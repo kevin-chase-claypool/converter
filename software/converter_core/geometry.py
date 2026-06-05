@@ -304,17 +304,105 @@ def mark_grid_contours(polygon, spacing, angle_deg=0.0, mark="dots"):
     return contours
 
 
+def tile_shape_contours(polygon, spacing, angle_deg=0.0, shape="diamonds"):
+    if spacing <= 0 or len(polygon) < 3:
+        return []
+    ang = math.radians(angle_deg)
+    cs, sn = math.cos(-ang), math.sin(-ang)
+    ca, sa = math.cos(ang), math.sin(ang)
+    rot = [(x * cs - y * sn, x * sn + y * cs) for x, y in polygon]
+    min_x = min(p[0] for p in rot)
+    max_x = max(p[0] for p in rot)
+    min_y = min(p[1] for p in rot)
+    max_y = max(p[1] for p in rot)
+    contours = []
+
+    def world(x, y):
+        return (x * ca - y * sa, x * sa + y * ca)
+
+    def add_if_inside(points):
+        shaped = [world(x, y) for x, y in points]
+        checks = list(shaped[:-1])
+        checks.extend(((a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0) for a, b in zip(shaped, shaped[1:]))
+        if all(point_in_polygon(point, polygon) for point in checks):
+            contours.append(shaped)
+
+    if shape == "circles":
+        radius = max(spacing * 0.5, 0.05)
+        steps = 18
+        row_step = radius * math.sqrt(3.0)
+        y = min_y + radius
+        row = 0
+        while y <= max_y - radius:
+            x = min_x + radius + (radius if row % 2 else 0.0)
+            while x <= max_x - radius:
+                add_if_inside([
+                    (
+                        x + math.cos(2.0 * math.pi * i / steps) * radius,
+                        y + math.sin(2.0 * math.pi * i / steps) * radius,
+                    )
+                    for i in range(steps + 1)
+                ])
+                x += radius * 2.0
+            y += row_step
+            row += 1
+        return contours
+
+    if shape == "hexagonal":
+        radius = max(spacing * 0.5, 0.05)
+        x_step = radius * 1.5
+        y_step = radius * math.sqrt(3.0)
+        col = 0
+        x = min_x + radius
+        while x <= max_x - radius:
+            y = min_y + radius + (y_step * 0.5 if col % 2 else 0.0)
+            while y <= max_y - radius:
+                add_if_inside([
+                    (
+                        x + math.cos(math.radians(60.0 * i)) * radius,
+                        y + math.sin(math.radians(60.0 * i)) * radius,
+                    )
+                    for i in range(7)
+                ])
+                y += y_step
+            x += x_step
+            col += 1
+        return contours
+
+    radius = max(spacing * 0.5, 0.05)
+    y = min_y + radius
+    while y <= max_y - radius:
+        x = min_x + radius
+        while x <= max_x - radius:
+            add_if_inside([
+                (x, y - radius),
+                (x + radius, y),
+                (x, y + radius),
+                (x - radius, y),
+                (x, y - radius),
+            ])
+            x += radius * 2.0
+        y += radius * 2.0
+    return contours
+
+
 def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern):
     pattern = normalized_hatch_pattern(pattern)
-    if pattern in ("circles", "dots"):
+    if pattern == "dots":
         active = max(0, min(max(1, int(levels)), int(math.ceil(max(0.0, min(darkness, 1.0)) * max(1, int(levels))))))
         if active <= 0:
             return []
         mark_spacing = spacing / math.sqrt(active)
         return mark_grid_contours(polygon, mark_spacing, base_angle, pattern)
+    if pattern in ("circles", "diamonds", "hexagonal"):
+        active = max(0, min(max(1, int(levels)), int(math.ceil(max(0.0, min(darkness, 1.0)) * max(1, int(levels))))))
+        if active <= 0:
+            return []
+        tile_spacing = spacing / math.sqrt(active)
+        return tile_shape_contours(polygon, tile_spacing, base_angle, pattern)
     angles = pattern_angles(base_angle, levels, angle_step, darkness, pattern)
     out = []
-    line_spacing = spacing * 1.5 if pattern == "hexagonal" else spacing
+    line_spacing = spacing
     for angle in angles:
         out.extend(hatch_polygon(polygon, line_spacing, angle))
     return out

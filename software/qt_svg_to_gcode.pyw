@@ -1077,7 +1077,7 @@ class MainWindow(QMainWindow):
 
         def add_mark(center, radius, mark):
             if mark == "circles":
-                steps = 10
+                steps = 18
                 contours.append([
                     maybe_flip((
                         center[0] + math.cos(2.0 * math.pi * i / steps) * radius,
@@ -1091,22 +1091,93 @@ class MainWindow(QMainWindow):
                     maybe_flip((center[0] + radius, center[1])),
                 ])
 
-        if pattern in ("circles", "dots"):
-            mark_radius = max(spacing * (0.16 if pattern == "circles" else 0.055), sample_step)
+        def add_shape_if_dark(points, threshold):
+            checks = list(points[:-1])
+            checks.extend(((a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0) for a, b in zip(points, points[1:]))
+            if all(view.left() <= x <= view.right() and view.top() <= y <= view.bottom() and darkness_at(x, y) >= threshold for x, y in checks):
+                contours.append([maybe_flip(point) for point in points])
+
+        if pattern in ("circles", "dots", "diamonds", "hexagonal"):
+            angle = math.radians(base_angle)
+            ca, sa = math.cos(angle), math.sin(angle)
+            cs, sn = math.cos(-angle), math.sin(-angle)
+            rot_corners = [(x * cs - y * sn, x * sn + y * cs) for x, y in corners]
+            min_rx = min(x for x, _ in rot_corners)
+            max_rx = max(x for x, _ in rot_corners)
+            min_ry = min(y for _, y in rot_corners)
+            max_ry = max(y for _, y in rot_corners)
+
+            def world(x, y):
+                return (x * ca - y * sa, x * sa + y * ca)
+
+        if pattern == "dots":
+            mark_radius = max(spacing * 0.055, sample_step)
             row_step = spacing * math.sqrt(3.0) / 2.0
             for layer in range(levels):
                 threshold = (layer + 1) / (levels + 1)
                 offset = spacing * layer / max(levels, 1)
-                y = view.top() + row_step * 0.5 + offset * 0.5
+                y = min_ry + row_step * 0.5 + offset * 0.5
                 row = 0
-                while y <= view.bottom():
-                    x = view.left() + spacing * (0.5 if row % 2 == 0 else 1.0) + offset
-                    while x <= view.right():
-                        if darkness_at(x, y) >= threshold:
-                            add_mark((x, y), mark_radius, pattern)
+                while y <= max_ry:
+                    x = min_rx + spacing * (0.5 if row % 2 == 0 else 1.0) + offset
+                    while x <= max_rx:
+                        center = world(x, y)
+                        dot = [(center[0] - mark_radius, center[1]), (center[0] + mark_radius, center[1])]
+                        if all(view.left() <= px <= view.right() and view.top() <= py <= view.bottom() and darkness_at(px, py) >= threshold for px, py in dot):
+                            add_mark(center, mark_radius, pattern)
                         x += spacing
                     y += row_step
                     row += 1
+            return contours
+
+        if pattern == "circles":
+            radius = max(spacing * 0.5, sample_step)
+            row_step = radius * math.sqrt(3.0)
+            steps = 18
+            for layer in range(levels):
+                threshold = (layer + 1) / (levels + 1)
+                y = min_ry + radius
+                row = 0
+                while y <= max_ry - radius:
+                    x = min_rx + radius + (radius if row % 2 else 0.0)
+                    while x <= max_rx - radius:
+                        circle = [world(x + math.cos(2.0 * math.pi * i / steps) * radius, y + math.sin(2.0 * math.pi * i / steps) * radius) for i in range(steps + 1)]
+                        add_shape_if_dark(circle, threshold)
+                        x += radius * 2.0
+                    y += row_step
+                    row += 1
+            return contours
+
+        if pattern == "hexagonal":
+            radius = max(spacing * 0.5, sample_step)
+            x_step = radius * 1.5
+            y_step = radius * math.sqrt(3.0)
+            for layer in range(levels):
+                threshold = (layer + 1) / (levels + 1)
+                col = 0
+                x = min_rx + radius
+                while x <= max_rx - radius:
+                    y = min_ry + radius + (y_step * 0.5 if col % 2 else 0.0)
+                    while y <= max_ry - radius:
+                        hexagon = [world(x + math.cos(math.radians(60.0 * i)) * radius, y + math.sin(math.radians(60.0 * i)) * radius) for i in range(7)]
+                        add_shape_if_dark(hexagon, threshold)
+                        y += y_step
+                    x += x_step
+                    col += 1
+            return contours
+
+        if pattern == "diamonds":
+            radius = max(spacing * 0.5, sample_step)
+            for layer in range(levels):
+                threshold = (layer + 1) / (levels + 1)
+                y = min_ry + radius
+                while y <= max_ry - radius:
+                    x = min_rx + radius
+                    while x <= max_rx - radius:
+                        diamond = [world(x, y - radius), world(x + radius, y), world(x, y + radius), world(x - radius, y), world(x, y - radius)]
+                        add_shape_if_dark(diamond, threshold)
+                        x += radius * 2.0
+                    y += radius * 2.0
             return contours
 
         if pattern == "linear":

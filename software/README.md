@@ -75,9 +75,10 @@ The exact dialect and the firmware-facing caveats are documented in
 - Set `Fill spacing mm > 0` to hatch filled regions; `0` disables hatching.
 - `Fill pattern` selects the generated infill: `crosshatch`, `linear`,
   `diagonal`, `diagonal_crosshatch`, `diamonds`, `triangular`, `hexagonal`,
-  `circles`, or `dots`. Line-based patterns are clipped to the filled SVG
-  contour; `circles` draws small outline circles, while `dots` draws tiny pen
-  marks inside the filled contour.
+  `circles`, or `dots`. `linear`, `crosshatch`, `diagonal`,
+  `diagonal_crosshatch`, and `triangular` generate line lattices; `diamonds`,
+  `hexagonal`, and `circles` generate repeated touching cell outlines; `dots`
+  generates tiny pen marks inside the filled contour.
 - `Shade levels > 1` turns SVG fill color into hatch density: darker fills receive
   more hatch angles, starting at `Fill angle deg` and stepping by `Shade angle step`.
 - `Raster shading` renders the whole SVG to a tone map first, then generates hatch
