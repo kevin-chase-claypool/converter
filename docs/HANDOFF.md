@@ -158,7 +158,10 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
   reduces pen-up cycles on the machine.
 - Triggered by any SVG element whose `fill` is not explicitly `none` / not fully transparent (SVG
   default = filled black). `hatch_spacing_mm` controls density (0 = disabled);
-  `hatch_angle_deg` controls direction (default 45).
+  `hatch_angle_deg` controls direction (default 45). `hatch_pattern` / "Fill pattern" selects
+  `crosshatch`, `linear`, `triangular`, `hexagonal`, or `dots`. Line-based patterns are clipped
+  into the filled polygon through the existing hatch scanner; dot patterns place small circular
+  contours inside the filled polygon.
 - Tone-driven SVG fill shading is implemented. `shade_levels` (Qt label "Shade levels", default 1)
   is the maximum number of hatch angle layers; `shade_angle_step_deg` (Qt label "Shade angle step",
   default 90) offsets each extra layer from `hatch_angle_deg`. Fill darkness comes from luminance
@@ -175,14 +178,14 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
   preview and, if the 5th-to-95th percentile darkness range is meaningful, enables `Raster shading`
   and sets starter values (`Fill spacing mm = 4`, `Shade levels = 4`, `Shade angle step = 45`).
   Flat single-tone artwork is left alone so silhouettes do not unexpectedly become raster-shaded.
-- Settings.hatch_spacing_mm / hatch_angle_deg threaded through `parse_svg_geometry` /
-  `element_contours`; `shade_levels` / `shade_angle_step_deg` are threaded through the same path.
-  Qt's raw-contour cache key includes all four so changes invalidate the cache.
+- Settings.hatch_spacing_mm / hatch_angle_deg / hatch_pattern threaded through `parse_svg_geometry`
+  / `element_contours`; `shade_levels` / `shade_angle_step_deg` are threaded through the same path.
+  Qt's raw-contour cache key includes these fill-generation settings so changes invalidate the cache.
 
 ### Qt UI
 - Sidebar settings are split into focused groups:
   - **Geometry** — scale, tolerance, Flip Y, and pen-stroke compensation.
-  - **Shading** — fill spacing/angle, shade levels/angle step, raster shading, and raster sampling.
+  - **Shading** — fill spacing/angle/pattern, shade levels/angle step, raster shading, and raster sampling.
   - **Motion** — draw/feed rate and travel rate.
   - **Theta kinematics** — theta axis/ratio/resolver/cost settings, plus monotonic theta.
   - **Pen** — Z heights, pen cycle, tool offsets, pen up/down commands, plus Use Z.
@@ -212,7 +215,7 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
 - Layout is now a `QSplitter`: left sidebar (settings + Convert/Preview buttons), centre
   GL preview with playback controls / status / estimate stacked beneath, right command list.
   Files row collapsed to one strip. Log shrunk to 60 px. Preview now gets most of the window.
-- Editing `scale`, `pen_diameter_mm`, `pen_cycle_ms`, `hatch_spacing_mm`, `hatch_angle_deg`,
+- Editing `scale`, `pen_diameter_mm`, `pen_cycle_ms`, `hatch_spacing_mm`, `hatch_angle_deg`, `hatch_pattern`,
   `shade_levels`, `shade_angle_step_deg`, `raster_px_per_unit`, or toggling `Raster shading` /
   `compensate_pen` re-runs the preview pipeline.
 

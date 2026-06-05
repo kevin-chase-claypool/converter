@@ -22,6 +22,7 @@ class Settings:
     bed_margin_mm: float = 6.35
     hatch_spacing_mm: float = 0.0
     hatch_angle_deg: float = 45.0
+    hatch_pattern: str = "crosshatch"
     shade_levels: int = 1
     shade_angle_step_deg: float = 90.0
     raster_shading: bool = False
@@ -46,6 +47,7 @@ TEXT_FIELD_GROUPS = (
     ("Shading", (
         ("Fill spacing mm", "hatch_spacing_mm", "0"),
         ("Fill angle deg", "hatch_angle_deg", "45"),
+        ("Fill pattern", "hatch_pattern", "crosshatch"),
         ("Shade levels", "shade_levels", "1"),
         ("Shade angle step", "shade_angle_step_deg", "90"),
         ("Raster px/unit", "raster_px_per_unit", "2"),

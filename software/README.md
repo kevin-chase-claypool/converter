@@ -36,7 +36,7 @@ The exact dialect and the firmware-facing caveats are documented in
 ## Settings groups (Qt app)
 
 - **Geometry** — scale, tolerance, Flip Y, and pen-stroke compensation.
-- **Shading** — fill spacing/angle, shade levels/angle step, raster shading, and
+- **Shading** — fill spacing/angle/pattern, shade levels/angle step, raster shading, and
   raster sampling resolution.
 - **Motion** — draw/feed rate and travel rate.
 - **Theta kinematics** — theta axis/ratio/resolver/cost settings (`Theta ratio`
@@ -73,6 +73,9 @@ The exact dialect and the firmware-facing caveats are documented in
 - `Bed margin mm` (default 6.35 ≈ 0.25") clips artwork inside the bed edge so the
   pen never reaches the rim.
 - Set `Fill spacing mm > 0` to hatch filled regions; `0` disables hatching.
+- `Fill pattern` selects the generated infill: `crosshatch`, `linear`,
+  `triangular`, `hexagonal`, or `dots`. Line-based patterns are clipped to the
+  filled SVG contour; dots are placed inside the filled contour.
 - `Shade levels > 1` turns SVG fill color into hatch density: darker fills receive
   more hatch angles, starting at `Fill angle deg` and stepping by `Shade angle step`.
 - `Raster shading` renders the whole SVG to a tone map first, then generates hatch

@@ -185,6 +185,109 @@ def hatch_angles_for_tone(base_angle, levels, angle_step, darkness):
     return [base_angle + i * angle_step for i in range(active)]
 
 
+def normalized_hatch_pattern(pattern):
+    text = str(pattern or "crosshatch").strip().lower().replace("-", "_").replace(" ", "_")
+    aliases = {
+        "line": "linear",
+        "lines": "linear",
+        "hatch": "linear",
+        "cross": "crosshatch",
+        "cross_hatch": "crosshatch",
+        "triangle": "triangular",
+        "tri": "triangular",
+        "hex": "hexagonal",
+        "hexagon": "hexagonal",
+        "dot": "dots",
+    }
+    return aliases.get(text, text if text in {"linear", "crosshatch", "triangular", "hexagonal", "dots"} else "crosshatch")
+
+
+def pattern_angles(base_angle, levels, angle_step, darkness, pattern):
+    base_angles = hatch_angles_for_tone(base_angle, levels, angle_step, darkness)
+    pattern = normalized_hatch_pattern(pattern)
+    if pattern == "linear":
+        return base_angles
+    if pattern == "triangular":
+        offsets = (0.0, 60.0, 120.0)
+    elif pattern == "hexagonal":
+        offsets = (0.0, 60.0, 120.0)
+    else:
+        offsets = (0.0, 90.0)
+    out = []
+    for angle in base_angles:
+        out.extend(angle + offset for offset in offsets)
+    return out
+
+
+def point_in_polygon(point, polygon):
+    x, y = point
+    inside = False
+    pts = polygon
+    if len(pts) < 3:
+        return False
+    for a, b in zip(pts, pts[1:] + pts[:1]):
+        x1, y1 = a
+        x2, y2 = b
+        if ((y1 > y) != (y2 > y)) and x < (x2 - x1) * (y - y1) / max(y2 - y1, 1e-12) + x1:
+            inside = not inside
+    return inside
+
+
+def dot_polygon(polygon, spacing, angle_deg=0.0):
+    if spacing <= 0 or len(polygon) < 3:
+        return []
+    ang = math.radians(angle_deg)
+    cs, sn = math.cos(-ang), math.sin(-ang)
+    ca, sa = math.cos(ang), math.sin(ang)
+    rot = [(x * cs - y * sn, x * sn + y * cs) for x, y in polygon]
+    min_x = min(p[0] for p in rot)
+    max_x = max(p[0] for p in rot)
+    min_y = min(p[1] for p in rot)
+    max_y = max(p[1] for p in rot)
+    radius = max(spacing * 0.16, 0.05)
+    row_step = spacing * math.sqrt(3.0) / 2.0
+    steps = 10
+    contours = []
+
+    def world(x, y):
+        return (x * ca - y * sa, x * sa + y * ca)
+
+    y = min_y + row_step * 0.5
+    row = 0
+    while y <= max_y:
+        x = min_x + spacing * (0.5 if row % 2 == 0 else 1.0)
+        while x <= max_x:
+            center = world(x, y)
+            if point_in_polygon(center, polygon):
+                contours.append([
+                    (
+                        center[0] + math.cos(2.0 * math.pi * i / steps) * radius,
+                        center[1] + math.sin(2.0 * math.pi * i / steps) * radius,
+                    )
+                    for i in range(steps + 1)
+                ])
+            x += spacing
+        y += row_step
+        row += 1
+    return contours
+
+
+def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern):
+    pattern = normalized_hatch_pattern(pattern)
+    if pattern == "dots":
+        active = max(0, min(max(1, int(levels)), int(math.ceil(max(0.0, min(darkness, 1.0)) * max(1, int(levels))))))
+        if active <= 0:
+            return []
+        dot_spacing = spacing / math.sqrt(active)
+        return dot_polygon(polygon, dot_spacing, base_angle)
+    angles = pattern_angles(base_angle, levels, angle_step, darkness, pattern)
+    out = []
+    line_spacing = spacing * 1.5 if pattern == "hexagonal" else spacing
+    for angle in angles:
+        out.extend(hatch_polygon(polygon, line_spacing, angle))
+    return out
+
+
 def hatch_polygon(polygon, spacing, angle_deg=0.0):
     if spacing <= 0 or len(polygon) < 3:
         return []
@@ -399,7 +502,7 @@ def path_to_contours(d, tolerance):
     return contours
 
 
-def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, shade_levels=1, shade_angle_step=90.0):
+def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0):
     tag = strip_ns(element.tag)
     contours = []
     if tag == "path":
@@ -425,17 +528,15 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, sha
     fill_lines = []
     if hatch_spacing > 0 and has_visible_fill(element):
         darkness = fill_darkness(element)
-        angles = hatch_angles_for_tone(hatch_angle, shade_levels, shade_angle_step, darkness)
         for contour in contours:
             if len(contour) >= 3:
-                for angle in angles:
-                    fill_lines.extend(hatch_polygon(contour, hatch_spacing, angle))
+                fill_lines.extend(fill_pattern_contours(contour, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern))
     if has_visible_stroke(element):
         contours = stroke_expanded_contours(contours, stroke_width(element))
     return contours + fill_lines
 
 
-def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_angle=0.0, shade_levels=1, shade_angle_step=90.0):
+def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0):
     tree = ET.parse(svg_path)
     root = tree.getroot()
     height = parse_length(root.get("height"), 0.0)
@@ -465,7 +566,7 @@ def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_ang
                 if target is not None and target_id not in seen:
                     walk(target, combined @ Matrix(e=parse_length(node.get("x")), f=parse_length(node.get("y"))), True, seen | {target_id})
             return
-        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, shade_levels, shade_angle_step):
+        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step):
             contours.append([combined.apply(x, y) for x, y in contour])
         for child in list(node):
             walk(child, combined, referenced, seen)
@@ -491,6 +592,7 @@ def read_svg(svg_path, settings):
         settings.flip_y,
         float(getattr(settings, "hatch_spacing_mm", 0.0)),
         float(getattr(settings, "hatch_angle_deg", 0.0)),
+        str(getattr(settings, "hatch_pattern", "crosshatch")),
         int(getattr(settings, "shade_levels", 1)),
         float(getattr(settings, "shade_angle_step_deg", 90.0)),
     )

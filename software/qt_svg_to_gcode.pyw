@@ -13,6 +13,7 @@ from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
+    QComboBox,
     QFileDialog,
     QFormLayout,
     QGroupBox,
@@ -713,8 +714,13 @@ class MainWindow(QMainWindow):
             form.setVerticalSpacing(2)
             form.setContentsMargins(8, 6, 8, 6)
             for label, key, value in items:
-                edit = QLineEdit(value)
-                edit.setMaximumWidth(120)
+                if key == "hatch_pattern":
+                    edit = QComboBox()
+                    edit.addItems(["crosshatch", "linear", "triangular", "hexagonal", "dots"])
+                    edit.setCurrentText(value)
+                else:
+                    edit = QLineEdit(value)
+                    edit.setMaximumWidth(120)
                 self.fields[key] = edit
                 form.addRow(QLabel(label), edit)
             return box, form
@@ -849,6 +855,7 @@ class MainWindow(QMainWindow):
         self.fields["pen_cycle_ms"].editingFinished.connect(lambda: self.refresh_preview_after_geometry_change())
         self.fields["hatch_spacing_mm"].editingFinished.connect(lambda: self.refresh_preview_after_geometry_change())
         self.fields["hatch_angle_deg"].editingFinished.connect(lambda: self.refresh_preview_after_geometry_change())
+        self.fields["hatch_pattern"].currentTextChanged.connect(lambda _text: self.refresh_preview_after_geometry_change())
         self.fields["shade_levels"].editingFinished.connect(lambda: self.refresh_preview_after_geometry_change())
         self.fields["shade_angle_step_deg"].editingFinished.connect(lambda: self.refresh_preview_after_geometry_change())
         self.fields["raster_px_per_unit"].editingFinished.connect(lambda: self.refresh_preview_after_geometry_change())
@@ -968,7 +975,10 @@ class MainWindow(QMainWindow):
         self.update_color_buttons()
 
     def settings(self):
-        text_values = {key: edit.text() for key, edit in self.fields.items()}
+        text_values = {
+            key: edit.currentText() if isinstance(edit, QComboBox) else edit.text()
+            for key, edit in self.fields.items()
+        }
         bool_values = {
             "flip_y": self.flip_y.isChecked(),
             "include_z": self.use_z.isChecked(),
@@ -992,6 +1002,7 @@ class MainWindow(QMainWindow):
             bool(settings.flip_y),
             float(getattr(settings, "hatch_spacing_mm", 0.0)),
             float(getattr(settings, "hatch_angle_deg", 0.0)),
+            str(getattr(settings, "hatch_pattern", "crosshatch")).lower(),
             int(getattr(settings, "shade_levels", 1)),
             float(getattr(settings, "shade_angle_step_deg", 90.0)),
             bool(getattr(settings, "raster_shading", False)),
@@ -1052,40 +1063,81 @@ class MainWindow(QMainWindow):
         contours = []
         base_angle = float(getattr(settings, "hatch_angle_deg", 0.0))
         angle_step = float(getattr(settings, "shade_angle_step_deg", 90.0))
+        pattern = converter.normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))
+
+        def add_dot(center, radius):
+            steps = 10
+            contours.append([
+                maybe_flip((
+                    center[0] + math.cos(2.0 * math.pi * i / steps) * radius,
+                    center[1] + math.sin(2.0 * math.pi * i / steps) * radius,
+                ))
+                for i in range(steps + 1)
+            ])
+
+        if pattern == "dots":
+            dot_radius = max(spacing * 0.16, sample_step)
+            row_step = spacing * math.sqrt(3.0) / 2.0
+            for layer in range(levels):
+                threshold = (layer + 1) / (levels + 1)
+                offset = spacing * layer / max(levels, 1)
+                y = view.top() + row_step * 0.5 + offset * 0.5
+                row = 0
+                while y <= view.bottom():
+                    x = view.left() + spacing * (0.5 if row % 2 == 0 else 1.0) + offset
+                    while x <= view.right():
+                        if darkness_at(x, y) >= threshold:
+                            add_dot((x, y), dot_radius)
+                        x += spacing
+                    y += row_step
+                    row += 1
+            return contours
+
+        if pattern == "linear":
+            offsets = (0.0,)
+            raster_spacing = spacing
+        elif pattern in ("triangular", "hexagonal"):
+            offsets = (0.0, 60.0, 120.0)
+            raster_spacing = spacing * (1.5 if pattern == "hexagonal" else 1.0)
+        else:
+            offsets = (0.0, 90.0)
+            raster_spacing = spacing
+
         for layer in range(levels):
             threshold = (layer + 1) / (levels + 1)
-            angle = math.radians(base_angle + layer * angle_step)
-            ux, uy = math.cos(angle), math.sin(angle)
-            nx, ny = -uy, ux
-            s_values = [x * nx + y * ny for x, y in corners]
-            t_values = [x * ux + y * uy for x, y in corners]
-            s = min(s_values) - spacing
-            s_max = max(s_values) + spacing
-            t_min = min(t_values) - spacing
-            t_max = max(t_values) + spacing
-            while s <= s_max:
-                active_start = None
-                last_point = None
-                t = t_min
-                while t <= t_max:
-                    x = ux * t + nx * s
-                    y = uy * t + ny * s
-                    inside = view.left() <= x <= view.right() and view.top() <= y <= view.bottom()
-                    active = inside and darkness_at(x, y) >= threshold
-                    if active:
-                        point = (x, y)
-                        if active_start is None:
-                            active_start = point
-                        last_point = point
-                    elif active_start is not None and last_point is not None:
-                        if converter.distance(active_start, last_point) >= min_segment:
-                            contours.append([maybe_flip(active_start), maybe_flip(last_point)])
-                        active_start = None
-                        last_point = None
-                    t += sample_step
-                if active_start is not None and last_point is not None and converter.distance(active_start, last_point) >= min_segment:
-                    contours.append([maybe_flip(active_start), maybe_flip(last_point)])
-                s += spacing
+            for offset_angle in offsets:
+                angle = math.radians(base_angle + layer * angle_step + offset_angle)
+                ux, uy = math.cos(angle), math.sin(angle)
+                nx, ny = -uy, ux
+                s_values = [x * nx + y * ny for x, y in corners]
+                t_values = [x * ux + y * uy for x, y in corners]
+                s = min(s_values) - raster_spacing
+                s_max = max(s_values) + raster_spacing
+                t_min = min(t_values) - raster_spacing
+                t_max = max(t_values) + raster_spacing
+                while s <= s_max:
+                    active_start = None
+                    last_point = None
+                    t = t_min
+                    while t <= t_max:
+                        x = ux * t + nx * s
+                        y = uy * t + ny * s
+                        inside = view.left() <= x <= view.right() and view.top() <= y <= view.bottom()
+                        active = inside and darkness_at(x, y) >= threshold
+                        if active:
+                            point = (x, y)
+                            if active_start is None:
+                                active_start = point
+                            last_point = point
+                        elif active_start is not None and last_point is not None:
+                            if converter.distance(active_start, last_point) >= min_segment:
+                                contours.append([maybe_flip(active_start), maybe_flip(last_point)])
+                            active_start = None
+                            last_point = None
+                        t += sample_step
+                    if active_start is not None and last_point is not None and converter.distance(active_start, last_point) >= min_segment:
+                        contours.append([maybe_flip(active_start), maybe_flip(last_point)])
+                    s += raster_spacing
         return contours
 
     def load_contours(self, svg_path, settings):
@@ -1098,6 +1150,7 @@ class MainWindow(QMainWindow):
                 settings.flip_y,
                 parse_hatch_spacing,
                 float(getattr(settings, "hatch_angle_deg", 0.0)),
+                str(getattr(settings, "hatch_pattern", "crosshatch")).lower(),
                 int(getattr(settings, "shade_levels", 1)),
                 float(getattr(settings, "shade_angle_step_deg", 90.0)),
             )
