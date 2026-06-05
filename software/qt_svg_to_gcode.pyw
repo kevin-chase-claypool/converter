@@ -95,6 +95,9 @@ class GLPreview(QOpenGLWidget):
         self.draw_count_at_move = []
         self.bounds_base = (-1.0, -1.0, 1.0, 1.0)
         self.zoom_factor = 1.0
+        self.pan_offset = (0.0, 0.0)
+        self.is_panning = False
+        self.last_pan_pos = None
         self.program = None
         self.program_ok = False
         self.vertex_counts = {}
@@ -332,6 +335,7 @@ class GLPreview(QOpenGLWidget):
         self.set_zoom(self.zoom_factor / 1.25)
 
     def reset_zoom(self):
+        self.pan_offset = (0.0, 0.0)
         self.set_zoom(1.0)
 
     def wheelEvent(self, event):
@@ -341,6 +345,50 @@ class GLPreview(QOpenGLWidget):
             return
         self.set_zoom(self.zoom_factor * (1.15 if delta > 0 else 1.0 / 1.15))
         event.accept()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.is_panning = True
+            self.last_pan_pos = event.position()
+            self.setCursor(Qt.ClosedHandCursor)
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self.is_panning and self.last_pan_pos is not None:
+            current = event.position()
+            dx = current.x() - self.last_pan_pos.x()
+            dy = current.y() - self.last_pan_pos.y()
+            min_x, min_y, max_x, max_y = self.adjusted_bounds()
+            span_x = max(max_x - min_x, 1e-9)
+            span_y = max(max_y - min_y, 1e-9)
+            self.pan_offset = (
+                self.pan_offset[0] - dx / max(self.width(), 1) * span_x,
+                self.pan_offset[1] + dy / max(self.height(), 1) * span_y,
+            )
+            self.last_pan_pos = current
+            self.invalidate_bounds()
+            self.update()
+            event.accept()
+            return
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton and self.is_panning:
+            self.is_panning = False
+            self.last_pan_pos = None
+            self.unsetCursor()
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.reset_zoom()
+            event.accept()
+            return
+        super().mouseDoubleClickEvent(event)
 
     def set_fast_render(self, enabled):
         self.fast_render = bool(enabled)
@@ -420,7 +468,7 @@ class GLPreview(QOpenGLWidget):
         return self.interpolate_point(progress, "command_start", "command_end")
 
     def adjusted_bounds(self):
-        key = (self.width(), self.height(), self.bounds_base, self.zoom_factor)
+        key = (self.width(), self.height(), self.bounds_base, self.zoom_factor, self.pan_offset)
         if self._cached_bounds is not None and self._cached_bounds_key == key:
             return self._cached_bounds
         min_x, min_y, max_x, max_y = self.bounds_base
@@ -443,6 +491,11 @@ class GLPreview(QOpenGLWidget):
             half_y = (max_y - min_y) / (2.0 * self.zoom_factor)
             min_x, max_x = cx - half_x, cx + half_x
             min_y, max_y = cy - half_y, cy + half_y
+        pan_x, pan_y = self.pan_offset
+        min_x += pan_x
+        max_x += pan_x
+        min_y += pan_y
+        max_y += pan_y
         bounds = (min_x, min_y, max_x, max_y)
         self._cached_bounds = bounds
         self._cached_bounds_key = key
@@ -760,9 +813,6 @@ class MainWindow(QMainWindow):
         self.slider.valueChanged.connect(self.set_index)
         controls.addWidget(self.slider, 1)
         controls.addWidget(QPushButton(">|", clicked=lambda: self.set_index(len(self.moves))))
-        controls.addWidget(QPushButton("Zoom -", clicked=lambda: self.gl_preview.zoom_out()))
-        controls.addWidget(QPushButton("Zoom +", clicked=lambda: self.gl_preview.zoom_in()))
-        controls.addWidget(QPushButton("Reset zoom", clicked=lambda: self.gl_preview.reset_zoom()))
         preview_layout.addLayout(controls)
 
         self.status = QLabel("Choose an SVG to build a preview.")
