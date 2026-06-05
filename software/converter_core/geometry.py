@@ -282,18 +282,22 @@ def mark_grid_contours(polygon, spacing, angle_deg=0.0, mark="dots"):
             center = world(x, y)
             if point_in_polygon(center, polygon):
                 if mark == "circles":
-                    contours.append([
+                    circle = [
                         (
                             center[0] + math.cos(2.0 * math.pi * i / steps) * circle_radius,
                             center[1] + math.sin(2.0 * math.pi * i / steps) * circle_radius,
                         )
                         for i in range(steps + 1)
-                    ])
+                    ]
+                    if all(point_in_polygon(point, polygon) for point in circle[:-1]):
+                        contours.append(circle)
                 else:
-                    contours.append([
+                    dot = [
                         (center[0] - dot_radius, center[1]),
                         (center[0] + dot_radius, center[1]),
-                    ])
+                    ]
+                    if all(point_in_polygon(point, polygon) for point in dot):
+                        contours.append(dot)
             x += spacing
         y += row_step
         row += 1
@@ -356,20 +360,13 @@ def hatch_polygon(polygon, spacing, angle_deg=0.0):
     for run_index, (y, pairs) in enumerate(runs):
         reversed_pass = (run_index % 2) == 1
         ordered_pairs = list(reversed(pairs)) if reversed_pass else pairs
-        for pair_index, (x_left, x_right) in enumerate(ordered_pairs):
+        for x_left, x_right in ordered_pairs:
             if reversed_pass:
                 start_x, end_x = x_right, x_left
             else:
                 start_x, end_x = x_left, x_right
             start_pt = world(start_x, y)
             end_pt = world(end_x, y)
-            if pair_index == 0 and chains and run_index > 0:
-                prev_chain = chains[-1]
-                prev_end = prev_chain[-1]
-                if (prev_end[0] - start_pt[0]) ** 2 + (prev_end[1] - start_pt[1]) ** 2 <= (spacing * 2.0) ** 2:
-                    prev_chain.append(start_pt)
-                    prev_chain.append(end_pt)
-                    continue
             chains.append([start_pt, end_pt])
     return chains
 
