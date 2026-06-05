@@ -159,15 +159,14 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
 - Triggered by any SVG element whose `fill` is not explicitly `none` / not fully transparent (SVG
   default = filled black). `hatch_spacing_mm` controls density (0 = disabled);
   `hatch_angle_deg` controls direction (default 45). `hatch_pattern` / "Fill pattern" selects
-  `crosshatch`, `linear`, `diagonal`, `diagonal_crosshatch`, `diamonds`, `triangular`,
-  `hexagonal`, `circles`, or `dots`. `linear`, `crosshatch`, `diagonal`,
-  `diagonal_crosshatch`, and `triangular` generate line lattices. `diamonds`, `hexagonal`, and
-  `circles` generate repeated clipped cell lattices. `dots` places tiny pen marks. Vector fills
-  treat the pattern as a full layer and clip pattern segments to the filled contour boundary.
+  OrcaSlicer-style sparse infill: `linear`, `crosshatch`, `diagonal`,
+  `diagonal_crosshatch`, `diamonds`, `triangular`, `honeycomb`/`hexagonal`, `circles`, or `dots`.
+  `linear` is always one parallel-line family; darker fills increase density by reducing spacing
+  rather than adding unrelated angle families. Vector fills treat the pattern as a full layer and
+  clip pattern segments to the filled contour boundary.
 - Tone-driven SVG fill shading is implemented. `shade_levels` (Qt label "Shade levels", default 1)
-  is the maximum number of hatch angle layers; `shade_angle_step_deg` (Qt label "Shade angle step",
-  default 90) offsets each extra layer from `hatch_angle_deg`. Fill darkness comes from luminance
-  and opacity: white gets no hatch, gray gets some layers, black gets all layers. Missing fill still
+  controls density steps for tone-driven fills. Fill darkness comes from luminance and opacity:
+  white gets no hatch, gray gets lower-density infill, black gets denser infill. Missing fill still
   follows the SVG default black behavior.
 - Raster shading is implemented in the Qt app (`Raster shading` checkbox). It uses `QSvgRenderer`
   to render the whole SVG to a transparent `QImage`, samples pixel darkness, and generates hatch

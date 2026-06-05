@@ -717,13 +717,13 @@ class MainWindow(QMainWindow):
                 if key == "hatch_pattern":
                     edit = QComboBox()
                     edit.addItems([
-                        "crosshatch",
                         "linear",
+                        "crosshatch",
                         "diagonal",
                         "diagonal_crosshatch",
                         "diamonds",
                         "triangular",
-                        "hexagonal",
+                        "honeycomb",
                         "circles",
                         "dots",
                     ])
@@ -1125,31 +1125,32 @@ class MainWindow(QMainWindow):
                 return (x * ca - y * sa, x * sa + y * ca)
 
         if pattern == "dots":
-            mark_radius = max(spacing * 0.055, sample_step)
-            row_step = spacing * math.sqrt(3.0) / 2.0
             for layer in range(levels):
                 threshold = (layer + 1) / (levels + 1)
-                offset = spacing * layer / max(levels, 1)
-                y = min_ry + row_step * 0.5 + offset * 0.5
+                layer_spacing = spacing / math.sqrt(layer + 1)
+                mark_radius = max(layer_spacing * 0.055, sample_step)
+                row_step = layer_spacing * math.sqrt(3.0) / 2.0
+                y = min_ry + row_step * 0.5
                 row = 0
                 while y <= max_ry:
-                    x = min_rx + spacing * (0.5 if row % 2 == 0 else 1.0) + offset
+                    x = min_rx + layer_spacing * (0.5 if row % 2 == 0 else 1.0)
                     while x <= max_rx:
                         center = world(x, y)
                         dot = [(center[0] - mark_radius, center[1]), (center[0] + mark_radius, center[1])]
                         if all(view.left() <= px <= view.right() and view.top() <= py <= view.bottom() and darkness_at(px, py) >= threshold for px, py in dot):
                             add_mark(center, mark_radius, pattern)
-                        x += spacing
+                        x += layer_spacing
                     y += row_step
                     row += 1
             return contours
 
         if pattern == "circles":
-            radius = max(spacing * 0.5, sample_step)
-            row_step = radius * math.sqrt(3.0)
             steps = 18
             for layer in range(levels):
                 threshold = (layer + 1) / (levels + 1)
+                layer_spacing = spacing / math.sqrt(layer + 1)
+                radius = max(layer_spacing * 0.5, sample_step)
+                row_step = radius * math.sqrt(3.0)
                 y = min_ry + radius
                 row = 0
                 while y <= max_ry - radius:
@@ -1163,11 +1164,12 @@ class MainWindow(QMainWindow):
             return contours
 
         if pattern == "hexagonal":
-            radius = max(spacing * 0.5, sample_step)
-            x_step = radius * 1.5
-            y_step = radius * math.sqrt(3.0)
             for layer in range(levels):
                 threshold = (layer + 1) / (levels + 1)
+                layer_spacing = spacing / math.sqrt(layer + 1)
+                radius = max(layer_spacing * 0.5, sample_step)
+                x_step = radius * 1.5
+                y_step = radius * math.sqrt(3.0)
                 col = 0
                 x = min_rx - radius
                 while x <= max_rx + radius:
@@ -1182,9 +1184,10 @@ class MainWindow(QMainWindow):
             return contours
 
         if pattern == "diamonds":
-            radius = max(spacing * 0.5, sample_step)
             for layer in range(levels):
                 threshold = (layer + 1) / (levels + 1)
+                layer_spacing = spacing / math.sqrt(layer + 1)
+                radius = max(layer_spacing * 0.5, sample_step)
                 y = min_ry - radius
                 while y <= max_ry + radius:
                     x = min_rx - radius
@@ -1198,27 +1201,22 @@ class MainWindow(QMainWindow):
 
         if pattern == "linear":
             offsets = (0.0,)
-            raster_spacing = spacing
         elif pattern == "crosshatch":
             offsets = (0.0, 90.0)
-            raster_spacing = spacing
         elif pattern == "diagonal":
             offsets = (45.0,)
-            raster_spacing = spacing
         elif pattern == "diagonal_crosshatch":
             offsets = (45.0, 135.0)
-            raster_spacing = spacing
         elif pattern == "triangular":
             offsets = (0.0, 60.0, 120.0)
-            raster_spacing = spacing
         else:
             offsets = (0.0, 90.0)
-            raster_spacing = spacing
 
         for layer in range(levels):
             threshold = (layer + 1) / (levels + 1)
+            raster_spacing = spacing / math.sqrt(layer + 1)
             for offset_angle in offsets:
-                angle = math.radians(base_angle + layer * angle_step + offset_angle)
+                angle = math.radians(base_angle + offset_angle)
                 ux, uy = math.cos(angle), math.sin(angle)
                 nx, ny = -uy, ux
                 s_values = [x * nx + y * ny for x, y in corners]

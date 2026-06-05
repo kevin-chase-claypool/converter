@@ -73,15 +73,14 @@ The exact dialect and the firmware-facing caveats are documented in
 - `Bed margin mm` (default 6.35 ≈ 0.25") clips artwork inside the bed edge so the
   pen never reaches the rim.
 - Set `Fill spacing mm > 0` to hatch filled regions; `0` disables hatching.
-- `Fill pattern` selects the generated infill: `crosshatch`, `linear`,
-  `diagonal`, `diagonal_crosshatch`, `diamonds`, `triangular`, `hexagonal`,
-  `circles`, or `dots`. `linear`, `crosshatch`, `diagonal`,
-  `diagonal_crosshatch`, and `triangular` generate line lattices; `diamonds`,
-  `hexagonal`, and `circles` generate repeated clipped cell lattices; `dots`
-  generates tiny pen marks. The vector fill path treats each pattern as a full
-  layer and clips pattern segments to the filled contour boundary.
+- `Fill pattern` selects OrcaSlicer-style sparse infill: `linear`, `crosshatch`,
+  `diagonal`, `diagonal_crosshatch`, `diamonds`, `triangular`, `honeycomb`,
+  `circles`, or `dots`. `linear` is always one parallel-line family; darker fills
+  increase density by reducing spacing, not by changing the pattern into another
+  pattern. The vector fill path treats each pattern as a full layer and clips
+  pattern segments to the filled contour boundary.
 - `Shade levels > 1` turns SVG fill color into hatch density: darker fills receive
-  more hatch angles, starting at `Fill angle deg` and stepping by `Shade angle step`.
+  denser spacing while preserving the selected fill pattern.
 - `Raster shading` renders the whole SVG to a tone map first, then generates hatch
   layers from pixel darkness. Use this for gradients, embedded images, or any SVG
   where tone is visible but not represented as separate filled vector regions.

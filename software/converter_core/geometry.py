@@ -190,6 +190,7 @@ def normalized_hatch_pattern(pattern):
     aliases = {
         "line": "linear",
         "lines": "linear",
+        "rectilinear": "linear",
         "hatch": "linear",
         "cross": "crosshatch",
         "cross_hatch": "crosshatch",
@@ -199,9 +200,11 @@ def normalized_hatch_pattern(pattern):
         "diagonal_cross_hatch": "diagonal_crosshatch",
         "diamond": "diamonds",
         "triangle": "triangular",
+        "triangles": "triangular",
         "tri": "triangular",
         "hex": "hexagonal",
         "hexagon": "hexagonal",
+        "honeycomb": "hexagonal",
         "circle": "circles",
         "dot": "dots",
     }
@@ -220,25 +223,32 @@ def normalized_hatch_pattern(pattern):
 
 
 def pattern_angles(base_angle, levels, angle_step, darkness, pattern):
-    level_angles = hatch_angles_for_tone(base_angle, levels, angle_step, darkness)
     pattern = normalized_hatch_pattern(pattern)
     if pattern == "linear":
-        offsets = (0.0,)
+        return [base_angle]
     elif pattern == "crosshatch":
         offsets = (0.0, 90.0)
     elif pattern == "diagonal":
-        offsets = (45.0,)
+        return [base_angle + 45.0]
     elif pattern == "diagonal_crosshatch":
         offsets = (45.0, 135.0)
     elif pattern == "triangular":
         offsets = (0.0, 60.0, 120.0)
     else:
-        offsets = (0.0,)
-    out = []
-    for layer_angle in level_angles:
-        shade_offset = layer_angle - base_angle
-        out.extend(base_angle + shade_offset + offset for offset in offsets)
-    return out
+        return [base_angle]
+    return [base_angle + offset for offset in offsets]
+
+
+def active_shade_layers(levels, darkness):
+    levels = max(1, int(levels))
+    return max(0, min(levels, int(math.ceil(max(0.0, min(float(darkness), 1.0)) * levels))))
+
+
+def density_spacing(spacing, levels, darkness):
+    active = active_shade_layers(levels, darkness)
+    if active <= 0:
+        return None
+    return max(float(spacing) / math.sqrt(active), 1e-6)
 
 
 def point_in_polygon(point, polygon):
@@ -443,23 +453,17 @@ def tile_shape_contours(polygon, spacing, angle_deg=0.0, shape="diamonds"):
 
 def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern):
     pattern = normalized_hatch_pattern(pattern)
+    fill_spacing = density_spacing(spacing, levels, darkness)
+    if fill_spacing is None:
+        return []
     if pattern == "dots":
-        active = max(0, min(max(1, int(levels)), int(math.ceil(max(0.0, min(darkness, 1.0)) * max(1, int(levels))))))
-        if active <= 0:
-            return []
-        mark_spacing = spacing / math.sqrt(active)
-        return mark_grid_contours(polygon, mark_spacing, base_angle, pattern)
+        return mark_grid_contours(polygon, fill_spacing, base_angle, pattern)
     if pattern in ("circles", "diamonds", "hexagonal"):
-        active = max(0, min(max(1, int(levels)), int(math.ceil(max(0.0, min(darkness, 1.0)) * max(1, int(levels))))))
-        if active <= 0:
-            return []
-        tile_spacing = spacing / math.sqrt(active)
-        return tile_shape_contours(polygon, tile_spacing, base_angle, pattern)
+        return tile_shape_contours(polygon, fill_spacing, base_angle, pattern)
     angles = pattern_angles(base_angle, levels, angle_step, darkness, pattern)
     out = []
-    line_spacing = spacing
     for angle in angles:
-        out.extend(hatch_polygon(polygon, line_spacing, angle))
+        out.extend(hatch_polygon(polygon, fill_spacing, angle))
     return out
 
 
