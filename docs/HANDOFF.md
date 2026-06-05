@@ -358,26 +358,33 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
 - **Fill refinements** — fill-mode toggle (outline only / fill only / both) and optional auto fill
   spacing tied to pen stroke width for gap-free solids.
 
-### Pi Pico 2 (RP2350) firmware — **decided: use grblHAL** (NOT started)
-Decision (this session): drive the machine with **grblHAL** on the Pico 2 rather than a custom
-parser/motion planner. grblHAL handles all of it — parsing this dialect, X/Y+A coordinated motion,
-acceleration/junction lookahead, step generation, and M3/M5 as a spindle-enable output. The
-pen-pressure system is a separate concern layered on top.
+### Pi Pico 2 (RP2350) firmware — **decided: RP23CNC + grblHAL + Ethernet** (NOT started)
+Hardware decision: use the **RP23CNC / RP23U5XBB 5-axis grblHAL controller** from Brookwood Design,
+with the optional Ethernet adapter. This gives the project a ready RP2350 grblHAL controller instead
+of a custom parser/motion board: X/Y/A step-dir outputs, opto-isolated limit inputs, probe/control
+inputs, spindle/digital outputs, and USB/Ethernet transport.
+
+Motion decision: drive the machine with **grblHAL** rather than a custom parser/motion planner.
+grblHAL handles parsing this dialect, X/Y+A coordinated motion, acceleration/junction lookahead,
+step generation, and M3/M5 as a spindle-enable output. The pen-pressure system is a separate
+concern layered on top.
 
 grblHAL setup tasks (config, not parser code):
-1. Build/flash a **4-axis** grblHAL for the RP2350 port (X/Y/Z/A enabled, not the default 3-axis).
+1. Build/flash RP23CNC-compatible grblHAL with Ethernet enabled and X/Y/Z/A available.
 2. `$` settings: steps/mm for X/Y; **A steps-per-unit = motor steps per degree** (the converter
    emits `A` in *motor* degrees — see G-code reference); per-axis max rate + acceleration.
-3. Wire grblHAL **spindle-enable output → pen pressure subsystem** as the override line:
+3. Wire X/Y limit switches to opto-isolated limit inputs. Use a theta index/probe input for the
+   bed index sensor once the homing scheme is finalized.
+4. Wire grblHAL **spindle-enable output → pen pressure subsystem** as the override line:
    M3 = ENGAGE, M5 = LIFT.
-4. **Settle handshake — DONE on the converter side.** `contours_to_gcode` now emits
+5. **Settle handshake — DONE on the converter side.** `contours_to_gcode` now emits
    `G4 P<pen_cycle_seconds>` after every M3/M5 (only in non-Z pen mode; skipped when
    `Pen cycle ms = 0`), via `append_pen_dwell`. So grblHAL pauses for the pen to lift before travel
    and reach paper before drawing. The redundant per-contour-start M5 was also removed (pen is
    always already up there), so each actuation gets exactly one dwell and the G-code matches the
    preview. Closed-loop "wait for actual load-cell contact" is still a later upgrade via a grblHAL
    plugin that feed-holds until a contact input.
-5. **Verify on hardware:** how grblHAL scales feed on a combined X/Y/**A** move vs the converter's
+6. **Verify on hardware:** how grblHAL scales feed on a combined X/Y/**A** move vs the converter's
    `sqrt(xy² + motor_deg²)/F` pacing. Only affects speed/timing, not path shape.
 
 Pen pressure system (independent of grblHAL):
