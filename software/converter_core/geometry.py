@@ -220,23 +220,24 @@ def normalized_hatch_pattern(pattern):
 
 
 def pattern_angles(base_angle, levels, angle_step, darkness, pattern):
-    base_angles = hatch_angles_for_tone(base_angle, levels, angle_step, darkness)
+    level_angles = hatch_angles_for_tone(base_angle, levels, angle_step, darkness)
     pattern = normalized_hatch_pattern(pattern)
     if pattern == "linear":
-        return base_angles
-    if pattern == "diagonal":
+        offsets = (0.0,)
+    elif pattern == "crosshatch":
+        offsets = (0.0, 90.0)
+    elif pattern == "diagonal":
         offsets = (45.0,)
-    elif pattern in ("diagonal_crosshatch", "diamonds"):
+    elif pattern == "diagonal_crosshatch":
         offsets = (45.0, 135.0)
     elif pattern == "triangular":
         offsets = (0.0, 60.0, 120.0)
-    elif pattern == "hexagonal":
-        offsets = (0.0, 60.0, 120.0)
     else:
-        offsets = (0.0, 90.0)
+        offsets = (0.0,)
     out = []
-    for angle in base_angles:
-        out.extend(angle + offset for offset in offsets)
+    for layer_angle in level_angles:
+        shade_offset = layer_angle - base_angle
+        out.extend(base_angle + shade_offset + offset for offset in offsets)
     return out
 
 
@@ -252,6 +253,50 @@ def point_in_polygon(point, polygon):
         if ((y1 > y) != (y2 > y)) and x < (x2 - x1) * (y - y1) / max(y2 - y1, 1e-12) + x1:
             inside = not inside
     return inside
+
+
+def clip_segment_to_polygon(a, b, polygon):
+    if len(polygon) < 3:
+        return []
+    ax, ay = a
+    bx, by = b
+    dx, dy = bx - ax, by - ay
+    ts = [0.0, 1.0]
+    pts = polygon if polygon[0] == polygon[-1] else polygon + [polygon[0]]
+    for p1, p2 in zip(pts, pts[1:]):
+        ex, ey = p2[0] - p1[0], p2[1] - p1[1]
+        denom = dx * ey - dy * ex
+        if abs(denom) <= 1e-12:
+            continue
+        qx, qy = p1[0] - ax, p1[1] - ay
+        t = (qx * ey - qy * ex) / denom
+        u = (qx * dy - qy * dx) / denom
+        if -1e-9 <= t <= 1.0 + 1e-9 and -1e-9 <= u <= 1.0 + 1e-9:
+            ts.append(max(0.0, min(1.0, t)))
+    ts = sorted(ts)
+    deduped = []
+    for t in ts:
+        if not deduped or abs(t - deduped[-1]) > 1e-7:
+            deduped.append(t)
+    segments = []
+    for t0, t1 in zip(deduped, deduped[1:]):
+        if t1 - t0 <= 1e-7:
+            continue
+        mid = (t0 + t1) / 2.0
+        mid_point = (ax + dx * mid, ay + dy * mid)
+        if point_in_polygon(mid_point, polygon):
+            segments.append([
+                (ax + dx * t0, ay + dy * t0),
+                (ax + dx * t1, ay + dy * t1),
+            ])
+    return segments
+
+
+def clip_polyline_to_polygon(points, polygon):
+    clipped = []
+    for a, b in zip(points, points[1:]):
+        clipped.extend(clip_segment_to_polygon(a, b, polygon))
+    return clipped
 
 
 def mark_grid_contours(polygon, spacing, angle_deg=0.0, mark="dots"):
@@ -289,15 +334,13 @@ def mark_grid_contours(polygon, spacing, angle_deg=0.0, mark="dots"):
                         )
                         for i in range(steps + 1)
                     ]
-                    if all(point_in_polygon(point, polygon) for point in circle[:-1]):
-                        contours.append(circle)
+                    contours.extend(clip_polyline_to_polygon(circle, polygon))
                 else:
                     dot = [
                         (center[0] - dot_radius, center[1]),
                         (center[0] + dot_radius, center[1]),
                     ]
-                    if all(point_in_polygon(point, polygon) for point in dot):
-                        contours.append(dot)
+                    contours.extend(clip_segment_to_polygon(dot[0], dot[1], polygon))
             x += spacing
         y += row_step
         row += 1
@@ -322,20 +365,17 @@ def tile_shape_contours(polygon, spacing, angle_deg=0.0, shape="diamonds"):
 
     def add_if_inside(points):
         shaped = [world(x, y) for x, y in points]
-        checks = list(shaped[:-1])
-        checks.extend(((a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0) for a, b in zip(shaped, shaped[1:]))
-        if all(point_in_polygon(point, polygon) for point in checks):
-            contours.append(shaped)
+        contours.extend(clip_polyline_to_polygon(shaped, polygon))
 
     if shape == "circles":
         radius = max(spacing * 0.5, 0.05)
         steps = 18
         row_step = radius * math.sqrt(3.0)
-        y = min_y + radius
+        y = min_y - radius
         row = 0
-        while y <= max_y - radius:
-            x = min_x + radius + (radius if row % 2 else 0.0)
-            while x <= max_x - radius:
+        while y <= max_y + radius:
+            x = min_x - radius + (radius if row % 2 else 0.0)
+            while x <= max_x + radius:
                 add_if_inside([
                     (
                         x + math.cos(2.0 * math.pi * i / steps) * radius,
@@ -353,10 +393,10 @@ def tile_shape_contours(polygon, spacing, angle_deg=0.0, shape="diamonds"):
         x_step = radius * 1.5
         y_step = radius * math.sqrt(3.0)
         col = 0
-        x = min_x + radius
-        while x <= max_x - radius:
-            y = min_y + radius + (y_step * 0.5 if col % 2 else 0.0)
-            while y <= max_y - radius:
+        x = min_x - radius
+        while x <= max_x + radius:
+            y = min_y - radius + (y_step * 0.5 if col % 2 else 0.0)
+            while y <= max_y + radius:
                 add_if_inside([
                     (
                         x + math.cos(math.radians(60.0 * i)) * radius,
@@ -370,10 +410,10 @@ def tile_shape_contours(polygon, spacing, angle_deg=0.0, shape="diamonds"):
         return contours
 
     radius = max(spacing * 0.5, 0.05)
-    y = min_y + radius
-    while y <= max_y - radius:
-        x = min_x + radius
-        while x <= max_x - radius:
+    y = min_y - radius
+    while y <= max_y + radius:
+        x = min_x - radius
+        while x <= max_x + radius:
             add_if_inside([
                 (x, y - radius),
                 (x + radius, y),

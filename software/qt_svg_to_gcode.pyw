@@ -1183,15 +1183,18 @@ class MainWindow(QMainWindow):
         if pattern == "linear":
             offsets = (0.0,)
             raster_spacing = spacing
+        elif pattern == "crosshatch":
+            offsets = (0.0, 90.0)
+            raster_spacing = spacing
         elif pattern == "diagonal":
             offsets = (45.0,)
             raster_spacing = spacing
-        elif pattern in ("diagonal_crosshatch", "diamonds"):
+        elif pattern == "diagonal_crosshatch":
             offsets = (45.0, 135.0)
             raster_spacing = spacing
-        elif pattern in ("triangular", "hexagonal"):
+        elif pattern == "triangular":
             offsets = (0.0, 60.0, 120.0)
-            raster_spacing = spacing * (1.5 if pattern == "hexagonal" else 1.0)
+            raster_spacing = spacing
         else:
             offsets = (0.0, 90.0)
             raster_spacing = spacing

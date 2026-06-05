@@ -78,7 +78,8 @@ The exact dialect and the firmware-facing caveats are documented in
   `circles`, or `dots`. `linear`, `crosshatch`, `diagonal`,
   `diagonal_crosshatch`, and `triangular` generate line lattices; `diamonds`,
   `hexagonal`, and `circles` generate repeated touching cell outlines; `dots`
-  generates tiny pen marks inside the filled contour.
+  generates tiny pen marks. The vector fill path treats each pattern as a full
+  layer and clips pattern segments to the filled contour boundary.
 - `Shade levels > 1` turns SVG fill color into hatch density: darker fills receive
   more hatch angles, starting at `Fill angle deg` and stepping by `Shade angle step`.
 - `Raster shading` renders the whole SVG to a tone map first, then generates hatch

@@ -153,17 +153,17 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
 - Scaling, tolerance-based curve flattening, Y-flip, Z-axis pen vs M3/M5 modes.
 
 ### Fill hatching
-- `hatch_polygon(polygon, spacing, angle)` runs a scanline fill and stitches adjacent runs into a
-  boustrophedon zigzag polyline (rather than one contour per line) — keeps the planner fast and
-  reduces pen-up cycles on the machine.
+- `hatch_polygon(polygon, spacing, angle)` runs a scanline fill and returns clipped line segments.
+  Segment-level clipping is intentional: connector moves between scanlines can cross outside
+  concave boundaries, so infill stays inside at the cost of more pen-up cycles.
 - Triggered by any SVG element whose `fill` is not explicitly `none` / not fully transparent (SVG
   default = filled black). `hatch_spacing_mm` controls density (0 = disabled);
   `hatch_angle_deg` controls direction (default 45). `hatch_pattern` / "Fill pattern" selects
   `crosshatch`, `linear`, `diagonal`, `diagonal_crosshatch`, `diamonds`, `triangular`,
   `hexagonal`, `circles`, or `dots`. `linear`, `crosshatch`, `diagonal`,
   `diagonal_crosshatch`, and `triangular` generate line lattices. `diamonds`, `hexagonal`, and
-  `circles` generate repeated touching cell outlines. `dots` places tiny pen marks inside the
-  fill.
+  `circles` generate repeated touching cell outlines. `dots` places tiny pen marks. Vector fills
+  treat the pattern as a full layer and clip pattern segments to the filled contour boundary.
 - Tone-driven SVG fill shading is implemented. `shade_levels` (Qt label "Shade levels", default 1)
   is the maximum number of hatch angle layers; `shade_angle_step_deg` (Qt label "Shade angle step",
   default 90) offsets each extra layer from `hatch_angle_deg`. Fill darkness comes from luminance
