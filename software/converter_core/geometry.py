@@ -363,9 +363,20 @@ def tile_shape_contours(polygon, spacing, angle_deg=0.0, shape="diamonds"):
     def world(x, y):
         return (x * ca - y * sa, x * sa + y * ca)
 
-    def add_if_inside(points):
+    def add_clipped_polyline(points):
         shaped = [world(x, y) for x, y in points]
         contours.extend(clip_polyline_to_polygon(shaped, polygon))
+
+    seen_segments = set()
+
+    def add_clipped_segment(a, b):
+        key_a = (round(a[0], 6), round(a[1], 6))
+        key_b = (round(b[0], 6), round(b[1], 6))
+        key = tuple(sorted((key_a, key_b)))
+        if key in seen_segments:
+            return
+        seen_segments.add(key)
+        contours.extend(clip_segment_to_polygon(world(*a), world(*b), polygon))
 
     if shape == "circles":
         radius = max(spacing * 0.5, 0.05)
@@ -376,7 +387,7 @@ def tile_shape_contours(polygon, spacing, angle_deg=0.0, shape="diamonds"):
         while y <= max_y + radius:
             x = min_x - radius + (radius if row % 2 else 0.0)
             while x <= max_x + radius:
-                add_if_inside([
+                add_clipped_polyline([
                     (
                         x + math.cos(2.0 * math.pi * i / steps) * radius,
                         y + math.sin(2.0 * math.pi * i / steps) * radius,
@@ -397,13 +408,15 @@ def tile_shape_contours(polygon, spacing, angle_deg=0.0, shape="diamonds"):
         while x <= max_x + radius:
             y = min_y - radius + (y_step * 0.5 if col % 2 else 0.0)
             while y <= max_y + radius:
-                add_if_inside([
+                vertices = [
                     (
                         x + math.cos(math.radians(60.0 * i)) * radius,
                         y + math.sin(math.radians(60.0 * i)) * radius,
                     )
                     for i in range(7)
-                ])
+                ]
+                for a, b in zip(vertices, vertices[1:]):
+                    add_clipped_segment(a, b)
                 y += y_step
             x += x_step
             col += 1
@@ -414,13 +427,15 @@ def tile_shape_contours(polygon, spacing, angle_deg=0.0, shape="diamonds"):
     while y <= max_y + radius:
         x = min_x - radius
         while x <= max_x + radius:
-            add_if_inside([
+            vertices = [
                 (x, y - radius),
                 (x + radius, y),
                 (x, y + radius),
                 (x - radius, y),
                 (x, y - radius),
-            ])
+            ]
+            for a, b in zip(vertices, vertices[1:]):
+                add_clipped_segment(a, b)
             x += radius * 2.0
         y += radius * 2.0
     return contours

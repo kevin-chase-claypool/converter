@@ -77,7 +77,7 @@ The exact dialect and the firmware-facing caveats are documented in
   `diagonal`, `diagonal_crosshatch`, `diamonds`, `triangular`, `hexagonal`,
   `circles`, or `dots`. `linear`, `crosshatch`, `diagonal`,
   `diagonal_crosshatch`, and `triangular` generate line lattices; `diamonds`,
-  `hexagonal`, and `circles` generate repeated touching cell outlines; `dots`
+  `hexagonal`, and `circles` generate repeated clipped cell lattices; `dots`
   generates tiny pen marks. The vector fill path treats each pattern as a full
   layer and clips pattern segments to the filled contour boundary.
 - `Shade levels > 1` turns SVG fill color into hatch density: darker fills receive

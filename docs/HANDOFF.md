@@ -162,7 +162,7 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
   `crosshatch`, `linear`, `diagonal`, `diagonal_crosshatch`, `diamonds`, `triangular`,
   `hexagonal`, `circles`, or `dots`. `linear`, `crosshatch`, `diagonal`,
   `diagonal_crosshatch`, and `triangular` generate line lattices. `diamonds`, `hexagonal`, and
-  `circles` generate repeated touching cell outlines. `dots` places tiny pen marks. Vector fills
+  `circles` generate repeated clipped cell lattices. `dots` places tiny pen marks. Vector fills
   treat the pattern as a full layer and clip pattern segments to the filled contour boundary.
 - Tone-driven SVG fill shading is implemented. `shade_levels` (Qt label "Shade levels", default 1)
   is the maximum number of hatch angle layers; `shade_angle_step_deg` (Qt label "Shade angle step",

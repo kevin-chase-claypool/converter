@@ -1097,6 +1097,20 @@ class MainWindow(QMainWindow):
             if all(view.left() <= x <= view.right() and view.top() <= y <= view.bottom() and darkness_at(x, y) >= threshold for x, y in checks):
                 contours.append([maybe_flip(point) for point in points])
 
+        seen_raster_segments = set()
+
+        def add_segment_if_dark(a, b, threshold):
+            checks = [a, b, ((a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0)]
+            if not all(view.left() <= x <= view.right() and view.top() <= y <= view.bottom() and darkness_at(x, y) >= threshold for x, y in checks):
+                return
+            key_a = (round(a[0], 5), round(a[1], 5))
+            key_b = (round(b[0], 5), round(b[1], 5))
+            key = tuple(sorted((key_a, key_b)))
+            if key in seen_raster_segments:
+                return
+            seen_raster_segments.add(key)
+            contours.append([maybe_flip(a), maybe_flip(b)])
+
         if pattern in ("circles", "dots", "diamonds", "hexagonal"):
             angle = math.radians(base_angle)
             ca, sa = math.cos(angle), math.sin(angle)
@@ -1155,12 +1169,13 @@ class MainWindow(QMainWindow):
             for layer in range(levels):
                 threshold = (layer + 1) / (levels + 1)
                 col = 0
-                x = min_rx + radius
-                while x <= max_rx - radius:
-                    y = min_ry + radius + (y_step * 0.5 if col % 2 else 0.0)
-                    while y <= max_ry - radius:
+                x = min_rx - radius
+                while x <= max_rx + radius:
+                    y = min_ry - radius + (y_step * 0.5 if col % 2 else 0.0)
+                    while y <= max_ry + radius:
                         hexagon = [world(x + math.cos(math.radians(60.0 * i)) * radius, y + math.sin(math.radians(60.0 * i)) * radius) for i in range(7)]
-                        add_shape_if_dark(hexagon, threshold)
+                        for a, b in zip(hexagon, hexagon[1:]):
+                            add_segment_if_dark(a, b, threshold)
                         y += y_step
                     x += x_step
                     col += 1
@@ -1170,12 +1185,13 @@ class MainWindow(QMainWindow):
             radius = max(spacing * 0.5, sample_step)
             for layer in range(levels):
                 threshold = (layer + 1) / (levels + 1)
-                y = min_ry + radius
-                while y <= max_ry - radius:
-                    x = min_rx + radius
-                    while x <= max_rx - radius:
+                y = min_ry - radius
+                while y <= max_ry + radius:
+                    x = min_rx - radius
+                    while x <= max_rx + radius:
                         diamond = [world(x, y - radius), world(x + radius, y), world(x, y + radius), world(x - radius, y), world(x, y - radius)]
-                        add_shape_if_dark(diamond, threshold)
+                        for a, b in zip(diamond, diamond[1:]):
+                            add_segment_if_dark(a, b, threshold)
                         x += radius * 2.0
                     y += radius * 2.0
             return contours
