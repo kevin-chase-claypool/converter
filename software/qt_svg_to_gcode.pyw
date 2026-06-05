@@ -94,6 +94,7 @@ class GLPreview(QOpenGLWidget):
         self.play_speed_mm_s = 100.0
         self.draw_count_at_move = []
         self.bounds_base = (-1.0, -1.0, 1.0, 1.0)
+        self.zoom_factor = 1.0
         self.program = None
         self.program_ok = False
         self.vertex_counts = {}
@@ -315,6 +316,32 @@ class GLPreview(QOpenGLWidget):
         self._cached_bounds = None
         self._cached_bounds_key = None
 
+    def invalidate_bounds(self):
+        self._cached_bounds = None
+        self._cached_bounds_key = None
+
+    def set_zoom(self, factor):
+        self.zoom_factor = max(0.1, min(float(factor), 20.0))
+        self.invalidate_bounds()
+        self.update()
+
+    def zoom_in(self):
+        self.set_zoom(self.zoom_factor * 1.25)
+
+    def zoom_out(self):
+        self.set_zoom(self.zoom_factor / 1.25)
+
+    def reset_zoom(self):
+        self.set_zoom(1.0)
+
+    def wheelEvent(self, event):
+        delta = event.angleDelta().y()
+        if delta == 0:
+            event.ignore()
+            return
+        self.set_zoom(self.zoom_factor * (1.15 if delta > 0 else 1.0 / 1.15))
+        event.accept()
+
     def set_fast_render(self, enabled):
         self.fast_render = bool(enabled)
         self.update()
@@ -393,7 +420,7 @@ class GLPreview(QOpenGLWidget):
         return self.interpolate_point(progress, "command_start", "command_end")
 
     def adjusted_bounds(self):
-        key = (self.width(), self.height(), self.bounds_base)
+        key = (self.width(), self.height(), self.bounds_base, self.zoom_factor)
         if self._cached_bounds is not None and self._cached_bounds_key == key:
             return self._cached_bounds
         min_x, min_y, max_x, max_y = self.bounds_base
@@ -409,6 +436,13 @@ class GLPreview(QOpenGLWidget):
             extra = span_x / view_aspect - span_y
             min_y -= extra / 2.0
             max_y += extra / 2.0
+        if self.zoom_factor != 1.0:
+            cx = (min_x + max_x) / 2.0
+            cy = (min_y + max_y) / 2.0
+            half_x = (max_x - min_x) / (2.0 * self.zoom_factor)
+            half_y = (max_y - min_y) / (2.0 * self.zoom_factor)
+            min_x, max_x = cx - half_x, cx + half_x
+            min_y, max_y = cy - half_y, cy + half_y
         bounds = (min_x, min_y, max_x, max_y)
         self._cached_bounds = bounds
         self._cached_bounds_key = key
@@ -726,6 +760,9 @@ class MainWindow(QMainWindow):
         self.slider.valueChanged.connect(self.set_index)
         controls.addWidget(self.slider, 1)
         controls.addWidget(QPushButton(">|", clicked=lambda: self.set_index(len(self.moves))))
+        controls.addWidget(QPushButton("Zoom -", clicked=lambda: self.gl_preview.zoom_out()))
+        controls.addWidget(QPushButton("Zoom +", clicked=lambda: self.gl_preview.zoom_in()))
+        controls.addWidget(QPushButton("Reset zoom", clicked=lambda: self.gl_preview.reset_zoom()))
         preview_layout.addLayout(controls)
 
         self.status = QLabel("Choose an SVG to build a preview.")
