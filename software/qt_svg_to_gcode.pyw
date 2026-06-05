@@ -716,7 +716,17 @@ class MainWindow(QMainWindow):
             for label, key, value in items:
                 if key == "hatch_pattern":
                     edit = QComboBox()
-                    edit.addItems(["crosshatch", "linear", "triangular", "hexagonal", "dots"])
+                    edit.addItems([
+                        "crosshatch",
+                        "linear",
+                        "diagonal",
+                        "diagonal_crosshatch",
+                        "diamonds",
+                        "triangular",
+                        "hexagonal",
+                        "circles",
+                        "dots",
+                    ])
                     edit.setCurrentText(value)
                 else:
                     edit = QLineEdit(value)
@@ -1065,18 +1075,24 @@ class MainWindow(QMainWindow):
         angle_step = float(getattr(settings, "shade_angle_step_deg", 90.0))
         pattern = converter.normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))
 
-        def add_dot(center, radius):
-            steps = 10
-            contours.append([
-                maybe_flip((
-                    center[0] + math.cos(2.0 * math.pi * i / steps) * radius,
-                    center[1] + math.sin(2.0 * math.pi * i / steps) * radius,
-                ))
-                for i in range(steps + 1)
-            ])
+        def add_mark(center, radius, mark):
+            if mark == "circles":
+                steps = 10
+                contours.append([
+                    maybe_flip((
+                        center[0] + math.cos(2.0 * math.pi * i / steps) * radius,
+                        center[1] + math.sin(2.0 * math.pi * i / steps) * radius,
+                    ))
+                    for i in range(steps + 1)
+                ])
+            else:
+                contours.append([
+                    maybe_flip((center[0] - radius, center[1])),
+                    maybe_flip((center[0] + radius, center[1])),
+                ])
 
-        if pattern == "dots":
-            dot_radius = max(spacing * 0.16, sample_step)
+        if pattern in ("circles", "dots"):
+            mark_radius = max(spacing * (0.16 if pattern == "circles" else 0.055), sample_step)
             row_step = spacing * math.sqrt(3.0) / 2.0
             for layer in range(levels):
                 threshold = (layer + 1) / (levels + 1)
@@ -1087,7 +1103,7 @@ class MainWindow(QMainWindow):
                     x = view.left() + spacing * (0.5 if row % 2 == 0 else 1.0) + offset
                     while x <= view.right():
                         if darkness_at(x, y) >= threshold:
-                            add_dot((x, y), dot_radius)
+                            add_mark((x, y), mark_radius, pattern)
                         x += spacing
                     y += row_step
                     row += 1
@@ -1095,6 +1111,12 @@ class MainWindow(QMainWindow):
 
         if pattern == "linear":
             offsets = (0.0,)
+            raster_spacing = spacing
+        elif pattern == "diagonal":
+            offsets = (45.0,)
+            raster_spacing = spacing
+        elif pattern in ("diagonal_crosshatch", "diamonds"):
+            offsets = (45.0, 135.0)
             raster_spacing = spacing
         elif pattern in ("triangular", "hexagonal"):
             offsets = (0.0, 60.0, 120.0)

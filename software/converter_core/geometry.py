@@ -193,13 +193,30 @@ def normalized_hatch_pattern(pattern):
         "hatch": "linear",
         "cross": "crosshatch",
         "cross_hatch": "crosshatch",
+        "grid": "crosshatch",
+        "diag": "diagonal",
+        "diagonal_cross": "diagonal_crosshatch",
+        "diagonal_cross_hatch": "diagonal_crosshatch",
+        "diamond": "diamonds",
         "triangle": "triangular",
         "tri": "triangular",
         "hex": "hexagonal",
         "hexagon": "hexagonal",
+        "circle": "circles",
         "dot": "dots",
     }
-    return aliases.get(text, text if text in {"linear", "crosshatch", "triangular", "hexagonal", "dots"} else "crosshatch")
+    supported = {
+        "linear",
+        "crosshatch",
+        "diagonal",
+        "diagonal_crosshatch",
+        "diamonds",
+        "triangular",
+        "hexagonal",
+        "circles",
+        "dots",
+    }
+    return aliases.get(text, text if text in supported else "crosshatch")
 
 
 def pattern_angles(base_angle, levels, angle_step, darkness, pattern):
@@ -207,7 +224,11 @@ def pattern_angles(base_angle, levels, angle_step, darkness, pattern):
     pattern = normalized_hatch_pattern(pattern)
     if pattern == "linear":
         return base_angles
-    if pattern == "triangular":
+    if pattern == "diagonal":
+        offsets = (45.0,)
+    elif pattern in ("diagonal_crosshatch", "diamonds"):
+        offsets = (45.0, 135.0)
+    elif pattern == "triangular":
         offsets = (0.0, 60.0, 120.0)
     elif pattern == "hexagonal":
         offsets = (0.0, 60.0, 120.0)
@@ -233,7 +254,7 @@ def point_in_polygon(point, polygon):
     return inside
 
 
-def dot_polygon(polygon, spacing, angle_deg=0.0):
+def mark_grid_contours(polygon, spacing, angle_deg=0.0, mark="dots"):
     if spacing <= 0 or len(polygon) < 3:
         return []
     ang = math.radians(angle_deg)
@@ -244,7 +265,8 @@ def dot_polygon(polygon, spacing, angle_deg=0.0):
     max_x = max(p[0] for p in rot)
     min_y = min(p[1] for p in rot)
     max_y = max(p[1] for p in rot)
-    radius = max(spacing * 0.16, 0.05)
+    circle_radius = max(spacing * 0.16, 0.05)
+    dot_radius = max(spacing * 0.055, 0.03)
     row_step = spacing * math.sqrt(3.0) / 2.0
     steps = 10
     contours = []
@@ -259,13 +281,19 @@ def dot_polygon(polygon, spacing, angle_deg=0.0):
         while x <= max_x:
             center = world(x, y)
             if point_in_polygon(center, polygon):
-                contours.append([
-                    (
-                        center[0] + math.cos(2.0 * math.pi * i / steps) * radius,
-                        center[1] + math.sin(2.0 * math.pi * i / steps) * radius,
-                    )
-                    for i in range(steps + 1)
-                ])
+                if mark == "circles":
+                    contours.append([
+                        (
+                            center[0] + math.cos(2.0 * math.pi * i / steps) * circle_radius,
+                            center[1] + math.sin(2.0 * math.pi * i / steps) * circle_radius,
+                        )
+                        for i in range(steps + 1)
+                    ])
+                else:
+                    contours.append([
+                        (center[0] - dot_radius, center[1]),
+                        (center[0] + dot_radius, center[1]),
+                    ])
             x += spacing
         y += row_step
         row += 1
@@ -274,12 +302,12 @@ def dot_polygon(polygon, spacing, angle_deg=0.0):
 
 def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern):
     pattern = normalized_hatch_pattern(pattern)
-    if pattern == "dots":
+    if pattern in ("circles", "dots"):
         active = max(0, min(max(1, int(levels)), int(math.ceil(max(0.0, min(darkness, 1.0)) * max(1, int(levels))))))
         if active <= 0:
             return []
-        dot_spacing = spacing / math.sqrt(active)
-        return dot_polygon(polygon, dot_spacing, base_angle)
+        mark_spacing = spacing / math.sqrt(active)
+        return mark_grid_contours(polygon, mark_spacing, base_angle, pattern)
     angles = pattern_angles(base_angle, levels, angle_step, darkness, pattern)
     out = []
     line_spacing = spacing * 1.5 if pattern == "hexagonal" else spacing

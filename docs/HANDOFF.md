@@ -159,9 +159,10 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
 - Triggered by any SVG element whose `fill` is not explicitly `none` / not fully transparent (SVG
   default = filled black). `hatch_spacing_mm` controls density (0 = disabled);
   `hatch_angle_deg` controls direction (default 45). `hatch_pattern` / "Fill pattern" selects
-  `crosshatch`, `linear`, `triangular`, `hexagonal`, or `dots`. Line-based patterns are clipped
-  into the filled polygon through the existing hatch scanner; dot patterns place small circular
-  contours inside the filled polygon.
+  `crosshatch`, `linear`, `diagonal`, `diagonal_crosshatch`, `diamonds`, `triangular`,
+  `hexagonal`, `circles`, or `dots`. Line-based patterns are clipped into the filled polygon
+  through the existing hatch scanner. `circles` places small outline circles inside the fill;
+  `dots` places tiny pen marks inside the fill.
 - Tone-driven SVG fill shading is implemented. `shade_levels` (Qt label "Shade levels", default 1)
   is the maximum number of hatch angle layers; `shade_angle_step_deg` (Qt label "Shade angle step",
   default 90) offsets each extra layer from `hatch_angle_deg`. Fill darkness comes from luminance
