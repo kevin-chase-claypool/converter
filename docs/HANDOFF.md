@@ -260,8 +260,9 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
 - `has_visible_fill` follows SVG defaults: any element without an explicit `fill="none"` is
   treated as filled. Stroke-only line-art SVGs that don't set `fill="none"` will over-hatch when
   `Fill spacing mm > 0` — set the spacing to 0 or add `fill="none"` in the SVG to disable.
-- Self-intersecting and composite (with-holes) polygons are hatched with even-odd parity. Usually
-  fine for autotraced SVGs; can look odd on hand-drawn composite paths.
+- Composite fill paths are hatched as one even-odd region, so holes/nested contours cut the sparse
+  infill layer instead of being hatched independently. Self-intersecting hand-drawn paths can still
+  look odd if their even-odd region is ambiguous.
 - `converter_core/` is the shared conversion **engine**. The old Tk UI has been removed; new UI work
   goes in `qt_svg_to_gcode.pyw`, while geometry, kinematics, planning, and G-code behavior stay in
   the focused core modules above. `svg_to_gcode.pyw` remains only as a compatibility shim.

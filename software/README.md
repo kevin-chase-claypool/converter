@@ -78,7 +78,8 @@ The exact dialect and the firmware-facing caveats are documented in
   `circles`, or `dots`. `linear` is always one parallel-line family; darker fills
   increase density by reducing spacing, not by changing the pattern into another
   pattern. The vector fill path treats each pattern as a full layer and clips
-  pattern segments to the filled contour boundary.
+  pattern segments to the filled contour boundary. Compound SVG paths are clipped
+  as one even-odd region, so holes cut the infill layer.
 - `Shade levels > 1` turns SVG fill color into hatch density: darker fills receive
   denser spacing while preserving the selected fill pattern.
 - `Raster shading` renders the whole SVG to a tone map first, then generates hatch

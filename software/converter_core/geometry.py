@@ -265,24 +265,31 @@ def point_in_polygon(point, polygon):
     return inside
 
 
-def clip_segment_to_polygon(a, b, polygon):
-    if len(polygon) < 3:
+def point_in_region(point, polygons):
+    return sum(1 for polygon in polygons if point_in_polygon(point, polygon)) % 2 == 1
+
+
+def clip_segment_to_region(a, b, polygons):
+    if not polygons:
         return []
     ax, ay = a
     bx, by = b
     dx, dy = bx - ax, by - ay
     ts = [0.0, 1.0]
-    pts = polygon if polygon[0] == polygon[-1] else polygon + [polygon[0]]
-    for p1, p2 in zip(pts, pts[1:]):
-        ex, ey = p2[0] - p1[0], p2[1] - p1[1]
-        denom = dx * ey - dy * ex
-        if abs(denom) <= 1e-12:
+    for polygon in polygons:
+        if len(polygon) < 3:
             continue
-        qx, qy = p1[0] - ax, p1[1] - ay
-        t = (qx * ey - qy * ex) / denom
-        u = (qx * dy - qy * dx) / denom
-        if -1e-9 <= t <= 1.0 + 1e-9 and -1e-9 <= u <= 1.0 + 1e-9:
-            ts.append(max(0.0, min(1.0, t)))
+        pts = polygon if polygon[0] == polygon[-1] else polygon + [polygon[0]]
+        for p1, p2 in zip(pts, pts[1:]):
+            ex, ey = p2[0] - p1[0], p2[1] - p1[1]
+            denom = dx * ey - dy * ex
+            if abs(denom) <= 1e-12:
+                continue
+            qx, qy = p1[0] - ax, p1[1] - ay
+            t = (qx * ey - qy * ex) / denom
+            u = (qx * dy - qy * dx) / denom
+            if -1e-9 <= t <= 1.0 + 1e-9 and -1e-9 <= u <= 1.0 + 1e-9:
+                ts.append(max(0.0, min(1.0, t)))
     ts = sorted(ts)
     deduped = []
     for t in ts:
@@ -294,7 +301,7 @@ def clip_segment_to_polygon(a, b, polygon):
             continue
         mid = (t0 + t1) / 2.0
         mid_point = (ax + dx * mid, ay + dy * mid)
-        if point_in_polygon(mid_point, polygon):
+        if point_in_region(mid_point, polygons):
             segments.append([
                 (ax + dx * t0, ay + dy * t0),
                 (ax + dx * t1, ay + dy * t1),
@@ -302,24 +309,69 @@ def clip_segment_to_polygon(a, b, polygon):
     return segments
 
 
-def clip_polyline_to_polygon(points, polygon):
+def clip_segment_to_polygon(a, b, polygon):
+    return clip_segment_to_region(a, b, [polygon])
+
+
+def clip_polyline_to_region(points, polygons):
     clipped = []
     for a, b in zip(points, points[1:]):
-        clipped.extend(clip_segment_to_polygon(a, b, polygon))
+        clipped.extend(clip_segment_to_region(a, b, polygons))
     return clipped
 
 
-def mark_grid_contours(polygon, spacing, angle_deg=0.0, mark="dots"):
-    if spacing <= 0 or len(polygon) < 3:
+def clip_polyline_to_polygon(points, polygon):
+    return clip_polyline_to_region(points, [polygon])
+
+
+def rotated_region_bounds(polygons, angle_deg):
+    ang = math.radians(angle_deg)
+    cs, sn = math.cos(-ang), math.sin(-ang)
+    points = [(x * cs - y * sn, x * sn + y * cs) for polygon in polygons for x, y in polygon]
+    if not points:
+        return (0.0, 0.0, 0.0, 0.0)
+    return (
+        min(x for x, _ in points),
+        min(y for _, y in points),
+        max(x for x, _ in points),
+        max(y for _, y in points),
+    )
+
+
+def line_region_contours(polygons, spacing, angle_deg=0.0):
+    if spacing <= 0 or not polygons:
+        return []
+    ang = math.radians(angle_deg)
+    ca, sa = math.cos(ang), math.sin(ang)
+    min_x, min_y, max_x, max_y = rotated_region_bounds(polygons, angle_deg)
+    if max_y - min_y < spacing:
+        return []
+
+    def world(x, y):
+        return (x * ca - y * sa, x * sa + y * ca)
+
+    contours = []
+    y = min_y + spacing * 0.5
+    row = 0
+    while y < max_y:
+        start = world(min_x - spacing, y)
+        end = world(max_x + spacing, y)
+        segments = clip_segment_to_region(start, end, polygons)
+        if row % 2:
+            segments = [[seg[1], seg[0]] for seg in reversed(segments)]
+        contours.extend(segments)
+        y += spacing
+        row += 1
+    return contours
+
+
+def mark_grid_contours(polygons, spacing, angle_deg=0.0, mark="dots"):
+    if spacing <= 0 or not polygons:
         return []
     ang = math.radians(angle_deg)
     cs, sn = math.cos(-ang), math.sin(-ang)
     ca, sa = math.cos(ang), math.sin(ang)
-    rot = [(x * cs - y * sn, x * sn + y * cs) for x, y in polygon]
-    min_x = min(p[0] for p in rot)
-    max_x = max(p[0] for p in rot)
-    min_y = min(p[1] for p in rot)
-    max_y = max(p[1] for p in rot)
+    min_x, min_y, max_x, max_y = rotated_region_bounds(polygons, angle_deg)
     circle_radius = max(spacing * 0.16, 0.05)
     dot_radius = max(spacing * 0.055, 0.03)
     row_step = spacing * math.sqrt(3.0) / 2.0
@@ -335,7 +387,7 @@ def mark_grid_contours(polygon, spacing, angle_deg=0.0, mark="dots"):
         x = min_x + spacing * (0.5 if row % 2 == 0 else 1.0)
         while x <= max_x:
             center = world(x, y)
-            if point_in_polygon(center, polygon):
+            if point_in_region(center, polygons):
                 if mark == "circles":
                     circle = [
                         (
@@ -344,30 +396,26 @@ def mark_grid_contours(polygon, spacing, angle_deg=0.0, mark="dots"):
                         )
                         for i in range(steps + 1)
                     ]
-                    contours.extend(clip_polyline_to_polygon(circle, polygon))
+                    contours.extend(clip_polyline_to_region(circle, polygons))
                 else:
                     dot = [
                         (center[0] - dot_radius, center[1]),
                         (center[0] + dot_radius, center[1]),
                     ]
-                    contours.extend(clip_segment_to_polygon(dot[0], dot[1], polygon))
+                    contours.extend(clip_segment_to_region(dot[0], dot[1], polygons))
             x += spacing
         y += row_step
         row += 1
     return contours
 
 
-def tile_shape_contours(polygon, spacing, angle_deg=0.0, shape="diamonds"):
-    if spacing <= 0 or len(polygon) < 3:
+def tile_shape_contours(polygons, spacing, angle_deg=0.0, shape="diamonds"):
+    if spacing <= 0 or not polygons:
         return []
     ang = math.radians(angle_deg)
     cs, sn = math.cos(-ang), math.sin(-ang)
     ca, sa = math.cos(ang), math.sin(ang)
-    rot = [(x * cs - y * sn, x * sn + y * cs) for x, y in polygon]
-    min_x = min(p[0] for p in rot)
-    max_x = max(p[0] for p in rot)
-    min_y = min(p[1] for p in rot)
-    max_y = max(p[1] for p in rot)
+    min_x, min_y, max_x, max_y = rotated_region_bounds(polygons, angle_deg)
     contours = []
 
     def world(x, y):
@@ -375,7 +423,7 @@ def tile_shape_contours(polygon, spacing, angle_deg=0.0, shape="diamonds"):
 
     def add_clipped_polyline(points):
         shaped = [world(x, y) for x, y in points]
-        contours.extend(clip_polyline_to_polygon(shaped, polygon))
+        contours.extend(clip_polyline_to_region(shaped, polygons))
 
     seen_segments = set()
 
@@ -386,7 +434,7 @@ def tile_shape_contours(polygon, spacing, angle_deg=0.0, shape="diamonds"):
         if key in seen_segments:
             return
         seen_segments.add(key)
-        contours.extend(clip_segment_to_polygon(world(*a), world(*b), polygon))
+        contours.extend(clip_segment_to_region(world(*a), world(*b), polygons))
 
     if shape == "circles":
         radius = max(spacing * 0.5, 0.05)
@@ -452,18 +500,22 @@ def tile_shape_contours(polygon, spacing, angle_deg=0.0, shape="diamonds"):
 
 
 def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern):
+    return fill_region_pattern_contours([polygon], spacing, base_angle, levels, angle_step, darkness, pattern)
+
+
+def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_step, darkness, pattern):
     pattern = normalized_hatch_pattern(pattern)
     fill_spacing = density_spacing(spacing, levels, darkness)
     if fill_spacing is None:
         return []
     if pattern == "dots":
-        return mark_grid_contours(polygon, fill_spacing, base_angle, pattern)
+        return mark_grid_contours(polygons, fill_spacing, base_angle, pattern)
     if pattern in ("circles", "diamonds", "hexagonal"):
-        return tile_shape_contours(polygon, fill_spacing, base_angle, pattern)
+        return tile_shape_contours(polygons, fill_spacing, base_angle, pattern)
     angles = pattern_angles(base_angle, levels, angle_step, darkness, pattern)
     out = []
     for angle in angles:
-        out.extend(hatch_polygon(polygon, fill_spacing, angle))
+        out.extend(line_region_contours(polygons, fill_spacing, angle))
     return out
 
 
@@ -700,9 +752,9 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
     fill_lines = []
     if hatch_spacing > 0 and has_visible_fill(element):
         darkness = fill_darkness(element)
-        for contour in contours:
-            if len(contour) >= 3:
-                fill_lines.extend(fill_pattern_contours(contour, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern))
+        fill_polygons = [contour for contour in contours if len(contour) >= 3]
+        if fill_polygons:
+            fill_lines.extend(fill_region_pattern_contours(fill_polygons, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern))
     if has_visible_stroke(element):
         contours = stroke_expanded_contours(contours, stroke_width(element))
     return contours + fill_lines
