@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RP23CNC Plotter Wiring Diagram</title>
+  <style>
+    :root {
+      --bg: #f7f8fa;
+      --panel: #ffffff;
+      --ink: #1d2733;
+      --muted: #5a6674;
+      --line: #c9d2dc;
+      --power: #c53030;
+      --ground: #2f855a;
+      --signal: #2b6cb0;
+      --motor: #805ad5;
+      --pen: #dd6b20;
+      --shadow: 0 8px 24px rgba(29, 39, 51, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.45;
+    }
+
+    main {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 28px 24px 40px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 8px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .swatch {
+      width: 18px;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--line);
+    }
+
+    .power { background: var(--power); }
+    .ground { background: var(--ground); }
+    .signal { background: var(--signal); }
+    .motor { background: var(--motor); }
+    .pen { background: var(--pen); }
+
+    .diagram {
+      overflow-x: auto;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    svg {
+      display: block;
+      min-width: 1160px;
+      width: 100%;
+      height: auto;
+    }
+
+    .box {
+      fill: #fff;
+      stroke: #9aa9b8;
+      stroke-width: 1.5;
+      rx: 8;
+    }
+
+    .box-title {
+      fill: var(--ink);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .box-note {
+      fill: var(--muted);
+      font-size: 12px;
+    }
+
+    .pin {
+      fill: var(--ink);
+      font-size: 12px;
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    .wire {
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .wire.power { stroke: var(--power); }
+    .wire.ground { stroke: var(--ground); }
+    .wire.signal { stroke: var(--signal); }
+    .wire.motor { stroke: var(--motor); }
+    .wire.pen { stroke: var(--pen); }
+
+    .label {
+      fill: var(--muted);
+      font-size: 11px;
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    .callouts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .callout {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .callout h2 {
+      margin: 0 0 7px;
+      font-size: 15px;
+    }
+
+    .callout p,
+    .callout ul {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .callout ul {
+      padding-left: 18px;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      main {
+        max-width: none;
+        padding: 12px;
+      }
+
+      .diagram,
+      .callout,
+      .legend span {
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>RP23CNC X/Y/Theta Plotter Wiring Diagram</h1>
+    <p class="subtitle">Single 12V supply with three TB6600-style external stepper drivers, STEPPERONLINE NEMA 17 motors, and a separate 5V buck converter for the DRV8833 pen pressure actuator.</p>
+
+    <div class="legend" aria-label="Wire color legend">
+      <span><i class="swatch power"></i>12V power</span>
+      <span><i class="swatch ground"></i>Ground/common return</span>
+      <span><i class="swatch signal"></i>Step/dir/enable signals</span>
+      <span><i class="swatch motor"></i>Stepper motor coil wiring</span>
+      <span><i class="swatch pen"></i>Pen actuator control/power</span>
+    </div>
+
+    <section class="diagram" aria-label="Full wiring diagram">
+      <svg viewBox="0 0 1160 820" role="img" aria-labelledby="diagram-title diagram-desc">
+        <title id="diagram-title">RP23CNC plotter wiring diagram</title>
+        <desc id="diagram-desc">A wiring diagram showing a 12V power supply feeding the RP23CNC controller, three TB6600 stepper drivers, a 5V buck converter, and a DRV8833 pen actuator driver.</desc>
+
+        <defs>
+          <marker id="arrow-power" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#c53030"></path>
+          </marker>
+          <marker id="arrow-ground" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#2f855a"></path>
+          </marker>
+          <marker id="arrow-signal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#2b6cb0"></path>
+          </marker>
+          <marker id="arrow-motor" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#805ad5"></path>
+          </marker>
+          <marker id="arrow-pen" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#dd6b20"></path>
+          </marker>
+        </defs>
+
+        <!-- Main devices -->
+        <rect class="box" x="40" y="52" width="190" height="120"></rect>
+        <text class="box-title" x="60" y="82">12V 10A PSU</text>
+        <text class="pin" x="60" y="114">+12V OUT</text>
+        <text class="pin" x="60" y="142">GND / - OUT</text>
+
+        <rect class="box" x="390" y="40" width="250" height="250"></rect>
+        <text class="box-title" x="415" y="72">RP23CNC / RP23U5XBB</text>
+        <text class="box-note" x="415" y="94">grblHAL motion controller</text>
+        <text class="pin" x="415" y="124">12V IN +</text>
+        <text class="pin" x="415" y="146">GND</text>
+        <text class="pin" x="415" y="178">X STEP / DIR / EN</text>
+        <text class="pin" x="415" y="206">Y STEP / DIR / EN</text>
+        <text class="pin" x="415" y="234">A STEP / DIR / EN</text>
+        <text class="pin" x="415" y="264">M3/M5 output to pen MCU</text>
+
+        <rect class="box" x="780" y="40" width="210" height="142"></rect>
+        <text class="box-title" x="800" y="70">TB6600 X Driver</text>
+        <text class="pin" x="800" y="100">PUL+/- DIR+/- ENA+/-</text>
+        <text class="pin" x="800" y="124">V+ / V-</text>
+        <text class="pin" x="800" y="148">A+ A- B+ B- motor out</text>
+
+        <rect class="box" x="780" y="250" width="210" height="142"></rect>
+        <text class="box-title" x="800" y="280">TB6600 Y Driver</text>
+        <text class="pin" x="800" y="310">PUL+/- DIR+/- ENA+/-</text>
+        <text class="pin" x="800" y="334">V+ / V-</text>
+        <text class="pin" x="800" y="358">A+ A- B+ B- motor out</text>
+
+        <rect class="box" x="780" y="460" width="210" height="142"></rect>
+        <text class="box-title" x="800" y="490">TB6600 A Driver</text>
+        <text class="box-note" x="800" y="512">theta bed motor</text>
+        <text class="pin" x="800" y="536">PUL+/- DIR+/- ENA+/-</text>
+        <text class="pin" x="800" y="560">V+ / V-</text>
+        <text class="pin" x="800" y="584">A+ A- B+ B- motor out</text>
+
+        <rect class="box" x="1018" y="48" width="128" height="108"></rect>
+        <text class="box-title" x="1038" y="92">X Motor</text>
+        <text class="box-note" x="1038" y="116">NEMA 17, 1.5A</text>
+        <text class="box-note" x="1038" y="136">45 Ncm</text>
+
+        <rect class="box" x="1018" y="258" width="128" height="108"></rect>
+        <text class="box-title" x="1038" y="302">Y Motor</text>
+        <text class="box-note" x="1038" y="326">NEMA 17, 1.5A</text>
+        <text class="box-note" x="1038" y="346">45 Ncm</text>
+
+        <rect class="box" x="1018" y="468" width="128" height="108"></rect>
+        <text class="box-title" x="1038" y="512">A Motor</text>
+        <text class="box-note" x="1038" y="536">NEMA 17, 1.5A</text>
+        <text class="box-note" x="1038" y="556">12:1 GT2 bed</text>
+
+        <rect class="box" x="390" y="520" width="210" height="118"></rect>
+        <text class="box-title" x="412" y="550">5V Buck Converter</text>
+        <text class="pin" x="412" y="582">VIN+ / VIN- from 12V</text>
+        <text class="pin" x="412" y="608">5V OUT / GND</text>
+
+        <rect class="box" x="720" y="650" width="210" height="120"></rect>
+        <text class="box-title" x="742" y="680">Pen MCU + DRV8833</text>
+        <text class="pin" x="742" y="710">5V / GND</text>
+        <text class="pin" x="742" y="736">IN1 / IN2 control</text>
+        <text class="pin" x="742" y="758">OUT1 / OUT2 actuator</text>
+
+        <rect class="box" x="1010" y="678" width="128" height="82"></rect>
+        <text class="box-title" x="1028" y="710">Pen Motor</text>
+        <text class="box-note" x="1028" y="734">extend/retract</text>
+
+        <!-- 12V power distribution -->
+        <path class="wire power" marker-end="url(#arrow-power)" d="M230 108 H360 H390"></path>
+        <text class="label" x="258" y="96">12V to controller</text>
+
+        <path class="wire power" marker-end="url(#arrow-power)" d="M230 108 H720 V112 H780"></path>
+        <path class="wire power" marker-end="url(#arrow-power)" d="M720 112 V322 H780"></path>
+        <path class="wire power" marker-end="url(#arrow-power)" d="M720 322 V532 H780"></path>
+        <text class="label" x="666" y="96">12V to driver V+</text>
+
+        <path class="wire power" marker-end="url(#arrow-power)" d="M230 108 H300 V562 H390"></path>
+        <text class="label" x="247" y="546">12V to buck VIN+</text>
+
+        <!-- Ground distribution -->
+        <path class="wire ground" marker-end="url(#arrow-ground)" d="M230 140 H350 V146 H390"></path>
+        <path class="wire ground" marker-end="url(#arrow-ground)" d="M350 146 V604 H390"></path>
+        <path class="wire ground" marker-end="url(#arrow-ground)" d="M350 146 H700 V132 H780"></path>
+        <path class="wire ground" marker-end="url(#arrow-ground)" d="M700 132 V342 H780"></path>
+        <path class="wire ground" marker-end="url(#arrow-ground)" d="M700 342 V552 H780"></path>
+        <text class="label" x="252" y="158">common ground</text>
+
+        <!-- Motion signals -->
+        <path class="wire signal" marker-end="url(#arrow-signal)" d="M640 178 H760 V98 H780"></path>
+        <text class="label" x="665" y="166">X STEP/DIR/EN to PUL+/DIR+/ENA+</text>
+
+        <path class="wire signal" marker-end="url(#arrow-signal)" d="M640 206 H742 V308 H780"></path>
+        <text class="label" x="648" y="232">Y STEP/DIR/EN</text>
+
+        <path class="wire signal" marker-end="url(#arrow-signal)" d="M640 234 H724 V536 H780"></path>
+        <text class="label" x="650" y="258">A STEP/DIR/EN</text>
+
+        <!-- Motor coil wiring -->
+        <path class="wire motor" marker-end="url(#arrow-motor)" d="M990 148 H1018"></path>
+        <text class="label" x="996" y="136">Black A+, Green A-, Red B+, Blue B-</text>
+
+        <path class="wire motor" marker-end="url(#arrow-motor)" d="M990 358 H1018"></path>
+        <text class="label" x="996" y="346">Black A+, Green A-, Red B+, Blue B-</text>
+
+        <path class="wire motor" marker-end="url(#arrow-motor)" d="M990 584 H1018"></path>
+        <text class="label" x="996" y="572">Black A+, Green A-, Red B+, Blue B-</text>
+
+        <!-- Pen circuit -->
+        <path class="wire pen" marker-end="url(#arrow-pen)" d="M640 264 H680 V720 H720"></path>
+        <text class="label" x="645" y="704">M3/M5 pen command</text>
+
+        <path class="wire power" marker-end="url(#arrow-power)" d="M600 608 H660 V710 H720"></path>
+        <text class="label" x="608" y="626">5V OUT</text>
+
+        <path class="wire ground" marker-end="url(#arrow-ground)" d="M600 620 H650 V730 H720"></path>
+        <text class="label" x="609" y="646">5V GND</text>
+
+        <path class="wire pen" marker-end="url(#arrow-pen)" d="M930 758 H1010"></path>
+        <text class="label" x="944" y="746">DRV8833 OUT1/OUT2</text>
+      </svg>
+    </section>
+
+    <section class="callouts">
+      <article class="callout">
+        <h2>TB6600 Signal Pattern</h2>
+        <ul>
+          <li>RP23CNC STEP goes to TB6600 PUL+.</li>
+          <li>RP23CNC DIR goes to TB6600 DIR+.</li>
+          <li>RP23CNC ENABLE goes to TB6600 ENA+.</li>
+          <li>RP23CNC GND goes to PUL-, DIR-, and ENA-.</li>
+        </ul>
+      </article>
+
+      <article class="callout">
+        <h2>Power Rule</h2>
+        <p>The 12V supply feeds the controller, all three external stepper drivers, and the separate 5V buck converter. Do not power the DRV8833 pen actuator from the RP23CNC onboard 5V rail.</p>
+      </article>
+
+      <article class="callout">
+        <h2>Stepper Motor Wiring</h2>
+        <p>The selected STEPPERONLINE 17HS15-1504S-X1 motors are 4-lead bipolar NEMA 17 steppers rated 1.5A/phase. Wire each motor to its TB6600 output as Black to A+, Green to A-, Red to B+, and Blue to B-.</p>
+      </article>
+
+      <article class="callout">
+        <h2>Driver Current</h2>
+        <p>Set each TB6600 current switch to the closest setting at or below 1.5A/phase for first testing. Increase only after checking motor temperature and missed steps.</p>
+      </article>
+
+      <article class="callout">
+        <h2>A Axis</h2>
+        <p>The A motor drives the rotary bed through a 12:1 GT2 belt reduction. The 14-inch slewing bearing supports the bed load, so the motor mainly provides controlled angular motion.</p>
+      </article>
+
+      <article class="callout">
+        <h2>Bring-Up Order</h2>
+        <p>Power the controller first, verify grblHAL communication, test one driver and motor at low current, then add Y, A, and the pen actuator one subsystem at a time.</p>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
