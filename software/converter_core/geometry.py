@@ -265,7 +265,31 @@ def point_in_polygon(point, polygon):
     return inside
 
 
+def point_on_segment(point, a, b, tol=1e-7):
+    px, py = point
+    ax, ay = a
+    bx, by = b
+    dx, dy = bx - ax, by - ay
+    length2 = dx * dx + dy * dy
+    if length2 <= tol * tol:
+        return math.hypot(px - ax, py - ay) <= tol
+    cross = (px - ax) * dy - (py - ay) * dx
+    if abs(cross) > tol * math.sqrt(length2):
+        return False
+    dot = (px - ax) * dx + (py - ay) * dy
+    return -tol <= dot <= length2 + tol
+
+
+def point_on_polygon_boundary(point, polygon, tol=1e-7):
+    if len(polygon) < 2:
+        return False
+    pts = polygon if polygon[0] == polygon[-1] else polygon + [polygon[0]]
+    return any(point_on_segment(point, a, b, tol) for a, b in zip(pts, pts[1:]))
+
+
 def point_in_region(point, polygons):
+    if any(point_on_polygon_boundary(point, polygon) for polygon in polygons):
+        return True
     return sum(1 for polygon in polygons if point_in_polygon(point, polygon)) % 2 == 1
 
 
@@ -372,6 +396,11 @@ def mark_grid_contours(polygons, spacing, angle_deg=0.0, mark="dots"):
     cs, sn = math.cos(-ang), math.sin(-ang)
     ca, sa = math.cos(ang), math.sin(ang)
     min_x, min_y, max_x, max_y = rotated_region_bounds(polygons, angle_deg)
+    margin = spacing * 2.0
+    min_x -= margin
+    max_x += margin
+    min_y -= margin
+    max_y += margin
     circle_radius = max(spacing * 0.16, 0.05)
     dot_radius = max(spacing * 0.055, 0.03)
     row_step = spacing * math.sqrt(3.0) / 2.0
@@ -416,6 +445,11 @@ def tile_shape_contours(polygons, spacing, angle_deg=0.0, shape="diamonds"):
     cs, sn = math.cos(-ang), math.sin(-ang)
     ca, sa = math.cos(ang), math.sin(ang)
     min_x, min_y, max_x, max_y = rotated_region_bounds(polygons, angle_deg)
+    margin = spacing * 2.0
+    min_x -= margin
+    max_x += margin
+    min_y -= margin
+    max_y += margin
     contours = []
 
     def world(x, y):
