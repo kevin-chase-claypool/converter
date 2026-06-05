@@ -163,7 +163,13 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
   `diagonal_crosshatch`, `diamonds`, `triangular`, `honeycomb`/`hexagonal`, `circles`, or `dots`.
   `linear` is always one parallel-line family; darker fills increase density by reducing spacing
   rather than adding unrelated angle families. Vector fills treat the pattern as a full layer and
-  clip pattern segments to the filled contour boundary.
+  clip pattern segments to the filled contour boundary. OrcaSlicer references used for this model:
+  the infill settings wiki and pattern settings wiki.
+- Sparse infill clipping now uses `clip_segment_to_region`: generated line/cell/dot segments are
+  intersected against all contours in the SVG element and retained only for even-odd-inside spans.
+  Points exactly on polygon boundaries are treated as inside, and shape/dot pattern layers are
+  generated beyond the region bounds before clipping so edge-crossing cells can be cut at the
+  boundary instead of disappearing.
 - Tone-driven SVG fill shading is implemented. `shade_levels` (Qt label "Shade levels", default 1)
   controls density steps for tone-driven fills. Fill darkness comes from luminance and opacity:
   white gets no hatch, gray gets lower-density infill, black gets denser infill. Missing fill still
@@ -261,8 +267,9 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
   treated as filled. Stroke-only line-art SVGs that don't set `fill="none"` will over-hatch when
   `Fill spacing mm > 0` — set the spacing to 0 or add `fill="none"` in the SVG to disable.
 - Composite fill paths are hatched as one even-odd region, so holes/nested contours cut the sparse
-  infill layer instead of being hatched independently. Self-intersecting hand-drawn paths can still
-  look odd if their even-odd region is ambiguous.
+  infill layer instead of being hatched independently. Regression smoke tests check that generated
+  segment midpoints remain inside a compound region with a hole. Self-intersecting hand-drawn paths
+  can still look odd if their even-odd region is ambiguous.
 - `converter_core/` is the shared conversion **engine**. The old Tk UI has been removed; new UI work
   goes in `qt_svg_to_gcode.pyw`, while geometry, kinematics, planning, and G-code behavior stay in
   the focused core modules above. `svg_to_gcode.pyw` remains only as a compatibility shim.
