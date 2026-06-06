@@ -4,6 +4,11 @@ Motion firmware for the X/Y gantry plus A/theta rotating bed axis. The selected
 controller is the Brookwood Design RP23CNC / RP23U5XBB 5-axis grblHAL controller
 based on the RP2350, with the Ethernet adapter installed.
 
+Canonical board reference:
+[`phil-barrett/RP23CNC`](https://github.com/phil-barrett/RP23CNC).
+Check its current documentation and schematics against the received board
+revision before assigning pins or applying power.
+
 Use grblHAL rather than custom motion firmware. The board provides the needed
 step-dir outputs, opto-isolated limit inputs, probe/control inputs, spindle and
 digital outputs, USB, and Ethernet.

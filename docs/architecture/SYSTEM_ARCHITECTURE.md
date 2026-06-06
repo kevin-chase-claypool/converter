@@ -1,5 +1,14 @@
 # System Architecture
 
+## Primary controller reference
+
+- RP23CNC hardware repository:
+  [`phil-barrett/RP23CNC`](https://github.com/phil-barrett/RP23CNC)
+
+Use this upstream repository for the current board documentation, schematics,
+pin assignments, assembly information, and RP23CNC-specific firmware guidance.
+Record the exact board revision used by this project before finalizing wiring.
+
 ## Subsystems
 
 | Subsystem | Responsibility | Implementation |

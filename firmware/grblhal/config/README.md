@@ -17,6 +17,9 @@ The master physical wiring record is
 Update it first; this folder should contain only the controller-specific subset
 needed to reproduce the firmware configuration.
 
+Upstream board reference:
+[`phil-barrett/RP23CNC`](https://github.com/phil-barrett/RP23CNC).
+
 Initial axis convention:
 
 | grblHAL axis | Machine axis | Unit |

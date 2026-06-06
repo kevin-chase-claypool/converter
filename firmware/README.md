@@ -3,6 +3,9 @@
 Runs on the machine side, fully separate from the host `software/`. Two
 independent subsystems:
 
+Primary RP23CNC hardware and board-support reference:
+[`phil-barrett/RP23CNC`](https://github.com/phil-barrett/RP23CNC).
+
 | Folder | Role | Target |
 |---|---|---|
 | [`grblhal/`](grblhal/) | Motion control - parses the host G-code and drives the X/Y/A steppers | RP23CNC / RP23U5XBB running grblHAL on RP2350 |

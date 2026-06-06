@@ -15,6 +15,9 @@ SVG -> host converter -> G-code -> RP23CNC/grblHAL -> X, Y, A motion
 The host converter is functional. Hardware integration and controller
 configuration are the next phase.
 
+Primary motion-controller reference:
+[`phil-barrett/RP23CNC`](https://github.com/phil-barrett/RP23CNC).
+
 ## Read in this order
 
 1. [`HANDOFF.md`](HANDOFF.md) - detailed implementation history and current behavior.

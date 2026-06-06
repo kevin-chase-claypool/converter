@@ -61,6 +61,19 @@ Add new entries at the top of the log below this line.
 
 ---
 
+### 🟩 2026-06-06 18:54:01 -0500 - SUCCESS - Promoted RP23CNC upstream reference
+
+- Status: success
+- Category: documentation, firmware
+- Summary: Added `phil-barrett/RP23CNC` as the canonical board reference in onboarding, architecture, firmware, and controller-configuration documentation.
+- Reason: Board schematics, revisions, pin assignments, and RP23CNC-specific guidance must remain traceable to the upstream hardware repository.
+- Struggle/failure: The link previously appeared only in the BOM source list and was easy to miss during controller work.
+- Evidence: https://github.com/phil-barrett/RP23CNC
+- Files/commit: `docs/START_HERE.md`, `docs/architecture/SYSTEM_ARCHITECTURE.md`, `firmware/README.md`, `firmware/grblhal/README.md`, `firmware/grblhal/config/README.md`; commit recorded after this entry.
+- Result: Controller-facing documents now point directly to the authoritative upstream repository.
+- Retry conditions: Replace the link only if the upstream project relocates.
+- Next action: Record the exact received RP23CNC board revision and archive the matching schematic before pin assignment.
+
 ### 🟥 2026-06-06 18:45:28 -0500 - STRUGGLE - Misinterpreted requested log structure
 
 - Status: struggle
