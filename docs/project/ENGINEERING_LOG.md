@@ -17,6 +17,11 @@ Do not rewrite a failed attempt as if the successful result was reached
 directly. The struggle, evidence, and recovery are part of the engineering
 record and are useful report material.
 
+The topic-based register is maintained separately in
+[`STRUGGLES_AND_REJECTED_APPROACHES.md`](STRUGGLES_AND_REJECTED_APPROACHES.md).
+When a struggle is significant or likely to recur, record the dated event here
+and update the corresponding topic there.
+
 Use Central Time and include the UTC offset in every timestamp:
 
 ```text
@@ -45,24 +50,19 @@ photo, measurement, test ID, or source document.
 
 Add new entries at the top of the log below this line.
 
-## Struggles and rejected approaches index
-
-Search this section before retrying a related approach.
-
-| Topic | What failed or was rejected | Resolution/status |
-|---|---|---|
-| OpenGL preview colors | `color_tuple()` returned `QVector4D` while callers unpacked a tuple, causing repeated `paintGL` exceptions | Return a plain tuple |
-| Bed preview transform | Bed rotation sign was reversed, so artwork moved opposite the converter model | Use positive bed theta around the preview center |
-| Theta shader uniform | PySide6 selected an integer overload for scalar `setUniformValue`, effectively sending zero | Use `setUniformValue1f` |
-| OpenGL VBO binding | Raw `glVertexAttribPointer(..., 0)` was brittle through PySide6 | Use `QOpenGLShaderProgram.setAttributeBuffer` |
-| Theta DP winding | Anchoring candidate winding to a tangent-following reference caused low-winding solutions to disappear | Use principal angles and nearest-wrap edge costs |
-| Hold-steady theta grid | A 45-degree grid was fast but parked the bed for about 94% of segments, violating the intended visible theta behavior | Grid disabled by default; retry only if throughput is prioritized |
-| Power-supply reseller data | Ubuy page mixed 30 A / 360 W text into the 12 V / 10 A product | Reject conflicting reseller text; prefer unit markings/manual |
-| Power-supply model | Reseller reported `SE-1500-12`, but physical unit is `S-120-12` | Physical label controls |
-| Fixed 5 V buck | Existing module was marginal for the 6 V actuator and had limited current margin | Replaced by adjustable B085T73CSD; fixed modules are spares |
-| QR-linked PDF extraction | PDF text extraction returned only the captured web viewer shell and initially failed on an unsupported console character | Archived PDF; use physical labels and visual/manual inspection |
-
 ---
+
+### 2026-06-06 18:55:00 -0500 - Separated struggle register from chronology
+
+- Category: documentation
+- Summary: Moved the topic-based failure and rejected-approach index into `STRUGGLES_AND_REJECTED_APPROACHES.md`, alongside this chronological log.
+- Reason: Chronology and recurrence prevention serve different lookup needs and should not be conflated.
+- Struggle/failure: The first implementation embedded the topic index inside the chronological document.
+- Evidence: Project-owner clarification.
+- Files/commit: `docs/project/ENGINEERING_LOG.md`, `docs/project/STRUGGLES_AND_REJECTED_APPROACHES.md`; commit recorded after this entry.
+- Result: Dated events remain here; consolidated technical lessons live in the adjacent register.
+- Retry conditions: Merge them again only if a future reporting requirement demonstrably benefits from one document.
+- Next action: Update both documents when a new recurring struggle is discovered.
 
 ### 2026-06-06 18:45:00 -0500 - Expanded log to preserve struggles and failures
 

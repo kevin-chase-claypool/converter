@@ -8,6 +8,9 @@ notes under `lab-notes/` so measurements and design changes can be cited later.
 The project-wide chronology is maintained in
 [`../project/ENGINEERING_LOG.md`](../project/ENGINEERING_LOG.md); use it to build
 the report timeline and locate supporting commits or lab evidence.
+The separate
+[`../project/STRUGGLES_AND_REJECTED_APPROACHES.md`](../project/STRUGGLES_AND_REJECTED_APPROACHES.md)
+supports discussion of setbacks, troubleshooting, rejected designs, and lessons learned.
 
 The report is about **integrating the subsystems** into one working pipeline:
 host conversion software → motion controller → force-controlled pen. The repo is

@@ -8,6 +8,8 @@
 > of physical connections. The HTML wiring diagram is conceptual only.
 > `project/ENGINEERING_LOG.md` is the rolling dated history. Add an entry after
 > every substantial software, hardware, wiring, test, or design session.
+> `project/STRUGGLES_AND_REJECTED_APPROACHES.md` is the adjacent topic-based
+> register for failures and lessons that future sessions must search first.
 
 Project root: `C:\Users\jacks\Documents\Claude\converter`
 
