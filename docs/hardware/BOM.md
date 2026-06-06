@@ -31,7 +31,8 @@ Do not energize a driver until coil pairs are confirmed with an ohmmeter.
 |---:|---|---|---|---|
 | 1 | Amazon ASIN B0CDQSVBFC | 1024GA20/N20 threaded gearmotor, selected listing option 6 V 200 RPM, M4 x 55 mm shaft | selected | No-load and stall current, travel limits, polarity, backlash, required force |
 | 1 | DRV8833 module | Dual H-bridge motor driver | selected | Module pinout, logic levels, supply range, continuous/peak current and cooling |
-| 1 | 5 V buck module, Amazon ASIN B0F1WB3LJ5 | Fixed 5 V step-down module; listing specifies 5-30 V input, approximately 1.5 A continuous and 1.8 A maximum output | candidate | Measure output voltage/ripple and temperature; accept only if actuator worst-case current has adequate margin below module rating |
+| 2 | Adjustable buck module, Amazon ASIN B085T73CSD | Purchased two-pack; listing specifies 4-38 V input, adjustable 1.25-36 V output, LED voltmeter/display, and 5 A maximum output | purchased | Set to 6.0 V before connecting the DRV8833; verify display accuracy, ripple, peak/continuous current, and temperature under actuator load |
+| 5 | Fixed 5 V buck module, Amazon ASIN B0F1WB3LJ5 | Existing modules; listing specifies 5-30 V input, approximately 1.5 A continuous and 1.8 A maximum output | spare | Retain for low-current 5 V loads; no longer preferred for the actuator |
 | 1 | Amazon ASIN B00XRRNCOO | HiLetgo HX711 24-bit load-cell ADC module | selected | Board data rate selection, noise, grounding, actual sample interval |
 | 1 | Amazon ASIN B07NRVML17 | uxcell 300 g wired load cell | selected | Wiring colors, excitation/signal pairs, calibration, overload margin |
 | 1 | Amazon ASIN B0CQVG659B | SparkFun TMAG5273 Qwiic 3D Hall-effect sensor | selected | I2C address/configuration, magnet geometry, usable position resolution |
@@ -70,6 +71,7 @@ These checks must pass before integrated wiring:
 - Stepper motor listing/datasheet: https://www.omc-stepperonline.com/
 - TB6600 listing: https://www.amazon.com/dp/B0FQ5GBNZ1
 - Toolhead motor: https://www.amazon.com/dp/B0CDQSVBFC
+- Selected adjustable toolhead buck converter: https://www.amazon.com/dp/B085T73CSD
 - Candidate 5 V buck converter: https://www.amazon.com/dp/B0F1WB3LJ5
 - HX711 modules: https://www.amazon.com/dp/B00XRRNCOO
 - 300 g load cell: https://www.amazon.com/dp/B07NRVML17
