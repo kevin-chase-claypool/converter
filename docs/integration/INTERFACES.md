@@ -1,5 +1,9 @@
 # Integration Interfaces
 
+Logical contracts live here. Exact terminals, conductors, wire colors, voltage
+domains, and verification status live in the authoritative
+[`../hardware/WIRING_TABLE.md`](../hardware/WIRING_TABLE.md).
+
 ## Host to grblHAL
 
 Transport is not yet fixed. Candidate transports are USB serial, Ethernet, and
@@ -43,7 +47,8 @@ converter, firmware configuration, sample files, and this document together.
 Each axis uses `STEP`, `DIR`, and common `ENABLE`. The final wiring table must be
 copied from the exact RP23CNC revision and received driver labels.
 
-Record the result in `firmware/grblhal/config/machine-settings.md`.
+Record the result in `docs/hardware/WIRING_TABLE.md` and mirror the final
+controller pin assignments in `firmware/grblhal/config/pin-map.md`.
 
 ## grblHAL to toolhead
 

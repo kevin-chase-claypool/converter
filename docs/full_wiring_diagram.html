@@ -192,6 +192,10 @@
   <main>
     <h1>RP23CNC X/Y/Theta Plotter Wiring Diagram</h1>
     <p class="subtitle">Single 12V supply with three TB6600-style external stepper drivers, STEPPERONLINE NEMA 17 motors, and a separate 5V buck converter for the DRV8833 pen pressure actuator.</p>
+    <article class="callout">
+      <h2>Concept Only - Do Not Wire From This Diagram Alone</h2>
+      <p>Terminal polarity, power distribution, and controller pin assignments are not fully verified. Use the continuously updated <a href="hardware/WIRING_TABLE.md">Master Wiring Table</a>; any connection still marked TBD must not be energized.</p>
+    </article>
 
     <div class="legend" aria-label="Wire color legend">
       <span><i class="swatch power"></i>12V power</span>
@@ -346,18 +350,16 @@
 
     <section class="callouts">
       <article class="callout">
-        <h2>TB6600 Signal Pattern</h2>
+        <h2>Proposed TB6600 Signal Pattern</h2>
         <ul>
-          <li>RP23CNC STEP goes to TB6600 PUL+.</li>
-          <li>RP23CNC DIR goes to TB6600 DIR+.</li>
-          <li>RP23CNC ENABLE goes to TB6600 ENA+.</li>
-          <li>RP23CNC GND goes to PUL-, DIR-, and ENA-.</li>
+          <li>The received driver input circuit must be verified before choosing common-anode or common-cathode wiring.</li>
+          <li>Record the final STEP, DIR, ENABLE, PUL, DIR, and ENA terminal assignments in the Master Wiring Table.</li>
         </ul>
       </article>
 
       <article class="callout">
-        <h2>Power Rule</h2>
-        <p>The 12V supply feeds the controller, all three external stepper drivers, and the separate 5V buck converter. Do not power the DRV8833 pen actuator from the RP23CNC onboard 5V rail.</p>
+        <h2>Proposed Power Architecture</h2>
+        <p>The final supply, branch fuses, grounding topology, and toolhead regulator remain TBD. Do not power the 6V actuator from the raw stepper supply.</p>
       </article>
 
       <article class="callout">

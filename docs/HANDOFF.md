@@ -4,6 +4,8 @@
 > Hardware integration planning is split into `architecture/`, `hardware/`,
 > `integration/`, `project/`, `testing/`, and `decisions/` so future AI sessions
 > do not have to reconstruct the current design from this long history.
+> `hardware/WIRING_TABLE.md` is the authoritative, continuously updated record
+> of physical connections. The HTML wiring diagram is conceptual only.
 
 Project root: `C:\Users\jacks\Documents\Claude\converter`
 

@@ -7,6 +7,8 @@
 - Keep the pen and mechanics disconnected during initial motor tests.
 - Record actual settings, instruments, firmware commit, result, and evidence.
 - A failed test is a result; do not tune around it without documenting the change.
+- Promote connection status in `docs/hardware/WIRING_TABLE.md` only after the
+  corresponding test passes.
 
 ## Phase 1 bench worksheet
 

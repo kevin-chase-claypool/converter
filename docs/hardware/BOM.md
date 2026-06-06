@@ -1,5 +1,10 @@
 # Hardware Inventory
 
+Physical connections are maintained in
+[`WIRING_TABLE.md`](WIRING_TABLE.md). The BOM says what parts exist; the wiring
+table says exactly how each conductor is connected and whether it has been
+verified.
+
 Status values: `selected`, `received`, `verified`, `rejected`, or `TBD`.
 
 ## Motion hardware

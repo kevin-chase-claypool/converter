@@ -16,7 +16,7 @@ can be edited and iterated on its own.
 
 New contributors and AI sessions should begin with
 [`docs/START_HERE.md`](docs/START_HERE.md). It links the hardware inventory,
-architecture, interface contracts, roadmap, and test plan.
+master wiring table, architecture, interface contracts, roadmap, and test plan.
 
 ## Run the converter
 
