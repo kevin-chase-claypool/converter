@@ -7,10 +7,8 @@ Use [`LAB_NOTE_TEMPLATE.md`](LAB_NOTE_TEMPLATE.md) for bench work. Keep dated
 notes under `lab-notes/` so measurements and design changes can be cited later.
 The project-wide chronology is maintained in
 [`../project/ENGINEERING_LOG.md`](../project/ENGINEERING_LOG.md); use it to build
-the report timeline and locate supporting commits or lab evidence.
-The separate
-[`../project/STRUGGLES_AND_REJECTED_APPROACHES.md`](../project/STRUGGLES_AND_REJECTED_APPROACHES.md)
-supports discussion of setbacks, troubleshooting, rejected designs, and lessons learned.
+the report timeline, locate supporting commits or lab evidence, and discuss
+setbacks, troubleshooting, rejected designs, and lessons learned in sequence.
 
 The report is about **integrating the subsystems** into one working pipeline:
 host conversion software → motion controller → force-controlled pen. The repo is
