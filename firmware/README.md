@@ -6,7 +6,7 @@ independent subsystems:
 | Folder | Role | Target |
 |---|---|---|
 | [`grblhal/`](grblhal/) | Motion control - parses the host G-code and drives the X/Y/A steppers | RP23CNC / RP23U5XBB running grblHAL on RP2350 |
-| [`pen_pressure/`](pen_pressure/) | Closed-loop pen contact-force control | separate MCU (load cell + force PID) |
+| [`pen_pressure/`](pen_pressure/) | Closed-loop pen contact-force control | RP2350 plugin/core 1 or separate MCU, pending tests |
 
 ## Why this split
 
@@ -14,8 +14,11 @@ Writing a G-code parser plus acceleration-aware motion planner from scratch is
 the hard 80% of plotter firmware. **grblHAL already does it** and has an
 RP2040/RP2350 port, so motion is configuration, not new code. The selected
 motion controller is the RP23CNC / RP23U5XBB 5-axis grblHAL controller with the
-Ethernet adapter. The pen-pressure loop is a distinct real-time concern and
-lives on its own MCU so grblHAL's timing cannot starve it, and vice versa.
+Ethernet adapter. The pen-pressure loop is a distinct real-time concern. Its
+final placement is still under evaluation: a supported RP2350 core-1/plugin
+implementation is preferred if it does not disturb grblHAL timing; otherwise it
+will use a separate MCU. See
+[`../docs/decisions/ADR-002-toolhead-placement.md`](../docs/decisions/ADR-002-toolhead-placement.md).
 
 ## Integration contract
 

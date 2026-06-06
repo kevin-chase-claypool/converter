@@ -1,5 +1,10 @@
 # Converter Handoff
 
+> For a shorter onboarding path, read [`START_HERE.md`](START_HERE.md) first.
+> Hardware integration planning is split into `architecture/`, `hardware/`,
+> `integration/`, `project/`, `testing/`, and `decisions/` so future AI sessions
+> do not have to reconstruct the current design from this long history.
+
 Project root: `C:\Users\jacks\Documents\Claude\converter`
 
 Repo layout (reorganized into components):
@@ -11,7 +16,8 @@ Repo layout (reorganized into components):
   - `converter_core/gcode.py` — G-code emission and preview move generation
   - `svg_to_gcode.pyw` — compatibility shim for old imports / command-line conversion
   - `qt_debug.log` — runtime errors after closing the app
-- `firmware/` — Pico 2 motion (grblHAL) + pen-pressure MCU (separate from `software/`)
+- `firmware/` — RP23CNC motion controller config/firmware (grblHAL) + pen-pressure MCU
+  (separate from `software/`)
 - `docs/` — this handoff + the System Integration report (`docs/report/`)
 - `samples/` — example `svg/` inputs and `gcode/` outputs
 - `converter.bat` (repo root) — launcher; `cd`s into `software/` and runs the app
@@ -139,6 +145,12 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
   machine. The net-winding cap TODO further down becomes more important when this is on.
 - Per-move `duration_ms` uses GRBL vector-feed math: `sqrt(xy_distance² + motor_theta_delta²) /
   rate × 60000`. Captures motor sweep time on rapids/travels that previously appeared instant.
+- Concentric and lattice fill modes have pen-cycle-aware keep-down bridging. `bridge_motion`
+  compares short contour-to-contour gaps against lift/travel/lower time and emits
+  `G1 ... (keep-down bridge)` when drawing the connector is cheaper. Preview uses the same logic,
+  so the estimate and saved G-code agree. Enabled for `concentric`, `triangular`, `diamonds`, and
+  `hexagonal`; other artwork still avoids arbitrary connector drawing. Gap thresholds use the
+  active pattern-specific size override when one is set, falling back to `Fill spacing mm`.
 - Final park-NE move at job end.
 - Renamed "rapid" → "travel" everywhere (settings, UI labels, move type strings, JS preview).
 
@@ -160,11 +172,21 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
   default = filled black). `hatch_spacing_mm` controls density (0 = disabled);
   `hatch_angle_deg` controls direction (default 45). `hatch_pattern` / "Fill pattern" selects
   OrcaSlicer-style sparse infill: `linear`, `crosshatch`, `diagonal`,
-  `diagonal_crosshatch`, `diamonds`, `triangular`, `honeycomb`/`hexagonal`, `circles`, or `dots`.
+  `diagonal_crosshatch`, `diamonds`, `triangular`, `honeycomb`/`hexagonal`, `circles`, `dots`,
+  `waves`, `gyroid`, `cubic`, or `concentric`.
   `linear` is always one parallel-line family; darker fills increase density by reducing spacing
   rather than adding unrelated angle families. Vector fills treat the pattern as a full layer and
   clip pattern segments to the filled contour boundary. OrcaSlicer references used for this model:
   the infill settings wiki and pattern settings wiki.
+- Pattern-specific size overrides are available for the non-basic patterns:
+  `triangle_size_mm`, `diamond_size_mm`, `hex_size_mm`, `circle_size_mm`, `dot_spacing_mm`,
+  `wave_size_mm`, `gyroid_size_mm`, `cubic_size_mm`, and `concentric_spacing_mm`. Each defaults to
+  0, which means "use Fill spacing mm"; the Qt row appears only for its selected pattern. The
+  triangular generator propagates a true 60-degree lattice through the fill and clips lattice edges
+  at the boundary; boundary cells can be partial, but interior edges stay on the three lattice
+  directions. `diamonds` and `hexagonal` use shared-vertex/shared-edge lattices rather than stamped
+  isolated cells. Lattice segment graphs are greedily chained into longer paths before planning, so
+  shared edges/corners do not force one pen cycle per edge.
 - Sparse infill clipping now uses `clip_segment_to_region`: generated line/cell/dot segments are
   intersected against all contours in the SVG element and retained only for even-odd-inside spans.
   Points exactly on polygon boundaries are treated as inside, and shape/dot pattern layers are
@@ -181,21 +203,29 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
   sampling resolution; the implementation caps the rendered max dimension at 2400 px to keep planning
   bounded. When raster shading is on, vector fill hatching is disabled and raster hatch contours are
   appended to the normal parsed vector contours.
+- For closed line-art SVGs with raster shading on, `triangular`, `diamonds`, `hexagonal`, and
+  `concentric` use a closed-centerline fallback: parse closed SVG centerlines without stroke
+  expansion, rasterize them as an even-odd fill mask, then clip the lattice/rings to the exact
+  `QPainterPath` boundary. This avoids sampling only dark stroke pixels and makes line-art behave
+  like filled regions.
 - Auto shading runs when the user selects an SVG in the Qt app. It renders a low-resolution tone
   preview and, if the 5th-to-95th percentile darkness range is meaningful, enables `Raster shading`
   and sets starter values (`Fill spacing mm = 4`, `Shade levels = 4`, `Shade angle step = 45`).
   Flat single-tone artwork is left alone so silhouettes do not unexpectedly become raster-shaded.
-- Settings.hatch_spacing_mm / hatch_angle_deg / hatch_pattern threaded through `parse_svg_geometry`
-  / `element_contours`; `shade_levels` / `shade_angle_step_deg` are threaded through the same path.
-  Qt's raw-contour cache key includes these fill-generation settings so changes invalidate the cache.
+- Settings.hatch_spacing_mm / hatch_angle_deg / hatch_pattern and the pattern-specific size map are
+  threaded through `parse_svg_geometry` / `element_contours`; `shade_levels` /
+  `shade_angle_step_deg` are threaded through the same path. Qt's raw-contour cache key includes
+  these fill-generation settings so changes invalidate the cache.
 
 ### Qt UI
 - Sidebar settings are split into focused groups:
   - **Geometry** — scale, tolerance, Flip Y, and pen-stroke compensation.
-  - **Shading** — fill spacing/angle/pattern, shade levels/angle step, raster shading, and raster sampling.
+  - **Shading** — fill spacing/angle/pattern, pattern-specific size fields, shade levels/angle
+    step, raster shading, and raster sampling. Pattern-specific rows appear only when relevant;
+    `Raster px/unit` appears only when raster shading is enabled.
   - **Motion** — draw/feed rate and travel rate.
   - **Theta kinematics** — theta axis/ratio/resolver/cost settings, plus monotonic theta.
-  - **Pen** — Z heights, pen cycle, tool offsets, pen up/down commands, plus Use Z.
+  - **Pen** — Z heights, pen up/down simulation/dwell times, tool offsets, pen up/down commands, plus Use Z.
   - **Preview settings** — print speed (mm/s), bed dia/margin, pen stroke width, preview
     colors. "Print speed" now drives **both** the runtime estimate **and** the animation pacing:
     playback runs in **real time** (`PLAYBACK_RATE = 1.0` in `qt_svg_to_gcode.pyw`) with draw moves
@@ -214,17 +244,24 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
     `GLPreview.cumulative_ms` (built via `_playback_move_ms`); `progress_after_time` must use the
     same `_playback_move_ms` for the within-move fraction. Bump `PLAYBACK_RATE` to fast-forward
     long jobs, or scrub with the slider.
-    **Update:** `_playback_move_ms` and the Qt estimated time now use full `motion_length`
-    (`hypot(xy, motor_deg)`) for draw and travel moves so smoothness / theta-tracking changes
-    affect the displayed simulation total.
+    **Update:** `_playback_move_ms` and the Qt estimated time use full `motion_length`
+    (`hypot(xy, motor_deg)`) for draw moves so smoothness / theta-tracking changes affect the
+    displayed simulation total. Travel playback/estimate is intentionally fixed at 100 mm/s using
+    `xy_length`, independent of the emitted G-code `travel_rate`, so inter-segment travel animates
+    at the expected machine travel speed.
   - **Other settings** — "Preview mode: omit theta axis" (the one knob that lives in both worlds —
     it also strips theta from the saved G-code).
 - Layout is now a `QSplitter`: left sidebar (settings + Convert/Preview buttons), centre
   GL preview with playback controls / status / estimate stacked beneath, right command list.
   Files row collapsed to one strip. Log shrunk to 60 px. Preview now gets most of the window.
-- Editing `scale`, `pen_diameter_mm`, `pen_cycle_ms`, `hatch_spacing_mm`, `hatch_angle_deg`, `hatch_pattern`,
-  `shade_levels`, `shade_angle_step_deg`, `raster_px_per_unit`, or toggling `Raster shading` /
-  `compensate_pen` re-runs the preview pipeline.
+- Preview generation is manual: editing settings no longer re-runs the pipeline automatically.
+  The user must press **Preview** to rebuild contours/moves after changing settings. Selecting an
+  SVG updates the suggested G-code path and auto-shading starter values, then waits for Preview.
+  `Print speed` still updates playback pacing for the already-built preview.
+- Non-Z pen simulation/dwell timing is split by direction: `Pen up ms` / M5 defaults to 300 ms,
+  and `Pen down ms` / M3 defaults to 600 ms. Saved G-code emits matching `G4` dwells after M5/M3.
+  The old single `pen_cycle_ms` field remains in settings for compatibility but is no longer shown
+  in the Qt Pen settings.
 
 ### OpenGL preview (`GLPreview`)
 - Vertex shader does the rotate-around-center + bounds-to-NDC normalize. Uniforms: `center`
@@ -370,7 +407,7 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
 - **Fill refinements** — fill-mode toggle (outline only / fill only / both) and optional auto fill
   spacing tied to pen stroke width for gap-free solids.
 
-### Pi Pico 2 (RP2350) firmware — **decided: RP23CNC + grblHAL + Ethernet** (NOT started)
+### RP23CNC (RP2350) firmware — **decided: RP23CNC + grblHAL + Ethernet** (NOT started)
 Hardware decision: use the **RP23CNC / RP23U5XBB 5-axis grblHAL controller** from Brookwood Design,
 with the optional Ethernet adapter. This gives the project a ready RP2350 grblHAL controller instead
 of a custom parser/motion board: X/Y/A step-dir outputs, opto-isolated limit inputs, probe/control
@@ -389,13 +426,13 @@ grblHAL setup tasks (config, not parser code):
    bed index sensor once the homing scheme is finalized.
 4. Wire grblHAL **spindle-enable output → pen pressure subsystem** as the override line:
    M3 = ENGAGE, M5 = LIFT.
-5. **Settle handshake — DONE on the converter side.** `contours_to_gcode` now emits
-   `G4 P<pen_cycle_seconds>` after every M3/M5 (only in non-Z pen mode; skipped when
-   `Pen cycle ms = 0`), via `append_pen_dwell`. So grblHAL pauses for the pen to lift before travel
-   and reach paper before drawing. The redundant per-contour-start M5 was also removed (pen is
-   always already up there), so each actuation gets exactly one dwell and the G-code matches the
-   preview. Closed-loop "wait for actual load-cell contact" is still a later upgrade via a grblHAL
-   plugin that feed-holds until a contact input.
+5. **Settle handshake — DONE on the converter side.** `contours_to_gcode` now emits direction-specific
+   dwells after M3/M5 in non-Z pen mode: M5 / `Pen up ms` defaults to `G4 P0.3`, and M3 /
+   `Pen down ms` defaults to `G4 P0.6`, via `append_pen_dwell`. So grblHAL pauses for the pen to
+   lift before travel and reach paper before drawing. The redundant per-contour-start M5 was also
+   removed (pen is always already up there), so each actuation gets exactly one dwell and the G-code
+   matches the preview. Closed-loop "wait for actual load-cell contact" is still a later upgrade via
+   a grblHAL plugin that feed-holds until a contact input.
 6. **Verify on hardware:** how grblHAL scales feed on a combined X/Y/**A** move vs the converter's
    `sqrt(xy² + motor_deg²)/F` pacing. Only affects speed/timing, not path shape.
 
@@ -405,9 +442,9 @@ Pen pressure system (independent of grblHAL):
   - `LIFT` (M5) = drive actuator open-loop to a safe retract height, force loop paused.
   - `ENGAGE` (M3) = release override; seek down slowly until the load cell trips, then hold force.
 - **Placement:** run it on a **separate MCU** that listens to the spindle-enable line (cleanest
-  first version, since grblHAL owns the Pico 2's timing). A grblHAL **plugin** on the same board is
-  the more integrated option later and is the only path that lets the pen system feed-hold grblHAL
-  until contact is confirmed.
+  first version, since grblHAL owns the RP23CNC motion timing). A grblHAL **plugin** on the same
+  controller is the more integrated option later and is the only path that lets the pen system
+  feed-hold grblHAL until contact is confirmed.
 - **ENGAGE safety:** approach rate-limit, max-seek/stall guard (abort to LIFT if no contact = missing
   paper), force clamp, force LIFT on any fault / E-stop.
 

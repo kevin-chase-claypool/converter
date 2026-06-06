@@ -1,7 +1,9 @@
 import math
 import re
 from xml.etree import ElementTree as ET
+from .settings import pattern_size_values
 
+GEOMETRY_VERSION = "2.2-patterns"  # concentric loops stay continuous and inside fill bounds
 COMMAND_RE = re.compile(r"[MmZzLlHhVvCcSsQqTtAa]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?")
 NUMBER_RE = re.compile(r"[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?")
 UNIT_RE = re.compile(r"^\s*([-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?)([a-zA-Z%]*)\s*$")
@@ -207,6 +209,15 @@ def normalized_hatch_pattern(pattern):
         "honeycomb": "hexagonal",
         "circle": "circles",
         "dot": "dots",
+        "wave": "waves",
+        "sine": "waves",
+        "sinusoidal": "waves",
+        "isometric": "cubic",
+        "iso": "cubic",
+        "cube": "cubic",
+        "concentric_ring": "concentric",
+        "rings": "concentric",
+        "inset": "concentric",
     }
     supported = {
         "linear",
@@ -218,6 +229,10 @@ def normalized_hatch_pattern(pattern):
         "hexagonal",
         "circles",
         "dots",
+        "waves",
+        "gyroid",
+        "cubic",
+        "concentric",
     }
     return aliases.get(text, text if text in supported else "crosshatch")
 
@@ -348,6 +363,78 @@ def clip_polyline_to_polygon(points, polygon):
     return clip_polyline_to_region(points, [polygon])
 
 
+def chain_segments_to_paths(segments, precision=5):
+    """Turn independent line segments into longer pen-down paths.
+
+    The lattice generators naturally produce a graph. A greedy edge traversal
+    reduces pen cycles by walking connected unused edges until it reaches a dead
+    end/branch exhaustion. Edges are still drawn once; the ordering just changes
+    from one contour per edge to one contour per graph trail.
+    """
+    clean = []
+    for segment in segments:
+        if len(segment) < 2:
+            continue
+        a, b = segment[0], segment[-1]
+        if distance(a, b) > 1e-9:
+            clean.append((a, b))
+    if not clean:
+        return []
+
+    def key(point):
+        return (round(point[0], precision), round(point[1], precision))
+
+    points = {}
+    adjacency = {}
+    for index, (a, b) in enumerate(clean):
+        ka, kb = key(a), key(b)
+        points.setdefault(ka, a)
+        points.setdefault(kb, b)
+        adjacency.setdefault(ka, []).append((index, kb))
+        adjacency.setdefault(kb, []).append((index, ka))
+
+    unused = set(range(len(clean)))
+
+    def unused_degree(k):
+        return sum(1 for edge_index, _other in adjacency.get(k, ()) if edge_index in unused)
+
+    def choose_start():
+        odd = [k for k in adjacency if unused_degree(k) % 2 == 1 and unused_degree(k) > 0]
+        if odd:
+            return min(odd, key=lambda k: unused_degree(k))
+        return next((k for k in adjacency if unused_degree(k) > 0), None)
+
+    def take_next(k, previous_key=None):
+        candidates = [(edge_index, other) for edge_index, other in adjacency.get(k, ()) if edge_index in unused]
+        if not candidates:
+            return None
+        if previous_key is not None and len(candidates) > 1:
+            non_backtrack = [item for item in candidates if item[1] != previous_key]
+            if non_backtrack:
+                candidates = non_backtrack
+        return min(candidates, key=lambda item: unused_degree(item[1]))
+
+    paths = []
+    while unused:
+        start = choose_start()
+        if start is None:
+            break
+        path_keys = [start]
+        current = start
+        previous = None
+        while True:
+            item = take_next(current, previous)
+            if item is None:
+                break
+            edge_index, other = item
+            unused.remove(edge_index)
+            previous, current = current, other
+            path_keys.append(current)
+        if len(path_keys) >= 2:
+            paths.append([points[k] for k in path_keys])
+    return paths
+
+
 def rotated_region_bounds(polygons, angle_deg):
     ang = math.radians(angle_deg)
     cs, sn = math.cos(-ang), math.sin(-ang)
@@ -368,16 +455,18 @@ def line_region_contours(polygons, spacing, angle_deg=0.0):
     ang = math.radians(angle_deg)
     ca, sa = math.cos(ang), math.sin(ang)
     min_x, min_y, max_x, max_y = rotated_region_bounds(polygons, angle_deg)
-    if max_y - min_y < spacing:
+    if max_y <= min_y:
         return []
 
     def world(x, y):
         return (x * ca - y * sa, x * sa + y * ca)
 
     contours = []
-    y = min_y + spacing * 0.5
+    # Snap to global grid so multiple angle families phase-align correctly
+    # (all families share reference lines at multiples of spacing from origin)
+    y = math.floor(min_y / spacing) * spacing
     row = 0
-    while y < max_y:
+    while y <= max_y:
         start = world(min_x - spacing, y)
         end = world(max_x + spacing, y)
         segments = clip_segment_to_region(start, end, polygons)
@@ -410,28 +499,29 @@ def mark_grid_contours(polygons, spacing, angle_deg=0.0, mark="dots"):
     def world(x, y):
         return (x * ca - y * sa, x * sa + y * ca)
 
-    y = min_y + row_step * 0.5
+    # Snap to global grid
+    y = math.floor((min_y - margin) / row_step) * row_step + row_step * 0.5
     row = 0
     while y <= max_y:
-        x = min_x + spacing * (0.5 if row % 2 == 0 else 1.0)
+        x_origin = math.floor((min_x - margin) / spacing) * spacing
+        x = x_origin + spacing * (0.5 if row % 2 == 0 else 1.0)
         while x <= max_x:
             center = world(x, y)
-            if point_in_region(center, polygons):
-                if mark == "circles":
-                    circle = [
-                        (
-                            center[0] + math.cos(2.0 * math.pi * i / steps) * circle_radius,
-                            center[1] + math.sin(2.0 * math.pi * i / steps) * circle_radius,
-                        )
-                        for i in range(steps + 1)
-                    ]
-                    contours.extend(clip_polyline_to_region(circle, polygons))
-                else:
-                    dot = [
-                        (center[0] - dot_radius, center[1]),
-                        (center[0] + dot_radius, center[1]),
-                    ]
-                    contours.extend(clip_segment_to_region(dot[0], dot[1], polygons))
+            if mark == "circles":
+                circle = [
+                    (
+                        center[0] + math.cos(2.0 * math.pi * i / steps) * circle_radius,
+                        center[1] + math.sin(2.0 * math.pi * i / steps) * circle_radius,
+                    )
+                    for i in range(steps + 1)
+                ]
+                contours.extend(clip_polyline_to_region(circle, polygons))
+            elif point_in_region(center, polygons):
+                dot = [
+                    (center[0] - dot_radius, center[1]),
+                    (center[0] + dot_radius, center[1]),
+                ]
+                contours.extend(clip_segment_to_region(dot[0], dot[1], polygons))
             x += spacing
         y += row_step
         row += 1
@@ -470,14 +560,19 @@ def tile_shape_contours(polygons, spacing, angle_deg=0.0, shape="diamonds"):
         seen_segments.add(key)
         contours.extend(clip_segment_to_region(world(*a), world(*b), polygons))
 
+    def add_grid_segment(a, b):
+        add_clipped_segment(a, b)
+
     if shape == "circles":
         radius = max(spacing * 0.5, 0.05)
         steps = 18
         row_step = radius * math.sqrt(3.0)
-        y = min_y - radius
+        # Snap to global grid so pattern is independent of polygon position
+        y = math.floor((min_y - radius) / row_step) * row_step
         row = 0
         while y <= max_y + radius:
-            x = min_x - radius + (radius if row % 2 else 0.0)
+            x_origin = math.floor((min_x - radius) / (radius * 2.0)) * (radius * 2.0)
+            x = x_origin + (radius if row % 2 else 0.0)
             while x <= max_x + radius:
                 add_clipped_polyline([
                     (
@@ -495,10 +590,13 @@ def tile_shape_contours(polygons, spacing, angle_deg=0.0, shape="diamonds"):
         radius = max(spacing * 0.5, 0.05)
         x_step = radius * 1.5
         y_step = radius * math.sqrt(3.0)
+        # Snap to global grid
+        x_origin = math.floor((min_x - radius) / x_step) * x_step
         col = 0
-        x = min_x - radius
+        x = x_origin
         while x <= max_x + radius:
-            y = min_y - radius + (y_step * 0.5 if col % 2 else 0.0)
+            y_base = math.floor((min_y - radius) / y_step) * y_step
+            y = y_base + (y_step * 0.5 if col % 2 else 0.0)
             while y <= max_y + radius:
                 vertices = [
                     (
@@ -512,40 +610,273 @@ def tile_shape_contours(polygons, spacing, angle_deg=0.0, shape="diamonds"):
                 y += y_step
             x += x_step
             col += 1
-        return contours
+        return chain_segments_to_paths(contours)
 
-    radius = max(spacing * 0.5, 0.05)
-    y = min_y - radius
-    while y <= max_y + radius:
-        x = min_x - radius
-        while x <= max_x + radius:
-            vertices = [
-                (x, y - radius),
-                (x + radius, y),
-                (x, y + radius),
-                (x - radius, y),
-                (x, y - radius),
-            ]
-            for a, b in zip(vertices, vertices[1:]):
-                add_clipped_segment(a, b)
-            x += radius * 2.0
-        y += radius * 2.0
+    if shape == "triangular":
+        side = max(spacing, 0.05)
+        row_step = side * math.sqrt(3.0) / 2.0
+        i_min = int(math.floor((min_x - max_y - side) / side)) - 2
+        i_max = int(math.ceil((max_x - min_y + side) / side)) + 2
+        j_min = int(math.floor((min_y - row_step) / row_step)) - 1
+        j_max = int(math.ceil((max_y + row_step) / row_step)) + 1
+
+        def point(i, j):
+            return ((i + j * 0.5) * side, j * row_step)
+
+        for j in range(j_min, j_max + 1):
+            for i in range(i_min, i_max + 1):
+                p = point(i, j)
+                add_grid_segment(p, point(i + 1, j))
+                add_grid_segment(p, point(i, j + 1))
+                add_grid_segment(p, point(i - 1, j + 1))
+        return chain_segments_to_paths(contours)
+
+    half = max(spacing * 0.5, 0.05)
+    x_min = int(math.floor((min_x - half) / half)) - 1
+    x_max = int(math.ceil((max_x + half) / half)) + 1
+    y_min = int(math.floor((min_y - half) / half)) - 1
+    y_max = int(math.ceil((max_y + half) / half)) + 1
+    for j in range(y_min, y_max + 1):
+        y = j * half
+        for i in range(x_min, x_max + 1):
+            x = i * half
+            # Rhombic lattice: every vertex connects to the two vertices in the
+            # next column. Adjacent diamonds share these vertices instead of
+            # being stamped as isolated cells.
+            add_grid_segment((x, y), (x + half, y + half))
+            add_grid_segment((x, y), (x + half, y - half))
+    return chain_segments_to_paths(contours)
+
+
+def wave_region_contours(polygons, spacing, angle_deg=0.0, amplitude=None, wavelength=None):
+    """Sinusoidal wave fill lines clipped to the region."""
+    if spacing <= 0 or not polygons:
+        return []
+    if amplitude is None:
+        amplitude = spacing * 0.42   # nearly-touching waves — clearly curved
+    if wavelength is None:
+        wavelength = spacing * 2.0   # longer wavelength = more obviously sinusoidal
+    ang = math.radians(angle_deg)
+    ca, sa = math.cos(ang), math.sin(ang)
+    min_x, min_y, max_x, max_y = rotated_region_bounds(polygons, angle_deg)
+    if max_y <= min_y:
+        return []
+    width = max_x - min_x + 4.0 * spacing
+    steps_per_wave = 24   # smoother curves
+
+    def world(x, y):
+        return (x * ca - y * sa, x * sa + y * ca)
+
+    contours = []
+    y = math.floor((min_y - spacing) / spacing) * spacing
+    row = 0
+    while y <= max_y + spacing:
+        n_steps = max(4, int(width / max(wavelength, 1e-6) * steps_per_wave))
+        phase = math.pi if row % 2 else 0.0
+        points = [
+            world(
+                min_x - 2.0 * spacing + i * width / n_steps,
+                y + amplitude * math.sin(2.0 * math.pi * (i / n_steps) * (width / wavelength) + phase),
+            )
+            for i in range(n_steps + 1)
+        ]
+        contours.extend(clip_polyline_to_region(points, polygons))
+        y += spacing
+        row += 1
     return contours
 
 
-def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern):
-    return fill_region_pattern_contours([polygon], spacing, base_angle, levels, angle_step, darkness, pattern)
+def gyroid_region_contours(polygons, spacing, angle_deg=0.0):
+    """Gyroid-like 2D implicit infill clipped to the region.
+
+    This follows the common slicer-style visual language: a continuous-looking
+    sinusoidal lattice, not a pair of straight hatch families.
+    """
+    if spacing <= 0 or not polygons:
+        return []
+    ang = math.radians(angle_deg)
+    ca, sa = math.cos(ang), math.sin(ang)
+    min_x, min_y, max_x, max_y = rotated_region_bounds(polygons, angle_deg)
+    if max_x <= min_x or max_y <= min_y:
+        return []
+    margin = spacing * 1.5
+    min_x -= margin
+    max_x += margin
+    min_y -= margin
+    max_y += margin
+    cell = max(spacing / 6.0, 0.1)
+    k = 2.0 * math.pi / max(spacing * 2.0, 1e-6)
+
+    def field(x, y):
+        return math.sin(x * k) * math.cos(y * k) + math.sin(y * k) * math.cos(x * k)
+
+    def world(x, y):
+        return (x * ca - y * sa, x * sa + y * ca)
+
+    def interp(p0, v0, p1, v1):
+        denom = v0 - v1
+        t = 0.5 if abs(denom) < 1e-12 else max(0.0, min(1.0, v0 / denom))
+        return (p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t)
+
+    contours = []
+    y = math.floor(min_y / cell) * cell
+    while y < max_y:
+        x = math.floor(min_x / cell) * cell
+        while x < max_x:
+            pts = [(x, y), (x + cell, y), (x + cell, y + cell), (x, y + cell)]
+            vals = [field(px, py) for px, py in pts]
+            crossings = []
+            for i, j in ((0, 1), (1, 2), (2, 3), (3, 0)):
+                vi, vj = vals[i], vals[j]
+                if (vi <= 0.0 < vj) or (vj <= 0.0 < vi):
+                    crossings.append(interp(pts[i], vi, pts[j], vj))
+            if len(crossings) == 2:
+                contours.extend(clip_segment_to_region(world(*crossings[0]), world(*crossings[1]), polygons))
+            elif len(crossings) == 4:
+                contours.extend(clip_segment_to_region(world(*crossings[0]), world(*crossings[1]), polygons))
+                contours.extend(clip_segment_to_region(world(*crossings[2]), world(*crossings[3]), polygons))
+            x += cell
+        y += cell
+    return contours
 
 
-def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_step, darkness, pattern):
+def _polygon_signed_area2(pts):
+    n = len(pts)
+    return sum(
+        (pts[i][0] * pts[(i + 1) % n][1] - pts[(i + 1) % n][0] * pts[i][1])
+        for i in range(n)
+    )
+
+
+def contour_inside_region(contour, polygons):
+    if len(contour) < 2:
+        return False
+    checks = list(contour)
+    checks.extend(((a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0) for a, b in zip(contour, contour[1:]))
+    return all(point_in_region(point, polygons) for point in checks)
+
+
+def inset_polygon_simple(polygon, offset):
+    """Inset a polygon by *offset* (positive = toward interior).
+
+    Works accurately for convex polygons; concave polygons may produce
+    self-intersections at sharp inward corners, which are left to the caller
+    to detect via area collapse.
+    """
+    pts = polygon[:-1] if (len(polygon) > 1 and polygon[0] == polygon[-1]) else list(polygon)
+    n = len(pts)
+    if n < 3:
+        return []
+    area2 = _polygon_signed_area2(pts)
+    winding = 1.0 if area2 > 0 else -1.0
+
+    new_pts = []
+    for i in range(n):
+        a = pts[(i - 1) % n]
+        b = pts[i]
+        c = pts[(i + 1) % n]
+        d1x, d1y = b[0] - a[0], b[1] - a[1]
+        d2x, d2y = c[0] - b[0], c[1] - b[1]
+        l1 = math.hypot(d1x, d1y)
+        l2 = math.hypot(d2x, d2y)
+        if l1 < 1e-9 or l2 < 1e-9:
+            new_pts.append(b)
+            continue
+        # Inward unit normals
+        n1x, n1y = -winding * d1y / l1,  winding * d1x / l1
+        n2x, n2y = -winding * d2y / l2,  winding * d2x / l2
+        # Bisector
+        bx, by = n1x + n2x, n1y + n2y
+        bl = math.hypot(bx, by)
+        if bl < 1e-9:
+            new_pts.append((b[0] + n1x * offset, b[1] + n1y * offset))
+            continue
+        dot = n1x * (bx / bl) + n1y * (by / bl)
+        if abs(dot) < 1e-9:
+            new_pts.append((b[0] + n1x * offset, b[1] + n1y * offset))
+        else:
+            d = offset / dot
+            new_pts.append((b[0] + bx / bl * d, b[1] + by / bl * d))
+
+    if len(new_pts) < 3:
+        return []
+    return new_pts + [new_pts[0]]
+
+
+def concentric_region_contours(polygons, spacing):
+    """Progressively inset each polygon ring, producing concentric contours."""
+    if spacing <= 0 or not polygons:
+        return []
+    contours = []
+    for polygon in polygons:
+        if len(polygon) < 3:
+            continue
+        outer = polygon[:-1] if (len(polygon) > 1 and polygon[0] == polygon[-1]) else list(polygon)
+        if len(outer) < 3:
+            continue
+        outer_area2 = _polygon_signed_area2(outer)
+        outer_sign = 1.0 if outer_area2 >= 0 else -1.0
+        prev_abs = abs(outer_area2)
+        current = list(polygon)
+        if not contour_inside_region(current, polygons):
+            continue
+        for _ in range(500):
+            inset = inset_polygon_simple(current, spacing)
+            if len(inset) < 3:
+                break
+            inner = inset[:-1] if inset[0] == inset[-1] else inset
+            if len(inner) < 3:
+                break
+            area2 = _polygon_signed_area2(inner)
+            abs_area2 = abs(area2)
+            # Stop if polygon inverted (winding flipped) or area grew (diverging) or collapsed
+            inner_sign = 1.0 if area2 >= 0 else -1.0
+            if inner_sign != outer_sign or abs_area2 >= prev_abs or abs_area2 < spacing * spacing * 0.25:
+                break
+            if not contour_inside_region(inset, polygons):
+                break
+            prev_abs = abs_area2
+            contours.append(inset)
+            current = inset
+    return contours
+
+
+def _pattern_spacing(pattern, fill_spacing, pattern_sizes=None, triangle_size=0.0):
+    value = 0.0
+    if pattern_sizes:
+        value = float(pattern_sizes.get(pattern, 0.0))
+    elif pattern == "triangular":
+        value = float(triangle_size)
+    return max(value if value > 0.0 else fill_spacing, 1e-6)
+
+
+def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None):
+    return fill_region_pattern_contours([polygon], spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size, pattern_sizes)
+
+
+def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None):
     pattern = normalized_hatch_pattern(pattern)
     fill_spacing = density_spacing(spacing, levels, darkness)
     if fill_spacing is None:
         return []
     if pattern == "dots":
-        return mark_grid_contours(polygons, fill_spacing, base_angle, pattern)
-    if pattern in ("circles", "diamonds", "hexagonal"):
-        return tile_shape_contours(polygons, fill_spacing, base_angle, pattern)
+        return mark_grid_contours(polygons, _pattern_spacing(pattern, fill_spacing, pattern_sizes, triangle_size), base_angle, "dots")
+    if pattern in ("circles", "diamonds", "hexagonal", "triangular"):
+        pattern_spacing = _pattern_spacing(pattern, fill_spacing, pattern_sizes, triangle_size)
+        return tile_shape_contours(polygons, pattern_spacing, base_angle, pattern)
+    if pattern == "waves":
+        return wave_region_contours(polygons, _pattern_spacing(pattern, fill_spacing, pattern_sizes, triangle_size), base_angle)
+    if pattern == "gyroid":
+        return gyroid_region_contours(polygons, _pattern_spacing(pattern, fill_spacing, pattern_sizes, triangle_size), base_angle)
+    if pattern == "concentric":
+        return concentric_region_contours(polygons, _pattern_spacing(pattern, fill_spacing, pattern_sizes, triangle_size))
+    if pattern == "cubic":
+        # Isometric cube grid: three line families at 30°, 90°, 150°
+        cubic_spacing = _pattern_spacing(pattern, fill_spacing, pattern_sizes, triangle_size)
+        out = []
+        for angle in (base_angle + 30.0, base_angle + 90.0, base_angle + 150.0):
+            out.extend(line_region_contours(polygons, cubic_spacing, angle))
+        return out
     angles = pattern_angles(base_angle, levels, angle_step, darkness, pattern)
     out = []
     for angle in angles:
@@ -760,7 +1091,7 @@ def path_to_contours(d, tolerance):
     return contours
 
 
-def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0):
+def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None):
     tag = strip_ns(element.tag)
     contours = []
     if tag == "path":
@@ -788,13 +1119,13 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
         darkness = fill_darkness(element)
         fill_polygons = [contour for contour in contours if len(contour) >= 3]
         if fill_polygons:
-            fill_lines.extend(fill_region_pattern_contours(fill_polygons, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern))
-    if has_visible_stroke(element):
+            fill_lines.extend(fill_region_pattern_contours(fill_polygons, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern, triangle_size, pattern_sizes))
+    if expand_strokes and has_visible_stroke(element):
         contours = stroke_expanded_contours(contours, stroke_width(element))
     return contours + fill_lines
 
 
-def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0):
+def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None):
     tree = ET.parse(svg_path)
     root = tree.getroot()
     height = parse_length(root.get("height"), 0.0)
@@ -824,7 +1155,7 @@ def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_ang
                 if target is not None and target_id not in seen:
                     walk(target, combined @ Matrix(e=parse_length(node.get("x")), f=parse_length(node.get("y"))), True, seen | {target_id})
             return
-        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step):
+        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step, expand_strokes, triangle_size, pattern_sizes):
             contours.append([combined.apply(x, y) for x, y in contour])
         for child in list(node):
             walk(child, combined, referenced, seen)
@@ -853,6 +1184,9 @@ def read_svg(svg_path, settings):
         str(getattr(settings, "hatch_pattern", "crosshatch")),
         int(getattr(settings, "shade_levels", 1)),
         float(getattr(settings, "shade_angle_step_deg", 90.0)),
+        True,
+        float(getattr(settings, "triangle_size_mm", 0.0)),
+        pattern_size_values(settings),
     )
     return apply_geometry_settings(contours, settings)
 
@@ -881,8 +1215,12 @@ def compensate_physical_pen_width(contours, pen_diameter):
     center_y = (min_y + max_y) / 2.0
     sx = max((span_x - pen_diameter) / span_x, 0.0) if span_x > pen_diameter else 1.0
     sy = max((span_y - pen_diameter) / span_y, 0.0) if span_y > pen_diameter else 1.0
+    # Preserve lattice angles and circular features. The old independent X/Y
+    # shrink distorted equilateral/hex patterns whenever the artwork bbox was
+    # not square.
+    scale = min(sx, sy)
     return [
-        [(center_x + (x - center_x) * sx, center_y + (y - center_y) * sy) for x, y in contour]
+        [(center_x + (x - center_x) * scale, center_y + (y - center_y) * scale) for x, y in contour]
         for contour in contours
     ]
 
@@ -998,5 +1336,3 @@ def clip_contours_to_bed(contours, center, radius):
         if len(current) >= 2:
             out.append(current)
     return out
-
-

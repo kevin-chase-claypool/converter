@@ -23,12 +23,23 @@ class Settings:
     hatch_spacing_mm: float = 0.0
     hatch_angle_deg: float = 45.0
     hatch_pattern: str = "crosshatch"
+    triangle_size_mm: float = 0.0
+    diamond_size_mm: float = 0.0
+    hex_size_mm: float = 0.0
+    circle_size_mm: float = 0.0
+    dot_spacing_mm: float = 0.0
+    wave_size_mm: float = 0.0
+    gyroid_size_mm: float = 0.0
+    cubic_size_mm: float = 0.0
+    concentric_spacing_mm: float = 0.0
     shade_levels: int = 1
     shade_angle_step_deg: float = 90.0
     raster_shading: bool = False
     raster_px_per_unit: float = 2.0
     pen_diameter_mm: float = 0.3
     pen_cycle_ms: float = 100.0
+    pen_up_ms: float = 300.0
+    pen_down_ms: float = 600.0
     tool_offset_x_mm: float = 34.544
     tool_offset_y_mm: float = -13.538
     pen_up_command: str = "M5"
@@ -48,6 +59,15 @@ TEXT_FIELD_GROUPS = (
         ("Fill spacing mm", "hatch_spacing_mm", "0"),
         ("Fill angle deg", "hatch_angle_deg", "45"),
         ("Fill pattern", "hatch_pattern", "crosshatch"),
+        ("Triangle size mm", "triangle_size_mm", "0"),
+        ("Diamond size mm", "diamond_size_mm", "0"),
+        ("Hex size mm", "hex_size_mm", "0"),
+        ("Circle size mm", "circle_size_mm", "0"),
+        ("Dot spacing mm", "dot_spacing_mm", "0"),
+        ("Wave size mm", "wave_size_mm", "0"),
+        ("Gyroid size mm", "gyroid_size_mm", "0"),
+        ("Cubic size mm", "cubic_size_mm", "0"),
+        ("Concentric spacing mm", "concentric_spacing_mm", "0"),
         ("Shade levels", "shade_levels", "1"),
         ("Shade angle step", "shade_angle_step_deg", "90"),
         ("Raster px/unit", "raster_px_per_unit", "2"),
@@ -70,7 +90,8 @@ TEXT_FIELD_GROUPS = (
     ("Pen", (
         ("Safe Z", "safe_z", "5"),
         ("Work Z", "work_z", "0"),
-        ("Pen cycle ms", "pen_cycle_ms", "100"),
+        ("Pen up ms", "pen_up_ms", "300"),
+        ("Pen down ms", "pen_down_ms", "600"),
         ("Tool offset X mm", "tool_offset_x_mm", "34.544"),
         ("Tool offset Y mm", "tool_offset_y_mm", "-13.538"),
         ("Pen up cmd", "pen_up_command", "M5"),
@@ -94,6 +115,29 @@ CHECKBOX_FIELDS = (
 )
 
 SETTING_TYPES = {field.name: field.type for field in fields(Settings)}
+
+PATTERN_SIZE_FIELDS = {
+    "triangular": "triangle_size_mm",
+    "diamonds": "diamond_size_mm",
+    "hexagonal": "hex_size_mm",
+    "circles": "circle_size_mm",
+    "dots": "dot_spacing_mm",
+    "waves": "wave_size_mm",
+    "gyroid": "gyroid_size_mm",
+    "cubic": "cubic_size_mm",
+    "concentric": "concentric_spacing_mm",
+}
+
+
+def pattern_size_values(settings):
+    return {pattern: float(getattr(settings, field, 0.0)) for pattern, field in PATTERN_SIZE_FIELDS.items()}
+
+
+def pattern_size_override(pattern, fallback, values=None):
+    value = 0.0
+    if values:
+        value = float(values.get(pattern, 0.0))
+    return value if value > 0.0 else fallback
 
 
 def coerce_setting(name, text):

@@ -3,6 +3,9 @@
 Working area for the end-of-semester report on this project. Drop drafts, figures,
 and exports here.
 
+Use [`LAB_NOTE_TEMPLATE.md`](LAB_NOTE_TEMPLATE.md) for bench work. Keep dated
+notes under `lab-notes/` so measurements and design changes can be cited later.
+
 The report is about **integrating the subsystems** into one working pipeline:
 host conversion software → motion controller → force-controlled pen. The repo is
 organized along those subsystem lines so each maps to a report section.

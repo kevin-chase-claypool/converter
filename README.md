@@ -10,9 +10,13 @@ can be edited and iterated on its own.
 | Folder | What it is | Language / target |
 |---|---|---|
 | [`software/`](software/) | Host desktop app: SVG → G-code converter with a live Qt/OpenGL preview | Python 3 + PySide6 |
-| [`firmware/`](firmware/) | Machine controller (motion via grblHAL) + the pen-pressure control system | grblHAL on Pi Pico 2 (RP2350); separate MCU for the force loop |
+| [`firmware/`](firmware/) | Machine controller (motion via grblHAL) + the pen-pressure control system | grblHAL on RP23CNC; toolhead placement pending tests |
 | [`docs/`](docs/) | Design/handoff notes and the System Integration in Robotics report | Markdown |
 | [`samples/`](samples/) | Example SVG inputs and generated G-code outputs | assets |
+
+New contributors and AI sessions should begin with
+[`docs/START_HERE.md`](docs/START_HERE.md). It links the hardware inventory,
+architecture, interface contracts, roadmap, and test plan.
 
 ## Run the converter
 

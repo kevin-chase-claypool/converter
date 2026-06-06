@@ -1,6 +1,7 @@
 import math
 
-from .geometry import distance, filtered_contour, unwrap_angle
+from .geometry import distance, filtered_contour, normalized_hatch_pattern, unwrap_angle
+from .settings import pattern_size_override, pattern_size_values
 
 def bed_to_machine(point, bed_theta, center):
     angle = math.radians(bed_theta)
@@ -566,7 +567,7 @@ def contour_entry_cost(start_machine, first_theta, previous_machine, previous_th
     # The r-theta sand-table lesson: pick contours so the bed never reverses;
     # the motor stays accelerated, backlash is constant-sign, and the visual
     # reads as a continuous sweep instead of jerking back and forth.
-    pen_cycle_ms = max(float(getattr(settings, "pen_cycle_ms", 100.0)), 0.0) * 2.0
+    pen_cycle_ms = max(float(getattr(settings, "pen_up_ms", 300.0)), 0.0) + max(float(getattr(settings, "pen_down_ms", 600.0)), 0.0)
     if previous_machine is None:
         return pen_cycle_ms
     travel_cost = distance(previous_machine, start_machine)
@@ -583,6 +584,20 @@ def contour_entry_cost(start_machine, first_theta, previous_machine, previous_th
             theta_cost = (360.0 - abs(delta)) * theta_weight
     else:
         theta_cost = abs(delta) * theta_weight
+    pattern = normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))
+    spacing = max(float(getattr(settings, "hatch_spacing_mm", 0.0)), 0.0)
+    spacing = pattern_size_override(pattern, spacing, pattern_size_values(settings))
+    if pattern in ("concentric", "triangular", "diamonds", "hexagonal") and spacing > 0.0:
+        pattern_gap = spacing * (1.35 if pattern == "concentric" else 0.85)
+        max_gap = max(pattern_gap, float(getattr(settings, "pen_diameter_mm", 0.0)) * 6.0)
+        if 1e-9 < travel_cost <= max_gap:
+            ratio = max(float(getattr(settings, "theta_drive_ratio", 1.0)), 1e-9)
+            motor_delta = abs(delta) * ratio
+            motion_len = math.hypot(travel_cost, motor_delta)
+            draw_ms = motion_len / max(float(getattr(settings, "feed_rate", 1.0)), 1e-9) * 60000.0
+            travel_ms = motion_len / max(float(getattr(settings, "travel_rate", 1.0)), 1e-9) * 60000.0
+            if draw_ms < travel_ms + pen_cycle_ms:
+                return math.hypot(travel_cost, theta_cost)
     return travel_cost + theta_cost + pen_cycle_ms
 
 

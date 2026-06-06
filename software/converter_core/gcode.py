@@ -1,8 +1,9 @@
 import math
 import re
 
-from .geometry import clip_contours_to_bed, contour_center, distance, format_float, read_svg
+from .geometry import clip_contours_to_bed, contour_center, distance, format_float, normalized_hatch_pattern, read_svg
 from .kinematics import bed_to_machine, ne_park_position, planned_contours, plan_contour_thetas, tool_to_command
+from .settings import pattern_size_override, pattern_size_values
 
 def append_custom_command(lines, command):
     for raw_line in (command or "").replace(";", "\n").splitlines():
@@ -11,14 +12,22 @@ def append_custom_command(lines, command):
             lines.append(line)
 
 
-def append_pen_dwell(lines, settings):
+def pen_up_duration_ms(settings):
+    return max(float(getattr(settings, "pen_up_ms", 300.0)), 0.0)
+
+
+def pen_down_duration_ms(settings):
+    return max(float(getattr(settings, "pen_down_ms", 600.0)), 0.0)
+
+
+def append_pen_dwell(lines, settings, direction):
     # Pause after an M3/M5 pen actuation so the pen reaches the paper (or lifts
     # clear) before motion resumes. grblHAL runs the next line immediately after
     # M3/M5, so without this the pen would drag or start a stroke mid-air. In Z
     # mode the pen move is itself a timed motion, so no dwell is needed.
     if settings.include_z:
         return
-    ms = float(getattr(settings, "pen_cycle_ms", 0.0))
+    ms = pen_down_duration_ms(settings) if direction == "down" else pen_up_duration_ms(settings)
     if ms > 0:
         lines.append(f"G4 P{format_float(ms / 1000.0)}")
 
@@ -26,6 +35,35 @@ def append_pen_dwell(lines, settings):
 def format_xy_command(point, settings):
     x, y = tool_to_command(point, settings)
     return f"X{format_float(x)} Y{format_float(y)}"
+
+
+def bridge_motion(prev_machine, prev_motor_theta, next_machine, next_motor_theta, settings):
+    pattern = normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))
+    bridge_patterns = {"concentric", "triangular", "diamonds", "hexagonal"}
+    if pattern not in bridge_patterns:
+        return None
+    xy_len = distance(prev_machine, next_machine)
+    spacing = max(float(getattr(settings, "hatch_spacing_mm", 0.0)), 0.0)
+    spacing = pattern_size_override(pattern, spacing, pattern_size_values(settings))
+    if spacing <= 0.0:
+        return None
+    pattern_gap = spacing * (1.35 if pattern == "concentric" else 0.85)
+    max_gap = max(pattern_gap, float(getattr(settings, "pen_diameter_mm", 0.0)) * 6.0)
+    if xy_len <= 1e-9 or xy_len > max_gap:
+        return None
+    motor_delta = abs(next_motor_theta - prev_motor_theta)
+    motion_len = math.hypot(xy_len, motor_delta)
+    draw_ms = motion_len / max(float(getattr(settings, "feed_rate", 1.0)), 1e-9) * 60000.0
+    travel_ms = motion_len / max(float(getattr(settings, "travel_rate", 1.0)), 1e-9) * 60000.0
+    lift_lower_ms = pen_up_duration_ms(settings) + pen_down_duration_ms(settings)
+    if draw_ms >= travel_ms + lift_lower_ms:
+        return None
+    return {
+        "xy_len": xy_len,
+        "motor_delta": motor_delta,
+        "motion_len": motion_len,
+        "duration_ms": draw_ms,
+    }
 
 
 def contours_to_gcode(contours, settings):
@@ -39,8 +77,9 @@ def contours_to_gcode(contours, settings):
         lines.append(f"G0 Z{format_float(settings.safe_z)}")
     else:
         append_custom_command(lines, settings.pen_up_command)
-        append_pen_dwell(lines, settings)
+        append_pen_dwell(lines, settings, "up")
 
+    planned_jobs = []
     previous_theta = None
     previous_machine = None
     for planned in planned_contours(contours, settings, center):
@@ -48,27 +87,48 @@ def contours_to_gcode(contours, settings):
         thetas, strategies = plan_contour_thetas(pts, settings, previous_theta, center, previous_machine)
         if not thetas:
             continue
+        planned_jobs.append((planned, pts, thetas, strategies))
+        previous_theta = thetas[-1]
+        previous_machine = bed_to_machine(pts[-1], thetas[-1], center)
+
+    previous_machine = None
+    previous_motor_theta = 0.0
+    pen_is_down = False
+    for planned, pts, thetas, strategies in planned_jobs:
         first_theta = thetas[0]
 
         x0, y0 = bed_to_machine(pts[0], first_theta, center)
         first_motor_theta = first_theta * settings.theta_drive_ratio
         lines.append(f"(contour {planned['index'] + 1}{' reversed' if planned.get('reversed') else ''})")
-        if settings.include_z:
+        bridge = None if previous_machine is None else bridge_motion(previous_machine, previous_motor_theta, (x0, y0), first_motor_theta, settings)
+        if bridge and pen_is_down:
             if settings.preview_xy_only:
-                lines.append(f"G0 {format_xy_command((x0, y0), settings)} Z{format_float(settings.safe_z)}")
+                lines.append(f"G1 {format_xy_command((x0, y0), settings)} F{format_float(settings.feed_rate)} (keep-down bridge)")
             else:
-                lines.append(f"G0 {format_xy_command((x0, y0), settings)} {axis}{format_float(first_motor_theta)} Z{format_float(settings.safe_z)}")
-            lines.append(f"G1 Z{format_float(settings.work_z)} F{format_float(settings.feed_rate)}")
+                lines.append(f"G1 {format_xy_command((x0, y0), settings)} {axis}{format_float(first_motor_theta)} F{format_float(settings.feed_rate)} (keep-down bridge)")
         else:
-            # Pen is already up here (initial lift, or the previous contour's
-            # end lift), so travel straight to the start — no redundant M5/dwell.
-            if settings.preview_xy_only:
-                lines.append(f"G0 {format_xy_command((x0, y0), settings)}")
+            if pen_is_down:
+                if settings.include_z:
+                    lines.append(f"G0 Z{format_float(settings.safe_z)}")
+                else:
+                    append_custom_command(lines, settings.pen_up_command)
+                    append_pen_dwell(lines, settings, "up")
+                pen_is_down = False
+            if settings.include_z:
+                if settings.preview_xy_only:
+                    lines.append(f"G0 {format_xy_command((x0, y0), settings)} Z{format_float(settings.safe_z)}")
+                else:
+                    lines.append(f"G0 {format_xy_command((x0, y0), settings)} {axis}{format_float(first_motor_theta)} Z{format_float(settings.safe_z)}")
+                lines.append(f"G1 Z{format_float(settings.work_z)} F{format_float(settings.feed_rate)}")
             else:
-                lines.append(f"G0 {format_xy_command((x0, y0), settings)} {axis}{format_float(first_motor_theta)}")
-            append_custom_command(lines, settings.pen_down_command)
-            append_pen_dwell(lines, settings)
-            lines.append(f"G1 F{format_float(settings.feed_rate)}")
+                if settings.preview_xy_only:
+                    lines.append(f"G0 {format_xy_command((x0, y0), settings)}")
+                else:
+                    lines.append(f"G0 {format_xy_command((x0, y0), settings)} {axis}{format_float(first_motor_theta)}")
+                append_custom_command(lines, settings.pen_down_command)
+                append_pen_dwell(lines, settings, "down")
+                lines.append(f"G1 F{format_float(settings.feed_rate)}")
+            pen_is_down = True
 
         for k in range(len(pts) - 1):
             a, b = pts[k], pts[k + 1]
@@ -84,12 +144,14 @@ def contours_to_gcode(contours, settings):
                 lines.append(f"G1 {format_xy_command((x, y), settings)} {axis}{format_float(motor_theta)} F{format_float(settings.feed_rate)} ({strategy})")
         previous_theta = thetas[-1]
         previous_machine = bed_to_machine(pts[-1], thetas[-1], center)
+        previous_motor_theta = previous_theta * settings.theta_drive_ratio
 
+    if pen_is_down:
         if settings.include_z:
             lines.append(f"G0 Z{format_float(settings.safe_z)}")
         else:
             append_custom_command(lines, settings.pen_up_command)
-            append_pen_dwell(lines, settings)
+            append_pen_dwell(lines, settings, "up")
     if previous_machine is not None:
         park_x, park_y = ne_park_position(center, settings)
         if settings.preview_xy_only or previous_theta is None:
@@ -118,20 +180,31 @@ def build_preview_moves(contours, settings):
     previous_theta = None
     previous_motor_theta = 0.0
     axis = re.sub(r"[^A-Za-z]", "", settings.theta_axis.upper())[:1] or "A"
+    planned_jobs = []
+    previous_machine = None
     for planned in planned_contours(contours, settings, center):
         contour_index = planned["index"]
         path = planned["path"]
-        thetas, strategies = plan_contour_thetas(path, settings, previous_theta, center, last_machine_end)
+        thetas, strategies = plan_contour_thetas(path, settings, previous_theta, center, previous_machine)
         if not thetas:
             continue
+        planned_jobs.append((planned, contour_index, path, thetas, strategies))
+        previous_theta = thetas[-1]
+        previous_machine = bed_to_machine(path[-1], thetas[-1], center)
+
+    previous_theta = None
+    previous_motor_theta = 0.0
+    pen_is_down = False
+    for planned, contour_index, path, thetas, strategies in planned_jobs:
         first_theta = thetas[0]
 
         machine_start = bed_to_machine(path[0], first_theta, center)
         command_start = tool_to_command(machine_start, settings)
         first_motor_theta = first_theta * settings.theta_drive_ratio
+        bridge = None if last_machine_end is None else bridge_motion(last_machine_end, previous_motor_theta, machine_start, first_motor_theta, settings)
         if last_machine_end is None:
             pen_up = f"G0 Z{format_float(settings.safe_z)}" if settings.include_z else (settings.pen_up_command or "(pen up)")
-            moves.append({"type": "pen_up", "start": machine_start, "end": machine_start, "command_start": command_start, "command_end": command_start, "bed_start": path[0], "bed_end": path[0], "contour": contour_index, "duration_ms": max(float(getattr(settings, "pen_cycle_ms", 100.0)), 0.0), "gcode": pen_up})
+            moves.append({"type": "pen_up", "start": machine_start, "end": machine_start, "command_start": command_start, "command_end": command_start, "bed_start": path[0], "bed_end": path[0], "contour": contour_index, "duration_ms": pen_up_duration_ms(settings), "gcode": pen_up})
             g0 = f"G0 {format_xy_command(machine_start, settings)}"
             if not settings.preview_xy_only:
                 g0 += f" {axis}{format_float(first_motor_theta)}"
@@ -139,20 +212,50 @@ def build_preview_moves(contours, settings):
             initial_travel_ms = initial_motor_delta / max(settings.travel_rate, 1e-9) * 60000.0
             moves.append({"type": "travel", "start": machine_start, "end": machine_start, "command_start": command_start, "command_end": command_start, "bed_start": path[0], "bed_end": path[0], "bed_theta": first_theta, "motor_theta": first_motor_theta, "contour": contour_index, "duration_ms": initial_travel_ms, "motion_length": initial_motor_delta, "xy_length": 0.0, "gcode": g0})
             previous_motor_theta = first_motor_theta
-        elif distance(last_machine_end, machine_start) > 1e-9 or abs(first_motor_theta - previous_motor_theta) > 1e-9:
-            travel_xy = distance(last_machine_end, machine_start)
-            travel_motor = abs(first_motor_theta - previous_motor_theta)
-            travel_len = math.hypot(travel_xy, travel_motor)
-            travel_ms = travel_len / max(settings.travel_rate, 1e-9) * 60000.0
-            g0 = f"G0 {format_xy_command(machine_start, settings)}"
+        elif bridge and pen_is_down:
+            gcode = f"G1 {format_xy_command(machine_start, settings)}"
             if not settings.preview_xy_only:
-                g0 += f" {axis}{format_float(first_motor_theta)}"
-            moves.append({"type": "travel", "start": last_machine_end, "end": machine_start, "command_start": tool_to_command(last_machine_end, settings), "command_end": command_start, "bed_start": path[0], "bed_end": path[0], "bed_theta": first_theta, "motor_theta": first_motor_theta, "contour": contour_index, "duration_ms": travel_ms, "motion_length": travel_len, "xy_length": travel_xy, "gcode": g0})
+                gcode += f" {axis}{format_float(first_motor_theta)}"
+            gcode += f" F{format_float(settings.feed_rate)} (keep-down bridge)"
+            moves.append({
+                "type": "draw",
+                "start": last_machine_end,
+                "end": machine_start,
+                "command_start": tool_to_command(last_machine_end, settings),
+                "command_end": command_start,
+                "bed_start": path[0],
+                "bed_end": path[0],
+                "bed_theta": first_theta,
+                "motor_theta": first_motor_theta,
+                "strategy": "keep_down_bridge",
+                "contour": contour_index,
+                "duration_ms": bridge["duration_ms"],
+                "motion_length": bridge["motion_len"],
+                "xy_length": bridge["xy_len"],
+                "gcode": gcode,
+            })
             previous_motor_theta = first_motor_theta
+        else:
+            if pen_is_down:
+                pen_up = f"G0 Z{format_float(settings.safe_z)}" if settings.include_z else (settings.pen_up_command or "(pen up)")
+                moves.append({"type": "pen_up", "start": last_machine_end, "end": last_machine_end, "command_start": tool_to_command(last_machine_end, settings), "command_end": tool_to_command(last_machine_end, settings), "bed_start": path[0], "bed_end": path[0], "contour": contour_index, "duration_ms": pen_up_duration_ms(settings), "gcode": pen_up})
+                pen_is_down = False
+            if distance(last_machine_end, machine_start) > 1e-9 or abs(first_motor_theta - previous_motor_theta) > 1e-9:
+                travel_xy = distance(last_machine_end, machine_start)
+                travel_motor = abs(first_motor_theta - previous_motor_theta)
+                travel_len = math.hypot(travel_xy, travel_motor)
+                travel_ms = travel_len / max(settings.travel_rate, 1e-9) * 60000.0
+                g0 = f"G0 {format_xy_command(machine_start, settings)}"
+                if not settings.preview_xy_only:
+                    g0 += f" {axis}{format_float(first_motor_theta)}"
+                moves.append({"type": "travel", "start": last_machine_end, "end": machine_start, "command_start": tool_to_command(last_machine_end, settings), "command_end": command_start, "bed_start": path[0], "bed_end": path[0], "bed_theta": first_theta, "motor_theta": first_motor_theta, "contour": contour_index, "duration_ms": travel_ms, "motion_length": travel_len, "xy_length": travel_xy, "gcode": g0})
+                previous_motor_theta = first_motor_theta
 
-        pen_down = f"G1 Z{format_float(settings.work_z)} F{format_float(settings.feed_rate)}" if settings.include_z else (settings.pen_down_command or "(pen down)")
-        moves.append({"type": "pen_down", "start": machine_start, "end": machine_start, "command_start": command_start, "command_end": command_start, "bed_start": path[0], "bed_end": path[0], "contour": contour_index, "duration_ms": max(float(getattr(settings, "pen_cycle_ms", 100.0)), 0.0), "gcode": pen_down})
-        moves.append({"type": "feed", "start": machine_start, "end": machine_start, "command_start": command_start, "command_end": command_start, "bed_start": path[0], "bed_end": path[0], "contour": contour_index, "duration_ms": 0, "gcode": f"G1 F{format_float(settings.feed_rate)}"})
+        if not pen_is_down:
+            pen_down = f"G1 Z{format_float(settings.work_z)} F{format_float(settings.feed_rate)}" if settings.include_z else (settings.pen_down_command or "(pen down)")
+            moves.append({"type": "pen_down", "start": machine_start, "end": machine_start, "command_start": command_start, "command_end": command_start, "bed_start": path[0], "bed_end": path[0], "contour": contour_index, "duration_ms": pen_down_duration_ms(settings), "gcode": pen_down})
+            moves.append({"type": "feed", "start": machine_start, "end": machine_start, "command_start": command_start, "command_end": command_start, "bed_start": path[0], "bed_end": path[0], "contour": contour_index, "duration_ms": 0, "gcode": f"G1 F{format_float(settings.feed_rate)}"})
+            pen_is_down = True
 
         last_machine = machine_start
         for k in range(len(path) - 1):
@@ -192,11 +295,11 @@ def build_preview_moves(contours, settings):
             })
             last_machine = machine_end
         previous_theta = thetas[-1]
-
-        pen_up = f"G0 Z{format_float(settings.safe_z)}" if settings.include_z else (settings.pen_up_command or "(pen up)")
-        moves.append({"type": "pen_up", "start": last_machine, "end": last_machine, "command_start": tool_to_command(last_machine, settings), "command_end": tool_to_command(last_machine, settings), "bed_start": path[-1], "bed_end": path[-1], "contour": contour_index, "duration_ms": max(float(getattr(settings, "pen_cycle_ms", 100.0)), 0.0), "gcode": pen_up})
         last_machine_end = last_machine
     if last_machine_end is not None:
+        if pen_is_down:
+            pen_up = f"G0 Z{format_float(settings.safe_z)}" if settings.include_z else (settings.pen_up_command or "(pen up)")
+            moves.append({"type": "pen_up", "start": last_machine_end, "end": last_machine_end, "command_start": tool_to_command(last_machine_end, settings), "command_end": tool_to_command(last_machine_end, settings), "bed_start": last_machine_end, "bed_end": last_machine_end, "contour": None, "duration_ms": pen_up_duration_ms(settings), "gcode": pen_up})
         park = ne_park_position(center, settings)
         command_park = tool_to_command(park, settings)
         park_motor_theta = previous_theta * settings.theta_drive_ratio if previous_theta is not None else 0.0
