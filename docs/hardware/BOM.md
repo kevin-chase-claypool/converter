@@ -12,7 +12,7 @@ Status values: `selected`, `received`, `verified`, `rejected`, or `TBD`.
 | Qty | Item | Known information | Status | Verification needed |
 |---:|---|---|---|---|
 | 1 | RP23CNC / RP23U5XBB | RP235x grblHAL breakout; 5 axes; step/dir/enable; limit inputs; Ethernet option | selected | Exact board revision, assembled options, pin map, firmware board target |
-| 1 | MEISHILE SMPS, Amazon ASIN B0781ZJ7GP | Fanless enclosed constant-voltage supply; listing specifies 100-240 VAC input, 12 VDC adjustable about 11-12.6 V, 10 A, 120 W nominal | selected | Received label and terminals, protective-earth connection, measured output, branch fusing, continuous-load thermal margin |
+| 1 | MEISHILE SMPS, Amazon ASIN B0781ZJ7GP | Fanless enclosed constant-voltage supply; listing specifies 100-240 VAC input, 50/60 Hz, 12 VDC adjustable about 11-12.6 V, 10 A, 120 W nominal. Ubuy reports model `SE-1500-12`, about 5 x 3.9 x 1.6 in and 0.7 lb, with no connectors included. | selected | Received model/label and dimensions, terminal markings, protective-earth connection, measured output, claimed protection behavior, branch fusing, continuous-load thermal margin |
 | 3 | STEPPERONLINE 17HS15-1504S-X1 | Bipolar NEMA 17, 1.8 deg, 1.5 A/phase, 45 Ncm, 4 wires | selected | Coil pairs, mechanics, required acceleration and torque margin |
 | 3 | Amazon ASIN B0FQ5GBNZ1 | Listed as TB6600, 9-42 V, up to 4 A, step/direction, three-pack | selected | Received model, logic input current/polarity, current switch table, microstep table, thermal behavior |
 
@@ -63,6 +63,7 @@ These checks must pass before integrated wiring:
 - RP23CNC: https://github.com/phil-barrett/RP23CNC
 - grblHAL RP2040/RP2350 driver: https://github.com/grblHAL/RP2040
 - Main 12 V supply: https://www.amazon.com/dp/B0781ZJ7GP
+- Additional reseller data for the same ASIN: https://www.ubuy.ec/en/product/3PQED2A14-12v-10a-120w-led-driver-switching-power-supply-smps-universal-regulated-transformer-converter-ac-100v-240v-to-dc-12v-for-led-strip-lights
 - Stepper motor listing/datasheet: https://www.omc-stepperonline.com/
 - TB6600 listing: https://www.amazon.com/dp/B0FQ5GBNZ1
 - Toolhead motor: https://www.amazon.com/dp/B0CDQSVBFC
