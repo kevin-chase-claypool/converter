@@ -18,12 +18,13 @@ configuration are the next phase.
 ## Read in this order
 
 1. [`HANDOFF.md`](HANDOFF.md) - detailed implementation history and current behavior.
-2. [`architecture/SYSTEM_ARCHITECTURE.md`](architecture/SYSTEM_ARCHITECTURE.md) - subsystem ownership and dual-core strategy.
-3. [`hardware/BOM.md`](hardware/BOM.md) - selected parts, known ratings, and unresolved electrical questions.
-4. [`hardware/WIRING_TABLE.md`](hardware/WIRING_TABLE.md) - authoritative physical connection record.
-5. [`integration/INTERFACES.md`](integration/INTERFACES.md) - contracts between host, motion controller, and toolhead.
-6. [`project/ROADMAP.md`](project/ROADMAP.md) - phased work plan and acceptance criteria.
-7. [`testing/TEST_PLAN.md`](testing/TEST_PLAN.md) - bring-up and integration test order.
+2. [`project/ENGINEERING_LOG.md`](project/ENGINEERING_LOG.md) - dated chronological record of work, evidence, and next actions.
+3. [`architecture/SYSTEM_ARCHITECTURE.md`](architecture/SYSTEM_ARCHITECTURE.md) - subsystem ownership and dual-core strategy.
+4. [`hardware/BOM.md`](hardware/BOM.md) - selected parts, known ratings, and unresolved electrical questions.
+5. [`hardware/WIRING_TABLE.md`](hardware/WIRING_TABLE.md) - authoritative physical connection record.
+6. [`integration/INTERFACES.md`](integration/INTERFACES.md) - contracts between host, motion controller, and toolhead.
+7. [`project/ROADMAP.md`](project/ROADMAP.md) - phased work plan and acceptance criteria.
+8. [`testing/TEST_PLAN.md`](testing/TEST_PLAN.md) - bring-up and integration test order.
 
 ## Current decisions
 
@@ -39,13 +40,14 @@ configuration are the next phase.
 
 At the end of every substantial AI session:
 
-1. Update the status table in [`project/ROADMAP.md`](project/ROADMAP.md).
-2. Record new measurements or tests in `docs/report/lab-notes/`.
-3. Add decisions with lasting consequences under `docs/decisions/`.
-4. Update `hardware/BOM.md` if a part or rating changes.
-5. Update `hardware/WIRING_TABLE.md` for every physical wiring or pin-assignment change.
-6. Update `integration/INTERFACES.md` if a signal, command, unit, or ownership boundary changes.
-7. Summarize changed files, tests run, failures, and the next concrete task in `HANDOFF.md`.
+1. Add a timestamped entry to [`project/ENGINEERING_LOG.md`](project/ENGINEERING_LOG.md).
+2. Update the status table in [`project/ROADMAP.md`](project/ROADMAP.md).
+3. Record new measurements or tests in `docs/report/lab-notes/`.
+4. Add decisions with lasting consequences under `docs/decisions/`.
+5. Update `hardware/BOM.md` if a part or rating changes.
+6. Update `hardware/WIRING_TABLE.md` for every physical wiring or pin-assignment change.
+7. Update `integration/INTERFACES.md` if a signal, command, unit, or ownership boundary changes.
+8. Summarize changed files, tests run, failures, and the next concrete task in `HANDOFF.md`.
 
 Do not put unverified assumptions into firmware constants. Mark them `TBD` and
 link them to the test that will determine the value.

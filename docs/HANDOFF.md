@@ -6,6 +6,8 @@
 > do not have to reconstruct the current design from this long history.
 > `hardware/WIRING_TABLE.md` is the authoritative, continuously updated record
 > of physical connections. The HTML wiring diagram is conceptual only.
+> `project/ENGINEERING_LOG.md` is the rolling dated history. Add an entry after
+> every substantial software, hardware, wiring, test, or design session.
 
 Project root: `C:\Users\jacks\Documents\Claude\converter`
 
