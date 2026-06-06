@@ -49,5 +49,9 @@ At the end of every substantial AI session:
 7. Update `integration/INTERFACES.md` if a signal, command, unit, or ownership boundary changes.
 8. Summarize changed files, tests run, failures, and the next concrete task in `HANDOFF.md`.
 
+Before starting an approach, search the engineering log's **Struggles and
+rejected approaches index**. Failed attempts must be logged with enough detail
+to prevent accidental repetition.
+
 Do not put unverified assumptions into firmware constants. Mark them `TBD` and
 link them to the test that will determine the value.
