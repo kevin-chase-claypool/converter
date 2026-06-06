@@ -61,6 +61,19 @@ Add new entries at the top of the log below this line.
 
 ---
 
+### 🟩 2026-06-06 18:58:24 -0500 - SUCCESS - Added roadmap completion checkboxes
+
+- Status: success
+- Category: documentation, project management
+- Summary: Converted every roadmap phase and task into Markdown checklists and separated previously combined phases.
+- Reason: Completion state needed to be visible at both phase and task level in VS Code Markdown Preview.
+- Struggle/failure: The earlier roadmap used prose bullets and a status table, so individual task completion could not be marked.
+- Evidence: `docs/project/ROADMAP.md`.
+- Files/commit: `docs/project/ROADMAP.md`, `docs/project/ENGINEERING_LOG.md`; commit recorded after this entry.
+- Result: Phase 0 is checked; all unverified hardware, firmware, motion, toolhead, integration, and report tasks remain unchecked.
+- Retry conditions: Check tasks only when evidence exists; do not use partial completion as completed.
+- Next action: Begin Phase 1 and update boxes as electrical tests pass.
+
 ### 🟩 2026-06-06 18:54:01 -0500 - SUCCESS - Promoted RP23CNC upstream reference
 
 - Status: success
