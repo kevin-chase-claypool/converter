@@ -31,14 +31,14 @@ disagrees with this table, this table controls.
 
 | ID | From device | From terminal | To device | To terminal | Signal/rail | Expected level | Wire | Protection | Status | Evidence/notes |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PWR-001 | AC mains | TBD | Main DC supply | AC input TBD | Mains power | TBD | TBD | Switch, fuse, earth TBD | TBD | Supply not selected |
-| PWR-002 | Main DC supply | `V+` TBD | RP23CNC | Main power input TBD | Controller power | 12 V nominal per RP23CNC design; verify revision | TBD | Branch fuse TBD | TBD | Exact board revision required |
-| PWR-003 | Main DC supply | `V+` TBD | X TB6600 | `VCC`/`DC+` TBD | Stepper power | Driver listing permits 9-42 V; final supply TBD | TBD | Branch fuse TBD | TBD | Verify received labels |
-| PWR-004 | Main DC supply | `V-` TBD | X TB6600 | `GND`/`DC-` TBD | Stepper return | 0 V | TBD | Same branch as PWR-003 | TBD | Verify received labels |
-| PWR-005 | Main DC supply | `V+` TBD | Y TB6600 | `VCC`/`DC+` TBD | Stepper power | Driver listing permits 9-42 V; final supply TBD | TBD | Branch fuse TBD | TBD | Verify received labels |
-| PWR-006 | Main DC supply | `V-` TBD | Y TB6600 | `GND`/`DC-` TBD | Stepper return | 0 V | TBD | Same branch as PWR-005 | TBD | Verify received labels |
-| PWR-007 | Main DC supply | `V+` TBD | A TB6600 | `VCC`/`DC+` TBD | Stepper power | Driver listing permits 9-42 V; final supply TBD | TBD | Branch fuse TBD | TBD | Verify received labels |
-| PWR-008 | Main DC supply | `V-` TBD | A TB6600 | `GND`/`DC-` TBD | Stepper return | 0 V | TBD | Same branch as PWR-007 | TBD | Verify received labels |
+| PWR-001 | AC mains | Hot/neutral/PE TBD | MEISHILE B0781ZJ7GP supply | `L`/`N`/earth TBD | Mains power | Listing: 100-240 VAC input | Mains-rated TBD | Enclosure, switch, fuse, strain relief, earth TBD | documented | Inspect received terminal markings before connection |
+| PWR-002 | MEISHILE B0781ZJ7GP supply | `V+` TBD | RP23CNC | Main power input TBD | Controller power | Listing: 12 VDC nominal, adjustable about 11-12.6 V | TBD | Branch fuse TBD | documented | Supply listing only; exact board revision required |
+| PWR-003 | MEISHILE B0781ZJ7GP supply | `V+` TBD | X TB6600 | `VCC`/`DC+` TBD | Stepper power | 12 VDC nominal | TBD | Branch fuse TBD | documented | Verify received labels and voltage before connection |
+| PWR-004 | MEISHILE B0781ZJ7GP supply | `V-` TBD | X TB6600 | `GND`/`DC-` TBD | Stepper return | 0 V | TBD | Same branch as PWR-003 | documented | Verify received labels |
+| PWR-005 | MEISHILE B0781ZJ7GP supply | `V+` TBD | Y TB6600 | `VCC`/`DC+` TBD | Stepper power | 12 VDC nominal | TBD | Branch fuse TBD | documented | Verify received labels and voltage before connection |
+| PWR-006 | MEISHILE B0781ZJ7GP supply | `V-` TBD | Y TB6600 | `GND`/`DC-` TBD | Stepper return | 0 V | TBD | Same branch as PWR-005 | documented | Verify received labels |
+| PWR-007 | MEISHILE B0781ZJ7GP supply | `V+` TBD | A TB6600 | `VCC`/`DC+` TBD | Stepper power | 12 VDC nominal | TBD | Branch fuse TBD | documented | Verify received labels and voltage before connection |
+| PWR-008 | MEISHILE B0781ZJ7GP supply | `V-` TBD | A TB6600 | `GND`/`DC-` TBD | Stepper return | 0 V | TBD | Same branch as PWR-007 | documented | Verify received labels |
 | PWR-009 | Toolhead regulated supply | `VOUT+` TBD | DRV8833 | `VM` TBD | Actuator motor power | 6 V target; verify motor/module | TBD | Current limit/fuse TBD | TBD | Do not connect to raw stepper supply |
 | PWR-010 | Toolhead regulated supply | `VOUT-` TBD | DRV8833 | `GND` TBD | Actuator return | 0 V | TBD | Same branch as PWR-009 | TBD | Common-reference plan pending |
 | PWR-011 | Logic supply/controller | TBD | HX711 | `VCC` TBD | HX711 power | TBD after module inspection | TBD | TBD | TBD | Verify module voltage requirements |
@@ -127,4 +127,5 @@ the RP23CNC plugin/core-1 implementation or the separate MCU selected later.
 
 | Date | Revision | Change | Updated by | Related evidence |
 |---|---:|---|---|---|
+| 2026-06-06 | 0.2 | Added selected MEISHILE B0781ZJ7GP 12 V, 10 A, 120 W supply and updated proposed 12 V distribution | Codex | Amazon listing supplied by project owner |
 | 2026-06-06 | 0.1 | Created master table from current BOM, interface contract, and conceptual diagram; all unverified terminals retained as TBD | Codex | Repository organization phase |

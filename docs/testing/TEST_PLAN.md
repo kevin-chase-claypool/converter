@@ -24,6 +24,8 @@
 | E-08 | Measure HX711 samples/s and noise | Sufficient for chosen loop bandwidth | TBD | TBD |
 | E-09 | Read TMAG5273 through intended wiring | Stable field/position signal | TBD | TBD |
 | E-10 | Verify all rails and common references | No overvoltage or unintended backfeed | TBD | TBD |
+| E-11 | Inspect and bench-test MEISHILE B0781ZJ7GP supply | Correct L/N/earth and V+/V- labels; approximately 12 V no-load output; adjustment and earth bonding documented | TBD | TBD |
+| E-12 | Measure system 12 V current and supply temperature under motion load | Adequate current/thermal margin below the supply's 10 A, 120 W listing rating | TBD | TBD |
 
 ## Firmware tests
 

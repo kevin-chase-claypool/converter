@@ -12,6 +12,7 @@ Status values: `selected`, `received`, `verified`, `rejected`, or `TBD`.
 | Qty | Item | Known information | Status | Verification needed |
 |---:|---|---|---|---|
 | 1 | RP23CNC / RP23U5XBB | RP235x grblHAL breakout; 5 axes; step/dir/enable; limit inputs; Ethernet option | selected | Exact board revision, assembled options, pin map, firmware board target |
+| 1 | MEISHILE SMPS, Amazon ASIN B0781ZJ7GP | Fanless enclosed constant-voltage supply; listing specifies 100-240 VAC input, 12 VDC adjustable about 11-12.6 V, 10 A, 120 W nominal | selected | Received label and terminals, protective-earth connection, measured output, branch fusing, continuous-load thermal margin |
 | 3 | STEPPERONLINE 17HS15-1504S-X1 | Bipolar NEMA 17, 1.8 deg, 1.5 A/phase, 45 Ncm, 4 wires | selected | Coil pairs, mechanics, required acceleration and torque margin |
 | 3 | Amazon ASIN B0FQ5GBNZ1 | Listed as TB6600, 9-42 V, up to 4 A, step/direction, three-pack | selected | Received model, logic input current/polarity, current switch table, microstep table, thermal behavior |
 
@@ -36,7 +37,8 @@ Do not energize a driver until coil pairs are confirmed with an ohmmeter.
 
 ## Power and protection still TBD
 
-- Main stepper supply voltage and current rating.
+- Confirm the received main supply matches the advertised 12 VDC, 10 A, 120 W model.
+- Determine the machine's measured current budget and suitable continuous-load margin.
 - Separate regulated toolhead motor supply if the main supply exceeds DRV8833/motor limits.
 - Logic supply and grounding topology.
 - Fuse sizes and branch protection.
@@ -60,6 +62,7 @@ These checks must pass before integrated wiring:
 
 - RP23CNC: https://github.com/phil-barrett/RP23CNC
 - grblHAL RP2040/RP2350 driver: https://github.com/grblHAL/RP2040
+- Main 12 V supply: https://www.amazon.com/dp/B0781ZJ7GP
 - Stepper motor listing/datasheet: https://www.omc-stepperonline.com/
 - TB6600 listing: https://www.amazon.com/dp/B0FQ5GBNZ1
 - Toolhead motor: https://www.amazon.com/dp/B0CDQSVBFC
