@@ -29,16 +29,34 @@ disagrees with this table, this table controls.
 
 ## Power distribution
 
+### MEISHILE S-120-12 terminal map
+
+Terminal numbering is left-to-right when facing the seven-position terminal
+block as reported from the received unit.
+
+| Terminal | Marking | Function | Verification status | Evidence/notes |
+|---:|---|---|---|---|
+| 1 | `L` | AC line/live input | documented | Physical unit observation; QR-linked manual archived in `references/` |
+| 2 | `N` | AC neutral input | documented | Physical unit observation |
+| 3 | Protective-earth symbol | Protective earth/chassis safety ground | documented | Physical unit observation; continuity to chassis must be tested before power |
+| 4 | `-V` | DC output negative | documented | One of two parallel negative output terminals |
+| 5 | `-V` | DC output negative | documented | One of two parallel negative output terminals |
+| 6 | `+V` | DC output positive | documented | One of two parallel positive output terminals |
+| 7 | `+V` | DC output positive | documented | One of two parallel positive output terminals |
+| Adjacent to 7 | `+V ADJ` | Output-voltage adjustment screw | documented | Measure with no load before connecting electronics; adjustment is not a current control |
+
 | ID | From device | From terminal | To device | To terminal | Signal/rail | Expected level | Wire | Protection | Status | Evidence/notes |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PWR-001 | AC mains | Hot/neutral/PE TBD | MEISHILE B0781ZJ7GP supply | `L`/`N`/earth TBD | Mains power | Listings: 100-240 VAC, 50/60 Hz input | Mains-rated TBD | Enclosure, switch, fuse, strain relief, earth TBD | documented | Ubuy reports model SE-1500-12 and no included connectors; inspect received markings before connection |
-| PWR-002 | MEISHILE B0781ZJ7GP supply | `V+` TBD | RP23CNC | Main power input TBD | Controller power | Listing: 12 VDC nominal, adjustable about 11-12.6 V | TBD | Branch fuse TBD | documented | Supply listing only; exact board revision required |
-| PWR-003 | MEISHILE B0781ZJ7GP supply | `V+` TBD | X TB6600 | `VCC`/`DC+` TBD | Stepper power | 12 VDC nominal | TBD | Branch fuse TBD | documented | Verify received labels and voltage before connection |
-| PWR-004 | MEISHILE B0781ZJ7GP supply | `V-` TBD | X TB6600 | `GND`/`DC-` TBD | Stepper return | 0 V | TBD | Same branch as PWR-003 | documented | Verify received labels |
-| PWR-005 | MEISHILE B0781ZJ7GP supply | `V+` TBD | Y TB6600 | `VCC`/`DC+` TBD | Stepper power | 12 VDC nominal | TBD | Branch fuse TBD | documented | Verify received labels and voltage before connection |
-| PWR-006 | MEISHILE B0781ZJ7GP supply | `V-` TBD | Y TB6600 | `GND`/`DC-` TBD | Stepper return | 0 V | TBD | Same branch as PWR-005 | documented | Verify received labels |
-| PWR-007 | MEISHILE B0781ZJ7GP supply | `V+` TBD | A TB6600 | `VCC`/`DC+` TBD | Stepper power | 12 VDC nominal | TBD | Branch fuse TBD | documented | Verify received labels and voltage before connection |
-| PWR-008 | MEISHILE B0781ZJ7GP supply | `V-` TBD | A TB6600 | `GND`/`DC-` TBD | Stepper return | 0 V | TBD | Same branch as PWR-007 | documented | Verify received labels |
+| PWR-001 | AC mains | Hot | MEISHILE S-120-12 | Terminal 1 `L` | AC line/live | 100-240 VAC listing range | Mains-rated TBD | Enclosure, switch, line fuse, strain relief TBD | documented | Do not energize until enclosure and protection design are complete |
+| PWR-001N | AC mains | Neutral | MEISHILE S-120-12 | Terminal 2 `N` | AC neutral | 100-240 VAC listing range | Mains-rated TBD | Same protected inlet as PWR-001 | documented | Keep neutral distinct from protective earth |
+| PWR-001E | Protective earth | PE | MEISHILE S-120-12 | Terminal 3 earth | Protective earth | Safety bonding conductor | Green/yellow, gauge TBD | Bonding hardware TBD | documented | Verify low-resistance chassis continuity before power |
+| PWR-002 | MEISHILE S-120-12 | Terminal 6 or 7 `+V` TBD | RP23CNC | Main power input TBD | Controller power | 12 VDC nominal | TBD | Branch fuse TBD | TBD | Final positive terminal allocation not assigned |
+| PWR-003 | MEISHILE S-120-12 | Terminal 6 or 7 `+V` TBD | X TB6600 | `VCC`/`DC+` TBD | Stepper power | 12 VDC nominal | TBD | Branch fuse TBD | TBD | Use a fused distribution block if terminal capacity is insufficient |
+| PWR-004 | MEISHILE S-120-12 | Terminal 4 or 5 `-V` TBD | X TB6600 | `GND`/`DC-` TBD | Stepper return | 0 VDC | TBD | Same branch as PWR-003 | TBD | Final negative terminal allocation not assigned |
+| PWR-005 | MEISHILE S-120-12 | Terminal 6 or 7 `+V` TBD | Y TB6600 | `VCC`/`DC+` TBD | Stepper power | 12 VDC nominal | TBD | Branch fuse TBD | TBD | Use a fused distribution block if terminal capacity is insufficient |
+| PWR-006 | MEISHILE S-120-12 | Terminal 4 or 5 `-V` TBD | Y TB6600 | `GND`/`DC-` TBD | Stepper return | 0 VDC | TBD | Same branch as PWR-005 | TBD | Final negative terminal allocation not assigned |
+| PWR-007 | MEISHILE S-120-12 | Terminal 6 or 7 `+V` TBD | A TB6600 | `VCC`/`DC+` TBD | Stepper power | 12 VDC nominal | TBD | Branch fuse TBD | TBD | Use a fused distribution block if terminal capacity is insufficient |
+| PWR-008 | MEISHILE S-120-12 | Terminal 4 or 5 `-V` TBD | A TB6600 | `GND`/`DC-` TBD | Stepper return | 0 VDC | TBD | Same branch as PWR-007 | TBD | Final negative terminal allocation not assigned |
 | PWR-009 | Toolhead regulated supply | `VOUT+` TBD | DRV8833 | `VM` TBD | Actuator motor power | 6 V target; verify motor/module | TBD | Current limit/fuse TBD | TBD | Do not connect to raw stepper supply |
 | PWR-010 | Toolhead regulated supply | `VOUT-` TBD | DRV8833 | `GND` TBD | Actuator return | 0 V | TBD | Same branch as PWR-009 | TBD | Common-reference plan pending |
 | PWR-011 | Logic supply/controller | TBD | HX711 | `VCC` TBD | HX711 power | TBD after module inspection | TBD | TBD | TBD | Verify module voltage requirements |
@@ -127,6 +145,7 @@ the RP23CNC plugin/core-1 implementation or the separate MCU selected later.
 
 | Date | Revision | Change | Updated by | Related evidence |
 |---|---:|---|---|---|
+| 2026-06-06 | 0.4 | Corrected received model to S-120-12; documented terminals 1-7 and +V ADJ from the physical unit; split AC line, neutral, and protective-earth conductors; archived QR-linked PDF | Codex | Owner inspection and `references/MEISHILE-S-120-12-manual.pdf` |
 | 2026-06-06 | 0.3 | Added internally consistent same-ASIN reseller details: reported model SE-1500-12, 50/60 Hz, approximate size/weight, protection claims, and no included connectors. Rejected contradictory 30 A/360 W text as unrelated listing contamination. | Codex | Ubuy product page supplied by project owner |
 | 2026-06-06 | 0.2 | Added selected MEISHILE B0781ZJ7GP 12 V, 10 A, 120 W supply and updated proposed 12 V distribution | Codex | Amazon listing supplied by project owner |
 | 2026-06-06 | 0.1 | Created master table from current BOM, interface contract, and conceptual diagram; all unverified terminals retained as TBD | Codex | Repository organization phase |
