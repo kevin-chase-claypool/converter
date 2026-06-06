@@ -57,8 +57,10 @@ block as reported from the received unit.
 | PWR-006 | MEISHILE S-120-12 | Terminal 4 or 5 `-V` TBD | Y TB6600 | `GND`/`DC-` TBD | Stepper return | 0 VDC | TBD | Same branch as PWR-005 | TBD | Final negative terminal allocation not assigned |
 | PWR-007 | MEISHILE S-120-12 | Terminal 6 or 7 `+V` TBD | A TB6600 | `VCC`/`DC+` TBD | Stepper power | 12 VDC nominal | TBD | Branch fuse TBD | TBD | Use a fused distribution block if terminal capacity is insufficient |
 | PWR-008 | MEISHILE S-120-12 | Terminal 4 or 5 `-V` TBD | A TB6600 | `GND`/`DC-` TBD | Stepper return | 0 VDC | TBD | Same branch as PWR-007 | TBD | Final negative terminal allocation not assigned |
-| PWR-009 | Toolhead regulated supply | `VOUT+` TBD | DRV8833 | `VM` TBD | Actuator motor power | 6 V target; verify motor/module | TBD | Current limit/fuse TBD | TBD | Do not connect to raw stepper supply |
-| PWR-010 | Toolhead regulated supply | `VOUT-` TBD | DRV8833 | `GND` TBD | Actuator return | 0 V | TBD | Same branch as PWR-009 | TBD | Common-reference plan pending |
+| PWR-009A | MEISHILE S-120-12 | Terminal 6 or 7 `+V` TBD | B0F1WB3LJ5 buck | `VIN+` TBD | Toolhead buck input | 12 VDC nominal | TBD | Branch fuse TBD | TBD | Buck listing accepts 5-30 V input |
+| PWR-009B | MEISHILE S-120-12 | Terminal 4 or 5 `-V` TBD | B0F1WB3LJ5 buck | `VIN-` TBD | Toolhead buck return | 0 VDC | TBD | Same branch as PWR-009A | TBD | Final distribution terminal not assigned |
+| PWR-009 | B0F1WB3LJ5 buck | `VOUT+` TBD | DRV8833 | `VM` TBD | Actuator motor power | Fixed 5 V listing output; motor is rated 6 V | TBD | Output protection/capacitance TBD | TBD | Candidate only; listing claims about 1.5 A continuous/1.8 A max |
+| PWR-010 | B0F1WB3LJ5 buck | `VOUT-` TBD | DRV8833 | `GND` TBD | Actuator return | 0 V | TBD | Same branch as PWR-009 | TBD | Common-reference plan pending |
 | PWR-011 | Logic supply/controller | TBD | HX711 | `VCC` TBD | HX711 power | TBD after module inspection | TBD | TBD | TBD | Verify module voltage requirements |
 | PWR-012 | Logic supply/controller | TBD | TMAG5273 Qwiic | `3V3`/Qwiic | Hall sensor power | 3.3 V | Qwiic cable TBD | TBD | documented | Verify controller-side Qwiic/I2C connection |
 
@@ -145,6 +147,7 @@ the RP23CNC plugin/core-1 implementation or the separate MCU selected later.
 
 | Date | Revision | Change | Updated by | Related evidence |
 |---|---:|---|---|---|
+| 2026-06-06 | 0.5 | Added B0F1WB3LJ5 fixed 5 V buck as a toolhead bench-test candidate; final acceptance depends on measured actuator current, ripple, and temperature | Codex | Amazon listing and tests E-06/E-14 |
 | 2026-06-06 | 0.4 | Corrected received model to S-120-12; documented terminals 1-7 and +V ADJ from the physical unit; split AC line, neutral, and protective-earth conductors; archived QR-linked PDF | Codex | Owner inspection and `references/MEISHILE-S-120-12-manual.pdf` |
 | 2026-06-06 | 0.3 | Added internally consistent same-ASIN reseller details: reported model SE-1500-12, 50/60 Hz, approximate size/weight, protection claims, and no included connectors. Rejected contradictory 30 A/360 W text as unrelated listing contamination. | Codex | Ubuy product page supplied by project owner |
 | 2026-06-06 | 0.2 | Added selected MEISHILE B0781ZJ7GP 12 V, 10 A, 120 W supply and updated proposed 12 V distribution | Codex | Amazon listing supplied by project owner |

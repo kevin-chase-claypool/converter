@@ -27,6 +27,7 @@
 | E-11 | Inspect and bench-test MEISHILE S-120-12 supply | Rating label photographed; terminals 1-7 match L, N, earth, -V, -V, +V, +V; approximately 12 V no-load output; +V ADJ range and protective-earth bonding documented | TBD | TBD |
 | E-12 | Measure system 12 V current and supply temperature under motion load | Adequate current/thermal margin below the supply's 10 A, 120 W listing rating | TBD | TBD |
 | E-13 | Verify supply protection and certification claims from markings/manual | Only protections and certifications printed on the unit or supported by manufacturer documentation are accepted | TBD | TBD |
+| E-14 | Characterize B0F1WB3LJ5 buck with the actuator | 5 V remains stable; peak current stays below rating with margin; ripple and temperature are acceptable during seek, hold, lift, and current-limited stall | TBD | TBD |
 
 ## Firmware tests
 
