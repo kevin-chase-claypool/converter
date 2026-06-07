@@ -29,6 +29,8 @@
 | E-13 | Verify supply protection and certification claims from markings/manual | Only protections and certifications printed on the unit or supported by manufacturer documentation are accepted | TBD | TBD |
 | E-14 | Configure B085T73CSD buck before load connection | Input/output labels and polarity verified; output adjusted to 6.0 V using a calibrated multimeter; onboard display error recorded | TBD | TBD |
 | E-15 | Characterize B085T73CSD buck with the actuator | 6 V remains stable; peak current stays below tested capacity with margin; ripple and temperature are acceptable during seek, hold, lift, and current-limited stall | TBD | TBD |
+| E-16 | Inventory RP23CNC Assembly and Ethernet Kits | Purchased variant, PCB revision, connectors, Ethernet components, and missing/damaged parts recorded | TBD | TBD |
+| E-17 | Inspect completed RP23CNC soldering | Correct orientation, complete joints, no bridges, no opens, and continuity/power-rail checks pass before board power | TBD | TBD |
 
 ## Firmware tests
 

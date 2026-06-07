@@ -11,7 +11,7 @@ Status values: `selected`, `received`, `verified`, `rejected`, or `TBD`.
 
 | Qty | Item | Known information | Status | Verification needed |
 |---:|---|---|---|---|
-| 1 | RP23CNC / RP23U5XBB | RP235x grblHAL breakout; 5 axes; step/dir/enable; limit inputs; Ethernet option | selected | Exact board revision, assembled options, pin map, firmware board target |
+| 1 | RP23CNC / RP23U5XBB with Assembly and Ethernet Kits | Purchased Brookwood Design variant `48493912129751`; RP2350B-based 5-axis grblHAL breakout with USB and Ethernet support. Connectors and Ethernet components require customer soldering. | purchased | Record PCB revision, inventory kit contents, solder/inspect connectors and Ethernet parts, archive matching schematic, pin map, and firmware target |
 | 1 | MEISHILE `S-120-12`, Amazon ASIN B0781ZJ7GP | Received enclosed constant-voltage supply. Unit markings identify model `S-120-12` with seven terminals: `L`, `N`, protective earth, two `-V`, and two `+V`; `+V ADJ` is beside terminal 7. Listings specify 100-240 VAC input, 50/60 Hz, 12 VDC, 10 A, 120 W nominal. | received | Photograph rating label, verify protective-earth continuity, measure output and adjustment range, design branch fusing, and confirm continuous-load thermal margin |
 | 3 | STEPPERONLINE 17HS15-1504S-X1 | Bipolar NEMA 17, 1.8 deg, 1.5 A/phase, 45 Ncm, 4 wires | selected | Coil pairs, mechanics, required acceleration and torque margin |
 | 3 | Amazon ASIN B0FQ5GBNZ1 | Listed as TB6600, 9-42 V, up to 4 A, step/direction, three-pack | selected | Received model, logic input current/polarity, current switch table, microstep table, thermal behavior |
@@ -64,6 +64,8 @@ These checks must pass before integrated wiring:
 ## Source links
 
 - RP23CNC: https://github.com/phil-barrett/RP23CNC
+- Purchased RP23CNC variant: https://brookwood-design-77.myshopify.com/products/ro?variant=48493912129751
+- RP23CNC board information: https://www.grbl.org/rp23u5xbb
 - grblHAL RP2040/RP2350 driver: https://github.com/grblHAL/RP2040
 - Main 12 V supply: https://www.amazon.com/dp/B0781ZJ7GP
 - Additional reseller data for the same ASIN: https://www.ubuy.ec/en/product/3PQED2A14-12v-10a-120w-led-driver-switching-power-supply-smps-universal-regulated-transformer-converter-ac-100v-240v-to-dc-12v-for-led-strip-lights

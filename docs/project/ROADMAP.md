@@ -42,7 +42,9 @@
 
 ## Phase 1: electrical characterization
 
-- [ ] Identify and photograph exact RP23CNC, driver, sensor, and module revisions.
+- [ ] Inventory and photograph the RP23CNC Assembly and Ethernet Kits and PCB revision. (`E-16`)
+- [ ] Solder and inspect required RP23CNC connectors and Ethernet components. (`E-17`)
+- [ ] Identify and photograph exact driver, sensor, and module revisions.
 - [ ] Verify MEISHILE S-120-12 terminal labels and protective-earth continuity. (`E-11`)
 - [ ] Measure S-120-12 no-load output and adjustment range. (`E-11`)
 - [ ] Measure stepper coil pairs and resistance. (`E-01`)
@@ -59,6 +61,7 @@
 
 ## Phase 2: controller baseline
 
+- [ ] Confirm RP23CNC soldering/continuity inspection passed before power. (`E-17`)
 - [ ] Record the exact RP23CNC board revision.
 - [ ] Build or obtain current RP23CNC-compatible grblHAL firmware.
 - [ ] Archive the exact source commits, board target, plugins, and build options.

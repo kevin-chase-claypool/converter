@@ -61,6 +61,19 @@ Add new entries at the top of the log below this line.
 
 ---
 
+### 🟨 2026-06-06 21:09:16 -0500 - MIXED/OPEN - Identified exact purchased RP23CNC kit
+
+- Status: mixed/open
+- Category: hardware, firmware, documentation
+- Summary: Identified the purchased controller as Brookwood Design RP23CNC variant `48493912129751`, With Assembly and Ethernet Kits.
+- Reason: Generic RP23CNC assumptions needed to be tied to the exact purchased configuration.
+- Struggle/failure: The product title can sound assembled, but the listing explicitly requires the customer to solder connectors and Ethernet components.
+- Evidence: https://brookwood-design-77.myshopify.com/products/ro?variant=48493912129751 and https://www.grbl.org/rp23u5xbb
+- Files/commit: BOM, wiring table, test plan, roadmap, and `firmware/grblhal/README.md`; commit recorded after this entry.
+- Result: Kit inventory, soldering, visual inspection, continuity, and power-rail checks are now required before board power or firmware bring-up.
+- Retry conditions: Mark assembly tasks complete only after E-16 and E-17 evidence exists.
+- Next action: Record the received PCB revision and photograph all kit contents before soldering.
+
 ### 🟩 2026-06-06 18:58:24 -0500 - SUCCESS - Added roadmap completion checkboxes
 
 - Status: success

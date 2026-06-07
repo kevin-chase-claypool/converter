@@ -6,6 +6,10 @@ part, pin assignment, connector, voltage, wire color, or test result changes.
 The visual diagram in `docs/full_wiring_diagram.html` is explanatory only. If it
 disagrees with this table, this table controls.
 
+Selected controller: Brookwood Design RP23CNC / RP23U5XBB variant
+`48493912129751`, **With Assembly and Ethernet Kits**. Connectors and Ethernet
+components must be soldered and inspected before wiring.
+
 ## Status definitions
 
 | Status | Meaning |
@@ -147,6 +151,7 @@ the RP23CNC plugin/core-1 implementation or the separate MCU selected later.
 
 | Date | Revision | Change | Updated by | Related evidence |
 |---|---:|---|---|---|
+| 2026-06-06 | 0.7 | Identified purchased RP23CNC variant as With Assembly and Ethernet Kits; added required soldering and inspection gate before pin assignment or power | Codex | Brookwood Design variant 48493912129751 |
 | 2026-06-06 | 0.6 | Replaced the fixed 5 V actuator candidate with purchased B085T73CSD adjustable modules; target output is 6.0 V and the claimed 5 A maximum remains subject to load/thermal testing | Codex | Amazon listing and tests E-14/E-15 |
 | 2026-06-06 | 0.5 | Added B0F1WB3LJ5 fixed 5 V buck as a toolhead bench-test candidate; final acceptance depends on measured actuator current, ripple, and temperature | Codex | Amazon listing and tests E-06/E-14 |
 | 2026-06-06 | 0.4 | Corrected received model to S-120-12; documented terminals 1-7 and +V ADJ from the physical unit; split AC line, neutral, and protective-earth conductors; archived QR-linked PDF | Codex | Owner inspection and `references/MEISHILE-S-120-12-manual.pdf` |
