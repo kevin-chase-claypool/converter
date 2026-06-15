@@ -27,7 +27,14 @@ Primary motion-controller reference:
 5. [`hardware/WIRING_TABLE.md`](hardware/WIRING_TABLE.md) - authoritative physical connection record.
 6. [`integration/INTERFACES.md`](integration/INTERFACES.md) - contracts between host, motion controller, and toolhead.
 7. [`project/ROADMAP.md`](project/ROADMAP.md) - phased work plan and acceptance criteria.
-8. [`testing/TEST_PLAN.md`](testing/TEST_PLAN.md) - bring-up and integration test order.
+8. [`project/PROJECT_GANTT.xlsx`](project/PROJECT_GANTT.xlsx) - editable schedule, phase dashboard, and weekly Gantt view.
+9. [`testing/TEST_PLAN.md`](testing/TEST_PLAN.md) - bring-up and integration test order.
+
+Regenerate the project schedule after roadmap changes with:
+
+```powershell
+& "C:\Users\jacks\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe" tools\build_project_gantt.mjs
+```
 
 ## Current decisions
 

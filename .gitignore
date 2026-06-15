@@ -21,3 +21,4 @@ Thumbs.db
 .claude/
 .agents/
 .codex/
+node_modules/

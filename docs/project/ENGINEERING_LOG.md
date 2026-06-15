@@ -61,6 +61,19 @@ Add new entries at the top of the log below this line.
 
 ---
 
+### 🟩 2026-06-15 08:44:38 -0500 - SUCCESS - Added editable project Gantt workbook
+
+- Status: success
+- Category: documentation, project management
+- Summary: Added an Excel project dashboard and weekly Gantt schedule covering roadmap phases 0 through 7.
+- Reason: The project needed a schedule view that Codex can regenerate and contributors can edit directly in Excel.
+- Struggle/failure: The first dashboard chart mixed task counts and percentage progress on one scale; it was replaced with a task-count versus completed-count chart.
+- Evidence: `docs/project/PROJECT_GANTT.xlsx` rendered successfully and its formula-error scan returned no matches.
+- Files/commit: `docs/project/PROJECT_GANTT.xlsx`, `tools/build_project_gantt.mjs`, `docs/START_HERE.md`; commit containing this entry.
+- Result: The workbook includes editable task dates, owners, statuses, priorities, progress, predecessors, evidence fields, formula-driven end dates, phase summaries, and status-colored timeline bars.
+- Retry conditions: Regenerate the workbook after roadmap scope or phase sequencing changes.
+- Next action: Update Phase 1 task statuses and evidence as bench tests are completed.
+
 ### 🟨 2026-06-06 21:09:16 -0500 - MIXED/OPEN - Identified exact purchased RP23CNC kit
 
 - Status: mixed/open
