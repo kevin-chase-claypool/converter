@@ -37,6 +37,7 @@
 - [x] Create the integration interface contract.
 - [x] Create the test plan and lab-note template.
 - [x] Create the chronological engineering log containing successes and struggles.
+- [x] Create categorized, indexed change histories for Windows software, RP23CNC software, and hardware.
 - [x] Create firmware configuration and toolhead-control placeholders.
 - [x] Push the organized project to GitHub.
 
@@ -62,7 +63,7 @@
 ## Phase 2: controller baseline
 
 - [ ] Confirm RP23CNC soldering/continuity inspection passed before power. (`E-17`)
-- [ ] Record the exact RP23CNC board revision.
+- [x] Record the exact RP23CNC board revision. (`RP23U5XBB V1.01`; 2026-06-09 board inspection lab note)
 - [ ] Build or obtain current RP23CNC-compatible grblHAL firmware.
 - [ ] Archive the exact source commits, board target, plugins, and build options.
 - [ ] Flash and identify the expected firmware. (`F-01`)

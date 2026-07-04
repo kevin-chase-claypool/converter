@@ -11,7 +11,7 @@ Status values: `selected`, `received`, `verified`, `rejected`, or `TBD`.
 
 | Qty | Item | Known information | Status | Verification needed |
 |---:|---|---|---|---|
-| 1 | RP23CNC / RP23U5XBB with Assembly and Ethernet Kits | Purchased Brookwood Design variant `48493912129751`; RP2350B-based 5-axis grblHAL breakout with USB and Ethernet support. Connectors and Ethernet components require customer soldering. | purchased | Record PCB revision, inventory kit contents, solder/inspect connectors and Ethernet parts, archive matching schematic, pin map, and firmware target |
+| 1 | RP23CNC / RP23U5XBB V1.01 with Assembly and Ethernet Kits | Received Brookwood Design variant `48493912129751`; front silkscreen confirms `RP23U5XBB V1.01`. Overview photographs show installed terminal strips, basic headers, and two Wiz850io sockets. Supplied Ethernet module shows a Wiznet W5500 IC and two six-pin rows. | received | Complete explicit kit inventory; perform magnified solder inspection and continuity/power-rail checks; install Ethernet module; archive matching V1.01 schematic, pin map, and firmware target |
 | 1 | MEISHILE `S-120-12`, Amazon ASIN B0781ZJ7GP | Received enclosed constant-voltage supply. Unit markings identify model `S-120-12` with seven terminals: `L`, `N`, protective earth, two `-V`, and two `+V`; `+V ADJ` is beside terminal 7. Listings specify 100-240 VAC input, 50/60 Hz, 12 VDC, 10 A, 120 W nominal. | received | Photograph rating label, verify protective-earth continuity, measure output and adjustment range, design branch fusing, and confirm continuous-load thermal margin |
 | 3 | STEPPERONLINE 17HS15-1504S-X1 | Bipolar NEMA 17, 1.8 deg, 1.5 A/phase, 45 Ncm, 4 wires | selected | Coil pairs, mechanics, required acceleration and torque margin |
 | 3 | Amazon ASIN B0FQ5GBNZ1 | Listed as TB6600, 9-42 V, up to 4 A, step/direction, three-pack | selected | Received model, logic input current/polarity, current switch table, microstep table, thermal behavior |
@@ -24,6 +24,12 @@ Motor lead colors from the manufacturer listing:
 | B | Red | Blue |
 
 Do not energize a driver until coil pairs are confirmed with an ohmmeter.
+
+## Electronics mounting hardware
+
+| Qty | Item | Known information | Status | Verification needed |
+|---:|---|---|---|---|
+| 1 | Tecmojo `14130201` sliding rack shelf, Amazon ASIN `B0BMW9V6MS` | 1U cold-rolled-steel shelf for a four-post 19-inch rack; published width 482.6 mm, shelf depth 350 mm, adjustable rack-post depth 350-500 mm, body height 44-44.45 mm, and capacity 110 lb / 50 kg. Reference STEP models and modeling limits are documented in [`cad/README.md`](cad/README.md). | selected | Confirm received SKU and revision; measure sheet thickness, tray width, mounting-hole locations, slide profiles, vent pitch, cable passages, anti-slip stops, and actual closed/open travel before relying on inferred CAD details |
 
 ## Toolhead hardware
 
@@ -66,7 +72,11 @@ These checks must pass before integrated wiring:
 - RP23CNC: https://github.com/phil-barrett/RP23CNC
 - Purchased RP23CNC variant: https://brookwood-design-77.myshopify.com/products/ro?variant=48493912129751
 - RP23CNC board information: https://www.grbl.org/rp23u5xbb
+- Archived RP23CNC user manual: [`references/RP23CNC-user-manual.pdf`](references/RP23CNC-user-manual.pdf)
+- Archived RP23U5XBB assembly instructions: [`references/RP23U5XBB-assembly-instructions.pdf`](references/RP23U5XBB-assembly-instructions.pdf)
 - grblHAL RP2040/RP2350 driver: https://github.com/grblHAL/RP2040
+- Tecmojo electronics shelf: https://www.amazon.com/dp/B0BMW9V6MS
+- Tecmojo shelf product page: https://tecmojo.com/products/tecmojo-1u-adjustable-vented-sliding-server-rack-mount-shelf-110lbs-14-16inch-adjustable-mounting-depth-4-post-universal-tray-for-19inch-av-network-equipment-rack
 - Main 12 V supply: https://www.amazon.com/dp/B0781ZJ7GP
 - Additional reseller data for the same ASIN: https://www.ubuy.ec/en/product/3PQED2A14-12v-10a-120w-led-driver-switching-power-supply-smps-universal-regulated-transformer-converter-ac-100v-240v-to-dc-12v-for-led-strip-lights
 - Archived QR-linked documentation: [`references/MEISHILE-S-120-12-manual.pdf`](references/MEISHILE-S-120-12-manual.pdf)

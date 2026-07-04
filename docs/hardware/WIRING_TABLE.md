@@ -3,12 +3,15 @@
 This is the authoritative wiring record for the machine. Update it whenever a
 part, pin assignment, connector, voltage, wire color, or test result changes.
 
-The visual diagram in `docs/full_wiring_diagram.html` is explanatory only. If it
-disagrees with this table, this table controls.
+The visual diagrams in `docs/full_wiring_diagram.html` and
+`docs/electronics_layout_and_wiring.html` are explanatory only. If either
+diagram disagrees with this table, this table controls.
 
-Selected controller: Brookwood Design RP23CNC / RP23U5XBB variant
+Selected controller: Brookwood Design RP23CNC / RP23U5XBB V1.01 variant
 `48493912129751`, **With Assembly and Ethernet Kits**. Connectors and Ethernet
-components must be soldered and inspected before wiring.
+components must be soldered and inspected before wiring. Front and back
+photographs confirm the PCB revision and visible connector population; E-17
+magnified inspection and continuity checks remain required.
 
 ## Status definitions
 
@@ -116,6 +119,21 @@ test E-01 before connection.
 | SAF-004 | E-stop | TBD | RP23CNC | Halt/E-stop input TBD | Immediate stop | Normally closed preferred; verify design | TBD | TBD | Power-removal strategy pending |
 | SAF-005 | E-stop | TBD | Motor power contactor/enable | TBD | Remove motor energy | Architecture TBD | TBD | TBD | Must be coordinated with SAF-004 |
 
+## Magnetic bed calibration adapter
+
+The planned magnetic calibration sensor path is unverified. Do not connect the
+RP2040 adapter to RP23CNC until the RP23CNC input circuit is confirmed and a
+proper open-drain, transistor, optocoupler, or equivalent switch-like output is
+selected.
+
+| ID | From device | From terminal | To device | To terminal | Signal | Expected behavior | Wire | Status | Evidence/notes |
+|---|---|---|---|---|---|---|---|---|---|
+| MAG-001 | SparkFun TMAG5273 Qwiic | Qwiic `SDA/SCL/3V3/GND` | RP2040 adapter | Qwiic/I2C TBD | 3D Hall readings | 3.3 V I2C; stable magnetic vector or magnitude readings | Qwiic cable TBD | TBD | Test E-09; used for bed-center and outer-index scans |
+| MAG-002 | RP2040 adapter | USB device TBD | Host PC | USB TBD | Calibration telemetry | Reports TMAG5273 readings during host-commanded scan moves | USB cable TBD | TBD | Calibration script/interface TBD |
+| MAG-003 | RP2040 adapter | Conditioned output TBD | RP23CNC | A limit/home input TBD | `A_HOME` magnetic index | Switch-like active state when the outer magnet is detected; polarity TBD | Shielded/twisted TBD | TBD | Do not wire directly until RP23CNC input requirements and output driver are verified |
+| MAG-004 | Center bed magnet | Embedded bed center | TMAG5273 scan path | Sensor over bed | Bed-center reference | Saturated or thresholded footprint centered on bed rotation axis | Mechanical placement | TBD | Cylindrical magnet; diameter, grade, polarity, and depth TBD |
+| MAG-005 | Outer bed magnet | Embedded near 8.9 in radius | TMAG5273 scan path | Sensor over bed | Theta/A index reference | Saturated or thresholded footprint centered on angular index mark | Mechanical placement | TBD | Cylindrical magnet; final measured radius and angular reference TBD |
+
 ## Toolhead control and sensors
 
 Controller placement is unresolved. `Toolhead controller` below means either
@@ -151,6 +169,9 @@ the RP23CNC plugin/core-1 implementation or the separate MCU selected later.
 
 | Date | Revision | Change | Updated by | Related evidence |
 |---|---:|---|---|---|
+| 2026-07-04 | 1.0 | Added an explanatory electronics layout and wiring concept HTML while retaining this table as the authority for terminal labels, connection status, and evidence | Codex | `docs/electronics_layout_and_wiring.html` |
+| 2026-07-04 | 0.9 | Added planned TMAG5273/RP2040 magnetic bed calibration adapter, center magnet, outer theta-index magnet, and gated A_HOME interface placeholders | Codex | `firmware/grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md` |
+| 2026-06-09 | 0.8 | Confirmed received controller as RP23U5XBB V1.01 from front silkscreen; recorded visible connector and Wiz850io socket installation while retaining E-17 inspection and continuity gates | Codex | `docs/report/lab-notes/2026-06-09-rp23u5xbb-v1.01-board-inspection.md` |
 | 2026-06-06 | 0.7 | Identified purchased RP23CNC variant as With Assembly and Ethernet Kits; added required soldering and inspection gate before pin assignment or power | Codex | Brookwood Design variant 48493912129751 |
 | 2026-06-06 | 0.6 | Replaced the fixed 5 V actuator candidate with purchased B085T73CSD adjustable modules; target output is 6.0 V and the claimed 5 A maximum remains subject to load/thermal testing | Codex | Amazon listing and tests E-14/E-15 |
 | 2026-06-06 | 0.5 | Added B0F1WB3LJ5 fixed 5 V buck as a toolhead bench-test candidate; final acceptance depends on measured actuator current, ripple, and temperature | Codex | Amazon listing and tests E-06/E-14 |

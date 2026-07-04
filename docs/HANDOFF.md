@@ -1,6 +1,9 @@
-# Converter Handoff
+# Converter Technical Reference
 
-> For a shorter onboarding path, read [`START_HERE.md`](START_HERE.md) first.
+> This is a deep technical and historical reference, not an onboarding
+> checklist. Start with [`START_HERE.md`](START_HERE.md) and the task-oriented
+> [`README.md`](README.md), then search this file for the relevant algorithm,
+> behavior, tradeoff, or debugging history.
 > Hardware integration planning is split into `architecture/`, `hardware/`,
 > `integration/`, `project/`, `testing/`, and `decisions/` so future AI sessions
 > do not have to reconstruct the current design from this long history.
@@ -9,6 +12,9 @@
 > `project/ENGINEERING_LOG.md` is the rolling dated history. Add an entry after
 > every substantial software, hardware, wiring, test, or design session.
 > Successes and struggles are interleaved chronologically and visually marked.
+> `changes/INDEX.md` provides the searchable, subsystem-organized change record.
+> Documentation requirements for every future change are defined in
+> `../AGENTS.md`.
 
 Project root: `C:\Users\jacks\Documents\Claude\converter`
 
@@ -234,26 +240,12 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
   - **Preview settings** — print speed (mm/s), bed dia/margin, pen stroke width, preview
     colors. "Print speed" now drives **both** the runtime estimate **and** the animation pacing:
     playback runs in **real time** (`PLAYBACK_RATE = 1.0` in `qt_svg_to_gcode.pyw`) with draw moves
-    paced at print speed, so the on-screen toolhead moves at the real machine speed (~100 mm/s by
-    default). **Both draw and travel pacing use XY length only** (`xy_length` on the move dict),
-    not the full GRBL vector `hypot(xy, motor_deg)` — the bed follows the gantry within each
-    move's XY time window rather than stretching the move to cover the motor sweep, so
-    rotation-heavy moves don't crawl. Draws use the print-speed setting (mm/s); travels use
-    `travel_rate` (mm/min). `motion_length` is kept on the move dict for engine reference. Pen
-    moves still use their fixed engine `duration_ms`. Rationale: with the bed always using theta
-    (no grid hold-steady), contour transitions involve substantial bed rotation; the GRBL vector
-    model treats motor degrees as mm at the same rate, which made travels appear to crawl (one
-    travel spinning 500° of motor at 50 deg/s = 10s of wait between contours). Reality is that
-    the firmware motor runs much faster than the gantry's `travel_rate` deg/min would suggest, so
-    playback now reflects what the user actually sees IRL. The playback timeline lives in
-    `GLPreview.cumulative_ms` (built via `_playback_move_ms`); `progress_after_time` must use the
-    same `_playback_move_ms` for the within-move fraction. Bump `PLAYBACK_RATE` to fast-forward
-    long jobs, or scrub with the slider.
-    **Update:** `_playback_move_ms` and the Qt estimated time use full `motion_length`
-    (`hypot(xy, motor_deg)`) for draw moves so smoothness / theta-tracking changes affect the
-    displayed simulation total. Travel playback/estimate is intentionally fixed at 100 mm/s using
-    `xy_length`, independent of the emitted G-code `travel_rate`, so inter-segment travel animates
-    at the expected machine travel speed.
+    paced at print speed. Draw duration uses full `motion_length` so theta-heavy smoothing remains
+    visible. Pen-up travel uses the move's planned `duration_ms`, which is generated from the
+    configured `travel_rate`; pen actuation uses its fixed duration. The playback timeline lives
+    in `GLPreview.cumulative_ms` (built via `_playback_move_ms`), and `progress_after_time` uses the
+    same duration source for the within-move fraction. Bump `PLAYBACK_RATE` to fast-forward long
+    jobs, or scrub with the slider.
   - **Other settings** — "Preview mode: omit theta axis" (the one knob that lives in both worlds —
     it also strips theta from the saved G-code).
 - Layout is now a `QSplitter`: left sidebar (settings + Convert/Preview buttons), centre
@@ -263,6 +255,16 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
   The user must press **Preview** to rebuild contours/moves after changing settings. Selecting an
   SVG updates the suggested G-code path and auto-shading starter values, then waits for Preview.
   `Print speed` still updates playback pacing for the already-built preview.
+- Preview generation now runs in a `QThread` worker and displays stage-based
+  progress, elapsed time, and the current operation. Preview and Save G-code
+  are disabled while the worker uses the shared geometry cache. The window
+  blocks closing until processing finishes. Progress is deliberately coarse:
+  parsing, motion planning, bed clipping, and OpenGL preparation.
+- The worker supports cooperative cancellation through a thread-safe event and
+  `converter_core.OperationCancelled`. The Cancel button requests shutdown;
+  checkpoints in SVG/fill generation, raster fallbacks, contour ordering,
+  theta planning, clipping, and move emission unwind the worker without forced
+  thread termination. The last completed preview is retained.
 - Non-Z pen simulation/dwell timing is split by direction: `Pen up ms` / M5 defaults to 300 ms,
   and `Pen down ms` / M3 defaults to 600 ms. Saved G-code emits matching `G4` dwells after M5/M3.
   The old single `pen_cycle_ms` field remains in settings for compatibility but is no longer shown
@@ -282,6 +284,9 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
   `preview_center`, which is the original SVG-bbox center passed in via `set_preview(center=...)`).
 - Pen-tip indicator (orange box) drawn at the unrotated machine-frame command point with all four
   sides closed (previously rendered only two sides because the buffer had 4 verts under GL_LINES).
+- Active draw and pen-up travel overlays end at the interpolated tool position. A travel path
+  therefore grows from the lift point as the gray tool marker moves instead of displaying the
+  complete start-to-destination segment at the beginning of the command.
 - **Draw-progress shading:** the full artwork is drawn as a light tint (`drawing_color.lighter(185)`),
   then the portion drawn so far is overdrawn in the full `drawing_color`. Implemented with a static
   `drawn_path` VBO built in *draw order* (bed coords, from each draw move's `bed_start`/`bed_end`)
@@ -420,16 +425,18 @@ inputs, spindle/digital outputs, and USB/Ethernet transport.
 
 Motion decision: drive the machine with **grblHAL** rather than a custom parser/motion planner.
 grblHAL handles parsing this dialect, X/Y+A coordinated motion, acceleration/junction lookahead,
-step generation, and M3/M5 as a spindle-enable output. The pen-pressure system is a separate
-concern layered on top.
+step generation, and a spindle/tool output pin state for M3/M5. The pen-pressure system is a
+separate concern layered on top.
 
 grblHAL setup tasks (config, not parser code):
-1. Build/flash RP23CNC-compatible grblHAL with Ethernet enabled and X/Y/Z/A available.
+1. Build/flash RP23CNC-compatible grblHAL with Ethernet enabled and X/Y/A available. A
+   four-axis build may expose a Z slot, but Z is unused and unwired.
 2. `$` settings: steps/mm for X/Y; **A steps-per-unit = motor steps per degree** (the converter
    emits `A` in *motor* degrees — see G-code reference); per-axis max rate + acceleration.
-3. Wire X/Y limit switches to opto-isolated limit inputs. Use a theta index/probe input for the
-   bed index sensor once the homing scheme is finalized.
-4. Wire grblHAL **spindle-enable output → pen pressure subsystem** as the override line:
+3. Wire X/Y limit switches to opto-isolated limit inputs. A homing uses the validated
+   switch-like `A_HOME` output from the RP2040/TMAG5273 magnetic adapter; do not wire it until
+   RP23CNC input requirements and adapter output-driver behavior are verified.
+4. Wire grblHAL **spindle/tool output pin → pen pressure subsystem** as the override line:
    M3 = ENGAGE, M5 = LIFT.
 5. **Settle handshake — DONE on the converter side.** `contours_to_gcode` now emits direction-specific
    dwells after M3/M5 in non-Z pen mode: M5 / `Pen up ms` defaults to `G4 P0.3`, and M3 /
@@ -440,13 +447,18 @@ grblHAL setup tasks (config, not parser code):
    a grblHAL plugin that feed-holds until a contact input.
 6. **Verify on hardware:** how grblHAL scales feed on a combined X/Y/**A** move vs the converter's
    `sqrt(xy² + motor_deg²)/F` pacing. Only affects speed/timing, not path shape.
+7. **Homing workflow:** normal startup homing is `M5`, lift dwell, `$H`; grblHAL homes X/Y from
+   physical switches and A from RP2040 `A_HOME`. Setup calibration, using the fixed-height
+   TMAG5273 and host/RP2040 diagnostics, determines center, thresholds, hysteresis, A offset, and
+   repeatability. Abort/fault states stop the attempt, keep the pen lifted, preserve diagnostics,
+   and require explicit user recovery before retry.
 
 Pen pressure system (independent of grblHAL):
 - Closed loop: load cell → force PID → pen motor, holds target contact force and tracks paper/bed
   unevenness while drawing. Driven by the spindle-enable signal as a **mode override**:
   - `LIFT` (M5) = drive actuator open-loop to a safe retract height, force loop paused.
   - `ENGAGE` (M3) = release override; seek down slowly until the load cell trips, then hold force.
-- **Placement:** run it on a **separate MCU** that listens to the spindle-enable line (cleanest
+- **Placement:** run it on a **separate MCU** that listens to the spindle/tool output line (cleanest
   first version, since grblHAL owns the RP23CNC motion timing). A grblHAL **plugin** on the same
   controller is the more integrated option later and is the only path that lets the pen system
   feed-hold grblHAL until contact is confirmed.

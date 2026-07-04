@@ -2,10 +2,11 @@ import bisect
 import math
 import os
 import sys
+import threading
 import time
 from array import array
 
-from PySide6.QtCore import QPointF, QTimer, Qt, QRectF
+from PySide6.QtCore import QObject, QPointF, QThread, QTimer, Qt, QRectF, Signal
 from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPainterPath, QSurfaceFormat
 from PySide6.QtOpenGL import QOpenGLBuffer, QOpenGLShader, QOpenGLShaderProgram
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
@@ -24,6 +25,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QMainWindow,
     QMessageBox,
+    QProgressBar,
     QPushButton,
     QColorDialog,
     QScrollArea,
@@ -40,7 +42,6 @@ print(f"[geometry version: {getattr(converter, 'GEOMETRY_VERSION', 'OLD-no-new-p
 # Playback wall-clock multiplier: 1.0 = real time, so the toolhead animates at
 # the configured print speed (mm/s). Bump up to fast-forward long jobs.
 PLAYBACK_RATE = 1.0
-PREVIEW_TRAVEL_MM_S = 100.0
 
 
 def fmt(value):
@@ -189,9 +190,10 @@ class GLPreview(QOpenGLWidget):
         if kind == "draw":
             dist = float(move.get("motion_length", move.get("xy_length", 0.0)))
             return dist / max(self.play_speed_mm_s, 1e-9) * 1000.0
-        if kind == "travel" and ("motion_length" in move or "xy_length" in move):
-            dist = float(move.get("xy_length", move.get("motion_length", 0.0)))
-            return dist / PREVIEW_TRAVEL_MM_S * 1000.0
+        if kind == "travel":
+            # Travel duration is planned from the configured G0 rate. Reuse it
+            # here so pen-up motion remains visible and matches the command.
+            return float(move.get("duration_ms", 0.0))
         return float(move.get("duration_ms", 0.0))
 
     def rebuild_timeline(self):
@@ -469,6 +471,13 @@ class GLPreview(QOpenGLWidget):
     def command_point_at_progress(self, progress):
         return self.interpolate_point(progress, "command_start", "command_end")
 
+    def active_segment_at_progress(self, progress):
+        move, _index, _frac = self.active_move_at_progress(progress)
+        if move is None or move.get("type") not in ("draw", "travel"):
+            return None
+        point = self.tool_point_at_progress(progress)
+        return move.get("start", point), point
+
     def adjusted_bounds(self):
         key = (self.width(), self.height(), self.bounds_base, self.zoom_factor, self.pan_offset)
         if self._cached_bounds is not None and self._cached_bounds_key == key:
@@ -633,9 +642,11 @@ class GLPreview(QOpenGLWidget):
         self.draw_static("travel", QColor("#cbd5e1"), 1.0)
         self.draw_static("motion", self.motion_color.lighter(155), 1.0)
 
-        if active is not None and active.get("type") in ("draw", "travel"):
+        active_segment = self.active_segment_at_progress(progress)
+        if active_segment is not None:
+            segment_start, segment_end = active_segment
             self.draw_dynamic_lines(
-                [active["start"][0], active["start"][1], active["end"][0], active["end"][1]],
+                [segment_start[0], segment_start[1], segment_end[0], segment_end[1]],
                 self.motion_color if active.get("type") == "draw" else QColor("#6b7280"),
                 3.0,
             )
@@ -663,6 +674,46 @@ class GLPreview(QOpenGLWidget):
         self.program.release()
 
 
+class PreviewWorker(QObject):
+    progress = Signal(int, str)
+    finished = Signal(object)
+    failed = Signal(str)
+    cancelled = Signal()
+
+    def __init__(self, window, svg_path, settings):
+        super().__init__()
+        self.window = window
+        self.svg_path = svg_path
+        self.settings = settings
+        self.cancel_event = threading.Event()
+
+    def cancel(self):
+        self.cancel_event.set()
+
+    def is_cancelled(self):
+        return self.cancel_event.is_set()
+
+    def run(self):
+        try:
+            self.progress.emit(10, "Parsing SVG geometry")
+            raw_contours = self.window.load_contours(self.svg_path, self.settings, self.is_cancelled)
+            self.progress.emit(48, f"Planning motion for {len(raw_contours)} contours")
+            bed_center = converter.contour_center(raw_contours)
+            clip_radius = max(
+                float(getattr(self.settings, "bed_diameter_mm", 457.2)) / 2.0
+                - float(getattr(self.settings, "bed_margin_mm", 0.0)),
+                0.0,
+            )
+            moves = self.window.build_preview_moves(raw_contours, self.settings, self.is_cancelled)
+            self.progress.emit(78, f"Clipping {len(raw_contours)} contours to the bed")
+            contours = converter.clip_contours_to_bed(raw_contours, bed_center, clip_radius, self.is_cancelled)
+            self.finished.emit((self.settings, contours, moves, bed_center))
+        except converter.OperationCancelled:
+            self.cancelled.emit()
+        except Exception as exc:
+            self.failed.emit(str(exc))
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -684,6 +735,11 @@ class MainWindow(QMainWindow):
         self.play_start_progress = 0.0
         self.last_command_follow_time = 0.0
         self.auto_gcode_path = ""
+        self.preview_thread = None
+        self.preview_worker = None
+        self.preview_started_at = None
+        self.preview_elapsed_timer = QTimer(self)
+        self.preview_elapsed_timer.timeout.connect(self.update_preview_elapsed)
         self.build_ui()
 
     def build_ui(self):
@@ -798,8 +854,20 @@ class MainWindow(QMainWindow):
         other_layout.addStretch(1)
 
         actions = QHBoxLayout()
-        actions.addWidget(QPushButton("Preview", clicked=self.preview))
-        actions.addWidget(QPushButton("Save G-code", clicked=self.convert))
+        self.preview_button = QPushButton("Preview", clicked=self.preview)
+        actions.addWidget(self.preview_button)
+        self.cancel_preview_button = QPushButton("Cancel", clicked=self.cancel_preview)
+        self.cancel_preview_button.setEnabled(False)
+        actions.addWidget(self.cancel_preview_button)
+        self.save_button = QPushButton("Save G-code", clicked=self.convert)
+        actions.addWidget(self.save_button)
+        self.preview_build_bar = QProgressBar()
+        self.preview_build_bar.setRange(0, 100)
+        self.preview_build_bar.setTextVisible(True)
+        self.preview_build_bar.hide()
+        self.preview_stage = QLabel()
+        self.preview_stage.setWordWrap(True)
+        self.preview_stage.hide()
 
         sidebar = QWidget()
         sidebar_layout = QVBoxLayout(sidebar)
@@ -813,6 +881,8 @@ class MainWindow(QMainWindow):
         sidebar_layout.addWidget(CollapsibleSection("Preview settings", preview_box, False))
         sidebar_layout.addWidget(CollapsibleSection("Other settings", other_box, False))
         sidebar_layout.addLayout(actions)
+        sidebar_layout.addWidget(self.preview_build_bar)
+        sidebar_layout.addWidget(self.preview_stage)
         sidebar_layout.addStretch(1)
         sidebar.setMaximumWidth(320)
         sidebar_scroll = QScrollArea()
@@ -1025,8 +1095,8 @@ class MainWindow(QMainWindow):
             fallback = float(getattr(settings, "hatch_spacing_mm", 0.0))
         return converter.pattern_size_override(pattern, fallback, self.pattern_size_values(settings))
 
-    def build_preview_moves(self, contours, settings):
-        return converter.build_preview_moves(contours, settings)
+    def build_preview_moves(self, contours, settings, cancel_check=None):
+        return converter.build_preview_moves(contours, settings, cancel_check)
 
     def raw_geometry_key(self, svg_path, settings):
         stat = os.stat(svg_path)
@@ -1046,7 +1116,8 @@ class MainWindow(QMainWindow):
             float(getattr(settings, "raster_px_per_unit", 2.0)),
         )
 
-    def raster_shade_contours(self, svg_path, settings):
+    def raster_shade_contours(self, svg_path, settings, cancel_check=None):
+        converter.check_cancelled(cancel_check)
         spacing = float(getattr(settings, "hatch_spacing_mm", 0.0))
         if spacing <= 0:
             return []
@@ -1073,6 +1144,7 @@ class MainWindow(QMainWindow):
         painter.end()
 
         def darkness_at(x, y):
+            converter.check_cancelled(cancel_check)
             px = int((x - view.left()) * px_per_unit)
             py = int((y - view.top()) * px_per_unit)
             if px < 0 or py < 0 or px >= width or py >= height:
@@ -1157,6 +1229,7 @@ class MainWindow(QMainWindow):
                 last_active = None
 
             for index in range(steps + 1):
+                converter.check_cancelled(cancel_check)
                 point = point_at(index)
                 x, y = point
                 active = view.left() <= x <= view.right() and view.top() <= y <= view.bottom() and darkness_at(x, y) >= threshold
@@ -1179,6 +1252,7 @@ class MainWindow(QMainWindow):
                     contours.append([maybe_flip(point) for point in active])
 
             for point in points:
+                converter.check_cancelled(cancel_check)
                 x, y = point
                 is_active = view.left() <= x <= view.right() and view.top() <= y <= view.bottom() and darkness_at(x, y) >= threshold
                 if is_active:
@@ -1215,6 +1289,7 @@ class MainWindow(QMainWindow):
             y = math.floor((min_ry - raster_spacing) / raster_spacing) * raster_spacing
             row = 0
             while y <= max_ry + raster_spacing:
+                converter.check_cancelled(cancel_check)
                 phase = math.pi if row % 2 else 0.0
                 points = [
                     world(
@@ -1250,8 +1325,10 @@ class MainWindow(QMainWindow):
 
             y = math.floor(min_ry / cell) * cell
             while y < max_ry:
+                converter.check_cancelled(cancel_check)
                 x = math.floor(min_rx / cell) * cell
                 while x < max_rx:
+                    converter.check_cancelled(cancel_check)
                     pts = [(x, y), (x + cell, y), (x + cell, y + cell), (x, y + cell)]
                     vals = [field(px, py) for px, py in pts]
                     crossings = []
@@ -1274,6 +1351,7 @@ class MainWindow(QMainWindow):
                 return (round(point[0], 5), round(point[1], 5))
 
             for index, (a, b) in enumerate(segments):
+                converter.check_cancelled(cancel_check)
                 endpoint_map.setdefault(key(a), []).append((index, 0))
                 endpoint_map.setdefault(key(b), []).append((index, 1))
 
@@ -1289,6 +1367,7 @@ class MainWindow(QMainWindow):
 
             polylines = []
             for index, (a, b) in enumerate(segments):
+                converter.check_cancelled(cancel_check)
                 if used[index]:
                     continue
                 used[index] = True
@@ -1335,8 +1414,10 @@ class MainWindow(QMainWindow):
 
             y = view.top()
             while y < view.bottom():
+                converter.check_cancelled(cancel_check)
                 x = view.left()
                 while x < view.right():
+                    converter.check_cancelled(cancel_check)
                     x1 = min(x + step, view.right())
                     y1 = min(y + step, view.bottom())
                     pts = [(x, y), (x1, y), (x1, y1), (x, y1)]
@@ -1362,7 +1443,7 @@ class MainWindow(QMainWindow):
 
         def raster_concentric(threshold, raster_spacing):
             loops = raster_threshold_loops(threshold, raster_spacing)
-            for contour in converter.concentric_region_contours(loops, raster_spacing):
+            for contour in converter.concentric_region_contours(loops, raster_spacing, cancel_check):
                 if len(contour) >= 3:
                     contours.append([maybe_flip(point) for point in contour])
 
@@ -1381,6 +1462,7 @@ class MainWindow(QMainWindow):
 
         if pattern == "dots":
             for layer in range(levels):
+                converter.check_cancelled(cancel_check)
                 threshold = (layer + 1) / (levels + 1)
                 layer_spacing = active_spacing / math.sqrt(layer + 1)
                 mark_radius = max(layer_spacing * 0.055, sample_step)
@@ -1388,8 +1470,10 @@ class MainWindow(QMainWindow):
                 y = min_ry + row_step * 0.5
                 row = 0
                 while y <= max_ry:
+                    converter.check_cancelled(cancel_check)
                     x = min_rx + layer_spacing * (0.5 if row % 2 == 0 else 1.0)
                     while x <= max_rx:
+                        converter.check_cancelled(cancel_check)
                         center = world(x, y)
                         dot = [(center[0] - mark_radius, center[1]), (center[0] + mark_radius, center[1])]
                         if all(view.left() <= px <= view.right() and view.top() <= py <= view.bottom() and darkness_at(px, py) >= threshold for px, py in dot):
@@ -1402,6 +1486,7 @@ class MainWindow(QMainWindow):
         if pattern == "circles":
             steps = 18
             for layer in range(levels):
+                converter.check_cancelled(cancel_check)
                 threshold = (layer + 1) / (levels + 1)
                 layer_spacing = active_spacing / math.sqrt(layer + 1)
                 radius = max(layer_spacing * 0.5, sample_step)
@@ -1409,8 +1494,10 @@ class MainWindow(QMainWindow):
                 y = min_ry + radius
                 row = 0
                 while y <= max_ry - radius:
+                    converter.check_cancelled(cancel_check)
                     x = min_rx + radius + (radius if row % 2 else 0.0)
                     while x <= max_rx - radius:
+                        converter.check_cancelled(cancel_check)
                         circle = [world(x + math.cos(2.0 * math.pi * i / steps) * radius, y + math.sin(2.0 * math.pi * i / steps) * radius) for i in range(steps + 1)]
                         add_shape_if_dark(circle, threshold)
                         x += radius * 2.0
@@ -1420,6 +1507,7 @@ class MainWindow(QMainWindow):
 
         if pattern == "hexagonal":
             for layer in range(levels):
+                converter.check_cancelled(cancel_check)
                 threshold = (layer + 1) / (levels + 1)
                 layer_spacing = active_spacing / math.sqrt(layer + 1)
                 radius = max(layer_spacing * 0.5, sample_step)
@@ -1428,8 +1516,10 @@ class MainWindow(QMainWindow):
                 col = 0
                 x = min_rx - radius
                 while x <= max_rx + radius:
+                    converter.check_cancelled(cancel_check)
                     y = min_ry - radius + (y_step * 0.5 if col % 2 else 0.0)
                     while y <= max_ry + radius:
+                        converter.check_cancelled(cancel_check)
                         hexagon = [world(x + math.cos(math.radians(60.0 * i)) * radius, y + math.sin(math.radians(60.0 * i)) * radius) for i in range(7)]
                         for a, b in zip(hexagon, hexagon[1:]):
                             add_segment_if_dark(a, b, threshold)
@@ -1440,6 +1530,7 @@ class MainWindow(QMainWindow):
 
         if pattern == "diamonds":
             for layer in range(levels):
+                converter.check_cancelled(cancel_check)
                 threshold = (layer + 1) / (levels + 1)
                 layer_spacing = active_spacing / math.sqrt(layer + 1)
                 half = max(layer_spacing * 0.5, sample_step)
@@ -1448,6 +1539,7 @@ class MainWindow(QMainWindow):
                 y_min = int(math.floor((min_ry - half) / half)) - 1
                 y_max = int(math.ceil((max_ry + half) / half)) + 1
                 for j in range(y_min, y_max + 1):
+                    converter.check_cancelled(cancel_check)
                     y = j * half
                     for i in range(x_min, x_max + 1):
                         x = i * half
@@ -1457,6 +1549,7 @@ class MainWindow(QMainWindow):
 
         if pattern == "triangular":
             for layer in range(levels):
+                converter.check_cancelled(cancel_check)
                 threshold = (layer + 1) / (levels + 1)
                 layer_spacing = active_spacing / math.sqrt(layer + 1)
                 side = max(layer_spacing, sample_step * 2.0)
@@ -1470,6 +1563,7 @@ class MainWindow(QMainWindow):
                     return (i * side + (0.5 * side if j % 2 else 0.0), j * row_step)
 
                 for j in range(j_min, j_max + 1):
+                    converter.check_cancelled(cancel_check)
                     for i in range(i_min, i_max + 1):
                         p = tri_point(i, j)
                         add_segment_if_dark(world(*p), world(*tri_point(i + 1, j)), threshold)
@@ -1506,6 +1600,7 @@ class MainWindow(QMainWindow):
             offsets = (0.0, 90.0)
 
         for layer in range(levels):
+            converter.check_cancelled(cancel_check)
             threshold = (layer + 1) / (levels + 1)
             raster_spacing = active_spacing / math.sqrt(layer + 1)
             for offset_angle in offsets:
@@ -1519,10 +1614,12 @@ class MainWindow(QMainWindow):
                 t_min = min(t_values) - raster_spacing
                 t_max = max(t_values) + raster_spacing
                 while s <= s_max:
+                    converter.check_cancelled(cancel_check)
                     active_start = None
                     last_point = None
                     t = t_min
                     while t <= t_max:
+                        converter.check_cancelled(cancel_check)
                         x = ux * t + nx * s
                         y = uy * t + ny * s
                         inside = view.left() <= x <= view.right() and view.top() <= y <= view.bottom()
@@ -1543,13 +1640,15 @@ class MainWindow(QMainWindow):
                     s += raster_spacing
         return contours
 
-    def concentric_from_closed_contours(self, contours, settings):
+    def concentric_from_closed_contours(self, contours, settings, cancel_check=None):
+        converter.check_cancelled(cancel_check)
         spacing = self.pattern_spacing(settings, "concentric")
         if spacing <= 0:
             return []
         close_tol = max(float(getattr(settings, "tolerance", 0.25)) * 2.0, 0.5)
         polygons = []
         for contour in contours:
+            converter.check_cancelled(cancel_check)
             if len(contour) < 4:
                 continue
             polygon = list(contour)
@@ -1591,6 +1690,7 @@ class MainWindow(QMainWindow):
         path = QPainterPath()
         path.setFillRule(Qt.OddEvenFill)
         for polygon in polygons:
+            converter.check_cancelled(cancel_check)
             px0, py0 = to_px(polygon[0])
             path.moveTo(px0, py0)
             for point in polygon[1:]:
@@ -1611,6 +1711,7 @@ class MainWindow(QMainWindow):
         big = 1.0e9
         dist = [big] * total
         for y in range(height):
+            converter.check_cancelled(cancel_check)
             row = y * width
             src = y * bpl
             for x in range(width):
@@ -1619,6 +1720,7 @@ class MainWindow(QMainWindow):
 
         diag = math.sqrt(2.0)
         for y in range(height):
+            converter.check_cancelled(cancel_check)
             row = y * width
             for x in range(width):
                 i = row + x
@@ -1633,6 +1735,7 @@ class MainWindow(QMainWindow):
                         d = min(d, dist[i - width + 1] + diag)
                 dist[i] = d
         for y in range(height - 1, -1, -1):
+            converter.check_cancelled(cancel_check)
             row = y * width
             for x in range(width - 1, -1, -1):
                 i = row + x
@@ -1736,6 +1839,7 @@ class MainWindow(QMainWindow):
             step_a = max(1, len(a_pts) // 160)
             step_b = max(1, len(b_pts) // 160)
             for ia in range(0, len(a_pts), step_a):
+                converter.check_cancelled(cancel_check)
                 a = a_pts[ia]
                 for ib in range(0, len(b_pts), step_b):
                     b = b_pts[ib]
@@ -1750,6 +1854,7 @@ class MainWindow(QMainWindow):
             best = None
             best_d = max_gap_px
             for index, point in enumerate(pts):
+                converter.check_cancelled(cancel_check)
                 d = converter.distance(endpoint, point)
                 if d < best_d and connector_inside(endpoint, point):
                     best = (d, index)
@@ -1760,6 +1865,7 @@ class MainWindow(QMainWindow):
             chains = []
             max_gap_px = spacing * px_per_unit * 2.35
             for level_index, loops in enumerate(levels):
+                converter.check_cancelled(cancel_check)
                 loops = [closed_loop(loop) for loop in loops if len(loop) >= 4 and loop[0] == loop[-1]]
                 if not loops:
                     continue
@@ -1819,9 +1925,11 @@ class MainWindow(QMainWindow):
         max_dist = max(d for d in dist if d < big) / px_per_unit
         level = spacing
         while level < max_dist:
+            converter.check_cancelled(cancel_check)
             threshold = level * px_per_unit
             segments = []
             for y in range(height - 1):
+                converter.check_cancelled(cancel_check)
                 row = y * width
                 next_row = row + width
                 for x in range(width - 1):
@@ -1850,7 +1958,8 @@ class MainWindow(QMainWindow):
             level += spacing
         return [[to_world(point) for point in chain] for chain in join_concentric_levels(levels) if len(chain) >= 2]
 
-    def lattice_from_closed_contours(self, contours, settings):
+    def lattice_from_closed_contours(self, contours, settings, cancel_check=None):
+        converter.check_cancelled(cancel_check)
         pattern = converter.normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))
         spacing = self.pattern_spacing(settings, pattern)
         if spacing <= 0:
@@ -1858,6 +1967,7 @@ class MainWindow(QMainWindow):
         close_tol = max(float(getattr(settings, "tolerance", 0.25)) * 2.0, 0.5)
         polygons = []
         for contour in contours:
+            converter.check_cancelled(cancel_check)
             if len(contour) < 4:
                 continue
             polygon = list(contour)
@@ -1892,6 +2002,7 @@ class MainWindow(QMainWindow):
         path = QPainterPath()
         path.setFillRule(Qt.OddEvenFill)
         for polygon in polygons:
+            converter.check_cancelled(cancel_check)
             px0, py0 = to_px(polygon[0])
             path.moveTo(px0, py0)
             for point in polygon[1:]:
@@ -1967,6 +2078,7 @@ class MainWindow(QMainWindow):
                 last = None
 
             for idx in range(steps + 1):
+                converter.check_cancelled(cancel_check)
                 t = idx / steps
                 point = (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
                 active = inside(point)
@@ -1995,6 +2107,7 @@ class MainWindow(QMainWindow):
                 return ((i + j * 0.5) * side, j * row_step)
 
             for j in range(j_min, j_max + 1):
+                converter.check_cancelled(cancel_check)
                 for i in range(i_min, i_max + 1):
                     p = tri_point(i, j)
                     add_segment(world(*p), world(*tri_point(i + 1, j)))
@@ -2007,6 +2120,7 @@ class MainWindow(QMainWindow):
             y_min = int(math.floor((rmin_y - half) / half)) - 1
             y_max = int(math.ceil((rmax_y + half) / half)) + 1
             for j in range(y_min, y_max + 1):
+                converter.check_cancelled(cancel_check)
                 y = j * half
                 for i in range(x_min, x_max + 1):
                     x = i * half
@@ -2019,8 +2133,10 @@ class MainWindow(QMainWindow):
             x = math.floor((rmin_x - radius) / x_step) * x_step
             col = 0
             while x <= rmax_x + radius:
+                converter.check_cancelled(cancel_check)
                 y = math.floor((rmin_y - radius) / y_step) * y_step + (y_step * 0.5 if col % 2 else 0.0)
                 while y <= rmax_y + radius:
+                    converter.check_cancelled(cancel_check)
                     vertices = [world(x + math.cos(math.radians(60.0 * i)) * radius, y + math.sin(math.radians(60.0 * i)) * radius) for i in range(7)]
                     for a, b in zip(vertices, vertices[1:]):
                         add_segment(a, b)
@@ -2031,11 +2147,12 @@ class MainWindow(QMainWindow):
             return converter.chain_segments_to_paths(out)
         return out
 
-    def load_contours(self, svg_path, settings):
+    def load_contours(self, svg_path, settings, cancel_check=None):
+        converter.check_cancelled(cancel_check)
         key = self.raw_geometry_key(svg_path, settings)
         if self.raw_cache_key != key or self.raw_contours is None:
             parse_hatch_spacing = 0.0 if getattr(settings, "raster_shading", False) else float(getattr(settings, "hatch_spacing_mm", 0.0))
-            self.raw_contours = converter.parse_svg_geometry(
+            raw_contours = converter.parse_svg_geometry(
                 svg_path,
                 settings.tolerance,
                 settings.flip_y,
@@ -2047,6 +2164,7 @@ class MainWindow(QMainWindow):
                 True,
                 float(getattr(settings, "triangle_size_mm", 0.0)),
                 self.pattern_size_values(settings),
+                cancel_check,
             )
             if getattr(settings, "raster_shading", False):
                 pattern = converter.normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))
@@ -2063,15 +2181,18 @@ class MainWindow(QMainWindow):
                         False,
                         float(getattr(settings, "triangle_size_mm", 0.0)),
                         self.pattern_size_values(settings),
+                        cancel_check,
                     )
                     if pattern == "concentric":
-                        self.raw_contours.extend(self.concentric_from_closed_contours(centerline_contours, settings))
+                        raw_contours.extend(self.concentric_from_closed_contours(centerline_contours, settings, cancel_check))
                     else:
-                        self.raw_contours.extend(self.lattice_from_closed_contours(centerline_contours, settings))
+                        raw_contours.extend(self.lattice_from_closed_contours(centerline_contours, settings, cancel_check))
                 else:
-                    self.raw_contours.extend(self.raster_shade_contours(svg_path, settings))
+                    raw_contours.extend(self.raster_shade_contours(svg_path, settings, cancel_check))
+            converter.check_cancelled(cancel_check)
+            self.raw_contours = raw_contours
             self.raw_cache_key = key
-            self.log.append(f"Parsed SVG geometry once: {len(self.raw_contours)} raw contours.")
+        converter.check_cancelled(cancel_check)
         return converter.apply_geometry_settings(self.raw_contours, settings)
 
     def print_speed_mm_s(self):
@@ -2125,10 +2246,7 @@ class MainWindow(QMainWindow):
                 strategy = move.get("strategy", "tangent")
                 strategy_counts[strategy] = strategy_counts.get(strategy, 0) + 1
             elif kind == "travel":
-                if "motion_length" in move or "xy_length" in move:
-                    travel_seconds += float(move.get("xy_length", move.get("motion_length", 0.0))) / PREVIEW_TRAVEL_MM_S
-                else:
-                    travel_seconds += float(move.get("duration_ms", 0.0)) / 1000.0
+                travel_seconds += float(move.get("duration_ms", 0.0)) / 1000.0
             elif kind in ("pen_up", "pen_down"):
                 pen_seconds += float(move.get("duration_ms", 0.0)) / 1000.0
 
@@ -2180,18 +2298,9 @@ class MainWindow(QMainWindow):
         ink_h = path_h + pen
         return f"path {fmt(path_w)} x {fmt(path_h)} mm, estimated ink {fmt(ink_w)} x {fmt(ink_h)} mm"
 
-    def load_preview(self, show_errors=True):
-        try:
-            settings = self.settings()
-            raw_contours = self.load_contours(self.svg_path.text(), settings)
-            bed_center = converter.contour_center(raw_contours)
-            clip_radius = max(float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0 - float(getattr(settings, "bed_margin_mm", 0.0)), 0.0)
-            self.moves = self.build_preview_moves(raw_contours, settings)
-            self.contours = converter.clip_contours_to_bed(raw_contours, bed_center, clip_radius)
-        except Exception as exc:
-            if show_errors:
-                QMessageBox.critical(self, "Preview failed", str(exc))
-            return None
+    def install_preview(self, settings, contours, moves, bed_center):
+        self.moves = moves
+        self.contours = contours
         self.command_list.clear()
         headers = ["(Generated preview)", "G21", "G90", f"G0 F{fmt(settings.travel_rate)}"]
         lines = headers
@@ -2203,8 +2312,77 @@ class MainWindow(QMainWindow):
         return settings
 
     def preview(self):
-        if self.load_preview(show_errors=True) is None:
+        if self.preview_thread is not None:
             return
+        svg_path = self.svg_path.text().strip()
+        if not svg_path:
+            QMessageBox.warning(self, "Preview needs an SVG", "Choose an SVG file first.")
+            return
+        try:
+            settings = self.settings()
+            self.raw_geometry_key(svg_path, settings)
+        except Exception as exc:
+            QMessageBox.critical(self, "Preview failed", str(exc))
+            return
+
+        self.pause()
+        self.preview_button.setEnabled(False)
+        self.preview_button.setText("Building...")
+        self.cancel_preview_button.setEnabled(True)
+        self.save_button.setEnabled(False)
+        self.preview_build_bar.setValue(2)
+        self.preview_build_bar.show()
+        self.preview_stage.setProperty("stage", "Reading settings")
+        self.preview_stage.setText("Reading settings | 0.0 s")
+        self.preview_stage.show()
+        self.status.setText("Building preview...")
+        self.preview_started_at = time.monotonic()
+        self.preview_elapsed_timer.start(100)
+
+        self.preview_thread = QThread(self)
+        self.preview_worker = PreviewWorker(self, svg_path, settings)
+        self.preview_worker.moveToThread(self.preview_thread)
+        self.preview_thread.started.connect(self.preview_worker.run)
+        self.preview_worker.progress.connect(self.set_preview_build_progress)
+        self.preview_worker.finished.connect(self.preview_ready)
+        self.preview_worker.failed.connect(self.preview_failed)
+        self.preview_worker.cancelled.connect(self.preview_cancelled)
+        self.preview_worker.finished.connect(self.preview_thread.quit)
+        self.preview_worker.failed.connect(self.preview_thread.quit)
+        self.preview_worker.cancelled.connect(self.preview_thread.quit)
+        self.preview_thread.finished.connect(self.preview_worker.deleteLater)
+        self.preview_thread.finished.connect(self.preview_thread.deleteLater)
+        self.preview_thread.finished.connect(self.preview_thread_finished)
+        self.preview_thread.start()
+
+    def cancel_preview(self):
+        if self.preview_worker is None:
+            return
+        self.preview_worker.cancel()
+        self.cancel_preview_button.setEnabled(False)
+        self.preview_stage.setProperty("stage", "Cancelling preview")
+        self.update_preview_elapsed()
+        self.status.setText("Cancelling preview...")
+
+    def set_preview_build_progress(self, percent, stage):
+        self.preview_build_bar.setValue(percent)
+        self.preview_build_bar.setFormat(f"{percent}%")
+        self.preview_stage.setProperty("stage", stage)
+        self.update_preview_elapsed()
+
+    def update_preview_elapsed(self):
+        if self.preview_started_at is None:
+            return
+        stage = self.preview_stage.property("stage") or "Building preview"
+        elapsed = time.monotonic() - self.preview_started_at
+        self.preview_stage.setText(f"{stage} | {elapsed:.1f} s")
+
+    def preview_ready(self, result):
+        settings, contours, moves, bed_center = result
+        self.set_preview_build_progress(90, "Preparing OpenGL preview")
+        QApplication.processEvents()
+        self.install_preview(settings, contours, moves, bed_center)
+        self.set_preview_build_progress(100, "Preview ready")
         estimate = self.update_estimate()
         if estimate:
             self.log.append(
@@ -2216,6 +2394,40 @@ class MainWindow(QMainWindow):
         size_summary = self.size_summary()
         if size_summary:
             self.log.append(f"Pen compensation: {size_summary}.")
+        self.status.setText(f"Preview ready: {len(self.moves)} commands.")
+
+    def preview_failed(self, message):
+        self.preview_build_bar.setValue(0)
+        self.preview_stage.setProperty("stage", "Preview failed")
+        self.update_preview_elapsed()
+        self.status.setText("Preview failed.")
+        QMessageBox.critical(self, "Preview failed", message)
+
+    def preview_cancelled(self):
+        self.preview_build_bar.setValue(0)
+        self.preview_build_bar.setFormat("Cancelled")
+        self.preview_stage.setProperty("stage", "Preview cancelled")
+        self.update_preview_elapsed()
+        self.status.setText("Preview cancelled. The previous preview was kept.")
+        self.log.append("Preview generation cancelled.")
+
+    def preview_thread_finished(self):
+        self.preview_elapsed_timer.stop()
+        self.update_preview_elapsed()
+        self.preview_button.setEnabled(True)
+        self.preview_button.setText("Preview")
+        self.cancel_preview_button.setEnabled(False)
+        self.save_button.setEnabled(True)
+        self.preview_thread = None
+        self.preview_worker = None
+
+    def closeEvent(self, event):
+        if self.preview_thread is not None:
+            self.cancel_preview()
+            self.status.setText("Cancelling preview. Close again after cancellation finishes.")
+            event.ignore()
+            return
+        super().closeEvent(event)
 
     def convert(self):
         svg_path = self.svg_path.text().strip()

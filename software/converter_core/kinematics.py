@@ -1,5 +1,6 @@
 import math
 
+from .cancellation import check_cancelled
 from .geometry import distance, filtered_contour, normalized_hatch_pattern, unwrap_angle
 from .settings import pattern_size_override, pattern_size_values
 
@@ -149,7 +150,7 @@ def _rtheta_segment_plan(a, b, settings, previous_theta, previous_machine, cente
     }
 
 
-def _plan_contour_thetas_rtheta(path, settings, previous_theta, center, previous_machine):
+def _plan_contour_thetas_rtheta(path, settings, previous_theta, center, previous_machine, cancel_check=None):
     n = len(path)
     if n < 2:
         return [], []
@@ -159,6 +160,7 @@ def _plan_contour_thetas_rtheta(path, settings, previous_theta, center, previous
     prev_theta = theta0
     prev_machine = bed_to_machine(path[0], theta0, center)
     for k in range(n - 1):
+        check_cancelled(cancel_check)
         a, b = path[k], path[k + 1]
         if distance(a, b) <= 1e-9:
             thetas[k + 1] = prev_theta
@@ -253,7 +255,7 @@ def smooth_sequence(values, window):
     return out
 
 
-def _plan_contour_thetas_greedy(path, settings, previous_theta, center, previous_machine):
+def _plan_contour_thetas_greedy(path, settings, previous_theta, center, previous_machine, cancel_check=None):
     # Greedy per-point bed orientation along the contour, then a moving-average
     # smoothing pass to remove segment-to-segment jitter (e.g. erratic
     # axis-locking) and ease the bed through sharp tangent flips. Cheap, but it
@@ -269,6 +271,7 @@ def _plan_contour_thetas_greedy(path, settings, previous_theta, center, previous
     prev_theta = thetas[0]
     prev_machine = bed_to_machine(path[0], thetas[0], center)
     for k in range(n - 1):
+        check_cancelled(cancel_check)
         a, b = path[k], path[k + 1]
         if distance(a, b) <= 1e-9:
             thetas[k + 1] = prev_theta
@@ -403,7 +406,7 @@ def _dp_edge_cost(ma_i, mb_j, ang_i, ang_j, label_j, tan, ratio, theta_weight, r
     return cost
 
 
-def _plan_contour_thetas_dp(path, settings, previous_theta, center, previous_machine):
+def _plan_contour_thetas_dp(path, settings, previous_theta, center, previous_machine, cancel_check=None):
     # Viterbi shortest-path over a per-point lattice of principal bed orientations.
     # The motor term |dtheta|*ratio accumulates along the whole contour, so the
     # global optimum avoids the wasteful back-and-forth winding the greedy (which
@@ -432,6 +435,7 @@ def _plan_contour_thetas_dp(path, settings, previous_theta, center, previous_mac
 
     cand = []
     for j in range(n):
+        check_cancelled(cancel_check)
         tlines = []
         if j - 1 >= 0:
             tlines.append(base[j - 1])
@@ -440,7 +444,10 @@ def _plan_contour_thetas_dp(path, settings, previous_theta, center, previous_mac
         prev_nm = nom_machine[j - 1] if j >= 1 else None
         cand.append(_dp_point_candidates(path[j], center, tlines, prev_nm, hold_grid_deg))
 
-    mach = [[bed_to_machine(path[j], ang, center) for ang, _ in cand[j]] for j in range(n)]
+    mach = []
+    for j in range(n):
+        check_cancelled(cancel_check)
+        mach.append([bed_to_machine(path[j], ang, center) for ang, _ in cand[j]])
 
     INF = float("inf")
     # Seed the first column from inter-contour continuity: rotating from the prior
@@ -457,17 +464,20 @@ def _plan_contour_thetas_dp(path, settings, previous_theta, center, previous_mac
     back = [[-1] * len(cand[0])]
 
     for k in range(n - 1):
+        check_cancelled(cancel_check)
         ca, ma = cand[k], mach[k]
         cb, mb = cand[k + 1], mach[k + 1]
         tan = base[k]
         next_cost = [INF] * len(cb)
         next_back = [-1] * len(cb)
         for j in range(len(cb)):
+            check_cancelled(cancel_check)
             ang_j = cb[j][0]
             m_j = mb[j]
             best = INF
             best_i = -1
             for i in range(len(ca)):
+                check_cancelled(cancel_check)
                 e = _dp_edge_cost(ma[i], m_j, ca[i][0], ang_j, cb[j][1], tan, ratio, theta_weight, round_bias, hold_penalty)
                 tot = cost[i] + e
                 if tot < best:
@@ -482,6 +492,7 @@ def _plan_contour_thetas_dp(path, settings, previous_theta, center, previous_mac
     idx = [0] * n
     idx[n - 1] = last
     for k in range(n - 1, 0, -1):
+        check_cancelled(cancel_check)
         idx[k - 1] = back[k][idx[k]]
 
     # Reconstruct absolute (continuous) thetas: take the nearest wrap on each step,
@@ -490,6 +501,7 @@ def _plan_contour_thetas_dp(path, settings, previous_theta, center, previous_mac
     thetas = [0.0] * n
     thetas[0] = unwrap_angle(principals[0], previous_theta) if previous_theta is not None else principals[0]
     for j in range(1, n):
+        check_cancelled(cancel_check)
         thetas[j] = unwrap_angle(principals[j], thetas[j - 1])
 
     window = _effective_theta_smooth_window(settings)
@@ -502,6 +514,7 @@ def _plan_contour_thetas_dp(path, settings, previous_theta, center, previous_mac
     # segments are all named after the axis that actually did the work.
     strategies = []
     for k in range(n - 1):
+        check_cancelled(cancel_check)
         ma = bed_to_machine(path[k], thetas[k], center)
         mb = bed_to_machine(path[k + 1], thetas[k + 1], center)
         dx = abs(mb[0] - ma[0])
@@ -510,7 +523,7 @@ def _plan_contour_thetas_dp(path, settings, previous_theta, center, previous_mac
     return thetas, strategies
 
 
-def plan_contour_thetas(path, settings, previous_theta, center, previous_machine):
+def plan_contour_thetas(path, settings, previous_theta, center, previous_machine, cancel_check=None):
     # Centralized per-contour theta selection. Returns (thetas, strategies):
     # thetas[k] is the bed orientation at path[k]; strategies[k] labels segment
     # path[k]->path[k+1]. Smoothing/DP only change *how the bed is oriented while
@@ -521,10 +534,10 @@ def plan_contour_thetas(path, settings, previous_theta, center, previous_machine
     resolver = str(getattr(settings, "theta_resolver", "rtheta")).strip().lower()
     mode = str(getattr(settings, "theta_mode", "optimized")).strip().lower()
     if resolver in ("rtheta", "r-theta", "axis_cost", "axis-cost") and mode in ("optimized", "auto", "select"):
-        return _plan_contour_thetas_rtheta(path, settings, previous_theta, center, previous_machine)
+        return _plan_contour_thetas_rtheta(path, settings, previous_theta, center, previous_machine, cancel_check)
     if resolver == "dp" and mode in ("optimized", "auto", "select"):
-        return _plan_contour_thetas_dp(path, settings, previous_theta, center, previous_machine)
-    return _plan_contour_thetas_greedy(path, settings, previous_theta, center, previous_machine)
+        return _plan_contour_thetas_dp(path, settings, previous_theta, center, previous_machine, cancel_check)
+    return _plan_contour_thetas_greedy(path, settings, previous_theta, center, previous_machine, cancel_check)
 
 
 def ne_park_position(center, settings):
@@ -543,8 +556,8 @@ def first_segment_theta(path, settings, previous_theta, center, previous_machine
     return None
 
 
-def simulate_contour_exit(path, settings, center, previous_theta, previous_machine):
-    thetas, _ = plan_contour_thetas(path, settings, previous_theta, center, previous_machine)
+def simulate_contour_exit(path, settings, center, previous_theta, previous_machine, cancel_check=None):
+    thetas, _ = plan_contour_thetas(path, settings, previous_theta, center, previous_machine, cancel_check)
     if not thetas:
         return None
     return {
@@ -627,9 +640,10 @@ def _ring_cells(cx, cy, r):
         yield (cx + r, cy + dy)
 
 
-def planned_contours(contours, settings, center):
+def planned_contours(contours, settings, center, cancel_check=None):
     items = []
     for index, contour in enumerate(contours):
+        check_cancelled(cancel_check)
         path = filtered_contour(contour)
         if len(path) >= 2:
             items.append({"index": index, "path": path})
@@ -648,6 +662,7 @@ def planned_contours(contours, settings, center):
         return (int(math.floor(point[0] / cell_size)), int(math.floor(point[1] / cell_size)))
 
     for i, item in enumerate(items):
+        check_cancelled(cancel_check)
         path = item["path"]
         grid.setdefault(cell_key(path[0]), []).append((i, False))
         grid.setdefault(cell_key(path[-1]), []).append((i, True))
@@ -663,6 +678,7 @@ def planned_contours(contours, settings, center):
     K = _PLANNER_CANDIDATE_COUNT
 
     while True:
+        check_cancelled(cancel_check)
         if previous_machine is None:
             search_pt = center
         else:
@@ -673,13 +689,16 @@ def planned_contours(contours, settings, center):
         top_k = []  # max-heap by (-squared_distance, slot)
         any_seen = False
         for r in range(max_ring + 1):
+            check_cancelled(cancel_check)
             ring_had_active = False
             for key in _ring_cells(scx, scy, r):
+                check_cancelled(cancel_check)
                 if key not in grid:
                     continue
                 bucket = grid[key]
                 live = []
                 for slot in bucket:
+                    check_cancelled(cancel_check)
                     item_idx, reverse_flag = slot
                     if not active[item_idx]:
                         continue
@@ -709,6 +728,7 @@ def planned_contours(contours, settings, center):
 
         best = None
         for item_idx, reverse_flag in candidates:
+            check_cancelled(cancel_check)
             item = items[item_idx]
             path = list(reversed(item["path"])) if reverse_flag else item["path"]
             first_theta = first_segment_theta(path, settings, previous_theta, center, previous_machine)
@@ -732,7 +752,7 @@ def planned_contours(contours, settings, center):
                 active[item_idx] = False
             continue
 
-        state = simulate_contour_exit(best["path"], settings, center, previous_theta, previous_machine)
+        state = simulate_contour_exit(best["path"], settings, center, previous_theta, previous_machine, cancel_check)
         active[best["item_idx"]] = False
         if state is None:
             continue
@@ -749,10 +769,10 @@ def planned_contours(contours, settings, center):
         previous_theta = state["end_theta"]
         previous_machine = state["end_machine"]
 
-    return _two_opt_pass(ordered, window=24)
+    return _two_opt_pass(ordered, window=24, cancel_check=cancel_check)
 
 
-def _two_opt_pass(ordered, window=24):
+def _two_opt_pass(ordered, window=24, cancel_check=None):
     # Bounded 2-opt on bed-frame endpoints. Adjacent contours rotate the bed
     # little, so bed-frame distance tracks machine travel closely enough to fix
     # gross ordering mistakes. Downstream recomputes exact kinematics, so we only
@@ -767,11 +787,13 @@ def _two_opt_pass(ordered, window=24):
         return math.hypot(dx, dy)
 
     for i in range(n - 2):
+        check_cancelled(cancel_check)
         a_end = ordered[i]["path"][-1]
         b_start = ordered[i + 1]["path"][0]
         best_j = -1
         best_delta = -1e-9
         for j in range(i + 2, min(i + 1 + window, n)):
+            check_cancelled(cancel_check)
             c_end = ordered[j]["path"][-1]
             base = gap(a_end, b_start)
             swap = gap(a_end, c_end)

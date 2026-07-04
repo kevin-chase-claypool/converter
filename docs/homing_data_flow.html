@@ -1,0 +1,1072 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RP23CNC Homing Data Flow Sheet</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101418;
+      --panel: #171d23;
+      --panel-2: #1f2730;
+      --text: #e7edf3;
+      --muted: #a8b3bd;
+      --line: #33414f;
+      --motion: #74b9ff;
+      --sensor: #7bd88f;
+      --tool: #f6c177;
+      --host: #c4a7e7;
+      --center-flow: #4fd1c5;
+      --axis-flow: #ff9f7a;
+      --danger: #ff7b72;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.45;
+    }
+
+    main {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-weight: 650;
+    }
+
+    h1 {
+      font-size: 30px;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin-top: 30px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+      font-size: 20px;
+    }
+
+    h3 {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      margin: 8px 0;
+      color: var(--muted);
+    }
+
+    code {
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: #0b0f13;
+      color: var(--text);
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 0.95em;
+    }
+
+    .lede {
+      max-width: 920px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .grid.cols-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid.cols-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 14px;
+    }
+
+    .tag {
+      display: inline-block;
+      margin: 2px 4px 2px 0;
+      padding: 2px 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .host {
+      border-color: color-mix(in srgb, var(--host) 55%, var(--line));
+    }
+
+    .motion {
+      border-color: color-mix(in srgb, var(--motion) 55%, var(--line));
+    }
+
+    .sensor {
+      border-color: color-mix(in srgb, var(--sensor) 55%, var(--line));
+    }
+
+    .tool {
+      border-color: color-mix(in srgb, var(--tool) 55%, var(--line));
+    }
+
+    .flow-panel {
+      margin-top: 30px;
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: color-mix(in srgb, var(--panel) 88%, #000);
+    }
+
+    .flow-panel h2 {
+      margin-top: 0;
+    }
+
+    .flow-center {
+      border-color: var(--center-flow);
+    }
+
+    .flow-axis {
+      border-color: var(--axis-flow);
+    }
+
+    .flow-abort {
+      border-color: var(--danger);
+    }
+
+    .flow-center h2,
+    .text-center-flow {
+      color: var(--center-flow);
+    }
+
+    .flow-axis h2,
+    .text-axis-flow {
+      color: var(--axis-flow);
+    }
+
+    .flow-abort h2,
+    .text-abort-flow {
+      color: var(--danger);
+    }
+
+    svg .text-abort-flow {
+      fill: var(--text);
+      font: 600 12px "Segoe UI", Arial, sans-serif;
+    }
+
+    .flow-key {
+      margin: 8px 0 12px;
+      color: var(--muted);
+    }
+
+    .diagram {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 16px;
+    }
+
+    svg {
+      display: block;
+      min-width: 1120px;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .box {
+      fill: var(--panel-2);
+      stroke: var(--line);
+      stroke-width: 2;
+      rx: 8;
+    }
+
+    .box-host {
+      stroke: var(--host);
+    }
+
+    .box-motion {
+      stroke: var(--motion);
+    }
+
+    .box-sensor {
+      stroke: var(--sensor);
+    }
+
+    .box-tool {
+      stroke: var(--tool);
+    }
+
+    .box-abort {
+      stroke: var(--danger);
+    }
+
+    .label {
+      fill: var(--text);
+      font: 600 15px "Segoe UI", Arial, sans-serif;
+    }
+
+    .small {
+      fill: var(--muted);
+      font: 12px "Segoe UI", Arial, sans-serif;
+    }
+
+    .small-center-flow {
+      fill: var(--center-flow);
+      font: 600 12px "Segoe UI", Arial, sans-serif;
+    }
+
+    .small-axis-flow {
+      fill: var(--axis-flow);
+      font: 600 12px "Segoe UI", Arial, sans-serif;
+    }
+
+    .exit-bubble {
+      fill: #0f151a;
+      stroke-width: 2.5;
+    }
+
+    .exit-center {
+      stroke: var(--center-flow);
+    }
+
+    .exit-axis {
+      stroke: var(--axis-flow);
+    }
+
+    .exit-abort {
+      stroke: var(--danger);
+    }
+
+    .arrow {
+      fill: none;
+      stroke: var(--muted);
+      stroke-width: 2.5;
+      marker-end: url(#arrow);
+    }
+
+    .arrow-motion {
+      stroke: var(--motion);
+    }
+
+    .arrow-sensor {
+      stroke: var(--sensor);
+    }
+
+    .arrow-tool {
+      stroke: var(--tool);
+    }
+
+    .arrow-host {
+      stroke: var(--host);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    th,
+    td {
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      background: var(--panel-2);
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    td {
+      color: var(--muted);
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    ol,
+    ul {
+      margin: 8px 0 0 22px;
+      padding: 0;
+      color: var(--muted);
+    }
+
+    li {
+      margin: 6px 0;
+    }
+
+    .warn {
+      border-left: 4px solid var(--danger);
+      background: #24161a;
+    }
+
+    .ok {
+      border-left: 4px solid var(--sensor);
+    }
+
+    .mono {
+      font-family: Consolas, "Cascadia Mono", monospace;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 860px) {
+      main {
+        padding: 18px;
+      }
+
+      .grid.cols-2,
+      .grid.cols-4 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>RP23CNC Homing Data Flow Sheet</h1>
+    <p class="lede">
+      Goal: the normal startup experience should be simple. The user connects
+      ioSender, confirms the pen is lifted, runs grblHAL homing, and the system
+      establishes X, Y, and A references without a manual magnetic scan.
+    </p>
+
+    <h2>Required Components</h2>
+    <section class="grid cols-4">
+      <div class="card host">
+        <h3>Windows PC + ioSender</h3>
+        <p>Starts homing and reports status. It does not interpret magnetic fields during normal startup homing.</p>
+        <span class="tag">USB or Telnet</span>
+        <span class="tag">$H / $HA</span>
+        <span class="tag">status</span>
+      </div>
+      <div class="card motion">
+        <h3>RP23CNC / grblHAL</h3>
+        <p>Owns X/Y/A motion, homing cycles, step generation, limit inputs, and machine coordinates.</p>
+        <span class="tag">X/Y switches</span>
+        <span class="tag">A_HOME</span>
+        <span class="tag">G-code</span>
+      </div>
+      <div class="card sensor">
+        <h3>RP2040 + TMAG5273</h3>
+        <p>Reads the magnetic gradient and turns it into a clean digital A home/index signal.</p>
+        <span class="tag">I2C/Qwiic</span>
+        <span class="tag">hysteresis</span>
+        <span class="tag">A_HOME</span>
+      </div>
+      <div class="card tool">
+        <h3>Toolhead Controller</h3>
+        <p>Receives M5/M3. Must keep the pen retracted during homing and calibration.</p>
+        <span class="tag">M5 = lift</span>
+        <span class="tag">M3 = engage</span>
+        <span class="tag">safe default</span>
+      </div>
+    </section>
+
+    <h2>Normal Startup Homing Overview</h2>
+    <p class="flow-key">
+      Color references in this overview match the detailed sections below:
+      <span class="text-center-flow">Bed-Center Calibration Flow</span> is a
+      post-homing calibration path from the homing-complete state, while
+      <span class="text-axis-flow">A-Axis Magnetic Homing Subflow</span> is the
+      sensor-driven A_HOME portion inside normal homing.
+    </p>
+    <section class="diagram" aria-label="Normal startup homing overview diagram">
+      <svg viewBox="0 0 1160 670" role="img" aria-labelledby="title desc">
+        <title id="title">RP23CNC normal startup homing overview</title>
+        <desc id="desc">Data flow between ioSender, grblHAL, the combined RP2040 and TMAG5273 magnetic adapter, toolhead controller, motors, and home inputs.</desc>
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+          </marker>
+        </defs>
+
+        <rect class="box box-host" x="40" y="50" width="220" height="120"></rect>
+        <text class="label" x="62" y="82">Windows PC</text>
+        <text class="small" x="62" y="108">ioSender</text>
+        <text class="small" x="62" y="132">User sends M5, then $H</text>
+        <text class="small" x="62" y="154">Reads status/alarms</text>
+
+        <rect class="box box-motion" x="350" y="40" width="260" height="150"></rect>
+        <text class="label" x="372" y="72">RP23CNC / grblHAL</text>
+        <text class="small" x="372" y="98">Runs homing state machine</text>
+        <text class="small" x="372" y="122">Drives X/Y/A STEP/DIR</text>
+        <text class="small" x="372" y="146">Reads X_HOME, Y_HOME, A_HOME</text>
+        <text class="small" x="372" y="170">Exits when X/Y/A are homed</text>
+
+        <rect class="box box-tool" x="740" y="35" width="225" height="120"></rect>
+        <text class="label" x="762" y="67">Toolhead MCU</text>
+        <text class="small" x="762" y="93">Reads grblHAL output pin</text>
+        <text class="small" x="762" y="117">M5-commanded state = LIFT</text>
+        <text class="small" x="762" y="139">Pen must stay clear</text>
+
+        <rect class="box box-motion" x="740" y="230" width="225" height="120"></rect>
+        <text class="label" x="762" y="262">Motors + Mechanics</text>
+        <text class="small" x="762" y="288">X/Y gantry motion</text>
+        <text class="small" x="762" y="312">A rotates bed motor</text>
+        <text class="small" x="762" y="334">A units = motor degrees</text>
+
+        <rect class="box box-sensor" x="740" y="430" width="330" height="190"></rect>
+        <text class="label" x="762" y="462">RP2040 + TMAG5273 Adapter</text>
+        <text class="small" x="762" y="488">1. TMAG5273 fixed-height sensor</text>
+        <text class="small" x="762" y="512">2. Reads Bx/By/Bz from outer magnet</text>
+        <text class="small" x="762" y="536">3. RP2040 reads sensor over I2C</text>
+        <text class="small" x="762" y="560">4. Threshold + hysteresis filter</text>
+        <text class="small" x="762" y="582">5. Outputs switch-like A_HOME</text>
+        <text class="small-axis-flow" x="762" y="605">A-Axis Magnetic Homing Subflow</text>
+
+        <rect class="box box-motion" x="350" y="430" width="225" height="120"></rect>
+        <text class="label" x="372" y="462">Home Inputs</text>
+        <text class="small" x="372" y="488">X_HOME physical switch</text>
+        <text class="small" x="372" y="512">Y_HOME physical switch</text>
+        <text class="small" x="372" y="536">A_HOME from RP2040</text>
+
+        <rect class="box box-host" x="40" y="430" width="240" height="110"></rect>
+        <text class="label" x="62" y="462">Homing Complete</text>
+        <text class="small" x="62" y="488">grblHAL reports idle/homed</text>
+        <text class="small" x="62" y="512">Pen remains lifted</text>
+        <text class="small-center-flow" x="62" y="532">Bed-Center Calibration Flow</text>
+
+        <path class="arrow arrow-motion" d="M 260 108 L 350 108"></path>
+        <text class="small" x="285" y="94">$H, $I, ?, $$</text>
+
+        <path class="arrow arrow-tool" d="M 610 92 L 740 92"></path>
+        <text class="small" x="635" y="78">spindle/LIFT pin state</text>
+
+        <path class="arrow arrow-motion" d="M 610 130 L 690 130 L 690 290 L 740 290"></path>
+        <text class="small" x="705" y="210">STEP/DIR</text>
+
+        <path class="arrow arrow-sensor" d="M 852 350 L 852 430"></path>
+        <text class="small" x="866" y="393">magnetic field</text>
+
+        <path class="arrow arrow-sensor" d="M 740 500 L 575 500"></path>
+        <text class="small" x="642" y="486">A_HOME</text>
+
+        <path class="arrow arrow-motion" d="M 462 430 L 462 190"></path>
+        <text class="small" x="478" y="315">home inputs while homing</text>
+
+        <path class="arrow arrow-motion" d="M 425 190 L 425 375 L 160 375 L 160 430"></path>
+        <text class="small" x="182" y="362">all axes homed</text>
+
+        <path class="arrow" d="M 40 485 L 18 485 L 18 110 L 40 110"></path>
+        <text class="small" x="32" y="305">status: idle / ready</text>
+      </svg>
+    </section>
+
+    <section class="flow-panel flow-center">
+      <h2>Bed-Center Calibration Flow</h2>
+      <p>
+        This flow locates the physical bed center after X/Y are homed. It is a
+        separate magnetic operation from A/theta homing. The TMAG5273 scans a
+        bounded <code>4 in x 4 in</code> X/Y window around the expected center
+        magnet, finds the left/right and front/back magnetic footprint edges, and
+        computes the actual bed-center point.
+      </p>
+      <section class="diagram" aria-label="Center magnet scan data flowchart">
+      <svg viewBox="0 0 1160 700" role="img" aria-labelledby="c-title c-desc">
+        <title id="c-title">Center magnet scan data flowchart</title>
+        <desc id="c-desc">A flowchart for lifting the pen, homing X and Y, scanning a four inch by four inch window over the center magnet, computing bed center, and validating the result.</desc>
+        <defs>
+          <marker id="c-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+          </marker>
+        </defs>
+
+        <rect class="box box-tool" x="40" y="40" width="245" height="95"></rect>
+        <text class="label" x="62" y="72">1. Lift toolhead</text>
+        <text class="small" x="62" y="98">ioSender sends M5</text>
+        <text class="small" x="62" y="120">Pen must clear bed</text>
+
+        <rect class="box box-motion" x="350" y="40" width="245" height="95"></rect>
+        <text class="label" x="372" y="72">2. Home X/Y</text>
+        <text class="small" x="372" y="98">grblHAL runs physical switches</text>
+        <text class="small" x="372" y="120">Machine X/Y are referenced</text>
+
+        <rect class="box box-motion" x="660" y="40" width="245" height="95"></rect>
+        <text class="label" x="682" y="72">3. Move near center</text>
+        <text class="small" x="682" y="98">Use expected bed-center area</text>
+        <text class="small" x="682" y="120">A may remain unindexed</text>
+
+        <rect class="box box-motion" x="40" y="205" width="245" height="115"></rect>
+        <text class="label" x="62" y="237">4. Scan X/Y window</text>
+        <text class="small" x="62" y="263">Bounded 4 in x 4 in area</text>
+        <text class="small" x="62" y="287">Step/raster path TBD</text>
+        <text class="small" x="62" y="309">Fixed installed sensor height</text>
+
+        <rect class="box box-sensor" x="350" y="205" width="245" height="115"></rect>
+        <text class="label" x="372" y="237">5. Read TMAG5273</text>
+        <text class="small" x="372" y="263">RP2040 streams Bx/By/Bz</text>
+        <text class="small" x="372" y="287">Average samples per point</text>
+        <text class="small" x="372" y="309">Record X/Y + field value</text>
+
+        <rect class="box box-sensor" x="660" y="205" width="245" height="115"></rect>
+        <text class="label" x="682" y="237">6. Find edges</text>
+        <text class="small" x="682" y="263">left/right threshold edges</text>
+        <text class="small" x="682" y="287">front/back threshold edges</text>
+        <text class="small" x="682" y="309">Use footprint, not peak</text>
+
+        <rect class="box box-sensor" x="40" y="385" width="245" height="120"></rect>
+        <text class="label" x="62" y="417">7. Compute center</text>
+        <text class="small" x="62" y="443">center_x = (left + right) / 2</text>
+        <text class="small" x="62" y="467">center_y = (front + back) / 2</text>
+        <text class="small" x="62" y="489">Save bed-center estimate</text>
+
+        <rect class="box box-sensor" x="350" y="385" width="245" height="120"></rect>
+        <text class="label" x="372" y="417">8. Validate result</text>
+        <text class="small" x="372" y="443">Footprint inside window</text>
+        <text class="small" x="372" y="467">Edges repeat within tolerance</text>
+        <text class="small" x="372" y="489">No saturation of whole window</text>
+
+        <rect class="box box-motion" x="660" y="385" width="245" height="120"></rect>
+        <text class="label" x="682" y="417">9. Use center</text>
+        <text class="small" x="682" y="443">Move to outer magnet radius</text>
+        <text class="small" x="682" y="467">Then run A/theta scan</text>
+        <text class="small" x="682" y="489">Do not set A from center magnet</text>
+
+        <rect class="box box-abort" x="950" y="205" width="170" height="300"></rect>
+        <text class="label" x="972" y="237">Abort if</text>
+        <text class="small" x="972" y="267">Pen is not lifted</text>
+        <text class="small" x="972" y="295">X/Y not homed</text>
+        <text class="small" x="972" y="323">No center magnet found</text>
+        <text class="small" x="972" y="351">Footprint exits window</text>
+        <text class="small" x="972" y="379">Whole window saturates</text>
+        <text class="small" x="972" y="407">Edges inconsistent</text>
+        <text class="small" x="972" y="435">RP2040 read fault</text>
+        <text class="small" x="972" y="463">grblHAL alarm</text>
+
+        <ellipse class="exit-bubble exit-center" cx="1035" cy="575" rx="90" ry="45"></ellipse>
+        <text class="label" x="1000" y="568">Exit</text>
+        <text class="small-center-flow" x="980" y="592">center stored / ready</text>
+
+        <path class="arrow arrow-tool" marker-end="url(#c-arrow)" d="M 285 88 L 350 88"></path>
+        <path class="arrow arrow-motion" marker-end="url(#c-arrow)" d="M 595 88 L 660 88"></path>
+        <path class="arrow arrow-motion" marker-end="url(#c-arrow)" d="M 782 135 L 782 170 L 162 170 L 162 205"></path>
+        <path class="arrow arrow-sensor" marker-end="url(#c-arrow)" d="M 285 262 L 350 262"></path>
+        <path class="arrow arrow-sensor" marker-end="url(#c-arrow)" d="M 595 262 L 660 262"></path>
+        <path class="arrow arrow-sensor" marker-end="url(#c-arrow)" d="M 782 320 L 782 350 L 162 350 L 162 385"></path>
+        <path class="arrow arrow-sensor" marker-end="url(#c-arrow)" d="M 285 445 L 350 445"></path>
+        <path class="arrow arrow-motion" marker-end="url(#c-arrow)" d="M 595 445 L 660 445"></path>
+        <path class="arrow arrow-motion" marker-end="url(#c-arrow)" d="M 782 505 L 782 575 L 945 575"></path>
+      </svg>
+      </section>
+
+      <table>
+      <thead>
+        <tr>
+          <th>Requirement</th>
+          <th>Specific Need</th>
+          <th>Owner</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Starting state</td>
+          <td>Pen/toolhead is lifted with <code>M5</code>; X/Y are homed using physical switches before magnetic center scanning starts.</td>
+          <td>ioSender, grblHAL, toolhead controller</td>
+        </tr>
+        <tr>
+          <td>Scan window</td>
+          <td>The TMAG5273 scans a bounded <code>4 in x 4 in</code> X/Y window around the expected bed-center magnet. The footprint must not fill or leave the window.</td>
+          <td>grblHAL motion command and calibration logic</td>
+        </tr>
+        <tr>
+          <td>Sensor readings</td>
+          <td>RP2040 records TMAG5273 readings at each X/Y sample point, using averaged samples and the fixed installed sensor height.</td>
+          <td>RP2040/TMAG5273 firmware</td>
+        </tr>
+        <tr>
+          <td>Center computation</td>
+          <td>Use thresholded or saturated footprint edges, not the peak field value: <code>center_x = (left_edge + right_edge) / 2</code> and <code>center_y = (front_edge + back_edge) / 2</code>.</td>
+          <td>Setup calibration script or future adapter logic</td>
+        </tr>
+        <tr>
+          <td>Output</td>
+          <td>The result is the measured bed center used to position the sensor at the outer magnet radius before the A/theta scan. The center magnet does not define A angular phase.</td>
+          <td>Calibration workflow</td>
+        </tr>
+      </tbody>
+      </table>
+    </section>
+
+    <section class="flow-panel flow-axis">
+      <h2>A-Axis Magnetic Homing Subflow</h2>
+      <p>
+        This flow is for the A/theta axis when the system must determine both
+        bounds of the outer magnet field. Because the converter and grblHAL
+        convention uses motor-shaft degrees, one full bed revolution is
+        <code>4320</code> A degrees with the current 12:1 bed ratio. Normal A
+        homing should scan two full bed revolutions, or <code>8640</code> A motor
+        degrees, record two valid entry/exit pairs, verify they agree, and average
+        the two computed centers.
+      </p>
+      <section class="diagram" aria-label="A-axis magnetic homing subflow flowchart">
+      <svg viewBox="0 0 1160 720" role="img" aria-labelledby="a-title a-desc">
+        <title id="a-title">A-axis magnetic homing subflow flowchart</title>
+        <desc id="a-desc">A flowchart for rotating the bed through two full revolutions, recording two magnetic entry and exit pairs, averaging their centers, and setting the A reference.</desc>
+        <defs>
+          <marker id="a-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+          </marker>
+        </defs>
+
+        <rect class="box box-tool" x="40" y="40" width="250" height="90"></rect>
+        <text class="label" x="62" y="72">1. Lift toolhead</text>
+        <text class="small" x="62" y="98">ioSender sends M5</text>
+        <text class="small" x="62" y="118">Wait verified lift dwell</text>
+
+        <rect class="box box-motion" x="350" y="40" width="250" height="90"></rect>
+        <text class="label" x="372" y="72">2. Prepare A scan</text>
+        <text class="small" x="372" y="98">grblHAL in controlled jog/feed</text>
+        <text class="small" x="372" y="118">Set slow A seek rate</text>
+
+        <rect class="box box-sensor" x="660" y="40" width="250" height="90"></rect>
+        <text class="label" x="682" y="72">3. Arm adapter</text>
+        <text class="small" x="682" y="98">RP2040 clears prior edge state</text>
+        <text class="small" x="682" y="118">TMAG5273 stream active</text>
+
+        <rect class="box box-motion" x="40" y="190" width="250" height="105"></rect>
+        <text class="label" x="62" y="222">4. Rotate A forward</text>
+        <text class="small" x="62" y="248">Scan exactly 8640 A deg</text>
+        <text class="small" x="62" y="272">Two full bed revolutions</text>
+
+        <rect class="box box-sensor" x="350" y="190" width="250" height="105"></rect>
+        <text class="label" x="372" y="222">5. Detect entries</text>
+        <text class="small" x="372" y="248">Field crosses threshold high</text>
+        <text class="small" x="372" y="272">Record enter_1 and enter_2</text>
+
+        <rect class="box box-sensor" x="660" y="190" width="250" height="105"></rect>
+        <text class="label" x="682" y="222">6. Detect exits</text>
+        <text class="small" x="682" y="248">Field crosses threshold low</text>
+        <text class="small" x="682" y="272">Record exit_1 and exit_2</text>
+
+        <rect class="box box-sensor" x="40" y="355" width="250" height="115"></rect>
+        <text class="label" x="62" y="387">7. Validate bounds</text>
+        <text class="small" x="62" y="413">Exactly two entry/exit pairs</text>
+        <text class="small" x="62" y="437">Centers agree within tolerance</text>
+        <text class="small" x="62" y="459">Reject noisy/saturated run</text>
+
+        <rect class="box box-sensor" x="350" y="355" width="250" height="115"></rect>
+        <text class="label" x="372" y="387">8. Compute index</text>
+        <text class="small" x="372" y="413">center_n = (enter_n + exit_n) / 2</text>
+        <text class="small" x="372" y="437">theta_center = avg(center_1, center_2)</text>
+        <text class="small" x="372" y="459">Apply measured offset if used</text>
+
+        <rect class="box box-motion" x="660" y="355" width="250" height="115"></rect>
+        <text class="label" x="682" y="387">9. Move to index</text>
+        <text class="small" x="682" y="413">grblHAL moves A to center</text>
+        <text class="small" x="682" y="437">Approach from one direction</text>
+        <text class="small" x="682" y="459">Backlash handled consistently</text>
+
+        <rect class="box box-motion" x="350" y="530" width="250" height="105"></rect>
+        <text class="label" x="372" y="562">10. Set A reference</text>
+        <text class="small" x="372" y="588">Set or verify A zero/offset</text>
+        <text class="small" x="372" y="612">Report homed/ready</text>
+
+        <ellipse class="exit-bubble exit-axis" cx="790" cy="585" rx="100" ry="45"></ellipse>
+        <text class="label" x="755" y="578">Exit</text>
+        <text class="small-axis-flow" x="722" y="602">A homed / ready</text>
+
+        <path class="arrow arrow-tool" marker-end="url(#a-arrow)" d="M 290 85 L 350 85"></path>
+        <path class="arrow arrow-sensor" marker-end="url(#a-arrow)" d="M 600 85 L 660 85"></path>
+        <path class="arrow arrow-motion" marker-end="url(#a-arrow)" d="M 785 130 L 785 160 L 165 160 L 165 190"></path>
+        <path class="arrow arrow-sensor" marker-end="url(#a-arrow)" d="M 290 242 L 350 242"></path>
+        <path class="arrow arrow-sensor" marker-end="url(#a-arrow)" d="M 600 242 L 660 242"></path>
+        <path class="arrow arrow-sensor" marker-end="url(#a-arrow)" d="M 785 295 L 785 325 L 165 325 L 165 355"></path>
+        <path class="arrow arrow-sensor" marker-end="url(#a-arrow)" d="M 290 412 L 350 412"></path>
+        <path class="arrow arrow-motion" marker-end="url(#a-arrow)" d="M 600 412 L 660 412"></path>
+        <path class="arrow arrow-motion" marker-end="url(#a-arrow)" d="M 785 470 L 785 505 L 475 505 L 475 530"></path>
+        <path class="arrow arrow-motion" marker-end="url(#a-arrow)" d="M 600 582 L 690 582"></path>
+
+        <rect class="box box-abort" x="950" y="190" width="170" height="280"></rect>
+        <text class="label" x="972" y="222">Abort if</text>
+        <text class="small" x="972" y="252">Not exactly two pairs</text>
+        <text class="small" x="972" y="280">Entry without exit</text>
+        <text class="small" x="972" y="308">Pair spacing not 4320 deg</text>
+        <text class="small" x="972" y="336">Centers disagree</text>
+        <text class="small" x="972" y="364">Width outside limits</text>
+        <text class="small" x="972" y="392">RP2040 fault</text>
+        <text class="small" x="972" y="420">grblHAL alarm</text>
+        <text class="small" x="972" y="448">Toolhead not lifted</text>
+      </svg>
+    </section>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Requirement</th>
+          <th>Specific Need</th>
+          <th>Owner</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Normal A-homing scan distance</td>
+          <td>Scan two full bed revolutions. With the current 12:1 convention, this is exactly <code>8640</code> A motor degrees.</td>
+          <td>grblHAL motion command and RP2040 edge recorder</td>
+        </tr>
+        <tr>
+          <td>Position convention</td>
+          <td>All A values in the scan are motor-shaft degrees unless the project deliberately changes both converter and firmware conventions.</td>
+          <td>grblHAL settings and calibration logic</td>
+        </tr>
+        <tr>
+          <td>Edge capture</td>
+          <td>RP2040 must record two <code>enter</code>/<code>exit</code> pairs from the same scan direction using threshold plus hysteresis.</td>
+          <td>RP2040/TMAG5273 firmware</td>
+        </tr>
+        <tr>
+          <td>Bounds validation</td>
+          <td>The scan must reject anything other than two valid edge pairs, reject field widths outside measured limits, and reject center positions that do not repeat within tolerance.</td>
+          <td>RP2040 firmware or setup calibration script</td>
+        </tr>
+        <tr>
+          <td>Precision rule</td>
+          <td>Compute each pass center independently, then average <code>center_1</code> and <code>center_2</code>. This improves repeatability checking and can reduce random edge noise.</td>
+          <td>RP2040 firmware or setup calibration script</td>
+        </tr>
+        <tr>
+          <td>Final index move</td>
+          <td>After computing the center, A should approach the final index from a consistent direction before setting or reporting the reference.</td>
+          <td>grblHAL motion sequence</td>
+        </tr>
+      </tbody>
+    </table>
+    </section>
+
+    <section class="flow-panel flow-abort">
+      <h2>Abort / Fault Data Flow</h2>
+      <p>
+        Any abort condition in the bed-center calibration flow or A-axis magnetic
+        homing subflow exits the current attempt. The machine must stop motion,
+        keep or command the pen lifted, preserve diagnostic data, report the
+        fault to the user, and require an explicit recovery decision before any
+        retry.
+      </p>
+      <section class="diagram" aria-label="Abort and fault handling data flowchart">
+        <svg viewBox="0 0 1160 520" role="img" aria-labelledby="abort-title abort-desc">
+          <title id="abort-title">Abort and fault handling data flowchart</title>
+          <desc id="abort-desc">A flowchart showing abort detection, motion stop, pen lift, diagnostic logging, user notification, and explicit recovery before retrying homing.</desc>
+          <defs>
+            <marker id="abort-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+
+          <rect class="box" x="40" y="50" width="250" height="125"></rect>
+          <text class="label" x="62" y="82">1. Abort condition</text>
+          <text class="small" x="62" y="108">Limit/alarm, no edge, bad edges</text>
+          <text class="small" x="62" y="132">Sensor fault, timeout, pen fault</text>
+          <text class="small" x="62" y="154">Any subflow can trigger this</text>
+
+          <rect class="box box-motion" x="350" y="50" width="250" height="125"></rect>
+          <text class="label" x="372" y="82">2. Stop motion</text>
+          <text class="small" x="372" y="108">grblHAL feed hold/alarm/stop</text>
+          <text class="small" x="372" y="132">Disable further homing motion</text>
+          <text class="small" x="372" y="154">Keep coordinates suspect</text>
+
+          <rect class="box box-tool" x="660" y="50" width="250" height="125"></rect>
+          <text class="label" x="682" y="82">3. Keep pen lifted</text>
+          <text class="small" x="682" y="108">Maintain LIFT output state</text>
+          <text class="small" x="682" y="132">Do not engage toolhead</text>
+          <text class="small" x="682" y="154">Fault-safe default is up/off</text>
+
+          <rect class="box box-sensor" x="40" y="245" width="250" height="125"></rect>
+          <text class="label" x="62" y="277">4. Preserve diagnostics</text>
+          <text class="small" x="62" y="303">RP2040 records last samples</text>
+          <text class="small" x="62" y="327">Store edge/fault reason</text>
+          <text class="small" x="62" y="349">Expose USB diagnostic log</text>
+
+          <rect class="box box-host" x="350" y="245" width="250" height="125"></rect>
+          <text class="label" x="372" y="277">5. Report to ioSender</text>
+          <text class="small" x="372" y="303">Show alarm/fault state</text>
+          <text class="small" x="372" y="327">User reads status and logs</text>
+          <text class="small" x="372" y="349">No automatic retry</text>
+
+          <rect class="box" x="660" y="245" width="250" height="125"></rect>
+          <text class="label" x="682" y="277">6. User recovery choice</text>
+          <text class="small" x="682" y="303">Clear alarm only after inspection</text>
+          <text class="small" x="682" y="327">Fix cause, then restart flow</text>
+          <text class="small" x="682" y="349">Abort remains terminal if unsafe</text>
+
+          <ellipse class="exit-bubble exit-abort" cx="1020" cy="307" rx="95" ry="48"></ellipse>
+          <text class="label" x="984" y="300">Exit</text>
+          <text class="text-abort-flow" x="953" y="324">fault handled / stopped</text>
+
+          <path class="arrow" marker-end="url(#abort-arrow)" d="M 290 112 L 350 112"></path>
+          <path class="arrow arrow-tool" marker-end="url(#abort-arrow)" d="M 600 112 L 660 112"></path>
+          <path class="arrow arrow-sensor" marker-end="url(#abort-arrow)" d="M 785 175 L 785 210 L 165 210 L 165 245"></path>
+          <path class="arrow arrow-sensor" marker-end="url(#abort-arrow)" d="M 290 307 L 350 307"></path>
+          <path class="arrow arrow-host" marker-end="url(#abort-arrow)" d="M 600 307 L 660 307"></path>
+          <path class="arrow" marker-end="url(#abort-arrow)" d="M 910 307 L 925 307"></path>
+        </svg>
+      </section>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Abort Source</th>
+            <th>Required Handling</th>
+            <th>Owner</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>grblHAL alarm, limit, or motion fault</td>
+            <td>Stop homing motion, report alarm state to ioSender, and require manual inspection before clearing and retrying.</td>
+            <td>grblHAL / ioSender</td>
+          </tr>
+          <tr>
+            <td>TMAG5273/RP2040 sensor or edge fault</td>
+            <td>Stop the current magnetic scan, preserve the last samples and edge decisions, and leave A untrusted until the cause is corrected.</td>
+            <td>RP2040 magnetic adapter</td>
+          </tr>
+          <tr>
+            <td>Toolhead lift fault or unknown lift state</td>
+            <td>Abort before motion or stop motion immediately; the pen must remain lifted/off before retrying any homing or scan path.</td>
+            <td>Toolhead MCU / grblHAL output</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <h2>Step-by-Step Normal Startup Homing</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Step</th>
+          <th>Actor</th>
+          <th>Data / Signal</th>
+          <th>Requirement</th>
+          <th>Failure if Missing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1. Boot safe</td>
+          <td>Toolhead MCU, RP2040 adapter, RP23CNC</td>
+          <td>Toolhead defaults to LIFT/OFF; grblHAL starts in known state; adapter starts sensor read loop.</td>
+          <td>Reset, watchdog, or fault must not drive the pen down.</td>
+          <td>Homing could drag the pen or crash the tool into the bed.</td>
+        </tr>
+        <tr>
+          <td>2. Connect</td>
+          <td>Windows PC / ioSender</td>
+          <td>USB serial or Ethernet/Telnet connection to grblHAL.</td>
+          <td>ioSender can query <code>$I</code>, <code>$$</code>, <code>$pins</code>, and <code>?</code>.</td>
+          <td>User cannot start or verify homing state.</td>
+        </tr>
+        <tr>
+          <td>3. Lift pen</td>
+          <td>ioSender, grblHAL, toolhead MCU</td>
+          <td><code>M5</code> commands grblHAL to set the spindle/tool output pin to the LIFT state, then the workflow waits through a verified lift dwell.</td>
+          <td>Pen/toolhead is physically clear before any X/Y/A motion.</td>
+          <td>Calibration or homing motion can scrape the bed.</td>
+        </tr>
+        <tr>
+          <td>4. Start homing</td>
+          <td>ioSender</td>
+          <td><code>$H</code> for full homing, or <code>$HA</code> for A only if single-axis homing is enabled.</td>
+          <td>grblHAL homing settings include X/Y physical switches and A home input.</td>
+          <td>Axes stay unreferenced or home in the wrong direction.</td>
+        </tr>
+        <tr>
+          <td>5. Home X/Y</td>
+          <td>grblHAL / RP23CNC</td>
+          <td>X/Y STEP/DIR outputs and X/Y physical home switch inputs.</td>
+          <td>Switch polarity, debounce, pull-off, and travel direction are verified.</td>
+          <td>False trips, no trips, or motion into hard stops.</td>
+        </tr>
+        <tr>
+          <td>6. Rotate A</td>
+          <td>grblHAL / RP23CNC</td>
+          <td>A STEP/DIR output to bed motor driver; A units are motor-shaft degrees.</td>
+          <td>A direction, steps/degree, conservative seek rate, and travel limits are configured.</td>
+          <td>Index is missed, bed rotates the wrong way, or motion stalls.</td>
+        </tr>
+        <tr>
+          <td>7. Detect magnet</td>
+          <td>TMAG5273 + RP2040 adapter</td>
+          <td>TMAG5273 Bx/By/Bz readings become a digital <code>A_HOME</code> edge.</td>
+          <td>Fixed sensor height, magnet geometry, threshold, hysteresis, and output polarity are measured.</td>
+          <td>Gradient noise or saturation causes inconsistent A home trips.</td>
+        </tr>
+        <tr>
+          <td>8. Trip A_HOME</td>
+          <td>RP2040 adapter to RP23CNC</td>
+          <td>Switch-like <code>A_HOME</code> signal into a verified RP23CNC input.</td>
+          <td>Electrical interface matches the opto/input circuit and fails safe.</td>
+          <td>RP23CNC input can be damaged or grblHAL never sees A home.</td>
+        </tr>
+        <tr>
+          <td>9. Apply offset</td>
+          <td>grblHAL</td>
+          <td>Homing pull-off and A home offset from measured calibration.</td>
+          <td>Offset maps the trigger edge to the desired A angular index.</td>
+          <td>A zero is repeatable but wrong relative to the bed.</td>
+        </tr>
+        <tr>
+          <td>10. Ready</td>
+          <td>ioSender + grblHAL</td>
+          <td>Idle/homed status. Pen remains lifted until plot G-code sends <code>M3</code>.</td>
+          <td>Final status is checked before running converter G-code.</td>
+          <td>Plot starts from an untrusted coordinate frame.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Microcontroller Requirements</h2>
+    <section class="grid cols-2">
+      <div class="card motion">
+        <h3>RP23CNC / grblHAL Requirements</h3>
+        <ul>
+          <li>Firmware built with four axes so <code>A</code> exists.</li>
+          <li>X/Y physical home switches wired to verified RP23CNC inputs.</li>
+          <li>A home input assigned, verified with <code>$pins</code>, and matched to the RP2040 output polarity.</li>
+          <li>Homing direction, seek rate, feed rate, debounce, pull-off, and A offset recorded in settings.</li>
+          <li>A steps per unit configured as motor steps per degree; do not reapply the 12:1 bed ratio.</li>
+          <li><code>M5</code> output verified as the toolhead LIFT command before homing.</li>
+        </ul>
+      </div>
+      <div class="card sensor">
+        <h3>RP2040 / TMAG5273 Requirements</h3>
+        <ul>
+          <li>Read TMAG5273 over 3.3 V I2C/Qwiic at the fixed installed sensor height.</li>
+          <li>Compute field magnitude or selected vector component consistently.</li>
+          <li>Apply threshold and hysteresis derived from measured traces.</li>
+          <li>Assert a clean switch-like <code>A_HOME</code> output during A homing.</li>
+          <li>Use an output driver compatible with the selected RP23CNC input; do not connect directly until verified.</li>
+          <li>Expose USB serial diagnostics for setup, logging, and offset measurement.</li>
+        </ul>
+      </div>
+      <div class="card tool">
+        <h3>Toolhead Controller Requirements</h3>
+        <ul>
+          <li>On reset, fault, watchdog expiry, or missing command, default to LIFT/OFF.</li>
+          <li>Interpret <code>M5</code> as LIFT and <code>M3</code> as ENGAGE.</li>
+          <li>Complete lift within a measured dwell before homing begins.</li>
+          <li>Later optional signal: report lifted/ready so homing can wait on proof instead of fixed dwell.</li>
+        </ul>
+      </div>
+      <div class="card host">
+        <h3>Windows Host Requirements</h3>
+        <ul>
+          <li>ioSender installed and able to connect to grblHAL over USB first, Ethernet later.</li>
+          <li>User can run <code>M5</code>, <code>$H</code>, <code>?</code>, <code>$I</code>, <code>$$</code>, and <code>$pins</code>.</li>
+          <li>Separate calibration script is used for setup only: it logs magnetic traces and determines A offset.</li>
+          <li>Daily homing should not require the calibration script.</li>
+        </ul>
+      </div>
+    </section>
+
+    <h2>Setup Calibration Versus Normal Startup Homing</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Mode</th>
+          <th>Who Interprets Magnet Data</th>
+          <th>Purpose</th>
+          <th>User Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Setup / maintenance calibration</td>
+          <td>Windows calibration script using RP2040 USB diagnostic stream.</td>
+          <td>Measure the gradient, determine threshold/hysteresis, find edge-to-center offset, and validate repeatability.</td>
+          <td>Run a slow scripted scan and save the resulting constants.</td>
+        </tr>
+        <tr>
+          <td>Normal startup homing</td>
+          <td>RP2040 adapter converts the magnetic profile into <code>A_HOME</code>; grblHAL treats it like a switch.</td>
+          <td>Reference X, Y, and A without manual coordination.</td>
+          <td>Connect ioSender, lift pen, run <code>$H</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Verification Gates Before Normal Startup Homing</h2>
+    <section class="grid cols-2">
+      <div class="card warn">
+        <h3>Do Not Skip</h3>
+        <ul>
+          <li>Do not connect the RP2040 <code>A_HOME</code> output to RP23CNC until voltage/current/polarity are verified.</li>
+          <li>Do not record A constants until magnet traces are repeatable at the fixed sensor height.</li>
+          <li>Do not run homing with the pen down.</li>
+          <li>Do not assume Web Builder pin mapping; verify with <code>$pins</code> and physical tests.</li>
+        </ul>
+      </div>
+      <div class="card ok">
+        <h3>Evidence Needed</h3>
+        <ul>
+          <li>RP23CNC boot banner and <code>$pins</code> capture.</li>
+          <li>Unpowered STEP/DIR/ENABLE and limit-input tests.</li>
+          <li>TMAG5273 trace over the outer magnet with entry/exit repeatability.</li>
+          <li>Measured A home offset from magnetic trigger edge to desired angular index.</li>
+          <li>Successful homing run with pen lifted and no tool contact.</li>
+        </ul>
+      </div>
+    </section>
+
+    <h2>Open TBDs</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Needed Before</th>
+          <th>Where to Record</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>RP23CNC A home input terminal and polarity</td>
+          <td>Connecting RP2040 <code>A_HOME</code></td>
+          <td><code>docs/hardware/WIRING_TABLE.md</code> and <code>firmware/grblhal/config/pin-map.md</code></td>
+        </tr>
+        <tr>
+          <td>RP2040 output-driver circuit</td>
+          <td>Any powered connection to RP23CNC</td>
+          <td><code>docs/hardware/WIRING_TABLE.md</code></td>
+        </tr>
+        <tr>
+          <td>Magnet threshold, hysteresis, and offset</td>
+          <td>Normal A homing</td>
+          <td>Calibration script output and <code>firmware/grblhal/config/machine-settings.md</code></td>
+        </tr>
+        <tr>
+          <td>Toolhead lift dwell</td>
+          <td>Homing with toolhead installed</td>
+          <td>Toolhead test note and firmware/settings documentation</td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>

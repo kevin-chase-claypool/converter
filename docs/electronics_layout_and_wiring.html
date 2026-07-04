@@ -373,7 +373,7 @@
       <text class="note" x="604" y="107">grblHAL motion controller</text>
       <text class="note" x="604" y="124">W5500 Ethernet module</text>
       <text class="note" x="604" y="141">X/Y/A STEP-DIR + limits</text>
-      <text class="small" x="604" y="160">E-16/E-17 and F-01..F-06 open</text>
+      <text class="small" x="604" y="160">Z unused; 4-axis exposes A</text>
 
       <path class="wire signal" marker-end="url(#arrow-signal)" d="M510 92 C540 92 555 92 585 92"></path>
       <path class="wire power tbd" marker-end="url(#arrow-power)" d="M768 252 C815 252 860 220 860 168 C860 132 844 120 830 120"></path>
@@ -421,7 +421,7 @@
       <text class="note" x="628" y="434">X limit switch</text>
       <text class="note" x="628" y="452">Y limit switch</text>
       <text class="note" x="628" y="470">A_HOME from adapter</text>
-      <text class="small" x="628" y="494">polarity and NC/NO TBD</text>
+      <text class="small" x="628" y="494">polarity/input circuit TBD</text>
 
       <path class="wire safety tbd" marker-end="url(#arrow-safety)" d="M765 430 C815 430 825 170 830 154"></path>
 
@@ -449,24 +449,24 @@
       <text class="title" x="68" y="594">Toolhead Hardware</text>
       <text class="note" x="68" y="617">DRV8833 + N20 lift</text>
       <text class="note" x="68" y="635">HX711 + load cell</text>
-      <text class="note" x="68" y="653">TMAG5273 optional</text>
+      <text class="note" x="68" y="653">pen force hardware</text>
 
       <path class="wire power tbd" marker-end="url(#arrow-power)" d="M215 466 C250 466 265 466 300 466"></path>
       <path class="wire tool tbd" marker-end="url(#arrow-tool)" d="M215 618 C250 618 260 500 300 500"></path>
       <path class="wire tool tbd" marker-end="url(#arrow-tool)" d="M585 116 C520 150 538 448 510 474"></path>
-      <rect class="label-bg" x="500" y="352" width="80" height="20"></rect>
-      <text class="label" x="508" y="366">M3/M5 lift</text>
+      <rect class="label-bg" x="480" y="352" width="124" height="20"></rect>
+      <text class="label" x="488" y="366">spindle/LIFT state</text>
 
       <!-- Magnetic adapter -->
       <rect class="box" x="300" y="610" width="210" height="112"></rect>
-      <text class="title" x="318" y="639">RP2040 Magnetic Adapter</text>
-      <text class="note" x="318" y="662">Pro Micro RP2040 candidate</text>
-      <text class="note" x="318" y="679">USB telemetry to host</text>
-      <text class="note" x="318" y="696">conditioned A_HOME TBD</text>
+      <text class="title" x="318" y="639">RP2040 + TMAG5273 Adapter</text>
+      <text class="note" x="318" y="662">I2C magnetic readings</text>
+      <text class="note" x="318" y="679">USB diagnostics to host</text>
+      <text class="note" x="318" y="696">validated A_HOME output</text>
 
       <rect class="box-soft" x="50" y="720" width="220" height="54"></rect>
-      <text class="title" x="68" y="748">TMAG5273 Qwiic Sensor</text>
-      <text class="note" x="68" y="765">rides with gantry/toolhead</text>
+      <text class="title" x="68" y="748">TMAG5273 Sensor</text>
+      <text class="note" x="68" y="765">fixed-height toolhead mount</text>
 
       <rect class="box-soft" x="540" y="700" width="230" height="74"></rect>
       <text class="title" x="558" y="728">Embedded Bed Magnets</text>
@@ -490,9 +490,10 @@
       <h3>Current Control Flow</h3>
       <ul>
         <li>Host PC sends G-code and jog commands to RP23CNC over USB first, Ethernet after W5500 bring-up.</li>
-        <li>RP23CNC/grblHAL owns X/Y/A motion, normal homing, limits, and M3/M5 output.</li>
-        <li>RP2040 reads the TMAG5273 and reports magnetic data to the host calibration script.</li>
-        <li>The optional RP2040 <code>A_HOME</code> output must behave like a verified switch input before connection.</li>
+        <li>RP23CNC/grblHAL owns X/Y/A motion, normal homing, limits, and the spindle/tool output pin state used for toolhead LIFT/ENGAGE.</li>
+        <li>The configured Z axis slot is unused; the four-axis grblHAL build is needed to expose A alongside X/Y.</li>
+        <li>RP2040 reads the TMAG5273, reports diagnostic magnetic data to the host, and produces the validated <code>A_HOME</code> switch-like output.</li>
+        <li>The RP2040 <code>A_HOME</code> output must behave like a verified switch input before connection to RP23CNC.</li>
       </ul>
     </div>
 
@@ -540,11 +541,11 @@
       </tr>
       <tr>
         <td>Magnetic adapter</td>
-        <td>TMAG5273 reading stability, RP2040 telemetry, sensor height, magnet footprint repeatability, and an electrically compatible output driver for <code>A_HOME</code>.</td>
+        <td>TMAG5273 reading stability, RP2040 diagnostics, fixed installed sensor height, magnet footprint repeatability, and an electrically compatible output driver for <code>A_HOME</code>.</td>
       </tr>
       <tr>
         <td>Toolhead</td>
-        <td>Controller placement, 6 V buck load test, DRV8833 wiring, load-cell calibration, force-loop behavior, and M3/M5 fail-safe polarity.</td>
+        <td>Controller placement, 6 V buck load test, DRV8833 wiring, load-cell calibration, force-loop behavior, and spindle/tool output fail-safe polarity for <code>M5</code> lift.</td>
       </tr>
     </tbody>
   </table>

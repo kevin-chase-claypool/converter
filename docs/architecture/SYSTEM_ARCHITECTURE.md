@@ -17,7 +17,8 @@ Record the exact board revision used by this project before finalizing wiring.
 | Motion controller | G-code parsing, modal state, lookahead, coordinated acceleration, step/direction generation, homing, limits | grblHAL on RP23CNC |
 | Stepper power stage | Convert RP23CNC step/direction signals into motor phase current | Three external TB6600-class drivers |
 | Toolhead controller | Lift/engage state machine, load-cell sampling, force regulation, actuator drive, fault handling | grblHAL plugin or separate MCU; decision pending bench validation |
-| Sensors | Pen force and actuator/position reference | 300 g load cell + HX711; TMAG5273 Hall sensor |
+| Magnetic homing adapter | Fixed-height magnetic sensing, setup diagnostics, and switch-like A home/index signal | RP2040 adapter reading TMAG5273 over Qwiic/I2C |
+| Toolhead sensors | Pen force feedback | 300 g load cell + HX711 |
 
 ## Motion data path
 
@@ -29,7 +30,9 @@ grblHAL parser -> planner/lookahead -> RP2350 driver/PIO/interrupts
        |                                  |
        |                                  +-> X/Y/A STEP + DIR
        |
-       +-> M3/M5 tool command
+       +-> M3/M5 spindle/tool output pin state
+       |
+       +<- X/Y home switches and RP2040 A_HOME
 ```
 
 The project should extend grblHAL rather than duplicate its parser or planner.
@@ -53,7 +56,7 @@ without first tracing and testing the upstream implementation.
 |---|---|
 | Core 0 | grblHAL protocol, parser, planner, machine state, alarms, homing, and command dispatch |
 | PIO/DMA/interrupt hardware | Deterministic step pulse generation as provided by the upstream driver |
-| Core 1 | Toolhead state machine, HX711 sampling, force-control calculation, Hall-sensor sampling, and bounded telemetry |
+| Core 1 | Toolhead state machine, HX711 sampling, force-control calculation, and bounded telemetry |
 
 Cross-core communication should use fixed-size single-producer/single-consumer
 queues or atomics. It must not use blocking locks in the motion path.
@@ -83,6 +86,18 @@ BOOT -> LIFT -> SEEK_CONTACT -> HOLD_FORCE
 - `FAULT`: motor disabled or commanded to safe retract, depending on verified mechanics.
 
 M5 commands `LIFT`. M3 commands `SEEK_CONTACT`, then `HOLD_FORCE`.
+
+## Homing and magnetic reference
+
+Normal startup homing is owned by grblHAL: X/Y use physical home switches and A
+uses the RP2040/TMAG5273 adapter's validated switch-like `A_HOME` signal. The
+TMAG5273 is not a Z-axis sensor; it is installed at a fixed toolhead/gantry
+height. Setup calibration scans the center and outer magnets to determine
+thresholds, hysteresis, A offset, and repeatability. During normal startup, the
+user should not have to coordinate a separate calibration script.
+
+The grblHAL build may expose a Z axis slot to enable A in a four-axis
+configuration, but Z is unused and unwired for this machine.
 
 ## Important constraints
 

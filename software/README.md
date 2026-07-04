@@ -63,6 +63,16 @@ The exact dialect and the firmware-facing caveats are documented in
 - **Preview settings** — print speed (estimate), bed diameter/margin, pen stroke
   width, and three preview colors: **Undrawn** (artwork not yet drawn), **Drawn**
   (the drawn portion / final color), and **Motion** (active move + toolpath).
+- Pressing **Preview** shows the current build stage, percentage, and elapsed
+  time. SVG parsing, motion planning, and clipping run in the background so the
+  window remains responsive. Preview and Save G-code are temporarily disabled
+  until the shared preview data is ready.
+- Press **Cancel** during preview generation to stop an unexpectedly large job.
+  Cancellation safely unwinds at geometry/planning checkpoints and keeps the
+  last completed preview visible.
+- During playback, pen-up travel moves animate from their lift point to their
+  destination using the configured travel rate. The highlighted rapid path
+  grows only as far as the moving toolhead instead of appearing all at once.
 - **Other settings** — "Preview mode: omit theta axis" (also strips the `A` word
   from saved G-code; useful for online viewers like NC Viewer / gcode.ws).
 

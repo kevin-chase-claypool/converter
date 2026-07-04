@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How Codex Reads This Repository</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #5b6475;
+      --paper: #f4f7fb;
+      --card: #ffffff;
+      --line: #aab5c7;
+      --blue: #1769aa;
+      --blue-soft: #e8f3fb;
+      --purple: #6542a6;
+      --purple-soft: #f0eafb;
+      --green: #18794e;
+      --green-soft: #e7f6ee;
+      --orange: #ad5700;
+      --orange-soft: #fff2df;
+      --shadow: 0 10px 28px rgba(38, 54, 82, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, #dceefa 0, transparent 32rem),
+        var(--paper);
+      color: var(--ink);
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 52px 0 72px;
+    }
+
+    header {
+      max-width: 860px;
+      margin: 0 auto 40px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 2vw, 1.2rem);
+    }
+
+    .flow {
+      display: grid;
+      justify-items: center;
+    }
+
+    .card {
+      width: min(760px, 100%);
+      padding: 24px 28px;
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .card h2 {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 8px;
+      font-size: clamp(1.2rem, 3vw, 1.55rem);
+    }
+
+    .card p { margin: 0; color: var(--muted); }
+    .card ul { margin: 12px 0 0; padding-left: 22px; }
+    .card li + li { margin-top: 5px; }
+
+    .step {
+      display: inline-grid;
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      background: var(--blue);
+      font-size: 1rem;
+    }
+
+    .mandatory { border-color: var(--blue); }
+    .route { border-color: var(--purple); }
+    .route .step { background: var(--purple); }
+    .work { border-color: var(--orange); }
+    .work .step { background: var(--orange); }
+    .finish { border-color: var(--green); }
+    .finish .step { background: var(--green); }
+
+    code {
+      padding: 0.1em 0.35em;
+      border-radius: 5px;
+      background: #edf1f7;
+      color: #27334a;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.92em;
+    }
+
+    .arrow {
+      position: relative;
+      width: 4px;
+      height: 48px;
+      background: var(--line);
+    }
+
+    .arrow::after {
+      position: absolute;
+      bottom: -2px;
+      left: 50%;
+      width: 14px;
+      height: 14px;
+      content: "";
+      border-right: 4px solid var(--line);
+      border-bottom: 4px solid var(--line);
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    .decision {
+      width: min(660px, 100%);
+      padding: 22px 30px;
+      border: 2px solid var(--purple);
+      border-radius: 18px;
+      background: var(--purple-soft);
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .decision h2 { margin: 0 0 5px; font-size: 1.4rem; }
+    .decision p { margin: 0; color: var(--muted); }
+
+    .branches {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      width: 100%;
+    }
+
+    .branch {
+      min-height: 180px;
+      padding: 20px;
+      border: 1px solid #c6b8df;
+      border-top: 5px solid var(--purple);
+      border-radius: 14px;
+      background: var(--card);
+      box-shadow: 0 5px 18px rgba(38, 54, 82, 0.08);
+    }
+
+    .branch h3 { margin: 0 0 10px; font-size: 1.05rem; }
+    .branch p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+    .branch code { display: inline-block; margin: 2px 0; }
+
+    .note {
+      width: min(920px, 100%);
+      margin-top: 34px;
+      padding: 20px 24px;
+      border-left: 6px solid var(--blue);
+      border-radius: 8px;
+      background: var(--blue-soft);
+    }
+
+    .note strong { color: var(--blue); }
+
+    @media (max-width: 820px) {
+      main { width: min(100% - 20px, 700px); padding-top: 30px; }
+      .branches { grid-template-columns: 1fr; }
+      .branch { min-height: auto; }
+      .card { padding: 20px; }
+      .arrow { height: 38px; }
+    }
+
+    @media print {
+      body { background: white; }
+      main { width: 100%; padding: 0; }
+      .card, .decision, .branch { box-shadow: none; break-inside: avoid; }
+      .branches { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>How Codex Reads This Repository</h1>
+      <p class="subtitle">
+        The document path used when a new converter-project thread begins.
+      </p>
+    </header>
+
+    <section class="flow" aria-label="Codex documentation reading flow">
+      <article class="card mandatory">
+        <h2><span class="step">1</span> New thread starts</h2>
+        <p>Codex establishes the repository root and reads the instructions before planning or running project commands.</p>
+      </article>
+
+      <div class="arrow" aria-hidden="true"></div>
+
+      <article class="card mandatory">
+        <h2><span class="step">2</span> Read every root Markdown file</h2>
+        <ul>
+          <li><code>AGENTS.md</code> defines the working agreement and completion requirements.</li>
+          <li><code>CLAUDE.md</code> redirects contributors to that agreement.</li>
+          <li><code>README.md</code> gives the project overview and entry point.</li>
+        </ul>
+      </article>
+
+      <div class="arrow" aria-hidden="true"></div>
+
+      <article class="card mandatory">
+        <h2><span class="step">3</span> Follow the required entry path</h2>
+        <ul>
+          <li><code>docs/START_HERE.md</code> gives the reading order and current decisions.</li>
+          <li><code>docs/README.md</code> maps task types to authoritative documents.</li>
+          <li><code>docs/project/ROADMAP.md</code> identifies priorities and acceptance criteria.</li>
+        </ul>
+      </article>
+
+      <div class="arrow" aria-hidden="true"></div>
+
+      <div class="decision">
+        <h2>4. What kind of task was requested?</h2>
+        <p>Codex now takes the shortest relevant documentation path.</p>
+      </div>
+
+      <div class="arrow" aria-hidden="true"></div>
+
+      <section class="branches" aria-label="Task-specific documentation routes">
+        <article class="branch">
+          <h3>Windows converter</h3>
+          <p><code>software/README.md</code><br>Relevant code under <code>software/</code></p>
+        </article>
+        <article class="branch">
+          <h3>Converter algorithms</h3>
+          <p>Relevant section of <code>docs/HANDOFF.md</code><br><code>software/converter_core/</code></p>
+        </article>
+        <article class="branch">
+          <h3>RP23CNC / grblHAL</h3>
+          <p><code>firmware/README.md</code><br>Relevant <code>firmware/grblhal/</code> document</p>
+        </article>
+        <article class="branch">
+          <h3>Pen-pressure firmware</h3>
+          <p><code>firmware/pen_pressure/README.md</code><br>Relevant firmware source</p>
+        </article>
+        <article class="branch">
+          <h3>Hardware</h3>
+          <p><code>docs/hardware/WIRING_TABLE.md</code><br><code>docs/hardware/BOM.md</code></p>
+        </article>
+        <article class="branch">
+          <h3>Interfaces and units</h3>
+          <p><code>docs/integration/INTERFACES.md</code></p>
+        </article>
+        <article class="branch">
+          <h3>Testing and bench work</h3>
+          <p><code>docs/testing/TEST_PLAN.md</code><br>Relevant dated lab notes</p>
+        </article>
+        <article class="branch">
+          <h3>Decision history</h3>
+          <p>Applicable ADR under <code>docs/decisions/</code></p>
+        </article>
+        <article class="branch">
+          <h3>Change history</h3>
+          <p><code>docs/changes/INDEX.md</code><br><code>docs/project/ENGINEERING_LOG.md</code></p>
+        </article>
+      </section>
+
+      <div class="arrow" aria-hidden="true"></div>
+
+      <article class="card work">
+        <h2><span class="step">5</span> Inspect, implement, and verify</h2>
+        <p>Codex reads the relevant code and history, performs the task, and runs tests proportional to the affected behavior.</p>
+      </article>
+
+      <div class="arrow" aria-hidden="true"></div>
+
+      <article class="card finish">
+        <h2><span class="step">6</span> Update documentation with the change</h2>
+        <p>Current-state documentation is always updated when behavior or instructions change. Meaningful changes may also require a change note, engineering-log event, lab note, ADR, or roadmap update.</p>
+      </article>
+
+      <div class="arrow" aria-hidden="true"></div>
+
+      <article class="card finish">
+        <h2><span class="step">7</span> Complete repository checks</h2>
+        <ul>
+          <li>Run <code>python tools\docs_index.py --write</code>.</li>
+          <li>Run <code>python tools\docs_index.py --check</code>.</li>
+          <li>Re-read <code>AGENTS.md</code> completion requirements.</li>
+          <li>Report implementation files, documentation files, verification, and unresolved risks.</li>
+        </ul>
+      </article>
+
+      <aside class="note">
+        <strong>Important:</strong> Codex does not read the entire documentation tree on every task.
+        It reads the mandatory entry documents first, then follows the task-specific route defined by
+        <code>docs/README.md</code>.
+      </aside>
+    </section>
+  </main>
+</body>
+</html>

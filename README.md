@@ -17,7 +17,13 @@ can be edited and iterated on its own.
 New contributors and AI sessions should begin with
 [`docs/START_HERE.md`](docs/START_HERE.md). It links the hardware inventory,
 engineering log, master wiring table, architecture, interface contracts,
-roadmap, and test plan.
+roadmap, test plan, and the categorized
+[`change index`](docs/changes/INDEX.md).
+
+For a quick status view, open
+[`project_management_overview.html`](project_management_overview.html) from the
+repository root. It summarizes the active phase, current blockers, next work,
+and links back to the controlling project documents.
 
 ## Run the converter
 
@@ -35,14 +41,15 @@ See [`software/README.md`](software/README.md) for full usage and settings.
 ```
    SVG  ──►  software/ (host)  ──►  .gcode  ──►  firmware/ (Pico 2 + grblHAL)  ──►  machine
                                                         │
-                                                        └─ M3/M5 pen signal ──►  pen-pressure MCU (load-cell force loop)
+                                                        └─ M3/M5 spindle/tool output state ──►  pen-pressure MCU
 ```
 
 - The host converter maps SVG artwork (bed-local coordinates) into machine
   `X/Y/A` moves for the rotating bed, and emits pen up/down as `M3`/`M5`.
 - grblHAL on the Pico 2 parses that G-code and drives the X/Y/A steppers.
-- The pen-pressure system is an independent closed loop that treats `M3`/`M5` as a
-  **mode override** (engage / lift) and otherwise holds a target contact force.
+- The pen-pressure system is an independent closed loop that treats the grblHAL
+  `M3`/`M5` spindle/tool output state as a **mode override** (engage / lift) and
+  otherwise holds a target contact force.
 
 Full architecture, decisions, and open items live in
 [`docs/HANDOFF.md`](docs/HANDOFF.md).

@@ -23,6 +23,7 @@
 | E-07 | Calibrate load cell with known masses | Repeatable slope and zero | TBD | TBD |
 | E-08 | Measure HX711 samples/s and noise | Sufficient for chosen loop bandwidth | TBD | TBD |
 | E-09 | Read TMAG5273 through intended wiring | Stable field/position signal | TBD | TBD |
+| E-18 | Verify RP2040/TMAG5273 magnetic adapter | Qwiic readings are stable; USB diagnostics are readable; the `A_HOME` output driver is electrically compatible with the selected RP23CNC input before connection | TBD | TBD |
 | E-10 | Verify all rails and common references | No overvoltage or unintended backfeed | TBD | TBD |
 | E-11 | Inspect and bench-test MEISHILE S-120-12 supply | Rating label photographed; terminals 1-7 match L, N, earth, -V, -V, +V, +V; approximately 12 V no-load output; +V ADJ range and protective-earth bonding documented | TBD | TBD |
 | E-12 | Measure system 12 V current and supply temperature under motion load | Adequate current/thermal margin below the supply's 10 A, 120 W listing rating | TBD | TBD |
@@ -40,8 +41,9 @@
 | F-02 | Parser dry run | Converter subset accepted; invalid words error clearly |
 | F-03 | Output pulse check | Correct STEP/DIR pins and polarity without drivers |
 | F-04 | Limit input test | Each input reports and alarms correctly |
-| F-05 | M3/M5 output test | Deterministic ENGAGE/LIFT signal |
+| F-05 | Spindle/tool output test | Deterministic output pin state: M3 = ENGAGE, M5 = LIFT, fail-safe to LIFT/OFF |
 | F-06 | Settings persistence | Reboot preserves calibrated settings |
+| F-07 | Four-axis configuration sanity check | X/Y/A are enabled, A is available for homing/motion, and the Z axis slot remains unused/unwired |
 
 ## Motion tests
 
@@ -53,7 +55,11 @@
 | M-04 | A-axis one motor revolution | 360 commanded motor degrees gives one motor revolution |
 | M-05 | Bed ratio check | 4320 motor degrees gives one bed revolution for 12:1 |
 | M-06 | Coordinated X/Y/A sample | Smooth motion and no lost steps |
-| M-07 | Homing and limits | Repeatable home and safe stop |
+| M-07 | Homing and limits | Repeatable X/Y home from physical switches, repeatable A home from validated `A_HOME`, and safe stop |
+| M-08 | Magnetic bed-center scan | After X/Y homing, a bounded 4 in x 4 in scan locates the center magnet from opposing saturated or thresholded edges with documented repeatability |
+| M-09 | Magnetic theta-index setup scan | At the measured outer radius, two full bed revolutions (`8640` A motor degrees) find two outer-magnet entry/exit pairs, validate pair spacing near `4320` A motor degrees, and compute a repeatable theta index |
+| M-10 | Normal startup homing macro | ioSender sends `M5`, waits the lift dwell, sends `$H`, and grblHAL exits homed/idle with X/Y/A referenced and the pen still lifted |
+| M-11 | Homing abort/fault path | Missing/inconsistent magnetic edges, sensor fault, grblHAL alarm, or unknown lift state stops the current attempt, preserves diagnostics, reports status to ioSender, and requires manual recovery before retry |
 
 ## Toolhead tests
 
@@ -69,7 +75,11 @@
 ## Integrated tests
 
 - M3 seeks contact and reaches stable force before drawing.
-- M5 lifts before any travel move.
+- M5 sets the spindle/tool output pin to the LIFT state before any travel,
+  homing, or magnetic scan move.
 - E-stop and reset leave the toolhead safe.
 - Toolhead workload does not create measurable lost steps or unacceptable jitter.
-- Calibration pattern dimensions and force traces are saved for the report.
+- Normal startup homing uses X/Y switches plus the validated RP2040 `A_HOME`
+  input; the setup calibration script is not required for daily homing.
+- Calibration pattern dimensions, force traces, and magnetic diagnostics are
+  saved for the report.

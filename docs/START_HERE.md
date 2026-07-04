@@ -20,14 +20,17 @@ Primary motion-controller reference:
 
 ## Read in this order
 
-1. [`HANDOFF.md`](HANDOFF.md) - detailed implementation history and current behavior.
-2. [`project/ENGINEERING_LOG.md`](project/ENGINEERING_LOG.md) - dated chronological record of work, evidence, and next actions.
-3. [`architecture/SYSTEM_ARCHITECTURE.md`](architecture/SYSTEM_ARCHITECTURE.md) - subsystem ownership and dual-core strategy.
-4. [`hardware/BOM.md`](hardware/BOM.md) - selected parts, known ratings, and unresolved electrical questions.
-5. [`hardware/WIRING_TABLE.md`](hardware/WIRING_TABLE.md) - authoritative physical connection record.
-6. [`integration/INTERFACES.md`](integration/INTERFACES.md) - contracts between host, motion controller, and toolhead.
-7. [`project/ROADMAP.md`](project/ROADMAP.md) - phased work plan and acceptance criteria.
-8. [`testing/TEST_PLAN.md`](testing/TEST_PLAN.md) - bring-up and integration test order.
+1. [`README.md`](README.md) - task-oriented documentation map and sources of truth.
+2. [`../project_management_overview.html`](../project_management_overview.html)
+   - at-a-glance project status dashboard.
+3. [`project/ROADMAP.md`](project/ROADMAP.md) - current priorities and acceptance criteria.
+4. Read only the subsystem documents relevant to the task.
+5. Search [`changes/INDEX.md`](changes/INDEX.md) and
+   [`project/ENGINEERING_LOG.md`](project/ENGINEERING_LOG.md) when history is
+   needed.
+
+[`HANDOFF.md`](HANDOFF.md) is a large technical and historical reference.
+Search its relevant section instead of reading it front to back.
 
 ## Current decisions
 
@@ -41,16 +44,16 @@ Primary motion-controller reference:
 
 ## Session handoff procedure
 
-At the end of every substantial AI session:
+Documentation is part of implementation, not a later cleanup task. Follow
+[`../AGENTS.md`](../AGENTS.md) for every change:
 
-1. Add a timestamped entry to [`project/ENGINEERING_LOG.md`](project/ENGINEERING_LOG.md).
-2. Update the status table in [`project/ROADMAP.md`](project/ROADMAP.md).
-3. Record new measurements or tests in `docs/report/lab-notes/`.
-4. Add decisions with lasting consequences under `docs/decisions/`.
-5. Update `hardware/BOM.md` if a part or rating changes.
-6. Update `hardware/WIRING_TABLE.md` for every physical wiring or pin-assignment change.
-7. Update `integration/INTERFACES.md` if a signal, command, unit, or ownership boundary changes.
-8. Summarize changed files, tests run, failures, and the next concrete task in `HANDOFF.md`.
+Use the documentation level defined in [`../AGENTS.md`](../AGENTS.md). Current
+behavior must stay current, but minor edits do not need duplicate narratives in
+both a change note and the engineering log.
+
+The same working agreement requires continuous, evidence-based maintenance:
+address local complexity when touching it, record larger technical debt in the
+roadmap, and avoid speculative rewrites.
 
 Before starting an approach, search the single chronological engineering log.
 Failed attempts must be interleaved with successes at the time they occurred

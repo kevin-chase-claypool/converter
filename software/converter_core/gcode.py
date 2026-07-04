@@ -1,6 +1,7 @@
 import math
 import re
 
+from .cancellation import check_cancelled
 from .geometry import clip_contours_to_bed, contour_center, distance, format_float, normalized_hatch_pattern, read_svg
 from .kinematics import bed_to_machine, ne_park_position, planned_contours, plan_contour_thetas, tool_to_command
 from .settings import pattern_size_override, pattern_size_values
@@ -172,20 +173,27 @@ def convert_file(svg_path, gcode_path, settings):
     return len(contours), len(gcode.splitlines())
 
 
-def build_preview_moves(contours, settings):
+def build_preview_moves(contours, settings, cancel_check=None):
+    check_cancelled(cancel_check)
     moves = []
     center = contour_center(contours)
-    contours = clip_contours_to_bed(contours, center, max(float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0 - float(getattr(settings, "bed_margin_mm", 0.0)), 0.0))
+    contours = clip_contours_to_bed(
+        contours,
+        center,
+        max(float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0 - float(getattr(settings, "bed_margin_mm", 0.0)), 0.0),
+        cancel_check,
+    )
     last_machine_end = None
     previous_theta = None
     previous_motor_theta = 0.0
     axis = re.sub(r"[^A-Za-z]", "", settings.theta_axis.upper())[:1] or "A"
     planned_jobs = []
     previous_machine = None
-    for planned in planned_contours(contours, settings, center):
+    for planned in planned_contours(contours, settings, center, cancel_check):
+        check_cancelled(cancel_check)
         contour_index = planned["index"]
         path = planned["path"]
-        thetas, strategies = plan_contour_thetas(path, settings, previous_theta, center, previous_machine)
+        thetas, strategies = plan_contour_thetas(path, settings, previous_theta, center, previous_machine, cancel_check)
         if not thetas:
             continue
         planned_jobs.append((planned, contour_index, path, thetas, strategies))
@@ -196,6 +204,7 @@ def build_preview_moves(contours, settings):
     previous_motor_theta = 0.0
     pen_is_down = False
     for planned, contour_index, path, thetas, strategies in planned_jobs:
+        check_cancelled(cancel_check)
         first_theta = thetas[0]
 
         machine_start = bed_to_machine(path[0], first_theta, center)
@@ -259,6 +268,7 @@ def build_preview_moves(contours, settings):
 
         last_machine = machine_start
         for k in range(len(path) - 1):
+            check_cancelled(cancel_check)
             a, b = path[k], path[k + 1]
             if distance(a, b) <= 1e-9:
                 continue

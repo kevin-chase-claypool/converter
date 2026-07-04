@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Theta Pen Plotter Project Management Overview</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #10151c;
+      --panel: #18212b;
+      --panel-soft: #202b36;
+      --ink: #edf2f7;
+      --muted: #adbac8;
+      --line: #364656;
+      --green: #69d28c;
+      --yellow: #f2c15b;
+      --blue: #68aaf7;
+      --red: #ff6b6b;
+      --violet: #c7a4ff;
+      --orange: #f6a45f;
+      --shadow: 0 14px 30px rgba(0, 0, 0, 0.32);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.42;
+    }
+
+    main {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 28px 22px 40px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 10px;
+    }
+
+    a {
+      color: #9dccff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 18px;
+      align-items: start;
+      margin-bottom: 20px;
+    }
+
+    .subtitle {
+      max-width: 880px;
+      color: var(--muted);
+      font-size: 15px;
+      margin-top: 6px;
+    }
+
+    .stamp {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 13px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .dashboard {
+      grid-template-columns: 1.15fr 0.85fr;
+      align-items: stretch;
+    }
+
+    .three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .four {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .metric {
+      min-height: 118px;
+    }
+
+    .metric .value {
+      display: block;
+      margin: 7px 0 3px;
+      font-size: 25px;
+      font-weight: 700;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+
+    .done .dot { background: var(--green); }
+    .active .dot { background: var(--yellow); }
+    .next .dot { background: var(--blue); }
+    .blocked .dot { background: var(--red); }
+
+    .phase-strip {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(72px, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .phase {
+      min-height: 76px;
+      padding: 10px 8px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-soft);
+      color: var(--muted);
+    }
+
+    .phase strong {
+      display: block;
+      color: var(--ink);
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .phase span {
+      font-size: 12px;
+    }
+
+    .phase.complete {
+      border-color: rgba(105, 210, 140, 0.7);
+    }
+
+    .phase.current {
+      border-color: rgba(242, 193, 91, 0.85);
+      background: #2a2518;
+    }
+
+    .phase.upcoming {
+      border-color: rgba(104, 170, 247, 0.55);
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    li {
+      margin: 6px 0;
+      color: var(--muted);
+    }
+
+    li strong {
+      color: var(--ink);
+    }
+
+    .queue {
+      display: grid;
+      gap: 9px;
+      counter-reset: task;
+    }
+
+    .task {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-soft);
+    }
+
+    .task::before {
+      counter-increment: task;
+      content: counter(task);
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #263444;
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .task p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .tag {
+      padding: 4px 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .callout {
+      border-left: 4px solid var(--yellow);
+    }
+
+    .ok { color: var(--green); }
+    .warn { color: var(--yellow); }
+    .info { color: var(--blue); }
+    .risk { color: var(--red); }
+    .mag { color: var(--violet); }
+    .tool { color: var(--orange); }
+
+    .doc-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .doc {
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-soft);
+      min-height: 86px;
+    }
+
+    .doc p {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 9px 8px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--ink);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    td {
+      color: var(--muted);
+    }
+
+    .mini {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 980px) {
+      .topbar,
+      .dashboard,
+      .three,
+      .four,
+      .doc-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stamp {
+        text-align: left;
+        white-space: normal;
+      }
+
+      .phase-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="topbar">
+      <div>
+        <h1>Theta Pen Plotter Project Management Overview</h1>
+        <p class="subtitle">One-page status dashboard for the XY + rotating-bed plotter. This file is an at-a-glance view; the roadmap, test plan, wiring table, and engineering log remain the controlling records.</p>
+      </div>
+      <div class="stamp">
+        Updated 2026-07-04<br>
+        Root file: project_management_overview.html
+      </div>
+    </header>
+
+    <section class="grid four">
+      <div class="panel metric">
+        <span class="status active"><span class="dot"></span> Current phase</span>
+        <span class="value warn">Phase 1</span>
+        <span class="label">Electrical characterization before powered integration.</span>
+      </div>
+      <div class="panel metric">
+        <span class="status next"><span class="dot"></span> Next phase</span>
+        <span class="value info">Phase 2</span>
+        <span class="label">RP23CNC/grblHAL baseline: flash, identify, communicate, and verify I/O.</span>
+      </div>
+      <div class="panel metric">
+        <span class="status done"><span class="dot"></span> Software</span>
+        <span class="value ok">Functional</span>
+        <span class="label">Host converter exists; hardware validation is still pending.</span>
+      </div>
+      <div class="panel metric">
+        <span class="status blocked"><span class="dot"></span> Main risk</span>
+        <span class="value risk">Untested I/O</span>
+        <span class="label">RP23CNC inputs, TB6600 inputs, TMAG5273 readings, and toolhead output states need bench evidence.</span>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top: 14px;">
+      <h2>Phase Gate View</h2>
+      <div class="phase-strip">
+        <div class="phase complete"><strong>0</strong><span>Repository organized</span></div>
+        <div class="phase current"><strong>1</strong><span>Electrical characterization</span></div>
+        <div class="phase upcoming"><strong>2</strong><span>Controller baseline</span></div>
+        <div class="phase"><strong>3</strong><span>Single-axis motion</span></div>
+        <div class="phase"><strong>4</strong><span>X/Y/A motion</span></div>
+        <div class="phase"><strong>5</strong><span>Toolhead bench loop</span></div>
+        <div class="phase"><strong>6</strong><span>System integration</span></div>
+        <div class="phase"><strong>7</strong><span>Validation and report</span></div>
+      </div>
+      <p class="mini">Check a phase only when its exit condition and required evidence are complete in the roadmap and test plan.</p>
+    </section>
+
+    <section class="grid dashboard" style="margin-top: 14px;">
+      <div class="panel">
+        <h2>Immediate Work Queue</h2>
+        <div class="queue">
+          <div class="task">
+            <div>
+              <strong>Complete the Phase 1 bench worksheet.</strong>
+              <p>Use the test plan before connecting motors or the toolhead to RP23CNC. Record actual measurements and evidence.</p>
+            </div>
+          </div>
+          <div class="task">
+            <div>
+              <strong>Inspect and document the RP23CNC board and Ethernet kit.</strong>
+              <p>Confirm soldering, PCB revision, connectors, W5500/Ethernet parts, and continuity before board power.</p>
+            </div>
+          </div>
+          <div class="task">
+            <div>
+              <strong>Characterize power and driver interfaces.</strong>
+              <p>Verify S-120-12 output, protective earth, TB6600 STEP/DIR behavior, motor coils, and conservative driver settings.</p>
+            </div>
+          </div>
+          <div class="task">
+            <div>
+              <strong>Verify magnetic homing electronics before wiring A_HOME.</strong>
+              <p>Read TMAG5273 through RP2040 diagnostics, validate fixed-height signal quality, and confirm the output driver is compatible with the selected RP23CNC input.</p>
+            </div>
+          </div>
+          <div class="task">
+            <div>
+              <strong>Build or obtain RP23CNC-compatible grblHAL firmware.</strong>
+              <p>Use a four-axis configuration so A exists with X/Y; Z remains unused and unwired.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel callout">
+        <h2>Current Operating Assumptions</h2>
+        <ul>
+          <li><strong>Motion controller:</strong> grblHAL on RP23CNC owns parsing, planning, homing, limits, and step generation.</li>
+          <li><strong>Axes:</strong> X/Y/A are used. Z may appear in the firmware builder only to expose A, but Z is unused and unwired.</li>
+          <li><strong>A units:</strong> converter A values are motor-shaft degrees. One bed revolution is 4320 A motor degrees with the 12:1 ratio.</li>
+          <li><strong>Toolhead:</strong> M3 means ENGAGE and M5 means LIFT through a spindle/tool output state.</li>
+          <li><strong>Normal homing:</strong> ioSender sends M5, waits for lift dwell, then sends $H. grblHAL homes X/Y switches and A from validated RP2040 A_HOME.</li>
+          <li><strong>Magnetic setup:</strong> center scan and two-revolution A scan are setup/calibration flows, not manual daily coordination steps.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="grid three" style="margin-top: 14px;">
+      <div class="panel">
+        <h2>Open Blockers</h2>
+        <ul>
+          <li>RP23CNC input polarity and electrical requirements are not yet verified.</li>
+          <li>RP2040 A_HOME output-driver behavior is not yet proven against the selected RP23CNC input.</li>
+          <li>TMAG5273 thresholds, hysteresis, offset, and repeatability are still TBD.</li>
+          <li>TB6600 input topology, switch settings, and safe current limits need bench evidence.</li>
+          <li>Toolhead controller placement and fault wiring remain pending.</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h2>Recently Clarified</h2>
+        <ul>
+          <li class="mag">TMAG5273 is fixed-height on the toolhead/gantry; it is not a Z sensor.</li>
+          <li class="info">A-axis magnetic homing uses exactly two full bed revolutions during the bounds scan.</li>
+          <li class="tool">The pen must be lifted before homing, calibration scans, and travel moves.</li>
+          <li class="risk">Abort paths must stop motion, keep the pen lifted, preserve diagnostics, and require explicit recovery.</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h2>Evidence Needed Next</h2>
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Evidence</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>E-09</td><td>Stable TMAG5273 readings with intended magnet geometry.</td></tr>
+            <tr><td>E-18</td><td>RP2040/TMAG5273 adapter diagnostics and A_HOME electrical compatibility.</td></tr>
+            <tr><td>F-05</td><td>Deterministic spindle/tool output state for M3/M5.</td></tr>
+            <tr><td>F-07</td><td>Four-axis sanity check with Z unused/unwired.</td></tr>
+            <tr><td>M-09</td><td>Two-revolution A magnetic index setup scan repeatability.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top: 14px;">
+      <h2>Subsystem Snapshot</h2>
+      <table>
+        <thead>
+          <tr><th>Subsystem</th><th>Status</th><th>Next management action</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Windows converter</td><td>Functional, with preview and G-code generation in place.</td><td>Keep stable until hardware motion feedback exposes a real issue.</td></tr>
+          <tr><td>RP23CNC / grblHAL</td><td>Architecture selected; baseline firmware still needs build, flash, and I/O verification.</td><td>Complete Phase 2 bring-up after Phase 1 electrical gates.</td></tr>
+          <tr><td>Motion electronics</td><td>TB6600-class driver plan exists; exact units and input behavior need testing.</td><td>Bench-test one driver before attaching mechanics.</td></tr>
+          <tr><td>Magnetic homing adapter</td><td>Planned RP2040 + TMAG5273 path with validated A_HOME output.</td><td>Prove readings and electrical compatibility before wiring to RP23CNC.</td></tr>
+          <tr><td>Toolhead force loop</td><td>Concept defined; placement and fault handling still pending.</td><td>Characterize actuator, load cell, HX711 rate/noise, and safe lift behavior.</td></tr>
+          <tr><td>Documentation and report</td><td>Change notes, roadmap, test plan, wiring table, and engineering log are active.</td><td>Record every bench result and failed approach as it happens.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel" style="margin-top: 14px;">
+      <h2>Source Documents</h2>
+      <div class="doc-grid">
+        <div class="doc">
+          <strong><a href="docs/project/ROADMAP.md">Roadmap</a></strong>
+          <p>Phase gates, checklist status, and the next concrete project task.</p>
+        </div>
+        <div class="doc">
+          <strong><a href="docs/testing/TEST_PLAN.md">Test Plan</a></strong>
+          <p>Bench worksheet and pass conditions for electrical, firmware, motion, toolhead, and integrated tests.</p>
+        </div>
+        <div class="doc">
+          <strong><a href="docs/hardware/WIRING_TABLE.md">Master Wiring Table</a></strong>
+          <p>Authoritative wiring status, evidence, and TBD terminal assignments.</p>
+        </div>
+        <div class="doc">
+          <strong><a href="docs/integration/INTERFACES.md">Interface Contract</a></strong>
+          <p>Units, commands, ownership boundaries, M3/M5 behavior, and homing interfaces.</p>
+        </div>
+        <div class="doc">
+          <strong><a href="docs/homing_data_flow.html">Homing Data Flow</a></strong>
+          <p>Normal startup homing, bed-center calibration, A magnetic homing, and abort/fault flows.</p>
+        </div>
+        <div class="doc">
+          <strong><a href="docs/electronics_layout_and_wiring.html">Electronics Layout</a></strong>
+          <p>Visual electronics and wiring concept for RP23CNC, drivers, power, toolhead, and magnetic adapter.</p>
+        </div>
+        <div class="doc">
+          <strong><a href="docs/project/ENGINEERING_LOG.md">Engineering Log</a></strong>
+          <p>Chronological successes, struggles, open risks, and evidence links.</p>
+        </div>
+        <div class="doc">
+          <strong><a href="docs/changes/INDEX.md">Change Index</a></strong>
+          <p>Categorized change notes for Windows software, RP23CNC software, and hardware.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
