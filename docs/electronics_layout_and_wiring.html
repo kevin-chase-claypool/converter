@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>XY Theta Plotter Electronics Layout and Wiring Concept</title>
+  <style>
+    :root {
+      --bg: #f5f7f9;
+      --panel: #ffffff;
+      --ink: #1f2933;
+      --muted: #5c6977;
+      --line: #c8d1dc;
+      --power: #c62828;
+      --ground: #2e7d32;
+      --motion: #375a9e;
+      --signal: #007c89;
+      --tool: #b56215;
+      --mag: #6f42a3;
+      --safety: #7a4b00;
+      --warn-bg: #fff8e6;
+      --warn-line: #dfb95e;
+      --shadow: 0 8px 22px rgba(31, 41, 51, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.45;
+    }
+
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 22px 40px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 26px 0 12px;
+      font-size: 19px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    .subtitle {
+      max-width: 920px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .notice {
+      margin: 18px 0;
+      padding: 12px 14px;
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-line);
+      border-radius: 6px;
+      color: #4d3900;
+      font-size: 14px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin: 16px 0 18px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 8px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .swatch {
+      width: 18px;
+      height: 3px;
+      border-radius: 99px;
+      background: var(--line);
+    }
+
+    .power { background: var(--power); }
+    .ground { background: var(--ground); }
+    .motion { background: var(--motion); }
+    .signal { background: var(--signal); }
+    .tool { background: var(--tool); }
+    .mag { background: var(--mag); }
+    .safety { background: var(--safety); }
+
+    .diagram-shell {
+      overflow-x: auto;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    svg {
+      display: block;
+      min-width: 1180px;
+      width: 100%;
+      height: auto;
+    }
+
+    .box {
+      fill: #fff;
+      stroke: #99a8b8;
+      stroke-width: 1.4;
+      rx: 8;
+    }
+
+    .box-soft {
+      fill: #f8fbff;
+      stroke: #99a8b8;
+      stroke-width: 1.2;
+      rx: 8;
+    }
+
+    .box-warn {
+      fill: #fff8e6;
+      stroke: var(--warn-line);
+      stroke-width: 1.4;
+      rx: 8;
+    }
+
+    .title {
+      fill: var(--ink);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .note {
+      fill: var(--muted);
+      font-size: 12px;
+    }
+
+    .pin {
+      fill: var(--ink);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .small {
+      fill: var(--muted);
+      font-size: 11px;
+    }
+
+    .wire {
+      fill: none;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .wire.power { stroke: var(--power); }
+    .wire.ground { stroke: var(--ground); }
+    .wire.motion { stroke: var(--motion); }
+    .wire.signal { stroke: var(--signal); }
+    .wire.tool { stroke: var(--tool); }
+    .wire.mag { stroke: var(--mag); }
+    .wire.safety { stroke: var(--safety); }
+    .wire.tbd {
+      stroke-dasharray: 7 5;
+    }
+
+    .label-bg {
+      fill: #fff;
+      stroke: #d9e0e8;
+      stroke-width: 1;
+      rx: 5;
+    }
+
+    .label {
+      fill: var(--ink);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+
+    ul {
+      margin: 8px 0 0 18px;
+      padding: 0;
+    }
+
+    li {
+      margin: 5px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #e3e8ee;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eef3f7;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    code {
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.95em;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>XY Theta Plotter Electronics Layout and Wiring Concept</h1>
+  <p class="subtitle">
+    Current planning view for the RP23CNC/grblHAL controller, three TB6600
+    stepper channels, toolhead electronics, Ethernet control, and the
+    TMAG5273/RP2040 magnetic homing adapter.
+  </p>
+
+  <div class="notice">
+    This is an explanatory layout, not an authority for terminal labels or wire
+    colors. The master wiring table controls. Every dashed connection remains
+    TBD until the matching inspection or bench test passes.
+  </div>
+
+  <div class="legend" aria-label="Wire legend">
+    <span><i class="swatch power"></i>12 V / AC power path</span>
+    <span><i class="swatch ground"></i>0 V / return / PE</span>
+    <span><i class="swatch motion"></i>STEP / DIR / ENABLE</span>
+    <span><i class="swatch signal"></i>Host / controller data</span>
+    <span><i class="swatch tool"></i>Toolhead control</span>
+    <span><i class="swatch mag"></i>Magnetic calibration</span>
+    <span><i class="swatch safety"></i>Limits / E-stop</span>
+  </div>
+
+  <section class="diagram-shell" aria-label="Electronics layout diagram">
+    <svg viewBox="0 0 1180 820" role="img" aria-labelledby="diagram-title diagram-desc">
+      <title id="diagram-title">Current electronics layout and wiring concept</title>
+      <desc id="diagram-desc">
+        Concept diagram showing host computer, RP23CNC, power supply, stepper
+        drivers, motors, toolhead controller, and magnetic calibration adapter.
+      </desc>
+
+      <defs>
+        <marker id="arrow-power" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L8,3 z" fill="#c62828"></path>
+        </marker>
+        <marker id="arrow-ground" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L8,3 z" fill="#2e7d32"></path>
+        </marker>
+        <marker id="arrow-motion" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L8,3 z" fill="#375a9e"></path>
+        </marker>
+        <marker id="arrow-signal" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L8,3 z" fill="#007c89"></path>
+        </marker>
+        <marker id="arrow-tool" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L8,3 z" fill="#b56215"></path>
+        </marker>
+        <marker id="arrow-mag" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L8,3 z" fill="#6f42a3"></path>
+        </marker>
+        <marker id="arrow-safety" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L8,3 z" fill="#7a4b00"></path>
+        </marker>
+      </defs>
+
+      <rect x="20" y="20" width="1140" height="780" fill="#fbfcfd" stroke="#d6dde5" rx="10"></rect>
+
+      <!-- Host and network -->
+      <rect class="box-soft" x="50" y="55" width="190" height="94"></rect>
+      <text class="title" x="68" y="84">Host PC</text>
+      <text class="note" x="68" y="106">converter, sender,</text>
+      <text class="note" x="68" y="123">calibration script</text>
+
+      <rect class="box-soft" x="300" y="45" width="210" height="112"></rect>
+      <text class="title" x="318" y="74">Network / USB Control</text>
+      <text class="note" x="318" y="98">Ethernet after W5500</text>
+      <text class="note" x="318" y="115">bring-up; USB recovery</text>
+      <text class="note" x="318" y="132">and initial setup</text>
+
+      <path class="wire signal" marker-end="url(#arrow-signal)" d="M240 92 C260 92 275 92 300 92"></path>
+      <rect class="label-bg" x="252" y="70" width="66" height="20"></rect>
+      <text class="label" x="260" y="84">sender</text>
+
+      <!-- Power -->
+      <rect class="box-warn" x="50" y="214" width="200" height="118"></rect>
+      <text class="title" x="68" y="244">AC Mains Input</text>
+      <text class="note" x="68" y="268">switch, fuse, inlet,</text>
+      <text class="note" x="68" y="285">strain relief TBD</text>
+      <text class="small" x="68" y="306">Do not energize until enclosed</text>
+
+      <rect class="box" x="320" y="206" width="210" height="136"></rect>
+      <text class="title" x="338" y="236">MEISHILE S-120-12</text>
+      <text class="note" x="338" y="260">12 V, 10 A, 120 W</text>
+      <text class="note" x="338" y="277">terminals documented</text>
+      <text class="pin" x="338" y="304">+V/-V distribution TBD</text>
+      <text class="small" x="338" y="321">E-11, E-12, E-13 open</text>
+
+      <path class="wire power tbd" marker-end="url(#arrow-power)" d="M250 260 C280 260 290 260 320 260"></path>
+      <path class="wire ground tbd" marker-end="url(#arrow-ground)" d="M250 292 C280 292 290 292 320 292"></path>
+      <rect class="label-bg" x="267" y="238" width="58" height="20"></rect>
+      <text class="label" x="275" y="252">L/N/PE</text>
+
+      <rect class="box-soft" x="590" y="218" width="178" height="98"></rect>
+      <text class="title" x="608" y="247">12 V Bus</text>
+      <text class="note" x="608" y="270">fused branches TBD</text>
+      <text class="small" x="608" y="290">positive and return</text>
+
+      <path class="wire power tbd" marker-end="url(#arrow-power)" d="M530 252 C550 252 565 252 590 252"></path>
+      <path class="wire ground tbd" marker-end="url(#arrow-ground)" d="M530 286 C550 286 565 286 590 286"></path>
+
+      <!-- RP23CNC -->
+      <rect class="box" x="585" y="55" width="245" height="122"></rect>
+      <text class="title" x="604" y="84">RP23CNC / RP23U5XBB V1.01</text>
+      <text class="note" x="604" y="107">grblHAL motion controller</text>
+      <text class="note" x="604" y="124">W5500 Ethernet module</text>
+      <text class="note" x="604" y="141">X/Y/A STEP-DIR + limits</text>
+      <text class="small" x="604" y="160">E-16/E-17 and F-01..F-06 open</text>
+
+      <path class="wire signal" marker-end="url(#arrow-signal)" d="M510 92 C540 92 555 92 585 92"></path>
+      <path class="wire power tbd" marker-end="url(#arrow-power)" d="M768 252 C815 252 860 220 860 168 C860 132 844 120 830 120"></path>
+      <path class="wire ground tbd" marker-end="url(#arrow-ground)" d="M768 286 C840 286 878 235 878 176 C878 144 852 142 830 142"></path>
+      <rect class="label-bg" x="825" y="200" width="108" height="20"></rect>
+      <text class="label" x="833" y="214">12 V to RP23CNC</text>
+
+      <!-- Drivers and motors -->
+      <rect class="box" x="830" y="265" width="145" height="72"></rect>
+      <text class="title" x="850" y="292">X TB6600</text>
+      <text class="note" x="850" y="314">PUL/DIR/ENA TBD</text>
+      <rect class="box" x="830" y="375" width="145" height="72"></rect>
+      <text class="title" x="850" y="402">Y TB6600</text>
+      <text class="note" x="850" y="424">PUL/DIR/ENA TBD</text>
+      <rect class="box" x="830" y="485" width="145" height="72"></rect>
+      <text class="title" x="850" y="512">A TB6600</text>
+      <text class="note" x="850" y="534">PUL/DIR/ENA TBD</text>
+
+      <rect class="box-soft" x="1020" y="265" width="105" height="72"></rect>
+      <text class="title" x="1046" y="292">X Motor</text>
+      <text class="note" x="1039" y="314">17HS15</text>
+      <rect class="box-soft" x="1020" y="375" width="105" height="72"></rect>
+      <text class="title" x="1046" y="402">Y Motor</text>
+      <text class="note" x="1039" y="424">17HS15</text>
+      <rect class="box-soft" x="1020" y="485" width="105" height="72"></rect>
+      <text class="title" x="1048" y="512">A Motor</text>
+      <text class="note" x="1038" y="534">bed theta</text>
+
+      <path class="wire motion tbd" marker-end="url(#arrow-motion)" d="M830 118 C804 118 790 300 830 300"></path>
+      <path class="wire motion tbd" marker-end="url(#arrow-motion)" d="M830 132 C790 132 780 410 830 410"></path>
+      <path class="wire motion tbd" marker-end="url(#arrow-motion)" d="M830 146 C776 146 770 520 830 520"></path>
+      <path class="wire power tbd" marker-end="url(#arrow-power)" d="M768 252 C795 252 805 300 830 300"></path>
+      <path class="wire power tbd" marker-end="url(#arrow-power)" d="M768 252 C800 252 808 410 830 410"></path>
+      <path class="wire power tbd" marker-end="url(#arrow-power)" d="M768 252 C805 252 810 520 830 520"></path>
+      <path class="wire ground tbd" marker-end="url(#arrow-ground)" d="M768 286 C790 286 804 318 830 318"></path>
+      <path class="wire ground tbd" marker-end="url(#arrow-ground)" d="M768 286 C796 286 804 428 830 428"></path>
+      <path class="wire ground tbd" marker-end="url(#arrow-ground)" d="M768 286 C802 286 806 538 830 538"></path>
+      <path class="wire motion tbd" marker-end="url(#arrow-motion)" d="M975 300 L1020 300"></path>
+      <path class="wire motion tbd" marker-end="url(#arrow-motion)" d="M975 410 L1020 410"></path>
+      <path class="wire motion tbd" marker-end="url(#arrow-motion)" d="M975 520 L1020 520"></path>
+
+      <!-- Limits -->
+      <rect class="box-soft" x="610" y="382" width="155" height="130"></rect>
+      <text class="title" x="628" y="410">Home / Limit Inputs</text>
+      <text class="note" x="628" y="434">X limit switch</text>
+      <text class="note" x="628" y="452">Y limit switch</text>
+      <text class="note" x="628" y="470">A_HOME from adapter</text>
+      <text class="small" x="628" y="494">polarity and NC/NO TBD</text>
+
+      <path class="wire safety tbd" marker-end="url(#arrow-safety)" d="M765 430 C815 430 825 170 830 154"></path>
+
+      <rect class="box-warn" x="585" y="570" width="195" height="82"></rect>
+      <text class="title" x="604" y="599">E-stop / Halt</text>
+      <text class="note" x="604" y="622">control input and motor</text>
+      <text class="note" x="604" y="639">power removal TBD</text>
+      <path class="wire safety tbd" marker-end="url(#arrow-safety)" d="M780 610 C842 610 876 196 830 160"></path>
+
+      <!-- Toolhead -->
+      <rect class="box" x="300" y="430" width="210" height="104"></rect>
+      <text class="title" x="318" y="459">Toolhead Controller</text>
+      <text class="note" x="318" y="482">separate MCU or RP2350</text>
+      <text class="note" x="318" y="499">placement still TBD</text>
+      <text class="small" x="318" y="518">force loop must not block motion</text>
+
+      <rect class="box" x="50" y="420" width="165" height="92"></rect>
+      <text class="title" x="68" y="449">B085T73CSD Buck</text>
+      <text class="note" x="68" y="472">set to 6.0 V</text>
+      <text class="small" x="68" y="492">E-14/E-15 open</text>
+      <path class="wire power tbd" marker-end="url(#arrow-power)" d="M590 286 C410 356 280 446 215 456"></path>
+      <path class="wire ground tbd" marker-end="url(#arrow-ground)" d="M590 300 C410 384 280 480 215 486"></path>
+
+      <rect class="box-soft" x="50" y="565" width="165" height="112"></rect>
+      <text class="title" x="68" y="594">Toolhead Hardware</text>
+      <text class="note" x="68" y="617">DRV8833 + N20 lift</text>
+      <text class="note" x="68" y="635">HX711 + load cell</text>
+      <text class="note" x="68" y="653">TMAG5273 optional</text>
+
+      <path class="wire power tbd" marker-end="url(#arrow-power)" d="M215 466 C250 466 265 466 300 466"></path>
+      <path class="wire tool tbd" marker-end="url(#arrow-tool)" d="M215 618 C250 618 260 500 300 500"></path>
+      <path class="wire tool tbd" marker-end="url(#arrow-tool)" d="M585 116 C520 150 538 448 510 474"></path>
+      <rect class="label-bg" x="500" y="352" width="80" height="20"></rect>
+      <text class="label" x="508" y="366">M3/M5 lift</text>
+
+      <!-- Magnetic adapter -->
+      <rect class="box" x="300" y="610" width="210" height="112"></rect>
+      <text class="title" x="318" y="639">RP2040 Magnetic Adapter</text>
+      <text class="note" x="318" y="662">Pro Micro RP2040 candidate</text>
+      <text class="note" x="318" y="679">USB telemetry to host</text>
+      <text class="note" x="318" y="696">conditioned A_HOME TBD</text>
+
+      <rect class="box-soft" x="50" y="720" width="220" height="54"></rect>
+      <text class="title" x="68" y="748">TMAG5273 Qwiic Sensor</text>
+      <text class="note" x="68" y="765">rides with gantry/toolhead</text>
+
+      <rect class="box-soft" x="540" y="700" width="230" height="74"></rect>
+      <text class="title" x="558" y="728">Embedded Bed Magnets</text>
+      <text class="note" x="558" y="751">center reference + outer 8.9 in index</text>
+
+      <path class="wire mag" marker-end="url(#arrow-mag)" d="M240 102 C160 150 150 610 300 652"></path>
+      <rect class="label-bg" x="134" y="560" width="126" height="20"></rect>
+      <text class="label" x="142" y="574">USB sensor telemetry</text>
+      <path class="wire mag tbd" marker-end="url(#arrow-mag)" d="M270 746 C294 746 300 694 300 694"></path>
+      <rect class="label-bg" x="236" y="722" width="68" height="20"></rect>
+      <text class="label" x="244" y="736">Qwiic I2C</text>
+      <path class="wire mag tbd" marker-end="url(#arrow-mag)" d="M510 688 C548 668 590 548 610 470"></path>
+      <rect class="label-bg" x="518" y="580" width="70" height="20"></rect>
+      <text class="label" x="526" y="594">A_HOME</text>
+      <path class="wire mag tbd" marker-end="url(#arrow-mag)" d="M270 748 C370 768 460 768 540 742"></path>
+    </svg>
+  </section>
+
+  <section class="grid" aria-label="Layout notes">
+    <div class="card">
+      <h3>Current Control Flow</h3>
+      <ul>
+        <li>Host PC sends G-code and jog commands to RP23CNC over USB first, Ethernet after W5500 bring-up.</li>
+        <li>RP23CNC/grblHAL owns X/Y/A motion, normal homing, limits, and M3/M5 output.</li>
+        <li>RP2040 reads the TMAG5273 and reports magnetic data to the host calibration script.</li>
+        <li>The optional RP2040 <code>A_HOME</code> output must behave like a verified switch input before connection.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Current Power Concept</h3>
+      <ul>
+        <li>AC mains feeds the MEISHILE S-120-12 through a protected inlet, switch, fuse, enclosure, and strain relief that are still TBD.</li>
+        <li>The 12 V bus feeds RP23CNC, X/Y/A TB6600 drivers, and the toolhead buck through fused branches still TBD.</li>
+        <li>The B085T73CSD buck is planned for 6.0 V toolhead actuator power after E-14/E-15 verification.</li>
+        <li>Protective earth and 0 V return routing must be verified before power is applied.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Homing and Calibration</h3>
+      <ul>
+        <li>X/Y home from physical limit switches wired to RP23CNC.</li>
+        <li>The center cylindrical magnet is scanned inside a bounded 4 in x 4 in area to locate bed center.</li>
+        <li>The outer cylindrical magnet near 8.9 in radius provides the theta/A angular index.</li>
+        <li>Saturated magnetic fields are handled by finding opposing footprint edges, not by looking for a peak.</li>
+      </ul>
+    </div>
+  </section>
+
+  <h2>Open Connection Gates</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Area</th>
+        <th>Must be verified before connection or promotion</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>RP23CNC power and Ethernet</td>
+        <td>E-16 kit inventory, E-17 solder/continuity inspection, boot identification, W5500 Ethernet bring-up, and saved settings dump.</td>
+      </tr>
+      <tr>
+        <td>Stepper drivers</td>
+        <td>TB6600 input topology, current/microstep settings, RP23CNC STEP/DIR/ENABLE pin mapping, and unpowered output polarity tests.</td>
+      </tr>
+      <tr>
+        <td>Limits and E-stop</td>
+        <td>Switch type, input polarity, normally closed/open decision, grblHAL inversion settings, and safe motor-energy removal approach.</td>
+      </tr>
+      <tr>
+        <td>Magnetic adapter</td>
+        <td>TMAG5273 reading stability, RP2040 telemetry, sensor height, magnet footprint repeatability, and an electrically compatible output driver for <code>A_HOME</code>.</td>
+      </tr>
+      <tr>
+        <td>Toolhead</td>
+        <td>Controller placement, 6 V buck load test, DRV8833 wiring, load-cell calibration, force-loop behavior, and M3/M5 fail-safe polarity.</td>
+      </tr>
+    </tbody>
+  </table>
+</main>
+</body>
+</html>
