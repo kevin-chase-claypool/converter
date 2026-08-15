@@ -138,6 +138,7 @@ Entry details remain only in the chronology.
 - [2026-08-14 16:45:00 -0500 - MIXED/OPEN - Selected X/Y SPDT roller limit switches](#elog-20260814164500)
 - [2026-08-14 17:00:00 -0500 - MIXED/OPEN - Staged temporary X/Y limit-switch harness before drag-chain routing](#elog-20260814170000)
 - [2026-08-14 17:30:00 -0500 - HARDWARE/OPEN - Initial E-stop uses RP23CNC Halt input](#elog-20260814173000)
+- [2026-08-15 09:00:00 -0500 - HARDWARE/PARTIAL - Recorded TB6600 factory switch state](#elog-20260815090000)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -148,6 +149,7 @@ Entry details remain only in the chronology.
 - [2026-08-14 16:10:00 -0500 - SUCCESS - Passed F-02 RP23CNC converter-command parser dry run](#elog-20260814161000)
 - [2026-08-14 16:30:00 -0500 - SUCCESS - Passed F-03 RP23CNC X/Y/A bare-output test](#elog-20260814163000)
 - [2026-08-14 16:45:00 -0500 - MIXED/OPEN - Selected X/Y SPDT roller limit switches](#elog-20260814164500)
+- [2026-08-15 09:00:00 -0500 - HARDWARE/PARTIAL - Recorded TB6600 factory switch state](#elog-20260815090000)
 
 ### Decisions and architecture
 - [2026-06-07 11:57:39 -0500 - SUCCESS - Made continuous maintainability a repository requirement](#elog-20260607115739)
@@ -1580,3 +1582,17 @@ Add new entries at the top of the log below this line.
   avoids representing a relay-based motor-energy-removal design as required.
 - Next action: identify the installed E-stop terminal pair, meter-check SW1,
   perform E-19, then set and verify the NC-compatible E-stop inversion.
+
+<a id="elog-20260815090000"></a>
+### 🟨 2026-08-15 09:00:00 -0500 - HARDWARE/PARTIAL - Recorded TB6600 factory switch state
+
+- Status: E-02 partial; no powered driver or motor test has occurred.
+- Category: hardware, test
+- Summary: The reported factory state is SW2/SW4 ON and SW1/SW3/SW5/SW6 OFF.
+  The supplied printed table maps it to 4 microsteps (800 pulses/revolution)
+  and 2.0 A.
+- Result: The factory current exceeds the selected motor's 1.5 A/phase rating.
+  Subject to confirmation of each received unit's printed table, E-04 will set
+  SW4 ON/SW5 OFF/SW6 ON before the first motor-power test.
+- Risk: TB6600 clones can use different switch tables; all three labels and
+  switch numbering must be photographed/confirmed before changing them.

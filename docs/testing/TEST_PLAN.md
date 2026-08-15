@@ -29,7 +29,7 @@ completion status.
 | ID | Test | Expected result | Actual result | Evidence |
 |---|---|---|---|---|
 | E-01 | Confirm each stepper coil pair with ohmmeter | Black/green and red/blue pairs | TBD | TBD |
-| E-02 | Record TB6600 labels and switch tables | Three identical, readable units | TBD | TBD |
+| E-02 | Record TB6600 labels and switch tables | Three identical, readable units | Partial | Reported factory state is SW2/SW4 ON and all others OFF. The printed table maps this to 4 microsteps (800 pulses/rev) and 2.0 A. Photograph/confirm all three received tables and switch numbering before treating it as verified. See 2026-08-15 E-02 lab note. |
 | E-03 | Check STEP/DIR input behavior | Compatible with RP23CNC outputs | TBD | TBD |
 | E-04 | Set driver current conservatively | At or below 1.5 A/phase convention | TBD | TBD |
 | E-05 | Measure N20 no-load current at 6 V | Stable and within supply/module range | Passed | At a 6.0 V bench input, toolhead idle current was 0.017 A. Both retract/lift and pen-down motion measured 0.043 A, for an approximately 0.026 A motor contribution in either direction. The repaired DRV8833 output solder joint remained reliable. No manual stall test was performed. |
