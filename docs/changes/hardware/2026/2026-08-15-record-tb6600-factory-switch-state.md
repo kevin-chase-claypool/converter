@@ -31,9 +31,10 @@ motion calibration values.
 
 ## Implementation
 
-The supplied printed table maps the reported state to 4 microsteps and 2.0 A.
+The received driver's printed table maps the reported state to 8 microsteps and
+2.0 A.
 The selected motors are rated 1.5 A per phase, so the documented target is the
-printed 1.5 A row, SW4 ON/SW5 OFF/SW6 ON, after each received unit's table is
+printed 1.5 A row, SW4 ON/SW5 ON/SW6 OFF, after each received unit's table is
 confirmed.
 
 ## Verification
@@ -43,7 +44,9 @@ confirmation of all three units; E-04 remains required before motor power.
 
 ## Struggles and rejected approaches
 
-No switch setting was changed based solely on a generic table or factory state.
+The initial transcription used a blurry earlier image and incorrectly mapped
+the factory microstep setting and 1.5 A row. A clear photograph of the received
+label corrected both entries before any switch setting was changed.
 
 ## Risks and follow-up
 

@@ -1589,10 +1589,10 @@ Add new entries at the top of the log below this line.
 - Status: E-02 partial; no powered driver or motor test has occurred.
 - Category: hardware, test
 - Summary: The reported factory state is SW2/SW4 ON and SW1/SW3/SW5/SW6 OFF.
-  The supplied printed table maps it to 4 microsteps (800 pulses/revolution)
+  A clear received-label photograph maps it to 8 microsteps (1600 pulses/revolution)
   and 2.0 A.
 - Result: The factory current exceeds the selected motor's 1.5 A/phase rating.
   Subject to confirmation of each received unit's printed table, E-04 will set
-  SW4 ON/SW5 OFF/SW6 ON before the first motor-power test.
+  SW4 ON/SW5 ON/SW6 OFF before the first motor-power test.
 - Risk: TB6600 clones can use different switch tables; all three labels and
   switch numbering must be photographed/confirmed before changing them.

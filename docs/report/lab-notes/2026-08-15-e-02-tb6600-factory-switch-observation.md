@@ -18,9 +18,9 @@ The project owner reported the factory state as:
 | SW5 | OFF |
 | SW6 | OFF |
 
-Using the printed driver table previously supplied for this driver style:
+Using the received driver's printed table, photographed on 2026-08-15:
 
-- SW1/SW2/SW3 = OFF/ON/OFF selects 4 microsteps, 800 pulses/revolution.
+- SW1/SW2/SW3 = OFF/ON/OFF selects 8 microsteps, 1600 pulses/revolution.
 - SW4/SW5/SW6 = ON/OFF/OFF selects 2.0 A.
 
 ## Disposition
@@ -30,8 +30,15 @@ received driver labels/tables and switch numbering must be visually confirmed.
 
 The selected 17HS15-1504S-X1 motors are rated 1.5 A per phase. If each received
 driver's printed table matches the recorded table, use the 1.5 A row before the
-first motor-power test: SW4 ON, SW5 OFF, SW6 ON. Do not change settings while a
+first motor-power test: SW4 ON, SW5 ON, SW6 OFF. Do not change settings while a
 driver is powered.
+
+## Correction
+
+An earlier same-day transcription incorrectly read the microstep row as 4 and
+the 1.5 A current row as ON/OFF/ON. The received label photograph resolves the
+mapping: the correct values are 8 microsteps and SW4/SW5/SW6 = ON/ON/OFF for
+1.5 A.
 
 ## Follow-up
 
