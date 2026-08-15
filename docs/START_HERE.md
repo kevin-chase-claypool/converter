@@ -7,9 +7,9 @@ This is the first file an AI or new contributor should read.
 Build an XY + rotating-bed pen plotter:
 
 ```text
-SVG -> host converter -> G-code -> RP23CNC/grblHAL -> X, Y, A motion
-                                      |
-                                      +-> engage/lift command -> force-controlled toolhead
+SVG -> host converter -> G-code -> ioSender -> RP23CNC/grblHAL -> X, Y, A motion
+                                                   |
+                                                   +-> engage/lift command -> force-controlled toolhead
 ```
 
 The host converter is functional. Hardware integration and controller

@@ -39,14 +39,17 @@ See [`software/README.md`](software/README.md) for full usage and settings.
 ## System overview
 
 ```
-   SVG  ──►  software/ (host)  ──►  .gcode  ──►  firmware/ (Pico 2 + grblHAL)  ──►  machine
-                                                        │
-                                                        └─ M3/M5 spindle/tool output state ──►  pen-pressure MCU
+   SVG  ──►  software/ (host)  ──►  .gcode  ──►  ioSender  ──►  RP23CNC + grblHAL  ──►  machine
+                                                              │
+                                                              └─ M3/M5 tool output ──►  pen-pressure MCU
 ```
 
 - The host converter maps SVG artwork (bed-local coordinates) into machine
   `X/Y/A` moves for the rotating bed, and emits pen up/down as `M3`/`M5`.
-- grblHAL on the Pico 2 parses that G-code and drives the X/Y/A steppers.
+- ioSender is the operator-facing G-code sender: it streams the saved G-code to
+  RP23CNC over USB or Ethernet and provides the console, settings, jog, and
+  status interface during setup and operation.
+- grblHAL on RP23CNC parses the streamed G-code and drives the X/Y/A steppers.
 - The pen-pressure system is an independent closed loop that treats the grblHAL
   `M3`/`M5` spindle/tool output state as a **mode override** (engage / lift) and
   otherwise holds a target contact force.

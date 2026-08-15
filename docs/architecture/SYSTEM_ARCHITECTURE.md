@@ -14,6 +14,7 @@ Record the exact board revision used by this project before finalizing wiring.
 | Subsystem | Responsibility | Implementation |
 |---|---|---|
 | Host converter | SVG parsing, geometry, XY+A kinematic planning, G-code generation, preview | Python/PySide6 in `software/` |
+| G-code sender / operator console | Streams the converter's saved G-code, exposes jog/status/console, and configures grblHAL | ioSender on the host PC, connected by USB or Ethernet |
 | Motion controller | G-code parsing, modal state, lookahead, coordinated acceleration, step/direction generation, homing, limits | grblHAL on RP23CNC |
 | Stepper power stage | Convert RP23CNC step/direction signals into motor phase current | Three external TB6600-class drivers |
 | Toolhead controller | Lift/engage state machine, load-cell sampling, force regulation, actuator drive, fault handling | grblHAL plugin or separate MCU; decision pending bench validation |
