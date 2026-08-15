@@ -1,7 +1,47 @@
-# Tecmojo 14130201 Sliding Shelf CAD
+# Hardware CAD
 
-This directory contains reference CAD for the Tecmojo 1U adjustable-depth
-sliding rack shelf sold as Amazon ASIN `B0BMW9V6MS`.
+This directory contains project CAD references, generated models, and exported
+geometry used for fit checks and course documentation.
+
+## Onshape API workflow
+
+Use the Onshape API helper when CAD exports need to be reproducible from the
+current cloud model instead of manually downloaded.
+
+Credentials are stored in Windows user environment variables, not in the
+repository:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\onshape\set_onshape_env.ps1
+```
+
+After opening a new terminal, check access:
+
+```powershell
+python tools\onshape\onshape_client.py list-documents --limit 5
+```
+
+Useful commands:
+
+```powershell
+python tools\onshape\onshape_client.py parse-url "https://cad.onshape.com/documents/.../w/.../e/..."
+python tools\onshape\onshape_client.py document --url "https://cad.onshape.com/documents/.../w/.../e/..."
+python tools\onshape\onshape_client.py elements "https://cad.onshape.com/documents/.../w/..."
+python tools\onshape\onshape_client.py export-partstudio-step "https://cad.onshape.com/documents/.../w/.../e/..." "docs\hardware\cad\exports\part-name.step"
+```
+
+Record the Onshape document URL, workspace or version ID, exported filename, and
+date in the relevant report or lab note when a model snapshot is used as
+evidence.
+
+The helper implements Onshape API-key request signing using `ONSHAPE_ACCESS_KEY`,
+`ONSHAPE_SECRET_KEY`, and `ONSHAPE_BASE_URL`. It uses only the Python standard
+library.
+
+## Tecmojo 14130201 sliding shelf
+
+This section documents reference CAD for the Tecmojo 1U adjustable-depth sliding
+rack shelf sold as Amazon ASIN `B0BMW9V6MS`.
 
 The product is a shelf for a four-post 19-inch rack, not a complete rack
 enclosure.

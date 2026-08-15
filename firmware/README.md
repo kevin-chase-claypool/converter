@@ -11,7 +11,7 @@ The board-specific implementation sequence is
 | Folder | Role | Target |
 |---|---|---|
 | [`grblhal/`](grblhal/) | Motion control - parses the host G-code and drives the X/Y/A steppers | RP23CNC / RP23U5XBB running grblHAL on RP2350 |
-| [`pen_pressure/`](pen_pressure/) | Closed-loop pen contact-force control | RP2350 plugin/core 1 or separate MCU, pending tests |
+| [`pen_pressure/`](pen_pressure/) | Closed-loop pen contact-force control | Separate SparkFun Pro Micro RP2350 prototype; final placement pending tests |
 
 ## Why this split
 
@@ -21,8 +21,8 @@ RP2040/RP2350 port, so motion is configuration, not new code. The selected
 motion controller is the RP23CNC / RP23U5XBB 5-axis grblHAL controller with the
 Ethernet adapter. The pen-pressure loop is a distinct real-time concern. Its
 final placement is still under evaluation: a supported RP2350 core-1/plugin
-implementation is preferred if it does not disturb grblHAL timing; otherwise it
-will use a separate MCU. See
+implementation is preferred if it does not disturb grblHAL timing; the current
+bench prototype uses a separate SparkFun Pro Micro RP2350. See
 [`../docs/decisions/ADR-002-toolhead-placement.md`](../docs/decisions/ADR-002-toolhead-placement.md).
 
 ## Integration contract
@@ -60,7 +60,28 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
 
 ## Status
 
-Planning is complete; physical assembly and firmware bring-up are not started.
+The RP23CNC grblHAL baseline now boots over native USB: F-01 passed on
+2026-08-14 with the RP23U5XBB board target, four-axis XYZA build, W5500, and
+SD/Ymodem support. Controller I/O and motion remain untested and disconnected.
+A separate-MCU pen-pressure prototype sketch
+now exists at
+[`pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`](pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino)
+for integrated bench testing the DRV8833, HX711, TMAG5273, and M3/M5 command
+input. With the proposed PC817C module, its GP29 M3/M5 and GP28 `HOME_ARM`
+inputs are externally pulled HIGH and optocoupler assertions pull them LOW;
+the integrated sketch is configured for that active-low interface. F-05/E-18
+must still establish the RP23CNC ENA/Aux0 state mapping before the harness is
+connected. Two smaller Arduino sketches also exist for safer bring-up:
+[`pen_pressure/bench_motor_command/bench_motor_command.ino`](pen_pressure/bench_motor_command/bench_motor_command.ino)
+tests only GP29 and the DRV8833, and
+[`pen_pressure/bench_sensors/bench_sensors.ino`](pen_pressure/bench_sensors/bench_sensors.ino)
+tests only the HX711 and TMAG5273.
+For powered pen-tip calibration, use
+[`pen_pressure/e07b_hx711_actuator_steps/e07b_hx711_actuator_steps.ino`](pen_pressure/e07b_hx711_actuator_steps/e07b_hx711_actuator_steps.ino).
+It uses a 3.3 V USB-to-TTL service adapter on GP20/GP21 rather than the Pro
+Micro USB-C port, and limits every actuator command to one short step followed
+by DRV8833 sleep. This is a temporary bench/service interface, not part of the
+normal plotter control path.
 Follow [`grblhal/UPCOMING_CODING_STEPS.md`](grblhal/UPCOMING_CODING_STEPS.md),
 then see
 [`../docs/HANDOFF.md`](../docs/HANDOFF.md) -> "Goals / roadmap -> Pi Pico 2 firmware"

@@ -1,0 +1,426 @@
+** Drc report for pc817-interface-v0.2.kicad_pcb **
+** Created on 2026-08-06T11:58:42 **
+** Report includes: Errors, Warnings **
+
+** Found 77 DRC violations **
+[silk_edge_clearance]: Silkscreen clipped by board edge
+    Rule: board setup constraints silk; warning
+    @(0.0000 mm, 0.0000 mm): Rectangle on Edge.Cuts
+    @(35.7500 mm, 17.7800 mm): PCB text 'J2 PRO MICRO 3V3' on f.Silkscreen
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(1.1000 mm, 17.7800 mm): PCB text 'J1 RP23CNC' on f.Silkscreen
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(35.7500 mm, 17.7800 mm): PCB text 'J2 PRO MICRO 3V3' on f.Silkscreen
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.6800 mm)
+    Rule: board setup constraints silk text height; warning
+    @(21.0000 mm, 20.0500 mm): PCB text 'GP8 / GP10: LOW = ASSERTED' on f.Silkscreen
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.6500 mm)
+    Rule: board setup constraints silk text height; warning
+    @(20.0800 mm, 18.9000 mm): PCB text 'UNROUTED PLACEMENT — NOT FOR FAB' on f.Silkscreen
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7500 mm)
+    Rule: board setup constraints silk text height; warning
+    @(20.0800 mm, 21.4500 mm): PCB text 'R6 DNP — VERIFY E-18' on f.Silkscreen
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(8.5500 mm, 2.4600 mm): Reference field of R1
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(8.5500 mm, 8.8100 mm): Reference field of R2
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(8.5500 mm, 15.1600 mm): Reference field of R5
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(26.1000 mm, 2.4600 mm): Reference field of R3
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(26.1000 mm, 8.8100 mm): Reference field of R4
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(26.1000 mm, 15.1600 mm): Reference field of R6
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(11.1000 mm, 3.9500 mm): Reference field of D1
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(11.1000 mm, 10.3000 mm): Reference field of D2
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(11.1000 mm, 16.6500 mm): Reference field of D3
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(26.1000 mm, 4.3000 mm): Reference field of C1
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(26.1000 mm, 10.6500 mm): Reference field of C2
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(31.2000 mm, 15.1600 mm): Reference field of C3
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(35.5200 mm, 1.8000 mm): Reference field of H1
+[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.7000 mm)
+    Rule: board setup constraints silk text height; warning
+    @(35.5200 mm, 20.8500 mm): Reference field of H2
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(20.0800 mm, 1.1500 mm): PCB text 'PC817C ISOLATED INTERFACE — REV 0.2' on f.Silkscreen
+    @(13.9700 mm, 2.0900 mm): Circle of U1 on f.Silkscreen
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(2.5400 mm, 3.3300 mm): Circle of J1 on f.Silkscreen
+    @(2.5400 mm, 3.1800 mm): Reference field of J1
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(1.1900 mm, 3.7300 mm): Rectangle of J1 on f.Silkscreen
+    @(2.5400 mm, 3.1800 mm): Reference field of J1
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(1.1900 mm, 3.7300 mm): Rectangle of J1 on f.Silkscreen
+    @(1.1000 mm, 17.7800 mm): PCB text 'J1 RP23CNC' on f.Silkscreen
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(21.0000 mm, 20.0500 mm): PCB text 'GP8 / GP10: LOW = ASSERTED' on f.Silkscreen
+    @(12.7200 mm, 15.2600 mm): Rectangle of U3 on f.Silkscreen
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(20.0800 mm, 18.9000 mm): PCB text 'UNROUTED PLACEMENT — NOT FOR FAB' on f.Silkscreen
+    @(12.7200 mm, 15.2600 mm): Rectangle of U3 on f.Silkscreen
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(37.6200 mm, 3.1800 mm): Reference field of J2
+    @(37.6200 mm, 3.3300 mm): Circle of J2 on f.Silkscreen
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(37.6200 mm, 3.1800 mm): Reference field of J2
+    @(37.6200 mm, 1.8000 mm): Circle of H1 on f.Silkscreen
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(37.6200 mm, 3.1800 mm): Reference field of J2
+    @(36.2700 mm, 3.7300 mm): Rectangle of J2 on f.Silkscreen
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(37.6200 mm, 1.8000 mm): Circle of H1 on f.Silkscreen
+    @(37.6200 mm, 3.3300 mm): Circle of J2 on f.Silkscreen
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(37.6200 mm, 20.8500 mm): Circle of H2 on f.Silkscreen
+    @(35.7500 mm, 17.7800 mm): PCB text 'J2 PRO MICRO 3V3' on f.Silkscreen
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(35.5200 mm, 20.8500 mm): Reference field of H2
+    @(35.7500 mm, 17.7800 mm): PCB text 'J2 PRO MICRO 3V3' on f.Silkscreen
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(12.7200 mm, 2.5600 mm): Rectangle of U1 on f.Silkscreen
+    @(17.7800 mm, 2.1600 mm): Reference field of U1
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(17.7800 mm, 8.5100 mm): Reference field of U2
+    @(12.7200 mm, 8.9100 mm): Rectangle of U2 on f.Silkscreen
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(12.7200 mm, 15.2600 mm): Rectangle of U3 on f.Silkscreen
+    @(17.7800 mm, 14.8600 mm): Reference field of U3
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(21.0000 mm, 20.0500 mm): PCB text 'GP8 / GP10: LOW = ASSERTED' on f.Silkscreen
+    @(13.9700 mm, 19.0500 mm): PTH pad 2 [TOOL_GND] of U3
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(20.0800 mm, 18.9000 mm): PCB text 'UNROUTED PLACEMENT — NOT FOR FAB' on f.Silkscreen
+    @(13.9700 mm, 19.0500 mm): PTH pad 2 [TOOL_GND] of U3
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(24.9000 mm, 3.0600 mm): Rectangle of R3 on f.Silkscreen
+    @(27.0500 mm, 3.8100 mm): Pad 2 [TOOL_3V3] of R3 on F.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(24.9000 mm, 3.0600 mm): Rectangle of R3 on f.Silkscreen
+    @(25.1500 mm, 3.8100 mm): Pad 1 [GP8] of R3 on F.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(24.9000 mm, 9.4100 mm): Rectangle of R4 on f.Silkscreen
+    @(27.0500 mm, 10.1600 mm): Pad 2 [TOOL_3V3] of R4 on F.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(24.9000 mm, 9.4100 mm): Rectangle of R4 on f.Silkscreen
+    @(25.1500 mm, 10.1600 mm): Pad 1 [GP10] of R4 on F.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(37.6200 mm, 3.1800 mm): Reference field of J2
+    @(37.6200 mm, 1.8000 mm): NPTH pad of H1
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(37.6200 mm, 3.3300 mm): Circle of J2 on f.Silkscreen
+    @(37.6200 mm, 1.8000 mm): NPTH pad of H1
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(21.0000 mm, 20.0500 mm): PCB text 'GP8 / GP10: LOW = ASSERTED' on f.Silkscreen
+    @(21.5900 mm, 19.0500 mm): PTH pad 3 [CTRL_GND] of U3
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(20.0800 mm, 18.9000 mm): PCB text 'UNROUTED PLACEMENT — NOT FOR FAB' on f.Silkscreen
+    @(21.5900 mm, 19.0500 mm): PTH pad 3 [CTRL_GND] of U3
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(24.9000 mm, 15.7600 mm): Rectangle of R6 on f.Silkscreen
+    @(27.0500 mm, 16.5100 mm): Pad 2 [A_HOME] of R6 on F.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(24.9000 mm, 15.7600 mm): Rectangle of R6 on f.Silkscreen
+    @(25.1500 mm, 16.5100 mm): Pad 1 [A_HOME_SW] of R6 on F.Cu
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(7.3500 mm, 3.0600 mm): Rectangle of R1 on b.Silkscreen
+    @(9.9000 mm, 4.5500 mm): Rectangle of D1 on b.Silkscreen
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(7.3500 mm, 9.4100 mm): Rectangle of R2 on b.Silkscreen
+    @(9.9000 mm, 10.9000 mm): Rectangle of D2 on b.Silkscreen
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(7.3500 mm, 15.7600 mm): Rectangle of R5 on b.Silkscreen
+    @(9.9000 mm, 17.2500 mm): Rectangle of D3 on b.Silkscreen
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(7.3500 mm, 3.0600 mm): Rectangle of R1 on b.Silkscreen
+    @(9.5000 mm, 3.8100 mm): Pad 2 [LED1_A] of R1 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(7.3500 mm, 3.0600 mm): Rectangle of R1 on b.Silkscreen
+    @(7.6000 mm, 3.8100 mm): Pad 1 [CTRL_5V] of R1 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(9.9000 mm, 4.5500 mm): Rectangle of D1 on b.Silkscreen
+    @(12.0500 mm, 5.3000 mm): Pad 2 [ENA] of D1 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(9.9000 mm, 4.5500 mm): Rectangle of D1 on b.Silkscreen
+    @(10.1500 mm, 5.3000 mm): Pad 1 [LED1_A] of D1 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(7.3500 mm, 9.4100 mm): Rectangle of R2 on b.Silkscreen
+    @(9.5000 mm, 10.1600 mm): Pad 2 [LED2_A] of R2 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(7.3500 mm, 9.4100 mm): Rectangle of R2 on b.Silkscreen
+    @(7.6000 mm, 10.1600 mm): Pad 1 [CTRL_5V] of R2 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(9.9000 mm, 10.9000 mm): Rectangle of D2 on b.Silkscreen
+    @(12.0500 mm, 11.6500 mm): Pad 2 [AUX0] of D2 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(9.9000 mm, 10.9000 mm): Rectangle of D2 on b.Silkscreen
+    @(10.1500 mm, 11.6500 mm): Pad 1 [LED2_A] of D2 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(7.3500 mm, 15.7600 mm): Rectangle of R5 on b.Silkscreen
+    @(9.5000 mm, 16.5100 mm): Pad 2 [LED3_A] of R5 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(7.3500 mm, 15.7600 mm): Rectangle of R5 on b.Silkscreen
+    @(7.6000 mm, 16.5100 mm): Pad 1 [GP9] of R5 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(9.9000 mm, 17.2500 mm): Rectangle of D3 on b.Silkscreen
+    @(12.0500 mm, 18.0000 mm): Pad 2 [TOOL_GND] of D3 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(9.9000 mm, 17.2500 mm): Rectangle of D3 on b.Silkscreen
+    @(10.1500 mm, 18.0000 mm): Pad 1 [LED3_A] of D3 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(24.9000 mm, 4.9000 mm): Rectangle of C1 on b.Silkscreen
+    @(27.0500 mm, 5.6500 mm): Pad 2 [TOOL_GND] of C1 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(24.9000 mm, 4.9000 mm): Rectangle of C1 on b.Silkscreen
+    @(25.1500 mm, 5.6500 mm): Pad 1 [GP8] of C1 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(24.9000 mm, 11.2500 mm): Rectangle of C2 on b.Silkscreen
+    @(27.0500 mm, 12.0000 mm): Pad 2 [TOOL_GND] of C2 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(24.9000 mm, 11.2500 mm): Rectangle of C2 on b.Silkscreen
+    @(25.1500 mm, 12.0000 mm): Pad 1 [GP10] of C2 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(30.0000 mm, 15.7600 mm): Rectangle of C3 on b.Silkscreen
+    @(32.1500 mm, 16.5100 mm): Pad 2 [TOOL_GND] of C3 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(30.0000 mm, 15.7600 mm): Rectangle of C3 on b.Silkscreen
+    @(30.2500 mm, 16.5100 mm): Pad 1 [TOOL_3V3] of C3 on B.Cu
+[nonmirrored_text_on_back_layer]: Non-Mirrored text on back layer
+    Local override; warning
+    @(8.5500 mm, 2.4600 mm): Reference field of R1
+[nonmirrored_text_on_back_layer]: Non-Mirrored text on back layer
+    Local override; warning
+    @(8.5500 mm, 8.8100 mm): Reference field of R2
+[nonmirrored_text_on_back_layer]: Non-Mirrored text on back layer
+    Local override; warning
+    @(8.5500 mm, 15.1600 mm): Reference field of R5
+[nonmirrored_text_on_back_layer]: Non-Mirrored text on back layer
+    Local override; warning
+    @(11.1000 mm, 3.9500 mm): Reference field of D1
+[nonmirrored_text_on_back_layer]: Non-Mirrored text on back layer
+    Local override; warning
+    @(11.1000 mm, 10.3000 mm): Reference field of D2
+[nonmirrored_text_on_back_layer]: Non-Mirrored text on back layer
+    Local override; warning
+    @(11.1000 mm, 16.6500 mm): Reference field of D3
+[nonmirrored_text_on_back_layer]: Non-Mirrored text on back layer
+    Local override; warning
+    @(26.1000 mm, 4.3000 mm): Reference field of C1
+[nonmirrored_text_on_back_layer]: Non-Mirrored text on back layer
+    Local override; warning
+    @(26.1000 mm, 10.6500 mm): Reference field of C2
+[nonmirrored_text_on_back_layer]: Non-Mirrored text on back layer
+    Local override; warning
+    @(31.2000 mm, 15.1600 mm): Reference field of C3
+
+** Found 32 unconnected pads **
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(7.6000 mm, 3.8100 mm): Pad 1 [CTRL_5V] of R1 on B.Cu
+    @(2.5400 mm, 5.0800 mm): PTH pad 1 [CTRL_5V] of J1
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(7.6000 mm, 10.1600 mm): Pad 1 [CTRL_5V] of R2 on B.Cu
+    @(7.6000 mm, 3.8100 mm): Pad 1 [CTRL_5V] of R1 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(2.5400 mm, 7.6200 mm): PTH pad 2 [CTRL_GND] of J1
+    @(21.5900 mm, 19.0500 mm): PTH pad 3 [CTRL_GND] of U3
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(12.0500 mm, 5.3000 mm): Pad 2 [ENA] of D1 on B.Cu
+    @(2.5400 mm, 10.1600 mm): PTH pad 3 [ENA] of J1
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(13.9700 mm, 6.3500 mm): PTH pad 2 [ENA] of U1
+    @(12.0500 mm, 5.3000 mm): Pad 2 [ENA] of D1 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(12.0500 mm, 11.6500 mm): Pad 2 [AUX0] of D2 on B.Cu
+    @(2.5400 mm, 12.7000 mm): PTH pad 4 [AUX0] of J1
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(13.9700 mm, 12.7000 mm): PTH pad 2 [AUX0] of U2
+    @(12.0500 mm, 11.6500 mm): Pad 2 [AUX0] of D2 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(2.5400 mm, 15.2400 mm): PTH pad 5 [A_HOME] of J1
+    @(27.0500 mm, 16.5100 mm): Pad 2 [A_HOME] of R6 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(27.0500 mm, 3.8100 mm): Pad 2 [TOOL_3V3] of R3 on F.Cu
+    @(27.0500 mm, 10.1600 mm): Pad 2 [TOOL_3V3] of R4 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(27.0500 mm, 10.1600 mm): Pad 2 [TOOL_3V3] of R4 on F.Cu
+    @(30.2500 mm, 16.5100 mm): Pad 1 [TOOL_3V3] of C3 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(37.6200 mm, 5.0800 mm): PTH pad 1 [TOOL_3V3] of J2
+    @(27.0500 mm, 3.8100 mm): Pad 2 [TOOL_3V3] of R3 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(12.0500 mm, 18.0000 mm): Pad 2 [TOOL_GND] of D3 on B.Cu
+    @(13.9700 mm, 19.0500 mm): PTH pad 2 [TOOL_GND] of U3
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(21.5900 mm, 12.7000 mm): PTH pad 3 [TOOL_GND] of U2
+    @(27.0500 mm, 12.0000 mm): Pad 2 [TOOL_GND] of C2 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(21.5900 mm, 12.7000 mm): PTH pad 3 [TOOL_GND] of U2
+    @(13.9700 mm, 19.0500 mm): PTH pad 2 [TOOL_GND] of U3
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(27.0500 mm, 5.6500 mm): Pad 2 [TOOL_GND] of C1 on B.Cu
+    @(21.5900 mm, 6.3500 mm): PTH pad 3 [TOOL_GND] of U1
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(27.0500 mm, 12.0000 mm): Pad 2 [TOOL_GND] of C2 on B.Cu
+    @(27.0500 mm, 5.6500 mm): Pad 2 [TOOL_GND] of C1 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(32.1500 mm, 16.5100 mm): Pad 2 [TOOL_GND] of C3 on B.Cu
+    @(27.0500 mm, 12.0000 mm): Pad 2 [TOOL_GND] of C2 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(32.1500 mm, 16.5100 mm): Pad 2 [TOOL_GND] of C3 on B.Cu
+    @(37.6200 mm, 7.6200 mm): PTH pad 2 [TOOL_GND] of J2
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(25.1500 mm, 3.8100 mm): Pad 1 [GP8] of R3 on F.Cu
+    @(21.5900 mm, 3.8100 mm): PTH pad 4 [GP8] of U1
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(25.1500 mm, 5.6500 mm): Pad 1 [GP8] of C1 on B.Cu
+    @(25.1500 mm, 3.8100 mm): Pad 1 [GP8] of R3 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(25.1500 mm, 5.6500 mm): Pad 1 [GP8] of C1 on B.Cu
+    @(37.6200 mm, 10.1600 mm): PTH pad 3 [GP8] of J2
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(25.1500 mm, 10.1600 mm): Pad 1 [GP10] of R4 on F.Cu
+    @(21.5900 mm, 10.1600 mm): PTH pad 4 [GP10] of U2
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(25.1500 mm, 12.0000 mm): Pad 1 [GP10] of C2 on B.Cu
+    @(25.1500 mm, 10.1600 mm): Pad 1 [GP10] of R4 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(25.1500 mm, 12.0000 mm): Pad 1 [GP10] of C2 on B.Cu
+    @(37.6200 mm, 12.7000 mm): PTH pad 4 [GP10] of J2
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(7.6000 mm, 16.5100 mm): Pad 1 [GP9] of R5 on B.Cu
+    @(37.6200 mm, 15.2400 mm): PTH pad 5 [GP9] of J2
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(9.5000 mm, 3.8100 mm): Pad 2 [LED1_A] of R1 on B.Cu
+    @(10.1500 mm, 5.3000 mm): Pad 1 [LED1_A] of D1 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(10.1500 mm, 5.3000 mm): Pad 1 [LED1_A] of D1 on B.Cu
+    @(13.9700 mm, 3.8100 mm): PTH pad 1 [LED1_A] of U1
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(9.5000 mm, 10.1600 mm): Pad 2 [LED2_A] of R2 on B.Cu
+    @(10.1500 mm, 11.6500 mm): Pad 1 [LED2_A] of D2 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(10.1500 mm, 11.6500 mm): Pad 1 [LED2_A] of D2 on B.Cu
+    @(13.9700 mm, 10.1600 mm): PTH pad 1 [LED2_A] of U2
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(9.5000 mm, 16.5100 mm): Pad 2 [LED3_A] of R5 on B.Cu
+    @(10.1500 mm, 18.0000 mm): Pad 1 [LED3_A] of D3 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(10.1500 mm, 18.0000 mm): Pad 1 [LED3_A] of D3 on B.Cu
+    @(13.9700 mm, 16.5100 mm): PTH pad 1 [LED3_A] of U3
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(21.5900 mm, 16.5100 mm): PTH pad 4 [A_HOME_SW] of U3
+    @(25.1500 mm, 16.5100 mm): Pad 1 [A_HOME_SW] of R6 on F.Cu
+
+** Found 0 Footprint errors **
+
+** Ignored checks **
+    - Footprint has no courtyard defined
+    - Track endpoint not centered on via
+    - Tuning profile track geometries
+    - Footprint doesn't match symbol's footprint filters
+    - Footprint component type doesn't match footprint pads
+
+** End of Report **

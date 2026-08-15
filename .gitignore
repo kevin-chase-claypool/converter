@@ -24,3 +24,11 @@ Thumbs.db
 .codex-remote-attachments/
 .obsidian/
 Obsidian/
+
+# Local rendering and KiCad session artifacts
+tmp/
+$pngBase
+$pngPath
+*.kicad_prl
+~*.lck
+fp-info-cache

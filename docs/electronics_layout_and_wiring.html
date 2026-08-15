@@ -434,13 +434,13 @@
       <!-- Toolhead -->
       <rect class="box" x="300" y="430" width="210" height="104"></rect>
       <text class="title" x="318" y="459">Toolhead Controller</text>
-      <text class="note" x="318" y="482">separate MCU or RP2350</text>
-      <text class="note" x="318" y="499">placement still TBD</text>
+      <text class="note" x="318" y="482">SparkFun Pro Micro RP2350</text>
+      <text class="note" x="318" y="499">mounted on toolhead</text>
       <text class="small" x="318" y="518">force loop must not block motion</text>
 
       <rect class="box" x="50" y="420" width="165" height="92"></rect>
-      <text class="title" x="68" y="449">B085T73CSD Buck</text>
-      <text class="note" x="68" y="472">set to 6.0 V</text>
+      <text class="title" x="68" y="449">Pololu D36V50F6</text>
+      <text class="note" x="68" y="472">fixed 6.0 V rail</text>
       <text class="small" x="68" y="492">E-14/E-15 open</text>
       <path class="wire power tbd" marker-end="url(#arrow-power)" d="M590 286 C410 356 280 446 215 456"></path>
       <path class="wire ground tbd" marker-end="url(#arrow-ground)" d="M590 300 C410 384 280 480 215 486"></path>
@@ -448,8 +448,8 @@
       <rect class="box-soft" x="50" y="565" width="165" height="112"></rect>
       <text class="title" x="68" y="594">Toolhead Hardware</text>
       <text class="note" x="68" y="617">DRV8833 + N20 lift</text>
-      <text class="note" x="68" y="635">HX711 + load cell</text>
-      <text class="note" x="68" y="653">pen force hardware</text>
+      <text class="note" x="68" y="635">Pololu S7V8F5 5 V</text>
+      <text class="note" x="68" y="653">HX711 + load cell</text>
 
       <path class="wire power tbd" marker-end="url(#arrow-power)" d="M215 466 C250 466 265 466 300 466"></path>
       <path class="wire tool tbd" marker-end="url(#arrow-tool)" d="M215 618 C250 618 260 500 300 500"></path>
@@ -502,7 +502,8 @@
       <ul>
         <li>AC mains feeds the MEISHILE S-120-12 through a protected inlet, switch, fuse, enclosure, and strain relief that are still TBD.</li>
         <li>The 12 V bus feeds RP23CNC, X/Y/A TB6600 drivers, and the toolhead buck through fused branches still TBD.</li>
-        <li>The B085T73CSD buck is planned for 6.0 V toolhead actuator power after E-14/E-15 verification.</li>
+        <li>The Pololu D36V50F6 is planned for 6.0 V toolhead power after E-14/E-15 verification.</li>
+        <li>The drag chain carries the 6 V toolhead rail; the Pololu S7V8F5 mounted on the toolhead makes local 5 V logic power.</li>
         <li>Protective earth and 0 V return routing must be verified before power is applied.</li>
       </ul>
     </div>

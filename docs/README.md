@@ -14,6 +14,7 @@ For a visual overview of this process, open
 | Converter algorithms or historical tradeoffs | [`HANDOFF.md`](HANDOFF.md) relevant section only | Code under `software/converter_core/`; deep rationale in `HANDOFF.md` |
 | RP23CNC/grblHAL work | [`../firmware/README.md`](../firmware/README.md) | Relevant file under `firmware/grblhal/` |
 | Pen-pressure firmware | [`../firmware/pen_pressure/README.md`](../firmware/pen_pressure/README.md) | `firmware/pen_pressure/` |
+| Power distribution | [`hardware/POWER_DISTRIBUTION.md`](hardware/POWER_DISTRIBUTION.md) | `hardware/WIRING_TABLE.md` plus the power-only schematic |
 | Wiring or pin assignment | [`hardware/WIRING_TABLE.md`](hardware/WIRING_TABLE.md) | `hardware/WIRING_TABLE.md` |
 | Part selection or electrical rating | [`hardware/BOM.md`](hardware/BOM.md) | `hardware/BOM.md` |
 | Subsystem interface or units | [`integration/INTERFACES.md`](integration/INTERFACES.md) | `integration/INTERFACES.md` |

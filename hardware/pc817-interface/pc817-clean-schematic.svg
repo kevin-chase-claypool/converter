@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1450" viewBox="0 0 2200 1450">
+  <style>
+    .title{font:bold 34px Arial,sans-serif;fill:#17212b}.subtitle{font:18px Arial,sans-serif;fill:#465a6e}
+    .section{font:bold 24px Arial,sans-serif;fill:#17212b}.label{font:18px Arial,sans-serif;fill:#17212b}.small{font:15px Arial,sans-serif;fill:#17212b}
+    .box{fill:#fff;stroke:#17212b;stroke-width:2.5}.ctrlbox{fill:#fff7f4;stroke:#be3d2c;stroke-width:3}.toolbox{fill:#f3f8ff;stroke:#2366ad;stroke-width:3}
+    .wire{fill:none;stroke:#17212b;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.ctrl{fill:none;stroke:#be3d2c;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.tool{fill:none;stroke:#2366ad;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+    .light{fill:none;stroke:#d48b00;stroke-width:4;stroke-dasharray:10 8}.dash{stroke-dasharray:10 8}.note{fill:#fff9e2;stroke:#b17800;stroke-width:2.5}
+  </style>
+  <rect width="2200" height="1450" fill="#fafcff"/>
+  <text x="1100" y="55" text-anchor="middle" class="title">PC817C PERFBOARD — CLEAN WIRING SCHEMATIC</text>
+  <text x="1100" y="84" text-anchor="middle" class="subtitle">Named nets replace long crossing wires. Dashed amber arrows are light inside each PC817—not electrical connections.</text>
+
+  <!-- U1 -->
+  <text x="80" y="145" class="section">U1 — RP23CNC ENA → Pro Micro GP8</text>
+  <rect x="80" y="175" width="470" height="245" rx="14" class="ctrlbox"/><text x="315" y="210" text-anchor="middle" class="section">CONTROLLER SIDE</text>
+  <text x="110" y="265" class="label">CTRL_5V</text><line x1="235" y1="258" x2="275" y2="258" class="ctrl"/><rect x="275" y="238" width="112" height="40" class="box"/><text x="331" y="264" text-anchor="middle" class="label">R1 680Ω</text><line x1="387" y1="258" x2="550" y2="258" class="ctrl"/>
+  <text x="110" y="360" class="label">ENA (J1 pin 3)</text><line x1="300" y1="353" x2="550" y2="353" class="ctrl"/>
+  <rect x="550" y="205" width="260" height="190" rx="8" class="box"/><text x="680" y="242" text-anchor="middle" class="section">PC817C U1</text>
+  <text x="570" y="263" class="label">1</text><text x="570" y="358" class="label">2</text><text x="785" y="263" class="label">4</text><text x="785" y="358" class="label">3</text>
+  <path d="M625 275 L655 298 L625 321 L655 344" class="wire"/><text x="670" y="314" class="small">internal LED</text><path d="M705 274 L750 341" class="light"/>
+  <path d="M515 258 L515 353" class="ctrl"/><path d="M503 275 L515 258 L527 275 M503 336 L515 353 L527 336" class="ctrl"/><text x="350" y="317" class="small">D1 1N4148 across pins 1–2; band toward pin 1</text>
+  <rect x="900" y="175" width="1210" height="245" rx="14" class="toolbox"/><text x="1505" y="210" text-anchor="middle" class="section">TOOLHEAD / PRO MICRO SIDE</text>
+  <line x1="810" y1="258" x2="1080" y2="258" class="tool"/><text x="940" y="248" class="label">GP8 (J2 pin 3)</text>
+  <line x1="1080" y1="258" x2="1080" y2="353" class="tool"/><line x1="1080" y1="353" x2="1180" y2="353" class="tool"/><text x="1095" y="347" class="small">TOOL_GND</text>
+  <line x1="1080" y1="258" x2="1260" y2="258" class="tool"/><line x1="1260" y1="220" x2="1260" y2="258" class="tool"/><rect x="1200" y="180" width="120" height="40" class="box"/><text x="1260" y="206" text-anchor="middle" class="label">R3 10k</text><text x="1225" y="167" class="small">TOOL_3V3</text>
+  <line x1="1120" y1="258" x2="1120" y2="300" class="tool"/><rect x="1080" y="300" width="80" height="38" class="box"/><text x="1120" y="325" text-anchor="middle" class="small">C1 47nF</text><line x1="1120" y1="338" x2="1120" y2="353" class="tool"/>
+  <text x="1690" y="300" class="label">LED off: GP8 = 3.3 V (HIGH)</text><text x="1690" y="340" class="label">LED on: GP8 ≈ 0 V (LOW)</text>
+
+  <!-- U2 -->
+  <text x="80" y="500" class="section">U2 — RP23CNC AUX0 → Pro Micro GP10 (optional)</text>
+  <rect x="80" y="530" width="470" height="245" rx="14" class="ctrlbox"/><text x="315" y="565" text-anchor="middle" class="section">CONTROLLER SIDE</text>
+  <text x="110" y="620" class="label">CTRL_5V</text><line x1="235" y1="613" x2="275" y2="613" class="ctrl"/><rect x="275" y="593" width="112" height="40" class="box"/><text x="331" y="619" text-anchor="middle" class="label">R2 680Ω</text><line x1="387" y1="613" x2="550" y2="613" class="ctrl"/>
+  <text x="110" y="715" class="label">AUX0 (J1 pin 4)</text><line x1="310" y1="708" x2="550" y2="708" class="ctrl"/>
+  <rect x="550" y="560" width="260" height="190" rx="8" class="box"/><text x="680" y="597" text-anchor="middle" class="section">PC817C U2</text>
+  <text x="570" y="618" class="label">1</text><text x="570" y="713" class="label">2</text><text x="785" y="618" class="label">4</text><text x="785" y="713" class="label">3</text>
+  <path d="M625 630 L655 653 L625 676 L655 699" class="wire"/><text x="670" y="669" class="small">internal LED</text><path d="M705 629 L750 696" class="light"/>
+  <path d="M515 613 L515 708" class="ctrl"/><path d="M503 630 L515 613 L527 630 M503 691 L515 708 L527 691" class="ctrl"/><text x="350" y="672" class="small">D2 1N4148 across pins 1–2; band toward pin 1</text>
+  <rect x="900" y="530" width="1210" height="245" rx="14" class="toolbox"/><text x="1505" y="565" text-anchor="middle" class="section">TOOLHEAD / PRO MICRO SIDE</text>
+  <line x1="810" y1="613" x2="1080" y2="613" class="tool"/><text x="930" y="603" class="label">GP10 (J2 pin 4)</text>
+  <line x1="1080" y1="613" x2="1080" y2="708" class="tool"/><line x1="1080" y1="708" x2="1180" y2="708" class="tool"/><text x="1095" y="702" class="small">TOOL_GND</text>
+  <line x1="1080" y1="613" x2="1260" y2="613" class="tool"/><line x1="1260" y1="575" x2="1260" y2="613" class="tool"/><rect x="1200" y="535" width="120" height="40" class="box"/><text x="1260" y="561" text-anchor="middle" class="label">R4 10k</text><text x="1225" y="522" class="small">TOOL_3V3</text>
+  <line x1="1120" y1="613" x2="1120" y2="655" class="tool"/><rect x="1080" y="655" width="80" height="38" class="box"/><text x="1120" y="680" text-anchor="middle" class="small">C2 47nF</text><line x1="1120" y1="693" x2="1120" y2="708" class="tool"/>
+  <text x="1690" y="655" class="label">LED off: GP10 = 3.3 V (HIGH)</text><text x="1690" y="695" class="label">LED on: GP10 ≈ 0 V (LOW)</text>
+
+  <!-- U3 -->
+  <text x="80" y="850" class="section">U3 — Pro Micro GP9 → RP23CNC A_HOME (leave disconnected until E-18)</text>
+  <rect x="80" y="880" width="630" height="290" rx="14" class="toolbox"/><text x="395" y="915" text-anchor="middle" class="section">TOOLHEAD / PRO MICRO SIDE</text>
+  <text x="110" y="975" class="label">GP9 (J2 pin 5)</text><line x1="275" y1="968" x2="325" y2="968" class="tool"/><rect x="325" y="948" width="125" height="40" class="box"/><text x="387" y="974" text-anchor="middle" class="label">R5 390Ω</text><line x1="450" y1="968" x2="710" y2="968" class="tool"/>
+  <text x="110" y="1070" class="label">TOOL_GND</text><line x1="235" y1="1063" x2="710" y2="1063" class="tool"/>
+  <rect x="710" y="915" width="260" height="190" rx="8" class="box"/><text x="840" y="952" text-anchor="middle" class="section">PC817C U3</text>
+  <text x="730" y="973" class="label">1</text><text x="730" y="1068" class="label">2</text><text x="945" y="973" class="label">4</text><text x="945" y="1068" class="label">3</text>
+  <path d="M785 985 L815 1008 L785 1031 L815 1054" class="wire"/><text x="830" y="1024" class="small">internal LED</text><path d="M865 984 L910 1051" class="light"/>
+  <path d="M675 968 L675 1063" class="tool"/><path d="M663 985 L675 968 L687 985 M663 1046 L675 1063 L687 1046" class="tool"/><text x="470" y="1027" class="small">D3 1N4148 across pins 1–2; band toward pin 1</text>
+  <rect x="1060" y="880" width="1050" height="290" rx="14" class="ctrlbox"/><text x="1585" y="915" text-anchor="middle" class="section">CONTROLLER SIDE</text>
+  <line x1="970" y1="968" x2="1130" y2="968" class="ctrl"/><text x="985" y="958" class="label">A_HOME_SW</text><rect x="1130" y="948" width="155" height="40" class="note"/><text x="1207" y="974" text-anchor="middle" class="label">R6 0Ω / wire</text><line x1="1285" y1="968" x2="1465" y2="968" class="ctrl dash"/><text x="1475" y="974" class="label">A_HOME (J1 pin 5)</text>
+  <text x="1110" y="1030" class="label">CTRL_GND (J1 pin 2)</text><line x1="970" y1="1063" x2="1465" y2="1063" class="ctrl"/>
+  <text x="1490" y="1030" class="label">LED off: controller pull-up keeps A_HOME HIGH</text><text x="1490" y="1070" class="label">LED on: U3 pulls A_HOME to CTRL_GND (LOW)</text>
+  <text x="1110" y="1125" class="small">R6 is a removable zero-ohm link, not a current-limiting resistor. Keep it open: generic U3 is not guaranteed to sink the RP23CNC 12 V / 2 kΩ input.</text>
+
+  <!-- Footnote -->
+  <rect x="80" y="1240" width="2030" height="115" rx="14" class="note"/>
+  <text x="110" y="1285" class="section">Isolation rule</text><text x="110" y="1323" class="label">J1 pin 2 CTRL_GND connects only to the RP23CNC/controller ground. J2 pin 2 TOOL_GND connects only to Pro Micro ground. Never wire these together.</text>
+</svg>

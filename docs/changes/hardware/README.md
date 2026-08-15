@@ -8,6 +8,31 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-08-14 | `RPSW-20260814-004` | verified | [RP23U5XBB grblHAL baseline build prepared](../rp23cnc-software/2026/2026-08-14-rp23cnc-grblhal-baseline-build.md) | `rp23cnc`, `rp23u5xbb`, `grblhal`, `firmware-build`, `web-builder` |
+| 2026-08-14 | `RPSW-20260814-003` | verified | [Add E-09 TMAG5273 Intended-Wiring Test](../rp23cnc-software/2026/2026-08-14-e09-tmag5273-verification-test.md) | `tmag5273`, `i2c`, `qwiic`, `toolhead` |
+| 2026-08-14 | `RPSW-20260814-002` | verified | [Add E-08 HX711 Rate and Noise Test](../rp23cnc-software/2026/2026-08-14-e08-hx711-rate-noise-test.md) | `hx711`, `sample-rate`, `noise`, `toolhead` |
+| 2026-08-14 | `RPSW-20260814-001` | implemented | [Add dedicated HX711 E-07 calibration sketch](../rp23cnc-software/2026/2026-08-14-e07-hx711-calibration-sketch.md) | `hx711`, `load-cell`, `calibration`, `bench-test` |
+| 2026-08-14 | `HW-20260814-005` | planned | [Use the RP23CNC Halt input for the initial E-stop](2026/2026-08-14-rp23cnc-halt-input-estop.md) | `estop`, `safety`, `rp23cnc` |
+| 2026-08-14 | `HW-20260814-004` | planned | [Select X/Y Roller-Lever Limit Switches](2026/2026-08-14-select-xy-roller-limit-switches.md) | `limit-switch`, `homing`, `safety`, `rp23cnc` |
+| 2026-08-14 | `HW-20260814-003` | verified | [Correct TMAG5273 I2C SDA/SCL Mapping](2026/2026-08-14-correct-tmag-i2c-sda-scl-mapping.md) | `tmag5273`, `i2c`, `qwiic`, `wiring-correction` |
+| 2026-08-14 | `HW-20260814-002` | implemented | [Toolhead UART Service Calibration Fixture](2026/2026-08-14-toolhead-uart-service-calibration.md) | `toolhead`, `uart`, `hx711`, `calibration` |
+| 2026-08-12 | `HW-20260812-002` | implemented | [Record Toolhead Perfboard Wiring Progress](2026/2026-08-12-toolhead-perfboard-wiring-progress.md) | `toolhead`, `drv8833`, `rp2350`, `power`, `testing` |
+| 2026-08-12 | `HW-20260812-001` | implemented | [Recorded load-cell wire mapping](2026/2026-08-12-load-cell-wire-colors.md) | `hx711`, `load-cell`, `wiring` |
+| 2026-08-11 | `HW-20260811-002` | implemented | [Moved HX711 to adjacent GP0/GP1 pins](2026/2026-08-11-hx711-adjacent-jst-pins.md) | `rp2350`, `hx711`, `jst`, `pin-assignment` |
+| 2026-08-11 | `HW-20260811-001` | superseded | [Reconciled E-stop and HD064RT topology (superseded)](2026/2026-08-11-estop-hd064rt-topology.md) | `emergency-stop`, `power-distribution`, `hd064rt`, `rp23cnc` |
+| 2026-08-10 | `HW-20260810-005` | implemented | [Direct-Header Toolhead Harness](2026/2026-08-10-direct-header-toolhead-harness.md) | `jst`, `harness`, `rp2350`, `pc817` |
+| 2026-08-10 | `HW-20260810-004` | implemented | [Record Recommended System Test Sequence](2026/2026-08-10-recommended-system-test-sequence.md) | `test-plan`, `safety`, `sequencing` |
+| 2026-08-10 | `HW-20260810-001` | verified | [Minimum-wire PC817 interface](2026/2026-08-10-minimum-wire-pc817-interface.md) | `pc817`, `perfboard`, `isolation`, `kicad`, `gpio20` |
+| 2026-08-06 | `HW-20260806-002` | implemented | [KiCad PC817C interface and active-low correction](2026/2026-08-06-kicad-pc817-perfboard-schematic.md) | `kicad`, `optocoupler`, `perfboard`, `a-home` |
+| 2026-08-06 | `HW-20260806-001` | superseded | [Compact PC817 interface module proposal](2026/2026-08-06-compact-pc817-interface-module-proposal.md) | `optocoupler`, `pcb-layout`, `toolhead`, `a-home` |
+| 2026-08-03 | `HW-20260803-003` | implemented | [B07WFGTNQC Optocoupler Interface](2026/2026-08-03-b07wfgtnqc-opto-interface.md) | `optocoupler`, `level-shifting`, `toolhead-interface`, `wiring` |
+| 2026-08-03 | `HW-20260803-002` | implemented | [Power Distribution Document And Schematic](2026/2026-08-03-power-distribution-doc-and-schematic.md) | `power-distribution`, `buck-regulator`, `wiring`, `toolhead` |
+| 2026-08-03 | `HW-20260803-001` | implemented | [RP23CNC To Pro Micro Interface Schematic](2026/2026-08-03-rp23cnc-pro-micro-interface-schematic.md) | `wiring`, `interface`, `rp23cnc`, `toolhead` |
+| 2026-08-02 | `HW-20260802-003` | implemented | [Onshape API CAD Workflow](2026/2026-08-02-onshape-api-cad-workflow.md) | `cad`, `onshape`, `api`, `documentation` |
+| 2026-08-02 | `HW-20260802-002` | implemented | [Shielded Stepper Cable Selection](2026/2026-08-02-shielded-stepper-cable-selection.md) | `stepper`, `cable`, `shielding`, `drag-chain` |
+| 2026-08-02 | `HW-20260802-001` | implemented | [Toolhead Local 5 V Regulator And 6 V Rail](2026/2026-08-02-toolhead-local-5v-regulator.md) | `power`, `toolhead`, `regulator`, `drag-chain` |
+| 2026-07-31 | `RPSW-20260731-001` | verified | [RP2350 Toolhead Prototype Firmware](../rp23cnc-software/2026/2026-07-31-rp2350-toolhead-prototype-firmware.md) | `toolhead`, `rp2350`, `arduino`, `drv8833`, `hx711`, `tmag5273` |
+| 2026-07-31 | `HW-20260731-001` | implemented | [Toolhead Wiring Diagram](2026/2026-07-31-toolhead-wiring-diagram.md) | `wiring`, `toolhead`, `rp2350`, `drv8833`, `hx711`, `tmag5273` |
 | 2026-07-04 | `WSW-20260704-001` | implemented | [Project Management Overview HTML](../windows-software/2026/2026-07-04-project-management-overview-html.md) | `project-management`, `dashboard`, `documentation`, `navigation` |
 | 2026-07-04 | `RPSW-20260704-003` | implemented | [Homing Data Flow Sheet](../rp23cnc-software/2026/2026-07-04-homing-data-flow-sheet.md) | `homing`, `data-flow`, `grblhal`, `tmag5273`, `toolhead` |
 | 2026-07-04 | `RPSW-20260704-002` | implemented | [Pen-Up Calibration Workflow](../rp23cnc-software/2026/2026-07-04-pen-up-calibration-workflow.md) | `homing`, `calibration`, `toolhead`, `safety` |

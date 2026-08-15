@@ -19,7 +19,12 @@ Examples:
 Each note should link to the relevant test in
 [`../../testing/TEST_PLAN.md`](../../testing/TEST_PLAN.md), affected change note,
 wiring-table rows, and engineering-log event. Keep measured values and failed
-attempts here; summarize conclusions in the subsystem change note.
+attempts here; summarize conclusions in the subsystem change note. For every
+`E-*` test, the note must state the physical/software configuration, exact
+procedure, measurements and outcome, difficulties encountered, corrective
+action, and repeat evidence supporting a pass. If any code, commands, or
+configuration were used, paste the exact version in a fenced code block in the
+note; a source-file reference alone is insufficient.
 
 ## Index
 
@@ -27,4 +32,5 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
-| - | - | - | No lab notes recorded yet. |
+| 2026-08-12 | E-14B partial | Pass/partial | Local 6 V branch and S7V8F5-to-Pro-Micro power path passed continuity and bench-power checks; no motor or upstream regulator test. |
+| 2026-08-10 | E-18 partial | Mixed | U1/U2/U3 and ground isolation passed after repairing missing wires; actual RP23CNC terminal behavior and magnetic-adapter work remain. |

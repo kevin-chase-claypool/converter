@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1500" viewBox="0 0 1800 1500">
+  <defs>
+    <style>
+      .bg{fill:#f7f8fa}.box{fill:#fff;stroke:#1f2937;stroke-width:2.5;rx:10;ry:10}.source{fill:#fef3c7;stroke:#92400e}.dist{fill:#e0f2fe;stroke:#075985}.din{fill:#dcfce7;stroke:#166534}.load{fill:#f3e8ff;stroke:#6b21a8}.tool{fill:#ccfbf1;stroke:#0f766e}.sig{fill:#fff7ed;stroke:#b45309}.warn{fill:#fff1f2;stroke:#be123c}.term{fill:#fff;stroke:#111827;stroke-width:1.5;rx:2;ry:2}.pin{fill:#fff;stroke:#111827;stroke-width:2}.title{font:700 24px Arial,sans-serif;fill:#111827}.subtitle{font:400 14px Arial,sans-serif;fill:#374151}.label{font:700 15px Arial,sans-serif;fill:#111827}.small{font:400 13px Arial,sans-serif;fill:#374151}.tiny{font:400 11px Arial,sans-serif;fill:#374151}.wire{fill:none;stroke-width:4;stroke-linecap:square;stroke-linejoin:miter}.p12{stroke:#dc2626}.gnd{stroke:#111827}.p6{stroke:#ea580c}.p5{stroke:#16a34a}.p33{stroke:#0d9488}.earth{stroke:#65a30d;stroke-dasharray:9 6}.m3{stroke:#7c3aed}.arm{stroke:#2563eb}.home{stroke:#be123c;stroke-dasharray:9 6}.zone{fill:none;stroke:#6b7280;stroke-width:2;stroke-dasharray:10 8}
+    </style>
+  </defs>
+  <rect class="bg" width="1800" height="1500"/>
+  <text class="title" x="45" y="42">Theta plotter toolhead power tree and interface schematic</text>
+  <text class="subtitle" x="45" y="68">Toolhead rails plus legacy signal wiring. The E-stop/K1/HD064RT feed order is defined separately in docs/hardware/estop-topology.svg.</text>
+
+  <rect class="box" x="55" y="115" width="245" height="130"/>
+  <text class="title" x="85" y="152">AC inlet / switch</text>
+  <text class="subtitle" x="85" y="176">fuse, enclosure, strain relief TBD</text>
+  <rect class="term" x="82" y="200" width="58" height="28"/><text class="label" x="105" y="220">L</text>
+  <rect class="term" x="150" y="200" width="58" height="28"/><text class="label" x="173" y="220">N</text>
+  <rect class="term" x="218" y="200" width="58" height="28"/><text class="label" x="235" y="220">PE</text>
+  <circle class="pin" cx="300" cy="214" r="7"/><circle class="pin" cx="300" cy="234" r="7"/><circle class="pin" cx="300" cy="254" r="7"/>
+
+  <rect class="box source" x="390" y="105" width="360" height="185"/>
+  <text class="title" x="425" y="143">MEISHILE S-120-12</text>
+  <text class="subtitle" x="425" y="166">12 VDC, 10 A nominal main supply</text>
+  <rect class="term" x="425" y="202" width="50" height="30"/><text class="label" x="444" y="222">L</text>
+  <rect class="term" x="485" y="202" width="50" height="30"/><text class="label" x="504" y="222">N</text>
+  <rect class="term" x="545" y="202" width="62" height="30"/><text class="label" x="566" y="222">PE</text>
+  <rect class="term" x="625" y="202" width="50" height="30"/><text class="label" x="642" y="222">-V</text>
+  <rect class="term" x="685" y="202" width="50" height="30"/><text class="label" x="701" y="222">+V</text>
+  <text class="small" x="425" y="260">Terminals 4/5 = -V, 6/7 = +V. Allocation TBD.</text>
+  <circle class="pin" cx="390" cy="214" r="7"/><circle class="pin" cx="390" cy="234" r="7"/><circle class="pin" cx="390" cy="254" r="7"/>
+  <circle class="pin" cx="750" cy="218" r="7"/><circle class="pin" cx="750" cy="254" r="7"/>
+  <path class="wire p12" d="M300 214 H390"/><path class="wire gnd" d="M300 234 H390"/><path class="wire earth" d="M300 254 H390"/>
+
+  <rect class="box dist" x="840" y="105" width="355" height="475"/>
+  <text class="title" x="880" y="143">Illustrative 12 V branches</text>
+  <text class="subtitle" x="880" y="166">See E-stop topology for actual HD064RT/K1 order</text>
+  <rect class="term" x="875" y="204" width="112" height="28"/><text class="label" x="902" y="224">12V BUS</text>
+  <rect class="term" x="875" y="244" width="112" height="28"/><text class="label" x="906" y="264">0V BUS</text>
+  <circle class="pin" cx="840" cy="218" r="7"/><circle class="pin" cx="840" cy="254" r="7"/>
+  <path class="wire p12" d="M750 218 H840"/><path class="wire gnd" d="M750 254 H840"/>
+  <rect class="term" x="1025" y="205" width="128" height="26"/><text class="label" x="1048" y="224">F1 RP23</text>
+  <rect class="term" x="1025" y="285" width="128" height="26"/><text class="label" x="1060" y="304">F2 X</text>
+  <rect class="term" x="1025" y="365" width="128" height="26"/><text class="label" x="1060" y="384">F3 Y</text>
+  <rect class="term" x="1025" y="445" width="128" height="26"/><text class="label" x="1060" y="464">F4 A</text>
+  <rect class="term" x="1025" y="525" width="128" height="26"/><text class="label" x="1044" y="544">F5 6V REG</text>
+  <circle class="pin" cx="1195" cy="218" r="7"/><circle class="pin" cx="1195" cy="244" r="7"/><circle class="pin" cx="1195" cy="298" r="7"/><circle class="pin" cx="1195" cy="324" r="7"/><circle class="pin" cx="1195" cy="378" r="7"/><circle class="pin" cx="1195" cy="404" r="7"/><circle class="pin" cx="1195" cy="458" r="7"/><circle class="pin" cx="1195" cy="484" r="7"/><circle class="pin" cx="1010" cy="538" r="7"/><circle class="pin" cx="1010" cy="564" r="7"/>
+
+  <rect class="box tool" x="1310" y="176" width="360" height="86"/><text class="title" x="1340" y="213">RP23CNC</text><text class="subtitle" x="1340" y="236">12 V controller branch</text><circle class="pin" cx="1310" cy="218" r="7"/><circle class="pin" cx="1310" cy="244" r="7"/><path class="wire p12" d="M1195 218 H1310"/><path class="wire gnd" d="M1195 244 H1310"/>
+  <rect class="box load" x="1310" y="256" width="360" height="86"/><text class="title" x="1340" y="293">X TB6600</text><text class="subtitle" x="1340" y="316">12 V stepper driver branch</text><circle class="pin" cx="1310" cy="298" r="7"/><circle class="pin" cx="1310" cy="324" r="7"/><path class="wire p12" d="M1195 298 H1310"/><path class="wire gnd" d="M1195 324 H1310"/>
+  <rect class="box load" x="1310" y="336" width="360" height="86"/><text class="title" x="1340" y="373">Y TB6600</text><text class="subtitle" x="1340" y="396">12 V stepper driver branch</text><circle class="pin" cx="1310" cy="378" r="7"/><circle class="pin" cx="1310" cy="404" r="7"/><path class="wire p12" d="M1195 378 H1310"/><path class="wire gnd" d="M1195 404 H1310"/>
+  <rect class="box load" x="1310" y="416" width="360" height="86"/><text class="title" x="1340" y="453">A TB6600</text><text class="subtitle" x="1340" y="476">12 V stepper driver branch</text><circle class="pin" cx="1310" cy="458" r="7"/><circle class="pin" cx="1310" cy="484" r="7"/><path class="wire p12" d="M1195 458 H1310"/><path class="wire gnd" d="M1195 484 H1310"/>
+
+  <rect class="box din" x="840" y="650" width="355" height="155"/>
+  <text class="title" x="880" y="690">Pololu D36V50F6</text><text class="subtitle" x="880" y="713">DIN-side fixed 6 V regulator</text>
+  <rect class="term" x="900" y="745" width="85" height="28"/><text class="label" x="925" y="765">VIN</text><rect class="term" x="900" y="775" width="85" height="28"/><text class="label" x="922" y="795">GND</text>
+  <rect class="term" x="1075" y="745" width="85" height="28"/><text class="label" x="1093" y="765">VOUT</text><rect class="term" x="1075" y="775" width="85" height="28"/><text class="label" x="1098" y="795">GND</text>
+  <circle class="pin" cx="940" cy="650" r="7"/><circle class="pin" cx="980" cy="650" r="7"/><circle class="pin" cx="1195" cy="759" r="7"/><circle class="pin" cx="1195" cy="789" r="7"/>
+  <text class="tiny" x="925" y="637">VIN</text><text class="tiny" x="964" y="637">GND</text>
+  <path class="wire p12" d="M1010 538 H940 V650"/><path class="wire gnd" d="M1010 564 H980 V650"/>
+  <line class="zone" x1="1265" y1="625" x2="1265" y2="1085"/><text class="label" x="1178" y="618">drag-chain boundary</text>
+
+  <rect class="box" x="1320" y="660" width="300" height="170"/>
+  <text class="title" x="1350" y="698">Toolhead 6 V terminal</text><text class="subtitle" x="1350" y="721">single 6 V + GND pair enters here</text>
+  <rect class="term" x="1350" y="745" width="80" height="26"/><text class="label" x="1367" y="764">6V IN</text><rect class="term" x="1350" y="775" width="80" height="26"/><text class="label" x="1362" y="794">GND IN</text>
+  <rect class="term" x="1505" y="705" width="80" height="26"/><text class="label" x="1515" y="724">6V DRV</text><rect class="term" x="1505" y="735" width="80" height="26"/><text class="label" x="1510" y="754">GND DRV</text>
+  <rect class="term" x="1505" y="785" width="80" height="26"/><text class="label" x="1512" y="804">6V 5REG</text><rect class="term" x="1505" y="815" width="80" height="26"/><text class="label" x="1507" y="834">GND 5REG</text>
+  <circle class="pin" cx="1320" cy="759" r="7"/><circle class="pin" cx="1320" cy="789" r="7"/><circle class="pin" cx="1620" cy="718" r="7"/><circle class="pin" cx="1620" cy="748" r="7"/><circle class="pin" cx="1620" cy="798" r="7"/><circle class="pin" cx="1620" cy="828" r="7"/>
+  <path class="wire p6" d="M1195 759 H1320"/><path class="wire gnd" d="M1195 789 H1320"/>
+
+  <rect class="box din" x="1320" y="870" width="300" height="84"/><text class="title" x="1350" y="902">DRV8833</text><text class="subtitle" x="1350" y="925">toolhead motor driver</text><circle class="pin" cx="1620" cy="906" r="7"/><circle class="pin" cx="1620" cy="934" r="7"/><text class="tiny" x="1636" y="900">VM/VCC</text><text class="tiny" x="1636" y="952">GND</text><path class="wire p6" d="M1620 718 H1705 V906 H1620"/><path class="wire gnd" d="M1620 748 H1730 V934 H1620"/>
+  <rect class="box din" x="1320" y="990" width="300" height="92"/><text class="title" x="1350" y="1026">Pololu S7V8F5</text><text class="subtitle" x="1350" y="1049">toolhead-local 5 V regulator</text><circle class="pin" cx="1320" cy="1026" r="7"/><circle class="pin" cx="1320" cy="1056" r="7"/><circle class="pin" cx="1620" cy="1026" r="7"/><circle class="pin" cx="1620" cy="1056" r="7"/><text class="tiny" x="1288" y="1020">VIN</text><text class="tiny" x="1275" y="1074">GND</text><text class="tiny" x="1636" y="1020">VOUT</text><text class="tiny" x="1636" y="1074">GND</text><path class="wire p6" d="M1620 798 H1660 V980 H1320 V1026"/><path class="wire gnd" d="M1620 828 H1685 V970 H1320 V1056"/>
+
+  <rect class="box tool" x="1320" y="1110" width="300" height="70"/>
+  <text class="title" x="1350" y="1140">Pro Micro power</text>
+  <text class="subtitle" x="1350" y="1163">S7V8F5 feeds RAW/5V and GND</text>
+  <circle class="pin" cx="1620" cy="1130" r="7"/><circle class="pin" cx="1620" cy="1160" r="7"/>
+  <text class="tiny" x="1636" y="1124">RAW/5V</text><text class="tiny" x="1636" y="1178">GND</text>
+  <path class="wire p5" d="M1620 1026 H1705 V1130 H1620"/>
+  <path class="wire gnd" d="M1620 1056 H1730 V1160 H1620"/>
+
+  <rect class="box" x="55" y="650" width="520" height="250"/>
+  <text class="title" x="85" y="687">Rules</text>
+  <text class="small" x="85" y="717">1. Use branch fuses/terminal blocks; do not stack loads on supply terminals.</text>
+  <text class="small" x="85" y="742">2. D36V50F6 makes the final 6 V toolhead rail; B085T73CSD modules are spares.</text>
+  <text class="small" x="85" y="767">3. S7V8F5 is mounted on the toolhead and makes local 5 V for the Pro Micro.</text>
+  <text class="small" x="85" y="792">4. Pro Micro 3.3 V powers HX711 and TMAG5273; GPIO must not see 5 V.</text>
+  <text class="small" x="85" y="817">5. B07WFGTNQC polarity and output-side 3.3 V behavior must be bench-verified.</text>
+  <text class="small" x="85" y="842">6. PE/chassis earth is separate from DC -V; shields land on PE at DIN only.</text>
+  <line class="wire p12" x1="85" y1="875" x2="140" y2="875"/><text class="small" x="155" y="880">12 V / 5 V ref</text>
+  <line class="wire p6" x1="285" y1="875" x2="340" y2="875"/><text class="small" x="355" y="880">6 V</text>
+  <line class="wire p33" x1="85" y1="910" x2="140" y2="910"/><text class="small" x="155" y="915">3.3 V</text>
+  <line class="wire gnd" x1="285" y1="910" x2="340" y2="910"/><text class="small" x="355" y="915">return</text>
+  <line class="wire m3" x1="85" y1="940" x2="140" y2="940"/><text class="small" x="155" y="945">M3/M5</text>
+  <line class="wire arm" x1="285" y1="940" x2="340" y2="940"/><text class="small" x="355" y="945">HOME_ARM</text>
+
+  <text class="title" x="55" y="1165">RP23CNC to Pro Micro signal isolation</text>
+  <text class="subtitle" x="55" y="1190">B07WFGTNQC is drawn for RP23CNC-to-Pro-Micro command inputs only. Use a separate verified switch-like return path for A_HOME unless the received board proves safe for mixed direction.</text>
+
+  <rect class="box tool" x="55" y="1225" width="420" height="220"/>
+  <text class="title" x="85" y="1262">RP23CNC signal side</text><text class="subtitle" x="85" y="1285">exact terminal names still TBD</text>
+  <rect class="term" x="90" y="1310" width="245" height="28"/><text class="label" x="112" y="1330">5V REF TBD</text><circle class="pin" cx="475" cy="1324" r="7"/>
+  <rect class="term" x="90" y="1350" width="245" height="28"/><text class="label" x="112" y="1370">GND REF TBD</text><circle class="pin" cx="475" cy="1364" r="7"/>
+  <rect class="term" x="90" y="1390" width="245" height="28"/><text class="label" x="112" y="1410">SPINDLE ENA OUT</text><circle class="pin" cx="475" cy="1404" r="7"/>
+  <rect class="term" x="90" y="1430" width="245" height="28"/><text class="label" x="112" y="1450">AUX0 HOME_ARM OUT</text><circle class="pin" cx="475" cy="1444" r="7"/>
+  <text class="tiny" x="90" y="1478">A limit/home input uses separate TBD switch-like path.</text>
+
+  <rect class="box sig" x="620" y="1215" width="500" height="245"/>
+  <text class="title" x="655" y="1250">B07WFGTNQC optocoupler</text><text class="subtitle" x="655" y="1273">4-channel isolation / voltage converter</text>
+  <rect class="term" x="655" y="1310" width="115" height="28"/><text class="label" x="680" y="1330">VCC IN</text><circle class="pin" cx="620" cy="1324" r="7"/>
+  <rect class="term" x="655" y="1350" width="115" height="28"/><text class="label" x="675" y="1370">GND IN</text><circle class="pin" cx="620" cy="1364" r="7"/>
+  <rect class="term" x="655" y="1390" width="115" height="28"/><text class="label" x="678" y="1410">IN1</text><circle class="pin" cx="620" cy="1404" r="7"/>
+  <rect class="term" x="655" y="1430" width="115" height="28"/><text class="label" x="678" y="1450">IN2</text><circle class="pin" cx="620" cy="1444" r="7"/>
+  <rect class="term" x="955" y="1310" width="115" height="28"/><text class="label" x="973" y="1330">VCC OUT</text><circle class="pin" cx="1120" cy="1324" r="7"/>
+  <rect class="term" x="955" y="1350" width="115" height="28"/><text class="label" x="972" y="1370">GND OUT</text><circle class="pin" cx="1120" cy="1364" r="7"/>
+  <rect class="term" x="955" y="1390" width="115" height="28"/><text class="label" x="978" y="1410">OUT1</text><circle class="pin" cx="1120" cy="1404" r="7"/>
+  <rect class="term" x="955" y="1430" width="115" height="28"/><text class="label" x="978" y="1450">OUT2</text><circle class="pin" cx="1120" cy="1444" r="7"/>
+  <rect class="box tool" x="1275" y="1225" width="430" height="220"/>
+  <text class="title" x="1305" y="1262">SparkFun Pro Micro RP2350</text><text class="subtitle" x="1305" y="1285">toolhead logic side</text>
+  <rect class="term" x="1430" y="1310" width="210" height="28"/><text class="label" x="1452" y="1330">3V3</text><circle class="pin" cx="1275" cy="1324" r="7"/>
+  <rect class="term" x="1430" y="1350" width="210" height="28"/><text class="label" x="1452" y="1370">GND</text><circle class="pin" cx="1275" cy="1364" r="7"/>
+  <rect class="term" x="1430" y="1390" width="210" height="28"/><text class="label" x="1452" y="1410">GP8 M3/M5 IN</text><circle class="pin" cx="1275" cy="1404" r="7"/>
+  <rect class="term" x="1430" y="1430" width="210" height="28"/><text class="label" x="1452" y="1450">GP10 HOME_ARM IN</text><circle class="pin" cx="1275" cy="1444" r="7"/>
+  <text class="tiny" x="1305" y="1478">GP9 A_HOME output not shown as final until interface is verified.</text>
+
+  <path class="wire p12" d="M475 1324 H620"/><path class="wire gnd" d="M475 1364 H620"/><path class="wire m3" d="M475 1404 H620"/><path class="wire arm" d="M475 1444 H620"/>
+  <path class="wire p33" d="M1120 1324 H1275"/><path class="wire gnd" d="M1120 1364 H1275"/><path class="wire m3" d="M1120 1404 H1275"/><path class="wire arm" d="M1120 1444 H1275"/>
+</svg>

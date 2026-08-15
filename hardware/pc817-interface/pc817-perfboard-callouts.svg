@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1300" viewBox="0 0 2000 1300">
+  <style>
+    .title { font: bold 32px Arial, sans-serif; fill: #17212b; }
+    .subtitle { font: 18px Arial, sans-serif; fill: #44576b; }
+    .box { fill: #ffffff; stroke: #aab9c8; stroke-width: 2; }
+    .red { fill: #fff6f3; stroke: #b63827; stroke-width: 3; }
+    .blue { fill: #f1f7ff; stroke: #2365a9; stroke-width: 3; }
+    .amber { fill: #fff9e5; stroke: #b77b00; stroke-width: 3; }
+    .green { fill: #f0fbf4; stroke: #21804a; stroke-width: 3; }
+    .head { font: bold 21px Arial, sans-serif; fill: #17212b; }
+    .text { font: 17px Arial, sans-serif; fill: #17212b; }
+    .small { font: 15px Arial, sans-serif; fill: #17212b; }
+    .arrow-red { stroke: #b63827; stroke-width: 4; fill: none; marker-end: url(#arrow-red); }
+    .arrow-blue { stroke: #2365a9; stroke-width: 4; fill: none; marker-end: url(#arrow-blue); }
+    .arrow-amber { stroke: #b77b00; stroke-width: 4; fill: none; marker-end: url(#arrow-amber); }
+    .arrow-green { stroke: #21804a; stroke-width: 4; fill: none; marker-end: url(#arrow-green); }
+    .target-red { fill: none; stroke: #b63827; stroke-width: 5; }
+    .target-blue { fill: none; stroke: #2365a9; stroke-width: 5; }
+    .target-amber { fill: none; stroke: #b77b00; stroke-width: 5; }
+    .target-green { fill: none; stroke: #21804a; stroke-width: 5; }
+  </style>
+  <defs>
+    <marker id="arrow-red" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#b63827"/></marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#2365a9"/></marker>
+    <marker id="arrow-amber" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#b77b00"/></marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#21804a"/></marker>
+  </defs>
+  <rect width="2000" height="1300" fill="#f8fafc"/>
+  <text x="34" y="48" class="title">PC817C 14 × 6 PERFBOARD — COMPONENT-SIDE BUILD MAP WITH CALLOUTS</text>
+  <text x="34" y="76" class="subtitle">The image is the actual through-hole layout. Make all electrical joins with insulated wire on the underside.</text>
+
+  <rect x="25" y="105" width="1245" height="848" rx="10" class="box"/>
+  <image href="pc817-perfboard-layout-v1.png" x="36" y="115" width="1223" height="833" preserveAspectRatio="xMidYMid meet"/>
+
+  <!-- highlight targets on the scaled layout -->
+  <rect x="80" y="250" width="48" height="340" rx="8" class="target-red"/>
+  <rect x="830" y="250" width="48" height="340" rx="8" class="target-blue"/>
+  <rect x="365" y="250" width="235" height="112" rx="10" class="target-green"/>
+  <rect x="365" y="425" width="235" height="112" rx="10" class="target-green"/>
+  <rect x="365" y="600" width="235" height="112" rx="10" class="target-amber"/>
+  <ellipse cx="775" cy="492" rx="80" ry="28" class="target-amber"/>
+  <ellipse cx="205" cy="357" rx="155" ry="130" class="target-amber"/>
+
+  <!-- callouts -->
+  <rect x="1300" y="115" width="660" height="142" rx="12" class="red"/>
+  <text x="1322" y="150" class="head">1. J1 — RP23CNC controller side</text>
+  <text x="1322" y="180" class="text">Pins 1–5: CTRL_5V, CTRL_GND, ENA, AUX0, A_HOME.</text>
+  <text x="1322" y="207" class="text">Pin 6 is NC. Keep this red-side ground isolated.</text>
+  <path d="M1300 187 L1080 187 L1080 310 L128 310" class="arrow-red"/>
+
+  <rect x="1300" y="280" width="660" height="135" rx="12" class="blue"/>
+  <text x="1322" y="315" class="head">2. J2 — Pro Micro toolhead side</text>
+  <text x="1322" y="345" class="text">Pins 1–5: TOOL_3V3, TOOL_GND, GP8, GP10, GP9.</text>
+  <text x="1322" y="372" class="text">Pin 6 is NC. This is the blue-side local ground.</text>
+  <path d="M1300 355 L1130 355 L1130 310 L878 310" class="arrow-blue"/>
+
+  <rect x="1300" y="438" width="660" height="135" rx="12" class="green"/>
+  <text x="1322" y="473" class="head">3. U1 — ENA to GP8</text>
+  <text x="1322" y="503" class="text">R1 680Ω drives the LED; D1 clamps reverse voltage.</text>
+  <text x="1322" y="530" class="text">R3 10k and C1 47nF make GP8 idle HIGH, active LOW.</text>
+  <path d="M1300 505 L1050 505 L1050 306 L600 306" class="arrow-green"/>
+
+  <rect x="1300" y="595" width="660" height="135" rx="12" class="green"/>
+  <text x="1322" y="630" class="head">4. U2 — AUX0 to GP10</text>
+  <text x="1322" y="660" class="text">R2 680Ω drives the LED; D2 is the reverse clamp.</text>
+  <text x="1322" y="687" class="text">R4 10k and C2 47nF make GP10 idle HIGH, active LOW.</text>
+  <path d="M1300 665 L1070 665 L1070 480 L600 480" class="arrow-green"/>
+
+  <rect x="1300" y="752" width="660" height="158" rx="12" class="amber"/>
+  <text x="1322" y="787" class="head">5. U3 — GP9 to A_HOME (not enabled yet)</text>
+  <text x="1322" y="817" class="text">GP9 → R5 390Ω → U3 pin 1; U3 pin 2 → TOOL_GND.</text>
+  <text x="1322" y="844" class="text">U3 pin 3 → CTRL_GND. U3 pin 4 → R6 → A_HOME.</text>
+  <text x="1322" y="871" class="text">Leave R6 empty until E-18 verifies the controller input.</text>
+  <path d="M1300 830 L1080 830 L1080 655 L600 655" class="arrow-amber"/>
+  <path d="M1300 880 L1030 880 L1030 492 L855 492" class="arrow-amber"/>
+
+  <rect x="50" y="985" width="920" height="240" rx="12" class="amber"/>
+  <text x="76" y="1025" class="head">6. Diode orientation and underside wiring</text>
+  <text x="76" y="1058" class="text">D1/D2/D3 are 1N4148 reverse-protection clamps across each PC817 LED.</text>
+  <text x="76" y="1088" class="text">The stripe/band points toward E2, E4, and E6 — the PC817 pin-1 / LED-anode side.</text>
+  <text x="76" y="1118" class="text">Do not connect controller ground to toolhead ground. Use only insulated underside wire links.</text>
+  <text x="76" y="1160" class="head">Read the underside-net table in PERFBOARD_BUILD.md while wiring.</text>
+  <path d="M360 985 L310 900 L205 480" class="arrow-amber"/>
+
+  <rect x="1010" y="985" width="950" height="240" rx="12" class="blue"/>
+  <text x="1036" y="1025" class="head">7. Build order</text>
+  <text x="1036" y="1058" class="text">1) Dry-fit both six-position 2.54 mm screw terminal blocks around the holes.</text>
+  <text x="1036" y="1088" class="text">2) Fit U1–U3, R1–R5, D1–D3, C1–C3. Do not fit R6.</text>
+  <text x="1036" y="1118" class="text">3) Wire the listed nets on the underside; verify CTRL_GND and TOOL_GND are open-circuit.</text>
+  <text x="1036" y="1160" class="text">4) Power the tool side first: GP8 and GP10 should read HIGH while idle.</text>
+</svg>

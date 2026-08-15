@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="820" viewBox="0 0 1600 820">
+  <style>
+    .bg{fill:#f8fafc}.box{fill:#fff;stroke:#1f2937;stroke-width:3;rx:12}.supply{fill:#fef3c7;stroke:#92400e}.control{fill:#dbeafe;stroke:#1d4ed8}.safety{fill:#fee2e2;stroke:#b91c1c}.power{fill:#dcfce7;stroke:#15803d}.load{fill:#f3e8ff;stroke:#7e22ce}.t{font:700 26px Arial,sans-serif;fill:#111827}.h{font:700 19px Arial,sans-serif;fill:#111827}.p{font:400 16px Arial,sans-serif;fill:#374151}.s{font:400 14px Arial,sans-serif;fill:#374151}.w{fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}.p12{stroke:#dc2626}.gnd{stroke:#111827}.sig{stroke:#2563eb}.dash{stroke-dasharray:11 8}.node{fill:#fff;stroke:#111827;stroke-width:3}
+  </style>
+  <rect class="bg" width="1600" height="820"/>
+  <text class="t" x="50" y="52">Theta plotter E-stop, relay, and HD064RT topology</text>
+  <text class="p" x="50" y="79">Planned architecture - do not energize until E-19 verifies terminals, fuse values, polarity, Halt state, and power removal.</text>
+
+  <rect class="box supply" x="55" y="170" width="245" height="140"/>
+  <text class="h" x="88" y="212">MEISHILE S-120-12</text><text class="p" x="88" y="240">12 V, 10 A source</text>
+  <text class="s" x="88" y="271">+V and -V common output</text>
+  <circle class="node" cx="300" cy="218" r="8"/><circle class="node" cx="300" cy="276" r="8"/>
+
+  <rect class="box safety" x="385" y="170" width="210" height="140"/>
+  <text class="h" x="426" y="212">FMAIN</text><text class="p" x="413" y="240">DC main fuse</text>
+  <text class="s" x="404" y="272">maximum 10 A</text>
+  <circle class="node" cx="385" cy="218" r="8"/><circle class="node" cx="595" cy="218" r="8"/>
+  <path class="w p12" d="M300 218 H385"/>
+
+  <rect class="box control" x="700" y="105" width="310" height="180"/>
+  <text class="h" x="746" y="147">Always-on control branch</text>
+  <text class="p" x="745" y="176">FCTRL -> RP23CNC</text>
+  <text class="s" x="745" y="206">Controller remains powered</text>
+  <text class="s" x="745" y="230">fuse value after measurement</text>
+  <circle class="node" cx="700" cy="195" r="8"/><circle class="node" cx="1010" cy="195" r="8"/>
+  <path class="w p12" d="M595 218 H650 V195 H700"/>
+
+  <rect class="box safety" x="700" y="350" width="310" height="190"/>
+  <text class="h" x="788" y="390">SW1 2NC E-stop</text>
+  <text class="p" x="732" y="424">NC-A -> RP23CNC E-stop/Halt</text>
+  <text class="p" x="732" y="455">NC-B -> K1 relay coil</text>
+  <text class="s" x="732" y="491">push: both circuits open</text>
+  <text class="s" x="732" y="516">twist: release only; no auto-motion</text>
+  <path class="w sig dash" d="M855 285 V350"/>
+  <text class="s" x="868" y="330">E-stop input</text>
+
+  <rect class="box safety" x="1090" y="350" width="225" height="190"/>
+  <text class="h" x="1165" y="390">K1 relay</text>
+  <text class="p" x="1130" y="423">Coil: left +, -V return</text>
+  <text class="p" x="1130" y="452">Contact: top COM, bottom NO</text>
+  <text class="s" x="1130" y="484">D4 1N4007 across coil</text>
+  <text class="s" x="1130" y="510">stripe -> coil +</text>
+  <!-- FCTRL output feeds NC-B and the relay coil; it is separate from the main contact feed. -->
+  <path class="w p12" d="M1010 195 H1040 V315 H680 V445 H700"/>
+  <path class="w p12" d="M1010 445 H1090"/>
+  <!-- Protected +12 V reaches K1 COM directly.  Only the NO contact feeds PD1. -->
+  <path class="w p12" d="M595 218 H630 V325 H1202 V350"/>
+  <text class="s" x="835" y="318">protected +12 V to K1 contact COM</text>
+  <!-- -V bypasses K1.  The branch at left is the coil return. -->
+  <path class="w gnd" d="M300 276 H1060 V575 H1270 V615"/>
+  <path class="w gnd" d="M1060 475 H1090"/>
+
+  <rect class="box power" x="1090" y="615" width="365" height="145"/>
+  <text class="h" x="1160" y="655">PD1 - HCDC HD064RT</text>
+  <text class="p" x="1150" y="685">post-K1 fused 12 V distribution</text>
+  <text class="s" x="1150" y="716">OUT1 X · OUT2 Y · OUT3 A · OUT4 D36V50F6</text>
+  <text class="s" x="1150" y="739">OUT5-OUT8 reserved</text>
+  <path class="w p12" d="M1202 540 V615"/>
+
+  <rect class="box load" x="70" y="615" width="790" height="145"/>
+  <text class="h" x="110" y="655">Motor/tool loads - zero volts when SW1 is pressed</text>
+  <text class="p" x="110" y="692">X TB6600  ·  Y TB6600  ·  A TB6600  ·  D36V50F6 -> 6 V toolhead/DRV8833</text>
+  <text class="s" x="110" y="724">Each receives a dedicated HD064RT fused output pair. DC -V is not switched.</text>
+  <path class="w p12" d="M1090 687 H860"/>
+  <path class="w gnd" d="M1090 723 H860"/>
+
+  <text class="s" x="54" y="800">This is a planned hobby-machine energy-removal arrangement, not a certified safety system. See ESTOP_TOPOLOGY.md and E-19.</text>
+</svg>

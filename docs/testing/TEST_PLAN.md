@@ -1,12 +1,26 @@
 # Test Plan
 
+For the recommended dependency and safety order for these tests, see
+[`RECOMMENDED_TEST_SEQUENCE.md`](RECOMMENDED_TEST_SEQUENCE.md). This plan
+remains the authoritative source for individual test pass conditions and
+completion status.
+
 ## Rules
 
 - Start with current-limited bench supplies.
 - Test one subsystem at a time.
 - Keep the pen and mechanics disconnected during initial motor tests.
+- For every `E-*` test attempt, create or update a dated lab note using
+  [`../report/LAB_NOTE_TEMPLATE.md`](../report/LAB_NOTE_TEMPLATE.md). Record
+  the setup, procedure, readings, observed behavior, pass/fail disposition,
+  and evidence.
+- If code, a command sequence, or a machine configuration is used, include the
+  exact version used in a fenced code block in that lab note. A file path or
+  verbal description alone is not sufficient test evidence.
+- Record every difficulty, failed attempt, unexpected behavior, and corrective
+  action that enabled a retry or pass. A failed test is a result; do not tune
+  around it without documenting the change.
 - Record actual settings, instruments, firmware commit, result, and evidence.
-- A failed test is a result; do not tune around it without documenting the change.
 - Promote connection status in `docs/hardware/WIRING_TABLE.md` only after the
   corresponding test passes.
 
@@ -18,28 +32,32 @@
 | E-02 | Record TB6600 labels and switch tables | Three identical, readable units | TBD | TBD |
 | E-03 | Check STEP/DIR input behavior | Compatible with RP23CNC outputs | TBD | TBD |
 | E-04 | Set driver current conservatively | At or below 1.5 A/phase convention | TBD | TBD |
-| E-05 | Measure N20 no-load current at 6 V | Stable and within supply/module range | TBD | TBD |
+| E-05 | Measure N20 no-load current at 6 V | Stable and within supply/module range | Passed | At a 6.0 V bench input, toolhead idle current was 0.017 A. Both retract/lift and pen-down motion measured 0.043 A, for an approximately 0.026 A motor contribution in either direction. The repaired DRV8833 output solder joint remained reliable. No manual stall test was performed. |
 | E-06 | Measure current-limited actuator stall current | Below verified DRV8833 safe limit | TBD | TBD |
-| E-07 | Calibrate load cell with known masses | Repeatable slope and zero | TBD | TBD |
-| E-08 | Measure HX711 samples/s and noise | Sufficient for chosen loop bandwidth | TBD | TBD |
-| E-09 | Read TMAG5273 through intended wiring | Stable field/position signal | TBD | TBD |
-| E-18 | Verify RP2040/TMAG5273 magnetic adapter | Qwiic readings are stable; USB diagnostics are readable; the `A_HOME` output driver is electrically compatible with the selected RP23CNC input before connection | TBD | TBD |
+| E-07 | Calibrate load cell with known masses | Repeatable slope and zero | Partial | USB-only HX711 testing passed communication (`hx_ready=1`). E-07B GP20/GP21 service UART and two automatic pen-tip/digital-scale contacts passed (49.4 g and 65 g). Normal Z-mechanism preload changes raw readings, so the residual approach is safe for contact detection but the coarse 50 ms final increment has not produced a repeatable force slope. Refine final approach increments before production calibration. See 2026-08-14 E-07 lab note. |
+| E-08 | Measure HX711 samples/s and noise | Sufficient for chosen loop bandwidth | Passed | Two stationary 15-second GP0/GP1 HX711 windows returned 179 samples each: 11.933 Hz. Peak-to-peak noise was 300 and 484 counts; standard deviation was 69.1 and 120.5 counts. Use a three-ready-sample median (about 0.25 s) and no faster than ~4 Hz force corrections after settling. See 2026-08-14 E-08 lab note. |
+| E-09 | Read TMAG5273 through intended wiring | Stable field/position signal | Passed | Corrected GP16/SDA and GP17/SCL I2C mapping passed. Far/near/return magnitudes were 0.24/7.51/7.44 mT; stationary spans were 0.25/0.28 mT. A conservative initial magnitude threshold is 3.5 mT with 1.0 mT hysteresis, pending final scan geometry. See 2026-08-14 E-09 lab note. |
+| E-18 | Verify RP2040/TMAG5273 magnetic adapter | Qwiic readings are stable; USB diagnostics are readable; the `A_HOME` output driver is electrically compatible with the selected RP23CNC input before connection | Partial | PC817 circuit bench stage passed on the prior GP8/GP20/GP9 map. Repeat U1/U2/U3 and isolation tests on the current GP29/GP28/GP27 harness; actual RP23CNC terminal behavior, Qwiic readings, and installed-system test remain. See `docs/report/lab-notes/2026-08-10-e-18-pc817-interface-bench-test.md`. |
+| E-19 | Verify E-stop/Halt input | SW1 NC-A is continuous released/open pressed; RP23CNC enters Halt and needs deliberate Reset/Unlock; no automatic movement occurs after release; NC-B remains insulated | TBD | Planned topology: `docs/hardware/ESTOP_TOPOLOGY.md` |
 | E-10 | Verify all rails and common references | No overvoltage or unintended backfeed | TBD | TBD |
 | E-11 | Inspect and bench-test MEISHILE S-120-12 supply | Rating label photographed; terminals 1-7 match L, N, earth, -V, -V, +V, +V; approximately 12 V no-load output; +V ADJ range and protective-earth bonding documented | TBD | TBD |
 | E-12 | Measure system 12 V current and supply temperature under motion load | Adequate current/thermal margin below the supply's 10 A, 120 W listing rating | TBD | TBD |
 | E-13 | Verify supply protection and certification claims from markings/manual | Only protections and certifications printed on the unit or supported by manufacturer documentation are accepted | TBD | TBD |
-| E-14 | Configure B085T73CSD buck before load connection | Input/output labels and polarity verified; output adjusted to 6.0 V using a calibrated multimeter; onboard display error recorded | TBD | TBD |
-| E-15 | Characterize B085T73CSD buck with the actuator | 6 V remains stable; peak current stays below tested capacity with margin; ripple and temperature are acceptable during seek, hold, lift, and current-limited stall | TBD | TBD |
+| E-14 | Verify Pololu D36V50F6 6 V regulator before load connection | Input/output labels and polarity verified; fixed output measured near 6.0 V using a calibrated multimeter; enable and power-good behavior documented if used | TBD | TBD |
+| E-14B | Inspect the completed toolhead perfboard before its first 6 V connection | With no supply connected: continuity confirms GP4→IN1, GP5→IN2, GP6←`EEP` fault output, and GP7→`ULT` sleep input; no short exists across the incoming 6 V JST or the 5 V/3.3 V rails to ground; `OUT1`/`OUT2` remain isolated until the motor pair is fitted; `CTRL_GND` remains isolated from tool ground | Partial | Power and every currently wired Pro Micro logic conductor passed continuity. A 6 V bench supply at the JST powered both the DRV8833 and S7V8F5, and the Pro Micro received the correct voltage. Firmware now matches the installed ACEIRMC label mapping; E-14C is its functional check. See 2026-08-12 toolhead-power lab note. |
+| E-14C | Inspect and function-check ACEIRMC DRV8833 control labels | Retain GP7→`ULT` (sleep input) and GP6←`EEP` (protection/fault output); firmware maps those physical endpoints; J2 sleep-control bridge is inspected and its state recorded; no motor attached | Partial | Functional evidence: GP7 pulsed `ULT` to about 3.3 V, GP6/`EEP` stayed about 2.98 V (no asserted fault), and the driver moved the N20 in both directions. Inspect/record J2 before calling this complete. |
+| E-15 | Characterize Pololu D36V50F6 with the actuator | 6 V remains stable; peak current stays below tested capacity with margin; ripple and temperature are acceptable during seek, hold, lift, and current-limited stall | TBD | TBD |
+| E-15A | Characterize toolhead-mounted Pololu S7V8F5 logic regulator | With the regulator fed from the 6 V toolhead rail, output remains 5.0 V within tolerance while RP2350, HX711, and TMAG5273 are active and while the DRV8833/N20 actuator starts, seeks, holds, and lifts; RP2350 does not reset | Passed for current motor-only configuration | With a 6.0 V bench input and the E-05 N20 motion test, DRV8833 `VM` remained near 6 V, the S7V8F5 output remained near 5 V, and the Pro Micro did not reset. HX711/TMAG loads, ripple, thermal behavior, and the upstream D36V50F6 remain separate tests. |
 | E-16 | Inventory RP23CNC Assembly and Ethernet Kits | Purchased variant, PCB revision, connectors, Ethernet components, and missing/damaged parts recorded | TBD | TBD |
-| E-17 | Inspect completed RP23CNC soldering | Correct orientation, complete joints, no bridges, no opens, and continuity/power-rail checks pass before board power | TBD | TBD |
+| E-17 | Inspect completed RP23CNC soldering | Correct orientation, complete joints, no bridges, no opens, and continuity/power-rail checks pass before board power | Passed | Magnified visual inspection found good joints and no visible bridges. With all power disconnected, both main 12 V positive-to-negative and labeled 5 V rail-to-ground checks had no continuity beep. See 2026-08-14 E-17 lab note. |
 
 ## Firmware tests
 
 | ID | Test | Pass condition |
 |---|---|---|
 | F-01 | Boot and identify firmware | Correct board/driver and recorded build |
-| F-02 | Parser dry run | Converter subset accepted; invalid words error clearly |
-| F-03 | Output pulse check | Correct STEP/DIR pins and polarity without drivers |
+| F-02 | Parser dry run | Passed — `G21`, `G90`, zero-distance XYZA `G0`/`G1`, `M3`, `G4 P0.1`, `M5`, and `M2` each accepted. `M2` reported program end and final modal state included safe `M5`. See 2026-08-14 F-02 lab note. |
+| F-03 | Output pulse check | Passed — X/Y/A each had held 0/5 V direction logic, STEP activity only during motion (about 50 mV DC-meter average), and active-low enable (5 V idle, 0 V moving). No driver, motor, or PC817 controller-side wire attached. See 2026-08-14 F-03 lab note. |
 | F-04 | Limit input test | Each input reports and alarms correctly |
 | F-05 | Spindle/tool output test | Deterministic output pin state: M3 = ENGAGE, M5 = LIFT, fail-safe to LIFT/OFF |
 | F-06 | Settings persistence | Reboot preserves calibrated settings |

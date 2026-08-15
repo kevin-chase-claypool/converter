@@ -1,0 +1,229 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="960" viewBox="0 0 1700 960">
+  <defs>
+    <style>
+      .bg { fill: #f6f7f9; }
+      .box { stroke: #222; stroke-width: 2.5; rx: 12; ry: 12; }
+      .rp { fill: #15803d; }
+      .pm { fill: #0f766e; }
+      .mod { fill: #fff7ed; stroke: #b45309; }
+      .term { fill: #fff; stroke: #222; stroke-width: 1.5; }
+      .pin { fill: #fff; stroke: #222; stroke-width: 2.5; }
+      .title { font: 700 24px Arial, sans-serif; fill: #fff; }
+      .subtitle { font: 400 15px Arial, sans-serif; fill: #e8fff0; }
+      .module-title { font: 700 22px Arial, sans-serif; fill: #111; }
+      .module-subtitle { font: 400 14px Arial, sans-serif; fill: #333; }
+      .label { font: 700 15px Arial, sans-serif; fill: #111; }
+      .small { font: 400 13px Arial, sans-serif; fill: #333; }
+      .wire-label { font: 400 13px Arial, sans-serif; fill: #111; }
+      .wire { fill: none; stroke-width: 4; stroke-linecap: square; stroke-linejoin: miter; }
+      .wire-red { stroke: #dc2626; }
+      .wire-black { stroke: #111827; }
+      .wire-purple { stroke: #7c3aed; }
+      .wire-blue { stroke: #2563eb; }
+      .wire-orange { stroke: #ea580c; }
+      .wire-gray { stroke: #6b7280; stroke-dasharray: 8 6; }
+      .panel-label { font: 700 18px Arial, sans-serif; fill: #111; }
+      .caption-bg { fill: #f6f7f9; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1700" height="960"/>
+
+  <text class="panel-label" x="45" y="38">RP23CNC to SparkFun Pro Micro RP2350 interface schematic</text>
+  <text class="small" x="45" y="64">Exact RP23CNC terminal names, polarity, and commons still need meter/manual confirmation before powering.</text>
+
+  <!-- RP23CNC block -->
+  <rect class="box rp" x="60" y="105" width="360" height="685"/>
+  <text class="title" x="92" y="146">RP23CNC / RP23U5XBB</text>
+  <text class="subtitle" x="92" y="170">machine-control side</text>
+
+  <rect class="term" x="95" y="215" width="245" height="38"/>
+  <text class="label" x="115" y="239">5V REF TBD</text>
+  <circle class="pin" cx="390" cy="234" r="8"/>
+
+  <rect class="term" x="95" y="275" width="245" height="38"/>
+  <text class="label" x="115" y="299">GND REF TBD</text>
+  <circle class="pin" cx="390" cy="294" r="8"/>
+
+  <rect class="term" x="95" y="345" width="245" height="38"/>
+  <text class="label" x="115" y="369">SPINDLE ENA OUT</text>
+  <circle class="pin" cx="390" cy="364" r="8"/>
+
+  <rect class="term" x="95" y="405" width="245" height="38"/>
+  <text class="label" x="115" y="429">AUX0 HOME_ARM OUT</text>
+  <circle class="pin" cx="390" cy="424" r="8"/>
+
+  <rect class="term" x="95" y="635" width="245" height="38"/>
+  <text class="label" x="115" y="659">A LIMIT / HOME IN</text>
+  <circle class="pin" cx="390" cy="654" r="8"/>
+
+  <rect class="term" x="95" y="695" width="245" height="38"/>
+  <text class="label" x="115" y="719">LIMIT COM / RETURN</text>
+  <circle class="pin" cx="390" cy="714" r="8"/>
+
+  <text class="small" x="95" y="758">Limit side may be 12V/24V switch-style.</text>
+  <text class="small" x="95" y="778">Do not drive directly from RP2350 GPIO.</text>
+
+  <!-- HiLetgo level shifter block -->
+  <rect class="box mod" x="590" y="150" width="380" height="350"/>
+  <text class="module-title" x="625" y="188">HiLetgo level shifter</text>
+  <text class="module-subtitle" x="625" y="212">3.3V / 5V logic only</text>
+
+  <rect class="term" x="630" y="215" width="125" height="38"/>
+  <text class="label" x="660" y="239">HV</text>
+  <circle class="pin" cx="602" cy="234" r="8"/>
+
+  <rect class="term" x="630" y="275" width="125" height="38"/>
+  <text class="label" x="656" y="299">GND</text>
+  <circle class="pin" cx="602" cy="294" r="8"/>
+
+  <rect class="term" x="630" y="345" width="125" height="38"/>
+  <text class="label" x="656" y="369">HV1</text>
+  <circle class="pin" cx="602" cy="364" r="8"/>
+
+  <rect class="term" x="630" y="405" width="125" height="38"/>
+  <text class="label" x="656" y="429">HV2</text>
+  <circle class="pin" cx="602" cy="424" r="8"/>
+
+  <rect class="term" x="805" y="215" width="125" height="38"/>
+  <text class="label" x="838" y="239">LV</text>
+  <circle class="pin" cx="958" cy="234" r="8"/>
+
+  <rect class="term" x="805" y="275" width="125" height="38"/>
+  <text class="label" x="831" y="299">GND</text>
+  <circle class="pin" cx="958" cy="294" r="8"/>
+
+  <rect class="term" x="805" y="345" width="125" height="38"/>
+  <text class="label" x="831" y="369">LV1</text>
+  <circle class="pin" cx="958" cy="364" r="8"/>
+
+  <rect class="term" x="805" y="405" width="125" height="38"/>
+  <text class="label" x="831" y="429">LV2</text>
+  <circle class="pin" cx="958" cy="424" r="8"/>
+
+  <!-- Zopsc optocoupler block -->
+  <rect class="box mod" x="590" y="535" width="380" height="235"/>
+  <text class="module-title" x="625" y="573">Zopsc optocoupler CH1</text>
+  <text class="module-subtitle" x="625" y="598">3.3/5V input, 3.6-24V output/load</text>
+
+  <rect class="term" x="630" y="635" width="125" height="38"/>
+  <text class="label" x="653" y="659">OUT+</text>
+  <circle class="pin" cx="602" cy="654" r="8"/>
+
+  <rect class="term" x="630" y="695" width="125" height="38"/>
+  <text class="label" x="653" y="719">OUT-</text>
+  <circle class="pin" cx="602" cy="714" r="8"/>
+
+  <rect class="term" x="805" y="635" width="125" height="38"/>
+  <text class="label" x="835" y="659">IN+</text>
+  <circle class="pin" cx="958" cy="654" r="8"/>
+
+  <rect class="term" x="805" y="695" width="125" height="38"/>
+  <text class="label" x="835" y="719">IN-</text>
+  <circle class="pin" cx="958" cy="714" r="8"/>
+
+  <!-- Pro Micro block -->
+  <rect class="box pm" x="1200" y="105" width="430" height="685"/>
+  <text class="title" x="1235" y="146">SparkFun Pro Micro RP2350</text>
+  <text class="subtitle" x="1235" y="170">toolhead 3.3V GPIO side</text>
+
+  <rect class="term" x="1255" y="215" width="245" height="38"/>
+  <text class="label" x="1275" y="239">3V3</text>
+  <circle class="pin" cx="1228" cy="234" r="8"/>
+
+  <rect class="term" x="1255" y="275" width="245" height="38"/>
+  <text class="label" x="1275" y="299">GND</text>
+  <circle class="pin" cx="1228" cy="294" r="8"/>
+
+  <rect class="term" x="1255" y="345" width="245" height="38"/>
+  <text class="label" x="1275" y="369">GP8 M3/M5 IN</text>
+  <circle class="pin" cx="1228" cy="364" r="8"/>
+
+  <rect class="term" x="1255" y="405" width="245" height="38"/>
+  <text class="label" x="1275" y="429">GP10 HOME_ARM IN</text>
+  <circle class="pin" cx="1228" cy="424" r="8"/>
+
+  <rect class="term" x="1255" y="635" width="245" height="38"/>
+  <text class="label" x="1275" y="659">GP9 A_HOME OUT</text>
+  <circle class="pin" cx="1228" cy="654" r="8"/>
+
+  <rect class="term" x="1255" y="695" width="245" height="38"/>
+  <text class="label" x="1275" y="719">GND</text>
+  <circle class="pin" cx="1228" cy="714" r="8"/>
+
+  <text class="small" x="1255" y="758">GP8/GP10 are inputs.</text>
+  <text class="small" x="1255" y="778">GP9 drives optocoupler input only.</text>
+
+  <!-- Wires: RP23CNC to HiLetgo -->
+  <path class="wire wire-red" d="M390 234 H602"/>
+  <rect class="caption-bg" x="444" y="215" width="112" height="17"/>
+  <text class="wire-label" x="448" y="228">5V reference</text>
+
+  <path class="wire wire-black" d="M390 294 H602"/>
+  <rect class="caption-bg" x="432" y="275" width="140" height="17"/>
+  <text class="wire-label" x="436" y="288">RP23CNC ground</text>
+
+  <path class="wire wire-purple" d="M390 364 H602"/>
+  <rect class="caption-bg" x="438" y="345" width="126" height="17"/>
+  <text class="wire-label" x="442" y="358">M3/M5 command</text>
+
+  <path class="wire wire-blue" d="M390 424 H602"/>
+  <rect class="caption-bg" x="448" y="405" width="106" height="17"/>
+  <text class="wire-label" x="452" y="418">HOME_ARM</text>
+
+  <!-- Wires: HiLetgo to Pro Micro -->
+  <path class="wire wire-red" d="M958 234 H1228"/>
+  <rect class="caption-bg" x="1036" y="215" width="126" height="17"/>
+  <text class="wire-label" x="1040" y="228">3.3V reference</text>
+
+  <path class="wire wire-black" d="M958 294 H1228"/>
+  <rect class="caption-bg" x="1030" y="275" width="140" height="17"/>
+  <text class="wire-label" x="1034" y="288">toolhead ground</text>
+
+  <path class="wire wire-purple" d="M958 364 H1228"/>
+  <rect class="caption-bg" x="1025" y="345" width="150" height="17"/>
+  <text class="wire-label" x="1029" y="358">safe 3.3V to GP8</text>
+
+  <path class="wire wire-blue" d="M958 424 H1228"/>
+  <rect class="caption-bg" x="1018" y="405" width="164" height="17"/>
+  <text class="wire-label" x="1022" y="418">safe 3.3V to GP10</text>
+
+  <!-- A_HOME wires -->
+  <path class="wire wire-orange" d="M1228 654 H958"/>
+  <rect class="caption-bg" x="1038" y="635" width="124" height="17"/>
+  <text class="wire-label" x="1042" y="648">GP9 to opto IN</text>
+
+  <path class="wire wire-black" d="M1228 714 H958"/>
+  <rect class="caption-bg" x="1048" y="695" width="104" height="17"/>
+  <text class="wire-label" x="1052" y="708">GP9 return</text>
+
+  <path class="wire wire-orange" d="M602 654 H390"/>
+  <rect class="caption-bg" x="438" y="635" width="120" height="17"/>
+  <text class="wire-label" x="442" y="648">A_HOME switch</text>
+
+  <path class="wire wire-gray" d="M602 714 H390"/>
+  <rect class="caption-bg" x="424" y="695" width="148" height="17"/>
+  <text class="wire-label" x="428" y="708">limit common TBD</text>
+
+  <!-- Harness boundary -->
+  <line x1="1080" y1="95" x2="1080" y2="805" stroke="#555" stroke-width="2" stroke-dasharray="12 8"/>
+  <text class="panel-label" x="1023" y="834">drag-chain harness boundary</text>
+  <text class="small" x="1018" y="857">Use signal+return twisted pairs.</text>
+
+  <!-- Legend -->
+  <rect x="60" y="845" width="1570" height="85" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5" rx="8"/>
+  <text class="label" x="90" y="878">Legend:</text>
+  <line class="wire wire-purple" x1="165" y1="873" x2="225" y2="873"/>
+  <text class="small" x="238" y="878">M3/M5</text>
+  <line class="wire wire-blue" x1="335" y1="873" x2="395" y2="873"/>
+  <text class="small" x="408" y="878">HOME_ARM</text>
+  <line class="wire wire-orange" x1="540" y1="873" x2="600" y2="873"/>
+  <text class="small" x="613" y="878">A_HOME</text>
+  <line class="wire wire-red" x1="725" y1="873" x2="785" y2="873"/>
+  <text class="small" x="798" y="878">logic reference voltage</text>
+  <line class="wire wire-black" x1="1015" y1="873" x2="1075" y2="873"/>
+  <text class="small" x="1088" y="878">signal ground/return</text>
+  <line class="wire wire-gray" x1="1310" y1="873" x2="1370" y2="873"/>
+  <text class="small" x="1383" y="878">RP23CNC limit common TBD</text>
+  <text class="small" x="90" y="910">HiLetgo handles RP23CNC-to-Pro-Micro logic inputs. Zopsc handles Pro-Micro-to-RP23CNC A_HOME as a switch-like optocoupled output.</text>
+</svg>

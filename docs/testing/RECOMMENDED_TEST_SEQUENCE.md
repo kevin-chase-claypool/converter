@@ -1,0 +1,80 @@
+# Recommended Test Sequence
+
+This is the recommended order for carrying out the existing tests in
+[`TEST_PLAN.md`](TEST_PLAN.md). It is a dependency and safety guide; it does
+not mark any test complete or replace the formal pass conditions.
+
+## Order of operations
+
+1. **E-01 through E-04 — Stepper and TB6600 characterization.** Identify coil
+   pairs, record the physical driver settings, confirm input behavior, and set
+   conservative current before connecting a controller.
+2. **E-17 — RP23CNC pre-power inspection.** Inspect soldering, orientation,
+   continuity, and rail isolation before applying normal power.
+3. **E-11 and E-13 — 12 V supply by itself.** Verify terminal labels,
+   protective earth, no-load output, adjustment range, and only documented
+   protection/certification claims.
+4. **E-14 — 6 V actuator regulator with no load.** Verify polarity and the
+   fixed 6.0 V output before attaching the motor.
+5. **E-14B — Completed toolhead perfboard, unpowered.** Before connecting the
+   arriving 6 V twisted pair, verify the new Pro Micro-to-DRV8833 wiring by
+   continuity, confirm the two-pin JST is not shorted, and confirm that
+   `OUT1`/`OUT2` are still isolated because the motor pair is not fitted.
+6. **E-14C — Exact DRV8833 control-label check.** For the installed ACEIRMC
+   board, retain the continuity-checked GP7→`ULT` (sleep input) and
+   GP6←`EEP` (fault output) harness, confirm the firmware mapping, and inspect
+   its J2 bridge. This is a hard gate before the motor is fitted.
+7. **E-15A — Toolhead 5 V regulator.** Connect the verified 6 V rail and
+   verify stable logic power with the RP2350 and sensors active before the
+   actuator is used.
+8. **E-10 — System rails and references.** Confirm voltage rails, intended
+   common references, and absence of unintended backfeed. Preserve galvanic
+   isolation between `CTRL_GND` and `TOOL_GND` at the PC817 interface.
+9. **F-01 — Controller baseline.** Boot and identify the RP23CNC firmware.
+10. **F-03 and F-04 — Unpowered controller I/O.** Check STEP/DIR and limits
+   before motor drivers or the toolhead are attached.
+11. **F-05 — M3/M5 tool-output behavior.** Establish the actual controller
+   ENA/AUX0 output states and fail-safe state.
+12. **E-18 — Installed PC817/TMAG interface.** The assembled board has passed
+    its simulated bench test; now verify it against the actual RP23CNC
+    terminals and complete the TMAG5273 portion.
+13. **E-05 — N20 no-load current.** After fitting the 22 AWG twisted
+   `OUT1`/`OUT2` pair, run the motor mechanically unloaded at
+    6 V in both directions. Do not restrain the shaft.
+14. **T-01 — Toolhead lift/open-loop direction.** Verify safe travel and
+    record which motor polarity produces lift versus seek/down. If reversed,
+    swap OUT1/OUT2 *or* reverse the firmware mapping, never both.
+15. **E-06 and E-15 — Loaded actuator capability.** Perform the
+    current-limited stall test and regulator load/ripple/temperature test only
+    after no-load direction is known.
+16. **E-07 through E-09 — Sensor characterization.** Calibrate the load cell,
+    measure HX711 behavior, and validate the TMAG5273 with the intended
+    magnet/geometry.
+17. **T-02 through T-06 — Closed-loop toolhead and faults.** Add contact seek,
+    force hold, and each safe-fault case one at a time.
+18. **M-01 through M-11 — Motion system.** Begin with one mechanically
+    detached axis, then progress through calibration, coordinated motion,
+    homing, magnetic scans, and homing fault paths.
+19. **E-19 — Emergency stop input.** With the pen removed and motion disabled
+    for the first pass, verify SW1 NC-A continuity, RP23CNC Halt/reset behavior,
+    NC-compatible input inversion, and no automatic motion restart after release.
+20. **Integrated tests — Full system.** Verify M3/M5 behavior, reset/E-stop
+    safety, timing, jitter/lost-step effects, calibration patterns, and saved
+    diagnostics.
+
+## Critical gates
+
+- Do not attach the RP23CNC to the optocoupler harness until **E-17**, power
+  checks, and **F-05** are complete.
+- Do not mechanically load or stall the N20 before **E-05** passes.
+- Do not connect the motion mechanics until their driver settings and isolated
+  I/O checks have passed.
+- Record each result in the formal test plan and a dated lab note; a failed
+  test pauses dependent tests until the cause and corrective action are
+  documented.
+
+## Current position
+
+The PC817 bench portion of **E-18** is complete, but E-18 remains partial:
+actual RP23CNC terminal behavior, TMAG readings, and installed-system
+verification remain outstanding.

@@ -60,6 +60,8 @@ Entry details remain only in the chronology.
 - [Before 2026-06-05 - Time not recorded - MIXED/OPEN - Hold-steady theta grid tradeoff](#elog-20260605-hold-steady-theta-grid-tradeoff)
 
 ### RP23CNC and machine software
+- [2026-08-06 12:30:00 -0500 - MIXED/OPEN - Corrected PC817 active-low contract and PCB review file](#elog-20260806123000)
+- [2026-07-31 11:03:49 -0500 - SUCCESS - Added RP2350 toolhead prototype firmware](#elog-20260731110349)
 - [2026-07-04 12:30:00 -0500 - MIXED/OPEN - Added electronics layout wiring HTML](#elog-20260704123000)
 - [2026-07-04 12:00:00 -0500 - MIXED/OPEN - Planned magnetic homing calibration](#elog-20260704120000)
 - [2026-06-09 13:03:34 -0500 - MIXED/OPEN - Planned RP23U5XBB Ethernet bring-up](#elog-20260609130334)
@@ -68,6 +70,21 @@ Entry details remain only in the chronology.
 - [2026-06-05 09:04:15 -0500 - SUCCESS - Chose RP23CNC and grblHAL](#elog-20260605090415)
 
 ### Hardware and wiring
+- [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
+- [2026-08-06 13:37:00 -0500 - MIXED/OPEN - Added KiCad 9-native perfboard schematic](#elog-20260806133700)
+- [2026-08-06 13:30:00 -0500 - MIXED/OPEN - Selected six-position perfboard screw terminals](#elog-20260806133000)
+- [2026-08-06 13:00:00 -0500 - MIXED/OPEN - Released all-through-hole perfboard build map](#elog-20260806130000)
+- [2026-08-06 12:30:00 -0500 - MIXED/OPEN - Corrected PC817 active-low contract and PCB review file](#elog-20260806123000)
+- [2026-08-06 11:54:00 -0500 - MIXED/OPEN - Created PC817C perfboard KiCad schematic](#elog-20260806115400)
+- [2026-08-06 10:26:41 -0500 - MIXED/OPEN - Proposed compact three-channel PC817C interface module](#elog-20260806102641)
+- [2026-08-03 08:20:00 -0500 - MIXED/OPEN - Added B07WFGTNQC optocoupler to schematic](#elog-20260803082000)
+- [2026-08-03 07:15:56 -0500 - MIXED/OPEN - Added power-distribution document and schematic](#elog-20260803071556)
+- [2026-08-03 06:14:31 -0500 - MIXED/OPEN - Added RP23CNC interface schematic](#elog-20260803061431)
+- [2026-08-02 21:36:20 -0500 - MIXED/OPEN - Added Onshape API CAD workflow](#elog-20260802213620)
+- [2026-08-02 17:26:26 -0500 - MIXED/OPEN - Selected shielded stepper cable](#elog-20260802172626)
+- [2026-08-02 11:58:36 -0500 - MIXED/OPEN - Added local 5 V toolhead regulator](#elog-20260802115836)
+- [2026-07-31 11:03:49 -0500 - SUCCESS - Added RP2350 toolhead prototype firmware](#elog-20260731110349)
+- [2026-07-31 10:41:17 -0500 - MIXED/OPEN - Added toolhead wiring diagram](#elog-20260731104117)
 - [2026-07-04 12:30:00 -0500 - MIXED/OPEN - Added electronics layout wiring HTML](#elog-20260704123000)
 - [2026-07-04 12:00:00 -0500 - MIXED/OPEN - Planned magnetic homing calibration](#elog-20260704120000)
 - [2026-06-15 09:57:11 -0500 - MIXED/OPEN - Created reference CAD for Tecmojo sliding shelf](#elog-20260615095711)
@@ -80,9 +97,57 @@ Entry details remain only in the chronology.
 - [2026-06-06 16:05:10 -0500 - MIXED/OPEN - Selected 12 V main power supply](#elog-20260606160510)
 - [2026-06-06 15:55:07 -0500 - SUCCESS - Created authoritative wiring table](#elog-20260606155507)
 - [2026-06-06 15:46:05 -0500 - SUCCESS - Organized hardware integration and expanded converter behavior](#elog-20260606154605)
+- [2026-08-06 - SUCCESS - Added viewable PC817 wiring diagram](#elog-20260806-added-viewable-pc817-wiring-diagram)
+- [2026-08-06 - SUCCESS - Added annotated perfboard build map](#elog-20260806-added-annotated-perfboard-build-map)
+- [2026-08-06 - SUCCESS - Added translucent interconnection overlay](#elog-20260806-added-translucent-interconnection-overlay)
+- [2026-08-08 - SUCCESS - Added no-overlap PC817 schematic](#elog-20260808-added-no-overlap-pc817-schematic)
+- [2026-08-09 - MIXED/OPEN - Verified RP23CNC A-home electrical requirement](#elog-20260809-verified-rp23cnc-a-home-electrical-requirement)
+- [2026-08-10 - SUCCESS - Minimized and verified PC817 layout](#elog-20260810-minimized-and-verified-pc817-layout)
+- [2026-08-10 - SUCCESS - Passed all PC817 bench channels](#elog-20260810-passed-all-pc817-bench-channels)
+- [2026-08-10 - SUCCESS - Recorded recommended system test sequence](#elog-20260810-recorded-recommended-system-test-sequence)
+- [2026-08-10 - SUCCESS - Adopted direct-header toolhead harness](#elog-20260810-adopted-direct-header-toolhead-harness)
+- [2026-08-11 - HARDWARE/PLANNED - Reconciled E-stop and HD064RT topology](#elog-20260811-reconciled-e-stop-and-hd064rt-topology)
+- [2026-08-11 - SUCCESS - Reassigned HX711 to adjacent GP0/GP1 pins](#elog-20260811-reassigned-hx711-to-adjacent-gp0-gp1-pins)
+- [2026-08-12 - SUCCESS - Recorded load-cell wire mapping](#elog-20260812-recorded-load-cell-wire-mapping)
+- [2026-08-12 20:16:39 -0500 - MIXED/OPEN - Advanced toolhead perfboard wiring](#elog-20260812201639)
+- [2026-08-12 20:22:03 -0500 - SUCCESS - Powered toolhead local branches from a 6 V bench supply](#elog-20260812202203)
+- [2026-08-12 20:26:25 -0500 - SUCCESS - Confirmed Pro Micro logic-harness continuity](#elog-20260812202625)
+- [2026-08-12 20:35:00 -0500 - STRUGGLE - Exact DRV8833 module corrected generic sleep/fault labels](#elog-20260812203500)
+- [2026-08-13 - SUCCESS - Corrected DRV8833 firmware mapping without harness rework](#elog-20260813-corrected-drv8833-firmware-mapping-without-harness-rework)
+- [2026-08-13 - SUCCESS - Made E-05 a one-shot boot test](#elog-20260813-made-e-05-a-one-shot-boot-test)
+- [2026-08-13 - MIXED/OPEN - Verified N20 bidirectional motion at the toolhead](#elog-20260813-verified-n20-bidirectional-motion-at-the-toolhead)
+- [2026-08-14 - SUCCESS - Repaired intermittent DRV8833 output solder joint](#elog-20260814-repaired-intermittent-drv8833-output-solder-joint)
+- [2026-08-14 - SUCCESS - Passed E-05 N20 no-load current test](#elog-20260814-passed-e-05-n20-no-load-current-test)
+- [2026-08-14 - SUCCESS - Passed E-15A toolhead rails during N20 motion](#elog-20260814-passed-e-15a-toolhead-rails-during-n20-motion)
+- [2026-08-14 - SUCCESS - Required complete records for every E-series test](#elog-20260814-required-complete-records-for-every-e-series-test)
+- [2026-08-14 - MIXED/OPEN - Started E-07 HX711 calibration](#elog-20260814-started-e-07-hx711-calibration)
+- [2026-08-14 - MIXED/OPEN - HX711 first raw-reading attempt passed communication](#elog-20260814-hx711-first-raw-reading-attempt-passed-communication)
+- [2026-08-14 - MIXED/OPEN - Prepared E-07B UART toolhead service test](#elog-20260814-prepared-e-07b-uart-toolhead-service-test)
+- [2026-08-14 - MIXED/OPEN - Corrected E-07B UART1 serial instance](#elog-20260814-corrected-e-07b-uart1-serial-instance)
+- [2026-08-14 - SUCCESS - Passed E-07B UART service bring-up](#elog-20260814-passed-e-07b-uart-service-bring-up)
+- [2026-08-14 - PARTIAL - First E-07B automated pen-tip contact](#elog-20260814-first-e-07b-automated-pen-tip-contact)
+- [2026-08-14 - SUCCESS - Passed E-08 HX711 rate and noise measurement](#elog-20260814-passed-e-08-hx711-rate-and-noise-measurement)
+- [2026-08-14 - BLOCKED - E-09 Qwiic I2C startup](#elog-20260814-e-09-qwiic-i2c-startup)
+- [2026-08-14 - SUCCESS - Passed E-09 TMAG5273 intended-wiring test](#elog-20260814-passed-e-09-tmag5273-intended-wiring-test)
+- [2026-08-14 - PARTIAL - E-18 repinned PC817 harness pre-check](#elog-20260814-e-18-repinned-pc817-harness-pre-check)
+- [2026-08-14 - SUCCESS - Passed E-17 RP23CNC pre-power inspection](#elog-20260814-passed-e-17-rp23cnc-pre-power-inspection)
+- [2026-08-14 - SUCCESS - Passed F-01 RP23CNC grblHAL baseline boot](#elog-20260814-passed-f-01-rp23cnc-grblhal-baseline-boot)
+- [2026-08-14 - PARTIAL - F-01 first-run control-input alarm](#elog-20260814-f-01-first-run-control-input-alarm)
+- [2026-08-14 15:59:36 -0500 - SUCCESS - Cleared RP23CNC first-run control alarm](#elog-20260814155936)
+- [2026-08-14 16:30:00 -0500 - SUCCESS - Passed F-03 RP23CNC X/Y/A bare-output test](#elog-20260814163000)
+- [2026-08-14 16:45:00 -0500 - MIXED/OPEN - Selected X/Y SPDT roller limit switches](#elog-20260814164500)
+- [2026-08-14 17:00:00 -0500 - MIXED/OPEN - Staged temporary X/Y limit-switch harness before drag-chain routing](#elog-20260814170000)
+- [2026-08-14 17:30:00 -0500 - HARDWARE/OPEN - Initial E-stop uses RP23CNC Halt input](#elog-20260814173000)
 
 ### Testing and verification
+- [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
+- [2026-08-06 13:37:00 -0500 - MIXED/OPEN - Added KiCad 9-native perfboard schematic](#elog-20260806133700)
 - [2026-07-04 12:00:00 -0500 - MIXED/OPEN - Planned magnetic homing calibration](#elog-20260704120000)
+- [2026-08-14 15:59:36 -0500 - SUCCESS - Cleared RP23CNC first-run control alarm](#elog-20260814155936)
+- [2026-08-14 16:03:00 -0500 - MIXED/OPEN - Isolated missing grblHAL settings-list response](#elog-20260814160300)
+- [2026-08-14 16:10:00 -0500 - SUCCESS - Passed F-02 RP23CNC converter-command parser dry run](#elog-20260814161000)
+- [2026-08-14 16:30:00 -0500 - SUCCESS - Passed F-03 RP23CNC X/Y/A bare-output test](#elog-20260814163000)
+- [2026-08-14 16:45:00 -0500 - MIXED/OPEN - Selected X/Y SPDT roller limit switches](#elog-20260814164500)
 
 ### Decisions and architecture
 - [2026-06-07 11:57:39 -0500 - SUCCESS - Made continuous maintainability a repository requirement](#elog-20260607115739)
@@ -90,6 +155,21 @@ Entry details remain only in the chronology.
 - [Before 2026-06-05 - Time not recorded - MIXED/OPEN - Hold-steady theta grid tradeoff](#elog-20260605-hold-steady-theta-grid-tradeoff)
 
 ### Documentation and project organization
+- [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
+- [2026-08-06 13:37:00 -0500 - MIXED/OPEN - Added KiCad 9-native perfboard schematic](#elog-20260806133700)
+- [2026-08-06 13:30:00 -0500 - MIXED/OPEN - Selected six-position perfboard screw terminals](#elog-20260806133000)
+- [2026-08-06 13:00:00 -0500 - MIXED/OPEN - Released all-through-hole perfboard build map](#elog-20260806130000)
+- [2026-08-06 12:30:00 -0500 - MIXED/OPEN - Corrected PC817 active-low contract and PCB review file](#elog-20260806123000)
+- [2026-08-06 11:54:00 -0500 - MIXED/OPEN - Created PC817C perfboard KiCad schematic](#elog-20260806115400)
+- [2026-08-06 10:26:41 -0500 - MIXED/OPEN - Proposed compact three-channel PC817C interface module](#elog-20260806102641)
+- [2026-08-03 08:20:00 -0500 - MIXED/OPEN - Added B07WFGTNQC optocoupler to schematic](#elog-20260803082000)
+- [2026-08-03 07:15:56 -0500 - MIXED/OPEN - Added power-distribution document and schematic](#elog-20260803071556)
+- [2026-08-03 06:14:31 -0500 - MIXED/OPEN - Added RP23CNC interface schematic](#elog-20260803061431)
+- [2026-08-02 21:36:20 -0500 - MIXED/OPEN - Added Onshape API CAD workflow](#elog-20260802213620)
+- [2026-08-02 17:26:26 -0500 - MIXED/OPEN - Selected shielded stepper cable](#elog-20260802172626)
+- [2026-08-02 11:58:36 -0500 - MIXED/OPEN - Added local 5 V toolhead regulator](#elog-20260802115836)
+- [2026-07-31 11:03:49 -0500 - SUCCESS - Added RP2350 toolhead prototype firmware](#elog-20260731110349)
+- [2026-07-31 10:41:17 -0500 - MIXED/OPEN - Added toolhead wiring diagram](#elog-20260731104117)
 - [2026-07-04 17:41:19 -0500 - SUCCESS - Added project management overview HTML](#elog-20260704174119)
 - [2026-07-04 12:30:00 -0500 - MIXED/OPEN - Added electronics layout wiring HTML](#elog-20260704123000)
 - [2026-07-04 12:00:00 -0500 - MIXED/OPEN - Planned magnetic homing calibration](#elog-20260704120000)
@@ -112,6 +192,11 @@ Entry details remain only in the chronology.
 - [2026-06-06 15:46:05 -0500 - SUCCESS - Organized hardware integration and expanded converter behavior](#elog-20260606154605)
 - [2026-06-05 10:56:12 -0500 - SUCCESS - Updated sparse-infill handoff notes](#elog-20260605105612)
 - [2026-06-05 08:28:30 -0500 - SUCCESS - Established project repository](#elog-20260605082830)
+- [2026-08-06 - SUCCESS - Added viewable PC817 wiring diagram](#elog-20260806-added-viewable-pc817-wiring-diagram)
+- [2026-08-06 - SUCCESS - Added annotated perfboard build map](#elog-20260806-added-annotated-perfboard-build-map)
+- [2026-08-06 - SUCCESS - Added translucent interconnection overlay](#elog-20260806-added-translucent-interconnection-overlay)
+- [2026-08-08 - SUCCESS - Added no-overlap PC817 schematic](#elog-20260808-added-no-overlap-pc817-schematic)
+- [2026-08-14 - SUCCESS - Required complete records for every E-series test](#elog-20260814-required-complete-records-for-every-e-series-test)
 <!-- END GENERATED TOPIC INDEX -->
 
 ## Entry format
@@ -132,6 +217,246 @@ Entry details remain only in the chronology.
 ```
 
 Add new entries at the top of the log below this line.
+
+---
+
+<a id="elog-20260806134200"></a>
+### 🟨 2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board
+
+- Status: mixed/open
+- Category: hardware, test, documentation
+- Summary: Recovered 110 manually routed segments and 3 vias from a mistakenly named KiCad 10 board into a cleanly named KiCad 10 review-file pair, with a separate KiCad 9-compatible fallback.
+- Reason: The user appeared to lose their manual routing after reopening the intentionally unrouted KiCad 9 perfboard assembly view.
+- Struggle/failure: The recovered track geometry is preserved, but DRC found shorts between `TOOL_GND` and GP8/GP10 around C1/C2 plus four open pad-to-track joins. The routing therefore does not yet validate the circuit and must not be used as a fabrication or perfboard wiring output.
+- Evidence: `pc817-perfboard-v1.2-routed.kicad_pcb` retains the original KiCad 10 routing and has a matching same-basename schematic. `tools/recover_pc817_routing.py` also transferred the same 110 segments and 3 vias to `pc817-perfboard-v1.2-routed-kicad9.kicad_pcb`, which KiCad 9 opened and checked with `pc817-perfboard-v1.2-routed-kicad9-drc.rpt`.
+- Files/commit: `tools/recover_pc817_routing.py`, `hardware/pc817-interface/pc817-perfboard-v1.2-routed.kicad_pcb`, `hardware/pc817-interface/pc817-perfboard-v1.2-routed.kicad_sch`, `hardware/pc817-interface/pc817-perfboard-v1.2-routed-kicad9.kicad_pcb`, `hardware/pc817-interface/pc817-perfboard-v1.2-routed-kicad9.kicad_sch`, `hardware/pc817-interface/pc817-perfboard-v1.2-routed-kicad9-drc.rpt`, and `hardware/pc817-interface/README.md`; commit not yet created.
+- Result: The user's routing is recoverable and editable under KiCad 10, with a KiCad 9 fallback; it needs localized correction rather than a complete reroute.
+- Retry conditions: Re-run KiCad 9 DRC after correcting C1/C2 and any other conflicting tracks. Retain the original KiCad 10 source file unchanged until the recovered board is verified.
+- Next action: Correct the C1/C2 GP8, GP10, and `TOOL_GND` tracks, then rerun DRC before using the routing as a connectivity check.
+
+---
+
+<a id="elog-20260806133700"></a>
+### 🟨 2026-08-06 13:37:00 -0500 - MIXED/OPEN - Added KiCad 9-native perfboard schematic
+
+- Status: mixed/open
+- Category: hardware, documentation, test
+- Summary: Converted the PC817 interface legacy schematic to KiCad 9 native syntax and added the same-basename companion schematic required by the current perfboard PCB Editor view.
+- Reason: The PCB's Open Schematic command reported a missing `pc817-perfboard-v1.2.kicad_sch` file; an earlier KiCad 10-only board artifact was also incompatible with the workstation's KiCad 9 installation.
+- Struggle/failure: Initial ERC exposed three diode connections ending 1.27 mm short of their intended LED-anode nodes. The PCB netlist was already correct, but the schematic could not be treated as a verified source until those gaps were closed.
+- Evidence: `kicad-cli sch erc hardware/pc817-interface/pc817-perfboard-v1.2.kicad_sch` reports zero violations after D1–D3 wire repair. The KiCad 9-native PCB remains `pc817-perfboard-v1.2.kicad_pcb`.
+- Files/commit: `hardware/pc817-interface/pc817-interface.kicad_sch`, `hardware/pc817-interface/pc817-perfboard-v1.2.kicad_sch`, `hardware/pc817-interface/README.md`, `hardware/pc817-interface/PERFBOARD_BUILD.md`, and change note `HW-20260806-002`; commit not yet created.
+- Result: The current perfboard PCB and schematic now open together under KiCad 9, and the three-channel circuit passes schematic ERC.
+- Retry conditions: Re-run ERC after any circuit or connector change. Keep `R6` unpopulated until E-18 verifies the controller A-home interface.
+- Next action: Open the schematic from the perfboard PCB, then perform F-05 and E-18 bench tests before connecting the controller harness.
+
+---
+
+<a id="elog-20260806133000"></a>
+### 🟨 2026-08-06 13:30:00 -0500 - MIXED/OPEN - Selected six-position perfboard screw terminals
+
+- Status: mixed/open
+- Category: hardware, wiring, documentation
+- Summary: Replaced the 1×5 header concept with one 1×6, 2.54 mm through-hole screw terminal on each short side of the PC817C perfboard.
+- Reason: The project owner selected screw terminals for the two harness interfaces.
+- Struggle/failure: The current circuit has only five unique conductors on each isolated side. Adding a sixth active connection without a verified requirement would be unsafe, so terminal 6 is explicitly NC/spare on both blocks.
+- Evidence: `pc817-perfboard-v1.2.kicad_pcb` places the two six-position blocks on A1–A6 and N1–N6; `PERFBOARD_BUILD.md` records both pin orders and the unconnected pin-6 rule. U1/U2/U3 use one unrotated footprint definition: notch toward the top edge, pin 1 upper-left, pin 2 lower-left, pin 4 upper-right, and pin 3 lower-right.
+- Files/commit: `hardware/pc817-interface/pc817-perfboard-v1.2.kicad_pcb`, `hardware/pc817-interface/PERFBOARD_BUILD.md`, `tools/generate_pc817_perfboard_kicad.py`, `docs/hardware/BOM.md`, and `docs/hardware/WIRING_TABLE.md`; commit not yet created.
+- Result: The physical terminal choice and PC817 orientation are explicit without changing the circuit or breaching ground isolation.
+- Retry conditions: Revise terminal 6 only after a specific, verified sixth conductor is required. Use a larger board if the selected terminal block body or wire-entry direction blocks the mounting holes.
+- Next action: Dry-fit the actual 2.54 mm screw blocks, then confirm F-05 and E-18 before connecting the controller harness.
+
+---
+
+<a id="elog-20260806130000"></a>
+### 🟨 2026-08-06 13:00:00 -0500 - MIXED/OPEN - Released all-through-hole perfboard build map
+
+- Status: mixed/open
+- Category: hardware, wiring, documentation
+- Summary: Replaced the SMD/unrouted PCB direction with a compact all-through-hole PC817C perfboard construction plan matched to the photographed 14 × 6, 2.54 mm pad field.
+- Reason: The project owner chose hand-soldered perfboard construction and requested no SMD parts.
+- Struggle/failure: An SMD PCB placement review had been created before the final construction choice. It is now retained only as superseded history; it is neither routed nor a fabrication output.
+- Evidence: `PERFBOARD_BUILD.md` names exact component holes, DIP and diode orientation, all underside-wire nets, and the DNP R6 safety boundary. `pc817-perfboard-layout-v1.png` renders the component side and wiring list; `pc817-perfboard-v1.1.kicad_pcb` presents the same all-THT layout in KiCad PCB Editor.
+- Files/commit: `hardware/pc817-interface/PERFBOARD_BUILD.md`, `hardware/pc817-interface/pc817-perfboard-layout-v1.png`, `hardware/pc817-interface/pc817-perfboard-v1.1.kicad_pcb`, `tools/render_pc817_perfboard.py`, `tools/generate_pc817_perfboard_kicad.py`, `docs/hardware/BOM.md`, `docs/hardware/WIRING_TABLE.md`, and change note `HW-20260806-002`; commit not yet created.
+- Result: The build contains only DIP, axial, radial, and 2.54 mm through-hole parts. Controller and toolhead grounds remain isolated; R6 remains unfitted.
+- Retry conditions: Use a larger perfboard or a fabricated PCB if the selected headers conflict with the two mounting holes, if wire density prevents a clean insulated underside build, or if F-05/E-18 changes the electrical circuit.
+- Next action: Dry-fit the headers, assemble U1/U2 first, power the Pro Micro side only, then complete F-05 before controller connection.
+
+---
+
+<a id="elog-20260806123000"></a>
+### 🟨 2026-08-06 12:30:00 -0500 - MIXED/OPEN - Corrected PC817 active-low contract and PCB review file
+
+- Status: mixed/open
+- Category: hardware, wiring, firmware, documentation
+- Summary: Audited the three PC817 nets, corrected the toolhead firmware to interpret U1/U2 as active-low GP8/GP10 inputs, and produced a separately named `v0.2` PCB placement/net-assignment review file.
+- Reason: Review found that the circuit's common-emitter U1/U2 outputs pull GP8/GP10 low when illuminated while the firmware had used active-high reading plus internal pull-downs.
+- Struggle/failure: A prior script-based routing attempt created invalid crossings. It was not retained as a manufactured-board candidate; the replacement is explicitly marked unrouted and not for fabrication.
+- Evidence: PC817 pin assignment was checked as LED anode/cathode on pins 1/2 and phototransistor emitter/collector on pins 3/4. U1/U2 collector nets are GP8/GP10 with emitters at toolhead ground and R3/R4 pullups to local 3.3 V, so asserted optocouplers pull their inputs LOW.
+- Files/commit: `hardware/pc817-interface/pc817-interface-v0.2.kicad_pcb`, `tools/generate_pc817_pcb.py`, `firmware/pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`, `docs/hardware/WIRING_TABLE.md`, `docs/integration/INTERFACES.md`, and change note `HW-20260806-002`; commit not yet created.
+- Result: The logical circuit and firmware now agree. Controller and toolhead grounds remain isolated, R6 remains DNP, and idle GP8/GP10 are externally pulled HIGH.
+- Retry conditions: Revise U1/U2 if F-05 demonstrates ENA does not provide the expected low-side M3/M5 behavior, or revise U2 if E-18 demonstrates a different Aux0/homing-arm behavior.
+- Next action: Open the rev 0.2 PCB review file, bench-test F-05 and E-18, then route and DRC-check only after confirmed controller behavior.
+
+---
+
+<a id="elog-20260806115400"></a>
+### 🟨 2026-08-06 11:54:00 -0500 - MIXED/OPEN - Created PC817C perfboard KiCad schematic
+
+- Status: mixed/open
+- Category: hardware, wiring, documentation
+- Summary: Created a three-channel PC817C perfboard schematic for `ENA` to GP8, `AUX0` to GP10, and GP9 to the reverse `A_HOME` path.
+- Reason: The project owner selected perfboard construction, making the earlier 1.25 mm JST-GH compact PCB connector concept mechanically unsuitable. The received B07WFGTNQC board's 3.6 V minimum output specification also does not establish safe direct use with RP2350 3.3 V GPIO.
+- Struggle/failure: KiCad 10 CLI `sch upgrade` rejects legacy `.sch` import syntax and accepts only native files; the legacy source must be opened and saved once in the KiCad editor before command-line ERC. The earlier JST-GH PCB concept is superseded, not silently reused.
+- Evidence: `hardware/pc817-interface/pc817-interface.sch` contains U1/U2/U3, all resistors, reverse clamp diodes, filters, generic 2.54 mm headers, net labels, and build notes. BOM and master wiring table now identify it as the current proposed interface.
+- Files/commit: `hardware/pc817-interface/pc817-interface.sch`, `hardware/pc817-interface/README.md`, `docs/hardware/BOM.md`, `docs/hardware/WIRING_TABLE.md`, and change note `HW-20260806-002`; commit not yet created.
+- Result: A KiCad schematic is available for a through-hole perfboard build. `R6` remains DNP and controller/toolhead grounds remain isolated.
+- Retry conditions: Revise if measured ENA/Aux0 behavior differs from low-side sinking, if the selected header/perfboard will not fit, or if E-18 shows a different A-home input requirement.
+- Next action: Open and save the schematic in KiCad to create native `.kicad_sch`, then bench-test U1/U2 and complete E-18 before fitting R6.
+
+---
+
+<a id="elog-20260806102641"></a>
+### 🟨 2026-08-06 10:26:41 -0500 - MIXED/OPEN - Proposed compact three-channel PC817C interface module
+
+- Status: mixed/open
+- Category: hardware, wiring, documentation
+- Summary: Added a 40.16 × 22.65 mm proposed PC817C interface module diagram with two controller-to-toolhead command channels, one reverse `A_HOME` channel, and 90° JST GH connectors on both short edges.
+- Reason: The reserved toolhead envelope is too small for a generic module, while the received board's specified 3.6 V minimum output side does not establish safe compatibility with RP2350 3.3 V GPIO.
+- Struggle/failure: The first direct-drive circuit concept omitted the separate RP23CNC `+5V` LED feed needed for ENA/Aux0 to behave as low-side sinks. The revised design preserves logic polarity through that explicit feed. The reverse channel remains deliberately unfinished because the RP23CNC A-home input is not yet verified.
+- Evidence: `pc817-three-channel-module-proposal.png` rendered with `tools/render_pc817_module.py` and visually inspected; JST GH manufacturer material identifies 1.25 mm side-entry SMT headers; wiring table and BOM retain the design as proposed.
+- Files/commit: `pc817-three-channel-module-proposal.png`, `tools/render_pc817_module.py`, `docs/hardware/BOM.md`, `docs/hardware/WIRING_TABLE.md`, and change note `HW-20260806-001`; commit not yet created.
+- Result: A compact, rectangular layout now exists for CAD fit review. The board uses 3 PC817C DIP-4 packages, 2 5-pin 90° JST GH headers, 0603 passives, and a DNP `R6` safety link for `A_HOME`.
+- Retry conditions: Rework the board if actual enclosure clearance, connector mating direction, RP23CNC source/sink behavior, or E-18 controller-input behavior differs from these assumptions.
+- Next action: Confirm the CAD fit and bench-test ENA/Aux0 first; do not populate R6 or connect A_HOME until E-18 passes.
+
+---
+
+<a id="elog-20260803082000"></a>
+### 🟨 2026-08-03 08:20:00 -0500 - MIXED/OPEN - Added B07WFGTNQC optocoupler to schematic
+
+- Status: mixed/open
+- Category: hardware, wiring, documentation
+- Summary: Added the B07WFGTNQC 4-channel optocoupler isolation / voltage-converter module to the power-distribution schematic and documented `CH1` for RP23CNC `M3/M5` into Pro Micro `GP8` and `CH2` for RP23CNC `HOME_ARM` into Pro Micro `GP10`.
+- Reason: The selected schematic needed to show the newly supplied optocoupler module and its actual command-signal wiring, not just the power branches.
+- Struggle/failure: The first expanded render placed the signal section too close to the power section, and a bulk coordinate shift distorted labels and terminals. The SVG was replaced with a fixed-coordinate layout and re-rendered.
+- Evidence: Amazon B07WFGTNQC listing describes 3.3 V or 5 V input control and 3.6-24 V output-side operation; `power-distribution-schematic.svg` parsed as XML; `power-distribution-schematic.png` rendered with Chrome headless and visually inspected for separated signal lanes and the visible S7V8F5 `VOUT/GND` to Pro Micro `RAW/5V/GND` power connection.
+- Files/commit: `power-distribution-schematic.svg`, `power-distribution-schematic.png`, `docs/hardware/BOM.md`, `docs/hardware/WIRING_TABLE.md`, `docs/hardware/POWER_DISTRIBUTION.md`, `docs/integration/INTERFACES.md`, `docs/project/ROADMAP.md`, and change note `HW-20260803-003`; commit not yet created.
+- Result: The current schematic now includes the optocoupler command path, explicitly shows the 5 V regulator output feeding the Pro Micro power input, and leaves the reverse `A_HOME` path as a separate verified switch-like interface.
+- Retry conditions: Revise after inspecting the received B07WFGTNQC silkscreen/manual or bench-testing if channel direction, common rails, pullup behavior, or output-side 3.3 V compatibility differs from the schematic assumptions.
+- Next action: Bench-test one channel from RP23CNC-side voltage into a 3.3 V Pro Micro-safe output before connecting to `GP8` or `GP10`.
+
+---
+
+<a id="elog-20260803071556"></a>
+### 🟨 2026-08-03 07:15:56 -0500 - MIXED/OPEN - Added power-distribution document and schematic
+
+- Status: mixed/open
+- Category: hardware, wiring, documentation
+- Summary: Added a dedicated power-distribution current-state document and a PNG/SVG power-only schematic that shows the current MEISHILE 12 V, fused 12 V branch, Pololu D36V50F6 6 V, toolhead 6 V terminal, Pololu S7V8F5 5 V, and Pro Micro 3.3 V sensor power path.
+- Reason: The buck/regulator components were already listed in the BOM and wiring table, but the power path needed one organized view that separated distribution wiring from signal wiring.
+- Struggle/failure: The first schematic render still visually bundled conductors near the drag-chain boundary and made the 6 V routing harder to inspect. It was redrawn with straight 12 V load lanes and a single labeled toolhead 6 V terminal block before local DRV8833 and S7V8F5 branches.
+- Evidence: `power-distribution-schematic.svg` parsed as XML, `power-distribution-schematic.png` rendered with Chrome headless and visually inspected, BOM and wiring table cross-linked to `docs/hardware/POWER_DISTRIBUTION.md`, and roadmap tasks updated to the D36V50F6/S7V8F5 regulator chain.
+- Files/commit: `docs/hardware/POWER_DISTRIBUTION.md`, `power-distribution-schematic.svg`, `power-distribution-schematic.png`, `docs/README.md`, `docs/hardware/BOM.md`, `docs/hardware/WIRING_TABLE.md`, `docs/project/ROADMAP.md`, and change note `HW-20260803-002`; commit not yet created.
+- Result: The buck/regulator path is now documented as current state: B085T73CSD and B0F1WB3LJ5 modules are spares, the D36V50F6 is the selected DIN-side 6 V regulator, and the S7V8F5 is the selected toolhead-local 5 V regulator.
+- Retry conditions: Revisit the topology if the D36V50F6 droops/overheats under actuator load, if the S7V8F5 lets the RP2350 reset during motor motion, or if the final terminal hardware cannot provide clean branch protection.
+- Next action: Complete `E-11`, `E-14`, `E-15`, and `E-15A`, then replace fuse, terminal, wire-gauge, and branch-protection TBDs with measured values.
+
+---
+
+<a id="elog-20260803061431"></a>
+### 🟨 2026-08-03 06:14:31 -0500 - MIXED/OPEN - Added RP23CNC interface schematic
+
+- Status: mixed/open
+- Category: hardware, wiring, documentation
+- Summary: Added a PNG/SVG schematic showing the planned RP23CNC-to-Pro-Micro interface through a HiLetgo level shifter and Zopsc optocoupler.
+- Reason: The toolhead interface needed a readable image that separates the RP23CNC-to-Pro-Micro logic inputs from the Pro-Micro-to-RP23CNC `A_HOME` switch-like output.
+- Struggle/failure: The first render placed the lower optocoupler title too close to the terminal labels, so the schematic was widened and the lower section was given more vertical room before final rendering.
+- Evidence: `rp23cnc-pro-micro-interface-schematic.svg`; Chrome headless render to `rp23cnc-pro-micro-interface-schematic.png`; visual inspection for separated wire lanes and no terminal-to-terminal wire overlap.
+- Files/commit: `rp23cnc-pro-micro-interface-schematic.svg`, `rp23cnc-pro-micro-interface-schematic.png`, `docs/hardware/WIRING_TABLE.md`, and change note `HW-20260803-001`; commit not yet created.
+- Result: The image now shows `SPINDLE ENA OUT` and `AUX0 HOME_ARM OUT` through the HiLetgo level shifter to Pro Micro `GP8` and `GP10`, and Pro Micro `GP9 A_HOME OUT` through the Zopsc optocoupler to the RP23CNC A limit/home input.
+- Retry conditions: Revise after exact RP23CNC terminal names, common points, polarity, and voltage behavior are verified with the board/manual/meter.
+- Next action: Verify the RP23CNC terminals before powered wiring.
+
+---
+
+<a id="elog-20260802213620"></a>
+### 🟨 2026-08-02 21:36:20 -0500 - MIXED/OPEN - Added Onshape API CAD workflow
+
+- Status: mixed/open
+- Category: hardware, CAD, documentation
+- Summary: Added a signed Onshape API helper and local credential setup script for repeatable CAD document metadata and export workflows.
+- Reason: The course project will need traceable CAD model documentation, exported geometry, model snapshots, and report evidence as the hardware design stabilizes.
+- Struggle/failure: The API secret was provided visually, but it was not written into the repository. Live API access still requires entering the credentials into Windows environment variables.
+- Evidence: `python -m py_compile tools\onshape\onshape_client.py`; sample URL parsing returned `did`, `w`, and `e` IDs; CAD README updated with setup and usage commands.
+- Files/commit: `tools/onshape/onshape_client.py`, `tools/onshape/set_onshape_env.ps1`, `docs/hardware/cad/README.md`, and change note `HW-20260802-003`; commit not yet created.
+- Result: The repo now has a local path for listing Onshape documents, reading document metadata, listing workspace elements, and requesting Part Studio STEP exports using environment-based credentials.
+- Retry conditions: Revisit after first live Onshape API call if an endpoint path, translation flow, or account permission differs from the documented assumptions.
+- Next action: Run `tools\onshape\set_onshape_env.ps1`, test `list-documents`, and then export the first relevant plotter CAD snapshot for documentation.
+
+---
+
+<a id="elog-20260802172626"></a>
+### 🟨 2026-08-02 17:26:26 -0500 - MIXED/OPEN - Selected shielded stepper cable
+
+- Status: mixed/open
+- Category: hardware, wiring, documentation
+- Summary: Recorded the purchased KWANGIL 20 AWG 4C AMESB shielded cable as the selected replacement cable for NEMA17 stepper phase wiring.
+- Reason: The drag chains may place NEMA17 wiring near toolhead power and RP23CNC control signals, so the stepper runs need a shielded cable with a clear drain-wire termination.
+- Struggle/failure: Plain four-conductor automotive cable was rejected because it did not appear twisted or shielded. A previously discussed shielded cable did not clearly document a separate drain wire.
+- Evidence: Amazon listing text for KWANGIL B0GVBF51Q7 identifying `OS+Drain+TC BRD`; project-owner purchase note; BOM and wiring table updates.
+- Files/commit: `docs/hardware/BOM.md`, `docs/hardware/WIRING_TABLE.md`, and change note `HW-20260802-002`; commit not yet created.
+- Result: Each NEMA17 motor uses one four-conductor cable for `A+`, `A-`, `B+`, and `B-`; the shield/drain bonds to PE/chassis at the TB6600/DIN-rail end only and is cut back/insulated at the motor end.
+- Retry conditions: Revisit if the received cable lacks the expected drain wire, is too stiff for the drag chain, does not fit connectors/strain reliefs, or creates measurable motion/noise issues.
+- Next action: Inspect the received cable, confirm drain-wire continuity to shield, and run E-01 before cutting or splicing motor leads.
+
+---
+
+<a id="elog-20260802115836"></a>
+### 🟨 2026-08-02 11:58:36 -0500 - MIXED/OPEN - Added local 5 V toolhead regulator
+
+- Status: mixed/open
+- Category: hardware, wiring, documentation
+- Summary: Added the purchased Pololu S7V8F5 5 V step-up/step-down regulator as the toolhead-local logic regulator, selected the Pololu D36V50F6 as the DIN-side fixed 6 V regulator, and clarified the Pro Micro mediated TMAG5273-to-RP23CNC homing path.
+- Reason: The toolhead power architecture now sends only the 6 V rail through the drag chain and locally generates 5 V for the SparkFun Pro Micro RP2350, reducing harness conductors while preserving brownout margin.
+- Struggle/failure: The existing fixed 5 V buck modules remain spares because they were not selected for 6 V-to-5 V toolhead logic regulation near motor-current dips. The adjustable B085T73CSD modules are also superseded for the final 6 V rail by the fixed-output D36V50F6.
+- Evidence: BOM and wiring table updated; interface contract updated; explanatory diagrams updated; E-14/E-15 changed to the D36V50F6 and E-15A added for S7V8F5 characterization; `toolhead-wiring-diagram.svg` parsed as XML; `toolhead-wiring-diagram.png` rendered and visually checked; documentation indexes regenerated and checked.
+- Files/commit: `docs/hardware/BOM.md`, `docs/hardware/WIRING_TABLE.md`, `docs/integration/INTERFACES.md`, `docs/testing/TEST_PLAN.md`, `docs/electronics_layout_and_wiring.html`, `docs/full_wiring_diagram.html`, `toolhead-wiring-diagram.svg`, `toolhead-wiring-diagram.png`, and change note `HW-20260802-001`; commit not yet created.
+- Result: The component list and diagrams now reflect a DIN-mounted Pololu D36V50F6 6 V regulator feeding the drag-chain toolhead rail, a toolhead-mounted Pololu S7V8F5 local 5 V regulator, RP23CNC `SPINDLE ENA OUT` into Pro Micro `GP8` through a 5 V-to-3.3 V interface, RP23CNC `Aux 0` into Pro Micro `GP10` `HOME_ARM` through the same interface, and the intended final `GP9` conditioned `A_HOME` output path from Pro Micro to the RP23CNC A limit/home input.
+- Retry conditions: Revisit if E-14/E-15/E-15A show poor regulation, overheating, excessive ripple, or RP2350 resets during actuator movement.
+- Next action: Bench-test the D36V50F6 and S7V8F5 regulator chain with the RP2350/sensors active and the actuator moving.
+
+---
+
+<a id="elog-20260731110349"></a>
+### 🟩 2026-07-31 11:03:49 -0500 - SUCCESS - Added RP2350 toolhead prototype firmware
+
+- Status: success
+- Category: firmware, hardware, wiring, documentation
+- Summary: Added Arduino C++ sketches for the SparkFun Pro Micro RP2350 toolhead controller using the prototype DRV8833, HX711, TMAG5273, and M3/M5 pin assignments.
+- Reason: The toolhead wiring now needed flashable bench firmware to verify motor direction, load-cell readings, magnetic telemetry, and command-input behavior.
+- Struggle/failure: The first pass could not be compiled until `arduino-cli` was installed. Final force thresholds and gains remain raw-count placeholders until calibration tests E-07/E-08.
+- Evidence: Pin assignments checked against `docs/hardware/WIRING_TABLE.md`; the SparkFun Pro Micro RP2350 Arduino variant uses GPIO-numbered pins and Qwiic on `GPIO17/GPIO16`; the integrated sketch includes serial bench commands, lift-first startup behavior, driver fault handling, optional sensor bring-up paths, and compiles for `rp2040:rp2040:sparkfun_promicrorp2350` using `HX711 Arduino Library` 0.7.5, `SparkFun TMAG5273 Arduino Library` 2.0.0, and `SparkFun Toolkit` 1.2.0 with 73,148 bytes program storage and 11,708 bytes dynamic memory. The new `bench_motor_command` sketch compiles with 60,328 bytes program storage and 10,872 bytes dynamic memory; the new `bench_sensors` sketch compiles with 70,668 bytes program storage and 11,648 bytes dynamic memory.
+- Files/commit: `firmware/README.md`, `firmware/pen_pressure/bench_motor_command/bench_motor_command.ino`, `firmware/pen_pressure/bench_sensors/bench_sensors.ino`, `firmware/pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`, `firmware/pen_pressure/README.md`, `docs/integration/INTERFACES.md`, and change note `RPSW-20260731-001`; commit not yet created.
+- Result: The prototype firmware is ready for Arduino IDE installation and staged bench flashing after required libraries are installed.
+- Retry conditions: Revisit after Arduino compile/upload, GP pin mapping confirmation, DRV8833 direction test, HX711 calibration, or TMAG5273 Qwiic test.
+- Next action: Flash `bench_sensors`, then `bench_motor_command`, then the integrated `pro_micro_rp2350_toolhead` sketch before attempting force-control plotting.
+
+---
+
+<a id="elog-20260731104117"></a>
+### 🟨 2026-07-31 10:41:17 -0500 - MIXED/OPEN - Added toolhead wiring diagram
+
+- Status: mixed/open
+- Category: hardware, wiring, documentation
+- Summary: Added a no-wire-crossing top-down toolhead wiring diagram covering the SparkFun Pro Micro RP2350, DRV8833, TMAG5273 Qwiic sensor, HX711, load cell, N20 actuator, and DIN rail harness inputs.
+- Reason: The toolhead prototype needed a readable wiring artifact with exact connection points and point-to-point routing instead of ambiguous split wires.
+- Struggle/failure: Earlier generated layouts crossed power and sensor wires and one intermediate pass placed DRV8833 signal labels away from their terminals. The diagram was rerouted with separated lanes and aligned inputs.
+- Evidence: `toolhead-wiring-diagram.svg` parsed as valid XML; `toolhead-wiring-diagram.png` rendered through Chrome headless; visual inspection confirmed no wire-to-wire crossings in the updated layout.
+- Files/commit: `toolhead-wiring-diagram.svg`, `toolhead-wiring-diagram-viewer.html`, `toolhead-wiring-diagram.png`, `docs/hardware/WIRING_TABLE.md`, and change note `HW-20260731-001`; commit not yet created.
+- Result: Prototype pin assignments are recorded for `GP4/GP5` to DRV8833 `IN1/IN2`, `GP6` to `EEP`, `GP7` from `ULT`, `GP2/GP3` to HX711 `DT/SCK`, Qwiic to TMAG5273, and RP23CNC spindle `ENA` to `GP8` through an interface circuit.
+- Retry conditions: Revise after physical module inspection, DRV8833 label verification, HX711 3.3 V bench test, load-cell color identification, or RP23CNC M3/M5 level-shifter/opto selection.
+- Next action: Bench-test TMAG5273, HX711, and DRV8833 separately before running the integrated toolhead state machine.
 
 ---
 
@@ -572,3 +897,686 @@ Add new entries at the top of the log below this line.
 - Result: Grid disabled by default.
 - Retry conditions: Enable only when throughput is explicitly prioritized over visible theta participation.
 - Next action: Keep the tradeoff available as a documented non-default option.
+
+<a id="elog-20260806-added-viewable-pc817-wiring-diagram"></a>
+### 🟩 2026-08-06 - SUCCESS - Added viewable PC817 wiring diagram
+
+- Status: success
+- Category: hardware, documentation
+- Summary: Added a standalone SVG electrical diagram for the three PC817C
+  perfboard paths, including diode orientation, local pullups/filters, isolated
+  grounds, and the gated A-home R6 connection.
+- Evidence: `hardware/pc817-interface/pc817-perfboard-wiring-schematic.svg`.
+- Result: The circuit can be inspected without relying on a Mermaid renderer or
+  opening KiCad. `PERFBOARD_BUILD.md` remains the construction source of truth.
+- Next action: Complete E-18 before fitting R6 or attaching the controller
+  A-home wire.
+
+<a id="elog-20260806-added-annotated-perfboard-build-map"></a>
+### 🟩 2026-08-06 - SUCCESS - Added annotated perfboard build map
+
+- Status: success
+- Category: hardware, documentation
+- Summary: Added an annotated component-side view of the exact 14 × 6 perfboard
+  arrangement so build callouts can be read without interpreting the KiCad view.
+- Evidence: `hardware/pc817-interface/pc817-perfboard-callouts.svg`.
+- Result: The electrical schematic and physical component placement now have
+  distinct, directly viewable diagrams.
+
+<a id="elog-20260806-added-translucent-interconnection-overlay"></a>
+### 🟩 2026-08-06 - SUCCESS - Added translucent interconnection overlay
+
+- Status: success
+- Category: hardware, documentation
+- Summary: Added a translucent component-side board view with every underside
+  electrical net overlaid in a distinct color and a pin/pad legend.
+- Evidence: `hardware/pc817-interface/pc817-perfboard-interconnections.svg`.
+- Result: The user can inspect logical component interconnections visually while
+  retaining `PERFBOARD_BUILD.md` as the physical wiring source of truth.
+
+<a id="elog-20260808-added-no-overlap-pc817-schematic"></a>
+### 🟩 2026-08-08 - SUCCESS - Added no-overlap PC817 schematic
+
+- Status: success
+- Category: hardware, documentation
+- Summary: Added a conventional, row-separated schematic for U1, U2, and U3
+  so every connection can be followed without crossing wires.
+- Evidence: `hardware/pc817-interface/pc817-clean-schematic.svg`.
+- Result: The project has separate visual artifacts for physical placement,
+  logical net overlay, and clear electrical signal flow.
+
+<a id="elog-20260809-verified-rp23cnc-a-home-electrical-requirement"></a>
+### 🟨 2026-08-09 - MIXED/OPEN - Verified RP23CNC A-home electrical requirement
+
+- Status: mixed/open
+- Category: hardware
+- Summary: Reviewed RP23CNC V1.0 schematic page 4. The A-axis `LIMA` input is
+  a 12 V active-low, switch-to-`GND1` optocoupler-input path with a 2 kΩ series
+  resistor, not a 3.3 V or 5 V logic input.
+- Evidence: `https://github.com/phil-barrett/RP23CNC/blob/main/Schematic/V1.0%20schematic.pdf`, page 4; `Documentation/featurelist.md` identifies limit inputs as 12 V compatible.
+- Result: The expected idle input voltage is approximately 12 V and assertion
+  is a low-side sink. However, the generic purchased PC817C is specified at a
+  50% minimum CTR at 5 mA; U3's approximately 5 mA LED drive cannot guarantee
+  the approximately 5.3 mA required by this input. R6/A_HOME remains open.
+- Next action: Add and test a controller-side output driver, or select an
+  optocoupler with guaranteed CTR sufficient for the 5.3 mA sink load.
+
+<a id="elog-20260810-minimized-and-verified-pc817-layout"></a>
+### 🟩 2026-08-10 - SUCCESS - Minimized and verified PC817 layout
+
+- Status: success with bench follow-up
+- Category: hardware, rp23cnc-software
+- Summary: Rebuilt the 14 × 6 all-through-hole PC817 interface around
+  channel-aligned connector pins, rotated reverse-direction U3 180 degrees,
+  omitted optional C3 rail bypassing, and moved `HOME_ARM` from unavailable GP10 to
+  exposed GPIO20.
+- Reason: The original perfboard was difficult to wire and its recovered route
+  contained electrical errors. Bench work also found U1 pin 2 unconnected and
+  an unresolved GP8 idle-pullup fault.
+- Evidence: KiCad 10.0.5 reports zero ERC errors, zero error-level DRC errors,
+  zero unconnected items, and zero schematic-parity issues. Route complexity
+  fell from 110 segments / 337.35 mm to 38 segments / 161.83 mm with no vias.
+  An exported-netlist audit matched all 46 schematic component pins to their
+  PCB reference/pad/net assignments.
+  The installed U3 sample switched a 12 V / 2.2 kΩ test load from about 12 V
+  idle to 0.2 V asserted. The GPIO20 firmware compiled for
+  `rp2040:rp2040:sparkfun_promicrorp2350` at 73,212 bytes program storage and
+  11,708 bytes dynamic memory.
+- Result: `pc817-perfboard-v2-minwire.kicad_pcb` is the current rebuild source.
+  Firmware and interface documents now use GPIO20 for `HOME_ARM`.
+- Next action: Rebuild, verify U1/U2 idle and asserted levels, repeat the U3
+  load test, then fit R6 only if U3 passes.
+
+<a id="elog-20260810-passed-all-pc817-bench-channels"></a>
+### 🟩 2026-08-10 - SUCCESS - Passed all PC817 bench channels
+
+- Status: success with controller-harness follow-up
+- Category: hardware
+- Summary: Completed U1, U2, U3, and isolation tests on the assembled
+  three-channel PC817 board.
+- Struggle/failure: U1 initially had its pin-2/ENA connection missing. U2
+  initially failed because one wire was disconnected. GP8 initially read low
+  because the Pro Micro 3.3 V/GND wires had not been connected to the tool-side
+  terminal.
+- Evidence: After repairs, U1 GP8 was 3.311 V unloaded and the Pro Micro test
+  sketch changed it HIGH/LOW as ENA was opened/grounded. U2 GPIO20 likewise
+  changed HIGH/LOW as AUX0 was opened/grounded. U3 held about 12 V idle and
+  0.2 V asserted through the 12 V / 2.2 kΩ simulated `LIMA` load. Final
+  `CTRL_GND` to `TOOL_GND` continuity test was open.
+- Result: The board's three isolated channels work with the specified bench
+  stimuli. A direct `A_HOME` wire or 0 Ω R6 link is valid for the tested U3
+  sample.
+- Next action: Do not infer actual RP23CNC ENA/Aux0 terminal behavior from the
+  simulation; complete F-05 and the remaining E-18 system tests before
+  connecting the controller harness.
+
+<a id="elog-20260810-recorded-recommended-system-test-sequence"></a>
+### 🟩 2026-08-10 - SUCCESS - Recorded recommended system test sequence
+
+- Status: implemented
+- Category: hardware, rp23cnc-software
+- Summary: Added a separate dependency-ordered operating sequence for the
+  existing test plan, from pre-power inspection through integrated validation.
+- Reason: The formal test plan defines individual pass conditions but did not
+  provide a concise execution order for safe staged bring-up.
+- Evidence: `docs/testing/RECOMMENDED_TEST_SEQUENCE.md`.
+- Result: The sequence makes E-17, supply/regulator checks, F-05, E-18,
+  N20 no-load testing, and T-01 explicit gates before their dependent work.
+- Next action: Record bench results in `TEST_PLAN.md` and dated lab notes as
+  tests are actually performed.
+
+<a id="elog-20260810-adopted-direct-header-toolhead-harness"></a>
+### 🟩 2026-08-10 - SUCCESS - Adopted direct-header toolhead harness
+
+- Status: implemented, harness verification pending
+- Category: hardware, rp23cnc-software
+- Summary: Adopted separate board-specific connectors: DRV8833 logic on
+  consecutive GP4–GP7 and PC817 on consecutive `GND`, `RST` NC, `3V3`, GP29,
+  GP28, GP27.
+- Evidence: `hardware/pc817-interface/PRO_MICRO_JST_HARNESS.md` and the
+  regenerated v2 KiCad design.
+- Result: PC817 firmware signals are now GP29 M3/M5, GP28 HOME_ARM, and GP27
+  A_HOME; no connector position uses reset.
+- Next action: Repeat E-18 U1/U2/U3/isolation checks after repinning.
+
+<a id="elog-20260811-reconciled-e-stop-and-hd064rt-topology"></a>
+### 🟨 2026-08-11 - HARDWARE/PLANNED - Reconciled E-stop and HD064RT topology
+
+- Status: planned; E-19 required before any powered operation.
+- Category: hardware, rp23cnc-software
+- Summary: Recorded the installed HCDC HD064RT eight-channel DIN fuse module as
+  the post-relay motor/tool distribution point and assigned the purchased
+  mxuteuk HB2-BS544's two NC contacts independently to RP23CNC Halt and K1
+  coil interruption.
+- Reason: Earlier advice incorrectly proposed redundant inline holders instead
+  of using the installed DIN distribution hardware.
+- Result: The planned E-stop topology keeps RP23CNC alive on a separately fused
+  control branch while K1 removes positive 12 V from HD064RT OUT1-OUT4 (X, Y,
+  A, and D36V50F6). E-19 is the required verification gate.
+- Evidence: `docs/hardware/ESTOP_TOPOLOGY.md`, the purchased-switch wiring
+  diagram, `docs/hardware/references/RP23CNC-user-manual.pdf` pages 4, 9, 29,
+  and 30, and the HD064RT product identification.
+- Risk: K1 selection, physical RP23CNC E-stop terminals/polarity, FMAIN/FCTRL
+  hardware, branch fuse values, and all powered behavior remain unverified.
+
+<a id="elog-20260811-reassigned-hx711-to-adjacent-gp0-gp1-pins"></a>
+### 🟩 2026-08-11 - SUCCESS - Reassigned HX711 to adjacent GP0/GP1 pins
+
+- Status: implemented; bench verification pending.
+- Category: hardware, rp23cnc-software
+- Summary: Moved HX711 `DOUT` and `SCK` from GP2/GP3 to GP0/GP1 so the sensor
+  JST can use a cleaner adjacent-header location beside the crowded PC817
+  harness.
+- Evidence: `docs/hardware/WIRING_TABLE.md` rows TH-010/TH-011 and both
+  matching Arduino sketches.
+- Result: GP0 is `DOUT`; GP1 is `SCK`; no existing project assignment uses
+  either pin.
+- Next action: Compile the updated sketches and complete E-07/E-08 after the
+  physical sensor harness is connected.
+
+<a id="elog-20260812-recorded-load-cell-wire-mapping"></a>
+### 🟩 2026-08-12 - SUCCESS - Recorded load-cell wire mapping
+
+- Status: documented; E-07 calibration pending.
+- Category: hardware
+- Summary: Recorded the selected uxcell 300 g load cell's supplied wire map:
+  Red `EXC+` to HX711 `E+`, Black `EXC-` to `E-`, Green `SEN+` to `A+`, and
+  White `SEN-` to `A-`.
+- Evidence: Manufacturer specification supplied by the project owner.
+- Next action: Verify the received connector and calibrate the installed load
+  cell in E-07.
+
+<a id="elog-20260812201639"></a>
+### 🟨 2026-08-12 20:16:39 -0500 - MIXED/OPEN - Advanced toolhead perfboard wiring
+
+- Status: physical assembly implemented; unpowered and powered verification pending.
+- Category: hardware
+- Summary: All intended Pro Micro toolhead connections and all four DRV8833
+  logic pins were wired. The DRV8833 and S7V8F5 now share a perfboard, with a
+  two-pin JST position reserved for the arriving 6 V twisted pair.
+- Evidence: Project-owner work report; `docs/hardware/WIRING_TABLE.md` rows
+  PWR-009 through PWR-011B and TH-002 through TH-005.
+- Result: `OUT1` and `OUT2` remain intentionally open pending the 22 AWG
+  twisted motor pair and unloaded direction test. New E-14B checks the
+  completed perfboard before its first 6 V connection.
+- Risk: No continuity, short-circuit, rail, driver-enable, or motor behavior
+  result is implied by physical wiring alone.
+- Next action: Complete the remaining E-14B signal/isolation checks and record
+  exact rail readings; test the upstream D36V50F6 in E-14 before fitting the
+  motor lead and running E-05/T-01.
+
+<a id="elog-20260812202203"></a>
+### 🟩 2026-08-12 20:22:03 -0500 - SUCCESS - Powered toolhead local branches from a 6 V bench supply
+
+- Status: partial E-14B/E-15A pass; upstream and loaded testing pending.
+- Category: hardware
+- Summary: After continuity checks, a bench supply set to 6 V was connected to
+  the toolhead JST. The DRV8833 received its correct supply rail, and the
+  S7V8F5 supplied the Pro Micro at its correct voltage.
+- Evidence: `docs/report/lab-notes/2026-08-12-e-14b-toolhead-local-power.md`.
+- Result: The local 6 V branch and 5 V controller branch are now
+  bench-verified. No motor was attached; no assertion is made about the
+  upstream D36V50F6, cable harness, motor transients, noise, ripple, or heat.
+- Next action: Record exact readings, complete/record the remaining E-14B
+  isolation checks, then run E-14 and the remaining E-15A conditions.
+
+<a id="elog-20260812202625"></a>
+### 🟩 2026-08-12 20:26:25 -0500 - SUCCESS - Confirmed Pro Micro logic-harness continuity
+
+- Status: E-14B signal continuity passed; controller-isolation recording and
+  powered functional tests remain.
+- Category: hardware
+- Summary: Continuity was checked successfully for every currently wired
+  conductor connected to the Pro Micro, including the DRV8833 logic interface.
+- Evidence: Project-owner bench report; updated
+  `docs/report/lab-notes/2026-08-12-e-14b-toolhead-local-power.md`.
+- Result: The local physical pin map is now continuity-checked. This validates
+  conductor endpoints, but does not prove firmware polarity, DRV8833 behavior,
+  PC817 functional isolation, or motor direction.
+- Next action: Record exact rail readings, test the D36V50F6 in E-14, and fit
+  the motor pair only for E-05/T-01.
+
+<a id="elog-20260812203500"></a>
+### 🟥 2026-08-12 20:35:00 -0500 - STRUGGLE - Exact DRV8833 module corrected generic sleep/fault labels
+
+- Status: initial interpretation was incorrect; resolved by the 2026-08-13 firmware correction.
+- Category: hardware, rp23cnc-software
+- Summary: The owner supplied Amazon ASIN B08RMWTDLM, identifying the installed
+  ACEIRMC DRV8833 board. Its listing states that `ULT` is low-level sleep and
+  `EEP` is the output-protection/fault pin, opposite the prior generic mapping.
+- Struggle/failure: The existing GP6→`EEP` and GP7→`ULT` wires passed a
+  continuity test, but continuity cannot detect swapped functional labels.
+- Evidence: [ACEIRMC B08RMWTDLM product listing](https://www.amazon.com/dp/B08RMWTDLM),
+  seller description; `docs/report/lab-notes/2026-08-12-e-14b-toolhead-local-power.md`.
+- Result: The exact labels showed that the *existing physical harness* was
+  right: GP7→`ULT` and GP6→`EEP`. The previously assigned firmware constants
+  were reversed.
+- Next action: Correct the firmware mapping, inspect the `J2` solder bridge,
+  and complete E-14C before fitting the N20 or running any motor command.
+
+<a id="elog-20260813-corrected-drv8833-firmware-mapping-without-harness-rework"></a>
+### 🟩 2026-08-13 - SUCCESS - Corrected DRV8833 firmware mapping without harness rework
+
+- Status: code mapping corrected; E-14C functional verification remains open.
+- Category: hardware, rp23cnc-software
+- Summary: Retained the continuity-checked ACEIRMC harness: GP7 drives `ULT`
+  (low-true sleep) and GP6 reads `EEP` (protection/fault). Updated the bench
+  and integrated firmware constants, wiring table, test plan, and harness note.
+- Evidence: Project-owner continuity report and [ACEIRMC B08RMWTDLM product listing](https://www.amazon.com/dp/B08RMWTDLM).
+- Result: No physical driver-end rewiring is needed. The software now drives
+  the pin wired to `ULT` and reads the pin wired from `EEP`.
+- Next action: With no motor connected, inspect/record J2 and run E-14C; then
+  attach the motor only for the unloaded E-05 direction test.
+
+<a id="elog-20260813-made-e-05-a-one-shot-boot-test"></a>
+### 🟩 2026-08-13 - SUCCESS - Made E-05 a one-shot boot test
+
+- Status: implemented; physical E-05 test pending.
+- Category: hardware, rp23cnc-software
+- Summary: Changed the N20 no-load direction sketch to wait three seconds after
+  boot, run each direction for 500 ms with a two-second pause, then stop and
+  sleep the DRV8833.
+- Reason: A normal USB cable can back-power the Pro Micro's 5 V rail while the
+  toolhead's 6 V supply is powering its local regulator. The test must work
+  after USB is unplugged.
+- Result: Upload with 6 V disconnected, unplug USB, then apply 6 V to perform
+  the direction test. Serial output is optional rather than required.
+
+<a id="elog-20260813-verified-n20-bidirectional-motion-at-the-toolhead"></a>
+### 🟨 2026-08-13 - MIXED/OPEN - Verified N20 bidirectional motion at the toolhead
+
+- Status: direction verified; connection reliability and no-load current remain open.
+- Category: hardware, rp23cnc-software
+- Summary: The one-shot E-05 test moved the N20 in both directions from a 6 V
+  bench supply. Its first pulse retracted/lifted the pen; its reverse pulse
+  moved the pen down.
+- Evidence: Project-owner observation; during pre-motion diagnosis `ULT` rose
+  to approximately 3.3 V, `EEP` remained approximately 2.98 V, and one output
+  switched to the 6 V motor rail.
+- Result: The installed code mapping GP7→`ULT`, GP6←`EEP`, and GP4/GP5 motor
+  control are functionally proven. A suspected intermittent motor-path
+  connection must be repaired and flex-tested before no-load current or loaded
+  actuator work.
+- Next action: Recheck and strain-relieve both `OUT1`/`OUT2` motor connections,
+  record E-05 no-load current, then proceed to E-06 only with a current limit.
+
+<a id="elog-20260814-repaired-intermittent-drv8833-output-solder-joint"></a>
+### 🟩 2026-08-14 - SUCCESS - Repaired intermittent DRV8833 output solder joint
+
+- Status: bidirectional motor drive is reliable; no-load current measurement remains open.
+- Category: hardware
+- Summary: The suspected motor-path intermittency was traced to one inadequately
+  soldered DRV8833 output pin. The joint was repaired and the N20 now runs
+  reliably under the E-05 one-shot direction test.
+- Evidence: Project-owner post-repair test report.
+- Result: The motor, output pair, driver, and tested firmware operate
+  bidirectionally. The earlier output-path reliability risk is resolved.
+- Next action: Measure and record E-05 no-load current at 6 V before any
+  loaded/current-limited E-06 testing.
+
+<a id="elog-20260814-passed-e-05-n20-no-load-current-test"></a>
+### 🟩 2026-08-14 - SUCCESS - Passed E-05 N20 no-load current test
+
+- Status: E-05 passed; loaded/stall characterization remains separate.
+- Category: hardware
+- Summary: At a 6.0 V bench input, toolhead idle current was 0.017 A. The N20
+  drew 0.043 A while retracting/lifting and 0.043 A while lowering the pen.
+- Evidence: Project-owner bench measurements after repair of the DRV8833 output
+  solder joint.
+- Result: The measured motor contribution is approximately 0.026 A in either
+  direction, confirming low no-load demand on the current 6 V rail and driver.
+- Next action: Do not hand-stall the actuator. Define a controlled E-06
+  current-limited test only if its result is needed for the pen mechanism.
+
+<a id="elog-20260814-passed-e-15a-toolhead-rails-during-n20-motion"></a>
+### 🟩 2026-08-14 - SUCCESS - Passed E-15A toolhead rails during N20 motion
+
+- Status: motor-only E-15A passed; sensor and final-rail characterization remain open.
+- Category: hardware
+- Summary: With a 6.0 V bench input, the DRV8833 motor rail held near 6 V and
+  the S7V8F5 logic rail held near 5 V while the N20 moved in both directions.
+  The Pro Micro did not reset.
+- Evidence: Project-owner bench measurements and observation.
+- Result: The present 6 V motor and local 5 V logic branches operate together
+  without an observed rail collapse during the unloaded direction test.
+- Next action: Characterize HX711/load cell and TMAG5273 separately; repeat
+  power characterization after the upstream D36V50F6 is installed.
+
+<a id="elog-20260814-required-complete-records-for-every-e-series-test"></a>
+### 🟩 2026-08-14 - SUCCESS - Required complete records for every E-series test
+
+- Status: implemented for future E-series work.
+- Category: documentation, hardware
+- Summary: Strengthened the test-plan and lab-note requirements so every E-*
+  test records its configuration, procedure, measurements, difficulties,
+  failed attempts, corrective actions, repeat result, and evidence. When code
+  or commands are used, the exact test version is embedded in a code block.
+- Reason: A simple pass/fail record does not preserve enough information to
+  reproduce bench work or understand how a defect was overcome.
+- Evidence: `docs/testing/TEST_PLAN.md`, `docs/report/LAB_NOTE_TEMPLATE.md`,
+  and `docs/report/lab-notes/README.md`.
+- Result: Future electrical-characterization tests have a consistent, auditable
+  record that includes both failure/recovery history and passing evidence.
+
+<a id="elog-20260814-started-e-07-hx711-calibration"></a>
+### 🟨 2026-08-14 - MIXED/OPEN - Started E-07 HX711 calibration
+
+- Status: test fixture and record prepared; bench readings pending.
+- Category: hardware, rp23cnc-software
+- Summary: Added a dedicated HX711-only E-07 sketch using GP0/GP1 and a dated
+  lab note containing the exact source code, required power isolation, and
+  known-mass procedure.
+- Reason: Begin load-cell calibration without energizing the motor driver or
+  combining sensor behavior with the separate TMAG5273 test.
+- Evidence: `firmware/pen_pressure/e07_hx711_calibration/e07_hx711_calibration.ino`
+  and `docs/report/lab-notes/2026-08-14-e-07-hx711-calibration.md`.
+- Next action: Upload over USB with the 6 V JST disconnected; tare unloaded,
+  record idle readings, then record stable deltas for known masses.
+
+<a id="elog-20260814-hx711-first-raw-reading-attempt-passed-communication"></a>
+### 🟨 2026-08-14 - MIXED/OPEN - HX711 first raw-reading attempt passed communication
+
+- Status: electrical response proven; repeatable mechanical zero/calibration pending.
+- Category: hardware
+- Summary: The HX711 on GP0/GP1 reported ready data and large signed raw-count
+  changes when the pen/load path was loaded. The initial unloaded tare was
+  47,909 counts, but the resting zero shifted after the load was released.
+- Struggle/failure: The first trial cannot be calibrated because the post-load
+  condition did not return to the original mechanical baseline. This is likely
+  force-path position/preload or friction/hysteresis, not an ADC communication
+  fault.
+- Evidence: Full serial capture is embedded in
+  `docs/report/lab-notes/2026-08-14-e-07-hx711-calibration.md`.
+- Next action: Repeat from a defined retracted/no-contact position, then use a
+  scale or known forces at the pen tip to obtain two stable calibration points.
+
+<a id="elog-20260814-prepared-e-07b-uart-toolhead-service-test"></a>
+### 🟨 2026-08-14 - MIXED/OPEN - Prepared E-07B UART toolhead service test
+
+- Status: firmware compiled; physical service-adapter harness not yet connected.
+- Category: hardware, rp23cnc-software
+- Summary: Prepared a GP20/GP21 UART1 diagnostic interface so the toolhead can
+  retain its local 6 V/5 V/3.3 V power path while a PC receives HX711 telemetry
+  and issues individual, safety-limited N20 steps. The Pro Micro USB-C port is
+  unplugged during this test; the USB-to-TTL adapter connects GND/RX/TX only
+  and its VCC remains open.
+- Reason: The normal USB-C port would introduce a second 5 V source during
+  motor-powered force calibration. Direct known-mass loading of the gray block
+  proved the sensor but was mechanically nonrepeatable.
+- Evidence: `firmware/pen_pressure/e07b_hx711_actuator_steps/e07b_hx711_actuator_steps.ino`
+  compiled with `arduino-cli` for `rp2040:rp2040:sparkfun_promicrorp2350`.
+- Next action: Connect the service adapter, upload E-07B with 6 V disconnected,
+  then test pen-tip force on a digital scale with 6 V enabled and the onboard
+  USB-C unplugged.
+
+<a id="elog-20260814-corrected-e-07b-uart1-serial-instance"></a>
+### 🟨 2026-08-14 - MIXED/OPEN - Corrected E-07B UART1 serial instance
+
+- Status: corrected firmware compiled; re-upload and live telemetry pending.
+- Category: hardware, rp23cnc-software
+- Summary: The UART adapter itself passed a TXD-to-RXD loopback test, but the
+  first E-07B program had no output and GP20 was about 160 mV. Investigation of
+  the installed Arduino-Pico core showed that `Serial1` is UART0; GP20/GP21 are
+  UART1 and require the `Serial2` object. The sketch now uses `Serial2`.
+- Struggle/failure: The original `Serial1` selection compiled successfully but
+  could not route UART0 to GP20, so compilation alone was insufficient evidence
+  of the intended UART pin mapping.
+- Evidence: E-07B recompiled for `rp2040:rp2040:sparkfun_promicrorp2350` after
+  the `Serial2` correction. Adapter loopback and voltage observations were
+  reported by the project owner.
+- Next action: Upload the corrected E-07B source with 6 V disconnected; then
+  power the toolhead locally and confirm its startup banner at 115200 baud.
+
+<a id="elog-20260814-passed-e-07b-uart-service-bring-up"></a>
+### 🟩 2026-08-14 - SUCCESS - Passed E-07B UART service bring-up
+
+- Status: GP20/GP21 UART telemetry is available for powered toolhead testing.
+- Category: hardware, rp23cnc-software
+- Summary: After re-uploading the corrected `Serial2` E-07B sketch, startup
+  telemetry appeared through the DSD TECH SH-U09C2 adapter at 115200 baud while
+  the toolhead operated from its local 6 V supply and the Pro Micro USB-C port
+  was unplugged.
+- Evidence: Project-owner live Serial Monitor observation; E-07 lab note and
+  TH-016/TH-017 wiring-table entries.
+- Result: The temporary service UART is verified. E-07 force calibration is
+  still open and must now proceed through pen-tip/digital-scale measurements.
+
+<a id="elog-20260814-first-e-07b-automated-pen-tip-contact"></a>
+### 🟨 2026-08-14 - PARTIAL - First E-07B automated pen-tip contact
+
+- Status: first instrumented contact point passed; repeatability and additional
+  force levels remain open.
+- Category: hardware, rp23cnc-software
+- Summary: The first absolute load-cell threshold caused false positives from
+  normal lead-screw/mechanism load transfer. The E-07B approach was revised to
+  learn three no-contact 50 ms pulse changes and stop on a 50,000-count
+  residual. The revised test stopped on pulse 4 at a measured 49.4 g / 0.485 N
+  pen-tip force, reporting `hx_delta=-284196` and `residual=-124308`.
+- Evidence: live UART capture and scale observation recorded in the dated E-07
+  lab note; provisional magnitude is about 5,753 counts/g with negative sign.
+- Next action: lift off, verify return-to-zero, and record at least two more
+  gentle scale-force points before setting a production calibration factor.
+
+<a id="elog-20260814-passed-e-08-hx711-rate-and-noise-measurement"></a>
+### 🟩 2026-08-14 - SUCCESS - Passed E-08 HX711 rate and noise measurement
+
+- Status: the installed force-loop timing evidence is available.
+- Category: hardware, rp23cnc-software
+- Summary: Two stationary 15-second HX711 windows each returned 179 samples,
+  establishing an installed rate of 11.933 Hz. Peak-to-peak noise was 300 and
+  484 counts; standard deviation was 69.1 and 120.5 counts.
+- Evidence: E-08 UART result blocks, exact source fingerprint, and dated E-08
+  lab note.
+- Result: Use a three-ready-sample median (about 0.25 s) and no more than about
+  4 Hz correction cadence after actuator settling. Mechanical preload remains
+  the dominant force uncertainty, not ADC noise.
+
+<a id="elog-20260814-e-09-qwiic-i2c-startup"></a>
+### 🟥 2026-08-14 - BLOCKED - E-09 Qwiic I2C startup
+
+- Status: service UART passed; magnetic-sensor bus diagnosis is required.
+- Category: hardware, rp23cnc-software
+- Summary: E-09's deferred I2C initialization printed its pre-I2C message but
+  did not return after command `i`. This ruled out the prior UART1 mapping
+  issue and localized the failure to the Qwiic/TMAG I2C stage.
+- Evidence: UART capture in the dated E-09 lab note.
+- Next action: with power off, verify GP16/SDA, GP17/SCL, 3V3, and TOOL_GND
+  continuity and absence of shorts; with power on, measure sensor 3.3 V and
+  the idle SDA/SCL levels before retrying E-09.
+
+<a id="elog-20260814-passed-e-09-tmag5273-intended-wiring-test"></a>
+### 🟩 2026-08-14 - SUCCESS - Passed E-09 TMAG5273 intended-wiring test
+
+- Status: corrected TMAG I2C wiring and bench magnetic response are verified.
+- Category: hardware, rp23cnc-software
+- Summary: Correcting the signal pair to GP16/SDA and GP17/SCL restored sensor
+  communication. Stable near-magnet magnitude was 7.51 mT with a 0.28 mT span;
+  far magnitude was 0.24 mT with a 0.25 mT span; return over the magnet was
+  7.44 mT.
+- Evidence: E-09 exact-source fingerprint and UART readings in the dated lab
+  note.
+- Result: A conservative initial magnitude threshold is 3.5 mT with 1.0 mT
+  hysteresis. Final A_HOME scan geometry remains E-18 work.
+
+<a id="elog-20260814-e-18-repinned-pc817-harness-pre-check"></a>
+### 🟨 2026-08-14 - PARTIAL - E-18 repinned PC817 harness pre-check
+
+- Status: repinned harness accepted; actual RP23CNC terminal integration is
+  still required.
+- Category: hardware
+- Summary: With all power disconnected, CTRL_GND to TOOL_GND had no continuity.
+  After powering only the toolhead side, TOOL_3V3 measured 3.3 V and GP29
+  measured 2.739 V relative to TOOL_GND, a valid idle HIGH level.
+- Evidence: dated E-18 repinned-harness lab note, project-owner multimeter
+  readings, earlier successful U1/U2/U3 5 V / 12 V + 2.2 kOhm bench evidence,
+  and previously recorded GP29/GP28/GP27 harness continuity.
+- Next action: F-05 must verify the real RP23CNC ENA and Aux0 terminal
+  behavior and LIMA input before the controller harness is connected.
+
+<a id="elog-20260814-passed-e-17-rp23cnc-pre-power-inspection"></a>
+### 🟩 2026-08-14 - SUCCESS - Passed E-17 RP23CNC pre-power inspection
+
+- Status: controller is cleared for USB-only baseline flashing.
+- Category: hardware, rp23cnc-software
+- Summary: Magnified visual inspection found good solder joints without visible
+  bridges. With all power removed, the main 12 V positive-to-negative and the
+  labeled 5 V rail-to-ground continuity checks both had no beep.
+- Evidence: dated E-17 lab note; saved Web Builder configuration and UF2 build
+  record with SHA-256.
+- Next action: flash the USB-only grblHAL baseline and capture its F-01 boot
+  banner before attaching controller I/O or 12 V machine power.
+
+<a id="elog-20260814-passed-f-01-rp23cnc-grblhal-baseline-boot"></a>
+### 🟩 2026-08-14 - SUCCESS - Passed F-01 RP23CNC grblHAL baseline boot
+
+- Status: controller firmware baseline is running over native USB.
+- Category: rp23cnc-software, hardware
+- Summary: The generated four-axis RP2350/RP23U5XBB UF2 booted on COM9.
+  `$I` reported grblHAL 1.1f.20260813, XYZA, W5500 detection, and the
+  SD-card/Ymodem plugins expected from the saved Web Builder configuration.
+- Evidence: dated F-01 lab note, build record, saved JSON configuration, UF2
+  SHA-256, and project-owner ioSender capture.
+- Next action: capture the initial `$$` settings dump before changing settings;
+  then perform unpowered F-03/F-04 and controller output F-05 tests.
+
+<a id="elog-20260814-f-01-first-run-control-input-alarm"></a>
+### 🟨 2026-08-14 - PARTIAL - F-01 first-run control-input alarm
+
+- Status: baseline firmware is valid; temporary control-input inversion is
+  required before settings can be queried or changed from the console.
+- Category: rp23cnc-software, hardware
+- Summary: `SIGNALS:HSE` and `ALARM:10` caused `$ $` and `$14=70` console
+  commands to return error 79 because grblHAL blocks commands during a critical
+  event. The board manual identifies the same initial condition and directs
+  using ioSender's Control signals settings UI to invert Feed Hold, Cycle
+  Start, and E-stop, then reboot.
+- Evidence: project-owner ioSender console capture and RP23CNC user manual,
+  page 23.
+- Next action: apply the documented temporary inversion through ioSender, then
+  capture the settings dump and continue unpowered I/O testing.
+
+<a id="elog-20260814155936"></a>
+### 🟩 2026-08-14 15:59:36 -0500 - SUCCESS - Cleared RP23CNC first-run control alarm
+
+- Status: controller reached `IDLE`; initial settings capture remains next.
+- Category: rp23cnc-software, hardware, test
+- Summary: With isolated-input 12 V present and main 12 V machine power,
+  drivers, motors, and PC817 controller-side wiring still disconnected, the
+  project owner used ioSender's saved control-signal inversion and clicked
+  **Unlock**. ioSender changed from `ALARM:10` to `IDLE` and displayed
+  `Caution: Unlocked`.
+- Struggle/failure: Before the isolated-input supply and inversion were made
+  active, grblHAL showed `SIGNALS:HSE` and blocked console configuration writes
+  with error 79.
+- Evidence: project-owner ioSender screenshot; dated F-01 lab note.
+- Result: The alarm condition is resolved for the present bench configuration.
+  No motion output or controller-to-toolhead electrical connection has been
+  tested.
+- Next action: send `$$` while `IDLE`, preserve the full settings dump, then
+  continue F-03/F-04 and F-05 with machine loads disconnected.
+
+<a id="elog-20260814160300"></a>
+### 🟨 2026-08-14 16:03:00 -0500 - MIXED/OPEN - Isolated missing grblHAL settings-list response
+
+- Status: USB commands work; use the ioSender settings UI as the present
+  configuration-reading path.
+- Category: rp23cnc-software, test
+- Summary: In `IDLE`, the controller echoed `$$` without returning a settings
+  list. `$HELP` immediately returned the command help-topic list, including
+  Settings, Control signals, and all axis groups. `$HELP Settings` then
+  returned the supported setting IDs/descriptions and `ok`, but not their
+  current values.
+- Evidence: project-owner console capture and dated F-01 lab note.
+- Result: Communication and normal-command parsing are proven. The missing
+  response is limited to the `$$` settings-list path or its display in this
+  firmware/sender combination.
+- Next action: select **Settings: Grbl → Reload** to obtain the current
+  configuration, without changing or saving values; investigate `$$` only if
+  it later blocks configuration export or recovery.
+
+<a id="elog-20260814161000"></a>
+### 🟩 2026-08-14 16:10:00 -0500 - SUCCESS - Passed F-02 RP23CNC converter-command parser dry run
+
+- Status: parser acceptance is verified; physical STEP/DIR output testing is
+  next.
+- Category: rp23cnc-software, test
+- Summary: With only USB and `ISO 12V` connected, the controller accepted
+  `G21`, `G90`, zero-distance XYZA `G0`/`G1`, `M3`, `G4 P0.1`, `M5`, and `M2`.
+  Program end reported `M5` in the final modal state.
+- Evidence: exact ioSender transcript in the dated F-02 lab note.
+- Result: The converter's present G-code interface subset parses on the
+  flashed RP23CNC build. No physical output/load claim is implied because all
+  driver, motor, and PC817 controller-side connections remained detached.
+- Next action: F-03 unpowered STEP/DIR/ENABLE identification and polarity
+  test.
+
+<a id="elog-20260814163000"></a>
+### 🟩 2026-08-14 16:30:00 -0500 - SUCCESS - Passed F-03 RP23CNC X/Y/A bare-output test
+
+- Status: controller-side X/Y/A stepper signals are characterized; TB6600
+  input polarity/topology remains the next physical interface test.
+- Category: hardware, rp23cnc-software, test
+- Summary: For X, Y, and A, `DIR` held 0 V for a positive logical move and 5 V
+  for a negative logical move. `STEP` was 0 V idle and registered about 50 mV
+  on a DC meter only while moving. `EN` was 5 V idle and 0 V only during moves.
+- Evidence: complete procedure and measurements in the dated F-03 lab note;
+  wiring-table entries MOT-001 through MOT-009.
+- Result: All three controller output groups have the same observed contract:
+  5 V direction logic, pulsed STEP, and active-low enable. No TB6600, motor,
+  or PC817 controller-side wire was attached.
+- Risk/limitation: a DC meter averages STEP pulses and does not verify pulse
+  width or edge quality. E-03 will prove actual TB6600 input compatibility.
+- Next action: perform F-04 limit input tests before connecting drivers, then
+  establish one TB6600's final input wiring under E-03.
+
+<a id="elog-20260814164500"></a>
+### 🟨 2026-08-14 16:45:00 -0500 - MIXED/OPEN - Selected X/Y SPDT roller limit switches
+
+- Status: X/Y switch part is selected; controller wiring and polarity are not
+  yet verified.
+- Category: hardware, wiring, test
+- Summary: The project owner identified the X/Y switches as HiLetgo KW12-3
+  roller-lever SPDT microswitches. The documented plan uses their `COM` and
+  `NC` contacts for a fail-safe circuit.
+- Evidence: Amazon ASIN B07X142VGC and hardware selection change note
+  `HW-20260814-004`.
+- Result: F-04 now has a defined switch part, but cannot start until each
+  received switch's terminal behavior and the exact RP23CNC input-pair labels
+  are inspected.
+- Next action: meter-check `COM`-`NC` with the lever released/pressed, provide
+  a close controller-terminal photo, then wire and run F-04.
+
+<a id="elog-20260814170000"></a>
+### 🟨 2026-08-14 17:00:00 -0500 - MIXED/OPEN - Staged temporary X/Y limit-switch harness before drag-chain routing
+
+- Status: short bench leads are the next F-04 fixture; permanent moving cable
+  routing is deliberately deferred.
+- Category: hardware, wiring, mechanical
+- Summary: The project owner will connect the selected X/Y switches with basic
+  short wires to verify their operation and RP23CNC connection before using the
+  crowded drawer-side drag chain. That chain currently fits the 4-conductor
+  shielded motor cable tightly and may require replacement with a larger,
+  suitable-radius chain for the remaining moving conductors.
+- Reason: A visible temporary harness isolates limit-switch electrical testing
+  from unresolved cable-carrier capacity and bend-radius constraints.
+- Evidence: project-owner wiring plan; BOM and roadmap updates.
+- Result: Permanent X/Y limit routing is not authorized until the selected
+  carrier's internal envelope, dynamic bend radius, cable fill, and free travel
+  are measured against the complete harness.
+- Next action: F-04 switch continuity check on short leads, then inspect the
+  controller terminal labels. Evaluate the alternate drag chain in place before
+  installing permanent cable.
+
+<a id="elog-20260814173000"></a>
+### 🟨 2026-08-14 17:30:00 -0500 - HARDWARE/OPEN - Initial E-stop uses RP23CNC Halt input
+
+- Status: planned; no E-stop conductor or configuration change has been made.
+- Category: hardware, safety, rp23cnc-software
+- Summary: The initial E-stop architecture uses NC-A from the purchased
+  mxuteuk 2NC mushroom across the RP23CNC's 12 V opto-isolated Halt input.
+  NC-B remains insulated. K1 and its flyback diode are excluded from the
+  project, rather than being purchase prerequisites.
+- Reason: This follows the RP23CNC manual's supported control-input method and
+  avoids representing a relay-based motor-energy-removal design as required.
+- Next action: identify the installed E-stop terminal pair, meter-check SW1,
+  perform E-19, then set and verify the NC-compatible E-stop inversion.

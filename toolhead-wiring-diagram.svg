@@ -1,0 +1,252 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2300" height="1700" viewBox="0 0 2300 1700">
+  <defs>
+    <style>
+      .bg { fill: #f7f8fa; }
+      .panel { fill: #fffbe8; stroke: #9b7400; stroke-width: 3; }
+      .harness { fill: #2f3033; stroke: #111; stroke-width: 3; }
+      .rp { fill: #21804f; stroke: #145633; stroke-width: 3; }
+      .drv { fill: #285a9b; stroke: #173764; stroke-width: 3; }
+      .hx { fill: #2d5b9a; stroke: #173764; stroke-width: 3; }
+      .tmag { fill: #9a6823; stroke: #60410f; stroke-width: 3; }
+      .term { fill: #f6f6f6; stroke: #202020; stroke-width: 2; }
+      .hole { fill: #fff; stroke: #202020; stroke-width: 2; }
+      .title { font: 700 29px Arial, sans-serif; fill: #111; }
+      .label { font: 700 19px Arial, sans-serif; fill: #111; }
+      .labelw { font: 700 19px Arial, sans-serif; fill: #fff; }
+      .small { font: 15px Arial, sans-serif; fill: #111; }
+      .smallw { font: 15px Arial, sans-serif; fill: #fff; }
+      .tiny { font: 13px Arial, sans-serif; fill: #111; }
+      .pin { font: 700 14px Arial, sans-serif; fill: #111; }
+      .wire { fill: none; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+      .w5v { stroke: #d62828; }
+      .w6v { stroke: #a4001d; }
+      .w3v { stroke: #f08a24; }
+      .wgnd { stroke: #111; }
+      .wcmd { stroke: #7b2cbf; }
+      .wi2csda { stroke: #159a9c; }
+      .wi2cscl { stroke: #2563eb; }
+      .whxdt { stroke: #008f45; }
+      .whxsck { stroke: #3a7d44; }
+      .wmotor { stroke: #c9184a; }
+      .wred { stroke: #d62828; }
+      .wblack { stroke: #111; }
+      .wgreen { stroke: #008f45; }
+      .wwhite { stroke: #b8b8b8; }
+      .wshield { stroke: #6f6f6f; stroke-dasharray: 12 9; }
+      .cap { fill: #f7d75c; stroke: #5b4b00; stroke-width: 2; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="2300" height="1700"/>
+  <text class="title" x="70" y="70">Toolhead wiring diagram - no wire crossings</text>
+  <text class="small" x="70" y="103">SparkFun Pro Micro RP2350 controls DRV8833 lift motor, reads HX711/load cell, and reads TMAG5273 over Qwiic. Pin choices show intended final wiring pending bench verification.</text>
+
+  <!-- DIN rail power distribution -->
+  <rect class="harness" x="70" y="180" width="310" height="300" rx="12"/>
+  <text class="labelw" x="100" y="220">DIN rail power</text>
+  <rect class="term" x="110" y="240" width="220" height="40"/><text class="pin" x="132" y="265">6V_TO_DRV</text><circle class="hole" cx="340" cy="260" r="9"/>
+  <rect class="term" x="110" y="300" width="220" height="40"/><text class="pin" x="132" y="325">GND_TO_DRV</text><circle class="hole" cx="340" cy="320" r="9"/>
+  <rect class="term" x="110" y="360" width="220" height="40"/><text class="pin" x="132" y="385">6V_TO_S7V8F5</text><circle class="hole" cx="340" cy="380" r="9"/>
+  <rect class="term" x="110" y="420" width="220" height="40"/><text class="pin" x="132" y="445">GND_TO_S7V8F5</text><circle class="hole" cx="340" cy="440" r="9"/>
+
+  <!-- Local 5 V regulator -->
+  <rect class="panel" x="390" y="170" width="195" height="205" rx="14"/>
+  <text class="label" x="412" y="210">Pololu S7V8F5</text>
+  <text class="small" x="412" y="236">local 5 V regulator</text>
+  <rect class="term" x="412" y="282" width="150" height="70"/>
+  <text class="pin" x="444" y="310">POWER</text>
+  <text class="tiny" x="414" y="334">VIN</text><text class="tiny" x="454" y="334">GND</text><text class="tiny" x="497" y="334">VOUT</text><text class="tiny" x="545" y="334">GND</text>
+  <circle class="hole" cx="425" cy="350" r="7"/><circle class="hole" cx="470" cy="350" r="7"/><circle class="hole" cx="515" cy="350" r="7"/><circle class="hole" cx="560" cy="350" r="7"/>
+
+  <!-- Pro Micro -->
+  <rect class="rp" x="600" y="205" width="475" height="735" rx="24"/>
+  <text class="labelw" x="735" y="250">SparkFun Pro Micro RP2350</text>
+  <text class="smallw" x="745" y="280">3.3 V GPIO; 5 V max RAW input</text>
+
+  <!-- Pro Micro left pins -->
+  <rect class="term" x="625" y="310" width="140" height="34"/><text class="pin" x="668" y="332">RAW/5V</text><circle class="hole" cx="612" cy="327" r="8"/>
+  <rect class="term" x="625" y="370" width="140" height="34"/><text class="pin" x="677" y="392">GND</text><circle class="hole" cx="612" cy="387" r="8"/>
+  <rect class="term" x="625" y="480" width="140" height="34"/><text class="pin" x="648" y="502">GP10 ARM</text><circle class="hole" cx="612" cy="497" r="8"/>
+  <text class="tiny" x="625" y="532">HOME_ARM input</text>
+  <rect class="term" x="625" y="540" width="140" height="34"/><text class="pin" x="676" y="562">GP8</text><circle class="hole" cx="612" cy="557" r="8"/>
+  <rect class="term" x="625" y="620" width="140" height="34"/><text class="pin" x="635" y="642">GP9 A_HOME</text><circle class="hole" cx="612" cy="637" r="8"/>
+  <text class="tiny" x="625" y="672">gated TMAG threshold output</text>
+
+  <!-- RP23CNC 5 V to RP2350 3.3 V input interface -->
+  <rect class="panel" x="430" y="445" width="150" height="170" rx="12"/>
+  <text class="pin" x="448" y="475">5V -> 3V3</text>
+  <text class="tiny" x="448" y="494">level shifter/opto</text>
+  <circle class="hole" cx="430" cy="497" r="7"/><circle class="hole" cx="580" cy="497" r="7"/>
+  <text class="tiny" x="448" y="525">CH1 AUX0 to GP10</text>
+  <circle class="hole" cx="430" cy="557" r="7"/><circle class="hole" cx="580" cy="557" r="7"/>
+  <text class="tiny" x="448" y="585">CH2 ENA to GP8</text>
+
+  <!-- Pro Micro right pins -->
+  <rect class="term" x="905" y="430" width="135" height="34"/><text class="pin" x="952" y="452">GP4</text><circle class="hole" cx="1053" cy="447" r="8"/>
+  <rect class="term" x="905" y="490" width="135" height="34"/><text class="pin" x="952" y="512">GP5</text><circle class="hole" cx="1053" cy="507" r="8"/>
+  <rect class="term" x="905" y="550" width="135" height="34"/><text class="pin" x="952" y="572">GP6</text><circle class="hole" cx="1053" cy="567" r="8"/>
+  <rect class="term" x="905" y="610" width="135" height="34"/><text class="pin" x="952" y="632">GP7</text><circle class="hole" cx="1053" cy="627" r="8"/>
+  <rect class="term" x="905" y="675" width="135" height="34"/><text class="pin" x="952" y="697">3V3</text><circle class="hole" cx="1053" cy="692" r="8"/>
+  <rect class="term" x="905" y="735" width="135" height="34"/><text class="pin" x="952" y="757">GND</text><circle class="hole" cx="1053" cy="752" r="8"/>
+  <rect class="term" x="905" y="795" width="135" height="34"/><text class="pin" x="952" y="817">GP2</text><circle class="hole" cx="1053" cy="812" r="8"/>
+  <rect class="term" x="905" y="855" width="135" height="34"/><text class="pin" x="952" y="877">GP3</text><circle class="hole" cx="1053" cy="872" r="8"/>
+
+  <!-- Pro Micro Qwiic bottom -->
+  <rect class="term" x="690" y="800" width="220" height="96"/>
+  <text class="pin" x="760" y="828">QWIIC</text>
+  <text class="tiny" x="716" y="854">GND</text><text class="tiny" x="762" y="854">3V3</text><text class="tiny" x="806" y="854">SDA</text><text class="tiny" x="850" y="854">SCL</text>
+  <circle class="hole" cx="728" cy="875" r="7"/><circle class="hole" cx="774" cy="875" r="7"/><circle class="hole" cx="820" cy="875" r="7"/><circle class="hole" cx="866" cy="875" r="7"/>
+  <text class="tiny" x="705" y="915">GPIO17 SDA / GPIO16 SCL</text>
+
+  <!-- DRV8833 -->
+  <rect class="drv" x="1450" y="190" width="445" height="610" rx="22"/>
+  <text class="labelw" x="1580" y="235">DRV8833 breakout</text>
+  <text class="smallw" x="1585" y="265">N20 lift motor driver</text>
+  <rect class="term" x="1485" y="300" width="120" height="34"/><text class="pin" x="1525" y="322">VCC</text><circle class="hole" cx="1470" cy="317" r="8"/>
+  <rect class="term" x="1485" y="360" width="120" height="34"/><text class="pin" x="1525" y="382">GND</text><circle class="hole" cx="1470" cy="377" r="8"/>
+  <rect class="term" x="1485" y="430" width="120" height="34"/><text class="pin" x="1528" y="452">IN1</text><circle class="hole" cx="1470" cy="447" r="8"/>
+  <rect class="term" x="1485" y="490" width="120" height="34"/><text class="pin" x="1528" y="512">IN2</text><circle class="hole" cx="1470" cy="507" r="8"/>
+  <rect class="term" x="1485" y="550" width="120" height="34"/><text class="pin" x="1528" y="572">EEP</text><circle class="hole" cx="1470" cy="567" r="8"/>
+  <rect class="term" x="1485" y="610" width="120" height="34"/><text class="pin" x="1528" y="632">ULT</text><circle class="hole" cx="1470" cy="627" r="8"/>
+  <rect class="term" x="1726" y="430" width="120" height="34"/><text class="pin" x="1760" y="452">OUT1</text><circle class="hole" cx="1862" cy="447" r="8"/>
+  <rect class="term" x="1726" y="490" width="120" height="34"/><text class="pin" x="1760" y="512">OUT2</text><circle class="hole" cx="1862" cy="507" r="8"/>
+  <rect class="term" x="1726" y="550" width="120" height="34"/><text class="pin" x="1760" y="572">OUT3</text><circle class="hole" cx="1862" cy="567" r="8"/>
+  <rect class="term" x="1726" y="610" width="120" height="34"/><text class="pin" x="1760" y="632">OUT4</text><circle class="hole" cx="1862" cy="627" r="8"/>
+  <text class="tiny" x="1665" y="700" fill="#fff">OUT3/OUT4 unused for one N20 motor</text>
+  <rect class="cap" x="1388" y="283" width="44" height="112" rx="6"/>
+  <text class="tiny" x="1322" y="270">220-470 uF + 0.1 uF near driver</text>
+
+  <!-- N20 -->
+  <rect class="tmag" x="2035" y="415" width="150" height="120" rx="18"/>
+  <circle cx="2110" cy="475" r="36" fill="#eee" stroke="#111" stroke-width="3"/>
+  <text class="label" x="2075" y="580">N20</text>
+  <text class="small" x="2020" y="608">6 V lift actuator</text>
+
+  <!-- TMAG -->
+  <rect class="tmag" x="455" y="1110" width="385" height="300" rx="20"/>
+  <text class="labelw" x="555" y="1160">TMAG5273 Qwiic</text>
+  <text class="smallw" x="570" y="1190">3D Hall sensor</text>
+  <rect class="term" x="520" y="1058" width="250" height="86"/>
+  <text class="pin" x="610" y="1088">QWIIC</text>
+  <text class="tiny" x="558" y="1112">GND</text><text class="tiny" x="606" y="1112">3V3</text><text class="tiny" x="654" y="1112">SDA</text><text class="tiny" x="704" y="1112">SCL</text>
+  <circle class="hole" cx="570" cy="1136" r="7"/><circle class="hole" cx="618" cy="1136" r="7"/><circle class="hole" cx="666" cy="1136" r="7"/><circle class="hole" cx="714" cy="1136" r="7"/>
+
+  <!-- HX711 -->
+  <rect class="hx" x="1110" y="1030" width="510" height="520" rx="22"/>
+  <text class="labelw" x="1328" y="1080">HX711</text>
+  <text class="smallw" x="1240" y="1110">load-cell amplifier, mount near load cell</text>
+  <rect class="term" x="1145" y="1180" width="120" height="34"/><text class="pin" x="1182" y="1202">VCC</text><circle class="hole" cx="1130" cy="1197" r="8"/>
+  <rect class="term" x="1145" y="1240" width="120" height="34"/><text class="pin" x="1182" y="1262">GND</text><circle class="hole" cx="1130" cy="1257" r="8"/>
+  <rect class="term" x="1145" y="1300" width="120" height="34"/><text class="pin" x="1188" y="1322">DT</text><circle class="hole" cx="1130" cy="1317" r="8"/>
+  <rect class="term" x="1145" y="1360" width="120" height="34"/><text class="pin" x="1182" y="1382">SCK</text><circle class="hole" cx="1130" cy="1377" r="8"/>
+  <rect class="term" x="1455" y="1170" width="120" height="34"/><text class="pin" x="1492" y="1192">E+</text><circle class="hole" cx="1590" cy="1187" r="8"/>
+  <rect class="term" x="1455" y="1230" width="120" height="34"/><text class="pin" x="1492" y="1252">E-</text><circle class="hole" cx="1590" cy="1247" r="8"/>
+  <rect class="term" x="1455" y="1290" width="120" height="34"/><text class="pin" x="1492" y="1312">A+</text><circle class="hole" cx="1590" cy="1307" r="8"/>
+  <rect class="term" x="1455" y="1350" width="120" height="34"/><text class="pin" x="1492" y="1372">A-</text><circle class="hole" cx="1590" cy="1367" r="8"/>
+  <rect class="term" x="1455" y="1410" width="120" height="34"/><text class="pin" x="1492" y="1432">B+</text><circle class="hole" cx="1590" cy="1427" r="8"/>
+  <rect class="term" x="1455" y="1470" width="120" height="34"/><text class="pin" x="1492" y="1492">B-</text><circle class="hole" cx="1590" cy="1487" r="8"/>
+  <text class="tiny" x="1415" y="1530" fill="#fff">B+/B- unused for one 4-wire load cell</text>
+
+  <!-- Load cell -->
+  <rect class="tmag" x="1880" y="1110" width="220" height="360" rx="20"/>
+  <text class="labelw" x="1948" y="1160">Load cell</text>
+  <text class="smallw" x="1932" y="1190">300 g bridge</text>
+  <rect class="term" x="1930" y="1230" width="130" height="34"/><text class="pin" x="1972" y="1252">RED</text><circle class="hole" cx="1908" cy="1247" r="8"/>
+  <rect class="term" x="1930" y="1290" width="130" height="34"/><text class="pin" x="1965" y="1312">BLACK</text><circle class="hole" cx="1908" cy="1307" r="8"/>
+  <rect class="term" x="1930" y="1350" width="130" height="34"/><text class="pin" x="1965" y="1372">GREEN</text><circle class="hole" cx="1908" cy="1367" r="8"/>
+  <rect class="term" x="1930" y="1410" width="130" height="34"/><text class="pin" x="1965" y="1432">WHITE</text><circle class="hole" cx="1908" cy="1427" r="8"/>
+  <text class="tiny" x="1850" y="1510">Typical colors only - verify with meter or load-cell sheet.</text>
+
+  <!-- Power and command wires: separated lanes, no crossings -->
+  <path class="wire w5v" d="M515 350 H585 V327 H612"/>
+  <path class="wire wgnd" d="M560 350 H585 V387 H612"/>
+  <text class="tiny" x="88" y="505">Shield/drain: terminate at DIN/RP23CNC end only.</text>
+
+  <path class="wire w6v" d="M340 260 H380 V135 H1420 V317 H1470"/>
+  <text class="tiny" x="990" y="122">D36V50F6 6 V rail to DRV8833 VCC/VM</text>
+  <path class="wire wgnd" d="M340 320 H370 V165 H1390 V377 H1470"/>
+  <text class="tiny" x="990" y="152">motor ground to DRV8833 GND</text>
+  <path class="wire w6v" d="M340 380 H385 V350 H425"/>
+  <path class="wire wgnd" d="M340 440 H470 V350"/>
+
+  <!-- RP23CNC/control side block -->
+  <rect class="rp" x="70" y="540" width="350" height="360" rx="18"/>
+  <text class="labelw" x="95" y="580">RP23CNC / RP23U5XBB</text>
+  <text class="smallw" x="95" y="608">grblHAL motion controller</text>
+  <rect class="term" x="100" y="635" width="230" height="38"/><text class="pin" x="122" y="660">AUX 0 OUT / HOME_ARM</text><circle class="hole" cx="345" cy="654" r="8"/>
+  <text class="tiny" x="100" y="694" fill="#fff">M64 P0 arm, M65 P0 disarm</text>
+  <rect class="term" x="100" y="725" width="230" height="38"/><text class="pin" x="122" y="750">SPINDLE ENA OUT</text><circle class="hole" cx="345" cy="744" r="8"/>
+  <text class="tiny" x="100" y="784" fill="#fff">M3 = engage, M5 = lift after polarity test</text>
+  <rect class="term" x="100" y="815" width="230" height="38"/><text class="pin" x="122" y="840">A LIMIT / HOME IN</text><circle class="hole" cx="345" cy="834" r="8"/>
+  <text class="tiny" x="100" y="872" fill="#fff">home input from Pro Micro/TMAG logic</text>
+
+  <!-- RP23CNC Aux 0 to Pro Micro HOME_ARM connection -->
+  <path class="wire wcmd" d="M345 654 H405 V497 H430"/>
+  <path class="wire wcmd" d="M580 497 H612"/>
+
+  <!-- RP23CNC to Pro Micro M3/M5 connection -->
+  <path class="wire wcmd" d="M345 744 H420 V557 H430"/>
+  <path class="wire wcmd" d="M580 557 H612"/>
+
+  <!-- A_HOME return path -->
+  <path class="wire wcmd" d="M612 637 H535 V834 H345"/>
+
+  <!-- Pro Micro to DRV8833, straight lanes -->
+  <path class="wire wcmd" d="M1053 447 H1470"/>
+  <text class="tiny" x="1182" y="434">GP4 PWM to IN1</text>
+  <path class="wire wcmd" d="M1053 507 H1470"/>
+  <text class="tiny" x="1182" y="494">GP5 PWM to IN2</text>
+  <path class="wire wcmd" d="M1053 567 H1470"/>
+  <text class="tiny" x="1160" y="554">GP6 to EEP/SLEEP</text>
+  <path class="wire wcmd" d="M1053 627 H1470"/>
+  <text class="tiny" x="1160" y="616">ULT/FAULT to GP7 input pullup</text>
+
+  <!-- DRV8833 to N20 -->
+  <path class="wire wmotor" d="M1862 447 H2035"/>
+  <text class="tiny" x="1930" y="434">OUT1</text>
+  <path class="wire wmotor" d="M1862 507 H2035"/>
+  <text class="tiny" x="1930" y="494">OUT2</text>
+
+  <!-- Qwiic wires: vertical lanes, no crossings -->
+  <path class="wire wgnd" d="M728 875 V980 H570 V1136"/>
+  <path class="wire w3v" d="M774 875 V1010 H618 V1136"/>
+  <path class="wire wi2csda" d="M820 875 V1040 H666 V1136"/>
+  <path class="wire wi2cscl" d="M866 875 V1070 H714 V1136"/>
+  <text class="tiny" x="490" y="1038">Qwiic cable approaches the TMAG connector from above</text>
+
+  <!-- HX711 logic wires: each lane exits RP2350, drops once, enters HX711 left side -->
+  <path class="wire w3v" d="M1053 692 H1090 V1197 H1130"/>
+  <text class="tiny" x="1038" y="1168">3V3 to HX711 VCC</text>
+  <path class="wire wgnd" d="M1053 752 H1070 V1257 H1130"/>
+  <text class="tiny" x="1022" y="1230">GND</text>
+  <path class="wire whxdt" d="M1053 812 H1050 V1317 H1130"/>
+  <text class="tiny" x="1000" y="1290">GP2 from HX711 DT</text>
+  <path class="wire whxsck" d="M1053 872 H1030 V1377 H1130"/>
+  <text class="tiny" x="992" y="1350">GP3 to HX711 SCK</text>
+
+  <!-- Load-cell bridge wires: same order on both sides, no crossings -->
+  <path class="wire wred" d="M1590 1187 H1760 V1247 H1908"/>
+  <text class="tiny" x="1652" y="1173">E+ excitation +</text>
+  <path class="wire wblack" d="M1590 1247 H1740 V1307 H1908"/>
+  <text class="tiny" x="1652" y="1234">E- excitation -</text>
+  <path class="wire wgreen" d="M1590 1307 H1720 V1367 H1908"/>
+  <text class="tiny" x="1652" y="1294">A+ signal +</text>
+  <path class="wire wwhite" d="M1590 1367 H1700 V1427 H1908"/>
+  <text class="tiny" x="1652" y="1354">A- signal -</text>
+
+  <!-- Notes -->
+  <rect class="panel" x="70" y="1090" width="350" height="500" rx="14"/>
+  <text class="label" x="95" y="1135">Critical notes</text>
+  <text class="small" x="95" y="1175">- Do not feed 6 V to RP2350 RAW.</text>
+  <text class="small" x="95" y="1207">- HX711 is powered from 3.3 V here.</text>
+  <text class="small" x="95" y="1239">- Keep HX711 close to load cell.</text>
+  <text class="small" x="95" y="1271">- Keep DRV8833 close to N20 motor.</text>
+  <text class="small" x="95" y="1303">- Pololu S7V8F5 makes local 5 V.</text>
+  <text class="small" x="95" y="1335">- Drive EEP/SLEEP high to run.</text>
+  <text class="small" x="95" y="1367">- ULT/FAULT needs pullup if used.</text>
+  <text class="small" x="95" y="1399">- Level-shift/opto RP23CNC ENA and AUX0.</text>
+  <text class="small" x="95" y="1431">- GP9 A_HOME is gated by GP10 ARM.</text>
+  <text class="small" x="95" y="1463">- Verify load-cell colors.</text>
+  <text class="small" x="95" y="1495">- OUT3/OUT4 and HX711 B+/B- unused.</text>
+  <text class="tiny" x="95" y="1555">Bench order: TMAG alone, HX711 alone, DRV8833/motor alone, then integrated.</text>
+</svg>

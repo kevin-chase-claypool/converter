@@ -1,0 +1,255 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1280" viewBox="0 0 1900 1280">
+  <title>Theta Plotter Wiring Schematic - Straight Lane Version</title>
+  <desc>Schematic with one horizontal lane per connection, no wire splits, and no wire crossings.</desc>
+  <defs>
+    <style>
+      .page { fill: #fbfbf8; }
+      .box { fill: #fff; stroke: #111; stroke-width: 2; }
+      .soft { fill: #f3f3ed; stroke: #444; stroke-width: 1.4; }
+      .warn { fill: #fff1ef; stroke: #c1121f; stroke-width: 2; }
+      .pin { fill: #fff; stroke: #111; stroke-width: 1.6; }
+      .pin-tbd { fill: #fff8f7; stroke: #c1121f; stroke-width: 1.8; stroke-dasharray: 5 4; }
+      .wire { fill: none; stroke-width: 2.4; stroke-linecap: square; }
+      .pwr { stroke: #c1121f; }
+      .gnd { stroke: #005f99; }
+      .sig { stroke: #237a3b; }
+      .coil-a { stroke: #7a3db8; }
+      .coil-b { stroke: #a45710; }
+      .tbd { stroke: #c1121f; stroke-dasharray: 8 6; }
+      .title { font: 700 24px Arial, sans-serif; fill: #111; }
+      .h1 { font: 700 17px Arial, sans-serif; fill: #111; }
+      .h2 { font: 700 13px Arial, sans-serif; fill: #111; }
+      .txt { font: 13px Arial, sans-serif; fill: #111; }
+      .small { font: 11px Arial, sans-serif; fill: #333; }
+      .tiny { font: 10px Arial, sans-serif; fill: #333; }
+      .net { font: 700 11px Arial, sans-serif; fill: #111; }
+      .red { fill: #c1121f; }
+      .blue { fill: #005f99; }
+      .green { fill: #237a3b; }
+      .purple { fill: #7a3db8; }
+      .brown { fill: #a45710; }
+    </style>
+  </defs>
+
+  <rect class="page" x="0" y="0" width="1900" height="1280"/>
+  <text class="title" x="40" y="42">Theta Pen Plotter - Straight-Lane Wiring Schematic</text>
+  <text class="small" x="40" y="66">One horizontal lane per wire. No drawn wire splits or overlaps. Distribution/common blocks show intentional shared electrical nodes.</text>
+
+  <g transform="translate(1230 24)">
+    <rect class="soft" x="0" y="0" width="620" height="88" rx="8"/>
+    <text class="h2" x="16" y="24">Line colors</text>
+    <line class="wire pwr" x1="20" y1="44" x2="70" y2="44"/><text class="small" x="82" y="48">+12 V / +6 V</text>
+    <line class="wire gnd" x1="202" y1="44" x2="252" y2="44"/><text class="small" x="264" y="48">0 V / GND</text>
+    <line class="wire sig" x1="360" y1="44" x2="410" y2="44"/><text class="small" x="422" y="48">logic</text>
+    <line class="wire coil-a" x1="20" y1="68" x2="70" y2="68"/><text class="small" x="82" y="72">motor phase A</text>
+    <line class="wire coil-b" x1="202" y1="68" x2="252" y2="68"/><text class="small" x="264" y="72">motor phase B</text>
+    <line class="wire tbd" x1="360" y1="68" x2="410" y2="68"/><text class="small" x="422" y="72">TBD</text>
+  </g>
+
+  <!-- Power overview -->
+  <g id="power-overview">
+    <rect class="box" x="40" y="98" width="175" height="116" rx="8"/>
+    <text class="h1" x="62" y="128">AC mains</text>
+    <text class="txt" x="62" y="156">Hot</text>
+    <text class="txt" x="62" y="180">Neutral</text>
+    <text class="txt" x="62" y="204">PE</text>
+
+    <rect class="box" x="295" y="86" width="300" height="144" rx="8"/>
+    <text class="h1" x="317" y="116">MEISHILE S-120-12</text>
+    <text class="small" x="317" y="138">12 VDC, 10 A nominal</text>
+    <rect class="pin" x="315" y="152" width="62" height="22"/><text class="tiny" x="331" y="167">1 L</text>
+    <rect class="pin" x="315" y="178" width="62" height="22"/><text class="tiny" x="331" y="193">2 N</text>
+    <rect class="pin" x="315" y="204" width="62" height="22"/><text class="tiny" x="328" y="219">3 PE</text>
+    <rect class="pin" x="513" y="152" width="62" height="22"/><text class="tiny" x="521" y="167">6/7 +V</text>
+    <rect class="pin" x="513" y="188" width="62" height="22"/><text class="tiny" x="521" y="203">4/5 -V</text>
+    <line class="wire" x1="215" y1="156" x2="315" y2="163"/>
+    <line class="wire" x1="215" y1="180" x2="315" y2="189"/>
+    <line class="wire" x1="215" y1="204" x2="315" y2="215"/>
+
+    <rect class="box" x="700" y="86" width="450" height="144" rx="8"/>
+    <text class="h1" x="722" y="116">Distribution blocks + branch fuses</text>
+    <text class="small" x="722" y="138">B0FFGTXLDM terminal blocks can distribute power; add fuses for final wiring.</text>
+    <rect class="pin" x="720" y="162" width="86" height="22"/><text class="net red" x="734" y="177">+12V IN</text>
+    <rect class="pin" x="720" y="192" width="86" height="22"/><text class="net blue" x="738" y="207">0V IN</text>
+    <rect class="pin" x="1010" y="150" width="104" height="22"/><text class="tiny" x="1022" y="165">X/Y/A branches</text>
+    <rect class="pin" x="1010" y="184" width="104" height="22"/><text class="tiny" x="1022" y="199">tool branch</text>
+    <line class="wire pwr" x1="575" y1="163" x2="720" y2="173"/>
+    <line class="wire gnd" x1="575" y1="199" x2="720" y2="203"/>
+  </g>
+
+  <!-- X axis -->
+  <g id="x-axis" transform="translate(0 300)">
+    <rect class="box" x="40" y="0" width="250" height="270" rx="8"/>
+    <text class="h1" x="62" y="30">X output / common block</text>
+    <text class="small" x="62" y="52">G common outputs come from RP23CNC X G.</text>
+    <rect class="pin" x="270" y="73" width="20" height="20"/><text class="net blue" x="105" y="88">X G common -> PUL-</text>
+    <rect class="pin" x="270" y="98" width="20" height="20"/><text class="net green" x="170" y="113">X Stp</text>
+    <rect class="pin" x="270" y="123" width="20" height="20"/><text class="net blue" x="105" y="138">X G common -> DIR-</text>
+    <rect class="pin" x="270" y="148" width="20" height="20"/><text class="net green" x="170" y="163">X Dir</text>
+    <rect class="pin" x="270" y="173" width="20" height="20"/><text class="net blue" x="105" y="188">X G common -> ENA-</text>
+    <rect class="pin" x="270" y="198" width="20" height="20"/><text class="net green" x="170" y="213">X En</text>
+    <rect class="pin" x="270" y="230" width="20" height="20"/><text class="net red" x="158" y="245">+12V X</text>
+    <rect class="pin" x="270" y="255" width="20" height="20"/><text class="net blue" x="166" y="270">0V X</text>
+
+    <rect class="box" x="455" y="30" width="340" height="270" rx="8"/>
+    <text class="h1" x="477" y="60">X TB6600 driver</text>
+    <rect class="pin" x="435" y="73" width="20" height="20"/><text class="net blue" x="477" y="88">PUL-</text>
+    <rect class="pin" x="435" y="98" width="20" height="20"/><text class="net green" x="477" y="113">PUL+</text>
+    <rect class="pin" x="435" y="123" width="20" height="20"/><text class="net blue" x="477" y="138">DIR-</text>
+    <rect class="pin" x="435" y="148" width="20" height="20"/><text class="net green" x="477" y="163">DIR+</text>
+    <rect class="pin" x="435" y="173" width="20" height="20"/><text class="net blue" x="477" y="188">ENA-</text>
+    <rect class="pin" x="435" y="198" width="20" height="20"/><text class="net green" x="477" y="213">ENA+</text>
+    <rect class="pin" x="435" y="230" width="20" height="20"/><text class="net red" x="477" y="245">DC+</text>
+    <rect class="pin" x="435" y="255" width="20" height="20"/><text class="net blue" x="477" y="270">DC-</text>
+    <rect class="pin" x="795" y="98" width="20" height="20"/><text class="net purple" x="740" y="113">A+</text>
+    <rect class="pin" x="795" y="123" width="20" height="20"/><text class="net purple" x="740" y="138">A-</text>
+    <rect class="pin" x="795" y="148" width="20" height="20"/><text class="net brown" x="740" y="163">B+</text>
+    <rect class="pin" x="795" y="173" width="20" height="20"/><text class="net brown" x="740" y="188">B-</text>
+    <line class="wire gnd" x1="290" y1="83" x2="435" y2="83"/>
+    <line class="wire sig" x1="290" y1="108" x2="435" y2="108"/>
+    <line class="wire gnd" x1="290" y1="133" x2="435" y2="133"/>
+    <line class="wire sig" x1="290" y1="158" x2="435" y2="158"/>
+    <line class="wire gnd" x1="290" y1="183" x2="435" y2="183"/>
+    <line class="wire sig" x1="290" y1="208" x2="435" y2="208"/>
+    <line class="wire pwr" x1="290" y1="240" x2="435" y2="240"/>
+    <line class="wire gnd" x1="290" y1="265" x2="435" y2="265"/>
+
+    <rect class="box" x="955" y="54" width="275" height="180" rx="8"/>
+    <text class="h1" x="977" y="84">X stepper motor</text>
+    <text class="small" x="977" y="106">17HS15-1504S-X1</text>
+    <rect class="pin" x="935" y="98" width="20" height="20"/><text class="net purple" x="977" y="113">Black A+</text>
+    <rect class="pin" x="935" y="123" width="20" height="20"/><text class="net purple" x="977" y="138">Green A-</text>
+    <rect class="pin" x="935" y="148" width="20" height="20"/><text class="net brown" x="977" y="163">Red B+</text>
+    <rect class="pin" x="935" y="173" width="20" height="20"/><text class="net brown" x="977" y="188">Blue B-</text>
+    <line class="wire coil-a" x1="815" y1="108" x2="935" y2="108"/>
+    <line class="wire coil-a" x1="815" y1="133" x2="935" y2="133"/>
+    <line class="wire coil-b" x1="815" y1="158" x2="935" y2="158"/>
+    <line class="wire coil-b" x1="815" y1="183" x2="935" y2="183"/>
+  </g>
+
+  <!-- Y axis -->
+  <g id="y-axis" transform="translate(0 610)">
+    <rect class="box" x="40" y="0" width="250" height="270" rx="8"/>
+    <text class="h1" x="62" y="30">Y output / common block</text>
+    <text class="small" x="62" y="52">G common outputs come from RP23CNC Y G.</text>
+    <rect class="pin" x="270" y="73" width="20" height="20"/><text class="net blue" x="105" y="88">Y G common -> PUL-</text>
+    <rect class="pin" x="270" y="98" width="20" height="20"/><text class="net green" x="170" y="113">Y Stp</text>
+    <rect class="pin" x="270" y="123" width="20" height="20"/><text class="net blue" x="105" y="138">Y G common -> DIR-</text>
+    <rect class="pin" x="270" y="148" width="20" height="20"/><text class="net green" x="170" y="163">Y Dir</text>
+    <rect class="pin" x="270" y="173" width="20" height="20"/><text class="net blue" x="105" y="188">Y G common -> ENA-</text>
+    <rect class="pin" x="270" y="198" width="20" height="20"/><text class="net green" x="170" y="213">Y En</text>
+    <rect class="pin" x="270" y="230" width="20" height="20"/><text class="net red" x="158" y="245">+12V Y</text>
+    <rect class="pin" x="270" y="255" width="20" height="20"/><text class="net blue" x="166" y="270">0V Y</text>
+    <rect class="box" x="455" y="30" width="340" height="270" rx="8"/>
+    <text class="h1" x="477" y="60">Y TB6600 driver</text>
+    <rect class="pin" x="435" y="73" width="20" height="20"/><text class="net blue" x="477" y="88">PUL-</text>
+    <rect class="pin" x="435" y="98" width="20" height="20"/><text class="net green" x="477" y="113">PUL+</text>
+    <rect class="pin" x="435" y="123" width="20" height="20"/><text class="net blue" x="477" y="138">DIR-</text>
+    <rect class="pin" x="435" y="148" width="20" height="20"/><text class="net green" x="477" y="163">DIR+</text>
+    <rect class="pin" x="435" y="173" width="20" height="20"/><text class="net blue" x="477" y="188">ENA-</text>
+    <rect class="pin" x="435" y="198" width="20" height="20"/><text class="net green" x="477" y="213">ENA+</text>
+    <rect class="pin" x="435" y="230" width="20" height="20"/><text class="net red" x="477" y="245">DC+</text>
+    <rect class="pin" x="435" y="255" width="20" height="20"/><text class="net blue" x="477" y="270">DC-</text>
+    <rect class="pin" x="795" y="98" width="20" height="20"/><text class="net purple" x="740" y="113">A+</text>
+    <rect class="pin" x="795" y="123" width="20" height="20"/><text class="net purple" x="740" y="138">A-</text>
+    <rect class="pin" x="795" y="148" width="20" height="20"/><text class="net brown" x="740" y="163">B+</text>
+    <rect class="pin" x="795" y="173" width="20" height="20"/><text class="net brown" x="740" y="188">B-</text>
+    <line class="wire gnd" x1="290" y1="83" x2="435" y2="83"/>
+    <line class="wire sig" x1="290" y1="108" x2="435" y2="108"/>
+    <line class="wire gnd" x1="290" y1="133" x2="435" y2="133"/>
+    <line class="wire sig" x1="290" y1="158" x2="435" y2="158"/>
+    <line class="wire gnd" x1="290" y1="183" x2="435" y2="183"/>
+    <line class="wire sig" x1="290" y1="208" x2="435" y2="208"/>
+    <line class="wire pwr" x1="290" y1="240" x2="435" y2="240"/>
+    <line class="wire gnd" x1="290" y1="265" x2="435" y2="265"/>
+    <rect class="box" x="955" y="54" width="275" height="180" rx="8"/>
+    <text class="h1" x="977" y="84">Y stepper motor</text>
+    <text class="small" x="977" y="106">17HS15-1504S-X1</text>
+    <rect class="pin" x="935" y="98" width="20" height="20"/><text class="net purple" x="977" y="113">Black A+</text>
+    <rect class="pin" x="935" y="123" width="20" height="20"/><text class="net purple" x="977" y="138">Green A-</text>
+    <rect class="pin" x="935" y="148" width="20" height="20"/><text class="net brown" x="977" y="163">Red B+</text>
+    <rect class="pin" x="935" y="173" width="20" height="20"/><text class="net brown" x="977" y="188">Blue B-</text>
+    <line class="wire coil-a" x1="815" y1="108" x2="935" y2="108"/>
+    <line class="wire coil-a" x1="815" y1="133" x2="935" y2="133"/>
+    <line class="wire coil-b" x1="815" y1="158" x2="935" y2="158"/>
+    <line class="wire coil-b" x1="815" y1="183" x2="935" y2="183"/>
+  </g>
+
+  <!-- A axis -->
+  <g id="a-axis" transform="translate(0 920)">
+    <rect class="box" x="40" y="0" width="250" height="270" rx="8"/>
+    <text class="h1" x="62" y="30">A output / common block</text>
+    <text class="small" x="62" y="52">G common outputs come from RP23CNC A G.</text>
+    <rect class="pin" x="270" y="73" width="20" height="20"/><text class="net blue" x="105" y="88">A G common -> PUL-</text>
+    <rect class="pin" x="270" y="98" width="20" height="20"/><text class="net green" x="170" y="113">A Stp</text>
+    <rect class="pin" x="270" y="123" width="20" height="20"/><text class="net blue" x="105" y="138">A G common -> DIR-</text>
+    <rect class="pin" x="270" y="148" width="20" height="20"/><text class="net green" x="170" y="163">A Dir</text>
+    <rect class="pin" x="270" y="173" width="20" height="20"/><text class="net blue" x="105" y="188">A G common -> ENA-</text>
+    <rect class="pin" x="270" y="198" width="20" height="20"/><text class="net green" x="170" y="213">A En</text>
+    <rect class="pin" x="270" y="230" width="20" height="20"/><text class="net red" x="158" y="245">+12V A</text>
+    <rect class="pin" x="270" y="255" width="20" height="20"/><text class="net blue" x="166" y="270">0V A</text>
+    <rect class="box" x="455" y="30" width="340" height="270" rx="8"/>
+    <text class="h1" x="477" y="60">A TB6600 driver</text>
+    <rect class="pin" x="435" y="73" width="20" height="20"/><text class="net blue" x="477" y="88">PUL-</text>
+    <rect class="pin" x="435" y="98" width="20" height="20"/><text class="net green" x="477" y="113">PUL+</text>
+    <rect class="pin" x="435" y="123" width="20" height="20"/><text class="net blue" x="477" y="138">DIR-</text>
+    <rect class="pin" x="435" y="148" width="20" height="20"/><text class="net green" x="477" y="163">DIR+</text>
+    <rect class="pin" x="435" y="173" width="20" height="20"/><text class="net blue" x="477" y="188">ENA-</text>
+    <rect class="pin" x="435" y="198" width="20" height="20"/><text class="net green" x="477" y="213">ENA+</text>
+    <rect class="pin" x="435" y="230" width="20" height="20"/><text class="net red" x="477" y="245">DC+</text>
+    <rect class="pin" x="435" y="255" width="20" height="20"/><text class="net blue" x="477" y="270">DC-</text>
+    <rect class="pin" x="795" y="98" width="20" height="20"/><text class="net purple" x="740" y="113">A+</text>
+    <rect class="pin" x="795" y="123" width="20" height="20"/><text class="net purple" x="740" y="138">A-</text>
+    <rect class="pin" x="795" y="148" width="20" height="20"/><text class="net brown" x="740" y="163">B+</text>
+    <rect class="pin" x="795" y="173" width="20" height="20"/><text class="net brown" x="740" y="188">B-</text>
+    <line class="wire gnd" x1="290" y1="83" x2="435" y2="83"/>
+    <line class="wire sig" x1="290" y1="108" x2="435" y2="108"/>
+    <line class="wire gnd" x1="290" y1="133" x2="435" y2="133"/>
+    <line class="wire sig" x1="290" y1="158" x2="435" y2="158"/>
+    <line class="wire gnd" x1="290" y1="183" x2="435" y2="183"/>
+    <line class="wire sig" x1="290" y1="208" x2="435" y2="208"/>
+    <line class="wire pwr" x1="290" y1="240" x2="435" y2="240"/>
+    <line class="wire gnd" x1="290" y1="265" x2="435" y2="265"/>
+    <rect class="box" x="955" y="54" width="275" height="180" rx="8"/>
+    <text class="h1" x="977" y="84">A stepper motor</text>
+    <text class="small" x="977" y="106">rotating-bed drive</text>
+    <rect class="pin" x="935" y="98" width="20" height="20"/><text class="net purple" x="977" y="113">Black A+</text>
+    <rect class="pin" x="935" y="123" width="20" height="20"/><text class="net purple" x="977" y="138">Green A-</text>
+    <rect class="pin" x="935" y="148" width="20" height="20"/><text class="net brown" x="977" y="163">Red B+</text>
+    <rect class="pin" x="935" y="173" width="20" height="20"/><text class="net brown" x="977" y="188">Blue B-</text>
+    <line class="wire coil-a" x1="815" y1="108" x2="935" y2="108"/>
+    <line class="wire coil-a" x1="815" y1="133" x2="935" y2="133"/>
+    <line class="wire coil-b" x1="815" y1="158" x2="935" y2="158"/>
+    <line class="wire coil-b" x1="815" y1="183" x2="935" y2="183"/>
+  </g>
+
+  <!-- Toolhead and TBD items -->
+  <g id="toolhead" transform="translate(1345 300)">
+    <rect class="warn" x="0" y="0" width="500" height="205" rx="8"/>
+    <text class="h1 red" x="22" y="32">Toolhead control is not pin-final</text>
+    <text class="txt" x="22" y="64">RP23CNC spindle/tool output -> toolhead ENGAGE/LIFT input</text>
+    <text class="txt" x="22" y="92">Toolhead controller -> DRV8833 AIN1/AIN2</text>
+    <text class="txt" x="22" y="120">DRV8833 AOUT1/AOUT2 -> N20 actuator leads</text>
+    <text class="small" x="22" y="150">Terminals remain TBD until polarity and controller placement are tested.</text>
+    <text class="small" x="22" y="174">This section is summarized to avoid implying unverified pins.</text>
+
+    <rect class="box" x="0" y="250" width="500" height="170" rx="8"/>
+    <text class="h1" x="22" y="282">Toolhead power chain</text>
+    <text class="txt" x="22" y="314">+12 V / 0 V tool branch -> B085T73CSD buck IN+ / IN-</text>
+    <text class="txt" x="22" y="342">Buck OUT+ / OUT- set to 6.0 V -> DRV8833 VM / GND</text>
+    <text class="small" x="22" y="374">Do not connect the actuator until the buck is adjusted with a meter.</text>
+
+    <rect class="warn" x="0" y="470" width="500" height="210" rx="8"/>
+    <text class="h1 red" x="22" y="502">Open / not yet wired</text>
+    <text class="txt" x="22" y="534">X limit switch: switch and polarity TBD</text>
+    <text class="txt" x="22" y="562">Y limit switch: switch and polarity TBD</text>
+    <text class="txt" x="22" y="590">A_HOME magnetic adapter: output conditioning TBD</text>
+    <text class="txt" x="22" y="618">E-stop: halt input and motor-power removal TBD</text>
+    <text class="txt" x="22" y="646">HX711/load cell and TMAG5273 controller pins TBD</text>
+  </g>
+
+  <g id="notes">
+    <rect class="soft" x="40" y="1220" width="1810" height="44" rx="8"/>
+    <text class="txt" x="62" y="1248">The repeated "G common -> PUL-/DIR-/ENA-" outputs are an explicit common/jumper block for each axis signal ground. Stepper motors connect only to TB6600 motor outputs, never directly to 12 V.</text>
+  </g>
+</svg>

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <style>
+    .title { font: bold 29px Arial, sans-serif; fill: #17212b; }
+    .head { font: bold 20px Arial, sans-serif; fill: #17212b; }
+    .label { font: 16px Arial, sans-serif; fill: #17212b; }
+    .small { font: 13px Arial, sans-serif; fill: #17212b; }
+    .wire { stroke: #17212b; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .tool { stroke: #1366b8; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .ctrl { stroke: #c04020; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .light { stroke: #d08b00; stroke-width: 3; fill: none; stroke-dasharray: 8 7; }
+    .box { fill: #fff; stroke: #17212b; stroke-width: 2; }
+    .ctrlbox { fill: #fff7f4; stroke: #c04020; stroke-width: 2; }
+    .toolbox { fill: #f4f9ff; stroke: #1366b8; stroke-width: 2; }
+    .note { fill: #fff9df; stroke: #b18100; stroke-width: 2; }
+  </style>
+
+  <rect width="1600" height="1000" fill="#ffffff"/>
+  <text x="800" y="42" text-anchor="middle" class="title">PC817C PERFBOARD — ELECTRICAL WIRING SCHEMATIC</text>
+  <text x="800" y="68" text-anchor="middle" class="small">Three isolated channels. Dashed amber lines are light inside the optocouplers, not wires.</text>
+
+  <rect x="32" y="95" width="350" height="805" rx="14" class="ctrlbox"/>
+  <text x="207" y="128" text-anchor="middle" class="head">RP23CNC CONTROLLER DOMAIN</text>
+  <text x="207" y="151" text-anchor="middle" class="small">J1 terminal block</text>
+  <text x="70" y="211" class="label">1  CTRL_5V</text><line x1="205" y1="205" x2="382" y2="205" class="ctrl"/>
+  <text x="70" y="265" class="label">2  CTRL_GND</text><line x1="205" y1="259" x2="382" y2="259" class="ctrl"/>
+  <text x="70" y="360" class="label">3  ENA (sink low)</text><line x1="245" y1="354" x2="382" y2="354" class="ctrl"/>
+  <text x="70" y="540" class="label">4  AUX0 (sink low)</text><line x1="245" y1="534" x2="382" y2="534" class="ctrl"/>
+  <text x="70" y="770" class="label">5  A_HOME input</text><line x1="225" y1="764" x2="382" y2="764" class="ctrl"/>
+  <text x="70" y="845" class="small">6  NC / spare</text>
+
+  <rect x="1218" y="95" width="350" height="805" rx="14" class="toolbox"/>
+  <text x="1393" y="128" text-anchor="middle" class="head">PRO MICRO RP2350 DOMAIN</text>
+  <text x="1393" y="151" text-anchor="middle" class="small">J2 terminal block</text>
+  <text x="1243" y="211" class="label">1  TOOL_3V3</text><line x1="1218" y1="205" x2="1390" y2="205" class="tool"/>
+  <text x="1243" y="265" class="label">2  TOOL_GND</text><line x1="1218" y1="259" x2="1390" y2="259" class="tool"/>
+  <text x="1243" y="360" class="label">3  GP8 input</text><line x1="1218" y1="354" x2="1390" y2="354" class="tool"/>
+  <text x="1243" y="540" class="label">4  GP10 input</text><line x1="1218" y1="534" x2="1390" y2="534" class="tool"/>
+  <text x="1243" y="720" class="label">5  GP9 output</text><line x1="1218" y1="714" x2="1390" y2="714" class="tool"/>
+  <text x="1243" y="845" class="small">6  NC / spare</text>
+
+  <!-- U1 input -->
+  <text x="485" y="185" class="head">U1 — ENA to GP8</text>
+  <line x1="382" y1="205" x2="418" y2="205" class="ctrl"/><rect x="418" y="187" width="92" height="36" class="box"/><text x="464" y="211" text-anchor="middle" class="label">R1 680Ω</text>
+  <line x1="510" y1="205" x2="558" y2="205" class="ctrl"/>
+  <rect x="558" y="180" width="150" height="190" class="box"/><text x="633" y="207" text-anchor="middle" class="head">PC817C U1</text>
+  <text x="575" y="244" class="label">1 LED A</text><text x="575" y="335" class="label">2 LED K</text><line x1="558" y1="239" x2="530" y2="239" class="ctrl"/><line x1="558" y1="330" x2="382" y2="354" class="ctrl"/>
+  <path d="M610 250 L635 270 L610 290 L635 310" class="wire"/><line x1="635" y1="270" x2="656" y2="270" class="wire"/><text x="678" y="274" class="small">LED</text>
+  <text x="650" y="244" class="small">4 C</text><text x="650" y="335" class="small">3 E</text>
+  <line x1="708" y1="239" x2="850" y2="239" class="tool"/><line x1="708" y1="330" x2="850" y2="330" class="tool"/>
+  <line x1="610" y1="245" x2="650" y2="315" class="light"/>
+  <path d="M528 239 L528 330" class="ctrl"/><path d="M518 253 L528 239 L538 253 M518 316 L528 330 L538 316" class="ctrl"/><text x="435" y="285" class="small">D1 1N4148, band to pin 1</text>
+  <line x1="850" y1="239" x2="955" y2="239" class="tool"/><rect x="955" y="221" width="92" height="36" class="box"/><text x="1001" y="245" text-anchor="middle" class="label">R3 10k</text><line x1="1047" y1="239" x2="1085" y2="239" class="tool"/><line x1="1085" y1="205" x2="1085" y2="239" class="tool"/><line x1="1085" y1="205" x2="1218" y2="205" class="tool"/>
+  <line x1="850" y1="239" x2="850" y2="354" class="tool"/><line x1="850" y1="354" x2="1218" y2="354" class="tool"/><text x="875" y="348" class="small">GP8</text>
+  <line x1="900" y1="354" x2="900" y2="390" class="tool"/><rect x="870" y="390" width="60" height="30" class="box"/><text x="900" y="411" text-anchor="middle" class="small">C1 47nF</text><line x1="900" y1="420" x2="900" y2="450" class="tool"/><line x1="850" y1="330" x2="900" y2="330" class="tool"/><line x1="900" y1="330" x2="900" y2="450" class="tool"/><line x1="900" y1="450" x2="1218" y2="450" class="tool"/><text x="1030" y="444" class="small">TOOL_GND</text>
+
+  <!-- U2 -->
+  <text x="485" y="472" class="head">U2 — AUX0 to GP10</text>
+  <path d="M382 205 L400 205 L400 493 L418 493" class="ctrl"/><rect x="418" y="475" width="92" height="36" class="box"/><text x="464" y="499" text-anchor="middle" class="label">R2 680Ω</text><path d="M510 493 L530 493 L530 531 L558 531" class="ctrl"/>
+  <rect x="558" y="467" width="150" height="190" class="box"/><text x="633" y="494" text-anchor="middle" class="head">PC817C U2</text><text x="575" y="531" class="label">1 LED A</text><text x="575" y="622" class="label">2 LED K</text><text x="650" y="531" class="small">4 C</text><text x="650" y="622" class="small">3 E</text>
+  <path d="M610 537 L635 557 L610 577 L635 597" class="wire"/><line x1="610" y1="532" x2="650" y2="602" class="light"/>
+  <path d="M528 531 L528 622" class="ctrl"/><path d="M518 545 L528 531 L538 545 M518 608 L528 622 L538 608" class="ctrl"/><text x="435" y="579" class="small">D2 1N4148, band to pin 1</text><path d="M382 534 L400 534 L400 622 L558 622" class="ctrl"/>
+  <line x1="708" y1="531" x2="850" y2="531" class="tool"/><line x1="708" y1="622" x2="850" y2="622" class="tool"/><line x1="850" y1="531" x2="955" y2="531" class="tool"/><rect x="955" y="513" width="92" height="36" class="box"/><text x="1001" y="537" text-anchor="middle" class="label">R4 10k</text><line x1="1047" y1="531" x2="1085" y2="531" class="tool"/><line x1="1085" y1="205" x2="1085" y2="531" class="tool"/>
+  <line x1="850" y1="531" x2="850" y2="534" class="tool"/><line x1="850" y1="534" x2="1218" y2="534" class="tool"/><text x="875" y="526" class="small">GP10</text><line x1="900" y1="534" x2="900" y2="570" class="tool"/><rect x="870" y="570" width="60" height="30" class="box"/><text x="900" y="591" text-anchor="middle" class="small">C2 47nF</text><line x1="900" y1="600" x2="900" y2="630" class="tool"/><line x1="850" y1="622" x2="900" y2="622" class="tool"/><line x1="900" y1="622" x2="900" y2="630" class="tool"/><line x1="900" y1="630" x2="1218" y2="630" class="tool"/>
+
+  <!-- U3 -->
+  <text x="485" y="715" class="head">U3 — GP9 to A_HOME (do not enable yet)</text>
+  <line x1="1218" y1="714" x2="1085" y2="714" class="tool"/><rect x="993" y="696" width="92" height="36" class="box"/><text x="1039" y="720" text-anchor="middle" class="label">R5 390Ω</text><path d="M993 714 L740 714 L740 680 L530 680 L530 764 L558 764" class="tool"/>
+  <rect x="558" y="700" width="150" height="190" class="box"/><text x="633" y="727" text-anchor="middle" class="head">PC817C U3</text><text x="575" y="764" class="label">1 LED A</text><text x="575" y="855" class="label">2 LED K</text><text x="650" y="764" class="small">4 C</text><text x="650" y="855" class="small">3 E</text>
+  <path d="M610 770 L635 790 L610 810 L635 830" class="wire"/><line x1="610" y1="765" x2="650" y2="835" class="light"/><line x1="558" y1="855" x2="850" y2="855" class="tool"/><line x1="850" y1="855" x2="850" y2="630" class="tool"/>
+  <path d="M528 764 L528 855" class="tool"/><path d="M518 778 L528 764 L538 778 M518 841 L528 855 L538 841" class="tool"/><text x="435" y="812" class="small">D3 1N4148, band to pin 1</text>
+  <line x1="708" y1="764" x2="805" y2="764" class="ctrl"/><rect x="805" y="746" width="95" height="36" class="note"/><text x="852" y="770" text-anchor="middle" class="label">R6 0Ω DNP</text><line x1="900" y1="764" x2="382" y2="764" class="ctrl"/>
+  <text x="805" y="803" class="small">Fit only after E-18 verifies A_HOME behavior.</text>
+  <line x1="708" y1="855" x2="708" y2="875" class="ctrl"/><line x1="708" y1="875" x2="382" y2="875" class="ctrl"/><line x1="382" y1="875" x2="382" y2="259" class="ctrl"/><text x="425" y="870" class="small">U3 pin 3 → CTRL_GND</text>
+
+  <rect x="1040" y="775" width="500" height="105" rx="10" class="note"/>
+  <text x="1060" y="805" class="head">Isolation rule</text>
+  <text x="1060" y="831" class="label">Never wire CTRL_GND to TOOL_GND.</text>
+  <text x="1060" y="856" class="small">C3 100nF goes between TOOL_3V3 and TOOL_GND at the terminal.</text>
+  <line x1="1140" y1="205" x2="1140" y2="305" class="tool"/><rect x="1110" y="305" width="60" height="30" class="box"/><text x="1140" y="326" text-anchor="middle" class="small">C3 100nF</text><line x1="1140" y1="335" x2="1140" y2="450" class="tool"/>
+</svg>

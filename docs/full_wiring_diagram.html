@@ -191,7 +191,7 @@
 <body>
   <main>
     <h1>RP23CNC X/Y/Theta Plotter Wiring Diagram</h1>
-    <p class="subtitle">Single 12V supply with three TB6600-style external stepper drivers, STEPPERONLINE NEMA 17 motors, and a separate 5V buck converter for the DRV8833 pen pressure actuator.</p>
+    <p class="subtitle">Single 12V supply with three TB6600-style external stepper drivers, STEPPERONLINE NEMA 17 motors, a 6V toolhead rail, and local 5V toolhead regulation.</p>
     <article class="callout">
       <h2>Concept Only - Do Not Wire From This Diagram Alone</h2>
       <p>Terminal polarity, power distribution, and controller pin assignments are not fully verified. Use the continuously updated <a href="hardware/WIRING_TABLE.md">Master Wiring Table</a>; any connection still marked TBD must not be energized.</p>
@@ -208,7 +208,7 @@
     <section class="diagram" aria-label="Full wiring diagram">
       <svg viewBox="0 0 1160 820" role="img" aria-labelledby="diagram-title diagram-desc">
         <title id="diagram-title">RP23CNC plotter wiring diagram</title>
-        <desc id="diagram-desc">A wiring diagram showing a 12V power supply feeding the RP23CNC controller, three TB6600 stepper drivers, a 5V buck converter, and a DRV8833 pen actuator driver.</desc>
+        <desc id="diagram-desc">A wiring diagram showing a 12V power supply feeding the RP23CNC controller, three TB6600 stepper drivers, a 6V toolhead buck, a local 5V regulator, and a DRV8833 pen actuator driver.</desc>
 
         <defs>
           <marker id="arrow-power" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
@@ -279,13 +279,13 @@
         <text class="box-note" x="1038" y="556">12:1 GT2 bed</text>
 
         <rect class="box" x="390" y="520" width="210" height="118"></rect>
-        <text class="box-title" x="412" y="550">5V Buck Converter</text>
+        <text class="box-title" x="412" y="550">Pololu D36V50F6</text>
         <text class="pin" x="412" y="582">VIN+ / VIN- from 12V</text>
-        <text class="pin" x="412" y="608">5V OUT / GND</text>
+        <text class="pin" x="412" y="608">fixed 6V OUT / GND</text>
 
         <rect class="box" x="720" y="650" width="210" height="120"></rect>
         <text class="box-title" x="742" y="680">Pen MCU + DRV8833</text>
-        <text class="pin" x="742" y="710">5V / GND</text>
+        <text class="pin" x="742" y="710">S7V8F5 local 5V</text>
         <text class="pin" x="742" y="736">IN1 / IN2 control</text>
         <text class="pin" x="742" y="758">OUT1 / OUT2 actuator</text>
 
@@ -303,7 +303,7 @@
         <text class="label" x="666" y="96">12V to driver V+</text>
 
         <path class="wire power" marker-end="url(#arrow-power)" d="M230 108 H300 V562 H390"></path>
-        <text class="label" x="247" y="546">12V to buck VIN+</text>
+        <text class="label" x="247" y="546">12V to 6V buck VIN+</text>
 
         <!-- Ground distribution -->
         <path class="wire ground" marker-end="url(#arrow-ground)" d="M230 140 H350 V146 H390"></path>
@@ -338,10 +338,10 @@
         <text class="label" x="645" y="704">spindle/LIFT state</text>
 
         <path class="wire power" marker-end="url(#arrow-power)" d="M600 608 H660 V710 H720"></path>
-        <text class="label" x="608" y="626">5V OUT</text>
+        <text class="label" x="608" y="626">6V rail to toolhead</text>
 
         <path class="wire ground" marker-end="url(#arrow-ground)" d="M600 620 H650 V730 H720"></path>
-        <text class="label" x="609" y="646">5V GND</text>
+        <text class="label" x="609" y="646">6V/common GND</text>
 
         <path class="wire pen" marker-end="url(#arrow-pen)" d="M930 758 H1010"></path>
         <text class="label" x="944" y="746">DRV8833 OUT1/OUT2</text>
@@ -359,7 +359,7 @@
 
       <article class="callout">
         <h2>Proposed Power Architecture</h2>
-        <p>The final supply, branch fuses, grounding topology, and toolhead regulator remain TBD. Do not power the 6V actuator from the raw stepper supply.</p>
+        <p>The final supply, branch fuses, grounding topology, and toolhead regulator mounting remain TBD. Do not power the 6V actuator from the raw stepper supply, and do not feed 6V directly to the RP2350.</p>
       </article>
 
       <article class="callout">

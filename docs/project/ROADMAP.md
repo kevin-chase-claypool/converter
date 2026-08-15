@@ -50,29 +50,35 @@
 - [ ] Measure S-120-12 no-load output and adjustment range. (`E-11`)
 - [ ] Measure stepper coil pairs and resistance. (`E-01`)
 - [ ] Document TB6600 switch tables and input behavior from the received units. (`E-02`, `E-03`)
-- [ ] Measure N20 motor no-load and current-limited stall current. (`E-05`, `E-06`)
+- [ ] Measure N20 motor no-load and current-limited stall current. (`E-05` passed; `E-06` remains)
 - [ ] Calibrate the 300 g load cell through the HX711. (`E-07`)
 - [ ] Measure usable HX711 sample rate and noise. (`E-08`)
 - [ ] Verify TMAG5273 readings with the intended magnet and geometry. (`E-09`)
-- [ ] Configure the B085T73CSD buck to 6.0 V and record display error. (`E-14`)
-- [ ] Characterize buck voltage, ripple, current, and temperature with actuator load. (`E-15`)
+- [ ] Verify Pololu D36V50F6 input/output polarity and fixed 6.0 V output. (`E-14`)
+- [ ] Inspect the completed toolhead perfboard, JST input, and Pro Micro-to-DRV8833 logic wiring unpowered. (`E-14B`)
+- [ ] Verify ACEIRMC DRV8833's existing GP7→`ULT` sleep and GP6←`EEP` fault mapping in firmware, then inspect the `J2` bridge. (`E-14C`)
+- [ ] Characterize Pololu D36V50F6 voltage, ripple, current, and temperature with actuator load. (`E-15`)
+- [ ] Characterize toolhead-mounted Pololu S7V8F5 5.0 V output with RP2350/sensors active and actuator moving. (Motor-only portion of `E-15A` passed; sensor portion remains.)
 - [ ] Complete the measured power budget.
 - [ ] Select branch fuses, wire gauges, connectors, and distribution hardware.
 - [ ] Update every affected master-wiring-table row with evidence.
 
 ## Phase 2: controller baseline
 
-- [ ] Confirm RP23CNC soldering/continuity inspection passed before power. (`E-17`)
+- [x] Confirm RP23CNC soldering/continuity inspection passed before power. (`E-17`; passed 2026-08-14)
 - [x] Record the exact RP23CNC board revision. (`RP23U5XBB V1.01`; 2026-06-09 board inspection lab note)
 - [ ] Build or obtain current RP23CNC-compatible grblHAL firmware.
 - [ ] Archive the exact source commits, board target, plugins, and build options.
-- [ ] Flash and identify the expected firmware. (`F-01`)
+- [x] Flash and identify the expected firmware. (`F-01`; passed 2026-08-14)
 - [ ] Confirm USB communication.
 - [ ] Confirm Ethernet communication if required.
-- [ ] Confirm converter G-code subset parsing. (`F-02`)
-- [ ] Confirm unpowered STEP/DIR output pins and polarity. (`F-03`)
+- [x] Confirm converter G-code subset parsing. (`F-02`; passed 2026-08-14)
+- [x] Confirm unpowered STEP/DIR output pins and polarity. (`F-03`; passed 2026-08-14)
 - [ ] Confirm limit input behavior and polarity. (`F-04`)
+- [ ] F-04 temporary-switch harness: verify X/Y roller switches with short leads before permanent drag-chain routing.
+- [ ] Measure the drawer-side drag chain's internal envelope and bend radius against every planned moving cable; replace it if the 4C shielded cable plus the remaining required conductors cannot move freely with margin.
 - [ ] Confirm M3/M5 tool output behavior. (`F-05`)
+- [ ] Verify B07WFGTNQC optocoupler channel direction, polarity, input current, output-side 3.3 V compatibility, and safe RP2350 logic levels before wiring `M3/M5` or `HOME_ARM`.
 - [ ] Save a complete `$` settings dump and verify persistence. (`F-06`)
 
 ## Phase 3: single-axis motion

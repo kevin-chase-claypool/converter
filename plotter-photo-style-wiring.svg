@@ -1,0 +1,305 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2500" height="2000" viewBox="0 0 2500 2000">
+  <title>Theta Plotter Photo-Style Wiring Layout - No Overlaps</title>
+  <desc>Photo-style wiring layout using peripheral terminal faces, 90-degree wiring, explicit distribution blocks, and no wire overlap across components or other wires.</desc>
+  <defs>
+    <style>
+      .page { fill: #f7f7f2; }
+      .panel { fill: #ffffff; stroke: #1f1f1f; stroke-width: 2.2; }
+      .metal { fill: #d9dbd9; stroke: #7d807d; stroke-width: 2; }
+      .plastic { fill: #20242b; stroke: #050505; stroke-width: 2; }
+      .module { fill: #fff; stroke: #111; stroke-width: 2; }
+      .driver { fill: #fffdf6; stroke: #6b4f00; stroke-width: 2.2; }
+      .board { fill: #0d7d48; stroke: #064d2c; stroke-width: 2; }
+      .blueboard { fill: #2176ae; stroke: #0d3f66; stroke-width: 2; }
+      .redboard { fill: #b32d2e; stroke: #6b1515; stroke-width: 2; }
+      .black { fill: #20242b; stroke: #050505; stroke-width: 2; }
+      .label { fill: #efefea; stroke: #bbbbaf; stroke-width: 1; }
+      .yellow { fill: #ffdf57; stroke: #8b6a00; stroke-width: 1.2; }
+      .term-red { fill: #fff0ee; stroke: #9f1d13; stroke-width: 1.5; }
+      .term-blue { fill: #eef6ff; stroke: #005f99; stroke-width: 1.5; }
+      .term-green { fill: #eefbf1; stroke: #237a3b; stroke-width: 1.5; }
+      .term-purple { fill: #f6efff; stroke: #7a3db8; stroke-width: 1.5; }
+      .term-brown { fill: #fff4e8; stroke: #a45710; stroke-width: 1.5; }
+      .term-tbd { fill: #fff8f7; stroke: #c1121f; stroke-width: 1.7; stroke-dasharray: 5 4; }
+      .screw { fill: #f7f7f7; stroke: #555; stroke-width: 1; }
+      .wire { fill: none; stroke-width: 3; stroke-linecap: square; stroke-linejoin: miter; }
+      .pwr { stroke: #c1121f; }
+      .gnd { stroke: #005f99; }
+      .sig { stroke: #237a3b; }
+      .coil-a { stroke: #7a3db8; }
+      .coil-b { stroke: #a45710; }
+      .tbd { stroke: #c1121f; stroke-dasharray: 8 6; }
+      .title { font: 700 28px Arial, sans-serif; fill: #111; }
+      .h1 { font: 700 20px Arial, sans-serif; fill: #111; }
+      .h2 { font: 700 15px Arial, sans-serif; fill: #111; }
+      .txt { font: 13px Arial, sans-serif; fill: #111; }
+      .small { font: 11px Arial, sans-serif; fill: #333; }
+      .tiny { font: 10px Arial, sans-serif; fill: #333; }
+      .pinlabel { font: 700 10px Arial, sans-serif; fill: #111; }
+      .white { fill: #fff; }
+      .red { fill: #c1121f; }
+      .blue { fill: #005f99; }
+      .green { fill: #237a3b; }
+      .purple { fill: #7a3db8; }
+      .brown { fill: #a45710; }
+      .note { fill: #fff7d7; stroke: #9a6b00; stroke-width: 1.5; }
+    </style>
+  </defs>
+
+  <rect class="page" x="0" y="0" width="2500" height="2000"/>
+  <text class="title" x="40" y="48">Theta Pen Plotter - Photo-Style Wiring Layout</text>
+  <text class="txt" x="40" y="76">No wires overlap other wires or pass across terminals. All wire paths use 90-degree segments in dedicated routing lanes.</text>
+
+  <g transform="translate(1550 26)">
+    <rect class="module" x="0" y="0" width="850" height="86" rx="8"/>
+    <text class="h2" x="16" y="24">Line colors</text>
+    <line class="wire pwr" x1="22" y1="44" x2="76" y2="44"/><text class="small" x="88" y="48">+12 V / +6 V / +5 V</text>
+    <line class="wire gnd" x1="250" y1="44" x2="304" y2="44"/><text class="small" x="316" y="48">0 V / GND</text>
+    <line class="wire sig" x1="420" y1="44" x2="474" y2="44"/><text class="small" x="486" y="48">logic</text>
+    <line class="wire coil-a" x1="22" y1="68" x2="76" y2="68"/><text class="small" x="88" y="72">motor coil A</text>
+    <line class="wire coil-b" x1="250" y1="68" x2="304" y2="68"/><text class="small" x="316" y="72">motor coil B</text>
+    <line class="wire tbd" x1="420" y1="68" x2="474" y2="68"/><text class="small" x="486" y="72">TBD / verify</text>
+  </g>
+
+  <!-- Panel 1: power -->
+  <g transform="translate(40 120)">
+    <rect class="panel" x="0" y="0" width="1120" height="560" rx="10"/>
+    <text class="h1" x="24" y="34">1. PSU terminal face to fused DIN distribution</text>
+    <text class="small" x="24" y="58">Wires exit downward into empty routing lanes, then enter the distribution block. They do not pass over the PSU terminal strip.</text>
+
+    <g transform="translate(54 96)">
+      <rect class="metal" x="0" y="0" width="440" height="250" rx="8"/>
+      <rect class="yellow" x="100" y="18" width="154" height="48" rx="4"/>
+      <text class="tiny" x="122" y="47">CAUTION</text>
+      <g fill="#111">
+        <circle cx="44" cy="48" r="7"/><circle cx="68" cy="48" r="7"/><circle cx="92" cy="48" r="7"/>
+        <circle cx="44" cy="72" r="7"/><circle cx="68" cy="72" r="7"/><circle cx="92" cy="72" r="7"/>
+        <circle cx="180" cy="98" r="7"/><circle cx="204" cy="98" r="7"/><circle cx="228" cy="98" r="7"/><circle cx="252" cy="98" r="7"/>
+        <circle cx="180" cy="122" r="7"/><circle cx="204" cy="122" r="7"/><circle cx="228" cy="122" r="7"/><circle cx="252" cy="122" r="7"/>
+        <circle cx="310" cy="48" r="7"/><circle cx="334" cy="48" r="7"/><circle cx="358" cy="48" r="7"/><circle cx="382" cy="48" r="7"/>
+        <circle cx="310" cy="72" r="7"/><circle cx="334" cy="72" r="7"/><circle cx="358" cy="72" r="7"/><circle cx="382" cy="72" r="7"/>
+      </g>
+      <rect class="plastic" x="36" y="172" width="350" height="50" rx="6"/>
+      <rect class="label" x="42" y="132" width="42" height="34"/><text class="h2" x="60" y="154">L</text>
+      <rect class="label" x="84" y="132" width="42" height="34"/><text class="h2" x="100" y="154">N</text>
+      <rect class="label" x="126" y="132" width="42" height="34"/><text class="h2" x="138" y="154">PE</text>
+      <rect class="label" x="168" y="132" width="42" height="34"/><text class="h2" x="180" y="154">-V</text>
+      <rect class="label" x="210" y="132" width="42" height="34"/><text class="h2" x="222" y="154">-V</text>
+      <rect class="label" x="252" y="132" width="42" height="34"/><text class="h2" x="263" y="154">+V</text>
+      <rect class="label" x="294" y="132" width="42" height="34"/><text class="h2" x="305" y="154">+V</text>
+      <rect class="label" x="338" y="132" width="72" height="34"/><text class="h2" x="352" y="154">+V ADJ</text>
+      <circle class="screw" cx="63" cy="197" r="9"/><circle class="screw" cx="105" cy="197" r="9"/><circle class="screw" cx="147" cy="197" r="9"/>
+      <circle class="screw" cx="189" cy="197" r="9"/><circle class="screw" cx="231" cy="197" r="9"/><circle class="screw" cx="273" cy="197" r="9"/><circle class="screw" cx="315" cy="197" r="9"/>
+      <text class="h2" x="0" y="-14">MEISHILE S-120-12</text>
+    </g>
+
+    <g transform="translate(680 96)">
+      <rect class="black" x="0" y="0" width="360" height="250" rx="10"/>
+      <text class="white h1" x="22" y="32">DIN fused distribution</text>
+      <text class="white small" x="22" y="54">one fused branch per load</text>
+      <rect class="term-red" x="26" y="82" width="64" height="38"/><circle class="screw" cx="58" cy="101" r="9"/><text class="h2 red" x="40" y="144">+IN</text>
+      <rect class="term-blue" x="26" y="160" width="64" height="38"/><circle class="screw" cx="58" cy="179" r="9"/><text class="h2 blue" x="40" y="222">0IN</text>
+      <g transform="translate(130 82)">
+        <rect class="term-red" x="0" y="0" width="52" height="30"/><text class="tiny red" x="11" y="20">+X</text>
+        <rect class="term-blue" x="0" y="38" width="52" height="30"/><text class="tiny blue" x="12" y="58">0X</text>
+        <rect class="term-red" x="68" y="0" width="52" height="30"/><text class="tiny red" x="79" y="20">+Y</text>
+        <rect class="term-blue" x="68" y="38" width="52" height="30"/><text class="tiny blue" x="80" y="58">0Y</text>
+        <rect class="term-red" x="136" y="0" width="52" height="30"/><text class="tiny red" x="147" y="20">+A</text>
+        <rect class="term-blue" x="136" y="38" width="52" height="30"/><text class="tiny blue" x="148" y="58">0A</text>
+        <rect class="term-red" x="68" y="96" width="72" height="30"/><text class="tiny red" x="77" y="116">+TOOL</text>
+        <rect class="term-blue" x="68" y="134" width="72" height="30"/><text class="tiny blue" x="79" y="154">0TOOL</text>
+      </g>
+      <g transform="translate(130 198)">
+        <rect class="yellow" x="0" y="0" width="38" height="28"/><text class="tiny" x="8" y="18">F1</text>
+        <rect class="yellow" x="68" y="0" width="38" height="28"/><text class="tiny" x="76" y="18">F2</text>
+        <rect class="yellow" x="136" y="0" width="38" height="28"/><text class="tiny" x="144" y="18">F3</text>
+      </g>
+    </g>
+
+    <!-- Clear bottom routing lanes, no component crossing -->
+    <polyline class="wire pwr" points="381,293 381,405 706,405 706,197"/>
+    <polyline class="wire gnd" points="285,293 285,445 738,445 738,275"/>
+    <text class="small red" x="392" y="394">+12 V route below PSU</text>
+    <text class="small blue" x="296" y="436">0 V route below PSU</text>
+
+    <rect class="note" x="54" y="470" width="986" height="58" rx="8"/>
+    <text class="txt" x="76" y="502">Only one +V and one -V PSU output are shown feeding the fused distribution input. Use ferrules and strain relief; do not use +V ADJ as a power terminal.</text>
+  </g>
+
+  <!-- Panel 2: one axis -->
+  <g transform="translate(40 730)">
+    <rect class="panel" x="0" y="0" width="1490" height="720" rx="10"/>
+    <text class="h1" x="24" y="34">2. Motion axis wiring pattern - repeat for X, Y, and A</text>
+    <text class="small" x="24" y="56">This is one axis, routed as lanes. Substitute X/Y/A terminal groups and the matching fused branch.</text>
+
+    <g transform="translate(54 116)">
+      <rect class="board" x="0" y="0" width="260" height="188" rx="10"/>
+      <text class="white h1" x="20" y="32">RP23CNC axis terminal</text>
+      <text class="white small" x="20" y="54">X, Y, or A group</text>
+      <rect class="term-blue" x="28" y="104" width="54" height="38"/><circle class="screw" cx="55" cy="123" r="9"/><text class="pinlabel blue" x="49" y="164">G</text>
+      <rect class="term-green" x="82" y="104" width="54" height="38"/><circle class="screw" cx="109" cy="123" r="9"/><text class="pinlabel green" x="95" y="164">Stp</text>
+      <rect class="term-green" x="136" y="104" width="54" height="38"/><circle class="screw" cx="163" cy="123" r="9"/><text class="pinlabel green" x="151" y="164">Dir</text>
+      <rect class="term-green" x="190" y="104" width="54" height="38"/><circle class="screw" cx="217" cy="123" r="9"/><text class="pinlabel green" x="209" y="164">En</text>
+    </g>
+
+    <g transform="translate(390 100)">
+      <rect class="module" x="0" y="0" width="230" height="220" rx="10"/>
+      <text class="h1" x="18" y="32">Axis G common</text>
+      <text class="small" x="18" y="54">jumper terminal block</text>
+      <rect class="term-blue" x="18" y="104" width="54" height="34"/><text class="pinlabel blue" x="31" y="126">G IN</text>
+      <rect class="term-blue" x="148" y="62" width="62" height="30"/><text class="pinlabel blue" x="156" y="82">PUL-</text>
+      <rect class="term-blue" x="148" y="114" width="62" height="30"/><text class="pinlabel blue" x="157" y="134">DIR-</text>
+      <rect class="term-blue" x="148" y="166" width="62" height="30"/><text class="pinlabel blue" x="156" y="186">ENA-</text>
+    </g>
+
+    <g transform="translate(780 76)">
+      <rect class="driver" x="0" y="0" width="390" height="300" rx="12"/>
+      <text class="h1" x="22" y="32">TB6600 driver</text>
+      <rect class="black" x="30" y="74" width="292" height="44" rx="6"/>
+      <rect class="term-blue" x="38" y="82" width="44" height="30"/><text class="pinlabel blue" x="45" y="102">PUL-</text>
+      <rect class="term-green" x="82" y="82" width="44" height="30"/><text class="pinlabel green" x="89" y="102">PUL+</text>
+      <rect class="term-blue" x="126" y="82" width="44" height="30"/><text class="pinlabel blue" x="135" y="102">DIR-</text>
+      <rect class="term-green" x="170" y="82" width="44" height="30"/><text class="pinlabel green" x="179" y="102">DIR+</text>
+      <rect class="term-blue" x="214" y="82" width="44" height="30"/><text class="pinlabel blue" x="222" y="102">ENA-</text>
+      <rect class="term-green" x="258" y="82" width="44" height="30"/><text class="pinlabel green" x="266" y="102">ENA+</text>
+      <rect class="black" x="30" y="210" width="104" height="44" rx="6"/>
+      <rect class="term-red" x="38" y="218" width="44" height="30"/><text class="pinlabel red" x="49" y="238">DC+</text>
+      <rect class="term-blue" x="82" y="218" width="44" height="30"/><text class="pinlabel blue" x="93" y="238">DC-</text>
+      <rect class="black" x="188" y="210" width="168" height="44" rx="6"/>
+      <rect class="term-purple" x="196" y="218" width="38" height="30"/><text class="pinlabel purple" x="206" y="238">A+</text>
+      <rect class="term-purple" x="234" y="218" width="38" height="30"/><text class="pinlabel purple" x="244" y="238">A-</text>
+      <rect class="term-brown" x="272" y="218" width="38" height="30"/><text class="pinlabel brown" x="282" y="238">B+</text>
+      <rect class="term-brown" x="310" y="218" width="38" height="30"/><text class="pinlabel brown" x="320" y="238">B-</text>
+      <rect class="yellow" x="234" y="140" width="92" height="36" rx="4"/><text class="tiny" x="250" y="162">DIP switches</text>
+    </g>
+
+    <g transform="translate(1280 142)">
+      <rect class="module" x="0" y="0" width="140" height="140" rx="14"/>
+      <circle cx="70" cy="70" r="44" fill="#e9e9e0" stroke="#555" stroke-width="2"/>
+      <circle cx="70" cy="70" r="10" fill="#777"/>
+      <text class="h2" x="16" y="-14">Stepper motor</text>
+      <text class="tiny purple" x="6" y="158">Black A+</text>
+      <text class="tiny purple" x="6" y="174">Green A-</text>
+      <text class="tiny brown" x="82" y="158">Red B+</text>
+      <text class="tiny brown" x="82" y="174">Blue B-</text>
+    </g>
+
+    <g transform="translate(390 394)">
+      <rect class="module" x="0" y="0" width="230" height="86" rx="10"/>
+      <text class="h1" x="18" y="32">Axis fused branch</text>
+      <rect class="term-red" x="112" y="18" width="52" height="30"/><text class="pinlabel red" x="123" y="38">+12</text>
+      <rect class="term-blue" x="164" y="18" width="52" height="30"/><text class="pinlabel blue" x="177" y="38">0V</text>
+      <text class="small" x="18" y="64">Use X, Y, or A branch.</text>
+    </g>
+
+    <!-- Clear wire lanes, no overlaps -->
+    <polyline class="wire gnd" points="109,239 109,344 408,344 408,221"/>
+    <polyline class="wire gnd" points="600,177 706,177 706,173 818,173"/>
+    <polyline class="wire gnd" points="600,229 730,229 730,173 906,173"/>
+    <polyline class="wire gnd" points="600,281 754,281 754,173 994,173"/>
+    <polyline class="wire sig" points="163,239 163,374 862,374 862,173"/>
+    <polyline class="wire sig" points="217,239 217,404 950,404 950,173"/>
+    <polyline class="wire sig" points="271,239 271,434 1038,434 1038,173"/>
+    <polyline class="wire pwr" points="542,427 676,427 676,309 818,309"/>
+    <polyline class="wire gnd" points="594,427 700,427 700,309 862,309"/>
+
+    <polyline class="wire coil-a" points="976,309 976,468 1300,468 1300,300"/>
+    <polyline class="wire coil-a" points="1014,309 1014,492 1300,492 1300,316"/>
+    <polyline class="wire coil-b" points="1052,309 1052,516 1376,516 1376,300"/>
+    <polyline class="wire coil-b" points="1090,309 1090,540 1376,540 1376,316"/>
+
+    <rect class="note" x="54" y="550" width="1358" height="116" rx="8"/>
+    <text class="h1" x="78" y="582">Axis labels to substitute</text>
+    <text class="txt" x="78" y="612">X: RP23CNC X terminal group, X G common, X fused branch, X TB6600, X motor.</text>
+    <text class="txt" x="78" y="638">Y and A use the same physical pattern with their matching terminal groups, fused branches, drivers, and motors.</text>
+  </g>
+
+  <!-- Panel 3: toolhead -->
+  <g transform="translate(1590 730)">
+    <rect class="panel" x="0" y="0" width="760" height="720" rx="10"/>
+    <text class="h1" x="24" y="34">3. Toolhead control loop</text>
+    <text class="small" x="24" y="56">Label-based until the MCU board, DRV8833 module, and buck placement are finalized.</text>
+
+    <g transform="translate(38 92)">
+      <rect class="redboard" x="0" y="0" width="190" height="100" rx="8"/>
+      <text class="white h2" x="16" y="28">6 V buck</text>
+      <rect class="term-red" x="14" y="58" width="38" height="28"/><text class="tiny red" x="20" y="76">IN+</text>
+      <rect class="term-blue" x="52" y="58" width="38" height="28"/><text class="tiny blue" x="58" y="76">IN-</text>
+      <rect class="term-red" x="104" y="58" width="38" height="28"/><text class="tiny red" x="108" y="76">OUT+</text>
+      <rect class="term-blue" x="142" y="58" width="38" height="28"/><text class="tiny blue" x="146" y="76">OUT-</text>
+    </g>
+    <g transform="translate(38 252)">
+      <rect class="redboard" x="0" y="0" width="190" height="100" rx="8"/>
+      <text class="white h2" x="16" y="28">5 V buck</text>
+      <rect class="term-red" x="14" y="58" width="38" height="28"/><text class="tiny red" x="20" y="76">IN+</text>
+      <rect class="term-blue" x="52" y="58" width="38" height="28"/><text class="tiny blue" x="58" y="76">IN-</text>
+      <rect class="term-red" x="104" y="58" width="38" height="28"/><text class="tiny red" x="108" y="76">OUT+</text>
+      <rect class="term-blue" x="142" y="58" width="38" height="28"/><text class="tiny blue" x="146" y="76">OUT-</text>
+    </g>
+    <g transform="translate(330 78)">
+      <rect class="blueboard" x="0" y="0" width="240" height="132" rx="8"/>
+      <text class="white h2" x="16" y="28">DRV8833</text>
+      <rect class="term-red" x="16" y="58" width="42" height="28"/><text class="tiny red" x="28" y="76">VM</text>
+      <rect class="term-blue" x="58" y="58" width="42" height="28"/><text class="tiny blue" x="65" y="76">GND</text>
+      <rect class="term-green" x="100" y="58" width="42" height="28"/><text class="tiny green" x="109" y="76">AIN1</text>
+      <rect class="term-green" x="142" y="58" width="42" height="28"/><text class="tiny green" x="151" y="76">AIN2</text>
+      <rect class="term-tbd" x="78" y="96" width="42" height="24"/><text class="tiny red" x="86" y="113">OUT1</text>
+      <rect class="term-tbd" x="120" y="96" width="42" height="24"/><text class="tiny red" x="128" y="113">OUT2</text>
+    </g>
+    <g transform="translate(330 260)">
+      <rect class="board" x="0" y="0" width="240" height="146" rx="8"/>
+      <text class="white h2" x="16" y="28">Pico 2 / RP2040 MCU</text>
+      <rect class="term-red" x="16" y="58" width="42" height="28"/><text class="tiny red" x="22" y="76">VSYS</text>
+      <rect class="term-blue" x="58" y="58" width="42" height="28"/><text class="tiny blue" x="65" y="76">GND</text>
+      <rect class="term-green" x="100" y="58" width="42" height="28"/><text class="tiny green" x="109" y="76">GP2</text>
+      <rect class="term-green" x="142" y="58" width="42" height="28"/><text class="tiny green" x="151" y="76">GP3</text>
+      <rect class="term-green" x="58" y="104" width="42" height="28"/><text class="tiny green" x="65" y="122">AIN1</text>
+      <rect class="term-green" x="100" y="104" width="42" height="28"/><text class="tiny green" x="107" y="122">AIN2</text>
+    </g>
+    <g transform="translate(330 490)">
+      <rect class="redboard" x="0" y="0" width="240" height="112" rx="8"/>
+      <text class="white h2" x="16" y="28">HX711</text>
+      <rect class="term-red" x="14" y="58" width="36" height="26"/><text class="tiny red" x="20" y="76">VCC</text>
+      <rect class="term-blue" x="50" y="58" width="36" height="26"/><text class="tiny blue" x="56" y="76">GND</text>
+      <rect class="term-green" x="86" y="58" width="36" height="26"/><text class="tiny green" x="93" y="76">DT</text>
+      <rect class="term-green" x="122" y="58" width="36" height="26"/><text class="tiny green" x="128" y="76">SCK</text>
+      <rect class="term-tbd" x="168" y="30" width="28" height="24"/><text class="tiny red" x="174" y="47">E+</text>
+      <rect class="term-tbd" x="196" y="30" width="28" height="24"/><text class="tiny red" x="202" y="47">E-</text>
+      <rect class="term-tbd" x="168" y="78" width="28" height="24"/><text class="tiny red" x="174" y="95">A+</text>
+      <rect class="term-tbd" x="196" y="78" width="28" height="24"/><text class="tiny red" x="202" y="95">A-</text>
+    </g>
+    <g transform="translate(52 510)">
+      <rect class="module" x="0" y="0" width="140" height="86" rx="8"/>
+      <text class="h2" x="22" y="30">Load cell</text>
+      <text class="tiny" x="18" y="58">wire colors TBD</text>
+    </g>
+    <g transform="translate(630 118)">
+      <rect class="module" x="0" y="0" width="138" height="64" rx="24"/>
+      <text class="h2" x="22" y="38">N20 actuator</text>
+    </g>
+
+    <!-- Toolhead wiring lanes, separated -->
+    <polyline class="wire pwr" points="142,150 252,150 252,150 346,150"/>
+    <polyline class="wire gnd" points="180,150 280,150 280,150 388,150"/>
+    <polyline class="wire pwr" points="142,310 252,310 252,318 346,318"/>
+    <polyline class="wire gnd" points="180,310 280,310 280,318 388,318"/>
+    <polyline class="wire sig" points="388,392 388,224 472,224 472,150"/>
+    <polyline class="wire sig" points="430,392 430,244 514,244 514,150"/>
+    <polyline class="wire sig" points="430,318 430,548"/>
+    <polyline class="wire sig" points="472,318 472,548"/>
+    <polyline class="wire tbd" points="429,186 429,644 650,644 650,182"/>
+    <polyline class="wire tbd" points="471,186 471,668 690,668 690,182"/>
+    <polyline class="wire tbd" points="192,552 292,552 292,520 498,520"/>
+    <polyline class="wire tbd" points="192,576 292,576 292,568 526,568"/>
+    <rect class="note" x="38" y="632" width="540" height="58" rx="8"/>
+    <text class="small" x="58" y="656">Preferred: HX711 near load cell; long harness carries power and digital/control lines.</text>
+  </g>
+
+  <g transform="translate(40 1500)">
+    <rect class="note" x="0" y="0" width="2300" height="130" rx="8"/>
+    <text class="h1" x="24" y="34">Correctness notes</text>
+    <text class="txt" x="24" y="64">Motion: RP23CNC axis G is intentionally commoned to TB6600 PUL-, DIR-, and ENA- through the axis G common block. Axis Stp/Dir/En go to TB6600 PUL+/DIR+/ENA+.</text>
+    <text class="txt" x="24" y="92">Stepper motor: TB6600 A+ -> black, A- -> green, B+ -> red, B- -> blue. Confirm coil pairs with an ohmmeter before power.</text>
+    <text class="txt" x="24" y="120">Power: MEISHILE +V/-V feeds the fused DIN distribution. Use separate fused branches for X/Y/A drivers and the toolhead buck inputs.</text>
+  </g>
+</svg>
