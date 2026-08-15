@@ -76,6 +76,27 @@ stable entry anchors.
 
 Report the documentation files changed alongside implementation files.
 
+## GitHub backup and publishing
+
+This repository's GitHub remote is the project owner's cloud backup. At the end
+of every completed, independently verifiable update, after the relevant checks
+pass:
+
+1. Inspect `git status` and the scoped diff.
+2. Stage only the files belonging to that milestone. Do not sweep unrelated or
+   pre-existing dirty-worktree changes into the commit.
+3. Create a descriptive commit that includes implementation and its required
+   documentation together.
+4. Push the commit to the configured `origin` remote before reporting the
+   milestone complete.
+5. Report the commit hash and pushed branch. If a push cannot be completed,
+   state the exact reason and leave the verified commit intact locally.
+
+Treat a sustained hardware/test session as a completed update when it records a
+decision, completed test, wiring change, or meaningful evidence. Push it
+promptly; do not wait for the end of a larger phase or accumulate unrelated
+updates before creating the backup commit.
+
 ## Maintainability and continuous optimization
 
 Treat long-term maintainability as part of every task:
