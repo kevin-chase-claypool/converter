@@ -139,6 +139,7 @@ Entry details remain only in the chronology.
 - [2026-08-14 17:00:00 -0500 - MIXED/OPEN - Staged temporary X/Y limit-switch harness before drag-chain routing](#elog-20260814170000)
 - [2026-08-14 17:30:00 -0500 - HARDWARE/OPEN - Initial E-stop uses RP23CNC Halt input](#elog-20260814173000)
 - [2026-08-15 09:00:00 -0500 - HARDWARE/PARTIAL - Recorded TB6600 factory switch state](#elog-20260815090000)
+- [2026-08-15 10:00:00 -0500 - HARDWARE/PLANNED - Selected A-axis TB6600 baseline from measured 12:1 reduction](#elog-20260815100000)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -1596,3 +1597,25 @@ Add new entries at the top of the log below this line.
   SW4 ON/SW5 ON/SW6 OFF before the first motor-power test.
 - Risk: TB6600 clones can use different switch tables; all three labels and
   switch numbering must be photographed/confirmed before changing them.
+
+<a id="elog-20260815100000"></a>
+### 🟨 2026-08-15 10:00:00 -0500 - HARDWARE/PLANNED - Selected A-axis TB6600 baseline from measured 12:1 reduction
+
+- Status: configuration baseline selected; it is not yet physically set or
+  calibrated.
+- Category: hardware, rp23cnc-software, motion
+- Summary: The project owner measured 12 motor rotations for one bed rotation.
+  The selected A-axis baseline remains the received TB6600's 8-microstep row
+  (`SW1 OFF`, `SW2 ON`, `SW3 OFF`), rather than moving to 16 or 32 microsteps.
+  With the 1.8 degree motor, this yields 1,600 pulses per motor revolution,
+  19,200 pulses per bed revolution, and 0.01875 bed degree per pulse.
+- Result: Under the established motor-shaft-degree A contract, the initial
+  grblHAL A calibration is 4.444444 steps per A degree; one bed revolution is
+  4,320 commanded A degrees. The 1.5 A/phase current row remains the required
+  current baseline (`SW4 ON`, `SW5 ON`, `SW6 OFF`).
+- Reason: The 12:1 reduction already provides fine angular resolution. Higher
+  microstep settings would increase step-pulse demand and reduce incremental
+  torque without a demonstrated benefit, which is counterproductive for the
+  high-travel A axis.
+- Next action: With the driver unpowered, complete E-04 on a received unit,
+  then run M-04 and M-05 to verify the calculated motor and bed travel.

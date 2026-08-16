@@ -148,6 +148,10 @@ After the baseline transport works:
 
    Do not apply the 12:1 bed ratio again; the converter already emits motor
    shaft degrees.
+   For the received 1.8 degree motors at the selected 8-microstep baseline,
+   use 4.444444 steps per motor-degree. The measured 12:1 A drive therefore
+   requires 4,320 A motor-degrees (19,200 pulses) per bed revolution. Verify
+   this with M-04 and M-05 before treating it as calibrated.
 4. Set conservative per-axis rates and accelerations before attaching
    mechanics.
 5. Verify the converter subset: `G21`, `G90`, `G0/G1 X Y A F`, `M3`, `M5`,

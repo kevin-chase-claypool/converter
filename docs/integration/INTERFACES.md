@@ -47,6 +47,29 @@ A steps/degree = motor full-steps/rev * microsteps / 360
 Do not multiply by 12 again in grblHAL. If this convention changes, update the
 converter, firmware configuration, sample files, and this document together.
 
+### A-axis TB6600 baseline
+
+The observed drive ratio is 12 motor revolutions for one bed revolution. With
+the 1.8 degree, 200-full-step NEMA 17 and the received TB6600's **8-microstep**
+setting (`SW1 OFF`, `SW2 ON`, `SW3 OFF`), the initial configuration is:
+
+| Quantity | Value |
+|---|---:|
+| Motor pulses/revolution | 1,600 |
+| Motor steps per commanded A motor-degree | 4.444444 |
+| Motor degrees per bed revolution | 4,320 |
+| Pulses per bed revolution | 19,200 |
+| Nominal bed angle per pulse | 0.01875 degrees |
+
+Set the grblHAL A-axis steps-per-unit (`$103`, subject to the controller's
+reported setting-number map) to **4.444444** because A commands use
+motor-shaft degrees. Do not set it to 53.333333 steps per *bed* degree: that
+would silently change the established host/controller contract. Eight
+microsteps is the recommended starting point because the 12:1 reduction already
+provides fine bed resolution; 16 or 32 microsteps would increase pulse demand
+and reduce incremental torque without a demonstrated plotting benefit. M-04
+and M-05 must still verify one motor revolution and one full bed revolution.
+
 ## RP23CNC to stepper drivers
 
 Each axis uses `STEP`, `DIR`, and common `ENABLE`. The final wiring table must be

@@ -31,7 +31,7 @@ completion status.
 | E-01 | Confirm each stepper coil pair with ohmmeter | Black/green and red/blue pairs | TBD | TBD |
 | E-02 | Record TB6600 labels and switch tables | Three identical, readable units | Partial | Received label photograph confirms factory state SW2/SW4 ON and all others OFF. The printed table maps this to 8 microsteps (1600 pulses/rev) and 2.0 A. Photograph/confirm all three received tables and switch numbering before treating it as verified. See 2026-08-15 E-02 lab note. |
 | E-03 | Check STEP/DIR input behavior | Compatible with RP23CNC outputs | TBD | TBD |
-| E-04 | Set driver current conservatively | At or below 1.5 A/phase convention | TBD | TBD |
+| E-04 | Set driver current and microstep configuration conservatively | 1.5 A/phase (`SW4 ON`, `SW5 ON`, `SW6 OFF`) and 8 microsteps (`SW1 OFF`, `SW2 ON`, `SW3 OFF`) with driver unpowered | TBD | The 12:1 A reduction produces 19,200 pulses/bed revolution at 8 microsteps; do not increase to 16/32 microsteps unless testing demonstrates a need. |
 | E-05 | Measure N20 no-load current at 6 V | Stable and within supply/module range | Passed | At a 6.0 V bench input, toolhead idle current was 0.017 A. Both retract/lift and pen-down motion measured 0.043 A, for an approximately 0.026 A motor contribution in either direction. The repaired DRV8833 output solder joint remained reliable. No manual stall test was performed. |
 | E-06 | Measure current-limited actuator stall current | Below verified DRV8833 safe limit | TBD | TBD |
 | E-07 | Calibrate load cell with known masses | Repeatable slope and zero | Partial | USB-only HX711 testing passed communication (`hx_ready=1`). E-07B GP20/GP21 service UART and two automatic pen-tip/digital-scale contacts passed (49.4 g and 65 g). Normal Z-mechanism preload changes raw readings, so the residual approach is safe for contact detection but the coarse 50 ms final increment has not produced a repeatable force slope. Refine final approach increments before production calibration. See 2026-08-14 E-07 lab note. |
@@ -70,8 +70,8 @@ completion status.
 | M-01 | One-axis low-speed jog | Correct direction, no stalls, acceptable heating |
 | M-02 | One-axis rate ramp | Documented stable max; configured below margin |
 | M-03 | X/Y dimensional calibration | Error inside project tolerance |
-| M-04 | A-axis one motor revolution | 360 commanded motor degrees gives one motor revolution |
-| M-05 | Bed ratio check | 4320 motor degrees gives one bed revolution for 12:1 |
+| M-04 | A-axis one motor revolution | With 8 microsteps and `$103 = 4.444444` steps per motor-degree, 360 commanded A motor-degrees gives one motor revolution |
+| M-05 | Bed ratio check | 4320 commanded A motor-degrees (19,200 pulses) gives one bed revolution for 12:1 |
 | M-06 | Coordinated X/Y/A sample | Smooth motion and no lost steps |
 | M-07 | Homing and limits | Repeatable X/Y home from physical switches, repeatable A home from validated `A_HOME`, and safe stop |
 | M-08 | Magnetic bed-center scan | After X/Y homing, a bounded 4 in x 4 in scan locates the center magnet from opposing saturated or thresholded edges with documented repeatability |

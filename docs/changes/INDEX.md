@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-08-15 | `HW-20260815-002` | hardware, rp23cnc-software | implemented | [Select A-axis TB6600 baseline](hardware/2026/2026-08-15-select-a-axis-tb6600-baseline.md) |
 | 2026-08-15 | `HW-20260815-001` | hardware | implemented | [Record TB6600 factory switch state](hardware/2026/2026-08-15-record-tb6600-factory-switch-state.md) |
 | 2026-08-14 | `RPSW-20260814-006` | rp23cnc-software, windows-software | implemented | [Document ioSender in the system overview](rp23cnc-software/2026/2026-08-14-document-iosender-in-system-overview.md) |
 | 2026-08-14 | `RPSW-20260814-004` | rp23cnc-software, hardware | verified | [RP23U5XBB grblHAL baseline build prepared](rp23cnc-software/2026/2026-08-14-rp23cnc-grblhal-baseline-build.md) |
