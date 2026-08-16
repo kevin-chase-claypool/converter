@@ -140,6 +140,7 @@ Entry details remain only in the chronology.
 - [2026-08-14 17:30:00 -0500 - HARDWARE/OPEN - Initial E-stop uses RP23CNC Halt input](#elog-20260814173000)
 - [2026-08-15 09:00:00 -0500 - HARDWARE/PARTIAL - Recorded TB6600 factory switch state](#elog-20260815090000)
 - [2026-08-15 10:00:00 -0500 - HARDWARE/PLANNED - Selected A-axis TB6600 baseline from measured 12:1 reduction](#elog-20260815100000)
+- [2026-08-15 10:15:00 -0500 - HARDWARE/PLANNED - Set X/Y initial calibration from confirmed 20-tooth pulleys](#elog-20260815101500)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -1619,3 +1620,17 @@ Add new entries at the top of the log below this line.
   high-travel A axis.
 - Next action: With the driver unpowered, complete E-04 on a received unit,
   then run M-04 and M-05 to verify the calculated motor and bed travel.
+
+<a id="elog-20260815101500"></a>
+### 🟨 2026-08-15 10:15:00 -0500 - HARDWARE/PLANNED - Set X/Y initial calibration from confirmed 20-tooth pulleys
+
+- Status: initial configuration recorded; physical calibration remains pending.
+- Category: hardware, rp23cnc-software, motion
+- Summary: The project owner confirmed 20-tooth GT2 motor pulleys on both X
+  and Y. At the selected 16-microstep TB6600 setting, both axes start at 80.0
+  steps/mm: `(200 * 16) / (2 mm * 20 teeth)`.
+- Result: Use `$100=80.000000` and `$101=80.000000` as initial values after
+  the drivers are correctly configured; use 1.5 A/phase for all three motors.
+- Risk/limitation: M-03 is still required because the calculated value does
+  not account for actual pulley geometry, belt tension/compliance, or assembly
+  error.

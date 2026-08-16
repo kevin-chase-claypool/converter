@@ -69,7 +69,7 @@ completion status.
 |---|---|---|
 | M-01 | One-axis low-speed jog | Correct direction, no stalls, acceptable heating |
 | M-02 | One-axis rate ramp | Documented stable max; configured below margin |
-| M-03 | X/Y dimensional calibration | Error inside project tolerance |
+| M-03 | X/Y dimensional calibration | Initial `$100/$101 = 80.000000` steps/mm for GT2 20T pulleys at 16 microsteps; measured error is inside project tolerance after correction |
 | M-04 | A-axis one motor revolution | With 8 microsteps and `$103 = 4.444444` steps per motor-degree, 360 commanded A motor-degrees gives one motor revolution |
 | M-05 | Bed ratio check | 4320 commanded A motor-degrees (19,200 pulses) gives one bed revolution for 12:1 |
 | M-06 | Coordinated X/Y/A sample | Smooth motion and no lost steps |

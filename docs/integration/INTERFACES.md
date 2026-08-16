@@ -70,6 +70,21 @@ provides fine bed resolution; 16 or 32 microsteps would increase pulse demand
 and reduce incremental torque without a demonstrated plotting benefit. M-04
 and M-05 must still verify one motor revolution and one full bed revolution.
 
+### X/Y TB6600 baseline
+
+Both X and Y use GT2 belts (2 mm pitch) with confirmed 20-tooth motor pulleys.
+The initial settings are 16 microsteps (`SW1 OFF`, `SW2 OFF`, `SW3 ON`) and the
+motor-rated 1.5 A/phase current row (`SW4 ON`, `SW5 ON`, `SW6 OFF`). With the
+200-full-step motors, the initial grblHAL values are:
+
+```text
+X steps/mm ($100) = (200 * 16) / (2 mm * 20 teeth) = 80.000000
+Y steps/mm ($101) = (200 * 16) / (2 mm * 20 teeth) = 80.000000
+```
+
+M-03 remains the physical travel calibration: use measured motion to correct
+either value if belt compliance, pulley geometry, or actual travel differs.
+
 ## RP23CNC to stepper drivers
 
 Each axis uses `STEP`, `DIR`, and common `ENABLE`. The final wiring table must be

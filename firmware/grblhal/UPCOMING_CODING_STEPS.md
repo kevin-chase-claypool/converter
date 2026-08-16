@@ -140,6 +140,9 @@ After the baseline transport works:
 
 1. Save a complete initial `$` settings dump in `config/machine-settings.md`.
 2. Configure X/Y steps per millimeter from measured mechanics and microstepping.
+   The confirmed GT2 20-tooth pulleys at the selected 16-microstep baseline
+   give an initial `$100 = 80.000000` and `$101 = 80.000000` steps/mm. M-03
+   must measure and correct these values before precision plotting.
 3. Configure A steps per unit as motor steps per degree:
 
    ```text
