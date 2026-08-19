@@ -83,7 +83,7 @@
 
 ## Phase 3: single-axis motion
 
-- [ ] Verify one TB6600 current and microstep configuration. Baseline: 8 microsteps and 1.5 A/phase; the 12:1 A drive is 19,200 pulses per bed revolution.
+- [ ] Verify each TB6600's current and microstep configuration. Baseline: X/Y 16 microsteps and A 8 microsteps, all at 1.5 A/phase; the 12:1 A drive is 19,200 pulses per bed revolution.
 - [ ] Connect one motor without mechanics attached.
 - [ ] Complete low-speed jog test. (`M-01`)
 - [ ] Measure motor and driver temperature.

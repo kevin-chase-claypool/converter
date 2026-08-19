@@ -142,6 +142,7 @@ Entry details remain only in the chronology.
 - [2026-08-15 10:00:00 -0500 - HARDWARE/PLANNED - Selected A-axis TB6600 baseline from measured 12:1 reduction](#elog-20260815100000)
 - [2026-08-15 10:15:00 -0500 - HARDWARE/PLANNED - Set X/Y initial calibration from confirmed 20-tooth pulleys](#elog-20260815101500)
 - [2026-08-19 14:32:03 -0500 - HARDWARE/PARTIAL - Confirmed 17HS15 coil pairs and recorded Y cable exception](#elog-20260819143203)
+- [2026-08-19 15:00:00 -0500 - HARDWARE/CORRECTED - Corrected B0FQ5GBNZ1 TB6600 DIP mapping](#elog-20260819150000)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -154,6 +155,7 @@ Entry details remain only in the chronology.
 - [2026-08-14 16:45:00 -0500 - MIXED/OPEN - Selected X/Y SPDT roller limit switches](#elog-20260814164500)
 - [2026-08-15 09:00:00 -0500 - HARDWARE/PARTIAL - Recorded TB6600 factory switch state](#elog-20260815090000)
 - [2026-08-19 14:32:03 -0500 - HARDWARE/PARTIAL - Confirmed 17HS15 coil pairs and recorded Y cable exception](#elog-20260819143203)
+- [2026-08-19 15:00:00 -0500 - HARDWARE/CORRECTED - Corrected B0FQ5GBNZ1 TB6600 DIP mapping](#elog-20260819150000)
 
 ### Decisions and architecture
 - [2026-06-07 11:57:39 -0500 - SUCCESS - Made continuous maintainability a repository requirement](#elog-20260607115739)
@@ -1655,3 +1657,19 @@ Add new entries at the top of the log below this line.
   retained as black/green and red/blue until M-01 confirms direction.
 - Next action: Measure each motor's winding resistance, set each TB6600's
   current/microstep switches while unpowered, then complete low-speed M-01.
+
+<a id="elog-20260819150000"></a>
+### 🟥 2026-08-19 15:00:00 -0500 - HARDWARE/CORRECTED - Corrected B0FQ5GBNZ1 TB6600 DIP mapping
+
+- Status: documented configuration corrected; E-02/E-04 still require physical
+  label comparison and unpowered setting inspection.
+- Category: hardware, motion, test
+- Struggle/failure: Earlier documentation and advice incorrectly transcribed the
+  B0FQ5GBNZ1 1.5 A row as SW4/SW5/SW6 = ON/ON/OFF. That setting is the listing's
+  1.0 A row, not its 1.5 A row.
+- Evidence: Direct inspection of the product-label image at the project-owner
+  supplied Amazon B0FQ5GBNZ1 listing; dated E-02 lab note.
+- Result: The source-specific mapping is 8× = SW1/SW2/SW3 OFF/ON/OFF, 16× =
+  OFF/OFF/ON, and 1.5 A = SW4/SW5/SW6 ON/OFF/ON. X/Y start at 16× and A at 8×.
+- Next action: With all drivers de-energized, physically compare each label and
+  set X/Y/A according to `HW-20260819-002`; then inspect E-04 before M-01.
