@@ -103,7 +103,11 @@ verified. Do not use the conceptual HTML diagram as proof of polarity.
 ## Stepper motor phases
 
 Manufacturer colors are documented, but each motor must still pass continuity
-test E-01 before connection.
+test E-01 before connection. The Y motor's coil grouping was confirmed by an
+unpowered hand-turn generated-voltage test on 2026-08-19: black/green is one
+coil and red/blue is the other. Its installed shielded-cable splice uses
+black/green and red/white cable pairs respectively; white is therefore the
+cable-side continuation of the motor's blue lead.
 
 Selected replacement stepper cable is KWANGIL 20 AWG 4C AMESB shielded cable
 with an overall shield, drain wire, and tinned-copper braid. Use one 4-conductor
@@ -114,20 +118,20 @@ shield/drain to DC `-V`, motor phase terminals, or RP23CNC signal ground.
 
 | ID | From device | From terminal | To device | To terminal | Signal | Wire color | Status | Evidence/notes |
 |---|---|---|---|---|---|---|---|---|
-| XPH-001 | X TB6600 | `A+` | X motor | A+ lead | Phase A+ | KWANGIL 20 AWG 4C conductor TBD; original motor lead black | documented | 17HS15-1504S-X1 manufacturer listing; confirm with E-01 before splicing |
-| XPH-002 | X TB6600 | `A-` | X motor | A- lead | Phase A- | KWANGIL 20 AWG 4C conductor TBD; original motor lead green | documented | Confirm with E-01 before splicing |
-| XPH-003 | X TB6600 | `B+` | X motor | B+ lead | Phase B+ | KWANGIL 20 AWG 4C conductor TBD; original motor lead red | documented | Confirm with E-01 before splicing |
-| XPH-004 | X TB6600 | `B-` | X motor | B- lead | Phase B- | KWANGIL 20 AWG 4C conductor TBD; original motor lead blue | documented | Confirm with E-01 before splicing |
+| XPH-001 | X TB6600 | `A+` | X motor | A+ lead | Phase A+ | KWANGIL 20 AWG 4C conductor TBD; original motor lead black | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil; retain lead order pending M-01 direction check. |
+| XPH-002 | X TB6600 | `A-` | X motor | A- lead | Phase A- | KWANGIL 20 AWG 4C conductor TBD; original motor lead green | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil. |
+| XPH-003 | X TB6600 | `B+` | X motor | B+ lead | Phase B+ | KWANGIL 20 AWG 4C conductor TBD; original motor lead red | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil; retain lead order pending M-01 direction check. |
+| XPH-004 | X TB6600 | `B-` | X motor | B- lead | Phase B- | KWANGIL 20 AWG 4C conductor TBD; original motor lead blue | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil. |
 | XSH-001 | X motor cable shield/drain | Drain wire at TB6600 end | DIN rail PE/chassis terminal | PE/chassis TBD | Cable shield bond | Bare/tinned drain | TBD | Bond at driver/DIN end only; insulate shield at motor end; verify continuity to PE and isolation from DC `-V` |
-| YPH-001 | Y TB6600 | `A+` | Y motor | A+ lead | Phase A+ | KWANGIL 20 AWG 4C conductor TBD; original motor lead black | documented | Confirm with E-01 before splicing |
-| YPH-002 | Y TB6600 | `A-` | Y motor | A- lead | Phase A- | KWANGIL 20 AWG 4C conductor TBD; original motor lead green | documented | Confirm with E-01 before splicing |
-| YPH-003 | Y TB6600 | `B+` | Y motor | B+ lead | Phase B+ | KWANGIL 20 AWG 4C conductor TBD; original motor lead red | documented | Confirm with E-01 before splicing |
-| YPH-004 | Y TB6600 | `B-` | Y motor | B- lead | Phase B- | KWANGIL 20 AWG 4C conductor TBD; original motor lead blue | documented | Confirm with E-01 before splicing |
+| YPH-001 | Y TB6600 | `A+` | Y motor | A+ lead | Phase A+ | Shielded 4C cable black -> motor black | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil. Preserve this splice order; final driver direction remains M-01/M-03. |
+| YPH-002 | Y TB6600 | `A-` | Y motor | A- lead | Phase A- | Shielded 4C cable green -> motor green | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil. |
+| YPH-003 | Y TB6600 | `B+` | Y motor | B+ lead | Phase B+ | Shielded 4C cable red -> motor red | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil. Preserve this splice order; final driver direction remains M-01/M-03. |
+| YPH-004 | Y TB6600 | `B-` | Y motor | B- lead | Phase B- | Shielded 4C cable white -> motor blue | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil; white is the cable-side continuation of blue. |
 | YSH-001 | Y motor cable shield/drain | Drain wire at TB6600 end | DIN rail PE/chassis terminal | PE/chassis TBD | Cable shield bond | Bare/tinned drain | TBD | Bond at driver/DIN end only; insulate shield at motor end; verify continuity to PE and isolation from DC `-V` |
-| APH-001 | A TB6600 | `A+` | A motor | A+ lead | Phase A+ | KWANGIL 20 AWG 4C conductor TBD; original motor lead black | documented | Confirm with E-01 before splicing |
-| APH-002 | A TB6600 | `A-` | A motor | A- lead | Phase A- | KWANGIL 20 AWG 4C conductor TBD; original motor lead green | documented | Confirm with E-01 before splicing |
-| APH-003 | A TB6600 | `B+` | A motor | B+ lead | Phase B+ | KWANGIL 20 AWG 4C conductor TBD; original motor lead red | documented | Confirm with E-01 before splicing |
-| APH-004 | A TB6600 | `B-` | A motor | B- lead | Phase B- | KWANGIL 20 AWG 4C conductor TBD; original motor lead blue | documented | Confirm with E-01 before splicing |
+| APH-001 | A TB6600 | `A+` | A motor | A+ lead | Phase A+ | KWANGIL 20 AWG 4C conductor TBD; original motor lead black | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil; retain lead order pending M-01 direction check. |
+| APH-002 | A TB6600 | `A-` | A motor | A- lead | Phase A- | KWANGIL 20 AWG 4C conductor TBD; original motor lead green | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil. |
+| APH-003 | A TB6600 | `B+` | A motor | B+ lead | Phase B+ | KWANGIL 20 AWG 4C conductor TBD; original motor lead red | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil; retain lead order pending M-01 direction check. |
+| APH-004 | A TB6600 | `B-` | A motor | B- lead | Phase B- | KWANGIL 20 AWG 4C conductor TBD; original motor lead blue | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil. |
 | ASH-001 | A motor cable shield/drain | Drain wire at TB6600 end | DIN rail PE/chassis terminal | PE/chassis TBD | Cable shield bond | Bare/tinned drain | TBD | Bond at driver/DIN end only; insulate shield at motor end; verify continuity to PE and isolation from DC `-V` |
 
 ## Limits, controls, and safety
@@ -234,6 +238,7 @@ must pass bench tests before being treated as final machine wiring.
 
 | Date | Revision | Change | Updated by | Related evidence |
 |---|---:|---|---|---|
+| 2026-08-19 | 2.8 | Recorded E-01 hand-turn coil-pair results for all three 17HS15 motors: black/green and red/blue. The Y axis has the special shielded-cable splice: cable black/green continues motor black/green, while cable red/white continues motor red/blue. | Codex | Owner hand-turn generated-voltage test; `2026-08-19-e-01-y-stepper-coil-pair-test.md` |
 | 2026-08-13 | 2.7 | Reconciled the continuity-checked ACEIRMC DRV8833 harness with its exact labels without solder rework: GP7 drives `ULT` sleep and GP6 reads `EEP` protection/fault. Firmware now matches the installed harness. E-14C still checks the J2 bridge and live behavior before motor testing. | Codex | Owner bench report; Amazon ASIN B08RMWTDLM; E-14C required |
 | 2026-08-12 | 1.4 | Recorded manufacturer-confirmed uxcell load-cell mapping: Red `EXC+` to HX711 `E+`, Black `EXC-` to `E-`, Green `SEN+` to `A+`, White `SEN-` to `A-` | Codex | Owner-supplied product specification; E-07 still required |
 | 2026-08-10 | 2.5 | Reassigned PC817 tool-side pins to direct-header GP29/GP28/GP27 and recorded separate 1×4 DRV8833 plus 1×6 PC817 JST harnesses; reset is intentionally NC | Codex | `PRO_MICRO_JST_HARNESS.md`; E-18 harness re-test required |

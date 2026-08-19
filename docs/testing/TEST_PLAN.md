@@ -28,7 +28,7 @@ completion status.
 
 | ID | Test | Expected result | Actual result | Evidence |
 |---|---|---|---|---|
-| E-01 | Confirm each stepper coil pair with ohmmeter | Black/green and red/blue pairs | TBD | TBD |
+| E-01 | Confirm each stepper coil pair with ohmmeter | Black/green and red/blue pairs | Partial | Owner hand-turn generated-voltage test confirmed all three 17HS15 motors have black/green and red/blue coil pairs on 2026-08-19. Y's shielded cable continues the coils as black/green and red/white, with white spliced to motor blue; X/A cable conductor assignments remain TBD. Winding-resistance measurement remains open. See `2026-08-19-e-01-y-stepper-coil-pair-test.md`. |
 | E-02 | Record TB6600 labels and switch tables | Three identical, readable units | Partial | Received label photograph confirms factory state SW2/SW4 ON and all others OFF. The printed table maps this to 8 microsteps (1600 pulses/rev) and 2.0 A. Photograph/confirm all three received tables and switch numbering before treating it as verified. See 2026-08-15 E-02 lab note. |
 | E-03 | Check STEP/DIR input behavior | Compatible with RP23CNC outputs | TBD | TBD |
 | E-04 | Set driver current and microstep configuration conservatively | 1.5 A/phase (`SW4 ON`, `SW5 ON`, `SW6 OFF`) and 8 microsteps (`SW1 OFF`, `SW2 ON`, `SW3 OFF`) with driver unpowered | TBD | The 12:1 A reduction produces 19,200 pulses/bed revolution at 8 microsteps; do not increase to 16/32 microsteps unless testing demonstrates a need. |

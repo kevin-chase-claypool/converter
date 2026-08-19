@@ -32,5 +32,6 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-08-19 | E-01 partial | Pass/partial | All 17HS15 coil pairs were identified by hand-turn generated voltage; Y's shielded cable continues black/green and red/white, with white spliced to motor blue. |
 | 2026-08-12 | E-14B partial | Pass/partial | Local 6 V branch and S7V8F5-to-Pro-Micro power path passed continuity and bench-power checks; no motor or upstream regulator test. |
 | 2026-08-10 | E-18 partial | Mixed | U1/U2/U3 and ground isolation passed after repairing missing wires; actual RP23CNC terminal behavior and magnetic-adapter work remain. |

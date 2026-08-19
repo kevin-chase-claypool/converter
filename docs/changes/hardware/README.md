@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-08-19 | `HW-20260819-001` | verified | [Record Y Stepper Coil Pair and Shielded Cable Mapping](2026/2026-08-19-y-stepper-coil-pair-and-shielded-cable-mapping.md) | `y-axis`, `stepper`, `coil-pair`, `shielded-cable`, `wiring` |
 | 2026-08-15 | `HW-20260815-003` | implemented | [Set X/Y 20T baseline](2026/2026-08-15-set-xy-20t-baseline.md) | `x-axis`, `y-axis`, `gt2`, `calibration` |
 | 2026-08-15 | `HW-20260815-002` | implemented | [Select A-axis TB6600 baseline](2026/2026-08-15-select-a-axis-tb6600-baseline.md) | `a-axis`, `tb6600`, `microstepping`, `calibration` |
 | 2026-08-15 | `HW-20260815-001` | implemented | [Record TB6600 factory switch state](2026/2026-08-15-record-tb6600-factory-switch-state.md) | `tb6600`, `stepper-driver`, `microstepping`, `current-limit` |

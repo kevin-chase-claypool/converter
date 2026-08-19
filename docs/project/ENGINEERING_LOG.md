@@ -141,6 +141,7 @@ Entry details remain only in the chronology.
 - [2026-08-15 09:00:00 -0500 - HARDWARE/PARTIAL - Recorded TB6600 factory switch state](#elog-20260815090000)
 - [2026-08-15 10:00:00 -0500 - HARDWARE/PLANNED - Selected A-axis TB6600 baseline from measured 12:1 reduction](#elog-20260815100000)
 - [2026-08-15 10:15:00 -0500 - HARDWARE/PLANNED - Set X/Y initial calibration from confirmed 20-tooth pulleys](#elog-20260815101500)
+- [2026-08-19 14:32:03 -0500 - HARDWARE/PARTIAL - Confirmed 17HS15 coil pairs and recorded Y cable exception](#elog-20260819143203)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -152,6 +153,7 @@ Entry details remain only in the chronology.
 - [2026-08-14 16:30:00 -0500 - SUCCESS - Passed F-03 RP23CNC X/Y/A bare-output test](#elog-20260814163000)
 - [2026-08-14 16:45:00 -0500 - MIXED/OPEN - Selected X/Y SPDT roller limit switches](#elog-20260814164500)
 - [2026-08-15 09:00:00 -0500 - HARDWARE/PARTIAL - Recorded TB6600 factory switch state](#elog-20260815090000)
+- [2026-08-19 14:32:03 -0500 - HARDWARE/PARTIAL - Confirmed 17HS15 coil pairs and recorded Y cable exception](#elog-20260819143203)
 
 ### Decisions and architecture
 - [2026-06-07 11:57:39 -0500 - SUCCESS - Made continuous maintainability a repository requirement](#elog-20260607115739)
@@ -1634,3 +1636,22 @@ Add new entries at the top of the log below this line.
 - Risk/limitation: M-03 is still required because the calculated value does
   not account for actual pulley geometry, belt tension/compliance, or assembly
   error.
+
+<a id="elog-20260819143203"></a>
+### 🟨 2026-08-19 14:32:03 -0500 - HARDWARE/PARTIAL - Confirmed 17HS15 coil pairs and recorded Y cable exception
+
+- Status: E-01 partial; coil grouping is known for X, Y, and A, but winding
+  resistance and powered direction tests remain open.
+- Category: hardware, wiring, test
+- Summary: The project owner used a hand-turn generated-voltage test to confirm
+  black/green and red/blue as the two coil pairs on all three 17HS15 motors.
+  The Y motor's installed shielded cable preserves the pairs as black/green and
+  red/white, with cable white spliced to the motor's blue lead.
+- Evidence: Owner bench report; E-01 lab note
+  `docs/report/lab-notes/2026-08-19-e-01-y-stepper-coil-pair-test.md`; hardware
+  change note `HW-20260819-001`.
+- Result: The master wiring table has axis-specific phase records, preventing a
+  false assumption that Y has a blue cable conductor. The polarity order is
+  retained as black/green and red/blue until M-01 confirms direction.
+- Next action: Measure each motor's winding resistance, set each TB6600's
+  current/microstep switches while unpowered, then complete low-speed M-01.
