@@ -144,6 +144,7 @@ Entry details remain only in the chronology.
 - [2026-08-19 14:32:03 -0500 - HARDWARE/PARTIAL - Confirmed 17HS15 coil pairs and recorded Y cable exception](#elog-20260819143203)
 - [2026-08-19 15:00:00 -0500 - HARDWARE/CORRECTED - Corrected B0FQ5GBNZ1 TB6600 DIP mapping](#elog-20260819150000)
 - [2026-08-19 15:22:27 -0500 - HARDWARE/CORRECTED - Limited installed motor shielding to Y](#elog-20260819152227)
+- [2026-08-19 16:06:38 -0500 - HARDWARE/PLANNED - Recorded actual HD064RT output allocation](#elog-20260819160638)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -1690,3 +1691,27 @@ Add new entries at the top of the log below this line.
   option, not installed machine wiring.
 - Next action: Verify Y drain-to-PE continuity and isolation from `-V` before
   mains power; add physical wiring records before installing shielded X/A cable.
+
+<a id="elog-20260819160638"></a>
+### 🟨 2026-08-19 16:06:38 -0500 - HARDWARE/PLANNED - Recorded actual HD064RT output allocation
+
+- Status: owner allocation recorded; no branch has been continuity-checked or
+  energized as a result of this record.
+- Category: hardware, wiring, power distribution
+- Summary: The owner assigned the HCDC HD064RT outputs as `OUT1` RP23CNC,
+  `OUT4` Pololu D36V50F6, `OUT6` X TB6600, `OUT7` Y TB6600, and `OUT8` A
+  TB6600. `OUT2`, `OUT3`, and `OUT5` have no load and remain intentionally
+  unused.
+- Result: The master wiring table, power-distribution document, BOM, and
+  E-stop allocation now match the physical distribution plan. The controller's
+  branch fuse is `OUT1`/`FCTRL`; the selected starting values are 2 A for
+  `OUT1` and the three TB6600 branches and 3 A intended for the D36V50F6
+  branch.
+- Evidence: Project-owner allocation report. The stated values are planned;
+  no claim is made about currently fitted fuse markings or live behavior.
+- Risk: A branch fuse, terminal label, polarity, conductor gauge, current, and
+  E-stop behavior must all be physically checked before power. Do not assume a
+  factory 3 A fuse remains installed just because it shipped with the module.
+- Next action: With all power removed, inspect and record each fitted fuse;
+  then complete the applicable current, polarity, and E-19 checks before any
+  powered TB6600 or toolhead test.

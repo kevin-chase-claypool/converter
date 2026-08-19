@@ -15,14 +15,13 @@ AC mains
   -> MEISHILE S-120-12 12 VDC supply
      -> FMAIN (DC main fuse, maximum 10 A; final type/TBD)
         -> protected 12 V bus
-        |  -> FCTRL -> always-on control branch (value TBD)
-        |     -> RP23CNC controller and its isolated-control-input supply
-        |
         -> HD064RT eight-channel fused distribution module
-              -> OUT1 X TB6600 driver
-              -> OUT2 Y TB6600 driver
-              -> OUT3 A TB6600 driver
+              -> OUT1 RP23CNC controller/control-input supply
               -> OUT4 Pololu D36V50F6 fixed 6 V regulator
+              -> OUT6 X TB6600 driver
+              -> OUT7 Y TB6600 driver
+              -> OUT8 A TB6600 driver
+              -> OUT2, OUT3, OUT5 unused
            -> 6 V toolhead rail through drag chain
               -> DRV8833 motor supply
               -> Pololu S7V8F5 local 5 V regulator on toolhead
@@ -58,8 +57,9 @@ The main supply is the received MEISHILE `S-120-12`.
 
 The two `+V` and two `-V` terminals are not enough to directly land every final
 branch cleanly. The received HCDC `HD064RT` is the fused DIN distribution module
-for the motor/tool branches. Its eight outputs are not a substitute for
-the separately fused, always-on controller/control branch.
+for all currently allocated low-voltage branches, including the controller.
+`OUT1` is the controller/control-input branch (its branch fuse is `FCTRL` in
+the wiring record); it remains powered during an E-stop.
 
 ## Emergency-stop topology
 
@@ -91,16 +91,19 @@ Planned 12 V branches from the MEISHILE supply:
 
 | Branch | Load | Notes |
 |---|---|---|
-| 12V-RP23CNC | RP23CNC controller and control-input supply | Always on through `FCTRL`; final fuse value and terminals TBD |
-| 12V-X | X TB6600 driver | HD064RT `OUT1`; protected by its branch fuse; driver input labels and current setting must be verified |
-| 12V-Y | Y TB6600 driver | HD064RT `OUT2`; protected by its branch fuse; driver input labels and current setting must be verified |
-| 12V-A | A TB6600 driver | HD064RT `OUT3`; protected by its branch fuse; driver input labels and current setting must be verified |
-| 12V-TOOL-6V | Pololu D36V50F6 `VIN/GND` | HD064RT `OUT4`; protected by its branch fuse; generates the 6 V toolhead rail |
+| 12V-RP23CNC | RP23CNC controller and control-input supply | HD064RT `OUT1` (`FCTRL`); 2 A selected, but confirm the fitted fuse and controller terminals before power |
+| 12V-X | X TB6600 driver | HD064RT `OUT6`; 2 A selected, but confirm the fitted fuse, driver input labels, and current setting before power |
+| 12V-Y | Y TB6600 driver | HD064RT `OUT7`; 2 A selected, but confirm the fitted fuse, driver input labels, and current setting before power |
+| 12V-A | A TB6600 driver | HD064RT `OUT8`; 2 A selected, but confirm the fitted fuse, driver input labels, and current setting before power |
+| 12V-TOOL-6V | Pololu D36V50F6 `VIN/GND` | HD064RT `OUT4`; owner intends a 3 A fuse, pending confirmation and E-15 characterization |
+| Unused | No load | HD064RT `OUT2`, `OUT3`, and `OUT5`; leave open and label unused |
 
-The HD064RT's factory 3 A fuses are only initial fitted parts, not approved
-values for this machine. Each output's final fuse value is TBD until the
-measured current budget is complete. The module is specified for 20 A total and
-its positions accept up to 10 A after a suitable fuse is fitted; the 10 A main
+The HD064RT's factory 3 A fuses must not be assumed to be the fitted values.
+The currently selected starting values are 2 A for `OUT1` and each TB6600
+branch (`OUT6`–`OUT8`), and 3 A intended for the D36V50F6 branch (`OUT4`).
+Confirm each physical marking with power removed and retain/change values only
+after current measurements. The module is specified for 20 A total and its
+positions accept up to 10 A after a suitable fuse is fitted; the 10 A main
 supply remains the limiting source.
 
 ## Wiring Table Cross-Reference
@@ -109,7 +112,7 @@ These are the power rows that currently define the buck/regulator path:
 
 | Wiring IDs | Path | Status |
 |---|---|---|
-| `PWR-009A`, `PWR-009B` | MEISHILE 12 V distribution to Pololu D36V50F6 `VIN/GND` | TBD terminal allocation |
+| `PWR-009A`, `PWR-009B` | HD064RT `OUT4` to Pololu D36V50F6 `VIN/GND` | planned; owner allocation recorded |
 | `PWR-009`, `PWR-010` | D36V50F6 `VOUT/GND` to DRV8833 motor supply | selected; bench verification required |
 | `PWR-011A`, `PWR-011B` | D36V50F6 `VOUT/GND` to toolhead S7V8F5 `VIN/GND` | selected; local split on toolhead |
 | `PWR-011`, `PWR-012` | S7V8F5 `VOUT/GND` to SparkFun Pro Micro RP2350 `RAW/5V` and `GND` | purchased; output verification required |

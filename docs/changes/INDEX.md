@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-08-19 | `HW-20260819-004` | hardware | implemented | [Record HD064RT Output Allocation](hardware/2026/2026-08-19-record-hcdc-output-allocation.md) |
 | 2026-08-19 | `HW-20260819-003` | hardware | implemented | [Correct Installed Stepper Cable Shielding](hardware/2026/2026-08-19-correct-installed-stepper-cable-shielding.md) |
 | 2026-08-19 | `HW-20260819-002` | hardware, rp23cnc-software | implemented | [Correct TB6600 Axis Switch Settings](hardware/2026/2026-08-19-correct-tb6600-axis-switch-settings.md) |
 | 2026-08-19 | `HW-20260819-001` | hardware | verified | [Record Y Stepper Coil Pair and Shielded Cable Mapping](hardware/2026/2026-08-19-y-stepper-coil-pair-and-shielded-cable-mapping.md) |

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-08-19 | `HW-20260819-004` | implemented | [Record HD064RT Output Allocation](2026/2026-08-19-record-hcdc-output-allocation.md) | `hcdc`, `hd064rt`, `power-distribution`, `fuse`, `tb6600`, `rp23cnc` |
 | 2026-08-19 | `HW-20260819-003` | implemented | [Correct Installed Stepper Cable Shielding](2026/2026-08-19-correct-installed-stepper-cable-shielding.md) | `stepper`, `cable`, `shielding`, `y-axis`, `protective-earth` |
 | 2026-08-19 | `HW-20260819-002` | implemented | [Correct TB6600 Axis Switch Settings](2026/2026-08-19-correct-tb6600-axis-switch-settings.md) | `tb6600`, `dip-switch`, `microstepping`, `current-limit`, `x-axis`, `y-axis`, `a-axis` |
 | 2026-08-19 | `HW-20260819-001` | verified | [Record Y Stepper Coil Pair and Shielded Cable Mapping](2026/2026-08-19-y-stepper-coil-pair-and-shielded-cable-mapping.md) | `y-axis`, `stepper`, `coil-pair`, `shielded-cable`, `wiring` |

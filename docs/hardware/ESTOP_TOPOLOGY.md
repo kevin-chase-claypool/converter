@@ -28,8 +28,8 @@ its terminals individually.
 |---|---|---|---|
 | SW1 | mxuteuk `HB2-BS544`, 22 mm latching mushroom, 2 NC | purchased | NC-A is the initial controller Halt circuit; NC-B remains unused and insulated |
 | FMAIN | DC main fuse/carrier | TBD selection | Protects the external positive feed from the 10 A supply; fuse must not exceed 10 A |
-| FCTRL | DC control-branch fuse/carrier | TBD selection | Protects RP23CNC and isolated-input supply; value follows measured control-branch current |
-| PD1 | HCDC `HD064RT`, 5-32 V, eight-channel fused distribution | received/installed | Four switched branches now allocated; OUT5-OUT8 spare |
+| FCTRL | HD064RT `OUT1` branch fuse | planned | Protects the RP23CNC and isolated-input supply; 2 A selected, fitted marking/current still require verification |
+| PD1 | HCDC `HD064RT`, 5-32 V, eight-channel fused distribution | received/installed | `OUT1` RP23CNC, `OUT4` D36V50F6, `OUT6` X, `OUT7` Y, `OUT8` A; `OUT2`, `OUT3`, and `OUT5` unused |
 
 ## Initial net topology
 
@@ -59,11 +59,12 @@ point on the protected 12 V bus. It is compatible with the 12 V source because i
 specified 5-32 V operating range covers 12 V and its 20 A aggregate rating is
 above the source's 10 A maximum.
 
-The pre-installed 3 A fuses are not final values. Verify the specific output's
-steady and start/stall current before retaining or changing each fuse. In
-particular, the D36V50F6 branch may need more than 3 A during tool-motor
-operation; do not fit a fuse above the terminal/module limit or above the
-source/wire protection basis.
+Do not assume the pre-installed 3 A fuses are the values currently fitted.
+The initial planned values are 2 A on `OUT1`, `OUT6`, `OUT7`, and `OUT8`, and
+3 A intended on `OUT4`. With power removed, verify each physical fuse marking;
+then verify steady and start/stall current before retaining or changing a value.
+Do not fit a fuse above the terminal/module limit or the source/wire protection
+basis.
 
 ## Required E-19 verification: controller Halt
 
