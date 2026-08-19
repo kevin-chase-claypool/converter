@@ -143,6 +143,7 @@ Entry details remain only in the chronology.
 - [2026-08-15 10:15:00 -0500 - HARDWARE/PLANNED - Set X/Y initial calibration from confirmed 20-tooth pulleys](#elog-20260815101500)
 - [2026-08-19 14:32:03 -0500 - HARDWARE/PARTIAL - Confirmed 17HS15 coil pairs and recorded Y cable exception](#elog-20260819143203)
 - [2026-08-19 15:00:00 -0500 - HARDWARE/CORRECTED - Corrected B0FQ5GBNZ1 TB6600 DIP mapping](#elog-20260819150000)
+- [2026-08-19 15:22:27 -0500 - HARDWARE/CORRECTED - Limited installed motor shielding to Y](#elog-20260819152227)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -1673,3 +1674,19 @@ Add new entries at the top of the log below this line.
   OFF/OFF/ON, and 1.5 A = SW4/SW5/SW6 ON/OFF/ON. X/Y start at 16× and A at 8×.
 - Next action: With all drivers de-energized, physically compare each label and
   set X/Y/A according to `HW-20260819-002`; then inspect E-04 before M-01.
+
+<a id="elog-20260819152227"></a>
+### 🟨 2026-08-19 15:22:27 -0500 - HARDWARE/CORRECTED - Limited installed motor shielding to Y
+
+- Status: current cable record corrected; PE continuity and isolation testing
+  remain required before mains power.
+- Category: hardware, wiring, safety
+- Struggle/failure: The prior record conflated a purchased KWANGIL shielded
+  cable with the cables actually installed, creating X/A shield-drain rows that
+  do not exist physically.
+- Evidence: Project-owner correction: only the Y motor cable is shielded.
+- Result: X/A retain supplied unshielded 24 AWG leads; only Y's drain connects
+  to the PE/chassis point at the TB6600 end. The KWANGIL cable remains a future
+  option, not installed machine wiring.
+- Next action: Verify Y drain-to-PE continuity and isolation from `-V` before
+  mains power; add physical wiring records before installing shielded X/A cable.

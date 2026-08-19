@@ -109,30 +109,28 @@ coil and red/blue is the other. Its installed shielded-cable splice uses
 black/green and red/white cable pairs respectively; white is therefore the
 cable-side continuation of the motor's blue lead.
 
-Selected replacement stepper cable is KWANGIL 20 AWG 4C AMESB shielded cable
-with an overall shield, drain wire, and tinned-copper braid. Use one 4-conductor
-cable per NEMA17 motor. Assign the four internal conductors to `A+`, `A-`, `B+`,
-and `B-` only. Bond the shield/drain to PE/chassis at the TB6600/DIN-rail end
-only; cut back and insulate the shield at the motor end. Do not connect the
-shield/drain to DC `-V`, motor phase terminals, or RP23CNC signal ground.
+Only the Y motor uses a shielded cable. Its shield/drain bonds to PE/chassis at
+the TB6600/DIN-rail end only and is cut back and insulated at the motor end.
+Do not connect that shield/drain to DC `-V`, motor phase terminals, or RP23CNC
+signal ground. X and A use their supplied unshielded 24 AWG motor leads; the
+purchased KWANGIL 20 AWG shielded cable remains a future replacement option,
+not an installed X/A cable.
 
 | ID | From device | From terminal | To device | To terminal | Signal | Wire color | Status | Evidence/notes |
 |---|---|---|---|---|---|---|---|---|
-| XPH-001 | X TB6600 | `A+` | X motor | A+ lead | Phase A+ | KWANGIL 20 AWG 4C conductor TBD; original motor lead black | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil; retain lead order pending M-01 direction check. |
-| XPH-002 | X TB6600 | `A-` | X motor | A- lead | Phase A- | KWANGIL 20 AWG 4C conductor TBD; original motor lead green | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil. |
-| XPH-003 | X TB6600 | `B+` | X motor | B+ lead | Phase B+ | KWANGIL 20 AWG 4C conductor TBD; original motor lead red | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil; retain lead order pending M-01 direction check. |
-| XPH-004 | X TB6600 | `B-` | X motor | B- lead | Phase B- | KWANGIL 20 AWG 4C conductor TBD; original motor lead blue | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil. |
-| XSH-001 | X motor cable shield/drain | Drain wire at TB6600 end | DIN rail PE/chassis terminal | PE/chassis TBD | Cable shield bond | Bare/tinned drain | TBD | Bond at driver/DIN end only; insulate shield at motor end; verify continuity to PE and isolation from DC `-V` |
+| XPH-001 | X TB6600 | `A+` | X motor | A+ lead | Phase A+ | Supplied unshielded 24 AWG motor lead black | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil; retain lead order pending M-01 direction check. |
+| XPH-002 | X TB6600 | `A-` | X motor | A- lead | Phase A- | Supplied unshielded 24 AWG motor lead green | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil. |
+| XPH-003 | X TB6600 | `B+` | X motor | B+ lead | Phase B+ | Supplied unshielded 24 AWG motor lead red | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil; retain lead order pending M-01 direction check. |
+| XPH-004 | X TB6600 | `B-` | X motor | B- lead | Phase B- | Supplied unshielded 24 AWG motor lead blue | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil. |
 | YPH-001 | Y TB6600 | `A+` | Y motor | A+ lead | Phase A+ | Shielded 4C cable black -> motor black | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil. Preserve this splice order; final driver direction remains M-01/M-03. |
 | YPH-002 | Y TB6600 | `A-` | Y motor | A- lead | Phase A- | Shielded 4C cable green -> motor green | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil. |
 | YPH-003 | Y TB6600 | `B+` | Y motor | B+ lead | Phase B+ | Shielded 4C cable red -> motor red | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil. Preserve this splice order; final driver direction remains M-01/M-03. |
 | YPH-004 | Y TB6600 | `B-` | Y motor | B- lead | Phase B- | Shielded 4C cable white -> motor blue | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil; white is the cable-side continuation of blue. |
 | YSH-001 | Y motor cable shield/drain | Drain wire at TB6600 end | DIN rail PE/chassis terminal | PE/chassis TBD | Cable shield bond | Bare/tinned drain | TBD | Bond at driver/DIN end only; insulate shield at motor end; verify continuity to PE and isolation from DC `-V` |
-| APH-001 | A TB6600 | `A+` | A motor | A+ lead | Phase A+ | KWANGIL 20 AWG 4C conductor TBD; original motor lead black | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil; retain lead order pending M-01 direction check. |
-| APH-002 | A TB6600 | `A-` | A motor | A- lead | Phase A- | KWANGIL 20 AWG 4C conductor TBD; original motor lead green | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil. |
-| APH-003 | A TB6600 | `B+` | A motor | B+ lead | Phase B+ | KWANGIL 20 AWG 4C conductor TBD; original motor lead red | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil; retain lead order pending M-01 direction check. |
-| APH-004 | A TB6600 | `B-` | A motor | B- lead | Phase B- | KWANGIL 20 AWG 4C conductor TBD; original motor lead blue | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil. |
-| ASH-001 | A motor cable shield/drain | Drain wire at TB6600 end | DIN rail PE/chassis terminal | PE/chassis TBD | Cable shield bond | Bare/tinned drain | TBD | Bond at driver/DIN end only; insulate shield at motor end; verify continuity to PE and isolation from DC `-V` |
+| APH-001 | A TB6600 | `A+` | A motor | A+ lead | Phase A+ | Supplied unshielded 24 AWG motor lead black | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil; retain lead order pending M-01 direction check. |
+| APH-002 | A TB6600 | `A-` | A motor | A- lead | Phase A- | Supplied unshielded 24 AWG motor lead green | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil. |
+| APH-003 | A TB6600 | `B+` | A motor | B+ lead | Phase B+ | Supplied unshielded 24 AWG motor lead red | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil; retain lead order pending M-01 direction check. |
+| APH-004 | A TB6600 | `B-` | A motor | B- lead | Phase B- | Supplied unshielded 24 AWG motor lead blue | continuity-checked | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil. |
 
 ## Limits, controls, and safety
 
@@ -238,6 +236,7 @@ must pass bench tests before being treated as final machine wiring.
 
 | Date | Revision | Change | Updated by | Related evidence |
 |---|---:|---|---|---|
+| 2026-08-19 | 2.9 | Corrected motor-cable installation: only Y has a shield/drain; X and A retain their supplied unshielded 24 AWG leads. Removed the nonexistent X/A shield-bond rows. | Codex | Project-owner correction; `HW-20260819-003` |
 | 2026-08-19 | 2.8 | Recorded E-01 hand-turn coil-pair results for all three 17HS15 motors: black/green and red/blue. The Y axis has the special shielded-cable splice: cable black/green continues motor black/green, while cable red/white continues motor red/blue. | Codex | Owner hand-turn generated-voltage test; `2026-08-19-e-01-y-stepper-coil-pair-test.md` |
 | 2026-08-13 | 2.7 | Reconciled the continuity-checked ACEIRMC DRV8833 harness with its exact labels without solder rework: GP7 drives `ULT` sleep and GP6 reads `EEP` protection/fault. Firmware now matches the installed harness. E-14C still checks the J2 bridge and live behavior before motor testing. | Codex | Owner bench report; Amazon ASIN B08RMWTDLM; E-14C required |
 | 2026-08-12 | 1.4 | Recorded manufacturer-confirmed uxcell load-cell mapping: Red `EXC+` to HX711 `E+`, Black `EXC-` to `E-`, Green `SEN+` to `A+`, White `SEN-` to `A-` | Codex | Owner-supplied product specification; E-07 still required |
