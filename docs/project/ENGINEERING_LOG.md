@@ -145,6 +145,7 @@ Entry details remain only in the chronology.
 - [2026-08-19 15:00:00 -0500 - HARDWARE/CORRECTED - Corrected B0FQ5GBNZ1 TB6600 DIP mapping](#elog-20260819150000)
 - [2026-08-19 15:22:27 -0500 - HARDWARE/CORRECTED - Limited installed motor shielding to Y](#elog-20260819152227)
 - [2026-08-19 16:06:38 -0500 - HARDWARE/PLANNED - Recorded actual HD064RT output allocation](#elog-20260819160638)
+- [2026-08-20 15:41:52 -0500 - HARDWARE/PARTIAL - Verified main-supply no-load path through HD064RT](#elog-20260820154152)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -158,6 +159,7 @@ Entry details remain only in the chronology.
 - [2026-08-15 09:00:00 -0500 - HARDWARE/PARTIAL - Recorded TB6600 factory switch state](#elog-20260815090000)
 - [2026-08-19 14:32:03 -0500 - HARDWARE/PARTIAL - Confirmed 17HS15 coil pairs and recorded Y cable exception](#elog-20260819143203)
 - [2026-08-19 15:00:00 -0500 - HARDWARE/CORRECTED - Corrected B0FQ5GBNZ1 TB6600 DIP mapping](#elog-20260819150000)
+- [2026-08-20 15:41:52 -0500 - HARDWARE/PARTIAL - Verified main-supply no-load path through HD064RT](#elog-20260820154152)
 
 ### Decisions and architecture
 - [2026-06-07 11:57:39 -0500 - SUCCESS - Made continuous maintainability a repository requirement](#elog-20260607115739)
@@ -1715,3 +1717,23 @@ Add new entries at the top of the log below this line.
 - Next action: With all power removed, inspect and record each fitted fuse;
   then complete the applicable current, polarity, and E-19 checks before any
   powered TB6600 or toolhead test.
+
+<a id="elog-20260820154152"></a>
+### 🟨 2026-08-20 15:41:52 -0500 - HARDWARE/PARTIAL - Verified main-supply no-load path through HD064RT
+
+- Status: partial E-11; this is not a loaded-power or safety-certification
+  result.
+- Category: hardware, wiring, power, test
+- Summary: With the main supply energized and no downstream loads reported,
+  the project owner measured 12.05 VDC at the HD064RT fuse-block input and
+  12.05 VDC at one output pair. Observed polarity matched the block markings.
+- Evidence: `docs/report/lab-notes/2026-08-20-e-11-main-supply-no-load-path-test.md`.
+- Result: The supply-to-distribution no-load path is consistent with the
+  intended nominal 12 V rail; no polarity reversal was observed.
+- Risk: Meter identity/accuracy and the particular output pair were not
+  recorded. Supply-terminal reading, PE/chassis bonding, adjustment range,
+  label photo, fitted fuses, branch terminal checks, and loaded behavior are
+  still unverified.
+- Next action: With power removed, complete the PE continuity test and record
+  the exact fitted fuse ratings; then finish the remaining E-11 no-load checks
+  before connecting a TB6600 or toolhead load.
