@@ -146,6 +146,7 @@ Entry details remain only in the chronology.
 - [2026-08-19 15:22:27 -0500 - HARDWARE/CORRECTED - Limited installed motor shielding to Y](#elog-20260819152227)
 - [2026-08-19 16:06:38 -0500 - HARDWARE/PLANNED - Recorded actual HD064RT output allocation](#elog-20260819160638)
 - [2026-08-20 15:41:52 -0500 - HARDWARE/PARTIAL - Verified main-supply no-load path through HD064RT](#elog-20260820154152)
+- [2026-08-21 - HARDWARE - Segregated mains-input and DC-output routes](#elog-20260821-segregated-mains-input-and-dc-output-routes)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -1737,3 +1738,21 @@ Add new entries at the top of the log below this line.
 - Next action: With power removed, complete the PE continuity test and record
   the exact fitted fuse ratings; then finish the remaining E-11 no-load checks
   before connecting a TB6600 or toolhead load.
+
+<a id="elog-20260821-segregated-mains-input-and-dc-output-routes"></a>
+### 🟩 2026-08-21 - HARDWARE - Segregated mains-input and DC-output routes
+
+- Status: physical-routing improvement implemented; E-11 remains partial.
+- Category: hardware, wiring, power, safety
+- Summary: The project owner rerouted the mains-input and DC-output conductors
+  near the main supply and HD064RT fuse block so they no longer overlap.
+- Reason: A physical crossover was eliminated to provide clearer segregation
+  between mains and extra-low-voltage wiring.
+- Evidence: Owner report; `HW-20260821-001`; follow-up in
+  `docs/report/lab-notes/2026-08-20-e-11-main-supply-no-load-path-test.md`.
+- Result: The two conductor routes are now visually separate.
+- Risk: This does not verify the remaining electrical and mechanical gates:
+  PE bonding, fitted fuses, strain relief, supply adjustment range, and loaded
+  operation.
+- Next action: With power removed, verify PE continuity and fitted-fuse
+  ratings before any branch load is connected.

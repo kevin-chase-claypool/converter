@@ -32,13 +32,17 @@ No firmware, software, or controller commands used.
 - Fuse-block input: 12.05 VDC.
 - One output pair: 12.05 VDC.
 - The observed polarity matched the HD064RT `+` and `-` markings.
+- Follow-up on 2026-08-21: the mains-input and DC-output conductors were
+  rerouted so they do not overlap.
 
 This is partial E-11 evidence. It verifies the no-load supply-to-distribution
 path, not the complete supply characterization.
 
 ## Difficulties and corrective actions
 
-None reported. The meter model/accuracy and the particular output pair were not
+The initial physical layout allowed the insulated mains-input and DC-output
+conductors to cross. The conductors were rerouted on 2026-08-21 so they do not
+overlap. The meter model/accuracy and the particular output pair were not
 recorded, so they cannot be treated as traceable measurement details.
 
 ## Interpretation

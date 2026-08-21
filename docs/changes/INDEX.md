@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-08-21 | `HW-20260821-001` | hardware | implemented | [Separate Mains and DC Routes](hardware/2026/2026-08-21-separate-mains-and-dc-routes.md) |
 | 2026-08-20 | `HW-20260820-001` | hardware | verified | [Record Main Supply No-Load Path Test](hardware/2026/2026-08-20-record-main-supply-no-load-path-test.md) |
 | 2026-08-19 | `HW-20260819-004` | hardware | implemented | [Record HD064RT Output Allocation](hardware/2026/2026-08-19-record-hcdc-output-allocation.md) |
 | 2026-08-19 | `HW-20260819-003` | hardware | implemented | [Correct Installed Stepper Cable Shielding](hardware/2026/2026-08-19-correct-installed-stepper-cable-shielding.md) |
