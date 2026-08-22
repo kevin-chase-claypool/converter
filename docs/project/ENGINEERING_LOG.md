@@ -149,6 +149,7 @@ Entry details remain only in the chronology.
 - [2026-08-21 - HARDWARE - Segregated mains-input and DC-output routes](#elog-20260821-segregated-mains-input-and-dc-output-routes)
 - [2026-08-22 - HARDWARE/PARTIAL - Verified X/Y limit live-input reporting](#elog-20260822-verified-x-y-limit-live-input-reporting)
 - [2026-08-22 - HARDWARE - Routed toolhead PC817 harness through drag chains](#elog-20260822-routed-toolhead-pc817-harness-through-drag-chains)
+- [2026-08-22 - RP23CNC-SOFTWARE/PLANNED - Added motorless PRB/G38 feasibility gate](#elog-20260822-added-motorless-prb-g38-feasibility-gate)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -1796,3 +1797,25 @@ Add new entries at the top of the log below this line.
 - Evidence: Owner report and `HW-20260822-002`.
 - Next action: Label and continuity-test the routed conductors, prove ground
   isolation, then perform the gated controller-output tests.
+
+<a id="elog-20260822-added-motorless-prb-g38-feasibility-gate"></a>
+### 🟨 2026-08-22 - RP23CNC-SOFTWARE/PLANNED - Added motorless PRB/G38 feasibility gate
+
+- Status: F-08 planned; no endpoint reassignment or probe-function pass is
+  claimed.
+- Category: rp23cnc-software, hardware, probing, magnetic calibration
+- Summary: Added a motorless test for the proposed use of RP23CNC `PRB` to
+  capture TMAG5273 threshold transitions during X/Y raster and A-index moves.
+  The test uses internal grblHAL position counters with TB6600 signal leads and
+  motors disconnected.
+- Evidence boundary: RP23CNC documentation establishes an isolated 12 V probe
+  input, and grblHAL implements G38 cycles and probe-coordinate reporting, but
+  neither explicitly certifies this complete Hall-raster/rotary-A use case.
+- Result: The authoritative wiring remains GP27/PC817C U3 -> `LIMA`. F-08 must
+  prove direct `PRB` polarity, X trigger/release capture, coordinate reporting,
+  and installed-build A behavior before the isolated path or any retermination
+  is attempted.
+- Evidence: `RPSW-20260822-001`; `docs/testing/TEST_PLAN.md` F-08.
+- Next action: Perform the direct-input F-08 procedure without motor wiring,
+  record every command and result in a dated lab note, and proceed to the
+  GP27/U3 path only if the direct stage passes.

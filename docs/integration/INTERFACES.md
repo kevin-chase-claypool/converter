@@ -135,6 +135,16 @@ reference. Any inconsistent edge, sensor fault, motion alarm, or unknown
 toolhead-lift state exits through the abort/fault handling path instead of
 retrying automatically.
 
+The current physical/interface contract remains GP27/U3 -> RP23CNC `LIMA` for
+the switch-like `A_HOME` signal. A proposed alternative would terminate that
+same routed return at RP23CNC `PRB` so host-driven G38 moves could capture
+magnetic entry and release coordinates for X/Y raster and A-index processing.
+That alternative is not yet accepted: F-08 must first prove direct `PRB`
+polarity, X transition capture, coordinate reporting, and the installed XYZA
+build's A-axis G38 behavior without motors connected, followed by an actual
+GP27/U3 isolated-path test. Until then, do not reterminate the conductor or
+change the normal `$H` contract.
+
 Do not connect the Pro Micro output directly to an RP23CNC input until the
 RP23CNC input polarity, voltage/current requirement, output driver, and
 isolation behavior are verified in `docs/hardware/WIRING_TABLE.md`.

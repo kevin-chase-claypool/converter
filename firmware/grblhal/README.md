@@ -43,6 +43,10 @@ digital outputs, USB, and Ethernet.
    [`HOMING_AND_MAGNETIC_CALIBRATION.md`](HOMING_AND_MAGNETIC_CALIBRATION.md)
    for the planned two-stage homing/calibration scheme: physical X/Y switches
    first, then TMAG5273/RP2040 magnetic bed-center and theta-index scans.
+   Before considering GP27/U3 retermination from `LIMA` to `PRB`, run the
+   motorless F-08 test to prove X G38 transition capture, coordinate reporting,
+   and the installed build's A-axis probing behavior. Source inspection alone
+   is not acceptance evidence.
 6. Map the **spindle-enable output** to the pen-pressure MCU's engage/lift input:
    `M3` = engage, `M5` = lift.
 7. Confirm `G4` dwell handling. The host emits `G4 P<seconds>` after M3/M5, and

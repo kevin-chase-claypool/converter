@@ -62,6 +62,50 @@ completion status.
 | F-05 | Spindle/tool output test | Deterministic output pin state: M3 = ENGAGE, M5 = LIFT, fail-safe to LIFT/OFF |
 | F-06 | Settings persistence | Reboot preserves calibrated settings |
 | F-07 | Four-axis configuration sanity check | X/Y/A are enabled, A is available for homing/motion, and the Z axis slot remains unused/unwired |
+| F-08 | Motorless RP23CNC `PRB`/G38 feasibility | With TB6600 signal leads and motors disconnected, the isolated `PRB` input reports the intended idle/asserted states, `G38.3` captures an inactive-to-active X transition, `G38.5` captures an active-to-inactive X transition, and the installed four-axis build either proves or rejects equivalent A-axis probe commands and A-coordinate reporting. Keep GP27 assigned to `LIMA` until this test and the subsequent GP27/U3 path check pass. |
+
+### F-08 motorless PRB/G38 procedure
+
+This is a controller-input and firmware-feasibility test, not a motion test.
+Disconnect the TB6600 `STEP`/`DIR`/`EN` signal leads and all motors. grblHAL may
+then advance only its internal position counters while the RP23CNC step outputs
+remain unloaded.
+
+1. Power the RP23CNC and its isolated 12 V input section. Use a temporary dry
+   contact or the already validated optocoupler-style sink between `PRB` and
+   its isolated input ground. Do not drive the 12 V probe terminal from a
+   3.3 V or 5 V logic output.
+2. With no motion command active, verify the intended idle and asserted states
+   in ioSender. `Pn:P` must appear only for the asserted probe state. Record
+   the starting and final `$6` probe-inversion value; change it only if the
+   observed state is reversed.
+3. Confirm hard and soft limits are disabled for this bench test, unlock the
+   controller if required, and select millimeters plus incremental motion:
+
+   ```gcode
+   G21
+   G91
+   ```
+
+4. Start with `PRB` inactive. Send `G38.3 X10 F60`, assert `PRB` before the
+   logical target is reached, and verify that the cycle ends with a successful
+   `[PRB:...]` report.
+5. Leave `PRB` asserted. Send `G38.5 X10 F60`, release `PRB` before the logical
+   target is reached, and verify a second successful probe-coordinate report.
+6. Repeat bounded inactive-to-active and active-to-inactive checks with an A
+   target. Record whether the installed XYZA firmware accepts `G38.x A...`,
+   stops on both transitions, and reports an A coordinate. Source-level support
+   is not accepted as a substitute for this installed-build result.
+7. After the direct `PRB` test passes, repeat the state and G38 checks through
+   the actual Pro Micro GP27 -> PC817C U3 -> controller input path while
+   preserving `CTRL_GND`/`TOOL_GND` isolation.
+8. Send `G90`, reset the controller, and do not use the motorless test's
+   internal coordinates as machine references.
+
+Pass requires deterministic polarity, successful X transition captures,
+an explicit pass/fail result for A probing, readable probe coordinates, and a
+successful GP27/U3 path check. Only a later documented wiring change may move
+the routed U3 return conductor from `LIMA` to `PRB`.
 
 ## Motion tests
 

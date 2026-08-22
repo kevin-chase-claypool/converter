@@ -57,6 +57,11 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   homing is trusted. Send `M5` and verify the pen/toolhead is retracted before
   any homing or magnetic scan. See
   [`grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`](grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md).
+- **Candidate probe capture** - F-08 will test the RP23CNC `PRB` input and
+  grblHAL G38 transition/coordinate behavior without TB6600 signal leads or
+  motors attached. The installed XYZA build must explicitly prove or reject A
+  probing. GP27/U3 remains assigned to `LIMA` until that motorless test and the
+  subsequent isolated-path check pass.
 
 ## Status
 

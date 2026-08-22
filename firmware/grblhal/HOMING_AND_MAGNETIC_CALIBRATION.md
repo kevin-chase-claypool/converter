@@ -163,6 +163,27 @@ Custom grblHAL code is justified only after the host-coordinated calibration
 proves a specific limitation that cannot be handled by settings, sender macros,
 or the RP2040 adapter.
 
+### Candidate PRB/G38 path and required feasibility gate
+
+The RP23CNC manual documents an opto-isolated 12 V `PRB` input, and grblHAL
+implements the `G38.2` through `G38.5` probe motion modes and probe-coordinate
+reporting. Neither source explicitly certifies this project's complete
+TMAG5273 serpentine-raster, area-centroid, and rotary-A workflow. In particular,
+the installed four-axis firmware has not yet proved that an A target is accepted
+by G38 and returned in the probe-coordinate report.
+
+Test F-08 is therefore a hard feasibility gate. Its first stage deliberately
+uses no TB6600 signal connections and no motors: a dry contact or validated
+opto-isolated sink toggles `PRB` while grblHAL advances only internal X and A
+position counters. The test must prove input polarity, `Pn:P`, G38 entry/release
+behavior, and coordinate reporting on the installed build. The actual
+GP27/PC817C U3 path is tested only after the direct-input stage passes.
+
+Until F-08 passes, the authoritative wiring remains GP27/U3 -> `LIMA` as the
+switch-like `A_HOME` design. A successful test permits a later design decision
+and documented retermination to `PRB`; it does not itself change the wiring or
+normal startup-homing contract.
+
 ## Open verification items
 
 - Exact fixed TMAG5273 mounting height and orientation.
@@ -171,6 +192,8 @@ or the RP2040 adapter.
 - Final RP2040 adapter board selection and output-driver circuit.
 - RP23CNC input terminal, polarity, voltage/current requirement, and isolation
   behavior for the adapter's digital `A_HOME` signal.
+- F-08 motorless proof or rejection of the proposed `PRB`/G38 X and A capture
+  behavior on the installed XYZA firmware before any `LIMA` retermination.
 - Scan step sizes, averaging count, thresholds, and acceptable repeatability.
 - Final sender macro or procedure for `M5`, lift dwell, `$H`, status check, and
   abort recovery.

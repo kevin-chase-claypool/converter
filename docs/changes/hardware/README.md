@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-08-22 | `RPSW-20260822-001` | planned | [Motorless PRB/G38 Feasibility Test](../rp23cnc-software/2026/2026-08-22-motorless-prb-g38-feasibility-test.md) | `probing`, `magnetic-calibration`, `motorless-test`, `g38` |
 | 2026-08-22 | `HW-20260822-002` | implemented | [Route toolhead PC817 harness](2026/2026-08-22-route-toolhead-pc817-harness.md) | `toolhead`, `optocoupler`, `drag-chain`, `wiring` |
 | 2026-08-22 | `HW-20260822-001` | verified | [Verify X/Y limit live inputs](2026/2026-08-22-verify-x-y-limit-live-inputs.md) | `limits`, `homing`, `safety`, `iosender` |
 | 2026-08-21 | `HW-20260821-001` | implemented | [Separate Mains and DC Routes](2026/2026-08-21-separate-mains-and-dc-routes.md) | `mains`, `dc-power`, `wiring-segregation`, `e-11` |

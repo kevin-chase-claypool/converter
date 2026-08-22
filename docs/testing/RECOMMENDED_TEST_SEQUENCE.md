@@ -33,32 +33,38 @@ not mark any test complete or replace the formal pass conditions.
 9. **F-01 — Controller baseline.** Boot and identify the RP23CNC firmware.
 10. **F-03 and F-04 — Unpowered controller I/O.** Check STEP/DIR and limits
    before motor drivers or the toolhead are attached.
-11. **F-05 — M3/M5 tool-output behavior.** Establish the actual controller
+11. **F-08 — Motorless PRB/G38 feasibility.** With all TB6600 signal leads and
+   motors disconnected, use a dry contact or validated optocoupler-style sink
+   to prove probe state reporting, X `G38.3`/`G38.5` transition capture, probe
+   coordinate reporting, and whether the installed XYZA build accepts A-axis
+   probing. Keep the routed GP27 return assigned to `LIMA` until F-08 and its
+   later GP27/U3 path check pass.
+12. **F-05 — M3/M5 tool-output behavior.** Establish the actual controller
    ENA/AUX0 output states and fail-safe state.
-12. **E-18 — Installed PC817/TMAG interface.** The assembled board has passed
+13. **E-18 — Installed PC817/TMAG interface.** The assembled board has passed
     its simulated bench test; now verify it against the actual RP23CNC
     terminals and complete the TMAG5273 portion.
-13. **E-05 — N20 no-load current.** After fitting the 22 AWG twisted
+14. **E-05 — N20 no-load current.** After fitting the 22 AWG twisted
    `OUT1`/`OUT2` pair, run the motor mechanically unloaded at
     6 V in both directions. Do not restrain the shaft.
-14. **T-01 — Toolhead lift/open-loop direction.** Verify safe travel and
+15. **T-01 — Toolhead lift/open-loop direction.** Verify safe travel and
     record which motor polarity produces lift versus seek/down. If reversed,
     swap OUT1/OUT2 *or* reverse the firmware mapping, never both.
-15. **E-06 and E-15 — Loaded actuator capability.** Perform the
+16. **E-06 and E-15 — Loaded actuator capability.** Perform the
     current-limited stall test and regulator load/ripple/temperature test only
     after no-load direction is known.
-16. **E-07 through E-09 — Sensor characterization.** Calibrate the load cell,
+17. **E-07 through E-09 — Sensor characterization.** Calibrate the load cell,
     measure HX711 behavior, and validate the TMAG5273 with the intended
     magnet/geometry.
-17. **T-02 through T-06 — Closed-loop toolhead and faults.** Add contact seek,
+18. **T-02 through T-06 — Closed-loop toolhead and faults.** Add contact seek,
     force hold, and each safe-fault case one at a time.
-18. **M-01 through M-11 — Motion system.** Begin with one mechanically
+19. **M-01 through M-11 — Motion system.** Begin with one mechanically
     detached axis, then progress through calibration, coordinated motion,
     homing, magnetic scans, and homing fault paths.
-19. **E-19 — Emergency stop input.** With the pen removed and motion disabled
+20. **E-19 — Emergency stop input.** With the pen removed and motion disabled
     for the first pass, verify SW1 NC-A continuity, RP23CNC Halt/reset behavior,
     NC-compatible input inversion, and no automatic motion restart after release.
-20. **Integrated tests — Full system.** Verify M3/M5 behavior, reset/E-stop
+21. **Integrated tests — Full system.** Verify M3/M5 behavior, reset/E-stop
     safety, timing, jitter/lost-step effects, calibration patterns, and saved
     diagnostics.
 
@@ -66,6 +72,9 @@ not mark any test complete or replace the formal pass conditions.
 
 - Do not attach the RP23CNC to the optocoupler harness until **E-17**, power
   checks, and **F-05** are complete.
+- Do not move the GP27/U3 return from `LIMA` to `PRB` until the direct-input
+  portion of **F-08** proves the installed firmware behavior. Do not treat an
+  A-axis source-code inference as a passed hardware/firmware test.
 - Do not mechanically load or stall the N20 before **E-05** passes.
 - Do not connect the motion mechanics until their driver settings and isolated
   I/O checks have passed.
