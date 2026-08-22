@@ -271,7 +271,7 @@
   <p class="subtitle">
     Current planning view for the RP23CNC/grblHAL controller, three TB6600
     stepper channels, toolhead electronics, Ethernet control, and the
-    TMAG5273/RP2040 magnetic homing adapter.
+    TMAG5273 sensing on the Pro Micro RP2350 toolhead controller.
   </p>
 
   <div class="notice">
@@ -295,7 +295,7 @@
       <title id="diagram-title">Current electronics layout and wiring concept</title>
       <desc id="diagram-desc">
         Concept diagram showing host computer, RP23CNC, power supply, stepper
-        drivers, motors, toolhead controller, and magnetic calibration adapter.
+        drivers, motors, toolhead controller, and toolhead magnetic sensing.
       </desc>
 
       <defs>
@@ -420,7 +420,7 @@
       <text class="title" x="628" y="410">Home / Limit Inputs</text>
       <text class="note" x="628" y="434">X limit switch</text>
       <text class="note" x="628" y="452">Y limit switch</text>
-      <text class="note" x="628" y="470">A_HOME from adapter</text>
+      <text class="note" x="628" y="470">A_HOME from toolhead</text>
       <text class="small" x="628" y="494">polarity/input circuit TBD</text>
 
       <path class="wire safety tbd" marker-end="url(#arrow-safety)" d="M765 430 C815 430 825 170 830 154"></path>
@@ -457,12 +457,12 @@
       <rect class="label-bg" x="480" y="352" width="124" height="20"></rect>
       <text class="label" x="488" y="366">spindle/LIFT state</text>
 
-      <!-- Magnetic adapter -->
+      <!-- Magnetic function on the same toolhead MCU -->
       <rect class="box" x="300" y="610" width="210" height="112"></rect>
-      <text class="title" x="318" y="639">RP2040 + TMAG5273 Adapter</text>
+      <text class="title" x="318" y="639">Magnetic Function (same MCU)</text>
       <text class="note" x="318" y="662">I2C magnetic readings</text>
       <text class="note" x="318" y="679">USB diagnostics to host</text>
-      <text class="note" x="318" y="696">validated A_HOME output</text>
+      <text class="note" x="318" y="696">not a separate adapter board</text>
 
       <rect class="box-soft" x="50" y="720" width="220" height="54"></rect>
       <text class="title" x="68" y="748">TMAG5273 Sensor</text>
@@ -492,8 +492,8 @@
         <li>Host PC sends G-code and jog commands to RP23CNC over USB first, Ethernet after W5500 bring-up.</li>
         <li>RP23CNC/grblHAL owns X/Y/A motion, normal homing, limits, and the spindle/tool output pin state used for toolhead LIFT/ENGAGE.</li>
         <li>The configured Z axis slot is unused; the four-axis grblHAL build is needed to expose A alongside X/Y.</li>
-        <li>RP2040 reads the TMAG5273, reports diagnostic magnetic data to the host, and produces the validated <code>A_HOME</code> switch-like output.</li>
-        <li>The RP2040 <code>A_HOME</code> output must behave like a verified switch input before connection to RP23CNC.</li>
+        <li>The Pro Micro RP2350 toolhead controller reads the TMAG5273, reports diagnostic magnetic data to the host, and produces the validated <code>A_HOME</code> switch-like output.</li>
+        <li>The Pro Micro RP2350 <code>A_HOME</code> output must behave like a verified switch input before connection to RP23CNC.</li>
       </ul>
     </div>
 
@@ -541,8 +541,8 @@
         <td>Switch type, input polarity, normally closed/open decision, grblHAL inversion settings, and safe motor-energy removal approach.</td>
       </tr>
       <tr>
-        <td>Magnetic adapter</td>
-        <td>TMAG5273 reading stability, RP2040 diagnostics, fixed installed sensor height, magnet footprint repeatability, and an electrically compatible output driver for <code>A_HOME</code>.</td>
+        <td>Toolhead magnetic sensing</td>
+        <td>TMAG5273 reading stability, Pro Micro RP2350 diagnostics, fixed installed sensor height, magnet footprint repeatability, and an electrically compatible output driver for <code>A_HOME</code>.</td>
       </tr>
       <tr>
         <td>Toolhead</td>

@@ -9,12 +9,12 @@ grblHAL on RP23CNC remains the motion controller. It homes and jogs X, Y, and A,
 executes scan moves, enforces limits, and runs generated plot G-code. It should
 see ordinary digital home/limit signals, not raw I2C magnetic data.
 
-A separate RP2040 adapter reads the SparkFun TMAG5273 Qwiic 3D Hall sensor and
-reports magnetic measurements to the host. The current adapter candidate is a
-SparkFun Pro Micro RP2040 because it provides 3.3 V logic and onboard Qwiic. The
-adapter is expected to assert a clean digital `A_HOME` signal to an RP23CNC
-limit/home input for normal A homing after the signal conditioning, output
-driver, and input polarity are verified.
+The SparkFun Pro Micro RP2350 toolhead controller reads the TMAG5273 Qwiic 3D
+Hall sensor. This is the same MCU that owns the local pen-pressure state machine,
+HX711 sampling, and DRV8833 actuator control; there is no separate RP2040
+magnetic adapter. The Pro Micro RP2350 is expected to assert a clean digital
+`A_HOME` signal to an RP23CNC limit/home input for normal A homing after the
+signal conditioning, output driver, and input polarity are verified.
 
 The host PC coordinates setup and maintenance calibration scans by talking to
 both devices:
@@ -23,14 +23,14 @@ both devices:
 Host PC
   |-- Ethernet/Telnet/WebSocket or USB --> RP23CNC/grblHAL for X/Y/A motion
   |
-  |-- USB serial -----------------------> RP2040 adapter for TMAG5273 readings
+  |-- service UART/USB diagnostics -----> Pro Micro RP2350 for TMAG5273 readings
 ```
 
 Use RP23CNC Ethernet after the W5500 bring-up is verified. Keep USB as the
 initial recovery and baseline configuration path.
 
 For a detailed normal-startup homing data-flow sheet, including the requirements for
-ioSender, grblHAL, the RP2040/TMAG5273 adapter, and the toolhead controller,
+ioSender, grblHAL, and the Pro Micro RP2350 toolhead/TMAG5273 controller,
 see [`../../docs/homing_data_flow.html`](../../docs/homing_data_flow.html).
 
 ## Hardware concept
@@ -43,8 +43,9 @@ see [`../../docs/homing_data_flow.html`](../../docs/homing_data_flow.html).
   magnets. Its Z height is fixed by the toolhead mount and heat-set inserts;
   calibration must treat that height as non-adjustable unless the mount is
   redesigned.
-- The RP2040 adapter reads TMAG5273 `Bx`, `By`, and `Bz`, computes or reports
-  field magnitude, exposes diagnostic readings over USB serial, and provides
+- The Pro Micro RP2350 toolhead controller reads TMAG5273 `Bx`, `By`, and
+  `Bz`, computes or reports field magnitude, exposes diagnostic readings over
+  USB serial, and provides
   the validated switch-like `A_HOME` output used by grblHAL normal A homing.
 
 The two embedded magnets are planned as:
@@ -66,8 +67,8 @@ TMAG5273 position, not pen contact.
 
 Normal startup homing should be simple after setup constants are established:
 ioSender sends `M5`, waits for the lift dwell, then sends `$H`; grblHAL homes
-X/Y from physical switches and A from the RP2040-generated `A_HOME` input. The
-steps below describe the setup/maintenance calibration path used to determine
+X/Y from physical switches and A from the Pro Micro RP2350-generated `A_HOME`
+input. The steps below describe the setup/maintenance calibration path used to determine
 bed center, magnetic thresholds, hysteresis, edge offsets, and repeatability.
 
 1. Command tool lift/retract:
@@ -146,14 +147,14 @@ For first bring-up, do not write a custom grblHAL plugin for the TMAG5273. Use
 standard grblHAL motion and limit/home behavior:
 
 - grblHAL homes X/Y from the physical limit switches.
-- grblHAL homes A from the RP2040 adapter's validated switch-like `A_HOME`
+- grblHAL homes A from the Pro Micro RP2350's validated switch-like `A_HOME`
   input during normal startup homing.
 - grblHAL moves the machine through scan coordinates sent by a host calibration
   script after `M5` has lifted the pen/toolhead during setup or maintenance
   calibration.
-- The RP2040/TMAG5273 adapter provides diagnostic readings to the host script
-  and the digital `A_HOME` edge to grblHAL once the electrical interface is
-  verified.
+- The Pro Micro RP2350/TMAG5273 toolhead provides diagnostic readings to the
+  host script and the digital `A_HOME` edge to grblHAL once the electrical
+  interface is verified.
 - Any inconsistent edge pair, missing edge, sensor fault, grblHAL alarm, or
   unknown toolhead-lift state must abort the current attempt, stop motion or
   enter alarm/hold, keep the pen lifted, preserve diagnostics, and require
@@ -161,7 +162,7 @@ standard grblHAL motion and limit/home behavior:
 
 Custom grblHAL code is justified only after the host-coordinated calibration
 proves a specific limitation that cannot be handled by settings, sender macros,
-or the RP2040 adapter.
+or the Pro Micro RP2350 toolhead controller.
 
 ### Candidate PRB/G38 path and required feasibility gate
 
@@ -189,9 +190,9 @@ normal startup-homing contract.
 - Exact fixed TMAG5273 mounting height and orientation.
 - Magnet diameter, grade, polarity, and installed depth.
 - Confirmed 8.9 in outer-magnet radius after measurement.
-- Final RP2040 adapter board selection and output-driver circuit.
+- Final Pro Micro RP2350 magnetic-output behavior and output-driver circuit.
 - RP23CNC input terminal, polarity, voltage/current requirement, and isolation
-  behavior for the adapter's digital `A_HOME` signal.
+  behavior for the toolhead's digital `A_HOME` signal.
 - F-08 motorless proof or rejection of the proposed `PRB`/G38 X and A capture
   behavior on the installed XYZA firmware before any `LIMA` retermination.
 - Scan step sizes, averaging count, thresholds, and acceptable repeatability.

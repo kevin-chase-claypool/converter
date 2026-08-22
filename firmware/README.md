@@ -11,7 +11,7 @@ The board-specific implementation sequence is
 | Folder | Role | Target |
 |---|---|---|
 | [`grblhal/`](grblhal/) | Motion control - parses the host G-code and drives the X/Y/A steppers | RP23CNC / RP23U5XBB running grblHAL on RP2350 |
-| [`pen_pressure/`](pen_pressure/) | Closed-loop pen contact-force control | Separate SparkFun Pro Micro RP2350 prototype; final placement pending tests |
+| [`pen_pressure/`](pen_pressure/) | Closed-loop pen contact-force control and TMAG5273 magnetic sensing | Toolhead-mounted SparkFun Pro Micro RP2350 |
 
 ## Why this split
 
@@ -20,9 +20,9 @@ the hard 80% of plotter firmware. **grblHAL already does it** and has an
 RP2040/RP2350 port, so motion is configuration, not new code. The selected
 motion controller is the RP23CNC / RP23U5XBB 5-axis grblHAL controller with the
 Ethernet adapter. The pen-pressure loop is a distinct real-time concern. Its
-final placement is still under evaluation: a supported RP2350 core-1/plugin
-implementation is preferred if it does not disturb grblHAL timing; the current
-bench prototype uses a separate SparkFun Pro Micro RP2350. See
+controller placement is now accepted: a separate SparkFun Pro Micro RP2350 on
+the toolhead owns force control and TMAG5273 sensing so those workloads remain
+isolated from grblHAL motion timing. See
 [`../docs/decisions/ADR-002-toolhead-placement.md`](../docs/decisions/ADR-002-toolhead-placement.md).
 
 ## Integration contract
@@ -49,12 +49,13 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   dwell with a feed-hold until the load cell reports actual contact.
 - **Homing and bed calibration** - grblHAL owns normal X/Y/A homing and limit
   behavior. X/Y use physical limit switches. A uses a validated switch-like
-  `A_HOME` signal from a separate RP2040/TMAG5273 magnetic adapter; the
-  adapter reads the fixed-height TMAG5273, applies measured threshold and
-  hysteresis behavior, and presents a digital home input to RP23CNC. The host
+  `A_HOME` signal from the SparkFun Pro Micro RP2350 toolhead controller; that
+  same MCU reads the fixed-height TMAG5273, applies measured threshold and
+  hysteresis behavior, controls the pressure actuator, and presents a digital
+  home input to RP23CNC. There is no separate RP2040 magnetic adapter. The host
   calibration script is for setup and maintenance: it commands scan moves,
-  records RP2040 diagnostics, and determines constants before normal startup
-  homing is trusted. Send `M5` and verify the pen/toolhead is retracted before
+  records Pro Micro RP2350 diagnostics, and determines constants before normal
+  startup homing is trusted. Send `M5` and verify the pen/toolhead is retracted before
   any homing or magnetic scan. See
   [`grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`](grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md).
 - **Candidate probe capture** - F-08 will test the RP23CNC `PRB` input and

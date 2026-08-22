@@ -190,6 +190,9 @@ The module's local 10 kΩ pullups make an idle GP29/GP28 read HIGH and an
 asserted optocoupler read LOW. The RP23CNC ENA/Aux0 state mapping remains
 provisional until F-05/E-18 bench tests are complete.
 
+This Pro Micro RP2350 is also the installed TMAG5273 reader and magnetic-output
+owner. It is not paired with a separate RP2040 magnetic adapter.
+
 ## Safety invariants
 
 - SW1 NC-A asserts the RP23CNC E-stop/Halt input. NC-B is individually

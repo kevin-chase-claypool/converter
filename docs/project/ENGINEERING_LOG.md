@@ -150,6 +150,7 @@ Entry details remain only in the chronology.
 - [2026-08-22 - HARDWARE/PARTIAL - Verified X/Y limit live-input reporting](#elog-20260822-verified-x-y-limit-live-input-reporting)
 - [2026-08-22 - HARDWARE - Routed toolhead PC817 harness through drag chains](#elog-20260822-routed-toolhead-pc817-harness-through-drag-chains)
 - [2026-08-22 - RP23CNC-SOFTWARE/PLANNED - Added motorless PRB/G38 feasibility gate](#elog-20260822-added-motorless-prb-g38-feasibility-gate)
+- [2026-08-22 - RP23CNC-SOFTWARE/CORRECTED - Corrected RP2350 toolhead ownership](#elog-20260822-corrected-rp2350-toolhead-ownership)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -214,6 +215,7 @@ Entry details remain only in the chronology.
 - [2026-08-06 - SUCCESS - Added translucent interconnection overlay](#elog-20260806-added-translucent-interconnection-overlay)
 - [2026-08-08 - SUCCESS - Added no-overlap PC817 schematic](#elog-20260808-added-no-overlap-pc817-schematic)
 - [2026-08-14 - SUCCESS - Required complete records for every E-series test](#elog-20260814-required-complete-records-for-every-e-series-test)
+- [2026-08-22 - RP23CNC-SOFTWARE/CORRECTED - Corrected RP2350 toolhead ownership](#elog-20260822-corrected-rp2350-toolhead-ownership)
 <!-- END GENERATED TOPIC INDEX -->
 
 ## Entry format
@@ -1819,3 +1821,26 @@ Add new entries at the top of the log below this line.
 - Next action: Perform the direct-input F-08 procedure without motor wiring,
   record every command and result in a dated lab note, and proceed to the
   GP27/U3 path only if the direct stage passes.
+
+<a id="elog-20260822-corrected-rp2350-toolhead-ownership"></a>
+### 🟩 2026-08-22 - RP23CNC-SOFTWARE/CORRECTED - Corrected RP2350 toolhead ownership
+
+- Status: current-state documentation corrected and ADR-002 accepted; no wiring
+  or firmware changed.
+- Category: rp23cnc-software, hardware, toolhead, documentation
+- Summary: Replaced stale descriptions of a separate RP2040 magnetic adapter
+  with the installed architecture: the SparkFun Pro Micro RP2350 toolhead
+  controller owns both pen-pressure control and TMAG5273 magnetic sensing/output.
+- Struggle/failure: Current documents retained terminology from the earlier
+  standalone-adapter plan even after the functions moved onto the selected
+  Pro Micro RP2350 toolhead controller.
+- Result: Firmware, architecture, interface, wiring, testing, handoff, and
+  current visual-overview documents now describe one combined toolhead MCU.
+  ADR-002 records the Pro Micro RP2350 placement as accepted and the matching
+  roadmap item is complete; GP27 `LIMA` versus `PRB` remains test-gated.
+  Historical change records and dated lab notes remain unchanged where their
+  older terminology is part of the original evidence.
+- Evidence: Owner correction; `RPSW-20260822-002`; current GP27/GP28/GP29 and
+  Qwiic wiring records.
+- Next action: Continue E-18 and F-08 against the Pro Micro RP2350 toolhead
+  controller; do not infer that this naming correction verifies either test.

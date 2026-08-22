@@ -10,7 +10,7 @@ can be edited and iterated on its own.
 | Folder | What it is | Language / target |
 |---|---|---|
 | [`software/`](software/) | Host desktop app: SVG → G-code converter with a live Qt/OpenGL preview | Python 3 + PySide6 |
-| [`firmware/`](firmware/) | Machine controller (motion via grblHAL) + the pen-pressure control system | grblHAL on RP23CNC; toolhead placement pending tests |
+| [`firmware/`](firmware/) | Machine controller (motion via grblHAL) + the pen-pressure control system | grblHAL on RP23CNC; SparkFun Pro Micro RP2350 on the toolhead |
 | [`docs/`](docs/) | Design/handoff notes and the System Integration in Robotics report | Markdown |
 | [`samples/`](samples/) | Example SVG inputs and generated G-code outputs | assets |
 

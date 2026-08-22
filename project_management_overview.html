@@ -430,7 +430,7 @@
           <div class="task">
             <div>
               <strong>Verify magnetic homing electronics before wiring A_HOME.</strong>
-              <p>Read TMAG5273 through RP2040 diagnostics, validate fixed-height signal quality, and confirm the output driver is compatible with the selected RP23CNC input.</p>
+              <p>Read TMAG5273 through Pro Micro RP2350 toolhead diagnostics, validate fixed-height signal quality, and confirm the output driver is compatible with the selected RP23CNC input.</p>
             </div>
           </div>
           <div class="task">
@@ -449,7 +449,7 @@
           <li><strong>Axes:</strong> X/Y/A are used. Z may appear in the firmware builder only to expose A, but Z is unused and unwired.</li>
           <li><strong>A units:</strong> converter A values are motor-shaft degrees. One bed revolution is 4320 A motor degrees with the 12:1 ratio.</li>
           <li><strong>Toolhead:</strong> M3 means ENGAGE and M5 means LIFT through a spindle/tool output state.</li>
-          <li><strong>Normal homing:</strong> ioSender sends M5, waits for lift dwell, then sends $H. grblHAL homes X/Y switches and A from validated RP2040 A_HOME.</li>
+          <li><strong>Normal homing:</strong> ioSender sends M5, waits for lift dwell, then sends $H. grblHAL homes X/Y switches and A from validated Pro Micro RP2350 A_HOME.</li>
           <li><strong>Magnetic setup:</strong> center scan and two-revolution A scan are setup/calibration flows, not manual daily coordination steps.</li>
         </ul>
       </div>
@@ -460,10 +460,10 @@
         <h2>Open Blockers</h2>
         <ul>
           <li>RP23CNC input polarity and electrical requirements are not yet verified.</li>
-          <li>RP2040 A_HOME output-driver behavior is not yet proven against the selected RP23CNC input.</li>
+          <li>Pro Micro RP2350 A_HOME output-driver behavior is not yet proven against the selected RP23CNC input.</li>
           <li>TMAG5273 thresholds, hysteresis, offset, and repeatability are still TBD.</li>
           <li>TB6600 input topology, switch settings, and safe current limits need bench evidence.</li>
-          <li>Toolhead controller placement and fault wiring remain pending.</li>
+          <li>Toolhead force calibration and optional READY/FAULT wiring remain pending.</li>
         </ul>
       </div>
 
@@ -485,7 +485,7 @@
           </thead>
           <tbody>
             <tr><td>E-09</td><td>Stable TMAG5273 readings with intended magnet geometry.</td></tr>
-            <tr><td>E-18</td><td>RP2040/TMAG5273 adapter diagnostics and A_HOME electrical compatibility.</td></tr>
+            <tr><td>E-18</td><td>Pro Micro RP2350/TMAG5273 toolhead diagnostics and A_HOME electrical compatibility.</td></tr>
             <tr><td>F-05</td><td>Deterministic spindle/tool output state for M3/M5.</td></tr>
             <tr><td>F-07</td><td>Four-axis sanity check with Z unused/unwired.</td></tr>
             <tr><td>M-09</td><td>Two-revolution A magnetic index setup scan repeatability.</td></tr>
@@ -504,8 +504,8 @@
           <tr><td>Windows converter</td><td>Functional, with preview and G-code generation in place.</td><td>Keep stable until hardware motion feedback exposes a real issue.</td></tr>
           <tr><td>RP23CNC / grblHAL</td><td>Architecture selected; baseline firmware still needs build, flash, and I/O verification.</td><td>Complete Phase 2 bring-up after Phase 1 electrical gates.</td></tr>
           <tr><td>Motion electronics</td><td>TB6600-class driver plan exists; exact units and input behavior need testing.</td><td>Bench-test one driver before attaching mechanics.</td></tr>
-          <tr><td>Magnetic homing adapter</td><td>Planned RP2040 + TMAG5273 path with validated A_HOME output.</td><td>Prove readings and electrical compatibility before wiring to RP23CNC.</td></tr>
-          <tr><td>Toolhead force loop</td><td>Concept defined; placement and fault handling still pending.</td><td>Characterize actuator, load cell, HX711 rate/noise, and safe lift behavior.</td></tr>
+          <tr><td>Toolhead magnetic sensing</td><td>Pro Micro RP2350 + TMAG5273 path with validated A_HOME output; no separate magnetic adapter.</td><td>Prove readings and electrical compatibility before wiring to RP23CNC.</td></tr>
+          <tr><td>Toolhead force loop</td><td>Pro Micro RP2350 prototype implemented; closed-loop calibration and fault behavior remain pending.</td><td>Characterize actuator, load cell, HX711 rate/noise, and safe lift behavior.</td></tr>
           <tr><td>Documentation and report</td><td>Change notes, roadmap, test plan, wiring table, and engineering log are active.</td><td>Record every bench result and failed approach as it happens.</td></tr>
         </tbody>
       </table>
@@ -536,7 +536,7 @@
         </div>
         <div class="doc">
           <strong><a href="docs/electronics_layout_and_wiring.html">Electronics Layout</a></strong>
-          <p>Visual electronics and wiring concept for RP23CNC, drivers, power, toolhead, and magnetic adapter.</p>
+          <p>Visual electronics and wiring concept for RP23CNC, drivers, power, and the combined pressure/magnetic toolhead.</p>
         </div>
         <div class="doc">
           <strong><a href="docs/project/ENGINEERING_LOG.md">Engineering Log</a></strong>

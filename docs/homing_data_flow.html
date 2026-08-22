@@ -376,15 +376,15 @@
         <span class="tag">G-code</span>
       </div>
       <div class="card sensor">
-        <h3>RP2040 + TMAG5273</h3>
-        <p>Reads the magnetic gradient and turns it into a clean digital A home/index signal.</p>
+        <h3>Pro Micro RP2350 Toolhead Controller</h3>
+        <p>Owns pressure control and reads the TMAG5273 magnetic gradient to produce the digital A home/index signal.</p>
         <span class="tag">I2C/Qwiic</span>
         <span class="tag">hysteresis</span>
         <span class="tag">A_HOME</span>
       </div>
       <div class="card tool">
-        <h3>Toolhead Controller</h3>
-        <p>Receives M5/M3. Must keep the pen retracted during homing and calibration.</p>
+        <h3>Toolhead Mechanics</h3>
+        <p>The load cell, actuator, and pen mechanism controlled by the Pro Micro must remain retracted during homing and calibration.</p>
         <span class="tag">M5 = lift</span>
         <span class="tag">M3 = engage</span>
         <span class="tag">safe default</span>
@@ -402,7 +402,7 @@
     <section class="diagram" aria-label="Normal startup homing overview diagram">
       <svg viewBox="0 0 1160 670" role="img" aria-labelledby="title desc">
         <title id="title">RP23CNC normal startup homing overview</title>
-        <desc id="desc">Data flow between ioSender, grblHAL, the combined RP2040 and TMAG5273 magnetic adapter, toolhead controller, motors, and home inputs.</desc>
+        <desc id="desc">Data flow between ioSender, grblHAL, the Pro Micro RP2350 toolhead controller with TMAG5273 sensing, motors, and home inputs.</desc>
         <defs>
           <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
@@ -423,7 +423,7 @@
         <text class="small" x="372" y="170">Exits when X/Y/A are homed</text>
 
         <rect class="box box-tool" x="740" y="35" width="225" height="120"></rect>
-        <text class="label" x="762" y="67">Toolhead MCU</text>
+        <text class="label" x="762" y="67">RP2350 Toolhead (pressure)</text>
         <text class="small" x="762" y="93">Reads grblHAL output pin</text>
         <text class="small" x="762" y="117">M5-commanded state = LIFT</text>
         <text class="small" x="762" y="139">Pen must stay clear</text>
@@ -435,10 +435,10 @@
         <text class="small" x="762" y="334">A units = motor degrees</text>
 
         <rect class="box box-sensor" x="740" y="430" width="330" height="190"></rect>
-        <text class="label" x="762" y="462">RP2040 + TMAG5273 Adapter</text>
+        <text class="label" x="762" y="462">Same RP2350 (magnetic) + TMAG5273</text>
         <text class="small" x="762" y="488">1. TMAG5273 fixed-height sensor</text>
         <text class="small" x="762" y="512">2. Reads Bx/By/Bz from outer magnet</text>
-        <text class="small" x="762" y="536">3. RP2040 reads sensor over I2C</text>
+        <text class="small" x="762" y="536">3. Toolhead RP2350 reads sensor over I2C</text>
         <text class="small" x="762" y="560">4. Threshold + hysteresis filter</text>
         <text class="small" x="762" y="582">5. Outputs switch-like A_HOME</text>
         <text class="small-axis-flow" x="762" y="605">A-Axis Magnetic Homing Subflow</text>
@@ -447,7 +447,7 @@
         <text class="label" x="372" y="462">Home Inputs</text>
         <text class="small" x="372" y="488">X_HOME physical switch</text>
         <text class="small" x="372" y="512">Y_HOME physical switch</text>
-        <text class="small" x="372" y="536">A_HOME from RP2040</text>
+        <text class="small" x="372" y="536">A_HOME from toolhead RP2350</text>
 
         <rect class="box box-host" x="40" y="430" width="240" height="110"></rect>
         <text class="label" x="62" y="462">Homing Complete</text>
@@ -523,7 +523,7 @@
 
         <rect class="box box-sensor" x="350" y="205" width="245" height="115"></rect>
         <text class="label" x="372" y="237">5. Read TMAG5273</text>
-        <text class="small" x="372" y="263">RP2040 streams Bx/By/Bz</text>
+        <text class="small" x="372" y="263">RP2350 toolhead streams Bx/By/Bz</text>
         <text class="small" x="372" y="287">Average samples per point</text>
         <text class="small" x="372" y="309">Record X/Y + field value</text>
 
@@ -559,7 +559,7 @@
         <text class="small" x="972" y="351">Footprint exits window</text>
         <text class="small" x="972" y="379">Whole window saturates</text>
         <text class="small" x="972" y="407">Edges inconsistent</text>
-        <text class="small" x="972" y="435">RP2040 read fault</text>
+        <text class="small" x="972" y="435">RP2350 sensor-read fault</text>
         <text class="small" x="972" y="463">grblHAL alarm</text>
 
         <ellipse class="exit-bubble exit-center" cx="1035" cy="575" rx="90" ry="45"></ellipse>
@@ -599,13 +599,13 @@
         </tr>
         <tr>
           <td>Sensor readings</td>
-          <td>RP2040 records TMAG5273 readings at each X/Y sample point, using averaged samples and the fixed installed sensor height.</td>
-          <td>RP2040/TMAG5273 firmware</td>
+          <td>The Pro Micro RP2350 records TMAG5273 readings at each X/Y sample point, using averaged samples and the fixed installed sensor height.</td>
+          <td>Pro Micro RP2350/TMAG5273 toolhead firmware</td>
         </tr>
         <tr>
           <td>Center computation</td>
           <td>Use thresholded or saturated footprint edges, not the peak field value: <code>center_x = (left_edge + right_edge) / 2</code> and <code>center_y = (front_edge + back_edge) / 2</code>.</td>
-          <td>Setup calibration script or future adapter logic</td>
+          <td>Setup calibration script or future Pro Micro RP2350 firmware logic</td>
         </tr>
         <tr>
           <td>Output</td>
@@ -648,8 +648,8 @@
         <text class="small" x="372" y="118">Set slow A seek rate</text>
 
         <rect class="box box-sensor" x="660" y="40" width="250" height="90"></rect>
-        <text class="label" x="682" y="72">3. Arm adapter</text>
-        <text class="small" x="682" y="98">RP2040 clears prior edge state</text>
+        <text class="label" x="682" y="72">3. Arm magnetic output</text>
+        <text class="small" x="682" y="98">RP2350 toolhead clears prior edge state</text>
         <text class="small" x="682" y="118">TMAG5273 stream active</text>
 
         <rect class="box box-motion" x="40" y="190" width="250" height="105"></rect>
@@ -712,7 +712,7 @@
         <text class="small" x="972" y="308">Pair spacing not 4320 deg</text>
         <text class="small" x="972" y="336">Centers disagree</text>
         <text class="small" x="972" y="364">Width outside limits</text>
-        <text class="small" x="972" y="392">RP2040 fault</text>
+        <text class="small" x="972" y="392">RP2350 toolhead fault</text>
         <text class="small" x="972" y="420">grblHAL alarm</text>
         <text class="small" x="972" y="448">Toolhead not lifted</text>
       </svg>
@@ -730,7 +730,7 @@
         <tr>
           <td>Normal A-homing scan distance</td>
           <td>Scan two full bed revolutions. With the current 12:1 convention, this is exactly <code>8640</code> A motor degrees.</td>
-          <td>grblHAL motion command and RP2040 edge recorder</td>
+          <td>grblHAL motion command and Pro Micro RP2350 edge recorder</td>
         </tr>
         <tr>
           <td>Position convention</td>
@@ -739,18 +739,18 @@
         </tr>
         <tr>
           <td>Edge capture</td>
-          <td>RP2040 must record two <code>enter</code>/<code>exit</code> pairs from the same scan direction using threshold plus hysteresis.</td>
-          <td>RP2040/TMAG5273 firmware</td>
+          <td>The Pro Micro RP2350 must record two <code>enter</code>/<code>exit</code> pairs from the same scan direction using threshold plus hysteresis.</td>
+          <td>Pro Micro RP2350/TMAG5273 toolhead firmware</td>
         </tr>
         <tr>
           <td>Bounds validation</td>
           <td>The scan must reject anything other than two valid edge pairs, reject field widths outside measured limits, and reject center positions that do not repeat within tolerance.</td>
-          <td>RP2040 firmware or setup calibration script</td>
+          <td>Pro Micro RP2350 firmware or setup calibration script</td>
         </tr>
         <tr>
           <td>Precision rule</td>
           <td>Compute each pass center independently, then average <code>center_1</code> and <code>center_2</code>. This improves repeatability checking and can reduce random edge noise.</td>
-          <td>RP2040 firmware or setup calibration script</td>
+          <td>Pro Micro RP2350 firmware or setup calibration script</td>
         </tr>
         <tr>
           <td>Final index move</td>
@@ -800,7 +800,7 @@
 
           <rect class="box box-sensor" x="40" y="245" width="250" height="125"></rect>
           <text class="label" x="62" y="277">4. Preserve diagnostics</text>
-          <text class="small" x="62" y="303">RP2040 records last samples</text>
+          <text class="small" x="62" y="303">RP2350 toolhead records last samples</text>
           <text class="small" x="62" y="327">Store edge/fault reason</text>
           <text class="small" x="62" y="349">Expose USB diagnostic log</text>
 
@@ -844,9 +844,9 @@
             <td>grblHAL / ioSender</td>
           </tr>
           <tr>
-            <td>TMAG5273/RP2040 sensor or edge fault</td>
+            <td>TMAG5273/Pro Micro RP2350 sensor or edge fault</td>
             <td>Stop the current magnetic scan, preserve the last samples and edge decisions, and leave A untrusted until the cause is corrected.</td>
-            <td>RP2040 magnetic adapter</td>
+            <td>Pro Micro RP2350 toolhead controller</td>
           </tr>
           <tr>
             <td>Toolhead lift fault or unknown lift state</td>
@@ -871,8 +871,8 @@
       <tbody>
         <tr>
           <td>1. Boot safe</td>
-          <td>Toolhead MCU, RP2040 adapter, RP23CNC</td>
-          <td>Toolhead defaults to LIFT/OFF; grblHAL starts in known state; adapter starts sensor read loop.</td>
+          <td>Pro Micro RP2350 toolhead controller, RP23CNC</td>
+          <td>Toolhead defaults to LIFT/OFF and starts its sensor read loop; grblHAL starts in a known state.</td>
           <td>Reset, watchdog, or fault must not drive the pen down.</td>
           <td>Homing could drag the pen or crash the tool into the bed.</td>
         </tr>
@@ -913,14 +913,14 @@
         </tr>
         <tr>
           <td>7. Detect magnet</td>
-          <td>TMAG5273 + RP2040 adapter</td>
+          <td>TMAG5273 + Pro Micro RP2350 toolhead</td>
           <td>TMAG5273 Bx/By/Bz readings become a digital <code>A_HOME</code> edge.</td>
           <td>Fixed sensor height, magnet geometry, threshold, hysteresis, and output polarity are measured.</td>
           <td>Gradient noise or saturation causes inconsistent A home trips.</td>
         </tr>
         <tr>
           <td>8. Trip A_HOME</td>
-          <td>RP2040 adapter to RP23CNC</td>
+          <td>Pro Micro RP2350 toolhead to RP23CNC</td>
           <td>Switch-like <code>A_HOME</code> signal into a verified RP23CNC input.</td>
           <td>Electrical interface matches the opto/input circuit and fails safe.</td>
           <td>RP23CNC input can be damaged or grblHAL never sees A home.</td>
@@ -949,14 +949,14 @@
         <ul>
           <li>Firmware built with four axes so <code>A</code> exists.</li>
           <li>X/Y physical home switches wired to verified RP23CNC inputs.</li>
-          <li>A home input assigned, verified with <code>$pins</code>, and matched to the RP2040 output polarity.</li>
+          <li>A home input assigned, verified with <code>$pins</code>, and matched to the Pro Micro RP2350 output polarity.</li>
           <li>Homing direction, seek rate, feed rate, debounce, pull-off, and A offset recorded in settings.</li>
           <li>A steps per unit configured as motor steps per degree; do not reapply the 12:1 bed ratio.</li>
           <li><code>M5</code> output verified as the toolhead LIFT command before homing.</li>
         </ul>
       </div>
       <div class="card sensor">
-        <h3>RP2040 / TMAG5273 Requirements</h3>
+        <h3>Pro Micro RP2350 / TMAG5273 Requirements</h3>
         <ul>
           <li>Read TMAG5273 over 3.3 V I2C/Qwiic at the fixed installed sensor height.</li>
           <li>Compute field magnitude or selected vector component consistently.</li>
@@ -999,13 +999,13 @@
       <tbody>
         <tr>
           <td>Setup / maintenance calibration</td>
-          <td>Windows calibration script using RP2040 USB diagnostic stream.</td>
+          <td>Windows calibration script using the Pro Micro RP2350 service diagnostic stream.</td>
           <td>Measure the gradient, determine threshold/hysteresis, find edge-to-center offset, and validate repeatability.</td>
           <td>Run a slow scripted scan and save the resulting constants.</td>
         </tr>
         <tr>
           <td>Normal startup homing</td>
-          <td>RP2040 adapter converts the magnetic profile into <code>A_HOME</code>; grblHAL treats it like a switch.</td>
+          <td>The Pro Micro RP2350 toolhead converts the magnetic profile into <code>A_HOME</code>; grblHAL treats it like a switch.</td>
           <td>Reference X, Y, and A without manual coordination.</td>
           <td>Connect ioSender, lift pen, run <code>$H</code>.</td>
         </tr>
@@ -1017,7 +1017,7 @@
       <div class="card warn">
         <h3>Do Not Skip</h3>
         <ul>
-          <li>Do not connect the RP2040 <code>A_HOME</code> output to RP23CNC until voltage/current/polarity are verified.</li>
+          <li>Do not connect the Pro Micro RP2350 <code>A_HOME</code> output path to RP23CNC until voltage/current/polarity are verified.</li>
           <li>Do not record A constants until magnet traces are repeatable at the fixed sensor height.</li>
           <li>Do not run homing with the pen down.</li>
           <li>Do not assume Web Builder pin mapping; verify with <code>$pins</code> and physical tests.</li>
@@ -1047,11 +1047,11 @@
       <tbody>
         <tr>
           <td>RP23CNC A home input terminal and polarity</td>
-          <td>Connecting RP2040 <code>A_HOME</code></td>
+          <td>Connecting Pro Micro RP2350 <code>A_HOME</code></td>
           <td><code>docs/hardware/WIRING_TABLE.md</code> and <code>firmware/grblhal/config/pin-map.md</code></td>
         </tr>
         <tr>
-          <td>RP2040 output-driver circuit</td>
+          <td>Pro Micro RP2350 output-driver circuit</td>
           <td>Any powered connection to RP23CNC</td>
           <td><code>docs/hardware/WIRING_TABLE.md</code></td>
         </tr>

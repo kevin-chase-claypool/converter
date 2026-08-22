@@ -434,8 +434,9 @@ grblHAL setup tasks (config, not parser code):
 2. `$` settings: steps/mm for X/Y; **A steps-per-unit = motor steps per degree** (the converter
    emits `A` in *motor* degrees — see G-code reference); per-axis max rate + acceleration.
 3. Wire X/Y limit switches to opto-isolated limit inputs. A homing uses the validated
-   switch-like `A_HOME` output from the RP2040/TMAG5273 magnetic adapter; do not wire it until
-   RP23CNC input requirements and adapter output-driver behavior are verified.
+   switch-like `A_HOME` output from the Pro Micro RP2350/TMAG5273 toolhead
+   controller; do not wire it until RP23CNC input requirements and toolhead
+   output-driver behavior are verified.
 4. Wire grblHAL **spindle/tool output pin → pen pressure subsystem** as the override line:
    M3 = ENGAGE, M5 = LIFT.
 5. **Settle handshake — DONE on the converter side.** `contours_to_gcode` now emits direction-specific
@@ -448,25 +449,27 @@ grblHAL setup tasks (config, not parser code):
 6. **Verify on hardware:** how grblHAL scales feed on a combined X/Y/**A** move vs the converter's
    `sqrt(xy² + motor_deg²)/F` pacing. Only affects speed/timing, not path shape.
 7. **Homing workflow:** normal startup homing is `M5`, lift dwell, `$H`; grblHAL homes X/Y from
-   physical switches and A from RP2040 `A_HOME`. Setup calibration, using the fixed-height
-   TMAG5273 and host/RP2040 diagnostics, determines center, thresholds, hysteresis, A offset, and
-   repeatability. Abort/fault states stop the attempt, keep the pen lifted, preserve diagnostics,
-   and require explicit user recovery before retry.
+   physical switches and A from the Pro Micro RP2350 `A_HOME`. Setup
+   calibration, using the fixed-height TMAG5273 and Pro Micro RP2350
+   diagnostics, determines center, thresholds, hysteresis, A offset, and
+   repeatability. Abort/fault states stop the attempt, keep the pen lifted,
+   preserve diagnostics, and require explicit user recovery before retry.
 
 Pen pressure system (independent of grblHAL):
 - Closed loop: load cell → force PID → pen motor, holds target contact force and tracks paper/bed
   unevenness while drawing. Driven by the spindle-enable signal as a **mode override**:
   - `LIFT` (M5) = drive actuator open-loop to a safe retract height, force loop paused.
   - `ENGAGE` (M3) = release override; seek down slowly until the load cell trips, then hold force.
-- **Placement:** run it on a **separate MCU** that listens to the spindle/tool output line (cleanest
-  first version, since grblHAL owns the RP23CNC motion timing). A grblHAL **plugin** on the same
-  controller is the more integrated option later and is the only path that lets the pen system
-  feed-hold grblHAL until contact is confirmed.
+- **Placement:** run it on the toolhead-mounted **SparkFun Pro Micro RP2350**
+  that listens to the spindle/tool output line. This is the accepted placement
+  because grblHAL owns RP23CNC motion timing. A future READY/FAULT handshake
+  may involve a grblHAL input or plugin without moving the force loop off the
+  toolhead MCU.
 - **ENGAGE safety:** approach rate-limit, max-seek/stall guard (abort to LIFT if no contact = missing
   paper), force clamp, force LIFT on any fault / E-stop.
 
 Open sub-decisions: transport (grblHAL SD-card plugin vs USB streaming from a host); load-cell
-interface (HX711 vs ADC+amp); pressure-loop placement (separate MCU first, plugin later).
+interface calibration and the optional future READY/FAULT handshake.
 
 ## Useful commands
 

@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-08-22 | `RPSW-20260822-002` | implemented | [Correct RP2350 Toolhead Ownership](2026/2026-08-22-correct-rp2350-toolhead-ownership.md) | `toolhead`, `rp2350`, `tmag5273`, `documentation-correction` |
 | 2026-08-22 | `RPSW-20260822-001` | planned | [Motorless PRB/G38 Feasibility Test](2026/2026-08-22-motorless-prb-g38-feasibility-test.md) | `probing`, `magnetic-calibration`, `motorless-test`, `g38` |
 | 2026-08-22 | `HW-20260822-002` | implemented | [Route toolhead PC817 harness](../hardware/2026/2026-08-22-route-toolhead-pc817-harness.md) | `toolhead`, `optocoupler`, `drag-chain`, `wiring` |
 | 2026-08-22 | `HW-20260822-001` | verified | [Verify X/Y limit live inputs](../hardware/2026/2026-08-22-verify-x-y-limit-live-inputs.md) | `limits`, `homing`, `safety`, `iosender` |

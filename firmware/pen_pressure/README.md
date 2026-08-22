@@ -23,11 +23,13 @@ a grblHAL plugin reading a contact input).
 - force clamp on PID output
 - force LIFT on any fault / E-stop
 
-## Open decisions
+## Open verification
 
-- load-cell interface: HX711 vs ADC + instrumentation amp
-- actuator type for pen height (geared DC + encoder, stepper, voice coil…)
-- separate MCU now vs. fold into a grblHAL plugin later
+- Calibrate the installed HX711/load-cell force slope and final control gains.
+- Complete actuator travel, stall, seek-timeout, and safe-fault testing.
+- Decide whether the later `CONTACT_READY`/`TOOL_FAULT` handshake is necessary
+  after the fixed-dwell version is proven.
+- Complete E-18/F-08 for the Pro Micro RP2350 magnetic-output path.
 
 ## SparkFun Pro Micro RP2350 prototype
 

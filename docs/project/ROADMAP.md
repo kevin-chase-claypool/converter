@@ -104,7 +104,8 @@
 
 ## Phase 5: toolhead
 
-- [ ] Finalize toolhead controller placement: RP2350 plugin/core 1 or separate MCU.
+- [x] Finalize toolhead controller placement: use the toolhead-mounted SparkFun
+  Pro Micro RP2350 for pressure control and TMAG5273 sensing/output (ADR-002).
 - [ ] Verify open-loop actuator direction and safe travel. (`T-01`)
 - [ ] Implement BOOT, LIFT, SEEK_CONTACT, HOLD_FORCE, and FAULT states.
 - [ ] Add hard travel, seek-timeout, sensor, and force-limit faults.

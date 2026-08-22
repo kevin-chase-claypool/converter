@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-08-22 | `RPSW-20260822-002` | rp23cnc-software, hardware | implemented | [Correct RP2350 Toolhead Ownership](rp23cnc-software/2026/2026-08-22-correct-rp2350-toolhead-ownership.md) |
 | 2026-08-22 | `RPSW-20260822-001` | rp23cnc-software, hardware | planned | [Motorless PRB/G38 Feasibility Test](rp23cnc-software/2026/2026-08-22-motorless-prb-g38-feasibility-test.md) |
 | 2026-08-22 | `HW-20260822-002` | hardware, rp23cnc-software | implemented | [Route toolhead PC817 harness](hardware/2026/2026-08-22-route-toolhead-pc817-harness.md) |
 | 2026-08-22 | `HW-20260822-001` | hardware, rp23cnc-software | verified | [Verify X/Y limit live inputs](hardware/2026/2026-08-22-verify-x-y-limit-live-inputs.md) |

@@ -17,9 +17,8 @@ Record the exact board revision used by this project before finalizing wiring.
 | G-code sender / operator console | Streams the converter's saved G-code, exposes jog/status/console, and configures grblHAL | ioSender on the host PC, connected by USB or Ethernet |
 | Motion controller | G-code parsing, modal state, lookahead, coordinated acceleration, step/direction generation, homing, limits | grblHAL on RP23CNC |
 | Stepper power stage | Convert RP23CNC step/direction signals into motor phase current | Three external TB6600-class drivers |
-| Toolhead controller | Lift/engage state machine, load-cell sampling, force regulation, actuator drive, fault handling | grblHAL plugin or separate MCU; decision pending bench validation |
-| Magnetic homing adapter | Fixed-height magnetic sensing, setup diagnostics, and switch-like A home/index signal | RP2040 adapter reading TMAG5273 over Qwiic/I2C |
-| Toolhead sensors | Pen force feedback | 300 g load cell + HX711 |
+| Toolhead controller | Lift/engage state machine, load-cell sampling, force regulation, actuator drive, fault handling, fixed-height magnetic sensing, and magnetic home/index output | SparkFun Pro Micro RP2350 reading HX711 and TMAG5273 over Qwiic/I2C |
+| Toolhead sensors | Pen force and magnetic reference feedback | 300 g load cell + HX711; TMAG5273 3D Hall sensor |
 
 ## Motion data path
 
@@ -33,7 +32,7 @@ grblHAL parser -> planner/lookahead -> RP2350 driver/PIO/interrupts
        |
        +-> M3/M5 spindle/tool output pin state
        |
-       +<- X/Y home switches and RP2040 A_HOME
+       +<- X/Y home switches and Pro Micro RP2350 A_HOME
 ```
 
 The project should extend grblHAL rather than duplicate its parser or planner.
@@ -91,7 +90,7 @@ M5 commands `LIFT`. M3 commands `SEEK_CONTACT`, then `HOLD_FORCE`.
 ## Homing and magnetic reference
 
 Normal startup homing is owned by grblHAL: X/Y use physical home switches and A
-uses the RP2040/TMAG5273 adapter's validated switch-like `A_HOME` signal. The
+uses the Pro Micro RP2350/TMAG5273 toolhead's validated switch-like `A_HOME` signal. The
 TMAG5273 is not a Z-axis sensor; it is installed at a fixed toolhead/gantry
 height. Setup calibration scans the center and outer magnets to determine
 thresholds, hysteresis, A offset, and repeatability. During normal startup, the

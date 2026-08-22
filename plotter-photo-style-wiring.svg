@@ -218,7 +218,7 @@
   <g transform="translate(1590 730)">
     <rect class="panel" x="0" y="0" width="760" height="720" rx="10"/>
     <text class="h1" x="24" y="34">3. Toolhead control loop</text>
-    <text class="small" x="24" y="56">Label-based until the MCU board, DRV8833 module, and buck placement are finalized.</text>
+    <text class="small" x="24" y="56">Current toolhead MCU: SparkFun Pro Micro RP2350; verify remaining module and power endpoints against the master wiring table.</text>
 
     <g transform="translate(38 92)">
       <rect class="redboard" x="0" y="0" width="190" height="100" rx="8"/>
@@ -248,13 +248,13 @@
     </g>
     <g transform="translate(330 260)">
       <rect class="board" x="0" y="0" width="240" height="146" rx="8"/>
-      <text class="white h2" x="16" y="28">Pico 2 / RP2040 MCU</text>
-      <rect class="term-red" x="16" y="58" width="42" height="28"/><text class="tiny red" x="22" y="76">VSYS</text>
+      <text class="white h2" x="16" y="28">SparkFun Pro Micro RP2350</text>
+      <rect class="term-red" x="16" y="58" width="42" height="28"/><text class="tiny red" x="22" y="76">5V</text>
       <rect class="term-blue" x="58" y="58" width="42" height="28"/><text class="tiny blue" x="65" y="76">GND</text>
-      <rect class="term-green" x="100" y="58" width="42" height="28"/><text class="tiny green" x="109" y="76">GP2</text>
-      <rect class="term-green" x="142" y="58" width="42" height="28"/><text class="tiny green" x="151" y="76">GP3</text>
-      <rect class="term-green" x="58" y="104" width="42" height="28"/><text class="tiny green" x="65" y="122">AIN1</text>
-      <rect class="term-green" x="100" y="104" width="42" height="28"/><text class="tiny green" x="107" y="122">AIN2</text>
+      <rect class="term-green" x="100" y="58" width="42" height="28"/><text class="tiny green" x="109" y="76">GP4</text>
+      <rect class="term-green" x="142" y="58" width="42" height="28"/><text class="tiny green" x="151" y="76">GP5</text>
+      <rect class="term-green" x="58" y="104" width="42" height="28"/><text class="tiny green" x="65" y="122">GP0</text>
+      <rect class="term-green" x="100" y="104" width="42" height="28"/><text class="tiny green" x="107" y="122">GP1</text>
     </g>
     <g transform="translate(330 490)">
       <rect class="redboard" x="0" y="0" width="240" height="112" rx="8"/>

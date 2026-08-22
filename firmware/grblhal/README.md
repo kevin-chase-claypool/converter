@@ -42,7 +42,9 @@ digital outputs, USB, and Ethernet.
 5. Follow
    [`HOMING_AND_MAGNETIC_CALIBRATION.md`](HOMING_AND_MAGNETIC_CALIBRATION.md)
    for the planned two-stage homing/calibration scheme: physical X/Y switches
-   first, then TMAG5273/RP2040 magnetic bed-center and theta-index scans.
+   first, then TMAG5273/Pro Micro RP2350 magnetic bed-center and theta-index
+   scans. The Pro Micro is the existing toolhead/pen-pressure controller, not a
+   separate magnetic adapter.
    Before considering GP27/U3 retermination from `LIMA` to `PRB`, run the
    motorless F-08 test to prove X G38 transition capture, coordinate reporting,
    and the installed build's A-axis probing behavior. Source inspection alone

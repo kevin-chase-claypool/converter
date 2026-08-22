@@ -166,7 +166,7 @@ After the baseline transport works:
 9. For homing and bed calibration, keep grblHAL responsible for motion and
    digital limit/home handling. X/Y home from physical switches, and normal A
    homing uses the validated switch-like `A_HOME` signal from the
-   RP2040/TMAG5273 adapter. Use the setup-calibration process in
+   Pro Micro RP2350/TMAG5273 toolhead controller. Use the setup-calibration process in
    [`HOMING_AND_MAGNETIC_CALIBRATION.md`](HOMING_AND_MAGNETIC_CALIBRATION.md)
    to determine thresholds, hysteresis, offsets, and repeatability before
    considering a custom grblHAL plugin.
@@ -181,11 +181,11 @@ Write custom grblHAL code only after the baseline proves a specific gap:
 - A plugin may later replace fixed `G4` delays with a `CONTACT_READY` or
   `TOOL_FAULT` handshake.
 - A plugin may later participate in magnetic calibration only if the
-  RP2040/TMAG5273 adapter plus sender/setup-calibration process proves an
+  Pro Micro RP2350/TMAG5273 toolhead plus sender/setup-calibration process proves an
   actual grblHAL limitation.
-- Toolhead force control should remain on a separate MCU unless the RP2350 pin
-  audit and timing measurements prove a supported plugin/core-1 design is
-  maintainable.
+- Toolhead force control remains on the installed Pro Micro RP2350, separate
+  from the RP23CNC motion controller. Reconsidering that placement requires a
+  superseding ADR plus pin, timing, safety, and maintainability evidence.
 - Any plugin must preserve reset, E-stop, and watchdog behavior that defaults
   the toolhead to LIFT/OFF.
 

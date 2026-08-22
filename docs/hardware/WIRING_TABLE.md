@@ -152,7 +152,9 @@ not an installed X/A cable.
 
 The intended final magnetic calibration sensor path uses the toolhead SparkFun
 Pro Micro RP2350 as the TMAG5273 reader because the TMAG5273 is wired to the
-toolhead Qwiic connector. The Pro Micro drives `GP27` as the conditioned
+toolhead Qwiic connector. The same Pro Micro also owns the HX711/DRV8833
+pen-pressure controller; there is no separate RP2040 magnetic adapter. The Pro
+Micro drives `GP27` as the conditioned
 `A_HOME` output to the RP23CNC A limit/home input through a selected
 open-drain, transistor, optocoupler, or equivalent switch-like interface. `GP27`
 must only assert when both the TMAG5273 threshold condition is true and the
@@ -247,6 +249,7 @@ must pass bench tests before being treated as final machine wiring.
 
 | Date | Revision | Change | Updated by | Related evidence |
 |---|---:|---|---|---|
+| 2026-08-22 | 3.4 | Corrected stale separate-RP2040-adapter language: the installed SparkFun Pro Micro RP2350 toolhead controller owns both pen-pressure control and TMAG5273 magnetic sensing/output. No wiring changed. | Codex | `RPSW-20260822-002`; current GP27/GP28/GP29 wiring rows |
 | 2026-08-22 | 3.3 | Added motorless F-08 as the gate for the candidate GP27/U3-to-`PRB` probe path; retained `LIMA` as the authoritative endpoint until X/A G38 behavior, coordinate reporting, and the actual isolated path pass. | Codex | `RPSW-20260822-001`; F-08 planned |
 | 2026-08-21 | 3.2 | Recorded physical segregation of the mains-input and DC-output conductor routes at the main-supply/fuse-block area. | Codex | Owner report; `HW-20260821-001` |
 | 2026-08-20 | 3.1 | Recorded a partial E-11 no-load power-path check: the HD064RT input and one output pair measured 12.05 VDC, with polarity matching the block markings. | Codex | `2026-08-20-e-11-main-supply-no-load-path-test.md` |
