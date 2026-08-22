@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-08-22 | `HW-20260822-002` | hardware, rp23cnc-software | implemented | [Route toolhead PC817 harness](hardware/2026/2026-08-22-route-toolhead-pc817-harness.md) |
 | 2026-08-22 | `HW-20260822-001` | hardware, rp23cnc-software | verified | [Verify X/Y limit live inputs](hardware/2026/2026-08-22-verify-x-y-limit-live-inputs.md) |
 | 2026-08-21 | `HW-20260821-001` | hardware | implemented | [Separate Mains and DC Routes](hardware/2026/2026-08-21-separate-mains-and-dc-routes.md) |
 | 2026-08-20 | `HW-20260820-001` | hardware | verified | [Record Main Supply No-Load Path Test](hardware/2026/2026-08-20-record-main-supply-no-load-path-test.md) |

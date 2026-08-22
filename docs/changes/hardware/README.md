@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-08-22 | `HW-20260822-002` | implemented | [Route toolhead PC817 harness](2026/2026-08-22-route-toolhead-pc817-harness.md) | `toolhead`, `optocoupler`, `drag-chain`, `wiring` |
 | 2026-08-22 | `HW-20260822-001` | verified | [Verify X/Y limit live inputs](2026/2026-08-22-verify-x-y-limit-live-inputs.md) | `limits`, `homing`, `safety`, `iosender` |
 | 2026-08-21 | `HW-20260821-001` | implemented | [Separate Mains and DC Routes](2026/2026-08-21-separate-mains-and-dc-routes.md) | `mains`, `dc-power`, `wiring-segregation`, `e-11` |
 | 2026-08-20 | `HW-20260820-001` | verified | [Record Main Supply No-Load Path Test](2026/2026-08-20-record-main-supply-no-load-path-test.md) | `power-supply`, `fuse-block`, `e-11`, `voltage` |

@@ -148,6 +148,7 @@ Entry details remain only in the chronology.
 - [2026-08-20 15:41:52 -0500 - HARDWARE/PARTIAL - Verified main-supply no-load path through HD064RT](#elog-20260820154152)
 - [2026-08-21 - HARDWARE - Segregated mains-input and DC-output routes](#elog-20260821-segregated-mains-input-and-dc-output-routes)
 - [2026-08-22 - HARDWARE/PARTIAL - Verified X/Y limit live-input reporting](#elog-20260822-verified-x-y-limit-live-input-reporting)
+- [2026-08-22 - HARDWARE - Routed toolhead PC817 harness through drag chains](#elog-20260822-routed-toolhead-pc817-harness-through-drag-chains)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -1777,3 +1778,21 @@ Add new entries at the top of the log below this line.
 - Next action: Resolve unused input states, then test a controlled hard-limit
   alarm before enabling hard limits; keep drivers/motors out of any limit test
   until their dedicated commissioning gate.
+
+<a id="elog-20260822-routed-toolhead-pc817-harness-through-drag-chains"></a>
+### 🟨 2026-08-22 - HARDWARE - Routed toolhead PC817 harness through drag chains
+
+- Status: physical routing complete; endpoint and functional verification are
+  open.
+- Category: hardware, wiring, toolhead
+- Summary: The owner routed the five planned controller-side PC817 conductors
+  through the drag chains: controller `5V`, spindle `ENA`, `Aux 0`, controller
+  `GND`, and `LIMA`/`A_HOME`.
+- Result: The moving-harness route is in place without yet claiming endpoint
+  termination, continuity, isolation, controller-output behavior, or powered
+  operation.
+- Risk: `CTRL_GND` and `TOOL_GND` must remain isolated. Do not connect the
+  controller-side `ENA`, `Aux 0`, or `LIMA` ends until F-05/E-18 tests pass.
+- Evidence: Owner report and `HW-20260822-002`.
+- Next action: Label and continuity-test the routed conductors, prove ground
+  isolation, then perform the gated controller-output tests.
