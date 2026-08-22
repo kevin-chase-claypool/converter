@@ -147,6 +147,7 @@ Entry details remain only in the chronology.
 - [2026-08-19 16:06:38 -0500 - HARDWARE/PLANNED - Recorded actual HD064RT output allocation](#elog-20260819160638)
 - [2026-08-20 15:41:52 -0500 - HARDWARE/PARTIAL - Verified main-supply no-load path through HD064RT](#elog-20260820154152)
 - [2026-08-21 - HARDWARE - Segregated mains-input and DC-output routes](#elog-20260821-segregated-mains-input-and-dc-output-routes)
+- [2026-08-22 - HARDWARE/PARTIAL - Verified X/Y limit live-input reporting](#elog-20260822-verified-x-y-limit-live-input-reporting)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -161,6 +162,7 @@ Entry details remain only in the chronology.
 - [2026-08-19 14:32:03 -0500 - HARDWARE/PARTIAL - Confirmed 17HS15 coil pairs and recorded Y cable exception](#elog-20260819143203)
 - [2026-08-19 15:00:00 -0500 - HARDWARE/CORRECTED - Corrected B0FQ5GBNZ1 TB6600 DIP mapping](#elog-20260819150000)
 - [2026-08-20 15:41:52 -0500 - HARDWARE/PARTIAL - Verified main-supply no-load path through HD064RT](#elog-20260820154152)
+- [2026-08-22 - HARDWARE/PARTIAL - Verified X/Y limit live-input reporting](#elog-20260822-verified-x-y-limit-live-input-reporting)
 
 ### Decisions and architecture
 - [2026-06-07 11:57:39 -0500 - SUCCESS - Made continuous maintainability a repository requirement](#elog-20260607115739)
@@ -1756,3 +1758,22 @@ Add new entries at the top of the log below this line.
   operation.
 - Next action: With power removed, verify PE continuity and fitted-fuse
   ratings before any branch load is connected.
+
+<a id="elog-20260822-verified-x-y-limit-live-input-reporting"></a>
+### 🟨 2026-08-22 - HARDWARE/PARTIAL - Verified X/Y limit live-input reporting
+
+- Status: partial F-04; X/Y live reporting passed, but hard-limit alarm and
+  fault-path testing remain open.
+- Category: hardware, wiring, safety, test
+- Summary: The owner meter-verified each HiLetgo KW12-3 `COM`–`NC` contact,
+  wired `COM` to the RP23CNC `SIG` terminal and `NC` to `GND`, and used
+  ioSender 2.0.47 to operate each input separately. Both X and Y were inactive
+  released and active only while their own switch was pressed.
+- Result: `$5=0` is correct for the installed X/Y switches. `$21=0` remains
+  required until unused Z/A inputs are made deterministic and hard-limit alarm
+  testing is deliberately performed.
+- Evidence: `HW-20260822-001` and
+  `docs/report/lab-notes/2026-08-22-f-04-x-y-limit-live-input-test.md`.
+- Next action: Resolve unused input states, then test a controlled hard-limit
+  alarm before enabling hard limits; keep drivers/motors out of any limit test
+  until their dedicated commissioning gate.

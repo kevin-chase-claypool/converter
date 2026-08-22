@@ -58,7 +58,7 @@ completion status.
 | F-01 | Boot and identify firmware | Correct board/driver and recorded build |
 | F-02 | Parser dry run | Passed — `G21`, `G90`, zero-distance XYZA `G0`/`G1`, `M3`, `G4 P0.1`, `M5`, and `M2` each accepted. `M2` reported program end and final modal state included safe `M5`. See 2026-08-14 F-02 lab note. |
 | F-03 | Output pulse check | Passed — X/Y/A each had held 0/5 V direction logic, STEP activity only during motion (about 50 mV DC-meter average), and active-low enable (5 V idle, 0 V moving). No driver, motor, or PC817 controller-side wire attached. See 2026-08-14 F-03 lab note. |
-| F-04 | Limit input test | Each input reports and alarms correctly |
+| F-04 | Limit input test | Partial — X and Y each report active only when its own NC switch is pressed, with both released inactive, in ioSender on 2026-08-22. `$5=0`; hard limits remain disabled (`$21=0`). Hard-limit alarm behavior, broken-wire response, and the unused Z/A/A-index inputs remain open. See 2026-08-22 F-04 lab note. |
 | F-05 | Spindle/tool output test | Deterministic output pin state: M3 = ENGAGE, M5 = LIFT, fail-safe to LIFT/OFF |
 | F-06 | Settings persistence | Reboot preserves calibrated settings |
 | F-07 | Four-axis configuration sanity check | X/Y/A are enabled, A is available for homing/motion, and the Z axis slot remains unused/unwired |

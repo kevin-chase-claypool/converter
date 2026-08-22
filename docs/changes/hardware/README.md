@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-08-22 | `HW-20260822-001` | verified | [Verify X/Y limit live inputs](2026/2026-08-22-verify-x-y-limit-live-inputs.md) | `limits`, `homing`, `safety`, `iosender` |
 | 2026-08-21 | `HW-20260821-001` | implemented | [Separate Mains and DC Routes](2026/2026-08-21-separate-mains-and-dc-routes.md) | `mains`, `dc-power`, `wiring-segregation`, `e-11` |
 | 2026-08-20 | `HW-20260820-001` | verified | [Record Main Supply No-Load Path Test](2026/2026-08-20-record-main-supply-no-load-path-test.md) | `power-supply`, `fuse-block`, `e-11`, `voltage` |
 | 2026-08-19 | `HW-20260819-004` | implemented | [Record HD064RT Output Allocation](2026/2026-08-19-record-hcdc-output-allocation.md) | `hcdc`, `hd064rt`, `power-distribution`, `fuse`, `tb6600`, `rp23cnc` |
