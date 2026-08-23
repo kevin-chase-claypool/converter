@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-08-23 | `HW-20260823-001` | hardware, rp23cnc-software | implemented | [Partially terminate toolhead-control harness](hardware/2026/2026-08-23-partially-terminate-toolhead-control-harness.md) |
 | 2026-08-22 | `RPSW-20260822-003` | rp23cnc-software, hardware | implemented | [Implement Dual-Core Magnetic Registration](rp23cnc-software/2026/2026-08-22-dual-core-magnetic-registration.md) |
 | 2026-08-22 | `RPSW-20260822-002` | rp23cnc-software, hardware | implemented | [Correct RP2350 Toolhead Ownership](rp23cnc-software/2026/2026-08-22-correct-rp2350-toolhead-ownership.md) |
 | 2026-08-22 | `RPSW-20260822-001` | rp23cnc-software, hardware | planned | [Motorless PRB/G38 Feasibility Test](rp23cnc-software/2026/2026-08-22-motorless-prb-g38-feasibility-test.md) |

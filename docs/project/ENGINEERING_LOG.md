@@ -152,6 +152,7 @@ Entry details remain only in the chronology.
 - [2026-08-22 - RP23CNC-SOFTWARE/PLANNED - Added motorless PRB/G38 feasibility gate](#elog-20260822-added-motorless-prb-g38-feasibility-gate)
 - [2026-08-22 - RP23CNC-SOFTWARE/CORRECTED - Corrected RP2350 toolhead ownership](#elog-20260822-corrected-rp2350-toolhead-ownership)
 - [2026-08-22 - RP23CNC-SOFTWARE/IMPLEMENTED - Implemented gated magnetic registration](#elog-20260822-implemented-gated-magnetic-registration)
+- [2026-08-23 - HARDWARE/PARTIAL - Partially terminated toolhead-control harness](#elog-20260823-partially-terminated-toolhead-control-harness)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -1867,3 +1868,25 @@ Add new entries at the top of the log below this line.
   XY vector to G54 so X0/Y0 locates the pen tip, not the magnetic sensor.
 - Next action: Complete T-01/T-02 and E-18, then run F-08 motorless on the exact
   candidate build before considering GP27/U3 retermination or magnetic motion.
+
+<a id="elog-20260823-partially-terminated-toolhead-control-harness"></a>
+### 🟨 2026-08-23 - HARDWARE/PARTIAL - Partially terminated toolhead-control harness
+
+- Status: four controller-side conductors are reported connected; electrical
+  verification and the reverse return connection remain open.
+- Category: hardware, wiring, toolhead, rp23cnc
+- Summary: The owner supplied an annotated PC817C board image and reported that
+  J1.1 `CTRL_5V`, J1.2 `ENA`, J1.4 `AUX0`, and J1.5 `CTRL_GND` are now wired at
+  the RP23CNC. J1.6 `A_HOME` is not connected. No connection to `PRB` is
+  claimed.
+- Evidence boundary: The report and image establish board-side conductor
+  identity, not the exact controller terminal labels, continuity, isolation,
+  output polarity/current, or energized behavior.
+- Result: The interface wiring state is updated to partially terminated. The
+  installed reverse-return assignment remains `LIMA`; `PRB` remains a
+  test-gated candidate.
+- Evidence: `HW-20260823-001` and
+  `docs/report/lab-notes/2026-08-23-rp23cnc-toolhead-control-partial-termination.md`.
+- Next action: With power removed, check continuity and `CTRL_GND`/`TOOL_GND`
+  isolation; then perform F-05/E-18. Do not connect the return to `PRB` before
+  F-08 passes.
