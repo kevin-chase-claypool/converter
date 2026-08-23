@@ -101,6 +101,21 @@ bounds. It then performs the deliberately named **Centroid Approach and
 Registration Pass**: approach from a fixed direction, move slowly to the
 computed centroid, and set G54 X0/Y0 with `G10 L20`.
 
+### Mandatory TMAG-to-pen XY compensation
+
+The TMAG sensing point and pen tip are not coincident. Before Q0 or Q3 can run,
+P100 requires a separate `sensor_to_pen_offset_valid` gate in addition to the
+general commissioning gate. Record the installed vector in the macro as:
+
+```text
+sensor_to_pen_x = pen_X - TMAG_X
+sensor_to_pen_y = pen_Y - TMAG_Y
+```
+
+At the TMAG centroid P100 assigns those values to the current G54 coordinate.
+Its later `G54 G0 X0 Y0` move therefore brings the **pen**, not the TMAG, to bed
+center. This correction belongs in P100; do not apply it again in the converter.
+
 This is why GP27 never claims that one threshold edge is the center. It carries
 only a one-bit sensor state; grblHAL records all coordinates and computes the
 centroid after the full raster.
@@ -144,8 +159,9 @@ Only after both pass may the existing return be reterminated from `LIMA` to
 3. Build and archive the accepted candidate; do not overwrite the known-good
    baseline UF2.
 4. Prove `Q1`, then `Q2`, then bounded low-speed `Q3`, then `Q4`.
-5. Install measured scan bounds, pitch, feeds, threshold, hysteresis, outer
-   radius, tolerances, and timeouts with dated evidence.
+5. Install measured scan bounds, pitch, feeds, threshold, hysteresis,
+   **sensor-to-pen XY offset**, outer radius, tolerances, and timeouts with
+   dated evidence.
 6. Set both firmware and macro commissioning gates only after their respective
    acceptance tests pass.
 7. Run `Q0` repeatedly without a pen before creating the ioSender button.

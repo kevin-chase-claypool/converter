@@ -1862,5 +1862,8 @@ Add new entries at the top of the log below this line.
 - Safety boundary: All actuator, lift, pressure, magnetic, and production macro
   commissioning gates remain false. No candidate UF2 was generated or flashed,
   no physical wire was reterminated, and no motor or PRB test is claimed.
+- Correction: The center-registration path now has a separate locked
+  `sensor_to_pen_offset_valid` gate. P100 applies the installed `pen - TMAG`
+  XY vector to G54 so X0/Y0 locates the pen tip, not the magnetic sensor.
 - Next action: Complete T-01/T-02 and E-18, then run F-08 motorless on the exact
   candidate build before considering GP27/U3 retermination or magnetic motion.

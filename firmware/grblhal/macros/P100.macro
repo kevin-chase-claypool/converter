@@ -5,8 +5,13 @@
 
 #<mode> = #17
 #<commissioned> = 0
+#<sensor_to_pen_offset_valid> = 0
 
 (Commissioning values - replace only with dated test evidence.)
+(sensor_to_pen is pen location minus TMAG location in machine X/Y.)
+(This must be the measured installed value, not an assumed CAD orientation.)
+#<sensor_to_pen_x> = 0.0
+#<sensor_to_pen_y> = 0.0
 #<scan_min_x> = 0.0
 #<scan_max_x> = 0.0
 #<scan_min_y> = 0.0
@@ -55,6 +60,11 @@ o107 if [#<mode> EQ 4]
     (abort,P100 Q4 locked: A-index commissioning is incomplete)
   o108 endif
 o107 endif
+o109 if [[#<mode> EQ 0] OR [#<mode> EQ 3]]
+  o115 if [#<sensor_to_pen_offset_valid> EQ 0]
+    (abort,P100 Q0/Q3 locked: sensor-to-pen XY offset is not commissioned)
+  o115 endif
+o109 endif
 
 M5
 G4 P[#<lift_dwell_s>]
@@ -229,8 +239,9 @@ o200 if [[#<mode> EQ 0] OR [#<mode> EQ 3]]
   G53 G0 X[#<centroid_x> - #<approach_distance>] Y[#<centroid_y> - #<approach_distance>]
   G53 G1 X[#<centroid_x>] Y[#<centroid_y>] F[#<registration_feed>]
   G54
-  G10 L20 P1 X0 Y0
-  (print,P100 bed centroid registered as G54 X0 Y0)
+  (At the TMAG centroid, apply the pen-minus-TMAG installed offset.)
+  G10 L20 P1 X[#<sensor_to_pen_x>] Y[#<sensor_to_pen_y>]
+  (print,P100 bed centroid registered so G54 X0 Y0 is pen-at-center)
 o200 endif
 
 o240 if [#<mode> EQ 3]

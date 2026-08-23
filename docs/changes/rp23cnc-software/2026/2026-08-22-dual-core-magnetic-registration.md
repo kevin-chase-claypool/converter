@@ -40,7 +40,8 @@ the calculation.
 
 Core 0 owns pressure/safety/HX711/DRV8833 and Core 1 owns TMAG/GP28/GP27. A
 two-phase readiness handshake prevents a threshold edge from masquerading as a
-center result. P100 scans equal-pitch chords, computes a width-weighted area
+center result. P100 additionally requires a separately commissioned
+`pen - TMAG` XY vector before center registration. It scans equal-pitch chords, computes a width-weighted area
 centroid, registers G54 XY, validates two outer-index observations one bed
 revolution apart, and registers G54 A. Candidate build options enable probe and
 NGC expression support; the baseline build is unchanged.
@@ -65,7 +66,8 @@ Pro Micro RP2350.
 
 F-08 must prove filesystem macro parsing, X and A G38 behavior, probe
 parameters, and G54 semantics on the exact candidate build. E-18 must prove the
-GP27/U3 path. T-01/T-02/E-07/E-08/M-08/M-09 must supply installed constants.
+GP27/U3 path. T-01/T-02/E-07/E-08/M-08/M-09 must supply installed constants,
+including the pen-minus-TMAG XY vector. All source commissioning flags remain false, and no UF2 was generated/flashed.
 All source commissioning flags remain false, and no UF2 was generated/flashed.
 
 ## Files

@@ -41,6 +41,7 @@ def validate_flow_control(text: str) -> None:
 def validate_safety_contract(text: str) -> None:
     required = [
         "#<commissioned> = 0",
+        "#<sensor_to_pen_offset_valid> = 0",
         "g65 p100 q0",
         "m64 p0",
         "m65 p0",
@@ -50,7 +51,7 @@ def validate_safety_contract(text: str) -> None:
         "#5070",
         "#5061",
         "#5064",
-        "g10 l20 p1 x0 y0",
+        "g10 l20 p1 x[#<sensor_to_pen_x>] y[#<sensor_to_pen_y>]",
         "g10 l20 p1 a0",
         "centroid approach and registration pass",
     ]
@@ -105,12 +106,27 @@ def validate_a_math() -> None:
     assert index + 2 * expected_spacing > exit_2
 
 
+def validate_sensor_to_pen_registration() -> None:
+    # At the axis coordinate where the TMAG is over center, G54 must report the
+    # pen-minus-TMAG offset. A subsequent G54 X0 Y0 move then puts the pen at
+    # center, not the TMAG.
+    tmag_centroid_x, tmag_centroid_y = 100.0, -40.0
+    sensor_to_pen_x, sensor_to_pen_y = 12.0, -8.0
+    work_origin_x = tmag_centroid_x - sensor_to_pen_x
+    work_origin_y = tmag_centroid_y - sensor_to_pen_y
+    assert tmag_centroid_x - work_origin_x == sensor_to_pen_x
+    assert tmag_centroid_y - work_origin_y == sensor_to_pen_y
+    assert work_origin_x + sensor_to_pen_x == tmag_centroid_x
+    assert work_origin_y + sensor_to_pen_y == tmag_centroid_y
+
+
 def main() -> None:
     text = MACRO.read_text(encoding="utf-8")
     validate_flow_control(text)
     validate_safety_contract(text)
     validate_centroid_math()
     validate_a_math()
+    validate_sensor_to_pen_registration()
     print(f"P100 validation passed: {MACRO.relative_to(ROOT)}")
 
 

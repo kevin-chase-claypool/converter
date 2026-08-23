@@ -16,6 +16,9 @@ The file intentionally sets `#<commissioned> = 0`. Modes 0, 3, and 4 abort
 until F-08/E-18 pass and every scan constant at the top of the macro is replaced
 with measured, documented values. Mode 1 requires commissioned toolhead
 firmware because the Pro Micro will not acknowledge readiness otherwise.
+Modes 0 and 3 also require the independent `#<sensor_to_pen_offset_valid> = 1`
+gate and installed `pen - TMAG` X/Y values; this ensures G54 X0/Y0 is the pen
+tip at bed center.
 
 The ioSender production button is named `HOME + REGISTER`, has confirmation
 enabled, and sends `G65 P100 Q0`. During staged testing, invoke Q1 through Q4

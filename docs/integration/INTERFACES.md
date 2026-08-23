@@ -102,6 +102,11 @@ area centroid, registers G54 X0/Y0, then scans the outer magnet twice and
 registers G54 A0. Every startup uses the full sequence; the physical switches
 define machine bounds, not the actual bed center.
 
+The TMAG and pen tip have a fixed CAD/measured XY separation. P100 owns that
+transformation: it records `pen - TMAG` as a commissioning-gated offset and
+sets G54 so `X0 Y0` means **pen at bed center**. The converter must not add the
+same offset to plot coordinates.
+
 The Pro Micro RP2350 reads the TMAG5273 and uses the existing GP28/GP27 pair for
 a two-phase protocol. The first Aux0 assertion requests a GP27 readiness ACK;
 Aux0 is released and the ACK must clear; the second assertion arms GP27 as the
