@@ -110,15 +110,17 @@ current cable plan uses that same color pairing on the unshielded Y and A runs.
 Only the X motor cable has a grounded shield/sheath. Its shield/drain bonds to
 PE/chassis at the TB6600/DIN-rail end only and is cut back and insulated at the
 motor end. Do not connect that shield/drain to DC `-V`, motor phase terminals,
-or RP23CNC signal ground. Y and A use unshielded four-wire motor leads, with
-black/green as one coil and red/blue as the other.
+or RP23CNC signal ground. The X shielded run uses black/green for Phase A and
+red/white for Phase B (white continues the motor's blue B- lead). Y and A use
+unshielded four-wire motor leads, with black/green as one coil and red/blue as
+the other.
 
 | ID | From device | From terminal | To device | To terminal | Signal | Wire color | Status | Evidence/notes |
 |---|---|---|---|---|---|---|---|---|
 | XPH-001 | X TB6600 | `A+` | X motor | A+ lead | Phase A+ | Planned shielded motor run; black lead | partial | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil; retain lead order pending M-01 direction check and shielded-run installation. |
 | XPH-002 | X TB6600 | `A-` | X motor | A- lead | Phase A- | Planned shielded motor run; green lead | partial | Owner hand-turn generated-voltage test, 2026-08-19: black/green is one coil. |
-| XPH-003 | X TB6600 | `B+` | X motor | B+ lead | Phase B+ | Planned shielded motor run; red lead | partial | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil; retain lead order pending M-01 direction check and shielded-run installation. |
-| XPH-004 | X TB6600 | `B-` | X motor | B- lead | Phase B- | Planned shielded motor run; blue lead | partial | Owner hand-turn generated-voltage test, 2026-08-19: red/blue is one coil. |
+| XPH-003 | X TB6600 | `B+` | X motor | B+ lead | Phase B+ | Planned shielded motor run; red -> motor red | partial | Owner correction, 2026-08-23: X `B+` is red; retain lead order pending M-01 direction check and shielded-run installation. |
+| XPH-004 | X TB6600 | `B-` | X motor | B- lead | Phase B- | Planned shielded motor run; white -> motor blue | partial | Owner correction, 2026-08-23: X `B-` is white; white is the cable-side continuation of the motor's blue B- lead. |
 | XSH-001 | X motor cable shield/drain | Drain wire at TB6600 end | DIN rail PE/chassis terminal | PE/chassis TBD | Cable shield bond | Bare/tinned drain | planned | Bond at driver/DIN end only; insulate shield at motor end; verify continuity to PE and isolation from DC `-V` after installation. |
 | YPH-001 | Y TB6600 | `A+` | Y motor | A+ lead | Phase A+ | Unshielded motor lead black | continuity-checked | Owner report, 2026-08-23: black/green is one coil; final driver direction remains M-01/M-03. |
 | YPH-002 | Y TB6600 | `A-` | Y motor | A- lead | Phase A- | Unshielded motor lead green | continuity-checked | Owner report, 2026-08-23: black/green is one coil. |
@@ -253,6 +255,7 @@ must pass bench tests before being treated as final machine wiring.
 | 2026-08-20 | 3.1 | Recorded a partial E-11 no-load power-path check: the HD064RT input and one output pair measured 12.05 VDC, with polarity matching the block markings. | Codex | `2026-08-20-e-11-main-supply-no-load-path-test.md` |
 | 2026-08-19 | 3.0 | Recorded the actual HD064RT output allocation: RP23CNC on OUT1, Pololu D36V50F6 on OUT4, and X/Y/A TB6600s on OUT6/OUT7/OUT8; OUT2/OUT3/OUT5 are unused. Recorded selected branch-fuse starting values pending physical confirmation. | Codex | Project-owner allocation report; `HW-20260819-004` |
 | 2026-08-23 | 3.6 | Superseded the prior shield assignment: only X now has the grounded motor-cable sheath; Y and A are unshielded, with black/green and red/blue coil pairs. | Codex | Project-owner note; `HW-20260823-002` |
+| 2026-08-23 | 3.7 | Corrected the X shielded-run Phase B colors: `B+` is red and `B-` is white, with white continuing the motor's blue B- lead. | Codex | Project-owner correction; `HW-20260823-003` |
 | 2026-08-19 | 2.9 | Corrected motor-cable installation: only Y has a shield/drain; X and A retain their supplied unshielded 24 AWG leads. Removed the nonexistent X/A shield-bond rows. | Codex | Superseded by `HW-20260823-002`. |
 | 2026-08-19 | 2.8 | Recorded E-01 hand-turn coil-pair results for all three 17HS15 motors: black/green and red/blue. The Y axis has the special shielded-cable splice: cable black/green continues motor black/green, while cable red/white continues motor red/blue. | Codex | Owner hand-turn generated-voltage test; `2026-08-19-e-01-y-stepper-coil-pair-test.md` |
 | 2026-08-13 | 2.7 | Reconciled the continuity-checked ACEIRMC DRV8833 harness with its exact labels without solder rework: GP7 drives `ULT` sleep and GP6 reads `EEP` protection/fault. Firmware now matches the installed harness. E-14C still checks the J2 bridge and live behavior before motor testing. | Codex | Owner bench report; Amazon ASIN B08RMWTDLM; E-14C required |

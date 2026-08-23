@@ -154,6 +154,7 @@ Entry details remain only in the chronology.
 - [2026-08-22 - RP23CNC-SOFTWARE/IMPLEMENTED - Implemented gated magnetic registration](#elog-20260822-implemented-gated-magnetic-registration)
 - [2026-08-23 - HARDWARE/PARTIAL - Partially terminated toolhead-control harness](#elog-20260823-partially-terminated-toolhead-control-harness)
 - [2026-08-23 - HARDWARE/PLANNED - Set X-axis motor shielding plan](#elog-20260823-set-x-axis-motor-shielding-plan)
+- [2026-08-23 - HARDWARE/CORRECTED - Corrected X-axis Phase B cable color](#elog-20260823-corrected-x-axis-phase-b-cable-color)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -1908,3 +1909,18 @@ Add new entries at the top of the log below this line.
 - Next action: Before energizing X, install and continuity-test the X shield
   bond, confirm its isolation from DC `-V` and signal ground, and complete
   phase/direction checks.
+
+<a id="elog-20260823-corrected-x-axis-phase-b-cable-color"></a>
+### 🟨 2026-08-23 - HARDWARE/CORRECTED - Corrected X-axis Phase B cable color
+
+- Status: driver-side X Phase B color corrected; continuity and powered checks
+  remain open.
+- Category: hardware, wiring, stepper, x-axis
+- Summary: The owner corrected the X TB6600 Phase B mapping: `B+` is red and
+  `B-` is white. White is the shielded-cable-side continuation of the motor's
+  blue B- lead.
+- Result: The current X connection record is `A+` black, `A-` green, `B+` red,
+  and `B-` white. Y/A remain unshielded with black/green and red/blue pairs.
+- Evidence: Owner correction; `HW-20260823-003`.
+- Next action: Power-off continuity-check the red/white X Phase B run and
+  white-to-blue motor splice before driver energization.
