@@ -433,10 +433,10 @@ grblHAL setup tasks (config, not parser code):
    four-axis build may expose a Z slot, but Z is unused and unwired.
 2. `$` settings: steps/mm for X/Y; **A steps-per-unit = motor steps per degree** (the converter
    emits `A` in *motor* degrees — see G-code reference); per-axis max rate + acceleration.
-3. Wire X/Y limit switches to opto-isolated limit inputs. A homing uses the validated
-   switch-like `A_HOME` output from the Pro Micro RP2350/TMAG5273 toolhead
-   controller; do not wire it until RP23CNC input requirements and toolhead
-   output-driver behavior are verified.
+3. X/Y limit switches establish physical machine coordinates. The implemented,
+   locked P100 candidate then registers actual bed-center G54 XY from a
+   serpentine TMAG raster and G54 A from two outer-magnet observations. Keep the
+   installed GP27/U3 return on `LIMA` until F-08 authorizes `PRB` retermination.
 4. Wire grblHAL **spindle/tool output pin → pen pressure subsystem** as the override line:
    M3 = ENGAGE, M5 = LIFT.
 5. **Settle handshake — DONE on the converter side.** `contours_to_gcode` now emits direction-specific
@@ -448,12 +448,12 @@ grblHAL setup tasks (config, not parser code):
    a grblHAL plugin that feed-holds until a contact input.
 6. **Verify on hardware:** how grblHAL scales feed on a combined X/Y/**A** move vs the converter's
    `sqrt(xy² + motor_deg²)/F` pacing. Only affects speed/timing, not path shape.
-7. **Homing workflow:** normal startup homing is `M5`, lift dwell, `$H`; grblHAL homes X/Y from
-   physical switches and A from the Pro Micro RP2350 `A_HOME`. Setup
-   calibration, using the fixed-height TMAG5273 and Pro Micro RP2350
-   diagnostics, determines center, thresholds, hysteresis, A offset, and
-   repeatability. Abort/fault states stop the attempt, keep the pen lifted,
-   preserve diagnostics, and require explicit user recovery before retry.
+7. **Homing workflow:** after commissioning, one ioSender button sends `G65
+   P100 Q0`: M5/lift, physical X/Y home, center centroid raster and registration,
+   then outer-magnet A registration. The dual-core Pro Micro sends readiness
+   and threshold state over the existing GP28/GP27 interface; grblHAL records
+   coordinates and does the math. Abort/fault states stop the attempt, keep the
+   pen lifted, preserve diagnostics, and require explicit recovery.
 
 Pen pressure system (independent of grblHAL):
 - Closed loop: load cell → force PID → pen motor, holds target contact force and tracks paper/bed

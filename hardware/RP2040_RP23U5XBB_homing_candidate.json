@@ -1,0 +1,25 @@
+{
+  "driver": "RP2040",
+  "URL": "https://github.com/grblHAL/RP2040",
+  "board": "BOARD_RP23U5XBB",
+  "symbols": [
+    "OVERRIDE_MY_MACHINE=1",
+    "RP_MCU=2350",
+    "USB_SERIAL_CDC=1",
+    "N_AXIS=4",
+    "PROBE_ENABLE=1",
+    "NGC_PARAMETERS_ENABLE=1",
+    "NGC_EXPRESSIONS_ENABLE=1",
+    "SPINDLE0_ENABLE=11",
+    "SDCARD_ENABLE=2",
+    "_WIZCHIP_=5500",
+    "ETHERNET_ENABLE=1",
+    "TELNET_ENABLE=1",
+    "WEBSOCKET_ENABLE=1",
+    "FTP_ENABLE=1",
+    "ACCELERATION_TICKS_PER_SECOND=100",
+    "CONTROL_ENABLE=70"
+  ],
+  "docker_instance": "/RP2040",
+  "grblHAL": "webBuilder"
+}

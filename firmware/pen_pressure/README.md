@@ -31,7 +31,7 @@ a grblHAL plugin reading a contact input).
   after the fixed-dwell version is proven.
 - Complete E-18/F-08 for the Pro Micro RP2350 magnetic-output path.
 
-## SparkFun Pro Micro RP2350 prototype
+## SparkFun Pro Micro RP2350 dual-core implementation
 
 The integrated separate-MCU bench firmware lives in
 [`pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`](pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino).
@@ -42,8 +42,8 @@ Prototype wiring assumptions mirror `docs/hardware/WIRING_TABLE.md`:
 | RP2350 pin | Connection |
 |---|---|
 | `GP29` / `A3` | M3/M5 command input from PC817C U1. The module has an external 10 kΩ pullup to local 3.3 V; an asserted optocoupler pulls GP29 LOW. |
-| `GP27` / `A1` | Conditioned `A_HOME` output to RP23CNC A limit/home input through the selected switch-like interface |
-| `GP28` / `A2` | `HOME_ARM` input from PC817C U2. The module has an external 10 kΩ pullup to local 3.3 V; an asserted optocoupler pulls GP28 LOW, allowing `GP27 A_HOME` to assert only while homing is intentionally armed. |
+| `GP27` / `A1` | Conditioned readiness/magnetic-state output through U3; installed at `LIMA`, candidate `PRB` only after F-08 |
+| `GP28` / `A2` | Two-phase arm input from PC817C U2. An assertion pulls GP28 LOW: first arm requests readiness ACK, release clears it, second arm exposes threshold state on GP27. |
 | `GP4` | DRV8833 `IN1` |
 | `GP5` | DRV8833 `IN2` |
 | `GP6` | ACEIRMC DRV8833 `EEP` protection/fault output |
@@ -52,9 +52,16 @@ Prototype wiring assumptions mirror `docs/hardware/WIRING_TABLE.md`:
 | `GP1` | HX711 `SCK` |
 | Qwiic `GPIO16/GPIO17` | TMAG5273 `SDA/SCL` |
 
-The sketch defaults to a safe lift/stop behavior, supports serial bench commands,
-and keeps HX711 force thresholds as raw-count placeholders until E-07/E-08
-establish calibration and noise data. Do not install the pen or connect the
+The integrated sketch divides work across the RP2350 cores. Core 0 owns the
+pressure state machine, HX711, DRV8833, GP29, faults, telemetry, and watchdog.
+Core 1 owns the TMAG5273, GP28 two-phase arm/readiness handshake, and GP27
+readiness/magnetic output. Fixed-size atomics carry status between cores.
+During a magnetic scan, a verified lifted state is required and the HX711 is
+powered down because pressure measurement is unnecessary.
+
+The firmware defaults to a safe lift/stop behavior, supports serial diagnostics,
+and keeps all actuator, force, lift-reference, and magnetic commissioning gates
+false until their named tests establish measured values. Do not install the pen or connect the
 RP23CNC M3/M5 line until motor direction, load-cell polarity, and input polarity
 are verified on the bench. The integrated sketch is configured for the PC817C
 module's active-low GP29/GP28 output; F-05 and E-18 must still verify the
@@ -71,7 +78,7 @@ opened from its own folder:
 | [`e08_hx711_rate_noise/e08_hx711_rate_noise.ino`](e08_hx711_rate_noise/e08_hx711_rate_noise.ino) | Measures actual stationary HX711 sample rate and raw-count noise in one quiet 15-second UART result; keeps the motor driver inactive. | HX711 Arduino Library by Bogdan Necula / bogde |
 | [`e09_tmag5273_verification/e09_tmag5273_verification.ino`](e09_tmag5273_verification/e09_tmag5273_verification.ino) | Verifies TMAG5273 I2C identity, on-demand magnetic vector, and stationary field stability through the intended Qwiic wiring; keeps the motor driver inactive. | SparkFun TMAG5273 Arduino Library |
 | [`bench_sensors/bench_sensors.ino`](bench_sensors/bench_sensors.ino) | Tests HX711 raw readings and TMAG5273 Qwiic telemetry without energizing the motor driver. | HX711 and SparkFun TMAG5273 |
-| [`pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`](pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino) | Combines GP29 command input, GP27 A_HOME output assignment gated by GP28 HOME_ARM, DRV8833 motor control, HX711 force feedback, and TMAG5273 telemetry. | HX711 and SparkFun TMAG5273 |
+| [`pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`](pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino) | Dual-core integrated pressure/safety and magnetic-readiness/threshold controller for GP29, GP28, GP27, DRV8833, HX711, and TMAG5273. | HX711 and SparkFun TMAG5273 |
 
 Recommended bench order: run `bench_sensors` first, run `bench_motor_command`
 with the actuator unloaded, then flash `pro_micro_rp2350_toolhead` only after

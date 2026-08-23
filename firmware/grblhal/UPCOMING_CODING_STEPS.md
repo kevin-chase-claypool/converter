@@ -163,13 +163,12 @@ After the baseline transport works:
 7. Verify limit/control input polarity.
 8. Verify the selected spindle/tool output pin state is fail-safe for the
    future toolhead: `M3` = ENGAGE and `M5` = LIFT/OFF.
-9. For homing and bed calibration, keep grblHAL responsible for motion and
-   digital limit/home handling. X/Y home from physical switches, and normal A
-   homing uses the validated switch-like `A_HOME` signal from the
-   Pro Micro RP2350/TMAG5273 toolhead controller. Use the setup-calibration process in
+9. For homing and bed registration, keep grblHAL responsible for motion and
+   coordinate capture. X/Y home from physical switches; the gated P100 macro
+   uses the validated GP27/U3-to-`PRB` state to compute the center raster
+   centroid and outer-magnet A index. Follow
    [`HOMING_AND_MAGNETIC_CALIBRATION.md`](HOMING_AND_MAGNETIC_CALIBRATION.md)
-   to determine thresholds, hysteresis, offsets, and repeatability before
-   considering a custom grblHAL plugin.
+   and complete F-08 before any endpoint retermination or magnetic motion.
 
 ## Stage 7: decide what code is actually needed
 
@@ -180,8 +179,8 @@ Write custom grblHAL code only after the baseline proves a specific gap:
 
 - A plugin may later replace fixed `G4` delays with a `CONTACT_READY` or
   `TOOL_FAULT` handshake.
-- A plugin may later participate in magnetic calibration only if the
-  Pro Micro RP2350/TMAG5273 toolhead plus sender/setup-calibration process proves an
+- A plugin may later participate in magnetic registration only if the
+  Pro Micro RP2350/TMAG5273 toolhead plus P100 process proves an
   actual grblHAL limitation.
 - Toolhead force control remains on the installed Pro Micro RP2350, separate
   from the RP23CNC motion controller. Reconsidering that placement requires a

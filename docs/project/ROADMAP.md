@@ -107,8 +107,8 @@
 - [x] Finalize toolhead controller placement: use the toolhead-mounted SparkFun
   Pro Micro RP2350 for pressure control and TMAG5273 sensing/output (ADR-002).
 - [ ] Verify open-loop actuator direction and safe travel. (`T-01`)
-- [ ] Implement BOOT, LIFT, SEEK_CONTACT, HOLD_FORCE, and FAULT states.
-- [ ] Add hard travel, seek-timeout, sensor, and force-limit faults.
+- [x] Implement commissioning-gated BOOT, LIFT, SEEK_CONTACT, HOLD_FORCE, and FAULT states in source. (2026-08-22 compile; bench verification remains.)
+- [x] Add source-level core heartbeat, seek-timeout, sensor, driver, and force-limit faults. (2026-08-22 compile; installed verification remains.)
 - [ ] Characterize actuator backlash and response.
 - [ ] Implement bounded contact seek. (`T-02`)
 - [ ] Implement proportional or PI force control at the measured sensor rate. (`T-03`)
@@ -118,6 +118,8 @@
 
 ## Phase 6: system integration
 
+- [x] Implement the locked P100 physical-home, centroid-raster, and A-registration macro source. (2026-08-22 static validation; F-08/M-08/M-09 remain.)
+- [x] Implement the dual-core GP28/GP27 readiness and magnetic-state protocol without adding drag-chain wires. (2026-08-22 compile; E-18 remains.)
 - [ ] Connect grblHAL M3/M5 to toolhead ENGAGE/LIFT.
 - [ ] Verify reset and E-stop leave the toolhead safe.
 - [ ] Validate fixed G4 lift and engage dwell timing.

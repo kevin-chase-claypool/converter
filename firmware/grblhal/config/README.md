@@ -12,6 +12,11 @@ Planned files:
 
 Do not commit credentials or private network secrets.
 
+The verified baseline remains in [`build-record.md`](build-record.md). The
+unflashed probe/expression configuration for staged magnetic-homing tests is in
+[`homing-candidate.md`](homing-candidate.md); it must not replace the baseline
+artifact until its motorless gates pass.
+
 The master physical wiring record is
 [`../../../docs/hardware/WIRING_TABLE.md`](../../../docs/hardware/WIRING_TABLE.md).
 Update it first; this folder should contain only the controller-specific subset

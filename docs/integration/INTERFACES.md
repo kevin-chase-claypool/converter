@@ -95,32 +95,26 @@ controller pin assignments in `firmware/grblhal/config/pin-map.md`.
 
 ## Homing and magnetic bed calibration
 
-Normal startup homing remains a grblHAL/RP23CNC responsibility. ioSender sends
-`M5`, waits for the toolhead lift dwell, then starts homing with `$H`.
-grblHAL homes X/Y from physical home switches and homes A from a validated,
-switch-like `A_HOME` signal generated from the TMAG5273 readings. In the current
-toolhead prototype, the SparkFun Pro Micro RP2350 reads the TMAG5273 over Qwiic
-and drives `GP27` as the intended final conditioned `A_HOME` output through the
-selected switch-like interface after the threshold, hysteresis, polarity, and
-RP23CNC input behavior are verified. `A_HOME` is gated by the Pro Micro `GP28`
-`HOME_ARM` input so normal plotting does not assert the RP23CNC A limit/home
-input when the bed magnet passes the sensor. `HOME_ARM` uses PC817C U2 with
-RP23CNC `Aux 0` on the LED side and Pro Micro `GP28` on the phototransistor
-side. U2 assertion pulls GP28 LOW against its local 3.3 V pullup. The intended
-operator workflow is
-`M64 P0`, `$H`, then `M65 P0`.
-Setup and maintenance calibration are separate from normal startup homing and
-are used to determine magnetic thresholds, hysteresis, offsets, and
-repeatability before those constants are trusted.
+Normal startup home and registration is a grblHAL/RP23CNC responsibility. The
+eventual ioSender button sends `G65 P100 Q0`. P100 commands M5, homes X/Y from
+physical switches, performs a serpentine center-magnet raster, calculates an
+area centroid, registers G54 X0/Y0, then scans the outer magnet twice and
+registers G54 A0. Every startup uses the full sequence; the physical switches
+define machine bounds, not the actual bed center.
+
+The Pro Micro RP2350 reads the TMAG5273 and uses the existing GP28/GP27 pair for
+a two-phase protocol. The first Aux0 assertion requests a GP27 readiness ACK;
+Aux0 is released and the ACK must clear; the second assertion arms GP27 as the
+thresholded magnetic probe state. Therefore one GP27 edge never means
+"center." grblHAL records entry and exit coordinates and computes the result.
 
 | Interface | Contract |
 |---|---|
 | X/Y limit switches -> RP23CNC | Physical home/limit references for grblHAL homing |
 | TMAG5273 -> Pro Micro RP2350 | Qwiic/I2C 3D Hall readings at the fixed installed sensor height |
-| Pro Micro RP2350 -> host PC | USB serial diagnostics and magnetic readings during setup calibration scans |
-| Host PC -> RP23CNC/grblHAL | Setup scan moves over USB or Ethernet while recording magnetic readings |
-| RP23CNC Aux 0 -> PC817C U2 -> Pro Micro RP2350 `GP28` | Active-low isolated `HOME_ARM` input that allows `GP27` `A_HOME` to assert only during homing |
-| Pro Micro RP2350 -> RP23CNC | Validated conditioned digital `A_HOME` signal for grblHAL A/theta homing |
+| Pro Micro RP2350 -> host PC | Service diagnostics only; host is not in the real-time centroid loop |
+| RP23CNC Aux 0 -> PC817C U2 -> Pro Micro RP2350 `GP28` | Active-low two-phase readiness/scan arm |
+| Pro Micro RP2350 `GP27` -> PC817C U3 -> candidate RP23CNC `PRB` | First-phase readiness ACK, then second-phase thresholded magnetic state |
 
 The center bed magnet locates the geometric bed center after X/Y homing. The
 outer bed magnet, nominally 8.9 in from center, provides the theta/A angular
@@ -128,18 +122,16 @@ index. The calibration routine should locate the geometric center of each
 saturated or thresholded magnetic footprint from opposing edges; it should not
 depend on an unsaturated peak.
 
-Normal A homing scans two full bed revolutions, or `8640` A motor degrees with
-the current 12:1 convention, records two entry/exit pairs, validates agreement,
-and averages the two computed centers before setting or reporting the A
-reference. Any inconsistent edge, sensor fault, motion alarm, or unknown
+Normal A registration records two entry/exit pairs separated by one bed
+revolution, validates spacing near `4320` A motor degrees, and averages the
+equivalent centers before setting G54 A0. Any inconsistent edge, sensor fault, motion alarm, or unknown
 toolhead-lift state exits through the abort/fault handling path instead of
 retrying automatically.
 
-The current physical/interface contract remains GP27/U3 -> RP23CNC `LIMA` for
-the switch-like `A_HOME` signal. A proposed alternative would terminate that
-same routed return at RP23CNC `PRB` so host-driven G38 moves could capture
-magnetic entry and release coordinates for X/Y raster and A-index processing.
-That alternative is not yet accepted: F-08 must first prove direct `PRB`
+The current installed endpoint remains GP27/U3 -> RP23CNC `LIMA`. The
+implemented candidate terminates that same routed return at `PRB` so
+controller-resident G38 moves can capture entry and release coordinates.
+That retermination is not yet authorized: F-08 must first prove direct `PRB`
 polarity, X transition capture, coordinate reporting, and the installed XYZA
 build's A-axis G38 behavior without motors connected, followed by an actual
 GP27/U3 isolated-path test. Until then, do not reterminate the conductor or
@@ -180,7 +172,7 @@ Power boundary:
 | DRV8833 `ULT`/fault | Optional driver fault input to the toolhead controller |
 | TMAG5273 Qwiic `SDA/SCL` | Position/reference magnetic sensor readings |
 
-The prototype SparkFun Pro Micro RP2350 firmware assigns `GP0/GP1` to HX711,
+The SparkFun Pro Micro RP2350 firmware assigns `GP0/GP1` to HX711,
 `GP4/GP5/GP6/GP7` to DRV8833 control/fault, Qwiic `GPIO17/GPIO16` to TMAG5273,
 `GP29` to the active-low M3/M5 input through PC817C U1, `GP27` to the
 conditioned `A_HOME` output through PC817C U3's bench-verified direct/0 Ω
@@ -188,7 +180,9 @@ link, and
 `GP28` to the active-low RP23CNC `Aux 0` `HOME_ARM` input through PC817C U2.
 The module's local 10 kΩ pullups make an idle GP29/GP28 read HIGH and an
 asserted optocoupler read LOW. The RP23CNC ENA/Aux0 state mapping remains
-provisional until F-05/E-18 bench tests are complete.
+provisional until F-05/E-18 bench tests are complete. Core 0 owns pressure and
+safety; Core 1 owns TMAG sampling and GP28/GP27 magnetic protocol. HX711
+acquisition is suspended only while a verified-lifted magnetic scan is active.
 
 This Pro Micro RP2350 is also the installed TMAG5273 reader and magnetic-output
 owner. It is not paired with a separate RP2040 magnetic adapter.

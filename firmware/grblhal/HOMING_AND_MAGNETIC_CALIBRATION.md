@@ -1,200 +1,155 @@
-# Homing and Magnetic Bed Calibration Plan
+# Homing and Magnetic Registration
 
-This plan is not yet verified on hardware. Keep all thresholds, offsets, pin
-assignments, and grblHAL `$` settings as `TBD` until measured.
+This is the implemented, commissioning-gated design. Source code exists, but
+the magnetic motion modes remain locked until the named electrical and motion
+tests provide measured constants. Do not set either commissioning lock to true
+merely to make the macro run.
 
-## Responsibility split
+## Ownership and references
 
-grblHAL on RP23CNC remains the motion controller. It homes and jogs X, Y, and A,
-executes scan moves, enforces limits, and runs generated plot G-code. It should
-see ordinary digital home/limit signals, not raw I2C magnetic data.
+- RP23CNC/grblHAL owns X/Y/A motion, physical X/Y homing, probe-coordinate
+  capture, centroid arithmetic, work-coordinate registration, and aborts.
+- The toolhead SparkFun Pro Micro RP2350 owns pen lift/pressure control and the
+  TMAG5273. There is no separate RP2040 adapter.
+- X/Y limit switches establish machine coordinates only. The center magnet
+  establishes the bed's actual G54 X0/Y0 after physical homing.
+- The outer magnet establishes G54 A0. A commands remain motor-shaft degrees;
+  one bed revolution is 4320 A degrees with the 12:1 drive.
 
-The SparkFun Pro Micro RP2350 toolhead controller reads the TMAG5273 Qwiic 3D
-Hall sensor. This is the same MCU that owns the local pen-pressure state machine,
-HX711 sampling, and DRV8833 actuator control; there is no separate RP2040
-magnetic adapter. The Pro Micro RP2350 is expected to assert a clean digital
-`A_HOME` signal to an RP23CNC limit/home input for normal A homing after the
-signal conditioning, output driver, and input polarity are verified.
+The controller macro is [`macros/P100.macro`](macros/P100.macro). It is invoked
+from ioSender with `G65 P100 Q<mode>` after the file is copied to the RP23CNC
+filesystem and the candidate build passes F-08.
 
-The host PC coordinates setup and maintenance calibration scans by talking to
-both devices:
+| Mode | Purpose | Current availability |
+|---:|---|---|
+| `Q0` | Full startup: lift, X/Y home, center raster, A index, return to G54 zero | Locked until commissioning |
+| `Q1` | Toolhead readiness handshake only | Source ready; requires commissioned toolhead firmware and E-18 |
+| `Q2` | Physical X/Y `$H` only | Candidate for parser/motorless testing; homing configuration must omit A/Z |
+| `Q3` | Center raster and G54 X/Y registration | Locked until commissioning |
+| `Q4` | Outer-magnet A scan and G54 A registration | Locked until commissioning |
+
+The eventual single ioSender button sends `G65 P100 Q0`. Separate modes exist
+so each stage can be commissioned without bypassing the others.
+
+## Existing three-signal interface
+
+No additional moving-harness conductor is required.
+
+| Controller path | Pro Micro pin | Meaning during this sequence |
+|---|---:|---|
+| Spindle ENA through U1 | GP29 | `M5` requests lift; `M3` is forbidden during a magnetic scan |
+| Aux0 through U2 | GP28 | Two-phase magnetic arm/readiness command |
+| GP27 through U3 to candidate `PRB` | GP27 | Readiness acknowledgement first, then thresholded magnetic state |
+
+The two-phase handshake prevents the first threshold crossing from being
+mistaken for a computed center:
+
+1. RP23CNC issues `M64 P0` while the toolhead is safe and lifted.
+2. GP27 asserts only as a readiness acknowledgement.
+3. RP23CNC verifies it, issues `M65 P0`, and verifies GP27 releases.
+4. RP23CNC issues `M64 P0` a second time. GP27 now represents only the
+   thresholded TMAG footprint during G38 moves.
+5. RP23CNC issues `M65 P0` on success or any handled abort.
+
+The current physical endpoint remains `LIMA` until F-08 passes. Moving the
+existing GP27/U3 return to `PRB` is a controller-end retermination, not a new
+drag-chain wire.
+
+## Toolhead dual-core behavior
+
+The integrated Arduino-Pico firmware uses the RP2350's two cores:
+
+| Core | Responsibility |
+|---|---|
+| Core 0 | GP29 command, HX711 acquisition, lift/seek/force states, DRV8833 control, faults, USB diagnostics, and watchdog feed |
+| Core 1 | TMAG5273 sampling, baseline and hysteresis, GP28 handshake, GP27 output, and magnetic timeout |
+
+Shared status is fixed-size atomic data. During magnetic readiness and scan,
+Core 0 requires a verified lifted state and powers down/suspends the HX711;
+pen-pressure measurement is unnecessary while the pen is up. Core 0 feeds the
+hardware watchdog only while Core 1's heartbeat is fresh. A reset, stale core,
+sensor failure, unsafe pressure state, M3 request during scan, or timeout
+suppresses GP27 and leaves the actuator in its safe path.
+
+The compile-time gates in
+[`../pen_pressure/pro_micro_rp2350_toolhead/toolhead_config.h`](../pen_pressure/pro_micro_rp2350_toolhead/toolhead_config.h)
+remain false until T-01/T-02, E-07/E-08, and E-18/M-08 establish installed
+direction, lift reference, force values, and magnetic thresholds.
+
+## Center raster and centroid
+
+After physical X/Y homing, P100 scans equal-pitch X chords in a bounded
+serpentine raster. Each row records an inactive-to-active entry with `G38.3`
+and an active-to-inactive exit with `G38.5`. The footprint width and midpoint
+are:
 
 ```text
-Host PC
-  |-- Ethernet/Telnet/WebSocket or USB --> RP23CNC/grblHAL for X/Y/A motion
-  |
-  |-- service UART/USB diagnostics -----> Pro Micro RP2350 for TMAG5273 readings
+width_i = abs(exit_i - entry_i)
+mid_x_i = (entry_i + exit_i) / 2
 ```
 
-Use RP23CNC Ethernet after the W5500 bring-up is verified. Keep USB as the
-initial recovery and baseline configuration path.
+For equal Y pitch, the area-centroid approximation is:
 
-For a detailed normal-startup homing data-flow sheet, including the requirements for
-ioSender, grblHAL, and the Pro Micro RP2350 toolhead/TMAG5273 controller,
-see [`../../docs/homing_data_flow.html`](../../docs/homing_data_flow.html).
+```text
+Xc = sum(mid_x_i * width_i) / sum(width_i)
+Yc = sum(row_y_i * width_i) / sum(width_i)
+```
 
-## Hardware concept
+The macro rejects too few hit rows, zero area, implausible chord widths,
+multiple chords on one row, missing releases, and a centroid outside the scan
+bounds. It then performs the deliberately named **Centroid Approach and
+Registration Pass**: approach from a fixed direction, move slowly to the
+computed centroid, and set G54 X0/Y0 with `G10 L20`.
 
-- X and Y use conventional physical home/limit switches wired to RP23CNC
-  limit inputs.
-- A/theta uses a cylindrical outer bed magnet as an angular index mark.
-- A cylindrical center bed magnet provides the geometric bed-center reference.
-- The TMAG5273 rides with the gantry/toolhead so the machine can scan over the
-  magnets. Its Z height is fixed by the toolhead mount and heat-set inserts;
-  calibration must treat that height as non-adjustable unless the mount is
-  redesigned.
-- The Pro Micro RP2350 toolhead controller reads TMAG5273 `Bx`, `By`, and
-  `Bz`, computes or reports field magnitude, exposes diagnostic readings over
-  USB serial, and provides
-  the validated switch-like `A_HOME` output used by grblHAL normal A homing.
+This is why GP27 never claims that one threshold edge is the center. It carries
+only a one-bit sensor state; grblHAL records all coordinates and computes the
+centroid after the full raster.
 
-The two embedded magnets are planned as:
+## Outer-magnet registration
 
-| Magnet | Purpose | Nominal location |
-|---|---|---|
-| Center magnet | Calibrate actual bed center after X/Y homing | Bed rotation center |
-| Outer magnet | Define A/theta angular index | About 8.9 in radially from the center magnet |
+At the commissioned outer radius, P100 rotates A in one direction and records
+two entry/exit pairs. It validates each footprint width and requires the two
+centers to be separated by approximately 4320 A motor degrees. It averages the
+equivalent index observations, approaches from the same direction, and sets
+G54 A0 with `G10 L20`.
 
-Do not use the center magnet as a theta reference. A magnet on the rotation
-axis locates center but does not define angular phase.
+The center raster must run before the A scan because the sensor is positioned
+at the outer radius relative to the newly registered bed center.
 
-## Startup and calibration sequence
+## Required controller candidate
 
-The pen/toolhead must be up for every homing and magnetic-calibration move.
-Before starting, command `M5`, wait for the configured lift dwell, and verify
-that the pen is physically clear of the bed. Magnetic calibration uses the
-TMAG5273 position, not pen contact.
+The unchanged baseline build has probe support disabled. The candidate recipe
+[`config/homing-candidate.md`](config/homing-candidate.md) enables probe support,
+NGC parameters, and expressions. It does not certify this use case and no
+candidate UF2 has been flashed.
 
-Normal startup homing should be simple after setup constants are established:
-ioSender sends `M5`, waits for the lift dwell, then sends `$H`; grblHAL homes
-X/Y from physical switches and A from the Pro Micro RP2350-generated `A_HOME`
-input. The steps below describe the setup/maintenance calibration path used to determine
-bed center, magnetic thresholds, hysteresis, edge offsets, and repeatability.
+F-08 must prove, on the exact build:
 
-1. Command tool lift/retract:
+- `PRB` idle/asserted polarity and reporting;
+- `G38.3` entry and `G38.5` release capture on X;
+- the probe parameter/coordinate values used by the macro;
+- filesystem `G65 P100` execution and `$H` behavior inside the macro;
+- A-axis G38 acceptance and `#5064` reporting;
+- G53/G54 and `G10 L20` semantics for XYZA;
+- safe handling of a probe state that remains active between entry and exit.
 
-   ```text
-   M5
-   G4 P<TBD-lift-settle-seconds>
-   ```
+Run the direct-input motorless stage first, then the GP27/U3 isolated path.
+Only after both pass may the existing return be reterminated from `LIMA` to
+`PRB` and documented as installed wiring.
 
-2. Home X and Y with grblHAL using physical limit switches while the pen remains
-   retracted.
-3. Move the TMAG5273 to the expected bed-center area.
-4. Scan a bounded `4 in x 4 in` square around the expected center.
-5. Find the center magnet's saturated or thresholded field footprint.
-6. Compute the geometric center from opposing saturated edges:
+## Commissioning sequence
 
-   ```text
-   center_x = (left_edge + right_edge) / 2
-   center_y = (front_edge + back_edge) / 2
-   ```
+1. Complete toolhead direction, lift, HX711, and magnetic calibration tests.
+2. Complete F-08 with TB6600 signal leads and motors disconnected.
+3. Build and archive the accepted candidate; do not overwrite the known-good
+   baseline UF2.
+4. Prove `Q1`, then `Q2`, then bounded low-speed `Q3`, then `Q4`.
+5. Install measured scan bounds, pitch, feeds, threshold, hysteresis, outer
+   radius, tolerances, and timeouts with dated evidence.
+6. Set both firmware and macro commissioning gates only after their respective
+   acceptance tests pass.
+7. Run `Q0` repeatedly without a pen before creating the ioSender button.
 
-7. Move the sensor to the nominal outer radius from that measured center.
-8. Rotate A slowly through two full bed revolutions so the outer magnet is
-   observed twice from the same scan direction. With the current convention,
-   one bed revolution is `4320` A motor degrees because the host applies the
-   12:1 bed ratio, so the normal A-homing scan is `8640` A motor degrees. Record
-   two valid saturated or thresholded angular entry/exit pairs:
-
-   ```text
-   center_1 = (theta_enter_1 + theta_exit_1) / 2
-   center_2 = (theta_enter_2 + theta_exit_2) / 2
-   theta_center = (center_1 + center_2) / 2
-   ```
-
-   The two centers must agree within a measured tolerance before the result is
-   accepted. This improves repeatability checking and can reduce random edge
-   noise; it does not compensate for a biased threshold, incorrect magnet
-   geometry, or backlash from inconsistent approach direction.
-
-9. At `theta_center`, jog radially across the outer magnet and compute:
-
-   ```text
-   radius_center = (radius_inner_edge + radius_outer_edge) / 2
-   ```
-
-10. Repeat the angular scan at the measured `radius_center` if more precision is
-   needed.
-11. Use the final angular center as the A/theta index reference.
-
-## Saturated-field handling
-
-For these cylindrical magnets, saturation is acceptable if the scan captures a
-repeatable geometric footprint with visible edges. The calibration routine
-should find the center of the saturated or thresholded blob, not the maximum
-field value.
-
-Minimum requirements for repeatability:
-
-- Sensor height is fixed by the toolhead mount and must remain unchanged during
-  all calibration scans.
-- The scan plane is parallel to the bed.
-- The saturated footprint does not fill the entire search window.
-- Each edge is approached consistently to reduce backlash error.
-- Multiple TMAG5273 samples are averaged at each scan point.
-- Nearby ferromagnetic parts are checked for field distortion before relying on
-  the result.
-
-If saturation fills the search window or produces inconsistent edges, do not
-assume Z-height adjustment is available. Instead, widen the scan window, reduce
-threshold sensitivity, reduce magnet strength, change magnet size/shape/depth,
-or redesign the fixed sensor mount before recording calibration constants.
-
-## grblHAL integration
-
-For first bring-up, do not write a custom grblHAL plugin for the TMAG5273. Use
-standard grblHAL motion and limit/home behavior:
-
-- grblHAL homes X/Y from the physical limit switches.
-- grblHAL homes A from the Pro Micro RP2350's validated switch-like `A_HOME`
-  input during normal startup homing.
-- grblHAL moves the machine through scan coordinates sent by a host calibration
-  script after `M5` has lifted the pen/toolhead during setup or maintenance
-  calibration.
-- The Pro Micro RP2350/TMAG5273 toolhead provides diagnostic readings to the
-  host script and the digital `A_HOME` edge to grblHAL once the electrical
-  interface is verified.
-- Any inconsistent edge pair, missing edge, sensor fault, grblHAL alarm, or
-  unknown toolhead-lift state must abort the current attempt, stop motion or
-  enter alarm/hold, keep the pen lifted, preserve diagnostics, and require
-  explicit user inspection before retrying.
-
-Custom grblHAL code is justified only after the host-coordinated calibration
-proves a specific limitation that cannot be handled by settings, sender macros,
-or the Pro Micro RP2350 toolhead controller.
-
-### Candidate PRB/G38 path and required feasibility gate
-
-The RP23CNC manual documents an opto-isolated 12 V `PRB` input, and grblHAL
-implements the `G38.2` through `G38.5` probe motion modes and probe-coordinate
-reporting. Neither source explicitly certifies this project's complete
-TMAG5273 serpentine-raster, area-centroid, and rotary-A workflow. In particular,
-the installed four-axis firmware has not yet proved that an A target is accepted
-by G38 and returned in the probe-coordinate report.
-
-Test F-08 is therefore a hard feasibility gate. Its first stage deliberately
-uses no TB6600 signal connections and no motors: a dry contact or validated
-opto-isolated sink toggles `PRB` while grblHAL advances only internal X and A
-position counters. The test must prove input polarity, `Pn:P`, G38 entry/release
-behavior, and coordinate reporting on the installed build. The actual
-GP27/PC817C U3 path is tested only after the direct-input stage passes.
-
-Until F-08 passes, the authoritative wiring remains GP27/U3 -> `LIMA` as the
-switch-like `A_HOME` design. A successful test permits a later design decision
-and documented retermination to `PRB`; it does not itself change the wiring or
-normal startup-homing contract.
-
-## Open verification items
-
-- Exact fixed TMAG5273 mounting height and orientation.
-- Magnet diameter, grade, polarity, and installed depth.
-- Confirmed 8.9 in outer-magnet radius after measurement.
-- Final Pro Micro RP2350 magnetic-output behavior and output-driver circuit.
-- RP23CNC input terminal, polarity, voltage/current requirement, and isolation
-  behavior for the toolhead's digital `A_HOME` signal.
-- F-08 motorless proof or rejection of the proposed `PRB`/G38 X and A capture
-  behavior on the installed XYZA firmware before any `LIMA` retermination.
-- Scan step sizes, averaging count, thresholds, and acceptable repeatability.
-- Final sender macro or procedure for `M5`, lift dwell, `$H`, status check, and
-  abort recovery.
+Any missing edge, extra footprint, spacing error, sensor fault, unsafe lift
+state, grblHAL alarm, or timeout invalidates that run. Keep the pen lifted,
+preserve the diagnostic output, and require operator inspection before retry.

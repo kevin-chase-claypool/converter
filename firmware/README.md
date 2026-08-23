@@ -47,16 +47,14 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   its `Pen cycle ms`, so grblHAL pauses for the pen to lift before travel and
   reach paper before drawing. A future grblHAL plugin can replace the fixed
   dwell with a feed-hold until the load cell reports actual contact.
-- **Homing and bed calibration** - grblHAL owns normal X/Y/A homing and limit
-  behavior. X/Y use physical limit switches. A uses a validated switch-like
-  `A_HOME` signal from the SparkFun Pro Micro RP2350 toolhead controller; that
-  same MCU reads the fixed-height TMAG5273, applies measured threshold and
-  hysteresis behavior, controls the pressure actuator, and presents a digital
-  home input to RP23CNC. There is no separate RP2040 magnetic adapter. The host
-  calibration script is for setup and maintenance: it commands scan moves,
-  records Pro Micro RP2350 diagnostics, and determines constants before normal
-  startup homing is trusted. Send `M5` and verify the pen/toolhead is retracted before
-  any homing or magnetic scan. See
+- **Homing and bed registration** - X/Y physical switches establish machine
+  coordinates. A controller-resident `P100.macro` then uses the existing
+  Aux0/GP28 arm and GP27/U3 return to capture a full center-magnet raster,
+  compute an area centroid, register G54 X0/Y0, and scan the outer magnet twice
+  to register G54 A0. The Pro Micro supplies only readiness and thresholded
+  magnetic state; it never claims one threshold edge is the center. Send `M5`
+  and verify the toolhead is retracted before any homing or scan. The production
+  modes remain commissioning-locked. See
   [`grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`](grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md).
 - **Candidate probe capture** - F-08 will test the RP23CNC `PRB` input and
   grblHAL G38 transition/coordinate behavior without TB6600 signal leads or
@@ -69,15 +67,17 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
 The RP23CNC grblHAL baseline now boots over native USB: F-01 passed on
 2026-08-14 with the RP23U5XBB board target, four-axis XYZA build, W5500, and
 SD/Ymodem support. Controller I/O and motion remain untested and disconnected.
-A separate-MCU pen-pressure prototype sketch
-now exists at
+A dual-core toolhead implementation now exists at
 [`pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`](pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino)
-for integrated bench testing the DRV8833, HX711, TMAG5273, and M3/M5 command
-input. With the proposed PC817C module, its GP29 M3/M5 and GP28 `HOME_ARM`
+for integrated control of the DRV8833, HX711, TMAG5273, and M3/M5 command
+input. Core 0 owns pressure/safety and Core 1 owns magnetic acquisition and the
+two-phase readiness/scan handshake. HX711 acquisition is suspended while the
+verified-lifted magnetic mode is active. With the PC817C module, GP29 M3/M5 and GP28 `HOME_ARM`
 inputs are externally pulled HIGH and optocoupler assertions pull them LOW;
 the integrated sketch is configured for that active-low interface. F-05/E-18
-must still establish the RP23CNC ENA/Aux0 state mapping before the harness is
-connected. Two smaller Arduino sketches also exist for safer bring-up:
+must still establish the RP23CNC ENA/Aux0 state mapping. Compile-time safety
+gates deliberately prevent uncommissioned actuator and magnetic operation.
+Two smaller Arduino sketches also exist for safer bring-up:
 [`pen_pressure/bench_motor_command/bench_motor_command.ino`](pen_pressure/bench_motor_command/bench_motor_command.ino)
 tests only GP29 and the DRV8833, and
 [`pen_pressure/bench_sensors/bench_sensors.ino`](pen_pressure/bench_sensors/bench_sensors.ino)

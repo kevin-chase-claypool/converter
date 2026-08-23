@@ -1,0 +1,321 @@
+(P100 - Theta plotter home and magnetic registration)
+(Q0 full startup; Q1 readiness; Q2 X/Y home; Q3 center; Q4 A index)
+(Production ioSender invocation: G65 P100 Q0)
+(Requires PROBE_ENABLE, NGC expressions, FS macros, Aux0=P0, and PRB)
+
+#<mode> = #17
+#<commissioned> = 0
+
+(Commissioning values - replace only with dated test evidence.)
+#<scan_min_x> = 0.0
+#<scan_max_x> = 0.0
+#<scan_min_y> = 0.0
+#<scan_max_y> = 0.0
+#<row_pitch> = 0.0
+#<scan_feed> = 60.0
+#<registration_feed> = 30.0
+#<approach_distance> = 2.0
+#<minimum_hit_rows> = 3
+#<minimum_chord_width> = 0.5
+#<maximum_chord_width> = 25.0
+#<lift_dwell_s> = 3.0
+#<ready_wait_s> = 1.0
+#<edge_settle_s> = 0.10
+#<outer_radius> = 226.06
+#<a_search_degrees> = 4500.0
+#<a_expected_spacing> = 4320.0
+#<a_spacing_tolerance> = 10.0
+#<a_maximum_width> = 120.0
+#<a_scan_feed> = 600.0
+#<a_registration_feed> = 120.0
+
+#<old_g54_x> = #5221
+#<old_g54_y> = #5222
+#<old_g54_a> = #5224
+
+o101 if [#<mode> LT 0]
+  (abort,P100 invalid Q mode)
+o101 endif
+o102 if [#<mode> GT 4]
+  (abort,P100 invalid Q mode)
+o102 endif
+
+o103 if [#<mode> EQ 0]
+  o104 if [#<commissioned> EQ 0]
+    (abort,P100 Q0 locked: commissioning values and F-08/E-18 are incomplete)
+  o104 endif
+o103 endif
+o105 if [#<mode> EQ 3]
+  o106 if [#<commissioned> EQ 0]
+    (abort,P100 Q3 locked: center-scan commissioning is incomplete)
+  o106 endif
+o105 endif
+o107 if [#<mode> EQ 4]
+  o108 if [#<commissioned> EQ 0]
+    (abort,P100 Q4 locked: A-index commissioning is incomplete)
+  o108 endif
+o107 endif
+
+M5
+G4 P[#<lift_dwell_s>]
+G21 G90 G94 G17 G54
+
+(Q0 and Q2: physical X/Y homing. Configure homing cycles to omit A.)
+o110 if [#<mode> EQ 0]
+  $H
+o110 endif
+o111 if [#<mode> EQ 2]
+  $H
+  (print,P100 Q2 X/Y homing complete)
+  o100 return [1]
+o111 endif
+
+(Preposition while HOME_ARM is inactive so the re-arm interval stays short.)
+o112 if [#<mode> EQ 0]
+  G53 G0 X[#<scan_min_x>] Y[#<scan_min_y>]
+o112 endif
+o113 if [#<mode> EQ 3]
+  G53 G0 X[#<scan_min_x>] Y[#<scan_min_y>]
+o113 endif
+o114 if [#<mode> EQ 4]
+  G54 G0 X[#<outer_radius>] Y0
+o114 endif
+
+(Two-phase readiness handshake on Aux0/GP28 and PRB/GP27.)
+M64 P0
+G4 P[#<ready_wait_s>]
+o120 if [#<_probe_state> NE 1]
+  M65 P0
+  (abort,P100 READY acknowledgement missing)
+o120 endif
+M65 P0
+G4 P[#<edge_settle_s>]
+o121 if [#<_probe_state> NE 0]
+  (abort,P100 READY acknowledgement did not release)
+o121 endif
+
+o122 if [#<mode> EQ 1]
+  (print,P100 Q1 readiness handshake passed)
+  o100 return [1]
+o122 endif
+
+M64 P0
+G4 P[#<edge_settle_s>]
+
+(Center raster: equal-pitch serpentine X chords in machine coordinates.)
+o200 if [[#<mode> EQ 0] OR [#<mode> EQ 3]]
+  o201 if [#<_probe_state> NE 0]
+    M65 P0
+    (abort,P100 scan corner is magnetically active)
+  o201 endif
+  #<scan_width> = [#<scan_max_x> - #<scan_min_x>]
+  #<scan_height> = [#<scan_max_y> - #<scan_min_y>]
+  o202 if [[#<scan_width> LE 0] OR [#<scan_width> GT 101.6]]
+    M65 P0
+    (abort,P100 invalid X scan bounds)
+  o202 endif
+  o203 if [[#<scan_height> LE 0] OR [#<scan_height> GT 101.6]]
+    M65 P0
+    (abort,P100 invalid Y scan bounds)
+  o203 endif
+  o204 if [#<row_pitch> LE 0]
+    M65 P0
+    (abort,P100 row pitch is not configured)
+  o204 endif
+
+  #<row_y> = #<scan_min_y>
+  #<direction> = 1
+  #<hit_rows> = 0
+  #<sum_width> = 0
+  #<sum_x_weight> = 0
+  #<sum_y_weight> = 0
+
+  o210 while [#<row_y> LE #<scan_max_y>]
+    o211 if [#<direction> EQ 1]
+      G53 G0 X[#<scan_min_x>] Y[#<row_y>]
+      G91 G38.3 X[#<scan_width>] F[#<scan_feed>]
+      G90
+      o212 if [#5070 EQ 1]
+        #<entry> = #5061
+        #<remaining> = [#<scan_max_x> - #<entry>]
+        G91 G38.5 X[#<remaining>] F[#<scan_feed>]
+        G90
+        o213 if [#5070 NE 1]
+          M65 P0
+          (abort,P100 missing positive-row magnetic exit)
+        o213 endif
+        #<exit> = #5061
+        #<remaining> = [#<scan_max_x> - #<exit>]
+        o214 if [#<remaining> GT 0.01]
+          G91 G38.3 X[#<remaining>] F[#<scan_feed>]
+          G90
+          o215 if [#5070 EQ 1]
+            M65 P0
+            (abort,P100 multiple magnetic chords on one row)
+          o215 endif
+        o214 endif
+        #<chord_width> = ABS[#<exit> - #<entry>]
+        #<chord_mid_x> = [[#<entry> + #<exit>] / 2]
+        o216 if [[#<chord_width> LT #<minimum_chord_width>] OR [#<chord_width> GT #<maximum_chord_width>]]
+          M65 P0
+          (abort,P100 magnetic chord width outside limits)
+        o216 endif
+        #<hit_rows> = [#<hit_rows> + 1]
+        #<sum_width> = [#<sum_width> + #<chord_width>]
+        #<sum_x_weight> = [#<sum_x_weight> + [#<chord_mid_x> * #<chord_width>]]
+        #<sum_y_weight> = [#<sum_y_weight> + [#<row_y> * #<chord_width>]]
+      o212 endif
+    o211 else
+      G53 G0 X[#<scan_max_x>] Y[#<row_y>]
+      G91 G38.3 X[-#<scan_width>] F[#<scan_feed>]
+      G90
+      o220 if [#5070 EQ 1]
+        #<entry> = #5061
+        #<remaining> = [#<entry> - #<scan_min_x>]
+        G91 G38.5 X[-#<remaining>] F[#<scan_feed>]
+        G90
+        o221 if [#5070 NE 1]
+          M65 P0
+          (abort,P100 missing negative-row magnetic exit)
+        o221 endif
+        #<exit> = #5061
+        #<remaining> = [#<exit> - #<scan_min_x>]
+        o222 if [#<remaining> GT 0.01]
+          G91 G38.3 X[-#<remaining>] F[#<scan_feed>]
+          G90
+          o223 if [#5070 EQ 1]
+            M65 P0
+            (abort,P100 multiple magnetic chords on one row)
+          o223 endif
+        o222 endif
+        #<chord_width> = ABS[#<exit> - #<entry>]
+        #<chord_mid_x> = [[#<entry> + #<exit>] / 2]
+        o224 if [[#<chord_width> LT #<minimum_chord_width>] OR [#<chord_width> GT #<maximum_chord_width>]]
+          M65 P0
+          (abort,P100 magnetic chord width outside limits)
+        o224 endif
+        #<hit_rows> = [#<hit_rows> + 1]
+        #<sum_width> = [#<sum_width> + #<chord_width>]
+        #<sum_x_weight> = [#<sum_x_weight> + [#<chord_mid_x> * #<chord_width>]]
+        #<sum_y_weight> = [#<sum_y_weight> + [#<row_y> * #<chord_width>]]
+      o220 endif
+    o211 endif
+
+    #<row_y> = [#<row_y> + #<row_pitch>]
+    #<direction> = [-#<direction>]
+  o210 endwhile
+
+  o230 if [#<hit_rows> LT #<minimum_hit_rows>]
+    M65 P0
+    (abort,P100 too few magnetic raster rows)
+  o230 endif
+  o231 if [#<sum_width> LE 0]
+    M65 P0
+    (abort,P100 invalid zero-area magnetic footprint)
+  o231 endif
+
+  #<centroid_x> = [#<sum_x_weight> / #<sum_width>]
+  #<centroid_y> = [#<sum_y_weight> / #<sum_width>]
+  o232 if [[#<centroid_x> LT #<scan_min_x>] OR [#<centroid_x> GT #<scan_max_x>]]
+    M65 P0
+    (abort,P100 X centroid outside scan bounds)
+  o232 endif
+  o233 if [[#<centroid_y> LT #<scan_min_y>] OR [#<centroid_y> GT #<scan_max_y>]]
+    M65 P0
+    (abort,P100 Y centroid outside scan bounds)
+  o233 endif
+
+  (Centroid Approach and Registration Pass.)
+  G53 G0 X[#<centroid_x> - #<approach_distance>] Y[#<centroid_y> - #<approach_distance>]
+  G53 G1 X[#<centroid_x>] Y[#<centroid_y>] F[#<registration_feed>]
+  G54
+  G10 L20 P1 X0 Y0
+  (print,P100 bed centroid registered as G54 X0 Y0)
+o200 endif
+
+o240 if [#<mode> EQ 3]
+  M65 P0
+  G54 G0 X0 Y0
+  (print,P100 Q3 center registration complete)
+  o100 return [1]
+o240 endif
+
+(Outer-magnet A registration. A units are motor-shaft degrees.)
+o300 if [[#<mode> EQ 0] OR [#<mode> EQ 4]]
+  G54 G90 G0 X[#<outer_radius>] Y0
+
+  (If starting over the magnet, first move to its inactive side.)
+  o301 if [#<_probe_state> EQ 1]
+    G91 G38.5 A[#<a_maximum_width>] F[#<a_scan_feed>]
+    G90
+    o302 if [#5070 NE 1]
+      M65 P0
+      G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
+      (abort,P100 could not leave initial A magnetic footprint)
+    o302 endif
+  o301 endif
+
+  G91 G38.3 A[#<a_search_degrees>] F[#<a_scan_feed>]
+  G90
+  o303 if [#5070 NE 1]
+    M65 P0
+    G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
+    (abort,P100 first A entry not found)
+  o303 endif
+  #<a_entry_1> = #5064
+  G91 G38.5 A[#<a_maximum_width>] F[#<a_scan_feed>]
+  G90
+  o304 if [#5070 NE 1]
+    M65 P0
+    G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
+    (abort,P100 first A exit not found)
+  o304 endif
+  #<a_exit_1> = #5064
+
+  G91 G38.3 A[#<a_search_degrees>] F[#<a_scan_feed>]
+  G90
+  o305 if [#5070 NE 1]
+    M65 P0
+    G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
+    (abort,P100 second A entry not found)
+  o305 endif
+  #<a_entry_2> = #5064
+  G91 G38.5 A[#<a_maximum_width>] F[#<a_scan_feed>]
+  G90
+  o306 if [#5070 NE 1]
+    M65 P0
+    G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
+    (abort,P100 second A exit not found)
+  o306 endif
+  #<a_exit_2> = #5064
+
+  #<a_width_1> = ABS[#<a_exit_1> - #<a_entry_1>]
+  #<a_width_2> = ABS[#<a_exit_2> - #<a_entry_2>]
+  o307 if [[#<a_width_1> GT #<a_maximum_width>] OR [#<a_width_2> GT #<a_maximum_width>]]
+    M65 P0
+    G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
+    (abort,P100 A magnetic width outside limits)
+  o307 endif
+
+  #<a_center_1> = [[#<a_entry_1> + #<a_exit_1>] / 2]
+  #<a_center_2> = [[#<a_entry_2> + #<a_exit_2>] / 2]
+  #<a_spacing> = [#<a_center_2> - #<a_center_1>]
+  o308 if [ABS[#<a_spacing> - #<a_expected_spacing>] GT #<a_spacing_tolerance>]
+    M65 P0
+    G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
+    (abort,P100 A index spacing validation failed)
+  o308 endif
+
+  #<a_index> = [[#<a_center_1> + [#<a_center_2> - #<a_expected_spacing>]] / 2]
+  #<a_approach_target> = [#<a_index> + [2 * #<a_expected_spacing>]]
+  G53 G1 A[#<a_approach_target>] F[#<a_registration_feed>]
+  G54
+  G10 L20 P1 A0
+  (print,P100 outer magnet registered as G54 A0)
+o300 endif
+
+M65 P0
+M5
+G54 G90 G0 X0 Y0 A0
+(print,P100 HOME + REGISTER complete)
+o100 return [1]

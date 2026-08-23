@@ -148,17 +148,17 @@ not an installed X/A cable.
 | SAF-010 | HCDC `HD064RT` | `OUT4` / fused pair | Pololu D36V50F6 | `VIN/GND` | Toolhead motor supply source | Remains powered when SW1 is pressed | Branch wire/fuse TBD | planned | Owner intends 3 A; confirm fitted marking and characterize E-15 |
 | SAF-011 | HCDC `HD064RT` | `OUT1` / fused pair | RP23CNC | 12 V main input TBD | Controller/control-input supply | Remains powered when SW1 is pressed | Branch wire/fuse TBD | planned | 2 A selected; confirm fitted marking, terminal labels, and E-19 behavior before power |
 
-## Magnetic bed calibration adapter
+## Magnetic bed registration interface
 
-The intended final magnetic calibration sensor path uses the toolhead SparkFun
+The implemented magnetic registration candidate uses the toolhead SparkFun
 Pro Micro RP2350 as the TMAG5273 reader because the TMAG5273 is wired to the
 toolhead Qwiic connector. The same Pro Micro also owns the HX711/DRV8833
 pen-pressure controller; there is no separate RP2040 magnetic adapter. The Pro
-Micro drives `GP27` as the conditioned
-`A_HOME` output to the RP23CNC A limit/home input through a selected
+Micro drives `GP27` as the conditioned readiness/magnetic-state return through an
 open-drain, transistor, optocoupler, or equivalent switch-like interface. `GP27`
-must only assert when both the TMAG5273 threshold condition is true and the
-`GP28` `HOME_ARM` input is active, so the bed magnet cannot trip the A
+uses a two-phase `GP28` handshake: GP27 first acknowledges readiness, clears,
+then represents thresholded field during the second arm. Therefore one edge is
+never interpreted as the computed center, and the bed magnet cannot trip the A
 limit/home input during normal printing. RP23CNC V1.0 schematic page 4 shows
 the `LIMA` input as an active-low, switch-to-`GND1` 12 V input with a 2 kΩ
 series resistor and internal input optocoupler LED. Its nominal asserted
@@ -186,8 +186,8 @@ controller `+5V` LED feed. On the Pro Micro side, R3/R4 pull GP29/GP28 to local
 asserted. The reverse `GP27` channel uses the tested `R6`/direct A_HOME link;
 repeat the 12 V / 2.2 kΩ load test if U3 is replaced.
 
-`PRB` is a test-gated alternative endpoint for the existing GP27/U3 return,
-not the current wiring assignment. F-08 first tests the controller's probe
+`PRB` is the implemented but test-gated candidate endpoint for the existing
+GP27/U3 return, not the current wiring assignment. F-08 first tests the controller's probe
 input and G38 behavior with TB6600 signal leads and motors disconnected. Keep
 MAG-003 and the routed harness on `LIMA` until F-08 proves X transition capture,
 the installed build's A-axis behavior, coordinate reporting, and the subsequent
@@ -198,10 +198,10 @@ application.
 | ID | From device | From terminal | To device | To terminal | Signal | Expected behavior | Wire | Status | Evidence/notes |
 |---|---|---|---|---|---|---|---|---|---|
 | MAG-001 | SparkFun TMAG5273 Qwiic | Qwiic `SDA/SCL/3V3/GND` | SparkFun Pro Micro RP2350 | Qwiic `GPIO16/GPIO17/3V3/GND` | 3D Hall readings | 3.3 V I2C; stable magnetic vector or magnitude readings | Qwiic cable TBD | bench-verified | E-09 passed after correcting the signal pair: GP16 is SDA and GP17 is SCL. Far/near/return magnitudes were 0.24/7.51/7.44 mT; initial threshold guidance 3.5 mT with 1.0 mT hysteresis. |
-| MAG-002 | SparkFun Pro Micro RP2350 | USB device TBD | Host PC | USB TBD | Calibration telemetry | Reports TMAG5273 readings during host-commanded scan moves | USB cable TBD | TBD | Calibration script/interface TBD; current bench firmware prints TMAG telemetry |
-| MAG-003 | SparkFun Pro Micro RP2350 | `GP27` through PC817C U3 | RP23CNC | `LIMA` / A limit-home input | `A_HOME` magnetic index | RP23CNC V1.0 page 4: idle approximately 12 V; assert by sinking to `GND1` through its 2 kΩ / input-opto path (about 5.3 mA). Do not drive this terminal high. | Shielded/twisted TBD | harness re-test required | U3 passed the 12 V / 2.2 kΩ sample test on prior GP9 wiring; repeat it on GP27 after repinning. `PRB` is only a candidate endpoint pending motorless F-08 and does not supersede this row. |
-| MAG-003A | RP23CNC | `Aux 0` digital output | PC817C module U2 LED cathode | `AUX0` / pin 2 | `HOME_ARM` command into isolation module | `M64 P0` arms A/theta homing; U2 LED on only when Aux0 sinks current from controller `+5V` through `R2`; `M65 P0` disarms | Protected signal conductor TBD | simulated-input bench verified; controller mapping pending | U2 changed GPIO20 HIGH/LOW using the 5 V low-side-sink bench simulation. Verify actual RP23CNC Aux0 terminal polarity/current before connection. |
-| MAG-003B | PC817C module U2 collector | `GP28` / pullup node | SparkFun Pro Micro RP2350 | `GP28` / A2 | `HOME_ARM` isolated output to Pro Micro | Local 3.3 V pullup through `R4`; U2 on pulls GP28 low | Protected signal conductor TBD | harness re-test required | Assigned to the consecutive right-side harness; repeat the U2 test after repinning. |
+| MAG-002 | SparkFun Pro Micro RP2350 | USB device TBD | Host PC | USB TBD | Service telemetry | Reports pressure state, magnetic state/vector, and faults for commissioning; it does not send numeric centroids to RP23CNC | USB cable TBD | source implemented; installed test TBD | P100 owns position capture and centroid arithmetic. |
+| MAG-003 | SparkFun Pro Micro RP2350 | `GP27` through PC817C U3 | RP23CNC | Installed `LIMA`; candidate `PRB` after F-08 | Phase 1 readiness ACK; phase 2 thresholded magnetic state | Isolated switch-like return; never drive a controller input high | Existing routed control conductor | harness re-test and F-08 required | No new drag-chain wire. Retermination is controller-end only and prohibited until direct PRB and GP27/U3 stages pass. |
+| MAG-003A | RP23CNC | `Aux 0` digital output | PC817C module U2 LED cathode | `AUX0` / pin 2 | Two-phase magnetic arm | First `M64 P0` requests readiness ACK; `M65 P0` clears it; second `M64 P0` enters scan state; final `M65 P0` disarms | Existing routed control conductor | source implemented; controller mapping pending | U2 assertion pulls GP28 low. Toolhead must be commissioned, lifted, safe, and TMAG-ready before ACK. |
+| MAG-003B | PC817C module U2 collector | `GP28` / pullup node | SparkFun Pro Micro RP2350 | `GP28` / A2 | Isolated two-phase arm input | Local 3.3 V pullup through `R4`; U2 on pulls GP28 low | Existing routed control conductor | harness re-test required | Core 1 owns the handshake; unsafe state or timeout suppresses GP27. |
 | MAG-004 | Center bed magnet | Embedded bed center | TMAG5273 scan path | Sensor over bed | Bed-center reference | Saturated or thresholded footprint centered on bed rotation axis | Mechanical placement | TBD | Cylindrical magnet; diameter, grade, polarity, and depth TBD |
 | MAG-005 | Outer bed magnet | Embedded near 8.9 in radius | TMAG5273 scan path | Sensor over bed | Theta/A index reference | Saturated or thresholded footprint centered on angular index mark | Mechanical placement | TBD | Cylindrical magnet; final measured radius and angular reference TBD |
 
@@ -249,6 +249,7 @@ must pass bench tests before being treated as final machine wiring.
 
 | Date | Revision | Change | Updated by | Related evidence |
 |---|---:|---|---|---|
+| 2026-08-22 | 3.5 | Documented the implemented dual-core readiness/threshold protocol and controller-resident centroid/A-registration macro. Reused all five routed control conductors; retained `LIMA` until F-08 authorizes controller-end retermination to `PRB`. | Codex | `RPSW-20260822-003`; source compile and macro validator only |
 | 2026-08-22 | 3.4 | Corrected stale separate-RP2040-adapter language: the installed SparkFun Pro Micro RP2350 toolhead controller owns both pen-pressure control and TMAG5273 magnetic sensing/output. No wiring changed. | Codex | `RPSW-20260822-002`; current GP27/GP28/GP29 wiring rows |
 | 2026-08-22 | 3.3 | Added motorless F-08 as the gate for the candidate GP27/U3-to-`PRB` probe path; retained `LIMA` as the authoritative endpoint until X/A G38 behavior, coordinate reporting, and the actual isolated path pass. | Codex | `RPSW-20260822-001`; F-08 planned |
 | 2026-08-21 | 3.2 | Recorded physical segregation of the mains-input and DC-output conductor routes at the main-supply/fuse-block area. | Codex | Owner report; `HW-20260821-001` |

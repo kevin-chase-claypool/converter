@@ -352,7 +352,16 @@
 </head>
 <body>
   <main>
-    <h1>RP23CNC Homing Data Flow Sheet</h1>
+    <h1>Archived RP23CNC Homing Data Flow Concept</h1>
+    <section class="card" style="border-color:#ffb454; margin-bottom:20px">
+      <h2 style="margin-top:0">Superseded on 2026-08-22</h2>
+      <p>This visual preserves the earlier direct A_HOME / host-calibration
+      concept and is not an operating instruction. The current implementation
+      is the commissioning-gated controller-resident P100 centroid raster and A
+      registration described in
+      <a href="../firmware/grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md">HOMING_AND_MAGNETIC_CALIBRATION.md</a>.
+      Do not use the $H/$HA or LIMA workflow shown below to commission P100.</p>
+    </section>
     <p class="lede">
       Goal: the normal startup experience should be simple. The user connects
       ioSender, confirms the pen is lifted, runs grblHAL homing, and the system

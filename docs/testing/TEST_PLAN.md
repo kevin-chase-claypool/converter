@@ -62,7 +62,7 @@ completion status.
 | F-05 | Spindle/tool output test | Deterministic output pin state: M3 = ENGAGE, M5 = LIFT, fail-safe to LIFT/OFF |
 | F-06 | Settings persistence | Reboot preserves calibrated settings |
 | F-07 | Four-axis configuration sanity check | X/Y/A are enabled, A is available for homing/motion, and the Z axis slot remains unused/unwired |
-| F-08 | Motorless RP23CNC `PRB`/G38 feasibility | With TB6600 signal leads and motors disconnected, the isolated `PRB` input reports the intended idle/asserted states, `G38.3` captures an inactive-to-active X transition, `G38.5` captures an active-to-inactive X transition, and the installed four-axis build either proves or rejects equivalent A-axis probe commands and A-coordinate reporting. Keep GP27 assigned to `LIMA` until this test and the subsequent GP27/U3 path check pass. |
+| F-08 | Motorless RP23CNC `PRB`/G38/macro feasibility | With TB6600 signal leads and motors disconnected, the candidate build reports `PRB`, captures X entry/release with `G38.3`/`G38.5`, proves or rejects equivalent A capture and `#5064`, executes filesystem `G65 P100`, and verifies the coordinate/parameter semantics used by P100. Keep GP27 on `LIMA` until the direct-input and GP27/U3 stages pass. |
 
 ### F-08 motorless PRB/G38 procedure
 
@@ -99,7 +99,11 @@ remain unloaded.
 7. After the direct `PRB` test passes, repeat the state and G38 checks through
    the actual Pro Micro GP27 -> PC817C U3 -> controller input path while
    preserving `CTRL_GND`/`TOOL_GND` isolation.
-8. Send `G90`, reset the controller, and do not use the motorless test's
+8. Copy the locked `P100.macro` to the controller filesystem. Verify `G65 P100
+   Q1`, the expected commissioning abort for Q0/Q3/Q4, `$H` behavior in Q2,
+   G53/G54 and `G10 L20` parameter semantics, and that every abort releases
+   Aux0. Do not bypass either commissioning lock.
+9. Send `G90`, reset the controller, and do not use the motorless test's
    internal coordinates as machine references.
 
 Pass requires deterministic polarity, successful X transition captures,
@@ -117,10 +121,10 @@ the routed U3 return conductor from `LIMA` to `PRB`.
 | M-04 | A-axis one motor revolution | With 8 microsteps and `$103 = 4.444444` steps per motor-degree, 360 commanded A motor-degrees gives one motor revolution |
 | M-05 | Bed ratio check | 4320 commanded A motor-degrees (19,200 pulses) gives one bed revolution for 12:1 |
 | M-06 | Coordinated X/Y/A sample | Smooth motion and no lost steps |
-| M-07 | Homing and limits | Repeatable X/Y home from physical switches, repeatable A home from validated `A_HOME`, and safe stop |
-| M-08 | Magnetic bed-center scan | After X/Y homing, a bounded 4 in x 4 in scan locates the center magnet from opposing saturated or thresholded edges with documented repeatability |
-| M-09 | Magnetic theta-index setup scan | At the measured outer radius, two full bed revolutions (`8640` A motor degrees) find two outer-magnet entry/exit pairs, validate pair spacing near `4320` A motor degrees, and compute a repeatable theta index |
-| M-10 | Normal startup homing macro | ioSender sends `M5`, waits the lift dwell, sends `$H`, and grblHAL exits homed/idle with X/Y/A referenced and the pen still lifted |
+| M-07 | Homing and limits | Repeatable X/Y machine home from physical switches, safe limit behavior, and homing configuration that excludes unused Z and magnetic A registration |
+| M-08 | Magnetic bed-center centroid raster | After X/Y physical homing, P100 produces multiple valid equal-pitch X chords, rejects malformed footprints, calculates the chord-width-weighted area centroid, performs the Centroid Approach and Registration Pass, and repeatably sets G54 X0/Y0 |
+| M-09 | Magnetic theta-index registration | At the measured outer radius, P100 finds two outer-magnet entry/exit pairs from one direction, validates spacing near `4320` A motor degrees, approaches the equivalent averaged index, and repeatably sets G54 A0 |
+| M-10 | Full startup home and registration | One ioSender `G65 P100 Q0` command lifts, homes physical X/Y, registers center and A, returns to G54 X0 Y0 A0, and leaves the pen lifted |
 | M-11 | Homing abort/fault path | Missing/inconsistent magnetic edges, sensor fault, grblHAL alarm, or unknown lift state stops the current attempt, preserves diagnostics, reports status to ioSender, and requires manual recovery before retry |
 
 ## Toolhead tests
@@ -141,7 +145,8 @@ the routed U3 return conductor from `LIMA` to `PRB`.
   homing, or magnetic scan move.
 - E-stop and reset leave the toolhead safe.
 - Toolhead workload does not create measurable lost steps or unacceptable jitter.
-- Normal startup homing uses X/Y switches plus the validated Pro Micro RP2350 `A_HOME`
-  input; the setup calibration script is not required for daily homing.
+- Normal startup uses X/Y switches plus the full controller-resident center
+  raster and A registration; no Windows converter or separate host script is
+  in the real-time sequence.
 - Calibration pattern dimensions, force traces, and magnetic diagnostics are
   saved for the report.

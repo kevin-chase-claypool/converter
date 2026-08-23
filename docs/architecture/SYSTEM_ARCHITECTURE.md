@@ -17,7 +17,7 @@ Record the exact board revision used by this project before finalizing wiring.
 | G-code sender / operator console | Streams the converter's saved G-code, exposes jog/status/console, and configures grblHAL | ioSender on the host PC, connected by USB or Ethernet |
 | Motion controller | G-code parsing, modal state, lookahead, coordinated acceleration, step/direction generation, homing, limits | grblHAL on RP23CNC |
 | Stepper power stage | Convert RP23CNC step/direction signals into motor phase current | Three external TB6600-class drivers |
-| Toolhead controller | Lift/engage state machine, load-cell sampling, force regulation, actuator drive, fault handling, fixed-height magnetic sensing, and magnetic home/index output | SparkFun Pro Micro RP2350 reading HX711 and TMAG5273 over Qwiic/I2C |
+| Toolhead controller | Dual-core lift/pressure safety plus fixed-height magnetic sensing and readiness/threshold output | SparkFun Pro Micro RP2350 reading HX711 and TMAG5273 over Qwiic/I2C |
 | Toolhead sensors | Pen force and magnetic reference feedback | 300 g load cell + HX711; TMAG5273 3D Hall sensor |
 
 ## Motion data path
@@ -32,13 +32,13 @@ grblHAL parser -> planner/lookahead -> RP2350 driver/PIO/interrupts
        |
        +-> M3/M5 spindle/tool output pin state
        |
-       +<- X/Y home switches and Pro Micro RP2350 A_HOME
+       +<- X/Y home switches and candidate Pro Micro GP27 -> PRB state
 ```
 
 The project should extend grblHAL rather than duplicate its parser or planner.
 The converter intentionally emits a small, documented G-code subset.
 
-## Dual-core strategy
+## RP23CNC execution strategy
 
 RP2350 is dual-core, but the split must follow the grblHAL RP2040/RP2350
 driver's supported execution model. Do not move driver internals between cores
@@ -50,26 +50,19 @@ without first tracing and testing the upstream implementation.
 - Use the RP23CNC/grblHAL board map and plugins before adding custom multicore code.
 - Measure planner starvation, step jitter, and sensor-loop timing before claiming a need for core separation.
 
-### Preferred split if a supported core-1 extension is feasible
+The toolhead loop is already isolated on its own Pro Micro RP2350; do not move
+it into an RP23CNC core or fork the motion driver.
 
-| Core/resource | Work |
+## Toolhead RP2350 dual-core split
+
+| Core | Work |
 |---|---|
-| Core 0 | grblHAL protocol, parser, planner, machine state, alarms, homing, and command dispatch |
-| PIO/DMA/interrupt hardware | Deterministic step pulse generation as provided by the upstream driver |
-| Core 1 | Toolhead state machine, HX711 sampling, force-control calculation, and bounded telemetry |
+| Core 0 | GP29, pressure states, HX711, DRV8833, faults, USB diagnostics, watchdog |
+| Core 1 | TMAG5273, GP28 two-phase arm, GP27 readiness/magnetic state |
 
-Cross-core communication should use fixed-size single-producer/single-consumer
-queues or atomics. It must not use blocking locks in the motion path.
-
-Core 0 remains authoritative for machine alarm state. Either core may request a
-toolhead shutdown, but the actuator must default to LIFT/OFF on reset, timeout,
-or communication loss.
-
-### Fallback
-
-If grblHAL does not expose a maintainable core-1 integration point, put the
-toolhead loop on a separate small MCU. This is preferable to a fragile fork of
-the motion driver and gives the force loop independent fault containment.
+The cores exchange fixed-size atomic status. Core 0 feeds the watchdog only
+while Core 1 is fresh. Magnetic mode requires verified lift and suspends HX711
+acquisition; any unsafe state suppresses the magnetic output.
 
 ## Toolhead control states
 
@@ -89,12 +82,12 @@ M5 commands `LIFT`. M3 commands `SEEK_CONTACT`, then `HOLD_FORCE`.
 
 ## Homing and magnetic reference
 
-Normal startup homing is owned by grblHAL: X/Y use physical home switches and A
-uses the Pro Micro RP2350/TMAG5273 toolhead's validated switch-like `A_HOME` signal. The
-TMAG5273 is not a Z-axis sensor; it is installed at a fixed toolhead/gantry
-height. Setup calibration scans the center and outer magnets to determine
-thresholds, hysteresis, A offset, and repeatability. During normal startup, the
-user should not have to coordinate a separate calibration script.
+Normal startup is owned by grblHAL's P100 macro. X/Y physical switches establish
+machine coordinates; a serpentine center-magnet raster registers G54 X0/Y0 and
+a two-observation outer-magnet scan registers G54 A0. The Pro Micro supplies a
+two-phase readiness acknowledgement and threshold state through existing
+GP28/GP27 wiring. The TMAG5273 is not a Z-axis sensor, and no separate host
+calibration process participates in the real-time sequence.
 
 The grblHAL build may expose a Z axis slot to enable A in a four-axis
 configuration, but Z is unused and unwired for this machine.

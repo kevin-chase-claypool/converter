@@ -151,6 +151,7 @@ Entry details remain only in the chronology.
 - [2026-08-22 - HARDWARE - Routed toolhead PC817 harness through drag chains](#elog-20260822-routed-toolhead-pc817-harness-through-drag-chains)
 - [2026-08-22 - RP23CNC-SOFTWARE/PLANNED - Added motorless PRB/G38 feasibility gate](#elog-20260822-added-motorless-prb-g38-feasibility-gate)
 - [2026-08-22 - RP23CNC-SOFTWARE/CORRECTED - Corrected RP2350 toolhead ownership](#elog-20260822-corrected-rp2350-toolhead-ownership)
+- [2026-08-22 - RP23CNC-SOFTWARE/IMPLEMENTED - Implemented gated magnetic registration](#elog-20260822-implemented-gated-magnetic-registration)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -1844,3 +1845,22 @@ Add new entries at the top of the log below this line.
   Qwiic wiring records.
 - Next action: Continue E-18 and F-08 against the Pro Micro RP2350 toolhead
   controller; do not infer that this naming correction verifies either test.
+
+<a id="elog-20260822-implemented-gated-magnetic-registration"></a>
+### 🟨 2026-08-22 - RP23CNC-SOFTWARE/IMPLEMENTED - Implemented gated magnetic registration
+
+- Status: source implemented and statically verified; hardware commissioning
+  and controller feasibility remain open.
+- Category: rp23cnc-software, hardware, architecture, testing
+- Summary: Implemented the Pro Micro RP2350 dual-core pressure/magnetic split,
+  two-phase GP28/GP27 protocol, probe-enabled RP23CNC candidate configuration,
+  and P100 physical-home/centroid-raster/A-registration macro. No moving-harness
+  conductor was added and the installed GP27/U3 endpoint remains `LIMA`.
+- Evidence: Arduino-Pico compile passed with warnings enabled at 75,628 bytes
+  flash and 15,816 bytes globals; `tools/validate_homing_macro.py` passed its
+  structural and synthetic arithmetic checks; `RPSW-20260822-003`; ADR-003.
+- Safety boundary: All actuator, lift, pressure, magnetic, and production macro
+  commissioning gates remain false. No candidate UF2 was generated or flashed,
+  no physical wire was reterminated, and no motor or PRB test is claimed.
+- Next action: Complete T-01/T-02 and E-18, then run F-08 motorless on the exact
+  candidate build before considering GP27/U3 retermination or magnetic motion.

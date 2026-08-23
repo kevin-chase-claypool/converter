@@ -41,10 +41,10 @@ digital outputs, USB, and Ethernet.
 4. Wire X/Y home switches to opto-isolated limit inputs.
 5. Follow
    [`HOMING_AND_MAGNETIC_CALIBRATION.md`](HOMING_AND_MAGNETIC_CALIBRATION.md)
-   for the planned two-stage homing/calibration scheme: physical X/Y switches
-   first, then TMAG5273/Pro Micro RP2350 magnetic bed-center and theta-index
-   scans. The Pro Micro is the existing toolhead/pen-pressure controller, not a
-   separate magnetic adapter.
+   for the implemented, commissioning-gated sequence: physical X/Y switches,
+   a serpentine center-magnet raster and area centroid, then a two-observation
+   outer-magnet A registration. `macros/P100.macro` owns the motion and G54
+   registration; the existing Pro Micro supplies readiness and threshold state.
    Before considering GP27/U3 retermination from `LIMA` to `PRB`, run the
    motorless F-08 test to prove X G38 transition capture, coordinate reporting,
    and the installed build's A-axis probing behavior. Source inspection alone
@@ -56,6 +56,16 @@ digital outputs, USB, and Ethernet.
 8. Verify feed-rate scaling on a combined X/Y/**A** move vs the host's
    `sqrt(xy^2 + motor_deg^2)/F` pacing. This affects speed/timing only, not path
    shape.
+
+## Magnetic registration candidate
+
+- Candidate build options: [`config/homing-candidate.md`](config/homing-candidate.md)
+- Controller macro and ioSender setup: [`macros/README.md`](macros/README.md)
+- Full design and commissioning gates:
+  [`HOMING_AND_MAGNETIC_CALIBRATION.md`](HOMING_AND_MAGNETIC_CALIBRATION.md)
+
+The baseline UF2 is unchanged. The candidate source and macro are not authority
+to flash, reterminate GP27/U3 to `PRB`, or enable motion before F-08/E-18.
 
 ## Contents to add
 
