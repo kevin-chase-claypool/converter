@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-08-23 | `HW-20260823-002` | hardware | implemented | [Set X-axis motor shielding plan](hardware/2026/2026-08-23-set-x-axis-motor-shielding-plan.md) |
 | 2026-08-23 | `HW-20260823-001` | hardware, rp23cnc-software | implemented | [Partially terminate toolhead-control harness](hardware/2026/2026-08-23-partially-terminate-toolhead-control-harness.md) |
 | 2026-08-22 | `RPSW-20260822-003` | rp23cnc-software, hardware | implemented | [Implement Dual-Core Magnetic Registration](rp23cnc-software/2026/2026-08-22-dual-core-magnetic-registration.md) |
 | 2026-08-22 | `RPSW-20260822-002` | rp23cnc-software, hardware | implemented | [Correct RP2350 Toolhead Ownership](rp23cnc-software/2026/2026-08-22-correct-rp2350-toolhead-ownership.md) |

@@ -178,13 +178,13 @@ Keep these concepts distinct:
 
 | Name | Meaning | Notes |
 |---|---|---|
-| PE / chassis earth | safety earth from AC inlet and MEISHILE earth terminal | bond supply chassis, enclosure, DIN rail PE, and the Y motor-cable shield here |
+| PE / chassis earth | safety earth from AC inlet and MEISHILE earth terminal | bond supply chassis, enclosure, DIN rail PE, and the X motor-cable shield here |
 | 12 V `-V` | DC return for 12 V loads | not the same thing as PE for shield termination |
 | toolhead GND | 6 V/5 V/3.3 V local return | common reference for DRV8833, S7V8F5, Pro Micro, HX711, and TMAG5273 |
 | signal ground/reference | logic return for level shifting where required | do not use as shield drain |
 
-Only the Y stepper cable has a shield/drain. It lands on PE/chassis at the
-driver/DIN end only; X/A use unshielded motor leads. The Y shield/drain does
+Only the X stepper cable has a shield/drain. It lands on PE/chassis at the
+driver/DIN end only; Y/A use unshielded motor leads. The X shield/drain does
 not land on `-V`, TB6600 `DC-`, RP23CNC signal ground, or toolhead ground.
 
 ## Open Verification Gates

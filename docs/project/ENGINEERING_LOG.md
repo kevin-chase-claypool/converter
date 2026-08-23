@@ -153,6 +153,7 @@ Entry details remain only in the chronology.
 - [2026-08-22 - RP23CNC-SOFTWARE/CORRECTED - Corrected RP2350 toolhead ownership](#elog-20260822-corrected-rp2350-toolhead-ownership)
 - [2026-08-22 - RP23CNC-SOFTWARE/IMPLEMENTED - Implemented gated magnetic registration](#elog-20260822-implemented-gated-magnetic-registration)
 - [2026-08-23 - HARDWARE/PARTIAL - Partially terminated toolhead-control harness](#elog-20260823-partially-terminated-toolhead-control-harness)
+- [2026-08-23 - HARDWARE/PLANNED - Set X-axis motor shielding plan](#elog-20260823-set-x-axis-motor-shielding-plan)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -1890,3 +1891,20 @@ Add new entries at the top of the log below this line.
 - Next action: With power removed, check continuity and `CTRL_GND`/`TOOL_GND`
   isolation; then perform F-05/E-18. Do not connect the return to `PRB` before
   F-08 passes.
+
+<a id="elog-20260823-set-x-axis-motor-shielding-plan"></a>
+### 🟨 2026-08-23 - HARDWARE/PLANNED - Set X-axis motor shielding plan
+
+- Status: X is the sole planned shielded motor run; its final cable installation
+  and PE bond are unverified.
+- Category: hardware, wiring, stepper, shielding
+- Summary: The owner corrected the motor-cable convention: only the X-axis
+  toolhead-travel motor cable will have a grounded sheath. Y and A are
+  unshielded, with black/green and red/blue as their two coil pairs.
+- Result: The prior current-state record assigning shielding to Y is superseded.
+  The X shield is designated for a driver/DIN-end PE/chassis bond only, never a
+  DC or signal-ground connection.
+- Evidence: Owner instruction; `HW-20260823-002`.
+- Next action: Before energizing X, install and continuity-test the X shield
+  bond, confirm its isolation from DC `-V` and signal ground, and complete
+  phase/direction checks.
