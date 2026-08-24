@@ -158,6 +158,7 @@ Entry details remain only in the chronology.
 - [2026-08-23 - HARDWARE/PARTIAL - Recorded X sheath protective-earth bond](#elog-20260823-recorded-x-sheath-protective-earth-bond)
 - [2026-08-23 - HARDWARE/VERIFIED - Verified mains terminals and X sheath landing](#elog-20260823-verified-mains-terminals-and-x-sheath-landing)
 - [2026-08-23 - HARDWARE/VERIFIED - Verified X sheath DC-negative isolation](#elog-20260823-verified-x-sheath-dc-negative-isolation)
+- [2026-08-23 - HARDWARE/VERIFIED - Verified supply protective-earth chassis path](#elog-20260823-verified-supply-protective-earth-chassis-path)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -1975,3 +1976,18 @@ Add new entries at the top of the log below this line.
 - Evidence: `HW-20260823-006`.
 - Next action: Verify PE-to-chassis continuity and sheath isolation from all
   motor phases before any mains/motor power test.
+
+<a id="elog-20260823-verified-supply-protective-earth-chassis-path"></a>
+### 🟩 2026-08-23 - HARDWARE/VERIFIED - Verified supply protective-earth chassis path
+
+- Status: power-supply PE-to-chassis path passed; X sheath motor-phase isolation
+  and remaining mains checks are open.
+- Category: hardware, protective earth, mains, shielding
+- Summary: The owner verified the protective-earth terminal-to-supply-chassis
+  path. The powder-coated machine structure is deliberately not used as the PE
+  reference; the green X sheath remains landed at supply PE.
+- Result: The PE reference does not depend on electrical contact through powder
+  coating. This does not verify enclosure bonding or powered mains behavior.
+- Evidence: `HW-20260823-007`.
+- Next action: Verify X sheath isolation from every motor-phase conductor, then
+  complete the remaining E-11 checks before energizing a load.

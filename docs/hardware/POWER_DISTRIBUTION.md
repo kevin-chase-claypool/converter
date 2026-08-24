@@ -59,6 +59,8 @@ Owner-reported mains colors are red → `L`, blue → `N`, and green → the
 protective-earth symbol. Do not rely on color alone: verify each landing against
 the supply's printed terminal label with power removed. The green X motor-cable
 sheath/drain is landed at that protective-earth terminal, not at DC `-V`.
+The owner verified the PE-terminal-to-supply-chassis path. The powder-coated
+machine structure is not used as a protective-earth bonding path.
 
 The two `+V` and two `-V` terminals are not enough to directly land every final
 branch cleanly. The received HCDC `HD064RT` is the fused DIN distribution module
