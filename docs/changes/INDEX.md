@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-08-23 | `HW-20260823-006` | hardware | verified | [Verify X sheath DC-negative isolation](hardware/2026/2026-08-23-verify-x-sheath-dc-negative-isolation.md) |
 | 2026-08-23 | `HW-20260823-005` | hardware | verified | [Verify mains terminal and X sheath landing](hardware/2026/2026-08-23-verify-mains-terminal-and-x-sheath-landing.md) |
 | 2026-08-23 | `HW-20260823-004` | hardware | implemented | [Record X sheath protective-earth bond](hardware/2026/2026-08-23-record-x-sheath-pe-bond.md) |
 | 2026-08-23 | `HW-20260823-003` | hardware | implemented | [Correct X-axis Phase B cable color](hardware/2026/2026-08-23-correct-x-axis-phase-b-color.md) |

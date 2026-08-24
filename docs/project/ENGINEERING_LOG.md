@@ -157,6 +157,7 @@ Entry details remain only in the chronology.
 - [2026-08-23 - HARDWARE/CORRECTED - Corrected X-axis Phase B cable color](#elog-20260823-corrected-x-axis-phase-b-cable-color)
 - [2026-08-23 - HARDWARE/PARTIAL - Recorded X sheath protective-earth bond](#elog-20260823-recorded-x-sheath-protective-earth-bond)
 - [2026-08-23 - HARDWARE/VERIFIED - Verified mains terminals and X sheath landing](#elog-20260823-verified-mains-terminals-and-x-sheath-landing)
+- [2026-08-23 - HARDWARE/VERIFIED - Verified X sheath DC-negative isolation](#elog-20260823-verified-x-sheath-dc-negative-isolation)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -1960,3 +1961,17 @@ Add new entries at the top of the log below this line.
   `docs/report/lab-notes/2026-08-23-mains-terminal-and-x-sheath-verification.md`.
 - Next action: Measure PE-to-chassis continuity and shield isolation from DC
   `-V`/motor phases, then complete the remaining E-11 checks.
+
+<a id="elog-20260823-verified-x-sheath-dc-negative-isolation"></a>
+### 🟩 2026-08-23 - HARDWARE/VERIFIED - Verified X sheath DC-negative isolation
+
+- Status: X sheath-to-DC-`-V` isolation passed; other PE/shield checks remain
+  open.
+- Category: hardware, protective earth, shielding, isolation
+- Summary: The owner meter-verified no continuity between the green X
+  motor-cable sheath and the DC `-V` return.
+- Result: The sheath is not a DC return path. This result does not establish
+  PE-to-chassis continuity or isolation from motor-phase conductors.
+- Evidence: `HW-20260823-006`.
+- Next action: Verify PE-to-chassis continuity and sheath isolation from all
+  motor phases before any mains/motor power test.
