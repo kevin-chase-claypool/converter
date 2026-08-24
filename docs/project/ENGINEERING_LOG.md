@@ -160,6 +160,7 @@ Entry details remain only in the chronology.
 - [2026-08-23 - HARDWARE/VERIFIED - Verified X sheath DC-negative isolation](#elog-20260823-verified-x-sheath-dc-negative-isolation)
 - [2026-08-23 - HARDWARE/VERIFIED - Verified supply protective-earth chassis path](#elog-20260823-verified-supply-protective-earth-chassis-path)
 - [2026-08-23 - HARDWARE/VERIFIED - Verified X sheath motor-phase isolation](#elog-20260823-verified-x-sheath-motor-phase-isolation)
+- [2026-08-23 - HARDWARE/PLANNED - Plan motor-harness strain-relief CAD](#elog-20260823-plan-motor-harness-strain-relief-cad)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2006,3 +2007,17 @@ Add new entries at the top of the log below this line.
 - Evidence: `HW-20260823-008`.
 - Next action: Complete remaining enclosure/strain-relief and powered E-11
   checks, then proceed with controlled motor commissioning.
+
+<a id="elog-20260823-plan-motor-harness-strain-relief-cad"></a>
+### 🟨 2026-08-23 - HARDWARE/PLANNED - Plan motor-harness strain-relief CAD
+
+- Status: CAD design planned; no physical strain relief is installed or verified.
+- Category: hardware, CAD, cable management, stepper
+- Summary: The owner will design strain-relief features for the X, Y, and A
+  motor wire harnesses.
+- Acceptance criteria: The design must grip harness cable jackets rather than individual
+  conductors, preserve bend radius and service slack, relieve TB6600 terminals,
+  and preserve the X sheath's PE bond and isolation.
+- Evidence: Owner plan; `HW-20260823-009`.
+- Next action: Measure cable diameters, exit directions, mounting geometry, and
+  drag-chain clearance before selecting CAD dimensions.

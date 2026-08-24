@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-08-23 | `HW-20260823-009` | hardware | planned | [Plan motor-harness strain-relief CAD](hardware/2026/2026-08-23-plan-motor-harness-strain-relief-cad.md) |
 | 2026-08-23 | `HW-20260823-008` | hardware | verified | [Verify X sheath motor-phase isolation](hardware/2026/2026-08-23-verify-x-sheath-motor-phase-isolation.md) |
 | 2026-08-23 | `HW-20260823-007` | hardware | verified | [Verify supply protective-earth chassis path](hardware/2026/2026-08-23-verify-supply-pe-chassis-path.md) |
 | 2026-08-23 | `HW-20260823-006` | hardware | verified | [Verify X sheath DC-negative isolation](hardware/2026/2026-08-23-verify-x-sheath-dc-negative-isolation.md) |

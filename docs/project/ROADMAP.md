@@ -77,6 +77,7 @@
 - [ ] Confirm limit input behavior and polarity. (`F-04`)
 - [ ] F-04 temporary-switch harness: verify X/Y roller switches with short leads before permanent drag-chain routing.
 - [ ] Measure the drawer-side drag chain's internal envelope and bend radius against every planned moving cable; replace it if the 4C shielded cable plus the remaining required conductors cannot move freely with margin.
+- [ ] Design CAD strain-relief features for the X, Y, and A motor wire harnesses. Acceptance: each feature grips the harness cable jacket rather than individual conductors, preserves bend radius and service slack, prevents terminal load under normal motion, and keeps the X PE sheath termination electrically and mechanically undisturbed.
 - [ ] Confirm M3/M5 tool output behavior. (`F-05`)
 - [ ] Verify B07WFGTNQC optocoupler channel direction, polarity, input current, output-side 3.3 V compatibility, and safe RP2350 logic levels before wiring `M3/M5` or `HOME_ARM`.
 - [ ] Save a complete `$` settings dump and verify persistence. (`F-06`)

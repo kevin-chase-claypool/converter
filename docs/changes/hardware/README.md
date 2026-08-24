@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-08-23 | `HW-20260823-009` | planned | [Plan motor-harness strain-relief CAD](2026/2026-08-23-plan-motor-harness-strain-relief-cad.md) | `cad`, `strain-relief`, `stepper`, `cable-management` |
 | 2026-08-23 | `HW-20260823-008` | verified | [Verify X sheath motor-phase isolation](2026/2026-08-23-verify-x-sheath-motor-phase-isolation.md) | `protective-earth`, `shielding`, `isolation`, `wiring`, `stepper` |
 | 2026-08-23 | `HW-20260823-007` | verified | [Verify supply protective-earth chassis path](2026/2026-08-23-verify-supply-pe-chassis-path.md) | `protective-earth`, `chassis`, `shielding`, `mains`, `wiring` |
 | 2026-08-23 | `HW-20260823-006` | verified | [Verify X sheath DC-negative isolation](2026/2026-08-23-verify-x-sheath-dc-negative-isolation.md) | `protective-earth`, `shielding`, `isolation`, `wiring`, `x-axis` |
