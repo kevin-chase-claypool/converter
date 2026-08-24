@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-08-23 | `HW-20260823-004` | hardware | implemented | [Record X sheath protective-earth bond](hardware/2026/2026-08-23-record-x-sheath-pe-bond.md) |
 | 2026-08-23 | `HW-20260823-003` | hardware | implemented | [Correct X-axis Phase B cable color](hardware/2026/2026-08-23-correct-x-axis-phase-b-color.md) |
 | 2026-08-23 | `HW-20260823-002` | hardware | implemented | [Set X-axis motor shielding plan](hardware/2026/2026-08-23-set-x-axis-motor-shielding-plan.md) |
 | 2026-08-23 | `HW-20260823-001` | hardware, rp23cnc-software | implemented | [Partially terminate toolhead-control harness](hardware/2026/2026-08-23-partially-terminate-toolhead-control-harness.md) |

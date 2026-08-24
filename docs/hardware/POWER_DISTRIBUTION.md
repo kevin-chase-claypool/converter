@@ -55,6 +55,11 @@ The main supply is the received MEISHILE `S-120-12`.
 | `+V`, `+V` | 12 VDC positive | documented; final terminal allocation TBD |
 | `+V ADJ` | voltage adjustment | measure before connecting loads |
 
+Owner-reported mains colors are red → `L`, blue → `N`, and green → the
+protective-earth symbol. Do not rely on color alone: verify each landing against
+the supply's printed terminal label with power removed. The green X motor-cable
+sheath/drain is landed at that protective-earth terminal, not at DC `-V`.
+
 The two `+V` and two `-V` terminals are not enough to directly land every final
 branch cleanly. The received HCDC `HD064RT` is the fused DIN distribution module
 for all currently allocated low-voltage branches, including the controller.

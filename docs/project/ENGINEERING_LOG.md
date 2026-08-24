@@ -155,6 +155,7 @@ Entry details remain only in the chronology.
 - [2026-08-23 - HARDWARE/PARTIAL - Partially terminated toolhead-control harness](#elog-20260823-partially-terminated-toolhead-control-harness)
 - [2026-08-23 - HARDWARE/PLANNED - Set X-axis motor shielding plan](#elog-20260823-set-x-axis-motor-shielding-plan)
 - [2026-08-23 - HARDWARE/CORRECTED - Corrected X-axis Phase B cable color](#elog-20260823-corrected-x-axis-phase-b-cable-color)
+- [2026-08-23 - HARDWARE/PARTIAL - Recorded X sheath protective-earth bond](#elog-20260823-recorded-x-sheath-protective-earth-bond)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -1924,3 +1925,20 @@ Add new entries at the top of the log below this line.
 - Evidence: Owner correction; `HW-20260823-003`.
 - Next action: Power-off continuity-check the red/white X Phase B run and
   white-to-blue motor splice before driver energization.
+
+<a id="elog-20260823-recorded-x-sheath-protective-earth-bond"></a>
+### 🟨 2026-08-23 - HARDWARE/PARTIAL - Recorded X sheath protective-earth bond
+
+- Status: the reported X sheath PE landing is recorded; terminal and continuity
+  verification remain open.
+- Category: hardware, mains, protective earth, shielding
+- Summary: The owner reports red mains live to `L`, blue neutral to `N`, and a
+  green earth conductor at the power supply's protective-earth terminal. The
+  green X motor-cable sheath/drain is landed at the same PE terminal.
+- Safety boundary: The PE symbol/printed terminal marking—not wire color—is
+  authoritative. The X shield must never be connected to `-V`, a motor phase,
+  `L`, `N`, or signal ground.
+- Evidence: Owner report; `HW-20260823-004`.
+- Next action: With all power removed, inspect terminal markings, measure
+  low-resistance PE-to-chassis continuity, and confirm shield isolation from
+  DC `-V` and all motor-phase conductors.
