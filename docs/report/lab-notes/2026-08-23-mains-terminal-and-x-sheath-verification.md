@@ -17,16 +17,17 @@ The owner verified the following power-supply terminations:
 The owner also meter-verified that the X sheath has no continuity to DC `-V`.
 The PE terminal-to-supply-chassis path also passed. The powder-coated machine
 structure is not used as the PE reference.
+The owner additionally verified no continuity between the X sheath and any
+motor-phase conductor.
 
 ## Evidence boundary
 
 This verifies terminal identity, the reported landing, and X-sheath isolation
 from DC `-V`, and the PE terminal-to-supply-chassis path. It does not verify
-the X shield's end-to-end continuity or isolation from motor phases, bonding of
-the powder-coated machine structure, the enclosure, or powered mains behavior.
+the X shield's end-to-end continuity, bonding of the powder-coated machine
+structure, the enclosure, or powered mains behavior.
 
 ## Required next action
 
-With all mains power removed, verify the X sheath has no continuity to
-motor-phase conductors. Complete the remaining E-11 power checks before
-energizing a load.
+Complete the remaining E-11 enclosure and powered-load checks before energizing
+a load.
