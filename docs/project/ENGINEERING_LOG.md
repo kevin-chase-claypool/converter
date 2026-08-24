@@ -156,6 +156,7 @@ Entry details remain only in the chronology.
 - [2026-08-23 - HARDWARE/PLANNED - Set X-axis motor shielding plan](#elog-20260823-set-x-axis-motor-shielding-plan)
 - [2026-08-23 - HARDWARE/CORRECTED - Corrected X-axis Phase B cable color](#elog-20260823-corrected-x-axis-phase-b-cable-color)
 - [2026-08-23 - HARDWARE/PARTIAL - Recorded X sheath protective-earth bond](#elog-20260823-recorded-x-sheath-protective-earth-bond)
+- [2026-08-23 - HARDWARE/VERIFIED - Verified mains terminals and X sheath landing](#elog-20260823-verified-mains-terminals-and-x-sheath-landing)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -1942,3 +1943,20 @@ Add new entries at the top of the log below this line.
 - Next action: With all power removed, inspect terminal markings, measure
   low-resistance PE-to-chassis continuity, and confirm shield isolation from
   DC `-V` and all motor-phase conductors.
+
+<a id="elog-20260823-verified-mains-terminals-and-x-sheath-landing"></a>
+### 🟩 2026-08-23 - HARDWARE/VERIFIED - Verified mains terminals and X sheath landing
+
+- Status: AC terminal identities and X sheath PE landing verified; continuity
+  and powered checks remain open.
+- Category: hardware, mains, protective earth, shielding
+- Summary: With power removed, the owner verified red at printed `L`, blue at
+  printed `N`, and the green wall-earth conductor plus green X sheath/drain at
+  the protective-earth symbol terminal.
+- Result: The physical terminal mapping is verified without relying on color
+  alone. No claim is made for PE-to-chassis resistance, shield isolation,
+  enclosure protection, or powered behavior.
+- Evidence: `HW-20260823-005` and
+  `docs/report/lab-notes/2026-08-23-mains-terminal-and-x-sheath-verification.md`.
+- Next action: Measure PE-to-chassis continuity and shield isolation from DC
+  `-V`/motor phases, then complete the remaining E-11 checks.
