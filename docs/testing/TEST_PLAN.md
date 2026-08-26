@@ -133,7 +133,7 @@ the routed U3 return conductor from `LIMA` to `PRB`.
 |---|---|---|
 | T-01 | LIFT state | Retracts reliably and stops safely |
 | T-02 | Contact seek | Finds paper before timeout without excessive force |
-| T-03 | Force hold | Stable force within defined error band |
+| T-03 | Force hold | After E-06, E-07, E-08, T-01, and T-02: a bounded pulse-based P/PI trim loop holds a calibrated target force through (a) stationary contact, (b) X/Y translation, and (c) progressively faster constant A rotation. Define the measured error band before the test; log mean, 95th-percentile absolute error, peak force, pulse count/reversals, and faults. No sustained limit cycle, hard-force trip, or uncommanded contact loss is allowed. Demonstrate that the dominant bed-rotation disturbance is within the measured loop bandwidth; otherwise reduce speed or add mechanical compliance before considering feed-forward. |
 | T-04 | Missing-paper fault | Seek timeout enters FAULT |
 | T-05 | Overforce fault | Immediate safe response |
 | T-06 | Sensor disconnect | Safe response and visible fault |

@@ -161,6 +161,7 @@ Entry details remain only in the chronology.
 - [2026-08-23 - HARDWARE/VERIFIED - Verified supply protective-earth chassis path](#elog-20260823-verified-supply-protective-earth-chassis-path)
 - [2026-08-23 - HARDWARE/VERIFIED - Verified X sheath motor-phase isolation](#elog-20260823-verified-x-sheath-motor-phase-isolation)
 - [2026-08-23 - HARDWARE/PLANNED - Plan motor-harness strain-relief CAD](#elog-20260823-plan-motor-harness-strain-relief-cad)
+- [2026-08-25 - RP23CNC-SOFTWARE/PLANNED - Plan slow PI toolhead force control](#elog-20260825-plan-slow-pi-toolhead-force-control)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2021,3 +2022,23 @@ Add new entries at the top of the log below this line.
 - Evidence: Owner plan; `HW-20260823-009`.
 - Next action: Measure cable diameters, exit directions, mounting geometry, and
   drag-chain clearance before selecting CAD dimensions.
+
+<a id="elog-20260825-plan-slow-pi-toolhead-force-control"></a>
+### 🟨 2026-08-25 - RP23CNC-SOFTWARE/PLANNED - Plan slow PI toolhead force control
+
+- Status: implementation and all gains remain test-gated.
+- Category: rp23cnc-software, hardware, toolhead, force-control
+- Summary: Selected a bounded pulse-based P/PI trim strategy for the N20,
+  lead-screw, load-cell toolhead. Mechanical compliance handles fast pen
+  vibration; the roughly 4 Hz useful force correction cadence handles slow
+  paper/bed-height variation.
+- Reason: E-08 measured 11.93 HX711 samples/s and the mechanism has stiction,
+  backlash, and Z-dependent preload. A conventional fast PID or force-error D
+  term would not be evidence-supported.
+- Evidence: E-05 no-load motor result, E-07 partial calibration and preload
+  observation, E-08 sample/noise measurement, and the documented plan
+  `RPSW-20260825-001`.
+- Safety boundary: No commissioning flag or firmware force constant changed.
+  E-06, E-07, T-01, and T-02 must precede T-03 gain selection.
+- Next action: Characterize short motor pulses against a scale, establish a
+  repeatable force calibration, then tune P before adding a leaky I term.

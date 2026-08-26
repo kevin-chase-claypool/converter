@@ -31,6 +31,96 @@ a grblHAL plugin reading a contact input).
   after the fixed-dwell version is proven.
 - Complete E-18/F-08 for the Pro Micro RP2350 magnetic-output path.
 
+## Planned force-control strategy
+
+Use a **slow, pulse-based PI trim loop**, not a conventional high-bandwidth PID.
+The installed HX711 measured 11.93 Hz (E-08), and the current three-sample
+median plus correction cadence yields approximately four useful corrections per
+second.  That is appropriate for compensating slow paper/bed height change,
+but it cannot cancel pen vibration or a fast height disturbance.
+
+The N20/50:1/M4 actuator has ample low-speed mechanical advantage for pen
+force, but its gearbox, lead screw, rail, and pen mechanism introduce static
+friction, backlash, and a likely self-locking hold.  Continuous PWM around a
+force setpoint would therefore tend to alternately stick and jump.  Treat one
+correction as a bounded directional motor pulse followed by measurement and
+settling:
+
+1. Convert the load-cell reading to a signed force unit after E-07 establishes
+   a repeatable slope. Normalize the installed negative sensor sign in software;
+   do not depend on raw-count polarity in the controller.
+2. Filter only enough to reject spikes: the existing median-of-three is the
+   starting point. Measure its settled noise with the motor and motion system
+   active before selecting a deadband.
+3. At no more than 4 Hz, calculate `error = target_force - measured_force`.
+   A deadband around zero commands no motion. Outside it, proportional effort
+   selects pulse direction and duration; a small, leaky integral term removes
+   slow bias from friction and bed slope.
+4. Clamp pulse width, duty/PWM, total consecutive correction travel, and the
+   integral state. Integrate only when a commanded correction is not saturated;
+   clear or decay it when lifting, seeking, changing direction, entering a
+   deadband, or faulting. This is required anti-windup, not an optional tune.
+5. After a pulse, keep the driver asleep/idle until at least one new filtered
+   HX711 result is available. A direction reversal requires an extra settle
+   window. The hard force limit remains an immediate independent fault.
+
+Start with **P only**. Add the small leaky I term only after repeated, static
+contact shows a consistent force bias that P cannot remove. Do not add a D
+term to force error: at this sample rate it chiefly amplifies HX711 noise and
+motor/pen vibration while adding delay. If damping is later needed, use a
+bounded change-of-command rule or a derivative of the *filtered* force only;
+keep it disabled unless a logged comparison shows an improvement.
+
+The mechanical design has an equally important role. Give the pen a compliant
+element (spring/flexure or compliant pen mount) with useful travel around the
+target force, minimize guide friction and moving mass, and avoid a loose
+load-cell/pen force path. The control loop should correct quasi-static surface
+variation; compliance must absorb stroke vibration and height changes faster
+than the roughly 4 Hz loop can follow.
+
+### Bed unevenness and rotating-bed plan
+
+First run force hold with X/Y/A stationary, then translate only, then rotate
+the bed at progressively higher constant angular speeds. Record force versus
+bed angle, radius, feed rate, and drawing direction. A printed circular bed
+can have a repeatable height field `h(radius, angle)` as well as random
+vibration. The PI loop corrects the slow residual. Only after it is stable
+should firmware add a bounded, optional angle-indexed feed-forward table
+learned from those measurements; index it by bed angle and radius, blend it
+smoothly, and retain the force loop and all limits as the authority.
+
+Choose drawing speeds so the dominant once-per-revolution error is comfortably
+slower than the demonstrated closed-loop bandwidth. If testing shows the
+surface disturbance is faster, increase compliance or slow the bed; do not
+raise PID gains beyond the HX711/actuator settling limit.
+
+### Required characterization and tuning sequence
+
+1. Complete E-06 with a current-limited source. The motor's stated `<=1.1 A`
+   stall rating is not a verified allowable DRV8833 or regulator operating
+   point; use the measured peak, regulator temperature/ripple, and driver-fault
+   result to set safe electrical limits.
+2. Complete T-01 and map lift/seek direction. With a scale under the pen,
+   measure 5, 10, 20, and 40 ms pulses at candidate PWM values in both
+   directions, then wait for a new filtered sample. Record force increment,
+   delay, overshoot, repeatability, and minimum pulse that reliably breaks
+   stiction. The existing 50 ms final approach is explicitly too coarse for a
+   production force calibration.
+3. Complete E-07 using at least three gentle force levels and repeated
+   lift/re-contact cycles. Establish the force slope, offset drift, force-path
+   hysteresis, and a target range safely below the 300 g load-cell capacity.
+   The known preload change with Z position means every contact sequence must
+   use its current unloaded reference; an old tare is not valid after travel.
+4. Set the deadband from motor-active noise and the smallest repeatable pulse
+   effect, not from E-08 stationary ADC noise alone. Tune P upward from a
+   conservative pulse duration until the step response is prompt but does not
+   reverse/oscillate. Then add the smallest leaky I that removes sustained
+   error without creating a limit cycle.
+5. Run T-03's static, X/Y, and A rotation profiles. Save the telemetry and
+   report mean error, 95th-percentile absolute error, peak force, correction
+   count, reversals, faults, and force-versus-angle plots. Enable a
+   feed-forward map only if repeatable angle/radius structure remains.
+
 ## SparkFun Pro Micro RP2350 dual-core implementation
 
 The integrated separate-MCU bench firmware lives in
