@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Theta Pen Plotter — Independent Study Presentation</title>
+  <style>
+    :root {
+      --bg-dark: #0b0f17;
+      --bg-card: #131b26;
+      --bg-card-hover: #1a2433;
+      --border-color: #233144;
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* Top Navigation Bar */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 28px;
+      background-color: rgba(11, 15, 23, 0.95);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 100;
+    }
+
+    .project-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .project-badge {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .project-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .slide-counter {
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .nav-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-cyan);
+      color: #fff;
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      border-color: var(--border-color);
+    }
+
+    /* Presentation Deck Area */
+    .deck-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .slide {
+      position: absolute;
+      width: 100%;
+      max-width: 1140px;
+      height: 92%;
+      max-height: 650px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 36px 44px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.96) translateY(15px);
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1) translateY(0);
+    }
+
+    /* Slide Header */
+    .slide-header {
+      margin-bottom: 20px;
+    }
+
+    .slide-category {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-cyan);
+      margin-bottom: 4px;
+    }
+
+    .slide-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.15;
+    }
+
+    .slide-subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    /* Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    /* Minimalist Cards */
+    .card {
+      background: rgba(11, 15, 23, 0.65);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card.highlight-cyan {
+      border-color: rgba(6, 182, 212, 0.4);
+      background: rgba(6, 182, 212, 0.05);
+    }
+
+    .card.highlight-blue {
+      border-color: rgba(59, 130, 246, 0.4);
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .card.highlight-emerald {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tag-blue { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+    .tag-emerald { background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); }
+    .tag-amber { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
+    .tag-cyan { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); }
+
+    /* Punchy Bullet Lists */
+    .card-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.92rem;
+      color: var(--text-main);
+    }
+
+    .card-list li {
+      position: relative;
+      padding-left: 18px;
+      line-height: 1.35;
+    }
+
+    .card-list li::before {
+      content: "•";
+      position: absolute;
+      left: 2px;
+      color: var(--accent-cyan);
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+
+    .card-list.check li::before {
+      content: "✓";
+      color: var(--accent-emerald);
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    .card-list.step li::before {
+      content: "➔";
+      color: var(--accent-amber);
+      font-size: 0.85rem;
+    }
+
+    /* Hero Slide (Slide 1) */
+    .hero-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      height: 100%;
+      gap: 24px;
+    }
+
+    .hero-title {
+      font-size: 3.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 40%, var(--accent-cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.1;
+    }
+
+    .hero-subtitle {
+      font-size: 1.3rem;
+      color: var(--text-muted);
+      max-width: 760px;
+      line-height: 1.4;
+    }
+
+    .hero-pill-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .hero-pill {
+      background: rgba(11, 15, 23, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 9999px;
+      padding: 10px 22px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .hero-pill span {
+      color: var(--accent-cyan);
+    }
+
+    /* Pipeline Flow Bar (Slide 2) */
+    .pipeline-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(11, 15, 23, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px 20px;
+      gap: 10px;
+    }
+
+    .pipeline-step {
+      flex: 1;
+      text-align: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .pipeline-step.active-subsystem {
+      border-color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.08);
+    }
+
+    .step-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .step-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .pipeline-arrow {
+      color: var(--accent-cyan);
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    /* Metric Badges */
+    .metric-badge {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      font-family: var(--font-mono);
+    }
+
+    .metric-number {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }
+
+    .metric-unit {
+      font-size: 0.8rem;
+      color: var(--text-subtle);
+    }
+
+    .meta-label {
+      font-size: 0.75rem;
+      color: var(--text-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Footer Navigation */
+    footer {
+      padding: 12px 28px;
+      background: rgba(11, 15, 23, 0.95);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .dots-container {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border-color);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .dot.active {
+      background: var(--accent-cyan);
+      transform: scale(1.25);
+    }
+
+    .shortcut-hint {
+      font-size: 0.75rem;
+      color: var(--text-subtle);
+      font-family: var(--font-mono);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="project-brand">
+      <span class="project-badge">Independent Study</span>
+      <span class="project-title">Theta Pen Plotter — System Integration in Robotics</span>
+    </div>
+    <div class="header-controls">
+      <span class="slide-counter" id="slideCounter">Slide 1 / 8</span>
+      <button class="nav-btn" id="prevBtn" onclick="prevSlide()" disabled>← Prev</button>
+      <button class="nav-btn" id="nextBtn" onclick="nextSlide()">Next →</button>
+      <button class="nav-btn" onclick="toggleFullScreen()">⛶ Fullscreen</button>
+    </div>
+  </header>
+
+  <!-- Slide Deck Container -->
+  <main class="deck-container">
+
+    <!-- SLIDE 1: Title & Overview -->
+    <section class="slide active" id="slide-1">
+      <div class="hero-container">
+        <span class="project-badge" style="font-size: 0.85rem; padding: 6px 14px;">System Integration in Robotics</span>
+        <h1 class="hero-title">Theta Pen Plotter</h1>
+        <p class="hero-subtitle">
+          Autonomous polar robotics with active closed-loop pen force control and 18-inch rotating bed kinematics.
+        </p>
+
+        <div class="hero-pill-row">
+          <div class="hero-pill">
+            <span>●</span> 18" Rotating Bed Kinematics
+          </div>
+          <div class="hero-pill">
+            <span>●</span> Dual-Core Toolhead (RP2350)
+          </div>
+          <div class="hero-pill">
+            <span>●</span> Closed-Loop Force Regulation
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: System Architecture -->
+    <section class="slide" id="slide-2">
+      <div class="slide-header">
+        <div class="slide-category">Architecture</div>
+        <h2 class="slide-title">Modular 3-Tier System</h2>
+        <p class="slide-subtitle">Strict isolation between host path planning, deterministic motion, and toolhead sensing.</p>
+      </div>
+      <div class="slide-body">
+        <div class="pipeline-bar">
+          <div class="pipeline-step active-subsystem">
+            <span class="step-name">1. Host Desktop</span>
+            <span class="step-desc">Python • PySide6 • OpenGL</span>
+          </div>
+          <span class="pipeline-arrow">➔</span>
+          <div class="pipeline-step active-subsystem">
+            <span class="step-name">2. Motion Controller</span>
+            <span class="step-desc">RP23CNC • grblHAL (X, Y, A)</span>
+          </div>
+          <span class="pipeline-arrow">➔</span>
+          <div class="pipeline-step active-subsystem">
+            <span class="step-name">3. Toolhead Embedded</span>
+            <span class="step-desc">Dual-Core RP2350 • HX711</span>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="card highlight-blue">
+            <div class="card-title">
+              1. Host Desktop
+              <span class="tag tag-blue">PC Software</span>
+            </div>
+            <ul class="card-list">
+              <li>Converts SVG artwork to polar moves.</li>
+              <li>Live 3D OpenGL bed simulation.</li>
+              <li>Cost-optimized kinematic routing.</li>
+            </ul>
+          </div>
+          <div class="card highlight-cyan">
+            <div class="card-title">
+              2. Motion Controller
+              <span class="tag tag-cyan">RP23CNC</span>
+            </div>
+            <ul class="card-list">
+              <li>grblHAL on RP2350 microcontroller.</li>
+              <li>3-Axis coordinated motion (X, Y, A).</li>
+              <li>Optoisolated M3/M5 tool commands.</li>
+            </ul>
+          </div>
+          <div class="card highlight-emerald">
+            <div class="card-title">
+              3. Toolhead Embedded
+              <span class="tag tag-emerald">Carriage MCU</span>
+            </div>
+            <ul class="card-list">
+              <li>Dual-Core SparkFun Pro Micro RP2350.</li>
+              <li>24-bit load cell force loop (HX711).</li>
+              <li>3D magnetic bed homing (TMAG5273).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: Summer Milestone 1 — Host Software & Redundancy -->
+    <section class="slide" id="slide-3">
+      <div class="slide-header">
+        <div class="slide-category">Summer Milestone</div>
+        <h2 class="slide-title">Host App & Kinematic Redundancy</h2>
+        <p class="slide-subtitle">100% complete desktop suite with real-time 3D simulation and polar path optimization.</p>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card highlight-blue">
+            <div class="card-title">
+              Host Application
+              <span class="tag tag-emerald">100% Complete</span>
+            </div>
+            <ul class="card-list check">
+              <li><strong>PySide6 / Qt Desktop Suite:</strong> Full GUI controls and presets.</li>
+              <li><strong>Live 3D OpenGL Preview:</strong> Synchronous XY + bed rotation rendering.</li>
+              <li><strong>12:1 Rotary Ratio:</strong> 19,200 step pulses per bed revolution.</li>
+              <li><strong>M3/M5 Tool Protocol:</strong> Automated dwell settling handshake.</li>
+            </ul>
+          </div>
+
+          <div class="card highlight-cyan">
+            <div class="card-title">
+              Kinematic Redundancy: X+θ vs Y+θ
+              <span class="tag tag-cyan">Robotics Theory</span>
+            </div>
+            <ul class="card-list">
+              <li><strong>3-DOF for 2-DOF Plane:</strong> Infinite inverse kinematic solutions.</li>
+              <li><strong>Axis-Lock Solver:</strong> Splits moves into candidate <code>X+θ</code> and <code>Y+θ</code> paths.</li>
+              <li><strong>Inertia Optimization:</strong> Spares heavy 18" bed rotation to maximize speed.</li>
+              <li><strong>Tangent Following:</strong> Smooth curve rendering without polyline facets.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="grid-4">
+          <div class="card" style="padding: 10px 14px;">
+            <span class="meta-label">Bed Dimension</span>
+            <div class="metric-badge"><span class="metric-number">18.0</span><span class="metric-unit">inch dia</span></div>
+          </div>
+          <div class="card" style="padding: 10px 14px;">
+            <span class="meta-label">Linear Resolution</span>
+            <div class="metric-badge"><span class="metric-number">80</span><span class="metric-unit">steps/mm</span></div>
+          </div>
+          <div class="card" style="padding: 10px 14px;">
+            <span class="meta-label">Rotary Resolution</span>
+            <div class="metric-badge"><span class="metric-number">19.2k</span><span class="metric-unit">pulses/rev</span></div>
+          </div>
+          <div class="card" style="padding: 10px 14px;">
+            <span class="meta-label">Solver Engine</span>
+            <div class="metric-badge"><span class="metric-number" style="font-size: 1.15rem; color: var(--accent-emerald);">r-θ Cost Model</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: Summer Milestone 2 — Power & Hardware Wiring -->
+    <section class="slide" id="slide-4">
+      <div class="slide-header">
+        <div class="slide-category">Summer Milestone</div>
+        <h2 class="slide-title">Power Distribution & Hardware Wiring</h2>
+        <p class="slide-subtitle">Engineered a noise-isolated power and interface architecture for high reliability.</p>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-title">
+              Power Bus
+              <span class="tag tag-emerald">Bench Verified</span>
+            </div>
+            <ul class="card-list check">
+              <li>12V 10A industrial power supply.</li>
+              <li>8-channel fused block (HD064RT).</li>
+              <li>6V high-current toolhead line.</li>
+              <li>Local 5V toolhead logic regulator.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-title">
+              Optocoupled Signal Bus
+              <span class="tag tag-emerald">Bench Verified</span>
+            </div>
+            <ul class="card-list check">
+              <li>Custom 3-channel PC817C module.</li>
+              <li>Galvanic isolation (5V to 3.3V).</li>
+              <li>Zero ground loops / EMI spikes.</li>
+              <li>Forward M3/M5 & reverse A_HOME.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-title">
+              Safety & Mechanical
+              <span class="tag tag-emerald">Bench Verified</span>
+            </div>
+            <ul class="card-list check">
+              <li>Dual-contact latching E-Stop switch.</li>
+              <li>Shielded 20 AWG X-axis motor run.</li>
+              <li>1U sliding rack chassis integration.</li>
+              <li>Master wiring table documented.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: Summer Milestone 3 — grblHAL Motion Controller -->
+    <section class="slide" id="slide-5">
+      <div class="slide-header">
+        <div class="slide-category">Summer Milestone</div>
+        <h2 class="slide-title">Motion Controller Firmware (RP23CNC)</h2>
+        <p class="slide-subtitle">Assembled and bench-verified grblHAL on the RP2350 motion controller.</p>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-title">
+              Board Assembly
+              <span class="tag tag-emerald">Verified</span>
+            </div>
+            <ul class="card-list check">
+              <li>RP23U5XBB V1.01 board.</li>
+              <li>Wiznet W5500 Ethernet kit socketed.</li>
+              <li>Solder & continuity inspection passed (E-17).</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-title">
+              G-Code Parser
+              <span class="tag tag-emerald">Verified</span>
+            </div>
+            <ul class="card-list check">
+              <li>Dry run passed converter G-code (F-02).</li>
+              <li>Linear XYZA interpolation verified.</li>
+              <li>Precision G4 dwell & M3/M5 modes.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-title">
+              Step / Dir Timing
+              <span class="tag tag-emerald">Verified</span>
+            </div>
+            <ul class="card-list check">
+              <li>Scope-verified STEP pulse trains (F-03).</li>
+              <li>Active-low driver enable logic.</li>
+              <li>Limit switch NC inputs mapped.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 6: Engineering Troubleshooting & Pivots -->
+    <section class="slide" id="slide-6">
+      <div class="slide-header">
+        <div class="slide-category">Engineering Rigor</div>
+        <h2 class="slide-title">Key Setbacks & Design Pivots</h2>
+        <p class="slide-subtitle">Evidence-based troubleshooting and architecture decisions.</p>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card highlight-cyan">
+            <div class="card-title">
+              1. Sensor Rate (11.93 Hz)
+              <span class="tag tag-amber">Pivot</span>
+            </div>
+            <ul class="card-list step">
+              <li><strong>Challenge:</strong> Too slow for high-bandwidth PID to cancel drawing chatter.</li>
+              <li><strong>Design Strategy:</strong> Plan a low-frequency pulse PI trim loop; rely on mechanical compliance to absorb vibration.</li>
+            </ul>
+          </div>
+          <div class="card highlight-cyan">
+            <div class="card-title">
+              2. Lead Screw Backlash
+              <span class="tag tag-amber">Pivot</span>
+            </div>
+            <ul class="card-list step">
+              <li><strong>Challenge:</strong> M4 nut deadband and Z-dependent friction.</li>
+              <li><strong>Solution:</strong> Coaxial preload spring (cancels out on load cell in mid-air).</li>
+            </ul>
+          </div>
+          <div class="card highlight-cyan">
+            <div class="card-title">
+              3. Electrical Noise
+              <span class="tag tag-amber">Pivot</span>
+            </div>
+            <ul class="card-list step">
+              <li><strong>Challenge:</strong> Stepper switching spikes coupling to 24-bit ADC.</li>
+              <li><strong>Solution:</strong> Custom optoisolator board for full galvanic isolation.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 7: Semester Plan & Next Steps -->
+    <section class="slide" id="slide-7">
+      <div class="slide-header">
+        <div class="slide-category">Roadmap</div>
+        <h2 class="slide-title">Semester Plan & Next Steps</h2>
+        <p class="slide-subtitle">Four sequential phases taking the machine from bench tests to drawing execution.</p>
+      </div>
+      <div class="slide-body">
+        <div class="grid-4">
+          <div class="card">
+            <span class="tag tag-amber" style="width: fit-content;">Phase 1</span>
+            <div class="card-title" style="font-size: 0.95rem; margin-top: 4px;">Force Loop Calibration</div>
+            <ul class="card-list">
+              <li>Preload spring installation.</li>
+              <li>Load cell slope calibration (E-07).</li>
+              <li>PI force hold tuning (T-03).</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="tag tag-blue" style="width: fit-content;">Phase 2</span>
+            <div class="card-title" style="font-size: 0.95rem; margin-top: 4px;">3-Axis Motion Bring-Up</div>
+            <ul class="card-list">
+              <li>TB6600 driver current tuning.</li>
+              <li>X, Y, A motion calibration.</li>
+              <li>12:1 rotary bed ratio test.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="tag tag-cyan" style="width: fit-content;">Phase 3</span>
+            <div class="card-title" style="font-size: 0.95rem; margin-top: 4px;">System Integration</div>
+            <ul class="card-list">
+              <li>P100 magnetic bed homing.</li>
+              <li>grblHAL M3/M5 tool link.</li>
+              <li>Dry coordinated G-code runs.</li>
+            </ul>
+          </div>
+          <div class="card highlight-emerald">
+            <span class="tag tag-emerald" style="width: fit-content;">Phase 4</span>
+            <div class="card-title" style="font-size: 0.95rem; margin-top: 4px;">Validation & Report</div>
+            <ul class="card-list">
+              <li>Full calibration test plots.</li>
+              <li>Force tracking on rotating bed.</li>
+              <li>Final Technical Report.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: Deliverables & Conclusion -->
+    <section class="slide" id="slide-8">
+      <div class="hero-container">
+        <span class="project-badge" style="font-size: 0.85rem; padding: 6px 14px;">Course Outcomes</span>
+        <h1 class="hero-title" style="font-size: 2.4rem;">Project Deliverables</h1>
+        <div class="grid-3" style="width: 100%; max-width: 980px; margin-top: 10px; text-align: left;">
+          <div class="card highlight-blue">
+            <div class="card-title">1. Operational Robot</div>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Fully integrated polar pen plotter drawing complex SVG artwork with adaptive force control.</p>
+          </div>
+          <div class="card highlight-cyan">
+            <div class="card-title">2. Engineering Archive</div>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Complete repository with CAD models, master wiring tables, schematics, and chronological lab notes.</p>
+          </div>
+          <div class="card highlight-emerald">
+            <div class="card-title">3. Technical Report</div>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Comprehensive academic report on System Integration in Robotics detailing kinematics, loops, and data.</p>
+          </div>
+        </div>
+        <p style="margin-top: 10px; color: var(--accent-cyan); font-weight: 600;">Ready for live demonstration and semester execution.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Navigation Footer -->
+  <footer>
+    <div class="dots-container" id="dotsContainer"></div>
+    <div class="shortcut-hint">Navigate: [←] / [→] Arrow Keys or Spacebar • [F] Fullscreen</div>
+  </footer>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dotsContainer');
+    const slideCounter = document.getElementById('slideCounter');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    let currentSlide = 0;
+
+    // Create navigation dots
+    slides.forEach((_, idx) => {
+      const dot = document.createElement('div');
+      dot.classList.add('dot');
+      if (idx === 0) dot.classList.add('active');
+      dot.addEventListener('click', () => goToSlide(idx));
+      dotsContainer.appendChild(dot);
+    });
+
+    const dots = document.querySelectorAll('.dot');
+
+    function updateSlide() {
+      slides.forEach((slide, idx) => {
+        slide.classList.toggle('active', idx === currentSlide);
+      });
+      dots.forEach((dot, idx) => {
+        dot.classList.toggle('active', idx === currentSlide);
+      });
+
+      slideCounter.textContent = `Slide ${currentSlide + 1} / ${slides.length}`;
+      prevBtn.disabled = currentSlide === 0;
+      nextBtn.disabled = currentSlide === slides.length - 1;
+    }
+
+    function nextSlide() {
+      if (currentSlide < slides.length - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function goToSlide(index) {
+      if (index >= 0 && index < slides.length) {
+        currentSlide = index;
+        updateSlide();
+      }
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        goToSlide(0);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        goToSlide(slides.length - 1);
+      } else if (e.key.toLowerCase() === 'f') {
+        toggleFullScreen();
+      }
+    });
+  </script>
+</body>
+</html>

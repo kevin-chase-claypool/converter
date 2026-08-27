@@ -227,6 +227,7 @@ Entry details remain only in the chronology.
 - [2026-08-08 - SUCCESS - Added no-overlap PC817 schematic](#elog-20260808-added-no-overlap-pc817-schematic)
 - [2026-08-14 - SUCCESS - Required complete records for every E-series test](#elog-20260814-required-complete-records-for-every-e-series-test)
 - [2026-08-22 - RP23CNC-SOFTWARE/CORRECTED - Corrected RP2350 toolhead ownership](#elog-20260822-corrected-rp2350-toolhead-ownership)
+- [2026-08-27 - SUCCESS - Adjusted presentation slide deck to remove Pro Micro code](#elog-20260827-adjusted-presentation-slide-deck-to-remove-pro-micro-code)
 <!-- END GENERATED TOPIC INDEX -->
 
 ## Entry format
@@ -2042,3 +2043,13 @@ Add new entries at the top of the log below this line.
   E-06, E-07, T-01, and T-02 must precede T-03 gain selection.
 - Next action: Characterize short motor pulses against a scale, establish a
   repeatable force calibration, then tune P before adding a leaky I term.
+
+<a id="elog-20260827-adjusted-presentation-slide-deck-to-remove-pro-micro-code"></a>
+### 🟩 2026-08-27 - SUCCESS - Adjusted presentation slide deck to remove Pro Micro code
+
+- Status: presentation slide deck updated.
+- Category: documentation, project management
+- Summary: Removed the "Dual-Core Toolhead Subsystem" slide (Slide 5) from `independent_study_presentation.html` since code implementation on the Pro Micro has not yet started. Re-indexed the remaining slides (total count adjusted from 9 to 8) and updated Slide 6 (Troubleshooting & Pivots) to frame the sensor rate PI loop as a design/planned strategy rather than a completed implementation.
+- Reason: Avoid misrepresenting uncompleted Pro Micro software milestones in the upcoming independent study presentation.
+- Evidence: updated [independent_study_presentation.html](../../independent_study_presentation.html).
+- Next action: run the docs index check tool to regenerate topic links and validate stability.
