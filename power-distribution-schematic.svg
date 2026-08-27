@@ -30,7 +30,7 @@
   <path class="wire p12" d="M300 214 H390"/><path class="wire gnd" d="M300 234 H390"/><path class="wire earth" d="M300 254 H390"/>
 
   <rect class="box dist" x="840" y="105" width="355" height="475"/>
-  <text class="title" x="880" y="143">Illustrative 12 V branches</text>
+  <text class="title" x="880" y="143">12 V branches</text>
   <text class="subtitle" x="880" y="166">See E-stop topology for actual HD064RT/K1 order</text>
   <rect class="term" x="875" y="204" width="112" height="28"/><text class="label" x="902" y="224">12V BUS</text>
   <rect class="term" x="875" y="244" width="112" height="28"/><text class="label" x="906" y="264">0V BUS</text>
