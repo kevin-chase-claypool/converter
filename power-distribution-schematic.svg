@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1500" viewBox="0 0 1800 1500">
   <defs>
     <style>
-      .bg{fill:#f7f8fa}.box{fill:#fff;stroke:#1f2937;stroke-width:2.5;rx:10;ry:10}.source{fill:#fef3c7;stroke:#92400e}.dist{fill:#e0f2fe;stroke:#075985}.din{fill:#dcfce7;stroke:#166534}.load{fill:#f3e8ff;stroke:#6b21a8}.tool{fill:#ccfbf1;stroke:#0f766e}.sig{fill:#fff7ed;stroke:#b45309}.warn{fill:#fff1f2;stroke:#be123c}.term{fill:#fff;stroke:#111827;stroke-width:1.5;rx:2;ry:2}.pin{fill:#fff;stroke:#111827;stroke-width:2}.title{font:700 24px Arial,sans-serif;fill:#111827}.subtitle{font:400 14px Arial,sans-serif;fill:#374151}.label{font:700 15px Arial,sans-serif;fill:#111827}.small{font:400 13px Arial,sans-serif;fill:#374151}.tiny{font:400 11px Arial,sans-serif;fill:#374151}.wire{fill:none;stroke-width:4;stroke-linecap:square;stroke-linejoin:miter}.p12{stroke:#dc2626}.gnd{stroke:#111827}.p6{stroke:#b46522}.p5{stroke:#16a34a}.p33{stroke:#0d9488}.earth{stroke:#65a30d;stroke-dasharray:9 6}.m3{stroke:#7c3aed}.arm{stroke:#2563eb}.home{stroke:#be123c;stroke-dasharray:9 6}.zone{fill:none;stroke:#6b7280;stroke-width:2;stroke-dasharray:10 8}
+      .bg{fill:#f7f8fa}.box{fill:#fff;stroke:#1f2937;stroke-width:2.5;rx:10;ry:10}.source{fill:#fef3c7;stroke:#92400e}.dist{fill:#e0f2fe;stroke:#075985}.din{fill:#dcfce7;stroke:#166534}.load{fill:#f3e8ff;stroke:#6b21a8}.tool{fill:#ccfbf1;stroke:#0f766e}.sig{fill:#fff7ed;stroke:#b45309}.warn{fill:#fff1f2;stroke:#be123c}.term{fill:#fff;stroke:#111827;stroke-width:1.5;rx:2;ry:2}.pin{fill:#fff;stroke:#111827;stroke-width:2}.title{font:700 24px Arial,sans-serif;fill:#111827}.subtitle{font:400 14px Arial,sans-serif;fill:#374151}.label{font:700 15px Arial,sans-serif;fill:#111827}.small{font:400 13px Arial,sans-serif;fill:#374151}.tiny{font:400 11px Arial,sans-serif;fill:#374151}.wire{fill:none;stroke-width:4;stroke-linecap:square;stroke-linejoin:miter}.p12{stroke:#dc2626}.gnd{stroke:#111827}.p6{stroke:#b46522}.p5{stroke:#ca8a04}.p33{stroke:#0d9488}.earth{stroke:#65a30d;stroke-dasharray:9 6}.m3{stroke:#7c3aed}.arm{stroke:#2563eb}.home{stroke:#be123c;stroke-dasharray:9 6}.zone{fill:none;stroke:#6b7280;stroke-width:2;stroke-dasharray:10 8}
     </style>
   </defs>
   <rect class="bg" width="1800" height="1500"/>
@@ -76,14 +76,15 @@
   <path class="wire p5" d="M1620 1026 H1705 V1130 H1620"/>
   <path class="wire gnd" d="M1620 1056 H1730 V1160 H1620"/>
 
-  <rect class="box" x="55" y="650" width="520" height="160"/>
+  <rect class="box" x="55" y="650" width="520" height="200"/>
   <text class="title" x="85" y="687">Legend</text>
-  <line class="wire p12" x1="85" y1="715" x2="140" y2="715"/><text class="small" x="155" y="720">12 V / 5 V ref</text>
-  <line class="wire p6" x1="285" y1="715" x2="340" y2="715"/><text class="small" x="355" y="720">6 V</text>
-  <line class="wire p33" x1="85" y1="750" x2="140" y2="750"/><text class="small" x="155" y="755">3.3 V</text>
-  <line class="wire gnd" x1="285" y1="750" x2="340" y2="750"/><text class="small" x="355" y="755">return</text>
-  <line class="wire m3" x1="85" y1="785" x2="140" y2="785"/><text class="small" x="155" y="790">M3/M5</text>
-  <line class="wire arm" x1="285" y1="785" x2="340" y2="785"/><text class="small" x="355" y="790">HOME_ARM</text>
+  <line class="wire p12" x1="85" y1="715" x2="140" y2="715"/><text class="small" x="155" y="720">12 V</text>
+  <line class="wire p5" x1="285" y1="715" x2="340" y2="715"/><text class="small" x="355" y="720">5 V</text>
+  <line class="wire p6" x1="85" y1="750" x2="140" y2="750"/><text class="small" x="155" y="755">6 V</text>
+  <line class="wire p33" x1="285" y1="750" x2="340" y2="750"/><text class="small" x="355" y="755">3.3 V</text>
+  <line class="wire gnd" x1="85" y1="785" x2="140" y2="785"/><text class="small" x="155" y="790">return</text>
+  <line class="wire m3" x1="285" y1="785" x2="340" y2="785"/><text class="small" x="355" y="790">M3/M5</text>
+  <line class="wire arm" x1="85" y1="820" x2="140" y2="820"/><text class="small" x="155" y="825">HOME_ARM</text>
 
   <text class="title" x="55" y="1165">RP23CNC to Pro Micro signal isolation</text>
   <text class="subtitle" x="55" y="1190">B07WFGTNQC is drawn for RP23CNC-to-Pro-Micro command inputs only. Use a separate verified switch-like return path for A_HOME unless the received board proves safe for mixed direction.</text>
