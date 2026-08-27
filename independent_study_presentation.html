@@ -478,7 +478,7 @@
       <span class="project-title">Theta Pen Plotter — System Integration in Robotics</span>
     </div>
     <div class="header-controls">
-      <span class="slide-counter" id="slideCounter">Slide 1 / 8</span>
+      <span class="slide-counter" id="slideCounter">Slide 1 / 9</span>
       <button class="nav-btn" id="prevBtn" onclick="prevSlide()" disabled>← Prev</button>
       <button class="nav-btn" id="nextBtn" onclick="nextSlide()">Next →</button>
       <button class="nav-btn" onclick="toggleFullScreen()">⛶ Fullscreen</button>
@@ -772,8 +772,79 @@
       </div>
     </section>
 
-    <!-- SLIDE 7: Semester Plan & Next Steps -->
+    <!-- SLIDE 7: Verification & Test Progress -->
     <section class="slide" id="slide-7">
+      <div class="slide-header">
+        <div class="slide-category">Verification</div>
+        <h2 class="slide-title">System Verification & Test Status</h2>
+        <p class="slide-subtitle">Structured pass/fail results mapped from the official TEST_PLAN.md.</p>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card highlight-emerald">
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem;">
+              Subsystem Bench (Phase 1)
+              <span class="tag tag-emerald" style="font-size: 0.7rem; padding: 2px 6px;">6 / 15 Checked</span>
+            </div>
+            <ul class="card-list" style="font-size: 0.8rem; line-height: 1.35; margin-top: 8px;">
+              <li class="verified"><strong>E-05:</strong> N20 no-load current (6V)</li>
+              <li class="verified"><strong>E-08:</strong> HX711 sample rate & noise</li>
+              <li class="verified"><strong>E-09:</strong> TMAG5273 I2C sensor mapping</li>
+              <li class="verified"><strong>E-17:</strong> RP23CNC PCB solder check</li>
+              <li class="partial"><strong>E-01:</strong> Stepper coil confirmation</li>
+              <li class="partial"><strong>E-02:</strong> TB6600 switch tables</li>
+              <li class="partial"><strong>E-07:</strong> Load cell calibration</li>
+              <li class="partial"><strong>E-11:</strong> MEISHILE S-120-12 supply</li>
+              <li class="partial"><strong>E-14B/C:</strong> Toolhead board & DRV8833</li>
+              <li class="partial"><strong>E-18:</strong> Opto signal isolator circuit</li>
+              <li class="planned"><strong>E-03/04:</strong> STEP/DIR input & current</li>
+              <li class="planned"><strong>E-06:</strong> Actuator limited stall</li>
+              <li class="planned"><strong>E-10/19:</strong> Rails & E-stop topology</li>
+              <li class="planned"><strong>E-12/13/15:</strong> D36V50F6 load/thermal</li>
+            </ul>
+          </div>
+          
+          <div class="card highlight-blue">
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem;">
+              grblHAL Firmware
+              <span class="tag tag-blue" style="font-size: 0.7rem; padding: 2px 6px;">2 / 8 Checked</span>
+            </div>
+            <ul class="card-list" style="font-size: 0.8rem; line-height: 1.35; margin-top: 8px;">
+              <li class="verified"><strong>F-02:</strong> G-code parser dry run</li>
+              <li class="verified"><strong>F-03:</strong> STEP/DIR pulse logic output</li>
+              <li class="partial"><strong>F-04:</strong> Limit input Nc switch test</li>
+              <li class="planned"><strong>F-01:</strong> Boot & build identification</li>
+              <li class="planned"><strong>F-05:</strong> Spindle/tool engage (M3/M5)</li>
+              <li class="planned"><strong>F-06:</strong> EEPROM settings persistence</li>
+              <li class="planned"><strong>F-07:</strong> XYZA 4-axis config check</li>
+              <li class="planned"><strong>F-08:</strong> Motorless G38 macro check</li>
+            </ul>
+          </div>
+
+          <div class="card highlight-cyan">
+            <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem;">
+              Motion & Integration (Phases 2-4)
+              <span class="tag tag-cyan" style="font-size: 0.7rem; padding: 2px 6px;">Planned</span>
+            </div>
+            <ul class="card-list" style="font-size: 0.8rem; line-height: 1.35; margin-top: 8px;">
+              <li class="planned"><strong>M-01/02:</strong> Axis jog & rate ramps</li>
+              <li class="planned"><strong>M-03/04:</strong> X/Y & A-axis calibration</li>
+              <li class="planned"><strong>M-05:</strong> 12:1 rotating bed ratio</li>
+              <li class="planned"><strong>M-07:</strong> X/Y limits physical homing</li>
+              <li class="planned"><strong>M-08:</strong> P100 center centroid raster</li>
+              <li class="planned"><strong>M-09:</strong> Outer theta registration</li>
+              <li class="planned"><strong>M-10/11:</strong> Auto-home & fault paths</li>
+              <li class="planned"><strong>T-01/02:</strong> Tool contact seek & lift</li>
+              <li class="planned"><strong>T-03:</strong> Force hold PI trim loop</li>
+              <li class="planned"><strong>T-04/05/06:</strong> Overforce & disconnect</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: Semester Plan & Next Steps -->
+    <section class="slide" id="slide-8">
       <div class="slide-header">
         <div class="slide-category">Roadmap</div>
         <h2 class="slide-title">Semester Plan & Next Steps</h2>
@@ -821,8 +892,8 @@
       </div>
     </section>
 
-    <!-- SLIDE 8: Deliverables & Conclusion -->
-    <section class="slide" id="slide-8">
+    <!-- SLIDE 9: Deliverables & Conclusion -->
+    <section class="slide" id="slide-9">
       <div class="hero-container">
         <span class="project-badge" style="font-size: 0.85rem; padding: 6px 14px;">Course Outcomes</span>
         <h1 class="hero-title" style="font-size: 2.4rem;">Project Deliverables</h1>
