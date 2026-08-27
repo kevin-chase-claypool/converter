@@ -617,43 +617,49 @@
         <h2 class="slide-title">Power Distribution & Hardware Wiring</h2>
         <p class="slide-subtitle">Engineered a noise-isolated power and interface architecture for high reliability.</p>
       </div>
-      <div class="slide-body">
-        <div class="grid-3">
-          <div class="card">
-            <div class="card-title">
-              Power Bus
-              <span class="tag tag-emerald">Bench Verified</span>
+      <div class="slide-body" style="flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0;">
+        <div class="grid-2" style="align-items: stretch; height: 100%; gap: 18px; min-height: 0;">
+          <div style="display: flex; flex-direction: column; gap: 10px; justify-content: space-between; min-height: 0;">
+            <div class="card" style="padding: 10px 14px; gap: 4px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+              <div class="card-title" style="font-size: 0.95rem;">
+                Power Bus
+                <span class="tag tag-emerald">Bench Verified</span>
+              </div>
+              <ul class="card-list check" style="font-size: 0.85rem; gap: 4px;">
+                <li>12V 10A industrial power supply.</li>
+                <li>8-channel fused block (HD064RT).</li>
+                <li>6V high-current toolhead line.</li>
+                <li>Local 5V toolhead logic regulator.</li>
+              </ul>
             </div>
-            <ul class="card-list check">
-              <li>12V 10A industrial power supply.</li>
-              <li>8-channel fused block (HD064RT).</li>
-              <li>6V high-current toolhead line.</li>
-              <li>Local 5V toolhead logic regulator.</li>
-            </ul>
+            <div class="card" style="padding: 10px 14px; gap: 4px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+              <div class="card-title" style="font-size: 0.95rem;">
+                Optocoupled Signal Bus
+                <span class="tag tag-emerald">Bench Verified</span>
+              </div>
+              <ul class="card-list check" style="font-size: 0.85rem; gap: 4px;">
+                <li>Custom 3-channel PC817C module.</li>
+                <li>Galvanic isolation (5V to 3.3V).</li>
+                <li>Zero ground loops / EMI spikes.</li>
+                <li>Forward M3/M5 & reverse A_HOME.</li>
+              </ul>
+            </div>
+            <div class="card" style="padding: 10px 14px; gap: 4px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+              <div class="card-title" style="font-size: 0.95rem;">
+                Safety & Mechanical
+                <span class="tag tag-emerald">Bench Verified</span>
+              </div>
+              <ul class="card-list check" style="font-size: 0.85rem; gap: 4px;">
+                <li>Dual-contact latching E-Stop switch.</li>
+                <li>Shielded 20 AWG X-axis motor run.</li>
+                <li>1U sliding rack chassis integration.</li>
+                <li>Master wiring table documented.</li>
+              </ul>
+            </div>
           </div>
-          <div class="card">
-            <div class="card-title">
-              Optocoupled Signal Bus
-              <span class="tag tag-emerald">Bench Verified</span>
-            </div>
-            <ul class="card-list check">
-              <li>Custom 3-channel PC817C module.</li>
-              <li>Galvanic isolation (5V to 3.3V).</li>
-              <li>Zero ground loops / EMI spikes.</li>
-              <li>Forward M3/M5 & reverse A_HOME.</li>
-            </ul>
-          </div>
-          <div class="card">
-            <div class="card-title">
-              Safety & Mechanical
-              <span class="tag tag-emerald">Bench Verified</span>
-            </div>
-            <ul class="card-list check">
-              <li>Dual-contact latching E-Stop switch.</li>
-              <li>Shielded 20 AWG X-axis motor run.</li>
-              <li>1U sliding rack chassis integration.</li>
-              <li>Master wiring table documented.</li>
-            </ul>
+          
+          <div class="card" style="background: #f7f8fa; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; padding: 12px; border-radius: 12px; min-height: 0;">
+            <img src="power-distribution-schematic.png" alt="Power Distribution Schematic" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px;">
           </div>
         </div>
       </div>
