@@ -310,6 +310,46 @@
       font-weight: bold;
     }
 
+    /* Inline Legend for Status Markers */
+    .status-legend {
+      display: flex;
+      gap: 16px;
+      font-size: 0.75rem;
+      background: rgba(11, 15, 23, 0.4);
+      border: 1px solid var(--border-color);
+      padding: 5px 12px;
+      border-radius: 20px;
+      width: fit-content;
+      margin-top: 8px;
+    }
+
+    .status-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-main);
+    }
+
+    .status-legend-item::before {
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    .status-legend-item.verified::before {
+      content: "✓";
+      color: var(--accent-emerald);
+    }
+
+    .status-legend-item.partial::before {
+      content: "✓";
+      color: var(--accent-amber);
+    }
+
+    .status-legend-item.planned::before {
+      content: "○";
+      color: var(--text-subtle);
+    }
+
     /* Hero Slide (Slide 1) */
     .hero-container {
       display: flex;
@@ -637,6 +677,11 @@
         <div class="slide-category">Summer Milestone</div>
         <h2 class="slide-title">Power Distribution & Hardware Wiring</h2>
         <p class="slide-subtitle">Engineered a noise-isolated power and interface architecture for high reliability.</p>
+        <div class="status-legend">
+          <span class="status-legend-item verified">Verified</span>
+          <span class="status-legend-item partial">Partially Verified</span>
+          <span class="status-legend-item planned">Planned</span>
+        </div>
       </div>
       <div class="slide-body" style="flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0;">
         <div class="grid-2" style="align-items: stretch; height: 100%; gap: 18px; min-height: 0;">
@@ -778,6 +823,11 @@
         <div class="slide-category">Verification</div>
         <h2 class="slide-title">System Verification & Test Status</h2>
         <p class="slide-subtitle">Structured pass/fail results mapped from the official TEST_PLAN.md.</p>
+        <div class="status-legend">
+          <span class="status-legend-item verified">Verified</span>
+          <span class="status-legend-item partial">Partially Verified</span>
+          <span class="status-legend-item planned">Planned</span>
+        </div>
       </div>
       <div class="slide-body">
         <div class="grid-3">
