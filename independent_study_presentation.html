@@ -677,7 +677,7 @@
           </div>
           
           <div class="card" style="background: #f7f8fa; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; padding: 12px; border-radius: 12px; min-height: 0;">
-            <img src="power-distribution-schematic.png" alt="Power Distribution Schematic" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px;">
+            <img src="power-distribution-schematic.png" alt="Power Distribution Schematic" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; cursor: zoom-in;" onclick="openModal(this.src)">
           </div>
         </div>
       </div>
@@ -930,8 +930,27 @@
         goToSlide(slides.length - 1);
       } else if (e.key.toLowerCase() === 'f') {
         toggleFullScreen();
+      } else if (e.key === 'Escape') {
+        closeModal();
       }
     });
+
+    function openModal(imgSrc) {
+      const modal = document.getElementById('imageModal');
+      const modalImg = document.getElementById('modalImg');
+      modalImg.src = imgSrc;
+      modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('imageModal').style.display = 'none';
+    }
   </script>
+
+  <!-- Image Lightbox Modal -->
+  <div id="imageModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(11, 15, 23, 0.95); z-index: 1000; align-items: center; justify-content: center; cursor: zoom-out;" onclick="closeModal()">
+    <span style="position: absolute; top: 20px; right: 30px; font-size: 2.5rem; font-weight: bold; color: var(--text-muted); cursor: pointer;" onclick="closeModal()">&times;</span>
+    <img id="modalImg" style="max-width: 90%; max-height: 90%; object-fit: contain; border: 1px solid var(--border-color); border-radius: 8px; background: #f7f8fa; padding: 12px; cursor: default;" onclick="event.stopPropagation()">
+  </div>
 </body>
 </html>
