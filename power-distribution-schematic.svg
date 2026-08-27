@@ -76,20 +76,14 @@
   <path class="wire p5" d="M1620 1026 H1705 V1130 H1620"/>
   <path class="wire gnd" d="M1620 1056 H1730 V1160 H1620"/>
 
-  <rect class="box" x="55" y="650" width="520" height="250"/>
-  <text class="title" x="85" y="687">Rules</text>
-  <text class="small" x="85" y="717">1. Use branch fuses/terminal blocks; do not stack loads on supply terminals.</text>
-  <text class="small" x="85" y="742">2. D36V50F6 makes the final 6 V toolhead rail; B085T73CSD modules are spares.</text>
-  <text class="small" x="85" y="767">3. S7V8F5 is mounted on the toolhead and makes local 5 V for the Pro Micro.</text>
-  <text class="small" x="85" y="792">4. Pro Micro 3.3 V powers HX711 and TMAG5273; GPIO must not see 5 V.</text>
-  <text class="small" x="85" y="817">5. B07WFGTNQC polarity and output-side 3.3 V behavior must be bench-verified.</text>
-  <text class="small" x="85" y="842">6. PE/chassis earth is separate from DC -V; shields land on PE at DIN only.</text>
-  <line class="wire p12" x1="85" y1="875" x2="140" y2="875"/><text class="small" x="155" y="880">12 V / 5 V ref</text>
-  <line class="wire p6" x1="285" y1="875" x2="340" y2="875"/><text class="small" x="355" y="880">6 V</text>
-  <line class="wire p33" x1="85" y1="910" x2="140" y2="910"/><text class="small" x="155" y="915">3.3 V</text>
-  <line class="wire gnd" x1="285" y1="910" x2="340" y2="910"/><text class="small" x="355" y="915">return</text>
-  <line class="wire m3" x1="85" y1="940" x2="140" y2="940"/><text class="small" x="155" y="945">M3/M5</text>
-  <line class="wire arm" x1="285" y1="940" x2="340" y2="940"/><text class="small" x="355" y="945">HOME_ARM</text>
+  <rect class="box" x="55" y="650" width="520" height="160"/>
+  <text class="title" x="85" y="687">Legend</text>
+  <line class="wire p12" x1="85" y1="715" x2="140" y2="715"/><text class="small" x="155" y="720">12 V / 5 V ref</text>
+  <line class="wire p6" x1="285" y1="715" x2="340" y2="715"/><text class="small" x="355" y="720">6 V</text>
+  <line class="wire p33" x1="85" y1="750" x2="140" y2="750"/><text class="small" x="155" y="755">3.3 V</text>
+  <line class="wire gnd" x1="285" y1="750" x2="340" y2="750"/><text class="small" x="355" y="755">return</text>
+  <line class="wire m3" x1="85" y1="785" x2="140" y2="785"/><text class="small" x="155" y="790">M3/M5</text>
+  <line class="wire arm" x1="285" y1="785" x2="340" y2="785"/><text class="small" x="355" y="790">HOME_ARM</text>
 
   <text class="title" x="55" y="1165">RP23CNC to Pro Micro signal isolation</text>
   <text class="subtitle" x="55" y="1190">B07WFGTNQC is drawn for RP23CNC-to-Pro-Micro command inputs only. Use a separate verified switch-like return path for A_HOME unless the received board proves safe for mixed direction.</text>
