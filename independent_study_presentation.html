@@ -303,6 +303,13 @@
       font-weight: bold;
     }
 
+    .card-list li.partial::before {
+      content: "✓";
+      color: var(--accent-amber);
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
     /* Hero Slide (Slide 1) */
     .hero-container {
       display: flex;
@@ -652,7 +659,7 @@
               <ul class="card-list" style="font-size: 0.85rem; gap: 4px;">
                 <li class="verified">Custom 3-channel PC817C module.</li>
                 <li class="verified">Galvanic isolation (5V to 3.3V).</li>
-                <li class="verified">Zero ground loops / EMI spikes.</li>
+                <li class="partial">Zero ground loops / EMI spikes.</li>
                 <li class="planned">Forward M3/M5 & reverse A_HOME.</li>
               </ul>
             </div>
