@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-08-28 | `WSW-20260828-001` | implemented | [Establish sequential agent execution policy](../windows-software/2026/2026-08-28-agent-execution-policy.md) | `agent-workflow`, `token-efficiency`, `quality`, `project-policy` |
 | 2026-08-25 | `RPSW-20260825-001` | planned | [Plan Slow PI Toolhead Force Control](../rp23cnc-software/2026/2026-08-25-plan-slow-pi-toolhead-force-control.md) | `toolhead`, `load-cell`, `n20`, `force-control`, `pi` |
 | 2026-08-23 | `HW-20260823-009` | planned | [Plan motor-harness strain-relief CAD](2026/2026-08-23-plan-motor-harness-strain-relief-cad.md) | `cad`, `strain-relief`, `stepper`, `cable-management` |
 | 2026-08-23 | `HW-20260823-008` | verified | [Verify X sheath motor-phase isolation](2026/2026-08-23-verify-x-sheath-motor-phase-isolation.md) | `protective-earth`, `shielding`, `isolation`, `wiring`, `stepper` |

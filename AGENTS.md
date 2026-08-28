@@ -11,6 +11,27 @@ Do not treat a task as complete when these instruction files have not been
 checked. If a referenced instruction file or required command is missing,
 report that as a repository setup problem instead of silently skipping it.
 
+## Agent execution policy
+
+Use the lowest-cost agent that can safely complete the current unit of work.
+The priority is to reduce token use while preserving productivity and quality.
+
+- **Luna** performs bounded, routine work: file and text discovery, mechanical
+  edits, formatting, documentation-index commands, and prescribed checks with
+  clear pass criteria.
+- **Sol** is reserved for judgment-heavy work: architecture and design choices,
+  ambiguous requirements, safety-sensitive hardware or firmware decisions,
+  cross-subsystem tradeoffs, nontrivial diagnosis, and final review when Luna
+  reports uncertainty or a failed check.
+- Luna must stop and provide the relevant evidence when it reaches a decision
+  boundary. Sol decides the direction; after that, Luna may resume the bounded
+  implementation or verification work.
+- Run one job at a time, in the stated order. Do not create parallel agent
+  work, speculative follow-up jobs, or background batches.
+- Do not run overnight, unattended, recurring, or long-running work on the
+  flagship model (Sol). Keep Sol work interactive and bounded to the active
+  decision or review.
+
 ## Documentation is part of every change
 
 A task is not complete until its documentation is updated in the same working

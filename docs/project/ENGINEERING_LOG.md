@@ -228,6 +228,7 @@ Entry details remain only in the chronology.
 - [2026-08-14 - SUCCESS - Required complete records for every E-series test](#elog-20260814-required-complete-records-for-every-e-series-test)
 - [2026-08-22 - RP23CNC-SOFTWARE/CORRECTED - Corrected RP2350 toolhead ownership](#elog-20260822-corrected-rp2350-toolhead-ownership)
 - [2026-08-27 - SUCCESS - Adjusted presentation slide deck and added power schematic](#elog-20260827-adjusted-presentation-slide-deck-and-added-power-schematic)
+- [2026-08-28 08:37:05 -0500 - SUCCESS - Established sequential agent execution policy](#elog-20260828083705)
 <!-- END GENERATED TOPIC INDEX -->
 
 ## Entry format
@@ -2053,3 +2054,19 @@ Add new entries at the top of the log below this line.
 - Reason: Avoid misrepresenting uncompleted Pro Micro software milestones, ensure academic objectivity, support interactive visual schematic analysis, present formal test plan progress, provide clear marker definitions, accurately partition future tests by roadmap phase, present a fully verified power subsystem status, align project naming terminology, correct grammatical phrasing on Slide 2, and clarify step-by-step roadmap terminology in the upcoming independent study presentation.
 - Evidence: updated [independent_study_presentation.html](../../independent_study_presentation.html), [power-distribution-schematic.svg](../../power-distribution-schematic.svg), and [power-distribution-schematic.png](../../power-distribution-schematic.png).
 - Next action: run the docs index check tool to regenerate topic links and validate stability.
+
+<a id="elog-20260828083705"></a>
+### 🟩 2026-08-28 08:37:05 -0500 - SUCCESS - Established sequential agent execution policy
+
+- Status: implemented; applies to all future repository work.
+- Category: documentation, project management
+- Summary: The working agreement now assigns bounded routine work to Luna and
+  reserves Sol for judgment-heavy decisions, safety-sensitive work,
+  cross-subsystem tradeoffs, nontrivial diagnosis, and uncertainty review.
+- Result: Agent work is one job at a time in stated order. Parallel,
+  speculative, and background batches are prohibited, and Sol must not be used
+  for overnight, unattended, recurring, or long-running work.
+- Evidence: Owner instruction; `WSW-20260828-001`; `AGENTS.md`; and
+  `docs/START_HERE.md`.
+- Next action: Apply the policy to future tasks and keep any model substitution
+  within the same routine-work versus judgment-work boundary.

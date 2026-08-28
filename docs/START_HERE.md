@@ -51,6 +51,11 @@ Use the documentation level defined in [`../AGENTS.md`](../AGENTS.md). Current
 behavior must stay current, but minor edits do not need duplicate narratives in
 both a change note and the engineering log.
 
+For agent work, use Luna for bounded routine execution and escalate decisions,
+ambiguity, safety-sensitive work, cross-subsystem tradeoffs, and failed checks
+to Sol. Work is strictly sequential: one job at a time, with no parallel or
+background batches. Do not schedule overnight or unattended Sol work.
+
 The same working agreement requires continuous, evidence-based maintenance:
 address local complexity when touching it, record larger technical debt in the
 roadmap, and avoid speculative rewrites.
