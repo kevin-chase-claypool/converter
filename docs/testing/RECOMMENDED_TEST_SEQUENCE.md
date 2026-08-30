@@ -1,8 +1,21 @@
 # Recommended Test Sequence
 
 This is the recommended order for carrying out the existing tests in
-[`TEST_PLAN.md`](TEST_PLAN.md). It is a dependency and safety guide; it does
-not mark any test complete or replace the formal pass conditions.
+[`TEST_PLAN.md`](TEST_PLAN.md). It is a dependency and safety guide with
+explicit stop/go rules; it does not replace the formal measurements or pass
+conditions in the test plan.
+
+## Pass/fail rule
+
+- **Pass / proceed** means the relevant `TEST_PLAN.md` pass condition is met,
+  the exact setup and readings are in a dated lab note, and no safety fault or
+  unresolved anomalous behavior remains. Advance only to the stated dependent
+  test.
+- **Fail or partial / stop** means leave dependent tests unstarted, command the
+  actuator to its safe state or remove power as appropriate, and record the
+  observation, settings, and corrective action in the lab note. A retry starts
+  from the failed test after the cause is addressed; it is never an implicit
+  pass.
 
 ## Order of operations
 
@@ -49,23 +62,44 @@ not mark any test complete or replace the formal pass conditions.
     6 V in both directions. Do not restrain the shaft.
 15. **T-01A — Toolhead geometry and preload reference.** With the toolhead
     unpowered, measure the installed spring, safe compression range, and LIFT
-    reference before allowing the actuator to approach a hard stop.
+    reference before allowing the actuator to approach a hard stop. **Pass / proceed:**
+    all T-01A lengths, force direction, and solid-height margin are recorded;
+    proceed to the basic T-01 direction test. **Fail or partial / stop:** do
+    not power the actuator into the unknown range; correct the geometry or add
+    a guarded travel limit, then repeat T-01A.
 16. **T-01 basic lift/open-loop direction.** Verify safe travel and record
     which motor polarity produces lift versus seek/down. If reversed, swap
-    OUT1/OUT2 *or* reverse the firmware mapping, never both.
+    OUT1/OUT2 *or* reverse the firmware mapping, never both. **Pass / proceed:**
+    lift direction and guarded travel are repeatable; proceed to E-06/E-15.
+    **Fail or partial / stop:** de-energize before a hard stop, correct exactly
+    one direction mapping, and repeat this test.
 17. **E-06 and E-15 — Loaded actuator capability.** Perform the
     current-limited stall test and regulator load/ripple/temperature test only
-    after no-load direction is known.
+    after no-load direction is known. **Pass / proceed:** measured current,
+    driver response, regulator voltage/ripple, and thermal behavior establish a
+    safe loaded electrical envelope; proceed to sensor characterization.
+    **Fail or partial / stop:** do not attempt preload endurance or force-loop
+    testing; resolve the electrical or thermal limit and repeat the failed test.
 18. **E-07 through E-09 — Sensor characterization.** Calibrate the load cell,
     measure HX711 behavior, and validate the TMAG5273 with the intended
-    magnet/geometry.
+    magnet/geometry. **Pass / proceed:** E-07 provides repeatable force units
+    and E-08/E-09 meet their recorded requirements; proceed to T-01B through
+    T-01F. **Fail or partial / stop:** do not interpret raw counts as control
+    force or tune gains; repair/recalibrate the affected sensor and repeat it.
 19. **T-01B through T-01F — Motor/preload physical envelope.** Measure the
     installed force curve, motor hold and retract reserve, pulse response, and
     the resulting controller limits. E-06, E-15, and E-07 are required gates;
     do not use nominal spring dimensions or unloaded N20 current as a force
-    capability result.
+    capability result. **Pass / proceed:** the T-01F envelope has every
+    required value or a documented safe bound, and T-01C/D prove the selected
+    hold and retract commands; proceed to contact seek. **Fail or partial /
+    stop:** retain the relevant commissioning gate, reduce the claimed working
+    range or correct the mechanism, then repeat the failed sub-test.
 20. **T-02 through T-06 — Closed-loop toolhead and faults.** Add contact seek,
-    force hold, and each safe-fault case one at a time.
+    force hold, and each safe-fault case one at a time. **Pass / proceed:**
+    each test meets its formal pass condition and leaves the toolhead safe;
+    proceed only to the next listed toolhead test. **Fail or partial / stop:**
+    leave drawing/integration disabled and resolve the fault path before retry.
 21. **M-01 through M-11 — Motion system.** Begin with one mechanically
     detached axis, then progress through calibration, coordinated motion,
     homing, magnetic scans, and homing fault paths.

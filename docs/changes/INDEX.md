@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-08-30 | `HW-20260830-002` | hardware | planned | [Add Toolhead Test Stop/Go Rules](hardware/2026/2026-08-30-toolhead-test-stop-go-rules.md) |
 | 2026-08-30 | `HW-20260830-001` | hardware, rp23cnc-software | planned | [Plan Toolhead Motor/Preload Physical-Envelope Test](hardware/2026/2026-08-30-toolhead-motor-preload-test-plan.md) |
 | 2026-08-28 | `WSW-20260828-001` | windows-software, rp23cnc-software, hardware | implemented | [Establish sequential agent execution policy](windows-software/2026/2026-08-28-agent-execution-policy.md) |
 | 2026-08-25 | `RPSW-20260825-001` | rp23cnc-software, hardware | planned | [Plan Slow PI Toolhead Force Control](rp23cnc-software/2026/2026-08-25-plan-slow-pi-toolhead-force-control.md) |

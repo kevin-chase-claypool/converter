@@ -163,6 +163,7 @@ Entry details remain only in the chronology.
 - [2026-08-23 - HARDWARE/PLANNED - Plan motor-harness strain-relief CAD](#elog-20260823-plan-motor-harness-strain-relief-cad)
 - [2026-08-25 - RP23CNC-SOFTWARE/PLANNED - Plan slow PI toolhead force control](#elog-20260825-plan-slow-pi-toolhead-force-control)
 - [2026-08-30 - HARDWARE/PLANNED - Plan toolhead motor/preload physical-envelope test](#elog-20260830-plan-toolhead-motor-preload-physical-envelope-test)
+- [2026-08-30 - HARDWARE/PLANNED - Add toolhead test stop/go rules](#elog-20260830-add-toolhead-test-stop-go-rules)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2094,3 +2095,19 @@ Add new entries at the top of the log below this line.
   T-01F; `docs/testing/RECOMMENDED_TEST_SEQUENCE.md`.
 - Next action: Run T-01A unpowered, then complete the remaining sub-tests in
   the documented dependency order and record each attempt in a dated lab note.
+
+<a id="elog-20260830-add-toolhead-test-stop-go-rules"></a>
+### 🟨 2026-08-30 - HARDWARE/PLANNED - Add toolhead test stop/go rules
+
+- Status: documentation clarification only; no test result changed.
+- Category: hardware, toolhead, testing
+- Summary: Added explicit pass/proceed and fail-or-partial/stop decisions to
+  the toolhead portion of the recommended test sequence. T-01A must establish
+  safe geometry before powered motion; loaded motor, sensor, and preload tests
+  each block their dependent test until their formal evidence exists.
+- Reason: A dependency-only order could be read as permission to continue when
+  a test was partial or failed.
+- Evidence: `HW-20260830-002`;
+  `docs/testing/RECOMMENDED_TEST_SEQUENCE.md`.
+- Next action: Start T-01A and record its result in a dated lab note; do not
+  power the actuator into an unmeasured compression range.
