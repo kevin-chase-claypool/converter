@@ -110,6 +110,7 @@
 - [ ] Verify open-loop actuator direction and safe travel. (`T-01`)
 - [x] Implement commissioning-gated BOOT, LIFT, SEEK_CONTACT, HOLD_FORCE, and FAULT states in source. (2026-08-22 compile; bench verification remains.)
 - [x] Add source-level core heartbeat, seek-timeout, sensor, driver, and force-limit faults. (2026-08-22 compile; installed verification remains.)
+- [ ] Establish the motor/preload physical control envelope, including spring force curve, actuator hold/retract reserve, pulse response, and safe controller limits. (`T-01A` through `T-01F`)
 - [ ] Characterize actuator backlash and response.
 - [ ] Implement bounded contact seek. (`T-02`)
 - [ ] Implement proportional or PI force control at the measured sensor rate. (`T-03`)

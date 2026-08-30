@@ -25,6 +25,9 @@ a grblHAL plugin reading a contact input).
 
 ## Open verification
 
+- Complete the T-01A through T-01F motor/preload physical-capability sequence
+  in [`docs/testing/TEST_PLAN.md`](../../docs/testing/TEST_PLAN.md) before
+  choosing travel limits, force limits, LIFT dwell, or correction-pulse bounds.
 - Calibrate the installed HX711/load-cell force slope and final control gains.
 - Complete actuator travel, stall, seek-timeout, and safe-fault testing.
 - Decide whether the later `CONTACT_READY`/`TOOL_FAULT` handshake is necessary

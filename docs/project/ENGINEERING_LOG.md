@@ -162,6 +162,7 @@ Entry details remain only in the chronology.
 - [2026-08-23 - HARDWARE/VERIFIED - Verified X sheath motor-phase isolation](#elog-20260823-verified-x-sheath-motor-phase-isolation)
 - [2026-08-23 - HARDWARE/PLANNED - Plan motor-harness strain-relief CAD](#elog-20260823-plan-motor-harness-strain-relief-cad)
 - [2026-08-25 - RP23CNC-SOFTWARE/PLANNED - Plan slow PI toolhead force control](#elog-20260825-plan-slow-pi-toolhead-force-control)
+- [2026-08-30 - HARDWARE/PLANNED - Plan toolhead motor/preload physical-envelope test](#elog-20260830-plan-toolhead-motor-preload-physical-envelope-test)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2070,3 +2071,26 @@ Add new entries at the top of the log below this line.
   `docs/START_HERE.md`.
 - Next action: Apply the policy to future tasks and keep any model substitution
   within the same routine-work versus judgment-work boundary.
+
+<a id="elog-20260830-plan-toolhead-motor-preload-physical-envelope-test"></a>
+### 🟨 2026-08-30 - HARDWARE/PLANNED - Plan toolhead motor/preload physical-envelope test
+
+- Status: T-01 has been expanded into planned sub-tests; no physical force,
+  spring-rate, motor-capability, or controller-limit result is claimed.
+- Category: hardware, rp23cnc-software, toolhead, testing, force-control
+- Summary: Added T-01A through T-01F to measure the installed spring geometry
+  and force curve, preload, hysteresis, motor static hold, retract reserve,
+  command-to-force response, and the resulting control envelope. The selected
+  spring is nominally 0.027 in wire x 0.295 in OD x 1.19 in free length, but
+  the test requires measurements of the installed part and mechanism.
+- Reason: The N20 must retract against the actual preload and the slow,
+  pulse-based force loop must use measured travel, force, stiction, backlash,
+  thermal, and timing bounds rather than nominal dimensions or unloaded motor
+  current.
+- Safety boundary: E-06, E-15, and E-07 remain gates for loaded conclusions.
+  The test uses guarded travel and a scale/force fixture; it does not hand-stall
+  the actuator or authorize firmware constants before evidence exists.
+- Evidence: `HW-20260830-001`; `docs/testing/TEST_PLAN.md` T-01A through
+  T-01F; `docs/testing/RECOMMENDED_TEST_SEQUENCE.md`.
+- Next action: Run T-01A unpowered, then complete the remaining sub-tests in
+  the documented dependency order and record each attempt in a dated lab note.

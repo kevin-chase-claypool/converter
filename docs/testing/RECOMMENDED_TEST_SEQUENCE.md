@@ -47,24 +47,32 @@ not mark any test complete or replace the formal pass conditions.
 14. **E-05 — N20 no-load current.** After fitting the 22 AWG twisted
    `OUT1`/`OUT2` pair, run the motor mechanically unloaded at
     6 V in both directions. Do not restrain the shaft.
-15. **T-01 — Toolhead lift/open-loop direction.** Verify safe travel and
-    record which motor polarity produces lift versus seek/down. If reversed,
-    swap OUT1/OUT2 *or* reverse the firmware mapping, never both.
-16. **E-06 and E-15 — Loaded actuator capability.** Perform the
+15. **T-01A — Toolhead geometry and preload reference.** With the toolhead
+    unpowered, measure the installed spring, safe compression range, and LIFT
+    reference before allowing the actuator to approach a hard stop.
+16. **T-01 basic lift/open-loop direction.** Verify safe travel and record
+    which motor polarity produces lift versus seek/down. If reversed, swap
+    OUT1/OUT2 *or* reverse the firmware mapping, never both.
+17. **E-06 and E-15 — Loaded actuator capability.** Perform the
     current-limited stall test and regulator load/ripple/temperature test only
     after no-load direction is known.
-17. **E-07 through E-09 — Sensor characterization.** Calibrate the load cell,
+18. **E-07 through E-09 — Sensor characterization.** Calibrate the load cell,
     measure HX711 behavior, and validate the TMAG5273 with the intended
     magnet/geometry.
-18. **T-02 through T-06 — Closed-loop toolhead and faults.** Add contact seek,
+19. **T-01B through T-01F — Motor/preload physical envelope.** Measure the
+    installed force curve, motor hold and retract reserve, pulse response, and
+    the resulting controller limits. E-06, E-15, and E-07 are required gates;
+    do not use nominal spring dimensions or unloaded N20 current as a force
+    capability result.
+20. **T-02 through T-06 — Closed-loop toolhead and faults.** Add contact seek,
     force hold, and each safe-fault case one at a time.
-19. **M-01 through M-11 — Motion system.** Begin with one mechanically
+21. **M-01 through M-11 — Motion system.** Begin with one mechanically
     detached axis, then progress through calibration, coordinated motion,
     homing, magnetic scans, and homing fault paths.
-20. **E-19 — Emergency stop input.** With the pen removed and motion disabled
+22. **E-19 — Emergency stop input.** With the pen removed and motion disabled
     for the first pass, verify SW1 NC-A continuity, RP23CNC Halt/reset behavior,
     NC-compatible input inversion, and no automatic motion restart after release.
-21. **Integrated tests — Full system.** Verify M3/M5 behavior, reset/E-stop
+23. **Integrated tests — Full system.** Verify M3/M5 behavior, reset/E-stop
     safety, timing, jitter/lost-step effects, calibration patterns, and saved
     diagnostics.
 

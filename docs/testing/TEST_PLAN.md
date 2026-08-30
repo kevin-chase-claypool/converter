@@ -131,12 +131,44 @@ the routed U3 return conductor from `LIMA` to `PRB`.
 
 | ID | Test | Pass condition |
 |---|---|---|
-| T-01 | LIFT state | Retracts reliably and stops safely |
+| T-01 | LIFT state and motor/preload physical capability | Every applicable T-01A through T-01F sub-test below is recorded. The chosen LIFT position, command limits, and preload range stay inside the measured mechanical and electrical envelope; retracts repeatably without a fault, hard-stop contact, unacceptable drift, or an uncommanded pen contact. |
 | T-02 | Contact seek | Finds paper before timeout without excessive force |
 | T-03 | Force hold | After E-06, E-07, E-08, T-01, and T-02: a bounded pulse-based P/PI trim loop holds a calibrated target force through (a) stationary contact, (b) X/Y translation, and (c) progressively faster constant A rotation. Define the measured error band before the test; log mean, 95th-percentile absolute error, peak force, pulse count/reversals, and faults. No sustained limit cycle, hard-force trip, or uncommanded contact loss is allowed. Demonstrate that the dominant bed-rotation disturbance is within the measured loop bandwidth; otherwise reduce speed or add mechanical compliance before considering feed-forward. |
 | T-04 | Missing-paper fault | Seek timeout enters FAULT |
 | T-05 | Overforce fault | Immediate safe response |
 | T-06 | Sensor disconnect | Safe response and visible fault |
+
+### T-01 motor/preload physical-capability sub-tests
+
+**Purpose:** establish the measured mechanical, force, motor, and electrical
+limits that the pressure controller must obey. This is a commissioning test,
+not permission to change a firmware constant from a nominal spring dimension.
+The selected spring is nominally 0.027 in wire x 0.295 in outside diameter x
+1.19 in free length; measure the installed part rather than assuming those
+catalogue dimensions are exact.
+
+**Safety gates:** T-01A may be performed unpowered. E-05 and the basic
+open-loop direction portion of T-01 must pass before powered motion. E-06
+(current-limited loaded-actuator test), E-15 (loaded 6 V rail), and E-07
+(repeatable force calibration) must pass before endurance, force-envelope, or
+force-control conclusions are accepted. Use a guarded travel range that stops
+short of both the spring's solid height and the mechanism's hard stops. Keep a
+digital scale or equivalent calibrated force fixture under the pen for every
+loaded test; never hand-stall the actuator.
+
+| Sub-test | Procedure and values to record | Pass condition / resulting control input |
+|---|---|---|
+| **T-01A — geometry and preload reference** | With power off, measure actual free spring length `L_free`, installed spring length at LIFT `L_lift`, at first pen contact `L_contact`, and at the greatest intended compression `L_min`. Record spring solid length `L_solid` from a manufacturer specification or a cautious dedicated compression measurement. Record the direction of compression as the motor retracts. Calculate `x = L_free - L`, `x_lift`, `x_contact`, `x_max`, and the remaining solid-height margin `L_min - L_solid`. Photograph/mark the repeatable LIFT reference. | Every length, force direction, and safe travel endpoint is known; `L_min` remains above `L_solid` with a documented mechanical margin. These values set the firmware travel soft limits and identify whether retract increases or decreases preload. |
+| **T-01B — installed spring force curve and hysteresis** | At no fewer than five evenly spaced compression points from the least to greatest intended compression, measure force with the spring installed in its real force path. Run at least three increasing/decreasing cycles, returning to the LIFT reference between cycles. Record applied force, length/position, load-cell raw reading, and any guide or linkage motion. Fit or tabulate the local force curve; do not assume a single linear rate if the mechanism is nonlinear. | Determine `F_preload = F(x_lift)`, `F_min`, `F_max`, effective spring rate or lookup table, and increasing/decreasing-path hysteresis. The intended force range is inside the measured range without coil bind or force-path slip. |
+| **T-01C — static motor hold against preload** | After E-06 and E-15, command the motor to the worst intended opposing-spring position, not a hard stop. At nominal 6 V, record actuator position, pen force, rail voltage, motor/driver current, and motor/driver/regulator temperature at the start and after a defined hold dwell. Repeat once with the driver disabled only if the intended LIFT/HOLD design allows it, to determine back-drive or creep. | The intended powered hold mode maintains the required position/clearance for the defined dwell with no driver fault, rail collapse, excessive temperature, or drift beyond the documented LIFT-repeatability tolerance. The result explicitly states whether the driver may sleep or must remain energized. |
+| **T-01D — retract motion reserve** | Starting from the greatest intended opposing-spring force, increase retract pulse width/PWM or speed in small documented steps. At each setting record retract time, current peak, position reached, force/clearance, and any driver fault. At the selected setting, perform at least 30 full LIFT-to-work-range-to-LIFT cycles with the normal payload. | Select a retract command below the first unreliable setting, with documented force/current/thermal margin. All 30 cycles reach the LIFT reference without a fault, hard-stop contact, lost reference, or uncommanded pen contact. This sets maximum retract effort, timing, and the minimum M5 dwell. |
+| **T-01E — command-to-force and pulse response map** | With E-07 calibration active and a scale under the pen, collect small up/down pulse tests at the intended preload and at the low, nominal, and high planned pen-force regions. For each, record command direction, PWM, pulse width, initial/final position, initial/final force, delay to response, settle time, overshoot, and reversal/backlash effect. | Establish the smallest repeatable pulse, force change per pulse, deadband, maximum safe pulse, directional backlash, and settle delay. These measured values bound pulse duration, correction rate, deadband, and anti-windup behavior for T-03. |
+| **T-01F — control-envelope record** | Consolidate the measurements in the lab note into one configuration table: `L_free`, `L_solid`, `L_lift`, `L_contact`, `x_lift`, `x_max`, solid-height margin, force curve/rate, `F_preload`, pen-force target range, hysteresis, friction/stiction threshold, backlash, minimum/maximum pulse, retract time, maximum tested current, rail-voltage minimum, temperatures, hold drift, and selected dwell. State the source/test date for each value. | The table supplies every non-TBD physical value needed to configure force limits, travel limits, seek timeout, pulse bounds, correction cadence, LIFT dwell, and the T-03 acceptance band. Any unknown or failed value remains a commissioning gate rather than a firmware assumption. |
+
+For every T-01 sub-test, use the lab-note template and include the exact test
+sketch/build, supply current limit, PWM/pulse settings, instruments, raw
+readings, photos, and unsuccessful attempts. Do not start T-02 or tune T-03
+until T-01F identifies a safe working envelope.
 
 ## Integrated tests
 
