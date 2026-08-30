@@ -156,6 +156,14 @@ short of both the spring's solid height and the mechanism's hard stops. Keep a
 digital scale or equivalent calibrated force fixture under the pen for every
 loaded test; never hand-stall the actuator.
 
+**Current proposed LIFT datum (2026-08-30):** the owner measured
+`L_free = 1.190 in` and selected `x_lift = 0.535 in` as the proposed LIFT
+compression, yielding `L_lift = 0.655 in`. At that position the pen tip was
+measured 0.1885 in above the bed. A mechanical pen stop integrated into the
+pen mount is planned so the pen seats at a repeatable height. T-01A remains
+partial until `L_solid` is measured/verified and the 0.655 in installed length
+is shown to retain a documented solid-height margin.
+
 | Sub-test | Procedure and values to record | Pass condition / resulting control input |
 |---|---|---|
 | **T-01A — geometry and preload reference** | With power off, measure actual free spring length `L_free`, installed spring length at LIFT `L_lift`, at first pen contact `L_contact`, and at the greatest intended compression `L_min`. Record spring solid length `L_solid` from a manufacturer specification or a cautious dedicated compression measurement. Record the direction of compression as the motor retracts. Calculate `x = L_free - L`, `x_lift`, `x_contact`, `x_max`, and the remaining solid-height margin `L_min - L_solid`. Photograph/mark the repeatable LIFT reference. | Every length, force direction, and safe travel endpoint is known; `L_min` remains above `L_solid` with a documented mechanical margin. These values set the firmware travel soft limits and identify whether retract increases or decreases preload. |

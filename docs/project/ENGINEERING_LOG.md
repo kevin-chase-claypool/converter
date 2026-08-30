@@ -165,6 +165,7 @@ Entry details remain only in the chronology.
 - [2026-08-30 - HARDWARE/PLANNED - Plan toolhead motor/preload physical-envelope test](#elog-20260830-plan-toolhead-motor-preload-physical-envelope-test)
 - [2026-08-30 - HARDWARE/PLANNED - Add toolhead test stop/go rules](#elog-20260830-add-toolhead-test-stop-go-rules)
 - [2026-08-30 - HARDWARE/PARTIAL - Record preliminary toolhead preload current](#elog-20260830-record-preliminary-toolhead-preload-current)
+- [2026-08-30 - HARDWARE/PARTIAL - Set proposed toolhead LIFT datum](#elog-20260830-set-proposed-toolhead-lift-datum)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2135,3 +2136,21 @@ Add new entries at the top of the log below this line.
 - Next action: Complete T-01A measurements, then repeat at the intended maximum
   working compression with a recorded supply limit and a peak-capable current
   measurement.
+
+<a id="elog-20260830-set-proposed-toolhead-lift-datum"></a>
+### 🟨 2026-08-30 - HARDWARE/PARTIAL - Set proposed toolhead LIFT datum
+
+- Status: proposed geometry measured; pen stop and solid-height verification
+  remain open.
+- Category: hardware, toolhead, spring, preload, testing
+- Summary: The owner measured the spring at 1.190 in free length and selected
+  0.535 in compression for the proposed LIFT position. The installed spring
+  length is therefore 0.655 in, and the pen tip measured 0.1885 in above the
+  bed. An integrated pen-mount stop is planned to make pen insertion height
+  repeatable.
+- Evidence boundary: This does not establish the spring solid length, coil-bind
+  margin, working contact force, or a safe firmware limit.
+- Evidence: `HW-20260830-004`;
+  `docs/report/lab-notes/2026-08-30-t-01a-toolhead-lift-datum.md`.
+- Next action: Build and verify the pen stop, then measure `L_solid` and
+  document the margin before treating this LIFT position as safe.

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-08-30 | `HW-20260830-004` | planned | [Set Proposed Toolhead Lift Datum](2026/2026-08-30-set-toolhead-lift-datum.md) | `toolhead`, `spring`, `preload`, `lift`, `pen-stop` |
 | 2026-08-30 | `HW-20260830-003` | planned | [Record Preliminary Toolhead Preload Current](2026/2026-08-30-record-preliminary-toolhead-preload-current.md) | `toolhead`, `n20`, `preload`, `current`, `testing` |
 | 2026-08-30 | `HW-20260830-002` | planned | [Add Toolhead Test Stop/Go Rules](2026/2026-08-30-toolhead-test-stop-go-rules.md) | `toolhead`, `testing`, `safety`, `preload` |
 | 2026-08-30 | `HW-20260830-001` | planned | [Plan Toolhead Motor/Preload Physical-Envelope Test](2026/2026-08-30-toolhead-motor-preload-test-plan.md) | `toolhead`, `preload`, `spring`, `n20`, `force-control`, `test-plan` |
