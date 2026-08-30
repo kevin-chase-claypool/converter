@@ -170,6 +170,16 @@ sketch/build, supply current limit, PWM/pulse settings, instruments, raw
 readings, photos, and unsuccessful attempts. Do not start T-02 or tune T-03
 until T-01F identifies a safe working envelope.
 
+**Preliminary observation (2026-08-30):** with the spring installed, the owner
+reported approximately 0.019-0.050 A during retraction and 0.18 A at the
+reported fully compressed end condition. This is encouraging qualitative
+evidence that the present spring does not cause an immediate high-current
+retract, but it is not an E-06 stall-current result or a T-01C/T-01D pass:
+supply voltage/current limit, PWM, meter bandwidth, spring length, end-stop
+condition, and temperatures were not recorded. Do not use a fully compressed
+spring as a normal operating point. See
+[`2026-08-30-t-01-preload-current-observation.md`](../report/lab-notes/2026-08-30-t-01-preload-current-observation.md).
+
 ## Integrated tests
 
 - M3 seeks contact and reaches stable force before drawing.

@@ -164,6 +164,7 @@ Entry details remain only in the chronology.
 - [2026-08-25 - RP23CNC-SOFTWARE/PLANNED - Plan slow PI toolhead force control](#elog-20260825-plan-slow-pi-toolhead-force-control)
 - [2026-08-30 - HARDWARE/PLANNED - Plan toolhead motor/preload physical-envelope test](#elog-20260830-plan-toolhead-motor-preload-physical-envelope-test)
 - [2026-08-30 - HARDWARE/PLANNED - Add toolhead test stop/go rules](#elog-20260830-add-toolhead-test-stop-go-rules)
+- [2026-08-30 - HARDWARE/PARTIAL - Record preliminary toolhead preload current](#elog-20260830-record-preliminary-toolhead-preload-current)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2111,3 +2112,26 @@ Add new entries at the top of the log below this line.
   `docs/testing/RECOMMENDED_TEST_SEQUENCE.md`.
 - Next action: Start T-01A and record its result in a dated lab note; do not
   power the actuator into an unmeasured compression range.
+
+<a id="elog-20260830-record-preliminary-toolhead-preload-current"></a>
+### 🟨 2026-08-30 - HARDWARE/PARTIAL - Record preliminary toolhead preload current
+
+- Status: preliminary retract-current observation recorded; E-06 and T-01
+  remain open.
+- Category: hardware, toolhead, n20, preload, testing
+- Summary: With the spring installed, the owner reported approximately
+  0.019-0.050 A while retracting and 0.18 A at the reported fully compressed
+  end condition. The current rise occurs where the motor is opposing the
+  greatest observed spring load.
+- Evidence boundary: The setup did not record supply/current limit, PWM,
+  spring compression, meter bandwidth, peak current, force, or temperature.
+  This does not establish stall current, driver margin, spring solid-height
+  margin, continuous holding capability, or a safe firmware limit.
+- Safety boundary: Do not operate at a fully compressed spring condition.
+  Establish the guarded working end point, then run E-06/T-01C/T-01D with a
+  current-limited supply and recorded thermal/force evidence.
+- Evidence: `HW-20260830-003`;
+  `docs/report/lab-notes/2026-08-30-t-01-preload-current-observation.md`.
+- Next action: Complete T-01A measurements, then repeat at the intended maximum
+  working compression with a recorded supply limit and a peak-capable current
+  measurement.
