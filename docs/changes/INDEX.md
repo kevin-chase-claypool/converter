@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-08-30 | `HW-20260830-005` | hardware, rp23cnc-software | planned | [Plan Toolhead LIFT-Home Switch](hardware/2026/2026-08-30-plan-toolhead-lift-home-switch.md) |
 | 2026-08-30 | `HW-20260830-004` | hardware | planned | [Set Proposed Toolhead Lift Datum](hardware/2026/2026-08-30-set-toolhead-lift-datum.md) |
 | 2026-08-30 | `HW-20260830-003` | hardware | planned | [Record Preliminary Toolhead Preload Current](hardware/2026/2026-08-30-record-preliminary-toolhead-preload-current.md) |
 | 2026-08-30 | `HW-20260830-002` | hardware | planned | [Add Toolhead Test Stop/Go Rules](hardware/2026/2026-08-30-toolhead-test-stop-go-rules.md) |

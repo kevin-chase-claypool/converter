@@ -166,6 +166,7 @@ Entry details remain only in the chronology.
 - [2026-08-30 - HARDWARE/PLANNED - Add toolhead test stop/go rules](#elog-20260830-add-toolhead-test-stop-go-rules)
 - [2026-08-30 - HARDWARE/PARTIAL - Record preliminary toolhead preload current](#elog-20260830-record-preliminary-toolhead-preload-current)
 - [2026-08-30 - HARDWARE/PARTIAL - Set proposed toolhead LIFT datum](#elog-20260830-set-proposed-toolhead-lift-datum)
+- [2026-08-30 - HARDWARE/PLANNED - Plan toolhead LIFT-home switch](#elog-20260830-plan-toolhead-lift-home-switch)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2154,3 +2155,26 @@ Add new entries at the top of the log below this line.
   `docs/report/lab-notes/2026-08-30-t-01a-toolhead-lift-datum.md`.
 - Next action: Build and verify the pen stop, then measure `L_solid` and
   document the margin before treating this LIFT position as safe.
+
+<a id="elog-20260830-plan-toolhead-lift-home-switch"></a>
+### 🟨 2026-08-30 - HARDWARE/PLANNED - Plan toolhead LIFT-home switch
+
+- Status: proposed local position-reference circuit; no connection or powered
+  test has been completed.
+- Category: hardware, rp23cnc-software, toolhead, lift-home, testing
+- Summary: The owner identified microswitch terminals `1` and `3` as the
+  intended COM/NO pair for a normally-open LIFT-home switch. The proposed dry
+  contact connects only between Pro Micro RP2350 `GP2` and `TOOL_GND`; the
+  firmware will use an internal pullup, making pressed read LOW.
+- Reason: The pen carriage rides a linear rail and its spring compression does
+  not change the floating load-cell reading, so the load cell cannot establish
+  retracted height.
+- Safety boundary: The switch is an electrical reference, not a hard stop. A
+  mechanical backstop and verified spring solid-height margin remain mandatory;
+  do not connect 5 V, 6 V, or PC817C `CTRL_GND` to this input.
+- Evidence: `HW-20260830-005`;
+  `docs/report/lab-notes/2026-08-30-t-01g-lift-home-switch-terminal-identification.md`;
+  T-01G planned.
+- Next action: Meter-check the released/pressed contact behavior, install the
+  switch and moving flag, then perform the ten-cycle guarded T-01G test before
+  enabling firmware homing.

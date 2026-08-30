@@ -67,26 +67,34 @@ conditions in the test plan.
     proceed to the basic T-01 direction test. **Fail or partial / stop:** do
     not power the actuator into the unknown range; correct the geometry or add
     a guarded travel limit, then repeat T-01A.
-16. **T-01 basic lift/open-loop direction.** Verify safe travel and record
+16. **T-01G — LIFT-home switch.** With the actuator guarded, meter-check the
+    planned terminals `1` and `3`, then verify the `GP2` input reads LOW only
+    when the moving-carriage flag presses the fixed switch. Run ten slow
+    retracts and record the trigger/release positions. **Pass / proceed:** all
+    ten transitions are repeatable and occur before the mechanical backstop;
+    proceed to the basic T-01 direction test. **Fail or partial / stop:** keep
+    the input out of firmware control, correct the switch/flag geometry or
+    wiring, and repeat T-01G.
+17. **T-01 basic lift/open-loop direction.** Verify safe travel and record
     which motor polarity produces lift versus seek/down. If reversed, swap
     OUT1/OUT2 *or* reverse the firmware mapping, never both. **Pass / proceed:**
     lift direction and guarded travel are repeatable; proceed to E-06/E-15.
     **Fail or partial / stop:** de-energize before a hard stop, correct exactly
     one direction mapping, and repeat this test.
-17. **E-06 and E-15 — Loaded actuator capability.** Perform the
+18. **E-06 and E-15 — Loaded actuator capability.** Perform the
     current-limited stall test and regulator load/ripple/temperature test only
     after no-load direction is known. **Pass / proceed:** measured current,
     driver response, regulator voltage/ripple, and thermal behavior establish a
     safe loaded electrical envelope; proceed to sensor characterization.
     **Fail or partial / stop:** do not attempt preload endurance or force-loop
     testing; resolve the electrical or thermal limit and repeat the failed test.
-18. **E-07 through E-09 — Sensor characterization.** Calibrate the load cell,
+19. **E-07 through E-09 — Sensor characterization.** Calibrate the load cell,
     measure HX711 behavior, and validate the TMAG5273 with the intended
     magnet/geometry. **Pass / proceed:** E-07 provides repeatable force units
     and E-08/E-09 meet their recorded requirements; proceed to T-01B through
     T-01F. **Fail or partial / stop:** do not interpret raw counts as control
     force or tune gains; repair/recalibrate the affected sensor and repeat it.
-19. **T-01B through T-01F — Motor/preload physical envelope.** Measure the
+20. **T-01B through T-01F — Motor/preload physical envelope.** Measure the
     installed force curve, motor hold and retract reserve, pulse response, and
     the resulting controller limits. E-06, E-15, and E-07 are required gates;
     do not use nominal spring dimensions or unloaded N20 current as a force
@@ -95,18 +103,18 @@ conditions in the test plan.
     hold and retract commands; proceed to contact seek. **Fail or partial /
     stop:** retain the relevant commissioning gate, reduce the claimed working
     range or correct the mechanism, then repeat the failed sub-test.
-20. **T-02 through T-06 — Closed-loop toolhead and faults.** Add contact seek,
+21. **T-02 through T-06 — Closed-loop toolhead and faults.** Add contact seek,
     force hold, and each safe-fault case one at a time. **Pass / proceed:**
     each test meets its formal pass condition and leaves the toolhead safe;
     proceed only to the next listed toolhead test. **Fail or partial / stop:**
     leave drawing/integration disabled and resolve the fault path before retry.
-21. **M-01 through M-11 — Motion system.** Begin with one mechanically
+22. **M-01 through M-11 — Motion system.** Begin with one mechanically
     detached axis, then progress through calibration, coordinated motion,
     homing, magnetic scans, and homing fault paths.
-22. **E-19 — Emergency stop input.** With the pen removed and motion disabled
+23. **E-19 — Emergency stop input.** With the pen removed and motion disabled
     for the first pass, verify SW1 NC-A continuity, RP23CNC Halt/reset behavior,
     NC-compatible input inversion, and no automatic motion restart after release.
-23. **Integrated tests — Full system.** Verify M3/M5 behavior, reset/E-stop
+24. **Integrated tests — Full system.** Verify M3/M5 behavior, reset/E-stop
     safety, timing, jitter/lost-step effects, calibration patterns, and saved
     diagnostics.
 
