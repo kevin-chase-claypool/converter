@@ -24,6 +24,10 @@ one pen-clear position can produce the same no-contact force.
 - `LIFT_HOME` is a separate full-retract action for boot, recovery, and service
   only. It uses the planned normally-open GP2 switch input; it is not a normal
   per-stroke M5 feedback signal.
+- The accepted scale-derived force profile is versioned and stored
+  nonvolatilely only through an explicit service calibration commit. Each boot
+  takes a fresh RAM-only no-contact baseline after `LIFT_HOME`; it never
+  rewrites that profile.
 - The mechanical backstop remains independent of GP2. The switch establishes a
   reference position; it is not a load-bearing stop.
 
@@ -41,5 +45,8 @@ it.
   SEEK_CONTACT -> HOLD_FORCE`, with guarded fault transitions.
 - T-01G verifies GP2 `LIFT_HOME`; T-01H verifies M5 release hysteresis,
   debounce, clearance pulse, pen-tip gap, and 30-cycle repeatability.
+- T-01I verifies the saved profile across power cycles, force checks against
+  the scale, and the separation between persistent calibration and RAM-only
+  startup drift compensation.
 - Firmware stays commissioning-gated until those tests and load-cell force
   calibration succeed.

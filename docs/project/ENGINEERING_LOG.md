@@ -168,6 +168,7 @@ Entry details remain only in the chronology.
 - [2026-08-30 - HARDWARE/PARTIAL - Set proposed toolhead LIFT datum](#elog-20260830-set-proposed-toolhead-lift-datum)
 - [2026-08-30 - HARDWARE/PLANNED - Plan toolhead LIFT-home switch](#elog-20260830-plan-toolhead-lift-home-switch)
 - [2026-09-01 - MIXED/PLANNED - Separate normal pen clear from LIFT home](#elog-20260901-separate-normal-pen-clear-from-lift-home)
+- [2026-09-01 - MIXED/PLANNED - Persist toolhead force profile separately from boot baseline](#elog-20260901-persist-toolhead-force-profile-separately-from-boot-baseline)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2207,3 +2208,25 @@ Add new entries at the top of the log below this line.
   `F_contact_on`/`F_release_off`, debounce, the clearance-pulse command, and
   30-cycle pen-clear evidence. Keep the normal M5 behavior commissioning-gated
   until that result exists.
+
+<a id="elog-20260901-persist-toolhead-force-profile-separately-from-boot-baseline"></a>
+### 🟨 2026-09-01 - MIXED/PLANNED - Persist toolhead force profile separately from boot baseline
+
+- Status: calibration-storage acceptance plan recorded; no profile has been
+  stored, loaded, or validated on hardware.
+- Category: hardware, rp23cnc-software, toolhead, load-cell, calibration,
+  nonvolatile-storage, testing
+- Summary: T-01I now requires the scale-derived force profile to be committed
+  through an explicit service action and survive five power cycles. Every boot
+  then takes a fresh RAM-only no-contact baseline after `LIFT_HOME`; it may
+  compensate drift but may never overwrite the accepted profile.
+- Reason: Normal operation needs calibrated force values to remain available,
+  while automatic re-calibration from an unloaded reading could hide sensor or
+  mechanism faults and corrupt the known scale mapping.
+- Safety boundary: Profile schema/checksum, force tolerances, and baseline/noise
+  bounds are TBD until E-07, T-01E, and T-01H provide measured evidence. An
+  invalid profile or implausible baseline must keep force control disabled.
+- Evidence: `HW-20260901-002`; `docs/testing/TEST_PLAN.md` T-01I; and
+  `firmware/pen_pressure/CONTROL_STRATEGY.md`.
+- Next action: Complete the existing scale and pulse tests, define the profile
+  fields/limits, then run T-01I before enabling persistent force control.

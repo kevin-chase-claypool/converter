@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-01 | `HW-20260901-002` | hardware, rp23cnc-software | planned | [Persist Toolhead Force Profile Separately from Boot Baseline](hardware/2026/2026-09-01-persist-toolhead-force-profile.md) |
 | 2026-09-01 | `HW-20260901-001` | hardware, rp23cnc-software | planned | [Separate Normal Pen Clear from LIFT Home](hardware/2026/2026-09-01-separate-pen-clear-from-lift-home.md) |
 | 2026-08-30 | `HW-20260830-005` | hardware, rp23cnc-software | planned | [Plan Toolhead LIFT-Home Switch](hardware/2026/2026-08-30-plan-toolhead-lift-home-switch.md) |
 | 2026-08-30 | `HW-20260830-004` | hardware | planned | [Set Proposed Toolhead Lift Datum](hardware/2026/2026-08-30-set-toolhead-lift-datum.md) |

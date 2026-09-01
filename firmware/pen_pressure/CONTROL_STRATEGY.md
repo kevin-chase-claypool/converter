@@ -54,6 +54,21 @@ clearance. If release is not observed before the configured command/travel
 limit, enter `FAULT`; do not continue retracting toward the home switch during
 an ordinary M5.
 
+## Calibration profile and boot baseline
+
+After E-07, T-01E, and T-01H pass, commit one versioned, checksummed
+nonvolatile calibration profile through an explicit local service action. The
+profile includes the accepted force conversion/slope, signed direction,
+`F_contact_on`, `F_release_off`, `F_target`, `F_max`, debounce, correction-pulse
+bounds, and M5 clearance-pulse bounds. Never write it as a side effect of a
+normal M3/M5 cycle or boot.
+
+After each verified `LIFT_HOME`, collect a short no-contact HX711 baseline in
+RAM. Use that temporary residual only to compensate startup drift. It must not
+replace the stored calibration profile. Reject force control and report a fault
+if the stored profile is absent, has a bad checksum/version, or the startup
+baseline is implausible/noisy under the T-01I acceptance limits.
+
 ## Controller development order
 
 1. Open-loop motor direction and travel limits.

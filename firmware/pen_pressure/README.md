@@ -30,7 +30,7 @@ a grblHAL plugin reading a contact input).
 
 ## Open verification
 
-- Complete the T-01A through T-01H motor/preload physical-capability sequence
+- Complete the T-01A through T-01I motor/preload physical-capability sequence
   in [`docs/testing/TEST_PLAN.md`](../../docs/testing/TEST_PLAN.md) before
   choosing travel limits, force limits, LIFT dwell, or correction-pulse bounds.
 - Do not enable a firmware LIFT_HOME reference until T-01G verifies the planned
@@ -38,6 +38,9 @@ a grblHAL plugin reading a contact input).
   backstop margin.
 - Do not enable normal M5 `PEN_CLEAR` until T-01H verifies the release
   hysteresis, debounce, calibrated clearance pulse, and actual pen-tip gap.
+- Do not enable stored force-control parameters until T-01I proves that the
+  accepted profile survives power cycles and that a fresh no-contact baseline
+  stays RAM-only.
 - Calibrate the installed HX711/load-cell force slope and final control gains.
 - Complete actuator travel, stall, seek-timeout, and safe-fault testing.
 - Decide whether the later `CONTACT_READY`/`TOOL_FAULT` handshake is necessary

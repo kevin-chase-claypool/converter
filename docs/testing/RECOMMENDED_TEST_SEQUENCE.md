@@ -95,15 +95,17 @@ conditions in the test plan.
     and E-08/E-09 meet their recorded requirements; proceed to T-01B through
     T-01F. **Fail or partial / stop:** do not interpret raw counts as control
     force or tune gains; repair/recalibrate the affected sensor and repeat it.
-20. **T-01B through T-01H — Motor/preload and M5-clear physical envelope.**
+20. **T-01B through T-01I — Motor/preload, M5-clear, and calibration-profile
+    envelope.**
     Measure the installed force curve, motor hold and retract reserve, pulse
     response, normal M5 load-cell release hysteresis, clearance pulse, and the
     resulting controller limits. E-06, E-15, and E-07 are required gates; do
     not use nominal spring dimensions or unloaded N20 current as a force
     capability result. **Pass / proceed:** the T-01F envelope has every
     required value or a documented safe bound, T-01C/D prove the selected hold
-    and retract commands, and T-01H proves that normal M5 creates pen clearance
-    without reaching the LIFT-home switch; proceed to contact seek. **Fail or
+    and retract commands, T-01H proves that normal M5 creates pen clearance
+    without reaching the LIFT-home switch, and T-01I proves profile persistence
+    plus a RAM-only startup baseline; proceed to contact seek. **Fail or
     partial / stop:** retain the relevant commissioning gate, reduce the
     claimed working range or correct the mechanism, then repeat the failed
     sub-test.
