@@ -16,9 +16,12 @@
 ## Mechanical intent
 
 The switch will be fixed to the upper toolhead structure. A block/flag on the
-moving linear-rail carriage will press it at the proposed LIFT reference of
-`x_lift = 0.535 in` spring compression. A distinct mechanical backstop remains
-required after the electrical trigger and before spring solid height.
+moving linear-rail carriage will press it at the proposed `LIFT_HOME` reference
+of `x_lift = 0.535 in` spring compression. It is used only at boot, recovery,
+or an explicit service action; ordinary high-cycle M5 operations stop from the
+load-cell release threshold plus a separate calibrated clearance pulse. A
+distinct mechanical backstop remains required after the electrical trigger and
+before spring solid height.
 
 ## Required verification
 

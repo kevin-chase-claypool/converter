@@ -5,20 +5,54 @@
 - `ENGAGE`: derived from grblHAL M3/M5 output.
 - Load-cell force through HX711.
 - Position/reference data through TMAG5273.
-- Optional hard limit switches.
+- Planned `GP2` LIFT-home switch for an occasional absolute lift reference.
 
 ## Output
 
 Bidirectional PWM or phase/enable command to the DRV8833 driving the 6 V N20
 threaded gearmotor.
 
-## State machine
+## Planned state machine
+
+This is the commissioning-gated target behavior. The current firmware must not
+claim these thresholds or positions until T-01G and T-01H provide their measured
+inputs.
 
 1. `BOOT`: initialize outputs in a safe state and validate sensors.
-2. `LIFT`: retract to a verified safe position; ignore force-control demand.
-3. `SEEK_CONTACT`: descend with bounded command until force threshold.
-4. `HOLD_FORCE`: regulate contact force.
-5. `FAULT`: stop or retract according to the verified safest mechanical response.
+2. `LIFT_HOME`: on boot, recovery, or an explicit service request only, retract
+   to the `GP2` switch reference; ignore force-control demand.
+3. `PEN_CLEAR`: the normal `M5` state. Retract until the filtered force returns
+   to the measured no-contact release band, then apply one bounded, calibrated
+   extra lift pulse to create clearance above the paper.
+4. `SEEK_CONTACT`: descend with bounded command until force threshold.
+5. `HOLD_FORCE`: regulate contact force.
+6. `FAULT`: stop or retract according to the verified safest mechanical response.
+
+`PEN_CLEAR` is not an absolute actuator position. Its load-cell transition
+proves that the pen has released the paper; the measured clearance pulse then
+creates the required travel gap. `LIFT_HOME` is the absolute position reference
+used at startup and recovery. Do not make normal high-cycle `M5` motions travel
+to the home switch.
+
+## M3/M5 force transitions
+
+The M3/M5 input requests a mode; it does not directly set N20 polarity or a
+fixed motor duration.
+
+- `M3` requests `SEEK_CONTACT`. Start from `PEN_CLEAR`, descend slowly, and
+  declare contact only after the filtered force crosses `F_contact_on`.
+- `M5` requests `PEN_CLEAR`. Retract until the filtered force stays below
+  `F_release_off` for the configured debounce interval, then issue the bounded
+  `t_clear`/pulse command and stop the actuator.
+- `F_contact_on` and `F_release_off` are distinct hysteresis thresholds. Both
+  must be derived from the installed, signed load-cell force units and current
+  no-contact residual; raw HX711 zero is not a valid threshold.
+
+The T-01H characterization test must establish `F_contact_on`,
+`F_release_off`, debounce, the clearance-pulse bound, and the resulting pen-tip
+clearance. If release is not observed before the configured command/travel
+limit, enter `FAULT`; do not continue retracting toward the home switch during
+an ordinary M5.
 
 ## Controller development order
 

@@ -3,16 +3,21 @@
 Independent closed-loop control of pen contact force, on its own MCU. Driven by
 the grblHAL spindle-enable line as a **mode override**, not a position command.
 
-## Behavior
+## Planned behavior
 
-- **LIFT** (input = M5): drive the pen actuator open-loop to a safe retract
-  height; force loop paused. Report `pen_is_lifted` when there.
+- **PEN_CLEAR** (input = M5): retract until the filtered load-cell value returns
+  to its measured no-contact release band, then apply one bounded, calibrated
+  clearance pulse. The force loop is paused and `pen_is_clear` is reported.
 - **ENGAGE** (input = M3): release the override; seek down slowly until the load
   cell crosses the contact threshold, then hold target force, tracking paper/bed
   unevenness while drawing. Report `pen_in_contact` once settled.
+- **LIFT_HOME** (boot/recovery/service only): retract fully until the planned
+  `GP2` switch reference is reached. This establishes an absolute lift datum;
+  it is not the normal high-cycle M5 operation.
 
-The host's `G4` dwell after M3/M5 gives this loop time to reach the LIFT/ENGAGE
-state before motion resumes (open-loop handshake). A later upgrade: feed-hold
+The host's `G4` dwell after M3/M5 gives this loop time to reach the
+`PEN_CLEAR`/`ENGAGE` state before motion resumes (open-loop handshake). A later
+upgrade: feed-hold
 grblHAL until `pen_in_contact` is asserted (true closed-loop handshake, e.g., via
 a grblHAL plugin reading a contact input).
 
@@ -25,12 +30,14 @@ a grblHAL plugin reading a contact input).
 
 ## Open verification
 
-- Complete the T-01A through T-01G motor/preload physical-capability sequence
+- Complete the T-01A through T-01H motor/preload physical-capability sequence
   in [`docs/testing/TEST_PLAN.md`](../../docs/testing/TEST_PLAN.md) before
   choosing travel limits, force limits, LIFT dwell, or correction-pulse bounds.
-- Do not enable a firmware LIFT-home reference until T-01G verifies the planned
-  `GP2`/`TOOL_GND` normally-open switch input and its separate mechanical
+- Do not enable a firmware LIFT_HOME reference until T-01G verifies the planned
+  `GP2`/`TOOL_GND` normally-open switch input and separate mechanical
   backstop margin.
+- Do not enable normal M5 `PEN_CLEAR` until T-01H verifies the release
+  hysteresis, debounce, calibrated clearance pulse, and actual pen-tip gap.
 - Calibrate the installed HX711/load-cell force slope and final control gains.
 - Complete actuator travel, stall, seek-timeout, and safe-fault testing.
 - Decide whether the later `CONTACT_READY`/`TOOL_FAULT` handshake is necessary

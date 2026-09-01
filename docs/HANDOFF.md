@@ -438,7 +438,7 @@ grblHAL setup tasks (config, not parser code):
    serpentine TMAG raster and G54 A from two outer-magnet observations. Keep the
    installed GP27/U3 return on `LIMA` until F-08 authorizes `PRB` retermination.
 4. Wire grblHAL **spindle/tool output pin → pen pressure subsystem** as the override line:
-   M3 = ENGAGE, M5 = LIFT.
+   M3 = ENGAGE, M5 = PEN_CLEAR.
 5. **Settle handshake — DONE on the converter side.** `contours_to_gcode` now emits direction-specific
    dwells after M3/M5 in non-Z pen mode: M5 / `Pen up ms` defaults to `G4 P0.3`, and M3 /
    `Pen down ms` defaults to `G4 P0.6`, via `append_pen_dwell`. So grblHAL pauses for the pen to
@@ -458,8 +458,13 @@ grblHAL setup tasks (config, not parser code):
 Pen pressure system (independent of grblHAL):
 - Closed loop: load cell → force PID → pen motor, holds target contact force and tracks paper/bed
   unevenness while drawing. Driven by the spindle-enable signal as a **mode override**:
-  - `LIFT` (M5) = drive actuator open-loop to a safe retract height, force loop paused.
-  - `ENGAGE` (M3) = release override; seek down slowly until the load cell trips, then hold force.
+  - `PEN_CLEAR` (normal M5) = retract until the filtered force returns to the
+    measured no-contact release band, apply a calibrated clearance pulse, then
+    pause the force loop.
+  - `ENGAGE` (M3) = release override; seek down slowly until the filtered force
+    crosses the contact threshold, then hold force.
+  - `LIFT_HOME` = the separate full-retract GP2 switch reference for boot,
+    recovery, and service; it is not a per-stroke M5 operation.
 - **Placement:** run it on the toolhead-mounted **SparkFun Pro Micro RP2350**
   that listens to the spindle/tool output line. This is the accepted placement
   because grblHAL owns RP23CNC motion timing. A future READY/FAULT handshake

@@ -70,11 +70,12 @@ conditions in the test plan.
 16. **T-01G — LIFT-home switch.** With the actuator guarded, meter-check the
     planned terminals `1` and `3`, then verify the `GP2` input reads LOW only
     when the moving-carriage flag presses the fixed switch. Run ten slow
-    retracts and record the trigger/release positions. **Pass / proceed:** all
-    ten transitions are repeatable and occur before the mechanical backstop;
-    proceed to the basic T-01 direction test. **Fail or partial / stop:** keep
-    the input out of firmware control, correct the switch/flag geometry or
-    wiring, and repeat T-01G.
+    full-retract `LIFT_HOME` motions and record the trigger/release positions.
+    **Pass / proceed:** all ten transitions are repeatable and occur before the
+    mechanical backstop; proceed to the basic T-01 direction test. **Fail or
+    partial / stop:** keep the input out of firmware control, correct the
+    switch/flag geometry or wiring, and repeat T-01G. This is a boot/recovery
+    reference test, not a normal M5 cycle test.
 17. **T-01 basic lift/open-loop direction.** Verify safe travel and record
     which motor polarity produces lift versus seek/down. If reversed, swap
     OUT1/OUT2 *or* reverse the firmware mapping, never both. **Pass / proceed:**
@@ -94,15 +95,18 @@ conditions in the test plan.
     and E-08/E-09 meet their recorded requirements; proceed to T-01B through
     T-01F. **Fail or partial / stop:** do not interpret raw counts as control
     force or tune gains; repair/recalibrate the affected sensor and repeat it.
-20. **T-01B through T-01F — Motor/preload physical envelope.** Measure the
-    installed force curve, motor hold and retract reserve, pulse response, and
-    the resulting controller limits. E-06, E-15, and E-07 are required gates;
-    do not use nominal spring dimensions or unloaded N20 current as a force
+20. **T-01B through T-01H — Motor/preload and M5-clear physical envelope.**
+    Measure the installed force curve, motor hold and retract reserve, pulse
+    response, normal M5 load-cell release hysteresis, clearance pulse, and the
+    resulting controller limits. E-06, E-15, and E-07 are required gates; do
+    not use nominal spring dimensions or unloaded N20 current as a force
     capability result. **Pass / proceed:** the T-01F envelope has every
-    required value or a documented safe bound, and T-01C/D prove the selected
-    hold and retract commands; proceed to contact seek. **Fail or partial /
-    stop:** retain the relevant commissioning gate, reduce the claimed working
-    range or correct the mechanism, then repeat the failed sub-test.
+    required value or a documented safe bound, T-01C/D prove the selected hold
+    and retract commands, and T-01H proves that normal M5 creates pen clearance
+    without reaching the LIFT-home switch; proceed to contact seek. **Fail or
+    partial / stop:** retain the relevant commissioning gate, reduce the
+    claimed working range or correct the mechanism, then repeat the failed
+    sub-test.
 21. **T-02 through T-06 — Closed-loop toolhead and faults.** Add contact seek,
     force hold, and each safe-fault case one at a time. **Pass / proceed:**
     each test meets its formal pass condition and leaves the toolhead safe;

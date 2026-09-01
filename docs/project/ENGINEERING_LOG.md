@@ -167,6 +167,7 @@ Entry details remain only in the chronology.
 - [2026-08-30 - HARDWARE/PARTIAL - Record preliminary toolhead preload current](#elog-20260830-record-preliminary-toolhead-preload-current)
 - [2026-08-30 - HARDWARE/PARTIAL - Set proposed toolhead LIFT datum](#elog-20260830-set-proposed-toolhead-lift-datum)
 - [2026-08-30 - HARDWARE/PLANNED - Plan toolhead LIFT-home switch](#elog-20260830-plan-toolhead-lift-home-switch)
+- [2026-09-01 - MIXED/PLANNED - Separate normal pen clear from LIFT home](#elog-20260901-separate-normal-pen-clear-from-lift-home)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2178,3 +2179,31 @@ Add new entries at the top of the log below this line.
 - Next action: Meter-check the released/pressed contact behavior, install the
   switch and moving flag, then perform the ten-cycle guarded T-01G test before
   enabling firmware homing.
+
+<a id="elog-20260901-separate-normal-pen-clear-from-lift-home"></a>
+### 🟨 2026-09-01 - MIXED/PLANNED - Separate normal pen clear from LIFT home
+
+- Status: interface and test-plan decision recorded; no mechanism, wiring,
+  firmware threshold, or clearance result is claimed.
+- Category: hardware, rp23cnc-software, toolhead, m3, m5, load-cell,
+  lift-home, testing
+- Summary: Normal high-cycle M5 is now defined as `PEN_CLEAR`: retract to the
+  filtered no-contact load-cell release band, then issue one bounded clearance
+  pulse. M3 still seeks contact and enters force hold. The planned GP2 switch
+  is retained only for full `LIFT_HOME` reference at boot, recovery, or an
+  explicit service action.
+- Reason: A full movement to the distant lift-home switch on every plotting
+  stroke would be unnecessary and slow. The load cell can identify paper
+  release quickly, but cannot turn a no-contact value into an absolute actuator
+  position.
+- Safety boundary: `PEN_CLEAR` requires measured hysteresis, debounce, pulse
+  bound, and pen-tip gap. `LIFT_HOME` still requires T-01G switch verification,
+  a separate mechanical backstop, and solid-height margin. No raw HX711 count,
+  nominal spring length, or unmeasured motor time is authorized as a control
+  constant.
+- Evidence: `HW-20260901-001`; `docs/testing/TEST_PLAN.md` T-01H; and
+  `firmware/pen_pressure/CONTROL_STRATEGY.md`.
+- Next action: Complete E-07, then perform T-01H to establish signed
+  `F_contact_on`/`F_release_off`, debounce, the clearance-pulse command, and
+  30-cycle pen-clear evidence. Keep the normal M5 behavior commissioning-gated
+  until that result exists.

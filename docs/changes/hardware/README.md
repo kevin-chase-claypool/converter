@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-01 | `HW-20260901-001` | planned | [Separate Normal Pen Clear from LIFT Home](2026/2026-09-01-separate-pen-clear-from-lift-home.md) | `toolhead`, `m3`, `m5`, `pen-clear`, `lift-home`, `load-cell` |
 | 2026-08-30 | `HW-20260830-005` | planned | [Plan Toolhead LIFT-Home Switch](2026/2026-08-30-plan-toolhead-lift-home-switch.md) | `toolhead`, `lift-home`, `microswitch`, `gp2` |
 | 2026-08-30 | `HW-20260830-004` | planned | [Set Proposed Toolhead Lift Datum](2026/2026-08-30-set-toolhead-lift-datum.md) | `toolhead`, `spring`, `preload`, `lift`, `pen-stop` |
 | 2026-08-30 | `HW-20260830-003` | planned | [Record Preliminary Toolhead Preload Current](2026/2026-08-30-record-preliminary-toolhead-preload-current.md) | `toolhead`, `n20`, `preload`, `current`, `testing` |

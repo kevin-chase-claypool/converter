@@ -21,7 +21,8 @@ also matches the constructed GP0/GP1, GP4-GP7, Qwiic, and GP27-GP29 harnesses.
 Use the toolhead-mounted SparkFun Pro Micro RP2350 as the combined controller
 for:
 
-- M3/M5-driven lift, seek-contact, and force-hold states.
+- M3/M5-driven pen-clear, seek-contact, and force-hold states, plus local
+  LIFT_HOME reference handling.
 - HX711 load-cell acquisition.
 - DRV8833/N20 actuator control and local fault response.
 - TMAG5273 Qwiic magnetic sensing.

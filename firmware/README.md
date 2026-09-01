@@ -29,10 +29,10 @@ isolated from grblHAL motion timing. See
 
 ```text
 host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
-                                      |
-                                      +-> pen-pressure MCU
+                                          |
+                                          +-> pen-pressure MCU
                                           M3 = ENGAGE (resume force loop, seek paper)
-                                          M5 = LIFT   (retract, pause force loop)
+                                          M5 = PEN_CLEAR (release paper, add clearance pulse)
 ```
 
 - **Selected controller** - RP23CNC / RP23U5XBB with Ethernet adapter. Use its
@@ -44,9 +44,11 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   **not** reapply the ratio. Or set `Theta ratio = 1` in the host and own the
   ratio here. Pick exactly one place.
 - **Settle handshake** - the host emits a `G4` dwell after each `M3`/`M5`, from
-  its `Pen cycle ms`, so grblHAL pauses for the pen to lift before travel and
-  reach paper before drawing. A future grblHAL plugin can replace the fixed
-  dwell with a feed-hold until the load cell reports actual contact.
+  its `Pen cycle ms`, so grblHAL pauses for the pen to clear the paper before
+  travel and reach paper before drawing. Normal `M5` ends at the load-cell
+  release threshold plus a calibrated clearance pulse; it does not travel to
+  the distant `LIFT_HOME` switch. A future grblHAL plugin can replace the fixed
+  dwell with a feed-hold until the toolhead reports state.
 - **Homing and bed registration** - X/Y physical switches establish machine
   coordinates. A controller-resident `P100.macro` then uses the existing
   Aux0/GP28 arm and GP27/U3 return to capture a full center-magnet raster,

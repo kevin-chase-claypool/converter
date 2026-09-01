@@ -17,8 +17,8 @@ The converter emits:
 | `G90` | Absolute positioning |
 | `G0 X Y A F` | Pen-up travel |
 | `G1 X Y A F` | Pen-down coordinated move |
-| `M3` | Toolhead ENGAGE |
-| `M5` | Toolhead LIFT |
+| `M3` | Toolhead ENGAGE: seek paper, then hold target force |
+| `M5` | Toolhead PEN_CLEAR: release paper by load-cell threshold, then add a calibrated clearance pulse |
 | `G4 P...` | Fixed toolhead settling delay |
 | `M2` | Program end |
 
@@ -152,12 +152,17 @@ Minimum interface:
 
 | Signal | Meaning | Fail-safe state |
 |---|---|---|
-| ENGAGE/LIFT | grblHAL spindle/tool output pin state: M3 = engage, M5 = lift | LIFT |
+| ENGAGE/PEN_CLEAR | grblHAL spindle/tool output pin state: M3 = engage, M5 = normal fast pen clear | PEN_CLEAR |
 | TOOL_FAULT | Toolhead cannot safely draw | Active/fault |
 | CONTACT_READY, optional | Contact force is stable | Not ready |
 
-Version 1 may use only ENGAGE/LIFT plus fixed `G4` delays. A later plugin may
+Version 1 may use only ENGAGE/PEN_CLEAR plus fixed `G4` delays. A later plugin may
 feed-hold until `CONTACT_READY` or alarm on `TOOL_FAULT`.
+
+`M5` is not the toolhead's absolute position-reference command. The planned
+local `GP2` switch establishes `LIFT_HOME` only at boot, recovery, or an
+explicit service action. Normal M5 uses the same load cell as M3, but detects
+the no-contact release band and then applies a verified clearance pulse.
 
 ## Toolhead internal interfaces
 

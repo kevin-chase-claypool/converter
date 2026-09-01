@@ -67,18 +67,23 @@ acquisition; any unsafe state suppresses the magnetic output.
 ## Toolhead control states
 
 ```text
-BOOT -> LIFT -> SEEK_CONTACT -> HOLD_FORCE
-          ^          |              |
-          |          +-> FAULT <----+
-          +--------------------------+
+BOOT -> LIFT_HOME -> PEN_CLEAR -> SEEK_CONTACT -> HOLD_FORCE
+            ^             ^              |              |
+            |             |              +-> FAULT <----+
+            +-------------+------------------------------+
 ```
 
-- `LIFT`: retract actuator; force loop disabled.
+- `LIFT_HOME`: full retract to the planned GP2 switch reference, used at boot,
+  recovery, and service only.
+- `PEN_CLEAR`: normal M5 action; retract to the load-cell release threshold,
+  add a calibrated clearance pulse, then pause the force loop.
 - `SEEK_CONTACT`: approach at limited duty/speed until force threshold.
 - `HOLD_FORCE`: closed-loop force regulation.
 - `FAULT`: motor disabled or commanded to safe retract, depending on verified mechanics.
 
-M5 commands `LIFT`. M3 commands `SEEK_CONTACT`, then `HOLD_FORCE`.
+M5 commands `PEN_CLEAR`. M3 commands `SEEK_CONTACT`, then `HOLD_FORCE`.
+The toolhead enters `LIFT_HOME` only for boot, recovery, or an explicit service
+request; it is not used for every plotting stroke.
 
 ## Homing and magnetic reference
 

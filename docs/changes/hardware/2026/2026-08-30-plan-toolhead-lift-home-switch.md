@@ -30,16 +30,18 @@ and `3` as the intended dry-contact pair.
 ## Reason
 
 The pen carriage floats on its linear rail relative to the load-cell force
-path, so the load cell cannot establish retracted height. A local position
-reference is needed to repeat the selected LIFT clearance before plotting.
+path, so the load cell cannot establish absolute retracted height. A local
+position reference is needed for `LIFT_HOME` at boot and recovery. It is not
+needed for each normal pen-up stroke: M5 will use the load-cell no-contact
+release condition followed by a calibrated clearance pulse.
 
 ## Implementation
 
 The planned firmware uses `GP2` with `INPUT_PULLUP`; the normally-open contact
 pulls the input LOW when the moving carriage flag presses a fixed switch. The
-contact has no electrical polarity. The switch is a reference sensor, not a
-mechanical stop: a separate backstop and spring solid-height margin remain
-required.
+contact has no electrical polarity. The switch is a `LIFT_HOME` reference
+sensor, not a mechanical stop or normal M5 feedback device: a separate
+backstop and spring solid-height margin remain required.
 
 ## Verification
 
