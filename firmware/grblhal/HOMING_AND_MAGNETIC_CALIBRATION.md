@@ -48,6 +48,7 @@ assume a shared pen-tip height.
 This is the target commissioning-gated order. It records which controller owns
 each decision and which existing signal carries the result. The present macro
 does not yet implement the GP2-verified home wait or the per-run touch check.
+The interactive companion is [`../../docs/p100-data-movement.html`](../../docs/p100-data-movement.html).
 
 ### 1. Start command: host to motion controller
 

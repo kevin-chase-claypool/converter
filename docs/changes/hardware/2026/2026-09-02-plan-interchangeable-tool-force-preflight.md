@@ -55,6 +55,8 @@ can validate each tool against the actual paper before it plots.
   GP2-verified home-ready result, then magnetic state; GP29 carries M3/M5;
   the future touch-check result reuses GP28/GP27 in a defined third protocol
   phase.
+- Added an interactive hover/focus map so the signal ownership and data moved
+  at each P100 stage can be inspected without reading the full protocol first.
 
 ## Verification
 
@@ -84,6 +86,7 @@ do not claim that the current macro validates a tool change.
 - `firmware/pen_pressure/README.md`: adds the user-facing commissioning gate.
 - `firmware/grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`: scopes the future P100
   preflight, current interface limitation, and authoritative data movement.
+- `docs/p100-data-movement.html`: interactive P100 process/data-movement map.
 - `docs/testing/TEST_PLAN.md`: adds T-01J.
 - `docs/testing/RECOMMENDED_TEST_SEQUENCE.md`: places T-01J in the gate order.
 - `docs/integration/INTERFACES.md`: records that the current macro cannot yet

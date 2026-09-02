@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>P100 data movement</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --page: #f5f7fa;
+      --surface: #ffffff;
+      --ink: #18212b;
+      --muted: #51606e;
+      --line: #c9d3de;
+      --motion: #165d9c;
+      --tool: #8a5311;
+      --sensor: #1e754b;
+      --ready: #4e397d;
+      --danger: #a22e30;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --page: #151a20;
+        --surface: #202832;
+        --ink: #edf2f7;
+        --muted: #b6c2cf;
+        --line: #566575;
+        --motion: #72b9f2;
+        --tool: #f0b669;
+        --sensor: #72d09d;
+        --ready: #c9afff;
+        --danger: #ff9f9f;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+    main { max-width: 1060px; margin: 0 auto; padding: 28px 20px 40px; }
+    h1 { margin: 0; font-size: clamp(1.6rem, 3vw, 2.2rem); }
+    h2 { margin: 0; font-size: 1.05rem; }
+    p { margin: 0; }
+    .subtitle { color: var(--muted); margin-top: 6px; max-width: 72ch; }
+    .notice {
+      margin: 22px 0;
+      border-left: 4px solid var(--danger);
+      padding: 10px 14px;
+      background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+      color: var(--ink);
+    }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(270px, .8fr); gap: 24px; align-items: start; }
+    .flow { display: grid; gap: 0; }
+    .process {
+      width: 100%; text-align: left; border: 1px solid var(--line); border-left: 6px solid var(--motion);
+      border-radius: 8px; background: var(--surface); color: var(--ink); padding: 14px 16px;
+      cursor: pointer; font: inherit;
+    }
+    .process:hover, .process:focus-visible, .process.active { outline: 3px solid color-mix(in srgb, var(--motion) 35%, transparent); outline-offset: 2px; }
+    .process.tool { border-left-color: var(--tool); }
+    .process.sensor { border-left-color: var(--sensor); }
+    .process.ready { border-left-color: var(--ready); }
+    .step { color: var(--muted); font-size: .85rem; display: block; margin-bottom: 2px; }
+    .connector { height: 30px; position: relative; margin-left: 29px; border-left: 2px solid var(--line); }
+    .connector::after { content: "↓"; position: absolute; bottom: -9px; left: -8px; color: var(--muted); background: var(--page); padding: 0 2px; }
+    .detail { position: sticky; top: 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 18px; }
+    .detail-title { color: var(--motion); margin-bottom: 10px; }
+    .signal { border-top: 1px solid var(--line); padding: 11px 0; }
+    .signal:last-child { padding-bottom: 0; }
+    .signal b { display: block; font-size: .9rem; margin-bottom: 3px; }
+    .signal span { color: var(--muted); display: block; }
+    .key { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 16px; color: var(--muted); font-size: .9rem; }
+    .key b { color: var(--ink); }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .abort { color: var(--danger); margin-top: 16px; }
+    @media (max-width: 720px) {
+      main { padding: 22px 14px 30px; }
+      .layout { grid-template-columns: 1fr; }
+      .detail { position: static; order: -1; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>P100: data movement by process</h1>
+    <p class="subtitle">Hover, focus, or tap a process to see the command, sensor data, response, and decision owner.</p>
+    <p class="notice"><b>Planned, commissioning-gated flow.</b> The present macro does not yet perform the GP2-verified wait or the per-run touch check.</p>
+
+    <div class="layout">
+      <section class="flow" aria-label="P100 process sequence">
+        <button class="process active" type="button" data-process="start">
+          <span class="step">1. Start command</span><b>ioSender starts P100 on RP23CNC</b>
+        </button>
+        <div class="connector" aria-hidden="true"></div>
+        <button class="process tool" type="button" data-process="toolhome">
+          <span class="step">2. Toolhead home</span><b>Verify full retract through the existing handshake</b>
+        </button>
+        <div class="connector" aria-hidden="true"></div>
+        <button class="process" type="button" data-process="xyhome">
+          <span class="step">3. Machine home</span><b>RP23CNC homes X and Y</b>
+        </button>
+        <div class="connector" aria-hidden="true"></div>
+        <button class="process sensor" type="button" data-process="magnetic">
+          <span class="step">4. Magnetic registration</span><b>Find bed center and A index</b>
+        </button>
+        <div class="connector" aria-hidden="true"></div>
+        <button class="process tool" type="button" data-process="touch">
+          <span class="step">5. Per-run touch check</span><b>Touch paper, release, and create clearance</b>
+        </button>
+        <div class="connector" aria-hidden="true"></div>
+        <button class="process ready" type="button" data-process="ready">
+          <span class="step">6. Ready state</span><b>Return to G54 zero, pen clear, start drawing</b>
+        </button>
+      </section>
+
+      <aside class="detail" aria-live="polite" aria-label="Selected process data movement">
+        <h2 class="detail-title" id="detail-title">1. Start command</h2>
+        <div id="detail-content"></div>
+      </aside>
+    </div>
+
+    <p class="key"><b>Signal roles:</b> <code>GP2</code> is the toolhead’s local upper switch. <code>GP29</code> carries M3/M5. <code>GP28</code> is the existing RP23CNC request to the Pro Micro. <code>GP27</code> is the existing Pro Micro reply to RP23CNC. No pen-force samples go to ioSender.</p>
+  </main>
+  <script>
+    const processes = {
+      start: {
+        title: '1. Start command',
+        rows: [
+          ['Command', '<code>ioSender → RP23CNC</code>: <code>G65 P100 Q0</code>'],
+          ['Decision owner', 'RP23CNC/grblHAL starts P100 locally.'],
+          ['Not moved', 'HX711 force samples stay inside the Pro Micro toolhead controller.']
+        ]
+      },
+      toolhome: {
+        title: '2. Toolhead home',
+        rows: [
+          ['Request', '<code>RP23CNC GP28 → Pro Micro</code>: request home/ready.'],
+          ['Local sensor', '<code>GP2 ← upper switch</code>: Pro Micro waits for verified LIFT_HOME, including release/retrigger if the switch begins pressed.'],
+          ['Local data', 'Pro Micro commands the N20 and captures a RAM-only no-contact HX711 baseline after home.'],
+          ['Reply', '<code>Pro Micro GP27 → RP23CNC</code>: assert only when LIFT_HOME is verified.'],
+          ['Decision owner', 'P100 waits for GP27 with a timeout; it must not infer home from a fixed delay.']
+        ]
+      },
+      xyhome: {
+        title: '3. Machine home',
+        rows: [
+          ['Command', '<code>RP23CNC → X/Y motion</code>: <code>$H</code>.'],
+          ['Local sensors', 'X/Y physical switches report only to RP23CNC/grblHAL.'],
+          ['Decision owner', 'grblHAL establishes gantry machine coordinates. The Pro Micro has no role in X/Y homing.']
+        ]
+      },
+      magnetic: {
+        title: '4. Magnetic registration',
+        rows: [
+          ['Request', '<code>RP23CNC GP28 → Pro Micro</code>: second phase, arm magnetic scan.'],
+          ['Sensor data', '<code>TMAG5273 → Pro Micro</code>: local magnetic field samples.'],
+          ['Reply', '<code>Pro Micro GP27 → RP23CNC</code>: one-bit magnetic active/inactive state.'],
+          ['Decision owner', 'RP23CNC records G38 edge coordinates, validates the center raster and outer A footprints, then sets <code>G54 X0 Y0 A0</code>.']
+        ]
+      },
+      touch: {
+        title: '5. Per-run touch check',
+        rows: [
+          ['Contact request', '<code>RP23CNC M3 → GP29 → Pro Micro</code>: seek paper at limited force.'],
+          ['Sensor data', '<code>HX711/load cell → Pro Micro</code>: contact threshold, hard-force limit, and release threshold.'],
+          ['Clear request', '<code>RP23CNC M5 → GP29 → Pro Micro</code>: retract to release, then apply the clearance pulse.'],
+          ['Reply', 'Future: the Pro Micro returns pass/fail through the existing <code>GP28/GP27</code> path. The exact third request/reply phase is still TBD; no new wire or pin is needed.'],
+          ['Decision owner', 'Pro Micro faults on missing contact, overforce, or failure to return to clear; P100 must not continue after a failed reply.']
+        ]
+      },
+      ready: {
+        title: '6. Ready state',
+        rows: [
+          ['Motion state', '<code>P100 → G54 X0 Y0 A0</code>.'],
+          ['Toolhead state', '<code>Pro Micro → PEN_CLEAR</code>.'],
+          ['Result', 'RP23CNC may begin the drawing G-code only after every prior section passes.']
+        ]
+      }
+    };
+
+    const title = document.getElementById('detail-title');
+    const content = document.getElementById('detail-content');
+    const buttons = [...document.querySelectorAll('.process')];
+
+    function showProcess(key) {
+      const process = processes[key];
+      title.textContent = process.title;
+      content.innerHTML = process.rows.map(([label, detail]) => `<div class="signal"><b>${label}</b><span>${detail}</span></div>`).join('');
+      buttons.forEach(button => button.classList.toggle('active', button.dataset.process === key));
+    }
+
+    buttons.forEach(button => {
+      const activate = () => showProcess(button.dataset.process);
+      button.addEventListener('mouseenter', activate);
+      button.addEventListener('focus', activate);
+      button.addEventListener('click', activate);
+    });
+    showProcess('start');
+  </script>
+</body>
+</html>

@@ -174,6 +174,7 @@ Entry details remain only in the chronology.
 - [2026-09-02 08:24:06 -05:00 - SUCCESS - Made data-flow visual a controlled record](#elog-20260902082406)
 - [2026-09-02 - MIXED/PLANNED - Plan interchangeable-tool force preflight](#elog-20260902-plan-interchangeable-tool-force-preflight)
 - [2026-09-02 - SUCCESS - Recorded intended P100 data movement](#elog-20260902-recorded-intended-p100-data-movement)
+- [2026-09-02 - SUCCESS - Added interactive P100 data-movement map](#elog-20260902-added-interactive-p100-data-movement-map)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -245,6 +246,7 @@ Entry details remain only in the chronology.
 - [2026-09-02 08:17:43 -05:00 - SUCCESS - Corrected mobile data-flow layout](#elog-20260902081743)
 - [2026-09-02 08:24:06 -05:00 - SUCCESS - Made data-flow visual a controlled record](#elog-20260902082406)
 - [2026-09-02 - SUCCESS - Recorded intended P100 data movement](#elog-20260902-recorded-intended-p100-data-movement)
+- [2026-09-02 - SUCCESS - Added interactive P100 data-movement map](#elog-20260902-added-interactive-p100-data-movement-map)
 <!-- END GENERATED TOPIC INDEX -->
 
 ## Entry format
@@ -2332,3 +2334,16 @@ Add new entries at the top of the log below this line.
   it adds no wire or RP23CNC pin and is not yet implemented.
 - Evidence: `HW-20260902-001`;
   `firmware/grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`.
+
+<a id="elog-20260902-added-interactive-p100-data-movement-map"></a>
+### 🟩 2026-09-02 - SUCCESS - Added interactive P100 data-movement map
+
+- Status: documentation visual implemented; no macro, wire, or firmware
+  behavior changed.
+- Category: rp23cnc-software, hardware, p100, toolhead, documentation
+- Summary: Added an interactive P100 process map. Hover, keyboard focus, or tap
+  selects each of the six stages and exposes its command, sensor data, reply,
+  and decision owner.
+- Safety boundary: The map labels the GP2-verified home and per-run touch check
+  as planned commissioning-gated behavior, not current `P100.macro` behavior.
+- Evidence: `HW-20260902-001`; `docs/p100-data-movement.html`.

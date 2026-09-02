@@ -11,6 +11,8 @@ registration, toolhead lifecycle, faults, and commissioning), open
 [`system_data_flow.html`](system_data_flow.html). Its comparison baselines and
 update procedure are in
 [`architecture/SYSTEM_DATA_FLOW_RECORD.md`](architecture/SYSTEM_DATA_FLOW_RECORD.md).
+For the intended P100 command/sensor/reply ownership by stage, open
+[`p100-data-movement.html`](p100-data-movement.html).
 
 ## Start by task
 
