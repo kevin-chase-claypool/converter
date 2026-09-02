@@ -22,6 +22,13 @@ Record the exact board revision used by this project before finalizing wiring.
 
 ## Motion data path
 
+The current, scenario-by-scenario visual is
+[`../system_data_flow.html`](../system_data_flow.html). It is the visual
+companion to this architecture: its routed lanes show normal plotting, P100
+registration, toolhead control, fault/recovery, and commissioning without
+connector crossings. Interface details and verification status remain in their
+authoritative documents.
+
 ```text
 Host G-code stream
        |

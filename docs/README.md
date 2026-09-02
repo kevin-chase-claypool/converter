@@ -6,6 +6,10 @@ the entire documentation tree before working.
 For a visual overview of this process, open
 [`codex-documentation-flow.html`](codex-documentation-flow.html).
 
+For the current end-to-end system data paths (normal plotting, P100 startup
+registration, toolhead lifecycle, faults, and commissioning), open
+[`system_data_flow.html`](system_data_flow.html).
+
 ## Start by task
 
 | Task | Read first | Current source of truth |

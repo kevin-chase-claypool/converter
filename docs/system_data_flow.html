@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Theta Pen Plotter — Current System Data Flow</title>
+  <style>
+    :root { color-scheme: light dark; --bg: #10161c; --surface: #18222c; --ink: #eaf1f7; --muted: #b5c2cf; --line: #526576; --host: #bd9cf4; --motion: #65b9ee; --sensor: #79d49b; --tool: #f6bf6e; --fault: #f17c78; --data: #60d4c4; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Segoe UI", Arial, sans-serif; line-height: 1.45; }
+    main { max-width: 1500px; margin: 0 auto; padding: 28px; }
+    h1, h2 { margin: 0; font-weight: 650; }
+    h1 { font-size: 30px; }
+    h2 { margin-top: 34px; font-size: 21px; }
+    p { color: var(--muted); max-width: 1080px; }
+    .key { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); font-size: 14px; }
+    .key span::before { content: ""; display: inline-block; width: 12px; height: 12px; margin-right: 6px; border-radius: 2px; vertical-align: -1px; background: currentColor; }
+    .host { color: var(--host); } .motion { color: var(--motion); } .sensor { color: var(--sensor); } .tool { color: var(--tool); } .fault { color: var(--fault); } .data { color: var(--data); }
+    .diagram { margin: 14px 0 8px; padding: 14px; overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+    svg { display: block; min-width: 1220px; width: 100%; height: auto; }
+    .node { fill: #202d38; stroke: var(--line); stroke-width: 2; rx: 9; }
+    .node-host { stroke: var(--host); } .node-motion { stroke: var(--motion); } .node-sensor { stroke: var(--sensor); } .node-tool { stroke: var(--tool); } .node-fault { stroke: var(--fault); } .node-data { stroke: var(--data); }
+    .title { fill: var(--ink); font: 650 16px "Segoe UI", Arial, sans-serif; }
+    .text { fill: var(--muted); font: 13px "Segoe UI", Arial, sans-serif; }
+    .label { fill: var(--ink); font: 600 12px "Segoe UI", Arial, sans-serif; }
+    .small { fill: var(--muted); font: 11px "Segoe UI", Arial, sans-serif; }
+    .flow { fill: none; stroke-width: 3; marker-end: url(#arrow); }
+    .f-host { stroke: var(--host); } .f-motion { stroke: var(--motion); } .f-sensor { stroke: var(--sensor); } .f-tool { stroke: var(--tool); } .f-fault { stroke: var(--fault); } .f-data { stroke: var(--data); }
+    .lane { fill: none; stroke: var(--line); stroke-width: 1; stroke-dasharray: 5 5; }
+    .note { color: var(--muted); font-size: 14px; }
+    code { color: var(--ink); }
+    @media (max-width: 700px) { main { padding: 18px; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Theta Pen Plotter — Current System Data Flow</h1>
+  <p>Each scenario uses dedicated horizontal or vertical routing lanes. Arrowheads show the direction information travels; no connector crosses another connector or passes through a component.</p>
+  <div class="key" aria-label="Diagram color key"><span class="host">Host / operator</span><span class="motion">Motion control</span><span class="sensor">Sensor feedback</span><span class="tool">Toolhead control</span><span class="data">Calculated data or registration</span><span class="fault">Fault or safe-stop path</span></div>
+
+  <h2>1. Normal plotting: artwork to physical mark</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 1420 670" role="img" aria-labelledby="plot-title plot-desc">
+      <title id="plot-title">Normal plotting data flow</title><desc id="plot-desc">SVG artwork is converted to saved G-code, streamed by ioSender, parsed and planned by grblHAL, then separated into motion and tool-control paths. Status returns independently to the operator.</desc>
+      <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="context-stroke"/></marker></defs>
+      <path class="lane" d="M40 108H1380"/><text class="small" x="42" y="96">job-definition lane</text>
+      <path class="lane" d="M40 290H1380"/><text class="small" x="42" y="278">motion-command lane</text>
+      <path class="lane" d="M40 468H1380"/><text class="small" x="42" y="456">tool-control and force-feedback lane</text>
+      <path class="lane" d="M40 625H1380"/><text class="small" x="42" y="613">status / operator-observation lane</text>
+      <rect class="node node-host" x="45" y="135" width="165" height="92"/><text class="title" x="62" y="167">SVG artwork</text><text class="text" x="62" y="191">bed-local paths</text><text class="text" x="62" y="211">and settings</text>
+      <rect class="node node-host" x="280" y="135" width="190" height="92"/><text class="title" x="297" y="166">Host converter</text><text class="text" x="297" y="190">geometry + XY/A plan</text><text class="text" x="297" y="210">preview + validation</text>
+      <rect class="node node-host" x="540" y="135" width="160" height="92"/><text class="title" x="557" y="166">Saved G-code</text><text class="text" x="557" y="190">G21 G90 G0/G1</text><text class="text" x="557" y="210">M3/M5 G4 M2</text>
+      <rect class="node node-host" x="770" y="135" width="165" height="92"/><text class="title" x="787" y="166">ioSender</text><text class="text" x="787" y="190">operator console</text><text class="text" x="787" y="210">stream / jog / status</text>
+      <rect class="node node-motion" x="1005" y="135" width="185" height="92"/><text class="title" x="1022" y="166">RP23CNC / grblHAL</text><text class="text" x="1022" y="190">parser + lookahead</text><text class="text" x="1022" y="210">modal state</text>
+      <rect class="node node-motion" x="1005" y="318" width="185" height="92"/><text class="title" x="1022" y="349">STEP / DIR output</text><text class="text" x="1022" y="373">X, Y, A pulse trains</text><text class="text" x="1022" y="393">+ enable</text>
+      <rect class="node node-motion" x="1245" y="318" width="140" height="92"/><text class="title" x="1262" y="349">TB6600s</text><text class="text" x="1262" y="373">phase current</text><text class="text" x="1262" y="393">to motors</text>
+      <rect class="node node-motion" x="1245" y="493" width="140" height="92"/><text class="title" x="1262" y="524">Machine</text><text class="text" x="1262" y="548">X/Y gantry +</text><text class="text" x="1262" y="568">rotating bed</text>
+      <rect class="node node-tool" x="770" y="493" width="180" height="92"/><text class="title" x="787" y="524">PC817C → GP29</text><text class="text" x="787" y="548">isolated M3/M5</text><text class="text" x="787" y="568">mode override</text>
+      <rect class="node node-tool" x="1010" y="493" width="180" height="92"/><text class="title" x="1027" y="524">Toolhead RP2350</text><text class="text" x="1027" y="548">SEEK / HOLD / CLEAR</text><text class="text" x="1027" y="568">safety state machine</text>
+      <rect class="node node-sensor" x="535" y="493" width="165" height="92"/><text class="title" x="552" y="524">Load cell + HX711</text><text class="text" x="552" y="548">force samples</text><text class="text" x="552" y="568">filtered reading</text>
+      <rect class="node node-tool" x="1010" y="318" width="180" height="92"/><text class="title" x="1027" y="349">DRV8833 + N20</text><text class="text" x="1027" y="373">bounded actuator pulse</text><text class="text" x="1027" y="393">pen height / force</text>
+      <rect class="node node-tool" x="770" y="318" width="180" height="92"/><text class="title" x="787" y="349">Pen on paper</text><text class="text" x="787" y="373">contact force produces</text><text class="text" x="787" y="393">the drawn mark</text>
+      <rect class="node node-host" x="280" y="543" width="190" height="72"/><text class="title" x="297" y="572">Operator display</text><text class="text" x="297" y="596">position, state, alarms</text>
+      <path class="flow f-host" d="M210 181H280"/><text class="label" x="225" y="169">open</text><path class="flow f-host" d="M470 181H540"/><text class="label" x="483" y="169">generate</text><path class="flow f-host" d="M700 181H770"/><text class="label" x="716" y="169">load</text><path class="flow f-host" d="M935 181H1005"/><text class="label" x="951" y="169">stream</text>
+      <path class="flow f-motion" d="M1097 227V318"/><text class="label" x="1110" y="274">XYA moves</text><path class="flow f-motion" d="M1190 364H1245"/><path class="flow f-motion" d="M1315 410V493"/><text class="label" x="1325" y="460">motion</text>
+      <path class="flow f-tool" d="M1055 227V260H860V493"/><text class="label" x="871" y="250">M3/M5 pin state</text><path class="flow f-tool" d="M950 539H1010"/><path class="flow f-tool" d="M1100 493V410"/><path class="flow f-tool" d="M1010 364H950"/><text class="label" x="940" y="306">actuator effect</text><path class="flow f-tool" d="M770 364V410H860V493"/><text class="label" x="784" y="438">contact</text>
+      <path class="flow f-sensor" d="M700 539H1010"/><text class="label" x="835" y="526">measured force</text>
+      <path class="flow f-host" d="M1005 205V625H470"/><text class="label" x="679" y="615">controller status / alarms</text><path class="flow f-tool" d="M1010 573V625H470"/><text class="label" x="635" y="652">tool state / service diagnostics</text>
+    </svg>
+  </div>
+  <p class="note">M3 and M5 are interpreted by grblHAL and become an isolated pin state at the toolhead; they are not forwarded as G-code text. The fixed G4 dwell is the initial open-loop settle time.</p>
+
+  <h2>2. Startup P100: home, magnetic registration, and work coordinates</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 1420 635" role="img" aria-labelledby="home-title home-desc">
+      <title id="home-title">P100 startup registration flow</title><desc id="home-desc">The operator launches P100. grblHAL homes physical switches, requests a toolhead readiness handshake, captures magnetic probe edges, computes centroids, and sets the G54 work coordinate system.</desc>
+      <defs><marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="context-stroke"/></marker></defs>
+      <path class="lane" d="M40 92H1380"/><text class="small" x="42" y="80">command and machine-motion lane</text><path class="lane" d="M40 302H1380"/><text class="small" x="42" y="290">two-phase readiness / probe-state lane</text><path class="lane" d="M40 530H1380"/><text class="small" x="42" y="518">registration-result lane</text>
+      <rect class="node node-host" x="45" y="125" width="170" height="88"/><text class="title" x="62" y="156">Operator / ioSender</text><text class="text" x="62" y="180">G65 P100 Q0</text><text class="text" x="62" y="200">reads outcome</text>
+      <rect class="node node-motion" x="285" y="125" width="190" height="88"/><text class="title" x="302" y="156">grblHAL P100</text><text class="text" x="302" y="180">M5, home X/Y</text><text class="text" x="302" y="200">moves and G38 capture</text>
+      <rect class="node node-motion" x="545" y="125" width="165" height="88"/><text class="title" x="562" y="156">Physical references</text><text class="text" x="562" y="180">X/Y switches</text><text class="text" x="562" y="200">machine bounds</text>
+      <rect class="node node-tool" x="800" y="125" width="190" height="88"/><text class="title" x="817" y="156">Toolhead RP2350</text><text class="text" x="817" y="180">requires verified lift</text><text class="text" x="817" y="200">suspends force loop</text>
+      <rect class="node node-sensor" x="1080" y="125" width="190" height="88"/><text class="title" x="1097" y="156">TMAG5273</text><text class="text" x="1097" y="180">magnetic vector</text><text class="text" x="1097" y="200">at fixed height</text>
+      <rect class="node node-motion" x="285" y="365" width="190" height="88"/><text class="title" x="302" y="396">RP23CNC Aux0</text><text class="text" x="302" y="420">first: request ACK</text><text class="text" x="302" y="440">second: scan arm</text>
+      <rect class="node node-tool" x="800" y="365" width="190" height="88"/><text class="title" x="817" y="396">GP28 / GP27 logic</text><text class="text" x="817" y="420">ACK, then thresholded</text><text class="text" x="817" y="440">magnetic state only</text>
+      <rect class="node node-motion" x="1080" y="365" width="190" height="88"/><text class="title" x="1097" y="396">PRB candidate input</text><text class="text" x="1097" y="420">G38 entry / exit</text><text class="text" x="1097" y="440">coordinates to P100</text>
+      <rect class="node node-motion" x="545" y="530" width="220" height="76"/><text class="title" x="562" y="560">P100 calculation</text><text class="text" x="562" y="584">centroid + A index validation</text>
+      <rect class="node node-data" x="850" y="530" width="220" height="76"/><text class="title" x="867" y="560">G54 registration</text><text class="text" x="867" y="584">pen X0/Y0 and A0</text>
+      <rect class="node node-host" x="1155" y="530" width="210" height="76"/><text class="title" x="1172" y="560">Ready / abort report</text><text class="text" x="1172" y="584">operator inspects failures</text>
+      <path class="flow f-host" marker-end="url(#arrow2)" d="M215 169H285"/><path class="flow f-motion" marker-end="url(#arrow2)" d="M475 169H545"/><text class="label" x="487" y="157">home seek</text><path class="flow f-motion" marker-end="url(#arrow2)" d="M710 169H800"/><text class="label" x="720" y="157">home complete</text><path class="flow f-sensor" marker-end="url(#arrow2)" d="M1080 169H990"/><text class="label" x="996" y="157">I²C samples</text>
+      <path class="flow f-motion" marker-end="url(#arrow2)" d="M380 213V365"/><text class="label" x="393" y="282">arm signal</text><path class="flow f-tool" marker-end="url(#arrow2)" d="M475 409H800"/><text class="label" x="598" y="397">isolated GP28</text><path class="flow f-sensor" marker-end="url(#arrow2)" d="M990 409H1080"/><text class="label" x="997" y="397">isolated GP27</text>
+      <path class="flow f-data" marker-end="url(#arrow2)" d="M1080 453V492H655V530"/><text class="label" x="782" y="482">probe edge coordinates</text><path class="flow f-data" marker-end="url(#arrow2)" d="M765 568H850"/><path class="flow f-data" marker-end="url(#arrow2)" d="M1070 568H1155"/><text class="label" x="1082" y="556">result</text>
+    </svg>
+  </div>
+  <p class="note">The installed GP27 return remains at <code>LIMA</code>; the illustrated <code>PRB</code> path is a candidate, gated by F-08. One GP27 edge never means “center”: P100 owns coordinate capture and all centroid/index calculations.</p>
+
+  <h2>3. Toolhead lifecycle: M3/M5, force control, and service home</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 1420 515" role="img" aria-labelledby="tool-title tool-desc">
+      <title id="tool-title">Toolhead control lifecycle</title><desc id="tool-desc">M3 starts a contact seek and force hold. M5 performs normal pen clear. Boot, recovery, and service enter lift home. Force feedback remains local to the toolhead.</desc>
+      <defs><marker id="arrow3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="context-stroke"/></marker></defs>
+      <path class="lane" d="M40 87H1380"/><text class="small" x="42" y="75">command and state-transition lane</text><path class="lane" d="M40 397H1380"/><text class="small" x="42" y="385">local measurement and actuator lane</text>
+      <rect class="node node-motion" x="45" y="125" width="150" height="84"/><text class="title" x="62" y="155">M3 / M5 state</text><text class="text" x="62" y="180">via GP29</text><text class="text" x="62" y="198">active-low input</text>
+      <rect class="node node-tool" x="270" y="125" width="160" height="84"/><text class="title" x="287" y="155">PEN_CLEAR</text><text class="text" x="287" y="180">M5: release band</text><text class="text" x="287" y="198">+ clearance pulse</text>
+      <rect class="node node-tool" x="505" y="125" width="160" height="84"/><text class="title" x="522" y="155">SEEK_CONTACT</text><text class="text" x="522" y="180">M3: bounded</text><text class="text" x="522" y="198">approach</text>
+      <rect class="node node-tool" x="740" y="125" width="160" height="84"/><text class="title" x="757" y="155">HOLD_FORCE</text><text class="text" x="757" y="180">slow pulse PI trim</text><text class="text" x="757" y="198">while drawing</text>
+      <rect class="node node-tool" x="975" y="125" width="160" height="84"/><text class="title" x="992" y="155">LIFT_HOME</text><text class="text" x="992" y="180">boot / recovery /</text><text class="text" x="992" y="198">explicit service only</text>
+      <rect class="node node-fault" x="1210" y="125" width="160" height="84"/><text class="title" x="1227" y="155">FAULT</text><text class="text" x="1227" y="180">safe stop or</text><text class="text" x="1227" y="198">verified retract</text>
+      <rect class="node node-sensor" x="270" y="300" width="170" height="84"/><text class="title" x="287" y="330">Load cell + HX711</text><text class="text" x="287" y="354">new filtered force</text><text class="text" x="287" y="372">sample (≈ 12 Hz)</text>
+      <rect class="node node-tool" x="575" y="300" width="170" height="84"/><text class="title" x="592" y="330">RP2350 decision</text><text class="text" x="592" y="354">threshold / deadband</text><text class="text" x="592" y="372">limits / watchdog</text>
+      <rect class="node node-tool" x="880" y="300" width="170" height="84"/><text class="title" x="897" y="330">DRV8833 + N20</text><text class="text" x="897" y="354">bounded motor pulse</text><text class="text" x="897" y="372">or driver sleep</text>
+      <rect class="node node-tool" x="1185" y="300" width="185" height="84"/><text class="title" x="1202" y="330">Pen / mechanics</text><text class="text" x="1202" y="354">contact, clearance,</text><text class="text" x="1202" y="372">and force change</text>
+      <path class="flow f-tool" marker-end="url(#arrow3)" d="M195 167H270"/><text class="label" x="204" y="155">M5</text><path class="flow f-tool" marker-end="url(#arrow3)" d="M430 167H505"/><text class="label" x="444" y="155">M3</text><path class="flow f-tool" marker-end="url(#arrow3)" d="M665 167H740"/><text class="label" x="675" y="155">contact</text>
+      <path class="flow f-tool" marker-end="url(#arrow3)" d="M1135 167H1210"/><text class="label" x="1145" y="155">fault</text><path class="flow f-tool" marker-end="url(#arrow3)" d="M1055 125V85H350V125"/><text class="label" x="603" y="72">boot, recovery, or service request</text>
+      <path class="flow f-sensor" marker-end="url(#arrow3)" d="M440 342H575"/><path class="flow f-tool" marker-end="url(#arrow3)" d="M745 342H880"/><path class="flow f-tool" marker-end="url(#arrow3)" d="M1050 342H1185"/><path class="flow f-sensor" marker-end="url(#arrow3)" d="M1277 384V432H355V384"/><text class="label" x="744" y="422">mechanical force → next measurement</text>
+    </svg>
+  </div>
+  <p class="note">Force sensing and correction remain local to the toolhead; the host and motion controller do not enter that real-time loop. Normal M5 is not an absolute position reference.</p>
+
+  <h2>4. Fault and recovery: every unsafe input reaches a safe, observable end state</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 1420 430" role="img" aria-labelledby="fault-title fault-desc">
+      <title id="fault-title">Fault and recovery data flow</title><desc id="fault-desc">Limit, probe, motion, sensor, driver, and watchdog faults lead to grblHAL or toolhead safe states. Their independently reported alarms reach the operator, who must inspect and deliberately recover.</desc>
+      <defs><marker id="arrow4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="context-stroke"/></marker></defs>
+      <path class="lane" d="M40 87H1380"/><text class="small" x="42" y="75">fault-input lane</text><path class="lane" d="M40 322H1380"/><text class="small" x="42" y="310">alarm and explicit-recovery lane</text>
+      <rect class="node node-fault" x="45" y="125" width="180" height="86"/><text class="title" x="62" y="155">Motion-side fault</text><text class="text" x="62" y="180">limit, probe, E-stop,</text><text class="text" x="62" y="198">alarm or timeout</text>
+      <rect class="node node-fault" x="285" y="125" width="180" height="86"/><text class="title" x="302" y="155">Toolhead-side fault</text><text class="text" x="302" y="180">force, sensor, driver,</text><text class="text" x="302" y="198">watchdog or unsafe lift</text>
+      <rect class="node node-motion" x="570" y="125" width="185" height="86"/><text class="title" x="587" y="155">grblHAL safe state</text><text class="text" x="587" y="180">alarm / motion halt</text><text class="text" x="587" y="198">M5-safe tool output</text>
+      <rect class="node node-tool" x="860" y="125" width="185" height="86"/><text class="title" x="877" y="155">Toolhead safe state</text><text class="text" x="877" y="180">motor disabled or</text><text class="text" x="877" y="198">verified safe retract</text>
+      <rect class="node node-host" x="1150" y="125" width="220" height="86"/><text class="title" x="1167" y="155">ioSender / diagnostics</text><text class="text" x="1167" y="180">alarm, position, service</text><text class="text" x="1167" y="198">telemetry is observable</text>
+      <rect class="node node-host" x="570" y="330" width="220" height="70"/><text class="title" x="587" y="358">Operator inspection</text><text class="text" x="587" y="382">preserve evidence; correct cause</text>
+      <rect class="node node-host" x="930" y="330" width="220" height="70"/><text class="title" x="947" y="358">Deliberate recovery</text><text class="text" x="947" y="382">reset / unlock / re-home as needed</text>
+      <path class="flow f-fault" marker-end="url(#arrow4)" d="M225 168H570"/><text class="label" x="385" y="156">alarm input</text><path class="flow f-fault" marker-end="url(#arrow4)" d="M465 168H860"/><text class="label" x="650" y="156">local fault</text><path class="flow f-fault" marker-end="url(#arrow4)" d="M755 168H860"/><text class="label" x="772" y="156">safe M5 state</text><path class="flow f-fault" marker-end="url(#arrow4)" d="M1045 168H1150"/><text class="label" x="1063" y="156">tool alarm</text>
+      <path class="flow f-host" marker-end="url(#arrow4)" d="M1260 211V280H680V330"/><text class="label" x="932" y="270">reported state and diagnostics</text><path class="flow f-host" marker-end="url(#arrow4)" d="M790 365H930"/><text class="label" x="820" y="353">only after inspection</text>
+    </svg>
+  </div>
+  <p class="note">Fault paths do not retry automatically. A recovery action starts a new controlled attempt after the operator has inspected the reported condition.</p>
+
+  <h2>5. Bench and commissioning: calibration information is kept separate from a drawing job</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 1420 405" role="img" aria-labelledby="bench-title bench-desc">
+      <title id="bench-title">Commissioning and service data flow</title><desc id="bench-desc">A service computer exchanges UART diagnostics with the toolhead. Measured calibration data is reviewed before explicit acceptance into a force profile; normal jobs read the accepted profile but cannot rewrite it.</desc>
+      <defs><marker id="arrow5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="context-stroke"/></marker></defs>
+      <path class="lane" d="M40 84H1380"/><text class="small" x="42" y="72">service-command and measurement lane</text><path class="lane" d="M40 300H1380"/><text class="small" x="42" y="288">accepted-configuration read-only lane during normal operation</text>
+      <rect class="node node-host" x="45" y="125" width="180" height="84"/><text class="title" x="62" y="155">Service computer</text><text class="text" x="62" y="180">UART commands</text><text class="text" x="62" y="198">and telemetry log</text>
+      <rect class="node node-tool" x="305" y="125" width="195" height="84"/><text class="title" x="322" y="155">Toolhead diagnostics</text><text class="text" x="322" y="180">GP20/GP21 UART</text><text class="text" x="322" y="198">raw / filtered samples</text>
+      <rect class="node node-sensor" x="580" y="125" width="195" height="84"/><text class="title" x="597" y="155">Bench measurements</text><text class="text" x="597" y="180">force, pulses, lift,</text><text class="text" x="597" y="198">sensor and driver evidence</text>
+      <rect class="node node-host" x="855" y="125" width="195" height="84"/><text class="title" x="872" y="155">Review / acceptance</text><text class="text" x="872" y="180">tests establish bounds</text><text class="text" x="872" y="198">and calibrated values</text>
+      <rect class="node node-data" x="1130" y="125" width="240" height="84"/><text class="title" x="1147" y="155">Persistent force profile</text><text class="text" x="1147" y="180">explicit service write only</text><text class="text" x="1147" y="198">schema / checksum validated</text>
+      <rect class="node node-tool" x="580" y="315" width="240" height="68"/><text class="title" x="597" y="343">Normal toolhead boot</text><text class="text" x="597" y="366">fresh RAM-only no-contact baseline</text>
+      <rect class="node node-tool" x="970" y="315" width="240" height="68"/><text class="title" x="987" y="343">Normal drawing control</text><text class="text" x="987" y="366">reads profile; never writes it</text>
+      <path class="flow f-host" marker-end="url(#arrow5)" d="M225 167H305"/><text class="label" x="236" y="155">commands</text><path class="flow f-data" marker-end="url(#arrow5)" d="M305 188V245H135V209"/><text class="label" x="160" y="237">telemetry</text><path class="flow f-sensor" marker-end="url(#arrow5)" d="M500 167H580"/><path class="flow f-data" marker-end="url(#arrow5)" d="M775 167H855"/><path class="flow f-data" marker-end="url(#arrow5)" d="M1050 167H1130"/><text class="label" x="1063" y="155">accept + commit</text>
+      <path class="flow f-data" marker-end="url(#arrow5)" d="M1250 209V270H700V315"/><text class="label" x="936" y="260">validated profile read</text><path class="flow f-data" marker-end="url(#arrow5)" d="M820 349H970"/><text class="label" x="850" y="337">limits / targets</text>
+    </svg>
+  </div>
+  <p class="note">This preserves the separation between measured, explicitly accepted calibration and the fresh baseline used at boot. A normal M3/M5 cycle never writes the profile.</p>
+
+  <p>Authoritative contracts and wiring: <a href="integration/INTERFACES.md">integration interfaces</a>, <a href="hardware/WIRING_TABLE.md">wiring table</a>, <a href="../firmware/pen_pressure/README.md">toolhead control</a>, and <a href="../firmware/grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md">P100 magnetic registration</a>.</p>
+</main>
+</body>
+</html>

@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-02 | `RPSW-20260902-001` | windows-software, rp23cnc-software, hardware | implemented | [Add Current System Data Flow Chart](rp23cnc-software/2026/2026-09-02-current-system-data-flow.md) |
 | 2026-09-01 | `HW-20260901-002` | hardware, rp23cnc-software | planned | [Persist Toolhead Force Profile Separately from Boot Baseline](hardware/2026/2026-09-01-persist-toolhead-force-profile.md) |
 | 2026-09-01 | `HW-20260901-001` | hardware, rp23cnc-software | planned | [Separate Normal Pen Clear from LIFT Home](hardware/2026/2026-09-01-separate-pen-clear-from-lift-home.md) |
 | 2026-08-30 | `HW-20260830-005` | hardware, rp23cnc-software | planned | [Plan Toolhead LIFT-Home Switch](hardware/2026/2026-08-30-plan-toolhead-lift-home-switch.md) |

@@ -169,6 +169,7 @@ Entry details remain only in the chronology.
 - [2026-08-30 - HARDWARE/PLANNED - Plan toolhead LIFT-home switch](#elog-20260830-plan-toolhead-lift-home-switch)
 - [2026-09-01 - MIXED/PLANNED - Separate normal pen clear from LIFT home](#elog-20260901-separate-normal-pen-clear-from-lift-home)
 - [2026-09-01 - MIXED/PLANNED - Persist toolhead force profile separately from boot baseline](#elog-20260901-persist-toolhead-force-profile-separately-from-boot-baseline)
+- [2026-09-02 08:05:50 -05:00 - SUCCESS - Added current system data-flow chart](#elog-20260902080550)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -236,6 +237,7 @@ Entry details remain only in the chronology.
 - [2026-08-22 - RP23CNC-SOFTWARE/CORRECTED - Corrected RP2350 toolhead ownership](#elog-20260822-corrected-rp2350-toolhead-ownership)
 - [2026-08-27 - SUCCESS - Adjusted presentation slide deck and added power schematic](#elog-20260827-adjusted-presentation-slide-deck-and-added-power-schematic)
 - [2026-08-28 08:37:05 -0500 - SUCCESS - Established sequential agent execution policy](#elog-20260828083705)
+- [2026-09-02 08:05:50 -05:00 - SUCCESS - Added current system data-flow chart](#elog-20260902080550)
 <!-- END GENERATED TOPIC INDEX -->
 
 ## Entry format
@@ -2230,3 +2232,24 @@ Add new entries at the top of the log below this line.
   `firmware/pen_pressure/CONTROL_STRATEGY.md`.
 - Next action: Complete the existing scale and pulse tests, define the profile
   fields/limits, then run T-01I before enabling persistent force control.
+
+<a id="elog-20260902080550"></a>
+### 🟩 2026-09-02 08:05:50 -05:00 - SUCCESS - Added current system data-flow chart
+
+- Status: current-state documentation implemented; no hardware, firmware, or
+  interface behavior changed.
+- Category: windows-software, rp23cnc-software, hardware, documentation,
+  data-flow, system-architecture
+- Summary: Added `docs/system_data_flow.html`, a single visual reference with
+  five separately routed scenarios: normal plotting, P100 startup registration,
+  toolhead lifecycle, fault/recovery, and bench commissioning. Each connector
+  has a dedicated lane and does not cross another connector or a component.
+- Decision: The older `docs/homing_data_flow.html` remains archived because it
+  represents a superseded homing architecture; it was not extended.
+- Evidence: `RPSW-20260902-001`; documentation review against
+  `docs/integration/INTERFACES.md`,
+  `firmware/pen_pressure/README.md`, and
+  `firmware/grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`; documentation index
+  write/check passed.
+- Next action: Update the visual whenever an interface contract, P100 route,
+  or toolhead fault/handshake behavior changes.
