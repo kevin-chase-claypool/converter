@@ -180,6 +180,7 @@ Entry details remain only in the chronology.
 - [2026-09-02 - SUCCESS - Aligned P100 presentation detail states](#elog-20260902-aligned-p100-presentation-detail-states)
 - [2026-09-02 - SUCCESS - Expanded P100 presentation views to full slide](#elog-20260902-expanded-p100-presentation-views-to-full-slide)
 - [2026-09-02 - SUCCESS - Refreshed summer presentation opening render](#elog-20260902-refreshed-summer-presentation-opening-render)
+- [2026-09-02 - SUCCESS - Set opening slide to full-bleed machine render](#elog-20260902-set-opening-slide-to-full-bleed-machine-render)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2431,5 +2432,19 @@ Add new entries at the top of the log below this line.
   `docs/report/Theta_Pen_Plotter_Summer_Progress_Update.pptx`; title slide
   inspected, all 13 slides rendered, `slides_test.py` passed, and native P100
   navigation actions were checked in PowerPoint.
+- Next action: Run the deck in Slide Show mode on the classroom computer before
+  presenting, to confirm display scaling and mouse-over navigation.
+
+<a id="elog-20260902-set-opening-slide-to-full-bleed-machine-render"></a>
+### 🟩 2026-09-02 - SUCCESS - Set opening slide to full-bleed machine render
+
+- Status: presentation visual update implemented; no machine firmware, wiring,
+  or control behavior changed.
+- Category: windows-software, rp23cnc-software, hardware, presentation
+- Summary: Filled the title slide with the supplied machine render and added a
+  dark translucent title panel so the presentation text remains legible.
+- Evidence: `RPSW-20260902-007`;
+  `docs/report/Theta_Pen_Plotter_Summer_Progress_Update.pptx`; the opening slide
+  was rendered and inspected, and `slides_test.py` passed for all 13 slides.
 - Next action: Run the deck in Slide Show mode on the classroom computer before
   presenting, to confirm display scaling and mouse-over navigation.
