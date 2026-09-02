@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-02 | `RPSW-20260902-005` | rp23cnc-software, hardware, windows-software | implemented | [Expand P100 Presentation to Full Slide](rp23cnc-software/2026/2026-09-02-expand-p100-presentation-to-full-slide.md) |
 | 2026-09-02 | `RPSW-20260902-004` | rp23cnc-software, hardware, windows-software | implemented | [Align P100 Presentation Detail States](rp23cnc-software/2026/2026-09-02-align-p100-presentation-detail-states.md) |
 | 2026-09-02 | `RPSW-20260902-003` | rp23cnc-software, hardware, windows-software | implemented | [Add P100 Presentation Interaction](rp23cnc-software/2026/2026-09-02-add-p100-presentation-interaction.md) |
 | 2026-09-02 | `RPSW-20260902-002` | windows-software, rp23cnc-software, hardware | implemented | [Add Summer Progress Presentation](rp23cnc-software/2026/2026-09-02-add-summer-progress-presentation.md) |

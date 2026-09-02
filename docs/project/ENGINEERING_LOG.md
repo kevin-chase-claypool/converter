@@ -178,6 +178,7 @@ Entry details remain only in the chronology.
 - [2026-09-02 - SUCCESS - Added summer progress presentation](#elog-20260902-added-summer-progress-presentation)
 - [2026-09-02 - SUCCESS - Added native P100 presentation interaction](#elog-20260902-added-native-p100-presentation-interaction)
 - [2026-09-02 - SUCCESS - Aligned P100 presentation detail states](#elog-20260902-aligned-p100-presentation-detail-states)
+- [2026-09-02 - SUCCESS - Expanded P100 presentation views to full slide](#elog-20260902-expanded-p100-presentation-views-to-full-slide)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2399,3 +2400,20 @@ Add new entries at the top of the log below this line.
   were verified in PowerPoint.
 - Limitation: The PowerPoint overlay mirrors the HTML map's data; it does not
   embed webpage execution.
+
+<a id="elog-20260902-expanded-p100-presentation-views-to-full-slide"></a>
+### 🟩 2026-09-02 - SUCCESS - Expanded P100 presentation views to full slide
+
+- Status: presentation-layout correction implemented; no machine firmware,
+  wiring, or control behavior changed.
+- Category: windows-software, rp23cnc-software, hardware, presentation, P100
+- Summary: Removed white presentation chrome and redundant outer panels from
+  the P100 overview/detail views. The dark map now fills the slide height and
+  the background fills the widescreen canvas; detail states retain only a
+  compact Back control.
+- Evidence: `RPSW-20260902-005`;
+  `docs/report/Theta_Pen_Plotter_Summer_Progress_Update.pptx`; all 13 slides
+  rendered, `slides_test.py` passed, and six card targets plus the Back action
+  were checked in PowerPoint.
+- Rationale: The map preserves its aspect ratio instead of being stretched
+  horizontally, avoiding distorted text and cards.
