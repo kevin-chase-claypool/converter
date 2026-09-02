@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-02 | `RPSW-20260902-002` | implemented | [Add Summer Progress Presentation](../rp23cnc-software/2026/2026-09-02-add-summer-progress-presentation.md) | `presentation`, `summer-progress`, `p100`, `toolhead`, `force-control` |
 | 2026-09-02 | `RPSW-20260902-001` | implemented | [Add Current System Data Flow Chart](../rp23cnc-software/2026/2026-09-02-current-system-data-flow.md) | `data-flow`, `system-architecture`, `plotting`, `p100`, `toolhead`, `safety` |
 | 2026-08-28 | `WSW-20260828-001` | implemented | [Establish sequential agent execution policy](2026/2026-08-28-agent-execution-policy.md) | `agent-workflow`, `token-efficiency`, `quality`, `project-policy` |
 | 2026-08-14 | `RPSW-20260814-006` | implemented | [Document ioSender in the system overview](../rp23cnc-software/2026/2026-08-14-document-iosender-in-system-overview.md) | `iosender`, `system-overview`, `gcode` |

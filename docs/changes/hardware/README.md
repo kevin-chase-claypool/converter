@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-02 | `RPSW-20260902-002` | implemented | [Add Summer Progress Presentation](../rp23cnc-software/2026/2026-09-02-add-summer-progress-presentation.md) | `presentation`, `summer-progress`, `p100`, `toolhead`, `force-control` |
 | 2026-09-02 | `RPSW-20260902-001` | implemented | [Add Current System Data Flow Chart](../rp23cnc-software/2026/2026-09-02-current-system-data-flow.md) | `data-flow`, `system-architecture`, `plotting`, `p100`, `toolhead`, `safety` |
 | 2026-09-02 | `HW-20260902-001` | planned | [Plan Interchangeable-Tool Force Preflight](2026/2026-09-02-plan-interchangeable-tool-force-preflight.md) | `toolhead`, `interchangeable-tools`, `load-cell`, `p100`, `pen-clear`, `testing` |
 | 2026-09-01 | `HW-20260901-002` | planned | [Persist Toolhead Force Profile Separately from Boot Baseline](2026/2026-09-01-persist-toolhead-force-profile.md) | `toolhead`, `load-cell`, `calibration`, `force-profile`, `startup-baseline`, `nonvolatile-storage` |

@@ -14,6 +14,13 @@ The report is about **integrating the subsystems** into one working pipeline:
 host conversion software → motion controller → force-controlled pen. The repo is
 organized along those subsystem lines so each maps to a report section.
 
+## Progress presentation
+
+[`Theta_Pen_Plotter_Summer_Progress_Update.pptx`](Theta_Pen_Plotter_Summer_Progress_Update.pptx)
+is the professor-facing summer-progress update. It gives the high-level machine
+architecture, homing and P100 sequence, force-controlled M3/M5 print cycle,
+and remaining commissioning gates.
+
 ## Suggested outline
 
 1. **Introduction / goal** — polar pen plotter: SVG in, drawn artwork out.

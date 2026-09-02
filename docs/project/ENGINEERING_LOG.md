@@ -175,6 +175,7 @@ Entry details remain only in the chronology.
 - [2026-09-02 - MIXED/PLANNED - Plan interchangeable-tool force preflight](#elog-20260902-plan-interchangeable-tool-force-preflight)
 - [2026-09-02 - SUCCESS - Recorded intended P100 data movement](#elog-20260902-recorded-intended-p100-data-movement)
 - [2026-09-02 - SUCCESS - Added interactive P100 data-movement map](#elog-20260902-added-interactive-p100-data-movement-map)
+- [2026-09-02 - SUCCESS - Added summer progress presentation](#elog-20260902-added-summer-progress-presentation)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2347,3 +2348,19 @@ Add new entries at the top of the log below this line.
 - Safety boundary: The map labels the GP2-verified home and per-run touch check
   as planned commissioning-gated behavior, not current `P100.macro` behavior.
 - Evidence: `HW-20260902-001`; `docs/p100-data-movement.html`.
+
+<a id="elog-20260902-added-summer-progress-presentation"></a>
+### 🟩 2026-09-02 - SUCCESS - Added summer progress presentation
+
+- Status: presentation artifact implemented; it summarizes current work and
+  commissioning-gated plans without claiming unverified hardware results.
+- Category: windows-software, rp23cnc-software, hardware, presentation,
+  documentation
+- Summary: Added a seven-slide professor update covering summer progress,
+  high-level system split, homing, P100 data movement, M3/M5 force control, and
+  the remaining path to a first calibration drawing.
+- Evidence: `RPSW-20260902-002`;
+  `docs/report/Theta_Pen_Plotter_Summer_Progress_Update.pptx`; all slides
+  rendered and `slides_test.py` reported no overflow.
+- Next action: Update the progress deck only when measured commissioning or
+  calibration-drawing evidence changes the presentation narrative.
