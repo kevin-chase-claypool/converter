@@ -170,6 +170,7 @@ Entry details remain only in the chronology.
 - [2026-09-01 - MIXED/PLANNED - Separate normal pen clear from LIFT home](#elog-20260901-separate-normal-pen-clear-from-lift-home)
 - [2026-09-01 - MIXED/PLANNED - Persist toolhead force profile separately from boot baseline](#elog-20260901-persist-toolhead-force-profile-separately-from-boot-baseline)
 - [2026-09-02 08:05:50 -05:00 - SUCCESS - Added current system data-flow chart](#elog-20260902080550)
+- [2026-09-02 08:17:43 -05:00 - SUCCESS - Corrected mobile data-flow layout](#elog-20260902081743)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -238,6 +239,7 @@ Entry details remain only in the chronology.
 - [2026-08-27 - SUCCESS - Adjusted presentation slide deck and added power schematic](#elog-20260827-adjusted-presentation-slide-deck-and-added-power-schematic)
 - [2026-08-28 08:37:05 -0500 - SUCCESS - Established sequential agent execution policy](#elog-20260828083705)
 - [2026-09-02 08:05:50 -05:00 - SUCCESS - Added current system data-flow chart](#elog-20260902080550)
+- [2026-09-02 08:17:43 -05:00 - SUCCESS - Corrected mobile data-flow layout](#elog-20260902081743)
 <!-- END GENERATED TOPIC INDEX -->
 
 ## Entry format
@@ -2253,3 +2255,20 @@ Add new entries at the top of the log below this line.
   write/check passed.
 - Next action: Update the visual whenever an interface contract, P100 route,
   or toolhead fault/handshake behavior changes.
+
+<a id="elog-20260902081743"></a>
+### 🟩 2026-09-02 08:17:43 -05:00 - SUCCESS - Corrected mobile data-flow layout
+
+- Status: documentation-layout correction complete; no hardware, firmware, or
+  interface behavior changed.
+- Category: windows-software, rp23cnc-software, hardware, documentation,
+  data-flow, mobile-layout
+- Struggle/failure: The initial SVG chart used long return connectors that
+  crossed through nodes and overlapped visual elements on a phone. The supplied
+  mobile screenshot made the problem visible.
+- Resolution: Replaced connector routing with responsive top-to-bottom cards
+  and adjacent down arrows. The two independent branches appear side by side
+  only when space permits and otherwise stack; there are no drawn paths that
+  can cross a node or another path.
+- Evidence: `RPSW-20260902-001`; `docs/system_data_flow.html`; mobile-layout
+  review against the supplied screenshot; documentation index write/check.

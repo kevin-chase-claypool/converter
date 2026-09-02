@@ -40,10 +40,12 @@ current operational scenarios and makes their start and end points visible.
 ## Implementation
 
 Created `docs/system_data_flow.html` with five explicit scenario diagrams.
-Every connector occupies a dedicated routing lane; connectors do not cross or
-run through components. The sheet distinguishes job data, motion commands,
-toolhead control, sensor feedback, calculated registration data, and faults.
-It states that M3/M5 becomes an isolated pin state, P100 owns magnetic
+The first SVG-based layout proved too dense on a phone and its return paths
+crossed components. Replaced it with responsive top-to-bottom card flows: each
+arrow connects only adjacent steps, and the only desktop-only branches stack to
+one column on a narrow display. The sheet distinguishes job data, motion
+commands, toolhead control, sensor feedback, calculated registration data, and
+faults. It states that M3/M5 becomes an isolated pin state, P100 owns magnetic
 calculation, the force loop is local to the toolhead, and faults require
 deliberate recovery.
 
@@ -55,13 +57,17 @@ Linked the sheet from the documentation map and system architecture.
 - Reviewed against `docs/integration/INTERFACES.md`,
   `firmware/pen_pressure/README.md`, and
   `firmware/grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`.
-- `python tools\docs_index.py --write` and `--check` pending after visual
-  inspection.
+- Mobile screenshot review identified the original crossing/overlap defect;
+  the replacement uses no drawn connector paths.
+- `python tools\docs_index.py --write` and `--check` passed after the layout
+  correction.
 
 ## Struggles and rejected approaches
 
 Extending `docs/homing_data_flow.html` was rejected because it is explicitly
-archived and represents a superseded direct A-home workflow.
+archived and represents a superseded direct A-home workflow. The first new
+SVG-based layout was also rejected after mobile review because its connector
+paths crossed and ran through components.
 
 ## Risks and follow-up
 
