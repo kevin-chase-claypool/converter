@@ -177,6 +177,7 @@ Entry details remain only in the chronology.
 - [2026-09-02 - SUCCESS - Added interactive P100 data-movement map](#elog-20260902-added-interactive-p100-data-movement-map)
 - [2026-09-02 - SUCCESS - Added summer progress presentation](#elog-20260902-added-summer-progress-presentation)
 - [2026-09-02 - SUCCESS - Added native P100 presentation interaction](#elog-20260902-added-native-p100-presentation-interaction)
+- [2026-09-02 - SUCCESS - Aligned P100 presentation detail states](#elog-20260902-aligned-p100-presentation-detail-states)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2381,3 +2382,20 @@ Add new entries at the top of the log below this line.
   all 13 slides rendered and `slides_test.py` reported no overflow.
 - Limitation: This is PowerPoint navigation, not embedded HTML execution. The
   underlying P100 plan remains commissioning-gated.
+
+<a id="elog-20260902-aligned-p100-presentation-detail-states"></a>
+### 🟩 2026-09-02 - SUCCESS - Aligned P100 presentation detail states
+
+- Status: presentation correction implemented; no machine firmware, wiring, or
+  control behavior changed.
+- Category: windows-software, rp23cnc-software, hardware, presentation, P100
+- Summary: Corrected the six interactive P100 detail views so their in-map
+  detail panel matches the selected card. Removed the redundant outer detail
+  panel; the right side now gives only navigation guidance and the return
+  control.
+- Evidence: `RPSW-20260902-004`;
+  `docs/report/Theta_Pen_Plotter_Summer_Progress_Update.pptx`; all 13 slides
+  rendered, `slides_test.py` passed, and all six card actions plus back action
+  were verified in PowerPoint.
+- Limitation: The PowerPoint overlay mirrors the HTML map's data; it does not
+  embed webpage execution.
