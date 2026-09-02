@@ -30,6 +30,11 @@ one pen-clear position can produce the same no-contact force.
   rewrites that profile.
 - The mechanical backstop remains independent of GP2. The switch establishes a
   reference position; it is not a load-bearing stop.
+- Interchangeable pens, markers, and pencils are supported without a shared
+  vertical pen-tip datum. The load cell decides pressing versus released;
+  it does not determine an unloaded air gap. A tool-specific guarded preflight
+  must validate contact, release, selected force target, and clearance pulse
+  before plotting.
 
 No threshold, debounce duration, PWM, pulse duration, or clearance distance is
 accepted as a firmware constant until the named commissioning tests establish
@@ -48,5 +53,7 @@ it.
 - T-01I verifies the saved profile across power cycles, force checks against
   the scale, and the separation between persistent calibration and RAM-only
   startup drift compensation.
+- T-01J validates each intended interchangeable tool type. P100 may automate
+  that preflight only after its local toolhead acknowledgement is implemented.
 - Firmware stays commissioning-gated until those tests and load-cell force
   calibration succeed.

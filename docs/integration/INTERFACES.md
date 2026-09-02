@@ -164,6 +164,14 @@ local `GP2` switch establishes `LIFT_HOME` only at boot, recovery, or an
 explicit service action. Normal M5 uses the same load cell as M3, but detects
 the no-contact release band and then applies a verified clearance pulse.
 
+The planned P100 toolhead preflight is a separate commissioning-gated contract
+for an installed pen, marker, or pencil: home; capture a no-contact baseline;
+seek paper at limited force; perform normal M5 clear; and require a stable
+clear result. Current `P100.macro` does not yet implement or wait for that
+sequence, so it must not claim that tool changes are automatically validated.
+No-contact force proves release, not an exact air gap; the per-tool clearance
+pulse and target force require T-01J evidence.
+
 ## Toolhead internal interfaces
 
 Power boundary:

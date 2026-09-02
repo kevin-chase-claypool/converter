@@ -15,6 +15,14 @@ the grblHAL spindle-enable line as a **mode override**, not a position command.
   `GP2` switch reference is reached. This establishes an absolute lift datum;
   it is not the normal high-cycle M5 operation.
 
+Different pens, markers, and pencils may sit at different heights in the
+clamp. Normal control therefore uses the calibrated load-cell residual to
+identify **pressing** (`F_contact_on`) and **clear** (`F_release_off`), not one
+shared pen-tip height. The planned P100 toolhead preflight will home, baseline,
+seek actual paper at limited force, clear normally, and require a stable clear
+result before allowing a newly installed tool to plot. It proves contact and
+release only; the load cell cannot report an exact unloaded air gap.
+
 The host's `G4` dwell after M3/M5 gives this loop time to reach the
 `PEN_CLEAR`/`ENGAGE` state before motion resumes (open-loop handshake). A later
 upgrade: feed-hold
@@ -30,7 +38,7 @@ a grblHAL plugin reading a contact input).
 
 ## Open verification
 
-- Complete the T-01A through T-01I motor/preload physical-capability sequence
+- Complete the T-01A through T-01J motor/preload physical-capability sequence
   in [`docs/testing/TEST_PLAN.md`](../../docs/testing/TEST_PLAN.md) before
   choosing travel limits, force limits, LIFT dwell, or correction-pulse bounds.
 - Do not enable a firmware LIFT_HOME reference until T-01G verifies the planned
@@ -41,6 +49,8 @@ a grblHAL plugin reading a contact input).
 - Do not enable stored force-control parameters until T-01I proves that the
   accepted profile survives power cycles and that a fresh no-contact baseline
   stays RAM-only.
+- Do not allow an interchangeable pen/pencil to plot until T-01J validates its
+  contact/release preflight and its selected target-force/clearance settings.
 - Calibrate the installed HX711/load-cell force slope and final control gains.
 - Complete actuator travel, stall, seek-timeout, and safe-fault testing.
 - Decide whether the later `CONTACT_READY`/`TOOL_FAULT` handshake is necessary

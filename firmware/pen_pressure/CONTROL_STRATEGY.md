@@ -34,6 +34,28 @@ creates the required travel gap. `LIFT_HOME` is the absolute position reference
 used at startup and recovery. Do not make normal high-cycle `M5` motions travel
 to the home switch.
 
+## Interchangeable writing tools and preflight
+
+The intended toolhead accepts pens, markers, and pencils with different tip
+heights. It therefore does **not** depend on one shared vertical pen-tip datum
+for normal contact and release control. The load cell distinguishes only the
+two operational conditions: `CONTACT` when the filtered residual crosses
+`F_contact_on`, and `CLEAR` when it remains below `F_release_off`.
+
+It cannot measure an absolute air gap while the tip is unloaded. After each
+tool change, a planned P100 toolhead preflight must: run `LIFT_HOME`, take the
+RAM-only no-contact baseline, seek the actual paper at limited force, perform
+normal `PEN_CLEAR`, and verify that the result returns to the clear band. It
+must fault rather than permit plotting if contact, release, or the allowed
+travel/force bounds are not achieved. The preflight proves this installed tool
+can contact and release the current paper; it does not establish an exact tip
+height or clearance distance.
+
+The saved force conversion and safety limits may be shared only after they
+pass scale checks. `F_target` and the accepted clearance-pulse bounds must be
+validated for each pen/pencil type; they are not inferred automatically from
+the no-contact reading.
+
 ## M3/M5 force transitions
 
 The M3/M5 input requests a mode; it does not directly set N20 polarity or a

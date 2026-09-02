@@ -31,6 +31,18 @@ filesystem and the candidate build passes F-08.
 The eventual single ioSender button sends `G65 P100 Q0`. Separate modes exist
 so each stage can be commissioned without bypassing the others.
 
+### Planned interchangeable-tool preflight
+
+Before a tool change can be considered automatically safe, the P100 `Q0`
+sequence needs a commissioning-gated toolhead preflight: `LIFT_HOME`, a
+RAM-only no-contact load-cell baseline, limited-force seek to the actual paper,
+normal M5 `PEN_CLEAR`, and stable clear-band verification. This is deliberately
+not implemented in the present macro: the existing M3/M5 signal plus fixed
+dwell does not yet provide an acknowledgement that lets grblHAL safely wait
+for the local force result. Until that interface is implemented and T-01J
+passes, the operator must run the equivalent guarded tool check and must not
+assume a shared pen-tip height.
+
 ## Existing three-signal interface
 
 No additional moving-harness conductor is required.

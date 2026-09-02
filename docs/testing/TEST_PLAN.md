@@ -131,7 +131,7 @@ the routed U3 return conductor from `LIMA` to `PRB`.
 
 | ID | Test | Pass condition |
 |---|---|---|
-| T-01 | Toolhead lift/clear and motor/preload physical capability | Every applicable T-01A through T-01I sub-test below is recorded. The full `LIFT_HOME` and normal `PEN_CLEAR` motions stay inside the measured mechanical and electrical envelope; retracts repeatably without a fault, hard-stop contact, unacceptable drift, or an uncommanded pen contact. |
+| T-01 | Toolhead lift/clear and motor/preload physical capability | Every applicable T-01A through T-01J sub-test below is recorded. The full `LIFT_HOME` and normal `PEN_CLEAR` motions stay inside the measured mechanical and electrical envelope; retracts repeatably without a fault, hard-stop contact, unacceptable drift, or an uncommanded pen contact. |
 | T-02 | Contact seek | Finds paper before timeout without excessive force |
 | T-03 | Force hold | After E-06, E-07, E-08, T-01, and T-02: a bounded pulse-based P/PI trim loop holds a calibrated target force through (a) stationary contact, (b) X/Y translation, and (c) progressively faster constant A rotation. Define the measured error band before the test; log mean, 95th-percentile absolute error, peak force, pulse count/reversals, and faults. No sustained limit cycle, hard-force trip, or uncommanded contact loss is allowed. Demonstrate that the dominant bed-rotation disturbance is within the measured loop bandwidth; otherwise reduce speed or add mechanical compliance before considering feed-forward. |
 | T-04 | Missing-paper fault | Seek timeout enters FAULT |
@@ -158,11 +158,11 @@ loaded test; never hand-stall the actuator.
 
 **Current proposed LIFT datum (2026-08-30):** the owner measured
 `L_free = 1.190 in` and selected `x_lift = 0.535 in` as the proposed LIFT
-compression, yielding `L_lift = 0.655 in`. At that position the pen tip was
-measured 0.1885 in above the bed. A mechanical pen stop integrated into the
-pen mount is planned so the pen seats at a repeatable height. T-01A remains
-partial until `L_solid` is measured/verified and the 0.655 in installed length
-is shown to retain a documented solid-height margin.
+compression, yielding `L_lift = 0.655 in`. With the then-installed pen, the
+tip was measured 0.1885 in above the bed. That is not a universal clearance:
+interchangeable pens and pencils may sit at different clamp heights. T-01A
+remains partial until `L_solid` is measured/verified and the 0.655 in installed
+length is shown to retain a documented solid-height margin.
 
 | Sub-test | Procedure and values to record | Pass condition / resulting control input |
 |---|---|---|
@@ -175,13 +175,15 @@ is shown to retain a documented solid-height margin.
 | **T-01G — LIFT-home switch** | Before connecting to the Pro Micro, meter-check the selected terminals: open when released and closed when the actuator flag presses the switch. Then wire the dry contact only between `GP2` and `TOOL_GND`, enable `INPUT_PULLUP`, and record at least ten slow retract cycles. Record trigger/release position relative to the 0.535 in LIFT compression, repeatability, debounce behavior, and timeout behavior if no trigger occurs. | All ten cycles report `GP2` LOW only when the moving-carriage flag presses the fixed switch, at a repeatable LIFT position before the separate mechanical backstop. A missing or implausible transition faults/stops retraction. This input is a position reference, not a hard stop; do not use it until the separate solid-height and backstop margins are verified. |
 | **T-01H — M5 release and clearance pulse** | With E-07 force calibration active and a scale/paper fixture under the pen, start from stable contact and command normal M5. Record the signed filtered force trace, `F_contact_on`, `F_release_off`, release debounce, retract command, extra clearance-pulse PWM/duration, pen-tip gap after stopping, and any mark/drag during a representative pen-up travel move. Repeat at least 30 M3-contact/M5-clear cycles. `LIFT_HOME` switch contact is not expected during this test. | `F_contact_on` and `F_release_off` have a measured hysteresis margin; release is detected repeatably before the pulse; the calibrated pulse leaves the pen clear throughout the representative travel without contacting the distant switch; all 30 cycles complete without fault, drag, or uncommanded paper contact. These values authorize normal high-cycle M5 `PEN_CLEAR` behavior. |
 | **T-01I — saved force profile and startup baseline** | After E-07, T-01E, and T-01H produce accepted values, record a versioned calibration profile containing the load-cell slope/direction, `F_contact_on`, `F_release_off`, `F_target`, `F_max`, debounce, pulse bounds, and clearance-pulse command. Commit it only through an explicit local service action and record its identifier/checksum. Perform at least five complete power cycles. On each boot, run `LIFT_HOME`, verify the profile identifier/checksum before force control is enabled, collect a fresh no-contact baseline in RAM, and then use the scale fixture to check one low and one nominal commanded force. Query the stored profile again after every cycle. | All five boots reload the identical valid profile; each RAM baseline is within the documented no-contact/noise acceptance band; the low and nominal scale checks stay within their documented force tolerance; invalid/missing profile or implausible baseline leaves force control disabled/faulted; and the stored identifier/checksum remains unchanged until another explicit service calibration commit. This authorizes the profile for normal operation, not an automatic re-calibration. |
+| **T-01J — interchangeable-tool contact and clear preflight** | For each intended pen, marker, or pencil type and its allowed clamp-height range, run: `LIFT_HOME`; no-contact baseline; guarded low-force seek to the current paper/scale fixture; normal M5 release plus clearance pulse; then a representative pen-up travel move. Record tool identity, clamp setting, first-contact force, seek travel/time, selected `F_target`, `F_contact_on`, `F_release_off`, clearance-pulse command, post-clear force band, mark quality, and any drag. Repeat enough M3/M5 cycles to expose stiction or missed release; never use normal M5 to reach the home switch. | Every tested tool reaches contact before its seek limit, stays below `F_max`, releases into the clear band, and completes representative pen-up travel without drag or switch contact. The saved force conversion remains valid against the scale. Record a separate approved target-force/clearance setting for each tool type; do not claim an exact unloaded gap or automatic tool identification. A failure leaves that tool/profile combination disabled pending correction. |
 
 For every T-01 sub-test, use the lab-note template and include the exact test
 sketch/build, supply current limit, PWM/pulse settings, instruments, raw
 readings, photos, and unsuccessful attempts. Do not start T-02 or tune T-03
 until T-01F identifies a safe working envelope, T-01G establishes a repeatable
-`LIFT_HOME` reference, T-01H establishes normal M5 `PEN_CLEAR` behavior, and
-T-01I verifies the saved profile plus RAM-only startup baseline.
+`LIFT_HOME` reference, T-01H establishes normal M5 `PEN_CLEAR` behavior,
+T-01I verifies the saved profile plus RAM-only startup baseline, and T-01J
+establishes the selected interchangeable-tool settings.
 
 **Preliminary observation (2026-08-30):** with the spring installed, the owner
 reported approximately 0.019-0.050 A during retraction and 0.18 A at the

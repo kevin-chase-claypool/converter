@@ -172,6 +172,7 @@ Entry details remain only in the chronology.
 - [2026-09-02 08:05:50 -05:00 - SUCCESS - Added current system data-flow chart](#elog-20260902080550)
 - [2026-09-02 08:17:43 -05:00 - SUCCESS - Corrected mobile data-flow layout](#elog-20260902081743)
 - [2026-09-02 08:24:06 -05:00 - SUCCESS - Made data-flow visual a controlled record](#elog-20260902082406)
+- [2026-09-02 - MIXED/PLANNED - Plan interchangeable-tool force preflight](#elog-20260902-plan-interchangeable-tool-force-preflight)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2288,3 +2289,27 @@ Add new entries at the top of the log below this line.
   process before the chart can be redrawn.
 - Evidence: `RPSW-20260902-001`; system-data-flow record; documentation index
   write/check.
+
+<a id="elog-20260902-plan-interchangeable-tool-force-preflight"></a>
+### 🟨 2026-09-02 - MIXED/PLANNED - Plan interchangeable-tool force preflight
+
+- Status: interface, control, and test decision recorded; no automatic P100
+  preflight or new force-control firmware has been implemented.
+- Category: hardware, rp23cnc-software, toolhead, load-cell, p100, testing
+- Summary: The toolhead is now planned to accept pens, markers, and pencils at
+  different clamp heights without a shared vertical pen-tip datum. It will use
+  the calibrated load-cell residual to distinguish contact from clear. T-01J
+  was added to validate each intended tool's contact, release, force target,
+  and clearance pulse.
+- Reason: The previous 0.1885 in retract gap was measured with one installed
+  pen and cannot safely represent all interchangeable tools. A no-contact
+  reading identifies release but cannot measure an absolute air gap.
+- Safety boundary: The planned P100 preflight must home, baseline, guarded-seek
+  to paper, clear normally, and confirm clear-band return. The current P100
+  macro lacks a toolhead acknowledgement and must not claim it performs that
+  validation. A failed tool preflight leaves plotting disabled.
+- Evidence: `HW-20260902-001`; `docs/testing/TEST_PLAN.md` T-01J;
+  `firmware/pen_pressure/CONTROL_STRATEGY.md`.
+- Next action: Complete E-07/T-01H, run T-01J with the intended pen and pencil
+  types, then design and test a P100/toolhead acknowledgement before automating
+  the preflight.

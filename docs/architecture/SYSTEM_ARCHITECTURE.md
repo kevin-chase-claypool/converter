@@ -96,6 +96,14 @@ M5 commands `PEN_CLEAR`. M3 commands `SEEK_CONTACT`, then `HOLD_FORCE`.
 The toolhead enters `LIFT_HOME` only for boot, recovery, or an explicit service
 request; it is not used for every plotting stroke.
 
+The toolhead is intended to accept interchangeable pens, markers, and pencils
+without relying on one shared vertical pen-tip datum. Load-cell thresholds
+determine pressing versus clear; the clearance pulse creates travel gap after
+release. A planned P100 toolhead preflight must verify home, no-contact
+baseline, limited-force contact seek, normal clear, and a stable clear result
+for the installed tool before plotting. It cannot calculate an exact unloaded
+tip-to-paper gap from a load-cell reading.
+
 ## Homing and magnetic reference
 
 Normal startup is owned by grblHAL's P100 macro. X/Y physical switches establish
