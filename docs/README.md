@@ -8,7 +8,9 @@ For a visual overview of this process, open
 
 For the current end-to-end system data paths (normal plotting, P100 startup
 registration, toolhead lifecycle, faults, and commissioning), open
-[`system_data_flow.html`](system_data_flow.html).
+[`system_data_flow.html`](system_data_flow.html). Its comparison baselines and
+update procedure are in
+[`architecture/SYSTEM_DATA_FLOW_RECORD.md`](architecture/SYSTEM_DATA_FLOW_RECORD.md).
 
 ## Start by task
 

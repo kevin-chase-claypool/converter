@@ -29,6 +29,10 @@ registration, toolhead control, fault/recovery, and commissioning without
 connector crossings. Interface details and verification status remain in their
 authoritative documents.
 
+[`SYSTEM_DATA_FLOW_RECORD.md`](SYSTEM_DATA_FLOW_RECORD.md) makes the visual a
+controlled record: it defines comparison baselines, traceable authorities, and
+the procedure for recording an inconsistency before changing the diagram.
+
 ```text
 Host G-code stream
        |

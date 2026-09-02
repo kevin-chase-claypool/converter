@@ -171,6 +171,7 @@ Entry details remain only in the chronology.
 - [2026-09-01 - MIXED/PLANNED - Persist toolhead force profile separately from boot baseline](#elog-20260901-persist-toolhead-force-profile-separately-from-boot-baseline)
 - [2026-09-02 08:05:50 -05:00 - SUCCESS - Added current system data-flow chart](#elog-20260902080550)
 - [2026-09-02 08:17:43 -05:00 - SUCCESS - Corrected mobile data-flow layout](#elog-20260902081743)
+- [2026-09-02 08:24:06 -05:00 - SUCCESS - Made data-flow visual a controlled record](#elog-20260902082406)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -240,6 +241,7 @@ Entry details remain only in the chronology.
 - [2026-08-28 08:37:05 -0500 - SUCCESS - Established sequential agent execution policy](#elog-20260828083705)
 - [2026-09-02 08:05:50 -05:00 - SUCCESS - Added current system data-flow chart](#elog-20260902080550)
 - [2026-09-02 08:17:43 -05:00 - SUCCESS - Corrected mobile data-flow layout](#elog-20260902081743)
+- [2026-09-02 08:24:06 -05:00 - SUCCESS - Made data-flow visual a controlled record](#elog-20260902082406)
 <!-- END GENERATED TOPIC INDEX -->
 
 ## Entry format
@@ -2272,3 +2274,17 @@ Add new entries at the top of the log below this line.
   can cross a node or another path.
 - Evidence: `RPSW-20260902-001`; `docs/system_data_flow.html`; mobile-layout
   review against the supplied screenshot; documentation index write/check.
+
+<a id="elog-20260902082406"></a>
+### 🟩 2026-09-02 08:24:06 -05:00 - SUCCESS - Made data-flow visual a controlled record
+
+- Status: documentation control record implemented; no hardware, firmware, or
+  interface behavior changed.
+- Category: windows-software, rp23cnc-software, hardware, documentation,
+  data-flow, change-control
+- Summary: Added `docs/architecture/SYSTEM_DATA_FLOW_RECORD.md` as the audit
+  companion to the macro view. It defines eight traceable data-path baselines,
+  what would count as an inconsistency, and the required evidence/disposition
+  process before the chart can be redrawn.
+- Evidence: `RPSW-20260902-001`; system-data-flow record; documentation index
+  write/check.

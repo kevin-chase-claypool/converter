@@ -51,6 +51,11 @@ deliberate recovery.
 
 Linked the sheet from the documentation map and system architecture.
 
+Added `docs/architecture/SYSTEM_DATA_FLOW_RECORD.md` so this macro visual is a
+controlled record rather than a presentation alone. It lists eight expected
+data-path invariants, the authority for each, and the required handling for a
+confirmed change, documentation defect, or unresolved discrepancy.
+
 ## Verification
 
 - Documentation-only update.
@@ -78,5 +83,7 @@ thresholds remain commissioning-gated until their named tests pass.
 ## Files
 
 - `docs/system_data_flow.html`: current, non-overlapping system data-flow chart.
+- `docs/architecture/SYSTEM_DATA_FLOW_RECORD.md`: comparison baselines,
+  authorities, discrepancy process, and revision history.
 - `docs/architecture/SYSTEM_ARCHITECTURE.md`: link to the visual companion.
 - `docs/README.md`: documentation-map link.
