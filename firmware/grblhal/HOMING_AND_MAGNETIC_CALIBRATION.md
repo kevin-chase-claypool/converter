@@ -43,6 +43,83 @@ for the local force result. Until that interface is implemented and T-01J
 passes, the operator must run the equivalent guarded tool check and must not
 assume a shared pen-tip height.
 
+## Intended P100 Q0 data movement
+
+This is the target commissioning-gated order. It records which controller owns
+each decision and which existing signal carries the result. The present macro
+does not yet implement the GP2-verified home wait or the per-run touch check.
+
+### 1. Start command: host to motion controller
+
+```text
+ioSender -- G65 P100 Q0 --> RP23CNC/grblHAL
+```
+
+P100 begins locally on RP23CNC. Pen-force samples do not travel to the host.
+
+### 2. Toolhead home: motion controller and Pro Micro
+
+```text
+RP23CNC GP28 -- home/ready request --> Pro Micro
+Pro Micro GP2 <-- upper LIFT_HOME switch
+Pro Micro GP27 -- LIFT_HOME verified --> RP23CNC
+```
+
+P100 first requests a safe M5 state and then requests the toolhead-ready
+phase. The Pro Micro owns N20 motion, waits for GP2 (including the guarded
+release/retrigger branch if already pressed), captures its RAM-only no-contact
+baseline, and asserts GP27 only after successful `LIFT_HOME`. P100 waits for
+that reply with a timeout; it does not substitute a fixed dwell for the switch
+result.
+
+### 3. Machine home: RP23CNC only
+
+```text
+RP23CNC -- $H --> X/Y motors and X/Y physical switches
+```
+
+The grblHAL homing cycle establishes gantry coordinates. The Pro Micro does
+not participate in X/Y homing.
+
+### 4. Magnetic registration: motion controller and Pro Micro
+
+```text
+RP23CNC GP28 -- magnetic-scan request --> Pro Micro
+TMAG5273 ------ magnetic field samples --> Pro Micro
+Pro Micro GP27 -- magnetic active/inactive --> RP23CNC
+```
+
+The second GP28 phase changes GP27 from the home-ready reply into the one-bit
+magnetic state. RP23CNC performs the center raster and outer-A scans, captures
+their edge coordinates, validates the geometry, and sets G54 `X0 Y0 A0`.
+
+### 5. Per-run pen touch check: motion controller and Pro Micro
+
+```text
+RP23CNC M3 -- GP29 --> Pro Micro       request guarded contact seek
+HX711/load cell --------> Pro Micro    contact/release force samples
+RP23CNC M5 -- GP29 --> Pro Micro       request normal PEN_CLEAR
+```
+
+For every P100 run, the Pro Micro will seek the current paper at limited force,
+reject overforce or missing contact, then run normal M5 release plus the
+clearance pulse. The toolhead must return a pass/fail result through the
+existing GP28/GP27 request/reply path before P100 proceeds. The exact third
+request/reply phase is TBD; it is a protocol definition, not a new wire or
+RP23CNC pin.
+
+### 6. Ready state
+
+```text
+P100 --> G54 X0 Y0 A0
+toolhead --> PEN_CLEAR
+RP23CNC --> ready to stream drawing G-code
+```
+
+Any missing home-ready acknowledgement, failed touch check, force fault,
+magnetic-handshake failure, invalid magnetic footprint, or invalid A spacing
+aborts P100 and leaves plotting disabled.
+
 ## Existing three-signal interface
 
 No additional moving-harness conductor is required.

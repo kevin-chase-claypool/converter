@@ -51,6 +51,10 @@ can validate each tool against the actual paper before it plots.
   for the local result.
 - Added T-01J to validate contact/release, clearance, and selected
   target-force/pulse settings for each intended tool type.
+- Added the intended P100 Q0 data-movement order: GP28/GP27 first carries the
+  GP2-verified home-ready result, then magnetic state; GP29 carries M3/M5;
+  the future touch-check result reuses GP28/GP27 in a defined third protocol
+  phase.
 
 ## Verification
 
@@ -79,7 +83,7 @@ do not claim that the current macro validates a tool change.
   contract and force limitations.
 - `firmware/pen_pressure/README.md`: adds the user-facing commissioning gate.
 - `firmware/grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`: scopes the future P100
-  preflight and current interface limitation.
+  preflight, current interface limitation, and authoritative data movement.
 - `docs/testing/TEST_PLAN.md`: adds T-01J.
 - `docs/testing/RECOMMENDED_TEST_SEQUENCE.md`: places T-01J in the gate order.
 - `docs/integration/INTERFACES.md`: records that the current macro cannot yet

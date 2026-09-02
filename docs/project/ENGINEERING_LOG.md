@@ -173,6 +173,7 @@ Entry details remain only in the chronology.
 - [2026-09-02 08:17:43 -05:00 - SUCCESS - Corrected mobile data-flow layout](#elog-20260902081743)
 - [2026-09-02 08:24:06 -05:00 - SUCCESS - Made data-flow visual a controlled record](#elog-20260902082406)
 - [2026-09-02 - MIXED/PLANNED - Plan interchangeable-tool force preflight](#elog-20260902-plan-interchangeable-tool-force-preflight)
+- [2026-09-02 - SUCCESS - Recorded intended P100 data movement](#elog-20260902-recorded-intended-p100-data-movement)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -243,6 +244,7 @@ Entry details remain only in the chronology.
 - [2026-09-02 08:05:50 -05:00 - SUCCESS - Added current system data-flow chart](#elog-20260902080550)
 - [2026-09-02 08:17:43 -05:00 - SUCCESS - Corrected mobile data-flow layout](#elog-20260902081743)
 - [2026-09-02 08:24:06 -05:00 - SUCCESS - Made data-flow visual a controlled record](#elog-20260902082406)
+- [2026-09-02 - SUCCESS - Recorded intended P100 data movement](#elog-20260902-recorded-intended-p100-data-movement)
 <!-- END GENERATED TOPIC INDEX -->
 
 ## Entry format
@@ -2313,3 +2315,20 @@ Add new entries at the top of the log below this line.
 - Next action: Complete E-07/T-01H, run T-01J with the intended pen and pencil
   types, then design and test a P100/toolhead acknowledgement before automating
   the preflight.
+
+<a id="elog-20260902-recorded-intended-p100-data-movement"></a>
+### 🟩 2026-09-02 - SUCCESS - Recorded intended P100 data movement
+
+- Status: current-state planning reference documented; no macro, wire, or
+  firmware behavior changed.
+- Category: rp23cnc-software, hardware, p100, toolhead, documentation
+- Summary: Recorded P100 Q0 in six data-movement sections: start command,
+  toolhead GP2 home verification through the existing GP28/GP27 handshake,
+  X/Y homing, magnetic registration, per-run M3/M5 touch check, and ready
+  state.
+- Safety boundary: GP2 remains local to the Pro Micro. P100 must wait for the
+  existing GP27 acknowledgement rather than infer home from a fixed delay. The
+  planned touch-check acknowledgement needs a defined third GP28/GP27 phase;
+  it adds no wire or RP23CNC pin and is not yet implemented.
+- Evidence: `HW-20260902-001`;
+  `firmware/grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`.
