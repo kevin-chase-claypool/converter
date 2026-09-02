@@ -19,7 +19,9 @@ organized along those subsystem lines so each maps to a report section.
 [`Theta_Pen_Plotter_Summer_Progress_Update.pptx`](Theta_Pen_Plotter_Summer_Progress_Update.pptx)
 is the professor-facing summer-progress update. It gives the high-level machine
 architecture, homing and P100 sequence, force-controlled M3/M5 print cycle,
-and remaining commissioning gates.
+and remaining commissioning gates. Its P100 map supports hover or click on any
+of the six process cards during Slide Show; a matching detail view opens, with
+a **Back to overview** control.
 
 ## Suggested outline
 

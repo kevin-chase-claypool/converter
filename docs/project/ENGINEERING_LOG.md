@@ -176,6 +176,7 @@ Entry details remain only in the chronology.
 - [2026-09-02 - SUCCESS - Recorded intended P100 data movement](#elog-20260902-recorded-intended-p100-data-movement)
 - [2026-09-02 - SUCCESS - Added interactive P100 data-movement map](#elog-20260902-added-interactive-p100-data-movement-map)
 - [2026-09-02 - SUCCESS - Added summer progress presentation](#elog-20260902-added-summer-progress-presentation)
+- [2026-09-02 - SUCCESS - Added native P100 presentation interaction](#elog-20260902-added-native-p100-presentation-interaction)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2364,3 +2365,19 @@ Add new entries at the top of the log below this line.
   rendered and `slides_test.py` reported no overflow.
 - Next action: Update the progress deck only when measured commissioning or
   calibration-drawing evidence changes the presentation narrative.
+
+<a id="elog-20260902-added-native-p100-presentation-interaction"></a>
+### 🟩 2026-09-02 - SUCCESS - Added native P100 presentation interaction
+
+- Status: presentation interaction implemented; no machine firmware, wiring,
+  or control behavior changed.
+- Category: windows-software, rp23cnc-software, hardware, presentation, P100
+- Summary: The P100 overview slide now has six native hover/click regions. Each
+  opens the corresponding process-detail view, and every detail view includes a
+  **Back to overview** control.
+- Evidence: `RPSW-20260902-003`;
+  `docs/report/Theta_Pen_Plotter_Summer_Progress_Update.pptx`; PowerPoint
+  action settings were checked for six overview targets and the return action;
+  all 13 slides rendered and `slides_test.py` reported no overflow.
+- Limitation: This is PowerPoint navigation, not embedded HTML execution. The
+  underlying P100 plan remains commissioning-gated.
