@@ -78,6 +78,17 @@ With the 6.0 V bench input and N20 moving in both directions, DRV8833 `VM` to
 motor-only configuration; sensor load, ripple, temperature, and the final
 upstream D36V50F6 rail remain unmeasured.
 
+## 2026-09-04 E-05 alignment correction
+
+The owner clarified that the corrected **unloaded N20 motor-motion current is
+0.009 A**. The earlier 0.043 A motion reading included extra mechanical load
+because the lead screw was not nearly straight against the heat-set insert.
+After correcting that alignment, 0.009 A is the appropriate unloaded-motion
+baseline. The earlier 0.043 A result remains useful as evidence that the rail
+survived a higher accidental alignment load, but it must not be used as the
+normal unloaded N20 current. This correction does not replace the separate
+spring-installed preload observation.
+
 ## Decisions and next action
 
 Record exact voltage readings in the next powered session. Complete the

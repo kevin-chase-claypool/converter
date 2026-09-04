@@ -56,4 +56,6 @@ Do not use the fully compressed end condition as normal operation. Complete
 T-01A, then repeat the measurement at the intended maximum working compression
 with the current limit, voltage, force/position, peak current, hold dwell, and
 temperature recorded. The reported preload hold should be formalized as T-01C
-evidence before it is used as a controller assumption.
+evidence before it is used as a controller assumption. The later-corrected
+0.009 A value applies to aligned **unloaded** motor motion; it does not replace
+this spring-installed preload observation.

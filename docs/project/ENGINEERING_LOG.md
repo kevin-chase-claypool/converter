@@ -192,6 +192,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 14:43:51 -0500 - MIXED/OPEN - Recorded completed TB6600 signal harness wiring](#elog-20260904144351)
 - [2026-09-04 14:48:01 -0500 - MIXED/OPEN - Verified TB6600 signal-harness continuity](#elog-20260904144801)
 - [2026-09-04 - HARDWARE/PARTIAL - Clarified N20 stall current and preload hold](#elog-20260904-clarified-n20-stall-current-and-preload-hold)
+- [2026-09-04 - HARDWARE/PARTIAL - Corrected N20 unloaded current after alignment](#elog-20260904-corrected-n20-unloaded-current-after-alignment)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2635,3 +2636,25 @@ Add new entries at the top of the log below this line.
 - Next action: Repeat at the guarded working compression with a current-limited
   supply and record hold dwell, force/position, rail voltage, current, driver
   state, and temperatures; then complete T-01C/T-01D.
+
+<a id="elog-20260904-corrected-n20-unloaded-current-after-alignment"></a>
+### 🟨 2026-09-04 - HARDWARE/PARTIAL - Corrected N20 unloaded current after alignment
+
+- Status: E-05 unloaded-current baseline corrected; spring-loaded capability
+  remains separately qualified only by owner report.
+- Category: hardware, toolhead, n20, alignment, testing
+- Summary: The owner clarified that aligned unloaded N20 motion current is
+  `0.009 A`. The earlier `0.043 A` toolhead motion reading included extra
+  mechanical load from a lead screw that was not nearly straight against the
+  heat-set insert; the alignment has since been corrected.
+- Result: `0.009 A` is now the normal unloaded-motion baseline. The earlier
+  `0.043 A` result remains historical evidence that the rail survived a
+  higher accidental alignment load, but is not the normal no-load value.
+- Limitation: This correction does not replace the spring-installed
+  `0.019-0.050 A` observation or qualify the reported `0.18 A` stall current,
+  loaded rail margin, or formal T-01C hold dwell.
+- Evidence: `docs/report/lab-notes/2026-08-12-e-14b-toolhead-local-power.md`;
+  `docs/testing/TEST_PLAN.md`;
+  `docs/changes/hardware/2026/2026-09-04-correct-n20-unloaded-current-after-alignment.md`.
+- Next action: Use the corrected alignment for the next controlled spring-load
+  test and record current, force, rail voltage, dwell, and temperatures.
