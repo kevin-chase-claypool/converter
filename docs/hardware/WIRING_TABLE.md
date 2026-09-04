@@ -84,21 +84,23 @@ block as reported from the received unit.
 
 ## Motion control signals
 
-The RP23CNC terminal names and TB6600 common-anode/common-cathode wiring remain
-TBD until the exact board revision and received driver input circuits are
-verified. Do not use the conceptual HTML diagram as proof of polarity.
+The supplied TB6600 schematic defines the planned common-cathode pattern:
+each RP23CNC axis `G` is jumpered to its TB6600 `PUL-`, `DIR-`, and `ENA-`;
+`Stp`, `Dir`, and `En` go to `PUL+`, `DIR+`, and `ENA+`. This is documented,
+not yet powered-driver verified: E-03 must prove the installed inputs behave
+correctly before mechanics are attached. Compare every terminal with received
+hardware silkscreen before wiring.
 
 | ID | From device | From terminal | To device | To terminal | Signal | Expected level/polarity | Wire | Status | Evidence/notes |
 |---|---|---|---|---|---|---|---|---|---|
-| MOT-001 | RP23CNC | X output group `STEP` | X TB6600 | `PUL+` or `PUL-` TBD | X step pulse | 5 V pulse activity observed only during commanded motion; final TB6600 polarity/topology TBD | Twisted pair TBD | controller side passed | F-03: 0 V idle, about 50 mV DC-meter average during move; test E-03 input polarity before final wiring |
-| MOT-002 | RP23CNC | X output group `DIR` | X TB6600 | `DIR+` or `DIR-` TBD | X direction | 0 V positive direction, 5 V negative direction; final TB6600 polarity/topology TBD | Twisted pair TBD | controller side passed | F-03: held direction level; test E-03 before final wiring |
-| MOT-003 | RP23CNC | X output group `EN` | X TB6600 | `ENA+` or `ENA-` TBD | X enable | Active-low: 5 V idle, 0 V while moving; final TB6600 topology TBD | Twisted pair TBD | controller side passed | F-03; test E-03 before final wiring |
-| MOT-004 | RP23CNC | Y output group `STEP` | Y TB6600 | `PUL+` or `PUL-` TBD | Y step pulse | 5 V pulse activity observed only during commanded motion; final TB6600 polarity/topology TBD | Twisted pair TBD | controller side passed | F-03: 0 V idle, about 50 mV DC-meter average during move; test E-03 input polarity before final wiring |
-| MOT-005 | RP23CNC | Y output group `DIR` | Y TB6600 | `DIR+` or `DIR-` TBD | Y direction | 0 V positive direction, 5 V negative direction; final TB6600 polarity/topology TBD | Twisted pair TBD | controller side passed | F-03: held direction level; test E-03 before final wiring |
-| MOT-006 | RP23CNC | Y output group `EN` | Y TB6600 | `ENA+` or `ENA-` TBD | Y enable | Active-low: 5 V idle, 0 V while moving; final TB6600 topology TBD | Twisted pair TBD | controller side passed | F-03; test E-03 before final wiring |
-| MOT-007 | RP23CNC | A output group `STEP` | A TB6600 | `PUL+` or `PUL-` TBD | A step pulse | 5 V pulse activity observed only during commanded motion; final TB6600 polarity/topology TBD | Twisted pair TBD | controller side passed | F-03: 0 V idle, about 50 mV DC-meter average during move; test E-03 input polarity before final wiring |
-| MOT-008 | RP23CNC | A output group `DIR` | A TB6600 | `DIR+` or `DIR-` TBD | A direction | 0 V positive direction, 5 V negative direction; final TB6600 polarity/topology TBD | Twisted pair TBD | controller side passed | F-03: held direction level; test E-03 before final wiring |
-| MOT-009 | RP23CNC | A output group `EN` | A TB6600 | `ENA+` or `ENA-` TBD | A enable | Active-low: 5 V idle, 0 V while moving; final TB6600 topology TBD | Twisted pair TBD | controller side passed | F-03; test E-03 before final wiring |
+| MOT-001 | RP23CNC | X `Stp` | X TB6600 | `PUL+` | X step pulse | 5 V pulse activity during commanded motion | Twisted pair TBD | documented — controller side passed | F-03; supplied schematic establishes endpoint; E-03 remains installed-driver verification. |
+| MOT-002 | RP23CNC | X `Dir` | X TB6600 | `DIR+` | X direction | 0 V positive, 5 V negative direction | Twisted pair TBD | documented — controller side passed | F-03; E-03 remains required. |
+| MOT-003 | RP23CNC | X `En` | X TB6600 | `ENA+` | X enable | Active-low: 5 V idle, 0 V moving | Twisted pair TBD | documented — controller side passed | F-03; E-03 remains required. |
+| MOT-004 | RP23CNC | Y `Stp` / `Dir` / `En` | Y TB6600 | `PUL+` / `DIR+` / `ENA+` | Y step, direction, enable | Same F-03 logic as X | Twisted pair TBD | documented — controller side passed | Supplied schematic; E-03 remains required. |
+| MOT-005 | RP23CNC | A `Stp` / `Dir` / `En` | A TB6600 | `PUL+` / `DIR+` / `ENA+` | A step, direction, enable | Same F-03 logic as X | Twisted pair TBD | documented — controller side passed | Supplied schematic; E-03 remains required. |
+| MOT-006 | RP23CNC | X `G` | X TB6600 | `PUL-`, `DIR-`, `ENA-` via common block | X signal return | Axis-local common reference | Three jumpers/common block TBD | documented | Do not use isolated-input ground; E-03 remains required. |
+| MOT-007 | RP23CNC | Y `G` | Y TB6600 | `PUL-`, `DIR-`, `ENA-` via common block | Y signal return | Axis-local common reference | Three jumpers/common block TBD | documented | Do not use isolated-input ground; E-03 remains required. |
+| MOT-008 | RP23CNC | A `G` | A TB6600 | `PUL-`, `DIR-`, `ENA-` via common block | A signal return | Axis-local common reference | Three jumpers/common block TBD | documented | Do not use isolated-input ground; E-03 remains required. |
 
 ## Stepper motor phases
 

@@ -180,6 +180,7 @@ Entry details remain only in the chronology.
 - [2026-09-02 - SUCCESS - Aligned P100 presentation detail states](#elog-20260902-aligned-p100-presentation-detail-states)
 - [2026-09-02 - SUCCESS - Expanded P100 presentation views to full slide](#elog-20260902-expanded-p100-presentation-views-to-full-slide)
 - [2026-09-02 - SUCCESS - Refreshed summer presentation opening render](#elog-20260902-refreshed-summer-presentation-opening-render)
+- [2026-09-03 - IMPLEMENTED - Recorded TB6600 signal and A-axis commissioning baseline](#elog-20260903-recorded-tb6600-signal-and-a-axis-commissioning-baseline)
 - [2026-09-03 - SUCCESS - Added opto-isolation presentation slide](#elog-20260903-added-opto-isolation-presentation-slide)
 - [2026-09-02 - SUCCESS - Set opening slide to full-bleed machine render](#elog-20260902-set-opening-slide-to-full-bleed-machine-render)
 
@@ -2435,6 +2436,24 @@ Add new entries at the top of the log below this line.
   navigation actions were checked in PowerPoint.
 - Next action: Run the deck in Slide Show mode on the classroom computer before
   presenting, to confirm display scaling and mouse-over navigation.
+
+<a id="elog-20260903-recorded-tb6600-signal-and-a-axis-commissioning-baseline"></a>
+### 🟩 2026-09-03 - IMPLEMENTED - Recorded TB6600 signal and A-axis commissioning baseline
+
+- Status: documentation correction and commissioning baseline; no powered
+  driver or motion result is claimed.
+- Category: hardware, rp23cnc-software, TB6600, A-axis, calibration, homing.
+- Summary: Promoted the already-supplied common-cathode TB6600 signal pattern
+  into the master wiring table: axis `G` to `PUL-`/`DIR-`/`ENA-`, and
+  `Stp`/`Dir`/`En` to `PUL+`/`DIR+`/`ENA+`. Recorded the X/Y 80 steps/mm
+  baseline and the A 12:1, 19,200-pulse/bed-revolution, 0.01875-degree/pulse
+  calculation, including a two-rotation scan-time formula.
+- Evidence: supplied `plotter-wiring-schematic.svg` and
+  `plotter-pinout-schematic.html`; arithmetic review. E-03 and M-01 through
+  M-05 remain required hardware verification.
+- Next action: With power removed, confirm received terminal labels, fuses,
+  and DIP states; then use E-03 and one-axis low-speed M-01/M-02 testing to
+  establish reliable loaded motion and the production A scan rate.
 
 <a id="elog-20260903-added-opto-isolation-presentation-slide"></a>
 ### 🟩 2026-09-03 - SUCCESS - Added opto-isolation presentation slide

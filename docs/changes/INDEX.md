@@ -6,6 +6,7 @@ Newest changes appear first.
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
 | 2026-09-03 | `RPSW-20260903-008` | rp23cnc-software, hardware, windows-software | implemented | [Add Opto-Isolation Presentation Slide](rp23cnc-software/2026/2026-09-03-add-opto-isolation-presentation-slide.md) |
+| 2026-09-03 | `HW-20260903-001` | hardware, rp23cnc-software | implemented | [Record TB6600 signal and A-axis commissioning baseline](hardware/2026/2026-09-03-record-tb6600-signal-and-a-axis-commissioning-baseline.md) |
 | 2026-09-02 | `RPSW-20260902-007` | rp23cnc-software, hardware, windows-software | implemented | [Full-Bleed Opening Slide Image](rp23cnc-software/2026/2026-09-02-full-bleed-opening-slide-image.md) |
 | 2026-09-02 | `RPSW-20260902-006` | rp23cnc-software, hardware, windows-software | implemented | [Refresh Summer Presentation Opening Render](rp23cnc-software/2026/2026-09-02-refresh-summer-presentation-opening-render.md) |
 | 2026-09-02 | `RPSW-20260902-005` | rp23cnc-software, hardware, windows-software | implemented | [Expand P100 Presentation to Full Slide](rp23cnc-software/2026/2026-09-02-expand-p100-presentation-to-full-slide.md) |

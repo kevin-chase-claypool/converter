@@ -70,11 +70,19 @@ provides fine bed resolution; 16 or 32 microsteps would increase pulse demand
 and reduce incremental torque without a demonstrated plotting benefit. M-04
 and M-05 must still verify one motor revolution and one full bed revolution.
 
+The angular increment is uniform across the bed; tangential increment is
+`radius × 0.00032725` in the same linear unit as the radius. At 9 in from the
+center, one A pulse is about 0.00295 in (0.0748 mm). A planned two-bed-
+revolution index search takes `120 / bed_RPM` seconds at constant speed: 24 s
+at 5 RPM, 12 s at 10 RPM, or 6 s at 20 RPM, plus ramps and detection dwell.
+Commission the actual scan rate through loaded A-axis M-01/M-02 testing.
+
 ### X/Y TB6600 baseline
 
 Both X and Y use GT2 belts (2 mm pitch) with confirmed 20-tooth motor pulleys.
+The opposite 20-tooth belt pulley is an idler and does not change this ratio.
 The initial settings are 16 microsteps (`SW1 OFF`, `SW2 OFF`, `SW3 ON`) and the
-motor-rated 1.5 A/phase current row (`SW4 ON`, `SW5 ON`, `SW6 OFF`). With the
+motor-rated 1.5 A/phase current row (`SW4 ON`, `SW5 OFF`, `SW6 ON`). With the
 200-full-step motors, the initial grblHAL values are:
 
 ```text
