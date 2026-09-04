@@ -122,11 +122,12 @@ raise PID gains beyond the HX711/actuator settling limit.
 
 ### Required characterization and tuning sequence
 
-1. Complete E-06 with a current-limited source. The owner-reported N20 stall
-   current is `0.18 A`, and the motor reportedly holds the selected preload;
-   these are useful capability evidence but not a verified DRV8833 or
-   regulator operating point until the measured peak, dwell, regulator
-   temperature/ripple, and driver-fault result are recorded.
+1. E-06 bounded stall check passed with a 6.0 V supply limited to 0.20 A: the
+   owner reports 0.18 A stall current, approximately 30 s hold duration, and
+   10 successful repeats while holding the selected preload. This establishes
+   the tested actuator capability; optional thermal/rail/endurance
+   characterization remains separate before making a full production safety
+   claim.
 2. Complete T-01 and map lift/seek direction. With a scale under the pen,
    measure 5, 10, 20, and 40 ms pulses at candidate PWM values in both
    directions, then wait for a new filtered sample. Record force increment,

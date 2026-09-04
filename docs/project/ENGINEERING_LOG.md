@@ -193,6 +193,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 14:48:01 -0500 - MIXED/OPEN - Verified TB6600 signal-harness continuity](#elog-20260904144801)
 - [2026-09-04 - HARDWARE/PARTIAL - Clarified N20 stall current and preload hold](#elog-20260904-clarified-n20-stall-current-and-preload-hold)
 - [2026-09-04 - HARDWARE/PARTIAL - Corrected N20 unloaded current after alignment](#elog-20260904-corrected-n20-unloaded-current-after-alignment)
+- [2026-09-04 - HARDWARE - Passed bounded N20 stall and preload-hold test](#elog-20260904-passed-bounded-n20-stall-and-preload-hold-test)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2658,3 +2659,23 @@ Add new entries at the top of the log below this line.
   `docs/changes/hardware/2026/2026-09-04-correct-n20-unloaded-current-after-alignment.md`.
 - Next action: Use the corrected alignment for the next controlled spring-load
   test and record current, force, rail voltage, dwell, and temperatures.
+
+<a id="elog-20260904-passed-bounded-n20-stall-and-preload-hold-test"></a>
+### 🟩 2026-09-04 - HARDWARE - Passed bounded N20 stall and preload-hold test
+
+- Status: bounded E-06 passed; functional T-01C preload-hold evidence recorded.
+- Category: hardware, toolhead, n20, preload, testing
+- Summary: With the lead screw aligned against the heat-set insert, the owner
+  tested the N20 at 6.0 V with a 0.20 A bench-supply current limit. The motor
+  reached 0.18 A at stall, held the selected spring preload for approximately
+  30 seconds, and repeated successfully 10 times.
+- Result: The bounded current-limited stall condition passed without reaching
+  the supply limit, and the selected preload was maintained in every repeat.
+- Limitation: Current was read at the supply; rail voltage, driver fault state,
+  temperature, exact spring compression, and long-duration endurance were not
+  recorded. These remain outside this bounded test's scope.
+- Evidence: `docs/report/lab-notes/2026-09-04-e-06-t-01c-n20-stall-preload-hold.md`;
+  `docs/testing/TEST_PLAN.md`.
+- Next action: Continue the mechanical/force characterization sequence; add
+  thermal or endurance measurements only if a full production safety envelope
+  is required.

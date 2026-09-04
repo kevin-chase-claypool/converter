@@ -45,17 +45,17 @@ Not recorded for this preliminary owner observation.
 ## Difficulties and corrective actions
 
 The spring compression, force, supply limit, meter response, temperature, and
-command settings were not captured. Treat this as preliminary actuator
-evidence, not a passed E-06 or T-01 result. The next test must use a guarded
-non-solid working end point, a current-limited supply, and documented
-measurements.
+command settings were not captured. Treat this original note as preliminary
+actuator evidence. A later controlled test recorded the 6.0 V supply, 0.20 A
+limit, approximately 30 s stall dwell, 0.18 A stall current, and 10 successful
+repeats; that result is recorded separately as a bounded E-06 pass. T-01C
+quantitative drift/force/temperature evidence remains outside that test.
 
 ## Decisions and next action
 
-Do not use the fully compressed end condition as normal operation. Complete
-T-01A, then repeat the measurement at the intended maximum working compression
-with the current limit, voltage, force/position, peak current, hold dwell, and
-temperature recorded. The reported preload hold should be formalized as T-01C
-evidence before it is used as a controller assumption. The later-corrected
-0.009 A value applies to aligned **unloaded** motor motion; it does not replace
-this spring-installed preload observation.
+Do not use the fully compressed end condition as normal operation. The bounded
+E-06 result is now recorded separately; complete T-01A and the remaining T-01C
+quantitative measurements before using the preload hold as a full controller
+qualification. The later-corrected 0.009 A value applies to aligned
+**unloaded** motor motion; it does not replace this spring-installed preload
+observation.

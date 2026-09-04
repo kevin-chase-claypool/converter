@@ -50,7 +50,7 @@
 - [ ] Measure S-120-12 no-load output and adjustment range. (`E-11`)
 - [ ] Measure stepper coil pairs and resistance. (`E-01`)
 - [ ] Document TB6600 switch tables and input behavior from the received units. (`E-02`, `E-03`)
-- [ ] Measure N20 motor no-load and current-limited stall current. (`E-05` passed; owner-reported `0.18 A` stall/preload hold is recorded, but controlled `E-06` remains)
+- [x] Measure N20 motor no-load and current-limited stall current. (`E-05` passed; bounded `E-06` passed at 6.0 V / 0.20 A limit / 0.18 A stall with 10 repeats; thermal characterization remains separate)
 - [ ] Calibrate the 300 g load cell through the HX711. (`E-07`)
 - [ ] Measure usable HX711 sample rate and noise. (`E-08`)
 - [ ] Verify TMAG5273 readings with the intended magnet and geometry. (`E-09`)
