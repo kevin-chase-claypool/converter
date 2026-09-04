@@ -187,6 +187,7 @@ Entry details remain only in the chronology.
 - [2026-09-02 - SUCCESS - Set opening slide to full-bleed machine render](#elog-20260902-set-opening-slide-to-full-bleed-machine-render)
 - [2026-09-04 - IMPLEMENTED - Corrected axis-specific motor cable colors in diagrams](#elog-20260904-corrected-axis-specific-motor-cable-colors-in-diagrams)
 - [2026-09-04 12:47:26 -0500 - IMPLEMENTED - Rerouted top-down wiring schematic into clean lanes](#elog-20260904124726)
+- [2026-09-04 14:43:51 -0500 - MIXED/OPEN - Recorded completed TB6600 signal harness wiring](#elog-20260904144351)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2555,3 +2556,19 @@ Add new entries at the top of the log below this line.
   block. Both issues were corrected before recording this result.
 - Next action: compare the explanatory routes against the installed terminal
   silkscreens and verify the physical harness before applying power.
+
+<a id="elog-20260904144351"></a>
+### 🟨 2026-09-04 14:43:51 -0500 - MIXED/OPEN - Recorded completed TB6600 signal harness wiring
+
+- Status: physical installation reported complete; installed-driver behavior
+  remains open.
+- Category: hardware, wiring, TB6600, X/Y/A.
+- Summary: The owner reported all X, Y, and A TB6600 signal pins and common
+  returns wired over approximately six-inch runs using 24 AWG conductors.
+  Black is common `G`, yellow is `En`, white is `Dir`, and blue is `Stp`.
+- Evidence: owner report; current entries MOT-001 through MOT-008 in
+  `docs/hardware/WIRING_TABLE.md` and `HW-20260904-003`.
+- Limitation: Wiring completion is not a functional pass. Power-off continuity
+  and short checks plus the one-axis-at-a-time E-03 input test remain required.
+- Next action: verify every endpoint and the common-cathode polarity before
+  applying motor power; keep motors disconnected during E-03.
