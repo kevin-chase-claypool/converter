@@ -99,14 +99,14 @@ Planned 12 V branches from the MEISHILE supply:
 | Branch | Load | Notes |
 |---|---|---|
 | 12V-RP23CNC | RP23CNC controller and control-input supply | HD064RT `OUT1` (`FCTRL`); 2 A selected, but confirm the fitted fuse and controller terminals before power |
-| 12V-X | X TB6600 driver | HD064RT `OUT6`; 2 A selected, but confirm the fitted fuse, driver input labels, and current setting before power |
-| 12V-Y | Y TB6600 driver | HD064RT `OUT7`; 2 A selected, but confirm the fitted fuse, driver input labels, and current setting before power |
-| 12V-A | A TB6600 driver | HD064RT `OUT8`; 2 A selected, but confirm the fitted fuse, driver input labels, and current setting before power |
+| 12V-X | X TB6600 driver | HD064RT `OUT6`; 3 A selected by owner, but confirm the fitted fuse, driver input labels, and current setting before power |
+| 12V-Y | Y TB6600 driver | HD064RT `OUT7`; 3 A selected by owner, but confirm the fitted fuse, driver input labels, and current setting before power |
+| 12V-A | A TB6600 driver | HD064RT `OUT8`; 3 A selected by owner, but confirm the fitted fuse, driver input labels, and current setting before power |
 | 12V-TOOL-6V | Pololu D36V50F6 `VIN/GND` | HD064RT `OUT4`; owner intends a 3 A fuse, pending confirmation and E-15 characterization |
 | Unused | No load | HD064RT `OUT2`, `OUT3`, and `OUT5`; leave open and label unused |
 
 The HD064RT's factory 3 A fuses must not be assumed to be the fitted values.
-The currently selected starting values are 2 A for `OUT1` and each TB6600
+The currently selected starting values are 2 A for `OUT1`, 3 A for each TB6600
 branch (`OUT6`–`OUT8`), and 3 A intended for the D36V50F6 branch (`OUT4`).
 Confirm each physical marking with power removed and retain/change values only
 after current measurements. The module is specified for 20 A total and its

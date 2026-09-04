@@ -2446,6 +2446,8 @@ Add new entries at the top of the log below this line.
 - Category: hardware, power-distribution, wiring, TB6600, X/Y/A.
 - Summary: Positive and return conductors from HD064RT `OUT6`, `OUT7`, and
   `OUT8` are now physically landed at the X, Y, and A TB6600 branches.
+- Owner selected a 3 A starting fuse for each TB6600 branch (`OUT6`/`OUT7`/
+  `OUT8`); fitted fuse inserts and current suitability remain unverified.
 - Evidence: project-owner wiring report. The master wiring table retains
   `planned — wired, unverified` until exact terminal labels, polarity, fuse
   markings, continuity, and power-on behavior are recorded.
