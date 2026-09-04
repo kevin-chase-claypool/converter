@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1280" viewBox="0 0 1900 1280">
   <title>Theta Plotter Wiring Schematic - Straight Lane Version</title>
-  <desc>Schematic with one horizontal lane per connection, no wire splits, and no wire crossings.</desc>
+  <desc>Schematic with one horizontal lane per connection, no wire splits, and no wire crossings. X uses a shielded motor cable with a white B- conductor continuing to the motor's blue lead; Y and A retain stock blue B- leads.</desc>
   <defs>
     <style>
       .page { fill: #fbfbf8; }
@@ -120,7 +120,8 @@
     <rect class="pin" x="935" y="98" width="20" height="20"/><text class="net purple" x="977" y="113">Black A+</text>
     <rect class="pin" x="935" y="123" width="20" height="20"/><text class="net purple" x="977" y="138">Green A-</text>
     <rect class="pin" x="935" y="148" width="20" height="20"/><text class="net brown" x="977" y="163">Red B+</text>
-    <rect class="pin" x="935" y="173" width="20" height="20"/><text class="net brown" x="977" y="188">Blue B-</text>
+    <rect class="pin" x="935" y="173" width="20" height="20"/><text class="net brown" x="977" y="188">White B-</text>
+    <text class="small" x="977" y="210">Shielded cable; white continues to motor blue</text>
     <line class="wire coil-a" x1="815" y1="108" x2="935" y2="108"/>
     <line class="wire coil-a" x1="815" y1="133" x2="935" y2="133"/>
     <line class="wire coil-b" x1="815" y1="158" x2="935" y2="158"/>

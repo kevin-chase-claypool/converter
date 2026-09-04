@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2100" height="1500" viewBox="0 0 2100 1500">
   <title>Theta Plotter Top-Down Wiring Schematic</title>
-  <desc>Top-down style wiring schematic with peripherals drawn as modules with labeled screw terminals and point-to-point wiring.</desc>
+  <desc>Top-down style wiring schematic with peripherals drawn as modules with labeled screw terminals and point-to-point wiring. X uses a shielded cable with white B- continuing to the motor's blue lead; Y and A use stock blue B- leads.</desc>
   <defs>
     <style>
       .page { fill: #fbfbf8; }
@@ -206,7 +206,8 @@
       <rect class="term-purple" x="20" y="54" width="54" height="28"/><text class="pinlabel purple" x="30" y="73">Black</text>
       <rect class="term-purple" x="74" y="54" width="54" height="28"/><text class="pinlabel purple" x="86" y="73">Green</text>
       <rect class="term-brown" x="128" y="54" width="54" height="28"/><text class="pinlabel brown" x="143" y="73">Red</text>
-      <rect class="term-brown" x="182" y="54" width="54" height="28"/><text class="pinlabel brown" x="197" y="73">Blue</text>
+      <rect class="term-brown" x="182" y="54" width="54" height="28"/><text class="pinlabel brown" x="197" y="73">White</text>
+      <text class="tiny" x="22" y="98">X shielded cable; white continues to motor blue</text>
     </g>
     <g transform="translate(1250 608)">
       <rect class="module" x="0" y="0" width="300" height="110" rx="8"/>
@@ -284,9 +285,10 @@
   </g>
 
   <g id="caution">
-    <rect class="note" x="42" y="1190" width="1980" height="90" rx="8"/>
+    <rect class="note" x="42" y="1190" width="1980" height="120" rx="8"/>
     <text class="h1" x="66" y="1222">Caution</text>
     <text class="txt" x="160" y="1222">This top-down view shows terminal locations by label, not guaranteed physical order. Before wiring, compare each drawn terminal label with the silkscreen on your exact RP23CNC and TB6600 hardware.</text>
     <text class="txt" x="160" y="1250">The repeated G wires from each RP23CNC axis terminal mean that axis G must be jumpered to PUL-, DIR-, and ENA-. Use ferrules or a small terminal/jumper block; do not leave loose multi-wire strands.</text>
+    <text class="txt" x="160" y="1278">Motor colors: X uses white for the shielded-cable B- conductor (to motor blue); Y/A use stock blue for B-.</text>
   </g>
 </svg>

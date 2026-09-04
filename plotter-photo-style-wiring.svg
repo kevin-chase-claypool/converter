@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2500" height="2000" viewBox="0 0 2500 2000">
   <title>Theta Plotter Photo-Style Wiring Layout - No Overlaps</title>
-  <desc>Photo-style wiring layout using peripheral terminal faces, 90-degree wiring, explicit distribution blocks, and no wire overlap across components or other wires.</desc>
+  <desc>Photo-style wiring layout using peripheral terminal faces, 90-degree wiring, explicit distribution blocks, and no wire overlap across components or other wires. X uses shielded cable with white B-; Y and A use stock blue B- leads.</desc>
   <defs>
     <style>
       .page { fill: #f7f7f2; }
@@ -181,7 +181,8 @@
       <text class="tiny purple" x="6" y="158">Black A+</text>
       <text class="tiny purple" x="6" y="174">Green A-</text>
       <text class="tiny brown" x="82" y="158">Red B+</text>
-      <text class="tiny brown" x="82" y="174">Blue B-</text>
+      <text class="tiny brown" x="82" y="174">Blue B- (Y/A)</text>
+      <text class="tiny brown" x="82" y="190">X: White B- -> motor blue</text>
     </g>
 
     <g transform="translate(390 394)">
@@ -211,7 +212,7 @@
     <rect class="note" x="54" y="550" width="1358" height="116" rx="8"/>
     <text class="h1" x="78" y="582">Axis labels to substitute</text>
     <text class="txt" x="78" y="612">X: RP23CNC X terminal group, X G common, X fused branch, X TB6600, X motor.</text>
-    <text class="txt" x="78" y="638">Y and A use the same physical pattern with their matching terminal groups, fused branches, drivers, and motors.</text>
+    <text class="txt" x="78" y="638">Y/A use stock leads: black A+, green A-, red B+, blue B-. X uses shielded cable with white B- (white continues to motor blue).</text>
   </g>
 
   <!-- Panel 3: toolhead -->
@@ -299,7 +300,7 @@
     <rect class="note" x="0" y="0" width="2300" height="130" rx="8"/>
     <text class="h1" x="24" y="34">Correctness notes</text>
     <text class="txt" x="24" y="64">Motion: RP23CNC axis G is intentionally commoned to TB6600 PUL-, DIR-, and ENA- through the axis G common block. Axis Stp/Dir/En go to TB6600 PUL+/DIR+/ENA+.</text>
-    <text class="txt" x="24" y="92">Stepper motor: TB6600 A+ -> black, A- -> green, B+ -> red, B- -> blue. Confirm coil pairs with an ohmmeter before power.</text>
+    <text class="txt" x="24" y="92">Stepper motor: Y/A stock leads are A+ black, A- green, B+ red, B- blue. X uses shielded cable with B- white -> motor blue. Confirm coil pairs before power.</text>
     <text class="txt" x="24" y="120">Power: MEISHILE +V/-V feeds the fused DIN distribution. Use separate fused branches for X/Y/A drivers and the toolhead buck inputs.</text>
   </g>
 </svg>

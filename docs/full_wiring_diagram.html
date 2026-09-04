@@ -191,7 +191,7 @@
 <body>
   <main>
     <h1>RP23CNC X/Y/Theta Plotter Wiring Diagram</h1>
-    <p class="subtitle">Single 12V supply with three TB6600-style external stepper drivers, STEPPERONLINE NEMA 17 motors, a 6V toolhead rail, and local 5V toolhead regulation.</p>
+    <p class="subtitle">Single 12V supply with three TB6600-style external stepper drivers, STEPPERONLINE NEMA 17 motors, a 6V toolhead rail, and local 5V toolhead regulation. X uses the shielded motor cable; Y and A retain the stock motor leads.</p>
     <article class="callout">
       <h2>Concept Only - Do Not Wire From This Diagram Alone</h2>
       <p>Terminal polarity, power distribution, and controller pin assignments are not fully verified. Use the continuously updated <a href="hardware/WIRING_TABLE.md">Master Wiring Table</a>; any connection still marked TBD must not be energized.</p>
@@ -208,7 +208,7 @@
     <section class="diagram" aria-label="Full wiring diagram">
       <svg viewBox="0 0 1160 820" role="img" aria-labelledby="diagram-title diagram-desc">
         <title id="diagram-title">RP23CNC plotter wiring diagram</title>
-        <desc id="diagram-desc">A wiring diagram showing a 12V power supply feeding the RP23CNC controller, three TB6600 stepper drivers, a 6V toolhead buck, a local 5V regulator, and a DRV8833 pen actuator driver.</desc>
+        <desc id="diagram-desc">A wiring diagram showing a 12V power supply feeding the RP23CNC controller, three TB6600 stepper drivers, axis-specific motor cable colors, a 6V toolhead buck, a local 5V regulator, and a DRV8833 pen actuator driver.</desc>
 
         <defs>
           <marker id="arrow-power" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
@@ -325,13 +325,13 @@
 
         <!-- Motor coil wiring -->
         <path class="wire motor" marker-end="url(#arrow-motor)" d="M990 148 H1018"></path>
-        <text class="label" x="996" y="136">Black A+, Green A-, Red B+, Blue B-</text>
+        <text class="label" x="996" y="136">X shielded: B- white -> motor blue</text>
 
         <path class="wire motor" marker-end="url(#arrow-motor)" d="M990 358 H1018"></path>
-        <text class="label" x="996" y="346">Black A+, Green A-, Red B+, Blue B-</text>
+        <text class="label" x="996" y="346">Y stock leads: B- blue</text>
 
         <path class="wire motor" marker-end="url(#arrow-motor)" d="M990 584 H1018"></path>
-        <text class="label" x="996" y="572">Black A+, Green A-, Red B+, Blue B-</text>
+        <text class="label" x="996" y="572">A stock leads: B- blue</text>
 
         <!-- Pen circuit -->
         <path class="wire pen" marker-end="url(#arrow-pen)" d="M640 264 H680 V720 H720"></path>
@@ -364,7 +364,7 @@
 
       <article class="callout">
         <h2>Stepper Motor Wiring</h2>
-        <p>The selected STEPPERONLINE 17HS15-1504S-X1 motors are 4-lead bipolar NEMA 17 steppers rated 1.5A/phase. Wire each motor to its TB6600 output as Black to A+, Green to A-, Red to B+, and Blue to B-.</p>
+        <p>The selected STEPPERONLINE 17HS15-1504S-X1 motors are 4-lead bipolar NEMA 17 steppers rated 1.5A/phase. Y and A retain the stock mapping: Black to A+, Green to A-, Red to B+, and Blue to B-. X uses the shielded replacement cable: Black to A+, Green to A-, Red to B+, and White to B-; the white cable conductor continues to the motor's blue lead.</p>
       </article>
 
       <article class="callout">

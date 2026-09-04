@@ -185,6 +185,7 @@ Entry details remain only in the chronology.
 - [2026-09-03 - IMPLEMENTED - Recorded TB6600 signal and A-axis commissioning baseline](#elog-20260903-recorded-tb6600-signal-and-a-axis-commissioning-baseline)
 - [2026-09-03 - SUCCESS - Added opto-isolation presentation slide](#elog-20260903-added-opto-isolation-presentation-slide)
 - [2026-09-02 - SUCCESS - Set opening slide to full-bleed machine render](#elog-20260902-set-opening-slide-to-full-bleed-machine-render)
+- [2026-09-04 - IMPLEMENTED - Corrected axis-specific motor cable colors in diagrams](#elog-20260904-corrected-axis-specific-motor-cable-colors-in-diagrams)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2517,3 +2518,19 @@ Add new entries at the top of the log below this line.
   was rendered and inspected, and `slides_test.py` passed for all 13 slides.
 - Next action: Run the deck in Slide Show mode on the classroom computer before
   presenting, to confirm display scaling and mouse-over navigation.
+
+<a id="elog-20260904-corrected-axis-specific-motor-cable-colors-in-diagrams"></a>
+### 🟩 2026-09-04 - IMPLEMENTED - Corrected axis-specific motor cable colors in diagrams
+
+- Status: documentation correction implemented; no physical wiring or motor
+  behavior changed.
+- Category: hardware, wiring, TB6600, X/Y/A.
+- Summary: Updated the straight-lane, photo-style, top-down, and full HTML
+  wiring views so X shows the shielded cable's white `B-` conductor continuing
+  to the motor's blue lead, while Y and A retain stock blue `B-` leads.
+- Reason: the former visual labels repeated the stock black/green/red/blue
+  mapping for every axis and therefore did not match the installed X harness.
+- Evidence: regenerated PNG previews were visually inspected; SVG sources
+  were parsed as XML; the authoritative table retains the same mapping.
+- Next action: complete final X phase-continuity and motor-direction checks
+  before treating the driver-to-motor paths as powered-verified.
