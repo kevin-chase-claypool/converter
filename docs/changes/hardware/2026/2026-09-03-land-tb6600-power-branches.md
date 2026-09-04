@@ -40,9 +40,10 @@ clear commissioning boundary before the drivers are energized.
 - `OUT7` positive/return: Y TB6600.
 - `OUT8` positive/return: A TB6600.
 
-The owner-selected starting fuse value for each of these three branches is
-**3 A**. This is a selection record, not confirmation that the physical
-HD064RT fuse inserts are fitted or correctly marked.
+The six branch conductors are owner-reported **20 AWG**. The owner-selected
+starting fuse value for each of these three branches is **3 A**. This is a
+selection record, not confirmation that the physical HD064RT fuse inserts are
+fitted or correctly marked.
 
 The master wiring table records these as `planned — wired, unverified`. No
 terminal-label, polarity, fuse-marking, continuity, or powered-load result is
@@ -50,7 +51,7 @@ inferred from the physical landing report.
 
 ## Verification
 
-Owner-reported wiring completion and fuse-value selection only. E-11 and the remaining power checks,
+Owner-reported wiring completion, conductor gauge, and fuse-value selection only. E-11 and the remaining power checks,
 power-removed continuity inspection, fuse confirmation, and the staged E-03 /
 M-01 bring-up remain open.
 

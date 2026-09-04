@@ -99,9 +99,9 @@ Planned 12 V branches from the MEISHILE supply:
 | Branch | Load | Notes |
 |---|---|---|
 | 12V-RP23CNC | RP23CNC controller and control-input supply | HD064RT `OUT1` (`FCTRL`); 2 A selected, but confirm the fitted fuse and controller terminals before power |
-| 12V-X | X TB6600 driver | HD064RT `OUT6`; 3 A selected by owner, but confirm the fitted fuse, driver input labels, and current setting before power |
-| 12V-Y | Y TB6600 driver | HD064RT `OUT7`; 3 A selected by owner, but confirm the fitted fuse, driver input labels, and current setting before power |
-| 12V-A | A TB6600 driver | HD064RT `OUT8`; 3 A selected by owner, but confirm the fitted fuse, driver input labels, and current setting before power |
+| 12V-X | X TB6600 driver | HD064RT `OUT6`; 20 AWG branch, 3 A selected by owner; confirm the fitted fuse, driver input labels, and current setting before power |
+| 12V-Y | Y TB6600 driver | HD064RT `OUT7`; 20 AWG branch, 3 A selected by owner; confirm the fitted fuse, driver input labels, and current setting before power |
+| 12V-A | A TB6600 driver | HD064RT `OUT8`; 20 AWG branch, 3 A selected by owner; confirm the fitted fuse, driver input labels, and current setting before power |
 | 12V-TOOL-6V | Pololu D36V50F6 `VIN/GND` | HD064RT `OUT4`; owner intends a 3 A fuse, pending confirmation and E-15 characterization |
 | Unused | No load | HD064RT `OUT2`, `OUT3`, and `OUT5`; leave open and label unused |
 
