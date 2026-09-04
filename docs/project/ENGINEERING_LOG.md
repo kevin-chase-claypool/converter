@@ -188,6 +188,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 - IMPLEMENTED - Corrected axis-specific motor cable colors in diagrams](#elog-20260904-corrected-axis-specific-motor-cable-colors-in-diagrams)
 - [2026-09-04 12:47:26 -0500 - IMPLEMENTED - Rerouted top-down wiring schematic into clean lanes](#elog-20260904124726)
 - [2026-09-04 14:43:51 -0500 - MIXED/OPEN - Recorded completed TB6600 signal harness wiring](#elog-20260904144351)
+- [2026-09-04 14:48:01 -0500 - MIXED/OPEN - Verified TB6600 signal-harness continuity](#elog-20260904144801)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2572,3 +2573,20 @@ Add new entries at the top of the log below this line.
   and short checks plus the one-axis-at-a-time E-03 input test remain required.
 - Next action: verify every endpoint and the common-cathode polarity before
   applying motor power; keep motors disconnected during E-03.
+
+<a id="elog-20260904144801"></a>
+### 🟨 2026-09-04 14:48:01 -0500 - MIXED/OPEN - Verified TB6600 signal-harness continuity
+
+- Status: physical continuity gate complete; installed-driver behavior remains
+  open.
+- Category: hardware, wiring, TB6600, X/Y/A.
+- Summary: The owner reported end-to-end continuity for all three six-inch
+  RP23CNC-to-TB6600 signal harnesses, including the black common-`G` paths and
+  their common-block jumpers.
+- Evidence: owner report and
+  `docs/report/lab-notes/2026-09-04-pre-e03-tb6600-signal-harness-continuity.md`.
+- Limitation: Meter model, readings, inter-wire short checks, powered signal
+  response, and input-current behavior were not recorded. The result does not
+  close E-03.
+- Next action: complete the power-off short check, then run E-03 one driver at
+  a time with motors disconnected and record the functional pass/fail result.

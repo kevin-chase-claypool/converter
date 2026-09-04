@@ -48,9 +48,11 @@ harnesses and common-ground jumpers.
 ## Verification
 
 The owner reports all signal pins and their common returns are physically
-wired. Functional input behavior remains unverified; E-03 must still be
-performed with the motors disconnected and with the documented polarity
-confirmed.
+wired and that end-to-end continuity has been checked. Functional input
+behavior remains unverified; E-03 must still be performed with the motors
+disconnected and with the documented polarity confirmed. The meter model and
+measurement details were not recorded, so this is installation evidence rather
+than a complete E-03 result.
 
 ## Struggles and rejected approaches
 
@@ -59,11 +61,13 @@ retained so the blue step wire cannot be confused with signal ground.
 
 ## Risks and follow-up
 
-Before applying motor power, perform power-off continuity and short checks at
-each driver. Then run E-03 one axis at a time; do not promote these rows to
-passed until the installed TB6600 inputs respond correctly.
+Before applying motor power, complete the remaining power-off inter-wire short
+check at each driver, then run E-03 one axis at a time; do not promote these
+rows to passed until the installed TB6600 inputs respond correctly.
 
 ## Files
 
 - `docs/hardware/WIRING_TABLE.md`: records 24 AWG signal colors and wired,
-  unverified status for MOT-001 through MOT-008.
+  continuity-verified, E-03-open status for MOT-001 through MOT-008.
+- `docs/report/lab-notes/2026-09-04-pre-e03-tb6600-signal-harness-continuity.md`:
+  records the owner-reported continuity gate and its evidence limits.
