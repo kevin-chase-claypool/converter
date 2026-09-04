@@ -265,6 +265,7 @@ must pass bench tests before being treated as final machine wiring.
 | Date | Revision | Change | Updated by | Related evidence |
 |---|---:|---|---|---|
 | 2026-09-04 | 4.4 | Corrected the visual wiring diagrams to show the axis-specific motor cable colors: X shielded-cable `B-` is white and continues to the motor's blue lead; Y and A retain stock blue `B-` leads. | Codex | Project-owner clarification; `HW-20260904-001` |
+| 2026-09-04 | 4.5 | Re-routed the explanatory top-down wiring schematic into separate axis, signal, motor, and power lanes; no connection assignments changed. | Codex | `HW-20260904-002` |
 | 2026-08-30 | 4.3 | Added planned toolhead LIFT-home microswitch input on `GP2`/`TOOL_GND`; terminals `1` and `3` are the intended COM/NO pair. | Codex | Owner terminal identification; T-01G planned |
 | 2026-08-22 | 3.5 | Documented the implemented dual-core readiness/threshold protocol and controller-resident centroid/A-registration macro. Reused all five routed control conductors; retained `LIMA` until F-08 authorizes controller-end retermination to `PRB`. | Codex | `RPSW-20260822-003`; source compile and macro validator only |
 | 2026-08-22 | 3.4 | Corrected stale separate-RP2040-adapter language: the installed SparkFun Pro Micro RP2350 toolhead controller owns both pen-pressure control and TMAG5273 magnetic sensing/output. No wiring changed. | Codex | `RPSW-20260822-002`; current GP27/GP28/GP29 wiring rows |

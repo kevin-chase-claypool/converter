@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-04 | `HW-20260904-002` | hardware | implemented | [Reroute top-down wiring schematic into clean lanes](hardware/2026/2026-09-04-reroute-top-down-wiring-diagram.md) |
 | 2026-09-04 | `HW-20260904-001` | hardware | implemented | [Correct axis-specific motor cable colors in diagrams](hardware/2026/2026-09-04-correct-axis-motor-cable-colors-in-diagrams.md) |
 | 2026-09-03 | `RPSW-20260903-008` | rp23cnc-software, hardware, windows-software | implemented | [Add Opto-Isolation Presentation Slide](rp23cnc-software/2026/2026-09-03-add-opto-isolation-presentation-slide.md) |
 | 2026-09-03 | `HW-20260903-003` | hardware | implemented | [Add mobile wiring-table view](hardware/2026/2026-09-03-add-mobile-wiring-table-view.md) |

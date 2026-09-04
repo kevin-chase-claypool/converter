@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-04 | `HW-20260904-002` | implemented | [Reroute top-down wiring schematic into clean lanes](2026/2026-09-04-reroute-top-down-wiring-diagram.md) | `wiring`, `schematic`, `routing`, `tb6600`, `signal-lanes` |
 | 2026-09-04 | `HW-20260904-001` | implemented | [Correct axis-specific motor cable colors in diagrams](2026/2026-09-04-correct-axis-motor-cable-colors-in-diagrams.md) | `stepper`, `tb6600`, `motor-cable`, `wiring`, `x-axis`, `y-axis`, `a-axis` |
 | 2026-09-03 | `RPSW-20260903-008` | implemented | [Add Opto-Isolation Presentation Slide](../rp23cnc-software/2026/2026-09-03-add-opto-isolation-presentation-slide.md) | `presentation`, `opto-isolation`, `wiring`, `p100` |
 | 2026-09-03 | `HW-20260903-003` | implemented | [Add mobile wiring-table view](2026/2026-09-03-add-mobile-wiring-table-view.md) | `wiring`, `mobile`, `documentation` |

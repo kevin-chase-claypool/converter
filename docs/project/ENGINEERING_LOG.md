@@ -186,6 +186,7 @@ Entry details remain only in the chronology.
 - [2026-09-03 - SUCCESS - Added opto-isolation presentation slide](#elog-20260903-added-opto-isolation-presentation-slide)
 - [2026-09-02 - SUCCESS - Set opening slide to full-bleed machine render](#elog-20260902-set-opening-slide-to-full-bleed-machine-render)
 - [2026-09-04 - IMPLEMENTED - Corrected axis-specific motor cable colors in diagrams](#elog-20260904-corrected-axis-specific-motor-cable-colors-in-diagrams)
+- [2026-09-04 12:47:26 -0500 - IMPLEMENTED - Rerouted top-down wiring schematic into clean lanes](#elog-20260904124726)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2534,3 +2535,23 @@ Add new entries at the top of the log below this line.
   were parsed as XML; the authoritative table retains the same mapping.
 - Next action: complete final X phase-continuity and motor-direction checks
   before treating the driver-to-motor paths as powered-verified.
+
+<a id="elog-20260904124726"></a>
+### 🟩 2026-09-04 12:47:26 -0500 - IMPLEMENTED - Rerouted top-down wiring schematic into clean lanes
+
+- Status: explanatory wiring-diagram update implemented; no physical wiring or
+  terminal assignment changed.
+- Category: hardware, wiring, TB6600, X/Y/A.
+- Summary: Rebuilt `plotter-top-down-wiring-schematic.svg` with independent
+  orthogonal lanes for each RP23CNC axis, explicit signal-common blocks,
+  horizontal motor leads, and a far-right DIN power corridor.
+- Reason: the previous layout used diagonal power branches and repeated signal
+  fan-outs that crossed or overlaid one another, making individual paths hard
+  to follow.
+- Evidence: SVG XML parse passed; Chrome headless rendered the PNG preview;
+  visual inspection confirmed separated signal, motor, and power routes.
+- Struggle: the first clean-lane draft still overlaid the PSU-to-DIN `+V` and
+  `0V` routes and put the X white terminal on the opposite side of its motor
+  block. Both issues were corrected before recording this result.
+- Next action: compare the explanatory routes against the installed terminal
+  silkscreens and verify the physical harness before applying power.
