@@ -194,6 +194,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 - HARDWARE/PARTIAL - Clarified N20 stall current and preload hold](#elog-20260904-clarified-n20-stall-current-and-preload-hold)
 - [2026-09-04 - HARDWARE/PARTIAL - Corrected N20 unloaded current after alignment](#elog-20260904-corrected-n20-unloaded-current-after-alignment)
 - [2026-09-04 - HARDWARE - Passed bounded N20 stall and preload-hold test](#elog-20260904-passed-bounded-n20-stall-and-preload-hold-test)
+- [2026-09-04 - HARDWARE/IMPLEMENTED - Made pulse response per-tool during preflight](#elog-20260904-made-pulse-response-per-tool-during-preflight)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2679,3 +2680,21 @@ Add new entries at the top of the log below this line.
 - Next action: Continue the mechanical/force characterization sequence; add
   thermal or endurance measurements only if a full production safety envelope
   is required.
+
+<a id="elog-20260904-made-pulse-response-per-tool-during-preflight"></a>
+### 🟩 2026-09-04 - HARDWARE/IMPLEMENTED - Made pulse response per-tool during preflight
+
+- Status: control-test architecture clarified; no physical test result changed.
+- Category: hardware, rp23cnc-software, toolhead, force-control
+- Summary: The project owner noted that the pulse-duration-to-force response
+  will differ for each loaded pen or pencil. T-01E now establishes global N20
+  actuator bounds, while T-01J performs a short bounded response check and
+  selects per-tool force/threshold settings.
+- Decision: Keep the load cell as the force authority. Do not apply one
+  universal open-loop pulse-to-force curve to all tools; allow only bounded
+  per-tool overrides inside the global actuator limits.
+- Evidence: `docs/decisions/ADR-005-per-tool-pulse-response-preflight.md`;
+  `docs/testing/TEST_PLAN.md`;
+  `docs/changes/hardware/2026/2026-09-04-per-tool-pulse-response-preflight.md`.
+- Next action: Complete T-01J for each intended pen or pencil after the global
+  T-01E limits and load-cell calibration are accepted.

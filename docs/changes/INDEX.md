@@ -6,6 +6,7 @@ Newest changes appear first.
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
 | 2026-09-04 | `WSW-20260904-001` | windows-software, rp23cnc-software | implemented | [Move pen/TMAG XY offset ownership to P100](windows-software/2026/2026-09-04-remove-converter-tool-offset.md) |
+| 2026-09-04 | `HW-20260904-006` | rp23cnc-software | implemented | [Make Pulse Response Tool-Specific During Preflight](hardware/2026/2026-09-04-per-tool-pulse-response-preflight.md) |
 | 2026-09-04 | `HW-20260904-005` | hardware | partial | [Correct N20 Current After Lead-Screw Alignment and Preload Test](hardware/2026/2026-09-04-correct-n20-unloaded-current-after-alignment.md) |
 | 2026-09-04 | `HW-20260904-003` | hardware | implemented | [Record TB6600 signal harness wiring](hardware/2026/2026-09-04-record-tb6600-signal-harness-wiring.md) |
 | 2026-09-04 | `HW-20260904-002` | hardware | implemented | [Reroute top-down wiring schematic into clean lanes](hardware/2026/2026-09-04-reroute-top-down-wiring-diagram.md) |

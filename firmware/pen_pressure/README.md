@@ -128,12 +128,14 @@ raise PID gains beyond the HX711/actuator settling limit.
    the tested actuator capability; optional thermal/rail/endurance
    characterization remains separate before making a full production safety
    claim.
-2. Complete T-01 and map lift/seek direction. With a scale under the pen,
-   measure 5, 10, 20, and 40 ms pulses at candidate PWM values in both
-   directions, then wait for a new filtered sample. Record force increment,
-   delay, overshoot, repeatability, and minimum pulse that reliably breaks
-   stiction. The existing 50 ms final approach is explicitly too coarse for a
-   production force calibration.
+2. Complete T-01 and map lift/seek direction. Use a representative pen or
+   guarded force fixture to establish global 5, 10, 20, and 40 ms pulse bounds
+   in both directions, then wait for a new filtered sample. Record force
+   increment, delay, overshoot, repeatability, and minimum pulse that reliably
+   breaks stiction. Do not treat that force-per-pulse response as universal:
+   each installed pen or pencil gets a short bounded response check during
+   T-01J, while the load cell remains the force-control authority. The existing
+   50 ms final approach is explicitly too coarse for a production calibration.
 3. Complete E-07 using at least three gentle force levels and repeated
    lift/re-contact cycles. Establish the force slope, offset drift, force-path
    hysteresis, and a target range safely below the 300 g load-cell capacity.
