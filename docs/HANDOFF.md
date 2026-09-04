@@ -40,9 +40,9 @@ XY gantry + rotating bed driven by a stepper with a 60T motor pulley → 720T be
 loaded SVG contours; rotation about that center maps bed-local coords → machine coords via
 `bed_to_machine(point, bed_theta, center)`.
 
-The pen tip is offset from the hall sensor (= the commanded XY) by
-`tool_offset_x_mm, tool_offset_y_mm` (defaults `34.544, -13.538`). G-code commands the hall sensor;
-the pen tip lands at `command + tool_offset`.
+The converter emits XY positions without a pen/TMAG translation. The controller's
+commissioning macro `P100` owns the measured `pen - TMAG` vector and sets `G54`
+so `X0 Y0` means the pen tip is at bed center after magnetic registration.
 
 ## G-code output reference (what the firmware must parse)
 
@@ -236,7 +236,7 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
     `Raster px/unit` appears only when raster shading is enabled.
   - **Motion** — draw/feed rate and travel rate.
   - **Theta kinematics** — theta axis/ratio/resolver/cost settings, plus monotonic theta.
-  - **Pen** — Z heights, pen up/down simulation/dwell times, tool offsets, pen up/down commands, plus Use Z.
+  - **Pen** — Z heights, pen up/down simulation/dwell times, pen up/down commands, plus Use Z.
   - **Preview settings** — print speed (mm/s), bed dia/margin, pen stroke width, preview
     colors. "Print speed" now drives **both** the runtime estimate **and** the animation pacing:
     playback runs in **real time** (`PLAYBACK_RATE = 1.0` in `qt_svg_to_gcode.pyw`) with draw moves
@@ -407,11 +407,11 @@ and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
   explicitly cap *net* winding across the whole job (cable-wrap). At light bias net stays low (~2–6 rev);
   if cable management ever needs a hard bound, add a net-winding penalty or a periodic unwind move.
 
-- **Settings persistence** — machine constants (bed dia, tool offsets, theta ratio, feeds) reset to
+- **Settings persistence** — machine constants (bed dia, theta ratio, feeds) reset to
   defaults every launch. Add JSON save/load (auto-load on startup, ideally named profiles per
   pen/material). Highest convenience-per-effort item; not yet started.
 - **Calibration test-pattern generator** — emit a known square + circle + center cross so the real
-  machine can be checked for scale, tool offset, and theta direction before committing to a big job.
+  machine can be checked for scale, registration, and theta direction before committing to a big job.
   De-risks everything below; the kinematics have only ever been verified in the preview, never on
   hardware.
 - **Fill refinements** — fill-mode toggle (outline only / fill only / both) and optional auto fill

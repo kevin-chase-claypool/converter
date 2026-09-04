@@ -58,6 +58,7 @@ Entry details remain only in the chronology.
 - [Before 2026-06-05 - Time not recorded - STRUGGLE - OpenGL preview type and binding bugs](#elog-20260605-opengl-preview-type-and-binding-bugs)
 - [Before 2026-06-05 - Time not recorded - STRUGGLE - Theta DP winding reference failed](#elog-20260605-theta-dp-winding-reference-failed)
 - [Before 2026-06-05 - Time not recorded - MIXED/OPEN - Hold-steady theta grid tradeoff](#elog-20260605-hold-steady-theta-grid-tradeoff)
+- [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### RP23CNC and machine software
 - [2026-08-06 12:30:00 -0500 - MIXED/OPEN - Corrected PC817 active-low contract and PCB review file](#elog-20260806123000)
@@ -68,6 +69,7 @@ Entry details remain only in the chronology.
 - [2026-06-06 21:09:16 -0500 - MIXED/OPEN - Identified exact purchased RP23CNC kit](#elog-20260606210916)
 - [2026-06-06 18:54:01 -0500 - SUCCESS - Promoted RP23CNC upstream reference](#elog-20260606185401)
 - [2026-06-05 09:04:15 -0500 - SUCCESS - Chose RP23CNC and grblHAL](#elog-20260605090415)
+- [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -204,6 +206,7 @@ Entry details remain only in the chronology.
 - [2026-08-19 15:00:00 -0500 - HARDWARE/CORRECTED - Corrected B0FQ5GBNZ1 TB6600 DIP mapping](#elog-20260819150000)
 - [2026-08-20 15:41:52 -0500 - HARDWARE/PARTIAL - Verified main-supply no-load path through HD064RT](#elog-20260820154152)
 - [2026-08-22 - HARDWARE/PARTIAL - Verified X/Y limit live-input reporting](#elog-20260822-verified-x-y-limit-live-input-reporting)
+- [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Decisions and architecture
 - [2026-06-07 11:57:39 -0500 - SUCCESS - Made continuous maintainability a repository requirement](#elog-20260607115739)
@@ -2590,3 +2593,23 @@ Add new entries at the top of the log below this line.
   close E-03.
 - Next action: complete the power-off short check, then run E-03 one driver at
   a time with motors disconnected and record the functional pass/fail result.
+
+<a id="elog-20260904152239"></a>
+### 🟨 2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100
+
+- Status: converter implementation and documentation updated; physical P100
+  registration remains unverified.
+- Category: software, firmware, test, coordinate-frames, tool-offset, p100
+- Summary: Removed the converter's `tool_offset_x_mm`/
+  `tool_offset_y_mm` settings and XY translation. G-code and preview positions
+  now share one direct frame; P100 remains the sole owner of the measured
+  `pen - TMAG` correction and G54 registration.
+- Reason: Applying the correction in both the converter and P100 would shift
+  the pen twice. Keeping the correction at the runtime registration seam also
+  allows the saved G-code to remain independent of the current machine setup.
+- Evidence: `WSW-20260904-001`; three coordinate-frame regression tests;
+  Python syntax check; documentation index write/check.
+- Limitation: The measured P100 offset, commissioning gate, and physical
+  pen-at-center result remain open until magnetic registration is commissioned.
+- Next action: Validate P100's installed `pen - TMAG` values and run a
+  pen-lifted calibration pattern before production plotting.

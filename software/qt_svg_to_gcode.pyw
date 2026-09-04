@@ -271,9 +271,7 @@ class GLPreview(QOpenGLWidget):
             self.theta_cache.append(theta)
             start = move.get("start", self.preview_center)
             end = move.get("end", start)
-            command_start = move.get("command_start", start)
-            command_end = move.get("command_end", end)
-            self.machine_points.extend([start, end, command_start, command_end])
+            self.machine_points.extend([start, end])
             if move.get("type") == "travel":
                 travel.extend([start[0], start[1], end[0], end[1]])
             elif move.get("type") == "draw":
@@ -468,9 +466,6 @@ class GLPreview(QOpenGLWidget):
     def tool_point_at_progress(self, progress):
         return self.interpolate_point(progress, "start", "end")
 
-    def command_point_at_progress(self, progress):
-        return self.interpolate_point(progress, "command_start", "command_end")
-
     def active_segment_at_progress(self, progress):
         move, _index, _frac = self.active_move_at_progress(progress)
         if move is None or move.get("type") not in ("draw", "travel"):
@@ -518,12 +513,12 @@ class GLPreview(QOpenGLWidget):
         y = self.height() - (point[1] - min_y) / max(max_y - min_y, 1e-9) * self.height()
         return x, y
 
-    def update_overlay_labels(self, command_point, bounds):
+    def update_overlay_labels(self, point, bounds):
         if not self.moves:
             self.x_label.hide()
             self.y_label.hide()
             return
-        sx, sy = self.screen_from_world(command_point, bounds)
+        sx, sy = self.screen_from_world(point, bounds)
         self.x_label.move(8, max(0, min(int(sy) - 18, self.height() - 18)))
         self.y_label.move(max(0, min(int(sx) + 8, self.width() - 70)), 4)
         self.x_label.show()
@@ -614,9 +609,8 @@ class GLPreview(QOpenGLWidget):
         active, _active_index, _active_frac = self.active_move_at_progress(progress)
         bed_theta, _motor_theta = self.active_theta()
         tool_point = self.tool_point_at_progress(progress) or self.preview_center
-        command_point = self.command_point_at_progress(progress) or tool_point
         bounds = self.adjusted_bounds()
-        self.update_overlay_labels(command_point, bounds)
+        self.update_overlay_labels(tool_point, bounds)
 
         self.program.bind()
         bed_theta_rad = math.radians(bed_theta)
@@ -652,23 +646,21 @@ class GLPreview(QOpenGLWidget):
             )
 
         crosshair = [
-            min_x, command_point[1], max_x, command_point[1],
-            command_point[0], min_y, command_point[0], max_y,
+            min_x, tool_point[1], max_x, tool_point[1],
+            tool_point[0], min_y, tool_point[0], max_y,
         ]
-        pen_connector = [command_point[0], command_point[1], tool_point[0], tool_point[1]]
         tool_marker = self.marker_square(tool_point, (max_x - min_x) * 0.0045)
         pen_tip_bed = [
-            command_point[0] - 8, command_point[1] - 8,
-            command_point[0] + 8, command_point[1] - 8,
-            command_point[0] + 8, command_point[1] - 8,
-            command_point[0] + 8, command_point[1] + 8,
-            command_point[0] + 8, command_point[1] + 8,
-            command_point[0] - 8, command_point[1] + 8,
-            command_point[0] - 8, command_point[1] + 8,
-            command_point[0] - 8, command_point[1] - 8,
+            tool_point[0] - 8, tool_point[1] - 8,
+            tool_point[0] + 8, tool_point[1] - 8,
+            tool_point[0] + 8, tool_point[1] - 8,
+            tool_point[0] + 8, tool_point[1] + 8,
+            tool_point[0] + 8, tool_point[1] + 8,
+            tool_point[0] - 8, tool_point[1] + 8,
+            tool_point[0] - 8, tool_point[1] + 8,
+            tool_point[0] - 8, tool_point[1] - 8,
         ]
         self.draw_dynamic_lines(crosshair, self.gantry_color, 1.0)
-        self.draw_dynamic_lines(pen_connector, QColor("#111827"), 1.0)
         self.draw_dynamic_lines(pen_tip_bed, QColor("#f59e0b"), 2.0)
         self.draw_dynamic_lines(tool_marker, self.motion_color if active and active.get("type") == "draw" else QColor("#6b7280"), 2.0)
         self.program.release()
@@ -2488,10 +2480,9 @@ class MainWindow(QMainWindow):
             move = self.moves[min(max(int(math.floor(self.preview_progress)), 0), len(self.moves) - 1)]
         theta, motor = self.gl_preview.active_theta()
         point = self.gl_preview.tool_point_at_progress(self.preview_progress) or move.get("end", (0, 0))
-        command_point = self.gl_preview.command_point_at_progress(self.preview_progress) or move.get("command_end", point)
         strategy = move.get("strategy", "")
         strategy_text = f" | {strategy}" if strategy else ""
-        self.status.setText(f"move {fmt(self.preview_progress)}/{len(self.moves)} {move.get('type')}{strategy_text} | pen X {fmt(point[0])} Y {fmt(point[1])} | cmd X {fmt(command_point[0])} Y {fmt(command_point[1])} | bed theta {fmt(theta)} deg | A motor {fmt(motor)} deg")
+        self.status.setText(f"move {fmt(self.preview_progress)}/{len(self.moves)} {move.get('type')}{strategy_text} | X {fmt(point[0])} Y {fmt(point[1])} | bed theta {fmt(theta)} deg | A motor {fmt(motor)} deg")
 
     def play(self):
         if not self.moves:

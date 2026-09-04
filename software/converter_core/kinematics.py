@@ -16,23 +16,6 @@ def bed_to_machine(point, bed_theta, center):
     )
 
 
-def tool_offset(settings):
-    return (
-        float(getattr(settings, "tool_offset_x_mm", 0.0)),
-        float(getattr(settings, "tool_offset_y_mm", 0.0)),
-    )
-
-
-def tool_to_command(point, settings):
-    ox, oy = tool_offset(settings)
-    return (point[0] - ox, point[1] - oy)
-
-
-def command_to_tool(point, settings):
-    ox, oy = tool_offset(settings)
-    return (point[0] + ox, point[1] + oy)
-
-
 def _axis_locked_roots(point, center, axis, target):
     # Principal bed orientations (degrees) that put point's *machine* coordinate
     # on `axis` exactly at `target` (i.e. a pure-X or pure-Y machine move from a

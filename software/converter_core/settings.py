@@ -40,8 +40,6 @@ class Settings:
     pen_cycle_ms: float = 100.0
     pen_up_ms: float = 300.0
     pen_down_ms: float = 600.0
-    tool_offset_x_mm: float = 34.544
-    tool_offset_y_mm: float = -13.538
     pen_up_command: str = "M5"
     pen_down_command: str = "M3"
     flip_y: bool = True
@@ -92,8 +90,6 @@ TEXT_FIELD_GROUPS = (
         ("Work Z", "work_z", "0"),
         ("Pen up ms", "pen_up_ms", "300"),
         ("Pen down ms", "pen_down_ms", "600"),
-        ("Tool offset X mm", "tool_offset_x_mm", "34.544"),
-        ("Tool offset Y mm", "tool_offset_y_mm", "-13.538"),
         ("Pen up cmd", "pen_up_command", "M5"),
         ("Pen down cmd", "pen_down_command", "M3"),
     )),

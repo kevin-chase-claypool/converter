@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-04 | `WSW-20260904-001` | windows-software, rp23cnc-software | implemented | [Move pen/TMAG XY offset ownership to P100](windows-software/2026/2026-09-04-remove-converter-tool-offset.md) |
 | 2026-09-04 | `HW-20260904-003` | hardware | implemented | [Record TB6600 signal harness wiring](hardware/2026/2026-09-04-record-tb6600-signal-harness-wiring.md) |
 | 2026-09-04 | `HW-20260904-002` | hardware | implemented | [Reroute top-down wiring schematic into clean lanes](hardware/2026/2026-09-04-reroute-top-down-wiring-diagram.md) |
 | 2026-09-04 | `HW-20260904-001` | hardware | implemented | [Correct axis-specific motor cable colors in diagrams](hardware/2026/2026-09-04-correct-axis-motor-cable-colors-in-diagrams.md) |

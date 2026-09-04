@@ -25,7 +25,8 @@ Requires `PySide6` (`pip install PySide6`).
 
 - `G21` (mm), `G90` (absolute)
 - `G0` travel moves (pen up), `G1` draw moves (pen down)
-- `X Y` in mm; `A` = **motor-shaft degrees** (already multiplied by `Theta ratio`)
+- `X Y` in mm in the machine's active work-coordinate frame; `A` =
+  **motor-shaft degrees** (already multiplied by `Theta ratio`)
 - `M5` / `M3` pen up / down (or `Z` moves if "Use Z axis" is enabled), with a
   `G4` settle dwell after each (from `Pen cycle ms`) for the firmware handshake
 - `M2` at end
@@ -41,7 +42,7 @@ The exact dialect and the firmware-facing caveats are documented in
 - **Motion** — draw/feed rate and travel rate.
 - **Theta kinematics** — theta axis/ratio/resolver/cost settings (`Theta ratio`
   defaults to 12 for the 60T→720T pulley pair).
-- **Pen** — Z heights, pen cycle, tool offsets, pen up/down commands, and Use Z.
+- **Pen** — Z heights, pen cycle, pen up/down commands, and Use Z.
   - **Curve round bias** (`round_bias`, default 0.05) trades lowest-cost motion vs.
     well-rounded curves. `0` = pick the cheapest theta per segment (tends to
     axis-lock, flatter curves); higher values bias theta toward the path tangent so
@@ -80,6 +81,10 @@ The exact dialect and the firmware-facing caveats are documented in
 
 - Leave **Use Z axis** unchecked and keep `Pen up cmd = M5`, `Pen down cmd = M3` —
   pen height is owned by the force-control loop, not commanded Z.
+- The converter does not apply a pen/TMAG XY tool offset. Generated XY positions
+  remain in the machine work-coordinate frame; the controller's commissioning
+  macro `P100` owns magnetic center registration, the measured `pen - TMAG`
+  offset, and `G54 X0 Y0` so work zero means pen tip at bed center.
 - `Bed margin mm` (default 6.35 ≈ 0.25") clips artwork inside the bed edge so the
   pen never reaches the rim.
 - Set `Fill spacing mm > 0` to hatch filled regions; `0` disables hatching.
