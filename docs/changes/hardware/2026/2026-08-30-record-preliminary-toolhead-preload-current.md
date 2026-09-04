@@ -4,7 +4,7 @@ date: 2026-08-30
 category: hardware
 affected_categories:
   - hardware
-status: planned
+status: partial
 components:
   - toolhead
   - docs/testing/TEST_PLAN.md
@@ -24,12 +24,15 @@ related:
 
 Recorded the first reported N20 retract-current observation with the spring
 installed: approximately 0.019-0.050 A in motion and 0.18 A at the reported
-fully compressed end condition.
+endpoint. The owner later clarified that 0.18 A is the observed N20 stall
+current and that the motor holds the selected spring preload.
 
 ## Reason
 
-The observation informs whether the selected spring may overload the N20, but
-must not be mistaken for a controlled stall, thermal, or force-capability test.
+The observation informs whether the selected spring may overload the N20, and
+the follow-up clarification provides qualitative preload-hold evidence. It
+must not be mistaken for a complete electrical, thermal, or force-envelope
+qualification without the missing test conditions and dwell measurements.
 
 ## Implementation
 
@@ -40,19 +43,22 @@ guarded working endpoint and controlled measurement setup.
 ## Verification
 
 - Owner-reported current values recorded in the lab note.
-- No component capability, pass condition, or firmware setting changed.
+- The test-plan interpretation was updated to record the owner-reported stall
+  current and preload hold while leaving formal E-06/T-01C acceptance open.
 
 ## Struggles and rejected approaches
 
-Treating the 0.18 A reading as verified stall current or proof of motor margin
-was rejected because the measurement method, spring compression, force, supply
-limit, peak behavior, and thermal duration were not recorded.
+Treating the 0.18 A reading as a complete E-06 pass was rejected because the
+measurement method, spring compression, force, supply limit, peak behavior,
+stall duration, and thermal duration were not recorded. The owner's statement
+that the motor holds preload is retained as qualitative T-01C evidence, not a
+formal dwell/temperature pass.
 
 ## Risks and follow-up
 
-Avoid full spring compression in normal operation. Complete T-01A, E-06,
-T-01C, and T-01D before setting a controller limit or claiming reliable
-retraction against preload.
+Avoid full spring compression in normal operation. Complete T-01A, the
+controlled portion of E-06, and the measured T-01C/T-01D evidence before
+setting a controller limit or claiming a qualified continuous preload hold.
 
 ## Files
 

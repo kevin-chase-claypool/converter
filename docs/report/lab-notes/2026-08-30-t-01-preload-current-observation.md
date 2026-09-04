@@ -33,21 +33,27 @@ Not recorded for this preliminary owner observation.
 ## Results
 
 - Reported retract current: approximately 0.019-0.050 A.
-- Reported current at the fully compressed end condition: approximately 0.18 A.
+- Owner clarification received 2026-09-04: the approximately 0.18 A endpoint
+  reading is the N20 stall current, and the motor holds the selected spring
+  preload.
 - Interpretation: current increased as the motor opposed the greatest observed
-  spring load, but the observation does not establish a safe continuous hold,
-  stall current, peak current, spring rate, force, or a coil-bind margin.
+  spring load. The result provides useful actuator-capability evidence, but it
+  does not by itself establish the formal E-06 electrical/thermal margin or a
+  T-01C hold pass because the test setup, dwell, force, rail behavior, and
+  temperatures were not recorded.
 
 ## Difficulties and corrective actions
 
 The spring compression, force, supply limit, meter response, temperature, and
-command settings were not captured. Treat this as a preliminary observation,
-not a passed E-06 or T-01 result. The next test must use a guarded non-solid
-working end point, a current-limited supply, and documented measurements.
+command settings were not captured. Treat this as preliminary actuator
+evidence, not a passed E-06 or T-01 result. The next test must use a guarded
+non-solid working end point, a current-limited supply, and documented
+measurements.
 
 ## Decisions and next action
 
 Do not use the fully compressed end condition as normal operation. Complete
 T-01A, then repeat the measurement at the intended maximum working compression
-with the current limit, voltage, force/position, peak current, and temperature
-recorded.
+with the current limit, voltage, force/position, peak current, hold dwell, and
+temperature recorded. The reported preload hold should be formalized as T-01C
+evidence before it is used as a controller assumption.

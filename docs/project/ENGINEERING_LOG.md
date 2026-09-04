@@ -191,6 +191,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 12:47:26 -0500 - IMPLEMENTED - Rerouted top-down wiring schematic into clean lanes](#elog-20260904124726)
 - [2026-09-04 14:43:51 -0500 - MIXED/OPEN - Recorded completed TB6600 signal harness wiring](#elog-20260904144351)
 - [2026-09-04 14:48:01 -0500 - MIXED/OPEN - Verified TB6600 signal-harness continuity](#elog-20260904144801)
+- [2026-09-04 - HARDWARE/PARTIAL - Clarified N20 stall current and preload hold](#elog-20260904-clarified-n20-stall-current-and-preload-hold)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2613,3 +2614,24 @@ Add new entries at the top of the log below this line.
   pen-at-center result remain open until magnetic registration is commissioned.
 - Next action: Validate P100's installed `pen - TMAG` values and run a
   pen-lifted calibration pattern before production plotting.
+
+<a id="elog-20260904-clarified-n20-stall-current-and-preload-hold"></a>
+### 🟨 2026-09-04 - HARDWARE/PARTIAL - Clarified N20 stall current and preload hold
+
+- Status: owner-reported actuator capability clarified; formal E-06 and T-01C
+  acceptance remains open.
+- Category: hardware, toolhead, n20, preload, testing
+- Summary: The owner clarified that the approximately `0.18 A` endpoint
+  reading is the N20 stall current, and reports that the motor holds the
+  selected spring preload. This upgrades the earlier ambiguous observation to
+  useful qualitative loaded-capability evidence.
+- Evidence boundary: The supply/current limit, stall duration, peak-capture
+  method, spring compression, force, rail behavior, driver-fault state, and
+  temperatures were not recorded. Therefore the result does not yet qualify
+  the DRV8833/regulator electrical or thermal margin, nor satisfy the defined
+  T-01C hold dwell criteria.
+- Evidence: `docs/report/lab-notes/2026-08-30-t-01-preload-current-observation.md`;
+  `docs/testing/TEST_PLAN.md`.
+- Next action: Repeat at the guarded working compression with a current-limited
+  supply and record hold dwell, force/position, rail voltage, current, driver
+  state, and temperatures; then complete T-01C/T-01D.

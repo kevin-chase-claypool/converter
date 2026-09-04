@@ -25,7 +25,7 @@ Newest changes appear first.
 | 2026-09-01 | `HW-20260901-001` | hardware, rp23cnc-software | planned | [Separate Normal Pen Clear from LIFT Home](hardware/2026/2026-09-01-separate-pen-clear-from-lift-home.md) |
 | 2026-08-30 | `HW-20260830-005` | hardware, rp23cnc-software | planned | [Plan Toolhead LIFT-Home Switch](hardware/2026/2026-08-30-plan-toolhead-lift-home-switch.md) |
 | 2026-08-30 | `HW-20260830-004` | hardware | planned | [Set Proposed Toolhead Lift Datum](hardware/2026/2026-08-30-set-toolhead-lift-datum.md) |
-| 2026-08-30 | `HW-20260830-003` | hardware | planned | [Record Preliminary Toolhead Preload Current](hardware/2026/2026-08-30-record-preliminary-toolhead-preload-current.md) |
+| 2026-08-30 | `HW-20260830-003` | hardware | partial | [Record Preliminary Toolhead Preload Current](hardware/2026/2026-08-30-record-preliminary-toolhead-preload-current.md) |
 | 2026-08-30 | `HW-20260830-002` | hardware | planned | [Add Toolhead Test Stop/Go Rules](hardware/2026/2026-08-30-toolhead-test-stop-go-rules.md) |
 | 2026-08-30 | `HW-20260830-001` | hardware, rp23cnc-software | planned | [Plan Toolhead Motor/Preload Physical-Envelope Test](hardware/2026/2026-08-30-toolhead-motor-preload-test-plan.md) |
 | 2026-08-28 | `WSW-20260828-001` | windows-software, rp23cnc-software, hardware | implemented | [Establish sequential agent execution policy](windows-software/2026/2026-08-28-agent-execution-policy.md) |
