@@ -180,6 +180,7 @@ Entry details remain only in the chronology.
 - [2026-09-02 - SUCCESS - Aligned P100 presentation detail states](#elog-20260902-aligned-p100-presentation-detail-states)
 - [2026-09-02 - SUCCESS - Expanded P100 presentation views to full slide](#elog-20260902-expanded-p100-presentation-views-to-full-slide)
 - [2026-09-02 - SUCCESS - Refreshed summer presentation opening render](#elog-20260902-refreshed-summer-presentation-opening-render)
+- [2026-09-03 - IMPLEMENTED - Landed TB6600 power branches](#elog-20260903-landed-tb6600-power-branches)
 - [2026-09-03 - IMPLEMENTED - Recorded TB6600 signal and A-axis commissioning baseline](#elog-20260903-recorded-tb6600-signal-and-a-axis-commissioning-baseline)
 - [2026-09-03 - SUCCESS - Added opto-isolation presentation slide](#elog-20260903-added-opto-isolation-presentation-slide)
 - [2026-09-02 - SUCCESS - Set opening slide to full-bleed machine render](#elog-20260902-set-opening-slide-to-full-bleed-machine-render)
@@ -2436,6 +2437,20 @@ Add new entries at the top of the log below this line.
   navigation actions were checked in PowerPoint.
 - Next action: Run the deck in Slide Show mode on the classroom computer before
   presenting, to confirm display scaling and mouse-over navigation.
+
+<a id="elog-20260903-landed-tb6600-power-branches"></a>
+### 🟩 2026-09-03 - IMPLEMENTED - Landed TB6600 power branches
+
+- Status: owner-reported physical wiring progress; no electrical or powered
+  verification is claimed.
+- Category: hardware, power-distribution, wiring, TB6600, X/Y/A.
+- Summary: Positive and return conductors from HD064RT `OUT6`, `OUT7`, and
+  `OUT8` are now physically landed at the X, Y, and A TB6600 branches.
+- Evidence: project-owner wiring report. The master wiring table retains
+  `planned — wired, unverified` until exact terminal labels, polarity, fuse
+  markings, continuity, and power-on behavior are recorded.
+- Next action: With power removed, inspect the six terminations and branch
+  fuses; then continue the staged E-03 and one-axis M-01/M-02 bring-up.
 
 <a id="elog-20260903-recorded-tb6600-signal-and-a-axis-commissioning-baseline"></a>
 ### 🟩 2026-09-03 - IMPLEMENTED - Recorded TB6600 signal and A-axis commissioning baseline
