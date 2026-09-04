@@ -9,6 +9,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-09-03 | `RPSW-20260903-008` | implemented | [Add Opto-Isolation Presentation Slide](../rp23cnc-software/2026/2026-09-03-add-opto-isolation-presentation-slide.md) | `presentation`, `opto-isolation`, `wiring`, `p100` |
+| 2026-09-03 | `HW-20260903-003` | implemented | [Add mobile wiring-table view](2026/2026-09-03-add-mobile-wiring-table-view.md) | `wiring`, `mobile`, `documentation` |
 | 2026-09-03 | `HW-20260903-002` | implemented | [Land TB6600 power branches](2026/2026-09-03-land-tb6600-power-branches.md) | `tb6600`, `power-distribution`, `wiring`, `x-axis`, `y-axis`, `a-axis` |
 | 2026-09-03 | `HW-20260903-001` | implemented | [Record TB6600 signal and A-axis commissioning baseline](2026/2026-09-03-record-tb6600-signal-and-a-axis-commissioning-baseline.md) | `tb6600`, `stepper`, `a-axis`, `calibration`, `homing` |
 | 2026-09-02 | `RPSW-20260902-007` | implemented | [Full-Bleed Opening Slide Image](../rp23cnc-software/2026/2026-09-02-full-bleed-opening-slide-image.md) | `presentation`, `title-slide`, `toolhead` |

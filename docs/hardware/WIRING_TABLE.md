@@ -10,6 +10,13 @@ The visual diagrams in `docs/full_wiring_diagram.html`,
 power-distribution narrative is in [`POWER_DISTRIBUTION.md`](POWER_DISTRIBUTION.md).
 If any diagram or narrative disagrees with this table, this table controls.
 
+For tablet/phone reading, use the generated [mobile card view](wiring-table-mobile.html).
+It is derived from this Markdown file; regenerate it after changing this table:
+
+```powershell
+python tools\generate_wiring_table_mobile.py
+```
+
 Selected controller: Brookwood Design RP23CNC / RP23U5XBB V1.01 variant
 `48493912129751`, **With Assembly and Ethernet Kits**. Connectors and Ethernet
 components must be soldered and inspected before wiring. Front and back

@@ -180,6 +180,7 @@ Entry details remain only in the chronology.
 - [2026-09-02 - SUCCESS - Aligned P100 presentation detail states](#elog-20260902-aligned-p100-presentation-detail-states)
 - [2026-09-02 - SUCCESS - Expanded P100 presentation views to full slide](#elog-20260902-expanded-p100-presentation-views-to-full-slide)
 - [2026-09-02 - SUCCESS - Refreshed summer presentation opening render](#elog-20260902-refreshed-summer-presentation-opening-render)
+- [2026-09-03 - IMPLEMENTED - Added mobile wiring-table view](#elog-20260903-added-mobile-wiring-table-view)
 - [2026-09-03 - IMPLEMENTED - Landed TB6600 power branches](#elog-20260903-landed-tb6600-power-branches)
 - [2026-09-03 - IMPLEMENTED - Recorded TB6600 signal and A-axis commissioning baseline](#elog-20260903-recorded-tb6600-signal-and-a-axis-commissioning-baseline)
 - [2026-09-03 - SUCCESS - Added opto-isolation presentation slide](#elog-20260903-added-opto-isolation-presentation-slide)
@@ -256,6 +257,7 @@ Entry details remain only in the chronology.
 - [2026-09-02 08:24:06 -05:00 - SUCCESS - Made data-flow visual a controlled record](#elog-20260902082406)
 - [2026-09-02 - SUCCESS - Recorded intended P100 data movement](#elog-20260902-recorded-intended-p100-data-movement)
 - [2026-09-02 - SUCCESS - Added interactive P100 data-movement map](#elog-20260902-added-interactive-p100-data-movement-map)
+- [2026-09-03 - IMPLEMENTED - Added mobile wiring-table view](#elog-20260903-added-mobile-wiring-table-view)
 <!-- END GENERATED TOPIC INDEX -->
 
 ## Entry format
@@ -2437,6 +2439,20 @@ Add new entries at the top of the log below this line.
   navigation actions were checked in PowerPoint.
 - Next action: Run the deck in Slide Show mode on the classroom computer before
   presenting, to confirm display scaling and mouse-over navigation.
+
+<a id="elog-20260903-added-mobile-wiring-table-view"></a>
+### 🟩 2026-09-03 - IMPLEMENTED - Added mobile wiring-table view
+
+- Status: documentation view implemented; wiring data and hardware behavior
+  unchanged.
+- Category: hardware, documentation, mobile usability.
+- Summary: Added a generated responsive card view of every Markdown table in
+  `docs/hardware/WIRING_TABLE.md`, with a filter field for tablet/phone use.
+- Evidence: `python tools/generate_wiring_table_mobile.py` completed from the
+  authoritative table; the generated HTML includes mobile-first cards and a
+  two-column wider-screen layout.
+- Next action: Regenerate the view after each wiring-table edit and check it on
+  the target tablet when practical.
 
 <a id="elog-20260903-landed-tb6600-power-branches"></a>
 ### 🟩 2026-09-03 - IMPLEMENTED - Landed TB6600 power branches
