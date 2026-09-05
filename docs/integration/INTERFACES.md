@@ -68,14 +68,15 @@ would silently change the established host/controller contract. Eight
 microsteps is the recommended starting point because the 12:1 reduction already
 provides fine bed resolution; 16 or 32 microsteps would increase pulse demand
 and reduce incremental torque without a demonstrated plotting benefit. M-04
-and M-05 must still verify one motor revolution and one full bed revolution.
+and M-05 passed their unloaded one-motor-revolution and full-bed-revolution
+checks on 2026-09-05.
 
 The initial ioSender screenshot from the 2026-09-05 rate-ramp session showed
 `$103 = 250.000 step/deg`, but the operator corrected the setting to
 `$103 = 4.44444`; the later `$$` report confirms the corrected value. M-04
 then passed the one-motor-revolution check with `A360 F300` in both directions.
-M-05 still must verify the 12:1 bed ratio before the system treats a full bed
-rotation as validated. At `$113=5000` and `$123=10 deg/sec^2`, short A-axis
+M-05's `A4320` check now verifies the 12:1 bed ratio for unloaded bed-angle
+commands. At `$113=5000` and `$123=10 deg/sec^2`, short A-axis
 moves can be dominated by acceleration and deceleration rather than steady
 speed.
 
@@ -109,6 +110,10 @@ Y steps/mm ($101) = (200 * 16) / (2 mm * 20 teeth) = 80.000000
 
 M-03 remains the physical travel calibration: use measured motion to correct
 either value if belt compliance, pulley geometry, or actual travel differs.
+The Y-axis unloaded rate check passed its stepped `F60` through `F500` moves;
+the operator selected `$111=1500` mm/min and `$121=500` mm/sec^2 as preliminary
+commissioning values. These settings do not replace M-03 dimensional
+calibration or establish the final pen-loaded plotting rate.
 
 ## RP23CNC to stepper drivers
 

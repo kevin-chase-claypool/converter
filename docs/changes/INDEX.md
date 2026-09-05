@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-05 | `HW-20260905-005` | hardware, rp23cnc-software | verified | [Verify the Y-axis rate and acceleration baseline](hardware/2026/2026-09-05-m-02-y-axis-rate-verification.md) |
 | 2026-09-05 | `HW-20260905-004` | hardware, rp23cnc-software | verified | [Verify the A-axis 12:1 bed ratio](hardware/2026/2026-09-05-m-05-bed-ratio-verification.md) |
 | 2026-09-05 | `HW-20260905-003` | hardware, rp23cnc-software | verified | [Correct A-axis calibration and characterize the F5000 ramp](hardware/2026/2026-09-05-a-axis-rate-calibration-and-acceleration-check.md) |
 | 2026-09-05 | `HW-20260905-002` | hardware, rp23cnc-software | verified | [Verify installed TB6600 signal response](hardware/2026/2026-09-05-tb6600-installed-signal-response.md) |

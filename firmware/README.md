@@ -68,7 +68,10 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
 
 The RP23CNC grblHAL baseline now boots over native USB: F-01 passed on
 2026-08-14 with the RP23U5XBB board target, four-axis XYZA build, W5500, and
-SD/Ymodem support. Controller I/O and motion remain untested and disconnected.
+SD/Ymodem support. Installed TB6600 signal response and unloaded X/Y/A motion
+bring-up have since been partially commissioned: A M-01/M-02/M-04/M-05 and Y
+M-01/M-02 checks passed for their documented scopes. X rate, dimensional
+calibration, coordinated motion, homing, and pen-loaded behavior remain open.
 A dual-core toolhead implementation now exists at
 [`pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`](pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino)
 for integrated control of the DRV8833, HX711, TMAG5273, and M3/M5 command

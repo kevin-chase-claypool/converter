@@ -61,8 +61,8 @@ or partially rotated bed position.
 
 This validates the unloaded 12:1 scaling, not the final plotting feed,
 pen-engaged force behavior, magnetic index repeatability, or thermal limits.
-Continue with X/Y rate checks and the separate homing, registration, and
-toolhead validation tests.
+Continue with the X rate check and M-03 X/Y dimensional calibration, followed
+by the separate homing, registration, and toolhead validation tests.
 
 ## Files
 

@@ -77,8 +77,8 @@ final plotting rate or qualify pen-engaged force behavior.
 ## Decisions and next action
 
 Mark M-05 complete and retain `$103 = 4.44444`. Continue with the remaining
-X/Y rate checks, then proceed to the separate homing, magnetic registration,
-and pen-engaged toolhead tests.
+X-axis rate check, then perform M-03 X/Y distance calibration before the
+separate homing, magnetic registration, and pen-engaged toolhead tests.
 
 ## Related records
 

@@ -170,7 +170,7 @@ thermal evidence. A later `$113=80000` / `F80000` forward-reverse test also
 reportedly returned perfectly. The operator then reported a smooth repeat at
 `$123=6000`; repeated forward/reverse cycles remained non-problematic, and both
 the motor and driver remained cool to the touch. Unloaded A-axis motion is
-complete through the tested settings; the X/Y rate checks remain. See
+complete through the tested settings; the X-axis rate check remains. See
 [`2026-09-05-m-02-a-axis-rate-ramp.md`](../report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md).
 
 M-05 current evidence: on 2026-09-05, with `$103 = 4.44444` and the 12:1
@@ -183,6 +183,15 @@ each forward/reverse check, with no reported lost-step or position error.
 magnetic index repeatability, final plotting rate, and instrumented thermal
 limits remain separate tests. See
 [`2026-09-05-m-05-bed-ratio-check.md`](../report/lab-notes/2026-09-05-m-05-bed-ratio-check.md).
+
+M-02 Y-axis evidence: on 2026-09-05, the operator ran matched `Y5`/`Y-5`
+unloaded moves at `F60`, `F120`, `F240`, `F360`, and `F500` after establishing
+`G21` and `G94`. All stepped moves completed successfully with no reported
+skipped steps, stalls, or jerking. The operator then raised `$111` to `1500`
+mm/min and `$121` to `500` mm/sec^2 and reported the resulting motion as
+smooth and acceptable. **M-02 passed for the conducted unloaded Y-axis check
+and preliminary settings; the X-axis rate check remains.** See
+[`2026-09-05-m-02-y-axis-rate-ramp.md`](../report/lab-notes/2026-09-05-m-02-y-axis-rate-ramp.md).
 
 ## Toolhead tests
 

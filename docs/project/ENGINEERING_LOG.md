@@ -72,6 +72,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-05 - HARDWARE/SUCCESS - Completed M-02 Y-axis rate check](#elog-20260905-completed-m-02-y-axis-rate-check)
 - [2026-09-05 - HARDWARE/SUCCESS - Completed M-05 A-axis bed-ratio check](#elog-20260905-completed-m-05-a-axis-bed-ratio-check)
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
 - [2026-08-06 13:37:00 -0500 - MIXED/OPEN - Added KiCad 9-native perfboard schematic](#elog-20260806133700)
@@ -296,6 +297,29 @@ Entry details remain only in the chronology.
 ```
 
 Add new entries at the top of the log below this line.
+
+---
+
+<a id="elog-20260905-completed-m-02-y-axis-rate-check"></a>
+### 🟩 2026-09-05 - HARDWARE/SUCCESS - Completed M-02 Y-axis rate check
+
+- Status: M-02 passed for the conducted unloaded Y-axis rate check and
+  preliminary settings.
+- Category: hardware, Y-axis, TB6600, stepper, motion testing.
+- Procedure: The operator established `G21` and `G94`, then ran matched `Y5`
+  and `Y-5` moves at `F60`, `F120`, `F240`, `F360`, and `F500`.
+- Result: Every stepped move completed successfully with no reported skipped
+  steps, stalls, or jerking. The operator then raised `$111` to `1500` mm/min
+  and `$121` to `500` mm/sec^2 and reported the resulting motion as smooth.
+- Limitation: No numeric current or instrumented temperature measurement was
+  recorded for this Y rate ramp. `$111=1500` and `$121=500` are preliminary
+  unloaded settings, not a final pen-loaded plotting limit.
+- Recovery: The first `G1 Y5 F60` attempt returned error 22 because the feed
+  modal state was invalid; `G21` and `G94` corrected the setup.
+- Evidence: `docs/report/lab-notes/2026-09-05-m-02-y-axis-rate-ramp.md`;
+  `docs/testing/TEST_PLAN.md`.
+- Next action: complete the X rate check, then perform M-03 physical X/Y
+  distance calibration before coordinated plotting tests.
 
 ---
 
