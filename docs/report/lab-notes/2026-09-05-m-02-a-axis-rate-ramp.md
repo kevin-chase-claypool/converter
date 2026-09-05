@@ -101,24 +101,22 @@ G90
   both passed the operator's motion check. No stalls or return-position errors
   were reported; current and temperature values were not recorded for these
   two acceleration steps.
-- The operator then raised `$113` to `15000`, `$123` to `300`, and ran the
+- The operator then raised `$113` to `15000`, `$123` to `4000`, and ran the
   corresponding `F15000` A-axis forward/reverse test. Motion was reported as
   smooth in both directions. Assuming the same `A1440` travel, the target is
-  `250 deg/sec`; at `$123=300`, each ramp is about `0.83 s` and `104` commanded
+  `250 deg/sec`; at `$123=4000`, each ramp is about `0.063 s` and `7.8` commanded
   degrees. Current, temperature, and exact travel were not recorded in this
   step.
 - The operator then raised `$113` to `40000` and ran `G1 A1440 F40000` and
   `G1 A-1440 F40000`. Both directions reportedly returned exactly to the
-  reference mark. At `$123=300`, the `A1440` distance is shorter than the
-  approximately `1481` commanded degrees needed to reach a true `40000
-  deg/min` trapezoidal cruise, so this result is a high-acceleration triangular
-  profile rather than proof of sustained `40000 deg/min` operation. The 12 V
-  supply display read `0.492 A` during motion and `0.122 A` while idle, a
-  `0.370 A` increase. This is supply current, not motor phase current; cycle
-  count and temperature were not recorded.
+  reference mark. At `$123=4000`, the ramps require only about `111` commanded
+  degrees combined, so this `A1440` move includes a sustained-speed section.
+  The 12 V supply display read `0.492 A` during motion and `0.122 A` while
+  idle, a `0.370 A` increase. This is supply current, not motor phase current;
+  cycle count and temperature were not recorded.
 - Disposition: **M-02 is in progress. `F500` was the highest actual A-axis rate
-  validated under the initial `$113=500` configuration; the later `F5000` and
-  `F15000` runs used raised `$113` values and are acceleration-profile
+  validated under the initial `$113=500` configuration; the later `F5000`,
+  `F15000`, and `F40000` runs used raised `$113` values and are commissioning
   observations, not a final plotting-rate decision.**
 
 ## Difficulties and corrective actions
@@ -154,7 +152,7 @@ Keep `$113 = 15000` for this rate experiment, but do not select a final plotting
 acceleration from the unloaded bed test. M-04's one-motor-revolution check now
 passes at `A360 F300` in both directions; M-05 must still verify the 12:1 bed
 ratio. The `$123 = 25` and `$123 = 50` steps passed the unloaded motion check,
-and the later `$123 = 300` tests at `F15000` and `F40000` were also reported
+and the later `$123 = 4000` tests at `F15000` and `F40000` were also reported
 smooth with exact mark returns. Do not raise the limits further until current,
 temperature, exact travel, and return position are recorded over repeated
 cycles. The F40000 test drew `0.492 A` from the 12 V supply while moving and

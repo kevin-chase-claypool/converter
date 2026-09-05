@@ -2865,24 +2865,22 @@ Add new entries at the top of the log below this line.
 - Result update: The same `A1440 F5000` forward/reverse check passed at
   `$123 = 25` and `$123 = 50` with no reported stalls or return-position errors.
   Current and temperature were not recorded for these two steps.
-- Result update: The operator then raised `$113` to `15000`, `$123` to `300`,
+- Result update: The operator then raised `$113` to `15000`, `$123` to `4000`,
   and ran the corresponding `F15000` A-axis forward/reverse test. Motion was
   reported smooth in both directions. Assuming the same `A1440` travel, the
-  target is `250 deg/sec`; each ramp is about `0.83 s`. Current, temperature,
+  target is `250 deg/sec`; each ramp is about `0.063 s`. Current, temperature,
   and exact travel were not recorded.
 - Result update: The operator then raised `$113` to `40000` and ran
   `G1 A1440 F40000` and `G1 A-1440 F40000`. Both directions reportedly landed
-  exactly on the reference mark. At `$123=300`, `A1440` is shorter than the
-  approximately `1481` commanded degrees needed to reach a true `40000 deg/min`
-  cruise, so this is a triangular high-acceleration profile, not sustained
-  `40000 deg/min` validation. The 12 V supply display read `0.492 A` during
-  motion and `0.122 A` while idle; cycle count and temperature were not
-  recorded.
+  exactly on the reference mark. At `$123=4000`, the ramps require only about
+  `111` commanded degrees combined, so `A1440` includes a sustained-speed
+  section. The 12 V supply display read `0.492 A` during motion and `0.122 A`
+  while idle; cycle count and temperature were not recorded.
 - Measurement limitation: an earlier longer run showed approximately
   `0.47-0.476 A`, but the exact rate was not recorded; dwell duration and
   instrumented temperature were not captured.
 - Decision: retain `$103 = 4.44444`. The unloaded motion check has now been
-  reported smooth through `$113=40000`, `F40000`, and `$123=300`, but this is
+  reported smooth through `$113=40000`, `F40000`, and `$123=4000`, but this is
   not a production setting. Stop increasing the limits until quantitative
   current, temperature, travel, and repeated return-position evidence is
   captured, then repeat under the eventual pen-load condition.

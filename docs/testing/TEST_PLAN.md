@@ -161,11 +161,11 @@ smooth but dominated by ramp-up/ramp-down; they do not select a final plotting
 acceleration. The same forward/reverse check passed at `$123=25` and `$123=50`
 without reported stalls or return-position errors; current and temperature were
 not recorded for those steps. A later test at `$113=15000`, `F15000`, and
-`$123=300` was also reported smooth in both directions, but exact travel,
+`$123=4000` was also reported smooth in both directions, but exact travel,
 current, temperature, and return position were not recorded. A later
 `$113=40000` / `F40000` forward-reverse test reportedly returned exactly to the
-mark in both directions; it was an acceleration-profile result, not sustained
-`40000 deg/min` validation. M-02 remains in progress for quantitative evidence,
+mark in both directions and included a sustained-speed section at `$123=4000`;
+it still needs repeated thermal evidence. M-02 remains in progress for quantitative evidence,
 a pen-loaded check, M-05 bed-ratio
 verification, and then the X/Y rate checks. See
 [`2026-09-05-m-02-a-axis-rate-ramp.md`](../report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md).
