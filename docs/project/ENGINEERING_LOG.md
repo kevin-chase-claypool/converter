@@ -197,6 +197,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 - HARDWARE/IMPLEMENTED - Made pulse response per-tool during preflight](#elog-20260904-made-pulse-response-per-tool-during-preflight)
 - [2026-09-04 - HARDWARE/OPEN - Replaced toolhead preload spring](#elog-20260904-replaced-toolhead-preload-spring)
 - [2026-09-05 - HARDWARE/VERIFIED - Recovered RP23CNC USB recognition](#elog-20260905-recovered-rp23cnc-usb-recognition)
+- [2026-09-05 - HARDWARE/SUCCESS - Passed installed TB6600 signal response test](#elog-20260905-passed-installed-tb6600-signal-response-test)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2738,3 +2739,29 @@ Add new entries at the top of the log below this line.
 - Limitation: No STEP, DIR, or ENA waveform has been measured yet.
 - Next action: run E-03 one TB6600 at a time with motors disconnected and the
   oscilloscope referenced to RP23CNC signal ground.
+
+<a id="elog-20260905-passed-installed-tb6600-signal-response-test"></a>
+### 🟩 2026-09-05 - HARDWARE/SUCCESS - Passed installed TB6600 signal response test
+
+- Status: E-03 passed for the installed X, Y, and A TB6600 signal harnesses.
+- Category: hardware, RP23CNC, TB6600, stepper, commissioning.
+- Summary: The owner tested the completed common-cathode signal wiring with
+  motor phases disconnected. ioSender commands returned `ok`; the A-axis
+  status moved 150 -> 160 -> 150 for relative positive and negative moves.
+- Result: `ENA+` measured about 4.82 V at idle and 0 V while moving; `DIR+`
+  measured about 0 V for positive A and 4.82 V for negative A; `PUL+` reached
+  about 5.22 V on the oscilloscope during motion. X and Y were reported to
+  match the A-axis response.
+- Struggle/recovery: The initial console view appeared to contain only sent
+  command text; enabling visible replies and sending one command at a time
+  exposed the expected acknowledgements. An early direction check used
+  `ENA+`; moving the meter to `DIR+` separated the two signal roles.
+- Evidence: `docs/report/lab-notes/2026-09-05-e-03-tb6600-installed-signal-response.md`;
+  `docs/testing/TEST_PLAN.md`; `docs/hardware/WIRING_TABLE.md`;
+  `docs/changes/hardware/2026/2026-09-05-tb6600-installed-signal-response.md`.
+- Limitation: Motor-phase order, current/microstep DIP settings, loaded
+  motion, physical direction, lost-step behavior, and thermal margin remain
+  open for E-04/M-01 and later tests. Status reports also showed `Pn:ZA`; the
+  active Z/A input state must be resolved before full-machine homing.
+- Next action: perform E-04 DIP/current confirmation, then connect one motor
+  at a time for M-01 under current-limited power.

@@ -91,30 +91,31 @@ block as reported from the received unit.
 
 ## Motion control signals
 
-The supplied TB6600 schematic defines the planned common-cathode pattern:
-each RP23CNC axis `G` is jumpered to its TB6600 `PUL-`, `DIR-`, and `ENA-`;
-`Stp`, `Dir`, and `En` go to `PUL+`, `DIR+`, and `ENA+`. This is documented,
-not yet powered-driver verified: E-03 must prove the installed inputs behave
-correctly before mechanics are attached. Compare every terminal with received
-hardware silkscreen before wiring.
+The supplied TB6600 schematic defines the common-cathode pattern: each RP23CNC
+axis `G` is jumpered to its TB6600 `PUL-`, `DIR-`, and `ENA-`; `Stp`, `Dir`, and
+`En` go to `PUL+`, `DIR+`, and `ENA+`. E-03 installed-driver verification passed
+on 2026-09-05 for X, Y, and A. Compare every terminal with received hardware
+silkscreen before wiring.
 
 On 2026-09-04, the owner reported that all three axis signal harnesses were
 physically wired with 24 AWG conductors. The repeated color convention is
 black for each common `G` return, yellow for `En`, white for `Dir`, and blue
 for `Stp`. The owner subsequently reported end-to-end continuity verification
-for all of these conductors. This verifies the physical paths only; E-03 still
-must prove installed-driver input behavior.
+for all of these conductors. On 2026-09-05, the powered E-03 test passed on all
+three installed drivers: `ENA+` was active-low (about 5 V idle and 0 V moving),
+`DIR+` changed state for opposite motion, and `PUL+` produced approximately
+5 V step pulses.
 
 | ID | From device | From terminal | To device | To terminal | Signal | Expected level/polarity | Wire | Status | Evidence/notes |
 |---|---|---|---|---|---|---|---|---|---|
-| MOT-001 | RP23CNC | X `Stp` | X TB6600 | `PUL+` | X step pulse | 5 V pulse activity during commanded motion | 24 AWG blue | continuity verified; E-03 open | F-03; owner reported physical harness and end-to-end continuity complete 2026-09-04; E-03 remains installed-driver verification. |
-| MOT-002 | RP23CNC | X `Dir` | X TB6600 | `DIR+` | X direction | 0 V positive, 5 V negative direction | 24 AWG white | continuity verified; E-03 open | F-03; owner reported physical harness and end-to-end continuity complete 2026-09-04; E-03 remains required. |
-| MOT-003 | RP23CNC | X `En` | X TB6600 | `ENA+` | X enable | Active-low: 5 V idle, 0 V moving | 24 AWG yellow | continuity verified; E-03 open | F-03; owner reported physical harness and end-to-end continuity complete 2026-09-04; E-03 remains required. |
-| MOT-004 | RP23CNC | Y `Stp` / `Dir` / `En` | Y TB6600 | `PUL+` / `DIR+` / `ENA+` | Y step, direction, enable | Same F-03 logic as X | 24 AWG blue / white / yellow | continuity verified; E-03 open | Owner reported physical harness and end-to-end continuity complete 2026-09-04; E-03 remains required. |
-| MOT-005 | RP23CNC | A `Stp` / `Dir` / `En` | A TB6600 | `PUL+` / `DIR+` / `ENA+` | A step, direction, enable | Same F-03 logic as X | 24 AWG blue / white / yellow | continuity verified; E-03 open | Owner reported physical harness and end-to-end continuity complete 2026-09-04; E-03 remains required. |
-| MOT-006 | RP23CNC | X `G` | X TB6600 | `PUL-`, `DIR-`, `ENA-` via common block | X signal return | Axis-local common reference | 24 AWG black; three common-block jumpers | continuity verified; E-03 open | Do not use isolated-input ground; owner reported physical harness and end-to-end continuity complete 2026-09-04; E-03 remains required. |
-| MOT-007 | RP23CNC | Y `G` | Y TB6600 | `PUL-`, `DIR-`, `ENA-` via common block | Y signal return | Axis-local common reference | 24 AWG black; three common-block jumpers | continuity verified; E-03 open | Do not use isolated-input ground; owner reported physical harness and end-to-end continuity complete 2026-09-04; E-03 remains required. |
-| MOT-008 | RP23CNC | A `G` | A TB6600 | `PUL-`, `DIR-`, `ENA-` via common block | A signal return | Axis-local common reference | 24 AWG black; three common-block jumpers | continuity verified; E-03 open | Do not use isolated-input ground; owner reported physical harness and end-to-end continuity complete 2026-09-04; E-03 remains required. |
+| MOT-001 | RP23CNC | X `Stp` | X TB6600 | `PUL+` | X step pulse | 5 V pulse activity during commanded motion | 24 AWG blue | bench-verified | F-03 and E-03 passed; installed-driver signal response recorded 2026-09-05. |
+| MOT-002 | RP23CNC | X `Dir` | X TB6600 | `DIR+` | X direction | 0 V positive, 5 V negative direction | 24 AWG white | bench-verified | F-03 and E-03 passed; installed-driver signal response recorded 2026-09-05. |
+| MOT-003 | RP23CNC | X `En` | X TB6600 | `ENA+` | X enable | Active-low: 5 V idle, 0 V moving | 24 AWG yellow | bench-verified | F-03 and E-03 passed; installed-driver signal response recorded 2026-09-05. |
+| MOT-004 | RP23CNC | Y `Stp` / `Dir` / `En` | Y TB6600 | `PUL+` / `DIR+` / `ENA+` | Y step, direction, enable | Same F-03 logic as X | 24 AWG blue / white / yellow | bench-verified | Owner reports the installed-driver response matches X/A; E-03 recorded 2026-09-05. |
+| MOT-005 | RP23CNC | A `Stp` / `Dir` / `En` | A TB6600 | `PUL+` / `DIR+` / `ENA+` | A step, direction, enable | Same F-03 logic as X | 24 AWG blue / white / yellow | bench-verified | A-axis installed-driver response passed 2026-09-05; X/Y reported matching. |
+| MOT-006 | RP23CNC | X `G` | X TB6600 | `PUL-`, `DIR-`, `ENA-` via common block | X signal return | Axis-local common reference | 24 AWG black; three common-block jumpers | bench-verified | Common return continuity and E-03 signal response passed; do not use isolated-input ground. |
+| MOT-007 | RP23CNC | Y `G` | Y TB6600 | `PUL-`, `DIR-`, `ENA-` via common block | Y signal return | Axis-local common reference | 24 AWG black; three common-block jumpers | bench-verified | Common return continuity and E-03 signal response passed; do not use isolated-input ground. |
+| MOT-008 | RP23CNC | A `G` | A TB6600 | `PUL-`, `DIR-`, `ENA-` via common block | A signal return | Axis-local common reference | 24 AWG black; three common-block jumpers | bench-verified | Common return continuity and E-03 signal response passed; do not use isolated-input ground. |
 
 ## Stepper motor phases
 
@@ -273,6 +274,7 @@ must pass bench tests before being treated as final machine wiring.
 |---|---:|---|---|---|
 | 2026-09-04 | 4.4 | Corrected the visual wiring diagrams to show the axis-specific motor cable colors: X shielded-cable `B-` is white and continues to the motor's blue lead; Y and A retain stock blue `B-` leads. | Codex | Project-owner clarification; `HW-20260904-001` |
 | 2026-09-04 | 4.5 | Re-routed the explanatory top-down wiring schematic into separate axis, signal, motor, and power lanes; no connection assignments changed. | Codex | `HW-20260904-002` |
+| 2026-09-05 | 4.6 | Promoted X/Y/A TB6600 signal harnesses from continuity-checked to bench-verified after E-03 installed-driver testing. | Codex | `HW-20260905-002`; `2026-09-05-e-03-tb6600-installed-signal-response.md` |
 | 2026-08-30 | 4.3 | Added planned toolhead LIFT-home microswitch input on `GP2`/`TOOL_GND`; terminals `1` and `3` are the intended COM/NO pair. | Codex | Owner terminal identification; T-01G planned |
 | 2026-08-22 | 3.5 | Documented the implemented dual-core readiness/threshold protocol and controller-resident centroid/A-registration macro. Reused all five routed control conductors; retained `LIMA` until F-08 authorizes controller-end retermination to `PRB`. | Codex | `RPSW-20260822-003`; source compile and macro validator only |
 | 2026-08-22 | 3.4 | Corrected stale separate-RP2040-adapter language: the installed SparkFun Pro Micro RP2350 toolhead controller owns both pen-pressure control and TMAG5273 magnetic sensing/output. No wiring changed. | Codex | `RPSW-20260822-002`; current GP27/GP28/GP29 wiring rows |
