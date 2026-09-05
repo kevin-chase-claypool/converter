@@ -200,6 +200,7 @@ Entry details remain only in the chronology.
 - [2026-09-05 - HARDWARE/SUCCESS - Passed installed TB6600 signal response test](#elog-20260905-passed-installed-tb6600-signal-response-test)
 - [2026-09-05 - HARDWARE/PARTIAL - Passed initial A-axis direction jog](#elog-20260905-passed-initial-a-axis-direction-jog)
 - [2026-09-05 - HARDWARE/SUCCESS - Completed M-01 low-speed jog test](#elog-20260905-completed-m-01-low-speed-jog-test)
+- [2026-09-05 - HARDWARE/IN PROGRESS - M-02 A-axis rate ramp through F480](#elog-20260905-m-02-a-axis-rate-ramp-through-f480)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2827,3 +2828,25 @@ Add new entries at the top of the log below this line.
   measurement, rate ramp, and dimensional calibration remain separate tests.
 - Next action: begin M-02 one-axis rate-ramp testing under the same current
   and mechanical safety limits.
+
+<a id="elog-20260905-m-02-a-axis-rate-ramp-through-f480"></a>
+### 🟨 2026-09-05 - HARDWARE/IN PROGRESS - M-02 A-axis rate ramp through F480
+
+- Status: M-02 remains in progress; the A-axis rate ramp has been validated
+  through `F480` for the recorded move pattern.
+- Category: hardware, A-axis, TB6600, stepper, motion testing.
+- Result: `F180`, `F240`, `F300`, `F360`, `F420`, and `F480` completed without
+  reported stalls or jerks. At `F480`, the mechanism returned exactly to its
+  physical reference mark, drew approximately `0.465 A` from the supply, and
+  remained cool to the touch.
+- Measurement limitation: an earlier longer run showed approximately
+  `0.47-0.476 A`, but the exact rate was not recorded; dwell duration and
+  instrumented temperature were not captured.
+- Decision: treat `F480` as the highest A-axis rate tested so far, not as the
+  absolute configured maximum. Check the A-axis maximum-rate setting before
+  commanding a higher rate.
+- Evidence: `docs/report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md`;
+  `docs/testing/TEST_PLAN.md`.
+- Next action: record the configured rate ceiling and continue M-02 on X/Y;
+  add a longer dwell or instrumented temperature check if thermal margin is
+  needed.
