@@ -127,6 +127,12 @@ the routed U3 return conductor from `LIMA` to `PRB`.
 | M-10 | Full startup home and registration | One ioSender `G65 P100 Q0` command lifts, homes physical X/Y, registers center and A, returns to G54 X0 Y0 A0, and leaves the pen lifted |
 | M-11 | Homing abort/fault path | Missing/inconsistent magnetic edges, sensor fault, grblHAL alarm, or unknown lift state stops the current attempt, preserves diagnostics, reports status to ioSender, and requires manual recovery before retry |
 
+M-01 current evidence: on 2026-09-05 the A-axis motor completed an initial
+bidirectional jog at `F120`; `A10` was counterclockwise, `A-10` was clockwise,
+and supply current was approximately `0.44 A` with a 2 A limit. This is an
+initial pass only; repeatability, lost-step observation, and heating remain
+open. See [`2026-09-05-m-01-a-axis-direction-jog.md`](../report/lab-notes/2026-09-05-m-01-a-axis-direction-jog.md).
+
 ## Toolhead tests
 
 | ID | Test | Pass condition |

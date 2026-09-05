@@ -198,6 +198,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 - HARDWARE/OPEN - Replaced toolhead preload spring](#elog-20260904-replaced-toolhead-preload-spring)
 - [2026-09-05 - HARDWARE/VERIFIED - Recovered RP23CNC USB recognition](#elog-20260905-recovered-rp23cnc-usb-recognition)
 - [2026-09-05 - HARDWARE/SUCCESS - Passed installed TB6600 signal response test](#elog-20260905-passed-installed-tb6600-signal-response-test)
+- [2026-09-05 - HARDWARE/PARTIAL - Passed initial A-axis direction jog](#elog-20260905-passed-initial-a-axis-direction-jog)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2765,3 +2766,23 @@ Add new entries at the top of the log below this line.
   active Z/A input state must be resolved before full-machine homing.
 - Next action: perform E-04 DIP/current confirmation, then connect one motor
   at a time for M-01 under current-limited power.
+
+<a id="elog-20260905-passed-initial-a-axis-direction-jog"></a>
+### 🟨 2026-09-05 - HARDWARE/PARTIAL - Passed initial A-axis direction jog
+
+- Status: Initial A-axis portion of M-01 passed; repeatability and heating
+  evidence remain open.
+- Category: hardware, A-axis, TB6600, stepper, motion testing.
+- Summary: With the A TB6600 at 8× microstep and 1.5 A/phase, the owner ran
+  `G1 A10 F120` and `G1 A-10 F120` in incremental mode. The A mechanism moved
+  counterclockwise for positive A and clockwise for negative A.
+- Result: The positive move completed successfully and the 12 V supply display
+  read approximately `0.44 A`, below the 2 A temporary test limit. No stall or
+  failed move was reported.
+- Evidence: `docs/report/lab-notes/2026-09-05-m-01-a-axis-direction-jog.md`;
+  `docs/testing/TEST_PLAN.md`.
+- Limitation: Motor/driver temperature, repeat-cycle return-to-mark, and
+  lost-step behavior were not measured; M-01 remains partial. X and Y motor
+  motion are still untested.
+- Next action: Repeat the A-axis move for multiple cycles with temperature and
+  return-position observations, then perform equivalent guarded X/Y jogs.
