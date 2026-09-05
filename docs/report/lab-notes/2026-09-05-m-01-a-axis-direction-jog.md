@@ -39,6 +39,8 @@ restored with `G90`.
 4. Commanded a negative 10-unit A move and observed the reverse rotation.
 5. Removed A power before connecting the Y motor, then commanded 1-unit
    positive and negative Y moves at `F60` and observed the cardinal directions.
+6. Removed Y power before connecting the X motor, then commanded 1-unit
+   positive and negative X moves at `F60` and observed the cardinal directions.
 
 ## Results
 
@@ -50,14 +52,20 @@ restored with `G90`.
 - `G1 Y1 F60` completed successfully and moved the Y axis north; `G1 Y-1 F60`
   moved south. The reported supply current for both Y moves was approximately
   `0.43 A`.
+- `G1 X1 F60` completed successfully and moved the X axis east; `G1 X-1 F60`
+  moved west. The reported supply current for both X moves was approximately
+  `0.42 A`.
 - No stall or failed move was reported.
-- Disposition: **initial M-01 A/Y direction and smooth-motion checks passed;
-  full M-01 remains partial pending repeatability, X-axis testing, and heating
-  evidence.**
+- Disposition: **initial M-01 X/Y/A direction and smooth-motion checks passed;
+  full M-01 remains partial pending repeatability and heating evidence.**
 
 ## Difficulties and corrective actions
 
-None encountered during this initial A-axis jog.
+An initial X-axis attempt was reported as jerking forward and backward. The
+owner then rechecked the X phase termination and subsequently obtained clean
+east/west jog results. The exact corrective wiring change was not recorded;
+retain the pair check as the repeatable corrective action if the symptom
+returns.
 
 ## Interpretation
 
@@ -69,10 +77,9 @@ limit. This is not yet a full thermal or lost-step qualification.
 ## Decisions and next action
 
 Keep the 1.5 A/phase driver setting and 2 A supply limit for the next guarded
-check. Repeat positive/negative A and Y moves for multiple cycles, verify that
-each mechanism returns to its starting mark, record motor/driver temperature,
-and perform the equivalent X-axis low-speed jog before treating M-01 as
-complete.
+check. Repeat positive/negative X, Y, and A moves for multiple cycles, verify
+that each mechanism returns to its starting mark, and record motor/driver
+temperature before treating M-01 as complete.
 
 ## Related records
 
