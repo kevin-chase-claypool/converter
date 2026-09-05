@@ -1,0 +1,137 @@
+import math
+import re
+import sys
+import unittest
+from pathlib import Path
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+import converter_core as converter
+
+
+class RadiusAwareThetaFeedTests(unittest.TestCase):
+    CENTER = (0.0, 0.0)
+
+    def settings(self, **kwargs):
+        defaults = {
+            "feed_rate": 1200.0,
+            "theta_tangential_speed_mm_min": 1200.0,
+            "theta_controller_limits": converter.ThetaControllerLimits(
+                max_rate_deg_min=1_000_000.0,
+                max_acceleration_deg_s2=1_000_000_000.0,
+            ),
+        }
+        defaults.update(kwargs)
+        return converter.Settings(**defaults)
+
+    def plan_at_radius(self, radius, motor_delta=100.0, **kwargs):
+        return converter.plan_radius_aware_draw_feed(
+            (radius, 0.0),
+            (radius, 0.0),
+            self.CENTER,
+            0.0,
+            motor_delta,
+            self.settings(**kwargs),
+        )
+
+    def test_required_a_rate_is_inverse_to_radius(self):
+        inner = self.plan_at_radius(50.0)
+        outer = self.plan_at_radius(100.0)
+
+        self.assertAlmostEqual(inner["a_rate_deg_min"], outer["a_rate_deg_min"] * 2.0)
+        self.assertAlmostEqual(inner["tangential_speed_mm_min"], 1200.0)
+        self.assertAlmostEqual(outer["tangential_speed_mm_min"], 1200.0)
+
+    def test_tangential_speed_setting_is_loaded_from_the_ui_value(self):
+        settings = converter.settings_from_values(
+            {"theta_tangential_speed_mm_min": "725.5"},
+            {},
+        )
+
+        self.assertEqual(settings.theta_tangential_speed_mm_min, 725.5)
+
+    def test_forward_and_reverse_a_moves_have_the_same_feed_plan(self):
+        forward = self.plan_at_radius(100.0, motor_delta=100.0)
+        reverse = self.plan_at_radius(100.0, motor_delta=-100.0)
+
+        self.assertAlmostEqual(forward["feed_rate"], reverse["feed_rate"])
+        self.assertAlmostEqual(forward["a_rate_deg_min"], reverse["a_rate_deg_min"])
+
+    def test_a_rate_and_acceleration_limits_are_applied(self):
+        rate_limited = self.plan_at_radius(
+            50.0,
+            theta_controller_limits=converter.ThetaControllerLimits(
+                max_rate_deg_min=1000.0,
+                max_acceleration_deg_s2=1_000_000_000.0,
+            ),
+        )
+        accel_limited = self.plan_at_radius(
+            100.0,
+            motor_delta=1.0,
+            theta_controller_limits=converter.ThetaControllerLimits(
+                max_rate_deg_min=1_000_000.0,
+                max_acceleration_deg_s2=4.0,
+            ),
+        )
+
+        self.assertAlmostEqual(rate_limited["a_rate_deg_min"], 1000.0)
+        self.assertIn("rate", rate_limited["limited_by"])
+        self.assertAlmostEqual(accel_limited["a_rate_deg_min"], 120.0)
+        self.assertIn("acceleration", accel_limited["limited_by"])
+
+    def test_center_move_is_finite_and_has_zero_tangential_speed(self):
+        plan = converter.plan_radius_aware_draw_feed(
+            self.CENTER,
+            self.CENTER,
+            self.CENTER,
+            0.0,
+            10.0,
+            self.settings(),
+        )
+
+        self.assertEqual(plan["radius_mm"], 0.0)
+        self.assertEqual(plan["tangential_speed_mm_min"], 0.0)
+        self.assertTrue(math.isfinite(plan["feed_rate"]))
+        self.assertTrue(math.isfinite(plan["duration_ms"]))
+
+    def test_no_a_move_retains_the_xy_feed_rate(self):
+        plan = converter.plan_radius_aware_draw_feed(
+            (0.0, 0.0),
+            (100.0, 0.0),
+            self.CENTER,
+            100.0,
+            0.0,
+            self.settings(feed_rate=987.0),
+        )
+
+        self.assertEqual(plan["feed_rate"], 987.0)
+        self.assertEqual(plan["duration_ms"], 100.0 / 987.0 * 60000.0)
+
+    def test_preview_draw_blocks_match_generated_gcode(self):
+        contours = [[(-50.0, -10.0), (0.0, 15.0), (50.0, 30.0)]]
+        settings = self.settings(include_z=False)
+        gcode = converter.contours_to_gcode(contours, settings)
+        draw_moves = [move for move in converter.build_preview_moves(contours, settings) if move["type"] == "draw"]
+
+        self.assertTrue(draw_moves)
+        self.assertTrue(any(" A" in move["gcode"] for move in draw_moves))
+        for move in draw_moves:
+            self.assertIn(move["gcode"], gcode)
+            match = re.search(r"\bF([-+0-9.]+)", move["gcode"])
+            self.assertIsNotNone(match)
+            self.assertAlmostEqual(float(match.group(1)), move["feed_rate"], places=4)
+
+    def test_fixed_theta_output_is_unchanged_by_tangential_setting(self):
+        contours = [[(-25.0, 0.0), (25.0, 0.0)]]
+        baseline = self.settings(theta_mode="fixed", theta_tangential_speed_mm_min=1200.0)
+        changed = self.settings(theta_mode="fixed", theta_tangential_speed_mm_min=300.0)
+
+        self.assertEqual(
+            converter.contours_to_gcode(contours, baseline),
+            converter.contours_to_gcode(contours, changed),
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

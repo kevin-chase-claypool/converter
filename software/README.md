@@ -34,7 +34,7 @@ Requires `PySide6` (`pip install PySide6`).
 The exact dialect and the firmware-facing caveats are documented in
 [`../docs/HANDOFF.md`](../docs/HANDOFF.md) → "G-code output reference".
 
-## Required next change: radius-aware A-axis feed
+## Radius-aware A-axis feed
 
 The converter must not treat the A-axis portion of `F` as a fixed bed-surface
 speed. Because `A` is emitted in motor-shaft degrees and the bed reduction is
@@ -45,19 +45,26 @@ pen's instantaneous radius from the bed center:
 A_feed_motor_deg/min = (4320 × tangential_speed_mm/min) / (2π × radius_mm)
 ```
 
-The current G-code contract still emits one coordinated `F` per move, so this
-is a planned converter change rather than an implemented behavior. The planner
-must calculate radius-aware, per-segment feed limits, combine A motion with the
-XY contribution to the requested path speed, and cap the result at the
-controller's per-axis `$113`/`$123` limits. Near the center, the requested A
-rate can exceed the configured maximum; the converter must then reduce the
-achievable tangential speed instead of silently exceeding the limit. The
-implementation must also define its behavior at zero or near-zero radius.
+`Feed rate` remains the requested maximum X/Y component speed. The additional
+**Theta tangential speed mm/min** setting is the requested bed-surface speed
+for draw segments that include A motion. For each segment, the converter uses
+the average endpoint radius, limits the requested A rate using the installed
+RP23CNC profile (`$113 = 80000` motor-deg/min and `$123 = 6000`
+motor-deg/s²), and derives one coordinated `F` from the longer X/Y or A
+component duration. X/Y-only output remains unchanged.
 
-Acceptance requires generated G-code and preview timing to agree for multiple
-radii, with inverse-radius A rates for a constant target tangential speed,
-bounded combined X/Y/A feed, and explicit handling of the controller's A rate
-and acceleration ceilings.
+At the exact bed center, rotation has zero tangential effect. The converter
+therefore uses the capped angular move required by the theta plan without
+dividing by zero and reports zero achieved tangential speed. The acceleration
+limit is a conservative rest-to-rest segment bound; grblHAL can carry speed
+through adjacent blocks, so M-06 hardware validation is still required before
+relying on estimated execution time at high speed.
+
+Preview draw moves use this same planner and retain the resulting feed, radius,
+achieved tangential speed, and limiting reason in their move data. Generated
+G-code and preview blocks therefore agree. Unit tests cover inverse-radius
+rates, forward/reverse motion, both A limits, center handling, unchanged
+X/Y-only output, and preview/G-code parity.
 
 ## Settings groups (Qt app)
 
@@ -67,6 +74,8 @@ and acceleration ceilings.
 - **Motion** — draw/feed rate and travel rate.
 - **Theta kinematics** — theta axis/ratio/resolver/cost settings (`Theta ratio`
   defaults to 12 for the 60T→720T pulley pair).
+  - **Theta tangential speed mm/min** is the requested surface speed caused by
+    A-axis bed rotation during drawing. It does not change X/Y-only output.
 - **Pen** — Z heights, pen cycle, pen up/down commands, and Use Z.
   - **Curve round bias** (`round_bias`, default 0.05) trades lowest-cost motion vs.
     well-rounded curves. `0` = pick the cheapest theta per segment (tends to

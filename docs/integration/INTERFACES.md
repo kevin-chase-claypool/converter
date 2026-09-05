@@ -47,13 +47,19 @@ A steps/degree = motor full-steps/rev * microsteps / 360
 Do not multiply by 12 again in grblHAL. If this convention changes, update the
 converter, firmware configuration, sample files, and this document together.
 
-For drawing motion, the converter must also account for bed radius when
-choosing A feed. A target tangential speed `v` at radius `r` requires
-`A_feed = 4320 × v / (2πr)` motor-deg/min. The planned implementation must
-combine that radius-aware A contribution with XY motion, cap it at the
-controller's per-axis rate/acceleration limits, and define a safe behavior near
-zero radius. A single global `F` must not be treated as a fixed bed-surface
-speed at every radius.
+For drawing motion, the converter accounts for bed radius when choosing A
+feed. A target tangential speed `v` at radius `r` requires
+`A_feed = 4320 × v / (2πr)` motor-deg/min. The converter uses a separate
+theta tangential-speed setting, retains `Feed rate` as the maximum X/Y
+component speed, and derives one coordinated `F` from the longer component
+duration. It caps the requested A rate with the installed `$113 = 80000`
+motor-deg/min and `$123 = 6000` motor-deg/s² profile. At the exact center,
+the angular plan remains capped and the achieved tangential speed is zero.
+Preview uses the same per-segment calculation as emitted G-code.
+
+The acceleration bound is conservative because it treats an individual block
+as rest-to-rest. grblHAL look-ahead can carry velocity across blocks; M-06
+hardware testing remains required to validate combined X/Y/A timing.
 
 ### A-axis TB6600 baseline
 

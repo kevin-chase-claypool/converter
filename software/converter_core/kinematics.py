@@ -4,6 +4,101 @@ from .cancellation import check_cancelled
 from .geometry import distance, filtered_contour, normalized_hatch_pattern, unwrap_angle
 from .settings import pattern_size_override, pattern_size_values
 
+
+_EPSILON = 1e-9
+
+
+def plan_radius_aware_draw_feed(start_point, end_point, center, xy_length, motor_delta, settings):
+    """Return one coordinated drawing-feed plan for an X/Y/A segment.
+
+    ``feed_rate`` remains the maximum requested X/Y component speed. The
+    separate theta tangential-speed setting requests the bed-surface speed
+    caused by A rotation. A single coordinated F is derived from the longer of
+    those two component durations, so neither component is commanded faster
+    than its request. The controller's installed A rate and acceleration
+    limits are applied conservatively before the F value is emitted.
+    """
+    xy_length = max(float(xy_length), 0.0)
+    motor_delta = abs(float(motor_delta))
+    motion_length = math.hypot(xy_length, motor_delta)
+    xy_rate = max(float(getattr(settings, "feed_rate", 1.0)), _EPSILON)
+
+    # No emitted A motion must retain the legacy XY-only F behavior exactly.
+    if motor_delta <= _EPSILON:
+        duration_min = motion_length / xy_rate
+        return {
+            "feed_rate": xy_rate,
+            "duration_ms": duration_min * 60000.0,
+            "motion_length": motion_length,
+            "radius_mm": None,
+            "requested_a_rate_deg_min": 0.0,
+            "a_rate_deg_min": 0.0,
+            "tangential_speed_mm_min": 0.0,
+            "limited_by": (),
+        }
+
+    start_radius = math.hypot(start_point[0] - center[0], start_point[1] - center[1])
+    end_radius = math.hypot(end_point[0] - center[0], end_point[1] - center[1])
+    radius = (start_radius + end_radius) / 2.0
+    ratio = max(float(getattr(settings, "theta_drive_ratio", 12.0)), _EPSILON)
+    motor_degrees_per_bed_revolution = 360.0 * ratio
+    target_tangential_speed = max(float(getattr(settings, "theta_tangential_speed_mm_min", xy_rate)), 0.0)
+    limits = getattr(settings, "theta_controller_limits", None)
+    max_a_rate = max(float(getattr(limits, "max_rate_deg_min", 80000.0)), _EPSILON)
+    max_a_acceleration = max(float(getattr(limits, "max_acceleration_deg_s2", 6000.0)), 0.0)
+
+    # At the exact center, rotation has zero tangential effect. Request the
+    # capped angular motion needed by the geometric plan rather than dividing
+    # by zero; the achieved tangential speed remains explicitly zero.
+    if radius <= _EPSILON or target_tangential_speed <= _EPSILON:
+        requested_a_rate = math.inf if radius <= _EPSILON else 0.0
+    else:
+        requested_a_rate = (
+            motor_degrees_per_bed_revolution * target_tangential_speed / (2.0 * math.pi * radius)
+        )
+
+    # A rest-to-rest triangular move cannot exceed this peak rate. grblHAL can
+    # carry speed through a sequence, so this is deliberately conservative and
+    # keeps preview timing on the safe side until M-06 verifies combined motion.
+    acceleration_rate_cap = math.inf
+    if max_a_acceleration > _EPSILON:
+        acceleration_rate_cap = math.sqrt(motor_delta * max_a_acceleration) * 60.0
+
+    a_rate = min(requested_a_rate, max_a_rate, acceleration_rate_cap)
+    limited_by = []
+    if requested_a_rate > max_a_rate:
+        limited_by.append("rate")
+    if requested_a_rate > acceleration_rate_cap:
+        limited_by.append("acceleration")
+    if not math.isfinite(a_rate) or a_rate <= _EPSILON:
+        # A zero tangential target still has to execute the planned orientation
+        # move. Use the existing X/Y duration where available, while retaining
+        # the controller caps instead of emitting an invalid or unbounded F.
+        a_rate = min(
+            max_a_rate,
+            acceleration_rate_cap,
+            motor_delta / max(xy_length / xy_rate, _EPSILON),
+        )
+
+    xy_duration_min = xy_length / xy_rate
+    a_duration_min = motor_delta / a_rate
+    duration_min = max(xy_duration_min, a_duration_min)
+    feed_rate = motion_length / max(duration_min, _EPSILON)
+    achieved_a_rate = motor_delta / max(duration_min, _EPSILON)
+    achieved_tangential_speed = (
+        achieved_a_rate * 2.0 * math.pi * radius / motor_degrees_per_bed_revolution
+    )
+    return {
+        "feed_rate": feed_rate,
+        "duration_ms": duration_min * 60000.0,
+        "motion_length": motion_length,
+        "radius_mm": radius,
+        "requested_a_rate_deg_min": requested_a_rate,
+        "a_rate_deg_min": achieved_a_rate,
+        "tangential_speed_mm_min": achieved_tangential_speed,
+        "limited_by": tuple(limited_by),
+    }
+
 def bed_to_machine(point, bed_theta, center):
     angle = math.radians(bed_theta)
     cos_a = math.cos(angle)

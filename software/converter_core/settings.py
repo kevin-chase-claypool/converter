@@ -1,4 +1,17 @@
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
+
+
+@dataclass(frozen=True)
+class ThetaControllerLimits:
+    """Installed RP23CNC A-axis limits in motor-shaft units.
+
+    These defaults mirror the validated controller configuration ($113/$123).
+    They are intentionally not exposed as another Qt control: changing them
+    requires a matching machine-controller change and hardware verification.
+    """
+
+    max_rate_deg_min: float = 80000.0
+    max_acceleration_deg_s2: float = 6000.0
 
 @dataclass
 class Settings:
@@ -11,6 +24,8 @@ class Settings:
     theta_axis: str = "A"
     theta_offset: float = 0.0
     theta_drive_ratio: float = 12.0
+    theta_tangential_speed_mm_min: float = 1200.0
+    theta_controller_limits: ThetaControllerLimits = field(default_factory=ThetaControllerLimits)
     theta_mode: str = "optimized"
     theta_resolver: str = "rtheta"
     theta_weight: float = 1.0
@@ -78,6 +93,7 @@ TEXT_FIELD_GROUPS = (
         ("Theta axis", "theta_axis", "A"),
         ("Theta offset", "theta_offset", "0"),
         ("Theta ratio", "theta_drive_ratio", "12"),
+        ("Theta tangential speed mm/min", "theta_tangential_speed_mm_min", "1200"),
         ("Theta mode", "theta_mode", "optimized"),
         ("Theta resolver", "theta_resolver", "rtheta"),
         ("Theta weight", "theta_weight", "1.0"),

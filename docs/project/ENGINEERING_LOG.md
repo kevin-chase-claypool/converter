@@ -47,6 +47,7 @@ The links below are alternate views of the single chronological log.
 Entry details remain only in the chronology.
 
 ### Windows software
+- [2026-09-05 - WINDOWS SOFTWARE/SUCCESS - Implemented radius-aware A-axis feed](#elog-20260905-implemented-radius-aware-a-axis-feed)
 - [2026-06-07 14:02:21 -0500 - SUCCESS - Animated pen-up preview travel](#elog-20260607140221)
 - [2026-06-07 13:16:27 -0500 - SUCCESS - Added cooperative preview cancellation](#elog-20260607131627)
 - [2026-06-07 11:51:28 -0500 - SUCCESS - Added categorized change documentation and preview progress](#elog-20260607115128)
@@ -301,6 +302,28 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260905-implemented-radius-aware-a-axis-feed"></a>
+### 🟩 2026-09-05 - WINDOWS SOFTWARE/SUCCESS - Implemented radius-aware A-axis feed
+
+- Status: converter implementation and automated verification complete; M-06
+  installed-machine validation remains open.
+- Category: software, converter, theta, A-axis, feed planning.
+- Implementation: added `Theta tangential speed mm/min` without redefining the
+  existing X/Y `Feed rate`. For A draw segments, the shared planner calculates
+  the average endpoint radius, uses the validated 4,320 motor-deg/bed-rev
+  contract, caps A motion with the current `$113 = 80000` motor-deg/min and
+  `$123 = 6000` motor-deg/s² profile, and emits a coordinated `F`. Preview
+  calls the identical helper and retains feed/radius/tangential-speed data.
+- Safety behavior: a center-radius move remains finite, uses capped angular
+  motion, and reports zero achieved tangential speed. The acceleration bound is
+  conservative because it treats each block as rest-to-rest.
+- Verification: `python -m unittest discover -s software/tests -v` passed all
+  10 tests, including inverse-radius, forward/reverse, caps, center, unchanged
+  no-A output, and preview/G-code parity coverage.
+- Risk and next action: grblHAL look-ahead may carry velocity across blocks,
+  so M-06 must compare installed combined X/Y/A behavior against the converter
+  estimate after the remaining X-axis M-03 calibration.
 
 <a id="elog-20260905-planned-radius-aware-a-axis-feed"></a>
 ### 🟨 2026-09-05 - WINDOWS SOFTWARE/MIXED - Planned radius-aware A-axis feed

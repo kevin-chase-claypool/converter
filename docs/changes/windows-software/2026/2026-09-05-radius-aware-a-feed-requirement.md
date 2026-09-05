@@ -6,10 +6,12 @@ affected_categories:
   - windows-software
   - rp23cnc-software
   - hardware
-status: planned
+status: implemented
 components:
+  - software/converter_core/settings.py
   - software/converter_core/kinematics.py
   - software/converter_core/gcode.py
+  - software/tests/test_theta_feed.py
   - software/README.md
   - docs/integration/INTERFACES.md
 tags:
@@ -24,14 +26,14 @@ related:
   - HW-20260905-004
 ---
 
-# Plan radius-aware A-axis feed for drawing
+# Implement radius-aware A-axis feed for drawing
 
 ## Summary
 
-The converter must make A-axis feed radius-aware. A is emitted in motor-shaft
-degrees, while the desired writing speed is tangential bed speed; therefore the
-required angular rate changes inversely with the pen's radius from the bed
-center.
+The converter now makes drawing A-axis feed radius-aware. A is emitted in
+motor-shaft degrees, while the desired writing speed is tangential bed speed;
+therefore the required angular rate changes inversely with the pen's radius
+from the bed center.
 
 ## Reason
 
@@ -49,37 +51,51 @@ motor-degree rate is:
 A_feed_motor_deg/min = (4320 × v) / (2π × r)
 ```
 
-The future planner change must calculate this per segment, combine the A
-contribution with XY motion for coordinated feed, cap the result at the
-controller's A rate/acceleration limits, and define a safe zero/near-zero
-radius policy. Preview timing must use the same result as emitted G-code.
+The planner calculates this per segment from the average endpoint radius. It
+uses the new `Theta tangential speed mm/min` field for the bed-surface request,
+retains `Feed rate` as the maximum X/Y component speed, and derives one
+coordinated `F` from the longer component duration. The installed A profile
+(`$113 = 80000` motor-deg/min; `$123 = 6000` motor-deg/s²) caps the request.
+At the exact center it uses capped angular motion without division by zero and
+reports zero achieved tangential speed. Preview and emitted G-code call the
+same feed-planning helper.
 
 ## Verification
 
-- The formula is consistent with the validated 12:1 ratio and A motor-degree
+- `python -m unittest discover -s software/tests -v` passed all 10 tests.
+- Tests cover inverse-radius A rates, forward/reverse moves, rate and
+  acceleration limits, center behavior, unchanged no-A output, and generated
+  G-code/preview parity.
+- The formula remains consistent with the validated 12:1 A motor-degree
   contract documented in `docs/integration/INTERFACES.md`.
-- A hardware-coordinated-motion test (M-06) remains required to verify how
-  grblHAL applies the combined `F` and axis limits.
-- Software implementation and generated-G-code tests are not complete yet.
 
 ## Struggles and rejected approaches
 
 Treating the modal `F` as a fixed bed-surface speed was rejected because the
 same angular rate produces different tangential speeds at different radii.
-Applying the 12:1 ratio a second time in firmware is also rejected; the
-converter's established A unit is motor-shaft degrees.
+Redefining the existing `Feed rate` field was also rejected because it would
+silently change X/Y-only output. Applying the 12:1 ratio a second time in
+firmware remains rejected; the converter's established A unit is motor-shaft
+degrees.
 
 ## Risks and follow-up
 
 Near the center, the rate required for a chosen tangential speed can exceed
-`$113`; the converter must lower achievable surface speed rather than emit an
-unbounded request. Combined XY/A feed metric behavior must be measured on the
-installed grblHAL build. Add unit, G-code, preview, and hardware acceptance
-tests before treating the feature as implemented.
+`$113`; the converter lowers achievable surface speed rather than emitting an
+unbounded request. The acceleration cap is intentionally conservative because
+it treats each segment as rest-to-rest. Combined XY/A feed metric and
+look-ahead behavior must be measured on the installed grblHAL build in M-06
+before relying on high-speed runtime estimates.
 
 ## Files
 
-- `software/README.md`: records the user-facing requirement and formula.
-- `docs/HANDOFF.md`: records the G-code caveat and hardware verification need.
-- `docs/integration/INTERFACES.md`: records the cross-subsystem feed contract.
-- `docs/project/ROADMAP.md`: adds the Phase 4 implementation task.
+- `software/converter_core/settings.py`: adds the explicit tangential-speed
+  setting and installed A limit profile.
+- `software/converter_core/kinematics.py`: plans radius-aware segment feeds.
+- `software/converter_core/gcode.py`: emits planned feeds and exposes the same
+  values to preview moves.
+- `software/tests/test_theta_feed.py`: covers planner and G-code/preview
+  behavior.
+- `software/README.md`, `docs/HANDOFF.md`, and
+  `docs/integration/INTERFACES.md`: document current behavior and M-06 risk.
+- `docs/project/ROADMAP.md`: records the completed software task.
