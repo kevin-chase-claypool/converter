@@ -113,7 +113,8 @@ G90
   degrees combined, so this `A1440` move includes a sustained-speed section.
   The 12 V supply display read `0.492 A` during motion and `0.122 A` while
   idle, a `0.370 A` increase. This is supply current, not motor phase current;
-  cycle count and temperature were not recorded.
+  after the `A14400 F40000` run, the motor was still cool to the touch. No
+  instrumented temperature or repeated-cycle count was recorded.
 - Disposition: **M-02 is in progress. `F500` was the highest actual A-axis rate
   validated under the initial `$113=500` configuration; the later `F5000`,
   `F15000`, and `F40000` runs used raised `$113` values and are commissioning
@@ -156,9 +157,10 @@ and the later `$123 = 4000` tests at `F15000` and `F40000` were also reported
 smooth with exact mark returns. Do not raise the limits further until current,
 temperature, exact travel, and return position are recorded over repeated
 cycles. The F40000 test drew `0.492 A` from the 12 V supply while moving and
-`0.122 A` while idle. Repeat the chosen acceleration under the eventual
-pen-load condition before adopting a production value. Do not move the pulley
-while inspecting the mark.
+`0.122 A` while idle; the motor remained cool to the touch after the run. Use
+an IR thermometer or thermocouple and repeat forward/reverse cycles before
+adopting a production value. Repeat the chosen acceleration under the eventual
+pen-load condition. Do not move the pulley while inspecting the mark.
 
 ## Related records
 

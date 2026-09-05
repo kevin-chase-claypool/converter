@@ -61,6 +61,9 @@ than applying the target feed instantly.
   reverse at `F40000`; both directions reportedly returned exactly to the
   reference mark. At `$123=4000`, the ramps require only about `111` commanded
   degrees combined, so `A1440` includes a sustained-speed section.
+- The longer `A14400 F40000` run was reported cool to the touch afterward.
+  This is qualitative single-run evidence; no instrumented temperature or
+  repeated-cycle count was recorded.
 - M-05, the full 12:1 bed-ratio check, remains open.
 
 ## Struggles and rejected approaches
@@ -73,9 +76,10 @@ configured acceleration profile.
 ## Risks and follow-up
 
 Do not raise the limits further until current, temperature, exact travel, and
-return position are recorded. Repeat the selected acceleration under the
-eventual pen-load condition before adopting a production value, and complete
-M-05 before using bed-rotation speed as a validated machine value.
+return position are recorded over repeated cycles. Use an IR thermometer or
+thermocouple, then repeat the selected acceleration under the eventual pen-load
+condition before adopting a production value. Complete M-05 before using
+bed-rotation speed as a validated machine value.
 
 ## Files
 

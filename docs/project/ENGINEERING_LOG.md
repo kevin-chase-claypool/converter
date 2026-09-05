@@ -2875,7 +2875,8 @@ Add new entries at the top of the log below this line.
   exactly on the reference mark. At `$123=4000`, the ramps require only about
   `111` commanded degrees combined, so `A1440` includes a sustained-speed
   section. The 12 V supply display read `0.492 A` during motion and `0.122 A`
-  while idle; cycle count and temperature were not recorded.
+  while idle. The motor remained cool to the touch after the run; no
+  instrumented temperature or repeated-cycle count was recorded.
 - Measurement limitation: an earlier longer run showed approximately
   `0.47-0.476 A`, but the exact rate was not recorded; dwell duration and
   instrumented temperature were not captured.
@@ -2883,7 +2884,9 @@ Add new entries at the top of the log below this line.
   reported smooth through `$113=40000`, `F40000`, and `$123=4000`, but this is
   not a production setting. Stop increasing the limits until quantitative
   current, temperature, travel, and repeated return-position evidence is
-  captured, then repeat under the eventual pen-load condition.
+  captured. The single A14400 run remained cool to the touch, but repeat
+  forward/reverse cycles and instrumented temperature are still required before
+  repeating under the eventual pen-load condition.
 - Evidence: `docs/report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md`;
   `docs/testing/TEST_PLAN.md`.
 - Next action: run the controlled `$123` acceleration ladder, complete the
