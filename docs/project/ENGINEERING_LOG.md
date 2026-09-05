@@ -2875,7 +2875,9 @@ Add new entries at the top of the log below this line.
   exactly on the reference mark. At `$123=300`, `A1440` is shorter than the
   approximately `1481` commanded degrees needed to reach a true `40000 deg/min`
   cruise, so this is a triangular high-acceleration profile, not sustained
-  `40000 deg/min` validation.
+  `40000 deg/min` validation. The 12 V supply display read `0.492 A` during
+  motion and `0.122 A` while idle; cycle count and temperature were not
+  recorded.
 - Measurement limitation: an earlier longer run showed approximately
   `0.47-0.476 A`, but the exact rate was not recorded; dwell duration and
   instrumented temperature were not captured.

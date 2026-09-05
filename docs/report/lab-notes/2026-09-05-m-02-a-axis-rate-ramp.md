@@ -112,7 +112,10 @@ G90
   reference mark. At `$123=300`, the `A1440` distance is shorter than the
   approximately `1481` commanded degrees needed to reach a true `40000
   deg/min` trapezoidal cruise, so this result is a high-acceleration triangular
-  profile rather than proof of sustained `40000 deg/min` operation.
+  profile rather than proof of sustained `40000 deg/min` operation. The 12 V
+  supply display read `0.492 A` during motion and `0.122 A` while idle, a
+  `0.370 A` increase. This is supply current, not motor phase current; cycle
+  count and temperature were not recorded.
 - Disposition: **M-02 is in progress. `F500` was the highest actual A-axis rate
   validated under the initial `$113=500` configuration; the later `F5000` and
   `F15000` runs used raised `$113` values and are acceleration-profile
@@ -154,9 +157,10 @@ ratio. The `$123 = 25` and `$123 = 50` steps passed the unloaded motion check,
 and the later `$123 = 300` tests at `F15000` and `F40000` were also reported
 smooth with exact mark returns. Do not raise the limits further until current,
 temperature, exact travel, and return position are recorded over repeated
-cycles. Repeat the chosen acceleration under the eventual pen-load condition
-before adopting a production value. Do not move the pulley while inspecting
-the mark.
+cycles. The F40000 test drew `0.492 A` from the 12 V supply while moving and
+`0.122 A` while idle. Repeat the chosen acceleration under the eventual
+pen-load condition before adopting a production value. Do not move the pulley
+while inspecting the mark.
 
 ## Related records
 
