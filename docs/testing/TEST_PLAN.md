@@ -129,9 +129,11 @@ the routed U3 return conductor from `LIMA` to `PRB`.
 
 M-01 current evidence: on 2026-09-05 the A-axis motor completed an initial
 bidirectional jog at `F120`; `A10` was counterclockwise, `A-10` was clockwise,
-and supply current was approximately `0.44 A` with a 2 A limit. This is an
-initial pass only; repeatability, lost-step observation, and heating remain
-open. See [`2026-09-05-m-01-a-axis-direction-jog.md`](../report/lab-notes/2026-09-05-m-01-a-axis-direction-jog.md).
+and supply current was approximately `0.44 A` with a 2 A limit. The Y axis then
+moved north for `Y1` and south for `Y-1` at `F60`, with approximately `0.43 A`
+reported for both moves. This is an initial pass only; X motion, repeatability,
+lost-step observation, and heating remain open. See
+[`2026-09-05-m-01-a-axis-direction-jog.md`](../report/lab-notes/2026-09-05-m-01-a-axis-direction-jog.md).
 
 ## Toolhead tests
 

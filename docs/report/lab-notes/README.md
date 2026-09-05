@@ -32,7 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
-| 2026-09-05 | M-01 partial | Initial pass/partial | A-axis motor moved counterclockwise for `A10` and clockwise for `A-10` at `F120`; supply current was approximately 0.44 A. Repeatability and heating remain open. |
+| 2026-09-05 | M-01 partial | Initial pass/partial | A-axis moved counterclockwise/clockwise for positive/negative commands at `F120`, and Y moved north/south for positive/negative 1-unit commands at `F60`; supply current was approximately 0.44/0.43 A. X, repeatability, and heating remain open. |
 | 2026-09-05 | E-03 | Passed | Installed X/Y/A TB6600 signal response passed: active-low enable, opposite DIR states, and approximately 5 V STEP pulses through the common-cathode harnesses. |
 | 2026-08-19 | E-01 partial | Pass/partial | All 17HS15 coil pairs were identified by hand-turn generated voltage; Y's shielded cable continues black/green and red/white, with white spliced to motor blue. |
 | 2026-08-12 | E-14B partial | Pass/partial | Local 6 V branch and S7V8F5-to-Pro-Micro power path passed continuity and bench-power checks; no motor or upstream regulator test. |

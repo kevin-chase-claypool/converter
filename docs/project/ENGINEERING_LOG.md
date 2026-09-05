@@ -2775,14 +2775,17 @@ Add new entries at the top of the log below this line.
 - Category: hardware, A-axis, TB6600, stepper, motion testing.
 - Summary: With the A TB6600 at 8× microstep and 1.5 A/phase, the owner ran
   `G1 A10 F120` and `G1 A-10 F120` in incremental mode. The A mechanism moved
-  counterclockwise for positive A and clockwise for negative A.
-- Result: The positive move completed successfully and the 12 V supply display
-  read approximately `0.44 A`, below the 2 A temporary test limit. No stall or
-  failed move was reported.
+  counterclockwise for positive A and clockwise for negative A. The Y TB6600
+  was then tested with `G1 Y1 F60` and `G1 Y-1 F60`; positive Y moved north and
+  negative Y moved south.
+- Result: The A positive move completed successfully and the 12 V supply
+  display read approximately `0.44 A`; both Y moves were reported at about
+  `0.43 A`. These readings were below the 2 A temporary test limit. No stall
+  or failed move was reported.
 - Evidence: `docs/report/lab-notes/2026-09-05-m-01-a-axis-direction-jog.md`;
   `docs/testing/TEST_PLAN.md`.
 - Limitation: Motor/driver temperature, repeat-cycle return-to-mark, and
-  lost-step behavior were not measured; M-01 remains partial. X and Y motor
-  motion are still untested.
-- Next action: Repeat the A-axis move for multiple cycles with temperature and
-  return-position observations, then perform equivalent guarded X/Y jogs.
+  lost-step behavior were not measured; M-01 remains partial. X motor motion
+  is still untested.
+- Next action: Perform the guarded X-axis jog, then repeat A/Y moves for
+  multiple cycles with temperature and return-position observations.
