@@ -2794,5 +2794,12 @@ Add new entries at the top of the log below this line.
   the physical carriage/frame marks returned to the exact starting position.
   This provides no observable X lost-step or coupling-slip evidence for that
   cycle test.
-- Next action: Repeat positive/negative Y and A moves for multiple cycles and
-  record motor/driver temperature for all three axes.
+- Result update: After ten Y `+5`/`-5` cycles at `F60`, the owner reports that
+  the physical carriage/frame marks also returned to the exact starting
+  position. This provides no observable Y lost-step or coupling-slip evidence
+  for that cycle test.
+- Thermal observation: No noticeable heating was reported at the X or Y
+  motors or TB6600 drivers during the initial jog and return checks. This was a
+  touch-based observation without numeric temperature readings.
+- Next action: Repeat positive/negative A moves for multiple cycles and record
+  motor/driver temperature for all three axes.

@@ -44,6 +44,9 @@ restored with `G90`.
 7. Marked the X carriage against the stationary frame, ran ten `X5`/`X-5`
    relative cycles at `F60`, and compared the physical reference after the
    final return.
+8. Marked the Y carriage against the stationary frame, ran ten `Y5`/`Y-5`
+   relative cycles at `F60`, and compared the physical reference after the
+   final return.
 
 ## Results
 
@@ -61,8 +64,13 @@ restored with `G90`.
 - No stall or failed move was reported during the final direction checks.
 - After ten X-axis `+5`/`-5` cycles, the physical carriage/frame marks were in
   the exact same relative position as at the start of the test.
+- After ten Y-axis `+5`/`-5` cycles, the physical carriage/frame marks were in
+  the exact same relative position as at the start of the test.
+- No noticeable heating was reported at the X or Y motors or TB6600 drivers
+  during their direction and return-position checks. This was a touch-based
+  observation; no temperature instrument or numeric limit was recorded.
 - Disposition: **initial M-01 X/Y/A direction and smooth-motion checks passed,
-  and X return to position passed; full M-01 remains partial pending Y/A
+  and X/Y return to position passed; full M-01 remains partial pending A
   repeatability and heating evidence.**
 
 ## Difficulties and corrective actions
@@ -76,18 +84,20 @@ returns.
 ## Interpretation
 
 The A, Y, and X motor phases and direction mappings are producing useful
-bidirectional motion through their tested TB6600s. The X physical reference
-returned exactly after ten cycles, providing no observable lost-step or
-coupling-slip evidence in that test. Current draw remained comfortably below
-the temporary supply limit. This is not yet a full thermal or all-axis
-repeatability qualification.
+bidirectional motion through their tested TB6600s. The X and Y physical
+references returned exactly after ten cycles, providing no observable lost-step
+or coupling-slip evidence in those tests. Current draw remained comfortably
+below the temporary supply limit. No noticeable X/Y heating was observed, but
+that observation was not instrumented. This is not yet a full thermal or
+all-axis repeatability qualification.
 
 ## Decisions and next action
 
 Keep the 1.5 A/phase driver setting and 2 A supply limit for the next guarded
-check. Repeat positive/negative Y and A moves for multiple cycles, verify that
-each mechanism returns to its starting mark, and record motor/driver
-temperature for all three axes before treating M-01 as complete.
+check. Repeat positive/negative A moves for multiple cycles, verify that the
+mechanism returns to its starting mark, and record motor/driver temperature
+with an instrument if available for all three axes before treating M-01 as
+complete.
 
 ## Related records
 
