@@ -2854,18 +2854,24 @@ Add new entries at the top of the log below this line.
   frequency verification.
 - Result update: The ioSender A-axis settings screen confirms `$113 = 500.000
   deg/min`; `F540` and `F600` therefore cannot exceed an actual planner rate of
-  `F500`. The same screen reports `$103 = 250.000 step/deg`, conflicting with
-  the planned `4.444444 step/deg` contract. M-04 must resolve this calibration
-  discrepancy before pulse-frequency or motor-speed calculations are used.
+  `F500`. The operator corrected `$103` from the initial `250.000` screenshot
+  value to `4.44444`, and the later `$$` report confirms it. M-04 then passed
+  the one-motor-revolution check with `A360 F300` in both directions.
+- Result update: After `$113` was raised to `5000.000`, `G1 A720 F5000` and
+  `G1 A1440 F5000` completed smoothly but with visibly slow ramp-up and
+  ramp-down. At `$123 = 10 deg/sec^2`, the target `83.33 deg/sec` takes about
+  `8.3 s` to reach; this is an acceleration-profile observation, not a final
+  plotting-rate decision.
 - Measurement limitation: an earlier longer run showed approximately
   `0.47-0.476 A`, but the exact rate was not recorded; dwell duration and
   instrumented temperature were not captured.
-- Decision: treat the configured `F500` ceiling as the highest actual A-axis
-  rate for now; `F540` and `F600` were capped by `$113 = 500.000 deg/min`.
-  Resolve the `$103 = 250.000 step/deg` versus planned `4.444444` discrepancy
-  before changing the ceiling or converting F values to mechanical speed.
+- Decision: retain `$103 = 4.44444` and use `$113 = 5000` only for the current
+  experiment. Test `$123` in controlled steps, starting at `25` and then `50`
+  if the unloaded move remains smooth; verify the chosen value again under the
+  eventual pen-load condition.
 - Evidence: `docs/report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md`;
   `docs/testing/TEST_PLAN.md`.
-- Next action: resolve the `$103 = 250.000 step/deg` calibration discrepancy
-  with M-04, then continue M-02 on X/Y. Only after that should the `$113` rate
-  ceiling be deliberately changed and retested.
+- Next action: run the controlled `$123` acceleration ladder, complete the
+  pen-loaded check and M-05 bed-ratio verification, then continue M-02 on X/Y.
+  Do not treat the A1440 result as a steady-speed validation without checking
+  actual feed and elapsed time.

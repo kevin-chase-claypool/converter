@@ -70,12 +70,14 @@ provides fine bed resolution; 16 or 32 microsteps would increase pulse demand
 and reduce incremental torque without a demonstrated plotting benefit. M-04
 and M-05 must still verify one motor revolution and one full bed revolution.
 
-Current configuration warning: an ioSender screenshot from the 2026-09-05
-rate-ramp session reports `$103 = 250.000 step/deg`, not the planned
-`4.444444`. Treat the planned value above as the interface target, not proof of
-the installed setting. Until M-04 verifies one motor revolution and the bed
-ratio, do not convert A feed rates into pulse frequency, motor RPM, or bed RPM
-using either value; resolve the discrepancy first.
+The initial ioSender screenshot from the 2026-09-05 rate-ramp session showed
+`$103 = 250.000 step/deg`, but the operator corrected the setting to
+`$103 = 4.44444`; the later `$$` report confirms the corrected value. M-04
+then passed the one-motor-revolution check with `A360 F300` in both directions.
+M-05 still must verify the 12:1 bed ratio before the system treats a full bed
+rotation as validated. At `$113=5000` and `$123=10 deg/sec^2`, short A-axis
+moves can be dominated by acceleration and deceleration rather than steady
+speed.
 
 The angular increment is uniform across the bed; tangential increment is
 `radius × 0.00032725` in the same linear unit as the radius. At 9 in from the

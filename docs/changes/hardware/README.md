@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-05 | `HW-20260905-003` | verified | [Correct A-axis calibration and characterize the F5000 ramp](2026/2026-09-05-a-axis-rate-calibration-and-acceleration-check.md) | `a-axis`, `calibration`, `acceleration`, `tb6600`, `commissioning` |
 | 2026-09-05 | `HW-20260905-002` | verified | [Verify installed TB6600 signal response](2026/2026-09-05-tb6600-installed-signal-response.md) | `tb6600`, `step`, `direction`, `enable`, `e-03`, `commissioning` |
 | 2026-09-05 | `HW-20260905-001` | verified | [RP23CNC USB source-selector bring-up](2026/2026-09-05-rp23cnc-usb-source-selector-bringup.md) | `rp23cnc`, `usb`, `power-selector`, `tb6600` |
 | 2026-09-04 | `HW-20260904-007` | implemented | [Replace Toolhead Preload Spring](2026/2026-09-04-replace-toolhead-preload-spring.md) | `toolhead`, `spring`, `preload`, `lift`, `testing` |

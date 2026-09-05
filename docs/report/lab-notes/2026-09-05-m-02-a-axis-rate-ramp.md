@@ -15,12 +15,13 @@ current-limited bench-test setup.
 - Mechanics: A-axis circular bed, with no hard stop in the tested range.
 - Controller: RP23CNC/RP23U5XBB V1.01 through ioSender; installed E-03 and
   M-01 checks had already passed.
-- ioSender A-axis settings observed after the ramp: maximum rate `500.000 deg/min`
-  (`$113`), acceleration `10.000 deg/sec^2` (`$123`), and maximum
-  travel `200.000 deg` (`$133`). The screenshot also reports `$103 = 250.000
-  step/deg`, which conflicts with the project's planned `4.444444 step/deg`
-  A-axis contract and must be resolved by M-04 before converting F rates to
-  motor or bed speed.
+- ioSender A-axis settings during the initial ramp: maximum rate
+  `500.000 deg/min` (`$113`), acceleration `10.000 deg/sec^2` (`$123`), and
+  maximum travel `200.000 deg` (`$133`). The initial screenshot showed
+  `$103 = 250.000 step/deg`; the operator corrected it to `$103 = 4.44444`,
+  which the later `$$` report confirms. For the follow-up high-rate check,
+  `$113` was raised to `5000.000 deg/min`; `$123` remained `10.000 deg/sec^2`.
+  The A-axis contract therefore uses motor-shaft degrees.
 - Instruments: power-supply current display and touch-based temperature
   observation; no numeric temperature instrument was used.
 
@@ -88,11 +89,18 @@ G90
   `500.000 deg/min` (`$113`), so commands above `F500` are planner-limited.
 - In a follow-up comparison, the operator could distinguish `F495`, while
   `F500`, `F540`, and `F600` sounded identical. This is consistent with the
-  configured `F500` cap, although the current `$103` resolution mismatch means
-  the actual step frequency must not be inferred from the planned baseline.
-- Disposition: **M-02 is in progress; `F500` is the highest actual A-axis rate
-  configured and validated so far. `F540` and `F600` were accepted commands but
-  were limited by `$113`.**
+  configured `F500` cap; the later `$103` correction makes the motor-degree
+  interpretation explicit.
+- After correcting `$103` to `4.44444` and raising `$113` to `5000.000`, the
+  operator ran `G1 A720 F5000` and then `G1 A1440 F5000`. Both moves were
+  reported as smooth with slow ramp-up and ramp-down. At `$123 = 10 deg/sec^2`,
+  `F5000` is `83.33 deg/sec`; each ramp takes about `8.3 s` and `347` commanded
+  degrees. The `A1440` move therefore should have about `746` commanded degrees
+  of constant-speed travel, but the ramp occupies a large visual portion.
+- Disposition: **M-02 is in progress. `F500` was the highest actual A-axis rate
+  validated under the initial `$113=500` configuration; the later `F5000` runs
+  used `$113=5000` and are acceleration-profile observations, not a final
+  plotting-rate decision.**
 
 ## Difficulties and corrective actions
 
@@ -112,19 +120,24 @@ rates. The apparent `F600` reference discrepancy was caused by moving the
 pulley during inspection. The measured supply currents at `F480`, `F540`, and
 `F600` (`0.465 A`, `0.476 A`, and `0.485 A`) remained below the
 temporary 2 A limit; current and touch temperature alone cannot establish the
-absolute motor or controller limit. The `$113 = 500.000 deg/min` setting
-confirms that the higher F commands did not request a higher actual planner
-rate. The `$103 = 250.000` setting still conflicts with the planned
-`4.444444 step/deg` contract and must be resolved before converting these F
-values to pulse frequency or mechanical speed.
+absolute motor or controller limit. The initial `$113 = 500.000 deg/min`
+setting confirms that the earlier higher F commands did not request a higher
+actual planner rate; the follow-up `$113` was then raised to `5000.000`. The
+corrected `$103 = 4.44444` setting now matches the planned motor-degree
+contract. The observed slow `F5000` profile is explained by the
+low `$123 = 10` setting, not by a failure to command motion. If an `A1440`
+move shows no constant-speed interval, verify the actual commanded position,
+feed, and elapsed time before increasing acceleration.
 
 ## Decisions and next action
 
-Keep `F500` as the highest configured A-axis rate for now; `F540` and `F600`
-were accepted commands but were limited by `$113`. Resolve the `$103=250.000`
-versus planned `4.444444 step/deg` discrepancy with M-04 (one motor revolution
-and bed-ratio check) before changing `$103` or converting F rates to pulse
-frequency. Do not move the pulley while inspecting the mark.
+Keep `$113 = 5000` for this rate experiment, but do not select a final plotting
+acceleration from the unloaded bed test. M-04's one-motor-revolution check now
+passes at `A360 F300` in both directions; M-05 must still verify the 12:1 bed
+ratio. Test `$123` in controlled steps, beginning at `25`, then `50` if the
+move remains smooth and returns to its mark. Repeat under the eventual pen-load
+condition before adopting a production value, and do not move the pulley while
+inspecting the mark.
 
 ## Related records
 

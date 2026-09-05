@@ -32,7 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
-| 2026-09-05 | M-02 in progress | In progress | A-axis rate ramp passed cleanly through the configured `F500` ceiling (`F540`/`F600` are planner-limited; `0.485 A`, cool). ioSender reports `$113=500 deg/min`, while `$103=250 step/deg` conflicts with the planned `4.444444`; resolve with M-04. |
+| 2026-09-05 | M-02 in progress | In progress | A-axis rate ramp passed cleanly through the earlier `F500` ceiling (`0.485 A`, cool). `$103=4.44444` is corrected, M-04 passed the one-motor-revolution check, and `$113=5000` was tested. `A720` and `A1440` at `F5000` were smooth but dominated by the conservative `$123=10` ramp; acceleration ladder and M-05 remain. |
 | 2026-09-05 | M-01 | Passed | A moved counterclockwise/clockwise at `F120`, Y north/south at `F60`, and X east/west at `F60`; supply current was approximately 0.44/0.43/0.42 A. X, Y, and A returned exactly to their physical marks with no noticeable heating by touch. |
 | 2026-09-05 | E-03 | Passed | Installed X/Y/A TB6600 signal response passed: active-low enable, opposite DIR states, and approximately 5 V STEP pulses through the common-cathode harnesses. |
 | 2026-08-19 | E-01 partial | Pass/partial | All 17HS15 coil pairs were identified by hand-turn generated voltage; Y's shielded cable continues black/green and red/white, with white spliced to motor blue. |
