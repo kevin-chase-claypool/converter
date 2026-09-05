@@ -147,10 +147,10 @@ M-02 current evidence: on 2026-09-05 the A-axis rate ramp completed cleanly at
 `F180`, `F240`, `F300`, `F360`, `F420`, `F480`, and `F540`. The mechanism
 returned exactly to its physical reference mark at both `F480` and `F540` and
 remained cool to the touch. The measured supply current at `F480` was
-approximately `0.465 A`; F540 current was not recorded. A prior longer run
-showed approximately `0.47-0.476 A`; its exact rate was not recorded
-separately. M-02 remains in progress for the X/Y rate checks and configured
-A-axis maximum-rate margin. See
+approximately `0.465 A`, and the measured current at `F540` was approximately
+`0.476 A`. A prior longer run showed approximately `0.47-0.476 A`; its exact
+rate was not recorded separately. M-02 remains in progress for the X/Y rate
+checks and configured A-axis maximum-rate margin. See
 [`2026-09-05-m-02-a-axis-rate-ramp.md`](../report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md).
 
 ## Toolhead tests

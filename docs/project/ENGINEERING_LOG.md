@@ -2838,7 +2838,8 @@ Add new entries at the top of the log below this line.
 - Result: `F180`, `F240`, `F300`, `F360`, `F420`, `F480`, and `F540` completed
   without reported stalls or jerks. At both `F480` and `F540`, the mechanism
   returned exactly to its physical reference mark and remained cool to the
-  touch. The `F480` supply current was approximately `0.465 A`.
+  touch. The `F480` supply current was approximately `0.465 A` and the `F540`
+  supply current was approximately `0.476 A`.
 - Measurement limitation: an earlier longer run showed approximately
   `0.47-0.476 A`, but the exact rate was not recorded; dwell duration and
   instrumented temperature were not captured.
@@ -2847,6 +2848,6 @@ Add new entries at the top of the log below this line.
   commanding a higher rate.
 - Evidence: `docs/report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md`;
   `docs/testing/TEST_PLAN.md`.
-- Next action: record F540 current and the configured rate ceiling, then
-  continue M-02 on X/Y; add a longer dwell or instrumented temperature check if
-  thermal margin is needed.
+- Next action: record the configured rate ceiling and continue M-02 on X/Y;
+  add a longer dwell or instrumented temperature check if thermal margin is
+  needed.

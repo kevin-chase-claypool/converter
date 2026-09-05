@@ -66,7 +66,8 @@ G90
   reading was not recorded separately from the rate-ramp steps.
 - Dwell duration and an instrumented temperature measurement were not
   recorded.
-- A numeric supply-current reading specifically at `F540` was not recorded.
+- The measured supply current during the `F540` move was approximately
+  `0.476 A`, below the 2 A supply limit.
 - Disposition: **M-02 is in progress; `F540` is the highest A-axis rate
   validated so far under this test setup.**
 
@@ -80,20 +81,20 @@ rate ramp.
 
 The A-axis has demonstrated clean, repeatable motion through `F540` for the
 tested move pattern, with no observed position loss or heating. The measured
-`0.465 A` supply current at `F480` is well below the temporary 2 A limit. This
-supports using `F540` as the highest currently tested rate, subject to the configured A-axis
-maximum rate and the actual operating duty cycle. It is not yet evidence that
-`F540` is the absolute motor or controller limit. The lack of a F540-specific
-current reading and quantitative temperature/dwell data limits the strength of
-the thermal conclusion.
+`0.465 A` supply current at `F480` and `0.476 A` at `F540` are well below the
+temporary 2 A limit. This supports using `F540` as the highest currently tested
+rate, subject to the configured A-axis maximum rate and the actual operating
+duty cycle. It is not yet evidence that `F540` is the absolute motor or
+controller limit. The lack of quantitative temperature and dwell data limits
+the strength of the thermal conclusion.
 
 ## Decisions and next action
 
 Do not command above the controller's configured A-axis maximum rate. Record
 the A-axis setting in ioSender before selecting a production rate. Keep
 `F540` as the highest A-axis rate tested so far and continue M-02 with the X
-and Y axes. Record F540 current and add a longer dwell or instrumented
-temperature check if thermal margin is needed.
+and Y axes. Add a longer dwell or instrumented temperature check if thermal
+margin is needed.
 
 ## Related records
 
