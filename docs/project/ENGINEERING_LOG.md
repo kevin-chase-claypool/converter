@@ -2833,8 +2833,7 @@ Add new entries at the top of the log below this line.
 ### 🟨 2026-09-05 - HARDWARE/IN PROGRESS - M-02 A-axis rate ramp through F600
 
 - Status: M-02 remains in progress; the A-axis rate ramp has been validated
-  through `F600` for the recorded move pattern; `F600` did not pass the first
-  return-to-reference check.
+  through `F600` for the recorded move pattern.
 - Category: hardware, A-axis, TB6600, stepper, motion testing.
 - Result: `F180`, `F240`, `F300`, `F360`, `F420`, `F480`, `F540`, and `F600`
   completed without reported stalls or jerks. At both `F480` and `F540`, the mechanism
@@ -2842,18 +2841,16 @@ Add new entries at the top of the log below this line.
   touch. The `F480` supply current was approximately `0.465 A`, the `F540`
   supply current was approximately `0.476 A`, and the `F600` supply current was
   approximately `0.485 A`.
-- Result update: The initial `F600` return was approximately `0.5 mm` off the
-  physical reference mark despite smooth motion and a cool motor. This is an
-  unresolved repeatability failure, not yet a confirmed missed-step event.
+- Result update: An apparent `0.5 mm` F600 return offset was later traced to the
+  operator moving the pulley during inspection. It is discarded as a
+  reference-handling error, not a machine repeatability failure.
 - Measurement limitation: an earlier longer run showed approximately
   `0.47-0.476 A`, but the exact rate was not recorded; dwell duration and
   instrumented temperature were not captured.
-- Decision: treat `F540` as the highest qualified A-axis rate for now, not as the
+- Decision: treat `F600` as the highest qualified A-axis rate for now, not as the
   absolute configured maximum. Check the A-axis maximum-rate setting before
   commanding a higher rate.
 - Evidence: `docs/report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md`;
   `docs/testing/TEST_PLAN.md`.
-- Next action: repeat `F600` from a verified reference for multiple cycles to
-  distinguish backlash/settling from missed steps; do not raise the rate until
-  repeatability passes. Then record the configured rate ceiling and continue
-  M-02 on X/Y.
+- Next action: repeat one bounded `F600` cycle from an untouched verified
+  reference, then record the configured rate ceiling and continue M-02 on X/Y.

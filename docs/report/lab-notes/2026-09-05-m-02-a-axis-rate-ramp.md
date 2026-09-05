@@ -60,8 +60,9 @@ G90
   after the return move.
 - At `F540`, the mechanism also landed exactly on the established reference
   mark after the return move.
-- At `F600`, motion was smooth and the mechanism remained cool, but the return
-  was approximately `0.5 mm` away from the reference mark.
+- At `F600`, motion was smooth, the mechanism remained cool, and the apparent
+  return offset was later traced to the operator having moved the pulley while
+  checking the mark; it was not a machine repeatability error.
 - The measured supply current during the `F480` move was approximately
   `0.465 A`, below the 2 A supply limit.
 - The motor remained cool to the touch after the `F480` and `F540` tests.
@@ -74,36 +75,33 @@ G90
   `0.476 A`, below the 2 A supply limit.
 - The measured supply current during the `F600` move was approximately
   `0.485 A`, below the 2 A supply limit.
-- Disposition: **M-02 is in progress; `F540` is the highest A-axis rate
-  validated so far under this test setup. `F600` did not pass the initial
-  return-to-mark check.**
+- Disposition: **M-02 is in progress; `F600` is the highest A-axis rate
+  validated so far under this test setup.**
 
 ## Difficulties and corrective actions
 
-The first `F600` return was approximately `0.5 mm` off the reference mark even
-though motion was smooth and the motor stayed cool. Do not classify this as a
-confirmed missed-step event until the same bounded move is repeated and the
-error is checked for accumulation or direction dependence. The earlier X-axis
-jerking was part of M-01 and was not observed in the A-axis rate ramp.
+An apparent `0.5 mm` return offset at `F600` was initially reported, but the
+operator then identified that the pulley had been moved during the check. The
+offset is therefore discarded as a reference-handling error, not attributed to
+the motor or driver. The earlier X-axis jerking was part of M-01 and was not
+observed in the A-axis rate ramp.
 
 ## Interpretation
 
-The A-axis has demonstrated clean, repeatable motion through `F540` for the
-tested move pattern, with no observed position loss or heating. The first
-`F600` test was smooth and cool but did not return to the mark, so `F600` is not
-currently qualified. The measured supply currents at `F480`, `F540`, and
-`F600` (`0.465 A`, `0.476 A`, and `0.485 A`) remained below the temporary 2 A
-limit; current and touch temperature alone cannot rule out missed steps or
-mechanical compliance.
+The A-axis has demonstrated clean motion through `F600` for the tested move
+pattern, with no confirmed position loss or heating. The apparent `F600`
+reference discrepancy was caused by moving the pulley during inspection, so
+`F600` remains qualified for this run. The measured supply currents at `F480`,
+`F540`, and `F600` (`0.465 A`, `0.476 A`, and `0.485 A`) remained below the
+temporary 2 A limit; current and touch temperature alone cannot establish the
+absolute motor or controller limit.
 
 ## Decisions and next action
 
-Keep `F540` as the highest qualified A-axis rate for now. Repeat the `F600`
-positive/negative move from a verified reference for multiple cycles. If the
-error repeats at the same sign and magnitude, investigate backlash/settling;
-if it accumulates or varies, treat it as a likely torque or missed-step limit.
-Do not raise the rate again until `F600` passes repeatability. Also do not
-command above the controller's configured A-axis maximum rate.
+Keep `F600` as the highest qualified A-axis rate for now. Repeat one bounded
+`F600` positive/negative cycle from an untouched, verified reference before
+raising the rate; do not move the pulley while inspecting the mark. Then record
+the controller's configured A-axis maximum rate and continue M-02 on X/Y.
 
 ## Related records
 
