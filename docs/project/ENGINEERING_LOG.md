@@ -2848,6 +2848,10 @@ Add new entries at the top of the log below this line.
   plateau near `F500`. This is not yet evidence of a controller cap because the
   short move may not reach cruise speed; verify the A-axis maximum setting or
   measure STEP frequency on a longer move.
+- Result update: In a follow-up comparison the operator could distinguish
+  `F495`, while `F500`, `F540`, and `F600` sounded identical. This strengthens
+  the approximately `F500` rate-cap hypothesis, pending configuration or STEP
+  frequency verification.
 - Measurement limitation: an earlier longer run showed approximately
   `0.47-0.476 A`, but the exact rate was not recorded; dwell duration and
   instrumented temperature were not captured.

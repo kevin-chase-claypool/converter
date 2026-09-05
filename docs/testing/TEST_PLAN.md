@@ -150,7 +150,9 @@ mechanism returned exactly to its physical reference mark at both `F480` and
 was approximately `0.465 A`, at `F540` approximately `0.476 A`, and at `F600`
 approximately `0.485 A`. An apparent `0.5 mm` offset was later traced to the
 operator moving the pulley during inspection, not to a machine repeatability
-failure. The operator also reported an audible speed plateau near `F500`; this
+failure. The operator also reported an audible speed plateau near `F500` and
+could distinguish `F495` from the identical-sounding `F500`, `F540`, and `F600`
+commands. This makes an approximately `F500` cap the leading hypothesis, but
 requires configuration or STEP-frequency verification because the short move
 may not reach cruise speed. A prior longer run showed approximately
 `0.47-0.476 A`; its exact rate was not recorded separately. M-02 remains in

@@ -78,6 +78,10 @@ G90
 - The operator reported that the audible speed appeared to plateau near
   `F500`; this was not instrumented and may reflect the configured A-axis rate
   ceiling or the short move not reaching cruise speed.
+- In a follow-up comparison, the operator could distinguish `F495`, while
+  `F500`, `F540`, and `F600` sounded identical. This makes an approximately
+  `F500` configured-rate cap the leading hypothesis, pending instrumented
+  verification.
 - Disposition: **M-02 is in progress; `F600` is the highest A-axis rate
   validated so far under this test setup.**
 
