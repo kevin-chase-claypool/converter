@@ -101,10 +101,16 @@ G90
   both passed the operator's motion check. No stalls or return-position errors
   were reported; current and temperature values were not recorded for these
   two acceleration steps.
+- The operator then raised `$113` to `15000`, `$123` to `300`, and ran the
+  corresponding `F15000` A-axis forward/reverse test. Motion was reported as
+  smooth in both directions. Assuming the same `A1440` travel, the target is
+  `250 deg/sec`; at `$123=300`, each ramp is about `0.83 s` and `104` commanded
+  degrees. Current, temperature, and exact travel were not recorded in this
+  step.
 - Disposition: **M-02 is in progress. `F500` was the highest actual A-axis rate
-  validated under the initial `$113=500` configuration; the later `F5000` runs
-  used `$113=5000` and are acceleration-profile observations, not a final
-  plotting-rate decision.**
+  validated under the initial `$113=500` configuration; the later `F5000` and
+  `F15000` runs used raised `$113` values and are acceleration-profile
+  observations, not a final plotting-rate decision.**
 
 ## Difficulties and corrective actions
 
@@ -135,14 +141,15 @@ feed, and elapsed time before increasing acceleration.
 
 ## Decisions and next action
 
-Keep `$113 = 5000` for this rate experiment, but do not select a final plotting
+Keep `$113 = 15000` for this rate experiment, but do not select a final plotting
 acceleration from the unloaded bed test. M-04's one-motor-revolution check now
 passes at `A360 F300` in both directions; M-05 must still verify the 12:1 bed
-ratio. The `$123 = 25` and `$123 = 50` steps passed the unloaded motion check.
-Continue with `$123 = 75`, then `100` only if the same forward/reverse test
-remains smooth and returns to the mark. Record current and temperature, then
-repeat the chosen acceleration under the eventual pen-load condition before
-adopting a production value. Do not move the pulley while inspecting the mark.
+ratio. The `$123 = 25` and `$123 = 50` steps passed the unloaded motion check,
+and the later `$123 = 300` / `F15000` test was also reported smooth in both
+directions. Do not raise the limits further until current, temperature, exact
+travel, and return position are recorded. Repeat the chosen acceleration under
+the eventual pen-load condition before adopting a production value. Do not
+move the pulley while inspecting the mark.
 
 ## Related records
 

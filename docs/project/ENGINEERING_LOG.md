@@ -2865,13 +2865,19 @@ Add new entries at the top of the log below this line.
 - Result update: The same `A1440 F5000` forward/reverse check passed at
   `$123 = 25` and `$123 = 50` with no reported stalls or return-position errors.
   Current and temperature were not recorded for these two steps.
+- Result update: The operator then raised `$113` to `15000`, `$123` to `300`,
+  and ran the corresponding `F15000` A-axis forward/reverse test. Motion was
+  reported smooth in both directions. Assuming the same `A1440` travel, the
+  target is `250 deg/sec`; each ramp is about `0.83 s`. Current, temperature,
+  and exact travel were not recorded.
 - Measurement limitation: an earlier longer run showed approximately
   `0.47-0.476 A`, but the exact rate was not recorded; dwell duration and
   instrumented temperature were not captured.
-- Decision: retain `$103 = 4.44444` and use `$113 = 5000` only for the current
-  experiment. The unloaded motion check passes through `$123 = 50`; continue
-  at `75` and then `100` only with current/temperature observations, and verify
-  the chosen value again under the eventual pen-load condition.
+- Decision: retain `$103 = 4.44444`. The unloaded motion check has now been
+  reported smooth at `$113=15000`, `F15000`, and `$123=300`, but this is not a
+  production setting. Stop increasing the limits until quantitative current,
+  temperature, travel, and return-position evidence is captured, then repeat
+  under the eventual pen-load condition.
 - Evidence: `docs/report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md`;
   `docs/testing/TEST_PLAN.md`.
 - Next action: run the controlled `$123` acceleration ladder, complete the

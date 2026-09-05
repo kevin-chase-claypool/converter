@@ -160,8 +160,11 @@ and `$123=10 deg/sec^2`, follow-up `A720 F5000` and `A1440 F5000` moves were
 smooth but dominated by ramp-up/ramp-down; they do not select a final plotting
 acceleration. The same forward/reverse check passed at `$123=25` and `$123=50`
 without reported stalls or return-position errors; current and temperature were
-not recorded for those steps. M-02 remains in progress for a controlled `$123` ladder, a
-pen-loaded check, M-05 bed-ratio verification, and then the X/Y rate checks. See
+not recorded for those steps. A later test at `$113=15000`, `F15000`, and
+`$123=300` was also reported smooth in both directions, but exact travel,
+current, temperature, and return position were not recorded. M-02 remains in
+progress for quantitative evidence, a pen-loaded check, M-05 bed-ratio
+verification, and then the X/Y rate checks. See
 [`2026-09-05-m-02-a-axis-rate-ramp.md`](../report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md).
 
 ## Toolhead tests

@@ -38,9 +38,10 @@ needed a physical check before interpreting commanded A travel or feed rates.
 
 ## Implementation
 
-The operator set `$103` to `4.44444` and `$113` to `5000.000` in ioSender.
-With `$123 = 10 deg/sec^2`, the controller ramps rather than applying the
-target feed instantly.
+The operator set `$103` to `4.44444` in ioSender, first tested `$113=5000`,
+then raised `$113` to `15000` for the high-rate check. `$123` was increased
+from `10` through `25`, `50`, and finally `300`; the controller ramps rather
+than applying the target feed instantly.
 
 ## Verification
 
@@ -52,6 +53,10 @@ target feed instantly.
 - The same `A1440 F5000` forward/reverse check passed at `$123=25` and
   `$123=50`, with no reported stalls or return-position errors. Current and
   temperature were not recorded for those two steps.
+- The operator then raised `$113` to `15000`, `$123` to `300`, and ran the
+  corresponding `F15000` forward/reverse test. Motion was reported smooth in
+  both directions. Assuming `A1440` travel, each ramp is about `0.83 s`;
+  current, temperature, and exact travel were not recorded.
 - M-05, the full 12:1 bed-ratio check, remains open.
 
 ## Struggles and rejected approaches
@@ -63,11 +68,10 @@ configured acceleration profile.
 
 ## Risks and follow-up
 
-Continue the controlled `$123` ladder at `75`, then `100` only if the unloaded
-move remains smooth; record current and temperature at each step. Repeat the
-chosen acceleration under the eventual pen-load condition before adopting a
-production value, and complete M-05 before using bed-rotation speed as a
-validated machine value.
+Do not raise the limits further until current, temperature, exact travel, and
+return position are recorded. Repeat the selected acceleration under the
+eventual pen-load condition before adopting a production value, and complete
+M-05 before using bed-rotation speed as a validated machine value.
 
 ## Files
 
