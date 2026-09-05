@@ -70,6 +70,13 @@ provides fine bed resolution; 16 or 32 microsteps would increase pulse demand
 and reduce incremental torque without a demonstrated plotting benefit. M-04
 and M-05 must still verify one motor revolution and one full bed revolution.
 
+Current configuration warning: an ioSender screenshot from the 2026-09-05
+rate-ramp session reports `$103 = 250.000 step/deg`, not the planned
+`4.444444`. Treat the planned value above as the interface target, not proof of
+the installed setting. Until M-04 verifies one motor revolution and the bed
+ratio, do not convert A feed rates into pulse frequency, motor RPM, or bed RPM
+using either value; resolve the discrepancy first.
+
 The angular increment is uniform across the bed; tangential increment is
 `radius × 0.00032725` in the same linear unit as the radius. At 9 in from the
 center, one A pulse is about 0.00295 in (0.0748 mm). A planned two-bed-

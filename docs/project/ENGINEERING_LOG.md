@@ -2852,13 +2852,20 @@ Add new entries at the top of the log below this line.
   `F495`, while `F500`, `F540`, and `F600` sounded identical. This strengthens
   the approximately `F500` rate-cap hypothesis, pending configuration or STEP
   frequency verification.
+- Result update: The ioSender A-axis settings screen confirms `$113 = 500.000
+  deg/min`; `F540` and `F600` therefore cannot exceed an actual planner rate of
+  `F500`. The same screen reports `$103 = 250.000 step/deg`, conflicting with
+  the planned `4.444444 step/deg` contract. M-04 must resolve this calibration
+  discrepancy before pulse-frequency or motor-speed calculations are used.
 - Measurement limitation: an earlier longer run showed approximately
   `0.47-0.476 A`, but the exact rate was not recorded; dwell duration and
   instrumented temperature were not captured.
-- Decision: treat `F600` as the highest qualified A-axis rate for now, not as the
-  absolute configured maximum. Check the A-axis maximum-rate setting before
-  commanding a higher rate.
+- Decision: treat the configured `F500` ceiling as the highest actual A-axis
+  rate for now; `F540` and `F600` were capped by `$113 = 500.000 deg/min`.
+  Resolve the `$103 = 250.000 step/deg` versus planned `4.444444` discrepancy
+  before changing the ceiling or converting F values to mechanical speed.
 - Evidence: `docs/report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md`;
   `docs/testing/TEST_PLAN.md`.
-- Next action: verify the configured A-axis maximum or measure STEP frequency
-  on a longer move before raising the rate; then continue M-02 on X/Y.
+- Next action: resolve the `$103 = 250.000 step/deg` calibration discrepancy
+  with M-04, then continue M-02 on X/Y. Only after that should the `$113` rate
+  ceiling be deliberately changed and retested.

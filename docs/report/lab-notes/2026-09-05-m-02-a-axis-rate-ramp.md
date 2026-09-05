@@ -15,6 +15,12 @@ current-limited bench-test setup.
 - Mechanics: A-axis circular bed, with no hard stop in the tested range.
 - Controller: RP23CNC/RP23U5XBB V1.01 through ioSender; installed E-03 and
   M-01 checks had already passed.
+- ioSender A-axis settings observed after the ramp: maximum rate `500.000 deg/min`
+  (`$113`), acceleration `10.000 deg/sec^2` (`$123`), and maximum
+  travel `200.000 deg` (`$133`). The screenshot also reports `$103 = 250.000
+  step/deg`, which conflicts with the project's planned `4.444444 step/deg`
+  A-axis contract and must be resolved by M-04 before converting F rates to
+  motor or bed speed.
 - Instruments: power-supply current display and touch-based temperature
   observation; no numeric temperature instrument was used.
 
@@ -78,12 +84,15 @@ G90
 - The operator reported that the audible speed appeared to plateau near
   `F500`; this was not instrumented and may reflect the configured A-axis rate
   ceiling or the short move not reaching cruise speed.
+- The ioSender settings screen confirms the A-axis maximum rate is
+  `500.000 deg/min` (`$113`), so commands above `F500` are planner-limited.
 - In a follow-up comparison, the operator could distinguish `F495`, while
-  `F500`, `F540`, and `F600` sounded identical. This makes an approximately
-  `F500` configured-rate cap the leading hypothesis, pending instrumented
-  verification.
-- Disposition: **M-02 is in progress; `F600` is the highest A-axis rate
-  validated so far under this test setup.**
+  `F500`, `F540`, and `F600` sounded identical. This is consistent with the
+  configured `F500` cap, although the current `$103` resolution mismatch means
+  the actual step frequency must not be inferred from the planned baseline.
+- Disposition: **M-02 is in progress; `F500` is the highest actual A-axis rate
+  configured and validated so far. `F540` and `F600` were accepted commands but
+  were limited by `$113`.**
 
 ## Difficulties and corrective actions
 
@@ -95,25 +104,27 @@ observed in the A-axis rate ramp.
 
 ## Interpretation
 
-The A-axis has demonstrated clean motion through `F600` for the tested move
-pattern, with no confirmed position loss or heating. The apparent `F600`
-reference discrepancy was caused by moving the pulley during inspection, so
-`F600` remains qualified for this run. The measured supply currents at `F480`,
-`F540`, and `F600` (`0.465 A`, `0.476 A`, and `0.485 A`) remained below the
+The A-axis has demonstrated clean motion for commands through `F600` for the
+tested move pattern, with no confirmed position loss or heating. Because
+`$113 = 500.000 deg/min`, however, the controller likely executed `F540` and
+`F600` at no more than `F500`; those commands do not prove higher actual cruise
+rates. The apparent `F600` reference discrepancy was caused by moving the
+pulley during inspection. The measured supply currents at `F480`, `F540`, and
+`F600` (`0.465 A`, `0.476 A`, and `0.485 A`) remained below the
 temporary 2 A limit; current and touch temperature alone cannot establish the
-absolute motor or controller limit. The reported audible plateau near `F500`
-must be checked with the controller setting or measured STEP frequency before
-assuming that the axis actually reached `F600` cruise speed.
+absolute motor or controller limit. The `$113 = 500.000 deg/min` setting
+confirms that the higher F commands did not request a higher actual planner
+rate. The `$103 = 250.000` setting still conflicts with the planned
+`4.444444 step/deg` contract and must be resolved before converting these F
+values to pulse frequency or mechanical speed.
 
 ## Decisions and next action
 
-Keep `F600` as the highest qualified A-axis command for now. Before raising the
-rate, read the configured A-axis maximum in ioSender and measure STEP frequency
-on a longer, safe move. At the present `4.444444` steps/degree, `F500`, `F540`,
-and `F600` correspond to approximately `37.0`, `40.0`, and `44.4 Hz`. If the
-frequency tops out near `37 Hz`, the controller is limiting the axis near
-`F500`; if it reaches `44.4 Hz`, the apparent plateau was acoustic or
-acceleration-related. Do not move the pulley while inspecting the mark.
+Keep `F500` as the highest configured A-axis rate for now; `F540` and `F600`
+were accepted commands but were limited by `$113`. Resolve the `$103=250.000`
+versus planned `4.444444 step/deg` discrepancy with M-04 (one motor revolution
+and bed-ratio check) before changing `$103` or converting F rates to pulse
+frequency. Do not move the pulley while inspecting the mark.
 
 ## Related records
 
