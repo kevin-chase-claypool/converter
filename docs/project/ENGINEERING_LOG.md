@@ -191,9 +191,9 @@ Entry details remain only in the chronology.
 - [2026-09-04 12:47:26 -0500 - IMPLEMENTED - Rerouted top-down wiring schematic into clean lanes](#elog-20260904124726)
 - [2026-09-04 14:43:51 -0500 - MIXED/OPEN - Recorded completed TB6600 signal harness wiring](#elog-20260904144351)
 - [2026-09-04 14:48:01 -0500 - MIXED/OPEN - Verified TB6600 signal-harness continuity](#elog-20260904144801)
-- [2026-09-04 - HARDWARE/PARTIAL - Clarified N20 stall current and preload hold](#elog-20260904-clarified-n20-stall-current-and-preload-hold)
+- [2026-09-04 - HARDWARE/PARTIAL - Clarified N20 endpoint stall current](#elog-20260904-clarified-n20-endpoint-stall-current)
 - [2026-09-04 - HARDWARE/PARTIAL - Corrected N20 unloaded current after alignment](#elog-20260904-corrected-n20-unloaded-current-after-alignment)
-- [2026-09-04 - HARDWARE - Passed bounded N20 stall and preload-hold test](#elog-20260904-passed-bounded-n20-stall-and-preload-hold-test)
+- [2026-09-04 - HARDWARE/PARTIAL - Passed bounded N20 endpoint-stall test](#elog-20260904-passed-bounded-n20-endpoint-stall-test)
 - [2026-09-04 - HARDWARE/IMPLEMENTED - Made pulse response per-tool during preflight](#elog-20260904-made-pulse-response-per-tool-during-preflight)
 - [2026-09-04 - HARDWARE/OPEN - Replaced toolhead preload spring](#elog-20260904-replaced-toolhead-preload-spring)
 
@@ -2619,21 +2619,20 @@ Add new entries at the top of the log below this line.
 - Next action: Validate P100's installed `pen - TMAG` values and run a
   pen-lifted calibration pattern before production plotting.
 
-<a id="elog-20260904-clarified-n20-stall-current-and-preload-hold"></a>
-### 🟨 2026-09-04 - HARDWARE/PARTIAL - Clarified N20 stall current and preload hold
+<a id="elog-20260904-clarified-n20-endpoint-stall-current"></a>
+### 🟨 2026-09-04 - HARDWARE/PARTIAL - Clarified N20 endpoint stall current
 
-- Status: owner-reported actuator capability clarified; formal E-06 and T-01C
-  acceptance remains open.
+- Status: owner-reported endpoint-stall observation clarified; formal T-01C
+  preload-hold acceptance remains open.
 - Category: hardware, toolhead, n20, preload, testing
-- Summary: The owner clarified that the approximately `0.18 A` endpoint
-  reading is the N20 stall current, and reports that the motor holds the
-  selected spring preload. This upgrades the earlier ambiguous observation to
-  useful qualitative loaded-capability evidence.
-- Evidence boundary: The supply/current limit, stall duration, peak-capture
-  method, spring compression, force, rail behavior, driver-fault state, and
-  temperatures were not recorded. Therefore the result does not yet qualify
-  the DRV8833/regulator electrical or thermal margin, nor satisfy the defined
-  T-01C hold dwell criteria.
+- Summary: The owner clarified that the approximately `0.18 A` reading occurred
+  when the N20 retracted to the travel endpoint and pressed the LIFT_HOME
+  switch. It is an endpoint stall current, not current measured while holding a
+  selected operating preload.
+- Evidence boundary: The spring identity/compression, force, rail behavior,
+  driver-fault state, and temperatures were not recorded. Therefore the result
+  does not establish T-01C preload-hold capability or qualify the full
+  DRV8833/regulator electrical or thermal margin.
 - Evidence: `docs/report/lab-notes/2026-08-30-t-01-preload-current-observation.md`;
   `docs/testing/TEST_PLAN.md`.
 - Next action: Repeat at the guarded working compression with a current-limited
@@ -2662,25 +2661,27 @@ Add new entries at the top of the log below this line.
 - Next action: Use the corrected alignment for the next controlled spring-load
   test and record current, force, rail voltage, dwell, and temperatures.
 
-<a id="elog-20260904-passed-bounded-n20-stall-and-preload-hold-test"></a>
-### 🟩 2026-09-04 - HARDWARE - Passed bounded N20 stall and preload-hold test
+<a id="elog-20260904-passed-bounded-n20-endpoint-stall-test"></a>
+### 🟨 2026-09-04 - HARDWARE/PARTIAL - Passed bounded N20 endpoint-stall test
 
-- Status: bounded E-06 passed; functional T-01C preload-hold evidence recorded.
+- Status: bounded E-06 endpoint-stall observation passed; T-01C preload-hold
+  evidence was not recorded.
 - Category: hardware, toolhead, n20, preload, testing
 - Summary: With the lead screw aligned against the heat-set insert, the owner
   tested the N20 at 6.0 V with a 0.20 A bench-supply current limit. The motor
-  reached 0.18 A at stall, held the selected spring preload for approximately
-  30 seconds, and repeated successfully 10 times.
-- Result: The bounded current-limited stall condition passed without reaching
-  the supply limit, and the selected preload was maintained in every repeat.
+  retracted until it could travel no farther and pressed the LIFT_HOME switch;
+  the supply read 0.18 A at that endpoint for approximately 30 seconds and the
+  endpoint test repeated successfully 10 times.
+- Result: The bounded switch-pressed endpoint-stall observation passed without
+  reaching the supply limit. No known-compression operating-preload hold was
+  measured.
 - Limitation: Current was read at the supply; rail voltage, driver fault state,
-  temperature, exact spring compression, and long-duration endurance were not
-  recorded. These remain outside this bounded test's scope.
+  temperature, spring identity/compression, operating preload force, and
+  long-duration endurance were not recorded. T-01C remains open.
 - Evidence: `docs/report/lab-notes/2026-09-04-e-06-t-01c-n20-stall-preload-hold.md`;
   `docs/testing/TEST_PLAN.md`.
-- Next action: Continue the mechanical/force characterization sequence; add
-  thermal or endurance measurements only if a full production safety envelope
-  is required.
+- Next action: Repeat the guarded current/hold test at a known safe spring
+  compression, then continue the mechanical/force characterization sequence.
 
 <a id="elog-20260904-made-pulse-response-per-tool-during-preflight"></a>
 ### 🟩 2026-09-04 - HARDWARE/IMPLEMENTED - Made pulse response per-tool during preflight

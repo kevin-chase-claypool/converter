@@ -24,25 +24,29 @@ related:
 ## Summary
 
 The owner corrected the unloaded N20 motion-current result to **0.009 A** and
-then completed a bounded spring-loaded test. At 6.0 V with a 0.20 A supply
-limit, the motor reached 0.18 A at stall, held the selected preload for about
-30 seconds, and repeated successfully 10 times. The earlier 0.043 A toolhead
-reading included extra load from a lead screw that was not nearly straight
-against the heat-set insert. The alignment has since been corrected.
+reported a bounded endpoint-stall test. At 6.0 V with a 0.20 A supply limit,
+the motor retracted until it could travel no farther and pressed the LIFT_HOME
+switch; the supply read 0.18 A for about 30 seconds, repeated 10 times. This
+is not a measurement of current required to hold a selected spring preload.
+The earlier 0.043 A toolhead reading included extra load from a lead screw that
+was not nearly straight against the heat-set insert. The alignment has since
+been corrected.
 
 ## Reason
 
 The previous value was not a valid normal unloaded baseline because it mixed
 motor motion with avoidable lateral heat-set friction. The corrected value is
 needed for interpreting the N20's actual no-load behavior and power margin.
-The controlled stall/hold result establishes the practical actuator capability
-at the selected preload.
+The controlled endpoint-stall result bounds the current observed at the switch-
+pressed travel endpoint. It does not establish practical actuator capability at
+a selected operating preload.
 
 ## Implementation
 
 Updated the E-05/E-06 records and toolhead lab notes to distinguish the
 corrected aligned unloaded current from the earlier misalignment-loaded
-measurement, and recorded the bounded E-06/T-01C result.
+measurement, and to separate the switch-pressed endpoint stall from the still
+open T-01C preload-hold test.
 
 ## Verification
 
@@ -50,8 +54,10 @@ measurement, and recorded the bounded E-06/T-01C result.
 - E-05 remains passed for stable unloaded motion at 6 V.
 - The earlier 0.043 A reading is retained as historical evidence of an
   accidental alignment load, not the normal unloaded baseline.
-- Bounded E-06 passed at 6.0 V / 0.20 A supply limit / 0.18 A stall current,
-  approximately 30 s dwell, and 10 successful repeats while holding preload.
+- Bounded E-06 endpoint observation passed at 6.0 V / 0.20 A supply limit /
+  0.18 A switch-pressed stall current, approximately 30 s dwell, and 10
+  successful repeats.
+- No known-compression operating-preload hold was measured; T-01C remains open.
 
 ## Struggles and rejected approaches
 
@@ -61,10 +67,11 @@ insert as the source of the additional load.
 
 ## Risks and follow-up
 
-The bounded result does not characterize temperature, rail droop, driver-fault
-behavior, or long-duration endurance. Retain the separate spring geometry and
-force-path gates, and complete T-01D/T-01E before setting production travel or
-force-loop limits.
+The bounded result does not characterize operating-preload capability,
+temperature, rail droop, driver-fault behavior, or long-duration endurance.
+Retain the separate spring geometry and force-path gates, repeat T-01C at a
+known safe compression, and complete T-01D/T-01E before setting production
+travel or force-loop limits.
 
 ## Files
 

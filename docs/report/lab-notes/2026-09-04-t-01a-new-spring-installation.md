@@ -29,8 +29,9 @@ pen-clearance, or current measurement was performed as part of this record.
 
 The previous 0.535 in compression proposal, 0.655 in installed length, and
 0.1885 in pen-tip clearance were specific to the removed spring and are
-superseded for the current assembly. The earlier loaded N20/E-06 result also
-used the previous spring.
+superseded for the current assembly. The earlier 0.18 A N20/E-06 result was a
+switch-pressed endpoint stall rather than a known-compression preload-hold
+measurement; its spring identity and compression were not recorded.
 
 ## Decisions and next action
 
