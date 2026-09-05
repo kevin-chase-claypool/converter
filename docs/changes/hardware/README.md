@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-04 | `HW-20260904-007` | implemented | [Replace Toolhead Preload Spring](2026/2026-09-04-replace-toolhead-preload-spring.md) | `toolhead`, `spring`, `preload`, `lift`, `testing` |
 | 2026-09-04 | `HW-20260904-005` | partial | [Correct N20 Current After Lead-Screw Alignment and Preload Test](2026/2026-09-04-correct-n20-unloaded-current-after-alignment.md) | `toolhead`, `n20`, `current`, `alignment`, `testing` |
 | 2026-09-04 | `HW-20260904-003` | implemented | [Record TB6600 signal harness wiring](2026/2026-09-04-record-tb6600-signal-harness-wiring.md) | `tb6600`, `signal-wiring`, `wire-gauge`, `x-axis`, `y-axis`, `a-axis` |
 | 2026-09-04 | `HW-20260904-002` | implemented | [Reroute top-down wiring schematic into clean lanes](2026/2026-09-04-reroute-top-down-wiring-diagram.md) | `wiring`, `schematic`, `routing`, `tb6600`, `signal-lanes` |

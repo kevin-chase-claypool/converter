@@ -57,6 +57,7 @@ Do not energize a driver until coil pairs are confirmed with an ohmmeter.
 | 1 | Amazon ASIN B00XRRNCOO | HiLetgo HX711 24-bit load-cell ADC module | selected | Board data rate selection, noise, grounding, actual sample interval |
 | 1 | Amazon ASIN B07NRVML17 | uxcell 300 g wired load cell; manufacturer mapping is Red `EXC+`, Black `EXC-`, Green `SEN+`, White `SEN-`; sensitivity `0.7 ± 0.15 mV/V`, error `±0.05% F.S.` | selected | Verify received connector/wire labels and calibrate in E-07; characterize overload margin |
 | 1 | Amazon ASIN B0CQVG659B | SparkFun TMAG5273 Qwiic 3D Hall-effect sensor | selected | I2C address/configuration, magnet geometry, usable position resolution |
+| 1 | Owner-supplied compression spring | Installed 2026-09-04 as the replacement for the prior spring candidate; owner-reported dimensions are 0.4 mm wire diameter x 7 mm outside diameter x 25 mm free length | received/installed | Measure actual free length, solid height, force curve, safe compression, LIFT reference, and preload margin in T-01A/T-01B before reusing any prior spring-dependent value |
 
 ## Power and protection still TBD
 

@@ -33,7 +33,7 @@ completion status.
 | E-03 | Check STEP/DIR/EN input behavior | The documented common-cathode pattern (`G` to `PUL-`/`DIR-`/`ENA-`; `Stp`/`Dir`/`En` to `PUL+`/`DIR+`/`ENA+`) works without excessive input loading | TBD | Supplied wiring schematic establishes the pattern; F-03 verified source levels. Owner reported all three 24 AWG signal harnesses and common returns have end-to-end continuity (2026-09-04); prove installed-driver behavior before mechanics. |
 | E-04 | Set driver current and microstep configuration conservatively | With all drivers unpowered: X/Y 16× (`SW1 OFF`, `SW2 OFF`, `SW3 ON`); A 8× (`SW1 OFF`, `SW2 ON`, `SW3 OFF`); all 1.5 A/phase (`SW4 ON`, `SW5 OFF`, `SW6 ON`) | TBD | X/Y's 20T GT2 pulleys yield 80 steps/mm at 16×. The 12:1 A reduction produces 19,200 pulses/bed revolution at 8×; do not increase A to 16/32× unless testing demonstrates a need. |
 | E-05 | Measure N20 no-load current at 6 V | Stable and within supply/module range | Passed | Owner correction: aligned unloaded N20 motion current is 0.009 A. The earlier 0.043 A toolhead reading included extra mechanical load from a lead screw that was not straight against the heat-set insert; it is retained as a historical misalignment result, not the normal unloaded baseline. The repaired DRV8833 output solder joint remained reliable. No manual stall test was performed during the original E-05 run. |
-| E-06 | Measure current-limited actuator stall current | Below verified DRV8833 safe limit | Passed (bounded) | At 6.0 V with the bench supply limited to 0.20 A, the N20 reached 0.18 A at stall for approximately 30 s and held the selected spring preload. The result was successfully repeated 10 times. This closes the bounded current-limited stall check for the tested setup; temperature, rail-voltage, and long-duration endurance were outside this recorded test scope. |
+| E-06 | Measure current-limited actuator stall current | Below verified DRV8833 safe limit | Passed (bounded; previous spring) | With the previous spring candidate, at 6.0 V and a 0.20 A bench-supply limit, the N20 reached 0.18 A at stall for approximately 30 s and held the selected preload; this repeated 10 times. The bounded result remains valid for that tested assembly, but the spring was replaced on 2026-09-04, so repeat the loaded check before claiming the same margin for the current spring. Temperature, rail-voltage, and long-duration endurance remain outside this test scope. |
 | E-07 | Calibrate load cell with known masses | Repeatable slope and zero | Partial | USB-only HX711 testing passed communication (`hx_ready=1`). E-07B GP20/GP21 service UART and two automatic pen-tip/digital-scale contacts passed (49.4 g and 65 g). Normal Z-mechanism preload changes raw readings, so the residual approach is safe for contact detection but the coarse 50 ms final increment has not produced a repeatable force slope. Refine final approach increments before production calibration. See 2026-08-14 E-07 lab note. |
 | E-08 | Measure HX711 samples/s and noise | Sufficient for chosen loop bandwidth | Passed | Two stationary 15-second GP0/GP1 HX711 windows returned 179 samples each: 11.933 Hz. Peak-to-peak noise was 300 and 484 counts; standard deviation was 69.1 and 120.5 counts. Use a three-ready-sample median (about 0.25 s) and no faster than ~4 Hz force corrections after settling. See 2026-08-14 E-08 lab note. |
 | E-09 | Read TMAG5273 through intended wiring | Stable field/position signal | Passed | Corrected GP16/SDA and GP17/SCL I2C mapping passed. Far/near/return magnitudes were 0.24/7.51/7.44 mT; stationary spans were 0.25/0.28 mT. A conservative initial magnitude threshold is 3.5 mT with 1.0 mT hysteresis, pending final scan geometry. See 2026-08-14 E-09 lab note. |
@@ -143,9 +143,12 @@ the routed U3 return conductor from `LIMA` to `PRB`.
 **Purpose:** establish the measured mechanical, force, motor, and electrical
 limits that the pressure controller must obey. This is a commissioning test,
 not permission to change a firmware constant from a nominal spring dimension.
-The selected spring is nominally 0.027 in wire x 0.295 in outside diameter x
-1.19 in free length; measure the installed part rather than assuming those
-catalogue dimensions are exact.
+The previously documented spring candidate was nominally 0.027 in wire x
+0.295 in outside diameter x 1.19 in free length. It was replaced on
+2026-09-04. The currently installed candidate is owner-reported as 0.4 mm
+wire diameter x 7 mm outside diameter x 25 mm free length. Measure the
+installed part rather than assuming either catalogue/owner-reported set of
+dimensions is exact.
 
 **Safety gates:** T-01A may be performed unpowered. E-05 and the basic
 open-loop direction portion of T-01 must pass before powered motion. E-06
@@ -156,13 +159,14 @@ short of both the spring's solid height and the mechanism's hard stops. Keep a
 digital scale or equivalent calibrated force fixture under the pen for every
 loaded test; never hand-stall the actuator.
 
-**Current proposed LIFT datum (2026-08-30):** the owner measured
-`L_free = 1.190 in` and selected `x_lift = 0.535 in` as the proposed LIFT
-compression, yielding `L_lift = 0.655 in`. With the then-installed pen, the
-tip was measured 0.1885 in above the bed. That is not a universal clearance:
-interchangeable pens and pencils may sit at different clamp heights. T-01A
-remains partial until `L_solid` is measured/verified and the 0.655 in installed
-length is shown to retain a documented solid-height margin.
+**Previous LIFT datum superseded (2026-09-04):** the prior spring candidate
+had `L_free = 1.190 in` and a proposed `x_lift = 0.535 in`, yielding
+`L_lift = 0.655 in`; the then-installed pen tip was measured 0.1885 in above
+the bed. Those values are historical to the removed spring and are not
+approved for the current assembly. The new 0.4 mm x 7 mm x 25 mm candidate has
+no approved LIFT compression, clearance, or safe travel endpoint yet. Re-run
+T-01A before powered motion into preload. Interchangeable pens and pencils
+may still sit at different clamp heights.
 
 | Sub-test | Procedure and values to record | Pass condition / resulting control input |
 |---|---|---|
@@ -172,7 +176,7 @@ length is shown to retain a documented solid-height margin.
 | **T-01D — retract motion reserve** | Starting from the greatest intended opposing-spring force, increase retract pulse width/PWM or speed in small documented steps. At each setting record retract time, current peak, position reached, force/clearance, and any driver fault. At the selected setting, perform at least 30 full `PEN_CLEAR`-to-work-range-to-`PEN_CLEAR` cycles with the normal payload. | Select a retract command below the first unreliable setting, with documented force/current/thermal margin. All 30 cycles reach `PEN_CLEAR` without a fault, hard-stop contact, lost reference, or uncommanded pen contact. This sets maximum retract effort and the minimum M5 dwell; it does not validate `LIFT_HOME`. |
 | **T-01E — command-to-force and pulse response map** | Characterize the actuator's global motion limits with a representative pen or guarded force fixture: small up/down pulses at the intended preload and low/nominal/high force regions. Record command direction, PWM, pulse width, initial/final position, initial/final force, response delay, settle time, overshoot, and reversal/backlash. Do not assume the force change per pulse is universal across tools. Each new pen, marker, or pencil receives a short bounded response check during T-01J rather than repeating the full map unless it falls outside the established range. | Establish global minimum repeatable pulse, maximum safe pulse, directional backlash, and settle delay for the actuator. Record any per-tool force-response correction needed by T-01J. The load cell remains the force authority; these measurements bound pulse duration, correction rate, deadband, and anti-windup behavior for T-03. |
 | **T-01F — control-envelope record** | Consolidate global actuator values and per-tool settings in the lab note: `L_free`, `L_solid`, `L_lift`, `L_contact`, `x_lift`, `x_max`, solid-height margin, force curve/rate, `F_preload`, global friction/stiction threshold, backlash, global minimum/maximum pulse, retract time, maximum tested current, rail-voltage minimum, temperatures, hold drift, selected dwell, and each tool's `F_target`, contact/release thresholds, and any bounded pulse override. State the source/test date for each value. | The table supplies every non-TBD physical value needed to configure force limits, travel limits, seek timeout, pulse bounds, correction cadence, LIFT dwell, and the T-03 acceptance band without pretending that one pen's pulse-to-force curve applies to every tool. Any unknown or failed value remains a commissioning gate rather than a firmware assumption. |
-| **T-01G — LIFT-home switch** | Before connecting to the Pro Micro, meter-check the selected terminals: open when released and closed when the actuator flag presses the switch. Then wire the dry contact only between `GP2` and `TOOL_GND`, enable `INPUT_PULLUP`, and record at least ten slow retract cycles. Record trigger/release position relative to the 0.535 in LIFT compression, repeatability, debounce behavior, and timeout behavior if no trigger occurs. | All ten cycles report `GP2` LOW only when the moving-carriage flag presses the fixed switch, at a repeatable LIFT position before the separate mechanical backstop. A missing or implausible transition faults/stops retraction. This input is a position reference, not a hard stop; do not use it until the separate solid-height and backstop margins are verified. |
+| **T-01G — LIFT-home switch** | Before connecting to the Pro Micro, meter-check the selected terminals: open when released and closed when the actuator flag presses the switch. Then wire the dry contact only between `GP2` and `TOOL_GND`, enable `INPUT_PULLUP`, and record at least ten slow retract cycles. Record trigger/release position relative to the **current measured LIFT compression**, repeatability, debounce behavior, and timeout behavior if no trigger occurs. | All ten cycles report `GP2` LOW only when the moving-carriage flag presses the fixed switch, at a repeatable LIFT position before the separate mechanical backstop. A missing or implausible transition faults/stops retraction. This input is a position reference, not a hard stop; do not use it until the current spring's solid-height and backstop margins are verified. |
 | **T-01H — M5 release and clearance pulse** | With E-07 force calibration active and a scale/paper fixture under the pen, start from stable contact and command normal M5. Record the signed filtered force trace, `F_contact_on`, `F_release_off`, release debounce, retract command, extra clearance-pulse PWM/duration, pen-tip gap after stopping, and any mark/drag during a representative pen-up travel move. Repeat at least 30 M3-contact/M5-clear cycles. `LIFT_HOME` switch contact is not expected during this test. | `F_contact_on` and `F_release_off` have a measured hysteresis margin; release is detected repeatably before the pulse; the calibrated pulse leaves the pen clear throughout the representative travel without contacting the distant switch; all 30 cycles complete without fault, drag, or uncommanded paper contact. These values authorize normal high-cycle M5 `PEN_CLEAR` behavior. |
 | **T-01I — saved force profile and startup baseline** | After E-07, T-01E, and T-01H produce accepted values, record a versioned calibration profile containing the load-cell slope/direction, `F_contact_on`, `F_release_off`, `F_target`, `F_max`, debounce, pulse bounds, and clearance-pulse command. Commit it only through an explicit local service action and record its identifier/checksum. Perform at least five complete power cycles. On each boot, run `LIFT_HOME`, verify the profile identifier/checksum before force control is enabled, collect a fresh no-contact baseline in RAM, and then use the scale fixture to check one low and one nominal commanded force. Query the stored profile again after every cycle. | All five boots reload the identical valid profile; each RAM baseline is within the documented no-contact/noise acceptance band; the low and nominal scale checks stay within their documented force tolerance; invalid/missing profile or implausible baseline leaves force control disabled/faulted; and the stored identifier/checksum remains unchanged until another explicit service calibration commit. This authorizes the profile for normal operation, not an automatic re-calibration. |
 | **T-01J — interchangeable-tool contact and clear preflight** | For each intended pen, marker, or pencil type and its allowed clamp-height range, run: `LIFT_HOME`; no-contact baseline; guarded low-force seek to the current paper/scale fixture; a short bounded response check using the global T-01E pulse limits; normal M5 release plus clearance pulse; then a representative pen-up travel move. Record tool identity, clamp setting, first-contact force, seek travel/time, selected `F_target`, `F_contact_on`, `F_release_off`, any per-tool pulse override, clearance-pulse command, post-clear force band, mark quality, and any drag. Repeat enough M3/M5 cycles to expose stiction or missed release; never use normal M5 to reach the home switch. | Every tested tool reaches contact before its seek limit, stays below `F_max`, releases into the clear band, and completes representative pen-up travel without drag or switch contact. The load cell closes the force loop; no universal pulse-to-force curve is required. Record a separate approved target-force/clearance setting for each tool type, with a per-tool pulse override only when the bounded response check requires it. A failure leaves that tool/profile combination disabled pending correction. |
@@ -185,16 +189,15 @@ until T-01F identifies a safe working envelope, T-01G establishes a repeatable
 T-01I verifies the saved profile plus RAM-only startup baseline, and T-01J
 establishes the selected interchangeable-tool settings.
 
-**Preliminary observation (2026-08-30; owner clarification 2026-09-04):** with
-the spring installed, the owner reported approximately 0.019-0.050 A during
-retraction and clarified that the 0.18 A endpoint reading is the N20 stall
-current. The owner also reports that the motor holds the selected spring
-preload. This is useful evidence of actuator capability, but it is not yet a
-formal T-01C/T-01D pass because the spring length, end-stop condition, force,
-rail behavior, and temperatures were not recorded. The later controlled test
-with a 6.0 V supply, 0.20 A current limit, approximately 30 s stall dwell, and
-10 repeats is the bounded E-06 result. Do not use a fully compressed spring as
-a normal operating point. See
+**Historical spring-loaded observation (2026-08-30; owner clarification
+2026-09-04):** with the previous spring candidate installed, the owner
+reported approximately 0.019-0.050 A during retraction and clarified that the
+0.18 A endpoint reading is the N20 stall current. The owner also reported that
+the motor held the selected preload. The bounded E-06 result used that prior
+spring. These observations do not qualify the current 0.4 mm x 7 mm x 25 mm
+spring; repeat T-01A and the loaded E-06/T-01C/T-01D checks after establishing
+its safe compression range. Do not use a fully compressed spring as a normal
+operating point. See
 [`2026-08-30-t-01-preload-current-observation.md`](../report/lab-notes/2026-08-30-t-01-preload-current-observation.md).
 
 ## Integrated tests

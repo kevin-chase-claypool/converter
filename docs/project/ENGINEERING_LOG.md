@@ -195,6 +195,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 - HARDWARE/PARTIAL - Corrected N20 unloaded current after alignment](#elog-20260904-corrected-n20-unloaded-current-after-alignment)
 - [2026-09-04 - HARDWARE - Passed bounded N20 stall and preload-hold test](#elog-20260904-passed-bounded-n20-stall-and-preload-hold-test)
 - [2026-09-04 - HARDWARE/IMPLEMENTED - Made pulse response per-tool during preflight](#elog-20260904-made-pulse-response-per-tool-during-preflight)
+- [2026-09-04 - HARDWARE/OPEN - Replaced toolhead preload spring](#elog-20260904-replaced-toolhead-preload-spring)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2698,3 +2699,23 @@ Add new entries at the top of the log below this line.
   `docs/changes/hardware/2026/2026-09-04-per-tool-pulse-response-preflight.md`.
 - Next action: Complete T-01J for each intended pen or pencil after the global
   T-01E limits and load-cell calibration are accepted.
+
+<a id="elog-20260904-replaced-toolhead-preload-spring"></a>
+### 🟨 2026-09-04 - HARDWARE/OPEN - Replaced toolhead preload spring
+
+- Status: replacement installed; current spring geometry and force envelope are
+  unverified.
+- Category: hardware, toolhead, spring, preload, testing
+- Summary: The owner replaced the previously installed spring with an
+  owner-reported compression spring measuring 0.4 mm wire diameter x 7 mm
+  outside diameter x 25 mm free length.
+- Decision: Treat the prior 0.535 in LIFT compression, 0.1885 in pen clearance,
+  and spring-loaded N20/E-06 observations as historical to the removed spring.
+  They are not control values for the current assembly.
+- Evidence: `docs/report/lab-notes/2026-09-04-t-01a-new-spring-installation.md`;
+  `docs/testing/TEST_PLAN.md`;
+  `docs/changes/hardware/2026/2026-09-04-replace-toolhead-preload-spring.md`.
+- Limitation: No replacement-spring free-length, solid-height, force, safe
+  compression, clearance, or loaded-current measurement has been recorded.
+- Next action: repeat T-01A unpowered, then repeat the guarded loaded actuator
+  and force-envelope checks before reusing any prior preload setting.

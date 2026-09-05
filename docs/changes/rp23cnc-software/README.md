@@ -10,6 +10,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-09-04 | `WSW-20260904-001` | implemented | [Move pen/TMAG XY offset ownership to P100](../windows-software/2026/2026-09-04-remove-converter-tool-offset.md) | `coordinate-frames`, `tool-offset`, `p100`, `g54` |
+| 2026-09-04 | `HW-20260904-007` | implemented | [Replace Toolhead Preload Spring](../hardware/2026/2026-09-04-replace-toolhead-preload-spring.md) | `toolhead`, `spring`, `preload`, `lift`, `testing` |
 | 2026-09-04 | `HW-20260904-006` | implemented | [Make Pulse Response Tool-Specific During Preflight](../hardware/2026/2026-09-04-per-tool-pulse-response-preflight.md) | `toolhead`, `n20`, `force-control`, `interchangeable-tools`, `preflight` |
 | 2026-09-03 | `RPSW-20260903-008` | implemented | [Add Opto-Isolation Presentation Slide](2026/2026-09-03-add-opto-isolation-presentation-slide.md) | `presentation`, `opto-isolation`, `wiring`, `p100` |
 | 2026-09-03 | `HW-20260903-001` | implemented | [Record TB6600 signal and A-axis commissioning baseline](../hardware/2026/2026-09-03-record-tb6600-signal-and-a-axis-commissioning-baseline.md) | `tb6600`, `stepper`, `a-axis`, `calibration`, `homing` |
