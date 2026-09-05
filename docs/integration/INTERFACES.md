@@ -86,6 +86,14 @@ revolution index search takes `120 / bed_RPM` seconds at constant speed: 24 s
 at 5 RPM, 12 s at 10 RPM, or 6 s at 20 RPM, plus ramps and detection dwell.
 Commission the actual scan rate through loaded A-axis M-01/M-02 testing.
 
+Do not use ioSender's guided Stepper calibration page as the primary A-axis
+calibration method unless its target and measured values are explicitly angular
+motor degrees. The current A procedure is the mechanical calculation above,
+followed by M-04 (`A360` for one motor revolution) and M-05 (`A4320` for one
+bed revolution). The guided page is appropriate for measured linear X/Y/Z
+steps-per-unit calibration; it does not tune `$113` maximum rate or `$123`
+acceleration.
+
 ### X/Y TB6600 baseline
 
 Both X and Y use GT2 belts (2 mm pitch) with confirmed 20-tooth motor pulleys.
