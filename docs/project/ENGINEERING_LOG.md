@@ -2790,5 +2790,9 @@ Add new entries at the top of the log below this line.
   correction was not recorded. Motor/driver temperature, repeat-cycle
   return-to-mark, and lost-step behavior were not measured; M-01 remains
   partial.
-- Next action: Repeat positive/negative X, Y, and A moves for multiple cycles
-  with temperature and return-position observations.
+- Result update: After ten X `+5`/`-5` cycles at `F60`, the owner reports that
+  the physical carriage/frame marks returned to the exact starting position.
+  This provides no observable X lost-step or coupling-slip evidence for that
+  cycle test.
+- Next action: Repeat positive/negative Y and A moves for multiple cycles and
+  record motor/driver temperature for all three axes.

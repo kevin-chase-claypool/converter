@@ -41,6 +41,9 @@ restored with `G90`.
    positive and negative Y moves at `F60` and observed the cardinal directions.
 6. Removed Y power before connecting the X motor, then commanded 1-unit
    positive and negative X moves at `F60` and observed the cardinal directions.
+7. Marked the X carriage against the stationary frame, ran ten `X5`/`X-5`
+   relative cycles at `F60`, and compared the physical reference after the
+   final return.
 
 ## Results
 
@@ -55,9 +58,12 @@ restored with `G90`.
 - `G1 X1 F60` completed successfully and moved the X axis east; `G1 X-1 F60`
   moved west. The reported supply current for both X moves was approximately
   `0.42 A`.
-- No stall or failed move was reported.
-- Disposition: **initial M-01 X/Y/A direction and smooth-motion checks passed;
-  full M-01 remains partial pending repeatability and heating evidence.**
+- No stall or failed move was reported during the final direction checks.
+- After ten X-axis `+5`/`-5` cycles, the physical carriage/frame marks were in
+  the exact same relative position as at the start of the test.
+- Disposition: **initial M-01 X/Y/A direction and smooth-motion checks passed,
+  and X return to position passed; full M-01 remains partial pending Y/A
+  repeatability and heating evidence.**
 
 ## Difficulties and corrective actions
 
@@ -69,17 +75,19 @@ returns.
 
 ## Interpretation
 
-The A and Y motor phases and direction mappings are producing useful
-bidirectional motion through their tested TB6600s. Both motors reverse as
-commanded and their current draw is comfortably below the temporary supply
-limit. This is not yet a full thermal or lost-step qualification.
+The A, Y, and X motor phases and direction mappings are producing useful
+bidirectional motion through their tested TB6600s. The X physical reference
+returned exactly after ten cycles, providing no observable lost-step or
+coupling-slip evidence in that test. Current draw remained comfortably below
+the temporary supply limit. This is not yet a full thermal or all-axis
+repeatability qualification.
 
 ## Decisions and next action
 
 Keep the 1.5 A/phase driver setting and 2 A supply limit for the next guarded
-check. Repeat positive/negative X, Y, and A moves for multiple cycles, verify
-that each mechanism returns to its starting mark, and record motor/driver
-temperature before treating M-01 as complete.
+check. Repeat positive/negative Y and A moves for multiple cycles, verify that
+each mechanism returns to its starting mark, and record motor/driver
+temperature for all three axes before treating M-01 as complete.
 
 ## Related records
 

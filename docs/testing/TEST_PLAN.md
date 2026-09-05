@@ -132,8 +132,10 @@ bidirectional jog at `F120`; `A10` was counterclockwise, `A-10` was clockwise,
 and supply current was approximately `0.44 A` with a 2 A limit. The Y axis then
 moved north for `Y1` and south for `Y-1` at `F60`, with approximately `0.43 A`
 reported for both moves. The X axis moved east for `X1` and west for `X-1` at
-`F60`, with approximately `0.42 A` reported for both moves. This is an initial
-pass only; repeatability, lost-step observation, and heating remain open. See
+`F60`, with approximately `0.42 A` reported for both moves. After ten X
+`+5`/`-5` cycles at `F60`, the physical carriage mark returned exactly to its
+starting reference. This is an initial pass only; Y/A repeatability,
+all-axis lost-step observation, and heating remain open. See
 [`2026-09-05-m-01-a-axis-direction-jog.md`](../report/lab-notes/2026-09-05-m-01-a-axis-direction-jog.md).
 
 ## Toolhead tests
