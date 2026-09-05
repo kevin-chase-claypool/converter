@@ -144,12 +144,15 @@ qualitative rather than instrumented. See
 [`2026-09-05-m-01-a-axis-direction-jog.md`](../report/lab-notes/2026-09-05-m-01-a-axis-direction-jog.md).
 
 M-02 current evidence: on 2026-09-05 the A-axis rate ramp completed cleanly at
-`F180`, `F240`, `F300`, `F360`, `F420`, `F480`, and `F540`. The mechanism
-returned exactly to its physical reference mark at both `F480` and `F540` and
-remained cool to the touch. The measured supply current at `F480` was
-approximately `0.465 A`, and the measured current at `F540` was approximately
-`0.476 A`. A prior longer run showed approximately `0.47-0.476 A`; its exact
-rate was not recorded separately. M-02 remains in progress for the X/Y rate
+`F180`, `F240`, `F300`, `F360`, `F420`, `F480`, `F540`, and `F600`. The
+mechanism returned exactly to its physical reference mark at both `F480` and
+`F540` and remained cool to the touch. The measured supply current at `F480`
+was approximately `0.465 A`, at `F540` approximately `0.476 A`, and at `F600`
+approximately `0.485 A`. The initial `F600` return was approximately `0.5 mm`
+off the reference mark despite smooth motion, so `F600` did not pass the
+initial repeatability check. A prior longer run showed approximately
+`0.47-0.476 A`; its exact rate was not recorded separately. M-02 remains in
+progress pending a bounded `F600` repeatability diagnosis, then the X/Y rate
 checks and configured A-axis maximum-rate margin. See
 [`2026-09-05-m-02-a-axis-rate-ramp.md`](../report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md).
 

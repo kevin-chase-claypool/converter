@@ -39,6 +39,8 @@ G1 A10 F480
 G1 A-10 F480
 G1 A10 F540
 G1 A-10 F540
+G1 A10 F600
+G1 A-10 F600
 G90
 ```
 
@@ -46,7 +48,7 @@ G90
 
 1. Kept only the A-axis motor connected and retained the 2 A supply limit.
 2. Increased the commanded `G1` feed in bounded steps from `F180` through
-   `F540`, using equal positive and negative moves at each rate.
+   `F600`, using equal positive and negative moves at each rate.
 3. Observed motion smoothness, direction, return to the physical reference
    mark, supply current, and motor temperature after the moves.
 
@@ -58,6 +60,8 @@ G90
   after the return move.
 - At `F540`, the mechanism also landed exactly on the established reference
   mark after the return move.
+- At `F600`, motion was smooth and the mechanism remained cool, but the return
+  was approximately `0.5 mm` away from the reference mark.
 - The measured supply current during the `F480` move was approximately
   `0.465 A`, below the 2 A supply limit.
 - The motor remained cool to the touch after the `F480` and `F540` tests.
@@ -68,33 +72,38 @@ G90
   recorded.
 - The measured supply current during the `F540` move was approximately
   `0.476 A`, below the 2 A supply limit.
+- The measured supply current during the `F600` move was approximately
+  `0.485 A`, below the 2 A supply limit.
 - Disposition: **M-02 is in progress; `F540` is the highest A-axis rate
-  validated so far under this test setup.**
+  validated so far under this test setup. `F600` did not pass the initial
+  return-to-mark check.**
 
 ## Difficulties and corrective actions
 
-None encountered during the recorded `F180`-`F540` A-axis rate steps. The
-earlier X-axis jerking was part of M-01 and was not observed in this A-axis
-rate ramp.
+The first `F600` return was approximately `0.5 mm` off the reference mark even
+though motion was smooth and the motor stayed cool. Do not classify this as a
+confirmed missed-step event until the same bounded move is repeated and the
+error is checked for accumulation or direction dependence. The earlier X-axis
+jerking was part of M-01 and was not observed in the A-axis rate ramp.
 
 ## Interpretation
 
 The A-axis has demonstrated clean, repeatable motion through `F540` for the
-tested move pattern, with no observed position loss or heating. The measured
-`0.465 A` supply current at `F480` and `0.476 A` at `F540` are well below the
-temporary 2 A limit. This supports using `F540` as the highest currently tested
-rate, subject to the configured A-axis maximum rate and the actual operating
-duty cycle. It is not yet evidence that `F540` is the absolute motor or
-controller limit. The lack of quantitative temperature and dwell data limits
-the strength of the thermal conclusion.
+tested move pattern, with no observed position loss or heating. The first
+`F600` test was smooth and cool but did not return to the mark, so `F600` is not
+currently qualified. The measured supply currents at `F480`, `F540`, and
+`F600` (`0.465 A`, `0.476 A`, and `0.485 A`) remained below the temporary 2 A
+limit; current and touch temperature alone cannot rule out missed steps or
+mechanical compliance.
 
 ## Decisions and next action
 
-Do not command above the controller's configured A-axis maximum rate. Record
-the A-axis setting in ioSender before selecting a production rate. Keep
-`F540` as the highest A-axis rate tested so far and continue M-02 with the X
-and Y axes. Add a longer dwell or instrumented temperature check if thermal
-margin is needed.
+Keep `F540` as the highest qualified A-axis rate for now. Repeat the `F600`
+positive/negative move from a verified reference for multiple cycles. If the
+error repeats at the same sign and magnitude, investigate backlash/settling;
+if it accumulates or varies, treat it as a likely torque or missed-step limit.
+Do not raise the rate again until `F600` passes repeatability. Also do not
+command above the controller's configured A-axis maximum rate.
 
 ## Related records
 
