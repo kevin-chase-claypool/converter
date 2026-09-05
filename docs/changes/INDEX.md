@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-05 | `WSW-20260905-002` | windows-software, rp23cnc-software, hardware | planned | [Plan radius-aware A-axis feed for drawing](windows-software/2026/2026-09-05-radius-aware-a-feed-requirement.md) |
 | 2026-09-05 | `HW-20260905-006` | hardware, rp23cnc-software | verified | [Verify Y-axis dimensional calibration](hardware/2026/2026-09-05-m-03-y-axis-dimensional-calibration.md) |
 | 2026-09-05 | `HW-20260905-005` | hardware, rp23cnc-software | verified | [Verify the Y-axis rate and acceleration baseline](hardware/2026/2026-09-05-m-02-y-axis-rate-verification.md) |
 | 2026-09-05 | `HW-20260905-004` | hardware, rp23cnc-software | verified | [Verify the A-axis 12:1 bed ratio](hardware/2026/2026-09-05-m-05-bed-ratio-verification.md) |

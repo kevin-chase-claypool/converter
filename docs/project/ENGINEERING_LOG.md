@@ -72,6 +72,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-05 - WINDOWS SOFTWARE/MIXED - Planned radius-aware A-axis feed](#elog-20260905-planned-radius-aware-a-axis-feed)
 - [2026-09-05 - HARDWARE/SUCCESS - Completed M-03 Y-axis dimensional check](#elog-20260905-completed-m-03-y-axis-dimensional-check)
 - [2026-09-05 - HARDWARE/SUCCESS - Completed M-02 Y-axis rate check](#elog-20260905-completed-m-02-y-axis-rate-check)
 - [2026-09-05 - HARDWARE/SUCCESS - Completed M-05 A-axis bed-ratio check](#elog-20260905-completed-m-05-a-axis-bed-ratio-check)
@@ -298,6 +299,27 @@ Entry details remain only in the chronology.
 ```
 
 Add new entries at the top of the log below this line.
+
+---
+
+<a id="elog-20260905-planned-radius-aware-a-axis-feed"></a>
+### 🟨 2026-09-05 - WINDOWS SOFTWARE/MIXED - Planned radius-aware A-axis feed
+
+- Status: planned converter change; documentation and formula captured, code not
+  yet implemented.
+- Category: windows software, RP23CNC software, hardware, converter, theta.
+- Reason: A is emitted in motor-shaft degrees, but the desired pen speed is a
+  tangential bed speed that changes with radius. A fixed A interpretation of
+  `F` would therefore vary surface speed across the bed.
+- Contract: with 4,320 motor degrees per bed revolution,
+  `A_feed = 4320 × tangential_speed / (2π × radius)` motor-deg/min.
+- Required behavior: calculate the radius-aware rate per segment, combine it
+  with XY motion, cap it at the controller's A rate/acceleration limits, and
+  define a safe near-center policy. Preview timing must match emitted G-code.
+- Evidence: validated M-05 12:1 bed ratio and the current A motor-degree unit
+  contract; combined-feed behavior still requires M-06 hardware verification.
+- Next action: implement unit/G-code/preview tests and then verify the combined
+  feed on the installed grblHAL build.
 
 ---
 

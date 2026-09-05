@@ -65,6 +65,14 @@ bed degrees by `theta_drive_ratio` (12). Firmware must convert `A` straight to m
 **not** reapply the 12:1. (Alternatively set `theta_drive_ratio = 1` in the converter so `A` carries
 bed degrees and the firmware owns the ratio — pick exactly one place.)
 
+**Required converter change:** A constant writing speed on the bed is not a constant A rate. With
+`A` in motor degrees, the rate for tangential speed `v` at radius `r` is
+`A_feed = 4320 × v / (2πr)` motor-deg/min. The planner must make this radius-aware per segment,
+combine it with the XY contribution to the coordinated feed, cap it at the controller's A rate and
+acceleration limits, and define a safe near-center/zero-radius behavior. This is not yet implemented;
+the current single modal `F` is a global coordinated feed and must not be interpreted as a fixed
+bed-surface speed at every radius.
+
 For a force-controlled pen, use **M3/M5 mode, not Z mode** (uncheck "Use Z axis"): Z mode commands an
 explicit pen height that would fight the pressure loop. M3/M5 only says "engage / lift".
 **Current UI/default gotcha:** `Settings.include_z` and the "Use Z axis" checkbox currently default
@@ -447,7 +455,8 @@ grblHAL setup tasks (config, not parser code):
    matches the preview. Closed-loop "wait for actual load-cell contact" is still a later upgrade via
    a grblHAL plugin that feed-holds until a contact input.
 6. **Verify on hardware:** how grblHAL scales feed on a combined X/Y/**A** move vs the converter's
-   `sqrt(xy² + motor_deg²)/F` pacing. Only affects speed/timing, not path shape.
+   `sqrt(xy² + motor_deg²)/F` pacing. The planned radius-aware A-feed change must preserve bounded
+   tangential speed; this affects speed/timing, not path shape.
 7. **Homing workflow:** after commissioning, one ioSender button sends `G65
    P100 Q0`: M5/lift, physical X/Y home, center centroid raster and registration,
    then outer-magnet A registration. The dual-core Pro Micro sends readiness

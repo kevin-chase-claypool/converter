@@ -34,6 +34,31 @@ Requires `PySide6` (`pip install PySide6`).
 The exact dialect and the firmware-facing caveats are documented in
 [`../docs/HANDOFF.md`](../docs/HANDOFF.md) → "G-code output reference".
 
+## Required next change: radius-aware A-axis feed
+
+The converter must not treat the A-axis portion of `F` as a fixed bed-surface
+speed. Because `A` is emitted in motor-shaft degrees and the bed reduction is
+12:1, the A rate required for a target tangential pen speed depends on the
+pen's instantaneous radius from the bed center:
+
+```text
+A_feed_motor_deg/min = (4320 × tangential_speed_mm/min) / (2π × radius_mm)
+```
+
+The current G-code contract still emits one coordinated `F` per move, so this
+is a planned converter change rather than an implemented behavior. The planner
+must calculate radius-aware, per-segment feed limits, combine A motion with the
+XY contribution to the requested path speed, and cap the result at the
+controller's per-axis `$113`/`$123` limits. Near the center, the requested A
+rate can exceed the configured maximum; the converter must then reduce the
+achievable tangential speed instead of silently exceeding the limit. The
+implementation must also define its behavior at zero or near-zero radius.
+
+Acceptance requires generated G-code and preview timing to agree for multiple
+radii, with inverse-radius A rates for a constant target tangential speed,
+bounded combined X/Y/A feed, and explicit handling of the controller's A rate
+and acceleration ceilings.
+
 ## Settings groups (Qt app)
 
 - **Geometry** — scale, tolerance, Flip Y, and pen-stroke compensation.

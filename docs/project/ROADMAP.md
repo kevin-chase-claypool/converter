@@ -96,6 +96,10 @@
 
 - [ ] Repeat driver and motor bring-up for X, Y, and A.
 - [ ] Determine and calibrate X/Y steps per millimeter. (`M-03`)
+- [ ] Implement radius-aware A-axis feed planning in the converter so a target
+  tangential writing speed remains bounded as pen radius changes; handle the
+  12:1 motor-degree contract, combined XY/A feed, controller caps, and the
+  near-center limit explicitly.
 - [ ] Set A steps per motor-shaft degree. (`M-04`)
 - [ ] Verify the 12:1 bed ratio. (`M-05`)
 - [ ] Tune max rate and acceleration one axis at a time.
@@ -143,5 +147,5 @@
 
 ## Next concrete task
 
-Complete the Phase 1 bench worksheet in
-`docs/testing/TEST_PLAN.md` before connecting motors or the toolhead to RP23CNC.
+Complete the X-axis rate and M-03 dimensional checks, then implement and test
+the radius-aware A-axis feed requirement before coordinated plotting runs.
