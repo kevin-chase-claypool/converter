@@ -47,6 +47,9 @@ restored with `G90`.
 8. Marked the Y carriage against the stationary frame, ran ten `Y5`/`Y-5`
    relative cycles at `F60`, and compared the physical reference after the
    final return.
+9. Marked the A motor pulley relative to the motor body, ran the repeat
+   positive/negative A cycle, and compared the reference after the final
+   return.
 
 ## Results
 
@@ -69,9 +72,13 @@ restored with `G90`.
 - No noticeable heating was reported at the X or Y motors or TB6600 drivers
   during their direction and return-position checks. This was a touch-based
   observation; no temperature instrument or numeric limit was recorded.
-- Disposition: **initial M-01 X/Y/A direction and smooth-motion checks passed,
-  and X/Y return to position passed; full M-01 remains partial pending A
-  repeatability and heating evidence.**
+- The A motor pulley returned to the exact same position relative to the motor
+  body after its repeat cycle set.
+- No noticeable heating was reported by touch at any X, Y, or A motor or
+  TB6600 driver; all remained cold. This is a qualitative observation, not a
+  numeric temperature measurement.
+- Disposition: **M-01 passed for the conducted low-speed X/Y/A direction,
+  return-to-position, and preliminary heating checks.**
 
 ## Difficulties and corrective actions
 
@@ -85,19 +92,19 @@ returns.
 
 The A, Y, and X motor phases and direction mappings are producing useful
 bidirectional motion through their tested TB6600s. The X and Y physical
-references returned exactly after ten cycles, providing no observable lost-step
-or coupling-slip evidence in those tests. Current draw remained comfortably
-below the temporary supply limit. No noticeable X/Y heating was observed, but
-that observation was not instrumented. This is not yet a full thermal or
-all-axis repeatability qualification.
+references returned exactly after ten cycles, and the A physical reference
+returned exactly after its repeat cycle set. These results provide no
+observable lost-step or coupling-slip evidence in the conducted tests. Current
+draw remained comfortably below the temporary supply limit. No noticeable
+heating was observed on any axis, but that observation was not instrumented.
+This is a low-speed qualification; longer dwell and rate-ramp thermal behavior
+remain follow-up work.
 
 ## Decisions and next action
 
-Keep the 1.5 A/phase driver setting and 2 A supply limit for the next guarded
-check. Repeat positive/negative A moves for multiple cycles, verify that the
-mechanism returns to its starting mark, and record motor/driver temperature
-with an instrument if available for all three axes before treating M-01 as
-complete.
+Keep the 1.5 A/phase driver setting and 2 A supply limit. Begin M-02
+controlled rate-ramp testing; record temperatures with an instrument if
+available during the longer or faster runs.
 
 ## Related records
 

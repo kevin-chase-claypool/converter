@@ -135,10 +135,12 @@ reported for both moves. The X axis moved east for `X1` and west for `X-1` at
 `F60`, with approximately `0.42 A` reported for both moves. After ten X
 `+5`/`-5` cycles at `F60`, the physical carriage mark returned exactly to its
 starting reference. After ten Y `+5`/`-5` cycles at `F60`, the physical Y
-carriage mark also returned exactly to its starting reference. This is an
-initial pass only; A repeatability, all-axis lost-step observation, and
-quantified heating remain open. No noticeable heating was reported at the X/Y
-motors or drivers, but it was not instrumented. See
+carriage mark also returned exactly to its starting reference. The A motor
+pulley likewise returned to its starting position relative to the motor after
+the repeat cycle set. No noticeable heating was reported at any X, Y, or A
+motor or driver; all remained cold to the touch. **M-01 passed for the
+conducted low-speed jog and return checks**, with the thermal observation
+qualitative rather than instrumented. See
 [`2026-09-05-m-01-a-axis-direction-jog.md`](../report/lab-notes/2026-09-05-m-01-a-axis-direction-jog.md).
 
 ## Toolhead tests

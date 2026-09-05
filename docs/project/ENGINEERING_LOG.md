@@ -199,6 +199,7 @@ Entry details remain only in the chronology.
 - [2026-09-05 - HARDWARE/VERIFIED - Recovered RP23CNC USB recognition](#elog-20260905-recovered-rp23cnc-usb-recognition)
 - [2026-09-05 - HARDWARE/SUCCESS - Passed installed TB6600 signal response test](#elog-20260905-passed-installed-tb6600-signal-response-test)
 - [2026-09-05 - HARDWARE/PARTIAL - Passed initial A-axis direction jog](#elog-20260905-passed-initial-a-axis-direction-jog)
+- [2026-09-05 - HARDWARE/SUCCESS - Completed M-01 low-speed jog test](#elog-20260905-completed-m-01-low-speed-jog-test)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2803,3 +2804,26 @@ Add new entries at the top of the log below this line.
   touch-based observation without numeric temperature readings.
 - Next action: Repeat positive/negative A moves for multiple cycles and record
   motor/driver temperature for all three axes.
+
+<a id="elog-20260905-completed-m-01-low-speed-jog-test"></a>
+### 🟩 2026-09-05 - HARDWARE/SUCCESS - Completed M-01 low-speed jog test
+
+- Status: M-01 passed for the conducted low-speed X/Y/A jog and return checks.
+- Category: hardware, X-axis, Y-axis, A-axis, TB6600, stepper, motion testing.
+- Summary: X moved east/west, Y moved north/south, and A moved
+  counterclockwise/clockwise for positive/negative commands. Supply readings
+  were approximately 0.42 A, 0.43 A, and 0.44 A respectively.
+- Result: X and Y physical carriage marks returned exactly after ten positive
+  and negative cycles. The A motor pulley returned to the exact same position
+  relative to the motor body after its repeat cycle set. No stalls were
+  reported.
+- Thermal observation: No noticeable heating was reported at any motor or
+  TB6600 driver; all remained cold to the touch. This is qualitative evidence,
+  not a numeric temperature measurement.
+- Evidence: `docs/report/lab-notes/2026-09-05-m-01-a-axis-direction-jog.md`;
+  `docs/testing/TEST_PLAN.md`.
+- Limitation: The earlier X jerking symptom was corrected/retested, but the
+  exact wiring change was not recorded. Longer dwell, quantitative temperature
+  measurement, rate ramp, and dimensional calibration remain separate tests.
+- Next action: begin M-02 one-axis rate-ramp testing under the same current
+  and mechanical safety limits.
