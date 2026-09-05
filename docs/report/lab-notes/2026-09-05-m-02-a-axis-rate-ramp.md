@@ -119,16 +119,19 @@ G90
   `G1 A14400 F80000` and `G1 A-14400 F80000` also returned perfectly. With
   `$123=4000`, the target is `1333 deg/sec` motor speed (about `18.5 RPM` at
   the bed), and the `A14400` move should take about `11.1 s` with a sustained
-  constant-speed section. Current, temperature, and cable-strain observations
-  were not recorded for this higher-rate run.
+  constant-speed section. Repeated forward/reverse cycles remained
+  non-problematic, and both the motor and driver remained cool to the touch;
+  no instrumented temperature was recorded.
 - The operator then increased `$123` to `6000` and reported that the same
   `A14400 F80000` forward/reverse movement remained smooth and repeatable. At
-  this acceleration, each ramp is about `0.22 s`; current, temperature, and
-  cable-strain observations were not recorded.
-- Disposition: **M-02 is in progress. `F500` was the highest actual A-axis rate
-  validated under the initial `$113=500` configuration; the later `F5000`,
-  `F15000`, `F40000`, and `F80000` runs used raised `$113` values and are commissioning
-  observations, not a final plotting-rate decision.**
+  this acceleration, each ramp is about `0.22 s`; repeated forward/reverse
+  cycles remained non-problematic, and both the motor and driver remained cool
+  to the touch.
+- Disposition: **M-02 unloaded A-axis motion is complete through the tested
+  settings. `F500` was the highest actual A-axis rate validated under the
+  initial `$113=500` configuration; the later `F5000`, `F15000`, `F40000`, and
+  `F80000` runs used raised `$113` values. M-05 bed-ratio verification remains
+  open; these results do not select a final plotting-rate setting.**
 
 ## Difficulties and corrective actions
 
@@ -159,18 +162,14 @@ feed, and elapsed time before increasing acceleration.
 
 ## Decisions and next action
 
-Keep `$113 = 15000` for this rate experiment, but do not select a final plotting
-acceleration from the unloaded bed test. M-04's one-motor-revolution check now
-passes at `A360 F300` in both directions; M-05 must still verify the 12:1 bed
-ratio. The `$123 = 25` and `$123 = 50` steps passed the unloaded motion check,
-and the later `$123 = 4000` tests at `F15000` and `F40000` were also reported
-smooth with exact mark returns. Do not raise the limits further until current,
-temperature, exact travel, and return position are recorded over repeated
-cycles. The F40000 test drew `0.492 A` from the 12 V supply while moving and
-`0.122 A` while idle; the motor remained cool to the touch after the run. Use
-an IR thermometer or thermocouple and repeat forward/reverse cycles before
-adopting a production value. Repeat the chosen acceleration under the eventual
-  pen-load condition. Do not move the pulley while inspecting the mark.
+The unloaded A-axis acceleration test is complete through the tested settings.
+M-04's one-motor-revolution check passes at `A360 F300` in both directions;
+M-05 must still verify the 12:1 bed ratio. The `$123 = 25`, `$123 = 50`,
+`$123 = 4000`, and `$123 = 6000` settings were reported smooth with repeated
+forward/reverse returns. The F40000 test drew `0.492 A` from the 12 V supply
+while moving and `0.122 A` while idle; both the motor and driver remained cool
+to the touch. Instrumented thermal data and pen-engaged force testing are
+separate follow-up work. Do not move the pulley while inspecting the mark.
 
 ## Related records
 

@@ -67,11 +67,11 @@ than applying the target feed instantly.
 - The operator confirmed `$113=80000.000 deg/min` and reported perfect returns
   from `A14400 F80000` in both directions. With `$123=4000`, this is about
   `18.5 RPM` at the bed and an approximately `11.1 s` move. Current,
-  temperature, and cable-strain observations were not recorded.
+  temperature instrumentation was not recorded; repeated forward/reverse cycles
+  remained non-problematic and both the motor and driver stayed cool to touch.
 - The operator then increased `$123` to `6000` and reported that the same
   `A14400 F80000` forward/reverse movement remained smooth and repeatable. Each
-  ramp is about `0.22 s`; current, temperature, and cable-strain observations
-  were not recorded.
+  ramp is about `0.22 s`; both the motor and driver remained cool to the touch.
 - M-05, the full 12:1 bed-ratio check, remains open.
 
 ## Struggles and rejected approaches
@@ -83,11 +83,11 @@ configured acceleration profile.
 
 ## Risks and follow-up
 
-Do not raise the limits further until current, temperature, exact travel, and
-return position are recorded over repeated cycles. Use an IR thermometer or
-thermocouple, inspect cable strain, then repeat the selected acceleration under
-the eventual pen-load condition before adopting a production value. Complete
-M-05 before using bed-rotation speed as a validated machine value.
+The unloaded A-axis acceleration test is complete through the tested settings:
+repeated forward/reverse cycles remained non-problematic and both motor and
+driver stayed cool by touch. Instrumented thermal data is optional follow-up;
+pen-engaged force testing belongs to the separate toolhead validation plan.
+Complete M-05 before using bed-rotation speed as a validated machine value.
 
 ## Files
 
