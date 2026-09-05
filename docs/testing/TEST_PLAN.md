@@ -193,6 +193,13 @@ smooth and acceptable. **M-02 passed for the conducted unloaded Y-axis check
 and preliminary settings; the X-axis rate check remains.** See
 [`2026-09-05-m-02-y-axis-rate-ramp.md`](../report/lab-notes/2026-09-05-m-02-y-axis-rate-ramp.md).
 
+M-03 Y-axis evidence: on 2026-09-05, with `$101=80.000000`, a relative
+`G1 Y100 F120` move measured exactly 100 mm with calipers. The matched
+`G1 Y-100 F120` move returned exactly to the starting reference mark. **M-03
+passed for the conducted Y-axis dimensional check; the X-axis measurement
+remains.** See
+[`2026-09-05-m-03-y-axis-dimensional-calibration.md`](../report/lab-notes/2026-09-05-m-03-y-axis-dimensional-calibration.md).
+
 ## Toolhead tests
 
 | ID | Test | Pass condition |

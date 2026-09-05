@@ -72,6 +72,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-05 - HARDWARE/SUCCESS - Completed M-03 Y-axis dimensional check](#elog-20260905-completed-m-03-y-axis-dimensional-check)
 - [2026-09-05 - HARDWARE/SUCCESS - Completed M-02 Y-axis rate check](#elog-20260905-completed-m-02-y-axis-rate-check)
 - [2026-09-05 - HARDWARE/SUCCESS - Completed M-05 A-axis bed-ratio check](#elog-20260905-completed-m-05-a-axis-bed-ratio-check)
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -297,6 +298,25 @@ Entry details remain only in the chronology.
 ```
 
 Add new entries at the top of the log below this line.
+
+---
+
+<a id="elog-20260905-completed-m-03-y-axis-dimensional-check"></a>
+### 🟩 2026-09-05 - HARDWARE/SUCCESS - Completed M-03 Y-axis dimensional check
+
+- Status: M-03 passed for the conducted Y-axis 100 mm calibration check.
+- Category: hardware, Y-axis, dimensional calibration, motion testing.
+- Setup: `$101=80.000000` steps/mm, `G21`/`G94`, and relative `G91` motion.
+- Result: `G1 Y100 F120` measured exactly 100 mm with calipers. The matched
+  `G1 Y-100 F120` move returned exactly to the starting reference mark.
+- Recovery: An earlier long move was invalid because `G90` was active and
+  `$101=250`; the operator restored `$101=80` and explicitly confirmed `G91`
+  before repeating the measurement.
+- Interpretation: The calculated Y steps/mm baseline is physically validated
+  over the measured 100 mm span. X still requires its M-03 check.
+- Evidence: `docs/report/lab-notes/2026-09-05-m-03-y-axis-dimensional-calibration.md`;
+  `docs/testing/TEST_PLAN.md`.
+- Next action: perform the corresponding X-axis distance measurement.
 
 ---
 

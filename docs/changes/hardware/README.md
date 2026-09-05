@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-05 | `HW-20260905-006` | verified | [Verify Y-axis dimensional calibration](2026/2026-09-05-m-03-y-axis-dimensional-calibration.md) | `y-axis`, `dimensional-calibration`, `steps-per-mm`, `commissioning` |
 | 2026-09-05 | `HW-20260905-005` | verified | [Verify the Y-axis rate and acceleration baseline](2026/2026-09-05-m-02-y-axis-rate-verification.md) | `y-axis`, `rate`, `acceleration`, `commissioning` |
 | 2026-09-05 | `HW-20260905-004` | verified | [Verify the A-axis 12:1 bed ratio](2026/2026-09-05-m-05-bed-ratio-verification.md) | `a-axis`, `bed-ratio`, `calibration`, `commissioning` |
 | 2026-09-05 | `HW-20260905-003` | verified | [Correct A-axis calibration and characterize the F5000 ramp](2026/2026-09-05-a-axis-rate-calibration-and-acceleration-check.md) | `a-axis`, `calibration`, `acceleration`, `tb6600`, `commissioning` |

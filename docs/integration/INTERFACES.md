@@ -113,7 +113,10 @@ either value if belt compliance, pulley geometry, or actual travel differs.
 The Y-axis unloaded rate check passed its stepped `F60` through `F500` moves;
 the operator selected `$111=1500` mm/min and `$121=500` mm/sec^2 as preliminary
 commissioning values. These settings do not replace M-03 dimensional
-calibration or establish the final pen-loaded plotting rate.
+calibration or establish the final pen-loaded plotting rate. The Y-axis M-03
+check then measured exactly 100 mm for `G1 Y100 F120` and returned exactly to
+the starting mark with `G1 Y-100 F120`; `$101=80.000000` is retained. The X
+axis still requires its corresponding physical check.
 
 ## RP23CNC to stepper drivers
 

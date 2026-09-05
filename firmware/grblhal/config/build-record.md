@@ -32,7 +32,7 @@ following preliminary Y settings for continued commissioning:
 
 | Setting | Value | Scope |
 |---|---:|---|
-| `$101` | `80.000000` steps/mm | GT2 20-tooth pulley baseline; M-03 physical calibration remains |
+| `$101` | `80.000000` steps/mm | Y 100 mm M-03 check passed; X calibration remains |
 | `$111` | `1500` mm/min | Preliminary unloaded maximum-rate setting |
 | `$121` | `500` mm/sec^2 | Preliminary unloaded acceleration setting |
 
