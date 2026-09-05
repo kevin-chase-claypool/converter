@@ -170,9 +170,19 @@ thermal evidence. A later `$113=80000` / `F80000` forward-reverse test also
 reportedly returned perfectly. The operator then reported a smooth repeat at
 `$123=6000`; repeated forward/reverse cycles remained non-problematic, and both
 the motor and driver remained cool to the touch. Unloaded A-axis motion is
-complete through the tested settings; M-05 bed-ratio verification and the X/Y
-rate checks remain. See
+complete through the tested settings; the X/Y rate checks remain. See
 [`2026-09-05-m-02-a-axis-rate-ramp.md`](../report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md).
+
+M-05 current evidence: on 2026-09-05, with `$103 = 4.44444` and the 12:1
+bed reduction, the operator marked the bed against a fixed frame reference and
+commanded `G1 A4320 F10000`, followed by `G1 A-4320 F10000` in incremental mode.
+`A4320` is 12 motor revolutions (19,200 pulses) and should equal one complete
+bed revolution. The bed mark returned exactly to its starting position after
+each forward/reverse check, with no reported lost-step or position error.
+**M-05 passed for the unloaded geometric bed-ratio check.** Pen-engaged force,
+magnetic index repeatability, final plotting rate, and instrumented thermal
+limits remain separate tests. See
+[`2026-09-05-m-05-bed-ratio-check.md`](../report/lab-notes/2026-09-05-m-05-bed-ratio-check.md).
 
 ## Toolhead tests
 

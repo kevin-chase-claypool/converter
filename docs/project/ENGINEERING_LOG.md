@@ -72,6 +72,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-05 - HARDWARE/SUCCESS - Completed M-05 A-axis bed-ratio check](#elog-20260905-completed-m-05-a-axis-bed-ratio-check)
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
 - [2026-08-06 13:37:00 -0500 - MIXED/OPEN - Added KiCad 9-native perfboard schematic](#elog-20260806133700)
 - [2026-08-06 13:30:00 -0500 - MIXED/OPEN - Selected six-position perfboard screw terminals](#elog-20260806133000)
@@ -295,6 +296,28 @@ Entry details remain only in the chronology.
 ```
 
 Add new entries at the top of the log below this line.
+
+---
+
+<a id="elog-20260905-completed-m-05-a-axis-bed-ratio-check"></a>
+### 🟩 2026-09-05 - HARDWARE/SUCCESS - Completed M-05 A-axis bed-ratio check
+
+- Status: M-05 passed for the unloaded A-axis geometric ratio check.
+- Category: hardware, A-axis, rotating bed, calibration, motion testing.
+- Setup: `$103 = 4.44444`, 8× A-axis microstep setting, and the installed 12:1
+  motor-to-bed reduction.
+- Procedure: A unique bed mark was compared with a fixed frame reference while
+  running `G1 A4320 F10000` and `G1 A-4320 F10000` in incremental mode. `A4320`
+  represents 12 motor revolutions (19,200 pulses), or one bed revolution.
+- Result: The bed mark returned exactly to its starting position after each
+  forward/reverse check. No lost-step or position error was reported.
+- Interpretation: The installed motor-degree calibration and 12:1 reduction
+  are consistent for bed-angle commands. This does not set the final plotting
+  feed or qualify pen-engaged force behavior.
+- Evidence: `docs/report/lab-notes/2026-09-05-m-05-bed-ratio-check.md`;
+  `docs/testing/TEST_PLAN.md`.
+- Next action: continue the X/Y rate checks, then perform the separate homing,
+  magnetic registration, and toolhead validation tests.
 
 ---
 

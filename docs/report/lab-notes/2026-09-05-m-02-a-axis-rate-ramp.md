@@ -130,8 +130,9 @@ G90
 - Disposition: **M-02 unloaded A-axis motion is complete through the tested
   settings. `F500` was the highest actual A-axis rate validated under the
   initial `$113=500` configuration; the later `F5000`, `F15000`, `F40000`, and
-  `F80000` runs used raised `$113` values. M-05 bed-ratio verification remains
-  open; these results do not select a final plotting-rate setting.**
+  `F80000` runs used raised `$113` values. M-05 subsequently passed its
+  unloaded bed-ratio check; these results do not select a final plotting-rate
+  setting.**
 
 ## Difficulties and corrective actions
 
@@ -164,7 +165,8 @@ feed, and elapsed time before increasing acceleration.
 
 The unloaded A-axis acceleration test is complete through the tested settings.
 M-04's one-motor-revolution check passes at `A360 F300` in both directions;
-M-05 must still verify the 12:1 bed ratio. The `$123 = 25`, `$123 = 50`,
+M-05's `A4320` forward/reverse check also passed, confirming the 12:1 bed
+ratio. The `$123 = 25`, `$123 = 50`,
 `$123 = 4000`, and `$123 = 6000` settings were reported smooth with repeated
 forward/reverse returns. The F40000 test drew `0.492 A` from the 12 V supply
 while moving and `0.122 A` while idle; both the motor and driver remained cool
