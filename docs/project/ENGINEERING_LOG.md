@@ -196,6 +196,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 - HARDWARE/PARTIAL - Passed bounded N20 endpoint-stall test](#elog-20260904-passed-bounded-n20-endpoint-stall-test)
 - [2026-09-04 - HARDWARE/IMPLEMENTED - Made pulse response per-tool during preflight](#elog-20260904-made-pulse-response-per-tool-during-preflight)
 - [2026-09-04 - HARDWARE/OPEN - Replaced toolhead preload spring](#elog-20260904-replaced-toolhead-preload-spring)
+- [2026-09-05 - HARDWARE/VERIFIED - Recovered RP23CNC USB recognition](#elog-20260905-recovered-rp23cnc-usb-recognition)
 
 ### Testing and verification
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
@@ -2720,3 +2721,20 @@ Add new entries at the top of the log below this line.
   compression, clearance, or loaded-current measurement has been recorded.
 - Next action: repeat T-01A unpowered, then repeat the guarded loaded actuator
   and force-envelope checks before reusing any prior preload setting.
+
+<a id="elog-20260905-recovered-rp23cnc-usb-recognition"></a>
+### 🟩 2026-09-05 - HARDWARE/VERIFIED - Recovered RP23CNC USB recognition
+
+- Status: USB bring-up recovered; TB6600 signal verification remains open.
+- Category: hardware, RP23CNC, USB, power-selector, TB6600.
+- Summary: The RP23CNC was not recognized while the front `SWC USB` selector
+  was on `SWC` and the board's main 12 V input was absent. With power removed,
+  selecting `USB` restored laptop recognition.
+- Interpretation: `USB` is required for USB-only board power. `SWC` is required
+  when the main 12 V input supplies the onboard switching converter; USB can
+  then remain connected for ioSender data.
+- Evidence: `docs/report/lab-notes/2026-09-05-rp23cnc-usb-source-selector.md`;
+  `docs/changes/hardware/2026/2026-09-05-rp23cnc-usb-source-selector-bringup.md`.
+- Limitation: No STEP, DIR, or ENA waveform has been measured yet.
+- Next action: run E-03 one TB6600 at a time with motors disconnected and the
+  oscilloscope referenced to RP23CNC signal ground.

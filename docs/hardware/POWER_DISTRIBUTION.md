@@ -68,6 +68,21 @@ for all currently allocated low-voltage branches, including the controller.
 `OUT1` is the controller/control-input branch (its branch fuse is `FCTRL` in
 the wiring record); it remains powered during an E-stop.
 
+### RP23CNC 5 V source selector
+
+The RP23U5XBB V1.01 front-panel selector is labeled `SWC USB`:
+
+- Select `USB` when the RP23CNC is being powered only from the USB-C cable.
+- Select `SWC` when the board is powered from its main 12 V input and the
+  onboard switching converter supplies the 5 V rail. USB may remain connected
+  for data in this arrangement.
+
+Move the selector only with power removed. During the September 5, 2026
+bring-up, USB enumeration failed with `SWC` selected and the 12 V main input
+absent; selecting `USB` restored laptop recognition. This selector is unrelated
+to TB6600 STEP/DIR/ENA logic, but the correct source must be selected before
+the controller can communicate for the signal test.
+
 ## Emergency-stop topology
 
 The purchased mxuteuk `HB2-BS544` is a latching, twist-release, 22 mm mushroom

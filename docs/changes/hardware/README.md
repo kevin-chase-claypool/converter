@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-05 | `HW-20260905-001` | verified | [RP23CNC USB source-selector bring-up](2026/2026-09-05-rp23cnc-usb-source-selector-bringup.md) | `rp23cnc`, `usb`, `power-selector`, `tb6600` |
 | 2026-09-04 | `HW-20260904-007` | implemented | [Replace Toolhead Preload Spring](2026/2026-09-04-replace-toolhead-preload-spring.md) | `toolhead`, `spring`, `preload`, `lift`, `testing` |
 | 2026-09-04 | `HW-20260904-005` | partial | [Correct N20 Current After Lead-Screw Alignment and Preload Test](2026/2026-09-04-correct-n20-unloaded-current-after-alignment.md) | `toolhead`, `n20`, `current`, `alignment`, `testing` |
 | 2026-09-04 | `HW-20260904-003` | implemented | [Record TB6600 signal harness wiring](2026/2026-09-04-record-tb6600-signal-harness-wiring.md) | `tb6600`, `signal-wiring`, `wire-gauge`, `x-axis`, `y-axis`, `a-axis` |
