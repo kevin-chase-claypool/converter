@@ -121,6 +121,10 @@ G90
   the bed), and the `A14400` move should take about `11.1 s` with a sustained
   constant-speed section. Current, temperature, and cable-strain observations
   were not recorded for this higher-rate run.
+- The operator then increased `$123` to `6000` and reported that the same
+  `A14400 F80000` forward/reverse movement remained smooth and repeatable. At
+  this acceleration, each ramp is about `0.22 s`; current, temperature, and
+  cable-strain observations were not recorded.
 - Disposition: **M-02 is in progress. `F500` was the highest actual A-axis rate
   validated under the initial `$113=500` configuration; the later `F5000`,
   `F15000`, `F40000`, and `F80000` runs used raised `$113` values and are commissioning
@@ -166,7 +170,7 @@ cycles. The F40000 test drew `0.492 A` from the 12 V supply while moving and
 `0.122 A` while idle; the motor remained cool to the touch after the run. Use
 an IR thermometer or thermocouple and repeat forward/reverse cycles before
 adopting a production value. Repeat the chosen acceleration under the eventual
-pen-load condition. Do not move the pulley while inspecting the mark.
+  pen-load condition. Do not move the pulley while inspecting the mark.
 
 ## Related records
 

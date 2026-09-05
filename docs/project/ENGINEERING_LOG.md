@@ -2882,16 +2882,21 @@ Add new entries at the top of the log below this line.
   `$123=4000`, this corresponds to about `18.5 RPM` at the bed and an
   approximately `11.1 s` move with a sustained-speed section. Current,
   temperature, and cable-strain observations were not recorded.
+- Result update: The operator then increased `$123` to `6000` and reported that
+  the same `A14400 F80000` forward/reverse movement remained smooth and
+  repeatable. Each ramp is about `0.22 s`; current, temperature, and cable
+  strain were not recorded.
 - Measurement limitation: an earlier longer run showed approximately
   `0.47-0.476 A`, but the exact rate was not recorded; dwell duration and
   instrumented temperature were not captured.
 - Decision: retain `$103 = 4.44444`. The unloaded motion check has now been
-  reported smooth through `$113=80000`, `F80000`, and `$123=4000`, but this is
+  reported smooth through `$113=80000`, `F80000`, and `$123=6000`, but this is
   not a production setting. Stop increasing the limits until quantitative
   current, temperature, travel, and repeated return-position evidence is
   captured. The single A14400 run remained cool to the touch, but repeat
   forward/reverse cycles and instrumented temperature are still required before
-  repeating under the eventual pen-load condition.
+  repeating under the eventual pen-load condition. Stop increasing acceleration
+  until those measurements are captured.
 - Evidence: `docs/report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md`;
   `docs/testing/TEST_PLAN.md`.
 - Next action: run the controlled `$123` acceleration ladder, complete the

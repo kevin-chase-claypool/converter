@@ -68,6 +68,10 @@ than applying the target feed instantly.
   from `A14400 F80000` in both directions. With `$123=4000`, this is about
   `18.5 RPM` at the bed and an approximately `11.1 s` move. Current,
   temperature, and cable-strain observations were not recorded.
+- The operator then increased `$123` to `6000` and reported that the same
+  `A14400 F80000` forward/reverse movement remained smooth and repeatable. Each
+  ramp is about `0.22 s`; current, temperature, and cable-strain observations
+  were not recorded.
 - M-05, the full 12:1 bed-ratio check, remains open.
 
 ## Struggles and rejected approaches
