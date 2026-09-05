@@ -115,9 +115,15 @@ G90
   idle, a `0.370 A` increase. This is supply current, not motor phase current;
   after the `A14400 F40000` run, the motor was still cool to the touch. No
   instrumented temperature or repeated-cycle count was recorded.
+- The operator confirmed `$113 = 80000.000 deg/min` and reported that
+  `G1 A14400 F80000` and `G1 A-14400 F80000` also returned perfectly. With
+  `$123=4000`, the target is `1333 deg/sec` motor speed (about `18.5 RPM` at
+  the bed), and the `A14400` move should take about `11.1 s` with a sustained
+  constant-speed section. Current, temperature, and cable-strain observations
+  were not recorded for this higher-rate run.
 - Disposition: **M-02 is in progress. `F500` was the highest actual A-axis rate
   validated under the initial `$113=500` configuration; the later `F5000`,
-  `F15000`, and `F40000` runs used raised `$113` values and are commissioning
+  `F15000`, `F40000`, and `F80000` runs used raised `$113` values and are commissioning
   observations, not a final plotting-rate decision.**
 
 ## Difficulties and corrective actions

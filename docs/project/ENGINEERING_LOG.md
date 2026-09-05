@@ -2877,11 +2877,16 @@ Add new entries at the top of the log below this line.
   section. The 12 V supply display read `0.492 A` during motion and `0.122 A`
   while idle. The motor remained cool to the touch after the run; no
   instrumented temperature or repeated-cycle count was recorded.
+- Result update: The operator confirmed `$113 = 80000.000 deg/min` and reported
+  that `G1 A14400 F80000` and `G1 A-14400 F80000` returned perfectly. With
+  `$123=4000`, this corresponds to about `18.5 RPM` at the bed and an
+  approximately `11.1 s` move with a sustained-speed section. Current,
+  temperature, and cable-strain observations were not recorded.
 - Measurement limitation: an earlier longer run showed approximately
   `0.47-0.476 A`, but the exact rate was not recorded; dwell duration and
   instrumented temperature were not captured.
 - Decision: retain `$103 = 4.44444`. The unloaded motion check has now been
-  reported smooth through `$113=40000`, `F40000`, and `$123=4000`, but this is
+  reported smooth through `$113=80000`, `F80000`, and `$123=4000`, but this is
   not a production setting. Stop increasing the limits until quantitative
   current, temperature, travel, and repeated return-position evidence is
   captured. The single A14400 run remained cool to the touch, but repeat

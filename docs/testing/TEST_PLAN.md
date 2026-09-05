@@ -166,7 +166,9 @@ current, temperature, and return position were not recorded. A later
 `$113=40000` / `F40000` forward-reverse test reportedly returned exactly to the
 mark in both directions and included a sustained-speed section at `$123=4000`;
 the motor remained cool to the touch afterward, but it still needs repeated
-thermal evidence. M-02 remains in progress for quantitative evidence,
+thermal evidence. A later `$113=80000` / `F80000` forward-reverse test also
+reportedly returned perfectly; current, temperature, cable strain, and
+pen-loaded behavior remain unmeasured. M-02 remains in progress for quantitative evidence,
 a pen-loaded check, M-05 bed-ratio
 verification, and then the X/Y rate checks. See
 [`2026-09-05-m-02-a-axis-rate-ramp.md`](../report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md).
