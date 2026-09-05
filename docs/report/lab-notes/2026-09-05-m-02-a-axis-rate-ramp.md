@@ -75,6 +75,9 @@ G90
   `0.476 A`, below the 2 A supply limit.
 - The measured supply current during the `F600` move was approximately
   `0.485 A`, below the 2 A supply limit.
+- The operator reported that the audible speed appeared to plateau near
+  `F500`; this was not instrumented and may reflect the configured A-axis rate
+  ceiling or the short move not reaching cruise speed.
 - Disposition: **M-02 is in progress; `F600` is the highest A-axis rate
   validated so far under this test setup.**
 
@@ -94,14 +97,19 @@ reference discrepancy was caused by moving the pulley during inspection, so
 `F600` remains qualified for this run. The measured supply currents at `F480`,
 `F540`, and `F600` (`0.465 A`, `0.476 A`, and `0.485 A`) remained below the
 temporary 2 A limit; current and touch temperature alone cannot establish the
-absolute motor or controller limit.
+absolute motor or controller limit. The reported audible plateau near `F500`
+must be checked with the controller setting or measured STEP frequency before
+assuming that the axis actually reached `F600` cruise speed.
 
 ## Decisions and next action
 
-Keep `F600` as the highest qualified A-axis rate for now. Repeat one bounded
-`F600` positive/negative cycle from an untouched, verified reference before
-raising the rate; do not move the pulley while inspecting the mark. Then record
-the controller's configured A-axis maximum rate and continue M-02 on X/Y.
+Keep `F600` as the highest qualified A-axis command for now. Before raising the
+rate, read the configured A-axis maximum in ioSender and measure STEP frequency
+on a longer, safe move. At the present `4.444444` steps/degree, `F500`, `F540`,
+and `F600` correspond to approximately `37.0`, `40.0`, and `44.4 Hz`. If the
+frequency tops out near `37 Hz`, the controller is limiting the axis near
+`F500`; if it reaches `44.4 Hz`, the apparent plateau was acoustic or
+acceleration-related. Do not move the pulley while inspecting the mark.
 
 ## Related records
 

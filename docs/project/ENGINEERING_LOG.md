@@ -2844,6 +2844,10 @@ Add new entries at the top of the log below this line.
 - Result update: An apparent `0.5 mm` F600 return offset was later traced to the
   operator moving the pulley during inspection. It is discarded as a
   reference-handling error, not a machine repeatability failure.
+- Result update: The operator reported that the audible speed appeared to
+  plateau near `F500`. This is not yet evidence of a controller cap because the
+  short move may not reach cruise speed; verify the A-axis maximum setting or
+  measure STEP frequency on a longer move.
 - Measurement limitation: an earlier longer run showed approximately
   `0.47-0.476 A`, but the exact rate was not recorded; dwell duration and
   instrumented temperature were not captured.
@@ -2852,5 +2856,5 @@ Add new entries at the top of the log below this line.
   commanding a higher rate.
 - Evidence: `docs/report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md`;
   `docs/testing/TEST_PLAN.md`.
-- Next action: repeat one bounded `F600` cycle from an untouched verified
-  reference, then record the configured rate ceiling and continue M-02 on X/Y.
+- Next action: verify the configured A-axis maximum or measure STEP frequency
+  on a longer move before raising the rate; then continue M-02 on X/Y.
