@@ -97,6 +97,10 @@ G90
   `F5000` is `83.33 deg/sec`; each ramp takes about `8.3 s` and `347` commanded
   degrees. The `A1440` move therefore should have about `746` commanded degrees
   of constant-speed travel, but the ramp occupies a large visual portion.
+- With the same `A1440 F5000` forward/reverse test, `$123 = 25` and `$123 = 50`
+  both passed the operator's motion check. No stalls or return-position errors
+  were reported; current and temperature values were not recorded for these
+  two acceleration steps.
 - Disposition: **M-02 is in progress. `F500` was the highest actual A-axis rate
   validated under the initial `$113=500` configuration; the later `F5000` runs
   used `$113=5000` and are acceleration-profile observations, not a final
@@ -134,10 +138,11 @@ feed, and elapsed time before increasing acceleration.
 Keep `$113 = 5000` for this rate experiment, but do not select a final plotting
 acceleration from the unloaded bed test. M-04's one-motor-revolution check now
 passes at `A360 F300` in both directions; M-05 must still verify the 12:1 bed
-ratio. Test `$123` in controlled steps, beginning at `25`, then `50` if the
-move remains smooth and returns to its mark. Repeat under the eventual pen-load
-condition before adopting a production value, and do not move the pulley while
-inspecting the mark.
+ratio. The `$123 = 25` and `$123 = 50` steps passed the unloaded motion check.
+Continue with `$123 = 75`, then `100` only if the same forward/reverse test
+remains smooth and returns to the mark. Record current and temperature, then
+repeat the chosen acceleration under the eventual pen-load condition before
+adopting a production value. Do not move the pulley while inspecting the mark.
 
 ## Related records
 

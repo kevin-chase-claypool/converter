@@ -2862,13 +2862,16 @@ Add new entries at the top of the log below this line.
   ramp-down. At `$123 = 10 deg/sec^2`, the target `83.33 deg/sec` takes about
   `8.3 s` to reach; this is an acceleration-profile observation, not a final
   plotting-rate decision.
+- Result update: The same `A1440 F5000` forward/reverse check passed at
+  `$123 = 25` and `$123 = 50` with no reported stalls or return-position errors.
+  Current and temperature were not recorded for these two steps.
 - Measurement limitation: an earlier longer run showed approximately
   `0.47-0.476 A`, but the exact rate was not recorded; dwell duration and
   instrumented temperature were not captured.
 - Decision: retain `$103 = 4.44444` and use `$113 = 5000` only for the current
-  experiment. Test `$123` in controlled steps, starting at `25` and then `50`
-  if the unloaded move remains smooth; verify the chosen value again under the
-  eventual pen-load condition.
+  experiment. The unloaded motion check passes through `$123 = 50`; continue
+  at `75` and then `100` only with current/temperature observations, and verify
+  the chosen value again under the eventual pen-load condition.
 - Evidence: `docs/report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md`;
   `docs/testing/TEST_PLAN.md`.
 - Next action: run the controlled `$123` acceleration ladder, complete the

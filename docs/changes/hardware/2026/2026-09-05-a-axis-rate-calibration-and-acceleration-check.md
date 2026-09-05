@@ -49,6 +49,9 @@ target feed instantly.
 - `G1 A720 F5000` and `G1 A1440 F5000` completed smoothly. The operator observed
   slow ramp-up and ramp-down; at `F5000`, the target is `83.33 deg/sec` and
   each ramp takes about `8.3 s`.
+- The same `A1440 F5000` forward/reverse check passed at `$123=25` and
+  `$123=50`, with no reported stalls or return-position errors. Current and
+  temperature were not recorded for those two steps.
 - M-05, the full 12:1 bed-ratio check, remains open.
 
 ## Struggles and rejected approaches
@@ -60,10 +63,11 @@ configured acceleration profile.
 
 ## Risks and follow-up
 
-Use a controlled `$123` ladder, beginning at `25` and then `50` if the unloaded
-move remains smooth. Repeat the chosen acceleration under the eventual pen-load
-condition before adopting a production value, and complete M-05 before using
-bed-rotation speed as a validated machine value.
+Continue the controlled `$123` ladder at `75`, then `100` only if the unloaded
+move remains smooth; record current and temperature at each step. Repeat the
+chosen acceleration under the eventual pen-load condition before adopting a
+production value, and complete M-05 before using bed-rotation speed as a
+validated machine value.
 
 ## Files
 
