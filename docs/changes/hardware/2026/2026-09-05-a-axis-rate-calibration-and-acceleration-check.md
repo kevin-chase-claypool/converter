@@ -57,6 +57,10 @@ than applying the target feed instantly.
   corresponding `F15000` forward/reverse test. Motion was reported smooth in
   both directions. Assuming `A1440` travel, each ramp is about `0.83 s`;
   current, temperature, and exact travel were not recorded.
+- The operator then raised `$113` to `40000` and ran `A1440` forward and
+  reverse at `F40000`; both directions reportedly returned exactly to the
+  reference mark. At `$123=300`, this move is too short to establish a true
+  `40000 deg/min` cruise, so it is a triangular acceleration-profile result.
 - M-05, the full 12:1 bed-ratio check, remains open.
 
 ## Struggles and rejected approaches

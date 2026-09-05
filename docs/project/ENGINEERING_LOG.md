@@ -2870,14 +2870,20 @@ Add new entries at the top of the log below this line.
   reported smooth in both directions. Assuming the same `A1440` travel, the
   target is `250 deg/sec`; each ramp is about `0.83 s`. Current, temperature,
   and exact travel were not recorded.
+- Result update: The operator then raised `$113` to `40000` and ran
+  `G1 A1440 F40000` and `G1 A-1440 F40000`. Both directions reportedly landed
+  exactly on the reference mark. At `$123=300`, `A1440` is shorter than the
+  approximately `1481` commanded degrees needed to reach a true `40000 deg/min`
+  cruise, so this is a triangular high-acceleration profile, not sustained
+  `40000 deg/min` validation.
 - Measurement limitation: an earlier longer run showed approximately
   `0.47-0.476 A`, but the exact rate was not recorded; dwell duration and
   instrumented temperature were not captured.
 - Decision: retain `$103 = 4.44444`. The unloaded motion check has now been
-  reported smooth at `$113=15000`, `F15000`, and `$123=300`, but this is not a
-  production setting. Stop increasing the limits until quantitative current,
-  temperature, travel, and return-position evidence is captured, then repeat
-  under the eventual pen-load condition.
+  reported smooth through `$113=40000`, `F40000`, and `$123=300`, but this is
+  not a production setting. Stop increasing the limits until quantitative
+  current, temperature, travel, and repeated return-position evidence is
+  captured, then repeat under the eventual pen-load condition.
 - Evidence: `docs/report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md`;
   `docs/testing/TEST_PLAN.md`.
 - Next action: run the controlled `$123` acceleration ladder, complete the

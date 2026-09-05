@@ -107,6 +107,12 @@ G90
   `250 deg/sec`; at `$123=300`, each ramp is about `0.83 s` and `104` commanded
   degrees. Current, temperature, and exact travel were not recorded in this
   step.
+- The operator then raised `$113` to `40000` and ran `G1 A1440 F40000` and
+  `G1 A-1440 F40000`. Both directions reportedly returned exactly to the
+  reference mark. At `$123=300`, the `A1440` distance is shorter than the
+  approximately `1481` commanded degrees needed to reach a true `40000
+  deg/min` trapezoidal cruise, so this result is a high-acceleration triangular
+  profile rather than proof of sustained `40000 deg/min` operation.
 - Disposition: **M-02 is in progress. `F500` was the highest actual A-axis rate
   validated under the initial `$113=500` configuration; the later `F5000` and
   `F15000` runs used raised `$113` values and are acceleration-profile
@@ -145,11 +151,12 @@ Keep `$113 = 15000` for this rate experiment, but do not select a final plotting
 acceleration from the unloaded bed test. M-04's one-motor-revolution check now
 passes at `A360 F300` in both directions; M-05 must still verify the 12:1 bed
 ratio. The `$123 = 25` and `$123 = 50` steps passed the unloaded motion check,
-and the later `$123 = 300` / `F15000` test was also reported smooth in both
-directions. Do not raise the limits further until current, temperature, exact
-travel, and return position are recorded. Repeat the chosen acceleration under
-the eventual pen-load condition before adopting a production value. Do not
-move the pulley while inspecting the mark.
+and the later `$123 = 300` tests at `F15000` and `F40000` were also reported
+smooth with exact mark returns. Do not raise the limits further until current,
+temperature, exact travel, and return position are recorded over repeated
+cycles. Repeat the chosen acceleration under the eventual pen-load condition
+before adopting a production value. Do not move the pulley while inspecting
+the mark.
 
 ## Related records
 
