@@ -47,6 +47,7 @@ The links below are alternate views of the single chronological log.
 Entry details remain only in the chronology.
 
 ### Windows software
+- [2026-09-05 - DOCUMENTATION/SUCCESS - Consolidated current documentation](#elog-20260905-consolidated-current-documentation)
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
 - [2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review](#elog-20260905-iosender-to-converter-compatibility-review)
 - [2026-09-05 - WINDOWS SOFTWARE/SUCCESS - Implemented radius-aware A-axis feed](#elog-20260905-implemented-radius-aware-a-axis-feed)
@@ -64,6 +65,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### RP23CNC and machine software
+- [2026-09-05 - DOCUMENTATION/SUCCESS - Consolidated current documentation](#elog-20260905-consolidated-current-documentation)
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
 - [2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review](#elog-20260905-iosender-to-converter-compatibility-review)
 - [2026-08-06 12:30:00 -0500 - MIXED/OPEN - Corrected PC817 active-low contract and PCB review file](#elog-20260806123000)
@@ -236,6 +238,7 @@ Entry details remain only in the chronology.
 - [Before 2026-06-05 - Time not recorded - MIXED/OPEN - Hold-steady theta grid tradeoff](#elog-20260605-hold-steady-theta-grid-tradeoff)
 
 ### Documentation and project organization
+- [2026-09-05 - DOCUMENTATION/SUCCESS - Consolidated current documentation](#elog-20260905-consolidated-current-documentation)
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
 - [2026-08-06 13:37:00 -0500 - MIXED/OPEN - Added KiCad 9-native perfboard schematic](#elog-20260806133700)
 - [2026-08-06 13:30:00 -0500 - MIXED/OPEN - Selected six-position perfboard screw terminals](#elog-20260806133000)
@@ -309,6 +312,24 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260905-consolidated-current-documentation"></a>
+### 🟩 2026-09-05 - DOCUMENTATION/SUCCESS - Consolidated current documentation
+
+- Status: current-document navigation and ownership clarified; historical
+  records retained at stable paths.
+- Category: documentation, software, firmware, project management.
+- Implementation: moved live converter G-code ownership to the converter README
+  and interface contract; designated the toolhead control strategy as the
+  behavior/tuning authority; moved active RP23CNC work to the roadmap and test
+  plan; marked the June simplification and grblHAL bring-up plans as archived.
+- Struggle/failure: the prior handoff and current README files repeated state
+  and task lists, allowing the obsolete default-Z warning and already-passed
+  bring-up steps to appear current.
+- Evidence: documentation review covered 179 Markdown files and checked that
+  historical links still resolve at their original paths.
+- Next action: update only the named authoritative current-state document when
+  behavior changes; retain change notes, lab notes, and chronology as evidence.
 
 <a id="elog-20260905-corrected-converter-startup-contract"></a>
 ### 🟩 2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract

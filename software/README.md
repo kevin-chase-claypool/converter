@@ -34,8 +34,8 @@ Requires `PySide6` (`pip install PySide6`).
   `G4` settle dwell after each (from `Pen cycle ms`) for the firmware handshake
 - `M2` at end
 
-The exact dialect and the firmware-facing caveats are documented in
-[`../docs/HANDOFF.md`](../docs/HANDOFF.md) → "G-code output reference".
+The authoritative host-to-controller contract is
+[`../docs/integration/INTERFACES.md`](../docs/integration/INTERFACES.md).
 
 ## Radius-aware A-axis feed
 

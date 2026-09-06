@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-05 | `WSW-20260905-005` | windows-software, rp23cnc-software, hardware | implemented | [Consolidate current documentation ownership](windows-software/2026/2026-09-05-consolidate-current-documentation.md) |
 | 2026-09-05 | `WSW-20260905-004` | windows-software, rp23cnc-software, hardware | implemented | [Make converter programs self-contained for ioSender](windows-software/2026/2026-09-05-self-contained-iosender-program-contract.md) |
 | 2026-09-05 | `WSW-20260905-003` | windows-software, rp23cnc-software, hardware | implemented | [Record ioSender-to-converter compatibility review](windows-software/2026/2026-09-05-iosender-converter-compatibility-review.md) |
 | 2026-09-05 | `WSW-20260905-002` | windows-software, rp23cnc-software, hardware | implemented | [Implement radius-aware A-axis feed for drawing](windows-software/2026/2026-09-05-radius-aware-a-feed-requirement.md) |

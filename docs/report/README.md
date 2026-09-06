@@ -40,6 +40,7 @@ a **Back to overview** control.
 7. **Results** — calibration, sample prints, runtime-estimate vs actual.
 8. **Future work** — items still open in the roadmap.
 
-`../HANDOFF.md` is the running record of design decisions and is the best single
-source when drafting sections 3–6. `../SIMPLIFICATION_PLAN.md` captures the
-before/after code footprint and is useful evidence for the host-software section.
+Use `../HANDOFF.md` for converter history and tradeoffs, current subsystem
+documents for present behavior, and the dated change notes for the original
+code-refactor evidence. `../SIMPLIFICATION_PLAN.md` is an archived snapshot,
+not a current design source.

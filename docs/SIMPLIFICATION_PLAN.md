@@ -1,4 +1,18 @@
-# Code Simplification Plan
+# Archived code-simplification snapshot
+
+> **Historical record — not a current plan.** This June 2026 refactor snapshot
+> predates the current M3/M5 converter default and later module changes. Its
+> detailed before/after counts and optional-Z language must not be used as
+> current behavior or a task list.
+
+Current converter behavior is documented in
+[`../software/README.md`](../software/README.md); active work belongs in
+[`project/ROADMAP.md`](project/ROADMAP.md). The original rationale remains in
+Git history and the associated change notes.
+
+---
+
+## Historical snapshot
 
 ## Before / after footprint
 

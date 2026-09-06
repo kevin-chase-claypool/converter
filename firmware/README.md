@@ -5,8 +5,8 @@ independent subsystems:
 
 Primary RP23CNC hardware and board-support reference:
 [`phil-barrett/RP23CNC`](https://github.com/phil-barrett/RP23CNC).
-The board-specific implementation sequence is
-[`grblhal/UPCOMING_CODING_STEPS.md`](grblhal/UPCOMING_CODING_STEPS.md).
+Current motion-controller tasks are maintained in
+[`../docs/project/ROADMAP.md`](../docs/project/ROADMAP.md).
 
 | Folder | Role | Target |
 |---|---|---|
@@ -94,7 +94,8 @@ It uses a 3.3 V USB-to-TTL service adapter on GP20/GP21 rather than the Pro
 Micro USB-C port, and limits every actuator command to one short step followed
 by DRV8833 sleep. This is a temporary bench/service interface, not part of the
 normal plotter control path.
-Follow [`grblhal/UPCOMING_CODING_STEPS.md`](grblhal/UPCOMING_CODING_STEPS.md),
-then see
-[`../docs/HANDOFF.md`](../docs/HANDOFF.md) -> "Goals / roadmap -> Pi Pico 2 firmware"
-for the full plan and the open sub-decisions.
+Use [`../docs/project/ROADMAP.md`](../docs/project/ROADMAP.md) for active
+work, [`grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`](grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md)
+for P100 design/commissioning, and
+[`../docs/testing/TEST_PLAN.md`](../docs/testing/TEST_PLAN.md) for acceptance
+conditions.

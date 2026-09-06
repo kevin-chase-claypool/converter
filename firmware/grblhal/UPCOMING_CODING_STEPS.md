@@ -1,4 +1,19 @@
-# RP23U5XBB Ethernet and grblHAL Upcoming Coding Steps
+# Archived RP23U5XBB Ethernet and grblHAL bring-up plan
+
+> **Historical record — not an active task list.** This June 2026 sequence
+> predates the passed USB baseline, installed axis bring-up, and current
+> converter/interface decisions. It remains at this path so historical change
+> notes continue to resolve, but its steps must not be treated as pending.
+
+Current RP23CNC state and configuration are in
+[`README.md`](README.md), current system tasks are in
+[`../../docs/project/ROADMAP.md`](../../docs/project/ROADMAP.md), and current
+P100/magnetic work is in
+[`HOMING_AND_MAGNETIC_CALIBRATION.md`](HOMING_AND_MAGNETIC_CALIBRATION.md).
+
+---
+
+## Historical June 2026 plan
 
 Reviewed on 2026-06-09 against the Brookwood Design
 `RP23CNC User Manual`, covering RP23U5XBB versions 1.0 and 1.01, the separate

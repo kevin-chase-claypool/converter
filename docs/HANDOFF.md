@@ -44,26 +44,17 @@ The converter emits XY positions without a pen/TMAG translation. The controller'
 commissioning macro `P100` owns the measured `pen - TMAG` vector and sets `G54`
 so `X0 Y0` means the pen tip is at bed center after magnetic registration.
 
-## G-code output reference (what the firmware must parse)
+## G-code output reference
 
-The converter emits a tiny fixed subset — not full G-code:
+This historical reference does not own the live G-code contract. Read
+[`../software/README.md`](../software/README.md) for emitted-program behavior
+and [`integration/INTERFACES.md`](integration/INTERFACES.md) for the
+host-to-controller contract. The production default is X/Y/A plus M3/M5;
+the controller's Z slot is unwired and receives no Z words.
 
-| Token | Meaning |
-|---|---|
-| `(...)` | comment line — skip |
-| `G21` | units = mm (emitted once) |
-| `G90` | absolute coordinates (emitted once) |
-| `G0 X.. Y.. [A..] [Z..] [F..]` | rapid / **travel** (pen up) |
-| `G1 X.. Y.. [A..] [Z..] [F..]` | feed / **draw** (pen down) |
-| `F..` | feed rate mm/min (modal) |
-| `M3` / `M5` | pen down / pen up (non-Z mode) |
-| `G1 Z{work}` / `G0 Z{safe}` | pen down / up (Z mode only) |
-| `M2` | end of program |
-
-**Critical caveat:** the `A` word is already in **motor-shaft degrees** — the converter multiplied
-bed degrees by `theta_drive_ratio` (12). Firmware must convert `A` straight to motor steps and
-**not** reapply the 12:1. (Alternatively set `theta_drive_ratio = 1` in the converter so `A` carries
-bed degrees and the firmware owns the ratio — pick exactly one place.)
+**Critical caveat:** `A` is already in **motor-shaft degrees** — the converter
+applies `theta_drive_ratio` (12). Firmware must convert `A` straight to motor
+steps and must not reapply the 12:1 ratio.
 
 **Radius-aware A feed:** A constant writing speed on the bed is not a constant A rate. With `A` in
 motor degrees, the rate for tangential speed `v` at radius `r` is
@@ -74,12 +65,10 @@ uses the capped angular plan without division by zero, for zero achieved tangent
 uses the identical planner. M-06 must still verify grblHAL's combined X/Y/A look-ahead behavior on
 the installed machine.
 
-For a force-controlled pen, use **M3/M5 mode, not Z mode** (uncheck "Use Z axis"): Z mode commands an
-explicit pen height that would fight the pressure loop. M3/M5 only says "engage / lift".
-**Current UI/default gotcha:** `Settings.include_z` and the "Use Z axis" checkbox currently default
-to `True`, so pressure-control test jobs must explicitly uncheck "Use Z axis" before generating
-G-code. If this is left on, the generated file will use `G0/G1 Z...` pen moves instead of `M5/M3`
-and will skip the `G4` pressure-settle dwell used by the pen-pressure handshake.
+For a force-controlled pen, use M3/M5 mode, not Z mode: explicit Z heights
+would fight the pressure loop. The converter now defaults to M3/M5 and emits
+the configured `G4` settle dwell after each transition. See the current
+converter README for the exact preamble and settings.
 
 ## Implemented
 

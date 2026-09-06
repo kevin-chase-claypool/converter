@@ -54,5 +54,6 @@ See [`software/README.md`](software/README.md) for full usage and settings.
   `M3`/`M5` spindle/tool output state as a **mode override** (engage / lift) and
   otherwise holds a target contact force.
 
-Full architecture, decisions, and open items live in
-[`docs/HANDOFF.md`](docs/HANDOFF.md).
+Use [`docs/README.md`](docs/README.md) to find the current architecture,
+interfaces, tests, and open work. [`docs/HANDOFF.md`](docs/HANDOFF.md) retains
+converter history and technical tradeoffs.
