@@ -83,7 +83,8 @@ void emitTelemetry() {
       line, sizeof(line),
       "pressure=%s cmd=%s fault=%s hx_raw=%ld hx_filtered=%ld hx_delta=%ld "
       "mag=%s mT=[%ld.%03ld,%ld.%03ld,%ld.%03ld] delta=%ld.%03ld "
-      "samples=%lu status=0x%08lx commission=[dir:%d pressure:%d lift:%d mag:%d]\r\n",
+      "samples=%lu status=0x%08lx ready=[contact:%d clear:%d gp27:%d] "
+      "commission=[dir:%d pressure:%d lift:%d mag:%d]\r\n",
       pressure.stateName(), pressure.commandEngage() ? "M3" : "M5",
       pressure.faultReason(), pressure.raw(), pressure.filtered(), pressure.forceDelta(),
       publishedMagneticStateName(),
@@ -92,7 +93,10 @@ void emitTelemetry() {
       static_cast<long>(mz / 1000), static_cast<long>(std::abs(mz % 1000)),
       static_cast<long>(md / 1000), static_cast<long>(std::abs(md % 1000)),
       static_cast<unsigned long>(g_mag_sample_count.load(std::memory_order_relaxed)),
-      static_cast<unsigned long>(status), ACTUATOR_DIRECTION_VALID,
+      static_cast<unsigned long>(status),
+      statusFlag(STATUS_CONTACT_READY), statusFlag(STATUS_CLEAR_READY),
+      GP27_NORMAL_STATUS_ENABLED,
+      ACTUATOR_DIRECTION_VALID,
       PRESSURE_CALIBRATION_VALID, LIFT_REFERENCE_VALID, MAGNETIC_CALIBRATION_VALID);
 
   if (length > 0 && length < static_cast<int>(sizeof(line)) && Serial &&

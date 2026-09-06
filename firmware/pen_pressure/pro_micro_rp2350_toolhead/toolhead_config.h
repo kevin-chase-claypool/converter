@@ -43,6 +43,11 @@ constexpr bool ACTUATOR_DIRECTION_VALID = false;  // T-01
 constexpr bool PRESSURE_CALIBRATION_VALID = false; // E-07/E-08
 constexpr bool LIFT_REFERENCE_VALID = false;       // T-02
 constexpr bool MAGNETIC_CALIBRATION_VALID = false; // E-18/M-08
+// Normal-print status shares GP27/U3 with the P100 magnetic protocol. Keep
+// this false until F-08 proves the controller input polarity/endpoint and
+// T-01H proves normal M5 clearance. It does not enable any controller wait.
+constexpr bool GP27_NORMAL_STATUS_ENABLED = false;
+constexpr bool PEN_CLEAR_VALID = false;             // T-01H
 
 constexpr long NO_CONTACT_RAW_REFERENCE = 0;
 constexpr long LIFT_RELEASE_TOLERANCE_RAW = 500;
@@ -53,6 +58,10 @@ constexpr long TARGET_FORCE_RAW_DELTA = 1200;
 constexpr long HARD_FORCE_RAW_DELTA = 6000;
 constexpr int16_t HOLD_KP_NUM = 1;
 constexpr int16_t HOLD_KP_DEN = 60;
+// TBD until force calibration. These values are inactive while the above
+// commissioning gates remain false.
+constexpr long CONTACT_READY_TOLERANCE_RAW = 200;
+constexpr uint8_t CONTACT_READY_REQUIRED_WINDOWS = 3;
 
 // E-09 commissioning starting point. MAGNETIC_CALIBRATION_VALID deliberately
 // remains false until installed-height scans validate these values.
@@ -63,6 +72,10 @@ constexpr uint32_t MAG_SAMPLE_PERIOD_US = 2000;
 constexpr uint32_t MAG_SENSOR_CHECK_PERIOD_MS = 500;
 constexpr uint32_t MAG_MAX_ARM_TIME_MS = 300000;
 constexpr uint32_t MAG_REARM_WINDOW_MS = 3000;
+// Initial conservative value; F-08 must validate it against the controller
+// input. Force GP27 inactive before emitting the magnetic readiness ACK so it
+// is distinguishable from normal-print status.
+constexpr uint32_t MAG_READY_ACK_DELAY_MS = 20;
 constexpr uint16_t MAG_BASELINE_SAMPLES = 64;
 constexpr float MAG_BASELINE_MAX_MT = 2.0f;
 

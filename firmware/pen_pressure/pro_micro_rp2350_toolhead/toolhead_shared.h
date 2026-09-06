@@ -15,6 +15,8 @@ enum ToolheadStatus : uint32_t {
   STATUS_MAG_DETECTED = 1u << 8,
   STATUS_MAG_FAULT = 1u << 9,
   STATUS_HX_ONLINE = 1u << 10,
+  STATUS_CONTACT_READY = 1u << 11,
+  STATUS_CLEAR_READY = 1u << 12,
 };
 
 extern std::atomic<uint32_t> g_status;

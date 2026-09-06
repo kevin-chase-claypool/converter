@@ -62,7 +62,7 @@ completion status.
 | F-05 | Spindle/tool output test | Deterministic output pin state: M3 = ENGAGE, M5 = PEN_CLEAR, fail-safe to PEN_CLEAR/OFF |
 | F-06 | Settings persistence | Reboot preserves calibrated settings |
 | F-07 | Four-axis configuration sanity check | X/Y/A are enabled, A is available for homing/motion, and the Z axis slot remains unused/unwired |
-| F-08 | Motorless RP23CNC `PRB`/G38/macro feasibility | With TB6600 signal leads and motors disconnected, the candidate build reports `PRB`, captures X entry/release with `G38.3`/`G38.5`, proves or rejects equivalent A capture and `#5064`, executes filesystem `G65 P100`, and verifies the coordinate/parameter semantics used by P100. Keep GP27 on `LIMA` until the direct-input and GP27/U3 stages pass. |
+| F-08 | Motorless RP23CNC `PRB`/G38/macro feasibility | With TB6600 signal leads and motors disconnected, the candidate build reports `PRB`, captures X entry/release with `G38.3`/`G38.5`, proves or rejects equivalent A capture and `#5064`, executes filesystem `G65 P100`, and verifies the coordinate/parameter semantics used by P100. It must also verify that the proposed 20 ms GP27 inactive interval produces a distinct P100 readiness ACK after any normal-status assertion. Keep GP27 on `LIMA` until the direct-input and GP27/U3 stages pass. |
 
 ### F-08 motorless PRB/G38 procedure
 

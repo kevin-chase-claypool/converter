@@ -8,7 +8,11 @@ the grblHAL spindle-enable line as a **mode override**, not a position command.
 `M3` requests contact seek and force hold; `M5` requests normal `PEN_CLEAR`.
 The converter follows both with a calibrated fixed `G4` dwell while the
 toolhead reaches the requested state. This is the current no-new-wire
-synchronization method; it is not a controller-visible ready handshake.
+synchronization method; it is not a controller-visible ready handshake. The
+integrated firmware contains a disabled-by-default GP27 normal-print-status
+path for later use; it changes neither the controller endpoint nor the fixed
+dwell until commissioning and a bounded controller-side wait are separately
+approved.
 
 [`CONTROL_STRATEGY.md`](CONTROL_STRATEGY.md) is the authoritative behavior
 document for state transitions, force thresholds, per-tool preflight, profile
@@ -33,7 +37,9 @@ implemented pin assignments, staged sketches, and commissioning gates.
 - Calibrate the installed HX711/load-cell force slope and final control gains.
 - Complete actuator travel, stall, seek-timeout, and safe-fault testing.
 - Decide whether the later `CONTACT_READY`/`TOOL_FAULT` handshake is necessary
-  after the fixed-dwell version is proven.
+  after the fixed-dwell version is proven. If adopted, complete F-08 input
+  polarity/endpoint evidence, T-01H M5 clearance evidence, and a controller
+  timeout/alarm implementation before enabling `GP27_NORMAL_STATUS_ENABLED`.
 - Complete E-18/F-08 for the Pro Micro RP2350 magnetic-output path.
 
 ## Force-control strategy
@@ -55,7 +61,7 @@ Prototype wiring assumptions mirror `docs/hardware/WIRING_TABLE.md`:
 | RP2350 pin | Connection |
 |---|---|
 | `GP29` / `A3` | M3/M5 command input from PC817C U1. The module has an external 10 kΩ pullup to local 3.3 V; an asserted optocoupler pulls GP29 LOW. |
-| `GP27` / `A1` | Conditioned readiness/magnetic-state output through U3; installed at `LIMA`, candidate `PRB` only after F-08 |
+| `GP27` / `A1` | Conditioned output through U3. During GP28/P100 it is exclusively the readiness/magnetic state; when P100 is idle it can later report contact/clear completion, but that mode is disabled by default. Installed at `LIMA`, candidate `PRB` only after F-08. |
 | `GP28` / `A2` | Two-phase arm input from PC817C U2. An assertion pulls GP28 LOW: first arm requests readiness ACK, release clears it, second arm exposes threshold state on GP27. |
 | `GP4` | DRV8833 `IN1` |
 | `GP5` | DRV8833 `IN2` |
@@ -68,7 +74,10 @@ Prototype wiring assumptions mirror `docs/hardware/WIRING_TABLE.md`:
 The integrated sketch divides work across the RP2350 cores. Core 0 owns the
 pressure state machine, HX711, DRV8833, GP29, faults, telemetry, and watchdog.
 Core 1 owns the TMAG5273, GP28 two-phase arm/readiness handshake, and GP27
-readiness/magnetic output. Fixed-size atomics carry status between cores.
+output arbitration. GP28 activity always suppresses normal-print status; Core
+1 first forces GP27 inactive for 20 ms before issuing a fresh magnetic ACK.
+Outside P100, it can expose Core 0's stable-contact or proven-clear status only
+when the explicit gate is enabled. Fixed-size atomics carry status between cores.
 During a magnetic scan, a verified lifted state is required and the HX711 is
 powered down because pressure measurement is unnecessary.
 

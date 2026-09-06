@@ -50,6 +50,9 @@ void PressureController::setState(PressureState next) {
   if (next != PressureState::VERIFY_LIFTED) {
     lift_release_windows_ = 0;
   }
+  if (next != PressureState::HOLD_FORCE) {
+    contact_ready_windows_ = 0;
+  }
   publishSafetyState();
 }
 
@@ -166,9 +169,40 @@ void PressureController::publishSafetyState() {
   const bool lifted = state_ == PressureState::LIFTED;
   const bool safe = lifted && LIFT_REFERENCE_VALID && !driverFaulted() &&
                     state_ != PressureState::FAULT;
+  const bool pressure_healthy = PRESSURE_CALIBRATION_VALID &&
+                                statusFlag(STATUS_HX_ONLINE) &&
+                                !driverFaulted() && state_ != PressureState::FAULT;
+  const bool contact_ready = pressure_healthy && state_ == PressureState::HOLD_FORCE &&
+                             contact_ready_windows_ >= CONTACT_READY_REQUIRED_WINDOWS;
+  // This firmware's present LIFTED state is only published as a normal M5
+  // completion after T-01H has proven the calibrated PEN_CLEAR behavior.
+  const bool clear_ready = PEN_CLEAR_VALID && lifted && !commandEngage() &&
+                           !driverFaulted() && state_ != PressureState::FAULT;
   setStatusFlag(STATUS_TOOL_LIFTED, lifted);
   setStatusFlag(STATUS_SAFE_FOR_HOMING, safe);
   setStatusFlag(STATUS_PRESSURE_FAULT, state_ == PressureState::FAULT);
+  setStatusFlag(STATUS_CONTACT_READY, contact_ready);
+  setStatusFlag(STATUS_CLEAR_READY, clear_ready);
+}
+
+void PressureController::updateReadyState() {
+  if (state_ != PressureState::HOLD_FORCE || !PRESSURE_CALIBRATION_VALID ||
+      !statusFlag(STATUS_HX_ONLINE) || driverFaulted()) {
+    contact_ready_windows_ = 0;
+    return;
+  }
+  if (!new_filtered_sample_) {
+    return;
+  }
+
+  const long target_error = std::labs(forceDelta() - TARGET_FORCE_RAW_DELTA);
+  if (target_error <= CONTACT_READY_TOLERANCE_RAW) {
+    if (contact_ready_windows_ < CONTACT_READY_REQUIRED_WINDOWS) {
+      contact_ready_windows_++;
+    }
+  } else {
+    contact_ready_windows_ = 0;
+  }
 }
 
 void PressureController::enterFault(const char *reason) {
@@ -325,6 +359,7 @@ void PressureController::service() {
       break;
   }
 
+  updateReadyState();
   new_filtered_sample_ = false;
   publishSafetyState();
 }

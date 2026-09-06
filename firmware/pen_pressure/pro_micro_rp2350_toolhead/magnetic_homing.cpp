@@ -63,7 +63,17 @@ void MagneticHomingController::setOutput(bool active) {
 void MagneticHomingController::clearPublishedState() {
   setStatusFlag(STATUS_MAG_SCAN_ACTIVE, false);
   setStatusFlag(STATUS_MAG_DETECTED, false);
-  setOutput(false);
+}
+
+void MagneticHomingController::publishNormalPrintStatus() {
+  // GP27 is safe to reuse only while the magnetic protocol is completely
+  // idle. The status itself is additionally disabled until its controller
+  // endpoint and the M5 clearance behavior have passed commissioning.
+  const bool ready = GP27_NORMAL_STATUS_ENABLED && !armActive() &&
+                     statusFlag(STATUS_CORE0_READY) && statusFlag(STATUS_CORE1_READY) &&
+                     !statusFlag(STATUS_PRESSURE_FAULT) && !statusFlag(STATUS_MAG_FAULT) &&
+                     (statusFlag(STATUS_CONTACT_READY) || statusFlag(STATUS_CLEAR_READY));
+  setOutput(ready);
 }
 
 void MagneticHomingController::setState(MagneticState next) {
@@ -193,26 +203,34 @@ void MagneticHomingController::service() {
   switch (state_) {
     case MagneticState::BOOT:
       clearPublishedState();
+      setOutput(false);
       break;
 
     case MagneticState::DISARMED:
       clearPublishedState();
       if (arm_rising) {
+        // A normal-print status may have been active. Force an unambiguous
+        // inactive interval before the first-phase magnetic readiness ACK.
+        setOutput(false);
         if (prerequisitesReady()) {
           fault_reason_ = "none";
           setState(MagneticState::READY_ACK);
-          setOutput(true);
         } else {
           enterFault("magnetic readiness prerequisites not met");
         }
+      } else {
+        publishNormalPrintStatus();
       }
       break;
 
     case MagneticState::READY_ACK:
-      setOutput(true);
       if (arm_falling) {
         setOutput(false);
         setState(MagneticState::WAIT_REARM);
+      } else if (now - state_started_ms_ >= MAG_READY_ACK_DELAY_MS) {
+        setOutput(true);
+      } else {
+        setOutput(false);
       }
       break;
 
@@ -245,6 +263,7 @@ void MagneticHomingController::service() {
 
     case MagneticState::FAULT:
       clearPublishedState();
+      setOutput(false);
       if (!arm && tmag_online_ && statusFlag(STATUS_SAFE_FOR_HOMING)) {
         fault_reason_ = "none";
         setState(MagneticState::DISARMED);

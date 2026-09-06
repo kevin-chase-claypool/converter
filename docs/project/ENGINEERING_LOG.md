@@ -215,6 +215,7 @@ Entry details remain only in the chronology.
 - [2026-09-05 - HARDWARE/PARTIAL - Passed initial A-axis direction jog](#elog-20260905-passed-initial-a-axis-direction-jog)
 - [2026-09-05 - HARDWARE/SUCCESS - Completed M-01 low-speed jog test](#elog-20260905-completed-m-01-low-speed-jog-test)
 - [2026-09-05 - HARDWARE/IN PROGRESS - M-02 A-axis rate ramp through F600](#elog-20260905-m-02-a-axis-rate-ramp-through-f600)
+- [2026-09-06 - RP23CNC-SOFTWARE/IMPLEMENTED - Added GP27 normal-status guardrails](#elog-20260906-added-gp27-normal-status-guardrails)
 
 ### Testing and verification
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -3109,3 +3110,31 @@ Add new entries at the top of the log below this line.
 - Evidence: `docs/report/lab-notes/2026-09-05-m-02-a-axis-rate-ramp.md`;
   `docs/testing/TEST_PLAN.md`.
 - Next action: complete M-05 bed-ratio verification, then continue M-02 on X/Y.
+
+<a id="elog-20260906-added-gp27-normal-status-guardrails"></a>
+### 🟨 2026-09-06 - RP23CNC-SOFTWARE/IMPLEMENTED - Added GP27 normal-status guardrails
+
+- Status: firmware implementation complete and disabled by default; no hardware
+  commissioning or controller-side wait was enabled.
+- Category: rp23cnc-software, hardware, toolhead, GP27, P100, safety.
+- Summary: Reused the already-isolated GP27/U3 path in firmware only as a
+  future candidate normal-print completion status, while preserving exclusive
+  GP28/P100 ownership for magnetic readiness and scan states.
+- Result: Core 0 now qualifies stable M3 contact with three filtered in-band
+  samples and qualifies M5 clear only behind the T-01H clearance gate. Core 1
+  can publish either result only when magnetic control is disarmed, GP28 is
+  inactive, both cores are live, and no fault is present. The external output
+  gate remains false.
+- Safety boundary: Every GP28 assertion suppresses normal status and forces
+  GP27 inactive for an initial conservative 20 ms before the fresh P100
+  readiness ACK. Boot, fault, re-arm, and scan states drive GP27 inactive or
+  retain their existing magnetic meaning.
+- Evidence: Arduino CLI compile for `rp2040:rp2040:sparkfun_promicrorp2350`,
+  `git diff --check`, and documentation index checks passed. See
+  `RPSW-20260906-001`.
+- Limitation: F-08 must prove U3/controller polarity and the fresh ACK timing;
+  T-01H must prove normal M5 clearance; a future RP23CNC wait must be bounded
+  by timeout and alarm. GP27 remains at `LIMA`; no wiring or macro change was
+  made.
+- Next action: keep fixed G4 dwell behavior until those commissioning gates and
+  controller-side acceptance tests have passed.

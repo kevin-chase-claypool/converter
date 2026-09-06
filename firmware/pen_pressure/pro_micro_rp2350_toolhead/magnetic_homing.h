@@ -31,6 +31,7 @@ class MagneticHomingController {
   void updateDetection(float delta_magnitude);
   void enterFault(const char *reason);
   void clearPublishedState();
+  void publishNormalPrintStatus();
 
   TMAG5273 tmag_;
   MagneticState state_ = MagneticState::BOOT;

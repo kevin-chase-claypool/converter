@@ -145,6 +145,23 @@ The current physical endpoint remains `LIMA` until F-08 passes. Moving the
 existing GP27/U3 return to `PRB` is a controller-end retermination, not a new
 drag-chain wire.
 
+### GP27 normal-print-status guardrail
+
+The same isolated GP27/U3 conductor is reserved for a possible later
+contact/clear acknowledgement during normal drawing. This does not alter the
+two-phase P100 protocol: while GP28 is active or the magnetic controller is
+not `DISARMED`, magnetic logic exclusively owns GP27. On a new GP28 assertion,
+firmware forces GP27 inactive for an initial conservative 20 ms before
+publishing the first readiness ACK, ensuring that a previously active
+normal-print status cannot be mistaken for a P100 reply. F-08 must validate
+that interval at the selected controller input.
+
+Outside P100, firmware can assert GP27 only after a commissioned stable-force
+window (`M3`) or a commissioned proven-clear state (`M5`). The output gate is
+false in source, so this revision neither changes P100 behavior nor creates a
+controller wait. Enabling it requires F-08 polarity/endpoint evidence, T-01H
+clearance evidence, and a separate RP23CNC bounded-timeout wait/alarm feature.
+
 ## Toolhead dual-core behavior
 
 The integrated Arduino-Pico firmware uses the RP2350's two cores:

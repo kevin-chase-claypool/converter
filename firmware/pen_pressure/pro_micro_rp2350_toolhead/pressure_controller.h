@@ -43,6 +43,7 @@ class PressureController {
   void serviceHx711();
   void serviceTare(long sample);
   void updateFilteredSample(long sample);
+  void updateReadyState();
   void publishSafetyState();
   void enterFault(const char *reason);
   static long median3(long a, long b, long c);
@@ -69,6 +70,7 @@ class PressureController {
   int64_t tare_sum_ = 0;
   uint8_t tare_count_ = 0;
   uint8_t lift_release_windows_ = 0;
+  uint8_t contact_ready_windows_ = 0;
 
   const char *fault_reason_ = "none";
 };

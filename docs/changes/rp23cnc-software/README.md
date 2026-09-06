@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-06 | `RPSW-20260906-001` | implemented | [Add GP27 Normal-Status Guardrails](2026/2026-09-06-gp27-normal-status-guardrails.md) | `gp27`, `contact-ready`, `p100`, `safety` |
 | 2026-09-05 | `WSW-20260905-005` | implemented | [Consolidate current documentation ownership](../windows-software/2026/2026-09-05-consolidate-current-documentation.md) | `documentation`, `consolidation`, `source-of-truth`, `grblhal`, `toolhead` |
 | 2026-09-05 | `WSW-20260905-004` | implemented | [Make converter programs self-contained for ioSender](../windows-software/2026/2026-09-05-self-contained-iosender-program-contract.md) | `iosender`, `grblhal`, `gcode`, `m3`, `m5`, `z-axis` |
 | 2026-09-05 | `WSW-20260905-003` | implemented | [Record ioSender-to-converter compatibility review](../windows-software/2026/2026-09-05-iosender-converter-compatibility-review.md) | `iosender`, `grblhal`, `gcode`, `p100`, `integration-review` |

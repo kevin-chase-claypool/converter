@@ -171,7 +171,7 @@ thresholded magnetic probe state. Therefore one GP27 edge never means
 | TMAG5273 -> Pro Micro RP2350 | Qwiic/I2C 3D Hall readings at the fixed installed sensor height |
 | Pro Micro RP2350 -> host PC | Service diagnostics only; host is not in the real-time centroid loop |
 | RP23CNC Aux 0 -> PC817C U2 -> Pro Micro RP2350 `GP28` | Active-low two-phase readiness/scan arm |
-| Pro Micro RP2350 `GP27` -> PC817C U3 -> candidate RP23CNC `PRB` | First-phase readiness ACK, then second-phase thresholded magnetic state |
+| Pro Micro RP2350 `GP27` -> PC817C U3 -> candidate RP23CNC `PRB` | During GP28/P100: first-phase readiness ACK, then second-phase thresholded magnetic state. Outside P100: reserved, disabled-by-default candidate for contact/clear completion status. |
 
 The center bed magnet locates the geometric bed center after X/Y homing. The
 outer bed magnet, nominally 8.9 in from center, provides the theta/A angular
@@ -206,10 +206,12 @@ Minimum interface:
 |---|---|---|
 | ENGAGE/PEN_CLEAR | grblHAL spindle/tool output pin state: M3 = engage, M5 = normal fast pen clear | PEN_CLEAR |
 | TOOL_FAULT | Toolhead cannot safely draw | Active/fault |
-| CONTACT_READY, optional | Contact force is stable | Not ready |
+| CONTACT_READY, optional | Contact force is stable; later the same GP27/U3 path may also report proven M5 clear outside P100 | Not ready |
 
 Version 1 may use only ENGAGE/PEN_CLEAR plus fixed `G4` delays. A later plugin may
-feed-hold until `CONTACT_READY` or alarm on `TOOL_FAULT`.
+feed-hold until `CONTACT_READY` or alarm on `TOOL_FAULT`. The firmware-side
+normal-print status is present but disabled by default; no grblHAL wait,
+endpoint retermination, or G-code behavior changes in this revision.
 
 `M5` is not the toolhead's absolute position-reference command. The planned
 local `GP2` switch establishes `LIFT_HOME` only at boot, recovery, or an
@@ -253,6 +255,12 @@ asserted optocoupler read LOW. The RP23CNC ENA/Aux0 state mapping remains
 provisional until F-05/E-18 bench tests are complete. Core 0 owns pressure and
 safety; Core 1 owns TMAG sampling and GP28/GP27 magnetic protocol. HX711
 acquisition is suspended only while a verified-lifted magnetic scan is active.
+When `GP28` is inactive, Core 1 may later use GP27 to publish Core 0's stable
+M3 force or verified M5-clear completion. Any GP28 assertion first forces GP27
+inactive for an initial conservative 20 ms, then restores exclusive P100
+readiness/magnetic ownership; F-08 must validate that interval at the selected
+controller input. Faults, reset, invalid calibration, and uncommissioned
+configuration all keep the normal-print status inactive.
 
 This Pro Micro RP2350 is also the installed TMAG5273 reader and magnetic-output
 owner. It is not paired with a separate RP2040 magnetic adapter.
