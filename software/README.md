@@ -104,6 +104,8 @@ X/Y-only output, and preview/G-code parity.
 - **Preview settings** — playback speed (visualization only), bed diameter/margin, pen stroke
   width, and three preview colors: **Undrawn** (artwork not yet drawn), **Drawn**
   (the drawn portion / final color), and **Motion** (active move + toolpath).
+  The fixed pen-tip/contact footprint is a high-contrast green square so it
+  remains distinct from the artwork, motion path, and crosshair.
 - Pressing **Preview** shows the current build stage, percentage, and elapsed
   time. SVG parsing, motion planning, and clipping run in the background so the
   window remains responsive. The expensive contour/theta plan is built once and

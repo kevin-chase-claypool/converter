@@ -661,7 +661,7 @@ class GLPreview(QOpenGLWidget):
             tool_point[0] - 8, tool_point[1] - 8,
         ]
         self.draw_dynamic_lines(crosshair, self.gantry_color, 1.0)
-        self.draw_dynamic_lines(pen_tip_bed, QColor("#f59e0b"), 2.0)
+        self.draw_dynamic_lines(pen_tip_bed, QColor("#16a34a"), 3.0)
         self.draw_dynamic_lines(tool_marker, self.motion_color if active and active.get("type") == "draw" else QColor("#6b7280"), 2.0)
         self.program.release()
 
