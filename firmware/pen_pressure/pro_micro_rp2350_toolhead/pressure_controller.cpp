@@ -102,10 +102,7 @@ long PressureController::median3(long a, long b, long c) {
     const long t = a; a = b; b = t;
   }
   if (b > c) {
-    const long t = b; b = c; c = t;
-  }
-  if (a > b) {
-    const long t = a; a = b; b = t;
+    return a > c ? a : c;
   }
   return b;
 }
