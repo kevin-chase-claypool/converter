@@ -99,6 +99,11 @@ commands. At `$113=5000` and `$123=10 deg/sec^2`, short A-axis
 moves can be dominated by acceleration and deceleration rather than steady
 speed.
 
+The continuous bed has no finite A travel, so `$133=0.000` degrees. This does
+not disable A; it prevents a fictional travel envelope from being used by
+ordinary finite-travel homing or soft-limit workflows. Magnetic P100
+registration remains the separate A-axis reference procedure.
+
 The angular increment is uniform across the bed; tangential increment is
 `radius × 0.00032725` in the same linear unit as the radius. At 9 in from the
 center, one A pulse is about 0.00295 in (0.0748 mm). A planned two-bed-

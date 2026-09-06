@@ -217,6 +217,7 @@ Entry details remain only in the chronology.
 - [2026-09-05 - HARDWARE/IN PROGRESS - M-02 A-axis rate ramp through F600](#elog-20260905-m-02-a-axis-rate-ramp-through-f600)
 - [2026-09-06 - RP23CNC-SOFTWARE/IMPLEMENTED - Added GP27 normal-status guardrails](#elog-20260906-added-gp27-normal-status-guardrails)
 - [2026-09-06 - HARDWARE/VERIFIED - X-axis preliminary motion and scale](#elog-20260906-x-axis-preliminary-motion-and-scale)
+- [2026-09-06 - HARDWARE/VERIFIED - A-axis continuous-travel setting](#elog-20260906-a-axis-continuous-travel-setting)
 
 ### Testing and verification
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -3157,3 +3158,18 @@ Add new entries at the top of the log below this line.
   test. The settings remain preliminary unloaded values.
 - Next action: retain these values for pen-free coordinated X/Y/A testing;
   complete homing/limits and later pen-loaded validation before production use.
+
+<a id="elog-20260906-a-axis-continuous-travel-setting"></a>
+### 🟩 2026-09-06 - HARDWARE/VERIFIED - A-axis continuous-travel setting
+
+- Status: current controller configuration verified in ioSender.
+- Category: hardware, rp23cnc-software, A-axis, rotary, soft-limits.
+- Summary: Set `$133=0.000` degrees because the 12:1 rotary bed has no
+  mechanical travel endpoint. A remains enabled with its existing calibrated
+  resolution, rate, and acceleration.
+- Boundary: This does not enable a soft limit, standard A homing, or P100.
+  Current `$130`/`$131=508` mm entries are also not authorization to enable
+  X/Y soft limits before physical homing/endpoint verification.
+- Evidence: ioSender settings display; `HW-20260906-003`.
+- Next action: retain unlimited A travel and use the separate magnetic P100
+  registration process when that commissioning path is ready.

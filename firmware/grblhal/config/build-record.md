@@ -40,7 +40,11 @@ for continued commissioning:
 | `$111` | `1500` mm/min | Preliminary unloaded maximum-rate setting |
 | `$120` | `500` mm/sec^2 | Preliminary unloaded acceleration setting |
 | `$121` | `500` mm/sec^2 | Preliminary unloaded acceleration setting |
+| `$130` | `508.000` mm | Current X maximum-travel entry; home/soft-limit use unverified |
+| `$131` | `508.000` mm | Current Y maximum-travel entry; home/soft-limit use unverified |
+| `$133` | `0.000` deg | Continuous A bed: no finite maximum travel |
 
 These values are not a final pen-loaded plotting limit. Complete coordinated
 X/Y/A motion and loaded toolhead validation before treating them as production
-settings.
+settings. Do not enable X/Y soft limits until their physical homing and
+endpoint behavior is verified; do not assign a finite A soft limit.
