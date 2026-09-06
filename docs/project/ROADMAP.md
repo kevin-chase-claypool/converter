@@ -109,7 +109,9 @@
 - [ ] Verify the 12:1 bed ratio. (`M-05`)
 - [ ] Tune max rate and acceleration one axis at a time.
 - [ ] Add and verify homing and soft limits. (`M-07`)
-- [ ] Run short coordinated X/Y/A parser and motion tests. (`M-06`)
+- [ ] Complete M-06 coordinated X/Y/A validation. Initial pen-free symmetric
+  repeatability smoke test passed through `F20000` on 2026-09-06; converter
+  inner/mid/outer-radius timing and geometry validation remains. (`M-06`)
 - [ ] Run converter-generated sample G-code without the tool installed.
 - [ ] **Post-M-06 converter refinement — time-optimal X/Y/A candidate cost.**
   The current theta candidate selector minimizes a weighted combined-distance
@@ -163,6 +165,6 @@
 ## Next concrete task
 
 Re-run F-02 with a newly generated default converter file. Then complete the
-X-axis rate and M-03 checks, and run M-06 to verify combined X/Y/A motion and
-radius-aware feed behavior on installed grblHAL. Do not enable direct
-P100-to-print operation until its commissioning and toolhead gates also pass.
+converter-generated M-06 inner/mid/outer-radius timing and geometry check on
+installed grblHAL. Do not enable direct P100-to-print operation until its
+commissioning and toolhead gates also pass.

@@ -63,8 +63,10 @@ the angular plan remains capped and the achieved tangential speed is zero.
 Preview uses the same per-segment calculation as emitted G-code.
 
 The acceleration bound is conservative because it treats an individual block
-as rest-to-rest. grblHAL look-ahead can carry velocity across blocks; M-06
-hardware testing remains required to validate combined X/Y/A timing.
+as rest-to-rest. grblHAL look-ahead can carry velocity across blocks. The
+initial M-06 pen-free repeatability smoke test passed through `F20000`; the
+converter-generated inner/mid/outer-radius timing test remains required to
+validate combined X/Y/A feed behavior.
 
 ### A-axis TB6600 baseline
 

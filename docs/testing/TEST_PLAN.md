@@ -214,6 +214,13 @@ the matched `X-100` return reached the original mark. **M-03 passed for the
 conducted X-axis dimensional check.** See
 [`2026-09-06-m-03-x-axis-dimensional-calibration.md`](../report/lab-notes/2026-09-06-m-03-x-axis-dimensional-calibration.md).
 
+M-06 initial evidence: on 2026-09-06, pen-free matched diagonal X/Y/A moves
+were reported perfect at `F15000` and `F20000`; the X/Y carriage and A-bed
+marks returned exactly to their starts. **The coordinated-motion repeatability
+smoke test passed.** Converter-generated inner/mid/outer-radius timing and
+geometry validation remain required. See
+[`2026-09-06-m-06-xya-coordinated-smoke.md`](../report/lab-notes/2026-09-06-m-06-xya-coordinated-smoke.md).
+
 ## Toolhead tests
 
 | ID | Test | Pass condition |

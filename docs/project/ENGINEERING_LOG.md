@@ -218,6 +218,7 @@ Entry details remain only in the chronology.
 - [2026-09-06 - RP23CNC-SOFTWARE/IMPLEMENTED - Added GP27 normal-status guardrails](#elog-20260906-added-gp27-normal-status-guardrails)
 - [2026-09-06 - HARDWARE/VERIFIED - X-axis preliminary motion and scale](#elog-20260906-x-axis-preliminary-motion-and-scale)
 - [2026-09-06 - HARDWARE/VERIFIED - A-axis continuous-travel setting](#elog-20260906-a-axis-continuous-travel-setting)
+- [2026-09-06 - HARDWARE/VERIFIED - Pen-free X/Y/A coordinated smoke test](#elog-20260906-pen-free-x-y-a-coordinated-smoke-test)
 
 ### Testing and verification
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -3174,3 +3175,21 @@ Add new entries at the top of the log below this line.
 - Evidence: ioSender settings display; `HW-20260906-003`.
 - Next action: retain unlimited A travel and use the separate magnetic P100
   registration process when that commissioning path is ready.
+
+<a id="elog-20260906-pen-free-x-y-a-coordinated-smoke-test"></a>
+### 🟩 2026-09-06 - HARDWARE/VERIFIED - Pen-free X/Y/A coordinated smoke test
+
+- Status: basic M-06 repeatability evidence passed; full converter timing and
+  geometry validation remains open.
+- Category: hardware, rp23cnc-software, X/Y/A, coordinated-motion, M-06.
+- Summary: With all three TB6600 axes powered, matched simultaneous diagonal
+  moves were reported perfect at `F15000` and `F20000`. X/Y carriage and A-bed
+  reference marks returned exactly to their starts.
+- Result: The pen-free sequence validates basic simultaneous motion in both
+  directions. It uses no M3/M5 command and does not involve the toolhead.
+- Limitation: A large `A720` component makes low scalar feeds appear slow;
+  this manual symmetric test neither validates converter geometry nor proves
+  radius-aware tangential speed or preview timing.
+- Evidence: `HW-20260906-004`; `2026-09-06-m-06-xya-coordinated-smoke.md`.
+- Next action: run a converter-generated pen-free sample at inner, middle, and
+  outer radii; compare emitted blocks, elapsed time, and returned marks.

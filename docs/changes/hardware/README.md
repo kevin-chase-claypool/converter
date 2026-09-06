@@ -9,6 +9,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-09-06 | `RPSW-20260906-001` | implemented | [Add GP27 Normal-Status Guardrails](../rp23cnc-software/2026/2026-09-06-gp27-normal-status-guardrails.md) | `gp27`, `contact-ready`, `p100`, `safety` |
+| 2026-09-06 | `HW-20260906-004` | verified | [Verify pen-free coordinated X/Y/A repeatability](2026/2026-09-06-xya-coordinated-smoke-test.md) | `xya`, `coordinated-motion`, `m-06`, `repeatability`, `commissioning` |
 | 2026-09-06 | `HW-20260906-003` | verified | [Configure the A axis without a finite travel limit](2026/2026-09-06-a-axis-unlimited-travel-configuration.md) | `a-axis`, `rotary`, `soft-limits`, `configuration` |
 | 2026-09-06 | `HW-20260906-002` | verified | [Verify X-axis rate and dimensional calibration](2026/2026-09-06-x-axis-rate-and-dimensional-calibration.md) | `x-axis`, `rate`, `acceleration`, `dimensional-calibration`, `commissioning` |
 | 2026-09-05 | `WSW-20260905-005` | implemented | [Consolidate current documentation ownership](../windows-software/2026/2026-09-05-consolidate-current-documentation.md) | `documentation`, `consolidation`, `source-of-truth`, `grblhal`, `toolhead` |
