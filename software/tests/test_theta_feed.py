@@ -3,11 +3,13 @@ import re
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import converter_core as converter
+import converter_core.gcode as gcode_module
 
 
 class RadiusAwareThetaFeedTests(unittest.TestCase):
@@ -149,8 +151,13 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
     def test_preview_draw_blocks_match_generated_gcode(self):
         contours = [[(-50.0, -10.0), (0.0, 15.0), (50.0, 30.0)]]
         settings = self.settings(include_z=False)
-        gcode = converter.contours_to_gcode(contours, settings)
-        draw_moves = [move for move in converter.build_preview_moves(contours, settings) if move["type"] == "draw"]
+        program_plan = converter.plan_program(contours, settings)
+        gcode = converter.contours_to_gcode(contours, settings, program_plan)
+        draw_moves = [
+            move
+            for move in converter.build_preview_moves(contours, settings, program_plan=program_plan)
+            if move["type"] == "draw"
+        ]
 
         self.assertTrue(draw_moves)
         self.assertTrue(any(" A" in move["gcode"] for move in draw_moves))
@@ -159,6 +166,16 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
             match = re.search(r"\bF([-+0-9.]+)", move["gcode"])
             self.assertIsNotNone(match)
             self.assertAlmostEqual(float(match.group(1)), move["feed_rate"], places=4)
+
+    def test_shared_program_plan_does_not_replan_for_preview_and_gcode(self):
+        contours = [[(-50.0, -10.0), (0.0, 15.0), (50.0, 30.0)]]
+        settings = self.settings()
+        original = gcode_module.plan_contour_thetas
+        with patch.object(gcode_module, "plan_contour_thetas", wraps=original) as planner:
+            program_plan = converter.plan_program(contours, settings)
+            converter.build_preview_moves(contours, settings, program_plan=program_plan)
+            converter.contours_to_gcode(contours, settings, program_plan)
+        self.assertEqual(planner.call_count, len(program_plan["planned_jobs"]))
 
     def test_fixed_theta_output_is_unchanged_by_tangential_setting(self):
         contours = [[(-25.0, 0.0), (25.0, 0.0)]]

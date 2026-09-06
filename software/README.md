@@ -106,8 +106,9 @@ X/Y-only output, and preview/G-code parity.
   (the drawn portion / final color), and **Motion** (active move + toolpath).
 - Pressing **Preview** shows the current build stage, percentage, and elapsed
   time. SVG parsing, motion planning, and clipping run in the background so the
-  window remains responsive. Preview and Save G-code are temporarily disabled
-  until the shared preview data is ready.
+  window remains responsive. The expensive contour/theta plan is built once and
+  shared by the preview and complete command-list generation. Preview and Save
+  G-code are temporarily disabled until that shared data is ready.
 - Press **Cancel** during preview generation to stop an unexpectedly large job.
   Cancellation safely unwinds at geometry/planning checkpoints and keeps the
   last completed preview visible.

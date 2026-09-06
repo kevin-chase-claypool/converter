@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-05 | `WSW-20260905-007` | windows-software | implemented | [Share the preview motion plan](windows-software/2026/2026-09-05-share-preview-motion-plan.md) |
 | 2026-09-05 | `WSW-20260905-006` | windows-software | implemented | [Make the production preview safe and complete](windows-software/2026/2026-09-05-production-preview-safety.md) |
 | 2026-09-05 | `WSW-20260905-005` | windows-software, rp23cnc-software, hardware | implemented | [Consolidate current documentation ownership](windows-software/2026/2026-09-05-consolidate-current-documentation.md) |
 | 2026-09-05 | `WSW-20260905-004` | windows-software, rp23cnc-software, hardware | implemented | [Make converter programs self-contained for ioSender](windows-software/2026/2026-09-05-self-contained-iosender-program-contract.md) |

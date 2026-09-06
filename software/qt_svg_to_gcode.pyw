@@ -690,18 +690,12 @@ class PreviewWorker(QObject):
             self.progress.emit(10, "Parsing SVG geometry")
             raw_contours = self.window.load_contours(self.svg_path, self.settings, self.is_cancelled)
             self.progress.emit(48, f"Planning motion for {len(raw_contours)} contours")
-            bed_center = converter.contour_center(raw_contours)
-            clip_radius = max(
-                float(getattr(self.settings, "bed_diameter_mm", 457.2)) / 2.0
-                - float(getattr(self.settings, "bed_margin_mm", 0.0)),
-                0.0,
-            )
-            moves = self.window.build_preview_moves(raw_contours, self.settings, self.is_cancelled)
-            self.progress.emit(78, f"Clipping {len(raw_contours)} contours to the bed")
-            contours = converter.clip_contours_to_bed(raw_contours, bed_center, clip_radius, self.is_cancelled)
+            program_plan = converter.plan_program(raw_contours, self.settings, self.is_cancelled)
+            moves = self.window.build_preview_moves(raw_contours, self.settings, self.is_cancelled, program_plan)
+            self.progress.emit(78, f"Preparing {len(program_plan['contours'])} clipped contours")
             self.progress.emit(90, "Generating complete G-code listing")
-            program_gcode = converter.contours_to_gcode(raw_contours, self.settings)
-            self.finished.emit((self.settings, contours, moves, bed_center, program_gcode))
+            program_gcode = converter.contours_to_gcode(raw_contours, self.settings, program_plan)
+            self.finished.emit((self.settings, program_plan["contours"], moves, program_plan["center"], program_gcode))
         except converter.OperationCancelled:
             self.cancelled.emit()
         except Exception as exc:
@@ -1081,8 +1075,8 @@ class MainWindow(QMainWindow):
             fallback = float(getattr(settings, "hatch_spacing_mm", 0.0))
         return converter.pattern_size_override(pattern, fallback, self.pattern_size_values(settings))
 
-    def build_preview_moves(self, contours, settings, cancel_check=None):
-        return converter.build_preview_moves(contours, settings, cancel_check)
+    def build_preview_moves(self, contours, settings, cancel_check=None, program_plan=None):
+        return converter.build_preview_moves(contours, settings, cancel_check, program_plan)
 
     def raw_geometry_key(self, svg_path, settings):
         stat = os.stat(svg_path)

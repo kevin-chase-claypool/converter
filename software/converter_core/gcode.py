@@ -76,11 +76,48 @@ def bridge_motion(prev_machine, prev_motor_theta, next_machine, next_motor_theta
     }
 
 
-def contours_to_gcode(contours, settings):
+def plan_program(contours, settings, cancel_check=None):
+    """Plan clipped contours and theta positions once for all program consumers."""
     validate_settings(settings)
-    axis = re.sub(r"[^A-Za-z]", "", settings.theta_axis.upper())[:1] or "A"
+    check_cancelled(cancel_check)
     center = contour_center(contours)
-    contours = clip_contours_to_bed(contours, center, max(float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0 - float(getattr(settings, "bed_margin_mm", 0.0)), 0.0))
+    clipped_contours = clip_contours_to_bed(
+        contours,
+        center,
+        max(float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0 - float(getattr(settings, "bed_margin_mm", 0.0)), 0.0),
+        cancel_check,
+    )
+    planned_jobs = []
+    previous_theta = None
+    previous_machine = None
+    for planned in planned_contours(clipped_contours, settings, center, cancel_check):
+        check_cancelled(cancel_check)
+        points = planned["path"]
+        thetas, strategies = plan_contour_thetas(
+            points,
+            settings,
+            previous_theta,
+            center,
+            previous_machine,
+            cancel_check,
+        )
+        if not thetas:
+            continue
+        planned_jobs.append((planned, points, thetas, strategies))
+        previous_theta = thetas[-1]
+        previous_machine = bed_to_machine(points[-1], thetas[-1], center)
+    return {
+        "center": center,
+        "contours": clipped_contours,
+        "planned_jobs": planned_jobs,
+    }
+
+
+def contours_to_gcode(contours, settings, program_plan=None):
+    validate_settings(settings)
+    program_plan = program_plan or plan_program(contours, settings)
+    axis = re.sub(r"[^A-Za-z]", "", settings.theta_axis.upper())[:1] or "A"
+    center = program_plan["center"]
     # Establish the drawing file's own units, distance, feed, plane, and work
     # coordinate modes. ioSender streams these lines; it does not repair modal
     # state inherited from an earlier console command or macro.
@@ -99,22 +136,10 @@ def contours_to_gcode(contours, settings):
         append_custom_command(lines, settings.pen_up_command)
         append_pen_dwell(lines, settings, "up")
 
-    planned_jobs = []
-    previous_theta = None
-    previous_machine = None
-    for planned in planned_contours(contours, settings, center):
-        pts = planned["path"]
-        thetas, strategies = plan_contour_thetas(pts, settings, previous_theta, center, previous_machine)
-        if not thetas:
-            continue
-        planned_jobs.append((planned, pts, thetas, strategies))
-        previous_theta = thetas[-1]
-        previous_machine = bed_to_machine(pts[-1], thetas[-1], center)
-
     previous_machine = None
     previous_motor_theta = 0.0
     pen_is_down = False
-    for planned, pts, thetas, strategies in planned_jobs:
+    for planned, pts, thetas, strategies in program_plan["planned_jobs"]:
         first_theta = thetas[0]
 
         x0, y0 = bed_to_machine(pts[0], first_theta, center)
@@ -199,39 +224,22 @@ def convert_file(svg_path, gcode_path, settings):
     return len(contours), len(gcode.splitlines())
 
 
-def build_preview_moves(contours, settings, cancel_check=None):
+def build_preview_moves(contours, settings, cancel_check=None, program_plan=None):
     validate_settings(settings)
     check_cancelled(cancel_check)
     moves = []
-    center = contour_center(contours)
-    contours = clip_contours_to_bed(
-        contours,
-        center,
-        max(float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0 - float(getattr(settings, "bed_margin_mm", 0.0)), 0.0),
-        cancel_check,
-    )
+    program_plan = program_plan or plan_program(contours, settings, cancel_check)
+    center = program_plan["center"]
     last_machine_end = None
     previous_theta = None
     previous_motor_theta = 0.0
     axis = re.sub(r"[^A-Za-z]", "", settings.theta_axis.upper())[:1] or "A"
-    planned_jobs = []
-    previous_machine = None
-    for planned in planned_contours(contours, settings, center, cancel_check):
-        check_cancelled(cancel_check)
-        contour_index = planned["index"]
-        path = planned["path"]
-        thetas, strategies = plan_contour_thetas(path, settings, previous_theta, center, previous_machine, cancel_check)
-        if not thetas:
-            continue
-        planned_jobs.append((planned, contour_index, path, thetas, strategies))
-        previous_theta = thetas[-1]
-        previous_machine = bed_to_machine(path[-1], thetas[-1], center)
-
     previous_theta = None
     previous_motor_theta = 0.0
     pen_is_down = False
-    for planned, contour_index, path, thetas, strategies in planned_jobs:
+    for planned, path, thetas, strategies in program_plan["planned_jobs"]:
         check_cancelled(cancel_check)
+        contour_index = planned["index"]
         first_theta = thetas[0]
 
         machine_start = bed_to_machine(path[0], first_theta, center)

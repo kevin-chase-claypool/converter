@@ -47,6 +47,7 @@ The links below are alternate views of the single chronological log.
 Entry details remain only in the chronology.
 
 ### Windows software
+- [2026-09-05 21:20:18 -0500 - SOFTWARE/SUCCESS - Shared the preview motion plan](#elog-20260905212018)
 - [2026-09-05 21:06:43 -0500 - SOFTWARE/SUCCESS - Made the production preview safe and complete](#elog-20260905210643)
 - [2026-09-05 - DOCUMENTATION/SUCCESS - Consolidated current documentation](#elog-20260905-consolidated-current-documentation)
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -313,6 +314,23 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260905212018"></a>
+### 🟩 2026-09-05 21:20:18 -0500 - SOFTWARE/SUCCESS - Shared the preview motion plan
+
+- Status: implementation and automated verification complete.
+- Category: software, converter, preview, performance.
+- Summary: preview now plans clipped contours and theta positions once, then
+  reuses that result for graphics moves and the exact G-code command listing.
+- Reason: the complete-command-list implementation initially performed the
+  same expensive planning work twice, causing a noticeable preview slowdown.
+- Evidence: 15 converter unit tests pass, including shared-plan G-code/preview
+  parity; Python compilation and `git diff --check` pass. Change note
+  `WSW-20260905-007`.
+- Result: output semantics remain unchanged while the duplicated planner pass
+  is eliminated.
+- Next action: use a representative large SVG to confirm the improved preview
+  wait time; complete M-06 before relying on controller-time estimates.
 
 <a id="elog-20260905210643"></a>
 ### 🟩 2026-09-05 21:06:43 -0500 - SOFTWARE/SUCCESS - Made the production preview safe and complete
