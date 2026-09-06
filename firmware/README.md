@@ -79,6 +79,10 @@ measured exactly 100 mm at `$101=80.000000`; the X M-03 check measured exactly
 repeated combined tests using the east/south NC switches, with Z/A excluded.
 Hard/soft-limit behavior, G54 magnetic registration, and pen-loaded behavior
 remain open.
+For guarded pen-free commissioning, the operator manually established a
+temporary pen-corrected G54 X/Y reference from the center magnet on 2026-09-06;
+the measured `sensor_to_pen` vector is `(0.000, -30.100)` mm. This is not P100
+or A registration and must be overwritten before production drawing.
 A dual-core toolhead implementation now exists at
 [`pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`](pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino)
 for integrated control of the DRV8833, HX711, TMAG5273, and M3/M5 command

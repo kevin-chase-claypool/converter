@@ -163,6 +163,13 @@ area centroid, registers G54 X0/Y0, then scans the outer magnet twice and
 registers G54 A0. Every startup uses the full sequence; the physical switches
 define machine bounds, not the actual bed center.
 
+During pen-free commissioning only, a manually aligned **temporary** G54 X/Y
+reference may be used after X/Y physical homing. On 2026-09-06 the installed
+TMAG-to-pen vector was measured as `(0.000, -30.100)` mm (`pen - TMAG`) by
+aligning each point to the same center magnet. With the pen axis over that
+magnet, `G10 L20 P1 X0 Y0` set temporary XY zero. This is not a P100 result,
+does not set A0, and must be overwritten by P100 before production drawing.
+
 The TMAG and pen tip have a fixed CAD/measured XY separation. P100 owns that
 transformation: it records `pen - TMAG` as a commissioning-gated offset and
 sets G54 so `X0 Y0` means **pen at bed center**. The converter must not add the

@@ -6,6 +6,7 @@ Newest changes appear first.
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
 | 2026-09-06 | `RPSW-20260906-001` | rp23cnc-software, hardware | implemented | [Add GP27 Normal-Status Guardrails](rp23cnc-software/2026/2026-09-06-gp27-normal-status-guardrails.md) |
+| 2026-09-06 | `HW-20260906-006` | hardware, rp23cnc-software | verified | [Set temporary manual pen-corrected G54 XY reference](hardware/2026/2026-09-06-set-temporary-manual-g54-xy-reference.md) |
 | 2026-09-06 | `HW-20260906-005` | hardware, rp23cnc-software | verified | [Commission X/Y physical homing](hardware/2026/2026-09-06-commission-xy-physical-homing.md) |
 | 2026-09-06 | `HW-20260906-004` | hardware, rp23cnc-software | verified | [Verify pen-free coordinated X/Y/A repeatability](hardware/2026/2026-09-06-xya-coordinated-smoke-test.md) |
 | 2026-09-06 | `HW-20260906-003` | hardware, rp23cnc-software | verified | [Configure the A axis without a finite travel limit](hardware/2026/2026-09-06-a-axis-unlimited-travel-configuration.md) |

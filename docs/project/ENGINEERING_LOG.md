@@ -220,6 +220,7 @@ Entry details remain only in the chronology.
 - [2026-09-06 - HARDWARE/VERIFIED - A-axis continuous-travel setting](#elog-20260906-a-axis-continuous-travel-setting)
 - [2026-09-06 - HARDWARE/VERIFIED - Pen-free X/Y/A coordinated smoke test](#elog-20260906-pen-free-x-y-a-coordinated-smoke-test)
 - [2026-09-06 - HARDWARE/VERIFIED - X/Y physical homing](#elog-20260906-x-y-physical-homing)
+- [2026-09-06 - HARDWARE/VERIFIED - Temporary manual G54 XY reference](#elog-20260906-temporary-manual-g54-xy-reference)
 
 ### Testing and verification
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -3213,3 +3214,21 @@ Add new entries at the top of the log below this line.
 - Evidence: `HW-20260906-005`; `2026-09-06-m-07-xy-physical-homing.md`.
 - Next action: validate endpoint/hard-limit behavior separately before enabling
   limits; do not stream converter output until G54 registration is commissioned.
+
+<a id="elog-20260906-temporary-manual-g54-xy-reference"></a>
+### 🟨 2026-09-06 - HARDWARE/VERIFIED - Temporary manual G54 XY reference
+
+- Status: a pen-corrected XY reference is available only for guarded pen-free
+  commissioning; P100 M-08/M-09 remain open.
+- Category: hardware, rp23cnc-software, G54, TMAG, pen offset, commissioning.
+- Summary: The TMAG was aligned to the center magnet at `(-232.900,-283.300)`
+  MPos, then the pen axis at `(-232.900,-253.200)`. This measured
+  `sensor_to_pen=(0.000,-30.100)` mm (`pen - TMAG`).
+- Result: At the centered pen axis, `G10 L20 P1 X0 Y0` was accepted, producing
+  matching X/Y `MPos` and `WCO`; A was intentionally not changed.
+- Boundary: This manual visual alignment neither validates magnetic centroid
+  scanning nor supplies an A orientation. P100 must overwrite the temporary
+  G54 reference before production drawing.
+- Evidence: `HW-20260906-006`; `2026-09-06-manual-temporary-g54-xy-reference.md`.
+- Next action: preserve the temporary A boundary and run only guarded pen-free
+  tests until P100 prerequisites are commissioned.

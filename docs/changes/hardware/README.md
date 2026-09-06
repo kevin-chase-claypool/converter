@@ -9,6 +9,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-09-06 | `RPSW-20260906-001` | implemented | [Add GP27 Normal-Status Guardrails](../rp23cnc-software/2026/2026-09-06-gp27-normal-status-guardrails.md) | `gp27`, `contact-ready`, `p100`, `safety` |
+| 2026-09-06 | `HW-20260906-006` | verified | [Set temporary manual pen-corrected G54 XY reference](2026/2026-09-06-set-temporary-manual-g54-xy-reference.md) | `g54`, `bed-center`, `tmag`, `pen-offset`, `commissioning` |
 | 2026-09-06 | `HW-20260906-005` | verified | [Commission X/Y physical homing](2026/2026-09-06-commission-xy-physical-homing.md) | `homing`, `limits`, `xy`, `m-07`, `commissioning` |
 | 2026-09-06 | `HW-20260906-004` | verified | [Verify pen-free coordinated X/Y/A repeatability](2026/2026-09-06-xya-coordinated-smoke-test.md) | `xya`, `coordinated-motion`, `m-06`, `repeatability`, `commissioning` |
 | 2026-09-06 | `HW-20260906-003` | verified | [Configure the A axis without a finite travel limit](2026/2026-09-06-a-axis-unlimited-travel-configuration.md) | `a-axis`, `rotary`, `soft-limits`, `configuration` |
