@@ -15,7 +15,7 @@ or continuous A axis.
   with `$5=0`.
 - Homing settings: `$20=0`, `$21=0`, `$22=3` (enabled plus single-axis
   commands), `$23=2` (Y only inverted), `$24=50` mm/min, `$25=500` mm/min,
-  `$26=250` ms, `$27=1.000` mm, `$43=1`, `$44=3` (XY first phase), and
+  `$26=250` ms, `$27=10.000` mm, `$43=1`, `$44=3` (XY first phase), and
   `$45=$46=$47=0` (no later homing phases).
 - Z and A were excluded from the homing cycle. A remains continuous and is not
   a conventional switch-homed axis.
@@ -41,6 +41,8 @@ or continuous A axis.
 ```
 
 - `H:1,3` confirms X and Y were marked homed. No homing alarm was reported.
+- `$27=10.000` mm is intentional: it provides clearance so a nearby wire cannot
+  catch on a home switch. It is the value used by the successful combined runs.
 - The controller displayed a pre-existing `G54` work-coordinate offset
   (`WCO:58.681,50.000,0.000,720.000`). Physical homing did not change it.
 

@@ -45,7 +45,7 @@ for continued commissioning:
 | `$133` | `0.000` deg | Continuous A bed: no finite maximum travel |
 | `$20` / `$21` | `0` / `0` | Soft and hard limits remain disabled |
 | `$22` / `$23` | `3` / `2` | X/Y homing enabled with single-axis diagnostics; Y homes negative |
-| `$24` / `$25` / `$27` | `50` / `500` mm/min / `1.000` mm | Locate, seek, and pull-off settings |
+| `$24` / `$25` / `$27` | `50` / `500` mm/min / `10.000` mm | Locate, seek, and pull-off settings; 10 mm intentionally clears nearby switch wiring |
 | `$43` / `$44` / `$45-$47` | `1` / `XY` / `none` | One XY-only homing phase; Z and A excluded |
 
 These values are not a final pen-loaded plotting limit. X/Y physical homing

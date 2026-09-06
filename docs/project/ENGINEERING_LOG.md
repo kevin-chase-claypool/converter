@@ -3207,8 +3207,9 @@ Add new entries at the top of the log below this line.
 - Result: `$HX` and `$HY` each passed, followed by an initial and two repeated
   combined `$H` cycles. The two logged repeats finished without alarm at
   `MPos:-10.000,-498.000,0.000,0.000` with `H:1,3`.
-- Boundary: `$20` and `$21` remain zero. Homing does not change the stale G54
-  offset, and P100 magnetic registration still owns future G54 X/Y/A setup.
+- Boundary: `$20` and `$21` remain zero. `$27=10.000` mm is intentional wire
+  clearance at the switches. Homing does not change the stale G54 offset, and
+  P100 magnetic registration still owns future G54 X/Y/A setup.
 - Evidence: `HW-20260906-005`; `2026-09-06-m-07-xy-physical-homing.md`.
 - Next action: validate endpoint/hard-limit behavior separately before enabling
   limits; do not stream converter output until G54 registration is commissioned.

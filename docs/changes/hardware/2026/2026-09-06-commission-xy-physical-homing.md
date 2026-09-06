@@ -40,7 +40,9 @@ unwired Z and continuous A from the cycle.
 
 ioSender homing was enabled with single-axis diagnostic commands, a single
 XY-only phase, Y-only direction inversion, 500 mm/min search, 50 mm/min
-locate, and 1 mm pull-off. Hard and soft limits remain disabled.
+locate, and 10 mm pull-off. The larger pull-off is intentional clearance for a
+nearby wire that could otherwise catch on a switch. Hard and soft limits remain
+disabled.
 
 ## Verification
 
