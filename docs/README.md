@@ -26,6 +26,7 @@ For the intended P100 command/sensor/reply ownership by stage, open
 | Wiring or pin assignment | [`hardware/WIRING_TABLE.md`](hardware/WIRING_TABLE.md) | `hardware/WIRING_TABLE.md` |
 | Part selection or electrical rating | [`hardware/BOM.md`](hardware/BOM.md) | `hardware/BOM.md` |
 | Subsystem interface or units | [`integration/INTERFACES.md`](integration/INTERFACES.md) | `integration/INTERFACES.md` |
+| ioSender/converter streaming readiness | [`integration/IOSENDER_CONVERTER_COMPATIBILITY_REVIEW.md`](integration/IOSENDER_CONVERTER_COMPATIBILITY_REVIEW.md) | Review plus F-02, M-06, F-05, and P100 commissioning evidence |
 | Current priorities | [`project/ROADMAP.md`](project/ROADMAP.md) | `project/ROADMAP.md` |
 | Test or bench work | [`testing/TEST_PLAN.md`](testing/TEST_PLAN.md) | Test plan plus `report/lab-notes/` evidence |
 | Why a lasting decision was made | [`decisions/`](decisions/) | Applicable ADR |

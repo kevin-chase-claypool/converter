@@ -47,6 +47,7 @@ The links below are alternate views of the single chronological log.
 Entry details remain only in the chronology.
 
 ### Windows software
+- [2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review](#elog-20260905-iosender-to-converter-compatibility-review)
 - [2026-09-05 - WINDOWS SOFTWARE/SUCCESS - Implemented radius-aware A-axis feed](#elog-20260905-implemented-radius-aware-a-axis-feed)
 - [2026-06-07 14:02:21 -0500 - SUCCESS - Animated pen-up preview travel](#elog-20260607140221)
 - [2026-06-07 13:16:27 -0500 - SUCCESS - Added cooperative preview cancellation](#elog-20260607131627)
@@ -62,6 +63,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### RP23CNC and machine software
+- [2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review](#elog-20260905-iosender-to-converter-compatibility-review)
 - [2026-08-06 12:30:00 -0500 - MIXED/OPEN - Corrected PC817 active-low contract and PCB review file](#elog-20260806123000)
 - [2026-07-31 11:03:49 -0500 - SUCCESS - Added RP2350 toolhead prototype firmware](#elog-20260731110349)
 - [2026-07-04 12:30:00 -0500 - MIXED/OPEN - Added electronics layout wiring HTML](#elog-20260704123000)
@@ -73,6 +75,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review](#elog-20260905-iosender-to-converter-compatibility-review)
 - [2026-09-05 - WINDOWS SOFTWARE/MIXED - Planned radius-aware A-axis feed](#elog-20260905-planned-radius-aware-a-axis-feed)
 - [2026-09-05 - HARDWARE/SUCCESS - Completed M-03 Y-axis dimensional check](#elog-20260905-completed-m-03-y-axis-dimensional-check)
 - [2026-09-05 - HARDWARE/SUCCESS - Completed M-02 Y-axis rate check](#elog-20260905-completed-m-02-y-axis-rate-check)
@@ -208,6 +211,7 @@ Entry details remain only in the chronology.
 - [2026-09-05 - HARDWARE/IN PROGRESS - M-02 A-axis rate ramp through F600](#elog-20260905-m-02-a-axis-rate-ramp-through-f600)
 
 ### Testing and verification
+- [2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review](#elog-20260905-iosender-to-converter-compatibility-review)
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
 - [2026-08-06 13:37:00 -0500 - MIXED/OPEN - Added KiCad 9-native perfboard schematic](#elog-20260806133700)
 - [2026-07-04 12:00:00 -0500 - MIXED/OPEN - Planned magnetic homing calibration](#elog-20260704120000)
@@ -302,6 +306,21 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260905-iosender-to-converter-compatibility-review"></a>
+### 🟨 2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review
+
+- Status: review complete; direct P100-to-print operation remains blocked.
+- Category: software, firmware, hardware, test, ioSender, grblHAL, P100.
+- Evidence: the converter default enables Z output even though the plotter uses
+  M3/M5 and has no wired Z. Its header also omits explicit G94/G54. P100 Q0 is
+  intentionally locked and the installed baseline has `PROBE_ENABLE=0`.
+- Conclusion: ioSender is compatible as the grblHAL sender, but it cannot fix
+  program modal state, disabled macro features, or unfinished M3/M5/toolhead
+  commissioning. M-06 remains necessary for mixed X/Y/A feed behavior.
+- Next action: correct and parser-verify the converter preamble/default, then
+  complete the documented P100, X calibration, M3/M5, and coordinated-motion
+  gates before enabling direct printing.
 
 <a id="elog-20260905-implemented-radius-aware-a-axis-feed"></a>
 ### 🟩 2026-09-05 - WINDOWS SOFTWARE/SUCCESS - Implemented radius-aware A-axis feed

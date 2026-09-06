@@ -94,6 +94,9 @@
 
 ## Phase 4: three-axis motion
 
+- [ ] Correct the converter's production defaults and self-contained program
+  preamble: non-Z M3/M5 mode plus explicit `G21 G90 G94 G17 G54`; rerun the
+  parser dry run before allowing ioSender direct-stream operation.
 - [ ] Repeat driver and motor bring-up for X, Y, and A.
 - [ ] Determine and calibrate X/Y steps per millimeter. (`M-03`)
 - [x] Implement radius-aware A-axis feed planning in the converter so a target
@@ -147,6 +150,8 @@
 
 ## Next concrete task
 
-Complete the X-axis rate and M-03 dimensional checks, then run M-06 to verify
-combined X/Y/A motion and the converter's radius-aware feed behavior on the
-installed grblHAL build.
+Correct and parser-verify the converter's M3/M5 default plus explicit modal
+preamble. Then complete the X-axis rate and M-03 checks, and run M-06 to
+verify combined X/Y/A motion and radius-aware feed behavior on installed
+grblHAL. Do not enable direct P100-to-print operation until its commissioning
+and toolhead gates also pass.

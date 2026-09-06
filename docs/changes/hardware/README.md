@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-05 | `WSW-20260905-003` | implemented | [Record ioSender-to-converter compatibility review](../windows-software/2026/2026-09-05-iosender-converter-compatibility-review.md) | `iosender`, `grblhal`, `gcode`, `p100`, `integration-review` |
 | 2026-09-05 | `WSW-20260905-002` | implemented | [Implement radius-aware A-axis feed for drawing](../windows-software/2026/2026-09-05-radius-aware-a-feed-requirement.md) | `theta`, `a-axis`, `tangential-speed`, `radius`, `feed-planning` |
 | 2026-09-05 | `HW-20260905-006` | verified | [Verify Y-axis dimensional calibration](2026/2026-09-05-m-03-y-axis-dimensional-calibration.md) | `y-axis`, `dimensional-calibration`, `steps-per-mm`, `commissioning` |
 | 2026-09-05 | `HW-20260905-005` | verified | [Verify the Y-axis rate and acceleration baseline](2026/2026-09-05-m-02-y-axis-rate-verification.md) | `y-axis`, `rate`, `acceleration`, `commissioning` |
