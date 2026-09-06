@@ -32,6 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-06 | M-07 X/Y homing | Passed (physical home) | X-east and Y-south NC switches passed single-axis and repeated combined `$H` cycles. Both logged repeats ended at `MPos:-10.000,-498.000` with `H:1,3`; limits and G54 registration remain open. |
 | 2026-09-06 | M-06 X/Y/A | Passed (smoke) | Pen-free simultaneous diagonal X/Y/A moves were reported perfect at `F15000` and `F20000`; carriage and bed marks returned exactly. Converter radius/timing validation remains. |
 | 2026-09-06 | M-03 X-axis | Passed | With `$100=79.71303`, a relative `G1 X100 F300` move measured exactly 100 mm by caliper and `G1 X-100 F300` returned exactly to the starting mark. |
 | 2026-09-06 | M-02 X-axis | Passed (unloaded) | Five `X50`/`X-50` pairs at `F1500` returned exactly to the reference mark with no reported motion problem; `$110=1500` and `$120=500` are preliminary unloaded settings. |

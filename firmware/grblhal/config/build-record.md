@@ -43,8 +43,13 @@ for continued commissioning:
 | `$130` | `508.000` mm | Measured X end-to-end physical travel; soft-limit use unverified |
 | `$131` | `508.000` mm | Measured Y end-to-end physical travel; soft-limit use unverified |
 | `$133` | `0.000` deg | Continuous A bed: no finite maximum travel |
+| `$20` / `$21` | `0` / `0` | Soft and hard limits remain disabled |
+| `$22` / `$23` | `3` / `2` | X/Y homing enabled with single-axis diagnostics; Y homes negative |
+| `$24` / `$25` / `$27` | `50` / `500` mm/min / `1.000` mm | Locate, seek, and pull-off settings |
+| `$43` / `$44` / `$45-$47` | `1` / `XY` / `none` | One XY-only homing phase; Z and A excluded |
 
-These values are not a final pen-loaded plotting limit. Complete coordinated
-X/Y/A motion and loaded toolhead validation before treating them as production
-settings. Do not enable X/Y soft limits until their physical homing and
-endpoint behavior is verified; do not assign a finite A soft limit.
+These values are not a final pen-loaded plotting limit. X/Y physical homing
+passed on 2026-09-06, but hard/soft-limit endpoint behavior, G54 bed-center
+registration, and loaded toolhead validation remain. Do not enable X/Y soft
+limits until their endpoint behavior is verified; do not assign a finite A soft
+limit.

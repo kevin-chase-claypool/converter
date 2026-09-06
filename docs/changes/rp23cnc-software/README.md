@@ -10,6 +10,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-09-06 | `RPSW-20260906-001` | implemented | [Add GP27 Normal-Status Guardrails](2026/2026-09-06-gp27-normal-status-guardrails.md) | `gp27`, `contact-ready`, `p100`, `safety` |
+| 2026-09-06 | `HW-20260906-005` | verified | [Commission X/Y physical homing](../hardware/2026/2026-09-06-commission-xy-physical-homing.md) | `homing`, `limits`, `xy`, `m-07`, `commissioning` |
 | 2026-09-06 | `HW-20260906-004` | verified | [Verify pen-free coordinated X/Y/A repeatability](../hardware/2026/2026-09-06-xya-coordinated-smoke-test.md) | `xya`, `coordinated-motion`, `m-06`, `repeatability`, `commissioning` |
 | 2026-09-06 | `HW-20260906-003` | verified | [Configure the A axis without a finite travel limit](../hardware/2026/2026-09-06-a-axis-unlimited-travel-configuration.md) | `a-axis`, `rotary`, `soft-limits`, `configuration` |
 | 2026-09-06 | `HW-20260906-002` | verified | [Verify X-axis rate and dimensional calibration](../hardware/2026/2026-09-06-x-axis-rate-and-dimensional-calibration.md) | `x-axis`, `rate`, `acceleration`, `dimensional-calibration`, `commissioning` |

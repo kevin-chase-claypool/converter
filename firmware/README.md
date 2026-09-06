@@ -75,7 +75,9 @@ SD/Ymodem support. Installed TB6600 signal response and unloaded X/Y/A motion
 bring-up have since been partially commissioned: A M-01/M-02/M-04/M-05 and
 X/Y M-01/M-02 checks passed for their documented scopes. The Y M-03 check
 measured exactly 100 mm at `$101=80.000000`; the X M-03 check measured exactly
-100 mm at `$100=79.71303`. Coordinated motion, homing, and pen-loaded behavior
+100 mm at `$100=79.71303`. X/Y physical homing then passed single-axis and
+repeated combined tests using the east/south NC switches, with Z/A excluded.
+Hard/soft-limit behavior, G54 magnetic registration, and pen-loaded behavior
 remain open.
 A dual-core toolhead implementation now exists at
 [`pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`](pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino)

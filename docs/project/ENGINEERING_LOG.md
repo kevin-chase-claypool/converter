@@ -219,6 +219,7 @@ Entry details remain only in the chronology.
 - [2026-09-06 - HARDWARE/VERIFIED - X-axis preliminary motion and scale](#elog-20260906-x-axis-preliminary-motion-and-scale)
 - [2026-09-06 - HARDWARE/VERIFIED - A-axis continuous-travel setting](#elog-20260906-a-axis-continuous-travel-setting)
 - [2026-09-06 - HARDWARE/VERIFIED - Pen-free X/Y/A coordinated smoke test](#elog-20260906-pen-free-x-y-a-coordinated-smoke-test)
+- [2026-09-06 - HARDWARE/VERIFIED - X/Y physical homing](#elog-20260906-x-y-physical-homing)
 
 ### Testing and verification
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -3193,3 +3194,21 @@ Add new entries at the top of the log below this line.
 - Evidence: `HW-20260906-004`; `2026-09-06-m-06-xya-coordinated-smoke.md`.
 - Next action: run a converter-generated pen-free sample at inner, middle, and
   outer radii; compare emitted blocks, elapsed time, and returned marks.
+
+<a id="elog-20260906-x-y-physical-homing"></a>
+### 🟩 2026-09-06 - HARDWARE/VERIFIED - X/Y physical homing
+
+- Status: X/Y physical-home portion of M-07 passed; hard/soft limits and G54
+  registration remain open.
+- Category: hardware, rp23cnc-software, homing, limits, X/Y, M-07.
+- Summary: X homes east and Y homes south using their installed normally-closed
+  switches. The controller was changed from a Z/A/XY phase sequence to one
+  XY-only phase with Y-only homing-direction inversion.
+- Result: `$HX` and `$HY` each passed, followed by an initial and two repeated
+  combined `$H` cycles. The two logged repeats finished without alarm at
+  `MPos:-10.000,-498.000,0.000,0.000` with `H:1,3`.
+- Boundary: `$20` and `$21` remain zero. Homing does not change the stale G54
+  offset, and P100 magnetic registration still owns future G54 X/Y/A setup.
+- Evidence: `HW-20260906-005`; `2026-09-06-m-07-xy-physical-homing.md`.
+- Next action: validate endpoint/hard-limit behavior separately before enabling
+  limits; do not stream converter output until G54 registration is commissioned.

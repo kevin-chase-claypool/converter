@@ -108,7 +108,9 @@
 - [ ] Set A steps per motor-shaft degree. (`M-04`)
 - [ ] Verify the 12:1 bed ratio. (`M-05`)
 - [ ] Tune max rate and acceleration one axis at a time.
-- [ ] Add and verify homing and soft limits. (`M-07`)
+- [ ] Complete M-07 hard/soft-limit behavior. X/Y physical homing passed on
+  2026-09-06 with a repeatable XY-only cycle; endpoint-limit behavior and
+  G54 registration remain open. (`M-07`)
 - [ ] Complete M-06 coordinated X/Y/A validation. Initial pen-free symmetric
   repeatability smoke test passed through `F20000` on 2026-09-06; converter
   inner/mid/outer-radius timing and geometry validation remains. (`M-06`)

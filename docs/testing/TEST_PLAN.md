@@ -121,7 +121,7 @@ the routed U3 return conductor from `LIMA` to `PRB`.
 | M-04 | A-axis one motor revolution | With 8 microsteps and `$103 = 4.444444` steps per motor-degree, 360 commanded A motor-degrees gives one motor revolution |
 | M-05 | Bed ratio check | 4320 commanded A motor-degrees (19,200 pulses) gives one bed revolution for 12:1 |
 | M-06 | Coordinated X/Y/A sample | Smooth motion and no lost steps |
-| M-07 | Homing and limits | Repeatable X/Y machine home from physical switches, safe limit behavior, and homing configuration that excludes unused Z and magnetic A registration |
+| M-07 | Homing and limits | X/Y physical home passed: repeatable machine home from physical switches with Z/A excluded. Hard/soft-limit behavior remains a separate open requirement. |
 | M-08 | Magnetic bed-center centroid raster | After X/Y physical homing, P100 produces multiple valid equal-pitch X chords, rejects malformed footprints, calculates the chord-width-weighted area centroid, performs the Centroid Approach and Registration Pass, and repeatably sets G54 X0/Y0 |
 | M-09 | Magnetic theta-index registration | At the measured outer radius, P100 finds two outer-magnet entry/exit pairs from one direction, validates spacing near `4320` A motor degrees, approaches the equivalent averaged index, and repeatably sets G54 A0 |
 | M-10 | Full startup home and registration | One ioSender `G65 P100 Q0` command lifts, homes physical X/Y, registers center and A, returns to G54 X0 Y0 A0, and leaves the pen lifted |
