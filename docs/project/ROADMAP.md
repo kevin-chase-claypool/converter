@@ -99,7 +99,8 @@
 - [ ] Re-run F-02 with a newly generated default file before allowing ioSender
   direct-stream operation.
 - [ ] Repeat driver and motor bring-up for X, Y, and A.
-- [ ] Determine and calibrate X/Y steps per millimeter. (`M-03`)
+- [x] Determine and calibrate X/Y steps per millimeter. (`M-03`; Y: 2026-09-05,
+  X: 2026-09-06)
 - [x] Implement radius-aware A-axis feed planning in the converter so a target
   tangential writing speed remains bounded as pen radius changes; the software
   handles the 12:1 motor-degree contract, combined XY/A feed, controller caps,

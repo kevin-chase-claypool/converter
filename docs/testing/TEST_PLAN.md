@@ -196,9 +196,23 @@ and preliminary settings; the X-axis rate check remains.** See
 M-03 Y-axis evidence: on 2026-09-05, with `$101=80.000000`, a relative
 `G1 Y100 F120` move measured exactly 100 mm with calipers. The matched
 `G1 Y-100 F120` move returned exactly to the starting reference mark. **M-03
-passed for the conducted Y-axis dimensional check; the X-axis measurement
-remains.** See
+passed for the conducted Y-axis dimensional check.** See
 [`2026-09-05-m-03-y-axis-dimensional-calibration.md`](../report/lab-notes/2026-09-05-m-03-y-axis-dimensional-calibration.md).
+
+M-02 X-axis evidence: on 2026-09-06, the operator selected `$110=1500`
+mm/min and `$120=500` mm/sec^2, then ran five matched `X50`/`X-50` unloaded
+moves at `F1500`. Motion was reported smooth and returned exactly to the
+reference mark with no skipped-step, stall, or jerk symptom. **M-02 passed for
+the conducted unloaded X-axis check and preliminary settings.** No temperature
+observation was recorded. See
+[`2026-09-06-m-02-x-axis-rate-ramp.md`](../report/lab-notes/2026-09-06-m-02-x-axis-rate-ramp.md).
+
+M-03 X-axis evidence: the initial 10 mm measurement was rejected after a
+longer caliper check. With `$100=80.000000`, `G1 X100 F300` measured
+`100.36 mm`; the corrected `$100=79.71303` then yielded exactly 100 mm, and
+the matched `X-100` return reached the original mark. **M-03 passed for the
+conducted X-axis dimensional check.** See
+[`2026-09-06-m-03-x-axis-dimensional-calibration.md`](../report/lab-notes/2026-09-06-m-03-x-axis-dimensional-calibration.md).
 
 ## Toolhead tests
 

@@ -32,6 +32,8 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-06 | M-03 X-axis | Passed | With `$100=79.71303`, a relative `G1 X100 F300` move measured exactly 100 mm by caliper and `G1 X-100 F300` returned exactly to the starting mark. |
+| 2026-09-06 | M-02 X-axis | Passed (unloaded) | Five `X50`/`X-50` pairs at `F1500` returned exactly to the reference mark with no reported motion problem; `$110=1500` and `$120=500` are preliminary unloaded settings. |
 | 2026-09-05 | M-03 Y-axis | Passed | With `$101=80.000000`, a relative `G1 Y100 F120` move measured exactly 100 mm by caliper and `G1 Y-100 F120` returned exactly to the starting mark; X remains. |
 | 2026-09-05 | M-02 Y-axis | Passed (unloaded) | Y stepped bidirectional moves at `F60` through `F500` completed without skipped steps, stalls, or jerking; `$111=1500` and `$121=500` were then reported smooth as preliminary settings. X rate remains; dimensional calibration is separate. |
 | 2026-09-05 | M-05 | Passed | With `$103 = 4.44444`, `A4320` and `A-4320` at `F10000` produced the expected one-bed-revolution forward/reverse check; the bed mark returned exactly to its starting position each time. |

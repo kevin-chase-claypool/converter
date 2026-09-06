@@ -6,6 +6,7 @@ Newest changes appear first.
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
 | 2026-09-06 | `RPSW-20260906-001` | rp23cnc-software, hardware | implemented | [Add GP27 Normal-Status Guardrails](rp23cnc-software/2026/2026-09-06-gp27-normal-status-guardrails.md) |
+| 2026-09-06 | `HW-20260906-002` | hardware, rp23cnc-software | verified | [Verify X-axis rate and dimensional calibration](hardware/2026/2026-09-06-x-axis-rate-and-dimensional-calibration.md) |
 | 2026-09-05 | `WSW-20260905-007` | windows-software | implemented | [Share the preview motion plan](windows-software/2026/2026-09-05-share-preview-motion-plan.md) |
 | 2026-09-05 | `WSW-20260905-006` | windows-software | implemented | [Make the production preview safe and complete](windows-software/2026/2026-09-05-production-preview-safety.md) |
 | 2026-09-05 | `WSW-20260905-005` | windows-software, rp23cnc-software, hardware | implemented | [Consolidate current documentation ownership](windows-software/2026/2026-09-05-consolidate-current-documentation.md) |

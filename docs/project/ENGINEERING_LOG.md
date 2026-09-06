@@ -216,6 +216,7 @@ Entry details remain only in the chronology.
 - [2026-09-05 - HARDWARE/SUCCESS - Completed M-01 low-speed jog test](#elog-20260905-completed-m-01-low-speed-jog-test)
 - [2026-09-05 - HARDWARE/IN PROGRESS - M-02 A-axis rate ramp through F600](#elog-20260905-m-02-a-axis-rate-ramp-through-f600)
 - [2026-09-06 - RP23CNC-SOFTWARE/IMPLEMENTED - Added GP27 normal-status guardrails](#elog-20260906-added-gp27-normal-status-guardrails)
+- [2026-09-06 - HARDWARE/VERIFIED - X-axis preliminary motion and scale](#elog-20260906-x-axis-preliminary-motion-and-scale)
 
 ### Testing and verification
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -3138,3 +3139,21 @@ Add new entries at the top of the log below this line.
   made.
 - Next action: keep fixed G4 dwell behavior until those commissioning gates and
   controller-side acceptance tests have passed.
+
+<a id="elog-20260906-x-axis-preliminary-motion-and-scale"></a>
+### 🟩 2026-09-06 - HARDWARE/VERIFIED - X-axis preliminary motion and scale
+
+- Status: unloaded X M-02 and M-03 checks passed for the documented scope.
+- Category: hardware, rp23cnc-software, X-axis, TB6600, commissioning.
+- Summary: The operator selected `$110=1500` mm/min and `$120=500` mm/sec^2,
+  then reported five matched `X50`/`X-50` moves at `F1500` smooth with exact
+  return to the reference mark. A 100 mm caliper check corrected the initial
+  calculated `$100=80.000000` to `$100=79.71303` steps/mm.
+- Evidence: `$100=80.000000` produced 100.36 mm for `X100`; at `$100=79.71303`
+  the repeated `X100` measured exactly 100 mm and `X-100` returned exactly to
+  the original mark. See `HW-20260906-002` and the M-02/M-03 X lab notes.
+- Limitation: The initial 10 mm measurement was rejected as inaccurate, and no
+  X motor/driver temperature observation was recorded during the repeated-rate
+  test. The settings remain preliminary unloaded values.
+- Next action: retain these values for pen-free coordinated X/Y/A testing;
+  complete homing/limits and later pen-loaded validation before production use.

@@ -131,11 +131,13 @@ M-03 remains the physical travel calibration: use measured motion to correct
 either value if belt compliance, pulley geometry, or actual travel differs.
 The Y-axis unloaded rate check passed its stepped `F60` through `F500` moves;
 the operator selected `$111=1500` mm/min and `$121=500` mm/sec^2 as preliminary
-commissioning values. These settings do not replace M-03 dimensional
-calibration or establish the final pen-loaded plotting rate. The Y-axis M-03
-check then measured exactly 100 mm for `G1 Y100 F120` and returned exactly to
-the starting mark with `G1 Y-100 F120`; `$101=80.000000` is retained. The X
-axis still requires its corresponding physical check.
+commissioning values. The X-axis repeated-rate check likewise passed at
+`$110=1500` mm/min and `$120=500` mm/sec^2. These values do not establish a
+final pen-loaded plotting rate. The Y M-03 check measured exactly 100 mm for
+`G1 Y100 F120` and returned to its mark with `G1 Y-100 F120`; `$101=80.000000`
+is retained. X M-03 measured 100.36 mm at its calculated `$100=80.000000` and
+exactly 100 mm after correction to `$100=79.71303`; the matched reverse move
+also returned exactly to its mark.
 
 ## RP23CNC to stepper drivers
 
