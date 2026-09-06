@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200mm" height="200mm" viewBox="0 0 200 200">
+  <!--
+    Pen-free M-06 input. Four sparse radial strokes around (100,100) cross
+    nominal 20 mm, 50 mm, and 80 mm radii without entering the exact center.
+  -->
+  <g fill="none" stroke="#000000" stroke-width="0.5" stroke-linecap="round">
+    <path d="M 120 100 L 150 100 L 180 100"/>
+    <path d="M 100 80 L 100 50 L 100 20"/>
+    <path d="M 80 100 L 50 100 L 20 100"/>
+    <path d="M 100 120 L 100 150 L 100 180"/>
+  </g>
+</svg>

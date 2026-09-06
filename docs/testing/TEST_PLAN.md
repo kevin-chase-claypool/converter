@@ -220,6 +220,8 @@ marks returned exactly to their starts. **The coordinated-motion repeatability
 smoke test passed.** Converter-generated inner/mid/outer-radius timing and
 geometry validation remain required. See
 [`2026-09-06-m-06-xya-coordinated-smoke.md`](../report/lab-notes/2026-09-06-m-06-xya-coordinated-smoke.md).
+Use [`m06-radius-sweep.svg`](../../samples/svg/m06-radius-sweep.svg) for the
+next pen-free converter-generated M-06 timing and geometry run.
 
 ## Toolhead tests
 
