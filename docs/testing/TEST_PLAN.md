@@ -229,6 +229,12 @@ both pen commands and both pen delays to blank/zero before generating the
 file. Confirm the G54 XY reference and a deliberate temporary A reference,
 then inspect the generated first rapid and park target before Cycle Start.
 
+Use [`m06-xy-theta-lettering.svg`](../../samples/svg/m06-xy-theta-lettering.svg)
+as a separate pen-free visual strategy check. With the current default r-theta
+resolver, its generated command list must contain both `(x_theta)` and
+`(y_theta)` draw labels. Those labels describe the selected coordinated
+kinematic strategy; they do not denote distinct firmware modes.
+
 ## Toolhead tests
 
 | ID | Test | Pass condition |

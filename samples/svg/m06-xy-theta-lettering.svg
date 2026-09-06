@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200mm" height="200mm" viewBox="0 0 200 200">
+  <!--
+    Pen-free M-06 strategy-visibility sample. The X and Y letter strokes are
+    centered at (100,100), which the converter maps to G54 X0 Y0. With the
+    current r-theta resolver, the generated command list includes both
+    (x_theta) and (y_theta) drawing labels.
+  -->
+  <g fill="none" stroke="#000000" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="45,70 85,130"/>
+    <polyline points="45,130 85,70"/>
+    <polyline points="115,70 135,100 155,70"/>
+    <polyline points="135,100 135,130"/>
+  </g>
+</svg>

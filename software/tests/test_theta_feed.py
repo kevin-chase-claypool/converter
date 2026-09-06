@@ -130,6 +130,20 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         self.assertTrue(any(delta > 1e-6 for delta in directions))
         self.assertTrue(any(delta < -1e-6 for delta in directions))
 
+    def test_m06_xy_theta_lettering_exposes_both_strategy_labels(self):
+        sample = Path(__file__).resolve().parents[2] / "samples" / "svg" / "m06-xy-theta-lettering.svg"
+        settings = self.settings(
+            pen_up_command="",
+            pen_down_command="",
+            pen_up_ms=0.0,
+            pen_down_ms=0.0,
+        )
+        contours = converter.read_svg(sample, settings)
+        gcode = converter.contours_to_gcode(contours, settings)
+
+        self.assertIn("(x_theta)", gcode)
+        self.assertIn("(y_theta)", gcode)
+
     def test_invalid_machine_motion_settings_are_rejected(self):
         for kwargs in (
             {"feed_rate": 0.0},
