@@ -9,9 +9,9 @@ grblHAL baseline, and the intended `G65 P100 Q0` startup path.
 The intended workflow is compatible in principle, but it is **not ready for
 unconditional “convert, run P100, then print” operation**. ioSender is an
 appropriate sender for grblHAL and does not need a translation layer; the
-remaining discrepancies are in the converter defaults, program modal-state
-header, uncommissioned P100 prerequisites, and unverified machine/toolhead
-behavior.
+converter defaults and program-header discrepancies have been corrected in
+software. Uncommissioned P100 prerequisites and unverified machine/toolhead
+behavior still block direct printing.
 
 ## Confirmed compatible subset
 
@@ -28,8 +28,8 @@ mode and supports `G21`, `G90`, `G54`, `M3`/`M5`, and `M2` in its official
 
 | Priority | Finding | Evidence | Required resolution |
 |---|---|---|---|
-| Stop | **The converter defaults to Z mode.** A default conversion emits `G0 Z5` and `G1 Z0`, not the required `M5`/`M3` pen contract. This machine has no wired Z motor. | `Settings.include_z = True`; a default generated program contains Z commands. The software documentation instead instructs the operator to uncheck Use Z axis. | Change the default to non-Z M3/M5 mode and add a regression test. Until then, the operator must manually clear **Use Z axis** before every conversion. |
-| Stop | **The generated header omits `G94` and `G54`.** P100 currently sets both, but a drawing program should establish its own feed and work-coordinate modes. | The generated header is `G21`, `G90`, then `G0 F...`; the macro contains `G21 G90 G94 G17 G54`. A prior Y test produced error 22 until `G94` was explicitly sent. | Emit at least `G21`, `G90`, `G94`, and `G54` before any motion. Retain `G17` if the converter assumes that plane. |
+| Resolved in software | **The converter defaulted to Z mode.** The default now uses the required M5/M3 pen contract and emits no Z words. This machine has no wired Z motor. | `Settings.include_z = False`; regression coverage inspects default generated output. | Re-run F-02 with a newly generated default file on the installed controller before direct streaming. Keep **Use Z axis** disabled. |
+| Resolved in software | **The generated header omitted `G94` and `G54`.** The header now explicitly establishes `G21`, `G90`, `G94`, `G17`, and `G54` before any motion. | Regression coverage inspects the generated preamble. | Re-run F-02 with a newly generated default file; retain self-contained modal setup in future output changes. |
 | Stop | **P100 Q0 cannot currently be the automatic startup step.** | `P100.macro` sets `#<commissioned> = 0` and aborts Q0. The installed baseline build configuration has `PROBE_ENABLE=0`, while the macro requires probe input, NGC expressions, filesystem macros, Aux0, and PRB. | Build/install the stated candidate features, commission constants and sensor-to-pen offset, then pass F-08, E-18, M-08, M-09, and M-10 before enabling Q0. |
 | Stop | **M3/M5 pen behavior is not yet authorized for production strokes.** | Firmware documentation leaves F-05/E-18 mapping and normal M5 clearance validation open; T-01H/T-01J remain required. | Verify actual spindle-enable polarity, M3 contact, M5 clearance, dwell values, and repeated no-drag cycles. |
 | Hold | **Radius-aware combined X/Y/A timing remains a host-side estimate.** | The converter computes a coordinated feed from mixed X/Y/A motion. The repository keeps M-06 open. grblHAL's official changelog records a rotary-feed-rate fix, but the installed build record does not state whether its relevant option is enabled. | Run M-06 after X rate and M-03 calibration. Compare commanded blocks, actual elapsed time, and position repeatability at inner/mid/outer radii. Do not rely on preview runtime for production scheduling before this pass. |
@@ -37,8 +37,8 @@ mode and supports `G21`, `G90`, `G54`, `M3`/`M5`, and `M2` in its official
 
 ## Required self-contained program contract
 
-After the converter-default and header fixes above, every saved drawing file
-should begin with a self-contained modal/safety preamble equivalent to:
+Every default saved drawing file now begins with this self-contained
+modal/safety preamble:
 
 ```gcode
 G21

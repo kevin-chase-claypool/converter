@@ -47,6 +47,7 @@ The links below are alternate views of the single chronological log.
 Entry details remain only in the chronology.
 
 ### Windows software
+- [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
 - [2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review](#elog-20260905-iosender-to-converter-compatibility-review)
 - [2026-09-05 - WINDOWS SOFTWARE/SUCCESS - Implemented radius-aware A-axis feed](#elog-20260905-implemented-radius-aware-a-axis-feed)
 - [2026-06-07 14:02:21 -0500 - SUCCESS - Animated pen-up preview travel](#elog-20260607140221)
@@ -63,6 +64,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### RP23CNC and machine software
+- [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
 - [2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review](#elog-20260905-iosender-to-converter-compatibility-review)
 - [2026-08-06 12:30:00 -0500 - MIXED/OPEN - Corrected PC817 active-low contract and PCB review file](#elog-20260806123000)
 - [2026-07-31 11:03:49 -0500 - SUCCESS - Added RP2350 toolhead prototype firmware](#elog-20260731110349)
@@ -211,6 +213,7 @@ Entry details remain only in the chronology.
 - [2026-09-05 - HARDWARE/IN PROGRESS - M-02 A-axis rate ramp through F600](#elog-20260905-m-02-a-axis-rate-ramp-through-f600)
 
 ### Testing and verification
+- [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
 - [2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review](#elog-20260905-iosender-to-converter-compatibility-review)
 - [2026-08-06 13:42:00 -0500 - MIXED/OPEN - Recovered KiCad 10 routing into a KiCad 9 review board](#elog-20260806134200)
 - [2026-08-06 13:37:00 -0500 - MIXED/OPEN - Added KiCad 9-native perfboard schematic](#elog-20260806133700)
@@ -306,6 +309,23 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260905-corrected-converter-startup-contract"></a>
+### 🟩 2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract
+
+- Status: converter implementation and automated verification complete;
+  installed-controller parser verification remains open.
+- Category: software, firmware, test, converter, ioSender, grblHAL.
+- Implementation: changed the converter default from Z pen motion to M5/M3,
+  matching the unwired-Z X/Y/A plotter contract. Generated files now establish
+  `G21 G90 G94 G17 G54` before any motion, then issue the configured initial
+  M5 and settle dwell.
+- Evidence: automated regression coverage inspects the exact preamble,
+  M3/M5 presence, and absence of Z words in default output.
+- Limitation: this does not unlock P100 Q0, enable `PROBE_ENABLE`, validate
+  M3/M5 hardware behavior, or replace F-02 and M-06 installed-machine tests.
+- Next action: stream a newly generated default file during F-02, then retain
+  the existing P100/toolhead/X-axis/coordinated-motion gates before printing.
 
 <a id="elog-20260905-iosender-to-converter-compatibility-review"></a>
 ### 🟨 2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review

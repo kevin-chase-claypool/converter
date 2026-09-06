@@ -15,6 +15,9 @@ The converter emits:
 |---|---|
 | `G21` | Millimeters |
 | `G90` | Absolute positioning |
+| `G94` | Units-per-minute feed mode |
+| `G17` | XY plane selection |
+| `G54` | P100-registered pen-at-bed-center work-coordinate frame |
 | `G0 X Y A F` | Pen-up travel |
 | `G1 X Y A F` | Pen-down coordinated move |
 | `M3` | Toolhead ENGAGE: seek paper, then hold target force |
@@ -36,7 +39,9 @@ silent motion.
 The grblHAL build may expose a Z axis slot because the Web Builder uses a
 four-axis configuration to enable A alongside X/Y. Z is unused for this machine:
 do not wire a Z motor, do not home Z, and do not treat the TMAG5273 as a Z-axis
-sensor.
+sensor. The converter defaults to the M3/M5 pen contract and emits no Z words;
+the optional **Use Z axis** setting is not a production configuration for this
+machine.
 
 The converter currently applies the 12:1 bed ratio. Therefore:
 

@@ -23,11 +23,14 @@ Requires `PySide6` (`pip install PySide6`).
 
 ## What it emits
 
-- `G21` (mm), `G90` (absolute)
+- `G21` (mm), `G90` (absolute), `G94` (units/minute feed), `G17` (XY plane),
+  and `G54` (the registered work-coordinate frame)
 - `G0` travel moves (pen up), `G1` draw moves (pen down)
 - `X Y` in mm in the machine's active work-coordinate frame; `A` =
   **motor-shaft degrees** (already multiplied by `Theta ratio`)
-- `M5` / `M3` pen up / down (or `Z` moves if "Use Z axis" is enabled), with a
+- `M5` / `M3` pen up / down by default. `Z` moves are available only when
+  **Use Z axis** is deliberately enabled; do not enable it for this machine,
+  whose controller's Z slot is unwired. M3/M5 moves include a
   `G4` settle dwell after each (from `Pen cycle ms`) for the firmware handshake
 - `M2` at end
 

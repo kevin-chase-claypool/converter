@@ -58,7 +58,9 @@ class Settings:
     pen_up_command: str = "M5"
     pen_down_command: str = "M3"
     flip_y: bool = True
-    include_z: bool = True
+    # This machine exposes a Z slot only to enable A in the controller build;
+    # its pen contract is M3/M5, not physical Z motion.
+    include_z: bool = False
     preview_xy_only: bool = False
     compensate_pen_width: bool = True
 
@@ -122,7 +124,7 @@ CHECKBOX_FIELDS = (
     ("Geometry", "compensate_pen_width", "Compensate pen stroke", True),
     ("Shading", "raster_shading", "Raster shading", False),
     ("Theta kinematics", "monotonic_theta", "Monotonic theta (r-theta style)", True),
-    ("Pen", "include_z", "Use Z axis for pen up/down", True),
+    ("Pen", "include_z", "Use Z axis for pen up/down", False),
     ("Other settings", "preview_xy_only", "Preview mode: omit theta axis", False),
 )
 
