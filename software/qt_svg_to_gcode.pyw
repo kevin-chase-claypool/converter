@@ -699,7 +699,9 @@ class PreviewWorker(QObject):
             moves = self.window.build_preview_moves(raw_contours, self.settings, self.is_cancelled)
             self.progress.emit(78, f"Clipping {len(raw_contours)} contours to the bed")
             contours = converter.clip_contours_to_bed(raw_contours, bed_center, clip_radius, self.is_cancelled)
-            self.finished.emit((self.settings, contours, moves, bed_center))
+            self.progress.emit(90, "Generating complete G-code listing")
+            program_gcode = converter.contours_to_gcode(raw_contours, self.settings)
+            self.finished.emit((self.settings, contours, moves, bed_center, program_gcode))
         except converter.OperationCancelled:
             self.cancelled.emit()
         except Exception as exc:
@@ -801,7 +803,6 @@ class MainWindow(QMainWindow):
 
         self.flip_y = make_checkbox("flip_y")
         self.use_z = make_checkbox("include_z")
-        self.preview_xy = make_checkbox("preview_xy_only")
         self.compensate_pen = make_checkbox("compensate_pen_width")
         self.monotonic_theta = make_checkbox("monotonic_theta")
         self.raster_shading = make_checkbox("raster_shading")
@@ -838,13 +839,6 @@ class MainWindow(QMainWindow):
         preview_box, preview_form = make_form_group("Preview settings", field_groups["Preview settings"])
         preview_form.addRow(QLabel("Colors"), color_widget)
 
-        other_box = QGroupBox("Other settings")
-        other_layout = QVBoxLayout(other_box)
-        other_layout.setContentsMargins(8, 6, 8, 6)
-        other_layout.setSpacing(2)
-        other_layout.addWidget(self.preview_xy)
-        other_layout.addStretch(1)
-
         actions = QHBoxLayout()
         self.preview_button = QPushButton("Preview", clicked=self.preview)
         actions.addWidget(self.preview_button)
@@ -871,7 +865,6 @@ class MainWindow(QMainWindow):
         sidebar_layout.addWidget(CollapsibleSection("Theta kinematics", theta_box, False))
         sidebar_layout.addWidget(CollapsibleSection("Pen", pen_box, False))
         sidebar_layout.addWidget(CollapsibleSection("Preview settings", preview_box, False))
-        sidebar_layout.addWidget(CollapsibleSection("Other settings", other_box, False))
         sidebar_layout.addLayout(actions)
         sidebar_layout.addWidget(self.preview_build_bar)
         sidebar_layout.addWidget(self.preview_stage)
@@ -1054,12 +1047,13 @@ class MainWindow(QMainWindow):
         bool_values = {
             "flip_y": self.flip_y.isChecked(),
             "include_z": self.use_z.isChecked(),
-            "preview_xy_only": self.preview_xy.isChecked(),
             "compensate_pen_width": self.compensate_pen.isChecked(),
             "monotonic_theta": self.monotonic_theta.isChecked(),
             "raster_shading": self.raster_shading.isChecked(),
         }
-        return converter.settings_from_values(text_values, bool_values)
+        settings = converter.settings_from_values(text_values, bool_values)
+        self.print_speed_mm_s()
+        return settings
 
     def update_pattern_settings(self):
         pattern = converter.normalized_hatch_pattern(self.fields["hatch_pattern"].currentText())
@@ -2188,7 +2182,10 @@ class MainWindow(QMainWindow):
         return converter.apply_geometry_settings(self.raw_contours, settings)
 
     def print_speed_mm_s(self):
-        return max(float(self.fields["print_speed"].text()), 1e-9)
+        speed = float(self.fields["print_speed"].text())
+        if speed <= 0.0:
+            raise ValueError("preview playback speed must be greater than zero.")
+        return speed
 
     def on_print_speed_changed(self):
         self.update_estimate()
@@ -2226,8 +2223,9 @@ class MainWindow(QMainWindow):
             return f"{minutes}m {secs}s"
         return f"{secs}s"
 
-    def estimate_runtime(self, moves, print_speed_mm_s):
+    def estimate_runtime(self, moves):
         draw_mm = 0.0
+        draw_seconds = 0.0
         travel_seconds = 0.0
         pen_seconds = 0.0
         strategy_counts = {}
@@ -2235,6 +2233,7 @@ class MainWindow(QMainWindow):
             kind = move.get("type")
             if kind == "draw":
                 draw_mm += self.move_strategy_length(move)
+                draw_seconds += float(move.get("duration_ms", 0.0)) / 1000.0
                 strategy = move.get("strategy", "tangent")
                 strategy_counts[strategy] = strategy_counts.get(strategy, 0) + 1
             elif kind == "travel":
@@ -2242,7 +2241,6 @@ class MainWindow(QMainWindow):
             elif kind in ("pen_up", "pen_down"):
                 pen_seconds += float(move.get("duration_ms", 0.0)) / 1000.0
 
-        draw_seconds = draw_mm / max(print_speed_mm_s, 1e-9)
         total_seconds = draw_seconds + travel_seconds + pen_seconds
         return {
             "total_seconds": total_seconds,
@@ -2257,25 +2255,20 @@ class MainWindow(QMainWindow):
         if not self.moves:
             self.estimate.setText("Estimated time: preview an SVG to calculate.")
             return None
-        try:
-            print_speed = self.print_speed_mm_s()
-        except ValueError:
-            self.estimate.setText("Estimated time: enter a valid print speed.")
-            return None
-        estimate = self.estimate_runtime(self.moves, print_speed)
+        estimate = self.estimate_runtime(self.moves)
         counts = estimate["strategy_counts"]
         axis_summary = f"x_theta {counts.get('x_theta', 0)}, y_theta {counts.get('y_theta', 0)}"
         fallback_count = counts.get("fallback", 0)
         if fallback_count:
             axis_summary += f", fallback {fallback_count}"
         self.estimate.setText(
-            "Estimated time: "
+            "Controller-time estimate: "
             f"{self.format_duration(estimate['total_seconds'])} "
             f"(draw {self.format_duration(estimate['draw_seconds'])}, "
             f"travel {self.format_duration(estimate['travel_seconds'])}, "
             f"pen {self.format_duration(estimate['pen_seconds'])}; "
-            f"draw coordinated motion {fmt(estimate['draw_mm'])} @ {fmt(print_speed)} mm/s; "
-            f"{axis_summary})"
+            f"draw coordinated motion {fmt(estimate['draw_mm'])}; "
+            f"{axis_summary}). Rapid timing remains an estimate until M-06."
         )
         return estimate
 
@@ -2290,14 +2283,24 @@ class MainWindow(QMainWindow):
         ink_h = path_h + pen
         return f"path {fmt(path_w)} x {fmt(path_h)} mm, estimated ink {fmt(ink_w)} x {fmt(ink_h)} mm"
 
-    def install_preview(self, settings, contours, moves, bed_center):
+    def install_preview(self, settings, contours, moves, bed_center, program_gcode):
         self.moves = moves
         self.contours = contours
+        self.program_lines = program_gcode.splitlines()
+        self.move_program_rows = []
+        self.program_row_to_move = {}
+        search_from = 0
+        for move_index, move in enumerate(self.moves):
+            try:
+                row = self.program_lines.index(move.get("gcode", ""), search_from)
+            except ValueError:
+                self.move_program_rows.append(None)
+                continue
+            self.move_program_rows.append(row)
+            self.program_row_to_move[row] = move_index
+            search_from = row + 1
         self.command_list.clear()
-        headers = ["(Generated preview)", "G21", "G90", f"G0 F{fmt(settings.travel_rate)}"]
-        lines = headers
-        lines.extend(f"{i:05d}: {move.get('gcode', '')}" for i, move in enumerate(self.moves, start=1))
-        self.command_list.addItems(lines)
+        self.command_list.addItems(self.program_lines)
         self.slider.setMaximum(max(0, len(self.moves)))
         self.set_index(len(self.moves))
         self.gl_preview.set_preview(self.contours, self.moves, settings, center=bed_center, play_speed_mm_s=self.print_speed_mm_s())
@@ -2370,19 +2373,19 @@ class MainWindow(QMainWindow):
         self.preview_stage.setText(f"{stage} | {elapsed:.1f} s")
 
     def preview_ready(self, result):
-        settings, contours, moves, bed_center = result
-        self.set_preview_build_progress(90, "Preparing OpenGL preview")
+        settings, contours, moves, bed_center, program_gcode = result
+        self.set_preview_build_progress(94, "Preparing OpenGL preview")
         QApplication.processEvents()
-        self.install_preview(settings, contours, moves, bed_center)
+        self.install_preview(settings, contours, moves, bed_center, program_gcode)
         self.set_preview_build_progress(100, "Preview ready")
         estimate = self.update_estimate()
         if estimate:
             self.log.append(
-                f"Loaded {len(self.moves)} preview commands. Estimated print time {self.format_duration(estimate['total_seconds'])} "
-                f"at {fmt(self.print_speed_mm_s())} mm/s."
+                f"Loaded {len(self.moves)} preview moves from {len(self.program_lines)} exact G-code lines. "
+                f"Controller-time estimate {self.format_duration(estimate['total_seconds'])}; rapid timing remains an estimate."
             )
         else:
-            self.log.append(f"Loaded {len(self.moves)} preview commands.")
+            self.log.append(f"Loaded {len(self.moves)} preview moves from {len(self.program_lines)} exact G-code lines.")
         size_summary = self.size_summary()
         if size_summary:
             self.log.append(f"Pen compensation: {size_summary}.")
@@ -2457,10 +2460,8 @@ class MainWindow(QMainWindow):
             self.slider.blockSignals(False)
         self.gl_preview.set_index(self.preview_progress)
         if sync_command_list:
-            row = self.preview_index + 4 if self.preview_index < len(self.moves) else len(self.moves) + 3
-            if self.preview_progress <= 0:
-                row = 0
-            if 0 <= row < self.command_list.count() and self.command_list.currentRow() != row:
+            row = len(self.program_lines) - 1 if self.preview_index >= len(self.moves) else self.move_program_rows[self.preview_index]
+            if row is not None and 0 <= row < self.command_list.count() and self.command_list.currentRow() != row:
                 self.command_list.blockSignals(True)
                 self.command_list.setCurrentRow(row)
                 self.command_list.scrollToItem(self.command_list.item(row))
@@ -2468,8 +2469,9 @@ class MainWindow(QMainWindow):
         self.update_status()
 
     def command_selected(self, row):
-        if row >= 4:
-            self.set_index(row - 4)
+        move_index = self.program_row_to_move.get(row)
+        if move_index is not None:
+            self.set_index(move_index, sync_command_list=False)
 
     def update_status(self):
         if not self.moves:

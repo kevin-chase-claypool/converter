@@ -74,7 +74,10 @@ X/Y-only output, and preview/G-code parity.
 - **Geometry** — scale, tolerance, Flip Y, and pen-stroke compensation.
 - **Shading** — fill spacing/angle/pattern, shade levels/angle step, raster shading, and
   raster sampling resolution.
-- **Motion** — draw/feed rate and travel rate.
+- **Motion** — draw/feed rate and travel rate. Values that cannot describe a
+  meaningful X/Y/A program (for example, zero feed, a nonpositive theta ratio,
+  an invalid A-axis name, or a bed margin that leaves no drawable area) are
+  rejected before preview or save.
 - **Theta kinematics** — theta axis/ratio/resolver/cost settings (`Theta ratio`
   defaults to 12 for the 60T→720T pulley pair).
   - **Theta tangential speed mm/min** is the requested surface speed caused by
@@ -98,7 +101,7 @@ X/Y-only output, and preview/G-code parity.
     applied to the per-contour bed-orientation sequence. Removes bed jitter / erratic
     axis-locking; `0` disables it. Does not change the drawn shape — only how the bed
     is oriented while drawing.
-- **Preview settings** — print speed (estimate), bed diameter/margin, pen stroke
+- **Preview settings** — playback speed (visualization only), bed diameter/margin, pen stroke
   width, and three preview colors: **Undrawn** (artwork not yet drawn), **Drawn**
   (the drawn portion / final color), and **Motion** (active move + toolpath).
 - Pressing **Preview** shows the current build stage, percentage, and elapsed
@@ -108,16 +111,22 @@ X/Y-only output, and preview/G-code parity.
 - Press **Cancel** during preview generation to stop an unexpectedly large job.
   Cancellation safely unwinds at geometry/planning checkpoints and keeps the
   last completed preview visible.
+- The command list is the complete generated G-code program, including modal
+  setup, M3/M5 commands, G4 dwell lines, comments, and M2. It is not a
+  shortened preview-only command list.
+- The controller-time estimate uses emitted draw-feed plans and configured pen
+  dwell durations. Rapid timing remains an estimate until M-06 confirms the
+  installed grblHAL rapid behavior.
 - During playback, pen-up travel moves animate from their lift point to their
-  destination using the configured travel rate. The highlighted rapid path
+  destination using the configured travel-rate model. The highlighted rapid path
   grows only as far as the moving toolhead instead of appearing all at once.
-- **Other settings** — "Preview mode: omit theta axis" (also strips the `A` word
-  from saved G-code; useful for online viewers like NC Viewer / gcode.ws).
 
 ## Notes for this machine
 
 - Leave **Use Z axis** unchecked and keep `Pen up cmd = M5`, `Pen down cmd = M3` —
   pen height is owned by the force-control loop, not commanded Z.
+- The converter has no XY-only export mode: every generated production program
+  retains its planned A-axis words.
 - The converter does not apply a pen/TMAG XY tool offset. Generated XY positions
   remain in the machine work-coordinate frame; the controller's commissioning
   macro `P100` owns magnetic center registration, the measured `pen - TMAG`

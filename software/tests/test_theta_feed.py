@@ -68,6 +68,26 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         self.assertIn("M5", lines)
         self.assertIn("M3", lines)
         self.assertNotRegex(gcode, r"(?m)(?:^|\s)Z[-+0-9.]")
+        self.assertTrue(any(line.startswith("G1 ") and " A" in line for line in lines))
+
+    def test_invalid_machine_motion_settings_are_rejected(self):
+        for kwargs in (
+            {"feed_rate": 0.0},
+            {"travel_rate": -1.0},
+            {"theta_drive_ratio": 0.0},
+            {"theta_axis": "B"},
+            {"bed_margin_mm": 230.0},
+        ):
+            with self.subTest(kwargs=kwargs):
+                with self.assertRaises(ValueError):
+                    converter.contours_to_gcode([[(0.0, 0.0), (10.0, 0.0)]], converter.Settings(**kwargs))
+
+    def test_preview_only_theta_omission_mode_is_not_available(self):
+        self.assertFalse(hasattr(converter.Settings(), "preview_xy_only"))
+        self.assertNotIn(
+            "preview_xy_only",
+            " ".join(key for _group, key, _label, _default in converter.CHECKBOX_FIELDS),
+        )
 
     def test_forward_and_reverse_a_moves_have_the_same_feed_plan(self):
         forward = self.plan_at_radius(100.0, motor_delta=100.0)

@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass, field, fields
 
 
@@ -61,7 +62,6 @@ class Settings:
     # This machine exposes a Z slot only to enable A in the controller build;
     # its pen contract is M3/M5, not physical Z motion.
     include_z: bool = False
-    preview_xy_only: bool = False
     compensate_pen_width: bool = True
 
 
@@ -112,7 +112,7 @@ TEXT_FIELD_GROUPS = (
         ("Pen down cmd", "pen_down_command", "M3"),
     )),
     ("Preview settings", (
-        ("Print speed mm/s", "print_speed", "100"),
+        ("Preview playback speed mm/s", "print_speed", "100"),
         ("Bed dia mm", "bed_diameter_mm", "457.2"),
         ("Bed margin mm", "bed_margin_mm", "6.35"),
         ("Pen stroke mm", "pen_diameter_mm", "0.3"),
@@ -125,7 +125,6 @@ CHECKBOX_FIELDS = (
     ("Shading", "raster_shading", "Raster shading", False),
     ("Theta kinematics", "monotonic_theta", "Monotonic theta (r-theta style)", True),
     ("Pen", "include_z", "Use Z axis for pen up/down", False),
-    ("Other settings", "preview_xy_only", "Preview mode: omit theta axis", False),
 )
 
 SETTING_TYPES = {field.name: field.type for field in fields(Settings)}
@@ -172,4 +171,54 @@ def settings_from_values(text_values, bool_values):
             kwargs[field.name] = bool(bool_values[field.name])
         elif field.name in text_values:
             kwargs[field.name] = coerce_setting(field.name, text_values[field.name])
-    return Settings(**kwargs)
+    return validate_settings(Settings(**kwargs))
+
+
+def validate_settings(settings):
+    """Reject values that cannot produce a safe, meaningful machine program."""
+    positive = (
+        "scale",
+        "tolerance",
+        "feed_rate",
+        "travel_rate",
+        "theta_drive_ratio",
+        "bed_diameter_mm",
+        "raster_px_per_unit",
+    )
+    nonnegative = (
+        "theta_tangential_speed_mm_min",
+        "theta_weight",
+        "round_bias",
+        "smoothness_factor",
+        "hatch_spacing_mm",
+        "triangle_size_mm",
+        "diamond_size_mm",
+        "hex_size_mm",
+        "circle_size_mm",
+        "dot_spacing_mm",
+        "wave_size_mm",
+        "gyroid_size_mm",
+        "cubic_size_mm",
+        "concentric_spacing_mm",
+        "pen_diameter_mm",
+        "pen_up_ms",
+        "pen_down_ms",
+        "bed_margin_mm",
+    )
+    for name in positive:
+        value = float(getattr(settings, name))
+        if not math.isfinite(value) or value <= 0.0:
+            raise ValueError(f"{name.replace('_', ' ')} must be greater than zero.")
+    for name in nonnegative:
+        value = float(getattr(settings, name))
+        if not math.isfinite(value) or value < 0.0:
+            raise ValueError(f"{name.replace('_', ' ')} cannot be negative.")
+    if int(settings.shade_levels) < 1:
+        raise ValueError("shade levels must be at least one.")
+    if int(settings.theta_smooth_window) < 0:
+        raise ValueError("theta smooth window cannot be negative.")
+    if float(settings.bed_margin_mm) * 2.0 >= float(settings.bed_diameter_mm):
+        raise ValueError("bed margin must leave a positive drawable bed radius.")
+    if str(settings.theta_axis).strip().upper() != "A":
+        raise ValueError("theta axis must be A for this X/Y/A plotter.")
+    return settings

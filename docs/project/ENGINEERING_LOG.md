@@ -47,6 +47,7 @@ The links below are alternate views of the single chronological log.
 Entry details remain only in the chronology.
 
 ### Windows software
+- [2026-09-05 21:06:43 -0500 - SOFTWARE/SUCCESS - Made the production preview safe and complete](#elog-20260905210643)
 - [2026-09-05 - DOCUMENTATION/SUCCESS - Consolidated current documentation](#elog-20260905-consolidated-current-documentation)
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
 - [2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review](#elog-20260905-iosender-to-converter-compatibility-review)
@@ -312,6 +313,25 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260905210643"></a>
+### 🟩 2026-09-05 21:06:43 -0500 - SOFTWARE/SUCCESS - Made the production preview safe and complete
+
+- Status: implementation complete; hardware/controller timing verification remains open.
+- Category: software, converter, preview, validation, ioSender.
+- Summary: removed the XY-only export path, made the preview command pane show
+  the exact generated G-code program, and added preflight validation for
+  machine-critical conversion settings.
+- Reason: the viewer-oriented option could save an A-axis-free file, while the
+  shortened preview list could not be reliably compared with the program sent
+  to ioSender.
+- Evidence: twelve converter unit tests pass; three representative SVGs emit
+  finite self-contained X/Y/A programs. Change note `WSW-20260905-006`.
+- Result: every production conversion retains planned A words; the command pane
+  includes modal setup, M3/M5, G4, comments, and M2. Runtime display uses the
+  draw-feed plan but continues to label rapid timing as an estimate.
+- Next action: re-run F-02 with a freshly generated default file, then complete
+  M-06 on the installed controller before using runtime estimates operationally.
 
 <a id="elog-20260905-consolidated-current-documentation"></a>
 ### 🟩 2026-09-05 - DOCUMENTATION/SUCCESS - Consolidated current documentation

@@ -235,24 +235,22 @@ converter README for the exact preamble and settings.
   - **Motion** — draw/feed rate and travel rate.
   - **Theta kinematics** — theta axis/ratio/resolver/cost settings, plus monotonic theta.
   - **Pen** — Z heights, pen up/down simulation/dwell times, pen up/down commands, plus Use Z.
-  - **Preview settings** — print speed (mm/s), bed dia/margin, pen stroke width, preview
-    colors. "Print speed" now drives **both** the runtime estimate **and** the animation pacing:
-    playback runs in **real time** (`PLAYBACK_RATE = 1.0` in `qt_svg_to_gcode.pyw`) with draw moves
-    paced at print speed. Draw duration uses full `motion_length` so theta-heavy smoothing remains
-    visible. Pen-up travel uses the move's planned `duration_ms`, which is generated from the
-    configured `travel_rate`; pen actuation uses its fixed duration. The playback timeline lives
+  - **Preview settings** — playback speed (mm/s), bed dia/margin, pen stroke width, preview
+    colors. Playback speed controls the on-screen animation only. The controller-time estimate
+    uses each emitted draw move's planned duration, plus dwell and modelled rapid durations;
+    rapid timing remains an estimate until M-06. The playback timeline lives
     in `GLPreview.cumulative_ms` (built via `_playback_move_ms`), and `progress_after_time` uses the
     same duration source for the within-move fraction. Bump `PLAYBACK_RATE` to fast-forward long
     jobs, or scrub with the slider.
-  - **Other settings** — "Preview mode: omit theta axis" (the one knob that lives in both worlds —
-    it also strips theta from the saved G-code).
+- The preview command pane shows the complete generated program, including setup, M3/M5,
+  G4, comments, and M2. XY-only theta omission is not available in production output.
 - Layout is now a `QSplitter`: left sidebar (settings + Convert/Preview buttons), centre
   GL preview with playback controls / status / estimate stacked beneath, right command list.
   Files row collapsed to one strip. Log shrunk to 60 px. Preview now gets most of the window.
 - Preview generation is manual: editing settings no longer re-runs the pipeline automatically.
   The user must press **Preview** to rebuild contours/moves after changing settings. Selecting an
   SVG updates the suggested G-code path and auto-shading starter values, then waits for Preview.
-  `Print speed` still updates playback pacing for the already-built preview.
+  Preview playback speed still updates animation pacing for the already-built preview.
 - Preview generation now runs in a `QThread` worker and displays stage-based
   progress, elapsed time, and the current operation. Preview and Save G-code
   are disabled while the worker uses the shared geometry cache. The window
