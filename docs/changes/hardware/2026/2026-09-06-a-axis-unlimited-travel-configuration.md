@@ -37,10 +37,10 @@ or homing behavior.
 
 ## Implementation
 
-The controller setting was changed to `$133=0`. X and Y retain their displayed
-508 mm maximum-travel entries, but those entries remain provisional until their
-physical home/limit system is commissioned. No soft-limit or conventional
-A-axis homing behavior was enabled.
+The controller setting was changed to `$133=0`. X and Y retain their measured
+508 mm end-to-end physical travel entries. Those measured distances cannot yet
+be enforced as controller soft limits until their physical home/limit system is
+commissioned. No soft-limit or conventional A-axis homing behavior was enabled.
 
 ## Verification
 

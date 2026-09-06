@@ -40,8 +40,8 @@ for continued commissioning:
 | `$111` | `1500` mm/min | Preliminary unloaded maximum-rate setting |
 | `$120` | `500` mm/sec^2 | Preliminary unloaded acceleration setting |
 | `$121` | `500` mm/sec^2 | Preliminary unloaded acceleration setting |
-| `$130` | `508.000` mm | Current X maximum-travel entry; home/soft-limit use unverified |
-| `$131` | `508.000` mm | Current Y maximum-travel entry; home/soft-limit use unverified |
+| `$130` | `508.000` mm | Measured X end-to-end physical travel; soft-limit use unverified |
+| `$131` | `508.000` mm | Measured Y end-to-end physical travel; soft-limit use unverified |
 | `$133` | `0.000` deg | Continuous A bed: no finite maximum travel |
 
 These values are not a final pen-loaded plotting limit. Complete coordinated

@@ -3168,8 +3168,9 @@ Add new entries at the top of the log below this line.
   mechanical travel endpoint. A remains enabled with its existing calibrated
   resolution, rate, and acceleration.
 - Boundary: This does not enable a soft limit, standard A homing, or P100.
-  Current `$130`/`$131=508` mm entries are also not authorization to enable
-  X/Y soft limits before physical homing/endpoint verification.
+  `$130`/`$131=508` mm are measured X/Y end-to-end physical travels, but they
+  are not authorization to enable soft limits before physical homing/endpoint
+  verification.
 - Evidence: ioSender settings display; `HW-20260906-003`.
 - Next action: retain unlimited A travel and use the separate magnetic P100
   registration process when that commissioning path is ready.
