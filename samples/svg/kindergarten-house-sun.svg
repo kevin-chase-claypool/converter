@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220mm" height="200mm" viewBox="0 0 220 200">
+  <!--
+    Pen-free visual motion sample. Explicit polylines avoid unsupported SVG arc
+    commands while keeping the deliberately hand-drawn, kindergarten style.
+  -->
+  <g fill="none" stroke="#000000" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+    <!-- House and roof -->
+    <polyline points="42,165 42,103 101,54 160,103 160,165 42,165"/>
+    <polyline points="34,103 101,42 168,103"/>
+    <polyline points="118,63 118,34 139,34 139,82"/>
+
+    <!-- Door, windows, and a slightly crooked path -->
+    <polyline points="85,165 85,123 112,123 112,165"/>
+    <polyline points="56,117 76,117 76,139 56,139 56,117"/>
+    <polyline points="126,117 146,117 146,139 126,139 126,117"/>
+    <polyline points="98,165 92,176 102,187 95,197"/>
+    <polyline points="101,165 110,176 104,187 113,197"/>
+
+    <!-- Twelve-sided sun and childlike rays -->
+    <polyline points="177,28 184,30 189,36 191,44 189,52 184,58 177,60 169,58 164,52 162,44 164,36 169,30 177,28"/>
+    <polyline points="177,18 177,7"/>
+    <polyline points="191,24 200,15"/>
+    <polyline points="196,39 209,36"/>
+    <polyline points="196,50 208,56"/>
+    <polyline points="189,62 197,73"/>
+    <polyline points="165,62 156,73"/>
+    <polyline points="159,50 147,56"/>
+    <polyline points="159,39 146,36"/>
+    <polyline points="165,24 155,15"/>
+
+    <!-- Wavy grass / ground -->
+    <polyline points="18,174 27,168 36,177 46,170 56,179 67,171 78,178 89,170 100,179 111,171 123,178 134,170 145,179 156,171 168,178 180,170 192,177 204,169"/>
+    <polyline points="20,187 31,181 42,190 54,182 66,191 79,183 92,190 105,182 118,191 132,183 146,190 160,182 174,191 189,183 204,190"/>
+  </g>
+</svg>

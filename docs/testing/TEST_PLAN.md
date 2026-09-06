@@ -235,6 +235,11 @@ resolver, its generated command list must contain both `(x_theta)` and
 `(y_theta)` draw labels. Those labels describe the selected coordinated
 kinematic strategy; they do not denote distinct firmware modes.
 
+[`kindergarten-house-sun.svg`](../../samples/svg/kindergarten-house-sun.svg)
+is a larger pen-free visual smoke sample: house, sun, and explicit wavy ground
+lines. It is parser-safe (polylines only) and is centered in G54 by the
+converter; it does not replace the controlled radius or strategy checks.
+
 ## Toolhead tests
 
 | ID | Test | Pass condition |
