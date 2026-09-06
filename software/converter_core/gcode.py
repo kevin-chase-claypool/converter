@@ -77,16 +77,27 @@ def bridge_motion(prev_machine, prev_motor_theta, next_machine, next_motor_theta
 
 
 def plan_program(contours, settings, cancel_check=None):
-    """Plan clipped contours and theta positions once for all program consumers."""
+    """Plan clipped contours in the G54 bed-center work frame.
+
+    SVG coordinates are document-local. The controller's G54 frame is instead
+    registered with its origin at the physical bed center, so normalize the
+    clipped artwork once here before any theta planning, preview, or G-code
+    emission consumes it.
+    """
     validate_settings(settings)
     check_cancelled(cancel_check)
-    center = contour_center(contours)
+    source_center = contour_center(contours)
     clipped_contours = clip_contours_to_bed(
         contours,
-        center,
+        source_center,
         max(float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0 - float(getattr(settings, "bed_margin_mm", 0.0)), 0.0),
         cancel_check,
     )
+    center = (0.0, 0.0)
+    clipped_contours = [
+        [(point[0] - source_center[0], point[1] - source_center[1]) for point in contour]
+        for contour in clipped_contours
+    ]
     planned_jobs = []
     previous_theta = None
     previous_machine = None
@@ -108,6 +119,7 @@ def plan_program(contours, settings, cancel_check=None):
         previous_machine = bed_to_machine(points[-1], thetas[-1], center)
     return {
         "center": center,
+        "source_center": source_center,
         "contours": clipped_contours,
         "planned_jobs": planned_jobs,
     }

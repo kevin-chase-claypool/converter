@@ -28,6 +28,14 @@ The converter emits:
 Unknown or unsupported commands must cause an explicit error during test, not
 silent motion.
 
+The converter treats the geometric center of the clipped SVG as the bed-local
+origin and emits it as `G54 X0 Y0`. SVG document coordinates are never passed
+through as absolute controller coordinates. This requires the controller's
+G54 frame to be registered so X/Y zero is the physical pen-at-bed-center point;
+P100 is the production authority, while the documented manual reference is
+pen-free commissioning only. The generated NE park target is constrained to
+the drawable circle after the configured bed margin.
+
 ## Axis and unit convention
 
 | Axis | Physical meaning | G-code unit |

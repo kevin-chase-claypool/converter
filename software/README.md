@@ -34,6 +34,12 @@ Requires `PySide6` (`pip install PySide6`).
   `G4` settle dwell after each (from `Pen cycle ms`) for the firmware handshake
 - `M2` at end
 
+The converter normalizes the clipped SVG around its geometric center before
+planning. That center is emitted as `G54 X0 Y0`, matching the pen-at-bed-center
+frame registered by P100 (or the narrowly scoped temporary commissioning
+reference). The final NE park target is on the configured drawable circle, not
+outside it on a diagonal.
+
 The authoritative host-to-controller contract is
 [`../docs/integration/INTERFACES.md`](../docs/integration/INTERFACES.md).
 
@@ -134,6 +140,9 @@ X/Y-only output, and preview/G-code parity.
   remain in the machine work-coordinate frame; the controller's commissioning
   macro `P100` owns magnetic center registration, the measured `pen - TMAG`
   offset, and `G54 X0 Y0` so work zero means pen tip at bed center.
+- SVG document coordinates are not machine coordinates. The converter centers
+  the clipped artwork at G54 zero; a document centered at `(100,100)`, for
+  example, emits drawing coordinates around `(0,0)`, not `(100,100)`.
 - `Bed margin mm` (default 6.35 ≈ 0.25") clips artwork inside the bed edge so the
   pen never reaches the rim.
 - Set `Fill spacing mm > 0` to hatch filled regions; `0` disables hatching.

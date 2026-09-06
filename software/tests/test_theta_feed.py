@@ -72,6 +72,64 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         self.assertNotRegex(gcode, r"(?m)(?:^|\s)Z[-+0-9.]")
         self.assertTrue(any(line.startswith("G1 ") and " A" in line for line in lines))
 
+    def test_svg_coordinates_are_centered_in_g54_before_emission_and_preview(self):
+        contours = [[(100.0, 100.0), (150.0, 100.0), (100.0, 150.0)]]
+        settings = self.settings()
+        program_plan = converter.plan_program(contours, settings)
+        gcode = converter.contours_to_gcode(contours, settings, program_plan)
+        preview_moves = converter.build_preview_moves(contours, settings, program_plan=program_plan)
+
+        self.assertEqual(program_plan["source_center"], (125.0, 125.0))
+        self.assertEqual(program_plan["center"], (0.0, 0.0))
+        self.assertIn("G0 X-25 Y-25 A0", gcode.splitlines())
+        first_travel = next(move for move in preview_moves if move["type"] == "travel")
+        self.assertEqual(first_travel["end"], (-25.0, -25.0))
+
+    def test_ne_park_stays_inside_the_configured_drawable_bed(self):
+        settings = self.settings(bed_diameter_mm=200.0, bed_margin_mm=10.0)
+        gcode = converter.contours_to_gcode([[(0.0, 0.0), (20.0, 0.0)]], settings)
+        park = next(line for line in gcode.splitlines() if "(park NE)" in line)
+        match = re.search(r"X([-+0-9.]+) Y([-+0-9.]+)", park)
+
+        self.assertIsNotNone(match)
+        x, y = (float(match.group(1)), float(match.group(2)))
+        self.assertLessEqual(math.hypot(x, y), 90.0 + 1e-4)
+
+    def test_m06_radius_sweep_is_centered_and_rotates_in_both_directions(self):
+        sample = Path(__file__).resolve().parents[2] / "samples" / "svg" / "m06-radius-sweep.svg"
+        settings = self.settings(
+            compensate_pen_width=False,
+            pen_up_command="",
+            pen_down_command="",
+            pen_up_ms=0.0,
+            pen_down_ms=0.0,
+        )
+        contours = converter.read_svg(sample, settings)
+        program_plan = converter.plan_program(contours, settings)
+        gcode = converter.contours_to_gcode(contours, settings, program_plan)
+
+        self.assertEqual(program_plan["source_center"], (100.0, 100.0))
+        self.assertEqual(program_plan["center"], (0.0, 0.0))
+        radii = {
+            round(math.hypot(x, y), 3)
+            for contour in program_plan["contours"]
+            for x, y in contour
+        }
+        self.assertTrue({20.0, 50.0, 80.0}.issubset(radii))
+
+        directions = []
+        for contour in re.split(r"(?=\(contour )", gcode):
+            a_values = [
+                float(match.group(1))
+                for line in contour.splitlines()
+                if line.startswith("G1 ")
+                for match in [re.search(r"\bA([-+0-9.]+)", line)]
+                if match
+            ]
+            directions.extend(b - a for a, b in zip(a_values, a_values[1:]))
+        self.assertTrue(any(delta > 1e-6 for delta in directions))
+        self.assertTrue(any(delta < -1e-6 for delta in directions))
+
     def test_invalid_machine_motion_settings_are_rejected(self):
         for kwargs in (
             {"feed_rate": 0.0},

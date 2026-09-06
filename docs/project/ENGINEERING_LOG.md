@@ -65,6 +65,7 @@ Entry details remain only in the chronology.
 - [Before 2026-06-05 - Time not recorded - STRUGGLE - Theta DP winding reference failed](#elog-20260605-theta-dp-winding-reference-failed)
 - [Before 2026-06-05 - Time not recorded - MIXED/OPEN - Hold-steady theta grid tradeoff](#elog-20260605-hold-steady-theta-grid-tradeoff)
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
+- [2026-09-06 - WINDOWS SOFTWARE/SUCCESS - Centered converter G54 output and corrected M-06 sample](#elog-20260906-centered-converter-g54-output-and-corrected-m-06-sample)
 
 ### RP23CNC and machine software
 - [2026-09-05 - DOCUMENTATION/SUCCESS - Consolidated current documentation](#elog-20260905-consolidated-current-documentation)
@@ -3232,3 +3233,24 @@ Add new entries at the top of the log below this line.
 - Evidence: `HW-20260906-006`; `2026-09-06-manual-temporary-g54-xy-reference.md`.
 - Next action: preserve the temporary A boundary and run only guarded pen-free
   tests until P100 prerequisites are commissioned.
+
+<a id="elog-20260906-centered-converter-g54-output-and-corrected-m-06-sample"></a>
+### 🟩 2026-09-06 - WINDOWS SOFTWARE/SUCCESS - Centered converter G54 output and corrected M-06 sample
+
+- Status: converter coordinate-frame correction and automated checks passed;
+  installed pen-free M-06 remains open.
+- Category: software, converter, G54, X/Y/A, M-06, safety.
+- Problem: the planner rotated artwork about its SVG center but emitted the
+  unshifted document coordinates. A 200 mm sample centered at `(100,100)`
+  therefore produced X/Y coordinates around `(100,100)` in a G54 frame whose
+  bed center is `(0,0)`; its diagonal park target was outside the circular bed.
+- Result: clipped artwork is now normalized once into the G54 bed-center frame,
+  and NE parking uses the drawable-circle diagonal. The M-06 sample now uses
+  explicit 20/50/80 mm-radius polylines with a reversed middle loop; tests
+  verify G54 centering, safe parking, and both A drawing directions.
+- Boundary: this does not register G54 on the controller, set A0, or authorize
+  P100/toolhead operation. The operator must establish and inspect the
+  temporary pen-free references before streaming the sample.
+- Verification: `python -m unittest discover -s software/tests -v` passed.
+- Next action: generate the sample with blank pen commands/zero delays, inspect
+  the first rapid and park block, then perform the guarded installed M-06 run.

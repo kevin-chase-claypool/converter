@@ -221,7 +221,13 @@ smoke test passed.** Converter-generated inner/mid/outer-radius timing and
 geometry validation remain required. See
 [`2026-09-06-m-06-xya-coordinated-smoke.md`](../report/lab-notes/2026-09-06-m-06-xya-coordinated-smoke.md).
 Use [`m06-radius-sweep.svg`](../../samples/svg/m06-radius-sweep.svg) for the
-next pen-free converter-generated M-06 timing and geometry run.
+next pen-free converter-generated M-06 timing and geometry run. It uses
+explicit inner/middle/outer-radius polylines and a reversed middle loop so the
+current planner emits both positive and negative A drawing moves. For this
+toolhead-disconnected run, leave **Use Z axis** unchecked and temporarily set
+both pen commands and both pen delays to blank/zero before generating the
+file. Confirm the G54 XY reference and a deliberate temporary A reference,
+then inspect the generated first rapid and park target before Cycle Start.
 
 ## Toolhead tests
 

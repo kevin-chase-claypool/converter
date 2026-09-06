@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-06 | `WINSW-20260906-001` | windows-software, hardware | implemented | [Center G54 output and correct the M-06 sample](windows-software/2026/2026-09-06-center-g54-output-and-correct-m06-sample.md) |
 | 2026-09-06 | `RPSW-20260906-001` | rp23cnc-software, hardware | implemented | [Add GP27 Normal-Status Guardrails](rp23cnc-software/2026/2026-09-06-gp27-normal-status-guardrails.md) |
 | 2026-09-06 | `HW-20260906-006` | hardware, rp23cnc-software | verified | [Set temporary manual pen-corrected G54 XY reference](hardware/2026/2026-09-06-set-temporary-manual-g54-xy-reference.md) |
 | 2026-09-06 | `HW-20260906-005` | hardware, rp23cnc-software | verified | [Commission X/Y physical homing](hardware/2026/2026-09-06-commission-xy-physical-homing.md) |

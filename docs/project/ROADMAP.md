@@ -113,7 +113,9 @@
   G54 registration remain open. (`M-07`)
 - [ ] Complete M-06 coordinated X/Y/A validation. Initial pen-free symmetric
   repeatability smoke test passed through `F20000` on 2026-09-06; converter
-  inner/mid/outer-radius timing and geometry validation remains. (`M-06`)
+  inner/mid/outer-radius timing and geometry validation remains. The converter
+  now centers SVG output at G54 zero and the replacement sample exercises both
+  A directions; installed-machine evidence remains required. (`M-06`)
 - [ ] Run converter-generated sample G-code without the tool installed.
 - [ ] **Post-M-06 converter refinement — time-optimal X/Y/A candidate cost.**
   The current theta candidate selector minimizes a weighted combined-distance
