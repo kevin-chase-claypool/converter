@@ -110,6 +110,16 @@
 - [ ] Add and verify homing and soft limits. (`M-07`)
 - [ ] Run short coordinated X/Y/A parser and motion tests. (`M-06`)
 - [ ] Run converter-generated sample G-code without the tool installed.
+- [ ] **Post-M-06 converter refinement — time-optimal X/Y/A candidate cost.**
+  The current theta candidate selector minimizes a weighted combined-distance
+  cost across X, Y, and A motor degrees; it does not yet rank alternatives by
+  measured per-axis rate/acceleration limits and grblHAL look-ahead behavior.
+  After M-06 records those observations, evaluate candidate orientations by
+  predicted coordinated block time. Preserve the 12:1 A motor-degree contract,
+  output geometry, and existing safe caps. Acceptance: representative
+  inner/mid/outer-radius paths show no lost steps or geometry change, and the
+  predicted ordering agrees with measured elapsed time within a documented
+  tolerance.
 
 ## Phase 5: toolhead
 
