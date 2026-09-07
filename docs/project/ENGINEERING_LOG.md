@@ -222,6 +222,7 @@ Entry details remain only in the chronology.
 - [2026-09-06 - HARDWARE/VERIFIED - Pen-free X/Y/A coordinated smoke test](#elog-20260906-pen-free-x-y-a-coordinated-smoke-test)
 - [2026-09-06 - HARDWARE/VERIFIED - X/Y physical homing](#elog-20260906-x-y-physical-homing)
 - [2026-09-06 - HARDWARE/VERIFIED - Temporary manual G54 XY reference](#elog-20260906-temporary-manual-g54-xy-reference)
+- [2026-09-07 17:53:46 -0500 - HARDWARE/OPEN - Required scale-force transfer calibration](#elog-20260907175346)
 
 ### Testing and verification
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -3254,3 +3255,23 @@ Add new entries at the top of the log below this line.
 - Verification: `python -m unittest discover -s software/tests -v` passed.
 - Next action: generate the sample with blank pen commands/zero delays, inspect
   the first rapid and park block, then perform the guarded installed M-06 run.
+
+<a id="elog-20260907175346"></a>
+### 🟨 2026-09-07 17:53:46 -0500 - HARDWARE/OPEN - Required scale-force transfer calibration
+
+- Status: E-07 was made explicit; physical calibration remains open.
+- Category: hardware, toolhead, HX711, force calibration, testing.
+- Decision: a digital-scale test must establish the signed relationship between
+  settled filtered HX711 delta and grams-force at the clamped pen tip. This
+  mapping is necessary to select meaningful contact, target, release, and
+  hard-force thresholds.
+- Method: clamp a capped or rigid non-marking dummy tool as a normal pen; use
+  at least five gentle known scale-force points across the intended range and
+  at least three load/unload cycles; record raw/filtered readings, conversion,
+  residual, and hysteresis.
+- Boundary: the scale mapping calibrates sensing, not motor PWM, actuator
+  travel, or spring response. It is required during commissioning and periodic
+  profile verification, not before every print.
+- Evidence: `HW-20260907-001`; E-07 and T-01B in `docs/testing/TEST_PLAN.md`.
+- Next action: complete the guarded E-07 fixture procedure after the
+  LIFT_HOME and safe actuator travel envelope are available.

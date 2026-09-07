@@ -34,7 +34,12 @@ implemented pin assignments, staged sketches, and commissioning gates.
   stays RAM-only.
 - Do not allow an interchangeable pen/pencil to plot until T-01J validates its
   contact/release preflight and its selected target-force/clearance settings.
-- Calibrate the installed HX711/load-cell force slope and final control gains.
+- Complete E-07's digital-scale transfer calibration with a capped/dummy tool
+  clamped as a real pen: establish the signed filtered-HX711-delta to
+  grams-force conversion, residual, and hysteresis before selecting raw force
+  thresholds or final control gains. This is an occasional service
+  calibration/profile-verification activity, not a scale check required at
+  every print.
 - Complete actuator travel, stall, seek-timeout, and safe-fault testing.
 - Decide whether the later `CONTACT_READY`/`TOOL_FAULT` handshake is necessary
   after the fixed-dwell version is proven. If adopted, complete F-08 input

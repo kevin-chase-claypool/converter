@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-07 | `HW-20260907-001` | planned | [Require scale-force transfer calibration](2026/2026-09-07-require-scale-force-transfer-calibration.md) | `force-calibration`, `hx711`, `grams-force`, `toolhead`, `testing` |
 | 2026-09-06 | `WINSW-20260906-001` | implemented | [Center G54 output and correct the M-06 sample](../windows-software/2026/2026-09-06-center-g54-output-and-correct-m06-sample.md) | `g54`, `coordinates`, `parking`, `m-06`, `a-axis` |
 | 2026-09-06 | `RPSW-20260906-001` | implemented | [Add GP27 Normal-Status Guardrails](../rp23cnc-software/2026/2026-09-06-gp27-normal-status-guardrails.md) | `gp27`, `contact-ready`, `p100`, `safety` |
 | 2026-09-06 | `HW-20260906-006` | verified | [Set temporary manual pen-corrected G54 XY reference](2026/2026-09-06-set-temporary-manual-g54-xy-reference.md) | `g54`, `bed-center`, `tmag`, `pen-offset`, `commissioning` |
