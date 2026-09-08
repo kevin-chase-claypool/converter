@@ -21,6 +21,12 @@ implemented pin assignments, staged sketches, and commissioning gates.
 
 ## Open verification
 
+The upstream D36V50F6 6 V supply gate (E-14, constant 6.05 V), toolhead
+perfboard inspection (E-14B), DRV8833/J2 mapping gate (E-14C), and S7V8F5
+logic-rail gate (E-15A) passed on 2026-09-08. E-15 remains separate: it must
+measure loaded D36V50F6 current, ripple, and temperature before force-control
+work.
+
 - Complete the T-01A through T-01J motor/preload physical-capability sequence
   in [`docs/testing/TEST_PLAN.md`](../../docs/testing/TEST_PLAN.md) before
   choosing travel limits, force limits, LIFT dwell, or correction-pulse bounds.

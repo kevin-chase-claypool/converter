@@ -6,6 +6,7 @@ Newest changes appear first.
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
 | 2026-09-08 | `WSW-20260908-001` | windows-software, hardware, rp23cnc-software | implemented | [Calibrate the preview motion-time estimate](windows-software/2026/2026-09-08-calibrate-preview-motion-estimate.md) |
+| 2026-09-08 | `HW-20260908-002` | hardware, rp23cnc-software | verified | [Verify toolhead power-path gates](hardware/2026/2026-09-08-verify-toolhead-power-path.md) |
 | 2026-09-08 | `HW-20260908-001` | hardware | verified | [Identify and diagram the RP23CNC ESTOP screw terminal](hardware/2026/2026-09-08-identify-rp23cnc-estop-terminal.md) |
 | 2026-09-07 | `HW-20260907-002` | hardware, rp23cnc-software, windows-software | verified | [Verify converter motion and guarded X/Y envelope](hardware/2026/2026-09-07-verify-converter-motion-and-guarded-xy-envelope.md) |
 | 2026-09-07 | `HW-20260907-001` | hardware, rp23cnc-software | planned | [Require scale-force transfer calibration](hardware/2026/2026-09-07-require-scale-force-transfer-calibration.md) |

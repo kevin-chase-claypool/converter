@@ -54,11 +54,11 @@
 - [ ] Calibrate the 300 g load cell through the HX711. (`E-07`)
 - [ ] Measure usable HX711 sample rate and noise. (`E-08`)
 - [ ] Verify TMAG5273 readings with the intended magnet and geometry. (`E-09`)
-- [ ] Verify Pololu D36V50F6 input/output polarity and fixed 6.0 V output. (`E-14`)
-- [ ] Inspect the completed toolhead perfboard, JST input, and Pro Micro-to-DRV8833 logic wiring unpowered. (`E-14B`)
-- [ ] Verify ACEIRMC DRV8833's existing GP7→`ULT` sleep and GP6←`EEP` fault mapping in firmware, then inspect the `J2` bridge. (`E-14C`)
+- [x] Verify Pololu D36V50F6 input/output polarity and fixed 6.0 V output. (`E-14`; 6.05 V constant, 2026-09-08)
+- [x] Inspect the completed toolhead perfboard, JST input, and Pro Micro-to-DRV8833 logic wiring unpowered. (`E-14B`; passed 2026-09-08)
+- [x] Verify ACEIRMC DRV8833's existing GP7→`ULT` sleep and GP6←`EEP` fault mapping in firmware, then inspect the `J2` bridge. (`E-14C`; passed 2026-09-08)
 - [ ] Characterize Pololu D36V50F6 voltage, ripple, current, and temperature with actuator load. (`E-15`)
-- [ ] Characterize toolhead-mounted Pololu S7V8F5 5.0 V output with RP2350/sensors active and actuator moving. (Motor-only portion of `E-15A` passed; sensor portion remains.)
+- [x] Characterize toolhead-mounted Pololu S7V8F5 5.0 V output with RP2350/sensors active and actuator moving. (`E-15A`; owner reported prior TMAG test passed, 2026-09-08.)
 - [ ] Complete the measured power budget.
 - [ ] Select branch fuses, wire gauges, connectors, and distribution hardware.
 - [ ] Update every affected master-wiring-table row with evidence.

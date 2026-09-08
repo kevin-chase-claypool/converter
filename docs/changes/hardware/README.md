@@ -9,6 +9,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-09-08 | `WSW-20260908-001` | implemented | [Calibrate the preview motion-time estimate](../windows-software/2026/2026-09-08-calibrate-preview-motion-estimate.md) | `preview`, `timing`, `m-06`, `calibration` |
+| 2026-09-08 | `HW-20260908-002` | verified | [Verify toolhead power-path gates](2026/2026-09-08-verify-toolhead-power-path.md) | `toolhead`, `power`, `d36v50f6`, `drv8833`, `e-14` |
 | 2026-09-08 | `HW-20260908-001` | verified | [Identify and diagram the RP23CNC ESTOP screw terminal](2026/2026-09-08-identify-rp23cnc-estop-terminal.md) | `estop`, `safety`, `rp23cnc` |
 | 2026-09-07 | `HW-20260907-002` | verified | [Verify converter motion and guarded X/Y envelope](2026/2026-09-07-verify-converter-motion-and-guarded-xy-envelope.md) | `m-03`, `m-06`, `m-07`, `soft-limits`, `g54`, `xya` |
 | 2026-09-07 | `HW-20260907-001` | planned | [Require scale-force transfer calibration](2026/2026-09-07-require-scale-force-transfer-calibration.md) | `force-calibration`, `hx711`, `grams-force`, `toolhead`, `testing` |

@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - HARDWARE/VERIFIED - Passed toolhead power-path gates](#elog-20260908-passed-toolhead-power-path-gates)
 - [2026-09-08 - SOFTWARE/SUCCESS - Calibrated preview motion-time estimate](#elog-20260908-calibrated-preview-motion-time-estimate)
 - [2026-09-08 - HARDWARE/PARTIAL - Measured M-06 preview-time gap](#elog-20260908-measured-m-06-preview-time-gap)
 - [2026-09-08 - HARDWARE/PARTIAL - M-06 radius-sweep return passed](#elog-20260908-m-06-radius-sweep-return-passed)
@@ -333,6 +334,19 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-passed-toolhead-power-path-gates"></a>
+### 🟩 2026-09-08 - HARDWARE/VERIFIED - Passed toolhead power-path gates
+
+- Status: E-14, E-14B, E-14C, and E-15A passed; E-15 loaded characterization remains open.
+- Category: hardware, rp23cnc-software, toolhead, power, drv8833.
+- Evidence: owner reported a constant 6.05 V D36V50F6 output and completion of
+  the perfboard/DRV8833/J2 gates. The owner also confirmed the prior TMAG test
+  passed the S7V8F5 5 V path gate.
+- Result: the guarded toolhead power path is authorized for the next staged
+  mechanical checks, but not force-control or loaded-regulator qualification.
+- Next action: complete E-15 under actuator load, then guarded T-01A/T-01G/T-01
+  geometry, LIFT-home, and direction tests.
 
 <a id="elog-20260908-calibrated-preview-motion-time-estimate"></a>
 ### 🟩 2026-09-08 - SOFTWARE/SUCCESS - Calibrated preview motion-time estimate
