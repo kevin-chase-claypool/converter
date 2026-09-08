@@ -22,9 +22,10 @@ related:
 
 ## Summary
 
-Recorded the replacement spring’s 20.37 mm installed/unloaded length and 1.95
-mm reported full-compression length. The housing therefore applies 4.63 mm
-compression even without external load.
+Recorded the assembled spring-seat separation as 20.37 mm unloaded and 1.95
+mm at the lower housing endpoint, establishing an 18.42 mm motor-controlled
+compression span. The housing applies 4.63 mm compression even without
+external load.
 
 ## Reason
 
@@ -40,8 +41,10 @@ as a working endpoint until separate coil-bind and housing-stop margins exist.
 
 ## Verification
 
-Power-off measurements: 25.00 mm free length outside the housing, 20.37 mm
-installed/unloaded, and a 1.95 mm full-compression endpoint within the housing.
+Power-off measurements and annotated photographs: 25.00 mm free length outside
+the housing, 20.37 mm assembled/unloaded spring-seat separation, and 1.95 mm
+at the lower in-housing endpoint; `20.37 - 1.95 = 18.42 mm` available
+compression span.
 
 ## Struggles and rejected approaches
 
@@ -51,9 +54,10 @@ or to a housing hard stop.
 
 ## Risks and follow-up
 
-Measure free-spring `L_solid`, `L_lift`, `L_contact`, selected `L_min`, margins
-to both coil bind and the housing endpoint, and retract direction before
-powered preload motion.
+Measure `L_lift`, `L_contact`, selected `L_min`, margin to the housing
+endpoint, and retract direction before powered preload motion. Obtain
+free-spring `L_solid` or its specification before final coil-bind margin or
+force limits are assigned.
 
 ## Files
 

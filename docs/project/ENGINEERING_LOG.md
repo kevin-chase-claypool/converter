@@ -342,14 +342,15 @@ Add new entries at the top of the log below this line.
 - Status: T-01A geometry is partially measured; solid-height and safe-working
   envelope remain open.
 - Category: hardware, toolhead, spring, t-01a, safety.
-- Evidence: measured `L_free = 25.00 mm` outside the housing and `L_unloaded
-  = 20.37 mm` in the housing; reported housing full-compression endpoint =
-  `1.95 mm`.
-- Result: the housing applies 4.63 mm compression unloaded. The 1.95 mm value
+- Evidence: annotated photographs establish `L_free = 25.00 mm` outside the
+  housing, `L_unloaded = 20.37 mm` between assembled spring seats, and lower
+  housing endpoint = `1.95 mm`.
+- Result: the housing applies 4.63 mm captured preload unloaded; the motor's
+  assembled compression span is `20.37 - 1.95 = 18.42 mm`. The 1.95 mm value
   is not free-spring `L_solid` and is not a working endpoint.
-- Next action: with power off, measure free-spring solid height (or obtain its
-  specification), `L_lift`, `L_contact`, `L_min`, both endpoint margins, and
-  retract direction before any powered preload move.
+- Next action: with power off, measure `L_lift`, `L_contact`, `L_min`, housing
+  endpoint margin, and retract direction before any powered preload move;
+  obtain free-spring solid height or specification before final force limits.
 
 <a id="elog-20260908-passed-toolhead-power-path-gates"></a>
 ### 🟩 2026-09-08 - HARDWARE/VERIFIED - Passed toolhead power-path gates

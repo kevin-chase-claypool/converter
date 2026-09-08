@@ -316,14 +316,16 @@ may still sit at different clamp heights.
 **T-01A partial geometry result (2026-09-08):** the current spring measures
 `L_free = 25.00 mm` outside its housing and `20.37 mm` installed and unloaded in its
 housing, giving `x_unloaded = 4.63 mm`. Its reported full-compression length is
-`1.95 mm`, giving `x_full = 23.05 mm`. This is the housing's reported
-full-compression endpoint, not a measurement of the free spring's `L_solid`.
-It must not be used as `L_min` or as a coil-bind limit: the endpoint can be a
-housing hard stop, near coil bind, or both. Measure the free spring's actual
-`L_solid` outside the housing (or obtain its manufacturer specification), then
-measure `L_lift`, `L_contact`, a chosen `L_min`, margins from both `L_solid`
-and the 1.95 mm housing endpoint, and compression direction before powered
-preload motion.
+`1.95 mm`. The photos confirm these are the two spring-seat separations within
+the assembled mechanism: the motor-controlled compression span is therefore
+`20.37 - 1.95 = 18.42 mm`. The 25.00 mm free length only establishes the
+4.63 mm captured preload at the unloaded position; it is not the commanded
+travel span. The 1.95 mm lower position is a hard housing endpoint, not a
+normal `L_min` or a measurement of free-spring `L_solid`; it can coincide with
+a housing hard stop, near coil bind, or both. Measure `L_lift`, `L_contact`, a
+chosen working `L_min`, margins from the 1.95 mm endpoint, and compression
+direction before powered preload motion. Obtain free-spring `L_solid` or its
+specification before assigning final coil-bind margin or force limits.
 
 **Force-path terminology (2026-09-04):** in the current geometry, the spring
 is not assumed to be compressed while the pen is floating clear of the paper.
