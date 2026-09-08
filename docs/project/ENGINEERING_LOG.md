@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - HARDWARE/PARTIAL - Recorded current spring housing geometry](#elog-20260908-recorded-current-spring-housing-geometry)
 - [2026-09-08 - HARDWARE/VERIFIED - Passed toolhead power-path gates](#elog-20260908-passed-toolhead-power-path-gates)
 - [2026-09-08 - SOFTWARE/SUCCESS - Calibrated preview motion-time estimate](#elog-20260908-calibrated-preview-motion-time-estimate)
 - [2026-09-08 - HARDWARE/PARTIAL - Measured M-06 preview-time gap](#elog-20260908-measured-m-06-preview-time-gap)
@@ -334,6 +335,20 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-recorded-current-spring-housing-geometry"></a>
+### 🟨 2026-09-08 - HARDWARE/PARTIAL - Recorded current spring housing geometry
+
+- Status: T-01A geometry is partially measured; solid-height and safe-working
+  envelope remain open.
+- Category: hardware, toolhead, spring, t-01a, safety.
+- Evidence: owner-reported `L_free = 25.00 mm`; measured `L_unloaded = 20.37
+  mm` in the housing; reported housing full-compression endpoint = `1.95 mm`.
+- Result: the housing applies 4.63 mm compression unloaded. The 1.95 mm value
+  is not free-spring `L_solid` and is not a working endpoint.
+- Next action: with power off, measure free-spring solid height (or obtain its
+  specification), `L_lift`, `L_contact`, `L_min`, both endpoint margins, and
+  retract direction before any powered preload move.
 
 <a id="elog-20260908-passed-toolhead-power-path-gates"></a>
 ### 🟩 2026-09-08 - HARDWARE/VERIFIED - Passed toolhead power-path gates

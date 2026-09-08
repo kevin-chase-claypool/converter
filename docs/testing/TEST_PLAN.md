@@ -313,6 +313,18 @@ no approved LIFT compression, clearance, or safe travel endpoint yet. Re-run
 T-01A before powered motion into preload. Interchangeable pens and pencils
 may still sit at different clamp heights.
 
+**T-01A partial geometry result (2026-09-08):** the current spring is reported
+as `L_free = 25.00 mm`; it measures `20.37 mm` installed and unloaded in its
+housing, giving `x_unloaded = 4.63 mm`. Its reported full-compression length is
+`1.95 mm`, giving `x_full = 23.05 mm`. This is the housing's reported
+full-compression endpoint, not a measurement of the free spring's `L_solid`.
+It must not be used as `L_min` or as a coil-bind limit: the endpoint can be a
+housing hard stop, near coil bind, or both. Measure the free spring's actual
+`L_solid` outside the housing (or obtain its manufacturer specification), then
+measure `L_lift`, `L_contact`, a chosen `L_min`, margins from both `L_solid`
+and the 1.95 mm housing endpoint, and compression direction before powered
+preload motion.
+
 **Force-path terminology (2026-09-04):** in the current geometry, the spring
 is not assumed to be compressed while the pen is floating clear of the paper.
 When the pen contacts the paper, the paper reaction drives the pen carriage

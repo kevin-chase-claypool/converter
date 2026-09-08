@@ -32,6 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-08 | T-01A spring geometry | Partial | Current spring: 25.00 mm free and 20.37 mm installed/unloaded establish 4.63 mm housing compression. The 1.95 mm reading is the housing full-compression endpoint, not spring solid height; LIFT/contact/safe-margin values remain. |
 | 2026-09-08 | E-14 / E-14B / E-14C / E-15A | Passed | D36V50F6 output was reported constant at 6.05 V; perfboard, DRV8833/J2, and previously tested TMAG-related 5 V path gates passed. E-15 loaded characterization remains. |
 | 2026-09-08 | M-06 radius sweep | Partial — geometry/repeatability passed | Pen-free converter-generated inner/middle/outer-radius sweep reportedly completed perfectly; explicit G54 return landed X/Y/A on all reference marks. Per-radius elapsed times remain. |
 | 2026-09-07 | Converter X/Y/A and X/Y envelope | Passed (guarded pen-free scope) | `$100=80.00000` is the active caliper-verified X setting. The conservative X/Y software envelope is enabled at `$130=455`, `$131=446`, `$20=$40=1`; the house-and-sun program and `G90 G54 G0 X0 Y0 A0` return reached both reference marks. Boundary rejection, timing, and production registration remain open. |

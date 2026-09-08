@@ -30,6 +30,10 @@ work.
 - Complete the T-01A through T-01J motor/preload physical-capability sequence
   in [`docs/testing/TEST_PLAN.md`](../../docs/testing/TEST_PLAN.md) before
   choosing travel limits, force limits, LIFT dwell, or correction-pulse bounds.
+  T-01A currently establishes only 25.00 mm reported free length and 20.37 mm
+  installed/unloaded length (4.63 mm housing compression); its 1.95 mm reading
+  is a housing endpoint, not spring solid height, so no powered preload limit
+  is approved.
 - Do not enable a firmware LIFT_HOME reference until T-01G verifies the planned
   `GP2`/`TOOL_GND` normally-open switch input and separate mechanical
   backstop margin.
