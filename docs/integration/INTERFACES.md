@@ -150,9 +150,10 @@ commissioning values. The X-axis repeated-rate check likewise passed at
 `$110=1500` mm/min and `$120=500` mm/sec^2. These values do not establish a
 final pen-loaded plotting rate. The Y M-03 check measured exactly 100 mm for
 `G1 Y100 F120` and returned to its mark with `G1 Y-100 F120`; `$101=80.000000`
-is retained. X M-03 measured 100.36 mm at its calculated `$100=80.000000` and
-exactly 100 mm after correction to `$100=79.71303`; the matched reverse move
-also returned exactly to its mark.
+is retained. X M-03 initially measured 100.36 mm at `$100=80.000000`, then a
+calculated `$100=79.71303` correction was recorded. A later owner caliper
+recheck selected `$100=80.000000` as the active accurate value; the earlier
+correction is superseded.
 
 ## RP23CNC to stepper drivers
 
@@ -171,12 +172,15 @@ area centroid, registers G54 X0/Y0, then scans the outer magnet twice and
 registers G54 A0. Every startup uses the full sequence; the physical switches
 define machine bounds, not the actual bed center.
 
-During pen-free commissioning only, a manually aligned **temporary** G54 X/Y
+During pen-free commissioning only, a manually aligned **temporary** G54
 reference may be used after X/Y physical homing. On 2026-09-06 the installed
 TMAG-to-pen vector was measured as `(0.000, -30.100)` mm (`pen - TMAG`) by
 aligning each point to the same center magnet. With the pen axis over that
-magnet, `G10 L20 P1 X0 Y0` set temporary XY zero. This is not a P100 result,
-does not set A0, and must be overwritten by P100 before production drawing.
+magnet, `G10 L20 P1 X0 Y0` set temporary XY zero. After `$131` changed the
+homed Y frame, the same visual center was re-established at
+`MPos:-232.900,-191.200` on 2026-09-07. A manually chosen temporary `A0` was
+also used for one pen-free converter run. Neither is a P100 result or magnetic
+registration; P100 must overwrite both before production drawing.
 
 The TMAG and pen tip have a fixed CAD/measured XY separation. P100 owns that
 transformation: it records `pen - TMAG` as a commissioning-gated offset and

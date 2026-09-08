@@ -18,13 +18,15 @@ merely to make the macro run.
 
 ### Temporary manual XY reference
 
-For guarded pen-free commissioning only, a manually aligned G54 X/Y reference
-may temporarily replace a stale work offset after X/Y home. On 2026-09-06 the
+For guarded pen-free commissioning only, a manually aligned G54 reference may
+temporarily replace a stale work offset after X/Y home. On 2026-09-06 the
 operator aligned the installed TMAG and pen axis to the same center magnet and
-measured `sensor_to_pen = (0.000, -30.100)` mm (`pen - TMAG`). At the manually
-centered pen axis, `G10 L20 P1 X0 Y0` set temporary G54 XY zero. This does not
-validate M-08, does not set G54 A0, and P100 must overwrite it before any
-production drawing.
+measured `sensor_to_pen = (0.000, -30.100)` mm (`pen - TMAG`). After the
+2026-09-07 conservative Y envelope was enabled, the homed machine frame
+changed; the manually centered pen axis was therefore refreshed at
+`MPos:-232.900,-191.200` with `G10 L20 P1 X0 Y0`. The operator also used a
+temporary visual G54 `A0` reference for pen-free testing. Neither reference
+validates M-08/M-09; P100 must overwrite both before production drawing.
 
 The controller macro is [`macros/P100.macro`](macros/P100.macro). It is invoked
 from ioSender with `G65 P100 Q<mode>` after the file is copied to the RP23CNC

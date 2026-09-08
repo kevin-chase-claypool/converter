@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-07 | `HW-20260907-002` | verified | [Verify converter motion and guarded X/Y envelope](../hardware/2026/2026-09-07-verify-converter-motion-and-guarded-xy-envelope.md) | `m-03`, `m-06`, `m-07`, `soft-limits`, `g54`, `xya` |
 | 2026-09-06 | `WINSW-20260906-001` | implemented | [Center G54 output and correct the M-06 sample](2026/2026-09-06-center-g54-output-and-correct-m06-sample.md) | `g54`, `coordinates`, `parking`, `m-06`, `a-axis` |
 | 2026-09-05 | `WSW-20260905-007` | implemented | [Share the preview motion plan](2026/2026-09-05-share-preview-motion-plan.md) | `preview`, `performance`, `motion-planning` |
 | 2026-09-05 | `WSW-20260905-006` | implemented | [Make the production preview safe and complete](2026/2026-09-05-production-preview-safety.md) | `preview`, `gcode`, `validation`, `safety`, `iosender` |

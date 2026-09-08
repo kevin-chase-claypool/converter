@@ -64,7 +64,11 @@ This does not quantify full-frame backlash or pen-loaded dimensional error.
 
 ## Decisions and next action
 
-Retain `$100=79.71303` steps/mm. X and Y now have measured 100 mm travel
+The `79.71303` observation was accepted for this 2026-09-06 run. It was later
+superseded as the **active** setting by the operator's 2026-09-07 caliper
+recheck selecting `$100=80.00000`; see
+[`2026-09-07-converter-house-sun-and-soft-limits.md`](2026-09-07-converter-house-sun-and-soft-limits.md).
+X and Y now have measured 100 mm travel
 checks; proceed with pen-free coordinated X/Y/A motion after the relevant
 clearance and registration setup is ready.
 

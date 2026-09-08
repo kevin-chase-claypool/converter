@@ -32,10 +32,11 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-07 | Converter X/Y/A and X/Y envelope | Passed (guarded pen-free scope) | `$100=80.00000` is the active caliper-verified X setting. The conservative X/Y software envelope is enabled at `$130=455`, `$131=446`, `$20=$40=1`; the house-and-sun program and `G90 G54 G0 X0 Y0 A0` return reached both reference marks. Boundary rejection, timing, and production registration remain open. |
 | 2026-09-06 | Manual G54 XY | Verified (temporary) | Manual TMAG/pen-axis alignment measured a `(0,-30.1)` mm sensor-to-pen vector and set pen-centered G54 X/Y zero; A/P100 remain unregistered. |
 | 2026-09-06 | M-07 X/Y homing | Passed (physical home) | X-east and Y-south NC switches passed single-axis and repeated combined `$H` cycles. Both logged repeats ended at `MPos:-10.000,-498.000` with `H:1,3`; limits and G54 registration remain open. |
 | 2026-09-06 | M-06 X/Y/A | Passed (smoke) | Pen-free simultaneous diagonal X/Y/A moves were reported perfect at `F15000` and `F20000`; carriage and bed marks returned exactly. Converter radius/timing validation remains. |
-| 2026-09-06 | M-03 X-axis | Passed | With `$100=79.71303`, a relative `G1 X100 F300` move measured exactly 100 mm by caliper and `G1 X-100 F300` returned exactly to the starting mark. |
+| 2026-09-06 | M-03 X-axis | Passed | Historical run: `$100=79.71303` measured exactly 100 mm by caliper and `G1 X-100 F300` returned exactly to the starting mark. The active setting was later superseded to `$100=80.00000` after a separate 2026-09-07 caliper recheck. |
 | 2026-09-06 | M-02 X-axis | Passed (unloaded) | Five `X50`/`X-50` pairs at `F1500` returned exactly to the reference mark with no reported motion problem; `$110=1500` and `$120=500` are preliminary unloaded settings. |
 | 2026-09-05 | M-03 Y-axis | Passed | With `$101=80.000000`, a relative `G1 Y100 F120` move measured exactly 100 mm by caliper and `G1 Y-100 F120` returned exactly to the starting mark; X remains. |
 | 2026-09-05 | M-02 Y-axis | Passed (unloaded) | Y stepped bidirectional moves at `F60` through `F500` completed without skipped steps, stalls, or jerking; `$111=1500` and `$121=500` were then reported smooth as preliminary settings. X rate remains; dimensional calibration is separate. |

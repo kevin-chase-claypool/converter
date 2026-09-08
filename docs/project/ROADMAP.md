@@ -109,14 +109,18 @@
 - [ ] Verify the 12:1 bed ratio. (`M-05`)
 - [ ] Tune max rate and acceleration one axis at a time.
 - [ ] Complete M-07 hard/soft-limit behavior. X/Y physical homing passed on
-  2026-09-06 with a repeatable XY-only cycle; endpoint-limit behavior and
-  G54 registration remain open. (`M-07`)
+  2026-09-06 with a repeatable XY-only cycle. The conservative X/Y software
+  envelope (`$130=455`, `$131=446`, `$20=$40=1`) was enabled on 2026-09-07;
+  controlled boundary rejection/recovery and production G54 registration remain
+  open. (`M-07`)
 - [ ] Complete M-06 coordinated X/Y/A validation. Initial pen-free symmetric
-  repeatability smoke test passed through `F20000` on 2026-09-06; converter
-  inner/mid/outer-radius timing and geometry validation remains. The converter
-  now centers SVG output at G54 zero and the replacement sample exercises both
-  A directions; installed-machine evidence remains required. (`M-06`)
-- [ ] Run converter-generated sample G-code without the tool installed.
+  repeatability smoke test passed through `F20000` on 2026-09-06, and the
+  pen-free converter-generated house-and-sun sample returned exactly to G54
+  `X0 Y0 A0` on 2026-09-07. Controlled inner/mid/outer-radius timing and
+  geometry validation remains. The converter now centers SVG output at G54 zero
+  and the replacement sample exercises both A directions. (`M-06`)
+- [x] Run a pen-free converter-generated sample G-code. (House-and-sun sample
+  passed 2026-09-07; it does not replace the controlled M-06 radius sweep.)
 - [ ] **Post-M-06 converter refinement — time-optimal X/Y/A candidate cost.**
   The current theta candidate selector minimizes a weighted combined-distance
   cost across X, Y, and A motor degrees; it does not yet rank alternatives by

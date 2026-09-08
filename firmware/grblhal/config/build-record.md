@@ -34,22 +34,22 @@ for continued commissioning:
 
 | Setting | Value | Scope |
 |---|---:|---|
-| `$100` | `79.71303` steps/mm | X 100 mm M-03 check passed |
+| `$100` | `80.00000` steps/mm | Current owner-caliper-verified X setting; earlier `79.71303` correction superseded |
 | `$101` | `80.000000` steps/mm | Y 100 mm M-03 check passed |
 | `$110` | `1500` mm/min | Preliminary unloaded maximum-rate setting |
 | `$111` | `1500` mm/min | Preliminary unloaded maximum-rate setting |
 | `$120` | `500` mm/sec^2 | Preliminary unloaded acceleration setting |
 | `$121` | `500` mm/sec^2 | Preliminary unloaded acceleration setting |
-| `$130` | `508.000` mm | Measured X end-to-end physical travel; soft-limit use unverified |
-| `$131` | `508.000` mm | Measured Y end-to-end physical travel; soft-limit use unverified |
+| `$130` | `455.000` mm | Conservative observed-safe X software envelope |
+| `$131` | `446.000` mm | Conservative observed-safe Y software envelope |
 | `$133` | `0.000` deg | Continuous A bed: no finite maximum travel |
-| `$20` / `$21` | `0` / `0` | Soft and hard limits remain disabled |
+| `$20` / `$21` | `1` / `0` | X/Y soft limits enabled; hard-limit alarms remain disabled |
+| `$40` | `1` | Soft limits also apply to jogging |
 | `$22` / `$23` | `3` / `2` | X/Y homing enabled with single-axis diagnostics; Y homes negative |
 | `$24` / `$25` / `$27` | `50` / `500` mm/min / `10.000` mm | Locate, seek, and pull-off settings; 10 mm intentionally clears nearby switch wiring |
 | `$43` / `$44` / `$45-$47` | `1` / `XY` / `none` | One XY-only homing phase; Z and A excluded |
 
 These values are not a final pen-loaded plotting limit. X/Y physical homing
-passed on 2026-09-06, but hard/soft-limit endpoint behavior, G54 bed-center
-registration, and loaded toolhead validation remain. Do not enable X/Y soft
-limits until their endpoint behavior is verified; do not assign a finite A soft
-limit.
+and a pen-free converter-generated return test passed, but explicit
+near-boundary soft-limit rejection/recovery, G54 magnetic registration, and
+loaded toolhead validation remain. Do not assign a finite A soft limit.

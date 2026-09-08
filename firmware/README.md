@@ -74,15 +74,21 @@ The RP23CNC grblHAL baseline now boots over native USB: F-01 passed on
 SD/Ymodem support. Installed TB6600 signal response and unloaded X/Y/A motion
 bring-up have since been partially commissioned: A M-01/M-02/M-04/M-05 and
 X/Y M-01/M-02 checks passed for their documented scopes. The Y M-03 check
-measured exactly 100 mm at `$101=80.000000`; the X M-03 check measured exactly
-100 mm at `$100=79.71303`. X/Y physical homing then passed single-axis and
+measured exactly 100 mm at `$101=80.000000`; the current owner-caliper-verified
+X setting is `$100=80.00000`. X/Y physical homing then passed single-axis and
 repeated combined tests using the east/south NC switches, with Z/A excluded.
-Hard/soft-limit behavior, G54 magnetic registration, and pen-loaded behavior
-remain open.
+The guarded X/Y software envelope is enabled at `$130=455.000` mm and
+`$131=446.000` mm with `$20=$40=1` and hard limits disabled (`$21=0`);
+controlled boundary-rejection testing remains open. G54 magnetic registration
+and pen-loaded behavior remain open.
 For guarded pen-free commissioning, the operator manually established a
 temporary pen-corrected G54 X/Y reference from the center magnet on 2026-09-06;
-the measured `sensor_to_pen` vector is `(0.000, -30.100)` mm. This is not P100
-or A registration and must be overwritten before production drawing.
+the measured `sensor_to_pen` vector is `(0.000, -30.100)` mm. After the
+guarded Y envelope changed the homed machine frame, that reference was
+refreshed at `MPos:-232.900,-191.200`; the operator also chose a temporary G54
+`A0` reference for a pen-free converter run, which returned exactly to its
+references. This is not P100 or magnetic A registration and must be overwritten
+before production drawing.
 A dual-core toolhead implementation now exists at
 [`pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`](pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino)
 for integrated control of the DRV8833, HX711, TMAG5273, and M3/M5 command

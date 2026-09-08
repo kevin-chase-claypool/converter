@@ -219,6 +219,7 @@ Entry details remain only in the chronology.
 - [2026-09-06 - RP23CNC-SOFTWARE/IMPLEMENTED - Added GP27 normal-status guardrails](#elog-20260906-added-gp27-normal-status-guardrails)
 - [2026-09-06 - HARDWARE/VERIFIED - X-axis preliminary motion and scale](#elog-20260906-x-axis-preliminary-motion-and-scale)
 - [2026-09-06 - HARDWARE/VERIFIED - A-axis continuous-travel setting](#elog-20260906-a-axis-continuous-travel-setting)
+- [2026-09-07 - HARDWARE/VERIFIED - Converter X/Y/A run and guarded X/Y envelope](#elog-20260907-converter-x-y-a-run-and-guarded-x-y-envelope)
 - [2026-09-06 - HARDWARE/VERIFIED - Pen-free X/Y/A coordinated smoke test](#elog-20260906-pen-free-x-y-a-coordinated-smoke-test)
 - [2026-09-06 - HARDWARE/VERIFIED - X/Y physical homing](#elog-20260906-x-y-physical-homing)
 - [2026-09-06 - HARDWARE/VERIFIED - Temporary manual G54 XY reference](#elog-20260906-temporary-manual-g54-xy-reference)
@@ -3179,6 +3180,31 @@ Add new entries at the top of the log below this line.
 - Evidence: ioSender settings display; `HW-20260906-003`.
 - Next action: retain unlimited A travel and use the separate magnetic P100
   registration process when that commissioning path is ready.
+
+<a id="elog-20260907-converter-x-y-a-run-and-guarded-x-y-envelope"></a>
+### 🟩 2026-09-07 - HARDWARE/VERIFIED - Converter X/Y/A run and guarded X/Y envelope
+
+- Status: a pen-free converter-generated sample completed and returned to the
+  manually established G54 X/Y/A references; the conservative X/Y software
+  envelope is active. Controlled boundary and timing checks remain open.
+- Category: hardware, rp23cnc-software, windows-software, X/Y/A, M-03, M-06,
+  M-07, soft-limits, G54.
+- Summary: The operator selected `$100=80.00000` after a later caliper
+  recheck, enabled `$20=1` and `$40=1` with conservative `$130=455.000` and
+  `$131=446.000`, then successfully homed X/Y (`H:1,3`). Because the Y limit
+  changed the homed coordinate frame, the manual pen-axis center was refreshed
+  at `MPos:-232.900,-191.200`; the operator also used temporary G54 `A0`.
+- Result: Pen-free `kindergarten-house-sun.gcode` completed without a reported
+  motion symptom. `G90 G54 G0 X0 Y0 A0` returned the pen axis exactly to the
+  center mark and the bed exactly to the A reference.
+- Boundary: The finite X/Y values are observed-safe software-envelope values,
+  not hard-stop measurements. No explicit boundary-rejection/recovery,
+  preview-versus-runtime, controlled radius sweep, P100, or pen/toolhead test
+  was performed. The temporary G54 reference remains non-production.
+- Evidence: `HW-20260907-002`; `2026-09-07-converter-house-sun-and-soft-limits.md`.
+- Next action: perform controlled X/Y soft-limit rejection/recovery and the
+  inner/middle/outer-radius converter M-06 timing/geometry check before
+  proceeding to pen-loaded work.
 
 <a id="elog-20260906-pen-free-x-y-a-coordinated-smoke-test"></a>
 ### 🟩 2026-09-06 - HARDWARE/VERIFIED - Pen-free X/Y/A coordinated smoke test

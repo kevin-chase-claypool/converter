@@ -140,7 +140,7 @@ the routed U3 return conductor from `LIMA` to `PRB`.
 | M-04 | A-axis one motor revolution | With 8 microsteps and `$103 = 4.444444` steps per motor-degree, 360 commanded A motor-degrees gives one motor revolution |
 | M-05 | Bed ratio check | 4320 commanded A motor-degrees (19,200 pulses) gives one bed revolution for 12:1 |
 | M-06 | Coordinated X/Y/A sample | Smooth motion and no lost steps |
-| M-07 | Homing and limits | X/Y physical home passed: repeatable machine home from physical switches with Z/A excluded. Hard/soft-limit behavior remains a separate open requirement. |
+| M-07 | Homing and limits | X/Y physical home passed: repeatable machine home from physical switches with Z/A excluded. A conservative X/Y software envelope is enabled; explicit near-boundary rejection/recovery remains open. |
 | M-08 | Magnetic bed-center centroid raster | After X/Y physical homing, P100 produces multiple valid equal-pitch X chords, rejects malformed footprints, calculates the chord-width-weighted area centroid, performs the Centroid Approach and Registration Pass, and repeatably sets G54 X0/Y0 |
 | M-09 | Magnetic theta-index registration | At the measured outer radius, P100 finds two outer-magnet entry/exit pairs from one direction, validates spacing near `4320` A motor degrees, approaches the equivalent averaged index, and repeatably sets G54 A0 |
 | M-10 | Full startup home and registration | One ioSender `G65 P100 Q0` command lifts, homes physical X/Y, registers center and A, returns to G54 X0 Y0 A0, and leaves the pen lifted |
@@ -227,11 +227,14 @@ observation was recorded. See
 [`2026-09-06-m-02-x-axis-rate-ramp.md`](../report/lab-notes/2026-09-06-m-02-x-axis-rate-ramp.md).
 
 M-03 X-axis evidence: the initial 10 mm measurement was rejected after a
-longer caliper check. With `$100=80.000000`, `G1 X100 F300` measured
-`100.36 mm`; the corrected `$100=79.71303` then yielded exactly 100 mm, and
-the matched `X-100` return reached the original mark. **M-03 passed for the
-conducted X-axis dimensional check.** See
-[`2026-09-06-m-03-x-axis-dimensional-calibration.md`](../report/lab-notes/2026-09-06-m-03-x-axis-dimensional-calibration.md).
+longer caliper check. With `$100=80.000000`, `G1 X100 F300` initially measured
+`100.36 mm`; a calculated `79.71303` correction was tried and documented.
+The operator later rechecked the axis by caliper, found `$100=80.000000`
+accurate, and restored that value as the active setting. **M-03 passed for the
+conducted X-axis dimensional check, with `$100=80.000000` as the current
+operator-verified value.** See
+[`2026-09-06-m-03-x-axis-dimensional-calibration.md`](../report/lab-notes/2026-09-06-m-03-x-axis-dimensional-calibration.md)
+and [`2026-09-07-converter-house-sun-and-soft-limits.md`](../report/lab-notes/2026-09-07-converter-house-sun-and-soft-limits.md).
 
 M-06 initial evidence: on 2026-09-06, pen-free matched diagonal X/Y/A moves
 were reported perfect at `F15000` and `F20000`; the X/Y carriage and A-bed
@@ -257,7 +260,10 @@ kinematic strategy; they do not denote distinct firmware modes.
 [`kindergarten-house-sun.svg`](../../samples/svg/kindergarten-house-sun.svg)
 is a larger pen-free visual smoke sample: house, sun, and explicit wavy ground
 lines. It is parser-safe (polylines only) and is centered in G54 by the
-converter; it does not replace the controlled radius or strategy checks.
+converter. Its pen-free generated program completed on 2026-09-07 and the
+explicit `G90 G54 G0 X0 Y0 A0` return landed exactly on both reference marks.
+It does not replace the controlled radius, strategy, or preview-time checks;
+see [`2026-09-07-converter-house-sun-and-soft-limits.md`](../report/lab-notes/2026-09-07-converter-house-sun-and-soft-limits.md).
 
 ## Toolhead tests
 
