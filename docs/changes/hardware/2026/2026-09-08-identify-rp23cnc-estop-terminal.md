@@ -71,8 +71,9 @@ controller-signal-only wiring instruction:
   `RP23U5XBB V1.01`.
 - ioSender 2.0.47 Settings: Grbl screenshot inspected: `$14=6`, Feed Hold and
   Cycle Start selected, E-stop clear.
-- No electrical press/release result supplied. E-19 (continuity check,
-  ioSender Halt/Reset-Unlock behavior) remains open.
+- The live E-stop cycle passed: press produced `ALARM:10`; twist-release,
+  Reset, and Unlock returned ioSender to `IDLE` with no motion reported.
+- Unpowered NC-A/NC-B continuity evidence remains open.
 
 ## Struggles and rejected approaches
 

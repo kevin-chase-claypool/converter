@@ -26,7 +26,11 @@ assert the E-stop signal indicator, and report `MSG:Emergency stop, clear then
 reset to continue`. This verifies the wired NC contact invokes the controller
 Halt/E-stop input.
 
-The test remains partial: it does not yet prove unpowered switch continuity,
-release behavior, Reset/Unlock recovery, or absence of automatic restart.
-Complete those checks with the pen removed and no job running before marking
-E-19 verified.
+The owner then twist-released SW1, selected Reset, and selected Unlock. The
+follow-up ioSender screenshot shows `MSG:Caution: Unlocked` and state `IDLE`.
+No motion was reported. This passes the release, deliberate recovery, and
+no-automatic-restart portions of E-19.
+
+The test remains partial because unpowered meter evidence is still missing:
+NC-A terminal `1`–`2` must be continuous released/open pressed, and NC-B must
+be isolated from NC-A with both NC-B terminals insulated.

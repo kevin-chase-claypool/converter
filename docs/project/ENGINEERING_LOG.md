@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - HARDWARE/PARTIAL - E-stop recovery cycle passed](#elog-20260908-e-stop-recovery-cycle-passed)
 - [2026-09-08 - HARDWARE/PARTIAL - E-stop press asserted RP23CNC Halt](#elog-20260908-e-stop-press-asserted-rp23cnc-halt)
 - [2026-09-08 - HARDWARE/PARTIAL - Configured NC E-stop inversion in ioSender](#elog-20260908-configured-nc-e-stop-inversion-in-iosender)
 - [2026-09-08 - HARDWARE/PARTIAL - E-stop signal pair reported wired](#elog-20260908-e-stop-signal-pair-reported-wired)
@@ -328,6 +329,19 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-e-stop-recovery-cycle-passed"></a>
+### 🟨 2026-09-08 - HARDWARE/PARTIAL - E-stop recovery cycle passed
+
+- Status: live functional E-stop cycle passed; unpowered continuity check open.
+- Category: hardware, rp23cnc-software, wiring, estop, safety.
+- Evidence: after the documented `ALARM:10` press response, the owner
+  twist-released SW1, selected Reset, then Unlock. ioSender reported
+  `MSG:Caution: Unlocked` and state `IDLE`; no motion was reported.
+- Result: the E-stop requires deliberate recovery and does not automatically
+  resume motion after release. The controller-signal-only boundary remains.
+- Next action: with all power removed, meter NC-A terminal `1`–`2` for
+  released-continuous/pressed-open and confirm NC-B isolation.
 
 <a id="elog-20260908-e-stop-press-asserted-rp23cnc-halt"></a>
 ### 🟨 2026-09-08 - HARDWARE/PARTIAL - E-stop press asserted RP23CNC Halt

@@ -120,7 +120,9 @@ Perform with the pen removed, axes clear, and motion set to a safe test state:
 Partial E-19 result, 2026-09-08: with `$14=6`, the owner pressed SW1 and
 ioSender entered `ALARM:10` with `MSG:Emergency stop, clear then reset to
 continue`. The E-stop signal indicator was asserted. Release, Reset/Unlock,
-and no-automatic-restart evidence remain open.
+and no-automatic-restart behavior subsequently passed: after twist-release,
+Reset, and Unlock, ioSender returned to `IDLE` with no motion reported. The
+unpowered NC-A/NC-B meter-continuity check remains open.
 
 ## Non-negotiable rules
 
