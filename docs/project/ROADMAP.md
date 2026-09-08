@@ -116,8 +116,9 @@
 - [ ] Complete M-06 coordinated X/Y/A validation. Initial pen-free symmetric
   repeatability smoke test passed through `F20000` on 2026-09-06, and the
   pen-free converter-generated house-and-sun sample returned exactly to G54
-  `X0 Y0 A0` on 2026-09-07. Controlled inner/mid/outer-radius timing and
-  geometry validation remains. The converter now centers SVG output at G54 zero
+  `X0 Y0 A0` on 2026-09-07. The 2026-09-08 controlled radius sweep also
+  reportedly completed perfectly and returned exactly to all G54 reference
+  marks. Per-radius elapsed-time measurements remain. The converter now centers SVG output at G54 zero
   and the replacement sample exercises both A directions. (`M-06`)
 - [x] Run a pen-free converter-generated sample G-code. (House-and-sun sample
   passed 2026-09-07; it does not replace the controlled M-06 radius sweep.)

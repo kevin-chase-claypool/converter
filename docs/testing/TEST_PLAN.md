@@ -250,6 +250,11 @@ toolhead-disconnected run, leave **Use Z axis** unchecked and temporarily set
 both pen commands and both pen delays to blank/zero before generating the
 file. Confirm the G54 XY reference and a deliberate temporary A reference,
 then inspect the generated first rapid and park target before Cycle Start.
+On 2026-09-08, the owner reported that this radius-sweep run completed each
+path perfectly and that the post-run `G90` / `G54` / `G0 X0 Y0 A0` command
+returned X, Y, and A exactly to their reference marks. This passes the reported
+geometry/repeatability portion; elapsed-time measurements for the inner,
+middle, and outer paths remain required for the timing comparison.
 
 Use [`m06-xy-theta-lettering.svg`](../../samples/svg/m06-xy-theta-lettering.svg)
 as a separate pen-free visual strategy check. With the current default r-theta

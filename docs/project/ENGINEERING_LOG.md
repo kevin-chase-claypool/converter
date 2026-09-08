@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - HARDWARE/PARTIAL - M-06 radius-sweep return passed](#elog-20260908-m-06-radius-sweep-return-passed)
 - [2026-09-08 - HARDWARE/VERIFIED - Passed E-19 controller-signal E-stop](#elog-20260908-passed-e-19-controller-signal-e-stop)
 - [2026-09-08 - HARDWARE/PARTIAL - E-stop recovery cycle passed](#elog-20260908-e-stop-recovery-cycle-passed)
 - [2026-09-08 - HARDWARE/PARTIAL - E-stop press asserted RP23CNC Halt](#elog-20260908-e-stop-press-asserted-rp23cnc-halt)
@@ -330,6 +331,20 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-m-06-radius-sweep-return-passed"></a>
+### 🟨 2026-09-08 - HARDWARE/PARTIAL - M-06 radius-sweep return passed
+
+- Status: geometry/repeatability observation passed; per-radius timing remains open.
+- Category: hardware, rp23cnc-software, windows-software, motion, m-06.
+- Evidence: owner report that the pen-free converter-generated inner, middle,
+  and outer-radius sweep completed perfectly. After it reached `IDLE`, the
+  explicit `G90` / `G54` / `G0 X0 Y0 A0` return landed all axes exactly on
+  their existing reference marks.
+- Result: no lost-step or return-to-reference symptom was reported for the
+  controlled radius sweep. Elapsed-time measurements were not captured.
+- Next action: repeat or supplement this run with inner/middle/outer elapsed
+  times and compare them with the converter preview estimate.
 
 <a id="elog-20260908-passed-e-19-controller-signal-e-stop"></a>
 ### 🟩 2026-09-08 - HARDWARE/VERIFIED - Passed E-19 controller-signal E-stop

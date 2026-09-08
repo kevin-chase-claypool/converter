@@ -32,6 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-08 | M-06 radius sweep | Partial — geometry/repeatability passed | Pen-free converter-generated inner/middle/outer-radius sweep reportedly completed perfectly; explicit G54 return landed X/Y/A on all reference marks. Per-radius elapsed times remain. |
 | 2026-09-07 | Converter X/Y/A and X/Y envelope | Passed (guarded pen-free scope) | `$100=80.00000` is the active caliper-verified X setting. The conservative X/Y software envelope is enabled at `$130=455`, `$131=446`, `$20=$40=1`; the house-and-sun program and `G90 G54 G0 X0 Y0 A0` return reached both reference marks. Boundary rejection, timing, and production registration remain open. |
 | 2026-09-06 | Manual G54 XY | Verified (temporary) | Manual TMAG/pen-axis alignment measured a `(0,-30.1)` mm sensor-to-pen vector and set pen-centered G54 X/Y zero; A/P100 remain unregistered. |
 | 2026-09-06 | M-07 X/Y homing | Passed (physical home) | X-east and Y-south NC switches passed single-axis and repeated combined `$H` cycles. Both logged repeats ended at `MPos:-10.000,-498.000` with `H:1,3`; limits and G54 registration remain open. |

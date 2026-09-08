@@ -58,6 +58,9 @@ work.
   motion or skipped-step symptom.
 - `G90`, `G54`, `G0 X0 Y0 A0` returned the pen axis and bed exactly to their
   manually established references.
+- On 2026-09-08, the pen-free `m06-radius-sweep.svg` converter run reportedly
+  completed every path perfectly; the same explicit G54 return landed X, Y,
+  and A exactly on their reference marks. No elapsed times were captured.
 
 ## Struggles and rejected approaches
 
@@ -69,8 +72,8 @@ interpretation. It is superseded by the owner's later caliper verification of
 
 The finite X/Y values are conservative software-envelope values, not verified
 hard-stop coordinates. Test controller rejection/recovery near each X/Y
-boundary, compare converter preview time with measured runtime, and complete
-the controlled inner/middle/outer-radius M-06 sample. P100 magnetic
+boundary and compare converter preview time with measured runtime for the
+completed inner/middle/outer-radius M-06 sample. P100 magnetic
 registration must replace the temporary G54 reference before production.
 
 ## Files
