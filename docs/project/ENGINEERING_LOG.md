@@ -346,7 +346,8 @@ Add new entries at the top of the log below this line.
 - Evidence: selected microswitch terminals were open released and continuous
   pressed, then connected to Pro Micro RP2350 `GP2` and adjacent `TOOL_GND`.
 - Result: firmware configures GP2 as active-low `INPUT_PULLUP` and emits a
-  `lift_home` USB telemetry field. It deliberately does not control the motor.
+  `lift_home` field through native USB and GP20/GP21 service UART. It
+  deliberately does not control the motor.
 - Next action: flash the sketch with motor power disabled; verify released and
   pressed telemetry transitions, then run the documented guarded T-01G cycles.
 

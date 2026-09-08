@@ -17,6 +17,8 @@ constexpr uint8_t PIN_HX711_DT = 0;
 constexpr uint8_t PIN_HX711_SCK = 1;
 constexpr uint8_t PIN_I2C_SDA = 16;
 constexpr uint8_t PIN_I2C_SCL = 17;
+constexpr uint8_t PIN_SERVICE_UART_TX = 20;
+constexpr uint8_t PIN_SERVICE_UART_RX = 21;
 
 constexpr bool CMD_ACTIVE_HIGH_IS_M3 = false;
 constexpr bool HOME_ARM_ACTIVE_LOW = true;

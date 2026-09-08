@@ -105,6 +105,10 @@ void emitTelemetry() {
       Serial.availableForWrite() >= length) {
     Serial.write(reinterpret_cast<const uint8_t *>(line), static_cast<size_t>(length));
   }
+  if (length > 0 && length < static_cast<int>(sizeof(line)) &&
+      Serial1.availableForWrite() >= length) {
+    Serial1.write(reinterpret_cast<const uint8_t *>(line), static_cast<size_t>(length));
+  }
 }
 
 void serviceSerial() {
@@ -150,6 +154,9 @@ void serviceCore1Watchdog() {
 
 void setup() {
   Serial.begin(SERIAL_BAUD);
+  Serial1.setTX(PIN_SERVICE_UART_TX);
+  Serial1.setRX(PIN_SERVICE_UART_RX);
+  Serial1.begin(SERIAL_BAUD);
   delay(250); // Startup-only USB enumeration; automatic control has not begun.
   Serial.println();
   Serial.println(F("Theta RP2350 dual-core toolhead firmware"));
