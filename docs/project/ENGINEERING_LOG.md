@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 11:44:58 -0500 - HARDWARE/OPEN - Identified the RP23CNC ESTOP terminal](#elog-20260908114458)
 - [2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review](#elog-20260905-iosender-to-converter-compatibility-review)
 - [2026-09-05 - WINDOWS SOFTWARE/MIXED - Planned radius-aware A-axis feed](#elog-20260905-planned-radius-aware-a-axis-feed)
 - [2026-09-05 - HARDWARE/SUCCESS - Completed M-03 Y-axis dimensional check](#elog-20260905-completed-m-03-y-axis-dimensional-check)
@@ -323,6 +324,32 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908114458"></a>
+### 🟨 2026-09-08 11:44:58 -0500 - HARDWARE/OPEN - Identified the RP23CNC ESTOP terminal
+
+- Status: terminal identified; nothing wired, E-19 not yet performed.
+- Category: hardware, wiring, estop, rp23cnc, safety.
+- Summary: closed the TBD terminal in `ESTOP_TOPOLOGY.md`/`WIRING_TABLE.md`
+  (`SAF-004`). The RP23CNC user manual's board diagram (p.6, rev V1.0) labels
+  a dedicated 2-pin `ESTOP` `SIG`/`GND` terminal, rightmost in the Grbl
+  Control Inputs group after `DOOR`, `CY/ST`, `FD HOLD`. Confirmed against a
+  photo of the owner's installed board (silkscreen reads `RP23U5XBB V1.01`),
+  which shows the same labeled row in the same position.
+- Struggle/failure: pulling the manual through the web-fetch/in-app-browser
+  tools first failed — GitHub's PDF viewer would not expose extractable text
+  and a direct raw-file fetch was treated as a download requiring explicit
+  permission. Used the manual copy already checked into
+  `docs/hardware/references/RP23CNC-user-manual.pdf` with local
+  `pdftotext`/`pdftoppm` instead, which worked immediately.
+- Evidence: `HW-20260908-001`;
+  `docs/report/lab-notes/2026-09-08-rp23cnc-estop-terminal-identification.md`.
+- Result: `ESTOP_TOPOLOGY.md` and `WIRING_TABLE.md` now name the terminal
+  instead of TBD; both remain status `planned` pending E-19.
+- Next action: run E-19 — verify SW1 NC-A/NC-B continuity with power removed,
+  land NC-A across `ESTOP` `SIG`/`GND`, set `$14=6` during the live test, and
+  confirm Halt/Reset-Unlock behavior in ioSender before marking `SAF-004`
+  verified.
 
 <a id="elog-20260905212018"></a>
 ### 🟩 2026-09-05 21:20:18 -0500 - SOFTWARE/SUCCESS - Shared the preview motion plan

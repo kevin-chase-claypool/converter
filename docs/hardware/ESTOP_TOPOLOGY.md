@@ -6,7 +6,9 @@ and Halt arrangement. It supplements the individual connection rows in
 
 Status: planned as the RP23CNC's dedicated opto-isolated Halt input only; no
 final conductor has been landed and E-19 has not yet been performed. A relay
-energy-removal branch is not part of this project.
+energy-removal branch is not part of this project. The physical terminal is
+now identified (see "Identified terminal" below); it is identified, not yet
+wired or verified.
 
 ## Purpose and boundary
 
@@ -36,15 +38,36 @@ its terminals individually.
 ```text
 RP23CNC Iso 12 V input -> powers the isolated control-input section
 
-SW1 NC-A terminal 1 -> RP23CNC dedicated E-stop/Halt terminal 1
-SW1 NC-A terminal 2 -> RP23CNC dedicated E-stop/Halt terminal 2
+SW1 NC-A terminal 1 -> RP23CNC ESTOP terminal, SIG pin
+SW1 NC-A terminal 2 -> RP23CNC ESTOP terminal, GND pin
 
 SW1 NC-B -> unused: insulate both terminals individually
 ```
 
 The E-stop's NC terminals have no polarity. The exact RP23CNC E-stop terminal
-pair is intentionally not filled in until the installed board silkscreen and
-E-19 checks agree. Never infer it from the mushroom-switch drawing alone.
+pair was intentionally left blank until the installed board silkscreen and
+E-19 checks agreed with the manual. That identification is now done (see
+"Identified terminal" below); do not skip the E-19 continuity/live checks just
+because the terminal name is known.
+
+## Identified terminal
+
+The RP23CNC user manual's "Key Features" board diagram (`docs/hardware/references/RP23CNC-user-manual.pdf`,
+p.6, board rev RP23U5XBB V1.0) labels a dedicated 2-pin `ESTOP` screw
+terminal (`SIG` / `GND`) as the rightmost terminal in the "Grbl Control
+Inputs" group, immediately after `DOOR`, `CY/ST`, and `FD HOLD`. This was
+cross-checked against a photo of the owner's installed board, which reads
+`RP23U5XBB V1.01` on the silkscreen and shows the same
+`... DOOR CY/ST FD HOLD ESTOP` terminal row with matching `SIG`/`GND`
+labels. See
+`docs/report/lab-notes/2026-09-08-rp23cnc-estop-terminal-identification.md`
+for the evidence photos and reasoning.
+
+This is a simple 2-wire switch loop, not a powered feed: SW1 NC-A bridges the
+`ESTOP` terminal's `SIG` and `GND` pins when the switch is released (open when
+pressed). The board's isolated 12 V input must still be powered for the
+control-input opto section to be live at all; that is separate from this
+2-wire connection and carries no polarity requirement of its own here.
 
 Because SW1 is NC, its E-stop inversion bit must be **clear**. The manual's
 first-run `$14=70` value assumes an NO E-stop. With the current Feed Hold and
@@ -72,8 +95,9 @@ Perform with the pen removed, axes clear, and motion set to a safe test state:
 
 1. With all power removed, verify NC-A is continuous when released and open
    when pressed. Verify NC-B is isolated from NC-A and leave NC-B insulated.
-2. With isolated 12 V present, wire only NC-A to the RP23CNC E-stop/Halt input
-   pair after identifying its terminal labels.
+2. With isolated 12 V present, wire only NC-A to the RP23CNC `ESTOP` terminal's
+   `SIG`/`GND` pins (identified above; confirm once more against the physical
+   board before landing wire).
 3. Set the E-stop control-input inversion for NC operation as part of this
    live test (current planned `$14=6`, subject to ioSender state verification).
 4. Power only the controller/control branch. Press SW1 and verify that ioSender
