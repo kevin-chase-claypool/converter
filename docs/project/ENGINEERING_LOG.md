@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - HARDWARE/PARTIAL - E-stop press asserted RP23CNC Halt](#elog-20260908-e-stop-press-asserted-rp23cnc-halt)
 - [2026-09-08 - HARDWARE/PARTIAL - Configured NC E-stop inversion in ioSender](#elog-20260908-configured-nc-e-stop-inversion-in-iosender)
 - [2026-09-08 - HARDWARE/PARTIAL - E-stop signal pair reported wired](#elog-20260908-e-stop-signal-pair-reported-wired)
 - [2026-09-08 - HARDWARE/PLANNED - Clarified controller-signal E-stop wiring](#elog-20260908-clarified-controller-signal-e-stop-wiring)
@@ -327,6 +328,19 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-e-stop-press-asserted-rp23cnc-halt"></a>
+### 🟨 2026-09-08 - HARDWARE/PARTIAL - E-stop press asserted RP23CNC Halt
+
+- Status: press-to-Halt passed; recovery and no-auto-restart checks remain open.
+- Category: hardware, rp23cnc-software, wiring, estop, safety.
+- Evidence: owner-supplied ioSender 2.0.47 screenshots. Controller was `IDLE`
+  with `$14=6`; pressing SW1 asserted the E-stop indicator, produced
+  `ALARM:10`, and displayed the emergency-stop clear/reset message.
+- Result: NC-A-to-`ESTOP SIG`/`GND` correctly invokes the controller-signal
+  E-stop. This is not an energy-isolation test.
+- Next action: twist-release SW1, then verify Reset and Unlock return the
+  controller to `IDLE` without any automatic motion.
 
 <a id="elog-20260908-configured-nc-e-stop-inversion-in-iosender"></a>
 ### 🟨 2026-09-08 - HARDWARE/PARTIAL - Configured NC E-stop inversion in ioSender

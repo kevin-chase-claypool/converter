@@ -115,7 +115,12 @@ Perform with the pen removed, axes clear, and motion set to a safe test state:
    deliberate separate action.
 5. Confirm no automatic motion restart occurs after twist-release, reset, and
    unlock. Record the final terminal pair, `$14` value, state transitions, and
-   photographs in a dated lab note before changing the row to `verified`.
+    photographs in a dated lab note before changing the row to `verified`.
+
+Partial E-19 result, 2026-09-08: with `$14=6`, the owner pressed SW1 and
+ioSender entered `ALARM:10` with `MSG:Emergency stop, clear then reset to
+continue`. The E-stop signal indicator was asserted. Release, Reset/Unlock,
+and no-automatic-restart evidence remain open.
 
 ## Non-negotiable rules
 

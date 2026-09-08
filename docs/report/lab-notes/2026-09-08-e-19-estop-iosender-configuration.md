@@ -20,7 +20,13 @@ existing Feed Hold and Cycle Start choices while clearing the E-stop inversion.
 
 ## Result and remaining test
 
-The configuration snapshot is partial E-19 evidence only. It does not prove
-the switch contact state, RP23CNC input state, grblHAL Halt response,
-Reset/Unlock recovery, or absence of automatic restart. Complete those checks
-with the pen removed and no job running before marking E-19 verified.
+The configuration snapshot was followed by a live press test. With the
+controller initially `IDLE`, pressing SW1 caused ioSender to show `ALARM:10`,
+assert the E-stop signal indicator, and report `MSG:Emergency stop, clear then
+reset to continue`. This verifies the wired NC contact invokes the controller
+Halt/E-stop input.
+
+The test remains partial: it does not yet prove unpowered switch continuity,
+release behavior, Reset/Unlock recovery, or absence of automatic restart.
+Complete those checks with the pen removed and no job running before marking
+E-19 verified.
