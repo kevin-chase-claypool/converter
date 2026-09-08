@@ -116,6 +116,7 @@ opened from its own folder:
 | [`e08_hx711_rate_noise/e08_hx711_rate_noise.ino`](e08_hx711_rate_noise/e08_hx711_rate_noise.ino) | Measures actual stationary HX711 sample rate and raw-count noise in one quiet 15-second UART result; keeps the motor driver inactive. | HX711 Arduino Library by Bogdan Necula / bogde |
 | [`e09_tmag5273_verification/e09_tmag5273_verification.ino`](e09_tmag5273_verification/e09_tmag5273_verification.ino) | Verifies TMAG5273 I2C identity, on-demand magnetic vector, and stationary field stability through the intended Qwiic wiring; keeps the motor driver inactive. | SparkFun TMAG5273 Arduino Library |
 | [`bench_sensors/bench_sensors.ino`](bench_sensors/bench_sensors.ino) | Tests HX711 raw readings and TMAG5273 Qwiic telemetry without energizing the motor driver. | HX711 and SparkFun TMAG5273 |
+| [`t01g_lift_home_uart/t01g_lift_home_uart.ino`](t01g_lift_home_uart/t01g_lift_home_uart.ino) | Motor-safe T-01G diagnostic: reads GP2 with `INPUT_PULLUP` and writes a fixed 115200-baud `lift_home` line only through GP20/GP21 UART1. | none beyond Arduino core |
 | [`pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`](pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino) | Dual-core integrated pressure/safety and magnetic-readiness/threshold controller for GP29, GP28, GP27, DRV8833, HX711, and TMAG5273. | HX711 and SparkFun TMAG5273 |
 
 Recommended bench order: run `bench_sensors` first, run `bench_motor_command`

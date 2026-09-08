@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - RP23CNC-SOFTWARE/DIAGNOSTIC - Isolated LIFT_HOME UART check](#elog-20260908-isolated-lift-home-uart-check)
 - [2026-09-08 - HARDWARE/PARTIAL - Installed LIFT_HOME switch input](#elog-20260908-installed-lift-home-switch-input)
 - [2026-09-08 - HARDWARE/PARTIAL - Recorded current spring housing geometry](#elog-20260908-recorded-current-spring-housing-geometry)
 - [2026-09-08 - HARDWARE/VERIFIED - Passed toolhead power-path gates](#elog-20260908-passed-toolhead-power-path-gates)
@@ -336,6 +337,21 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-isolated-lift-home-uart-check"></a>
+### 🟨 2026-09-08 - RP23CNC-SOFTWARE/DIAGNOSTIC - Isolated LIFT_HOME UART check
+
+- Status: diagnostic sketch compiled; installed output test pending.
+- Category: rp23cnc-software, hardware, toolhead, lift-home, uart, t-01g.
+- Evidence: the integrated firmware's first service-UART observation was
+  unreadable/absent despite successful UF2 upload and apparent power.
+- Result: added a 115200-baud GP2/GP20-only sketch that outputs the switch state
+  every 500 ms and initializes no motor-related pin.
+- Verification: `arduino-cli compile --fqbn rp2040:rp2040:sparkfun_promicrorp2350
+  firmware\\pen_pressure\\t01g_lift_home_uart` passed.
+- Next action: upload with motor power disabled; distinguish a clean fixed-line
+  result from a UART wiring/adapter/configuration failure before using the
+  integrated sketch again.
 
 <a id="elog-20260908-installed-lift-home-switch-input"></a>
 ### 🟨 2026-09-08 - HARDWARE/PARTIAL - Installed LIFT_HOME switch input

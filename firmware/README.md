@@ -104,7 +104,8 @@ to local `TOOL_GND`; the integrated firmware configures it as an active-low
 pull-up input and reports it through native USB and GP20/GP21 service UART.
 T-01G must verify live transitions and guarded retract cycles before it
 controls motor behavior.
-Two smaller Arduino sketches also exist for safer bring-up:
+Smaller Arduino sketches also exist for safer bring-up, including a GP2/GP20
+LIFT_HOME UART-only diagnostic with no motor-related pin activity:
 [`pen_pressure/bench_motor_command/bench_motor_command.ino`](pen_pressure/bench_motor_command/bench_motor_command.ino)
 tests only GP29 and the DRV8833, and
 [`pen_pressure/bench_sensors/bench_sensors.ino`](pen_pressure/bench_sensors/bench_sensors.ino)

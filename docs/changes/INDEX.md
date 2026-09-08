@@ -6,6 +6,7 @@ Newest changes appear first.
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
 | 2026-09-08 | `WSW-20260908-001` | windows-software, hardware, rp23cnc-software | implemented | [Calibrate the preview motion-time estimate](windows-software/2026/2026-09-08-calibrate-preview-motion-estimate.md) |
+| 2026-09-08 | `RPSW-20260908-001` | rp23cnc-software, hardware | implemented | [Add LIFT_HOME UART diagnostic sketch](rp23cnc-software/2026/2026-09-08-add-lift-home-uart-diagnostic.md) |
 | 2026-09-08 | `HW-20260908-004` | hardware, rp23cnc-software | implemented | [Install LIFT_HOME switch input diagnostics](hardware/2026/2026-09-08-install-lift-home-switch-input.md) |
 | 2026-09-08 | `HW-20260908-003` | hardware, rp23cnc-software | implemented | [Record current spring geometry](hardware/2026/2026-09-08-record-current-spring-geometry.md) |
 | 2026-09-08 | `HW-20260908-002` | hardware, rp23cnc-software | verified | [Verify toolhead power-path gates](hardware/2026/2026-09-08-verify-toolhead-power-path.md) |

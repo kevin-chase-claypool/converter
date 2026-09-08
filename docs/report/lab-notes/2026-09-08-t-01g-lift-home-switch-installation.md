@@ -28,3 +28,8 @@ only after that input test passes, run ten guarded slow retract cycles and
 document repeatability, release position, debounce behavior, and timeout/fault
 behavior. The switch is a position reference, not a mechanical hard stop and
 not a spring-force sensor.
+
+If the integrated sketch does not produce readable service telemetry, first
+flash the motor-safe `t01g_lift_home_uart` sketch. It prints only
+`T01G lift_home=0` or `T01G lift_home=1` through GP20/GP21 at 115200 baud,
+making the switch/UART hardware path independently testable.
