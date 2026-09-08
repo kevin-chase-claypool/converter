@@ -53,6 +53,15 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
 
         self.assertEqual(settings.theta_tangential_speed_mm_min, 725.5)
 
+    def test_motion_estimate_calibration_uses_the_m06_measurement(self):
+        self.assertAlmostEqual(
+            converter.calibrated_motion_seconds(160.58),
+            75.05,
+            places=6,
+        )
+        with self.assertRaises(ValueError):
+            converter.calibrated_motion_seconds(10.0, 0.0)
+
     def test_default_program_is_self_contained_non_z_pen_contract(self):
         contours = [[(-25.0, 0.0), (25.0, 0.0)]]
         gcode = converter.contours_to_gcode(contours, converter.Settings())

@@ -917,6 +917,7 @@ class MainWindow(QMainWindow):
 
         self.update_color_buttons()
         self.fields["print_speed"].textChanged.connect(lambda _text: self.on_print_speed_changed())
+        self.fields["motion_estimate_scale"].textChanged.connect(lambda _text: self.on_motion_estimate_scale_changed())
         self.fields["hatch_pattern"].currentTextChanged.connect(lambda _text: self.update_pattern_settings())
         self.raster_shading.toggled.connect(lambda _checked: self.update_pattern_settings())
         self.update_pattern_settings()
@@ -2189,6 +2190,16 @@ class MainWindow(QMainWindow):
             return
         self.gl_preview.set_play_speed(speed)
 
+    def motion_estimate_scale(self):
+        return float(self.fields["motion_estimate_scale"].text())
+
+    def on_motion_estimate_scale_changed(self):
+        try:
+            converter.calibrated_motion_seconds(0.0, self.motion_estimate_scale())
+        except ValueError:
+            return
+        self.update_estimate()
+
     def move_strategy_length(self, move):
         # Full coordinated motion length; includes theta motor degrees so
         # rotation-heavy smoothing changes affect the displayed estimate.
@@ -2235,12 +2246,22 @@ class MainWindow(QMainWindow):
             elif kind in ("pen_up", "pen_down"):
                 pen_seconds += float(move.get("duration_ms", 0.0)) / 1000.0
 
-        total_seconds = draw_seconds + travel_seconds + pen_seconds
+        model_motion_seconds = draw_seconds + travel_seconds
+        motion_estimate_scale = self.motion_estimate_scale()
+        calibrated_motion_seconds = converter.calibrated_motion_seconds(
+            model_motion_seconds,
+            motion_estimate_scale,
+        )
+        model_total_seconds = model_motion_seconds + pen_seconds
+        total_seconds = calibrated_motion_seconds + pen_seconds
         return {
             "total_seconds": total_seconds,
+            "model_total_seconds": model_total_seconds,
             "draw_seconds": draw_seconds,
             "travel_seconds": travel_seconds,
             "pen_seconds": pen_seconds,
+            "motion_estimate_scale": motion_estimate_scale,
+            "calibrated_motion_seconds": calibrated_motion_seconds,
             "draw_mm": draw_mm,
             "strategy_counts": strategy_counts,
         }
@@ -2249,20 +2270,26 @@ class MainWindow(QMainWindow):
         if not self.moves:
             self.estimate.setText("Estimated time: preview an SVG to calculate.")
             return None
-        estimate = self.estimate_runtime(self.moves)
+        try:
+            estimate = self.estimate_runtime(self.moves)
+        except ValueError as exc:
+            self.estimate.setText(f"Controller-time estimate unavailable: {exc}")
+            return None
         counts = estimate["strategy_counts"]
         axis_summary = f"x_theta {counts.get('x_theta', 0)}, y_theta {counts.get('y_theta', 0)}"
         fallback_count = counts.get("fallback", 0)
         if fallback_count:
             axis_summary += f", fallback {fallback_count}"
         self.estimate.setText(
-            "Controller-time estimate: "
+            "Calibrated controller-time estimate: "
             f"{self.format_duration(estimate['total_seconds'])} "
-            f"(draw {self.format_duration(estimate['draw_seconds'])}, "
+            f"(model {self.format_duration(estimate['model_total_seconds'])}; "
+            f"motion ×{fmt(estimate['motion_estimate_scale'])}; "
+            f"draw {self.format_duration(estimate['draw_seconds'])}, "
             f"travel {self.format_duration(estimate['travel_seconds'])}, "
             f"pen {self.format_duration(estimate['pen_seconds'])}; "
             f"draw coordinated motion {fmt(estimate['draw_mm'])}; "
-            f"{axis_summary}). Rapid timing remains an estimate until M-06."
+            f"{axis_summary}). Pen dwells are not scaled; refine after more timing runs."
         )
         return estimate
 
@@ -2376,7 +2403,9 @@ class MainWindow(QMainWindow):
         if estimate:
             self.log.append(
                 f"Loaded {len(self.moves)} preview moves from {len(self.program_lines)} exact G-code lines. "
-                f"Controller-time estimate {self.format_duration(estimate['total_seconds'])}; rapid timing remains an estimate."
+                f"Calibrated controller-time estimate {self.format_duration(estimate['total_seconds'])} "
+                f"from model {self.format_duration(estimate['model_total_seconds'])} "
+                f"at motion scale {fmt(estimate['motion_estimate_scale'])}."
             )
         else:
             self.log.append(f"Loaded {len(self.moves)} preview moves from {len(self.program_lines)} exact G-code lines.")

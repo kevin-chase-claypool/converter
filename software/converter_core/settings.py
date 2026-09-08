@@ -2,6 +2,23 @@ import math
 from dataclasses import dataclass, field, fields
 
 
+# M-06 pen-free radius sweep: 75.05 s observed movement / 160.58 s model.
+# This is a display-only correction for the installed RP23CNC motion profile;
+# it must never alter emitted feeds or G-code.
+DEFAULT_MOTION_ESTIMATE_SCALE = 75.05 / 160.58
+
+
+def calibrated_motion_seconds(model_seconds, scale=DEFAULT_MOTION_ESTIMATE_SCALE):
+    """Return a display-only calibrated motion duration in seconds."""
+    model_seconds = float(model_seconds)
+    scale = float(scale)
+    if not math.isfinite(model_seconds) or model_seconds < 0.0:
+        raise ValueError("model motion time must be finite and non-negative.")
+    if not math.isfinite(scale) or scale <= 0.0:
+        raise ValueError("motion estimate scale must be finite and greater than zero.")
+    return model_seconds * scale
+
+
 @dataclass(frozen=True)
 class ThetaControllerLimits:
     """Installed RP23CNC A-axis limits in motor-shaft units.
@@ -113,6 +130,7 @@ TEXT_FIELD_GROUPS = (
     )),
     ("Preview settings", (
         ("Preview playback speed mm/s", "print_speed", "100"),
+        ("Motion estimate scale", "motion_estimate_scale", f"{DEFAULT_MOTION_ESTIMATE_SCALE:.6f}"),
         ("Bed dia mm", "bed_diameter_mm", "457.2"),
         ("Bed margin mm", "bed_margin_mm", "6.35"),
         ("Pen stroke mm", "pen_diameter_mm", "0.3"),

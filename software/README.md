@@ -124,8 +124,12 @@ X/Y-only output, and preview/G-code parity.
   setup, M3/M5 commands, G4 dwell lines, comments, and M2. It is not a
   shortened preview-only command list.
 - The controller-time estimate uses emitted draw-feed plans and configured pen
-  dwell durations. Rapid timing remains an estimate until M-06 confirms the
-  installed grblHAL rapid behavior.
+  dwell durations. Its **Motion estimate scale** is display-only: the current
+  default `0.467368` comes from the pen-free M-06 radius sweep (`75.05 s`
+  observed / `160.58 s` model). It scales draw and rapid-motion time only;
+  pen dwells and emitted feeds/G-code are unchanged. The UI shows both the
+  calibrated estimate and the unscaled model time. Repeat timing evidence
+  before changing this machine-specific calibration.
 - During playback, pen-up travel moves animate from their lift point to their
   destination using the configured travel-rate model. The highlighted rapid path
   grows only as far as the moving toolhead instead of appearing all at once.

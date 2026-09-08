@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - SOFTWARE/SUCCESS - Calibrated preview motion-time estimate](#elog-20260908-calibrated-preview-motion-time-estimate)
 - [2026-09-08 - HARDWARE/PARTIAL - Measured M-06 preview-time gap](#elog-20260908-measured-m-06-preview-time-gap)
 - [2026-09-08 - HARDWARE/PARTIAL - M-06 radius-sweep return passed](#elog-20260908-m-06-radius-sweep-return-passed)
 - [2026-09-08 - HARDWARE/VERIFIED - Passed E-19 controller-signal E-stop](#elog-20260908-passed-e-19-controller-signal-e-stop)
@@ -332,6 +333,20 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-calibrated-preview-motion-time-estimate"></a>
+### 🟩 2026-09-08 - SOFTWARE/SUCCESS - Calibrated preview motion-time estimate
+
+- Status: implemented and unit-tested; further timing evidence remains desirable.
+- Category: windows-software, hardware, rp23cnc-software, preview, timing, m-06.
+- Summary: added a display-only Motion estimate scale of `0.467368`, derived
+  from the pen-free M-06 `75.05 / 160.58` s observation. It scales only draw
+  and rapid-motion duration, presents both calibrated and raw model time, and
+  does not change G-code or feeds. Explicit pen dwells remain unscaled.
+- Evidence: `python -m unittest discover -s software\tests -v` passed 20 tests;
+  the added regression maps 160.58 model seconds to 75.05 calibrated seconds.
+- Next action: collect a comparable timing repeat or per-radius times before
+  revising the factor further.
 
 <a id="elog-20260908-measured-m-06-preview-time-gap"></a>
 ### 🟨 2026-09-08 - HARDWARE/PARTIAL - Measured M-06 preview-time gap
