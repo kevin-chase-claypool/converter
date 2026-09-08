@@ -342,8 +342,9 @@ Add new entries at the top of the log below this line.
 - Status: T-01A geometry is partially measured; solid-height and safe-working
   envelope remain open.
 - Category: hardware, toolhead, spring, t-01a, safety.
-- Evidence: owner-reported `L_free = 25.00 mm`; measured `L_unloaded = 20.37
-  mm` in the housing; reported housing full-compression endpoint = `1.95 mm`.
+- Evidence: measured `L_free = 25.00 mm` outside the housing and `L_unloaded
+  = 20.37 mm` in the housing; reported housing full-compression endpoint =
+  `1.95 mm`.
 - Result: the housing applies 4.63 mm compression unloaded. The 1.95 mm value
   is not free-spring `L_solid` and is not a working endpoint.
 - Next action: with power off, measure free-spring solid height (or obtain its

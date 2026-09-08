@@ -9,7 +9,7 @@ Establish the first measured geometry values for the installed 0.4 mm × 7 mm ×
 
 | Quantity | Value | Interpretation |
 |---|---:|---|
-| `L_free` | 25.00 mm | Owner-reported free length. |
+| `L_free` | 25.00 mm | Measured outside the housing. |
 | `L_unloaded` | 20.37 mm | Spring length installed in the housing with no external load. |
 | `x_unloaded = L_free - L_unloaded` | 4.63 mm | Existing housing compression. |
 | `L_housing_full` | 1.95 mm | Owner-reported full-compression endpoint within the housing. |

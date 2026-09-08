@@ -40,8 +40,8 @@ as a working endpoint until separate coil-bind and housing-stop margins exist.
 
 ## Verification
 
-Owner-reported power-off measurements: 25.00 mm free, 20.37 mm installed
-unloaded, and a 1.95 mm full-compression endpoint within the housing.
+Power-off measurements: 25.00 mm free length outside the housing, 20.37 mm
+installed/unloaded, and a 1.95 mm full-compression endpoint within the housing.
 
 ## Struggles and rejected approaches
 
