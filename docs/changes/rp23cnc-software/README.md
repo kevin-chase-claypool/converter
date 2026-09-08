@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-08 | `WSW-20260908-001` | implemented | [Calibrate the preview motion-time estimate](../windows-software/2026/2026-09-08-calibrate-preview-motion-estimate.md) | `preview`, `timing`, `m-06`, `calibration` |
 | 2026-09-07 | `HW-20260907-002` | verified | [Verify converter motion and guarded X/Y envelope](../hardware/2026/2026-09-07-verify-converter-motion-and-guarded-xy-envelope.md) | `m-03`, `m-06`, `m-07`, `soft-limits`, `g54`, `xya` |
 | 2026-09-07 | `HW-20260907-001` | planned | [Require scale-force transfer calibration](../hardware/2026/2026-09-07-require-scale-force-transfer-calibration.md) | `force-calibration`, `hx711`, `grams-force`, `toolhead`, `testing` |
 | 2026-09-06 | `RPSW-20260906-001` | implemented | [Add GP27 Normal-Status Guardrails](2026/2026-09-06-gp27-normal-status-guardrails.md) | `gp27`, `contact-ready`, `p100`, `safety` |
