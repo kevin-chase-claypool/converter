@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - HARDWARE/PARTIAL - E-stop signal pair reported wired](#elog-20260908-e-stop-signal-pair-reported-wired)
 - [2026-09-08 - HARDWARE/PLANNED - Clarified controller-signal E-stop wiring](#elog-20260908-clarified-controller-signal-e-stop-wiring)
 - [2026-09-08 11:44:58 -0500 - HARDWARE/OPEN - Identified the RP23CNC ESTOP terminal](#elog-20260908114458)
 - [2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review](#elog-20260905-iosender-to-converter-compatibility-review)
@@ -325,6 +326,21 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-e-stop-signal-pair-reported-wired"></a>
+### 🟨 2026-09-08 - HARDWARE/PARTIAL - E-stop signal pair reported wired
+
+- Status: owner reports SW1 NC-A landed; E-19 live verification remains open.
+- Category: hardware, wiring, estop, rp23cnc, safety.
+- Summary: The selected upper `1`/`NC`/`2` block is now reported connected
+  across the RP23CNC `ESTOP SIG`/`GND` terminal. The lower independent NC
+  block remains unused. This is controller-signal-only wiring and does not
+  remove motor/tool 12 V.
+- Evidence: project-owner wiring report; no meter reading, ioSender state, or
+  motion test yet supplied.
+- Next action: complete E-19: verify NC continuity with power removed, clear
+  the ioSender E-stop inversion to obtain `$14=6`, reboot, and verify
+  Halt/Reset-Unlock behavior without a pen or running job.
 
 <a id="elog-20260908-clarified-controller-signal-e-stop-wiring"></a>
 ### 🟨 2026-09-08 - HARDWARE/PLANNED - Clarified controller-signal E-stop wiring

@@ -26,8 +26,8 @@ terminal in the "Grbl Control Inputs" group on the RP23U5XBB board, after
 `DOOR`, `CY/ST`, and `FD HOLD`. The current documents now include a
 photo-oriented diagram: the supplied switch's upper `1`/`NC`/`2` block (NC-A)
 connects as a two-wire loop across `ESTOP SIG` and `GND`; its lower NC block is
-individually insulated. No wire has been landed and E-19 has not been
-performed.
+individually insulated. The owner subsequently reported NC-A landed. E-19 has
+not been performed, so the input remains unverified.
 
 ## Reason
 
@@ -39,8 +39,8 @@ that TBD first.
 
 ## Implementation
 
-No physical wiring changed. This note records the terminal identification and
-the unambiguous controller-signal-only wiring instruction:
+This note records the terminal identification and the unambiguous
+controller-signal-only wiring instruction:
 
 - The RP23CNC user manual's "Key Features" board diagram
   (`docs/hardware/references/RP23CNC-user-manual.pdf`, p.6, board rev
@@ -55,6 +55,9 @@ the unambiguous controller-signal-only wiring instruction:
   photo as NC-A: connect its terminal `1` and `2` to the controller's `SIG`
   and `GND` in either order. It explicitly prohibits combining terminals from
   the two NC blocks and confirms the design does not cut motor/tool power.
+- Owner report on 2026-09-08: the two NC-A conductors are now connected to the
+  `ESTOP` terminal. This is recorded as wired/unverified; no meter or live
+  controller result was supplied.
 
 ## Verification
 
@@ -63,7 +66,7 @@ the unambiguous controller-signal-only wiring instruction:
 - Owner-supplied photo of the installed board's control-input terminal row
   compared label-by-label against the manual diagram; silkscreen reads
   `RP23U5XBB V1.01`.
-- No electrical test performed. E-19 (continuity check, wiring, `$14=6`,
+- No electrical test result supplied. E-19 (continuity check, `$14=6`,
   ioSender Halt/Reset-Unlock behavior) remains open.
 
 ## Struggles and rejected approaches
@@ -77,10 +80,9 @@ reference-PDF practice from `HW-20260704-002`.
 
 ## Risks and follow-up
 
-- The terminal name is now known, but nothing is wired. E-19 must still run
-  in full: continuity check, landing the two NC-A wires, setting `$14=6`
-  during the live test (not before), and confirming Halt/Reset-Unlock
-  behavior in ioSender.
+- NC-A is reported wired, but E-19 must still run in full: continuity check,
+  setting `$14=6` during the live test (not before), and confirming
+  Halt/Reset-Unlock behavior in ioSender.
 - `ESTOP_TOPOLOGY.md`'s "Required E-19 verification" section is the
   authoritative next-step procedure.
 

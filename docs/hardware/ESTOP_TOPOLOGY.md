@@ -4,11 +4,10 @@ This document is the current design authority for the plotter's emergency-stop
 and Halt arrangement. It supplements the individual connection rows in
 [`WIRING_TABLE.md`](WIRING_TABLE.md).
 
-Status: planned as the RP23CNC's dedicated opto-isolated Halt input only; no
-final conductor has been landed and E-19 has not yet been performed. A relay
-energy-removal branch is not part of this project. The physical terminal is
-now identified (see "Identified terminal" below); it is identified, not yet
-wired or verified.
+Status: NC-A has been reported landed across the RP23CNC's dedicated
+opto-isolated Halt input; E-19 has not yet been performed, so the connection
+is wired but unverified. A relay energy-removal branch is not part of this
+project. The physical terminal is identified (see "Identified terminal" below).
 
 ## Purpose and boundary
 
