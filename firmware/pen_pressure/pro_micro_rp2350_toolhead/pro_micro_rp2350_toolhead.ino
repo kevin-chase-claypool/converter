@@ -82,11 +82,13 @@ void emitTelemetry() {
   const int length = snprintf(
       line, sizeof(line),
       "pressure=%s cmd=%s fault=%s hx_raw=%ld hx_filtered=%ld hx_delta=%ld "
+      "lift_home=%d "
       "mag=%s mT=[%ld.%03ld,%ld.%03ld,%ld.%03ld] delta=%ld.%03ld "
       "samples=%lu status=0x%08lx ready=[contact:%d clear:%d gp27:%d] "
       "commission=[dir:%d pressure:%d lift:%d mag:%d]\r\n",
       pressure.stateName(), pressure.commandEngage() ? "M3" : "M5",
       pressure.faultReason(), pressure.raw(), pressure.filtered(), pressure.forceDelta(),
+      pressure.liftHomeActive(),
       publishedMagneticStateName(),
       static_cast<long>(mx / 1000), static_cast<long>(std::abs(mx % 1000)),
       static_cast<long>(my / 1000), static_cast<long>(std::abs(my % 1000)),

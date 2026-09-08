@@ -99,6 +99,10 @@ inputs are externally pulled HIGH and optocoupler assertions pull them LOW;
 the integrated sketch is configured for that active-low interface. F-05/E-18
 must still establish the RP23CNC ENA/Aux0 state mapping. Compile-time safety
 gates deliberately prevent uncommissioned actuator and magnetic operation.
+The separate normally-open `LIFT_HOME` microswitch is now installed from GP2
+to local `TOOL_GND`; the integrated firmware configures it as an active-low
+pull-up input and reports it in USB telemetry only. T-01G must verify live
+transitions and guarded retract cycles before it controls motor behavior.
 Two smaller Arduino sketches also exist for safer bring-up:
 [`pen_pressure/bench_motor_command/bench_motor_command.ino`](pen_pressure/bench_motor_command/bench_motor_command.ino)
 tests only GP29 and the DRV8833, and

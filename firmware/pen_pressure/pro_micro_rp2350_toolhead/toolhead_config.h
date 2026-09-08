@@ -8,6 +8,7 @@ namespace toolhead_config {
 constexpr uint8_t PIN_CMD_M3M5 = 29;
 constexpr uint8_t PIN_A_HOME_OUT = 27;
 constexpr uint8_t PIN_HOME_ARM_IN = 28;
+constexpr uint8_t PIN_LIFT_HOME = 2;
 constexpr uint8_t PIN_DRV_IN1 = 4;
 constexpr uint8_t PIN_DRV_IN2 = 5;
 constexpr uint8_t PIN_DRV_FAULT = 6;
@@ -19,6 +20,7 @@ constexpr uint8_t PIN_I2C_SCL = 17;
 
 constexpr bool CMD_ACTIVE_HIGH_IS_M3 = false;
 constexpr bool HOME_ARM_ACTIVE_LOW = true;
+constexpr bool LIFT_HOME_ACTIVE_LOW = true;
 constexpr bool DRV_FAULT_ACTIVE_LOW = true;
 constexpr bool LIFT_USES_IN1_PWM = true;
 constexpr bool SEEK_USES_IN1_PWM = false;

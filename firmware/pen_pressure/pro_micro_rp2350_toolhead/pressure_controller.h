@@ -31,6 +31,7 @@ class PressureController {
   long forceDelta() const { return hx_filtered_ - hx_tare_; }
   bool commandEngage() const;
   bool driverFaulted() const;
+  bool liftHomeActive() const;
   bool manualOverride() const { return manual_override_; }
 
  private:

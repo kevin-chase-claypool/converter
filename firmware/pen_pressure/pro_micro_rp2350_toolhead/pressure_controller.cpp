@@ -13,6 +13,7 @@ void PressureController::begin() {
   pinMode(PIN_DRV_IN2, OUTPUT);
   pinMode(PIN_DRV_SLEEP, OUTPUT);
   pinMode(PIN_DRV_FAULT, INPUT_PULLUP);
+  pinMode(PIN_LIFT_HOME, INPUT_PULLUP);
 
   motorStop();
   setDriverEnabled(false);
@@ -87,6 +88,11 @@ void PressureController::motorSeek() {
 bool PressureController::driverFaulted() const {
   const int raw = digitalRead(PIN_DRV_FAULT);
   return DRV_FAULT_ACTIVE_LOW ? raw == LOW : raw == HIGH;
+}
+
+bool PressureController::liftHomeActive() const {
+  const int raw = digitalRead(PIN_LIFT_HOME);
+  return LIFT_HOME_ACTIVE_LOW ? raw == LOW : raw == HIGH;
 }
 
 bool PressureController::commandEngage() const {

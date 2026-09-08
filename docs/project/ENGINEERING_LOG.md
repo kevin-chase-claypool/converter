@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - HARDWARE/PARTIAL - Installed LIFT_HOME switch input](#elog-20260908-installed-lift-home-switch-input)
 - [2026-09-08 - HARDWARE/PARTIAL - Recorded current spring housing geometry](#elog-20260908-recorded-current-spring-housing-geometry)
 - [2026-09-08 - HARDWARE/VERIFIED - Passed toolhead power-path gates](#elog-20260908-passed-toolhead-power-path-gates)
 - [2026-09-08 - SOFTWARE/SUCCESS - Calibrated preview motion-time estimate](#elog-20260908-calibrated-preview-motion-time-estimate)
@@ -335,6 +336,19 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-installed-lift-home-switch-input"></a>
+### 🟨 2026-09-08 - HARDWARE/PARTIAL - Installed LIFT_HOME switch input
+
+- Status: physical dry-contact installation and input-only firmware support are
+  complete; T-01G functional verification remains open.
+- Category: hardware, rp23cnc-software, toolhead, lift-home, t-01g.
+- Evidence: selected microswitch terminals were open released and continuous
+  pressed, then connected to Pro Micro RP2350 `GP2` and adjacent `TOOL_GND`.
+- Result: firmware configures GP2 as active-low `INPUT_PULLUP` and emits a
+  `lift_home` USB telemetry field. It deliberately does not control the motor.
+- Next action: flash the sketch with motor power disabled; verify released and
+  pressed telemetry transitions, then run the documented guarded T-01G cycles.
 
 <a id="elog-20260908-recorded-current-spring-housing-geometry"></a>
 ### 🟨 2026-09-08 - HARDWARE/PARTIAL - Recorded current spring housing geometry

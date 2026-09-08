@@ -9,6 +9,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-09-08 | `WSW-20260908-001` | implemented | [Calibrate the preview motion-time estimate](../windows-software/2026/2026-09-08-calibrate-preview-motion-estimate.md) | `preview`, `timing`, `m-06`, `calibration` |
+| 2026-09-08 | `HW-20260908-004` | implemented | [Install LIFT_HOME switch input diagnostics](2026/2026-09-08-install-lift-home-switch-input.md) | `toolhead`, `lift-home`, `t-01g`, `safety` |
 | 2026-09-08 | `HW-20260908-003` | implemented | [Record current spring geometry](2026/2026-09-08-record-current-spring-geometry.md) | `toolhead`, `spring`, `t-01a`, `safety` |
 | 2026-09-08 | `HW-20260908-002` | verified | [Verify toolhead power-path gates](2026/2026-09-08-verify-toolhead-power-path.md) | `toolhead`, `power`, `d36v50f6`, `drv8833`, `e-14` |
 | 2026-09-08 | `HW-20260908-001` | verified | [Identify and diagram the RP23CNC ESTOP screw terminal](2026/2026-09-08-identify-rp23cnc-estop-terminal.md) | `estop`, `safety`, `rp23cnc` |
