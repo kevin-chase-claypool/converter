@@ -352,8 +352,9 @@ spring-based force control.
 contact meter-tested open released and continuous pressed. It is installed
 between `GP2` and adjacent local `TOOL_GND`. Firmware configures GP2 with
 `INPUT_PULLUP` and reports `lift_home=1` only when the switch is pressed; it
-does not yet command or stop motor motion. Native-USB or GP20/GP21 UART
-state-transition evidence and ten slow powered retract cycles remain required.
+does not yet command or stop motor motion. The motor-safe UART1 diagnostic
+passed at 115200 baud: `lift_home=1` pressed and `lift_home=0` released. Ten
+slow powered retract cycles remain required.
 Use `t01g_lift_home_uart` to isolate the GP2/GP20 path if the integrated sketch
 does not produce readable service telemetry; it drives no motor-related pin.
 | **T-01H — M5 release and clearance pulse** | With E-07 force calibration active and a scale/paper fixture under the pen, start from stable contact and command normal M5. Record the signed filtered force trace, `F_contact_on`, `F_release_off`, release debounce, retract command, extra clearance-pulse PWM/duration, pen-tip gap after stopping, and any mark/drag during a representative pen-up travel move. Repeat at least 30 M3-contact/M5-clear cycles. `LIFT_HOME` switch contact is not expected during this test. | `F_contact_on` and `F_release_off` have a measured hysteresis margin; release is detected repeatably before the pulse; the calibrated pulse leaves the pen clear throughout the representative travel without contacting the distant switch; all 30 cycles complete without fault, drag, or uncommanded paper contact. These values authorize normal high-cycle M5 `PEN_CLEAR` behavior. |

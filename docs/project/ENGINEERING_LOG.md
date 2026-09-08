@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - HARDWARE/VERIFIED - Passed unpowered LIFT_HOME input/UART check](#elog-20260908-passed-unpowered-lift-home-input-uart-check)
 - [2026-09-08 - RP23CNC-SOFTWARE/DIAGNOSTIC - Isolated LIFT_HOME UART check](#elog-20260908-isolated-lift-home-uart-check)
 - [2026-09-08 - HARDWARE/PARTIAL - Installed LIFT_HOME switch input](#elog-20260908-installed-lift-home-switch-input)
 - [2026-09-08 - HARDWARE/PARTIAL - Recorded current spring housing geometry](#elog-20260908-recorded-current-spring-housing-geometry)
@@ -337,6 +338,20 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-passed-unpowered-lift-home-input-uart-check"></a>
+### 🟩 2026-09-08 - HARDWARE/VERIFIED - Passed unpowered LIFT_HOME input/UART check
+
+- Status: GP2 switch input and service UART are verified without motor output;
+  the powered T-01G retract-cycle gate remains open.
+- Category: hardware, rp23cnc-software, toolhead, lift-home, uart, t-01g.
+- Evidence: at 115200 baud on FTDI COM8, the motor-safe UART1 diagnostic
+  repeatedly reported `lift_home=0` released and `lift_home=1` pressed, then
+  returned to `0` on release.
+- Result: the normally-open contact, GP2 active-low pull-up, GP20 UART1 TX,
+  local ground, adapter, and monitor are verified. This is not motor control.
+- Next action: restore the integrated sketch and run ten guarded slow retract
+  cycles before relying on LIFT_HOME for retract control.
 
 <a id="elog-20260908-isolated-lift-home-uart-check"></a>
 ### 🟨 2026-09-08 - RP23CNC-SOFTWARE/DIAGNOSTIC - Isolated LIFT_HOME UART check

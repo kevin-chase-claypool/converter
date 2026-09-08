@@ -42,7 +42,9 @@ output in this milestone.
 
 Power-off meter test: the selected contact was open released and continuous
 pressed. Owner reported the COM/NO pair installed on GP2 and adjacent local
-TOOL_GND. Firmware compilation and live telemetry transition remain pending.
+TOOL_GND. With the motor-safe UART1 diagnostic flashed and the toolhead on its
+known-good 5 V service supply, COM8 at 115200 reported `lift_home=0` released
+and `lift_home=1` pressed. This does not yet verify powered retract cycles.
 
 ## Struggles and rejected approaches
 
@@ -52,10 +54,9 @@ motor.
 
 ## Risks and follow-up
 
-Flash with motor power disabled and confirm `lift_home=0` released and `1`
-pressed. Then complete all ten guarded T-01G retract cycles before permitting
-the input to control retract. The switch remains a position reference, not a
-hard stop or force sensor.
+Restore the integrated sketch and complete all ten guarded T-01G retract cycles
+before permitting the input to control retract. The switch remains a position
+reference, not a hard stop or force sensor.
 
 ## Files
 

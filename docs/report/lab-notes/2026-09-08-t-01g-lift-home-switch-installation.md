@@ -20,14 +20,23 @@ service-UART telemetry. It does not yet use this input to start, stop, or
 otherwise control the DRV8833/motor. This keeps the initial post-installation
 check motor-safe.
 
+## Unpowered input/UART result
+
+The motor-safe UART1 diagnostic was flashed through USB-C/UF2. With the
+toolhead powered from its known-good 5 V service supply and the FTDI adapter on
+COM8 at 115200 baud, it repeatedly reported `T01G lift_home=0` released and
+`T01G lift_home=1` while the microswitch was pressed, then returned to `0` on
+release. This verifies the switch contact, GP2 active-low pull-up, GP20 UART1
+TX path, local ground, adapter, and monitor configuration. It does not verify
+motor direction, retract stopping, debounce under motion, or a mechanical
+backstop.
+
 ## Remaining T-01G verification
 
-With motor power disabled, flash the firmware and confirm native-USB or service
-UART telemetry reads `lift_home=0` released and `lift_home=1` pressed. Then,
-only after that input test passes, run ten guarded slow retract cycles and
-document repeatability, release position, debounce behavior, and timeout/fault
-behavior. The switch is a position reference, not a mechanical hard stop and
-not a spring-force sensor.
+The unpowered input test passed. Next, restore the integrated firmware, then
+run ten guarded slow retract cycles and document repeatability, release
+position, debounce behavior, and timeout/fault behavior. The switch is a
+position reference, not a mechanical hard stop and not a spring-force sensor.
 
 If the integrated sketch does not produce readable service telemetry, first
 flash the motor-safe `t01g_lift_home_uart` sketch. It prints only
