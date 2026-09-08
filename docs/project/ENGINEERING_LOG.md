@@ -345,8 +345,8 @@ Add new entries at the top of the log below this line.
   passed the S7V8F5 5 V path gate.
 - Result: the guarded toolhead power path is authorized for the next staged
   mechanical checks, but not force-control or loaded-regulator qualification.
-- Next action: complete E-15 under actuator load, then guarded T-01A/T-01G/T-01
-  geometry, LIFT-home, and direction tests.
+- Next action: complete unpowered T-01A geometry/preload and T-01G LIFT-home
+  checks, then guarded T-01 direction testing before loaded E-15 qualification.
 
 <a id="elog-20260908-calibrated-preview-motion-time-estimate"></a>
 ### 🟩 2026-09-08 - SOFTWARE/SUCCESS - Calibrated preview motion-time estimate
