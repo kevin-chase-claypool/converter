@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - HARDWARE/VERIFIED - Passed E-19 controller-signal E-stop](#elog-20260908-passed-e-19-controller-signal-e-stop)
 - [2026-09-08 - HARDWARE/PARTIAL - E-stop recovery cycle passed](#elog-20260908-e-stop-recovery-cycle-passed)
 - [2026-09-08 - HARDWARE/PARTIAL - E-stop press asserted RP23CNC Halt](#elog-20260908-e-stop-press-asserted-rp23cnc-halt)
 - [2026-09-08 - HARDWARE/PARTIAL - Configured NC E-stop inversion in ioSender](#elog-20260908-configured-nc-e-stop-inversion-in-iosender)
@@ -329,6 +330,21 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-passed-e-19-controller-signal-e-stop"></a>
+### 🟩 2026-09-08 - HARDWARE/VERIFIED - Passed E-19 controller-signal E-stop
+
+- Status: E-19 passed; controller-signal E-stop is verified.
+- Category: hardware, rp23cnc-software, wiring, estop, safety.
+- Evidence: with all power removed, the owner meter-tested SW1 NC-A `1`–`2`:
+  continuous/beeping released and open/silent pressed. Earlier ioSender
+  evidence recorded `$14=6`, press-to-`ALARM:10`, and twist-release → Reset
+  → Unlock back to `IDLE` without reported motion.
+- Result: SW1 NC-A across RP23CNC `ESTOP SIG`/`GND` correctly provides the
+  documented Halt/E-stop and deliberate recovery behavior. NC-B remains
+  individually insulated. This does not remove motor/tool 12 V.
+- Next action: retain the main power switch as the deliberate power-isolation
+  control; include SW1 in normal preflight and any future integrated test.
 
 <a id="elog-20260908-e-stop-recovery-cycle-passed"></a>
 ### 🟨 2026-09-08 - HARDWARE/PARTIAL - E-stop recovery cycle passed

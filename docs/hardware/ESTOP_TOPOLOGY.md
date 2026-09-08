@@ -4,10 +4,10 @@ This document is the current design authority for the plotter's emergency-stop
 and Halt arrangement. It supplements the individual connection rows in
 [`WIRING_TABLE.md`](WIRING_TABLE.md).
 
-Status: NC-A has been reported landed across the RP23CNC's dedicated
-opto-isolated Halt input; E-19 has not yet been performed, so the connection
-is wired but unverified. A relay energy-removal branch is not part of this
-project. The physical terminal is identified (see "Identified terminal" below).
+Status: verified controller-signal E-stop. NC-A is landed across the RP23CNC's
+dedicated opto-isolated Halt input and E-19 passed on 2026-09-08. A relay
+energy-removal branch is not part of this project. The physical terminal is
+identified (see "Identified terminal" below).
 
 ## Purpose and boundary
 
@@ -121,8 +121,9 @@ Partial E-19 result, 2026-09-08: with `$14=6`, the owner pressed SW1 and
 ioSender entered `ALARM:10` with `MSG:Emergency stop, clear then reset to
 continue`. The E-stop signal indicator was asserted. Release, Reset/Unlock,
 and no-automatic-restart behavior subsequently passed: after twist-release,
-Reset, and Unlock, ioSender returned to `IDLE` with no motion reported. The
-unpowered NC-A/NC-B meter-continuity check remains open.
+Reset, and Unlock, ioSender returned to `IDLE` with no motion reported. With
+all power removed, the owner then meter-tested NC-A: it beeped/was continuous
+released and did not beep/open when pressed. E-19 is complete.
 
 ## Non-negotiable rules
 

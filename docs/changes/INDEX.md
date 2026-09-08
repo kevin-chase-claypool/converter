@@ -5,7 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
-| 2026-09-08 | `HW-20260908-001` | hardware | planned | [Identify and diagram the RP23CNC ESTOP screw terminal](hardware/2026/2026-09-08-identify-rp23cnc-estop-terminal.md) |
+| 2026-09-08 | `HW-20260908-001` | hardware | verified | [Identify and diagram the RP23CNC ESTOP screw terminal](hardware/2026/2026-09-08-identify-rp23cnc-estop-terminal.md) |
 | 2026-09-07 | `HW-20260907-002` | hardware, rp23cnc-software, windows-software | verified | [Verify converter motion and guarded X/Y envelope](hardware/2026/2026-09-07-verify-converter-motion-and-guarded-xy-envelope.md) |
 | 2026-09-07 | `HW-20260907-001` | hardware, rp23cnc-software | planned | [Require scale-force transfer calibration](hardware/2026/2026-09-07-require-scale-force-transfer-calibration.md) |
 | 2026-09-06 | `WINSW-20260906-001` | windows-software, hardware | implemented | [Center G54 output and correct the M-06 sample](windows-software/2026/2026-09-06-center-g54-output-and-correct-m06-sample.md) |

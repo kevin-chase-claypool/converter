@@ -31,6 +31,12 @@ follow-up ioSender screenshot shows `MSG:Caution: Unlocked` and state `IDLE`.
 No motion was reported. This passes the release, deliberate recovery, and
 no-automatic-restart portions of E-19.
 
-The test remains partial because unpowered meter evidence is still missing:
-NC-A terminal `1`–`2` must be continuous released/open pressed, and NC-B must
-be isolated from NC-A with both NC-B terminals insulated.
+With all power removed, the owner meter-tested NC-A terminal `1`–`2`: the
+meter beeped when the mushroom was released and did not beep when it was
+pressed. This is the required normally-closed contact behavior. NC-B remains
+unused and individually insulated.
+
+E-19 passed: the physical NC contact, RP23CNC E-stop/Halt input, deliberate
+Reset/Unlock recovery, and no-automatic-restart behavior are verified. This
+does not change the design boundary: SW1 is a controller-signal stop and does
+not remove motor or toolhead 12 V.

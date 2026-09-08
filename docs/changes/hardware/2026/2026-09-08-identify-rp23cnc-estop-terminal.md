@@ -4,7 +4,7 @@ date: 2026-09-08
 category: hardware
 affected_categories:
   - hardware
-status: planned
+status: verified
 components:
   - docs/hardware/ESTOP_TOPOLOGY.md
   - docs/hardware/WIRING_TABLE.md
@@ -73,7 +73,8 @@ controller-signal-only wiring instruction:
   Cycle Start selected, E-stop clear.
 - The live E-stop cycle passed: press produced `ALARM:10`; twist-release,
   Reset, and Unlock returned ioSender to `IDLE` with no motion reported.
-- Unpowered NC-A/NC-B continuity evidence remains open.
+- With power removed, NC-A `1`–`2` meter-tested continuous/beeping released
+  and open/silent pressed. NC-B remains insulated. E-19 passed.
 
 ## Struggles and rejected approaches
 
