@@ -58,6 +58,9 @@ controller-signal-only wiring instruction:
 - Owner report on 2026-09-08: the two NC-A conductors are now connected to the
   `ESTOP` terminal. This is recorded as wired/unverified; no meter or live
   controller result was supplied.
+- An ioSender 2.0.47 settings screenshot subsequently showed `$14=6` with
+  Feed Hold and Cycle Start selected and E-stop clear, matching the NC E-stop
+  configuration. It is configuration evidence, not a completed E-19 test.
 
 ## Verification
 
@@ -66,7 +69,9 @@ controller-signal-only wiring instruction:
 - Owner-supplied photo of the installed board's control-input terminal row
   compared label-by-label against the manual diagram; silkscreen reads
   `RP23U5XBB V1.01`.
-- No electrical test result supplied. E-19 (continuity check, `$14=6`,
+- ioSender 2.0.47 Settings: Grbl screenshot inspected: `$14=6`, Feed Hold and
+  Cycle Start selected, E-stop clear.
+- No electrical press/release result supplied. E-19 (continuity check,
   ioSender Halt/Reset-Unlock behavior) remains open.
 
 ## Struggles and rejected approaches

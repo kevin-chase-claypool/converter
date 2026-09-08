@@ -79,8 +79,9 @@ control-input opto section to be live at all; that is separate from this
 Because SW1 is NC, its E-stop inversion bit must be **clear**. The manual's
 first-run `$14=70` value assumes an NO E-stop. With the current Feed Hold and
 Cycle Start choices unchanged, the target after SW1 is wired is `$14=6`
-(bit 6 removed); make that change only as part of E-19 while verifying the
-actual input state.
+(bit 6 removed). An ioSender screenshot on 2026-09-08 shows exactly that:
+Feed hold and Cycle start selected, E-stop clear, and `14 Invert control
+inputs: 6`. E-19's live press/release test remains required.
 
 ## HD064RT allocation and limits
 

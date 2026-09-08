@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - HARDWARE/PARTIAL - Configured NC E-stop inversion in ioSender](#elog-20260908-configured-nc-e-stop-inversion-in-iosender)
 - [2026-09-08 - HARDWARE/PARTIAL - E-stop signal pair reported wired](#elog-20260908-e-stop-signal-pair-reported-wired)
 - [2026-09-08 - HARDWARE/PLANNED - Clarified controller-signal E-stop wiring](#elog-20260908-clarified-controller-signal-e-stop-wiring)
 - [2026-09-08 11:44:58 -0500 - HARDWARE/OPEN - Identified the RP23CNC ESTOP terminal](#elog-20260908114458)
@@ -326,6 +327,18 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-configured-nc-e-stop-inversion-in-iosender"></a>
+### 🟨 2026-09-08 - HARDWARE/PARTIAL - Configured NC E-stop inversion in ioSender
+
+- Status: `$14=6` observed; live E-19 press/release verification remains open.
+- Category: hardware, rp23cnc-software, wiring, estop, safety.
+- Evidence: ioSender 2.0.47 Settings: Grbl screenshot shows `Invert control
+  inputs: 6`, with Feed hold and Cycle start selected and E-stop clear.
+- Result: the recorded state matches the NC SW1 connection. No continuity,
+  Halt indication, Reset/Unlock, or no-auto-restart observation has occurred.
+- Next action: with no pen or job running, press SW1; capture Halt indication,
+  twist-release, Reset/Unlock, and confirm that no motion restarts automatically.
 
 <a id="elog-20260908-e-stop-signal-pair-reported-wired"></a>
 ### 🟨 2026-09-08 - HARDWARE/PARTIAL - E-stop signal pair reported wired
