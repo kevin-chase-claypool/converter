@@ -344,9 +344,12 @@ Add new entries at the top of the log below this line.
 - Status: diagnostic sketch compiled; installed output test pending.
 - Category: rp23cnc-software, hardware, toolhead, lift-home, uart, t-01g.
 - Evidence: the integrated firmware's first service-UART observation was
-  unreadable/absent despite successful UF2 upload and apparent power.
-- Result: added a 115200-baud GP2/GP20-only sketch that outputs the switch state
-  every 500 ms and initializes no motor-related pin.
+  unreadable/absent despite successful UF2 upload and apparent power. Core
+  inspection showed it used Arduino-Pico `Serial1` (UART0), while GP20/GP21
+  are UART1-only pins.
+- Result: the 115200-baud GP2/GP20-only sketch and integrated service path now
+  use `Serial2` (UART1), output the switch state every 500 ms, and initialize
+  no motor-related pin in the diagnostic.
 - Verification: `arduino-cli compile --fqbn rp2040:rp2040:sparkfun_promicrorp2350
   firmware\\pen_pressure\\t01g_lift_home_uart` passed.
 - Next action: upload with motor power disabled; distinguish a clean fixed-line

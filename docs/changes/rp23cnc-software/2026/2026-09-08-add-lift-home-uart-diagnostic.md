@@ -36,10 +36,10 @@ the integrated firmware.
 
 ## Implementation
 
-`t01g_lift_home_uart` configures GP2 with `INPUT_PULLUP`, maps UART1 TX/RX to
-GP20/GP21, and writes `T01G lift_home=0` or `T01G lift_home=1` every 500 ms at
-115200 baud. It initializes no DRV8833, motor, HX711, TMAG5273, PC817C, or
-machine-control pin.
+`t01g_lift_home_uart` configures GP2 with `INPUT_PULLUP`, maps Arduino-Pico
+`Serial2` (hardware UART1) TX/RX to GP20/GP21, and writes `T01G lift_home=0`
+or `T01G lift_home=1` every 500 ms at 115200 baud. It initializes no DRV8833,
+motor, HX711, TMAG5273, PC817C, or machine-control pin.
 
 ## Verification
 
@@ -50,7 +50,9 @@ passed. Installed UART output remains pending.
 
 Using the integrated sketch as the first UART proof was rejected because its
 dual-core safety, watchdog, sensor, and motor-driver initialization complicate
-an otherwise simple physical communications check.
+an otherwise simple physical communications check. The initial diagnostic also
+incorrectly used `Serial1` (UART0), which cannot route to GP20/GP21; it was
+corrected to `Serial2` (UART1).
 
 ## Risks and follow-up
 

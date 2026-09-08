@@ -15,14 +15,14 @@ constexpr uint32_t SERIAL_BAUD = 115200;
 
 void setup() {
   pinMode(PIN_LIFT_HOME, INPUT_PULLUP);
-  Serial1.setTX(PIN_SERVICE_UART_TX);
-  Serial1.setRX(PIN_SERVICE_UART_RX);
-  Serial1.begin(SERIAL_BAUD);
+  Serial2.setTX(PIN_SERVICE_UART_TX);
+  Serial2.setRX(PIN_SERVICE_UART_RX);
+  Serial2.begin(SERIAL_BAUD);
 }
 
 void loop() {
   const bool pressed = digitalRead(PIN_LIFT_HOME) == LOW;
-  Serial1.print(F("T01G lift_home="));
-  Serial1.println(pressed ? 1 : 0);
+  Serial2.print(F("T01G lift_home="));
+  Serial2.println(pressed ? 1 : 0);
   delay(500);
 }

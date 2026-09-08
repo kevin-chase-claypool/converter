@@ -34,7 +34,7 @@ or reference any motor motion.
 ## Implementation
 
 `PIN_LIFT_HOME` is GP2 and uses `INPUT_PULLUP`; `PressureController` exposes
-the active-low state in the native-USB and GP20/GP21 service-UART `lift_home`
+the active-low state in the native-USB and GP20/GP21 **UART1** `lift_home`
 telemetry field. The input does not alter motor state, motor enable, or driver
 output in this milestone.
 
