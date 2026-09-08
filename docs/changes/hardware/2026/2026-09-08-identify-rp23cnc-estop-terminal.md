@@ -16,15 +16,18 @@ related:
   - HW-20260814-005
 ---
 
-# Identify the RP23CNC ESTOP screw terminal
+# Identify and diagram the RP23CNC ESTOP screw terminal
 
 ## Summary
 
 The RP23CNC's dedicated Halt input terminal, previously recorded as TBD, is
 now identified: a 2-pin `ESTOP` screw terminal (`SIG` / `GND`), the rightmost
 terminal in the "Grbl Control Inputs" group on the RP23U5XBB board, after
-`DOOR`, `CY/ST`, and `FD HOLD`. No wire has been landed and E-19 has not been
-performed; only the terminal identification is resolved.
+`DOOR`, `CY/ST`, and `FD HOLD`. The current documents now include a
+photo-oriented diagram: the supplied switch's upper `1`/`NC`/`2` block (NC-A)
+connects as a two-wire loop across `ESTOP SIG` and `GND`; its lower NC block is
+individually insulated. No wire has been landed and E-19 has not been
+performed.
 
 ## Reason
 
@@ -36,8 +39,8 @@ that TBD first.
 
 ## Implementation
 
-No physical wiring changed. This note records the terminal identification
-only:
+No physical wiring changed. This note records the terminal identification and
+the unambiguous controller-signal-only wiring instruction:
 
 - The RP23CNC user manual's "Key Features" board diagram
   (`docs/hardware/references/RP23CNC-user-manual.pdf`, p.6, board rev
@@ -48,6 +51,10 @@ only:
 - `docs/hardware/ESTOP_TOPOLOGY.md` and `docs/hardware/WIRING_TABLE.md`
   (`SAF-004`) were updated to name the terminal instead of TBD, and both still
   state the connection is planned/identified, not landed or verified.
+- The diagram designates the upper contact block from the supplied rear-switch
+  photo as NC-A: connect its terminal `1` and `2` to the controller's `SIG`
+  and `GND` in either order. It explicitly prohibits combining terminals from
+  the two NC blocks and confirms the design does not cut motor/tool power.
 
 ## Verification
 
@@ -80,9 +87,10 @@ reference-PDF practice from `HW-20260704-002`.
 ## Files
 
 - `docs/hardware/ESTOP_TOPOLOGY.md`: added the "Identified terminal" section
-  and updated the net topology and E-19 step 2 to name the `ESTOP`
-  `SIG`/`GND` terminal instead of TBD.
-- `docs/hardware/WIRING_TABLE.md`: updated `SAF-004`'s target terminal and
-  notes.
+  plus a photo-oriented NC-A-to-`ESTOP SIG`/`GND` diagram and E-19 procedure.
+- `docs/hardware/WIRING_TABLE.md`: updated `SAF-004`/`SAF-005` with the
+  upper/lower contact-block assignments and controller-signal boundary.
+- `docs/testing/TEST_PLAN.md`: made E-19's contact, settings, and expected
+  controller-only behavior explicit.
 - `docs/report/lab-notes/2026-09-08-rp23cnc-estop-terminal-identification.md`:
   new lab note recording the photo evidence and reasoning.

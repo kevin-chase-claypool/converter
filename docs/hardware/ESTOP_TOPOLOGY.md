@@ -20,6 +20,9 @@ For the initial implementation, SW1 must do one thing when pressed:
 The RP23CNC manual specifically supports this 12 V opto-isolated control-input
 approach. The controller remains powered during an E-stop, preserving the Halt
 state and avoiding a power restoration being treated as permission to move.
+This is a **controller-signal stop**, not an energy-isolation circuit: it does
+not remove 12 V from the TB6600s or toolhead. Use the main power switch (and
+disconnect mains before wiring) for power isolation.
 
 SW1's unused second NC contact is not part of this project. Insulate both of
 its terminals individually.
@@ -36,19 +39,24 @@ its terminals individually.
 ## Initial net topology
 
 ```text
-RP23CNC Iso 12 V input -> powers the isolated control-input section
+              upper NC contact block in the supplied switch photo
+                 (released: 1--2 closed; pressed: 1--2 open)
 
-SW1 NC-A terminal 1 -> RP23CNC ESTOP terminal, SIG pin
-SW1 NC-A terminal 2 -> RP23CNC ESTOP terminal, GND pin
+ RP23CNC ESTOP SIG o------[ terminal 1   NC   terminal 2 ]------o RP23CNC ESTOP GND
+                         \_____________ SW1 NC-A _____________/
 
-SW1 NC-B -> unused: insulate both terminals individually
+ lower NC contact block (SW1 NC-B): use neither terminal; insulate each
+
+ RP23CNC ISO 12 V input -> powers the isolated control-input section
+                            separately from this two-wire switch loop
 ```
 
-The E-stop's NC terminals have no polarity. The exact RP23CNC E-stop terminal
-pair was intentionally left blank until the installed board silkscreen and
-E-19 checks agreed with the manual. That identification is now done (see
-"Identified terminal" below); do not skip the E-19 continuity/live checks just
-because the terminal name is known.
+The E-stop's NC terminals have no polarity: terminal 1 may go to `SIG` and
+terminal 2 to `GND`, as shown, or the two wires may be swapped. Do not use one
+terminal from each contact block. The upper block in the supplied rear-switch
+photo is designated NC-A only to make the diagram unambiguous; the lower,
+independent `1`/`NC`/`2` block is NC-B and remains unused. Do not skip the E-19
+continuity/live checks just because the terminal name is known.
 
 ## Identified terminal
 
@@ -93,11 +101,13 @@ basis.
 
 Perform with the pen removed, axes clear, and motion set to a safe test state:
 
-1. With all power removed, verify NC-A is continuous when released and open
-   when pressed. Verify NC-B is isolated from NC-A and leave NC-B insulated.
+1. With all power removed, meter NC-A terminal `1` to `2`: continuous when
+   released and open when pressed. Verify NC-B is isolated from NC-A and leave
+   both NC-B terminals individually insulated.
 2. With isolated 12 V present, wire only NC-A to the RP23CNC `ESTOP` terminal's
    `SIG`/`GND` pins (identified above; confirm once more against the physical
-   board before landing wire).
+   board before landing wire). The `SIG`/`GND` assignment at the NC contact is
+   interchangeable.
 3. Set the E-stop control-input inversion for NC operation as part of this
    live test (current planned `$14=6`, subject to ioSender state verification).
 4. Power only the controller/control branch. Press SW1 and verify that ioSender

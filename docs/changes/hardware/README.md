@@ -8,7 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
-| 2026-09-08 | `HW-20260908-001` | planned | [Identify the RP23CNC ESTOP screw terminal](2026/2026-09-08-identify-rp23cnc-estop-terminal.md) | `estop`, `safety`, `rp23cnc` |
+| 2026-09-08 | `HW-20260908-001` | planned | [Identify and diagram the RP23CNC ESTOP screw terminal](2026/2026-09-08-identify-rp23cnc-estop-terminal.md) | `estop`, `safety`, `rp23cnc` |
 | 2026-09-07 | `HW-20260907-002` | verified | [Verify converter motion and guarded X/Y envelope](2026/2026-09-07-verify-converter-motion-and-guarded-xy-envelope.md) | `m-03`, `m-06`, `m-07`, `soft-limits`, `g54`, `xya` |
 | 2026-09-07 | `HW-20260907-001` | planned | [Require scale-force transfer calibration](2026/2026-09-07-require-scale-force-transfer-calibration.md) | `force-calibration`, `hx711`, `grams-force`, `toolhead`, `testing` |
 | 2026-09-06 | `WINSW-20260906-001` | implemented | [Center G54 output and correct the M-06 sample](../windows-software/2026/2026-09-06-center-g54-output-and-correct-m06-sample.md) | `g54`, `coordinates`, `parking`, `m-06`, `a-axis` |

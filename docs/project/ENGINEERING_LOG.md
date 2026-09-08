@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - HARDWARE/PLANNED - Clarified controller-signal E-stop wiring](#elog-20260908-clarified-controller-signal-e-stop-wiring)
 - [2026-09-08 11:44:58 -0500 - HARDWARE/OPEN - Identified the RP23CNC ESTOP terminal](#elog-20260908114458)
 - [2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review](#elog-20260905-iosender-to-converter-compatibility-review)
 - [2026-09-05 - WINDOWS SOFTWARE/MIXED - Planned radius-aware A-axis feed](#elog-20260905-planned-radius-aware-a-axis-feed)
@@ -324,6 +325,24 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-clarified-controller-signal-e-stop-wiring"></a>
+### 🟨 2026-09-08 - HARDWARE/PLANNED - Clarified controller-signal E-stop wiring
+
+- Status: planned; documentation clarified, no conductor landed and E-19 remains open.
+- Category: hardware, wiring, estop, rp23cnc, safety.
+- Summary: Recorded a photo-oriented two-wire diagram for the selected
+  controller-signal-only E-stop topology. The upper `1`/`NC`/`2` contact block
+  in the supplied rear-switch photo (NC-A) connects its terminal `1` and `2`
+  across the identified RP23CNC `ESTOP SIG`/`GND` pair in either order. The
+  lower NC block (NC-B) remains individually insulated.
+- Boundary: This asserts the RP23CNC/grblHAL Halt input; it does not remove
+  12 V from the motor or toolhead branches. The main power switch is the
+  system's power-isolation control.
+- Evidence: owner-supplied switch and RP23CNC terminal-row photos;
+  `HW-20260908-001`; RP23CNC user manual p.6; no electrical test.
+- Next action: perform E-19 with power removed first, then verify NC input
+  configuration (`$14=6`) and the Halt/Reset-Unlock behavior in ioSender.
 
 <a id="elog-20260908114458"></a>
 ### 🟨 2026-09-08 11:44:58 -0500 - HARDWARE/OPEN - Identified the RP23CNC ESTOP terminal
