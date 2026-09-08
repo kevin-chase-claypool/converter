@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - HARDWARE/PARTIAL - Measured M-06 preview-time gap](#elog-20260908-measured-m-06-preview-time-gap)
 - [2026-09-08 - HARDWARE/PARTIAL - M-06 radius-sweep return passed](#elog-20260908-m-06-radius-sweep-return-passed)
 - [2026-09-08 - HARDWARE/VERIFIED - Passed E-19 controller-signal E-stop](#elog-20260908-passed-e-19-controller-signal-e-stop)
 - [2026-09-08 - HARDWARE/PARTIAL - E-stop recovery cycle passed](#elog-20260908-e-stop-recovery-cycle-passed)
@@ -331,6 +332,18 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-measured-m-06-preview-time-gap"></a>
+### 🟨 2026-09-08 - HARDWARE/PARTIAL - Measured M-06 preview-time gap
+
+- Status: one total timing observation captured; estimator calibration remains open.
+- Category: hardware, rp23cnc-software, windows-software, motion, m-06, timing.
+- Evidence: owner recorded 1:15.05 (75.05 s) actual bed movement for the
+  successful pen-free radius sweep; converter preview was 2:40.58 (160.58 s).
+- Result: preview exceeded the observed movement interval by 85.53 s, about
+  2.14×. No motion or return-to-reference problem was reported.
+- Next action: repeat the measurement with the same start/stop scope or record
+  inner/middle/outer segment times before modifying preview estimation.
 
 <a id="elog-20260908-m-06-radius-sweep-return-passed"></a>
 ### 🟨 2026-09-08 - HARDWARE/PARTIAL - M-06 radius-sweep return passed

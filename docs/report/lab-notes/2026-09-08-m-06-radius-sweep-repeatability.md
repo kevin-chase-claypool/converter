@@ -27,11 +27,18 @@ The owner reported that every radius-sweep path ran perfectly. After the full
 program reached `IDLE`, the explicit G54 return landed X, Y, and A exactly on
 their reference marks.
 
+For the same run, the owner recorded 1:15.05 (75.05 s) of actual bed movement.
+The converter preview reported 2:40.58 (160.58 s). The preview therefore
+overestimated the observed motion interval by 1:25.53 (85.53 s), or about
+2.14×. This is one timing observation; it does not by itself identify whether
+the difference is in preview modelling, its scope versus the stopwatch interval,
+or machine execution.
+
 ## Limits and next action
 
-No elapsed times, per-radius measurements, or screenshots were captured in
-this report. The geometry/repeatability observation is positive, but M-06
-timing validation remains open: record inner/middle/outer elapsed times and
-compare them with the converter preview estimate. See
+No per-radius elapsed times or screenshots were captured in this report. The
+geometry/repeatability observation is positive, but M-06 timing validation
+remains open: repeat the total timing or record inner/middle/outer elapsed
+times and compare their like-for-like scope with the converter preview estimate. See
 [`../../testing/TEST_PLAN.md`](../../testing/TEST_PLAN.md) and
 [`../../changes/hardware/2026/2026-09-07-verify-converter-motion-and-guarded-xy-envelope.md`](../../changes/hardware/2026/2026-09-07-verify-converter-motion-and-guarded-xy-envelope.md).

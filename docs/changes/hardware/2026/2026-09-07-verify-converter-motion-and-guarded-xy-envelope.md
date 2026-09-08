@@ -60,7 +60,9 @@ work.
   manually established references.
 - On 2026-09-08, the pen-free `m06-radius-sweep.svg` converter run reportedly
   completed every path perfectly; the same explicit G54 return landed X, Y,
-  and A exactly on their reference marks. No elapsed times were captured.
+  and A exactly on their reference marks. Actual bed movement was 1:15.05
+  versus a 2:40.58 preview (a 2.14× preview overestimate); repeat with
+  like-for-like scope or per-radius timing before estimator changes.
 
 ## Struggles and rejected approaches
 
@@ -72,8 +74,8 @@ interpretation. It is superseded by the owner's later caliper verification of
 
 The finite X/Y values are conservative software-envelope values, not verified
 hard-stop coordinates. Test controller rejection/recovery near each X/Y
-boundary and compare converter preview time with measured runtime for the
-completed inner/middle/outer-radius M-06 sample. P100 magnetic
+boundary and repeat the converter preview-time comparison with like-for-like
+scope or per-radius timing before refining the estimator. P100 magnetic
 registration must replace the temporary G54 reference before production.
 
 ## Files

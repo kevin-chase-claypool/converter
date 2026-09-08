@@ -253,8 +253,10 @@ then inspect the generated first rapid and park target before Cycle Start.
 On 2026-09-08, the owner reported that this radius-sweep run completed each
 path perfectly and that the post-run `G90` / `G54` / `G0 X0 Y0 A0` command
 returned X, Y, and A exactly to their reference marks. This passes the reported
-geometry/repeatability portion; elapsed-time measurements for the inner,
-middle, and outer paths remain required for the timing comparison.
+geometry/repeatability portion. Actual bed movement measured 1:15.05 (75.05 s)
+versus a 2:40.58 (160.58 s) preview, a 2.14× preview overestimate. Repeat the
+timing with like-for-like scope or record inner/middle/outer times before
+calibrating the estimator.
 
 Use [`m06-xy-theta-lettering.svg`](../../samples/svg/m06-xy-theta-lettering.svg)
 as a separate pen-free visual strategy check. With the current default r-theta

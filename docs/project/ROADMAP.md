@@ -118,7 +118,9 @@
   pen-free converter-generated house-and-sun sample returned exactly to G54
   `X0 Y0 A0` on 2026-09-07. The 2026-09-08 controlled radius sweep also
   reportedly completed perfectly and returned exactly to all G54 reference
-  marks. Per-radius elapsed-time measurements remain. The converter now centers SVG output at G54 zero
+  marks. Its actual 1:15.05 motion interval was 2.14× faster than the 2:40.58
+  preview; a like-for-like repeat or per-radius elapsed times remain before
+  estimator refinement. The converter now centers SVG output at G54 zero
   and the replacement sample exercises both A directions. (`M-06`)
 - [x] Run a pen-free converter-generated sample G-code. (House-and-sun sample
   passed 2026-09-07; it does not replace the controlled M-06 radius sweep.)
