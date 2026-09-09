@@ -45,14 +45,20 @@ h=read GP2 without motor movement
 | Retract result | First `lift_home=1` after 9 up/retract pulses in every cycle |
 | Pressed-state stability | Three stationary reads: `1`, `1`, `1` |
 | Driver state | Reported stopped/asleep after every pulse |
-| `L_lift` at first assertion | 7.23 mm spring-seat separation |
-| Switch release position | 7.97 mm spring-seat separation |
+| Lead-screw/nut gap at first assertion | 7.23 mm |
+| Lead-screw/nut gap at first release | 7.97 mm |
 | Observed switch travel window | 0.74 mm (`7.97 - 7.23`) |
+| Free-spring `L_solid` | 3.75 mm (coils first fully touching) |
+| Installed unloaded spring length `L_unloaded` | 20.29 mm (direct spring-seat measurement, pen clear) |
 
-The asserted `L_lift` position is 5.28 mm above the 1.95 mm housing endpoint.
-This is only a housing-endpoint separation, not a coil-bind margin or approved
-minimum working length because free-spring solid height remains unknown. Force,
-temperature, and rail-ripple measurements were not taken.
+The purple-line measurement spans the lead screw in its heat-set nut, not the
+spring seats. Retract with the pen clear of paper leaves the spring
+unloaded/expanded; spring compression occurs only after upward paper force at
+the pen. `L_solid` is therefore a contact-force bound, not a retract-travel
+bound. Force, temperature, and rail-ripple measurements were not taken.
+The direct reading differs by 0.08 mm from the earlier 20.37 mm record; retain
+both as repeat readings and use approximately 20.3 mm until a caliper repeat
+set establishes the measurement tolerance.
 
 ## Difficulties and corrective actions
 
@@ -65,12 +71,13 @@ motor behavior.
 
 The installed switch, GP2 polarity, carriage flag, and bounded actuator motion
 are repeatable in this limited test. The 0.74 mm release-to-assertion span is
-observed mechanical switch travel, not the switch-to-backstop margin. This is
-not authorization for automatic LIFT_HOME: free-spring solid height, true
-backstop margin, and missing-trigger fault behavior are still unmeasured.
+an observed lead-screw/nut position change, not spring compression or a
+switch-to-backstop margin. This is not authorization for automatic LIFT_HOME:
+actual spring-seat lengths, true backstop margin, and missing-trigger fault
+behavior are still unmeasured.
 
 ## Decisions and next action
 
-Keep GP2 telemetry-only. Measure `L_lift`, `L_contact`, selected `L_min`,
-free-spring solid height, and the LIFT-to-backstop margin before choosing an
-automated retract boundary.
+Keep GP2 telemetry-only. Repeat `L_unloaded`, then measure spring-seat length
+at first contact and selected-force conditions plus the actual LIFT-to-backstop
+margin before choosing an automated retract boundary.

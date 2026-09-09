@@ -354,10 +354,12 @@ Add new entries at the top of the log below this line.
   after six 20 ms down pulses and first asserted it after nine 20 ms
   up/retract pulses in all ten cycles. Three stationary pressed reads remained
   asserted, and every pulse ended with the DRV8833 asleep.
-- Geometry: spring-seat separation was 7.23 mm at first switch assertion and
-  7.97 mm at release (0.74 mm switch window); the asserted position is 5.28 mm
-  above the 1.95 mm housing endpoint. It is not an approved coil-bind margin.
-- Boundary: free-spring solid height, true backstop margin, released-state
+- Correction: the 7.23 mm assertion and 7.97 mm release measurements span the
+  lead screw in its heat-set nut, not spring seats; their 0.74 mm difference is
+  a lead-screw/nut position window. Free-spring solid height is 3.75 mm.
+  Compression occurs only under upward pen/paper force, so solid height is a
+  contact-force bound, not a retract-travel bound.
+- Boundary: actual spring-seat lengths, true backstop margin, released-state
   stability on every cycle, and missing-trigger timeout/fault behavior were
   not measured. GP2 remains telemetry-only.
 - Evidence: `HW-20260909-001`; `RPSW-20260909-001`;
