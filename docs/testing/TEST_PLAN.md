@@ -388,6 +388,15 @@ until T-01F identifies a safe working envelope, T-01G establishes a repeatable
 T-01I verifies the saved profile plus RAM-only startup baseline, and T-01J
 establishes the selected interchangeable-tool settings.
 
+**Actuator replacement hold (2026-09-09):** 6 V 400 RPM and 1000 RPM N20
+replacement candidates are ordered. Pause loaded contact, force, hold, retract,
+and pulse-response characterization on the installed 200 RPM motor: speed and
+gear ratio can alter torque reserve, current, self-locking, backlash, and every
+command-to-force result. On receipt, first verify physical compatibility and
+repeat E-05, guarded E-06/E-15, direction, GP2 travel, and the T-01 envelope
+for the selected motor. Sensor-only work remains valid when it does not depend
+on actuator motion.
+
 **Historical endpoint-stall observation (2026-08-30; owner clarification
 2026-09-04):** with a spring installed, the owner reported approximately
 0.019-0.050 A during retraction. The 0.18 A reading occurred only after the
