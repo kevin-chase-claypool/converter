@@ -37,7 +37,8 @@ as a position reference.
 At 6.0 V with a 0.20 A supply limit and 20 ms pulses, every observed cycle
 released after six down pulses and first asserted after nine up/retract pulses.
 The carriage flag visibly pressed the switch at `lift_home=1`; three stationary
-pressed reads remained asserted.
+pressed reads remained asserted. Spring-seat separation was 7.23 mm at first
+assertion and 7.97 mm at first release, an observed 0.74 mm switch window.
 
 ## Verification
 
@@ -52,7 +53,8 @@ pulse sketch rather than using continuous movement near the switch.
 
 ## Risks and follow-up
 
-This does not establish LIFT spring position, switch-to-backstop margin,
+This establishes only the measured LIFT spring position and switch window; it
+does not establish free-spring solid height, the switch-to-backstop margin,
 released-state debounce for every cycle, or a missing-trigger timeout/fault.
 GP2 remains telemetry-only.
 

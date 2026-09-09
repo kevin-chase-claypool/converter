@@ -45,9 +45,14 @@ h=read GP2 without motor movement
 | Retract result | First `lift_home=1` after 9 up/retract pulses in every cycle |
 | Pressed-state stability | Three stationary reads: `1`, `1`, `1` |
 | Driver state | Reported stopped/asleep after every pulse |
+| `L_lift` at first assertion | 7.23 mm spring-seat separation |
+| Switch release position | 7.97 mm spring-seat separation |
+| Observed switch travel window | 0.74 mm (`7.97 - 7.23`) |
 
-No spring-seat position, force, temperature, or rail-ripple measurement was
-taken.
+The asserted `L_lift` position is 5.28 mm above the 1.95 mm housing endpoint.
+This is only a housing-endpoint separation, not a coil-bind margin or approved
+minimum working length because free-spring solid height remains unknown. Force,
+temperature, and rail-ripple measurements were not taken.
 
 ## Difficulties and corrective actions
 
@@ -59,9 +64,10 @@ motor behavior.
 ## Interpretation
 
 The installed switch, GP2 polarity, carriage flag, and bounded actuator motion
-are repeatable in this limited test. It is not authorization for automatic
-LIFT_HOME: spring position, backstop margin, and missing-trigger fault behavior
-are still unmeasured.
+are repeatable in this limited test. The 0.74 mm release-to-assertion span is
+observed mechanical switch travel, not the switch-to-backstop margin. This is
+not authorization for automatic LIFT_HOME: free-spring solid height, true
+backstop margin, and missing-trigger fault behavior are still unmeasured.
 
 ## Decisions and next action
 
