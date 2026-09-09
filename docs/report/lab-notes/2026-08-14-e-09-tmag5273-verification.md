@@ -130,9 +130,11 @@ magnetic initialization fault, the motor-safe E-09 sketch was reflashed and
 used through the verified GP20/GP21 FTDI service interface. At COM8/115200,
 `i` reported `TMAG5273 online at I2C address 0x22`, and `p` reported
 `mag_mT=[0.08,0.08,0.27]`, magnitude `0.29 mT`, and temperature `28.9 C`.
-This reconfirms current installed I2C identity and one far-field reading. Run
-the existing 20-sample `r` window before treating the current installation's
-noise/span evidence as refreshed.
+The subsequent stationary `r` window returned 20 samples with mean magnitude
+`0.32 mT`, minimum `0.23 mT`, maximum `0.52 mT`, and peak-to-peak span
+`0.29 mT`. This reconfirms current installed I2C identity and far-field
+stability. Its span closely matches the earlier 0.25-0.28 mT evidence and is
+well below the 3.5 mT preliminary threshold.
 
 ## Pass criteria
 

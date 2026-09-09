@@ -82,7 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
-- [2026-09-08 - HARDWARE/VERIFIED - Rechecked installed TMAG5273 identity](#elog-20260908-rechecked-installed-tmag5273-identity)
+- [2026-09-08 - HARDWARE/VERIFIED - Rechecked installed TMAG5273 identity and stability](#elog-20260908-rechecked-installed-tmag5273-identity-and-stability)
 - [2026-09-08 - HARDWARE/VERIFIED - Passed integrated LIFT_HOME transition check](#elog-20260908-passed-integrated-lift-home-transition-check)
 - [2026-09-08 - RP23CNC-SOFTWARE/VERIFIED - Verified integrated service-UART telemetry](#elog-20260908-verified-integrated-service-uart-telemetry)
 - [2026-09-08 - RP23CNC-SOFTWARE/STRUGGLE - Corrected integrated service-UART telemetry suppression](#elog-20260908-corrected-integrated-service-uart-telemetry-suppression)
@@ -343,20 +343,22 @@ Add new entries at the top of the log below this line.
 
 ---
 
-<a id="elog-20260908-rechecked-installed-tmag5273-identity"></a>
-### 🟩 2026-09-08 - HARDWARE/VERIFIED - Rechecked installed TMAG5273 identity
+<a id="elog-20260908-rechecked-installed-tmag5273-identity-and-stability"></a>
+### 🟩 2026-09-08 - HARDWARE/VERIFIED - Rechecked installed TMAG5273 identity and stability
 
-- Status: fully wired toolhead I2C identity and one far-field vector verified;
-  refreshed stationary-noise evidence remains pending.
+- Status: fully wired toolhead I2C identity, far-field vector, and stationary
+  stability are verified.
 - Category: hardware, rp23cnc-software, toolhead, tmag5273, i2c, e-09.
 - Evidence: motor-safe E-09 over the verified COM8 service UART initialized
   the TMAG5273 at `0x22` and reported `[0.08,0.08,0.27] mT`, magnitude
-  `0.29 mT`, and `28.9 C`.
-- Result: the current installed I2C path is live. This supersedes the
-  integrated `mag=FAULT` observation as a hardware-wiring diagnosis, but does
-  not itself explain the integrated initialization path or refresh stability.
-- Next action: send E-09 `r` for a 20-sample stationary window, then run the
-  motor-safe HX711 E-08 check through the same service interface.
+  `0.29 mT`, and `28.9 C`; its `r` command then returned 20 samples with
+  0.32 mT mean and 0.29 mT peak-to-peak span.
+- Result: the current installed I2C path and its far-field stability are live.
+  The 0.29 mT span agrees with prior evidence and is well below the preliminary
+  3.5 mT threshold. This does not itself explain the integrated `mag=FAULT`
+  initialization path.
+- Next action: run the motor-safe HX711 E-08 check through the same service
+  interface.
 
 <a id="elog-20260908-passed-integrated-lift-home-transition-check"></a>
 ### 🟩 2026-09-08 - HARDWARE/VERIFIED - Passed integrated LIFT_HOME transition check
