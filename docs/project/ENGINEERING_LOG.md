@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-09 - HARDWARE/PARTIAL - Passed guarded LIFT_HOME repeatability](#elog-20260909-passed-guarded-lift-home-repeatability)
 - [2026-09-08 - HARDWARE/VERIFIED - Rechecked installed TMAG5273 identity and stability](#elog-20260908-rechecked-installed-tmag5273-identity-and-stability)
 - [2026-09-08 - HARDWARE/VERIFIED - Passed integrated LIFT_HOME transition check](#elog-20260908-passed-integrated-lift-home-transition-check)
 - [2026-09-08 - RP23CNC-SOFTWARE/VERIFIED - Verified integrated service-UART telemetry](#elog-20260908-verified-integrated-service-uart-telemetry)
@@ -342,6 +343,24 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260909-passed-guarded-lift-home-repeatability"></a>
+### 🟨 2026-09-09 - HARDWARE/PARTIAL - Passed guarded LIFT_HOME repeatability
+
+- Status: ten bounded powered cycles passed the observed GP2 switch-polarity
+  and repeatability portion of T-01G; automatic retract control remains gated.
+- Category: hardware, rp23cnc-software, toolhead, lift-home, t-01g, safety.
+- Result: with 6.0 V and a 0.20 A supply limit, the carriage released GP2
+  after six 20 ms down pulses and first asserted it after nine 20 ms
+  up/retract pulses in all ten cycles. Three stationary pressed reads remained
+  asserted, and every pulse ended with the DRV8833 asleep.
+- Boundary: LIFT spring length, backstop margin, released-state stability on
+  every cycle, and missing-trigger timeout/fault behavior were not measured.
+  GP2 remains telemetry-only.
+- Evidence: `HW-20260909-001`; `RPSW-20260909-001`;
+  `2026-09-09-t-01g-guarded-retract-cycles.md`.
+- Next action: measure the T-01A spring/LIFT geometry and switch-to-backstop
+  margin before designing any GP2-controlled retract action.
 
 <a id="elog-20260908-rechecked-installed-tmag5273-identity-and-stability"></a>
 ### 🟩 2026-09-08 - HARDWARE/VERIFIED - Rechecked installed TMAG5273 identity and stability

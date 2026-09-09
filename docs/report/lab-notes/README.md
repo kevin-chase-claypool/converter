@@ -32,6 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-09 | T-01G guarded retract cycles | Partial — repeatability passed | All ten 6.0 V / 0.20 A guarded cycles released GP2 after six down pulses and re-triggered after nine up/retract pulses; backstop margin and timeout remain open. |
 | 2026-09-08 | T-01G LIFT_HOME installation | Partial | Meter-verified normally-open contact installed between Pro Micro GP2 and local TOOL_GND. Input-only firmware telemetry is implemented; USB transition and guarded retract-cycle evidence remain. |
 | 2026-09-08 | T-01A spring geometry | Partial | Current spring: 20.37 mm unloaded to 1.95 mm lower housing endpoint establishes an 18.42 mm in-housing compression span; 25.00 mm free length establishes 4.63 mm captured preload. LIFT/contact/safe-margin values remain. |
 | 2026-09-08 | E-14 / E-14B / E-14C / E-15A | Passed | D36V50F6 output was reported constant at 6.05 V; perfboard, DRV8833/J2, and previously tested TMAG-related 5 V path gates passed. E-15 loaded characterization remains. |

@@ -6,6 +6,7 @@ Newest changes appear first.
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
 | 2026-09-09 | `RPSW-20260909-001` | rp23cnc-software, hardware | implemented | [Add lift-home status to bounded actuator test](rp23cnc-software/2026/2026-09-09-add-lift-home-status-to-bounded-actuator-test.md) |
+| 2026-09-09 | `HW-20260909-001` | hardware, rp23cnc-software | partial | [Verify guarded lift-home repeatability](hardware/2026/2026-09-09-verify-guarded-lift-home-repeatability.md) |
 | 2026-09-08 | `WSW-20260908-001` | windows-software, hardware, rp23cnc-software | implemented | [Calibrate the preview motion-time estimate](windows-software/2026/2026-09-08-calibrate-preview-motion-estimate.md) |
 | 2026-09-08 | `RPSW-20260908-002` | rp23cnc-software, hardware | verified | [Fix integrated service-UART telemetry suppression](rp23cnc-software/2026/2026-09-08-fix-integrated-service-uart-telemetry.md) |
 | 2026-09-08 | `RPSW-20260908-001` | rp23cnc-software, hardware | implemented | [Add LIFT_HOME UART diagnostic sketch](rp23cnc-software/2026/2026-09-08-add-lift-home-uart-diagnostic.md) |

@@ -10,6 +10,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-09-09 | `RPSW-20260909-001` | implemented | [Add lift-home status to bounded actuator test](2026/2026-09-09-add-lift-home-status-to-bounded-actuator-test.md) | `toolhead`, `t-01g`, `lift-home`, `uart`, `commissioning` |
+| 2026-09-09 | `HW-20260909-001` | partial | [Verify guarded lift-home repeatability](../hardware/2026/2026-09-09-verify-guarded-lift-home-repeatability.md) | `toolhead`, `lift-home`, `t-01g`, `commissioning` |
 | 2026-09-08 | `WSW-20260908-001` | implemented | [Calibrate the preview motion-time estimate](../windows-software/2026/2026-09-08-calibrate-preview-motion-estimate.md) | `preview`, `timing`, `m-06`, `calibration` |
 | 2026-09-08 | `RPSW-20260908-002` | verified | [Fix integrated service-UART telemetry suppression](2026/2026-09-08-fix-integrated-service-uart-telemetry.md) | `toolhead`, `uart`, `telemetry`, `diagnostics` |
 | 2026-09-08 | `RPSW-20260908-001` | implemented | [Add LIFT_HOME UART diagnostic sketch](2026/2026-09-08-add-lift-home-uart-diagnostic.md) | `toolhead`, `lift-home`, `uart`, `diagnostics`, `t-01g` |
