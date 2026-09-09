@@ -123,6 +123,17 @@ separation is far larger than either stationary span (0.25-0.28 mT). A
 conservative initial magnitude threshold is 3.5 mT, with about 1.0 mT
 hysteresis; final scan geometry still determines the production threshold.
 
+## Installed toolhead recheck (2026-09-08)
+
+After the fully wired toolhead's integrated telemetry initially showed a
+magnetic initialization fault, the motor-safe E-09 sketch was reflashed and
+used through the verified GP20/GP21 FTDI service interface. At COM8/115200,
+`i` reported `TMAG5273 online at I2C address 0x22`, and `p` reported
+`mag_mT=[0.08,0.08,0.27]`, magnitude `0.29 mT`, and temperature `28.9 C`.
+This reconfirms current installed I2C identity and one far-field reading. Run
+the existing 20-sample `r` window before treating the current installation's
+noise/span evidence as refreshed.
+
 ## Pass criteria
 
 - I2C device is found at the expected address.
