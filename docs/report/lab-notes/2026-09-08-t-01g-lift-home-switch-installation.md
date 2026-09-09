@@ -70,3 +70,13 @@ the expected compile-time safety lock; it keeps the DRV8833 disabled. The
 reported `lift_home=0` is the expected released-switch state. The separate
 `mag=FAULT`, zero magnetic samples, and zero HX711 values are not UART failures
 and remain sensor bring-up items outside this input/UART check.
+
+## Integrated LIFT_HOME transition result
+
+While the integrated firmware continued to report its intentional actuator
+commissioning fault, manually pressing and releasing the installed switch
+produced repeated `lift_home=0` released, `lift_home=1` pressed, and
+`lift_home=0` released telemetry. This completes the input/UART portion of
+T-01G end-to-end. It does not authorize powered retracts: the next T-01G scope
+is separately guarded motor direction, slow travel, switch repeatability,
+release position, and timeout/backstop evidence.

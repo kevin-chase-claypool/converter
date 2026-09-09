@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - HARDWARE/VERIFIED - Passed integrated LIFT_HOME transition check](#elog-20260908-passed-integrated-lift-home-transition-check)
 - [2026-09-08 - RP23CNC-SOFTWARE/VERIFIED - Verified integrated service-UART telemetry](#elog-20260908-verified-integrated-service-uart-telemetry)
 - [2026-09-08 - RP23CNC-SOFTWARE/STRUGGLE - Corrected integrated service-UART telemetry suppression](#elog-20260908-corrected-integrated-service-uart-telemetry-suppression)
 - [2026-09-08 - HARDWARE/VERIFIED - Passed unpowered LIFT_HOME input/UART check](#elog-20260908-passed-unpowered-lift-home-input-uart-check)
@@ -340,6 +341,22 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-passed-integrated-lift-home-transition-check"></a>
+### 🟩 2026-09-08 - HARDWARE/VERIFIED - Passed integrated LIFT_HOME transition check
+
+- Status: T-01G input/UART evidence is complete; powered retract behavior is
+  not enabled or verified.
+- Category: hardware, rp23cnc-software, toolhead, lift-home, uart, t-01g.
+- Evidence: recurring integrated telemetry changed from `lift_home=0` released
+  to `lift_home=1` while manually pressing the installed switch and returned to
+  `0` on release.
+- Result: the installed COM/NO contact, GP2 input pull-up, active-low polarity,
+  integrated pressure-controller readout, UART1 telemetry, adapter, and monitor
+  function together end-to-end. The persistent actuator-direction fault kept
+  the DRV8833/motor disabled throughout the check.
+- Next action: do not alter commissioning gates yet; prepare the separately
+  bounded, slow, backstop-aware powered T-01G retract procedure.
 
 <a id="elog-20260908-verified-integrated-service-uart-telemetry"></a>
 ### 🟩 2026-09-08 - RP23CNC-SOFTWARE/VERIFIED - Verified integrated service-UART telemetry
