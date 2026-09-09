@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-09 - HARDWARE/SUCCESS - Documented toolhead pen-mount mechanics](#elog-20260909-documented-toolhead-pen-mount-mechanics)
 - [2026-09-09 - HARDWARE/PARTIAL - Passed guarded LIFT_HOME repeatability](#elog-20260909-passed-guarded-lift-home-repeatability)
 - [2026-09-08 - HARDWARE/VERIFIED - Rechecked installed TMAG5273 identity and stability](#elog-20260908-rechecked-installed-tmag5273-identity-and-stability)
 - [2026-09-08 - HARDWARE/VERIFIED - Passed integrated LIFT_HOME transition check](#elog-20260908-passed-integrated-lift-home-transition-check)
@@ -343,6 +344,19 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260909-documented-toolhead-pen-mount-mechanics"></a>
+### 🟩 2026-09-09 - HARDWARE/SUCCESS - Documented toolhead pen-mount mechanics
+
+- Status: physical model clarified; force-rate characterization remains open.
+- Category: hardware, toolhead, pen-mount, spring, mechanics, testing.
+- Result: the outer spring housing is fixed, while the pen housing slides
+  upward under paper reaction and compresses the spring. Lead-screw/nut gap
+  and GP2 LIFT_HOME are actuator-position references, not spring-force data.
+- Evidence: project-owner side-view inspection with and without upward pen
+  force; `TOOLHEAD_MECHANICS.md`.
+- Next action: install and requalify the selected replacement N20, then resume
+  guarded scale-force characterization using the documented force path.
 
 <a id="elog-20260909-passed-guarded-lift-home-repeatability"></a>
 ### 🟨 2026-09-09 - HARDWARE/PARTIAL - Passed guarded LIFT_HOME repeatability

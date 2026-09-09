@@ -10,6 +10,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-09-09 | `RPSW-20260909-001` | implemented | [Add lift-home status to bounded actuator test](2026/2026-09-09-add-lift-home-status-to-bounded-actuator-test.md) | `toolhead`, `t-01g`, `lift-home`, `uart`, `commissioning` |
+| 2026-09-09 | `HW-20260909-003` | implemented | [Document toolhead pen-mount mechanics](../hardware/2026/2026-09-09-document-toolhead-pen-mount-mechanics.md) | `toolhead`, `pen-mount`, `spring`, `mechanics`, `t-01` |
 | 2026-09-09 | `HW-20260909-002` | planned | [Order faster toolhead actuator candidates](../hardware/2026/2026-09-09-order-faster-toolhead-actuator-candidates.md) | `toolhead`, `n20`, `actuator`, `commissioning` |
 | 2026-09-09 | `HW-20260909-001` | partial | [Verify guarded lift-home repeatability](../hardware/2026/2026-09-09-verify-guarded-lift-home-repeatability.md) | `toolhead`, `lift-home`, `t-01g`, `commissioning` |
 | 2026-09-08 | `WSW-20260908-001` | implemented | [Calibrate the preview motion-time estimate](../windows-software/2026/2026-09-08-calibrate-preview-motion-estimate.md) | `preview`, `timing`, `m-06`, `calibration` |

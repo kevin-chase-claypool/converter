@@ -6,6 +6,7 @@ Newest changes appear first.
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
 | 2026-09-09 | `RPSW-20260909-001` | rp23cnc-software, hardware | implemented | [Add lift-home status to bounded actuator test](rp23cnc-software/2026/2026-09-09-add-lift-home-status-to-bounded-actuator-test.md) |
+| 2026-09-09 | `HW-20260909-003` | hardware, rp23cnc-software | implemented | [Document toolhead pen-mount mechanics](hardware/2026/2026-09-09-document-toolhead-pen-mount-mechanics.md) |
 | 2026-09-09 | `HW-20260909-002` | hardware, rp23cnc-software | planned | [Order faster toolhead actuator candidates](hardware/2026/2026-09-09-order-faster-toolhead-actuator-candidates.md) |
 | 2026-09-09 | `HW-20260909-001` | hardware, rp23cnc-software | partial | [Verify guarded lift-home repeatability](hardware/2026/2026-09-09-verify-guarded-lift-home-repeatability.md) |
 | 2026-09-08 | `WSW-20260908-001` | windows-software, hardware, rp23cnc-software | implemented | [Calibrate the preview motion-time estimate](windows-software/2026/2026-09-08-calibrate-preview-motion-estimate.md) |

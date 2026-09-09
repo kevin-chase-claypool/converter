@@ -25,6 +25,7 @@ For the intended P100 command/sensor/reply ownership by stage, open
 | Power distribution | [`hardware/POWER_DISTRIBUTION.md`](hardware/POWER_DISTRIBUTION.md) | `hardware/WIRING_TABLE.md` plus the power-only schematic |
 | Wiring or pin assignment | [`hardware/WIRING_TABLE.md`](hardware/WIRING_TABLE.md) | `hardware/WIRING_TABLE.md` |
 | Part selection or electrical rating | [`hardware/BOM.md`](hardware/BOM.md) | `hardware/BOM.md` |
+| Toolhead pen mount or spring mechanics | [`hardware/TOOLHEAD_MECHANICS.md`](hardware/TOOLHEAD_MECHANICS.md) | `hardware/TOOLHEAD_MECHANICS.md` |
 | Subsystem interface or units | [`integration/INTERFACES.md`](integration/INTERFACES.md) | `integration/INTERFACES.md` |
 | ioSender/converter streaming readiness | [`integration/IOSENDER_CONVERTER_COMPATIBILITY_REVIEW.md`](integration/IOSENDER_CONVERTER_COMPATIBILITY_REVIEW.md) | Review plus F-02, M-06, F-05, and P100 commissioning evidence |
 | Current priorities | [`project/ROADMAP.md`](project/ROADMAP.md) | `project/ROADMAP.md` |
