@@ -5,7 +5,7 @@ category: rp23cnc-software
 affected_categories:
   - rp23cnc-software
   - hardware
-status: implemented
+status: verified
 components:
   - pro_micro_rp2350_toolhead
   - GP20/GP21 service UART
@@ -46,7 +46,8 @@ UART1 on GP20/GP21. Native USB `Serial` remains the command interface.
 
 `arduino-cli compile --fqbn rp2040:rp2040:sparkfun_promicrorp2350
 firmware\\pen_pressure\\pro_micro_rp2350_toolhead` and `git diff --check`
-passed. Installed integrated telemetry confirmation remains required.
+passed. With the corrected sketch installed, COM8 at 115200 reported the ready
+line and recurring complete telemetry records.
 
 ## Struggles and rejected approaches
 
@@ -57,9 +58,9 @@ already been corrected to `Serial2`; this was a separate record-size/FIFO gate.
 
 ## Risks and follow-up
 
-Confirm the startup line and recurring telemetry with the integrated sketch
-before powered T-01G retract tests. The motor commissioning gates remain false;
-this change must not be treated as authorization for motion.
+The UART result does not validate sensor initialization or powered motion. The
+motor commissioning gates remain false; this change must not be treated as
+authorization for motion.
 
 ## Files
 

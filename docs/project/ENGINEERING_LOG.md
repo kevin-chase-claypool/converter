@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - RP23CNC-SOFTWARE/VERIFIED - Verified integrated service-UART telemetry](#elog-20260908-verified-integrated-service-uart-telemetry)
 - [2026-09-08 - RP23CNC-SOFTWARE/STRUGGLE - Corrected integrated service-UART telemetry suppression](#elog-20260908-corrected-integrated-service-uart-telemetry-suppression)
 - [2026-09-08 - HARDWARE/VERIFIED - Passed unpowered LIFT_HOME input/UART check](#elog-20260908-passed-unpowered-lift-home-input-uart-check)
 - [2026-09-08 - RP23CNC-SOFTWARE/DIAGNOSTIC - Isolated LIFT_HOME UART check](#elog-20260908-isolated-lift-home-uart-check)
@@ -339,6 +340,26 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-verified-integrated-service-uart-telemetry"></a>
+### 🟩 2026-09-08 - RP23CNC-SOFTWARE/VERIFIED - Verified integrated service-UART telemetry
+
+- Status: GP20 UART1 telemetry is verified in the integrated dual-core sketch;
+  powered T-01G retract-cycle testing remains open.
+- Category: rp23cnc-software, hardware, toolhead, uart, telemetry, t-01g.
+- Evidence: after flashing the corrected integrated sketch, FTDI COM8 at
+  115200 reported `Theta toolhead service UART ready` and recurring complete
+  telemetry records.
+- Result: `pressure=FAULT` with `T-01 actuator direction is not commissioned`
+  confirms the intended motor commissioning lock, not a runtime fault caused by
+  the UART repair. `lift_home=0` confirms the released input is visible in the
+  integrated record.
+- Limitation: `mag=FAULT`/zero samples and HX711 zero readings are distinct
+  sensor bring-up work; this observation does not validate them or powered
+  retract behavior.
+- Next action: press/release LIFT_HOME while observing the integrated record to
+  confirm its live 0→1→0 transitions, then keep motor motion disabled pending
+  the separate guarded T-01G plan.
 
 <a id="elog-20260908-corrected-integrated-service-uart-telemetry-suppression"></a>
 ### 🟥 2026-09-08 - RP23CNC-SOFTWARE/STRUGGLE - Corrected integrated service-UART telemetry suppression

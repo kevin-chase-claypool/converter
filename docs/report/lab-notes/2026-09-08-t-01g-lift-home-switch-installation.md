@@ -59,3 +59,14 @@ The writer now writes the valid completed record directly, and startup emits
 `Theta toolhead service UART ready` before pressure and magnetic
 initialization. This correction does not change motor behavior: actuator
 commissioning remains locked and T-01G powered retract testing is still open.
+
+## Integrated service-UART result
+
+With the corrected integrated firmware flashed through USB-C/UF2, the same
+externally powered FTDI COM8 monitor at 115200 reported `Theta toolhead service
+UART ready` followed by recurring complete telemetry records. The reported
+`pressure=FAULT` with `fault=T-01 actuator direction is not commissioned` is
+the expected compile-time safety lock; it keeps the DRV8833 disabled. The
+reported `lift_home=0` is the expected released-switch state. The separate
+`mag=FAULT`, zero magnetic samples, and zero HX711 values are not UART failures
+and remain sensor bring-up items outside this input/UART check.
