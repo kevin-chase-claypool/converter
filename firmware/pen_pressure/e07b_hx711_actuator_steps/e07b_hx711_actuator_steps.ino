@@ -16,6 +16,7 @@
     GP1 -> HX711 SCK                     GP5 -> DRV8833 IN2
     Pro Micro 3V3 -> HX711 VCC           GP6 <- DRV8833 EEP fault
     Pro Micro GND -> HX711 GND           GP7 -> DRV8833 ULT sleep
+    GP2 <- LIFT_HOME normally-open switch to TOOL_GND
 
   Commands at 115200 baud:
     t  tare the unloaded, stationary mechanism (20 samples)
@@ -26,6 +27,7 @@
     [  reduce step time by 5 ms (minimum 5 ms)
     ]  increase step time by 5 ms (maximum 100 ms)
     x  stop and sleep driver immediately
+    h  report LIFT_HOME switch state
     ?  print help
 
   Do not use continuous motor commands for E-07B. Place a digital scale under
@@ -43,6 +45,7 @@ constexpr uint8_t PIN_IN1 = 4;
 constexpr uint8_t PIN_IN2 = 5;
 constexpr uint8_t PIN_EEP_FAULT = 6;
 constexpr uint8_t PIN_ULT_SLEEP = 7;
+constexpr uint8_t PIN_LIFT_HOME = 2;
 constexpr uint8_t PIN_UART_TX = 20;
 constexpr uint8_t PIN_UART_RX = 21;
 
@@ -71,6 +74,15 @@ uint16_t stepMs = 20;
 
 bool faultActive() {
   return digitalRead(PIN_EEP_FAULT) == (EEP_FAULT_ACTIVE_LOW ? LOW : HIGH);
+}
+
+bool liftHomePressed() {
+  return digitalRead(PIN_LIFT_HOME) == LOW;
+}
+
+void reportLiftHome() {
+  Serial2.print(F("lift_home="));
+  Serial2.println(liftHomePressed() ? F("1") : F("0"));
 }
 
 void stopAndSleep() {
@@ -136,7 +148,8 @@ void moveOneStep(bool in1High, const __FlashStringHelper *name) {
   digitalWrite(PIN_IN2, in1High ? LOW : HIGH);
   delay(stepMs);
   stopAndSleep();
-  Serial2.println(F("Motor stopped and asleep."));
+  Serial2.print(F("Motor stopped and asleep; "));
+  reportLiftHome();
 }
 
 bool readAveragedRaw(long &value) {
@@ -234,7 +247,7 @@ void automaticApproach() {
 }
 
 void printHelp() {
-  Serial2.println(F("E-07B: t=tare p=print d=down u=up a=auto [=shorter ]=longer x=stop ?=help"));
+  Serial2.println(F("E-07B: t=tare p=print d=down u=up a=auto [=shorter ]=longer x=stop h=lift-home ?=help"));
   Serial2.print(F("Current step duration: "));
   Serial2.print(stepMs);
   Serial2.println(F(" ms"));
@@ -260,6 +273,7 @@ void handleCommand(char command) {
       stopAndSleep();
       Serial2.println(F("Motor stopped and asleep."));
       break;
+    case 'h': case 'H': reportLiftHome(); break;
     case '?': printHelp(); break;
     default: break;
   }
@@ -274,12 +288,14 @@ void setup() {
   pinMode(PIN_IN2, OUTPUT);
   pinMode(PIN_ULT_SLEEP, OUTPUT);
   pinMode(PIN_EEP_FAULT, INPUT_PULLUP);
+  pinMode(PIN_LIFT_HOME, INPUT_PULLUP);
   stopAndSleep();
 
   scale.begin(PIN_HX711_DT, PIN_HX711_SCK);
   delay(500);
   Serial2.println(F("E-07B HX711 + safe actuator-step test"));
   printHelp();
+  reportLiftHome();
   if (!scale.is_ready()) {
     Serial2.println(F("HX711 not ready: check VCC, GND, GP0, and GP1."));
   }
