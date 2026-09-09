@@ -105,8 +105,12 @@ void emitTelemetry() {
       Serial.availableForWrite() >= length) {
     Serial.write(reinterpret_cast<const uint8_t *>(line), static_cast<size_t>(length));
   }
-  if (length > 0 && length < static_cast<int>(sizeof(line)) &&
-      Serial2.availableForWrite() >= length) {
+  // UART's transmit FIFO can be smaller than this complete telemetry record.
+  // Do not require the whole record to fit before starting the write: that
+  // condition permanently suppressed service-UART telemetry on GP20/GP21.
+  // At 115200 baud, this once-per-period write is comfortably bounded and
+  // does not affect the commissioning-locked motor state.
+  if (length > 0 && length < static_cast<int>(sizeof(line))) {
     Serial2.write(reinterpret_cast<const uint8_t *>(line), static_cast<size_t>(length));
   }
 }
@@ -157,6 +161,7 @@ void setup() {
   Serial2.setTX(PIN_SERVICE_UART_TX);
   Serial2.setRX(PIN_SERVICE_UART_RX);
   Serial2.begin(SERIAL_BAUD);
+  Serial2.println(F("Theta toolhead service UART ready"));
   delay(250); // Startup-only USB enumeration; automatic control has not begun.
   Serial.println();
   Serial.println(F("Theta RP2350 dual-core toolhead firmware"));

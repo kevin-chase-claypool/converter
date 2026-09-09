@@ -97,6 +97,15 @@ when the explicit gate is enabled. Fixed-size atomics carry status between cores
 During a magnetic scan, a verified lifted state is required and the HX711 is
 powered down because pressure measurement is unnecessary.
 
+The temporary service interface is `Serial2` / hardware UART1 on GP20 (TX) and
+GP21 (RX) at 115200 baud. The integrated sketch immediately writes `Theta
+toolhead service UART ready` after configuring that interface, before pressure
+or magnetic initialization. It writes completed telemetry records directly to
+the UART; do not reintroduce an `availableForWrite() >= full_record_length`
+gate, because the UART FIFO can be smaller than an entire record and would
+silently suppress all service telemetry. Native USB `Serial` remains the
+separate USB diagnostic/command interface.
+
 The firmware defaults to a safe lift/stop behavior, supports serial diagnostics,
 and keeps all actuator, force, lift-reference, and magnetic commissioning gates
 false until their named tests establish measured values. Do not install the pen or connect the

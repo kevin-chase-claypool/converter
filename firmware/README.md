@@ -102,6 +102,10 @@ gates deliberately prevent uncommissioned actuator and magnetic operation.
 The separate normally-open `LIFT_HOME` microswitch is now installed from GP2
 to local `TOOL_GND`; the integrated firmware configures it as an active-low
 pull-up input and reports it through native USB and GP20/GP21 service UART.
+The service interface uses Arduino-Pico `Serial2` (hardware UART1), and the
+integrated firmware prints its service-UART-ready line before other
+initialization. Its telemetry writer does not require a complete record to fit
+in the UART FIFO, so GP20 telemetry is not silently suppressed.
 T-01G must verify live transitions and guarded retract cycles before it
 controls motor behavior.
 Smaller Arduino sketches also exist for safer bring-up, including a GP2/GP20

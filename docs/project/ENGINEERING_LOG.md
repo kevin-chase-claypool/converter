@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-08 - RP23CNC-SOFTWARE/STRUGGLE - Corrected integrated service-UART telemetry suppression](#elog-20260908-corrected-integrated-service-uart-telemetry-suppression)
 - [2026-09-08 - HARDWARE/VERIFIED - Passed unpowered LIFT_HOME input/UART check](#elog-20260908-passed-unpowered-lift-home-input-uart-check)
 - [2026-09-08 - RP23CNC-SOFTWARE/DIAGNOSTIC - Isolated LIFT_HOME UART check](#elog-20260908-isolated-lift-home-uart-check)
 - [2026-09-08 - HARDWARE/PARTIAL - Installed LIFT_HOME switch input](#elog-20260908-installed-lift-home-switch-input)
@@ -338,6 +339,27 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260908-corrected-integrated-service-uart-telemetry-suppression"></a>
+### 🟥 2026-09-08 - RP23CNC-SOFTWARE/STRUGGLE - Corrected integrated service-UART telemetry suppression
+
+- Status: source correction compiled; installed integrated-UART confirmation is
+  pending.
+- Category: rp23cnc-software, hardware, toolhead, uart, diagnostics, t-01g.
+- Evidence: the motor-safe T-01G sketch produced clean repeated output through
+  the same GP20/GP21/FTDI/COM8 path, while the integrated sketch did not.
+- Cause: after the earlier `Serial2`/UART1 correction, integrated telemetry
+  still required the full approximately 400-byte formatted line to fit in
+  `Serial2.availableForWrite()` before writing. A UART FIFO can be smaller than
+  the record, making that predicate permanently false and silently suppressing
+  telemetry.
+- Result: the integrated sketch now writes the completed record directly and
+  emits a service-UART-ready line before pressure and magnetic initialization.
+  The motor remains commissioning-locked; no motor behavior changed.
+- Verification: integrated Arduino CLI compile and `git diff --check` passed.
+- Next action: upload the integrated sketch through USB-C/UF2, power from the
+  established external 5 V service supply, and confirm the ready line and
+  recurring telemetry at FTDI COM8/115200 before any powered T-01G cycle.
 
 <a id="elog-20260908-passed-unpowered-lift-home-input-uart-check"></a>
 ### 🟩 2026-09-08 - HARDWARE/VERIFIED - Passed unpowered LIFT_HOME input/UART check

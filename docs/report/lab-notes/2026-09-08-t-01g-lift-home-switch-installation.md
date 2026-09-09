@@ -47,3 +47,15 @@ making the switch/UART hardware path independently testable.
 diagnostic and integrated service implementation used `Serial1` (UART0), whose
 pin assignment to GP20/GP21 is invalid and is silently refused by the core.
 Both now use `Serial2` (UART1).
+
+## Integrated-telemetry correction
+
+The clean T-01G diagnostic output isolated a later integrated-sketch failure to
+its UART telemetry writer rather than to the switch, Pro Micro, FTDI adapter,
+or wiring. The integrated writer had required the entire formatted telemetry
+record to fit in `Serial2.availableForWrite()` before issuing a write. A UART
+FIFO may be smaller than that record, so that condition suppressed every line.
+The writer now writes the valid completed record directly, and startup emits
+`Theta toolhead service UART ready` before pressure and magnetic
+initialization. This correction does not change motor behavior: actuator
+commissioning remains locked and T-01G powered retract testing is still open.
