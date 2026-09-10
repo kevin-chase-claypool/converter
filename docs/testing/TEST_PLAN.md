@@ -81,7 +81,7 @@ verification, but not for each print after an approved tool profile exists.
 | F-05 | Spindle/tool output test | Deterministic output pin state: M3 = ENGAGE, M5 = PEN_CLEAR, fail-safe to PEN_CLEAR/OFF |
 | F-06 | Settings persistence | Reboot preserves calibrated settings |
 | F-07 | Four-axis configuration sanity check | X/Y/A are enabled, A is available for homing/motion, and the Z axis slot remains unused/unwired |
-| F-08 | Motorless RP23CNC `PRB`/G38/macro feasibility | With TB6600 signal leads and motors disconnected, the candidate build reports `PRB`, captures X entry/release with `G38.3`/`G38.5`, proves or rejects equivalent A capture and `#5064`, executes filesystem `G65 P100`, and verifies the coordinate/parameter semantics used by P100. It must also verify that the proposed 20 ms GP27 inactive interval produces a distinct P100 readiness ACK after any normal-status assertion. Keep GP27 on `LIMA` until the direct-input and GP27/U3 stages pass. |
+| F-08 | Motorless RP23CNC `PRB`/G38/macro feasibility | Partial pass 2026-09-10: the candidate reports `PRB`; direct and actual GP27/U3 paths captured A entry/release with `G38.3`/`G38.5`; the blue return was moved from `LIMA` to `PRB` after those stages passed. Still required: `#5064`, filesystem `G65 P100`, coordinate/parameter semantics, and the proposed 20 ms GP27 inactive interval after normal-status assertion. |
 
 ### F-08 motorless PRB/G38 procedure
 
@@ -135,8 +135,27 @@ remain unloaded.
 
 Pass requires deterministic polarity, successful X transition captures,
 an explicit pass/fail result for A probing, readable probe coordinates, and a
-successful GP27/U3 path check. Only a later documented wiring change may move
-the routed U3 return conductor from `LIMA` to `PRB`.
+successful GP27/U3 path check. The documented 2026-09-10 direct and
+actual-path result moved the routed U3 return conductor from `LIMA` to `PRB`.
+Preserve `$6=1` unless a future measured idle/asserted observation proves the
+physical input polarity changed.
+
+### F-08 result: 2026-09-10 PRB and real-magnet GP27/U3 path
+
+The candidate build (`grblHAL 1.1f.20260908`) reported `PRB` and accepted A-axis
+G38. Direct dry-contact testing established normally-open polarity with `$6=1`.
+The actual motor-inert `p100_handshake_test` path then synchronized toolhead
+`detected=0 -> 1 -> 0` with controller `P` blank -> red -> blank and returned:
+
+```text
+G38.3 A30 F60 -> [PRB:0.000,0.000,0.000,11.475:1]
+G38.5 A30 F60 -> [PRB:0.000,0.000,0.000,13.275:1]
+```
+
+The TB6600 branch fuses were removed and no axis moved. The initial `:0` result
+was caused by the diagnostic's known five-minute scan timeout, then cleared by
+disarming and reacquiring the baseline. F-08 remains open for macro/parameter
+and coordinate semantics; Q3/Q4 remain prohibited.
 
 ## Motion tests
 

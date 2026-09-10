@@ -23,6 +23,21 @@ COM9. `$I` reported grblHAL `1.1f.20260813`, board `RP23U5XBB`, four axes
 `XYZA`, `RP2350@150MHz`, `WIZCHIP:W5500`, and SD-card/Ymodem plugin support.
 The complete `$I` capture is preserved in the dated F-01 lab note.
 
+## 2026-09-10 homing candidate
+
+- Builder configuration: [`../../../hardware/RP2040_RP23U5XBB_homing_candidate.json`](../../../hardware/RP2040_RP23U5XBB_homing_candidate.json)
+- Firmware artifact: [`../../../hardware/firmware-homing-candidate.uf2`](../../../hardware/firmware-homing-candidate.uf2)
+- Firmware size: 889,856 bytes
+- SHA-256: `892799841E6262556D380594CF909FE8A40284BC6FA52E798102BFEC36276DC9`
+- Added candidate capabilities: `PROBE_ENABLE=1`, NGC parameters, and NGC
+  expressions. The known-good baseline artifact remains unchanged.
+- Installed boot report: grblHAL `1.1f.20260908`; `XYZA`; `[SIGNALS:HSEP]`;
+  `[NEWOPT:ENUMS,RT+,HOME,ES,REBOOT,EXPR,TC,SED,ETH,YM,SD]`; `PRB` mapped to
+  pin 7; `Aux out 0,P0` mapped to pin 36.
+- F-08 used `$6=1` for the installed normally-open PRB sink, then restored
+  `$20=1` and `G90` at completion. Full evidence is in
+  [`../../../docs/report/lab-notes/2026-09-10-e-18-motor-inert-p100-handshake.md`](../../../docs/report/lab-notes/2026-09-10-e-18-motor-inert-p100-handshake.md).
+
 ## 2026-09-06 unloaded motion commissioning snapshot
 
 The installed controller and TB6600 signal paths passed their documented

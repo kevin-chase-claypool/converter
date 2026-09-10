@@ -61,11 +61,11 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   and verify the toolhead is retracted before any homing or scan. The production
   modes remain commissioning-locked. See
   [`grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`](grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md).
-- **Candidate probe capture** - F-08 will test the RP23CNC `PRB` input and
-  grblHAL G38 transition/coordinate behavior without TB6600 signal leads or
-  motors attached. The installed XYZA build must explicitly prove or reject A
-  probing. GP27/U3 remains assigned to `LIMA` until that motorless test and the
-  subsequent isolated-path check pass.
+- **Candidate probe capture** - the 2026-09-10 F-08 motor-inert candidate
+  proved direct and actual GP27/U3 `PRB` transitions and A-axis G38 capture;
+  GP27/U3 is now assigned to `PROBE SIG` with `$6=1`. Filesystem macro,
+  parameter/coordinate, and normal-status timing gates remain before P100
+  motion or production use.
 
 ## Status
 

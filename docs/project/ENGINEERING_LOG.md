@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-10 12:55:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Passed real-magnet PRB/G38 GP27/U3 path](#elog-20260910125500)
 - [2026-09-10 11:15:18 -0500 - RP23CNC-SOFTWARE/HARDWARE/PARTIAL - Passed motor-inert P100 handshake and local magnetic state](#elog-20260910111518)
 - [2026-09-09 19:40:38 -0500 - RP23CNC-SOFTWARE/SUCCESS - Added motor-inert P100 handshake diagnostic](#elog-20260909194038)
 - [2026-09-09 - HARDWARE/SUCCESS - Documented toolhead pen-mount mechanics](#elog-20260909-documented-toolhead-pen-mount-mechanics)
@@ -346,6 +347,28 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260910125500"></a>
+### 🟩 2026-09-10 12:55:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Passed real-magnet PRB/G38 GP27/U3 path
+
+- Status: F-08 direct and actual-path PRB transition stages passed; macro and
+  coordinate semantics remain open.
+- Category: rp23cnc-software, hardware, P100, F-08, probe, G38, magnetic
+  homing, safety.
+- Result: after direct PRB checks, blue `A_HOME` moved from `LIMA SIG` to
+  `PROBE SIG`. With `$6=1`, the motor-inert diagnostic's `READY_ACK`, release,
+  and TMAG `detected=0 -> 1 -> 0` states matched ioSender P red/blank changes.
+  Real-magnet A-axis entry and release returned `[PRB:...11.475:1]` and
+  `[PRB:...13.275:1]` respectively.
+- Struggle: one first probe attempt returned `:0` because the diagnostic had
+  exceeded its five-minute scan timeout and had intentionally faulted. A safe
+  disarm and fresh baseline resolved it; no actuator or physical axis moved.
+- Boundary: TB6600 branch fuses remain out. The result does not prove macro
+  execution, `#5064`, G53/G54/G10 semantics, normal-status timing, or Q3/Q4.
+- Evidence: `docs/report/lab-notes/2026-09-10-e-18-motor-inert-p100-handshake.md`;
+  `RPSW-20260910-002`.
+- Next action: archive/transfer `P100.macro` and complete its Q1, parameter,
+  abort, and coordinate-semantics checks without enabling magnetic motion.
 
 <a id="elog-20260910111518"></a>
 ### 🟨 2026-09-10 11:15:18 -0500 - RP23CNC-SOFTWARE/HARDWARE/PARTIAL - Passed motor-inert P100 handshake and local magnetic state

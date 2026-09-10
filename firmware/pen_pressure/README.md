@@ -55,7 +55,11 @@ work.
   after the fixed-dwell version is proven. If adopted, complete F-08 input
   polarity/endpoint evidence, T-01H M5 clearance evidence, and a controller
   timeout/alarm implementation before enabling `GP27_NORMAL_STATUS_ENABLED`.
-- Complete E-18/F-08 for the Pro Micro RP2350 magnetic-output path. The 2026-09-10 motor-inert diagnostic passed the installed Aux0/U2/GP28 handshake and local TMAG scan-state transition, but controller-visible `LIMA` behavior and all `PRB`/G38 evidence remain open.
+- Complete the remaining E-18/F-08 macro and coordinate stages for the Pro
+  Micro RP2350 magnetic-output path. The 2026-09-10 motor-inert diagnostic
+  passed installed Aux0/U2/GP28, local TMAG scan state, controller-visible PRB
+  transitions, and real-magnet A-axis G38 entry/release through GP27/U3.
+  `G65 P100 Q1`, parameters/coordinates, and all motion modes remain open.
 
 ## Force-control strategy
 

@@ -43,8 +43,10 @@ ratio. Controller steps-per-unit must not apply that ratio a second time.
 - Full design and commissioning gates:
   [`HOMING_AND_MAGNETIC_CALIBRATION.md`](HOMING_AND_MAGNETIC_CALIBRATION.md)
 
-The baseline UF2 is unchanged. The candidate source and macro are not authority
-to flash, reterminate GP27/U3 to `PRB`, or enable motion before F-08/E-18.
+The baseline UF2 is unchanged. The 2026-09-10 candidate passed direct and
+actual GP27/U3 motor-inert PRB/G38 transition checks, so the blue return is now
+at `PRB`. It does not authorize P100 motion: macro/parameter semantics, the
+normal-status interval, and all Q3/Q4 commissioning gates remain open.
 
 ## Current records
 

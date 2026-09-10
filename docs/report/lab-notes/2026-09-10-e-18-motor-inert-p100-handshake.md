@@ -103,3 +103,44 @@ motorless PRB/G38 stage of F-08 next, then repeat it through GP27/U3 with a
 controller-visible probe input. See [the test plan](../../testing/TEST_PLAN.md),
 [the wiring table](../../hardware/WIRING_TABLE.md), and
 [RPSW-20260910-001](../../changes/rp23cnc-software/2026/2026-09-10-record-motor-inert-p100-handshake.md).
+
+## Addendum: F-08 PRB/G38 completion stage
+
+The earlier stage was superseded by a controller-visible follow-up on the same
+date. With power off, the blue J1.6 `A_HOME` conductor was moved from `LIMA
+SIG` to `PROBE SIG`; `LIMA GND` and `PROBE GND` were meter-confirmed common, so
+J1.5 `CTRL_GND` remained unchanged. This is the installed endpoint now.
+
+The candidate grblHAL build enabled `PRB`; its installed report included
+`[SIGNALS:HSEP]`, `EXPR`, `PRB` on pin 7, and `Aux out 0,P0` on pin 36. The
+candidate artifact was 889,856 bytes with SHA-256
+`892799841E6262556D380594CF909FE8A40284BC6FA52E798102BFEC36276DC9`.
+
+The three TB6600 branch fuses were removed. This left drivers/motors without
+power while G38 updated only controller coordinates; it did not authorize or
+produce physical axis movement. Direct `PRB SIG`/`GND` dry-contact checks
+established `$6=1`: open was `P` blank and closed was `P` red. Direct X and A
+`G38.3`/`G38.5` captures each returned `[PRB:...:1]`.
+
+The actual toolhead path then passed as follows:
+
+- On this installed active-low Aux0 interface, `M65 P0` requests `READY_ACK`
+  and makes `P` red; `M64 P0` produces `WAIT_REARM` and makes `P` blank.
+- `M65 P0` -> `M64 P0` -> `M65 P0`, with the second arm inside three seconds,
+  entered `SCAN_ACTIVE`. The center magnet produced `detected=0 -> 1 -> 0`
+  and `P` blank -> red -> blank in sync.
+- With `$20=0`, `G21`, and `G91`, the real-magnet A entry test
+  `G38.3 A30 F60` returned `[PRB:0.000,0.000,0.000,11.475:1]`.
+- The real-magnet release test `G38.5 A30 F60` returned
+  `[PRB:0.000,0.000,0.000,13.275:1]`.
+
+One first A probe attempt returned `:0` because the diagnostic had exceeded
+its five-minute `SCAN_ACTIVE` timeout and deliberately entered `FAULT`.
+Lowering Aux0 reset it to `DISARMED`, it reacquired a far-field baseline, and
+the repeated entry/release tests passed. At completion, `M64 P0`, `$20=1`,
+`G90`, and an ioSender reset restored `DISARMED`, `P` blank, soft limits, and
+absolute distance mode. The three TB6600 fuses remain out.
+
+This closes the direct and actual GP27/U3 PRB transition stages of F-08, but
+not filesystem `G65 P100 Q1`, `#5064`, G53/G54/G10 semantics, the 20 ms
+normal-status interval, or any Q3/Q4/production motion authorization.

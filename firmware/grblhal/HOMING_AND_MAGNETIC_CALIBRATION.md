@@ -153,9 +153,9 @@ mistaken for a computed center:
    thresholded TMAG footprint during G38 moves.
 5. RP23CNC issues `M65 P0` on success or any handled abort.
 
-The current physical endpoint remains `LIMA` until F-08 passes. Moving the
-existing GP27/U3 return to `PRB` is a controller-end retermination, not a new
-drag-chain wire.
+The 2026-09-10 direct and actual-path F-08 stages passed, so the existing blue
+GP27/U3 return was moved from `LIMA` to `PRB`; this was a controller-end
+retermination, not a new drag-chain wire. It does not unlock macro modes.
 
 ### GP27 normal-print-status guardrail
 
@@ -254,8 +254,9 @@ at the outer radius relative to the newly registered bed center.
 
 The unchanged baseline build has probe support disabled. The candidate recipe
 [`config/homing-candidate.md`](config/homing-candidate.md) enables probe support,
-NGC parameters, and expressions. It does not certify this use case and no
-candidate UF2 has been flashed.
+NGC parameters, and expressions. It was flashed and passed the direct/actual
+PRB A-axis G38 stages on 2026-09-10; it does not yet certify macro execution or
+magnetic registration motion.
 
 F-08 must prove, on the exact build:
 
