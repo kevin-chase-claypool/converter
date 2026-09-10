@@ -118,6 +118,14 @@ remain unloaded.
 7. After the direct `PRB` test passes, repeat the state and G38 checks through
    the actual Pro Micro GP27 -> PC817C U3 -> controller input path while
    preserving `CTRL_GND`/`TOOL_GND` isolation.
+   Before the replacement actuator is qualified, use only
+   `firmware/pen_pressure/p100_handshake_test/p100_handshake_test.ino` for
+   this stage. It drives the real two-phase GP28/GP27 protocol, including the
+   20 ms inactive interval before its ACK and threshold state during the second
+   arm, but never configures or writes DRV8833, M3/M5, HX711, or LIFT_HOME
+   pins. Verify `G65 P100 Q1` reports the ACK/release result and use the
+   controlled dry-contact checks for every G38 transition. Do not run Q3/Q4
+   with this diagnostic firmware.
 8. Copy the locked `P100.macro` to the controller filesystem. Verify `G65 P100
    Q1`, the expected commissioning abort for Q0/Q3/Q4, `$H` behavior in Q2,
    G53/G54 and `G10 L20` parameter semantics, and that every abort releases

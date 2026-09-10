@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-09 19:40:38 -0500 - RP23CNC-SOFTWARE/SUCCESS - Added motor-inert P100 handshake diagnostic](#elog-20260909194038)
 - [2026-09-09 - HARDWARE/SUCCESS - Documented toolhead pen-mount mechanics](#elog-20260909-documented-toolhead-pen-mount-mechanics)
 - [2026-09-09 - HARDWARE/PARTIAL - Passed guarded LIFT_HOME repeatability](#elog-20260909-passed-guarded-lift-home-repeatability)
 - [2026-09-08 - HARDWARE/VERIFIED - Rechecked installed TMAG5273 identity and stability](#elog-20260908-rechecked-installed-tmag5273-identity-and-stability)
@@ -344,6 +345,32 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260909194038"></a>
+### 🟩 2026-09-09 19:40:38 -0500 - RP23CNC-SOFTWARE/SUCCESS - Added motor-inert P100 handshake diagnostic
+
+- Status: source and staged-test instructions are ready; no controller or
+  toolhead firmware was flashed and F-08/E-18 remain open.
+- Category: rp23cnc-software, hardware, P100, F-08, E-18, magnetic homing,
+  safety.
+- Problem: the integrated toolhead firmware correctly refuses P100 magnetic
+  readiness until it has proven the actuator's safe-lift state. That prevents
+  the real GP28/GP27 path from being tested while replacement N20 selection and
+  actuator characterization are on hold.
+- Result: added `p100_handshake_test.ino`, which initializes only the TMAG5273,
+  GP28 arm input, GP27 return, and service UART. It publishes the same delayed
+  readiness ACK, ACK release, and debounced magnetic state that P100 expects,
+  while leaving all DRV8833, M3/M5, HX711, and LIFT_HOME pins untouched.
+- Boundary: this is controller/probe protocol evidence only. It cannot prove a
+  safe lift or authorize P100 Q3/Q4 center/A motion, production P100, or
+  drawing. The integrated toolhead firmware must be restored before those
+  stages.
+- Verification: `python tools/validate_homing_macro.py` passed for the
+  unchanged production macro. Hardware flash, candidate build, F-08, and E-18
+  are intentionally pending.
+- Evidence: `RPSW-20260909-002`.
+- Next action: run F-08 direct PRB first, then the isolated GP27/U3 path using
+  the diagnostic; retain `LIMA` until both stages pass.
 
 <a id="elog-20260909-documented-toolhead-pen-mount-mechanics"></a>
 ### 🟩 2026-09-09 - HARDWARE/SUCCESS - Documented toolhead pen-mount mechanics

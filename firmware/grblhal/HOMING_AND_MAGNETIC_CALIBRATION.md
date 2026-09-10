@@ -274,7 +274,13 @@ Only after both pass may the existing return be reterminated from `LIMA` to
 ## Commissioning sequence
 
 1. Complete toolhead direction, lift, HX711, and magnetic calibration tests.
-2. Complete F-08 with TB6600 signal leads and motors disconnected.
+2. Complete F-08 with TB6600 signal leads and motors disconnected. For the
+   GP27/U3 stage before the replacement actuator is qualified, flash only
+   [`../pen_pressure/p100_handshake_test/p100_handshake_test.ino`](../pen_pressure/p100_handshake_test/p100_handshake_test.ino).
+   It implements the exact two-phase arm/acknowledgement/threshold protocol
+   while leaving every actuator-related pin untouched. It is sufficient for
+   `P100 Q1` and the isolated-path portion of F-08, but cannot authorize a
+   magnetic motion scan or replace the production toolhead firmware.
 3. Build and archive the accepted candidate; do not overwrite the known-good
    baseline UF2.
 4. Prove `Q1`, then `Q2`, then bounded low-speed `Q3`, then `Q4`.

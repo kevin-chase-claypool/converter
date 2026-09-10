@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-09 | `RPSW-20260909-002` | implemented | [Add motor-inert P100 handshake diagnostic](2026/2026-09-09-add-motor-inert-p100-handshake-diagnostic.md) | `p100`, `magnetic-homing`, `f-08`, `e-18`, `safety` |
 | 2026-09-09 | `RPSW-20260909-001` | implemented | [Add lift-home status to bounded actuator test](2026/2026-09-09-add-lift-home-status-to-bounded-actuator-test.md) | `toolhead`, `t-01g`, `lift-home`, `uart`, `commissioning` |
 | 2026-09-09 | `HW-20260909-003` | implemented | [Document toolhead pen-mount mechanics](../hardware/2026/2026-09-09-document-toolhead-pen-mount-mechanics.md) | `toolhead`, `pen-mount`, `spring`, `mechanics`, `t-01` |
 | 2026-09-09 | `HW-20260909-002` | planned | [Order faster toolhead actuator candidates](../hardware/2026/2026-09-09-order-faster-toolhead-actuator-candidates.md) | `toolhead`, `n20`, `actuator`, `commissioning` |
