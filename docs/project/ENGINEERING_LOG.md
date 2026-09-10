@@ -82,6 +82,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-10 11:15:18 -0500 - RP23CNC-SOFTWARE/HARDWARE/PARTIAL - Passed motor-inert P100 handshake and local magnetic state](#elog-20260910111518)
 - [2026-09-09 19:40:38 -0500 - RP23CNC-SOFTWARE/SUCCESS - Added motor-inert P100 handshake diagnostic](#elog-20260909194038)
 - [2026-09-09 - HARDWARE/SUCCESS - Documented toolhead pen-mount mechanics](#elog-20260909-documented-toolhead-pen-mount-mechanics)
 - [2026-09-09 - HARDWARE/PARTIAL - Passed guarded LIFT_HOME repeatability](#elog-20260909-passed-guarded-lift-home-repeatability)
@@ -345,6 +346,28 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260910111518"></a>
+### 🟨 2026-09-10 11:15:18 -0500 - RP23CNC-SOFTWARE/HARDWARE/PARTIAL - Passed motor-inert P100 handshake and local magnetic state
+
+- Status: installed Aux0/U2/GP28 and local TMAG state passed; controller-visible
+  LIMA interpretation and all PRB/G38 work remain open.
+- Category: rp23cnc-software, hardware, P100, E-18, F-08, magnetic homing,
+  safety.
+- Result: the owner connected the blue `A_HOME` conductor to `LIMA SIG` and
+  used the motor-inert diagnostic. J1.4 measured 9.33 V released and 0.15 mV
+  asserted relative to `CTRL_GND`; COM8 recorded `DISARMED → READY_ACK →
+  WAIT_REARM → SCAN_ACTIVE → DISARMED`. In scan state the installed TMAG
+  changed `detected=0 → 1 → 0` as the center magnet was brought near and away.
+- Boundary: J1.6 sank to 0 V during `READY_ACK`, but ioSender did not expose a
+  usable LIMA state or released-level result. This does not prove controller
+  input interpretation, PRB/G38 behavior, or authorize P100 motion/production
+  firmware.
+- Evidence: `docs/report/lab-notes/2026-09-10-e-18-motor-inert-p100-handshake.md`;
+  `RPSW-20260910-001`.
+- Next action: perform F-08's direct motorless PRB/G38 stage, then test the
+  GP27/U3 return through a controller-visible probe input before reterminating
+  the existing wire.
 
 <a id="elog-20260909194038"></a>
 ### 🟩 2026-09-09 19:40:38 -0500 - RP23CNC-SOFTWARE/SUCCESS - Added motor-inert P100 handshake diagnostic

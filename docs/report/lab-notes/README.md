@@ -32,6 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-10 | E-18 / F-08 staged handshake | Partial — motor-inert local path passed | Installed `M64`/`M65` drove active-low Aux0/U2/GP28 through `READY_ACK`, `WAIT_REARM`, and `SCAN_ACTIVE`; TMAG detection changed 0→1→0. J1.6 sank during readiness, but ioSender did not expose `LIMA` input state; PRB/G38 remains open. |
 | 2026-09-09 | T-01G guarded retract cycles | Partial — repeatability passed | All ten 6.0 V / 0.20 A guarded cycles released GP2 after six down pulses and re-triggered after nine up/retract pulses; backstop margin and timeout remain open. |
 | 2026-09-08 | T-01G LIFT_HOME installation | Partial | Meter-verified normally-open contact installed between Pro Micro GP2 and local TOOL_GND. Input-only firmware telemetry is implemented; USB transition and guarded retract-cycle evidence remain. |
 | 2026-09-08 | T-01A spring geometry | Partial | Current spring: 20.37 mm unloaded to 1.95 mm lower housing endpoint establishes an 18.42 mm in-housing compression span; 25.00 mm free length establishes 4.63 mm captured preload. LIFT/contact/safe-margin values remain. |

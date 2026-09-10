@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-10 | `RPSW-20260910-001` | rp23cnc-software, hardware | verified | [Record motor-inert P100 handshake evidence](rp23cnc-software/2026/2026-09-10-record-motor-inert-p100-handshake.md) |
 | 2026-09-09 | `RPSW-20260909-002` | rp23cnc-software, hardware | implemented | [Add motor-inert P100 handshake diagnostic](rp23cnc-software/2026/2026-09-09-add-motor-inert-p100-handshake-diagnostic.md) |
 | 2026-09-09 | `RPSW-20260909-001` | rp23cnc-software, hardware | implemented | [Add lift-home status to bounded actuator test](rp23cnc-software/2026/2026-09-09-add-lift-home-status-to-bounded-actuator-test.md) |
 | 2026-09-09 | `HW-20260909-003` | hardware, rp23cnc-software | implemented | [Document toolhead pen-mount mechanics](hardware/2026/2026-09-09-document-toolhead-pen-mount-mechanics.md) |
