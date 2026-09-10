@@ -33,6 +33,10 @@ The macro expects:
 - grblHAL homing cycles configured for X/Y only, excluding A; and
 - G54 selected for the plotter's bed-local X/Y/A coordinate frame.
 
+On the installed active-low U2/GP28 path, `M65 P0` asserts the arm and `M64
+P0` releases it. The macro therefore uses `M65` -> `M64` -> `M65` for the
+two-phase protocol and uses `M64` for every cleanup/abort path.
+
 Do not upload or run the production macro until the candidate build and macro
 syntax have passed the controller-side simulator/motorless validation described
 in `docs/testing/TEST_PLAN.md`.

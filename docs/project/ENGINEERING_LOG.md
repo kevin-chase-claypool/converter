@@ -68,6 +68,7 @@ Entry details remain only in the chronology.
 - [2026-09-06 - WINDOWS SOFTWARE/SUCCESS - Centered converter G54 output and corrected M-06 sample](#elog-20260906-centered-converter-g54-output-and-corrected-m-06-sample)
 
 ### RP23CNC and machine software
+- [2026-09-10 13:30:00 -0500 - RP23CNC-SOFTWARE/VERIFIED - Corrected P100 installed Aux0 polarity](#elog-20260910133000)
 - [2026-09-05 - DOCUMENTATION/SUCCESS - Consolidated current documentation](#elog-20260905-consolidated-current-documentation)
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
 - [2026-09-05 - SOFTWARE/TEST - ioSender-to-converter compatibility review](#elog-20260905-iosender-to-converter-compatibility-review)
@@ -347,6 +348,23 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260910133000"></a>
+### 🟩 2026-09-10 13:30:00 -0500 - RP23CNC-SOFTWARE/VERIFIED - Corrected P100 installed Aux0 polarity
+
+- Status: macro and static validator now match the measured active-low U2/GP28
+  hardware; filesystem Q1 execution remains open.
+- Category: firmware, rp23cnc-software, P100, macro, Aux0, GP28, safety.
+- Result: P100 now uses `M65` -> `M64` -> `M65` for readiness, release, and
+  scan entry; every abort and final cleanup uses `M64`. The validator checks
+  that exact normal path, two assertions only, and a final release.
+- Struggle: the historical macro assumed the opposite polarity. The first
+  validator check also counted an error-branch cleanup as normal flow; it was
+  refined before acceptance.
+- Evidence: real-hardware `RPSW-20260910-002`; `RPSW-20260910-003`;
+  `python tools\validate_homing_macro.py`.
+- Next action: transfer the corrected macro and test Q1 only with all TB6600
+  branch fuses still removed.
 
 <a id="elog-20260910125500"></a>
 ### 🟩 2026-09-10 12:55:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Passed real-magnet PRB/G38 GP27/U3 path

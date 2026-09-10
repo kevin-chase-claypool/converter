@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-10 | `RPSW-20260910-003` | rp23cnc-software, hardware | verified | [Correct P100 installed Aux0 polarity](rp23cnc-software/2026/2026-09-10-correct-p100-aux-polarity.md) |
 | 2026-09-10 | `RPSW-20260910-002` | rp23cnc-software, hardware | verified | [Verify real-magnet PRB/G38 path](rp23cnc-software/2026/2026-09-10-prb-g38-magnetic-path.md) |
 | 2026-09-10 | `RPSW-20260910-001` | rp23cnc-software, hardware | verified | [Record motor-inert P100 handshake evidence](rp23cnc-software/2026/2026-09-10-record-motor-inert-p100-handshake.md) |
 | 2026-09-09 | `RPSW-20260909-002` | rp23cnc-software, hardware | implemented | [Add motor-inert P100 handshake diagnostic](rp23cnc-software/2026/2026-09-09-add-motor-inert-p100-handshake-diagnostic.md) |

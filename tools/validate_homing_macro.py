@@ -63,6 +63,30 @@ def validate_safety_contract(text: str) -> None:
     )
 
 
+def validate_installed_aux_polarity(text: str) -> None:
+    aux_commands = [
+        line.strip().lower()
+        for line in text.splitlines()
+        if line.strip().lower() in {"m64 p0", "m65 p0"}
+    ]
+    normal_handshake = re.compile(
+        r"\(two-phase readiness handshake.*?\)\s*"
+        r"\(installed u2/gp28 path.*?\)\s*"
+        r"m65 p0\s+g4 p\[#<ready_wait_s>\].*?"
+        r"o120 endif\s+m64 p0\s+g4 p\[#<edge_settle_s>\].*?"
+        r"o122 endif\s+m65 p0\s+g4 p\[#<edge_settle_s>\]",
+        re.DOTALL,
+    )
+    assert normal_handshake.search(text.lower()), (
+        "installed active-low U2/GP28 normal path must arm, release, then "
+        "re-arm with M65, M64, M65"
+    )
+    assert aux_commands.count("m65 p0") == 2, (
+        "only readiness and scan entry may assert Aux0; cleanup must release it"
+    )
+    assert aux_commands[-1] == "m64 p0", "P100 must release Aux0 on exit"
+
+
 def validate_centroid_math() -> None:
     expected_x = 12.5
     expected_y = -7.25
@@ -124,6 +148,7 @@ def main() -> None:
     text = MACRO.read_text(encoding="utf-8")
     validate_flow_control(text)
     validate_safety_contract(text)
+    validate_installed_aux_polarity(text)
     validate_centroid_math()
     validate_a_math()
     validate_sensor_to_pen_registration()

@@ -146,12 +146,12 @@ No additional moving-harness conductor is required.
 The two-phase handshake prevents the first threshold crossing from being
 mistaken for a computed center:
 
-1. RP23CNC issues `M64 P0` while the toolhead is safe and lifted.
+1. RP23CNC issues `M65 P0` while the toolhead is safe and lifted.
 2. GP27 asserts only as a readiness acknowledgement.
-3. RP23CNC verifies it, issues `M65 P0`, and verifies GP27 releases.
-4. RP23CNC issues `M64 P0` a second time. GP27 now represents only the
+3. RP23CNC verifies it, issues `M64 P0`, and verifies GP27 releases.
+4. RP23CNC issues `M65 P0` a second time. GP27 now represents only the
    thresholded TMAG footprint during G38 moves.
-5. RP23CNC issues `M65 P0` on success or any handled abort.
+5. RP23CNC issues `M64 P0` on success or any handled abort.
 
 The 2026-09-10 direct and actual-path F-08 stages passed, so the existing blue
 GP27/U3 return was moved from `LIMA` to `PRB`; this was a controller-end

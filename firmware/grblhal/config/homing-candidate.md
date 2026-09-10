@@ -19,7 +19,8 @@ and the baseline control-input configuration.
    direct simulated `PRB` input.
 4. Confirm `NEWOPT` reports expression support, `$pins` reports `PRB`, and
    `G65 P100 Q2`/flow-control parsing succeeds with the commissioning lock on.
-5. Only then test GP27/U3 electrically and decide whether to move the existing
-   controller-end conductor from `LIMA` to `PRB`.
+5. The 2026-09-10 candidate passed direct and actual GP27/U3 PRB/G38 tests;
+   the existing blue return is now at `PRB`. Next verify `G65 P100 Q1` with
+   the installed active-low command order (`M65` -> `M64` -> `M65`).
 
 This repository update does not generate, flash, or approve a replacement UF2.

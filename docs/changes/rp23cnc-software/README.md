@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-10 | `RPSW-20260910-003` | verified | [Correct P100 installed Aux0 polarity](2026/2026-09-10-correct-p100-aux-polarity.md) | `p100`, `aux0`, `gp28`, `safety`, `macro` |
 | 2026-09-10 | `RPSW-20260910-002` | verified | [Verify real-magnet PRB/G38 path](2026/2026-09-10-prb-g38-magnetic-path.md) | `p100`, `f-08`, `probe`, `g38`, `magnetic-homing`, `safety` |
 | 2026-09-10 | `RPSW-20260910-001` | verified | [Record motor-inert P100 handshake evidence](2026/2026-09-10-record-motor-inert-p100-handshake.md) | `p100`, `magnetic-homing`, `e-18`, `f-08`, `safety` |
 | 2026-09-09 | `RPSW-20260909-002` | implemented | [Add motor-inert P100 handshake diagnostic](2026/2026-09-09-add-motor-inert-p100-handshake-diagnostic.md) | `p100`, `magnetic-homing`, `f-08`, `e-18`, `safety` |

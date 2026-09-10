@@ -92,13 +92,14 @@ o114 if [#<mode> EQ 4]
 o114 endif
 
 (Two-phase readiness handshake on Aux0/GP28 and PRB/GP27.)
-M64 P0
+(Installed U2/GP28 path is active-low: M65 asserts arm; M64 releases it.)
+M65 P0
 G4 P[#<ready_wait_s>]
 o120 if [#<_probe_state> NE 1]
-  M65 P0
+  M64 P0
   (abort,P100 READY acknowledgement missing)
 o120 endif
-M65 P0
+M64 P0
 G4 P[#<edge_settle_s>]
 o121 if [#<_probe_state> NE 0]
   (abort,P100 READY acknowledgement did not release)
@@ -109,27 +110,27 @@ o122 if [#<mode> EQ 1]
   o100 return [1]
 o122 endif
 
-M64 P0
+M65 P0
 G4 P[#<edge_settle_s>]
 
 (Center raster: equal-pitch serpentine X chords in machine coordinates.)
 o200 if [[#<mode> EQ 0] OR [#<mode> EQ 3]]
   o201 if [#<_probe_state> NE 0]
-    M65 P0
+    M64 P0
     (abort,P100 scan corner is magnetically active)
   o201 endif
   #<scan_width> = [#<scan_max_x> - #<scan_min_x>]
   #<scan_height> = [#<scan_max_y> - #<scan_min_y>]
   o202 if [[#<scan_width> LE 0] OR [#<scan_width> GT 101.6]]
-    M65 P0
+    M64 P0
     (abort,P100 invalid X scan bounds)
   o202 endif
   o203 if [[#<scan_height> LE 0] OR [#<scan_height> GT 101.6]]
-    M65 P0
+    M64 P0
     (abort,P100 invalid Y scan bounds)
   o203 endif
   o204 if [#<row_pitch> LE 0]
-    M65 P0
+    M64 P0
     (abort,P100 row pitch is not configured)
   o204 endif
 
@@ -151,7 +152,7 @@ o200 if [[#<mode> EQ 0] OR [#<mode> EQ 3]]
         G91 G38.5 X[#<remaining>] F[#<scan_feed>]
         G90
         o213 if [#5070 NE 1]
-          M65 P0
+          M64 P0
           (abort,P100 missing positive-row magnetic exit)
         o213 endif
         #<exit> = #5061
@@ -160,14 +161,14 @@ o200 if [[#<mode> EQ 0] OR [#<mode> EQ 3]]
           G91 G38.3 X[#<remaining>] F[#<scan_feed>]
           G90
           o215 if [#5070 EQ 1]
-            M65 P0
+            M64 P0
             (abort,P100 multiple magnetic chords on one row)
           o215 endif
         o214 endif
         #<chord_width> = ABS[#<exit> - #<entry>]
         #<chord_mid_x> = [[#<entry> + #<exit>] / 2]
         o216 if [[#<chord_width> LT #<minimum_chord_width>] OR [#<chord_width> GT #<maximum_chord_width>]]
-          M65 P0
+          M64 P0
           (abort,P100 magnetic chord width outside limits)
         o216 endif
         #<hit_rows> = [#<hit_rows> + 1]
@@ -185,7 +186,7 @@ o200 if [[#<mode> EQ 0] OR [#<mode> EQ 3]]
         G91 G38.5 X[-#<remaining>] F[#<scan_feed>]
         G90
         o221 if [#5070 NE 1]
-          M65 P0
+          M64 P0
           (abort,P100 missing negative-row magnetic exit)
         o221 endif
         #<exit> = #5061
@@ -194,14 +195,14 @@ o200 if [[#<mode> EQ 0] OR [#<mode> EQ 3]]
           G91 G38.3 X[-#<remaining>] F[#<scan_feed>]
           G90
           o223 if [#5070 EQ 1]
-            M65 P0
+            M64 P0
             (abort,P100 multiple magnetic chords on one row)
           o223 endif
         o222 endif
         #<chord_width> = ABS[#<exit> - #<entry>]
         #<chord_mid_x> = [[#<entry> + #<exit>] / 2]
         o224 if [[#<chord_width> LT #<minimum_chord_width>] OR [#<chord_width> GT #<maximum_chord_width>]]
-          M65 P0
+          M64 P0
           (abort,P100 magnetic chord width outside limits)
         o224 endif
         #<hit_rows> = [#<hit_rows> + 1]
@@ -216,22 +217,22 @@ o200 if [[#<mode> EQ 0] OR [#<mode> EQ 3]]
   o210 endwhile
 
   o230 if [#<hit_rows> LT #<minimum_hit_rows>]
-    M65 P0
+    M64 P0
     (abort,P100 too few magnetic raster rows)
   o230 endif
   o231 if [#<sum_width> LE 0]
-    M65 P0
+    M64 P0
     (abort,P100 invalid zero-area magnetic footprint)
   o231 endif
 
   #<centroid_x> = [#<sum_x_weight> / #<sum_width>]
   #<centroid_y> = [#<sum_y_weight> / #<sum_width>]
   o232 if [[#<centroid_x> LT #<scan_min_x>] OR [#<centroid_x> GT #<scan_max_x>]]
-    M65 P0
+    M64 P0
     (abort,P100 X centroid outside scan bounds)
   o232 endif
   o233 if [[#<centroid_y> LT #<scan_min_y>] OR [#<centroid_y> GT #<scan_max_y>]]
-    M65 P0
+    M64 P0
     (abort,P100 Y centroid outside scan bounds)
   o233 endif
 
@@ -245,7 +246,7 @@ o200 if [[#<mode> EQ 0] OR [#<mode> EQ 3]]
 o200 endif
 
 o240 if [#<mode> EQ 3]
-  M65 P0
+  M64 P0
   G54 G0 X0 Y0
   (print,P100 Q3 center registration complete)
   o100 return [1]
@@ -260,7 +261,7 @@ o300 if [[#<mode> EQ 0] OR [#<mode> EQ 4]]
     G91 G38.5 A[#<a_maximum_width>] F[#<a_scan_feed>]
     G90
     o302 if [#5070 NE 1]
-      M65 P0
+      M64 P0
       G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
       (abort,P100 could not leave initial A magnetic footprint)
     o302 endif
@@ -268,16 +269,16 @@ o300 if [[#<mode> EQ 0] OR [#<mode> EQ 4]]
 
   G91 G38.3 A[#<a_search_degrees>] F[#<a_scan_feed>]
   G90
-  o303 if [#5070 NE 1]
-    M65 P0
+o303 if [#5070 NE 1]
+    M64 P0
     G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
     (abort,P100 first A entry not found)
   o303 endif
   #<a_entry_1> = #5064
   G91 G38.5 A[#<a_maximum_width>] F[#<a_scan_feed>]
   G90
-  o304 if [#5070 NE 1]
-    M65 P0
+o304 if [#5070 NE 1]
+    M64 P0
     G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
     (abort,P100 first A exit not found)
   o304 endif
@@ -285,16 +286,16 @@ o300 if [[#<mode> EQ 0] OR [#<mode> EQ 4]]
 
   G91 G38.3 A[#<a_search_degrees>] F[#<a_scan_feed>]
   G90
-  o305 if [#5070 NE 1]
-    M65 P0
+o305 if [#5070 NE 1]
+    M64 P0
     G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
     (abort,P100 second A entry not found)
   o305 endif
   #<a_entry_2> = #5064
   G91 G38.5 A[#<a_maximum_width>] F[#<a_scan_feed>]
   G90
-  o306 if [#5070 NE 1]
-    M65 P0
+o306 if [#5070 NE 1]
+    M64 P0
     G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
     (abort,P100 second A exit not found)
   o306 endif
@@ -302,8 +303,8 @@ o300 if [[#<mode> EQ 0] OR [#<mode> EQ 4]]
 
   #<a_width_1> = ABS[#<a_exit_1> - #<a_entry_1>]
   #<a_width_2> = ABS[#<a_exit_2> - #<a_entry_2>]
-  o307 if [[#<a_width_1> GT #<a_maximum_width>] OR [#<a_width_2> GT #<a_maximum_width>]]
-    M65 P0
+o307 if [[#<a_width_1> GT #<a_maximum_width>] OR [#<a_width_2> GT #<a_maximum_width>]]
+    M64 P0
     G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
     (abort,P100 A magnetic width outside limits)
   o307 endif
@@ -311,8 +312,8 @@ o300 if [[#<mode> EQ 0] OR [#<mode> EQ 4]]
   #<a_center_1> = [[#<a_entry_1> + #<a_exit_1>] / 2]
   #<a_center_2> = [[#<a_entry_2> + #<a_exit_2>] / 2]
   #<a_spacing> = [#<a_center_2> - #<a_center_1>]
-  o308 if [ABS[#<a_spacing> - #<a_expected_spacing>] GT #<a_spacing_tolerance>]
-    M65 P0
+o308 if [ABS[#<a_spacing> - #<a_expected_spacing>] GT #<a_spacing_tolerance>]
+    M64 P0
     G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
     (abort,P100 A index spacing validation failed)
   o308 endif
@@ -325,7 +326,7 @@ o300 if [[#<mode> EQ 0] OR [#<mode> EQ 4]]
   (print,P100 outer magnet registered as G54 A0)
 o300 endif
 
-M65 P0
+M64 P0
 M5
 G54 G90 G0 X0 Y0 A0
 (print,P100 HOME + REGISTER complete)
