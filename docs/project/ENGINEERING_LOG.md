@@ -83,6 +83,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-11 11:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Recorded P100 Q3 candidate scan parameters](#elog-20260911110000)
 - [2026-09-11 10:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Recorded P100 Q3 candidate G53 rectangle](#elog-20260911103000)
 - [2026-09-11 10:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Verified isolated P100 Q2 X/Y home stage](#elog-20260911100000)
 - [2026-09-10 12:55:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Passed real-magnet PRB/G38 GP27/U3 path](#elog-20260910125500)
@@ -350,6 +351,23 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260911110000"></a>
+### 🟨 2026-09-11 11:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Recorded P100 Q3 candidate scan parameters
+
+- Status: candidate offset, pitch, and feed are recorded and statically
+  checked; Q3 remains locked.
+- Category: rp23cnc-software, hardware, P100, Q3, scan feed, tool offset,
+  safety.
+- Result: first-pass Q3 values are 10.000 mm pitch, 1000.000 mm/min feed, and
+  `pen - TMAG = (0.000, -29.4892)` mm. The latter converts the operator's
+  1.160992 in direct-south measurement to negative machine Y. The validator
+  enforces these candidate constants and confirms the offset-valid gate stays
+  zero.
+- Evidence: `docs/report/lab-notes/2026-09-11-p100-q3-candidate-parameters.md`;
+  `RPSW-20260911-004`.
+- Next action: make an inspectable first-pass raster plan, complete a
+  no-motion magnetic corner-baseline check, then reconsider the Q3 lock.
 
 <a id="elog-20260911103000"></a>
 ### 🟨 2026-09-11 10:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Recorded P100 Q3 candidate G53 rectangle

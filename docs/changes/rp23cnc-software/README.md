@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-11 | `RPSW-20260911-004` | implemented | [Record P100 Q3 Candidate Scan Parameters](2026/2026-09-11-record-p100-q3-candidate-parameters.md) | `P100`, `Q3`, `scan-feed`, `tool-offset`, `safety` |
 | 2026-09-11 | `RPSW-20260911-003` | implemented | [Record P100 Q3 Candidate Scan Rectangle](2026/2026-09-11-record-p100-q3-candidate-rectangle.md) | `P100`, `Q3`, `scan-bounds`, `G53`, `safety` |
 | 2026-09-11 | `RPSW-20260911-002` | verified | [Enable Isolated P100 Q2 X/Y Homing](2026/2026-09-11-enable-isolated-p100-q2-home.md) | `P100`, `homing`, `safety`, `grblHAL` |
 | 2026-09-11 | `RPSW-20260911-001` | verified | [Verify P100 Q1 probe handshake](2026/2026-09-11-verify-p100-q1-probe-handshake.md) | `p100`, `q1`, `probe`, `gp27`, `safety` |

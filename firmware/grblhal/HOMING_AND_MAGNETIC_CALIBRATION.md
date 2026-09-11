@@ -54,6 +54,12 @@ It is inside the proven X `-455..0` and Y `-446..0` envelope. These are
 candidate bounds only: Q3 stays locked until row pitch, scan feed, and the
 first supervised raster plan are reviewed.
 
+The current candidate scan parameters are 10.000 mm row pitch and 1000.000
+mm/min feed. The current candidate `pen - TMAG` vector is `(0.000, -29.4892)`
+mm: the pen is 1.160992 in directly south of the TMAG. This is distinct from
+the historical temporary G54 manual-alignment measurement; neither
+`#<commissioned>` nor `#<sensor_to_pen_offset_valid>` has been released.
+
 ### Planned interchangeable-tool preflight
 
 Before a tool change can be considered automatically safe, the P100 `Q0`

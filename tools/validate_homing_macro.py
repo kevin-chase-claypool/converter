@@ -156,6 +156,16 @@ def validate_candidate_scan_rectangle(text: str) -> None:
     assert max_y - min_y == 100.0, "candidate Y scan height must be 100 mm"
 
 
+def validate_candidate_scan_parameters(text: str) -> None:
+    assert assignment(text, "sensor_to_pen_x") == 0.0
+    assert assignment(text, "sensor_to_pen_y") == -29.4892
+    assert assignment(text, "row_pitch") == 10.0
+    assert assignment(text, "scan_feed") == 1000.0
+    assert "#<sensor_to_pen_offset_valid> = 0" in text.lower(), (
+        "candidate offset must not unlock Q3 before a supervised scan"
+    )
+
+
 def validate_centroid_math() -> None:
     expected_x = 12.5
     expected_y = -7.25
@@ -220,6 +230,7 @@ def main() -> None:
     validate_commissioning_locks(text)
     validate_installed_aux_polarity(text)
     validate_candidate_scan_rectangle(text)
+    validate_candidate_scan_parameters(text)
     validate_centroid_math()
     validate_a_math()
     validate_sensor_to_pen_registration()
