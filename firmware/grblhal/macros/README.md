@@ -99,3 +99,9 @@ from a magnetically clear TMAG position, it performs the actual P100
 180 seconds, then releases automatically. During the hold, manual jogging is
 allowed: P blank means clear and P red means a detected magnetic field. It
 contains no axis motion, spindle, or probe move of its own.
+
+`P107.macro` is the Q5 preposition diagnostic. After a successful Q2, it makes
+only the bounded G53 rapid from the X/Y-home position to Q5's southwest scan
+corner `X=-280`, `Y=-266` mm and stops. It contains no `$H`, probe, Aux0,
+A-axis, or G54-write command. Use it to distinguish the first Q5 travel move
+from an unexpected additional physical homing cycle.

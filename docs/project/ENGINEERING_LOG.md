@@ -83,6 +83,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-11 13:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated unexpected Q5 limit approaches](#elog-20260911130000)
 - [2026-09-11 12:00:00 -0500 - RP23CNC-SOFTWARE/VERIFIED - P100 Q5 center-magnet centroid survey](#elog-20260911120000)
 - [2026-09-11 11:30:00 -0500 - RP23CNC-SOFTWARE/IMPLEMENTED - Added P106 manual magnetic survey](#elog-20260911113000)
 - [2026-09-11 11:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Recorded P100 Q3 candidate scan parameters](#elog-20260911110000)
@@ -353,6 +354,25 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260911130000"></a>
+### 🟨 2026-09-11 13:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated unexpected Q5 limit approaches
+
+- Status: P107 diagnostic implemented; installed result pending.
+- Category: rp23cnc-software, hardware, P100, P107, Q5, homing, limits,
+  safety.
+- Observation: after Q5, the operator observed three apparent X/Y limit-switch
+  approaches. Source inspection confirms the Q5 path contains no `$H`, but the
+  controller console's rolling buffer did not preserve the decisive early
+  portion of the trace.
+- Decision: do not repeat the full Q5 raster. Run P107 after Q2 instead; it
+  performs only the known-safe Q5 preposition to G53 `X=-280`, `Y=-266` and
+  emits concise start/completion markers.
+- Evidence: `RPSW-20260911-007`;
+  `docs/report/lab-notes/2026-09-11-p107-q5-preposition-diagnostic.md`.
+- Next action: execute Q2 then P107 with X/Y clear. If it enters `Home` or
+  approaches a switch, stop and record its final MPos/status; otherwise use
+  the result to isolate a later Q5 stage.
 
 <a id="elog-20260911120000"></a>
 ### 🟩 2026-09-11 12:00:00 -0500 - RP23CNC-SOFTWARE/VERIFIED - P100 Q5 center-magnet centroid survey

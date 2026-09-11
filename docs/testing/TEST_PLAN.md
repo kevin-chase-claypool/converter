@@ -136,11 +136,15 @@ remain unloaded.
    `pen - TMAG` vector is `(0, -29.4892)` mm. Retain the Q3 lock until the
    P106 magnetic corner baseline and first observed raster plan are reviewed.
    Do not bypass the Q0/Q3/Q4 commissioning locks.
-9. After Q2, run `G65 P100 Q5` only under observation. It is the automatic
+9. Before re-running Q5 after any observation of unexpected limit approaches,
+   run `G65 P107` following Q2. It must make exactly one G53 move to
+   `MPos X=-280, Y=-266` without entering `Home` or reaching either X/Y
+   switch. This isolates Q5's preposition from its handshake and raster.
+10. After Q2, run `G65 P100 Q5` only under observation. It is the automatic
    survey pass: it may traverse the candidate rectangle and stop at the
    calculated TMAG centroid, but must not change G54 or A. Record final MPos
    and the completion message before considering registration.
-9. Send `G90`, reset the controller, and do not use the motorless test's
+11. Send `G90`, reset the controller, and do not use the motorless test's
    internal coordinates as machine references.
 
 Pass requires deterministic polarity, successful X transition captures,

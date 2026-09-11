@@ -1,0 +1,11 @@
+(P107 - Q5 preposition diagnostic)
+(Requires a successful Q2 immediately beforehand.)
+(One bounded G53 move only: no $H, probe, Aux0, A, or G54 write.)
+
+M5
+G4 P3.0
+G21 G90 G94 G17 G54
+(print,P107 start: no homing; moving TMAG to Q5 southwest scan corner)
+G53 G0 X-280.0 Y-266.0
+(print,P107 complete: at Q5 southwest scan corner; inspect MPos and limits)
+o107 return [1]
