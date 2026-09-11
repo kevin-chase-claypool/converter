@@ -66,7 +66,7 @@ o005 endif
 #<approach_distance> = 2.0
 #<minimum_hit_rows> = 3
 #<minimum_chord_width> = 0.5
-#<maximum_chord_width> = 25.0
+#<maximum_chord_width> = 50.0
 #<lift_dwell_s> = 3.0
 #<ready_wait_s> = 2.0
 #<edge_settle_s> = 0.10

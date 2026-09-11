@@ -184,6 +184,7 @@ def validate_candidate_scan_parameters(text: str) -> None:
     assert assignment(text, "row_pitch") == 10.0
     assert assignment(text, "scan_feed") == 1000.0
     assert assignment(text, "ready_wait_s") == 2.0
+    assert assignment(text, "maximum_chord_width") == 50.0
     assert "#<sensor_to_pen_offset_valid> = 0" in text.lower(), (
         "candidate offset must not unlock Q3 before a supervised scan"
     )

@@ -57,3 +57,7 @@ remain locked.
 
 Q5 commands automatic X/Y motion. Run it only with X/Y clear, slow rates, and
 observation. It supplies no G54/A registration result.
+
+The first valid chord measured 36.687 mm at Y `-226.000`; the provisional
+25 mm ceiling rejected it safely. The candidate ceiling is now 50 mm for the
+next observed pass.
