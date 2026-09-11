@@ -87,6 +87,7 @@ Entry details remain only in the chronology.
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Add P112 outer-index survey](#elog-20260911-add-p112-outer-index-survey)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/MIXED - Measured P112 outer-index spacing](#elog-20260911-measured-p112-outer-index-spacing)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Retune P100 Q5 raster density](#elog-20260911-retune-p100-q5-raster-density)
+- [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/PARTIAL - Complete non-registering P112 survey](#elog-20260911-complete-non-registering-p112-survey)
 - [2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row](#elog-20260911143000)
 - [2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster](#elog-20260911140000)
 - [2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake](#elog-20260911133000)
@@ -445,6 +446,21 @@ Add new entries at the top of the log below this line.
   mm/min request may be capped by grblHAL.
 - Next action: copy P100 to SD, verify its file listing, then run a supervised
   Q5 survey and inspect its status feed before using it as P112's prerequisite.
+
+<a id="elog-20260911-complete-non-registering-p112-survey"></a>
+### 🟨 2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/PARTIAL - Complete non-registering P112 survey
+
+- Status: controller-side M-09 capture and final trim passed; physical visual
+  center verification remains open.
+- Category: rp23cnc-software, hardware, P112, A-axis, index-magnet, M-09,
+  safety.
+- Evidence: the second footprint captured `A8557.209..8662.959`; P112 reported
+  its completion message and trimmed to its midpoint at
+  `MPos:-10.500,-218.363,A8610.084`. The final status was `Idle`, `FS:0`, and
+  `Pn:ZA`; no error, alarm, or G54 write occurred.
+- Boundary: P112 remains survey-only. Q4 and Q0 remain locked until the
+  operator visually verifies that TMAG is centered over the physical index
+  magnet and registration semantics are separately reviewed.
 
 <a id="elog-20260911143000"></a>
 ### 🟨 2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row

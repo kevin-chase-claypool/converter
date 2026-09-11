@@ -57,6 +57,13 @@ provisional `4320 +/- 10` gate rejected this repeatable 11.818-degree deviation.
 P112 now uses a bounded `4320 +/- 15` gate; it still makes no G54 write and Q4
 remains locked pending a successful installed survey.
 
+With the revised gate installed, P112 completed successfully. Its second-pass
+footprint was captured at `A8557.209..8662.959`; P112 trimmed backward to the
+computed midpoint and stopped at `MPos:-10.500,-218.363,A8610.084`. It printed
+its survey-complete message, released the probe state, and did not alter G54.
+Visual confirmation that the stopped TMAG is over the physical index magnet is
+still pending before any registration mode is considered.
+
 ## Boundary
 
 Q5 is hardware-verified as a center-magnet survey. It is not Q3 and does not

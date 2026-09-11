@@ -59,7 +59,11 @@ the final G53 trim.
   footprint centers were 4331.818 motor degrees apart; widths were 106.425 and
   105.750 degrees. The original +/-10 gate rejected it by 1.818 degrees.
   The bounded +/-15 gate accepts that measured result; a successful installed
-  completion remains required before registration is enabled.
+  completion then parked at pass-two center
+  `MPos:-10.500,-218.363,A8610.084` after the observed second footprint
+  `A8557.209..8662.959`. It printed the completion message, released PRB, and
+  made no G54 write. Physical visual center confirmation remains required
+  before registration is enabled.
 
 ## Struggles and rejected approaches
 

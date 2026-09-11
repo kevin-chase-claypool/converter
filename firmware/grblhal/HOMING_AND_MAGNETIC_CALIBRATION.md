@@ -49,7 +49,9 @@ on the same +X line. It captures two A footprints and stops at their second-pass
 averaged center without changing G54. It accepts center-to-center spacing within
 `4320 +/- 15` A motor degrees: the installed two-footprint observation measured
 `4331.818` degrees, a repeatable 11.818-degree deviation from nominal. It is the
-M-09 precursor; Q4 remains locked.
+non-registering M-09 capture stage. The revised installed run completed and
+trimmed to pass-two center `MPos:-10.500,-218.363,A8610.084` without changing
+G54. Physical visual center confirmation is still required; Q4 remains locked.
 
 The eventual single ioSender button sends `G65 P100 Q0`. Separate modes exist
 so each stage can be commissioned without bypassing the others.

@@ -42,7 +42,9 @@ searches run at 10,000 motor-degrees/min: at 12:1,
 that is 2.31 bed RPM and no more than 54 seconds for the 9,000 motor-degree
 search allowance. The final move trims backward from the second exit to that
 second observed center; it does not add a third rotation. Q4 remains locked
-until this survey is physically verified.
+until this survey's physical center stop is visually verified. The installed
+revised survey completed at `MPos:-10.500,-218.363,A8610.084` without a G54
+write.
 
 Q5 is a verified controlled motion stage. Run P111 first, then Q5. Q5 contains
 no `$H` command and does not home. It uses the
