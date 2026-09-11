@@ -71,6 +71,7 @@ Entry details remain only in the chronology.
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Enable verified P100 Q0 registration](#elog-20260911-enable-verified-p100-q0-registration)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Complete first automated P100 Q0 registration](#elog-20260911-complete-first-automated-p100-q0-registration)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Verify P100 Q0 fast center return](#elog-20260911-verify-p100-q0-fast-center-return)
+- [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Verify P113 one-command registration wrapper](#elog-20260911-verify-p113-one-command-registration-wrapper)
 - [2026-09-10 13:30:00 -0500 - RP23CNC-SOFTWARE/VERIFIED - Corrected P100 installed Aux0 polarity](#elog-20260910133000)
 - [2026-09-05 - DOCUMENTATION/SUCCESS - Consolidated current documentation](#elog-20260905-consolidated-current-documentation)
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -96,6 +97,7 @@ Entry details remain only in the chronology.
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Enable verified P100 Q0 registration](#elog-20260911-enable-verified-p100-q0-registration)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Complete first automated P100 Q0 registration](#elog-20260911-complete-first-automated-p100-q0-registration)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Verify P100 Q0 fast center return](#elog-20260911-verify-p100-q0-fast-center-return)
+- [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Verify P113 one-command registration wrapper](#elog-20260911-verify-p113-one-command-registration-wrapper)
 - [2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row](#elog-20260911143000)
 - [2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster](#elog-20260911140000)
 - [2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake](#elog-20260911133000)
@@ -553,6 +555,18 @@ Add new entries at the top of the log below this line.
   looked good.
 - Boundary: raster `F2000` remains capped by `$110=1500`; do not claim a
   faster achieved crossing rate without a separate supervised loaded-rate test.
+
+<a id="elog-20260911-verify-p113-one-command-registration-wrapper"></a>
+### 🟩 2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Verify P113 one-command registration wrapper
+
+- Status: P113 is the verified normal HOME + REGISTER command.
+- Category: firmware, hardware, P113, P114, P100, P111, G54, nested-macro,
+  safety.
+- Evidence: motor-inert `G65 P114` printed both P101 and P114 PASS messages,
+  proving the controller returns correctly from a nested filesystem macro.
+  `G65 P113` then printed P100 center-registration, P100 completion, and P113
+  wrapper-complete messages, parked at `MPos:-232.738,-190.013,A8666.785`, and
+  the operator visually confirmed the pen tip perfectly centered.
 
 <a id="elog-20260911143000"></a>
 ### 🟨 2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row
