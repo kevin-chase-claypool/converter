@@ -1,5 +1,5 @@
 (P100 - Theta plotter home and magnetic registration)
-(Q0 full startup; Q1 readiness; Q2 X/Y home; Q3 center; Q4 A index)
+(Q0 full startup; Q1 readiness; Q2 X/Y home; Q3 center; Q4 A index; Q5 survey)
 (Production ioSender invocation: G65 P100 Q0)
 (Requires PROBE_ENABLE, NGC expressions, FS macros, Aux0=P0, and PRB)
 
@@ -84,7 +84,7 @@ o101 if [#31 LT 0]
   (print,P100 invalid Q mode)
   o901 error[39]
 o101 endif
-o102 if [#31 GT 4]
+o102 if [#31 GT 5]
   (print,P100 invalid Q mode)
   o902 error[39]
 o102 endif
@@ -132,7 +132,7 @@ o111 endif
 o112 if [#31 EQ 0]
   G53 G0 X[#<scan_min_x>] Y[#<scan_min_y>]
 o112 endif
-o113 if [#31 EQ 3]
+o113 if [[#31 EQ 3] OR [#31 EQ 5]]
   G53 G0 X[#<scan_min_x>] Y[#<scan_min_y>]
 o113 endif
 o114 if [#31 EQ 4]
@@ -164,7 +164,7 @@ M65 P0
 G4 P[#<edge_settle_s>]
 
 (Center raster: equal-pitch serpentine X chords in machine coordinates.)
-o200 if [[#31 EQ 0] OR [#31 EQ 3]]
+o200 if [[[#31 EQ 0] OR [#31 EQ 3]] OR [#31 EQ 5]]
   o201 if [#<_probe_state> NE 0]
     M64 P0
     (print,P100 scan corner is magnetically active)
@@ -303,6 +303,11 @@ o200 if [[#31 EQ 0] OR [#31 EQ 3]]
   (Centroid Approach and Registration Pass.)
   G53 G0 X[#<centroid_x> - #<approach_distance>] Y[#<centroid_y> - #<approach_distance>]
   G53 G1 X[#<centroid_x>] Y[#<centroid_y>] F[#<registration_feed>]
+  o234 if [#31 EQ 5]
+    M64 P0
+    (print,P100 Q5 survey complete: TMAG is at calculated centroid; inspect MPos)
+    o100 return [1]
+  o234 endif
   G54
   (At the TMAG centroid, apply the pen-minus-TMAG installed offset.)
   G10 L20 P1 X[#<sensor_to_pen_x>] Y[#<sensor_to_pen_y>]

@@ -95,6 +95,12 @@ def validate_commissioning_locks(text: str) -> None:
         "o001 return [1]",
         "o004 if [#17 eq 2]",
         "$h\n  (print,p100 q2 x/y homing complete)\n  o004 return [1]",
+        "o102 if [#31 gt 5]",
+        "o113 if [[#31 eq 3] or [#31 eq 5]]",
+        "o200 if [[[#31 eq 0] or [#31 eq 3]] or [#31 eq 5]]",
+        "o234 if [#31 eq 5]",
+        "p100 q5 survey complete: tmag is at calculated centroid; inspect mpos",
+        "o100 return [1]",
         "o999 error[39]",
         "p100 mode locked: q1 readiness and q2 x/y home only are enabled",
         "o103 if [#31 eq 0]",
@@ -114,6 +120,13 @@ def validate_commissioning_locks(text: str) -> None:
     )
     assert lower.index("o004 if [#17 eq 2]") < lower.index("#31 = #17"), (
         "Q2 must dispatch before named-variable initialization and magnetic paths"
+    )
+    q5_return = lower.index(
+        "p100 q5 survey complete: tmag is at calculated centroid; inspect mpos"
+    )
+    first_g54_registration = lower.index("g10 l20 p1 x[#<sensor_to_pen_x>]")
+    assert q5_return < first_g54_registration, (
+        "Q5 must return before any G54 XY registration"
     )
 
 

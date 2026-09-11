@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-11 | `RPSW-20260911-006` | implemented | [Add P100 Q5 Centroid Survey](../rp23cnc-software/2026/2026-09-11-add-p100-q5-centroid-survey.md) | `P100`, `Q5`, `centroid`, `raster`, `safety` |
 | 2026-09-11 | `RPSW-20260911-005` | implemented | [Add P106 Manual Magnetic Survey](../rp23cnc-software/2026/2026-09-11-add-p106-manual-magnetic-survey.md) | `P100`, `Q3`, `P106`, `magnetic-survey`, `safety` |
 | 2026-09-11 | `RPSW-20260911-004` | implemented | [Record P100 Q3 Candidate Scan Parameters](../rp23cnc-software/2026/2026-09-11-record-p100-q3-candidate-parameters.md) | `P100`, `Q3`, `scan-feed`, `tool-offset`, `safety` |
 | 2026-09-11 | `RPSW-20260911-003` | implemented | [Record P100 Q3 Candidate Scan Rectangle](../rp23cnc-software/2026/2026-09-11-record-p100-q3-candidate-rectangle.md) | `P100`, `Q3`, `scan-bounds`, `G53`, `safety` |

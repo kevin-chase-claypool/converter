@@ -39,6 +39,7 @@ filesystem and the candidate build passes F-08.
 | `Q2` | Physical X/Y `$H` only | Verified on 2026-09-11 through direct `$H` and SD-resident `G65 P100 Q2`. Homing configuration omits A/Z. |
 | `Q3` | Center raster and G54 X/Y registration | Locked until commissioning |
 | `Q4` | Outer-magnet A scan and G54 A registration | Locked until commissioning |
+| `Q5` | Automatic center-magnet survey | Source-enabled; requires prior Q2. Stops at TMAG centroid without changing G54/A. |
 
 The eventual single ioSender button sends `G65 P100 Q0`. Separate modes exist
 so each stage can be commissioned without bypassing the others.

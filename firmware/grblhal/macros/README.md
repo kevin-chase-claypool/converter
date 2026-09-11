@@ -11,6 +11,7 @@ It is intended for the grblHAL filesystem macro plugin and is invoked with
 | 2 | Physical X/Y homing only |
 | 3 | Center raster and `G54 X0 Y0` registration |
 | 4 | Outer-magnet scan and `G54 A0` registration |
+| 5 | Automatic center-magnet survey; stops at TMAG centroid without writing G54 or A |
 
 The file intentionally sets `#<commissioned> = 0`. Modes 0, 3, and 4 return
 grblHAL error 39 before they can command `M5`, motion, or Aux0; they remain
@@ -19,13 +20,18 @@ replaced with measured, documented values. Mode 1 requires commissioned
 toolhead firmware because the Pro Micro will not acknowledge readiness
 otherwise.
 
-P100's executable entry points now permit **Q1** and **Q2** only. Q1 performs
+P100's executable entry points now permit **Q1**, **Q2**, and **Q5** only. Q1 performs
 the proven motor-inert READY/release handshake. Q2 performs only `M5`, a
 three-second settle, and the controller's configured X/Y `$H` cycle, then
 returns; it never reaches the readiness, raster, or A-index code. Q0, Q3, and
 Q4 immediately return error 39 before the macro's legacy registration body.
 The Q2 branch passed direct installed `$H` and filesystem `G65 P100 Q2`
 execution on 2026-09-11.
+
+Q5 is the next controlled motion stage. Run Q2 first, then Q5. It uses the
+candidate G53 rectangle and P100 probe/chord validation to calculate the
+center-magnet centroid, approaches that centroid in G53, releases Aux0, and
+returns. It does not execute `G10`, change G54, or move A.
 The staged Q1 path waits two seconds for READY_ACK, based on the observed
 controller-to-toolhead response timing. Before asserting READY it forces Aux0
 released and waits two seconds for the toolhead to reacquire its inactive

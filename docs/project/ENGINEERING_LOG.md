@@ -83,6 +83,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-11 12:00:00 -0500 - RP23CNC-SOFTWARE/IMPLEMENTED - Added P100 Q5 centroid survey](#elog-20260911120000)
 - [2026-09-11 11:30:00 -0500 - RP23CNC-SOFTWARE/IMPLEMENTED - Added P106 manual magnetic survey](#elog-20260911113000)
 - [2026-09-11 11:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Recorded P100 Q3 candidate scan parameters](#elog-20260911110000)
 - [2026-09-11 10:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Recorded P100 Q3 candidate G53 rectangle](#elog-20260911103000)
@@ -352,6 +353,19 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260911120000"></a>
+### 🟨 2026-09-11 12:00:00 -0500 - RP23CNC-SOFTWARE/IMPLEMENTED - Added P100 Q5 centroid survey
+
+- Status: source-enabled automatic survey; controller execution remains pending.
+- Category: rp23cnc-software, hardware, P100, Q5, raster, centroid, safety.
+- Result: Q5 shares P100's chord-validated G53 raster and approaches the
+  calculated TMAG centroid, but returns before any `G10`, G54, or A operation.
+  Q2 must run first; Q0/Q3/Q4 remain locked.
+- Evidence: `docs/report/lab-notes/2026-09-11-p100-q5-centroid-survey-plan.md`;
+  `RPSW-20260911-006`.
+- Next action: execute Q2 then Q5 under observation and record final MPos
+  before considering registration.
 
 <a id="elog-20260911113000"></a>
 ### 🟨 2026-09-11 11:30:00 -0500 - RP23CNC-SOFTWARE/IMPLEMENTED - Added P106 manual magnetic survey
