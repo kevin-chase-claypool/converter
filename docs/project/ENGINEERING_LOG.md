@@ -70,6 +70,7 @@ Entry details remain only in the chronology.
 ### RP23CNC and machine software
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Enable verified P100 Q0 registration](#elog-20260911-enable-verified-p100-q0-registration)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Complete first automated P100 Q0 registration](#elog-20260911-complete-first-automated-p100-q0-registration)
+- [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Verify P100 Q0 fast center return](#elog-20260911-verify-p100-q0-fast-center-return)
 - [2026-09-10 13:30:00 -0500 - RP23CNC-SOFTWARE/VERIFIED - Corrected P100 installed Aux0 polarity](#elog-20260910133000)
 - [2026-09-05 - DOCUMENTATION/SUCCESS - Consolidated current documentation](#elog-20260905-consolidated-current-documentation)
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -94,6 +95,7 @@ Entry details remain only in the chronology.
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Complete manual magnetic G54 registration](#elog-20260911-complete-manual-magnetic-g54-registration)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Enable verified P100 Q0 registration](#elog-20260911-enable-verified-p100-q0-registration)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Complete first automated P100 Q0 registration](#elog-20260911-complete-first-automated-p100-q0-registration)
+- [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Verify P100 Q0 fast center return](#elog-20260911-verify-p100-q0-fast-center-return)
 - [2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row](#elog-20260911143000)
 - [2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster](#elog-20260911140000)
 - [2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake](#elog-20260911133000)
@@ -537,6 +539,20 @@ Add new entries at the top of the log below this line.
 - Correction: the first run used F30 for the long index-to-center return.
   P100 now retains F30 only for the final 2 mm centroid approach and uses
   1500 mm/min for that long return.
+
+<a id="elog-20260911-verify-p100-q0-fast-center-return"></a>
+### 🟩 2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Verify P100 Q0 fast center return
+
+- Status: the corrected long return was verified at the installed 1500 mm/min
+  X/Y travel ceiling.
+- Category: firmware, hardware, P100, Q0, feed-rate, G54, TMAG, safety.
+- Evidence: the second Q0 run returned from the outer index at `FS:1500`,
+  registered the center, and parked without alarm at
+  `MPos:-232.800,-190.063,A8664.309`, WCO
+  `-232.799,-190.058,A8664.197`. The operator reported that the complete run
+  looked good.
+- Boundary: raster `F2000` remains capped by `$110=1500`; do not claim a
+  faster achieved crossing rate without a separate supervised loaded-rate test.
 
 <a id="elog-20260911143000"></a>
 ### 🟨 2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row

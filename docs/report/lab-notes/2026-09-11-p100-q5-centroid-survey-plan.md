@@ -93,8 +93,11 @@ must issue `G65 P111` before `G65 P100 Q0`. Q0 keeps the old G54 frame until
 both the center raster and two-pass A survey have passed, then writes A0 at the
 second observed index center, returns TMAG to the calculated center, writes the
 verified `X0 Y-29.4892` sensor-to-pen offset, and parks the pen at G54 X0/Y0.
-Q3/Q4 remain locked. The first combined Q0 run is pending supervised hardware
-verification.
+Q3/Q4 remain locked. The first combined Q0 run completed without alarm and
+visually parked the pen tip at center. A second run verified the long
+index-to-center return at `FS:1500`; it completed without alarm at
+`MPos:-232.800,-190.063,A8664.309` with WCO
+`-232.799,-190.058,A8664.197`.
 
 The installed `$110/$111=1500` mm/min axis limits have not been changed as
 part of this raster retune. A requested `F2000` may therefore be rate-limited
