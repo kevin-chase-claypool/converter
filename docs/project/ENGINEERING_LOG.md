@@ -83,6 +83,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-11 11:30:00 -0500 - RP23CNC-SOFTWARE/IMPLEMENTED - Added P106 manual magnetic survey](#elog-20260911113000)
 - [2026-09-11 11:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Recorded P100 Q3 candidate scan parameters](#elog-20260911110000)
 - [2026-09-11 10:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Recorded P100 Q3 candidate G53 rectangle](#elog-20260911103000)
 - [2026-09-11 10:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Verified isolated P100 Q2 X/Y home stage](#elog-20260911100000)
@@ -351,6 +352,22 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260911113000"></a>
+### 🟨 2026-09-11 11:30:00 -0500 - RP23CNC-SOFTWARE/IMPLEMENTED - Added P106 manual magnetic survey
+
+- Status: source-only no-motion P106 diagnostic added; controller execution is
+  pending.
+- Category: rp23cnc-software, hardware, P100, Q3, P106, magnetic survey,
+  safety.
+- Result: P106 performs baseline/release/re-arm, enters SCAN_ACTIVE for 180
+  seconds, then releases Aux0. It commands no axis motion. It distinguishes
+  the Q3 magnetic state from P105's READY_ACK by mapping P blank to clear and
+  P red to detected while the operator manually jogs.
+- Evidence: `docs/report/lab-notes/2026-09-11-p106-manual-magnetic-survey-plan.md`;
+  `RPSW-20260911-005`.
+- Next action: copy P106 to the controller and validate clear-corner and
+  center-detection transitions before considering Q3 motion.
 
 <a id="elog-20260911110000"></a>
 ### 🟨 2026-09-11 11:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Recorded P100 Q3 candidate scan parameters

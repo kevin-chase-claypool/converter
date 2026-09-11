@@ -1,0 +1,18 @@
+(P106 - timed manual magnetic field-survey diagnostic)
+(Safe test: no axis motion, spindle, or probe move.)
+(Arms READY_ACK, releases, re-arms SCAN_ACTIVE, holds 180 seconds, releases.)
+
+(Start with the TMAG at a known magnetically clear location.)
+M64 P0
+G4 P5.0
+M65 P0
+G4 P0.10
+M64 P0
+G4 P0.10
+M65 P0
+G4 P0.10
+(print,P106 SCAN_ACTIVE: manually jog; P blank=clear, P red=magnet detected)
+G4 P180.0
+M64 P0
+(print,P106 complete: Aux0 released)
+o106 return [1]

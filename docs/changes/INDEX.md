@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-11 | `RPSW-20260911-005` | rp23cnc-software, hardware | implemented | [Add P106 Manual Magnetic Survey](rp23cnc-software/2026/2026-09-11-add-p106-manual-magnetic-survey.md) |
 | 2026-09-11 | `RPSW-20260911-004` | rp23cnc-software, hardware | implemented | [Record P100 Q3 Candidate Scan Parameters](rp23cnc-software/2026/2026-09-11-record-p100-q3-candidate-parameters.md) |
 | 2026-09-11 | `RPSW-20260911-003` | rp23cnc-software, hardware | implemented | [Record P100 Q3 Candidate Scan Rectangle](rp23cnc-software/2026/2026-09-11-record-p100-q3-candidate-rectangle.md) |
 | 2026-09-11 | `RPSW-20260911-002` | rp23cnc-software, hardware | verified | [Enable Isolated P100 Q2 X/Y Homing](rp23cnc-software/2026/2026-09-11-enable-isolated-p100-q2-home.md) |

@@ -82,3 +82,10 @@ asserted. Verify `READY_ACK` on the toolhead, then release it manually with
 five seconds, holds READY_ACK for 30 seconds to permit a safe meter reading,
 and then releases Aux0 automatically. It contains no axis motion, spindle, or
 probe command.
+
+`P106.macro` is the timed manual magnetic field-survey diagnostic. Starting
+from a magnetically clear TMAG position, it performs the actual P100
+`M65 -> M64 -> M65` READY/release/re-arm sequence, holds `SCAN_ACTIVE` for
+180 seconds, then releases automatically. During the hold, manual jogging is
+allowed: P blank means clear and P red means a detected magnetic field. It
+contains no axis motion, spindle, or probe move of its own.

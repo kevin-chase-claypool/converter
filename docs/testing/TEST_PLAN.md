@@ -134,8 +134,8 @@ remain unloaded.
    rectangle is X `-280..-180`, Y `-266..-166` in G53 machine coordinates;
    its candidate pitch/feed are 10 mm / 1000 mm/min, and its candidate
    `pen - TMAG` vector is `(0, -29.4892)` mm. Retain the Q3 lock until the
-   magnetic corner baseline and first observed raster plan are reviewed. Do
-   not bypass the Q0/Q3/Q4 commissioning locks.
+   P106 magnetic corner baseline and first observed raster plan are reviewed.
+   Do not bypass the Q0/Q3/Q4 commissioning locks.
 9. Send `G90`, reset the controller, and do not use the motorless test's
    internal coordinates as machine references.
 
