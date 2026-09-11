@@ -5,7 +5,7 @@ category: rp23cnc-software
 affected_categories:
   - rp23cnc-software
   - hardware
-status: implemented
+status: verified
 components:
   - firmware/grblhal/macros/P100.macro
   - firmware/grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md
@@ -46,7 +46,11 @@ branch and retains the Q0/Q3/Q4 locks.
   `MPos:-10.000,-436.000,0.000,0.000` and transient `H:1,3`.
 - X and Y home inputs each changed from blank to asserted when their own
   switch was pressed.
-- `python tools\\validate_homing_macro.py`: pending after this source update.
+- `python tools\\validate_homing_macro.py`: passed after this source update.
+- Filesystem `G65 P100 Q2`: passed on 2026-09-11. The controller entered
+  `Home`, reported `H:1,3`, returned `Idle` at
+  `MPos:-10.000,-436.000,0.000,0.000`, then printed
+  `P100 Q2 X/Y homing complete` and `ok`.
 
 ## Struggles and rejected approaches
 
@@ -56,10 +60,8 @@ the Q2 call to later magnetic code, so the released path is an early return.
 
 ## Risks and follow-up
 
-The controller filesystem still needs this exact macro copied to the SD card
-and `G65 P100 Q2` run under supervision. Q0, Q3, and Q4 remain unavailable;
-this change does not establish scan bounds, G54 registration, A indexing, or
-production readiness.
+Q0, Q3, and Q4 remain unavailable; this change does not establish scan bounds,
+G54 registration, A indexing, or production readiness.
 
 ## Files
 

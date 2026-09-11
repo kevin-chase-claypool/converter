@@ -83,7 +83,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
-- [2026-09-11 10:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Enabled isolated P100 Q2 X/Y home stage](#elog-20260911100000)
+- [2026-09-11 10:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Verified isolated P100 Q2 X/Y home stage](#elog-20260911100000)
 - [2026-09-10 12:55:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Passed real-magnet PRB/G38 GP27/U3 path](#elog-20260910125500)
 - [2026-09-10 11:15:18 -0500 - RP23CNC-SOFTWARE/HARDWARE/PARTIAL - Passed motor-inert P100 handshake and local magnetic state](#elog-20260910111518)
 - [2026-09-09 19:40:38 -0500 - RP23CNC-SOFTWARE/SUCCESS - Added motor-inert P100 handshake diagnostic](#elog-20260909194038)
@@ -351,21 +351,22 @@ Add new entries at the top of the log below this line.
 ---
 
 <a id="elog-20260911100000"></a>
-### 🟨 2026-09-11 10:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Enabled isolated P100 Q2 X/Y home stage
+### 🟩 2026-09-11 10:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Verified isolated P100 Q2 X/Y home stage
 
-- Status: direct installed X/Y `$H` passed; source now exposes that operation
-  through Q2 only. Filesystem-macro execution remains unverified.
+- Status: direct installed X/Y `$H` and SD-resident `G65 P100 Q2` passed.
 - Category: rp23cnc-software, hardware, P100, homing, safety.
 - Result: each X/Y home input asserted only at its own physical switch. With
   X/Y motor fuses installed and Z/A excluded, `$H` completed without an alarm,
   reported `H:1,3`, and returned `Idle` at
-  `MPos:-10.000,-436.000,0.000,0.000`. P100's Q2 early branch now runs `M5`,
-  waits three seconds, runs `$H`, prints completion, and returns before all
-  magnetic paths. Q0/Q3/Q4 remain error-39 locked.
+  `MPos:-10.000,-436.000,0.000,0.000`. The SD-resident Q2 call then entered
+  `Home`, reported `H:1,3`, printed `P100 Q2 X/Y homing complete`, and returned
+  `ok`. P100's Q2 early branch runs `M5`, waits three seconds, runs `$H`,
+  prints completion, and returns before all magnetic paths. Q0/Q3/Q4 remain
+  error-39 locked.
 - Evidence: `docs/report/lab-notes/2026-09-11-p100-q2-direct-xy-home.md`;
   `RPSW-20260911-002`.
-- Next action: transfer the updated macro and execute `G65 P100 Q2` with the
-  same observed setup; do not run Q0/Q3/Q4.
+- Next action: define and validate the bounded machine-coordinate rectangle
+  required for Q3; do not run Q0/Q3/Q4.
 
 <a id="elog-20260910133000"></a>
 ### 🟩 2026-09-10 13:30:00 -0500 - RP23CNC-SOFTWARE/VERIFIED - Corrected P100 installed Aux0 polarity

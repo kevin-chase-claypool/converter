@@ -65,10 +65,9 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   proved direct and actual GP27/U3 `PRB` transitions, A-axis G38 capture, and
   the automated non-motion `G65 P100 Q1` readiness/release handshake.
   GP27/U3 is assigned to `PROBE SIG` with `$6=1`. The isolated Q2 X/Y homing
-  branch is source-enabled after a successful direct installed `$H` test on
-  2026-09-11; its filesystem-macro execution is still pending. Q0/Q3/Q4,
-  coordinate semantics, and normal-status timing gates remain closed before
-  P100 production use.
+  branch passed both direct `$H` and SD-resident `G65 P100 Q2` execution on
+  2026-09-11. Q0/Q3/Q4, coordinate semantics, and normal-status timing gates
+  remain closed before P100 production use.
 
 ## Status
 

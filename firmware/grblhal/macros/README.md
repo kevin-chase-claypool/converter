@@ -24,8 +24,8 @@ the proven motor-inert READY/release handshake. Q2 performs only `M5`, a
 three-second settle, and the controller's configured X/Y `$H` cycle, then
 returns; it never reaches the readiness, raster, or A-index code. Q0, Q3, and
 Q4 immediately return error 39 before the macro's legacy registration body.
-The Q2 source branch is enabled after the direct installed `$H` test passed on
-2026-09-11; its filesystem-macro execution remains the next required test.
+The Q2 branch passed direct installed `$H` and filesystem `G65 P100 Q2`
+execution on 2026-09-11.
 The staged Q1 path waits two seconds for READY_ACK, based on the observed
 controller-to-toolhead response timing. Before asserting READY it forces Aux0
 released and waits two seconds for the toolhead to reacquire its inactive

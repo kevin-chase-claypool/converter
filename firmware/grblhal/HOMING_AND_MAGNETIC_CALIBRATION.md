@@ -36,7 +36,7 @@ filesystem and the candidate build passes F-08.
 |---:|---|---|
 | `Q0` | Full startup: lift, X/Y home, center raster, A index, return to G54 zero | Locked until commissioning |
 | `Q1` | Toolhead readiness handshake only | Motor-inert machine-verified on 2026-09-11; no motion |
-| `Q2` | Physical X/Y `$H` only | Source-enabled after direct installed `$H` passed on 2026-09-11; verify `G65 P100 Q2` separately. Homing configuration omits A/Z. |
+| `Q2` | Physical X/Y `$H` only | Verified on 2026-09-11 through direct `$H` and SD-resident `G65 P100 Q2`. Homing configuration omits A/Z. |
 | `Q3` | Center raster and G54 X/Y registration | Locked until commissioning |
 | `Q4` | Outer-magnet A scan and G54 A registration | Locked until commissioning |
 
@@ -284,8 +284,8 @@ Only after both pass may the existing return be reterminated from `LIMA` to
    magnetic motion scan or replace the production toolhead firmware.
 3. Build and archive the accepted candidate; do not overwrite the known-good
    baseline UF2.
-4. `Q1` passed motor-inert and direct X/Y `$H` passed on 2026-09-11. Next,
-   separately verify filesystem `G65 P100 Q2`, then
+4. `Q1` and the isolated Q2 X/Y home stage passed on 2026-09-11. Next,
+   establish safe bounded scan coordinates, then
    bounded low-speed `Q3`, then `Q4`.
 5. Install measured scan bounds, pitch, feeds, threshold, hysteresis,
    **sensor-to-pen XY offset**, outer radius, tolerances, and timeouts with

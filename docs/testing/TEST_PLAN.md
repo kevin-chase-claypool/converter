@@ -128,9 +128,10 @@ remain unloaded.
    with this diagnostic firmware.
 8. Copy `P100.macro` to the controller filesystem. `G65 P100 Q1` passed on
    2026-09-11 and direct X/Y `$H` passed with the installed switches and fuses.
-   Next verify `G65 P100 Q2`, the expected commissioning abort for Q0/Q3/Q4,
-   G53/G54 and `G10 L20` parameter semantics, and that every abort releases
-   Aux0. Do not bypass the Q0/Q3/Q4 commissioning locks.
+   `G65 P100 Q2` then passed with `H:1,3` and its completion message. Next
+   verify the expected commissioning abort for Q0/Q3/Q4, G53/G54 and `G10 L20`
+   parameter semantics, and that every abort releases Aux0. Do not bypass the
+   Q0/Q3/Q4 commissioning locks.
 9. Send `G90`, reset the controller, and do not use the motorless test's
    internal coordinates as machine references.
 

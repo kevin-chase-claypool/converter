@@ -25,12 +25,14 @@ consistent with the installed homing configuration and `$23=2`.
 ## Result
 
 The direct controller X/Y `$H` operation is proven for this installed setup.
-The P100 source may expose Q2 only as `M5`, a three-second settle, `$H`, and an
-immediate return. This evidence does not authorize Q0, Q3, Q4, raster motion,
-G54 registration, or A motion.
+The SD-resident macro then passed `G65 P100 Q2`: it entered `Home`, reported
+`H:1,3`, returned `Idle` at `MPos:-10.000,-436.000,0.000,0.000`, and printed
+`P100 Q2 X/Y homing complete` followed by `ok`. Q2 is therefore verified as
+`M5`, a three-second settle, `$H`, and an immediate return. This evidence does
+not authorize Q0, Q3, Q4, raster motion, G54 registration, or A motion.
 
 ## Next action
 
-Copy the updated `P100.macro` to the controller filesystem and run
-`G65 P100 Q2` under the same clear-area, observed conditions. Restore the
-normal homing-rate settings only after that test if desired.
+Define and validate the bounded machine-coordinate rectangle required for Q3.
+Restore the normal homing-rate settings only after deciding whether another
+observed homing test is needed.
