@@ -83,6 +83,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake](#elog-20260911133000)
 - [2026-09-11 13:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated unexpected Q5 limit approaches](#elog-20260911130000)
 - [2026-09-11 12:00:00 -0500 - RP23CNC-SOFTWARE/VERIFIED - P100 Q5 center-magnet centroid survey](#elog-20260911120000)
 - [2026-09-11 11:30:00 -0500 - RP23CNC-SOFTWARE/IMPLEMENTED - Added P106 manual magnetic survey](#elog-20260911113000)
@@ -354,6 +355,21 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260911133000"></a>
+### 🟨 2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake
+
+- Status: P108 handshake-only diagnostic implemented; installed result pending.
+- Category: rp23cnc-software, hardware, P100, P107, P108, Q5, handshake,
+  limits, safety.
+- Evidence: P107 passed its sole Q5 preposition move from
+  `MPos:-10.000,-436.000` to `MPos:-280.000,-266.000` with no `Home` state.
+  The reported extra limit approaches must occur later or outside that move.
+- Decision: P108 mirrors Q5's Aux0/probe handshake while containing no
+  axis-motion G-code and no `$H`. It leaves concise retained markers rather
+  than a raster's high-volume status traffic.
+- Next action: execute P108 at Idle. Any `Home` state or axis motion is a
+  stop condition; otherwise continue isolating the first probe-raster stage.
 
 <a id="elog-20260911130000"></a>
 ### 🟨 2026-09-11 13:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated unexpected Q5 limit approaches

@@ -140,11 +140,14 @@ remain unloaded.
    run `G65 P107` following Q2. It must make exactly one G53 move to
    `MPos X=-280, Y=-266` without entering `Home` or reaching either X/Y
    switch. This isolates Q5's preposition from its handshake and raster.
-10. After Q2, run `G65 P100 Q5` only under observation. It is the automatic
+10. After a passed P107, run `G65 P108`. It contains the Q5 Aux0 readiness
+   handshake but no axis-motion command. It must remain Idle and report its
+   completion message. Any `Home` state or X/Y motion is a stop condition.
+11. After Q2, run `G65 P100 Q5` only under observation. It is the automatic
    survey pass: it may traverse the candidate rectangle and stop at the
    calculated TMAG centroid, but must not change G54 or A. Record final MPos
    and the completion message before considering registration.
-11. Send `G90`, reset the controller, and do not use the motorless test's
+12. Send `G90`, reset the controller, and do not use the motorless test's
    internal coordinates as machine references.
 
 Pass requires deterministic polarity, successful X transition captures,

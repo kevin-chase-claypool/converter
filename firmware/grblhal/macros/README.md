@@ -105,3 +105,9 @@ only the bounded G53 rapid from the X/Y-home position to Q5's southwest scan
 corner `X=-280`, `Y=-266` mm and stops. It contains no `$H`, probe, Aux0,
 A-axis, or G54-write command. Use it to distinguish the first Q5 travel move
 from an unexpected additional physical homing cycle.
+
+`P108.macro` is the Q5 readiness-handshake diagnostic. It reproduces Q5's
+`M64 -> M65 -> M64 -> M65 -> M64` Aux0 sequence and probe-state checks, but
+contains no axis-motion command. A `Home` state or any X/Y movement during
+P108 is therefore an unexpected controller/external action rather than Q5
+preposition or raster motion.

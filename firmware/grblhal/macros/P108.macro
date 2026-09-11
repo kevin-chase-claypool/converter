@@ -1,0 +1,26 @@
+(P108 - Q5 readiness-handshake diagnostic)
+(No axis motion: tests Q5's Aux0 sequence without preposition or raster.)
+
+M5
+G4 P3.0
+M64 P0
+G4 P2.0
+(print,P108 baseline released: no Home or axis motion is permitted)
+M65 P0
+G4 P2.0
+o108 if [#<_probe_state> NE 1]
+  M64 P0
+  (print,P108 READY acknowledgement missing)
+  o901 error[39]
+o108 endif
+M64 P0
+G4 P0.10
+o109 if [#<_probe_state> NE 0]
+  (print,P108 READY acknowledgement did not release)
+  o902 error[39]
+o109 endif
+M65 P0
+G4 P0.10
+M64 P0
+(print,P108 complete: Q5 handshake passed with no axis command)
+o108 return [1]
