@@ -1,0 +1,11 @@
+(P105 - timed GP27 READY_ACK voltage diagnostic)
+(Safe test: no axis motion, spindle, or probe command.)
+(Five-second baseline interval, 30-second READY_ACK hold, automatic release.)
+
+M64 P0
+G4 P5.0
+M65 P0
+G4 P30.0
+M64 P0
+(print,P105 complete: Aux0 released)
+o105 return [1]

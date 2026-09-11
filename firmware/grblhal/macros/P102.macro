@@ -1,0 +1,13 @@
+(P102 - non-motion G65 argument preservation diagnostic)
+(Safe test: no motion, outputs, spindle, or probe commands.)
+
+#31 = #17
+#<commissioned> = 0
+#<sensor_to_pen_offset_valid> = 0
+
+o102 if [#31 EQ 1]
+  (print,P102 PASS: Q1 survived named-variable initialization in #31)
+o102 else
+  (print,P102 FAIL: Q1 did not survive named-variable initialization in #31)
+o102 endif
+o103 return [1]

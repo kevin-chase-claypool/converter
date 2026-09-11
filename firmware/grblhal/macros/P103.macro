@@ -1,0 +1,39 @@
+(P103 - non-motion full P100 initialization diagnostic)
+(Safe test: no motion, outputs, spindle, or probe commands.)
+
+#31 = #17
+#<commissioned> = 0
+#<sensor_to_pen_offset_valid> = 0
+#<sensor_to_pen_x> = 0.0
+#<sensor_to_pen_y> = 0.0
+#<scan_min_x> = 0.0
+#<scan_max_x> = 0.0
+#<scan_min_y> = 0.0
+#<scan_max_y> = 0.0
+#<row_pitch> = 0.0
+#<scan_feed> = 60.0
+#<registration_feed> = 30.0
+#<approach_distance> = 2.0
+#<minimum_hit_rows> = 3
+#<minimum_chord_width> = 0.5
+#<maximum_chord_width> = 25.0
+#<lift_dwell_s> = 3.0
+#<ready_wait_s> = 1.0
+#<edge_settle_s> = 0.10
+#<outer_radius> = 226.06
+#<a_search_degrees> = 4500.0
+#<a_expected_spacing> = 4320.0
+#<a_spacing_tolerance> = 10.0
+#<a_maximum_width> = 120.0
+#<a_scan_feed> = 600.0
+#<a_registration_feed> = 120.0
+#<old_g54_x> = #5221
+#<old_g54_y> = #5222
+#<old_g54_a> = #5224
+
+o103 if [#31 EQ 1]
+  (print,P103 PASS: Q1 survived full P100 initialization in #31)
+o103 else
+  (print,P103 FAIL: Q1 was changed during full P100 initialization in #31)
+o103 endif
+o104 return [1]

@@ -208,20 +208,17 @@ controller `+5V` LED feed. On the Pro Micro side, R3/R4 pull GP29/GP28 to local
 asserted. The reverse `GP27` channel uses the tested `R6`/direct A_HOME link;
 repeat the 12 V / 2.2 kΩ load test if U3 is replaced.
 
-`PRB` is the implemented but test-gated candidate endpoint for the existing
-GP27/U3 return, not the current wiring assignment. F-08 first tests the controller's probe
-input and G38 behavior with TB6600 signal leads and motors disconnected. Keep
-MAG-003 and the routed harness on `LIMA` until F-08 proves X transition capture,
-the installed build's A-axis behavior, coordinate reporting, and the subsequent
-GP27/U3 path test. The RP23CNC and grblHAL documentation establish the component
-probe functions but do not explicitly certify the complete TMAG raster/A-index
-application.
+`PRB` is the installed endpoint for the existing GP27/U3 return. The F-08
+motor-inert stage proved direct and actual-path PRB transitions and A-axis G38
+capture with TB6600 signal leads and motors disconnected. The non-motion P100
+Q1 readiness/release gate passed on 2026-09-11. This does not certify the
+complete TMAG raster/A-index application or authorize P100 motion modes.
 
 | ID | From device | From terminal | To device | To terminal | Signal | Expected behavior | Wire | Status | Evidence/notes |
 |---|---|---|---|---|---|---|---|---|---|
 | MAG-001 | SparkFun TMAG5273 Qwiic | Qwiic `SDA/SCL/3V3/GND` | SparkFun Pro Micro RP2350 | Qwiic `GPIO16/GPIO17/3V3/GND` | 3D Hall readings | 3.3 V I2C; stable magnetic vector or magnitude readings | Qwiic cable TBD | bench-verified | E-09 passed after correcting the signal pair: GP16 is SDA and GP17 is SCL. Far/near/return magnitudes were 0.24/7.51/7.44 mT; initial threshold guidance 3.5 mT with 1.0 mT hysteresis. |
 | MAG-002 | SparkFun Pro Micro RP2350 | USB device TBD | Host PC | USB TBD | Service telemetry | Reports pressure state, magnetic state/vector, and faults for commissioning; it does not send numeric centroids to RP23CNC | USB cable TBD | source implemented; installed test TBD | P100 owns position capture and centroid arithmetic. |
-| MAG-003 | SparkFun Pro Micro RP2350 | `GP27` through PC817C U3 | RP23CNC | `PROBE SIG` | Phase 1 readiness ACK; phase 2 thresholded magnetic state | Isolated switch-like low-side return to the controller probe input; never drive a controller input high | Existing blue routed control conductor | machine-verified, F-08 partial | On 2026-09-10, after direct PRB polarity/G38 checks, blue `A_HOME` moved from `LIMA SIG` to `PROBE SIG` with power off. J1.5 `CTRL_GND` was confirmed common with controller `PROBE GND`. With `$6=1`, `M65 P0`/`READY_ACK` made P red and `M64 P0`/release made P blank. In scan, real TMAG `detected=0 -> 1 -> 0` matched P blank -> red -> blank; real-magnet A `G38.3`/`.5` both returned `:1`. Macro/coordinate commissioning remains open. |
+| MAG-003 | SparkFun Pro Micro RP2350 | `GP27` through PC817C U3 | RP23CNC | `PROBE SIG` | Phase 1 readiness ACK; phase 2 thresholded magnetic state | Isolated switch-like low-side return to the controller probe input; never drive a controller input high | Existing blue routed control conductor | machine-verified, F-08 partial | On 2026-09-10, after direct PRB polarity/G38 checks, blue `A_HOME` moved from `LIMA SIG` to `PROBE SIG` with power off. J1.5 `CTRL_GND` was confirmed common with controller `PROBE GND`. With `$6=1`, `M65 P0`/`READY_ACK` made P red and `M64 P0`/release made P blank. In scan, real TMAG `detected=0 -> 1 -> 0` matched P blank -> red -> blank; real-magnet A `G38.3`/`.5` both returned `:1`. On 2026-09-11, P105 held the asserted path at 173.4 mV and `G65 P100 Q1` passed its automatic PRB assert/release checks. Q2–Q4 and coordinate commissioning remain open. |
 | MAG-003A | RP23CNC | `Aux 0` digital output | PC817C module U2 LED cathode | `AUX0` / pin 2 | Two-phase magnetic arm | Installed path is active-low: `M65 P0` requests readiness or scan, and `M64 P0` releases/disarms; `M65` -> `M64` -> `M65` enters scan | Existing routed control conductor | machine-verified, F-08 partial | On 2026-09-10, J1.4 measured 9.33 V released and 0.15 mV asserted relative to J1.5 `CTRL_GND`; the installed diagnostic observed `DISARMED → READY_ACK → WAIT_REARM → SCAN_ACTIVE → DISARMED`, followed by controller-visible PRB/G38 proof. |
 | MAG-003B | PC817C module U2 collector | `GP28` / pullup node | SparkFun Pro Micro RP2350 | `GP28` / A2 | Isolated two-phase arm input | Local 3.3 V pullup through `R4`; U2 on pulls GP28 low | Existing routed control conductor | harness re-test required | Core 1 owns the handshake; unsafe state or timeout suppresses GP27. |
 | MAG-004 | Center bed magnet | Embedded bed center | TMAG5273 scan path | Sensor over bed | Bed-center reference | Saturated or thresholded footprint centered on bed rotation axis | Mechanical placement | TBD | Cylindrical magnet; diameter, grade, polarity, and depth TBD |

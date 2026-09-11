@@ -56,10 +56,51 @@ def validate_safety_contract(text: str) -> None:
         "centroid approach and registration pass",
     ]
     lower = text.lower()
+    assert "#<mode>" not in lower, (
+        "P100 must not use the local named mode alias; it selected Q0 during "
+        "the motorless test"
+    )
+    assert "#31 = #17" in lower, (
+        "P100 must preserve the G65 Q argument in #31 before named-variable "
+        "initialization"
+    )
+    assert lower.count("#17") == 2, (
+        "P100 may read #17 only for the initial Q1 stage gate and the later "
+        "copy to #31"
+    )
     for token in required:
         assert token in lower, f"required safety/interface token missing: {token}"
     assert "g38.2" not in lower and "g38.4" not in lower, (
         "P100 must use non-alarming probe variants so it can execute cleanup"
+    )
+    assert "(abort," not in lower, (
+        "P100 abort comments do not stop grblHAL macro execution; use an "
+        "o... error[...] command instead"
+    )
+
+
+def validate_commissioning_locks(text: str) -> None:
+    lower = text.lower()
+    required = [
+        "o001 if [#17 eq 1]",
+        "m64 p0\n  g4 p2.0\n  (installed u2/gp28 path is active-low: m65 asserts arm; m64 releases it.)\n  m65 p0",
+        "o001 return [1]",
+        "o999 error[39]",
+        "p100 mode locked: only q1 motorless handshake is enabled",
+        "o103 if [#31 eq 0]",
+        "o105 if [#31 eq 3]",
+        "o107 if [#31 eq 4]",
+        "o901 error[39]",
+        "o902 error[39]",
+        "o903 error[39]",
+        "o904 error[39]",
+        "o905 error[39]",
+        "o906 error[39]",
+    ]
+    for token in required:
+        assert token in lower, f"required executable commissioning lock missing: {token}"
+    assert lower.index("o001 if [#17 eq 1]") < lower.index("#31 = #17"), (
+        "Q1 must dispatch before named-variable initialization and all homing paths"
     )
 
 
@@ -81,8 +122,9 @@ def validate_installed_aux_polarity(text: str) -> None:
         "installed active-low U2/GP28 normal path must arm, release, then "
         "re-arm with M65, M64, M65"
     )
-    assert aux_commands.count("m65 p0") == 2, (
-        "only readiness and scan entry may assert Aux0; cleanup must release it"
+    assert aux_commands.count("m65 p0") == 3, (
+        "P100 must contain one Q1 stage-gate assertion plus the legacy "
+        "readiness/scan assertions; cleanup must release Aux0"
     )
     assert aux_commands[-1] == "m64 p0", "P100 must release Aux0 on exit"
 
@@ -148,6 +190,7 @@ def main() -> None:
     text = MACRO.read_text(encoding="utf-8")
     validate_flow_control(text)
     validate_safety_contract(text)
+    validate_commissioning_locks(text)
     validate_installed_aux_polarity(text)
     validate_centroid_math()
     validate_a_math()

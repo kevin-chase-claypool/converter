@@ -1,0 +1,9 @@
+(P101 - non-motion G65 Q-parameter diagnostic)
+(Safe test: no motion, outputs, spindle, or probe commands.)
+
+o101 if [#17 EQ 1]
+  (print,P101 PASS: Q1 arrived as parameter #17)
+o101 else
+  (print,P101 FAIL: Q1 did not arrive as parameter #17)
+o101 endif
+o102 return [1]

@@ -35,7 +35,7 @@ filesystem and the candidate build passes F-08.
 | Mode | Purpose | Current availability |
 |---:|---|---|
 | `Q0` | Full startup: lift, X/Y home, center raster, A index, return to G54 zero | Locked until commissioning |
-| `Q1` | Toolhead readiness handshake only | Source ready; requires commissioned toolhead firmware and E-18 |
+| `Q1` | Toolhead readiness handshake only | Motor-inert machine-verified on 2026-09-11; no motion |
 | `Q2` | Physical X/Y `$H` only | Candidate for parser/motorless testing; homing configuration must omit A/Z |
 | `Q3` | Center raster and G54 X/Y registration | Locked until commissioning |
 | `Q4` | Outer-magnet A scan and G54 A registration | Locked until commissioning |
@@ -284,7 +284,8 @@ Only after both pass may the existing return be reterminated from `LIMA` to
    magnetic motion scan or replace the production toolhead firmware.
 3. Build and archive the accepted candidate; do not overwrite the known-good
    baseline UF2.
-4. Prove `Q1`, then `Q2`, then bounded low-speed `Q3`, then `Q4`.
+4. `Q1` passed motor-inert on 2026-09-11. Next, separately prove `Q2`, then
+   bounded low-speed `Q3`, then `Q4`.
 5. Install measured scan bounds, pitch, feeds, threshold, hysteresis,
    **sensor-to-pen XY offset**, outer radius, tolerances, and timeouts with
    dated evidence.
