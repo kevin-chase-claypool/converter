@@ -35,6 +35,12 @@ unconditional `$H`, preceded by `M5` and a three-second settle. Run `G65 P111`
 before Q5 or Q0; the X/Y homing configuration must omit A/Z. The production
 ioSender routine is therefore two commands: `G65 P111`, then `G65 P100 Q0`.
 
+`P113.macro` is the proposed one-command `HOME + REGISTER` wrapper. It contains
+the same one unconditional `$H`, followed by `G65 P100 Q0`; P100 remains free
+of `$H`. Before using P113 for motion, run motor-inert `G65 P114`: it calls P101
+and must print both `P101 PASS` and `P114 PASS`, proving that this grblHAL
+filesystem build returns correctly from a nested macro invocation.
+
 `P112.macro` is the next **survey-only** A-index stage. After fresh P111 and a
 successful Q5, run `G65 P112` without jogging X/Y/A between them. P112 moves
 the TMAG along +X to G53 X `-10.5` mm: the measured `223.675804` mm radius

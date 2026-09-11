@@ -11,6 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P100.macro"
 HOME_MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P111.macro"
 INDEX_SURVEY_MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P112.macro"
+WRAPPER_MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P113.macro"
+NESTED_DIAGNOSTIC_MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P114.macro"
 
 
 def assignment(text: str, name: str) -> float:
@@ -194,6 +196,22 @@ def validate_isolated_home_macro() -> None:
     assert commands.count("$h") == 1, "P111 must contain exactly one executable $H"
 
 
+def validate_registration_wrapper_macros() -> None:
+    wrapper = WRAPPER_MACRO.read_text(encoding="utf-8")
+    wrapper_commands = [
+        line.strip().lower()
+        for line in wrapper.splitlines()
+        if line.strip() and not line.lstrip().startswith("(")
+    ]
+    assert wrapper_commands == [
+        "m5", "g4 p3.0", "$h", "g65 p100 q0", "o113 return [1]"
+    ], "P113 must be exactly one home followed by P100 Q0"
+    diagnostic = NESTED_DIAGNOSTIC_MACRO.read_text(encoding="utf-8").lower()
+    assert "g65 p101 q1" in diagnostic and "$h" not in diagnostic, (
+        "P114 must safely prove nested filesystem macro return before P113"
+    )
+
+
 def validate_outer_index_survey_macro() -> None:
     text = INDEX_SURVEY_MACRO.read_text(encoding="utf-8")
     lower = text.lower()
@@ -363,6 +381,7 @@ def main() -> None:
     validate_commissioning_locks(text)
     validate_installed_aux_polarity(text)
     validate_isolated_home_macro()
+    validate_registration_wrapper_macros()
     validate_outer_index_survey_macro()
     validate_candidate_scan_rectangle(text)
     validate_candidate_scan_parameters(text)

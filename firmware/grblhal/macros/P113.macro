@@ -1,0 +1,10 @@
+(P113 - full HOME + REGISTER wrapper.)
+(This is the only full-registration macro permitted to contain $H.)
+(It must be run without a Q argument. P100 remains free of $H.)
+
+M5
+G4 P3.0
+$H
+G65 P100 Q0
+(print,P113 HOME + REGISTER wrapper complete)
+o113 return [1]

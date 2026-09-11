@@ -1,0 +1,6 @@
+(P114 - motor-inert nested filesystem-macro diagnostic.)
+(Run before P113: verifies P101 returns to its calling macro.)
+
+G65 P101 Q1
+(print,P114 PASS: nested P101 invocation returned)
+o114 return [1]
