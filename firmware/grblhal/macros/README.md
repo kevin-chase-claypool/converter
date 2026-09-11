@@ -118,3 +118,9 @@ It stops before every `G38` command, so it contains no raster or centroid
 motion. Run it only after a fresh Q2; a `Home` state during P109 isolates the
 interaction to this combined sequence, while a clean pass shifts attention to
 the first raster/probe command.
+
+`P110.macro` is the first Q5 G38-row diagnostic. After a fresh Q2, it reaches
+the southwest corner, runs the full Q5 arm/release/re-arm sequence, and issues
+only the first clear-row `G38.3 X100` at G53 Y `-266` mm. It releases Aux0
+before returning. It performs no centroid, G54, or A operation. A `Home`
+state during P110 isolates the behavior to G38 probing rather than homing.

@@ -83,6 +83,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row](#elog-20260911143000)
 - [2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster](#elog-20260911140000)
 - [2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake](#elog-20260911133000)
 - [2026-09-11 13:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated unexpected Q5 limit approaches](#elog-20260911130000)
@@ -356,6 +357,19 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260911143000"></a>
+### 🟨 2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row
+
+- Status: P110 implemented; installed result pending after fresh Q2.
+- Category: rp23cnc-software, hardware, P100, P110, Q5, G38, probe, raster,
+  safety.
+- Evidence: P109 passed the full Q5 sequence before G38. It reached the
+  southwest scan corner and completed its readiness handshake without `Home`.
+- Decision: P110 will execute only the expected-clear first row, G38.3 from
+  G53 X `-280` to `-180` at Y `-266`, then release Aux0 and return.
+- Next action: run Q2 then P110. A `Home` state implicates G38 execution; a
+  clean pass removes the first G38 transition from the fault scope.
 
 <a id="elog-20260911140000"></a>
 ### 🟨 2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster

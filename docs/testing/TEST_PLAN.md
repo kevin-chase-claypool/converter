@@ -146,11 +146,14 @@ remain unloaded.
 11. After a fresh Q2, run `G65 P109`. It combines P107 and P108 in Q5 order,
    but stops before every G38 raster command. It must reach `MPos X=-280,
    Y=-266` without `Home` and print its completion message.
-12. After Q2, run `G65 P100 Q5` only under observation. It is the automatic
+12. After a fresh Q2, run `G65 P110`. It executes only Q5's first clear G38.3
+   row from G53 `X=-280` to `X=-180` at Y `-266`, then releases Aux0. It must
+   never enter `Home`; require `P110 complete: clear first G38.3 row passed`.
+13. After Q2, run `G65 P100 Q5` only under observation. It is the automatic
    survey pass: it may traverse the candidate rectangle and stop at the
    calculated TMAG centroid, but must not change G54 or A. Record final MPos
    and the completion message before considering registration.
-13. Send `G90`, reset the controller, and do not use the motorless test's
+14. Send `G90`, reset the controller, and do not use the motorless test's
    internal coordinates as machine references.
 
 Pass requires deterministic polarity, successful X transition captures,

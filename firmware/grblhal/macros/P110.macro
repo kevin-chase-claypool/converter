@@ -1,0 +1,39 @@
+(P110 - Q5 first G38 raster-row diagnostic)
+(Requires fresh Q2. Tests one clear first row; cleans up Aux0 automatically.)
+
+M5
+G4 P3.0
+G21 G90 G94 G17 G54
+M64 P0
+G4 P2.0
+G53 G0 X-280.0 Y-266.0
+M65 P0
+G4 P2.0
+o110 if [#<_probe_state> NE 1]
+  M64 P0
+  (print,P110 READY acknowledgement missing)
+  o901 error[39]
+o110 endif
+M64 P0
+G4 P0.10
+o111 if [#<_probe_state> NE 0]
+  (print,P110 READY acknowledgement did not release)
+  o902 error[39]
+o111 endif
+M65 P0
+G4 P0.10
+o112 if [#<_probe_state> NE 0]
+  M64 P0
+  (print,P110 southwest scan corner is magnetically active)
+  o903 error[39]
+o112 endif
+(print,P110 first clear G38.3 row: X=-280 to X=-180 at Y=-266)
+G91 G38.3 X100.0 F1000.0
+G90
+M64 P0
+o113 if [#5070 EQ 1]
+  (print,P110 unexpected magnetic hit on first clear row)
+o113 else
+  (print,P110 complete: clear first G38.3 row passed)
+o113 endif
+o110 return [1]
