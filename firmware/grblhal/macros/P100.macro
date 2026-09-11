@@ -3,7 +3,7 @@
 (Production ioSender invocation: G65 P100 Q0)
 (Requires PROBE_ENABLE, NGC expressions, FS macros, Aux0=P0, and PRB)
 
-(Stage gates: Q1 readiness and the separately proven Q2 X/Y home only.)
+(Stage gates: Q1 readiness, Q2 X/Y home, and Q5 centroid survey only.)
 o001 if [#17 EQ 1]
   M5
   G4 P3.0
@@ -40,8 +40,10 @@ o004 if [#17 EQ 2]
 o004 endif
 
 (Q0/Q3/Q4 remain deliberately locked pending magnetic commissioning.)
-(print,P100 mode locked: Q1 readiness and Q2 X/Y home only are enabled)
-o999 error[39]
+o005 if [#17 NE 5]
+  (print,P100 mode locked: Q1 readiness, Q2 X/Y home, and Q5 survey only are enabled)
+  o999 error[39]
+o005 endif
 
 #31 = #17
 #<commissioned> = 0

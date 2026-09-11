@@ -40,7 +40,10 @@ remain locked.
 
 ## Verification
 
-- Static macro validation: pending after this source update.
+- The first controller Q5 attempt correctly returned error 39 with the old
+  early-lock message and made no move. It revealed that the early gate still
+  rejected Q5 before it could reach the new survey body.
+- Static macro validation: pending after the early-gate correction.
 - Hardware execution: pending; required command sequence is Q2 then Q5.
 
 ## Risks and follow-up

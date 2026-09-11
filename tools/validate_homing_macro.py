@@ -72,9 +72,9 @@ def validate_safety_contract(text: str) -> None:
         "P100 must preserve the G65 Q argument in #31 before named-variable "
         "initialization"
     )
-    assert lower.count("#17") == 3, (
-        "P100 may read #17 only for the isolated Q1/Q2 stage gates and the "
-        "later copy to #31"
+    assert lower.count("#17") == 4, (
+        "P100 may read #17 only for the isolated Q1/Q2 stage gates, the Q5 "
+        "allow gate, and the later copy to #31"
     )
     for token in required:
         assert token in lower, f"required safety/interface token missing: {token}"
@@ -102,7 +102,8 @@ def validate_commissioning_locks(text: str) -> None:
         "p100 q5 survey complete: tmag is at calculated centroid; inspect mpos",
         "o100 return [1]",
         "o999 error[39]",
-        "p100 mode locked: q1 readiness and q2 x/y home only are enabled",
+        "o005 if [#17 ne 5]",
+        "p100 mode locked: q1 readiness, q2 x/y home, and q5 survey only are enabled",
         "o103 if [#31 eq 0]",
         "o105 if [#31 eq 3]",
         "o107 if [#31 eq 4]",
@@ -120,6 +121,9 @@ def validate_commissioning_locks(text: str) -> None:
     )
     assert lower.index("o004 if [#17 eq 2]") < lower.index("#31 = #17"), (
         "Q2 must dispatch before named-variable initialization and magnetic paths"
+    )
+    assert lower.index("o005 if [#17 ne 5]") < lower.index("#31 = #17"), (
+        "only Q5 may continue past the early Q1/Q2 stage gates"
     )
     q5_return = lower.index(
         "p100 q5 survey complete: tmag is at calculated centroid; inspect mpos"
