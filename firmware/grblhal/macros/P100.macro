@@ -3,7 +3,7 @@
 (Production ioSender invocation: G65 P100 Q0)
 (Requires PROBE_ENABLE, NGC expressions, FS macros, Aux0=P0, and PRB)
 
-(Stage gate: only the motorless Q1 handshake is enabled at this point.)
+(Stage gates: Q1 readiness and the separately proven Q2 X/Y home only.)
 o001 if [#17 EQ 1]
   M5
   G4 P3.0
@@ -29,8 +29,18 @@ o001 if [#17 EQ 1]
   o001 return [1]
 o001 endif
 
-(Q0/Q2/Q3/Q4 are deliberately locked until flow-control semantics are revalidated.)
-(print,P100 mode locked: only Q1 motorless handshake is enabled)
+(Q2 has separately passed direct X/Y $H with the installed switches and fuses.)
+(It is intentionally isolated from the readiness, raster, and A-index paths.)
+o004 if [#17 EQ 2]
+  M5
+  G4 P3.0
+  $H
+  (print,P100 Q2 X/Y homing complete)
+  o004 return [1]
+o004 endif
+
+(Q0/Q3/Q4 remain deliberately locked pending magnetic commissioning.)
+(print,P100 mode locked: Q1 readiness and Q2 X/Y home only are enabled)
 o999 error[39]
 
 #31 = #17

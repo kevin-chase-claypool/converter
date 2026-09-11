@@ -64,9 +64,9 @@ def validate_safety_contract(text: str) -> None:
         "P100 must preserve the G65 Q argument in #31 before named-variable "
         "initialization"
     )
-    assert lower.count("#17") == 2, (
-        "P100 may read #17 only for the initial Q1 stage gate and the later "
-        "copy to #31"
+    assert lower.count("#17") == 3, (
+        "P100 may read #17 only for the isolated Q1/Q2 stage gates and the "
+        "later copy to #31"
     )
     for token in required:
         assert token in lower, f"required safety/interface token missing: {token}"
@@ -85,8 +85,10 @@ def validate_commissioning_locks(text: str) -> None:
         "o001 if [#17 eq 1]",
         "m64 p0\n  g4 p2.0\n  (installed u2/gp28 path is active-low: m65 asserts arm; m64 releases it.)\n  m65 p0",
         "o001 return [1]",
+        "o004 if [#17 eq 2]",
+        "$h\n  (print,p100 q2 x/y homing complete)\n  o004 return [1]",
         "o999 error[39]",
-        "p100 mode locked: only q1 motorless handshake is enabled",
+        "p100 mode locked: q1 readiness and q2 x/y home only are enabled",
         "o103 if [#31 eq 0]",
         "o105 if [#31 eq 3]",
         "o107 if [#31 eq 4]",
@@ -101,6 +103,9 @@ def validate_commissioning_locks(text: str) -> None:
         assert token in lower, f"required executable commissioning lock missing: {token}"
     assert lower.index("o001 if [#17 eq 1]") < lower.index("#31 = #17"), (
         "Q1 must dispatch before named-variable initialization and all homing paths"
+    )
+    assert lower.index("o004 if [#17 eq 2]") < lower.index("#31 = #17"), (
+        "Q2 must dispatch before named-variable initialization and magnetic paths"
     )
 
 

@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-11 | `RPSW-20260911-002` | implemented | [Enable Isolated P100 Q2 X/Y Homing](2026/2026-09-11-enable-isolated-p100-q2-home.md) | `P100`, `homing`, `safety`, `grblHAL` |
 | 2026-09-11 | `RPSW-20260911-001` | verified | [Verify P100 Q1 probe handshake](2026/2026-09-11-verify-p100-q1-probe-handshake.md) | `p100`, `q1`, `probe`, `gp27`, `safety` |
 | 2026-09-10 | `RPSW-20260910-003` | verified | [Correct P100 installed Aux0 polarity](2026/2026-09-10-correct-p100-aux-polarity.md) | `p100`, `aux0`, `gp28`, `safety`, `macro` |
 | 2026-09-10 | `RPSW-20260910-002` | verified | [Verify real-magnet PRB/G38 path](2026/2026-09-10-prb-g38-magnetic-path.md) | `p100`, `f-08`, `probe`, `g38`, `magnetic-homing`, `safety` |

@@ -19,11 +19,13 @@ replaced with measured, documented values. Mode 1 requires commissioned
 toolhead firmware because the Pro Micro will not acknowledge readiness
 otherwise.
 
-At the present motorless stage, P100's executable entry point permits **Q1
-only**. It performs the proven READY/release handshake and returns. Q0, Q2,
-Q3, and Q4 immediately return error 39 before the macro's legacy homing and
-registration body. This guard remains until the candidate controller's
-multi-branch flow-control semantics are independently revalidated.
+P100's executable entry points now permit **Q1** and **Q2** only. Q1 performs
+the proven motor-inert READY/release handshake. Q2 performs only `M5`, a
+three-second settle, and the controller's configured X/Y `$H` cycle, then
+returns; it never reaches the readiness, raster, or A-index code. Q0, Q3, and
+Q4 immediately return error 39 before the macro's legacy registration body.
+The Q2 source branch is enabled after the direct installed `$H` test passed on
+2026-09-11; its filesystem-macro execution remains the next required test.
 The staged Q1 path waits two seconds for READY_ACK, based on the observed
 controller-to-toolhead response timing. Before asserting READY it forces Aux0
 released and waits two seconds for the toolhead to reacquire its inactive
