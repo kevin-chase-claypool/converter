@@ -9,7 +9,9 @@ square, then stop at the calculated TMAG centroid without changing G54 or A.
 
 - P111 X/Y homing has passed immediately before Q5.
 - Candidate G53 rectangle: X `-280..-180`, Y `-266..-166`.
-- Candidate pitch/feed: 10 mm / 1000 mm/min.
+- Active Q5 pitch/feed: 5 mm / requested 2000 mm/min. The 100 mm square now
+  has 21 rows; this doubles the requested line speed and sample density while
+  retaining approximately the former total crossing time.
 - X/Y travel is clear and the operator watches the motion.
 
 ## Result
@@ -59,3 +61,8 @@ remains locked pending a successful installed survey.
 
 Q5 is hardware-verified as a center-magnet survey. It is not Q3 and does not
 authorize center, pen-offset, or A-index registration.
+
+The installed `$110/$111=1500` mm/min axis limits have not been changed as
+part of this raster retune. A requested `F2000` may therefore be rate-limited
+by grblHAL; a loaded X/Y rate test must precede any claim that the physical
+crossing speed doubled.

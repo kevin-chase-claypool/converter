@@ -51,7 +51,10 @@ center-magnet centroid, approaches that centroid in G53, releases Aux0, and
 returns. It does not execute `G10`, change G54, or move A.
 Its successful 2026-09-11 hardware run completed at TMAG machine position
 `X=-232.325`, `Y=-217.950` mm; visual placement of a magnet beneath that
-point agreed with the calculated centroid.
+point agreed with the calculated centroid. The active Q5 settings are 5 mm
+row pitch and requested `F2000` magnetic crossings. With the existing 1500
+mm/min X/Y maximum rate, that requested feed must not be treated as a measured
+physical 2000 mm/min rate until a separate loaded-rate test passes.
 The staged Q1 path waits two seconds for READY_ACK, based on the observed
 controller-to-toolhead response timing. Before asserting READY it forces Aux0
 released and waits two seconds for the toolhead to reacquire its inactive

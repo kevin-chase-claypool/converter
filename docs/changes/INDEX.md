@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-11 | `RPSW-20260911-013` | rp23cnc-software, hardware | implemented | [Retune P100 Q5 Raster Density](rp23cnc-software/2026/2026-09-11-retune-p100-q5-raster.md) |
 | 2026-09-11 | `RPSW-20260911-012` | rp23cnc-software, hardware | implemented | [Add P112 Outer-Index Survey](rp23cnc-software/2026/2026-09-11-add-p112-outer-index-survey.md) |
 | 2026-09-11 | `RPSW-20260911-011` | rp23cnc-software, hardware | implemented | [Isolate P100 System Homing](rp23cnc-software/2026/2026-09-11-isolate-p100-system-homing.md) |
 | 2026-09-11 | `RPSW-20260911-010` | rp23cnc-software, hardware | verified | [Add P110 Q5 First G38 Row Diagnostic](rp23cnc-software/2026/2026-09-11-add-p110-q5-first-g38-row-diagnostic.md) |

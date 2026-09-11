@@ -56,8 +56,8 @@ o005 endif
 #<scan_max_x> = -180.0
 #<scan_min_y> = -266.0
 #<scan_max_y> = -166.0
-#<row_pitch> = 10.0
-#<scan_feed> = 1000.0
+#<row_pitch> = 5.0
+#<scan_feed> = 2000.0
 #<registration_feed> = 30.0
 #<approach_distance> = 2.0
 #<minimum_hit_rows> = 3

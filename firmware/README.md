@@ -75,6 +75,11 @@ radius to clear the X home pull-off) without writing G54. Its installed
 two-footprint evidence measured `4331.818` A motor degrees per bed turn, so its
 bounded spacing gate is `4320 +/- 15`; Q0/Q3/Q4, coordinate
 semantics, and normal-status timing gates remain closed before production use.
+Q5 now uses a 5 mm row pitch and a requested 2000 mm/min G38 feed. The
+smaller pitch doubles the number of 100 mm rows, so it improves sampling
+density while the doubled requested line rate keeps total scan time comparable.
+The installed X/Y maximum rates remain 1500 mm/min until a separate loaded-rate
+test authorizes an increase.
 
 ## Status
 

@@ -86,6 +86,7 @@ Entry details remain only in the chronology.
 - [2026-09-11 - Time not recorded - RP23CNC-SOFTWARE/HARDWARE - P100 Q5 executed hidden system homing](#elog-20260911-p100-q5-executed-hidden-system-homing)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Add P112 outer-index survey](#elog-20260911-add-p112-outer-index-survey)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/MIXED - Measured P112 outer-index spacing](#elog-20260911-measured-p112-outer-index-spacing)
+- [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Retune P100 Q5 raster density](#elog-20260911-retune-p100-q5-raster-density)
 - [2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row](#elog-20260911143000)
 - [2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster](#elog-20260911140000)
 - [2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake](#elog-20260911133000)
@@ -428,6 +429,22 @@ Add new entries at the top of the log below this line.
   G54 write, and Q4/Q0 remain locked.
 - Next action: copy the updated P112 to SD, verify its listing, and rerun the
   P111 -> Q5 -> P112 sequence without any intervening axis motion.
+
+<a id="elog-20260911-retune-p100-q5-raster-density"></a>
+### 🟨 2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Retune P100 Q5 raster density
+
+- Status: Q5 source now requests 5 mm rows at F2000; installed physical rate
+  verification remains open.
+- Category: rp23cnc-software, hardware, P100, Q5, raster, scan-feed, safety.
+- Decision: halve row pitch from 10 to 5 mm and double requested G38 feed from
+  1000 to 2000 mm/min. A 100 mm raster consequently has 21 rather than 11
+  rows; each crossing is half as long, keeping estimated total crossing time
+  comparable while increasing magnetic sampling density.
+- Boundary: installed X/Y maximum rates remain `$110/$111=1500` mm/min. No
+  controller setting was raised without a new loaded-rate test, so the 2000
+  mm/min request may be capped by grblHAL.
+- Next action: copy P100 to SD, verify its file listing, then run a supervised
+  Q5 survey and inspect its status feed before using it as P112's prerequisite.
 
 <a id="elog-20260911143000"></a>
 ### 🟨 2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row
