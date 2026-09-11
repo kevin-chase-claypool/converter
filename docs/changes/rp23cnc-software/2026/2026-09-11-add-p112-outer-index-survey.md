@@ -37,8 +37,10 @@ A registration.
 ## Implementation
 
 P112 requires a fresh P111 followed by Q5 with no intervening axis movement.
-It moves the TMAG +X by the measured center-to-index radius `223.675804` mm,
-uses the established active-low Aux0/GP28 handshake, captures two `G38.3`/
+The measured `223.675804` mm +X radius would exceed the X `-10` mm home
+pull-off bound, so P112 moves along that same +X line only to G53 X `-10.5` mm,
+approximately 2.2 mm inboard. It uses the established active-low Aux0/GP28
+handshake, captures two `G38.3`/
 `G38.5` A footprints, validates their `4320 +/- 10` motor-degree spacing, and
 trims backward from the second exit to its second-pass center. Both searches
 run at `10000` motor-degrees/min (2.31 bed RPM); their combined 9,000-degree
@@ -64,8 +66,9 @@ installation. P112 keeps M-09 evidence separate from registration.
 
 ## Risks and follow-up
 
-The outer point is near the positive-X machine edge, so P112 must be started
-only from the observed Q5 TMAG centroid and with the XY path clear. The two
+The outer point is 0.5 mm inside the positive-X home pull-off boundary, so P112
+must be started only from the observed Q5 TMAG centroid and with the XY path
+clear. The two
 searches can total up to 9,000 motor degrees (2.083 bed revolutions) because
 the first index entry begins at an unknown A phase; the final trim reverses
 only across half of the observed index footprint. Do not run Q4 or production

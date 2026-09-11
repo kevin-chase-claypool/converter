@@ -397,11 +397,13 @@ Add new entries at the top of the log below this line.
   `G1 A-10 F120` returned controller MPos A to `0.000`; the physical bed mark
   also returned exactly. P100 Q5 had already placed TMAG at the verified center
   without a hidden home cycle.
-- Implementation: P112 requires fresh P111 then Q5, moves the TMAG +X by the
-  measured `223.675804` mm radius, records two outer-index A footprints, and
-  trims backward from the second exit to its second-pass center. Searches run
-  at `10000` motor degrees/min (2.31 bed RPM), bounding their 9,000-degree
-  allowance to 54 seconds. It releases Aux0 and makes no G54 write.
+- Implementation: P112 requires fresh P111 then Q5. The measured +X radius
+  would target X `-8.224`, 1.776 mm beyond the X `-10` home pull-off bound, so
+  it moves to G53 X `-10.5` (about 2.2 mm inboard) on the same radial line,
+  records two outer-index A footprints, and trims backward from the second exit
+  to its second-pass center. Searches run at `10000` motor degrees/min (2.31
+  bed RPM), bounding their 9,000-degree allowance to 54 seconds. It releases
+  Aux0 and makes no G54 write.
 - Safety boundary: Q4 and Q0 remain locked. P112 may travel slightly more than
   two bed revolutions because its first index entry begins at an unknown phase;
   it no longer adds a third revolution during final positioning.

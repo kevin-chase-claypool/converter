@@ -43,7 +43,9 @@ the physical bed reference mark exactly. P112 is the pending two-observation
 outer-index survey; it preserves G54 for this first M-09 evidence pass.
 Its two A searches run at 10,000 motor-degrees/min (2.31 bed RPM), with a
 short reverse trim to the second observed index center rather than a third
-forward rotation.
+forward rotation. The direct measured +X radius is 1.776 mm beyond the X
+`-10` mm home pull-off bound, so P112 instead uses G53 X `-10.5` mm: about
+2.2 mm inboard on the same radial line.
 
 ## Boundary
 

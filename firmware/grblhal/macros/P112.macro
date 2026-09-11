@@ -2,7 +2,8 @@
 (Requires a fresh P111 then a successful P100 Q5; start stationary at Q5 TMAG centroid.)
 (Moves TMAG +X by the measured center-to-index radius, captures two A footprints, and stops at pass-two center.)
 
-#<outer_radius> = 223.675804
+#<measured_center_to_index_radius> = 223.675804
+#<outer_machine_x> = -10.5
 #<a_search_degrees> = 4500.0
 #<a_expected_spacing> = 4320.0
 #<a_spacing_tolerance> = 10.0
@@ -15,11 +16,11 @@ M5
 G4 P3.0
 G21 G90 G94 G17 G54
 
-(Move from the verified center TMAG position to the measured +X index radius while scan is disarmed.)
+(The measured +X index radius would target beyond the X=-10 home pull-off limit.)
+(Keep the +X angle but stop 0.5 mm inboard at G53 X=-10.5 before arming scan.)
 M64 P0
 G4 P2.0
-G91 G1 X[#<outer_radius>] F[#<xy_travel_feed>]
-G90
+G53 G1 X[#<outer_machine_x>] F[#<xy_travel_feed>]
 
 (Two-phase readiness handshake, then publish the TMAG threshold on PRB.)
 M65 P0

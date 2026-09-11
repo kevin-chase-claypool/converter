@@ -200,8 +200,9 @@ def validate_outer_index_survey_macro() -> None:
     validate_flow_control(text)
     validate_line_comments(text)
     required = [
-        "#<outer_radius> = 223.675804",
-        "g91 g1 x[#<outer_radius>] f[#<xy_travel_feed>]",
+        "#<measured_center_to_index_radius> = 223.675804",
+        "#<outer_machine_x> = -10.5",
+        "g53 g1 x[#<outer_machine_x>] f[#<xy_travel_feed>]",
         "m65 p0\ng4 p2.0",
         "g91 g38.3 a[#<a_search_degrees>] f[#<a_scan_feed>]",
         "g91 g38.5 a[#<a_maximum_width>] f[#<a_scan_feed>]",

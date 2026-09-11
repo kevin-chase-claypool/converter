@@ -217,8 +217,9 @@ retrying automatically.
 
 During staged M-09 commissioning, `G65 P112` is the non-registering outer-index
 survey. It requires P111 then Q5 with no intervening axis motion, travels the
-TMAG +X by `223.675804` mm, captures two A footprints, and stops at the
-second-pass center. It does not issue `G10` or alter G54.
+TMAG along +X to G53 X `-10.5` mm (about 2.2 mm inboard of the measured
+`223.675804` mm radius to clear the X home pull-off), captures two A footprints,
+and stops at the second-pass center. It does not issue `G10` or alter G54.
 
 The current installed endpoint remains GP27/U3 -> RP23CNC `LIMA`. The
 implemented candidate terminates that same routed return at `PRB` so

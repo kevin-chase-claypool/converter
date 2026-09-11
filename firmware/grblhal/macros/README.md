@@ -33,10 +33,12 @@ before Q5; the X/Y homing configuration must omit A/Z.
 
 `P112.macro` is the next **survey-only** A-index stage. After fresh P111 and a
 successful Q5, run `G65 P112` without jogging X/Y/A between them. P112 moves
-the TMAG +X by the measured center-to-index radius of `223.675804` mm, captures
-two A entry/exit pairs, requires their centers to differ by `4320 +/- 10`
-motor degrees, and stops at the second-pass index center. It does not home or
-write G54. Its two bounded searches run at 10,000 motor-degrees/min: at 12:1,
+the TMAG along +X to G53 X `-10.5` mm: the measured `223.675804` mm radius
+would exceed the X `-10` mm home pull-off limit, so this is roughly 2.2 mm
+inboard while preserving the A phase. It captures two A entry/exit pairs,
+requires their centers to differ by `4320 +/- 10` motor degrees, and stops at
+the second-pass index center. It does not home or write G54. Its two bounded
+searches run at 10,000 motor-degrees/min: at 12:1,
 that is 2.31 bed RPM and no more than 54 seconds for the 9,000 motor-degree
 search allowance. The final move trims backward from the second exit to that
 second observed center; it does not add a third rotation. Q4 remains locked
