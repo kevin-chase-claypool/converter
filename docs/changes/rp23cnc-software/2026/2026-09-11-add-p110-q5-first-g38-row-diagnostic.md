@@ -5,7 +5,7 @@ category: rp23cnc-software
 affected_categories:
   - rp23cnc-software
   - hardware
-status: implemented
+status: verified
 components:
   - firmware/grblhal/macros/P110.macro
 tags:
@@ -45,14 +45,18 @@ or A command.
 - Static inspection: one 100 mm X-only G38.3, no `$H`, centroid, G54 write,
   or A command.
 - `python tools\\validate_homing_macro.py`: P100 remains valid.
-- Installed execution: pending after a fresh Q2.
+- Installed execution passed after fresh Q2. The row traveled east from the
+  southwest corner at `MPos:-280.000,-266.000` to the southeast corner at
+  `MPos:-180.000,-266.000`, returned clear `[PRB:-180.000,-266.000:0]`, and
+  printed `P110 complete: clear first G38.3 row passed`. It did not enter
+  `Home` or approach a limit switch.
 
 ## Risks and follow-up
 
 P110 commands one bounded probe move through the verified scan rectangle.
-Stop on any `Home` state or X/Y switch approach. If it passes, the full Q5
-raster logic—not its pre-raster or first G38 transition—becomes the remaining
-diagnostic scope.
+Its passed result proves Q5's initial clear-row probe transition is not a
+homing cycle. The remaining scope is the full raster loop, including rows that
+encounter the center magnet.
 
 ## Files
 

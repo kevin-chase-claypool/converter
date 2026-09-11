@@ -18,13 +18,14 @@ Run `G65 P110`. It reproduces Q5 preposition and readiness sequencing, then
 performs just `G91 G38.3 X100 F1000` from the southwest corner. It returns to
 absolute mode and releases Aux0 regardless of whether the probe triggers.
 
-## Expected result
+## Result
 
-The first scan row is expected to be clear. P110 should make one preposition
-move and one eastward G38.3 row, remain out of `Home`, and print `P110
-complete: clear first G38.3 row passed`. It has no centroid, G54, or A action.
+The first scan row was clear. P110 ran east from `MPos:-280.000,-266.000`
+(southwest) to `MPos:-180.000,-266.000` (southeast), reported
+`[PRB:-180.000,-266.000:0]`, and printed `P110 complete: clear first G38.3
+row passed`. It never entered `Home`. It has no centroid, G54, or A action.
 
 ## Stop condition
 
-If `Home` appears or the axes approach X/Y switches, press Reset and retain
-the P110 messages/status. Do not run Q5 after that outcome.
+No stop condition occurred. The remaining Q5 behavior is its repeated raster
+loop and magnet-detecting rows.

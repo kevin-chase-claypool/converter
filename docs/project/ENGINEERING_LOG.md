@@ -361,15 +361,19 @@ Add new entries at the top of the log below this line.
 <a id="elog-20260911143000"></a>
 ### 🟨 2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row
 
-- Status: P110 implemented; installed result pending after fresh Q2.
+- Status: P110 passed; full Q5 raster-loop behavior remains open.
 - Category: rp23cnc-software, hardware, P100, P110, Q5, G38, probe, raster,
   safety.
 - Evidence: P109 passed the full Q5 sequence before G38. It reached the
   southwest scan corner and completed its readiness handshake without `Home`.
 - Decision: P110 will execute only the expected-clear first row, G38.3 from
   G53 X `-280` to `-180` at Y `-266`, then release Aux0 and return.
-- Next action: run Q2 then P110. A `Home` state implicates G38 execution; a
-  clean pass removes the first G38 transition from the fault scope.
+- Verification: P110 traveled east from southwest `MPos:-280.000,-266.000`
+  to southeast `MPos:-180.000,-266.000`, returned clear PRB status, printed
+  completion, and never entered `Home`. This is the first Q5 raster row, not
+  a homing move.
+- Next action: distinguish the full Q5 serpentine raster from physical homing
+  before deciding whether to resume Q5.
 
 <a id="elog-20260911140000"></a>
 ### 🟨 2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster
