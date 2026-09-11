@@ -13,11 +13,12 @@ Q5: released baseline, READY_ACK assertion, release verification, scan-state
 assertion, and cleanup. It deliberately contains no G-code axis-motion word
 and no `$H`.
 
-## Expected result
+## Result
 
-The controller remains `Idle`; `P` may briefly assert during READY_ACK. P108
-prints `P108 complete: Q5 handshake passed with no axis command` and leaves
-Aux0 released. Neither X nor Y must move or enter `Home`.
+The controller remained `Idle`; P briefly asserted for READY_ACK and returned
+to blank on release. P108 printed `P108 complete: Q5 handshake passed with no
+axis command`, left Aux0 released, and produced neither X/Y movement nor a
+`Home` state.
 
 ## Stop condition
 
@@ -26,5 +27,5 @@ Reset and capture the retained P108 messages/status. Do not run Q5 afterward.
 
 ## Boundary
 
-P108 does not validate the Q5 raster or centroid. It only isolates the
+P108 does not validate the Q5 raster or centroid. It verifies only the
 non-motion readiness-handshake stage that follows P107's now-verified move.

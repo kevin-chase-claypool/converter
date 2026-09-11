@@ -5,7 +5,7 @@ category: rp23cnc-software
 affected_categories:
   - rp23cnc-software
   - hardware
-status: implemented
+status: verified
 components:
   - firmware/grblhal/macros/P108.macro
 tags:
@@ -42,7 +42,9 @@ buffer.
 
 - Static inspection: P108 contains no axis-motion G-code or `$H`.
 - `python tools\\validate_homing_macro.py`: P100 remains valid.
-- Installed execution: pending. Do not run Q5 before the P108 result.
+- Installed execution passed. P108 remained `Idle` throughout, asserted and
+  released `P` as expected, printed its completion message, and made no axis
+  motion or `Home` transition.
 
 ## Struggles and rejected approaches
 
@@ -52,8 +54,10 @@ now avoids raster status traffic entirely.
 
 ## Risks and follow-up
 
-P108 should never move an axis. Any movement is a stop condition and evidence
-of a controller/external action outside the macro's intended motion commands.
+P108 should never move an axis. Its passed result rules out the standalone
+Aux0 readiness handshake as the source of the reported limit approaches. The
+combined preposition-plus-handshake sequence remains to be checked before any
+further Q5 raster.
 
 ## Files
 
