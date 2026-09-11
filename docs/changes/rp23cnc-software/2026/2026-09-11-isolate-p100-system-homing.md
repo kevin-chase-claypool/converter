@@ -57,14 +57,14 @@ four-command contract, and rejects multiline parenthesized comments in P100.
   `error:71`. The source correction included a parenthesized comment split
   across two physical lines; grblHAL parsed its second line as an expression.
   That comment is now one physical line and the validator rejects this form.
-- Static validation now passes. Installed corrected-Q5 execution remains
-  pending. Do not reuse the prior P100 SD file.
+- The corrected P100 Q5 run completed with no `Home` state after its command
+  and ended at `MPos:-232.013,-218.775`. A magnet placed below the resulting
+  TMAG location was visually centered under the chip.
 
 ## Risks and follow-up
 
-Copy corrected P100 to the SD root; the already-installed P111 is unchanged.
-After a controller restart, run P111 once and verify one X/Y home cycle before
-the first corrected Q5. Q0 remains locked; future production startup must
+P100 Q5 is now verified as a center-magnet survey. After a controller restart,
+run P111 once before Q5. Q0 remains locked; future production startup must
 explicitly compose the separate home stage with the later registration macro
 without nesting G65 calls.
 

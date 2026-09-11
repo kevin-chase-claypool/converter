@@ -7,7 +7,7 @@ square, then stop at the calculated TMAG centroid without changing G54 or A.
 
 ## Preconditions
 
-- Q2 X/Y homing has passed immediately before Q5.
+- P111 X/Y homing has passed immediately before Q5.
 - Candidate G53 rectangle: X `-280..-180`, Y `-266..-166`.
 - Candidate pitch/feed: 10 mm / 1000 mm/min.
 - X/Y travel is clear and the operator watches the motion.
@@ -31,7 +31,11 @@ P111 was then installed and successfully performed exactly one X/Y home.
 The first corrected-P100 execution stopped before motion with `error:71`:
 the new explanatory parenthesized comment had been split across two physical
 lines. That has been corrected to one line and is now rejected by static
-validation if reintroduced. The corrected Q5 controller run remains pending.
+validation if reintroduced.
+
+The corrected P100 Q5 then completed without any `Home` state after the Q5
+command. Its final position was `MPos:-232.013,-218.775,0.000,0.000`; a
+magnet placed under the TMAG at that endpoint was visually centered.
 
 ## Boundary
 
