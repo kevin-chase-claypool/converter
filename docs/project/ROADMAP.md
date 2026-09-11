@@ -153,7 +153,7 @@
 
 ## Phase 6: system integration
 
-- [x] Implement the locked P100 physical-home, centroid-raster, and A-registration macro source. (2026-08-22 static validation; F-08/M-08/M-09 remain.)
+- [x] Implement the locked P100 physical-home, centroid-raster, and A-registration macro source. (2026-08-22 static validation; F-08/M-08 remain. The non-registering M-09 P112 survey passed physical center verification on 2026-09-11; G54-A registration remains locked.)
 - [x] Implement the dual-core GP28/GP27 readiness and magnetic-state protocol without adding drag-chain wires. (2026-08-22 compile; E-18 remains.)
 - [ ] Connect grblHAL M3/M5 to toolhead ENGAGE/LIFT.
 - [ ] Verify reset and E-stop leave the toolhead safe.

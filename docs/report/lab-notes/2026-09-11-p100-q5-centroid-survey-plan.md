@@ -61,8 +61,9 @@ With the revised gate installed, P112 completed successfully. Its second-pass
 footprint was captured at `A8557.209..8662.959`; P112 trimmed backward to the
 computed midpoint and stopped at `MPos:-10.500,-218.363,A8610.084`. It printed
 its survey-complete message, released the probe state, and did not alter G54.
-Visual confirmation that the stopped TMAG is over the physical index magnet is
-still pending before any registration mode is considered.
+The operator then visually confirmed that the stopped TMAG chip is centered
+over the physical index magnet. P112 is therefore M-09 verified as a
+survey-only stage; no registration mode has been enabled.
 
 ## Boundary
 

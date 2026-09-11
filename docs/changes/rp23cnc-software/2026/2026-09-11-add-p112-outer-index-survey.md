@@ -62,8 +62,8 @@ the final G53 trim.
   completion then parked at pass-two center
   `MPos:-10.500,-218.363,A8610.084` after the observed second footprint
   `A8557.209..8662.959`. It printed the completion message, released PRB, and
-  made no G54 write. Physical visual center confirmation remains required
-  before registration is enabled.
+  made no G54 write. The operator visually confirmed the index magnet centered
+  beneath TMAG at that stop. Registration remains disabled.
 
 ## Struggles and rejected approaches
 
