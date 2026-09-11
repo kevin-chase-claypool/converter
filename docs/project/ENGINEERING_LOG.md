@@ -83,6 +83,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-11 10:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Recorded P100 Q3 candidate G53 rectangle](#elog-20260911103000)
 - [2026-09-11 10:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Verified isolated P100 Q2 X/Y home stage](#elog-20260911100000)
 - [2026-09-10 12:55:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Passed real-magnet PRB/G38 GP27/U3 path](#elog-20260910125500)
 - [2026-09-10 11:15:18 -0500 - RP23CNC-SOFTWARE/HARDWARE/PARTIAL - Passed motor-inert P100 handshake and local magnetic state](#elog-20260910111518)
@@ -349,6 +350,22 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260911103000"></a>
+### 🟨 2026-09-11 10:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Recorded P100 Q3 candidate G53 rectangle
+
+- Status: the candidate scan area is stored and statically bounded; Q3 remains
+  locked and no automatic raster motion has been authorized.
+- Category: rp23cnc-software, hardware, P100, Q3, scan bounds, G53, safety.
+- Result: four jogged G54 corners formed a 100 × 100 mm square. Readback of
+  `G54:-232.900,-191.200` converted it to G53 X `-280..-180`, Y
+  `-266..-166`, within the proven X `-455..0`, Y `-446..0` envelope. P100's
+  validator now enforces this ordered, 100 mm candidate rectangle and a 20 mm
+  endpoint clearance.
+- Evidence: `docs/report/lab-notes/2026-09-11-p100-q3-candidate-rectangle.md`;
+  `RPSW-20260911-003`.
+- Next action: make a non-motion, inspectable first-pass raster plan and select
+  row pitch/feed before considering a Q3 unlock.
 
 <a id="elog-20260911100000"></a>
 ### 🟩 2026-09-11 10:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Verified isolated P100 Q2 X/Y home stage

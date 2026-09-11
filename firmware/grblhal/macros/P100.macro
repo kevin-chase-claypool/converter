@@ -52,10 +52,12 @@ o999 error[39]
 (This must be the measured installed value, not an assumed CAD orientation.)
 #<sensor_to_pen_x> = 0.0
 #<sensor_to_pen_y> = 0.0
-#<scan_min_x> = 0.0
-#<scan_max_x> = 0.0
-#<scan_min_y> = 0.0
-#<scan_max_y> = 0.0
+(Candidate Q3 rectangle: measured by jog in G54, converted to G53 MPos.)
+(It remains unusable until the Q3 commissioning lock is deliberately released.)
+#<scan_min_x> = -280.0
+#<scan_max_x> = -180.0
+#<scan_min_y> = -266.0
+#<scan_max_y> = -166.0
 #<row_pitch> = 0.0
 #<scan_feed> = 60.0
 #<registration_feed> = 30.0

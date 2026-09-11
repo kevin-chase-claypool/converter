@@ -11,6 +11,14 @@ ROOT = Path(__file__).resolve().parents[1]
 MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P100.macro"
 
 
+def assignment(text: str, name: str) -> float:
+    match = re.search(
+        rf"(?m)^#<{re.escape(name)}>\s*=\s*(-?\d+(?:\.\d+)?)\s*$", text
+    )
+    assert match, f"P100 missing numeric assignment for {name}"
+    return float(match.group(1))
+
+
 def validate_flow_control(text: str) -> None:
     stack: list[tuple[str, str, int]] = []
     opening = {"if": "endif", "while": "endwhile"}
@@ -134,6 +142,20 @@ def validate_installed_aux_polarity(text: str) -> None:
     assert aux_commands[-1] == "m64 p0", "P100 must release Aux0 on exit"
 
 
+def validate_candidate_scan_rectangle(text: str) -> None:
+    min_x = assignment(text, "scan_min_x")
+    max_x = assignment(text, "scan_max_x")
+    min_y = assignment(text, "scan_min_y")
+    max_y = assignment(text, "scan_max_y")
+
+    # MPos envelope after the proven X/Y home configuration. The candidate
+    # rectangle must retain a 20 mm clearance at every endpoint.
+    assert -435.0 <= min_x < max_x <= -20.0, "unsafe candidate X scan bounds"
+    assert -426.0 <= min_y < max_y <= -20.0, "unsafe candidate Y scan bounds"
+    assert max_x - min_x == 100.0, "candidate X scan width must be 100 mm"
+    assert max_y - min_y == 100.0, "candidate Y scan height must be 100 mm"
+
+
 def validate_centroid_math() -> None:
     expected_x = 12.5
     expected_y = -7.25
@@ -197,6 +219,7 @@ def main() -> None:
     validate_safety_contract(text)
     validate_commissioning_locks(text)
     validate_installed_aux_polarity(text)
+    validate_candidate_scan_rectangle(text)
     validate_centroid_math()
     validate_a_math()
     validate_sensor_to_pen_registration()

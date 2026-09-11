@@ -130,8 +130,10 @@ remain unloaded.
    2026-09-11 and direct X/Y `$H` passed with the installed switches and fuses.
    `G65 P100 Q2` then passed with `H:1,3` and its completion message. Next
    verify the expected commissioning abort for Q0/Q3/Q4, G53/G54 and `G10 L20`
-   parameter semantics, and that every abort releases Aux0. Do not bypass the
-   Q0/Q3/Q4 commissioning locks.
+   parameter semantics, and that every abort releases Aux0. The candidate Q3
+   rectangle is X `-280..-180`, Y `-266..-166` in G53 machine coordinates;
+   retain the Q3 lock until its pitch, feed, and first observed raster plan are
+   reviewed. Do not bypass the Q0/Q3/Q4 commissioning locks.
 9. Send `G90`, reset the controller, and do not use the motorless test's
    internal coordinates as machine references.
 

@@ -43,6 +43,17 @@ filesystem and the candidate build passes F-08.
 The eventual single ioSender button sends `G65 P100 Q0`. Separate modes exist
 so each stage can be commissioned without bypassing the others.
 
+### Candidate Q3 rectangle
+
+On 2026-09-11, the operator jogged the TMAG sensor to the four corners of a
+100 mm square around the center magnet. The G54 DRO corners were X `-47.100`
+to `52.900` and Y `-74.800` to `25.200`. With the verified
+`G54:-232.900,-191.200` offset, P100 records the equivalent G53 machine
+rectangle as X `-280.000` to `-180.000` and Y `-266.000` to `-166.000`.
+It is inside the proven X `-455..0` and Y `-446..0` envelope. These are
+candidate bounds only: Q3 stays locked until row pitch, scan feed, and the
+first supervised raster plan are reviewed.
+
 ### Planned interchangeable-tool preflight
 
 Before a tool change can be considered automatically safe, the P100 `Q0`
