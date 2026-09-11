@@ -11,16 +11,15 @@ After a successful `G65 P100 Q2`, execute `G65 P107`. P107 commands `M5`, a
 three-second dwell, and one `G53 G0 X-280 Y-266` move. It uses no `$H`, probe,
 Aux0, A-axis, or coordinate-write command.
 
-## Expected result
+## Result
 
-Starting from the Q2 X/Y-home position, the toolhead makes one bounded move to
-the southwest corner of the known Q5 rectangle. It must not enter `Home` and
-must not approach or open the X/Y home switches. It prints one start message
-and one completion message, which remain visible even if the controller's
-rolling status buffer overwrites older telemetry.
+Starting from Q2's `MPos:-10.000,-436.000` X/Y-home position, P107 made one
+continuous diagonal move to `MPos:-280.000,-266.000`. It remained in `Run`
+then `Idle`; no `Home` status or X/Y limit approach occurred. Its start and
+completion messages remained available in the controller console.
 
 ## Boundary
 
 P107 does not validate the Q5 handshake, probe transitions, raster, centroid,
-or registration. A P107 result is needed before any further Q5 execution after
-the reported unexpected limit behavior.
+or registration. Its passed result isolates the remaining concern to a later
+Q5 stage, beginning with the Aux0 readiness handshake.

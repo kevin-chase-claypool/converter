@@ -9,7 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
-| 2026-09-11 | `RPSW-20260911-007` | implemented | [Add P107 Q5 Preposition Diagnostic](2026/2026-09-11-add-p107-q5-preposition-diagnostic.md) | `P100`, `P107`, `Q5`, `diagnostic`, `homing`, `safety` |
+| 2026-09-11 | `RPSW-20260911-007` | verified | [Add P107 Q5 Preposition Diagnostic](2026/2026-09-11-add-p107-q5-preposition-diagnostic.md) | `P100`, `P107`, `Q5`, `diagnostic`, `homing`, `safety` |
 | 2026-09-11 | `RPSW-20260911-006` | verified | [Add P100 Q5 Centroid Survey](2026/2026-09-11-add-p100-q5-centroid-survey.md) | `P100`, `Q5`, `centroid`, `raster`, `safety` |
 | 2026-09-11 | `RPSW-20260911-005` | implemented | [Add P106 Manual Magnetic Survey](2026/2026-09-11-add-p106-manual-magnetic-survey.md) | `P100`, `Q3`, `P106`, `magnetic-survey`, `safety` |
 | 2026-09-11 | `RPSW-20260911-004` | implemented | [Record P100 Q3 Candidate Scan Parameters](2026/2026-09-11-record-p100-q3-candidate-parameters.md) | `P100`, `Q3`, `scan-feed`, `tool-offset`, `safety` |

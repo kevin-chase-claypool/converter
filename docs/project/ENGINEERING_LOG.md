@@ -358,7 +358,7 @@ Add new entries at the top of the log below this line.
 <a id="elog-20260911130000"></a>
 ### 🟨 2026-09-11 13:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated unexpected Q5 limit approaches
 
-- Status: P107 diagnostic implemented; installed result pending.
+- Status: P107 diagnostic passed; the later Q5 handshake path remains open.
 - Category: rp23cnc-software, hardware, P100, P107, Q5, homing, limits,
   safety.
 - Observation: after Q5, the operator observed three apparent X/Y limit-switch
@@ -370,9 +370,12 @@ Add new entries at the top of the log below this line.
   emits concise start/completion markers.
 - Evidence: `RPSW-20260911-007`;
   `docs/report/lab-notes/2026-09-11-p107-q5-preposition-diagnostic.md`.
-- Next action: execute Q2 then P107 with X/Y clear. If it enters `Home` or
-  approaches a switch, stop and record its final MPos/status; otherwise use
-  the result to isolate a later Q5 stage.
+- Verification: after fresh Q2, P107 moved continuously from
+  `MPos:-10.000,-436.000` to `MPos:-280.000,-266.000`, with `Run` followed by
+  `Idle` and no `Home` state or X/Y limit approach. Q5's preposition is not
+  the cause of the reported extra limit approaches.
+- Next action: isolate Q5's Aux0 readiness/handshake stage without raster
+  motion before repeating Q5.
 
 <a id="elog-20260911120000"></a>
 ### 🟩 2026-09-11 12:00:00 -0500 - RP23CNC-SOFTWARE/VERIFIED - P100 Q5 center-magnet centroid survey

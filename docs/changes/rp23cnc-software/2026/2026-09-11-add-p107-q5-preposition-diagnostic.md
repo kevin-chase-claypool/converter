@@ -5,7 +5,7 @@ category: rp23cnc-software
 affected_categories:
   - rp23cnc-software
   - hardware
-status: implemented
+status: verified
 components:
   - firmware/grblhal/macros/P107.macro
 tags:
@@ -44,8 +44,10 @@ Aux0, A-axis, or coordinate-registration operation.
 
 - Static inspection: P107 contains a single G53 X/Y move and no `$H`.
 - `python tools\\validate_homing_macro.py`: P100 remains valid.
-- Installed execution: pending. Required sequence is Q2, then P107; do not
-  repeat Q5 until the P107 result is known.
+- Installed execution passed after a fresh Q2. P107 printed its start and
+  completion messages, remained in `Run`/`Idle` rather than `Home`, and ended
+  at `MPos:-280.000,-266.000,0.000,0.000`. The movement was one continuous
+  diagonal from Q2's `MPos:-10.000,-436.000` home position.
 
 ## Struggles and rejected approaches
 
@@ -55,9 +57,9 @@ P107 narrows the physical test to the first load-bearing move.
 
 ## Risks and follow-up
 
-P107 still commands one automatic XY rapid. Execute only after a fresh Q2 with
-the X/Y travel path clear and stop immediately if it enters `Home` or heads
-toward an X/Y switch.
+P107 still commands one automatic XY rapid. Its passed result rules out Q5's
+preposition move as the source of the observed extra limit approaches; the
+Q5 readiness/handshake portion remains the next isolated diagnostic target.
 
 ## Files
 
