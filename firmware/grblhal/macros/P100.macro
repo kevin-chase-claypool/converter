@@ -3,7 +3,7 @@
 (Production ioSender invocation: G65 P100 Q0)
 (Requires PROBE_ENABLE, NGC expressions, FS macros, Aux0=P0, and PRB)
 
-(Stage gates: Q1 readiness and Q5 centroid survey only.)
+(Stage gates: Q0 full registration, Q1 readiness, and Q5 centroid survey.)
 o001 if [#17 EQ 1]
   M5
   G4 P3.0
@@ -35,15 +35,15 @@ o004 if [#17 EQ 2]
   o904 error[39]
 o004 endif
 
-(Q0/Q3/Q4 remain deliberately locked pending magnetic commissioning.)
-o005 if [#17 NE 5]
-  (print,P100 mode locked: Q1 readiness and Q5 survey only are enabled)
+(Q3/Q4 remain deliberately locked; Q0 uses the separately proven P111/Q5/P112 workflow.)
+o005 if [[#17 EQ 3] OR [#17 EQ 4]]
+  (print,P100 mode locked: Q3/Q4 remain disabled; use Q0 only after P111)
   o999 error[39]
 o005 endif
 
 #31 = #17
-#<commissioned> = 0
-#<sensor_to_pen_offset_valid> = 0
+#<commissioned> = 1
+#<sensor_to_pen_offset_valid> = 1
 
 (Commissioning values - replace only with dated test evidence.)
 (sensor_to_pen is pen location minus TMAG location in machine X/Y.)
@@ -51,7 +51,7 @@ o005 endif
 #<sensor_to_pen_x> = 0.0
 #<sensor_to_pen_y> = -29.4892
 (Candidate Q3 rectangle: measured by jog in G54, converted to G53 MPos.)
-(It remains unusable until the Q3 commissioning lock is deliberately released.)
+(Q0 uses this verified rectangle; Q3 remains separately locked.)
 #<scan_min_x> = -280.0
 #<scan_max_x> = -180.0
 #<scan_min_y> = -266.0
@@ -66,17 +66,13 @@ o005 endif
 #<lift_dwell_s> = 3.0
 #<ready_wait_s> = 2.0
 #<edge_settle_s> = 0.10
-#<outer_radius> = 226.06
+#<outer_machine_x> = -10.5
 #<a_search_degrees> = 4500.0
 #<a_expected_spacing> = 4320.0
-#<a_spacing_tolerance> = 10.0
+#<a_spacing_tolerance> = 15.0
 #<a_maximum_width> = 120.0
-#<a_scan_feed> = 600.0
-#<a_registration_feed> = 120.0
-
-#<old_g54_x> = #5221
-#<old_g54_y> = #5222
-#<old_g54_a> = #5224
+#<a_scan_feed> = 10000.0
+#<a_registration_feed> = 10000.0
 
 o101 if [#31 LT 0]
   (print,P100 invalid Q mode)
@@ -117,8 +113,8 @@ G4 P[#<lift_dwell_s>]
 G21 G90 G94 G17 G54
 
 (Preposition while HOME_ARM is inactive so the re-arm interval stays short.)
-o116 if [#31 EQ 5]
-  (Q5 starts from the proven Q1-style released baseline before it moves.)
+o116 if [[#31 EQ 0] OR [#31 EQ 5]]
+  (Q0/Q5 start from the proven Q1-style released baseline before moving.)
   M64 P0
   G4 P2.0
 o116 endif
@@ -128,10 +124,6 @@ o112 endif
 o113 if [[#31 EQ 3] OR [#31 EQ 5]]
   G53 G0 X[#<scan_min_x>] Y[#<scan_min_y>]
 o113 endif
-o114 if [#31 EQ 4]
-  G54 G0 X[#<outer_radius>] Y0
-o114 endif
-
 (Two-phase readiness handshake on Aux0/GP28 and PRB/GP27.)
 (Installed U2/GP28 path is active-low: M65 asserts arm; M64 releases it.)
 M65 P0
@@ -302,10 +294,8 @@ o200 if [[[#31 EQ 0] OR [#31 EQ 3]] OR [#31 EQ 5]]
     (print,P100 Q5 survey complete: TMAG is at calculated centroid; inspect MPos)
     o100 return [1]
   o234 endif
-  G54
-  (At the TMAG centroid, apply the pen-minus-TMAG installed offset.)
-  G10 L20 P1 X[#<sensor_to_pen_x>] Y[#<sensor_to_pen_y>]
-  (print,P100 bed centroid registered so G54 X0 Y0 is pen-at-center)
+  (Q0 defers all G54 writes until the outer-index survey has also passed.)
+  (That preserves the prior G54 frame if either physical survey fails.)
 o200 endif
 
 o240 if [#31 EQ 3]
@@ -316,84 +306,104 @@ o240 if [#31 EQ 3]
 o240 endif
 
 (Outer-magnet A registration. A units are motor-shaft degrees.)
-o300 if [[#31 EQ 0] OR [#31 EQ 4]]
-  G54 G90 G0 X[#<outer_radius>] Y0
+(This is the verified P112 two-footprint path, integrated after Q0's center scan.)
+o300 if [#31 EQ 0]
+  M64 P0
+  G4 P2.0
+  (Keep the proven radial angle but stay 0.5 mm inboard of X home pull-off.)
+  G53 G1 X[#<outer_machine_x>] F1000
+
+  (Re-run READY/release/re-arm after the center survey before A scanning.)
+  M65 P0
+  G4 P2.0
+  o301 if [#<_probe_state> NE 1]
+    M64 P0
+    (print,P100 outer READY acknowledgement missing)
+    o926 error[39]
+  o301 endif
+  M64 P0
+  G4 P0.10
+  o302 if [#<_probe_state> NE 0]
+    (print,P100 outer READY acknowledgement did not release)
+    o927 error[39]
+  o302 endif
+  M65 P0
+  G4 P0.10
 
   (If starting over the magnet, first move to its inactive side.)
-  o301 if [#<_probe_state> EQ 1]
+  o303 if [#<_probe_state> EQ 1]
     G91 G38.5 A[#<a_maximum_width>] F[#<a_scan_feed>]
     G90
-    o302 if [#5070 NE 1]
+    o304 if [#5070 NE 1]
       M64 P0
-      G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
       (print,P100 could not leave initial A magnetic footprint)
-      o926 error[39]
-    o302 endif
-  o301 endif
-
-  G91 G38.3 A[#<a_search_degrees>] F[#<a_scan_feed>]
-  G90
-o303 if [#5070 NE 1]
-    M64 P0
-    G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
-    (print,P100 first A entry not found)
-    o927 error[39]
+      o928 error[39]
+    o304 endif
   o303 endif
-  #<a_entry_1> = #5064
-  G91 G38.5 A[#<a_maximum_width>] F[#<a_scan_feed>]
-  G90
-o304 if [#5070 NE 1]
-    M64 P0
-    G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
-    (print,P100 first A exit not found)
-    o928 error[39]
-  o304 endif
-  #<a_exit_1> = #5064
 
   G91 G38.3 A[#<a_search_degrees>] F[#<a_scan_feed>]
   G90
-o305 if [#5070 NE 1]
+  o305 if [#5070 NE 1]
     M64 P0
-    G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
-    (print,P100 second A entry not found)
+    (print,P100 first A entry not found)
     o929 error[39]
   o305 endif
-  #<a_entry_2> = #5064
+  #<a_entry_1> = [#5064 + #5224]
   G91 G38.5 A[#<a_maximum_width>] F[#<a_scan_feed>]
   G90
-o306 if [#5070 NE 1]
+  o306 if [#5070 NE 1]
     M64 P0
-    G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
-    (print,P100 second A exit not found)
+    (print,P100 first A exit not found)
     o930 error[39]
   o306 endif
-  #<a_exit_2> = #5064
+  #<a_exit_1> = [#5064 + #5224]
+
+  G91 G38.3 A[#<a_search_degrees>] F[#<a_scan_feed>]
+  G90
+  o307 if [#5070 NE 1]
+    M64 P0
+    (print,P100 second A entry not found)
+    o931 error[39]
+  o307 endif
+  #<a_entry_2> = [#5064 + #5224]
+  G91 G38.5 A[#<a_maximum_width>] F[#<a_scan_feed>]
+  G90
+  o308 if [#5070 NE 1]
+    M64 P0
+    (print,P100 second A exit not found)
+    o932 error[39]
+  o308 endif
+  #<a_exit_2> = [#5064 + #5224]
 
   #<a_width_1> = ABS[#<a_exit_1> - #<a_entry_1>]
   #<a_width_2> = ABS[#<a_exit_2> - #<a_entry_2>]
-o307 if [[#<a_width_1> GT #<a_maximum_width>] OR [#<a_width_2> GT #<a_maximum_width>]]
+  o309 if [[[#<a_width_1> LE 0] OR [#<a_width_1> GT #<a_maximum_width>]] OR [[#<a_width_2> LE 0] OR [#<a_width_2> GT #<a_maximum_width>]]]
     M64 P0
-    G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
     (print,P100 A magnetic width outside limits)
-    o931 error[39]
-  o307 endif
+    o933 error[39]
+  o309 endif
 
   #<a_center_1> = [[#<a_entry_1> + #<a_exit_1>] / 2]
   #<a_center_2> = [[#<a_entry_2> + #<a_exit_2>] / 2]
   #<a_spacing> = [#<a_center_2> - #<a_center_1>]
-o308 if [ABS[#<a_spacing> - #<a_expected_spacing>] GT #<a_spacing_tolerance>]
+  o310 if [ABS[#<a_spacing> - #<a_expected_spacing>] GT #<a_spacing_tolerance>]
     M64 P0
-    G10 L2 P1 X[#<old_g54_x>] Y[#<old_g54_y>] A[#<old_g54_a>]
     (print,P100 A index spacing validation failed)
-    o932 error[39]
-  o308 endif
+    o934 error[39]
+  o310 endif
 
-  #<a_index> = [[#<a_center_1> + [#<a_center_2> - #<a_expected_spacing>]] / 2]
-  #<a_approach_target> = [#<a_index> + [2 * #<a_expected_spacing>]]
-  G53 G1 A[#<a_approach_target>] F[#<a_registration_feed>]
+  (Use the second observed midpoint, not a nominal-period extrapolation.)
+  #<a_pass_two_center> = #<a_center_2>
+  G53 G1 A[#<a_pass_two_center>] F[#<a_registration_feed>]
   G54
   G10 L20 P1 A0
   (print,P100 outer magnet registered as G54 A0)
+
+  (Only both passing surveys may now replace the XY work offset.)
+  G53 G1 X[#<centroid_x>] Y[#<centroid_y>] F[#<registration_feed>]
+  G54
+  G10 L20 P1 X[#<sensor_to_pen_x>] Y[#<sensor_to_pen_y>]
+  (print,P100 center registered so G54 X0 Y0 is pen-at-center)
 o300 endif
 
 M64 P0

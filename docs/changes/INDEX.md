@@ -18,6 +18,7 @@ Newest changes appear first.
 | 2026-09-11 | `RPSW-20260911-003` | rp23cnc-software, hardware | implemented | [Record P100 Q3 Candidate Scan Rectangle](rp23cnc-software/2026/2026-09-11-record-p100-q3-candidate-rectangle.md) |
 | 2026-09-11 | `RPSW-20260911-002` | rp23cnc-software, hardware | verified | [Enable Isolated P100 Q2 X/Y Homing](rp23cnc-software/2026/2026-09-11-enable-isolated-p100-q2-home.md) |
 | 2026-09-11 | `RPSW-20260911-001` | rp23cnc-software, hardware | verified | [Verify P100 Q1 probe handshake](rp23cnc-software/2026/2026-09-11-verify-p100-q1-probe-handshake.md) |
+| 2026-09-11 | `RP23-20260911-024` | hardware | implemented | [Enable Verified P100 Q0 Registration](rp23cnc-software/2026/2026-09-11-enable-verified-p100-q0-registration.md) |
 | 2026-09-11 | `RP23-20260911-023` | hardware | verified | [Verify Manual Magnetic G54 Registration](rp23cnc-software/2026/2026-09-11-verify-manual-magnetic-g54-registration.md) |
 | 2026-09-10 | `RPSW-20260910-003` | rp23cnc-software, hardware | verified | [Correct P100 installed Aux0 polarity](rp23cnc-software/2026/2026-09-10-correct-p100-aux-polarity.md) |
 | 2026-09-10 | `RPSW-20260910-002` | rp23cnc-software, hardware | verified | [Verify real-magnet PRB/G38 path](rp23cnc-software/2026/2026-09-10-prb-g38-magnetic-path.md) |

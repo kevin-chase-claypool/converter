@@ -6,21 +6,24 @@ It is intended for the grblHAL filesystem macro plugin and is invoked with
 
 | Mode | Behavior |
 |---:|---|
-| 0 | Full X/Y home, center raster, centroid approach/registration, and A registration |
+| 0 | Full magnetic registration after standalone P111: center raster, two-pass A index, G54 writes, pen-center park |
 | 1 | Toolhead readiness handshake only |
 | 2 | Compatibility stop; directs the operator to P111 |
 | 3 | Center raster and `G54 X0 Y0` registration |
 | 4 | Outer-magnet scan and `G54 A0` registration |
 | 5 | Automatic center-magnet survey; stops at TMAG centroid without writing G54 or A |
 
-The file intentionally sets `#<commissioned> = 0`. Modes 0, 3, and 4 return
-grblHAL error 39 before they can command `M5`, motion, or Aux0; they remain
-locked until F-08/E-18 pass and every scan constant at the top of the macro is
-replaced with measured, documented values. Mode 1 requires commissioned
-toolhead firmware because the Pro Micro will not acknowledge readiness
-otherwise.
+Q0 is enabled for a supervised first combined run only after `G65 P111`
+completes successfully. Its measured values are the verified Q5 rectangle,
+the P112 inboard `G53 X-10.5` index position, two 10,000 motor-degree/min A
+searches, and the `4320 +/- 15` A-spacing gate. It defers every G54 write until
+both magnetic surveys pass, writes A0 at the second observed index center,
+returns TMAG to the calculated center, writes the installed pen-minus-TMAG
+offset, and parks with the pen at `G54 X0 Y0 A0`. Q3/Q4 remain locked and return
+error 39 before motion. Mode 1 requires commissioned toolhead firmware because
+the Pro Micro will not acknowledge readiness otherwise.
 
-P100's executable entry points now permit **Q1** and **Q5**. Q1 performs the
+P100's executable entry points now permit **Q0**, **Q1**, and **Q5**. Q1 performs the
 proven motor-inert READY/release handshake. `Q2` now returns error 39 with an
 explicit instruction to run `G65 P111`, because grblHAL processes `$H` system
 commands while streaming a macro even when an enclosing O-word condition is
@@ -29,7 +32,8 @@ before the magnetic body.
 
 `P111.macro` owns physical X/Y homing. It contains the one intentional,
 unconditional `$H`, preceded by `M5` and a three-second settle. Run `G65 P111`
-before Q5; the X/Y homing configuration must omit A/Z.
+before Q5 or Q0; the X/Y homing configuration must omit A/Z. The production
+ioSender routine is therefore two commands: `G65 P111`, then `G65 P100 Q0`.
 
 `P112.macro` is the next **survey-only** A-index stage. After fresh P111 and a
 successful Q5, run `G65 P112` without jogging X/Y/A between them. P112 moves
@@ -79,8 +83,8 @@ gate and installed `pen - TMAG` X/Y values; this ensures G54 X0/Y0 is the pen
 tip at bed center.
 
 The ioSender production button is named `HOME + REGISTER`, has confirmation
-enabled, and is not yet authorized because Q0 remains locked. During staged
-testing, invoke Q1/Q5 from P100 and physical X/Y home through P111 only.
+enabled, and must issue `G65 P111` followed by `G65 P100 Q0`. The first combined
+Q0 run is supervised commissioning evidence; do not substitute Q3 or Q4.
 
 The macro expects:
 

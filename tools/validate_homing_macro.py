@@ -60,8 +60,8 @@ def validate_line_comments(text: str) -> None:
 
 def validate_safety_contract(text: str) -> None:
     required = [
-        "#<commissioned> = 0",
-        "#<sensor_to_pen_offset_valid> = 0",
+        "#<commissioned> = 1",
+        "#<sensor_to_pen_offset_valid> = 1",
         "g65 p100 q0",
         "m64 p0",
         "m65 p0",
@@ -90,9 +90,9 @@ def validate_safety_contract(text: str) -> None:
         "P100 must preserve the G65 Q argument in #31 before named-variable "
         "initialization"
     )
-    assert lower.count("#17") == 4, (
-        "P100 may read #17 only for the isolated Q1/Q2 stage gates, the Q5 "
-        "allow gate, and the later copy to #31"
+    assert lower.count("#17") == 5, (
+        "P100 may read #17 only for the isolated Q1/Q2 stage gates, the "
+        "Q3/Q4 lock, and the later copy to #31"
     )
     for token in required:
         assert token in lower, f"required safety/interface token missing: {token}"
@@ -120,8 +120,8 @@ def validate_commissioning_locks(text: str) -> None:
         "p100 q5 survey complete: tmag is at calculated centroid; inspect mpos",
         "o100 return [1]",
         "o999 error[39]",
-        "o005 if [#17 ne 5]",
-        "p100 mode locked: q1 readiness and q5 survey only are enabled",
+        "o005 if [[#17 eq 3] or [#17 eq 4]]",
+        "p100 mode locked: q3/q4 remain disabled; use q0 only after p111",
         "o103 if [#31 eq 0]",
         "o105 if [#31 eq 3]",
         "o107 if [#31 eq 4]",
@@ -140,8 +140,8 @@ def validate_commissioning_locks(text: str) -> None:
     assert lower.index("o004 if [#17 eq 2]") < lower.index("#31 = #17"), (
         "Q2 must dispatch before named-variable initialization and magnetic paths"
     )
-    assert lower.index("o005 if [#17 ne 5]") < lower.index("#31 = #17"), (
-        "only Q5 may continue past the early Q1/Q2 stage gates"
+    assert lower.index("o005 if [[#17 eq 3] or [#17 eq 4]]") < lower.index("#31 = #17"), (
+        "Q3/Q4 must stop before named-variable initialization and motion"
     )
     q5_return = lower.index(
         "p100 q5 survey complete: tmag is at calculated centroid; inspect mpos"
@@ -150,8 +150,8 @@ def validate_commissioning_locks(text: str) -> None:
     assert q5_return < first_g54_registration, (
         "Q5 must return before any G54 XY registration"
     )
-    assert "o116 if [#31 eq 5]" in lower, (
-        "Q5 must establish a released baseline before prepositioning"
+    assert "o116 if [[#31 eq 0] or [#31 eq 5]]" in lower, (
+        "Q0/Q5 must establish a released baseline before prepositioning"
     )
 
 
@@ -173,9 +173,9 @@ def validate_installed_aux_polarity(text: str) -> None:
         "installed active-low U2/GP28 normal path must arm, release, then "
         "re-arm with M65, M64, M65"
     )
-    assert aux_commands.count("m65 p0") == 3, (
-        "P100 must contain one Q1 stage-gate assertion plus the legacy "
-        "readiness/scan assertions; cleanup must release Aux0"
+    assert aux_commands.count("m65 p0") == 5, (
+        "P100 must contain the Q1 assertion plus the center and outer "
+        "readiness/scan assertion pairs; cleanup must release Aux0"
     )
     assert aux_commands[-1] == "m64 p0", "P100 must release Aux0 on exit"
 
@@ -262,8 +262,37 @@ def validate_candidate_scan_parameters(text: str) -> None:
     assert assignment(text, "scan_feed") == 2000.0
     assert assignment(text, "ready_wait_s") == 2.0
     assert assignment(text, "maximum_chord_width") == 50.0
-    assert "#<sensor_to_pen_offset_valid> = 0" in text.lower(), (
-        "candidate offset must not unlock Q3 before a supervised scan"
+    assert "#<sensor_to_pen_offset_valid> = 1" in text.lower(), (
+        "the measured pen offset must enable Q0 after its supervised scan"
+    )
+
+
+def validate_q0_verified_registration_path(text: str) -> None:
+    lower = text.lower()
+    required = [
+        "#<outer_machine_x> = -10.5",
+        "#<a_spacing_tolerance> = 15.0",
+        "#<a_scan_feed> = 10000.0",
+        "#<a_registration_feed> = 10000.0",
+        "g53 g1 x[#<outer_machine_x>] f1000",
+        "#<a_entry_1> = [#5064 + #5224]",
+        "#<a_exit_1> = [#5064 + #5224]",
+        "#<a_entry_2> = [#5064 + #5224]",
+        "#<a_exit_2> = [#5064 + #5224]",
+        "#<a_pass_two_center> = #<a_center_2>",
+        "g53 g1 a[#<a_pass_two_center>] f[#<a_registration_feed>]",
+        "g53 g1 x[#<centroid_x>] y[#<centroid_y>] f[#<registration_feed>]",
+        "g54 g90 g0 x0 y0 a0",
+    ]
+    for token in required:
+        assert token in lower, f"Q0 verified registration token missing: {token}"
+    assert "#<outer_radius>" not in lower, "Q0 must not use stale outer radius"
+    assert "g10 l2 p1" not in lower, "Q0 must not rewrite G54 on survey failure"
+    a_write = lower.index("g10 l20 p1 a0")
+    xy_write = lower.index("g10 l20 p1 x[#<sensor_to_pen_x>] y[#<sensor_to_pen_y>]")
+    assert a_write < xy_write, "Q0 must verify/register A before replacing XY"
+    assert xy_write < lower.index("g54 g90 g0 x0 y0 a0"), (
+        "Q0 must write both references before final G54 park"
     )
 
 
@@ -335,6 +364,7 @@ def main() -> None:
     validate_outer_index_survey_macro()
     validate_candidate_scan_rectangle(text)
     validate_candidate_scan_parameters(text)
+    validate_q0_verified_registration_path(text)
     validate_centroid_math()
     validate_a_math()
     validate_sensor_to_pen_registration()

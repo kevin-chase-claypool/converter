@@ -68,6 +68,7 @@ Entry details remain only in the chronology.
 - [2026-09-06 - WINDOWS SOFTWARE/SUCCESS - Centered converter G54 output and corrected M-06 sample](#elog-20260906-centered-converter-g54-output-and-corrected-m-06-sample)
 
 ### RP23CNC and machine software
+- [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Enable verified P100 Q0 registration](#elog-20260911-enable-verified-p100-q0-registration)
 - [2026-09-10 13:30:00 -0500 - RP23CNC-SOFTWARE/VERIFIED - Corrected P100 installed Aux0 polarity](#elog-20260910133000)
 - [2026-09-05 - DOCUMENTATION/SUCCESS - Consolidated current documentation](#elog-20260905-consolidated-current-documentation)
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -90,6 +91,7 @@ Entry details remain only in the chronology.
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Complete non-registering P112 survey](#elog-20260911-complete-non-registering-p112-survey)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Register verified index as G54 A0](#elog-20260911-register-verified-index-as-g54-a0)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Complete manual magnetic G54 registration](#elog-20260911-complete-manual-magnetic-g54-registration)
+- [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Enable verified P100 Q0 registration](#elog-20260911-enable-verified-p100-q0-registration)
 - [2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row](#elog-20260911143000)
 - [2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster](#elog-20260911140000)
 - [2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake](#elog-20260911133000)
@@ -496,6 +498,26 @@ Add new entries at the top of the log below this line.
   the stale P100 Q0/Q3/Q4 implementation. Do not unlock those modes. The
   future automated path must use P111 → Q5 → P112 before applying the two
   verified G54 writes and parking at X0/Y0.
+
+<a id="elog-20260911-enable-verified-p100-q0-registration"></a>
+### 🟨 2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Enable verified P100 Q0 registration
+
+- Status: Q0 source now implements the measured full registration sequence;
+  its first physical combined run remains supervised verification.
+- Category: firmware, hardware, P100, P111, Q5, P112, G54, A-axis, TMAG,
+  magnetic-registration, safety.
+- Decision: ioSender must issue `G65 P111` then `G65 P100 Q0`. P100 contains
+  no `$H`; Q3/Q4 remain early-motion locks.
+- Implementation: Q0 holds the existing G54 until its Q5 center raster and
+  inboard X-10.5 two-pass A survey pass. It uses the P112 10,000
+  motor-degree/min search, 4320 +/- 15 spacing gate, and second observed
+  center. It then writes A0, returns to center, writes X0/Y-29.4892, and parks
+  at X0/Y0/A0.
+- Verification: `python tools\validate_homing_macro.py` passes the new static
+  order, geometry, lock, and coordinate-write checks.
+- Next action: copy P100 to SD and perform one supervised P111 then Q0 run;
+  inspect completion, `$#`, pen-at-center, and index reference before treating
+  the ioSender routine as production-ready.
 
 <a id="elog-20260911143000"></a>
 ### 🟨 2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row

@@ -166,8 +166,8 @@ controller pin assignments in `firmware/grblhal/config/pin-map.md`.
 ## Homing and magnetic bed calibration
 
 Normal startup home and registration is a grblHAL/RP23CNC responsibility. The
-eventual ioSender button sends `G65 P100 Q0`, but it remains locked. Physical
-X/Y home is currently the preceding standalone `G65 P111`: `$H` is a grblHAL
+ioSender routine sends `G65 P111`, then `G65 P100 Q0` for its first supervised
+combined run. Physical X/Y home is the preceding standalone `G65 P111`: `$H` is a grblHAL
 system command and must not appear in P100, where it executes even in a false
 O-word branch. After P111, P100 performs a serpentine center-magnet raster, calculates an
 area centroid, registers G54 X0/Y0, then scans the outer magnet twice and

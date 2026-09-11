@@ -85,6 +85,17 @@ sequence is now verified, but Q5 itself remains non-registering. Do not unlock
 Q0/Q3/Q4: their combined body has not yet been updated to use the verified
 P111/Q5/P112 workflow.
 
+## Follow-up implementation
+
+After the complete manual frame was verified, P100 Q0 was rewritten to use the
+same P111/Q5/P112 measurements. Q0 still contains no `$H`; the ioSender routine
+must issue `G65 P111` before `G65 P100 Q0`. Q0 keeps the old G54 frame until
+both the center raster and two-pass A survey have passed, then writes A0 at the
+second observed index center, returns TMAG to the calculated center, writes the
+verified `X0 Y-29.4892` sensor-to-pen offset, and parks the pen at G54 X0/Y0.
+Q3/Q4 remain locked. The first combined Q0 run is pending supervised hardware
+verification.
+
 The installed `$110/$111=1500` mm/min axis limits have not been changed as
 part of this raster retune. A requested `F2000` may therefore be rate-limited
 by grblHAL; a loaded X/Y rate test must precede any claim that the physical

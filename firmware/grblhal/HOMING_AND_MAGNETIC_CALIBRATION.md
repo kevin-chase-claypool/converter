@@ -35,11 +35,11 @@ filesystem and the candidate build passes F-08.
 
 | Mode | Purpose | Current availability |
 |---:|---|---|
-| `Q0` | Full startup: lift, X/Y home, center raster, A index, return to G54 zero | Locked until commissioning |
+| `Q0` | Full registration after P111: center raster, two-pass A index, deferred G54 writes, pen-center park | Enabled for supervised first combined run after `G65 P111` |
 | `Q1` | Toolhead readiness handshake only | Motor-inert machine-verified on 2026-09-11; no motion |
 | `Q2` | Compatibility stop | Retired: use `G65 P111` for the one physical X/Y `$H`. `$H` system commands inside P100's false O-word branches executed during Q5. Homing configuration omits A/Z. |
-| `Q3` | Center raster and G54 X/Y registration | Locked until commissioning |
-| `Q4` | Outer-magnet A scan and G54 A registration | Locked until commissioning |
+| `Q3` | Center raster and G54 X/Y registration | Locked |
+| `Q4` | Outer-magnet A scan and G54 A registration | Locked |
 | `Q5` | Automatic center-magnet survey | Source-enabled; requires prior P111. Stops at TMAG centroid without changing G54/A. |
 
 `P112` is a separate outer-index survey, not a P100 mode. It requires fresh
@@ -68,8 +68,11 @@ magnetic index at A0. This is verified manual registration evidence; automated
 P100 Q0/Q3/Q4 remains locked until its stale combined A path is replaced with
 the verified P111/Q5/P112 sequence.
 
-The eventual single ioSender button sends `G65 P100 Q0`. Separate modes exist
-so each stage can be commissioned without bypassing the others.
+The production ioSender button sends `G65 P111` then `G65 P100 Q0`. `$H` must
+remain in P111 rather than P100 because grblHAL streams system commands even in
+false O-word branches. Q0 uses the verified Q5 center survey and P112 index
+survey values, defers G54 writes until both pass, then parks the pen at G54
+X0/Y0 with G54 A0 at the outer index.
 
 ### Candidate Q3 rectangle
 
