@@ -43,7 +43,14 @@ remain locked.
 - The first controller Q5 attempt correctly returned error 39 with the old
   early-lock message and made no move. It revealed that the early gate still
   rejected Q5 before it could reach the new survey body.
-- Static macro validation: pending after the early-gate correction.
+- The next Q5 attempt reached `MPos:-280.000,-266.000` inside the candidate
+  rectangle, then safely aborted before a raster row because READY was absent.
+  Q5 now performs Q1's forced-release baseline and uses a two-second READY wait.
+- The following attempt reached a real magnetic entry at
+  `MPos:-232.863,-236.000`, then soft-limit protection rejected the next move.
+  The cause is confirmed: grblHAL exposes `#5061` in G54 work coordinates
+  while the raster uses G53. Entry/exit values now convert with `+ #5221`.
+- Static macro validation: pending after the baseline correction.
 - Hardware execution: pending; required command sequence is Q2 then Q5.
 
 ## Risks and follow-up

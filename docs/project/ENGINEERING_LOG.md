@@ -363,7 +363,12 @@ Add new entries at the top of the log below this line.
   calculated TMAG centroid, but returns before any `G10`, G54, or A operation.
   Q2 must run first; Q0/Q3/Q4 remain locked. The first controller Q5 command
   correctly found a missed early-mode gate and returned error 39 with no move;
-  the gate correction is pending validation.
+  the gate correction is pending validation. The next attempt reached the safe
+  G53 start corner and safely aborted on missing READY before a raster row;
+  Q5 now uses Q1's forced-release baseline and a two-second READY wait. The
+  next run detected a real entry at `MPos:-232.863,-236.000`; soft-limit
+  protection then exposed a G54 `#5061` versus G53 coordinate mix. The source
+  now converts probe positions with `+ #5221` before relative scan moves.
 - Evidence: `docs/report/lab-notes/2026-09-11-p100-q5-centroid-survey-plan.md`;
   `RPSW-20260911-006`.
 - Next action: execute Q2 then Q5 under observation and record final MPos

@@ -58,6 +58,8 @@ def validate_safety_contract(text: str) -> None:
         "g38.5",
         "#5070",
         "#5061",
+        "#<entry> = [#5061 + #5221]",
+        "#<exit> = [#5061 + #5221]",
         "#5064",
         "g10 l20 p1 x[#<sensor_to_pen_x>] y[#<sensor_to_pen_y>]",
         "g10 l20 p1 a0",
@@ -132,6 +134,9 @@ def validate_commissioning_locks(text: str) -> None:
     assert q5_return < first_g54_registration, (
         "Q5 must return before any G54 XY registration"
     )
+    assert "o116 if [#31 eq 5]" in lower, (
+        "Q5 must establish a released baseline before prepositioning"
+    )
 
 
 def validate_installed_aux_polarity(text: str) -> None:
@@ -178,6 +183,7 @@ def validate_candidate_scan_parameters(text: str) -> None:
     assert assignment(text, "sensor_to_pen_y") == -29.4892
     assert assignment(text, "row_pitch") == 10.0
     assert assignment(text, "scan_feed") == 1000.0
+    assert assignment(text, "ready_wait_s") == 2.0
     assert "#<sensor_to_pen_offset_valid> = 0" in text.lower(), (
         "candidate offset must not unlock Q3 before a supervised scan"
     )

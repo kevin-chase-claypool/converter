@@ -68,7 +68,7 @@ o005 endif
 #<minimum_chord_width> = 0.5
 #<maximum_chord_width> = 25.0
 #<lift_dwell_s> = 3.0
-#<ready_wait_s> = 1.0
+#<ready_wait_s> = 2.0
 #<edge_settle_s> = 0.10
 #<outer_radius> = 226.06
 #<a_search_degrees> = 4500.0
@@ -131,6 +131,11 @@ o111 if [#31 EQ 2]
 o111 endif
 
 (Preposition while HOME_ARM is inactive so the re-arm interval stays short.)
+o116 if [#31 EQ 5]
+  (Q5 starts from the proven Q1-style released baseline before it moves.)
+  M64 P0
+  G4 P2.0
+o116 endif
 o112 if [#31 EQ 0]
   G53 G0 X[#<scan_min_x>] Y[#<scan_min_y>]
 o112 endif
@@ -203,7 +208,8 @@ o200 if [[[#31 EQ 0] OR [#31 EQ 3]] OR [#31 EQ 5]]
       G91 G38.3 X[#<scan_width>] F[#<scan_feed>]
       G90
       o212 if [#5070 EQ 1]
-        #<entry> = #5061
+        (grblHAL #5061 is probe X in the active G54 work frame; raster is G53.)
+        #<entry> = [#5061 + #5221]
         #<remaining> = [#<scan_max_x> - #<entry>]
         G91 G38.5 X[#<remaining>] F[#<scan_feed>]
         G90
@@ -212,7 +218,7 @@ o200 if [[[#31 EQ 0] OR [#31 EQ 3]] OR [#31 EQ 5]]
           (print,P100 missing positive-row magnetic exit)
           o916 error[39]
         o213 endif
-        #<exit> = #5061
+        #<exit> = [#5061 + #5221]
         #<remaining> = [#<scan_max_x> - #<exit>]
         o214 if [#<remaining> GT 0.01]
           G91 G38.3 X[#<remaining>] F[#<scan_feed>]
@@ -240,7 +246,7 @@ o200 if [[[#31 EQ 0] OR [#31 EQ 3]] OR [#31 EQ 5]]
       G91 G38.3 X[-#<scan_width>] F[#<scan_feed>]
       G90
       o220 if [#5070 EQ 1]
-        #<entry> = #5061
+        #<entry> = [#5061 + #5221]
         #<remaining> = [#<entry> - #<scan_min_x>]
         G91 G38.5 X[-#<remaining>] F[#<scan_feed>]
         G90
@@ -249,7 +255,7 @@ o200 if [[[#31 EQ 0] OR [#31 EQ 3]] OR [#31 EQ 5]]
           (print,P100 missing negative-row magnetic exit)
           o919 error[39]
         o221 endif
-        #<exit> = #5061
+        #<exit> = [#5061 + #5221]
         #<remaining> = [#<exit> - #<scan_min_x>]
         o222 if [#<remaining> GT 0.01]
           G91 G38.3 X[-#<remaining>] F[#<scan_feed>]
