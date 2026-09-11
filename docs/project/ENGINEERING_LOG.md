@@ -84,6 +84,7 @@ Entry details remain only in the chronology.
 
 ### Hardware and wiring
 - [2026-09-11 - Time not recorded - RP23CNC-SOFTWARE/HARDWARE - P100 Q5 executed hidden system homing](#elog-20260911-p100-q5-executed-hidden-system-homing)
+- [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Add P112 outer-index survey](#elog-20260911-add-p112-outer-index-survey)
 - [2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row](#elog-20260911143000)
 - [2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster](#elog-20260911140000)
 - [2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake](#elog-20260911133000)
@@ -385,6 +386,24 @@ Add new entries at the top of the log below this line.
   was visually centered under the chip.
 - Next action: retain P111 as the required one-time home step after controller
   restart before future Q5 surveys.
+
+<a id="elog-20260911-add-p112-outer-index-survey"></a>
+### 🟨 2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Add P112 outer-index survey
+
+- Status: implementation and A-drive preflight complete; installed survey pending.
+- Category: rp23cnc-software, hardware, P112, A-axis, index-magnet, M-09,
+  safety.
+- Evidence: after reinstalling the A-axis fuse, `G1 A10 F120` then
+  `G1 A-10 F120` returned controller MPos A to `0.000`; the physical bed mark
+  also returned exactly. P100 Q5 had already placed TMAG at the verified center
+  without a hidden home cycle.
+- Implementation: P112 requires fresh P111 then Q5, moves the TMAG +X by the
+  measured `223.675804` mm radius, records two outer-index A footprints, and
+  approaches their second-pass center. It releases Aux0 and makes no G54 write.
+- Safety boundary: Q4 and Q0 remain locked. P112 may travel slightly more than
+  two bed revolutions because its first index entry begins at an unknown phase.
+- Next action: install P112, verify its SD listing, then execute P111, Q5, and
+  P112 in that exact order without intervening X/Y/A motion.
 
 <a id="elog-20260911143000"></a>
 ### 🟨 2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row

@@ -37,6 +37,11 @@ The corrected P100 Q5 then completed without any `Home` state after the Q5
 command. Its final position was `MPos:-232.013,-218.775,0.000,0.000`; a
 magnet placed under the TMAG at that endpoint was visually centered.
 
+After the A-axis fuse was reinstalled, the low-speed incremental `G1 A10 F120`
+then `G1 A-10 F120` check returned controller MPos A to `0.000` and returned
+the physical bed reference mark exactly. P112 is the pending two-observation
+outer-index survey; it preserves G54 for this first M-09 evidence pass.
+
 ## Boundary
 
 Q5 is hardware-verified as a center-magnet survey. It is not Q3 and does not

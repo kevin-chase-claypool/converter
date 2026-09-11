@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P100.macro"
 HOME_MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P111.macro"
+INDEX_SURVEY_MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P112.macro"
 
 
 def assignment(text: str, name: str) -> float:
@@ -193,6 +194,36 @@ def validate_isolated_home_macro() -> None:
     assert commands.count("$h") == 1, "P111 must contain exactly one executable $H"
 
 
+def validate_outer_index_survey_macro() -> None:
+    text = INDEX_SURVEY_MACRO.read_text(encoding="utf-8")
+    lower = text.lower()
+    validate_flow_control(text)
+    validate_line_comments(text)
+    required = [
+        "#<outer_radius> = 223.675804",
+        "g91 g1 x[#<outer_radius>] f[#<xy_travel_feed>]",
+        "m65 p0\ng4 p2.0",
+        "g91 g38.3 a[#<a_search_degrees>] f[#<a_scan_feed>]",
+        "g91 g38.5 a[#<a_maximum_width>] f[#<a_scan_feed>]",
+        "#<a_entry_1> = [#5064 + #5224]",
+        "#<a_exit_1> = [#5064 + #5224]",
+        "#<a_entry_2> = [#5064 + #5224]",
+        "#<a_exit_2> = [#5064 + #5224]",
+        "#<a_expected_spacing> = 4320.0",
+        "#<a_pass_two_center>",
+        "g53 g1 a[#<a_pass_two_center>] f[#<a_registration_feed>]",
+        "p112 survey complete: tmag is at pass-two outer-index center",
+        "m64 p0\n(print,p112 survey complete",
+    ]
+    for token in required:
+        assert token in lower, f"P112 missing required survey token: {token}"
+    assert "$h" not in lower, "P112 must not contain physical homing"
+    assert "g10" not in lower, "P112 must not write a work offset"
+    assert lower.count("g38.3 a[#<a_search_degrees>]") == 2, (
+        "P112 must make exactly two bounded A entry searches"
+    )
+
+
 def validate_candidate_scan_rectangle(text: str) -> None:
     min_x = assignment(text, "scan_min_x")
     max_x = assignment(text, "scan_max_x")
@@ -284,6 +315,7 @@ def main() -> None:
     validate_commissioning_locks(text)
     validate_installed_aux_polarity(text)
     validate_isolated_home_macro()
+    validate_outer_index_survey_macro()
     validate_candidate_scan_rectangle(text)
     validate_candidate_scan_parameters(text)
     validate_centroid_math()

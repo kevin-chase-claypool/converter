@@ -31,6 +31,13 @@ before the magnetic body.
 unconditional `$H`, preceded by `M5` and a three-second settle. Run `G65 P111`
 before Q5; the X/Y homing configuration must omit A/Z.
 
+`P112.macro` is the next **survey-only** A-index stage. After fresh P111 and a
+successful Q5, run `G65 P112` without jogging X/Y/A between them. P112 moves
+the TMAG +X by the measured center-to-index radius of `223.675804` mm, captures
+two A entry/exit pairs, requires their centers to differ by `4320 +/- 10`
+motor degrees, and stops at the second-pass index center. It does not home or
+write G54. Q4 remains locked until this survey is physically verified.
+
 Q5 is a verified controlled motion stage. Run P111 first, then Q5. Q5 contains
 no `$H` command and does not home. It uses the
 candidate G53 rectangle and P100 probe/chord validation to calculate the

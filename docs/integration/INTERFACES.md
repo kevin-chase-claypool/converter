@@ -215,6 +215,11 @@ equivalent centers before setting G54 A0. Any inconsistent edge, sensor fault, m
 toolhead-lift state exits through the abort/fault handling path instead of
 retrying automatically.
 
+During staged M-09 commissioning, `G65 P112` is the non-registering outer-index
+survey. It requires P111 then Q5 with no intervening axis motion, travels the
+TMAG +X by `223.675804` mm, captures two A footprints, and stops at the
+second-pass center. It does not issue `G10` or alter G54.
+
 The current installed endpoint remains GP27/U3 -> RP23CNC `LIMA`. The
 implemented candidate terminates that same routed return at `PRB` so
 controller-resident G38 moves can capture entry and release coordinates.

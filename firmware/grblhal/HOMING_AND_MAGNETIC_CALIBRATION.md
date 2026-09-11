@@ -41,6 +41,12 @@ filesystem and the candidate build passes F-08.
 | `Q4` | Outer-magnet A scan and G54 A registration | Locked until commissioning |
 | `Q5` | Automatic center-magnet survey | Source-enabled; requires prior P111. Stops at TMAG centroid without changing G54/A. |
 
+`P112` is a separate outer-index survey, not a P100 mode. It requires fresh
+P111 followed immediately by a successful Q5, then moves the TMAG +X from the
+verified center by the measured `223.675804` mm center-to-index radius. It
+captures two A footprints and stops at their second-pass averaged center without
+changing G54. It is the M-09 precursor; Q4 remains locked.
+
 The eventual single ioSender button sends `G65 P100 Q0`. Separate modes exist
 so each stage can be commissioned without bypassing the others.
 

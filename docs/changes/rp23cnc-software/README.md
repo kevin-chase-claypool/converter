@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-11 | `RPSW-20260911-012` | implemented | [Add P112 Outer-Index Survey](2026/2026-09-11-add-p112-outer-index-survey.md) | `P112`, `P100`, `A-axis`, `index-magnet`, `M-09`, `safety` |
 | 2026-09-11 | `RPSW-20260911-011` | implemented | [Isolate P100 System Homing](2026/2026-09-11-isolate-p100-system-homing.md) | `P100`, `P111`, `homing`, `grblHAL`, `safety` |
 | 2026-09-11 | `RPSW-20260911-010` | verified | [Add P110 Q5 First G38 Row Diagnostic](2026/2026-09-11-add-p110-q5-first-g38-row-diagnostic.md) | `P100`, `P110`, `Q5`, `G38`, `probe`, `diagnostic`, `safety` |
 | 2026-09-11 | `RPSW-20260911-009` | verified | [Add P109 Q5 Combined Diagnostic](2026/2026-09-11-add-p109-q5-combined-diagnostic.md) | `P100`, `P109`, `Q5`, `diagnostic`, `handshake`, `raster`, `safety` |

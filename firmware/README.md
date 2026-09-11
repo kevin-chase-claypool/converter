@@ -68,9 +68,11 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   proved that `$H` works from an SD macro, but Q5 subsequently revealed that
   grblHAL streams every `$H` in P100 even inside false O-word branches. P100
   now contains no `$H`; `G65 P111` owns the one intentional X/Y home before
-  Q5. The bounded Q5 center-magnet raster passed, placing TMAG at
-  `MPos:-232.313,-218.313`; it leaves G54/A unchanged. Q0/Q3/Q4, coordinate
-  semantics, and normal-status timing gates remain closed before production use.
+Q5. The bounded Q5 center-magnet raster passed, placing TMAG at
+`MPos:-232.013,-218.775`; it leaves G54/A unchanged. P112 now stages the
+outer-index survey at the measured `223.675804` mm radius without writing G54;
+Q0/Q3/Q4, coordinate semantics, and normal-status timing gates remain closed
+before production use.
 
 ## Status
 
