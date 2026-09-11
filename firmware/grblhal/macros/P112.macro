@@ -6,7 +6,9 @@
 #<outer_machine_x> = -10.5
 #<a_search_degrees> = 4500.0
 #<a_expected_spacing> = 4320.0
-#<a_spacing_tolerance> = 10.0
+(The installed two-footprint survey measured 4331.818 motor-degrees between footprint centers.)
+(Accept that repeatable 11.818-degree deviation, but reject a deviation greater than 15 degrees.)
+#<a_spacing_tolerance> = 15.0
 #<a_maximum_width> = 120.0
 #<xy_travel_feed> = 1000.0
 #<a_scan_feed> = 10000.0

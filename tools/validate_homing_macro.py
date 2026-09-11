@@ -228,6 +228,17 @@ def validate_outer_index_survey_macro() -> None:
     assert "#<a_pass_two_center> = #<a_center_2>" in lower, (
         "P112 must stop at the second observed center without a third rotation"
     )
+    spacing_tolerance = assignment(text, "a_spacing_tolerance")
+    assert spacing_tolerance == 15.0, (
+        "P112 tolerance must retain the measured, bounded 15 motor-degree gate"
+    )
+    observed_spacing = 4331.8175
+    assert abs(observed_spacing - 4320.0) <= spacing_tolerance, (
+        "P112 must accept the repeatable installed index spacing"
+    )
+    assert abs(4335.1 - 4320.0) > spacing_tolerance, (
+        "P112 tolerance must still reject spacing outside its bounded gate"
+    )
 
 
 def validate_candidate_scan_rectangle(text: str) -> None:

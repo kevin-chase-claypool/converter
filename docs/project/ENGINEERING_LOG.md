@@ -85,6 +85,7 @@ Entry details remain only in the chronology.
 ### Hardware and wiring
 - [2026-09-11 - Time not recorded - RP23CNC-SOFTWARE/HARDWARE - P100 Q5 executed hidden system homing](#elog-20260911-p100-q5-executed-hidden-system-homing)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Add P112 outer-index survey](#elog-20260911-add-p112-outer-index-survey)
+- [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/MIXED - Measured P112 outer-index spacing](#elog-20260911-measured-p112-outer-index-spacing)
 - [2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row](#elog-20260911143000)
 - [2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster](#elog-20260911140000)
 - [2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake](#elog-20260911133000)
@@ -409,6 +410,24 @@ Add new entries at the top of the log below this line.
   it no longer adds a third revolution during final positioning.
 - Next action: install P112, verify its SD listing, then execute P111, Q5, and
   P112 in that exact order without intervening X/Y/A motion.
+
+<a id="elog-20260911-measured-p112-outer-index-spacing"></a>
+### 🟨 2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/MIXED - Measured P112 outer-index spacing
+
+- Status: the installed survey captured both intended outer-index footprints but
+  its provisional spacing gate rejected an otherwise repeatable measurement.
+- Category: rp23cnc-software, hardware, P112, A-axis, index-magnet, M-09,
+  safety.
+- Evidence: captures were `11234.037..11340.462` and
+  `15566.192..15671.942` A motor degrees. The corresponding widths were
+  106.425 and 105.750 degrees; centers were 11287.250 and 15619.067, giving
+  4331.818 degrees per bed revolution. This is 11.818 degrees above nominal
+  4320 and agrees with the preceding survey evidence to within 0.45 degrees.
+- Decision: raise only P112's survey acceptance gate from `4320 +/- 10` to
+  `4320 +/- 15` motor degrees. The gate remains bounded; P112 still makes no
+  G54 write, and Q4/Q0 remain locked.
+- Next action: copy the updated P112 to SD, verify its listing, and rerun the
+  P111 -> Q5 -> P112 sequence without any intervening axis motion.
 
 <a id="elog-20260911143000"></a>
 ### 🟨 2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row

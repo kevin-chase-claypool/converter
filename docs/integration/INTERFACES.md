@@ -210,7 +210,8 @@ saturated or thresholded magnetic footprint from opposing edges; it should not
 depend on an unsaturated peak.
 
 Normal A registration records two entry/exit pairs separated by one bed
-revolution, validates spacing near `4320` A motor degrees, and averages the
+revolution, validates spacing within the currently measured `4320 +/- 15` A
+motor-degree gate, and averages the
 equivalent centers before setting G54 A0. Any inconsistent edge, sensor fault, motion alarm, or unknown
 toolhead-lift state exits through the abort/fault handling path instead of
 retrying automatically.

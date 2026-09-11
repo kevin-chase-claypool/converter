@@ -47,6 +47,14 @@ forward rotation. The direct measured +X radius is 1.776 mm beyond the X
 `-10` mm home pull-off bound, so P112 instead uses G53 X `-10.5` mm: about
 2.2 mm inboard on the same radial line.
 
+The installed P112 outer-index survey then captured two complete A magnetic
+footprints at `11234.037..11340.462` and `15566.192..15671.942` motor degrees.
+Their widths were `106.425` and `105.750` motor degrees; their centers were
+`11287.250` and `15619.067`, separated by `4331.818` motor degrees. The
+provisional `4320 +/- 10` gate rejected this repeatable 11.818-degree deviation.
+P112 now uses a bounded `4320 +/- 15` gate; it still makes no G54 write and Q4
+remains locked pending a successful installed survey.
+
 ## Boundary
 
 Q5 is hardware-verified as a center-magnet survey. It is not Q3 and does not

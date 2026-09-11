@@ -71,7 +71,9 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
 Q5. The bounded Q5 center-magnet raster passed, placing TMAG at
 `MPos:-232.013,-218.775`; it leaves G54/A unchanged. P112 now stages the
 outer-index survey at G53 X `-10.5` mm (about 2.2 mm inboard of the measured
-radius to clear the X home pull-off) without writing G54; Q0/Q3/Q4, coordinate
+radius to clear the X home pull-off) without writing G54. Its installed
+two-footprint evidence measured `4331.818` A motor degrees per bed turn, so its
+bounded spacing gate is `4320 +/- 15`; Q0/Q3/Q4, coordinate
 semantics, and normal-status timing gates remain closed before production use.
 
 ## Status

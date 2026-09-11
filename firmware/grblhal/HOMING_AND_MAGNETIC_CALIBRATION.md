@@ -46,7 +46,10 @@ P111 followed immediately by a successful Q5, then moves the TMAG +X from the
 verified center to G53 X `-10.5` mm. The measured `223.675804` mm radius would
 cross the X `-10` mm home pull-off bound, so this remains about 2.2 mm inboard
 on the same +X line. It captures two A footprints and stops at their second-pass
-averaged center without changing G54. It is the M-09 precursor; Q4 remains locked.
+averaged center without changing G54. It accepts center-to-center spacing within
+`4320 +/- 15` A motor degrees: the installed two-footprint observation measured
+`4331.818` degrees, a repeatable 11.818-degree deviation from nominal. It is the
+M-09 precursor; Q4 remains locked.
 
 The eventual single ioSender button sends `G65 P100 Q0`. Separate modes exist
 so each stage can be commissioned without bypassing the others.

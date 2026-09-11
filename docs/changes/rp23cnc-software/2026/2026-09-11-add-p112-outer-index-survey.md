@@ -41,7 +41,7 @@ The measured `223.675804` mm +X radius would exceed the X `-10` mm home
 pull-off bound, so P112 moves along that same +X line only to G53 X `-10.5` mm,
 approximately 2.2 mm inboard. It uses the established active-low Aux0/GP28
 handshake, captures two `G38.3`/
-`G38.5` A footprints, validates their `4320 +/- 10` motor-degree spacing, and
+`G38.5` A footprints, validates their `4320 +/- 15` motor-degree spacing, and
 trims backward from the second exit to its second-pass center. Both searches
 run at `10000` motor-degrees/min (2.31 bed RPM); their combined 9,000-degree
 search allowance takes no more than 54 seconds. It releases Aux0 and makes no
@@ -54,7 +54,12 @@ the final G53 trim.
   `0.000`; the physical bed reference mark also returned exactly.
 - `python tools/validate_homing_macro.py` passed the P100/P111/P112 static
   safety contract.
-- Installed P112 survey: pending.
+- Installed P112 evidence: the first complete two-footprint observation was
+  `11234.037..11340.462` then `15566.192..15671.942` A motor degrees. Its
+  footprint centers were 4331.818 motor degrees apart; widths were 106.425 and
+  105.750 degrees. The original +/-10 gate rejected it by 1.818 degrees.
+  The bounded +/-15 gate accepts that measured result; a successful installed
+  completion remains required before registration is enabled.
 
 ## Struggles and rejected approaches
 
