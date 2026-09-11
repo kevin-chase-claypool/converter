@@ -36,10 +36,10 @@ filesystem and the candidate build passes F-08.
 |---:|---|---|
 | `Q0` | Full startup: lift, X/Y home, center raster, A index, return to G54 zero | Locked until commissioning |
 | `Q1` | Toolhead readiness handshake only | Motor-inert machine-verified on 2026-09-11; no motion |
-| `Q2` | Physical X/Y `$H` only | Verified on 2026-09-11 through direct `$H` and SD-resident `G65 P100 Q2`. Homing configuration omits A/Z. |
+| `Q2` | Compatibility stop | Retired: use `G65 P111` for the one physical X/Y `$H`. `$H` system commands inside P100's false O-word branches executed during Q5. Homing configuration omits A/Z. |
 | `Q3` | Center raster and G54 X/Y registration | Locked until commissioning |
 | `Q4` | Outer-magnet A scan and G54 A registration | Locked until commissioning |
-| `Q5` | Automatic center-magnet survey | Source-enabled; requires prior Q2. Stops at TMAG centroid without changing G54/A. |
+| `Q5` | Automatic center-magnet survey | Source-enabled; requires prior P111. Stops at TMAG centroid without changing G54/A. |
 
 The eventual single ioSender button sends `G65 P100 Q0`. Separate modes exist
 so each stage can be commissioned without bypassing the others.
@@ -281,7 +281,8 @@ F-08 must prove, on the exact build:
 - `PRB` idle/asserted polarity and reporting;
 - `G38.3` entry and `G38.5` release capture on X;
 - the probe parameter/coordinate values used by the macro;
-- filesystem `G65 P100` execution and `$H` behavior inside the macro;
+- filesystem `G65 P100` execution with no `$H` present, plus isolated
+  filesystem `G65 P111` X/Y `$H` behavior;
 - A-axis G38 acceptance and `#5064` reporting;
 - G53/G54 and `G10 L20` semantics for XYZA;
 - safe handling of a probe state that remains active between entry and exit.
@@ -302,7 +303,9 @@ Only after both pass may the existing return be reterminated from `LIMA` to
    magnetic motion scan or replace the production toolhead firmware.
 3. Build and archive the accepted candidate; do not overwrite the known-good
    baseline UF2.
-4. `Q1` and the isolated Q2 X/Y home stage passed on 2026-09-11. Next,
+4. `Q1` and the old isolated Q2 X/Y home stage passed on 2026-09-11. P111 now
+   owns the physical-home command because `$H` cannot safely reside in P100.
+   Next,
    establish safe bounded scan coordinates, then
    bounded low-speed `Q3`, then `Q4`.
 5. Install measured scan bounds, pitch, feeds, threshold, hysteresis,

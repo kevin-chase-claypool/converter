@@ -64,12 +64,13 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
 - **Candidate probe capture** - the 2026-09-10/11 motor-inert candidate
   proved direct and actual GP27/U3 `PRB` transitions, A-axis G38 capture, and
   the automated non-motion `G65 P100 Q1` readiness/release handshake.
-  GP27/U3 is assigned to `PROBE SIG` with `$6=1`. The isolated Q2 X/Y homing
-  branch passed both direct `$H` and SD-resident `G65 P100 Q2` execution on
-  2026-09-11. The bounded Q5 center-magnet raster then passed, placing TMAG at
-  `MPos:-232.325,-217.950`; Q5 has no additional homing command and leaves
-  G54/A unchanged. Q0/Q3/Q4, coordinate semantics, and normal-status timing
-  gates remain closed before P100 production use.
+  GP27/U3 is assigned to `PROBE SIG` with `$6=1`. The old `P100 Q2` branch
+  proved that `$H` works from an SD macro, but Q5 subsequently revealed that
+  grblHAL streams every `$H` in P100 even inside false O-word branches. P100
+  now contains no `$H`; `G65 P111` owns the one intentional X/Y home before
+  Q5. The bounded Q5 center-magnet raster passed, placing TMAG at
+  `MPos:-232.313,-218.313`; it leaves G54/A unchanged. Q0/Q3/Q4, coordinate
+  semantics, and normal-status timing gates remain closed before production use.
 
 ## Status
 

@@ -20,9 +20,12 @@ completion message. After the queued approach fully completed, final position
 was `MPos:-232.325,-217.950,0.000,0.000`. A magnet placed under that final
 TMAG position appeared visually centered.
 
-`G65 P100 Q2` supplied the single X/Y `$H` cycle before Q5. Q5 issued no
-additional `$H`; all later movement in its trace was raster travel followed by
-the centroid approach. G54 and A remained unchanged.
+The original SD P100 also executed three unintended `$H` cycles during Q5,
+before the raster. `$H` is a grblHAL system command and was processed despite
+the false O-word branches surrounding its three literal instances. The full
+raster and centroid result are still valid, but this P100 revision must not be
+reused; P111 now owns the one intentional physical X/Y home. G54 and A
+remained unchanged.
 
 ## Boundary
 

@@ -57,7 +57,12 @@ remain locked.
   that final TMAG position appeared visually centered.
 - The completion message is emitted when the final centroid approach is queued;
   `Idle` at the final MPos, rather than that message alone, is the completion
-  criterion. The trace contains no Q5 `$H` command or additional homing cycle.
+  criterion.
+- A later trace proved the old P100 source executed all three literal `$H`
+  system-command lines during Q5 even though their O-word conditions were
+  false. The centroid survey result remains valid, but Q5 must not be repeated
+  until P100 is replaced by the `$H`-free revision documented in
+  `RPSW-20260911-011`.
 
 ## Risks and follow-up
 

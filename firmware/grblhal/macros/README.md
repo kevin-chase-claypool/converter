@@ -8,7 +8,7 @@ It is intended for the grblHAL filesystem macro plugin and is invoked with
 |---:|---|
 | 0 | Full X/Y home, center raster, centroid approach/registration, and A registration |
 | 1 | Toolhead readiness handshake only |
-| 2 | Physical X/Y homing only |
+| 2 | Compatibility stop; directs the operator to P111 |
 | 3 | Center raster and `G54 X0 Y0` registration |
 | 4 | Outer-magnet scan and `G54 A0` registration |
 | 5 | Automatic center-magnet survey; stops at TMAG centroid without writing G54 or A |
@@ -20,16 +20,19 @@ replaced with measured, documented values. Mode 1 requires commissioned
 toolhead firmware because the Pro Micro will not acknowledge readiness
 otherwise.
 
-P100's executable entry points now permit **Q1**, **Q2**, and **Q5** only. Q1 performs
-the proven motor-inert READY/release handshake. Q2 performs only `M5`, a
-three-second settle, and the controller's configured X/Y `$H` cycle, then
-returns; it never reaches the readiness, raster, or A-index code. Q0, Q3, and
-Q4 immediately return error 39 before the macro's legacy registration body.
-The Q2 branch passed direct installed `$H` and filesystem `G65 P100 Q2`
-execution on 2026-09-11.
+P100's executable entry points now permit **Q1** and **Q5**. Q1 performs the
+proven motor-inert READY/release handshake. `Q2` now returns error 39 with an
+explicit instruction to run `G65 P111`, because grblHAL processes `$H` system
+commands while streaming a macro even when an enclosing O-word condition is
+false. P100 therefore contains **no** `$H` text. Q0, Q2, Q3, and Q4 return
+before the magnetic body.
 
-Q5 is a verified controlled motion stage. Run Q2 first, then Q5. Q2 contains
-the one X/Y `$H` cycle; Q5 contains no `$H` command and does not home again. It uses the
+`P111.macro` owns physical X/Y homing. It contains the one intentional,
+unconditional `$H`, preceded by `M5` and a three-second settle. Run `G65 P111`
+before Q5; the X/Y homing configuration must omit A/Z.
+
+Q5 is a verified controlled motion stage. Run P111 first, then Q5. Q5 contains
+no `$H` command and does not home. It uses the
 candidate G53 rectangle and P100 probe/chord validation to calculate the
 center-magnet centroid, approaches that centroid in G53, releases Aux0, and
 returns. It does not execute `G10`, change G54, or move A.
@@ -47,8 +50,8 @@ gate and installed `pen - TMAG` X/Y values; this ensures G54 X0/Y0 is the pen
 tip at bed center.
 
 The ioSender production button is named `HOME + REGISTER`, has confirmation
-enabled, and sends `G65 P100 Q0`. During staged testing, invoke Q1 through Q4
-individually from the MDI only after satisfying each mode's prerequisites.
+enabled, and is not yet authorized because Q0 remains locked. During staged
+testing, invoke Q1/Q5 from P100 and physical X/Y home through P111 only.
 
 The macro expects:
 

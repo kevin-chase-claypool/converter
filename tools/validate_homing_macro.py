@@ -9,6 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P100.macro"
+HOME_MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P111.macro"
 
 
 def assignment(text: str, name: str) -> float:
@@ -70,6 +71,10 @@ def validate_safety_contract(text: str) -> None:
         "P100 must not use the local named mode alias; it selected Q0 during "
         "the motorless test"
     )
+    assert "$h" not in lower, (
+        "P100 must not contain $H: grblHAL processes system commands even "
+        "when an enclosing O-word branch is false. P111 owns physical homing."
+    )
     assert "#31 = #17" in lower, (
         "P100 must preserve the G65 Q argument in #31 before named-variable "
         "initialization"
@@ -96,7 +101,7 @@ def validate_commissioning_locks(text: str) -> None:
         "m64 p0\n  g4 p2.0\n  (installed u2/gp28 path is active-low: m65 asserts arm; m64 releases it.)\n  m65 p0",
         "o001 return [1]",
         "o004 if [#17 eq 2]",
-        "$h\n  (print,p100 q2 x/y homing complete)\n  o004 return [1]",
+        "p100 q2 retired: run g65 p111 for physical x/y home",
         "o102 if [#31 gt 5]",
         "o113 if [[#31 eq 3] or [#31 eq 5]]",
         "o200 if [[[#31 eq 0] or [#31 eq 3]] or [#31 eq 5]]",
@@ -105,7 +110,7 @@ def validate_commissioning_locks(text: str) -> None:
         "o100 return [1]",
         "o999 error[39]",
         "o005 if [#17 ne 5]",
-        "p100 mode locked: q1 readiness, q2 x/y home, and q5 survey only are enabled",
+        "p100 mode locked: q1 readiness and q5 survey only are enabled",
         "o103 if [#31 eq 0]",
         "o105 if [#31 eq 3]",
         "o107 if [#31 eq 4]",
@@ -162,6 +167,20 @@ def validate_installed_aux_polarity(text: str) -> None:
         "readiness/scan assertions; cleanup must release Aux0"
     )
     assert aux_commands[-1] == "m64 p0", "P100 must release Aux0 on exit"
+
+
+def validate_isolated_home_macro() -> None:
+    text = HOME_MACRO.read_text(encoding="utf-8")
+    lower = text.lower()
+    commands = [
+        line.strip().lower()
+        for line in text.splitlines()
+        if line.strip() and not line.lstrip().startswith("(")
+    ]
+    assert commands == ["m5", "g4 p3.0", "$h", "o111 return [1]"], (
+        "P111 must contain only lift, settle, one unconditional $H, and return"
+    )
+    assert commands.count("$h") == 1, "P111 must contain exactly one executable $H"
 
 
 def validate_candidate_scan_rectangle(text: str) -> None:
@@ -253,6 +272,7 @@ def main() -> None:
     validate_safety_contract(text)
     validate_commissioning_locks(text)
     validate_installed_aux_polarity(text)
+    validate_isolated_home_macro()
     validate_candidate_scan_rectangle(text)
     validate_candidate_scan_parameters(text)
     validate_centroid_math()

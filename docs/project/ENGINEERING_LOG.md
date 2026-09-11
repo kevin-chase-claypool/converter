@@ -83,6 +83,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-11 - Time not recorded - RP23CNC-SOFTWARE/HARDWARE - P100 Q5 executed hidden system homing](#elog-20260911-p100-q5-executed-hidden-system-homing)
 - [2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row](#elog-20260911143000)
 - [2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster](#elog-20260911140000)
 - [2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake](#elog-20260911133000)
@@ -357,6 +358,25 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260911-p100-q5-executed-hidden-system-homing"></a>
+### 🟥 2026-09-11 - Time not recorded - RP23CNC-SOFTWARE/HARDWARE - P100 Q5 executed hidden system homing
+
+- Status: source correction implemented; installed verification pending.
+- Category: rp23cnc-software, hardware, P100, P111, Q5, homing, grblHAL,
+  safety.
+- Evidence: the retained Q5 trace showed three `Home` cycles after the Q5
+  command and before its first raster move. P100 had exactly three literal
+  `$H` lines, even though each was within a false O-word branch for Q5. Q5
+  then completed the raster at `MPos:-232.313,-218.313`, where a magnet placed
+  beneath the toolhead appeared centered under the TMAG chip.
+- Root cause: `$H` is a grblHAL system command rather than normal G-code; it
+  was processed while P100 was streamed, outside the intended O-word branch
+  control.
+- Correction: P100 now contains no `$H`; P111 owns exactly one unconditional
+  physical X/Y home. Static validation rejects `$H` in P100.
+- Next action: copy the matched P100/P111 pair to SD, verify one P111 home,
+  then run Q5 and require zero `Home` states.
 
 <a id="elog-20260911143000"></a>
 ### 🟨 2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row

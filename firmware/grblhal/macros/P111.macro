@@ -1,0 +1,9 @@
+(P111 - Physical X/Y home, isolated from P100 scan flow control.)
+(This macro intentionally has one unconditional grblHAL system command: $H.)
+(Controller homing configuration must omit A and Z.)
+
+M5
+G4 P3.0
+$H
+(print,P111 X/Y homing complete)
+o111 return [1]

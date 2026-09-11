@@ -128,7 +128,10 @@ remain unloaded.
    with this diagnostic firmware.
 8. Copy `P100.macro` to the controller filesystem. `G65 P100 Q1` passed on
    2026-09-11 and direct X/Y `$H` passed with the installed switches and fuses.
-   `G65 P100 Q2` then passed with `H:1,3` and its completion message. Next
+   `G65 P100 Q2` then passed with `H:1,3`, but a subsequent Q5 exposed that
+   grblHAL executes every `$H` present in P100 regardless of false O-word
+   branches. Copy P111 and use `G65 P111` for the single physical X/Y home;
+   require `H:1,3` and its completion message. Next
    verify the expected commissioning abort for Q0/Q3/Q4, G53/G54 and `G10 L20`
    parameter semantics, and that every abort releases Aux0. The candidate Q3
    rectangle is X `-280..-180`, Y `-266..-166` in G53 machine coordinates;
@@ -137,19 +140,19 @@ remain unloaded.
    P106 magnetic corner baseline and first observed raster plan are reviewed.
    Do not bypass the Q0/Q3/Q4 commissioning locks.
 9. Before re-running Q5 after any observation of unexpected limit approaches,
-   run `G65 P107` following Q2. It must make exactly one G53 move to
+   run `G65 P107` following P111. It must make exactly one G53 move to
    `MPos X=-280, Y=-266` without entering `Home` or reaching either X/Y
    switch. This isolates Q5's preposition from its handshake and raster.
 10. After a passed P107, run `G65 P108`. It contains the Q5 Aux0 readiness
    handshake but no axis-motion command. It must remain Idle and report its
    completion message. Any `Home` state or X/Y motion is a stop condition.
-11. After a fresh Q2, run `G65 P109`. It combines P107 and P108 in Q5 order,
+11. After a fresh P111, run `G65 P109`. It combines P107 and P108 in Q5 order,
    but stops before every G38 raster command. It must reach `MPos X=-280,
    Y=-266` without `Home` and print its completion message.
-12. After a fresh Q2, run `G65 P110`. It executes only Q5's first clear G38.3
+12. After a fresh P111, run `G65 P110`. It executes only Q5's first clear G38.3
    row from G53 `X=-280` to `X=-180` at Y `-266`, then releases Aux0. It must
    never enter `Home`; require `P110 complete: clear first G38.3 row passed`.
-13. After Q2, run `G65 P100 Q5` only under observation. It is the automatic
+13. After P111, run `G65 P100 Q5` only under observation. It is the automatic
    survey pass: it may traverse the candidate rectangle and stop at the
    calculated TMAG centroid, but must not change G54 or A. Record final MPos
    and the completion message before considering registration.
