@@ -12,14 +12,19 @@ square, then stop at the calculated TMAG centroid without changing G54 or A.
 - Candidate pitch/feed: 10 mm / 1000 mm/min.
 - X/Y travel is clear and the operator watches the motion.
 
-## Expected result
+## Result
 
-Q5 enters the P100 magnetic protocol, runs the chord-validating raster,
-approaches the calculated G53 centroid, releases Aux0, and prints its Q5
-completion message. The final MPos records the measured TMAG centroid. G54
-and A must not change.
+Q5 entered the P100 magnetic protocol, ran the chord-validating raster,
+approached the calculated G53 centroid, released Aux0, and printed its Q5
+completion message. After the queued approach fully completed, final position
+was `MPos:-232.325,-217.950,0.000,0.000`. A magnet placed under that final
+TMAG position appeared visually centered.
+
+`G65 P100 Q2` supplied the single X/Y `$H` cycle before Q5. Q5 issued no
+additional `$H`; all later movement in its trace was raster travel followed by
+the centroid approach. G54 and A remained unchanged.
 
 ## Boundary
 
-Q5 is source-enabled but unverified on hardware. It is not Q3 and does not
+Q5 is hardware-verified as a center-magnet survey. It is not Q3 and does not
 authorize center, pen-offset, or A-index registration.

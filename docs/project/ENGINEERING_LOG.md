@@ -83,7 +83,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
-- [2026-09-11 12:00:00 -0500 - RP23CNC-SOFTWARE/IMPLEMENTED - Added P100 Q5 centroid survey](#elog-20260911120000)
+- [2026-09-11 12:00:00 -0500 - RP23CNC-SOFTWARE/VERIFIED - P100 Q5 center-magnet centroid survey](#elog-20260911120000)
 - [2026-09-11 11:30:00 -0500 - RP23CNC-SOFTWARE/IMPLEMENTED - Added P106 manual magnetic survey](#elog-20260911113000)
 - [2026-09-11 11:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Recorded P100 Q3 candidate scan parameters](#elog-20260911110000)
 - [2026-09-11 10:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Recorded P100 Q3 candidate G53 rectangle](#elog-20260911103000)
@@ -355,9 +355,9 @@ Add new entries at the top of the log below this line.
 ---
 
 <a id="elog-20260911120000"></a>
-### 🟨 2026-09-11 12:00:00 -0500 - RP23CNC-SOFTWARE/IMPLEMENTED - Added P100 Q5 centroid survey
+### 🟩 2026-09-11 12:00:00 -0500 - RP23CNC-SOFTWARE/VERIFIED - P100 Q5 center-magnet centroid survey
 
-- Status: source-enabled automatic survey; controller execution remains pending.
+- Status: bounded automatic survey passed on the installed machine; registration remains intentionally closed.
 - Category: rp23cnc-software, hardware, P100, Q5, raster, centroid, safety.
 - Result: Q5 shares P100's chord-validated G53 raster and approaches the
   calculated TMAG centroid, but returns before any `G10`, G54, or A operation.
@@ -371,8 +371,13 @@ Add new entries at the top of the log below this line.
   now converts probe positions with `+ #5221` before relative scan moves.
 - Evidence: `docs/report/lab-notes/2026-09-11-p100-q5-centroid-survey-plan.md`;
   `RPSW-20260911-006`.
-- Next action: execute Q2 then Q5 under observation and record final MPos
-  before considering registration.
+- Verification: after `G65 P100 Q2`, `G65 P100 Q5` completed the full raster
+  and queued its final approach. The controller reached `Idle` at
+  `MPos:-232.325,-217.950,0.000,0.000`; a magnet placed under the final TMAG
+  position appeared centered. The Q5 trace contains no `$H`; only Q2 homed.
+- Next action: preserve this result as survey evidence only. Do not continue
+  to G54 or A registration until the separate Q3/Q4 authorization and design
+  review are complete.
 
 <a id="elog-20260911113000"></a>
 ### 🟨 2026-09-11 11:30:00 -0500 - RP23CNC-SOFTWARE/IMPLEMENTED - Added P106 manual magnetic survey

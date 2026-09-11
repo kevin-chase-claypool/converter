@@ -28,10 +28,14 @@ Q4 immediately return error 39 before the macro's legacy registration body.
 The Q2 branch passed direct installed `$H` and filesystem `G65 P100 Q2`
 execution on 2026-09-11.
 
-Q5 is the next controlled motion stage. Run Q2 first, then Q5. It uses the
+Q5 is a verified controlled motion stage. Run Q2 first, then Q5. Q2 contains
+the one X/Y `$H` cycle; Q5 contains no `$H` command and does not home again. It uses the
 candidate G53 rectangle and P100 probe/chord validation to calculate the
 center-magnet centroid, approaches that centroid in G53, releases Aux0, and
 returns. It does not execute `G10`, change G54, or move A.
+Its successful 2026-09-11 hardware run completed at TMAG machine position
+`X=-232.325`, `Y=-217.950` mm; visual placement of a magnet beneath that
+point agreed with the calculated centroid.
 The staged Q1 path waits two seconds for READY_ACK, based on the observed
 controller-to-toolhead response timing. Before asserting READY it forces Aux0
 released and waits two seconds for the toolhead to reacquire its inactive

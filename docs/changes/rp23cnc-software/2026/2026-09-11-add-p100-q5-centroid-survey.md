@@ -5,7 +5,7 @@ category: rp23cnc-software
 affected_categories:
   - rp23cnc-software
   - hardware
-status: implemented
+status: verified
 components:
   - firmware/grblhal/macros/P100.macro
 tags:
@@ -50,13 +50,21 @@ remain locked.
   `MPos:-232.863,-236.000`, then soft-limit protection rejected the next move.
   The cause is confirmed: grblHAL exposes `#5061` in G54 work coordinates
   while the raster uses G53. Entry/exit values now convert with `+ #5221`.
-- Static macro validation: pending after the baseline correction.
-- Hardware execution: pending; required command sequence is Q2 then Q5.
+- Static macro validation passed with `python tools\\validate_homing_macro.py`.
+- Hardware execution passed after `G65 P100 Q2`, followed by `G65 P100 Q5`.
+  Q5 completed the full 100 mm square raster, reported its completion message,
+  and reached `MPos:-232.325,-217.950,0.000,0.000`. A magnet placed beneath
+  that final TMAG position appeared visually centered.
+- The completion message is emitted when the final centroid approach is queued;
+  `Idle` at the final MPos, rather than that message alone, is the completion
+  criterion. The trace contains no Q5 `$H` command or additional homing cycle.
 
 ## Risks and follow-up
 
 Q5 commands automatic X/Y motion. Run it only with X/Y clear, slow rates, and
-observation. It supplies no G54/A registration result.
+observation. It supplies no G54/A registration result. It does not replace
+Q2: Q2 performs the one required X/Y `$H` cycle; Q5 then performs only the
+bounded G53 raster and centroid approach.
 
 The first valid chord measured 36.687 mm at Y `-226.000`; the provisional
 25 mm ceiling rejected it safely. The candidate ceiling is now 50 mm for the
