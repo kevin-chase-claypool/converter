@@ -210,6 +210,8 @@ def validate_outer_index_survey_macro() -> None:
         "#<a_entry_2> = [#5064 + #5224]",
         "#<a_exit_2> = [#5064 + #5224]",
         "#<a_expected_spacing> = 4320.0",
+        "#<a_scan_feed> = 10000.0",
+        "#<a_registration_feed> = 10000.0",
         "#<a_pass_two_center>",
         "g53 g1 a[#<a_pass_two_center>] f[#<a_registration_feed>]",
         "p112 survey complete: tmag is at pass-two outer-index center",
@@ -221,6 +223,9 @@ def validate_outer_index_survey_macro() -> None:
     assert "g10" not in lower, "P112 must not write a work offset"
     assert lower.count("g38.3 a[#<a_search_degrees>]") == 2, (
         "P112 must make exactly two bounded A entry searches"
+    )
+    assert "#<a_pass_two_center> = #<a_center_2>" in lower, (
+        "P112 must stop at the second observed center without a third rotation"
     )
 
 

@@ -8,8 +8,8 @@
 #<a_spacing_tolerance> = 10.0
 #<a_maximum_width> = 120.0
 #<xy_travel_feed> = 1000.0
-#<a_scan_feed> = 600.0
-#<a_registration_feed> = 120.0
+#<a_scan_feed> = 10000.0
+#<a_registration_feed> = 10000.0
 
 M5
 G4 P3.0
@@ -103,9 +103,8 @@ o129 if [ABS[#<a_spacing> - #<a_expected_spacing>] GT #<a_spacing_tolerance>]
   o909 error[39]
 o129 endif
 
-(Normalize pass two to pass one, then approach the pass-two magnetic center.)
-#<a_index> = [[#<a_center_1> + [#<a_center_2> - #<a_expected_spacing>]] / 2]
-#<a_pass_two_center> = [#<a_index> + [2 * #<a_expected_spacing>]]
+(The second observation is the landing target; trim backward from its exit to its center.)
+#<a_pass_two_center> = #<a_center_2>
 G53 G1 A[#<a_pass_two_center>] F[#<a_registration_feed>]
 M64 P0
 (print,P112 survey complete: TMAG is at pass-two outer-index center; inspect MPos)

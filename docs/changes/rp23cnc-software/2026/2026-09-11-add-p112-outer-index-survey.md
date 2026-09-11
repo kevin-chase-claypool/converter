@@ -40,9 +40,11 @@ P112 requires a fresh P111 followed by Q5 with no intervening axis movement.
 It moves the TMAG +X by the measured center-to-index radius `223.675804` mm,
 uses the established active-low Aux0/GP28 handshake, captures two `G38.3`/
 `G38.5` A footprints, validates their `4320 +/- 10` motor-degree spacing, and
-approaches the equivalent second-pass center. It releases Aux0 and makes no
+trims backward from the second exit to its second-pass center. Both searches
+run at `10000` motor-degrees/min (2.31 bed RPM); their combined 9,000-degree
+search allowance takes no more than 54 seconds. It releases Aux0 and makes no
 `G10` work-offset write. Probe captures are converted from G54 to G53 A before
-the final G53 approach.
+the final G53 trim.
 
 ## Verification
 
@@ -55,15 +57,19 @@ the final G53 approach.
 ## Struggles and rejected approaches
 
 Enabling P100 Q4 would also make its eventual G54 A write reachable, which is
-not appropriate for the first real-index observation. P112 keeps M-09 evidence
-separate from registration.
+not appropriate for the first real-index observation. The first P112 version
+would have approached a target one full revolution beyond the second observation
+at the old 120 motor-degree/min registration feed; it was corrected before SD
+installation. P112 keeps M-09 evidence separate from registration.
 
 ## Risks and follow-up
 
 The outer point is near the positive-X machine edge, so P112 must be started
-only from the observed Q5 TMAG centroid and with the XY path clear. It may
-travel slightly more than two full bed revolutions because the first index
-entry begins at an unknown A phase. Do not run Q4 or production Q0 yet.
+only from the observed Q5 TMAG centroid and with the XY path clear. The two
+searches can total up to 9,000 motor degrees (2.083 bed revolutions) because
+the first index entry begins at an unknown A phase; the final trim reverses
+only across half of the observed index footprint. Do not run Q4 or production
+Q0 yet.
 
 ## Files
 

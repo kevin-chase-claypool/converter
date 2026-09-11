@@ -41,6 +41,9 @@ After the A-axis fuse was reinstalled, the low-speed incremental `G1 A10 F120`
 then `G1 A-10 F120` check returned controller MPos A to `0.000` and returned
 the physical bed reference mark exactly. P112 is the pending two-observation
 outer-index survey; it preserves G54 for this first M-09 evidence pass.
+Its two A searches run at 10,000 motor-degrees/min (2.31 bed RPM), with a
+short reverse trim to the second observed index center rather than a third
+forward rotation.
 
 ## Boundary
 

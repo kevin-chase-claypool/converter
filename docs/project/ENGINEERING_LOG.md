@@ -399,9 +399,12 @@ Add new entries at the top of the log below this line.
   without a hidden home cycle.
 - Implementation: P112 requires fresh P111 then Q5, moves the TMAG +X by the
   measured `223.675804` mm radius, records two outer-index A footprints, and
-  approaches their second-pass center. It releases Aux0 and makes no G54 write.
+  trims backward from the second exit to its second-pass center. Searches run
+  at `10000` motor degrees/min (2.31 bed RPM), bounding their 9,000-degree
+  allowance to 54 seconds. It releases Aux0 and makes no G54 write.
 - Safety boundary: Q4 and Q0 remain locked. P112 may travel slightly more than
-  two bed revolutions because its first index entry begins at an unknown phase.
+  two bed revolutions because its first index entry begins at an unknown phase;
+  it no longer adds a third revolution during final positioning.
 - Next action: install P112, verify its SD listing, then execute P111, Q5, and
   P112 in that exact order without intervening X/Y/A motion.
 
