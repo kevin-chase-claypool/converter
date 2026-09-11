@@ -1,0 +1,29 @@
+(P109 - Q5 preposition plus readiness diagnostic)
+(Requires fresh Q2. Stops before every G38/raster command.)
+
+M5
+G4 P3.0
+G21 G90 G94 G17 G54
+M64 P0
+G4 P2.0
+(print,P109 start: Q5 preposition plus handshake; no Home or G38 permitted)
+G53 G0 X-280.0 Y-266.0
+(print,P109 preposition complete: beginning Q5 readiness handshake)
+M65 P0
+G4 P2.0
+o109 if [#<_probe_state> NE 1]
+  M64 P0
+  (print,P109 READY acknowledgement missing)
+  o901 error[39]
+o109 endif
+M64 P0
+G4 P0.10
+o110 if [#<_probe_state> NE 0]
+  (print,P109 READY acknowledgement did not release)
+  o902 error[39]
+o110 endif
+M65 P0
+G4 P0.10
+M64 P0
+(print,P109 complete: Q5 preposition plus handshake passed; no G38 issued)
+o109 return [1]

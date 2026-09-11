@@ -111,3 +111,10 @@ from an unexpected additional physical homing cycle.
 contains no axis-motion command. A `Home` state or any X/Y movement during
 P108 is therefore an unexpected controller/external action rather than Q5
 preposition or raster motion.
+
+`P109.macro` combines the two verified pieces in their Q5 order: the bounded
+G53 preposition to `X=-280`, `Y=-266` followed by the complete Aux0 handshake.
+It stops before every `G38` command, so it contains no raster or centroid
+motion. Run it only after a fresh Q2; a `Home` state during P109 isolates the
+interaction to this combined sequence, while a clean pass shifts attention to
+the first raster/probe command.

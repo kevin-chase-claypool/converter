@@ -83,6 +83,7 @@ Entry details remain only in the chronology.
 - [2026-09-04 15:22:39 -0500 - MIXED/OPEN - Moved pen/TMAG XY offset ownership to P100](#elog-20260904152239)
 
 ### Hardware and wiring
+- [2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster](#elog-20260911140000)
 - [2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake](#elog-20260911133000)
 - [2026-09-11 13:00:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated unexpected Q5 limit approaches](#elog-20260911130000)
 - [2026-09-11 12:00:00 -0500 - RP23CNC-SOFTWARE/VERIFIED - P100 Q5 center-magnet centroid survey](#elog-20260911120000)
@@ -355,6 +356,20 @@ Entry details remain only in the chronology.
 Add new entries at the top of the log below this line.
 
 ---
+
+<a id="elog-20260911140000"></a>
+### 🟨 2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster
+
+- Status: P109 implemented; installed result pending after a fresh Q2.
+- Category: rp23cnc-software, hardware, P100, P107, P108, P109, Q5,
+  handshake, raster, safety.
+- Evidence: P107 passed the lone preposition, and P108 passed the lone
+  handshake. Neither entered `Home` nor caused X/Y movement beyond P107's
+  expected diagonal.
+- Decision: P109 puts those two stages back in Q5's actual order, but returns
+  before any G38 command. This is the minimum remaining combined-motion test.
+- Next action: run Q2 then P109. A clean result shifts diagnosis to the first
+  probe-raster command; a `Home` result implicates the stage interaction.
 
 <a id="elog-20260911133000"></a>
 ### 🟨 2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-11 | `RPSW-20260911-009` | implemented | [Add P109 Q5 Combined Diagnostic](../rp23cnc-software/2026/2026-09-11-add-p109-q5-combined-diagnostic.md) | `P100`, `P109`, `Q5`, `diagnostic`, `handshake`, `raster`, `safety` |
 | 2026-09-11 | `RPSW-20260911-008` | verified | [Add P108 Q5 Handshake Diagnostic](../rp23cnc-software/2026/2026-09-11-add-p108-q5-handshake-diagnostic.md) | `P100`, `P108`, `Q5`, `handshake`, `diagnostic`, `safety` |
 | 2026-09-11 | `RPSW-20260911-007` | verified | [Add P107 Q5 Preposition Diagnostic](../rp23cnc-software/2026/2026-09-11-add-p107-q5-preposition-diagnostic.md) | `P100`, `P107`, `Q5`, `diagnostic`, `homing`, `safety` |
 | 2026-09-11 | `RPSW-20260911-006` | verified | [Add P100 Q5 Centroid Survey](../rp23cnc-software/2026/2026-09-11-add-p100-q5-centroid-survey.md) | `P100`, `Q5`, `centroid`, `raster`, `safety` |
