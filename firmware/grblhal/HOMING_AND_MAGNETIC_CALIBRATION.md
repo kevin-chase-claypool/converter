@@ -35,7 +35,7 @@ filesystem and the candidate build passes F-08.
 
 | Mode | Purpose | Current availability |
 |---:|---|---|
-| `Q0` | Full registration after P111: center raster, two-pass A index, deferred G54 writes, pen-center park | Enabled for supervised first combined run after `G65 P111` |
+| `Q0` | Full registration after P111: center raster, two-pass A index, deferred G54 writes, pen-center park | Hardware-verified; run after `G65 P111` |
 | `Q1` | Toolhead readiness handshake only | Motor-inert machine-verified on 2026-09-11; no motion |
 | `Q2` | Compatibility stop | Retired: use `G65 P111` for the one physical X/Y `$H`. `$H` system commands inside P100's false O-word branches executed during Q5. Homing configuration omits A/Z. |
 | `Q3` | Center raster and G54 X/Y registration | Locked |
@@ -73,6 +73,14 @@ remain in P111 rather than P100 because grblHAL streams system commands even in
 false O-word branches. Q0 uses the verified Q5 center survey and P112 index
 survey values, defers G54 writes until both pass, then parks the pen at G54
 X0/Y0 with G54 A0 at the outer index.
+
+The first combined Q0 run completed without alarm. It registered at
+`MPos:-232.800,-190.025,A8661.609` with G54 work offset
+`-232.801,-190.025,A8661.497`; the remaining 0.112 A motor-degree display
+delta is half the 0.225-degree controller step resolution. The operator
+visually confirmed the parked pen tip perfectly centered on the center magnet.
+Q0 now uses F30 only for its final 2 mm TMAG centroid approach; the long return
+from the outer index to center uses the verified 1500 mm/min X/Y travel rate.
 
 ### Candidate Q3 rectangle
 

@@ -69,6 +69,7 @@ Entry details remain only in the chronology.
 
 ### RP23CNC and machine software
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Enable verified P100 Q0 registration](#elog-20260911-enable-verified-p100-q0-registration)
+- [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Complete first automated P100 Q0 registration](#elog-20260911-complete-first-automated-p100-q0-registration)
 - [2026-09-10 13:30:00 -0500 - RP23CNC-SOFTWARE/VERIFIED - Corrected P100 installed Aux0 polarity](#elog-20260910133000)
 - [2026-09-05 - DOCUMENTATION/SUCCESS - Consolidated current documentation](#elog-20260905-consolidated-current-documentation)
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -92,6 +93,7 @@ Entry details remain only in the chronology.
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Register verified index as G54 A0](#elog-20260911-register-verified-index-as-g54-a0)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Complete manual magnetic G54 registration](#elog-20260911-complete-manual-magnetic-g54-registration)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Enable verified P100 Q0 registration](#elog-20260911-enable-verified-p100-q0-registration)
+- [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Complete first automated P100 Q0 registration](#elog-20260911-complete-first-automated-p100-q0-registration)
 - [2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row](#elog-20260911143000)
 - [2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster](#elog-20260911140000)
 - [2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake](#elog-20260911133000)
@@ -518,6 +520,23 @@ Add new entries at the top of the log below this line.
 - Next action: copy P100 to SD and perform one supervised P111 then Q0 run;
   inspect completion, `$#`, pen-at-center, and index reference before treating
   the ioSender routine as production-ready.
+
+<a id="elog-20260911-complete-first-automated-p100-q0-registration"></a>
+### 🟩 2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Complete first automated P100 Q0 registration
+
+- Status: the P111 then Q0 two-command registration routine passed its first
+  complete supervised hardware run.
+- Category: firmware, hardware, P100, P111, Q0, G54, center-magnet,
+  index-magnet, coordinate-system, safety.
+- Evidence: Q0 printed `center registered so G54 X0 Y0 is pen-at-center` and
+  `HOME + REGISTER complete`, then completed its final 1500 mm/min park with
+  no alarm. Final MPos was `-232.800,-190.025,A8661.609`; WCO was
+  `-232.801,-190.025,A8661.497`. The 0.112 A motor-degree display delta is
+  half the 0.225-degree controller step resolution. The operator visually
+  confirmed the pen tip perfectly centered on the physical center magnet.
+- Correction: the first run used F30 for the long index-to-center return.
+  P100 now retains F30 only for the final 2 mm centroid approach and uses
+  1500 mm/min for that long return.
 
 <a id="elog-20260911143000"></a>
 ### 🟨 2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row

@@ -59,8 +59,8 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   to register G54 A0. The Pro Micro supplies only readiness and thresholded
   magnetic state; it never claims one threshold edge is the center. Send `M5`
   and verify the toolhead is retracted before any homing or scan. The production
-  Q0 is enabled only after standalone P111 X/Y homing and is still awaiting its
-  first supervised combined run; Q3/Q4 remain locked. See
+  Q0 is hardware-verified after standalone P111 X/Y homing; Q3/Q4 remain
+  locked. See
   [`grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`](grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md).
 - **Candidate probe capture** - the 2026-09-10/11 motor-inert candidate
   proved direct and actual GP27/U3 `PRB` transitions, A-axis G38 capture, and

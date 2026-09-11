@@ -4,7 +4,7 @@ date: 2026-09-11
 category: rp23cnc-software
 affected_categories:
   - hardware
-status: implemented
+status: verified
 components:
   - firmware/grblhal/macros/P100.macro
   - firmware/grblhal/macros/P111.macro
@@ -46,7 +46,9 @@ write X0/Y-29.4892, and park at X0/Y0/A0. Q3 and Q4 remain locked.
 - `python tools\validate_homing_macro.py` passes static flow, coordinate,
   lock, probe, and measured-parameter checks.
 - No `$H` exists in P100; P111 remains the only homing macro.
-- The first full Q0 run remains supervised hardware verification.
+- The first full `G65 P111` then `G65 P100 Q0` run completed without alarm.
+- The final park was `MPos:-232.800,-190.025,A8661.609` with G54 work offset
+  `-232.801,-190.025,A8661.497`; the pen tip was visually perfect at center.
 
 ## Struggles and rejected approaches
 

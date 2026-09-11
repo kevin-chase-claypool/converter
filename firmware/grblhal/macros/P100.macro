@@ -58,7 +58,8 @@ o005 endif
 #<scan_max_y> = -166.0
 #<row_pitch> = 5.0
 #<scan_feed> = 2000.0
-#<registration_feed> = 30.0
+#<centroid_approach_feed> = 30.0
+#<center_return_feed> = 1500.0
 #<approach_distance> = 2.0
 #<minimum_hit_rows> = 3
 #<minimum_chord_width> = 0.5
@@ -288,7 +289,7 @@ o200 if [[[#31 EQ 0] OR [#31 EQ 3]] OR [#31 EQ 5]]
 
   (Centroid Approach and Registration Pass.)
   G53 G0 X[#<centroid_x> - #<approach_distance>] Y[#<centroid_y> - #<approach_distance>]
-  G53 G1 X[#<centroid_x>] Y[#<centroid_y>] F[#<registration_feed>]
+  G53 G1 X[#<centroid_x>] Y[#<centroid_y>] F[#<centroid_approach_feed>]
   o234 if [#31 EQ 5]
     M64 P0
     (print,P100 Q5 survey complete: TMAG is at calculated centroid; inspect MPos)
@@ -400,7 +401,8 @@ o300 if [#31 EQ 0]
   (print,P100 outer magnet registered as G54 A0)
 
   (Only both passing surveys may now replace the XY work offset.)
-  G53 G1 X[#<centroid_x>] Y[#<centroid_y>] F[#<registration_feed>]
+  (The long verified index-to-center return is travel, not an edge refinement.)
+  G53 G1 X[#<centroid_x>] Y[#<centroid_y>] F[#<center_return_feed>]
   G54
   G10 L20 P1 X[#<sensor_to_pen_x>] Y[#<sensor_to_pen_y>]
   (print,P100 center registered so G54 X0 Y0 is pen-at-center)

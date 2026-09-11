@@ -260,6 +260,8 @@ def validate_candidate_scan_parameters(text: str) -> None:
     assert assignment(text, "sensor_to_pen_y") == -29.4892
     assert assignment(text, "row_pitch") == 5.0
     assert assignment(text, "scan_feed") == 2000.0
+    assert assignment(text, "centroid_approach_feed") == 30.0
+    assert assignment(text, "center_return_feed") == 1500.0
     assert assignment(text, "ready_wait_s") == 2.0
     assert assignment(text, "maximum_chord_width") == 50.0
     assert "#<sensor_to_pen_offset_valid> = 1" in text.lower(), (
@@ -281,7 +283,7 @@ def validate_q0_verified_registration_path(text: str) -> None:
         "#<a_exit_2> = [#5064 + #5224]",
         "#<a_pass_two_center> = #<a_center_2>",
         "g53 g1 a[#<a_pass_two_center>] f[#<a_registration_feed>]",
-        "g53 g1 x[#<centroid_x>] y[#<centroid_y>] f[#<registration_feed>]",
+        "g53 g1 x[#<centroid_x>] y[#<centroid_y>] f[#<center_return_feed>]",
         "g54 g90 g0 x0 y0 a0",
     ]
     for token in required:
