@@ -70,10 +70,20 @@ stop. The controller returned `ok` without motion; `$#` then reported
 `[G54:-232.900,-191.200,0.000,17281.142]`. This preserves the physical index
 as G54 A0. It does not validate or replace the temporary XY work offset.
 
+The operator then ran another successful Q5. It returned TMAG to the calculated
+center at `MPos:-232.125,-218.325,A17281.142`. While stationary, the operator
+issued `G10 L20 P1 X0 Y-29.4892`; `$#` reported
+`[G54:-232.126,-188.835,0.000,17281.142]`. Finally, `G54 G0 X0 Y0` moved the
+pen north by the measured offset. The operator visually confirmed that the pen
+tip was perfectly centered over the physical center magnet. This is a complete
+manual magnetic G54 registration: pen center is X0/Y0 and outer index is A0.
+
 ## Boundary
 
-Q5 is hardware-verified as a center-magnet survey. It is not Q3 and does not
-authorize center, pen-offset, or A-index registration.
+Q5 is hardware-verified as a center-magnet survey. The manual registration
+sequence is now verified, but Q5 itself remains non-registering. Do not unlock
+Q0/Q3/Q4: their combined body has not yet been updated to use the verified
+P111/Q5/P112 workflow.
 
 The installed `$110/$111=1500` mm/min axis limits have not been changed as
 part of this raster retune. A requested `F2000` may therefore be rate-limited

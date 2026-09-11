@@ -25,8 +25,9 @@ measured `sensor_to_pen = (0.000, -30.100)` mm (`pen - TMAG`). After the
 2026-09-07 conservative Y envelope was enabled, the homed machine frame
 changed; the manually centered pen axis was therefore refreshed at
 `MPos:-232.900,-191.200` with `G10 L20 P1 X0 Y0`. The operator also used a
-temporary visual G54 `A0` reference for pen-free testing. Neither reference
-validates M-08/M-09; P100 must overwrite both before production drawing.
+temporary visual G54 `A0` reference for pen-free testing. Those historical
+references have now been replaced by the 2026-09-11 magnetic registration
+evidence below; do not restore them.
 
 The controller macro is [`macros/P100.macro`](macros/P100.macro). It is invoked
 from ioSender with `G65 P100 Q<mode>` after the file is copied to the RP23CNC
@@ -55,6 +56,17 @@ G54. The operator visually confirmed the index magnet centered beneath the
 TMAG chip at that stop. With the toolhead stationary there, `G10 L20 P1 A0`
 stored G54 A offset `17281.142`, so the physical index is now G54 A0; Q4
 remains locked for separate automated-registration review.
+
+The same final Q5 survey then returned the TMAG to the calculated center at
+`MPos:-232.125,-218.325,A17281.142`. At that stationary TMAG location the
+operator issued `G10 L20 P1 X0 Y-29.4892`, producing
+`G54:-232.126,-188.835,0.000,17281.142`. The subsequent
+`G54 G0 X0 Y0` moved the pen north by the measured 29.4892 mm TMAG-to-pen
+offset and the operator visually verified the pen tip exactly centered on the
+center magnet. Thus the active G54 now means pen-at-center at X0/Y0 and
+magnetic index at A0. This is verified manual registration evidence; automated
+P100 Q0/Q3/Q4 remains locked until its stale combined A path is replaced with
+the verified P111/Q5/P112 sequence.
 
 The eventual single ioSender button sends `G65 P100 Q0`. Separate modes exist
 so each stage can be commissioned without bypassing the others.

@@ -49,6 +49,14 @@ manually set the verified stationary position to G54 A0 with `G10 L20 P1 A0`;
 `$#` reported G54 A offset `17281.142`. This is a verified commissioning
 reference, not authorization to run P100 Q4/Q0.
 
+The final center reference has also been physically verified. A subsequent Q5
+returned TMAG to `MPos:-232.125,-218.325,A17281.142`; at that stationary point,
+`G10 L20 P1 X0 Y-29.4892` set the installed pen-minus-TMAG offset. `$#` then
+reported `G54:-232.126,-188.835,0.000,17281.142`. `G54 G0 X0 Y0` was visually
+confirmed to place the **pen tip** exactly at the center magnet. This replaces
+the historical temporary XY reference, but it does not authorize P100 Q0/Q3/Q4:
+the production path must first be rebuilt around P111, Q5, and P112.
+
 Q5 is a verified controlled motion stage. Run P111 first, then Q5. Q5 contains
 no `$H` command and does not home. It uses the
 candidate G53 rectangle and P100 probe/chord validation to calculate the

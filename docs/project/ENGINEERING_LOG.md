@@ -89,6 +89,7 @@ Entry details remain only in the chronology.
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Retune P100 Q5 raster density](#elog-20260911-retune-p100-q5-raster-density)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Complete non-registering P112 survey](#elog-20260911-complete-non-registering-p112-survey)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Register verified index as G54 A0](#elog-20260911-register-verified-index-as-g54-a0)
+- [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Complete manual magnetic G54 registration](#elog-20260911-complete-manual-magnetic-g54-registration)
 - [2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row](#elog-20260911143000)
 - [2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster](#elog-20260911140000)
 - [2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake](#elog-20260911133000)
@@ -477,6 +478,24 @@ Add new entries at the top of the log below this line.
 - Boundary: this replaces the prior temporary A0 with a magnetic reference, but
   G54 X/Y remains temporary. Do not run Q4/Q0; re-run P111 then Q5 to establish
   the current TMAG center before setting pen-corrected XY zero.
+
+<a id="elog-20260911-complete-manual-magnetic-g54-registration"></a>
+### 🟩 2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Complete manual magnetic G54 registration
+
+- Status: the active G54 now has physically verified pen-center XY and
+  outer-index A references; automated registration remains locked.
+- Category: rp23cnc-software, hardware, G54, P100, Q5, P112, TMAG,
+  center-magnet, index-magnet, coordinate-system, safety.
+- Evidence: a final successful Q5 returned TMAG to
+  `MPos:-232.125,-218.325,A17281.142`. While stationary, `G10 L20 P1 X0
+  Y-29.4892` produced `$#` report
+  `[G54:-232.126,-188.835,0.000,17281.142]`. `G54 G0 X0 Y0` then completed
+  without alarm and the operator confirmed the pen tip perfectly centered on
+  the center magnet.
+- Boundary: this manual sequence proves the resulting coordinate frame, not
+  the stale P100 Q0/Q3/Q4 implementation. Do not unlock those modes. The
+  future automated path must use P111 → Q5 → P112 before applying the two
+  verified G54 writes and parking at X0/Y0.
 
 <a id="elog-20260911143000"></a>
 ### 🟨 2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row

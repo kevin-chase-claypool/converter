@@ -183,9 +183,14 @@ homed Y frame, the same visual center was re-established at
 `MPos:-232.900,-191.200` on 2026-09-07. A manually chosen temporary `A0` was
 also used for one pen-free converter run. That temporary A reference has now
 been replaced: after P112's verified physical index stop, `G10 L20 P1 A0`
-stored G54 A offset `17281.142` with no motion. The current A0 is therefore a
-magnetic reference, while the temporary XY reference still must be replaced
-before production drawing.
+stored G54 A offset `17281.142` with no motion. A subsequent Q5 returned TMAG
+to the center at `MPos:-232.125,-218.325,A17281.142`. At that stationary point,
+`G10 L20 P1 X0 Y-29.4892` produced
+`G54:-232.126,-188.835,0.000,17281.142`; `G54 G0 X0 Y0` was visually verified
+with the pen tip exactly over the center magnet. Therefore G54 presently means
+pen-at-center at X0/Y0 and magnetic index at A0. This replaces the temporary
+manual XY reference, but still does not authorize the stale P100 Q0/Q3/Q4
+registration code.
 
 The TMAG and pen tip have a fixed CAD/measured XY separation. P100 owns that
 transformation: it records `pen - TMAG` as a commissioning-gated offset and

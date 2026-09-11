@@ -86,6 +86,13 @@ density while the doubled requested line rate keeps total scan time comparable.
 The installed X/Y maximum rates remain 1500 mm/min until a separate loaded-rate
 test authorizes an increase.
 
+The manual magnetic G54 frame is now physically verified. A final Q5 returned
+TMAG to `MPos:-232.125,-218.325,A17281.142`; the stationary
+`G10 L20 P1 X0 Y-29.4892` write produced
+`G54:-232.126,-188.835,0.000,17281.142`. `G54 G0 X0 Y0` then placed the pen
+tip exactly at the center magnet by visual inspection. This replaces both
+temporary G54 references, but it does not unlock P100 Q0/Q3/Q4.
+
 ## Status
 
 The RP23CNC grblHAL baseline now boots over native USB: F-01 passed on
