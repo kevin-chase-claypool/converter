@@ -360,7 +360,7 @@ Add new entries at the top of the log below this line.
 <a id="elog-20260911140000"></a>
 ### 🟨 2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster
 
-- Status: P109 implemented; installed result pending after a fresh Q2.
+- Status: P109 passed; first G38 raster diagnostic remains open.
 - Category: rp23cnc-software, hardware, P100, P107, P108, P109, Q5,
   handshake, raster, safety.
 - Evidence: P107 passed the lone preposition, and P108 passed the lone
@@ -368,8 +368,11 @@ Add new entries at the top of the log below this line.
   expected diagonal.
 - Decision: P109 puts those two stages back in Q5's actual order, but returns
   before any G38 command. This is the minimum remaining combined-motion test.
-- Next action: run Q2 then P109. A clean result shifts diagnosis to the first
-  probe-raster command; a `Home` result implicates the stage interaction.
+- Verification: after fresh Q2, P109 reached `MPos:-280,-266`, completed the
+  expected P assertion/release, printed completion, and never entered `Home`.
+  The complete Q5 pre-raster sequence is therefore clear.
+- Next action: isolate Q5's first G38 probe-raster command; do not rerun the
+  full Q5 survey yet.
 
 <a id="elog-20260911133000"></a>
 ### 🟨 2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake

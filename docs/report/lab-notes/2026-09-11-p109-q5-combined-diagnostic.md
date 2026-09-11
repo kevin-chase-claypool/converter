@@ -17,13 +17,13 @@ Execute `G65 P109`. It reproduces Q5's `M5`, released baseline, southwest
 G53 preposition, READY_ACK/release/re-arm handshake, and cleanup. It then
 returns before its first G38 command.
 
-## Expected result
+## Result
 
-P109 makes one continuous move from X/Y home to `MPos:-280,-266`, briefly
-asserts/releases P for the handshake, stays out of `Home`, and prints its
-completion message. No raster row, probe move, G54 write, or A move occurs.
+P109 made one continuous move from X/Y home to `MPos:-280,-266`, briefly
+asserted/released P for the handshake, stayed out of `Home`, and printed its
+completion message. No raster row, probe move, G54 write, or A move occurred.
 
 ## Stop condition
 
-If `Home` appears or the axes approach an X/Y switch, press Reset and retain
-the P109 messages/status. Do not run Q5 after that outcome.
+No stop condition occurred. The remaining untested Q5 operation is its first
+G38 raster command.
