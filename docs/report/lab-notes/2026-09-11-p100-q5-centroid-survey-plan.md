@@ -65,6 +65,11 @@ The operator then visually confirmed that the stopped TMAG chip is centered
 over the physical index magnet. P112 is therefore M-09 verified as a
 survey-only stage; no registration mode has been enabled.
 
+Before any further movement, the operator issued `G10 L20 P1 A0` at the P112
+stop. The controller returned `ok` without motion; `$#` then reported
+`[G54:-232.900,-191.200,0.000,17281.142]`. This preserves the physical index
+as G54 A0. It does not validate or replace the temporary XY work offset.
+
 ## Boundary
 
 Q5 is hardware-verified as a center-magnet survey. It is not Q3 and does not

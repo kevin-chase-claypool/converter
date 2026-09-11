@@ -44,7 +44,10 @@ search allowance. The final move trims backward from the second exit to that
 second observed center; it does not add a third rotation. Q4 remains locked
 for a separate registration review. The installed revised survey completed at
 `MPos:-10.500,-218.363,A8610.084` without a G54 write, and the operator
-visually confirmed the index magnet centered beneath TMAG.
+visually confirmed the index magnet centered beneath TMAG. The operator then
+manually set the verified stationary position to G54 A0 with `G10 L20 P1 A0`;
+`$#` reported G54 A offset `17281.142`. This is a verified commissioning
+reference, not authorization to run P100 Q4/Q0.
 
 Q5 is a verified controlled motion stage. Run P111 first, then Q5. Q5 contains
 no `$H` command and does not home. It uses the

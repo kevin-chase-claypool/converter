@@ -88,6 +88,7 @@ Entry details remain only in the chronology.
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/MIXED - Measured P112 outer-index spacing](#elog-20260911-measured-p112-outer-index-spacing)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Retune P100 Q5 raster density](#elog-20260911-retune-p100-q5-raster-density)
 - [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Complete non-registering P112 survey](#elog-20260911-complete-non-registering-p112-survey)
+- [2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Register verified index as G54 A0](#elog-20260911-register-verified-index-as-g54-a0)
 - [2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row](#elog-20260911143000)
 - [2026-09-11 14:00:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Combined Q5 stages before raster](#elog-20260911140000)
 - [2026-09-11 13:30:00 -0500 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated Q5 readiness handshake](#elog-20260911133000)
@@ -461,6 +462,21 @@ Add new entries at the top of the log below this line.
   physical index magnet centered beneath the stopped TMAG chip.
 - Boundary: P112 remains survey-only. Q4 and Q0 remain locked until the
   registration semantics are separately reviewed.
+
+<a id="elog-20260911-register-verified-index-as-g54-a0"></a>
+### 🟩 2026-09-11 - RP23CNC-SOFTWARE/HARDWARE/VERIFIED - Register verified index as G54 A0
+
+- Status: the physical index is now the active G54 A0 reference; automatic
+  registration remains locked.
+- Category: rp23cnc-software, hardware, G54, A-axis, P112, index-magnet,
+  coordinate-system, safety.
+- Evidence: while stationary at P112's visually verified index center, the
+  operator issued `G10 L20 P1 A0`. The controller returned `ok` without motion;
+  status then showed WCO A `17281.142`, and `$#` reported
+  `[G54:-232.900,-191.200,0.000,17281.142]`.
+- Boundary: this replaces the prior temporary A0 with a magnetic reference, but
+  G54 X/Y remains temporary. Do not run Q4/Q0; re-run P111 then Q5 to establish
+  the current TMAG center before setting pen-corrected XY zero.
 
 <a id="elog-20260911143000"></a>
 ### 🟨 2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row

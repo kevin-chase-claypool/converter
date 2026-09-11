@@ -181,8 +181,11 @@ aligning each point to the same center magnet. With the pen axis over that
 magnet, `G10 L20 P1 X0 Y0` set temporary XY zero. After `$131` changed the
 homed Y frame, the same visual center was re-established at
 `MPos:-232.900,-191.200` on 2026-09-07. A manually chosen temporary `A0` was
-also used for one pen-free converter run. Neither is a P100 result or magnetic
-registration; P100 must overwrite both before production drawing.
+also used for one pen-free converter run. That temporary A reference has now
+been replaced: after P112's verified physical index stop, `G10 L20 P1 A0`
+stored G54 A offset `17281.142` with no motion. The current A0 is therefore a
+magnetic reference, while the temporary XY reference still must be replaced
+before production drawing.
 
 The TMAG and pen tip have a fixed CAD/measured XY separation. P100 owns that
 transformation: it records `pen - TMAG` as a commissioning-gated offset and

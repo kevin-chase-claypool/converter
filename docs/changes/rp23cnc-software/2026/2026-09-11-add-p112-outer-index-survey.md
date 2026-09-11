@@ -63,7 +63,10 @@ the final G53 trim.
   `MPos:-10.500,-218.363,A8610.084` after the observed second footprint
   `A8557.209..8662.959`. It printed the completion message, released PRB, and
   made no G54 write. The operator visually confirmed the index magnet centered
-  beneath TMAG at that stop. Registration remains disabled.
+  beneath TMAG at that stop. While stationary, the operator issued
+  `G10 L20 P1 A0`; `$#` then reported G54 A offset `17281.142`, establishing
+  the verified physical index as G54 A0 without motion. Automated registration
+  remains disabled.
 
 ## Struggles and rejected approaches
 

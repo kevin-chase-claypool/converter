@@ -76,7 +76,9 @@ two-footprint evidence measured `4331.818` A motor degrees per bed turn, so its
 bounded spacing gate is `4320 +/- 15`. The revised installed P112 run completed
 and parked at its pass-two center `MPos:-10.500,-218.363,A8610.084` without a
 G54 write; the operator visually confirmed the index magnet centered beneath
-the TMAG chip. Q0/Q3/Q4, coordinate
+the TMAG chip. With the toolhead still at that verified position, the operator
+issued `G10 L20 P1 A0`; `$#` then reported `G54` A offset `17281.142`, proving
+the current physical index is G54 A0 with no motion. Q0/Q3/Q4, coordinate
 semantics, and normal-status timing gates remain closed before production use.
 Q5 now uses a 5 mm row pitch and a requested 2000 mm/min G38 feed. The
 smaller pitch doubles the number of 100 mm rows, so it improves sampling

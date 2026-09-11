@@ -52,7 +52,9 @@ averaged center without changing G54. It accepts center-to-center spacing within
 non-registering M-09 capture stage. The revised installed run completed and
 trimmed to pass-two center `MPos:-10.500,-218.363,A8610.084` without changing
 G54. The operator visually confirmed the index magnet centered beneath the
-TMAG chip at that stop; Q4 remains locked for a separate registration review.
+TMAG chip at that stop. With the toolhead stationary there, `G10 L20 P1 A0`
+stored G54 A offset `17281.142`, so the physical index is now G54 A0; Q4
+remains locked for separate automated-registration review.
 
 The eventual single ioSender button sends `G65 P100 Q0`. Separate modes exist
 so each stage can be commissioned without bypassing the others.
