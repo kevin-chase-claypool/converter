@@ -362,7 +362,7 @@ Add new entries at the top of the log below this line.
 <a id="elog-20260911-p100-q5-executed-hidden-system-homing"></a>
 ### 🟥 2026-09-11 - Time not recorded - RP23CNC-SOFTWARE/HARDWARE - P100 Q5 executed hidden system homing
 
-- Status: source correction implemented; installed verification pending.
+- Status: P111 installed and passed; corrected-P100/Q5 verification pending.
 - Category: rp23cnc-software, hardware, P100, P111, Q5, homing, grblHAL,
   safety.
 - Evidence: the retained Q5 trace showed three `Home` cycles after the Q5
@@ -374,9 +374,14 @@ Add new entries at the top of the log below this line.
   was processed while P100 was streamed, outside the intended O-word branch
   control.
 - Correction: P100 now contains no `$H`; P111 owns exactly one unconditional
-  physical X/Y home. Static validation rejects `$H` in P100.
-- Next action: copy the matched P100/P111 pair to SD, verify one P111 home,
-  then run Q5 and require zero `Home` states.
+  physical X/Y home. The installed P111 run produced one successful home at
+  `MPos:-10.000,-436.000` with `H:1,3`.
+- Correction regression: the first corrected P100 stopped before any motion
+  with `error:71`, caused by a parenthesized explanatory comment split across
+  two physical lines. It is now one line; static validation also rejects
+  multiline parenthesized comments.
+- Next action: copy corrected P100 to SD, run P111 after any controller
+  restart, then run Q5 and require zero `Home` states.
 
 <a id="elog-20260911143000"></a>
 ### 🟨 2026-09-11 14:30:00 - RP23CNC-SOFTWARE/HARDWARE/OPEN - Isolated first Q5 G38 raster row

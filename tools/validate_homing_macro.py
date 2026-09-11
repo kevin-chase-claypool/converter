@@ -47,6 +47,16 @@ def validate_flow_control(text: str) -> None:
     assert not stack, f"unclosed flow-control blocks: {stack}"
 
 
+def validate_line_comments(text: str) -> None:
+    for line_number, raw_line in enumerate(text.splitlines(), start=1):
+        line = raw_line.strip()
+        if line.startswith("("):
+            assert line.endswith(")"), (
+                f"line {line_number}: grblHAL comments must open and close "
+                "on the same physical line"
+            )
+
+
 def validate_safety_contract(text: str) -> None:
     required = [
         "#<commissioned> = 0",
@@ -269,6 +279,7 @@ def validate_sensor_to_pen_registration() -> None:
 def main() -> None:
     text = MACRO.read_text(encoding="utf-8")
     validate_flow_control(text)
+    validate_line_comments(text)
     validate_safety_contract(text)
     validate_commissioning_locks(text)
     validate_installed_aux_polarity(text)

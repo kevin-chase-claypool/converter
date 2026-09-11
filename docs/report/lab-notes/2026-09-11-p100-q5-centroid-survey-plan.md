@@ -27,6 +27,12 @@ raster and centroid result are still valid, but this P100 revision must not be
 reused; P111 now owns the one intentional physical X/Y home. G54 and A
 remained unchanged.
 
+P111 was then installed and successfully performed exactly one X/Y home.
+The first corrected-P100 execution stopped before motion with `error:71`:
+the new explanatory parenthesized comment had been split across two physical
+lines. That has been corrected to one line and is now rejected by static
+validation if reintroduced. The corrected Q5 controller run remains pending.
+
 ## Boundary
 
 Q5 is hardware-verified as a center-magnet survey. It is not Q3 and does not

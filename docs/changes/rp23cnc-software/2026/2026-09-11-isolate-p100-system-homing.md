@@ -42,8 +42,8 @@ P100 Q2 now returns error 39 with an instruction to use `G65 P111`; all
 legacy physical-home branches were removed. P111 performs the previously
 verified `M5`, three-second settle, one unconditional `$H`, and completion
 message. Q5 is consequently free of any homing system command. The static
-validator now rejects `$H` anywhere in P100 and enforces P111's minimal
-four-command contract.
+validator now rejects `$H` anywhere in P100, enforces P111's minimal
+four-command contract, and rejects multiline parenthesized comments in P100.
 
 ## Verification
 
@@ -51,16 +51,22 @@ four-command contract.
   after `G65 P100 Q5`, then the raster completed at
   `MPos:-232.313,-218.313`; physical magnet placement agreed with the TMAG
   endpoint.
-- Static validation: pending for the P100/P111 split.
-- Installed P111 and corrected-Q5 execution: pending. Do not reuse the old
-  P100 SD file.
+- `G65 P111` was installed and produced exactly one successful X/Y home cycle
+  ending at `MPos:-10.000,-436.000` with `H:1,3`.
+- The first installed corrected P100 attempt stopped before motion with
+  `error:71`. The source correction included a parenthesized comment split
+  across two physical lines; grblHAL parsed its second line as an expression.
+  That comment is now one physical line and the validator rejects this form.
+- Static validation now passes. Installed corrected-Q5 execution remains
+  pending. Do not reuse the prior P100 SD file.
 
 ## Risks and follow-up
 
-Copy both P100 and P111 to the SD root as a matched pair. Run P111 once and
-verify one X/Y home cycle before the first corrected Q5. Q0 remains locked;
-future production startup must explicitly compose the separate home stage
-with the later registration macro without nesting G65 calls.
+Copy corrected P100 to the SD root; the already-installed P111 is unchanged.
+After a controller restart, run P111 once and verify one X/Y home cycle before
+the first corrected Q5. Q0 remains locked; future production startup must
+explicitly compose the separate home stage with the later registration macro
+without nesting G65 calls.
 
 ## Files
 

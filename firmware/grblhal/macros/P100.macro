@@ -29,8 +29,7 @@ o001 if [#17 EQ 1]
   o001 return [1]
 o001 endif
 
-(Q2 is retained only as an explicit compatibility stop. The grblHAL homing
-system command is processed even inside false O-word branches; use P111.)
+(Q2 compatibility stop: grblHAL system home bypasses false O-word branches; use P111.)
 o004 if [#17 EQ 2]
   (print,P100 Q2 retired: run G65 P111 for physical X/Y home)
   o904 error[39]
