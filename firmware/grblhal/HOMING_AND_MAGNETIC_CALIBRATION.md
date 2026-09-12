@@ -274,6 +274,10 @@ Xc = sum(mid_x_i * width_i) / sum(width_i)
 Yc = sum(row_y_i * width_i) / sum(width_i)
 ```
 
+For an editable diagram of the scan, chord measurements, and centroid
+calculation, see
+[`../../samples/svg/center-magnet-raster-math.svg`](../../samples/svg/center-magnet-raster-math.svg).
+
 The macro rejects too few hit rows, zero area, implausible chord widths,
 multiple chords on one row, missing releases, and a centroid outside the scan
 bounds. It then performs the deliberately named **Centroid Approach and

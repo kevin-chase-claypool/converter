@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="1200" height="860" viewBox="0 0 1200 860">
+  <title>Center-magnet homing raster mathematics</title>
+  <desc>Diagram of the P100 center-magnet serpentine raster, magnetic entry and exit chords, and the weighted-area centroid calculation.</desc>
+  <rect width="1200" height="860" fill="#f5f8fc"/>
+  <text x="600" y="48" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#102b45">Center-magnet homing raster: the centroid math</text>
+  <text x="600" y="76" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#3b5063">After P111 physical X/Y homing, Q5 scans in G53 machine coordinates. This drawing shows 7 representative rows; the installed scan uses 21 rows at 5 mm pitch.</text>
+
+  <rect x="40" y="110" width="590" height="640" rx="18" fill="#fff" stroke="#b6c7d8" stroke-width="2"/>
+  <text x="68" y="148" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#164d78">1. Measure magnetic chords in a serpentine raster</text>
+  <rect x="105" y="195" width="450" height="430" fill="#edf5fb" stroke="#517a9c" stroke-width="3"/>
+  <text x="330" y="182" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="#405b70">bounded 100 mm × 100 mm G53 scan rectangle</text>
+  <ellipse cx="345" cy="411" rx="112" ry="148" fill="#cedceb" stroke="#537da1" stroke-width="3"/>
+  <ellipse cx="345" cy="411" rx="68" ry="102" fill="#a8c2db"/>
+  <text x="345" y="409" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#163c61">detected magnetic</text>
+  <text x="345" y="432" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#163c61">footprint</text>
+
+  <g fill="none" stroke="#2573a9" stroke-width="4">
+    <path d="M125 250 H535"/><path d="M535 300 H125"/><path d="M125 350 H535"/><path d="M535 400 H125"/><path d="M125 450 H535"/><path d="M535 500 H125"/><path d="M125 550 H535"/>
+  </g>
+  <g fill="#2573a9">
+    <path d="M535 250 L521 242 L521 258 Z"/><path d="M125 300 L139 292 L139 308 Z"/><path d="M535 350 L521 342 L521 358 Z"/><path d="M125 400 L139 392 L139 408 Z"/><path d="M535 450 L521 442 L521 458 Z"/><path d="M125 500 L139 492 L139 508 Z"/><path d="M535 550 L521 542 L521 558 Z"/>
+  </g>
+  <line x1="233" y1="400" x2="457" y2="400" stroke="#dc5252" stroke-width="7"/>
+  <circle cx="233" cy="400" r="8" fill="#dc5252"/><circle cx="457" cy="400" r="8" fill="#dc5252"/>
+  <text x="233" y="384" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#ad3535">entry eᵢ</text>
+  <text x="457" y="384" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#ad3535">exit xᵢ</text>
+  <text x="345" y="388" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="#7d2222">one row's chord</text>
+  <line x1="345" y1="365" x2="345" y2="435" stroke="#102b45" stroke-width="2" stroke-dasharray="6,5"/>
+  <circle cx="345" cy="400" r="7" fill="#102b45"/>
+  <text x="355" y="471" font-family="Arial, sans-serif" font-size="15" fill="#102b45">mᵢ = midpoint</text>
+  <text x="68" y="674" font-family="Arial, sans-serif" font-size="16" fill="#344f67">G38.3 captures the inactive → active edge; G38.5 captures the active → inactive edge.</text>
+  <text x="68" y="704" font-family="Arial, sans-serif" font-size="16" fill="#344f67">Alternate directions reduce non-drawing travel; the equations use the absolute X distance, so direction does not change the result.</text>
+
+  <rect x="660" y="110" width="500" height="640" rx="18" fill="#fff" stroke="#b6c7d8" stroke-width="2"/>
+  <text x="688" y="148" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#164d78">2. Convert chords into a center point</text>
+  <text x="688" y="195" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#102b45">For every row i:</text>
+  <text x="710" y="238" font-family="Georgia, serif" font-size="25" font-style="italic" fill="#102b45">wᵢ = |xᵢ − eᵢ|</text>
+  <text x="710" y="265" font-family="Arial, sans-serif" font-size="16" fill="#425b70">magnetic width of that chord</text>
+  <text x="710" y="315" font-family="Georgia, serif" font-size="25" font-style="italic" fill="#102b45">mᵢ = (eᵢ + xᵢ) / 2</text>
+  <text x="710" y="342" font-family="Arial, sans-serif" font-size="16" fill="#425b70">horizontal midpoint of that chord</text>
+  <line x1="690" y1="372" x2="1130" y2="372" stroke="#c9d8e7" stroke-width="2"/>
+  <text x="688" y="412" font-family="Arial, sans-serif" font-size="19" font-weight="bold" fill="#102b45">Area-weighted centroid:</text>
+  <text x="710" y="456" font-family="Georgia, serif" font-size="25" font-style="italic" fill="#102b45">Xc = Σ(mᵢ × wᵢ) / Σwᵢ</text>
+  <text x="710" y="502" font-family="Georgia, serif" font-size="25" font-style="italic" fill="#102b45">Yc = Σ(yᵢ × wᵢ) / Σwᵢ</text>
+  <text x="710" y="545" font-family="Arial, sans-serif" font-size="16" fill="#425b70">Each chord represents a thin strip of detected area.</text>
+  <text x="710" y="570" font-family="Arial, sans-serif" font-size="16" fill="#425b70">All strips have the same 5 mm height, so that common</text>
+  <text x="710" y="595" font-family="Arial, sans-serif" font-size="16" fill="#425b70">area factor cancels from both numerator and denominator.</text>
+  <rect x="688" y="625" width="442" height="85" rx="10" fill="#eaf4ec" stroke="#87b597" stroke-width="2"/>
+  <text x="710" y="658" font-family="Arial, sans-serif" font-size="17" font-weight="bold" fill="#235b38">Why weight by width?</text>
+  <text x="710" y="685" font-family="Arial, sans-serif" font-size="16" fill="#235b38">Wide middle chords represent more magnetic area than narrow edge chords.</text>
+  <text x="710" y="712" font-family="Arial, sans-serif" font-size="16" fill="#235b38">The result is the footprint's area center—not one edge or one row's center.</text>
+
+  <path d="M305 775 H580" stroke="#4b85b7" stroke-width="4"/><path d="M580 775 L567 767 L567 783 Z" fill="#4b85b7"/>
+  <text x="600" y="781" font-family="Arial, sans-serif" font-size="18" fill="#163c61">Validate chords → calculate (Xc, Yc) → approach it from a fixed direction → stop TMAG at the calculated center</text>
+</svg>
