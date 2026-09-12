@@ -1,105 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title description">
-  <title id="title">How SVG raster shading becomes hatch lines</title>
-  <desc id="description">A vector diagram showing an SVG gradient rendered to pixels, converted to darkness values, thresholded into layers, and emitted as hatch lines.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="1200" height="760" viewBox="0 0 1200 760">
+  <title>Raster shading: SVG appearance to pen paths</title>
+  <desc>An SVG raster-shading mathematics diagram: render, sample, calculate darkness, threshold, and hatch.</desc>
   <defs>
-    <linearGradient id="tone" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#fff"/>
-      <stop offset="1" stop-color="#101827"/>
-    </linearGradient>
-    <pattern id="fineHatch" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <line x1="0" y1="0" x2="0" y2="12" stroke="#194b78" stroke-width="2"/>
-    </pattern>
-    <pattern id="denseHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <line x1="0" y1="0" x2="0" y2="6" stroke="#123e64" stroke-width="1.6"/>
-    </pattern>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-opacity=".16"/>
-    </filter>
-    <style>
-      .heading { font: 700 34px system-ui, sans-serif; fill: #10243b; }
-      .label { font: 700 20px system-ui, sans-serif; fill: #163c61; }
-      .body { font: 18px system-ui, sans-serif; fill: #273b50; }
-      .math { font: italic 23px Georgia, serif; fill: #10243b; }
-      .small { font: 15px system-ui, sans-serif; fill: #43566b; }
-      .step { fill: #fff; stroke: #c9d8e7; stroke-width: 2; rx: 18; filter: url(#shadow); }
-      .arrow { fill: none; stroke: #4b85b7; stroke-width: 4; marker-end: url(#arrowhead); }
-    </style>
-    <marker id="arrowhead" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto">
-      <path d="M0,0 L10,4 L0,8 Z" fill="#4b85b7"/>
-    </marker>
+    <linearGradient id="tone" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#172536"/></linearGradient>
   </defs>
-
   <rect width="1200" height="760" fill="#f4f8fc"/>
-  <text x="600" y="58" text-anchor="middle" class="heading">Raster shading: SVG appearance → pen paths</text>
-  <text x="600" y="88" text-anchor="middle" class="body">The converter samples the rendered SVG, measures darkness, then keeps hatch geometry only where it is dark enough.</text>
+  <text x="600" y="52" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="bold" fill="#10243b">Raster shading: SVG appearance to pen paths</text>
+  <text x="600" y="82" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#273b50">Render the SVG, measure each pixel's darkness, and retain hatch marks where it is dark enough.</text>
 
-  <path d="M274 260 H322 M550 260 H598 M826 260 H874" class="arrow"/>
+  <rect x="35" y="120" width="240" height="260" rx="16" fill="#fff" stroke="#aebfce" stroke-width="2"/>
+  <text x="57" y="158" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#163c61">1. Render the SVG</text>
+  <rect x="59" y="180" width="192" height="108" rx="8" fill="url(#tone)" stroke="#67819b" stroke-width="2"/>
+  <path d="M84 263 C108 196 186 193 226 247" fill="none" stroke="#dd4f49" stroke-width="7" stroke-linecap="round"/>
+  <text x="57" y="325" font-family="Arial, sans-serif" font-size="17" fill="#273b50">Gradients, images, and alpha</text><text x="57" y="349" font-family="Arial, sans-serif" font-size="17" fill="#273b50">are composited into pixels.</text>
+  <line x1="276" y1="250" x2="314" y2="250" stroke="#4b85b7" stroke-width="4"/><path d="M314 250 L302 242 L302 258 Z" fill="#4b85b7"/>
 
-  <g transform="translate(40 130)">
-    <rect width="235" height="255" class="step"/>
-    <text x="22" y="38" class="label">1. Render the SVG</text>
-    <rect x="25" y="61" width="185" height="112" rx="10" fill="url(#tone)" stroke="#67819b" stroke-width="2"/>
-    <path d="M53 150 C78 82 148 75 183 133" fill="none" stroke="#e8514d" stroke-width="7" stroke-linecap="round"/>
-    <text x="22" y="205" class="body">Gradients, transparency, and</text>
-    <text x="22" y="229" class="body">embedded images become pixels.</text>
-  </g>
+  <rect x="325" y="120" width="240" height="260" rx="16" fill="#fff" stroke="#aebfce" stroke-width="2"/>
+  <text x="347" y="158" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#163c61">2. Sample a pixel</text>
+  <rect x="360" y="183" width="40" height="40" fill="#f7f7f7"/><rect x="402" y="183" width="40" height="40" fill="#d1d4d7"/><rect x="444" y="183" width="40" height="40" fill="#9299a1"/><rect x="486" y="183" width="40" height="40" fill="#273340"/>
+  <rect x="360" y="225" width="40" height="40" fill="#e4e5e6"/><rect x="402" y="225" width="40" height="40" fill="#b5bbc0"/><rect x="444" y="225" width="40" height="40" fill="#65717b"/><rect x="486" y="225" width="40" height="40" fill="#15202c"/>
+  <text x="347" y="316" font-family="Georgia, serif" font-size="22" font-style="italic" fill="#10243b">L = 0.2126R + 0.7152G + 0.0722B</text><text x="347" y="347" font-family="Arial, sans-serif" font-size="15" fill="#43566b">L = perceptual luminance (lightness).</text>
+  <line x1="566" y1="250" x2="604" y2="250" stroke="#4b85b7" stroke-width="4"/><path d="M604 250 L592 242 L592 258 Z" fill="#4b85b7"/>
 
-  <g transform="translate(325 130)">
-    <rect width="225" height="255" class="step"/>
-    <text x="20" y="38" class="label">2. Sample a pixel</text>
-    <g transform="translate(31 62)">
-      <rect width="38" height="38" fill="#f7f7f7"/><rect x="40" width="38" height="38" fill="#d1d4d7"/><rect x="80" width="38" height="38" fill="#9299a1"/><rect x="120" width="38" height="38" fill="#273340"/>
-      <rect y="40" width="38" height="38" fill="#e4e5e6"/><rect x="40" y="40" width="38" height="38" fill="#b5bbc0"/><rect x="80" y="40" width="38" height="38" fill="#65717b"/><rect x="120" y="40" width="38" height="38" fill="#15202c"/>
-      <rect y="80" width="38" height="38" fill="#c4c8cc"/><rect x="40" y="80" width="38" height="38" fill="#8d969e"/><rect x="80" y="80" width="38" height="38" fill="#3d4a57"/><rect x="120" y="80" width="38" height="38" fill="#09131c"/>
-    </g>
-    <text x="20" y="207" class="math">L = .2126R + .7152G + .0722B</text>
-    <text x="20" y="235" class="small">L is perceptual luminance (lightness).</text>
-  </g>
+  <rect x="615" y="120" width="240" height="260" rx="16" fill="#fff" stroke="#aebfce" stroke-width="2"/>
+  <text x="637" y="158" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#163c61">3. Find darkness</text>
+  <circle cx="735" cy="225" r="54" fill="#1d2b39"/><path d="M735 171 A54 54 0 0 0 735 279 L735 225 Z" fill="#f8fbfd"/><text x="735" y="231" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#fff">dark</text>
+  <text x="637" y="316" font-family="Georgia, serif" font-size="25" font-style="italic" fill="#10243b">D = (1 - L) alpha</text><text x="637" y="347" font-family="Arial, sans-serif" font-size="15" fill="#43566b">Transparent pixel: alpha = 0, so D = 0.</text>
+  <line x1="856" y1="250" x2="894" y2="250" stroke="#4b85b7" stroke-width="4"/><path d="M894 250 L882 242 L882 258 Z" fill="#4b85b7"/>
 
-  <g transform="translate(600 130)">
-    <rect width="225" height="255" class="step"/>
-    <text x="20" y="38" class="label">3. Find darkness</text>
-    <circle cx="112" cy="112" r="57" fill="#1d2b39"/>
-    <path d="M112 55 A57 57 0 0 0 112 169" fill="#f7fbff"/>
-    <text x="112" y="119" text-anchor="middle" class="body" fill="#fff">dark</text>
-    <text x="20" y="207" class="math">D = (1 − L)α</text>
-    <text x="20" y="235" class="small">Transparent pixels have α = 0, so D = 0.</text>
-  </g>
+  <rect x="905" y="120" width="260" height="260" rx="16" fill="#fff" stroke="#aebfce" stroke-width="2"/>
+  <text x="927" y="158" font-family="Arial, sans-serif" font-size="21" font-weight="bold" fill="#163c61">4. Threshold layers</text><rect x="930" y="182" width="210" height="28" rx="5" fill="url(#tone)"/>
+  <line x1="974" y1="174" x2="974" y2="218" stroke="#dd4f49" stroke-width="3"/><line x1="1035" y1="174" x2="1035" y2="218" stroke="#dd4f49" stroke-width="3"/><line x1="1095" y1="174" x2="1095" y2="218" stroke="#dd4f49" stroke-width="3"/>
+  <text x="927" y="258" font-family="Georgia, serif" font-size="21" font-style="italic" fill="#10243b">T(k) = (k + 1) / (N + 1)</text><text x="927" y="294" font-family="Georgia, serif" font-size="21" font-style="italic" fill="#10243b">draw when D &gt;= T(k)</text><text x="927" y="330" font-family="Arial, sans-serif" font-size="16" fill="#273b50">Darker pixels pass more layers.</text>
 
-  <g transform="translate(875 130)">
-    <rect width="285" height="255" class="step"/>
-    <text x="20" y="38" class="label">4. Threshold each layer</text>
-    <rect x="22" y="59" width="240" height="30" fill="url(#tone)" rx="6"/>
-    <line x1="70" y1="54" x2="70" y2="96" stroke="#e8514d" stroke-width="3"/><line x1="130" y1="54" x2="130" y2="96" stroke="#e8514d" stroke-width="3"/><line x1="190" y1="54" x2="190" y2="96" stroke="#e8514d" stroke-width="3"/>
-    <text x="20" y="130" class="math">Tₖ = (k + 1) / (N + 1)</text>
-    <text x="20" y="163" class="math">draw when D ≥ Tₖ</text>
-    <text x="20" y="207" class="body">Darker pixels pass more thresholds,</text>
-    <text x="20" y="231" class="body">so they receive more ink layers.</text>
-  </g>
-
-  <g transform="translate(60 454)">
-    <rect width="1080" height="245" class="step"/>
-    <text x="28" y="40" class="label">Result: layer hatching approximates tonal value</text>
-    <text x="28" y="68" class="body">At layer k, spacing decreases as the layer number rises:</text>
-    <text x="570" y="68" class="math">sₖ = s₀ / √(k + 1)</text>
-
-    <g transform="translate(34 91)">
-      <rect width="135" height="105" rx="8" fill="#fff" stroke="#c9d8e7"/>
-      <text x="67" y="132" text-anchor="middle" class="small">D &lt; T₀: no ink</text>
-      <rect x="165" width="135" height="105" rx="8" fill="url(#fineHatch)" stroke="#c9d8e7"/>
-      <text x="232" y="132" text-anchor="middle" class="small">one layer</text>
-      <rect x="330" width="135" height="105" rx="8" fill="url(#fineHatch)" stroke="#c9d8e7"/>
-      <path d="M338 92 L455 13 M338 68 L432 5" stroke="#123e64" stroke-width="2"/>
-      <text x="397" y="132" text-anchor="middle" class="small">two layers</text>
-      <rect x="495" width="135" height="105" rx="8" fill="url(#denseHatch)" stroke="#c9d8e7"/>
-      <path d="M503 92 L620 13 M503 68 L597 5" stroke="#0a304f" stroke-width="2"/>
-      <text x="562" y="132" text-anchor="middle" class="small">three layers</text>
-      <rect x="660" width="135" height="105" rx="8" fill="#193b59" stroke="#c9d8e7"/>
-      <path d="M665 100 L785 20 M680 105 L795 28 M662 74 L754 12" stroke="#d9e9f6" stroke-width="1.5"/>
-      <text x="727" y="132" text-anchor="middle" class="small">very dark</text>
-      <path d="M822 53 H1012" class="arrow"/>
-      <text x="916" y="31" text-anchor="middle" class="body">increasing darkness / pen density</text>
-    </g>
-  </g>
+  <rect x="35" y="425" width="1130" height="285" rx="16" fill="#fff" stroke="#aebfce" stroke-width="2"/>
+  <text x="60" y="466" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#163c61">Result: more darkness produces more pen marks</text><text x="60" y="497" font-family="Arial, sans-serif" font-size="18" fill="#273b50">Each succeeding layer uses closer hatch spacing:</text><text x="505" y="497" font-family="Georgia, serif" font-size="23" font-style="italic" fill="#10243b">s(k) = s(0) / sqrt(k + 1)</text>
+  <rect x="70" y="535" width="150" height="105" rx="8" fill="#fff" stroke="#c9d8e7" stroke-width="2"/><text x="145" y="670" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#43566b">below threshold</text>
+  <rect x="270" y="535" width="150" height="105" rx="8" fill="#fff" stroke="#c9d8e7" stroke-width="2"/><g stroke="#194b78" stroke-width="2"><line x1="275" y1="630" x2="365" y2="540"/><line x1="295" y1="640" x2="395" y2="540"/><line x1="325" y1="640" x2="415" y2="550"/></g><text x="345" y="670" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#43566b">one layer</text>
+  <rect x="470" y="535" width="150" height="105" rx="8" fill="#fff" stroke="#c9d8e7" stroke-width="2"/><g stroke="#194b78" stroke-width="2"><line x1="475" y1="630" x2="565" y2="540"/><line x1="495" y1="640" x2="595" y2="540"/><line x1="525" y1="640" x2="615" y2="550"/></g><g stroke="#123e64" stroke-width="2"><line x1="475" y1="550" x2="565" y2="640"/><line x1="495" y1="540" x2="595" y2="640"/><line x1="525" y1="540" x2="615" y2="630"/></g><text x="545" y="670" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#43566b">two layers</text>
+  <rect x="670" y="535" width="150" height="105" rx="8" fill="#e9f2f9" stroke="#c9d8e7" stroke-width="2"/><g stroke="#0f3d62" stroke-width="2"><line x1="675" y1="630" x2="765" y2="540"/><line x1="690" y1="640" x2="790" y2="540"/><line x1="710" y1="640" x2="810" y2="540"/><line x1="740" y1="640" x2="815" y2="565"/><line x1="675" y1="550" x2="765" y2="640"/><line x1="690" y1="540" x2="790" y2="640"/><line x1="710" y1="540" x2="810" y2="640"/><line x1="740" y1="540" x2="815" y2="615"/></g><text x="745" y="670" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#43566b">three layers</text>
+  <line x1="870" y1="586" x2="1085" y2="586" stroke="#4b85b7" stroke-width="4"/><path d="M1085 586 L1073 578 L1073 594 Z" fill="#4b85b7"/><text x="976" y="558" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#273b50">increasing darkness</text><text x="976" y="618" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" fill="#273b50">and pen density</text>
 </svg>
