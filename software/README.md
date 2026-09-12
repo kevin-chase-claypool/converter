@@ -163,6 +163,8 @@ X/Y-only output, and preview/G-code parity.
   layers from pixel darkness. Use this for gradients, embedded images, or any SVG
   where tone is visible but not represented as separate filled vector regions.
   `Raster px/unit` controls sampling resolution; higher is more accurate and slower.
+- [`../samples/svg/raster-shading-math.svg`](../samples/svg/raster-shading-math.svg)
+  is an editable visual reference for the tone-to-hatch mathematics.
 - When an SVG is selected, the Qt app samples a low-resolution render. If meaningful
   tone variation is detected, it automatically enables raster shading and sets
   practical starter values (`Fill spacing mm = 4`, `Shade levels = 4`,
