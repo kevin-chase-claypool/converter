@@ -35,7 +35,7 @@ filesystem and the candidate build passes F-08.
 
 | Mode | Purpose | Current availability |
 |---:|---|---|
-| `Q0` | Full registration after P111: center raster, two-pass A index, deferred G54 writes, pen-center park | Hardware-verified; run after `G65 P111` |
+| `Q0` | Full registration after physical X/Y home: center raster, two-pass A index, deferred G54 writes, pen-center park | Hardware-verified through `G65 P113` |
 | `Q1` | Toolhead readiness handshake only | Motor-inert machine-verified on 2026-09-11; no motion |
 | `Q2` | Compatibility stop | Retired: use `G65 P111` for the one physical X/Y `$H`. `$H` system commands inside P100's false O-word branches executed during Q5. Homing configuration omits A/Z. |
 | `Q3` | Center raster and G54 X/Y registration | Locked |
@@ -65,14 +65,15 @@ operator issued `G10 L20 P1 X0 Y-29.4892`, producing
 offset and the operator visually verified the pen tip exactly centered on the
 center magnet. Thus the active G54 now means pen-at-center at X0/Y0 and
 magnetic index at A0. This is verified manual registration evidence; automated
-P100 Q0/Q3/Q4 remains locked until its stale combined A path is replaced with
-the verified P111/Q5/P112 sequence.
+The stale combined A path has been replaced with the verified P111/Q5/P112
+sequence inside P100 Q0. Q3/Q4 remain locked as separate diagnostic modes.
 
-The production ioSender button sends `G65 P111` then `G65 P100 Q0`. `$H` must
-remain in P111 rather than P100 because grblHAL streams system commands even in
-false O-word branches. Q0 uses the verified Q5 center survey and P112 index
-survey values, defers G54 writes until both pass, then parks the pen at G54
-X0/Y0 with G54 A0 at the outer index.
+The production ioSender button sends the verified unified `G65 P113` command.
+P113 performs M5 and its settle dwell, owns the one physical X/Y `$H`, then
+calls P100 Q0. `$H` must remain outside P100 because grblHAL streams system
+commands even in false O-word branches. Q0 uses the verified Q5 center survey
+and P112 index-survey values, defers G54 writes until both pass, then parks the
+pen at G54 X0/Y0 with G54 A0 at the outer index.
 
 The first combined Q0 run completed without alarm. It registered at
 `MPos:-232.800,-190.025,A8661.609` with G54 work offset
@@ -115,7 +116,7 @@ for the local force result. Until that interface is implemented and T-01J
 passes, the operator must run the equivalent guarded tool check and must not
 assume a shared pen-tip height.
 
-## Intended P100 Q0 data movement
+## Intended P113 / P100 Q0 data movement
 
 This is the target commissioning-gated order. It records which controller owns
 each decision and which existing signal carries the result. The present macro
@@ -125,10 +126,11 @@ The interactive companion is [`../../docs/p100-data-movement.html`](../../docs/p
 ### 1. Start command: host to motion controller
 
 ```text
-ioSender -- G65 P100 Q0 --> RP23CNC/grblHAL
+ioSender -- G65 P113 --> RP23CNC/grblHAL -- G65 P100 Q0 --> registration
 ```
 
-P100 begins locally on RP23CNC. Pen-force samples do not travel to the host.
+P113 performs the safe pen-clear/dwell and physical X/Y home, then P100 begins
+locally on RP23CNC. Pen-force samples do not travel to the host.
 
 ### 2. Toolhead home: motion controller and Pro Micro
 

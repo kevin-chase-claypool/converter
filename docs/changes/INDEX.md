@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-12 | `RPSW-20260912-001` | rp23cnc-software, hardware | verified | [Record P113 unified registration command](rp23cnc-software/2026/2026-09-12-record-p113-unified-registration.md) |
 | 2026-09-11 | `WSW-20260911-001` | windows-software, rp23cnc-software, hardware | implemented | [Add Ontoly investigation prompt](windows-software/2026/2026-09-11-add-ontoly-investigation-prompt.md) |
 | 2026-09-11 | `RPSW-20260911-013` | rp23cnc-software, hardware | implemented | [Retune P100 Q5 Raster Density](rp23cnc-software/2026/2026-09-11-retune-p100-q5-raster.md) |
 | 2026-09-11 | `RPSW-20260911-012` | rp23cnc-software, hardware | implemented | [Add P112 Outer-Index Survey](rp23cnc-software/2026/2026-09-11-add-p112-outer-index-survey.md) |

@@ -153,7 +153,7 @@
 
 ## Phase 6: system integration
 
-- [x] Implement and hardware-verify the P100 physical-home, centroid-raster, and A-registration macro source. (2026-09-11: Q0 replaced the stale combined path with verified P111/Q5/P112 geometry, deferred G54 writes, and pen-center park. The first P111→Q0 run completed without alarm and visually parked the pen at center. Q3/Q4 remain locked.)
+- [x] Implement and hardware-verify the P113 unified physical-home, centroid-raster, and A-registration macro source. (2026-09-11: P113 performs the verified M5/dwell/P111/P100-Q0 sequence. Q0 uses P111/Q5/P112 geometry, defers G54 writes, and parks the pen at center. The P113 run completed without alarm and visually centered the pen. Q3/Q4 remain locked.)
 - [x] Implement the dual-core GP28/GP27 readiness and magnetic-state protocol without adding drag-chain wires. (2026-08-22 compile; E-18 remains.)
 - [ ] Connect grblHAL M3/M5 to toolhead ENGAGE/LIFT.
 - [ ] Verify reset and E-stop leave the toolhead safe.

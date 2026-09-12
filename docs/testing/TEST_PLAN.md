@@ -196,7 +196,7 @@ and coordinate semantics; Q3/Q4 remain prohibited.
 | M-07 | Homing and limits | X/Y physical home passed: repeatable machine home from physical switches with Z/A excluded. A conservative X/Y software envelope is enabled; explicit near-boundary rejection/recovery remains open. |
 | M-08 | Magnetic bed-center centroid raster | After X/Y physical homing, P100 produces multiple valid equal-pitch X chords, rejects malformed footprints, calculates the chord-width-weighted area centroid, performs the Centroid Approach and Registration Pass, and repeatably sets G54 X0/Y0 |
 | M-09 | Magnetic theta-index registration | At the measured outer radius, P100 finds two outer-magnet entry/exit pairs from one direction, validates spacing near `4320` A motor degrees, approaches the equivalent averaged index, and repeatably sets G54 A0 |
-| M-10 | Full startup home and registration | One ioSender `G65 P100 Q0` command lifts, homes physical X/Y, registers center and A, returns to G54 X0 Y0 A0, and leaves the pen lifted |
+| M-10 | Full startup home and registration | One ioSender `G65 P113` command clears the pen, homes physical X/Y, runs P100 Q0 to register center and A, returns to G54 X0 Y0 A0, and leaves the pen lifted |
 | M-11 | Homing abort/fault path | Missing/inconsistent magnetic edges, sensor fault, grblHAL alarm, or unknown lift state stops the current attempt, preserves diagnostics, reports status to ioSender, and requires manual recovery before retry |
 
 M-01 current evidence: on 2026-09-05 the A-axis motor completed an initial

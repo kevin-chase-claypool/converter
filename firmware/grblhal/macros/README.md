@@ -30,16 +30,16 @@ commands while streaming a macro even when an enclosing O-word condition is
 false. P100 therefore contains **no** `$H` text. Q0, Q2, Q3, and Q4 return
 before the magnetic body.
 
-`P111.macro` owns physical X/Y homing. It contains the one intentional,
-unconditional `$H`, preceded by `M5` and a three-second settle. Run `G65 P111`
-before Q5 or Q0; the X/Y homing configuration must omit A/Z. The production
-ioSender routine is therefore two commands: `G65 P111`, then `G65 P100 Q0`.
+`P111.macro` owns physical X/Y homing for isolated commissioning stages such
+as Q5. It contains the one intentional, unconditional `$H`, preceded by `M5`
+and a three-second settle; the X/Y homing configuration must omit A/Z.
 
-`P113.macro` is the proposed one-command `HOME + REGISTER` wrapper. It contains
-the same one unconditional `$H`, followed by `G65 P100 Q0`; P100 remains free
-of `$H`. Before using P113 for motion, run motor-inert `G65 P114`: it calls P101
-and must print both `P101 PASS` and `P114 PASS`, proving that this grblHAL
-filesystem build returns correctly from a nested macro invocation.
+`P113.macro` is the hardware-verified one-command `HOME + REGISTER` production
+wrapper. It performs `M5`, the three-second dwell, the one unconditional `$H`,
+and `G65 P100 Q0`; P100 remains free of `$H`. The motor-inert `G65 P114`
+diagnostic printed both P101 and P114 PASS messages before the verified P113
+run, proving that this grblHAL filesystem build returns correctly from a
+nested macro invocation.
 
 `P112.macro` is the next **survey-only** A-index stage. After fresh P111 and a
 successful Q5, run `G65 P112` without jogging X/Y/A between them. P112 moves
@@ -89,8 +89,8 @@ gate and installed `pen - TMAG` X/Y values; this ensures G54 X0/Y0 is the pen
 tip at bed center.
 
 The ioSender production button is named `HOME + REGISTER`, has confirmation
-enabled, and must issue `G65 P111` followed by `G65 P100 Q0`. The first combined
-Q0 run is supervised commissioning evidence; do not substitute Q3 or Q4.
+enabled, and issues `G65 P113`. P113 is the verified unified registration
+sequence; do not substitute Q3 or Q4.
 
 The macro expects:
 

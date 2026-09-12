@@ -58,9 +58,10 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   compute an area centroid, register G54 X0/Y0, and scan the outer magnet twice
   to register G54 A0. The Pro Micro supplies only readiness and thresholded
   magnetic state; it never claims one threshold edge is the center. Send `M5`
-  and verify the toolhead is retracted before any homing or scan. The production
-  Q0 is hardware-verified after standalone P111 X/Y homing; Q3/Q4 remain
-  locked. See
+  and verify the toolhead is retracted before any homing or scan. The verified
+  production entry point is `G65 P113`: its unified wrapper performs the safe
+  pen clear and dwell, the one physical X/Y `$H`, and then `G65 P100 Q0`.
+  Q3/Q4 remain locked. See
   [`grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`](grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md).
 - **Candidate probe capture** - the 2026-09-10/11 motor-inert candidate
   proved direct and actual GP27/U3 `PRB` transitions, A-axis G38 capture, and
@@ -106,8 +107,9 @@ X setting is `$100=80.00000`. X/Y physical homing then passed single-axis and
 repeated combined tests using the east/south NC switches, with Z/A excluded.
 The guarded X/Y software envelope is enabled at `$130=455.000` mm and
 `$131=446.000` mm with `$20=$40=1` and hard limits disabled (`$21=0`);
-controlled boundary-rejection testing remains open. G54 magnetic registration
-and pen-loaded behavior remain open.
+controlled boundary-rejection testing remains open. Pen-free G54 magnetic
+registration is hardware-verified through P113; pen-loaded behavior remains
+open.
 For guarded pen-free commissioning, the operator manually established a
 temporary pen-corrected G54 X/Y reference from the center magnet on 2026-09-06;
 the measured `sensor_to_pen` vector is `(0.000, -30.100)` mm. After the

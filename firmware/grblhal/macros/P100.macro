@@ -1,6 +1,6 @@
 (P100 - Theta plotter home and magnetic registration)
 (Q0 full startup; Q1 readiness; Q2 X/Y home; Q3 center; Q4 A index; Q5 survey)
-(Production ioSender invocation: G65 P100 Q0)
+(Production ioSender entry point: G65 P113; its registration stage is G65 P100 Q0 after home.)
 (Requires PROBE_ENABLE, NGC expressions, FS macros, Aux0=P0, and PRB)
 
 (Stage gates: Q0 full registration, Q1 readiness, and Q5 centroid survey.)

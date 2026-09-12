@@ -92,7 +92,7 @@
     <div class="layout">
       <section class="flow" aria-label="P100 process sequence">
         <button class="process active" type="button" data-process="start">
-          <span class="step">1. Start command</span><b>ioSender starts P100 on RP23CNC</b>
+          <span class="step">1. Start command</span><b>ioSender starts unified P113 on RP23CNC</b>
         </button>
         <div class="connector" aria-hidden="true"></div>
         <button class="process tool" type="button" data-process="toolhome">
@@ -129,8 +129,8 @@
       start: {
         title: '1. Start command',
         rows: [
-          ['Command', '<code>ioSender → RP23CNC</code>: <code>G65 P100 Q0</code>'],
-          ['Decision owner', 'RP23CNC/grblHAL starts P100 locally.'],
+          ['Command', '<code>ioSender → RP23CNC</code>: <code>G65 P113</code>'],
+          ['Decision owner', 'RP23CNC/grblHAL runs P113, then starts P100 Q0 locally after home.'],
           ['Not moved', 'HX711 force samples stay inside the Pro Micro toolhead controller.']
         ]
       },

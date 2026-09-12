@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-12 | `RPSW-20260912-001` | verified | [Record P113 unified registration command](2026/2026-09-12-record-p113-unified-registration.md) | `P113`, `P100`, `P111`, `homing`, `magnetic-registration`, `G54` |
 | 2026-09-11 | `WSW-20260911-001` | implemented | [Add Ontoly investigation prompt](../windows-software/2026/2026-09-11-add-ontoly-investigation-prompt.md) | `ontoly`, `architecture`, `impact-analysis`, `agent-workflow` |
 | 2026-09-11 | `RPSW-20260911-013` | implemented | [Retune P100 Q5 Raster Density](2026/2026-09-11-retune-p100-q5-raster.md) | `P100`, `Q5`, `raster`, `scan-feed`, `safety` |
 | 2026-09-11 | `RPSW-20260911-012` | implemented | [Add P112 Outer-Index Survey](2026/2026-09-11-add-p112-outer-index-survey.md) | `P112`, `P100`, `A-axis`, `index-magnet`, `M-09`, `safety` |
