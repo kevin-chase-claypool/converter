@@ -20,6 +20,11 @@ engineering log, master wiring table, architecture, interface contracts,
 roadmap, test plan, and the categorized
 [`change index`](docs/changes/INDEX.md).
 
+For architecture, dependency, impact, or cross-subsystem investigations using
+the local Ontoly graph, begin with the reusable
+[`ONTOLY_PROMPT.md`](ONTOLY_PROMPT.md). It pairs graph evidence with the
+authoritative interface, wiring, and commissioning records.
+
 For a quick status view, open
 [`project_management_overview.html`](project_management_overview.html) from the
 repository root. It summarizes the active phase, current blockers, next work,

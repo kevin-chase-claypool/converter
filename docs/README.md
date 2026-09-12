@@ -18,6 +18,7 @@ For the intended P100 command/sensor/reply ownership by stage, open
 
 | Task | Read first | Current source of truth |
 |---|---|---|
+| Architecture, dependency, impact, or cross-subsystem investigation | [`../ONTOLY_PROMPT.md`](../ONTOLY_PROMPT.md) | Ontoly graph for code topology; listed subsystem authorities for physical and runtime facts |
 | Windows converter UI or behavior | [`../software/README.md`](../software/README.md) | Code under `software/`; behavior in `software/README.md` |
 | Converter algorithms or historical tradeoffs | [`HANDOFF.md`](HANDOFF.md) relevant section only | Code under `software/converter_core/`; deep rationale in `HANDOFF.md` |
 | RP23CNC/grblHAL work | [`../firmware/README.md`](../firmware/README.md) | Relevant file under `firmware/grblhal/` |

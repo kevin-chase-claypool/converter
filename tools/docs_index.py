@@ -283,7 +283,7 @@ def markdown_link_errors() -> list[str]:
     errors = []
     link_pattern = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
     for path in ROOT.rglob("*.md"):
-        if ".git" in path.parts:
+        if ".git" in path.parts or "node_modules" in path.parts:
             continue
         text = path.read_text(encoding="utf-8")
         for target in link_pattern.findall(text):
