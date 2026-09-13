@@ -170,6 +170,10 @@ Folding those sheets to make four layers allowed insertion only with force.
 The static gap is therefore bounded between the two-sheet and four-sheet cases;
 no further lift was commanded.
 
+The operator selected one additional conservative 50 ms lift pulse above that
+bracket and reported the result satisfactory for bench pen-clear use. It remains
+a provisional setting pending actual-bed and force-calibration validation.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

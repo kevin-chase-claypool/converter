@@ -247,3 +247,9 @@ this as a bench clearance bracket, not a calibrated distance.
 Folding the two sheets to form four stacked layers allowed insertion only with
 force. Thus the current static pen-clear gap is bounded between the two-sheet
 and four-sheet cases. No more lift was commanded.
+
+The operator then selected one additional conservative 50 ms lift pulse above
+this measured bracket and reported the result satisfactory for bench pen-clear
+use. This is an accepted provisional clearance setting, not a final production
+qualification: repeat it against the actual rotating bed after force-calibration
+work establishes the intended tool and contact range.
