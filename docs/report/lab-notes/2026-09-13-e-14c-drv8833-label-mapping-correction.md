@@ -238,3 +238,8 @@ sheet of paper could just barely slide beneath the blunt pen end. This confirms
 the pen was not pressing the scale, but it is only a minimal air gap and not a
 qualified production `PEN_CLEAR` reserve. Bracket the gap with additional
 sheets before choosing a clearance pulse.
+
+With no further actuator motion, two stacked sheets of paper also slid beneath
+the blunt pen end, but with friction. The present clearance is therefore at
+least two paper thicknesses but has no demonstrated third-sheet margin. Keep
+this as a bench clearance bracket, not a calibrated distance.

@@ -161,6 +161,11 @@ Physical clearance observation: after the second bounded 10 ms lift, one sheet
 of paper could just barely slide beneath the blunt pen end. This proves
 separation but only a minimal gap; it is not a production `PEN_CLEAR` reserve.
 
+With no additional actuator motion, two stacked sheets also passed beneath the
+blunt pen end, but with friction. The gap is at least two paper thicknesses but
+has no demonstrated third-sheet margin; treat it as a bench bracket rather
+than a calibrated clearance distance.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 
