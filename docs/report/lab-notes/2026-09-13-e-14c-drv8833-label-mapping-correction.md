@@ -308,5 +308,24 @@ after each pulse. Every record carries phase, step, `millis()` timestamp, raw,
 tare, and delta; `x` aborts during the settle interval. The run is bounded,
 stops/sleeps on any fault or failed sample, and does not infer force from pulse
 time. A short video of the scale display is the external-force evidence to
-align with the serial timestamps. Source compilation passed; hardware reflash
-and trace validation remain pending.
+align with the serial timestamps. Source compilation passed; the following
+section records the subsequent reflash and hardware-validation result.
+
+### Fast-trace hardware validation
+
+The owner reflashed E07B, established a new clear-state tare (`218660`), and
+recorded the first `r` run as `TimeVideo_20260913_134622.mp4`. The recording
+is a continuous 26-second artifact: it includes the service console during
+trace start and then the external scale display for the complete force
+excursion. The scale rises from the first legible approximately 59 g indication
+through an approximately 75 g peak during the DOWN portion, then declines
+during the UP portion and returns to 0.0 g before the scale's auto-off timer.
+No operator intervention occurred between individual trace pulses.
+
+This validates the bounded fast-trace *method*: it captures a complete
+approach/release cycle within the scale timeout, with the actuator sleeping
+between pulses. The exact raw-HX711-to-grams pairing is still pending the full
+`TRACE phase=...` console records from this same run; blurred video digits are
+not being promoted to calibration points. The existing conclusion remains:
+do not select a force target, raw threshold, or automatic force-control gain
+until a repeatable transfer/hysteresis calibration passes.

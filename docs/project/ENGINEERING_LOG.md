@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20260913-fast-force-trace-method-passed"></a>
+### 🟩 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/PASSED - E07B fast force-trace method
+
+- Status: the first bounded `r` bench trace completed within the external
+  scale's auto-off interval.
+- Category: hardware, rp23cnc-software, toolhead, E-07B, force calibration.
+- Evidence: a 26-second attached video, `TimeVideo_20260913_134622.mp4`,
+  shows the trace start followed by a continuous scale excursion from clear
+  through an approximately 75 g maximum and back to 0.0 g. The driver sleeps
+  between fixed 10 ms pulses and no per-pulse operator round trip occurred.
+- Decision: retain `r` as the required evidence-collection method for the
+  remaining transfer/hysteresis work; do not return to the manual
+  pulse/report/review workflow that makes the scale time out.
+- Constraint: this validates timing and bench motion only. Full retained
+  `TRACE phase` records from a run are still required before pairing HX711
+  values to scale grams or selecting any force-control limit.
+- Evidence detail: `docs/report/lab-notes/2026-09-13-e-14c-drv8833-label-mapping-correction.md`;
+  `RPSW-20260913-005`.
+
 <a id="elog-20260913-added-nonmotion-drv8833-meter-mode"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Added non-motion DRV8833 meter mode
 

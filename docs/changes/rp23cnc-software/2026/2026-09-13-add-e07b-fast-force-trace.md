@@ -43,6 +43,12 @@ force from pulse duration.
 `arduino-cli compile --fqbn rp2040:rp2040:sparkfun_promicrorp2350
 firmware\pen_pressure\e07b_hx711_actuator_steps` passed.
 
+Hardware method validation passed in the first 26-second scale recording:
+the bounded run completed a continuous approximately 0--75--0 g excursion
+before the scale auto-off timer. This validates trace timing and sleep-between-
+pulse behavior only; the matching serial `TRACE` records remain required for
+HX711-to-grams calibration.
+
 ## Struggles and rejected approaches
 
 Per-point user/agent review was rejected because it exceeded the scale's
@@ -50,9 +56,10 @@ auto-off interval and made a complete unload trace impractical.
 
 ## Risks and follow-up
 
-Hardware validation is pending. Start only from a physically clear, tared pen;
-record the scale display on video and keep `x` available. This remains a bench
-test, not production force control.
+Start only from a physically clear, tared pen; record the scale display on
+video and keep `x` available. This remains a bench test, not production force
+control. Repeat with complete retained serial trace lines to establish the
+transfer and hysteresis evidence.
 
 ## Files
 

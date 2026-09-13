@@ -50,6 +50,12 @@ work.
   thresholds or final control gains. This is an occasional service
   calibration/profile-verification activity, not a scale check required at
   every print.
+- The E-07B `r` fast-trace method is hardware-validated as a bounded bench
+  procedure: its first scale video captured a continuous 10 ms down/up cycle
+  from clear through an approximately 75 g peak and back to 0.0 g before the
+  scale auto-off timer. It solves the manual workflow timing problem; it does
+  **not** validate the HX711-to-force transfer or approve a target, force
+  limit, or automatic approach.
 - Complete actuator travel, stall, seek-timeout, and safe-fault testing.
 - Decide whether the later `CONTACT_READY`/`TOOL_FAULT` handshake is necessary
   after the fixed-dwell version is proven. If adopted, complete F-08 input
