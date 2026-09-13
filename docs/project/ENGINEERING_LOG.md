@@ -126,6 +126,12 @@ alone evidence that the observed spring/screw fault persists. Force control
 must use settled load-cell feedback, a bounded pulse, a deadband, and a dwell
 rather than a fixed force-per-pulse assumption.
 
+Settled-feedback evidence: after two 10 ms down pulses from clear, the scale
+read 31.5 g. Three stationary HX711 deltas over about six seconds were
+`-186392`, `-185420`, and `-184008` (2384-count span). This is sufficiently
+stable to continue evaluating a dwell/filter-based feedback strategy, while
+force transfer and limits remain uncalibrated.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

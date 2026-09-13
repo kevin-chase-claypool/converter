@@ -59,8 +59,11 @@ direction, sleep-after-pulse, and fault behavior.
 - After the reported screw/spring resolution, paired 10 ms cycles still reached
   11.8 g and 27.8 g respectively; each one-pulse lift returned to 0.0 g.
   Down-force varies while release is repeatable. This is expected in an
-  open-loop gearbox/friction system and must be handled by settled force
-  feedback rather than treated as a fixed grams-per-pulse calibration.
+open-loop gearbox/friction system and must be handled by settled force
+feedback rather than treated as a fixed grams-per-pulse calibration.
+- At a 31.5 g stationary point, three HX711 deltas over about six seconds
+  spanned 2384 counts (`-186392` to `-184008`), supporting settled-feedback
+  evaluation despite variable open-loop pulse displacement.
 
 ## Struggles and rejected approaches
 

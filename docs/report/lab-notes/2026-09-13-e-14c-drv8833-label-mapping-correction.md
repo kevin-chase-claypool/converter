@@ -158,6 +158,7 @@ every pulse. The physical scale is the force authority.
 | Post-interference 10 ms clear | 226681 | `u` once at 10 ms | `hx_raw=232952`, `hx_delta=6271` | 0.0 g | Released to clear; HX711 returned near tare. |
 | Post-interference repeat down | 227032 | `d` once at 10 ms | `hx_raw=-106343`, `hx_delta=-333375` | 27.8 g | Same nominal down pulse produced 16.0 g more than preceding cycle. |
 | Post-interference repeat clear | 227032 | `u` once at 10 ms | `hx_raw=227674`, `hx_delta=642` | 0.0 g | Released to clear; HX711 returned near tare. |
+| Settled-force stability | 53462 | `d` twice at 10 ms | `hx_delta=-186392`, `-185420`, `-184008` over 6 s | 31.5 g | Stable range 2384 counts while stationary. |
 
 The two 10 ms lift pulses reduced 22.8 g to 11.3 g then clear. A subsequent
 no-contact 10 ms down pulse produced a similar-magnitude negative HX711 delta
@@ -193,3 +194,9 @@ Gearbox friction, backlash, and clearance take-up make that expected for an
 open-loop pulse; it does not by itself prove an unresolved screw/spring fault.
 The closed-loop controller must measure settled force after each bounded pulse,
 use a deadband and dwell, and never assume a fixed grams-per-pulse value.
+
+At a later stationary 31.5 g point reached after two 10 ms down pulses from a
+clear tare of 53462, three HX711 samples over roughly six seconds spanned only
+2384 counts (`-186392` through `-184008`). This supports using a settle dwell
+and filtered feedback after a bounded pulse; it does not establish a transfer
+curve or final force settings.
