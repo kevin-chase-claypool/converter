@@ -253,3 +253,16 @@ this measured bracket and reported the result satisfactory for bench pen-clear
 use. This is an accepted provisional clearance setting, not a final production
 qualification: repeat it against the actual rotating bed after force-calibration
 work establishes the intended tool and contact range.
+
+### First guarded descent after the 50 ms clearance reserve
+
+Starting from the new clear state at 10 ms steps and with a fresh tare of
+226834, the operator issued ten consecutive `DOWN` pulses. The post-pulse
+`hx_delta` samples in chronological order were: -201956, -189941, -212857,
+-232336, -299905, -205654, -203939, -195017, -207575, and -342929. The final
+state read 20.7 g on the scale with `hx_raw=-116095` and `hx_delta=-342929`.
+
+Only the final pulse has a paired scale measurement. The preceding nine HX711
+values must not be treated as an individual force map or as proven contact
+points. The evidence establishes a guarded 20.7 g endpoint after ten 10 ms
+down pulses from this particular cleared state.

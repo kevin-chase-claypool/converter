@@ -174,6 +174,13 @@ The operator selected one additional conservative 50 ms lift pulse above that
 bracket and reported the result satisfactory for bench pen-clear use. It remains
 a provisional setting pending actual-bed and force-calibration validation.
 
+First guarded descent from that clear state: at 10 ms, ten consecutive down
+pulses were issued after a fresh raw tare of 226834. The only paired scale
+reading was the final state: 20.7 g at `hx_raw=-116095`,
+`hx_delta=-342929`. Intermediate deltas (-201956, -189941, -212857, -232336,
+-299905, -205654, -203939, -195017, -207575) have no paired scale readings and
+are not a force map. This is a guarded endpoint, not an accepted force target.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 
