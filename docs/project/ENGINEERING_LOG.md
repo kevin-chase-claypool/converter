@@ -195,6 +195,11 @@ The next 10 ms down pulse reached 48.0 g with `hx_raw=-239949` and
 `hx_delta=-466783`. The 6.9 g rise came with a filtered reading nearer the
 previous values, reinforcing that command time is not a force authority.
 
+After 48.0 g, eight 10 ms down pulses were issued without intermediate scale
+readings. The final sample was `hx_raw=-347582`, `hx_delta=-574416`, and the
+subsequently checked scale load was 60 g. It was below the 100 g guard, but is
+one unpaired 48-to-60 g segment, not eight calibration points.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

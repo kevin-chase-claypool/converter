@@ -283,3 +283,10 @@ after about ten seconds, paired with 48.0 g on the scale. This returns the
 filtered reading nearer to the previous values while force rose 6.9 g, further
 supporting the decision to use filtered force feedback rather than command time
 as the force authority.
+
+After the 48.0 g point, eight additional 10 ms down pulses were issued without
+intermediate scale readings. The final sample was `hx_raw=-347582`,
+`hx_delta=-574416`, and the subsequently checked scale reading was 60 g. This
+remained below the initial 100 g guard, but the unpaired intermediate pulses
+are deliberately recorded as one 48-to-60 g segment rather than eight force
+calibration points.
