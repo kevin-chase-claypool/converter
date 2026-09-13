@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-13 | `HW-20260913-009` | hardware, rp23cnc-software | verified | [Repair DRV8833 output solder joint](hardware/2026/2026-09-13-repair-drv8833-output-solder-joint.md) |
 | 2026-09-13 | `HW-20260913-008` | hardware, rp23cnc-software | implemented | [Add manual historical E-05 step test](hardware/2026/2026-09-13-add-manual-legacy-e05-steps.md) |
 | 2026-09-13 | `HW-20260913-007` | hardware, rp23cnc-software | implemented | [Preserve historical E-05 motor test](hardware/2026/2026-09-13-preserve-historical-e05-motor-test.md) |
 | 2026-09-13 | `HW-20260913-006` | hardware, rp23cnc-software | implemented | [Extend E07B actuator pulse range](hardware/2026/2026-09-13-extend-e07b-actuator-pulse-range.md) |

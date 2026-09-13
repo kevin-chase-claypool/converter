@@ -56,6 +56,14 @@ reverse. The verbatim `03f6c00` source remains unchanged. This is the next
 physical A/B discriminator; a movement result cannot by itself identify GP7 as
 sleep because legacy GP6 `INPUT_PULLUP` may already enable EEP.
 
+Result: the owner located a DRV8833 pin with no solder connection to the board,
+then reflowed it with power removed. Corrected E07B `u` and `d` commands now
+move the installed 1000 RPM N20 in both directions. The historical no-motion
+behavior was therefore a loaded output solder fault, not UART, pulse duration,
+GP4--GP7 mapping, or a proven failed DRV8833 IC. Continue with guarded travel
+and force characterization; bidirectional motion is not yet a force-control
+qualification.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

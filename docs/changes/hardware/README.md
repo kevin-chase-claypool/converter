@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-13 | `HW-20260913-009` | verified | [Repair DRV8833 output solder joint](2026/2026-09-13-repair-drv8833-output-solder-joint.md) | `drv8833`, `n20`, `solder-repair`, `e-14c` |
 | 2026-09-13 | `HW-20260913-008` | implemented | [Add manual historical E-05 step test](2026/2026-09-13-add-manual-legacy-e05-steps.md) | `n20`, `drv8833`, `e-05`, `pulse-duration`, `diagnostics` |
 | 2026-09-13 | `HW-20260913-007` | implemented | [Preserve historical E-05 motor test](2026/2026-09-13-preserve-historical-e05-motor-test.md) | `n20`, `drv8833`, `e-05`, `regression-test` |
 | 2026-09-13 | `HW-20260913-006` | implemented | [Extend E07B actuator pulse range](2026/2026-09-13-extend-e07b-actuator-pulse-range.md) | `n20`, `toolhead`, `pulse-duration`, `diagnostics` |

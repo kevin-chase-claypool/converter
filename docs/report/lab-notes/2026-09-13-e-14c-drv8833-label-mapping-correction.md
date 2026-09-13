@@ -109,3 +109,13 @@ reverses. Clear travel in the selected direction remains mandatory because
 LIFT_HOME is not used as a motion stop in this diagnostic. A movement result
 still cannot prove GP7 is physical sleep: GP6 `INPUT_PULLUP` can itself leave
 the confirmed EEP sleep input high.
+
+## Final root cause and verified repair
+
+The owner found a DRV8833 pin that was not soldered to the board. With power
+removed, the joint was reflowed and inspected. No wire, connector, or GPIO
+mapping was changed. After the repair, the corrected E07B sketch moved the
+installed N20 in both `u` and `d` directions. This closes the loaded
+OUT1/OUT2 delivery fault: the prior static-output test was a false assurance
+because the bridge could present open-circuit voltage despite the defective
+loaded output connection.
