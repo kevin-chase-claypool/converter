@@ -64,6 +64,10 @@ feedback rather than treated as a fixed grams-per-pulse calibration.
 - At a 31.5 g stationary point, three HX711 deltas over about six seconds
   spanned 2384 counts (`-186392` to `-184008`), supporting settled-feedback
   evaluation despite variable open-loop pulse displacement.
+- After release to a physical 0.0 g, the HX711 held a +164k to +168k count
+  offset for 16 seconds without motion. This fails the absolute zero-reference
+  requirement and pauses closed-loop force work pending load-cell force-path
+  isolation.
 
 ## Struggles and rejected approaches
 

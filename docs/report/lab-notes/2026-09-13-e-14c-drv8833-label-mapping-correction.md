@@ -200,3 +200,14 @@ clear tare of 53462, three HX711 samples over roughly six seconds spanned only
 2384 counts (`-186392` through `-184008`). This supports using a settle dwell
 and filtered feedback after a bounded pulse; it does not establish a transfer
 curve or final force settings.
+
+### Failed post-release zero-reference check
+
+After the settled 31.5 g point was released and the physical scale read 0.0 g,
+the immediate HX711 value was `hx_delta=166043`. With no actuator motion and
+the scale remaining 0.0 g, three further samples over 16 seconds were
+`168245`, `164697`, and `163794`. This is a persistent history-dependent
+zero-force offset, not ordinary settling noise. Open-loop gearbox friction can
+explain variable force from a pulse, but it cannot authorize using this
+state-dependent HX711 value as an absolute force reference. Pause closed-loop
+force implementation until the mechanical load-cell force path is isolated.

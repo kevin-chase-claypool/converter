@@ -132,6 +132,14 @@ read 31.5 g. Three stationary HX711 deltas over about six seconds were
 stable to continue evaluating a dwell/filter-based feedback strategy, while
 force transfer and limits remain uncalibrated.
 
+Failed zero-reference result: after release from the 31.5 g point, the physical
+scale read 0.0 g but HX711 remained at `hx_delta=166043`. Three no-motion
+samples over 16 seconds at 0.0 g were `168245`, `164697`, and `163794`. This
+stable history-dependent offset is not ordinary settling and prevents an
+absolute raw-force reference. Gearbox friction may explain variable open-loop
+pulse displacement, but not this zero-force sensor state; pause closed-loop
+force implementation pending mechanical load-cell force-path isolation.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 
