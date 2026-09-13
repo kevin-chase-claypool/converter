@@ -56,6 +56,9 @@ direction, sleep-after-pulse, and fault behavior.
 - Repeat one-pulse 10 ms trials reached 53.4 g at `hx_delta=-95958` and
   31.1 g at `hx_delta=-364221`; one 10 ms lift then cleared the latter to
   0.0 g at `hx_delta=-18012`. This confirms variable down-force response.
+- After the reported screw/spring resolution, paired 10 ms cycles still reached
+  11.8 g and 27.8 g respectively; each one-pulse lift returned to 0.0 g.
+  Down-force repeatability remains failed while release is repeatable.
 
 ## Struggles and rejected approaches
 

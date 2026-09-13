@@ -156,6 +156,8 @@ every pulse. The physical scale is the force authority.
 | 10 ms third clear | 240356 | `u` once at 10 ms | `hx_raw=222344`, `hx_delta=-18012` | 0.0 g | Released to clear. |
 | Post-interference 10 ms down | 226681 | `d` once at 10 ms | `hx_raw=-16713`, `hx_delta=-243394` | 11.8 g | First post-observation verification point; release check pending. |
 | Post-interference 10 ms clear | 226681 | `u` once at 10 ms | `hx_raw=232952`, `hx_delta=6271` | 0.0 g | Released to clear; HX711 returned near tare. |
+| Post-interference repeat down | 227032 | `d` once at 10 ms | `hx_raw=-106343`, `hx_delta=-333375` | 27.8 g | Same nominal down pulse produced 16.0 g more than preceding cycle. |
+| Post-interference repeat clear | 227032 | `u` once at 10 ms | `hx_raw=227674`, `hx_delta=642` | 0.0 g | Released to clear; HX711 returned near tare. |
 
 The two 10 ms lift pulses reduced 22.8 g to 11.3 g then clear. A subsequent
 no-contact 10 ms down pulse produced a similar-magnitude negative HX711 delta
@@ -184,4 +186,7 @@ post-observation 10 ms down verification from a clear tare of 226681 reached
 11.8 g at `hx_delta=-243394`. The matching 10 ms up pulse released to 0.0 g
 and returned HX711 near tare (`hx_delta=6271`). One paired cycle does not prove
 that the interference is eliminated or that the force/HX711 relationship is
-repeatable; repeat cycles remain required.
+repeatable. The next paired cycle reached 27.8 g from the same nominal 10 ms
+down command, then cleared to 0.0 g at `hx_delta=642` with one 10 ms up
+command. Release is repeatable, but down-force response remains variable; the
+mechanical issue is not yet verified resolved.
