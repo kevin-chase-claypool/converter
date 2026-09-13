@@ -191,6 +191,10 @@ A further 10 ms down pulse settled at 41.1 g with `hx_raw=-250016` and
 39.8 g point, compared with 19.1 g in the prior step; duration cannot be used
 as a fixed force increment, so scale/HX feedback remains the control authority.
 
+The next 10 ms down pulse reached 48.0 g with `hx_raw=-239949` and
+`hx_delta=-466783`. The 6.9 g rise came with a filtered reading nearer the
+previous values, reinforcing that command time is not a force authority.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

@@ -277,3 +277,9 @@ after approximately seven seconds, paired with a 41.1 g scale reading. The
 increment from the preceding 39.8 g point was only 1.3 g, versus 19.1 g for
 the preceding pulse. This confirms that a fixed-duration N20 pulse is not a
 fixed force increment; force feedback remains the control authority.
+
+The next 10 ms down pulse produced `hx_raw=-239949` and `hx_delta=-466783`
+after about ten seconds, paired with 48.0 g on the scale. This returns the
+filtered reading nearer to the previous values while force rose 6.9 g, further
+supporting the decision to use filtered force feedback rather than command time
+as the force authority.
