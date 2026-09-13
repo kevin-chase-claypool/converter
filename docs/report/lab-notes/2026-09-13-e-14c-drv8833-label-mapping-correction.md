@@ -74,3 +74,5 @@ test. Do not hold a potentially stalled motor energized merely to accommodate a
 slow multimeter. Related changes:
 [`HW-20260913-001`](../../changes/hardware/2026/2026-09-13-correct-drv8833-sleep-fault-mapping.md).
 and [`HW-20260913-002`](../../changes/hardware/2026/2026-09-13-add-nonmotion-drv8833-meter-mode.md).
+The N20 leads were reported disconnected. Reflash E07B with `o` output-meter
+mode and record OUT1/OUT2 voltage in each polarity before reconnecting them.

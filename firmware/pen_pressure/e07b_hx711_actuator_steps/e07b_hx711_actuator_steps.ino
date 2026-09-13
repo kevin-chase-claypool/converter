@@ -29,6 +29,7 @@
     x  stop and sleep driver immediately
     h  report LIFT_HOME switch state
     v  60-second meter-mode sequence; no motor motion
+    o  60-second OUT1/OUT2 meter sequence; motor must be disconnected
     ?  print help
 
   Do not use continuous motor commands for E-07B. Place a digital scale under
@@ -250,7 +251,7 @@ void automaticApproach() {
 }
 
 void printHelp() {
-  Serial2.println(F("E-07B: t=tare p=print d=down u=up a=auto v=meter [=shorter ]=longer x=stop h=lift-home ?=help"));
+  Serial2.println(F("E-07B: t=tare p=print d=down u=up a=auto v=logic-meter o=output-meter [=shorter ]=longer x=stop h=lift-home ?=help"));
   Serial2.print(F("Current step duration: "));
   Serial2.print(stepMs);
   Serial2.println(F(" ms"));
@@ -282,6 +283,37 @@ void meterMode() {
   Serial2.println(F("METER complete: motor stopped and asleep."));
 }
 
+void outputMeterMode() {
+  // This intentionally energizes the H bridge. It is safe only with the two
+  // N20 leads removed from OUT1 and OUT2, so a slow meter can read each state.
+  stopAndSleep();
+  if (faultActive()) {
+    Serial2.println(F("OUTPUT METER cancelled: ULT reports FAULT."));
+    return;
+  }
+
+  Serial2.println(F("OUTPUT 1/2: N20 MUST be disconnected. OUT1=VM, OUT2=GND for 30 s."));
+  Serial2.println(F("Black probe: DRV GND. Measure OUT1, then OUT2."));
+  digitalWrite(PIN_DRV_SLEEP, HIGH);
+  delay(5);
+  digitalWrite(PIN_IN1, HIGH);
+  digitalWrite(PIN_IN2, LOW);
+  delay(METER_HOLD_MS);
+
+  if (faultActive()) {
+    Serial2.println(F("OUTPUT METER stopped: ULT reports FAULT."));
+    stopAndSleep();
+    return;
+  }
+  Serial2.println(F("OUTPUT 2/2: N20 MUST remain disconnected. OUT1=GND, OUT2=VM for 30 s."));
+  Serial2.println(F("Black probe: DRV GND. Measure OUT1, then OUT2."));
+  digitalWrite(PIN_IN1, LOW);
+  digitalWrite(PIN_IN2, HIGH);
+  delay(METER_HOLD_MS);
+  stopAndSleep();
+  Serial2.println(F("OUTPUT METER complete: motor stopped and asleep."));
+}
+
 void handleCommand(char command) {
   switch (command) {
     case 't': case 'T': tare(); break;
@@ -303,6 +335,7 @@ void handleCommand(char command) {
       Serial2.println(F("Motor stopped and asleep."));
       break;
     case 'v': case 'V': meterMode(); break;
+    case 'o': case 'O': outputMeterMode(); break;
     case 'h': case 'H': reportLiftHome(); break;
     case '?': printHelp(); break;
     default: break;

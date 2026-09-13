@@ -19,6 +19,10 @@ Update: E07B `v` mode measured GP4=3.3 V, GP5=0 V, and GP6/EEP=3.3 V relative
 to driver ground. Controller-side logic and the corrected harness pass; the
 remaining isolated test is DRV8833 OUT1/OUT2 switching with the motor removed.
 
+Update: the two N20 leads were disconnected. E07B now provides a guarded `o`
+mode that holds each bridge-output polarity for 30 seconds only in that isolated
+configuration. Output voltage evidence remains pending.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 
