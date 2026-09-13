@@ -49,6 +49,9 @@ Pending safe logic-meter command after reflash: v
   stages and the owner measured GP4=3.3 V, GP5=0 V, and GP6/EEP=3.3 V, each
   relative to local DRV8833 ground. This passes the controller-side logic
   portion of E-14C; driver-output switching remains unverified.
+- With both N20 leads disconnected, E07B `o` mode held each output polarity
+  for 30 seconds. The owner reported all four expected readings: OUT1≈VM /
+  OUT2≈0 V, then OUT1≈0 V / OUT2≈VM. The driver output stage passes.
 
 ## Difficulties and corrective actions
 
@@ -60,6 +63,9 @@ Pending safe logic-meter command after reflash: v
 - After the corrected E07B build still gave no audible motion from repeated
   100 ms UP pulses, a non-motion `v` meter mode was added. It holds GP4/GP5
   logic while asleep, then GP6/EEP enabled with both direction pins low.
+- The isolated output test passed while the N20 previously ran direct from
+  6 V. The remaining fault is therefore the physical N20 lead/OUT1/OUT2 path,
+  which must be re-terminated or resoldered with power removed.
 
 ## Interpretation
 
@@ -74,5 +80,5 @@ test. Do not hold a potentially stalled motor energized merely to accommodate a
 slow multimeter. Related changes:
 [`HW-20260913-001`](../../changes/hardware/2026/2026-09-13-correct-drv8833-sleep-fault-mapping.md).
 and [`HW-20260913-002`](../../changes/hardware/2026/2026-09-13-add-nonmotion-drv8833-meter-mode.md).
-The N20 leads were reported disconnected. Reflash E07B with `o` output-meter
-mode and record OUT1/OUT2 voltage in each polarity before reconnecting them.
+With power removed, repair only the two N20 output connections, reconnect them,
+and verify a single short `u` pulse before any automatic force test.

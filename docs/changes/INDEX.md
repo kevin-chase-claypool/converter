@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-13 | `HW-20260913-004` | hardware, rp23cnc-software | planned | [Isolate N20 output-connection failure](hardware/2026/2026-09-13-isolate-n20-output-connection-failure.md) |
 | 2026-09-13 | `HW-20260913-003` | hardware, rp23cnc-software | implemented | [Add isolated DRV8833 output meter mode](hardware/2026/2026-09-13-add-isolated-drv8833-output-meter-mode.md) |
 | 2026-09-13 | `HW-20260913-002` | hardware, rp23cnc-software | implemented | [Add non-motion DRV8833 meter mode](hardware/2026/2026-09-13-add-nonmotion-drv8833-meter-mode.md) |
 | 2026-09-13 | `HW-20260913-001` | hardware, rp23cnc-software | implemented | [Correct confirmed DRV8833 sleep/fault mapping](hardware/2026/2026-09-13-correct-drv8833-sleep-fault-mapping.md) |

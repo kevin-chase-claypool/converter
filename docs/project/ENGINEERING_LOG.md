@@ -23,6 +23,11 @@ Update: the two N20 leads were disconnected. E07B now provides a guarded `o`
 mode that holds each bridge-output polarity for 30 seconds only in that isolated
 configuration. Output voltage evidence remains pending.
 
+Result: the owner reported all four expected `o` output readings. The DRV8833
+and its corrected control harness pass. Because the N20 also ran directly at
+6 V while installed pulses did not move it, repair is confined to the physical
+OUT1/OUT2-to-N20 pair; do not alter GP4–GP7.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 
