@@ -243,3 +243,7 @@ With no further actuator motion, two stacked sheets of paper also slid beneath
 the blunt pen end, but with friction. The present clearance is therefore at
 least two paper thicknesses but has no demonstrated third-sheet margin. Keep
 this as a bench clearance bracket, not a calibrated distance.
+
+Folding the two sheets to form four stacked layers allowed insertion only with
+force. Thus the current static pen-clear gap is bounded between the two-sheet
+and four-sheet cases. No more lift was commanded.

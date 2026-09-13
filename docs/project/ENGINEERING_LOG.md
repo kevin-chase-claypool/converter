@@ -166,6 +166,10 @@ blunt pen end, but with friction. The gap is at least two paper thicknesses but
 has no demonstrated third-sheet margin; treat it as a bench bracket rather
 than a calibrated clearance distance.
 
+Folding those sheets to make four layers allowed insertion only with force.
+The static gap is therefore bounded between the two-sheet and four-sheet cases;
+no further lift was commanded.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 
