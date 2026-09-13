@@ -44,10 +44,11 @@ force from pulse duration.
 firmware\pen_pressure\e07b_hx711_actuator_steps` passed.
 
 Hardware method validation passed in the first 26-second scale recording:
-the bounded run completed a continuous approximately 0--75--0 g excursion
-before the scale auto-off timer. This validates trace timing and sleep-between-
-pulse behavior only; the matching serial `TRACE` records remain required for
-HX711-to-grams calibration.
+the bounded run completed a continuous approximately 59--75--0 g loaded-cycle
+excursion before the scale auto-off timer. A manual down pulse occurred after
+tare and before `r`, so this does not validate a clear-start force map. It
+does validate trace timing and sleep-between-pulse behavior; the matching serial
+`TRACE` records remain required for HX711-to-grams calibration.
 
 ## Struggles and rejected approaches
 

@@ -7,9 +7,10 @@
   scale's auto-off interval.
 - Category: hardware, rp23cnc-software, toolhead, E-07B, force calibration.
 - Evidence: a 26-second attached video, `TimeVideo_20260913_134622.mp4`,
-  shows the trace start followed by a continuous scale excursion from clear
-  through an approximately 75 g maximum and back to 0.0 g. The driver sleeps
-  between fixed 10 ms pulses and no per-pulse operator round trip occurred.
+  shows the trace start followed by a continuous approximately 59--75--0 g
+  scale excursion. The driver sleeps between fixed 10 ms pulses and no
+  per-pulse operator round trip occurred. A manual 20 ms DOWN after tare but
+  before `r` means this was a loaded-cycle test, not a clear-start force map.
 - Decision: retain `r` as the required evidence-collection method for the
   remaining transfer/hysteresis work; do not return to the manual
   pulse/report/review workflow that makes the scale time out.

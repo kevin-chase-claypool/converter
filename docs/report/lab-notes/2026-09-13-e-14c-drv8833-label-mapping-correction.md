@@ -313,19 +313,27 @@ section records the subsequent reflash and hardware-validation result.
 
 ### Fast-trace hardware validation
 
-The owner reflashed E07B, established a new clear-state tare (`218660`), and
-recorded the first `r` run as `TimeVideo_20260913_134622.mp4`. The recording
-is a continuous 26-second artifact: it includes the service console during
-trace start and then the external scale display for the complete force
-excursion. The scale rises from the first legible approximately 59 g indication
-through an approximately 75 g peak during the DOWN portion, then declines
-during the UP portion and returns to 0.0 g before the scale's auto-off timer.
-No operator intervention occurred between individual trace pulses.
+The owner reflashed E07B, tared at `218660`, and recorded the first `r` run as
+`TimeVideo_20260913_134622.mp4`. The recording is a continuous 26-second
+artifact: it includes the service console during trace start and then the
+external scale display for the complete force excursion. The scale rises from
+the first legible approximately 59 g indication through an approximately 75 g
+peak during the DOWN portion, then declines during the UP portion and returns
+to 0.0 g before the scale's auto-off timer. No operator intervention occurred
+between individual trace pulses.
+
+The time-synchronised serial evidence also shows one manual 20 ms `DOWN` pulse
+at `13:45:42`, after the `13:45:30` tare and before the `13:46:28` trace start.
+Therefore this first trace began already in contact, rather than from the
+required clear state. Its first legible approximately 59 g video reading is
+consistent with that loaded precondition. Do not interpret it as a 0--75 g
+approach curve or as a clear-start calibration pass.
 
 This validates the bounded fast-trace *method*: it captures a complete
-approach/release cycle within the scale timeout, with the actuator sleeping
-between pulses. The exact raw-HX711-to-grams pairing is still pending the full
-`TRACE phase=...` console records from this same run; blurred video digits are
-not being promoted to calibration points. The existing conclusion remains:
-do not select a force target, raw threshold, or automatic force-control gain
-until a repeatable transfer/hysteresis calibration passes.
+loaded-cycle/release sequence within the scale timeout, with the actuator
+sleeping between pulses. A valid force-map run must clear the pen, issue `t`,
+and then issue `r` with no intervening `u` or `d`. The exact raw-HX711-to-grams
+pairing is also still pending the full `TRACE phase=...` console records;
+blurred video digits are not being promoted to calibration points. Do not
+select a force target, raw threshold, or automatic force-control gain until a
+repeatable transfer/hysteresis calibration passes.
