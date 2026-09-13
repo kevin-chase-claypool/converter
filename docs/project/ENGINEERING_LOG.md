@@ -15,6 +15,10 @@
   failure.
 - Evidence: `HW-20260913-002`; `2026-09-13-e-14c-drv8833-label-mapping-correction.md`.
 
+Update: E07B `v` mode measured GP4=3.3 V, GP5=0 V, and GP6/EEP=3.3 V relative
+to driver ground. Controller-side logic and the corrected harness pass; the
+remaining isolated test is DRV8833 OUT1/OUT2 switching with the motor removed.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

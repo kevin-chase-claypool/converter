@@ -45,6 +45,10 @@ Pending safe logic-meter command after reflash: v
   beeped. GP4→IN1, GP5→IN2, and GP7→ULT continuity were reported.
 - The old firmware description was reversed relative to the owner-confirmed
   board labels. No E-14C pass is claimed until the corrected E07B build runs.
+- After the corrected E07B reflash, non-motion `v` meter mode reported both
+  stages and the owner measured GP4=3.3 V, GP5=0 V, and GP6/EEP=3.3 V, each
+  relative to local DRV8833 ground. This passes the controller-side logic
+  portion of E-14C; driver-output switching remains unverified.
 
 ## Difficulties and corrective actions
 
@@ -65,8 +69,8 @@ driver-enable/fault mapping must be verified first.
 
 ## Decisions and next action
 
-Reflash E07B once, then run `v` and measure its stated logic windows relative
-to local driver ground. Record the three voltages before another energized
-manual pulse. Related changes:
+Temporarily isolate the motor from OUT1/OUT2, then measure a held driver-output
+test. Do not hold a potentially stalled motor energized merely to accommodate a
+slow multimeter. Related changes:
 [`HW-20260913-001`](../../changes/hardware/2026/2026-09-13-correct-drv8833-sleep-fault-mapping.md).
 and [`HW-20260913-002`](../../changes/hardware/2026/2026-09-13-add-nonmotion-drv8833-meter-mode.md).
