@@ -148,11 +148,23 @@ void moveOneStep(bool in1High, const __FlashStringHelper *name) {
 
   digitalWrite(PIN_DRV_SLEEP, HIGH);
   delay(5);
+  if (faultActive()) {
+    Serial2.println(F("ULT reports FAULT after driver enable; motor command cancelled."));
+    stopAndSleep();
+    return;
+  }
   digitalWrite(PIN_IN1, in1High ? HIGH : LOW);
   digitalWrite(PIN_IN2, in1High ? LOW : HIGH);
   delay(stepMs);
+  const int faultRawDuringDrive = digitalRead(PIN_DRV_FAULT);
+  const bool faultDuringDrive = DRV_FAULT_ACTIVE_LOW ?
+      faultRawDuringDrive == LOW : faultRawDuringDrive == HIGH;
   stopAndSleep();
-  Serial2.print(F("Motor stopped and asleep; "));
+  Serial2.print(F("Motor stopped and asleep; fault_during_drive="));
+  Serial2.print(faultDuringDrive ? F("1") : F("0"));
+  Serial2.print(F(" raw="));
+  Serial2.print(faultRawDuringDrive);
+  Serial2.print(F("; "));
   reportLiftHome();
 }
 

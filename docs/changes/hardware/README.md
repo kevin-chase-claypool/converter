@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-13 | `HW-20260913-005` | implemented | [Add DRV8833 loaded-fault telemetry](2026/2026-09-13-add-drv8833-loaded-fault-telemetry.md) | `drv8833`, `fault`, `diagnostics`, `toolhead` |
 | 2026-09-13 | `HW-20260913-004` | planned | [Isolate N20 output-connection failure](2026/2026-09-13-isolate-n20-output-connection-failure.md) | `drv8833`, `n20`, `toolhead`, `diagnostics` |
 | 2026-09-13 | `HW-20260913-003` | implemented | [Add isolated DRV8833 output meter mode](2026/2026-09-13-add-isolated-drv8833-output-meter-mode.md) | `drv8833`, `toolhead`, `diagnostics`, `e-14c` |
 | 2026-09-13 | `HW-20260913-002` | implemented | [Add non-motion DRV8833 meter mode](2026/2026-09-13-add-nonmotion-drv8833-meter-mode.md) | `drv8833`, `toolhead`, `diagnostics`, `e-14c` |

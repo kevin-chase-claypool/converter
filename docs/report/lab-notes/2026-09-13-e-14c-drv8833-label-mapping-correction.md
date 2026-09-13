@@ -81,4 +81,6 @@ slow multimeter. Related changes:
 [`HW-20260913-001`](../../changes/hardware/2026/2026-09-13-correct-drv8833-sleep-fault-mapping.md).
 and [`HW-20260913-002`](../../changes/hardware/2026/2026-09-13-add-nonmotion-drv8833-meter-mode.md).
 With power removed, repair only the two N20 output connections, reconnect them,
-and verify a single short `u` pulse before any automatic force test.
+and verify a single short `u` pulse before any automatic force test. The next
+E07B build records ULT immediately after enable and during that short loaded
+pulse, so retain the complete UART line.

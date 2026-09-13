@@ -28,6 +28,11 @@ and its corrected control harness pass. Because the N20 also ran directly at
 6 V while installed pulses did not move it, repair is confined to the physical
 OUT1/OUT2-to-N20 pair; do not alter GP4–GP7.
 
+Follow-up: the existing E07B sketch checked ULT only before enabling the
+loaded bridge. It now samples after enable and during the 20 ms motor pulse,
+so the next repeat can distinguish an immediate loaded protection trip from an
+inert current path without a risky long command.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 
