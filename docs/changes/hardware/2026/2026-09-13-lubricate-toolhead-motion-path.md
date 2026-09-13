@@ -43,6 +43,7 @@ firmware mapping changed.
 - One 10 ms lift pulse reduced the physical scale from 33.7 g to 0.4 g, then
   1.2 g on the third stationary reading. Corresponding deltas were `-21011`,
   `-22650`, and `-26409`.
+- A second 10 ms lift pulse held the scale at 0.4 g with `hx_delta=10956`.
 
 ## Struggles and rejected approaches
 
@@ -52,8 +53,10 @@ force path is correct. The earlier persistent zero-force offset remains open.
 ## Risks and follow-up
 
 The release behavior is markedly improved, but the 0.4--1.2 g residual is not
-yet an approved clear band. Establish repeatable clear threshold, target force,
-and pulse/dwell limits before enabling force control.
+yet an approved clear band. Do not keep retracting toward the mechanical
+endpoint merely to chase a scale fraction. Establish a visible gap and a
+repeatable clear threshold, target force, and pulse/dwell limits before
+enabling force control.
 
 ## Files
 

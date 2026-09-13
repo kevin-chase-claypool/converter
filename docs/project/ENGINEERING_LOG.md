@@ -152,6 +152,11 @@ Lubricated release result: one 10 ms up pulse reduced the 33.7 g contact to
 approximately +166k zero-force offset. Treat this as promising evidence, not
 an approved clear threshold or completed force calibration.
 
+One additional 10 ms lift pulse held the scale at 0.4 g with
+`hx_delta=10956`. Do not continue retracting toward the unverified endpoint
+solely to chase sub-gram scale indication; verify a visible gap and define a
+bounded clearance reserve instead.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

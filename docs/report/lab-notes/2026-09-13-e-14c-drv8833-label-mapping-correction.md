@@ -227,3 +227,8 @@ was `hx_delta=-22650`. Compared with the earlier persistent approximately
 +166k zero-force offset, this is a substantial improvement after lubrication.
 The low residual scale reading and small raw offset are not yet an approved
 PEN_CLEAR threshold or a repeatability result.
+
+A second 10 ms up pulse produced `hx_delta=10956` while the scale remained at
+0.4 g. This does not justify continued retraction toward the unverified
+mechanical endpoint solely to eliminate a sub-gram scale indication. Verify a
+visible pen-to-paper gap and establish a bounded clearance reserve instead.
