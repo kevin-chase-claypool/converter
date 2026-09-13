@@ -49,6 +49,13 @@ an owner-requested A/B test before invasive driver/perfboard rework. It retains
 GP7-high/GP6-`INPUT_PULLUP` roles and both automatic 500 ms directions from
 commit `03f6c00`; it does not overwrite current diagnostic firmware.
 
+Update: a separate manual E-05 derivative now preserves those same historical
+GPIO roles while exposing a `Serial2` duration control: 100--1000 ms in 100 ms
+steps, with one explicitly selected direction per command and no automatic
+reverse. The verbatim `03f6c00` source remains unchanged. This is the next
+physical A/B discriminator; a movement result cannot by itself identify GP7 as
+sleep because legacy GP6 `INPUT_PULLUP` may already enable EEP.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

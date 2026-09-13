@@ -99,3 +99,13 @@ one-second guard because LIFT_HOME remains report-only in this service sketch.
 At the owner's request, a verbatim historical E-05 source copy from `03f6c00`
 was prepared as an A/B reproduction. It must be treated as two automatic
 500 ms motions, not as the guarded current E07B procedure.
+
+To make that comparison controllable without changing the preserved source,
+`e05_legacy_manual_steps` now uses the same historical roles with the 3.3 V
+GP20/GP21 `Serial2` service adapter. It starts at 100 ms. Send `u` for the
+historical first direction or `d` for reverse; send `]` before the next pulse
+to increase by 100 ms, up to 1000 ms (`[` decreases). It never automatically
+reverses. Clear travel in the selected direction remains mandatory because
+LIFT_HOME is not used as a motion stop in this diagnostic. A movement result
+still cannot prove GP7 is physical sleep: GP6 `INPUT_PULLUP` can itself leave
+the confirmed EEP sleep input high.
