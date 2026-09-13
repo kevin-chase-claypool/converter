@@ -55,8 +55,8 @@
 - [ ] Measure usable HX711 sample rate and noise. (`E-08`)
 - [ ] Verify TMAG5273 readings with the intended magnet and geometry. (`E-09`)
 - [x] Verify Pololu D36V50F6 input/output polarity and fixed 6.0 V output. (`E-14`; 6.05 V constant, 2026-09-08)
-- [x] Inspect the completed toolhead perfboard, JST input, and Pro Micro-to-DRV8833 logic wiring unpowered. (`E-14B`; passed 2026-09-08)
-- [x] Verify ACEIRMC DRV8833's existing GP7→`ULT` sleep and GP6←`EEP` fault mapping in firmware, then inspect the `J2` bridge. (`E-14C`; passed 2026-09-08)
+- [ ] Reconfirm the completed toolhead perfboard's GP6→`EEP` sleep and `ULT` fault→GP7 behavior after the corrected firmware reflash. (`E-14B`; prior opposite-role interpretation superseded 2026-09-13)
+- [ ] Function-check the confirmed DRV8833 labels: GP6→`EEP` sleep and `ULT` fault→GP7, then record J2 state. (`E-14C`; corrected mapping pending re-test)
 - [ ] Characterize Pololu D36V50F6 voltage, ripple, current, and temperature with actuator load. (`E-15`)
 - [x] Characterize toolhead-mounted Pololu S7V8F5 5.0 V output with RP2350/sensors active and actuator moving. (`E-15A`; owner reported prior TMAG test passed, 2026-09-08.)
 - [ ] Complete the measured power budget.

@@ -11,8 +11,8 @@
     GP29 <- RP23CNC M3/M5 spindle-enable signal after PC817C isolation
     GP4  -> DRV8833 IN1
     GP5  -> DRV8833 IN2
-    GP6  <- ACEIRMC DRV8833 EEP / protection-fault output
-    GP7  -> ACEIRMC DRV8833 ULT / low-true nSLEEP input
+    GP6  -> confirmed DRV8833 EEP / low-true nSLEEP input
+    GP7  <- confirmed DRV8833 ULT / protection-fault output
 
   Bench with the motor mechanically unloaded until direction is verified.
 */
@@ -23,8 +23,8 @@ static const uint8_t PIN_CMD_M3M5 = 29;    // GP29 / A3, protected digital input
 static const uint8_t PIN_DRV_IN1 = 4;      // GP4
 static const uint8_t PIN_DRV_IN2 = 5;      // GP5
 // These match the installed, continuity-checked harness. Do not rewire it.
-static const uint8_t PIN_DRV_SLEEP = 7;    // GP7, ULT / low-true nSLEEP
-static const uint8_t PIN_DRV_FAULT = 6;    // GP6, EEP / protection fault
+static const uint8_t PIN_DRV_SLEEP = 6;    // GP6, EEP / low-true nSLEEP
+static const uint8_t PIN_DRV_FAULT = 7;    // GP7, ULT / protection fault
 
 static const bool CMD_ACTIVE_HIGH_IS_M3 = true;
 static const bool DRV_FAULT_ACTIVE_LOW = true;

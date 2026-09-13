@@ -11,8 +11,9 @@ constexpr uint8_t PIN_HOME_ARM_IN = 28;
 constexpr uint8_t PIN_LIFT_HOME = 2;
 constexpr uint8_t PIN_DRV_IN1 = 4;
 constexpr uint8_t PIN_DRV_IN2 = 5;
-constexpr uint8_t PIN_DRV_FAULT = 6;
-constexpr uint8_t PIN_DRV_SLEEP = 7;
+// Confirmed installed module: EEP is nSLEEP and ULT is nFAULT.
+constexpr uint8_t PIN_DRV_SLEEP = 6;
+constexpr uint8_t PIN_DRV_FAULT = 7;
 constexpr uint8_t PIN_HX711_DT = 0;
 constexpr uint8_t PIN_HX711_SCK = 1;
 constexpr uint8_t PIN_I2C_SDA = 16;

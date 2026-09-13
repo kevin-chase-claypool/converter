@@ -14,8 +14,8 @@
   Toolhead wiring:
     GP0 <- HX711 DT/DOUT                 GP4 -> DRV8833 IN1
     GP1 -> HX711 SCK                     GP5 -> DRV8833 IN2
-    Pro Micro 3V3 -> HX711 VCC           GP6 <- DRV8833 EEP fault
-    Pro Micro GND -> HX711 GND           GP7 -> DRV8833 ULT sleep
+    Pro Micro 3V3 -> HX711 VCC           GP6 -> DRV8833 EEP sleep
+    Pro Micro GND -> HX711 GND           GP7 <- DRV8833 ULT fault
     GP2 <- LIFT_HOME normally-open switch to TOOL_GND
 
   Commands at 115200 baud:
@@ -43,8 +43,9 @@ constexpr uint8_t PIN_HX711_DT = 0;
 constexpr uint8_t PIN_HX711_SCK = 1;
 constexpr uint8_t PIN_IN1 = 4;
 constexpr uint8_t PIN_IN2 = 5;
-constexpr uint8_t PIN_EEP_FAULT = 6;
-constexpr uint8_t PIN_ULT_SLEEP = 7;
+// The confirmed installed module labels EEP as nSLEEP and ULT as nFAULT.
+constexpr uint8_t PIN_DRV_SLEEP = 6;
+constexpr uint8_t PIN_DRV_FAULT = 7;
 constexpr uint8_t PIN_LIFT_HOME = 2;
 constexpr uint8_t PIN_UART_TX = 20;
 constexpr uint8_t PIN_UART_RX = 21;
@@ -61,7 +62,7 @@ constexpr uint8_t AUTO_APPROACH_LEARN_STEPS = 3;
 // traveling. Stop only when one pulse departs substantially from that learned
 // no-contact behavior; this is roughly 10 g in the 57.2 g bench experiments.
 constexpr long AUTO_CONTACT_RESIDUAL_COUNTS = 50000;
-constexpr bool EEP_FAULT_ACTIVE_LOW = true;
+constexpr bool DRV_FAULT_ACTIVE_LOW = true;
 
 // Verified E-05 direction mapping for the installed motor wires.
 constexpr bool LIFT_IN1_HIGH = true;
@@ -73,7 +74,7 @@ long lastRaw = 0;
 uint16_t stepMs = 20;
 
 bool faultActive() {
-  return digitalRead(PIN_EEP_FAULT) == (EEP_FAULT_ACTIVE_LOW ? LOW : HIGH);
+  return digitalRead(PIN_DRV_FAULT) == (DRV_FAULT_ACTIVE_LOW ? LOW : HIGH);
 }
 
 bool liftHomePressed() {
@@ -88,7 +89,7 @@ void reportLiftHome() {
 void stopAndSleep() {
   digitalWrite(PIN_IN1, LOW);
   digitalWrite(PIN_IN2, LOW);
-  digitalWrite(PIN_ULT_SLEEP, LOW);
+  digitalWrite(PIN_DRV_SLEEP, LOW);
 }
 
 bool readRaw(long &value) {
@@ -133,7 +134,7 @@ void tare() {
 void moveOneStep(bool in1High, const __FlashStringHelper *name) {
   stopAndSleep();
   if (faultActive()) {
-    Serial2.println(F("EEP reports FAULT; motor command cancelled."));
+    Serial2.println(F("ULT reports FAULT; motor command cancelled."));
     return;
   }
 
@@ -142,7 +143,7 @@ void moveOneStep(bool in1High, const __FlashStringHelper *name) {
   Serial2.print(stepMs);
   Serial2.println(F(" ms"));
 
-  digitalWrite(PIN_ULT_SLEEP, HIGH);
+  digitalWrite(PIN_DRV_SLEEP, HIGH);
   delay(5);
   digitalWrite(PIN_IN1, in1High ? HIGH : LOW);
   digitalWrite(PIN_IN2, in1High ? LOW : HIGH);
@@ -183,7 +184,7 @@ bool autoAbortRequested() {
 void automaticApproach() {
   stopAndSleep();
   if (faultActive()) {
-    Serial2.println(F("EEP reports FAULT; automatic approach cancelled."));
+    Serial2.println(F("ULT reports FAULT; automatic approach cancelled."));
     return;
   }
 
@@ -199,11 +200,11 @@ void automaticApproach() {
     }
     if (faultActive()) {
       stopAndSleep();
-      Serial2.println(F("EEP reports FAULT; AUTO cancelled."));
+      Serial2.println(F("ULT reports FAULT; AUTO cancelled."));
       return;
     }
 
-    digitalWrite(PIN_ULT_SLEEP, HIGH);
+    digitalWrite(PIN_DRV_SLEEP, HIGH);
     delay(5);
     digitalWrite(PIN_IN1, LOWER_IN1_HIGH ? HIGH : LOW);
     digitalWrite(PIN_IN2, LOWER_IN1_HIGH ? LOW : HIGH);
@@ -286,8 +287,8 @@ void setup() {
 
   pinMode(PIN_IN1, OUTPUT);
   pinMode(PIN_IN2, OUTPUT);
-  pinMode(PIN_ULT_SLEEP, OUTPUT);
-  pinMode(PIN_EEP_FAULT, INPUT_PULLUP);
+  pinMode(PIN_DRV_SLEEP, OUTPUT);
+  pinMode(PIN_DRV_FAULT, INPUT_PULLUP);
   pinMode(PIN_LIFT_HOME, INPUT_PULLUP);
   stopAndSleep();
 

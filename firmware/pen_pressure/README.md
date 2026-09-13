@@ -85,8 +85,8 @@ Prototype wiring assumptions mirror `docs/hardware/WIRING_TABLE.md`:
 | `GP2` | `LIFT_HOME` normally-open microswitch to local `TOOL_GND`. Firmware uses `INPUT_PULLUP`; released reads HIGH and the fully retracted carriage reads LOW. The current implementation reports this in native-USB and GP20/GP21 service-UART telemetry only; it does not yet control motor motion. |
 | `GP4` | DRV8833 `IN1` |
 | `GP5` | DRV8833 `IN2` |
-| `GP6` | ACEIRMC DRV8833 `EEP` protection/fault output |
-| `GP7` | ACEIRMC DRV8833 `ULT` low-true sleep input |
+| `GP6` | Confirmed DRV8833 `EEP` low-true sleep input; drive HIGH to enable |
+| `GP7` | Confirmed DRV8833 `ULT` low-true protection/fault output; `INPUT_PULLUP`, LOW is fault |
 | `GP0` | HX711 `DT`/`DOUT` |
 | `GP1` | HX711 `SCK` |
 | Qwiic `GPIO16/GPIO17` | TMAG5273 `SDA/SCL` |

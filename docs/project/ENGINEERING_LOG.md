@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
+### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
+
+- Status: source and canonical wiring records corrected; powered reflash and
+  E-14C function re-test remain open.
+- Category: hardware, rp23cnc-software, toolhead, DRV8833, E-14C.
+- Evidence: the owner confirmed that the installed module labels pin 1
+  `SLEEP`/`EEP` and pin 6 `FAULT`/`ULT`. The retained harness is GP6→EEP and
+  ULT→GP7.
+- Decision: do not resolder. Firmware now drives GP6/EEP high to enable and
+  reads GP7/ULT as an active-low fault. The former opposite mapping is
+  superseded.
+- Result: the previous no-motion E07B result cannot qualify the 1000 RPM N20;
+  repeat a guarded pulse after reflash.
+- Evidence: `HW-20260913-001`; `2026-09-13-e-14c-drv8833-label-mapping-correction.md`.
+
 This is the rolling chronological record of project work. It answers: what
 changed, when it changed, why it changed, what evidence exists, and what should
 happen next.
