@@ -290,3 +290,10 @@ intermediate scale readings. The final sample was `hx_raw=-347582`,
 remained below the initial 100 g guard, but the unpaired intermediate pulses
 are deliberately recorded as one 48-to-60 g segment rather than eight force
 calibration points.
+
+Partial unloading from the 60 g endpoint used three separate 10 ms up pulses.
+The settled paired readings were: 59.4 g at `hx_raw=-331251`,
+`hx_delta=-558085`; 58.8 g at `hx_raw=-271932`, `hx_delta=-498766`; and
+58.5 g at `hx_raw=-254767`, `hx_delta=-481601`. The scale then timed out and
+powered off, ending the unload pass. This is valid evidence of large
+directional stiction/backlash, but not a complete unloading curve.

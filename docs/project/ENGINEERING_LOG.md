@@ -200,6 +200,12 @@ readings. The final sample was `hx_raw=-347582`, `hx_delta=-574416`, and the
 subsequently checked scale load was 60 g. It was below the 100 g guard, but is
 one unpaired 48-to-60 g segment, not eight calibration points.
 
+Partial unload from 60 g: three separate 10 ms up pulses measured 59.4 g
+(`hx_delta=-558085`), 58.8 g (`hx_delta=-498766`), and 58.5 g
+(`hx_delta=-481601`). The scale timed out and powered off, ending the pass.
+This is valid evidence of directional stiction/backlash, not a full release
+curve.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 
