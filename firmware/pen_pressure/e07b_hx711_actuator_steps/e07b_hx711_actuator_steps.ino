@@ -28,7 +28,7 @@
     ]  increase step time by 5 ms (maximum 100 ms)
     x  stop and sleep driver immediately
     h  report LIFT_HOME switch state
-    v  20-second meter-mode sequence; no motor motion
+    v  60-second meter-mode sequence; no motor motion
     ?  print help
 
   Do not use continuous motor commands for E-07B. Place a digital scale under
@@ -57,7 +57,7 @@ constexpr uint16_t STEP_MIN_MS = 5;
 constexpr uint16_t STEP_MAX_MS = 100;
 constexpr uint16_t STEP_INCREMENT_MS = 5;
 constexpr uint16_t AUTO_APPROACH_STEP_MS = 50;
-constexpr uint16_t METER_HOLD_MS = 10000;
+constexpr uint16_t METER_HOLD_MS = 30000;
 constexpr uint8_t AUTO_APPROACH_MAX_STEPS = 20;
 constexpr uint8_t AUTO_APPROACH_LEARN_STEPS = 3;
 // The installed load cell also sees normal lead-screw/mechanism force while
@@ -261,7 +261,7 @@ void meterMode() {
   // Stage 2 proves GP6 reaches the sleep/enable pin with both direction pins
   // low, so neither stage can command motor motion.
   stopAndSleep();
-  Serial2.println(F("METER 1/2: bridge asleep; GP4=HIGH, GP5=LOW for 10 s."));
+  Serial2.println(F("METER 1/2: bridge asleep; GP4=HIGH, GP5=LOW for 30 s."));
   Serial2.println(F("Measure GP4-to-GND and GP5-to-GND now."));
   digitalWrite(PIN_IN1, HIGH);
   digitalWrite(PIN_IN2, LOW);
@@ -274,7 +274,7 @@ void meterMode() {
     stopAndSleep();
     return;
   }
-  Serial2.println(F("METER 2/2: GP6/EEP enabled; GP4=LOW, GP5=LOW for 10 s."));
+  Serial2.println(F("METER 2/2: GP6/EEP enabled; GP4=LOW, GP5=LOW for 30 s."));
   Serial2.println(F("Measure GP6/EEP-to-GND now; no motor output is commanded."));
   digitalWrite(PIN_DRV_SLEEP, HIGH);
   delay(METER_HOLD_MS);

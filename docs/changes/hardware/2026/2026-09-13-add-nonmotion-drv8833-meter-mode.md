@@ -34,7 +34,7 @@ to capture.
 
 ## Implementation
 
-`v` runs two ten-second stages:
+`v` runs two thirty-second stages:
 
 1. GP4 HIGH and GP5 LOW while GP6 keeps the bridge asleep.
 2. GP6/EEP HIGH while GP4 and GP5 are both LOW.

@@ -9,7 +9,7 @@
   during three 100 ms UP pulses. The service-UART trace had no fault report.
 - Decision: do not lengthen an energized motor test for a slow meter. The
   `v` command holds GP4/GP5 logic while asleep, then GP6/EEP enabled while
-  both direction pins are low, for ten seconds each.
+  both direction pins are low, for thirty seconds each.
 - Next action: reflash E07B and record GP4, GP5, and GP6/EEP voltages relative
   to driver ground; use those results to isolate driver-input versus output
   failure.
