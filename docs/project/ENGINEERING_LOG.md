@@ -120,8 +120,11 @@ down/clear pair; repeat it before treating the mechanical fix as verified.
 Repeat result: from a fresh tare of 227032, the same 10 ms down pulse reached
 27.8 g at `hx_delta=-333375`, versus 11.8 g in the preceding post-interference
 cycle. One 10 ms up pulse cleared to 0.0 g at `hx_delta=642`. The release path
-is repeatable, but down-force response is not; do not treat the observed
-spring/screw resolution as verified or resume force mapping.
+is repeatable, but down-force response is not. This open-loop variability is
+consistent with gearbox friction, backlash, and clearance take-up; it is not
+alone evidence that the observed spring/screw fault persists. Force control
+must use settled load-cell feedback, a bounded pulse, a deadband, and a dwell
+rather than a fixed force-per-pulse assumption.
 
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping

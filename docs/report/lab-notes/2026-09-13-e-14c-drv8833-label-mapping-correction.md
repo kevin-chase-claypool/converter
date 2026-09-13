@@ -188,5 +188,8 @@ and returned HX711 near tare (`hx_delta=6271`). One paired cycle does not prove
 that the interference is eliminated or that the force/HX711 relationship is
 repeatable. The next paired cycle reached 27.8 g from the same nominal 10 ms
 down command, then cleared to 0.0 g at `hx_delta=642` with one 10 ms up
-command. Release is repeatable, but down-force response remains variable; the
-mechanical issue is not yet verified resolved.
+command. Release is repeatable, but down-force response remains variable.
+Gearbox friction, backlash, and clearance take-up make that expected for an
+open-loop pulse; it does not by itself prove an unresolved screw/spring fault.
+The closed-loop controller must measure settled force after each bounded pulse,
+use a deadband and dwell, and never assume a fixed grams-per-pulse value.

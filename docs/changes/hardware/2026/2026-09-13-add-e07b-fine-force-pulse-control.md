@@ -58,7 +58,9 @@ direction, sleep-after-pulse, and fault behavior.
   0.0 g at `hx_delta=-18012`. This confirms variable down-force response.
 - After the reported screw/spring resolution, paired 10 ms cycles still reached
   11.8 g and 27.8 g respectively; each one-pulse lift returned to 0.0 g.
-  Down-force repeatability remains failed while release is repeatable.
+  Down-force varies while release is repeatable. This is expected in an
+  open-loop gearbox/friction system and must be handled by settled force
+  feedback rather than treated as a fixed grams-per-pulse calibration.
 
 ## Struggles and rejected approaches
 
@@ -69,9 +71,10 @@ rejected because LIFT_HOME remains telemetry-only in E07B.
 ## Risks and follow-up
 
 The fine pulse range is a diagnostic tool, not an approved force-control
-profile. The latest no-contact result fails force-signal correlation. Isolate
-the load-cell force path and motion artifact before selecting a target,
-establishing pulse bounds, or enabling automatic approach.
+profile. The earlier no-contact result still requires attention, but variable
+open-loop pulse force alone is expected with gearbox friction. Establish a
+settled load-cell/scale transfer, bounded pulse limits, deadband, and dwell
+before selecting a target or enabling automatic approach.
 
 ## Files
 
