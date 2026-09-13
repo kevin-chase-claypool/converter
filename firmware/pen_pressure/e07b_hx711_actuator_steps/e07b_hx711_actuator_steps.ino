@@ -24,8 +24,8 @@
     d  one selected-duration pen-DOWN step, then driver sleeps
     u  one selected-duration pen-UP step, then driver sleeps
     a  automatic approach: 50 ms DOWN pulses until load is detected
-    [  reduce step time by 100 ms (minimum 100 ms)
-    ]  increase step time by 100 ms (maximum 1000 ms)
+    [  reduce step time: 10 ms steps at or below 100 ms, otherwise 100 ms
+    ]  increase step time: 10 ms steps below 100 ms, otherwise 100 ms
     x  stop and sleep driver immediately
     h  report LIFT_HOME switch state
     v  60-second meter-mode sequence; no motor motion
@@ -54,12 +54,14 @@ constexpr uint8_t PIN_UART_RX = 21;
 
 constexpr uint32_t SERIAL_BAUD = 115200;
 constexpr uint8_t TARE_SAMPLES = 20;
-constexpr uint16_t STEP_MIN_MS = 100;
+constexpr uint16_t STEP_MIN_MS = 10;
+constexpr uint16_t STEP_FINE_LIMIT_MS = 100;
 // E07B has no motion-controlled LIFT_HOME stop, so this is a guard rather
 // than a 100 ms tuning restriction. Use only the shortest pulse that produces
 // the required observation and keep clear travel to the selected direction.
 constexpr uint16_t STEP_MAX_MS = 1000;
-constexpr uint16_t STEP_INCREMENT_MS = 100;
+constexpr uint16_t STEP_FINE_INCREMENT_MS = 10;
+constexpr uint16_t STEP_COARSE_INCREMENT_MS = 100;
 constexpr uint16_t AUTO_APPROACH_STEP_MS = 50;
 constexpr uint16_t METER_HOLD_MS = 30000;
 constexpr uint8_t AUTO_APPROACH_MAX_STEPS = 20;
@@ -78,7 +80,7 @@ constexpr bool LOWER_IN1_HIGH = true;
 HX711 scale;
 long tareRaw = 0;
 long lastRaw = 0;
-uint16_t stepMs = STEP_MIN_MS;
+uint16_t stepMs = 20;
 
 bool faultActive() {
   return digitalRead(PIN_DRV_FAULT) == (DRV_FAULT_ACTIVE_LOW ? LOW : HIGH);
@@ -267,10 +269,24 @@ void automaticApproach() {
 }
 
 void printHelp() {
-  Serial2.println(F("E-07B: t=tare p=print d=down u=up a=auto v=logic-meter o=output-meter [=shorter ]=longer x=stop h=lift-home ?=help"));
+  Serial2.println(F("E-07B: t=tare p=print d=down u=up a=auto v=logic-meter o=output-meter [/] fine-to-100 then coarse x=stop h=lift-home ?=help"));
   Serial2.print(F("Current step duration: "));
   Serial2.print(stepMs);
   Serial2.println(F(" ms"));
+}
+
+void adjustStep(bool increase) {
+  if (increase) {
+    const uint16_t increment = stepMs < STEP_FINE_LIMIT_MS ?
+        STEP_FINE_INCREMENT_MS : STEP_COARSE_INCREMENT_MS;
+    const uint16_t candidate = stepMs + increment;
+    stepMs = candidate > STEP_MAX_MS ? STEP_MAX_MS : candidate;
+  } else {
+    const uint16_t increment = stepMs <= STEP_FINE_LIMIT_MS ?
+        STEP_FINE_INCREMENT_MS : STEP_COARSE_INCREMENT_MS;
+    stepMs = stepMs > increment ? stepMs - increment : STEP_MIN_MS;
+  }
+  printHelp();
 }
 
 void meterMode() {
@@ -337,16 +353,8 @@ void handleCommand(char command) {
     case 'd': case 'D': moveOneStep(LOWER_IN1_HIGH, F("DOWN")); break;
     case 'u': case 'U': moveOneStep(LIFT_IN1_HIGH, F("UP")); break;
     case 'a': case 'A': automaticApproach(); break;
-    case '[':
-      stepMs = stepMs > STEP_MIN_MS + STEP_INCREMENT_MS ?
-          stepMs - STEP_INCREMENT_MS : STEP_MIN_MS;
-      printHelp();
-      break;
-    case ']':
-      stepMs = stepMs <= STEP_MAX_MS - STEP_INCREMENT_MS ?
-          stepMs + STEP_INCREMENT_MS : STEP_MAX_MS;
-      printHelp();
-      break;
+    case '[': adjustStep(false); break;
+    case ']': adjustStep(true); break;
     case 'x': case 'X':
       stopAndSleep();
       Serial2.println(F("Motor stopped and asleep."));

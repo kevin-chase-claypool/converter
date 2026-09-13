@@ -69,6 +69,14 @@ carriage down and `d` moved it up. The installed motor wires remain in place;
 E07B now maps `u` to the observed lift polarity and `d` to the observed lower
 polarity. Reflash and guarded confirmation are required before scale contact.
 
+Force-response result: with the blunt pen end on a paper-covered scale, two
+net 100 ms down pulses reached 43.4 g (`hx_delta=-503592`); one 100 ms up
+pulse released to 0.5 g (`hx_delta=-5984`). The repaired 1000 RPM N20 has
+sufficient down-force and retract capability, but a 100 ms minimum is too
+coarse for writing-force control. E07B now starts at 20 ms and has 10 ms
+increments below 100 ms, retaining 100 ms increments above it for travel
+diagnostics. Fine response mapping remains the next gate.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

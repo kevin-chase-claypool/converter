@@ -126,3 +126,13 @@ With corrected E07B and the repaired output, the owner observed that the
 then-current `u` command physically lowered the motor/carriage and `d` raised
 it. E07B was corrected in code only: `u` now uses the observed lift polarity
 and `d` the observed lower polarity. The motor wiring remains unchanged.
+
+## Initial blunt-tool force response
+
+With the blunt pen end on the paper-covered scale, two net 100 ms down pulses
+produced 43.4 g at `hx_delta=-503592`. One 100 ms up pulse then reduced the
+physical scale reading to 0.5 g at `hx_delta=-5984`. This proves the 1000 RPM
+N20 can overcome the spring, lift the carriage, and release contact, but it
+also proves 100 ms is too coarse for low-force control. E07B now defaults to
+20 ms and provides 10 ms increments below 100 ms; its previous 100 ms
+increments remain available for longer diagnostic travel.
