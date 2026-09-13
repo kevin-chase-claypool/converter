@@ -33,6 +33,11 @@ loaded bridge. It now samples after enable and during the 20 ms motor pulse,
 so the next repeat can distinguish an immediate loaded protection trip from an
 inert current path without a risky long command.
 
+Result: a 100 ms connected-N20 UP pulse reported `fault_during_drive=0 raw=1`
+with no motion. The command remained active and ULT remained inactive. Code,
+control wiring, and reported driver protection are not the observed blocker;
+measure the source/current capability under the 1000 RPM motor load next.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

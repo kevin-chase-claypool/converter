@@ -84,3 +84,10 @@ With power removed, repair only the two N20 output connections, reconnect them,
 and verify a single short `u` pulse before any automatic force test. The next
 E07B build records ULT immediately after enable and during that short loaded
 pulse, so retain the complete UART line.
+
+Loaded repeat result: after the N20 was reconnected, a 100 ms UP pulse printed
+`fault_during_drive=0 raw=1` and still produced no motion. Therefore ULT was
+inactive throughout the actual command; E07B did not cancel the pulse and the
+driver did not claim over-current/thermal protection. The next discriminator is
+the supply/current capability required by the 1000 RPM motor, not another GPIO
+or signal-wire change.
