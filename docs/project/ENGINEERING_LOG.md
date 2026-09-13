@@ -1,5 +1,20 @@
 # Engineering Log
 
+<a id="elog-20260913-added-nonmotion-drv8833-meter-mode"></a>
+### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Added non-motion DRV8833 meter mode
+
+- Status: compiled E07B diagnostic extension; owner measurement is pending.
+- Category: hardware, rp23cnc-software, toolhead, DRV8833, E-14C.
+- Trigger: corrected mapping and continuity checks did not restore N20 motion
+  during three 100 ms UP pulses. The service-UART trace had no fault report.
+- Decision: do not lengthen an energized motor test for a slow meter. The
+  `v` command holds GP4/GP5 logic while asleep, then GP6/EEP enabled while
+  both direction pins are low, for ten seconds each.
+- Next action: reflash E07B and record GP4, GP5, and GP6/EEP voltages relative
+  to driver ground; use those results to isolate driver-input versus output
+  failure.
+- Evidence: `HW-20260913-002`; `2026-09-13-e-14c-drv8833-label-mapping-correction.md`.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

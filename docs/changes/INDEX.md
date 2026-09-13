@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-13 | `HW-20260913-002` | hardware, rp23cnc-software | implemented | [Add non-motion DRV8833 meter mode](hardware/2026/2026-09-13-add-nonmotion-drv8833-meter-mode.md) |
 | 2026-09-13 | `HW-20260913-001` | hardware, rp23cnc-software | implemented | [Correct confirmed DRV8833 sleep/fault mapping](hardware/2026/2026-09-13-correct-drv8833-sleep-fault-mapping.md) |
 | 2026-09-12 | `RPSW-20260912-001` | rp23cnc-software, hardware | verified | [Record P113 unified registration command](rp23cnc-software/2026/2026-09-12-record-p113-unified-registration.md) |
 | 2026-09-11 | `WSW-20260911-001` | windows-software, rp23cnc-software, hardware | implemented | [Add Ontoly investigation prompt](windows-software/2026/2026-09-11-add-ontoly-investigation-prompt.md) |

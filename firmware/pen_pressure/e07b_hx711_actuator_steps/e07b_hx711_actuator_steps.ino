@@ -28,6 +28,7 @@
     ]  increase step time by 5 ms (maximum 100 ms)
     x  stop and sleep driver immediately
     h  report LIFT_HOME switch state
+    v  20-second meter-mode sequence; no motor motion
     ?  print help
 
   Do not use continuous motor commands for E-07B. Place a digital scale under
@@ -56,6 +57,7 @@ constexpr uint16_t STEP_MIN_MS = 5;
 constexpr uint16_t STEP_MAX_MS = 100;
 constexpr uint16_t STEP_INCREMENT_MS = 5;
 constexpr uint16_t AUTO_APPROACH_STEP_MS = 50;
+constexpr uint16_t METER_HOLD_MS = 10000;
 constexpr uint8_t AUTO_APPROACH_MAX_STEPS = 20;
 constexpr uint8_t AUTO_APPROACH_LEARN_STEPS = 3;
 // The installed load cell also sees normal lead-screw/mechanism force while
@@ -248,10 +250,36 @@ void automaticApproach() {
 }
 
 void printHelp() {
-  Serial2.println(F("E-07B: t=tare p=print d=down u=up a=auto [=shorter ]=longer x=stop h=lift-home ?=help"));
+  Serial2.println(F("E-07B: t=tare p=print d=down u=up a=auto v=meter [=shorter ]=longer x=stop h=lift-home ?=help"));
   Serial2.print(F("Current step duration: "));
   Serial2.print(stepMs);
   Serial2.println(F(" ms"));
+}
+
+void meterMode() {
+  // Stage 1 proves the GP4/GP5 logic levels with the bridge forcibly asleep.
+  // Stage 2 proves GP6 reaches the sleep/enable pin with both direction pins
+  // low, so neither stage can command motor motion.
+  stopAndSleep();
+  Serial2.println(F("METER 1/2: bridge asleep; GP4=HIGH, GP5=LOW for 10 s."));
+  Serial2.println(F("Measure GP4-to-GND and GP5-to-GND now."));
+  digitalWrite(PIN_IN1, HIGH);
+  digitalWrite(PIN_IN2, LOW);
+  delay(METER_HOLD_MS);
+
+  digitalWrite(PIN_IN1, LOW);
+  digitalWrite(PIN_IN2, LOW);
+  if (faultActive()) {
+    Serial2.println(F("METER stopped: ULT reports FAULT while bridge is asleep."));
+    stopAndSleep();
+    return;
+  }
+  Serial2.println(F("METER 2/2: GP6/EEP enabled; GP4=LOW, GP5=LOW for 10 s."));
+  Serial2.println(F("Measure GP6/EEP-to-GND now; no motor output is commanded."));
+  digitalWrite(PIN_DRV_SLEEP, HIGH);
+  delay(METER_HOLD_MS);
+  stopAndSleep();
+  Serial2.println(F("METER complete: motor stopped and asleep."));
 }
 
 void handleCommand(char command) {
@@ -274,6 +302,7 @@ void handleCommand(char command) {
       stopAndSleep();
       Serial2.println(F("Motor stopped and asleep."));
       break;
+    case 'v': case 'V': meterMode(); break;
     case 'h': case 'H': reportLiftHome(); break;
     case '?': printHelp(); break;
     default: break;

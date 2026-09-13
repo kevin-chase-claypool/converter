@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-13 | `HW-20260913-002` | implemented | [Add non-motion DRV8833 meter mode](../hardware/2026/2026-09-13-add-nonmotion-drv8833-meter-mode.md) | `drv8833`, `toolhead`, `diagnostics`, `e-14c` |
 | 2026-09-13 | `HW-20260913-001` | implemented | [Correct confirmed DRV8833 sleep/fault mapping](../hardware/2026/2026-09-13-correct-drv8833-sleep-fault-mapping.md) | `drv8833`, `toolhead`, `wiring`, `pen-pressure` |
 | 2026-09-12 | `RPSW-20260912-001` | verified | [Record P113 unified registration command](2026/2026-09-12-record-p113-unified-registration.md) | `P113`, `P100`, `P111`, `homing`, `magnetic-registration`, `G54` |
 | 2026-09-11 | `WSW-20260911-001` | implemented | [Add Ontoly investigation prompt](../windows-software/2026/2026-09-11-add-ontoly-investigation-prompt.md) | `ontoly`, `architecture`, `impact-analysis`, `agent-workflow` |

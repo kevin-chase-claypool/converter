@@ -21,6 +21,7 @@ E07B prior service-UART commands: u, d, x, and a
 Corrected electrical contract:
 GP6 -> EEP / nSLEEP: HIGH enables; LOW sleeps
 GP7 <- ULT / nFAULT: INPUT_PULLUP; LOW indicates fault
+Pending safe logic-meter command after reflash: v
 ```
 
 ## Procedure
@@ -52,6 +53,9 @@ GP7 <- ULT / nFAULT: INPUT_PULLUP; LOW indicates fault
 - Moving wires was rejected to avoid unnecessary toolhead disassembly.
 - Firmware was changed to treat GP6/EEP as sleep and GP7/ULT as fault. The
   next retest must use the reflashed E07B sketch.
+- After the corrected E07B build still gave no audible motion from repeated
+  100 ms UP pulses, a non-motion `v` meter mode was added. It holds GP4/GP5
+  logic while asleep, then GP6/EEP enabled with both direction pins low.
 
 ## Interpretation
 
@@ -61,7 +65,8 @@ driver-enable/fault mapping must be verified first.
 
 ## Decisions and next action
 
-Reflash E07B once, with the pen clear and supply current limited to 0.20 A.
-Run one guarded manual pulse, record movement/current/fault output, and update
-E-14C before using automatic pressure/force tests. Related change:
+Reflash E07B once, then run `v` and measure its stated logic windows relative
+to local driver ground. Record the three voltages before another energized
+manual pulse. Related changes:
 [`HW-20260913-001`](../../changes/hardware/2026/2026-09-13-correct-drv8833-sleep-fault-mapping.md).
+and [`HW-20260913-002`](../../changes/hardware/2026/2026-09-13-add-nonmotion-drv8833-meter-mode.md).
