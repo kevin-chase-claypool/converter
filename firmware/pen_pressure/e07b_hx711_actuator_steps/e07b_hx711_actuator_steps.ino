@@ -24,6 +24,7 @@
     d  one selected-duration pen-DOWN step, then driver sleeps
     u  one selected-duration pen-UP step, then driver sleeps
     a  automatic approach: 50 ms DOWN pulses until load is detected
+    r  fast 12-down/12-up trace at 10 ms per pulse; tare while clear first
     [  reduce step time: 10 ms steps at or below 100 ms, otherwise 100 ms
     ]  increase step time: 10 ms steps below 100 ms, otherwise 100 ms
     x  stop and sleep driver immediately
@@ -66,6 +67,9 @@ constexpr uint16_t AUTO_APPROACH_STEP_MS = 50;
 constexpr uint16_t METER_HOLD_MS = 30000;
 constexpr uint8_t AUTO_APPROACH_MAX_STEPS = 20;
 constexpr uint8_t AUTO_APPROACH_LEARN_STEPS = 3;
+constexpr uint8_t TRACE_STEPS_PER_DIRECTION = 12;
+constexpr uint16_t TRACE_STEP_MS = 10;
+constexpr uint16_t TRACE_SETTLE_MS = 500;
 // The installed load cell also sees normal lead-screw/mechanism force while
 // traveling. Stop only when one pulse departs substantially from that learned
 // no-contact behavior; this is roughly 10 g in the 57.2 g bench experiments.
@@ -81,6 +85,7 @@ HX711 scale;
 long tareRaw = 0;
 long lastRaw = 0;
 uint16_t stepMs = 20;
+bool tareValid = false;
 
 bool faultActive() {
   return digitalRead(PIN_DRV_FAULT) == (DRV_FAULT_ACTIVE_LOW ? LOW : HIGH);
@@ -136,6 +141,7 @@ void tare() {
     delay(10);
   }
   tareRaw = total / TARE_SAMPLES;
+  tareValid = true;
   Serial2.print(F("Tare raw="));
   Serial2.println(tareRaw);
 }
@@ -268,8 +274,87 @@ void automaticApproach() {
   Serial2.println(F("AUTO stopped: 20-pulse travel limit reached."));
 }
 
+bool traceWait(uint16_t durationMs) {
+  const uint32_t deadline = millis() + durationMs;
+  while (static_cast<int32_t>(millis() - deadline) < 0) {
+    if (autoAbortRequested()) return false;
+    delay(5);
+  }
+  return true;
+}
+
+bool tracePoint(const __FlashStringHelper *phase, uint8_t step) {
+  long raw = lastRaw;
+  if (!readAveragedRaw(raw)) {
+    Serial2.println(F("TRACE stopped: HX711 did not provide three samples."));
+    return false;
+  }
+  Serial2.print(F("TRACE phase="));
+  Serial2.print(phase);
+  Serial2.print(F(" step="));
+  Serial2.print(step);
+  Serial2.print(F(" t_ms="));
+  Serial2.print(millis());
+  Serial2.print(F(" hx_raw="));
+  Serial2.print(raw);
+  Serial2.print(F(" hx_tare="));
+  Serial2.print(tareRaw);
+  Serial2.print(F(" hx_delta="));
+  Serial2.println(raw - tareRaw);
+  return true;
+}
+
+void fastTrace() {
+  stopAndSleep();
+  if (!tareValid) {
+    Serial2.println(F("TRACE cancelled: tare while pen is clear before r."));
+    return;
+  }
+  if (faultActive()) {
+    Serial2.println(F("ULT reports FAULT; TRACE cancelled."));
+    return;
+  }
+
+  Serial2.println(F("TRACE: 12 DOWN then 12 UP at 10 ms; x aborts."));
+  Serial2.println(F("TRACE precondition: pen clear and tared; record the scale on video."));
+  for (uint8_t step = 1; step <= TRACE_STEPS_PER_DIRECTION; ++step) {
+    if (autoAbortRequested()) {
+      stopAndSleep();
+      Serial2.println(F("TRACE aborted; motor stopped and asleep."));
+      return;
+    }
+    const uint16_t savedStepMs = stepMs;
+    stepMs = TRACE_STEP_MS;
+    moveOneStep(LOWER_IN1_HIGH, F("TRACE DOWN"));
+    stepMs = savedStepMs;
+    if (faultActive() || !traceWait(TRACE_SETTLE_MS) || !tracePoint(F("DOWN"), step)) {
+      stopAndSleep();
+      Serial2.println(F("TRACE stopped; motor asleep."));
+      return;
+    }
+  }
+  for (uint8_t step = 1; step <= TRACE_STEPS_PER_DIRECTION; ++step) {
+    if (autoAbortRequested()) {
+      stopAndSleep();
+      Serial2.println(F("TRACE aborted; motor stopped and asleep."));
+      return;
+    }
+    const uint16_t savedStepMs = stepMs;
+    stepMs = TRACE_STEP_MS;
+    moveOneStep(LIFT_IN1_HIGH, F("TRACE UP"));
+    stepMs = savedStepMs;
+    if (faultActive() || !traceWait(TRACE_SETTLE_MS) || !tracePoint(F("UP"), step)) {
+      stopAndSleep();
+      Serial2.println(F("TRACE stopped; motor asleep."));
+      return;
+    }
+  }
+  stopAndSleep();
+  Serial2.println(F("TRACE complete: motor stopped and asleep."));
+}
+
 void printHelp() {
-  Serial2.println(F("E-07B: t=tare p=print d=down u=up a=auto v=logic-meter o=output-meter [/] fine-to-100 then coarse x=stop h=lift-home ?=help"));
+  Serial2.println(F("E-07B: t=tare p=print d=down u=up a=auto r=fast-trace v=logic-meter o=output-meter [/] fine-to-100 then coarse x=stop h=lift-home ?=help"));
   Serial2.print(F("Current step duration: "));
   Serial2.print(stepMs);
   Serial2.println(F(" ms"));
@@ -353,6 +438,7 @@ void handleCommand(char command) {
     case 'd': case 'D': moveOneStep(LOWER_IN1_HIGH, F("DOWN")); break;
     case 'u': case 'U': moveOneStep(LIFT_IN1_HIGH, F("UP")); break;
     case 'a': case 'A': automaticApproach(); break;
+    case 'r': case 'R': fastTrace(); break;
     case '[': adjustStep(false); break;
     case ']': adjustStep(true); break;
     case 'x': case 'X':

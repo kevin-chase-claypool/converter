@@ -206,6 +206,13 @@ Partial unload from 60 g: three separate 10 ms up pulses measured 59.4 g
 This is valid evidence of directional stiction/backlash, not a full release
 curve.
 
+Test-method correction: manual pulse/report/review delays outlasted the scale's
+auto-off interval. E-07B now has `r`, a bounded clear-state-tared 12-down/12-up
+trace using fixed 10 ms pulses, 500 ms settles, timestamped three-sample HX711
+records, fault/sample-stop behavior, and `x` abort during settles. A short
+scale-display video supplies external-force points aligned to the serial trace.
+The sketch compiles; reflash and hardware validation remain pending.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

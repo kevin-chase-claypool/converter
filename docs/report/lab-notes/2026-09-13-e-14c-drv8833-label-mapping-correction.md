@@ -297,3 +297,16 @@ The settled paired readings were: 59.4 g at `hx_raw=-331251`,
 58.5 g at `hx_raw=-254767`, `hx_delta=-481601`. The scale then timed out and
 powered off, ending the unload pass. This is valid evidence of large
 directional stiction/backlash, but not a complete unloading curve.
+
+### Test-method correction: fast trace
+
+The manual one-pulse/report/review workflow took longer than the scale's
+auto-off interval and caused the incomplete unload pass. E-07B now adds `r`:
+after an explicit clear-state tare, it performs twelve 10 ms down pulses and
+twelve 10 ms up pulses, with a 500 ms settle plus three-sample HX711 reading
+after each pulse. Every record carries phase, step, `millis()` timestamp, raw,
+tare, and delta; `x` aborts during the settle interval. The run is bounded,
+stops/sleeps on any fault or failed sample, and does not infer force from pulse
+time. A short video of the scale display is the external-force evidence to
+align with the serial timestamps. Source compilation passed; hardware reflash
+and trace validation remain pending.

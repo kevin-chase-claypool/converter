@@ -147,8 +147,11 @@ For powered pen-tip calibration, use
 [`pen_pressure/e07b_hx711_actuator_steps/e07b_hx711_actuator_steps.ino`](pen_pressure/e07b_hx711_actuator_steps/e07b_hx711_actuator_steps.ino).
 It uses a 3.3 V USB-to-TTL service adapter on GP20/GP21 rather than the Pro
 Micro USB-C port, and limits every actuator command to one short step followed
-by DRV8833 sleep. This is a temporary bench/service interface, not part of the
-normal plotter control path.
+by DRV8833 sleep. Its `r` command performs one bounded 12-down/12-up trace at
+fixed 10 ms pulses, sampling HX711 after each motion so a short scale video can
+be reconciled with the serial trace without a human round trip per point. This
+is a temporary bench/service interface, not part of the normal plotter control
+path.
 Use [`../docs/project/ROADMAP.md`](../docs/project/ROADMAP.md) for active
 work, [`grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`](grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md)
 for P100 design/commissioning, and

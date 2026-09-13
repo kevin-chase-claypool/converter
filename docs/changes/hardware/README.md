@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-13 | `RPSW-20260913-005` | implemented | [Add E-07B fast force trace](../rp23cnc-software/2026/2026-09-13-add-e07b-fast-force-trace.md) | `toolhead`, `e07b`, `hx711`, `force-calibration`, `testing` |
 | 2026-09-13 | `HW-20260913-012` | implemented | [Lubricate toolhead motion path](2026/2026-09-13-lubricate-toolhead-motion-path.md) | `toolhead`, `lubrication`, `leadscrew`, `force-testing` |
 | 2026-09-13 | `HW-20260913-011` | implemented | [Add E07B fine force-pulse control](2026/2026-09-13-add-e07b-fine-force-pulse-control.md) | `n20`, `force-control`, `pulse-duration`, `e-07b` |
 | 2026-09-13 | `HW-20260913-010` | verified | [Calibrate E07B N20 direction](2026/2026-09-13-calibrate-e07b-n20-direction.md) | `n20`, `drv8833`, `direction`, `e-07b` |
