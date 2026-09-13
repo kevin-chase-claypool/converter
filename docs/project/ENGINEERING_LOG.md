@@ -186,6 +186,11 @@ the scale with `hx_raw=-235544` and `hx_delta=-462378`. This is the second
 paired force point on the same loaded path and remains below the initial 100 g
 E-07B ceiling.
 
+A further 10 ms down pulse settled at 41.1 g with `hx_raw=-250016` and
+`hx_delta=-476850`. The pulse changed force by only 1.3 g from the preceding
+39.8 g point, compared with 19.1 g in the prior step; duration cannot be used
+as a fixed force increment, so scale/HX feedback remains the control authority.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

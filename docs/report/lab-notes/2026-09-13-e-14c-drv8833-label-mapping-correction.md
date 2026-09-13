@@ -271,3 +271,9 @@ One additional 10 ms down pulse from that endpoint produced `hx_raw=-235544`
 and `hx_delta=-462378` after five seconds; the paired scale reading was
 39.8 g. This establishes a second force point on the same loaded path. It is
 still below the initial 100 g E-07B ceiling.
+
+A further 10 ms down pulse produced `hx_raw=-250016` and `hx_delta=-476850`
+after approximately seven seconds, paired with a 41.1 g scale reading. The
+increment from the preceding 39.8 g point was only 1.3 g, versus 19.1 g for
+the preceding pulse. This confirms that a fixed-duration N20 pulse is not a
+fixed force increment; force feedback remains the control authority.
