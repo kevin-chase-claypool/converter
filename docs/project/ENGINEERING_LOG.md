@@ -113,6 +113,10 @@ hang-up resolved, a clear tare of 226681 followed by one 10 ms down pulse
 reached 11.8 g at `hx_delta=-243394`. This is a low-force point, not proof of
 repair or calibration; complete the paired 10 ms release and repeat cycles.
 
+The paired 10 ms up pulse released that 11.8 g point to 0.0 g and returned
+HX711 near tare at `hx_delta=6271`. This is the first clean post-interference
+down/clear pair; repeat it before treating the mechanical fix as verified.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 
