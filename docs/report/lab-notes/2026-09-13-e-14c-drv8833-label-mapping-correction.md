@@ -266,3 +266,8 @@ Only the final pulse has a paired scale measurement. The preceding nine HX711
 values must not be treated as an individual force map or as proven contact
 points. The evidence establishes a guarded 20.7 g endpoint after ten 10 ms
 down pulses from this particular cleared state.
+
+One additional 10 ms down pulse from that endpoint produced `hx_raw=-235544`
+and `hx_delta=-462378` after five seconds; the paired scale reading was
+39.8 g. This establishes a second force point on the same loaded path. It is
+still below the initial 100 g E-07B ceiling.

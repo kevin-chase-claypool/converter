@@ -181,6 +181,11 @@ reading was the final state: 20.7 g at `hx_raw=-116095`,
 -299905, -205654, -203939, -195017, -207575) have no paired scale readings and
 are not a force map. This is a guarded endpoint, not an accepted force target.
 
+One additional 10 ms down pulse from the 20.7 g endpoint settled at 39.8 g on
+the scale with `hx_raw=-235544` and `hx_delta=-462378`. This is the second
+paired force point on the same loaded path and remains below the initial 100 g
+E-07B ceiling.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 
