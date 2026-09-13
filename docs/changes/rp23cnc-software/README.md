@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-13 | `HW-20260913-007` | implemented | [Preserve historical E-05 motor test](../hardware/2026/2026-09-13-preserve-historical-e05-motor-test.md) | `n20`, `drv8833`, `e-05`, `regression-test` |
 | 2026-09-13 | `HW-20260913-006` | implemented | [Extend E07B actuator pulse range](../hardware/2026/2026-09-13-extend-e07b-actuator-pulse-range.md) | `n20`, `toolhead`, `pulse-duration`, `diagnostics` |
 | 2026-09-13 | `HW-20260913-005` | implemented | [Add DRV8833 loaded-fault telemetry](../hardware/2026/2026-09-13-add-drv8833-loaded-fault-telemetry.md) | `drv8833`, `fault`, `diagnostics`, `toolhead` |
 | 2026-09-13 | `HW-20260913-004` | planned | [Isolate N20 output-connection failure](../hardware/2026/2026-09-13-isolate-n20-output-connection-failure.md) | `drv8833`, `n20`, `toolhead`, `diagnostics` |

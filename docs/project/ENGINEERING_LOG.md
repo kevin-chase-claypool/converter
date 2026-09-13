@@ -44,6 +44,11 @@ allows 100–1000 ms in 100 ms steps, retaining a one-second guard because it do
 not yet stop on LIFT_HOME. First bracket the shortest effective pulse with
 clear travel; do not use automatic approach.
 
+Decision: preserve the exact historical E-05 source in a separate sketch for
+an owner-requested A/B test before invasive driver/perfboard rework. It retains
+GP7-high/GP6-`INPUT_PULLUP` roles and both automatic 500 ms directions from
+commit `03f6c00`; it does not overwrite current diagnostic firmware.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

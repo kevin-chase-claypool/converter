@@ -95,3 +95,7 @@ or signal-wire change.
 The 100 ms manual-pulse cap was then superseded for this replacement motor.
 E07B now permits 100–1000 ms in 100 ms adjustments, while retaining a finite
 one-second guard because LIFT_HOME remains report-only in this service sketch.
+
+At the owner's request, a verbatim historical E-05 source copy from `03f6c00`
+was prepared as an A/B reproduction. It must be treated as two automatic
+500 ms motions, not as the guarded current E07B procedure.
