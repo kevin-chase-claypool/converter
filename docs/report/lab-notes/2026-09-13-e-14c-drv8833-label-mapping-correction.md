@@ -149,8 +149,9 @@ every pulse. The physical scale is the force authority.
 | 20 ms release | 233439 | `u` once at 20 ms | `hx_raw=225222`, `hx_delta=-8217` | 0.0 g | Released to clear. |
 | 10 ms contact | 218958 | `d` twice at 10 ms | `hx_raw=-118526`, `hx_delta=-337484` | 22.8 g | First pulse may have taken up clearance; individual first-pulse force was not read. |
 | 10 ms partial release | 218958 | `u` once at 10 ms | `hx_raw=167647`, `hx_delta=-51311` | 11.3 g | Reduced contact by 11.5 g without clearing. |
+| 10 ms clear | 218958 | second `u` at 10 ms | `hx_raw=238037`, `hx_delta=19079` | 0.0 g | Released to clear. |
 
-The 10 ms response from 22.8 g reduced force by 11.5 g. The 20 ms result proves
-torque and clear capability, but the clearance take-up and path-dependent HX711
-values mean no target force, pulse bound, or automatic approach is approved
-yet.
+The two 10 ms lift pulses reduced 22.8 g to 11.3 g then clear. The 20 ms result
+proves torque and clear capability, but the clearance take-up and
+path-dependent HX711 values mean no target force, pulse bound, or automatic
+approach is approved yet.

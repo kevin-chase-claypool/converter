@@ -84,7 +84,8 @@ tare of 233439, one 20 ms down pulse reached 19.6 g at
 reached 22.8 g at `hx_delta=-337484`; the individual first-pulse result was
 not sampled. One 10 ms up pulse then reduced that state to 11.3 g at
 `hx_delta=-51311`, a measured 11.5 g correction without clearing. These are
-bench observations, not an approved force profile.
+bench observations, not an approved force profile. A second 10 ms up pulse
+cleared the scale to 0.0 g at `hx_delta=19079`.
 
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping

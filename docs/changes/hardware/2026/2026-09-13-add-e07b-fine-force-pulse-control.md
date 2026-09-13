@@ -48,6 +48,7 @@ direction, sleep-after-pulse, and fault behavior.
   20 ms lift pulse released to 0.0 g at `hx_delta=-8217`.
 - Two 10 ms down pulses reached 22.8 g at `hx_delta=-337484`; one 10 ms lift
   pulse reduced that force to 11.3 g at `hx_delta=-51311`.
+- A second 10 ms lift pulse released the scale to 0.0 g at `hx_delta=19079`.
 
 ## Struggles and rejected approaches
 
