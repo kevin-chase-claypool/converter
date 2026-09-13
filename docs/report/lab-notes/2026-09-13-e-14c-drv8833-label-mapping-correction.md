@@ -150,8 +150,18 @@ every pulse. The physical scale is the force authority.
 | 10 ms contact | 218958 | `d` twice at 10 ms | `hx_raw=-118526`, `hx_delta=-337484` | 22.8 g | First pulse may have taken up clearance; individual first-pulse force was not read. |
 | 10 ms partial release | 218958 | `u` once at 10 ms | `hx_raw=167647`, `hx_delta=-51311` | 11.3 g | Reduced contact by 11.5 g without clearing. |
 | 10 ms clear | 218958 | second `u` at 10 ms | `hx_raw=238037`, `hx_delta=19079` | 0.0 g | Released to clear. |
+| 10 ms no-contact down | 232452 | `d` once at 10 ms | `hx_raw=-93219`, `hx_delta=-325671` | 0.0 g | Invalid force indication: no scale force despite large HX711 change. |
+| 10 ms repeat down | -105646 | `d` once at 10 ms | `hx_raw=-201604`, `hx_delta=-95958` | 53.4 g | Large physical force with comparatively small HX711 delta. |
+| 10 ms third down | 240356 | `d` once at 10 ms | `hx_raw=-123865`, `hx_delta=-364221` | 31.1 g | Down-force value differs substantially from preceding repeat. |
+| 10 ms third clear | 240356 | `u` once at 10 ms | `hx_raw=222344`, `hx_delta=-18012` | 0.0 g | Released to clear. |
 
-The two 10 ms lift pulses reduced 22.8 g to 11.3 g then clear. The 20 ms result
-proves torque and clear capability, but the clearance take-up and
-path-dependent HX711 values mean no target force, pulse bound, or automatic
-approach is approved yet.
+The two 10 ms lift pulses reduced 22.8 g to 11.3 g then clear. A subsequent
+no-contact 10 ms down pulse produced a similar-magnitude negative HX711 delta
+while the scale remained 0.0 g. Therefore the HX711 currently responds to
+actuator/mechanical state or a motion-related artifact, not yet a validated
+pen-force signal. No target force, pulse bound, or automatic approach is
+approved. Pause contact-force mapping until this force-path discrepancy is
+isolated. Two later nominally identical 10 ms down trials reached 53.4 g and
+31.1 g with incompatible HX711 deltas; the following 10 ms up pulse cleared
+31.1 g to 0.0 g. The safe release behavior does not make the down-force
+response suitable for closed-loop control.

@@ -87,6 +87,20 @@ not sampled. One 10 ms up pulse then reduced that state to 11.3 g at
 bench observations, not an approved force profile. A second 10 ms up pulse
 cleared the scale to 0.0 g at `hx_delta=19079`.
 
+Failure: from a fresh clear tare of 232452, one 10 ms down pulse produced
+`hx_delta=-325671` while the physical scale remained 0.0 g. The force sensor
+is therefore not yet a validated measurement of pen force; it reacts strongly
+to actuator/mechanical state without verified paper force. Pause T-01E force
+mapping and do not choose force thresholds or enable automatic approach until
+the load-cell force path versus motion artifact is isolated.
+
+Repeat evidence strengthened that stop: a fresh 10 ms down trial reached
+53.4 g at `hx_delta=-95958`, while a later fresh 10 ms down trial reached
+31.1 g at `hx_delta=-364221`. One 10 ms up pulse cleared the latter to 0.0 g
+at `hx_delta=-18012`. Retract capability is repeatably demonstrated, but the
+same commanded down pulse and incompatible HX711 responses cannot be used as
+a force-control calibration.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

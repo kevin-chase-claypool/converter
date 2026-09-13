@@ -49,6 +49,13 @@ direction, sleep-after-pulse, and fault behavior.
 - Two 10 ms down pulses reached 22.8 g at `hx_delta=-337484`; one 10 ms lift
   pulse reduced that force to 11.3 g at `hx_delta=-51311`.
 - A second 10 ms lift pulse released the scale to 0.0 g at `hx_delta=19079`.
+- A fresh clear tare followed by one 10 ms down pulse produced
+  `hx_delta=-325671` while the scale remained 0.0 g. This fails the required
+  force-signal correlation; force mapping is paused pending mechanical/HX711
+  isolation.
+- Repeat one-pulse 10 ms trials reached 53.4 g at `hx_delta=-95958` and
+  31.1 g at `hx_delta=-364221`; one 10 ms lift then cleared the latter to
+  0.0 g at `hx_delta=-18012`. This confirms variable down-force response.
 
 ## Struggles and rejected approaches
 
@@ -59,9 +66,9 @@ rejected because LIFT_HOME remains telemetry-only in E07B.
 ## Risks and follow-up
 
 The fine pulse range is a diagnostic tool, not an approved force-control
-profile. Establish repeatable force response, travel bounds, and release
-hysteresis with the scale before selecting a target or enabling automatic
-approach.
+profile. The latest no-contact result fails force-signal correlation. Isolate
+the load-cell force path and motion artifact before selecting a target,
+establishing pulse bounds, or enabling automatic approach.
 
 ## Files
 
