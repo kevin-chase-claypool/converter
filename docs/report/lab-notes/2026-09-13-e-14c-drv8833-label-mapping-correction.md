@@ -154,6 +154,7 @@ every pulse. The physical scale is the force authority.
 | 10 ms repeat down | -105646 | `d` once at 10 ms | `hx_raw=-201604`, `hx_delta=-95958` | 53.4 g | Large physical force with comparatively small HX711 delta. |
 | 10 ms third down | 240356 | `d` once at 10 ms | `hx_raw=-123865`, `hx_delta=-364221` | 31.1 g | Down-force value differs substantially from preceding repeat. |
 | 10 ms third clear | 240356 | `u` once at 10 ms | `hx_raw=222344`, `hx_delta=-18012` | 0.0 g | Released to clear. |
+| Post-interference 10 ms down | 226681 | `d` once at 10 ms | `hx_raw=-16713`, `hx_delta=-243394` | 11.8 g | First post-observation verification point; release check pending. |
 
 The two 10 ms lift pulses reduced 22.8 g to 11.3 g then clear. A subsequent
 no-contact 10 ms down pulse produced a similar-magnitude negative HX711 delta
@@ -176,3 +177,10 @@ paper contact. The observation is not a repair verification. Pause powered
 force trials until, with power removed, the screw-to-spring/housing clearance,
 spring seating, centering, and full guarded travel are inspected for rubbing,
 binding, or witness marks.
+
+After the owner reported the observed screw/spring hang-up resolved, one
+post-observation 10 ms down verification from a clear tare of 226681 reached
+11.8 g at `hx_delta=-243394`. This is within the low-force exploration range,
+but one point does not prove that the interference is eliminated or that the
+force/HX711 relationship is repeatable; the matching 10 ms release check and
+repeat cycles remain required.

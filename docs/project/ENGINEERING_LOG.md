@@ -108,6 +108,11 @@ contact force and load-cell side-load offsets. It is the active T-01 mechanical
 blocker; with power removed, inspect clearance, concentricity, spring seats,
 and guarded travel before any further powered force pulse.
 
+Post-observation verification: after the owner reported the screw/spring
+hang-up resolved, a clear tare of 226681 followed by one 10 ms down pulse
+reached 11.8 g at `hx_delta=-243394`. This is a low-force point, not proof of
+repair or calibration; complete the paired 10 ms release and repeat cycles.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 
