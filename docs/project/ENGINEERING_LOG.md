@@ -64,6 +64,11 @@ GP4--GP7 mapping, or a proven failed DRV8833 IC. Continue with guarded travel
 and force characterization; bidirectional motion is not yet a force-control
 qualification.
 
+Direction result: before final command-polarity correction, E07B `u` moved the
+carriage down and `d` moved it up. The installed motor wires remain in place;
+E07B now maps `u` to the observed lift polarity and `d` to the observed lower
+polarity. Reflash and guarded confirmation are required before scale contact.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

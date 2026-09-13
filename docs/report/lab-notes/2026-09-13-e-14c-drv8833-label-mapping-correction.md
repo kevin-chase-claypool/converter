@@ -119,3 +119,10 @@ installed N20 in both `u` and `d` directions. This closes the loaded
 OUT1/OUT2 delivery fault: the prior static-output test was a false assurance
 because the bridge could present open-circuit voltage despite the defective
 loaded output connection.
+
+## Direction observation
+
+With corrected E07B and the repaired output, the owner observed that the
+then-current `u` command physically lowered the motor/carriage and `d` raised
+it. E07B was corrected in code only: `u` now uses the observed lift polarity
+and `d` the observed lower polarity. The motor wiring remains unchanged.

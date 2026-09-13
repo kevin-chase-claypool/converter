@@ -21,8 +21,8 @@
   Commands at 115200 baud:
     t  tare the unloaded, stationary mechanism (20 samples)
     p  print one HX711 reading now
-    d  one 20 ms pen-DOWN step, then driver sleeps
-    u  one 20 ms pen-UP step, then driver sleeps
+    d  one selected-duration pen-DOWN step, then driver sleeps
+    u  one selected-duration pen-UP step, then driver sleeps
     a  automatic approach: 50 ms DOWN pulses until load is detected
     [  reduce step time by 100 ms (minimum 100 ms)
     ]  increase step time by 100 ms (maximum 1000 ms)
@@ -70,9 +70,10 @@ constexpr uint8_t AUTO_APPROACH_LEARN_STEPS = 3;
 constexpr long AUTO_CONTACT_RESIDUAL_COUNTS = 50000;
 constexpr bool DRV_FAULT_ACTIVE_LOW = true;
 
-// Verified E-05 direction mapping for the installed motor wires.
-constexpr bool LIFT_IN1_HIGH = true;
-constexpr bool LOWER_IN1_HIGH = false;
+// Verified with the installed 1000 RPM N20: IN1 LOW drives pen-up/lift and
+// IN1 HIGH drives pen-down/lower. Keep the motor wires in their present state.
+constexpr bool LIFT_IN1_HIGH = false;
+constexpr bool LOWER_IN1_HIGH = true;
 
 HX711 scale;
 long tareRaw = 0;
