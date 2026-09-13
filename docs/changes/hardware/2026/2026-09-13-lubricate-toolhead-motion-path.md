@@ -40,7 +40,9 @@ firmware mapping changed.
 - From tare raw 215937, one 10 ms down pulse produced 33.7 g.
 - Three stationary readings were `hx_delta=-323079`, `-322781`, and
   `-322551`, a 528-count span over about five seconds.
-- Release and post-release zero-reference verification remain pending.
+- One 10 ms lift pulse reduced the physical scale from 33.7 g to 0.4 g, then
+  1.2 g on the third stationary reading. Corresponding deltas were `-21011`,
+  `-22650`, and `-26409`.
 
 ## Struggles and rejected approaches
 
@@ -49,9 +51,9 @@ force path is correct. The earlier persistent zero-force offset remains open.
 
 ## Risks and follow-up
 
-Release the current 33.7 g load with one bounded up pulse, then test whether
-the physical 0 g condition returns to a stable near-tare HX711 value. Do not
-enable force control until the zero-reference result passes.
+The release behavior is markedly improved, but the 0.4--1.2 g residual is not
+yet an approved clear band. Establish repeatable clear threshold, target force,
+and pulse/dwell limits before enabling force control.
 
 ## Files
 

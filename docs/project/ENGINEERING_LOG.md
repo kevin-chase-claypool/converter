@@ -146,6 +146,12 @@ reached 33.7 g; three stationary HX711 deltas over about five seconds were
 `-323079`, `-322781`, and `-322551` (528-count span). Stationary stability
 improved, but the post-release zero-reference test remains the gating result.
 
+Lubricated release result: one 10 ms up pulse reduced the 33.7 g contact to
+0.4 g, then 1.2 g on a later stationary sample. HX711 deltas were `-21011`,
+`-22650`, and `-26409`, a substantial improvement over the earlier persistent
+approximately +166k zero-force offset. Treat this as promising evidence, not
+an approved clear threshold or completed force calibration.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

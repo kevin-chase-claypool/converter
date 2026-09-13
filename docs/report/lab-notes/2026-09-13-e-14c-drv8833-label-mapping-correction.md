@@ -220,3 +220,10 @@ samples over about five seconds were `hx_delta=-323079`, `-322781`, and
 `-322551`, a 528-count span. This is better stationary stability than the
 earlier 31.5 g point, but it does not yet resolve the failed post-release
 zero-reference condition. Release and zero-reference checks remain pending.
+
+One 10 ms up pulse released the 33.7 g point. The scale read 0.4 g at
+`hx_delta=-21011`, then 1.2 g at `hx_delta=-26409`; the intermediate sample
+was `hx_delta=-22650`. Compared with the earlier persistent approximately
++166k zero-force offset, this is a substantial improvement after lubrication.
+The low residual scale reading and small raw offset are not yet an approved
+PEN_CLEAR threshold or a repeatability result.
