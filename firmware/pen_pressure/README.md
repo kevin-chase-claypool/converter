@@ -51,12 +51,13 @@ work.
   calibration/profile-verification activity, not a scale check required at
   every print.
 - The E-07B `r` fast-trace method is hardware-validated as a bounded bench
-  procedure: its first scale video captured a continuous 10 ms down/up cycle
-  from an already-loaded approximately 59 g state through an approximately
-  75 g peak and back to 0.0 g before the scale auto-off timer. It solves the
-  manual workflow timing problem; it does **not** validate a clear-start force
-  curve, the HX711-to-force transfer, or a target, force limit, or automatic
-  approach.
+  procedure. A second, correctly clear-started 10 ms trace reached 59.3 g and
+  returned to 0.0 g before the scale auto-off timer. It solves the manual
+  workflow timing problem, but it also proved the present HX711 value cannot
+  serve as pen force: 25.0 g occurred at essentially the same delta as zero
+  force, and the HX711 remained strongly loaded after physical release. Do
+  **not** enable automatic approach, a target, or a force limit until the
+  load-cell force path/signal discrepancy is isolated.
 - Complete actuator travel, stall, seek-timeout, and safe-fault testing.
 - Decide whether the later `CONTACT_READY`/`TOOL_FAULT` handshake is necessary
   after the fixed-dwell version is proven. If adopted, complete F-08 input

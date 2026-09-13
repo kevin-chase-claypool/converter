@@ -20,6 +20,15 @@
 - Evidence detail: `docs/report/lab-notes/2026-09-13-e-14c-drv8833-label-mapping-correction.md`;
   `RPSW-20260913-005`.
 
+Follow-up result: the retained full serial trace and synchronous clear-start
+video have now provided that pairing. A 10 ms DOWN trace reached 59.3 g, but
+DOWN 1--3 were 0.0 g with deltas from -223595 to -246190, while DOWN 4 was
+25.0 g at -234595. On the way up, the scale was 0.0 g at UP 4 while HX711
+remained -500683. The actuator/pen force path works mechanically, but the
+present HX711 measurement fails E-07 and cannot enter force control. Next
+diagnosis must isolate mechanical force-path bypass/side-load versus load-cell
+mounting or signal-path artifacts with the actuator stationary.
+
 <a id="elog-20260913-added-nonmotion-drv8833-meter-mode"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Added non-motion DRV8833 meter mode
 

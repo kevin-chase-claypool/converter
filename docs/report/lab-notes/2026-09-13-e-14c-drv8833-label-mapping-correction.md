@@ -337,3 +337,42 @@ pairing is also still pending the full `TRACE phase=...` console records;
 blurred video digits are not being promoted to calibration points. Do not
 select a force target, raw threshold, or automatic force-control gain until a
 repeatable transfer/hysteresis calibration passes.
+
+### Clear-start fast trace: force path discrepancy confirmed
+
+After two additional 20 ms UP pulses, the owner tared the visibly clear pen at
+`265267`, then sent `r` at `14:11:19` with no intervening motion command. The
+attached `TimeVideo_20260913_141116.mp4` clock is synchronous with the full
+serial trace. The scale and HX711 records aligned at the settled post-pulse
+sample are:
+
+| Phase / step | External scale (g) | HX711 delta | Interpretation |
+|---|---:|---:|---|
+| DOWN 1 | 0.0 | -223595 | No-contact actuator/mechanism response. |
+| DOWN 2 | 0.0 | -246190 | No-contact actuator/mechanism response. |
+| DOWN 3 | 0.0 | -233987 | No-contact actuator/mechanism response. |
+| DOWN 4 | 25.0 | -234595 | First confirmed contact, but essentially unchanged from no-contact delta. |
+| DOWN 5 | 42.5 | -269186 | Force rise begins; response remains nonlinear. |
+| DOWN 6 | 51.3 | -360473 | Increasing contact. |
+| DOWN 7 | 52.7 | -487672 | Large count change for 1.4 g force change. |
+| DOWN 8 | 54.6 | -516497 | Increasing contact. |
+| DOWN 9 | 56.3 | -525668 | Increasing contact. |
+| DOWN 10 | 59.1 | -539954 | Near force plateau. |
+| DOWN 11 | 59.1 | -552058 | Same displayed force, changing HX711 delta. |
+| DOWN 12 | 59.3 | -563236 | Maximum recorded force. |
+| UP 1 | 59.3 | -545319 | No meaningful physical release yet. |
+| UP 2 | 59.0 | -531188 | No meaningful physical release yet. |
+| UP 3 | 59.3 | -515698 | No meaningful physical release yet. |
+| UP 4 | 0.0 | -500683 | Physical release occurred while HX711 still indicated large load. |
+| UP 5 | 0.0 | -265302 | HX711 began recovering after release. |
+| UP 6 | 0.0 | -97652 | HX711 continued recovering after release. |
+| UP 7--12 | 0.0 | -28424 to -50036 | Near-clear HX711 band, still offset from the fresh tare. |
+
+The 1000 RPM N20, spring, and carriage therefore have a demonstrated bounded
+mechanical response from clear through approximately 59 g and back to clear.
+The HX711 does not satisfy E-07: it responds strongly to actuator state with
+zero external pen force, misses the first confirmed 25 g contact, and lags
+physical release by at least one 10 ms UP pulse. This is not ordinary sampling
+noise or a usable calibration hysteresis; it is a force-path/sensing
+discrepancy. Keep all automatic force control, contact thresholds, and M3/M5
+force behavior disabled.

@@ -50,6 +50,14 @@ tare and before `r`, so this does not validate a clear-start force map. It
 does validate trace timing and sleep-between-pulse behavior; the matching serial
 `TRACE` records remain required for HX711-to-grams calibration.
 
+A subsequent correctly clear-started trace supplied the full synchronized
+serial/video evidence. It reached 59.3 g and returned to 0.0 g within the
+bounded run, but failed E-07 force-transfer validation: zero-force DOWN
+samples were approximately -224k counts, 25.0 g was still -235k counts, and
+the external scale was clear at UP-4 while the HX711 was -501k counts. The
+trace is retained as the tight bench feedback loop for diagnosing the force
+path; it does not authorize closed-loop force control.
+
 ## Struggles and rejected approaches
 
 Per-point user/agent review was rejected because it exceeded the scale's
