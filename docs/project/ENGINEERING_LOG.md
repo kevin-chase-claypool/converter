@@ -38,6 +38,12 @@ with no motion. The command remained active and ULT remained inactive. Code,
 control wiring, and reported driver protection are not the observed blocker;
 measure the source/current capability under the 1000 RPM motor load next.
 
+Decision: the prior 100 ms E07B manual-pulse ceiling was not a measured safe
+limit and may be below the replacement motor's breakaway duration. E07B now
+allows 100–1000 ms in 100 ms steps, retaining a one-second guard because it does
+not yet stop on LIFT_HOME. First bracket the shortest effective pulse with
+clear travel; do not use automatic approach.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

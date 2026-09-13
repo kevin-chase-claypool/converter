@@ -91,3 +91,7 @@ inactive throughout the actual command; E07B did not cancel the pulse and the
 driver did not claim over-current/thermal protection. The next discriminator is
 the supply/current capability required by the 1000 RPM motor, not another GPIO
 or signal-wire change.
+
+The 100 ms manual-pulse cap was then superseded for this replacement motor.
+E07B now permits 100–1000 ms in 100 ms adjustments, while retaining a finite
+one-second guard because LIFT_HOME remains report-only in this service sketch.
