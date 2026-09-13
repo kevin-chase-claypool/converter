@@ -136,3 +136,20 @@ N20 can overcome the spring, lift the carriage, and release contact, but it
 also proves 100 ms is too coarse for low-force control. E07B now defaults to
 20 ms and provides 10 ms increments below 100 ms; its previous 100 ms
 increments remain available for longer diagnostic travel.
+
+### Controlled E07B response measurements
+
+All values below used the blunt pen end on the paper-covered scale, with the
+repaired DRV8833, corrected `u`/`d` command polarity, and E07B sleep after
+every pulse. The physical scale is the force authority.
+
+| Trial | Clear tare raw | Command sequence | Settled HX711 result | Scale result | Result |
+|---|---:|---|---:|---:|---|
+| 20 ms contact | 233439 | `d` once at 20 ms | `hx_raw=-116095`, `hx_delta=-349534` | 19.6 g | First controlled contact point. |
+| 20 ms release | 233439 | `u` once at 20 ms | `hx_raw=225222`, `hx_delta=-8217` | 0.0 g | Released to clear. |
+| 10 ms contact | 218958 | `d` twice at 10 ms | `hx_raw=-118526`, `hx_delta=-337484` | 22.8 g | First pulse may have taken up clearance; individual first-pulse force was not read. |
+
+The 10 ms release response from the 22.8 g point remains pending. The 20 ms
+result proves torque and clear capability, but the abrupt force change and
+clearance take-up mean no target force, pulse bound, or automatic approach is
+approved yet.

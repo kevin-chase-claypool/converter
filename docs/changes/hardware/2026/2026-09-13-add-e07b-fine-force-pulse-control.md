@@ -44,7 +44,10 @@ direction, sleep-after-pulse, and fault behavior.
 - The physical force evidence motivating the change was 43.4 g at
   `hx_delta=-503592`, followed by 0.5 g at `hx_delta=-5984` after one 100 ms
   lift pulse.
-- Reflash and guarded 20/30/40 ms response measurements remain pending.
+- A controlled 20 ms down pulse reached 19.6 g at `hx_delta=-349534`; one
+  20 ms lift pulse released to 0.0 g at `hx_delta=-8217`.
+- Two 10 ms down pulses reached 22.8 g at `hx_delta=-337484`; the 10 ms
+  release measurement remains pending.
 
 ## Struggles and rejected approaches
 
