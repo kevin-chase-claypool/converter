@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-13 | `HW-20260913-012` | implemented | [Lubricate toolhead motion path](2026/2026-09-13-lubricate-toolhead-motion-path.md) | `toolhead`, `lubrication`, `leadscrew`, `force-testing` |
 | 2026-09-13 | `HW-20260913-011` | implemented | [Add E07B fine force-pulse control](2026/2026-09-13-add-e07b-fine-force-pulse-control.md) | `n20`, `force-control`, `pulse-duration`, `e-07b` |
 | 2026-09-13 | `HW-20260913-010` | verified | [Calibrate E07B N20 direction](2026/2026-09-13-calibrate-e07b-n20-direction.md) | `n20`, `drv8833`, `direction`, `e-07b` |
 | 2026-09-13 | `HW-20260913-009` | verified | [Repair DRV8833 output solder joint](2026/2026-09-13-repair-drv8833-output-solder-joint.md) | `drv8833`, `n20`, `solder-repair`, `e-14c` |

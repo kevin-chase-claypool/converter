@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-13 | `HW-20260913-012` | hardware | implemented | [Lubricate toolhead motion path](hardware/2026/2026-09-13-lubricate-toolhead-motion-path.md) |
 | 2026-09-13 | `HW-20260913-011` | hardware, rp23cnc-software | implemented | [Add E07B fine force-pulse control](hardware/2026/2026-09-13-add-e07b-fine-force-pulse-control.md) |
 | 2026-09-13 | `HW-20260913-010` | hardware, rp23cnc-software | verified | [Calibrate E07B N20 direction](hardware/2026/2026-09-13-calibrate-e07b-n20-direction.md) |
 | 2026-09-13 | `HW-20260913-009` | hardware, rp23cnc-software | verified | [Repair DRV8833 output solder joint](hardware/2026/2026-09-13-repair-drv8833-output-solder-joint.md) |

@@ -211,3 +211,12 @@ zero-force offset, not ordinary settling noise. Open-loop gearbox friction can
 explain variable force from a pulse, but it cannot authorize using this
 state-dependent HX711 value as an absolute force reference. Pause closed-loop
 force implementation until the mechanical load-cell force path is isolated.
+
+### Lubrication retest
+
+The owner greased the moving toolhead mechanism before another guarded trial.
+From tare raw 215937, one 10 ms down pulse reached 33.7 g. Three stationary
+samples over about five seconds were `hx_delta=-323079`, `-322781`, and
+`-322551`, a 528-count span. This is better stationary stability than the
+earlier 31.5 g point, but it does not yet resolve the failed post-release
+zero-reference condition. Release and zero-reference checks remain pending.

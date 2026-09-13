@@ -140,6 +140,12 @@ absolute raw-force reference. Gearbox friction may explain variable open-loop
 pulse displacement, but not this zero-force sensor state; pause closed-loop
 force implementation pending mechanical load-cell force-path isolation.
 
+Lubrication retest: the owner greased the toolhead motion path after the
+observed screw/spring interference. From tare raw 215937, one 10 ms down pulse
+reached 33.7 g; three stationary HX711 deltas over about five seconds were
+`-323079`, `-322781`, and `-322551` (528-count span). Stationary stability
+improved, but the post-release zero-reference test remains the gating result.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 
