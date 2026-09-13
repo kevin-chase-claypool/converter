@@ -101,6 +101,13 @@ at `hx_delta=-18012`. Retract capability is repeatably demonstrated, but the
 same commanded down pulse and incompatible HX711 responses cannot be used as
 a force-control calibration.
 
+Mechanical observation: after the variable-force trials, the owner saw the
+leadscrew briefly hang up on the spring inside its housing before it appeared
+to release. This plausible spring/screw interference can create both variable
+contact force and load-cell side-load offsets. It is the active T-01 mechanical
+blocker; with power removed, inspect clearance, concentricity, spring seats,
+and guarded travel before any further powered force pulse.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

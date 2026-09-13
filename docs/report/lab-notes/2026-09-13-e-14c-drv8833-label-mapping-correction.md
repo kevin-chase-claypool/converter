@@ -165,3 +165,14 @@ isolated. Two later nominally identical 10 ms down trials reached 53.4 g and
 31.1 g with incompatible HX711 deltas; the following 10 ms up pulse cleared
 31.1 g to 0.0 g. The safe release behavior does not make the down-force
 response suitable for closed-loop control.
+
+### Mechanical observation after variable-force trials
+
+The owner observed that the leadscrew briefly hung up on the spring inside its
+housing, then appeared to release. This is a plausible direct cause of the
+large trial-to-trial force variation and HX711 state offsets: a snagged spring
+or screw can store/release force suddenly and impose side load unrelated to
+paper contact. The observation is not a repair verification. Pause powered
+force trials until, with power removed, the screw-to-spring/housing clearance,
+spring seating, centering, and full guarded travel are inspected for rubbing,
+binding, or witness marks.
