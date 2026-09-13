@@ -157,6 +157,10 @@ One additional 10 ms lift pulse held the scale at 0.4 g with
 solely to chase sub-gram scale indication; verify a visible gap and define a
 bounded clearance reserve instead.
 
+Physical clearance observation: after the second bounded 10 ms lift, one sheet
+of paper could just barely slide beneath the blunt pen end. This proves
+separation but only a minimal gap; it is not a production `PEN_CLEAR` reserve.
+
 <a id="elog-20260913-corrected-drv8833-sleep-fault-label-mapping"></a>
 ### 🟨 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/OPEN - Corrected DRV8833 sleep/fault label mapping
 

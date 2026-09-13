@@ -232,3 +232,9 @@ A second 10 ms up pulse produced `hx_delta=10956` while the scale remained at
 0.4 g. This does not justify continued retraction toward the unverified
 mechanical endpoint solely to eliminate a sub-gram scale indication. Verify a
 visible pen-to-paper gap and establish a bounded clearance reserve instead.
+
+Physical clearance observation after the second bounded 10 ms up pulse: one
+sheet of paper could just barely slide beneath the blunt pen end. This confirms
+the pen was not pressing the scale, but it is only a minimal air gap and not a
+qualified production `PEN_CLEAR` reserve. Bracket the gap with additional
+sheets before choosing a clearance pulse.
