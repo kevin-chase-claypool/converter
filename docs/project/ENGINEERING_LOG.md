@@ -531,6 +531,7 @@ Entry details remain only in the chronology.
 - [2026-09-06 - HARDWARE/VERIFIED - X/Y physical homing](#elog-20260906-x-y-physical-homing)
 - [2026-09-06 - HARDWARE/VERIFIED - Temporary manual G54 XY reference](#elog-20260906-temporary-manual-g54-xy-reference)
 - [2026-09-07 17:53:46 -0500 - HARDWARE/OPEN - Required scale-force transfer calibration](#elog-20260907175346)
+- [2026-09-13 - HARDWARE/PLANNED - Replace HX711 force-sensing path with CS1238](#elog-20260913-replace-hx711-force-sensing-path-with-cs1238)
 
 ### Testing and verification
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -4395,3 +4396,32 @@ Add new entries at the top of the log below this line.
 - Evidence: `HW-20260907-001`; E-07 and T-01B in `docs/testing/TEST_PLAN.md`.
 - Next action: complete the guarded E-07 fixture procedure after the
   LIFT_HOME and safe actuator travel envelope are available.
+
+<a id="elog-20260913-replace-hx711-force-sensing-path-with-cs1238"></a>
+### 🟨 2026-09-13 - HARDWARE/PLANNED - Replace HX711 force-sensing path with CS1238
+
+- Status: NAU7802 breakout purchased as spare and CS1238 selected as the active
+  HX711-form-factor replacement; neither board has been received, wired, or
+  flashed.
+- Category: hardware, rp23cnc-software, toolhead, load-cell, cs1238,
+  force-control, testing.
+- Evidence: Three correctly clear-started, time-synchronised HX711/scale
+  traces reached approximately 59.3 g, 70.7 g, and 71.0 g, then cleared to
+  0.0 g. The HX711 failed force-path classification: its no-contact response
+  overlapped first confirmed contact and it remained highly offset after
+  physical release. Lubrication improved the N20 motion path but does not make
+  the HX711 a valid force authority.
+- Decision: Replace the HX711 with a CS1238 breakout in the same two-hole
+  module form factor, retaining the 300 g load cell and GP0/GP1 as
+  `DT`/`DRDY-DOUT` and `SCK`. Do not assume the exact breakout's pin order,
+  supply range, or load-cell terminal labels before receipt inspection. The
+  earlier NAU7802 is a spare, not a parallel sensor path.
+- Test plan: E-07C power-off/motor-inert inspection and CS1238 bring-up; E-08C
+  40/640/1280 SPS installed rate/noise windows; E-09C three bounded 6-down/6-up
+  scale-video traces with RMS-band separation. The N20 remains asleep for the
+  first two gates. The former 12-down trace is prohibited as the first test.
+- Safety boundary: M5/PEN_CLEAR remains a conservative timed lift plus proven
+  physical clearance reserve. No M3 force seek, hold threshold, automatic
+  approach, or controller handshake is enabled by this purchase.
+- Next action: On receipt, photograph the exact CS1238 breakout and inspect
+  its 3.3 V/data-clock/bridge wiring requirements before removing the HX711.

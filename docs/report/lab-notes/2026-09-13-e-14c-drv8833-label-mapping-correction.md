@@ -376,3 +376,34 @@ physical release by at least one 10 ms UP pulse. This is not ordinary sampling
 noise or a usable calibration hysteresis; it is a force-path/sensing
 discrepancy. Keep all automatic force control, contact thresholds, and M3/M5
 force behavior disabled.
+
+### Repeated clear-start traces and CS1238 replacement decision
+
+The owner then supplied one continuous follow-up recording,
+`TimeVideo_20260913_142723.mp4`, containing two additional clear-start
+12-down/12-up traces. Their fresh HX711 tares were `220052` and `222330`.
+The external scale again returned to `0.0 g` after each unload. The displayed
+peak force was approximately `70.7 g` on the second trace and `71.0 g` on the
+third, compared with `59.3 g` on the earlier valid trace. Thus the same bounded
+actuator routine is mechanically repeatable in the broad sense of
+clear-to-contact-to-clear, but not at a precision force endpoint.
+
+The sensor deltas were comparatively consistent only late in the loaded path;
+for example, the three `DOWN 7` values were `-487672`, `-471867`, and
+`-489362`, while the earlier no-contact/first-contact region overlapped and
+varied substantially. More samples cannot convert this into an absolute force
+signal. A faster ADC may improve control cadence, but it must independently
+prove a valid force path.
+
+On 2026-09-13 the owner first purchased an NAU7802 load-cell ADC breakout, then
+selected a CS1238 breakout as the active replacement because the common
+CS1238 board retains the installed HX711 module's two-hole footprint, four-wire
+load-cell terminal pattern, and `GP0`/`GP1` data/clock harness. The NAU7802 is
+retained as a spare. The CS1238 requires new firmware but no intended
+perfboard/harness redesign. Receipt inspection must still confirm the exact
+board's 3.3 V compatibility, silkscreen, and terminal order; no wiring or
+firmware change has occurred. E-07C/E-08C/E-09C are now the required
+motor-inert bring-up, rate/noise, and bounded force-path qualification sequence.
+The greased N20 mechanism remains part of the mechanical improvement, but
+neither lubrication nor a new ADC authorizes force control before these tests
+pass.

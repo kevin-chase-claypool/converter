@@ -34,8 +34,11 @@ completion status.
 | E-04 | Set driver current and microstep configuration conservatively | With all drivers unpowered: X/Y 16× (`SW1 OFF`, `SW2 OFF`, `SW3 ON`); A 8× (`SW1 OFF`, `SW2 ON`, `SW3 OFF`); all 1.5 A/phase (`SW4 ON`, `SW5 OFF`, `SW6 ON`) | TBD | X/Y's 20T GT2 pulleys yield 80 steps/mm at 16×. The 12:1 A reduction produces 19,200 pulses/bed revolution at 8×; do not increase A to 16/32× unless testing demonstrates a need. |
 | E-05 | Measure N20 no-load current at 6 V | Stable and within supply/module range | Passed | Owner correction: aligned unloaded N20 motion current is 0.009 A. The earlier 0.043 A toolhead reading included extra mechanical load from a lead screw that was not straight against the heat-set insert; it is retained as a historical misalignment result, not the normal unloaded baseline. The repaired DRV8833 output solder joint remained reliable. No manual stall test was performed during the original E-05 run. |
 | E-06 | Measure current-limited actuator stall current | Below verified DRV8833 safe limit | Passed (bounded endpoint-stall only) | With the then-installed spring (identity and compression not recorded), the N20 was commanded to retract until it could travel no farther and pressed the LIFT_HOME switch. At 6.0 V with a 0.20 A bench-supply limit it read 0.18 A at that endpoint for approximately 30 s, repeated 10 times. This is bounded endpoint-stall evidence only; it does not measure current required to hold a selected operating preload, and it does not qualify the current 0.4 mm x 7 mm x 25 mm spring. Repeat the loaded current/hold check at a known safe compression. Temperature, rail-voltage, and long-duration endurance remain outside this test scope. |
-| E-07 | Calibrate load cell with a scale-force transfer test | A repeatable signed conversion from settled filtered HX711 delta to grams-force, with zero, residual, and hysteresis bounds | Partial | USB-only HX711 testing passed communication (`hx_ready=1`). E-07B GP20/GP21 service UART and two automatic pen-tip/digital-scale contacts passed (49.4 g and 65 g). Normal Z-mechanism preload changes raw readings, so the residual approach is safe for contact detection but the coarse 50 ms final increment has not produced a repeatable force slope. Refine final approach increments before production calibration. See 2026-08-14 E-07 lab note. |
-| E-08 | Measure HX711 samples/s and noise | Sufficient for chosen loop bandwidth | Passed | Two stationary 15-second GP0/GP1 HX711 windows returned 179 samples each: 11.933 Hz. Peak-to-peak noise was 300 and 484 counts; standard deviation was 69.1 and 120.5 counts. Use a three-ready-sample median (about 0.25 s) and no faster than ~4 Hz force corrections after settling. See 2026-08-14 E-08 lab note. |
+| E-07 | Calibrate load cell with a scale-force transfer test | A repeatable signed conversion from settled filtered sensor output to grams-force, with zero, residual, and hysteresis bounds | Failed for installed HX711 | The HX711 communicated and its historical 11.933 Hz/noise test passed, but clear-start scale traces on 2026-09-13 showed no-contact actuator response overlapping first contact and a large delayed post-release response. It is not a usable force authority. Preserve the evidence; supersede production qualification with E-07C through E-09C after CS1238 installation. |
+| E-08 | Measure HX711 samples/s and noise | Sufficient for chosen loop bandwidth | Historical only | Two stationary 15-second GP0/GP1 HX711 windows returned 179 samples each: 11.933 Hz. Peak-to-peak noise was 300 and 484 counts; standard deviation was 69.1 and 120.5 counts. These are not NAU7802 acceptance values. |
+| E-07C | Inspect and bring up replacement CS1238 | With the N20 driver asleep and power applied, the received breakout's 3.3 V supply, ground, two-hole fit, channel-A load-cell terminal mapping, and GP0/GP1 `DT`/`SCK` levels are verified without any over-voltage or unintended actuator movement | Planned | Power off before replacing the HX711. Photograph the exact board; verify the required `VCC/GND/DT/SCK` and `E+/E-/A+/A-` order and that it is 3.3 V compatible. Reuse the 300 g load cell only after matching each existing wire to the board's actual channel-A labels. Then run a motor-inert CS1238 identity/read test. Do not assume a generic breakout pin order. |
+| E-08C | Measure installed CS1238 rate and zero-force noise | Record the configured rate, actual samples/s, mean, RMS noise, peak-to-peak span, and missed-sample count in at least two 60-second stationary clear-state windows | Planned | Start at 40 SPS, then repeat at 640 SPS and 1280 SPS if communication remains reliable. Choose the fastest configuration whose filtered clear-state band remains separated from the lowest intended contact band. The controller cadence must be derived from this measurement, not an advertised conversion rate. |
+| E-09C | Validate CS1238 force-path classification and hysteresis | In three automated, clear-start scale cycles, filtered clear-state and first confirmed contact bands are separated by more than five combined RMS values; release returns to the clear band without persistent history offset | Planned | Use the real pen/dummy tool and paper-covered scale; record one continuous scale video plus timestamped serial output. Begin with no more than six 10 ms DOWN pulses and six UP pulses, with the operator ready to abort. Do not repeat the prior 12-down trace until a lower-force envelope is demonstrated. The scale remains the force authority. |
 | E-09 | Read TMAG5273 through intended wiring | Stable field/position signal | Passed | Corrected GP16/SDA and GP17/SCL I2C mapping passed. Far/near/return magnitudes were 0.24/7.51/7.44 mT; stationary spans were 0.25/0.28 mT. A conservative initial magnitude threshold is 3.5 mT with 1.0 mT hysteresis, pending final scan geometry. The fully wired installed toolhead recheck on 2026-09-08 again identified the device at `0x22`, read a 0.29 mT far-field vector at 28.9 C, and produced a 20-sample far-field span of 0.29 mT. See 2026-08-14 E-09 lab note. |
 | E-18 | Verify Pro Micro RP2350/TMAG5273 magnetic interface | Installed active-low Aux0/U2/GP28 and GP27/U3-to-PRB transitions with real-magnet A capture | Partial | The 2026-09-10 motor-inert diagnostic passed arm/release/re-arm, local TMAG `detected=0→1→0`, and the actual GP27/U3-to-PRB state path. Real-magnet A `G38.3`/`.5` captures each returned `:1`; the blue return is at `PROBE SIG`. J1.4 measured 9.33 V released and 0.15 mV asserted relative to `CTRL_GND`. P100 macro, coordinate, and production/actuator gates remain open. See `docs/report/lab-notes/2026-09-10-e-18-motor-inert-p100-handshake.md`. |
 | E-19 | Verify E-stop/Halt input | With power removed, upper NC-A `1`–`2` is continuous released/open pressed and lower NC-B is isolated/insulated. With NC-A across RP23CNC `ESTOP SIG`/`GND` and NC-compatible `$14=6` verified live, pressing SW1 enters Halt; deliberate Reset/Unlock is required after release and no automatic movement occurs. Motor/tool 12 V remains powered. | Passed | On 2026-09-08, power-off NC-A meter check beeped/continuous released and did not beep/open pressed. ioSender 2.0.47 showed `$14=6`; press produced `ALARM:10`, then twist-release → Reset → Unlock returned it to `IDLE` with no motion reported. The unused NC-B pair remains insulated; see `2026-09-08-e-19-estop-iosender-configuration.md`. |
@@ -51,13 +54,44 @@ completion status.
 | E-16 | Inventory RP23CNC Assembly and Ethernet Kits | Purchased variant, PCB revision, connectors, Ethernet components, and missing/damaged parts recorded | TBD | TBD |
 | E-17 | Inspect completed RP23CNC soldering | Correct orientation, complete joints, no bridges, no opens, and continuity/power-rail checks pass before board power | Passed | Magnified visual inspection found good joints and no visible bridges. With all power disconnected, both main 12 V positive-to-negative and labeled 5 V rail-to-ground checks had no continuity beep. See 2026-08-14 E-17 lab note. |
 
+### Replacement CS1238 force-sensor sequence
+
+The selected CS1238 is not installed and no board-specific terminal mapping is
+assumed until receipt. It replaces the HX711; it does not run beside it. Keep
+the DRV8833 asleep for E-07C/E-08C. Only E-09C permits bounded actuator motion.
+
+1. **E-07C, power-off / motor-inert bring-up.** Photograph both boards, record
+   the exact CS1238 breakout revision and terminal labels, remove the HX711,
+   and connect only verified 3.3 V, ground, `GP0` `DT`/`DRDY-DOUT`, `GP1`
+   `SCK`, and the four channel-A load-cell conductors. Confirm the two-hole
+   board fit and meter both logic lines to ground before powering. Flash a
+   read-only CS1238 sketch that leaves GP4--GP7 and the N20 driver inactive.
+2. **E-08C, sensor quality.** With the pen clear and mechanism still, collect
+   two 60-second windows at 40 SPS, then 640 SPS and 1280 SPS if reliable.
+   Compute mean, RMS noise,
+   peak-to-peak span, actual delivered samples/s, and missing samples. This
+   selects the service/control sampling rate and a median/average window; it
+   does not calibrate grams.
+3. **E-09C, real force-path check.** Use the actual intended pen or a rigid
+   non-marking surrogate in its production clamp, with paper on the scale.
+   Run three clear-tare, bounded 6-DOWN/6-UP traces, recording the scale display
+   continuously on video and serial samples with timestamps. The operator may
+   abort at any sign of excessive force. Compare clear/contact/release means
+   and RMS bands—not a single reading. A sensor is accepted only if the first
+   confirmed contact and release classifications have a greater-than-five-
+   combined-RMS margin in all three cycles.
+4. **Only after E-09C passes:** map several settled force points, choose broad
+   contact/hold/release bands, then resume T-01E/T-01H and later force control.
+   Pen-up safety remains a bounded timed lift plus physical clearance reserve;
+   it does not wait on this sensor.
+
 ### E-07 required scale-force transfer calibration
 
 Clamp a capped pen or other rigid non-marking dummy tool exactly as a writing
 pen will be clamped. With a digital scale under the tip, gather settled
-**filtered** HX711 deltas at no fewer than five gentle, known force points
+**filtered** force-sensor readings at no fewer than five gentle, known force points
 covering the intended writing range. At every point record the external scale
-reading in grams-force, raw HX711 value, filtered HX711 value, no-contact
+reading in grams-force, raw sensor value, filtered sensor value, no-contact
 baseline, and tool/clamp identity. Repeat at least three loading and unloading
 cycles without side-loading the pen.
 

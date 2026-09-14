@@ -44,12 +44,14 @@ work.
   stays RAM-only.
 - Do not allow an interchangeable pen/pencil to plot until T-01J validates its
   contact/release preflight and its selected target-force/clearance settings.
-- Complete E-07's digital-scale transfer calibration with a capped/dummy tool
-  clamped as a real pen: establish the signed filtered-HX711-delta to
-  grams-force conversion, residual, and hysteresis before selecting raw force
-  thresholds or final control gains. This is an occasional service
-  calibration/profile-verification activity, not a scale check required at
-  every print.
+- The installed HX711 failed the required E-07 transfer test and is retained
+  only as diagnostic evidence. The selected CS1238 breakout will replace it on
+  the same 300 g load cell, in the same two-hole HX711-form-factor footprint.
+  It retains GP0→`DT`/`DRDY-DOUT` and GP1→`SCK`; it requires a new driver and
+  a measured rate/noise/force-path qualification (E-07C through E-09C) before
+  any force threshold or control gain is selected. The earlier NAU7802 purchase
+  is retained as a spare, not the active design. This is an occasional
+  service-calibration activity, not a scale check required before every print.
 - The E-07B `r` fast-trace method is hardware-validated as a bounded bench
   procedure. A second, correctly clear-started 10 ms trace reached 59.3 g and
   returned to 0.0 g before the scale auto-off timer. It solves the manual
@@ -71,9 +73,10 @@ work.
 
 ## Force-control strategy
 
-The target is a slow pulse-based P/PI trim loop using the measured approximately
-11.93 Hz HX711 input. The full rationale, characterization sequence,
-anti-windup bounds, and rotating-bed policy live in
+The target is a slow pulse-based P/PI trim loop. The former approximately
+11.93 Hz HX711 result is historical only; select the CS1238 loop cadence from
+its measured installed rate and noise, not its advertised maximum rate. The
+full rationale, characterization sequence, anti-windup bounds, and rotating-bed policy live in
 [`CONTROL_STRATEGY.md`](CONTROL_STRATEGY.md). Do not tune from this README;
 choose measured limits only after the named tests pass.
 
@@ -95,8 +98,8 @@ Prototype wiring assumptions mirror `docs/hardware/WIRING_TABLE.md`:
 | `GP5` | DRV8833 `IN2` |
 | `GP6` | Confirmed DRV8833 `EEP` low-true sleep input; drive HIGH to enable |
 | `GP7` | Confirmed DRV8833 `ULT` low-true protection/fault output; `INPUT_PULLUP`, LOW is fault |
-| `GP0` | HX711 `DT`/`DOUT` |
-| `GP1` | HX711 `SCK` |
+| `GP0` | HX711 `DT`/`DOUT` currently; planned CS1238 `DT`/`DRDY-DOUT` after replacement qualification |
+| `GP1` | HX711 `SCK` currently; planned CS1238 `SCK` after replacement qualification |
 | Qwiic `GPIO16/GPIO17` | TMAG5273 `SDA/SCL` |
 
 The integrated sketch divides work across the RP2350 cores. Core 0 owns the
