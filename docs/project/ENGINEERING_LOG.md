@@ -532,6 +532,7 @@ Entry details remain only in the chronology.
 - [2026-09-06 - HARDWARE/VERIFIED - Temporary manual G54 XY reference](#elog-20260906-temporary-manual-g54-xy-reference)
 - [2026-09-07 17:53:46 -0500 - HARDWARE/OPEN - Required scale-force transfer calibration](#elog-20260907175346)
 - [2026-09-13 - HARDWARE/PLANNED - Replace HX711 force-sensing path with CS1238](#elog-20260913-replace-hx711-force-sensing-path-with-cs1238)
+- [2026-09-14 - RP23CNC SOFTWARE/IMPLEMENTED - CS1238 motor-inert bring-up source](#elog-20260914-cs1238-motor-inert-bring-up-source)
 
 ### Testing and verification
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -4425,3 +4426,29 @@ Add new entries at the top of the log below this line.
   approach, or controller handshake is enabled by this purchase.
 - Next action: On receipt, photograph the exact CS1238 breakout and inspect
   its 3.3 V/data-clock/bridge wiring requirements before removing the HX711.
+
+<a id="elog-20260914-cs1238-motor-inert-bring-up-source"></a>
+### 🟨 2026-09-14 - RP23CNC SOFTWARE/IMPLEMENTED - CS1238 motor-inert bring-up source
+
+- Status: `e07c_cs1238_sensor_bringup` compiles for the SparkFun Pro Micro
+  RP2350. It is ready to flash only after receipt inspection; no installed
+  hardware claim is made.
+- Category: rp23cnc-software, hardware, toolhead, CS1238, force control,
+  testing.
+- Result: native-USB commands provide raw/tare, 40/640/1280 SPS selection,
+  60-second Welford rate/noise statistics, and an ADC internal-short check.
+  It leaves GP2 and GP4--GP7 untouched and has no code path to DRV8833, N20,
+  M3/M5, TMAG, or the service UART.
+- Verification: `arduino-cli compile --fqbn
+  rp2040:rp2040:sparkfun_promicrorp2350
+  firmware\\pen_pressure\\e07c_cs1238_sensor_bringup` passed with CS123x
+  library 1.1.0.
+- Boundary: E-07C must identify the exact received board and measure the
+  connected bridge resistance and `E+`--`E-` excitation. Some TL431-reference
+  CS1238 modules require a documented board-specific correction for a
+  low-impedance load cell. No threshold, control cadence, or actuator trace is
+  approved by this software alone.
+- Evidence: `RPSW-20260914-001`; E-07C/E-08C in
+  `docs/testing/TEST_PLAN.md`.
+- Next action: perform the motor-inert receipt/electrical inspection, then run
+  the 40/640/1280 SPS windows before creating the bounded CS1238 E-09C trace.

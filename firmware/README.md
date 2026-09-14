@@ -152,6 +152,10 @@ fixed 10 ms pulses, sampling HX711 after each motion so a short scale video can
 be reconciled with the serial trace without a human round trip per point. This
 is a temporary bench/service interface, not part of the normal plotter control
 path.
+The replacement CS1238 starts instead with the native-USB, motor-inert
+[`pen_pressure/e07c_cs1238_sensor_bringup/e07c_cs1238_sensor_bringup.ino`](pen_pressure/e07c_cs1238_sensor_bringup/e07c_cs1238_sensor_bringup.ino).
+It is intentionally not an actuator test: it characterizes the received ADC at
+40/640/1280 SPS before a later bounded CS1238 actuator trace is written.
 Use [`../docs/project/ROADMAP.md`](../docs/project/ROADMAP.md) for active
 work, [`grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`](grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md)
 for P100 design/commissioning, and

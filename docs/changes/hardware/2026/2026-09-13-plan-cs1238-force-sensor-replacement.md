@@ -40,7 +40,7 @@ through its own test gates.
 
 ## Implementation
 
-No wiring, firmware, or production behavior changed. Preparation adds:
+No wiring or production behavior changed. Preparation adds:
 
 - receipt inspection for the exact breakout's 3.3 V requirements, header and
   bridge-terminal labels, and two-hole fit;
@@ -50,10 +50,16 @@ No wiring, firmware, or production behavior changed. Preparation adds:
   10 ms down and six up pulses, with RMS-band separation as the acceptance
   criterion.
 
+The follow-up software milestone adds the motor-inert CS1238 source at
+`firmware/pen_pressure/e07c_cs1238_sensor_bringup/`. It has no actuator,
+DRV8833, M3/M5, TMAG, or service-UART path. It is intentionally not a
+replacement force controller.
+
 ## Verification
 
-Documentation review passed. No hardware verification is claimed: the exact
-breakout revision and its safe wiring remain unverified until receipt.
+Documentation review and compilation of the motor-inert sketch passed. No
+hardware verification is claimed: the exact breakout revision, bridge
+excitation, and its safe wiring remain unverified until receipt.
 
 ## Struggles and rejected approaches
 
@@ -66,8 +72,11 @@ pen-up safety signal; mechanical timed lift and clearance remain separate.
 
 The CS1238 can offer a faster sampling cadence but cannot solve a bypassed or
 side-loaded mechanical force path by itself. Do not select a target force, raw
-threshold, or loop cadence until E-07C/E-08C/E-09C pass. The actual pen and
-its production clamp are required for final T-01J qualification.
+threshold, or loop cadence until E-07C/E-08C/E-09C pass. Measure the actual
+attached bridge's resistance and excitation before accepting ADC data: common
+TL431-reference boards can require a documented board-specific reference
+correction. The actual pen and its production clamp are required for final
+T-01J qualification.
 
 ## Files
 

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-14 | `RPSW-20260914-001` | implemented | [Add CS1238 motor-inert bring-up firmware](../rp23cnc-software/2026/2026-09-14-add-cs1238-motor-inert-bringup.md) | `cs1238`, `load-cell`, `force-control`, `testing`, `motor-inert` |
 | 2026-09-13 | `RPSW-20260913-005` | implemented | [Add E-07B fast force trace](../rp23cnc-software/2026/2026-09-13-add-e07b-fast-force-trace.md) | `toolhead`, `e07b`, `hx711`, `force-calibration`, `testing` |
 | 2026-09-13 | `HW-20260913-012` | implemented | [Lubricate toolhead motion path](2026/2026-09-13-lubricate-toolhead-motion-path.md) | `toolhead`, `lubrication`, `leadscrew`, `force-testing` |
 | 2026-09-13 | `HW-20260913-011` | implemented | [Add E07B fine force-pulse control](2026/2026-09-13-add-e07b-fine-force-pulse-control.md) | `n20`, `force-control`, `pulse-duration`, `e-07b` |

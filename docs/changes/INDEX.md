@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-14 | `RPSW-20260914-001` | hardware | implemented | [Add CS1238 motor-inert bring-up firmware](rp23cnc-software/2026/2026-09-14-add-cs1238-motor-inert-bringup.md) |
 | 2026-09-13 | `RPSW-20260913-005` | hardware | implemented | [Add E-07B fast force trace](rp23cnc-software/2026/2026-09-13-add-e07b-fast-force-trace.md) |
 | 2026-09-13 | `HW-20260913-013` | rp23cnc-software | planned | [Plan CS1238 force-sensor replacement](hardware/2026/2026-09-13-plan-cs1238-force-sensor-replacement.md) |
 | 2026-09-13 | `HW-20260913-012` | hardware | implemented | [Lubricate toolhead motion path](hardware/2026/2026-09-13-lubricate-toolhead-motion-path.md) |

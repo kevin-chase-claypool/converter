@@ -52,6 +52,15 @@ work.
   any force threshold or control gain is selected. The earlier NAU7802 purchase
   is retained as a spare, not the active design. This is an occasional
   service-calibration activity, not a scale check required before every print.
+- The motor-inert CS1238 bring-up source is now available at
+  [`e07c_cs1238_sensor_bringup/e07c_cs1238_sensor_bringup.ino`](e07c_cs1238_sensor_bringup/e07c_cs1238_sensor_bringup.ino).
+  It uses native USB `Serial` only, leaves GP2 and GP4--GP7 untouched, and has
+  no actuator command path. Before interpreting its output, E-07C must measure
+  the *actual connected* load-cell excitation at `E+`--`E-`; some common
+  CS1238 breakouts use a TL431-based bridge reference whose stock resistor
+  arrangement may be unsuitable for a low-impedance load cell. The exact
+  received board determines whether its documented reference modification is
+  needed. This is a qualification check, not an approved circuit change.
 - The E-07B `r` fast-trace method is hardware-validated as a bounded bench
   procedure. A second, correctly clear-started 10 ms trace reached 59.3 g and
   returned to 0.0 g before the scale auto-off timer. It solves the manual
@@ -138,6 +147,7 @@ opened from its own folder:
 | [`bench_motor_command/bench_motor_command.ino`](bench_motor_command/bench_motor_command.ino) | Tests only `GP29`, DRV8833 `IN1/IN2`, `EEP`, and `ULT` with manual serial commands and short automatic M3/M5 pulses. | none beyond Arduino core |
 | [`e07_hx711_calibration/e07_hx711_calibration.ino`](e07_hx711_calibration/e07_hx711_calibration.ino) | Tests only HX711 raw readings, tare, force sign, and known-mass calibration; keeps the motor driver inactive. | HX711 Arduino Library by Bogdan Necula / bogde |
 | [`e07b_hx711_actuator_steps/e07b_hx711_actuator_steps.ino`](e07b_hx711_actuator_steps/e07b_hx711_actuator_steps.ino) | GP20/GP21 `Serial2` service-UART test: single sleeping actuator pulses with pre-enable and during-drive `ULT` fault telemetry, HX711 diagnostics, read-only active-low GP2 `LIFT_HOME` reports, and two meter modes. `r`, after a clear-state `t` tare, runs a bounded 12-down/12-up 10 ms trace with timestamped HX samples and `x` abort. `v` holds logic states without motor motion. `o` holds each OUT1/OUT2 polarity for 30 seconds and is permitted only while both N20 leads are disconnected. | HX711 Arduino Library by Bogdan Necula / bogde |
+| [`e07c_cs1238_sensor_bringup/e07c_cs1238_sensor_bringup.ino`](e07c_cs1238_sensor_bringup/e07c_cs1238_sensor_bringup.ino) | E-07C/E-08C native-USB sensor-only CS1238 bring-up. It provides raw sample/tare, 40/640/1280 SPS selection, 60-second Welford RMS-noise windows, and an internal-short diagnostic. It does not configure GP2 or GP4--GP7 and contains no motor, DRV8833, M3/M5, or TMAG code. | CS123x by FMazz97, 1.1.0 |
 | [`e05_historical_03f6c00/e05_historical_03f6c00.ino`](e05_historical_03f6c00/e05_historical_03f6c00.ino) | Verbatim copy of historical commit `03f6c00` E-05 source: GP7 is driven high as sleep, GP6 is `INPUT_PULLUP` fault, followed by automatic 500 ms first and reverse pulses. Use only as an A/B historical reproduction, with clear travel in both directions. | none beyond Arduino core |
 | [`e05_legacy_manual_steps/e05_legacy_manual_steps.ino`](e05_legacy_manual_steps/e05_legacy_manual_steps.ino) | Manual COM8/`Serial2` version of the historical GP7-high / GP6-`INPUT_PULLUP` roles. `u`/`d` use selected 100–1000 ms pulses in 100 ms increments; it never automatically issues a reverse motion. | none beyond Arduino core |
 | [`e08_hx711_rate_noise/e08_hx711_rate_noise.ino`](e08_hx711_rate_noise/e08_hx711_rate_noise.ino) | Measures actual stationary HX711 sample rate and raw-count noise in one quiet 15-second UART result; keeps the motor driver inactive. | HX711 Arduino Library by Bogdan Necula / bogde |
