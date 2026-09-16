@@ -37,7 +37,9 @@ a **Back to overview** control.
    LIFT/ENGAGE override contract; the settle handshake.
 6. **Integration decisions & trade-offs** — pull from `../HANDOFF.md`
    ("Debugging history", "Known soft spots", "Goals / roadmap").
-7. **Results** — calibration, sample prints, runtime-estimate vs actual.
+7. **Results** — calibration, sample prints, runtime-estimate vs actual. The
+   force-calibration results must include the raw-data provenance and figure
+   set in [`FORCE_CALIBRATION_RESULTS.md`](FORCE_CALIBRATION_RESULTS.md).
 8. **Future work** — items still open in the roadmap.
 
 Use `../HANDOFF.md` for converter history and tradeoffs, current subsystem

@@ -4499,6 +4499,10 @@ Add new entries at the top of the log below this line.
   `GND` signal reference. Pico timestamps both marker edges with its own
   monotonic clock, so PC/USB latency is excluded from command-to-force
   alignment. GP1 returns to CS1238 clock duty after the fixture is removed.
+- Results requirement: every E-09C run will retain raw sample/event/command
+  files and a versioned paper figure package. Overlays use two Pico sensor
+  traces and the Pico-clocked Pro Micro marker lane; transfer and residual
+  plots evaluate calibration without assuming linearity.
 - Evidence: `HW-20260915-001`; `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`;
   `docs/hardware/pico2-dual-sensor-daq.html`.
 - Next action: identify the actual INA101/reference-sensor terminal and supply

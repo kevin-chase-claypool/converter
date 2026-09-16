@@ -52,7 +52,8 @@
 - [ ] Document TB6600 switch tables and input behavior from the received units. (`E-02`, `E-03`)
 - [x] Measure N20 motor no-load and current-limited stall current. (`E-05` passed; bounded `E-06` passed at 6.0 V / 0.20 A limit / 0.18 A stall with 10 repeats; thermal characterization remains separate)
 - [ ] Replace the failed HX711 force-sensing path with the selected CS1238,
-  then calibrate the 300 g load cell. (`E-07C`, `E-09C`; existing `E-07` failed)
+  then calibrate the 300 g load cell with raw data and reproducible
+  final-paper figures. (`E-07C`, `E-09C`; existing `E-07` failed)
 - [ ] Measure installed CS1238 sample rate and RMS noise. (`E-08C`; existing
   HX711 `E-08` is historical only)
 - [ ] Verify TMAG5273 readings with the intended magnet and geometry. (`E-09`)

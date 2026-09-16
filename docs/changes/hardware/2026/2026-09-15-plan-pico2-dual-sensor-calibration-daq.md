@@ -96,9 +96,16 @@ The fixture now reserves temporary Pro Micro `GP1` as a 3.3 V
 event and both force channels share the same clock. The marker is not a
 production interface and GP1 returns to CS1238 clock duty after the test.
 
+Each completed E-09C run now requires a raw-data package and reproducible
+paper figure set: raw dual-sensor overlay, calibrated-reference/toolhead-count
+overlay, force-transfer and residual plot, and timestamp/sample-quality
+evidence. The Pico's marker-event lane represents Pro Micro actuation; PC
+command-receipt timestamps are retained only as an audit log.
+
 ## Files
 
 - `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`: test wiring, storage, and safety authority.
 - `docs/hardware/pico2-dual-sensor-daq.html`: viewable bench schematic.
 - `docs/hardware/WIRING_TABLE.md`: planned fixture connections.
 - `docs/hardware/BOM.md`: DAQ components and verification gates.
+- `docs/report/FORCE_CALIBRATION_RESULTS.md`: raw-data and final-paper figure requirements.

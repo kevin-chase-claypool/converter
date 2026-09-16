@@ -52,11 +52,12 @@ toolhead_time_us,toolhead_cs1238_raw,reference_time_us,reference_adc_raw
 1563,5825518,1571,1251
 ```
 
-The PC-side logger owns a dated run directory, `samples.csv`, a plain-text
-serial log, and `metadata.json`. Metadata includes the PC wall-clock start,
-Pico firmware version, CS1238 configuration, INA101 supply/gain settings,
-sensor identities, and operator notes. No moving average, tare subtraction,
-or force conversion is permitted in the acquisition CSV.
+The PC-side logger owns a dated run directory, `samples.csv`, `events.csv`, a
+plain-text Pro Micro command/reply log, and `metadata.json`. Metadata includes
+the PC wall-clock start, Pico firmware version, CS1238 configuration, INA101
+supply/gain settings, sensor identities, and operator notes. No moving
+average, tare subtraction, or force conversion is permitted in the acquisition
+CSV.
 
 The Pico also records `motion_start_us` and `motion_end_us` when its `GP14`
 interrupt receives the Pro Micro's `MOTION_ACTIVE` rising and falling edges.
@@ -64,6 +65,11 @@ Those event times belong in a separate raw `events.csv` or clearly identified
 event records, not inferred from PC command receipt time. The Pro Micro sets
 the marker HIGH immediately before an actuator pulse and LOW immediately after
 it ends; boot, stop, and fault leave it LOW.
+
+Every completed run also requires the paper-ready figure package specified in
+[`../report/FORCE_CALIBRATION_RESULTS.md`](../report/FORCE_CALIBRATION_RESULTS.md).
+It overlays the two Pico channels with the Pico-timestamped Pro Micro marker,
+while retaining the raw files and separately showing the force-transfer fit.
 
 ## Recommended minimum-change PC arrangement
 
@@ -206,7 +212,8 @@ until those programs are added and verified.
   event while the Pro Micro is motor-unpowered. These Pico timestamps, rather
   than PC or USB receipt times, establish the command-to-force alignment.
 - [ ] Confirm the PC logger creates a new dated run directory containing the
-  raw CSV, serial log, and metadata before any loading test.
+  raw CSV, event CSV, Pro Micro command/reply log, and metadata before any
+  loading test.
 - [ ] Connect the existing 3.3 V USB-to-TTL service adapter to the Pro Micro
   command UART (`adapter RXD` <- `GP20`, `adapter TXD` -> `GP21`, and adapter
   ground -> `TOOL_GND`). Leave adapter VCC disconnected. This is the actuator
