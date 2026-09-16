@@ -4503,6 +4503,11 @@ Add new entries at the top of the log below this line.
   files and a versioned paper figure package. Overlays use two Pico sensor
   traces and the Pico-clocked Pro Micro marker lane; transfer and residual
   plots evaluate calibration without assuming linearity.
+- Diagram/power correction: the five-terminal INA101 board has one `GND`
+  terminal that branches to the dual-supply midpoint and Pico AGND. The
+  schematic now shows one series-linked dual-output bench supply; if its
+  continuity check passes, the `5V` bridge-excitation terminal shares the
+  supply's +5 V rail rather than using a third supply.
 - Evidence: `HW-20260915-001`; `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`;
   `docs/hardware/pico2-dual-sensor-daq.html`.
 - Next action: identify the actual INA101/reference-sensor terminal and supply

@@ -27,7 +27,7 @@ The accompanying wiring diagram is
 | CS1238 digital | Pico `GP2` -> `SCK`; CS1238 `DT`/`DRDY-DOUT` -> Pico `GP3` | Planned. Both signals are 3.3 V logic. No level shifting is authorized until the received board is inspected. |
 | Reference sensor | Instructor 5 N strain-gauge sensor -> existing INA101 board input | Planned. Identify the sensor conductors and board input/excitation terminals from their markings before connecting. |
 | INA101 supply | Rear board terminals labelled `+V`, `-V`, `GND` -> verified dual bench supply | Required verification. The INA101KU operates from ±5 V to ±20 V rails; do not power it from Pico 3.3 V or the board's `5V` terminal. |
-| Reference excitation | Rear board terminal labelled `5V` -> separately verified 5 V excitation source, if continuity mapping proves that is the bridge-excitation path | TBD. The terminal name alone does not prove its electrical function; leave this wire disconnected until the board and reference sensor are mapped with power removed. |
+| Reference excitation | Rear board terminal labelled `5V` -> same dual-supply `+5 V` rail used for INA `+V`, if continuity mapping proves it is the bridge-excitation path | TBD. This is a branch of the same physical dual-output bench supply, not a third supply. Leave the wire disconnected until the board and reference sensor are mapped with power removed. |
 | INA101 output | Board-labelled `OUT` -> 1 kOhm series resistor -> Pico `GP26` / ADC0 | Required verification. Probe the output first. A negative or greater-than-3.3-V output must never reach Pico ADC0. |
 | ADC reference | Board-labelled `GND` -> Pico `AGND` only after the supply/reference relationship is metered | Required verification. This is the analogue signal reference, not permission to tie unknown supply rails together. |
 | Test switch | Pico `GP15` -> normally-open momentary switch -> Pico `GND` | Optional physical START/STOP. Firmware uses `INPUT_PULLUP`. |
@@ -113,10 +113,11 @@ passes.
    10.3 V/V. Do not assume whether the 100 kOhm trim is series or parallel
    until that resistance check proves it.
 4. Power the INA101 only from its verified ± supply arrangement. Its labelled
-   `5V` terminal is a board feature, not an INA101 supply rail. With the
-   reference sensor unloaded and then gently loaded, meter `OUT` relative to
-   board `GND` before connecting Pico ADC0. It must stay in the inclusive
-   0-3.3 V range with margin across the planned 5 N range.
+   `5V` terminal is not the INA101 amplifier rail; if continuity proves it is
+   bridge excitation, branch it from the same +5 V bench-supply rail used for
+   `+V`. With the reference sensor unloaded and then gently loaded, meter
+   `OUT` relative to board `GND` before connecting Pico ADC0. It must stay in
+   the inclusive 0-3.3 V range with margin across the planned 5 N range.
 5. Verify the Pico `AGND` signal-reference connection produces a stable ADC
    reading without creating an unexpected supply-to-supply current path.
 6. Verify raw CS1238 and ADC records with no actuator power. Only then permit
@@ -182,13 +183,15 @@ until those programs are added and verified.
 
 - [ ] Connect the reference sensor to the continuity-mapped INA101 input
   terminals only.
-- [ ] With bench outputs still off, connect the verified dual supply to the
-  INA101 rear terminals: supply positive to `+V`, supply negative to `-V`,
-  and supply common/reference to `GND`.
+- [ ] With bench outputs still off, series-link the two 5 V bench channels:
+  channel 1 negative to channel 2 positive is the 0 V midpoint. Connect
+  channel 1 positive to INA `+V`, channel 2 negative to INA `-V`, and the
+  midpoint to INA `GND`.
 - [ ] Leave the INA101 `OUT` wire disconnected from Pico `GP26` initially.
 - [ ] Leave the labelled INA101 `5V` terminal disconnected unless the
   power-off mapping has specifically proved it is the correct reference-bridge
-  excitation connection and its required source voltage is known.
+  excitation connection. Once proven, branch it from the same channel-1
+  positive / +5 V rail that feeds INA `+V`; do not add a third supply.
 - [ ] Power the INA101 from the verified dual supply and meter `OUT` relative
   to board `GND`, unloaded and under a gentle hand load. Confirm it stays
   inside **0–3.3 V with margin** and has the expected polarity throughout the

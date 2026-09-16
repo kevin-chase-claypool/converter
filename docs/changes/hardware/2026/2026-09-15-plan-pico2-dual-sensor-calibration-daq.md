@@ -67,11 +67,12 @@ no force conversion, filtering, or automatic actuation is authorized by this
 plan. Keep the physical E-stop and main-power cutoff accessible during any
 later loaded test.
 
-The bench diagram explicitly shows the two supply boundaries: PC USB supplies
-the Pico (which supplies 3.3 V only to CS1238 #1), while a verified external
-dual supply provides INA101 `+V`, `-V`, and `GND`. Its separately drawn 5 V
-lead is intentionally marked TBD: terminal labelling alone is not evidence it
-is the reference bridge-excitation connection.
+The bench diagram shows PC USB supplying the Pico (which supplies 3.3 V only
+to CS1238 #1), while one series-linked dual-output bench supply provides the
+INA101 `+5 V`, `0 V`, and `-5 V` rails. If continuity proves the board's `5V`
+terminal is the reference bridge-excitation input, it branches from that same
++5 V rail; it is not a separate third supply. Terminal mapping remains a
+power-off prerequisite.
 
 An operator checklist now makes the power-off inspection, exclusive ADC
 ownership, supply/output-span proof, raw-data acceptance, and de-energized
