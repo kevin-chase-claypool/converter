@@ -76,6 +76,115 @@ or force conversion is permitted in the acquisition CSV.
    a guarded, operator-supervised loading test with the existing physical
    E-stop and main-power cutoff accessible.
 
+## Setup checklist
+
+This is a **bench-only, supervised** procedure. Stop at any unchecked
+prerequisite; an unchecked item is not permission to improvise a connection.
+The available repository firmware does not yet implement Pico dual-channel
+DAQ or the PC logger, so this checklist ends at the hardware/readiness gate
+until those programs are added and verified.
+
+### 1. Make the bench safe
+
+- [ ] Keep the plotter actuator supply disconnected; do not command motion or
+  force control during this test.
+- [ ] Keep the physical E-stop and the machine main-power cutoff reachable.
+- [ ] Turn the bench supply outputs **off** and unplug the Pico USB cable.
+- [ ] Disconnect the toolhead 300 g bridge completely from the Pro Micro and
+  HX711 path. One bridge must have one ADC owner only.
+- [ ] Place the Pico, CS1238, INA101 board, and reference sensor where no bare
+  conductor can short to the plotter frame or another supply.
+- [ ] Photograph the boards, cable colours, and terminal labels before making
+  changes. Record board revision/markings in the future run metadata.
+
+### 2. Power-off identification and meter checks
+
+- [ ] On CS1238 #1, identify and label its actual `VCC`, `GND`, `SCK`,
+  `DT`/`DRDY`, `E+`, `E-`, `A+`, and `A-` terminals. Do not rely on a generic
+  HX711-form-factor pin order.
+- [ ] Measure and record the toolhead bridge resistance and the isolated
+  resistance between its signal/excitation conductors. Do not apply power if
+  there is an unexpected short.
+- [ ] Identify the four reference-sensor conductors and map them to the
+  INA101 board's rear green-terminal input pins using continuity only.
+- [ ] Map the rear green-terminal pins labelled `OUT`, `5V`, `+V`, `-V`, and
+  `GND` to the board traces. In particular, prove whether `5V` is bridge
+  excitation before connecting any 5 V source.
+- [ ] With power removed, measure the INA101 gain-network resistance at both
+  trim extremes and record the results. Do not turn the trim during a loaded
+  acquisition.
+- [ ] Confirm the bench supply has two isolated, adjustable outputs suitable
+  for the INA101 `+V` and `-V` rails. Do not substitute the Pico's 3.3 V rail
+  or a single 5 V supply for these rails.
+
+### 3. Wire the toolhead CS1238 channel
+
+- [ ] Connect the 300 g toolhead bridge to **CS1238 #1 channel A**:
+  `E+`, `E-`, `A+`, and `A-` by the inspected board labels.
+- [ ] Connect Pico `3V3(OUT)` to CS1238 `VCC`.
+- [ ] Connect Pico `GND` to CS1238 `GND`.
+- [ ] Connect Pico `GP2` to CS1238 `SCK`.
+- [ ] Connect CS1238 `DT`/`DRDY` to Pico `GP3`.
+- [ ] Inspect every CS1238 connection against the wiring table and confirm no
+  other MCU, HX711, or ADC remains connected to that bridge.
+
+### 4. Wire and prove the reference path
+
+- [ ] Connect the reference sensor to the continuity-mapped INA101 input
+  terminals only.
+- [ ] With bench outputs still off, connect the verified dual supply to the
+  INA101 rear terminals: supply positive to `+V`, supply negative to `-V`,
+  and supply common/reference to `GND`.
+- [ ] Leave the INA101 `OUT` wire disconnected from Pico `GP26` initially.
+- [ ] Leave the labelled INA101 `5V` terminal disconnected unless the
+  power-off mapping has specifically proved it is the correct reference-bridge
+  excitation connection and its required source voltage is known.
+- [ ] Power the INA101 from the verified dual supply and meter `OUT` relative
+  to board `GND`, unloaded and under a gentle hand load. Confirm it stays
+  inside **0–3.3 V with margin** and has the expected polarity throughout the
+  intended 5 N range.
+- [ ] Turn the bench output off before changing the signal wiring.
+- [ ] Only after the output-span check passes, connect INA101 `OUT` through a
+  1 kOhm series resistor to Pico `GP26`/ADC0 and connect INA101 `GND` to Pico
+  `AGND`. Recheck that no negative or above-3.3 V voltage can reach ADC0.
+
+### 5. Bring up the USB and acquisition chain
+
+- [ ] Connect the Pico micro-USB cable directly to the PC. This powers the
+  Pico and supplies CDC serial; it is not a power source for INA101 rails.
+- [ ] Confirm the PC recognizes the Pico serial port and record its COM port.
+- [ ] Flash the dedicated Pico DAQ firmware only after it exists, compiles, and
+  has a documented version identifier. Do not use a Pro Micro trace as
+  substitute data because it does not share the Pico timestamp base.
+- [ ] Confirm the DAQ reports raw CS1238 values and raw ADC0 values with Pico
+  microsecond timestamps, with no moving average, tare, or force conversion.
+- [ ] Confirm the PC logger creates a new dated run directory containing the
+  raw CSV, serial log, and metadata before any loading test.
+
+### 6. Dry-run acceptance gate
+
+- [ ] With the toolhead actuator still unpowered, collect at least 30 seconds
+  of unloaded raw data.
+- [ ] Confirm timestamps are monotonic, neither data field is blank, and the
+  CS1238 delivered sample rate is recorded rather than assumed.
+- [ ] Confirm ADC0 remains within 0–3.3 V and does not show supply-related
+  clipping or a large unexpected step when the reference sensor is touched.
+- [ ] Stop the run. Preserve the raw CSV unchanged and add sensor identities,
+  supply settings, gain-trim position, operator, and PC wall-clock time to
+  metadata.
+
+### 7. Supervised loading and shutdown
+
+- [ ] Obtain operator approval before applying any load. Keep force below the
+  known safe range of both sensors and the toolhead mechanics.
+- [ ] Start a new raw-data run, apply only slow, controlled load/unload steps,
+  and keep the E-stop accessible. Do not move the plotter automatically.
+- [ ] Stop the run before changing wiring, gain, supply settings, or mechanical
+  alignment.
+- [ ] Turn off the bench supply, unplug Pico USB, and only then rewire.
+- [ ] Restore the toolhead bridge to its production controller path only after
+  the calibration fixture is fully de-energized.
+
 ## Calibration interpretation
 
 Calibrate the reference-sensor path independently into force first. Use its

@@ -73,6 +73,11 @@ dual supply provides INA101 `+V`, `-V`, and `GND`. Its separately drawn 5 V
 lead is intentionally marked TBD: terminal labelling alone is not evidence it
 is the reference bridge-excitation connection.
 
+An operator checklist now makes the power-off inspection, exclusive ADC
+ownership, supply/output-span proof, raw-data acceptance, and de-energized
+shutdown gates explicit. It does not claim DAQ firmware or the PC logger
+exists yet.
+
 ## Files
 
 - `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`: test wiring, storage, and safety authority.
