@@ -257,6 +257,23 @@ must pass bench tests before being treated as final machine wiring.
 | TH-016 | SparkFun Pro Micro RP2350 | `GP20` / UART1 TX | DSD TECH SH-U09C2 USB-to-TTL service adapter | `RXD` | Toolhead test telemetry | 3.3 V UART, 115200 baud; adapter receives Pro Micro output | Short temporary jumper | bench-verified | E-07B UART startup telemetry passed 2026-08-14. Cross TX to adapter RXD; set adapter jumper to 3.3 V. Adapter VCC remains disconnected; this attaches only to `TOOL_GND`, never PC817C `CTRL_GND`. |
 | TH-017 | DSD TECH SH-U09C2 USB-to-TTL service adapter | `TXD` | SparkFun Pro Micro RP2350 | `GP21` / UART1 RX | Toolhead test commands | 3.3 V UART, 115200 baud | Short temporary jumper | bench-verified | E-07B UART command path ready; telemetry startup passed 2026-08-14. Cross adapter TXD to Pro Micro RX; adapter GND must connect to `TOOL_GND`; adapter VCC remains disconnected. |
 
+### Pico 2 dual-sensor calibration fixture (temporary bench wiring)
+
+This fixture calibrates the installed toolhead load cell. It is not production
+toolhead wiring and does not alter the Pro Micro's GP0/GP1 ownership when the
+fixture is removed. See [`PICO2_DUAL_SENSOR_DAQ.md`](PICO2_DUAL_SENSOR_DAQ.md)
+and its accompanying schematic before connecting power.
+
+| ID | From device | From terminal | To device | To terminal | Signal | Expected level/polarity | Wire | Status | Evidence/notes |
+|---|---|---|---|---|---|---|---|---|---|
+| DAQ-001 | Pico 2 | `3V3(OUT)`, `GND` | CS1238 #1 | `VCC`, `GND` | Toolhead-ADC logic/bridge supply | 3.3 V only after board inspection | Temporary bench harness | planned | Confirm actual CS1238 input range, reference configuration, and connected `E+`--`E-` excitation. |
+| DAQ-002 | Pico 2 | `GP2`, `GP3` | CS1238 #1 | `SCK`, `DT`/`DRDY-DOUT` | Toolhead raw data | GP2 is 3.3 V clock output; GP3 receives 3.3 V data-ready/data | Temporary bench harness | planned | CS1238 #1 is disconnected from Pro Micro GP0/GP1 during this test; never parallel ADC clock or data connections. |
+| DAQ-003 | uxcell 300 g load cell | verified red/black/green/white bridge wires | CS1238 #1 | received board's channel-A `E+`, `E-`, `A+`, `A-` | Toolhead force bridge | Board-label dependent | Existing sensor lead / temporary board fixture | planned | Reuse only after E-07C checks. The bridge must have one excitation/ADC owner at a time. |
+| DAQ-004 | Instructor 5 N reference sensor | bridge terminals TBD | INA101 board | input/excitation terminals TBD | Reference-force analogue conditioning | Board/sensor-specific | Temporary bench harness | planned | Identify all terminals and supply requirements from the actual equipment; do not infer from generic INA101 pinouts. |
+| DAQ-005 | INA101 board | verified `OUT` and output reference | Pico 2 | `GP26`/ADC0 through 1 kOhm; `AGND` | Reference raw voltage | Input to Pico must remain 0-3.3 V; `AGND` is signal reference only | Temporary shielded/twisted analogue lead preferred | planned | Meter unloaded and loaded output before landing the ADC lead. Do not feed a negative or >3.3 V output to the Pico. |
+| DAQ-006 | Pico 2 | micro-USB | Host PC | USB | DAQ power and timestamped serial data | USB CDC serial | USB data cable | planned | PC logs raw records and metadata; Windows receive time is not the sensor time base. |
+| DAQ-007 | Pico 2 | `GP15`, `GND` | momentary switch | switch contacts | Optional physical test start/stop | `INPUT_PULLUP`; pressed is LOW | Temporary two-wire lead | planned | This switch is DAQ control only; it does not replace the machine E-stop or main-power cutoff. |
+
 ## Communications
 
 | ID | From device | From terminal | To device | To terminal | Signal | Cable | Status | Evidence/notes |
@@ -273,6 +290,7 @@ must pass bench tests before being treated as final machine wiring.
 | 2026-09-04 | 4.4 | Corrected the visual wiring diagrams to show the axis-specific motor cable colors: X shielded-cable `B-` is white and continues to the motor's blue lead; Y and A retain stock blue `B-` leads. | Codex | Project-owner clarification; `HW-20260904-001` |
 | 2026-09-04 | 4.5 | Re-routed the explanatory top-down wiring schematic into separate axis, signal, motor, and power lanes; no connection assignments changed. | Codex | `HW-20260904-002` |
 | 2026-09-05 | 4.6 | Promoted X/Y/A TB6600 signal harnesses from continuity-checked to bench-verified after E-03 installed-driver testing. | Codex | `HW-20260905-002`; `2026-09-05-e-03-tb6600-installed-signal-response.md` |
+| 2026-09-15 | 4.8 | Added planned temporary Pico 2 dual-sensor calibration-fixture rows: CS1238 #1 on GP2/GP3 and INA101 output to ADC0. Production Pro Micro GP0/GP1 wiring is unchanged. | Codex | `HW-20260915-001`; `PICO2_DUAL_SENSOR_DAQ.md` |
 | 2026-08-30 | 4.3 | Added planned toolhead LIFT-home microswitch input on `GP2`/`TOOL_GND`; terminals `1` and `3` are the intended COM/NO pair. | Codex | Owner terminal identification; T-01G planned |
 | 2026-08-22 | 3.5 | Documented the implemented dual-core readiness/threshold protocol and controller-resident centroid/A-registration macro. Reused all five routed control conductors; retained `LIMA` until F-08 authorizes controller-end retermination to `PRB`. | Codex | `RPSW-20260822-003`; source compile and macro validator only |
 | 2026-08-22 | 3.4 | Corrected stale separate-RP2040-adapter language: the installed SparkFun Pro Micro RP2350 toolhead controller owns both pen-pressure control and TMAG5273 magnetic sensing/output. No wiring changed. | Codex | `RPSW-20260822-002`; current GP27/GP28/GP29 wiring rows |

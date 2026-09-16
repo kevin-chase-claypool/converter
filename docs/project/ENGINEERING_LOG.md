@@ -533,6 +533,7 @@ Entry details remain only in the chronology.
 - [2026-09-07 17:53:46 -0500 - HARDWARE/OPEN - Required scale-force transfer calibration](#elog-20260907175346)
 - [2026-09-13 - HARDWARE/PLANNED - Replace HX711 force-sensing path with CS1238](#elog-20260913-replace-hx711-force-sensing-path-with-cs1238)
 - [2026-09-14 - RP23CNC SOFTWARE/IMPLEMENTED - CS1238 motor-inert bring-up source](#elog-20260914-cs1238-motor-inert-bring-up-source)
+- [2026-09-15 - HARDWARE/PLANNED - Pico 2 dual-sensor calibration DAQ](#elog-20260915-pico-2-dual-sensor-calibration-daq)
 
 ### Testing and verification
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -4452,3 +4453,26 @@ Add new entries at the top of the log below this line.
   `docs/testing/TEST_PLAN.md`.
 - Next action: perform the motor-inert receipt/electrical inspection, then run
   the 40/640/1280 SPS windows before creating the bounded CS1238 E-09C trace.
+
+<a id="elog-20260915-pico-2-dual-sensor-calibration-daq"></a>
+### 🟨 2026-09-15 - HARDWARE/PLANNED - Pico 2 dual-sensor calibration DAQ
+
+- Status: planned wiring and PC-storage architecture only; no fixture wiring,
+  firmware, or load test has been performed.
+- Category: hardware, rp23cnc-software, windows-software, toolhead, Pico 2,
+  CS1238, INA101, strain gauge, force calibration.
+- Decision: replace the historical HX711/kitchen-scale transfer method with
+  one Pico 2 monotonic-timebase acquisition fixture. CS1238 #1 reads the
+  installed 300 g toolhead bridge; the instructor 5 N reference sensor uses
+  the existing INA101 board and Pico ADC0 after the board's output has been
+  proven safe. The PC stores raw timestamped records and separate metadata.
+- Safety boundary: the toolhead bridge has only one ADC owner during a test;
+  do not parallel the Pico CS1238 with the Pro Micro/HX711 path. The unknown
+  INA101 board must be supplied, referenced, and metered before its output is
+  connected to the 0-3.3 V Pico ADC. The physical E-stop and main-power cutoff
+  remain required for later loaded tests.
+- Evidence: `HW-20260915-001`; `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`;
+  `docs/hardware/pico2-dual-sensor-daq.html`.
+- Next action: identify the actual INA101/reference-sensor terminal and supply
+  details, inspect both CS1238 boards, then perform the specified power-off
+  and meter checks before writing DAQ firmware.

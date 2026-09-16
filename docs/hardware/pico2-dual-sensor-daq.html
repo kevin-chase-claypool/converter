@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pico 2 dual-sensor calibration DAQ</title>
+  <style>
+    :root { color-scheme: light dark; --ink: #172033; --line: #3f4c65; --signal: #1769aa; --analog: #8a4b08; --power: #a22222; --warning: #7d1f1f; --paper: #f8fbff; --panel: #eaf0f8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.45 system-ui, sans-serif; }
+    main { max-width: 1180px; margin: auto; padding: 24px; }
+    h1 { margin: 0 0 4px; } p { margin: 6px 0 18px; }
+    .key { display: flex; flex-wrap: wrap; gap: 16px; margin: 8px 0 18px; font-size: .93rem; }
+    .swatch { display: inline-block; width: 20px; border-top: 4px solid; vertical-align: middle; margin-right: 5px; }
+    svg { width: 100%; height: auto; background: #fff; border: 1px solid #bac5d5; }
+    .box { fill: #f8fbff; stroke: var(--line); stroke-width: 2; rx: 9; }
+    .warn { fill: #fff4f2; stroke: var(--warning); stroke-width: 2; rx: 9; }
+    .label { fill: var(--ink); font-size: 17px; font-weight: 650; }
+    .small { fill: var(--ink); font-size: 14px; }
+    .tiny { fill: var(--ink); font-size: 12px; }
+    .wire { fill: none; stroke: var(--line); stroke-width: 2.4; }
+    .digital { stroke: var(--signal); } .analog { stroke: var(--analog); } .power { stroke: var(--power); } .ground { stroke: #445; }
+    .dot { fill: #172033; } .danger { fill: var(--warning); font-size: 13px; font-weight: 650; }
+    code { background: #e7edf6; padding: 1px 4px; border-radius: 3px; }
+    .notes { margin-top: 18px; padding: 14px 18px; border-left: 5px solid var(--warning); background: #fff5f3; }
+    @media (prefers-color-scheme: dark) { :root { --ink: #e8eef9; --line: #aebbd0; --paper: #101725; --panel: #202b3c; } svg { background: #182233; } .box { fill: #1c2839; } .warn { fill: #42292b; } code { background: #2b3b53; } .notes { background: #42292b; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Pico 2 dual-sensor calibration DAQ — supervised bench wiring</h1>
+  <p>Raw toolhead CS1238 data and raw reference-sensor ADC data share the Pico's monotonic microsecond time base.</p>
+  <div class="key"><span><i class="swatch" style="border-color:#1769aa"></i>3.3 V digital</span><span><i class="swatch" style="border-color:#8a4b08"></i>analogue signal</span><span><i class="swatch" style="border-color:#a22222"></i>power</span><span><i class="swatch" style="border-color:#445"></i>signal reference / ground</span></div>
+  <svg viewBox="0 0 1120 730" role="img" aria-label="Bench schematic showing a Pico 2 with CS1238 toolhead channel and INA101 reference-sensor channel">
+    <rect x="430" y="252" width="274" height="276" class="box"/>
+    <text x="567" y="284" text-anchor="middle" class="label">Raspberry Pi Pico 2</text>
+    <text x="450" y="323" class="small">GP2  — CS1238 SCK</text><text x="450" y="352" class="small">GP3  — CS1238 DT / DRDY</text>
+    <text x="450" y="381" class="small">GP26 / ADC0 — INA101 OUT</text><text x="450" y="410" class="small">AGND — analogue reference</text>
+    <text x="450" y="439" class="small">GP15 — optional start/stop</text><text x="450" y="468" class="small">3V3(OUT), GND</text>
+    <text x="450" y="497" class="small">micro-USB CDC serial + power</text>
+    <rect x="45" y="110" width="270" height="138" class="box"/>
+    <text x="180" y="141" text-anchor="middle" class="label">Toolhead load cell</text>
+    <text x="67" y="171" class="small">300 g sensor: red E+, black E−</text><text x="67" y="195" class="small">green A+, white A−</text><text x="67" y="222" class="tiny">Verify received CS1238 terminal labels first.</text>
+    <rect x="48" y="330" width="264" height="166" class="box"/>
+    <text x="180" y="361" text-anchor="middle" class="label">CS1238 #1</text>
+    <text x="67" y="392" class="small">Channel A: E+, E−, A+, A−</text><text x="67" y="419" class="small">VCC ← Pico 3V3(OUT)</text><text x="67" y="445" class="small">GND ← Pico GND</text><text x="67" y="471" class="small">SCK ← GP2; DT/DRDY → GP3</text>
+    <path d="M180 248 V330" class="wire"/><circle cx="180" cy="288" r="4" class="dot"/>
+    <path d="M312 393 H430" class="wire power"/><text x="335" y="384" class="tiny">3V3/GND</text>
+    <path d="M312 445 H400 V323 H430" class="wire digital"/><text x="335" y="316" class="tiny">SCK</text>
+    <path d="M312 471 H380 V352 H430" class="wire digital"/><text x="327" y="365" class="tiny">DT/DRDY</text>
+    <rect x="776" y="108" width="282" height="128" class="box"/>
+    <text x="917" y="140" text-anchor="middle" class="label">5 N reference sensor</text>
+    <text x="796" y="170" class="small">Strain-gauge bridge terminals</text><text x="796" y="195" class="tiny">Identify sensor wiring/excitation before use.</text>
+    <rect x="778" y="320" width="278" height="191" class="warn"/>
+    <text x="917" y="351" text-anchor="middle" class="label">Existing INA101 board</text>
+    <text x="797" y="382" class="small">Bridge input / excitation: board-specific</text><text x="797" y="409" class="small">Supply: verified bench rails only</text><text x="797" y="436" class="small">OUT → 1 kΩ → Pico ADC0</text><text x="797" y="463" class="small">OUT reference → Pico AGND</text><text x="797" y="490" class="danger">Meter OUT: it must remain 0–3.3 V.</text>
+    <path d="M917 236 V320" class="wire analog"/><circle cx="917" cy="278" r="4" class="dot"/>
+    <path d="M778 436 H730 V381 H704" class="wire analog"/><text x="705" y="370" class="tiny">1 kΩ series</text>
+    <path d="M778 463 H750 V410 H704" class="wire ground"/>
+    <rect x="432" y="588" width="274" height="83" class="box"/>
+    <text x="569" y="619" text-anchor="middle" class="label">PC / Python logger</text><text x="569" y="647" text-anchor="middle" class="small">USB serial → raw CSV + metadata</text>
+    <path d="M567 528 V588" class="wire digital"/><text x="580" y="560" class="tiny">micro-USB</text>
+    <rect x="43" y="565" width="270" height="92" class="box"/>
+    <text x="178" y="597" text-anchor="middle" class="label">Optional momentary switch</text><text x="178" y="625" text-anchor="middle" class="small">GP15 ↔ GND (INPUT_PULLUP)</text>
+    <path d="M313 610 H400 V439 H430" class="wire ground"/>
+  </svg>
+  <div class="notes"><strong>Do not parallel ADCs.</strong> During this calibration, CS1238 #1 and the Pico own the toolhead load-cell path. Disconnect it from the Pro Micro/HX711 path; do not share SCK or DOUT. The INA101 supply pins, bridge excitation, output reference, and gain remain inspection-and-metering gates because the board revision is unknown.</div>
+</main>
+</body>
+</html>
