@@ -4484,6 +4484,11 @@ Add new entries at the top of the log below this line.
   de-energized inspection, exclusive bridge ownership, safe INA101-output
   proof, and raw-data acceptance gates. It records that Pico DAQ firmware and
   the PC logger have not yet been implemented.
+- Calibration-scope clarification: the loaded phase uses existing Pro Micro
+  service-UART commands and the established 6 V toolhead rail to create pen
+  force. Pico/CS1238 and Pico/ADC0 record the response only; the bridge is
+  still disconnected from the Pro Micro ADC. A verified manual 6 V cutoff is
+  required because the documented E-stop does not itself remove that rail.
 - Evidence: `HW-20260915-001`; `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`;
   `docs/hardware/pico2-dual-sensor-daq.html`.
 - Next action: identify the actual INA101/reference-sensor terminal and supply

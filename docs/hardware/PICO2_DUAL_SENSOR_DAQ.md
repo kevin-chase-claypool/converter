@@ -3,9 +3,11 @@
 ## Purpose and boundary
 
 This is a temporary, supervised bench fixture for calibrating the installed
-toolhead 300 g load cell. It replaces the historical HX711/kitchen-scale
-method. It does not change the production toolhead controller, force-control
-state machine, M3/M5 interface, or E-stop topology.
+toolhead 300 g load cell while the existing Pro Micro commands controlled
+downward pen motion. It replaces the historical HX711/kitchen-scale method.
+The Pico replaces only the toolhead bridge's ADC during the test; the Pro
+Micro remains the actuator-command controller. It does not enable production
+closed-loop force control or alter the E-stop topology.
 
 The Pico 2 reads both channels on one monotonic microsecond time base and
 streams raw records through its micro-USB connection to a PC logger. The PC
@@ -19,6 +21,8 @@ The accompanying wiring diagram is
 | Path | Connection | Status / condition |
 |---|---|---|
 | Toolhead sensor | Installed 300 g load cell -> CS1238 #1 channel A | Planned. Use the received board's verified `E+`, `E-`, `A+`, and `A-` labels. The load cell must not be connected to an HX711 or Pro Micro ADC at the same time. |
+| Toolhead actuation | Existing 6 V toolhead input -> DRV8833 motor rail and S7V8F5 -> regulated 5 V Pro Micro supply | Required for the loaded calibration phase. The Pro Micro commands controlled downward/upward pen motion; do not feed 6 V directly to the Pro Micro. |
+| Toolhead commands | Existing USB-to-TTL service adapter -> Pro Micro UART1 `GP20`/`GP21` | Required for the loaded calibration phase. Use the existing documented command interface; this command path is separate from the Pico measurement time base. |
 | CS1238 power | Pico 2 `3V3(OUT)` -> `VCC`; Pico `GND` -> `GND` | Planned. Confirm the actual CS1238 board is 3.3 V-safe and its bridge-reference configuration/excitation before power. |
 | CS1238 digital | Pico `GP2` -> `SCK`; CS1238 `DT`/`DRDY-DOUT` -> Pico `GP3` | Planned. Both signals are 3.3 V logic. No level shifting is authorized until the received board is inspected. |
 | Reference sensor | Instructor 5 N strain-gauge sensor -> existing INA101 board input | Planned. Identify the sensor conductors and board input/excitation terminals from their markings before connecting. |
@@ -86,8 +90,8 @@ until those programs are added and verified.
 
 ### 1. Make the bench safe
 
-- [ ] Keep the plotter actuator supply disconnected; do not command motion or
-  force control during this test.
+- [ ] Keep the 6 V toolhead actuator supply disconnected during all wiring and
+  dry electrical checks. It is energized only after the dry-run gate passes.
 - [ ] Keep the physical E-stop and the machine main-power cutoff reachable.
 - [ ] Turn the bench supply outputs **off** and unplug the Pico USB cable.
 - [ ] Disconnect the toolhead 300 g bridge completely from the Pro Micro and
@@ -160,6 +164,10 @@ until those programs are added and verified.
   microsecond timestamps, with no moving average, tare, or force conversion.
 - [ ] Confirm the PC logger creates a new dated run directory containing the
   raw CSV, serial log, and metadata before any loading test.
+- [ ] Connect the existing 3.3 V USB-to-TTL service adapter to the Pro Micro
+  command UART (`adapter RXD` <- `GP20`, `adapter TXD` -> `GP21`, and adapter
+  ground -> `TOOL_GND`). Leave adapter VCC disconnected. This is the actuator
+  command link; Pico USB remains the measurement-data link.
 
 ### 6. Dry-run acceptance gate
 
@@ -173,12 +181,23 @@ until those programs are added and verified.
   supply settings, gain-trim position, operator, and PC wall-clock time to
   metadata.
 
-### 7. Supervised loading and shutdown
+### 7. Supervised commanded-force calibration and shutdown
 
 - [ ] Obtain operator approval before applying any load. Keep force below the
   known safe range of both sensors and the toolhead mechanics.
-- [ ] Start a new raw-data run, apply only slow, controlled load/unload steps,
-  and keep the E-stop accessible. Do not move the plotter automatically.
+- [ ] Verify an accessible manual power-cutoff path for the toolhead 6 V rail.
+  The documented machine E-stop does not by itself remove that rail.
+- [ ] Energize the existing 6 V toolhead input only through its established
+  path: DRV8833 motor rail plus S7V8F5 regulated 5 V supply to the Pro Micro.
+  Do not apply 6 V directly to the Pro Micro or to Pico/INA101 wiring.
+- [ ] Verify the Pro Micro boots safely and accepts its existing manual
+  service-UART commands before placing the reference sensor in the force path.
+- [ ] Start a new Pico raw-data run, then issue only small, controlled
+  downward/upward commands to the Pro Micro. The Pico records the resulting
+  CS1238 and reference-sensor data; it does not command the actuator.
+- [ ] Stop immediately using the verified toolhead power cutoff if force,
+  travel, output voltage, or communications are abnormal. Keep the E-stop
+  accessible throughout.
 - [ ] Stop the run before changing wiring, gain, supply settings, or mechanical
   alignment.
 - [ ] Turn off the bench supply, unplug Pico USB, and only then rewire.

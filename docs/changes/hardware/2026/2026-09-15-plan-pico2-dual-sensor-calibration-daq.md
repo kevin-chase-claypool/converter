@@ -78,6 +78,12 @@ ownership, supply/output-span proof, raw-data acceptance, and de-energized
 shutdown gates explicit. It does not claim DAQ firmware or the PC logger
 exists yet.
 
+The test purpose is commanded downward pen-pressure calibration, not a static
+sensor-only exercise: the established 6 V toolhead rail powers the DRV8833 and
+the S7V8F5-regulated Pro Micro path during the loaded phase. The Pico owns
+measurement only; the existing 3.3 V service UART sends supervised Pro Micro
+commands. The toolhead bridge remains disconnected from the Pro Micro ADC.
+
 ## Files
 
 - `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`: test wiring, storage, and safety authority.
