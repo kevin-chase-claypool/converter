@@ -36,9 +36,9 @@
     <rect x="42" y="62" width="190" height="150" class="box"/>
     <text x="137" y="94" text-anchor="middle" class="label">Toolhead load cell</text>
     <text x="61" y="126" class="small">red E+ · black E−</text><text x="61" y="151" class="small">green A+ · white A−</text><text x="61" y="182" class="tiny">300 g bridge</text>
-    <rect x="302" y="62" width="190" height="150" class="box"/>
+    <rect x="302" y="62" width="190" height="220" class="box"/>
     <text x="397" y="94" text-anchor="middle" class="label">CS1238 #1</text>
-    <text x="322" y="126" class="small">Channel A bridge</text><text x="322" y="151" class="small">VCC · GND</text><text x="322" y="176" class="small">SCK · DT/DRDY</text>
+    <text x="322" y="126" class="small">Channel A bridge</text><text x="322" y="151" class="small">VCC · GND</text><text x="322" y="176" class="small">SCK · DT/DRDY</text><text x="322" y="247" class="small">GND</text>
     <rect x="622" y="62" width="220" height="270" class="box"/>
     <text x="732" y="94" text-anchor="middle" class="label">Raspberry Pi Pico 2</text>
     <text x="645" y="128" class="small">3V3(OUT), GND</text><text x="645" y="158" class="small">GP2  → SCK</text><text x="645" y="188" class="small">GP3  ← DT / DRDY</text>
@@ -50,7 +50,7 @@
     <path d="M492 128 H622" class="wire power"/><text x="505" y="119" class="tiny">3V3</text>
     <path d="M492 158 H622" class="wire digital"/><text x="505" y="149" class="tiny">SCK</text>
     <path d="M492 188 H622" class="wire digital"/><text x="505" y="179" class="tiny">DT/DRDY</text>
-    <path d="M492 248 H622" class="wire ground"/><text x="505" y="239" class="tiny">GND</text>
+    <path d="M492 248 H622" class="wire ground"/><circle cx="492" cy="248" r="4" class="dot"/><circle cx="622" cy="248" r="4" class="dot"/><text x="505" y="239" class="tiny">GND</text>
     <path d="M842 308 H910" class="wire digital"/><text x="855" y="298" class="tiny">micro-USB</text>
     <rect x="42" y="397" width="190" height="130" class="box"/>
     <text x="137" y="429" text-anchor="middle" class="label">5 N reference sensor</text>
