@@ -4508,6 +4508,9 @@ Add new entries at the top of the log below this line.
   schematic now shows one series-linked dual-output bench supply; if its
   continuity check passes, the `5V` bridge-excitation terminal shares the
   supply's +5 V rail rather than using a third supply.
+- DAQ control update: Pico GP15 now uses a latching SPST ON/OFF switch. ON
+  grounds the `INPUT_PULLUP` pin/starts capture; OFF releases it/stops capture.
+  It is explicitly separate from actuator power and the E-stop.
 - Evidence: `HW-20260915-001`; `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`;
   `docs/hardware/pico2-dual-sensor-daq.html`.
 - Next action: identify the actual INA101/reference-sensor terminal and supply

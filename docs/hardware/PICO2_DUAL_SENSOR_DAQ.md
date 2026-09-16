@@ -30,7 +30,7 @@ The accompanying wiring diagram is
 | Reference excitation | Rear board terminal labelled `5V` -> same dual-supply `+5 V` rail used for INA `+V`, if continuity mapping proves it is the bridge-excitation path | TBD. This is a branch of the same physical dual-output bench supply, not a third supply. Leave the wire disconnected until the board and reference sensor are mapped with power removed. |
 | INA101 output | Board-labelled `OUT` -> 1 kOhm series resistor -> Pico `GP26` / ADC0 | Required verification. Probe the output first. A negative or greater-than-3.3-V output must never reach Pico ADC0. |
 | ADC reference | Board-labelled `GND` -> Pico `AGND` only after the supply/reference relationship is metered | Required verification. This is the analogue signal reference, not permission to tie unknown supply rails together. |
-| Test switch | Pico `GP15` -> normally-open momentary switch -> Pico `GND` | Optional physical START/STOP. Firmware uses `INPUT_PULLUP`. |
+| DAQ ON/OFF switch | Pico `GP15` -> latching SPST switch -> Pico `GND` | Optional physical DAQ control. Firmware uses `INPUT_PULLUP`: switch ON closes to GND and reads LOW; switch OFF opens and reads HIGH. ON starts a run and OFF stops it; it does not control motor power or replace E-stop. |
 | Motion marker | Pro Micro `GP1` -> Pico `GP14`; Pro Micro `TOOL_GND` -> Pico `GND` | Planned temporary test-only timing marker. Both are 3.3 V logic; never use `PC817C CTRL_GND`. Pico records the two marker edges on its own microsecond clock. |
 | PC link | PC USB port -> Pico micro-USB | USB supplies Pico power and carries the CDC serial stream for the DAQ fixture. Pico `3V3(OUT)` then powers CS1238 #1 only. |
 
@@ -214,6 +214,9 @@ until those programs are added and verified.
 - [ ] Confirm the Pico reports and records a rising and falling `GP14` marker
   event while the Pro Micro is motor-unpowered. These Pico timestamps, rather
   than PC or USB receipt times, establish the command-to-force alignment.
+- [ ] With the actuator supply still off, prove the latching GP15 DAQ switch:
+  ON closes GP15 to Pico GND and starts a test; OFF opens it and stops the
+  test. It must not change actuator power or substitute for the E-stop.
 - [ ] Confirm the PC logger creates a new dated run directory containing the
   raw CSV, event CSV, Pro Micro command/reply log, and metadata before any
   loading test.

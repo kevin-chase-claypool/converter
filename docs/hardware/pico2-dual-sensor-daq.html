@@ -43,11 +43,13 @@
     <text x="732" y="94" text-anchor="middle" class="label">Raspberry Pi Pico 2</text>
     <text x="645" y="128" class="small">3V3(OUT), GND</text><text x="645" y="158" class="small">GP2  → SCK</text><text x="645" y="188" class="small">GP3  ← DT / DRDY</text>
     <text x="645" y="218" class="small">GP26 / ADC0 ← OUT</text><text x="645" y="248" class="small">AGND ← INA101 GND</text>
-    <text x="645" y="278" class="small">GP14 ← motion marker</text><text x="645" y="308" class="small">GP15 ↔ start/stop</text><text x="645" y="338" class="small">GND ← marker reference</text><text x="645" y="368" class="small">micro-USB: 5 V + CDC serial</text>
+    <text x="645" y="278" class="small">GP14 ← motion marker</text><text x="645" y="308" class="small">GP15 ← ON/OFF switch</text><text x="645" y="338" class="small">GND ← marker / switch</text><text x="645" y="368" class="small">micro-USB: 5 V + CDC serial</text>
     <rect x="910" y="355" width="170" height="80" class="box"/>
     <text x="995" y="387" text-anchor="middle" class="label">PC USB / logger</text><text x="995" y="414" text-anchor="middle" class="small">USB 5 V + raw CSV</text>
     <rect x="910" y="230" width="170" height="115" class="box"/>
     <text x="995" y="257" text-anchor="middle" class="label">Pro Micro RP2350</text><text x="930" y="300" class="small">GP1: marker output</text><text x="930" y="322" class="tiny">temporary test use</text>
+    <rect x="302" y="300" width="190" height="70" class="box"/>
+    <text x="397" y="326" text-anchor="middle" class="label">DAQ ON/OFF switch</text><text x="322" y="352" class="small">ON: GP15 pulled LOW</text>
     <path d="M232 108 H302" class="wire"/>
     <path d="M492 128 H622" class="wire power"/><text x="505" y="119" class="tiny">3V3</text>
     <path d="M492 158 H622" class="wire digital"/><text x="505" y="149" class="tiny">SCK</text>
@@ -56,6 +58,8 @@
     <path d="M842 278 H875 V270 H910" class="wire digital"/>
     <path d="M842 368 H910" class="wire digital"/>
     <path d="M842 338 H875 V330 H910" class="wire ground"/>
+    <path d="M492 308 H622" class="wire digital"/>
+    <path d="M492 338 H622" class="wire ground"/>
     <rect x="42" y="450" width="190" height="120" class="box"/>
     <text x="137" y="482" text-anchor="middle" class="label">5 N reference sensor</text>
     <text x="61" y="513" class="small">Strain-gauge bridge</text><text x="61" y="539" class="tiny">Map lower terminal order</text>

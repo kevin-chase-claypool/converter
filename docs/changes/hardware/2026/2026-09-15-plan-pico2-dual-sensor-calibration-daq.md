@@ -74,6 +74,11 @@ terminal is the reference bridge-excitation input, it branches from that same
 +5 V rail; it is not a separate third supply. Terminal mapping remains a
 power-off prerequisite.
 
+Pico `GP15` is now assigned to a latching SPST DAQ ON/OFF switch rather than
+a momentary control. Switch ON grounds GP15 (active LOW) to start capture and
+OFF releases it to stop capture. It has no actuator-power or emergency-stop
+authority.
+
 An operator checklist now makes the power-off inspection, exclusive ADC
 ownership, supply/output-span proof, raw-data acceptance, and de-energized
 shutdown gates explicit. It does not claim DAQ firmware or the PC logger

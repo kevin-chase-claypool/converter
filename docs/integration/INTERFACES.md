@@ -287,6 +287,11 @@ actuator event with the two raw force channels. Boot, fault, and explicit stop
 must hold the marker LOW. This temporary connection does not authorize a
 production force-control protocol.
 
+Pico `GP15` is a separate latching SPST DAQ ON/OFF input using `INPUT_PULLUP`:
+ON closes it to Pico GND/LOW and starts capture; OFF opens it/HIGH and stops
+capture. It has no authority over Pro Micro actuator power, the physical
+E-stop, or the main-power cutoff.
+
 Power boundary:
 
 | Rail | Owner | Contract |
