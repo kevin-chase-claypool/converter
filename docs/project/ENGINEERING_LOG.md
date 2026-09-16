@@ -4476,6 +4476,10 @@ Add new entries at the top of the log below this line.
   INA101 board must be supplied, referenced, and metered before its output is
   connected to the 0-3.3 V Pico ADC. The physical E-stop and main-power cutoff
   remain required for later loaded tests.
+- Diagram clarification: the bench schematic now draws PC USB as the Pico
+  power/data path; Pico 3.3 V is only for CS1238 #1. It separately draws the
+  verified INA101 `+V`, `-V`, and `GND` supply leads and leaves the board's
+  labelled `5V` terminal as an unconnected, continuity-mapping prerequisite.
 - Evidence: `HW-20260915-001`; `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`;
   `docs/hardware/pico2-dual-sensor-daq.html`.
 - Next action: identify the actual INA101/reference-sensor terminal and supply

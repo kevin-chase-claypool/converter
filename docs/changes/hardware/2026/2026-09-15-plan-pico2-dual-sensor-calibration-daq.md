@@ -67,6 +67,12 @@ no force conversion, filtering, or automatic actuation is authorized by this
 plan. Keep the physical E-stop and main-power cutoff accessible during any
 later loaded test.
 
+The bench diagram explicitly shows the two supply boundaries: PC USB supplies
+the Pico (which supplies 3.3 V only to CS1238 #1), while a verified external
+dual supply provides INA101 `+V`, `-V`, and `GND`. Its separately drawn 5 V
+lead is intentionally marked TBD: terminal labelling alone is not evidence it
+is the reference bridge-excitation connection.
+
 ## Files
 
 - `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`: test wiring, storage, and safety authority.

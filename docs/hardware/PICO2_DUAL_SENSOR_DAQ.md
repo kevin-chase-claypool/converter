@@ -22,11 +22,12 @@ The accompanying wiring diagram is
 | CS1238 power | Pico 2 `3V3(OUT)` -> `VCC`; Pico `GND` -> `GND` | Planned. Confirm the actual CS1238 board is 3.3 V-safe and its bridge-reference configuration/excitation before power. |
 | CS1238 digital | Pico `GP2` -> `SCK`; CS1238 `DT`/`DRDY-DOUT` -> Pico `GP3` | Planned. Both signals are 3.3 V logic. No level shifting is authorized until the received board is inspected. |
 | Reference sensor | Instructor 5 N strain-gauge sensor -> existing INA101 board input | Planned. Identify the sensor conductors and board input/excitation terminals from their markings before connecting. |
-| INA101 supply | Existing board's labelled `+V`, `-V`, `GND` terminals -> verified dual bench supply | Required verification. The INA101KU operates from ±5 V to ±20 V rails; do not power it from Pico 3.3 V or the board's `5V` terminal. |
+| INA101 supply | Rear board terminals labelled `+V`, `-V`, `GND` -> verified dual bench supply | Required verification. The INA101KU operates from ±5 V to ±20 V rails; do not power it from Pico 3.3 V or the board's `5V` terminal. |
+| Reference excitation | Rear board terminal labelled `5V` -> separately verified 5 V excitation source, if continuity mapping proves that is the bridge-excitation path | TBD. The terminal name alone does not prove its electrical function; leave this wire disconnected until the board and reference sensor are mapped with power removed. |
 | INA101 output | Board-labelled `OUT` -> 1 kOhm series resistor -> Pico `GP26` / ADC0 | Required verification. Probe the output first. A negative or greater-than-3.3-V output must never reach Pico ADC0. |
 | ADC reference | Board-labelled `GND` -> Pico `AGND` only after the supply/reference relationship is metered | Required verification. This is the analogue signal reference, not permission to tie unknown supply rails together. |
 | Test switch | Pico `GP15` -> normally-open momentary switch -> Pico `GND` | Optional physical START/STOP. Firmware uses `INPUT_PULLUP`. |
-| PC link | Pico micro-USB -> PC | USB power and CDC serial stream for the DAQ fixture. |
+| PC link | PC USB port -> Pico micro-USB | USB supplies Pico power and carries the CDC serial stream for the DAQ fixture. Pico `3V3(OUT)` then powers CS1238 #1 only. |
 
 The production Pro Micro retains its existing GP0/GP1/3V3/GND CS1238 path when
 the test fixture is removed. The test harness temporarily gives CS1238 #1 its
