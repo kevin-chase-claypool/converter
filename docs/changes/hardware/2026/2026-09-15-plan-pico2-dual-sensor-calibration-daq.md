@@ -90,6 +90,12 @@ low-rate commanded-motion events, and leaves all 640-SPS force data on Pico
 USB. Direct externally powered Pro Micro USB CDC is a separately metered
 later option, not a prerequisite.
 
+The fixture now reserves temporary Pro Micro `GP1` as a 3.3 V
+`MOTION_ACTIVE` output to Pico `GP14`, with a separate `TOOL_GND` to Pico
+`GND` reference wire. The Pico must timestamp both edges locally, so a command
+event and both force channels share the same clock. The marker is not a
+production interface and GP1 returns to CS1238 clock duty after the test.
+
 ## Files
 
 - `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`: test wiring, storage, and safety authority.

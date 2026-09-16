@@ -31,11 +31,14 @@ The accompanying wiring diagram is
 | INA101 output | Board-labelled `OUT` -> 1 kOhm series resistor -> Pico `GP26` / ADC0 | Required verification. Probe the output first. A negative or greater-than-3.3-V output must never reach Pico ADC0. |
 | ADC reference | Board-labelled `GND` -> Pico `AGND` only after the supply/reference relationship is metered | Required verification. This is the analogue signal reference, not permission to tie unknown supply rails together. |
 | Test switch | Pico `GP15` -> normally-open momentary switch -> Pico `GND` | Optional physical START/STOP. Firmware uses `INPUT_PULLUP`. |
+| Motion marker | Pro Micro `GP1` -> Pico `GP14`; Pro Micro `TOOL_GND` -> Pico `GND` | Planned temporary test-only timing marker. Both are 3.3 V logic; never use `PC817C CTRL_GND`. Pico records the two marker edges on its own microsecond clock. |
 | PC link | PC USB port -> Pico micro-USB | USB supplies Pico power and carries the CDC serial stream for the DAQ fixture. Pico `3V3(OUT)` then powers CS1238 #1 only. |
 
 The production Pro Micro retains its existing GP0/GP1/3V3/GND CS1238 path when
-the test fixture is removed. The test harness temporarily gives CS1238 #1 its
-own Pico connections; do not parallel either ADC's clock or data pins.
+the test fixture is removed. During the test GP1 is reassigned only as a
+`MOTION_ACTIVE` output; it returns to CS1238 clock ownership when the fixture
+is removed. The test harness temporarily gives CS1238 #1 its own Pico
+connections; do not parallel either ADC's clock or data pins.
 
 ## Raw stream and PC storage
 
@@ -54,6 +57,13 @@ serial log, and `metadata.json`. Metadata includes the PC wall-clock start,
 Pico firmware version, CS1238 configuration, INA101 supply/gain settings,
 sensor identities, and operator notes. No moving average, tare subtraction,
 or force conversion is permitted in the acquisition CSV.
+
+The Pico also records `motion_start_us` and `motion_end_us` when its `GP14`
+interrupt receives the Pro Micro's `MOTION_ACTIVE` rising and falling edges.
+Those event times belong in a separate raw `events.csv` or clearly identified
+event records, not inferred from PC command receipt time. The Pro Micro sets
+the marker HIGH immediately before an actuator pulse and LOW immediately after
+it ends; boot, stop, and fault leave it LOW.
 
 ## Recommended minimum-change PC arrangement
 
@@ -158,6 +168,9 @@ until those programs are added and verified.
 - [ ] Connect CS1238 `DT`/`DRDY` to Pico `GP3`.
 - [ ] Inspect every CS1238 connection against the wiring table and confirm no
   other MCU, HX711, or ADC remains connected to that bridge.
+- [ ] Connect Pro Micro `GP1` to Pico `GP14` and Pro Micro `TOOL_GND` to Pico
+  `GND` as a separate two-wire timing-marker pair. Confirm both boards are
+  de-energized first and never use the isolated `PC817C CTRL_GND` node.
 
 ### 4. Wire and prove the reference path
 
@@ -189,6 +202,9 @@ until those programs are added and verified.
   substitute data because it does not share the Pico timestamp base.
 - [ ] Confirm the DAQ reports raw CS1238 values and raw ADC0 values with Pico
   microsecond timestamps, with no moving average, tare, or force conversion.
+- [ ] Confirm the Pico reports and records a rising and falling `GP14` marker
+  event while the Pro Micro is motor-unpowered. These Pico timestamps, rather
+  than PC or USB receipt times, establish the command-to-force alignment.
 - [ ] Confirm the PC logger creates a new dated run directory containing the
   raw CSV, serial log, and metadata before any loading test.
 - [ ] Connect the existing 3.3 V USB-to-TTL service adapter to the Pro Micro

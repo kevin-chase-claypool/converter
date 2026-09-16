@@ -31,47 +31,51 @@
   <h1>Pico 2 dual-sensor calibration DAQ — supervised bench wiring</h1>
   <p>Raw toolhead CS1238 data and raw reference-sensor ADC data share the Pico's monotonic microsecond time base.</p>
   <div class="key"><span><i class="swatch" style="border-color:#1769aa"></i>3.3 V digital</span><span><i class="swatch" style="border-color:#8a4b08"></i>analogue signal</span><span><i class="swatch" style="border-color:#a22222"></i>power</span><span><i class="swatch" style="border-color:#445"></i>signal reference / ground</span></div>
-  <svg viewBox="0 0 1120 760" role="img" aria-label="Bench schematic with separate, non-overlapping point-to-point lanes for the Pico 2, CS1238, INA101, sensors, PC USB power, and bench-supply rails">
-    <text x="45" y="42" class="label">Toolhead channel</text><text x="45" y="372" class="label">Reference channel</text>
+  <svg viewBox="0 0 1120 800" role="img" aria-label="Bench schematic with separate, non-overlapping point-to-point lanes for the Pico 2, CS1238, INA101, sensors, PC USB power, bench-supply rails, and a Pro Micro motion marker">
+    <text x="45" y="42" class="label">Toolhead channel</text><text x="45" y="402" class="label">Reference channel</text>
     <rect x="42" y="62" width="190" height="150" class="box"/>
     <text x="137" y="94" text-anchor="middle" class="label">Toolhead load cell</text>
     <text x="61" y="126" class="small">red E+ · black E−</text><text x="61" y="151" class="small">green A+ · white A−</text><text x="61" y="182" class="tiny">300 g bridge</text>
     <rect x="302" y="62" width="190" height="220" class="box"/>
     <text x="397" y="94" text-anchor="middle" class="label">CS1238 #1</text>
     <text x="322" y="126" class="small">Channel A bridge</text><text x="322" y="151" class="small">VCC · GND</text><text x="322" y="176" class="small">SCK · DT/DRDY</text><text x="322" y="247" class="small">GND</text>
-    <rect x="622" y="62" width="220" height="270" class="box"/>
+    <rect x="622" y="62" width="220" height="330" class="box"/>
     <text x="732" y="94" text-anchor="middle" class="label">Raspberry Pi Pico 2</text>
     <text x="645" y="128" class="small">3V3(OUT), GND</text><text x="645" y="158" class="small">GP2  → SCK</text><text x="645" y="188" class="small">GP3  ← DT / DRDY</text>
     <text x="645" y="218" class="small">GP26 / ADC0 ← OUT</text><text x="645" y="248" class="small">AGND ← INA101 GND</text>
-    <text x="645" y="278" class="small">GP15 ↔ start/stop</text><text x="645" y="308" class="small">micro-USB: 5 V + CDC serial</text>
-    <rect x="910" y="148" width="170" height="100" class="box"/>
-    <text x="995" y="180" text-anchor="middle" class="label">PC USB / logger</text><text x="995" y="207" text-anchor="middle" class="small">USB 5 V + raw CSV</text>
+    <text x="645" y="278" class="small">GP14 ← motion marker</text><text x="645" y="308" class="small">GP15 ↔ start/stop</text><text x="645" y="338" class="small">GND ← marker reference</text><text x="645" y="368" class="small">micro-USB: 5 V + CDC serial</text>
+    <rect x="910" y="355" width="170" height="80" class="box"/>
+    <text x="995" y="387" text-anchor="middle" class="label">PC USB / logger</text><text x="995" y="414" text-anchor="middle" class="small">USB 5 V + raw CSV</text>
+    <rect x="910" y="240" width="170" height="95" class="box"/>
+    <text x="995" y="272" text-anchor="middle" class="label">Pro Micro RP2350</text><text x="930" y="303" class="small">GP1 → MOTION_ACTIVE</text><text x="930" y="326" class="tiny">temporary test output</text>
     <path d="M232 108 H302" class="wire"/><text x="247" y="99" class="tiny">E+/E−/A+/A−</text>
     <path d="M492 128 H622" class="wire power"/><text x="505" y="119" class="tiny">3V3</text>
     <path d="M492 158 H622" class="wire digital"/><text x="505" y="149" class="tiny">SCK</text>
     <path d="M492 188 H622" class="wire digital"/><text x="505" y="179" class="tiny">DT/DRDY</text>
     <path d="M492 248 H622" class="wire ground"/><circle cx="492" cy="248" r="4" class="dot"/><circle cx="622" cy="248" r="4" class="dot"/><text x="505" y="239" class="tiny">GND</text>
-    <path d="M842 308 H910" class="wire digital"/><text x="855" y="298" class="tiny">micro-USB: power + CDC</text>
-    <rect x="42" y="420" width="190" height="120" class="box"/>
-    <text x="137" y="452" text-anchor="middle" class="label">5 N reference sensor</text>
-    <text x="61" y="483" class="small">Strain-gauge bridge</text><text x="61" y="509" class="tiny">Map lower terminal order</text>
-    <rect x="302" y="420" width="250" height="190" class="warn"/>
-    <text x="427" y="452" text-anchor="middle" class="label">INA101KU board</text>
-    <text x="322" y="480" class="small">Rear: OUT · 5V · +V · −V · GND</text><text x="322" y="508" class="small">100 kΩ trim + 4.3 kΩ resistor</text><text x="322" y="536" class="small">Top ports: OUT / GND → Pico</text><text x="322" y="564" class="small">Right ports: +V / −V / GND</text><text x="322" y="592" class="danger">Meter OUT: 0–3.3 V only.</text>
-    <path d="M232 480 H302" class="wire"/><text x="245" y="470" class="tiny">bridge / excitation</text>
-    <path d="M380 420 V350 H585 V218 H622" class="wire analog"/><text x="390" y="341" class="tiny">OUT → 1 kΩ</text>
-    <path d="M460 420 V370 H605 V248 H622" class="wire ground"/><text x="470" y="388" class="tiny">GND reference</text>
-    <rect x="870" y="420" width="210" height="155" class="warn"/>
-    <text x="975" y="452" text-anchor="middle" class="label">Bench supply</text>
-    <text x="890" y="500" class="small">+V rail (to verify)</text><text x="890" y="526" class="small">−V rail (to verify)</text><text x="890" y="552" class="small">0 V / GND (to verify)</text>
-    <path d="M552 500 H870" class="wire power"/><text x="700" y="491" class="tiny">+V</text>
-    <path d="M552 526 H870" class="wire"/><text x="700" y="517" class="tiny">−V</text>
-    <path d="M552 552 H870" class="wire ground"/><text x="700" y="543" class="tiny">GND</text>
-    <rect x="870" y="640" width="210" height="80" class="warn"/>
-    <text x="975" y="670" text-anchor="middle" class="label">5 V excitation</text>
-    <text x="975" y="696" text-anchor="middle" class="tiny">TBD: meter terminal mapping first</text>
-    <path d="M510 610 V680 H870" class="wire power tbd"/><text x="620" y="671" class="tiny">proposed: INA rear labelled 5V</text>
-    <text x="42" y="725" class="danger">Safety: CS1238 #1 is the sole ADC owner of the toolhead bridge during this test. Disconnect the Pro Micro/HX711 path.</text>
+    <path d="M842 278 H875 V294 H910" class="wire digital"/><text x="850" y="268" class="tiny">MOTION_ACTIVE · 3.3 V</text>
+    <path d="M842 368 H910" class="wire digital"/><text x="850" y="358" class="tiny">micro-USB: power + CDC</text>
+    <path d="M842 338 H875 V318 H910" class="wire ground"/><text x="750" y="328" class="tiny">TOOL_GND → Pico GND</text>
+    <rect x="42" y="450" width="190" height="120" class="box"/>
+    <text x="137" y="482" text-anchor="middle" class="label">5 N reference sensor</text>
+    <text x="61" y="513" class="small">Strain-gauge bridge</text><text x="61" y="539" class="tiny">Map lower terminal order</text>
+    <rect x="302" y="450" width="250" height="190" class="warn"/>
+    <text x="427" y="482" text-anchor="middle" class="label">INA101KU board</text>
+    <text x="322" y="510" class="small">Rear: OUT · 5V · +V · −V · GND</text><text x="322" y="538" class="small">100 kΩ trim + 4.3 kΩ resistor</text><text x="322" y="566" class="small">Top ports: OUT / GND → Pico</text><text x="322" y="594" class="small">Right ports: +V / −V / GND</text><text x="322" y="622" class="danger">Meter OUT: 0–3.3 V only.</text>
+    <path d="M232 510 H302" class="wire"/><text x="245" y="500" class="tiny">bridge / excitation</text>
+    <path d="M380 450 V390 H585 V218 H622" class="wire analog"/><text x="390" y="381" class="tiny">OUT → 1 kΩ</text>
+    <path d="M460 450 V410 H605 V248 H622" class="wire ground"/><text x="470" y="428" class="tiny">GND reference</text>
+    <rect x="870" y="450" width="210" height="155" class="warn"/>
+    <text x="975" y="482" text-anchor="middle" class="label">Bench supply</text>
+    <text x="890" y="530" class="small">+V rail (to verify)</text><text x="890" y="556" class="small">−V rail (to verify)</text><text x="890" y="582" class="small">0 V / GND (to verify)</text>
+    <path d="M552 530 H870" class="wire power"/><text x="700" y="521" class="tiny">+V</text>
+    <path d="M552 556 H870" class="wire"/><text x="700" y="547" class="tiny">−V</text>
+    <path d="M552 582 H870" class="wire ground"/><text x="700" y="573" class="tiny">GND</text>
+    <rect x="870" y="670" width="210" height="80" class="warn"/>
+    <text x="975" y="700" text-anchor="middle" class="label">5 V excitation</text>
+    <text x="975" y="726" text-anchor="middle" class="tiny">TBD: meter terminal mapping first</text>
+    <path d="M510 640 V710 H870" class="wire power tbd"/><text x="620" y="701" class="tiny">proposed: INA rear labelled 5V</text>
+    <text x="42" y="775" class="danger">Safety: CS1238 #1 is the sole ADC owner of the toolhead bridge during this test. Disconnect the Pro Micro/HX711 path.</text>
   </svg>
   <div class="notes"><strong>Do not parallel ADCs.</strong> During this calibration, CS1238 #1 and the Pico own the toolhead load-cell path. Disconnect it from the Pro Micro/HX711 path; do not share SCK or DOUT. The INA101 board is INA101KU with a 100 kΩ trim and 4.3 kΩ fixed resistor; confirm the trim's gain-network resistance and the lower load-cell terminal order with power removed before wiring.</div>
 </main>

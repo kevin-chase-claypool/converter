@@ -4494,6 +4494,11 @@ Add new entries at the top of the log below this line.
   stream; the established USB-to-TTL adapter on Pro Micro `Serial2` sends
   only low-rate controlled-pulse commands and records acknowledgements.
   Externally powered native Pro Micro USB is a later voltage-check option.
+- Timing update: reserve temporary Pro Micro `GP1` as a 3.3 V
+  `MOTION_ACTIVE` output to Pico `GP14`, plus a separate `TOOL_GND` to Pico
+  `GND` signal reference. Pico timestamps both marker edges with its own
+  monotonic clock, so PC/USB latency is excluded from command-to-force
+  alignment. GP1 returns to CS1238 clock duty after the fixture is removed.
 - Evidence: `HW-20260915-001`; `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`;
   `docs/hardware/pico2-dual-sensor-daq.html`.
 - Next action: identify the actual INA101/reference-sensor terminal and supply

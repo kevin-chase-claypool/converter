@@ -274,6 +274,19 @@ pulse and target force require T-01J evidence.
 
 ## Toolhead internal interfaces
 
+### Temporary Pico 2 calibration marker
+
+During the supervised dual-sensor calibration fixture only, Pro Micro `GP1`
+is detached from its production CS1238-clock role and becomes a 3.3 V
+`MOTION_ACTIVE` output to Pico 2 `GP14`. A separate `TOOL_GND` to Pico `GND`
+wire provides the signal reference; it must never use isolated `PC817C
+CTRL_GND`. The Pro Micro asserts the marker immediately before a commanded
+actuator pulse and releases it immediately after the pulse. Pico interrupt
+timestamps of those edges, not PC USB or UART receipt times, align the
+actuator event with the two raw force channels. Boot, fault, and explicit stop
+must hold the marker LOW. This temporary connection does not authorize a
+production force-control protocol.
+
 Power boundary:
 
 | Rail | Owner | Contract |
