@@ -53,7 +53,7 @@
     <text x="796" y="170" class="small">Strain-gauge bridge terminals</text><text x="796" y="195" class="tiny">Identify sensor wiring/excitation before use.</text>
     <rect x="778" y="320" width="278" height="191" class="warn"/>
     <text x="917" y="351" text-anchor="middle" class="label">Existing INA101 board</text>
-    <text x="797" y="382" class="small">Bridge input / excitation: board-specific</text><text x="797" y="409" class="small">Supply: verified bench rails only</text><text x="797" y="436" class="small">OUT → 1 kΩ → Pico ADC0</text><text x="797" y="463" class="small">OUT reference → Pico AGND</text><text x="797" y="490" class="danger">Meter OUT: it must remain 0–3.3 V.</text>
+    <text x="797" y="382" class="small">Top: OUT, 5V, +V, −V, GND</text><text x="797" y="409" class="small">Supply: verified ±5 V or higher</text><text x="797" y="436" class="small">OUT → 1 kΩ → Pico ADC0</text><text x="797" y="463" class="small">GND signal reference → Pico AGND</text><text x="797" y="490" class="danger">Meter OUT: it must remain 0–3.3 V.</text>
     <path d="M917 236 V320" class="wire analog"/><circle cx="917" cy="278" r="4" class="dot"/>
     <path d="M778 436 H730 V381 H704" class="wire analog"/><text x="705" y="370" class="tiny">1 kΩ series</text>
     <path d="M778 463 H750 V410 H704" class="wire ground"/>
@@ -64,7 +64,7 @@
     <text x="178" y="597" text-anchor="middle" class="label">Optional momentary switch</text><text x="178" y="625" text-anchor="middle" class="small">GP15 ↔ GND (INPUT_PULLUP)</text>
     <path d="M313 610 H400 V439 H430" class="wire ground"/>
   </svg>
-  <div class="notes"><strong>Do not parallel ADCs.</strong> During this calibration, CS1238 #1 and the Pico own the toolhead load-cell path. Disconnect it from the Pro Micro/HX711 path; do not share SCK or DOUT. The INA101 supply pins, bridge excitation, output reference, and gain remain inspection-and-metering gates because the board revision is unknown.</div>
+  <div class="notes"><strong>Do not parallel ADCs.</strong> During this calibration, CS1238 #1 and the Pico own the toolhead load-cell path. Disconnect it from the Pro Micro/HX711 path; do not share SCK or DOUT. The INA101 board is INA101KU with a 100 kΩ trim and 4.3 kΩ fixed resistor; confirm the trim's gain-network resistance and the lower load-cell terminal order with power removed before wiring.</div>
 </main>
 </body>
 </html>

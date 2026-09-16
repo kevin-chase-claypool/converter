@@ -22,9 +22,9 @@ The accompanying wiring diagram is
 | CS1238 power | Pico 2 `3V3(OUT)` -> `VCC`; Pico `GND` -> `GND` | Planned. Confirm the actual CS1238 board is 3.3 V-safe and its bridge-reference configuration/excitation before power. |
 | CS1238 digital | Pico `GP2` -> `SCK`; CS1238 `DT`/`DRDY-DOUT` -> Pico `GP3` | Planned. Both signals are 3.3 V logic. No level shifting is authorized until the received board is inspected. |
 | Reference sensor | Instructor 5 N strain-gauge sensor -> existing INA101 board input | Planned. Identify the sensor conductors and board input/excitation terminals from their markings before connecting. |
-| INA101 supply | Isolated/bench supply according to the actual INA101 board marking | Required verification. The INA101 IC is not a Pico-3.3-V-powered amplifier; do not infer the board's supply pinout or required rails. |
-| INA101 output | Confirmed, nonnegative, 0-3.3 V `OUT` -> 1 kOhm series resistor -> Pico `GP26` / ADC0 | Required verification. Probe the output first. A negative or greater-than-3.3-V output must never reach Pico ADC0. |
-| ADC reference | INA101 output reference/return -> Pico `AGND` only after the board's output reference is identified | Required verification. This is the signal reference, not permission to tie unknown power rails together. |
+| INA101 supply | Existing board's labelled `+V`, `-V`, `GND` terminals -> verified dual bench supply | Required verification. The INA101KU operates from ±5 V to ±20 V rails; do not power it from Pico 3.3 V or the board's `5V` terminal. |
+| INA101 output | Board-labelled `OUT` -> 1 kOhm series resistor -> Pico `GP26` / ADC0 | Required verification. Probe the output first. A negative or greater-than-3.3-V output must never reach Pico ADC0. |
+| ADC reference | Board-labelled `GND` -> Pico `AGND` only after the supply/reference relationship is metered | Required verification. This is the analogue signal reference, not permission to tie unknown supply rails together. |
 | Test switch | Pico `GP15` -> normally-open momentary switch -> Pico `GND` | Optional physical START/STOP. Firmware uses `INPUT_PULLUP`. |
 | PC link | Pico micro-USB -> PC | USB power and CDC serial stream for the DAQ fixture. |
 
@@ -52,17 +52,26 @@ or force conversion is permitted in the acquisition CSV.
 
 ## Required checks before live loading
 
-1. With power removed, inspect and photograph both CS1238 boards, the INA101
-   board, and the reference sensor; record labels and wire mapping.
+1. With power removed, inspect and photograph both CS1238 boards and the
+   reference sensor. The INA101 board is visually identified as INA101KU with
+   upper terminals `OUT`, `5V`, `+V`, `-V`, and `GND`, a 100 kOhm trim, and a
+   4.3 kOhm fixed resistor; the lower load-cell terminals still require a
+   continuity-mapped order.
 2. Complete E-07C bridge-resistance and `E+`--`E-` excitation checks for
    CS1238 #1 before accepting readings.
-3. Power the INA101 only from its verified supply arrangement. With the
-   reference sensor unloaded and then gently loaded, meter its output before
-   connecting Pico ADC0. It must stay in the inclusive 0-3.3 V range with
-   margin across the planned 5 N range.
-4. Verify the Pico `AGND` signal-reference connection produces a stable ADC
+3. With power removed, measure the resistance seen by the INA101 gain network
+   at the trim extremes. The IC gain law is `G = 1 + 40 kOhm / R_G`; if the
+   4.3 kOhm resistor is the minimum series `R_G`, the maximum gain is about
+   10.3 V/V. Do not assume whether the 100 kOhm trim is series or parallel
+   until that resistance check proves it.
+4. Power the INA101 only from its verified ± supply arrangement. Its labelled
+   `5V` terminal is a board feature, not an INA101 supply rail. With the
+   reference sensor unloaded and then gently loaded, meter `OUT` relative to
+   board `GND` before connecting Pico ADC0. It must stay in the inclusive
+   0-3.3 V range with margin across the planned 5 N range.
+5. Verify the Pico `AGND` signal-reference connection produces a stable ADC
    reading without creating an unexpected supply-to-supply current path.
-5. Verify raw CS1238 and ADC records with no actuator power. Only then permit
+6. Verify raw CS1238 and ADC records with no actuator power. Only then permit
    a guarded, operator-supervised loading test with the existing physical
    E-stop and main-power cutoff accessible.
 

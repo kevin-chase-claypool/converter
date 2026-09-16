@@ -58,11 +58,14 @@ reference, and full-scale output must be metered before connection.
 
 ## Risks and follow-up
 
-The instructor sensor's bridge wiring/electrical compatibility and INA101
-board details are unknown. Confirm them before choosing CS1238 #2 or the
-INA101 path. Preserve raw data; no force conversion, filtering, or automatic
-actuation is authorized by this plan. Keep the physical E-stop and main-power
-cutoff accessible during any later loaded test.
+The board photo identifies INA101KU and labels `OUT`, `5V`, `+V`, `-V`, and
+`GND`; it also shows a 100 kOhm trim and 4.3 kOhm fixed resistor. The INA101
+gain law is `G = 1 + 40 kOhm / R_G`, but the photo alone does not establish
+whether the trim is series or parallel with the fixed resistor. The reference
+sensor terminal mapping and actual output span remain open. Preserve raw data;
+no force conversion, filtering, or automatic actuation is authorized by this
+plan. Keep the physical E-stop and main-power cutoff accessible during any
+later loaded test.
 
 ## Files
 

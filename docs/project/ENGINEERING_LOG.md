@@ -4466,6 +4466,11 @@ Add new entries at the top of the log below this line.
   installed 300 g toolhead bridge; the instructor 5 N reference sensor uses
   the existing INA101 board and Pico ADC0 after the board's output has been
   proven safe. The PC stores raw timestamped records and separate metadata.
+- Inspection update: supplied board photos identify the amplifier as INA101KU,
+  with upper terminals `OUT`, `5V`, `+V`, `-V`, and `GND`, a 100 kOhm trim,
+  and a 4.3 kOhm fixed resistor. The documented gain relation is
+  `G = 1 + 40 kOhm / R_G`; the gain-network topology and lower load-cell
+  terminal order remain a power-off continuity/metering task.
 - Safety boundary: the toolhead bridge has only one ADC owner during a test;
   do not parallel the Pico CS1238 with the Pro Micro/HX711 path. The unknown
   INA101 board must be supplied, referenced, and metered before its output is
