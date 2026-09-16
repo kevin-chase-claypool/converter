@@ -84,6 +84,12 @@ the S7V8F5-regulated Pro Micro path during the loaded phase. The Pico owns
 measurement only; the existing 3.3 V service UART sends supervised Pro Micro
 commands. The toolhead bridge remains disconnected from the Pro Micro ADC.
 
+Research selected the existing USB-to-TTL service adapter as the lowest-change
+second PC COM port: it preserves external Pro Micro power, sends only
+low-rate commanded-motion events, and leaves all 640-SPS force data on Pico
+USB. Direct externally powered Pro Micro USB CDC is a separately metered
+later option, not a prerequisite.
+
 ## Files
 
 - `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`: test wiring, storage, and safety authority.

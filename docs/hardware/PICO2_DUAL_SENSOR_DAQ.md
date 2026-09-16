@@ -55,6 +55,33 @@ Pico firmware version, CS1238 configuration, INA101 supply/gain settings,
 sensor identities, and operator notes. No moving average, tare subtraction,
 or force conversion is permitted in the acquisition CSV.
 
+## Recommended minimum-change PC arrangement
+
+Use two USB COM ports on the PC, with separate responsibilities:
+
+1. **Pico 2 native USB:** the sole high-rate measurement stream. It emits the
+   raw CS1238 and ADC0 values plus Pico microsecond timestamps.
+2. **Existing USB-to-TTL adapter -> Pro Micro `Serial2`:** controlled `d`,
+   `u`, `x`, and step-duration commands plus low-rate command/actuator status.
+   It is already a USB connection at the PC but does not power the Pro Micro;
+   adapter `VCC` stays disconnected.
+
+This preserves the established 6 V -> S7V8F5 -> Pro Micro power path and
+avoids changing the working toolhead controller for the calibration. The
+currently staged E-07B actuator-step sketch already accepts short `d`/`u`
+pulses and `x` stop through that service UART; its disconnected HX711 reports
+are not calibration data and should be ignored. The integrated toolhead
+firmware remains commissioning-locked and must not be used for force control.
+
+The unavoidable new work is limited to Pico DAQ firmware and a PC logger. The
+logger first starts Pico capture, then sends a low-rate Pro Micro pulse command
+and records its text acknowledgement in a separate command log. Pico time,
+not PC or Pro Micro receive time, remains the only time base used to compare
+the two force sensors. Native Pro Micro USB CDC may be evaluated later after
+the external-power/USB voltage check in
+[`2026-09-16-promicro-external-power-usb-cdc-research.md`](../report/lab-notes/2026-09-16-promicro-external-power-usb-cdc-research.md)
+passes.
+
 ## Required checks before live loading
 
 1. With power removed, inspect and photograph both CS1238 boards and the

@@ -4489,6 +4489,11 @@ Add new entries at the top of the log below this line.
   force. Pico/CS1238 and Pico/ADC0 record the response only; the bridge is
   still disconnected from the Pro Micro ADC. A verified manual 6 V cutoff is
   required because the documented E-stop does not itself remove that rail.
+- Architecture research: selected two PC USB COM ports with no Pro Micro
+  controller/power rewiring: Pico native USB owns the high-rate raw force
+  stream; the established USB-to-TTL adapter on Pro Micro `Serial2` sends
+  only low-rate controlled-pulse commands and records acknowledgements.
+  Externally powered native Pro Micro USB is a later voltage-check option.
 - Evidence: `HW-20260915-001`; `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`;
   `docs/hardware/pico2-dual-sensor-daq.html`.
 - Next action: identify the actual INA101/reference-sensor terminal and supply
