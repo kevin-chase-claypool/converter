@@ -1,6 +1,6 @@
 # INA101KU instructor load-cell PCB: datasheet reconciliation
 
-**Date:** 2026-09-18  
+**Date:** 2026-09-18
 **Scope:** Identify what can be concluded from the supplied PCB-layout and board photographs, and what still requires a power-off continuity test before wiring the Pico 2.
 
 ## Evidence boundaries
@@ -51,4 +51,3 @@ With all supplies and the Pico disconnected:
 6. Connect board `GND` to Pico `AGND` only after the above checks pass. Record actual rail voltages, output baseline, output span, gain-trim position, and sensor orientation in the calibration metadata.
 
 This evidence does not change the existing raw-data requirement: the Pico should retain timestamped raw ADC values, while the reference-channel calibration to force is performed later during analysis.
-
