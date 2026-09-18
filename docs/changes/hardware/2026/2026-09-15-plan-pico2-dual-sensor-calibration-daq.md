@@ -58,11 +58,14 @@ reference, and full-scale output must be metered before connection.
 
 ## Risks and follow-up
 
-The board photo identifies INA101KU and labels `OUT`, `5V`, `+V`, `-V`, and
-`GND`; it also shows a 100 kOhm trim and 4.3 kOhm fixed resistor. The INA101
-gain law is `G = 1 + 40 kOhm / R_G`, but the photo alone does not establish
-whether the trim is series or parallel with the fixed resistor. The reference
-sensor terminal mapping and actual output span remain open. Preserve raw data;
+The supplied PCB artwork identifies INA101KU in its SOL-16 package and labels
+the rear terminals `OUT`, `5V`, `+V`, `-V`, and `GND`; it also shows an
+integral four-pad load-cell footprint, a 100 kOhm trim, and a 4.3 kOhm fixed
+resistor. TI documents `G = 1 + 40 kOhm / R_G`: the 4.3 kOhm part is now the
+likely gain resistor (about 10.3 V/V), while the 100 kOhm pot is likely offset
+trim. The PCB artwork also makes `5V` likely bridge excitation, not an INA101
+rail. Those conclusions remain continuity checks, along with the actual output
+span. Preserve raw data;
 no force conversion, filtering, or automatic actuation is authorized by this
 plan. Keep the physical E-stop and main-power cutoff accessible during any
 later loaded test.

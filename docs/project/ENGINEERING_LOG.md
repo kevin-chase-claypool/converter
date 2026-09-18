@@ -4511,8 +4511,19 @@ Add new entries at the top of the log below this line.
 - DAQ control update: Pico GP15 now uses a latching SPST ON/OFF switch. ON
   grounds the `INPUT_PULLUP` pin/starts capture; OFF releases it/stops capture.
   It is explicitly separate from actuator power and the E-stop.
+- PCB/datasheet reconciliation (2026-09-18): the supplied instructor PCB
+  artwork shows the 5 N reference load cell as an integral four-pad assembly;
+  the rear green five-position terminal block is its only user wiring
+  interface. TI's INA101KU SOL-16 pinout identifies `+V`/`-V` as the amplifier
+  rails and `GND` as the `Common` reference. The board's separate `5V` label
+  is therefore not an INA101 supply pin and is likely bridge excitation. Its
+  visible 4.3 kOhm part is likely `R_G` (about 10.3 V/V); the 100 kOhm pot is
+  more likely offset trim. Every one of these board-specific mappings remains
+  subject to the documented power-off continuity check before wiring or
+  energizing the board.
 - Evidence: `HW-20260915-001`; `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`;
-  `docs/hardware/pico2-dual-sensor-daq.html`.
+  `docs/hardware/pico2-dual-sensor-daq.html`;
+  `docs/report/lab-notes/2026-09-18-ina101ku-instructor-pcb-datasheet-reconciliation.md`.
 - Next action: identify the actual INA101/reference-sensor terminal and supply
   details, inspect both CS1238 boards, then perform the specified power-off
   and meter checks before writing DAQ firmware.

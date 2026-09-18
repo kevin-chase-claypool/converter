@@ -25,8 +25,8 @@ The accompanying wiring diagram is
 | Toolhead commands | Existing USB-to-TTL service adapter -> Pro Micro UART1 `GP20`/`GP21` | Required for the loaded calibration phase. Use the existing documented command interface; this command path is separate from the Pico measurement time base. |
 | CS1238 power | Pico 2 `3V3(OUT)` -> `VCC`; Pico `GND` -> `GND` | Planned. Confirm the actual CS1238 board is 3.3 V-safe and its bridge-reference configuration/excitation before power. |
 | CS1238 digital | Pico `GP2` -> `SCK`; CS1238 `DT`/`DRDY-DOUT` -> Pico `GP3` | Planned. Both signals are 3.3 V logic. No level shifting is authorized until the received board is inspected. |
-| Reference sensor | Instructor 5 N strain-gauge sensor -> existing INA101 board input | Planned. Identify the sensor conductors and board input/excitation terminals from their markings before connecting. |
-| INA101 supply | Rear board terminals labelled `+V`, `-V`, `GND` -> verified dual bench supply | Required verification. The INA101KU operates from ±5 V to ±20 V rails; do not power it from Pico 3.3 V or the board's `5V` terminal. |
+| Reference sensor | Instructor 5 N strain-gauge sensor, integrated on the INA101KU board assembly | Planned. The supplied PCB artwork shows an internal four-pad load-cell footprint. The green five-position rear terminal block is the only user wiring interface; do not add a separate sensor-input harness. |
+| INA101 supply | Rear board terminals labelled `+V`, `-V`, `GND` -> verified dual bench supply | Required verification. `+V` and `-V` are the INA101KU bipolar amplifier rails (±5 V to ±20 V); do not power the amplifier from Pico 3.3 V. |
 | Reference excitation | Rear board terminal labelled `5V` -> same dual-supply `+5 V` rail used for INA `+V`, if continuity mapping proves it is the bridge-excitation path | TBD. This is a branch of the same physical dual-output bench supply, not a third supply. Leave the wire disconnected until the board and reference sensor are mapped with power removed. |
 | INA101 output | Board-labelled `OUT` -> 1 kOhm series resistor -> Pico `GP26` / ADC0 | Required verification. Probe the output first. A negative or greater-than-3.3-V output must never reach Pico ADC0. |
 | ADC reference | Board-labelled `GND` -> Pico `AGND` only after the supply/reference relationship is metered | Required verification. This is the analogue signal reference, not permission to tie unknown supply rails together. |
@@ -101,17 +101,18 @@ passes.
 ## Required checks before live loading
 
 1. With power removed, inspect and photograph both CS1238 boards and the
-   reference sensor. The INA101 board is visually identified as INA101KU with
-   upper terminals `OUT`, `5V`, `+V`, `-V`, and `GND`, a 100 kOhm trim, and a
-   4.3 kOhm fixed resistor; the lower load-cell terminals still require a
-   continuity-mapped order.
+   reference-board rear terminal block. The INA101 board is visually identified
+   as INA101KU with terminals `OUT`, `5V`, `+V`, `-V`, and `GND`, a 100 kOhm
+   trim, a 4.3 kOhm fixed resistor, and an internal four-pad load-cell
+   footprint. The rear terminal block is the only user wiring interface.
 2. Complete E-07C bridge-resistance and `E+`--`E-` excitation checks for
    CS1238 #1 before accepting readings.
-3. With power removed, measure the resistance seen by the INA101 gain network
-   at the trim extremes. The IC gain law is `G = 1 + 40 kOhm / R_G`; if the
-   4.3 kOhm resistor is the minimum series `R_G`, the maximum gain is about
-   10.3 V/V. Do not assume whether the 100 kOhm trim is series or parallel
-   until that resistance check proves it.
+3. With power removed, continuity-map the rear terminals to the INA101KU
+   SOL-16 pins: `OUT` to pin 1, `+V` to pin 2, `-V` to pin 10, and `GND` to
+   pin 9 (`Common`). The 4.3 kOhm part is the likely gain resistor, giving
+   approximately `G = 1 + 40 kOhm / 4.3 kOhm = 10.3 V/V`; the 100 kOhm pot is
+   more likely the data-sheet-style offset trim. Confirm both conclusions by
+   continuity before adjusting either control.
 4. Power the INA101 only from its verified ± supply arrangement. Its labelled
    `5V` terminal is not the INA101 amplifier rail; if continuity proves it is
    bridge excitation, branch it from the same +5 V bench-supply rail used for
@@ -123,6 +124,9 @@ passes.
 6. Verify raw CS1238 and ADC records with no actuator power. Only then permit
    a guarded, operator-supervised loading test with the existing physical
    E-stop and main-power cutoff accessible.
+
+The evidence and meter procedure behind this correction are recorded in
+[`2026-09-18-ina101ku-instructor-pcb-datasheet-reconciliation.md`](../report/lab-notes/2026-09-18-ina101ku-instructor-pcb-datasheet-reconciliation.md).
 
 ## Setup checklist
 
