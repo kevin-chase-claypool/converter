@@ -63,20 +63,20 @@
     <rect x="42" y="450" width="190" height="120" class="box"/>
     <text x="137" y="482" text-anchor="middle" class="label">5 N reference sensor</text>
     <text x="61" y="513" class="small">Integral board assembly</text><text x="61" y="539" class="tiny">No user sensor harness</text>
-    <rect x="302" y="450" width="250" height="215" class="warn"/>
+    <rect x="302" y="450" width="250" height="235" class="warn"/>
     <text x="427" y="482" text-anchor="middle" class="label">INA101KU board</text>
-    <text x="322" y="508" class="small">Rear terminals (only user wiring)</text><text x="322" y="530" class="small">OUT · 5V* · +V · −V · GND</text><text x="322" y="553" class="small">4.3 kΩ R_G likely: G ≈ 10.3</text><text x="322" y="576" class="small">100 kΩ pot likely offset trim</text><text x="322" y="599" class="small">OUT / GND → Pico</text><text x="322" y="622" class="small">+V / −V / GND → supply</text><text x="322" y="645" class="danger">Meter OUT: 0–3.3 V only.</text>
+    <text x="322" y="508" class="small">Rear terminals (only user wiring)</text><text x="322" y="529" class="small">OUT · 5V · +V · −V · GND</text><text x="322" y="551" class="small">5V: bridge excitation (confirmed)</text><text x="322" y="573" class="small">4.3 kΩ R_G likely: G ≈ 10.3</text><text x="322" y="595" class="small">100 kΩ pot likely offset trim</text><text x="322" y="617" class="small">OUT / GND → Pico</text><text x="322" y="639" class="small">+V / −V / GND → supply</text><text x="322" y="661" class="danger">Meter OUT: 0–3.3 V only.</text>
     <path d="M380 450 V390 H585 V218 H622" class="wire analog"/>
     <path d="M460 450 V410 H605 V248 H622" class="wire ground"/>
     <rect x="870" y="450" width="210" height="155" class="warn"/>
     <text x="975" y="482" text-anchor="middle" class="label">Dual-output bench supply</text>
     <text x="890" y="508" class="tiny">series-linked, both channels at 5 V</text>
-    <text x="890" y="530" class="small">+5 V → INA +V, 5V*</text><text x="890" y="556" class="small">−5 V → INA −V</text><text x="890" y="582" class="small">0 V → INA GND / Pico AGND</text>
-    <path d="M552 510 H600 V530 H870" class="wire power tbd"/>
+    <text x="890" y="530" class="small">+5 V → INA +V, 5V</text><text x="890" y="556" class="small">−5 V → INA −V</text><text x="890" y="582" class="small">0 V → INA GND / Pico AGND</text>
+    <path d="M552 510 H600 V530 H870" class="wire power"/>
     <path d="M552 530 H870" class="wire power"/>
     <path d="M552 556 H870" class="wire"/>
     <path d="M552 582 H870" class="wire ground"/>
-    <text x="42" y="715" class="tiny">* `5V` is not an INA101 supply pin. Connect it to +5 V only after continuity proves it is bridge excitation.</text>
+    <text x="42" y="715" class="tiny">Board `5V` is the original Arduino 5 V bridge-excitation input; branch the fixture +5 V rail to it and INA `+V`.</text>
     <text x="42" y="755" class="danger">Safety: CS1238 #1 is the sole ADC owner of the toolhead bridge during this test. Disconnect the Pro Micro/HX711 path.</text>
   </svg>
   <div class="notes"><strong>Do not parallel ADCs.</strong> During this calibration, CS1238 #1 and the Pico own the toolhead load-cell path. Disconnect it from the Pro Micro/HX711 path; do not share SCK or DOUT. On the instructor board, the reference sensor is integral: wire only the rear green terminal block. With power removed, continuity-check `OUT`, `+V`, `−V`, and `GND` against INA101KU pins before connecting supply or ADC0.</div>

@@ -27,7 +27,7 @@ The accompanying wiring diagram is
 | CS1238 digital | Pico `GP2` -> `SCK`; CS1238 `DT`/`DRDY-DOUT` -> Pico `GP3` | Planned. Both signals are 3.3 V logic. No level shifting is authorized until the received board is inspected. |
 | Reference sensor | Instructor 5 N strain-gauge sensor, integrated on the INA101KU board assembly | Planned. The supplied PCB artwork shows an internal four-pad load-cell footprint. The green five-position rear terminal block is the only user wiring interface; do not add a separate sensor-input harness. |
 | INA101 supply | Rear board terminals labelled `+V`, `-V`, `GND` -> verified dual bench supply | Required verification. `+V` and `-V` are the INA101KU bipolar amplifier rails (±5 V to ±20 V); do not power the amplifier from Pico 3.3 V. |
-| Reference excitation | Rear board terminal labelled `5V` -> same dual-supply `+5 V` rail used for INA `+V`, if continuity mapping proves it is the bridge-excitation path | TBD. This is a branch of the same physical dual-output bench supply, not a third supply. Leave the wire disconnected until the board and reference sensor are mapped with power removed. |
+| Reference excitation | Rear board terminal labelled `5V` -> same dual-supply `+5 V` rail used for INA `+V` | Planned wiring; terminal purpose confirmed by the owner as the original Arduino 5 V input. It is bridge excitation, not an INA101 supply rail. This is a branch of the same physical dual-output bench supply, not a third supply. |
 | INA101 output | Board-labelled `OUT` -> 1 kOhm series resistor -> Pico `GP26` / ADC0 | Required verification. Probe the output first. A negative or greater-than-3.3-V output must never reach Pico ADC0. |
 | ADC reference | Board-labelled `GND` -> Pico `AGND` only after the supply/reference relationship is metered | Required verification. This is the analogue signal reference, not permission to tie unknown supply rails together. |
 | DAQ ON/OFF switch | Pico `GP15` -> latching SPST switch -> Pico `GND` | Optional physical DAQ control. Firmware uses `INPUT_PULLUP`: switch ON closes to GND and reads LOW; switch OFF opens and reads HIGH. ON starts a run and OFF stops it; it does not control motor power or replace E-stop. |
@@ -114,9 +114,9 @@ passes.
    more likely the data-sheet-style offset trim. Confirm both conclusions by
    continuity before adjusting either control.
 4. Power the INA101 only from its verified ± supply arrangement. Its labelled
-   `5V` terminal is not the INA101 amplifier rail; if continuity proves it is
-   bridge excitation, branch it from the same +5 V bench-supply rail used for
-   `+V`. With the reference sensor unloaded and then gently loaded, meter
+   `5V` terminal is the original Arduino 5 V bridge-excitation input, not an
+   INA101 amplifier rail; branch it from the same +5 V bench-supply rail used
+   for `+V`. With the reference sensor unloaded and then gently loaded, meter
    `OUT` relative to board `GND` before connecting Pico ADC0. It must stay in
    the inclusive 0-3.3 V range with margin across the planned 5 N range.
 5. Verify the Pico `AGND` signal-reference connection produces a stable ADC
@@ -157,11 +157,10 @@ until those programs are added and verified.
 - [ ] Measure and record the toolhead bridge resistance and the isolated
   resistance between its signal/excitation conductors. Do not apply power if
   there is an unexpected short.
-- [ ] Identify the four reference-sensor conductors and map them to the
-  INA101 board's rear green-terminal input pins using continuity only.
 - [ ] Map the rear green-terminal pins labelled `OUT`, `5V`, `+V`, `-V`, and
-  `GND` to the board traces. In particular, prove whether `5V` is bridge
-  excitation before connecting any 5 V source.
+  `GND` to the board traces. The owner has confirmed `5V` is the original
+  Arduino 5 V bridge-excitation input; verify the other terminal-to-INA101
+  mappings and absence of shorts before applying power.
 - [ ] With power removed, measure the INA101 gain-network resistance at both
   trim extremes and record the results. Do not turn the trim during a loaded
   acquisition.
@@ -185,17 +184,11 @@ until those programs are added and verified.
 
 ### 4. Wire and prove the reference path
 
-- [ ] Connect the reference sensor to the continuity-mapped INA101 input
-  terminals only.
 - [ ] With bench outputs still off, series-link the two 5 V bench channels:
   channel 1 negative to channel 2 positive is the 0 V midpoint. Connect
-  channel 1 positive to INA `+V`, channel 2 negative to INA `-V`, and the
-  midpoint to INA `GND`.
+  channel 1 positive to **both** INA `+V` and board `5V`, channel 2 negative
+  to INA `-V`, and the midpoint to INA `GND`.
 - [ ] Leave the INA101 `OUT` wire disconnected from Pico `GP26` initially.
-- [ ] Leave the labelled INA101 `5V` terminal disconnected unless the
-  power-off mapping has specifically proved it is the correct reference-bridge
-  excitation connection. Once proven, branch it from the same channel-1
-  positive / +5 V rail that feeds INA `+V`; do not add a third supply.
 - [ ] Power the INA101 from the verified dual supply and meter `OUT` relative
   to board `GND`, unloaded and under a gentle hand load. Confirm it stays
   inside **0–3.3 V with margin** and has the expected polarity throughout the

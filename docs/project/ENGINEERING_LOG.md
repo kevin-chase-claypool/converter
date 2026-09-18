@@ -4521,6 +4521,12 @@ Add new entries at the top of the log below this line.
   more likely offset trim. Every one of these board-specific mappings remains
   subject to the documented power-off continuity check before wiring or
   energizing the board.
+- Owner terminal-role confirmation (2026-09-18): board `5V` was powered from
+  an Arduino 5 V rail in the original installation. It is therefore the
+  confirmed bridge-excitation input. The fixture uses the same series-linked
+  bench supply: its +5 V rail branches to both INA `+V` and board `5V`; this
+  does not add a third power supply. The fixture remains unpowered and the
+  required short/polarity/output-span checks are unchanged.
 - Evidence: `HW-20260915-001`; `docs/hardware/PICO2_DUAL_SENSOR_DAQ.md`;
   `docs/hardware/pico2-dual-sensor-daq.html`;
   `docs/report/lab-notes/2026-09-18-ina101ku-instructor-pcb-datasheet-reconciliation.md`.

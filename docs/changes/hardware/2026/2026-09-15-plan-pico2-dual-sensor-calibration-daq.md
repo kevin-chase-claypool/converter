@@ -63,19 +63,20 @@ the rear terminals `OUT`, `5V`, `+V`, `-V`, and `GND`; it also shows an
 integral four-pad load-cell footprint, a 100 kOhm trim, and a 4.3 kOhm fixed
 resistor. TI documents `G = 1 + 40 kOhm / R_G`: the 4.3 kOhm part is now the
 likely gain resistor (about 10.3 V/V), while the 100 kOhm pot is likely offset
-trim. The PCB artwork also makes `5V` likely bridge excitation, not an INA101
-rail. Those conclusions remain continuity checks, along with the actual output
-span. Preserve raw data;
+trim. The project owner subsequently confirmed `5V` was the original Arduino
+5 V bridge-excitation input, not an INA101 rail; it now branches from the
+fixture +5 V rail alongside `+V`. The gain and output-span conclusions still
+require power-off/powered verification. Preserve raw data;
 no force conversion, filtering, or automatic actuation is authorized by this
 plan. Keep the physical E-stop and main-power cutoff accessible during any
 later loaded test.
 
 The bench diagram shows PC USB supplying the Pico (which supplies 3.3 V only
 to CS1238 #1), while one series-linked dual-output bench supply provides the
-INA101 `+5 V`, `0 V`, and `-5 V` rails. If continuity proves the board's `5V`
-terminal is the reference bridge-excitation input, it branches from that same
-+5 V rail; it is not a separate third supply. Terminal mapping remains a
-power-off prerequisite.
+INA101 `+5 V`, `0 V`, and `-5 V` rails. The owner confirmed board `5V` is the
+reference bridge-excitation input, so it branches from that same +5 V rail; it
+is not a separate third supply. Terminal-to-INA101 mapping remains a power-off
+prerequisite.
 
 Pico `GP15` is now assigned to a latching SPST DAQ ON/OFF switch rather than
 a momentary control. Switch ON grounds GP15 (active LOW) to start capture and
