@@ -292,6 +292,15 @@ ON closes it to Pico GND/LOW and starts capture; OFF opens it/HIGH and stops
 capture. It has no authority over Pro Micro actuator power, the physical
 E-stop, or the main-power cutoff.
 
+The temporary Pico 2 USB CDC data contract is `SAMPLE,<toolhead_time_us>,
+<toolhead_cs1238_raw>,<reference_time_us>,<reference_adc_raw>` and
+`EVENT,<pico_time_us>,motion_start|motion_end,<marker_level>`. Every time is
+relative to the Pico `TEST_START` monotonic origin. The host must separate
+these record payloads into raw-data and marker-event CSV files without
+substituting host receive time for a sensor time. `START`, `STOP`, and `STATUS`
+are optional future host-to-Pico commands; a USB `START` is accepted only when
+GP15 is physically ON, while opening GP15 always stops capture.
+
 Power boundary:
 
 | Rail | Owner | Contract |

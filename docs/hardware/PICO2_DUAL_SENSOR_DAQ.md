@@ -264,3 +264,36 @@ timestamped force and the closest raw CS1238 sample to evaluate the toolhead
 sensor's signed transfer, linearity, hysteresis, and residuals. Do not assume
 the relationship is linear or copy resulting constants into the toolhead
 controller until the force-path acceptance test is documented.
+
+## Pico 2 firmware and raw stream
+
+The implemented fixture firmware is
+[`firmware/pen_pressure/pico2_dual_sensor_daq/`](../../firmware/pen_pressure/pico2_dual_sensor_daq/).
+It is native Pico SDK firmware for `PICO_BOARD=pico2`, not an Arduino sketch.
+It configures CS1238 #1 for channel A, gain 128, external reference, and
+640 SPS. It reads one signed 24-bit conversion and one unfiltered 12-bit ADC0
+code per record; it does not tare, scale, filter, average, or command the Pro
+Micro.
+
+After USB CDC connection and CS1238 configuration, the Pico emits `READY`.
+Closing the GP15 switch begins a run; opening it stops one. The future PC
+runner may additionally send newline-terminated `START`, `STOP`, or `STATUS`,
+but `START` is rejected while the physical GP15 DAQ switch is OFF. GP15 never
+controls motor power.
+
+During a run the serial stream uses these record types:
+
+```text
+TEST_START,source=switch,monotonic_origin_us=...
+SAMPLES_HEADER,toolhead_time_us,toolhead_cs1238_raw,reference_time_us,reference_adc_raw
+EVENTS_HEADER,pico_time_us,event,marker_level
+SAMPLE,0,5823412,7,1247
+EVENT,1550,motion_start,1
+TEST_STOP,reason=daq_switch_off,samples=...,marker_overflow=0
+```
+
+All times in `SAMPLE` and `EVENT` rows are microseconds relative to the Pico
+run origin. The Windows logger must write `SAMPLE` payloads to the raw-data CSV
+and `EVENT` payloads to a separate event CSV; PC wall-clock reception time is
+metadata only. This source has not yet been bench-verified against the actual
+CS1238 breakout or INA101 output span.

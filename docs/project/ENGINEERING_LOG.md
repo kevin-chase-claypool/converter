@@ -534,6 +534,7 @@ Entry details remain only in the chronology.
 - [2026-09-13 - HARDWARE/PLANNED - Replace HX711 force-sensing path with CS1238](#elog-20260913-replace-hx711-force-sensing-path-with-cs1238)
 - [2026-09-14 - RP23CNC SOFTWARE/IMPLEMENTED - CS1238 motor-inert bring-up source](#elog-20260914-cs1238-motor-inert-bring-up-source)
 - [2026-09-15 - HARDWARE/PLANNED - Pico 2 dual-sensor calibration DAQ](#elog-20260915-pico-2-dual-sensor-calibration-daq)
+- [2026-09-19 - RP23CNC-SOFTWARE/IMPLEMENTED - Pico 2 raw dual-sensor DAQ firmware](#elog-20260919-pico-2-raw-dual-sensor-daq-firmware)
 
 ### Testing and verification
 - [2026-09-05 - SOFTWARE/SUCCESS - Corrected converter startup contract](#elog-20260905-corrected-converter-startup-contract)
@@ -4533,3 +4534,31 @@ Add new entries at the top of the log below this line.
 - Next action: identify the actual INA101/reference-sensor terminal and supply
   details, inspect both CS1238 boards, then perform the specified power-off
   and meter checks before writing DAQ firmware.
+
+<a id="elog-20260919-pico-2-raw-dual-sensor-daq-firmware"></a>
+### 🟨 2026-09-19 - RP23CNC-SOFTWARE/IMPLEMENTED - Pico 2 raw dual-sensor DAQ firmware
+
+- Status: source implemented; Pico SDK compilation and all fixture bench tests
+  remain open.
+- Category: rp23cnc-software, hardware, windows-software, Pico 2, CS1238,
+  INA101, strain gauge, force calibration.
+- Result: added a native RP2350 Pico SDK project that uses GP2/GP3 for CS1238
+  #1, GP26/ADC0 for the INA101 `OUT`, GP14 marker interrupts, GP15 latching
+  DAQ enable, and Pico USB CDC. It emits raw `SAMPLE` records, marker `EVENT`
+  records, and test lifecycle records with a Pico monotonic-time origin.
+- Safety boundary: this code is Pico-only data acquisition. It contains no
+  actuator commands, Pro Micro service-UART path, DRV8833 pins, or toolhead
+  power control. GP15 controls capture only; the manual toolhead power cutoff
+  and E-stop remain required for a later loaded test.
+- Decision: do not use an Arduino core for this fixture. The target is
+  `PICO_BOARD=pico2`; its host stream is designed for a future Windows logger
+  to create raw sample/event CSV files without substituting USB receipt time
+  for the measurement clock.
+- Verification: source static review and `git diff --check` passed. No local
+  Pico SDK / ARM toolchain was available for a build, and no hardware was
+  connected or energized.
+- Next action: install/select a Pico SDK toolchain, build and flash the UF2,
+  prove the INA101 output range, then run the motor-unpowered 30-second
+  timestamp/marker acceptance gate before applying toolhead 6 V.
+- Evidence: `RPSW-20260919-001`; E-09C;
+  `firmware/pen_pressure/pico2_dual_sensor_daq/`.
