@@ -30,14 +30,13 @@ The accompanying wiring diagram is
 | Reference excitation | Rear board terminal labelled `5V` -> same dual-supply `+5 V` rail used for INA `+V` | Planned wiring; terminal purpose confirmed by the owner as the original Arduino 5 V input. It is bridge excitation, not an INA101 supply rail. This is a branch of the same physical dual-output bench supply, not a third supply. |
 | INA101 output | Board-labelled `OUT` -> 1 kOhm series resistor -> Pico `GP26` / ADC0 | Required verification. Probe the output first. A negative or greater-than-3.3-V output must never reach Pico ADC0. |
 | ADC reference | Board-labelled `GND` -> Pico `AGND` only after the supply/reference relationship is metered | Required verification. This is the analogue signal reference, not permission to tie unknown supply rails together. |
-| DAQ ON/OFF switch | Pico `GP15` -> latching SPST switch -> Pico `GND` | Optional physical DAQ control. Firmware uses `INPUT_PULLUP`: switch ON closes to GND and reads LOW; switch OFF opens and reads HIGH. ON starts a run and OFF stops it; it does not control motor power or replace E-stop. |
-| Motion marker | Pro Micro `GP1` -> Pico `GP14`; Pro Micro `TOOL_GND` -> Pico `GND` | Planned temporary test-only timing marker. Both are 3.3 V logic; never use `PC817C CTRL_GND`. Pico records the two marker edges on its own microsecond clock. |
+| DAQ gate | Pro Micro `GP0` -> Pico `GP15`; Pro Micro `TOOL_GND` -> Pico `GND` | Temporary test-only start/stop gate. Both are 3.3 V logic; never use `PC817C CTRL_GND`. Pro Micro reset/idle drives GP0 HIGH, which stops Pico capture; a commanded run drives GP0 LOW before motion and HIGH after settle. |
 | PC link | PC USB port -> Pico micro-USB | USB supplies Pico power and carries the CDC serial stream for the DAQ fixture. Pico `3V3(OUT)` then powers CS1238 #1 only. |
 
 The production Pro Micro retains its existing GP0/GP1/3V3/GND CS1238 path when
-the test fixture is removed. During the test GP1 is reassigned only as a
-`MOTION_ACTIVE` output; it returns to CS1238 clock ownership when the fixture
-is removed. The test harness temporarily gives CS1238 #1 its own Pico
+the test fixture is removed. During the test GP0 is reassigned only as a
+DAQ-gate output and returns to CS1238 data duty when the fixture is removed.
+GP1 is unused by this fixture. The test harness temporarily gives CS1238 #1 its own Pico
 connections; do not parallel either ADC's clock or data pins.
 
 ## Raw stream and PC storage
@@ -59,12 +58,27 @@ supply/gain settings, sensor identities, and operator notes. No moving
 average, tare subtraction, or force conversion is permitted in the acquisition
 CSV.
 
-The Pico also records `motion_start_us` and `motion_end_us` when its `GP14`
-interrupt receives the Pro Micro's `MOTION_ACTIVE` rising and falling edges.
-Those event times belong in a separate raw `events.csv` or clearly identified
-event records, not inferred from PC command receipt time. The Pro Micro sets
-the marker HIGH immediately before an actuator pulse and LOW immediately after
-it ends; boot, stop, and fault leave it LOW.
+The GP0-to-GP15 gate makes the Pico capture window deterministic: the Pro
+Micro drives it LOW, waits 100 ms for pre-motion samples, performs one bounded
+pulse, retains the requested settle interval, then drives it HIGH. The raw
+force traces therefore contain the whole response even though PC receipt times
+remain metadata rather than sensor timestamps.
+
+After a pulse, the Windows fixture panel reports an **estimated settling time**
+for the CS1238 and for the reference ADC separately. It uses the final 200 ms
+of each raw trace as the tentative steady state, then finds the first
+post-pulse 200 ms interval within that final mean plus/minus three observed
+standard deviations plus one raw count. The result is saved as
+`settling_analysis.json` beside that run's unchanged raw CSV. It is an
+operator aid for choosing the `Settle ms` capture duration, not a replacement
+for reviewing the complete force trace or for a force-calibration result.
+
+The Windows fixture has two deliberate calibration stages. **Reference
+Calibration** records unloaded/known-mass captures, persists the reference
+ADC-to-force fit, and saves its CSV, JSON, and plot. **Toolhead Calibration**
+retains every raw pulse sample but fits CS1238 count to reference force using
+only the common post-settling region. Its timestamped result folder includes
+time-trace, transfer-fit, and residual PNG graphs; none replaces the raw CSV.
 
 Every completed run also requires the paper-ready figure package specified in
 [`../report/FORCE_CALIBRATION_RESULTS.md`](../report/FORCE_CALIBRATION_RESULTS.md).
@@ -77,22 +91,21 @@ Use two USB COM ports on the PC, with separate responsibilities:
 
 1. **Pico 2 native USB:** the sole high-rate measurement stream. It emits the
    raw CS1238 and ADC0 values plus Pico microsecond timestamps.
-2. **Existing USB-to-TTL adapter -> Pro Micro `Serial2`:** controlled `d`,
-   `u`, `x`, and step-duration commands plus low-rate command/actuator status.
+2. **Existing USB-to-TTL adapter -> Pro Micro `Serial2`:** the dedicated
+   fixture's `RUN DOWN|UP <pulse_ms> <settle_ms>`, `STATUS`, and `STOP`
+   commands plus low-rate driver-fault status.
    It is already a USB connection at the PC but does not power the Pro Micro;
    adapter `VCC` stays disconnected.
 
 This preserves the established 6 V -> S7V8F5 -> Pro Micro power path and
-avoids changing the working toolhead controller for the calibration. The
-currently staged E-07B actuator-step sketch already accepts short `d`/`u`
-pulses and `x` stop through that service UART; its disconnected HX711 reports
-are not calibration data and should be ignored. The integrated toolhead
-firmware remains commissioning-locked and must not be used for force control.
+uses the dedicated fixture sketch, not E-07B or the integrated toolhead
+firmware. The fixture is restricted to one 10-100 ms pulse per `RUN`; `STOP`,
+reset, fault, or malformed input sleeps the driver and releases GP0 HIGH.
 
-The unavoidable new work is limited to Pico DAQ firmware and a PC logger. The
-logger first starts Pico capture, then sends a low-rate Pro Micro pulse command
-and records its text acknowledgement in a separate command log. Pico time,
-not PC or Pro Micro receive time, remains the only time base used to compare
+The fixture package includes Pico DAQ firmware, Pro Micro actuator code, and a
+Windows logger. The logger confirms both boards, then sends one low-rate Pro
+Micro `RUN`; GP0 starts/stops Pico capture and the logger records the command
+acknowledgement. Pico time, not PC or Pro Micro receive time, remains the only time base used to compare
 the two force sensors. Native Pro Micro USB CDC may be evaluated later after
 the external-power/USB voltage check in
 [`2026-09-16-promicro-external-power-usb-cdc-research.md`](../report/lab-notes/2026-09-16-promicro-external-power-usb-cdc-research.md)
@@ -178,9 +191,10 @@ until those programs are added and verified.
 - [ ] Connect CS1238 `DT`/`DRDY` to Pico `GP3`.
 - [ ] Inspect every CS1238 connection against the wiring table and confirm no
   other MCU, HX711, or ADC remains connected to that bridge.
-- [ ] Connect Pro Micro `GP1` to Pico `GP14` and Pro Micro `TOOL_GND` to Pico
-  `GND` as a separate two-wire timing-marker pair. Confirm both boards are
-  de-energized first and never use the isolated `PC817C CTRL_GND` node.
+- [ ] Connect Pro Micro `GP0` to Pico `GP15` and Pro Micro `TOOL_GND` to Pico
+  `GND` as the two-wire DAQ gate. Confirm both boards are de-energized first
+  and never use the isolated `PC817C CTRL_GND` node. Leave GP1 and Pico GP14
+  unconnected for this fixture.
 
 ### 4. Wire and prove the reference path
 
@@ -208,12 +222,10 @@ until those programs are added and verified.
   substitute data because it does not share the Pico timestamp base.
 - [ ] Confirm the DAQ reports raw CS1238 values and raw ADC0 values with Pico
   microsecond timestamps, with no moving average, tare, or force conversion.
-- [ ] Confirm the Pico reports and records a rising and falling `GP14` marker
-  event while the Pro Micro is motor-unpowered. These Pico timestamps, rather
-  than PC or USB receipt times, establish the command-to-force alignment.
-- [ ] With the actuator supply still off, prove the latching GP15 DAQ switch:
-  ON closes GP15 to Pico GND and starts a test; OFF opens it and stops the
-  test. It must not change actuator power or substitute for the E-stop.
+- [ ] With the actuator supply still off, prove the GP0-to-GP15 gate: Pro
+  Micro boot, `STATUS`, `STOP`, and reset leave GP0 HIGH/Pico stopped. A dry
+  `RUN` drives GP0 LOW before its bounded motion interval and HIGH afterward.
+  It must not change actuator power or substitute for the E-stop.
 - [ ] Confirm the PC logger creates a new dated run directory containing the
   raw CSV, event CSV, Pro Micro command/reply log, and metadata before any
   loading test.
@@ -267,33 +279,31 @@ controller until the force-path acceptance test is documented.
 
 ## Pico 2 firmware and raw stream
 
-The implemented fixture firmware is
-[`firmware/pen_pressure/pico2_dual_sensor_daq/`](../../firmware/pen_pressure/pico2_dual_sensor_daq/).
-It is native Pico SDK firmware for `PICO_BOARD=pico2`, not an Arduino sketch.
+The implemented fixture package is
+[`firmware/pen_pressure/force_calibration_test/`](../../firmware/pen_pressure/force_calibration_test/).
+It is an Arduino-Pico sketch targeting Raspberry Pi Pico 2; no Arduino board
+is involved.
 It configures CS1238 #1 for channel A, gain 128, external reference, and
 640 SPS. It reads one signed 24-bit conversion and one unfiltered 12-bit ADC0
 code per record; it does not tare, scale, filter, average, or command the Pro
 Micro.
 
 After USB CDC connection and CS1238 configuration, the Pico emits `READY`.
-Closing the GP15 switch begins a run; opening it stops one. The future PC
-runner may additionally send newline-terminated `START`, `STOP`, or `STATUS`,
-but `START` is rejected while the physical GP15 DAQ switch is OFF. GP15 never
-controls motor power.
+Pro Micro GP0 LOW begins a run through Pico GP15; GP0 HIGH stops it. The
+Pro Micro fixture defaults GP0 HIGH at boot and after every fault or stop. GP15
+never controls motor power.
 
 During a run the serial stream uses these record types:
 
 ```text
-TEST_START,source=switch,monotonic_origin_us=...
+TEST_START,source=gp0_gate,monotonic_origin_us=...
 SAMPLES_HEADER,toolhead_time_us,toolhead_cs1238_raw,reference_time_us,reference_adc_raw
-EVENTS_HEADER,pico_time_us,event,marker_level
 SAMPLE,0,5823412,7,1247
-EVENT,1550,motion_start,1
-TEST_STOP,reason=daq_switch_off,samples=...,marker_overflow=0
+TEST_STOP,reason=daq_gate_off,samples=...
 ```
 
-All times in `SAMPLE` and `EVENT` rows are microseconds relative to the Pico
-run origin. The Windows logger must write `SAMPLE` payloads to the raw-data CSV
-and `EVENT` payloads to a separate event CSV; PC wall-clock reception time is
-metadata only. This source has not yet been bench-verified against the actual
-CS1238 breakout or INA101 output span.
+All times in `SAMPLE` rows are microseconds relative to the Pico run origin.
+The Windows logger writes `SAMPLE` payloads to the raw-data CSV and lifecycle
+records to `events.csv`; PC wall-clock reception time is metadata only. This
+source has not yet been bench-verified against the actual CS1238 breakout or
+INA101 output span.

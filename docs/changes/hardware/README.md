@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-19 | `WINSW-20260919-001` | implemented | [Add guided force-calibration analysis workflow](../windows-software/2026/2026-09-19-add-guided-force-calibration-analysis.md) | `force-calibration`, `pico2`, `cs1238`, `ina101`, `plotting` |
 | 2026-09-19 | `RPSW-20260919-001` | implemented | [Add Pico 2 dual-sensor DAQ firmware](../rp23cnc-software/2026/2026-09-19-add-pico2-dual-sensor-daq-firmware.md) | `pico2`, `cs1238`, `ina101`, `force-calibration`, `raw-data` |
 | 2026-09-14 | `RPSW-20260914-001` | implemented | [Add CS1238 motor-inert bring-up firmware](../rp23cnc-software/2026/2026-09-14-add-cs1238-motor-inert-bringup.md) | `cs1238`, `load-cell`, `force-control`, `testing`, `motor-inert` |
 | 2026-09-13 | `RPSW-20260913-005` | implemented | [Add E-07B fast force trace](../rp23cnc-software/2026/2026-09-13-add-e07b-fast-force-trace.md) | `toolhead`, `e07b`, `hx711`, `force-calibration`, `testing` |

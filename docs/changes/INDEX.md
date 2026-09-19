@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-19 | `WINSW-20260919-001` | hardware, rp23cnc-software | implemented | [Add guided force-calibration analysis workflow](windows-software/2026/2026-09-19-add-guided-force-calibration-analysis.md) |
 | 2026-09-19 | `RPSW-20260919-001` | hardware, windows-software | implemented | [Add Pico 2 dual-sensor DAQ firmware](rp23cnc-software/2026/2026-09-19-add-pico2-dual-sensor-daq-firmware.md) |
 | 2026-09-15 | `HW-20260915-001` | rp23cnc-software, windows-software | planned | [Plan Pico 2 dual-sensor calibration DAQ](hardware/2026/2026-09-15-plan-pico2-dual-sensor-calibration-daq.md) |
 | 2026-09-14 | `RPSW-20260914-001` | hardware | implemented | [Add CS1238 motor-inert bring-up firmware](rp23cnc-software/2026/2026-09-14-add-cs1238-motor-inert-bringup.md) |

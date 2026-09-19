@@ -274,32 +274,23 @@ pulse and target force require T-01J evidence.
 
 ## Toolhead internal interfaces
 
-### Temporary Pico 2 calibration marker
+### Temporary Pico 2 calibration gate
 
-During the supervised dual-sensor calibration fixture only, Pro Micro `GP1`
-is detached from its production CS1238-clock role and becomes a 3.3 V
-`MOTION_ACTIVE` output to Pico 2 `GP14`. A separate `TOOL_GND` to Pico `GND`
-wire provides the signal reference; it must never use isolated `PC817C
-CTRL_GND`. The Pro Micro asserts the marker immediately before a commanded
-actuator pulse and releases it immediately after the pulse. Pico interrupt
-timestamps of those edges, not PC USB or UART receipt times, align the
-actuator event with the two raw force channels. Boot, fault, and explicit stop
-must hold the marker LOW. This temporary connection does not authorize a
-production force-control protocol.
-
-Pico `GP15` is a separate latching SPST DAQ ON/OFF input using `INPUT_PULLUP`:
-ON closes it to Pico GND/LOW and starts capture; OFF opens it/HIGH and stops
-capture. It has no authority over Pro Micro actuator power, the physical
-E-stop, or the main-power cutoff.
+During the supervised dual-sensor calibration fixture only, Pro Micro `GP0`
+is detached from its production CS1238-data role and becomes a 3.3 V DAQ-gate
+output to Pico 2 `GP15`. A separate `TOOL_GND` to Pico `GND` wire provides the
+signal reference; it must never use isolated `PC817C CTRL_GND`. Pico GP15 uses
+`INPUT_PULLUP`: Pro Micro reset/idle/HIGH stops capture, while LOW starts it.
+The dedicated Pro Micro fixture asserts LOW, waits 100 ms, issues one bounded
+actuator pulse, retains a requested settle interval, then returns HIGH. This
+temporary connection does not authorize a production force-control protocol.
 
 The temporary Pico 2 USB CDC data contract is `SAMPLE,<toolhead_time_us>,
-<toolhead_cs1238_raw>,<reference_time_us>,<reference_adc_raw>` and
-`EVENT,<pico_time_us>,motion_start|motion_end,<marker_level>`. Every time is
-relative to the Pico `TEST_START` monotonic origin. The host must separate
-these record payloads into raw-data and marker-event CSV files without
-substituting host receive time for a sensor time. `START`, `STOP`, and `STATUS`
-are optional future host-to-Pico commands; a USB `START` is accepted only when
-GP15 is physically ON, while opening GP15 always stops capture.
+<toolhead_cs1238_raw>,<reference_time_us>,<reference_adc_raw>`. Every time is
+relative to the Pico `TEST_START` monotonic origin. The host writes payloads to
+raw-data CSV without substituting host receive time for a sensor time. The
+dedicated Pro Micro contract is `STATUS`, `STOP`, and `RUN DOWN|UP <pulse_ms>
+<settle_ms>`; the Windows logger sends one `RUN` and logs replies separately.
 
 Power boundary:
 

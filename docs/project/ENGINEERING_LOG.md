@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20260919-guided-force-calibration-analysis"></a>
+### 🟨 2026-09-19 - WINDOWS SOFTWARE/IMPLEMENTED - Guided temporary force-calibration analysis
+
+- Status: the temporary Windows fixture application now stores known-mass
+  reference calibration, retains raw dual-sensor runs, and produces a proposed
+  CS1238-to-reference-force transfer fit plus plots. No hardware is connected
+  or qualified by this source change.
+- Category: windows-software, hardware, rp23cnc-software, Pico 2, CS1238,
+  INA101, force calibration, E-09C.
+- Decision: raw acquisition remains unfiltered and immutable. The fit uses
+  only the shared post-settling sample region; time-trace, transfer, and
+  residual plots retain the information needed to detect transient behavior
+  and up/down hysteresis before accepting a linear production coefficient.
+- Verification: Python syntax, synthetic settle/fit checks, documentation
+  index validation, and whitespace validation passed. Matplotlib is installed
+  by the Windows batch launcher on first use; no live serial, ADC, or actuator
+  run has been performed.
+- Evidence: `WINSW-20260919-001`; `force_calibration_test/pc_logger/`.
+- Next action: perform the required de-energized wiring and INA101 output-span
+  checks, then record reference known-mass points before any loaded pulse.
+
 <a id="elog-20260913-fast-force-trace-method-passed"></a>
 ### 🟩 2026-09-13 - HARDWARE/RP23CNC SOFTWARE/PASSED - E07B fast force-trace method
 
