@@ -44,6 +44,9 @@ only the common post-settling region for the CS1238-to-reference-force fit. A
 result folder contains the combined raw CSV, summary JSON, time-trace,
 transfer-fit, and residual plots. The live monitor also shows independent
 CS1238/reference settling estimates and the slower combined result.
+The Results tab indexes every timestamped Auto Calibrate session rather than
+only the newest one, so repeated force maps can be selected and reviewed
+independently.
 
 ## Verification
 

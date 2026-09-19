@@ -142,13 +142,19 @@ class CalibrationApp(tk.Tk):
         self.auto_button = ttk.Button(calibration, text="Auto Calibrate", command=self.auto_calibrate); self.auto_button.grid(row=5, column=0, columnspan=2, pady=(8, 0))
         self.result_summary = tk.StringVar(value="No calibration analysis has been created yet.")
         ttk.Label(results, text="Calibration outputs", font=("TkDefaultFont", 10, "bold")).grid(row=0, column=0, sticky="w")
-        ttk.Label(results, text="Auto Calibrate creates a self-contained results folder: raw combined data, fitted steady samples, summary JSON, and PNG graphs for your report.", wraplength=560).grid(row=1, column=0, sticky="w", pady=(6, 12))
-        ttk.Label(results, textvariable=self.result_summary, wraplength=560).grid(row=2, column=0, sticky="w", pady=(0, 12))
-        controls = ttk.Frame(results); controls.grid(row=3, column=0, sticky="w")
-        ttk.Button(controls, text="Open results folder", command=lambda: self.open_result(".")).grid(row=0, column=0, padx=(0, 6))
-        ttk.Button(controls, text="Open time-trace graph", command=lambda: self.open_result("time_traces.png")).grid(row=0, column=1, padx=6)
-        ttk.Button(controls, text="Open transfer graph", command=lambda: self.open_result("transfer_fit.png")).grid(row=0, column=2, padx=6)
-        ttk.Button(controls, text="Open residual graph", command=lambda: self.open_result("residuals.png")).grid(row=0, column=3, padx=6)
+        ttk.Label(results, text="Each Auto Calibrate session is retained separately. Select any completed session below to review its raw files and graphs.", wraplength=650).grid(row=1, column=0, sticky="w", pady=(6, 8))
+        self.result_table = ttk.Treeview(results, columns=("session", "status", "pulses", "slope", "r2"), show="headings", height=7)
+        for column, title, width in (("session", "Session", 200), ("status", "Status", 100), ("pulses", "Pulses", 80), ("slope", "N / CS count", 140), ("r2", "R²", 100)):
+            self.result_table.heading(column, text=title); self.result_table.column(column, width=width, anchor="center")
+        self.result_table.grid(row=2, column=0, sticky="w")
+        self.result_table.bind("<<TreeviewSelect>>", self.select_result)
+        ttk.Label(results, textvariable=self.result_summary, wraplength=650).grid(row=3, column=0, sticky="w", pady=(10, 8))
+        controls = ttk.Frame(results); controls.grid(row=4, column=0, sticky="w")
+        ttk.Button(controls, text="Refresh history", command=self.refresh_results_history).grid(row=0, column=0, padx=(0, 6))
+        ttk.Button(controls, text="Open results folder", command=lambda: self.open_result(".")).grid(row=0, column=1, padx=6)
+        ttk.Button(controls, text="Open time-trace graph", command=lambda: self.open_result("time_traces.png")).grid(row=0, column=2, padx=6)
+        ttk.Button(controls, text="Open transfer graph", command=lambda: self.open_result("transfer_fit.png")).grid(row=0, column=3, padx=6)
+        ttk.Button(controls, text="Open residual graph", command=lambda: self.open_result("residuals.png")).grid(row=0, column=4, padx=6)
         monitor = ttk.LabelFrame(shell, text="Live COM monitor", padding=8); monitor.grid(row=1, column=0, sticky="ew", pady=(10,0))
         ttk.Label(monitor, text="Pico 2").grid(row=0, column=0, sticky="w")
         self.pico_monitor = ttk.Treeview(monitor, columns=("event", "toolhead_us", "cs1238_raw", "reference_us", "reference_adc", "cs_settle", "ref_settle"), show="headings", height=1)
@@ -161,6 +167,7 @@ class CalibrationApp(tk.Tk):
             self.pro_monitor.heading(column, text=title); self.pro_monitor.column(column, width=width, anchor="center")
         self.pro_monitor.insert("", "end", iid="latest", values=("waiting", "", "", "", "", "")); self.pro_monitor.grid(row=3, column=0, sticky="ew")
         self.load_reference_store()
+        self.refresh_results_history()
         self.refresh_ports()
 
     def refresh_ports(self) -> None:
@@ -241,9 +248,46 @@ class CalibrationApp(tk.Tk):
     def open_result(self, filename: str) -> None:
         target = self.latest_result_dir if filename == "." else (self.latest_result_dir / filename if self.latest_result_dir else None)
         if target is None or not target.exists():
-            messagebox.showinfo("Results", "Run Auto Calibrate first to create this result.")
+            messagebox.showinfo("Results", "Select a completed calibration session first.")
             return
         os.startfile(target)  # type: ignore[attr-defined]  # Windows fixture application
+
+    def refresh_results_history(self) -> None:
+        self.data_dir.mkdir(exist_ok=True)
+        self.result_table.delete(*self.result_table.get_children())
+        sessions = sorted(self.data_dir.glob("auto_calibration_*"), reverse=True)
+        for session in sessions:
+            summary_path = session / "calibration_summary.json"
+            try:
+                summary = json.loads(summary_path.read_text(encoding="utf-8"))
+                runs = summary.get("runs", [])
+                status = str(summary.get("status", "unknown"))
+                slope = summary.get("proposed_force_n_per_cs1238_count")
+                r_squared = summary.get("r_squared")
+                values = (session.name.removeprefix("auto_calibration_"), status, len(runs),
+                          f"{float(slope):.7g}" if slope is not None else "—",
+                          f"{float(r_squared):.6f}" if r_squared is not None else "—")
+                self.result_table.insert("", "end", iid=str(session), values=values)
+            except (OSError, ValueError, TypeError):
+                self.result_table.insert("", "end", iid=str(session), values=(session.name, "unreadable", "—", "—", "—"))
+        if self.latest_result_dir and self.latest_result_dir.exists():
+            self.result_table.selection_set(str(self.latest_result_dir))
+            self.result_table.focus(str(self.latest_result_dir))
+
+    def select_result(self, _event=None) -> None:
+        selected = self.result_table.selection()
+        if not selected:
+            return
+        self.latest_result_dir = Path(selected[0])
+        try:
+            summary = json.loads((self.latest_result_dir / "calibration_summary.json").read_text(encoding="utf-8"))
+            if summary.get("status") == "completed":
+                self.result_summary.set(
+                    f"Selected {self.latest_result_dir.name}: Force N = ({float(summary['proposed_force_n_per_cs1238_count']):.8g} × CS1238 raw) + ({float(summary['proposed_force_offset_n']):.8g}); R² = {float(summary['r_squared']):.6f}; RMS = {float(summary['residual_rms_n']):.5g} N.")
+            else:
+                self.result_summary.set(f"Selected {self.latest_result_dir.name}: session stopped; raw data is retained, but no calibration fit is offered.")
+        except (OSError, ValueError, KeyError, TypeError):
+            self.result_summary.set("Selected session cannot be summarized; open its folder to inspect the preserved files.")
 
     def run(self) -> None:
         try:
@@ -439,10 +483,8 @@ class CalibrationApp(tk.Tk):
     def auto_finished(self, failed: bool, message: str, result_dir: Path, proposal: dict[str, object]) -> None:
         self.run_button.configure(state="normal"); self.auto_button.configure(state="normal"); self.status.set(message)
         self.latest_result_dir = result_dir
-        if failed:
-            self.result_summary.set(f"Stopped — raw files were retained at {result_dir}.")
-        else:
-            self.result_summary.set(f"Proposed calibration: Force N = ({proposal['proposed_force_n_per_cs1238_count']:.8g} × CS1238 raw) + ({proposal['proposed_force_offset_n']:.8g}); R² = {proposal['r_squared']:.6f}; RMS = {proposal['residual_rms_n']:.5g} N.")
+        self.refresh_results_history()
+        self.select_result()
         if failed: messagebox.showwarning("Auto-Calibrate stopped", message)
 
     def record_reference(self, mass_g: float | None) -> None:

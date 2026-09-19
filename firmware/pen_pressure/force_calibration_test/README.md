@@ -43,7 +43,8 @@ Pro Micro UART1 via USB-to-TTL ----> PC test command logger
 7. In **Toolhead Calibration**, run **Auto Calibrate** only after the reference
    fit is available and an appropriate force-stop limit is set. It retains all
    samples but uses only samples after both channels settled for its transfer
-   fit. The **Results** tab opens its timestamped folder, time-trace overlay,
+   fit. The **Results** tab retains a selectable history of every timestamped
+   session, each with its own folder, time-trace overlay,
    CS1238-to-reference transfer graph, and residual plot.
 
 GP0 defaults HIGH on reset and after every outcome. Pico GP15 treats HIGH as
