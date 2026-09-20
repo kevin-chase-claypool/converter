@@ -33,17 +33,20 @@ Pro Micro UART1 via USB-to-TTL ----> PC test command logger
    or Pico GP14 wire is used.
 4. Connect both PC COM ports and double-click
    [`run_force_calibration.bat`](pc_logger/run_force_calibration.bat).
-5. In **Reference Calibration**, record an unloaded zero and several known
+5. Open the application's **Help** tab for clickable workflow sections. **1. Setup** only identifies the two COM
+   ports. In **2. Reference Sensor**, record an unloaded zero and several known
    masses. The app retains each raw capture, saves `reference_calibration.csv`
    and `.json`, and produces `reference_calibration.png`. Its saved conversion
    maps raw reference ADC counts into force.
-6. Use **Pulse Test** for one conservative trial. Its live tables show the raw
-   CS1238/reference readings, command state, and post-run settling estimate.
-   Increase capture duration when either channel reports it did not settle.
-7. In **Toolhead Calibration**, run **Auto Calibrate** only after the reference
+6. Only after the reference conversion has been saved, use **3. Pulse &
+   Settling** for one conservative trial. Its live tables show
+   the raw CS1238/reference readings, command state, and post-run settling
+   estimate. **Use measured settling + 200 ms** transfers the slower valid
+   estimate into the post-pulse capture setting.
+7. In **4. Toolhead Fit**, run the calibration only after the reference
    fit is available and an appropriate force-stop limit is set. It retains all
    samples but uses only samples after both channels settled for its transfer
-   fit. The **Results** tab retains a selectable history of every timestamped
+   fit. The **5. Results** tab retains a selectable history of every timestamped
    session, each with its own folder, time-trace overlay,
    CS1238-to-reference transfer graph, and residual plot.
 

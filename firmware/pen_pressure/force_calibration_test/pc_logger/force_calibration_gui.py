@@ -105,57 +105,79 @@ class CalibrationApp(tk.Tk):
         self.reference_store = self.data_dir / "reference_calibration.json"
         self.latest_result_dir: Path | None = None
         shell = ttk.Frame(self, padding=12); shell.grid()
-        tabs = ttk.Notebook(shell); tabs.grid(row=0, column=0, sticky="nsew")
-        form = ttk.Frame(tabs, padding=12); reference = ttk.Frame(tabs, padding=12); calibration = ttk.Frame(tabs, padding=12); results = ttk.Frame(tabs, padding=12)
-        tabs.add(form, text="Pulse Test"); tabs.add(reference, text="Reference Calibration"); tabs.add(calibration, text="Toolhead Calibration"); tabs.add(results, text="Results")
-        ttk.Label(form, text="Pico 2 COM port").grid(row=0, column=0, sticky="w")
-        self.pico_box = ttk.Combobox(form, textvariable=self.pico, width=38, state="readonly"); self.pico_box.grid(row=0, column=1, padx=8, pady=4)
-        ttk.Label(form, text="Pro Micro COM port").grid(row=1, column=0, sticky="w")
-        self.toolhead_box = ttk.Combobox(form, textvariable=self.toolhead, width=38, state="readonly"); self.toolhead_box.grid(row=1, column=1, padx=8, pady=4)
-        ttk.Button(form, text="Refresh ports", command=self.refresh_ports).grid(row=0, column=2, rowspan=2, padx=(2, 0))
-        ttk.Label(form, text="Direction").grid(row=2, column=0, sticky="w"); ttk.Combobox(form, textvariable=self.direction, values=("down", "up"), width=10, state="readonly").grid(row=2, column=1, sticky="w", padx=8, pady=4)
-        ttk.Label(form, text="Pulse ms (10–100)").grid(row=3, column=0, sticky="w"); ttk.Entry(form, textvariable=self.pulse, width=12).grid(row=3, column=1, sticky="w", padx=8, pady=4)
-        ttk.Label(form, text="Settle ms (0–10000)").grid(row=4, column=0, sticky="w"); ttk.Entry(form, textvariable=self.settle, width=12).grid(row=4, column=1, sticky="w", padx=8, pady=4)
+        self.next_step = tk.StringVar(value="Start here: select the Pico 2 and Pro Micro COM ports, then make one small Pulse 1x check.")
+        ttk.Label(shell, text="Temporary Toolhead Force Calibration", font=("TkDefaultFont", 11, "bold")).grid(row=0, column=0, sticky="w")
+        tabs = ttk.Notebook(shell)
+        tabs.grid(row=1, column=0, sticky="nsew", pady=(8, 0))
+        self.tabs = tabs
+        setup = ttk.Frame(tabs, padding=12); reference = ttk.Frame(tabs, padding=12); pulse_form = ttk.Frame(tabs, padding=12); calibration = ttk.Frame(tabs, padding=12); results = ttk.Frame(tabs, padding=12); help_tab = ttk.Frame(tabs, padding=12)
+        tabs.add(setup, text="1. Setup"); tabs.add(reference, text="2. Reference Sensor"); tabs.add(pulse_form, text="3. Pulse & Settling"); tabs.add(calibration, text="4. Toolhead Load-Cell Calibration"); tabs.add(results, text="5. Results"); tabs.add(help_tab, text="Help")
+        ttk.Label(setup, text="Pico 2 COM port").grid(row=0, column=0, sticky="w")
+        self.pico_box = ttk.Combobox(setup, textvariable=self.pico, width=38, state="readonly"); self.pico_box.grid(row=0, column=1, padx=8, pady=4)
+        ttk.Label(setup, text="Pro Micro COM port").grid(row=1, column=0, sticky="w")
+        self.toolhead_box = ttk.Combobox(setup, textvariable=self.toolhead, width=38, state="readonly"); self.toolhead_box.grid(row=1, column=1, padx=8, pady=4)
+        ttk.Button(setup, text="Refresh ports", command=self.refresh_ports).grid(row=0, column=2, rowspan=2, padx=(2, 0))
+        ttk.Label(pulse_form, text="Direction").grid(row=0, column=0, sticky="w"); ttk.Combobox(pulse_form, textvariable=self.direction, values=("down", "up"), width=10, state="readonly").grid(row=0, column=1, sticky="w", padx=8, pady=4)
+        ttk.Label(pulse_form, text="Pulse ms (10–100)").grid(row=1, column=0, sticky="w"); ttk.Entry(pulse_form, textvariable=self.pulse, width=12).grid(row=1, column=1, sticky="w", padx=8, pady=4)
+        ttk.Label(pulse_form, text="Post-pulse capture ms (0–10000)").grid(row=2, column=0, sticky="w"); ttk.Entry(pulse_form, textvariable=self.settle, width=12).grid(row=2, column=1, sticky="w", padx=8, pady=4)
         self.status = tk.StringVar(value="")
-        ttk.Label(form, textvariable=self.status, wraplength=500).grid(row=5, column=0, columnspan=3, sticky="w", pady=(10, 6))
-        self.run_button = ttk.Button(form, text="Pulse 1x", command=self.run)
-        self.run_button.grid(row=6, column=0, columnspan=3, pady=(2, 0))
+        ttk.Label(pulse_form, textvariable=self.status, wraplength=500).grid(row=3, column=0, columnspan=3, sticky="w", pady=(10, 6))
+        self.run_button = ttk.Button(pulse_form, text="Pulse 1x", command=self.run, state="disabled")
+        self.run_button.grid(row=4, column=0, columnspan=3, pady=(2, 0))
         self.settle_reading = tk.StringVar(value="Measured settling: run a pulse to calculate.")
-        ttk.Label(form, textvariable=self.settle_reading, wraplength=500).grid(row=7, column=0, columnspan=3, sticky="w", pady=(8, 0))
-        ttk.Label(reference, text="Place no load on the strain-gauge ball and record zero. Then place centered known masses and record each one.", wraplength=500).grid(row=0, column=0, columnspan=3, sticky="w", pady=(0,10))
-        ttk.Label(reference, text="Known mass (g)").grid(row=1, column=0, sticky="w"); ttk.Entry(reference, textvariable=self.known_mass_g, width=12).grid(row=1, column=1, sticky="w", padx=8)
-        ttk.Label(reference, text="Capture ms").grid(row=2, column=0, sticky="w"); ttk.Entry(reference, textvariable=self.reference_capture_ms, width=12).grid(row=2, column=1, sticky="w", padx=8)
-        ttk.Button(reference, text="Record Zero", command=lambda: self.record_reference(0.0)).grid(row=3, column=0, pady=8)
-        ttk.Button(reference, text="Record Known Weight", command=lambda: self.record_reference(None)).grid(row=3, column=1, pady=8)
-        ttk.Button(reference, text="Clear reference points", command=self.clear_reference_points).grid(row=3, column=2, pady=8)
+        ttk.Label(pulse_form, textvariable=self.settle_reading, wraplength=500).grid(row=5, column=0, columnspan=3, sticky="w", pady=(8, 0))
+        self.apply_capture_button = ttk.Button(pulse_form, text="Use measured settling + 200 ms", command=self.apply_measured_capture, state="disabled")
+        self.apply_capture_button.grid(row=6, column=0, columnspan=3, pady=(6, 0))
+        ttk.Label(reference, text="Known mass (g)").grid(row=0, column=0, sticky="w"); ttk.Entry(reference, textvariable=self.known_mass_g, width=12).grid(row=0, column=1, sticky="w", padx=8)
+        ttk.Label(reference, text="Capture ms").grid(row=1, column=0, sticky="w"); ttk.Entry(reference, textvariable=self.reference_capture_ms, width=12).grid(row=1, column=1, sticky="w", padx=8)
+        ttk.Button(reference, text="Record Zero", command=lambda: self.record_reference(0.0)).grid(row=2, column=0, pady=8)
+        ttk.Button(reference, text="Record Known Weight", command=lambda: self.record_reference(None)).grid(row=2, column=1, pady=8)
+        ttk.Button(reference, text="Clear reference points", command=self.clear_reference_points).grid(row=2, column=2, pady=8)
         self.reference_status = tk.StringVar(value="No reference points recorded.")
-        ttk.Label(reference, textvariable=self.reference_status, wraplength=500).grid(row=4, column=0, columnspan=3, sticky="w")
+        ttk.Label(reference, textvariable=self.reference_status, wraplength=500).grid(row=3, column=0, columnspan=3, sticky="w")
         self.reference_table = ttk.Treeview(reference, columns=("mass", "adc"), show="headings", height=5)
         self.reference_table.heading("mass", text="Known mass g"); self.reference_table.column("mass", width=140, anchor="center")
         self.reference_table.heading("adc", text="Reference ADC mean"); self.reference_table.column("adc", width=180, anchor="center")
-        self.reference_table.grid(row=5, column=0, columnspan=3, sticky="w", pady=(10, 0))
-        ttk.Label(calibration, text="1. Complete Reference Calibration.  2. Choose a conservative pulse and capture duration.  3. Auto Calibrate retains every raw sample but fits only samples after both channels have settled.", wraplength=560).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 10))
-        ttk.Label(calibration, text="Auto steps each direction (1–10)").grid(row=1, column=0, sticky="w"); ttk.Entry(calibration, textvariable=self.auto_steps, width=12).grid(row=1, column=1, sticky="w", padx=8, pady=4)
-        ttk.Label(calibration, text="Reference N/count slope").grid(row=2, column=0, sticky="w"); ttk.Entry(calibration, textvariable=self.reference_slope, width=18).grid(row=2, column=1, sticky="w", padx=8, pady=4)
-        ttk.Label(calibration, text="Reference-force offset N").grid(row=3, column=0, sticky="w"); ttk.Entry(calibration, textvariable=self.reference_offset, width=18).grid(row=3, column=1, sticky="w", padx=8, pady=4)
-        ttk.Label(calibration, text="Absolute force stop limit N").grid(row=4, column=0, sticky="w"); ttk.Entry(calibration, textvariable=self.force_limit, width=18).grid(row=4, column=1, sticky="w", padx=8, pady=4)
-        self.auto_button = ttk.Button(calibration, text="Auto Calibrate", command=self.auto_calibrate); self.auto_button.grid(row=5, column=0, columnspan=2, pady=(8, 0))
+        self.reference_table.grid(row=4, column=0, columnspan=3, sticky="w", pady=(10, 0))
+        ttk.Label(calibration, text="Auto steps each direction (1–10)").grid(row=0, column=0, sticky="w"); ttk.Entry(calibration, textvariable=self.auto_steps, width=12).grid(row=0, column=1, sticky="w", padx=8, pady=4)
+        ttk.Label(calibration, text="Reference N/count slope").grid(row=1, column=0, sticky="w"); ttk.Entry(calibration, textvariable=self.reference_slope, width=18).grid(row=1, column=1, sticky="w", padx=8, pady=4)
+        ttk.Label(calibration, text="Reference-force offset N").grid(row=2, column=0, sticky="w"); ttk.Entry(calibration, textvariable=self.reference_offset, width=18).grid(row=2, column=1, sticky="w", padx=8, pady=4)
+        ttk.Label(calibration, text="Absolute force stop limit N").grid(row=3, column=0, sticky="w"); ttk.Entry(calibration, textvariable=self.force_limit, width=18).grid(row=3, column=1, sticky="w", padx=8, pady=4)
+        self.auto_button = ttk.Button(calibration, text="Start Toolhead Calibration", command=self.auto_calibrate, state="disabled"); self.auto_button.grid(row=4, column=0, columnspan=2, pady=(8, 0))
         self.result_summary = tk.StringVar(value="No calibration analysis has been created yet.")
         ttk.Label(results, text="Calibration outputs", font=("TkDefaultFont", 10, "bold")).grid(row=0, column=0, sticky="w")
-        ttk.Label(results, text="Each Auto Calibrate session is retained separately. Select any completed session below to review its raw files and graphs.", wraplength=650).grid(row=1, column=0, sticky="w", pady=(6, 8))
         self.result_table = ttk.Treeview(results, columns=("session", "status", "pulses", "slope", "r2"), show="headings", height=7)
         for column, title, width in (("session", "Session", 200), ("status", "Status", 100), ("pulses", "Pulses", 80), ("slope", "N / CS count", 140), ("r2", "R²", 100)):
             self.result_table.heading(column, text=title); self.result_table.column(column, width=width, anchor="center")
-        self.result_table.grid(row=2, column=0, sticky="w")
+        self.result_table.grid(row=1, column=0, sticky="w", pady=(8, 0))
         self.result_table.bind("<<TreeviewSelect>>", self.select_result)
-        ttk.Label(results, textvariable=self.result_summary, wraplength=650).grid(row=3, column=0, sticky="w", pady=(10, 8))
-        controls = ttk.Frame(results); controls.grid(row=4, column=0, sticky="w")
+        ttk.Label(results, textvariable=self.result_summary, wraplength=650).grid(row=2, column=0, sticky="w", pady=(10, 8))
+        controls = ttk.Frame(results); controls.grid(row=3, column=0, sticky="w")
         ttk.Button(controls, text="Refresh history", command=self.refresh_results_history).grid(row=0, column=0, padx=(0, 6))
         ttk.Button(controls, text="Open results folder", command=lambda: self.open_result(".")).grid(row=0, column=1, padx=6)
         ttk.Button(controls, text="Open time-trace graph", command=lambda: self.open_result("time_traces.png")).grid(row=0, column=2, padx=6)
         ttk.Button(controls, text="Open transfer graph", command=lambda: self.open_result("transfer_fit.png")).grid(row=0, column=3, padx=6)
         ttk.Button(controls, text="Open residual graph", command=lambda: self.open_result("residuals.png")).grid(row=0, column=4, padx=6)
-        monitor = ttk.LabelFrame(shell, text="Live COM monitor", padding=8); monitor.grid(row=1, column=0, sticky="ew", pady=(10,0))
+        self.help_sections = {
+            "1. Setup": "Select the Pico 2 USB COM port and the Pro Micro USB-to-TTL COM port.\n\nDo not pulse the toolhead yet. The next task is to establish a force conversion for the reference strain-gauge sensor.",
+            "2. Reference Sensor": "With no force on the strain-gauge ball, choose Record Zero. Then apply known centered masses one at a time and choose Record Known Weight.\n\nRecord at least four masses across the force range you expect to use. The saved reference fit converts the Pico ADC reading into force for the later comparison.",
+            "3. Pulse & Settling": "After the reference conversion is saved, use a small Pulse 1x. The app records both sensors throughout the pulse and post-pulse capture.\n\nWhen both settling readings are valid, choose Use measured settling + 200 ms to set a conservative future capture duration.",
+            "4. Toolhead Load-Cell Calibration": "Set a conservative pulse, number of down/up steps, and an absolute reference-force stop limit. Start Toolhead Calibration to run the sequence.\n\nEvery raw sample is retained. Only samples after both channels settle are used for the proposed CS1238-to-force linear fit.",
+            "5. Results": "Each Auto Calibrate session has its own row. Select a row, then open its result folder or one of its graphs.\n\nReview time traces, transfer fit, and residuals before accepting a linear calibration coefficient for production use.",
+        }
+        ttk.Label(help_tab, text="Calibration workflow", font=("TkDefaultFont", 10, "bold")).grid(row=0, column=0, columnspan=2, sticky="w")
+        self.help_tree = ttk.Treeview(help_tab, show="tree", height=5, selectmode="browse")
+        for label in self.help_sections:
+            self.help_tree.insert("", "end", iid=label, text=label)
+        self.help_tree.grid(row=1, column=0, sticky="nsw", pady=(10, 0))
+        self.help_tree.bind("<<TreeviewSelect>>", self.show_help_section)
+        self.help_text = tk.Text(help_tab, width=68, height=12, wrap="word", relief="solid", borderwidth=1, padx=8, pady=8)
+        self.help_text.grid(row=1, column=1, padx=(12, 0), pady=(10, 0), sticky="nsew")
+        self.help_text.configure(state="disabled")
+        ttk.Button(help_tab, text="Go to selected section", command=self.open_help_section).grid(row=2, column=1, sticky="e", pady=(8, 0))
+        self.help_tree.selection_set("1. Setup")
+        self.show_help_section()
+        monitor = ttk.LabelFrame(shell, text="Live COM monitor", padding=8); monitor.grid(row=2, column=0, sticky="ew", pady=(10,0))
         ttk.Label(monitor, text="Pico 2").grid(row=0, column=0, sticky="w")
         self.pico_monitor = ttk.Treeview(monitor, columns=("event", "toolhead_us", "cs1238_raw", "reference_us", "reference_adc", "cs_settle", "ref_settle"), show="headings", height=1)
         for column, title, width in (("event", "Event", 110), ("toolhead_us", "Toolhead µs", 115), ("cs1238_raw", "CS1238 raw", 115), ("reference_us", "Reference µs", 115), ("reference_adc", "Reference ADC", 115), ("cs_settle", "CS settle ms", 115), ("ref_settle", "Ref settle ms", 115)):
@@ -169,6 +191,7 @@ class CalibrationApp(tk.Tk):
         self.load_reference_store()
         self.refresh_results_history()
         self.refresh_ports()
+        self.update_workflow_state()
 
     def refresh_ports(self) -> None:
         choices = [f"{p.device} — {p.description}" for p in list_ports.comports()]
@@ -176,6 +199,41 @@ class CalibrationApp(tk.Tk):
         self.toolhead_box["values"] = choices
         if choices and not self.pico.get(): self.pico.set(choices[0])
         if len(choices) > 1 and not self.toolhead.get(): self.toolhead.set(choices[1])
+
+    def show_help_section(self, _event=None) -> None:
+        selected = self.help_tree.selection()
+        if not selected:
+            return
+        self.help_text.configure(state="normal")
+        self.help_text.delete("1.0", "end")
+        self.help_text.insert("1.0", self.help_sections[selected[0]])
+        self.help_text.configure(state="disabled")
+
+    def open_help_section(self) -> None:
+        selected = self.help_tree.selection()
+        if not selected:
+            return
+        section_index = list(self.help_sections).index(selected[0])
+        self.tabs.select(section_index)
+
+    def update_workflow_state(self) -> None:
+        reference_ready = len(self.reference_points) >= 2 and bool(self.reference_slope.get()) and bool(self.reference_offset.get())
+        self.auto_button.configure(state="normal" if reference_ready else "disabled")
+        self.run_button.configure(state="normal" if reference_ready else "disabled")
+        if reference_ready:
+            self.next_step.set("Next: run a small Pulse 1x to measure settling, then use Toolhead Fit when the capture duration is adequate.")
+        elif self.reference_points:
+            self.next_step.set("Reference calibration needs at least one more known mass before toolhead calibration is enabled.")
+        else:
+            self.next_step.set("Start here: select the Pico 2 and Pro Micro COM ports, then record reference Zero and known masses.")
+
+    def apply_measured_capture(self) -> None:
+        try:
+            capture_ms = int(self.recommended_capture_ms)
+        except (AttributeError, ValueError):
+            return
+        self.settle.set(str(capture_ms))
+        self.status.set(f"Post-pulse capture set to {capture_ms} ms from the slower measured channel plus 200 ms margin.")
 
     @staticmethod
     def port(value: str) -> str:
@@ -192,6 +250,7 @@ class CalibrationApp(tk.Tk):
             self.reference_offset.set(str(data["force_offset_n"]))
             self.refresh_reference_table()
             self.reference_status.set(f"Loaded {len(self.reference_points)} saved reference points.")
+            self.update_workflow_state()
         except (OSError, ValueError, KeyError, TypeError):
             self.reference_status.set("Saved reference calibration could not be read; record fresh points.")
 
@@ -244,6 +303,7 @@ class CalibrationApp(tk.Tk):
         self.reference_store.unlink(missing_ok=True)
         self.refresh_reference_table()
         self.reference_status.set("Reference points cleared. Record zero and known masses again.")
+        self.update_workflow_state()
 
     def open_result(self, filename: str) -> None:
         target = self.latest_result_dir if filename == "." else (self.latest_result_dir / filename if self.latest_result_dir else None)
@@ -356,6 +416,11 @@ class CalibrationApp(tk.Tk):
             measurements = [value for value in (cs["settle_ms"], ref["settle_ms"])
                             if isinstance(value, float)]
             trace_settle = f"{max(measurements):.1f}" if measurements else "unavailable"
+            if measurements:
+                self.recommended_capture_ms = int(max(measurements) + 200 + 0.999)
+                self.apply_capture_button.configure(state="normal")
+            else:
+                self.apply_capture_button.configure(state="disabled")
             old = self.pro_monitor.item("latest", "values")
             self.pro_monitor.item("latest", values=(old[0], old[1], old[2], old[3], trace_settle, old[5]))
         except (OSError, ValueError, KeyError, IndexError) as error:
@@ -514,6 +579,7 @@ class CalibrationApp(tk.Tk):
         self.refresh_reference_table()
         suffix = " Reference force conversion and graph saved." if len(self.reference_points) >= 2 else " Record at least one more mass to create the conversion."
         self.reference_status.set(f"Recorded {mass_g:g} g at ADC {adc:.1f}. Points: {len(self.reference_points)}.{suffix}")
+        self.update_workflow_state()
 
     def reference_failed(self, text: str) -> None:
         self.reference_status.set("Reference capture failed."); messagebox.showerror("Reference calibration", text or "Capture failed")
