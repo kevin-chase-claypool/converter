@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-21 | `WINSW-20260921-001` | implemented | [Add Pro Micro known-mass calibration application](../windows-software/2026/2026-09-21-add-pro-micro-known-mass-calibration-app.md) | `cs1238`, `calibration`, `known-mass`, `plotting` |
 | 2026-09-19 | `WINSW-20260919-001` | implemented | [Add guided force-calibration analysis workflow](../windows-software/2026/2026-09-19-add-guided-force-calibration-analysis.md) | `force-calibration`, `pico2`, `cs1238`, `ina101`, `plotting` |
 | 2026-09-15 | `HW-20260915-001` | planned | [Plan Pico 2 dual-sensor calibration DAQ](../hardware/2026/2026-09-15-plan-pico2-dual-sensor-calibration-daq.md) | `pico2`, `cs1238`, `ina101`, `strain-gauge`, `force-calibration`, `testing` |
 | 2026-09-13 | `HW-20260913-013` | planned | [Plan CS1238 force-sensor replacement](../hardware/2026/2026-09-13-plan-cs1238-force-sensor-replacement.md) | `toolhead`, `cs1238`, `hx711`, `load-cell`, `force-control`, `testing` |

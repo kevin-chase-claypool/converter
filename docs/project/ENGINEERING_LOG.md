@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20260921-pro-micro-known-mass-calibration-app"></a>
+### 🟨 2026-09-21 - WINDOWS SOFTWARE/RP23CNC SOFTWARE/IMPLEMENTED - Pro Micro known-mass calibration application
+
+- Status: source for a one-device Windows capture/fit application is complete;
+  no device, load cell, precision mass, or actuator has been connected during
+  this software milestone.
+- Category: windows-software, rp23cnc-software, hardware, CS1238, load cell,
+  known-mass calibration, E-09C.
+- Decision: ADR-006 supersedes the unbuilt Pico 2/INA101 reference-sensor
+  fixture for the active calibration plan. The Pro Micro remains the sole ADC
+  owner; the PC app sends only E-07D's safe sensor commands over one native-USB
+  COM port and has no actuator-control code.
+- Result: each capture immediately retains the unmodified timestamped raw CSV;
+  the separate point table, OLS fit, 40–60 g proposed raw window, residual
+  graph, and raw-trace graph make the analysis reviewable without discarding
+  transients or hiding loading/unloading behavior.
+- Verification: Python syntax compilation and deterministic linear-fit checks
+  passed. No physical result is claimed.
+- Safety boundary: the 6 V actuator rail remains disconnected throughout
+  E-09C. A fitted static sensor equation does not enable M3/M5, motion,
+  contact seek, moving average, or force control.
+- Next action: complete E-07C and E-08C, then record three loading and three
+  unloading known-mass passes with the application and add the resulting lab
+  evidence.
+
 <a id="elog-20260919-guided-force-calibration-analysis"></a>
 ### 🟨 2026-09-19 - WINDOWS SOFTWARE/IMPLEMENTED - Guided temporary force-calibration analysis
 

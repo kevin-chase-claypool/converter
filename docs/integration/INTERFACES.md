@@ -283,6 +283,14 @@ The Pro Micro is the only ADC owner: `GP0` receives CS1238 `DT`/`DRDY` and
 its receive time is not a measurement timestamp. Pico 2, INA101KU, and the
 instructor reference sensor have no role in this methodology.
 
+The optional operator interface is the separate Windows application launched
+by `e07d_cs1238_known_mass_calibration/pc_logger/run_known_mass_calibration.bat`.
+It opens only the Pro Micro native-USB COM port. For each `CAPTURE`, it stores
+the complete raw trace in `raw/point_*.csv`, then records a final-half raw mean
+in `calibration_points.csv` for the proposed `grams = slope * raw + offset`
+fit. The fit and PNG graphs are PC-side analysis artifacts, not firmware
+constants or an authorization to energize the actuator.
+
 Power boundary:
 
 | Rail | Owner | Contract |

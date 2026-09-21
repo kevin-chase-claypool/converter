@@ -38,7 +38,7 @@ completion status.
 | E-08 | Measure HX711 samples/s and noise | Sufficient for chosen loop bandwidth | Historical only | Two stationary 15-second GP0/GP1 HX711 windows returned 179 samples each: 11.933 Hz. Peak-to-peak noise was 300 and 484 counts; standard deviation was 69.1 and 120.5 counts. These are not NAU7802 acceptance values. |
 | E-07C | Inspect and bring up replacement CS1238 | With the N20 driver unpowered, the received breakout's 3.3 V supply, ground, two-hole fit, channel-A load-cell terminal mapping, GP0/GP1 `DT`/`SCK` levels, and actual loaded `E+`--`E-` excitation are verified without any over-voltage or unintended actuator movement | Planned | Power off before replacing the HX711. Photograph the exact board; verify the required `VCC/GND/DT/SCK` and `E+/E-/A+/A-` order and that it is 3.3 V compatible. Reuse the 300 g load cell only after matching each existing wire to the board's actual channel-A labels. With the load cell attached, meter `E+`--`E-` and record load-cell bridge resistance before trusting readings: some TL431-reference CS1238 boards need a board-specific documented bridge-reference correction. Then run `e07c_cs1238_sensor_bringup`; it leaves GP2 and GP4--GP7 untouched. Do not assume a generic breakout pin order. |
 | E-08C | Measure installed CS1238 rate and zero-force noise | Record the configured rate, actual samples/s, mean, RMS noise, peak-to-peak span, and missed-sample count in at least two 60-second stationary clear-state windows | Planned | Start at 40 SPS, then repeat at 640 SPS and 1280 SPS if communication remains reliable. Choose the fastest configuration whose filtered clear-state band remains separated from the lowest intended contact band. The controller cadence must be derived from this measurement, not an advertised conversion rate. |
-| E-09C | Validate CS1238 force-path classification and hysteresis | In three supervised clear-start cycles, the raw Pico traces, Pico-timestamped motion-marker edges, and independently calibrated 5 N reference force establish repeatable contact/release classification without persistent history offset. Preserve raw data and produce the required figure package. | Planned | Use the real pen/dummy tool and the installed 5 N reference-sensor fixture. Record raw `samples.csv`, Pico-clocked `events.csv`, Pro Micro command/reply log, metadata, and paper-ready overlays. Begin with no more than six 10 ms DOWN pulses and six UP pulses, with the operator ready to abort. Do not repeat the prior 12-down trace until a lower-force envelope is demonstrated. The reference sensor, after its separate calibration, is the force authority. |
+| E-09C | Calibrate installed CS1238/load-cell with known precision masses | In the actual vertical pen-force path, Pro Micro raw CS1238 captures at 0–70 g establish a reproducible raw-to-grams relationship, stationary noise, loading/unloading hysteresis, residual bounds, and report-ready figures. | Planned | Keep the 6 V actuator rail disconnected. Run `e07d_cs1238_known_mass_calibration` and its one-COM-port Windows app. Capture 0, 5, 10, …, 70 g through at least three loading and three unloading passes. Retain every raw CSV and examine time traces, calibration fit, and residual graph before accepting the proposed equation. Pico 2, INA101KU, and the 5 N reference fixture are not used. |
 | E-09 | Read TMAG5273 through intended wiring | Stable field/position signal | Passed | Corrected GP16/SDA and GP17/SCL I2C mapping passed. Far/near/return magnitudes were 0.24/7.51/7.44 mT; stationary spans were 0.25/0.28 mT. A conservative initial magnitude threshold is 3.5 mT with 1.0 mT hysteresis, pending final scan geometry. The fully wired installed toolhead recheck on 2026-09-08 again identified the device at `0x22`, read a 0.29 mT far-field vector at 28.9 C, and produced a 20-sample far-field span of 0.29 mT. See 2026-08-14 E-09 lab note. |
 | E-18 | Verify Pro Micro RP2350/TMAG5273 magnetic interface | Installed active-low Aux0/U2/GP28 and GP27/U3-to-PRB transitions with real-magnet A capture | Partial | The 2026-09-10 motor-inert diagnostic passed arm/release/re-arm, local TMAG `detected=0→1→0`, and the actual GP27/U3-to-PRB state path. Real-magnet A `G38.3`/`.5` captures each returned `:1`; the blue return is at `PROBE SIG`. J1.4 measured 9.33 V released and 0.15 mV asserted relative to `CTRL_GND`. P100 macro, coordinate, and production/actuator gates remain open. See `docs/report/lab-notes/2026-09-10-e-18-motor-inert-p100-handshake.md`. |
 | E-19 | Verify E-stop/Halt input | With power removed, upper NC-A `1`–`2` is continuous released/open pressed and lower NC-B is isolated/insulated. With NC-A across RP23CNC `ESTOP SIG`/`GND` and NC-compatible `$14=6` verified live, pressing SW1 enters Halt; deliberate Reset/Unlock is required after release and no automatic movement occurs. Motor/tool 12 V remains powered. | Passed | On 2026-09-08, power-off NC-A meter check beeped/continuous released and did not beep/open pressed. ioSender 2.0.47 showed `$14=6`; press produced `ALARM:10`, then twist-release → Reset → Unlock returned it to `IDLE` with no motion reported. The unused NC-B pair remains insulated; see `2026-09-08-e-19-estop-iosender-configuration.md`. |
@@ -58,7 +58,9 @@ completion status.
 
 The selected CS1238 is not installed and no board-specific terminal mapping is
 assumed until receipt. It replaces the HX711; it does not run beside it. Keep
-the DRV8833 asleep for E-07C/E-08C. Only E-09C permits bounded actuator motion.
+the DRV8833 asleep for E-07C/E-08C/E-09C. A later, separately authorized
+actuator-response test must use the E-09C calibration result but is not part of
+the known-mass procedure.
 
 1. **E-07C, power-off / motor-inert bring-up.** Photograph both boards, record
    the exact CS1238 breakout revision and terminal labels, remove the HX711,
@@ -76,21 +78,18 @@ the DRV8833 asleep for E-07C/E-08C. Only E-09C permits bounded actuator motion.
    peak-to-peak span, actual delivered samples/s, and missing samples. This
    selects the service/control sampling rate and a median/average window; it
    does not calibrate grams.
-3. **E-09C, real force-path check.** Use the actual intended pen or a rigid
-   non-marking surrogate in its production clamp, with the 5 N reference
-   sensor in the force path. Run three clear-start, bounded 6-DOWN/6-UP
-   traces. Preserve Pico `samples.csv`, Pico `events.csv`, the Pro Micro
-   command/reply log, and metadata; generate the required overlays and
-   force-transfer figure set in
-   [`../report/FORCE_CALIBRATION_RESULTS.md`](../report/FORCE_CALIBRATION_RESULTS.md).
-   The operator may abort at any sign of excessive force. Compare
-   clear/contact/release means and RMS bands—not a single reading. A sensor is
-   accepted only if the first confirmed contact and release classifications
-   have a greater-than-five-combined-RMS margin in all three cycles.
-4. **Only after E-09C passes:** map several settled force points, choose broad
-   contact/hold/release bands, then resume T-01E/T-01H and later force control.
-   Pen-up safety remains a bounded timed lift plus physical clearance reserve;
-   it does not wait on this sensor.
+3. **E-09C, known-mass fit and hysteresis.** With the actuator 6 V rail
+   disconnected, put the supplied precision weights through the same vertical
+   force path as the pen. Use the Pro Micro's native USB port and
+   `pc_logger/run_known_mass_calibration.bat` to capture 0, 5, 10, …, 70 g.
+   Repeat at least three loading and three unloading passes. Preserve the
+   generated `raw/` CSV files, point summary, and calibration/residual/raw-trace
+   figures. Accept no coefficient until stationary noise, residuals, and
+   loading/unloading separation are reviewed.
+4. **Only after E-09C passes:** derive a tentative 40–60 g raw band, then
+   separately map bounded actuator responses before selecting contact/hold/
+   release bands or enabling force control. Pen-up safety remains a bounded
+   timed lift plus physical clearance reserve; it does not wait on this sensor.
 
 ### E-07 required scale-force transfer calibration
 
