@@ -11,7 +11,7 @@ Current motion-controller tasks are maintained in
 | Folder | Role | Target |
 |---|---|---|
 | [`grblhal/`](grblhal/) | Motion control - parses the host G-code and drives the X/Y/A steppers | RP23CNC / RP23U5XBB running grblHAL on RP2350 |
-| [`pen_pressure/`](pen_pressure/) | Closed-loop pen contact-force control, calibration fixtures, and TMAG5273 magnetic sensing | Toolhead-mounted SparkFun Pro Micro RP2350 and temporary Raspberry Pi Pico 2 DAQ |
+| [`pen_pressure/`](pen_pressure/) | Closed-loop pen contact-force control, calibration fixtures, and TMAG5273 magnetic sensing | Toolhead-mounted SparkFun Pro Micro RP2350 |
 
 ## Why this split
 

@@ -274,23 +274,14 @@ pulse and target force require T-01J evidence.
 
 ## Toolhead internal interfaces
 
-### Temporary Pico 2 calibration gate
+### CS1238 known-mass calibration
 
-During the supervised dual-sensor calibration fixture only, Pro Micro `GP0`
-is detached from its production CS1238-data role and becomes a 3.3 V DAQ-gate
-output to Pico 2 `GP15`. A separate `TOOL_GND` to Pico `GND` wire provides the
-signal reference; it must never use isolated `PC817C CTRL_GND`. Pico GP15 uses
-`INPUT_PULLUP`: Pro Micro reset/idle/HIGH stops capture, while LOW starts it.
-The dedicated Pro Micro fixture asserts LOW, waits 100 ms, issues one bounded
-actuator pulse, retains a requested settle interval, then returns HIGH. This
-temporary connection does not authorize a production force-control protocol.
-
-The temporary Pico 2 USB CDC data contract is `SAMPLE,<toolhead_time_us>,
-<toolhead_cs1238_raw>,<reference_time_us>,<reference_adc_raw>`. Every time is
-relative to the Pico `TEST_START` monotonic origin. The host writes payloads to
-raw-data CSV without substituting host receive time for a sensor time. The
-dedicated Pro Micro contract is `STATUS`, `STOP`, and `RUN DOWN|UP <pulse_ms>
-<settle_ms>`; the Windows logger sends one `RUN` and logs replies separately.
+The Pro Micro is the only ADC owner: `GP0` receives CS1238 `DT`/`DRDY` and
+`GP1` drives `SCK`. The sensor-only E-07D sketch exposes native USB commands
+`STATUS`, `TARE`, and `CAPTURE <ms>`, and emits unfiltered
+`SAMPLE,<time_us>,<cs1238_raw>` records. A PC may save/plot those records, but
+its receive time is not a measurement timestamp. Pico 2, INA101KU, and the
+instructor reference sensor have no role in this methodology.
 
 Power boundary:
 
@@ -298,7 +289,7 @@ Power boundary:
 |---|---|---|
 | 6 V toolhead rail | DIN-mounted Pololu D36V50F6 | Feeds the drag-chain toolhead power pair and DRV8833 motor supply after E-14/E-15 verification |
 | 5 V toolhead logic | Toolhead-mounted Pololu S7V8F5 | Generated locally from the 6 V rail for the SparkFun Pro Micro RP2350 logic input |
-| 3.3 V sensor rail | SparkFun Pro Micro RP2350 | Powers HX711 and TMAG5273/Qwiic so signal levels remain RP2350-safe |
+| 3.3 V sensor rail | SparkFun Pro Micro RP2350 | Powers CS1238 and TMAG5273/Qwiic so signal levels remain RP2350-safe |
 
 | Connection | Purpose |
 |---|---|
