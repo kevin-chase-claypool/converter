@@ -29,8 +29,10 @@ constexpr bool HOME_ARM_ACTIVE_LOW = true;
 // state as lift_home=1 (released reports 0).
 constexpr bool LIFT_HOME_ACTIVE_LOW = true;
 constexpr bool DRV_FAULT_ACTIVE_LOW = true;
-constexpr bool LIFT_USES_IN1_PWM = true;
-constexpr bool SEEK_USES_IN1_PWM = false;
+// E-09E direction evidence: IN1 HIGH / IN2 LOW drives DOWN; IN1 LOW /
+// IN2 HIGH drives UP. The booleans select which phase receives PWM.
+constexpr bool LIFT_USES_IN1_PWM = false;
+constexpr bool SEEK_USES_IN1_PWM = true;
 
 constexpr uint8_t PWM_LIFT = 70;
 constexpr uint8_t PWM_SEEK = 55;

@@ -32,6 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-22 | Integrated direction polarity | Failed safely — corrected | The first supervised integrated boot timed out before GP2 because IN1/IN2 lift/seek phase selections were reversed relative to E-09E; the controller entered a bounded fault and the constants were corrected. |
 | 2026-09-22 | T-01G lift-home switch transition | Partial | GP2 changed 0→1→0 repeatedly in the motor-safe UART diagnostic; ten powered retract cycles, positions, and backstop margin remain open. |
 | 2026-09-22 | E-09F guarded force hold | Partial — band hold passed | Two `t`/`a`/`s` runs using the precision-weight raw profile settled and held at reported 40.0 g and 40.4 g. The separate 100 ms air-gap clear test remains. |
 | 2026-09-22 | E-09E installed-pen scale direction | Partial | At a settled 40.7 g kitchen-scale reading, CS1238 raw was -59,087 and tare delta -312,723: the installed upward pen reaction is confirmed as opposite to downward calibration loading. One point does not establish an installed-pen transfer fit. |

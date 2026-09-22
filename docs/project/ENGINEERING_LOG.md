@@ -1,5 +1,19 @@
 # Engineering Log
 
+<a id="elog-20260922-integrated-direction-polarity-fault"></a>
+### 🟥 2026-09-22 - RP23CNC SOFTWARE/FAILED-CORRECTED - integrated lift polarity
+
+- Observation: the first supervised integrated boot reported
+  `GP2 lift-home not reached during retract` after its bounded 700 ms lift;
+  `lift_home=0` and `fault=0` on the driver input were reported.
+- Diagnosis: E-09E had already established IN1 HIGH/IN2 LOW as DOWN and IN1
+  LOW/IN2 HIGH as UP, but the integrated `LIFT_USES_IN1_PWM` and
+  `SEEK_USES_IN1_PWM` selections were reversed.
+- Correction: swapped those two phase-selection constants, compiled the
+  integrated sketch successfully, and kept the old binary out of service.
+- Next action: flash the corrected build and run one supervised boot followed
+  by one `e`/`l` cycle.
+
 <a id="elog-20260922-t01g-switch-transition"></a>
 ### 🟨 2026-09-22 - HARDWARE/IMPLEMENTED - T-01G GP2 switch transition
 

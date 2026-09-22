@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-015` | implemented | [Correct integrated motor-direction polarity](2026/2026-09-22-correct-integrated-direction-polarity.md) | `motor-direction`, `gp2`, `supervised-bench` |
 | 2026-09-22 | `RPSW-20260922-014` | implemented | [Enable the mechanical-preload supervised bench build](2026/2026-09-22-enable-mechanical-preload-bench-build.md) | `supervised-bench`, `mechanical-preload`, `moving-average-force-control` |
 | 2026-09-22 | `RPSW-20260922-013` | implemented | [Stage mechanical-preload M3/M5 behavior](2026/2026-09-22-stage-mechanical-preload-m3m5.md) | `mechanical-preload`, `m3-m5`, `cs1238`, `pen-clearance` |
 | 2026-09-22 | `RPSW-20260922-012` | implemented | [Add E-09F manual down setup pulse](2026/2026-09-22-add-e09f-manual-down-setup.md) | `e-09f`, `n20`, `pen-installation`, `manual-control` |
