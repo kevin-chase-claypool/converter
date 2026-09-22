@@ -11,6 +11,7 @@ Newest changes appear first.
 |---|---|---|---|---|
 | 2026-09-21 | `WINSW-20260921-001` | implemented | [Add Pro Micro known-mass calibration application](../windows-software/2026/2026-09-21-add-pro-micro-known-mass-calibration-app.md) | `cs1238`, `calibration`, `known-mass`, `plotting` |
 | 2026-09-21 | `RPSW-20260921-002` | implemented | [Migrate Integrated Toolhead to CS1238 Backend](2026/2026-09-21-migrate-integrated-toolhead-cs1238-backend.md) | `CS1238`, `load-cell`, `force-control`, `safety-gates` |
+| 2026-09-21 | `RP23CNC-20260921-008` | implemented | [Add post-release pen-clear air-gap pulse](2026/2026-09-21-add-post-release-pen-clear-air-gap.md) | `pen-clear`, `air-gap`, `n20`, `cs1238`, `t-01h` |
 | 2026-09-21 | `RP23CNC-20260921-007` | implemented | [Add bounded GP27 toolhead-ready wait](2026/2026-09-21-add-bounded-gp27-toolhead-wait.md) | `gp27`, `prb`, `m3-m5`, `pen-ready`, `synchronization`, `f-05a` |
 | 2026-09-19 | `WINSW-20260919-001` | implemented | [Add guided force-calibration analysis workflow](../windows-software/2026/2026-09-19-add-guided-force-calibration-analysis.md) | `force-calibration`, `pico2`, `cs1238`, `ina101`, `plotting` |
 | 2026-09-15 | `HW-20260915-001` | planned | [Plan Pico 2 dual-sensor calibration DAQ](../hardware/2026/2026-09-15-plan-pico2-dual-sensor-calibration-daq.md) | `pico2`, `cs1238`, `ina101`, `strain-gauge`, `force-calibration`, `testing` |

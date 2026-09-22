@@ -44,6 +44,8 @@ const char *PressureController::stateName() const {
     case PressureState::LIFTED: return "LIFTED";
     case PressureState::SEEK_CONTACT: return "SEEK_CONTACT";
     case PressureState::HOLD_FORCE: return "HOLD_FORCE";
+    case PressureState::RELEASE_TO_CLEAR: return "RELEASE_TO_CLEAR";
+    case PressureState::CLEARANCE_LIFT: return "CLEARANCE_LIFT";
     case PressureState::FAULT: return "FAULT";
   }
   return "UNKNOWN";
@@ -276,7 +278,7 @@ void PressureController::service() {
 
     case PressureState::LIFTING:
       motorLift();
-      if (now - state_started_ms_ >= LIFT_TIME_MS) {
+      if (now - state_started_ms_ >= BOOT_LIFT_TIME_MS) {
         motorStop();
         setDriverEnabled(false);
         setState(PressureState::VERIFY_LIFTED);
@@ -323,7 +325,10 @@ void PressureController::service() {
 
     case PressureState::SEEK_CONTACT:
       if (!engage) {
-        setState(PressureState::LIFTING);
+        // Normal M5 first proves the no-contact release band, then adds an
+        // explicit air-gap pulse. Do not treat a timed boot lift as proof of
+        // normal pen clearance.
+        setState(PressureState::RELEASE_TO_CLEAR);
         break;
       }
       motorSeek();
@@ -337,7 +342,7 @@ void PressureController::service() {
 
     case PressureState::HOLD_FORCE:
       if (!engage) {
-        setState(PressureState::LIFTING);
+        setState(PressureState::RELEASE_TO_CLEAR);
         break;
       }
       if (new_filtered_sample_ && now - last_force_correction_ms_ >= CS1238_CORRECTION_PERIOD_MS) {
@@ -353,6 +358,38 @@ void PressureController::service() {
         } else {
           motorStop();
         }
+      }
+      break;
+
+    case PressureState::RELEASE_TO_CLEAR:
+      motorLift();
+      if (new_filtered_sample_) {
+        const long residual = std::labs(cs1238_filtered_ - NO_CONTACT_RAW_REFERENCE);
+        if (residual <= LIFT_RELEASE_TOLERANCE_RAW) {
+          lift_release_windows_++;
+        } else {
+          lift_release_windows_ = 0;
+        }
+        if (lift_release_windows_ >= LIFT_RELEASE_REQUIRED_WINDOWS) {
+          // The requested 500 ms is deliberately *after* the CS1238 has
+          // confirmed release, providing a real physical air-gap margin for
+          // between-line travel rather than merely an unloaded pen state.
+          setState(PressureState::CLEARANCE_LIFT);
+          break;
+        }
+      }
+      if (now - state_started_ms_ >= PEN_CLEAR_RELEASE_TIMEOUT_MS) {
+        enterFault("CS1238 did not verify pen release before clearance lift");
+      }
+      break;
+
+    case PressureState::CLEARANCE_LIFT:
+      motorLift();
+      if (now - state_started_ms_ >= PEN_CLEAR_EXTRA_LIFT_MS) {
+        motorStop();
+        setDriverEnabled(false);
+        // Recheck after the added air-gap motion before declaring M5 complete.
+        setState(PressureState::VERIFY_LIFTED);
       }
       break;
 

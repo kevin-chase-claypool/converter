@@ -40,6 +40,9 @@ work.
   backstop margin.
 - Do not enable normal M5 `PEN_CLEAR` until T-01H verifies the release
   hysteresis, debounce, calibrated clearance pulse, and actual pen-tip gap.
+  The staged source now performs its 500 ms clearance lift only *after* the
+  configured near-zero CS1238 release band is stable; 500 ms is a temporary
+  bench starting value, not an accepted clearance setting.
 - Do not enable stored force-control parameters until T-01I proves that the
   accepted profile survives power cycles and that a fresh no-contact baseline
   stays RAM-only.
@@ -139,6 +142,14 @@ force-control authorization: `PRESSURE_CALIBRATION_VALID` remains false,
 `CS1238_CONTACT_FORCE_SIGN` is deliberately zero, and all raw contact/target/
 hard-limit values are zero placeholders until E-09C plus a later actuator-
 response test establish them.
+
+For a normal M5 from contact, Core 0 uses `RELEASE_TO_CLEAR`: it retracts only
+until the filtered CS1238 residual remains in the configured no-contact band
+for the required windows. It then enters `CLEARANCE_LIFT` and continues N20
+retraction for `PEN_CLEAR_EXTRA_LIFT_MS` (currently 500 ms), rechecks the clear
+band, and only then reaches `LIFTED`/possible `CLEAR_READY`. Boot and
+fault-recovery lifting remain a separate bounded sequence. All values and the
+entire normal-M5 gate remain disabled until E-09C and T-01H.
 
 The temporary service interface is `Serial2` / hardware UART1 on GP20 (TX) and
 GP21 (RX) at 115200 baud. The integrated sketch immediately writes `Theta

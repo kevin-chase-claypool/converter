@@ -12,6 +12,8 @@ enum class PressureState : uint8_t {
   LIFTED,
   SEEK_CONTACT,
   HOLD_FORCE,
+  RELEASE_TO_CLEAR,
+  CLEARANCE_LIFT,
   FAULT,
 };
 

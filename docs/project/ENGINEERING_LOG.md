@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20260921-post-release-pen-clear-air-gap"></a>
+### 🟨 2026-09-21 - RP23CNC SOFTWARE/IMPLEMENTED - Post-release normal-M5 air-gap pulse
+
+- Status: source now separates normal M5 release detection from an explicit
+  post-release N20 clearance lift; no hardware behavior is enabled or claimed.
+- Category: rp23cnc-software, hardware, N20, CS1238, pen clear, air gap,
+  T-01H.
+- Result: an M5 request from seek/hold enters `RELEASE_TO_CLEAR`, retracts
+  until the existing filtered no-contact tolerance/debounce windows pass, then
+  enters `CLEARANCE_LIFT` for a temporary 500 ms extra retract. It rechecks
+  clear before `LIFTED`/possible `CLEAR_READY`. Boot and recovery retain their
+  independent bounded lift sequence.
+- Safety boundary: release timeout faults before the clearance pulse; all
+  actuator-direction, CS1238 calibration, lift-reference, normal-M5, and GP27
+  gates remain false. The 500 ms pulse is a requested bench starting point,
+  not a measured or authorized clearance setting.
+- Verification: RP2350 source compilation passed; no N20, paper, load cell,
+  controller, or toolhead supply was energized.
+- Next action: T-01H must measure actual tip gap and perform 30 M3/M5 cycles
+  before selecting an accepted per-tool clearance value or enabling a gate.
+
 <a id="elog-20260921-bounded-gp27-pen-ready-wait"></a>
 ### 🟨 2026-09-21 - RP23CNC SOFTWARE/WINDOWS SOFTWARE/IMPLEMENTED - Bounded GP27 pen-ready acknowledgement source
 

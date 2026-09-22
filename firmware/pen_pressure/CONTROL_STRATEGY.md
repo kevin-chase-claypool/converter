@@ -3,7 +3,7 @@
 ## Inputs
 
 - `ENGAGE`: derived from grblHAL M3/M5 output.
-- Load-cell force through HX711.
+- Load-cell force through CS1238.
 - Position/reference data through TMAG5273.
 - Planned `GP2` LIFT-home switch for an occasional absolute lift reference.
 
@@ -65,10 +65,12 @@ fixed motor duration.
   declare contact only after the filtered force crosses `F_contact_on`.
 - `M5` requests `PEN_CLEAR`. Retract until the filtered force stays below
   `F_release_off` for the configured debounce interval, then issue the bounded
-  `t_clear`/pulse command and stop the actuator.
+  `t_clear`/pulse command and stop the actuator. The current staged source
+  uses a temporary 500 ms post-release lift pulse; it begins only after release
+  is confirmed and must be replaced by an accepted T-01H per-tool value.
 - `F_contact_on` and `F_release_off` are distinct hysteresis thresholds. Both
-  must be derived from the installed, signed load-cell force units and current
-  no-contact residual; raw HX711 zero is not a valid threshold.
+  must be derived from the installed, signed CS1238 force units and current
+  no-contact residual; a raw ADC zero is not a valid threshold.
 
 The T-01H characterization test must establish `F_contact_on`,
 `F_release_off`, debounce, the clearance-pulse bound, and the resulting pen-tip

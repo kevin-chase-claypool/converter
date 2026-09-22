@@ -35,8 +35,16 @@ constexpr uint8_t PWM_SEEK = 55;
 constexpr uint8_t PWM_HOLD_MAX = 85;
 
 constexpr uint32_t SERIAL_BAUD = 115200;
-constexpr uint32_t LIFT_TIME_MS = 700;
+// BOOT_LIFT_TIME_MS applies only to boot/fault recovery, where no preceding
+// contact state is available. Normal M5 uses RELEASE_TO_CLEAR followed by the
+// deliberately separate PEN_CLEAR_EXTRA_LIFT_MS air-gap pulse.
+constexpr uint32_t BOOT_LIFT_TIME_MS = 700;
 constexpr uint32_t LIFT_VERIFY_TIMEOUT_MS = 1800;
+constexpr uint32_t PEN_CLEAR_RELEASE_TIMEOUT_MS = 1800;
+// Temporary T-01H starting value requested for normal M5. Measure the actual
+// resulting tip gap and replace this with an accepted per-tool value before
+// PEN_CLEAR_VALID may be enabled.
+constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 500;
 constexpr uint32_t SEEK_TIMEOUT_MS = 1500;
 constexpr uint32_t CS1238_CORRECTION_PERIOD_MS = 250;
 constexpr uint8_t CS1238_TARE_SAMPLES = 64;
