@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20260922-integrated-force-target-35g-limit-60g"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - set 35 g target and 60 g force limit
+
+- Decision: change the supervised integrated toolhead target from 50 g to
+  35 g and lower its hard-force trip from 70 g to 60 g.
+- Conversion: retain the E-09C fit of 5,038.77 raw/g; set target to 176,357
+  raw and hard limit to 302,326 raw. The ±5 g target-ready window is now
+  approximately 30–40 g. This changes operating settings, not calibration data.
+- Unchanged behavior: fresh boot tare, 16-sample moving average, 250 ms
+  correction interval, fixed 100 ms mechanical M3 preload, and GP2 retract
+  stop remain as before. The hard limit is a software safeguard, not a
+  precision measurement or substitute for the physical cutoff.
+- Scope: applies to `pro_micro_rp2350_toolhead`; the standalone E-09F
+  diagnostic sketch retains its separate 70 g limit.
+- Verification: integrated sketch compiled for
+  `rp2040:rp2040:sparkfun_promicrorp2350` (79,512 bytes program storage,
+  16,160 bytes global memory); docs-index checks passed. No hardware test has
+  yet exercised the revised setpoint.
+- Next action: flash the integrated sketch, then make one guarded M3 test
+  while watching telemetry and keeping the physical cutoff reachable.
+
 <a id="elog-20260922-integrated-gp2-boot-retract-pass"></a>
 ### 🟩 2026-09-22 - RP23CNC SOFTWARE/VERIFIED - integrated boot reached GP2
 

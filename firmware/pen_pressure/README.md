@@ -146,10 +146,16 @@ clear band. Its fit was 5,038.77 raw/g with `R²=0.999978` and 0.132 g RMS
 residual. The selected upward pen-reaction assumption makes force increase as
 raw decreases. The earlier pen-cap run is retained as historical raw evidence
 only. The one-COM-port calibration application provides an installed-pen
-kitchen-scale raw-direction check. The current supervised bench build enables
-the force loop using the E-09C fit and E-09E direction evidence. This permits
-the supervised test only; production use still requires integrated direction
-and installed-pen checks.
+kitchen-scale raw-direction check. By the 2026-09-22 follow-up setting, the
+current supervised integrated build uses a 35 g target (176,357 raw) and a
+60 g hard-force limit (302,326 raw); its ±5 g target-ready band is therefore
+approximately 30–40 g. These are selected operating settings, not a new fit
+of the calibration data. The loop still uses the fresh boot tare and 16-sample
+moving average, after the unchanged 100 ms mechanical preload. The 70 g value
+remains in the original E-09C calibration record and the separate E-09F
+diagnostic sketch; it is not the integrated build's limit. This permits the
+supervised test only; production use still requires integrated direction and
+installed-pen checks.
 
 For a normal M5 from contact, Core 0 uses `RELEASE_TO_CLEAR`: it retracts only
 until the filtered CS1238 residual remains in the configured no-contact band

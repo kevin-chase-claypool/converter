@@ -92,18 +92,19 @@ constexpr long NO_CONTACT_RAW_REFERENCE = 248497;
 constexpr long LIFT_RELEASE_TOLERANCE_RAW = 15116;
 constexpr uint8_t LIFT_RELEASE_REQUIRED_WINDOWS = 3;
 
-// Candidate initial downward pen-force profile from the same fit:
-// 35 g contact = 176,357 raw; 50 g target = 251,938 raw; 70 g hard limit =
-// 352,714 raw. Force increases when raw decreases under the selected upward
-// pen-reaction assumption, hence the negative sign.
+// E-09C fit: 5,038.77 raw/g. Selected supervised bench profile:
+// 35 g target = 176,357 raw; 60 g hard limit = 302,326 raw. The original
+// 70 g candidate remains in the calibration record, not in this build.
+// Force increases when raw decreases under the selected upward pen-reaction
+// assumption, hence the negative sign.
 constexpr long CONTACT_RAW_DELTA = 176357;
-constexpr long TARGET_FORCE_RAW_DELTA = 251938;
-constexpr long HARD_FORCE_RAW_DELTA = 352714;
+constexpr long TARGET_FORCE_RAW_DELTA = 176357;
+constexpr long HARD_FORCE_RAW_DELTA = 302326;
 constexpr int8_t CS1238_CONTACT_FORCE_SIGN = -1;
 constexpr int16_t HOLD_KP_NUM = 1;
 constexpr int16_t HOLD_KP_DEN = 60;
-// Candidate ±5 g target-ready band = 25,194 raw. These values remain inactive
-// while the commissioning gates below remain false.
+// Selected ±5 g target-ready band = 25,194 raw (approximately 30–40 g around
+// the 35 g target).
 constexpr long CONTACT_READY_TOLERANCE_RAW = 25194;
 constexpr uint8_t CONTACT_READY_REQUIRED_WINDOWS = 3;
 
