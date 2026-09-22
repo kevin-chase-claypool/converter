@@ -178,12 +178,15 @@ toolhead service UART ready` after configuring that interface, before pressure
 or magnetic initialization. It writes completed telemetry records directly to
 the UART; do not reintroduce an `availableForWrite() >= full_record_length`
 gate, because the UART FIFO can be smaller than an entire record and would
-silently suppress all service telemetry. Native USB `Serial` remains the
-separate USB diagnostic/command interface.
+silently suppress all service telemetry. The native USB `Serial` and UART1
+`Serial2` both accept the same one-character diagnostic commands (`?`, `p`,
+`t`, `e`, `l`, `a`, `c`); use UART1 for runtime control when the external rail
+is powering the Pro Micro.
 
-The firmware defaults to a safe lift/stop behavior, supports serial diagnostics,
-and keeps all actuator, force, lift-reference, and magnetic commissioning gates
-false until their named tests establish measured values. Do not install the pen or connect the
+The firmware defaults to a safe lift/stop behavior and supports serial
+diagnostics. The current supervised bench build enables only the actuator
+direction, pressure-calibration, and mechanical-preload gates; lift-reference,
+normal-clear, magnetic, and GP27 production gates remain false. Do not install the pen or connect the
 RP23CNC M3/M5 line until motor direction, load-cell polarity, and input polarity
 are verified on the bench. The integrated sketch is configured for the PC817C
 module's active-low GP29/GP28 output; F-05 and E-18 must still verify the

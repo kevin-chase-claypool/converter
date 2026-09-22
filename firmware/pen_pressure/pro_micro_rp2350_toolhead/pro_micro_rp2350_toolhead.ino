@@ -116,19 +116,25 @@ void emitTelemetry() {
   }
 }
 
+void dispatchServiceCommand(char command) {
+  switch (command) {
+    case '?': printHelp(); break;
+    case 'p': emitTelemetry(); break;
+    case 't': pressure.requestTare(); break;
+    case 'e': pressure.setManualCommand(true, true); break;
+    case 'l': pressure.setManualCommand(true, false); break;
+    case 'a': pressure.setManualCommand(false, false); break;
+    case 'c': pressure.clearFault(); break;
+    default: break;
+  }
+}
+
 void serviceSerial() {
   while (Serial.available() > 0) {
-    const char command = static_cast<char>(Serial.read());
-    switch (command) {
-      case '?': printHelp(); break;
-      case 'p': emitTelemetry(); break;
-      case 't': pressure.requestTare(); break;
-      case 'e': pressure.setManualCommand(true, true); break;
-      case 'l': pressure.setManualCommand(true, false); break;
-      case 'a': pressure.setManualCommand(false, false); break;
-      case 'c': pressure.clearFault(); break;
-      default: break;
-    }
+    dispatchServiceCommand(static_cast<char>(Serial.read()));
+  }
+  while (Serial2.available() > 0) {
+    dispatchServiceCommand(static_cast<char>(Serial2.read()));
   }
 }
 

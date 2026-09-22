@@ -45,6 +45,10 @@ The checked-in test build now sets:
 then the 16-sample CS1238 moving average applies bounded force corrections.
 M5 performs the 100 ms UP air-gap move and stops if GP2 reaches `lift_home=1`.
 
+The integrated sketch now accepts the same `?`, `p`, `t`, `e`, `l`, `a`, and `c`
+commands on both native USB and the GP20/GP21 UART1 service link, so the
+externally powered bench setup can be controlled through the UART adapter.
+
 ## Verification
 
 The integrated sketch compiled successfully for
