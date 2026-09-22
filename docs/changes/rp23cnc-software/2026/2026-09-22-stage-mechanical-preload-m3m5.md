@@ -43,9 +43,11 @@ detector for this installed-pen setup.
 - When deliberately enabled, M3 applies a bounded 100 ms DOWN move, stops, and
   leaves the motor asleep; M5 applies a bounded 100 ms UP move and returns to
   `LIFTED`.
-- The CS1238 moving average remains telemetry in this mode. It does not claim
-  to detect paper contact or authorize motion. Existing actuator-direction,
-  lift-reference, magnetic, clear, and other safety gates remain in force.
+- After the timed M3 preload, the CS1238 16-sample moving average resumes
+  bounded force corrections toward the calibrated target. It does not seek
+  initial paper contact. GP2 remains the maximum-UP limit, and existing
+  actuator-direction, lift-reference, magnetic, clear, and other safety gates
+  remain in force.
 
 ## Verification
 

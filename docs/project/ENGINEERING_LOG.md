@@ -25,8 +25,9 @@
   guarded 5 ms UP pulses; twenty matching DOWN pulses restored acceptable
   paper resistance.
 - Safety: the flag remains `false`; actuator-direction, lift-reference, and
-  other commissioning gates remain disabled. CS1238 is telemetry only in this
-  staged path, while the normal validated raw-force path remains available.
+  other commissioning gates remain disabled. After the timed preload, the
+  CS1238 moving average provides bounded force corrections; it is not used to
+  seek initial paper contact, and GP2 remains the maximum-UP limit.
 - Next action: compile-check the integrated sketch, then commission direction
   and lift reference before any deliberate enablement or flashing.
 

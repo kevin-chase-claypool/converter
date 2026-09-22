@@ -180,7 +180,9 @@ void PressureController::setManualCommand(bool enabled, bool engage) {
 
 void PressureController::publishSafetyState() {
   const bool lifted = state_ == PressureState::LIFTED;
-  const bool safe = lifted && LIFT_REFERENCE_VALID && !driverFaulted() &&
+  const bool lift_reference_ok = MECHANICAL_PRELOAD_MODE ? liftHomeActive()
+                                                         : LIFT_REFERENCE_VALID;
+  const bool safe = lifted && lift_reference_ok && !driverFaulted() &&
                     state_ != PressureState::FAULT;
   const bool pressure_healthy = PRESSURE_CALIBRATION_VALID &&
                                 statusFlag(STATUS_CS1238_ONLINE) &&
@@ -286,11 +288,21 @@ void PressureController::service() {
       break;
 
     case PressureState::LIFTING:
-      motorLift();
-      if (now - state_started_ms_ >= BOOT_LIFT_TIME_MS) {
+      if (MECHANICAL_PRELOAD_MODE && liftHomeActive()) {
         motorStop();
         setDriverEnabled(false);
-        setState(PressureState::VERIFY_LIFTED);
+        setState(PressureState::LIFTED);
+      } else {
+        motorLift();
+        if (now - state_started_ms_ >= BOOT_LIFT_TIME_MS) {
+          motorStop();
+          setDriverEnabled(false);
+          if (MECHANICAL_PRELOAD_MODE) {
+            enterFault("GP2 lift-home not reached during retract");
+          } else {
+            setState(PressureState::VERIFY_LIFTED);
+          }
+        }
       }
       break;
 
@@ -325,6 +337,10 @@ void PressureController::service() {
         if (MECHANICAL_PRELOAD_MODE) {
           if (!ACTUATOR_DIRECTION_VALID) {
             enterFault("M3 requested before actuator direction commissioning");
+          } else if (!PRESSURE_CALIBRATION_VALID) {
+            enterFault("M3 requested without CS1238 force calibration");
+          } else if (!statusFlag(STATUS_CS1238_ONLINE)) {
+            enterFault("M3 requested without CS1238 data");
           } else {
             setState(PressureState::MECHANICAL_ENGAGE);
           }
@@ -344,8 +360,8 @@ void PressureController::service() {
         break;
       }
       // The pen is mechanically installed at the desired drawing preload.
-      // This timed move returns from the verified 100 ms clear position; the
-      // CS1238 remains telemetry/guarding and does not seek paper.
+      // This timed move returns from the verified 100 ms clear position;
+      // after it, HOLD_FORCE uses the CS1238 moving average for corrections.
       motorSeek();
       if (now - state_started_ms_ >= PEN_ENGAGE_TRAVEL_MS) {
         motorStop();
@@ -374,11 +390,6 @@ void PressureController::service() {
     case PressureState::HOLD_FORCE:
       if (!engage) {
         setState(PressureState::CLEARANCE_LIFT);
-        break;
-      }
-      if (MECHANICAL_PRELOAD_MODE) {
-        motorStop();
-        setDriverEnabled(false);
         break;
       }
       if (new_filtered_sample_ && now - last_force_correction_ms_ >= CS1238_CORRECTION_PERIOD_MS) {
@@ -420,13 +431,19 @@ void PressureController::service() {
       break;
 
     case PressureState::CLEARANCE_LIFT:
+      if (MECHANICAL_PRELOAD_MODE && liftHomeActive()) {
+        motorStop();
+        setDriverEnabled(false);
+        setState(PressureState::LIFTED);
+        break;
+      }
       motorLift();
       if (now - state_started_ms_ >= PEN_CLEAR_EXTRA_LIFT_MS) {
         motorStop();
         setDriverEnabled(false);
         if (MECHANICAL_PRELOAD_MODE) {
-          // The 100 ms motion is the verified mechanical clear operation. A
-          // CS1238 value immediately after motor travel is telemetry only.
+          // The 100 ms motion is the mechanical air-gap operation. The
+          // moving-average force loop is used only after the next M3 preload.
           setState(PressureState::LIFTED);
         } else {
           // Recheck after the added air-gap motion before declaring M5 complete.

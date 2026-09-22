@@ -165,11 +165,11 @@ The bench-confirmed pen-fit alternative is staged in the same controller as
 lock. Once the actuator direction and lift-reference gates are separately
 commissioned, this mode can make M3 a bounded 100 ms DOWN travel from the
 operator-installed pen preload and make M5 a bounded 100 ms UP clearance move.
-The CS1238 moving average is retained as telemetry in this mode; it does not
-pretend to detect paper contact or silently authorize motion. The measured
-20 x 5 ms manual UP round trip (about 1.75 mm clearance) and matching manual
-DOWN paper-resistance check are the current bench evidence for the staged
-duration, not a replacement for the normal force-control calibration profile.
+After M3, the CS1238 16-sample moving average resumes bounded force corrections
+toward the calibrated target; it is not used to seek initial paper contact.
+GP2 remains the maximum-UP limit. The measured 20 x 5 ms manual UP round trip
+(about 1.75 mm clearance) and matching manual DOWN paper-resistance check are
+the current bench evidence for the staged duration.
 
 The temporary service interface is `Serial2` / hardware UART1 on GP20 (TX) and
 GP21 (RX) at 115200 baud. The integrated sketch immediately writes `Theta
