@@ -54,8 +54,8 @@ that COM port open. The single-character commands act immediately, so either
 Serial Monitor line-ending setting is acceptable: `?` prints help, `t` tares
 with the pen clear, `a` arms 30 down pulses, `d` gives one selected-duration
 down/toward-scale pulse, `u` gives one up/away pulse, `r` reads the CS1238
-mean and tare delta, and `x` sleeps/disarms. `[` and `]` select 10 ms shorter
-or longer pulses, bounded from 10 to 100 ms. Start at 10 ms; after each `d`,
+mean and tare delta, and `x` sleeps/disarms. `[` and `]` select 5 ms shorter
+or longer pulses, bounded from 5 to 100 ms. Start at 5 ms; after each `d`,
 wait for the kitchen scale to settle, then use `r` to record the simultaneous
 raw reading. At a stable reading near 50 g, write down the scale value and the
 `raw=` value from the `READING` line. The scale is not electronically

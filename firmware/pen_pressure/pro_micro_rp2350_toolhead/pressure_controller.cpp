@@ -379,7 +379,7 @@ void PressureController::service() {
           lift_release_windows_ = 0;
         }
         if (lift_release_windows_ >= LIFT_RELEASE_REQUIRED_WINDOWS) {
-          // The requested 500 ms is deliberately *after* the CS1238 has
+          // The candidate 100 ms is deliberately *after* the CS1238 has
           // confirmed release, providing a real physical air-gap margin for
           // between-line travel rather than merely an unloaded pen state.
           setState(PressureState::CLEARANCE_LIFT);

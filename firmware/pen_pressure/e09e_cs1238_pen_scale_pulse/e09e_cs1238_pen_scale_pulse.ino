@@ -3,7 +3,7 @@
 
   This is dedicated supervised bench firmware, not the production controller.
   It drives no GP29/M3/M5 or GP27 signal. Service UART1 commands are intentionally
-  bounded: ARM permits a limited number of individual 10–100 ms pulses; every
+  bounded: ARM permits a limited number of individual 5–100 ms pulses; every
   pulse checks ULT/nFAULT and puts the DRV8833 to sleep before replying.
 
   Use only after E-09C known-mass calibration. Keep the physical 6 V cutoff
@@ -19,14 +19,14 @@
     t / a             tare clear state / ARM the next 30 DOWN pulses
     d / u             one DOWN (toward-scale) / UP (away) selected-duration pulse
     r / x             read CS1238 mean / STOP, sleep, and disarm
-    [ / ]             decrease / increase selected duration in 10 ms steps
+    [ / ]             decrease / increase selected duration in 5 ms steps
 
   Long commands remain available for scripted capture:
     STATUS             configuration and remaining downward-pulse budget
     TARE               64-sample clear-state diagnostic tare
     ARM                permit the next 30 individual DOWN pulses
-    PULSE DOWN <ms>    one bounded toward-scale pulse (requires ARM)
-    PULSE UP <ms>      one bounded away-from-scale pulse (blocked at GP2 home)
+    PULSE DOWN <ms>    one bounded 5–100 ms toward-scale pulse (requires ARM)
+    PULSE UP <ms>      one bounded 5–100 ms away-from-scale pulse (blocked at GP2 home)
     READ               16-sample CS1238 mean and tare-relative delta
     CAPTURE <ms>       raw SAMPLE,time_us,raw records; 250..10000 ms
     STOP               sleep the driver immediately
@@ -59,8 +59,9 @@ constexpr uint8_t PIN_SERVICE_UART_RX = 21;
 constexpr uint32_t BAUD = 115200;
 constexpr uint16_t TARE_SAMPLES = 64;
 constexpr uint8_t READ_SAMPLES = 16;
-constexpr uint16_t PULSE_MIN_MS = 10;
+constexpr uint16_t PULSE_MIN_MS = 5;
 constexpr uint16_t PULSE_MAX_MS = 100;
+constexpr uint16_t PULSE_STEP_MS = 5;
 constexpr uint8_t DOWN_PULSE_BUDGET = 30;
 constexpr bool FAULT_ACTIVE_LOW = true;
 constexpr bool LIFT_HOME_ACTIVE_LOW = true;
@@ -176,13 +177,13 @@ void printHelp() {
 
 void adjustPulseDuration(bool increase) {
   if (increase) {
-    selectedPulseMs = selectedPulseMs >= PULSE_MAX_MS - 10
+    selectedPulseMs = selectedPulseMs >= PULSE_MAX_MS - PULSE_STEP_MS
                           ? PULSE_MAX_MS
-                          : selectedPulseMs + 10;
+                          : selectedPulseMs + PULSE_STEP_MS;
   } else {
-    selectedPulseMs = selectedPulseMs <= PULSE_MIN_MS + 10
+    selectedPulseMs = selectedPulseMs <= PULSE_MIN_MS + PULSE_STEP_MS
                           ? PULSE_MIN_MS
-                          : selectedPulseMs - 10;
+                          : selectedPulseMs - PULSE_STEP_MS;
   }
   Serial.print(F("PULSE_DURATION_MS,"));
   Serial.println(selectedPulseMs);

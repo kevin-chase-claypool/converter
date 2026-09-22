@@ -307,7 +307,7 @@ used only to flash the sketch with the external rail disconnected. For the
 manual kitchen-scale check, Arduino IDE Serial Monitor owns the adapter COM
 port at 115200 baud. E-09E accepts immediate one-character `t` (tare), `a`
 (arm), `d`/`u` (one selected-duration down/up pulse), `r` (raw reading), `x`
-(stop), `[`/`]` (10 ms duration steps within 10–100 ms), and `?` (help/status).
+(stop), `[`/`]` (5 ms duration steps within 5–100 ms), and `?` (help/status).
 The Windows application is optional and must be closed while Serial Monitor
 owns the port. This avoids a second 5 V source while the N20's 6 V rail is
 energized.

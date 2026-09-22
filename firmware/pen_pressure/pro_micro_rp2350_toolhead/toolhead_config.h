@@ -41,10 +41,10 @@ constexpr uint32_t SERIAL_BAUD = 115200;
 constexpr uint32_t BOOT_LIFT_TIME_MS = 700;
 constexpr uint32_t LIFT_VERIFY_TIMEOUT_MS = 1800;
 constexpr uint32_t PEN_CLEAR_RELEASE_TIMEOUT_MS = 1800;
-// Temporary T-01H starting value requested for normal M5. Measure the actual
-// resulting tip gap and replace this with an accepted per-tool value before
-// PEN_CLEAR_VALID may be enabled.
-constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 500;
+// T-01H candidate inferred from E-09E observed N20 speed. It remains a staged
+// value only: measure the resulting tip gap and complete 30 M3/M5 clearance
+// cycles before PEN_CLEAR_VALID may be enabled.
+constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 100;
 constexpr uint32_t SEEK_TIMEOUT_MS = 1500;
 constexpr uint32_t CS1238_CORRECTION_PERIOD_MS = 250;
 constexpr uint8_t CS1238_TARE_SAMPLES = 64;
