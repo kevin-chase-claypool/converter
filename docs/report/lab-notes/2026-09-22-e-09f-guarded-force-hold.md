@@ -86,6 +86,11 @@ guarded E-09F `u` pulses (20 × 5 ms = 100 ms total UP) produced approximately
 value for the non-precision setup workflow. It is not a CS1238 force fit, and
 it does not validate automatic raw-based contact seeking.
 
+The subsequent manual paper-pull check felt appropriate to the operator: the
+paper slid beneath the installed pen with noticeable but acceptable resistance.
+This is the practical acceptance result for the manually set drawing preload;
+it does not claim a precision grams-force value.
+
 ## Failed clear attempt and correction
 
 On a later `a`, `c` attempt, the serial stream reported:

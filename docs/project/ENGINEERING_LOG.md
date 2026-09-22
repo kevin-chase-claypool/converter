@@ -9,7 +9,8 @@
   false contact detector.
 - Evidence: after manually setting approximate drawing preload, twenty guarded
   5 ms UP pulses produced about 1.75 mm physical clearance. Retain 100 ms as
-  the staged mechanical clear value.
+  the staged mechanical clear value. The paper-pull check had noticeable but
+  operator-judged acceptable resistance.
 - Safety: `d` remains supervised, one pulse at a time, ULT-protected, and
   asleep after each pulse. It is not production M3/M5 behavior.
 
