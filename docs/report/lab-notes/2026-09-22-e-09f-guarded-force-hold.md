@@ -24,5 +24,5 @@ Run E-09F clear (`a`, `c`) with the scale/paper fixture in place. Record `CLEAR_
 ## References
 
 - [E-09F test plan](../../testing/TEST_PLAN.md)
-- [E-09F source](../../firmware/pen_pressure/e09f_cs1238_guarded_force_hold/e09f_cs1238_guarded_force_hold.ino)
+- [E-09F source](../../../firmware/pen_pressure/e09f_cs1238_guarded_force_hold/e09f_cs1238_guarded_force_hold.ino)
 - [E-09E installed-pen direction evidence](2026-09-22-e-09e-installed-pen-scale-direction.md)
