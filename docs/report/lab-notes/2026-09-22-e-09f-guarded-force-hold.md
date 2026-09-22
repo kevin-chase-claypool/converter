@@ -17,9 +17,17 @@ With the pen clear, the operator issued `t`, `a`, and `s` twice. E-09F used 5 ms
 
 The first run reached and held **40.0 g**; the second reached and held **40.4 g**. Both are inside the requested practical 40–60 g band and repeatable to the available kitchen-scale resolution. E-09F intentionally stops correction as soon as it enters the band, so arriving near 40 g rather than the nominal 50 g center is expected. This is a band-hold pass, not a centered 50 g production-force result.
 
-## Next action
+## Clear result and next action
 
-Run E-09F clear (`a`, `c`) with the scale/paper fixture in place. Record `CLEAR_COMPLETE`, visible tip clearance, and whether the 100 ms candidate air-gap pulse reaches GP2 LIFT_HOME. Production M3/M5, GP27, and force-control gates remain disabled.
+The operator then ran E-09F clear (`a`, `c`). The pen cleared the scale/paper,
+stayed nowhere near the GP2 LIFT_HOME switch, and measured approximately
+**1.75 mm** above the scale after the staged 100 ms air-gap pulse. The exact
+terminal serial line was not retained, so `CLEAR_COMPLETE` is not asserted as
+captured evidence; the reported physical outcome is a one-cycle air-gap pass.
+
+The next action is repeated-clear testing. Production M3/M5, GP27, and
+force-control gates remain disabled until normal M5 behavior is exercised
+repeatedly rather than through this temporary E-09F sketch.
 
 ## References
 

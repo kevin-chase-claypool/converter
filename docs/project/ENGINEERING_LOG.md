@@ -22,6 +22,14 @@
 - Result: the precision-weight raw profile and 5 ms bounded corrections reach a repeatable lower edge of the intended band. E-09F intentionally stops when it enters that band, so it does not yet claim a centered 50 g hold.
 - Next action: run `a`, `c`, record `CLEAR_COMPLETE` plus visible gap/GP2 behavior, then decide whether a centered target/deadband controller test is necessary before production integration.
 
+<a id="elog-20260922-e09f-air-gap-result"></a>
+### 🟨 2026-09-22 - HARDWARE/PARTIAL - E-09F one-cycle air-gap result
+
+- Status: the staged 100 ms air-gap pulse passed one installed-pen physical check; normal M5 repeatability remains unproven.
+- Measurement: after `a`, `c`, the reported pen-tip clearance above the scale was approximately 1.75 mm and the carriage was nowhere near GP2 LIFT_HOME.
+- Result: retain 100 ms as the staged M5 air-gap candidate. The exact terminal `CLEAR_COMPLETE` record was not retained, so this is physical one-cycle evidence rather than a complete serial-trace acceptance record.
+- Next action: repeat normal clear cycles with the production-path equivalent before enabling `PEN_CLEAR_VALID`, GP27 completion, or drawing behavior.
+
 <a id="elog-20260922-e09e-installed-pen-direction-result"></a>
 ### 🟨 2026-09-22 - HARDWARE/PARTIAL - E-09E installed-pen force-direction result
 
