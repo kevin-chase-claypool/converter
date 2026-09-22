@@ -320,7 +320,8 @@ temporary supervised automatic test. Arduino IDE Serial Monitor commands
 Its only automatic motion is a maximum of 30 5 ms pulses per direction with a
 500 ms settle, a 30 s timeout, and a raw hard-force limit. `s` seeks/holds the
 E-09C precision-weight raw band for 40–60 g. `c` explicitly tests the staged
-100 ms air-gap candidate after a measured clear band. E-09F has no GP29/M3/M5,
+100 ms air-gap candidate after a measured clear band, then waits 500 ms for a
+telemetry-only CS1238 reading before reporting completion. E-09F has no GP29/M3/M5,
 GP27, or magnetic behavior and must never be used for drawing.
 
 Power boundary:

@@ -28,7 +28,7 @@ reachable and put the kitchen scale below the installed pen.
 | `t` | Collect a 64-sample clear-state tare with the pen off the scale. |
 | `a` | Arm one automatic test; reset each direction's 30-pulse budget. |
 | `s` | Seek/hold the calibrated 40–60 g raw band for five seconds. |
-| `c` | From contact, lift in 5 ms steps to the 3 g clear band, then issue one 100 ms air-gap pulse. |
+| `c` | From contact, lift in 5 ms steps to the 3 g clear band, then issue one 100 ms air-gap pulse. It waits 500 ms before reporting a final telemetry reading and `CLEAR_COMPLETE`. |
 | `u` | One guarded 5 ms manual UP/retract pulse; usable after a fault to recover from the fixture. |
 | `r` | Print a 16-sample CS1238 raw mean and tare delta. |
 | `x` | Stop/sleep/disarm immediately. |
@@ -37,8 +37,10 @@ The sketch has a 30 second automatic-test timeout, a 70 g raw hard limit with
 two-read confirmation during downward seeking/holding, 30 pulses per direction,
 500 ms settling between corrections, and GP2 LIFT_HOME blocking before every
 UP pulse. Release bypasses the downward hard-force gate because it can only
-lift; it retains its pulse/time/fault bounds. The driver sleeps after every
-pulse.
+lift; it retains its pulse/time/fault bounds. After the fixed air-gap pulse it
+waits 500 ms, prints `AIR_GAP_SETTLED`, and completes; that post-motion sample
+is recorded as telemetry, not used to reclassify the already-proven pre-gap
+clear state. The driver sleeps after every pulse.
 
 If an automatic test faults with the pen still pressing on the fixture, send
 `u` repeatedly until it is clear. Each command is one guarded 5 ms UP pulse
@@ -54,7 +56,8 @@ immediate-stop options.
    faults, and whether it stayed approximately 40–60 g.
 4. With the scale still under the pen, send `a`, then `c`. Verify the pen
    clears the scale/paper after the explicit 100 ms air-gap pulse without
-   reaching the LIFT_HOME switch. A pass prints `CLEAR_COMPLETE`.
+   reaching the LIFT_HOME switch. A pass prints `AIR_GAP_SETTLED` then
+   `CLEAR_COMPLETE`.
 
 This is a one-cycle qualification. It does not establish normal M3/M5 behavior;
 T-01H still requires actual tip-gap measurement and repeated clear cycles.

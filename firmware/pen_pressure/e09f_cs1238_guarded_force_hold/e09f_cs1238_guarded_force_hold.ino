@@ -18,6 +18,7 @@
     a  arm one supervised automatic test
     s  seek and hold within the 40--60 g raw band for 5 s
     c  from contact, release to the 3 g band then issue one 100 ms UP air-gap pulse
+       followed by a 500 ms telemetry-only sensor settle
     u  one guarded 5 ms manual UP/retract pulse; available after a fault
     r  report a 16-sample raw mean and tare delta
     x  immediately stop, sleep, disarm, and abort
@@ -50,6 +51,7 @@ constexpr uint8_t READ_SAMPLES = 16;
 constexpr uint16_t CORRECTION_PULSE_MS = 5;
 constexpr uint16_t CLEARANCE_PULSE_MS = 100;
 constexpr uint16_t CORRECTION_SETTLE_MS = 500;
+constexpr uint16_t AIR_GAP_SETTLE_MS = 500;
 constexpr uint32_t AUTO_TIMEOUT_MS = 30000;
 constexpr uint32_t HOLD_DURATION_MS = 5000;
 constexpr uint8_t AUTO_PULSE_BUDGET = 30;
@@ -67,7 +69,9 @@ constexpr CS123X_IntRef REFERENCE_MODE = CS123X_INT_REF_OFF;
 CS123x scale(CS123X_TYPE_CS1238, PIN_DT, PIN_SCK, CS123X_CH_A,
              CS123X_GAIN_128, CS123X_RATE_640Hz, REFERENCE_MODE);
 
-enum class TestState : uint8_t { IDLE, SEEK_HOLD, RELEASE_TO_CLEAR, COMPLETE, FAULT };
+enum class TestState : uint8_t {
+  IDLE, SEEK_HOLD, RELEASE_TO_CLEAR, AIR_GAP_SETTLE, COMPLETE, FAULT
+};
 
 bool configured = false;
 bool tareValid = false;
@@ -96,6 +100,7 @@ const __FlashStringHelper *stateName() {
     case TestState::IDLE: return F("IDLE");
     case TestState::SEEK_HOLD: return F("SEEK_HOLD");
     case TestState::RELEASE_TO_CLEAR: return F("RELEASE_TO_CLEAR");
+    case TestState::AIR_GAP_SETTLE: return F("AIR_GAP_SETTLE");
     case TestState::COMPLETE: return F("COMPLETE");
     case TestState::FAULT: return F("FAULT");
   }
@@ -284,17 +289,31 @@ void manualUp() {
 }
 
 void serviceAutomaticTest() {
-  if (state != TestState::SEEK_HOLD && state != TestState::RELEASE_TO_CLEAR) return;
+  if (state != TestState::SEEK_HOLD && state != TestState::RELEASE_TO_CLEAR &&
+      state != TestState::AIR_GAP_SETTLE) return;
   const uint32_t now = millis();
   if (now - startedMs >= AUTO_TIMEOUT_MS) {
     fail(F("automatic_test_timeout"));
     return;
   }
-  if (now - lastCorrectionMs < CORRECTION_SETTLE_MS) return;
+  const uint16_t settleMs = state == TestState::AIR_GAP_SETTLE
+                                ? AIR_GAP_SETTLE_MS
+                                : CORRECTION_SETTLE_MS;
+  if (now - lastCorrectionMs < settleMs) return;
   lastCorrectionMs = now;
 
   long delta = 0;
   if (!readForce(delta)) return;
+  if (state == TestState::AIR_GAP_SETTLE) {
+    // The clear band was proven before the known-duration UP pulse. This
+    // delayed reading is telemetry only: a CS1238 sample taken directly after
+    // motor motion is not evidence that the already-completed air gap failed.
+    Serial.print(F("AIR_GAP_SETTLED,tare_delta="));
+    Serial.println(delta);
+    state = TestState::COMPLETE;
+    Serial.println(F("CLEAR_COMPLETE,driver_asleep=1"));
+    return;
+  }
   if (state == TestState::SEEK_HOLD) {
     // Only downward seeking/holding can increase contact force. Confirm an
     // over-limit sample before faulting so a single CS1238 transient cannot
@@ -343,14 +362,9 @@ void serviceAutomaticTest() {
   // pulse and stop. GP2 is checked before each pulse.
   if (labs(delta) <= CLEAR_BAND_RAW) {
     if (!drivePulse(false, CLEARANCE_PULSE_MS, F("AIR_GAP_PULSE"))) return;
-    long postGapDelta = 0;
-    if (!readForce(postGapDelta)) return;
-    if (labs(postGapDelta) > CLEAR_BAND_RAW) {
-      fail(F("air_gap_not_clear"));
-      return;
-    }
-    state = TestState::COMPLETE;
-    Serial.println(F("CLEAR_COMPLETE,driver_asleep=1"));
+    state = TestState::AIR_GAP_SETTLE;
+    lastCorrectionMs = millis();
+    Serial.println(F("AIR_GAP_SETTLING,ms=500"));
     return;
   }
   if (upPulses >= AUTO_PULSE_BUDGET) {

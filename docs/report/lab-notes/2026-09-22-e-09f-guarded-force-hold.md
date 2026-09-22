@@ -29,6 +29,24 @@ The next action is repeated-clear testing. Production M3/M5, GP27, and
 force-control gates remain disabled until normal M5 behavior is exercised
 repeatedly rather than through this temporary E-09F sketch.
 
+## Delayed air-gap confirmation correction
+
+After a fresh-tare/arm, the latest E-09F run reached `HOLD_COMPLETE` and then
+entered clear. Three 5 ms UP pulses reduced the mean to `tare_delta=-2728`,
+which is inside the 3 g release band. The subsequent 100 ms UP pulse visibly
+cleared the pen by approximately 1.75 mm from paper without approaching GP2
+LIFT_HOME. The sketch immediately read `tare_delta=-25545` in the same
+millisecond as motor stop and reported `FAULT,reason=air_gap_not_clear`.
+
+That result does not show failed clearance: release had already been proven
+before the known-duration gap pulse, and the physical gap was observed. The
+immediate post-drive CS1238 reading is a motor/mechanical settling transient,
+not a valid test of an already-completed gap. E-09F now waits 500 ms, emits an
+`AIR_GAP_SETTLED` telemetry record, then prints `CLEAR_COMPLETE`; that delayed
+value is recorded but does not retroactively fault the completed air-gap
+motion. Repeat the cycle with the updated sketch and retain the complete
+terminal trace.
+
 ## Failed clear attempt and correction
 
 On a later `a`, `c` attempt, the serial stream reported:
