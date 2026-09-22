@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20260922-e09e-installed-pen-scale-pulse-source"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/WINDOWS SOFTWARE/IMPLEMENTED - E-09E installed-pen scale pulse source
+
+- Status: dedicated source now supports a bounded, supervised N20 approach to
+  the kitchen-scale fixture; no pulse was issued and no new physical result is
+  claimed.
+- Category: rp23cnc-software, windows-software, hardware, CS1238, N20,
+  kitchen scale, E-09E.
+- Result: the E-09E sketch requires clear tare and explicit arm, limits motion
+  to individual 10 ms pulses, reports driver faults, sleeps after each pulse,
+  prevents lift at GP2 home, and keeps raw CS1238 capture. Its GUI controls are
+  enabled only after the firmware explicitly identifies its mode.
+- Safety boundary: no continuous/automatic approach, force seek, M3/M5,
+  GP27, or production-control gate is present. The operator reads the scale
+  and stops manually because the scale is not electronically connected.
+- Next action: flash E-09E, verify its initial direction with clear travel and
+  current-limited 6 V, then use settled individual pulses to stop near 50 g
+  and capture the scale/CS1238 point.
+
 <a id="elog-20260922-e09c-cap-free-repeat"></a>
 ### 🟨 2026-09-22 - HARDWARE/RP23CNC SOFTWARE/PARTIAL - E-09C cap-free repeat replaces staged profile source
 

@@ -125,6 +125,7 @@ class KnownMassCalibrationApp(tk.Tk):
         self.capture_status = tk.StringVar(value="Enter the total mass currently resting on the load cell.")
         self.fit_status = tk.StringVar(value="Capture at least three distinct total masses before fitting.")
         self.device: serial.Serial | None = None
+        self.device_mode = "unknown"
         self.serial_lock = threading.Lock()
         self.points: list[dict[str, object]] = []
         self.current_run_dir: Path | None = None
@@ -247,33 +248,51 @@ class KnownMassCalibrationApp(tk.Tk):
         ttk.Label(
             frame,
             text=(
-                "This records raw CS1238 data only; it does not command the N20. Put the kitchen scale "
-                "under the installed pen and create a steady reading manually or with a separately qualified fixture."
+                "Use the dedicated E-09E pulse sketch for this check. The scale is the reference: arm the test, "
+                "make individual 10 ms toward-scale pulses, wait for the scale to settle, then stop at approximately 50 g."
             ),
             wraplength=720,
         ).grid(row=1, column=0, columnspan=3, sticky="w", pady=(6, 12))
+        self.pen_scale_mode_label = ttk.Label(
+            frame,
+            text="Pulse controls are disabled until the connected firmware reports mode=cs1238_pen_scale_pulse.",
+            wraplength=720,
+        )
+        self.pen_scale_mode_label.grid(row=2, column=0, columnspan=3, sticky="w", pady=(0, 10))
+        pulse_actions = ttk.Frame(frame)
+        pulse_actions.grid(row=3, column=0, columnspan=3, sticky="w", pady=(0, 10))
+        self.pen_scale_arm_button = ttk.Button(pulse_actions, text="Arm 30 pulses", command=lambda: self._pen_scale_command("ARM"), state="disabled")
+        self.pen_scale_arm_button.grid(row=0, column=0, padx=(0, 6))
+        self.pen_scale_down_button = ttk.Button(pulse_actions, text="Pulse toward scale (10 ms)", command=lambda: self._pen_scale_command("PULSE DOWN 10"), state="disabled")
+        self.pen_scale_down_button.grid(row=0, column=1, padx=6)
+        self.pen_scale_up_button = ttk.Button(pulse_actions, text="Pulse away (10 ms)", command=lambda: self._pen_scale_command("PULSE UP 10"), state="disabled")
+        self.pen_scale_up_button.grid(row=0, column=2, padx=6)
+        self.pen_scale_read_button = ttk.Button(pulse_actions, text="Read CS1238 now", command=lambda: self._pen_scale_command("READ"), state="disabled")
+        self.pen_scale_read_button.grid(row=0, column=3, padx=6)
+        self.pen_scale_stop_button = ttk.Button(pulse_actions, text="Stop / sleep driver", command=lambda: self._pen_scale_command("STOP"), state="disabled")
+        self.pen_scale_stop_button.grid(row=0, column=4, padx=6)
         ttk.Button(frame, text="Select calibration summary", command=self.select_pen_scale_summary).grid(
-            row=2, column=0, sticky="w", pady=4
+            row=4, column=0, sticky="w", pady=4
         )
         self.pen_scale_summary_label = ttk.Label(frame, text="No calibration summary selected.", wraplength=600)
-        self.pen_scale_summary_label.grid(row=2, column=1, columnspan=2, sticky="w", padx=8, pady=4)
-        ttk.Label(frame, text="Kitchen-scale reading (g)").grid(row=3, column=0, sticky="w", pady=4)
-        ttk.Entry(frame, textvariable=self.pen_scale_force_g, width=16).grid(row=3, column=1, sticky="w", padx=8, pady=4)
+        self.pen_scale_summary_label.grid(row=4, column=1, columnspan=2, sticky="w", padx=8, pady=4)
+        ttk.Label(frame, text="Kitchen-scale reading (g)").grid(row=5, column=0, sticky="w", pady=4)
+        ttk.Entry(frame, textvariable=self.pen_scale_force_g, width=16).grid(row=5, column=1, sticky="w", padx=8, pady=4)
         self.pen_scale_capture_button = ttk.Button(
             frame, text="Capture pen-scale raw", command=self.capture_pen_scale_check, state="disabled"
         )
-        self.pen_scale_capture_button.grid(row=4, column=1, sticky="w", pady=(10, 8))
+        self.pen_scale_capture_button.grid(row=6, column=1, sticky="w", pady=(10, 8))
         ttk.Label(frame, textvariable=self.pen_scale_status, wraplength=720).grid(
-            row=5, column=0, columnspan=3, sticky="w", pady=(4, 10)
+            row=7, column=0, columnspan=3, sticky="w", pady=(4, 10)
         )
         ttk.Label(
             frame,
             text=(
                 "Result: pen_scale_checks.csv and raw/pen_scale_check_*.csv are saved beside the selected calibration summary. "
-                "The app compares the measured scale force with the projected raw-force estimate."
+                "The app compares the scale force with the projected raw-force estimate. Each N20 pulse ends asleep; use the physical 6 V cutoff for any unexpected motion."
             ),
             wraplength=720,
-        ).grid(row=6, column=0, columnspan=3, sticky="w")
+        ).grid(row=8, column=0, columnspan=3, sticky="w")
 
     def _build_help(self, frame: ttk.Frame) -> None:
         text = (
@@ -283,7 +302,7 @@ class KnownMassCalibrationApp(tk.Tk):
             "4. Place the precision weights downward on the motor mount. This characterizes the cell; it may bend opposite to the upward reaction force at the pen tip. Leave Printing force relationship at Opposite unless a simple installed-pen check shows otherwise. Enter the total mass, wait for it to stop moving, then click Capture raw point.\n\n"
             "5. Capture 0, 5, 10, …, 70 g while loading. Repeat the sequence while unloading. Keep at least three complete loading/unloading passes for a defensible calibration.\n\n"
             "6. Click Fit calibration and save graphs. The summary retains both the measured downward-weight fit and an estimated 40–60 g upward pen-force raw window. The latter is an approximate sign projection, not a precision claim.\n\n"
-            "7. Open 4. Pen-scale check. Select this run's calibration_summary.json, place a kitchen scale under the installed pen, hold a steady roughly 50 g reading, and capture raw data. The check does not drive the N20; it verifies that the real pen-tip reaction follows the projected raw direction."
+            "7. To obtain a real installed-pen check without a precision scale-positioner, flash e09e_cs1238_pen_scale_pulse. With the kitchen scale under the pen, tare while clear, arm the bounded pulse budget, and use only individual 10 ms toward-scale pulses. Wait for the scale after every pulse; stop at a stable roughly 50 g display, enter that scale reading, and capture raw data. The scale is not electronically connected, so the operator—not firmware—decides when to stop."
         )
         help_text = tk.Text(frame, width=86, height=23, wrap="word", relief="solid", borderwidth=1, padx=8, pady=8)
         help_text.insert("1.0", text)
@@ -332,6 +351,7 @@ class KnownMassCalibrationApp(tk.Tk):
             self.after(0, lambda: self._connection_failed(str(error)))
 
     def _connected(self, response: str) -> None:
+        self.device_mode = "cs1238_pen_scale_pulse" if "mode=cs1238_pen_scale_pulse" in response else "raw_only"
         self.connection_status.set("Connected at 115200 baud. " + response.replace("\n", " "))
         self.append_message(response)
         self.connect_button.configure(text="Disconnect", state="normal")
@@ -346,6 +366,7 @@ class KnownMassCalibrationApp(tk.Tk):
         if self.device:
             self.device.close()
         self.device = None
+        self.device_mode = "unknown"
         self.connection_status.set("Disconnected")
         self.connect_button.configure(text="Connect", state="normal")
         self.capture_button.configure(state="disabled")
@@ -664,6 +685,51 @@ class KnownMassCalibrationApp(tk.Tk):
     def _update_pen_scale_button(self) -> None:
         enabled = bool(self.pen_scale_fit and self.pen_scale_run_dir and self.device and self.device.is_open)
         self.pen_scale_capture_button.configure(state="normal" if enabled else "disabled")
+        pulse_enabled = bool(self.device and self.device.is_open and self.device_mode == "cs1238_pen_scale_pulse")
+        for button in (
+            self.pen_scale_arm_button,
+            self.pen_scale_down_button,
+            self.pen_scale_up_button,
+            self.pen_scale_read_button,
+            self.pen_scale_stop_button,
+        ):
+            button.configure(state="normal" if pulse_enabled else "disabled")
+        if self.device_mode == "cs1238_pen_scale_pulse":
+            self.pen_scale_mode_label.configure(
+                text="E-09E pulse mode connected. Tare with the pen clear, then Arm 30 pulses before using Pulse toward scale."
+            )
+        elif self.device and self.device.is_open:
+            self.pen_scale_mode_label.configure(
+                text="Raw-only E-07D mode connected. Flash E-09E to enable bounded N20 pulse controls."
+            )
+        else:
+            self.pen_scale_mode_label.configure(
+                text="Pulse controls are disabled until the connected firmware reports mode=cs1238_pen_scale_pulse."
+            )
+
+    def _pen_scale_command(self, command: str) -> None:
+        if not self.device or not self.device.is_open or self.device_mode != "cs1238_pen_scale_pulse":
+            messagebox.showerror("Pulse mode unavailable", "Flash and connect the E-09E CS1238 pen-scale pulse sketch first.")
+            return
+        self.pen_scale_status.set(f"Sending {command}…")
+        threading.Thread(target=self._pen_scale_command_worker, args=(command,), daemon=True).start()
+
+    def _pen_scale_command_worker(self, command: str) -> None:
+        try:
+            assert self.device is not None
+            with self.serial_lock:
+                self.device.reset_input_buffer()
+                self.device.write((command + "\n").encode("ascii"))
+                self.device.flush()
+                lines = self._read_until_quiet(self.device, 1.5)
+            response = "\n".join(lines) or "No response received."
+            self.after(0, lambda: self._pen_scale_command_done(command, response))
+        except (serial.SerialException, OSError) as error:
+            self.after(0, lambda: self._pen_scale_command_done(command, f"Communication error: {error}"))
+
+    def _pen_scale_command_done(self, command: str, response: str) -> None:
+        self.pen_scale_status.set(f"{command}: {response.replace(chr(10), ' ')}")
+        self.append_message(response)
 
     def select_pen_scale_summary(self) -> None:
         selected = filedialog.askopenfilename(

@@ -39,8 +39,13 @@ then **Add fixture mass to labels…** before fitting again: `0, 5, …` becomes
 `mass_label_corrections.csv` records the adjustment. Do not subtract such a
 fixture mass from the labels.
 
-After fitting, **4. Pen-scale check** can directly verify the selected force
-direction at the installed pen: select the saved `calibration_summary.json`,
-put a kitchen scale under the pen, establish a steady reading near 50 g, and
-capture a raw trace. This records only; it does not command the N20. It writes
+After fitting, the application’s **4. Pen-scale check** works with the dedicated
+`e09e_cs1238_pen_scale_pulse` sketch to directly verify the selected force
+direction at the installed pen. Put a kitchen scale under the pen, tare while
+the pen is clear, click **Arm 30 pulses**, then issue only individual 10 ms
+**Pulse toward scale** commands. Let the scale settle after each pulse. When
+the scale is stable near 50 g, enter its displayed force and capture the raw
+trace. The scale is not electronically connected: the operator stops pulsing;
+the firmware does not seek 50 g automatically. Every pulse sleeps the driver,
+checks `ULT`, and a lift pulse is blocked if `LIFT_HOME` is pressed. It writes
 `raw/pen_scale_check_*.csv` and `pen_scale_checks.csv` alongside that run.
