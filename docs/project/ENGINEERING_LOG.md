@@ -1,5 +1,17 @@
 # Engineering Log
 
+<a id="elog-20260922-e09e-adjustable-pulse-duration"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/WINDOWS SOFTWARE/IMPLEMENTED - E-09E bounded adjustable pulse duration
+
+- Status: the operator can now choose a 10–100 ms E-09E pulse duration in the
+  Windows pen-scale interface; no hardware pulse result is claimed.
+- Category: rp23cnc-software, windows-software, N20, E-09E, safety.
+- Result: both UI and firmware reject values outside 10–100 ms. The existing
+  explicit arm budget, one-pulse-at-a-time behavior, fault check, GP2 lift
+  block, and post-pulse driver sleep remain unchanged.
+- Safety boundary: start at 10 ms and wait for a settled scale after every
+  pulse; this does not authorize automatic force seeking or production motion.
+
 <a id="elog-20260922-e09e-installed-pen-scale-pulse-source"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/WINDOWS SOFTWARE/IMPLEMENTED - E-09E installed-pen scale pulse source
 
@@ -9,7 +21,7 @@
 - Category: rp23cnc-software, windows-software, hardware, CS1238, N20,
   kitchen scale, E-09E.
 - Result: the E-09E sketch requires clear tare and explicit arm, limits motion
-  to individual 10 ms pulses, reports driver faults, sleeps after each pulse,
+  to individual 10–100 ms pulses, reports driver faults, sleeps after each pulse,
   prevents lift at GP2 home, and keeps raw CS1238 capture. Its GUI controls are
   enabled only after the firmware explicitly identifies its mode.
 - Safety boundary: no continuous/automatic approach, force seek, M3/M5,

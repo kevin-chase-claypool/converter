@@ -42,8 +42,9 @@ fixture mass from the labels.
 After fitting, the application’s **4. Pen-scale check** works with the dedicated
 `e09e_cs1238_pen_scale_pulse` sketch to directly verify the selected force
 direction at the installed pen. Put a kitchen scale under the pen, tare while
-the pen is clear, click **Arm 30 pulses**, then issue only individual 10 ms
-**Pulse toward scale** commands. Let the scale settle after each pulse. When
+the pen is clear, click **Arm 30 pulses**, then issue individual **Pulse toward
+scale** commands. The adjustable duration is bounded to 10–100 ms by both the
+app and firmware; start at 10 ms and let the scale settle after each pulse. When
 the scale is stable near 50 g, enter its displayed force and capture the raw
 trace. The scale is not electronically connected: the operator stops pulsing;
 the firmware does not seek 50 g automatically. Every pulse sleeps the driver,

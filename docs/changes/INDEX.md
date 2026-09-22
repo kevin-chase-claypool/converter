@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-004` | rp23cnc-software, windows-software | implemented | [Make E-09E pulse duration adjustable](rp23cnc-software/2026/2026-09-22-make-e09e-pulse-duration-adjustable.md) |
 | 2026-09-22 | `RPSW-20260922-003` | rp23cnc-software, windows-software, hardware | implemented | [Add E-09E installed-pen scale pulse check](rp23cnc-software/2026/2026-09-22-add-e09e-pen-scale-pulse-check.md) |
 | 2026-09-22 | `RPSW-20260922-002` | rp23cnc-software, hardware | implemented | [Replace E-09C profile with cap-free repeat](rp23cnc-software/2026/2026-09-22-replace-e09c-cap-free-calibration.md) |
 | 2026-09-22 | `RPSW-20260922-001` | rp23cnc-software, windows-software, hardware | implemented | [Stage E-09C CS1238 force profile](rp23cnc-software/2026/2026-09-22-stage-e09c-cs1238-force-profile.md) |

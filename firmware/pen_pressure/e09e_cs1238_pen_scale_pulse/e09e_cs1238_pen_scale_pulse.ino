@@ -3,7 +3,7 @@
 
   This is dedicated supervised bench firmware, not the production controller.
   It drives no GP29/M3/M5 or GP27 signal.  Native USB commands are intentionally
-  bounded: ARM permits a limited number of individual 10 ms pulses; every
+  bounded: ARM permits a limited number of individual 10–100 ms pulses; every
   pulse checks ULT/nFAULT and puts the DRV8833 to sleep before replying.
 
   Use only after E-09C known-mass calibration. Keep the physical 6 V cutoff
@@ -15,8 +15,8 @@
     STATUS             configuration and remaining downward-pulse budget
     TARE               64-sample clear-state diagnostic tare
     ARM                permit the next 30 individual DOWN pulses
-    PULSE DOWN 10      one bounded toward-scale pulse (requires ARM)
-    PULSE UP 10        one bounded away-from-scale pulse (blocked at GP2 home)
+    PULSE DOWN <ms>    one bounded toward-scale pulse (requires ARM)
+    PULSE UP <ms>      one bounded away-from-scale pulse (blocked at GP2 home)
     READ               16-sample CS1238 mean and tare-relative delta
     CAPTURE <ms>       raw SAMPLE,time_us,raw records; 250..10000 ms
     STOP               sleep the driver immediately
@@ -41,7 +41,8 @@ constexpr uint8_t PIN_LIFT_HOME = 2;  // Normally-open switch to TOOL_GND.
 constexpr uint32_t BAUD = 115200;
 constexpr uint16_t TARE_SAMPLES = 64;
 constexpr uint8_t READ_SAMPLES = 16;
-constexpr uint16_t PULSE_MS = 10;
+constexpr uint16_t PULSE_MIN_MS = 10;
+constexpr uint16_t PULSE_MAX_MS = 100;
 constexpr uint8_t DOWN_PULSE_BUDGET = 30;
 constexpr bool FAULT_ACTIVE_LOW = true;
 constexpr bool LIFT_HOME_ACTIVE_LOW = true;
@@ -84,8 +85,10 @@ bool readMean(uint8_t samples, int32_t &mean) {
 
 void status() {
   Serial.print(F("STATUS,board=pro_micro_rp2350,mode=cs1238_pen_scale_pulse,"));
-  Serial.print(F("channel=A,gain=128,rate_sps=640,pulse_ms="));
-  Serial.print(PULSE_MS);
+  Serial.print(F("channel=A,gain=128,rate_sps=640,pulse_ms_min="));
+  Serial.print(PULSE_MIN_MS);
+  Serial.print(F(",pulse_ms_max="));
+  Serial.print(PULSE_MAX_MS);
   Serial.print(F(",down_pulses_remaining="));
   Serial.print(remainingDownPulses);
   Serial.print(F(",tare_valid="));
@@ -145,8 +148,11 @@ void arm() {
 
 void pulse(bool down, uint16_t durationMs) {
   stopAndSleep();
-  if (durationMs != PULSE_MS) {
-    Serial.println(F("PULSE_REJECTED,reason=only_10ms_allowed"));
+  if (durationMs < PULSE_MIN_MS || durationMs > PULSE_MAX_MS) {
+    Serial.print(F("PULSE_REJECTED,reason=range_ms="));
+    Serial.print(PULSE_MIN_MS);
+    Serial.print(F(".."));
+    Serial.println(PULSE_MAX_MS);
     return;
   }
   if (!configured || faultActive()) {
@@ -226,10 +232,13 @@ void command(const char *line) {
     stopAndSleep();
     remainingDownPulses = 0;
     Serial.println(F("STOPPED,driver_asleep=1"));
-  } else if (!strcasecmp(line, "PULSE DOWN 10")) pulse(true, PULSE_MS);
-  else if (!strcasecmp(line, "PULSE UP 10")) pulse(false, PULSE_MS);
+  } else if (!strncasecmp(line, "PULSE DOWN ", 11)) {
+    pulse(true, static_cast<uint16_t>(strtoul(line + 11, nullptr, 10)));
+  } else if (!strncasecmp(line, "PULSE UP ", 9)) {
+    pulse(false, static_cast<uint16_t>(strtoul(line + 9, nullptr, 10)));
+  }
   else if (!strncasecmp(line, "CAPTURE ", 8)) capture(strtoul(line + 8, nullptr, 10));
-  else Serial.println(F("COMMAND_ERROR,expected=STATUS|TARE|ARM|PULSE DOWN 10|PULSE UP 10|READ|CAPTURE ms|STOP"));
+  else Serial.println(F("COMMAND_ERROR,expected=STATUS|TARE|ARM|PULSE DOWN ms|PULSE UP ms|READ|CAPTURE ms|STOP"));
 }
 
 void setup() {

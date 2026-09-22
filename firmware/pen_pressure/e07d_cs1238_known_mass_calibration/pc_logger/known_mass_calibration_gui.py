@@ -118,6 +118,7 @@ class KnownMassCalibrationApp(tk.Tk):
         self.calibration_load_direction = tk.StringVar(value=DOWNWARD_WEIGHT_LOAD)
         self.printing_force_relationship = tk.StringVar(value=UPWARD_PEN_REACTION)
         self.pen_scale_force_g = tk.StringVar(value="50")
+        self.pen_scale_pulse_ms = tk.StringVar(value="10")
         self.pen_scale_status = tk.StringVar(
             value="Select the completed calibration summary, then place the kitchen scale under the installed pen."
         )
@@ -249,7 +250,7 @@ class KnownMassCalibrationApp(tk.Tk):
             frame,
             text=(
                 "Use the dedicated E-09E pulse sketch for this check. The scale is the reference: arm the test, "
-                "make individual 10 ms toward-scale pulses, wait for the scale to settle, then stop at approximately 50 g."
+                "make individual 10–100 ms toward-scale pulses, wait for the scale to settle, then stop at approximately 50 g."
             ),
             wraplength=720,
         ).grid(row=1, column=0, columnspan=3, sticky="w", pady=(6, 12))
@@ -263,14 +264,16 @@ class KnownMassCalibrationApp(tk.Tk):
         pulse_actions.grid(row=3, column=0, columnspan=3, sticky="w", pady=(0, 10))
         self.pen_scale_arm_button = ttk.Button(pulse_actions, text="Arm 30 pulses", command=lambda: self._pen_scale_command("ARM"), state="disabled")
         self.pen_scale_arm_button.grid(row=0, column=0, padx=(0, 6))
-        self.pen_scale_down_button = ttk.Button(pulse_actions, text="Pulse toward scale (10 ms)", command=lambda: self._pen_scale_command("PULSE DOWN 10"), state="disabled")
+        self.pen_scale_down_button = ttk.Button(pulse_actions, text="Pulse toward scale", command=lambda: self._pen_scale_pulse("DOWN"), state="disabled")
         self.pen_scale_down_button.grid(row=0, column=1, padx=6)
-        self.pen_scale_up_button = ttk.Button(pulse_actions, text="Pulse away (10 ms)", command=lambda: self._pen_scale_command("PULSE UP 10"), state="disabled")
+        self.pen_scale_up_button = ttk.Button(pulse_actions, text="Pulse away", command=lambda: self._pen_scale_pulse("UP"), state="disabled")
         self.pen_scale_up_button.grid(row=0, column=2, padx=6)
         self.pen_scale_read_button = ttk.Button(pulse_actions, text="Read CS1238 now", command=lambda: self._pen_scale_command("READ"), state="disabled")
         self.pen_scale_read_button.grid(row=0, column=3, padx=6)
         self.pen_scale_stop_button = ttk.Button(pulse_actions, text="Stop / sleep driver", command=lambda: self._pen_scale_command("STOP"), state="disabled")
         self.pen_scale_stop_button.grid(row=0, column=4, padx=6)
+        ttk.Label(pulse_actions, text="Pulse duration (ms)").grid(row=0, column=5, padx=(16, 4))
+        ttk.Spinbox(pulse_actions, from_=10, to=100, increment=5, textvariable=self.pen_scale_pulse_ms, width=5).grid(row=0, column=6)
         ttk.Button(frame, text="Select calibration summary", command=self.select_pen_scale_summary).grid(
             row=4, column=0, sticky="w", pady=4
         )
@@ -302,7 +305,7 @@ class KnownMassCalibrationApp(tk.Tk):
             "4. Place the precision weights downward on the motor mount. This characterizes the cell; it may bend opposite to the upward reaction force at the pen tip. Leave Printing force relationship at Opposite unless a simple installed-pen check shows otherwise. Enter the total mass, wait for it to stop moving, then click Capture raw point.\n\n"
             "5. Capture 0, 5, 10, …, 70 g while loading. Repeat the sequence while unloading. Keep at least three complete loading/unloading passes for a defensible calibration.\n\n"
             "6. Click Fit calibration and save graphs. The summary retains both the measured downward-weight fit and an estimated 40–60 g upward pen-force raw window. The latter is an approximate sign projection, not a precision claim.\n\n"
-            "7. To obtain a real installed-pen check without a precision scale-positioner, flash e09e_cs1238_pen_scale_pulse. With the kitchen scale under the pen, tare while clear, arm the bounded pulse budget, and use only individual 10 ms toward-scale pulses. Wait for the scale after every pulse; stop at a stable roughly 50 g display, enter that scale reading, and capture raw data. The scale is not electronically connected, so the operator—not firmware—decides when to stop."
+            "7. To obtain a real installed-pen check without a precision scale-positioner, flash e09e_cs1238_pen_scale_pulse. With the kitchen scale under the pen, tare while clear, arm the bounded pulse budget, and use individual 10–100 ms toward-scale pulses. Start at 10 ms. Wait for the scale after every pulse; stop at a stable roughly 50 g display, enter that scale reading, and capture raw data. The scale is not electronically connected, so the operator—not firmware—decides when to stop."
         )
         help_text = tk.Text(frame, width=86, height=23, wrap="word", relief="solid", borderwidth=1, padx=8, pady=8)
         help_text.insert("1.0", text)
@@ -713,6 +716,17 @@ class KnownMassCalibrationApp(tk.Tk):
             return
         self.pen_scale_status.set(f"Sending {command}…")
         threading.Thread(target=self._pen_scale_command_worker, args=(command,), daemon=True).start()
+
+    def _pen_scale_pulse(self, direction: str) -> None:
+        try:
+            duration = int(self.pen_scale_pulse_ms.get())
+        except ValueError:
+            messagebox.showerror("Invalid pulse duration", "Enter whole milliseconds from 10 to 100.")
+            return
+        if not 10 <= duration <= 100:
+            messagebox.showerror("Invalid pulse duration", "Enter 10 to 100 ms. Longer pulses are intentionally blocked by the firmware.")
+            return
+        self._pen_scale_command(f"PULSE {direction} {duration}")
 
     def _pen_scale_command_worker(self, command: str) -> None:
         try:

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-004` | implemented | [Make E-09E pulse duration adjustable](../rp23cnc-software/2026/2026-09-22-make-e09e-pulse-duration-adjustable.md) | `e-09e`, `n20`, `pulse-duration`, `safety` |
 | 2026-09-22 | `RPSW-20260922-003` | implemented | [Add E-09E installed-pen scale pulse check](../rp23cnc-software/2026/2026-09-22-add-e09e-pen-scale-pulse-check.md) | `cs1238`, `n20`, `kitchen-scale`, `e-09e`, `pen-pressure` |
 | 2026-09-22 | `RPSW-20260922-001` | implemented | [Stage E-09C CS1238 force profile](../rp23cnc-software/2026/2026-09-22-stage-e09c-cs1238-force-profile.md) | `cs1238`, `e-09c`, `force-profile`, `pen-pressure`, `calibration` |
 | 2026-09-21 | `WINSW-20260921-002` | implemented | [Add known-mass force-direction projection](2026/2026-09-21-add-known-mass-force-direction-projection.md) | `cs1238`, `known-mass`, `force-direction`, `pen-force`, `calibration`, `e-09c` |
