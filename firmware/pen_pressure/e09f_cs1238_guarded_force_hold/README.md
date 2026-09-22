@@ -26,6 +26,7 @@ reachable and put the kitchen scale below the installed pen.
 |---|---|
 | `?` | Print help and status. |
 | `t` | Collect a 64-sample clear-state tare with the pen off the scale. |
+| `d` | One supervised 5 ms manual DOWN pulse for pen installation only. It does not use CS1238 raw data to claim contact. |
 | `a` | Arm one automatic test; reset each direction's 30-pulse budget. |
 | `s` | Seek/hold the calibrated 40–60 g raw band for five seconds. |
 | `c` | From contact, lift in 5 ms steps to the 3 g clear band, then issue one 100 ms air-gap pulse. It waits 500 ms before reporting a final telemetry reading and `CLEAR_COMPLETE`. |
@@ -46,6 +47,15 @@ If an automatic test faults with the pen still pressing on the fixture, send
 `u` repeatedly until it is clear. Each command is one guarded 5 ms UP pulse
 and returns the driver to sleep; `x` and the physical 6 V cutoff remain the
 immediate-stop options.
+
+For a practical, non-precision pen installation, use the actual paper and
+manual `d` pulses to move toward the installed drawing position while you set
+the pen's mechanical preload and tighten its retaining screw. `d` sleeps the
+driver after every 5 ms pulse and checks ULT, but it cannot detect paper
+contact; use only one pulse at a time with the physical cutoff reachable. The
+observed provisional clear move is twenty `u` pulses (100 ms total), which
+produced about 1.75 mm of air gap after the operator set the pen at drawing
+preload. This is a mechanical setup check, not CS1238 force calibration.
 
 ## Procedure
 

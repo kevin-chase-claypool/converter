@@ -77,6 +77,15 @@ stopped and slept—but they are not repeatability evidence. Restart using one
 strict sequence: physically clear and wait, `t`, `a`, `s`, `a`, `c`; only then
 may the next clear-state tare begin.
 
+## Mechanical pen-install clearance result
+
+The operator set the installed pen at an approximate desired drawing preload
+on paper while tightening the retaining screw. From that position, twenty
+guarded E-09F `u` pulses (20 × 5 ms = 100 ms total UP) produced approximately
+**1.75 mm** of physical air gap. This supplies the staged mechanical M5-clear
+value for the non-precision setup workflow. It is not a CS1238 force fit, and
+it does not validate automatic raw-based contact seeking.
+
 ## Failed clear attempt and correction
 
 On a later `a`, `c` attempt, the serial stream reported:

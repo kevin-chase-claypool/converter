@@ -15,6 +15,7 @@
 
   One-character Serial Monitor commands (line ending optional):
     ?  help + status       t  clear-state tare
+    d  one guarded DOWN setup pulse
     a  arm one supervised automatic test
     s  seek and hold within the 40--60 g raw band for 5 s
     c  from contact, release to the 3 g band then issue one 100 ms UP air-gap pulse
@@ -210,7 +211,7 @@ void status() {
 }
 
 void help() {
-  Serial.println(F("HELP,?=help,t=tare,a=arm,s=seek_hold,c=clear,u=up,r=read,x=abort"));
+  Serial.println(F("HELP,?=help,t=tare,d=down,a=arm,s=seek_hold,c=clear,u=up,r=read,x=abort"));
   Serial.println(F("HELP,force_band_raw=201551..302326,target=251938,hard=352714"));
   Serial.println(F("HELP,correction=5ms,settle=500ms,hold=5000ms,clearance=100ms"));
   status();
@@ -285,6 +286,18 @@ void manualUp() {
   state = TestState::IDLE;
   if (drivePulse(false, CORRECTION_PULSE_MS, F("MANUAL_UP"))) {
     Serial.println(F("MANUAL_UP_COMPLETE,driver_asleep=1"));
+  }
+}
+
+void manualDown() {
+  // Pen-install setup operation: one supervised 5 ms DOWN pulse only. It
+  // deliberately does not infer contact from the CS1238 because installed
+  // mechanical preload can change that signal before the tip reaches paper.
+  stopAndSleep();
+  armed = false;
+  state = TestState::IDLE;
+  if (drivePulse(true, CORRECTION_PULSE_MS, F("MANUAL_DOWN"))) {
+    Serial.println(F("MANUAL_DOWN_COMPLETE,driver_asleep=1"));
   }
 }
 
@@ -385,6 +398,7 @@ void command(const char *line) {
   else if (!strcasecmp(line, "SEEK")) startSeekHold();
   else if (!strcasecmp(line, "CLEAR")) startClear();
   else if (!strcasecmp(line, "UP")) manualUp();
+  else if (!strcasecmp(line, "DOWN")) manualDown();
   else if (!strcasecmp(line, "READ")) { long delta = 0; readForce(delta); }
   else if (!strcasecmp(line, "STOP")) abortTest();
   else Serial.println(F("COMMAND_ERROR,send=? for help"));
@@ -398,6 +412,7 @@ bool shortcut(char character) {
     case 's': startSeekHold(); return true;
     case 'c': startClear(); return true;
     case 'u': manualUp(); return true;
+    case 'd': manualDown(); return true;
     case 'r': { long delta = 0; readForce(delta); return true; }
     case 'x': abortTest(); return true;
     default: return false;

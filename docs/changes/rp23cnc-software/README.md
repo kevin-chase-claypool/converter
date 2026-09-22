@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-012` | implemented | [Add E-09F manual down setup pulse](2026/2026-09-22-add-e09f-manual-down-setup.md) | `e-09f`, `n20`, `pen-installation`, `manual-control` |
 | 2026-09-22 | `RPSW-20260922-011` | implemented | [Delay E-09F air-gap telemetry](2026/2026-09-22-delay-e09f-air-gap-telemetry.md) | `e-09f`, `cs1238`, `pen-clear`, `settling` |
 | 2026-09-22 | `RPSW-20260922-010` | implemented | [Add E-09F manual retract recovery](2026/2026-09-22-add-e09f-manual-retract-recovery.md) | `e-09f`, `n20`, `retract`, `recovery`, `safety` |
 | 2026-09-22 | `RPSW-20260922-009` | implemented | [Fix E-09F release hard-limit fault](2026/2026-09-22-fix-e09f-release-hard-limit.md) | `e-09f`, `cs1238`, `pen-clear`, `fault-handling` |

@@ -316,13 +316,21 @@ energized.
 
 E-09F uses the same flash/runtime power boundary as E-09E but is a distinct,
 temporary supervised automatic test. Arduino IDE Serial Monitor commands
-`t`, `a`, `s`, `c`, `r`, and `x` tare, arm, seek/hold, clear, read, and abort.
+`t`, `d`, `a`, `s`, `c`, `r`, and `x` tare, one manual 5 ms down setup pulse,
+arm, seek/hold, clear, read, and abort.
 Its only automatic motion is a maximum of 30 5 ms pulses per direction with a
 500 ms settle, a 30 s timeout, and a raw hard-force limit. `s` seeks/holds the
 E-09C precision-weight raw band for 40–60 g. `c` explicitly tests the staged
 100 ms air-gap candidate after a measured clear band, then waits 500 ms for a
 telemetry-only CS1238 reading before reporting completion. E-09F has no GP29/M3/M5,
 GP27, or magnetic behavior and must never be used for drawing.
+
+The `d` pulse is specifically for an approximate mechanical pen-install
+procedure on actual paper. It does not infer paper contact from CS1238 data;
+the latest installed trace showed that lead-screw/preload strain can enter the
+raw band while the tip is still air-gapped. The observed provisional pen-clear
+move is twenty guarded `u` pulses (100 ms total), about 1.75 mm after the pen
+was set at its desired drawing preload.
 
 Power boundary:
 
