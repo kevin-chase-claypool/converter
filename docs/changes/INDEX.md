@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-032` | rp23cnc-software, hardware | implemented | [Refresh Tare after Normal Pen Clear](rp23cnc-software/2026/2026-09-22-tare-after-normal-clear.md) |
 | 2026-09-22 | `RPSW-20260922-031` | rp23cnc-software, hardware | implemented | [Trend-gate Force-hold Corrections](rp23cnc-software/2026/2026-09-22-trend-gate-hold-corrections.md) |
 | 2026-09-22 | `RPSW-20260922-030` | rp23cnc-software, hardware | implemented | [Bound Trend Contact to a Usable Envelope](rp23cnc-software/2026/2026-09-22-bound-trend-contact-envelope.md) |
 | 2026-09-22 | `RPSW-20260922-029` | rp23cnc-software, hardware | implemented | [Re-acquire Contact after M5 Clearance](rp23cnc-software/2026/2026-09-22-reacquire-contact-after-clear.md) |

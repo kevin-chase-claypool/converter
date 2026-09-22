@@ -19,6 +19,7 @@ enum class PressureState : uint8_t {
   HOLD_FORCE,
   RELEASE_TO_CLEAR,
   CLEARANCE_LIFT,
+  CLEAR_TARE_SETTLING,
   FAULT,
 };
 
@@ -89,6 +90,7 @@ class PressureController {
   bool home_seek_pulse_active_ = false;
   bool hold_correction_pulse_active_ = false;
   bool home_tare_sampling_started_ = false;
+  bool clear_tare_sampling_started_ = false;
   bool home_wait_for_release_tare_ = false;
   bool home_seek_force_fine_only_ = false;
   bool home_surface_confirm_pending_ = false;

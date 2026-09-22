@@ -34,6 +34,23 @@ the observed coarse/stiction-prone mechanism. The next source revision makes
 both directions require three same-direction out-of-band observations separated
 by 25 ms and limits either direction to one correction per 250 ms.
 
+## 2026-09-22 normal-clear baseline observation
+
+The repeated normal M3/M5 trace also showed that a mechanically successful
+100 ms M5 clearance does not preserve the same unloaded CS1238 raw baseline.
+After clearance, normal re-contact produced sustained apparent surface
+responses ranging from roughly 158,000 to 256,000 raw, despite the pen being
+physically clear before each approach. These are large, persistent shifts, not
+single-sample spikes, so the existing trend filter correctly retained them but
+could not distinguish them from paper force using the previous stroke's tare.
+
+The next source candidate therefore adds a short normal-M5 clear-state tare:
+after the stopped 100 ms lift, it waits 50 ms with the driver asleep and
+collects a fresh 64-sample CS1238 tare. A following normal M3 still confirms a
+new surface response with fine pulses; it simply starts from the current
+unloaded mechanism baseline. Full GP2 remains invalid as a tare location and
+continues to use the longer GP2-release tare path.
+
 ## Objective
 
 Record the initial full-retract-to-paper condition that exposed why the

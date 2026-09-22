@@ -286,7 +286,9 @@ motor. GP2 released means normal post-M5 clearance: it discards the previous
 touch reference and runs the same confirmation process using only 5 ms DOWN
 pulses before force tuning. It never enters hold from a fixed travel time.
 Both paths then use moving-average force correction toward 35 g. M5 uses a
-100 ms UP clearance move, stopping immediately if GP2 is pressed. Use `p` to
+100 ms UP clearance move, stopping immediately if GP2 is pressed; if GP2 stays
+released, the sleeping controller waits 50 ms and captures a fresh 64-sample
+clear-state tare before the next normal M3. Use `p` to
 read the one-shot status including separate `home_seek_pulses` and
 `home_tune_pulses` counts;
 periodic scrolling remains opt-in with `v`.
@@ -303,7 +305,8 @@ live force zero. At boot and after `c`, the controller leaves `tare_valid=0`
 at GP2. M3 ignores force until a DOWN pulse first releases GP2; it then stops
 for one second and takes a 64-sample CS1238 tare before evaluating paper touch.
 This released, clear-of-paper baseline prevents the switch-preload force from
-being interpreted as surface contact.
+being interpreted as surface contact. Normal M5 clearance uses a separate
+50 ms settled, 64-sample tare because clearance itself shifts that baseline.
 
 After initial contact, the moving-average force hold is pulse-bounded: it
 sleeps the DRV8833 in the 30–40 g calibrated band. Outside that band, it

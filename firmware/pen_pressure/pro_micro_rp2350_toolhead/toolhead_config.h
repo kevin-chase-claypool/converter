@@ -55,6 +55,10 @@ constexpr uint32_t PEN_CLEAR_RELEASE_TIMEOUT_MS = 1800;
 // without approaching GP2 LIFT_HOME. It remains staged until 30 M3/M5
 // clearance cycles prove repeatability before PEN_CLEAR_VALID may be enabled.
 constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 100;
+// Normal M5 changes the mechanism's unloaded CS1238 baseline. Once the
+// clearance motion has stopped, let it settle briefly then take a 64-sample
+// clear-state tare before allowing the next M3 approach.
+constexpr uint32_t PEN_CLEAR_TARE_SETTLE_MS = 50;
 // Supervised bench build: home to GP2 at startup, use a slow bounded seek when
 // M3 begins at GP2, and retain the measured 100 ms M3/M5 pair between strokes.
 // This is not the production commissioning gate.

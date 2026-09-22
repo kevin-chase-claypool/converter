@@ -161,7 +161,10 @@ For a normal M5 from contact, Core 0 uses `RELEASE_TO_CLEAR`: it retracts only
 until the filtered CS1238 residual remains in the configured no-contact band
 for the required windows. It then enters `CLEARANCE_LIFT` and continues N20
 retraction for `PEN_CLEAR_EXTRA_LIFT_MS` (currently 100 ms), rechecks the clear
-band, and only then reaches `LIFTED`/possible `CLEAR_READY`. At boot or after a
+band, then stops/sleeps for `PEN_CLEAR_TARE_SETTLE_MS` (currently 50 ms) and
+takes a fresh 64-sample clear-state tare before reaching `LIFTED`/possible
+`CLEAR_READY`. This resets the unloaded baseline shifted by the clearance
+motion before the next M3. At boot or after a
 fault reset, the supervised mechanical-preload build drives UP until GP2
 asserts, then stops immediately; a 3000 ms timeout faults if GP2 never
 asserts. This timeout is a runaway bound, not the ordinary M5 clearance move.
@@ -194,8 +197,9 @@ GP2 itself changes the installed load-cell preload, so full home is not the
 force zero. From GP2, M3 first drives DOWN until GP2 releases, then stops for
 one second and takes its 64-sample tare while still clear of paper. Surface
 force is ignored until that tare completes. A `p` snapshot at full home may
-therefore show `tare_valid=0`; this is expected. M3 after ordinary M5 clearance
-still requires the already-valid release-transition tare.
+therefore show `tare_valid=0`; this is expected. Ordinary M5 clearance takes
+its own short fresh clear-state tare, so the following normal M3 starts from
+that current unloaded baseline rather than a prior-stroke tare.
 
 Once initial contact has been found, `HOLD_FORCE` leaves the driver asleep
 inside the calibrated 30–40 g moving-average band. Outside that band it waits

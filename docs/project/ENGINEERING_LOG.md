@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20260922-clear-state-tare"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - refresh tare after normal M5 clearance
+
+- Evidence: repeated normal M3/M5 cycles showed 158,000–256,000 raw apparent
+  contact responses immediately after an otherwise mechanically clear M5.
+  The 100 ms clearance move changes the unloaded mechanism/load-cell baseline,
+  so a persistent trend can still be false paper contact when measured against
+  the prior-stroke tare.
+- Change: after the ordinary 100 ms clearance lift, the controller stops and
+  sleeps for 50 ms, takes a new 64-sample clear-state tare, then reaches
+  `LIFTED`. A following normal M3 uses that current baseline and still requires
+  fine-pulse trend-confirmed contact. GP2 full home remains invalid and keeps
+  the longer release-transition tare.
+- Verification: exact SparkFun Pro Micro RP2350 sketch compilation passed.
+  Repeat normal M3/M5 cycles remain required before any drawing claim.
+
 <a id="elog-20260922-trend-gated-hold"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - trend-gate force-hold corrections
 

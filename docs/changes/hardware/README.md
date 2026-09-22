@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-032` | implemented | [Refresh Tare after Normal Pen Clear](../rp23cnc-software/2026/2026-09-22-tare-after-normal-clear.md) | `cs1238`, `tare`, `pen-clear`, `m3-m5` |
 | 2026-09-22 | `RPSW-20260922-031` | implemented | [Trend-gate Force-hold Corrections](../rp23cnc-software/2026/2026-09-22-trend-gate-hold-corrections.md) | `cs1238`, `moving-average`, `force-control`, `stiction` |
 | 2026-09-22 | `RPSW-20260922-030` | implemented | [Bound Trend Contact to a Usable Envelope](../rp23cnc-software/2026/2026-09-22-bound-trend-contact-envelope.md) | `cs1238`, `force-limit`, `contact-detection`, `safety` |
 | 2026-09-22 | `RPSW-20260922-029` | implemented | [Re-acquire Contact after M5 Clearance](../rp23cnc-software/2026/2026-09-22-reacquire-contact-after-clear.md) | `cs1238`, `m3-m5`, `contact-detection`, `force-control` |

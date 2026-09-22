@@ -66,8 +66,9 @@ fixed motor duration.
 - `M5` requests `PEN_CLEAR`. Retract until the filtered force stays below
   `F_release_off` for the configured debounce interval, then issue the bounded
   `t_clear`/pulse command and stop the actuator. The current staged source
-  uses a temporary 500 ms post-release lift pulse; it begins only after release
-  is confirmed and must be replaced by an accepted T-01H per-tool value.
+  uses a 100 ms post-release lift pulse, then waits 50 ms and takes a fresh
+  64-sample clear-state tare before reporting `LIFTED`. It begins only after
+  release is confirmed and must be replaced by an accepted T-01H per-tool value.
 - `F_contact_on` and `F_release_off` are distinct hysteresis thresholds. Both
   must be derived from the installed, signed CS1238 force units and current
   no-contact residual; a raw ADC zero is not a valid threshold.
@@ -109,14 +110,16 @@ about 12 mm above the paper in the current setup:
   `e` (or deliberately restore GP29 with `a`) to request another engage.
 
 M5 still applies the candidate 100 ms UP clearance move and stops sooner if
-GP2 is pressed. This two-touch envelope follows a real 160 x 5 ms seek that
+GP2 is pressed. If GP2 is not reached, it waits 50 ms after stopping and
+refreshes the 64-sample clear-state tare before the next normal M3. This
+two-touch envelope follows a real 160 x 5 ms seek that
 covered only about 7.5 mm and a three-pulse 25 ms seek that reached 35 g then
 briefly crossed the 60 g hard threshold. It is not a universal per-pen travel
 constant. T-01J must
 validate the home seek, force response, and clearance for each installed tool
 before plotting. Production remains commissioning-gated.
 
-### Release-transition tare
+### Clear-state tares
 
 The GP2 switch position changes the installed spring/load-cell preload, so it
 is not used as the force zero. Boot and fault recovery leave `tare_valid=0` at
@@ -124,6 +127,12 @@ GP2. An M3 started from GP2 ignores force while it uses coarse travel to first
 release GP2, then stops/sleeps for one second and takes a 64-sample tare. Only
 then does it evaluate the light surface-touch threshold. This makes the live
 zero refer to the actual released, clear-of-paper mechanism state.
+
+Normal M5 has a separate short clear-state tare because the 100 ms clearance
+move shifts the unloaded raw baseline enough to imitate a subsequent contact
+trend. It waits 50 ms with the motor asleep, collects 64 CS1238 samples, and
+only then makes the next normal M3 eligible. A full-GP2 M5 result intentionally
+remains invalid: the following M3 must release GP2 and use the longer tare.
 
 ### Bounded moving-average hold
 

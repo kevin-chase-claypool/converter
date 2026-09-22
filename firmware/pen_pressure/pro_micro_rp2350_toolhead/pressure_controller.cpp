@@ -51,6 +51,7 @@ const char *PressureController::stateName() const {
     case PressureState::HOLD_FORCE: return "HOLD_FORCE";
     case PressureState::RELEASE_TO_CLEAR: return "RELEASE_TO_CLEAR";
     case PressureState::CLEARANCE_LIFT: return "CLEARANCE_LIFT";
+    case PressureState::CLEAR_TARE_SETTLING: return "CLEAR_TARE_SETTLING";
     case PressureState::FAULT: return "FAULT";
   }
   return "UNKNOWN";
@@ -76,6 +77,9 @@ void PressureController::setState(PressureState next) {
   }
   if (next != PressureState::HOME_RELEASE_TARE_SETTLING) {
     home_tare_sampling_started_ = false;
+  }
+  if (next != PressureState::CLEAR_TARE_SETTLING) {
+    clear_tare_sampling_started_ = false;
   }
   publishSafetyState();
 }
@@ -307,7 +311,8 @@ void PressureController::service() {
 
   const bool retracting_to_home = state_ == PressureState::LIFTING ||
                                   state_ == PressureState::RELEASE_TO_CLEAR ||
-                                  state_ == PressureState::CLEARANCE_LIFT;
+                                  state_ == PressureState::CLEARANCE_LIFT ||
+                                  state_ == PressureState::CLEAR_TARE_SETTLING;
   if (state_ != PressureState::FAULT && !retracting_to_home && tare_valid_ &&
       PRESSURE_CALIBRATION_VALID && new_filtered_sample_ &&
       normalizedForceDelta() > activeHardForceRaw()) {
@@ -832,14 +837,39 @@ void PressureController::service() {
         motorStop();
         setDriverEnabled(false);
         if (MECHANICAL_PRELOAD_MODE) {
-          // The 100 ms motion is the mechanical air-gap operation. The
-          // moving-average force loop is used only after the next M3 preload.
-          setState(PressureState::LIFTED);
+          // The clearance move changes the unloaded force baseline. Refresh
+          // it before the next M3, rather than interpreting that shift as
+          // paper contact on the following approach.
+          setState(PressureState::CLEAR_TARE_SETTLING);
         } else {
           // Recheck after the added air-gap motion before declaring M5 complete.
           setState(PressureState::VERIFY_LIFTED);
         }
       }
+      break;
+
+    case PressureState::CLEAR_TARE_SETTLING:
+      motorStop();
+      setDriverEnabled(false);
+      if (liftHomeActive()) {
+        // Full home intentionally has no valid force zero; a following M3
+        // will release GP2 and take its own clear-state tare.
+        tare_valid_ = false;
+        setState(PressureState::LIFTED);
+        break;
+      }
+      if (now - state_started_ms_ < PEN_CLEAR_TARE_SETTLE_MS) {
+        break;
+      }
+      if (!clear_tare_sampling_started_) {
+        requestTare();
+        clear_tare_sampling_started_ = true;
+        break;
+      }
+      if (!tare_valid_) {
+        break;
+      }
+      setState(PressureState::LIFTED);
       break;
 
     case PressureState::FAULT:
