@@ -33,7 +33,9 @@ class PressureController {
   long raw() const { return cs1238_raw_; }
   long filtered() const { return cs1238_filtered_; }
   long tare() const { return cs1238_tare_; }
+  bool tareValid() const { return tare_valid_; }
   long forceDelta() const { return cs1238_filtered_ - cs1238_tare_; }
+  long normalizedForceDelta() const;
   bool commandEngage() const;
   bool driverFaulted() const;
   bool liftHomeActive() const;
@@ -52,7 +54,6 @@ class PressureController {
   void updateReadyState();
   void publishSafetyState();
   void enterFault(const char *reason);
-  long normalizedForceDelta() const;
   long noContactResidual() const;
   CS123x scale_{CS123X_TYPE_CS1238, toolhead_config::PIN_CS1238_DT,
                 toolhead_config::PIN_CS1238_SCK, CS123X_CH_A,
@@ -65,6 +66,7 @@ class PressureController {
   bool manual_engage_ = false;
   bool cs1238_powered_down_ = false;
   bool new_filtered_sample_ = false;
+  bool tare_valid_ = false;
 
   long cs1238_raw_ = 0;
   long cs1238_tare_ = 0;

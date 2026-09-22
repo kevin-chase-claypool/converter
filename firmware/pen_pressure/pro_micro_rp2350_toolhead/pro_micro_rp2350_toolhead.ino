@@ -47,18 +47,22 @@ uint32_t last_core0_observed_ms_core1 = 0;
 uint32_t last_core0_heartbeat_core1 = 0;
 uint32_t last_telemetry_ms = 0;
 bool watchdog_started = false;
+bool telemetry_stream_enabled = false;
+bool pressure_state_reported = false;
+PressureState last_reported_pressure_state = PressureState::BOOT;
+
+void printConsoleLine(const char *line) {
+  if (Serial) {
+    Serial.println(line);
+  }
+  Serial2.println(line);
+}
 
 void printHelp() {
-  Serial.println(F("Theta RP2350 dual-core toolhead commands:"));
-  Serial.println(F("  ?  help"));
-  Serial.println(F("  p  telemetry snapshot"));
-  Serial.println(F("  t  asynchronous CS1238 tare"));
-  Serial.println(F("  e  manual ENGAGE/M3 request"));
-  Serial.println(F("  l  manual LIFT/M5 request"));
-  Serial.println(F("  a  return to automatic GP29 input"));
-  Serial.println(F("  c  clear pressure fault when commissioning permits"));
-  Serial.println(F("Integrated motion remains locked until config validity flags are true."));
-  Serial.println(F("  M3/M5 remain commissioning-locked; staged mechanical preload mode uses 100 ms down/up."));
+  printConsoleLine("Toolhead commands: ? help | p one status snapshot | v toggle 1 s live stream");
+  printConsoleLine("t tare | e engage/M3 | l lift/M5 | a automatic GP29 | c clear fault");
+  printConsoleLine("Default output is quiet except startup, state changes, and one fault record.");
+  printConsoleLine("FAULT stops/disables the motor; inspect the cause before sending c.");
 }
 
 const char *publishedMagneticStateName() {
@@ -73,8 +77,8 @@ const char *publishedMagneticStateName() {
   return "UNKNOWN";
 }
 
-void emitTelemetry() {
-  char line[420];
+void emitTelemetry(const char *event) {
+  char line[512];
   const uint32_t status = g_status.load(std::memory_order_acquire);
   const int32_t mx = g_mag_x_millimt.load(std::memory_order_relaxed);
   const int32_t my = g_mag_y_millimt.load(std::memory_order_relaxed);
@@ -82,13 +86,17 @@ void emitTelemetry() {
   const int32_t md = g_mag_delta_millimt.load(std::memory_order_relaxed);
   const int length = snprintf(
       line, sizeof(line),
-      "pressure=%s cmd=%s fault=%s cs1238_raw=%ld cs1238_filtered=%ld cs1238_delta=%ld "
+      "event=%s pressure=%s cmd=%s fault=%s "
+      "cs1238_raw=%ld cs1238_filtered=%ld cs1238_tare=%ld tare_valid=%d "
+      "cs1238_delta=%ld force_norm_raw=%ld hard_limit_raw=%ld "
       "lift_home=%d "
       "mag=%s mT=[%ld.%03ld,%ld.%03ld,%ld.%03ld] delta=%ld.%03ld "
-      "samples=%lu status=0x%08lx ready=[contact:%d clear:%d gp27:%d] "
+      "mag_samples=%lu status=0x%08lx ready=[contact:%d clear:%d gp27:%d] "
       "commission=[dir:%d pressure:%d lift:%d mag:%d]\r\n",
-      pressure.stateName(), pressure.commandEngage() ? "M3" : "M5",
-      pressure.faultReason(), pressure.raw(), pressure.filtered(), pressure.forceDelta(),
+      event, pressure.stateName(), pressure.commandEngage() ? "M3" : "M5",
+      pressure.faultReason(), pressure.raw(), pressure.filtered(), pressure.tare(),
+      pressure.tareValid(), pressure.forceDelta(), pressure.normalizedForceDelta(),
+      static_cast<long>(HARD_FORCE_RAW_DELTA),
       pressure.liftHomeActive(),
       publishedMagneticStateName(),
       static_cast<long>(mx / 1000), static_cast<long>(std::abs(mx % 1000)),
@@ -109,17 +117,45 @@ void emitTelemetry() {
   // UART's transmit FIFO can be smaller than this complete telemetry record.
   // Do not require the whole record to fit before starting the write: that
   // condition permanently suppressed service-UART telemetry on GP20/GP21.
-  // At 115200 baud, this once-per-period write is comfortably bounded and
-  // does not affect the commissioning-locked motor state.
+  // This is used for one-shot snapshots, rare state/fault events, and the
+  // optional one-second stream; do not add periodic output to the default path.
   if (length > 0 && length < static_cast<int>(sizeof(line))) {
     Serial2.write(reinterpret_cast<const uint8_t *>(line), static_cast<size_t>(length));
   }
 }
 
+void reportPressureStateChange() {
+  const PressureState current = pressure.state();
+  if (pressure_state_reported && current == last_reported_pressure_state) {
+    return;
+  }
+  last_reported_pressure_state = current;
+  pressure_state_reported = true;
+  if (current == PressureState::FAULT) {
+    emitTelemetry("FAULT_EVENT");
+    return;
+  }
+
+  char line[128];
+  snprintf(line, sizeof(line),
+           "STATE_EVENT pressure=%s cmd=%s lift_home=%d tare_valid=%d force_norm_raw=%ld",
+           pressure.stateName(), pressure.commandEngage() ? "M3" : "M5",
+           pressure.liftHomeActive(), pressure.tareValid(),
+           pressure.normalizedForceDelta());
+  printConsoleLine(line);
+}
+
+void toggleTelemetryStream() {
+  telemetry_stream_enabled = !telemetry_stream_enabled;
+  last_telemetry_ms = millis();
+  emitTelemetry(telemetry_stream_enabled ? "STREAM_ON" : "STREAM_OFF");
+}
+
 void dispatchServiceCommand(char command) {
   switch (command) {
     case '?': printHelp(); break;
-    case 'p': emitTelemetry(); break;
+    case 'p': emitTelemetry("SNAPSHOT"); break;
+    case 'v': toggleTelemetryStream(); break;
     case 't': pressure.requestTare(); break;
     case 'e': pressure.setManualCommand(true, true); break;
     case 'l': pressure.setManualCommand(true, false); break;
@@ -178,7 +214,7 @@ void setup() {
   pressure.begin();
   last_core0_heartbeat_ms = millis();
   last_core1_observed_ms = millis();
-  printHelp();
+  printConsoleLine("READY,quiet=state-events,p=snapshot,v=toggle-1s-stream,?=help");
 }
 
 void loop() {
@@ -191,10 +227,13 @@ void loop() {
   pressure.service();
   serviceSerial();
   serviceCore1Watchdog();
+  reportPressureStateChange();
 
-  if (now - last_telemetry_ms >= TELEMETRY_PERIOD_MS) {
-    last_telemetry_ms = now;
-    emitTelemetry();
+  const uint32_t telemetry_now = millis();
+  if (telemetry_stream_enabled &&
+      telemetry_now - last_telemetry_ms >= TELEMETRY_PERIOD_MS) {
+    last_telemetry_ms = telemetry_now;
+    emitTelemetry("LIVE");
   }
   tight_loop_contents();
 }

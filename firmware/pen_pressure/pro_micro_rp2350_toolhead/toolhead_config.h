@@ -64,6 +64,7 @@ constexpr uint8_t CS1238_TARE_SAMPLES = 64;
 // Candidate 25 ms moving-average window at the configured 640 SPS. E-08C
 // must measure actual rate/noise before PRESSURE_CALIBRATION_VALID can be true.
 constexpr uint8_t CS1238_MOVING_AVERAGE_SAMPLES = 16;
+// Used only by the opt-in serial live stream; state and fault events are immediate.
 constexpr uint32_t TELEMETRY_PERIOD_MS = 1000;
 constexpr uint32_t CORE_HEARTBEAT_PERIOD_MS = 10;
 constexpr uint32_t CORE_STALE_TIMEOUT_MS = 500;

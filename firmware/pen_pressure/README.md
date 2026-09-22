@@ -182,13 +182,17 @@ the current bench evidence for the staged duration.
 The temporary service interface is `Serial2` / hardware UART1 on GP20 (TX) and
 GP21 (RX) at 115200 baud. The integrated sketch immediately writes `Theta
 toolhead service UART ready` after configuring that interface, before pressure
-or magnetic initialization. It writes completed telemetry records directly to
-the UART; do not reintroduce an `availableForWrite() >= full_record_length`
-gate, because the UART FIFO can be smaller than an entire record and would
-silently suppress all service telemetry. The native USB `Serial` and UART1
-`Serial2` both accept the same one-character diagnostic commands (`?`, `p`,
-`t`, `e`, `l`, `a`, `c`); use UART1 for runtime control when the external rail
-is powering the Pro Micro.
+or magnetic initialization. Native USB `Serial` and UART1 `Serial2` accept the
+same one-character commands (`?`, `p`, `v`, `t`, `e`, `l`, `a`, `c`); use
+UART1 for runtime control when the external rail is powering the Pro Micro.
+Output is quiet by default: startup and pressure-state changes print once, and
+entering `FAULT` emits a single detailed record containing the CS1238 raw,
+filtered, tare, tare-valid flag, signed and normalized deltas, and configured
+hard limit. `p` prints one snapshot; `v` toggles one-second live snapshots on
+and off. The telemetry field `mag_samples` is the magnetometer sample counter,
+not the CS1238 count. Completed records are written directly to UART; do not
+reintroduce an `availableForWrite() >= full_record_length` gate, because the
+UART FIFO can be smaller than a complete record and silently suppress output.
 
 The firmware defaults to a safe lift/stop behavior and supports serial
 diagnostics. The current supervised bench build enables only the actuator

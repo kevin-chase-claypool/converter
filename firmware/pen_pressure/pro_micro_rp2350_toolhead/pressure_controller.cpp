@@ -147,6 +147,7 @@ void PressureController::serviceTare(long sample) {
   if (tare_count_ >= CS1238_TARE_SAMPLES) {
     cs1238_tare_ = static_cast<long>(tare_sum_ / tare_count_);
     tare_requested_ = false;
+    tare_valid_ = true;
     tare_sum_ = 0;
     tare_count_ = 0;
   }
@@ -169,6 +170,7 @@ void PressureController::serviceCs1238() {
 
 void PressureController::requestTare() {
   tare_requested_ = true;
+  tare_valid_ = false;
   tare_sum_ = 0;
   tare_count_ = 0;
 }

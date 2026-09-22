@@ -1,5 +1,25 @@
 # Engineering Log
 
+<a id="elog-20260922-quiet-toolhead-service-console"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - make service telemetry event-driven
+
+- Observation: the supplied 209-line console capture contained only repeated
+  latched `pressure=FAULT` records; all displayed signed CS1238 deltas were
+  30,218–39,785 raw counts, and the capture began at `samples=9493` (the
+  magnetometer sample counter in that firmware version). The user confirmed
+  no UART commands were sent. It therefore omitted the initial boot/first-fault
+  transition needed to identify the triggering sample.
+- Change: disable periodic output by default; emit state changes once, and
+  print one detailed FAULT event at the transition. Add `p` one-shot snapshot
+  and `v` toggle for optional one-second streaming.
+- Fault record now includes the boot tare and validity, signed and normalized
+  force deltas, and configured hard limit. Rename `samples` to `mag_samples`
+  to clarify that it counts TMAG samples, not CS1238 samples.
+- Limit: this improves observability but does not establish the cause of the
+  autonomous fault; no startup-to-fault trace is yet available.
+- Next action: flash the quiet-telemetry build and capture from power-on. If
+  the fault recurs, preserve its single `FAULT_EVENT` record before clearing.
+
 <a id="elog-20260922-integrated-force-target-35g-limit-60g"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - set 35 g target and 60 g force limit
 

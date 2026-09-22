@@ -289,6 +289,24 @@ pulse and target force require T-01J evidence.
 
 ## Toolhead internal interfaces
 
+### Integrated Pro Micro service console
+
+The integrated toolhead accepts one-character commands through native USB
+`Serial` or service UART1 `Serial2` at 115200 baud (GP20 TX, GP21 RX): `?`
+prints help; `p` emits one status snapshot; `v` toggles one-second live status
+snapshots; `t` requests a CS1238 tare; `e` requests engage/M3; `l` requests
+lift/M5; `a` restores automatic GP29 command input; and `c` requests fault
+clear. The `p` and `v` commands do not move the actuator.
+
+Periodic telemetry is disabled by default. The console prints startup and
+pressure-state changes once; entering `FAULT` prints one detailed event record
+including `cs1238_raw`, `cs1238_filtered`, `cs1238_tare`, `tare_valid`, signed
+`cs1238_delta`, normalized `force_norm_raw`, configured `hard_limit_raw`, and
+`lift_home`. Use `p` for a single current reading or `v` to enable/disable the
+one-second stream. `mag_samples` is the TMAG sample counter, not the CS1238
+sample count. A displayed `cmd=M3` while `pressure=FAULT` is only the requested
+command; the pressure fault state stops and disables the motor driver.
+
 ### CS1238 known-mass calibration
 
 The Pro Micro is the only ADC owner: `GP0` receives CS1238 `DT`/`DRDY` and
