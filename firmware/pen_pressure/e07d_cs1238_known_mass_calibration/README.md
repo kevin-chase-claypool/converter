@@ -46,12 +46,21 @@ external toolhead rail is disconnected. Then disconnect USB-C and run E-09E
 through the existing 3.3 V USB-to-TTL service adapter: adapter `RXD` ← `GP20`,
 adapter `TXD` → `GP21`, adapter `GND` → `TOOL_GND`, and adapter `VCC` left
 disconnected. This avoids backfeeding the hardwired external 5 V Pro Micro
-rail through USB-C. Put a kitchen scale under the pen, tare while
-the pen is clear, click **Arm 30 pulses**, then issue individual **Pulse toward
-scale** commands. The adjustable duration is bounded to 10–100 ms by both the
-app and firmware; start at 10 ms and let the scale settle after each pulse. When
-the scale is stable near 50 g, enter its displayed force and capture the raw
-trace. The scale is not electronically connected: the operator stops pulsing;
-the firmware does not seek 50 g automatically. Every pulse sleeps the driver,
-checks `ULT`, and a lift pulse is blocked if `LIFT_HOME` is pressed. It writes
-`raw/pen_scale_check_*.csv` and `pen_scale_checks.csv` alongside that run.
+rail through USB-C.
+
+For the simplest E-09E operation, open **Arduino IDE Serial Monitor** on the
+adapter COM port at **115200 baud**. It is the only program allowed to have
+that COM port open. The single-character commands act immediately, so either
+Serial Monitor line-ending setting is acceptable: `?` prints help, `t` tares
+with the pen clear, `a` arms 30 down pulses, `d` gives one selected-duration
+down/toward-scale pulse, `u` gives one up/away pulse, `r` reads the CS1238
+mean and tare delta, and `x` sleeps/disarms. `[` and `]` select 10 ms shorter
+or longer pulses, bounded from 10 to 100 ms. Start at 10 ms; after each `d`,
+wait for the kitchen scale to settle, then use `r` to record the simultaneous
+raw reading. At a stable reading near 50 g, write down the scale value and the
+`raw=` value from the `READING` line. The scale is not electronically
+connected: the operator stops pulsing; the firmware does not seek 50 g
+automatically. Every pulse sleeps the driver, checks `ULT`, and a lift pulse
+is blocked if `LIFT_HOME` is pressed. The Windows application's pen-scale tab
+remains optional for retaining a raw trace, but it must be closed while Arduino
+IDE Serial Monitor owns the port.

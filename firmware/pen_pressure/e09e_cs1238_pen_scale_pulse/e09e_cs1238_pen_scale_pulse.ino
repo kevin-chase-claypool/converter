@@ -12,7 +12,16 @@
   at a selected scale force.
 
   Runtime commands at 115200 UART1 (GP20 TX / GP21 RX, via a 3.3 V USB-to-TTL
-  adapter with adapter VCC disconnected):
+  adapter with adapter VCC disconnected). In Arduino IDE Serial Monitor, the
+  following one-character commands work immediately; no line-ending choice is
+  needed:
+    ?                 print the command list and current status
+    t / a             tare clear state / ARM the next 30 DOWN pulses
+    d / u             one DOWN (toward-scale) / UP (away) selected-duration pulse
+    r / x             read CS1238 mean / STOP, sleep, and disarm
+    [ / ]             decrease / increase selected duration in 10 ms steps
+
+  Long commands remain available for scripted capture:
     STATUS             configuration and remaining downward-pulse budget
     TARE               64-sample clear-state diagnostic tare
     ARM                permit the next 30 individual DOWN pulses
@@ -64,6 +73,7 @@ bool configured = false;
 bool tareValid = false;
 int32_t tareRaw = 0;
 uint8_t remainingDownPulses = 0;
+uint16_t selectedPulseMs = PULSE_MIN_MS;
 
 bool valid(int32_t sample) { return sample < CS123X_TIMEOUT_ERROR; }
 
@@ -98,6 +108,8 @@ void status() {
   Serial.print(PULSE_MIN_MS);
   Serial.print(F(",pulse_ms_max="));
   Serial.print(PULSE_MAX_MS);
+  Serial.print(F(",pulse_ms_selected="));
+  Serial.print(selectedPulseMs);
   Serial.print(F(",down_pulses_remaining="));
   Serial.print(remainingDownPulses);
   Serial.print(F(",tare_valid="));
@@ -153,6 +165,27 @@ void arm() {
   remainingDownPulses = DOWN_PULSE_BUDGET;
   Serial.print(F("ARMED,down_pulse_budget="));
   Serial.println(remainingDownPulses);
+}
+
+void printHelp() {
+  Serial.println(F("HELP,shortcuts=? t a d u r x [ ]"));
+  Serial.println(F("HELP,t=tare,a=arm,d=down,u=up,r=read,x=stop,[/]=duration"));
+  Serial.println(F("HELP,long=STATUS|TARE|ARM|PULSE DOWN ms|PULSE UP ms|READ|CAPTURE ms|STOP"));
+  status();
+}
+
+void adjustPulseDuration(bool increase) {
+  if (increase) {
+    selectedPulseMs = selectedPulseMs >= PULSE_MAX_MS - 10
+                          ? PULSE_MAX_MS
+                          : selectedPulseMs + 10;
+  } else {
+    selectedPulseMs = selectedPulseMs <= PULSE_MIN_MS + 10
+                          ? PULSE_MIN_MS
+                          : selectedPulseMs - 10;
+  }
+  Serial.print(F("PULSE_DURATION_MS,"));
+  Serial.println(selectedPulseMs);
 }
 
 void pulse(bool down, uint16_t durationMs) {
@@ -232,8 +265,12 @@ void capture(uint32_t durationMs) {
   Serial.println(count);
 }
 
+bool shortcut(char character);
+
 void command(const char *line) {
-  if (!strcasecmp(line, "STATUS")) status();
+  if (strlen(line) == 1 && shortcut(line[0])) return;
+  if (!strcasecmp(line, "?") || !strcasecmp(line, "HELP")) printHelp();
+  else if (!strcasecmp(line, "STATUS")) status();
   else if (!strcasecmp(line, "TARE")) tare();
   else if (!strcasecmp(line, "ARM")) arm();
   else if (!strcasecmp(line, "READ")) reportRead(F("READING"));
@@ -247,7 +284,26 @@ void command(const char *line) {
     pulse(false, static_cast<uint16_t>(strtoul(line + 9, nullptr, 10)));
   }
   else if (!strncasecmp(line, "CAPTURE ", 8)) capture(strtoul(line + 8, nullptr, 10));
-  else Serial.println(F("COMMAND_ERROR,expected=STATUS|TARE|ARM|PULSE DOWN ms|PULSE UP ms|READ|CAPTURE ms|STOP"));
+  else Serial.println(F("COMMAND_ERROR,send=? for help"));
+}
+
+bool shortcut(char character) {
+  switch (tolower(static_cast<unsigned char>(character))) {
+    case '?': printHelp(); return true;
+    case 't': tare(); return true;
+    case 'a': arm(); return true;
+    case 'd': pulse(true, selectedPulseMs); return true;
+    case 'u': pulse(false, selectedPulseMs); return true;
+    case 'r': reportRead(F("READING")); return true;
+    case 'x':
+      stopAndSleep();
+      remainingDownPulses = 0;
+      Serial.println(F("STOPPED,driver_asleep=1"));
+      return true;
+    case '[': adjustPulseDuration(false); return true;
+    case ']': adjustPulseDuration(true); return true;
+    default: return false;
+  }
 }
 
 void setup() {
@@ -266,7 +322,7 @@ void setup() {
                                                   CS123X_RATE_640Hz, true);
   Serial.print(F("READY,configured="));
   Serial.println(configured ? 1 : 0);
-  status();
+  printHelp();
 }
 
 void loop() {
@@ -274,11 +330,14 @@ void loop() {
   static uint8_t length = 0;
   while (Serial.available()) {
     const char character = static_cast<char>(Serial.read());
-    if (character == '\r') continue;
-    if (character == '\n') {
-      line[length] = 0;
-      length = 0;
-      command(line);
+    if (character == '\r' || character == '\n') {
+      if (length > 0) {
+        line[length] = 0;
+        length = 0;
+        command(line);
+      }
+    } else if (length == 0 && Serial.available() == 0 && shortcut(character)) {
+      continue;
     } else if (length + 1 < sizeof(line)) {
       line[length++] = character;
     } else {

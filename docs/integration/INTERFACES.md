@@ -303,10 +303,14 @@ M3/M5 control. Because the Pro Micro's 5 V input is hardwired to its external
 toolhead rail, E-09E runtime communication uses the existing 3.3 V UART1
 service adapter rather than USB-C: adapter `RXD` ← `GP20`, adapter `TXD` →
 `GP21`, `GND` → `TOOL_GND`, and adapter `VCC` remains disconnected. USB-C is
-used only to flash the sketch with the external rail disconnected. The Windows
-application opens the adapter's COM port and enables E-09E controls only when
-the sketch reports `mode=cs1238_pen_scale_pulse`. This avoids a second 5 V
-source while the N20's 6 V rail is energized.
+used only to flash the sketch with the external rail disconnected. For the
+manual kitchen-scale check, Arduino IDE Serial Monitor owns the adapter COM
+port at 115200 baud. E-09E accepts immediate one-character `t` (tare), `a`
+(arm), `d`/`u` (one selected-duration down/up pulse), `r` (raw reading), `x`
+(stop), `[`/`]` (10 ms duration steps within 10–100 ms), and `?` (help/status).
+The Windows application is optional and must be closed while Serial Monitor
+owns the port. This avoids a second 5 V source while the N20's 6 V rail is
+energized.
 
 Power boundary:
 

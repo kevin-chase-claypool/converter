@@ -1,5 +1,22 @@
 # Engineering Log
 
+<a id="elog-20260922-e09e-serial-monitor-shortcuts"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - E-09E Arduino Serial Monitor operation
+
+- Status: E-09E now accepts immediate manual serial shortcuts at 115200 baud;
+  no powered N20 pulse or new scale result is claimed.
+- Category: rp23cnc-software, hardware, E-09E, UART, Arduino IDE, kitchen scale.
+- Reason: the optional Windows app did not complete its adapter-COM connection.
+  The bounded manual check does not require host-side automation.
+- Result: Arduino IDE Serial Monitor can use `t` tare, `a` arm, `d`/`u` one
+  selected-duration down/up pulse, `r` raw read, `x` stop, `[`/`]` 10 ms
+  duration adjustment, and `?` help/status. The 10–100 ms bounds, 30-pulse
+  down budget, ULT check, GP2 lift block, and sleep-after-every-pulse rule are
+  unchanged.
+- Safety boundary: only Serial Monitor may own the adapter COM port. USB-C
+  remains flash-only with external toolhead power disconnected; runtime remains
+  the 3.3 V GP20/GP21 adapter with adapter VCC disconnected. Start at 10 ms.
+
 <a id="elog-20260922-e09e-service-uart-runtime"></a>
 ### 🟨 2026-09-22 - HARDWARE/RP23CNC SOFTWARE/WINDOWS SOFTWARE/IMPLEMENTED - E-09E service-UART runtime
 
