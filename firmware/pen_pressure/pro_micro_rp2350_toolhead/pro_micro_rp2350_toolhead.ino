@@ -89,7 +89,7 @@ void emitTelemetry(const char *event) {
       "event=%s pressure=%s cmd=%s fault=%s "
       "cs1238_raw=%ld cs1238_filtered=%ld cs1238_tare=%ld tare_valid=%d "
       "cs1238_delta=%ld force_norm_raw=%ld hard_limit_raw=%ld "
-      "lift_home=%d home_seek_pulses=%u/%u "
+      "lift_home=%d home_seek_pulses=%u/%u home_tune_pulses=%u/%u "
       "mag=%s mT=[%ld.%03ld,%ld.%03ld,%ld.%03ld] delta=%ld.%03ld "
       "mag_samples=%lu status=0x%08lx ready=[contact:%d clear:%d gp27:%d] "
       "commission=[dir:%d pressure:%d lift:%d mag:%d]\r\n",
@@ -99,6 +99,8 @@ void emitTelemetry(const char *event) {
       static_cast<long>(HARD_FORCE_RAW_DELTA),
       pressure.liftHomeActive(), pressure.homeSeekPulseCount(),
       static_cast<unsigned int>(HOME_SEEK_MAX_PULSES),
+      pressure.homeTunePulseCount(),
+      static_cast<unsigned int>(HOME_TUNE_MAX_PULSES),
       publishedMagneticStateName(),
       static_cast<long>(mx / 1000), static_cast<long>(std::abs(mx % 1000)),
       static_cast<long>(my / 1000), static_cast<long>(std::abs(my % 1000)),

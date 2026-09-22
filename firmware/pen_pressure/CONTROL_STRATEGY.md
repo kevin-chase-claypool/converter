@@ -93,7 +93,7 @@ about 12 mm above the paper in the current setup:
   and starts `HOME_TUNE_FORCE`, which uses only 5 ms DOWN pulses and the same
   50 ms settle to reach the lower 30 g edge of the 30–40 g drawing band. The
   surface stage is bounded at 100 pulses/8 seconds/30 pulses without GP2
-  releasing; tuning is separately bounded at 30 pulses/3 seconds. Any bound,
+  releasing; tuning is separately bounded at 100 pulses/7 seconds. Any bound,
   sensor loss, or overforce stops/sleeps the motor and enters `FAULT`.
 - If M3 begins after ordinary M5 clearance with GP2 released, the established
   short 100 ms DOWN move remains the fast path. In both paths, the moving

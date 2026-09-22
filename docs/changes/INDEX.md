@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-027` | rp23cnc-software, hardware | implemented | [Extend Fine Force-Tune Budget](rp23cnc-software/2026/2026-09-22-extend-fine-force-tune-budget.md) |
 | 2026-09-22 | `RPSW-20260922-026` | rp23cnc-software, hardware | implemented | [Tare After Lift-Home Release](rp23cnc-software/2026/2026-09-22-tare-after-lift-home-release.md) |
 | 2026-09-22 | `RPSW-20260922-025` | rp23cnc-software, hardware | implemented | [Add Two-Touch Home Approach](rp23cnc-software/2026/2026-09-22-add-two-touch-home-approach.md) |
 | 2026-09-22 | `RPSW-20260922-024` | rp23cnc-software, hardware | implemented | [Bound Moving-Average Hold Pulses](rp23cnc-software/2026/2026-09-22-bound-moving-average-hold-pulses.md) |

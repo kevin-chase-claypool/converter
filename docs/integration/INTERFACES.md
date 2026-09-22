@@ -277,12 +277,13 @@ between pulses and checking the CS1238 moving average after a 50 ms settle.
 It backs off UP for 10 ms, then sends only 5 ms DOWN pulses until the lower
 30 g edge of the drawing band. The surface phase is bounded at 100 pulses,
 8 seconds, and 30 pulses while GP2 remains pressed; the force-tune phase is
-bounded at 30 pulses/3 seconds. Bound, sensor, and hard-force faults stop the
+bounded at 100 pulses/7 seconds. Bound, sensor, and hard-force faults stop the
 motor. GP2 released means normal post-M5 clearance, which retains the
 100 ms DOWN fast path. Both paths then use moving-average force correction
 toward 35 g and fault if force is not acquired within 1.5 seconds. M5 uses a
 100 ms UP clearance move, stopping immediately if GP2 is pressed. Use `p` to
-read the one-shot status including `home_seek_pulses=<completed>/<limit>`;
+read the one-shot status including separate `home_seek_pulses` and
+`home_tune_pulses` counts;
 periodic scrolling remains opt-in with `v`.
 
 The 60 g hard-force guard stops DOWN/hold operation. After inspecting a fault

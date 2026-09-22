@@ -1,5 +1,18 @@
 # Engineering Log
 
+<a id="elog-20260922-extend-fine-tune-budget"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/PARTIAL - extend bounded fine-tune travel
+
+- Evidence: post-release tare was `117 raw` and the first touch detected at
+  `25,589 raw`, validating the GP2-release tare and approximately 5 g surface
+  threshold. The 30-pulse force tune ended safely at only `48,185 raw`
+  (about 9.6 g), below the lower 30 g edge.
+- Change: retain the validated 5 ms tune pulse and all force limits; extend
+  only the tune budget to 100 pulses/7 seconds. Snapshot telemetry now reports
+  tune pulses separately from total home-seek pulses.
+- Verification: exact RP2350 source compilation remains required before flash;
+  the next T-02 run must confirm target arrival or a driver-asleep fault.
+
 <a id="elog-20260922-gp2-release-tare"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/PARTIAL - tare only after GP2 release
 

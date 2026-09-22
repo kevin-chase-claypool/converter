@@ -175,7 +175,7 @@ DOWN pulses until one-fifth of that threshold, then changes to 5 ms pulses with
 then uses only 5 ms DOWN pulses to reach the lower 30 g edge of the 30–40 g
 drawing band. The surface approach has provisional 100-pulse/8-second and
 30-pulses-without-GP2-release bounds; the force-tune phase has a separate
-30-pulse/3-second bound. Any limit, sensor loss, or overforce stops/sleeps the
+100-pulse/7-second bound. Any limit, sensor loss, or overforce stops/sleeps the
 driver and enters `FAULT`. When M3 begins after routine M5 clearance with GP2
 released, it retains the 100 ms DOWN fast path. Both paths then use the
 16-sample CS1238 moving average for force corrections toward 35 g, with a
@@ -203,7 +203,8 @@ the original 160 x 5 ms attempt covered only about 7.5 mm, while the first
 25 ms-only attempt contacted correctly but briefly exceeded the 60 g hard
 limit after contact. They do not establish a universal per-pen travel response. T-01J must validate
 the seek and clearance with each tool before plotting. The quiet `p` snapshot
-reports `home_seek_pulses=<completed>/<limit>` so progress can be checked
+reports both `home_seek_pulses=<completed>/<limit>` and
+`home_tune_pulses=<completed>/<limit>` so progress can be checked
 without enabling the scrolling live stream.
 
 The temporary service interface is `Serial2` / hardware UART1 on GP20 (TX) and

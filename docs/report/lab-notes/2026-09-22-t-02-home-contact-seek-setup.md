@@ -155,6 +155,15 @@ the M3 approach. It stops, waits one second, collects a 64-sample tare at that
 released clear position, and only then begins the light 5 g surface touch.
 This is the active candidate for the next supervised run.
 
+### Fine-tune travel result
+
+The first valid release-transition tare was `117 raw`, and the surface phase
+identified approximately 5 g at `25,589 raw`, confirming both stages work.
+After the 10 ms back-off, the original 30 fine 5 ms pulses reached only
+`48,185 raw` (about 9.6 g) and safely exhausted its budget. The tune phase is
+therefore extended to 100 unchanged 5 ms pulses with a 7-second bound. It does
+not increase a single motion step, target force, or the 60 g hard limit.
+
 ## Decisions and next action
 
 Flash and supervise the updated integrated toolhead firmware. First verify a

@@ -44,6 +44,7 @@ class PressureController {
   bool driverFaulted() const;
   bool liftHomeActive() const;
   uint16_t homeSeekPulseCount() const { return home_seek_pulse_count_; }
+  uint16_t homeTunePulseCount() const { return home_tune_pulse_count_; }
   bool manualOverride() const { return manual_override_; }
 
  private:

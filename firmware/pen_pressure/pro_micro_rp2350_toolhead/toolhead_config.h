@@ -79,8 +79,11 @@ constexpr long HOME_SURFACE_TOUCH_RAW_DELTA = 25194; // approximately 5 g
 constexpr uint8_t HOME_SURFACE_RETRACT_MS = 10;
 constexpr uint8_t HOME_TUNE_PULSE_MS = 5;
 constexpr uint32_t HOME_TUNE_SETTLE_MS = 50;
-constexpr uint16_t HOME_TUNE_MAX_PULSES = 30;
-constexpr uint32_t HOME_TUNE_TIMEOUT_MS = 3000;
+// The released-state 10 ms back-off intentionally leaves a real gap. The
+// tuning stage retains 5 ms resolution but needs enough bounded travel to
+// rebuild drawing preload from that gap.
+constexpr uint16_t HOME_TUNE_MAX_PULSES = 100;
+constexpr uint32_t HOME_TUNE_TIMEOUT_MS = 7000;
 // Existing post-contact force-hold cadence; home seeking has its own faster
 // settle constant above and does not retune the moving-average control loop.
 constexpr uint32_t CS1238_CORRECTION_PERIOD_MS = 250;
