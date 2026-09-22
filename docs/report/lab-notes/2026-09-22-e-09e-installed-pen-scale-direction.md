@@ -61,10 +61,10 @@ delta is the recorded `tare_delta`, not a reconstructed value.
 The 64.1–70.0 g non-outlier end of the trace is locally consistent: the raw
 delta changes from `-327,855` to `-355,688` across 5.9 g, or approximately
 `4,717 raw/g`. That is close to the cap-free downward-mass result of
-`5,038.77 raw/g`, so the data supports retaining the present opposite-sign
-staged scale as a provisional controller starting point. It does **not** prove
-the entire trace is linear: the low and mid-force observations require an
-unloading/repeat series before a production force profile can be accepted.
+`5,038.77 raw/g`. The precision-weight E-09C fit remains the sole raw-to-force
+calibration authority. This kitchen-scale trace is deliberately not fitted or
+used to replace its slope: the kitchen scale and compliant installed pen path
+are only a coarse installed-direction/range check.
 
 ### 5 ms unloading trace
 
@@ -93,13 +93,14 @@ the original tare, which is inside the staged 3 g (`15,116 raw`) release band.
 The 69.5–63.6 g segment is again locally consistent and overlaps the loading
 trace. The trace also exposes material mechanical hysteresis below about 60 g:
 the same approximate 40–50 g scale region spans `-170,755` through `-313,816`
-raw delta depending on approach history. Therefore the 50 g target candidate
-(`-251,938 raw`) remains a reasonable provisional center, but the current
-evidence does not support a narrow precision claim or a final force-loop gain.
+raw delta depending on approach history. That affects later controller tuning,
+but does not invalidate the precision-weight calibration. The 50 g target
+candidate (`-251,938 raw`) remains the selected center from that authoritative
+fit; the kitchen-scale trace verifies it is in the practical working region.
 
 ## Difficulties and next action
 
-The optional Windows application did not complete its adapter-COM connection, so Arduino IDE Serial Monitor provided explicit one-pulse commands and readable raw results. The first 5 ms load/unload cycle now reaches a stable clear return. Repeat one fresh-tare loading series, retaining pulse duration/count and the complete `READING` line, before any gain or threshold is accepted. Do not enable `PRESSURE_CALIBRATION_VALID`, actuator control, M3/M5 force control, or GP27 normal status from this observation.
+The optional Windows application did not complete its adapter-COM connection, so Arduino IDE Serial Monitor provided explicit one-pulse commands and readable raw results. The first 5 ms load/unload cycle now reaches a stable clear return. No further kitchen-scale curve fitting is required: the next measurement work is controller dynamics, using the existing precision-weight raw profile and checking that the installed pen remains approximately in the requested 40–60 g range. Do not enable `PRESSURE_CALIBRATION_VALID`, actuator control, M3/M5 force control, or GP27 normal status from this observation alone.
 
 ## References
 
