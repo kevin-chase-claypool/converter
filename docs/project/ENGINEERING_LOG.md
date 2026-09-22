@@ -1,5 +1,14 @@
 # Engineering Log
 
+<a id="elog-20260922-e09e-installed-pen-direction-result"></a>
+### 🟨 2026-09-22 - HARDWARE/PARTIAL - E-09E installed-pen force-direction result
+
+- Status: one settled kitchen-scale observation confirms the sign of the installed upward pen reaction; it does not authorize a profile revision.
+- Category: hardware, E-09E, E-09C, CS1238, load cell, kitchen scale.
+- Measurement: `PULSE_READING,time_us=145916961,raw=-59087,tare_delta=-312723,tare_valid=1` at reported `40.7 g` scale force.
+- Result: raw moved negative relative to the `253,636 raw` clear tare, confirming the E-09C opposite-direction selection. Its observed 7,684 raw/g magnitude differs from the downward mass fit's 5,038.77 raw/g, so it is not used to change the staged profile without multiple installed-pen repeats.
+- Next action: record several settled scale points near 20, 40, 50, and 60 g, including pulse duration/count, before any actuator or pressure-control gate.
+
 <a id="elog-20260922-e09e-serial-monitor-shortcuts"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - E-09E Arduino Serial Monitor operation
 

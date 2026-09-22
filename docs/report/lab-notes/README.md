@@ -32,6 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-22 | E-09E installed-pen scale direction | Partial | At a settled 40.7 g kitchen-scale reading, CS1238 raw was -59,087 and tare delta -312,723: the installed upward pen reaction is confirmed as opposite to downward calibration loading. One point does not establish an installed-pen transfer fit. |
 | 2026-09-16 | USB/CDC research | Planned | Lowest-change calibration uses Pico native USB for raw force data and the existing USB-to-TTL Pro Micro service link for commands; direct externally powered Pro Micro USB needs a voltage check. |
 | 2026-09-10 | E-18 / F-08 staged handshake | Partial — motor-inert local path passed | Installed `M64`/`M65` drove active-low Aux0/U2/GP28 through `READY_ACK`, `WAIT_REARM`, and `SCAN_ACTIVE`; TMAG detection changed 0→1→0. J1.6 sank during readiness, but ioSender did not expose `LIMA` input state; PRB/G38 remains open. |
 | 2026-09-09 | T-01G guarded retract cycles | Partial — repeatability passed | All ten 6.0 V / 0.20 A guarded cycles released GP2 after six down pulses and re-triggered after nine up/retract pulses; backstop margin and timeout remain open. |
