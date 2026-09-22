@@ -5,7 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
-| 2026-09-22 | `RPSW-20260922-017` | rp23cnc-software | implemented | [Set integrated lift timeout to 3000 ms](rp23cnc-software/2026/2026-09-22-set-integrated-lift-timeout-3000ms.md) |
+| 2026-09-22 | `RPSW-20260922-017` | rp23cnc-software | verified | [Set integrated lift timeout to 3000 ms](rp23cnc-software/2026/2026-09-22-set-integrated-lift-timeout-3000ms.md) |
 | 2026-09-22 | `RPSW-20260922-016` | rp23cnc-software, hardware | implemented | [Match integrated lift drive to validated bench pulses](rp23cnc-software/2026/2026-09-22-increase-integrated-lift-drive.md) |
 | 2026-09-22 | `RPSW-20260922-015` | rp23cnc-software, hardware | implemented | [Correct integrated motor-direction polarity](rp23cnc-software/2026/2026-09-22-correct-integrated-direction-polarity.md) |
 | 2026-09-22 | `RPSW-20260922-014` | rp23cnc-software, hardware | implemented | [Enable the mechanical-preload supervised bench build](rp23cnc-software/2026/2026-09-22-enable-mechanical-preload-bench-build.md) |

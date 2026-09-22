@@ -1,5 +1,18 @@
 # Engineering Log
 
+<a id="elog-20260922-integrated-gp2-boot-retract-pass"></a>
+### 🟩 2026-09-22 - RP23CNC SOFTWARE/VERIFIED - integrated boot reached GP2
+
+- Evidence: after the new `Theta toolhead service UART ready` startup marker,
+  telemetry reported `pressure=LIFTING, lift_home=0`, then on the next sample
+  `pressure=LIFTED, lift_home=1, fault=none`; subsequent records stayed there.
+- Result: supervised integrated boot retract reached the GP2 maximum-UP
+  switch after extending the timeout to 3000 ms.
+- Limit: `commission=[dir:1 pressure:1 lift:0 mag:0]` still shows the formal
+  lift-reference gate unset; this records the observed boot behavior only.
+- Next action: perform one supervised `e` M3 cycle and observe the timed DOWN
+  preload and moving-average CS1238 force response, then use `l` to lift.
+
 <a id="elog-20260922-set-integrated-lift-timeout-3000ms"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - extend GP2 retract timeout
 

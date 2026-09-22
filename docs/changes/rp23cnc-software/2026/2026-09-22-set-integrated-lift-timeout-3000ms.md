@@ -4,7 +4,7 @@ date: 2026-09-22
 category: rp23cnc-software
 affected_categories:
   - rp23cnc-software
-status: implemented
+status: verified
 components:
   - firmware/pen_pressure/pro_micro_rp2350_toolhead/toolhead_config.h
   - integrated boot/fault recovery LIFTING state
@@ -39,8 +39,9 @@ its separate 100 ms air-gap move.
 ## Verification
 
 The integrated sketch compiled for
-`rp2040:rp2040:sparkfun_promicrorp2350`; `python tools\docs_index.py --write`
-and `--check` passed for 187 change notes.
+`rp2040:rp2040:sparkfun_promicrorp2350`; documentation-index checks passed.
+The subsequent supervised boot trace reached `pressure=LIFTED`,
+`lift_home=1`, `fault=none` after first reporting `LIFTING`, `lift_home=0`.
 
 ## Struggles and rejected approaches
 
@@ -51,8 +52,9 @@ wiring fails.
 ## Risks and follow-up
 
 Full-drive UP can run for up to 3000 ms if GP2 does not activate. Keep the
-physical cutoff reachable during the supervised boot. If the switch remains
-released after the timeout, stop and inspect travel/direction/switch actuation.
+physical cutoff reachable during supervised boot. The successful trace shows
+GP2 activated before the timeout on this run; repeatability and mechanical
+backstop margin remain to be characterized separately.
 
 ## Files
 
@@ -61,4 +63,6 @@ released after the timeout, stop and inspect travel/direction/switch actuation.
 - `firmware/pen_pressure/README.md`: current supervised boot behavior.
 - `docs/changes/rp23cnc-software/2026/2026-09-22-increase-integrated-lift-drive.md`:
   follow-up to the full-drive lift update.
+- `docs/report/lab-notes/2026-09-22-integrated-gp2-boot-retract-pass.md`:
+  observed post-flash pass.
 - `docs/project/ENGINEERING_LOG.md`: reason, safety bound, and next bench step.
