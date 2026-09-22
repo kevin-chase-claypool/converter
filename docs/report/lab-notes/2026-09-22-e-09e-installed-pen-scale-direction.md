@@ -35,9 +35,40 @@ The raw response is negative relative to tare while the scale measures a positiv
 
 The observed magnitudes are not monotonic enough to construct an installed-pen transfer fit: the 40.7 g datum has a `-312,723 raw` delta while the later 62.5 g datum has a smaller `-247,637 raw` delta. This is evidence of a changing mechanism/settling state, not a valid linear calibration. The 10 ms up pulse then reduced the displayed scale reading from 35.5 g to 2.2 g without a fault, showing that 10 ms is too coarse near the 40–60 g target. E-09E therefore changes to 5–100 ms pulses in 5 ms steps. The original 40.7 g magnitude (`312,723 raw / 40.7 g = 7,684 raw/g`) remains materially different from the downward motor-mount calibration's `5,038.77 raw/g`.
 
+### 5 ms loading trace
+
+After the 5 ms E-09E update, the operator reported the following settled
+loading observations. All records share the same reported tare validity; raw
+delta is the recorded `tare_delta`, not a reconstructed value.
+
+| Time | Scale g | Raw | Tare delta raw | Assessment |
+|---|---:|---:|---:|---|
+| 10:28:07 | 0.4 | 236,844 | -14,854 | low-force baseline region |
+| 10:28:38 | 0.8 | 230,985 | -20,713 | low-force baseline region |
+| 10:28:57 | 10.7 | 225,501 | -26,197 | low-force point; does not follow later slope |
+| 10:29:15 | 35.8 | 120,294 | -131,404 | transitional point |
+| 10:29:48 | 41.3 | -20,366 | -272,064 | target-region point |
+| 10:30:08 | 41.5 | -4,371 | -256,069 | target-region point |
+| 10:30:33 | 59.2 | -32,792 | -284,490 | target-region point |
+| 10:30:58 | 64.1 | -76,157 | -327,855 | high-force trace |
+| 10:31:20 | 64.9 | -84,198 | -335,896 | high-force trace |
+| 10:31:41 | 66.3 | -88,560 | -340,258 | high-force trace |
+| 10:32:17 | 67.3 | -353,842 | -605,540 | exclude: isolated raw outlier |
+| 10:32:45 | 68.1 | -97,324 | -349,022 | high-force trace; returns to trend |
+| 10:33:06 | 68.5 | -100,542 | -352,240 | high-force trace |
+| 10:33:32 | 70.0 | -103,990 | -355,688 | high-force trace |
+
+The 64.1–70.0 g non-outlier end of the trace is locally consistent: the raw
+delta changes from `-327,855` to `-355,688` across 5.9 g, or approximately
+`4,717 raw/g`. That is close to the cap-free downward-mass result of
+`5,038.77 raw/g`, so the data supports retaining the present opposite-sign
+staged scale as a provisional controller starting point. It does **not** prove
+the entire trace is linear: the low and mid-force observations require an
+unloading/repeat series before a production force profile can be accepted.
+
 ## Difficulties and next action
 
-The optional Windows application did not complete its adapter-COM connection, so Arduino IDE Serial Monitor provided explicit one-pulse commands and readable raw results. Repeat a controlled 5 ms-pulse sequence after a fresh tare, retaining pulse duration/count and the complete `READING` line. Do not enable `PRESSURE_CALIBRATION_VALID`, actuator control, M3/M5 force control, or GP27 normal status from this observation.
+The optional Windows application did not complete its adapter-COM connection, so Arduino IDE Serial Monitor provided explicit one-pulse commands and readable raw results. Next, unload from the present force using 5 ms UP pulses, letting the scale settle and recording every raw line back to clear. Then repeat one fresh-tare loading series, retaining pulse duration/count and the complete `READING` line. Do not enable `PRESSURE_CALIBRATION_VALID`, actuator control, M3/M5 force control, or GP27 normal status from this observation.
 
 ## References
 
