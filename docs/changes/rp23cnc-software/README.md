@@ -9,6 +9,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-025` | implemented | [Add Two-Touch Home Approach](2026/2026-09-22-add-two-touch-home-approach.md) | `cs1238`, `force-control`, `n20`, `surface-touch` |
+| 2026-09-22 | `RPSW-20260922-024` | implemented | [Bound Moving-Average Hold Pulses](2026/2026-09-22-bound-moving-average-hold-pulses.md) | `cs1238`, `force-hold`, `n20`, `safety` |
 | 2026-09-22 | `RPSW-20260922-023` | implemented | [Tare Only After Home Retract](2026/2026-09-22-tare-after-home-retract.md) | `cs1238`, `tare`, `contact-seek` |
 | 2026-09-22 | `RPSW-20260922-022` | implemented | [Add Fine Home Contact Approach](2026/2026-09-22-add-fine-home-contact-approach.md) | `contact-seek`, `pulse-timing`, `force-limit` |
 | 2026-09-22 | `RPSW-20260922-021` | implemented | [Revise Home Contact-Seek Pacing](2026/2026-09-22-revise-home-contact-seek-pacing.md) | `contact-seek`, `pulse-timing`, `cs1238` |

@@ -1,5 +1,38 @@
 # Engineering Log
 
+<a id="elog-20260922-two-touch-home-approach"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - separate surface touch from drawing-force tune
+
+- Evidence: with a valid GP2-home tare, the revised home seek traversed the
+  full gap and reached physically appropriate drawing contact. The remaining
+  risk is asking its final approach to establish both surface position and
+  preload in one motion.
+- Decision: use a printer-style two-touch sequence: light approximately 5 g
+  surface detection, one bounded 10 ms UP back-off, then a 5 ms-only tune to
+  the lower 30 g edge of the 30–40 g hold band.
+- Safety: surface seek remains bounded at 100 pulses/8 seconds/30 GP2-active
+  pulses; force tune is separately bounded at 30 pulses/3 seconds. Both keep
+  CS1238, driver, and 60 g hard-force faults active.
+- Verification: the exact RP2350 sketch compiled successfully. Bench T-02/T-03
+  is still required before production M3/M5 or drawing use.
+
+<a id="elog-20260922-bounded-moving-average-hold"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/PARTIAL - bound moving-average force-hold pulses
+
+- Evidence: after the post-home tare passed (`force_norm_raw=-369` at GP2),
+  the two-stage seek released GP2 and entered `HOLD_FORCE` at `177,917 raw`,
+  essentially the 176,357 raw 35 g target. A subsequent filtered reading was
+  302,620 raw—only 294 raw above the 60 g guard—and correctly faulted.
+- Diagnosis: the seek reached appropriate physical contact. The prior hold
+  loop could leave a PWM drive command energized until its next 250 ms sample
+  cadence, which is not a bounded motion unit for this N20 mechanism.
+- Change: `HOLD_FORCE` now sleeps inside the 30–40 g moving-average band. It
+  uses one full-drive 5 ms UP pulse immediately above band, or one 5 ms DOWN
+  pulse only at the 250 ms cadence below band; every pulse stops and sleeps
+  before another filtered decision. The 60 g force guard remains unchanged.
+- Verification: exact RP2350 sketch compile passed. The source requires a
+  supervised T-02/T-03 stationary bench check before any drawing claim.
+
 <a id="elog-20260922-tare-after-home"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - defer live tare until GP2 home
 

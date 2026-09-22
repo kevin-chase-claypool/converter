@@ -39,7 +39,6 @@ constexpr bool SEEK_USES_IN1_PWM = true;
 // friction before its GP2 maximum-retract guard can assert.
 constexpr uint8_t PWM_LIFT = 255;
 constexpr uint8_t PWM_SEEK = 55;
-constexpr uint8_t PWM_HOLD_MAX = 85;
 
 constexpr uint32_t SERIAL_BAUD = 115200;
 // Boot/fault recovery drives UP continuously and stops immediately when GP2
@@ -70,9 +69,22 @@ constexpr uint16_t HOME_SEEK_MAX_PULSES = 100;
 constexpr uint8_t HOME_SEEK_MAX_SWITCH_ACTIVE_PULSES = 30;
 constexpr uint32_t HOME_SEEK_TIMEOUT_MS = 8000;
 constexpr uint8_t HOME_SEEK_PWM = 255;
+// First touch finds paper at a light calibrated force, then reverses enough
+// to remove the first-touch preload before the fine drawing-force approach.
+constexpr long HOME_SURFACE_TOUCH_RAW_DELTA = 25194; // approximately 5 g
+constexpr uint8_t HOME_SURFACE_RETRACT_MS = 10;
+constexpr uint8_t HOME_TUNE_PULSE_MS = 5;
+constexpr uint32_t HOME_TUNE_SETTLE_MS = 50;
+constexpr uint16_t HOME_TUNE_MAX_PULSES = 30;
+constexpr uint32_t HOME_TUNE_TIMEOUT_MS = 3000;
 // Existing post-contact force-hold cadence; home seeking has its own faster
 // settle constant above and does not retune the moving-average control loop.
 constexpr uint32_t CS1238_CORRECTION_PERIOD_MS = 250;
+// The installed mechanism responds materially to a 5 ms full-drive pulse.
+// Hold control therefore uses the same bounded pulse, never a continuous PWM
+// command held for an entire correction interval.
+constexpr uint8_t HOLD_CORRECTION_PULSE_MS = 5;
+constexpr uint8_t HOLD_CORRECTION_PWM = 255;
 constexpr uint8_t CS1238_TARE_SAMPLES = 64;
 // Candidate 25 ms moving-average window at the configured 640 SPS. E-08C
 // must measure actual rate/noise before PRESSURE_CALIBRATION_VALID can be true.
@@ -116,8 +128,6 @@ constexpr long CONTACT_RAW_DELTA = 176357;
 constexpr long TARGET_FORCE_RAW_DELTA = 176357;
 constexpr long HARD_FORCE_RAW_DELTA = 302326;
 constexpr int8_t CS1238_CONTACT_FORCE_SIGN = -1;
-constexpr int16_t HOLD_KP_NUM = 1;
-constexpr int16_t HOLD_KP_DEN = 60;
 // Selected ±5 g target-ready band = 25,194 raw (approximately 30–40 g around
 // the 35 g target).
 constexpr long CONTACT_READY_TOLERANCE_RAW = 25194;

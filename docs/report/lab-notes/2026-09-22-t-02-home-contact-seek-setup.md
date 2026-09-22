@@ -110,6 +110,37 @@ stops on the calibrated contact threshold, a GP2-stuck guard, budget, timeout,
 sensor loss, or hard-force limit. A valid clear-home tare is now a prerequisite
 to M3. The revised behavior must be checked on the real toolhead.
 
+### Two-stage result and hold-loop correction
+
+After the clear-home-tare update, the next T-02 attempt began correctly at
+`force_norm_raw=-369`, released GP2, and entered `HOLD_FORCE` at `177,917 raw`
+after 50 home-seek pulses, effectively the configured 35 g target. The later
+filtered value reached `302,620 raw`, only 294 raw above the 60 g guard, and
+correctly faulted. The operator reported physically appropriate paper contact
+at the hold transition.
+
+This isolated the remaining defect to `HOLD_FORCE`, not tare or home seeking:
+the former proportional implementation could leave a motor PWM output applied
+until the next 250 ms correction decision. Replace it with the validated 5 ms
+full-drive pulse as the sole correction unit. Hold sleeps inside the 30–40 g
+filtered band, relieves above-band force immediately with UP, and adds
+below-band force no more often than every 250 ms. The 60 g guard is retained.
+This new bounded hold behavior is source-compiled but remains unqualified until
+the next supervised stationary T-02/T-03 attempt.
+
+### Two-touch home approach
+
+The first two-stage post-home attempt proves the current setup can traverse the
+home-to-paper distance and reach an appropriate physical drawing force, but it
+also shows that a single approach should not be asked both to find paper and
+to land at drawing force. The revised source therefore uses two separate
+touches: it first detects paper at approximately 5 g, retracts UP for a
+bounded 10 ms, then makes a second all-5-ms-pulse approach to the lower 30 g
+edge of the 30–40 g hold band. Surface finding and drawing preload are now
+separate decisions with their own time/pulse bounds. This follows the intended
+printer-style probe-then-approach workflow and is pending supervised hardware
+verification.
+
 ## Decisions and next action
 
 Flash and supervise the updated integrated toolhead firmware. First verify a

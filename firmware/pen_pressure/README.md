@@ -169,12 +169,13 @@ The normal-M5 force-release path remains separately gated pending T-01H.
 
 The supervised `MECHANICAL_PRELOAD_MODE` now distinguishes a full-retract
 startup from routine M5 clearance. When M3 begins with GP2 (`LIFT_HOME`)
-pressed, it seeks initial paper contact in 25 ms full-drive DOWN pulses until
-the CS1238 reaches one-fifth of its calibrated contact threshold, then changes
-to 5 ms pulses with 50 ms CS1238 settling between every pulse. It stops at the
-calibrated 35 g contact threshold; the provisional limits are 100 pulses, 8
-seconds, and 30 pulses
-without GP2 releasing. Any limit, sensor loss, or overforce stops/sleeps the
+pressed, it seeks a light approximately 5 g paper touch in 25 ms full-drive
+DOWN pulses until one-fifth of that threshold, then changes to 5 ms pulses with
+50 ms CS1238 settling between every pulse. It backs off with one 10 ms UP move,
+then uses only 5 ms DOWN pulses to reach the lower 30 g edge of the 30–40 g
+drawing band. The surface approach has provisional 100-pulse/8-second and
+30-pulses-without-GP2-release bounds; the force-tune phase has a separate
+30-pulse/3-second bound. Any limit, sensor loss, or overforce stops/sleeps the
 driver and enters `FAULT`. When M3 begins after routine M5 clearance with GP2
 released, it retains the 100 ms DOWN fast path. Both paths then use the
 16-sample CS1238 moving average for force corrections toward 35 g, with a
@@ -188,7 +189,14 @@ reached GP2. This prevents an initial loaded pen position from being accepted
 as zero force. M3 faults safely if requested before that clear-home tare is
 complete; wait for `tare_valid=1` in a `p` snapshot before sending `e`.
 
-The 100-pulse limit and two-stage pulse width are supervised bench candidates:
+Once initial contact has been found, `HOLD_FORCE` leaves the driver asleep
+inside the calibrated 30–40 g moving-average band. If force rises above the
+band it immediately applies one 5 ms UP relief pulse; if force is low it may
+apply one 5 ms DOWN pulse only after the 250 ms correction cadence. Every hold
+pulse stops and sleeps before the next filtered decision. This is the current
+supervised anti-overshoot behavior, not a production-qualified tuning result.
+
+The 100-pulse limit and two-touch pulse widths are supervised bench candidates:
 the original 160 x 5 ms attempt covered only about 7.5 mm, while the first
 25 ms-only attempt contacted correctly but briefly exceeded the 60 g hard
 limit after contact. They do not establish a universal per-pen travel response. T-01J must validate

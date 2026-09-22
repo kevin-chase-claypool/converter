@@ -12,6 +12,8 @@ enum class PressureState : uint8_t {
   LIFTED,
   MECHANICAL_ENGAGE,
   HOME_SEEK_CONTACT,
+  HOME_RETRACT_AFTER_TOUCH,
+  HOME_TUNE_FORCE,
   SEEK_CONTACT,
   HOLD_FORCE,
   RELEASE_TO_CLEAR,
@@ -66,6 +68,8 @@ class PressureController {
   uint32_t m3_started_ms_ = 0;
   uint32_t home_seek_pulse_started_ms_ = 0;
   uint32_t home_seek_last_pulse_ended_ms_ = 0;
+  uint32_t home_surface_retract_started_ms_ = 0;
+  uint32_t hold_correction_pulse_started_ms_ = 0;
 
   bool manual_override_ = false;
   bool manual_engage_ = false;
@@ -74,6 +78,7 @@ class PressureController {
   bool tare_valid_ = false;
   bool m3_force_acquired_ = false;
   bool home_seek_pulse_active_ = false;
+  bool hold_correction_pulse_active_ = false;
   uint8_t home_seek_active_pulse_ms_ = 0;
 
   long cs1238_raw_ = 0;
@@ -90,6 +95,7 @@ class PressureController {
   uint8_t lift_release_windows_ = 0;
   uint8_t contact_ready_windows_ = 0;
   uint16_t home_seek_pulse_count_ = 0;
+  uint16_t home_tune_pulse_count_ = 0;
   uint8_t home_seek_pulses_while_switch_active_ = 0;
 
   const char *fault_reason_ = "none";

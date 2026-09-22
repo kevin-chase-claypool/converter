@@ -85,13 +85,16 @@ seated by the operator at an approximate drawing preload. The supervised
 `MECHANICAL_PRELOAD_MODE` has two M3 entry paths because boot homes the pen
 about 12 mm above the paper in the current setup:
 
-- If M3 begins with GP2 (`LIFT_HOME`) pressed, the controller performs
-  `HOME_SEEK_CONTACT`: 25 ms full-drive DOWN pulses while normalized force is
-  below one-fifth of the calibrated contact threshold, then 5 ms pulses. It
-  sleeps and waits 50 ms before each 16-sample CS1238 moving-average check.
-  The candidate bounds are 100 pulses, 8 seconds, and 30 completed
-  pulses without GP2 releasing. Reaching a bound stops/sleeps the motor and
-  enters `FAULT`; the operator must inspect the fault before clearing it.
+- If M3 begins with GP2 (`LIFT_HOME`) pressed, the controller performs a
+  two-touch `HOME_SEEK_CONTACT` sequence. First it finds paper at the light
+  approximately 5 g threshold: 25 ms full-drive DOWN pulses while normalized
+  force is below one-fifth of that threshold, then 5 ms pulses with a 50 ms
+  settle between each filtered check. It then makes a bounded 10 ms UP back-off
+  and starts `HOME_TUNE_FORCE`, which uses only 5 ms DOWN pulses and the same
+  50 ms settle to reach the lower 30 g edge of the 30–40 g drawing band. The
+  surface stage is bounded at 100 pulses/8 seconds/30 pulses without GP2
+  releasing; tuning is separately bounded at 30 pulses/3 seconds. Any bound,
+  sensor loss, or overforce stops/sleeps the motor and enters `FAULT`.
 - If M3 begins after ordinary M5 clearance with GP2 released, the established
   short 100 ms DOWN move remains the fast path. In both paths, the moving
   average then controls force toward 35 g; loss of sensor data or failure to
@@ -104,7 +107,7 @@ about 12 mm above the paper in the current setup:
   `e` (or deliberately restore GP29 with `a`) to request another engage.
 
 M5 still applies the candidate 100 ms UP clearance move and stops sooner if
-GP2 is pressed. This two-stage envelope follows a real 160 x 5 ms seek that
+GP2 is pressed. This two-touch envelope follows a real 160 x 5 ms seek that
 covered only about 7.5 mm and a three-pulse 25 ms seek that reached 35 g then
 briefly crossed the 60 g hard threshold. It is not a universal per-pen travel
 constant. T-01J must
@@ -119,6 +122,16 @@ clear position. M3 is rejected until that tare completes. This keeps the live
 zero reference independent of any transient force present while firmware
 starts, and is especially important because contact thresholding uses the
 live tare rather than the fixed calibration zero.
+
+### Bounded moving-average hold
+
+`HOLD_FORCE` uses the 16-sample moving-average force value. It does not leave
+a PWM motor command energized between 250 ms correction decisions. Within the
+30–40 g target band it sleeps the driver. Above the band it sends a single
+full-drive 5 ms UP relief pulse immediately; below the band it sends a single
+5 ms DOWN pulse no more often than once every 250 ms. The next correction is
+based on a later filtered sample after the driver has stopped. The independent
+60 g hard-force guard remains active throughout this state.
 
 ## Calibration profile and boot baseline
 

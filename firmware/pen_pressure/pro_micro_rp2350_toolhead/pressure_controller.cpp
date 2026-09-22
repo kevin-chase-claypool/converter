@@ -43,6 +43,8 @@ const char *PressureController::stateName() const {
     case PressureState::LIFTED: return "LIFTED";
     case PressureState::MECHANICAL_ENGAGE: return "MECHANICAL_ENGAGE";
     case PressureState::HOME_SEEK_CONTACT: return "HOME_SEEK_CONTACT";
+    case PressureState::HOME_RETRACT_AFTER_TOUCH: return "HOME_RETRACT_AFTER_TOUCH";
+    case PressureState::HOME_TUNE_FORCE: return "HOME_TUNE_FORCE";
     case PressureState::SEEK_CONTACT: return "SEEK_CONTACT";
     case PressureState::HOLD_FORCE: return "HOLD_FORCE";
     case PressureState::RELEASE_TO_CLEAR: return "RELEASE_TO_CLEAR";
@@ -60,8 +62,10 @@ void PressureController::setState(PressureState next) {
   }
   if (next != PressureState::HOLD_FORCE) {
     contact_ready_windows_ = 0;
+    hold_correction_pulse_active_ = false;
   }
-  if (next != PressureState::HOME_SEEK_CONTACT) {
+  if (next != PressureState::HOME_SEEK_CONTACT &&
+      next != PressureState::HOME_TUNE_FORCE) {
     home_seek_pulse_active_ = false;
     home_seek_active_pulse_ms_ = 0;
   }
@@ -366,6 +370,7 @@ void PressureController::service() {
             m3_force_acquired_ = false;
             if (liftHomeActive()) {
               home_seek_pulse_count_ = 0;
+              home_tune_pulse_count_ = 0;
               home_seek_pulses_while_switch_active_ = 0;
               home_seek_pulse_active_ = false;
               home_seek_active_pulse_ms_ = 0;
@@ -410,8 +415,8 @@ void PressureController::service() {
         break;
       }
 
-      const long fine_threshold =
-          CONTACT_RAW_DELTA / HOME_SEEK_FINE_THRESHOLD_DIVISOR;
+      const long fine_threshold = HOME_SURFACE_TOUCH_RAW_DELTA /
+                                  HOME_SEEK_FINE_THRESHOLD_DIVISOR;
       const uint32_t next_pulse_ms =
           normalizedForceDelta() >= fine_threshold ? HOME_SEEK_FINE_PULSE_MS
                                                    : HOME_SEEK_COARSE_PULSE_MS;
@@ -425,7 +430,7 @@ void PressureController::service() {
           engage,
           new_filtered_sample_,
           normalizedForceDelta(),
-          CONTACT_RAW_DELTA,
+          HOME_SURFACE_TOUCH_RAW_DELTA,
           now,
           state_started_ms_,
           home_seek_pulse_active_,
@@ -467,9 +472,8 @@ void PressureController::service() {
           setDriverEnabled(false);
           home_seek_pulse_active_ = false;
           home_seek_active_pulse_ms_ = 0;
-          m3_force_acquired_ = true;
-          last_force_correction_ms_ = now;
-          setState(PressureState::HOLD_FORCE);
+          home_surface_retract_started_ms_ = now;
+          setState(PressureState::HOME_RETRACT_AFTER_TOUCH);
           break;
         case toolhead::ContactSeekAction::CANCELLED:
           motorStop();
@@ -490,6 +494,95 @@ void PressureController::service() {
             enterFault("M3 home contact seek pulse budget exhausted");
           } else {
             enterFault("M3 home contact seek timed out");
+          }
+          break;
+      }
+      break;
+    }
+
+    case PressureState::HOME_RETRACT_AFTER_TOUCH:
+      motorLift();
+      if (now - home_surface_retract_started_ms_ >= HOME_SURFACE_RETRACT_MS ||
+          liftHomeActive()) {
+        motorStop();
+        setDriverEnabled(false);
+        home_tune_pulse_count_ = 0;
+        home_seek_pulse_active_ = false;
+        home_seek_active_pulse_ms_ = 0;
+        home_seek_pulse_started_ms_ = 0;
+        home_seek_last_pulse_ended_ms_ = now;
+        setState(PressureState::HOME_TUNE_FORCE);
+      }
+      break;
+
+    case PressureState::HOME_TUNE_FORCE: {
+      if (!statusFlag(STATUS_CS1238_ONLINE)) {
+        enterFault("CS1238 lost during home force tune");
+        break;
+      }
+
+      // Stop at the lower edge of the 30–40 g hold band. The filtered hold
+      // controller can then settle/release from inside its no-drive band.
+      const long tune_threshold =
+          TARGET_FORCE_RAW_DELTA - CONTACT_READY_TOLERANCE_RAW;
+      const toolhead::ContactSeekLimits limits{
+          HOME_TUNE_PULSE_MS, HOME_TUNE_SETTLE_MS,
+          HOME_TUNE_MAX_PULSES, HOME_TUNE_TIMEOUT_MS};
+      const toolhead::ContactSeekStatus tune_status{
+          engage,
+          new_filtered_sample_,
+          normalizedForceDelta(),
+          tune_threshold,
+          now,
+          state_started_ms_,
+          home_seek_pulse_active_,
+          home_seek_pulse_started_ms_,
+          home_seek_last_pulse_ended_ms_,
+          home_tune_pulse_count_};
+
+      switch (toolhead::decideContactSeekAction(tune_status, limits)) {
+        case toolhead::ContactSeekAction::WAIT:
+          break;
+        case toolhead::ContactSeekAction::START_PULSE:
+          motorDrive(SEEK_USES_IN1_PWM, HOME_SEEK_PWM);
+          home_seek_pulse_started_ms_ = now;
+          home_seek_active_pulse_ms_ = HOME_TUNE_PULSE_MS;
+          home_seek_pulse_active_ = true;
+          break;
+        case toolhead::ContactSeekAction::STOP_PULSE:
+          motorStop();
+          setDriverEnabled(false);
+          home_seek_pulse_active_ = false;
+          home_seek_active_pulse_ms_ = 0;
+          home_tune_pulse_count_++;
+          home_seek_pulse_count_++;
+          home_seek_last_pulse_ended_ms_ = now;
+          break;
+        case toolhead::ContactSeekAction::CONTACT_FOUND:
+          motorStop();
+          setDriverEnabled(false);
+          home_seek_pulse_active_ = false;
+          home_seek_active_pulse_ms_ = 0;
+          m3_force_acquired_ = true;
+          last_force_correction_ms_ = now;
+          setState(PressureState::HOLD_FORCE);
+          break;
+        case toolhead::ContactSeekAction::CANCELLED:
+          motorStop();
+          setDriverEnabled(false);
+          home_seek_pulse_active_ = false;
+          home_seek_active_pulse_ms_ = 0;
+          setState(PressureState::CLEARANCE_LIFT);
+          break;
+        case toolhead::ContactSeekAction::LIMIT_REACHED:
+          motorStop();
+          setDriverEnabled(false);
+          home_seek_pulse_active_ = false;
+          home_seek_active_pulse_ms_ = 0;
+          if (home_tune_pulse_count_ >= HOME_TUNE_MAX_PULSES) {
+            enterFault("M3 home force-tune pulse budget exhausted");
+          } else {
+            enterFault("M3 home force-tune timed out");
           }
           break;
       }
@@ -517,7 +610,7 @@ void PressureController::service() {
       }
       break;
 
-    case PressureState::HOLD_FORCE:
+    case PressureState::HOLD_FORCE: {
       if (!engage) {
         motorStop();
         setDriverEnabled(false);
@@ -538,21 +631,47 @@ void PressureController::service() {
           break;
         }
       }
-      if (new_filtered_sample_ && now - last_force_correction_ms_ >= CS1238_CORRECTION_PERIOD_MS) {
-        last_force_correction_ms_ = now;
-        const long error = TARGET_FORCE_RAW_DELTA - normalizedForceDelta();
-        int command = static_cast<int>((error * HOLD_KP_NUM) / HOLD_KP_DEN);
-        if (command > 0) {
-          command = constrain(command, 0, PWM_HOLD_MAX);
-          motorDrive(SEEK_USES_IN1_PWM, static_cast<uint8_t>(command));
-        } else if (command < -20) {
-          command = constrain(-command, 0, PWM_HOLD_MAX);
-          motorDrive(LIFT_USES_IN1_PWM, static_cast<uint8_t>(command));
-        } else {
+      if (hold_correction_pulse_active_) {
+        if (now - hold_correction_pulse_started_ms_ >=
+            HOLD_CORRECTION_PULSE_MS) {
           motorStop();
+          setDriverEnabled(false);
+          hold_correction_pulse_active_ = false;
+          last_force_correction_ms_ = now;
         }
+        break;
       }
+
+      if (!new_filtered_sample_) {
+        break;
+      }
+
+      const long force = normalizedForceDelta();
+      const long error = TARGET_FORCE_RAW_DELTA - force;
+      const bool above_hold_band = error < -CONTACT_READY_TOLERANCE_RAW;
+      const bool below_hold_band = error > CONTACT_READY_TOLERANCE_RAW;
+      // Correct an over-force reading immediately, rather than waiting up to
+      // the normal cadence and risking the 60 g guard while the mechanics
+      // settle. Low force uses the slower cadence to avoid hunting.
+      const bool correction_due = above_hold_band ||
+                                  (below_hold_band &&
+                                   now - last_force_correction_ms_ >=
+                                       CS1238_CORRECTION_PERIOD_MS);
+      if (!correction_due) {
+        motorStop();
+        setDriverEnabled(false);
+        break;
+      }
+
+      if (above_hold_band) {
+        motorDrive(LIFT_USES_IN1_PWM, HOLD_CORRECTION_PWM);
+      } else {
+        motorDrive(SEEK_USES_IN1_PWM, HOLD_CORRECTION_PWM);
+      }
+      hold_correction_pulse_started_ms_ = now;
+      hold_correction_pulse_active_ = true;
       break;
+    }
 
     case PressureState::RELEASE_TO_CLEAR:
       motorLift();

@@ -271,12 +271,14 @@ the no-contact release band and then applies a verified clearance pulse.
 
 For the current bench setup, `MECHANICAL_PRELOAD_MODE` is enabled only in the
 supervised firmware build. At M3, GP2 pressed means a cold/full-retract start:
-the Pro Micro sends 25 ms full-drive DOWN pulses until one-fifth of the
-contact threshold is measured, then 5 ms pulses, sleeps between pulses, and
-checks the CS1238 moving average after a 50 ms settle interval. It stops at
-the 35 g contact threshold. The provisional bounds are 100 pulses, 8 seconds,
-and 30 pulses while GP2 remains pressed; bound, sensor, and hard-force faults
-stop the motor. GP2 released means normal post-M5 clearance, which retains the
+the Pro Micro first sends 25 ms full-drive DOWN pulses until one-fifth of the
+light 5 g surface-touch threshold is measured, then 5 ms pulses, sleeping
+between pulses and checking the CS1238 moving average after a 50 ms settle.
+It backs off UP for 10 ms, then sends only 5 ms DOWN pulses until the lower
+30 g edge of the drawing band. The surface phase is bounded at 100 pulses,
+8 seconds, and 30 pulses while GP2 remains pressed; the force-tune phase is
+bounded at 30 pulses/3 seconds. Bound, sensor, and hard-force faults stop the
+motor. GP2 released means normal post-M5 clearance, which retains the
 100 ms DOWN fast path. Both paths then use moving-average force correction
 toward 35 g and fault if force is not acquired within 1.5 seconds. M5 uses a
 100 ms UP clearance move, stopping immediately if GP2 is pressed. Use `p` to
@@ -294,6 +296,13 @@ At boot and after `c` fault recovery, the controller first reaches GP2 and
 only then takes its 64-sample CS1238 tare. M3 is rejected until the snapshot
 shows `tare_valid=1`; this prevents startup paper force from being treated as
 the force zero.
+
+After initial contact, the moving-average force hold is pulse-bounded: it
+sleeps the DRV8833 in the 30–40 g calibrated band, uses one 5 ms UP pulse
+immediately when force rises above that band, and uses one 5 ms DOWN pulse no
+more often than every 250 ms when force is below it. It never leaves a PWM
+command energized for that 250 ms interval. The 60 g hard-force guard remains
+independent and active.
 
 The cold-start pulse/travel limits are provisional values revised after the
 first 160 x 5 ms attempt moved only about 7.5 mm and stopped 4.5 mm above
