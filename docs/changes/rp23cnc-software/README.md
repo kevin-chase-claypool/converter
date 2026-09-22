@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-010` | implemented | [Add E-09F manual retract recovery](2026/2026-09-22-add-e09f-manual-retract-recovery.md) | `e-09f`, `n20`, `retract`, `recovery`, `safety` |
 | 2026-09-22 | `RPSW-20260922-009` | implemented | [Fix E-09F release hard-limit fault](2026/2026-09-22-fix-e09f-release-hard-limit.md) | `e-09f`, `cs1238`, `pen-clear`, `fault-handling` |
 | 2026-09-22 | `RPSW-20260922-008` | implemented | [Add E-09F guarded force-hold test](2026/2026-09-22-add-e09f-guarded-force-hold.md) | `e-09f`, `cs1238`, `force-hold`, `pen-clear`, `safety` |
 | 2026-09-22 | `RPSW-20260922-007` | implemented | [Refine E-09E pulses and stage pen-clear candidate](2026/2026-09-22-refine-e09e-pulses-and-stage-pen-clear.md) | `e-09e`, `n20`, `pen-clear`, `pulse-duration`, `safety` |

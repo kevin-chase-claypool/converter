@@ -12,6 +12,15 @@
   bounded by pulse count, timeout, ULT, GP2, and sleep rules.
 - Next action: reflash E-09F, fresh-tare/arm, and repeat `s` then `c`.
 
+<a id="elog-20260922-e09f-manual-retract-recovery"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - E-09F manual retract recovery
+
+- Status: source compiled; post-flash physical recovery is pending.
+- Result: `u`/`UP` now cancels the automatic state, runs one guarded 5 ms UP
+  pulse even after a fault, and sleeps the driver. ULT and GP2 checks remain.
+- Safety boundary: use the physical cutoff for an emergency; use repeated `u`
+  only to withdraw from the fixture, then fresh-tare before a new test.
+
 <a id="elog-20260922-e09f-guarded-force-hold-source"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - E-09F guarded force-hold source
 

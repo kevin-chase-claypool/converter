@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-010` | rp23cnc-software, hardware | implemented | [Add E-09F manual retract recovery](rp23cnc-software/2026/2026-09-22-add-e09f-manual-retract-recovery.md) |
 | 2026-09-22 | `RPSW-20260922-009` | rp23cnc-software, hardware | implemented | [Fix E-09F release hard-limit fault](rp23cnc-software/2026/2026-09-22-fix-e09f-release-hard-limit.md) |
 | 2026-09-22 | `RPSW-20260922-008` | rp23cnc-software, hardware | implemented | [Add E-09F guarded force-hold test](rp23cnc-software/2026/2026-09-22-add-e09f-guarded-force-hold.md) |
 | 2026-09-22 | `RPSW-20260922-007` | rp23cnc-software, hardware | implemented | [Refine E-09E pulses and stage pen-clear candidate](rp23cnc-software/2026/2026-09-22-refine-e09e-pulses-and-stage-pen-clear.md) |

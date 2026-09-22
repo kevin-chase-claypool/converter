@@ -29,6 +29,7 @@ reachable and put the kitchen scale below the installed pen.
 | `a` | Arm one automatic test; reset each direction's 30-pulse budget. |
 | `s` | Seek/hold the calibrated 40–60 g raw band for five seconds. |
 | `c` | From contact, lift in 5 ms steps to the 3 g clear band, then issue one 100 ms air-gap pulse. |
+| `u` | One guarded 5 ms manual UP/retract pulse; usable after a fault to recover from the fixture. |
 | `r` | Print a 16-sample CS1238 raw mean and tare delta. |
 | `x` | Stop/sleep/disarm immediately. |
 
@@ -38,6 +39,11 @@ two-read confirmation during downward seeking/holding, 30 pulses per direction,
 UP pulse. Release bypasses the downward hard-force gate because it can only
 lift; it retains its pulse/time/fault bounds. The driver sleeps after every
 pulse.
+
+If an automatic test faults with the pen still pressing on the fixture, send
+`u` repeatedly until it is clear. Each command is one guarded 5 ms UP pulse
+and returns the driver to sleep; `x` and the physical 6 V cutoff remain the
+immediate-stop options.
 
 ## Procedure
 

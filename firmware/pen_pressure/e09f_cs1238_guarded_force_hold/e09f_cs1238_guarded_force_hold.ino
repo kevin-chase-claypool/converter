@@ -18,6 +18,7 @@
     a  arm one supervised automatic test
     s  seek and hold within the 40--60 g raw band for 5 s
     c  from contact, release to the 3 g band then issue one 100 ms UP air-gap pulse
+    u  one guarded 5 ms manual UP/retract pulse; available after a fault
     r  report a 16-sample raw mean and tare delta
     x  immediately stop, sleep, disarm, and abort
 
@@ -204,7 +205,7 @@ void status() {
 }
 
 void help() {
-  Serial.println(F("HELP,?=help,t=tare,a=arm,s=seek_hold,c=clear,r=read,x=abort"));
+  Serial.println(F("HELP,?=help,t=tare,a=arm,s=seek_hold,c=clear,u=up,r=read,x=abort"));
   Serial.println(F("HELP,force_band_raw=201551..302326,target=251938,hard=352714"));
   Serial.println(F("HELP,correction=5ms,settle=500ms,hold=5000ms,clearance=100ms"));
   status();
@@ -268,6 +269,18 @@ void abortTest() {
   armed = false;
   state = TestState::IDLE;
   Serial.println(F("ABORTED,driver_asleep=1"));
+}
+
+void manualUp() {
+  // Recovery operation: deliberately available after a fault so a failed
+  // automatic sequence cannot leave the pen pressing on the fixture. It still
+  // checks ULT and GP2, runs one 5 ms UP pulse only, then sleeps the driver.
+  stopAndSleep();
+  armed = false;
+  state = TestState::IDLE;
+  if (drivePulse(false, CORRECTION_PULSE_MS, F("MANUAL_UP"))) {
+    Serial.println(F("MANUAL_UP_COMPLETE,driver_asleep=1"));
+  }
 }
 
 void serviceAutomaticTest() {
@@ -357,6 +370,7 @@ void command(const char *line) {
   else if (!strcasecmp(line, "ARM")) arm();
   else if (!strcasecmp(line, "SEEK")) startSeekHold();
   else if (!strcasecmp(line, "CLEAR")) startClear();
+  else if (!strcasecmp(line, "UP")) manualUp();
   else if (!strcasecmp(line, "READ")) { long delta = 0; readForce(delta); }
   else if (!strcasecmp(line, "STOP")) abortTest();
   else Serial.println(F("COMMAND_ERROR,send=? for help"));
@@ -369,6 +383,7 @@ bool shortcut(char character) {
     case 'a': arm(); return true;
     case 's': startSeekHold(); return true;
     case 'c': startClear(); return true;
+    case 'u': manualUp(); return true;
     case 'r': { long delta = 0; readForce(delta); return true; }
     case 'x': abortTest(); return true;
     default: return false;

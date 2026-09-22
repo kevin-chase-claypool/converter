@@ -43,7 +43,11 @@ This was a firmware-state error: E-09F applied the downward contact-force hard
 limit during an UP/release state before commanding an UP pulse. The preceding
 hold had completed safely and the driver was asleep. The release code now
 bypasses that downward-only limit; seek/hold retains it with an immediate second
-CS1238 confirmation. Reflash the corrected sketch and repeat the clear test.
+CS1238 confirmation. The same fault also showed a recovery usability gap: the
+pre-fix sketch had no manual retract command while the pen remained on the
+fixture. E-09F now provides `u`, one guarded 5 ms UP pulse that works after a
+fault and sleeps the driver. Reflash, use `u` only until clear, fresh-tare, and
+then repeat the automatic test.
 
 ## References
 
