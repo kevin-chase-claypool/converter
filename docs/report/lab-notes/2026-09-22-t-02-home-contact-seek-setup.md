@@ -11,6 +11,19 @@ travel cannot authorize force hold after M5; clearance changes the mechanical
 preload and invalidates the previous touch reference. The next source revision
 replaces that shortcut with fine-pulse, trend-confirmed re-contact.
 
+## 2026-09-22 repeated trend-contact evidence
+
+With the re-contact source flashed, normal M3/M5 cycles correctly traversed
+`HOME_SEEK_CONTACT`, `HOME_RETRACT_AFTER_TOUCH`, `HOME_TUNE_FORCE`, and
+`HOLD_FORCE` without the former force-acquisition timeout. Accepted contact
+force nevertheless varied substantially: 80,669, 45,706, 195,497, and 95,747
+raw; the matching holds were 235,287, 197,658, 346,717, and 247,524 raw. The
+195,497/346,717 cycle is approximately 39/69 g under E-09C and exceeds the
+desired broad 60 g ceiling. It is evidence that persistent mechanism movement
+can still mimic paper contact. The next source revision retains trend logic but
+limits an accepted reference to a provisional 20 g envelope and restores the
+absolute 60 g guard.
+
 ## Objective
 
 Record the initial full-retract-to-paper condition that exposed why the

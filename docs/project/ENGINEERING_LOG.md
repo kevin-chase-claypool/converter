@@ -1,5 +1,19 @@
 # Engineering Log
 
+<a id="elog-20260922-bound-contact-envelope"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - bound trend contact to a usable force envelope
+
+- Evidence: repeated normal M3/M5 cycles completed, but accepted contact
+  references ranged from 45,706 to 195,497 raw. The last reference produced a
+  `HOLD_FORCE` state at 346,717 raw, approximately 69 g by E-09C, because the
+  prior relative hard guard had expanded with the reference.
+- Change: retain trend-based contact, but reject an accepted reference above
+  the provisional 20 g low-force envelope. The hard-force guard is restored
+  to an absolute 60 g ceiling; a touch reference can shift the target but
+  cannot increase that safety ceiling.
+- Verification: the exact SparkFun Pro Micro RP2350 sketch compiles. The
+  20 g envelope is a supervised T-02 candidate, not a precision requirement.
+
 <a id="elog-20260922-normal-m3-recontact"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - re-acquire contact after normal M5 clearance
 

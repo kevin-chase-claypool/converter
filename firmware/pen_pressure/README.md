@@ -175,7 +175,9 @@ pulses with 50 ms CS1238 settling between every pulse. A stopped pulse must
 produce a persistent approximately 2 g response in three 25 ms-separated
 filtered windows before paper touch is accepted. It backs off with one 10 ms
 UP move, then uses only 5 ms DOWN pulses to reach the lower 30 g edge of the
-30–40 g drawing band relative to the accepted touch reference. The surface
+30–40 g drawing band relative to the accepted touch reference. An accepted
+reference must remain within the broad provisional 20 g low-force envelope;
+the 60 g hard limit remains absolute rather than moving with the reference. The surface
 approach has provisional 100-pulse/8-second and
 30-pulses-without-GP2-release bounds; the force-tune phase has a separate
 100-pulse/7-second bound. Any limit, sensor loss, or overforce stops/sleeps the

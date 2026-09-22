@@ -76,6 +76,10 @@ constexpr uint8_t HOME_SEEK_PWM = 255;
 // First touch finds paper at a light calibrated force, then reverses enough
 // to remove the first-touch preload before the fine drawing-force approach.
 constexpr long HOME_SURFACE_TOUCH_RAW_DELTA = 25194; // approximately 5 g
+// A confirmed first-touch reference must remain low force. This broad 20 g
+// T-02 candidate rejects a large persistent sticktion jump without requiring
+// an exact physical touch value; repeat-cycle evidence will refine it.
+constexpr long HOME_SURFACE_REFERENCE_MAX_RAW = 100775; // approximately 20 g
 // A first touch is a persistent response to one stopped fine pulse, not an
 // absolute threshold crossing. At 640 SPS a 16-sample average spans about
 // 25 ms, so three separated windows add roughly 75 ms of confirmation.

@@ -141,10 +141,12 @@ The light first touch is not accepted merely because one raw value crosses an
 approximately 5 g level. Once that level is reached, the motor is stopped and
 the controller requires a response at least approximately 2 g above the
 pre-pulse value in three 25 ms-separated 16-sample windows. A one-window jump
-or a response that relaxes does not advance the state. The accepted response is
-the contact reference. The second approach targets the calibrated drawing force
-relative to that reference, so switch/preload friction is not mistaken for
-paper force. Its matching hard-force guard is also relative to that reference.
+or a response that relaxes does not advance the state. The accepted response
+must also remain inside the broad provisional 20 g low-force envelope; a large
+persistent sticktion shift faults instead of becoming the touch reference. The
+second approach targets the calibrated drawing force relative to that reference
+so switch/preload friction is not mistaken for paper force. The 60 g hard-force
+guard remains an absolute ceiling and is never moved upward by the reference.
 
 ## Calibration profile and boot baseline
 

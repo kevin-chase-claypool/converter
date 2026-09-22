@@ -134,9 +134,9 @@ long PressureController::activeTargetForceRaw() const {
 }
 
 long PressureController::activeHardForceRaw() const {
-  return contact_reference_valid_
-             ? contact_reference_force_raw_ + HARD_FORCE_RAW_DELTA
-             : HARD_FORCE_RAW_DELTA;
+  // A contact reference shifts the drawing target, but must never enlarge the
+  // calibrated absolute 60 g safety envelope.
+  return HARD_FORCE_RAW_DELTA;
 }
 
 long PressureController::noContactResidual() const {
@@ -488,6 +488,10 @@ void PressureController::service() {
               motorStop();
               setDriverEnabled(false);
               home_surface_confirm_pending_ = false;
+              if (normalizedForceDelta() > HOME_SURFACE_REFERENCE_MAX_RAW) {
+                enterFault("surface response exceeds low-force contact range");
+                break;
+              }
               contact_reference_force_raw_ = normalizedForceDelta();
               contact_reference_valid_ = true;
               home_surface_retract_started_ms_ = now;
