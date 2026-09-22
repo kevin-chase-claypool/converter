@@ -800,6 +800,7 @@ class MainWindow(QMainWindow):
         self.compensate_pen = make_checkbox("compensate_pen_width")
         self.monotonic_theta = make_checkbox("monotonic_theta")
         self.raster_shading = make_checkbox("raster_shading")
+        self.toolhead_status_handshake = make_checkbox("toolhead_status_handshake")
 
         geometry_box, geometry_form = make_form_group("Geometry", field_groups["Geometry"])
         geometry_form.addRow(self.flip_y)
@@ -815,6 +816,7 @@ class MainWindow(QMainWindow):
 
         pen_box, pen_form = make_form_group("Pen", field_groups["Pen"])
         pen_form.addRow(self.use_z)
+        pen_form.addRow(self.toolhead_status_handshake)
 
         self.undrawn_color_button = QPushButton("Undrawn")
         self.undrawn_color_button.clicked.connect(lambda: self.choose_preview_color("undrawn"))
@@ -1045,6 +1047,7 @@ class MainWindow(QMainWindow):
             "compensate_pen_width": self.compensate_pen.isChecked(),
             "monotonic_theta": self.monotonic_theta.isChecked(),
             "raster_shading": self.raster_shading.isChecked(),
+            "toolhead_status_handshake": self.toolhead_status_handshake.isChecked(),
         }
         settings = converter.settings_from_values(text_values, bool_values)
         self.print_speed_mm_s()

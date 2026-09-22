@@ -21,12 +21,20 @@ def pen_down_duration_ms(settings):
     return max(float(getattr(settings, "pen_down_ms", 600.0)), 0.0)
 
 
-def append_pen_dwell(lines, settings, direction):
+def append_pen_dwell(lines, settings, direction, requires_transition=True):
     # Pause after an M3/M5 pen actuation so the pen reaches the paper (or lifts
     # clear) before motion resumes. grblHAL runs the next line immediately after
     # M3/M5, so without this the pen would drag or start a stroke mid-air. In Z
     # mode the pen move is itself a timed motion, so no dwell is needed.
     if settings.include_z:
+        return
+    if getattr(settings, "toolhead_status_handshake", False):
+        # P115 runs on RP23CNC and polls GP27/PRB with bounded timeouts. Q1
+        # requires the output to deassert then reassert, preventing the
+        # previous M3/M5 completion from being mistaken for this command's
+        # acknowledgment. The program-opening M5 uses Q0 because it may
+        # already be proven clear before the program begins.
+        lines.append("G65 P115 Q1" if requires_transition else "G65 P115 Q0")
         return
     ms = pen_down_duration_ms(settings) if direction == "down" else pen_up_duration_ms(settings)
     if ms > 0:
@@ -146,7 +154,7 @@ def contours_to_gcode(contours, settings, program_plan=None):
         lines.append(f"G0 Z{format_float(settings.safe_z)}")
     else:
         append_custom_command(lines, settings.pen_up_command)
-        append_pen_dwell(lines, settings, "up")
+        append_pen_dwell(lines, settings, "up", requires_transition=False)
 
     previous_machine = None
     previous_motor_theta = 0.0

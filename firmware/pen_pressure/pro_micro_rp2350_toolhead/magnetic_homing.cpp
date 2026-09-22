@@ -69,7 +69,7 @@ void MagneticHomingController::publishNormalPrintStatus() {
   // GP27 is safe to reuse only while the magnetic protocol is completely
   // idle. The status itself is additionally disabled until its controller
   // endpoint and the M5 clearance behavior have passed commissioning.
-  const bool ready = GP27_NORMAL_STATUS_ENABLED && !armActive() &&
+  const bool ready = GP27_NORMAL_STATUS_ENABLED && state_ == MagneticState::DISARMED &&
                      statusFlag(STATUS_CORE0_READY) && statusFlag(STATUS_CORE1_READY) &&
                      !statusFlag(STATUS_PRESSURE_FAULT) && !statusFlag(STATUS_MAG_FAULT) &&
                      (statusFlag(STATUS_CONTACT_READY) || statusFlag(STATUS_CLEAR_READY));

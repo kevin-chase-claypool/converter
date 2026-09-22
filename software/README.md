@@ -31,7 +31,9 @@ Requires `PySide6` (`pip install PySide6`).
 - `M5` / `M3` pen up / down by default. `Z` moves are available only when
   **Use Z axis** is deliberately enabled; do not enable it for this machine,
   whose controller's Z slot is unwired. M3/M5 moves include a
-  `G4` settle dwell after each (from `Pen cycle ms`) for the firmware handshake
+  `G4` settle dwell after each by default. After commissioning, the optional
+  **Wait for GP27 toolhead ready** setting replaces those dwells with the
+  RP23CNC-resident `G65 P115` bounded acknowledgement macro.
 - `M2` at end
 
 The converter normalizes the clipped SVG around its geometric center before
@@ -88,7 +90,12 @@ X/Y-only output, and preview/G-code parity.
   defaults to 12 for the 60T→720T pulley pair).
   - **Theta tangential speed mm/min** is the requested surface speed caused by
     A-axis bed rotation during drawing. It does not change X/Y-only output.
-- **Pen** — Z heights, pen cycle, pen up/down commands, and Use Z.
+- **Pen** — Z heights, pen cycle, pen up/down commands, Use Z, and the
+  disabled-by-default **Wait for GP27 toolhead ready** option.
+  - Enable that option only after the `P115.macro` file is installed on the
+    RP23CNC, GP27/U3-to-`PRB` polarity is verified, and the selected pen has
+    passed contact/clear qualification. It replaces fixed `G4` dwells with a
+    bounded controller-side acknowledgement; it is not a host-PC serial wait.
   - **Curve round bias** (`round_bias`, default 0.05) trades lowest-cost motion vs.
     well-rounded curves. `0` = pick the cheapest theta per segment (tends to
     axis-lock, flatter curves); higher values bias theta toward the path tangent so
@@ -138,6 +145,9 @@ X/Y-only output, and preview/G-code parity.
 
 - Leave **Use Z axis** unchecked and keep `Pen up cmd = M5`, `Pen down cmd = M3` —
   pen height is owned by the force-control loop, not commanded Z.
+- Leave **Wait for GP27 toolhead ready** unchecked until its commissioning
+  tests pass. When checked, the converter emits `G65 P115 Q0` after its
+  opening M5 and `G65 P115 Q1` after every subsequent M3/M5 transition.
 - The converter has no XY-only export mode: every generated production program
   retains its planned A-axis words.
 - The converter does not apply a pen/TMAG XY tool offset. Generated XY positions

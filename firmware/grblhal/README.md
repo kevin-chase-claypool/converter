@@ -48,6 +48,10 @@ actual GP27/U3 motor-inert PRB/G38 transition checks, so the blue return is now
 at `PRB`. It does not authorize P100 motion: macro/parameter semantics, the
 normal-status interval, and all Q3/Q4 commissioning gates remain open.
 
+`macros/P115.macro` is source-ready for the later normal-print GP27
+acknowledgement. It performs bounded `PRB` polling only; it never commands an
+axis, Aux0, M3, or M5. It is not yet installed or enabled on the controller.
+
 ## Current records
 
 - [`config/build-record.md`](config/build-record.md): build provenance and

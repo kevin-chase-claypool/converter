@@ -231,10 +231,17 @@ normal-print status cannot be mistaken for a P100 reply. F-08 must validate
 that interval at the selected controller input.
 
 Outside P100, firmware can assert GP27 only after a commissioned stable-force
-window (`M3`) or a commissioned proven-clear state (`M5`). The output gate is
-false in source, so this revision neither changes P100 behavior nor creates a
-controller wait. Enabling it requires F-08 polarity/endpoint evidence, T-01H
-clearance evidence, and a separate RP23CNC bounded-timeout wait/alarm feature.
+window (`M3`) or a commissioned proven-clear state (`M5`). The source now has
+the controller-resident `P115.macro`: `Q1` requires GP27 to clear then assert
+for each new M3/M5 completion, while `Q0` accepts an already-clear program
+opening. It has 0.50 s stale-state and 5.00 s completion bounds and faults
+with error 39 before later motion. P115 never commands motion, M3/M5, or Aux0.
+
+The output gate and converter option remain false by default, so this revision
+does not change P100 behavior or live drawing. Enabling them requires F-08
+polarity/endpoint evidence, E-07C/E-08C/E-09C sensor evidence, T-01H clearance
+evidence, and a motor-inert P115 `PRB` assert/release/timeout test followed by
+a guarded M3/M5 motion test.
 
 ## Toolhead dual-core behavior
 
@@ -242,11 +249,11 @@ The integrated Arduino-Pico firmware uses the RP2350's two cores:
 
 | Core | Responsibility |
 |---|---|
-| Core 0 | GP29 command, HX711 acquisition, lift/seek/force states, DRV8833 control, faults, USB diagnostics, and watchdog feed |
+| Core 0 | GP29 command, CS1238 acquisition, lift/seek/force states, DRV8833 control, faults, USB diagnostics, and watchdog feed |
 | Core 1 | TMAG5273 sampling, baseline and hysteresis, GP28 handshake, GP27 output, and magnetic timeout |
 
 Shared status is fixed-size atomic data. During magnetic readiness and scan,
-Core 0 requires a verified lifted state and powers down/suspends the HX711;
+Core 0 requires a verified lifted state and powers down/suspends the CS1238;
 pen-pressure measurement is unnecessary while the pen is up. Core 0 feeds the
 hardware watchdog only while Core 1's heartbeat is fresh. A reset, stale core,
 sensor failure, unsafe pressure state, M3 request during scan, or timeout
@@ -254,7 +261,7 @@ suppresses GP27 and leaves the actuator in its safe path.
 
 The compile-time gates in
 [`../pen_pressure/pro_micro_rp2350_toolhead/toolhead_config.h`](../pen_pressure/pro_micro_rp2350_toolhead/toolhead_config.h)
-remain false until T-01/T-02, E-07/E-08, and E-18/M-08 establish installed
+remain false until T-01/T-02, E-07C/E-08C/E-09C, and E-18/M-08 establish installed
 direction, lift reference, force values, and magnetic thresholds.
 
 ## Center raster and centroid

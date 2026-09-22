@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20260921-bounded-gp27-pen-ready-wait"></a>
+### 🟨 2026-09-21 - RP23CNC SOFTWARE/WINDOWS SOFTWARE/IMPLEMENTED - Bounded GP27 pen-ready acknowledgement source
+
+- Status: source support now exists for a controller-resident `P115` PRB wait
+  after M3/M5, but it is not installed, enabled, or hardware-qualified.
+- Category: rp23cnc-software, windows-software, hardware, GP27, PRB, M3/M5,
+  pen synchronization, F-05A.
+- Decision: ADR-007 retains the existing fixed G4 delays as the default. The
+  opt-in converter setting emits `P115 Q0` only after the initial M5 and `P115
+  Q1` after every later M3/M5 transition. Q1 requires an observed inactive
+  state followed by a fresh active state, rather than accepting a stale ready
+  signal. P115 has 0.50 s release and 5.00 s ready bounds and fails with
+  `error[39]` before the next motion block.
+- Safety boundary: P115 only polls PRB and dwells; it contains no motion,
+  M3/M5, Aux0, or actuator output. GP27 normal status is restricted to fully
+  `DISARMED` magnetic state. `GP27_NORMAL_STATUS_ENABLED` and all force/
+  actuator gates remain false; no wiring or controller configuration changed.
+- Verification: converter unit tests (19), macro static safety validation,
+  and integrated RP2350 source compilation passed. Installed grblHAL macro
+  loop semantics, PRB polarity, timeout behavior, and no-motion behavior are
+  unverified and are explicitly F-05A work.
+- Next action: copy P115 only to the candidate controller filesystem and
+  complete F-05A with an isolated PRB dry-contact fixture before considering
+  the firmware or converter opt-in gates.
+
 <a id="elog-20260921-integrated-cs1238-backend"></a>
 ### 🟨 2026-09-21 - RP23CNC SOFTWARE/IMPLEMENTED - Integrated toolhead CS1238 backend
 

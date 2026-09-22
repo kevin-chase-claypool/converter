@@ -7,12 +7,13 @@ the grblHAL spindle-enable line as a **mode override**, not a position command.
 
 `M3` requests contact seek and force hold; `M5` requests normal `PEN_CLEAR`.
 The converter follows both with a calibrated fixed `G4` dwell while the
-toolhead reaches the requested state. This is the current no-new-wire
-synchronization method; it is not a controller-visible ready handshake. The
-integrated firmware contains a disabled-by-default GP27 normal-print-status
-path for later use; it changes neither the controller endpoint nor the fixed
-dwell until commissioning and a bounded controller-side wait are separately
-approved.
+toolhead reaches the requested state. This is the default no-new-wire
+synchronization method. The repository also contains an opt-in controller-side
+`P115` acknowledgement path: after each M3/M5 transition it requires GP27/PRB
+to release and then reassert, so the next drawing move cannot use a stale ready
+level. It remains disabled until its full commissioning evidence is recorded;
+it changes neither the existing controller endpoint nor ordinary generated
+programs by default.
 
 [`CONTROL_STRATEGY.md`](CONTROL_STRATEGY.md) is the authoritative behavior
 document for state transitions, force thresholds, per-tool preflight, profile
@@ -77,10 +78,12 @@ work.
   **not** enable automatic approach, a target, or a force limit until the
   load-cell force path/signal discrepancy is isolated.
 - Complete actuator travel, stall, seek-timeout, and safe-fault testing.
-- Decide whether the later `CONTACT_READY`/`TOOL_FAULT` handshake is necessary
-  after the fixed-dwell version is proven. If adopted, complete F-08 input
-  polarity/endpoint evidence, T-01H M5 clearance evidence, and a controller
-  timeout/alarm implementation before enabling `GP27_NORMAL_STATUS_ENABLED`.
+- Do not enable normal-print GP27 status or the converter's **Wait for GP27
+  toolhead ready** option until F-05A proves installed PRB polarity and `P115`
+  timeout behavior, T-01H proves normal M5 clearance, and the CS1238/
+  actuator gates prove truthful contact and clear status. The macro itself is
+  bounded and raises controller `error[39]`; it must be copied to the
+  controller filesystem and tested against a safe PRB fixture first.
 - Complete the remaining E-18/F-08 macro and coordinate stages for the Pro
   Micro RP2350 magnetic-output path. The 2026-09-10 motor-inert diagnostic
   passed installed Aux0/U2/GP28, local TMAG scan state, controller-visible PRB
@@ -107,7 +110,7 @@ Prototype wiring assumptions mirror `docs/hardware/WIRING_TABLE.md`:
 | RP2350 pin | Connection |
 |---|---|
 | `GP29` / `A3` | M3/M5 command input from PC817C U1. The module has an external 10 kΩ pullup to local 3.3 V; an asserted optocoupler pulls GP29 LOW. |
-| `GP27` / `A1` | Conditioned output through U3. During GP28/P100 it is exclusively the readiness/magnetic state; when P100 is idle it can later report contact/clear completion, but that mode is disabled by default. Installed at `LIMA`, candidate `PRB` only after F-08. |
+| `GP27` / `A1` | Conditioned output through U3. During every GP28/P100 state except fully `DISARMED`, it is exclusively the magnetic readiness/threshold state. Only while fully `DISARMED` may it later report contact/clear completion to installed `PRB`; normal-print status remains disabled by default. |
 | `GP28` / `A2` | Two-phase arm input from PC817C U2. An assertion pulls GP28 LOW: first arm requests readiness ACK, release clears it, second arm exposes threshold state on GP27. |
 | `GP2` | `LIFT_HOME` normally-open microswitch to local `TOOL_GND`. Firmware uses `INPUT_PULLUP`; released reads HIGH and the fully retracted carriage reads LOW. The current implementation reports this in native-USB and GP20/GP21 service-UART telemetry only; it does not yet control motor motion. |
 | `GP4` | DRV8833 `IN1` |
@@ -121,10 +124,11 @@ Prototype wiring assumptions mirror `docs/hardware/WIRING_TABLE.md`:
 The integrated sketch divides work across the RP2350 cores. Core 0 owns the
 pressure state machine, CS1238, DRV8833, GP29, faults, telemetry, and watchdog.
 Core 1 owns the TMAG5273, GP28 two-phase arm/readiness handshake, and GP27
-output arbitration. GP28 activity always suppresses normal-print status; Core
-1 first forces GP27 inactive for 20 ms before issuing a fresh magnetic ACK.
-Outside P100, it can expose Core 0's stable-contact or proven-clear status only
-when the explicit gate is enabled. Fixed-size atomics carry status between cores.
+output arbitration. Every armed, release-wait, or re-arm P100 state suppresses
+normal-print status; Core 1 first forces GP27 inactive for 20 ms before issuing
+a fresh magnetic ACK. Only in fully `DISARMED` state can it expose Core 0's
+stable-contact or proven-clear status, and only when the explicit gate is
+enabled. Fixed-size atomics carry status between cores.
 During a magnetic scan, a verified lifted state is required and the CS1238 is
 powered down because pressure measurement is unnecessary.
 

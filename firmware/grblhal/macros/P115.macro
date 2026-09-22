@@ -1,0 +1,41 @@
+(P115 - bounded GP27/PRB normal-print acknowledgement wait.)
+(Call immediately after M3 or M5. Q1 requires a new low-to-high completion edge; Q0 accepts an already-clear startup state.)
+(Requires GP27/U3 -> PRB, $6=1, filesystem macros, NGC expressions, and enabled normal-print status.)
+(Do not call while GP28/P100 is active. Error 39 stops the program before the next motion block.)
+
+#31 = #17
+#<poll_s> = 0.02
+#<release_wait_s> = 0.50
+#<ready_wait_s> = 5.00
+
+o1150 if [[#31 NE 0] AND [#31 NE 1]]
+  (print,P115 invalid Q: use Q0 for initial clear or Q1 after an M3/M5 transition)
+  o1150 error[39]
+o1150 endif
+
+(Q1 rejects a stale ready level from the preceding pen state.)
+o1151 if [#31 EQ 1]
+  #<remaining_s> = #<release_wait_s>
+  o1152 while [[#<_probe_state> NE 0] AND [#<remaining_s> GT 0]]
+    G4 P[#<poll_s>]
+    #<remaining_s> = [#<remaining_s> - #<poll_s>]
+  o1152 endwhile
+  o1153 if [#<_probe_state> NE 0]
+    (print,P115 command completion did not clear its prior ready state)
+    o1153 error[39]
+  o1153 endif
+o1151 endif
+
+(Both M3 contact-ready and M5 pen-clear complete by asserting GP27/PRB.)
+#<remaining_s> = #<ready_wait_s>
+o1154 while [[#<_probe_state> NE 1] AND [#<remaining_s> GT 0]]
+  G4 P[#<poll_s>]
+  #<remaining_s> = [#<remaining_s> - #<poll_s>]
+o1154 endwhile
+o1155 if [#<_probe_state> NE 1]
+  (print,P115 toolhead ready acknowledgement timed out)
+  o1155 error[39]
+o1155 endif
+
+(print,P115 toolhead completion acknowledged)
+o115 return [1]

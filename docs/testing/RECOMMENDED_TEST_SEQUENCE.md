@@ -53,7 +53,10 @@ conditions in the test plan.
    probing. Keep the routed GP27 return assigned to `LIMA` until F-08 and its
    later GP27/U3 path check pass.
 12. **F-05 — M3/M5 tool-output behavior.** Establish the actual controller
-   ENA/AUX0 output states and fail-safe state.
+   ENA/AUX0 output states and fail-safe state. Then perform **F-05A** using an
+   isolated PRB dry-contact fixture: prove `P115 Q0` and Q1 success, stale-high
+   rejection, low/delayed timeout, and `error[39]`, with no motion or actuator
+   energized. Do not enable normal GP27 status or converter P115 emission yet.
 13. **E-18 — Installed PC817/TMAG interface.** The assembled board has passed
     its simulated bench test; now verify it against the actual RP23CNC
     terminals and complete the TMAG5273 portion.

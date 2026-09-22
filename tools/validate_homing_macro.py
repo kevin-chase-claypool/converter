@@ -13,6 +13,7 @@ HOME_MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P111.macro"
 INDEX_SURVEY_MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P112.macro"
 WRAPPER_MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P113.macro"
 NESTED_DIAGNOSTIC_MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P114.macro"
+TOOLHEAD_WAIT_MACRO = ROOT / "firmware" / "grblhal" / "macros" / "P115.macro"
 
 
 def assignment(text: str, name: str) -> float:
@@ -212,6 +213,39 @@ def validate_registration_wrapper_macros() -> None:
     )
 
 
+def validate_toolhead_wait_macro() -> None:
+    text = TOOLHEAD_WAIT_MACRO.read_text(encoding="utf-8")
+    lower = text.lower()
+    validate_flow_control(text)
+    validate_line_comments(text)
+    required = [
+        "#31 = #17",
+        "#<_probe_state>",
+        "#<poll_s> = 0.02",
+        "#<release_wait_s> = 0.50",
+        "#<ready_wait_s> = 5.00",
+        "o1150 if [[#31 ne 0] and [#31 ne 1]]",
+        "o1151 if [#31 eq 1]",
+        "o1152 while [[#<_probe_state> ne 0] and [#<remaining_s> gt 0]]",
+        "o1154 while [[#<_probe_state> ne 1] and [#<remaining_s> gt 0]]",
+        "o1153 error[39]",
+        "o1155 error[39]",
+        "o115 return [1]",
+    ]
+    for token in required:
+        assert token in lower, f"P115 missing required safety token: {token}"
+    commands = [
+        line.strip().lower()
+        for line in text.splitlines()
+        if line.strip() and not line.lstrip().startswith("(") and not line.lstrip().startswith("#")
+    ]
+    forbidden = ("m3", "m5", "m64", "m65", "g0", "g1", "g38", "$h")
+    for token in forbidden:
+        assert not any(token in line for line in commands), (
+            f"P115 must only observe GP27, not command {token}"
+        )
+
+
 def validate_outer_index_survey_macro() -> None:
     text = INDEX_SURVEY_MACRO.read_text(encoding="utf-8")
     lower = text.lower()
@@ -382,6 +416,7 @@ def main() -> None:
     validate_installed_aux_polarity(text)
     validate_isolated_home_macro()
     validate_registration_wrapper_macros()
+    validate_toolhead_wait_macro()
     validate_outer_index_survey_macro()
     validate_candidate_scan_rectangle(text)
     validate_candidate_scan_parameters(text)
@@ -389,7 +424,10 @@ def main() -> None:
     validate_centroid_math()
     validate_a_math()
     validate_sensor_to_pen_registration()
-    print(f"P100 validation passed: {MACRO.relative_to(ROOT)}")
+    print(
+        "P100/P115 validation passed: "
+        f"{MACRO.relative_to(ROOT)}, {TOOLHEAD_WAIT_MACRO.relative_to(ROOT)}"
+    )
 
 
 if __name__ == "__main__":

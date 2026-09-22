@@ -1,4 +1,5 @@
 import math
+import re
 from dataclasses import dataclass, field, fields
 
 
@@ -75,6 +76,10 @@ class Settings:
     pen_down_ms: float = 600.0
     pen_up_command: str = "M5"
     pen_down_command: str = "M3"
+    # Emits the controller-resident P115 acknowledgement macro after each
+    # M3/M5 transition. It is deliberately opt-in until the CS1238 force path,
+    # normal M5 clearance, and GP27/PRB endpoint are commissioned.
+    toolhead_status_handshake: bool = False
     flip_y: bool = True
     # This machine exposes a Z slot only to enable A in the controller build;
     # its pen contract is M3/M5, not physical Z motion.
@@ -143,6 +148,7 @@ CHECKBOX_FIELDS = (
     ("Shading", "raster_shading", "Raster shading", False),
     ("Theta kinematics", "monotonic_theta", "Monotonic theta (r-theta style)", True),
     ("Pen", "include_z", "Use Z axis for pen up/down", False),
+    ("Pen", "toolhead_status_handshake", "Wait for GP27 toolhead ready (commissioned only)", False),
 )
 
 SETTING_TYPES = {field.name: field.type for field in fields(Settings)}
@@ -239,4 +245,17 @@ def validate_settings(settings):
         raise ValueError("bed margin must leave a positive drawable bed radius.")
     if str(settings.theta_axis).strip().upper() != "A":
         raise ValueError("theta axis must be A for this X/Y/A plotter.")
+    if settings.toolhead_status_handshake:
+        if settings.include_z:
+            raise ValueError(
+                "GP27 toolhead-ready waiting requires the M3/M5 pen contract; disable Use Z axis."
+            )
+        if not re.search(r"\bM5\b", str(settings.pen_up_command), flags=re.IGNORECASE):
+            raise ValueError(
+                "GP27 toolhead-ready waiting requires an M5 pen-up command."
+            )
+        if not re.search(r"\bM3\b", str(settings.pen_down_command), flags=re.IGNORECASE):
+            raise ValueError(
+                "GP27 toolhead-ready waiting requires an M3 pen-down command."
+            )
     return settings

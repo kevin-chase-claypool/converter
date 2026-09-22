@@ -41,6 +41,16 @@ diagnostic printed both P101 and P114 PASS messages before the verified P113
 run, proving that this grblHAL filesystem build returns correctly from a
 nested macro invocation.
 
+`P115.macro` is the normal-print toolhead acknowledgement wait. The converter
+can optionally emit `G65 P115 Q0` after its opening M5 and `G65 P115 Q1` after
+each later M3/M5 transition. Q1 first waits for GP27/`PRB` to clear so an old
+ready level cannot satisfy a new command, then waits for the new assertion. Q0
+accepts an already-proven-clear opening state. Both paths use finite 0.50 s
+release and 5.00 s completion bounds and raise error 39 before following
+motion on failure. `P115` never issues a motion, M3/M5, or Aux0 command.
+It must not be uploaded, selected in the converter, or used during P100 until
+the separate normal-print commissioning gates pass.
+
 `P112.macro` is the next **survey-only** A-index stage. After fresh P111 and a
 successful Q5, run `G65 P112` without jogging X/Y/A between them. P112 moves
 the TMAG along +X to G53 X `-10.5` mm: the measured `223.675804` mm radius

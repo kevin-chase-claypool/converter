@@ -81,6 +81,47 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         self.assertNotRegex(gcode, r"(?m)(?:^|\s)Z[-+0-9.]")
         self.assertTrue(any(line.startswith("G1 ") and " A" in line for line in lines))
 
+    def test_commissioned_gp27_handshake_replaces_fixed_pen_dwells(self):
+        contours = [[(-25.0, 0.0), (25.0, 0.0)]]
+        gcode = converter.contours_to_gcode(
+            contours,
+            converter.Settings(toolhead_status_handshake=True),
+        )
+        lines = gcode.splitlines()
+
+        # The opening M5 may already be clear. Every later transition must
+        # prove a new GP27 low-to-high completion edge before motion continues.
+        self.assertIn("M5", lines)
+        self.assertIn("M3", lines)
+        self.assertEqual(lines.count("G65 P115 Q0"), 1)
+        self.assertEqual(lines.count("G65 P115 Q1"), 2)
+        self.assertNotIn("G4 P0.3", lines)
+        self.assertNotIn("G4 P0.6", lines)
+
+        first_m3 = lines.index("M3")
+        self.assertEqual(lines[first_m3 + 1], "G65 P115 Q1")
+        self.assertTrue(lines[first_m3 + 2].startswith("G1 F"))
+
+    def test_gp27_handshake_rejects_non_m3_m5_pen_contract(self):
+        with self.assertRaisesRegex(ValueError, "M5 pen-up"):
+            converter.validate_settings(
+                converter.Settings(
+                    toolhead_status_handshake=True,
+                    pen_up_command="",
+                )
+            )
+        with self.assertRaisesRegex(ValueError, "M3 pen-down"):
+            converter.validate_settings(
+                converter.Settings(
+                    toolhead_status_handshake=True,
+                    pen_down_command="G4 P0.2",
+                )
+            )
+        with self.assertRaisesRegex(ValueError, "disable Use Z axis"):
+            converter.validate_settings(
+                converter.Settings(toolhead_status_handshake=True, include_z=True)
+            )
+
     def test_svg_coordinates_are_centered_in_g54_before_emission_and_preview(self):
         contours = [[(100.0, 100.0), (150.0, 100.0), (100.0, 150.0)]]
         settings = self.settings()

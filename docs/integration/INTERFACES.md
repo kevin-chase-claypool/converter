@@ -23,6 +23,7 @@ The converter emits:
 | `M3` | Toolhead ENGAGE: seek paper, then hold target force |
 | `M5` | Toolhead PEN_CLEAR: release paper by load-cell threshold, then add a calibrated clearance pulse |
 | `G4 P...` | Fixed toolhead settling delay |
+| `G65 P115 Q0/Q1` | Optional RP23CNC-local GP27/`PRB` completion wait; `Q0` is the opening clear check and `Q1` requires a new M3/M5 completion edge |
 | `M2` | Program end |
 
 Unknown or unsupported commands must cause an explicit error during test, not
@@ -254,10 +255,14 @@ Minimum interface:
 | TOOL_FAULT | Toolhead cannot safely draw | Active/fault |
 | CONTACT_READY, optional | Contact force is stable; later the same GP27/U3 path may also report proven M5 clear outside P100 | Not ready |
 
-Version 1 may use only ENGAGE/PEN_CLEAR plus fixed `G4` delays. A later plugin may
-feed-hold until `CONTACT_READY` or alarm on `TOOL_FAULT`. The firmware-side
-normal-print status is present but disabled by default; no grblHAL wait,
-endpoint retermination, or G-code behavior changes in this revision.
+Version 1 continues to default to ENGAGE/PEN_CLEAR plus fixed `G4` delays. The
+source-ready optional alternative is the controller-resident `P115.macro`, not
+a host-PC wait: it reads the already installed GP27/U3-to-`PRB` input, requires
+a fresh low-to-high completion edge for every ordinary M3/M5 transition, and
+raises error 39 on its bounded timeout before later motion. The converter
+emits it only through an explicit disabled-by-default setting. No firmware
+gate, controller macro file, or converter setting may be enabled until the
+specified force, clear, and GP27 tests pass.
 
 `M5` is not the toolhead's absolute position-reference command. The planned
 local `GP2` switch establishes `LIFT_HOME` only at boot, recovery, or an

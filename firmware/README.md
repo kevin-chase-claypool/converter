@@ -43,15 +43,15 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   ratio. Configure grblHAL's A steps-per-unit as *motor steps per degree*; do
   **not** reapply the ratio. Or set `Theta ratio = 1` in the host and own the
   ratio here. Pick exactly one place.
-- **Settle handshake** - the host emits a `G4` dwell after each `M3`/`M5`, from
-  its `Pen cycle ms`, so grblHAL pauses for the pen to clear the paper before
-  travel and reach paper before drawing. Normal `M5` ends at the load-cell
+- **Settle handshake** - fixed `G4` dwells remain the default. The optional
+  controller-resident `P115.macro` instead observes GP27/`PRB` after M3/M5:
+  it requires a new inactive-to-active completion edge, then returns only when
+  contact-ready or pen-clear is proven. Its finite timeout raises error 39
+  before the following motion block. The converter emits `P115` only when its
+  commissioning-only GP27 option is enabled. Normal `M5` ends at the load-cell
   release threshold plus a calibrated clearance pulse; it does not travel to
-  the distant `LIFT_HOME` switch. The toolhead firmware now has a
-  disabled-by-default GP27 normal-print status guardrail, but grblHAL still
-  uses the fixed dwell: no controller wait is enabled. A future bounded-timeout
-  controller feature can consume that status after F-08 and force/clearance
-  commissioning pass.
+  the distant `LIFT_HOME` switch. `P115` and the toolhead GP27 output remain
+  disabled until F-08, force, and clearance commissioning pass.
 - **Homing and bed registration** - X/Y physical switches establish machine
   coordinates. A controller-resident `P100.macro` then uses the existing
   Aux0/GP28 arm and GP27/U3 return to capture a full center-magnet raster,

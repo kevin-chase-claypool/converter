@@ -41,8 +41,10 @@ toolhead loop into an RP23CNC plugin or second core.
 - One Pro Micro RP2350 owns both pressure and magnetic toolhead behavior.
 - Toolhead firmware must keep sensor/control work bounded and default to a safe
   lift/off state after reset, fault, or invalid command combinations.
-- Version 1 continues to use M3/M5 plus fixed G4 settling delays; dedicated
-  `CONTACT_READY` and `TOOL_FAULT` returns remain possible later upgrades.
+- The default remains M3/M5 plus fixed G4 settling delays. ADR-007 adds a
+  commissioning-gated, opt-in GP27/PRB `P115` completion acknowledgement; it
+  does not change the normal program path until the required bench evidence
+  exists.
 - Toolhead and RP23CNC grounds remain isolated across the PC817C interface.
 - Replacing this controller placement requires a new superseding ADR and new
   wiring, timing, and safety evidence.
