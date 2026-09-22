@@ -3,11 +3,11 @@
 <a id="elog-20260922-e09e-installed-pen-direction-result"></a>
 ### 🟨 2026-09-22 - HARDWARE/PARTIAL - E-09E installed-pen force-direction result
 
-- Status: a 5 ms loading trace confirms the sign and shows a locally consistent high-force end, but does not yet accept a production profile.
+- Status: the first 5 ms load/unload cycle confirms the sign, high-force repeatability, and clear return, but does not yet accept a production profile.
 - Category: hardware, E-09E, E-09C, CS1238, load cell, kitchen scale.
-- Measurement: raw/tare deltas were `-59087/-312723` at `40.7 g`, `5999/-247637` at `62.5 g`, and `187766/-65870` at `2.2 g`. A fault-free 10 ms UP pulse reduced the displayed force from `35.5 g` to `2.2 g`. The later 5 ms trace reached `-327855`, `-335896`, `-340258`, `-349022`, `-352240`, and `-355688` raw delta across 64.1–70.0 g; an isolated `-605540` at 67.3 g was excluded because the subsequent 68.1 g record returned to trend.
-- Result: raw moved negative relative to the `253,636 raw` clear tare, confirming the E-09C opposite-direction selection. The non-outlier 64.1–70.0 g trace has a local 4,717 raw/g slope, close to the 5,038.77 raw/g downward-mass result. This retains, but does not validate, the staged profile as a starting point. Ten milliseconds is too coarse near target; E-09E now provides 5 ms increments. The staged M5 air-gap candidate is reduced from 500 ms to 100 ms based only on observed motor speed; it remains gated by T-01H.
-- Next action: complete a 5 ms unloading trace to clear and repeat a fresh-tare loading series with pulse count/duration before any actuator or pressure-control gate.
+- Measurement: raw/tare deltas were `-59087/-312723` at `40.7 g`, `5999/-247637` at `62.5 g`, and `187766/-65870` at `2.2 g`. A fault-free 10 ms UP pulse reduced the displayed force from `35.5 g` to `2.2 g`. The later 5 ms trace reached `-327855`, `-335896`, `-340258`, `-349022`, `-352240`, and `-355688` raw delta across 64.1–70.0 g; an isolated `-605540` at 67.3 g was excluded because the subsequent 68.1 g record returned to trend. The 5 ms unloading trace returned to `+13006` then `+11146` raw delta at 0.0 g.
+- Result: raw moved negative relative to the `253,636 raw` clear tare, confirming the E-09C opposite-direction selection. The non-outlier 64.1–70.0 g trace has a local 4,717 raw/g slope, close to the 5,038.77 raw/g downward-mass result, and the 69.5–63.6 g unload segment overlaps it. The 40–50 g region has material approach-path hysteresis, so the `-251938 raw` 50 g candidate remains only a provisional center rather than a final control law. Ten milliseconds is too coarse near target; E-09E now provides 5 ms increments. The staged M5 air-gap candidate is reduced from 500 ms to 100 ms based only on observed motor speed; it remains gated by T-01H.
+- Next action: repeat a fresh-tare 5 ms loading series with pulse count/duration before any actuator or pressure-control gate.
 
 <a id="elog-20260922-e09e-serial-monitor-shortcuts"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - E-09E Arduino Serial Monitor operation

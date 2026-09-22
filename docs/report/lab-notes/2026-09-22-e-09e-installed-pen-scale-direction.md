@@ -66,9 +66,40 @@ staged scale as a provisional controller starting point. It does **not** prove
 the entire trace is linear: the low and mid-force observations require an
 unloading/repeat series before a production force profile can be accepted.
 
+### 5 ms unloading trace
+
+The operator then used 5 ms UP pulses and recorded the following unloading
+path. Clear-state readings returned to within `+11,146` to `+13,006 raw` of
+the original tare, which is inside the staged 3 g (`15,116 raw`) release band.
+
+| Time | Scale g | Raw | Tare delta raw |
+|---|---:|---:|---:|
+| 10:37:25 | 69.5 | -105,591 | -357,289 |
+| 10:37:41 | 68.8 | -100,667 | -352,365 |
+| 10:37:55 | 68.0 | -96,288 | -347,986 |
+| 10:38:09 | 67.4 | -92,251 | -343,949 |
+| 10:38:27 | 66.6 | -84,996 | -336,694 |
+| 10:38:41 | 65.9 | -82,983 | -334,681 |
+| 10:38:57 | 65.0 | -78,205 | -329,903 |
+| 10:39:13 | 63.6 | -70,944 | -322,642 |
+| 10:39:26 | 52.5 | -62,118 | -313,816 |
+| 10:39:43 | 40.4 | 80,943 | -170,755 |
+| 10:39:58 | 41.0 | 88,681 | -163,017 |
+| 10:40:37 | 20.0 | 112,318 | -139,380 |
+| 10:41:05 | 0.4 | 232,764 | -18,934 |
+| 10:41:20 | 0.0 | 264,704 | +13,006 |
+| 10:41:38 | 0.0 | 262,844 | +11,146 |
+
+The 69.5–63.6 g segment is again locally consistent and overlaps the loading
+trace. The trace also exposes material mechanical hysteresis below about 60 g:
+the same approximate 40–50 g scale region spans `-170,755` through `-313,816`
+raw delta depending on approach history. Therefore the 50 g target candidate
+(`-251,938 raw`) remains a reasonable provisional center, but the current
+evidence does not support a narrow precision claim or a final force-loop gain.
+
 ## Difficulties and next action
 
-The optional Windows application did not complete its adapter-COM connection, so Arduino IDE Serial Monitor provided explicit one-pulse commands and readable raw results. Next, unload from the present force using 5 ms UP pulses, letting the scale settle and recording every raw line back to clear. Then repeat one fresh-tare loading series, retaining pulse duration/count and the complete `READING` line. Do not enable `PRESSURE_CALIBRATION_VALID`, actuator control, M3/M5 force control, or GP27 normal status from this observation.
+The optional Windows application did not complete its adapter-COM connection, so Arduino IDE Serial Monitor provided explicit one-pulse commands and readable raw results. The first 5 ms load/unload cycle now reaches a stable clear return. Repeat one fresh-tare loading series, retaining pulse duration/count and the complete `READING` line, before any gain or threshold is accepted. Do not enable `PRESSURE_CALIBRATION_VALID`, actuator control, M3/M5 force control, or GP27 normal status from this observation.
 
 ## References
 
