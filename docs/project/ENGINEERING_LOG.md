@@ -1,5 +1,18 @@
 # Engineering Log
 
+<a id="elog-20260922-trend-gated-hold"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - trend-gate force-hold corrections
+
+- Evidence: after repeated M3/M5 re-contact tests, the pen kept making
+  corrective probing movements instead of resting at a usable force. The hold
+  loop allowed an UP correction on one rolling-average high reading, making it
+  sensitive to mechanical stiction/noise.
+- Change: both UP and DOWN hold corrections now require three same-direction
+  out-of-band observations separated by 25 ms and then share a 250 ms cadence.
+  Each 5 ms motor pulse resets the evidence, so a fresh later trend is needed.
+- Verification: exact Pro Micro RP2350 compilation remains required; T-03
+  stationary hold must confirm reduced hunting before drawing claims.
+
 <a id="elog-20260922-bound-contact-envelope"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - bound trend contact to a usable force envelope
 

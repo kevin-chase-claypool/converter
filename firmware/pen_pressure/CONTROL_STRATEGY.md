@@ -128,12 +128,12 @@ zero refer to the actual released, clear-of-paper mechanism state.
 ### Bounded moving-average hold
 
 `HOLD_FORCE` uses the 16-sample moving-average force value. It does not leave
-a PWM motor command energized between 250 ms correction decisions. Within the
-30–40 g target band it sleeps the driver. Above the band it sends a single
-full-drive 5 ms UP relief pulse immediately; below the band it sends a single
-5 ms DOWN pulse no more often than once every 250 ms. The next correction is
-based on a later filtered sample after the driver has stopped. The independent
-60 g hard-force guard remains active throughout this state.
+a PWM motor command energized between corrections. Within the 30–40 g target
+band it sleeps the driver. Outside that band, it requires three same-direction
+out-of-band observations separated by 25 ms before issuing one full-drive 5 ms
+UP or DOWN pulse. Both directions are limited to one correction every 250 ms.
+The next correction requires a fresh later trend after the driver has stopped.
+The independent 60 g hard-force guard remains active throughout this state.
 
 ### Confirmed surface response and relative preload
 

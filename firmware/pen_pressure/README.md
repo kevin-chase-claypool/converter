@@ -198,11 +198,12 @@ therefore show `tare_valid=0`; this is expected. M3 after ordinary M5 clearance
 still requires the already-valid release-transition tare.
 
 Once initial contact has been found, `HOLD_FORCE` leaves the driver asleep
-inside the calibrated 30–40 g moving-average band. If force rises above the
-band it immediately applies one 5 ms UP relief pulse; if force is low it may
-apply one 5 ms DOWN pulse only after the 250 ms correction cadence. Every hold
-pulse stops and sleeps before the next filtered decision. This is the current
-supervised anti-overshoot behavior, not a production-qualified tuning result.
+inside the calibrated 30–40 g moving-average band. Outside that band it waits
+for three same-direction out-of-band observations, 25 ms apart, before one
+5 ms UP or DOWN pulse. Both directions share the 250 ms correction cadence.
+Every hold pulse stops and sleeps before a fresh later trend can request the
+next one. This is the current supervised anti-hunting behavior, not a
+production-qualified tuning result.
 
 The 100-pulse limit and two-touch pulse widths are supervised bench candidates:
 the original 160 x 5 ms attempt covered only about 7.5 mm, while the first

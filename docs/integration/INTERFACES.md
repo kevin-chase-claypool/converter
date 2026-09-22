@@ -306,11 +306,11 @@ This released, clear-of-paper baseline prevents the switch-preload force from
 being interpreted as surface contact.
 
 After initial contact, the moving-average force hold is pulse-bounded: it
-sleeps the DRV8833 in the 30–40 g calibrated band, uses one 5 ms UP pulse
-immediately when force rises above that band, and uses one 5 ms DOWN pulse no
-more often than every 250 ms when force is below it. It never leaves a PWM
-command energized for that 250 ms interval. The 60 g hard-force guard remains
-independent and active.
+sleeps the DRV8833 in the 30–40 g calibrated band. Outside that band, it
+requires three same-direction filtered observations, 25 ms apart, before one
+5 ms correction; either direction is then limited to once per 250 ms. It never
+leaves a PWM command energized between corrections. The 60 g hard-force guard
+remains independent and active.
 
 The cold-start pulse/travel limits are provisional values revised after the
 first 160 x 5 ms attempt moved only about 7.5 mm and stopped 4.5 mm above

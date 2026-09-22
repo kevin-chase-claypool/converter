@@ -24,6 +24,16 @@ can still mimic paper contact. The next source revision retains trend logic but
 limits an accepted reference to a provisional 20 g envelope and restores the
 absolute 60 g guard.
 
+## 2026-09-22 hold-loop hunting observation
+
+During later paper contact testing, the pen continued making correction probes
+instead of resting near a usable drag force. The existing hold implementation
+allowed one high rolling-average reading to command an immediate 5 ms UP pulse,
+whereas only low-force movement was cadence-limited. This is unsuitable for
+the observed coarse/stiction-prone mechanism. The next source revision makes
+both directions require three same-direction out-of-band observations separated
+by 25 ms and limits either direction to one correction per 250 ms.
+
 ## Objective
 
 Record the initial full-retract-to-paper condition that exposed why the

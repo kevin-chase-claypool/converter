@@ -98,6 +98,11 @@ constexpr uint32_t HOME_TUNE_TIMEOUT_MS = 7000;
 // Existing post-contact force-hold cadence; home seeking has its own faster
 // settle constant above and does not retune the moving-average control loop.
 constexpr uint32_t CS1238_CORRECTION_PERIOD_MS = 250;
+// Force hold ignores one-off rolling-average changes. A correction requires
+// three same-direction out-of-band observations separated by one complete
+// 16-sample window, then remains cadence-limited in both directions.
+constexpr uint8_t HOLD_TREND_REQUIRED_WINDOWS = 3;
+constexpr uint32_t HOLD_TREND_WINDOW_MS = 25;
 // The installed mechanism responds materially to a 5 ms full-drive pulse.
 // Hold control therefore uses the same bounded pulse, never a continuous PWM
 // command held for an entire correction interval.

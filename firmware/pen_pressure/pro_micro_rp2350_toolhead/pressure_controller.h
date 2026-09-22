@@ -78,6 +78,7 @@ class PressureController {
   uint32_t home_surface_confirm_started_ms_ = 0;
   uint32_t home_surface_confirm_last_ms_ = 0;
   uint32_t hold_correction_pulse_started_ms_ = 0;
+  uint32_t hold_out_of_band_last_ms_ = 0;
 
   bool manual_override_ = false;
   bool manual_engage_ = false;
@@ -113,6 +114,8 @@ class PressureController {
   uint16_t home_tune_pulse_count_ = 0;
   uint8_t home_seek_pulses_while_switch_active_ = 0;
   uint8_t home_surface_confirm_windows_ = 0;
+  uint8_t hold_out_of_band_windows_ = 0;
+  int8_t hold_out_of_band_direction_ = 0;
 
   const char *fault_reason_ = "none";
 };

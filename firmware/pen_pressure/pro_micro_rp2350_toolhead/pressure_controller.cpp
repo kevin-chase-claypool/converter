@@ -65,6 +65,9 @@ void PressureController::setState(PressureState next) {
   if (next != PressureState::HOLD_FORCE) {
     contact_ready_windows_ = 0;
     hold_correction_pulse_active_ = false;
+    hold_out_of_band_windows_ = 0;
+    hold_out_of_band_direction_ = 0;
+    hold_out_of_band_last_ms_ = 0;
   }
   if (next != PressureState::HOME_SEEK_CONTACT &&
       next != PressureState::HOME_TUNE_FORCE) {
@@ -753,20 +756,39 @@ void PressureController::service() {
       const long error = activeTargetForceRaw() - force;
       const bool above_hold_band = error < -CONTACT_READY_TOLERANCE_RAW;
       const bool below_hold_band = error > CONTACT_READY_TOLERANCE_RAW;
-      // Correct an over-force reading immediately, rather than waiting up to
-      // the normal cadence and risking the 60 g guard while the mechanics
-      // settle. Low force uses the slower cadence to avoid hunting.
-      const bool correction_due = above_hold_band ||
-                                  (below_hold_band &&
-                                   now - last_force_correction_ms_ >=
-                                       CS1238_CORRECTION_PERIOD_MS);
-      if (!correction_due) {
+      const int8_t correction_direction =
+          above_hold_band ? -1 : (below_hold_band ? 1 : 0);
+      if (correction_direction == 0) {
+        hold_out_of_band_windows_ = 0;
+        hold_out_of_band_direction_ = 0;
         motorStop();
         setDriverEnabled(false);
         break;
       }
 
-      if (above_hold_band) {
+      if (correction_direction != hold_out_of_band_direction_) {
+        hold_out_of_band_direction_ = correction_direction;
+        hold_out_of_band_windows_ = 1;
+        hold_out_of_band_last_ms_ = now;
+      } else if (now - hold_out_of_band_last_ms_ >= HOLD_TREND_WINDOW_MS) {
+        hold_out_of_band_last_ms_ = now;
+        if (hold_out_of_band_windows_ < HOLD_TREND_REQUIRED_WINDOWS) {
+          hold_out_of_band_windows_++;
+        }
+      }
+
+      if (hold_out_of_band_windows_ < HOLD_TREND_REQUIRED_WINDOWS ||
+          now - last_force_correction_ms_ < CS1238_CORRECTION_PERIOD_MS) {
+        motorStop();
+        setDriverEnabled(false);
+        break;
+      }
+
+      // A bounded correction follows only a stable out-of-band trend. Reset
+      // the evidence and require a fresh later trend after the motor stops.
+      hold_out_of_band_windows_ = 0;
+      hold_out_of_band_direction_ = 0;
+      if (correction_direction < 0) {
         motorDrive(LIFT_USES_IN1_PWM, HOLD_CORRECTION_PWM);
       } else {
         motorDrive(SEEK_USES_IN1_PWM, HOLD_CORRECTION_PWM);
