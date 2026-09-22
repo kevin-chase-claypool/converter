@@ -11,6 +11,7 @@ enum class PressureState : uint8_t {
   VERIFY_LIFTED,
   LIFTED,
   MECHANICAL_ENGAGE,
+  HOME_SEEK_CONTACT,
   SEEK_CONTACT,
   HOLD_FORCE,
   RELEASE_TO_CLEAR,
@@ -39,6 +40,7 @@ class PressureController {
   bool commandEngage() const;
   bool driverFaulted() const;
   bool liftHomeActive() const;
+  uint16_t homeSeekPulseCount() const { return home_seek_pulse_count_; }
   bool manualOverride() const { return manual_override_; }
 
  private:
@@ -61,12 +63,17 @@ class PressureController {
   PressureState state_ = PressureState::BOOT;
   uint32_t state_started_ms_ = 0;
   uint32_t last_force_correction_ms_ = 0;
+  uint32_t m3_started_ms_ = 0;
+  uint32_t home_seek_pulse_started_ms_ = 0;
+  uint32_t home_seek_last_pulse_ended_ms_ = 0;
 
   bool manual_override_ = false;
   bool manual_engage_ = false;
   bool cs1238_powered_down_ = false;
   bool new_filtered_sample_ = false;
   bool tare_valid_ = false;
+  bool m3_force_acquired_ = false;
+  bool home_seek_pulse_active_ = false;
 
   long cs1238_raw_ = 0;
   long cs1238_tare_ = 0;
@@ -81,6 +88,8 @@ class PressureController {
   uint8_t tare_count_ = 0;
   uint8_t lift_release_windows_ = 0;
   uint8_t contact_ready_windows_ = 0;
+  uint16_t home_seek_pulse_count_ = 0;
+  uint8_t home_seek_pulses_while_switch_active_ = 0;
 
   const char *fault_reason_ = "none";
 };

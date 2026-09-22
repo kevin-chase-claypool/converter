@@ -52,18 +52,27 @@ constexpr uint32_t PEN_CLEAR_RELEASE_TIMEOUT_MS = 1800;
 // without approaching GP2 LIFT_HOME. It remains staged until 30 M3/M5
 // clearance cycles prove repeatability before PEN_CLEAR_VALID may be enabled.
 constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 100;
-// Staged alternative to raw-based contact seeking. When enabled after the
-// remaining commissioning gates pass, M3/M5 use the mechanically verified
-// 100 ms down/up pair; after the timed M3 preload, the CS1238 moving average
-// resumes bounded force corrections. GP2 remains the maximum-UP limit.
+// Supervised bench build: home to GP2 at startup, use a slow bounded seek when
+// M3 begins at GP2, and retain the measured 100 ms M3/M5 pair between strokes.
+// This is not the production commissioning gate.
 constexpr bool MECHANICAL_PRELOAD_MODE = true; // supervised bench test build
 constexpr uint32_t PEN_ENGAGE_TRAVEL_MS = 100;
 constexpr uint32_t SEEK_TIMEOUT_MS = 1500;
+// E-09F measured about 1.75 mm of travel per 100 ms at full drive. The
+// operator reports about 12 mm from GP2 home to paper; 160 x 5 ms pulses
+// therefore provide about 14 mm of bounded home-seek travel. T-01J must
+// validate this provisional per-tool envelope before normal plotting.
+constexpr uint8_t HOME_SEEK_PULSE_MS = 5;
+constexpr uint16_t HOME_SEEK_MAX_PULSES = 160;
+constexpr uint8_t HOME_SEEK_MAX_SWITCH_ACTIVE_PULSES = 30;
+constexpr uint32_t HOME_SEEK_TIMEOUT_MS = 45000;
+constexpr uint8_t HOME_SEEK_PWM = 255;
 constexpr uint32_t CS1238_CORRECTION_PERIOD_MS = 250;
 constexpr uint8_t CS1238_TARE_SAMPLES = 64;
 // Candidate 25 ms moving-average window at the configured 640 SPS. E-08C
 // must measure actual rate/noise before PRESSURE_CALIBRATION_VALID can be true.
 constexpr uint8_t CS1238_MOVING_AVERAGE_SAMPLES = 16;
+constexpr uint32_t M3_FORCE_ACQUIRE_TIMEOUT_MS = 1500;
 // Used only by the opt-in serial live stream; state and fault events are immediate.
 constexpr uint32_t TELEMETRY_PERIOD_MS = 1000;
 constexpr uint32_t CORE_HEARTBEAT_PERIOD_MS = 10;
@@ -108,6 +117,11 @@ constexpr int16_t HOLD_KP_DEN = 60;
 // the 35 g target).
 constexpr long CONTACT_READY_TOLERANCE_RAW = 25194;
 constexpr uint8_t CONTACT_READY_REQUIRED_WINDOWS = 3;
+
+static_assert(HOME_SEEK_TIMEOUT_MS >
+                  HOME_SEEK_MAX_PULSES *
+                      (HOME_SEEK_PULSE_MS + CS1238_CORRECTION_PERIOD_MS),
+              "Home contact-seek timeout must permit its bounded pulse sequence");
 
 static_assert(!PRESSURE_CALIBRATION_VALID ||
               (CS1238_CONTACT_FORCE_SIGN != 0 && CONTACT_RAW_DELTA > 0 &&

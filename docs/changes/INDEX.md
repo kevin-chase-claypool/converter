@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-020` | rp23cnc-software, hardware | implemented | [Bound Home-Origin Contact Seek](rp23cnc-software/2026/2026-09-22-bound-home-origin-contact-seek.md) |
 | 2026-09-22 | `RPSW-20260922-019` | rp23cnc-software | implemented | [Make integrated toolhead telemetry quiet by default](rp23cnc-software/2026/2026-09-22-quiet-integrated-toolhead-telemetry.md) |
 | 2026-09-22 | `RPSW-20260922-018` | rp23cnc-software | implemented | [Set integrated force target to 35 g and limit to 60 g](rp23cnc-software/2026/2026-09-22-set-integrated-force-target-35g-limit-60g.md) |
 | 2026-09-22 | `RPSW-20260922-017` | rp23cnc-software | verified | [Set integrated lift timeout to 3000 ms](rp23cnc-software/2026/2026-09-22-set-integrated-lift-timeout-3000ms.md) |

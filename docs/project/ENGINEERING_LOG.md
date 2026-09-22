@@ -1,5 +1,35 @@
 # Engineering Log
 
+<a id="elog-20260922-bounded-home-origin-contact-seek"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - bound home-origin M3 contact seek
+
+- Observation: the user's status snapshot showed `pressure=LIFTED`,
+  `lift_home=1`, and a valid tare; they estimated the installed pen was about
+  12 mm above paper. The staged 100 ms M3 motion only restores the much
+  smaller normal clearance gap, so this full-retract start could not be served
+  by that path.
+- Decision: create a distinct `HOME_SEEK_CONTACT` path only when M3 begins at
+  GP2. It applies 5 ms full-drive DOWN pulses, sleeps and waits 250 ms between
+  decisions, and stops when the configured 35 g contact threshold is met.
+  Bound the attempt at 160 pulses, 45 seconds, and 30 pulses with GP2 still
+  pressed; retain the independent 60 g hard-force trip and the quick 100 ms
+  path after normal M5 clearance.
+- Observability: add `home_seek_pulses=<completed>/<limit>` to one-shot and
+  optional live snapshots so the operator can inspect progress without
+  enabling a constantly scrolling monitor.
+- Recovery: after the operator inspects a force fault, `c` may run the
+  bounded UP-to-GP2 recovery even while measured force remains above the hard
+  threshold; the guard continues to block down/hold operation. Fault clear
+  latches manual M5 to prevent a held GP29 M3 from auto-restarting the seek.
+- Verification: Arduino RP2350 build and both documentation-index checks pass;
+  deterministic compile-time decision cases are included. No new firmware has
+  been flashed and no motor movement was performed for this change.
+- Risk: pulse travel and switch-release timing are provisional extrapolations,
+  not a universal mechanical limit. T-02/T-01J supervised bench validation is
+  required before plotting; a fault must be inspected before sending `c`.
+- Next action: flash and run the bounded seek with a clear reachable cutoff
+  and observe pulse count/state via `p`.
+
 <a id="elog-20260922-quiet-toolhead-service-console"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - make service telemetry event-driven
 

@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-020` | implemented | [Bound Home-Origin Contact Seek](2026/2026-09-22-bound-home-origin-contact-seek.md) | `contact-seek`, `cs1238`, `pen-pressure` |
 | 2026-09-22 | `RPSW-20260922-019` | implemented | [Make integrated toolhead telemetry quiet by default](2026/2026-09-22-quiet-integrated-toolhead-telemetry.md) | `serial-monitor`, `telemetry`, `fault-diagnostics`, `cs1238` |
 | 2026-09-22 | `RPSW-20260922-018` | implemented | [Set integrated force target to 35 g and limit to 60 g](2026/2026-09-22-set-integrated-force-target-35g-limit-60g.md) | `cs1238`, `force-target`, `hard-force-limit`, `supervised-bench` |
 | 2026-09-22 | `RPSW-20260922-017` | verified | [Set integrated lift timeout to 3000 ms](2026/2026-09-22-set-integrated-lift-timeout-3000ms.md) | `gp2`, `lift-home`, `timeout` |

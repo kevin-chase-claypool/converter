@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 
+#include "contact_seek_policy.h"
 #include "toolhead_config.h"
 #include "toolhead_shared.h"
 
@@ -43,6 +44,7 @@ const char *PressureController::stateName() const {
     case PressureState::VERIFY_LIFTED: return "VERIFY_LIFTED";
     case PressureState::LIFTED: return "LIFTED";
     case PressureState::MECHANICAL_ENGAGE: return "MECHANICAL_ENGAGE";
+    case PressureState::HOME_SEEK_CONTACT: return "HOME_SEEK_CONTACT";
     case PressureState::SEEK_CONTACT: return "SEEK_CONTACT";
     case PressureState::HOLD_FORCE: return "HOLD_FORCE";
     case PressureState::RELEASE_TO_CLEAR: return "RELEASE_TO_CLEAR";
@@ -60,6 +62,9 @@ void PressureController::setState(PressureState next) {
   }
   if (next != PressureState::HOLD_FORCE) {
     contact_ready_windows_ = 0;
+  }
+  if (next != PressureState::HOME_SEEK_CONTACT) {
+    home_seek_pulse_active_ = false;
   }
   publishSafetyState();
 }
@@ -243,6 +248,10 @@ void PressureController::clearFault() {
     fault_reason_ = "T-01 actuator direction is not commissioned";
     return;
   }
+  // Fault clearing is retract-only. Hold the command low so an asserted GP29
+  // or stale manual M3 cannot restart contact seeking as soon as GP2 is hit.
+  manual_override_ = true;
+  manual_engage_ = false;
   fault_reason_ = "none";
   setState(PressureState::LIFTING);
 }
@@ -272,7 +281,11 @@ void PressureController::service() {
     return;
   }
 
-  if (state_ != PressureState::FAULT && PRESSURE_CALIBRATION_VALID && new_filtered_sample_ &&
+  const bool retracting_to_home = state_ == PressureState::LIFTING ||
+                                  state_ == PressureState::RELEASE_TO_CLEAR ||
+                                  state_ == PressureState::CLEARANCE_LIFT;
+  if (state_ != PressureState::FAULT && !retracting_to_home &&
+      PRESSURE_CALIBRATION_VALID && new_filtered_sample_ &&
       normalizedForceDelta() > HARD_FORCE_RAW_DELTA) {
     enterFault("hard force limit exceeded");
     return;
@@ -344,7 +357,18 @@ void PressureController::service() {
           } else if (!statusFlag(STATUS_CS1238_ONLINE)) {
             enterFault("M3 requested without CS1238 data");
           } else {
-            setState(PressureState::MECHANICAL_ENGAGE);
+            m3_started_ms_ = now;
+            m3_force_acquired_ = false;
+            if (liftHomeActive()) {
+              home_seek_pulse_count_ = 0;
+              home_seek_pulses_while_switch_active_ = 0;
+              home_seek_pulse_active_ = false;
+              home_seek_pulse_started_ms_ = 0;
+              home_seek_last_pulse_ended_ms_ = 0;
+              setState(PressureState::HOME_SEEK_CONTACT);
+            } else {
+              setState(PressureState::MECHANICAL_ENGAGE);
+            }
           }
         } else if (!PRESSURE_CALIBRATION_VALID) {
           enterFault("E-07/E-08 pressure calibration is incomplete");
@@ -358,12 +382,14 @@ void PressureController::service() {
 
     case PressureState::MECHANICAL_ENGAGE:
       if (!engage) {
+        motorStop();
+        setDriverEnabled(false);
         setState(PressureState::CLEARANCE_LIFT);
         break;
       }
-      // The pen is mechanically installed at the desired drawing preload.
-      // This timed move returns from the verified 100 ms clear position;
-      // after it, HOLD_FORCE uses the CS1238 moving average for corrections.
+      // A normal M5 leaves only the measured 100 ms clearance gap. Restore
+      // that short travel quickly; HOLD_FORCE must still acquire force within
+      // M3_FORCE_ACQUIRE_TIMEOUT_MS.
       motorSeek();
       if (now - state_started_ms_ >= PEN_ENGAGE_TRAVEL_MS) {
         motorStop();
@@ -372,17 +398,100 @@ void PressureController::service() {
       }
       break;
 
+    case PressureState::HOME_SEEK_CONTACT: {
+      if (!statusFlag(STATUS_CS1238_ONLINE)) {
+        enterFault("CS1238 lost during home contact seek");
+        break;
+      }
+
+      const toolhead::ContactSeekLimits limits{
+          HOME_SEEK_PULSE_MS, CS1238_CORRECTION_PERIOD_MS,
+          HOME_SEEK_MAX_PULSES, HOME_SEEK_TIMEOUT_MS};
+      const toolhead::ContactSeekStatus seek_status{
+          engage,
+          new_filtered_sample_,
+          normalizedForceDelta(),
+          CONTACT_RAW_DELTA,
+          now,
+          state_started_ms_,
+          home_seek_pulse_active_,
+          home_seek_pulse_started_ms_,
+          home_seek_last_pulse_ended_ms_,
+          home_seek_pulse_count_};
+
+      switch (toolhead::decideContactSeekAction(seek_status, limits)) {
+        case toolhead::ContactSeekAction::WAIT:
+          break;
+        case toolhead::ContactSeekAction::START_PULSE:
+          motorDrive(SEEK_USES_IN1_PWM, HOME_SEEK_PWM);
+          home_seek_pulse_started_ms_ = now;
+          home_seek_pulse_active_ = true;
+          break;
+        case toolhead::ContactSeekAction::STOP_PULSE:
+          motorStop();
+          setDriverEnabled(false);
+          home_seek_pulse_active_ = false;
+          home_seek_pulse_count_++;
+          home_seek_last_pulse_ended_ms_ = now;
+          if (liftHomeActive()) {
+            if (home_seek_pulses_while_switch_active_ <
+                HOME_SEEK_MAX_SWITCH_ACTIVE_PULSES) {
+              home_seek_pulses_while_switch_active_++;
+            }
+            if (home_seek_pulses_while_switch_active_ >=
+                HOME_SEEK_MAX_SWITCH_ACTIVE_PULSES) {
+              enterFault("GP2 home switch stayed active during M3 seek");
+            }
+          } else {
+            home_seek_pulses_while_switch_active_ = 0;
+          }
+          break;
+        case toolhead::ContactSeekAction::CONTACT_FOUND:
+          motorStop();
+          setDriverEnabled(false);
+          home_seek_pulse_active_ = false;
+          m3_force_acquired_ = true;
+          last_force_correction_ms_ = now;
+          setState(PressureState::HOLD_FORCE);
+          break;
+        case toolhead::ContactSeekAction::CANCELLED:
+          motorStop();
+          setDriverEnabled(false);
+          home_seek_pulse_active_ = false;
+          // The 3 g release detector is for force-controlled M5. A cancelled
+          // home seek may still be far above contact, so do only the normal
+          // bounded up-clearance move (or stop sooner at GP2).
+          setState(PressureState::CLEARANCE_LIFT);
+          break;
+        case toolhead::ContactSeekAction::LIMIT_REACHED:
+          motorStop();
+          setDriverEnabled(false);
+          home_seek_pulse_active_ = false;
+          if (home_seek_pulse_count_ >= HOME_SEEK_MAX_PULSES) {
+            enterFault("M3 home contact seek pulse budget exhausted");
+          } else {
+            enterFault("M3 home contact seek timed out");
+          }
+          break;
+      }
+      break;
+    }
+
     case PressureState::SEEK_CONTACT:
       if (!engage) {
         // Normal M5 first proves the no-contact release band, then adds an
         // explicit air-gap pulse. Do not treat a timed boot lift as proof of
         // normal pen clearance.
+        motorStop();
+        setDriverEnabled(false);
         setState(PressureState::RELEASE_TO_CLEAR);
         break;
       }
       motorSeek();
       if (new_filtered_sample_ && normalizedForceDelta() >= CONTACT_RAW_DELTA) {
         motorStop();
+        setDriverEnabled(false);
+        m3_force_acquired_ = true;
         setState(PressureState::HOLD_FORCE);
       } else if (now - state_started_ms_ >= SEEK_TIMEOUT_MS) {
         enterFault("seek timeout; no contact found");
@@ -391,8 +500,24 @@ void PressureController::service() {
 
     case PressureState::HOLD_FORCE:
       if (!engage) {
+        motorStop();
+        setDriverEnabled(false);
         setState(PressureState::CLEARANCE_LIFT);
         break;
+      }
+      if (!statusFlag(STATUS_CS1238_ONLINE)) {
+        enterFault("CS1238 lost during M3 force acquisition");
+        break;
+      }
+      if (!m3_force_acquired_) {
+        if (new_filtered_sample_ &&
+            normalizedForceDelta() >=
+                TARGET_FORCE_RAW_DELTA - CONTACT_READY_TOLERANCE_RAW) {
+          m3_force_acquired_ = true;
+        } else if (now - m3_started_ms_ >= M3_FORCE_ACQUIRE_TIMEOUT_MS) {
+          enterFault("M3 force acquisition timed out");
+          break;
+        }
       }
       if (new_filtered_sample_ && now - last_force_correction_ms_ >= CS1238_CORRECTION_PERIOD_MS) {
         last_force_correction_ms_ = now;

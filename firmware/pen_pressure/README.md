@@ -167,17 +167,26 @@ asserts, then stops immediately; a 3000 ms timeout faults if GP2 never
 asserts. This timeout is a runaway bound, not the ordinary M5 clearance move.
 The normal-M5 force-release path remains separately gated pending T-01H.
 
-The bench-confirmed pen-fit alternative is staged in the same controller as
-`MECHANICAL_PRELOAD_MODE`. The current checked-in build enables it only as a
-supervised bench test after the E-09E direction and E-09C calibration evidence;
-set it back to `false` before production use. This mode makes M3 a bounded
-100 ms DOWN travel from the operator-installed pen preload and M5 a bounded
-100 ms UP clearance move.
-After M3, the CS1238 16-sample moving average resumes bounded force corrections
-toward the calibrated target; it is not used to seek initial paper contact.
-GP2 remains the maximum-UP limit. The measured 20 x 5 ms manual UP round trip
-(about 1.75 mm clearance) and matching manual DOWN paper-resistance check are
-the current bench evidence for the staged duration.
+The supervised `MECHANICAL_PRELOAD_MODE` now distinguishes a full-retract
+startup from routine M5 clearance. When M3 begins with GP2 (`LIFT_HOME`)
+pressed, it seeks initial paper contact in 5 ms full-drive DOWN pulses with
+250 ms CS1238 settling between pulses. It stops at the calibrated 35 g contact
+threshold; the provisional limits are 160 pulses, 45 seconds, and 30 pulses
+without GP2 releasing. Any limit, sensor loss, or overforce stops/sleeps the
+driver and enters `FAULT`. When M3 begins after routine M5 clearance with GP2
+released, it retains the 100 ms DOWN fast path. Both paths then use the
+16-sample CS1238 moving average for force corrections toward 35 g, with a
+1.5-second force-acquisition timeout. M5 keeps the 100 ms UP clearance move
+and stops at GP2. After an inspected fault, `c` initiates a bounded UP-only
+recovery to GP2, latches manual M5, and cannot restart contact seeking until a
+fresh `e` command or deliberate `a` return to GP29 control.
+
+The 160-pulse limit is a supervised bench candidate based on the reported
+approximately 12 mm home-to-paper gap and the E-09F travel observation; it
+does not establish a universal per-pen travel response. T-01J must validate
+the seek and clearance with each tool before plotting. The quiet `p` snapshot
+reports `home_seek_pulses=<completed>/<limit>` so progress can be checked
+without enabling the scrolling live stream.
 
 The temporary service interface is `Serial2` / hardware UART1 on GP20 (TX) and
 GP21 (RX) at 115200 baud. The integrated sketch immediately writes `Theta

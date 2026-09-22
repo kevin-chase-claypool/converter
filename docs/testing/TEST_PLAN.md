@@ -372,7 +372,7 @@ see [`2026-09-07-converter-house-sun-and-soft-limits.md`](../report/lab-notes/20
 | ID | Test | Pass condition |
 |---|---|---|
 | T-01 | Toolhead lift/clear and motor/preload physical capability | Every applicable T-01A through T-01J sub-test below is recorded. The full `LIFT_HOME` and normal `PEN_CLEAR` motions stay inside the measured mechanical and electrical envelope; retracts repeatably without a fault, hard-stop contact, unacceptable drift, or an uncommanded pen contact. |
-| T-02 | Contact seek | Finds paper before timeout without excessive force |
+| T-02 | Contact seek | From GP2 home, the bounded 5 ms pulse seek finds contact before 160 pulses/45 seconds or faults with the driver asleep; force remains below the 60 g hard limit. Verify switch release within the first 30 pulses. |
 | T-03 | Force hold | After E-06, E-07, E-08, T-01, and T-02: a bounded pulse-based P/PI trim loop holds a calibrated target force through (a) stationary contact, (b) X/Y translation, and (c) progressively faster constant A rotation. Define the measured error band before the test; log mean, 95th-percentile absolute error, peak force, pulse count/reversals, and faults. No sustained limit cycle, hard-force trip, or uncommanded contact loss is allowed. Demonstrate that the dominant bed-rotation disturbance is within the measured loop bandwidth; otherwise reduce speed or add mechanical compliance before considering feed-forward. |
 | T-04 | Missing-paper fault | Seek timeout enters FAULT |
 | T-05 | Overforce fault | Immediate safe response |
@@ -474,6 +474,23 @@ calculating preload or compression margin.
 | **T-01H — M5 release and clearance pulse** | With E-07 force calibration active and a scale/paper fixture under the pen, start from stable contact and command normal M5. Record the signed filtered force trace, `F_contact_on`, `F_release_off`, release debounce, retract command, the elapsed release-to-pulse boundary, extra clearance-pulse PWM/duration, pen-tip gap after stopping, and any mark/drag during a representative pen-up travel move. The staged source uses a 100 ms post-release pulse, selected from observed E-09E motor speed; do not accept that value without measurement. Repeat at least 30 M3-contact/M5-clear cycles. `LIFT_HOME` switch contact is not expected during this test. | `F_contact_on` and `F_release_off` have a measured hysteresis margin; release is detected repeatably before the pulse; the calibrated pulse leaves the pen clear throughout the representative travel without contacting the distant switch; all 30 cycles complete without fault, drag, or uncommanded paper contact. These values authorize normal high-cycle M5 `PEN_CLEAR` behavior. |
 | **T-01I — saved force profile and startup baseline** | After E-07, T-01E, and T-01H produce accepted values, record a versioned calibration profile containing the load-cell slope/direction, `F_contact_on`, `F_release_off`, `F_target`, `F_max`, debounce, pulse bounds, and clearance-pulse command. Commit it only through an explicit local service action and record its identifier/checksum. Perform at least five complete power cycles. On each boot, run `LIFT_HOME`, verify the profile identifier/checksum before force control is enabled, collect a fresh no-contact baseline in RAM, and then use the scale fixture to check one low and one nominal commanded force. Query the stored profile again after every cycle. | All five boots reload the identical valid profile; each RAM baseline is within the documented no-contact/noise acceptance band; the low and nominal scale checks stay within their documented force tolerance; invalid/missing profile or implausible baseline leaves force control disabled/faulted; and the stored identifier/checksum remains unchanged until another explicit service calibration commit. This authorizes the profile for normal operation, not an automatic re-calibration. |
 | **T-01J — interchangeable-tool contact and clear preflight** | For each intended pen, marker, or pencil type and its allowed clamp-height range, run: `LIFT_HOME`; no-contact baseline; guarded low-force seek to the current paper/scale fixture; a short bounded response check using the global T-01E pulse limits; normal M5 release plus clearance pulse; then a representative pen-up travel move. Record tool identity, clamp setting, first-contact force, seek travel/time, selected `F_target`, `F_contact_on`, `F_release_off`, any per-tool pulse override, clearance-pulse command, post-clear force band, mark quality, and any drag. Repeat enough M3/M5 cycles to expose stiction or missed release; never use normal M5 to reach the home switch. | Every tested tool reaches contact before its seek limit, stays below `F_max`, releases into the clear band, and completes representative pen-up travel without drag or switch contact. The load cell closes the force loop; no universal pulse-to-force curve is required. Record a separate approved target-force/clearance setting for each tool type, with a per-tool pulse override only when the bounded response check requires it. A failure leaves that tool/profile combination disabled pending correction. |
+
+**T-02 supervised home-origin seek (source implemented; bench test pending):**
+With paper/scale under the pen, adequate pen clearance, the power cutoff
+reachable, and the service UART open, send `p` and confirm
+`pressure=LIFTED`, `lift_home=1`, `tare_valid=1`, and no fault. Send `e` once.
+The controller should report `HOME_SEEK_CONTACT`, then move in individual 5 ms
+DOWN pulses with a 250 ms sensing settle. Use `p` occasionally to read
+`home_seek_pulses=<completed>/160`; do not turn on the continuous `v` stream
+unless needed. Contact should transition to `HOLD_FORCE` around the configured
+35 g target, below the 60 g hard limit. The switch must release within 30
+pulses. A 160-pulse/45-second limit or sensor/force error must result in
+`FAULT` with the driver asleep. Keep the hand at the cutoff and do not send `c`
+until the cause and physical pen position are checked. After inspection, `c`
+must perform only the bounded UP recovery to GP2, never resume DOWN seeking.
+It must latch manual M5 so a held GP29 M3 cannot automatically start another
+seek. Do not repeat the test until the tool is visibly clear and the fault is
+understood.
 
 For every T-01 sub-test, use the lab-note template and include the exact test
 sketch/build, supply current limit, PWM/pulse settings, instruments, raw

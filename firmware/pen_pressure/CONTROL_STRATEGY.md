@@ -80,18 +80,35 @@ an ordinary M5.
 
 ### Staged mechanical-preload mode
 
-For the current non-precision plotter bench, the installed pen is first seated
-by the operator at an approximate drawing preload. The controller contains a
-separate `MECHANICAL_PRELOAD_MODE` for this setup. It is enabled in the current
-supervised bench build only; set it back to `false` before production use. When
-the required gates are enabled, M3 applies the measured
-100 ms DOWN travel and holds the motor stopped; M5 applies the measured 100 ms
-UP travel and returns to `LIFTED`. After M3, the CS1238 16-sample moving
-average applies bounded force corrections toward the calibrated target; it is
-not used to seek initial paper contact or infer the air gap. GP2 is the
-maximum-UP limit. Do not enable the mode until actuator direction, lift
-reference, and the physical pen-fit checks are recorded; keep the normal
-raw-force path available for a future per-pen validated profile.
+For the current non-precision plotter bench, the installed pen is normally
+seated by the operator at an approximate drawing preload. The supervised
+`MECHANICAL_PRELOAD_MODE` has two M3 entry paths because boot homes the pen
+about 12 mm above the paper in the current setup:
+
+- If M3 begins with GP2 (`LIFT_HOME`) pressed, the controller performs
+  `HOME_SEEK_CONTACT`: one 5 ms full-drive DOWN pulse, driver sleep, and a
+  250 ms sensor-settling interval before checking the 16-sample CS1238 moving
+  average. It repeats only while force is below the calibrated 35 g contact
+  threshold. The candidate bounds are 160 pulses, 45 seconds, and 30 completed
+  pulses without GP2 releasing. Reaching a bound stops/sleeps the motor and
+  enters `FAULT`; the operator must inspect the fault before clearing it.
+- If M3 begins after ordinary M5 clearance with GP2 released, the established
+  short 100 ms DOWN move remains the fast path. In both paths, the moving
+  average then controls force toward 35 g; loss of sensor data or failure to
+  acquire force within 1.5 seconds faults/stops the drive.
+- If a force fault occurs, inspect the reported cause and physical position
+  before sending `c`. Clearing a fault initiates the existing bounded UP
+  recovery toward GP2; over-force detection never blocks that retract-only
+  path. Fault clear latches M5/manual mode so a held GP29 M3 or stale serial
+  `e` cannot restart the downward contact-seek automatically; issue a fresh
+  `e` (or deliberately restore GP29 with `a`) to request another engage.
+
+M5 still applies the candidate 100 ms UP clearance move and stops sooner if
+GP2 is pressed. The 160-pulse envelope is only a bench candidate derived from
+the reported approximately 12 mm home-to-paper gap and the earlier E-09F
+motion observation; it is not a universal per-pen travel constant. T-01J must
+validate the home seek, force response, and clearance for each installed tool
+before plotting. Production remains commissioning-gated.
 
 ## Calibration profile and boot baseline
 

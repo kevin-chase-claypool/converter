@@ -128,15 +128,19 @@ inputs are externally pulled HIGH and optocoupler assertions pull them LOW;
 the integrated sketch is configured for that active-low interface. F-05/E-18
 must still establish the RP23CNC ENA/Aux0 state mapping. Compile-time safety
 gates deliberately prevent uncommissioned actuator and magnetic operation.
-The separate normally-open `LIFT_HOME` microswitch is now installed from GP2
-to local `TOOL_GND`; the integrated firmware configures it as an active-low
+The separate normally-open `LIFT_HOME` microswitch is installed from GP2 to
+local `TOOL_GND`; the integrated firmware configures it as an active-low
 pull-up input and reports it through native USB and GP20/GP21 service UART.
 The service interface uses Arduino-Pico `Serial2` (hardware UART1), and the
 integrated firmware prints its service-UART-ready line before other
 initialization. Its telemetry writer does not require a complete record to fit
 in the UART FIFO, so GP20 telemetry is not silently suppressed.
-T-01G must verify live transitions and guarded retract cycles before it
-controls motor behavior.
+The current supervised bench source uses GP2 as the full-retract origin for a
+bounded, force-checked M3 contact seek (5 ms DOWN pulses with 250 ms settling,
+160-pulse/45-second bounds); after normal M5, it retains the short 100 ms M3
+path. T-01G repeatability and T-02/T-01J powered seek qualification remain
+open, so keep the RP23CNC M3/M5 harness disconnected during initial seek
+validation and retain access to the toolhead power cutoff.
 Smaller Arduino sketches also exist for safer bring-up, including a GP2/GP20
 LIFT_HOME UART-only diagnostic with no motor-related pin activity:
 [`pen_pressure/bench_motor_command/bench_motor_command.ino`](pen_pressure/bench_motor_command/bench_motor_command.ino)

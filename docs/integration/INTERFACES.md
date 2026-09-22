@@ -269,15 +269,30 @@ local `GP2` switch establishes `LIFT_HOME` only at boot, recovery, or an
 explicit service action. Normal M5 uses the same load cell as M3, but detects
 the no-contact release band and then applies a verified clearance pulse.
 
-For the current bench setup, the controller also contains a staged
-`MECHANICAL_PRELOAD_MODE`, enabled only in the supervised bench build. Set it
-back to `false` before production use. After the operator seats an
-installed pen at approximate drawing preload, enabled commissioning gates make
-M3 a bounded 100 ms DOWN move and M5 a bounded 100 ms UP clearance move. After
-M3, the CS1238 moving average resumes bounded force corrections toward the
-calibrated target; it is not used to seek initial paper contact. GP2 remains
-the maximum-UP limit. The mode must remain disabled until actuator direction,
-lift reference, and pen-fit evidence are accepted.
+For the current bench setup, `MECHANICAL_PRELOAD_MODE` is enabled only in the
+supervised firmware build. At M3, GP2 pressed means a cold/full-retract start:
+the Pro Micro sends 5 ms full-drive DOWN pulses, sleeps between pulses, and
+checks the CS1238 moving average after a 250 ms settle interval. It stops at
+the 35 g contact threshold. The provisional bounds are 160 pulses, 45 seconds,
+and 30 pulses while GP2 remains pressed; bound, sensor, and hard-force faults
+stop the motor. GP2 released means normal post-M5 clearance, which retains the
+100 ms DOWN fast path. Both paths then use moving-average force correction
+toward 35 g and fault if force is not acquired within 1.5 seconds. M5 uses a
+100 ms UP clearance move, stopping immediately if GP2 is pressed. Use `p` to
+read the one-shot status including `home_seek_pulses=<completed>/<limit>`;
+periodic scrolling remains opt-in with `v`.
+
+The 60 g hard-force guard stops DOWN/hold operation. After inspecting a fault
+and the physical pen position, `c` starts only the existing bounded UP
+recovery toward GP2 and latches manual M5. A held GP29 M3 or stale serial `e`
+cannot restart the seek after homing; a fresh `e` or deliberate `a` restores
+engage control. The GP2/retract timeout still faults if the switch is not
+reached.
+
+The cold-start pulse/travel limits are provisional values derived from the
+reported roughly 12 mm paper gap and previous E-09F motion observation. They
+must be verified by the supervised T-01J bench test for each pen before
+plotting; they are not production-qualified settings.
 
 The planned P100 toolhead preflight is a separate commissioning-gated contract
 for an installed pen, marker, or pencil: home; capture a no-contact baseline;
