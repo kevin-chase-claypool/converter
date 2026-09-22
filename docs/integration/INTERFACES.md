@@ -296,6 +296,18 @@ in `calibration_points.csv` for the proposed `grams = slope * raw + offset`
 fit. The fit and PNG graphs are PC-side analysis artifacts, not firmware
 constants or an authorization to energize the actuator.
 
+### E-09E installed-pen scale pulse check
+
+E-09E is a separate supervised bench sketch, not an extension of production
+M3/M5 control. Because the Pro Micro's 5 V input is hardwired to its external
+toolhead rail, E-09E runtime communication uses the existing 3.3 V UART1
+service adapter rather than USB-C: adapter `RXD` ← `GP20`, adapter `TXD` →
+`GP21`, `GND` → `TOOL_GND`, and adapter `VCC` remains disconnected. USB-C is
+used only to flash the sketch with the external rail disconnected. The Windows
+application opens the adapter's COM port and enables E-09E controls only when
+the sketch reports `mode=cs1238_pen_scale_pulse`. This avoids a second 5 V
+source while the N20's 6 V rail is energized.
+
 Power boundary:
 
 | Rail | Owner | Contract |

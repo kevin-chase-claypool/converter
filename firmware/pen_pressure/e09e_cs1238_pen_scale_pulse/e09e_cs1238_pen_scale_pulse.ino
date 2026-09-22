@@ -2,7 +2,7 @@
   E-09E: CS1238 installed-pen kitchen-scale pulse check.
 
   This is dedicated supervised bench firmware, not the production controller.
-  It drives no GP29/M3/M5 or GP27 signal.  Native USB commands are intentionally
+  It drives no GP29/M3/M5 or GP27 signal. Service UART1 commands are intentionally
   bounded: ARM permits a limited number of individual 10–100 ms pulses; every
   pulse checks ULT/nFAULT and puts the DRV8833 to sleep before replying.
 
@@ -11,7 +11,8 @@
   the reference; this firmware cannot read it and therefore cannot auto-stop
   at a selected scale force.
 
-  Commands at 115200 native USB:
+  Runtime commands at 115200 UART1 (GP20 TX / GP21 RX, via a 3.3 V USB-to-TTL
+  adapter with adapter VCC disconnected):
     STATUS             configuration and remaining downward-pulse budget
     TARE               64-sample clear-state diagnostic tare
     ARM                permit the next 30 individual DOWN pulses
@@ -30,6 +31,12 @@
 #include <Arduino.h>
 #include <CS123x.h>
 
+// E-09E runs while the external 5 V toolhead rail powers the Pro Micro. Map
+// this sketch's service stream to UART1, not USB VBUS, to avoid a second 5 V
+// source through USB-C. The USB-C port is used only for flashing with the
+// external rail disconnected.
+#define Serial Serial2
+
 constexpr uint8_t PIN_DT = 0;
 constexpr uint8_t PIN_SCK = 1;
 constexpr uint8_t PIN_IN1 = 4;
@@ -37,6 +44,8 @@ constexpr uint8_t PIN_IN2 = 5;
 constexpr uint8_t PIN_DRV_SLEEP = 6;  // EEP / active-low nSLEEP.
 constexpr uint8_t PIN_DRV_FAULT = 7;  // ULT / active-low nFAULT.
 constexpr uint8_t PIN_LIFT_HOME = 2;  // Normally-open switch to TOOL_GND.
+constexpr uint8_t PIN_SERVICE_UART_TX = 20;
+constexpr uint8_t PIN_SERVICE_UART_RX = 21;
 
 constexpr uint32_t BAUD = 115200;
 constexpr uint16_t TARE_SAMPLES = 64;
@@ -249,6 +258,8 @@ void setup() {
   pinMode(PIN_LIFT_HOME, INPUT_PULLUP);
   stopAndSleep();
 
+  Serial2.setTX(PIN_SERVICE_UART_TX);
+  Serial2.setRX(PIN_SERVICE_UART_RX);
   Serial.begin(BAUD);
   delay(300);
   configured = scale.begin() && scale.setConfig(CS123X_CH_A, CS123X_GAIN_128,

@@ -1,5 +1,19 @@
 # Engineering Log
 
+<a id="elog-20260922-e09e-service-uart-runtime"></a>
+### 🟨 2026-09-22 - HARDWARE/RP23CNC SOFTWARE/WINDOWS SOFTWARE/IMPLEMENTED - E-09E service-UART runtime
+
+- Status: E-09E runtime now uses the bench-verified GP20/GP21 USB-to-TTL
+  adapter path instead of USB-C; no powered pulse was issued.
+- Category: hardware, rp23cnc-software, windows-software, UART, power safety,
+  E-09E.
+- Decision: USB-C is flash-only with the external toolhead rail disconnected.
+  During the powered scale test, the app opens the adapter COM port at 115200;
+  adapter RXD ← GP20, TXD → GP21, GND → TOOL_GND, VCC disconnected, 3.3 V
+  logic selected.
+- Reason: the external 5 V rail is hardwired to the Pro Micro, so concurrent
+  PC USB VBUS was not accepted without verified power isolation.
+
 <a id="elog-20260922-e09e-adjustable-pulse-duration"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/WINDOWS SOFTWARE/IMPLEMENTED - E-09E bounded adjustable pulse duration
 

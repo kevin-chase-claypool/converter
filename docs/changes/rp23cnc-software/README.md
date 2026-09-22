@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-005` | implemented | [Route E-09E runtime through service UART](2026/2026-09-22-route-e09e-through-service-uart.md) | `e-09e`, `uart`, `usb-to-ttl`, `power-safety` |
 | 2026-09-22 | `RPSW-20260922-004` | implemented | [Make E-09E pulse duration adjustable](2026/2026-09-22-make-e09e-pulse-duration-adjustable.md) | `e-09e`, `n20`, `pulse-duration`, `safety` |
 | 2026-09-22 | `RPSW-20260922-003` | implemented | [Add E-09E installed-pen scale pulse check](2026/2026-09-22-add-e09e-pen-scale-pulse-check.md) | `cs1238`, `n20`, `kitchen-scale`, `e-09e`, `pen-pressure` |
 | 2026-09-22 | `RPSW-20260922-002` | implemented | [Replace E-09C profile with cap-free repeat](2026/2026-09-22-replace-e09c-cap-free-calibration.md) | `cs1238`, `e-09c`, `calibration`, `load-cell`, `pen-pressure` |

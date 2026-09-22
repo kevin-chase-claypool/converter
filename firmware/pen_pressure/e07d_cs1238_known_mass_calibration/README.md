@@ -41,7 +41,12 @@ fixture mass from the labels.
 
 After fitting, the application’s **4. Pen-scale check** works with the dedicated
 `e09e_cs1238_pen_scale_pulse` sketch to directly verify the selected force
-direction at the installed pen. Put a kitchen scale under the pen, tare while
+direction at the installed pen. Flash E-09E through USB-C only while the
+external toolhead rail is disconnected. Then disconnect USB-C and run E-09E
+through the existing 3.3 V USB-to-TTL service adapter: adapter `RXD` ← `GP20`,
+adapter `TXD` → `GP21`, adapter `GND` → `TOOL_GND`, and adapter `VCC` left
+disconnected. This avoids backfeeding the hardwired external 5 V Pro Micro
+rail through USB-C. Put a kitchen scale under the pen, tare while
 the pen is clear, click **Arm 30 pulses**, then issue individual **Pulse toward
 scale** commands. The adjustable duration is bounded to 10–100 ms by both the
 app and firmware; start at 10 ms and let the scale settle after each pulse. When

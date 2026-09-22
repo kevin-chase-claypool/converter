@@ -38,7 +38,7 @@ approach is deliberately bounded and supervised.
 
 ## Implementation
 
-- Added E-09E native-USB test firmware. It requires clear-state tare plus an
+- Added E-09E service-UART test firmware. It requires clear-state tare plus an
   explicit `ARM`, permits only individual 10–100 ms pulses, checks `ULT`, sleeps
   the driver after every pulse, blocks lift at GP2 `LIFT_HOME`, and retains
   raw CS1238 `CAPTURE` support.

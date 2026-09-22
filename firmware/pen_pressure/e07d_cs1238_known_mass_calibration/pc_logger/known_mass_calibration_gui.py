@@ -1,7 +1,8 @@
 """Windows UI for raw CS1238 known-mass calibration through one Pro Micro.
 
-This program never commands the DRV8833 or any motor.  It uses the native USB
-serial contract of e07d_cs1238_known_mass_calibration.ino only.
+This program uses the E-07D native-USB raw-capture contract and, only when the
+connected E-09E sketch explicitly identifies itself, its bounded service-UART
+N20 pulse contract.
 """
 from __future__ import annotations
 
@@ -169,7 +170,7 @@ class KnownMassCalibrationApp(tk.Tk):
 
     def _build_setup(self, frame: ttk.Frame) -> None:
         frame.columnconfigure(1, weight=1)
-        ttk.Label(frame, text="Pro Micro USB COM port").grid(row=0, column=0, sticky="w", pady=4)
+        ttk.Label(frame, text="Toolhead test COM port").grid(row=0, column=0, sticky="w", pady=4)
         self.port_box = ttk.Combobox(frame, textvariable=self.port_choice, width=56, state="readonly")
         self.port_box.grid(row=0, column=1, sticky="ew", padx=8, pady=4)
         ttk.Button(frame, text="Refresh ports", command=self.refresh_ports).grid(row=0, column=2, padx=(0, 6))
@@ -300,7 +301,7 @@ class KnownMassCalibrationApp(tk.Tk):
     def _build_help(self, frame: ttk.Frame) -> None:
         text = (
             "1. Flash e07d_cs1238_known_mass_calibration.ino. Keep the actuator 6 V rail disconnected.\n\n"
-            "2. Connect the Pro Micro by its native USB port. Select that COM port here, then use Read device status.\n\n"
+            "2. For E-07D known-mass calibration, connect the Pro Micro native-USB COM port. For E-09E powered pen-scale pulses, connect the 3.3 V USB-to-TTL adapter COM port: adapter RXD ← GP20, adapter TXD → GP21, adapter GND → TOOL_GND, adapter VCC disconnected. Select that COM port here, then use Read device status.\n\n"
             "3. With the installed load cell unloaded, use Read unloaded tare. Tare is a diagnostic baseline; it does not change raw capture data.\n\n"
             "4. Place the precision weights downward on the motor mount. This characterizes the cell; it may bend opposite to the upward reaction force at the pen tip. Leave Printing force relationship at Opposite unless a simple installed-pen check shows otherwise. Enter the total mass, wait for it to stop moving, then click Capture raw point.\n\n"
             "5. Capture 0, 5, 10, …, 70 g while loading. Repeat the sequence while unloading. Keep at least three complete loading/unloading passes for a defensible calibration.\n\n"
@@ -318,7 +319,7 @@ class KnownMassCalibrationApp(tk.Tk):
         if choices and not self.port_choice.get():
             self.port_choice.set(choices[0])
         if not choices:
-            self.connection_status.set("No COM ports found. Connect the Pro Micro USB cable, then refresh.")
+            self.connection_status.set("No COM ports found. Connect the appropriate Pro Micro USB or USB-to-TTL adapter cable, then refresh.")
 
     def append_message(self, message: str) -> None:
         def update() -> None:
@@ -333,7 +334,7 @@ class KnownMassCalibrationApp(tk.Tk):
             self.disconnect()
             return
         if not self.port_choice.get():
-            messagebox.showerror("No COM port", "Select the Pro Micro USB COM port first.")
+            messagebox.showerror("No COM port", "Select the E-07D USB or E-09E USB-to-TTL COM port first.")
             return
         self.connect_button.configure(state="disabled")
         self.connection_status.set("Connecting…")
