@@ -1,5 +1,19 @@
 # Engineering Log
 
+<a id="elog-20260922-integrated-lift-drive-too-low"></a>
+### 🟥 2026-09-22 - RP23CNC SOFTWARE/FAILED-CORRECTED - integrated lift drive
+
+- Observation: after the phase-polarity correction, the integrated build still
+  timed out at `GP2 lift-home not reached during retract` with `lift_home=0`.
+  The DRV8833 fault input remained clear.
+- Diagnosis: the integrated lift command used PWM 70/255, while the validated
+  E-09E UP pulses use full phase drive; static friction may prevent motion at
+  the lower duty cycle.
+- Correction: set `PWM_LIFT=255` to match the validated E-09E drive level and
+  compile the integrated sketch successfully.
+- Next action: flash the full-drive build and retry one guarded boot; do not
+  increase the timeout until motion is confirmed.
+
 <a id="elog-20260922-integrated-direction-polarity-fault"></a>
 ### 🟥 2026-09-22 - RP23CNC SOFTWARE/FAILED-CORRECTED - integrated lift polarity
 

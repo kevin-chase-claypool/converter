@@ -32,6 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-22 | Integrated lift drive | Failed safely — PWM corrected | Corrected phase polarity still timed out at GP2 with no DRV fault; integrated lift PWM 70/255 was lower than E-09E's validated full-drive pulses, so it was raised to 255. |
 | 2026-09-22 | Integrated direction polarity | Failed safely — corrected | The first supervised integrated boot timed out before GP2 because IN1/IN2 lift/seek phase selections were reversed relative to E-09E; the controller entered a bounded fault and the constants were corrected. |
 | 2026-09-22 | T-01G lift-home switch transition | Partial | GP2 changed 0→1→0 repeatedly in the motor-safe UART diagnostic; ten powered retract cycles, positions, and backstop margin remain open. |
 | 2026-09-22 | E-09F guarded force hold | Partial — band hold passed | Two `t`/`a`/`s` runs using the precision-weight raw profile settled and held at reported 40.0 g and 40.4 g. The separate 100 ms air-gap clear test remains. |

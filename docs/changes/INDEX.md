@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-016` | rp23cnc-software, hardware | implemented | [Match integrated lift drive to validated bench pulses](rp23cnc-software/2026/2026-09-22-increase-integrated-lift-drive.md) |
 | 2026-09-22 | `RPSW-20260922-015` | rp23cnc-software, hardware | implemented | [Correct integrated motor-direction polarity](rp23cnc-software/2026/2026-09-22-correct-integrated-direction-polarity.md) |
 | 2026-09-22 | `RPSW-20260922-014` | rp23cnc-software, hardware | implemented | [Enable the mechanical-preload supervised bench build](rp23cnc-software/2026/2026-09-22-enable-mechanical-preload-bench-build.md) |
 | 2026-09-22 | `RPSW-20260922-013` | rp23cnc-software, hardware | implemented | [Stage mechanical-preload M3/M5 behavior](rp23cnc-software/2026/2026-09-22-stage-mechanical-preload-m3m5.md) |

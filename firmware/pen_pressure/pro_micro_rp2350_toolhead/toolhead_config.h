@@ -34,7 +34,10 @@ constexpr bool DRV_FAULT_ACTIVE_LOW = true;
 constexpr bool LIFT_USES_IN1_PWM = false;
 constexpr bool SEEK_USES_IN1_PWM = true;
 
-constexpr uint8_t PWM_LIFT = 70;
+// E-09E uses full phase drive for the validated 5–100 ms UP pulses. The
+// integrated controller must overcome the installed mechanism's static
+// friction before its GP2 maximum-retract guard can assert.
+constexpr uint8_t PWM_LIFT = 255;
 constexpr uint8_t PWM_SEEK = 55;
 constexpr uint8_t PWM_HOLD_MAX = 85;
 
