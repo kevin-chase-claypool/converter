@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-017` | implemented | [Set integrated lift timeout to 3000 ms](2026/2026-09-22-set-integrated-lift-timeout-3000ms.md) | `gp2`, `lift-home`, `timeout` |
 | 2026-09-22 | `RPSW-20260922-016` | implemented | [Match integrated lift drive to validated bench pulses](2026/2026-09-22-increase-integrated-lift-drive.md) | `motor-drive`, `gp2`, `supervised-bench` |
 | 2026-09-22 | `RPSW-20260922-015` | implemented | [Correct integrated motor-direction polarity](2026/2026-09-22-correct-integrated-direction-polarity.md) | `motor-direction`, `gp2`, `supervised-bench` |
 | 2026-09-22 | `RPSW-20260922-014` | implemented | [Enable the mechanical-preload supervised bench build](2026/2026-09-22-enable-mechanical-preload-bench-build.md) | `supervised-bench`, `mechanical-preload`, `moving-average-force-control` |

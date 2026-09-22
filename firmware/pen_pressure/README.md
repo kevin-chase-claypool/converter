@@ -146,19 +146,20 @@ clear band. Its fit was 5,038.77 raw/g with `R²=0.999978` and 0.132 g RMS
 residual. The selected upward pen-reaction assumption makes force increase as
 raw decreases. The earlier pen-cap run is retained as historical raw evidence
 only. The one-COM-port calibration application provides an installed-pen
-kitchen-scale raw-direction check.
-This source path is **not** force-control authorization:
-`PRESSURE_CALIBRATION_VALID` remains false, and T-01 direction, response, M5
-clearance, and installed-pen direction checks remain required before any gate
-may be enabled.
+kitchen-scale raw-direction check. The current supervised bench build enables
+the force loop using the E-09C fit and E-09E direction evidence. This permits
+the supervised test only; production use still requires integrated direction
+and installed-pen checks.
 
 For a normal M5 from contact, Core 0 uses `RELEASE_TO_CLEAR`: it retracts only
 until the filtered CS1238 residual remains in the configured no-contact band
 for the required windows. It then enters `CLEARANCE_LIFT` and continues N20
 retraction for `PEN_CLEAR_EXTRA_LIFT_MS` (currently 100 ms), rechecks the clear
-band, and only then reaches `LIFTED`/possible `CLEAR_READY`. Boot and
-fault-recovery lifting remain a separate bounded sequence. All values and the
-entire normal-M5 gate remain disabled until E-09C and T-01H.
+band, and only then reaches `LIFTED`/possible `CLEAR_READY`. At boot or after a
+fault reset, the supervised mechanical-preload build drives UP until GP2
+asserts, then stops immediately; a 3000 ms timeout faults if GP2 never
+asserts. This timeout is a runaway bound, not the ordinary M5 clearance move.
+The normal-M5 force-release path remains separately gated pending T-01H.
 
 The bench-confirmed pen-fit alternative is staged in the same controller as
 `MECHANICAL_PRELOAD_MODE`. The current checked-in build enables it only as a

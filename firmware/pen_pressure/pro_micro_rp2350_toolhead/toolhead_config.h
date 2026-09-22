@@ -42,10 +42,10 @@ constexpr uint8_t PWM_SEEK = 55;
 constexpr uint8_t PWM_HOLD_MAX = 85;
 
 constexpr uint32_t SERIAL_BAUD = 115200;
-// BOOT_LIFT_TIME_MS applies only to boot/fault recovery, where no preceding
-// contact state is available. Normal M5 uses RELEASE_TO_CLEAR followed by the
-// deliberately separate PEN_CLEAR_EXTRA_LIFT_MS air-gap pulse.
-constexpr uint32_t BOOT_LIFT_TIME_MS = 700;
+// Boot/fault recovery drives UP continuously and stops immediately when GP2
+// reports the pressed/home state. This timeout is the independent runaway
+// bound if GP2 never asserts; it is not the normal M5 air-gap duration.
+constexpr uint32_t BOOT_LIFT_TIME_MS = 3000;
 constexpr uint32_t LIFT_VERIFY_TIMEOUT_MS = 1800;
 constexpr uint32_t PEN_CLEAR_RELEASE_TIMEOUT_MS = 1800;
 // T-01H candidate: one E-09F installed-pen clear left about 1.75 mm of gap

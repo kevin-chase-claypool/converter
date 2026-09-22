@@ -32,19 +32,22 @@ using the lower duty cycle.
 
 ## Implementation
 
-`PWM_LIFT` is now `255`. The bounded 700 ms timeout and GP2 maximum-UP guard
-remain unchanged; the down/preload and moving-average correction values are
-not changed by this adjustment.
+`PWM_LIFT` is now `255`. The bounded timeout and GP2 maximum-UP guard remain;
+the timeout was subsequently extended to 3000 ms in response to observed
+travel taking longer than 700 ms. The down/preload and moving-average
+correction values are not changed by that timeout adjustment.
 
 ## Verification
 
 The integrated sketch compiled successfully for
-`rp2040:rp2040:sparkfun_promicrorp2350`. A powered retry is pending.
+`rp2040:rp2040:sparkfun_promicrorp2350`. The powered retry with full lift drive
+and the revised timeout is pending.
 
 ## Struggles and rejected approaches
 
-Increasing the timeout was rejected as the first response because the motor
-had not yet been shown to move under the integrated duty cycle.
+The first response raised lift drive to the already validated full phase level;
+the timeout was extended separately after another trace still ended before
+GP2 asserted.
 
 ## Risks and follow-up
 

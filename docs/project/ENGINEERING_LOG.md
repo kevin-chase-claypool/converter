@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20260922-set-integrated-lift-timeout-3000ms"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - extend GP2 retract timeout
+
+- Decision: set the boot/fault-recovery UP timeout to 3000 ms. In `LIFTING`,
+  firmware continues driving UP and checks GP2 each service loop; GP2 pressed
+  (`lift_home=1`) stops the motor immediately.
+- Reason: the prior 700 ms bound expired with `lift_home=0` during the
+  supervised integrated boot attempt.
+- Safety behavior: the 3000 ms limit remains a runaway bound if GP2 never
+  activates. It does not alter the normal M5 100 ms air-gap move.
+- Verification: integrated sketch compiled successfully for
+  `rp2040:rp2040:sparkfun_promicrorp2350`; documentation-index checks passed
+  for 187 change notes.
+- Next action: flash, observe whether GP2 asserts before 3000 ms, then share
+  the first `pressure=` telemetry line.
+
 <a id="elog-20260922-integrated-lift-drive-too-low"></a>
 ### 🟥 2026-09-22 - RP23CNC SOFTWARE/FAILED-CORRECTED - integrated lift drive
 
