@@ -133,6 +133,17 @@ full-drive 5 ms UP relief pulse immediately; below the band it sends a single
 based on a later filtered sample after the driver has stopped. The independent
 60 g hard-force guard remains active throughout this state.
 
+### Confirmed surface response and relative preload
+
+The light first touch is not accepted merely because one raw value crosses an
+approximately 5 g level. Once that level is reached, the motor is stopped and
+the controller requires a response at least approximately 2 g above the
+pre-pulse value in three 25 ms-separated 16-sample windows. A one-window jump
+or a response that relaxes does not advance the state. The accepted response is
+the contact reference. The second approach targets the calibrated drawing force
+relative to that reference, so switch/preload friction is not mistaken for
+paper force. Its matching hard-force guard is also relative to that reference.
+
 ## Calibration profile and boot baseline
 
 After E-07, T-01E, and T-01H pass, commit one versioned, checksummed

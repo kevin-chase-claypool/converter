@@ -127,6 +127,18 @@ long PressureController::normalizedForceDelta() const {
   return static_cast<long>(CS1238_CONTACT_FORCE_SIGN) * forceDelta();
 }
 
+long PressureController::activeTargetForceRaw() const {
+  return contact_reference_valid_
+             ? contact_reference_force_raw_ + TARGET_FORCE_RAW_DELTA
+             : TARGET_FORCE_RAW_DELTA;
+}
+
+long PressureController::activeHardForceRaw() const {
+  return contact_reference_valid_
+             ? contact_reference_force_raw_ + HARD_FORCE_RAW_DELTA
+             : HARD_FORCE_RAW_DELTA;
+}
+
 long PressureController::noContactResidual() const {
   // The E-09C zero is retained in configuration as calibration evidence, but
   // every boot takes a fresh unloaded tare. Clear detection must use that live
@@ -170,7 +182,7 @@ void PressureController::serviceCs1238() {
   if (cs1238_powered_down_ || !scale_.isReady()) {
     return;
   }
-  const int32_t sample = scale_.forceRead();
+  const int32_t sample = scale_.read();
   if (sample >= CS123X_TIMEOUT_ERROR) {
     setStatusFlag(STATUS_CS1238_ONLINE, false);
     return;
@@ -225,7 +237,8 @@ void PressureController::updateReadyState() {
     return;
   }
 
-  const long target_error = std::labs(normalizedForceDelta() - TARGET_FORCE_RAW_DELTA);
+  const long target_error =
+      std::labs(normalizedForceDelta() - activeTargetForceRaw());
   if (target_error <= CONTACT_READY_TOLERANCE_RAW) {
     if (contact_ready_windows_ < CONTACT_READY_REQUIRED_WINDOWS) {
       contact_ready_windows_++;
@@ -294,7 +307,7 @@ void PressureController::service() {
                                   state_ == PressureState::CLEARANCE_LIFT;
   if (state_ != PressureState::FAULT && !retracting_to_home && tare_valid_ &&
       PRESSURE_CALIBRATION_VALID && new_filtered_sample_ &&
-      normalizedForceDelta() > HARD_FORCE_RAW_DELTA) {
+      normalizedForceDelta() > activeHardForceRaw()) {
     enterFault("hard force limit exceeded");
     return;
   }
@@ -399,6 +412,9 @@ void PressureController::service() {
             m3_started_ms_ = now;
             m3_force_acquired_ = false;
             if (liftHomeActive()) {
+              contact_reference_valid_ = false;
+              home_surface_confirm_pending_ = false;
+              home_surface_confirm_windows_ = 0;
               home_seek_pulse_count_ = 0;
               home_tune_pulse_count_ = 0;
               home_seek_pulses_while_switch_active_ = 0;
@@ -447,6 +463,39 @@ void PressureController::service() {
         break;
       }
 
+      if (home_surface_confirm_pending_) {
+        if (now - home_surface_confirm_started_ms_ >=
+            HOME_SURFACE_CONFIRM_TIMEOUT_MS) {
+          home_surface_confirm_pending_ = false;
+          home_surface_confirm_windows_ = 0;
+        } else if (new_filtered_sample_ &&
+                   now - home_surface_confirm_last_ms_ >=
+                       HOME_SURFACE_CONFIRM_WINDOW_MS) {
+          home_surface_confirm_last_ms_ = now;
+          if (normalizedForceDelta() >=
+              home_surface_pulse_baseline_raw_ +
+                  HOME_SURFACE_RESPONSE_MIN_RAW) {
+            home_surface_confirm_windows_++;
+            if (home_surface_confirm_windows_ >=
+                HOME_SURFACE_CONFIRM_WINDOWS) {
+              motorStop();
+              setDriverEnabled(false);
+              home_surface_confirm_pending_ = false;
+              contact_reference_force_raw_ = normalizedForceDelta();
+              contact_reference_valid_ = true;
+              home_surface_retract_started_ms_ = now;
+              setState(PressureState::HOME_RETRACT_AFTER_TOUCH);
+              break;
+            }
+          } else {
+            home_surface_confirm_windows_ = 0;
+          }
+        }
+        if (home_surface_confirm_pending_) {
+          break;
+        }
+      }
+
       const long fine_threshold = HOME_SURFACE_TOUCH_RAW_DELTA /
                                   HOME_SEEK_FINE_THRESHOLD_DIVISOR;
       const uint32_t next_pulse_ms = home_wait_for_release_tare_
@@ -464,8 +513,7 @@ void PressureController::service() {
           engage,
           new_filtered_sample_,
           normalizedForceDelta(),
-          home_wait_for_release_tare_ ? 0x7fffffffL
-                                      : HOME_SURFACE_TOUCH_RAW_DELTA,
+          0x7fffffffL,
           now,
           state_started_ms_,
           home_seek_pulse_active_,
@@ -477,6 +525,7 @@ void PressureController::service() {
         case toolhead::ContactSeekAction::WAIT:
           break;
         case toolhead::ContactSeekAction::START_PULSE:
+          home_surface_pulse_baseline_raw_ = normalizedForceDelta();
           motorDrive(SEEK_USES_IN1_PWM, HOME_SEEK_PWM);
           home_seek_pulse_started_ms_ = now;
           home_seek_active_pulse_ms_ = static_cast<uint8_t>(limits.pulse_ms);
@@ -502,16 +551,19 @@ void PressureController::service() {
             home_seek_pulses_while_switch_active_ = 0;
             if (home_wait_for_release_tare_) {
               setState(PressureState::HOME_RELEASE_TARE_SETTLING);
+            } else if (home_surface_pulse_baseline_raw_ >=
+                           HOME_SURFACE_TOUCH_RAW_DELTA ||
+                       normalizedForceDelta() >= HOME_SURFACE_TOUCH_RAW_DELTA) {
+              home_surface_confirm_pending_ = true;
+              home_surface_confirm_windows_ = 0;
+              home_surface_confirm_started_ms_ = now;
+              home_surface_confirm_last_ms_ = now;
             }
           }
           break;
         case toolhead::ContactSeekAction::CONTACT_FOUND:
-          motorStop();
-          setDriverEnabled(false);
-          home_seek_pulse_active_ = false;
-          home_seek_active_pulse_ms_ = 0;
-          home_surface_retract_started_ms_ = now;
-          setState(PressureState::HOME_RETRACT_AFTER_TOUCH);
+          // The policy threshold is deliberately unreachable here. Surface
+          // contact is accepted only by the separated trend confirmation.
           break;
         case toolhead::ContactSeekAction::CANCELLED:
           motorStop();
@@ -559,10 +611,11 @@ void PressureController::service() {
         break;
       }
 
-      // Stop at the lower edge of the 30–40 g hold band. The filtered hold
-      // controller can then settle/release from inside its no-drive band.
+      // Contact is referenced by the persistent first-touch response, not by
+      // the released actuator preload. Tune to the lower edge of the 30–40 g
+      // band relative to that reference.
       const long tune_threshold =
-          TARGET_FORCE_RAW_DELTA - CONTACT_READY_TOLERANCE_RAW;
+          activeTargetForceRaw() - CONTACT_READY_TOLERANCE_RAW;
       const toolhead::ContactSeekLimits limits{
           HOME_TUNE_PULSE_MS, HOME_TUNE_SETTLE_MS,
           HOME_TUNE_MAX_PULSES, HOME_TUNE_TIMEOUT_MS};
@@ -685,7 +738,7 @@ void PressureController::service() {
       }
 
       const long force = normalizedForceDelta();
-      const long error = TARGET_FORCE_RAW_DELTA - force;
+      const long error = activeTargetForceRaw() - force;
       const bool above_hold_band = error < -CONTACT_READY_TOLERANCE_RAW;
       const bool below_hold_band = error > CONTACT_READY_TOLERANCE_RAW;
       // Correct an over-force reading immediately, rather than waiting up to

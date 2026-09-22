@@ -169,11 +169,14 @@ The normal-M5 force-release path remains separately gated pending T-01H.
 
 The supervised `MECHANICAL_PRELOAD_MODE` now distinguishes a full-retract
 startup from routine M5 clearance. When M3 begins with GP2 (`LIFT_HOME`)
-pressed, it seeks a light approximately 5 g paper touch in 25 ms full-drive
-DOWN pulses until one-fifth of that threshold, then changes to 5 ms pulses with
-50 ms CS1238 settling between every pulse. It backs off with one 10 ms UP move,
-then uses only 5 ms DOWN pulses to reach the lower 30 g edge of the 30–40 g
-drawing band. The surface approach has provisional 100-pulse/8-second and
+pressed, it seeks toward an approximately 5 g first-touch candidate in 25 ms
+full-drive DOWN pulses until one-fifth of that level, then changes to 5 ms
+pulses with 50 ms CS1238 settling between every pulse. A stopped pulse must
+produce a persistent approximately 2 g response in three 25 ms-separated
+filtered windows before paper touch is accepted. It backs off with one 10 ms
+UP move, then uses only 5 ms DOWN pulses to reach the lower 30 g edge of the
+30–40 g drawing band relative to the accepted touch reference. The surface
+approach has provisional 100-pulse/8-second and
 30-pulses-without-GP2-release bounds; the force-tune phase has a separate
 100-pulse/7-second bound. Any limit, sensor loss, or overforce stops/sleeps the
 driver and enters `FAULT`. When M3 begins after routine M5 clearance with GP2
@@ -215,8 +218,9 @@ same one-character commands (`?`, `p`, `v`, `t`, `e`, `l`, `a`, `c`); use
 UART1 for runtime control when the external rail is powering the Pro Micro.
 Output is quiet by default: startup and pressure-state changes print once, and
 entering `FAULT` emits a single detailed record containing the CS1238 raw,
-filtered, tare, tare-valid flag, signed and normalized deltas, and configured
-hard limit. `p` prints one snapshot; `v` toggles one-second live snapshots on
+filtered, tare, tare-valid flag, signed and normalized deltas, accepted
+contact reference, and active hard limit. `p` prints one snapshot; `v` toggles
+one-second live snapshots on
 and off. The telemetry field `mag_samples` is the magnetometer sample counter,
 not the CS1238 count. Completed records are written directly to UART; do not
 reintroduce an `availableForWrite() >= full_record_length` gate, because the
@@ -251,7 +255,7 @@ opened from its own folder:
 | [`bench_sensors/bench_sensors.ino`](bench_sensors/bench_sensors.ino) | Tests HX711 raw readings and TMAG5273 Qwiic telemetry without energizing the motor driver. | HX711 and SparkFun TMAG5273 |
 | [`p100_handshake_test/p100_handshake_test.ino`](p100_handshake_test/p100_handshake_test.ino) | Motor-inert F-08/E-18 diagnostic for the actual GP28 two-phase arm and GP27 readiness/threshold return. It never configures or writes DRV8833, M3/M5, HX711, or LIFT_HOME pins. | SparkFun TMAG5273 |
 | [`t01g_lift_home_uart/t01g_lift_home_uart.ino`](t01g_lift_home_uart/t01g_lift_home_uart.ino) | Motor-safe T-01G diagnostic: reads GP2 with `INPUT_PULLUP` and writes a fixed 115200-baud `lift_home` line only through GP20/GP21 UART1. | none beyond Arduino core |
-| [`pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`](pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino) | Dual-core integrated pressure/safety and magnetic-readiness/threshold controller for GP29, GP28, GP27, DRV8833, CS1238, and TMAG5273. Its CS1238 threshold/sign placeholders and all motion gates are disabled. | CS123x by FMazz97, 1.1.0; SparkFun TMAG5273 |
+| [`pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`](pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino) | Dual-core integrated pressure/safety and magnetic-readiness/threshold controller for GP29, GP28, GP27, DRV8833, CS1238, and TMAG5273. Its CS1238 threshold/sign placeholders and all motion gates are disabled. | CS123x by FMazz97, 2.0.3; SparkFun TMAG5273 |
 
 Recommended CS1238 bench order: run `e07c_cs1238_sensor_bringup` first, then
 the motor-inert `e07d_cs1238_known_mass_calibration` known-mass workflow. The
@@ -270,11 +274,11 @@ Arduino IDE must use these libraries:
 | Library Manager name | Version checked | Purpose |
 |---|---:|---|
 | `HX711 Arduino Library` by Bogdan Necula / bogde | 0.7.5 | HX711 load-cell ADC |
-| `CS123x` by FMazz97 | 1.1.0 | CS1238 load-cell ADC |
+| `CS123x` by FMazz97 | 2.0.3 | CS1238 load-cell ADC |
 | `SparkFun TMAG5273 Arduino Library` | 2.0.0 | TMAG5273 Qwiic Hall sensor |
 | `SparkFun Toolkit` | 1.2.0 | Dependency installed by the SparkFun TMAG5273 library |
 
 Historical HX711 sketches require Bogde's `HX711 Arduino Library`; do not
 install or select Rob Tillaart's separate `HX711` library for those sketches
 because it also provides `HX711.h` and can create an ambiguous include. The
-integrated controller instead requires CS123x 1.1.0.
+integrated controller instead requires CS123x 2.0.3.

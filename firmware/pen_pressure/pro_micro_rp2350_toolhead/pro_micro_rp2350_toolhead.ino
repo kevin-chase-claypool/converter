@@ -88,7 +88,8 @@ void emitTelemetry(const char *event) {
       line, sizeof(line),
       "event=%s pressure=%s cmd=%s fault=%s "
       "cs1238_raw=%ld cs1238_filtered=%ld cs1238_tare=%ld tare_valid=%d "
-      "cs1238_delta=%ld force_norm_raw=%ld hard_limit_raw=%ld "
+      "cs1238_delta=%ld force_norm_raw=%ld contact_ref_raw=%ld "
+      "contact_ref_valid=%d hard_limit_raw=%ld "
       "lift_home=%d home_seek_pulses=%u/%u home_tune_pulses=%u/%u "
       "mag=%s mT=[%ld.%03ld,%ld.%03ld,%ld.%03ld] delta=%ld.%03ld "
       "mag_samples=%lu status=0x%08lx ready=[contact:%d clear:%d gp27:%d] "
@@ -96,7 +97,8 @@ void emitTelemetry(const char *event) {
       event, pressure.stateName(), pressure.commandEngage() ? "M3" : "M5",
       pressure.faultReason(), pressure.raw(), pressure.filtered(), pressure.tare(),
       pressure.tareValid(), pressure.forceDelta(), pressure.normalizedForceDelta(),
-      static_cast<long>(HARD_FORCE_RAW_DELTA),
+      pressure.contactReferenceForceRaw(), pressure.contactReferenceValid(),
+      pressure.activeHardForceRaw(),
       pressure.liftHomeActive(), pressure.homeSeekPulseCount(),
       static_cast<unsigned int>(HOME_SEEK_MAX_PULSES),
       pressure.homeTunePulseCount(),

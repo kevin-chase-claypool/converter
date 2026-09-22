@@ -1,5 +1,19 @@
 # Engineering Log
 
+<a id="elog-20260922-trend-confirmed-contact"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - confirm contact response before tuning preload
+
+- Evidence: the extended two-touch trace reached `HOLD_FORCE` at 151,654 raw,
+  near the old absolute 30 g edge, but the pen remained about 0.5 mm clear of
+  paper. Absolute CS1238 raw includes actuator preload/friction.
+- Change: first touch now requires a response about 10,000 raw above the
+  pre-pulse value in three filtered windows spaced 25 ms apart after the motor
+  stops. The accepted response becomes the dynamic contact reference; tuning
+  target and hard-force guard are calculated relative to it.
+- Verification: the integrated sketch compiled with installed CS123x 2.0.3.
+  The former `forceRead()` API was replaced with its raw `read()` equivalent.
+  Hardware T-02 remains required; no drawing claim is made.
+
 <a id="elog-20260922-extend-fine-tune-budget"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/PARTIAL - extend bounded fine-tune travel
 

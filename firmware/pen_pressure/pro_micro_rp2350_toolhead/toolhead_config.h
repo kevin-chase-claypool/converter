@@ -76,6 +76,13 @@ constexpr uint8_t HOME_SEEK_PWM = 255;
 // First touch finds paper at a light calibrated force, then reverses enough
 // to remove the first-touch preload before the fine drawing-force approach.
 constexpr long HOME_SURFACE_TOUCH_RAW_DELTA = 25194; // approximately 5 g
+// A first touch is a persistent response to one stopped fine pulse, not an
+// absolute threshold crossing. At 640 SPS a 16-sample average spans about
+// 25 ms, so three separated windows add roughly 75 ms of confirmation.
+constexpr long HOME_SURFACE_RESPONSE_MIN_RAW = 10000; // approximately 2 g
+constexpr uint8_t HOME_SURFACE_CONFIRM_WINDOWS = 3;
+constexpr uint32_t HOME_SURFACE_CONFIRM_WINDOW_MS = 25;
+constexpr uint32_t HOME_SURFACE_CONFIRM_TIMEOUT_MS = 150;
 constexpr uint8_t HOME_SURFACE_RETRACT_MS = 10;
 constexpr uint8_t HOME_TUNE_PULSE_MS = 5;
 constexpr uint32_t HOME_TUNE_SETTLE_MS = 50;

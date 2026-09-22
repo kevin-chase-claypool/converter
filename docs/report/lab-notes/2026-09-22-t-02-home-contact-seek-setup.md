@@ -164,6 +164,18 @@ After the 10 ms back-off, the original 30 fine 5 ms pulses reached only
 therefore extended to 100 unchanged 5 ms pulses with a 7-second bound. It does
 not increase a single motion step, target force, or the 60 g hard limit.
 
+### Trend-confirmed contact correction
+
+The extended tune run reached `HOLD_FORCE` at `151,654 raw`, near the former
+absolute 30 g lower band, while the pen remained physically about 0.5 mm above
+paper. This proves that a raw threshold alone represents released-mechanism
+preload/friction as well as paper reaction. The next candidate accepts first
+touch only after a stopped pulse produces a persistent approximately 10,000 raw
+(about 2 g) change from its pre-pulse value across three 25 ms-separated
+filtered windows. That accepted response becomes the zero for subsequent
+drawing-preload target and hard-force calculations. Single spikes or values
+that relax before the three windows do not change state.
+
 ## Decisions and next action
 
 Flash and supervise the updated integrated toolhead firmware. First verify a

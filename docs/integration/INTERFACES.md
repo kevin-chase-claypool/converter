@@ -272,10 +272,13 @@ the no-contact release band and then applies a verified clearance pulse.
 For the current bench setup, `MECHANICAL_PRELOAD_MODE` is enabled only in the
 supervised firmware build. At M3, GP2 pressed means a cold/full-retract start:
 the Pro Micro first sends 25 ms full-drive DOWN pulses until one-fifth of the
-light 5 g surface-touch threshold is measured, then 5 ms pulses, sleeping
+light 5 g surface-candidate level is measured, then 5 ms pulses, sleeping
 between pulses and checking the CS1238 moving average after a 50 ms settle.
-It backs off UP for 10 ms, then sends only 5 ms DOWN pulses until the lower
-30 g edge of the drawing band. The surface phase is bounded at 100 pulses,
+A candidate must persist as an approximately 2 g response from its stopped
+pulse across three 25 ms-separated filtered windows before it is surface
+contact. It backs off UP for 10 ms, then sends only 5 ms DOWN pulses until the
+lower 30 g edge of the drawing band relative to that contact reference. The
+surface phase is bounded at 100 pulses,
 8 seconds, and 30 pulses while GP2 remains pressed; the force-tune phase is
 bounded at 100 pulses/7 seconds. Bound, sensor, and hard-force faults stop the
 motor. GP2 released means normal post-M5 clearance, which retains the
@@ -336,8 +339,9 @@ clear. The `p` and `v` commands do not move the actuator.
 Periodic telemetry is disabled by default. The console prints startup and
 pressure-state changes once; entering `FAULT` prints one detailed event record
 including `cs1238_raw`, `cs1238_filtered`, `cs1238_tare`, `tare_valid`, signed
-`cs1238_delta`, normalized `force_norm_raw`, configured `hard_limit_raw`, and
-`lift_home`. Use `p` for a single current reading or `v` to enable/disable the
+`cs1238_delta`, normalized `force_norm_raw`, `contact_ref_raw`,
+`contact_ref_valid`, configured `hard_limit_raw`, and `lift_home`. Use `p` for
+a single current reading or `v` to enable/disable the
 one-second stream. `mag_samples` is the TMAG sample counter, not the CS1238
 sample count. A displayed `cmd=M3` while `pressure=FAULT` is only the requested
 command; the pressure fault state stops and disables the motor driver.

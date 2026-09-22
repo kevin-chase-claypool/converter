@@ -40,6 +40,10 @@ class PressureController {
   bool tareValid() const { return tare_valid_; }
   long forceDelta() const { return cs1238_filtered_ - cs1238_tare_; }
   long normalizedForceDelta() const;
+  long activeTargetForceRaw() const;
+  long activeHardForceRaw() const;
+  bool contactReferenceValid() const { return contact_reference_valid_; }
+  long contactReferenceForceRaw() const { return contact_reference_force_raw_; }
   bool commandEngage() const;
   bool driverFaulted() const;
   bool liftHomeActive() const;
@@ -71,6 +75,8 @@ class PressureController {
   uint32_t home_seek_pulse_started_ms_ = 0;
   uint32_t home_seek_last_pulse_ended_ms_ = 0;
   uint32_t home_surface_retract_started_ms_ = 0;
+  uint32_t home_surface_confirm_started_ms_ = 0;
+  uint32_t home_surface_confirm_last_ms_ = 0;
   uint32_t hold_correction_pulse_started_ms_ = 0;
 
   bool manual_override_ = false;
@@ -83,11 +89,15 @@ class PressureController {
   bool hold_correction_pulse_active_ = false;
   bool home_tare_sampling_started_ = false;
   bool home_wait_for_release_tare_ = false;
+  bool home_surface_confirm_pending_ = false;
+  bool contact_reference_valid_ = false;
   uint8_t home_seek_active_pulse_ms_ = 0;
 
   long cs1238_raw_ = 0;
   long cs1238_tare_ = 0;
   long cs1238_filtered_ = 0;
+  long home_surface_pulse_baseline_raw_ = 0;
+  long contact_reference_force_raw_ = 0;
   long sample_window_[toolhead_config::CS1238_MOVING_AVERAGE_SAMPLES] = {};
   uint8_t sample_window_count_ = 0;
   uint8_t sample_window_index_ = 0;
@@ -101,6 +111,7 @@ class PressureController {
   uint16_t home_seek_pulse_count_ = 0;
   uint16_t home_tune_pulse_count_ = 0;
   uint8_t home_seek_pulses_while_switch_active_ = 0;
+  uint8_t home_surface_confirm_windows_ = 0;
 
   const char *fault_reason_ = "none";
 };
