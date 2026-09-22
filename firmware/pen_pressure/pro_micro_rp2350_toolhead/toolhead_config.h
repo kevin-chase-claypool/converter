@@ -58,14 +58,15 @@ constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 100;
 constexpr bool MECHANICAL_PRELOAD_MODE = true; // supervised bench test build
 constexpr uint32_t PEN_ENGAGE_TRAVEL_MS = 100;
 constexpr uint32_t SEEK_TIMEOUT_MS = 1500;
-// The first installed home-origin seek used 160 x 5 ms pulses and moved only
-// about 7.5 mm, leaving the pen about 4.5 mm above paper. Use 25 ms pulses
-// with 50 ms sensor checks to cover the observed 12 mm gap in roughly four
-// seconds rather than 34 seconds. 80 pulses retain about 18.75 mm of bounded
-// travel at that observed response. T-01J must validate this per-tool limit.
-constexpr uint8_t HOME_SEEK_PULSE_MS = 25;
+// Use coarse pulses until the load cell first sees meaningful force, then
+// switch to fine pulses before the 35 g contact threshold. The first 25 ms
+// candidate reached target then transiently crossed the 60 g hard limit;
+// keeping its speed only in the unloaded region avoids that final coarse step.
+constexpr uint8_t HOME_SEEK_COARSE_PULSE_MS = 25;
+constexpr uint8_t HOME_SEEK_FINE_PULSE_MS = 5;
+constexpr uint8_t HOME_SEEK_FINE_THRESHOLD_DIVISOR = 5;
 constexpr uint32_t HOME_SEEK_SETTLE_MS = 50;
-constexpr uint16_t HOME_SEEK_MAX_PULSES = 80;
+constexpr uint16_t HOME_SEEK_MAX_PULSES = 100;
 constexpr uint8_t HOME_SEEK_MAX_SWITCH_ACTIVE_PULSES = 30;
 constexpr uint32_t HOME_SEEK_TIMEOUT_MS = 8000;
 constexpr uint8_t HOME_SEEK_PWM = 255;
@@ -124,7 +125,7 @@ constexpr uint8_t CONTACT_READY_REQUIRED_WINDOWS = 3;
 
 static_assert(HOME_SEEK_TIMEOUT_MS >
                   HOME_SEEK_MAX_PULSES *
-                      (HOME_SEEK_PULSE_MS + HOME_SEEK_SETTLE_MS),
+                      (HOME_SEEK_COARSE_PULSE_MS + HOME_SEEK_SETTLE_MS),
               "Home contact-seek timeout must permit its bounded pulse sequence");
 
 static_assert(!PRESSURE_CALIBRATION_VALID ||

@@ -70,7 +70,7 @@ constexpr ContactSeekAction decideContactSeekAction(
 
 // Compile-time regression cases exercise the same decision function used by
 // the live state machine without energizing hardware.
-constexpr ContactSeekLimits kTestLimits{25, 50, 80, 8000};
+constexpr ContactSeekLimits kTestLimits{25, 50, 100, 8000};
 static_assert(decideContactSeekAction(
                   {true, true, 0, 100, 100, 100, false, 0, 0, 0},
                   kTestLimits) == ContactSeekAction::START_PULSE);
@@ -96,7 +96,7 @@ static_assert(decideContactSeekAction(
                   {true, true, 0, 100, 150, 100, false, 0, 100, 1},
                   kTestLimits) == ContactSeekAction::START_PULSE);
 static_assert(decideContactSeekAction(
-                  {true, true, 0, 100, 150, 100, false, 0, 100, 80},
+                  {true, true, 0, 100, 150, 100, false, 0, 100, 100},
                   kTestLimits) == ContactSeekAction::LIMIT_REACHED);
 static_assert(decideContactSeekAction(
                   {true, false, 0, 100, 8100, 100, false, 0, 0, 0},

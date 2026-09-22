@@ -9,6 +9,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-023` | implemented | [Tare Only After Home Retract](2026/2026-09-22-tare-after-home-retract.md) | `cs1238`, `tare`, `contact-seek` |
+| 2026-09-22 | `RPSW-20260922-022` | implemented | [Add Fine Home Contact Approach](2026/2026-09-22-add-fine-home-contact-approach.md) | `contact-seek`, `pulse-timing`, `force-limit` |
 | 2026-09-22 | `RPSW-20260922-021` | implemented | [Revise Home Contact-Seek Pacing](2026/2026-09-22-revise-home-contact-seek-pacing.md) | `contact-seek`, `pulse-timing`, `cs1238` |
 | 2026-09-22 | `RPSW-20260922-020` | implemented | [Bound Home-Origin Contact Seek](2026/2026-09-22-bound-home-origin-contact-seek.md) | `contact-seek`, `cs1238`, `pen-pressure` |
 | 2026-09-22 | `RPSW-20260922-019` | implemented | [Make integrated toolhead telemetry quiet by default](2026/2026-09-22-quiet-integrated-toolhead-telemetry.md) | `serial-monitor`, `telemetry`, `fault-diagnostics`, `cs1238` |

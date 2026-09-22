@@ -136,8 +136,9 @@ integrated firmware prints its service-UART-ready line before other
 initialization. Its telemetry writer does not require a complete record to fit
 in the UART FIFO, so GP20 telemetry is not silently suppressed.
 The current supervised bench source uses GP2 as the full-retract origin for a
-bounded, force-checked M3 contact seek (25 ms DOWN pulses with 50 ms settling,
-80-pulse/8-second bounds); after normal M5, it retains the short 100 ms M3
+bounded, force-checked M3 contact seek (25 ms DOWN pulses far from contact,
+then 5 ms pulses after force appears, with 50 ms settling and 100-pulse/
+8-second bounds); after normal M5, it retains the short 100 ms M3
 path. T-01G repeatability and T-02/T-01J powered seek qualification remain
 open, so keep the RP23CNC M3/M5 harness disconnected during initial seek
 validation and retain access to the toolhead power cutoff.

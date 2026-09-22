@@ -169,9 +169,10 @@ The normal-M5 force-release path remains separately gated pending T-01H.
 
 The supervised `MECHANICAL_PRELOAD_MODE` now distinguishes a full-retract
 startup from routine M5 clearance. When M3 begins with GP2 (`LIFT_HOME`)
-pressed, it seeks initial paper contact in 25 ms full-drive DOWN pulses with
-50 ms CS1238 settling between pulses. It stops at the
-calibrated 35 g contact threshold; the provisional limits are 80 pulses, 8
+pressed, it seeks initial paper contact in 25 ms full-drive DOWN pulses until
+the CS1238 reaches one-fifth of its calibrated contact threshold, then changes
+to 5 ms pulses with 50 ms CS1238 settling between every pulse. It stops at the
+calibrated 35 g contact threshold; the provisional limits are 100 pulses, 8
 seconds, and 30 pulses
 without GP2 releasing. Any limit, sensor loss, or overforce stops/sleeps the
 driver and enters `FAULT`. When M3 begins after routine M5 clearance with GP2
@@ -182,9 +183,15 @@ and stops at GP2. After an inspected fault, `c` initiates a bounded UP-only
 recovery to GP2, latches manual M5, and cannot restart contact seeking until a
 fresh `e` command or deliberate `a` return to GP29 control.
 
-The 80-pulse limit is a revised supervised bench candidate after a real 160 x
-5 ms attempt covered only about 7.5 mm of the reported 12 mm home-to-paper
-gap. It does not establish a universal per-pen travel response. T-01J must validate
+The 64-sample live tare begins only after boot or fault-recovery UP motion has
+reached GP2. This prevents an initial loaded pen position from being accepted
+as zero force. M3 faults safely if requested before that clear-home tare is
+complete; wait for `tare_valid=1` in a `p` snapshot before sending `e`.
+
+The 100-pulse limit and two-stage pulse width are supervised bench candidates:
+the original 160 x 5 ms attempt covered only about 7.5 mm, while the first
+25 ms-only attempt contacted correctly but briefly exceeded the 60 g hard
+limit after contact. They do not establish a universal per-pen travel response. T-01J must validate
 the seek and clearance with each tool before plotting. The quiet `p` snapshot
 reports `home_seek_pulses=<completed>/<limit>` so progress can be checked
 without enabling the scrolling live stream.

@@ -271,9 +271,10 @@ the no-contact release band and then applies a verified clearance pulse.
 
 For the current bench setup, `MECHANICAL_PRELOAD_MODE` is enabled only in the
 supervised firmware build. At M3, GP2 pressed means a cold/full-retract start:
-the Pro Micro sends 25 ms full-drive DOWN pulses, sleeps between pulses, and
-checks the CS1238 moving average after a 50 ms settle interval. Each DOWN
-pulse is 25 ms. It stops at the 35 g contact threshold. The provisional bounds are 80 pulses, 8 seconds,
+the Pro Micro sends 25 ms full-drive DOWN pulses until one-fifth of the
+contact threshold is measured, then 5 ms pulses, sleeps between pulses, and
+checks the CS1238 moving average after a 50 ms settle interval. It stops at
+the 35 g contact threshold. The provisional bounds are 100 pulses, 8 seconds,
 and 30 pulses while GP2 remains pressed; bound, sensor, and hard-force faults
 stop the motor. GP2 released means normal post-M5 clearance, which retains the
 100 ms DOWN fast path. Both paths then use moving-average force correction
@@ -289,9 +290,15 @@ cannot restart the seek after homing; a fresh `e` or deliberate `a` restores
 engage control. The GP2/retract timeout still faults if the switch is not
 reached.
 
+At boot and after `c` fault recovery, the controller first reaches GP2 and
+only then takes its 64-sample CS1238 tare. M3 is rejected until the snapshot
+shows `tare_valid=1`; this prevents startup paper force from being treated as
+the force zero.
+
 The cold-start pulse/travel limits are provisional values revised after the
 first 160 x 5 ms attempt moved only about 7.5 mm and stopped 4.5 mm above
-paper. They
+paper; a subsequent 25 ms-only attempt made contact but tripped the 60 g
+guard by approximately 0.7 g. They
 must be verified by the supervised T-01J bench test for each pen before
 plotting; they are not production-qualified settings.
 

@@ -8,6 +8,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-023` | implemented | [Tare Only After Home Retract](../rp23cnc-software/2026/2026-09-22-tare-after-home-retract.md) | `cs1238`, `tare`, `contact-seek` |
+| 2026-09-22 | `RPSW-20260922-022` | implemented | [Add Fine Home Contact Approach](../rp23cnc-software/2026/2026-09-22-add-fine-home-contact-approach.md) | `contact-seek`, `pulse-timing`, `force-limit` |
 | 2026-09-22 | `RPSW-20260922-021` | implemented | [Revise Home Contact-Seek Pacing](../rp23cnc-software/2026/2026-09-22-revise-home-contact-seek-pacing.md) | `contact-seek`, `pulse-timing`, `cs1238` |
 | 2026-09-22 | `RPSW-20260922-020` | implemented | [Bound Home-Origin Contact Seek](../rp23cnc-software/2026/2026-09-22-bound-home-origin-contact-seek.md) | `contact-seek`, `cs1238`, `pen-pressure` |
 | 2026-09-22 | `RPSW-20260922-016` | implemented | [Match integrated lift drive to validated bench pulses](../rp23cnc-software/2026/2026-09-22-increase-integrated-lift-drive.md) | `motor-drive`, `gp2`, `supervised-bench` |

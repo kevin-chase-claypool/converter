@@ -372,7 +372,7 @@ see [`2026-09-07-converter-house-sun-and-soft-limits.md`](../report/lab-notes/20
 | ID | Test | Pass condition |
 |---|---|---|
 | T-01 | Toolhead lift/clear and motor/preload physical capability | Every applicable T-01A through T-01J sub-test below is recorded. The full `LIFT_HOME` and normal `PEN_CLEAR` motions stay inside the measured mechanical and electrical envelope; retracts repeatably without a fault, hard-stop contact, unacceptable drift, or an uncommanded pen contact. |
-| T-02 | Contact seek | From GP2 home, the bounded 25 ms pulse seek finds contact before 80 pulses/8 seconds or faults with the driver asleep; force remains below the 60 g hard limit. Verify switch release within the first 30 pulses. |
+| T-02 | Contact seek | From GP2 home, the bounded two-stage seek uses 25 ms pulses far from contact and 5 ms pulses after one-fifth contact force, finds contact before 100 pulses/8 seconds or faults with the driver asleep, and remains below the 60 g hard limit. Verify switch release within the first 30 pulses. |
 | T-03 | Force hold | After E-06, E-07, E-08, T-01, and T-02: a bounded pulse-based P/PI trim loop holds a calibrated target force through (a) stationary contact, (b) X/Y translation, and (c) progressively faster constant A rotation. Define the measured error band before the test; log mean, 95th-percentile absolute error, peak force, pulse count/reversals, and faults. No sustained limit cycle, hard-force trip, or uncommanded contact loss is allowed. Demonstrate that the dominant bed-rotation disturbance is within the measured loop bandwidth; otherwise reduce speed or add mechanical compliance before considering feed-forward. |
 | T-04 | Missing-paper fault | Seek timeout enters FAULT |
 | T-05 | Overforce fault | Immediate safe response |
@@ -479,12 +479,15 @@ calculating preload or compression margin.
 With paper/scale under the pen, adequate pen clearance, the power cutoff
 reachable, and the service UART open, send `p` and confirm
 `pressure=LIFTED`, `lift_home=1`, `tare_valid=1`, and no fault. Send `e` once.
+After every reflash or `c` fault recovery, wait for the new clear-home tare to
+complete before this snapshot; do not manually tare while the pen is loaded.
 The controller should report `HOME_SEEK_CONTACT`, then move in individual 25 ms
-DOWN pulses with a 50 ms sensing settle. Use `p` occasionally to read
-`home_seek_pulses=<completed>/80`; do not turn on the continuous `v` stream
+DOWN pulses while force is low and 5 ms pulses after one-fifth contact force,
+with a 50 ms sensing settle. Use `p` occasionally to read
+`home_seek_pulses=<completed>/100`; do not turn on the continuous `v` stream
 unless needed. Contact should transition to `HOLD_FORCE` around the configured
 35 g target, below the 60 g hard limit. The switch must release within 30
-pulses. An 80-pulse/8-second limit or sensor/force error must result in
+pulses. A 100-pulse/8-second limit or sensor/force error must result in
 `FAULT` with the driver asleep. Keep the hand at the cutoff and do not send `c`
 until the cause and physical pen position are checked. After inspection, `c`
 must perform only the bounded UP recovery to GP2, never resume DOWN seeking.

@@ -5,6 +5,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-023` | rp23cnc-software, hardware | implemented | [Tare Only After Home Retract](rp23cnc-software/2026/2026-09-22-tare-after-home-retract.md) |
+| 2026-09-22 | `RPSW-20260922-022` | rp23cnc-software, hardware | implemented | [Add Fine Home Contact Approach](rp23cnc-software/2026/2026-09-22-add-fine-home-contact-approach.md) |
 | 2026-09-22 | `RPSW-20260922-021` | rp23cnc-software, hardware | implemented | [Revise Home Contact-Seek Pacing](rp23cnc-software/2026/2026-09-22-revise-home-contact-seek-pacing.md) |
 | 2026-09-22 | `RPSW-20260922-020` | rp23cnc-software, hardware | implemented | [Bound Home-Origin Contact Seek](rp23cnc-software/2026/2026-09-22-bound-home-origin-contact-seek.md) |
 | 2026-09-22 | `RPSW-20260922-019` | rp23cnc-software | implemented | [Make integrated toolhead telemetry quiet by default](rp23cnc-software/2026/2026-09-22-quiet-integrated-toolhead-telemetry.md) |

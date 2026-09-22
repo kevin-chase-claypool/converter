@@ -1,5 +1,42 @@
 # Engineering Log
 
+<a id="elog-20260922-tare-after-home"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - defer live tare until GP2 home
+
+- Evidence: the first clear snapshot had `cs1238_tare=249630` and normalized
+  force near zero. The later fast-seek trace had `cs1238_tare=301607` and
+  began at 38,281 normalized raw even though `lift_home=1`.
+- Diagnosis: the integrated firmware began its 64-sample tare during boot,
+  before it had completed its lift-to-GP2 motion. A transient loaded condition
+  could therefore be accepted as the live force zero.
+- Change: boot and fault recovery now reach GP2 first, then request the live
+  tare. M3 faults rather than seeking if `tare_valid=0`.
+- Status: updated sketch compiled/linked to ELF/BIN/UF2 artifacts; the Arduino
+  CLI process hung after artifact generation and was stopped without a compiler
+  error. A supervised post-flash `p` check must show GP2 home and valid tare
+  before another T-02 attempt.
+
+<a id="elog-20260922-two-stage-home-contact-seek"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/PARTIAL - add fine home-contact approach
+
+- Evidence: the 25 ms/50 ms home-seek candidate entered `HOLD_FORCE` at
+  177,470 normalized raw, essentially the 176,357 raw 35 g target, after
+  three pulses. Its next filtered sample was 305,811 raw, only 3,485 raw
+  (about 0.7 g) above the 302,326 raw 60 g hard limit, so the controller
+  correctly entered `FAULT` and stopped. The operator reported correct
+  physical paper contact before the fault.
+- Diagnosis: the 25 ms pulse is useful for unloaded travel but too coarse for
+  the final contact approach; filter/mechanical response continued after the
+  target sample, producing a small hard-limit transient.
+- Change: retain all calibrated force limits. Use 25 ms pulses only until
+  normalized force reaches one-fifth of the contact threshold, then use 5 ms
+  pulses. Preserve the dedicated 50 ms seek settle, 100-pulse/8-second bound,
+  30-pulse GP2-release guard, motor sleep, and fault recovery.
+- Status: updated sketch compiled/linked to ELF/BIN/UF2 artifacts; the Arduino
+  CLI process hung after artifact generation and was stopped without a compiler
+  error. The two-stage source is not flashed; T-02 hardware validation is
+  still required.
+
 <a id="elog-20260922-revise-home-seek-pacing"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/PARTIAL - revise home-origin seek pacing
 

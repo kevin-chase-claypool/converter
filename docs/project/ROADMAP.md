@@ -148,7 +148,7 @@
 - [x] Add source-level core heartbeat, seek-timeout, sensor, driver, and force-limit faults. (2026-08-22 compile; installed verification remains.)
 - [ ] Establish the motor/preload physical control envelope, including spring force curve, actuator hold/retract reserve, global pulse bounds, per-tool response checks, LIFT-home repeatability, and safe controller limits. (`T-01A` through `T-01J`)
 - [ ] Characterize actuator backlash and response.
-- [ ] Hardware-validate the supervised bounded home-origin contact seek. Source now provides a 25 ms pulse seek with force, switch, pulse-count, and time limits; one 5 ms pulse run stopped safely 4.5 mm short and informed the revised candidate. (`T-02`, `T-01J`)
+- [ ] Hardware-validate the supervised bounded home-origin contact seek. Source uses 25 ms pulses while force is low, then 5 ms pulses once force appears, with force, switch, pulse-count, and time limits. The 5 ms-only run stopped safely 4.5 mm short; the 25 ms-only run reached target but transiently tripped the hard limit. (`T-02`, `T-01J`)
 - [ ] Implement proportional or PI force control at the measured sensor rate. (`T-03`)
 - [ ] Verify missing-paper fault. (`T-04`)
 - [ ] Verify overforce fault. (`T-05`)

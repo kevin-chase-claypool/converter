@@ -24,8 +24,6 @@ void PressureController::begin() {
     enterFault("CS1238 initialization/configuration failed");
     return;
   }
-  requestTare();
-
   state_started_ms_ = millis();
   setStatusFlag(STATUS_CORE0_READY, true);
 
@@ -65,6 +63,7 @@ void PressureController::setState(PressureState next) {
   }
   if (next != PressureState::HOME_SEEK_CONTACT) {
     home_seek_pulse_active_ = false;
+    home_seek_active_pulse_ms_ = 0;
   }
   publishSafetyState();
 }
@@ -306,6 +305,10 @@ void PressureController::service() {
       if (MECHANICAL_PRELOAD_MODE && liftHomeActive()) {
         motorStop();
         setDriverEnabled(false);
+        // Tare only after GP2 proves the pen is fully retracted. Starting a
+        // 64-sample tare before the boot lift can capture paper contact and
+        // offset every subsequent force threshold.
+        requestTare();
         setState(PressureState::LIFTED);
       } else {
         motorLift();
@@ -352,6 +355,8 @@ void PressureController::service() {
         if (MECHANICAL_PRELOAD_MODE) {
           if (!ACTUATOR_DIRECTION_VALID) {
             enterFault("M3 requested before actuator direction commissioning");
+          } else if (!tare_valid_) {
+            enterFault("M3 requested before clear-home tare completed");
           } else if (!PRESSURE_CALIBRATION_VALID) {
             enterFault("M3 requested without CS1238 force calibration");
           } else if (!statusFlag(STATUS_CS1238_ONLINE)) {
@@ -363,6 +368,7 @@ void PressureController::service() {
               home_seek_pulse_count_ = 0;
               home_seek_pulses_while_switch_active_ = 0;
               home_seek_pulse_active_ = false;
+              home_seek_active_pulse_ms_ = 0;
               home_seek_pulse_started_ms_ = 0;
               home_seek_last_pulse_ended_ms_ = 0;
               setState(PressureState::HOME_SEEK_CONTACT);
@@ -404,8 +410,16 @@ void PressureController::service() {
         break;
       }
 
+      const long fine_threshold =
+          CONTACT_RAW_DELTA / HOME_SEEK_FINE_THRESHOLD_DIVISOR;
+      const uint32_t next_pulse_ms =
+          normalizedForceDelta() >= fine_threshold ? HOME_SEEK_FINE_PULSE_MS
+                                                   : HOME_SEEK_COARSE_PULSE_MS;
+      const uint32_t active_pulse_ms = home_seek_pulse_active_
+                                           ? home_seek_active_pulse_ms_
+                                           : next_pulse_ms;
       const toolhead::ContactSeekLimits limits{
-          HOME_SEEK_PULSE_MS, HOME_SEEK_SETTLE_MS,
+          active_pulse_ms, HOME_SEEK_SETTLE_MS,
           HOME_SEEK_MAX_PULSES, HOME_SEEK_TIMEOUT_MS};
       const toolhead::ContactSeekStatus seek_status{
           engage,
@@ -425,12 +439,14 @@ void PressureController::service() {
         case toolhead::ContactSeekAction::START_PULSE:
           motorDrive(SEEK_USES_IN1_PWM, HOME_SEEK_PWM);
           home_seek_pulse_started_ms_ = now;
+          home_seek_active_pulse_ms_ = static_cast<uint8_t>(limits.pulse_ms);
           home_seek_pulse_active_ = true;
           break;
         case toolhead::ContactSeekAction::STOP_PULSE:
           motorStop();
           setDriverEnabled(false);
           home_seek_pulse_active_ = false;
+          home_seek_active_pulse_ms_ = 0;
           home_seek_pulse_count_++;
           home_seek_last_pulse_ended_ms_ = now;
           if (liftHomeActive()) {
@@ -450,6 +466,7 @@ void PressureController::service() {
           motorStop();
           setDriverEnabled(false);
           home_seek_pulse_active_ = false;
+          home_seek_active_pulse_ms_ = 0;
           m3_force_acquired_ = true;
           last_force_correction_ms_ = now;
           setState(PressureState::HOLD_FORCE);
@@ -458,6 +475,7 @@ void PressureController::service() {
           motorStop();
           setDriverEnabled(false);
           home_seek_pulse_active_ = false;
+          home_seek_active_pulse_ms_ = 0;
           // The 3 g release detector is for force-controlled M5. A cancelled
           // home seek may still be far above contact, so do only the normal
           // bounded up-clearance move (or stop sooner at GP2).
@@ -467,6 +485,7 @@ void PressureController::service() {
           motorStop();
           setDriverEnabled(false);
           home_seek_pulse_active_ = false;
+          home_seek_active_pulse_ms_ = 0;
           if (home_seek_pulse_count_ >= HOME_SEEK_MAX_PULSES) {
             enterFault("M3 home contact seek pulse budget exhausted");
           } else {

@@ -74,6 +74,7 @@ class PressureController {
   bool tare_valid_ = false;
   bool m3_force_acquired_ = false;
   bool home_seek_pulse_active_ = false;
+  uint8_t home_seek_active_pulse_ms_ = 0;
 
   long cs1238_raw_ = 0;
   long cs1238_tare_ = 0;

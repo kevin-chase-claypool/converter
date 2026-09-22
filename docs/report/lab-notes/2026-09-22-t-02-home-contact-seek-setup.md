@@ -59,6 +59,30 @@ profile: below the 176,357 raw (35 g) contact threshold and far below the
 302,326 raw (60 g) hard limit. This is a safe pulse-budget result, not a
 contact-seek pass.
 
+### Fast-seek contact result
+
+The next 25 ms/50 ms candidate reached the intended contact threshold after
+three completed pulses:
+
+```text
+STATE_EVENT pressure=HOME_SEEK_CONTACT cmd=M3 lift_home=1 tare_valid=1 force_norm_raw=38281
+STATE_EVENT pressure=HOLD_FORCE cmd=M3 lift_home=1 tare_valid=1 force_norm_raw=177470
+event=FAULT_EVENT pressure=FAULT cmd=M3 fault=hard force limit exceeded cs1238_raw=-53945 cs1238_filtered=-4204 cs1238_tare=301607 tare_valid=1 cs1238_delta=-305811 force_norm_raw=305811 hard_limit_raw=302326 lift_home=0 home_seek_pulses=3/80
+```
+
+The operator reported that the pen appeared to make contact and stop at the
+desired physical force. The force state entered `HOLD_FORCE` at 177,470 raw,
+just above the 176,357 raw (35 g) target. The next filtered value was 305,811
+raw: only 3,485 raw, or about 0.7 g, above the 60 g hard limit. The controller
+therefore faulted and stopped as designed. This is a contact pass with an
+unacceptable transient hard-limit fault, not a qualified force-hold pass.
+
+The run also exposed a tare-lifecycle defect. The earlier clear snapshot used
+`cs1238_tare=249630`; the fast-seek fault contained `cs1238_tare=301607` and
+started the seek at `force_norm_raw=38281` despite `lift_home=1`. The prior
+firmware began the 64-sample tare before boot retraction completed, so a
+startup contact/load transient could become the live zero reference.
+
 ## Difficulties and corrective actions
 
 The implementation assumed M3 would normally begin after M5 from a small
@@ -66,18 +90,25 @@ clearance gap, but the device currently starts at GP2 full retract. The first
 5 ms / 250 ms candidate was also much too slow and short for the measured
 distance: 800 ms total drive time covered only about 7.5 mm. Revise only the
 home-seek pacing to 25 ms pulses and 50 ms sensing settles, with 80 pulses and
-an 8-second ceiling. The CS1238 35 g target, 60 g hard limit, and post-contact
-force-control cadence do not change.
+an 8-second ceiling. That candidate then reached contact in three pulses but
+overshot the hard limit by about 0.7 g after entering the target band. Revise
+the home seek to use its 25 ms pulse only while force is below one-fifth of
+the contact threshold, then use 5 ms pulses. The CS1238 35 g target, 60 g hard
+limit, and post-contact force-control cadence do not change.
+
+Move the automatic tare to the first confirmed GP2-home position after boot
+and after `c` recovery. Reject M3 until that fresh clear-home tare is complete.
 
 ## Interpretation
 
 The reported position explains why a fixed 100 ms M3 move can fail to reach
 paper from this state. The first pulse-budget fault gives a direct installed
 mechanism result: approximately 7.5 mm per 800 ms of full-drive seek motion.
-The revised 25 ms / 50 ms candidate should provide about 18.75 mm of bounded
-travel in approximately six seconds at its 80-pulse ceiling. It still stops on
-the calibrated contact threshold, a GP2-stuck guard, budget, timeout, sensor
-loss, or hard-force limit. It must be checked on the real toolhead.
+The revised two-stage candidate retains fast empty travel but reduces the
+final contact step to 5 ms. It has 100 pulses and an 8-second ceiling. It still
+stops on the calibrated contact threshold, a GP2-stuck guard, budget, timeout,
+sensor loss, or hard-force limit. A valid clear-home tare is now a prerequisite
+to M3. The revised behavior must be checked on the real toolhead.
 
 ## Decisions and next action
 
