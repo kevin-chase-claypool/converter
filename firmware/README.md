@@ -120,9 +120,9 @@ references. This is not P100 or magnetic A registration and must be overwritten
 before production drawing.
 A dual-core toolhead implementation now exists at
 [`pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`](pen_pressure/pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino)
-for integrated control of the DRV8833, HX711, TMAG5273, and M3/M5 command
+for integrated control of the DRV8833, CS1238, TMAG5273, and M3/M5 command
 input. Core 0 owns pressure/safety and Core 1 owns magnetic acquisition and the
-two-phase readiness/scan handshake. HX711 acquisition is suspended while the
+two-phase readiness/scan handshake. CS1238 acquisition is suspended while the
 verified-lifted magnetic mode is active. With the PC817C module, GP29 M3/M5 and GP28 `HOME_ARM`
 inputs are externally pulled HIGH and optocoupler assertions pull them LOW;
 the integrated sketch is configured for that active-low interface. F-05/E-18
@@ -142,8 +142,9 @@ LIFT_HOME UART-only diagnostic with no motor-related pin activity:
 [`pen_pressure/bench_motor_command/bench_motor_command.ino`](pen_pressure/bench_motor_command/bench_motor_command.ino)
 tests only GP29 and the DRV8833, and
 [`pen_pressure/bench_sensors/bench_sensors.ino`](pen_pressure/bench_sensors/bench_sensors.ino)
-tests only the HX711 and TMAG5273.
-For powered pen-tip calibration, use
+tests only the historical HX711 and TMAG5273 paths.
+The prior powered pen-tip HX711 diagnostic remains available only as historical
+evidence at
 [`pen_pressure/e07b_hx711_actuator_steps/e07b_hx711_actuator_steps.ino`](pen_pressure/e07b_hx711_actuator_steps/e07b_hx711_actuator_steps.ino).
 It uses a 3.3 V USB-to-TTL service adapter on GP20/GP21 rather than the Pro
 Micro USB-C port, and limits every actuator command to one short step followed
@@ -151,11 +152,13 @@ by DRV8833 sleep. Its `r` command performs one bounded 12-down/12-up trace at
 fixed 10 ms pulses, sampling HX711 after each motion so a short scale video can
 be reconciled with the serial trace without a human round trip per point. This
 is a temporary bench/service interface, not part of the normal plotter control
-path.
-The replacement CS1238 starts instead with the native-USB, motor-inert
+path. It must not be used to calibrate the CS1238.
+The native-USB, motor-inert
 [`pen_pressure/e07c_cs1238_sensor_bringup/e07c_cs1238_sensor_bringup.ino`](pen_pressure/e07c_cs1238_sensor_bringup/e07c_cs1238_sensor_bringup.ino).
-It is intentionally not an actuator test: it characterizes the received ADC at
-40/640/1280 SPS before a later bounded CS1238 actuator trace is written.
+characterizes the received ADC at 40/640/1280 SPS. The integrated controller
+now has the matching CS1238 source backend, but all calibration and motion
+gates remain false until E-07C/E-08C/E-09C evidence and a separately bounded
+actuator-response test are accepted.
 Use [`../docs/project/ROADMAP.md`](../docs/project/ROADMAP.md) for active
 work, [`grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`](grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md)
 for P100 design/commissioning, and

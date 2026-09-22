@@ -9,6 +9,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-09-21 | `WINSW-20260921-001` | implemented | [Add Pro Micro known-mass calibration application](../windows-software/2026/2026-09-21-add-pro-micro-known-mass-calibration-app.md) | `cs1238`, `calibration`, `known-mass`, `plotting` |
+| 2026-09-21 | `RPSW-20260921-002` | implemented | [Migrate Integrated Toolhead to CS1238 Backend](../rp23cnc-software/2026/2026-09-21-migrate-integrated-toolhead-cs1238-backend.md) | `CS1238`, `load-cell`, `force-control`, `safety-gates` |
 | 2026-09-21 | `RPSW-20260921-001` | implemented | [Replace dual-ADC fixture with Pro Micro known-mass calibration](../rp23cnc-software/2026/2026-09-21-replace-dual-adc-fixture-with-known-mass-cs1238.md) | `cs1238`, `load-cell`, `calibration`, `known-mass` |
 | 2026-09-19 | `WINSW-20260919-001` | implemented | [Add guided force-calibration analysis workflow](../windows-software/2026/2026-09-19-add-guided-force-calibration-analysis.md) | `force-calibration`, `pico2`, `cs1238`, `ina101`, `plotting` |
 | 2026-09-19 | `RPSW-20260919-001` | implemented | [Add Pico 2 dual-sensor DAQ firmware](../rp23cnc-software/2026/2026-09-19-add-pico2-dual-sensor-daq-firmware.md) | `pico2`, `cs1238`, `ina101`, `force-calibration`, `raw-data` |

@@ -114,19 +114,27 @@ Prototype wiring assumptions mirror `docs/hardware/WIRING_TABLE.md`:
 | `GP5` | DRV8833 `IN2` |
 | `GP6` | Confirmed DRV8833 `EEP` low-true sleep input; drive HIGH to enable |
 | `GP7` | Confirmed DRV8833 `ULT` low-true protection/fault output; `INPUT_PULLUP`, LOW is fault |
-| `GP0` | HX711 `DT`/`DOUT` currently; planned CS1238 `DT`/`DRDY-DOUT` after replacement qualification |
-| `GP1` | HX711 `SCK` currently; planned CS1238 `SCK` after replacement qualification |
+| `GP0` | CS1238 `DT`/`DRDY-DOUT` (channel A) |
+| `GP1` | CS1238 `SCK` |
 | Qwiic `GPIO16/GPIO17` | TMAG5273 `SDA/SCL` |
 
 The integrated sketch divides work across the RP2350 cores. Core 0 owns the
-pressure state machine, HX711, DRV8833, GP29, faults, telemetry, and watchdog.
+pressure state machine, CS1238, DRV8833, GP29, faults, telemetry, and watchdog.
 Core 1 owns the TMAG5273, GP28 two-phase arm/readiness handshake, and GP27
 output arbitration. GP28 activity always suppresses normal-print status; Core
 1 first forces GP27 inactive for 20 ms before issuing a fresh magnetic ACK.
 Outside P100, it can expose Core 0's stable-contact or proven-clear status only
 when the explicit gate is enabled. Fixed-size atomics carry status between cores.
-During a magnetic scan, a verified lifted state is required and the HX711 is
+During a magnetic scan, a verified lifted state is required and the CS1238 is
 powered down because pressure measurement is unnecessary.
+
+The integrated CS1238 backend configures channel A, gain 128, and 640 SPS. It
+uses nonblocking `DT`/`DRDY` readiness followed by a CS123x `forceRead()`, then
+forms a candidate 16-sample raw moving average. This source path is **not**
+force-control authorization: `PRESSURE_CALIBRATION_VALID` remains false,
+`CS1238_CONTACT_FORCE_SIGN` is deliberately zero, and all raw contact/target/
+hard-limit values are zero placeholders until E-09C plus a later actuator-
+response test establish them.
 
 The temporary service interface is `Serial2` / hardware UART1 on GP20 (TX) and
 GP21 (RX) at 115200 baud. The integrated sketch immediately writes `Theta
@@ -163,10 +171,13 @@ opened from its own folder:
 | [`bench_sensors/bench_sensors.ino`](bench_sensors/bench_sensors.ino) | Tests HX711 raw readings and TMAG5273 Qwiic telemetry without energizing the motor driver. | HX711 and SparkFun TMAG5273 |
 | [`p100_handshake_test/p100_handshake_test.ino`](p100_handshake_test/p100_handshake_test.ino) | Motor-inert F-08/E-18 diagnostic for the actual GP28 two-phase arm and GP27 readiness/threshold return. It never configures or writes DRV8833, M3/M5, HX711, or LIFT_HOME pins. | SparkFun TMAG5273 |
 | [`t01g_lift_home_uart/t01g_lift_home_uart.ino`](t01g_lift_home_uart/t01g_lift_home_uart.ino) | Motor-safe T-01G diagnostic: reads GP2 with `INPUT_PULLUP` and writes a fixed 115200-baud `lift_home` line only through GP20/GP21 UART1. | none beyond Arduino core |
-| [`pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`](pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino) | Dual-core integrated pressure/safety and magnetic-readiness/threshold controller for GP29, GP28, GP27, DRV8833, HX711, and TMAG5273. | HX711 and SparkFun TMAG5273 |
+| [`pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino`](pro_micro_rp2350_toolhead/pro_micro_rp2350_toolhead.ino) | Dual-core integrated pressure/safety and magnetic-readiness/threshold controller for GP29, GP28, GP27, DRV8833, CS1238, and TMAG5273. Its CS1238 threshold/sign placeholders and all motion gates are disabled. | CS123x by FMazz97, 1.1.0; SparkFun TMAG5273 |
 
-Recommended bench order: run `bench_sensors` first. For F-08/E-18 before the
-replacement actuator is installed, `p100_handshake_test` may validate the real
+Recommended CS1238 bench order: run `e07c_cs1238_sensor_bringup` first, then
+the motor-inert `e07d_cs1238_known_mass_calibration` known-mass workflow. The
+historical `bench_sensors` sketch remains only for preserving its HX711/TMAG
+diagnostic evidence. For F-08/E-18 before the replacement actuator is installed,
+`p100_handshake_test` may validate the real
 GP28/GP27 handshake with no actuator-related pin activity. It is diagnostic
 firmware only: it does not authorize P100 `Q3`/`Q4`, does not establish a safe
 lift, and must be replaced with `pro_micro_rp2350_toolhead` before actuator or
@@ -179,8 +190,11 @@ Arduino IDE must use these libraries:
 | Library Manager name | Version checked | Purpose |
 |---|---:|---|
 | `HX711 Arduino Library` by Bogdan Necula / bogde | 0.7.5 | HX711 load-cell ADC |
+| `CS123x` by FMazz97 | 1.1.0 | CS1238 load-cell ADC |
 | `SparkFun TMAG5273 Arduino Library` | 2.0.0 | TMAG5273 Qwiic Hall sensor |
 | `SparkFun Toolkit` | 1.2.0 | Dependency installed by the SparkFun TMAG5273 library |
 
-Do not install or select Rob Tillaart's separate `HX711` library for this
-sketch; it also provides `HX711.h` and can create an ambiguous include.
+Historical HX711 sketches require Bogde's `HX711 Arduino Library`; do not
+install or select Rob Tillaart's separate `HX711` library for those sketches
+because it also provides `HX711.h` and can create an ambiguous include. The
+integrated controller instead requires CS123x 1.1.0.

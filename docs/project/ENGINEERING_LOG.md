@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20260921-integrated-cs1238-backend"></a>
+### 🟨 2026-09-21 - RP23CNC SOFTWARE/IMPLEMENTED - Integrated toolhead CS1238 backend
+
+- Status: the integrated Pro Micro RP2350 controller now compiles against the
+  CS123x CS1238 driver rather than HX711 source. No CS1238 board, load cell,
+  pen force, motor, or DRV8833 output was energized or measured during this
+  source-only milestone.
+- Category: rp23cnc-software, hardware, CS1238, load cell, force control,
+  E-07C, E-08C, E-09C.
+- Result: Core 0 configures CS1238 channel A/gain 128/640 SPS, samples only
+  after `DT`/`DRDY` is ready, and computes a 16-sample raw moving average.
+  Magnetic scans power down that ADC path as before. Telemetry and online
+  status now identify CS1238 instead of HX711.
+- Safety boundary: `PRESSURE_CALIBRATION_VALID` remains false; the calibrated
+  raw sign is zero; all contact, target, hard-limit, release, and readiness
+  raw thresholds are reset to zero; a compile-time assertion prevents force
+  control from being enabled until those values are populated. Motor direction,
+  lift reference, and magnetic gates also remain false.
+- Verification: `arduino-cli compile --fqbn rp2040:rp2040:sparkfun_promicrorp2350
+  firmware\\pen_pressure\\pro_micro_rp2350_toolhead` passed. This is a source
+  compilation result, not bench qualification.
+- Next action: complete E-07C/E-08C/E-09C, review the known-mass calibration,
+  establish raw polarity and 40–60 g thresholds, then run a separately guarded
+  actuator-response test before considering any gate change.
+
 <a id="elog-20260921-pro-micro-known-mass-calibration-app"></a>
 ### 🟨 2026-09-21 - WINDOWS SOFTWARE/RP23CNC SOFTWARE/IMPLEMENTED - Pro Micro known-mass calibration application
 

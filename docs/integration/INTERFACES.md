@@ -301,13 +301,13 @@ Power boundary:
 
 | Connection | Purpose |
 |---|---|
-| HX711 `DOUT/SCK` | Load-cell sample acquisition |
+| CS1238 `DT`/`DRDY` and `SCK` | Load-cell sample acquisition (channel A, 3.3 V logic) |
 | DRV8833 `IN1/IN2` or phase/enable | Bidirectional DC motor command |
 | DRV8833 `EEP`/sleep enable | Explicit motor-driver enable under toolhead firmware control |
 | DRV8833 `ULT`/fault | Optional driver fault input to the toolhead controller |
 | TMAG5273 Qwiic `SDA/SCL` | Position/reference magnetic sensor readings |
 
-The SparkFun Pro Micro RP2350 firmware assigns `GP0/GP1` to HX711,
+The SparkFun Pro Micro RP2350 firmware assigns `GP0/GP1` to CS1238,
 `GP4/GP5/GP6/GP7` to DRV8833 control/fault, Qwiic `GPIO17/GPIO16` to TMAG5273,
 `GP29` to the active-low M3/M5 input through PC817C U1, `GP27` to the
 conditioned `A_HOME` output through PC817C U3's bench-verified direct/0 Ω
@@ -316,7 +316,7 @@ link, and
 The module's local 10 kΩ pullups make an idle GP29/GP28 read HIGH and an
 asserted optocoupler read LOW. The RP23CNC ENA/Aux0 state mapping remains
 provisional until F-05/E-18 bench tests are complete. Core 0 owns pressure and
-safety; Core 1 owns TMAG sampling and GP28/GP27 magnetic protocol. HX711
+safety; Core 1 owns TMAG sampling and GP28/GP27 magnetic protocol. CS1238
 acquisition is suspended only while a verified-lifted magnetic scan is active.
 When `GP28` is inactive, Core 1 may later use GP27 to publish Core 0's stable
 M3 force or verified M5-clear completion. Any GP28 assertion first forces GP27

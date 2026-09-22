@@ -18,7 +18,11 @@ void PressureController::begin() {
   motorStop();
   setDriverEnabled(false);
 
-  scale_.begin(PIN_HX711_DT, PIN_HX711_SCK);
+  if (!scale_.begin() ||
+      !scale_.setConfig(CS123X_CH_A, CS123X_GAIN_128, CS123X_RATE_640Hz, true)) {
+    enterFault("CS1238 initialization/configuration failed");
+    return;
+  }
   requestTare();
 
   state_started_ms_ = millis();
@@ -103,33 +107,23 @@ bool PressureController::commandEngage() const {
   return CMD_ACTIVE_HIGH_IS_M3 ? raw == HIGH : raw == LOW;
 }
 
-long PressureController::median3(long a, long b, long c) {
-  if (a > b) {
-    const long t = a; a = b; b = t;
-  }
-  if (b > c) {
-    return a > c ? a : c;
-  }
-  return b;
+long PressureController::normalizedForceDelta() const {
+  return static_cast<long>(CS1238_CONTACT_FORCE_SIGN) * forceDelta();
 }
 
 void PressureController::updateFilteredSample(long sample) {
-  sample_window_[sample_window_index_] = sample;
-  sample_window_index_ = (sample_window_index_ + 1) % 3;
-  if (sample_window_count_ < 3) {
+  if (sample_window_count_ == CS1238_MOVING_AVERAGE_SAMPLES) {
+    sample_window_sum_ -= sample_window_[sample_window_index_];
+  } else {
     sample_window_count_++;
   }
-  if (sample_window_count_ < 3) {
+  sample_window_[sample_window_index_] = sample;
+  sample_window_sum_ += sample;
+  sample_window_index_ = (sample_window_index_ + 1) % CS1238_MOVING_AVERAGE_SAMPLES;
+  if (sample_window_count_ < CS1238_MOVING_AVERAGE_SAMPLES) {
     return;
   }
-
-  const long median = median3(sample_window_[0], sample_window_[1], sample_window_[2]);
-  if (!ema_initialized_) {
-    hx_filtered_ = median;
-    ema_initialized_ = true;
-  } else {
-    hx_filtered_ = (3L * hx_filtered_ + median) / 4L;
-  }
+  cs1238_filtered_ = static_cast<long>(sample_window_sum_ / CS1238_MOVING_AVERAGE_SAMPLES);
   new_filtered_sample_ = true;
 }
 
@@ -139,22 +133,27 @@ void PressureController::serviceTare(long sample) {
   }
   tare_sum_ += sample;
   tare_count_++;
-  if (tare_count_ >= 10) {
-    hx_tare_ = static_cast<long>(tare_sum_ / tare_count_);
+  if (tare_count_ >= CS1238_TARE_SAMPLES) {
+    cs1238_tare_ = static_cast<long>(tare_sum_ / tare_count_);
     tare_requested_ = false;
     tare_sum_ = 0;
     tare_count_ = 0;
   }
 }
 
-void PressureController::serviceHx711() {
-  if (hx_powered_down_ || !scale_.is_ready()) {
+void PressureController::serviceCs1238() {
+  if (cs1238_powered_down_ || !scale_.isReady()) {
     return;
   }
-  hx_raw_ = scale_.read();
-  setStatusFlag(STATUS_HX_ONLINE, true);
-  serviceTare(hx_raw_);
-  updateFilteredSample(hx_raw_);
+  const int32_t sample = scale_.forceRead();
+  if (sample >= CS123X_TIMEOUT_ERROR) {
+    setStatusFlag(STATUS_CS1238_ONLINE, false);
+    return;
+  }
+  cs1238_raw_ = sample;
+  setStatusFlag(STATUS_CS1238_ONLINE, true);
+  serviceTare(cs1238_raw_);
+  updateFilteredSample(cs1238_raw_);
 }
 
 void PressureController::requestTare() {
@@ -173,7 +172,7 @@ void PressureController::publishSafetyState() {
   const bool safe = lifted && LIFT_REFERENCE_VALID && !driverFaulted() &&
                     state_ != PressureState::FAULT;
   const bool pressure_healthy = PRESSURE_CALIBRATION_VALID &&
-                                statusFlag(STATUS_HX_ONLINE) &&
+                                statusFlag(STATUS_CS1238_ONLINE) &&
                                 !driverFaulted() && state_ != PressureState::FAULT;
   const bool contact_ready = pressure_healthy && state_ == PressureState::HOLD_FORCE &&
                              contact_ready_windows_ >= CONTACT_READY_REQUIRED_WINDOWS;
@@ -190,7 +189,7 @@ void PressureController::publishSafetyState() {
 
 void PressureController::updateReadyState() {
   if (state_ != PressureState::HOLD_FORCE || !PRESSURE_CALIBRATION_VALID ||
-      !statusFlag(STATUS_HX_ONLINE) || driverFaulted()) {
+      !statusFlag(STATUS_CS1238_ONLINE) || driverFaulted()) {
     contact_ready_windows_ = 0;
     return;
   }
@@ -198,7 +197,7 @@ void PressureController::updateReadyState() {
     return;
   }
 
-  const long target_error = std::labs(forceDelta() - TARGET_FORCE_RAW_DELTA);
+  const long target_error = std::labs(normalizedForceDelta() - TARGET_FORCE_RAW_DELTA);
   if (target_error <= CONTACT_READY_TOLERANCE_RAW) {
     if (contact_ready_windows_ < CONTACT_READY_REQUIRED_WINDOWS) {
       contact_ready_windows_++;
@@ -237,19 +236,20 @@ void PressureController::service() {
   const uint32_t now = millis();
   const bool magnetic_scan = statusFlag(STATUS_MAG_SCAN_ACTIVE);
 
-  if (magnetic_scan && !hx_powered_down_) {
-    scale_.power_down();
-    hx_powered_down_ = true;
-    setStatusFlag(STATUS_HX_ONLINE, false);
-  } else if (!magnetic_scan && hx_powered_down_) {
-    scale_.power_up();
-    hx_powered_down_ = false;
+  if (magnetic_scan && !cs1238_powered_down_) {
+    scale_.powerDown();
+    cs1238_powered_down_ = true;
+    setStatusFlag(STATUS_CS1238_ONLINE, false);
+  } else if (!magnetic_scan && cs1238_powered_down_) {
+    scale_.powerUp();
+    cs1238_powered_down_ = false;
     sample_window_count_ = 0;
-    ema_initialized_ = false;
+    sample_window_index_ = 0;
+    sample_window_sum_ = 0;
   }
 
   if (!magnetic_scan) {
-    serviceHx711();
+    serviceCs1238();
   }
 
   if (state_ != PressureState::FAULT && driverFaulted()) {
@@ -257,8 +257,8 @@ void PressureController::service() {
     return;
   }
 
-  if (state_ != PressureState::FAULT && new_filtered_sample_ &&
-      forceDelta() > HARD_FORCE_RAW_DELTA) {
+  if (state_ != PressureState::FAULT && PRESSURE_CALIBRATION_VALID && new_filtered_sample_ &&
+      normalizedForceDelta() > HARD_FORCE_RAW_DELTA) {
     enterFault("hard force limit exceeded");
     return;
   }
@@ -291,7 +291,7 @@ void PressureController::service() {
         break;
       }
       if (new_filtered_sample_) {
-        const long residual = std::labs(hx_filtered_ - NO_CONTACT_RAW_REFERENCE);
+        const long residual = std::labs(cs1238_filtered_ - NO_CONTACT_RAW_REFERENCE);
         if (residual <= LIFT_RELEASE_TOLERANCE_RAW) {
           lift_release_windows_++;
         } else {
@@ -303,7 +303,7 @@ void PressureController::service() {
       }
       if (state_ == PressureState::VERIFY_LIFTED &&
           now - state_started_ms_ >= LIFT_VERIFY_TIMEOUT_MS) {
-        enterFault("HX711 did not verify pen release");
+        enterFault("CS1238 did not verify pen release");
       }
       break;
 
@@ -313,8 +313,8 @@ void PressureController::service() {
       if (engage) {
         if (!PRESSURE_CALIBRATION_VALID) {
           enterFault("E-07/E-08 pressure calibration is incomplete");
-        } else if (!statusFlag(STATUS_HX_ONLINE)) {
-          enterFault("M3 requested without HX711 data");
+        } else if (!statusFlag(STATUS_CS1238_ONLINE)) {
+          enterFault("M3 requested without CS1238 data");
         } else {
           setState(PressureState::SEEK_CONTACT);
         }
@@ -327,7 +327,7 @@ void PressureController::service() {
         break;
       }
       motorSeek();
-      if (new_filtered_sample_ && forceDelta() >= CONTACT_RAW_DELTA) {
+      if (new_filtered_sample_ && normalizedForceDelta() >= CONTACT_RAW_DELTA) {
         motorStop();
         setState(PressureState::HOLD_FORCE);
       } else if (now - state_started_ms_ >= SEEK_TIMEOUT_MS) {
@@ -340,9 +340,9 @@ void PressureController::service() {
         setState(PressureState::LIFTING);
         break;
       }
-      if (new_filtered_sample_ && now - last_force_correction_ms_ >= HX_CORRECTION_PERIOD_MS) {
+      if (new_filtered_sample_ && now - last_force_correction_ms_ >= CS1238_CORRECTION_PERIOD_MS) {
         last_force_correction_ms_ = now;
-        const long error = TARGET_FORCE_RAW_DELTA - forceDelta();
+        const long error = TARGET_FORCE_RAW_DELTA - normalizedForceDelta();
         int command = static_cast<int>((error * HOLD_KP_NUM) / HOLD_KP_DEN);
         if (command > 0) {
           command = constrain(command, 0, PWM_HOLD_MAX);

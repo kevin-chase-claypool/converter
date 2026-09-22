@@ -3,7 +3,7 @@
 
   Target: SparkFun Pro Micro RP2350, Arduino-Pico core.
 
-  Core 0 owns pen-pressure safety, HX711, DRV8833, GP29 M3/M5, USB
+  Core 0 owns pen-pressure safety, CS1238, DRV8833, GP29 M3/M5, USB
   diagnostics, and the hardware watchdog. Core 1 owns Qwiic/TMAG5273, GP28
   HOME_ARM, and GP27 READY/magnetic output. The two control loops exchange only
   atomic status and heartbeat words.
@@ -52,7 +52,7 @@ void printHelp() {
   Serial.println(F("Theta RP2350 dual-core toolhead commands:"));
   Serial.println(F("  ?  help"));
   Serial.println(F("  p  telemetry snapshot"));
-  Serial.println(F("  t  asynchronous HX711 tare"));
+  Serial.println(F("  t  asynchronous CS1238 tare"));
   Serial.println(F("  e  manual ENGAGE/M3 request"));
   Serial.println(F("  l  manual LIFT/M5 request"));
   Serial.println(F("  a  return to automatic GP29 input"));
@@ -81,7 +81,7 @@ void emitTelemetry() {
   const int32_t md = g_mag_delta_millimt.load(std::memory_order_relaxed);
   const int length = snprintf(
       line, sizeof(line),
-      "pressure=%s cmd=%s fault=%s hx_raw=%ld hx_filtered=%ld hx_delta=%ld "
+      "pressure=%s cmd=%s fault=%s cs1238_raw=%ld cs1238_filtered=%ld cs1238_delta=%ld "
       "lift_home=%d "
       "mag=%s mT=[%ld.%03ld,%ld.%03ld,%ld.%03ld] delta=%ld.%03ld "
       "samples=%lu status=0x%08lx ready=[contact:%d clear:%d gp27:%d] "

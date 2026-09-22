@@ -6,6 +6,7 @@ Newest changes appear first.
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
 | 2026-09-21 | `WINSW-20260921-001` | rp23cnc-software, hardware | implemented | [Add Pro Micro known-mass calibration application](windows-software/2026/2026-09-21-add-pro-micro-known-mass-calibration-app.md) |
+| 2026-09-21 | `RPSW-20260921-002` | rp23cnc-software, hardware | implemented | [Migrate Integrated Toolhead to CS1238 Backend](rp23cnc-software/2026/2026-09-21-migrate-integrated-toolhead-cs1238-backend.md) |
 | 2026-09-21 | `RPSW-20260921-001` | hardware | implemented | [Replace dual-ADC fixture with Pro Micro known-mass calibration](rp23cnc-software/2026/2026-09-21-replace-dual-adc-fixture-with-known-mass-cs1238.md) |
 | 2026-09-19 | `WINSW-20260919-001` | hardware, rp23cnc-software | implemented | [Add guided force-calibration analysis workflow](windows-software/2026/2026-09-19-add-guided-force-calibration-analysis.md) |
 | 2026-09-19 | `RPSW-20260919-001` | hardware, windows-software | implemented | [Add Pico 2 dual-sensor DAQ firmware](rp23cnc-software/2026/2026-09-19-add-pico2-dual-sensor-daq-firmware.md) |
