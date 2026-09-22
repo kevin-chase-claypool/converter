@@ -1,5 +1,23 @@
 # Engineering Log
 
+<a id="elog-20260922-revise-home-seek-pacing"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/PARTIAL - revise home-origin seek pacing
+
+- Evidence: after `e` from `LIFTED`, the first supervised configuration safely
+  reported `M3 home contact seek pulse budget exhausted` at 160/160 pulses.
+  The pen remained about 4.5 mm above paper; CS1238 normalized force was
+  80,626 raw (about 16 g), below the 176,357 raw 35 g contact threshold and
+  302,326 raw 60 g hard limit. GP2 had released (`lift_home=0`).
+- Diagnosis: 160 × 5 ms supplied only 800 ms total drive and covered about
+  7.5 mm, not the roughly 12 mm home-to-paper gap. The 250 ms inter-pulse wait
+  made the failed attempt take roughly 40 seconds even though motion was safe.
+- Change: retain the calibrated force values and all hard/switch safeguards;
+  change only `HOME_SEEK_CONTACT` pacing to 25 ms full-drive DOWN pulses with
+  a dedicated 50 ms sensing settle. Set a conservative 80-pulse/8-second
+  ceiling, equivalent to about 18.75 mm using the observed response.
+- Status: Arduino RP2350 compile passed; the next supervised T-02 hardware
+  attempt remains pending. This does not qualify normal plotting.
+
 <a id="elog-20260922-bounded-home-origin-contact-seek"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - bound home-origin M3 contact seek
 

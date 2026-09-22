@@ -86,10 +86,10 @@ seated by the operator at an approximate drawing preload. The supervised
 about 12 mm above the paper in the current setup:
 
 - If M3 begins with GP2 (`LIFT_HOME`) pressed, the controller performs
-  `HOME_SEEK_CONTACT`: one 5 ms full-drive DOWN pulse, driver sleep, and a
-  250 ms sensor-settling interval before checking the 16-sample CS1238 moving
+  `HOME_SEEK_CONTACT`: one 25 ms full-drive DOWN pulse, driver sleep, and a
+  50 ms sensor-settling interval before checking the 16-sample CS1238 moving
   average. It repeats only while force is below the calibrated 35 g contact
-  threshold. The candidate bounds are 160 pulses, 45 seconds, and 30 completed
+  threshold. The candidate bounds are 80 pulses, 8 seconds, and 30 completed
   pulses without GP2 releasing. Reaching a bound stops/sleeps the motor and
   enters `FAULT`; the operator must inspect the fault before clearing it.
 - If M3 begins after ordinary M5 clearance with GP2 released, the established
@@ -104,9 +104,9 @@ about 12 mm above the paper in the current setup:
   `e` (or deliberately restore GP29 with `a`) to request another engage.
 
 M5 still applies the candidate 100 ms UP clearance move and stops sooner if
-GP2 is pressed. The 160-pulse envelope is only a bench candidate derived from
-the reported approximately 12 mm home-to-paper gap and the earlier E-09F
-motion observation; it is not a universal per-pen travel constant. T-01J must
+GP2 is pressed. The 80-pulse envelope is a revised bench candidate: a real
+160 x 5 ms seek covered only about 7.5 mm of the reported 12 mm paper gap.
+It is not a universal per-pen travel constant. T-01J must
 validate the home seek, force response, and clearance for each installed tool
 before plotting. Production remains commissioning-gated.
 

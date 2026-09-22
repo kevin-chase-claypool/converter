@@ -405,7 +405,7 @@ void PressureController::service() {
       }
 
       const toolhead::ContactSeekLimits limits{
-          HOME_SEEK_PULSE_MS, CS1238_CORRECTION_PERIOD_MS,
+          HOME_SEEK_PULSE_MS, HOME_SEEK_SETTLE_MS,
           HOME_SEEK_MAX_PULSES, HOME_SEEK_TIMEOUT_MS};
       const toolhead::ContactSeekStatus seek_status{
           engage,

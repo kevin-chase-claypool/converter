@@ -32,7 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
-| 2026-09-22 | T-02 home-origin seek setup | Not yet run | User reported the installed pen tip approximately 12 mm above paper at `lift_home=1`; the prior 100 ms M3 move only served the routine clearance gap. This observation prompted a bounded home-origin contact-seek path; no actuator motion was recorded in this note. |
+| 2026-09-22 | T-02 home-origin seek setup | Partial — revised candidate pending | The first 160 × 5 ms seek stopped safely at its pulse bound, still about 4.5 mm above paper and at only ~16 g normalized force. The revised supervised candidate uses 25 ms pulses / 50 ms settling with 80-pulse / 8-second bounds. |
 | 2026-09-22 | Integrated GP2 boot retract | Passed (supervised bench) | Latest boot transitioned from `LIFTING, lift_home=0` to `LIFTED, lift_home=1, fault=none` after the 3000 ms timeout change; formal lift-reference gate remains unset. |
 | 2026-09-22 | Integrated lift drive | Failed safely — PWM corrected | Corrected phase polarity still timed out at GP2 with no DRV fault; integrated lift PWM 70/255 was lower than E-09E's validated full-drive pulses, so it was raised to 255. |
 | 2026-09-22 | Integrated direction polarity | Failed safely — corrected | The first supervised integrated boot timed out before GP2 because IN1/IN2 lift/seek phase selections were reversed relative to E-09E; the controller entered a bounded fault and the constants were corrected. |

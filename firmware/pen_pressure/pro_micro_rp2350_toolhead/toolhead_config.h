@@ -58,15 +58,19 @@ constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 100;
 constexpr bool MECHANICAL_PRELOAD_MODE = true; // supervised bench test build
 constexpr uint32_t PEN_ENGAGE_TRAVEL_MS = 100;
 constexpr uint32_t SEEK_TIMEOUT_MS = 1500;
-// E-09F measured about 1.75 mm of travel per 100 ms at full drive. The
-// operator reports about 12 mm from GP2 home to paper; 160 x 5 ms pulses
-// therefore provide about 14 mm of bounded home-seek travel. T-01J must
-// validate this provisional per-tool envelope before normal plotting.
-constexpr uint8_t HOME_SEEK_PULSE_MS = 5;
-constexpr uint16_t HOME_SEEK_MAX_PULSES = 160;
+// The first installed home-origin seek used 160 x 5 ms pulses and moved only
+// about 7.5 mm, leaving the pen about 4.5 mm above paper. Use 25 ms pulses
+// with 50 ms sensor checks to cover the observed 12 mm gap in roughly four
+// seconds rather than 34 seconds. 80 pulses retain about 18.75 mm of bounded
+// travel at that observed response. T-01J must validate this per-tool limit.
+constexpr uint8_t HOME_SEEK_PULSE_MS = 25;
+constexpr uint32_t HOME_SEEK_SETTLE_MS = 50;
+constexpr uint16_t HOME_SEEK_MAX_PULSES = 80;
 constexpr uint8_t HOME_SEEK_MAX_SWITCH_ACTIVE_PULSES = 30;
-constexpr uint32_t HOME_SEEK_TIMEOUT_MS = 45000;
+constexpr uint32_t HOME_SEEK_TIMEOUT_MS = 8000;
 constexpr uint8_t HOME_SEEK_PWM = 255;
+// Existing post-contact force-hold cadence; home seeking has its own faster
+// settle constant above and does not retune the moving-average control loop.
 constexpr uint32_t CS1238_CORRECTION_PERIOD_MS = 250;
 constexpr uint8_t CS1238_TARE_SAMPLES = 64;
 // Candidate 25 ms moving-average window at the configured 640 SPS. E-08C
@@ -120,7 +124,7 @@ constexpr uint8_t CONTACT_READY_REQUIRED_WINDOWS = 3;
 
 static_assert(HOME_SEEK_TIMEOUT_MS >
                   HOME_SEEK_MAX_PULSES *
-                      (HOME_SEEK_PULSE_MS + CS1238_CORRECTION_PERIOD_MS),
+                      (HOME_SEEK_PULSE_MS + HOME_SEEK_SETTLE_MS),
               "Home contact-seek timeout must permit its bounded pulse sequence");
 
 static_assert(!PRESSURE_CALIBRATION_VALID ||

@@ -70,7 +70,7 @@ constexpr ContactSeekAction decideContactSeekAction(
 
 // Compile-time regression cases exercise the same decision function used by
 // the live state machine without energizing hardware.
-constexpr ContactSeekLimits kTestLimits{5, 250, 160, 45000};
+constexpr ContactSeekLimits kTestLimits{25, 50, 80, 8000};
 static_assert(decideContactSeekAction(
                   {true, true, 0, 100, 100, 100, false, 0, 0, 0},
                   kTestLimits) == ContactSeekAction::START_PULSE);
@@ -78,10 +78,10 @@ static_assert(decideContactSeekAction(
                   {true, false, 0, 100, 100, 100, false, 0, 0, 0},
                   kTestLimits) == ContactSeekAction::WAIT);
 static_assert(decideContactSeekAction(
-                  {true, false, 0, 100, 104, 100, true, 100, 0, 0},
+                  {true, false, 0, 100, 124, 100, true, 100, 0, 0},
                   kTestLimits) == ContactSeekAction::WAIT);
 static_assert(decideContactSeekAction(
-                  {true, false, 0, 100, 105, 100, true, 100, 0, 0},
+                  {true, false, 0, 100, 125, 100, true, 100, 0, 0},
                   kTestLimits) == ContactSeekAction::STOP_PULSE);
 static_assert(decideContactSeekAction(
                   {true, true, 100, 100, 101, 100, true, 100, 0, 0},
@@ -90,16 +90,16 @@ static_assert(decideContactSeekAction(
                   {false, true, 0, 100, 101, 100, true, 100, 0, 0},
                   kTestLimits) == ContactSeekAction::CANCELLED);
 static_assert(decideContactSeekAction(
-                  {true, true, 0, 100, 349, 100, false, 0, 100, 1},
+                  {true, true, 0, 100, 149, 100, false, 0, 100, 1},
                   kTestLimits) == ContactSeekAction::WAIT);
 static_assert(decideContactSeekAction(
-                  {true, true, 0, 100, 351, 100, false, 0, 100, 1},
+                  {true, true, 0, 100, 150, 100, false, 0, 100, 1},
                   kTestLimits) == ContactSeekAction::START_PULSE);
 static_assert(decideContactSeekAction(
-                  {true, true, 0, 100, 350, 100, false, 0, 100, 160},
+                  {true, true, 0, 100, 150, 100, false, 0, 100, 80},
                   kTestLimits) == ContactSeekAction::LIMIT_REACHED);
 static_assert(decideContactSeekAction(
-                  {true, false, 0, 100, 45100, 100, false, 0, 0, 0},
+                  {true, false, 0, 100, 8100, 100, false, 0, 0, 0},
                   kTestLimits) == ContactSeekAction::LIMIT_REACHED);
 
 }  // namespace toolhead
