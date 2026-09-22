@@ -24,10 +24,13 @@
 - Evidence: E-09F bench testing recorded about 1.75 mm clearance after twenty
   guarded 5 ms UP pulses; twenty matching DOWN pulses restored acceptable
   paper resistance.
-- Safety: the flag remains `false`; actuator-direction, lift-reference, and
-  other commissioning gates remain disabled. After the timed preload, the
-  CS1238 moving average provides bounded force corrections; it is not used to
-  seek initial paper contact, and GP2 remains the maximum-UP limit.
+- Safety: the source initially kept the mode disabled while the travel and
+  switch evidence were recorded. The current supervised bench build now
+  enables only the mechanical-preload, actuator-direction, and pressure-fit
+  gates; production clear, magnetic, and GP27 gates remain disabled. After the
+  timed preload, the CS1238 moving average provides bounded force corrections;
+  it is not used to seek initial paper contact, and GP2 remains the maximum-UP
+  limit.
 - Next action: compile-check the integrated sketch, then commission direction
   and lift reference before any deliberate enablement or flashing.
 

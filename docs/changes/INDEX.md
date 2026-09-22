@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-014` | rp23cnc-software, hardware | implemented | [Enable the mechanical-preload supervised bench build](rp23cnc-software/2026/2026-09-22-enable-mechanical-preload-bench-build.md) |
 | 2026-09-22 | `RPSW-20260922-013` | rp23cnc-software, hardware | implemented | [Stage mechanical-preload M3/M5 behavior](rp23cnc-software/2026/2026-09-22-stage-mechanical-preload-m3m5.md) |
 | 2026-09-22 | `RPSW-20260922-012` | rp23cnc-software, hardware | implemented | [Add E-09F manual down setup pulse](rp23cnc-software/2026/2026-09-22-add-e09f-manual-down-setup.md) |
 | 2026-09-22 | `RPSW-20260922-011` | rp23cnc-software, hardware | implemented | [Delay E-09F air-gap telemetry](rp23cnc-software/2026/2026-09-22-delay-e09f-air-gap-telemetry.md) |

@@ -269,8 +269,9 @@ local `GP2` switch establishes `LIFT_HOME` only at boot, recovery, or an
 explicit service action. Normal M5 uses the same load cell as M3, but detects
 the no-contact release band and then applies a verified clearance pulse.
 
-For the current bench setup, the controller also contains a staged,
-disabled-by-default `MECHANICAL_PRELOAD_MODE`. After the operator seats an
+For the current bench setup, the controller also contains a staged
+`MECHANICAL_PRELOAD_MODE`, enabled only in the supervised bench build. Set it
+back to `false` before production use. After the operator seats an
 installed pen at approximate drawing preload, enabled commissioning gates make
 M3 a bounded 100 ms DOWN move and M5 a bounded 100 ms UP clearance move. After
 M3, the CS1238 moving average resumes bounded force corrections toward the

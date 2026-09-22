@@ -51,7 +51,7 @@ constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 100;
 // remaining commissioning gates pass, M3/M5 use the mechanically verified
 // 100 ms down/up pair; after the timed M3 preload, the CS1238 moving average
 // resumes bounded force corrections. GP2 remains the maximum-UP limit.
-constexpr bool MECHANICAL_PRELOAD_MODE = false; // staged; commissioning lock
+constexpr bool MECHANICAL_PRELOAD_MODE = true; // supervised bench test build
 constexpr uint32_t PEN_ENGAGE_TRAVEL_MS = 100;
 constexpr uint32_t SEEK_TIMEOUT_MS = 1500;
 constexpr uint32_t CS1238_CORRECTION_PERIOD_MS = 250;
@@ -66,8 +66,8 @@ constexpr uint32_t HARDWARE_WATCHDOG_MS = 2000;
 
 // Commissioning gates. The integrated firmware must remain motion-safe until
 // the referenced hardware tests replace these placeholders with measured data.
-constexpr bool ACTUATOR_DIRECTION_VALID = false;  // T-01
-constexpr bool PRESSURE_CALIBRATION_VALID = false; // E-07C/E-08C/E-09C
+constexpr bool ACTUATOR_DIRECTION_VALID = true;   // E-09E direction check
+constexpr bool PRESSURE_CALIBRATION_VALID = true;  // E-09C cap-free fit
 constexpr bool LIFT_REFERENCE_VALID = false;       // T-02
 constexpr bool MAGNETIC_CALIBRATION_VALID = false; // E-18/M-08
 // Normal-print status shares GP27/U3 with the P100 magnetic protocol. Keep

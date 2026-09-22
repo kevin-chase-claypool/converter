@@ -82,8 +82,9 @@ an ordinary M5.
 
 For the current non-precision plotter bench, the installed pen is first seated
 by the operator at an approximate drawing preload. The controller contains a
-separate, disabled-by-default `MECHANICAL_PRELOAD_MODE` for this setup. When
-its commissioning gates are deliberately enabled, M3 applies the measured
+separate `MECHANICAL_PRELOAD_MODE` for this setup. It is enabled in the current
+supervised bench build only; set it back to `false` before production use. When
+the required gates are enabled, M3 applies the measured
 100 ms DOWN travel and holds the motor stopped; M5 applies the measured 100 ms
 UP travel and returns to `LIFTED`. After M3, the CS1238 16-sample moving
 average applies bounded force corrections toward the calibrated target; it is
