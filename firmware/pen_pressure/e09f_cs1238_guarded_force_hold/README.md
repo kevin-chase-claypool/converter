@@ -32,9 +32,12 @@ reachable and put the kitchen scale below the installed pen.
 | `r` | Print a 16-sample CS1238 raw mean and tare delta. |
 | `x` | Stop/sleep/disarm immediately. |
 
-The sketch has a 30 second automatic-test timeout, a 70 g raw hard limit, 30
-pulses per direction, 500 ms settling between corrections, and GP2 LIFT_HOME
-blocking before every UP pulse. It sleeps the driver after every pulse.
+The sketch has a 30 second automatic-test timeout, a 70 g raw hard limit with
+two-read confirmation during downward seeking/holding, 30 pulses per direction,
+500 ms settling between corrections, and GP2 LIFT_HOME blocking before every
+UP pulse. Release bypasses the downward hard-force gate because it can only
+lift; it retains its pulse/time/fault bounds. The driver sleeps after every
+pulse.
 
 ## Procedure
 

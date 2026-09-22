@@ -1,5 +1,17 @@
 # Engineering Log
 
+<a id="elog-20260922-e09f-release-hard-limit-fix"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - E-09F release hard-limit fix
+
+- Status: source compiled; post-fix powered clear is pending.
+- Observation: `CLEAR_START` received an anomalous `tare_delta=967934` and
+  faulted `hard_force_limit` while the driver was asleep, before its first UP
+  correction.
+- Result: the hard-force gate now applies only to downward seek/hold and
+  confirms its input with a second immediate read. Upward release remains
+  bounded by pulse count, timeout, ULT, GP2, and sleep rules.
+- Next action: reflash E-09F, fresh-tare/arm, and repeat `s` then `c`.
+
 <a id="elog-20260922-e09f-guarded-force-hold-source"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - E-09F guarded force-hold source
 

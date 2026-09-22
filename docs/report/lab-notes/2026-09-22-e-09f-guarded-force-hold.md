@@ -29,6 +29,22 @@ The next action is repeated-clear testing. Production M3/M5, GP27, and
 force-control gates remain disabled until normal M5 behavior is exercised
 repeatedly rather than through this temporary E-09F sketch.
 
+## Failed clear attempt and correction
+
+On a later `a`, `c` attempt, the serial stream reported:
+
+```text
+CLEAR_START,release_raw_delta=15116,air_gap_ms=100
+READING,raw=-666510,tare_delta=967934,tare_valid=1
+FAULT,reason=hard_force_limit
+```
+
+This was a firmware-state error: E-09F applied the downward contact-force hard
+limit during an UP/release state before commanding an UP pulse. The preceding
+hold had completed safely and the driver was asleep. The release code now
+bypasses that downward-only limit; seek/hold retains it with an immediate second
+CS1238 confirmation. Reflash the corrected sketch and repeat the clear test.
+
 ## References
 
 - [E-09F test plan](../../testing/TEST_PLAN.md)

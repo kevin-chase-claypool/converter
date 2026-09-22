@@ -282,12 +282,20 @@ void serviceAutomaticTest() {
 
   long delta = 0;
   if (!readForce(delta)) return;
-  if (delta > HARD_FORCE_RAW) {
-    fail(F("hard_force_limit"));
-    return;
-  }
-
   if (state == TestState::SEEK_HOLD) {
+    // Only downward seeking/holding can increase contact force. Confirm an
+    // over-limit sample before faulting so a single CS1238 transient cannot
+    // turn an otherwise safe, sleeping test into a false fault.
+    if (delta > HARD_FORCE_RAW) {
+      long confirmation = 0;
+      if (!readForce(confirmation)) return;
+      if (confirmation > HARD_FORCE_RAW) {
+        fail(F("hard_force_limit"));
+      } else {
+        Serial.println(F("HARD_LIMIT_GLITCH_REJECTED"));
+      }
+      return;
+    }
     if (delta < FORCE_BAND_LOW_RAW) {
       if (downPulses >= AUTO_PULSE_BUDGET) {
         fail(F("down_pulse_budget"));
@@ -316,8 +324,10 @@ void serviceAutomaticTest() {
     return;
   }
 
-  // RELEASE_TO_CLEAR: rise in 5 ms steps until clear, then issue one explicit
-  // 100 ms candidate air-gap pulse and stop. GP2 is checked before each pulse.
+  // RELEASE_TO_CLEAR: upward movement cannot increase pen contact force, so
+  // it intentionally bypasses the downward hard-force gate above. Rise in 5
+  // ms steps until clear, then issue one explicit 100 ms candidate air-gap
+  // pulse and stop. GP2 is checked before each pulse.
   if (labs(delta) <= CLEAR_BAND_RAW) {
     if (!drivePulse(false, CLEARANCE_PULSE_MS, F("AIR_GAP_PULSE"))) return;
     long postGapDelta = 0;

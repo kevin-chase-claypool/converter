@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-009` | implemented | [Fix E-09F release hard-limit fault](../rp23cnc-software/2026/2026-09-22-fix-e09f-release-hard-limit.md) | `e-09f`, `cs1238`, `pen-clear`, `fault-handling` |
 | 2026-09-22 | `RPSW-20260922-008` | implemented | [Add E-09F guarded force-hold test](../rp23cnc-software/2026/2026-09-22-add-e09f-guarded-force-hold.md) | `e-09f`, `cs1238`, `force-hold`, `pen-clear`, `safety` |
 | 2026-09-22 | `RPSW-20260922-007` | implemented | [Refine E-09E pulses and stage pen-clear candidate](../rp23cnc-software/2026/2026-09-22-refine-e09e-pulses-and-stage-pen-clear.md) | `e-09e`, `n20`, `pen-clear`, `pulse-duration`, `safety` |
 | 2026-09-22 | `RPSW-20260922-006` | implemented | [Add E-09E Serial Monitor shortcuts](../rp23cnc-software/2026/2026-09-22-add-e09e-serial-monitor-shortcuts.md) | `e-09e`, `uart`, `arduino-ide`, `kitchen-scale`, `safety` |
