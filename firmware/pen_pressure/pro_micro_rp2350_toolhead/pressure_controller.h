@@ -52,6 +52,7 @@ class PressureController {
   void publishSafetyState();
   void enterFault(const char *reason);
   long normalizedForceDelta() const;
+  long noContactResidual() const;
   CS123x scale_{CS123X_TYPE_CS1238, toolhead_config::PIN_CS1238_DT,
                 toolhead_config::PIN_CS1238_SCK, CS123X_CH_A,
                 CS123X_GAIN_128, CS123X_RATE_640Hz, CS123X_INT_REF_OFF};

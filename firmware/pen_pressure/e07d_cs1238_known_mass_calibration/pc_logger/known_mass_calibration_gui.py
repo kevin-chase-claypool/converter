@@ -14,7 +14,7 @@ import time
 import tkinter as tk
 from datetime import datetime
 from pathlib import Path
-from tkinter import messagebox, ttk
+from tkinter import filedialog, messagebox, simpledialog, ttk
 
 import matplotlib
 
@@ -81,6 +81,29 @@ def project_printing_force_fit(weight_fit: dict[str, float], relationship: str) 
     }
 
 
+def raw_for_projected_force(printing_fit: dict[str, float | str], force_g: float) -> float:
+    """Return the raw count predicted for a selected pen-tip force."""
+    slope = float(printing_fit["grams_per_raw_count"])
+    if slope == 0:
+        raise ValueError("the projected pen-force slope is zero")
+    return (force_g - float(printing_fit["offset_g"])) / slope
+
+
+def apply_fixture_mass(points: list[dict[str, object]], fixture_mass_g: float) -> list[dict[str, object]]:
+    """Return copied points whose physical mass labels include a constant fixture mass.
+
+    The CS1238 traces remain untouched.  A fixture (for example, a pen cap)
+    resting on the cell during every capture is real load, so its mass is added
+    to—not subtracted from—the entered precision-weight totals.
+    """
+    corrected: list[dict[str, object]] = []
+    for point in points:
+        copy = dict(point)
+        copy["mass_g"] = float(copy["mass_g"]) + fixture_mass_g
+        corrected.append(copy)
+    return corrected
+
+
 class KnownMassCalibrationApp(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
@@ -94,6 +117,10 @@ class KnownMassCalibrationApp(tk.Tk):
         self.pass_direction = tk.StringVar(value="Loading")
         self.calibration_load_direction = tk.StringVar(value=DOWNWARD_WEIGHT_LOAD)
         self.printing_force_relationship = tk.StringVar(value=UPWARD_PEN_REACTION)
+        self.pen_scale_force_g = tk.StringVar(value="50")
+        self.pen_scale_status = tk.StringVar(
+            value="Select the completed calibration summary, then place the kitchen scale under the installed pen."
+        )
         self.connection_status = tk.StringVar(value="Not connected")
         self.capture_status = tk.StringVar(value="Enter the total mass currently resting on the load cell.")
         self.fit_status = tk.StringVar(value="Capture at least three distinct total masses before fitting.")
@@ -102,6 +129,8 @@ class KnownMassCalibrationApp(tk.Tk):
         self.points: list[dict[str, object]] = []
         self.current_run_dir: Path | None = None
         self.capture_number = 0
+        self.pen_scale_fit: dict[str, float | str] | None = None
+        self.pen_scale_run_dir: Path | None = None
 
         shell = ttk.Frame(self, padding=12)
         shell.grid(sticky="nsew")
@@ -116,15 +145,18 @@ class KnownMassCalibrationApp(tk.Tk):
         setup = ttk.Frame(tabs, padding=14)
         capture = ttk.Frame(tabs, padding=14)
         results = ttk.Frame(tabs, padding=14)
+        pen_scale = ttk.Frame(tabs, padding=14)
         help_tab = ttk.Frame(tabs, padding=14)
         tabs.add(setup, text="1. Connect")
         tabs.add(capture, text="2. Capture masses")
         tabs.add(results, text="3. Fit and graphs")
+        tabs.add(pen_scale, text="4. Pen-scale check")
         tabs.add(help_tab, text="Help")
 
         self._build_setup(setup)
         self._build_capture(capture)
         self._build_results(results)
+        self._build_pen_scale_check(pen_scale)
         self._build_help(help_tab)
         self.refresh_ports()
         self.protocol("WM_DELETE_WINDOW", self.close)
@@ -172,8 +204,10 @@ class KnownMassCalibrationApp(tk.Tk):
         self.capture_button = ttk.Button(frame, text="Capture raw point", command=self.capture_point, state="disabled")
         self.capture_button.grid(row=5, column=1, sticky="w", pady=(10, 8))
         ttk.Button(frame, text="Start a new run", command=self.new_run).grid(row=5, column=2, sticky="w", pady=(10, 8))
-        ttk.Label(frame, textvariable=self.capture_status, wraplength=700).grid(row=6, column=0, columnspan=4, sticky="w", pady=(2, 10))
-        ttk.Label(frame, text="Captured points", font=("TkDefaultFont", 10, "bold")).grid(row=7, column=0, columnspan=4, sticky="w")
+        ttk.Button(frame, text="Open saved run…", command=self.open_saved_run).grid(row=6, column=1, sticky="w", pady=(0, 6))
+        ttk.Button(frame, text="Add fixture mass to labels…", command=self.add_fixture_mass).grid(row=6, column=2, sticky="w", pady=(0, 6))
+        ttk.Label(frame, textvariable=self.capture_status, wraplength=700).grid(row=7, column=0, columnspan=4, sticky="w", pady=(2, 10))
+        ttk.Label(frame, text="Captured points", font=("TkDefaultFont", 10, "bold")).grid(row=8, column=0, columnspan=4, sticky="w")
         columns = ("number", "mass", "pass", "samples", "raw_mean", "raw_sigma")
         self.point_table = ttk.Treeview(frame, columns=columns, show="headings", height=11, selectmode="browse")
         for key, title, width in (
@@ -182,8 +216,8 @@ class KnownMassCalibrationApp(tk.Tk):
         ):
             self.point_table.heading(key, text=title)
             self.point_table.column(key, width=width, anchor="center")
-        self.point_table.grid(row=8, column=0, columnspan=4, sticky="nsew", pady=(6, 0))
-        ttk.Button(frame, text="Exclude selected point from fit", command=self.exclude_selected).grid(row=9, column=0, columnspan=2, sticky="w", pady=(8, 0))
+        self.point_table.grid(row=9, column=0, columnspan=4, sticky="nsew", pady=(6, 0))
+        ttk.Button(frame, text="Exclude selected point from fit", command=self.exclude_selected).grid(row=10, column=0, columnspan=2, sticky="w", pady=(8, 0))
 
     def _build_results(self, frame: ttk.Frame) -> None:
         frame.columnconfigure(0, weight=1)
@@ -205,6 +239,42 @@ class KnownMassCalibrationApp(tk.Tk):
         for index, line in enumerate(files, start=5):
             ttk.Label(frame, text=line).grid(row=index, column=0, sticky="w", pady=2)
 
+    def _build_pen_scale_check(self, frame: ttk.Frame) -> None:
+        frame.columnconfigure(1, weight=1)
+        ttk.Label(frame, text="Installed pen / kitchen-scale direction check", font=("TkDefaultFont", 10, "bold")).grid(
+            row=0, column=0, columnspan=3, sticky="w"
+        )
+        ttk.Label(
+            frame,
+            text=(
+                "This records raw CS1238 data only; it does not command the N20. Put the kitchen scale "
+                "under the installed pen and create a steady reading manually or with a separately qualified fixture."
+            ),
+            wraplength=720,
+        ).grid(row=1, column=0, columnspan=3, sticky="w", pady=(6, 12))
+        ttk.Button(frame, text="Select calibration summary", command=self.select_pen_scale_summary).grid(
+            row=2, column=0, sticky="w", pady=4
+        )
+        self.pen_scale_summary_label = ttk.Label(frame, text="No calibration summary selected.", wraplength=600)
+        self.pen_scale_summary_label.grid(row=2, column=1, columnspan=2, sticky="w", padx=8, pady=4)
+        ttk.Label(frame, text="Kitchen-scale reading (g)").grid(row=3, column=0, sticky="w", pady=4)
+        ttk.Entry(frame, textvariable=self.pen_scale_force_g, width=16).grid(row=3, column=1, sticky="w", padx=8, pady=4)
+        self.pen_scale_capture_button = ttk.Button(
+            frame, text="Capture pen-scale raw", command=self.capture_pen_scale_check, state="disabled"
+        )
+        self.pen_scale_capture_button.grid(row=4, column=1, sticky="w", pady=(10, 8))
+        ttk.Label(frame, textvariable=self.pen_scale_status, wraplength=720).grid(
+            row=5, column=0, columnspan=3, sticky="w", pady=(4, 10)
+        )
+        ttk.Label(
+            frame,
+            text=(
+                "Result: pen_scale_checks.csv and raw/pen_scale_check_*.csv are saved beside the selected calibration summary. "
+                "The app compares the measured scale force with the projected raw-force estimate."
+            ),
+            wraplength=720,
+        ).grid(row=6, column=0, columnspan=3, sticky="w")
+
     def _build_help(self, frame: ttk.Frame) -> None:
         text = (
             "1. Flash e07d_cs1238_known_mass_calibration.ino. Keep the actuator 6 V rail disconnected.\n\n"
@@ -212,7 +282,8 @@ class KnownMassCalibrationApp(tk.Tk):
             "3. With the installed load cell unloaded, use Read unloaded tare. Tare is a diagnostic baseline; it does not change raw capture data.\n\n"
             "4. Place the precision weights downward on the motor mount. This characterizes the cell; it may bend opposite to the upward reaction force at the pen tip. Leave Printing force relationship at Opposite unless a simple installed-pen check shows otherwise. Enter the total mass, wait for it to stop moving, then click Capture raw point.\n\n"
             "5. Capture 0, 5, 10, …, 70 g while loading. Repeat the sequence while unloading. Keep at least three complete loading/unloading passes for a defensible calibration.\n\n"
-            "6. Click Fit calibration and save graphs. The summary retains both the measured downward-weight fit and an estimated 40–60 g upward pen-force raw window. The latter is an approximate sign projection, not a precision claim. Confirm the raw direction with the installed pen before copying anything into later force-control firmware."
+            "6. Click Fit calibration and save graphs. The summary retains both the measured downward-weight fit and an estimated 40–60 g upward pen-force raw window. The latter is an approximate sign projection, not a precision claim.\n\n"
+            "7. Open 4. Pen-scale check. Select this run's calibration_summary.json, place a kitchen scale under the installed pen, hold a steady roughly 50 g reading, and capture raw data. The check does not drive the N20; it verifies that the real pen-tip reaction follows the projected raw direction."
         )
         help_text = tk.Text(frame, width=86, height=23, wrap="word", relief="solid", borderwidth=1, padx=8, pady=8)
         help_text.insert("1.0", text)
@@ -265,6 +336,7 @@ class KnownMassCalibrationApp(tk.Tk):
         self.append_message(response)
         self.connect_button.configure(text="Disconnect", state="normal")
         self.capture_button.configure(state="normal")
+        self._update_pen_scale_button()
 
     def _connection_failed(self, error: str) -> None:
         self.connection_status.set("Connection failed: " + error)
@@ -277,6 +349,7 @@ class KnownMassCalibrationApp(tk.Tk):
         self.connection_status.set("Disconnected")
         self.connect_button.configure(text="Connect", state="normal")
         self.capture_button.configure(state="disabled")
+        self._update_pen_scale_button()
 
     @staticmethod
     def _read_until_quiet(device: serial.Serial, seconds: float) -> list[str]:
@@ -490,6 +563,223 @@ class KnownMassCalibrationApp(tk.Tk):
         self._refresh_table()
         self._update_fit_button()
         self.capture_status.set("New run ready. The next capture creates a new timestamped results folder.")
+
+    def open_saved_run(self) -> None:
+        selected = filedialog.askopenfilename(
+            title="Open calibration_points.csv",
+            initialdir=str(self.results_root),
+            filetypes=(("Calibration points", "calibration_points.csv"), ("CSV files", "*.csv")),
+        )
+        if not selected:
+            return
+        try:
+            points_path = Path(selected)
+            run_dir = points_path.parent
+            loaded: list[dict[str, object]] = []
+            with points_path.open(newline="", encoding="utf-8") as handle:
+                for row in csv.DictReader(handle):
+                    raw_file = run_dir / row["raw_file"]
+                    if not raw_file.is_file():
+                        raise ValueError(f"missing raw trace: {raw_file.name}")
+                    loaded.append({
+                        "number": int(row["number"]),
+                        "mass_g": float(row["mass_g"]),
+                        "pass": row["pass"],
+                        "calibration_load_direction": row["calibration_load_direction"],
+                        "printing_force_relationship": row["printing_force_relationship"],
+                        "capture_ms": int(row["capture_ms"]),
+                        "sample_count": int(row["sample_count"]),
+                        "final_half_sample_count": int(row["final_half_sample_count"]),
+                        "raw_mean": float(row["raw_mean"]),
+                        "raw_sigma": float(row["raw_sigma"]),
+                        "raw_file": row["raw_file"],
+                        "included": row["included"].strip().lower() == "true",
+                    })
+            if not loaded:
+                raise ValueError("the selected file contains no points")
+            first = loaded[0]
+            if any(
+                point["calibration_load_direction"] != first["calibration_load_direction"]
+                or point["printing_force_relationship"] != first["printing_force_relationship"]
+                for point in loaded
+            ):
+                raise ValueError("the saved run contains inconsistent force-direction settings")
+            self.points = loaded
+            self.current_run_dir = run_dir
+            self.capture_number = max(int(point["number"]) for point in loaded)
+            self.calibration_load_direction.set(str(first["calibration_load_direction"]))
+            self.printing_force_relationship.set(str(first["printing_force_relationship"]))
+            self._refresh_table()
+            self._update_fit_button()
+            self.capture_status.set(f"Opened {len(loaded)} captures from {run_dir.name}. Raw traces are unchanged.")
+        except (OSError, ValueError, KeyError) as error:
+            messagebox.showerror("Cannot open saved run", str(error))
+
+    def add_fixture_mass(self) -> None:
+        if not self.points or not self.current_run_dir:
+            messagebox.showinfo("No saved run", "Open or capture a calibration run first.")
+            return
+        corrections_path = self.current_run_dir / "mass_label_corrections.csv"
+        if corrections_path.exists():
+            messagebox.showinfo(
+                "Fixture correction already recorded",
+                "This run already has a fixture-mass correction record. It is blocked from a second adjustment so labels cannot be shifted twice. "
+                "If the recorded correction is wrong, start a separate corrected run from the original raw evidence.",
+            )
+            return
+        fixture_mass_g = simpledialog.askfloat(
+            "Add fixture mass",
+            "Mass present on the load cell during every capture (g):\n\n"
+            "This is added to every mass label. Example: a 2.5 g pen cap changes 0, 5, … to 2.5, 7.5, … .",
+            minvalue=0.0,
+            maxvalue=300.0,
+            parent=self,
+        )
+        if fixture_mass_g is None:
+            return
+        if not messagebox.askyesno(
+            "Confirm fixture-mass correction",
+            f"Add {fixture_mass_g:g} g to all {len(self.points)} mass labels?\n\n"
+            "Raw CS1238 files will not change. A correction record will be saved beside the run.",
+            parent=self,
+        ):
+            return
+        self.points = apply_fixture_mass(self.points, fixture_mass_g)
+        with corrections_path.open("a", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=("applied_local", "operation", "fixture_mass_g", "point_count"))
+            writer.writeheader()
+            writer.writerow({
+                "applied_local": datetime.now().isoformat(timespec="seconds"),
+                "operation": "added constant fixture mass to all physical mass labels",
+                "fixture_mass_g": fixture_mass_g,
+                "point_count": len(self.points),
+            })
+        self._write_points_csv()
+        self._refresh_table()
+        self._update_fit_button()
+        self.capture_status.set(
+            f"Added {fixture_mass_g:g} g fixture mass to all labels. Review the table, then fit again to replace the summary and graphs."
+        )
+
+    def _update_pen_scale_button(self) -> None:
+        enabled = bool(self.pen_scale_fit and self.pen_scale_run_dir and self.device and self.device.is_open)
+        self.pen_scale_capture_button.configure(state="normal" if enabled else "disabled")
+
+    def select_pen_scale_summary(self) -> None:
+        selected = filedialog.askopenfilename(
+            title="Select calibration_summary.json",
+            initialdir=str(self.results_root),
+            filetypes=(("Calibration summary", "*.json"),),
+        )
+        if not selected:
+            return
+        try:
+            path = Path(selected)
+            summary = json.loads(path.read_text(encoding="utf-8"))
+            fit = summary["estimated_printing_force_fit"]
+            required = ("grams_per_raw_count", "offset_g", "relationship")
+            if not all(name in fit for name in required):
+                raise ValueError("selected JSON does not contain an estimated pen-force fit")
+            self.pen_scale_fit = fit
+            self.pen_scale_run_dir = path.parent
+            self.pen_scale_summary_label.configure(text=str(path))
+            predicted_raw = raw_for_projected_force(fit, float(self.pen_scale_force_g.get()))
+            self.pen_scale_status.set(
+                f"Loaded {fit['relationship']}. At {float(self.pen_scale_force_g.get()):g} g, projected raw is {predicted_raw:.0f}."
+            )
+            self._update_pen_scale_button()
+        except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
+            self.pen_scale_fit = None
+            self.pen_scale_run_dir = None
+            self.pen_scale_summary_label.configure(text="No valid calibration summary selected.")
+            self.pen_scale_status.set("Cannot load calibration summary: " + str(error))
+            self._update_pen_scale_button()
+
+    def capture_pen_scale_check(self) -> None:
+        try:
+            scale_force_g = float(self.pen_scale_force_g.get())
+            duration = int(self.capture_ms.get())
+            if scale_force_g < 0 or scale_force_g > 300:
+                raise ValueError("enter a kitchen-scale reading from 0 to 300 g")
+            if not MIN_CAPTURE_MS <= duration <= MAX_CAPTURE_MS:
+                raise ValueError(f"enter {MIN_CAPTURE_MS} to {MAX_CAPTURE_MS} ms")
+        except ValueError as error:
+            messagebox.showerror("Invalid scale reading", str(error))
+            return
+        if not self.pen_scale_fit or not self.pen_scale_run_dir or not self.device or not self.device.is_open:
+            messagebox.showerror("Not ready", "Connect the Pro Micro and select a completed calibration summary first.")
+            return
+        self.pen_scale_capture_button.configure(state="disabled")
+        self.pen_scale_status.set(f"Capturing raw data at the current {scale_force_g:g} g kitchen-scale reading…")
+        threading.Thread(target=self._pen_scale_capture_worker, args=(scale_force_g, duration), daemon=True).start()
+
+    def _pen_scale_capture_worker(self, scale_force_g: float, duration: int) -> None:
+        try:
+            assert self.device is not None
+            lines: list[str] = []
+            with self.serial_lock:
+                self.device.reset_input_buffer()
+                self.device.write(f"CAPTURE {duration}\n".encode("ascii"))
+                self.device.flush()
+                deadline = time.monotonic() + (duration / 1000.0) + 5.0
+                completed = False
+                while time.monotonic() < deadline:
+                    line = self.device.readline().decode("utf-8", errors="replace").strip()
+                    if not line:
+                        continue
+                    lines.append(line)
+                    if line.startswith("CAPTURE_STOP,"):
+                        completed = "reason=completed" in line
+                        break
+            samples = []
+            for line in lines:
+                pieces = line.split(",")
+                if len(pieces) == 3 and pieces[0] == "SAMPLE":
+                    samples.append((int(pieces[1]), int(pieces[2])))
+            if not completed or len(samples) < 3:
+                raise RuntimeError("pen-scale capture did not complete with enough raw samples")
+            self.after(0, lambda: self._store_pen_scale_check(scale_force_g, samples, lines))
+        except (ValueError, RuntimeError, serial.SerialException, OSError) as error:
+            self.after(0, lambda: self._pen_scale_capture_failed(str(error)))
+
+    def _store_pen_scale_check(self, scale_force_g: float, samples: list[tuple[int, int]], lines: list[str]) -> None:
+        assert self.pen_scale_fit is not None and self.pen_scale_run_dir is not None
+        raw_dir = self.pen_scale_run_dir / "raw"
+        number = len(list(raw_dir.glob("pen_scale_check_*.csv"))) + 1
+        raw_path = raw_dir / f"pen_scale_check_{number:03d}_{scale_force_g:g}g.csv"
+        with raw_path.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.writer(handle)
+            writer.writerow(("time_us", "cs1238_raw"))
+            writer.writerows(samples)
+        final_half = [raw for time_us, raw in samples if time_us >= samples[-1][0] / 2]
+        mean = statistics.fmean(final_half)
+        sigma = statistics.pstdev(final_half) if len(final_half) > 1 else 0.0
+        projected_g = float(self.pen_scale_fit["grams_per_raw_count"]) * mean + float(self.pen_scale_fit["offset_g"])
+        check_path = self.pen_scale_run_dir / "pen_scale_checks.csv"
+        new_file = not check_path.exists()
+        with check_path.open("a", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=("number", "scale_force_g", "sample_count", "raw_mean", "raw_sigma", "projected_pen_force_g", "difference_g", "raw_file"))
+            if new_file:
+                writer.writeheader()
+            writer.writerow({
+                "number": number,
+                "scale_force_g": scale_force_g,
+                "sample_count": len(samples),
+                "raw_mean": mean,
+                "raw_sigma": sigma,
+                "projected_pen_force_g": projected_g,
+                "difference_g": projected_g - scale_force_g,
+                "raw_file": str(raw_path.relative_to(self.pen_scale_run_dir)),
+            })
+        self.pen_scale_status.set(
+            f"Saved pen-scale check {number}: scale {scale_force_g:g} g, raw {mean:.1f}, projected {projected_g:.1f} g, difference {projected_g - scale_force_g:+.1f} g."
+        )
+        self.append_message(lines[-1])
+        self._update_pen_scale_button()
+
+    def _pen_scale_capture_failed(self, error: str) -> None:
+        self.pen_scale_status.set("Pen-scale capture failed: " + error)
+        self._update_pen_scale_button()
 
     def fit_and_save(self) -> None:
         included = self._included_points()

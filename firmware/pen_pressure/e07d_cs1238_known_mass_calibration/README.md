@@ -31,3 +31,16 @@ retains both fits and the separate projection graph identifies the approximate
 40–60 g upward-force raw window. The 40–60 g desired operating band is
 0.392–0.588 N, but it is not a production force-control setting until this test
 and later actuator response tests pass.
+
+If a constant item was on the cell for every capture (for example, a 2.5 g pen
+cap), it is physical fixture load. In the application use **Open saved run…**,
+then **Add fixture mass to labels…** before fitting again: `0, 5, …` becomes
+`2.5, 7.5, …`. The raw trace files remain untouched and
+`mass_label_corrections.csv` records the adjustment. Do not subtract such a
+fixture mass from the labels.
+
+After fitting, **4. Pen-scale check** can directly verify the selected force
+direction at the installed pen: select the saved `calibration_summary.json`,
+put a kitchen scale under the pen, establish a steady reading near 50 g, and
+capture a raw trace. This records only; it does not command the N20. It writes
+`raw/pen_scale_check_*.csv` and `pen_scale_checks.csv` alongside that run.

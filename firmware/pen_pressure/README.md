@@ -139,11 +139,18 @@ powered down because pressure measurement is unnecessary.
 
 The integrated CS1238 backend configures channel A, gain 128, and 640 SPS. It
 uses nonblocking `DT`/`DRDY` readiness followed by a CS123x `forceRead()`, then
-forms a candidate 16-sample raw moving average. This source path is **not**
-force-control authorization: `PRESSURE_CALIBRATION_VALID` remains false,
-`CS1238_CONTACT_FORCE_SIGN` is deliberately zero, and all raw contact/target/
-hard-limit values are zero placeholders until E-09C plus a later actuator-
-response test establish them.
+forms a candidate 16-sample raw moving average. E-09C's 2026-09-22
+downward-weight run supplied staged, signed raw candidates for a 35 g contact,
+50 g target, 70 g hard limit, ±5 g target-ready band, and 3 g clear band. The
+selected upward pen-reaction assumption makes force increase as raw decreases.
+That run carried an initially omitted 2.5 g pen cap at every point; its
+physical mass labels must be corrected upward by 2.5 g before reuse. The
+one-COM-port calibration application records this correction without changing
+any raw trace and provides an installed-pen kitchen-scale raw-direction check.
+This source path is **not** force-control authorization:
+`PRESSURE_CALIBRATION_VALID` remains false, and T-01 direction, response, M5
+clearance, and installed-pen direction checks remain required before any gate
+may be enabled.
 
 For a normal M5 from contact, Core 0 uses `RELEASE_TO_CLEAR`: it retracts only
 until the filtered CS1238 residual remains in the configured no-contact band

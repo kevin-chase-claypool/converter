@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20260922-e09c-known-mass-result-staged"></a>
+### 🟨 2026-09-22 - HARDWARE/RP23CNC SOFTWARE/PARTIAL - E-09C known-mass result staged in toolhead source
+
+- Status: a 19-capture 0–90 g precision-weight loading/unloading run is
+  recorded and its approximate signed candidate profile is now present in
+  source. No actuator or closed-loop force test occurred.
+- Category: hardware, rp23cnc-software, CS1238, load cell, force calibration,
+  E-09C.
+- Result: the first downward motor-mount fit was `0.000200466998 g/raw`
+  (4,988.35 raw/g), `R²=0.999231`, and `0.705 g` RMS residual. A 2.5 g pen
+  cap was later identified on every capture; it must be added to the physical
+  mass labels, moving the recorded no-load extrapolation from 263,659 to
+  251,188 raw while leaving the slope and raw force deltas unchanged. The
+  selected opposite upward-pen-reaction assumption stages `-1` sign, 35 g
+  contact, 50 g target, 70 g hard limit, ±5 g target ready, and 3 g clear
+  values. Clear detection now compares against the fresh boot tare, retaining
+  the fitted raw zero only as a calibration record.
+- Safety boundary: every actuator, force-control, pen-clear, and GP27 gate
+  remains false. The result is an initial non-precision profile, not proof of
+  the physical pen-tip reaction or authority to energize the N20.
+- Verification: the saved app summary and loading/unloading figures were
+  reviewed; RP2350 compilation and source checks remain required after staging.
+- Next action: record the fixture correction with the Windows app, then use
+  its installed-pen kitchen-scale check near 50 g to confirm raw direction.
+  Complete T-01 actuator direction/response and T-01H M5-clearance evidence
+  before enabling any controller gate.
+
 <a id="elog-20260921-known-mass-force-direction-projection"></a>
 ### 🟨 2026-09-21 - WINDOWS SOFTWARE/RP23CNC SOFTWARE/IMPLEMENTED - Direction-aware known-mass result projection
 

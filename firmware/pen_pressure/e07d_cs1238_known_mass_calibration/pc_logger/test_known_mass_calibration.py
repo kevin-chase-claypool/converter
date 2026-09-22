@@ -7,8 +7,10 @@ from known_mass_calibration_gui import (
     KnownMassCalibrationApp,
     SAME_FORCE_DIRECTION,
     UPWARD_PEN_REACTION,
+    apply_fixture_mass,
     linear_fit,
     project_printing_force_fit,
+    raw_for_projected_force,
 )
 
 
@@ -32,6 +34,21 @@ class KnownMassCalibrationTests(unittest.TestCase):
         self.assertAlmostEqual(projection["offset_g"], -50.0)
         self.assertAlmostEqual(projection["raw_at_40g"], 180.0)
         self.assertAlmostEqual(projection["raw_at_60g"], 220.0)
+
+    def test_fixture_mass_is_added_to_physical_labels_without_changing_raw_values(self):
+        points = [{"mass_g": 0.0, "raw_mean": 100.0}, {"mass_g": 5.0, "raw_mean": 120.0}]
+
+        corrected = apply_fixture_mass(points, 2.5)
+
+        self.assertEqual([point["mass_g"] for point in corrected], [2.5, 7.5])
+        self.assertEqual([point["raw_mean"] for point in corrected], [100.0, 120.0])
+        self.assertEqual([point["mass_g"] for point in points], [0.0, 5.0])
+
+    def test_raw_for_projected_force_inverts_projection(self):
+        fit, _ = linear_fit([100.0, 120.0, 140.0], [0.0, 10.0, 20.0])
+        projection = project_printing_force_fit(fit, UPWARD_PEN_REACTION)
+
+        self.assertAlmostEqual(raw_for_projected_force(projection, 50.0), 0.0)
 
     def test_projection_graph_is_written_separately_from_weight_graph(self):
         raw = [100.0, 120.0, 140.0]

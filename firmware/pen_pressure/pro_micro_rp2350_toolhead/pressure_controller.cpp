@@ -113,6 +113,14 @@ long PressureController::normalizedForceDelta() const {
   return static_cast<long>(CS1238_CONTACT_FORCE_SIGN) * forceDelta();
 }
 
+long PressureController::noContactResidual() const {
+  // The E-09C zero is retained in configuration as calibration evidence, but
+  // every boot takes a fresh unloaded tare. Clear detection must use that live
+  // reference so an otherwise valid profile is not defeated by ADC drift or a
+  // small fixture-zero change.
+  return cs1238_filtered_ - cs1238_tare_;
+}
+
 void PressureController::updateFilteredSample(long sample) {
   if (sample_window_count_ == CS1238_MOVING_AVERAGE_SAMPLES) {
     sample_window_sum_ -= sample_window_[sample_window_index_];
@@ -293,7 +301,7 @@ void PressureController::service() {
         break;
       }
       if (new_filtered_sample_) {
-        const long residual = std::labs(cs1238_filtered_ - NO_CONTACT_RAW_REFERENCE);
+        const long residual = std::labs(noContactResidual());
         if (residual <= LIFT_RELEASE_TOLERANCE_RAW) {
           lift_release_windows_++;
         } else {
@@ -364,7 +372,7 @@ void PressureController::service() {
     case PressureState::RELEASE_TO_CLEAR:
       motorLift();
       if (new_filtered_sample_) {
-        const long residual = std::labs(cs1238_filtered_ - NO_CONTACT_RAW_REFERENCE);
+        const long residual = std::labs(noContactResidual());
         if (residual <= LIFT_RELEASE_TOLERANCE_RAW) {
           lift_release_windows_++;
         } else {

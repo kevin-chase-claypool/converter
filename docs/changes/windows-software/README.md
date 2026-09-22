@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-001` | implemented | [Stage E-09C CS1238 force profile](../rp23cnc-software/2026/2026-09-22-stage-e09c-cs1238-force-profile.md) | `cs1238`, `e-09c`, `force-profile`, `pen-pressure`, `calibration` |
 | 2026-09-21 | `WINSW-20260921-002` | implemented | [Add known-mass force-direction projection](2026/2026-09-21-add-known-mass-force-direction-projection.md) | `cs1238`, `known-mass`, `force-direction`, `pen-force`, `calibration`, `e-09c` |
 | 2026-09-21 | `RP23CNC-20260921-007` | implemented | [Add bounded GP27 toolhead-ready wait](../rp23cnc-software/2026/2026-09-21-add-bounded-gp27-toolhead-wait.md) | `gp27`, `prb`, `m3-m5`, `pen-ready`, `synchronization`, `f-05a` |
 | 2026-09-19 | `RPSW-20260919-001` | implemented | [Add Pico 2 dual-sensor DAQ firmware](../rp23cnc-software/2026/2026-09-19-add-pico2-dual-sensor-daq-firmware.md) | `pico2`, `cs1238`, `ina101`, `force-calibration`, `raw-data` |
