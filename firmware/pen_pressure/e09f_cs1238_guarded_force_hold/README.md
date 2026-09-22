@@ -49,7 +49,9 @@ immediate-stop options.
 
 ## Procedure
 
-1. With the pen clear, send `t`, then `a`.
+1. With the pen physically clear and motionless for at least two seconds, send
+   `t`, then `a`. Never tare immediately after `HOLD_COMPLETE`: that is a
+   loaded baseline and invalidates the next force measurement.
 2. Send `s`; watch the scale and serial output. Use `x` or the physical cutoff
    immediately if the motion is implausible.
 3. A pass prints `HOLD_COMPLETE`; record scale range, correction count, any
@@ -58,6 +60,8 @@ immediate-stop options.
    clears the scale/paper after the explicit 100 ms air-gap pulse without
    reaching the LIFT_HOME switch. A pass prints `AIR_GAP_SETTLED` then
    `CLEAR_COMPLETE`.
+5. For another cycle, wait until the pen is visibly clear and stationary, then
+   return to step 1. Do not send `t` between `HOLD_COMPLETE` and `c`.
 
 This is a one-cycle qualification. It does not establish normal M3/M5 behavior;
 T-01H still requires actual tip-gap measurement and repeated clear cycles.

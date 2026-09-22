@@ -47,10 +47,10 @@ value is recorded but does not retroactively fault the completed air-gap
 motion. Repeat the cycle with the updated sketch and retain the complete
 terminal trace.
 
-## Captured post-fix clear pass
+## Captured post-fix clear state-machine result
 
-After flashing `f34d23a`, the operator completed a full `t`, `a`, `s`, `a`,
-`c` cycle. `s` held at `tare_delta=209102`. Clear then reported
+After flashing `f34d23a`, the operator obtained an E-09F state-machine clear
+completion. `s` held at `tare_delta=209102`. Clear then reported
 `209410 → 33106 → 1020` raw across two 5 ms release pulses; the final
 `1020` is inside the ±15,116 raw (3 g) clear band. The 100 ms UP gap motion
 then emitted the expected delayed completion:
@@ -65,9 +65,17 @@ CLEAR_COMPLETE,driver_asleep=1
 
 The pen was clear, the driver slept, and no ULT or GP2 fault occurred. The
 post-gap `93479` delta is retained as delayed strain telemetry, not treated as
-contact evidence or used to refit the precision-weight calibration. This is a
-successful supervised one-cycle clear result; repeated clear-cycle testing is
-still required before normal M5 behavior is enabled.
+contact evidence or used to refit the precision-weight calibration.
+
+The later complete serial trace revealed that `TARE_MEAN_RAW,251038` had been
+issued immediately after a prior `HOLD_COMPLETE`, before any clear command.
+That was a loaded tare, so this state-machine completion must **not** be
+treated as a valid calibrated force/clear qualification cycle. The same trace
+contains further loaded tares and ends in bounded `down_pulse_budget` and
+`clear_up_pulse_budget` results. Those are useful safety outcomes—the motor
+stopped and slept—but they are not repeatability evidence. Restart using one
+strict sequence: physically clear and wait, `t`, `a`, `s`, `a`, `c`; only then
+may the next clear-state tare begin.
 
 ## Failed clear attempt and correction
 

@@ -3,17 +3,25 @@
 <a id="elog-20260922-e09f-delayed-air-gap-telemetry"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - E-09F delayed air-gap telemetry
 
-- Status: post-flash one-cycle clear passed; repeated-clear test remains pending.
+- Status: post-flash state-machine clear completed; calibrated repeat cycle is
+  pending because the trace revealed a loaded tare.
 - Observation: clear was proven at `tare_delta=-2728`, then the 100 ms UP
   motion visibly left about 1.75 mm gap, but a same-millisecond CS1238 read
   returned `-25545` and falsely faulted `air_gap_not_clear`.
 - Result: E-09F now waits 500 ms after the air-gap pulse and reports a final
   `AIR_GAP_SETTLED` telemetry record before `CLEAR_COMPLETE`. That record does
   not retroactively reject the mechanically completed, pre-gap-proven clear.
-- Verification: post-flash `t`, `a`, `s`, `a`, `c` reached `tare_delta=1020`
-  before its 100 ms gap pulse, then printed `AIR_GAP_SETTLED,tare_delta=93479`
-  and `CLEAR_COMPLETE,driver_asleep=1`; the pen was physically clear.
-- Next action: repeat clear cycles before any production gate changes.
+- Verification: the post-flash stream reached `tare_delta=1020` before its
+  100 ms gap pulse, then printed `AIR_GAP_SETTLED,tare_delta=93479` and
+  `CLEAR_COMPLETE,driver_asleep=1`; the pen was physically clear. Later
+  trace review found that the preceding `t` occurred after an earlier
+  `HOLD_COMPLETE`, so it was a loaded baseline and cannot qualify the force
+  thresholds.
+- Result: later attempts also stopped safely on bounded down/clear pulse
+  budgets. They do not diagnose firmware or mechanics until the strict
+  clear-state-tare procedure is followed.
+- Next action: physically clear and settle, then run one uninterrupted `t`,
+  `a`, `s`, `a`, `c` cycle; repeat only after the next clear state.
 
 <a id="elog-20260922-e09f-release-hard-limit-fix"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - E-09F release hard-limit fix
