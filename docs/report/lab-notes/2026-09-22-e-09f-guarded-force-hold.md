@@ -6,7 +6,7 @@ Exercise the E-09C precision-weight CS1238 profile through E-09F's bounded autom
 
 ## Configuration
 
-- Sketch/commit: `e09f_cs1238_guarded_force_hold.ino`, `a02dc59 Add guarded E09F force hold test`.
+- Sketch/commit: `e09f_cs1238_guarded_force_hold.ino`, `f34d23a Delay E09F air gap telemetry` for the final successful cycle.
 - SparkFun Pro Micro RP2350, external toolhead rail, CS1238 channel A/gain 128/640 SPS.
 - Existing 3.3 V GP20/GP21 USB-to-TTL service UART, Arduino IDE Serial Monitor at 115200 baud, adapter VCC disconnected.
 - Installed pen over a kitchen scale. E-09C precision weights remain the force authority; the scale is a range/behavior check only.
@@ -46,6 +46,28 @@ not a valid test of an already-completed gap. E-09F now waits 500 ms, emits an
 value is recorded but does not retroactively fault the completed air-gap
 motion. Repeat the cycle with the updated sketch and retain the complete
 terminal trace.
+
+## Captured post-fix clear pass
+
+After flashing `f34d23a`, the operator completed a full `t`, `a`, `s`, `a`,
+`c` cycle. `s` held at `tare_delta=209102`. Clear then reported
+`209410 → 33106 → 1020` raw across two 5 ms release pulses; the final
+`1020` is inside the ±15,116 raw (3 g) clear band. The 100 ms UP gap motion
+then emitted the expected delayed completion:
+
+```text
+AIR_GAP_PULSE,direction=UP,ms=100,fault_during_drive=0
+AIR_GAP_SETTLING,ms=500
+READING,raw=157559,tare_delta=93479,tare_valid=1
+AIR_GAP_SETTLED,tare_delta=93479
+CLEAR_COMPLETE,driver_asleep=1
+```
+
+The pen was clear, the driver slept, and no ULT or GP2 fault occurred. The
+post-gap `93479` delta is retained as delayed strain telemetry, not treated as
+contact evidence or used to refit the precision-weight calibration. This is a
+successful supervised one-cycle clear result; repeated clear-cycle testing is
+still required before normal M5 behavior is enabled.
 
 ## Failed clear attempt and correction
 

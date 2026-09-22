@@ -3,15 +3,17 @@
 <a id="elog-20260922-e09f-delayed-air-gap-telemetry"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - E-09F delayed air-gap telemetry
 
-- Status: source updated; reflash and repeated-clear test pending.
+- Status: post-flash one-cycle clear passed; repeated-clear test remains pending.
 - Observation: clear was proven at `tare_delta=-2728`, then the 100 ms UP
   motion visibly left about 1.75 mm gap, but a same-millisecond CS1238 read
   returned `-25545` and falsely faulted `air_gap_not_clear`.
 - Result: E-09F now waits 500 ms after the air-gap pulse and reports a final
   `AIR_GAP_SETTLED` telemetry record before `CLEAR_COMPLETE`. That record does
   not retroactively reject the mechanically completed, pre-gap-proven clear.
-- Next action: reflash E-09F and retain one full `t`, `a`, `s`, `a`, `c`
-  serial trace, then repeat clear cycles before any production gate changes.
+- Verification: post-flash `t`, `a`, `s`, `a`, `c` reached `tare_delta=1020`
+  before its 100 ms gap pulse, then printed `AIR_GAP_SETTLED,tare_delta=93479`
+  and `CLEAR_COMPLETE,driver_asleep=1`; the pen was physically clear.
+- Next action: repeat clear cycles before any production gate changes.
 
 <a id="elog-20260922-e09f-release-hard-limit-fix"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - E-09F release hard-limit fix
