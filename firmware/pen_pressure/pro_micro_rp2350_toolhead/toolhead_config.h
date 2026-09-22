@@ -68,32 +68,30 @@ constexpr bool MAGNETIC_CALIBRATION_VALID = false; // E-18/M-08
 constexpr bool GP27_NORMAL_STATUS_ENABLED = false;
 constexpr bool PEN_CLEAR_VALID = false;             // T-01H
 
-// 2026-09-22 E-09C downward-weight fit, converted using the explicitly chosen
-// opposite upward pen-reaction assumption. The fit was 0.000200466998 g/raw
-// (4,988.35 raw/g), 0.705 g RMS residual, R²=0.999231. Every capture carried
-// an initially omitted 2.5 g pen cap, so its physical mass labels are +2.5 g
-// relative to the first summary. This corrected fixed zero is retained only
-// as a calibration record; live clear checks use the fresh boot tare to reject
-// drift and fixture offsets.
-constexpr long NO_CONTACT_RAW_REFERENCE = 251188;
-// Candidate clear band: 3 g = 14,965 raw. E-09C established ADC scale; T-01H
+// 2026-09-22 E-09C cap-free repeat, converted using the explicitly chosen
+// opposite upward pen-reaction assumption. The 20-point fit was
+// 0.000198461271 g/raw (5,038.77 raw/g), 0.132 g RMS residual, R²=0.999978.
+// This fixed zero is retained as a calibration record only; live clear checks
+// use the fresh boot tare to reject drift and fixture offsets.
+constexpr long NO_CONTACT_RAW_REFERENCE = 248497;
+// Candidate clear band: 3 g = 15,116 raw. E-09C established ADC scale; T-01H
 // must still prove normal-M5 release/air-gap behavior before its gate is true.
-constexpr long LIFT_RELEASE_TOLERANCE_RAW = 14965;
+constexpr long LIFT_RELEASE_TOLERANCE_RAW = 15116;
 constexpr uint8_t LIFT_RELEASE_REQUIRED_WINDOWS = 3;
 
 // Candidate initial downward pen-force profile from the same fit:
-// 35 g contact = 174,592 raw; 50 g target = 249,418 raw; 70 g hard limit =
-// 349,185 raw. Force increases when raw decreases under the selected upward
+// 35 g contact = 176,357 raw; 50 g target = 251,938 raw; 70 g hard limit =
+// 352,714 raw. Force increases when raw decreases under the selected upward
 // pen-reaction assumption, hence the negative sign.
-constexpr long CONTACT_RAW_DELTA = 174592;
-constexpr long TARGET_FORCE_RAW_DELTA = 249418;
-constexpr long HARD_FORCE_RAW_DELTA = 349185;
+constexpr long CONTACT_RAW_DELTA = 176357;
+constexpr long TARGET_FORCE_RAW_DELTA = 251938;
+constexpr long HARD_FORCE_RAW_DELTA = 352714;
 constexpr int8_t CS1238_CONTACT_FORCE_SIGN = -1;
 constexpr int16_t HOLD_KP_NUM = 1;
 constexpr int16_t HOLD_KP_DEN = 60;
-// Candidate ±5 g target-ready band = 24,942 raw. These values remain inactive
+// Candidate ±5 g target-ready band = 25,194 raw. These values remain inactive
 // while the commissioning gates below remain false.
-constexpr long CONTACT_READY_TOLERANCE_RAW = 24942;
+constexpr long CONTACT_READY_TOLERANCE_RAW = 25194;
 constexpr uint8_t CONTACT_READY_REQUIRED_WINDOWS = 3;
 
 static_assert(!PRESSURE_CALIBRATION_VALID ||

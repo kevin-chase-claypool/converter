@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-002` | implemented | [Replace E-09C profile with cap-free repeat](2026/2026-09-22-replace-e09c-cap-free-calibration.md) | `cs1238`, `e-09c`, `calibration`, `load-cell`, `pen-pressure` |
 | 2026-09-22 | `RPSW-20260922-001` | implemented | [Stage E-09C CS1238 force profile](2026/2026-09-22-stage-e09c-cs1238-force-profile.md) | `cs1238`, `e-09c`, `force-profile`, `pen-pressure`, `calibration` |
 | 2026-09-21 | `WINSW-20260921-002` | implemented | [Add known-mass force-direction projection](../windows-software/2026/2026-09-21-add-known-mass-force-direction-projection.md) | `cs1238`, `known-mass`, `force-direction`, `pen-force`, `calibration`, `e-09c` |
 | 2026-09-21 | `WINSW-20260921-001` | implemented | [Add Pro Micro known-mass calibration application](../windows-software/2026/2026-09-21-add-pro-micro-known-mass-calibration-app.md) | `cs1238`, `calibration`, `known-mass`, `plotting` |

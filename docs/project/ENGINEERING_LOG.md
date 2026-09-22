@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20260922-e09c-cap-free-repeat"></a>
+### 🟨 2026-09-22 - HARDWARE/RP23CNC SOFTWARE/PARTIAL - E-09C cap-free repeat replaces staged profile source
+
+- Status: a cap-free 0–90 g loading/unloading CS1238 repeat is the active
+  source for the still-inactive staged toolhead force profile. No actuator or
+  closed-loop test occurred.
+- Category: hardware, rp23cnc-software, CS1238, load cell, force calibration,
+  E-09C.
+- Result: 20 1,000 ms captures produced `0.000198461271 g/raw` (5,038.77
+  raw/g), `R²=0.999978`, and `0.132 g` RMS residual. The raw zero is 248,497.
+  Under the explicitly selected opposite-direction assumption, source now
+  stages 176,357 raw contact, 251,938 raw target, 352,714 raw hard limit,
+  25,194 raw target-ready tolerance, and 15,116 raw clear tolerance.
+- Decision: the earlier cap-included run remains preserved as historical raw
+  evidence but is not used for staged profile values.
+- Safety boundary: all actuator, force-control, pen-clear, and GP27 gates
+  remain false. The upward pen-force sign remains an unverified assumption.
+- Next action: record the cap-free installed-pen kitchen-scale raw-direction
+  observation near 50 g, then continue guarded T-01 actuator and M5-clearance
+  characterization.
+
 <a id="elog-20260922-e09c-known-mass-result-staged"></a>
 ### 🟨 2026-09-22 - HARDWARE/RP23CNC SOFTWARE/PARTIAL - E-09C known-mass result staged in toolhead source
 
