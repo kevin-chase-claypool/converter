@@ -91,6 +91,10 @@ paper slid beneath the installed pen with noticeable but acceptable resistance.
 This is the practical acceptance result for the manually set drawing preload;
 it does not claim a precision grams-force value.
 
+The operator then returned from the 1.75 mm gap with twenty guarded `d` pulses
+(20 × 5 ms = 100 ms). The pen returned to the same practical paper resistance,
+confirming the provisional mechanical down/up pair for this installation.
+
 ## Failed clear attempt and correction
 
 On a later `a`, `c` attempt, the serial stream reported:
