@@ -25,6 +25,8 @@ constexpr uint8_t PIN_SERVICE_UART_RX = 21;
 
 constexpr bool CMD_ACTIVE_HIGH_IS_M3 = false;
 constexpr bool HOME_ARM_ACTIVE_LOW = true;
+// GP2 raw input is LOW when pressed; liftHomeActive() reports that semantic
+// state as lift_home=1 (released reports 0).
 constexpr bool LIFT_HOME_ACTIVE_LOW = true;
 constexpr bool DRV_FAULT_ACTIVE_LOW = true;
 constexpr bool LIFT_USES_IN1_PWM = true;

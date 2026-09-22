@@ -46,7 +46,8 @@ The output changed from `lift_home=0` to `lift_home=1` and returned to `0`:
 12:22:11.362 -> T01G lift_home=0
 ```
 
-The transition is electrically repeatable over several serial samples. This
+The transition is electrically repeatable over several serial samples. In this
+telemetry, `lift_home=0` is released and `lift_home=1` is pressed/home. This
 run did not establish the ten slow powered retract cycles, trigger/release
 positions, backstop margin, or missing-trigger timeout behavior required by
 T-01G.
@@ -57,8 +58,9 @@ None encountered during this transition check.
 
 ## Interpretation
 
-GP2 polarity and the switch wiring are functioning as designed: `0` is the
-pressed/home state and `1` is released. This supports continuing T-01G, but it
+GP2 wiring and the firmware's active-low raw input are functioning as designed:
+the raw pin is LOW when pressed, and the reported semantic state is
+`lift_home=1`; released reports `lift_home=0`. This supports continuing T-01G, but it
 does not yet authorize `LIFT_REFERENCE_VALID` or motor-controlled homing.
 
 ## Decisions and next action

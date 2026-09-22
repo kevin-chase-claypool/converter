@@ -6,8 +6,8 @@
 - Evidence: motor-safe `t01g_lift_home_uart` telemetry changed from
   `lift_home=0` to repeated `lift_home=1` samples and back to `0` while the
   actuator flag traversed the switch.
-- Interpretation: the GP2 normally-open wiring and active-low `INPUT_PULLUP`
-  polarity are functioning (`0` pressed/home, `1` released).
+- Interpretation: the GP2 normally-open wiring and active-low raw input are
+  functioning; telemetry reports `lift_home=1` pressed/home and `0` released.
 - Gate status: this is only the electrical transition portion of T-01G;
   `LIFT_REFERENCE_VALID` remains false until ten slow powered retract cycles,
   trigger/release positions, backstop margin, and missing-trigger behavior are
