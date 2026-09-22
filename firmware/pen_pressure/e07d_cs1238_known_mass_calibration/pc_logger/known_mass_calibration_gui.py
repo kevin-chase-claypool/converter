@@ -27,6 +27,9 @@ from serial.tools import list_ports
 BAUD_RATE = 115200
 MIN_CAPTURE_MS = 250
 MAX_CAPTURE_MS = 10000
+DOWNWARD_WEIGHT_LOAD = "Downward weight on motor mount"
+UPWARD_PEN_REACTION = "Opposite: upward pen-tip reaction"
+SAME_FORCE_DIRECTION = "Same direction as calibration load"
 
 
 def linear_fit(raw_values: list[float], grams: list[float]) -> tuple[dict[str, float], list[float]]:
@@ -50,6 +53,34 @@ def linear_fit(raw_values: list[float], grams: list[float]) -> tuple[dict[str, f
     }, residuals
 
 
+def project_printing_force_fit(weight_fit: dict[str, float], relationship: str) -> dict[str, float | str]:
+    """Project a signed weight fit into an approximate pen-tip force fit.
+
+    A downward weight on the motor mount and an upward paper reaction at the
+    pen normally bend the cell in opposite directions. The caller chooses that
+    relationship explicitly because the mechanical load path is not assumed to
+    be a precision-equivalent fixture.
+    """
+    multiplier = -1.0 if relationship == UPWARD_PEN_REACTION else 1.0
+    slope = multiplier * float(weight_fit["grams_per_raw_count"])
+    offset = multiplier * float(weight_fit["offset_g"])
+    if slope == 0:
+        raise ValueError("the fitted CS1238 slope is zero")
+    return {
+        "relationship": relationship,
+        "force_equation": "estimated_pen_force_g = grams_per_raw_count * cs1238_raw + offset_g",
+        "grams_per_raw_count": slope,
+        "offset_g": offset,
+        "raw_at_40g": (40.0 - offset) / slope,
+        "raw_at_60g": (60.0 - offset) / slope,
+        "warning": (
+            "Approximate projection only: it assumes the installed upward pen-tip reaction "
+            "produces the selected same/opposite strain direction relative to the downward "
+            "weight fixture. Confirm raw direction with the installed pen before enabling control."
+        ),
+    }
+
+
 class KnownMassCalibrationApp(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
@@ -61,6 +92,8 @@ class KnownMassCalibrationApp(tk.Tk):
         self.capture_ms = tk.StringVar(value="1000")
         self.total_mass_g = tk.StringVar(value="0")
         self.pass_direction = tk.StringVar(value="Loading")
+        self.calibration_load_direction = tk.StringVar(value=DOWNWARD_WEIGHT_LOAD)
+        self.printing_force_relationship = tk.StringVar(value=UPWARD_PEN_REACTION)
         self.connection_status = tk.StringVar(value="Not connected")
         self.capture_status = tk.StringVar(value="Enter the total mass currently resting on the load cell.")
         self.fit_status = tk.StringVar(value="Capture at least three distinct total masses before fitting.")
@@ -119,18 +152,28 @@ class KnownMassCalibrationApp(tk.Tk):
 
     def _build_capture(self, frame: ttk.Frame) -> None:
         frame.columnconfigure(1, weight=1)
-        ttk.Label(frame, text="Total applied mass (g)").grid(row=0, column=0, sticky="w", pady=4)
-        ttk.Entry(frame, textvariable=self.total_mass_g, width=16).grid(row=0, column=1, sticky="w", padx=8, pady=4)
-        ttk.Label(frame, text="Use the total currently on the cell: 0, 5, 10, …, 70.").grid(row=0, column=2, columnspan=2, sticky="w")
-        ttk.Label(frame, text="Pass").grid(row=1, column=0, sticky="w", pady=4)
-        ttk.Combobox(frame, textvariable=self.pass_direction, values=("Loading", "Unloading", "Repeat"), width=14, state="readonly").grid(row=1, column=1, sticky="w", padx=8, pady=4)
-        ttk.Label(frame, text="Capture duration (ms)").grid(row=2, column=0, sticky="w", pady=4)
-        ttk.Entry(frame, textvariable=self.capture_ms, width=16).grid(row=2, column=1, sticky="w", padx=8, pady=4)
+        ttk.Label(frame, text="Calibration force direction").grid(row=0, column=0, sticky="w", pady=4)
+        ttk.Label(frame, textvariable=self.calibration_load_direction).grid(row=0, column=1, columnspan=3, sticky="w", padx=8, pady=4)
+        ttk.Label(frame, text="Printing force relationship").grid(row=1, column=0, sticky="w", pady=4)
+        ttk.Combobox(
+            frame,
+            textvariable=self.printing_force_relationship,
+            values=(UPWARD_PEN_REACTION, SAME_FORCE_DIRECTION),
+            width=34,
+            state="readonly",
+        ).grid(row=1, column=1, columnspan=3, sticky="w", padx=8, pady=4)
+        ttk.Label(frame, text="Total applied mass (g)").grid(row=2, column=0, sticky="w", pady=4)
+        ttk.Entry(frame, textvariable=self.total_mass_g, width=16).grid(row=2, column=1, sticky="w", padx=8, pady=4)
+        ttk.Label(frame, text="Use the total currently on the cell: 0, 5, 10, …, 70.").grid(row=2, column=2, columnspan=2, sticky="w")
+        ttk.Label(frame, text="Pass").grid(row=3, column=0, sticky="w", pady=4)
+        ttk.Combobox(frame, textvariable=self.pass_direction, values=("Loading", "Unloading", "Repeat"), width=14, state="readonly").grid(row=3, column=1, sticky="w", padx=8, pady=4)
+        ttk.Label(frame, text="Capture duration (ms)").grid(row=4, column=0, sticky="w", pady=4)
+        ttk.Entry(frame, textvariable=self.capture_ms, width=16).grid(row=4, column=1, sticky="w", padx=8, pady=4)
         self.capture_button = ttk.Button(frame, text="Capture raw point", command=self.capture_point, state="disabled")
-        self.capture_button.grid(row=3, column=1, sticky="w", pady=(10, 8))
-        ttk.Button(frame, text="Start a new run", command=self.new_run).grid(row=3, column=2, sticky="w", pady=(10, 8))
-        ttk.Label(frame, textvariable=self.capture_status, wraplength=700).grid(row=4, column=0, columnspan=4, sticky="w", pady=(2, 10))
-        ttk.Label(frame, text="Captured points", font=("TkDefaultFont", 10, "bold")).grid(row=5, column=0, columnspan=4, sticky="w")
+        self.capture_button.grid(row=5, column=1, sticky="w", pady=(10, 8))
+        ttk.Button(frame, text="Start a new run", command=self.new_run).grid(row=5, column=2, sticky="w", pady=(10, 8))
+        ttk.Label(frame, textvariable=self.capture_status, wraplength=700).grid(row=6, column=0, columnspan=4, sticky="w", pady=(2, 10))
+        ttk.Label(frame, text="Captured points", font=("TkDefaultFont", 10, "bold")).grid(row=7, column=0, columnspan=4, sticky="w")
         columns = ("number", "mass", "pass", "samples", "raw_mean", "raw_sigma")
         self.point_table = ttk.Treeview(frame, columns=columns, show="headings", height=11, selectmode="browse")
         for key, title, width in (
@@ -139,8 +182,8 @@ class KnownMassCalibrationApp(tk.Tk):
         ):
             self.point_table.heading(key, text=title)
             self.point_table.column(key, width=width, anchor="center")
-        self.point_table.grid(row=6, column=0, columnspan=4, sticky="nsew", pady=(6, 0))
-        ttk.Button(frame, text="Exclude selected point from fit", command=self.exclude_selected).grid(row=7, column=0, columnspan=2, sticky="w", pady=(8, 0))
+        self.point_table.grid(row=8, column=0, columnspan=4, sticky="nsew", pady=(6, 0))
+        ttk.Button(frame, text="Exclude selected point from fit", command=self.exclude_selected).grid(row=9, column=0, columnspan=2, sticky="w", pady=(8, 0))
 
     def _build_results(self, frame: ttk.Frame) -> None:
         frame.columnconfigure(0, weight=1)
@@ -156,8 +199,8 @@ class KnownMassCalibrationApp(tk.Tk):
         files = (
             "raw/point_###_*.csv — every raw CS1238 sample, unmodified",
             "calibration_points.csv — one representative mean for each capture",
-            "calibration_summary.json — slope, offset, residual statistics, and 40–60 g raw window",
-            "calibration_curve.png, residuals.png, raw_traces.png — figures for review/reporting",
+            "calibration_summary.json — downward-weight fit plus estimated upward pen-force projection",
+            "calibration_curve.png, estimated_pen_force_projection.png, residuals.png, raw_traces.png — figures for review/reporting",
         )
         for index, line in enumerate(files, start=5):
             ttk.Label(frame, text=line).grid(row=index, column=0, sticky="w", pady=2)
@@ -167,9 +210,9 @@ class KnownMassCalibrationApp(tk.Tk):
             "1. Flash e07d_cs1238_known_mass_calibration.ino. Keep the actuator 6 V rail disconnected.\n\n"
             "2. Connect the Pro Micro by its native USB port. Select that COM port here, then use Read device status.\n\n"
             "3. With the installed load cell unloaded, use Read unloaded tare. Tare is a diagnostic baseline; it does not change raw capture data.\n\n"
-            "4. Put the precision weights on the installed load cell through the same vertical force path as the pen. Enter the total mass, wait for it to stop moving, then click Capture raw point.\n\n"
+            "4. Place the precision weights downward on the motor mount. This characterizes the cell; it may bend opposite to the upward reaction force at the pen tip. Leave Printing force relationship at Opposite unless a simple installed-pen check shows otherwise. Enter the total mass, wait for it to stop moving, then click Capture raw point.\n\n"
             "5. Capture 0, 5, 10, …, 70 g while loading. Repeat the sequence while unloading. Keep at least three complete loading/unloading passes for a defensible calibration.\n\n"
-            "6. Click Fit calibration and save graphs. Review residuals and loading/unloading separation before copying any coefficient into later force-control firmware. The 40–60 g raw window is a result for review, not an enabled motor-control setting."
+            "6. Click Fit calibration and save graphs. The summary retains both the measured downward-weight fit and an estimated 40–60 g upward pen-force raw window. The latter is an approximate sign projection, not a precision claim. Confirm the raw direction with the installed pen before copying anything into later force-control firmware."
         )
         help_text = tk.Text(frame, width=86, height=23, wrap="word", relief="solid", borderwidth=1, padx=8, pady=8)
         help_text.insert("1.0", text)
@@ -288,6 +331,16 @@ class KnownMassCalibrationApp(tk.Tk):
         if not MIN_CAPTURE_MS <= duration <= MAX_CAPTURE_MS:
             messagebox.showerror("Invalid capture duration", f"Enter {MIN_CAPTURE_MS} to {MAX_CAPTURE_MS} ms.")
             return
+        if self.points and (
+            self.points[0]["calibration_load_direction"] != self.calibration_load_direction.get()
+            or self.points[0]["printing_force_relationship"] != self.printing_force_relationship.get()
+        ):
+            messagebox.showerror(
+                "Start a new run",
+                "Force-direction interpretation cannot change within one calibration run. "
+                "Start a new run before changing it.",
+            )
+            return
         if not self.device or not self.device.is_open:
             messagebox.showerror("Not connected", "Connect to the Pro Micro first.")
             return
@@ -334,6 +387,8 @@ class KnownMassCalibrationApp(tk.Tk):
             (self.current_run_dir / "metadata.json").write_text(json.dumps({
                 "created_local": datetime.now().isoformat(timespec="seconds"),
                 "method": "Pro Micro RP2350 E-07D raw CS1238 known-mass calibration",
+                "calibration_load_direction": self.calibration_load_direction.get(),
+                "printing_force_relationship": self.printing_force_relationship.get(),
                 "raw_data_policy": "Raw capture files are retained unfiltered. Representative values use the final half of each capture.",
                 "firmware_command": "CAPTURE <ms>",
             }, indent=2) + "\n", encoding="utf-8")
@@ -357,6 +412,8 @@ class KnownMassCalibrationApp(tk.Tk):
             "number": self.capture_number,
             "mass_g": mass,
             "pass": direction,
+            "calibration_load_direction": self.calibration_load_direction.get(),
+            "printing_force_relationship": self.printing_force_relationship.get(),
             "capture_ms": duration,
             "sample_count": len(samples),
             "final_half_sample_count": len(final_half),
@@ -382,7 +439,7 @@ class KnownMassCalibrationApp(tk.Tk):
     def _write_points_csv(self) -> None:
         if not self.current_run_dir:
             return
-        fields = ("number", "mass_g", "pass", "capture_ms", "sample_count", "final_half_sample_count", "raw_mean", "raw_sigma", "raw_file", "included")
+        fields = ("number", "mass_g", "pass", "calibration_load_direction", "printing_force_relationship", "capture_ms", "sample_count", "final_half_sample_count", "raw_mean", "raw_sigma", "raw_file", "included")
         with (self.current_run_dir / "calibration_points.csv").open("w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=fields)
             writer.writeheader()
@@ -442,26 +499,36 @@ class KnownMassCalibrationApp(tk.Tk):
             fit, residuals = linear_fit(raw, grams)
             assert self.current_run_dir is not None
             slope = fit["grams_per_raw_count"]
-            fit["raw_at_40g"] = (40.0 - fit["offset_g"]) / slope
-            fit["raw_at_60g"] = (60.0 - fit["offset_g"]) / slope
+            fit["raw_at_downward_weight_40g"] = (40.0 - fit["offset_g"]) / slope
+            fit["raw_at_downward_weight_60g"] = (60.0 - fit["offset_g"]) / slope
+            printing_fit = project_printing_force_fit(fit, self.printing_force_relationship.get())
             summary = {
                 "created_local": datetime.now().isoformat(timespec="seconds"),
-                "fit_equation": "grams = grams_per_raw_count * cs1238_raw + offset_g",
-                "fit": fit,
+                "downward_weight_fit_equation": "downward_weight_g = grams_per_raw_count * cs1238_raw + offset_g",
+                "downward_weight_fit": fit,
+                "estimated_printing_force_fit": printing_fit,
                 "included_point_count": len(included),
                 "raw_policy": "All raw records are in raw/. Point means use the final half of each capture only.",
-                "warning": "This result is not a production motor-control authorization. Review traces, repeatability, residuals, and later actuator tests first.",
+                "warning": "This result is not a production motor-control authorization. The estimated printing-force fit is a direction projection from a downward weight fixture; review traces, repeatability, raw direction at the installed pen, and later actuator tests first.",
             }
             (self.current_run_dir / "calibration_summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-            self._make_graphs(included, raw, grams, residuals, fit)
+            self._make_graphs(included, raw, grams, residuals, fit, printing_fit)
             self.fit_status.set(
-                f"Saved fit: grams = {slope:.9g} × raw + {fit['offset_g']:.5g}; R² = {fit['r_squared']:.6f}; "
-                f"40–60 g corresponds to raw {fit['raw_at_40g']:.1f} to {fit['raw_at_60g']:.1f}."
+                f"Saved downward-weight fit: g = {slope:.9g} × raw + {fit['offset_g']:.5g}; R² = {fit['r_squared']:.6f}. "
+                f"Estimated 40–60 g pen-force raw window: {printing_fit['raw_at_40g']:.1f} to {printing_fit['raw_at_60g']:.1f} ({printing_fit['relationship']})."
             )
         except (ValueError, ZeroDivisionError) as error:
             messagebox.showerror("Cannot fit calibration", str(error))
 
-    def _make_graphs(self, points: list[dict[str, object]], raw: list[float], grams: list[float], residuals: list[float], fit: dict[str, float]) -> None:
+    def _make_graphs(
+        self,
+        points: list[dict[str, object]],
+        raw: list[float],
+        grams: list[float],
+        residuals: list[float],
+        fit: dict[str, float],
+        printing_fit: dict[str, float | str],
+    ) -> None:
         assert self.current_run_dir is not None
         colors = {"Loading": "#1f77b4", "Unloading": "#d62728", "Repeat": "#2ca02c"}
         figure, axis = plt.subplots(figsize=(8, 5), layout="constrained")
@@ -474,11 +541,47 @@ class KnownMassCalibrationApp(tk.Tk):
         line_x = [lower - 0.05 * span, upper + 0.05 * span]
         line_y = [fit["grams_per_raw_count"] * value + fit["offset_g"] for value in line_x]
         axis.plot(line_x, line_y, color="black", label="OLS fit")
-        axis.axhspan(40, 60, color="#ffbf00", alpha=0.15, label="Desired pen-force band")
-        axis.set(title="CS1238 known-mass calibration", xlabel="CS1238 raw count (final-half mean)", ylabel="Applied mass (g)")
+        axis.set(title="CS1238 downward-weight calibration", xlabel="CS1238 raw count (final-half mean)", ylabel="Applied downward mass (g)")
         axis.grid(True, alpha=0.3)
         axis.legend()
         figure.savefig(self.current_run_dir / "calibration_curve.png", dpi=180)
+        plt.close(figure)
+
+        pen_slope = float(printing_fit["grams_per_raw_count"])
+        pen_offset = float(printing_fit["offset_g"])
+        pen_40 = float(printing_fit["raw_at_40g"])
+        pen_60 = float(printing_fit["raw_at_60g"])
+        lower = min(min(raw), pen_40, pen_60)
+        upper = max(max(raw), pen_40, pen_60)
+        span = max(1.0, upper - lower)
+        line_x = [lower - 0.05 * span, upper + 0.05 * span]
+        figure, axis = plt.subplots(figsize=(8, 5), layout="constrained")
+        axis.plot(
+            line_x,
+            [pen_slope * value + pen_offset for value in line_x],
+            color="#7c3aed",
+            label="Estimated pen-force projection",
+        )
+        axis.axhspan(40, 60, color="#ffbf00", alpha=0.18, label="Initial 40–60 g target")
+        axis.axvline(pen_40, color="#92400e", linestyle="--", linewidth=1, label="40 g candidate raw")
+        axis.axvline(pen_60, color="#b45309", linestyle="--", linewidth=1, label="60 g candidate raw")
+        axis.set(
+            title="Estimated upward pen-force projection",
+            xlabel="CS1238 raw count",
+            ylabel="Estimated pen force (g)",
+        )
+        axis.text(
+            0.02,
+            0.02,
+            str(printing_fit["warning"]),
+            transform=axis.transAxes,
+            fontsize=8,
+            va="bottom",
+            wrap=True,
+        )
+        axis.grid(True, alpha=0.3)
+        axis.legend(fontsize=8)
+        figure.savefig(self.current_run_dir / "estimated_pen_force_projection.png", dpi=180)
         plt.close(figure)
 
         figure, axis = plt.subplots(figsize=(8, 4), layout="constrained")

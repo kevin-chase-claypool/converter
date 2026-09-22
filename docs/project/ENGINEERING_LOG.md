@@ -1,5 +1,29 @@
 # Engineering Log
 
+<a id="elog-20260921-known-mass-force-direction-projection"></a>
+### 🟨 2026-09-21 - WINDOWS SOFTWARE/RP23CNC SOFTWARE/IMPLEMENTED - Direction-aware known-mass result projection
+
+- Status: the one-COM-port CS1238 calibration application now records its
+  downward motor-mount fixture direction and separately projects an approximate
+  upward pen-tip force result; no hardware measurement is claimed.
+- Category: windows-software, rp23cnc-software, hardware, CS1238, load cell,
+  calibration, force direction, E-09C.
+- Result: every run metadata/point CSV records the fixture interpretation. The
+  measured downward-weight OLS fit remains unchanged. The selected default
+  relation, **Opposite: upward pen-tip reaction**, negates that signed fit to
+  report candidate raw values for the initial 40–60 g printing range, with a
+  separate projection graph and explicit warning. A run cannot mix relations.
+- Safety boundary: the projection is a practical approximation, not evidence
+  that motor-mount loading and pen-tip reaction are mechanically identical.
+  `CS1238_CONTACT_FORCE_SIGN`, force parameters, and all controller gates
+  remain unset/false until the installed pen confirms raw direction.
+- Verification: deterministic unit tests cover same/opposite signed fit
+  projection. No USB device, actuator, paper, load cell, or power rail was
+  energized for this source-only update.
+- Next action: run the downward weight calibration, then press the installed
+  pen gently against paper/scale once to confirm the selected raw direction
+  before using the approximate 40–60 g target band.
+
 <a id="elog-20260921-post-release-pen-clear-air-gap"></a>
 ### 🟨 2026-09-21 - RP23CNC SOFTWARE/IMPLEMENTED - Post-release normal-M5 air-gap pulse
 

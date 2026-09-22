@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-21 | `WINSW-20260921-002` | windows-software, rp23cnc-software, hardware | implemented | [Add known-mass force-direction projection](windows-software/2026/2026-09-21-add-known-mass-force-direction-projection.md) |
 | 2026-09-21 | `WINSW-20260921-001` | rp23cnc-software, hardware | implemented | [Add Pro Micro known-mass calibration application](windows-software/2026/2026-09-21-add-pro-micro-known-mass-calibration-app.md) |
 | 2026-09-21 | `RPSW-20260921-002` | rp23cnc-software, hardware | implemented | [Migrate Integrated Toolhead to CS1238 Backend](rp23cnc-software/2026/2026-09-21-migrate-integrated-toolhead-cs1238-backend.md) |
 | 2026-09-21 | `RPSW-20260921-001` | hardware | implemented | [Replace dual-ADC fixture with Pro Micro known-mass calibration](rp23cnc-software/2026/2026-09-21-replace-dual-adc-fixture-with-known-mass-cs1238.md) |

@@ -69,7 +69,9 @@ work.
   GP0/GP1 resume their intended CS1238 `DT`/`SCK` roles. The sensor-only sketch
   retains raw samples for a load/unload fit; its companion Windows program at
   `e07d_cs1238_known_mass_calibration/pc_logger/` guides capture through one
-  native-USB COM port and writes raw CSV records plus report figures. Pico 2,
+  native-USB COM port and writes raw CSV records plus report figures. It
+  records the measured downward motor-mount weight fit separately from its
+  explicitly approximate opposite-direction pen-force projection. Pico 2,
   INA101KU, and the instructor reference board are removed from the calibration
   method.
 - The E-07B `r` fast-trace method is hardware-validated as a bounded bench

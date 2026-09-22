@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-21 | `WINSW-20260921-002` | implemented | [Add known-mass force-direction projection](../windows-software/2026/2026-09-21-add-known-mass-force-direction-projection.md) | `cs1238`, `known-mass`, `force-direction`, `pen-force`, `calibration`, `e-09c` |
 | 2026-09-21 | `WINSW-20260921-001` | implemented | [Add Pro Micro known-mass calibration application](../windows-software/2026/2026-09-21-add-pro-micro-known-mass-calibration-app.md) | `cs1238`, `calibration`, `known-mass`, `plotting` |
 | 2026-09-21 | `RPSW-20260921-002` | implemented | [Migrate Integrated Toolhead to CS1238 Backend](2026/2026-09-21-migrate-integrated-toolhead-cs1238-backend.md) | `CS1238`, `load-cell`, `force-control`, `safety-gates` |
 | 2026-09-21 | `RP23CNC-20260921-008` | implemented | [Add post-release pen-clear air-gap pulse](2026/2026-09-21-add-post-release-pen-clear-air-gap.md) | `pen-clear`, `air-gap`, `n20`, `cs1238`, `t-01h` |

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-21 | `WINSW-20260921-002` | implemented | [Add known-mass force-direction projection](../windows-software/2026/2026-09-21-add-known-mass-force-direction-projection.md) | `cs1238`, `known-mass`, `force-direction`, `pen-force`, `calibration`, `e-09c` |
 | 2026-09-21 | `WINSW-20260921-001` | implemented | [Add Pro Micro known-mass calibration application](../windows-software/2026/2026-09-21-add-pro-micro-known-mass-calibration-app.md) | `cs1238`, `calibration`, `known-mass`, `plotting` |
 | 2026-09-21 | `RPSW-20260921-002` | implemented | [Migrate Integrated Toolhead to CS1238 Backend](../rp23cnc-software/2026/2026-09-21-migrate-integrated-toolhead-cs1238-backend.md) | `CS1238`, `load-cell`, `force-control`, `safety-gates` |
 | 2026-09-21 | `RPSW-20260921-001` | implemented | [Replace dual-ADC fixture with Pro Micro known-mass calibration](../rp23cnc-software/2026/2026-09-21-replace-dual-adc-fixture-with-known-mass-cs1238.md) | `cs1238`, `load-cell`, `calibration`, `known-mass` |
