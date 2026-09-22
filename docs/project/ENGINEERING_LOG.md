@@ -14,6 +14,14 @@
 - Next action: run `t`, `a`, `s` with a scale under the pen, record the result,
   then `a`, `c` to inspect the clear/air-gap result before production gates.
 
+<a id="elog-20260922-e09f-force-hold-result"></a>
+### 🟨 2026-09-22 - HARDWARE/PARTIAL - E-09F force-band hold
+
+- Status: first guarded automatic force-hold check passed its requested practical 40–60 g range; clearance remains untested.
+- Measurement: two independent `t`, `a`, `s` runs reported 40.0 g and 40.4 g on the kitchen scale while holding.
+- Result: the precision-weight raw profile and 5 ms bounded corrections reach a repeatable lower edge of the intended band. E-09F intentionally stops when it enters that band, so it does not yet claim a centered 50 g hold.
+- Next action: run `a`, `c`, record `CLEAR_COMPLETE` plus visible gap/GP2 behavior, then decide whether a centered target/deadband controller test is necessary before production integration.
+
 <a id="elog-20260922-e09e-installed-pen-direction-result"></a>
 ### 🟨 2026-09-22 - HARDWARE/PARTIAL - E-09E installed-pen force-direction result
 
