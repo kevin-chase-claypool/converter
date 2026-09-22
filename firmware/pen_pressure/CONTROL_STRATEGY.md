@@ -78,6 +78,19 @@ clearance. If release is not observed before the configured command/travel
 limit, enter `FAULT`; do not continue retracting toward the home switch during
 an ordinary M5.
 
+### Staged mechanical-preload mode
+
+For the current non-precision plotter bench, the installed pen is first seated
+by the operator at an approximate drawing preload. The controller contains a
+separate, disabled-by-default `MECHANICAL_PRELOAD_MODE` for this setup. When
+its commissioning gates are deliberately enabled, M3 applies the measured
+100 ms DOWN travel and holds the motor stopped; M5 applies the measured 100 ms
+UP travel and returns to `LIFTED`. The CS1238 moving average remains visible
+for telemetry and later analysis, but it is not used as a paper-contact or
+air-gap detector in this mode. Do not enable the mode until actuator direction,
+lift reference, and the physical pen-fit checks are recorded; keep the normal
+raw-force path available for a future per-pen validated profile.
+
 ## Calibration profile and boot baseline
 
 After E-07, T-01E, and T-01H pass, commit one versioned, checksummed

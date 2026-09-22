@@ -58,6 +58,7 @@ void printHelp() {
   Serial.println(F("  a  return to automatic GP29 input"));
   Serial.println(F("  c  clear pressure fault when commissioning permits"));
   Serial.println(F("Integrated motion remains locked until config validity flags are true."));
+  Serial.println(F("  M3/M5 remain commissioning-locked; staged mechanical preload mode uses 100 ms down/up."));
 }
 
 const char *publishedMagneticStateName() {

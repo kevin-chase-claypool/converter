@@ -42,6 +42,7 @@ const char *PressureController::stateName() const {
     case PressureState::LIFTING: return "LIFTING";
     case PressureState::VERIFY_LIFTED: return "VERIFY_LIFTED";
     case PressureState::LIFTED: return "LIFTED";
+    case PressureState::MECHANICAL_ENGAGE: return "MECHANICAL_ENGAGE";
     case PressureState::SEEK_CONTACT: return "SEEK_CONTACT";
     case PressureState::HOLD_FORCE: return "HOLD_FORCE";
     case PressureState::RELEASE_TO_CLEAR: return "RELEASE_TO_CLEAR";
@@ -321,13 +322,35 @@ void PressureController::service() {
       motorStop();
       setDriverEnabled(false);
       if (engage) {
-        if (!PRESSURE_CALIBRATION_VALID) {
+        if (MECHANICAL_PRELOAD_MODE) {
+          if (!ACTUATOR_DIRECTION_VALID) {
+            enterFault("M3 requested before actuator direction commissioning");
+          } else {
+            setState(PressureState::MECHANICAL_ENGAGE);
+          }
+        } else if (!PRESSURE_CALIBRATION_VALID) {
           enterFault("E-07/E-08 pressure calibration is incomplete");
         } else if (!statusFlag(STATUS_CS1238_ONLINE)) {
           enterFault("M3 requested without CS1238 data");
         } else {
           setState(PressureState::SEEK_CONTACT);
         }
+      }
+      break;
+
+    case PressureState::MECHANICAL_ENGAGE:
+      if (!engage) {
+        setState(PressureState::CLEARANCE_LIFT);
+        break;
+      }
+      // The pen is mechanically installed at the desired drawing preload.
+      // This timed move returns from the verified 100 ms clear position; the
+      // CS1238 remains telemetry/guarding and does not seek paper.
+      motorSeek();
+      if (now - state_started_ms_ >= PEN_ENGAGE_TRAVEL_MS) {
+        motorStop();
+        setDriverEnabled(false);
+        setState(PressureState::HOLD_FORCE);
       }
       break;
 
@@ -350,7 +373,12 @@ void PressureController::service() {
 
     case PressureState::HOLD_FORCE:
       if (!engage) {
-        setState(PressureState::RELEASE_TO_CLEAR);
+        setState(PressureState::CLEARANCE_LIFT);
+        break;
+      }
+      if (MECHANICAL_PRELOAD_MODE) {
+        motorStop();
+        setDriverEnabled(false);
         break;
       }
       if (new_filtered_sample_ && now - last_force_correction_ms_ >= CS1238_CORRECTION_PERIOD_MS) {
@@ -396,8 +424,14 @@ void PressureController::service() {
       if (now - state_started_ms_ >= PEN_CLEAR_EXTRA_LIFT_MS) {
         motorStop();
         setDriverEnabled(false);
-        // Recheck after the added air-gap motion before declaring M5 complete.
-        setState(PressureState::VERIFY_LIFTED);
+        if (MECHANICAL_PRELOAD_MODE) {
+          // The 100 ms motion is the verified mechanical clear operation. A
+          // CS1238 value immediately after motor travel is telemetry only.
+          setState(PressureState::LIFTED);
+        } else {
+          // Recheck after the added air-gap motion before declaring M5 complete.
+          setState(PressureState::VERIFY_LIFTED);
+        }
       }
       break;
 

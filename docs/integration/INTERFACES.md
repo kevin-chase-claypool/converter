@@ -269,6 +269,15 @@ local `GP2` switch establishes `LIFT_HOME` only at boot, recovery, or an
 explicit service action. Normal M5 uses the same load cell as M3, but detects
 the no-contact release band and then applies a verified clearance pulse.
 
+For the current bench setup, the controller also contains a staged,
+disabled-by-default `MECHANICAL_PRELOAD_MODE`. After the operator seats an
+installed pen at approximate drawing preload, enabled commissioning gates make
+M3 a bounded 100 ms DOWN move and M5 a bounded 100 ms UP clearance move. The
+CS1238 moving average is telemetry only in that mode; it does not replace the
+normal validated force/contact and no-contact thresholds. The mode must remain
+disabled until actuator direction, lift reference, and pen-fit evidence are
+accepted.
+
 The planned P100 toolhead preflight is a separate commissioning-gated contract
 for an installed pen, marker, or pencil: home; capture a no-contact baseline;
 seek paper at limited force; perform normal M5 clear; and require a stable

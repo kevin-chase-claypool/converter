@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20260922-stage-mechanical-preload-m3m5"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - staged mechanical-preload M3/M5 path
+
+- Decision: add a separate `MECHANICAL_PRELOAD_MODE` to the integrated Pro
+  Micro controller for the current non-precision plotter. It uses the measured
+  100 ms DOWN/UP travel pair after the operator seats an installed pen at an
+  approximate drawing preload.
+- Evidence: E-09F bench testing recorded about 1.75 mm clearance after twenty
+  guarded 5 ms UP pulses; twenty matching DOWN pulses restored acceptable
+  paper resistance.
+- Safety: the flag remains `false`; actuator-direction, lift-reference, and
+  other commissioning gates remain disabled. CS1238 is telemetry only in this
+  staged path, while the normal validated raw-force path remains available.
+- Next action: compile-check the integrated sketch, then commission direction
+  and lift reference before any deliberate enablement or flashing.
+
 <a id="elog-20260922-e09f-manual-down-setup"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - E-09F manual down setup
 

@@ -45,6 +45,11 @@ constexpr uint32_t PEN_CLEAR_RELEASE_TIMEOUT_MS = 1800;
 // without approaching GP2 LIFT_HOME. It remains staged until 30 M3/M5
 // clearance cycles prove repeatability before PEN_CLEAR_VALID may be enabled.
 constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 100;
+// Staged alternative to raw-based contact seeking. When enabled after the
+// remaining commissioning gates pass, M3/M5 use the mechanically verified
+// 100 ms down/up pair and CS1238 remains telemetry only.
+constexpr bool MECHANICAL_PRELOAD_MODE = false; // staged; commissioning lock
+constexpr uint32_t PEN_ENGAGE_TRAVEL_MS = 100;
 constexpr uint32_t SEEK_TIMEOUT_MS = 1500;
 constexpr uint32_t CS1238_CORRECTION_PERIOD_MS = 250;
 constexpr uint8_t CS1238_TARE_SAMPLES = 64;
