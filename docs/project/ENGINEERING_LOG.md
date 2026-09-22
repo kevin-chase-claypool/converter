@@ -1,5 +1,19 @@
 # Engineering Log
 
+<a id="elog-20260922-normal-m3-recontact"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - re-acquire contact after normal M5 clearance
+
+- Evidence: the first trend-confirmed home M3 successfully held a visibly
+  drawing pen. Its following M5 cleared, but the next M3 used the prior
+  contact reference, made the old fixed 100 ms down move, entered
+  `HOLD_FORCE` at only 5,235 raw, and faulted after its force-acquisition
+  timeout.
+- Change: normal M5-to-M3 now resets the old touch reference and uses the
+  existing stopped-pulse trend confirmation before it backs off and tunes.
+  It starts with 5 ms pulses only because normal M5 leaves a small gap.
+- Verification: the exact SparkFun Pro Micro RP2350 sketch compiles. Repeat
+  M3/M5 bench cycles are still required before any drawing claim.
+
 <a id="elog-20260922-trend-confirmed-contact"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - confirm contact response before tuning preload
 

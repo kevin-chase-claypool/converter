@@ -180,10 +180,11 @@ approach has provisional 100-pulse/8-second and
 30-pulses-without-GP2-release bounds; the force-tune phase has a separate
 100-pulse/7-second bound. Any limit, sensor loss, or overforce stops/sleeps the
 driver and enters `FAULT`. When M3 begins after routine M5 clearance with GP2
-released, it retains the 100 ms DOWN fast path. Both paths then use the
-16-sample CS1238 moving average for force corrections toward 35 g, with a
-1.5-second force-acquisition timeout. M5 keeps the 100 ms UP clearance move
-and stops at GP2. After an inspected fault, `c` initiates a bounded UP-only
+released, it clears the preceding contact reference and repeats the
+trend-confirmed touch sequence using only 5 ms DOWN pulses. It does not enter
+force hold merely after a fixed travel time. Both paths then use the 16-sample
+CS1238 moving average for force corrections toward 35 g. M5 keeps the 100 ms
+UP clearance move and stops at GP2. After an inspected fault, `c` initiates a bounded UP-only
 recovery to GP2, latches manual M5, and cannot restart contact seeking until a
 fresh `e` command or deliberate `a` return to GP29 control.
 

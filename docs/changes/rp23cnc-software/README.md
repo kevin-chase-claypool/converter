@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-029` | implemented | [Re-acquire Contact after M5 Clearance](2026/2026-09-22-reacquire-contact-after-clear.md) | `cs1238`, `m3-m5`, `contact-detection`, `force-control` |
 | 2026-09-22 | `RPSW-20260922-028` | implemented | [Confirm Contact by Trend](2026/2026-09-22-confirm-contact-trend.md) | `cs1238`, `contact-detection`, `moving-average`, `force-control` |
 | 2026-09-22 | `RPSW-20260922-027` | implemented | [Extend Fine Force-Tune Budget](2026/2026-09-22-extend-fine-force-tune-budget.md) | `cs1238`, `n20`, `force-tune`, `safety` |
 | 2026-09-22 | `RPSW-20260922-026` | implemented | [Tare After Lift-Home Release](2026/2026-09-22-tare-after-lift-home-release.md) | `cs1238`, `tare`, `lift-home`, `gp2` |

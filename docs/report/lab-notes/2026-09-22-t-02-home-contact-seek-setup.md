@@ -1,5 +1,16 @@
 # Lab Note: 2026-09-22 - T-02 home-origin seek setup
 
+## 2026-09-22 normal M5-to-M3 regression
+
+The first trend-confirmed home-origin M3 reached `HOLD_FORCE` with a visible
+line and appropriate paper drag. The following M5 entered `CLEARANCE_LIFT` and
+`LIFTED` without GP2. The next M3 entered `MECHANICAL_ENGAGE`, then
+`HOLD_FORCE` at `force_norm_raw=5,235`, before faulting with `M3 force
+acquisition timed out`. This demonstrated that the fixed 100 ms normal-M3
+travel cannot authorize force hold after M5; clearance changes the mechanical
+preload and invalidates the previous touch reference. The next source revision
+replaces that shortcut with fine-pulse, trend-confirmed re-contact.
+
 ## Objective
 
 Record the initial full-retract-to-paper condition that exposed why the

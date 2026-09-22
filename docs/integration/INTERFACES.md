@@ -281,9 +281,10 @@ lower 30 g edge of the drawing band relative to that contact reference. The
 surface phase is bounded at 100 pulses,
 8 seconds, and 30 pulses while GP2 remains pressed; the force-tune phase is
 bounded at 100 pulses/7 seconds. Bound, sensor, and hard-force faults stop the
-motor. GP2 released means normal post-M5 clearance, which retains the
-100 ms DOWN fast path. Both paths then use moving-average force correction
-toward 35 g and fault if force is not acquired within 1.5 seconds. M5 uses a
+motor. GP2 released means normal post-M5 clearance: it discards the previous
+touch reference and runs the same confirmation process using only 5 ms DOWN
+pulses before force tuning. It never enters hold from a fixed travel time.
+Both paths then use moving-average force correction toward 35 g. M5 uses a
 100 ms UP clearance move, stopping immediately if GP2 is pressed. Use `p` to
 read the one-shot status including separate `home_seek_pulses` and
 `home_tune_pulses` counts;

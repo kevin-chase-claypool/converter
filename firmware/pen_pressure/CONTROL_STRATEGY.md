@@ -95,10 +95,12 @@ about 12 mm above the paper in the current setup:
   surface stage is bounded at 100 pulses/8 seconds/30 pulses without GP2
   releasing; tuning is separately bounded at 100 pulses/7 seconds. Any bound,
   sensor loss, or overforce stops/sleeps the motor and enters `FAULT`.
-- If M3 begins after ordinary M5 clearance with GP2 released, the established
-  short 100 ms DOWN move remains the fast path. In both paths, the moving
-  average then controls force toward 35 g; loss of sensor data or failure to
-  acquire force within 1.5 seconds faults/stops the drive.
+- If M3 begins after ordinary M5 clearance with GP2 released, it discards the
+  preceding touch reference and runs the same trend-confirmed search using
+  only 5 ms DOWN pulses. It does not enter `HOLD_FORCE` until it has accepted
+  a new surface response, backed off, and fine-tuned force. This keeps the
+  normal stroke cycle gentle while avoiding reuse of a stale mechanical
+  preload/reference.
 - If a force fault occurs, inspect the reported cause and physical position
   before sending `c`. Clearing a fault initiates the existing bounded UP
   recovery toward GP2; over-force detection never blocks that retract-only

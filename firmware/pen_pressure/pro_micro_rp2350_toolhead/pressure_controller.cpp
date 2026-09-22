@@ -411,22 +411,29 @@ void PressureController::service() {
           } else {
             m3_started_ms_ = now;
             m3_force_acquired_ = false;
+            contact_reference_valid_ = false;
+            home_surface_confirm_pending_ = false;
+            home_surface_confirm_windows_ = 0;
+            home_seek_pulse_count_ = 0;
+            home_tune_pulse_count_ = 0;
+            home_seek_pulses_while_switch_active_ = 0;
+            home_seek_pulse_active_ = false;
+            home_seek_active_pulse_ms_ = 0;
+            home_seek_pulse_started_ms_ = 0;
+            home_seek_last_pulse_ended_ms_ = 0;
             if (liftHomeActive()) {
-              contact_reference_valid_ = false;
-              home_surface_confirm_pending_ = false;
-              home_surface_confirm_windows_ = 0;
-              home_seek_pulse_count_ = 0;
-              home_tune_pulse_count_ = 0;
-              home_seek_pulses_while_switch_active_ = 0;
-              home_seek_pulse_active_ = false;
-              home_seek_active_pulse_ms_ = 0;
-              home_seek_pulse_started_ms_ = 0;
-              home_seek_last_pulse_ended_ms_ = 0;
+              home_seek_force_fine_only_ = false;
               tare_valid_ = false;
               home_wait_for_release_tare_ = true;
               setState(PressureState::HOME_SEEK_CONTACT);
             } else {
-              setState(PressureState::MECHANICAL_ENGAGE);
+              // M5 clearance changes the mechanism's preload. Re-find paper
+              // with the same trend confirmation instead of using the prior
+              // contact reference or entering hold directly. Start gently:
+              // the normal 100 ms M5 lift leaves only a small air gap.
+              home_seek_force_fine_only_ = true;
+              home_wait_for_release_tare_ = false;
+              setState(PressureState::HOME_SEEK_CONTACT);
             }
           }
         } else if (!PRESSURE_CALIBRATION_VALID) {
@@ -498,11 +505,12 @@ void PressureController::service() {
 
       const long fine_threshold = HOME_SURFACE_TOUCH_RAW_DELTA /
                                   HOME_SEEK_FINE_THRESHOLD_DIVISOR;
-      const uint32_t next_pulse_ms = home_wait_for_release_tare_
-                                         ? HOME_SEEK_COARSE_PULSE_MS
-                                         : normalizedForceDelta() >= fine_threshold
-                                               ? HOME_SEEK_FINE_PULSE_MS
-                                               : HOME_SEEK_COARSE_PULSE_MS;
+      const uint32_t next_pulse_ms =
+          home_wait_for_release_tare_ ||
+                  (!home_seek_force_fine_only_ &&
+                   normalizedForceDelta() < fine_threshold)
+              ? HOME_SEEK_COARSE_PULSE_MS
+              : HOME_SEEK_FINE_PULSE_MS;
       const uint32_t active_pulse_ms = home_seek_pulse_active_
                                            ? home_seek_active_pulse_ms_
                                            : next_pulse_ms;
