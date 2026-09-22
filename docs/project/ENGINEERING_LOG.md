@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20260922-gp2-release-tare"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/PARTIAL - tare only after GP2 release
+
+- Evidence: the first flashed two-touch run began at `force_norm_raw=59,825`
+  while `lift_home=1`, exceeding the approximately 5 g surface threshold.
+  It consequently skipped meaningful first-touch detection and exhausted the
+  30-pulse force-tune budget at 85,713 raw.
+- Diagnosis: GP2 pressed changes the installed mechanism/load-cell preload;
+  even a settled GP2 reading is not an unloaded force reference.
+- Change: M3 from GP2 now ignores force until a DOWN pulse first releases GP2,
+  stops/sleeps for one second, and takes the 64-sample live tare at that
+  released clear-of-paper state. Surface and force tuning then continue
+  automatically. Full-home snapshots correctly show `tare_valid=0`.
+- Verification: exact RP2350 source compiled successfully. The next T-02
+  attempt must confirm the transition and a valid post-release tare.
+
 <a id="elog-20260922-two-touch-home-approach"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - separate surface touch from drawing-force tune
 

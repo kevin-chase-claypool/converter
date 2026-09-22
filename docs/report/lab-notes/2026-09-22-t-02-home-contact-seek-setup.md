@@ -141,11 +141,26 @@ separate decisions with their own time/pulse bounds. This follows the intended
 printer-style probe-then-approach workflow and is pending supervised hardware
 verification.
 
+### GP2-release tare correction
+
+The first flashed two-touch attempt reported `lift_home=1` but began at
+`force_norm_raw=59,561` (about 12 g), above the 5 g first-touch threshold. It
+therefore immediately entered the back-off/tune stages and then exhausted the
+30-pulse tune budget at 85,713 raw without reaching the 30 g threshold. This
+shows GP2's pressed position changes the installed load-cell preload and is
+not an acceptable tare location.
+
+The controller now ignores force until GP2 first changes from `1` to `0` during
+the M3 approach. It stops, waits one second, collects a 64-sample tare at that
+released clear position, and only then begins the light 5 g surface touch.
+This is the active candidate for the next supervised run.
+
 ## Decisions and next action
 
 Flash and supervise the updated integrated toolhead firmware. First verify a
-one-shot `p` snapshot shows `pressure=LIFTED`, `lift_home=1`, a valid tare, and
-no fault; then issue one `e` and observe the pulse count and state. Keep the
+one-shot `p` snapshot shows `pressure=LIFTED`, `lift_home=1`, and no fault;
+`tare_valid=0` at hard home is expected. Then issue one `e` and observe the
+GP2 release, `HOME_RELEASE_TARE_SETTLING`, and the later touch states. Keep the
 physical power cutoff reachable, and do not clear any fault until its cause
 and pen position are checked. See T-02 and T-01J in
 [`../../testing/TEST_PLAN.md`](../../testing/TEST_PLAN.md).

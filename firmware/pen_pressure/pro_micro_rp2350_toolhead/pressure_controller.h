@@ -8,6 +8,7 @@
 enum class PressureState : uint8_t {
   BOOT,
   LIFTING,
+  HOME_RELEASE_TARE_SETTLING,
   VERIFY_LIFTED,
   LIFTED,
   MECHANICAL_ENGAGE,
@@ -79,6 +80,8 @@ class PressureController {
   bool m3_force_acquired_ = false;
   bool home_seek_pulse_active_ = false;
   bool hold_correction_pulse_active_ = false;
+  bool home_tare_sampling_started_ = false;
+  bool home_wait_for_release_tare_ = false;
   uint8_t home_seek_active_pulse_ms_ = 0;
 
   long cs1238_raw_ = 0;

@@ -114,14 +114,14 @@ constant. T-01J must
 validate the home seek, force response, and clearance for each installed tool
 before plotting. Production remains commissioning-gated.
 
-### Clear-home tare
+### Release-transition tare
 
-The live CS1238 tare is not collected at boot before retraction. Boot and
-fault recovery first reach GP2, then collect 64 raw samples at the verified
-clear position. M3 is rejected until that tare completes. This keeps the live
-zero reference independent of any transient force present while firmware
-starts, and is especially important because contact thresholding uses the
-live tare rather than the fixed calibration zero.
+The GP2 switch position changes the installed spring/load-cell preload, so it
+is not used as the force zero. Boot and fault recovery leave `tare_valid=0` at
+GP2. An M3 started from GP2 ignores force while it uses coarse travel to first
+release GP2, then stops/sleeps for one second and takes a 64-sample tare. Only
+then does it evaluate the light surface-touch threshold. This makes the live
+zero refer to the actual released, clear-of-paper mechanism state.
 
 ### Bounded moving-average hold
 

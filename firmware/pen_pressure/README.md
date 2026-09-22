@@ -184,10 +184,12 @@ and stops at GP2. After an inspected fault, `c` initiates a bounded UP-only
 recovery to GP2, latches manual M5, and cannot restart contact seeking until a
 fresh `e` command or deliberate `a` return to GP29 control.
 
-The 64-sample live tare begins only after boot or fault-recovery UP motion has
-reached GP2. This prevents an initial loaded pen position from being accepted
-as zero force. M3 faults safely if requested before that clear-home tare is
-complete; wait for `tare_valid=1` in a `p` snapshot before sending `e`.
+GP2 itself changes the installed load-cell preload, so full home is not the
+force zero. From GP2, M3 first drives DOWN until GP2 releases, then stops for
+one second and takes its 64-sample tare while still clear of paper. Surface
+force is ignored until that tare completes. A `p` snapshot at full home may
+therefore show `tare_valid=0`; this is expected. M3 after ordinary M5 clearance
+still requires the already-valid release-transition tare.
 
 Once initial contact has been found, `HOLD_FORCE` leaves the driver asleep
 inside the calibrated 30–40 g moving-average band. If force rises above the

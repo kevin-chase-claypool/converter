@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-026` | implemented | [Tare After Lift-Home Release](../rp23cnc-software/2026/2026-09-22-tare-after-lift-home-release.md) | `cs1238`, `tare`, `lift-home`, `gp2` |
 | 2026-09-22 | `RPSW-20260922-025` | implemented | [Add Two-Touch Home Approach](../rp23cnc-software/2026/2026-09-22-add-two-touch-home-approach.md) | `cs1238`, `force-control`, `n20`, `surface-touch` |
 | 2026-09-22 | `RPSW-20260922-024` | implemented | [Bound Moving-Average Hold Pulses](../rp23cnc-software/2026/2026-09-22-bound-moving-average-hold-pulses.md) | `cs1238`, `force-hold`, `n20`, `safety` |
 | 2026-09-22 | `RPSW-20260922-023` | implemented | [Tare Only After Home Retract](../rp23cnc-software/2026/2026-09-22-tare-after-home-retract.md) | `cs1238`, `tare`, `contact-seek` |

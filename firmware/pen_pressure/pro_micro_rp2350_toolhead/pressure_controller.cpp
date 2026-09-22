@@ -39,6 +39,8 @@ const char *PressureController::stateName() const {
   switch (state_) {
     case PressureState::BOOT: return "BOOT";
     case PressureState::LIFTING: return "LIFTING";
+    case PressureState::HOME_RELEASE_TARE_SETTLING:
+      return "HOME_RELEASE_TARE_SETTLING";
     case PressureState::VERIFY_LIFTED: return "VERIFY_LIFTED";
     case PressureState::LIFTED: return "LIFTED";
     case PressureState::MECHANICAL_ENGAGE: return "MECHANICAL_ENGAGE";
@@ -68,6 +70,9 @@ void PressureController::setState(PressureState next) {
       next != PressureState::HOME_TUNE_FORCE) {
     home_seek_pulse_active_ = false;
     home_seek_active_pulse_ms_ = 0;
+  }
+  if (next != PressureState::HOME_RELEASE_TARE_SETTLING) {
+    home_tare_sampling_started_ = false;
   }
   publishSafetyState();
 }
@@ -287,7 +292,7 @@ void PressureController::service() {
   const bool retracting_to_home = state_ == PressureState::LIFTING ||
                                   state_ == PressureState::RELEASE_TO_CLEAR ||
                                   state_ == PressureState::CLEARANCE_LIFT;
-  if (state_ != PressureState::FAULT && !retracting_to_home &&
+  if (state_ != PressureState::FAULT && !retracting_to_home && tare_valid_ &&
       PRESSURE_CALIBRATION_VALID && new_filtered_sample_ &&
       normalizedForceDelta() > HARD_FORCE_RAW_DELTA) {
     enterFault("hard force limit exceeded");
@@ -309,10 +314,10 @@ void PressureController::service() {
       if (MECHANICAL_PRELOAD_MODE && liftHomeActive()) {
         motorStop();
         setDriverEnabled(false);
-        // Tare only after GP2 proves the pen is fully retracted. Starting a
-        // 64-sample tare before the boot lift can capture paper contact and
-        // offset every subsequent force threshold.
-        requestTare();
+        // GP2 itself can preload this mechanism. The relevant no-paper tare
+        // is collected after an M3 seek first releases GP2, not at the switch.
+        tare_valid_ = false;
+        home_wait_for_release_tare_ = false;
         setState(PressureState::LIFTED);
       } else {
         motorLift();
@@ -326,6 +331,31 @@ void PressureController::service() {
           }
         }
       }
+      break;
+
+    case PressureState::HOME_RELEASE_TARE_SETTLING:
+      motorStop();
+      setDriverEnabled(false);
+      if (liftHomeActive()) {
+        // The transition was not stable. Resume the switch-release phase
+        // rather than accepting a switch-preloaded tare.
+        home_wait_for_release_tare_ = true;
+        setState(PressureState::HOME_SEEK_CONTACT);
+        break;
+      }
+      if (now - state_started_ms_ < HOME_RELEASE_TARE_SETTLE_MS) {
+        break;
+      }
+      if (!home_tare_sampling_started_) {
+        requestTare();
+        home_tare_sampling_started_ = true;
+        break;
+      }
+      if (!tare_valid_) {
+        break;
+      }
+      home_wait_for_release_tare_ = false;
+      setState(PressureState::HOME_SEEK_CONTACT);
       break;
 
     case PressureState::VERIFY_LIFTED:
@@ -359,7 +389,7 @@ void PressureController::service() {
         if (MECHANICAL_PRELOAD_MODE) {
           if (!ACTUATOR_DIRECTION_VALID) {
             enterFault("M3 requested before actuator direction commissioning");
-          } else if (!tare_valid_) {
+          } else if (!liftHomeActive() && !tare_valid_) {
             enterFault("M3 requested before clear-home tare completed");
           } else if (!PRESSURE_CALIBRATION_VALID) {
             enterFault("M3 requested without CS1238 force calibration");
@@ -376,6 +406,8 @@ void PressureController::service() {
               home_seek_active_pulse_ms_ = 0;
               home_seek_pulse_started_ms_ = 0;
               home_seek_last_pulse_ended_ms_ = 0;
+              tare_valid_ = false;
+              home_wait_for_release_tare_ = true;
               setState(PressureState::HOME_SEEK_CONTACT);
             } else {
               setState(PressureState::MECHANICAL_ENGAGE);
@@ -417,9 +449,11 @@ void PressureController::service() {
 
       const long fine_threshold = HOME_SURFACE_TOUCH_RAW_DELTA /
                                   HOME_SEEK_FINE_THRESHOLD_DIVISOR;
-      const uint32_t next_pulse_ms =
-          normalizedForceDelta() >= fine_threshold ? HOME_SEEK_FINE_PULSE_MS
-                                                   : HOME_SEEK_COARSE_PULSE_MS;
+      const uint32_t next_pulse_ms = home_wait_for_release_tare_
+                                         ? HOME_SEEK_COARSE_PULSE_MS
+                                         : normalizedForceDelta() >= fine_threshold
+                                               ? HOME_SEEK_FINE_PULSE_MS
+                                               : HOME_SEEK_COARSE_PULSE_MS;
       const uint32_t active_pulse_ms = home_seek_pulse_active_
                                            ? home_seek_active_pulse_ms_
                                            : next_pulse_ms;
@@ -430,7 +464,8 @@ void PressureController::service() {
           engage,
           new_filtered_sample_,
           normalizedForceDelta(),
-          HOME_SURFACE_TOUCH_RAW_DELTA,
+          home_wait_for_release_tare_ ? 0x7fffffffL
+                                      : HOME_SURFACE_TOUCH_RAW_DELTA,
           now,
           state_started_ms_,
           home_seek_pulse_active_,
@@ -465,6 +500,9 @@ void PressureController::service() {
             }
           } else {
             home_seek_pulses_while_switch_active_ = 0;
+            if (home_wait_for_release_tare_) {
+              setState(PressureState::HOME_RELEASE_TARE_SETTLING);
+            }
           }
           break;
         case toolhead::ContactSeekAction::CONTACT_FOUND:

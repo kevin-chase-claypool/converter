@@ -478,15 +478,16 @@ calculating preload or compression margin.
 **T-02 supervised home-origin seek (source implemented; bench test pending):**
 With paper/scale under the pen, adequate pen clearance, the power cutoff
 reachable, and the service UART open, send `p` and confirm
-`pressure=LIFTED`, `lift_home=1`, `tare_valid=1`, and no fault. Send `e` once.
-After every reflash or `c` fault recovery, wait for the new clear-home tare to
-complete before this snapshot; do not manually tare while the pen is loaded.
-The controller should report `HOME_SEEK_CONTACT`, then move in individual 25 ms
-DOWN pulses while force is low and 5 ms pulses after one-fifth contact force,
-with a 50 ms sensing settle. Use `p` occasionally to read
+`pressure=LIFTED`, `lift_home=1`, and no fault. `tare_valid=0` at full home is
+expected. Send `e` once. The controller must first release GP2, report
+`HOME_RELEASE_TARE_SETTLING`, wait one second, and take its released-state
+tare before it evaluates surface force. It then moves in individual 25 ms DOWN
+pulses while far from touch and 5 ms pulses near surface force, with a 50 ms
+sensing settle. Use `p` occasionally to read
 `home_seek_pulses=<completed>/100`; do not turn on the continuous `v` stream
-unless needed. Contact should transition to `HOLD_FORCE` around the configured
-35 g target, below the 60 g hard limit. The switch must release within 30
+unless needed. The first touch is approximately 5 g; after the 10 ms back-off,
+the fine tune should transition to `HOLD_FORCE` at the lower 30 g edge of the
+30–40 g band, below the 60 g hard limit. The switch must release within 30
 pulses. A 100-pulse/8-second limit or sensor/force error must result in
 `FAULT` with the driver asleep. Keep the hand at the cutoff and do not send `c`
 until the cause and physical pen position are checked. After inspection, `c`

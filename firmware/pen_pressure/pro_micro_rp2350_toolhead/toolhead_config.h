@@ -40,6 +40,10 @@ constexpr bool SEEK_USES_IN1_PWM = true;
 constexpr uint8_t PWM_LIFT = 255;
 constexpr uint8_t PWM_SEEK = 55;
 
+// The hard retract switch can preload the mechanism. After M3 first leaves
+// GP2, stop and let it settle before sampling the clear-of-paper tare.
+constexpr uint32_t HOME_RELEASE_TARE_SETTLE_MS = 1000;
+
 constexpr uint32_t SERIAL_BAUD = 115200;
 // Boot/fault recovery drives UP continuously and stops immediately when GP2
 // reports the pressed/home state. This timeout is the independent runaway

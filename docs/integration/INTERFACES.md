@@ -292,10 +292,12 @@ cannot restart the seek after homing; a fresh `e` or deliberate `a` restores
 engage control. The GP2/retract timeout still faults if the switch is not
 reached.
 
-At boot and after `c` fault recovery, the controller first reaches GP2 and
-only then takes its 64-sample CS1238 tare. M3 is rejected until the snapshot
-shows `tare_valid=1`; this prevents startup paper force from being treated as
-the force zero.
+GP2 full retract changes the installed load-cell preload, so it is not the
+live force zero. At boot and after `c`, the controller leaves `tare_valid=0`
+at GP2. M3 ignores force until a DOWN pulse first releases GP2; it then stops
+for one second and takes a 64-sample CS1238 tare before evaluating paper touch.
+This released, clear-of-paper baseline prevents the switch-preload force from
+being interpreted as surface contact.
 
 After initial contact, the moving-average force hold is pulse-bounded: it
 sleeps the DRV8833 in the 30–40 g calibrated band, uses one 5 ms UP pulse
