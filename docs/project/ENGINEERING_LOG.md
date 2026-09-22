@@ -1,5 +1,19 @@
 # Engineering Log
 
+<a id="elog-20260922-t01g-switch-transition"></a>
+### 🟨 2026-09-22 - HARDWARE/IMPLEMENTED - T-01G GP2 switch transition
+
+- Evidence: motor-safe `t01g_lift_home_uart` telemetry changed from
+  `lift_home=0` to repeated `lift_home=1` samples and back to `0` while the
+  actuator flag traversed the switch.
+- Interpretation: the GP2 normally-open wiring and active-low `INPUT_PULLUP`
+  polarity are functioning (`0` pressed/home, `1` released).
+- Gate status: this is only the electrical transition portion of T-01G;
+  `LIFT_REFERENCE_VALID` remains false until ten slow powered retract cycles,
+  trigger/release positions, backstop margin, and missing-trigger behavior are
+  recorded.
+- Next action: complete those guarded cycles with the actuator unloaded.
+
 <a id="elog-20260922-stage-mechanical-preload-m3m5"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - staged mechanical-preload M3/M5 path
 
