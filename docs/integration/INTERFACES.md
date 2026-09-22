@@ -312,6 +312,17 @@ The Windows application is optional and must be closed while Serial Monitor
 owns the port. This avoids a second 5 V source while the N20's 6 V rail is
 energized.
 
+### E-09F guarded force-hold qualification
+
+E-09F uses the same flash/runtime power boundary as E-09E but is a distinct,
+temporary supervised automatic test. Arduino IDE Serial Monitor commands
+`t`, `a`, `s`, `c`, `r`, and `x` tare, arm, seek/hold, clear, read, and abort.
+Its only automatic motion is a maximum of 30 5 ms pulses per direction with a
+500 ms settle, a 30 s timeout, and a raw hard-force limit. `s` seeks/holds the
+E-09C precision-weight raw band for 40–60 g. `c` explicitly tests the staged
+100 ms air-gap candidate after a measured clear band. E-09F has no GP29/M3/M5,
+GP27, or magnetic behavior and must never be used for drawing.
+
 Power boundary:
 
 | Rail | Owner | Contract |

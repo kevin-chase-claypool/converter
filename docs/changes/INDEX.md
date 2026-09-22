@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-22 | `RPSW-20260922-008` | rp23cnc-software, hardware | implemented | [Add E-09F guarded force-hold test](rp23cnc-software/2026/2026-09-22-add-e09f-guarded-force-hold.md) |
 | 2026-09-22 | `RPSW-20260922-007` | rp23cnc-software, hardware | implemented | [Refine E-09E pulses and stage pen-clear candidate](rp23cnc-software/2026/2026-09-22-refine-e09e-pulses-and-stage-pen-clear.md) |
 | 2026-09-22 | `RPSW-20260922-006` | rp23cnc-software, hardware | implemented | [Add E-09E Serial Monitor shortcuts](rp23cnc-software/2026/2026-09-22-add-e09e-serial-monitor-shortcuts.md) |
 | 2026-09-22 | `RPSW-20260922-005` | rp23cnc-software, windows-software, hardware | implemented | [Route E-09E runtime through service UART](rp23cnc-software/2026/2026-09-22-route-e09e-through-service-uart.md) |

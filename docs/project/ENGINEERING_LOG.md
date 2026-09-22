@@ -1,5 +1,19 @@
 # Engineering Log
 
+<a id="elog-20260922-e09f-guarded-force-hold-source"></a>
+### 🟨 2026-09-22 - RP23CNC SOFTWARE/IMPLEMENTED - E-09F guarded force-hold source
+
+- Status: source compiled; no powered E-09F run is claimed.
+- Category: rp23cnc-software, hardware, CS1238, N20, force hold, pen clear.
+- Decision: use the accepted E-09C precision-weight raw profile as the force
+  authority. Kitchen-scale readings only check installed force sign/range.
+- Result: a separate service-UART sketch uses 5 ms corrections, 500 ms settle,
+  30-pulse per-direction budgets, 30 s timeout, 70 g raw hard limit, ULT/GP2
+  checks, and driver sleep. It holds the 40–60 g raw band then separately tests
+  the 100 ms candidate air-gap pulse. It owns no M3/M5, GP27, or magnetic I/O.
+- Next action: run `t`, `a`, `s` with a scale under the pen, record the result,
+  then `a`, `c` to inspect the clear/air-gap result before production gates.
+
 <a id="elog-20260922-e09e-installed-pen-direction-result"></a>
 ### 🟨 2026-09-22 - HARDWARE/PARTIAL - E-09E installed-pen force-direction result
 
