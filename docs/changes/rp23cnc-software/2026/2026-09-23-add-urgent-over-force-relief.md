@@ -55,8 +55,13 @@ below the 50,387 raw clamp threshold.
 - Compiled for `rp2040:rp2040:sparkfun_promicrorp2350` with `arduino-cli`
   1.5.1: passed, 82344 bytes program storage and 16228 bytes dynamic memory.
 - `python tools\docs_index.py --write` and `--check` pass.
-- Bench verification of the relief is still required; this change is not yet
-  exercised on hardware.
+- A 2026-09-23 five-cycle bench run on this build completed with no faults and
+  no hard-force trip: first-touch reference spread 12,290 raw (about 2.4 g) and
+  held-force spread 12,943 raw (about 2.6 g). See
+  [`2026-09-23-t-02-five-cycle-clean-pass`](../../../report/lab-notes/2026-09-23-t-02-five-cycle-clean-pass.md).
+- That run does not confirm the relief itself. It emits no state event, all
+  five snapshots sat below target, and the relief was therefore never observed
+  activating. Direct bench verification of the relief remains open.
 
 ## Struggles and rejected approaches
 
