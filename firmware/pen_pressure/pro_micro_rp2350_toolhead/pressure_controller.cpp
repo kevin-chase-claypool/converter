@@ -519,12 +519,16 @@ void PressureController::service() {
 
       const long fine_threshold = HOME_SURFACE_TOUCH_RAW_DELTA /
                                   HOME_SEEK_FINE_THRESHOLD_DIVISOR;
+      // The warm coarse gate must sit above the M5 clear residual, or a cycle
+      // whose residual reads high skips the coarse phase entirely.
+      const long coarse_force_gate =
+          warm_seek_ ? SEEK_WARM_COARSE_FORCE_GATE_RAW : fine_threshold;
       const bool coarse_phase =
           home_wait_for_release_tare_ ||
           (!home_seek_force_fine_only_ &&
            (warm_seek_ ? warm_seek_coarse_used_ < warm_seek_coarse_budget_
                        : true) &&
-           normalizedForceDelta() < fine_threshold);
+           normalizedForceDelta() < coarse_force_gate);
       const uint32_t next_pulse_ms =
           coarse_phase ? HOME_SEEK_COARSE_PULSE_MS : HOME_SEEK_FINE_PULSE_MS;
       const uint32_t active_pulse_ms = home_seek_pulse_active_

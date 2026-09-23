@@ -280,7 +280,9 @@ controller enters `HOLD_FORCE`. GP2 released means normal post-M5 clearance: it
 starts from the fresh clear-state tare. The first warm M3 after boot is
 fine-only and measures the clearance; later warm M3s traverse most of the
 learned distance with 25 ms coarse pulses, keep an 8-pulse fine reserve, then
-finish with 5 ms pulses. It never enters hold from a fixed travel time. The
+finish with 5 ms pulses; the coarse phase also stops if force rises above about
+3 g, clear of the roughly 1 g M5 clear residual. It never enters hold from a
+fixed travel time. The
 approach is bounded at 100
 pulses / 60 seconds and 30 pulses while GP2 remains pressed. The 60 g
 hard-force ceiling remains absolute. Bound, sensor, and hard-force faults stop

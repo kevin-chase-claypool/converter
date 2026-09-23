@@ -181,7 +181,9 @@ from the fresh clear-state tare. The first warm M3 after boot descends with
 5 ms pulses to measure the clearance; later warm M3s traverse most of that
 learned distance with 25 ms coarse pulses, keep an 8-pulse fine reserve, then
 finish with 5 ms pulses. The learned distance is a moving average of the warm
-seek's travel, so it tracks clearance drift. It
+seek's travel, so it tracks clearance drift. The warm coarse phase also stops
+early if force rises above about 3 g, a gate set clear of the roughly 1 g M5
+clear residual so a high-residual cycle cannot skip the coarse travel. It
 never enters hold from a fixed travel time. The approach is bounded at 100
 pulses / 60 seconds and 30 pulses without GP2 releasing; any limit, sensor
 loss, or overforce stops/sleeps the driver and enters `FAULT`. The 60 g

@@ -96,7 +96,9 @@ about 12 mm above the paper, so the controller first closes that gap:
   warm M3 after boot is fine-only and measures the clearance; later warm M3s
   traverse most of the learned distance with 25 ms coarse pulses, keep an
   8-pulse fine reserve, and finish with 5 ms pulses. The learned distance is a
-  moving average of the warm seek's travel, so it tracks clearance drift.
+  moving average of the warm seek's travel, so it tracks clearance drift. The
+  warm coarse phase also stops early if force rises above about 3 g, clear of
+  the roughly 1 g M5 clear residual.
 - The approach is bounded at 100 pulses / 60 seconds and 30 pulses without GP2
   releasing. Any bound, sensor loss, or overforce stops/sleeps the motor and
   enters `FAULT`.

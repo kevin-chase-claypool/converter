@@ -32,6 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-23 | T-02 learned-travel first run | Partial — learning works, gate too tight | Six cycles, no faults. The first warm M3 measured 24 fine pulses and later cycles dropped to 13-14 using learned coarse travel. One cycle entered at a 6,516 raw clear residual, above the shared 1 g gate, and skipped coarse travel entirely (27 pulses). The warm gate is now 3 g. |
 | 2026-09-23 | T-02 single-descend ten-cycle run | Passed — 10/10 cycles | Single-descend seek works with no faults. Cold start dropped 74 to 56 pulses; warm cycles stayed 22-26 because the M5 clearance gap dominates. Seek overshoots its threshold and the relief corrects it, so held spread widened to 5.4 g from 2.7 g. |
 | 2026-09-23 | T-02 ten-cycle run (300 ms + rejection build) | Passed — 10/10 cycles | Ten M3/M5 cycles, no faults. Held force for warm cycles spanned 13,738 raw (2.7 g); references 38,108-80,032 raw (8.3 g) but clamped; three CS1238 conversions rejected with no fault and no recurrence of the false hard-force trip. |
 | 2026-09-23 | T-02 at 300 ms settle, CS1238 glitch | Partial — false hard-force fault | Two M3/M5 cycles passed on the 300 ms build (references 24,236 and 48,557 raw, relief never engaged), then the controller faulted while idle: one -6,292,478 raw conversion pulled the 16-sample mean to -107,985 and tripped the hard-force guard. Implausible conversions are now rejected. |

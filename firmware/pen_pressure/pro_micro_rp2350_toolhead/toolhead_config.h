@@ -101,6 +101,13 @@ constexpr long HOME_SURFACE_TOUCH_RAW_DELTA = 25194; // approximately 5 g
 constexpr uint8_t SEEK_WARM_COARSE_RATIO = 5;   // 25 ms coarse = 5 x 5 ms fine
 constexpr uint8_t SEEK_WARM_FINE_RESERVE = 8;   // fine pulses kept for final approach
 constexpr uint8_t SEEK_WARM_MAX_COARSE_PULSES = 8;
+// The warm coarse phase also stops if force rises above this, meaning the pen
+// met paper sooner than the learned distance predicted. It must sit above the
+// M5 clear residual: on 2026-09-23 that residual ranged 4,340-6,516 raw and
+// straddled the shared 1 g threshold, so cycles whose residual landed high
+// skipped the coarse phase entirely (27 pulses instead of 13). Three grams
+// clears the residual with margin while staying far below the 30 g target.
+constexpr long SEEK_WARM_COARSE_FORCE_GATE_RAW = 15116; // approximately 3 g
 // Existing post-contact force-hold cadence; home seeking has its own separate
 // settle constant above and does not retune the moving-average control loop.
 constexpr uint32_t CS1238_CORRECTION_PERIOD_MS = 250;
