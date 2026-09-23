@@ -222,9 +222,11 @@ the original 160 x 5 ms attempt covered only about 7.5 mm, while the first
 25 ms-only attempt contacted correctly but briefly exceeded the 60 g hard
 limit after contact. They do not establish a universal per-pen travel response. T-01J must validate
 the seek and clearance with each tool before plotting. The quiet `p` snapshot
-reports both `home_seek_pulses=<completed>/<limit>` and
-`home_tune_pulses=<completed>/<limit>` so progress can be checked
-without enabling the scrolling live stream.
+reports `home_seek_pulses=<completed>/<limit>`,
+`home_tune_pulses=<completed>/<limit>`, and
+`urgent_relief_count=<activations> urgent_relief_ms=<total driving time>`, so
+seek progress and over-force relief activity can be checked without enabling
+the scrolling live stream.
 
 The temporary service interface is `Serial2` / hardware UART1 on GP20 (TX) and
 GP21 (RX) at 115200 baud. The integrated sketch immediately writes `Theta

@@ -78,7 +78,9 @@ const char *publishedMagneticStateName() {
 }
 
 void emitTelemetry(const char *event) {
-  char line[512];
+  // Longest observed record is about 455 characters. Keep generous headroom
+  // rather than risk a silently dropped record if a counter grows.
+  char line[640];
   const uint32_t status = g_status.load(std::memory_order_acquire);
   const int32_t mx = g_mag_x_millimt.load(std::memory_order_relaxed);
   const int32_t my = g_mag_y_millimt.load(std::memory_order_relaxed);
@@ -91,6 +93,7 @@ void emitTelemetry(const char *event) {
       "cs1238_delta=%ld force_norm_raw=%ld contact_ref_raw=%ld "
       "contact_ref_valid=%d hard_limit_raw=%ld "
       "lift_home=%d home_seek_pulses=%u/%u home_tune_pulses=%u/%u "
+      "urgent_relief_count=%u urgent_relief_ms=%lu "
       "mag=%s mT=[%ld.%03ld,%ld.%03ld,%ld.%03ld] delta=%ld.%03ld "
       "mag_samples=%lu status=0x%08lx ready=[contact:%d clear:%d gp27:%d] "
       "commission=[dir:%d pressure:%d lift:%d mag:%d]\r\n",
@@ -103,6 +106,8 @@ void emitTelemetry(const char *event) {
       static_cast<unsigned int>(HOME_SEEK_MAX_PULSES),
       pressure.homeTunePulseCount(),
       static_cast<unsigned int>(HOME_TUNE_MAX_PULSES),
+      static_cast<unsigned int>(pressure.holdUrgentReliefCount()),
+      static_cast<unsigned long>(pressure.holdUrgentReliefTotalMs()),
       publishedMagneticStateName(),
       static_cast<long>(mx / 1000), static_cast<long>(std::abs(mx % 1000)),
       static_cast<long>(my / 1000), static_cast<long>(std::abs(my % 1000)),

@@ -50,6 +50,8 @@ class PressureController {
   bool liftHomeActive() const;
   uint16_t homeSeekPulseCount() const { return home_seek_pulse_count_; }
   uint16_t homeTunePulseCount() const { return home_tune_pulse_count_; }
+  uint16_t holdUrgentReliefCount() const { return hold_urgent_relief_count_; }
+  uint32_t holdUrgentReliefTotalMs() const { return hold_urgent_relief_total_ms_; }
   bool manualOverride() const { return manual_override_; }
 
  private:
@@ -116,6 +118,8 @@ class PressureController {
   uint8_t contact_ready_windows_ = 0;
   uint16_t home_seek_pulse_count_ = 0;
   uint16_t home_tune_pulse_count_ = 0;
+  uint16_t hold_urgent_relief_count_ = 0;
+  uint32_t hold_urgent_relief_total_ms_ = 0;
   uint8_t home_seek_pulses_while_switch_active_ = 0;
   uint8_t home_surface_confirm_windows_ = 0;
   uint8_t hold_out_of_band_windows_ = 0;

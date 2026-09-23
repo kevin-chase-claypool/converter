@@ -776,6 +776,7 @@ void PressureController::service() {
         if (normalizedForceDelta() <= activeTargetForceRaw() ||
             now - hold_urgent_relief_started_ms_ >=
                 HOLD_URGENT_RELIEF_MAX_MS) {
+          hold_urgent_relief_total_ms_ += now - hold_urgent_relief_started_ms_;
           motorStop();
           setDriverEnabled(false);
           hold_urgent_relief_active_ = false;
@@ -791,6 +792,7 @@ void PressureController::service() {
           activeTargetForceRaw() + HOLD_URGENT_RELIEF_RAW) {
         hold_urgent_relief_active_ = true;
         hold_urgent_relief_started_ms_ = now;
+        hold_urgent_relief_count_++;
         hold_out_of_band_windows_ = 0;
         hold_out_of_band_direction_ = 0;
         motorDrive(LIFT_USES_IN1_PWM, HOLD_CORRECTION_PWM);
