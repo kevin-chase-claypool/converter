@@ -50,8 +50,11 @@ near the threshold.
 - Compiled for `rp2040:rp2040:sparkfun_promicrorp2350` with `arduino-cli`
   1.5.1: passed, 81784 bytes program storage and 16220 bytes dynamic memory.
 - `python tools\docs_index.py --write` and `--check` pass.
-- Bench confirmation is required. Every warm cycle should now use the coarse
-  phase, so the pulse count should stay near 13-14 regardless of the residual.
+- A 2026-09-23 six-cycle bench run on this build completed with no faults. Every
+  warm cycle used the coarse phase (13-16 pulses against 24-27 fine-only), with
+  no repeat of the previous skip, and `cs1238_rejects` stayed at 0-1 after the
+  interface was reseated. See
+  [`2026-09-23-t-02-learned-travel-reseat-and-gate-fix`](../../../report/lab-notes/2026-09-23-t-02-learned-travel-reseat-and-gate-fix.md).
 
 ## Struggles and rejected approaches
 
