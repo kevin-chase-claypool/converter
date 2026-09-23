@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-23 | `RPSW-20260923-015` | verified | [Invert the grblHAL spindle enable to match the toolhead input](2026/2026-09-23-invert-spindle-enable-for-toolhead.md) | `f05`, `m3m5`, `spindle`, `toolhead`, `polarity` |
 | 2026-09-23 | `RPSW-20260923-014` | implemented | [Require a full filter window of implausible samples before faulting](2026/2026-09-23-raise-implausible-fault-streak.md) | `t02`, `sensor-health`, `reliability` |
 | 2026-09-23 | `RPSW-20260923-013` | implemented | [Stabilize warm-seek travel and stop motor-driven sensor-noise faults](2026/2026-09-23-stabilize-warm-seek-travel.md) | `t02`, `contact-seek`, `latency`, `sensor-health`, `learning` |
 | 2026-09-23 | `RPSW-20260923-012` | implemented | [Split the seek settle by proximity to the target](2026/2026-09-23-split-seek-settle.md) | `t02`, `contact-seek`, `latency` |

@@ -255,6 +255,13 @@ Minimum interface:
 | TOOL_FAULT | Toolhead cannot safely draw | Active/fault |
 | CONTACT_READY, optional | Contact force is stable; later the same GP27/U3 path may also report proven M5 clear outside P100 | Not ready |
 
+The RP23CNC spindle `ENA` output is active-high by default, which is inverted
+from the toolhead's active-low optocoupler input (M3 lights U1, whose collector
+pulls GP29 low). The controller sets `$16=1` (invert spindle enable) so `M3`
+pulls `ENA` low and `M5` leaves it high, which keeps the PEN_CLEAR fail-safe —
+loss of controller power or optocoupler current leaves GP29 high. Verified
+2026-09-23 (F-05); `F-05A` (`P115`/`PRB`) remains open.
+
 Version 1 continues to default to ENGAGE/PEN_CLEAR plus fixed `G4` delays. The
 source-ready optional alternative is the controller-resident `P115.macro`, not
 a host-PC wait: it reads the already installed GP27/U3-to-`PRB` input, requires

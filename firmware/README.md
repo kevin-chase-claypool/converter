@@ -38,7 +38,11 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
 - **Selected controller** - RP23CNC / RP23U5XBB with Ethernet adapter. Use its
   X/Y/A step-dir outputs, opto-isolated limit inputs for homing, and
   spindle-enable or another suitable digital output for the pen-pressure
-  ENGAGE/LIFT signal.
+  ENGAGE/LIFT signal. The spindle-enable output is active-high by default,
+  which is inverted from the toolhead's active-low optocoupler input, so the
+  controller sets `$16=1` (invert spindle enable); `M3` then engages and `M5`
+  lifts (F-05, 2026-09-23). See
+  [`grblhal/config/machine-settings.md`](grblhal/config/machine-settings.md).
 - **`A` is motor-shaft degrees** - the host already applied the 12:1 pulley
   ratio. Configure grblHAL's A steps-per-unit as *motor steps per degree*; do
   **not** reapply the ratio. Or set `Theta ratio = 1` in the host and own the

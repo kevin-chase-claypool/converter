@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20260923-f05-spindle-enable-polarity"></a>
+### 🟨 2026-09-23 - RP23CNC SOFTWARE/HARDWARE/VERIFIED - invert spindle enable for the toolhead M3/M5 path
+
+- Evidence: with the RP23CNC powered, the pen drove down with no `M3` issued.
+  Disconnecting the `ENA` wire stopped it, and the toolhead telemetry showed a
+  permanent `cmd=M3` at rest, then a home-seek fault at 100/100 pulses. The
+  controller's spindle `ENA` is active-high by default, so at idle it held the
+  toolhead's active-low optocoupler on.
+- Change: set `$16=1` (invert spindle enable) on the controller; it is
+  reboot-required. No optocoupler change. Flipping the toolhead flag would have
+  inverted the fail-safe, so the fix belongs on the controller.
+- Verification: `$16` reads back `1` after a reset; at controller power-up the
+  toolhead stays `LIFTED`/`cmd=M5`; `M3` drives the pen down and `M5` lifts it.
+  Not yet recorded: the `ENA` meter levels and an unexplained mid-session power
+  event on the RP23CNC. See `docs/report/lab-notes/2026-09-23-f-05-spindle-enable-polarity.md`.
+
 <a id="elog-20260923-implausible-streak-window"></a>
 ### 🟨 2026-09-23 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - require a full filter window before the implausible fault
 

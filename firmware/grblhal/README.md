@@ -30,8 +30,16 @@ The four-axis XYZA USB baseline passed F-01, and installed A/Y motion evidence
 is recorded in the roadmap and test plan. The remaining controller work is not
 duplicated here: use the roadmap for task status and the test plan for pass
 conditions. The active priorities are F-02 revalidation with a default
-converter file, F-05 M3/M5 behavior, F-08 PRB/G38 feasibility, X calibration,
-and M-06 combined X/Y/A motion.
+converter file, F-08 PRB/G38 feasibility, X calibration, and M-06 combined
+X/Y/A motion.
+
+F-05 M3/M5 behavior is now demonstrated. The RP23CNC spindle `ENA` output is
+active-high by default, which drove the toolhead's active-low optocoupler input
+on at idle and made the pen dive at power-up. The controller sets `$16=1`
+(invert spindle enable) to correct it, so `M3` engages and `M5` lifts, with the
+pen-up fail-safe preserved. See [`config/machine-settings.md`](config/machine-settings.md)
+and the 2026-09-23 F-05 lab note. `F-05A`, the `P115`/`PRB` acknowledgement,
+remains open.
 
 **A convention:** A is motor-shaft degrees; the converter applies the 12:1
 ratio. Controller steps-per-unit must not apply that ratio a second time.
@@ -56,6 +64,8 @@ axis, Aux0, M3, or M5. It is not yet installed or enabled on the controller.
 
 - [`config/build-record.md`](config/build-record.md): build provenance and
   installed baseline configuration.
+- [`config/machine-settings.md`](config/machine-settings.md): verified `$`
+  settings, including `$16=1` for the spindle-enable invert.
 - [`HOMING_AND_MAGNETIC_CALIBRATION.md`](HOMING_AND_MAGNETIC_CALIBRATION.md):
   P100 design and commissioning gates.
 - [`../../docs/testing/TEST_PLAN.md`](../../docs/testing/TEST_PLAN.md): formal
