@@ -49,6 +49,7 @@ class PressureController {
   uint16_t holdUrgentReliefCount() const { return hold_urgent_relief_count_; }
   uint32_t holdUrgentReliefTotalMs() const { return hold_urgent_relief_total_ms_; }
   uint16_t cs1238RejectedSamples() const { return cs1238_rejected_samples_; }
+  long cs1238LastRejectedRaw() const { return cs1238_last_rejected_raw_; }
   bool manualOverride() const { return manual_override_; }
 
  private:
@@ -92,6 +93,7 @@ class PressureController {
   bool home_seek_force_fine_only_ = false;
   bool hold_urgent_relief_active_ = false;
   bool warm_seek_ = false;
+  bool motor_driving_ = false;
   uint8_t home_seek_active_pulse_ms_ = 0;
 
   long cs1238_raw_ = 0;
@@ -112,6 +114,7 @@ class PressureController {
   uint32_t hold_urgent_relief_total_ms_ = 0;
   uint16_t cs1238_rejected_samples_ = 0;
   uint8_t cs1238_implausible_streak_ = 0;
+  long cs1238_last_rejected_raw_ = 0;
   uint8_t home_seek_pulses_while_switch_active_ = 0;
   uint16_t warm_seek_pulse_ema_ = 0;
   uint8_t warm_seek_coarse_budget_ = 0;

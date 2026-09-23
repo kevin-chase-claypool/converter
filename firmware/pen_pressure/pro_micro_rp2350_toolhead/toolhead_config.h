@@ -107,8 +107,20 @@ constexpr long HOME_SURFACE_TOUCH_RAW_DELTA = 25194; // approximately 5 g
 // distance with 25 ms coarse pulses before the fine 5 ms approach. These are
 // supervised bench candidates: the 1 g force threshold still ends the coarse
 // phase early if the pen reaches paper sooner than the learned distance.
-constexpr uint8_t SEEK_WARM_COARSE_RATIO = 5;   // 25 ms coarse = 5 x 5 ms fine
-constexpr uint8_t SEEK_WARM_FINE_RESERVE = 8;   // fine pulses kept for final approach
+//
+// SEEK_WARM_COARSE_RATIO is the measured fine-pulse distance one 25 ms coarse
+// pulse covers. E-09E bench logs on 2026-09-23 show the same ~1 mm clearance
+// took 17 fine-only pulses but only 1 coarse + 3-4 fine pulses, i.e. one
+// coarse pulse covers ~13-14 five-ms pulses, not the ideal 5x. The gap is
+// stiction in the linear-rail carriage: short fine pulses barely move the
+// mechanism while a 25 ms pulse overcomes static friction. This constant is
+// stiction-dominated and MUST be re-measured after the carriage/bearing swap
+// (expect it to fall back toward ~5 once stiction is removed).
+constexpr uint8_t SEEK_WARM_COARSE_RATIO = 13;
+// Fine-pulse reserve left for the final approach after the coarse phase.
+// With the ratio above and a ~17-fine-pulse clearance, one coarse pulse covers
+// ~13 fine pulses and leaves ~4 fine pulses for the settled contact approach.
+constexpr uint8_t SEEK_WARM_FINE_RESERVE = 4;
 constexpr uint8_t SEEK_WARM_MAX_COARSE_PULSES = 8;
 // The warm coarse phase also stops if force rises above this, meaning the pen
 // met paper sooner than the learned distance predicted. It must sit above the

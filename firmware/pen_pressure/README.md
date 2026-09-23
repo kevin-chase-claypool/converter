@@ -181,11 +181,14 @@ releases it takes its clear-of-paper tare, then continues down, switching to
 5 ms pulses once the force reads above about 1 g. After a normal M5 it starts
 from the fresh clear-state tare. The first warm M3 after boot descends with
 5 ms pulses to measure the clearance; later warm M3s traverse most of that
-learned distance with 25 ms coarse pulses, keep an 8-pulse fine reserve, then
-finish with 5 ms pulses. The learned distance is a moving average of the warm
-seek's travel, so it tracks clearance drift. The warm coarse phase also stops
-early if force rises above about 3 g, a gate set clear of the roughly 1 g M5
-clear residual so a high-residual cycle cannot skip the coarse travel. It
+learned distance with 25 ms coarse pulses, then finish with 5 ms pulses. One
+coarse pulse is credited as 13 fine pulses and the coarse budget is rounded to
+the nearest pulse, leaving a 4-fine-pulse reserve for the final approach. The
+learned distance is a moving average of the warm seek's travel, so it tracks
+clearance drift; the 13:1 ratio is stiction-dominated and must be re-measured
+after the carriage/bearing swap. The warm coarse phase also stops early if
+force rises above about 3 g, a gate set clear of the roughly 1 g M5 clear
+residual so a high-residual cycle cannot skip the coarse travel. It
 never enters hold from a fixed travel time. The approach is bounded at 100
 pulses / 60 seconds and 30 pulses without GP2 releasing; any limit, sensor
 loss, or overforce stops/sleeps the driver and enters `FAULT`. The 60 g
@@ -224,16 +227,23 @@ response. T-01J must validate
 the seek and clearance with each tool before plotting. The quiet `p` snapshot
 reports `home_seek_pulses=<completed>/<limit>` and `warm_ema=<learned travel>`,
 `urgent_relief_count=<activations> urgent_relief_ms=<total driving time>`, plus
-`cs1238_rejects=<dropped conversions>`, so seek progress, over-force relief
-activity, and rejected CS1238 conversions can be checked without enabling the
-scrolling live stream.
+`cs1238_rejects=<dropped conversions>` and `cs1238_last_reject=<last dropped
+raw>`; every `SNAPSHOT`, `FAULT_EVENT`, and `STATE_EVENT` line also carries
+`t_ms=<millis>` so pen-up-to-band wall-clock latency can be read directly from
+the log. Seek progress, over-force relief activity, and rejected CS1238
+conversions can therefore be checked without enabling the scrolling live
+stream.
 
 A CS1238 conversion is dropped before it can reach the force filter when it
 falls outside the physical plausibility band or sits more than twice the
 hard-force delta from the live tare. Isolated glitches are therefore absorbed;
 three consecutive implausible conversions instead raise a
 `CS1238 reading implausible` fault so a real sensor failure still stops the
-machine.
+machine. Conversions taken while the motor is actively PWM-driving do not
+count toward that three-in-a-row streak, because motor drive bit-bangs the
+GP0/GP1 interface and produces transient glitches rather than a sensor-health
+signal. A genuinely dead sensor still faults through the read-timeout/online
+path.
 
 The temporary service interface is `Serial2` / hardware UART1 on GP20 (TX) and
 GP21 (RX) at 115200 baud. The integrated sketch immediately writes `Theta

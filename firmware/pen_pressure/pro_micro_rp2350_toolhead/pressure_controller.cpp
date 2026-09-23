@@ -84,11 +84,15 @@ void PressureController::setState(PressureState next) {
 
 void PressureController::setDriverEnabled(bool enabled) {
   digitalWrite(PIN_DRV_SLEEP, enabled ? HIGH : LOW);
+  if (!enabled) {
+    motor_driving_ = false;
+  }
 }
 
 void PressureController::motorStop() {
   analogWrite(PIN_DRV_IN1, 0);
   analogWrite(PIN_DRV_IN2, 0);
+  motor_driving_ = false;
 }
 
 void PressureController::motorDrive(bool use_in1_pwm, uint8_t pwm) {
@@ -100,6 +104,7 @@ void PressureController::motorDrive(bool use_in1_pwm, uint8_t pwm) {
     analogWrite(PIN_DRV_IN1, 0);
     analogWrite(PIN_DRV_IN2, pwm);
   }
+  motor_driving_ = true;
 }
 
 void PressureController::motorLift() {
@@ -209,11 +214,22 @@ void PressureController::serviceCs1238() {
     if (cs1238_rejected_samples_ < 0xFFFF) {
       cs1238_rejected_samples_++;
     }
-    if (cs1238_implausible_streak_ < CS1238_IMPLAUSIBLE_FAULT_STREAK) {
-      cs1238_implausible_streak_++;
-    }
-    if (cs1238_implausible_streak_ >= CS1238_IMPLAUSIBLE_FAULT_STREAK) {
-      enterFault("CS1238 reading implausible");
+    cs1238_last_rejected_raw_ = static_cast<long>(sample);
+    // Motor PWM bit-bangs the CS1238 interface over GP0/GP1 and is a known
+    // transient noise source; the 2026-09-23 fault fired with three rejects
+    // during the first seek pulse (home_seek_pulses=0). Do not count samples
+    // taken while the motor is driving toward the sensor-health streak: a
+    // genuine dead sensor still faults via the read-timeout/online path, and
+    // a persistent idle glitch still faults once the motor stops.
+    if (motor_driving_) {
+      cs1238_implausible_streak_ = 0;
+    } else {
+      if (cs1238_implausible_streak_ < CS1238_IMPLAUSIBLE_FAULT_STREAK) {
+        cs1238_implausible_streak_++;
+      }
+      if (cs1238_implausible_streak_ >= CS1238_IMPLAUSIBLE_FAULT_STREAK) {
+        enterFault("CS1238 reading implausible");
+      }
     }
     return;
   }
@@ -469,11 +485,18 @@ void PressureController::service() {
                 warm_seek_coarse_budget_ = 0;
               } else {
                 home_seek_force_fine_only_ = false;
-                uint16_t coarse =
-                    warm_seek_pulse_ema_ > SEEK_WARM_FINE_RESERVE
-                        ? (warm_seek_pulse_ema_ - SEEK_WARM_FINE_RESERVE) /
-                              SEEK_WARM_COARSE_RATIO
-                        : 0;
+                // Round to nearest instead of truncating. Truncation made the
+                // budget flip between 0 and 1 on single-unit EMA noise (the
+                // 12<->13 oscillation in the 2026-09-23 split-settle log),
+                // because a 0-budget pass measured the full fine-only distance
+                // and a 1-budget pass measured a short coarse-assisted travel.
+                uint16_t coarse = 0;
+                if (warm_seek_pulse_ema_ > SEEK_WARM_FINE_RESERVE) {
+                  const uint32_t numerator =
+                      warm_seek_pulse_ema_ - SEEK_WARM_FINE_RESERVE +
+                      (SEEK_WARM_COARSE_RATIO / 2);
+                  coarse = numerator / SEEK_WARM_COARSE_RATIO;
+                }
                 if (coarse > SEEK_WARM_MAX_COARSE_PULSES) {
                   coarse = SEEK_WARM_MAX_COARSE_PULSES;
                 }

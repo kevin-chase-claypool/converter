@@ -281,8 +281,11 @@ target band the
 controller enters `HOLD_FORCE`. GP2 released means normal post-M5 clearance: it
 starts from the fresh clear-state tare. The first warm M3 after boot is
 fine-only and measures the clearance; later warm M3s traverse most of the
-learned distance with 25 ms coarse pulses, keep an 8-pulse fine reserve, then
-finish with 5 ms pulses; the coarse phase also stops if force rises above about
+learned distance with 25 ms coarse pulses, then finish with 5 ms pulses. One
+coarse pulse is credited as 13 fine pulses and the coarse budget is rounded to
+the nearest pulse, leaving a 4-fine-pulse reserve for the final approach; the
+13:1 ratio is stiction-dominated and must be re-measured after the
+carriage/bearing swap. The coarse phase also stops if force rises above about
 3 g, clear of the roughly 1 g M5 clear residual. It never enters hold from a
 fixed travel time. The
 approach is bounded at 100
@@ -293,8 +296,11 @@ pressed; if GP2 stays released, the sleeping controller waits 300 ms and
 captures a fresh 64-sample clear-state tare before the next normal M3. Use `p`
 to read the one-shot status including `home_seek_pulses` and the `warm_ema`
 learned travel, plus the `urgent_relief_count` and `urgent_relief_ms`
-over-force relief totals and the `cs1238_rejects` count of dropped conversions;
-periodic scrolling remains
+over-force relief totals, the `cs1238_rejects` count of dropped conversions,
+and `cs1238_last_reject` (the last dropped raw). Every `SNAPSHOT`,
+`FAULT_EVENT`, and `STATE_EVENT` line carries `t_ms=<millis>` so the
+pen-up-to-band wall-clock latency can be read directly from the log; periodic
+scrolling remains
 opt-in with `v`.
 
 The 60 g hard-force guard stops DOWN/hold operation. After inspecting a fault

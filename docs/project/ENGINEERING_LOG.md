@@ -1,5 +1,27 @@
 # Engineering Log
 
+<a id="elog-20260923-stabilize-warm-seek"></a>
+### 🟨 2026-09-23 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - stabilize warm-seek travel and gate motor-driven sensor noise
+
+- Evidence: the 2026-09-23 split-settle bench log alternated warm seeks between
+  17 fine-only pulses and 5 coarse-assisted pulses, with `warm_ema` pinned near
+  12-13, then faulted `CS1238 reading implausible` on three rejects during the
+  first seek pulse while the last valid reading was clean. The same ~1 mm
+  clearance measured 17 fine pulses fine-only but only 1 coarse + 3-4 fine
+  pulses, so one 25 ms coarse pulse covers ~13-14 fine pulses, not the assumed
+  5.
+- Change: the warm coarse budget is rounded to the nearest pulse instead of
+  truncated, `SEEK_WARM_COARSE_RATIO` is corrected to 13 with a 4-fine-pulse
+  reserve, and implausible conversions taken while the motor is PWM-driving no
+  longer count toward the three-sample fault streak. `t_ms` and
+  `cs1238_last_reject` were added to telemetry so pen-up-to-band latency and
+  dropped raw values are visible in the log.
+- Verification: exact SparkFun Pro Micro RP2350 sketch compilation passed
+  (81960 bytes program, 16220 bytes dynamic). Bench confirmation is required:
+  expect `warm_ema` to converge and normal seeks to stop raising the
+  implausible fault. Re-measure the coarse ratio after the carriage/bearing
+  swap.
+
 <a id="elog-20260922-clear-state-tare"></a>
 ### 🟨 2026-09-22 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - refresh tare after normal M5 clearance
 

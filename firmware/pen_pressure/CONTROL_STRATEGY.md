@@ -95,11 +95,15 @@ about 12 mm above the paper, so the controller first closes that gap:
   clear-of-paper tare, then continues the same descend. If M3 begins after
   ordinary M5 clearance, it starts from the fresh clear-state tare. The first
   warm M3 after boot is fine-only and measures the clearance; later warm M3s
-  traverse most of the learned distance with 25 ms coarse pulses, keep an
-  8-pulse fine reserve, and finish with 5 ms pulses. The learned distance is a
-  moving average of the warm seek's travel, so it tracks clearance drift. The
-  warm coarse phase also stops early if force rises above about 3 g, clear of
-  the roughly 1 g M5 clear residual.
+  traverse most of the learned distance with 25 ms coarse pulses and finish
+  with 5 ms pulses. One coarse pulse is credited as 13 fine pulses, and the
+  coarse budget is rounded to the nearest pulse, leaving a 4-fine-pulse
+  reserve for the final approach. The learned distance is a moving average of
+  the warm seek's travel, so it tracks clearance drift. The 13:1 ratio is
+  stiction-dominated (short fine pulses barely move the mechanism) and must be
+  re-measured after the linear-rail carriage/bearing swap. The warm coarse
+  phase also stops early if force rises above about 3 g, clear of the roughly
+  1 g M5 clear residual.
 - The approach is bounded at 100 pulses / 60 seconds and 30 pulses without GP2
   releasing. Any bound, sensor loss, or overforce stops/sleeps the motor and
   enters `FAULT`.
@@ -118,6 +122,14 @@ three-pulse 25 ms seek that reached 35 g then briefly crossed the 60 g hard
 threshold. They are not universal per-pen travel constants. T-01J must validate
 the home seek, force response, and clearance for each installed tool before
 plotting. Production remains commissioning-gated.
+
+Out-of-band or far-from-tare CS1238 conversions are dropped before they reach
+the force filter. Three consecutive implausible conversions normally raise a
+`CS1238 reading implausible` fault, but conversions taken while the motor is
+actively PWM-driving are excluded from that streak: motor drive bit-bangs the
+GP0/GP1 interface and produces transient glitches that are not a sensor-health
+signal. A genuinely dead sensor still faults through the read-timeout/online
+path.
 
 ### Clear-state tares
 

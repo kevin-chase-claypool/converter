@@ -86,19 +86,21 @@ void emitTelemetry(const char *event) {
   const int32_t my = g_mag_y_millimt.load(std::memory_order_relaxed);
   const int32_t mz = g_mag_z_millimt.load(std::memory_order_relaxed);
   const int32_t md = g_mag_delta_millimt.load(std::memory_order_relaxed);
+  const uint32_t now_ms = millis();
   const int length = snprintf(
       line, sizeof(line),
-      "event=%s pressure=%s cmd=%s fault=%s "
+      "event=%s t_ms=%lu pressure=%s cmd=%s fault=%s "
       "cs1238_raw=%ld cs1238_filtered=%ld cs1238_tare=%ld tare_valid=%d "
       "cs1238_delta=%ld force_norm_raw=%ld "
       "hard_limit_raw=%ld "
       "lift_home=%d home_seek_pulses=%u/%u warm_ema=%u "
       "urgent_relief_count=%u urgent_relief_ms=%lu "
-      "cs1238_rejects=%u "
+      "cs1238_rejects=%u cs1238_last_reject=%ld "
       "mag=%s mT=[%ld.%03ld,%ld.%03ld,%ld.%03ld] delta=%ld.%03ld "
       "mag_samples=%lu status=0x%08lx ready=[contact:%d clear:%d gp27:%d] "
       "commission=[dir:%d pressure:%d lift:%d mag:%d]\r\n",
-      event, pressure.stateName(), pressure.commandEngage() ? "M3" : "M5",
+      event, static_cast<unsigned long>(now_ms),
+      pressure.stateName(), pressure.commandEngage() ? "M3" : "M5",
       pressure.faultReason(), pressure.raw(), pressure.filtered(), pressure.tare(),
       pressure.tareValid(), pressure.forceDelta(), pressure.normalizedForceDelta(),
       pressure.activeHardForceRaw(),
@@ -108,6 +110,7 @@ void emitTelemetry(const char *event) {
       static_cast<unsigned int>(pressure.holdUrgentReliefCount()),
       static_cast<unsigned long>(pressure.holdUrgentReliefTotalMs()),
       static_cast<unsigned int>(pressure.cs1238RejectedSamples()),
+      pressure.cs1238LastRejectedRaw(),
       publishedMagneticStateName(),
       static_cast<long>(mx / 1000), static_cast<long>(std::abs(mx % 1000)),
       static_cast<long>(my / 1000), static_cast<long>(std::abs(my % 1000)),
@@ -148,10 +151,11 @@ void reportPressureStateChange() {
 
   char line[128];
   snprintf(line, sizeof(line),
-           "STATE_EVENT pressure=%s cmd=%s lift_home=%d tare_valid=%d force_norm_raw=%ld",
+           "STATE_EVENT pressure=%s cmd=%s lift_home=%d tare_valid=%d force_norm_raw=%ld t_ms=%lu",
            pressure.stateName(), pressure.commandEngage() ? "M3" : "M5",
            pressure.liftHomeActive(), pressure.tareValid(),
-           pressure.normalizedForceDelta());
+           pressure.normalizedForceDelta(),
+           static_cast<unsigned long>(millis()));
   printConsoleLine(line);
 }
 
