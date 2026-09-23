@@ -1,5 +1,19 @@
 # Engineering Log
 
+<a id="elog-20260923-t01h-clearance-no-drag"></a>
+### 🟨 2026-09-23 - HARDWARE/VERIFIED - pen clears on M5 without drag over repeated cycles
+
+- Evidence: with the pen installed and paper under the tip, roughly 10-20
+  `M3`/`M5` cycles were commanded through ioSender with X/Y jogs between
+  strokes. Every `M5` cleared the pen enough that the jog made no mark, every
+  `M3` re-contacted, and no cycle faulted.
+- Change: none; this validates existing staged behavior. The 57 ms clearance
+  was already active in the supervised bench build.
+- Verification: behavioral only. The measured pen-tip gap, the force trace with
+  `F_contact_on` / `F_release_off`, the exact cycle count, and the 30-cycle
+  formal record remain open, so `PEN_CLEAR_VALID` stays `false`. See
+  `docs/report/lab-notes/2026-09-23-t-01h-clearance-no-drag.md`.
+
 <a id="elog-20260923-f05-spindle-enable-polarity"></a>
 ### 🟨 2026-09-23 - RP23CNC SOFTWARE/HARDWARE/VERIFIED - invert spindle enable for the toolhead M3/M5 path
 

@@ -32,6 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-23 | T-01H clearance, no-drag | Passed — behavioral (measured record open) | About 10-20 `M3`/`M5` cycles with X/Y jogs between strokes: the pen cleared on every `M5`, the jog left no mark, every `M3` re-contacted, and nothing faulted. Validates the staged 57 ms clearance for the supervised bench build; the measured pen-tip gap and 30-cycle formal record remain open. |
 | 2026-09-23 | F-05 spindle-enable polarity | Passed — direction and fail-safe | Powering the RP23CNC drove the pen down with no M3 issued: the controller's spindle `ENA` is active-high by default, holding the toolhead's active-low optocoupler on at idle. Setting `$16=1` (invert spindle enable) fixed it — M3 is pen down, M5 is pen up, and the pen-up fail-safe holds. No optocoupler change. |
 | 2026-09-23 | T-02 one-millimetre clearance run | Passed — 8/8 cycles | Reducing the M5 gap to about 1 mm cut the steady-state warm seek from 13-16 to 7-9 pulses, and `warm_ema` converged to about 13. Warm M3 is now about 2.2-2.8 s. |
 | 2026-09-23 | T-02 learned travel after reseat + gate fix | Passed — 6/6 cycles | Reseating the CS1238 header dropped rejects from 1,578 to 0-1, confirming the flood was a connection. With the 3 g gate, every warm M3 now uses the learned coarse travel (13-16 pulses vs 24-27 fine-only). |
