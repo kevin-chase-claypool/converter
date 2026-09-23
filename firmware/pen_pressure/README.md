@@ -40,9 +40,10 @@ work.
   backstop margin.
 - Do not enable normal M5 `PEN_CLEAR` until T-01H verifies the release
   hysteresis, debounce, calibrated clearance pulse, and actual pen-tip gap.
-  The staged source now performs its 100 ms clearance lift only *after* the
-  configured near-zero CS1238 release band is stable; 100 ms is an E-09E
-  speed-based candidate, not an accepted clearance setting.
+  The staged source now performs its 57 ms clearance lift only *after* the
+  configured near-zero CS1238 release band is stable. 57 ms targets about 1 mm,
+  derived from E-09F's 1.75 mm per 100 ms observation; it is a candidate, not
+  an accepted clearance setting.
 - Do not enable stored force-control parameters until T-01I proves that the
   accepted profile survives power cycles and that a fresh no-contact baseline
   stays RAM-only.
@@ -160,7 +161,7 @@ installed-pen checks.
 For a normal M5 from contact, Core 0 uses `RELEASE_TO_CLEAR`: it retracts only
 until the filtered CS1238 residual remains in the configured no-contact band
 for the required windows. It then enters `CLEARANCE_LIFT` and continues N20
-retraction for `PEN_CLEAR_EXTRA_LIFT_MS` (currently 100 ms), rechecks the clear
+retraction for `PEN_CLEAR_EXTRA_LIFT_MS` (currently 57 ms), rechecks the clear
  band, then stops/sleeps for `PEN_CLEAR_TARE_SETTLE_MS` (currently 300 ms) and
 takes a fresh 64-sample clear-state tare before reaching `LIFTED`/possible
 `CLEAR_READY`. This resets the unloaded baseline shifted by the clearance
@@ -187,7 +188,7 @@ clear residual so a high-residual cycle cannot skip the coarse travel. It
 never enters hold from a fixed travel time. The approach is bounded at 100
 pulses / 60 seconds and 30 pulses without GP2 releasing; any limit, sensor
 loss, or overforce stops/sleeps the driver and enters `FAULT`. The 60 g
-hard-force guard is absolute. M5 keeps the 100 ms UP clearance move and stops
+hard-force guard is absolute. M5 keeps the 57 ms UP clearance move and stops
 at GP2. After an inspected fault, `c` initiates a bounded UP-only recovery to
 GP2, latches manual M5, and cannot restart contact seeking until a fresh `e`
 command or deliberate `a` return to GP29 control.

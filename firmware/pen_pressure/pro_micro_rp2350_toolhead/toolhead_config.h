@@ -51,10 +51,11 @@ constexpr uint32_t SERIAL_BAUD = 115200;
 constexpr uint32_t BOOT_LIFT_TIME_MS = 3000;
 constexpr uint32_t LIFT_VERIFY_TIMEOUT_MS = 1800;
 constexpr uint32_t PEN_CLEAR_RELEASE_TIMEOUT_MS = 1800;
-// T-01H candidate: one E-09F installed-pen clear left about 1.75 mm of gap
-// without approaching GP2 LIFT_HOME. It remains staged until 30 M3/M5
-// clearance cycles prove repeatability before PEN_CLEAR_VALID may be enabled.
-constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 100;
+// Clearance air gap. E-09F measured about 1.75 mm per 100 ms of UP drive, so
+// 57 ms targets about 1 mm. The smaller gap shortens the next M3's travel and
+// is folded into the warm-seek moving average; it must remain larger than
+// paper/bed height variation or the pen drags during pen-up travel.
+constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 57;
 // Normal M5 changes the mechanism's unloaded CS1238 baseline. Once the
 // clearance motion has stopped, wait for the full sensing settle before
 // taking the 64-sample clear-state tare. E-09F showed that a 50 ms read is

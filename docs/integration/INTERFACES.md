@@ -286,7 +286,7 @@ fixed travel time. The
 approach is bounded at 100
 pulses / 60 seconds and 30 pulses while GP2 remains pressed. The 60 g
 hard-force ceiling remains absolute. Bound, sensor, and hard-force faults stop
-the motor. M5 uses a 100 ms UP clearance move, stopping immediately if GP2 is
+the motor. M5 uses a 57 ms UP clearance move, stopping immediately if GP2 is
 pressed; if GP2 stays released, the sleeping controller waits 300 ms and
 captures a fresh 64-sample clear-state tare before the next normal M3. Use `p`
 to read the one-shot status including `home_seek_pulses` and the `warm_ema`
