@@ -55,9 +55,12 @@ well inside the 60 s bound.
 - Compiled for `rp2040:rp2040:sparkfun_promicrorp2350` with `arduino-cli`
   1.5.1: passed, 82448 bytes program storage and 16236 bytes dynamic memory.
 - `python tools\docs_index.py --write` and `--check` pass.
-- Bench confirmation is required. The expected effect is a first-touch
-  reference spread and fault rate no worse than the nine-cycle run that
-  motivated the 500 ms value.
+- A 2026-09-23 ten-cycle bench run on this build completed with no faults. Warm
+  held-force spread was 13,738 raw (about 2.7 g), as tight as or tighter than
+  the 17,235 raw (3.4 g) spread at 500 ms. First-touch references ranged
+  38,108-80,032 raw (8.3 g) and trended higher, but stayed under the 20 g
+  ceiling and do not change the held target because the clamp absorbs them. See
+  [`2026-09-23-t-02-ten-cycle-outlier-rejection-build`](../../../report/lab-notes/2026-09-23-t-02-ten-cycle-outlier-rejection-build.md).
 
 ## Struggles and rejected approaches
 

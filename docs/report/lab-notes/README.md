@@ -32,6 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-23 | T-02 ten-cycle run (300 ms + rejection build) | Passed — 10/10 cycles | Ten M3/M5 cycles, no faults. Held force for warm cycles spanned 13,738 raw (2.7 g); references 38,108-80,032 raw (8.3 g) but clamped; three CS1238 conversions rejected with no fault and no recurrence of the false hard-force trip. |
 | 2026-09-23 | T-02 at 300 ms settle, CS1238 glitch | Partial — false hard-force fault | Two M3/M5 cycles passed on the 300 ms build (references 24,236 and 48,557 raw, relief never engaged), then the controller faulted while idle: one -6,292,478 raw conversion pulled the 16-sample mean to -107,985 and tripped the hard-force guard. Implausible conversions are now rejected. |
 | 2026-09-23 | E-09E post-pulse settle trace | Measured — 300 ms adopted | Three 5 ms DOWN pulses with the pen clear: the 16-sample filtered value reached within ±1,000 raw (about 0.2 g) of its plateau at 218 / 220 / 294 ms against a 299-692 raw tail noise floor, so the integrated settle dropped from 500 ms to 300 ms. |
 | 2026-09-23 | T-02 hysteresis-relief nine-cycle run | Passed — relief engaged and recovered | Nine M3/M5 cycles, no faults. Cycle 1 entered hold 13.3 g above target; the relief engaged nine bounded times (199 ms total) and settled it in band, then stayed flat for cycles 2-9. Reference spread 21,403 raw, held spread 21,962 raw, smallest hard-limit margin 16 g. |

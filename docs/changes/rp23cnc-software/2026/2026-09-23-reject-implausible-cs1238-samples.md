@@ -59,9 +59,10 @@ this acquisition path rather than a one-off.
 - Compiled for `rp2040:rp2040:sparkfun_promicrorp2350` with `arduino-cli`
   1.5.1: passed, 82640 bytes program storage and 16244 bytes dynamic memory.
 - `python tools\docs_index.py --write` and `--check` pass.
-- Bench confirmation is required: a repeat cycle set should show
-  `cs1238_rejects` either static or slowly growing, with no false hard-force
-  fault.
+- A 2026-09-23 ten-cycle bench run on this build completed with no faults.
+  `cs1238_rejects` read 0 through cycle 8, then 3 from cycle 9 onward, and the
+  false hard-force trip from the previous run did not recur. See
+  [`2026-09-23-t-02-ten-cycle-outlier-rejection-build`](../../../report/lab-notes/2026-09-23-t-02-ten-cycle-outlier-rejection-build.md).
 
 ## Struggles and rejected approaches
 
