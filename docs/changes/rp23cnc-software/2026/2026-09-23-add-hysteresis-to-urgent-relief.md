@@ -57,11 +57,14 @@ band edge plus 5 g still leaves about 5 g before the 60 g trip.
 - Compiled for `rp2040:rp2040:sparkfun_promicrorp2350` with `arduino-cli`
   1.5.1: passed, 82448 bytes program storage and 16236 bytes dynamic memory.
 - `python tools\docs_index.py --write` and `--check` pass.
-- Bench confirmation is required. The `urgent_relief_count` and
-  `urgent_relief_ms` fields added in `RPSW-20260923-003` should stay constant
-  across a well-behaved cycle; a rising count is direct evidence the relief is
-  engaging, and a rapidly rising count with long `urgent_relief_ms` totals
-  means it is cycling rather than settling.
+- A 2026-09-23 four-cycle bench run on this build completed with no faults. The
+  relief engaged nine bounded times in the cold-start cycle (199 ms total) to
+  recover a hold entry 13.3 g above target, then stayed flat across the three
+  following cycles. See
+  [`2026-09-23-t-02-hysteresis-relief-four-cycle-run`](../../../report/lab-notes/2026-09-23-t-02-hysteresis-relief-four-cycle-run.md).
+- The relief stopping and restarting nine times in that cycle shows the
+  stop-at-band-edge condition can re-trigger while the mechanism is still
+  rising. It converged, but a single retract would be preferable.
 
 ## Struggles and rejected approaches
 

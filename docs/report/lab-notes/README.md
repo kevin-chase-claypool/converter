@@ -32,6 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-23 | T-02 hysteresis-relief four-cycle run | Passed — relief engaged and recovered | Four M3/M5 cycles, no faults. Cycle 1 entered hold 13.3 g above target; the relief engaged nine bounded times (199 ms total) and settled it in band, then stayed flat for cycles 2-4. Reference spread 18,183 raw, held spread 21,962 raw. |
 | 2026-09-23 | T-02 five-cycle clean pass | Passed (supervised cycle set) | Five M3/M5 cycles on the clamped + relief build reached `HOLD_FORCE` with no faults: reference spread 12,290 raw (about 2.4 g), held-force spread 12,943 raw (about 2.6 g), smallest hard-limit margin 18.7 g. The target clamp engaged on one cycle. |
 | 2026-09-23 | T-02 settled-seek four-cycle run | Partial — 3 of 4 cycles reached hold, follow-up faulted | Four M3/M5 cycles with the 500 ms settle: first-touch reference came in at 38,886 / 46,551 / 42,697 raw, but a 78,727 raw touch left only 4.4 g below the hard limit and post-hold creep tripped it. A further cycle on the clamped build also faulted, with the force rising about 20 g after hold from a 49,314 raw reference. |
 | 2026-09-22 | T-02 home-origin seek setup | Partial — two-stage candidate pending | The first 160 × 5 ms seek stopped safely 4.5 mm short; the next 25 ms-only seek reached the 35 g target then briefly crossed the 60 g limit. The new candidate uses 25 ms pulses far from contact and 5 ms pulses after force appears. |
