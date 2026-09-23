@@ -534,14 +534,23 @@ void PressureController::service() {
       const uint32_t active_pulse_ms = home_seek_pulse_active_
                                            ? home_seek_active_pulse_ms_
                                            : next_pulse_ms;
+      const long contact_threshold =
+          activeTargetForceRaw() - CONTACT_READY_TOLERANCE_RAW;
+      // Use the full settle only near the contact decision; transit and early
+      // press pulses can read sooner without losing decision quality.
+      const bool near_contact =
+          normalizedForceDelta() >=
+          contact_threshold - HOME_SEEK_FULL_SETTLE_NEAR_RAW;
+      const uint32_t settle_ms =
+          near_contact ? HOME_SEEK_SETTLE_MS : HOME_SEEK_SHORT_SETTLE_MS;
       const toolhead::ContactSeekLimits limits{
-          active_pulse_ms, HOME_SEEK_SETTLE_MS,
+          active_pulse_ms, settle_ms,
           HOME_SEEK_MAX_PULSES, HOME_SEEK_TIMEOUT_MS};
       const toolhead::ContactSeekStatus seek_status{
           engage,
           new_filtered_sample_,
           normalizedForceDelta(),
-          activeTargetForceRaw() - CONTACT_READY_TOLERANCE_RAW,
+          contact_threshold,
           now,
           state_started_ms_,
           home_seek_pulse_active_,

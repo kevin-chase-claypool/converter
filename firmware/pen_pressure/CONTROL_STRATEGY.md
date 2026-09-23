@@ -88,8 +88,9 @@ about 12 mm above the paper, so the controller first closes that gap:
 
 - `HOME_SEEK_CONTACT` steps DOWN with 25 ms full-drive pulses while far from
   the paper and 5 ms pulses once the normalized force rises above about 1 g,
-  each followed by a 300 ms settle. When the settled force crosses the lower
-  edge of the absolute 35 g target band, the controller enters `HOLD_FORCE`.
+  each followed by a short settle while far from the band and the full 300 ms
+  settle within about 10 g of it. When the settled force crosses the lower edge
+  of the absolute 35 g target band, the controller enters `HOLD_FORCE`.
 - If M3 begins with GP2 pressed, the controller releases GP2 first, takes its
   clear-of-paper tare, then continues the same descend. If M3 begins after
   ordinary M5 clearance, it starts from the fresh clear-state tare. The first

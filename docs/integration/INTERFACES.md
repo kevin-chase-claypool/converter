@@ -272,10 +272,12 @@ the no-contact release band and then applies a verified clearance pulse.
 For the current bench setup, `MECHANICAL_PRELOAD_MODE` is enabled only in the
 supervised firmware build. At M3, GP2 pressed means a cold/full-retract start:
 the Pro Micro first closes the 12 mm gap with 25 ms full-drive DOWN pulses,
-sleeping between pulses and checking the CS1238 moving average after a 300 ms
-settle. Once GP2 releases it takes a clear-of-paper tare and continues down,
-switching to 5 ms pulses once the normalized force rises above about 1 g. When
-the settled force crosses the lower edge of the absolute 35 g target band the
+sleeping between pulses and checking the CS1238 moving average after a short
+settle while far from the band, then the full 300 ms settle once force is
+within about 10 g of it. Once GP2 releases it takes a clear-of-paper tare and
+continues down, switching to 5 ms pulses once the normalized force rises above
+about 1 g. When the settled force crosses the lower edge of the absolute 35 g
+target band the
 controller enters `HOLD_FORCE`. GP2 released means normal post-M5 clearance: it
 starts from the fresh clear-state tare. The first warm M3 after boot is
 fine-only and measures the clearance; later warm M3s traverse most of the

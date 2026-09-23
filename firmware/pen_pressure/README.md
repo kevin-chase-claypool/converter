@@ -172,9 +172,10 @@ asserts. This timeout is a runaway bound, not the ordinary M5 clearance move.
 The normal-M5 force-release path remains separately gated pending T-01H.
 
 The supervised `MECHANICAL_PRELOAD_MODE` uses a single bounded descend instead
-of the earlier two-touch sequence. M3 steps DOWN in 5 ms pulses with 300 ms
-CS1238 settling and enters `HOLD_FORCE` once the settled force crosses the
-lower edge of the absolute 35 g target band. When M3 begins at GP2, the
+of the earlier two-touch sequence. M3 steps DOWN in 5 ms pulses with a short
+settle while far from the band and the full 300 ms settle within about 10 g of
+it, then enters `HOLD_FORCE` once the settled force crosses the lower edge of
+the absolute 35 g target band. When M3 begins at GP2, the
 controller first closes the 12 mm gap with 25 ms full-drive pulses; after GP2
 releases it takes its clear-of-paper tare, then continues down, switching to
 5 ms pulses once the force reads above about 1 g. After a normal M5 it starts

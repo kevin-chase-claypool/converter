@@ -84,6 +84,14 @@ constexpr uint8_t HOME_SEEK_FINE_THRESHOLD_DIVISOR = 5;
 // measured the filtered value reaching +/-1,000 raw of its plateau by
 // 218 / 220 / 294 ms, so 300 ms covers the measured settle.
 constexpr uint32_t HOME_SEEK_SETTLE_MS = 300;
+// Split settle. Pulses far below the contact threshold use this shorter wait
+// because their only decision is "am I still far away", which does not need a
+// fully settled reading. The full settle below still governs the contact
+// decision itself.
+constexpr uint32_t HOME_SEEK_SHORT_SETTLE_MS = 100;
+// The full settle applies once the normalized force is within this margin of
+// the contact threshold, so the final stage of the approach stays settled.
+constexpr long HOME_SEEK_FULL_SETTLE_NEAR_RAW = 50388; // approximately 10 g
 constexpr uint16_t HOME_SEEK_MAX_PULSES = 100;
 constexpr uint8_t HOME_SEEK_MAX_SWITCH_ACTIVE_PULSES = 30;
 // The settle dominates each bounded pulse. The timeout must allow the full
