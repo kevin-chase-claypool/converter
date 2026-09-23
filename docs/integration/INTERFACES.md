@@ -317,8 +317,9 @@ requires three same-direction filtered observations, 25 ms apart, before one
 leaves a PWM command energized between corrections, except for an over-force
 relief: above `HOLD_URGENT_RELIEF_RAW` (5 g) of excess it drives UP
 continuously for at most `HOLD_URGENT_RELIEF_MAX_MS` (200 ms), stopping as soon
-as the force returns to target. That path is retract-only. The 60 g hard-force
-guard remains independent and active.
+as the force is back inside the band. The trigger sits 5 g beyond the band edge
+and relief stops at the band edge. That path is retract-only. The 60 g
+hard-force guard remains independent and active.
 
 The cold-start pulse/travel limits are provisional values revised after the
 first 160 x 5 ms attempt moved only about 7.5 mm and stopped 4.5 mm above

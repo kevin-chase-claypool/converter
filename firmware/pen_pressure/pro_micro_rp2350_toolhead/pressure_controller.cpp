@@ -769,11 +769,13 @@ void PressureController::service() {
       }
 
       // Over-force relief must not wait out the trend gate and correction
-      // cadence. Above the urgent threshold, drive UP continuously and stop as
-      // soon as the force returns to target or the bounded move expires.
-      // This path only ever retracts, so it cannot increase force.
+      // cadence. Above the urgent threshold, drive UP continuously and stop
+      // once the force is back inside the band or the bounded move expires.
+      // Stopping at the band edge rather than target keeps the hysteresis the
+      // first form lacked. This path only ever retracts.
       if (hold_urgent_relief_active_) {
-        if (normalizedForceDelta() <= activeTargetForceRaw() ||
+        if (normalizedForceDelta() <=
+                activeTargetForceRaw() + CONTACT_READY_TOLERANCE_RAW ||
             now - hold_urgent_relief_started_ms_ >=
                 HOLD_URGENT_RELIEF_MAX_MS) {
           hold_urgent_relief_total_ms_ += now - hold_urgent_relief_started_ms_;

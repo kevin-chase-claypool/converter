@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-23 | `RPSW-20260923-004` | implemented | [Add hysteresis to the urgent over-force relief](2026/2026-09-23-add-hysteresis-to-urgent-relief.md) | `t03`, `force-control`, `hold`, `hunting` |
 | 2026-09-23 | `RPSW-20260923-003` | implemented | [Report urgent over-force relief activity in telemetry](2026/2026-09-23-report-urgent-relief-telemetry.md) | `observability`, `telemetry`, `force-control` |
 | 2026-09-23 | `RPSW-20260923-002` | implemented | [Add bounded urgent over-force relief to the hold loop](2026/2026-09-23-add-urgent-over-force-relief.md) | `t03`, `force-control`, `hold`, `hard-limit` |
 | 2026-09-23 | `RPSW-20260923-001` | implemented | [Clamp the hold band below the hard-force limit](2026/2026-09-23-clamp-hold-band-below-hard-limit.md) | `t02`, `force-control`, `hard-limit`, `safety-margin` |

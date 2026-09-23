@@ -211,11 +211,12 @@ for three same-direction out-of-band observations, 25 ms apart, before one
 Every hold pulse stops and sleeps before a fresh later trend can request the
 next one. That bounded cadence only provides about 15 ms of drive per second,
 so when the held force exceeds the target by `HOLD_URGENT_RELIEF_RAW`
-(currently 5 g) the controller instead drives UP continuously, stopping as
-soon as the force returns to target or after `HOLD_URGENT_RELIEF_MAX_MS`
-(200 ms). The relief path is retract-only and cannot increase force. This is
-the current supervised anti-hunting behavior, not a production-qualified
-tuning result.
+(currently 10 g) the controller instead drives UP continuously, stopping once
+the force is back inside the band or after `HOLD_URGENT_RELIEF_MAX_MS`
+(200 ms). The trigger sits 5 g beyond the band edge and relief stops at the
+band edge, so an ordinary in-band excursion cannot start it. The relief path
+is retract-only and cannot increase force. This is the current supervised
+anti-hunting behavior, not a production-qualified tuning result.
 
 The 100-pulse limit and two-touch pulse widths are supervised bench candidates:
 the original 160 x 5 ms attempt covered only about 7.5 mm, while the first

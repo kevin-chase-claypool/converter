@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-23 | `RPSW-20260923-004` | implemented | [Add hysteresis to the urgent over-force relief](../rp23cnc-software/2026/2026-09-23-add-hysteresis-to-urgent-relief.md) | `t03`, `force-control`, `hold`, `hunting` |
 | 2026-09-23 | `RPSW-20260923-002` | implemented | [Add bounded urgent over-force relief to the hold loop](../rp23cnc-software/2026/2026-09-23-add-urgent-over-force-relief.md) | `t03`, `force-control`, `hold`, `hard-limit` |
 | 2026-09-23 | `RPSW-20260923-001` | implemented | [Clamp the hold band below the hard-force limit](../rp23cnc-software/2026/2026-09-23-clamp-hold-band-below-hard-limit.md) | `t02`, `force-control`, `hard-limit`, `safety-margin` |
 | 2026-09-22 | `WSW-20260922-002` | implemented | [File outstanding working-tree artifacts into the repository](../windows-software/2026/2026-09-22-file-outstanding-working-tree-artifacts.md) | `repository-hygiene`, `evidence`, `samples` |

@@ -129,8 +129,17 @@ constexpr uint8_t HOLD_CORRECTION_PWM = 255;
 // cycle entered HOLD_FORCE in band, then rose 99,239 raw (about 20 g) to the
 // 60 g trip. Above this much excess force, relieve with a bounded continuous
 // UP move instead of waiting out the trend gate and cadence. Relief is
-// retract-only, so this can only reduce force.
-constexpr long HOLD_URGENT_RELIEF_RAW = 25194; // approximately 5 g above target
+// retract-only, so it can only reduce force.
+//
+// The trigger must clear the band, and relief must stop at the band edge.
+// The first form triggered exactly at the band top and retracted all the way
+// to target, so every excursion beyond the band caused a full retract and the
+// loop then rebuilt force with slow 5 ms pulses - a retract/rebuild limit
+// cycle that reads as the pen poking and never holding. Trigger at 10 g above
+// target (5 g beyond the band top) and stop at the band top for 5 g of
+// hysteresis, which still leaves about 5 g before the hard limit because the
+// target clamp keeps the band top 10 g below it.
+constexpr long HOLD_URGENT_RELIEF_RAW = 50388; // approximately 10 g above target
 constexpr uint32_t HOLD_URGENT_RELIEF_MAX_MS = 200;
 constexpr uint8_t CS1238_TARE_SAMPLES = 64;
 // Candidate 25 ms moving-average window at the configured 640 SPS. E-08C
