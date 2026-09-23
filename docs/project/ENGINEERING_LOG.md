@@ -11,7 +11,10 @@
 - Change: widened the hold band to ±10 g (25–45 g) and moved the relief trigger
   to 15 g above target so it still clears the band top. Added an opt-in
   "Expand strokes to outlines" converter setting, off by default, so a pen
-  draws each stroke's centerline once.
+  draws each stroke's centerline once. The desktop app's own contour loader
+  (`MainWindow.load_contours`) also hard-coded the old expand behavior; it is
+  now wired to the setting. That path — not the shared `read_svg` — is what the
+  app actually uses, so the first attempt at this fix appeared to do nothing.
 - Verification: firmware compiles (81960 bytes); the house-and-sun sample drops
   from 150 to 20 M3 cycles; the 22 converter tests pass. Bench re-test of the
   hold band and a regenerated drawing remain required. The gentle-landing seek

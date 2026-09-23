@@ -36,10 +36,14 @@ force loop no time to settle.
 
 - `settings.py`: added `expand_strokes` (default `False`) and a matching
   "Expand strokes to outlines" checkbox.
-- `geometry.py`: `read_svg` now passes the setting into `parse_svg_geometry`
-  instead of hard-coding `True`.
-- `qt_svg_to_gcode.pyw`: exposed the checkbox in the Geometry group and included
-  it in the settings round-trip.
+- `geometry.py`: the shared `read_svg` now passes the setting into
+  `parse_svg_geometry` instead of hard-coding `True`.
+- `qt_svg_to_gcode.pyw`: the desktop app has its **own** contour loader,
+  `MainWindow.load_contours`, which called `parse_svg_geometry` directly with
+  `expand_strokes` hard-coded `True`. That is the call the app actually uses, so
+  it now reads the setting. The checkbox is exposed in the Geometry group,
+  included in the settings round-trip, and added to `raw_geometry_key` so
+  toggling it invalidates the cached contours.
 
 ## Verification
 
@@ -50,6 +54,13 @@ force loop no time to settle.
 - `python tools\docs_index.py --write` and `--check` pass.
 
 ## Struggles and rejected approaches
+
+The first version of this fix only changed the shared `read_svg`, which the
+desktop app never calls. The app's `load_contours` bypasses it and passed
+`expand_strokes=True` by hand, so the preview and export kept producing outlines
+even after the core looked fixed — a live session was spent chasing that. The
+lesson: the desktop app has its own contour-loading path, and both must be
+changed together.
 
 Merging the expanded outline rectangles was rejected: they do not form a
 contiguous path, so merging would not reliably remove pen lifts. Drawing the
