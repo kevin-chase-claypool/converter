@@ -69,7 +69,17 @@ constexpr uint8_t AUTO_APPROACH_MAX_STEPS = 20;
 constexpr uint8_t AUTO_APPROACH_LEARN_STEPS = 3;
 constexpr uint8_t TRACE_STEPS_PER_DIRECTION = 12;
 constexpr uint16_t TRACE_STEP_MS = 10;
-constexpr uint16_t TRACE_SETTLE_MS = 500;
+// Raised from the original 500 ms across several bench iterations
+// (500 -> ~1200 -> ~1690 -> ~2620 -> 4000 ms) because the external scale's
+// own settle behavior and the mechanism's backlash/creep were not resolved
+// at the shorter dwells, which made per-pulse video readings unreliable.
+// At 4000 ms, individual pulses finally showed up on video as discrete
+// steps with a flat hold between them; one such step pair was matched with
+// high confidence against the corresponding UP-phase log deltas. See
+// docs/report/lab-notes and this folder's trace-settle-ms tuning note for
+// the evidence. This is a diagnostic dwell for bench characterization, not
+// a chosen production hold time.
+constexpr uint16_t TRACE_SETTLE_MS = 4000;
 // The installed load cell also sees normal lead-screw/mechanism force while
 // traveling. Stop only when one pulse departs substantially from that learned
 // no-contact behavior; this is roughly 10 g in the 57.2 g bench experiments.
