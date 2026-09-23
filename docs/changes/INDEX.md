@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-23 | `RPSW-20260923-005` | rp23cnc-software, hardware | implemented | [Add a one-pulse settle trace to E-09E](rp23cnc-software/2026/2026-09-23-add-e09e-settle-trace.md) |
 | 2026-09-23 | `RPSW-20260923-004` | rp23cnc-software, hardware | implemented | [Add hysteresis to the urgent over-force relief](rp23cnc-software/2026/2026-09-23-add-hysteresis-to-urgent-relief.md) |
 | 2026-09-23 | `RPSW-20260923-003` | rp23cnc-software | implemented | [Report urgent over-force relief activity in telemetry](rp23cnc-software/2026/2026-09-23-report-urgent-relief-telemetry.md) |
 | 2026-09-23 | `RPSW-20260923-002` | rp23cnc-software, hardware | implemented | [Add bounded urgent over-force relief to the hold loop](rp23cnc-software/2026/2026-09-23-add-urgent-over-force-relief.md) |

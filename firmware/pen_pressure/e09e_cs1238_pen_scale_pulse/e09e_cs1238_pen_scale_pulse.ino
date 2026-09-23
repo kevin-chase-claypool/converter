@@ -19,6 +19,7 @@
     t / a             tare clear state / ARM the next 30 DOWN pulses
     d / u             one DOWN (toward-scale) / UP (away) selected-duration pulse
     r / x             read CS1238 mean / STOP, sleep, and disarm
+    s                 one 5 ms DOWN pulse then a 2.5 s settle trace
     [ / ]             decrease / increase selected duration in 5 ms steps
 
   Long commands remain available for scripted capture:
@@ -169,9 +170,9 @@ void arm() {
 }
 
 void printHelp() {
-  Serial.println(F("HELP,shortcuts=? t a d u r x [ ]"));
-  Serial.println(F("HELP,t=tare,a=arm,d=down,u=up,r=read,x=stop,[/]=duration"));
-  Serial.println(F("HELP,long=STATUS|TARE|ARM|PULSE DOWN ms|PULSE UP ms|READ|CAPTURE ms|STOP"));
+  Serial.println(F("HELP,shortcuts=? t a d u r x s [ ]"));
+  Serial.println(F("HELP,t=tare,a=arm,d=down,u=up,r=read,x=stop,s=settle trace,[/]=duration"));
+  Serial.println(F("HELP,long=STATUS|TARE|ARM|PULSE DOWN ms|PULSE UP ms|READ|CAPTURE ms|SETTLE|STOP"));
   status();
 }
 
@@ -266,6 +267,65 @@ void capture(uint32_t durationMs) {
   Serial.println(count);
 }
 
+void settleTrace() {
+  if (!configured || !tareValid) {
+    Serial.println(F("SETTLE_REJECTED,reason=tare_required"));
+    return;
+  }
+  if (faultActive()) {
+    Serial.println(F("SETTLE_REJECTED,reason=drv_fault"));
+    return;
+  }
+  if (remainingDownPulses == 0) {
+    Serial.println(F("SETTLE_REJECTED,reason=arm_required"));
+    return;
+  }
+  if (liftHomePressed()) {
+    Serial.println(F("SETTLE_REJECTED,reason=lift_home_pressed"));
+    return;
+  }
+
+  // One bounded 5 ms DOWN pulse, the same guarded path as the normal pulse.
+  digitalWrite(PIN_DRV_SLEEP, HIGH);
+  delay(5);
+  if (faultActive()) {
+    stopAndSleep();
+    Serial.println(F("SETTLE_REJECTED,reason=drv_fault_after_enable"));
+    return;
+  }
+  digitalWrite(PIN_IN1, HIGH);
+  digitalWrite(PIN_IN2, LOW);
+  delay(PULSE_MIN_MS);
+  const bool faultDuringDrive = faultActive();
+  stopAndSleep();
+  --remainingDownPulses;
+
+  Serial.print(F("SETTLE_START,pulse_ms="));
+  Serial.print(PULSE_MIN_MS);
+  Serial.print(F(",fault_during_drive="));
+  Serial.println(faultDuringDrive ? 1 : 0);
+  Serial.println(F("SETTLE_HEADER,time_ms,cs1238_filtered"));
+
+  // Emit the 16-sample filtered value at its natural ~25 ms cadence for 2.5 s.
+  // This is the same value the integrated controller acts on, so the trace
+  // shows how long the decision signal actually takes to settle.
+  const uint32_t durationMs = 2500;
+  const uint32_t start = micros();
+  while (static_cast<uint32_t>(micros() - start) < durationMs * 1000UL) {
+    int32_t mean = 0;
+    if (!readMean(READ_SAMPLES, mean)) {
+      Serial.println(F("SETTLE_STOP,reason=cs1238_timeout"));
+      return;
+    }
+    const uint32_t ms = static_cast<uint32_t>(micros() - start) / 1000UL;
+    Serial.print(F("SETTLE,"));
+    Serial.print(ms);
+    Serial.print(',');
+    Serial.println(mean);
+  }
+  Serial.println(F("SETTLE_STOP,reason=completed,duration_ms=2500"));
+}
+
 bool shortcut(char character);
 
 void command(const char *line) {
@@ -285,6 +345,7 @@ void command(const char *line) {
     pulse(false, static_cast<uint16_t>(strtoul(line + 9, nullptr, 10)));
   }
   else if (!strncasecmp(line, "CAPTURE ", 8)) capture(strtoul(line + 8, nullptr, 10));
+  else if (!strcasecmp(line, "SETTLE")) settleTrace();
   else Serial.println(F("COMMAND_ERROR,send=? for help"));
 }
 
@@ -301,6 +362,7 @@ bool shortcut(char character) {
       remainingDownPulses = 0;
       Serial.println(F("STOPPED,driver_asleep=1"));
       return true;
+    case 's': settleTrace(); return true;
     case '[': adjustPulseDuration(false); return true;
     case ']': adjustPulseDuration(true); return true;
     default: return false;
