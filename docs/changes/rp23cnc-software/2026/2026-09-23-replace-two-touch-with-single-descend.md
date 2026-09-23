@@ -57,8 +57,12 @@ are unchanged.
 - Compiled for `rp2040:rp2040:sparkfun_promicrorp2350` with `arduino-cli`
   1.5.1: passed, 81584 bytes program storage and 16212 bytes dynamic memory.
 - `python tools\docs_index.py --write` and `--check` pass.
-- Bench verification is required. The seek should now use fewer pulses per M3
-  and hold at the absolute 35 g target rather than roughly 45 g.
+- A 2026-09-23 ten-cycle bench run on this build completed with no faults. The
+  cold start dropped from 74 to 56 pulses, but warm M3 stayed at 22-26 pulses
+  because the M5 clearance gap, not the tune, dominates. Held force spread was
+  27,143 raw (5.4 g), wider than the two-touch's 2.7 g, because the seek
+  overshoots its threshold and the hold loop and relief correct it down. See
+  [`2026-09-23-t-02-single-descend-ten-cycle-run`](../../../report/lab-notes/2026-09-23-t-02-single-descend-ten-cycle-run.md).
 
 ## Struggles and rejected approaches
 
