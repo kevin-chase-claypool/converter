@@ -43,10 +43,6 @@ constexpr ContactSeekAction decideContactSeekAction(
   if (!status.engage_requested) {
     return ContactSeekAction::CANCELLED;
   }
-  if (status.fresh_sample &&
-      status.normalized_force_raw >= status.contact_threshold_raw) {
-    return ContactSeekAction::CONTACT_FOUND;
-  }
   if (elapsed(status.now_ms, status.seek_started_ms, limits.timeout_ms)) {
     return ContactSeekAction::LIMIT_REACHED;
   }
@@ -58,9 +54,15 @@ constexpr ContactSeekAction decideContactSeekAction(
   if (!status.fresh_sample) {
     return ContactSeekAction::WAIT;
   }
+  // A threshold crossing only counts as contact after the just-finished pulse
+  // has had its full sensing settle. Checking earlier accepts the post-drive
+  // mechanical transient as force, which is how the seek overshot its target.
   if (status.completed_pulses > 0 &&
       !elapsed(status.now_ms, status.last_pulse_ended_ms, limits.settle_ms)) {
     return ContactSeekAction::WAIT;
+  }
+  if (status.normalized_force_raw >= status.contact_threshold_raw) {
+    return ContactSeekAction::CONTACT_FOUND;
   }
   if (status.completed_pulses >= limits.max_pulses) {
     return ContactSeekAction::LIMIT_REACHED;
@@ -72,11 +74,11 @@ constexpr ContactSeekAction decideContactSeekAction(
 // the live state machine without energizing hardware.
 constexpr ContactSeekLimits kTestLimits{25, 50, 100, 8000};
 static_assert(decideContactSeekAction(
-                  {true, true, 0, 100, 100, 100, false, 0, 0, 0},
-                  kTestLimits) == ContactSeekAction::START_PULSE);
+                  {false, true, 0, 100, 101, 100, true, 100, 0, 0},
+                  kTestLimits) == ContactSeekAction::CANCELLED);
 static_assert(decideContactSeekAction(
-                  {true, false, 0, 100, 100, 100, false, 0, 0, 0},
-                  kTestLimits) == ContactSeekAction::WAIT);
+                  {true, false, 0, 100, 8100, 100, false, 0, 0, 0},
+                  kTestLimits) == ContactSeekAction::LIMIT_REACHED);
 static_assert(decideContactSeekAction(
                   {true, false, 0, 100, 124, 100, true, 100, 0, 0},
                   kTestLimits) == ContactSeekAction::WAIT);
@@ -84,22 +86,22 @@ static_assert(decideContactSeekAction(
                   {true, false, 0, 100, 125, 100, true, 100, 0, 0},
                   kTestLimits) == ContactSeekAction::STOP_PULSE);
 static_assert(decideContactSeekAction(
-                  {true, true, 100, 100, 101, 100, true, 100, 0, 0},
+                  {true, false, 0, 100, 100, 100, false, 0, 0, 0},
+                  kTestLimits) == ContactSeekAction::WAIT);
+static_assert(decideContactSeekAction(
+                  {true, true, 100, 100, 149, 100, false, 0, 100, 1},
+                  kTestLimits) == ContactSeekAction::WAIT);
+static_assert(decideContactSeekAction(
+                  {true, true, 100, 100, 150, 100, false, 0, 100, 1},
                   kTestLimits) == ContactSeekAction::CONTACT_FOUND);
 static_assert(decideContactSeekAction(
-                  {false, true, 0, 100, 101, 100, true, 100, 0, 0},
-                  kTestLimits) == ContactSeekAction::CANCELLED);
-static_assert(decideContactSeekAction(
-                  {true, true, 0, 100, 149, 100, false, 0, 100, 1},
-                  kTestLimits) == ContactSeekAction::WAIT);
+                  {true, true, 100, 100, 100, 100, false, 0, 0, 0},
+                  kTestLimits) == ContactSeekAction::CONTACT_FOUND);
 static_assert(decideContactSeekAction(
                   {true, true, 0, 100, 150, 100, false, 0, 100, 1},
                   kTestLimits) == ContactSeekAction::START_PULSE);
 static_assert(decideContactSeekAction(
                   {true, true, 0, 100, 150, 100, false, 0, 100, 100},
-                  kTestLimits) == ContactSeekAction::LIMIT_REACHED);
-static_assert(decideContactSeekAction(
-                  {true, false, 0, 100, 8100, 100, false, 0, 0, 0},
                   kTestLimits) == ContactSeekAction::LIMIT_REACHED);
 
 }  // namespace toolhead

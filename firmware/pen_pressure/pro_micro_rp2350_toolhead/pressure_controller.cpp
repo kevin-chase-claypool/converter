@@ -479,6 +479,14 @@ void PressureController::service() {
       }
 
       if (home_surface_confirm_pending_) {
+        // A first touch is only credible after the just-finished pulse has
+        // had its full sensing settle. Sampling during the post-drive
+        // transient can accept mechanism stiction as paper contact.
+        const uint32_t confirm_ready_ms =
+            home_seek_last_pulse_ended_ms_ + HOME_SEEK_SETTLE_MS;
+        if (now < confirm_ready_ms) {
+          break;
+        }
         if (now - home_surface_confirm_started_ms_ >=
             HOME_SURFACE_CONFIRM_TIMEOUT_MS) {
           home_surface_confirm_pending_ = false;

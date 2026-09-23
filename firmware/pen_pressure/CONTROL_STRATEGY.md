@@ -66,7 +66,7 @@ fixed motor duration.
 - `M5` requests `PEN_CLEAR`. Retract until the filtered force stays below
   `F_release_off` for the configured debounce interval, then issue the bounded
   `t_clear`/pulse command and stop the actuator. The current staged source
-  uses a 100 ms post-release lift pulse, then waits 50 ms and takes a fresh
+   uses a 100 ms post-release lift pulse, then waits 500 ms and takes a fresh
   64-sample clear-state tare before reporting `LIFTED`. It begins only after
   release is confirmed and must be replaced by an accepted T-01H per-tool value.
 - `F_contact_on` and `F_release_off` are distinct hysteresis thresholds. Both
@@ -89,12 +89,12 @@ about 12 mm above the paper in the current setup:
 - If M3 begins with GP2 (`LIFT_HOME`) pressed, the controller performs a
   two-touch `HOME_SEEK_CONTACT` sequence. First it finds paper at the light
   approximately 5 g threshold: 25 ms full-drive DOWN pulses while normalized
-  force is below one-fifth of that threshold, then 5 ms pulses with a 50 ms
+   force is below one-fifth of that threshold, then 5 ms pulses with a 500 ms
   settle between each filtered check. It then makes a bounded 10 ms UP back-off
-  and starts `HOME_TUNE_FORCE`, which uses only 5 ms DOWN pulses and the same
-  50 ms settle to reach the lower 30 g edge of the 30–40 g drawing band. The
-  surface stage is bounded at 100 pulses/8 seconds/30 pulses without GP2
-  releasing; tuning is separately bounded at 100 pulses/7 seconds. Any bound,
+   and starts `HOME_TUNE_FORCE`, which uses only 5 ms DOWN pulses and the same
+   500 ms settle to reach the lower 30 g edge of the 30–40 g drawing band. The
+   surface stage is bounded at 100 pulses/60 seconds/30 pulses without GP2
+   releasing; tuning is separately bounded at 100 pulses/60 seconds. Any bound,
   sensor loss, or overforce stops/sleeps the motor and enters `FAULT`.
 - If M3 begins after ordinary M5 clearance with GP2 released, it discards the
   preceding touch reference and runs the same trend-confirmed search using
@@ -110,7 +110,7 @@ about 12 mm above the paper in the current setup:
   `e` (or deliberately restore GP29 with `a`) to request another engage.
 
 M5 still applies the candidate 100 ms UP clearance move and stops sooner if
-GP2 is pressed. If GP2 is not reached, it waits 50 ms after stopping and
+ GP2 is pressed. If GP2 is not reached, it waits 500 ms after stopping and
 refreshes the 64-sample clear-state tare before the next normal M3. This
 two-touch envelope follows a real 160 x 5 ms seek that
 covered only about 7.5 mm and a three-pulse 25 ms seek that reached 35 g then
@@ -130,7 +130,7 @@ zero refer to the actual released, clear-of-paper mechanism state.
 
 Normal M5 has a separate short clear-state tare because the 100 ms clearance
 move shifts the unloaded raw baseline enough to imitate a subsequent contact
-trend. It waits 50 ms with the motor asleep, collects 64 CS1238 samples, and
+ trend. It waits 500 ms with the motor asleep, collects 64 CS1238 samples, and
 only then makes the next normal M3 eligible. A full-GP2 M5 result intentionally
 remains invalid: the following M3 must release GP2 and use the longer tare.
 

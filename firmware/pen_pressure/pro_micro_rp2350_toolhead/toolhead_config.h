@@ -56,9 +56,10 @@ constexpr uint32_t PEN_CLEAR_RELEASE_TIMEOUT_MS = 1800;
 // clearance cycles prove repeatability before PEN_CLEAR_VALID may be enabled.
 constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 100;
 // Normal M5 changes the mechanism's unloaded CS1238 baseline. Once the
-// clearance motion has stopped, let it settle briefly then take a 64-sample
-// clear-state tare before allowing the next M3 approach.
-constexpr uint32_t PEN_CLEAR_TARE_SETTLE_MS = 50;
+// clearance motion has stopped, wait for the full sensing settle before
+// taking the 64-sample clear-state tare. E-09F showed that a 50 ms read is
+// still inside the post-drive mechanical transient.
+constexpr uint32_t PEN_CLEAR_TARE_SETTLE_MS = 500;
 // Supervised bench build: home to GP2 at startup, use a slow bounded seek when
 // M3 begins at GP2, and retain the measured 100 ms M3/M5 pair between strokes.
 // This is not the production commissioning gate.
@@ -72,10 +73,15 @@ constexpr uint32_t SEEK_TIMEOUT_MS = 1500;
 constexpr uint8_t HOME_SEEK_COARSE_PULSE_MS = 25;
 constexpr uint8_t HOME_SEEK_FINE_PULSE_MS = 5;
 constexpr uint8_t HOME_SEEK_FINE_THRESHOLD_DIVISOR = 5;
-constexpr uint32_t HOME_SEEK_SETTLE_MS = 50;
+// Force must be read only after the pulse has settled. E-09F's 500 ms settle
+// produced repeatable 40.0 g / 40.4 g holds on this mechanism, where 50 ms
+// reads were still settling transients.
+constexpr uint32_t HOME_SEEK_SETTLE_MS = 500;
 constexpr uint16_t HOME_SEEK_MAX_PULSES = 100;
 constexpr uint8_t HOME_SEEK_MAX_SWITCH_ACTIVE_PULSES = 30;
-constexpr uint32_t HOME_SEEK_TIMEOUT_MS = 8000;
+// A 500 ms settle dominates each bounded pulse. The timeout must allow the
+// full coarse-plus-fine pulse sequence (100 x 525 ms worst case).
+constexpr uint32_t HOME_SEEK_TIMEOUT_MS = 60000;
 constexpr uint8_t HOME_SEEK_PWM = 255;
 // First touch finds paper at a light calibrated force, then reverses enough
 // to remove the first-touch preload before the fine drawing-force approach.
@@ -90,16 +96,18 @@ constexpr long HOME_SURFACE_REFERENCE_MAX_RAW = 100775; // approximately 20 g
 constexpr long HOME_SURFACE_RESPONSE_MIN_RAW = 10000; // approximately 2 g
 constexpr uint8_t HOME_SURFACE_CONFIRM_WINDOWS = 3;
 constexpr uint32_t HOME_SURFACE_CONFIRM_WINDOW_MS = 25;
-constexpr uint32_t HOME_SURFACE_CONFIRM_TIMEOUT_MS = 150;
+// Confirmation starts only after the sensing settle, then needs three
+// 25 ms-separated settled windows.
+constexpr uint32_t HOME_SURFACE_CONFIRM_TIMEOUT_MS = 800;
 constexpr uint8_t HOME_SURFACE_RETRACT_MS = 10;
 constexpr uint8_t HOME_TUNE_PULSE_MS = 5;
-constexpr uint32_t HOME_TUNE_SETTLE_MS = 50;
+constexpr uint32_t HOME_TUNE_SETTLE_MS = 500;
 // The released-state 10 ms back-off intentionally leaves a real gap. The
 // tuning stage retains 5 ms resolution but needs enough bounded travel to
 // rebuild drawing preload from that gap.
 constexpr uint16_t HOME_TUNE_MAX_PULSES = 100;
-constexpr uint32_t HOME_TUNE_TIMEOUT_MS = 7000;
-// Existing post-contact force-hold cadence; home seeking has its own faster
+constexpr uint32_t HOME_TUNE_TIMEOUT_MS = 60000;
+// Existing post-contact force-hold cadence; home seeking has its own separate
 // settle constant above and does not retune the moving-average control loop.
 constexpr uint32_t CS1238_CORRECTION_PERIOD_MS = 250;
 // Force hold ignores one-off rolling-average changes. A correction requires
@@ -164,6 +172,11 @@ static_assert(HOME_SEEK_TIMEOUT_MS >
                   HOME_SEEK_MAX_PULSES *
                       (HOME_SEEK_COARSE_PULSE_MS + HOME_SEEK_SETTLE_MS),
               "Home contact-seek timeout must permit its bounded pulse sequence");
+
+static_assert(HOME_TUNE_TIMEOUT_MS >
+                  HOME_TUNE_MAX_PULSES *
+                      (HOME_TUNE_PULSE_MS + HOME_TUNE_SETTLE_MS),
+              "Home force-tune timeout must permit its bounded pulse sequence");
 
 static_assert(!PRESSURE_CALIBRATION_VALID ||
               (CS1238_CONTACT_FORCE_SIGN != 0 && CONTACT_RAW_DELTA > 0 &&

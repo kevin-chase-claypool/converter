@@ -273,21 +273,21 @@ For the current bench setup, `MECHANICAL_PRELOAD_MODE` is enabled only in the
 supervised firmware build. At M3, GP2 pressed means a cold/full-retract start:
 the Pro Micro first sends 25 ms full-drive DOWN pulses until one-fifth of the
 light 5 g surface-candidate level is measured, then 5 ms pulses, sleeping
-between pulses and checking the CS1238 moving average after a 50 ms settle.
+ between pulses and checking the CS1238 moving average after a 500 ms settle.
 A candidate must persist as an approximately 2 g response from its stopped
 pulse across three 25 ms-separated filtered windows before it is surface
 contact. It backs off UP for 10 ms, then sends only 5 ms DOWN pulses until the
 lower 30 g edge of the drawing band relative to that contact reference. The
 reference must be within the broad provisional 20 g low-force envelope, and
-the 60 g hard-force ceiling remains absolute. The surface phase is bounded at 100 pulses,
-8 seconds, and 30 pulses while GP2 remains pressed; the force-tune phase is
-bounded at 100 pulses/7 seconds. Bound, sensor, and hard-force faults stop the
+ the 60 g hard-force ceiling remains absolute. The surface phase is bounded at 100 pulses,
+ 60 seconds, and 30 pulses while GP2 remains pressed; the force-tune phase is
+ bounded at 100 pulses/60 seconds. Bound, sensor, and hard-force faults stop the
 motor. GP2 released means normal post-M5 clearance: it discards the previous
 touch reference and runs the same confirmation process using only 5 ms DOWN
 pulses before force tuning. It never enters hold from a fixed travel time.
 Both paths then use moving-average force correction toward 35 g. M5 uses a
 100 ms UP clearance move, stopping immediately if GP2 is pressed; if GP2 stays
-released, the sleeping controller waits 50 ms and captures a fresh 64-sample
+ released, the sleeping controller waits 500 ms and captures a fresh 64-sample
 clear-state tare before the next normal M3. Use `p` to
 read the one-shot status including separate `home_seek_pulses` and
 `home_tune_pulses` counts;
@@ -306,7 +306,7 @@ at GP2. M3 ignores force until a DOWN pulse first releases GP2; it then stops
 for one second and takes a 64-sample CS1238 tare before evaluating paper touch.
 This released, clear-of-paper baseline prevents the switch-preload force from
 being interpreted as surface contact. Normal M5 clearance uses a separate
-50 ms settled, 64-sample tare because clearance itself shifts that baseline.
+ 500 ms settled, 64-sample tare because clearance itself shifts that baseline.
 
 After initial contact, the moving-average force hold is pulse-bounded: it
 sleeps the DRV8833 in the 30–40 g calibrated band. Outside that band, it
