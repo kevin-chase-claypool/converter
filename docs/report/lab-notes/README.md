@@ -32,6 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-23 | T-02 one-millimetre clearance run | Passed — 8/8 cycles | Reducing the M5 gap to about 1 mm cut the steady-state warm seek from 13-16 to 7-9 pulses, and `warm_ema` converged to about 13. Warm M3 is now about 2.2-2.8 s. |
 | 2026-09-23 | T-02 learned travel after reseat + gate fix | Passed — 6/6 cycles | Reseating the CS1238 header dropped rejects from 1,578 to 0-1, confirming the flood was a connection. With the 3 g gate, every warm M3 now uses the learned coarse travel (13-16 pulses vs 24-27 fine-only). |
 | 2026-09-23 | T-02 learned-travel first run | Partial — learning works, gate too tight | Six cycles, no faults. The first warm M3 measured 24 fine pulses and later cycles dropped to 13-14 using learned coarse travel. One cycle entered at a 6,516 raw clear residual, above the shared 1 g gate, and skipped coarse travel entirely (27 pulses). The warm gate is now 3 g. |
 | 2026-09-23 | T-02 single-descend ten-cycle run | Passed — 10/10 cycles | Single-descend seek works with no faults. Cold start dropped 74 to 56 pulses; warm cycles stayed 22-26 because the M5 clearance gap dominates. Seek overshoots its threshold and the relief corrects it, so held spread widened to 5.4 g from 2.7 g. |

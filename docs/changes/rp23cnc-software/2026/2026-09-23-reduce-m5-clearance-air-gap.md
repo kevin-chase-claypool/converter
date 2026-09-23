@@ -42,8 +42,10 @@ and later cycles use it.
 - Compiled for `rp2040:rp2040:sparkfun_promicrorp2350` with `arduino-cli`
   1.5.1: passed, 81784 bytes program storage and 16220 bytes dynamic memory.
 - `python tools\docs_index.py --write` and `--check` pass.
-- Bench confirmation is required. Expected: the first warm M3 after the change
-  re-measures a shorter travel, and subsequent warm M3s use fewer pulses.
+- A 2026-09-23 eight-cycle bench run on this build completed with no faults. The
+  first warm M3 re-measured 22 pulses and `warm_ema` then converged to about 13;
+  steady-state warm seek dropped from 13-16 pulses to 7-9, about 2.2-2.8 s. See
+  [`2026-09-23-t-02-one-mm-clearance-run`](../../../report/lab-notes/2026-09-23-t-02-one-mm-clearance-run.md).
 
 ## Struggles and rejected approaches
 
