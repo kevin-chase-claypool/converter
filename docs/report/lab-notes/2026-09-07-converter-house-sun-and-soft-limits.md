@@ -24,7 +24,7 @@ and a pen-free converter-generated X/Y/A execution and return check.
   `G10 L20 P1 X0 Y0` set `WCO:-232.900,-191.200,0.000,0.000`.
 - A was previously manually set to G54 `A0`; this is a temporary visual angular
   reference, not M-09 magnetic index registration.
-- Program: `samples/svg/kindergarten-house-sun.gcode`, generated pen-free. Its
+- Program: `samples/gcode/kindergarten-house-sun.gcode`, generated pen-free. Its
   header is `G21 G90 G94 G17 G54`; it contains X/Y/A moves and no `M3` or `M5`.
 
 ## Procedure

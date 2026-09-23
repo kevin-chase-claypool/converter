@@ -289,7 +289,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "pc817-perfboard-v1.2.kicad_sch.kicad_pro",
+    "filename": "pc817-perfboard-v2-minwire.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -338,8 +338,8 @@
     "legacy_lib_list": [],
     "top_level_sheets": [
       {
-        "filename": "pc817-perfboard-v1.2.kicad_sch.kicad_sch",
-        "name": "pc817-perfboard-v1.2.kicad_sch",
+        "filename": "pc817-perfboard-v2-minwire.kicad_sch",
+        "name": "pc817-perfboard-v2-minwire",
         "uuid": "00000000-0000-0000-0000-000000000000"
       }
     ]

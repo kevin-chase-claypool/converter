@@ -50,8 +50,9 @@ Added ignore groups to `.gitignore`:
 - `*-backups/` — KiCad automatic project backup archives.
 
 The two stray root-level files `$pngBase` and `$pngPath`, written by a
-root-level script bug on 2026-08-09, keep their existing ignore entries and now
-carry a comment explaining their origin.
+root-level script bug on 2026-08-09, were given an explanatory comment rather
+than a silent entry. Both were deleted on 2026-09-22 with owner confirmation,
+so their ignore entries were removed again; see `WSW-20260922-002`.
 
 ## Verification
 
@@ -75,8 +76,8 @@ them, rather than being silently hidden.
 
 `work/` is now ignored wholesale. If a future workflow needs to commit
 something under `work/`, add an explicit negation rule rather than removing the
-directory rule. The stray `$pngBase` and `$pngPath` files are still on disk and
-can be deleted once the project owner confirms they are not needed.
+directory rule. The stray `$pngBase` and `$pngPath` files have been deleted and
+their ignore entries removed.
 
 ## Files
 

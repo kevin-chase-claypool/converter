@@ -23,6 +23,10 @@ and remaining commissioning gates. Its P100 map supports hover or click on any
 of the six process cards during Slide Show; a matching detail view opens, with
 a **Back to overview** control.
 
+The rendered slide set used for review is kept beside it in
+`docs/report/Theta_Pen_Plotter_Summer_Progress_Update/` as `slide-1.png`
+through `slide-13.png`.
+
 ## Suggested outline
 
 1. **Introduction / goal** — polar pen plotter: SVG in, drawn artwork out.

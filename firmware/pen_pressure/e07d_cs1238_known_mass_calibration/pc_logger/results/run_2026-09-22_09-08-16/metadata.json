@@ -1,0 +1,8 @@
+{
+  "created_local": "2026-09-22T09:08:16",
+  "method": "Pro Micro RP2350 E-07D raw CS1238 known-mass calibration",
+  "calibration_load_direction": "Downward weight on motor mount",
+  "printing_force_relationship": "Opposite: upward pen-tip reaction",
+  "raw_data_policy": "Raw capture files are retained unfiltered. Representative values use the final half of each capture.",
+  "firmware_command": "CAPTURE <ms>"
+}

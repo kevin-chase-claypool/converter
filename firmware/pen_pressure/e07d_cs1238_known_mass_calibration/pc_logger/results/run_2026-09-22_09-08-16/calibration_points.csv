@@ -1,0 +1,10 @@
+number,mass_g,pass,calibration_load_direction,printing_force_relationship,capture_ms,sample_count,final_half_sample_count,raw_mean,raw_sigma,raw_file,included
+1,0.0,Loading,Downward weight on motor mount,Opposite: upward pen-tip reaction,1000,651,325,248296.33846153846,544.8072200166298,raw\point_001_0g_loading.csv,True
+2,5.0,Loading,Downward weight on motor mount,Opposite: upward pen-tip reaction,1000,651,325,273109.4,2138.468213824667,raw\point_002_5g_loading.csv,True
+3,10.0,Loading,Downward weight on motor mount,Opposite: upward pen-tip reaction,1000,650,325,298306.80615384615,770.4906424584119,raw\point_003_10g_loading.csv,True
+4,15.0,Loading,Downward weight on motor mount,Opposite: upward pen-tip reaction,1000,651,325,323901.2153846154,1751.2049486199512,raw\point_004_15g_loading.csv,True
+5,20.0,Loading,Downward weight on motor mount,Opposite: upward pen-tip reaction,1000,651,325,349434.49846153846,2164.1768783458674,raw\point_005_20g_loading.csv,True
+6,30.0,Loading,Downward weight on motor mount,Opposite: upward pen-tip reaction,1000,651,325,399707.8307692308,1476.3879662018253,raw\point_006_30g_loading.csv,True
+7,40.0,Loading,Downward weight on motor mount,Opposite: upward pen-tip reaction,1000,650,325,449379.6123076923,616.5411837283347,raw\point_007_40g_loading.csv,True
+8,50.0,Loading,Downward weight on motor mount,Opposite: upward pen-tip reaction,1000,650,325,500631.9138461538,748.1564698288357,raw\point_008_50g_loading.csv,True
+9,50.0,Loading,Downward weight on motor mount,Opposite: upward pen-tip reaction,1000,651,325,600027.796923077,998.9988043373504,raw\point_009_50g_loading.csv,True

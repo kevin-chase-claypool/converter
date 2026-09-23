@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `WSW-20260922-002` | implemented | [File outstanding working-tree artifacts into the repository](2026/2026-09-22-file-outstanding-working-tree-artifacts.md) | `repository-hygiene`, `evidence`, `samples` |
 | 2026-09-22 | `WSW-20260922-001` | implemented | [Ignore local tooling and build-scratch directories](2026/2026-09-22-ignore-local-tooling-and-build-scratch.md) | `repository-hygiene`, `tooling`, `commit-workflow` |
 | 2026-09-22 | `RPSW-20260922-005` | implemented | [Route E-09E runtime through service UART](../rp23cnc-software/2026/2026-09-22-route-e09e-through-service-uart.md) | `e-09e`, `uart`, `usb-to-ttl`, `power-safety` |
 | 2026-09-22 | `RPSW-20260922-004` | implemented | [Make E-09E pulse duration adjustable](../rp23cnc-software/2026/2026-09-22-make-e09e-pulse-duration-adjustable.md) | `e-09e`, `n20`, `pulse-duration`, `safety` |

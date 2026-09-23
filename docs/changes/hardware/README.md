@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `WSW-20260922-002` | implemented | [File outstanding working-tree artifacts into the repository](../windows-software/2026/2026-09-22-file-outstanding-working-tree-artifacts.md) | `repository-hygiene`, `evidence`, `samples` |
 | 2026-09-22 | `WSW-20260922-001` | implemented | [Ignore local tooling and build-scratch directories](../windows-software/2026/2026-09-22-ignore-local-tooling-and-build-scratch.md) | `repository-hygiene`, `tooling`, `commit-workflow` |
 | 2026-09-22 | `RPSW-20260922-033` | implemented | [Record E-07B trace-settle tuning](../rp23cnc-software/2026/2026-09-22-record-e07b-trace-settle-tuning.md) | `hx711`, `e07b`, `bench-diagnostic`, `historical-evidence` |
 | 2026-09-22 | `RPSW-20260922-032` | implemented | [Refresh Tare after Normal Pen Clear](../rp23cnc-software/2026/2026-09-22-tare-after-normal-clear.md) | `cs1238`, `tare`, `pen-clear`, `m3-m5` |

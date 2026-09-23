@@ -1,0 +1,24 @@
+{
+  "created_local": "2026-09-22T09:05:08",
+  "downward_weight_fit_equation": "downward_weight_g = grams_per_raw_count * cs1238_raw + offset_g",
+  "downward_weight_fit": {
+    "grams_per_raw_count": 0.0002004669976942869,
+    "offset_g": -50.35499267637917,
+    "rms_residual_g": 0.7053635960126761,
+    "r_squared": 0.9992314456708115,
+    "raw_at_downward_weight_40g": 450722.5314671044,
+    "raw_at_downward_weight_60g": 550489.5765669672
+  },
+  "estimated_printing_force_fit": {
+    "relationship": "Opposite: upward pen-tip reaction",
+    "force_equation": "estimated_pen_force_g = grams_per_raw_count * cs1238_raw + offset_g",
+    "grams_per_raw_count": -0.0002004669976942869,
+    "offset_g": 50.35499267637917,
+    "raw_at_40g": 51654.35106765345,
+    "raw_at_60g": -48112.69403220929,
+    "warning": "Approximate projection only: it assumes the installed upward pen-tip reaction produces the selected same/opposite strain direction relative to the downward weight fixture. Confirm raw direction with the installed pen before enabling control."
+  },
+  "included_point_count": 19,
+  "raw_policy": "All raw records are in raw/. Point means use the final half of each capture only.",
+  "warning": "This result is not a production motor-control authorization. The estimated printing-force fit is a direction projection from a downward weight fixture; review traces, repeatability, raw direction at the installed pen, and later actuator tests first."
+}

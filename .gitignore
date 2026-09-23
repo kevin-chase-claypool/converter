@@ -44,8 +44,3 @@ tmp/
 ~*.lck
 fp-info-cache
 *-backups/
-
-# Stray root-level files written by a script bug on 2026-08-09. They stay out
-# of the index until the project owner confirms they can be deleted.
-$pngBase
-$pngPath

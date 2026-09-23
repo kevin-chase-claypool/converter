@@ -30,7 +30,7 @@ sample CSV.
 
 ## Results
 
-The saved run is local at:
+The saved run is retained in the repository at:
 
 ```text
 firmware/pen_pressure/e07d_cs1238_known_mass_calibration/pc_logger/
