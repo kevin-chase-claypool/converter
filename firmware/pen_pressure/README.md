@@ -161,7 +161,7 @@ For a normal M5 from contact, Core 0 uses `RELEASE_TO_CLEAR`: it retracts only
 until the filtered CS1238 residual remains in the configured no-contact band
 for the required windows. It then enters `CLEARANCE_LIFT` and continues N20
 retraction for `PEN_CLEAR_EXTRA_LIFT_MS` (currently 100 ms), rechecks the clear
- band, then stops/sleeps for `PEN_CLEAR_TARE_SETTLE_MS` (currently 500 ms) and
+ band, then stops/sleeps for `PEN_CLEAR_TARE_SETTLE_MS` (currently 300 ms) and
 takes a fresh 64-sample clear-state tare before reaching `LIFTED`/possible
 `CLEAR_READY`. This resets the unloaded baseline shifted by the clearance
 motion before the next M3. At boot or after a
@@ -174,7 +174,7 @@ The supervised `MECHANICAL_PRELOAD_MODE` now distinguishes a full-retract
 startup from routine M5 clearance. When M3 begins with GP2 (`LIFT_HOME`)
 pressed, it seeks toward an approximately 5 g first-touch candidate in 25 ms
 full-drive DOWN pulses until one-fifth of that level, then changes to 5 ms
-pulses with 500 ms CS1238 settling between every pulse. A stopped pulse must
+pulses with 300 ms CS1238 settling between every pulse. A stopped pulse must
 produce a persistent approximately 2 g response in three 25 ms-separated
 filtered windows, measured after the sensing settle, before paper touch is
 accepted. It backs off with one 10 ms

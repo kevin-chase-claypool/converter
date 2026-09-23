@@ -32,6 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
+| 2026-09-23 | E-09E post-pulse settle trace | Measured — 300 ms adopted | Three 5 ms DOWN pulses with the pen clear: the 16-sample filtered value reached within ±1,000 raw (about 0.2 g) of its plateau at 218 / 220 / 294 ms against a 299-692 raw tail noise floor, so the integrated settle dropped from 500 ms to 300 ms. |
 | 2026-09-23 | T-02 hysteresis-relief nine-cycle run | Passed — relief engaged and recovered | Nine M3/M5 cycles, no faults. Cycle 1 entered hold 13.3 g above target; the relief engaged nine bounded times (199 ms total) and settled it in band, then stayed flat for cycles 2-9. Reference spread 21,403 raw, held spread 21,962 raw, smallest hard-limit margin 16 g. |
 | 2026-09-23 | T-02 five-cycle clean pass | Passed (supervised cycle set) | Five M3/M5 cycles on the clamped + relief build reached `HOLD_FORCE` with no faults: reference spread 12,290 raw (about 2.4 g), held-force spread 12,943 raw (about 2.6 g), smallest hard-limit margin 18.7 g. The target clamp engaged on one cycle. |
 | 2026-09-23 | T-02 settled-seek four-cycle run | Partial — 3 of 4 cycles reached hold, follow-up faulted | Four M3/M5 cycles with the 500 ms settle: first-touch reference came in at 38,886 / 46,551 / 42,697 raw, but a 78,727 raw touch left only 4.4 g below the hard limit and post-hold creep tripped it. A further cycle on the clamped build also faulted, with the force rising about 20 g after hold from a 49,314 raw reference. |
