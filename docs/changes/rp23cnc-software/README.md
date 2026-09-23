@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-23 | `RPSW-20260923-007` | implemented | [Reject implausible CS1238 conversions](2026/2026-09-23-reject-implausible-cs1238-samples.md) | `cs1238`, `force-control`, `false-fault`, `observability` |
 | 2026-09-23 | `RPSW-20260923-006` | implemented | [Reduce the sensing settle to the measured 300 ms](2026/2026-09-23-reduce-settle-to-measured-300ms.md) | `settle`, `performance`, `force-control`, `t02` |
 | 2026-09-23 | `RPSW-20260923-005` | implemented | [Add a one-pulse settle trace to E-09E](2026/2026-09-23-add-e09e-settle-trace.md) | `settle`, `characterization`, `observability`, `e09e` |
 | 2026-09-23 | `RPSW-20260923-004` | implemented | [Add hysteresis to the urgent over-force relief](2026/2026-09-23-add-hysteresis-to-urgent-relief.md) | `t03`, `force-control`, `hold`, `hunting` |

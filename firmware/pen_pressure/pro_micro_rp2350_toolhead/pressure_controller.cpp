@@ -201,6 +201,29 @@ void PressureController::serviceCs1238() {
     setStatusFlag(STATUS_CS1238_ONLINE, false);
     return;
   }
+  // A single out-of-range conversion must never reach the force filter. On
+  // 2026-09-23 one -6,292,478 raw read pulled the 16-sample mean to -107,985
+  // and tripped the hard-force guard while the toolhead sat idle in LIFTED.
+  // Drop isolated glitches, but fault if they persist so a real sensor failure
+  // still stops the machine instead of being silently averaged away.
+  const bool out_of_band =
+      sample < CS1238_SAMPLE_MIN_RAW || sample > CS1238_SAMPLE_MAX_RAW;
+  const bool far_from_tare =
+      tare_valid_ && std::labs(static_cast<long>(sample) - cs1238_tare_) >
+                         CS1238_SAMPLE_MAX_DELTA_RAW;
+  if (out_of_band || far_from_tare) {
+    if (cs1238_rejected_samples_ < 0xFFFF) {
+      cs1238_rejected_samples_++;
+    }
+    if (cs1238_implausible_streak_ < CS1238_IMPLAUSIBLE_FAULT_STREAK) {
+      cs1238_implausible_streak_++;
+    }
+    if (cs1238_implausible_streak_ >= CS1238_IMPLAUSIBLE_FAULT_STREAK) {
+      enterFault("CS1238 reading implausible");
+    }
+    return;
+  }
+  cs1238_implausible_streak_ = 0;
   cs1238_raw_ = sample;
   setStatusFlag(STATUS_CS1238_ONLINE, true);
   serviceTare(cs1238_raw_);

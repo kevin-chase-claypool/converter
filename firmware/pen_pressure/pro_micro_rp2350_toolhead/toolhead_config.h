@@ -208,6 +208,20 @@ static_assert(HARD_FORCE_RAW_DELTA >
                   CONTACT_READY_TOLERANCE_RAW + HOLD_BAND_HEADROOM_RAW,
               "Hard-force limit must leave room for the acceptance band and its headroom");
 
+// Physical plausibility band for any single CS1238 conversion. The installed
+// bridge reads roughly -1.5e5 to +3.2e5 raw across its whole force range, so a
+// conversion outside this band is a communication or conversion fault.
+constexpr long CS1238_SAMPLE_MIN_RAW = -500000;
+constexpr long CS1238_SAMPLE_MAX_RAW = 500000;
+// A conversion this far from the live tare cannot be force. Twice the
+// hard-force delta is about 120 g, which leaves every real reading untouched
+// while rejecting the -6,292,478 raw glitch that contaminated the 16-sample
+// mean to -107,985 and tripped the hard-force guard on 2026-09-23.
+constexpr long CS1238_SAMPLE_MAX_DELTA_RAW = 2 * HARD_FORCE_RAW_DELTA;
+// Consecutive implausible conversions before the sensor is declared faulted.
+// Isolated glitches are dropped; a persistent failure still stops the machine.
+constexpr uint8_t CS1238_IMPLAUSIBLE_FAULT_STREAK = 3;
+
 static_assert(HOME_SEEK_TIMEOUT_MS >
                   HOME_SEEK_MAX_PULSES *
                       (HOME_SEEK_COARSE_PULSE_MS + HOME_SEEK_SETTLE_MS),

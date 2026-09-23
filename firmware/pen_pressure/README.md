@@ -225,9 +225,17 @@ limit after contact. They do not establish a universal per-pen travel response. 
 the seek and clearance with each tool before plotting. The quiet `p` snapshot
 reports `home_seek_pulses=<completed>/<limit>`,
 `home_tune_pulses=<completed>/<limit>`, and
-`urgent_relief_count=<activations> urgent_relief_ms=<total driving time>`, so
-seek progress and over-force relief activity can be checked without enabling
-the scrolling live stream.
+`urgent_relief_count=<activations> urgent_relief_ms=<total driving time>`, plus
+`cs1238_rejects=<dropped conversions>`, so seek progress, over-force relief
+activity, and rejected CS1238 conversions can be checked without enabling the
+scrolling live stream.
+
+A CS1238 conversion is dropped before it can reach the force filter when it
+falls outside the physical plausibility band or sits more than twice the
+hard-force delta from the live tare. Isolated glitches are therefore absorbed;
+three consecutive implausible conversions instead raise a
+`CS1238 reading implausible` fault so a real sensor failure still stops the
+machine.
 
 The temporary service interface is `Serial2` / hardware UART1 on GP20 (TX) and
 GP21 (RX) at 115200 baud. The integrated sketch immediately writes `Theta

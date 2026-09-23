@@ -52,6 +52,7 @@ class PressureController {
   uint16_t homeTunePulseCount() const { return home_tune_pulse_count_; }
   uint16_t holdUrgentReliefCount() const { return hold_urgent_relief_count_; }
   uint32_t holdUrgentReliefTotalMs() const { return hold_urgent_relief_total_ms_; }
+  uint16_t cs1238RejectedSamples() const { return cs1238_rejected_samples_; }
   bool manualOverride() const { return manual_override_; }
 
  private:
@@ -120,6 +121,8 @@ class PressureController {
   uint16_t home_tune_pulse_count_ = 0;
   uint16_t hold_urgent_relief_count_ = 0;
   uint32_t hold_urgent_relief_total_ms_ = 0;
+  uint16_t cs1238_rejected_samples_ = 0;
+  uint8_t cs1238_implausible_streak_ = 0;
   uint8_t home_seek_pulses_while_switch_active_ = 0;
   uint8_t home_surface_confirm_windows_ = 0;
   uint8_t hold_out_of_band_windows_ = 0;

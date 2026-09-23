@@ -292,8 +292,8 @@ Both paths then use moving-average force correction toward 35 g. M5 uses a
 clear-state tare before the next normal M3. Use `p` to
 read the one-shot status including separate `home_seek_pulses` and
 `home_tune_pulses` counts, plus the `urgent_relief_count` and
-`urgent_relief_ms` over-force relief totals; periodic scrolling remains opt-in
-with `v`.
+`urgent_relief_ms` over-force relief totals and the `cs1238_rejects` count of
+dropped conversions; periodic scrolling remains opt-in with `v`.
 
 The 60 g hard-force guard stops DOWN/hold operation. After inspecting a fault
 and the physical pen position, `c` starts only the existing bounded UP
