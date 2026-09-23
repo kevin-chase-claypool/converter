@@ -277,16 +277,20 @@ settle. Once GP2 releases it takes a clear-of-paper tare and continues down,
 switching to 5 ms pulses once the normalized force rises above about 1 g. When
 the settled force crosses the lower edge of the absolute 35 g target band the
 controller enters `HOLD_FORCE`. GP2 released means normal post-M5 clearance: it
-starts from the fresh clear-state tare and descends directly with 5 ms pulses.
-It never enters hold from a fixed travel time. The approach is bounded at 100
+starts from the fresh clear-state tare. The first warm M3 after boot is
+fine-only and measures the clearance; later warm M3s traverse most of the
+learned distance with 25 ms coarse pulses, keep an 8-pulse fine reserve, then
+finish with 5 ms pulses. It never enters hold from a fixed travel time. The
+approach is bounded at 100
 pulses / 60 seconds and 30 pulses while GP2 remains pressed. The 60 g
 hard-force ceiling remains absolute. Bound, sensor, and hard-force faults stop
 the motor. M5 uses a 100 ms UP clearance move, stopping immediately if GP2 is
 pressed; if GP2 stays released, the sleeping controller waits 300 ms and
 captures a fresh 64-sample clear-state tare before the next normal M3. Use `p`
-to read the one-shot status including `home_seek_pulses`, plus the
-`urgent_relief_count` and `urgent_relief_ms` over-force relief totals and the
-`cs1238_rejects` count of dropped conversions; periodic scrolling remains
+to read the one-shot status including `home_seek_pulses` and the `warm_ema`
+learned travel, plus the `urgent_relief_count` and `urgent_relief_ms`
+over-force relief totals and the `cs1238_rejects` count of dropped conversions;
+periodic scrolling remains
 opt-in with `v`.
 
 The 60 g hard-force guard stops DOWN/hold operation. After inspecting a fault

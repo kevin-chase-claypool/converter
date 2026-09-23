@@ -177,7 +177,11 @@ lower edge of the absolute 35 g target band. When M3 begins at GP2, the
 controller first closes the 12 mm gap with 25 ms full-drive pulses; after GP2
 releases it takes its clear-of-paper tare, then continues down, switching to
 5 ms pulses once the force reads above about 1 g. After a normal M5 it starts
-from the fresh clear-state tare and descends directly with 5 ms pulses. It
+from the fresh clear-state tare. The first warm M3 after boot descends with
+5 ms pulses to measure the clearance; later warm M3s traverse most of that
+learned distance with 25 ms coarse pulses, keep an 8-pulse fine reserve, then
+finish with 5 ms pulses. The learned distance is a moving average of the warm
+seek's travel, so it tracks clearance drift. It
 never enters hold from a fixed travel time. The approach is bounded at 100
 pulses / 60 seconds and 30 pulses without GP2 releasing; any limit, sensor
 loss, or overforce stops/sleeps the driver and enters `FAULT`. The 60 g
@@ -214,7 +218,7 @@ the first 25 ms-only attempt contacted correctly but briefly exceeded the 60 g
 hard limit after contact. They do not establish a universal per-pen travel
 response. T-01J must validate
 the seek and clearance with each tool before plotting. The quiet `p` snapshot
-reports `home_seek_pulses=<completed>/<limit>`,
+reports `home_seek_pulses=<completed>/<limit>` and `warm_ema=<learned travel>`,
 `urgent_relief_count=<activations> urgent_relief_ms=<total driving time>`, plus
 `cs1238_rejects=<dropped conversions>`, so seek progress, over-force relief
 activity, and rejected CS1238 conversions can be checked without enabling the

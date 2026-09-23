@@ -92,8 +92,11 @@ about 12 mm above the paper, so the controller first closes that gap:
   edge of the absolute 35 g target band, the controller enters `HOLD_FORCE`.
 - If M3 begins with GP2 pressed, the controller releases GP2 first, takes its
   clear-of-paper tare, then continues the same descend. If M3 begins after
-  ordinary M5 clearance, it starts from the fresh clear-state tare and
-  descends directly with 5 ms pulses.
+  ordinary M5 clearance, it starts from the fresh clear-state tare. The first
+  warm M3 after boot is fine-only and measures the clearance; later warm M3s
+  traverse most of the learned distance with 25 ms coarse pulses, keep an
+  8-pulse fine reserve, and finish with 5 ms pulses. The learned distance is a
+  moving average of the warm seek's travel, so it tracks clearance drift.
 - The approach is bounded at 100 pulses / 60 seconds and 30 pulses without GP2
   releasing. Any bound, sensor loss, or overforce stops/sleeps the motor and
   enters `FAULT`.

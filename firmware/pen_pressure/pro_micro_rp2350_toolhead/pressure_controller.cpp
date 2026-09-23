@@ -450,14 +450,35 @@ void PressureController::service() {
             home_seek_pulse_started_ms_ = 0;
             home_seek_last_pulse_ended_ms_ = 0;
             if (liftHomeActive()) {
+              warm_seek_ = false;
               home_seek_force_fine_only_ = false;
+              warm_seek_coarse_budget_ = 0;
+              warm_seek_coarse_used_ = 0;
               tare_valid_ = false;
               home_wait_for_release_tare_ = true;
               setState(PressureState::HOME_SEEK_CONTACT);
             } else {
-              // M5 leaves a fresh clear-state tare and a known small air gap.
-              // Descend with fine pulses straight to the target band.
-              home_seek_force_fine_only_ = true;
+              // Warm M3. The first pass after boot is fine-only and measures
+              // the clearance; later passes traverse most of the learned
+              // distance with coarse pulses, keeping a fine reserve for the
+              // final approach.
+              warm_seek_ = true;
+              warm_seek_coarse_used_ = 0;
+              if (warm_seek_pulse_ema_ == 0) {
+                home_seek_force_fine_only_ = true;
+                warm_seek_coarse_budget_ = 0;
+              } else {
+                home_seek_force_fine_only_ = false;
+                uint16_t coarse =
+                    warm_seek_pulse_ema_ > SEEK_WARM_FINE_RESERVE
+                        ? (warm_seek_pulse_ema_ - SEEK_WARM_FINE_RESERVE) /
+                              SEEK_WARM_COARSE_RATIO
+                        : 0;
+                if (coarse > SEEK_WARM_MAX_COARSE_PULSES) {
+                  coarse = SEEK_WARM_MAX_COARSE_PULSES;
+                }
+                warm_seek_coarse_budget_ = static_cast<uint8_t>(coarse);
+              }
               home_wait_for_release_tare_ = false;
               setState(PressureState::HOME_SEEK_CONTACT);
             }
@@ -498,12 +519,14 @@ void PressureController::service() {
 
       const long fine_threshold = HOME_SURFACE_TOUCH_RAW_DELTA /
                                   HOME_SEEK_FINE_THRESHOLD_DIVISOR;
-      const uint32_t next_pulse_ms =
+      const bool coarse_phase =
           home_wait_for_release_tare_ ||
-                  (!home_seek_force_fine_only_ &&
-                   normalizedForceDelta() < fine_threshold)
-              ? HOME_SEEK_COARSE_PULSE_MS
-              : HOME_SEEK_FINE_PULSE_MS;
+          (!home_seek_force_fine_only_ &&
+           (warm_seek_ ? warm_seek_coarse_used_ < warm_seek_coarse_budget_
+                       : true) &&
+           normalizedForceDelta() < fine_threshold);
+      const uint32_t next_pulse_ms =
+          coarse_phase ? HOME_SEEK_COARSE_PULSE_MS : HOME_SEEK_FINE_PULSE_MS;
       const uint32_t active_pulse_ms = home_seek_pulse_active_
                                            ? home_seek_active_pulse_ms_
                                            : next_pulse_ms;
@@ -535,6 +558,10 @@ void PressureController::service() {
           motorStop();
           setDriverEnabled(false);
           home_seek_pulse_active_ = false;
+          if (warm_seek_ &&
+              home_seek_active_pulse_ms_ == HOME_SEEK_COARSE_PULSE_MS) {
+            warm_seek_coarse_used_++;
+          }
           home_seek_active_pulse_ms_ = 0;
           home_seek_pulse_count_++;
           home_seek_last_pulse_ended_ms_ = now;
@@ -559,6 +586,17 @@ void PressureController::service() {
           setDriverEnabled(false);
           home_seek_pulse_active_ = false;
           home_seek_active_pulse_ms_ = 0;
+          if (warm_seek_) {
+            const uint16_t fine_pulses =
+                home_seek_pulse_count_ - warm_seek_coarse_used_;
+            const uint16_t travel =
+                warm_seek_coarse_used_ * SEEK_WARM_COARSE_RATIO + fine_pulses;
+            warm_seek_pulse_ema_ =
+                warm_seek_pulse_ema_ == 0
+                    ? travel
+                    : static_cast<uint16_t>(
+                          (warm_seek_pulse_ema_ * 3 + travel) / 4);
+          }
           m3_force_acquired_ = true;
           last_force_correction_ms_ = now;
           setState(PressureState::HOLD_FORCE);

@@ -93,6 +93,14 @@ constexpr uint8_t HOME_SEEK_PWM = 255;
 // normalized force is below this divided by HOME_SEEK_FINE_THRESHOLD_DIVISOR
 // (about 1 g), then switches to 5 ms fine pulses for the final approach.
 constexpr long HOME_SURFACE_TOUCH_RAW_DELTA = 25194; // approximately 5 g
+// Warm-seek travel learning. The first warm M3 after boot runs fine-only to
+// measure the clearance distance; later warm M3s traverse most of that learned
+// distance with 25 ms coarse pulses before the fine 5 ms approach. These are
+// supervised bench candidates: the 1 g force threshold still ends the coarse
+// phase early if the pen reaches paper sooner than the learned distance.
+constexpr uint8_t SEEK_WARM_COARSE_RATIO = 5;   // 25 ms coarse = 5 x 5 ms fine
+constexpr uint8_t SEEK_WARM_FINE_RESERVE = 8;   // fine pulses kept for final approach
+constexpr uint8_t SEEK_WARM_MAX_COARSE_PULSES = 8;
 // Existing post-contact force-hold cadence; home seeking has its own separate
 // settle constant above and does not retune the moving-average control loop.
 constexpr uint32_t CS1238_CORRECTION_PERIOD_MS = 250;

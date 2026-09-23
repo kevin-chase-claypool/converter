@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-23 | `RPSW-20260923-009` | rp23cnc-software, hardware | implemented | [Learn warm-seek travel to traverse it with coarse pulses](rp23cnc-software/2026/2026-09-23-learn-warm-seek-travel.md) |
 | 2026-09-23 | `RPSW-20260923-008` | rp23cnc-software, hardware | implemented | [Replace the two-touch seek with a single descend](rp23cnc-software/2026/2026-09-23-replace-two-touch-with-single-descend.md) |
 | 2026-09-23 | `RPSW-20260923-007` | rp23cnc-software, hardware | implemented | [Reject implausible CS1238 conversions](rp23cnc-software/2026/2026-09-23-reject-implausible-cs1238-samples.md) |
 | 2026-09-23 | `RPSW-20260923-006` | rp23cnc-software, hardware | implemented | [Reduce the sensing settle to the measured 300 ms](rp23cnc-software/2026/2026-09-23-reduce-settle-to-measured-300ms.md) |
