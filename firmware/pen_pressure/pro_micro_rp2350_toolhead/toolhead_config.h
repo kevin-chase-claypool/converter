@@ -89,34 +89,10 @@ constexpr uint8_t HOME_SEEK_MAX_SWITCH_ACTIVE_PULSES = 30;
 // coarse-plus-fine pulse sequence (100 x 325 ms worst case).
 constexpr uint32_t HOME_SEEK_TIMEOUT_MS = 60000;
 constexpr uint8_t HOME_SEEK_PWM = 255;
-// First touch finds paper at a light calibrated force, then reverses enough
-// to remove the first-touch preload before the fine drawing-force approach.
+// Coarse-to-fine switch basis. The seek stays on 25 ms coarse pulses while the
+// normalized force is below this divided by HOME_SEEK_FINE_THRESHOLD_DIVISOR
+// (about 1 g), then switches to 5 ms fine pulses for the final approach.
 constexpr long HOME_SURFACE_TOUCH_RAW_DELTA = 25194; // approximately 5 g
-// A confirmed first-touch reference must remain low force. This broad 20 g
-// T-02 candidate rejects a large persistent sticktion jump without requiring
-// an exact physical touch value. It is a plausibility check, not the
-// hard-limit guard: HOLD_BAND_HEADROOM_RAW and the target clamp own that.
-// Keep it above the observed good-touch range (38,886-46,551 raw on
-// 2026-09-23) so a high but usable touch is clamped rather than faulted.
-constexpr long HOME_SURFACE_REFERENCE_MAX_RAW = 100775; // approximately 20 g
-// A first touch is a persistent response to one stopped fine pulse, not an
-// absolute threshold crossing. At 640 SPS a 16-sample average spans about
-// 25 ms, so three separated windows add roughly 75 ms of confirmation.
-constexpr long HOME_SURFACE_RESPONSE_MIN_RAW = 10000; // approximately 2 g
-constexpr uint8_t HOME_SURFACE_CONFIRM_WINDOWS = 3;
-constexpr uint32_t HOME_SURFACE_CONFIRM_WINDOW_MS = 25;
-// Confirmation starts only after the sensing settle, then needs three
-// 25 ms-separated settled windows.
-constexpr uint32_t HOME_SURFACE_CONFIRM_TIMEOUT_MS = 800;
-constexpr uint8_t HOME_SURFACE_RETRACT_MS = 10;
-constexpr uint8_t HOME_TUNE_PULSE_MS = 5;
-// Same measured settle as the seek above; see HOME_SEEK_SETTLE_MS.
-constexpr uint32_t HOME_TUNE_SETTLE_MS = 300;
-// The released-state 10 ms back-off intentionally leaves a real gap. The
-// tuning stage retains 5 ms resolution but needs enough bounded travel to
-// rebuild drawing preload from that gap.
-constexpr uint16_t HOME_TUNE_MAX_PULSES = 100;
-constexpr uint32_t HOME_TUNE_TIMEOUT_MS = 60000;
 // Existing post-contact force-hold cadence; home seeking has its own separate
 // settle constant above and does not retune the moving-average control loop.
 constexpr uint32_t CS1238_CORRECTION_PERIOD_MS = 250;
@@ -226,11 +202,6 @@ static_assert(HOME_SEEK_TIMEOUT_MS >
                   HOME_SEEK_MAX_PULSES *
                       (HOME_SEEK_COARSE_PULSE_MS + HOME_SEEK_SETTLE_MS),
               "Home contact-seek timeout must permit its bounded pulse sequence");
-
-static_assert(HOME_TUNE_TIMEOUT_MS >
-                  HOME_TUNE_MAX_PULSES *
-                      (HOME_TUNE_PULSE_MS + HOME_TUNE_SETTLE_MS),
-              "Home force-tune timeout must permit its bounded pulse sequence");
 
 static_assert(!PRESSURE_CALIBRATION_VALID ||
               (CS1238_CONTACT_FORCE_SIGN != 0 && CONTACT_RAW_DELTA > 0 &&

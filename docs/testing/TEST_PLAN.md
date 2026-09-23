@@ -372,7 +372,7 @@ see [`2026-09-07-converter-house-sun-and-soft-limits.md`](../report/lab-notes/20
 | ID | Test | Pass condition |
 |---|---|---|
 | T-01 | Toolhead lift/clear and motor/preload physical capability | Every applicable T-01A through T-01J sub-test below is recorded. The full `LIFT_HOME` and normal `PEN_CLEAR` motions stay inside the measured mechanical and electrical envelope; retracts repeatably without a fault, hard-stop contact, unacceptable drift, or an uncommanded pen contact. |
-| T-02 | Contact seek | From GP2 home, the bounded two-touch seek uses 25 ms pulses far from touch and 5 ms pulses near a 5 g candidate. It accepts surface only after a stopped pulse produces a persistent approximately 2 g response across three 25 ms-separated filtered windows, sampled after the sensing settle, backs off 10 ms, then tunes to the lower 30 g edge relative to that touch reference with 5 ms pulses. Accepted reference force must remain under the provisional 20 g candidate ceiling, and the relative target is clamped so the top of the acceptance band keeps at least 10 g below the 60 g hard ceiling. After normal M5 clearance, the sleeping controller waits 300 ms and captures a fresh 64-sample clear-state tare; M3 then clears the old reference and repeats the same contact check using only 5 ms pulses. It must not enter hold from a timed move. Surface seek must complete before 100 pulses/60 seconds, force tune before 100 pulses/60 seconds, or fault with driver asleep; the hard guard remains an absolute 60 g ceiling. Verify switch release within the first 30 surface pulses. |
+| T-02 | Contact seek | From GP2 home, the bounded seek uses 25 ms pulses to close the 12 mm gap and 5 ms pulses once force rises above about 1 g, each followed by a 300 ms settle. It enters HOLD_FORCE when the settled force crosses the lower edge of the absolute 35 g target band; there is no separate light-touch detection, back-off, or retune. After normal M5 clearance, the sleeping controller waits 300 ms and captures a fresh 64-sample clear-state tare, then M3 descends directly with 5 ms pulses. It must not enter hold from a timed move. The seek must complete before 100 pulses/60 seconds, or fault with driver asleep; the hard guard remains an absolute 60 g ceiling. Verify switch release within the first 30 pulses. |
 | T-03 | Force hold | After E-06, E-07, E-08, T-01, and T-02: a bounded moving-average pulse controller holds the calibrated 30–40 g target band through (a) stationary contact, (b) X/Y translation, and (c) progressively faster constant A rotation. It may use only individual 5 ms corrections, after three same-direction 25 ms-separated out-of-band observations and at most once per 250 ms in either direction, except that more than 10 g of excess force triggers a bounded continuous retract-only UP relief of at most 200 ms that stops at the band edge. Log mean, 95th-percentile absolute error, peak force, pulse count/reversals, and faults. No sustained limit cycle, hard-force trip, or uncommanded contact loss is allowed. Demonstrate that the dominant bed-rotation disturbance is within the measured loop bandwidth; otherwise reduce speed or add mechanical compliance before considering feed-forward. |
 | T-04 | Missing-paper fault | Seek timeout enters FAULT |
 | T-05 | Overforce fault | Immediate safe response |
@@ -482,13 +482,14 @@ reachable, and the service UART open, send `p` and confirm
 expected. Send `e` once. The controller must first release GP2, report
 `HOME_RELEASE_TARE_SETTLING`, wait one second, and take its released-state
 tare before it evaluates surface force. It then moves in individual 25 ms DOWN
-pulses while far from touch and 5 ms pulses near surface force, with a 300 ms
+pulses while far from the paper and 5 ms pulses once force rises above about
+1 g, with a 300 ms
 sensing settle. Use `p` occasionally to read
 `home_seek_pulses=<completed>/100`; do not turn on the continuous `v` stream
-unless needed. The first touch is approximately 5 g; after the 10 ms back-off,
-the fine tune should transition to `HOLD_FORCE` at the lower 30 g edge of the
-30–40 g band, below the 60 g hard limit. The switch must release within 30
-pulses. A 100-pulse/60-second limit or sensor/force error must result in
+unless needed. The seek must transition to `HOLD_FORCE` when the settled force
+crosses the lower edge of the 35 g target band, below the 60 g hard limit. The
+switch must release within 30 pulses. A 100-pulse/60-second limit or
+sensor/force error must result in
 `FAULT` with the driver asleep. Keep the hand at the cutoff and do not send `c`
 until the cause and physical pen position are checked. After inspection, `c`
 must perform only the bounded UP recovery to GP2, never resume DOWN seeking.

@@ -83,25 +83,20 @@ an ordinary M5.
 
 For the current non-precision plotter bench, the installed pen is normally
 seated by the operator at an approximate drawing preload. The supervised
-`MECHANICAL_PRELOAD_MODE` has two M3 entry paths because boot homes the pen
-about 12 mm above the paper in the current setup:
+`MECHANICAL_PRELOAD_MODE` uses a single bounded descend. Boot homes the pen
+about 12 mm above the paper, so the controller first closes that gap:
 
-- If M3 begins with GP2 (`LIFT_HOME`) pressed, the controller performs a
-  two-touch `HOME_SEEK_CONTACT` sequence. First it finds paper at the light
-  approximately 5 g threshold: 25 ms full-drive DOWN pulses while normalized
-   force is below one-fifth of that threshold, then 5 ms pulses with a 300 ms
-  settle between each filtered check. It then makes a bounded 10 ms UP back-off
-   and starts `HOME_TUNE_FORCE`, which uses only 5 ms DOWN pulses and the same
-   300 ms settle to reach the lower 30 g edge of the 30–40 g drawing band. The
-   surface stage is bounded at 100 pulses/60 seconds/30 pulses without GP2
-   releasing; tuning is separately bounded at 100 pulses/60 seconds. Any bound,
-  sensor loss, or overforce stops/sleeps the motor and enters `FAULT`.
-- If M3 begins after ordinary M5 clearance with GP2 released, it discards the
-  preceding touch reference and runs the same trend-confirmed search using
-  only 5 ms DOWN pulses. It does not enter `HOLD_FORCE` until it has accepted
-  a new surface response, backed off, and fine-tuned force. This keeps the
-  normal stroke cycle gentle while avoiding reuse of a stale mechanical
-  preload/reference.
+- `HOME_SEEK_CONTACT` steps DOWN with 25 ms full-drive pulses while far from
+  the paper and 5 ms pulses once the normalized force rises above about 1 g,
+  each followed by a 300 ms settle. When the settled force crosses the lower
+  edge of the absolute 35 g target band, the controller enters `HOLD_FORCE`.
+- If M3 begins with GP2 pressed, the controller releases GP2 first, takes its
+  clear-of-paper tare, then continues the same descend. If M3 begins after
+  ordinary M5 clearance, it starts from the fresh clear-state tare and
+  descends directly with 5 ms pulses.
+- The approach is bounded at 100 pulses / 60 seconds and 30 pulses without GP2
+  releasing. Any bound, sensor loss, or overforce stops/sleeps the motor and
+  enters `FAULT`.
 - If a force fault occurs, inspect the reported cause and physical position
   before sending `c`. Clearing a fault initiates the existing bounded UP
   recovery toward GP2; over-force detection never blocks that retract-only
@@ -110,14 +105,13 @@ about 12 mm above the paper in the current setup:
   `e` (or deliberately restore GP29 with `a`) to request another engage.
 
 M5 still applies the candidate 100 ms UP clearance move and stops sooner if
- GP2 is pressed. If GP2 is not reached, it waits 300 ms after stopping and
-refreshes the 64-sample clear-state tare before the next normal M3. This
-two-touch envelope follows a real 160 x 5 ms seek that
-covered only about 7.5 mm and a three-pulse 25 ms seek that reached 35 g then
-briefly crossed the 60 g hard threshold. It is not a universal per-pen travel
-constant. T-01J must
-validate the home seek, force response, and clearance for each installed tool
-before plotting. Production remains commissioning-gated.
+GP2 is pressed. If GP2 is not reached, it waits 300 ms after stopping and
+refreshes the 64-sample clear-state tare before the next normal M3. The pulse
+widths follow a real 160 x 5 ms seek that covered only about 7.5 mm and a
+three-pulse 25 ms seek that reached 35 g then briefly crossed the 60 g hard
+threshold. They are not universal per-pen travel constants. T-01J must validate
+the home seek, force response, and clearance for each installed tool before
+plotting. Production remains commissioning-gated.
 
 ### Clear-state tares
 
@@ -152,22 +146,6 @@ inside the band or after `HOLD_URGENT_RELIEF_MAX_MS` (200 ms). The trigger sits
 in-band excursion cannot start a retract/rebuild cycle. This relief is
 retract-only, so it can only reduce force, and it exists because a mechanism
 releasing stored energy can otherwise outrun the correction cadence.
-
-### Confirmed surface response and relative preload
-
-The light first touch is not accepted merely because one raw value crosses an
-approximately 5 g level. Once that level is reached, the motor is stopped and
-the controller requires a response at least approximately 2 g above the
-pre-pulse value in three 25 ms-separated 16-sample windows. A one-window jump
-or a response that relaxes does not advance the state. The accepted response
-must also remain inside the broad provisional 20 g low-force envelope; a large
-persistent sticktion shift faults instead of becoming the touch reference. The
-second approach targets the calibrated drawing force relative to that reference
-so switch/preload friction is not mistaken for paper force. The 60 g hard-force
-guard remains an absolute ceiling and is never moved upward by the reference.
-The relative target is clamped so the top of the acceptance band always keeps
-`HOLD_BAND_HEADROOM_RAW` (currently 10 g) below that ceiling; without the clamp
-a maximum-reference cycle would hold with its band top on the trip point.
 
 ## Calibration profile and boot baseline
 

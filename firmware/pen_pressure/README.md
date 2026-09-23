@@ -170,31 +170,21 @@ asserts, then stops immediately; a 3000 ms timeout faults if GP2 never
 asserts. This timeout is a runaway bound, not the ordinary M5 clearance move.
 The normal-M5 force-release path remains separately gated pending T-01H.
 
-The supervised `MECHANICAL_PRELOAD_MODE` now distinguishes a full-retract
-startup from routine M5 clearance. When M3 begins with GP2 (`LIFT_HOME`)
-pressed, it seeks toward an approximately 5 g first-touch candidate in 25 ms
-full-drive DOWN pulses until one-fifth of that level, then changes to 5 ms
-pulses with 300 ms CS1238 settling between every pulse. A stopped pulse must
-produce a persistent approximately 2 g response in three 25 ms-separated
-filtered windows, measured after the sensing settle, before paper touch is
-accepted. It backs off with one 10 ms
-UP move, then uses only 5 ms DOWN pulses to reach the lower 30 g edge of the
-30–40 g drawing band relative to the accepted touch reference. An accepted
-reference must remain within the broad provisional 20 g low-force envelope.
-The 60 g hard limit remains absolute rather than moving with the reference, and
-the relative target is clamped so the top of the acceptance band always keeps
-10 g of margin below it. The surface approach has provisional
-100-pulse/60-second and 30-pulses-without-GP2-release bounds; the force-tune
-phase has a separate 100-pulse/60-second bound. Any limit, sensor loss, or
-overforce stops/sleeps the
-driver and enters `FAULT`. When M3 begins after routine M5 clearance with GP2
-released, it clears the preceding contact reference and repeats the
-trend-confirmed touch sequence using only 5 ms DOWN pulses. It does not enter
-force hold merely after a fixed travel time. Both paths then use the 16-sample
-CS1238 moving average for force corrections toward 35 g. M5 keeps the 100 ms
-UP clearance move and stops at GP2. After an inspected fault, `c` initiates a bounded UP-only
-recovery to GP2, latches manual M5, and cannot restart contact seeking until a
-fresh `e` command or deliberate `a` return to GP29 control.
+The supervised `MECHANICAL_PRELOAD_MODE` uses a single bounded descend instead
+of the earlier two-touch sequence. M3 steps DOWN in 5 ms pulses with 300 ms
+CS1238 settling and enters `HOLD_FORCE` once the settled force crosses the
+lower edge of the absolute 35 g target band. When M3 begins at GP2, the
+controller first closes the 12 mm gap with 25 ms full-drive pulses; after GP2
+releases it takes its clear-of-paper tare, then continues down, switching to
+5 ms pulses once the force reads above about 1 g. After a normal M5 it starts
+from the fresh clear-state tare and descends directly with 5 ms pulses. It
+never enters hold from a fixed travel time. The approach is bounded at 100
+pulses / 60 seconds and 30 pulses without GP2 releasing; any limit, sensor
+loss, or overforce stops/sleeps the driver and enters `FAULT`. The 60 g
+hard-force guard is absolute. M5 keeps the 100 ms UP clearance move and stops
+at GP2. After an inspected fault, `c` initiates a bounded UP-only recovery to
+GP2, latches manual M5, and cannot restart contact seeking until a fresh `e`
+command or deliberate `a` return to GP29 control.
 
 GP2 itself changes the installed load-cell preload, so full home is not the
 force zero. From GP2, M3 first drives DOWN until GP2 releases, then stops for
@@ -218,13 +208,13 @@ band edge, so an ordinary in-band excursion cannot start it. The relief path
 is retract-only and cannot increase force. This is the current supervised
 anti-hunting behavior, not a production-qualified tuning result.
 
-The 100-pulse limit and two-touch pulse widths are supervised bench candidates:
-the original 160 x 5 ms attempt covered only about 7.5 mm, while the first
-25 ms-only attempt contacted correctly but briefly exceeded the 60 g hard
-limit after contact. They do not establish a universal per-pen travel response. T-01J must validate
+The 100-pulse limit and the 5 ms/25 ms pulse widths are supervised bench
+candidates: the original 160 x 5 ms attempt covered only about 7.5 mm, while
+the first 25 ms-only attempt contacted correctly but briefly exceeded the 60 g
+hard limit after contact. They do not establish a universal per-pen travel
+response. T-01J must validate
 the seek and clearance with each tool before plotting. The quiet `p` snapshot
 reports `home_seek_pulses=<completed>/<limit>`,
-`home_tune_pulses=<completed>/<limit>`, and
 `urgent_relief_count=<activations> urgent_relief_ms=<total driving time>`, plus
 `cs1238_rejects=<dropped conversions>`, so seek progress, over-force relief
 activity, and rejected CS1238 conversions can be checked without enabling the
@@ -245,8 +235,8 @@ same one-character commands (`?`, `p`, `v`, `t`, `e`, `l`, `a`, `c`); use
 UART1 for runtime control when the external rail is powering the Pro Micro.
 Output is quiet by default: startup and pressure-state changes print once, and
 entering `FAULT` emits a single detailed record containing the CS1238 raw,
-filtered, tare, tare-valid flag, signed and normalized deltas, accepted
-contact reference, and active hard limit. `p` prints one snapshot; `v` toggles
+filtered, tare, tare-valid flag, signed and normalized deltas, and active hard
+limit. `p` prints one snapshot; `v` toggles
 one-second live snapshots on
 and off. The telemetry field `mag_samples` is the magnetometer sample counter,
 not the CS1238 count. Completed records are written directly to UART; do not

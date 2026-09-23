@@ -271,29 +271,23 @@ the no-contact release band and then applies a verified clearance pulse.
 
 For the current bench setup, `MECHANICAL_PRELOAD_MODE` is enabled only in the
 supervised firmware build. At M3, GP2 pressed means a cold/full-retract start:
-the Pro Micro first sends 25 ms full-drive DOWN pulses until one-fifth of the
-light 5 g surface-candidate level is measured, then 5 ms pulses, sleeping
- between pulses and checking the CS1238 moving average after a 300 ms settle.
-A candidate must persist as an approximately 2 g response from its stopped
-pulse across three 25 ms-separated filtered windows before it is surface
-contact. It backs off UP for 10 ms, then sends only 5 ms DOWN pulses until the
-lower 30 g edge of the drawing band relative to that contact reference. The
-reference must be within the broad provisional 20 g low-force envelope. The
-60 g hard-force ceiling remains absolute, and the relative target is clamped so
-the top of the acceptance band always keeps 10 g of margin below it. The surface phase is bounded at 100 pulses,
- 60 seconds, and 30 pulses while GP2 remains pressed; the force-tune phase is
- bounded at 100 pulses/60 seconds. Bound, sensor, and hard-force faults stop the
-motor. GP2 released means normal post-M5 clearance: it discards the previous
-touch reference and runs the same confirmation process using only 5 ms DOWN
-pulses before force tuning. It never enters hold from a fixed travel time.
-Both paths then use moving-average force correction toward 35 g. M5 uses a
-100 ms UP clearance move, stopping immediately if GP2 is pressed; if GP2 stays
- released, the sleeping controller waits 300 ms and captures a fresh 64-sample
-clear-state tare before the next normal M3. Use `p` to
-read the one-shot status including separate `home_seek_pulses` and
-`home_tune_pulses` counts, plus the `urgent_relief_count` and
-`urgent_relief_ms` over-force relief totals and the `cs1238_rejects` count of
-dropped conversions; periodic scrolling remains opt-in with `v`.
+the Pro Micro first closes the 12 mm gap with 25 ms full-drive DOWN pulses,
+sleeping between pulses and checking the CS1238 moving average after a 300 ms
+settle. Once GP2 releases it takes a clear-of-paper tare and continues down,
+switching to 5 ms pulses once the normalized force rises above about 1 g. When
+the settled force crosses the lower edge of the absolute 35 g target band the
+controller enters `HOLD_FORCE`. GP2 released means normal post-M5 clearance: it
+starts from the fresh clear-state tare and descends directly with 5 ms pulses.
+It never enters hold from a fixed travel time. The approach is bounded at 100
+pulses / 60 seconds and 30 pulses while GP2 remains pressed. The 60 g
+hard-force ceiling remains absolute. Bound, sensor, and hard-force faults stop
+the motor. M5 uses a 100 ms UP clearance move, stopping immediately if GP2 is
+pressed; if GP2 stays released, the sleeping controller waits 300 ms and
+captures a fresh 64-sample clear-state tare before the next normal M3. Use `p`
+to read the one-shot status including `home_seek_pulses`, plus the
+`urgent_relief_count` and `urgent_relief_ms` over-force relief totals and the
+`cs1238_rejects` count of dropped conversions; periodic scrolling remains
+opt-in with `v`.
 
 The 60 g hard-force guard stops DOWN/hold operation. After inspecting a fault
 and the physical pen position, `c` starts only the existing bounded UP
@@ -350,8 +344,8 @@ clear. The `p` and `v` commands do not move the actuator.
 Periodic telemetry is disabled by default. The console prints startup and
 pressure-state changes once; entering `FAULT` prints one detailed event record
 including `cs1238_raw`, `cs1238_filtered`, `cs1238_tare`, `tare_valid`, signed
-`cs1238_delta`, normalized `force_norm_raw`, `contact_ref_raw`,
-`contact_ref_valid`, configured `hard_limit_raw`, and `lift_home`. Use `p` for
+`cs1238_delta`, normalized `force_norm_raw`, configured `hard_limit_raw`, and
+`lift_home`. Use `p` for
 a single current reading or `v` to enable/disable the
 one-second stream. `mag_samples` is the TMAG sample counter, not the CS1238
 sample count. A displayed `cmd=M3` while `pressure=FAULT` is only the requested
