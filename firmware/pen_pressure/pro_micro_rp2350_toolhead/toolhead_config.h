@@ -154,11 +154,10 @@ constexpr uint8_t HOLD_CORRECTION_PWM = 255;
 // The first form triggered exactly at the band top and retracted all the way
 // to target, so every excursion beyond the band caused a full retract and the
 // loop then rebuilt force with slow 5 ms pulses - a retract/rebuild limit
-// cycle that reads as the pen poking and never holding. Trigger at 10 g above
-// target (5 g beyond the band top) and stop at the band top for 5 g of
-// hysteresis, which still leaves about 5 g before the hard limit because the
-// target clamp keeps the band top 10 g below it.
-constexpr long HOLD_URGENT_RELIEF_RAW = 50388; // approximately 10 g above target
+// cycle that reads as the pen poking and never holding. Trigger 15 g above
+// target (5 g beyond the now ±10 g band top) and stop at the band top for 5 g
+// of hysteresis, which still leaves 10 g before the 60 g hard limit.
+constexpr long HOLD_URGENT_RELIEF_RAW = 75582; // approximately 15 g above target
 constexpr uint32_t HOLD_URGENT_RELIEF_MAX_MS = 200;
 constexpr uint8_t CS1238_TARE_SAMPLES = 64;
 // Candidate 25 ms moving-average window at the configured 640 SPS. E-08C
@@ -203,9 +202,13 @@ constexpr long CONTACT_RAW_DELTA = 176357;
 constexpr long TARGET_FORCE_RAW_DELTA = 176357;
 constexpr long HARD_FORCE_RAW_DELTA = 302326;
 constexpr int8_t CS1238_CONTACT_FORCE_SIGN = -1;
-// Selected ±5 g target-ready band = 25,194 raw (approximately 30–40 g around
-// the 35 g target).
-constexpr long CONTACT_READY_TOLERANCE_RAW = 25194;
+// Selected ±10 g target-ready band = 50,388 raw (approximately 25–45 g around
+// the 35 g target). 2026-09-23 first-print runs showed the ±5 g band was too
+// tight for the mechanism's friction/noise: long strokes drifted out of band
+// and triggered retract/re-approach cycles, while the wider band lets the
+// hold tolerate that drift. This is a supervised bench choice, not a precision
+// setting.
+constexpr long CONTACT_READY_TOLERANCE_RAW = 50388;
 constexpr uint8_t CONTACT_READY_REQUIRED_WINDOWS = 3;
 // An accepted touch reference shifts the relative target upward, so the target
 // is clamped to keep the top of the acceptance band this far below the

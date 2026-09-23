@@ -1,5 +1,23 @@
 # Engineering Log
 
+<a id="elog-20260923-first-print-tuning"></a>
+### 🟨 2026-09-23 - RP23CNC SOFTWARE/WINDOWS SOFTWARE/IMPLEMENTED - widen the hold band and draw stroke centerlines
+
+- Evidence: the first-print run held the pen but kept tripping the hard-force
+  guard on short strokes and entering retract/re-approach cycles on long ones.
+  The ±5 g band was too tight for the mechanism's friction/noise. Separately,
+  the converter outlined every 0.7 mm stroke into segment rectangles, turning
+  20 polylines into ~150 contours and ~150 M3/M5 cycles.
+- Change: widened the hold band to ±10 g (25–45 g) and moved the relief trigger
+  to 15 g above target so it still clears the band top. Added an opt-in
+  "Expand strokes to outlines" converter setting, off by default, so a pen
+  draws each stroke's centerline once.
+- Verification: firmware compiles (81960 bytes); the house-and-sun sample drops
+  from 150 to 20 M3 cycles; the 22 converter tests pass. Bench re-test of the
+  hold band and a regenerated drawing remain required. The gentle-landing seek
+  (bounded low-PWM creep) and per-tool force profile are still open.
+- Evidence: `RPSW-20260923-016`; `WSW-20260923-001`.
+
 <a id="elog-20260923-t01h-clearance-no-drag"></a>
 ### 🟨 2026-09-23 - HARDWARE/VERIFIED - pen clears on M5 without drag over repeated cycles
 

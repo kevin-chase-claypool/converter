@@ -149,8 +149,8 @@ raw decreases. The earlier pen-cap run is retained as historical raw evidence
 only. The one-COM-port calibration application provides an installed-pen
 kitchen-scale raw-direction check. By the 2026-09-22 follow-up setting, the
 current supervised integrated build uses a 35 g target (176,357 raw) and a
-60 g hard-force limit (302,326 raw); its ±5 g target-ready band is therefore
-approximately 30–40 g. These are selected operating settings, not a new fit
+60 g hard-force limit (302,326 raw); its ±10 g target-ready band is therefore
+approximately 25–45 g. These are selected operating settings, not a new fit
 of the calibration data. The loop still uses the fresh boot tare and 16-sample
 moving average, after the unchanged 100 ms mechanical preload. The 70 g value
 remains in the original E-09C calibration record and the separate E-09F
@@ -206,13 +206,13 @@ its own short fresh clear-state tare, so the following normal M3 starts from
 that current unloaded baseline rather than a prior-stroke tare.
 
 Once initial contact has been found, `HOLD_FORCE` leaves the driver asleep
-inside the calibrated 30–40 g moving-average band. Outside that band it waits
+inside the calibrated 25–45 g moving-average band. Outside that band it waits
 for three same-direction out-of-band observations, 25 ms apart, before one
 5 ms UP or DOWN pulse. Both directions share the 250 ms correction cadence.
 Every hold pulse stops and sleeps before a fresh later trend can request the
 next one. That bounded cadence only provides about 15 ms of drive per second,
 so when the held force exceeds the target by `HOLD_URGENT_RELIEF_RAW`
-(currently 10 g) the controller instead drives UP continuously, stopping once
+(currently 15 g) the controller instead drives UP continuously, stopping once
 the force is back inside the band or after `HOLD_URGENT_RELIEF_MAX_MS`
 (200 ms). The trigger sits 5 g beyond the band edge and relief stops at the
 band edge, so an ordinary in-band excursion cannot start it. The relief path

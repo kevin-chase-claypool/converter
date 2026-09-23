@@ -143,7 +143,7 @@ The current supervised bench source uses GP2 as the full-retract origin for a
 bounded, two-touch M3 contact sequence (25 ms DOWN pulses far from the paper,
 then 5 ms pulses to a light 5 g surface touch; a 10 ms back-off; then 5 ms
 pulses to the lower 30 g edge of the drawing band). Its moving-average hold
-loop uses individual 5 ms corrective pulses only outside the 30–40 g band—
+loop uses individual 5 ms corrective pulses only outside the 25–45 g band—
 never a continuous motor command; after normal M5, it retains the short 100 ms M3
 path. T-01G repeatability and T-02/T-01J powered seek qualification remain
 open, so keep the RP23CNC M3/M5 harness disconnected during initial seek

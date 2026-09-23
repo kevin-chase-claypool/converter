@@ -798,6 +798,7 @@ class MainWindow(QMainWindow):
         self.flip_y = make_checkbox("flip_y")
         self.use_z = make_checkbox("include_z")
         self.compensate_pen = make_checkbox("compensate_pen_width")
+        self.expand_strokes = make_checkbox("expand_strokes")
         self.monotonic_theta = make_checkbox("monotonic_theta")
         self.raster_shading = make_checkbox("raster_shading")
         self.toolhead_status_handshake = make_checkbox("toolhead_status_handshake")
@@ -805,6 +806,7 @@ class MainWindow(QMainWindow):
         geometry_box, geometry_form = make_form_group("Geometry", field_groups["Geometry"])
         geometry_form.addRow(self.flip_y)
         geometry_form.addRow(self.compensate_pen)
+        geometry_form.addRow(self.expand_strokes)
 
         shading_box, shading_form = make_form_group("Shading", field_groups["Shading"])
         shading_form.addRow(self.raster_shading)
@@ -1045,6 +1047,7 @@ class MainWindow(QMainWindow):
             "flip_y": self.flip_y.isChecked(),
             "include_z": self.use_z.isChecked(),
             "compensate_pen_width": self.compensate_pen.isChecked(),
+            "expand_strokes": self.expand_strokes.isChecked(),
             "monotonic_theta": self.monotonic_theta.isChecked(),
             "raster_shading": self.raster_shading.isChecked(),
             "toolhead_status_handshake": self.toolhead_status_handshake.isChecked(),

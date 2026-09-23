@@ -326,7 +326,7 @@ being interpreted as surface contact. Normal M5 clearance uses a separate
  300 ms settled, 64-sample tare because clearance itself shifts that baseline.
 
 After initial contact, the moving-average force hold is pulse-bounded: it
-sleeps the DRV8833 in the 30–40 g calibrated band. Outside that band, it
+sleeps the DRV8833 in the 25–45 g calibrated band. Outside that band, it
 requires three same-direction filtered observations, 25 ms apart, before one
 5 ms correction; either direction is then limited to once per 250 ms. It never
 leaves a PWM command energized between corrections, except for an over-force

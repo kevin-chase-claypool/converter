@@ -1210,7 +1210,7 @@ def read_svg(svg_path, settings):
         str(getattr(settings, "hatch_pattern", "crosshatch")),
         int(getattr(settings, "shade_levels", 1)),
         float(getattr(settings, "shade_angle_step_deg", 90.0)),
-        True,
+        bool(getattr(settings, "expand_strokes", False)),
         float(getattr(settings, "triangle_size_mm", 0.0)),
         pattern_size_values(settings),
     )

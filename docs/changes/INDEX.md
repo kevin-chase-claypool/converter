@@ -5,6 +5,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-23 | `WSW-20260923-001` | windows-software | implemented | [Draw stroke centerlines by default instead of outlining the stroke width](windows-software/2026/2026-09-23-draw-stroke-centerlines-by-default.md) |
+| 2026-09-23 | `RPSW-20260923-016` | rp23cnc-software, hardware | implemented | [Widen the force-hold band to ±10 g and move relief to 15 g](rp23cnc-software/2026/2026-09-23-widen-hold-band.md) |
 | 2026-09-23 | `RPSW-20260923-015` | rp23cnc-software, hardware | verified | [Invert the grblHAL spindle enable to match the toolhead input](rp23cnc-software/2026/2026-09-23-invert-spindle-enable-for-toolhead.md) |
 | 2026-09-23 | `RPSW-20260923-014` | rp23cnc-software, hardware | implemented | [Require a full filter window of implausible samples before faulting](rp23cnc-software/2026/2026-09-23-raise-implausible-fault-streak.md) |
 | 2026-09-23 | `RPSW-20260923-013` | rp23cnc-software, hardware | implemented | [Stabilize warm-seek travel and stop motor-driven sensor-noise faults](rp23cnc-software/2026/2026-09-23-stabilize-warm-seek-travel.md) |

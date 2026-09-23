@@ -79,7 +79,10 @@ X/Y-only output, and preview/G-code parity.
 
 ## Settings groups (Qt app)
 
-- **Geometry** — scale, tolerance, Flip Y, and pen-stroke compensation.
+- **Geometry** — scale, tolerance, Flip Y, pen-stroke compensation, and
+  **Expand strokes to outlines** (off by default — a pen already marks its own
+  width, so drawing each stroke's centerline once is correct and produces far
+  fewer M3/M5 cycles than outlining the stroke width).
 - **Shading** — fill spacing/angle/pattern, shade levels/angle step, raster shading, and
   raster sampling resolution.
 - **Motion** — draw/feed rate and travel rate. Values that cannot describe a
