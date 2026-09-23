@@ -1,5 +1,23 @@
 # Engineering Log
 
+<a id="elog-20260923-implausible-streak-window"></a>
+### 🟨 2026-09-23 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - require a full filter window before the implausible fault
+
+- Evidence: after the warm-seek stabilization build, the machine held cleanly
+  11 times in a row then raised `CS1238 reading implausible` on a short burst of
+  garbage. `cs1238_last_reject` showed 2,920,287 and 4,218,117 raw, the same
+  large intermittent signature as the earlier header incident, arriving while
+  the toolhead was otherwise in band. Three consecutive rejects is only about
+  4.7 ms at 640 SPS, so a momentary burst faulted a working hold.
+- Change: the implausible fault streak is raised from 3 to 16 consecutive
+  conversions (one full 16-sample filter window, about 25 ms), so isolated
+  glitch bursts are absorbed. A dead or disconnected sensor still faults via
+  the read-timeout/online path.
+- Verification: exact SparkFun Pro Micro RP2350 sketch compilation passed
+  (81960 bytes program, 16220 bytes dynamic). Bench confirmation required:
+  expect isolated reject bursts to no longer fault. Re-seat the CS1238 header
+  if `cs1238_rejects` climbs again.
+
 <a id="elog-20260923-stabilize-warm-seek"></a>
 ### 🟨 2026-09-23 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - stabilize warm-seek travel and gate motor-driven sensor noise
 

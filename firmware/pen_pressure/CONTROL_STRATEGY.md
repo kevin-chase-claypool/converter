@@ -124,12 +124,15 @@ the home seek, force response, and clearance for each installed tool before
 plotting. Production remains commissioning-gated.
 
 Out-of-band or far-from-tare CS1238 conversions are dropped before they reach
-the force filter. Three consecutive implausible conversions normally raise a
-`CS1238 reading implausible` fault, but conversions taken while the motor is
-actively PWM-driving are excluded from that streak: motor drive bit-bangs the
-GP0/GP1 interface and produces transient glitches that are not a sensor-health
-signal. A genuinely dead sensor still faults through the read-timeout/online
-path.
+the force filter. The controller requires 16 consecutive implausible
+conversions (one full 16-sample filter window, about 25 ms at 640 SPS) before
+raising a `CS1238 reading implausible` fault, and conversions taken while the
+motor is actively PWM-driving are excluded from that streak. A momentary
+bit-bang burst is therefore absorbed, while a genuinely dead or disconnected
+sensor still faults through the read-timeout/online path. The 2026-09-23 bench
+run showed isolated bursts (2.9e6 / 4.2e6 raw) during an otherwise clean hold,
+which points to the CS1238 header/connection rather than motor noise; re-seat
+the header if the reject count climbs again.
 
 ### Clear-state tares
 

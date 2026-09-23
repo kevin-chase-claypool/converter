@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-23 | `RPSW-20260923-014` | rp23cnc-software, hardware | implemented | [Require a full filter window of implausible samples before faulting](rp23cnc-software/2026/2026-09-23-raise-implausible-fault-streak.md) |
 | 2026-09-23 | `RPSW-20260923-013` | rp23cnc-software, hardware | implemented | [Stabilize warm-seek travel and stop motor-driven sensor-noise faults](rp23cnc-software/2026/2026-09-23-stabilize-warm-seek-travel.md) |
 | 2026-09-23 | `RPSW-20260923-012` | rp23cnc-software, hardware | implemented | [Split the seek settle by proximity to the target](rp23cnc-software/2026/2026-09-23-split-seek-settle.md) |
 | 2026-09-23 | `RPSW-20260923-011` | rp23cnc-software, hardware | implemented | [Reduce the M5 clearance air gap to about 1 mm](rp23cnc-software/2026/2026-09-23-reduce-m5-clearance-air-gap.md) |

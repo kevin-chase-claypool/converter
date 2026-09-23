@@ -216,11 +216,12 @@ void PressureController::serviceCs1238() {
     }
     cs1238_last_rejected_raw_ = static_cast<long>(sample);
     // Motor PWM bit-bangs the CS1238 interface over GP0/GP1 and is a known
-    // transient noise source; the 2026-09-23 fault fired with three rejects
-    // during the first seek pulse (home_seek_pulses=0). Do not count samples
-    // taken while the motor is driving toward the sensor-health streak: a
-    // genuine dead sensor still faults via the read-timeout/online path, and
-    // a persistent idle glitch still faults once the motor stops.
+    // transient noise source, so samples taken while the motor is driving are
+    // not counted toward the sensor-health streak. A genuine dead sensor still
+    // faults via the read-timeout/online path, and an idle glitch must now
+    // persist for CS1238_IMPLAUSIBLE_FAULT_STREAK (16) consecutive samples
+    // before faulting, so momentary bit-bang bursts no longer stop the
+    // machine.
     if (motor_driving_) {
       cs1238_implausible_streak_ = 0;
     } else {

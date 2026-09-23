@@ -237,13 +237,13 @@ stream.
 A CS1238 conversion is dropped before it can reach the force filter when it
 falls outside the physical plausibility band or sits more than twice the
 hard-force delta from the live tare. Isolated glitches are therefore absorbed;
-three consecutive implausible conversions instead raise a
-`CS1238 reading implausible` fault so a real sensor failure still stops the
-machine. Conversions taken while the motor is actively PWM-driving do not
-count toward that three-in-a-row streak, because motor drive bit-bangs the
-GP0/GP1 interface and produces transient glitches rather than a sensor-health
-signal. A genuinely dead sensor still faults through the read-timeout/online
-path.
+16 consecutive implausible conversions (one full 16-sample filter window,
+about 25 ms at 640 SPS) raise a `CS1238 reading implausible` fault so a
+persistent sensor failure still stops the machine. Conversions taken while the
+motor is actively PWM-driving do not count toward that streak, because motor
+drive bit-bangs the GP0/GP1 interface and produces transient glitches rather
+than a sensor-health signal. A genuinely dead sensor still faults through the
+read-timeout/online path.
 
 The temporary service interface is `Serial2` / hardware UART1 on GP20 (TX) and
 GP21 (RX) at 115200 baud. The integrated sketch immediately writes `Theta

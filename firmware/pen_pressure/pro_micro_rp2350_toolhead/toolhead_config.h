@@ -232,7 +232,14 @@ constexpr long CS1238_SAMPLE_MAX_RAW = 500000;
 constexpr long CS1238_SAMPLE_MAX_DELTA_RAW = 2 * HARD_FORCE_RAW_DELTA;
 // Consecutive implausible conversions before the sensor is declared faulted.
 // Isolated glitches are dropped; a persistent failure still stops the machine.
-constexpr uint8_t CS1238_IMPLAUSIBLE_FAULT_STREAK = 3;
+// 2026-09-23: a threshold of 3 is only ~4.7 ms of continuous garbage at 640
+// SPS and still raised `CS1238 reading implausible` on a momentary bit-bang
+// burst (2.9e6 / 4.2e6 raw) during an otherwise clean, in-band hold. Require
+// one full 16-sample filter window (~25 ms) of continuous garbage instead. A
+// genuinely dead or disconnected sensor returns the read timeout and faults
+// through the CS1238-online/lost path, so this streak is only the secondary
+// net for a sensor that still toggles DRDY but returns garbage.
+constexpr uint8_t CS1238_IMPLAUSIBLE_FAULT_STREAK = 16;
 
 static_assert(HOME_SEEK_TIMEOUT_MS >
                   HOME_SEEK_MAX_PULSES *
