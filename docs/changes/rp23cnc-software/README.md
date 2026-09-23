@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-23 | `RPSW-20260923-001` | implemented | [Clamp the hold band below the hard-force limit](2026/2026-09-23-clamp-hold-band-below-hard-limit.md) | `t02`, `force-control`, `hard-limit`, `safety-margin` |
 | 2026-09-22 | `WSW-20260922-002` | implemented | [File outstanding working-tree artifacts into the repository](../windows-software/2026/2026-09-22-file-outstanding-working-tree-artifacts.md) | `repository-hygiene`, `evidence`, `samples` |
 | 2026-09-22 | `WSW-20260922-001` | implemented | [Ignore local tooling and build-scratch directories](../windows-software/2026/2026-09-22-ignore-local-tooling-and-build-scratch.md) | `repository-hygiene`, `tooling`, `commit-workflow` |
 | 2026-09-22 | `RPSW-20260922-034` | implemented | [Settle the home contact seek on settled force](2026/2026-09-22-settle-contact-seek-on-settled-force.md) | `t02`, `contact-seek`, `settle`, `cs1238`, `force-control` |

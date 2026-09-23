@@ -173,18 +173,20 @@ The normal-M5 force-release path remains separately gated pending T-01H.
 The supervised `MECHANICAL_PRELOAD_MODE` now distinguishes a full-retract
 startup from routine M5 clearance. When M3 begins with GP2 (`LIFT_HOME`)
 pressed, it seeks toward an approximately 5 g first-touch candidate in 25 ms
- full-drive DOWN pulses until one-fifth of that level, then changes to 5 ms
- pulses with 500 ms CS1238 settling between every pulse. A stopped pulse must
- produce a persistent approximately 2 g response in three 25 ms-separated
- filtered windows, measured after the sensing settle, before paper touch is
- accepted. It backs off with one 10 ms
+full-drive DOWN pulses until one-fifth of that level, then changes to 5 ms
+pulses with 500 ms CS1238 settling between every pulse. A stopped pulse must
+produce a persistent approximately 2 g response in three 25 ms-separated
+filtered windows, measured after the sensing settle, before paper touch is
+accepted. It backs off with one 10 ms
 UP move, then uses only 5 ms DOWN pulses to reach the lower 30 g edge of the
 30–40 g drawing band relative to the accepted touch reference. An accepted
-reference must remain within the broad provisional 20 g low-force envelope;
- the 60 g hard limit remains absolute rather than moving with the reference. The surface
- approach has provisional 100-pulse/60-second and
- 30-pulses-without-GP2-release bounds; the force-tune phase has a separate
- 100-pulse/60-second bound. Any limit, sensor loss, or overforce stops/sleeps the
+reference must remain within the broad provisional 20 g low-force envelope.
+The 60 g hard limit remains absolute rather than moving with the reference, and
+the relative target is clamped so the top of the acceptance band always keeps
+10 g of margin below it. The surface approach has provisional
+100-pulse/60-second and 30-pulses-without-GP2-release bounds; the force-tune
+phase has a separate 100-pulse/60-second bound. Any limit, sensor loss, or
+overforce stops/sleeps the
 driver and enters `FAULT`. When M3 begins after routine M5 clearance with GP2
 released, it clears the preceding contact reference and repeats the
 trend-confirmed touch sequence using only 5 ms DOWN pulses. It does not enter

@@ -278,8 +278,9 @@ A candidate must persist as an approximately 2 g response from its stopped
 pulse across three 25 ms-separated filtered windows before it is surface
 contact. It backs off UP for 10 ms, then sends only 5 ms DOWN pulses until the
 lower 30 g edge of the drawing band relative to that contact reference. The
-reference must be within the broad provisional 20 g low-force envelope, and
- the 60 g hard-force ceiling remains absolute. The surface phase is bounded at 100 pulses,
+reference must be within the broad provisional 20 g low-force envelope. The
+60 g hard-force ceiling remains absolute, and the relative target is clamped so
+the top of the acceptance band always keeps 10 g of margin below it. The surface phase is bounded at 100 pulses,
  60 seconds, and 30 pulses while GP2 remains pressed; the force-tune phase is
  bounded at 100 pulses/60 seconds. Bound, sensor, and hard-force faults stop the
 motor. GP2 released means normal post-M5 clearance: it discards the previous

@@ -135,9 +135,15 @@ long PressureController::normalizedForceDelta() const {
 }
 
 long PressureController::activeTargetForceRaw() const {
-  return contact_reference_valid_
-             ? contact_reference_force_raw_ + TARGET_FORCE_RAW_DELTA
-             : TARGET_FORCE_RAW_DELTA;
+  const long requested = contact_reference_valid_
+                             ? contact_reference_force_raw_ + TARGET_FORCE_RAW_DELTA
+                             : TARGET_FORCE_RAW_DELTA;
+  // The top of the acceptance band must always keep HOLD_BAND_HEADROOM_RAW
+  // below the absolute hard-force limit, even when an accepted touch reference
+  // shifts the relative target upward.
+  constexpr long max_target =
+      HARD_FORCE_RAW_DELTA - CONTACT_READY_TOLERANCE_RAW - HOLD_BAND_HEADROOM_RAW;
+  return requested < max_target ? requested : max_target;
 }
 
 long PressureController::activeHardForceRaw() const {

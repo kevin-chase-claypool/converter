@@ -88,7 +88,10 @@ constexpr uint8_t HOME_SEEK_PWM = 255;
 constexpr long HOME_SURFACE_TOUCH_RAW_DELTA = 25194; // approximately 5 g
 // A confirmed first-touch reference must remain low force. This broad 20 g
 // T-02 candidate rejects a large persistent sticktion jump without requiring
-// an exact physical touch value; repeat-cycle evidence will refine it.
+// an exact physical touch value. It is a plausibility check, not the
+// hard-limit guard: HOLD_BAND_HEADROOM_RAW and the target clamp own that.
+// Keep it above the observed good-touch range (38,886-46,551 raw on
+// 2026-09-23) so a high but usable touch is clamped rather than faulted.
 constexpr long HOME_SURFACE_REFERENCE_MAX_RAW = 100775; // approximately 20 g
 // A first touch is a persistent response to one stopped fine pulse, not an
 // absolute threshold crossing. At 640 SPS a 16-sample average spans about
@@ -167,6 +170,18 @@ constexpr int8_t CS1238_CONTACT_FORCE_SIGN = -1;
 // the 35 g target).
 constexpr long CONTACT_READY_TOLERANCE_RAW = 25194;
 constexpr uint8_t CONTACT_READY_REQUIRED_WINDOWS = 3;
+// An accepted touch reference shifts the relative target upward, so the target
+// is clamped to keep the top of the acceptance band this far below the
+// absolute hard limit. On 2026-09-23 T-02 cycle 4 accepted a 78,727 raw
+// (15.6 g) touch, leaving only 22,048 raw before the 60 g trip; post-hold
+// creep then crossed the limit. Without the clamp the 20 g reference cap, the
+// 35 g target, and the 5 g tolerance sum to exactly the 60 g hard limit, so a
+// maximum-reference cycle would hold with its band top on the trip point.
+constexpr long HOLD_BAND_HEADROOM_RAW = 50388; // approximately 10 g
+
+static_assert(HARD_FORCE_RAW_DELTA >
+                  CONTACT_READY_TOLERANCE_RAW + HOLD_BAND_HEADROOM_RAW,
+              "Hard-force limit must leave room for the acceptance band and its headroom");
 
 static_assert(HOME_SEEK_TIMEOUT_MS >
                   HOME_SEEK_MAX_PULSES *

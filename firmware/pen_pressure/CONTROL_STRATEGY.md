@@ -156,6 +156,9 @@ persistent sticktion shift faults instead of becoming the touch reference. The
 second approach targets the calibrated drawing force relative to that reference
 so switch/preload friction is not mistaken for paper force. The 60 g hard-force
 guard remains an absolute ceiling and is never moved upward by the reference.
+The relative target is clamped so the top of the acceptance band always keeps
+`HOLD_BAND_HEADROOM_RAW` (currently 10 g) below that ceiling; without the clamp
+a maximum-reference cycle would hold with its band top on the trip point.
 
 ## Calibration profile and boot baseline
 
