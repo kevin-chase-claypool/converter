@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-22 | `WSW-20260922-001` | implemented | [Ignore local tooling and build-scratch directories](../windows-software/2026/2026-09-22-ignore-local-tooling-and-build-scratch.md) | `repository-hygiene`, `tooling`, `commit-workflow` |
 | 2026-09-22 | `RPSW-20260922-032` | implemented | [Refresh Tare after Normal Pen Clear](2026/2026-09-22-tare-after-normal-clear.md) | `cs1238`, `tare`, `pen-clear`, `m3-m5` |
 | 2026-09-22 | `RPSW-20260922-031` | implemented | [Trend-gate Force-hold Corrections](2026/2026-09-22-trend-gate-hold-corrections.md) | `cs1238`, `moving-average`, `force-control`, `stiction` |
 | 2026-09-22 | `RPSW-20260922-030` | implemented | [Bound Trend Contact to a Usable Envelope](2026/2026-09-22-bound-trend-contact-envelope.md) | `cs1238`, `force-limit`, `contact-detection`, `safety` |
