@@ -80,6 +80,7 @@ class PressureController {
   uint32_t home_surface_confirm_last_ms_ = 0;
   uint32_t hold_correction_pulse_started_ms_ = 0;
   uint32_t hold_out_of_band_last_ms_ = 0;
+  uint32_t hold_urgent_relief_started_ms_ = 0;
 
   bool manual_override_ = false;
   bool manual_engage_ = false;
@@ -95,6 +96,7 @@ class PressureController {
   bool home_seek_force_fine_only_ = false;
   bool home_surface_confirm_pending_ = false;
   bool contact_reference_valid_ = false;
+  bool hold_urgent_relief_active_ = false;
   uint8_t home_seek_active_pulse_ms_ = 0;
 
   long cs1238_raw_ = 0;

@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-23 | `RPSW-20260923-002` | rp23cnc-software, hardware | implemented | [Add bounded urgent over-force relief to the hold loop](rp23cnc-software/2026/2026-09-23-add-urgent-over-force-relief.md) |
 | 2026-09-23 | `RPSW-20260923-001` | rp23cnc-software, hardware | implemented | [Clamp the hold band below the hard-force limit](rp23cnc-software/2026/2026-09-23-clamp-hold-band-below-hard-limit.md) |
 | 2026-09-22 | `WSW-20260922-002` | windows-software, rp23cnc-software, hardware | implemented | [File outstanding working-tree artifacts into the repository](windows-software/2026/2026-09-22-file-outstanding-working-tree-artifacts.md) |
 | 2026-09-22 | `WSW-20260922-001` | windows-software, rp23cnc-software, hardware | implemented | [Ignore local tooling and build-scratch directories](windows-software/2026/2026-09-22-ignore-local-tooling-and-build-scratch.md) |

@@ -87,14 +87,34 @@ M5 clear also repeated cleanly on all three completed cycles: `CLEARANCE_LIFT`
 to `CLEAR_TARE_SETTLING` to `LIFTED` with `force_norm_raw` returning to within
 about 300 raw of zero.
 
+## Follow-up cycle on the clamped-target build
+
+One further cycle was run after flashing `d0845a5`:
+
+```text
+STATE_EVENT pressure=HOLD_FORCE cmd=M3 lift_home=0 tare_valid=1 force_norm_raw=275752
+event=SNAPSHOT pressure=HOLD_FORCE cmd=M3 fault=none cs1238_raw=33962 cs1238_filtered=33374 cs1238_tare=236671 tare_valid=1 cs1238_delta=-203297 force_norm_raw=203297 contact_ref_raw=49314 contact_ref_valid=1 hard_limit_raw=302326 lift_home=0 home_seek_pulses=88/100 home_tune_pulses=79/100 mag=DISARMED mT=[0.136,0.175,0.122] delta=0.044 mag_samples=36130 status=0x00000c63 ready=[contact:1 clear:0 gp27:0] commission=[dir:1 pressure:1 lift:0 mag:0]
+event=FAULT_EVENT pressure=FAULT cmd=M3 fault=hard force limit exceeded cs1238_raw=-68910 cs1238_filtered=-65865 cs1238_tare=236671 tare_valid=1 cs1238_delta=-302536 force_norm_raw=302536 contact_ref_raw=49314 contact_ref_valid=1 hard_limit_raw=302326 lift_home=0 home_seek_pulses=88/100 home_tune_pulses=79/100 mag=DISARMED mT=[0.209,0.146,0.136] delta=0.059 mag_samples=36347 status=0x00000473 ready=[contact:0 clear:0 gp27:0] commission=[dir:1 pressure:1 lift:0 mag:0]
+```
+
+This cycle reached `HOLD_FORCE` in band and then faulted the same way. Its
+reference (49,314 raw) sat below the 50,387 raw clamp threshold, so the
+band-position clamp did not apply: the failure is not a band-placement
+problem. The force rose 99,239 raw, about 20 g, after hold was established,
+and the tune again needed a long low-gain approach (79 pulses). The hold
+loop's bounded corrections provide only about 15 ms of drive per second, which
+cannot retract against that release. See
+[`add-urgent-over-force-relief`](../../changes/rp23cnc-software/2026/2026-09-23-add-urgent-over-force-relief.md).
+
 ## Decisions and next action
 
-Reflash the integrated toolhead with the clamped-target build and repeat the
-M3/M5 cycle set. The pass criterion is unchanged: `HOLD_FORCE` with
-`fault=none` and `ready=[contact:1 ...]`, but the band top must now stay at or
-below 251,938 raw regardless of the accepted reference. If a cycle still runs
-away after the clamp, the hold loop's relief rate is the next target rather
-than the reference cap.
+Reflash with `RPSW-20260923-002`, which adds a bounded continuous retract-only
+relief whenever the held force exceeds target by more than 5 g. The pass
+criterion is unchanged: `HOLD_FORCE` with `fault=none` and
+`ready=[contact:1 ...]`, held without a hard-force trip. If the force still
+runs away with continuous relief available, the next question is mechanical —
+the stored-energy release itself, which is the same behaviour that motivates
+the planned linear-rail carriage replacement.
 
 ## References
 

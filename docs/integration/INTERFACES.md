@@ -313,8 +313,11 @@ After initial contact, the moving-average force hold is pulse-bounded: it
 sleeps the DRV8833 in the 30–40 g calibrated band. Outside that band, it
 requires three same-direction filtered observations, 25 ms apart, before one
 5 ms correction; either direction is then limited to once per 250 ms. It never
-leaves a PWM command energized between corrections. The 60 g hard-force guard
-remains independent and active.
+leaves a PWM command energized between corrections, except for an over-force
+relief: above `HOLD_URGENT_RELIEF_RAW` (5 g) of excess it drives UP
+continuously for at most `HOLD_URGENT_RELIEF_MAX_MS` (200 ms), stopping as soon
+as the force returns to target. That path is retract-only. The 60 g hard-force
+guard remains independent and active.
 
 The cold-start pulse/travel limits are provisional values revised after the
 first 160 x 5 ms attempt moved only about 7.5 mm and stopped 4.5 mm above

@@ -209,8 +209,13 @@ inside the calibrated 30–40 g moving-average band. Outside that band it waits
 for three same-direction out-of-band observations, 25 ms apart, before one
 5 ms UP or DOWN pulse. Both directions share the 250 ms correction cadence.
 Every hold pulse stops and sleeps before a fresh later trend can request the
-next one. This is the current supervised anti-hunting behavior, not a
-production-qualified tuning result.
+next one. That bounded cadence only provides about 15 ms of drive per second,
+so when the held force exceeds the target by `HOLD_URGENT_RELIEF_RAW`
+(currently 5 g) the controller instead drives UP continuously, stopping as
+soon as the force returns to target or after `HOLD_URGENT_RELIEF_MAX_MS`
+(200 ms). The relief path is retract-only and cannot increase force. This is
+the current supervised anti-hunting behavior, not a production-qualified
+tuning result.
 
 The 100-pulse limit and two-touch pulse widths are supervised bench candidates:
 the original 160 x 5 ms attempt covered only about 7.5 mm, while the first

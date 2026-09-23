@@ -32,7 +32,7 @@ Newest notes appear first.
 
 | Date | Test ID | Result | Summary |
 |---|---|---|---|
-| 2026-09-23 | T-02 settled-seek four-cycle run | Partial — 3 of 4 cycles reached hold | Four M3/M5 cycles with the 500 ms settle: first-touch reference came in at 38,886 / 46,551 / 42,697 raw, but a 78,727 raw touch left only 4.4 g below the hard limit and post-hold creep tripped it. |
+| 2026-09-23 | T-02 settled-seek four-cycle run | Partial — 3 of 4 cycles reached hold, follow-up faulted | Four M3/M5 cycles with the 500 ms settle: first-touch reference came in at 38,886 / 46,551 / 42,697 raw, but a 78,727 raw touch left only 4.4 g below the hard limit and post-hold creep tripped it. A further cycle on the clamped build also faulted, with the force rising about 20 g after hold from a 49,314 raw reference. |
 | 2026-09-22 | T-02 home-origin seek setup | Partial — two-stage candidate pending | The first 160 × 5 ms seek stopped safely 4.5 mm short; the next 25 ms-only seek reached the 35 g target then briefly crossed the 60 g limit. The new candidate uses 25 ms pulses far from contact and 5 ms pulses after force appears. |
 | 2026-09-22 | Integrated GP2 boot retract | Passed (supervised bench) | Latest boot transitioned from `LIFTING, lift_home=0` to `LIFTED, lift_home=1, fault=none` after the 3000 ms timeout change; formal lift-reference gate remains unset. |
 | 2026-09-22 | Integrated lift drive | Failed safely — PWM corrected | Corrected phase polarity still timed out at GP2 with no DRV fault; integrated lift PWM 70/255 was lower than E-09E's validated full-drive pulses, so it was raised to 255. |

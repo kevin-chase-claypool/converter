@@ -144,6 +144,13 @@ UP or DOWN pulse. Both directions are limited to one correction every 250 ms.
 The next correction requires a fresh later trend after the driver has stopped.
 The independent 60 g hard-force guard remains active throughout this state.
 
+That bounded cadence provides only about 15 ms of drive per second. When the
+held force exceeds the target by `HOLD_URGENT_RELIEF_RAW` (currently 5 g), the
+controller instead drives UP continuously and stops as soon as the force
+returns to target or after `HOLD_URGENT_RELIEF_MAX_MS` (200 ms). This relief is
+retract-only, so it can only reduce force, and it exists because a mechanism
+releasing stored energy can otherwise outrun the correction cadence.
+
 ### Confirmed surface response and relative preload
 
 The light first touch is not accepted merely because one raw value crosses an

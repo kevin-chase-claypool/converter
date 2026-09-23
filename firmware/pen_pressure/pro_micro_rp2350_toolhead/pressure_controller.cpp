@@ -69,6 +69,7 @@ void PressureController::setState(PressureState next) {
     hold_out_of_band_windows_ = 0;
     hold_out_of_band_direction_ = 0;
     hold_out_of_band_last_ms_ = 0;
+    hold_urgent_relief_active_ = false;
   }
   if (next != PressureState::HOME_SEEK_CONTACT &&
       next != PressureState::HOME_TUNE_FORCE) {
@@ -764,6 +765,35 @@ void PressureController::service() {
           hold_correction_pulse_active_ = false;
           last_force_correction_ms_ = now;
         }
+        break;
+      }
+
+      // Over-force relief must not wait out the trend gate and correction
+      // cadence. Above the urgent threshold, drive UP continuously and stop as
+      // soon as the force returns to target or the bounded move expires.
+      // This path only ever retracts, so it cannot increase force.
+      if (hold_urgent_relief_active_) {
+        if (normalizedForceDelta() <= activeTargetForceRaw() ||
+            now - hold_urgent_relief_started_ms_ >=
+                HOLD_URGENT_RELIEF_MAX_MS) {
+          motorStop();
+          setDriverEnabled(false);
+          hold_urgent_relief_active_ = false;
+          last_force_correction_ms_ = now;
+          hold_out_of_band_windows_ = 0;
+          hold_out_of_band_direction_ = 0;
+          break;
+        }
+        motorDrive(LIFT_USES_IN1_PWM, HOLD_CORRECTION_PWM);
+        break;
+      }
+      if (normalizedForceDelta() >
+          activeTargetForceRaw() + HOLD_URGENT_RELIEF_RAW) {
+        hold_urgent_relief_active_ = true;
+        hold_urgent_relief_started_ms_ = now;
+        hold_out_of_band_windows_ = 0;
+        hold_out_of_band_direction_ = 0;
+        motorDrive(LIFT_USES_IN1_PWM, HOLD_CORRECTION_PWM);
         break;
       }
 

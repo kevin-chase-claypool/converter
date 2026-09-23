@@ -123,6 +123,15 @@ constexpr uint32_t HOLD_TREND_WINDOW_MS = 25;
 // command held for an entire correction interval.
 constexpr uint8_t HOLD_CORRECTION_PULSE_MS = 5;
 constexpr uint8_t HOLD_CORRECTION_PWM = 255;
+// One bounded 5 ms pulse per 325 ms cadence gives the hold loop only about
+// 15 ms of drive authority per second. That is far too little when the
+// mechanism releases stored energy after a long low-gain tune: on 2026-09-23 a
+// cycle entered HOLD_FORCE in band, then rose 99,239 raw (about 20 g) to the
+// 60 g trip. Above this much excess force, relieve with a bounded continuous
+// UP move instead of waiting out the trend gate and cadence. Relief is
+// retract-only, so this can only reduce force.
+constexpr long HOLD_URGENT_RELIEF_RAW = 25194; // approximately 5 g above target
+constexpr uint32_t HOLD_URGENT_RELIEF_MAX_MS = 200;
 constexpr uint8_t CS1238_TARE_SAMPLES = 64;
 // Candidate 25 ms moving-average window at the configured 640 SPS. E-08C
 // must measure actual rate/noise before PRESSURE_CALIBRATION_VALID can be true.
