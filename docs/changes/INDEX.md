@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-24 | `WSW-20260924-006` | windows-software | implemented | [Fix fill leak and skip invisible white paths](windows-software/2026/2026-09-24-fix-fill-leak-and-skip-white-paths.md) |
 | 2026-09-24 | `WSW-20260924-005` | windows-software | implemented | [Generate fill at on-paper resolution when the artwork is scaled down](windows-software/2026/2026-09-24-fill-at-on-paper-resolution.md) |
 | 2026-09-24 | `WSW-20260924-004` | windows-software | implemented | [Eliminate duplicate theta planning during contour ordering](windows-software/2026/2026-09-24-eliminate-duplicate-theta-planning.md) |
 | 2026-09-24 | `WSW-20260924-003` | windows-software | implemented | [Tame cell-lattice fill density and fix triangular lattice over-generation](windows-software/2026/2026-09-24-tame-cell-lattice-fill-density.md) |

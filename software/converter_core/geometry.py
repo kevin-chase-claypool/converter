@@ -182,6 +182,30 @@ def fill_darkness(element):
     return max(0.0, min(darkness * opacity, 1.0))
 
 
+def stroke_darkness(element):
+    color = parse_svg_color(style_value(element, "stroke"))
+    if color is None:
+        return 0.0
+    r, g, b = color
+    luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    opacity = 1.0
+    for name in ("stroke-opacity", "opacity"):
+        value = style_value(element, name)
+        if value is None:
+            continue
+        try:
+            opacity *= max(0.0, min(float(value), 1.0))
+        except ValueError:
+            pass
+    return max(0.0, min((1.0 - luminance) * opacity, 1.0))
+
+
+def _element_is_visible(element):
+    if has_visible_fill(element) and fill_darkness(element) > 1e-9:
+        return True
+    return has_visible_stroke(element) and stroke_darkness(element) > 1e-9
+
+
 def hatch_angles_for_tone(base_angle, levels, angle_step, darkness):
     levels = max(1, int(levels))
     active = max(0, min(levels, int(math.ceil(darkness * levels))))
@@ -276,8 +300,14 @@ def point_in_polygon(point, polygon):
     for a, b in zip(pts, pts[1:] + pts[:1]):
         x1, y1 = a
         x2, y2 = b
-        if ((y1 > y) != (y2 > y)) and x < (x2 - x1) * (y - y1) / max(y2 - y1, 1e-12) + x1:
-            inside = not inside
+        if (y1 > y) != (y2 > y):
+            # Edge straddles the horizontal ray, so y1 != y2 and the ratio below
+            # is a well-behaved value in [0, 1]. Clamping the denominator with
+            # max(..., eps) is wrong for downward edges (it flips the sign and
+            # produces a huge intersection), so divide by (y2 - y1) directly.
+            x_intersect = x1 + (x2 - x1) * (y - y1) / (y2 - y1)
+            if x < x_intersect:
+                inside = not inside
     return inside
 
 
@@ -1135,6 +1165,12 @@ def path_to_contours(d, tolerance, cancel_check=None):
 
 def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None):
     check_cancelled(cancel_check)
+    # Skip elements that are invisible in a single-pen plot (white/transparent
+    # fill and stroke). A white knockout/background path would otherwise be
+    # traced as pen strokes and its often-large geometry still costs parse and
+    # plan time.
+    if not _element_is_visible(element):
+        return []
     tag = strip_ns(element.tag)
     contours = []
     if tag == "path":

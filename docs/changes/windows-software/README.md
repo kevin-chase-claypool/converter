@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-24 | `WSW-20260924-006` | implemented | [Fix fill leak and skip invisible white paths](2026/2026-09-24-fix-fill-leak-and-skip-white-paths.md) | `fill`, `correctness`, `point-in-polygon`, `invisibility` |
 | 2026-09-24 | `WSW-20260924-005` | implemented | [Generate fill at on-paper resolution when the artwork is scaled down](2026/2026-09-24-fill-at-on-paper-resolution.md) | `performance`, `fill`, `scale`, `shading` |
 | 2026-09-24 | `WSW-20260924-004` | implemented | [Eliminate duplicate theta planning during contour ordering](2026/2026-09-24-eliminate-duplicate-theta-planning.md) | `performance`, `theta`, `planner` |
 | 2026-09-24 | `WSW-20260924-003` | implemented | [Tame cell-lattice fill density and fix triangular lattice over-generation](2026/2026-09-24-tame-cell-lattice-fill-density.md) | `shading`, `fill-pattern`, `performance`, `lattice` |
