@@ -53,6 +53,13 @@ def format_xy_command(point):
     return f"X{format_float(x)} Y{format_float(y)}"
 
 
+def _is_open_contour(path, tol=0.5):
+    # Infill lattice trails are open polylines; stroke outlines (letters, star)
+    # are closed loops. Only bridge between two open trails so the pen never
+    # drags across a visible shape boundary (e.g. the A -> star gap).
+    return len(path) >= 2 and distance(path[0], path[-1]) > tol
+
+
 def bridge_motion(prev_machine, prev_motor_theta, next_machine, next_motor_theta, center, settings):
     pattern = normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))
     bridge_patterns = {"concentric", "triangular", "diamonds", "hexagonal"}
@@ -166,20 +173,23 @@ def contours_to_gcode(contours, settings, program_plan=None):
     previous_machine = None
     previous_motor_theta = 0.0
     pen_is_down = False
+    previous_pts = None
     for planned, pts, thetas, strategies in program_plan["planned_jobs"]:
         first_theta = thetas[0]
 
         x0, y0 = bed_to_machine(pts[0], first_theta, center)
         first_motor_theta = first_theta * settings.theta_drive_ratio
         lines.append(f"(contour {planned['index'] + 1}{' reversed' if planned.get('reversed') else ''})")
-        bridge = None if previous_machine is None else bridge_motion(
-            previous_machine,
-            previous_motor_theta,
-            (x0, y0),
-            first_motor_theta,
-            center,
-            settings,
-        )
+        bridge = None
+        if previous_machine is not None and previous_pts is not None and _is_open_contour(previous_pts) and _is_open_contour(pts):
+            bridge = bridge_motion(
+                previous_machine,
+                previous_motor_theta,
+                (x0, y0),
+                first_motor_theta,
+                center,
+                settings,
+            )
         if bridge and pen_is_down:
             bridge_feed = bridge["feed_plan"]["feed_rate"]
             lines.append(f"G1 {format_xy_command((x0, y0))} {axis}{format_float(first_motor_theta)} F{format_float(bridge_feed)} (keep-down bridge)")
@@ -234,6 +244,7 @@ def contours_to_gcode(contours, settings, program_plan=None):
                 lines.append(
                     f"G1 {format_xy_command((sx, sy))} {axis}{format_float(sub_motor_theta)} F{feed_text} ({strategy})"
                 )
+        previous_pts = pts
         previous_theta = thetas[-1]
         previous_machine = bed_to_machine(pts[-1], thetas[-1], center)
         previous_motor_theta = previous_theta * settings.theta_drive_ratio
@@ -277,6 +288,7 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
     previous_theta = None
     previous_motor_theta = 0.0
     pen_is_down = False
+    previous_path = None
     for planned, path, thetas, strategies in program_plan["planned_jobs"]:
         check_cancelled(cancel_check)
         contour_index = planned["index"]
@@ -284,14 +296,16 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
 
         machine_start = bed_to_machine(path[0], first_theta, center)
         first_motor_theta = first_theta * settings.theta_drive_ratio
-        bridge = None if last_machine_end is None else bridge_motion(
-            last_machine_end,
-            previous_motor_theta,
-            machine_start,
-            first_motor_theta,
-            center,
-            settings,
-        )
+        bridge = None
+        if last_machine_end is not None and previous_path is not None and _is_open_contour(previous_path) and _is_open_contour(path):
+            bridge = bridge_motion(
+                last_machine_end,
+                previous_motor_theta,
+                machine_start,
+                first_motor_theta,
+                center,
+                settings,
+            )
         if last_machine_end is None:
             pen_up = f"G0 Z{format_float(settings.safe_z)}" if settings.include_z else (settings.pen_up_command or "(pen up)")
             moves.append({"type": "pen_up", "start": machine_start, "end": machine_start, "bed_start": path[0], "bed_end": path[0], "contour": contour_index, "duration_ms": pen_up_duration_ms(settings), "gcode": pen_up})
@@ -391,6 +405,7 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
                 "gcode": gcode,
             })
             last_machine = machine_end
+        previous_path = path
         previous_theta = thetas[-1]
         last_machine_end = last_machine
     if last_machine_end is not None:
