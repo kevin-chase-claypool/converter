@@ -1292,8 +1292,14 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
             fill_lines.extend(fill_region_pattern_contours(fill_polygons, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern, triangle_size, pattern_sizes, cancel_check, fill_inset))
     if has_visible_stroke(element):
         width = stroke_width(element)
-        if fill_wide_strokes and pen_diameter > 0 and width >= stroke_fill_ratio * pen_diameter:
-            contours = stroke_fill_contours(contours, width, pen_diameter)
+        if fill_wide_strokes:
+            # This mode owns stroke rendering end to end: a stroke wide enough to
+            # need more than one pass is filled, and every thinner stroke stays a
+            # single centerline. It deliberately supersedes expand_strokes, which
+            # would otherwise outline exactly the thin strokes this mode exists
+            # to keep as one pass.
+            if pen_diameter > 0 and width >= stroke_fill_ratio * pen_diameter:
+                contours = stroke_fill_contours(contours, width, pen_diameter)
         elif expand_strokes:
             contours = stroke_expanded_contours(contours, width)
     return contours + fill_lines

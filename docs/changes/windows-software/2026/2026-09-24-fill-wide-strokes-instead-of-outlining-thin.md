@@ -76,6 +76,12 @@ The `fill_wide_strokes` checkbox was initially not included in the UI's
 collected boolean settings, so it silently stayed off no matter how the box was
 set; it was added to the settings dict in the follow-up fix.
 
+The first implementation only took precedence over `expand_strokes` for strokes
+that were wide enough to fill, so a thin stroke still fell through and was
+outlined whenever `expand_strokes` was also checked — the exact penalty this
+mode exists to avoid. `fill_wide_strokes` now owns stroke rendering outright and
+`expand_strokes` is only consulted when it is off.
+
 ## Risks and follow-up
 
 - `offset_polyline` is a per-vertex offset with no miter limit; sharp corners

@@ -56,6 +56,29 @@ class CoordinateFrameTests(unittest.TestCase):
         self.assertEqual(len(stroke_contours("2", False)), 1)
         self.assertEqual(len(stroke_contours("2", True, ratio=20.0)), 1)
 
+    def test_fill_wide_strokes_supersedes_expand_strokes_for_thin_strokes(self):
+        import xml.etree.ElementTree as ET
+
+        el = ET.fromstring(
+            '<path d="M0 0 L10 0" stroke="black" stroke-width="0.5" fill="none"/>'
+        )
+        outlined = converter.element_contours(el, 0.25, expand_strokes=True)
+        self.assertGreater(len(outlined[0]), 2)  # expand_strokes outlines the segment
+
+        el = ET.fromstring(
+            '<path d="M0 0 L10 0" stroke="black" stroke-width="0.5" fill="none"/>'
+        )
+        combined = converter.element_contours(
+            el,
+            0.25,
+            expand_strokes=True,
+            fill_wide_strokes=True,
+            stroke_fill_ratio=2.0,
+            pen_diameter=0.3,
+        )
+        self.assertEqual(len(combined), 1)
+        self.assertEqual(len(combined[0]), 2)  # unchanged centerline, not an outline
+
 
 if __name__ == "__main__":
     unittest.main()
