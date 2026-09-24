@@ -178,6 +178,11 @@ X/Y-only output, and preview/G-code parity.
   pattern. The vector fill path treats each pattern as a full layer and clips
   pattern segments to the filled contour boundary. Compound SVG paths are clipped
   as one even-odd region, so holes cut the infill layer.
+- `diamonds`, `triangular`, `hexagonal`, and `circles` each have a dedicated size
+  field (`Diamond size mm`, `Triangle size mm`, and so on). When that field is
+  left at `0`, the cell size falls back to `Fill spacing mm × 6` rather than
+  `Fill spacing mm` alone, so an unset lattice does not degrade into an
+  impractically dense (and slow) mesh.
 - `Shade levels > 1` turns SVG fill color into hatch density: darker fills receive
   denser spacing while preserving the selected fill pattern.
 - `Raster shading` renders the whole SVG to a tone map first, then generates hatch

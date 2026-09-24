@@ -2098,10 +2098,10 @@ class MainWindow(QMainWindow):
         if pattern == "triangular":
             side = max(fill_spacing, 0.05)
             row_step = side * math.sqrt(3.0) / 2.0
-            i_min = int(math.floor((rmin_x - rmax_y - side) / side)) - 2
-            i_max = int(math.ceil((rmax_x - rmin_y + side) / side)) + 2
             j_min = int(math.floor((rmin_y - row_step) / row_step)) - 1
             j_max = int(math.ceil((rmax_y + row_step) / row_step)) + 1
+            i_min = int(math.floor((rmin_x - side) / side - j_max * 0.5)) - 1
+            i_max = int(math.ceil((rmax_x + side) / side - j_min * 0.5)) + 1
 
             def tri_point(i, j):
                 return ((i + j * 0.5) * side, j * row_step)

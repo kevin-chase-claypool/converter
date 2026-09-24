@@ -177,6 +177,14 @@ PATTERN_SIZE_FIELDS = {
     "concentric": "concentric_spacing_mm",
 }
 
+# Lattice patterns treat their dedicated "size" as the side/diameter of one
+# cell, not a line spacing. If that size is left at 0 the converter currently
+# falls back to `Fill spacing`, but a 5 mm line spacing interpreted as a 5 mm
+# cell produces an extremely dense (and slow) lattice. Scale the fallback so an
+# unset cell size lands near the visual density of the equivalent line hatch.
+CELL_PATTERNS = frozenset({"triangular", "diamonds", "hexagonal", "circles"})
+CELL_SPACING_SCALE = 6.0
+
 
 def pattern_size_values(settings):
     return {pattern: float(getattr(settings, field, 0.0)) for pattern, field in PATTERN_SIZE_FIELDS.items()}
@@ -186,7 +194,12 @@ def pattern_size_override(pattern, fallback, values=None):
     value = 0.0
     if values:
         value = float(values.get(pattern, 0.0))
-    return value if value > 0.0 else fallback
+    if value > 0.0:
+        return value
+    fallback = float(fallback)
+    if pattern in CELL_PATTERNS:
+        return max(fallback * CELL_SPACING_SCALE, 1e-6)
+    return fallback
 
 
 def coerce_setting(name, text):

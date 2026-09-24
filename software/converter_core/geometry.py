@@ -2,7 +2,7 @@ import math
 import re
 from xml.etree import ElementTree as ET
 from .cancellation import check_cancelled
-from .settings import pattern_size_values
+from .settings import CELL_PATTERNS, CELL_SPACING_SCALE, pattern_size_values
 
 GEOMETRY_VERSION = "2.2-patterns"  # concentric loops stay continuous and inside fill bounds
 COMMAND_RE = re.compile(r"[MmZzLlHhVvCcSsQqTtAa]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?")
@@ -623,10 +623,13 @@ def tile_shape_contours(polygons, spacing, angle_deg=0.0, shape="diamonds", canc
     if shape == "triangular":
         side = max(spacing, 0.05)
         row_step = side * math.sqrt(3.0) / 2.0
-        i_min = int(math.floor((min_x - max_y - side) / side)) - 2
-        i_max = int(math.ceil((max_x - min_y + side) / side)) + 2
         j_min = int(math.floor((min_y - row_step) / row_step)) - 1
         j_max = int(math.ceil((max_y + row_step) / row_step)) + 1
+        # point(i, j) = ((i + j * 0.5) * side, j * row_step). Account for the
+        # j-dependent horizontal offset when bounding i so a tall region does
+        # not over-generate columns.
+        i_min = int(math.floor((min_x - side) / side - j_max * 0.5)) - 1
+        i_max = int(math.ceil((max_x + side) / side - j_min * 0.5)) + 1
 
         def point(i, j):
             return ((i + j * 0.5) * side, j * row_step)
@@ -864,7 +867,12 @@ def _pattern_spacing(pattern, fill_spacing, pattern_sizes=None, triangle_size=0.
         value = float(pattern_sizes.get(pattern, 0.0))
     elif pattern == "triangular":
         value = float(triangle_size)
-    return max(value if value > 0.0 else fill_spacing, 1e-6)
+    if value > 0.0:
+        return max(value, 1e-6)
+    fill_spacing = float(fill_spacing)
+    if pattern in CELL_PATTERNS:
+        return max(fill_spacing * CELL_SPACING_SCALE, 1e-6)
+    return max(fill_spacing, 1e-6)
 
 
 def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None):
