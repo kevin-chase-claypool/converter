@@ -5,6 +5,11 @@ from .cancellation import check_cancelled
 from .settings import CELL_PATTERNS, CELL_SPACING_SCALE, pattern_size_values
 
 GEOMETRY_VERSION = "2.2-patterns"  # concentric loops stay continuous and inside fill bounds
+
+# Drop contours shorter than this (in on-paper mm). Clipping the infill lattice
+# to a polygon boundary leaves sub-pen-width slivers that draw an M3/M5 "dot"
+# with no visible contribution; they only cost pen cycles and print time.
+MIN_FILL_SEGMENT_LENGTH = 1.0
 COMMAND_RE = re.compile(r"[MmZzLlHhVvCcSsQqTtAa]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?")
 NUMBER_RE = re.compile(r"[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?")
 UNIT_RE = re.compile(r"^\s*([-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?)([a-zA-Z%]*)\s*$")
@@ -1263,6 +1268,9 @@ def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_ang
 
 def apply_geometry_settings(contours, settings):
     contours = [[(x * settings.scale, y * settings.scale) for x, y in contour] for contour in contours]
+    # In on-paper space, drop sub-pen-width fragments (clipped infill slivers
+    # and trace specks) that only add an M3/M5 "dot" with no visible value.
+    contours = [contour for contour in contours if sum(distance(a, b) for a, b in zip(contour, contour[1:])) >= MIN_FILL_SEGMENT_LENGTH]
     if getattr(settings, "compensate_pen_width", True):
         contours = compensate_physical_pen_width(contours, settings.pen_diameter_mm)
     return contours
