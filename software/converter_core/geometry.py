@@ -10,6 +10,10 @@ GEOMETRY_VERSION = "2.2-patterns"  # concentric loops stay continuous and inside
 # to a polygon boundary leaves sub-pen-width slivers that draw an M3/M5 "dot"
 # with no visible contribution; they only cost pen cycles and print time.
 MIN_FILL_SEGMENT_LENGTH = 1.0
+
+# Inset the fill region by this much (on-paper mm, roughly the pen radius) before
+# clipping the lattice so infill does not bleed into surrounding blank borders.
+FILL_INSET_MM = 0.2
 COMMAND_RE = re.compile(r"[MmZzLlHhVvCcSsQqTtAa]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?")
 NUMBER_RE = re.compile(r"[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?")
 UNIT_RE = re.compile(r"^\s*([-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?)([a-zA-Z%]*)\s*$")
@@ -922,16 +926,39 @@ def _pattern_spacing(pattern, fill_spacing, pattern_sizes=None, triangle_size=0.
     return max(fill_spacing, 1e-6)
 
 
-def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None):
-    return fill_region_pattern_contours([polygon], spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size, pattern_sizes, cancel_check)
+def _inset_fill_region(polygons, margin):
+    """Inset the even-odd fill region by *margin* (outer shrink, holes grow)."""
+    if margin <= 0 or not polygons:
+        return polygons
+    result = []
+    for i, poly in enumerate(polygons):
+        if len(poly) < 3:
+            result.append(poly)
+            continue
+        cx = sum(p[0] for p in poly) / len(poly)
+        cy = sum(p[1] for p in poly) / len(poly)
+        depth = sum(
+            1
+            for j, other in enumerate(polygons)
+            if j != i and len(other) >= 3 and point_in_polygon((cx, cy), other)
+        )
+        offset = margin if depth % 2 == 0 else -margin
+        inset = inset_polygon_simple(poly, offset)
+        result.append(inset if len(inset) >= 3 else poly)
+    return result
 
 
-def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None):
+def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0):
+    return fill_region_pattern_contours([polygon], spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size, pattern_sizes, cancel_check, fill_inset)
+
+
+def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0):
     check_cancelled(cancel_check)
     pattern = normalized_hatch_pattern(pattern)
     fill_spacing = density_spacing(spacing, levels, darkness)
     if fill_spacing is None:
         return []
+    polygons = _inset_fill_region(polygons, fill_inset)
     if pattern == "dots":
         return mark_grid_contours(polygons, _pattern_spacing(pattern, fill_spacing, pattern_sizes, triangle_size), base_angle, "dots", cancel_check)
     if pattern in ("circles", "diamonds", "hexagonal", "triangular"):
@@ -1168,7 +1195,7 @@ def path_to_contours(d, tolerance, cancel_check=None):
     return contours
 
 
-def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None):
+def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0):
     check_cancelled(cancel_check)
     # Skip elements that are invisible in a single-pen plot (white/transparent
     # fill and stroke). A white knockout/background path would otherwise be
@@ -1203,7 +1230,7 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
         darkness = fill_darkness(element)
         fill_polygons = [contour for contour in contours if len(contour) >= 3]
         if fill_polygons:
-            fill_lines.extend(fill_region_pattern_contours(fill_polygons, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern, triangle_size, pattern_sizes, cancel_check))
+            fill_lines.extend(fill_region_pattern_contours(fill_polygons, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern, triangle_size, pattern_sizes, cancel_check, fill_inset))
     if expand_strokes and has_visible_stroke(element):
         contours = stroke_expanded_contours(contours, stroke_width(element))
     return contours + fill_lines
@@ -1216,13 +1243,13 @@ def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_ang
     # lattice at full source resolution and shrinking it afterward. This keeps the
     # on-paper fill spacing constant and produces proportionally fewer contours
     # (scale^2 fewer) for small scales, which is the dominant preview cost.
-    if 0.0 < scale < 1.0:
-        coarsen = 1.0 / scale
-        tolerance = float(tolerance) * coarsen
-        hatch_spacing = float(hatch_spacing) * coarsen
-        triangle_size = float(triangle_size) * coarsen
-        if pattern_sizes:
-            pattern_sizes = {pattern: float(value) * coarsen for pattern, value in pattern_sizes.items()}
+    coarsen = 1.0 / scale if 0.0 < scale < 1.0 else 1.0
+    tolerance = float(tolerance) * coarsen
+    hatch_spacing = float(hatch_spacing) * coarsen
+    triangle_size = float(triangle_size) * coarsen
+    if pattern_sizes:
+        pattern_sizes = {pattern: float(value) * coarsen for pattern, value in pattern_sizes.items()}
+    fill_inset = FILL_INSET_MM * coarsen
     tree = ET.parse(svg_path)
     root = tree.getroot()
     height = parse_length(root.get("height"), 0.0)
@@ -1253,7 +1280,7 @@ def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_ang
                 if target is not None and target_id not in seen:
                     walk(target, combined @ Matrix(e=parse_length(node.get("x")), f=parse_length(node.get("y"))), True, seen | {target_id})
             return
-        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step, expand_strokes, triangle_size, pattern_sizes, cancel_check):
+        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step, expand_strokes, triangle_size, pattern_sizes, cancel_check, fill_inset):
             check_cancelled(cancel_check)
             contours.append([combined.apply(x, y) for x, y in contour])
         for child in list(node):

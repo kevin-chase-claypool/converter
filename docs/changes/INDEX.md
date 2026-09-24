@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-24 | `WSW-20260924-010` | windows-software | implemented | [Inset infill away from polygon boundaries](windows-software/2026/2026-09-24-inset-infill-away-from-boundaries.md) |
 | 2026-09-24 | `WSW-20260924-009` | windows-software | implemented | [Drop sub-pen-width infill fragments](windows-software/2026/2026-09-24-drop-sub-pen-width-infill-fragments.md) |
 | 2026-09-24 | `WSW-20260924-008` | windows-software | implemented | [Subdivide polar moves linearly so A-axis-dominant lines stay straight](windows-software/2026/2026-09-24-straighten-a-axis-polar-lines.md) |
 | 2026-09-24 | `WSW-20260924-007` | windows-software | implemented | [Keep the pen down only between infill trails, never across shape outlines](windows-software/2026/2026-09-24-bridge-only-between-infill-trails.md) |
