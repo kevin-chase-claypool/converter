@@ -92,9 +92,11 @@ deferred G54 writes with no alarm. Recorded values: center centroid
 outer A footprints `1264.951/1369.576` and `5597.106/5701.281`, giving a
 center-to-center spacing of `4331.930` A motor degrees against the
 `4320 +/- 15` gate. The A spacing reproduced the earlier `4331.818` measurement
-to within 0.112 A motor degrees, and the X centroid reproduced to 0.013 mm.
-The parked pen tip has not yet been visually re-confirmed for this run. Full
-record: `docs/report/lab-notes/2026-09-24-e-18-m-08-p113-integrated-registration.md`
+to within 0.112 A motor degrees, and the X centroid reproduced to 0.013 mm. The
+operator confirmed the parked pen tip perfectly centered over the center
+magnet, so the automated registration now carries the same physical acceptance
+the 2026-09-11 manual reference had. Full record:
+`docs/report/lab-notes/2026-09-24-e-18-m-08-p113-integrated-registration.md`
 and change note `RPSW-20260924-001`.
 
 Two weaknesses surfaced in that session and remain open. An earlier attempt

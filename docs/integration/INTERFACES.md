@@ -197,8 +197,8 @@ produced the same contract, writing G54
 `-232.136,-189.980,0.000,5649.193` from a center centroid at
 `MPos:-232.138,-219.475` and outer A footprints spaced `4331.930` A motor
 degrees against the `4320 +/- 15` gate. Q3/Q4 remain locked as separate
-diagnostic modes, and the parked pen tip for that run still needs an operator
-visual confirmation. Evidence:
+diagnostic modes, and the operator confirmed the parked pen tip perfectly
+centered over the center magnet. Evidence:
 `docs/report/lab-notes/2026-09-24-e-18-m-08-p113-integrated-registration.md`;
 change note `RPSW-20260924-001`.
 

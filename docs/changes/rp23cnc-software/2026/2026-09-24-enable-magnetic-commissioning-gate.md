@@ -65,6 +65,9 @@ registration, so the production gate was the only remaining block.
   `-232.136,-189.980,0.000,5649.193`; outer A footprints `1264.951/1369.576`
   and `5597.106/5701.281`, spacing `4331.930` A motor degrees against the
   `4320 +/- 15` gate.
+- Operator confirmation: at the final `G54 G0 X0 Y0` park position the pen tip
+  was perfectly centered over the center magnet, so the automated registration
+  reproduces the physical acceptance the 2026-09-11 manual reference had.
 - Evidence: `docs/report/lab-notes/2026-09-24-e-18-m-08-p113-integrated-registration.md`.
 
 ## Struggles and rejected approaches
@@ -77,9 +80,9 @@ goal is to verify the exact integrated build that will run in production.
 
 The arm still requires, at run time: TMAG online, a fresh far-field baseline, a
 LIFTED pen with the LIFT_HOME switch active, and no pressure/driver fault.
-Those conditions were met for the run above; keep the toolhead, pen, and magnet
-path under supervision until the visual pen-centered check is recorded.
-Revert this flag immediately if the integrated arm/scan faults.
+Those conditions were met for the run above, and the operator confirmed the
+parked pen tip perfectly centered over the center magnet. Revert this flag
+immediately if the integrated arm/scan faults.
 
 Two robustness gaps were exposed and are not fixed here:
 

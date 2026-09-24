@@ -89,6 +89,11 @@ The 29.489 mm +Y park displacement from the centroid is the applied
 `sensor_to_pen` offset and matches the macro constant, so the parked pen tip -
 not the TMAG - is the point the `G54` origin names.
 
+Operator confirmation, 2026-09-24: at the final `G54 G0 X0 Y0` park position
+the pen tip was **perfectly centered over the center magnet**. This is the
+physical counterpart to the numeric centroid and closes the M-08 acceptance
+criterion for the automated path.
+
 ### Outer index (M-09)
 
 TMAG held on the outer scan line at X `-10.500`, Y `-219.475` throughout:
@@ -153,10 +158,11 @@ difference) and the X centroid reproduced to `0.013` mm.
 - `MAGNETIC_CALIBRATION_VALID` stays `true`. `LIFT_REFERENCE_VALID` and
   `PEN_CLEAR_VALID` are untouched by this run and remain `false`.
 - `RPSW-20260924-001` moves `implemented -> verified`.
-- Outstanding operator check for this run: confirm the parked pen tip is
-  visually centered on the center magnet at the final `G54 X0 Y0`. The
-  numeric record is complete; the visual confirmation is the last evidence
-  line for M-08.
+- The operator confirmed the parked pen tip perfectly centered over the center
+  magnet at the final `G54 X0 Y0`, so the automated P100 Q0 registration now
+  has the same physical acceptance the 2026-09-11 manual reference had. M-08
+  and M-09 are accepted; no manual re-referencing step remains in the startup
+  path.
 - Open robustness items:
   1. The A spacing gate consumed 79.5% of its `+/- 15` degree budget and the
      last two independent measurements agree at about `+11.9`, so the gate has

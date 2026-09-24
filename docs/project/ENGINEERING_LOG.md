@@ -22,6 +22,10 @@
   and `5597.106/5701.281`, spacing `4331.930` A motor degrees against the
   `4320 +/- 15` gate. The A spacing reproduced the 2026-09-11 measurement
   (`4331.818`) to 0.112 motor degrees and the X centroid to 0.013 mm.
+- Confirmation: the operator reported the parked pen tip perfectly centered
+  over the center magnet at the final `G54 G0 X0 Y0`, giving the automated
+  registration the same physical acceptance the 2026-09-11 manual reference
+  had and removing the last manual re-referencing step from startup.
 - Finding: an earlier attempt in the same session faulted at exactly
   `MAG_MAX_ARM_TIME_MS` (300000 ms) after `SCAN_ACTIVE` began, because the
   raster needed about 172 s just to reach the magnet. The arm watchdog, not a
