@@ -97,7 +97,7 @@ void emitTelemetry(const char *event) {
       "urgent_relief_count=%u urgent_relief_ms=%lu "
       "cs1238_rejects=%u cs1238_last_reject=%ld "
       "mag=%s mT=[%ld.%03ld,%ld.%03ld,%ld.%03ld] delta=%ld.%03ld "
-      "mag_samples=%lu status=0x%08lx ready=[contact:%d clear:%d gp27:%d] "
+      "mag_samples=%lu status=0x%08lx ready=[contact:%d clear:%d det:%d] "
       "commission=[dir:%d pressure:%d lift:%d mag:%d]\r\n",
       event, static_cast<unsigned long>(now_ms),
       pressure.stateName(), pressure.commandEngage() ? "M3" : "M5",
@@ -119,7 +119,7 @@ void emitTelemetry(const char *event) {
       static_cast<unsigned long>(g_mag_sample_count.load(std::memory_order_relaxed)),
       static_cast<unsigned long>(status),
       statusFlag(STATUS_CONTACT_READY), statusFlag(STATUS_CLEAR_READY),
-      GP27_NORMAL_STATUS_ENABLED,
+      statusFlag(STATUS_MAG_DETECTED),
       ACTUATOR_DIRECTION_VALID,
       PRESSURE_CALIBRATION_VALID, LIFT_REFERENCE_VALID, MAGNETIC_CALIBRATION_VALID);
 
