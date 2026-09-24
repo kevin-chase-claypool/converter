@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-24 | `WSW-20260924-008` | windows-software | implemented | [Subdivide polar moves linearly so A-axis-dominant lines stay straight](windows-software/2026/2026-09-24-straighten-a-axis-polar-lines.md) |
 | 2026-09-24 | `WSW-20260924-007` | windows-software | implemented | [Keep the pen down only between infill trails, never across shape outlines](windows-software/2026/2026-09-24-bridge-only-between-infill-trails.md) |
 | 2026-09-24 | `WSW-20260924-006` | windows-software | implemented | [Fix fill leak and skip invisible white paths](windows-software/2026/2026-09-24-fix-fill-leak-and-skip-white-paths.md) |
 | 2026-09-24 | `WSW-20260924-005` | windows-software | implemented | [Generate fill at on-paper resolution when the artwork is scaled down](windows-software/2026/2026-09-24-fill-at-on-paper-resolution.md) |

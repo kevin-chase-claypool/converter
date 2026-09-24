@@ -139,8 +139,9 @@ def polar_segment_steps(a, b, center, theta_a, theta_b, tolerance):
     grblHAL interpolates X, Y and A linearly across one move, so a single move
     that spans a bed rotation bows the pen's actual path across the paper: a
     straight SVG segment comes out as an arc. Measure the bow of the whole move
-    and split so each chord stays within ``tolerance``; chord error falls as
-    ``1/steps^2``, so the split scales with the square root of the measured bow.
+    and split so each chord stays within ``tolerance``. The bow of one move grows
+    linearly with its bed rotation (``deviation ~= L * dtheta / 4``), so the
+    split scales linearly with the measured bow.
     """
     if abs(float(theta_b) - float(theta_a)) <= 1e-9:
         return 1
@@ -148,9 +149,9 @@ def polar_segment_steps(a, b, center, theta_a, theta_b, tolerance):
     tolerance = max(float(tolerance), 1e-6)
     if deviation <= tolerance:
         return 1
-    # Measured falloff for this geometry is steeper than 1/steps^2 but shallower
-    # than linear; 0.75 exponent lands the residual bow at or under tolerance.
-    steps = int(math.ceil((deviation / tolerance) ** 0.75))
+    # Measured: deviation is linear in the bed rotation, so subdividing N ways
+    # leaves deviation/N; use a linear split to keep the residual at tolerance.
+    steps = int(math.ceil(deviation / tolerance))
     return max(1, min(600, steps))
 
 
