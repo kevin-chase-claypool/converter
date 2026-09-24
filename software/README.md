@@ -131,10 +131,6 @@ X/Y-only output, and preview/G-code parity.
   window remains responsive. The expensive contour/theta plan is built once and
   shared by the preview and complete command-list generation. Preview and Save
   G-code are temporarily disabled until that shared data is ready.
-- Changing **Fill pattern** or toggling **Raster shading** rebuilds the preview
-  automatically after a short settle, so a new pattern is reflected without a
-  second **Preview** click. Numeric shading fields still take effect on the next
-  explicit **Preview**.
 - Press **Cancel** during preview generation to stop an unexpectedly large job.
   Cancellation safely unwinds at geometry/planning checkpoints and keeps the
   last completed preview visible.

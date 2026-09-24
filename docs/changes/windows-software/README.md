@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-24 | `WSW-20260924-011` | implemented | [Restore manual-only preview refresh](2026/2026-09-24-restore-manual-preview-refresh.md) | `preview`, `shading`, `fill-pattern`, `ux` |
 | 2026-09-24 | `WSW-20260924-010` | implemented | [Inset infill away from polygon boundaries](2026/2026-09-24-inset-infill-away-from-boundaries.md) | `infill`, `inset`, `boundary`, `correctness` |
 | 2026-09-24 | `WSW-20260924-009` | implemented | [Drop sub-pen-width infill fragments](2026/2026-09-24-drop-sub-pen-width-infill-fragments.md) | `infill`, `pen-cycle`, `sliver`, `performance` |
 | 2026-09-24 | `WSW-20260924-008` | implemented | [Subdivide polar moves linearly so A-axis-dominant lines stay straight](2026/2026-09-24-straighten-a-axis-polar-lines.md) | `polar`, `subdivision`, `straightness`, `a-axis` |
@@ -16,7 +17,7 @@ Newest changes appear first.
 | 2026-09-24 | `WSW-20260924-005` | implemented | [Generate fill at on-paper resolution when the artwork is scaled down](2026/2026-09-24-fill-at-on-paper-resolution.md) | `performance`, `fill`, `scale`, `shading` |
 | 2026-09-24 | `WSW-20260924-004` | implemented | [Eliminate duplicate theta planning during contour ordering](2026/2026-09-24-eliminate-duplicate-theta-planning.md) | `performance`, `theta`, `planner` |
 | 2026-09-24 | `WSW-20260924-003` | implemented | [Tame cell-lattice fill density and fix triangular lattice over-generation](2026/2026-09-24-tame-cell-lattice-fill-density.md) | `shading`, `fill-pattern`, `performance`, `lattice` |
-| 2026-09-24 | `WSW-20260924-002` | implemented | [Rebuild the preview when the fill pattern or raster shading changes](2026/2026-09-24-refresh-preview-on-fill-pattern-change.md) | `preview`, `shading`, `fill-pattern`, `ux` |
+| 2026-09-24 | `WSW-20260924-002` | superseded | [Rebuild the preview when the fill pattern or raster shading changes (superseded)](2026/2026-09-24-refresh-preview-on-fill-pattern-change.md) | `preview`, `shading`, `fill-pattern`, `ux` |
 | 2026-09-24 | `WSW-20260924-001` | implemented | [Speed up the parse/preview pipeline by removing duplicate theta candidates](2026/2026-09-24-speed-up-theta-planning.md) | `performance`, `theta`, `preview` |
 | 2026-09-23 | `WSW-20260923-004` | implemented | [Add a curve-roundness test sample](2026/2026-09-23-add-curve-roundness-test-sample.md) | `sample`, `gcode`, `curve-flattening` |
 | 2026-09-23 | `WSW-20260923-003` | implemented | [Set converter defaults for the installed toolhead](2026/2026-09-23-converter-defaults-for-toolhead.md) | `gcode`, `pen-plot`, `defaults`, `toolhead` |

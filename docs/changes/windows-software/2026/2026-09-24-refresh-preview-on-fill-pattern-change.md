@@ -4,7 +4,7 @@ date: 2026-09-24
 category: windows-software
 affected_categories:
   - windows-software
-status: implemented
+status: superseded
 components:
   - software/qt_svg_to_gcode.pyw
 tags:
@@ -14,13 +14,14 @@ tags:
   - ux
 ---
 
-# Rebuild the preview when the fill pattern or raster shading changes
+# Rebuild the preview when the fill pattern or raster shading changes (superseded)
 
 ## Summary
 
-Changing the fill pattern (or toggling raster shading) now rebuilds the preview
-automatically after a short settle. The user no longer has to remember to press
-**Preview** to see a new pattern.
+Changing the fill pattern (or toggling raster shading) rebuilt the preview
+automatically after a short settle. This was later reverted (see
+`WSW-20260924-011`) because the user prefers the preview to refresh only on an
+explicit **Preview** click.
 
 ## Reason
 
