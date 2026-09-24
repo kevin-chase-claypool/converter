@@ -1133,28 +1133,6 @@ def path_to_contours(d, tolerance, cancel_check=None):
     return contours
 
 
-FILL_MAX_POLYGON_VERTICES = 512
-
-
-def _simplify_fill_polygon(polygon, max_vertices=FILL_MAX_POLYGON_VERTICES):
-    """Decimate a fill-clipping polygon to bound O(segments x vertices) cost.
-
-    The full-resolution outline is still emitted as the stroke, so simplifying
-    the polygon used only to clip the interior fill lattice is visually hidden
-    by the stroke and only becomes active for unusually detailed outlines.
-    """
-    if len(polygon) <= max_vertices:
-        return polygon
-    closed = polygon[0] == polygon[-1]
-    body = polygon[:-1] if closed else polygon
-    n = len(body)
-    indices = [int(round(i * (n - 1) / (max_vertices - 1))) for i in range(max_vertices)]
-    out = [body[i] for i in indices]
-    if closed:
-        out.append(out[0])
-    return out
-
-
 def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None):
     check_cancelled(cancel_check)
     tag = strip_ns(element.tag)
@@ -1184,7 +1162,6 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
         darkness = fill_darkness(element)
         fill_polygons = [contour for contour in contours if len(contour) >= 3]
         if fill_polygons:
-            fill_polygons = [_simplify_fill_polygon(polygon) for polygon in fill_polygons]
             fill_lines.extend(fill_region_pattern_contours(fill_polygons, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern, triangle_size, pattern_sizes, cancel_check))
     if expand_strokes and has_visible_stroke(element):
         contours = stroke_expanded_contours(contours, stroke_width(element))
