@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-24 | `WSW-20260924-012` | windows-software | implemented | [Fix stroke-only elements being treated as invisible](windows-software/2026/2026-09-24-fix-stroke-only-element-visibility.md) |
 | 2026-09-24 | `WSW-20260924-011` | windows-software | implemented | [Restore manual-only preview refresh](windows-software/2026/2026-09-24-restore-manual-preview-refresh.md) |
 | 2026-09-24 | `WSW-20260924-010` | windows-software | implemented | [Inset infill away from polygon boundaries](windows-software/2026/2026-09-24-inset-infill-away-from-boundaries.md) |
 | 2026-09-24 | `WSW-20260924-009` | windows-software | implemented | [Drop sub-pen-width infill fragments](windows-software/2026/2026-09-24-drop-sub-pen-width-infill-fragments.md) |

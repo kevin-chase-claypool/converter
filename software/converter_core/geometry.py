@@ -212,7 +212,8 @@ def stroke_darkness(element):
 def _element_is_visible(element):
     if has_visible_fill(element) and fill_darkness(element) > 1e-9:
         return True
-    return has_visible_stroke(element) and stroke_darkness(element) > 1e-9
+    stroke = style_value(element, "stroke")
+    return stroke is not None and stroke.strip().lower() != "none" and stroke_darkness(element) > 1e-9
 
 
 def hatch_angles_for_tone(base_angle, levels, angle_step, darkness):
