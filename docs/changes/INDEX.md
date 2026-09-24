@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-24 | `WSW-20260924-005` | windows-software | implemented | [Generate fill at on-paper resolution when the artwork is scaled down](windows-software/2026/2026-09-24-fill-at-on-paper-resolution.md) |
 | 2026-09-24 | `WSW-20260924-004` | windows-software | implemented | [Eliminate duplicate theta planning during contour ordering](windows-software/2026/2026-09-24-eliminate-duplicate-theta-planning.md) |
 | 2026-09-24 | `WSW-20260924-003` | windows-software | implemented | [Tame cell-lattice fill density and fix triangular lattice over-generation](windows-software/2026/2026-09-24-tame-cell-lattice-fill-density.md) |
 | 2026-09-24 | `WSW-20260924-002` | windows-software | implemented | [Rebuild the preview when the fill pattern or raster shading changes](windows-software/2026/2026-09-24-refresh-preview-on-fill-pattern-change.md) |

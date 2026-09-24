@@ -171,6 +171,11 @@ X/Y-only output, and preview/G-code parity.
 - `Bed margin mm` (default 6.35 ≈ 0.25") clips artwork inside the bed edge so the
   pen never reaches the rim.
 - Set `Fill spacing mm > 0` to hatch filled regions; `0` disables hatching.
+- `Fill spacing`, the pattern size fields, and the curve `Tolerance` are treated
+  as on-paper (machine-space) values. When the artwork is scaled below `1.0`,
+  the fill and curve flattening are generated coarser in SVG space so the final
+  on-paper density stays constant and the preview evaluates proportionally fewer
+  contours instead of building a full-resolution lattice and shrinking it.
 - `Fill pattern` selects OrcaSlicer-style sparse infill: `linear`, `crosshatch`,
   `diagonal`, `diagonal_crosshatch`, `diamonds`, `triangular`, `honeycomb`,
   `circles`, or `dots`. `linear` is always one parallel-line family; darker fills

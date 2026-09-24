@@ -2165,6 +2165,7 @@ class MainWindow(QMainWindow):
                 float(getattr(settings, "triangle_size_mm", 0.0)),
                 self.pattern_size_values(settings),
                 cancel_check,
+                scale=float(getattr(settings, "scale", 1.0)),
             )
             if getattr(settings, "raster_shading", False):
                 pattern = converter.normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))
@@ -2182,6 +2183,7 @@ class MainWindow(QMainWindow):
                         float(getattr(settings, "triangle_size_mm", 0.0)),
                         self.pattern_size_values(settings),
                         cancel_check,
+                        scale=float(getattr(settings, "scale", 1.0)),
                     )
                     if pattern == "concentric":
                         raw_contours.extend(self.concentric_from_closed_contours(centerline_contours, settings, cancel_check))
