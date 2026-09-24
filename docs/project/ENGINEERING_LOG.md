@@ -1,5 +1,20 @@
 # Engineering Log
 
+<a id="elog-20260923-curve-roundness-sample"></a>
+### 🟨 2026-09-23 - WINDOWS SOFTWARE/IMPLEMENTED - add a curve-roundness test sample and note the arc limitation
+
+- Evidence: the house-and-sun's sun is a 12-sided polyline and plots facetted;
+  there was no sample separating a polygon from a real curve element.
+- Change: added `samples/svg/curve-roundness-test.svg` with a 12-gon, a
+  `<circle>`, a 36-gon, an `<ellipse>`, and a cubic-bezier path, all
+  stroke-only.
+- Verification: it converts to 5 contours (12-gon 13 points, `<circle>` 361,
+  36-gon 37, ellipse 361, bezier 241), so curve elements flatten finely and
+  polygons do not. Bench plot required.
+- Finding: `<path>` arc commands (`A`) are parsed as a straight line to the
+  endpoint, so arc-based circles would plot as chords. Not fixed here.
+- Evidence: `WSW-20260923-004`.
+
 <a id="elog-20260923-converter-defaults-for-toolhead"></a>
 ### 🟨 2026-09-23 - WINDOWS SOFTWARE/IMPLEMENTED - default the converter to the installed toolhead
 
