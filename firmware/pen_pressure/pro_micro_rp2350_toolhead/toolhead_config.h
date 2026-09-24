@@ -175,7 +175,14 @@ constexpr uint32_t HARDWARE_WATCHDOG_MS = 2000;
 constexpr bool ACTUATOR_DIRECTION_VALID = true;   // E-09E direction check
 constexpr bool PRESSURE_CALIBRATION_VALID = true;  // E-09C cap-free fit
 constexpr bool LIFT_REFERENCE_VALID = false;       // T-02
-constexpr bool MAGNETIC_CALIBRATION_VALID = false; // E-18/M-08
+// 2026-09-24: released so the INTEGRATED dual-core firmware can run the E-18/M-08
+// verification. The magnetic interface already passed the motor-inert GP28->GP27
+// handshake (E-18), F-08 PRB capture, and the 2026-09-11 P113/Q0 centroid raster
+// plus A registration. Keep true only while the integrated path reproduces that
+// behavior; revert if the production arm/scan faults. The remaining magnetic
+// prerequisites still gate the arm at run time: TMAG online, a fresh baseline
+// away from a magnet, LIFTED with the LIFT_HOME switch active, and no fault.
+constexpr bool MAGNETIC_CALIBRATION_VALID = true; // E-18/M-08
 // Normal-print status shares GP27/U3 with the P100 magnetic protocol. Keep
 // this false until F-08 proves the controller input polarity/endpoint and
 // T-01H proves normal M5 clearance. It does not enable any controller wait.

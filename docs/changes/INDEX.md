@@ -17,6 +17,7 @@ Newest changes appear first.
 | 2026-09-24 | `WSW-20260924-003` | windows-software | implemented | [Tame cell-lattice fill density and fix triangular lattice over-generation](windows-software/2026/2026-09-24-tame-cell-lattice-fill-density.md) |
 | 2026-09-24 | `WSW-20260924-002` | windows-software | superseded | [Rebuild the preview when the fill pattern or raster shading changes (superseded)](windows-software/2026/2026-09-24-refresh-preview-on-fill-pattern-change.md) |
 | 2026-09-24 | `WSW-20260924-001` | windows-software | implemented | [Speed up the parse/preview pipeline by removing duplicate theta candidates](windows-software/2026/2026-09-24-speed-up-theta-planning.md) |
+| 2026-09-24 | `RPSW-20260924-001` | rp23cnc-software, hardware | implemented | [Enable the integrated toolhead magnetic commissioning gate](rp23cnc-software/2026/2026-09-24-enable-magnetic-commissioning-gate.md) |
 | 2026-09-23 | `WSW-20260923-004` | windows-software | implemented | [Add a curve-roundness test sample](windows-software/2026/2026-09-23-add-curve-roundness-test-sample.md) |
 | 2026-09-23 | `WSW-20260923-003` | windows-software, rp23cnc-software | implemented | [Set converter defaults for the installed toolhead](windows-software/2026/2026-09-23-converter-defaults-for-toolhead.md) |
 | 2026-09-23 | `WSW-20260923-002` | windows-software | implemented | [Subdivide draw moves so bed rotation traces straight lines](windows-software/2026/2026-09-23-subdivide-polar-draw-moves.md) |

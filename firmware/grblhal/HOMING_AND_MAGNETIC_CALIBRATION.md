@@ -261,8 +261,13 @@ suppresses GP27 and leaves the actuator in its safe path.
 
 The compile-time gates in
 [`../pen_pressure/pro_micro_rp2350_toolhead/toolhead_config.h`](../pen_pressure/pro_micro_rp2350_toolhead/toolhead_config.h)
-remain false until T-01/T-02, E-07C/E-08C/E-09C, and E-18/M-08 establish installed
-direction, lift reference, force values, and magnetic thresholds.
+gate the installed direction, lift reference, force values, and magnetic
+thresholds. `ACTUATOR_DIRECTION_VALID` and `PRESSURE_CALIBRATION_VALID` are
+true. `MAGNETIC_CALIBRATION_VALID` was set true on 2026-09-24 (RPSW-20260924-001)
+so the integrated firmware can run the E-18/M-08 verification; that run is still
+pending, so the magnetic path is not yet released. `LIFT_REFERENCE_VALID`
+(T-02) and `PEN_CLEAR_VALID` (T-01H) remain false; the arm therefore still
+depends on a LIFTED pen with an active LIFT_HOME switch at run time.
 
 ## Center raster and centroid
 
