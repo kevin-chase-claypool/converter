@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-24 | `WSW-20260924-001` | implemented | [Speed up the parse/preview pipeline by removing duplicate theta candidates](2026/2026-09-24-speed-up-theta-planning.md) | `performance`, `theta`, `preview` |
 | 2026-09-23 | `WSW-20260923-004` | implemented | [Add a curve-roundness test sample](2026/2026-09-23-add-curve-roundness-test-sample.md) | `sample`, `gcode`, `curve-flattening` |
 | 2026-09-23 | `WSW-20260923-003` | implemented | [Set converter defaults for the installed toolhead](2026/2026-09-23-converter-defaults-for-toolhead.md) | `gcode`, `pen-plot`, `defaults`, `toolhead` |
 | 2026-09-23 | `WSW-20260923-002` | implemented | [Subdivide draw moves so bed rotation traces straight lines](2026/2026-09-23-subdivide-polar-draw-moves.md) | `gcode`, `theta`, `polar`, `geometry` |

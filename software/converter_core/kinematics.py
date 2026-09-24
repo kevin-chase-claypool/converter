@@ -178,11 +178,14 @@ def _axis_locked_roots(point, center, axis, target):
 
 
 def axis_locked_theta_candidates(point, center, axis, target, reference):
-    out = []
-    for base in _axis_locked_roots(point, center, axis, target):
-        for k in range(-8, 9):
-            out.append(unwrap_angle(base + k * 360.0, reference))
-    return out
+    # `unwrap_angle` maps every full-revolution copy of a root to the same
+    # representative of `reference`, so the old k = -8..8 loop returned 17
+    # identical copies per root and made candidate_cost do ~17x redundant work.
+    # Return each principal root unwrapped once.
+    return [
+        unwrap_angle(base, reference)
+        for base in _axis_locked_roots(point, center, axis, target)
+    ]
 
 
 def candidate_cost(previous_machine, machine, previous_theta, theta, settings, tangent=None):

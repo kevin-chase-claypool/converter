@@ -1,5 +1,18 @@
 # Engineering Log
 
+<a id="elog-20260924-speed-up-theta-planning"></a>
+### 🟨 2026-09-24 - WINDOWS SOFTWARE/IMPLEMENTED - deduplicate axis-locked theta candidates for faster preview
+
+- Evidence: profiling showed theta planning was ~85% of parse/plan/preview time.
+  `axis_locked_theta_candidates` emitted 17 winding copies of each root, all
+  collapsing to the same `unwrap_angle` value, so `candidate_cost` ran ~17x on
+  duplicates.
+- Change: return each principal root unwrapped once.
+- Verification: `raster-shading-math.svg` parse/plan/preview 0.049 s -> 0.012 s
+  (cProfile 0.205 s -> 0.057 s); a 2,000-contour synthetic file parses in
+  ~0.46 s; the 22 converter tests pass. Output is unchanged.
+- Evidence: `WSW-20260924-001`.
+
 <a id="elog-20260923-curve-roundness-sample"></a>
 ### 🟨 2026-09-23 - WINDOWS SOFTWARE/IMPLEMENTED - add a curve-roundness test sample and note the arc limitation
 
