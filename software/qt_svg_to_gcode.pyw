@@ -799,6 +799,7 @@ class MainWindow(QMainWindow):
         self.use_z = make_checkbox("include_z")
         self.compensate_pen = make_checkbox("compensate_pen_width")
         self.expand_strokes = make_checkbox("expand_strokes")
+        self.fill_wide_strokes = make_checkbox("fill_wide_strokes")
         self.monotonic_theta = make_checkbox("monotonic_theta")
         self.raster_shading = make_checkbox("raster_shading")
         self.toolhead_status_handshake = make_checkbox("toolhead_status_handshake")
@@ -807,6 +808,7 @@ class MainWindow(QMainWindow):
         geometry_form.addRow(self.flip_y)
         geometry_form.addRow(self.compensate_pen)
         geometry_form.addRow(self.expand_strokes)
+        geometry_form.addRow(self.fill_wide_strokes)
 
         shading_box, shading_form = make_form_group("Shading", field_groups["Shading"])
         shading_form.addRow(self.raster_shading)
@@ -924,6 +926,7 @@ class MainWindow(QMainWindow):
         self.fields["motion_estimate_scale"].textChanged.connect(lambda _text: self.on_motion_estimate_scale_changed())
         self.fields["hatch_pattern"].currentTextChanged.connect(lambda _text: self.update_pattern_settings())
         self.raster_shading.toggled.connect(lambda _checked: self.update_pattern_settings())
+        self.fill_wide_strokes.toggled.connect(lambda _checked: self.update_pattern_settings())
         self.update_pattern_settings()
 
     def pick_svg(self):
@@ -1073,6 +1076,7 @@ class MainWindow(QMainWindow):
             set_visible(field_name, pattern == pattern_name)
         set_visible("shade_angle_step_deg", pattern in ("linear", "crosshatch", "diagonal", "diagonal_crosshatch", "cubic", "waves", "gyroid"))
         set_visible("raster_px_per_unit", self.raster_shading.isChecked())
+        set_visible("stroke_fill_ratio", self.fill_wide_strokes.isChecked())
 
     def pattern_size_values(self, settings):
         return converter.pattern_size_values(settings)
@@ -1102,6 +1106,9 @@ class MainWindow(QMainWindow):
             float(getattr(settings, "shade_angle_step_deg", 90.0)),
             bool(getattr(settings, "raster_shading", False)),
             float(getattr(settings, "raster_px_per_unit", 2.0)),
+            bool(getattr(settings, "fill_wide_strokes", False)),
+            float(getattr(settings, "stroke_fill_ratio", 2.0)),
+            float(getattr(settings, "pen_diameter_mm", 0.0)),
         )
 
     def raster_shade_contours(self, svg_path, settings, cancel_check=None):
@@ -2154,6 +2161,9 @@ class MainWindow(QMainWindow):
                 self.pattern_size_values(settings),
                 cancel_check,
                 scale=float(getattr(settings, "scale", 1.0)),
+                fill_wide_strokes=bool(getattr(settings, "fill_wide_strokes", False)),
+                stroke_fill_ratio=float(getattr(settings, "stroke_fill_ratio", 2.0)),
+                pen_diameter=float(getattr(settings, "pen_diameter_mm", 0.0)),
             )
             if getattr(settings, "raster_shading", False):
                 pattern = converter.normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))

@@ -105,12 +105,20 @@ class Settings:
     # plotter the pen already marks its own width, so drawing the centerline is
     # correct and produces far fewer M3/M5 cycles. Disabled by default.
     expand_strokes: bool = False
+    # When enabled, a stroked path is drawn as a single centerline unless its
+    # width is at least stroke_fill_ratio times the pen diameter; a stroke that
+    # wide is instead filled with parallel passes so its interior is solid.
+    # A pen already marks its own width, so thin strokes should stay one pass;
+    # this only adds passes for strokes the pen cannot render in one line.
+    fill_wide_strokes: bool = False
+    stroke_fill_ratio: float = 2.0
 
 
 TEXT_FIELD_GROUPS = (
     ("Geometry", (
         ("Scale", "scale", "1.0"),
         ("Tolerance", "tolerance", "0.25"),
+        ("Stroke fill ratio", "stroke_fill_ratio", "2"),
     )),
     ("Shading", (
         ("Fill spacing mm", "hatch_spacing_mm", "0"),
@@ -167,6 +175,7 @@ CHECKBOX_FIELDS = (
     ("Geometry", "flip_y", "Flip SVG Y axis", True),
     ("Geometry", "compensate_pen_width", "Compensate pen stroke", True),
     ("Geometry", "expand_strokes", "Expand strokes to outlines", False),
+    ("Geometry", "fill_wide_strokes", "Fill wide strokes", False),
     ("Shading", "raster_shading", "Raster shading", False),
     ("Theta kinematics", "monotonic_theta", "Monotonic theta (r-theta style)", True),
     ("Pen", "include_z", "Use Z axis for pen up/down", False),
@@ -260,6 +269,7 @@ def validate_settings(settings):
         "cubic_size_mm",
         "concentric_spacing_mm",
         "pen_diameter_mm",
+        "stroke_fill_ratio",
         "pen_up_ms",
         "pen_down_ms",
         "pen_down_first_ms",

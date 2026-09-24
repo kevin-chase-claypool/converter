@@ -1,5 +1,23 @@
 # Engineering Log
 
+<a id="elog-20260924-fill-wide-strokes-instead-of-outlining-thin"></a>
+### 🟨 2026-09-24 - WINDOWS SOFTWARE/IMPLEMENTED - fill wide strokes instead of outlining thin ones
+
+- Evidence: turning "Expand strokes to outlines" on for 0.5 mm text turned one
+  stroke into two edges and, because `stroke_expanded_contours` emits a closed
+  rectangle per segment, a multi-segment polyline became many contours with a
+  pen-up/down cycle each, exploding print time.
+- Change: added `Fill wide strokes` (`fill_wide_strokes`) and
+  `Stroke fill ratio` (default 2.0). When on, a stroke is a single centerline
+  unless its width is at least ratio x pen diameter; a wide stroke is rendered
+  as `ceil(width / pen_diameter)` parallel passes spaced one pen diameter apart.
+  Outlining is bypassed because it leaves the stroke interior empty — a cutter
+  workflow, not pen line weight.
+- Verification: 23 converter tests pass (one new). 0.5 mm stroke -> 1 contour;
+  2 mm stroke -> 7 passes; feature off -> 1 contour.
+- Category: software, stroke-fill
+- Evidence: `WSW-20260924-014`.
+
 <a id="elog-20260924-bound-coarse-seek-recover-hard-limit"></a>
 ### 🟨 2026-09-24 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - bound the coarse seek step and recover hard-limit overshoot
 

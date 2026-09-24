@@ -35,6 +35,27 @@ class CoordinateFrameTests(unittest.TestCase):
             self.assertNotIn("command_start", move)
             self.assertNotIn("command_end", move)
 
+    def test_fill_wide_strokes_only_fills_strokes_wider_than_threshold(self):
+        import xml.etree.ElementTree as ET
+
+        def stroke_contours(width, fill_wide, ratio=2.0):
+            el = ET.fromstring(
+                '<path d="M0 0 L10 0" stroke="black" stroke-width="%s" fill="none"/>' % width
+            )
+            return converter.element_contours(
+                el,
+                0.25,
+                expand_strokes=False,
+                fill_wide_strokes=fill_wide,
+                stroke_fill_ratio=ratio,
+                pen_diameter=0.3,
+            )
+
+        self.assertEqual(len(stroke_contours("0.5", True)), 1)
+        self.assertEqual(len(stroke_contours("2", True)), 7)
+        self.assertEqual(len(stroke_contours("2", False)), 1)
+        self.assertEqual(len(stroke_contours("2", True, ratio=20.0)), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

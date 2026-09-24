@@ -1063,6 +1063,64 @@ def stroke_expanded_contours(contours, width):
                 (a[0] + nx, a[1] + ny),
             ])
     return expanded
+
+
+def offset_polyline(points, offset):
+    """Return *points* shifted perpendicular to the local tangent by *offset*.
+
+    The tangent at each vertex is the direction from its predecessor to its
+    successor, so endpoints use the single adjacent segment and interior
+    vertices use the average direction. This is a per-vertex offset (no miter
+    limit), which is smooth enough for pen-fill passes along a stroke but is
+    not a robust polygon offset for sharp corners.
+    """
+    if not points:
+        return []
+    if abs(offset) < 1e-9 or len(points) < 2:
+        return list(points)
+    out = []
+    for i in range(len(points)):
+        prev = points[i - 1] if i > 0 else points[i]
+        nxt = points[i + 1] if i < len(points) - 1 else points[i]
+        dx = nxt[0] - prev[0]
+        dy = nxt[1] - prev[1]
+        length = math.hypot(dx, dy)
+        if length < 1e-9:
+            out.append((points[i][0], points[i][1]))
+            continue
+        nx = -dy / length
+        ny = dx / length
+        out.append((points[i][0] + nx * offset, points[i][1] + ny * offset))
+    return out
+
+
+def stroke_fill_contours(contours, width, pen_diameter):
+    """Fill each stroked polyline with parallel passes spaced *pen_diameter* apart.
+
+    A pen draws a line of its own diameter, so a stroke wider than that is
+    rendered by tracing parallel copies of its centerline, offset perpendicular
+    to the path and covering the stroke width. Returns the pass contours (each a
+    single line, so they plan and draw like normal strokes), or the originals
+    when the stroke is not wide enough to need more than one pass.
+    """
+    if width <= 0 or pen_diameter <= 0 or not contours:
+        return contours
+    passes = max(1, int(math.ceil(width / pen_diameter)))
+    if passes <= 1:
+        return contours
+    filled = []
+    for contour in contours:
+        if len(contour) < 2:
+            continue
+        half_span = (passes - 1) * pen_diameter / 2.0
+        for i in range(passes):
+            offset = -half_span + i * pen_diameter
+            shifted = offset_polyline(contour, offset)
+            if len(shifted) >= 2:
+                filled.append(shifted)
+    return filled
+
+
 def distance(a, b):
     return math.hypot(b[0] - a[0], b[1] - a[1])
 
@@ -1196,7 +1254,7 @@ def path_to_contours(d, tolerance, cancel_check=None):
     return contours
 
 
-def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0):
+def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, fill_wide_strokes=False, stroke_fill_ratio=2.0, pen_diameter=0.0):
     check_cancelled(cancel_check)
     # Skip elements that are invisible in a single-pen plot (white/transparent
     # fill and stroke). A white knockout/background path would otherwise be
@@ -1232,12 +1290,16 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
         fill_polygons = [contour for contour in contours if len(contour) >= 3]
         if fill_polygons:
             fill_lines.extend(fill_region_pattern_contours(fill_polygons, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern, triangle_size, pattern_sizes, cancel_check, fill_inset))
-    if expand_strokes and has_visible_stroke(element):
-        contours = stroke_expanded_contours(contours, stroke_width(element))
+    if has_visible_stroke(element):
+        width = stroke_width(element)
+        if fill_wide_strokes and pen_diameter > 0 and width >= stroke_fill_ratio * pen_diameter:
+            contours = stroke_fill_contours(contours, width, pen_diameter)
+        elif expand_strokes:
+            contours = stroke_expanded_contours(contours, width)
     return contours + fill_lines
 
 
-def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, scale=1.0):
+def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, scale=1.0, fill_wide_strokes=False, stroke_fill_ratio=2.0, pen_diameter=0.0):
     check_cancelled(cancel_check)
     # When the artwork is scaled down, generate the fill at the coarser SVG-space
     # spacing that matches the final on-paper density, instead of building the
@@ -1281,7 +1343,7 @@ def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_ang
                 if target is not None and target_id not in seen:
                     walk(target, combined @ Matrix(e=parse_length(node.get("x")), f=parse_length(node.get("y"))), True, seen | {target_id})
             return
-        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step, expand_strokes, triangle_size, pattern_sizes, cancel_check, fill_inset):
+        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step, expand_strokes, triangle_size, pattern_sizes, cancel_check, fill_inset, fill_wide_strokes, stroke_fill_ratio, pen_diameter):
             check_cancelled(cancel_check)
             contours.append([combined.apply(x, y) for x, y in contour])
         for child in list(node):
@@ -1319,6 +1381,9 @@ def read_svg(svg_path, settings):
         pattern_size_values(settings),
         None,
         float(getattr(settings, "scale", 1.0)),
+        fill_wide_strokes=bool(getattr(settings, "fill_wide_strokes", False)),
+        stroke_fill_ratio=float(getattr(settings, "stroke_fill_ratio", 2.0)),
+        pen_diameter=float(getattr(settings, "pen_diameter_mm", 0.0)),
     )
     return apply_geometry_settings(contours, settings)
 
