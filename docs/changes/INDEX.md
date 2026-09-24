@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-24 | `WSW-20260924-004` | windows-software | implemented | [Eliminate duplicate theta planning during contour ordering](windows-software/2026/2026-09-24-eliminate-duplicate-theta-planning.md) |
 | 2026-09-24 | `WSW-20260924-003` | windows-software | implemented | [Tame cell-lattice fill density and fix triangular lattice over-generation](windows-software/2026/2026-09-24-tame-cell-lattice-fill-density.md) |
 | 2026-09-24 | `WSW-20260924-002` | windows-software | implemented | [Rebuild the preview when the fill pattern or raster shading changes](windows-software/2026/2026-09-24-refresh-preview-on-fill-pattern-change.md) |
 | 2026-09-24 | `WSW-20260924-001` | windows-software | implemented | [Speed up the parse/preview pipeline by removing duplicate theta candidates](windows-software/2026/2026-09-24-speed-up-theta-planning.md) |

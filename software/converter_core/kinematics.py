@@ -197,20 +197,23 @@ def candidate_cost(previous_machine, machine, previous_theta, theta, settings, t
     # candidate identically (no per-strategy dx/dy/hypot split).
     ratio = max(float(getattr(settings, "theta_drive_ratio", 1.0)), 1e-9)
     theta_weight = max(float(getattr(settings, "theta_weight", 1.0)), 0.0)
-    smoothness_factor = _smoothness_factor(settings)
-    round_bias = max(float(getattr(settings, "round_bias", 1.0)), 0.0) * smoothness_factor
     xy_dist = math.hypot(machine[0] - previous_machine[0], machine[1] - previous_machine[1])
     motor_move = abs(theta - previous_theta) * ratio
     cost = math.hypot(xy_dist, theta_weight * motor_move)
-    # Rounding bias: reward orientations close to the path tangent *line* (mod
-    # 180, so a 180 flip counts as aligned). Tangent-tracking is what bends the
-    # per-segment interpolation into an arc, so this is what rounds curves; on
-    # straight runs the tangent is constant so it costs nothing.
-    if tangent is not None and round_bias > 0.0:
-        dev = (theta - tangent) % 180.0
-        if dev > 90.0:
-            dev -= 180.0
-        cost += round_bias * abs(dev) * ratio
+    if tangent is not None:
+        # Rounding bias: reward orientations close to the path tangent *line*
+        # (mod 180, so a 180 flip counts as aligned). Tangent-tracking is what
+        # bends the per-segment interpolation into an arc, so this is what
+        # rounds curves; on straight runs the tangent is constant so it costs
+        # nothing. Only the tangent/DP resolvers pass a tangent, so defer the
+        # lookups for the hotter r-theta path.
+        smoothness_factor = _smoothness_factor(settings)
+        round_bias = max(float(getattr(settings, "round_bias", 1.0)), 0.0) * smoothness_factor
+        if round_bias > 0.0:
+            dev = (theta - tangent) % 180.0
+            if dev > 90.0:
+                dev -= 180.0
+            cost += round_bias * abs(dev) * ratio
     return cost
 
 
@@ -688,15 +691,31 @@ def first_segment_theta(path, settings, previous_theta, center, previous_machine
     return None
 
 
+def _last_segment_theta(path, settings, first_theta):
+    if len(path) < 2:
+        return first_theta
+    a, b = path[-2], path[-1]
+    if distance(a, b) <= 1e-9:
+        return first_theta
+    base = math.degrees(math.atan2(b[1] - a[1], b[0] - a[0])) + float(getattr(settings, "theta_offset", 0.0))
+    return unwrap_angle(base, first_theta)
+
+
 def simulate_contour_exit(path, settings, center, previous_theta, previous_machine, cancel_check=None):
-    thetas, _ = plan_contour_thetas(path, settings, previous_theta, center, previous_machine, cancel_check)
-    if not thetas:
+    # Ordering only needs an exit state to chain the next contour's entry cost.
+    # The exact exit requires a full theta walk, which plan_program performs once
+    # in final order; simulating it here doubles the planner's work for a state
+    # the 2-opt pass then reorders anyway. Use the entry theta plus the final
+    # segment tangent as a cheap, order-stable estimate.
+    first_theta = first_segment_theta(path, settings, previous_theta, center, previous_machine)
+    if first_theta is None:
         return None
+    end_theta = _last_segment_theta(path, settings, first_theta)
     return {
-        "first_theta": thetas[0],
-        "start_machine": bed_to_machine(path[0], thetas[0], center),
-        "end_theta": thetas[-1],
-        "end_machine": bed_to_machine(path[-1], thetas[-1], center),
+        "first_theta": first_theta,
+        "start_machine": bed_to_machine(path[0], first_theta, center),
+        "end_theta": end_theta,
+        "end_machine": bed_to_machine(path[-1], end_theta, center),
     }
 
 

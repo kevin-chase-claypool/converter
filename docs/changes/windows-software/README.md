@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-24 | `WSW-20260924-004` | implemented | [Eliminate duplicate theta planning during contour ordering](2026/2026-09-24-eliminate-duplicate-theta-planning.md) | `performance`, `theta`, `planner` |
 | 2026-09-24 | `WSW-20260924-003` | implemented | [Tame cell-lattice fill density and fix triangular lattice over-generation](2026/2026-09-24-tame-cell-lattice-fill-density.md) | `shading`, `fill-pattern`, `performance`, `lattice` |
 | 2026-09-24 | `WSW-20260924-002` | implemented | [Rebuild the preview when the fill pattern or raster shading changes](2026/2026-09-24-refresh-preview-on-fill-pattern-change.md) | `preview`, `shading`, `fill-pattern`, `ux` |
 | 2026-09-24 | `WSW-20260924-001` | implemented | [Speed up the parse/preview pipeline by removing duplicate theta candidates](2026/2026-09-24-speed-up-theta-planning.md) | `performance`, `theta`, `preview` |
