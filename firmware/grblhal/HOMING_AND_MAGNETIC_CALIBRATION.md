@@ -83,6 +83,27 @@ visually confirmed the parked pen tip perfectly centered on the center magnet.
 Q0 now uses F30 only for its final 2 mm TMAG centroid approach; the long return
 from the outer index to center uses the verified 1500 mm/min X/Y travel rate.
 
+On 2026-09-24 the same full P113 path was re-verified on the **production**
+integrated toolhead firmware, with `MAGNETIC_CALIBRATION_VALID = true` and the
+toolhead stream reporting `commission=[dir:1 pressure:1 lift:0 mag:1]`. Q0
+completed the raster, centroid approach, outer two-footprint survey, and both
+deferred G54 writes with no alarm. Recorded values: center centroid
+`MPos:-232.138,-219.475`; G54 work offset `-232.136,-189.980,0.000,5649.193`;
+outer A footprints `1264.951/1369.576` and `5597.106/5701.281`, giving a
+center-to-center spacing of `4331.930` A motor degrees against the
+`4320 +/- 15` gate. The A spacing reproduced the earlier `4331.818` measurement
+to within 0.112 A motor degrees, and the X centroid reproduced to 0.013 mm.
+The parked pen tip has not yet been visually re-confirmed for this run. Full
+record: `docs/report/lab-notes/2026-09-24-e-18-m-08-p113-integrated-registration.md`
+and change note `RPSW-20260924-001`.
+
+Two weaknesses surfaced in that session and remain open. An earlier attempt
+faulted at exactly `MAG_MAX_ARM_TIME_MS` (300000 ms) after the scan armed,
+because the raster needed roughly 172 s just to reach the magnet - the arm
+watchdog, not a Q0 validation, was the abort. Separately, the A spacing gate
+consumed 79.5% of its `+/- 15` degree budget on both recorded runs, leaving
+about 3 degrees of margin before `P100 A index spacing validation failed`.
+
 ### Candidate Q3 rectangle
 
 On 2026-09-11, the operator jogged the TMAG sensor to the four corners of a

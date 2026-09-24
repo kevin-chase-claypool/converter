@@ -190,9 +190,17 @@ to the center at `MPos:-232.125,-218.325,A17281.142`. At that stationary point,
 `G10 L20 P1 X0 Y-29.4892` produced
 `G54:-232.126,-188.835,0.000,17281.142`; `G54 G0 X0 Y0` was visually verified
 with the pen tip exactly over the center magnet. Therefore G54 presently means
-pen-at-center at X0/Y0 and magnetic index at A0. This replaces the temporary
-manual XY reference, but still does not authorize the stale P100 Q0/Q3/Q4
-registration code.
+pen-at-center at X0/Y0 and magnetic index at A0. The temporary manual XY
+reference is no longer needed: on 2026-09-24 the **production** integrated
+toolhead firmware ran `G65 P113` to completion and the automated P100 Q0 path
+produced the same contract, writing G54
+`-232.136,-189.980,0.000,5649.193` from a center centroid at
+`MPos:-232.138,-219.475` and outer A footprints spaced `4331.930` A motor
+degrees against the `4320 +/- 15` gate. Q3/Q4 remain locked as separate
+diagnostic modes, and the parked pen tip for that run still needs an operator
+visual confirmation. Evidence:
+`docs/report/lab-notes/2026-09-24-e-18-m-08-p113-integrated-registration.md`;
+change note `RPSW-20260924-001`.
 
 The TMAG and pen tip have a fixed CAD/measured XY separation. P100 owns that
 transformation: it records `pen - TMAG` as a commissioning-gated offset and

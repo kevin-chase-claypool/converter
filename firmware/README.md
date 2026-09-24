@@ -112,8 +112,9 @@ repeated combined tests using the east/south NC switches, with Z/A excluded.
 The guarded X/Y software envelope is enabled at `$130=455.000` mm and
 `$131=446.000` mm with `$20=$40=1` and hard limits disabled (`$21=0`);
 controlled boundary-rejection testing remains open. Pen-free G54 magnetic
-registration is hardware-verified through P113; pen-loaded behavior remains
-open.
+registration is hardware-verified through P113, including on the production
+integrated toolhead build with the magnetic commissioning gate enabled
+(`RPSW-20260924-001`, 2026-09-24); pen-loaded behavior remains open.
 For guarded pen-free commissioning, the operator manually established a
 temporary pen-corrected G54 X/Y reference from the center magnet on 2026-09-06;
 the measured `sensor_to_pen` vector is `(0.000, -30.100)` mm. After the

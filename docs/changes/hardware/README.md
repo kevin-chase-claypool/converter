@@ -8,7 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
-| 2026-09-24 | `RPSW-20260924-001` | implemented | [Enable the integrated toolhead magnetic commissioning gate](../rp23cnc-software/2026/2026-09-24-enable-magnetic-commissioning-gate.md) | `p100`, `magnetic-homing`, `e-18`, `m-08`, `commissioning` |
+| 2026-09-24 | `RPSW-20260924-001` | verified | [Enable the integrated toolhead magnetic commissioning gate](../rp23cnc-software/2026/2026-09-24-enable-magnetic-commissioning-gate.md) | `p100`, `magnetic-homing`, `e-18`, `m-08`, `commissioning` |
 | 2026-09-23 | `RPSW-20260923-016` | implemented | [Widen the force-hold band to ±10 g and move relief to 15 g](../rp23cnc-software/2026/2026-09-23-widen-hold-band.md) | `t03`, `hold`, `force-band`, `reliability` |
 | 2026-09-23 | `RPSW-20260923-015` | verified | [Invert the grblHAL spindle enable to match the toolhead input](../rp23cnc-software/2026/2026-09-23-invert-spindle-enable-for-toolhead.md) | `f05`, `m3m5`, `spindle`, `toolhead`, `polarity` |
 | 2026-09-23 | `RPSW-20260923-014` | implemented | [Require a full filter window of implausible samples before faulting](../rp23cnc-software/2026/2026-09-23-raise-implausible-fault-streak.md) | `t02`, `sensor-health`, `reliability` |

@@ -1,5 +1,38 @@
 # Engineering Log
 
+<a id="elog-20260924-verify-the-integrated-p113-magnetic-registration"></a>
+### 🟨 2026-09-24 - RP23CNC SOFTWARE/HARDWARE/VERIFIED - verify the integrated P113 magnetic registration
+
+- Evidence: `RPSW-20260924-001` enabled `MAGNETIC_CALIBRATION_VALID` on the
+  production toolhead but was still `implemented`, not verified. The integrated
+  arm/scan path had never been exercised end to end, so every `G65 P113` on the
+  shipped firmware had aborted with `P100 READY acknowledgement missing`.
+- Change: no source change. This entry records the run that closes the flag's
+  PENDING verification on commit `61549e1`.
+- Verification: the toolhead stream reported
+  `commission=[dir:1 pressure:1 lift:0 mag:1]`, proving the gated build was
+  running. `G65 P113` then completed with
+  `P100 outer magnet registered as G54 A0`,
+  `P100 center registered so G54 X0 Y0 is pen-at-center`,
+  `P100 HOME + REGISTER complete`, and
+  `P113 HOME + REGISTER wrapper complete`, with no alarm and no rejected
+  validation.
+- Measurement: center centroid `MPos:-232.138,-219.475`; G54 work offset
+  `-232.136,-189.980,0.000,5649.193`; outer A footprints `1264.951/1369.576`
+  and `5597.106/5701.281`, spacing `4331.930` A motor degrees against the
+  `4320 +/- 15` gate. The A spacing reproduced the 2026-09-11 measurement
+  (`4331.818`) to 0.112 motor degrees and the X centroid to 0.013 mm.
+- Finding: an earlier attempt in the same session faulted at exactly
+  `MAG_MAX_ARM_TIME_MS` (300000 ms) after `SCAN_ACTIVE` began, because the
+  raster needed about 172 s just to reach the magnet. The arm watchdog, not a
+  P100 validation, was the abort.
+- Finding: the A spacing gate consumed 79.5% of its `+/- 15` degree budget on
+  both recorded runs, leaving about 3 degrees of margin before
+  `P100 A index spacing validation failed`.
+- Category: firmware, hardware, test, magnetic homing, P113
+- Evidence: `RPSW-20260924-001`;
+  `docs/report/lab-notes/2026-09-24-e-18-m-08-p113-integrated-registration.md`.
+
 <a id="elog-20260924-speed-up-theta-planning"></a>
 ### 🟨 2026-09-24 - WINDOWS SOFTWARE/IMPLEMENTED - deduplicate axis-locked theta candidates for faster preview
 
