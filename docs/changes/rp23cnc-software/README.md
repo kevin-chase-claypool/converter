@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-23 | `WSW-20260923-003` | implemented | [Set converter defaults for the installed toolhead](../windows-software/2026/2026-09-23-converter-defaults-for-toolhead.md) | `gcode`, `pen-plot`, `defaults`, `toolhead` |
 | 2026-09-23 | `RPSW-20260923-016` | implemented | [Widen the force-hold band to ±10 g and move relief to 15 g](2026/2026-09-23-widen-hold-band.md) | `t03`, `hold`, `force-band`, `reliability` |
 | 2026-09-23 | `RPSW-20260923-015` | verified | [Invert the grblHAL spindle enable to match the toolhead input](2026/2026-09-23-invert-spindle-enable-for-toolhead.md) | `f05`, `m3m5`, `spindle`, `toolhead`, `polarity` |
 | 2026-09-23 | `RPSW-20260923-014` | implemented | [Require a full filter window of implausible samples before faulting](2026/2026-09-23-raise-implausible-fault-streak.md) | `t02`, `sensor-health`, `reliability` |

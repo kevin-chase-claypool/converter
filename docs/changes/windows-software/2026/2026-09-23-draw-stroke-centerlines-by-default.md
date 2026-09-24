@@ -70,8 +70,8 @@ centerline directly is both simpler and the correct geometry for a pen.
 
 This changes emitted geometry for any user who relied on the outline/fill look;
 it is opt-in for them. Pen-width compensation remains a separate, still-enabled
-setting. The pen-up/pen-down dwell defaults are still machine-specific and
-should be reviewed in a separate change.
+setting. The pen-up/pen-down dwell defaults were machine-specific and are now
+set for the installed toolhead in `WSW-20260923-003`.
 
 ## Files
 

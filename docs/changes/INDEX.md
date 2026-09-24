@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-23 | `WSW-20260923-003` | windows-software, rp23cnc-software | implemented | [Set converter defaults for the installed toolhead](windows-software/2026/2026-09-23-converter-defaults-for-toolhead.md) |
 | 2026-09-23 | `WSW-20260923-002` | windows-software | implemented | [Subdivide draw moves so bed rotation traces straight lines](windows-software/2026/2026-09-23-subdivide-polar-draw-moves.md) |
 | 2026-09-23 | `WSW-20260923-001` | windows-software | implemented | [Draw stroke centerlines by default instead of outlining the stroke width](windows-software/2026/2026-09-23-draw-stroke-centerlines-by-default.md) |
 | 2026-09-23 | `RPSW-20260923-016` | rp23cnc-software, hardware | implemented | [Widen the force-hold band to ±10 g and move relief to 15 g](rp23cnc-software/2026/2026-09-23-widen-hold-band.md) |

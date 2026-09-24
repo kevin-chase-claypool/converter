@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20260923-converter-defaults-for-toolhead"></a>
+### 🟨 2026-09-23 - WINDOWS SOFTWARE/IMPLEMENTED - default the converter to the installed toolhead
+
+- Evidence: the shipped defaults produced a file that did not draw. `pen_down_ms`
+  (600 ms) was shorter than the toolhead's M3 seek (~1.2 s warm, ~2.9 s from
+  GP2), so the drawing move started with the pen still descending; `pen_up_ms`
+  (300 ms) was shorter than the ~0.46 s M5 clear; and a 1200 mm/min feed
+  disturbed the force hold on long strokes.
+- Change: set `feed_rate` 1200 -> 700, `theta_tangential_speed_mm_min`
+  1200 -> 700, `pen_up_ms` 300 -> 800, and `pen_down_ms` 600 -> 3500 in both the
+  `Settings` dataclass and the UI field defaults.
+- Verification: a fresh `Settings()` reports the new values and the generated
+  program uses `G4 P0.8` / `G4 P3.5`; the 22 converter tests pass. Bench re-plot
+  required. The probe-based GP27 `P115` handshake would replace the fixed dwells.
+- Evidence: `WSW-20260923-003`.
+
 <a id="elog-20260923-subdivide-polar-draw-moves"></a>
 ### 🟨 2026-09-23 - WINDOWS SOFTWARE/IMPLEMENTED - subdivide draw moves so bed rotation traces straight lines
 

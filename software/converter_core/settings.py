@@ -36,14 +36,18 @@ class ThetaControllerLimits:
 class Settings:
     scale: float = 1.0
     tolerance: float = 0.25
-    feed_rate: float = 1200.0
+    # Slower pen travel means smaller, slower friction changes for the toolhead
+    # force loop to absorb. 700 mm/min is the calm first-plot setting; raise it
+    # once the hold is proven.
+    feed_rate: float = 700.0
     travel_rate: float = 3000.0
     safe_z: float = 5.0
     work_z: float = 0.0
     theta_axis: str = "A"
     theta_offset: float = 0.0
     theta_drive_ratio: float = 12.0
-    theta_tangential_speed_mm_min: float = 1200.0
+    # Bed rotation drags the pen tangentially, so bound it like the draw feed.
+    theta_tangential_speed_mm_min: float = 700.0
     theta_controller_limits: ThetaControllerLimits = field(default_factory=ThetaControllerLimits)
     theta_mode: str = "optimized"
     theta_resolver: str = "rtheta"
@@ -72,8 +76,11 @@ class Settings:
     raster_px_per_unit: float = 2.0
     pen_diameter_mm: float = 0.3
     pen_cycle_ms: float = 100.0
-    pen_up_ms: float = 300.0
-    pen_down_ms: float = 600.0
+    # Measured on the integrated toolhead: M3 seeks in about 1.2 s warm and
+    # ~2.9 s from GP2, and M5 clears in about 0.46 s. The dwell must cover the
+    # actuation, or the drawing move starts while the pen is still in the air.
+    pen_up_ms: float = 800.0
+    pen_down_ms: float = 3500.0
     pen_up_command: str = "M5"
     pen_down_command: str = "M3"
     # Emits the controller-resident P115 acknowledgement macro after each
@@ -114,14 +121,14 @@ TEXT_FIELD_GROUPS = (
         ("Raster px/unit", "raster_px_per_unit", "2"),
     )),
     ("Motion", (
-        ("Feed rate", "feed_rate", "1200"),
+        ("Feed rate", "feed_rate", "700"),
         ("Travel rate", "travel_rate", "3000"),
     )),
     ("Theta kinematics", (
         ("Theta axis", "theta_axis", "A"),
         ("Theta offset", "theta_offset", "0"),
         ("Theta ratio", "theta_drive_ratio", "12"),
-        ("Theta tangential speed mm/min", "theta_tangential_speed_mm_min", "1200"),
+        ("Theta tangential speed mm/min", "theta_tangential_speed_mm_min", "700"),
         ("Theta mode", "theta_mode", "optimized"),
         ("Theta resolver", "theta_resolver", "rtheta"),
         ("Theta weight", "theta_weight", "1.0"),
@@ -132,8 +139,8 @@ TEXT_FIELD_GROUPS = (
     ("Pen", (
         ("Safe Z", "safe_z", "5"),
         ("Work Z", "work_z", "0"),
-        ("Pen up ms", "pen_up_ms", "300"),
-        ("Pen down ms", "pen_down_ms", "600"),
+        ("Pen up ms", "pen_up_ms", "800"),
+        ("Pen down ms", "pen_down_ms", "3500"),
         ("Pen up cmd", "pen_up_command", "M5"),
         ("Pen down cmd", "pen_down_command", "M3"),
     )),
