@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-24 | `WSW-20260924-013` | implemented | [Give the program's first pen-down a cold-seek dwell](2026/2026-09-24-first-pen-down-cold-seek-dwell.md) | `converter`, `pen-dwell`, `cold-seek`, `gp2`, `first-plot` |
 | 2026-09-24 | `WSW-20260924-012` | implemented | [Fix stroke-only elements being treated as invisible](2026/2026-09-24-fix-stroke-only-element-visibility.md) | `visibility`, `stroke`, `regression` |
 | 2026-09-24 | `WSW-20260924-011` | implemented | [Restore manual-only preview refresh](2026/2026-09-24-restore-manual-preview-refresh.md) | `preview`, `shading`, `fill-pattern`, `ux` |
 | 2026-09-24 | `WSW-20260924-010` | implemented | [Inset infill away from polygon boundaries](2026/2026-09-24-inset-infill-away-from-boundaries.md) | `infill`, `inset`, `boundary`, `correctness` |

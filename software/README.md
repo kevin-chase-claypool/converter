@@ -99,6 +99,18 @@ X/Y-only output, and preview/G-code parity.
     A-axis bed rotation during drawing. It does not change X/Y-only output.
 - **Pen** — Z heights, pen cycle, pen up/down commands, Use Z, and the
   disabled-by-default **Wait for GP27 toolhead ready** option.
+  - **Pen down ms** (`pen_down_ms`, default 3500) is the dwell after every
+    `M3`. It covers the toolhead's warm contact seek, which starts from the
+    ~1 mm `M5` clearance and finishes in 2-3 s.
+  - **Pen down first ms** (`pen_down_first_ms`, default 10000) is the dwell
+    after the program's **first** `M3` only. The toolhead parks on the GP2 lift
+    switch, so that one has to travel the whole retract distance before it
+    reaches paper — measured at about 7 s on the installed mechanism. Without
+    the longer first dwell grblHAL starts the first stroke mid-descent and the
+    leading section of the path is drawn in the air. Every later `M3` starts
+    from the `M5` clearance height and uses `Pen down ms`. Starting a program
+    when the pen is already off GP2 — for example right after a manual
+    `M3`/`M5` warm-up — only wastes the extra first-dwell time.
   - Enable that option only after the `P115.macro` file is installed on the
     RP23CNC, GP27/U3-to-`PRB` polarity is verified, and the selected pen has
     passed contact/clear qualification. It replaces fixed `G4` dwells with a

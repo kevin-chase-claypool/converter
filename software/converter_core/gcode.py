@@ -28,7 +28,13 @@ def pen_down_duration_ms(settings):
     return max(float(getattr(settings, "pen_down_ms", 600.0)), 0.0)
 
 
-def append_pen_dwell(lines, settings, direction, requires_transition=True):
+def pen_down_first_duration_ms(settings):
+    # Only the program's first pen-down starts from the GP2 lift switch; see
+    # Settings.pen_down_first_ms.
+    return max(float(getattr(settings, "pen_down_first_ms", 0.0)), 0.0)
+
+
+def append_pen_dwell(lines, settings, direction, requires_transition=True, is_first_down=False):
     # Pause after an M3/M5 pen actuation so the pen reaches the paper (or lifts
     # clear) before motion resumes. grblHAL runs the next line immediately after
     # M3/M5, so without this the pen would drag or start a stroke mid-air. In Z
@@ -43,7 +49,10 @@ def append_pen_dwell(lines, settings, direction, requires_transition=True):
         # already be proven clear before the program begins.
         lines.append("G65 P115 Q1" if requires_transition else "G65 P115 Q0")
         return
-    ms = pen_down_duration_ms(settings) if direction == "down" else pen_up_duration_ms(settings)
+    if direction == "down":
+        ms = pen_down_first_duration_ms(settings) if is_first_down else pen_down_duration_ms(settings)
+    else:
+        ms = pen_up_duration_ms(settings)
     if ms > 0:
         lines.append(f"G4 P{format_float(ms / 1000.0)}")
 
@@ -173,6 +182,9 @@ def contours_to_gcode(contours, settings, program_plan=None):
     previous_machine = None
     previous_motor_theta = 0.0
     pen_is_down = False
+    # Only the program's first pen-down starts from GP2 and needs the long
+    # cold-seek dwell; every later one starts from the M5 clearance height.
+    first_pen_down_pending = True
     previous_pts = None
     for planned, pts, thetas, strategies in program_plan["planned_jobs"]:
         first_theta = thetas[0]
@@ -207,7 +219,8 @@ def contours_to_gcode(contours, settings, program_plan=None):
             else:
                 lines.append(f"G0 {format_xy_command((x0, y0))} {axis}{format_float(first_motor_theta)}")
                 append_custom_command(lines, settings.pen_down_command)
-                append_pen_dwell(lines, settings, "down")
+                append_pen_dwell(lines, settings, "down", is_first_down=first_pen_down_pending)
+                first_pen_down_pending = False
                 lines.append(f"G1 F{format_float(settings.feed_rate)}")
             pen_is_down = True
 
@@ -288,6 +301,7 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
     previous_theta = None
     previous_motor_theta = 0.0
     pen_is_down = False
+    first_pen_down_pending = True
     previous_path = None
     for planned, path, thetas, strategies in program_plan["planned_jobs"]:
         check_cancelled(cancel_check)
@@ -357,7 +371,9 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
 
         if not pen_is_down:
             pen_down = f"G1 Z{format_float(settings.work_z)} F{format_float(settings.feed_rate)}" if settings.include_z else (settings.pen_down_command or "(pen down)")
-            moves.append({"type": "pen_down", "start": machine_start, "end": machine_start, "bed_start": path[0], "bed_end": path[0], "contour": contour_index, "duration_ms": pen_down_duration_ms(settings), "gcode": pen_down})
+            pen_down_ms = pen_down_first_duration_ms(settings) if first_pen_down_pending else pen_down_duration_ms(settings)
+            first_pen_down_pending = False
+            moves.append({"type": "pen_down", "start": machine_start, "end": machine_start, "bed_start": path[0], "bed_end": path[0], "contour": contour_index, "duration_ms": pen_down_ms, "gcode": pen_down})
             moves.append({"type": "feed", "start": machine_start, "end": machine_start, "bed_start": path[0], "bed_end": path[0], "contour": contour_index, "duration_ms": 0, "gcode": f"G1 F{format_float(settings.feed_rate)}"})
             pen_is_down = True
 

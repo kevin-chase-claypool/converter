@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-24 | `WSW-20260924-013` | implemented | [Give the program's first pen-down a cold-seek dwell](../windows-software/2026/2026-09-24-first-pen-down-cold-seek-dwell.md) | `converter`, `pen-dwell`, `cold-seek`, `gp2`, `first-plot` |
 | 2026-09-24 | `RPSW-20260924-002` | implemented | [Report magnet detection instead of a compile flag in the `ready=[...]` field](2026/2026-09-24-fix-toolhead-gp27-telemetry-field.md) | `telemetry`, `magnetic-homing`, `e-18` |
 | 2026-09-24 | `RPSW-20260924-001` | verified | [Enable the integrated toolhead magnetic commissioning gate](2026/2026-09-24-enable-magnetic-commissioning-gate.md) | `p100`, `magnetic-homing`, `e-18`, `m-08`, `commissioning` |
 | 2026-09-23 | `WSW-20260923-003` | implemented | [Set converter defaults for the installed toolhead](../windows-software/2026/2026-09-23-converter-defaults-for-toolhead.md) | `gcode`, `pen-plot`, `defaults`, `toolhead` |

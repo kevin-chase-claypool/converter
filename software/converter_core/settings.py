@@ -81,6 +81,15 @@ class Settings:
     # actuation, or the drawing move starts while the pen is still in the air.
     pen_up_ms: float = 800.0
     pen_down_ms: float = 3500.0
+    # Program start only. The toolhead parks on the GP2 lift switch, so the
+    # program's first M3 has to travel the whole retract distance before it
+    # reaches paper, while every later M3 starts from the ~1 mm M5 clearance
+    # and completes in 2-3 s. Measured at about 7 s on the installed mechanism.
+    # Without this longer first dwell grblHAL begins the first stroke while the
+    # pen is still descending, so the leading section of the path is drawn in
+    # the air. The margin above the measured 7 s covers the release-tare
+    # settling and the pen-clamp variation that changes the retract distance.
+    pen_down_first_ms: float = 10000.0
     pen_up_command: str = "M5"
     pen_down_command: str = "M3"
     # Emits the controller-resident P115 acknowledgement macro after each
@@ -141,6 +150,7 @@ TEXT_FIELD_GROUPS = (
         ("Work Z", "work_z", "0"),
         ("Pen up ms", "pen_up_ms", "800"),
         ("Pen down ms", "pen_down_ms", "3500"),
+        ("Pen down first ms", "pen_down_first_ms", "10000"),
         ("Pen up cmd", "pen_up_command", "M5"),
         ("Pen down cmd", "pen_down_command", "M3"),
     )),
@@ -252,6 +262,7 @@ def validate_settings(settings):
         "pen_diameter_mm",
         "pen_up_ms",
         "pen_down_ms",
+        "pen_down_first_ms",
         "bed_margin_mm",
     )
     for name in positive:

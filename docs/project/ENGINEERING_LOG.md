@@ -1,5 +1,29 @@
 # Engineering Log
 
+<a id="elog-20260924-first-pen-down-cold-seek-dwell"></a>
+### 🟨 2026-09-24 - WINDOWS SOFTWARE/RP23CNC SOFTWARE/IMPLEMENTED - dwell the program's first pen-down for the cold seek
+
+- Evidence: the operator reported that at plot start a large part of the
+  first stroke is drawn before the pen reaches the paper. The toolhead parks
+  on GP2 (`BOOT_LIFT_TIME_MS` 3000 ms on power-up; `CLEARANCE_LIFT` short-cuts
+  to `LIFTED` when GP2 is already active), so the first `M3` runs the cold
+  seek - coarse pulses, a 1000 ms release-tare wait, a 64-sample tare - and
+  takes about 7 s. The converter dwelled a flat 3500 ms after every `M3`, so
+  grblHAL expired it 3-4 s early and drew roughly 40-50 mm of the first stroke
+  in the air at the 700 mm/min default feed.
+- Change: added `Pen down first ms` (`pen_down_first_ms`, default 10000) and
+  applied it to the program's first `M3` only; every later pen-down keeps
+  `pen_down_ms = 3500`. The GP27 `P115` handshake path is unchanged.
+- Verification: the 22 converter tests pass; a two-contour default program
+  emits `M3` / `G4 P10` for the first stroke and `M3` / `G4 P3.5` for the
+  second; `build_preview_moves` reports matching 10000/3500 ms pen-down
+  durations. Bench confirmation of the first stroke is outstanding.
+- Rejected: raising `pen_down_ms` for the whole program (adds the margin to
+  every stroke of a filled drawing) and a program-opening `M3`/`M5` warm-up
+  pair (same wall time, two extra transitions).
+- Category: software, firmware, test, first-plot
+- Evidence: `WSW-20260924-013`.
+
 <a id="elog-20260924-verify-the-integrated-p113-magnetic-registration"></a>
 ### 🟨 2026-09-24 - RP23CNC SOFTWARE/HARDWARE/VERIFIED - verify the integrated P113 magnetic registration
 
