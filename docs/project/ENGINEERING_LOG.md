@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20260924-bound-coarse-seek-recover-hard-limit"></a>
+### 🟨 2026-09-24 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - bound the coarse seek step and recover hard-limit overshoot
+
+- Evidence: post carriage-swap print tripped `hard force limit exceeded` at
+  `force_norm_raw=303061` vs `hard_limit_raw=302326`, `home_seek_pulses=2/100`,
+  `warm_ema=33`. A 2-pulse coarse budget, with each 25 ms full-drive pulse worth
+  more than the whole 60 g envelope, overshot before the 3 g gate could act.
+  The latched `FAULT` also froze the pen down while grblHAL kept moving X/Y/A,
+  and recovery required `c` (full GP2 retract) then `a`, losing print time.
+- Change: `HOME_SEEK_COARSE_PULSE_MS` 25 -> 10 and `SEEK_WARM_COARSE_RATIO`
+  13 -> 2 (the 10 ms / 5 ms time ratio), so one coarse step lands near the 35 g
+  target instead of through the 60 g limit. Added bounded hard-limit recovery:
+  up to `HARD_LIMIT_RECOVERY_MAX = 3` consecutive over-force trips lift through
+  the normal M5 clearance and re-seek (the held M3 restarts) instead of latching
+  `FAULT`; the count resets on successful contact and is reported as
+  `recoveries=` in telemetry.
+- Verification: `arduino-cli compile --fqbn
+  rp2040:rp2040:sparkfun_promicrorp2350` builds cleanly. Bench confirmation is
+  outstanding (re-flash and print).
+- Rejected: fine-only warm seek (operator rejects the slower M3) and a
+  force-gate-only change (a single coarse pulse can jump below-gate to above
+  hard limit).
+- Category: firmware, hardware, test, toolhead, force-control
+- Evidence: `RPSW-20260924-003`.
+
 <a id="elog-20260924-first-pen-down-cold-seek-dwell"></a>
 ### 🟨 2026-09-24 - WINDOWS SOFTWARE/RP23CNC SOFTWARE/IMPLEMENTED - dwell the program's first pen-down for the cold seek
 

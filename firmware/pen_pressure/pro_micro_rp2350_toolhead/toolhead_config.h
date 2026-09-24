@@ -71,11 +71,14 @@ constexpr uint32_t PEN_CLEAR_TARE_SETTLE_MS = 300;
 constexpr bool MECHANICAL_PRELOAD_MODE = true; // supervised bench test build
 constexpr uint32_t PEN_ENGAGE_TRAVEL_MS = 100;
 constexpr uint32_t SEEK_TIMEOUT_MS = 1500;
-// Use coarse pulses until the load cell first sees meaningful force, then
-// switch to fine pulses before the 35 g contact threshold. The first 25 ms
-// candidate reached target then transiently crossed the 60 g hard limit;
-// keeping its speed only in the unloaded region avoids that final coarse step.
-constexpr uint8_t HOME_SEEK_COARSE_PULSE_MS = 25;
+// Use a bounded coarse pulse only while the pen is still clearly airborne, then
+// switch to fine pulses before the 35 g contact threshold. A 25 ms pulse moved
+// about 0.44 mm and the 2026-09-24 carriage-swap run reproduced the 60 g trip
+// with 60.1 g two coarse pulses into a warm seek. A 10 ms pulse moves about
+// 0.18 mm, so a worst-case placement lands near the 35 g target rather than
+// through the 60 g limit, while still covering ~2x a fine pulse so the seek
+// stays faster than fine-only.
+constexpr uint8_t HOME_SEEK_COARSE_PULSE_MS = 10;
 constexpr uint8_t HOME_SEEK_FINE_PULSE_MS = 5;
 constexpr uint8_t HOME_SEEK_FINE_THRESHOLD_DIVISOR = 5;
 // Force must be read only after the pulse has settled. E-09F's 500 ms settle
@@ -104,22 +107,21 @@ constexpr uint8_t HOME_SEEK_PWM = 255;
 constexpr long HOME_SURFACE_TOUCH_RAW_DELTA = 25194; // approximately 5 g
 // Warm-seek travel learning. The first warm M3 after boot runs fine-only to
 // measure the clearance distance; later warm M3s traverse most of that learned
-// distance with 25 ms coarse pulses before the fine 5 ms approach. These are
-// supervised bench candidates: the 1 g force threshold still ends the coarse
-// phase early if the pen reaches paper sooner than the learned distance.
+// distance with bounded coarse pulses before the fine 5 ms approach. The 1 g
+// force threshold still ends the coarse phase early if the pen reaches paper
+// sooner than the learned distance.
 //
-// SEEK_WARM_COARSE_RATIO is the measured fine-pulse distance one 25 ms coarse
-// pulse covers. E-09E bench logs on 2026-09-23 show the same ~1 mm clearance
-// took 17 fine-only pulses but only 1 coarse + 3-4 fine pulses, i.e. one
-// coarse pulse covers ~13-14 five-ms pulses, not the ideal 5x. The gap is
-// stiction in the linear-rail carriage: short fine pulses barely move the
-// mechanism while a 25 ms pulse overcomes static friction. This constant is
-// stiction-dominated and MUST be re-measured after the carriage/bearing swap
-// (expect it to fall back toward ~5 once stiction is removed).
-constexpr uint8_t SEEK_WARM_COARSE_RATIO = 13;
-// Fine-pulse reserve left for the final approach after the coarse phase.
-// With the ratio above and a ~17-fine-pulse clearance, one coarse pulse covers
-// ~13 fine pulses and leaves ~4 fine pulses for the settled contact approach.
+// SEEK_WARM_COARSE_RATIO is the fine-pulse distance one coarse pulse covers.
+// With HOME_SEEK_COARSE_PULSE_MS = 10 and the same full-drive PWM, travel is
+// proportional to pulse width, so the ratio is the 10 ms / 5 ms time ratio
+// (2). The old 13 came from the pre-swap stiction carriage, where a 25 ms
+// pulse overcame static friction but a 5 ms pulse barely moved. Re-verify on
+// the installed carriage before trusting the learned warm travel.
+constexpr uint8_t SEEK_WARM_COARSE_RATIO = 2;
+// Fine-pulse reserve left for the final approach after the coarse phase. With
+// the ratio above (2), the coarse budget covers the learned travel minus this
+// many fine pulses, so the last few pulses before contact are always the
+// gentler 5 ms steps.
 constexpr uint8_t SEEK_WARM_FINE_RESERVE = 4;
 constexpr uint8_t SEEK_WARM_MAX_COARSE_PULSES = 8;
 // The warm coarse phase also stops if force rises above this, meaning the pen
@@ -159,6 +161,12 @@ constexpr uint8_t HOLD_CORRECTION_PWM = 255;
 // of hysteresis, which still leaves 10 g before the 60 g hard limit.
 constexpr long HOLD_URGENT_RELIEF_RAW = 75582; // approximately 15 g above target
 constexpr uint32_t HOLD_URGENT_RELIEF_MAX_MS = 200;
+// Bounded over-force recovery. A hard-limit trip is treated as a recoverable
+// overshoot (lift through the normal M5 clearance and re-seek) rather than a
+// latched fault, up to this many consecutive recoveries without a successful
+// contact. Exceeding it latches FAULT so a persistent over-force cannot cycle
+// retract/re-seek forever while the gantry keeps moving.
+constexpr uint8_t HARD_LIMIT_RECOVERY_MAX = 3;
 constexpr uint8_t CS1238_TARE_SAMPLES = 64;
 // Candidate 25 ms moving-average window at the configured 640 SPS. E-08C
 // must measure actual rate/noise before PRESSURE_CALIBRATION_VALID can be true.

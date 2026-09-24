@@ -48,6 +48,7 @@ class PressureController {
   uint16_t warmSeekPulseEma() const { return warm_seek_pulse_ema_; }
   uint16_t holdUrgentReliefCount() const { return hold_urgent_relief_count_; }
   uint32_t holdUrgentReliefTotalMs() const { return hold_urgent_relief_total_ms_; }
+  uint16_t hardLimitRecoveries() const { return hard_limit_recoveries_; }
   uint16_t cs1238RejectedSamples() const { return cs1238_rejected_samples_; }
   long cs1238LastRejectedRaw() const { return cs1238_last_rejected_raw_; }
   bool manualOverride() const { return manual_override_; }
@@ -119,6 +120,7 @@ class PressureController {
   uint16_t warm_seek_pulse_ema_ = 0;
   uint8_t warm_seek_coarse_budget_ = 0;
   uint8_t warm_seek_coarse_used_ = 0;
+  uint16_t hard_limit_recoveries_ = 0;
   uint8_t hold_out_of_band_windows_ = 0;
   int8_t hold_out_of_band_direction_ = 0;
 

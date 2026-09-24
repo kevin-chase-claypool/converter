@@ -95,6 +95,7 @@ void emitTelemetry(const char *event) {
       "hard_limit_raw=%ld "
       "lift_home=%d home_seek_pulses=%u/%u warm_ema=%u "
       "urgent_relief_count=%u urgent_relief_ms=%lu "
+      "recoveries=%u "
       "cs1238_rejects=%u cs1238_last_reject=%ld "
       "mag=%s mT=[%ld.%03ld,%ld.%03ld,%ld.%03ld] delta=%ld.%03ld "
       "mag_samples=%lu status=0x%08lx ready=[contact:%d clear:%d det:%d] "
@@ -109,6 +110,7 @@ void emitTelemetry(const char *event) {
       static_cast<unsigned int>(pressure.warmSeekPulseEma()),
       static_cast<unsigned int>(pressure.holdUrgentReliefCount()),
       static_cast<unsigned long>(pressure.holdUrgentReliefTotalMs()),
+      static_cast<unsigned int>(pressure.hardLimitRecoveries()),
       static_cast<unsigned int>(pressure.cs1238RejectedSamples()),
       pressure.cs1238LastRejectedRaw(),
       publishedMagneticStateName(),

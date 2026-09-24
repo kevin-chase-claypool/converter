@@ -18,6 +18,7 @@ Newest changes appear first.
 | 2026-09-24 | `WSW-20260924-003` | windows-software | implemented | [Tame cell-lattice fill density and fix triangular lattice over-generation](windows-software/2026/2026-09-24-tame-cell-lattice-fill-density.md) |
 | 2026-09-24 | `WSW-20260924-002` | windows-software | superseded | [Rebuild the preview when the fill pattern or raster shading changes (superseded)](windows-software/2026/2026-09-24-refresh-preview-on-fill-pattern-change.md) |
 | 2026-09-24 | `WSW-20260924-001` | windows-software | implemented | [Speed up the parse/preview pipeline by removing duplicate theta candidates](windows-software/2026/2026-09-24-speed-up-theta-planning.md) |
+| 2026-09-24 | `RPSW-20260924-003` | rp23cnc-software, hardware | implemented | [Bound the coarse seek step and auto-recover from hard-limit overshoot](rp23cnc-software/2026/2026-09-24-bound-coarse-seek-and-recover-hard-limit.md) |
 | 2026-09-24 | `RPSW-20260924-002` | rp23cnc-software | implemented | [Report magnet detection instead of a compile flag in the `ready=[...]` field](rp23cnc-software/2026/2026-09-24-fix-toolhead-gp27-telemetry-field.md) |
 | 2026-09-24 | `RPSW-20260924-001` | rp23cnc-software, hardware | verified | [Enable the integrated toolhead magnetic commissioning gate](rp23cnc-software/2026/2026-09-24-enable-magnetic-commissioning-gate.md) |
 | 2026-09-23 | `WSW-20260923-004` | windows-software | implemented | [Add a curve-roundness test sample](windows-software/2026/2026-09-23-add-curve-roundness-test-sample.md) |

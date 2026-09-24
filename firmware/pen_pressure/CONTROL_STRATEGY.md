@@ -86,33 +86,42 @@ seated by the operator at an approximate drawing preload. The supervised
 `MECHANICAL_PRELOAD_MODE` uses a single bounded descend. Boot homes the pen
 about 12 mm above the paper, so the controller first closes that gap:
 
-- `HOME_SEEK_CONTACT` steps DOWN with 25 ms full-drive pulses while far from
-  the paper and 5 ms pulses once the normalized force rises above about 1 g,
-  each followed by a short settle while far from the band and the full 300 ms
-  settle within about 10 g of it. When the settled force crosses the lower edge
-  of the absolute 35 g target band, the controller enters `HOLD_FORCE`.
+- `HOME_SEEK_CONTACT` steps DOWN with bounded 10 ms full-drive coarse pulses
+  while far from the paper and 5 ms pulses once the normalized force rises above
+  about 1 g, each followed by a short settle while far from the band and the
+  full 300 ms settle within about 10 g of it. When the settled force crosses the
+  lower edge of the absolute 35 g target band, the controller enters
+  `HOLD_FORCE`.
 - If M3 begins with GP2 pressed, the controller releases GP2 first, takes its
   clear-of-paper tare, then continues the same descend. If M3 begins after
   ordinary M5 clearance, it starts from the fresh clear-state tare. The first
   warm M3 after boot is fine-only and measures the clearance; later warm M3s
-  traverse most of the learned distance with 25 ms coarse pulses and finish
-  with 5 ms pulses. One coarse pulse is credited as 13 fine pulses, and the
-  coarse budget is rounded to the nearest pulse, leaving a 4-fine-pulse
-  reserve for the final approach. The learned distance is a moving average of
-  the warm seek's travel, so it tracks clearance drift. The 13:1 ratio is
-  stiction-dominated (short fine pulses barely move the mechanism) and must be
-  re-measured after the linear-rail carriage/bearing swap. The warm coarse
-  phase also stops early if force rises above about 3 g, clear of the roughly
-  1 g M5 clear residual.
+  traverse most of the learned distance with 10 ms coarse pulses and finish
+  with 5 ms pulses. One coarse pulse is credited as 2 fine pulses (the 10 ms /
+  5 ms time ratio at equal drive), and the coarse budget is rounded to the
+  nearest pulse, leaving a 4-fine-pulse reserve for the final approach. The
+  learned distance is a moving average of the warm seek's travel, so it tracks
+  clearance drift. The pre-swap 13:1 ratio was stiction-dominated; after the
+  linear-rail carriage/bearing swap, a 25 ms coarse pulse reproduced the 60 g
+  trip two pulses into a warm seek, so the pulse was shortened to 10 ms, which
+  lands near the 35 g target rather than through the 60 g limit. Both the pulse
+  width and the 2:1 ratio remain bench candidates to re-measure on the installed
+  carriage. The warm coarse phase also stops early if force rises above about
+  3 g, clear of the roughly 1 g M5 clear residual.
 - The approach is bounded at 100 pulses / 60 seconds and 30 pulses without GP2
-  releasing. Any bound, sensor loss, or overforce stops/sleeps the motor and
-  enters `FAULT`.
-- If a force fault occurs, inspect the reported cause and physical position
-  before sending `c`. Clearing a fault initiates the existing bounded UP
-  recovery toward GP2; over-force detection never blocks that retract-only
-  path. Fault clear latches M5/manual mode so a held GP29 M3 or stale serial
-  `e` cannot restart the downward contact-seek automatically; issue a fresh
-  `e` (or deliberately restore GP29 with `a`) to request another engage.
+  releasing. Sensor loss, driver fault, or a non-recoverable bound stops/sleeps
+  the motor and enters `FAULT`.
+- A hard-limit over-force is recoverable rather than fatal: up to
+  `HARD_LIMIT_RECOVERY_MAX` consecutive times without a successful contact, the
+  controller lifts through the normal M5 clearance and re-seeks (the still-held
+  M3 restarts the descend) instead of latching `FAULT`. The recovery count
+  resets on any successful contact and is reported in telemetry as
+  `recoveries=`. This short lift replaces the old whole-run stop, where clearing
+  a fault retracted all the way to GP2 while the gantry kept moving. Non-force
+  faults still latch: inspect the reported cause before sending `c`, which
+  initiates the bounded UP recovery toward GP2 and latches M5/manual mode so a
+  held GP29 M3 or stale serial `e` cannot restart the downward contact-seek
+  automatically; issue a fresh `e` (or restore GP29 with `a`) to re-engage.
 
 M5 still applies the candidate 57 ms UP clearance move and stops sooner if
 GP2 is pressed. If GP2 is not reached, it waits 300 ms after stopping and

@@ -357,6 +357,17 @@ void PressureController::service() {
   if (state_ != PressureState::FAULT && !retracting_to_home && tare_valid_ &&
       PRESSURE_CALIBRATION_VALID && new_filtered_sample_ &&
       normalizedForceDelta() > activeHardForceRaw()) {
+    if (hard_limit_recoveries_ < HARD_LIMIT_RECOVERY_MAX) {
+      // Recoverable overshoot: lift through the normal M5 clearance and let the
+      // still-asserted M3 re-seek, instead of latching FAULT and leaving the
+      // pen down while the gantry continues. The retry count bounds the
+      // retract/re-seek loop if the over-force is persistent.
+      hard_limit_recoveries_++;
+      home_seek_pulse_count_ = 0;
+      home_seek_pulses_while_switch_active_ = 0;
+      setState(PressureState::RELEASE_TO_CLEAR);
+      return;
+    }
     enterFault("hard force limit exceeded");
     return;
   }
@@ -623,6 +634,7 @@ void PressureController::service() {
           setDriverEnabled(false);
           home_seek_pulse_active_ = false;
           home_seek_active_pulse_ms_ = 0;
+          hard_limit_recoveries_ = 0;
           if (warm_seek_) {
             const uint16_t fine_pulses =
                 home_seek_pulse_count_ - warm_seek_coarse_used_;
@@ -678,6 +690,7 @@ void PressureController::service() {
         motorStop();
         setDriverEnabled(false);
         m3_force_acquired_ = true;
+        hard_limit_recoveries_ = 0;
         setState(PressureState::HOLD_FORCE);
       } else if (now - state_started_ms_ >= SEEK_TIMEOUT_MS) {
         enterFault("seek timeout; no contact found");
