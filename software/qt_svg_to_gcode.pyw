@@ -1051,6 +1051,7 @@ class MainWindow(QMainWindow):
             "include_z": self.use_z.isChecked(),
             "compensate_pen_width": self.compensate_pen.isChecked(),
             "expand_strokes": self.expand_strokes.isChecked(),
+            "fill_wide_strokes": self.fill_wide_strokes.isChecked(),
             "monotonic_theta": self.monotonic_theta.isChecked(),
             "raster_shading": self.raster_shading.isChecked(),
             "toolhead_status_handshake": self.toolhead_status_handshake.isChecked(),

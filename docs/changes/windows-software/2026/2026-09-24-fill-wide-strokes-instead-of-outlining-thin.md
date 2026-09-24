@@ -72,6 +72,10 @@ the right output for a pen, since it leaves the stroke interior empty. Filling
 with parallel centerline passes reuses the normal stroke path and follows the
 stroke's curves rather than clipping a hatch grid to a synthesized band.
 
+The `fill_wide_strokes` checkbox was initially not included in the UI's
+collected boolean settings, so it silently stayed off no matter how the box was
+set; it was added to the settings dict in the follow-up fix.
+
 ## Risks and follow-up
 
 - `offset_polyline` is a per-vertex offset with no miter limit; sharp corners
