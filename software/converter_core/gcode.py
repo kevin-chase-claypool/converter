@@ -3,7 +3,14 @@ import re
 
 from .cancellation import check_cancelled
 from .geometry import clip_contours_to_bed, contour_center, distance, format_float, normalized_hatch_pattern, read_svg
-from .kinematics import bed_to_machine, ne_park_position, plan_radius_aware_draw_feed, planned_contours, plan_contour_thetas
+from .kinematics import (
+    bed_to_machine,
+    ne_park_position,
+    plan_radius_aware_draw_feed,
+    planned_contours,
+    plan_contour_thetas,
+    polar_segment_steps,
+)
 from .settings import pattern_size_override, pattern_size_values, validate_settings
 
 def append_custom_command(lines, command):
@@ -200,20 +207,33 @@ def contours_to_gcode(contours, settings, program_plan=None):
                 continue
             theta = thetas[k + 1]
             strategy = strategies[k] or "tangent"
-            x, y = bed_to_machine(b, theta, center)
-            motor_theta = theta * settings.theta_drive_ratio
             start_theta = thetas[k]
             start_machine = bed_to_machine(a, start_theta, center)
+            end_machine = bed_to_machine(b, theta, center)
+            motor_theta = theta * settings.theta_drive_ratio
             start_motor_theta = start_theta * settings.theta_drive_ratio
             feed_plan = plan_radius_aware_draw_feed(
                 a,
                 b,
                 center,
-                distance(start_machine, (x, y)),
+                distance(start_machine, end_machine),
                 motor_theta - start_motor_theta,
                 settings,
             )
-            lines.append(f"G1 {format_xy_command((x, y))} {axis}{format_float(motor_theta)} F{format_float(feed_plan['feed_rate'])} ({strategy})")
+            # One coordinated X/Y/A move interpolates linearly, so a single move
+            # that spans a bed rotation bows the pen off the straight bed path.
+            # Subdivide so the drawn bed path stays within tolerance.
+            steps = polar_segment_steps(a, b, center, start_theta, theta, settings.tolerance)
+            feed_text = format_float(feed_plan["feed_rate"])
+            for step in range(1, steps + 1):
+                t = step / steps
+                bed_point = (a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]))
+                sub_theta = start_theta + t * (theta - start_theta)
+                sx, sy = bed_to_machine(bed_point, sub_theta, center)
+                sub_motor_theta = sub_theta * settings.theta_drive_ratio
+                lines.append(
+                    f"G1 {format_xy_command((sx, sy))} {axis}{format_float(sub_motor_theta)} F{feed_text} ({strategy})"
+                )
         previous_theta = thetas[-1]
         previous_machine = bed_to_machine(pts[-1], thetas[-1], center)
         previous_motor_theta = previous_theta * settings.theta_drive_ratio

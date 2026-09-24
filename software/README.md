@@ -83,6 +83,10 @@ X/Y-only output, and preview/G-code parity.
   **Expand strokes to outlines** (off by default — a pen already marks its own
   width, so drawing each stroke's centerline once is correct and produces far
   fewer M3/M5 cycles than outlining the stroke width).
+  **Tolerance** also bounds how far a drawn move may bow from a straight
+  bed-frame line: because the controller interpolates X/Y/A linearly across one
+  move, a move that spans bed rotation is subdivided so each chord stays within
+  tolerance of the intended path.
 - **Shading** — fill spacing/angle/pattern, shade levels/angle step, raster shading, and
   raster sampling resolution.
 - **Motion** — draw/feed rate and travel rate. Values that cannot describe a

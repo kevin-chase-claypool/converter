@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-23 | `WSW-20260923-002` | implemented | [Subdivide draw moves so bed rotation traces straight lines](2026/2026-09-23-subdivide-polar-draw-moves.md) | `gcode`, `theta`, `polar`, `geometry` |
 | 2026-09-23 | `WSW-20260923-001` | implemented | [Draw stroke centerlines by default instead of outlining the stroke width](2026/2026-09-23-draw-stroke-centerlines-by-default.md) | `gcode`, `pen-plot`, `performance` |
 | 2026-09-22 | `WSW-20260922-002` | implemented | [File outstanding working-tree artifacts into the repository](2026/2026-09-22-file-outstanding-working-tree-artifacts.md) | `repository-hygiene`, `evidence`, `samples` |
 | 2026-09-22 | `WSW-20260922-001` | implemented | [Ignore local tooling and build-scratch directories](2026/2026-09-22-ignore-local-tooling-and-build-scratch.md) | `repository-hygiene`, `tooling`, `commit-workflow` |

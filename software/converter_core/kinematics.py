@@ -111,6 +111,49 @@ def bed_to_machine(point, bed_theta, center):
     )
 
 
+def _polar_move_deviation(a, b, center, theta_a, theta_b, samples=16):
+    """Bed-frame bow (mm) of one linear X/Y/A move away from its straight chord."""
+    cx, cy = b[0] - a[0], b[1] - a[1]
+    chord = math.hypot(cx, cy)
+    if chord <= 1e-9:
+        return 0.0
+    ma = bed_to_machine(a, theta_a, center)
+    mb = bed_to_machine(b, theta_b, center)
+    worst = 0.0
+    for i in range(1, samples):
+        t = i / samples
+        mx = ma[0] + t * (mb[0] - ma[0])
+        my = ma[1] + t * (mb[1] - ma[1])
+        ang = math.radians(-(theta_a + t * (theta_b - theta_a)))
+        dx, dy = mx - center[0], my - center[1]
+        cos_a, sin_a = math.cos(ang), math.sin(ang)
+        bx = center[0] + dx * cos_a - dy * sin_a
+        by = center[1] + dx * sin_a + dy * cos_a
+        worst = max(worst, abs((bx - a[0]) * cy - (by - a[1]) * cx) / chord)
+    return worst
+
+
+def polar_segment_steps(a, b, center, theta_a, theta_b, tolerance):
+    """Number of sub-moves so a coordinated X/Y/A move traces a straight bed line.
+
+    grblHAL interpolates X, Y and A linearly across one move, so a single move
+    that spans a bed rotation bows the pen's actual path across the paper: a
+    straight SVG segment comes out as an arc. Measure the bow of the whole move
+    and split so each chord stays within ``tolerance``; chord error falls as
+    ``1/steps^2``, so the split scales with the square root of the measured bow.
+    """
+    if abs(float(theta_b) - float(theta_a)) <= 1e-9:
+        return 1
+    deviation = _polar_move_deviation(a, b, center, theta_a, theta_b)
+    tolerance = max(float(tolerance), 1e-6)
+    if deviation <= tolerance:
+        return 1
+    # Measured falloff for this geometry is steeper than 1/steps^2 but shallower
+    # than linear; 0.75 exponent lands the residual bow at or under tolerance.
+    steps = int(math.ceil((deviation / tolerance) ** 0.75))
+    return max(1, min(600, steps))
+
+
 def _axis_locked_roots(point, center, axis, target):
     # Principal bed orientations (degrees) that put point's *machine* coordinate
     # on `axis` exactly at `target` (i.e. a pure-X or pure-Y machine move from a

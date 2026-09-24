@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20260923-subdivide-polar-draw-moves"></a>
+### 🟨 2026-09-23 - WINDOWS SOFTWARE/IMPLEMENTED - subdivide draw moves so bed rotation traces straight lines
+
+- Evidence: the first real plot drew the house's straight roof and walls as a
+  dome. The converter emitted one G-code move per SVG segment, and because
+  grblHAL interpolates X/Y/A linearly while the bed rotates, single moves
+  spanned up to 106° of bed rotation and bowed the pen up to 25 mm off the
+  intended straight bed line.
+- Change: added `polar_segment_steps`, which measures each move's bed-frame bow
+  and splits it so every sub-chord stays within the `tolerance` setting;
+  `contours_to_gcode` now emits those sub-moves.
+- Verification: within-stroke deviation from a straight line is now 0.24-0.25 mm
+  for every theta mode (versus ~25 mm), the sample still emits 20 pen-down
+  strokes, and the 22 converter tests pass. Bench re-plot required.
+- Note: an early measurement paired G1 lines across pen-up travels and reported
+  meaningless 25-113 mm bows at contour boundaries; the corrected measurement
+  only compares moves within one pen-down stroke.
+- Evidence: `WSW-20260923-002`.
+
 <a id="elog-20260923-first-print-tuning"></a>
 ### 🟨 2026-09-23 - RP23CNC SOFTWARE/WINDOWS SOFTWARE/IMPLEMENTED - widen the hold band and draw stroke centerlines
 
