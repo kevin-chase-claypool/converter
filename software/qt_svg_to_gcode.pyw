@@ -728,6 +728,9 @@ class MainWindow(QMainWindow):
         self.preview_started_at = None
         self.preview_elapsed_timer = QTimer(self)
         self.preview_elapsed_timer.timeout.connect(self.update_preview_elapsed)
+        self.preview_refresh_timer = QTimer(self)
+        self.preview_refresh_timer.setSingleShot(True)
+        self.preview_refresh_timer.timeout.connect(self.preview)
         self.build_ui()
 
     def build_ui(self):
@@ -922,8 +925,8 @@ class MainWindow(QMainWindow):
         self.update_color_buttons()
         self.fields["print_speed"].textChanged.connect(lambda _text: self.on_print_speed_changed())
         self.fields["motion_estimate_scale"].textChanged.connect(lambda _text: self.on_motion_estimate_scale_changed())
-        self.fields["hatch_pattern"].currentTextChanged.connect(lambda _text: self.update_pattern_settings())
-        self.raster_shading.toggled.connect(lambda _checked: self.update_pattern_settings())
+        self.fields["hatch_pattern"].currentTextChanged.connect(lambda _text: self.on_shading_control_changed())
+        self.raster_shading.toggled.connect(lambda _checked: self.on_shading_control_changed())
         self.update_pattern_settings()
 
     def pick_svg(self):
@@ -1073,6 +1076,15 @@ class MainWindow(QMainWindow):
             set_visible(field_name, pattern == pattern_name)
         set_visible("shade_angle_step_deg", pattern in ("linear", "crosshatch", "diagonal", "diagonal_crosshatch", "cubic", "waves", "gyroid"))
         set_visible("raster_px_per_unit", self.raster_shading.isChecked())
+
+    def on_shading_control_changed(self):
+        self.update_pattern_settings()
+        if not self.svg_path.text().strip():
+            return
+        # Rebuild the preview after a short settle so a pattern/raster change is
+        # reflected without the user having to press Preview manually. Debounced
+        # so a burst of related edits collapses into a single rebuild.
+        self.preview_refresh_timer.start(400)
 
     def pattern_size_values(self, settings):
         return converter.pattern_size_values(settings)
