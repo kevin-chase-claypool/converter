@@ -42,7 +42,10 @@ planning. That center is emitted as `G54 X0 Y0`, matching the pen-at-bed-center
 frame registered by P100 (or the narrowly scoped temporary commissioning
 reference). After the final pen-up the program ends with a `G53 G0` move to a
 configured machine-coordinate park position (defaults to the homed rest
-position), clearing the pen off the rotating bed so the paper can be removed.
+position). First it asserts Aux0/GP28 (`M65 P0`) to request a full retract to
+the toolhead's GP2 lift-home switch, waits for the clear-ready acknowledgement
+(`G65 P115 Q0`), and releases Aux0 (`M64 P0`), so the pen is fully up before
+the gantry clears the rotating bed.
 
 The authoritative host-to-controller contract is
 [`../docs/integration/INTERFACES.md`](../docs/integration/INTERFACES.md).

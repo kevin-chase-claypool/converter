@@ -66,6 +66,12 @@ void MagneticHomingController::clearPublishedState() {
 }
 
 void MagneticHomingController::publishNormalPrintStatus() {
+  // Hold GP27 low while a full-retract request is pending so the controller
+  // observes a clean inactive level until the pen actually reaches GP2.
+  if (statusFlag(STATUS_FULL_RETRACT_REQUESTED)) {
+    setOutput(false);
+    return;
+  }
   // GP27 is safe to reuse only while the magnetic protocol is completely idle.
   // Because the normal-print status asserts GP27 in both stable states
   // (contact-ready and clear-ready), the only LOW is the seek/lift transition.
@@ -226,11 +232,18 @@ void MagneticHomingController::service() {
       clearPublishedState();
       if (arm_rising) {
         // A normal-print status may have been active. Force an unambiguous
-        // inactive interval before the first-phase magnetic readiness ACK.
+        // inactive interval before the first-phase magnetic readiness ACK or
+        // the full-retract acknowledgement.
         setOutput(false);
         if (prerequisitesReady()) {
           fault_reason_ = "none";
           setState(MagneticState::READY_ACK);
+        } else if (!statusFlag(STATUS_PRESSURE_FAULT) &&
+                   !statusFlag(STATUS_MAG_FAULT)) {
+          // Healthy but not ready for the magnetic arm (the pen is not at
+          // GP2). Treat the arm assertion as an end-of-print full-retract
+          // request; Core 0 consumes the flag and drives the pen up to GP2.
+          setStatusFlag(STATUS_FULL_RETRACT_REQUESTED, true);
         } else {
           enterFault("magnetic readiness prerequisites not met");
         }

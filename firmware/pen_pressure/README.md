@@ -117,7 +117,7 @@ Prototype wiring assumptions mirror `docs/hardware/WIRING_TABLE.md`:
 |---|---|
 | `GP29` / `A3` | M3/M5 command input from PC817C U1. The module has an external 10 kΩ pullup to local 3.3 V; an asserted optocoupler pulls GP29 LOW. |
 | `GP27` / `A1` | Conditioned output through U3. During every GP28/P100 state except fully `DISARMED`, it is exclusively the magnetic readiness/threshold state. Only while fully `DISARMED` may it later report contact/clear completion to installed `PRB`; normal-print status remains disabled by default. |
-| `GP28` / `A2` | Two-phase arm input from PC817C U2. An assertion pulls GP28 LOW: first arm requests readiness ACK, release clears it, second arm exposes threshold state on GP27. |
+| `GP28` / `A2` | Two-phase arm input from PC817C U2. An assertion pulls GP28 LOW: first arm requests readiness ACK, release clears it, second arm exposes threshold state on GP27. During normal print (`DISARMED`, pen not at GP2) the same assertion requests a full retract to the GP2 lift-home switch for end-of-print paper clearance. |
 | `GP2` | `LIFT_HOME` normally-open microswitch to local `TOOL_GND`. Firmware uses `INPUT_PULLUP`; the raw pin is HIGH when released and LOW when pressed. Telemetry reports the semantic state as `lift_home=0` released and `lift_home=1` pressed/home. The current implementation reports this in native-USB and GP20/GP21 service-UART telemetry only; it does not yet control motor motion. |
 | `GP4` | DRV8833 `IN1` |
 | `GP5` | DRV8833 `IN2` |
@@ -137,7 +137,9 @@ stable-contact or proven-clear status, and only when the explicit gate is
 enabled. On every M3/M5 command edge while disarmed, it also holds GP27
 inactive for a guaranteed `GP27_TRANSITION_LOW_MS` (50 ms) before reasserting
 the ready status, so `P115 Q1` always sees a fresh inactive-then-active edge.
-Fixed-size atomics carry status between cores.
+An Aux0/GP28 assertion while disarmed and healthy requests a full retract to
+the GP2 lift-home switch (Core 0 drives `LIFTING` until GP2), used for
+end-of-print paper clearance. Fixed-size atomics carry status between cores.
 During a magnetic scan, a verified lifted state is required and the CS1238 is
 powered down because pressure measurement is unnecessary.
 

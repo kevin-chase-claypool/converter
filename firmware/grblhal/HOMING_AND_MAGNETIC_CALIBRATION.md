@@ -225,7 +225,7 @@ No additional moving-harness conductor is required.
 | Controller path | Pro Micro pin | Meaning during this sequence |
 |---|---:|---|
 | Spindle ENA through U1 | GP29 | `M5` requests lift; `M3` is forbidden during a magnetic scan |
-| Aux0 through U2 | GP28 | Two-phase magnetic arm/readiness command |
+| Aux0 through U2 | GP28 | Two-phase magnetic arm/readiness command; during normal print a single assertion requests a full retract to GP2 |
 | GP27 through U3 to candidate `PRB` | GP27 | Readiness acknowledgement first, then thresholded magnetic state |
 
 The two-phase handshake prevents the first threshold crossing from being
@@ -264,6 +264,12 @@ inactive for a guaranteed `GP27_TRANSITION_LOW_MS` (50 ms) on every M3/M5
 command edge, so the inactive-then-active completion edge is always observable
 even when the physical pen move is instantaneous (e.g. an M5 that starts from
 the GP2 lift switch).
+
+While disarmed, an Aux0/GP28 assertion with the pen off GP2 is interpreted as
+an end-of-print full-retract request: Core 0 drives `LIFTING` until the GP2
+lift-home switch asserts, then re-asserts GP27 clear-ready. The converter emits
+`M65 P0` / `G65 P115 Q0` / `M64 P0` after the final M5 so the program waits for
+that acknowledgement before parking the gantry.
 
 The output gate and converter option remain false by default, so this revision
 does not change P100 behavior or live drawing. Enabling them requires F-08

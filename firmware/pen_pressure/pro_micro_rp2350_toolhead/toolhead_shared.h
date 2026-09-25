@@ -17,6 +17,7 @@ enum ToolheadStatus : uint32_t {
   STATUS_CS1238_ONLINE = 1u << 10,
   STATUS_CONTACT_READY = 1u << 11,
   STATUS_CLEAR_READY = 1u << 12,
+  STATUS_FULL_RETRACT_REQUESTED = 1u << 13,
 };
 
 extern std::atomic<uint32_t> g_status;

@@ -11,6 +11,7 @@ Newest changes appear first.
 | 2026-09-25 | `WSW-20260925-003` | implemented | [Park the toolhead off the bed at program end](2026/2026-09-25-park-off-bed-at-program-end.md) | `converter`, `parking`, `g53`, `program-end` |
 | 2026-09-25 | `WSW-20260925-002` | implemented | [Lower the pen-down dwell default to 2500 ms](2026/2026-09-25-lower-pen-down-dwell.md) | `converter`, `pen-dwell` |
 | 2026-09-25 | `WSW-20260925-001` | implemented | [Default the GP27 handshake on](2026/2026-09-25-default-gp27-handshake.md) | `converter`, `gp27`, `handshake` |
+| 2026-09-25 | `RPSW-20260925-009` | implemented | [Full retract the pen to GP2 at program end](../rp23cnc-software/2026/2026-09-25-full-retract-at-program-end.md) | `toolhead`, `full-retract`, `gp28`, `aux0`, `program-end`, `converter` |
 | 2026-09-24 | `WSW-20260924-015` | implemented | [Show the artwork alone in the preview](2026/2026-09-24-clean-preview-artwork-only.md) | `converter`, `preview`, `polar` |
 | 2026-09-24 | `WSW-20260924-014` | implemented | [Fill wide strokes instead of outlining thin ones](2026/2026-09-24-fill-wide-strokes-instead-of-outlining-thin.md) | `converter`, `stroke`, `fill`, `pen-width` |
 | 2026-09-24 | `WSW-20260924-013` | implemented | [Give the program's first pen-down a cold-seek dwell](2026/2026-09-24-first-pen-down-cold-seek-dwell.md) | `converter`, `pen-dwell`, `cold-seek`, `gp2`, `first-plot` |

@@ -71,6 +71,19 @@ def park_home_command(settings):
     return f"G53 G0 X{format_float(park_x)} Y{format_float(park_y)} (park home)"
 
 
+def append_full_retract(lines, settings):
+    # After the final pen-up, request a full retract to the GP2 lift-home
+    # switch through the Aux0/GP28 arm line, so the pen is fully clear of the
+    # bed for paper removal instead of resting at the ~1 mm clearance gap. The
+    # toolhead acknowledges by asserting GP27 clear-ready when GP2 is reached.
+    lines.append("M65 P0")  # assert Aux0/GP28 (active-low arm)
+    if getattr(settings, "toolhead_status_handshake", False):
+        lines.append("G65 P115 Q0")  # wait for clear-ready at GP2
+    else:
+        lines.append("G4 P3.0")  # fixed dwell covering the full retract
+    lines.append("M64 P0")  # release Aux0/GP28
+
+
 def _is_open_contour(path, tol=0.5):
     # Infill lattice trails are open polylines; stroke outlines (letters, star)
     # are closed loops. Only bridge between two open trails so the pen never
@@ -277,6 +290,7 @@ def contours_to_gcode(contours, settings, program_plan=None):
         else:
             append_custom_command(lines, settings.pen_up_command)
             append_pen_dwell(lines, settings, "up")
+            append_full_retract(lines, settings)
     if previous_machine is not None:
         lines.append(park_home_command(settings))
     lines.append("M2")
@@ -432,12 +446,14 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
         if pen_is_down:
             pen_up = f"G0 Z{format_float(settings.safe_z)}" if settings.include_z else (settings.pen_up_command or "(pen up)")
             moves.append({"type": "pen_up", "start": last_machine_end, "end": last_machine_end, "bed_start": last_machine_end, "bed_end": last_machine_end, "contour": None, "duration_ms": pen_up_duration_ms(settings), "gcode": pen_up})
-        # The real program ends with a G53 machine-coordinate park. Its target
-        # has no fixed G54 equivalent (the work offset is registered at run
-        # time), so the preview only accounts for a nominal off-bed travel time
-        # instead of drawing an exact G54 destination.
+        # The real program ends with the full retract to GP2 and a G53
+        # machine-coordinate park. The park target has no fixed G54 equivalent
+        # (the work offset is registered at run time), so the preview accounts
+        # for a nominal off-bed travel plus the full-retract bound instead of
+        # drawing an exact G54 destination.
         park_len = max(float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0, 1.0)
         park_ms = park_len / max(settings.travel_rate, 1e-9) * 60000.0
+        park_ms += 3000.0  # nominal full-retract to the GP2 lift-home switch
         gcode = park_home_command(settings)
         moves.append({
             "type": "travel",

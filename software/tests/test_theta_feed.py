@@ -93,8 +93,11 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         # prove a new GP27 low-to-high completion edge before motion continues.
         self.assertIn("M5", lines)
         self.assertIn("M3", lines)
-        self.assertEqual(lines.count("G65 P115 Q0"), 1)
+        # One opening-clear Q0 and one end-of-print full-retract Q0.
+        self.assertEqual(lines.count("G65 P115 Q0"), 2)
         self.assertEqual(lines.count("G65 P115 Q1"), 2)
+        self.assertIn("M65 P0", lines)
+        self.assertIn("M64 P0", lines)
         self.assertNotIn("G4 P0.3", lines)
         self.assertNotIn("G4 P0.6", lines)
 

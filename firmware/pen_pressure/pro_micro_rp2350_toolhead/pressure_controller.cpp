@@ -389,6 +389,17 @@ void PressureController::service() {
     return;
   }
 
+  // Full-retract request raised by Core 1 when GP28/Aux0 is asserted during
+  // normal print (for example the end-of-print paper clearance). It drives
+  // the pen all the way up to the GP2 lift-home switch, unlike a normal M5
+  // clearance lift. Consume it exactly once.
+  if (statusFlag(STATUS_FULL_RETRACT_REQUESTED)) {
+    setStatusFlag(STATUS_FULL_RETRACT_REQUESTED, false);
+    if (state_ != PressureState::FAULT) {
+      setState(PressureState::LIFTING);
+    }
+  }
+
   switch (state_) {
     case PressureState::BOOT:
       motorStop();

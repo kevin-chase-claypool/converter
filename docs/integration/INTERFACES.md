@@ -24,6 +24,7 @@ The converter emits:
 | `M5` | Toolhead PEN_CLEAR: release paper by load-cell threshold, then add a calibrated clearance pulse |
 | `G4 P...` | Fixed toolhead settling delay |
 | `G65 P115 Q0/Q1` | Optional RP23CNC-local GP27/`PRB` completion wait; `Q0` is the opening clear check and `Q1` requires a new M3/M5 completion edge |
+| `M65 P0` / `M64 P0` | Assert/release Aux0/GP28; at end of print this requests the toolhead full retract to GP2 |
 | `G53 G0 X Y` | End-of-print machine-coordinate park; clears the pen off the bed |
 | `M2` | Program end |
 
@@ -36,8 +37,9 @@ through as absolute controller coordinates. This requires the controller's
 G54 frame to be registered so X/Y zero is the physical pen-at-bed-center point;
 P100 is the production authority, while the documented manual reference is
 pen-free commissioning only. After the final pen-up the program ends with a
-`G53 G0` machine-coordinate park (defaults to the homed rest position) so the
-pen clears the rotating bed for paper removal.
+full-retract request (`M65 P0`, `G65 P115 Q0`, `M64 P0`) that drives the pen up
+to the GP2 lift-home switch, then a `G53 G0` machine-coordinate park (defaults
+to the homed rest position) so the pen clears the rotating bed for paper removal.
 
 ## Axis and unit convention
 
