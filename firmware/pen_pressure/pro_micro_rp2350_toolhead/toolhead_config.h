@@ -208,17 +208,19 @@ constexpr long NO_CONTACT_RAW_REFERENCE = 248497;
 constexpr long LIFT_RELEASE_TOLERANCE_RAW = 15116;
 constexpr uint8_t LIFT_RELEASE_REQUIRED_WINDOWS = 3;
 
-// E-09C fit: 5,038.77 raw/g. Selected supervised bench profile:
-// 35 g target = 176,357 raw; 60 g hard limit = 302,326 raw. The original
-// 70 g candidate remains in the calibration record, not in this build.
-// Force increases when raw decreases under the selected upward pen-reaction
-// assumption, hence the negative sign.
-constexpr long CONTACT_RAW_DELTA = 176357;
-constexpr long TARGET_FORCE_RAW_DELTA = 176357;
-constexpr long HARD_FORCE_RAW_DELTA = 302326;
+// E-09C fit: 5,038.77 raw/g. Selected supervised bench profile. On
+// 2026-09-24 the whole envelope was raised 5 g (target, contact reference, and
+// hard limit together) to keep the pen pressed during motion after it was seen
+// to lose contact mid-print: 40 g target = 201,551 raw; 65 g hard limit =
+// 327,520 raw. The original 70 g candidate remains in the calibration record,
+// not in this build. Force increases when raw decreases under the selected
+// upward pen-reaction assumption, hence the negative sign.
+constexpr long CONTACT_RAW_DELTA = 201551;
+constexpr long TARGET_FORCE_RAW_DELTA = 201551;
+constexpr long HARD_FORCE_RAW_DELTA = 327520;
 constexpr int8_t CS1238_CONTACT_FORCE_SIGN = -1;
-// Selected ±10 g target-ready band = 50,388 raw (approximately 25–45 g around
-// the 35 g target). 2026-09-23 first-print runs showed the ±5 g band was too
+// Selected ±10 g target-ready band = 50,388 raw (approximately 30–50 g around
+// the 40 g target). 2026-09-23 first-print runs showed the ±5 g band was too
 // tight for the mechanism's friction/noise: long strokes drifted out of band
 // and triggered retract/re-approach cycles, while the wider band lets the
 // hold tolerate that drift. This is a supervised bench choice, not a precision

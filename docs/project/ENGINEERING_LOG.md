@@ -1,5 +1,19 @@
 # Engineering Log
 
+<a id="elog-20260924-raise-force-envelope-5g"></a>
+### 🟨 2026-09-24 - RP23CNC SOFTWARE/IMPLEMENTED - raise the force envelope 5 g
+
+- Evidence: the operator reported the pen losing contact with the paper during
+  printing. The target (35 g) sat in a +/- 10 g band with a 60 g ceiling, and
+  the pen was seen to lift off mid-stroke.
+- Change: raised the contact reference, target, and hard limit together by 5 g
+  (35 -> 40 g, 35 -> 40 g, 60 -> 65 g; 201551 / 201551 / 327520 raw). The band
+  and headroom are unchanged, so the held band is now 30-50 g.
+- Verification: `arduino-cli` compile passes; the target no longer hits the
+  safety clamp (max target is now 45 g). Bench confirmation outstanding.
+- Category: firmware, force
+- Evidence: `RPSW-20260924-004`.
+
 <a id="elog-20260924-clean-preview-artwork-only"></a>
 ### 🟨 2026-09-24 - WINDOWS SOFTWARE/IMPLEMENTED - show the artwork alone in the preview
 

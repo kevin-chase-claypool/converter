@@ -10,6 +10,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-09-24 | `WSW-20260924-013` | implemented | [Give the program's first pen-down a cold-seek dwell](../windows-software/2026/2026-09-24-first-pen-down-cold-seek-dwell.md) | `converter`, `pen-dwell`, `cold-seek`, `gp2`, `first-plot` |
+| 2026-09-24 | `RPSW-20260924-004` | implemented | [Raise the toolhead force envelope 5 g](2026/2026-09-24-raise-force-envelope-5g.md) | `toolhead`, `force`, `calibration` |
 | 2026-09-24 | `RPSW-20260924-003` | implemented | [Bound the coarse seek step and auto-recover from hard-limit overshoot](2026/2026-09-24-bound-coarse-seek-and-recover-hard-limit.md) | `toolhead`, `force-control`, `hard-limit`, `recovery`, `seek` |
 | 2026-09-24 | `RPSW-20260924-002` | implemented | [Report magnet detection instead of a compile flag in the `ready=[...]` field](2026/2026-09-24-fix-toolhead-gp27-telemetry-field.md) | `telemetry`, `magnetic-homing`, `e-18` |
 | 2026-09-24 | `RPSW-20260924-001` | verified | [Enable the integrated toolhead magnetic commissioning gate](2026/2026-09-24-enable-magnetic-commissioning-gate.md) | `p100`, `magnetic-homing`, `e-18`, `m-08`, `commissioning` |
