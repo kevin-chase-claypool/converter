@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-25 | `RPSW-20260925-008` | implemented | [Widen the force-hold band to ±15 g (30-60 g)](2026/2026-09-25-widen-hold-band-30-60g.md) | `toolhead`, `force`, `hold-band`, `high-speed` |
 | 2026-09-25 | `RPSW-20260925-007` | implemented | [Guarantee a GP27 inactive interval on every pen-command transition](2026/2026-09-25-gp27-transition-low-window.md) | `toolhead`, `gp27`, `handshake`, `p115` |
 | 2026-09-25 | `RPSW-20260925-006` | implemented | [Auto-clear a latched fault when the pen-up command is held](2026/2026-09-25-auto-clear-fault-on-pen-up.md) | `toolhead`, `fault`, `recovery`, `uart` |
 | 2026-09-25 | `RPSW-20260925-005` | implemented | [Move the hold band to 35-55 g](2026/2026-09-25-raise-hold-band-35-55g.md) | `toolhead`, `force`, `hold-band` |

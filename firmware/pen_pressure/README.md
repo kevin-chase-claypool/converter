@@ -151,9 +151,9 @@ residual. The selected upward pen-reaction assumption makes force increase as
 raw decreases. The earlier pen-cap run is retained as historical raw evidence
 only. The one-COM-port calibration application provides an installed-pen
 kitchen-scale raw-direction check. By the 2026-09-22 follow-up setting, the
-current supervised integrated build uses a 35 g target (176,357 raw) and a
-60 g hard-force limit (302,326 raw); its ±10 g target-ready band is therefore
-approximately 25–45 g. These are selected operating settings, not a new fit
+current supervised integrated build uses a 45 g target (226,745 raw) and a
+75 g hard-force limit (377,908 raw); its ±15 g target-ready band is therefore
+approximately 30–60 g. These are selected operating settings, not a new fit
 of the calibration data. The loop still uses the fresh boot tare and 16-sample
 moving average, after the unchanged 100 ms mechanical preload. The 70 g value
 remains in the original E-09C calibration record and the separate E-09F

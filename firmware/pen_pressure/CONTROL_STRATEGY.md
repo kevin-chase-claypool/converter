@@ -169,7 +169,7 @@ remains invalid: the following M3 must release GP2 and use the longer tare.
 ### Bounded moving-average hold
 
 `HOLD_FORCE` uses the 16-sample moving-average force value. It does not leave
-a PWM motor command energized between corrections. Within the 35–55 g target
+a PWM motor command energized between corrections. Within the 30–60 g target
 band it sleeps the driver. Outside that band, it requires three same-direction
 out-of-band observations separated by 25 ms before issuing one full-drive 5 ms
 UP or DOWN pulse. Both directions are limited to one correction every 250 ms.
@@ -177,7 +177,7 @@ The next correction requires a fresh later trend after the driver has stopped.
 The independent 75 g hard-force guard remains active throughout this state.
 
 That bounded cadence provides only about 15 ms of drive per second. When the
-held force exceeds the target by `HOLD_URGENT_RELIEF_RAW` (currently 15 g), the
+held force exceeds the target by `HOLD_URGENT_RELIEF_RAW` (currently 20 g), the
 controller instead drives UP continuously and stops once the force is back
 inside the band or after `HOLD_URGENT_RELIEF_MAX_MS` (200 ms). The trigger sits
 5 g beyond the band edge and relief stops at the band edge, so an ordinary

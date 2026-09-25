@@ -156,10 +156,10 @@ constexpr uint8_t HOLD_CORRECTION_PWM = 255;
 // The first form triggered exactly at the band top and retracted all the way
 // to target, so every excursion beyond the band caused a full retract and the
 // loop then rebuilt force with slow 5 ms pulses - a retract/rebuild limit
-// cycle that reads as the pen poking and never holding. Trigger 15 g above
-// target (5 g beyond the now ±10 g band top) and stop at the band top for 5 g
-// of hysteresis, which still leaves 10 g before the 60 g hard limit.
-constexpr long HOLD_URGENT_RELIEF_RAW = 75582; // approximately 15 g above target
+// cycle that reads as the pen poking and never holding. Trigger 20 g above
+// target (5 g beyond the now ±15 g band top) and stop at the band top for 5 g
+// of hysteresis, which still leaves 10 g before the 75 g hard limit.
+constexpr long HOLD_URGENT_RELIEF_RAW = 100775; // approximately 20 g above target
 constexpr uint32_t HOLD_URGENT_RELIEF_MAX_MS = 200;
 // Bounded auto-recovery. A hard-limit trip (recoverable overshoot) and a
 // CS1238 implausible-reading burst are each treated as recoverable: lift
@@ -242,13 +242,14 @@ constexpr long CONTACT_RAW_DELTA = 226745;
 constexpr long TARGET_FORCE_RAW_DELTA = 226745;
 constexpr long HARD_FORCE_RAW_DELTA = 377908;
 constexpr int8_t CS1238_CONTACT_FORCE_SIGN = -1;
-// Selected ±10 g target-ready band = 50,388 raw (approximately 35–55 g around
+// Selected ±15 g target-ready band = 75,582 raw (approximately 30–60 g around
 // the 45 g target). 2026-09-23 first-print runs showed the ±5 g band was too
 // tight for the mechanism's friction/noise: long strokes drifted out of band
-// and triggered retract/re-approach cycles, while the wider band lets the
-// hold tolerate that drift. This is a supervised bench choice, not a precision
-// setting.
-constexpr long CONTACT_READY_TOLERANCE_RAW = 50388;
+// and triggered retract/re-approach cycles. 2026-09-25 faster prints showed
+// that ±10 g still let high-speed friction spike past the band top and lift
+// the pen off the page. Widened to ±15 g (30–60 g) as a supervised bench
+// choice, not a precision setting, so the hold tolerates that drift.
+constexpr long CONTACT_READY_TOLERANCE_RAW = 75582;
 constexpr uint8_t CONTACT_READY_REQUIRED_WINDOWS = 3;
 // An accepted touch reference shifts the relative target upward, so the target
 // is clamped to keep the top of the acceptance band this far below the
