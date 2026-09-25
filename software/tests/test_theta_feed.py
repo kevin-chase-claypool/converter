@@ -153,6 +153,7 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
             pen_down_command="",
             pen_up_ms=0.0,
             pen_down_ms=0.0,
+            toolhead_status_handshake=False,
         )
         contours = converter.read_svg(sample, settings)
         program_plan = converter.plan_program(contours, settings)
@@ -187,6 +188,7 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
             pen_down_command="",
             pen_up_ms=0.0,
             pen_down_ms=0.0,
+            toolhead_status_handshake=False,
         )
         contours = converter.read_svg(sample, settings)
         gcode = converter.contours_to_gcode(contours, settings)

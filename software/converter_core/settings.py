@@ -92,10 +92,13 @@ class Settings:
     pen_down_first_ms: float = 10000.0
     pen_up_command: str = "M5"
     pen_down_command: str = "M3"
-    # Emits the controller-resident P115 acknowledgement macro after each
-    # M3/M5 transition. It is deliberately opt-in until the CS1238 force path,
-    # normal M5 clearance, and GP27/PRB endpoint are commissioned.
-    toolhead_status_handshake: bool = False
+    # Emits the controller-resident P115 acknowledgement macro after each M3/M5
+    # transition, replacing the fixed G4 dwells with a closed-loop wait for the
+    # toolhead's GP27 ready signal. Enabled by default for the commissioned
+    # machine (P115.macro installed, GP27/U3 -> PRB wired, and the toolhead
+    # GP27_NORMAL_STATUS_ENABLED flag true). If the macro or wiring is missing
+    # the generated program will error 39; uncheck to fall back to fixed dwells.
+    toolhead_status_handshake: bool = True
     flip_y: bool = True
     # This machine exposes a Z slot only to enable A in the controller build;
     # its pen contract is M3/M5, not physical Z motion.
@@ -179,7 +182,7 @@ CHECKBOX_FIELDS = (
     ("Shading", "raster_shading", "Raster shading", False),
     ("Theta kinematics", "monotonic_theta", "Monotonic theta (r-theta style)", True),
     ("Pen", "include_z", "Use Z axis for pen up/down", False),
-    ("Pen", "toolhead_status_handshake", "Wait for GP27 toolhead ready (commissioned only)", False),
+    ("Pen", "toolhead_status_handshake", "Wait for GP27 toolhead ready (commissioned only)", True),
 )
 
 SETTING_TYPES = {field.name: field.type for field in fields(Settings)}

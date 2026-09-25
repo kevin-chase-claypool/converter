@@ -31,9 +31,10 @@ Requires `PySide6` (`pip install PySide6`).
 - `M5` / `M3` pen up / down by default. `Z` moves are available only when
   **Use Z axis** is deliberately enabled; do not enable it for this machine,
   whose controller's Z slot is unwired. M3/M5 moves include a
-  `G4` settle dwell after each by default. After commissioning, the optional
-  **Wait for GP27 toolhead ready** setting replaces those dwells with the
-  RP23CNC-resident `G65 P115` bounded acknowledgement macro.
+  `G4` settle dwell after each when the handshake is off. With **Wait for GP27
+  toolhead ready** enabled (the default for the commissioned machine) those
+  dwells are replaced by the RP23CNC-resident `G65 P115` bounded
+  acknowledgement macro.
 - `M2` at end
 
 The converter normalizes the clipped SVG around its geometric center before
@@ -103,7 +104,8 @@ X/Y-only output, and preview/G-code parity.
   - **Theta tangential speed mm/min** is the requested surface speed caused by
     A-axis bed rotation during drawing. It does not change X/Y-only output.
 - **Pen** — Z heights, pen cycle, pen up/down commands, Use Z, and the
-  disabled-by-default **Wait for GP27 toolhead ready** option.
+  **Wait for GP27 toolhead ready** option (enabled by default for the
+  commissioned machine).
   - **Pen down ms** (`pen_down_ms`, default 3500) is the dwell after every
     `M3`. It covers the toolhead's warm contact seek, which starts from the
     ~1 mm `M5` clearance and finishes in 2-3 s.
@@ -169,9 +171,11 @@ X/Y-only output, and preview/G-code parity.
 
 - Leave **Use Z axis** unchecked and keep `Pen up cmd = M5`, `Pen down cmd = M3` —
   pen height is owned by the force-control loop, not commanded Z.
-- Leave **Wait for GP27 toolhead ready** unchecked until its commissioning
-  tests pass. When checked, the converter emits `G65 P115 Q0` after its
-  opening M5 and `G65 P115 Q1` after every subsequent M3/M5 transition.
+- **Wait for GP27 toolhead ready** is enabled by default and emits
+  `G65 P115 Q0` after the opening M5 and `G65 P115 Q1` after every subsequent
+  M3/M5 transition. It requires `P115.macro` on the RP23CNC and the GP27/U3-to-PRB
+  wiring; if either is missing the program errors `39`. Uncheck it to fall back
+  to the fixed `G4` pen dwells.
 - The converter has no XY-only export mode: every generated production program
   retains its planned A-axis words.
 - The converter does not apply a pen/TMAG XY tool offset. Generated XY positions

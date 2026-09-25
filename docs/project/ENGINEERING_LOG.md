@@ -1,5 +1,18 @@
 # Engineering Log
 
+<a id="elog-20260925-default-gp27-handshake"></a>
+### 🟨 2026-09-25 - WINDOWS SOFTWARE/IMPLEMENTED - default the GP27 handshake on
+
+- Evidence: the handshake was validated on the commissioned machine, so keeping
+  it opt-in required ticking a checkbox every session for no reason.
+- Change: `toolhead_status_handshake` defaults to true, so generated programs
+  emit `G65 P115` instead of the fixed `G4` dwells without an extra step.
+- Verification: the 24 converter tests pass; a default `Settings()` program
+  emits `G65 P115 Q0`/`Q1`. Two M-06 pen-free tests were updated to opt out
+  explicitly.
+- Category: software, gp27, handshake
+- Evidence: `WSW-20260925-001`.
+
 <a id="elog-20260925-raise-hard-force-limit-75g"></a>
 ### 🟨 2026-09-25 - RP23CNC SOFTWARE/IMPLEMENTED - raise the hard-force limit to 75 g
 
