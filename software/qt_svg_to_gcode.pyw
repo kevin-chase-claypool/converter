@@ -613,56 +613,22 @@ class GLPreview(QOpenGLWidget):
         self.update_overlay_labels(tool_point, bounds)
 
         self.program.bind()
-        bed_theta_rad = math.radians(bed_theta)
         min_x, min_y, max_x, max_y = bounds
         self.program.setUniformValue(self.uniform_loc["center"], float(self.preview_center[0]), float(self.preview_center[1]))
         self.program.setUniformValue(self.uniform_loc["bounds"], float(min_x), float(min_y), float(max_x), float(max_y))
 
-        # Bed-attached geometry rotates with the bed.
-        self.program.setUniformValue1f(self.uniform_loc["theta"], float(bed_theta_rad))
+        # Draw the artwork upright in its own frame. The gantry's machine-frame
+        # path is a polar tangle of short jogs that reads as noise layered over
+        # the artwork, so it is deliberately not drawn here; the artwork is the
+        # useful view and playback progress shows as drawn strokes filling in.
+        self.program.setUniformValue1f(self.uniform_loc["theta"], 0.0)
         self.draw_static("bed_circle", QColor("#94a3b8"), 1.5)
-        self.draw_static("debug_box", QColor("#e5e7eb"), 1.0)
-        self.draw_static("debug_cross", QColor("#111827"), 2.0)
         # Full artwork in the undrawn color, then overdraw the portion drawn so
         # far in the drawn color — the boundary tracks where the pen is.
         self.draw_static("artwork", self.undrawn_color, 1.0)
         drawn_segments = self.draw_segments_done(progress)
         if drawn_segments > 0:
             self.draw_static("drawn_path", self.drawing_color, 1.6, count=drawn_segments * 2)
-        self.draw_static("bed_radius", QColor("#0f766e"), 2.0)
-
-        # Machine-frame geometry — no bed rotation.
-        self.program.setUniformValue1f(self.uniform_loc["theta"], 0.0)
-        self.draw_static("travel", QColor("#cbd5e1"), 1.0)
-        self.draw_static("motion", self.motion_color.lighter(155), 1.0)
-
-        active_segment = self.active_segment_at_progress(progress)
-        if active_segment is not None:
-            segment_start, segment_end = active_segment
-            self.draw_dynamic_lines(
-                [segment_start[0], segment_start[1], segment_end[0], segment_end[1]],
-                self.motion_color if active.get("type") == "draw" else QColor("#6b7280"),
-                3.0,
-            )
-
-        crosshair = [
-            min_x, tool_point[1], max_x, tool_point[1],
-            tool_point[0], min_y, tool_point[0], max_y,
-        ]
-        tool_marker = self.marker_square(tool_point, (max_x - min_x) * 0.0045)
-        pen_tip_bed = [
-            tool_point[0] - 8, tool_point[1] - 8,
-            tool_point[0] + 8, tool_point[1] - 8,
-            tool_point[0] + 8, tool_point[1] - 8,
-            tool_point[0] + 8, tool_point[1] + 8,
-            tool_point[0] + 8, tool_point[1] + 8,
-            tool_point[0] - 8, tool_point[1] + 8,
-            tool_point[0] - 8, tool_point[1] + 8,
-            tool_point[0] - 8, tool_point[1] - 8,
-        ]
-        self.draw_dynamic_lines(crosshair, self.gantry_color, 1.0)
-        self.draw_dynamic_lines(pen_tip_bed, QColor("#16a34a"), 3.0)
-        self.draw_dynamic_lines(tool_marker, self.motion_color if active and active.get("type") == "draw" else QColor("#6b7280"), 2.0)
         self.program.release()
 
 

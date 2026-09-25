@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-24 | `WSW-20260924-015` | windows-software | implemented | [Show the artwork alone in the preview](windows-software/2026/2026-09-24-clean-preview-artwork-only.md) |
 | 2026-09-24 | `WSW-20260924-014` | windows-software | implemented | [Fill wide strokes instead of outlining thin ones](windows-software/2026/2026-09-24-fill-wide-strokes-instead-of-outlining-thin.md) |
 | 2026-09-24 | `WSW-20260924-013` | windows-software, rp23cnc-software | implemented | [Give the program's first pen-down a cold-seek dwell](windows-software/2026/2026-09-24-first-pen-down-cold-seek-dwell.md) |
 | 2026-09-24 | `WSW-20260924-012` | windows-software | implemented | [Fix stroke-only elements being treated as invisible](windows-software/2026/2026-09-24-fix-stroke-only-element-visibility.md) |

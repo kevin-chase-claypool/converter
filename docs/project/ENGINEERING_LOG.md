@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20260924-clean-preview-artwork-only"></a>
+### 🟨 2026-09-24 - WINDOWS SOFTWARE/IMPLEMENTED - show the artwork alone in the preview
+
+- Evidence: on a polar plot the gantry's machine-frame path is a tangle of short
+  jogs, and the preview drew that path (plus pen-up travel, a crosshair, and a
+  tool marker, all in machine coordinates) on top of the artwork, while also
+  rotating the artwork by the bed's final angle. The operator reported it as
+  "chickenscratch lines over the text" even though the artwork itself was
+  correct.
+- Change: `paintGL` now draws the bed-frame artwork upright (theta = 0) and no
+  longer overlays the machine-frame motion/travel or the dynamic machine-frame
+  marker lines. Playback progress still shows as strokes filling in.
+- Verification: `py_compile` passes and the 24 converter tests pass (UI-only).
+- Category: software, preview
+- Evidence: `WSW-20260924-015`.
+
 <a id="elog-20260924-fill-wide-strokes-instead-of-outlining-thin"></a>
 ### 🟨 2026-09-24 - WINDOWS SOFTWARE/IMPLEMENTED - fill wide strokes instead of outlining thin ones
 

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-24 | `WSW-20260924-015` | implemented | [Show the artwork alone in the preview](2026/2026-09-24-clean-preview-artwork-only.md) | `converter`, `preview`, `polar` |
 | 2026-09-24 | `WSW-20260924-014` | implemented | [Fill wide strokes instead of outlining thin ones](2026/2026-09-24-fill-wide-strokes-instead-of-outlining-thin.md) | `converter`, `stroke`, `fill`, `pen-width` |
 | 2026-09-24 | `WSW-20260924-013` | implemented | [Give the program's first pen-down a cold-seek dwell](2026/2026-09-24-first-pen-down-cold-seek-dwell.md) | `converter`, `pen-dwell`, `cold-seek`, `gp2`, `first-plot` |
 | 2026-09-24 | `WSW-20260924-012` | implemented | [Fix stroke-only elements being treated as invisible](2026/2026-09-24-fix-stroke-only-element-visibility.md) | `visibility`, `stroke`, `regression` |
