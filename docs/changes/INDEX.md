@@ -7,6 +7,7 @@ Newest changes appear first.
 |---|---|---|---|---|
 | 2026-09-25 | `WSW-20260925-002` | windows-software | implemented | [Lower the pen-down dwell default to 2500 ms](windows-software/2026/2026-09-25-lower-pen-down-dwell.md) |
 | 2026-09-25 | `WSW-20260925-001` | windows-software | implemented | [Default the GP27 handshake on](windows-software/2026/2026-09-25-default-gp27-handshake.md) |
+| 2026-09-25 | `RPSW-20260925-006` | rp23cnc-software | implemented | [Auto-clear a latched fault when the pen-up command is held](rp23cnc-software/2026/2026-09-25-auto-clear-fault-on-pen-up.md) |
 | 2026-09-25 | `RPSW-20260925-005` | rp23cnc-software | implemented | [Move the hold band to 35-55 g](rp23cnc-software/2026/2026-09-25-raise-hold-band-35-55g.md) |
 | 2026-09-25 | `RPSW-20260925-004` | rp23cnc-software | implemented | [Raise the hard-force limit to 75 g](rp23cnc-software/2026/2026-09-25-raise-hard-force-limit-75g.md) |
 | 2026-09-25 | `RPSW-20260925-003` | rp23cnc-software | implemented | [Enable the GP27 normal-print status](rp23cnc-software/2026/2026-09-25-enable-gp27-normal-print-status.md) |

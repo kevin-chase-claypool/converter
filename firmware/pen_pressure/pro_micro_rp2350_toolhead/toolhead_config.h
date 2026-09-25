@@ -168,6 +168,13 @@ constexpr uint32_t HOLD_URGENT_RELIEF_MAX_MS = 200;
 // it latches FAULT so a persistent fault cannot cycle retract/re-seek forever
 // while the gantry keeps moving.
 constexpr uint8_t HARD_LIMIT_RECOVERY_MAX = 3;
+// How long the controller must hold the pen-up command (GP29 released) before a
+// latched fault auto-clears. The controller's idle/M5 state is a deliberate
+// "return to the safe lifted state" from the machine, so the toolhead can
+// recover without the service console: it retracts to GP2 and hands control
+// back to GP29. A persistent fault simply re-latches on the next M3, and the
+// fault still drops the GP27 ready signal so the controller sees it.
+constexpr uint32_t FAULT_AUTO_CLEAR_MS = 500;
 constexpr uint8_t CS1238_TARE_SAMPLES = 64;
 // Candidate 25 ms moving-average window at the configured 640 SPS. E-08C
 // must measure actual rate/noise before PRESSURE_CALIBRATION_VALID can be true.

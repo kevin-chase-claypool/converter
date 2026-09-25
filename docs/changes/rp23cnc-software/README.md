@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-25 | `RPSW-20260925-006` | implemented | [Auto-clear a latched fault when the pen-up command is held](2026/2026-09-25-auto-clear-fault-on-pen-up.md) | `toolhead`, `fault`, `recovery`, `uart` |
 | 2026-09-25 | `RPSW-20260925-005` | implemented | [Move the hold band to 35-55 g](2026/2026-09-25-raise-hold-band-35-55g.md) | `toolhead`, `force`, `hold-band` |
 | 2026-09-25 | `RPSW-20260925-004` | implemented | [Raise the hard-force limit to 75 g](2026/2026-09-25-raise-hard-force-limit-75g.md) | `toolhead`, `force`, `hard-limit` |
 | 2026-09-25 | `RPSW-20260925-003` | implemented | [Enable the GP27 normal-print status](2026/2026-09-25-enable-gp27-normal-print-status.md) | `toolhead`, `gp27`, `handshake`, `p115` |

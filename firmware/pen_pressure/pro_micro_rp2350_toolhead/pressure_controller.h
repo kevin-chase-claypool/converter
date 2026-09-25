@@ -80,6 +80,7 @@ class PressureController {
   uint32_t hold_correction_pulse_started_ms_ = 0;
   uint32_t hold_out_of_band_last_ms_ = 0;
   uint32_t hold_urgent_relief_started_ms_ = 0;
+  uint32_t fault_release_since_ms_ = 0;
 
   bool manual_override_ = false;
   bool manual_engage_ = false;

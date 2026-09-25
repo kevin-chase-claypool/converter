@@ -897,6 +897,23 @@ void PressureController::service() {
     case PressureState::FAULT:
       motorStop();
       setDriverEnabled(false);
+      // Auto-clear when the controller holds the pen-up command long enough.
+      // A released GP29 is the machine deliberately returning to the safe
+      // lifted state, so a latched fault can clear without the service
+      // console. A persistent fault simply re-latches on the next M3, and the
+      // fault still dropped the GP27 ready signal for the controller.
+      if (ACTUATOR_DIRECTION_VALID && !engage) {
+        if (fault_release_since_ms_ == 0) {
+          fault_release_since_ms_ = now;
+        } else if (now - fault_release_since_ms_ >= FAULT_AUTO_CLEAR_MS) {
+          fault_release_since_ms_ = 0;
+          manual_override_ = false;
+          fault_reason_ = "none";
+          setState(PressureState::LIFTING);
+        }
+      } else {
+        fault_release_since_ms_ = 0;
+      }
       break;
   }
 

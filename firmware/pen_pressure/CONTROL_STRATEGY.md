@@ -121,11 +121,14 @@ about 12 mm above the paper, so the controller first closes that gap:
   contact and is reported in telemetry as `recoveries=` (hard-limit plus
   implausible combined). This short lift replaces the old whole-run stop, where
   clearing a fault retracted all the way to GP2 while the gantry kept moving.
-  Remaining non-recoverable faults still latch: inspect the reported cause
-  before sending `c`, which initiates the bounded UP recovery toward GP2 and
-  latches M5/manual mode so a held GP29 M3 or stale serial `e` cannot restart
-  the downward contact-seek automatically; issue a fresh `e` (or restore GP29
-  with `a`) to re-engage.
+  Remaining non-recoverable faults still latch, but they no longer need the
+  service console: holding the pen-up command (GP29 released) for
+  `FAULT_AUTO_CLEAR_MS` auto-clears a latched fault, retracts to GP2, and hands
+  control back to GP29, so the machine can recover from ioSender alone - at
+  startup or after a stopped run. A persistent fault re-latches on the next M3,
+  and the fault still drops the GP27 ready signal so the controller stops. The
+  serial `c` still performs the same retract with a manual-mode latch, and `a`
+  returns that manual mode to GP29.
 
 M5 applies the accepted 57 ms UP clearance move (T-01H: about 1.75 mm pen-tip
 gap) and stops sooner if GP2 is pressed. If GP2 is not reached, it waits 300 ms

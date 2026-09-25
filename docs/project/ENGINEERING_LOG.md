@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20260925-auto-clear-fault-on-pen-up"></a>
+### 🟨 2026-09-25 - RP23CNC SOFTWARE/IMPLEMENTED - auto-clear a latched fault on pen-up
+
+- Evidence: the machine needed the Arduino IDE serial console (`c`, then `a`)
+  whenever the toolhead latched a fault, including at startup, because the
+  controller had no way to clear it. The controller already sees the fault via
+  the dropped GP27 ready signal, so the serial step was redundant for recovery.
+- Change: a latched `FAULT` now auto-clears when GP29 is released (M5) for
+  `FAULT_AUTO_CLEAR_MS` (500 ms): retract to GP2 and hand control back to GP29.
+  A persistent fault re-latches on the next M3, and the serial `c`/`a` path is
+  unchanged for bench work.
+- Verification: `arduino-cli` compile passes. Behavioral confirmation is
+  outstanding.
+- Category: firmware, toolhead, fault, recovery
+- Evidence: `RPSW-20260925-006`.
+
 <a id="elog-20260925-raise-hold-band-35-55g"></a>
 ### 🟨 2026-09-25 - RP23CNC SOFTWARE/IMPLEMENTED - move the hold band to 35-55 g
 
