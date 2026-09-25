@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-25 | `WSW-20260925-004` | windows-software | implemented | [Add a single-centerline text SVG generator and Constitution preamble sample](windows-software/2026/2026-09-25-add-single-line-text-svg-generator.md) |
 | 2026-09-25 | `WSW-20260925-003` | windows-software | implemented | [Park the toolhead off the bed at program end](windows-software/2026/2026-09-25-park-off-bed-at-program-end.md) |
 | 2026-09-25 | `WSW-20260925-002` | windows-software | implemented | [Lower the pen-down dwell default to 2500 ms](windows-software/2026/2026-09-25-lower-pen-down-dwell.md) |
 | 2026-09-25 | `WSW-20260925-001` | windows-software | implemented | [Default the GP27 handshake on](windows-software/2026/2026-09-25-default-gp27-handshake.md) |

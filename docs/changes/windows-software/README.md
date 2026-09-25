@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-25 | `WSW-20260925-004` | implemented | [Add a single-centerline text SVG generator and Constitution preamble sample](2026/2026-09-25-add-single-line-text-svg-generator.md) | `converter`, `svg`, `hershey`, `single-line`, `text`, `sample` |
 | 2026-09-25 | `WSW-20260925-003` | implemented | [Park the toolhead off the bed at program end](2026/2026-09-25-park-off-bed-at-program-end.md) | `converter`, `parking`, `g53`, `program-end` |
 | 2026-09-25 | `WSW-20260925-002` | implemented | [Lower the pen-down dwell default to 2500 ms](2026/2026-09-25-lower-pen-down-dwell.md) | `converter`, `pen-dwell` |
 | 2026-09-25 | `WSW-20260925-001` | implemented | [Default the GP27 handshake on](2026/2026-09-25-default-gp27-handshake.md) | `converter`, `gp27`, `handshake` |
