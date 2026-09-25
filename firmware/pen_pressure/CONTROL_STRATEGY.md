@@ -166,7 +166,7 @@ remains invalid: the following M3 must release GP2 and use the longer tare.
 ### Bounded moving-average hold
 
 `HOLD_FORCE` uses the 16-sample moving-average force value. It does not leave
-a PWM motor command energized between corrections. Within the 30–50 g target
+a PWM motor command energized between corrections. Within the 35–55 g target
 band it sleeps the driver. Outside that band, it requires three same-direction
 out-of-band observations separated by 25 ms before issuing one full-drive 5 ms
 UP or DOWN pulse. Both directions are limited to one correction every 250 ms.

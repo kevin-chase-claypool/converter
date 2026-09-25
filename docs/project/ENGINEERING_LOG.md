@@ -1,5 +1,18 @@
 # Engineering Log
 
+<a id="elog-20260925-raise-hold-band-35-55g"></a>
+### 🟨 2026-09-25 - RP23CNC SOFTWARE/IMPLEMENTED - move the hold band to 35-55 g
+
+- Change: `TARGET_FORCE_RAW_DELTA` and `CONTACT_RAW_DELTA` 201551 -> 226745
+  (40 g -> 45 g), moving the +/- 10 g hold band from 30-50 g to 35-55 g. Band
+  width and the 75 g hard limit are unchanged.
+- Verification: `arduino-cli` compile passes; the target stays under the safety
+  clamp (max target 55 g) and the hard-limit assert still holds.
+- Finding: urgent relief (target + 15 g) moves to 60 g, leaving 15 g of headroom
+  to the 75 g ceiling instead of 20 g.
+- Category: firmware, force, hold-band
+- Evidence: `RPSW-20260925-005`.
+
 <a id="elog-20260925-lower-pen-down-dwell"></a>
 ### 🟨 2026-09-25 - WINDOWS SOFTWARE/IMPLEMENTED - lower the pen-down dwell default
 
