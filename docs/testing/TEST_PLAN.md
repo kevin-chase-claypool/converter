@@ -485,6 +485,18 @@ T-01H: the measured pen-tip gap, the force trace and `F_contact_on` /
 `F_release_off`, the exact cycle count, and the 30-cycle formal record. The
 `PEN_CLEAR_VALID` gate stays false until that measured record exists.
 
+**T-01H clearance evidence (2026-09-25):** several complete letter prints
+exercised hundreds of `M3`/`M5` cycles with pen-up travel between strokes and
+lines. After each 57 ms clearance pulse the pen settled clearly above the
+paper, with no drag, marking, or stray contact observed, and the cycle count
+far exceeds the 30 required. This satisfies T-01H's behavioral criterion (the
+calibrated pulse leaves the pen clear through representative travel). The
+measured pen-tip gap in millimetres and a captured force trace showing
+`F_contact_on`, `F_release_off`, and the release debounce remain open for the
+formal record, so `PEN_CLEAR_VALID` stays false until then. Neither depends on
+the pen, so this is a single bench sitting rather than per-pen work. See
+`docs/report/lab-notes/2026-09-25-t-01h-clearance-confirmed-across-print-runs.md`.
+
 **T-02 supervised home-origin seek (source implemented; bench test pending):**
 With paper/scale under the pen, adequate pen clearance, the power cutoff
 reachable, and the service UART open, send `p` and confirm

@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20260925-t-01h-clearance-across-print-runs"></a>
+### 🟨 2026-09-25 - HARDWARE/VERIFIED - confirm the 57 ms clearance across print runs
+
+- Evidence: the operator reported that across several complete letter prints
+  the pen settled clearly above the paper after every 57 ms `M5` clearance
+  pulse, with no drag, marking, or stray contact. Each print is hundreds of
+  `M3`/`M5` cycles, well past the 30-cycle T-01H requirement.
+- Change: documentation only. Recorded the production-print evidence for T-01H,
+  confirming the clearance pulse behaviorally. The measured pen-tip gap and a
+  force trace with `F_contact_on`/`F_release_off` remain the only formal items.
+- Verification: behavioral (operator-reported, production runs). The 57 ms
+  value is `PEN_CLEAR_EXTRA_LIFT_MS` in `toolhead_config.h`; `PEN_CLEAR_VALID`
+  stays false until the measured record exists.
+- Category: hardware, test, toolhead
+- Evidence: `docs/report/lab-notes/2026-09-25-t-01h-clearance-confirmed-across-print-runs.md`.
+
 <a id="elog-20260924-raise-force-envelope-5g"></a>
 ### 🟨 2026-09-24 - RP23CNC SOFTWARE/IMPLEMENTED - raise the force envelope 5 g
 
