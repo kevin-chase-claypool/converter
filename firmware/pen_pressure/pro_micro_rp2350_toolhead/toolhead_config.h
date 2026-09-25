@@ -192,10 +192,13 @@ constexpr bool LIFT_REFERENCE_VALID = false;       // T-02
 // prerequisites still gate the arm at run time: TMAG online, a fresh baseline
 // away from a magnet, LIFTED with the LIFT_HOME switch active, and no fault.
 constexpr bool MAGNETIC_CALIBRATION_VALID = true; // E-18/M-08
-// Normal-print status shares GP27/U3 with the P100 magnetic protocol. Keep
-// this false until F-08 proves the controller input polarity/endpoint and
-// F-05A proves the P115 handshake. It does not enable any controller wait.
-constexpr bool GP27_NORMAL_STATUS_ENABLED = false;
+// Normal-print status shares GP27/U3 with the P100 magnetic protocol. Enabled
+// 2026-09-25: F-08's endpoint items are de-facto verified by the P113 runs,
+// T-01H is accepted, and both ready bits (contact/clear) are available. It
+// does not itself enable a controller wait; F-05A (P115 handshake) remains the
+// final on-bench verification, and P115's timeout errors the program on a
+// stuck signal.
+constexpr bool GP27_NORMAL_STATUS_ENABLED = true;
 // 2026-09-25: T-01H accepted. The 57 ms M5 clearance was measured at about
 // 1.75 mm of pen-tip gap and cleared cleanly across production print runs and
 // a four-cycle bench capture (contact ~40-47 g, release to ~0 g). This enables

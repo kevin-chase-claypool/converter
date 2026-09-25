@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-25 | `RPSW-20260925-003` | implemented | [Enable the GP27 normal-print status](2026/2026-09-25-enable-gp27-normal-print-status.md) | `toolhead`, `gp27`, `handshake`, `p115` |
 | 2026-09-25 | `RPSW-20260925-002` | implemented | [Recover from CS1238 implausible-reading bursts](2026/2026-09-25-recover-from-implausible-readings.md) | `toolhead`, `cs1238`, `recovery`, `fault` |
 | 2026-09-25 | `RPSW-20260925-001` | verified | [Accept T-01H and enable the pen-clear status](2026/2026-09-25-accept-t-01h-pen-clear.md) | `toolhead`, `pen-clear`, `t-01h` |
 | 2026-09-24 | `WSW-20260924-013` | implemented | [Give the program's first pen-down a cold-seek dwell](../windows-software/2026/2026-09-24-first-pen-down-cold-seek-dwell.md) | `converter`, `pen-dwell`, `cold-seek`, `gp2`, `first-plot` |

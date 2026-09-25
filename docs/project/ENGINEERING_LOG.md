@@ -1,5 +1,20 @@
 # Engineering Log
 
+<a id="elog-20260925-enable-gp27-normal-print-status"></a>
+### 🟨 2026-09-25 - RP23CNC SOFTWARE/IMPLEMENTED - enable the GP27 normal-print status
+
+- Evidence: with T-01H accepted and F-08's endpoint items verified by the P113
+  runs, the only remaining piece of the normal-print handshake path was the
+  master switch plus the on-bench P115 validation.
+- Change: flipped `GP27_NORMAL_STATUS_ENABLED` true, so the toolhead asserts GP27
+  with contact-ready (M3) and clear-ready (M5) while the magnetic protocol is
+  disarmed. Marked F-08 passed; F-05A remains as the P115 on-bench check.
+- Verification: `arduino-cli` compile passes. The flag alone does not change
+  generated programs until `P115.macro` is installed and the converter box is
+  ticked.
+- Category: firmware, toolhead, gp27, handshake
+- Evidence: `RPSW-20260925-003`.
+
 <a id="elog-20260925-accept-t-01h-and-recover-implausible"></a>
 ### 🟨 2026-09-25 - RP23CNC SOFTWARE/HARDWARE/VERIFIED - accept T-01H and recover from implausible readings
 

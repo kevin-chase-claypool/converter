@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-25 | `RPSW-20260925-003` | rp23cnc-software | implemented | [Enable the GP27 normal-print status](rp23cnc-software/2026/2026-09-25-enable-gp27-normal-print-status.md) |
 | 2026-09-25 | `RPSW-20260925-002` | rp23cnc-software | implemented | [Recover from CS1238 implausible-reading bursts](rp23cnc-software/2026/2026-09-25-recover-from-implausible-readings.md) |
 | 2026-09-25 | `RPSW-20260925-001` | rp23cnc-software | verified | [Accept T-01H and enable the pen-clear status](rp23cnc-software/2026/2026-09-25-accept-t-01h-pen-clear.md) |
 | 2026-09-24 | `WSW-20260924-015` | windows-software | implemented | [Show the artwork alone in the preview](windows-software/2026/2026-09-24-clean-preview-artwork-only.md) |
