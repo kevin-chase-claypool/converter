@@ -45,6 +45,7 @@ tare.
 
 - After the 57 ms clearance pulse the pen settled at a good height above the
   paper; the operator reports it as clearly clear, not marginal.
+- Pen-tip gap after `M5`: approximately **1.75 mm** (operator measurement).
 - No drag, marking, or stray contact was observed across the runs.
 - Cycle count far exceeds the 30 required by T-01H: a single letter run is
   roughly 171 words plus dots, so each print is on the order of hundreds of
@@ -62,16 +63,18 @@ observed cycles completed without drag or uncommanded paper contact. The
 measured cycle count also clears the 30-cycle requirement.
 
 This is operator-reported behavioral evidence from production printing, not a
-bench measurement. Still open for the formal T-01H record: the pen-tip gap in
-millimetres after `M5`, and a captured force trace showing `F_contact_on`,
-`F_release_off`, and the release debounce. Neither depends on the pen, so they
-are a single bench sitting rather than a per-pen procedure.
+bench measurement. The pen-tip gap is now measured at about 1.75 mm, which
+clears the paper with margin and sits well short of the home switch. Still open
+for the formal T-01H record: a captured force trace showing `F_contact_on`,
+`F_release_off`, and the release debounce. That does not depend on the pen, so
+it is a single bench sitting rather than a per-pen procedure.
 
 ## Decisions and next action
 
 - Treat the 57 ms clearance as behaviorally accepted on this machine.
-- `PEN_CLEAR_VALID` stays `false` until the measured gap and force trace are
-  recorded; that measurement is the only remaining T-01H item.
+- `PEN_CLEAR_VALID` stays `false` until the release force trace
+  (`F_contact_on` / `F_release_off`) is recorded; the gap measurement is now in
+  hand, so that trace is the only remaining T-01H item.
 - No per-pen rework is implied: the clearance is a fixed post-release pulse and
   `M3` re-seeks contact every cycle, so pen length and clamp position do not
   change it.
