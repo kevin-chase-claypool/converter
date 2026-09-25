@@ -161,11 +161,12 @@ constexpr uint8_t HOLD_CORRECTION_PWM = 255;
 // of hysteresis, which still leaves 10 g before the 60 g hard limit.
 constexpr long HOLD_URGENT_RELIEF_RAW = 75582; // approximately 15 g above target
 constexpr uint32_t HOLD_URGENT_RELIEF_MAX_MS = 200;
-// Bounded over-force recovery. A hard-limit trip is treated as a recoverable
-// overshoot (lift through the normal M5 clearance and re-seek) rather than a
-// latched fault, up to this many consecutive recoveries without a successful
-// contact. Exceeding it latches FAULT so a persistent over-force cannot cycle
-// retract/re-seek forever while the gantry keeps moving.
+// Bounded auto-recovery. A hard-limit trip (recoverable overshoot) and a
+// CS1238 implausible-reading burst are each treated as recoverable: lift
+// through the normal M5 clearance and re-seek rather than latching FAULT, up
+// to this many consecutive recoveries without a successful contact. Exceeding
+// it latches FAULT so a persistent fault cannot cycle retract/re-seek forever
+// while the gantry keeps moving.
 constexpr uint8_t HARD_LIMIT_RECOVERY_MAX = 3;
 constexpr uint8_t CS1238_TARE_SAMPLES = 64;
 // Candidate 25 ms moving-average window at the configured 640 SPS. E-08C
@@ -193,9 +194,14 @@ constexpr bool LIFT_REFERENCE_VALID = false;       // T-02
 constexpr bool MAGNETIC_CALIBRATION_VALID = true; // E-18/M-08
 // Normal-print status shares GP27/U3 with the P100 magnetic protocol. Keep
 // this false until F-08 proves the controller input polarity/endpoint and
-// T-01H proves normal M5 clearance. It does not enable any controller wait.
+// F-05A proves the P115 handshake. It does not enable any controller wait.
 constexpr bool GP27_NORMAL_STATUS_ENABLED = false;
-constexpr bool PEN_CLEAR_VALID = false;             // T-01H
+// 2026-09-25: T-01H accepted. The 57 ms M5 clearance was measured at about
+// 1.75 mm of pen-tip gap and cleared cleanly across production print runs and
+// a four-cycle bench capture (contact ~40-47 g, release to ~0 g). This enables
+// the clear-ready status reported to the GP27 handshake path; it does not
+// itself enable the controller wait (that stays behind GP27_NORMAL_STATUS_ENABLED).
+constexpr bool PEN_CLEAR_VALID = true;              // T-01H
 
 // 2026-09-22 E-09C cap-free repeat, converted using the explicitly chosen
 // opposite upward pen-reaction assumption. The 20-point fit was

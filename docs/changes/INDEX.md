@@ -5,6 +5,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-25 | `RPSW-20260925-002` | rp23cnc-software | implemented | [Recover from CS1238 implausible-reading bursts](rp23cnc-software/2026/2026-09-25-recover-from-implausible-readings.md) |
+| 2026-09-25 | `RPSW-20260925-001` | rp23cnc-software | verified | [Accept T-01H and enable the pen-clear status](rp23cnc-software/2026/2026-09-25-accept-t-01h-pen-clear.md) |
 | 2026-09-24 | `WSW-20260924-015` | windows-software | implemented | [Show the artwork alone in the preview](windows-software/2026/2026-09-24-clean-preview-artwork-only.md) |
 | 2026-09-24 | `WSW-20260924-014` | windows-software | implemented | [Fill wide strokes instead of outlining thin ones](windows-software/2026/2026-09-24-fill-wide-strokes-instead-of-outlining-thin.md) |
 | 2026-09-24 | `WSW-20260924-013` | windows-software, rp23cnc-software | implemented | [Give the program's first pen-down a cold-seek dwell](windows-software/2026/2026-09-24-first-pen-down-cold-seek-dwell.md) |

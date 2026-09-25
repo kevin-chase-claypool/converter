@@ -110,7 +110,7 @@ void emitTelemetry(const char *event) {
       static_cast<unsigned int>(pressure.warmSeekPulseEma()),
       static_cast<unsigned int>(pressure.holdUrgentReliefCount()),
       static_cast<unsigned long>(pressure.holdUrgentReliefTotalMs()),
-      static_cast<unsigned int>(pressure.hardLimitRecoveries()),
+      static_cast<unsigned int>(pressure.hardLimitRecoveries() + pressure.implausibleRecoveries()),
       static_cast<unsigned int>(pressure.cs1238RejectedSamples()),
       pressure.cs1238LastRejectedRaw(),
       publishedMagneticStateName(),

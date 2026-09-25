@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20260925-accept-t-01h-and-recover-implausible"></a>
+### 🟨 2026-09-25 - RP23CNC SOFTWARE/HARDWARE/VERIFIED - accept T-01H and recover from implausible readings
+
+- Evidence: T-01H was accepted on a measured 1.75 mm pen-tip gap and a
+  four-cycle capture (contact ~40-47 g, release to ~0 g), on top of production
+  prints each running hundreds of M3/M5 cycles. Separately, a CS1238 glitch
+  burst had produced a `CS1238 reading implausible` fault that latched and
+  dragged the pen, which the operator wanted to auto-recover like the
+  hard-limit overshoot.
+- Change: flipped `PEN_CLEAR_VALID` true (T-01H accepted) and extended the
+  bounded auto-recovery to the implausible-reading burst (reset streak, lift via
+  `CLEARANCE_LIFT`, re-seek, capped by `HARD_LIMIT_RECOVERY_MAX`). The dead
+  sensor read-timeout path still latches.
+- Verification: `arduino-cli` compile passes for `rp2040:rp2040:sparkfun_promicrorp2350`.
+  Behavioral confirmation of the implausible recovery is outstanding.
+- Category: firmware, hardware, toolhead, test
+- Evidence: `RPSW-20260925-001`; `RPSW-20260925-002`;
+  `docs/report/lab-notes/2026-09-25-t-01h-clearance-confirmed-across-print-runs.md`.
+
 <a id="elog-20260925-t-01h-clearance-across-print-runs"></a>
 ### 🟨 2026-09-25 - HARDWARE/VERIFIED - confirm the 57 ms clearance across print runs
 

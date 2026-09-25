@@ -229,7 +229,18 @@ void PressureController::serviceCs1238() {
         cs1238_implausible_streak_++;
       }
       if (cs1238_implausible_streak_ >= CS1238_IMPLAUSIBLE_FAULT_STREAK) {
-        enterFault("CS1238 reading implausible");
+        cs1238_implausible_streak_ = 0;
+        if (implausible_recoveries_ < HARD_LIMIT_RECOVERY_MAX) {
+          // Recoverable glitch burst: lift through the timed M5 clearance and
+          // let a still-asserted M3 re-seek, rather than latching FAULT and
+          // leaving the pen down while the gantry keeps moving. A truly dead
+          // sensor still latches via the read-timeout/online path, and the
+          // retry cap bounds a persistent glitch loop.
+          implausible_recoveries_++;
+          setState(PressureState::CLEARANCE_LIFT);
+        } else {
+          enterFault("CS1238 reading implausible");
+        }
       }
     }
     return;
@@ -635,6 +646,7 @@ void PressureController::service() {
           home_seek_pulse_active_ = false;
           home_seek_active_pulse_ms_ = 0;
           hard_limit_recoveries_ = 0;
+          implausible_recoveries_ = 0;
           if (warm_seek_) {
             const uint16_t fine_pulses =
                 home_seek_pulse_count_ - warm_seek_coarse_used_;
@@ -691,6 +703,7 @@ void PressureController::service() {
         setDriverEnabled(false);
         m3_force_acquired_ = true;
         hard_limit_recoveries_ = 0;
+        implausible_recoveries_ = 0;
         setState(PressureState::HOLD_FORCE);
       } else if (now - state_started_ms_ >= SEEK_TIMEOUT_MS) {
         enterFault("seek timeout; no contact found");

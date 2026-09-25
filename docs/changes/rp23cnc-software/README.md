@@ -9,6 +9,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-25 | `RPSW-20260925-002` | implemented | [Recover from CS1238 implausible-reading bursts](2026/2026-09-25-recover-from-implausible-readings.md) | `toolhead`, `cs1238`, `recovery`, `fault` |
+| 2026-09-25 | `RPSW-20260925-001` | verified | [Accept T-01H and enable the pen-clear status](2026/2026-09-25-accept-t-01h-pen-clear.md) | `toolhead`, `pen-clear`, `t-01h` |
 | 2026-09-24 | `WSW-20260924-013` | implemented | [Give the program's first pen-down a cold-seek dwell](../windows-software/2026/2026-09-24-first-pen-down-cold-seek-dwell.md) | `converter`, `pen-dwell`, `cold-seek`, `gp2`, `first-plot` |
 | 2026-09-24 | `RPSW-20260924-004` | implemented | [Raise the toolhead force envelope 5 g](2026/2026-09-24-raise-force-envelope-5g.md) | `toolhead`, `force`, `calibration` |
 | 2026-09-24 | `RPSW-20260924-003` | implemented | [Bound the coarse seek step and auto-recover from hard-limit overshoot](2026/2026-09-24-bound-coarse-seek-and-recover-hard-limit.md) | `toolhead`, `force-control`, `hard-limit`, `recovery`, `seek` |

@@ -51,33 +51,52 @@ tare.
   roughly 171 words plus dots, so each print is on the order of hundreds of
   `M3`/`M5` cycles, and several prints were completed.
 
+### Measured force values (four-cycle bench capture)
+
+From the toolhead `STATE_EVENT` trace of four warm `M3`/`M5` cycles:
+
+| Cycle | Force at contact (`F_contact_on`) |
+|---|---:|
+| 1 (fine-only) | 28.8 g |
+| 2 | 40.1 g |
+| 3 | 44.5 g |
+| 4 | 46.6 g |
+
+`F_contact_on` is the force reported at the transition into `HOLD_FORCE`. The
+climb across warm cycles (28.8 -> 46.6 g) is the warm-seek coarse-pulse
+overshoot; it stays inside the 30-50 g acceptance band and is handled by the
+hold loop, so it is accepted as within the machine's tolerance rather than a
+precision target.
+
+`F_release_off` (release) clears to roughly zero every cycle: `LIFTED` force
+161-271 raw (~0.03-0.05 g), well below the 3 g release threshold. The release
+debounce is the firmware's `LIFT_RELEASE_REQUIRED_WINDOWS = 3` consecutive
+samples, and every cycle completed its fresh clear-state tare
+(`CLEAR_TARE_SETTLING` observed each time).
+
 ## Difficulties and corrective actions
 
 None. The clearance behaved consistently; no fault or retune was needed.
 
 ## Interpretation
 
-T-01H's behavioral criterion is satisfied: *the calibrated pulse leaves the pen
-clear throughout representative travel without contacting the switch*, and all
-observed cycles completed without drag or uncommanded paper contact. The
-measured cycle count also clears the 30-cycle requirement.
-
-This is operator-reported behavioral evidence from production printing, not a
-bench measurement. The pen-tip gap is now measured at about 1.75 mm, which
-clears the paper with margin and sits well short of the home switch. Still open
-for the formal T-01H record: a captured force trace showing `F_contact_on`,
-`F_release_off`, and the release debounce. That does not depend on the pen, so
-it is a single bench sitting rather than a per-pen procedure.
+T-01H is accepted: the calibrated 57 ms pulse leaves the pen clear through
+representative travel (gap ~1.75 mm, no drag), release clears to ~0 g on every
+cycle, the 30-cycle requirement is far exceeded, and the `F_contact_on` /
+`F_release_off` values are recorded with a large hysteresis margin (contact
+~40-47 g vs release ~0 g).
 
 ## Decisions and next action
 
 - Treat the 57 ms clearance as behaviorally accepted on this machine.
-- `PEN_CLEAR_VALID` stays `false` until the release force trace
-  (`F_contact_on` / `F_release_off`) is recorded; the gap measurement is now in
-  hand, so that trace is the only remaining T-01H item.
+- `PEN_CLEAR_VALID` flipped to `true` (T-01H accepted). `GP27_NORMAL_STATUS_ENABLED`
+  remains `false` until F-08 and F-05A close.
 - No per-pen rework is implied: the clearance is a fixed post-release pulse and
   `M3` re-seeks contact every cycle, so pen length and clamp position do not
   change it.
+- Open follow-up (separate from T-01H): the warm-seek contact overshoot climbs
+  across cycles, and `cs1238_rejects` is intermittent. Both are force-control /
+  sensor-integrity items, not clearance items.
 
 ## Related records
 

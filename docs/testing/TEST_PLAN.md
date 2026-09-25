@@ -489,13 +489,12 @@ T-01H: the measured pen-tip gap, the force trace and `F_contact_on` /
 exercised hundreds of `M3`/`M5` cycles with pen-up travel between strokes and
 lines. After each 57 ms clearance pulse the pen settled clearly above the
 paper, with no drag, marking, or stray contact observed, and the cycle count
-far exceeds the 30 required. This satisfies T-01H's behavioral criterion (the
-calibrated pulse leaves the pen clear through representative travel). The
-operator measured the pen-tip gap after `M5` at approximately 1.75 mm. A
-captured force trace showing `F_contact_on`, `F_release_off`, and the release
-debounce remains open for the formal record, so `PEN_CLEAR_VALID` stays false
-until then. Neither depends on the pen, so this is a single bench sitting
-rather than per-pen work. See
+far exceeds the 30 required. The operator measured the pen-tip gap after `M5`
+at approximately 1.75 mm, and a four-cycle bench capture recorded contact at
+~40-47 g (`F_contact_on`) and release clearing to ~0 g (`F_release_off`), with
+the 3-window release debounce completing each time. **T-01H is accepted** and
+`PEN_CLEAR_VALID` is flipped true. Neither the gap nor the thresholds depend on
+the pen. See
 `docs/report/lab-notes/2026-09-25-t-01h-clearance-confirmed-across-print-runs.md`.
 
 **T-02 supervised home-origin seek (source implemented; bench test pending):**

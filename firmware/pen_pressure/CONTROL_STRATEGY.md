@@ -68,7 +68,7 @@ fixed motor duration.
   `t_clear`/pulse command and stop the actuator. The current staged source
    uses a 57 ms post-release lift pulse, then waits 300 ms and takes a fresh
   64-sample clear-state tare before reporting `LIFTED`. It begins only after
-  release is confirmed and must be replaced by an accepted T-01H per-tool value.
+   release is confirmed and uses the accepted T-01H value.
 - `F_contact_on` and `F_release_off` are distinct hysteresis thresholds. Both
   must be derived from the installed, signed CS1238 force units and current
   no-contact residual; a raw ADC zero is not a valid threshold.
@@ -111,20 +111,25 @@ about 12 mm above the paper, so the controller first closes that gap:
 - The approach is bounded at 100 pulses / 60 seconds and 30 pulses without GP2
   releasing. Sensor loss, driver fault, or a non-recoverable bound stops/sleeps
   the motor and enters `FAULT`.
-- A hard-limit over-force is recoverable rather than fatal: up to
-  `HARD_LIMIT_RECOVERY_MAX` consecutive times without a successful contact, the
-  controller lifts through the normal M5 clearance and re-seeks (the still-held
-  M3 restarts the descend) instead of latching `FAULT`. The recovery count
-  resets on any successful contact and is reported in telemetry as
-  `recoveries=`. This short lift replaces the old whole-run stop, where clearing
-  a fault retracted all the way to GP2 while the gantry kept moving. Non-force
-  faults still latch: inspect the reported cause before sending `c`, which
-  initiates the bounded UP recovery toward GP2 and latches M5/manual mode so a
-  held GP29 M3 or stale serial `e` cannot restart the downward contact-seek
-  automatically; issue a fresh `e` (or restore GP29 with `a`) to re-engage.
+- A hard-limit over-force and a CS1238 implausible-reading burst are both
+  recoverable rather than fatal: up to `HARD_LIMIT_RECOVERY_MAX` consecutive
+  times without a successful contact, the controller lifts through the normal
+  M5 clearance and re-seeks (the still-held M3 restarts the descend) instead of
+  latching `FAULT`. The implausible path resets the 16-sample streak before
+  lifting and still latches if the sensor is genuinely gone (the
+  read-timeout/online path). The recovery count resets on any successful
+  contact and is reported in telemetry as `recoveries=` (hard-limit plus
+  implausible combined). This short lift replaces the old whole-run stop, where
+  clearing a fault retracted all the way to GP2 while the gantry kept moving.
+  Remaining non-recoverable faults still latch: inspect the reported cause
+  before sending `c`, which initiates the bounded UP recovery toward GP2 and
+  latches M5/manual mode so a held GP29 M3 or stale serial `e` cannot restart
+  the downward contact-seek automatically; issue a fresh `e` (or restore GP29
+  with `a`) to re-engage.
 
-M5 still applies the candidate 57 ms UP clearance move and stops sooner if
-GP2 is pressed. If GP2 is not reached, it waits 300 ms after stopping and
+M5 applies the accepted 57 ms UP clearance move (T-01H: about 1.75 mm pen-tip
+gap) and stops sooner if GP2 is pressed. If GP2 is not reached, it waits 300 ms
+after stopping and
 refreshes the 64-sample clear-state tare before the next normal M3. The pulse
 widths follow a real 160 x 5 ms seek that covered only about 7.5 mm and a
 three-pulse 25 ms seek that reached 35 g then briefly crossed the 60 g hard
