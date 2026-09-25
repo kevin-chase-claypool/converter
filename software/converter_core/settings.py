@@ -80,7 +80,7 @@ class Settings:
     # ~2.9 s from GP2, and M5 clears in about 0.46 s. The dwell must cover the
     # actuation, or the drawing move starts while the pen is still in the air.
     pen_up_ms: float = 800.0
-    pen_down_ms: float = 3500.0
+    pen_down_ms: float = 2500.0
     # Program start only. The toolhead parks on the GP2 lift switch, so the
     # program's first M3 has to travel the whole retract distance before it
     # reaches paper, while every later M3 starts from the ~1 mm M5 clearance
@@ -160,7 +160,7 @@ TEXT_FIELD_GROUPS = (
         ("Safe Z", "safe_z", "5"),
         ("Work Z", "work_z", "0"),
         ("Pen up ms", "pen_up_ms", "800"),
-        ("Pen down ms", "pen_down_ms", "3500"),
+        ("Pen down ms", "pen_down_ms", "2500"),
         ("Pen down first ms", "pen_down_first_ms", "10000"),
         ("Pen up cmd", "pen_up_command", "M5"),
         ("Pen down cmd", "pen_down_command", "M3"),

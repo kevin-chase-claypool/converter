@@ -106,7 +106,7 @@ X/Y-only output, and preview/G-code parity.
 - **Pen** — Z heights, pen cycle, pen up/down commands, Use Z, and the
   **Wait for GP27 toolhead ready** option (enabled by default for the
   commissioned machine).
-  - **Pen down ms** (`pen_down_ms`, default 3500) is the dwell after every
+  - **Pen down ms** (`pen_down_ms`, default 2500) is the dwell after every
     `M3`. It covers the toolhead's warm contact seek, which starts from the
     ~1 mm `M5` clearance and finishes in 2-3 s.
   - **Pen down first ms** (`pen_down_first_ms`, default 10000) is the dwell

@@ -1,5 +1,13 @@
 # Engineering Log
 
+<a id="elog-20260925-lower-pen-down-dwell"></a>
+### 🟨 2026-09-25 - WINDOWS SOFTWARE/IMPLEMENTED - lower the pen-down dwell default
+
+- Change: `pen_down_ms` default 3500 -> 2500 ms, matching the faster warm seek.
+- Verification: the 24 converter tests pass.
+- Category: software
+- Evidence: `WSW-20260925-002`.
+
 <a id="elog-20260925-default-gp27-handshake"></a>
 ### 🟨 2026-09-25 - WINDOWS SOFTWARE/IMPLEMENTED - default the GP27 handshake on
 

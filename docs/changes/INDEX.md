@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-25 | `WSW-20260925-002` | windows-software | implemented | [Lower the pen-down dwell default to 2500 ms](windows-software/2026/2026-09-25-lower-pen-down-dwell.md) |
 | 2026-09-25 | `WSW-20260925-001` | windows-software | implemented | [Default the GP27 handshake on](windows-software/2026/2026-09-25-default-gp27-handshake.md) |
 | 2026-09-25 | `RPSW-20260925-004` | rp23cnc-software | implemented | [Raise the hard-force limit to 75 g](rp23cnc-software/2026/2026-09-25-raise-hard-force-limit-75g.md) |
 | 2026-09-25 | `RPSW-20260925-003` | rp23cnc-software | implemented | [Enable the GP27 normal-print status](rp23cnc-software/2026/2026-09-25-enable-gp27-normal-print-status.md) |

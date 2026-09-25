@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-25 | `WSW-20260925-002` | implemented | [Lower the pen-down dwell default to 2500 ms](2026/2026-09-25-lower-pen-down-dwell.md) | `converter`, `pen-dwell` |
 | 2026-09-25 | `WSW-20260925-001` | implemented | [Default the GP27 handshake on](2026/2026-09-25-default-gp27-handshake.md) | `converter`, `gp27`, `handshake` |
 | 2026-09-24 | `WSW-20260924-015` | implemented | [Show the artwork alone in the preview](2026/2026-09-24-clean-preview-artwork-only.md) | `converter`, `preview`, `polar` |
 | 2026-09-24 | `WSW-20260924-014` | implemented | [Fill wide strokes instead of outlining thin ones](2026/2026-09-24-fill-wide-strokes-instead-of-outlining-thin.md) | `converter`, `stroke`, `fill`, `pen-width` |
