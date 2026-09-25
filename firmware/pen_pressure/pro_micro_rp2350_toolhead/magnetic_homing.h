@@ -42,11 +42,14 @@ class MagneticHomingController {
   bool detected_ = false;
   bool output_active_ = false;
   bool last_arm_active_ = false;
+  bool last_command_engage_ = false;
+  bool gp27_low_window_active_ = false;
 
   uint32_t state_started_ms_ = 0;
   uint32_t scan_started_ms_ = 0;
   uint32_t last_sample_us_ = 0;
   uint32_t last_sensor_check_ms_ = 0;
+  uint32_t gp27_low_since_ms_ = 0;
 
   uint16_t baseline_count_ = 0;
   double baseline_sum_x_ = 0.0;

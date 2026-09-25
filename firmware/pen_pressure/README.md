@@ -134,7 +134,10 @@ output arbitration. Every armed, release-wait, or re-arm P100 state suppresses
 normal-print status; Core 1 first forces GP27 inactive for 20 ms before issuing
 a fresh magnetic ACK. Only in fully `DISARMED` state can it expose Core 0's
 stable-contact or proven-clear status, and only when the explicit gate is
-enabled. Fixed-size atomics carry status between cores.
+enabled. On every M3/M5 command edge while disarmed, it also holds GP27
+inactive for a guaranteed `GP27_TRANSITION_LOW_MS` (50 ms) before reasserting
+the ready status, so `P115 Q1` always sees a fresh inactive-then-active edge.
+Fixed-size atomics carry status between cores.
 During a magnetic scan, a verified lifted state is required and the CS1238 is
 powered down because pressure measurement is unnecessary.
 

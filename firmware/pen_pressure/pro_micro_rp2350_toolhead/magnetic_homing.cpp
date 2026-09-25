@@ -66,14 +66,30 @@ void MagneticHomingController::clearPublishedState() {
 }
 
 void MagneticHomingController::publishNormalPrintStatus() {
-  // GP27 is safe to reuse only while the magnetic protocol is completely
-  // idle. The status itself is additionally disabled until its controller
-  // endpoint and the M5 clearance behavior have passed commissioning.
+  // GP27 is safe to reuse only while the magnetic protocol is completely idle.
+  // Because the normal-print status asserts GP27 in both stable states
+  // (contact-ready and clear-ready), the only LOW is the seek/lift transition.
+  // Enforce a guaranteed inactive interval on every pen-command edge so the
+  // P115 Q1 handshake can always observe a clean low-then-high completion edge,
+  // even when the physical transition is instantaneous (e.g. an M5 issued from
+  // the GP2 lift switch, which jumps straight back to LIFTED).
+  const int cmd_raw = digitalRead(PIN_CMD_M3M5);
+  const bool engage = CMD_ACTIVE_HIGH_IS_M3 ? cmd_raw == HIGH : cmd_raw == LOW;
+  if (engage != last_command_engage_) {
+    last_command_engage_ = engage;
+    gp27_low_window_active_ = true;
+    gp27_low_since_ms_ = millis();
+  }
+  if (gp27_low_window_active_ &&
+      millis() - gp27_low_since_ms_ >= GP27_TRANSITION_LOW_MS) {
+    gp27_low_window_active_ = false;
+  }
+
   const bool ready = GP27_NORMAL_STATUS_ENABLED && state_ == MagneticState::DISARMED &&
                      statusFlag(STATUS_CORE0_READY) && statusFlag(STATUS_CORE1_READY) &&
                      !statusFlag(STATUS_PRESSURE_FAULT) && !statusFlag(STATUS_MAG_FAULT) &&
                      (statusFlag(STATUS_CONTACT_READY) || statusFlag(STATUS_CLEAR_READY));
-  setOutput(ready);
+  setOutput(ready && !gp27_low_window_active_);
 }
 
 void MagneticHomingController::setState(MagneticState next) {

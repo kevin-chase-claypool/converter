@@ -206,6 +206,14 @@ constexpr bool MAGNETIC_CALIBRATION_VALID = true; // E-18/M-08
 // final on-bench verification, and P115's timeout errors the program on a
 // stuck signal.
 constexpr bool GP27_NORMAL_STATUS_ENABLED = true;
+// Guaranteed GP27-inactive interval enforced on every pen-command (M3/M5)
+// transition. The normal-print status asserts GP27 in both stable states
+// (contact-ready and clear-ready), so the only LOW is the seek/lift transition.
+// F-08 requires an observable inactive edge for the P115 Q1 handshake; P115
+// polls every 20 ms, so this floor keeps GP27 LOW for at least two polls even
+// when the transition is instantaneous. It never lengthens a normal seek/lift,
+// which already stays LOW far longer than this value.
+constexpr uint32_t GP27_TRANSITION_LOW_MS = 50;
 // 2026-09-25: T-01H accepted. The 57 ms M5 clearance was measured at about
 // 1.75 mm of pen-tip gap and cleared cleanly across production print runs and
 // a four-cycle bench capture (contact ~40-47 g, release to ~0 g). This enables

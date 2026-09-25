@@ -55,7 +55,9 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   commissioning-only GP27 option is enabled. Normal `M5` ends at the load-cell
   release threshold plus a calibrated clearance pulse; it does not travel to
   the distant `LIFT_HOME` switch. `P115` and the toolhead GP27 output remain
-  disabled until F-08, force, and clearance commissioning pass.
+  disabled until F-08, force, and clearance commissioning pass. To keep the
+  inactive-to-active edge observable, the toolhead now holds GP27 inactive for
+  a guaranteed 50 ms on every M3/M5 transition (`GP27_TRANSITION_LOW_MS`).
 - **Homing and bed registration** - X/Y physical switches establish machine
   coordinates. A controller-resident `P100.macro` then uses the existing
   Aux0/GP28 arm and GP27/U3 return to capture a full center-magnet raster,

@@ -259,6 +259,11 @@ the controller-resident `P115.macro`: `Q1` requires GP27 to clear then assert
 for each new M3/M5 completion, while `Q0` accepts an already-clear program
 opening. It has 0.50 s stale-state and 5.00 s completion bounds and faults
 with error 39 before later motion. P115 never commands motion, M3/M5, or Aux0.
+To make that stale-state release phase reliable, the toolhead holds GP27
+inactive for a guaranteed `GP27_TRANSITION_LOW_MS` (50 ms) on every M3/M5
+command edge, so the inactive-then-active completion edge is always observable
+even when the physical pen move is instantaneous (e.g. an M5 that starts from
+the GP2 lift switch).
 
 The output gate and converter option remain false by default, so this revision
 does not change P100 behavior or live drawing. Enabling them requires F-08
