@@ -1,5 +1,19 @@
 # Engineering Log
 
+<a id="elog-20260925-raise-hard-force-limit-75g"></a>
+### 🟨 2026-09-25 - RP23CNC SOFTWARE/IMPLEMENTED - raise the hard-force limit to 75 g
+
+- Evidence: the operator wanted more headroom above the 40 g target. The urgent
+  relief fires at 55 g (target + 15 g) and the ceiling was 65 g, leaving only
+  10 g of headroom.
+- Change: `HARD_FORCE_RAW_DELTA` 327520 -> 377908 (65 g -> 75 g). Target and
+  band unchanged, so the 55 g relief now has 20 g of headroom below the ceiling.
+  75 g remains inside the E-09C 0-90 g calibration.
+- Verification: `arduino-cli` compile passes; the hard-limit static assert and
+  the target clamp (max target now 55 g) still hold.
+- Category: firmware, force
+- Evidence: `RPSW-20260925-004`.
+
 <a id="elog-20260925-enable-gp27-normal-print-status"></a>
 ### 🟨 2026-09-25 - RP23CNC SOFTWARE/IMPLEMENTED - enable the GP27 normal-print status
 
