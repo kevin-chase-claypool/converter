@@ -99,6 +99,13 @@ class Settings:
     # GP27_NORMAL_STATUS_ENABLED flag true). If the macro or wiring is missing
     # the generated program will error 39; uncheck to fall back to fixed dwells.
     toolhead_status_handshake: bool = True
+    # End-of-print park, expressed in machine coordinates (G53). After the last
+    # pen-up the toolhead moves here so the pen clears the rotating bed and the
+    # paper can be removed. Defaults match the installed machine's homed rest
+    # position (X=0 and Y=-446 limit switches with the 10 mm $27 pull-off), and
+    # must stay inside the configured software envelope ($130/$131).
+    park_x_machine: float = -10.0
+    park_y_machine: float = -436.0
     flip_y: bool = True
     # This machine exposes a Z slot only to enable A in the controller build;
     # its pen contract is M3/M5, not physical Z motion.
@@ -164,6 +171,8 @@ TEXT_FIELD_GROUPS = (
         ("Pen down first ms", "pen_down_first_ms", "10000"),
         ("Pen up cmd", "pen_up_command", "M5"),
         ("Pen down cmd", "pen_down_command", "M3"),
+        ("Park X machine mm", "park_x_machine", "-10"),
+        ("Park Y machine mm", "park_y_machine", "-436"),
     )),
     ("Preview settings", (
         ("Preview playback speed mm/s", "print_speed", "100"),

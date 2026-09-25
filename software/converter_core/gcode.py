@@ -5,7 +5,6 @@ from .cancellation import check_cancelled
 from .geometry import clip_contours_to_bed, contour_center, distance, format_float, normalized_hatch_pattern, read_svg
 from .kinematics import (
     bed_to_machine,
-    ne_park_position,
     plan_radius_aware_draw_feed,
     planned_contours,
     plan_contour_thetas,
@@ -60,6 +59,16 @@ def append_pen_dwell(lines, settings, direction, requires_transition=True, is_fi
 def format_xy_command(point):
     x, y = point
     return f"X{format_float(x)} Y{format_float(y)}"
+
+
+def park_home_command(settings):
+    # End-of-print park in machine coordinates. G53 bypasses G54 so the pen
+    # moves to the fixed homed rest position regardless of the work offset the
+    # controller registered at runtime; this is what clears the pen off the
+    # rotating bed so the paper can be removed.
+    park_x = float(getattr(settings, "park_x_machine", -10.0))
+    park_y = float(getattr(settings, "park_y_machine", -436.0))
+    return f"G53 G0 X{format_float(park_x)} Y{format_float(park_y)} (park home)"
 
 
 def _is_open_contour(path, tol=0.5):
@@ -269,12 +278,7 @@ def contours_to_gcode(contours, settings, program_plan=None):
             append_custom_command(lines, settings.pen_up_command)
             append_pen_dwell(lines, settings, "up")
     if previous_machine is not None:
-        park_x, park_y = ne_park_position(center, settings)
-        if previous_theta is None:
-            lines.append(f"G0 {format_xy_command((park_x, park_y))} (park NE)")
-        else:
-            motor_theta = previous_theta * settings.theta_drive_ratio
-            lines.append(f"G0 {format_xy_command((park_x, park_y))} {axis}{format_float(motor_theta)} (park NE)")
+        lines.append(park_home_command(settings))
     lines.append("M2")
     return "\n".join(lines) + "\n"
 
@@ -428,28 +432,25 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
         if pen_is_down:
             pen_up = f"G0 Z{format_float(settings.safe_z)}" if settings.include_z else (settings.pen_up_command or "(pen up)")
             moves.append({"type": "pen_up", "start": last_machine_end, "end": last_machine_end, "bed_start": last_machine_end, "bed_end": last_machine_end, "contour": None, "duration_ms": pen_up_duration_ms(settings), "gcode": pen_up})
-        park = ne_park_position(center, settings)
-        park_motor_theta = previous_theta * settings.theta_drive_ratio if previous_theta is not None else 0.0
-        park_xy = distance(last_machine_end, park)
-        park_motor_delta = abs(park_motor_theta - previous_motor_theta)
-        park_len = math.hypot(park_xy, park_motor_delta)
+        # The real program ends with a G53 machine-coordinate park. Its target
+        # has no fixed G54 equivalent (the work offset is registered at run
+        # time), so the preview only accounts for a nominal off-bed travel time
+        # instead of drawing an exact G54 destination.
+        park_len = max(float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0, 1.0)
         park_ms = park_len / max(settings.travel_rate, 1e-9) * 60000.0
-        gcode = f"G0 {format_xy_command(park)}"
-        if previous_theta is not None:
-            gcode += f" {axis}{format_float(park_motor_theta)}"
-        gcode += " (park NE)"
+        gcode = park_home_command(settings)
         moves.append({
             "type": "travel",
             "start": last_machine_end,
-            "end": park,
-            "bed_start": park,
-            "bed_end": park,
+            "end": last_machine_end,
+            "bed_start": last_machine_end,
+            "bed_end": last_machine_end,
             "bed_theta": previous_theta if previous_theta is not None else 0.0,
-            "motor_theta": park_motor_theta,
+            "motor_theta": previous_motor_theta,
             "contour": None,
             "duration_ms": park_ms,
             "motion_length": park_len,
-            "xy_length": park_xy,
+            "xy_length": park_len,
             "gcode": gcode,
         })
     return moves

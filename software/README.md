@@ -40,8 +40,9 @@ Requires `PySide6` (`pip install PySide6`).
 The converter normalizes the clipped SVG around its geometric center before
 planning. That center is emitted as `G54 X0 Y0`, matching the pen-at-bed-center
 frame registered by P100 (or the narrowly scoped temporary commissioning
-reference). The final NE park target is on the configured drawable circle, not
-outside it on a diagonal.
+reference). After the final pen-up the program ends with a `G53 G0` move to a
+configured machine-coordinate park position (defaults to the homed rest
+position), clearing the pen off the rotating bed so the paper can be removed.
 
 The authoritative host-to-controller contract is
 [`../docs/integration/INTERFACES.md`](../docs/integration/INTERFACES.md).

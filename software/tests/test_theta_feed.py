@@ -135,15 +135,13 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         first_travel = next(move for move in preview_moves if move["type"] == "travel")
         self.assertEqual(first_travel["end"], (-25.0, -25.0))
 
-    def test_ne_park_stays_inside_the_configured_drawable_bed(self):
-        settings = self.settings(bed_diameter_mm=200.0, bed_margin_mm=10.0)
+    def test_program_ends_with_machine_home_park(self):
+        settings = self.settings(park_x_machine=-10.0, park_y_machine=-436.0)
         gcode = converter.contours_to_gcode([[(0.0, 0.0), (20.0, 0.0)]], settings)
-        park = next(line for line in gcode.splitlines() if "(park NE)" in line)
-        match = re.search(r"X([-+0-9.]+) Y([-+0-9.]+)", park)
+        lines = gcode.splitlines()
 
-        self.assertIsNotNone(match)
-        x, y = (float(match.group(1)), float(match.group(2)))
-        self.assertLessEqual(math.hypot(x, y), 90.0 + 1e-4)
+        self.assertEqual(lines[-1], "M2")
+        self.assertEqual(lines[-2], "G53 G0 X-10 Y-436 (park home)")
 
     def test_m06_radius_sweep_is_centered_and_rotates_in_both_directions(self):
         sample = Path(__file__).resolve().parents[2] / "samples" / "svg" / "m06-radius-sweep.svg"

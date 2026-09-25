@@ -668,19 +668,6 @@ def plan_contour_thetas(path, settings, previous_theta, center, previous_machine
     return _plan_contour_thetas_greedy(path, settings, previous_theta, center, previous_machine, cancel_check)
 
 
-def ne_park_position(center, settings):
-    # G54 is bed-centered. A diagonal point at (radius, radius) is outside a
-    # circular bed, so place the NE park position on the configured drawable
-    # circle instead. The same margin used for artwork clipping stays clear.
-    radius = max(
-        float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0
-        - float(getattr(settings, "bed_margin_mm", 0.0)),
-        0.0,
-    )
-    component = radius / math.sqrt(2.0)
-    return (center[0] + component, center[1] + component)
-
-
 def first_segment_theta(path, settings, previous_theta, center, previous_machine):
     resolver = str(getattr(settings, "theta_resolver", "rtheta")).strip().lower()
     mode = str(getattr(settings, "theta_mode", "optimized")).strip().lower()
