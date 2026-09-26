@@ -146,6 +146,23 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         self.assertEqual(lines[-1], "M2")
         self.assertEqual(lines[-2], "G53 G0 X-10 Y-436 (park home)")
 
+    def test_machine_reach_radius_caps_the_drawable_area(self):
+        settings = self.settings(
+            bed_diameter_mm=457.2,
+            bed_margin_mm=0.0,
+            machine_reach_radius_mm=50.0,
+        )
+        gcode = converter.contours_to_gcode([[(0.0, 0.0), (200.0, 0.0)]], settings)
+        xs = [
+            float(m.group(1))
+            for line in gcode.splitlines()
+            if "G53" not in line
+            for m in [re.search(r"X(-?[0-9.]+)", line)]
+            if m
+        ]
+        self.assertLessEqual(max(abs(x) for x in xs), 50.0 + 1e-4)
+        self.assertGreaterEqual(max(abs(x) for x in xs), 45.0)
+
     def test_m06_radius_sweep_is_centered_and_rotates_in_both_directions(self):
         sample = Path(__file__).resolve().parents[2] / "samples" / "svg" / "m06-radius-sweep.svg"
         settings = self.settings(

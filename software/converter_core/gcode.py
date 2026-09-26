@@ -140,10 +140,17 @@ def plan_program(contours, settings, cancel_check=None):
     validate_settings(settings)
     check_cancelled(cancel_check)
     source_center = contour_center(contours)
+    bed_radius = max(
+        float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0
+        - float(getattr(settings, "bed_margin_mm", 0.0)),
+        0.0,
+    )
+    reach = float(getattr(settings, "machine_reach_radius_mm", 0.0))
+    radius = min(bed_radius, reach) if reach > 0.0 else bed_radius
     clipped_contours = clip_contours_to_bed(
         contours,
         source_center,
-        max(float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0 - float(getattr(settings, "bed_margin_mm", 0.0)), 0.0),
+        radius,
         cancel_check,
     )
     center = (0.0, 0.0)

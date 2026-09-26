@@ -193,6 +193,11 @@ X/Y-only output, and preview/G-code parity.
   example, emits drawing coordinates around `(0,0)`, not `(100,100)`.
 - `Bed margin mm` (default 6.35 ≈ 0.25") clips artwork inside the bed edge so the
   pen never reaches the rim.
+- `Gantry reach radius mm` (default 191.4) caps the drawable circle at the
+  gantry's reachable radius from the registered bed center. Because the bed
+  rotates freely, the safe drawable area is this circle rather than the full
+  bed; it keeps emitted coordinates inside the controller's X/Y envelope so
+  artwork at the rim cannot trip `Alarm:2 - Soft limit`.
 - Set `Fill spacing mm > 0` to hatch filled regions; `0` disables hatching.
 - `Fill spacing`, the pattern size fields, and the curve `Tolerance` are treated
   as on-paper (machine-space) values. When the artwork is scaled below `1.0`,

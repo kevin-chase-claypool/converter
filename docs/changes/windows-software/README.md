@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-26 | `WSW-20260926-002` | implemented | [Cap the drawable radius at the gantry's reach](2026/2026-09-26-cap-drawable-radius-to-gantry-reach.md) | `converter`, `clipping`, `soft-limit`, `reachable-area`, `bed` |
 | 2026-09-26 | `WSW-20260926-001` | implemented | [Restore the generated pen-down path in the preview](2026/2026-09-26-restore-pen-down-preview-path.md) | `converter`, `preview`, `gcode`, `pen-down` |
 | 2026-09-25 | `WSW-20260925-004` | implemented | [Add a single-centerline text SVG generator and Constitution preamble sample](2026/2026-09-25-add-single-line-text-svg-generator.md) | `converter`, `svg`, `hershey`, `single-line`, `text`, `sample` |
 | 2026-09-25 | `WSW-20260925-003` | implemented | [Park the toolhead off the bed at program end](2026/2026-09-25-park-off-bed-at-program-end.md) | `converter`, `parking`, `g53`, `program-end` |

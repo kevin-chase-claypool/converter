@@ -58,6 +58,15 @@ class Settings:
     monotonic_theta: bool = True
     bed_diameter_mm: float = 457.2
     bed_margin_mm: float = 6.35
+    # Radius the gantry can actually reach from the registered bed center,
+    # in the tightest direction. The bed rotates freely, so any artwork point
+    # at radius r must be reachable at every bed angle; the safe drawable area
+    # is therefore a circle of this radius, not the full bed circle. Derived
+    # from the installed software envelope ($130=455, $131=446) and the
+    # registered bed-center offset (machine ~ -232.6, -191.4): the +Y edge
+    # (0 - (-191.4) = 191.4 mm) is the binding one. Clip radius becomes
+    # min(bed_diameter/2 - bed_margin, this).
+    machine_reach_radius_mm: float = 191.4
     hatch_spacing_mm: float = 0.0
     hatch_angle_deg: float = 45.0
     hatch_pattern: str = "crosshatch"
@@ -179,6 +188,7 @@ TEXT_FIELD_GROUPS = (
         ("Motion estimate scale", "motion_estimate_scale", f"{DEFAULT_MOTION_ESTIMATE_SCALE:.6f}"),
         ("Bed dia mm", "bed_diameter_mm", "457.2"),
         ("Bed margin mm", "bed_margin_mm", "6.35"),
+        ("Gantry reach radius mm", "machine_reach_radius_mm", "191.4"),
         ("Pen stroke mm", "pen_diameter_mm", "0.3"),
     )),
 )
@@ -286,6 +296,7 @@ def validate_settings(settings):
         "pen_down_ms",
         "pen_down_first_ms",
         "bed_margin_mm",
+        "machine_reach_radius_mm",
     )
     for name in positive:
         value = float(getattr(settings, name))
