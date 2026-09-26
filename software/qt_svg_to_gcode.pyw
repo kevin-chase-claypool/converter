@@ -88,6 +88,7 @@ class GLPreview(QOpenGLWidget):
         self.undrawn_color = QColor("#bcd0f5")
         self.motion_color = QColor("#be123c")
         self.gantry_color = QColor("#7f1d1d")
+        self.show_pen_down_path = True
         self.fast_render = False
         self.preview_center = (0.0, 0.0)
         self.preview_radius = 1.0
@@ -410,6 +411,11 @@ class GLPreview(QOpenGLWidget):
             self.gantry_color = QColor(motion_color).darker(140)
         self.update()
 
+    def set_show_pen_down_path(self, show):
+        """Show only generated G1 X/Y segments, not pen-up travel clutter."""
+        self.show_pen_down_path = bool(show)
+        self.update()
+
     def active_theta(self):
         return self.theta_at_progress(self.progress)
 
@@ -617,10 +623,10 @@ class GLPreview(QOpenGLWidget):
         self.program.setUniformValue(self.uniform_loc["center"], float(self.preview_center[0]), float(self.preview_center[1]))
         self.program.setUniformValue(self.uniform_loc["bounds"], float(min_x), float(min_y), float(max_x), float(max_y))
 
-        # Draw the artwork upright in its own frame. The gantry's machine-frame
-        # path is a polar tangle of short jogs that reads as noise layered over
-        # the artwork, so it is deliberately not drawn here; the artwork is the
-        # useful view and playback progress shows as drawn strokes filling in.
+        # Draw the artwork upright in its own frame. The optional red overlay is
+        # the generated machine-frame X/Y path for pen-down (G1) moves only.
+        # Pen-up travel, crosshairs, and tool markers remain hidden so it stays
+        # useful as a G-code sanity check instead of becoming a cluttered view.
         self.program.setUniformValue1f(self.uniform_loc["theta"], 0.0)
         self.draw_static("bed_circle", QColor("#94a3b8"), 1.5)
         # Full artwork in the undrawn color, then overdraw the portion drawn so
@@ -629,6 +635,8 @@ class GLPreview(QOpenGLWidget):
         drawn_segments = self.draw_segments_done(progress)
         if drawn_segments > 0:
             self.draw_static("drawn_path", self.drawing_color, 1.6, count=drawn_segments * 2)
+        if self.show_pen_down_path:
+            self.draw_static("motion", self.motion_color, 1.2)
         self.program.release()
 
 
@@ -794,6 +802,9 @@ class MainWindow(QMainWindow):
         self.drawing_color_button.clicked.connect(lambda: self.choose_preview_color("drawing"))
         self.motion_color_button = QPushButton("Motion")
         self.motion_color_button.clicked.connect(lambda: self.choose_preview_color("motion"))
+        self.show_pen_down_path = QCheckBox("Show X/Y pen-down path")
+        self.show_pen_down_path.setChecked(True)
+        self.show_pen_down_path.toggled.connect(self.gl_preview.set_show_pen_down_path)
         color_widget = QWidget()
         color_layout = QHBoxLayout(color_widget)
         color_layout.setContentsMargins(0, 0, 0, 0)
@@ -804,6 +815,7 @@ class MainWindow(QMainWindow):
 
         preview_box, preview_form = make_form_group("Preview settings", field_groups["Preview settings"])
         preview_form.addRow(QLabel("Colors"), color_widget)
+        preview_form.addRow(self.show_pen_down_path)
 
         actions = QHBoxLayout()
         self.preview_button = QPushButton("Preview", clicked=self.preview)
