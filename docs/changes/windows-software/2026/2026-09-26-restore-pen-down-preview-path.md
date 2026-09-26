@@ -43,12 +43,19 @@ required inspection of the generated X/Y drawing path.
 
 - `python -m py_compile software/qt_svg_to_gcode.pyw`
 - `python -m unittest discover -s software/tests`
+- `QT_QPA_PLATFORM=offscreen` construction of `MainWindow` passes. This runs
+  the same `qt_svg_to_gcode.pyw` entry point used by `converter.bat` and
+  catches widget-order startup failures before a user launches the app.
 
 ## Struggles and rejected approaches
 
 Restoring every removed machine-frame layer would reintroduce pen-up travel,
 crosshairs, and markers that obscure the drawing. Rendering only `motion`
 preserves the requested G-code inspection layer.
+
+The first implementation connected the new checkbox before `GLPreview` was
+constructed, causing `converter.bat` to exit during `MainWindow` construction.
+The connection now occurs immediately after `GLPreview` is created.
 
 ## Risks and follow-up
 

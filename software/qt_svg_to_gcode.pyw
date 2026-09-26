@@ -804,7 +804,6 @@ class MainWindow(QMainWindow):
         self.motion_color_button.clicked.connect(lambda: self.choose_preview_color("motion"))
         self.show_pen_down_path = QCheckBox("Show X/Y pen-down path")
         self.show_pen_down_path.setChecked(True)
-        self.show_pen_down_path.toggled.connect(self.gl_preview.set_show_pen_down_path)
         color_widget = QWidget()
         color_layout = QHBoxLayout(color_widget)
         color_layout.setContentsMargins(0, 0, 0, 0)
@@ -858,6 +857,7 @@ class MainWindow(QMainWindow):
         preview_layout.setContentsMargins(0, 0, 0, 0)
         preview_layout.setSpacing(2)
         self.gl_preview = GLPreview()
+        self.show_pen_down_path.toggled.connect(self.gl_preview.set_show_pen_down_path)
         preview_layout.addWidget(self.gl_preview, 1)
 
         controls = QHBoxLayout()
