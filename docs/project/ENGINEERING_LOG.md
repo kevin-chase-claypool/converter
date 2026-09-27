@@ -1,5 +1,34 @@
 # Engineering Log
 
+<a id="elog-20260927-parameterize-p115-bounds"></a>
+### 🟨 2026-09-27 - RP23CNC SOFTWARE/IMPLEMENTED - parameterize the P115 handshake bounds and add a warn-only mode
+
+- Problem: the fatal `G65 P115` guard aborted healthy programs because its
+  bounds were constants. The program's first `M3` seeks from the GP2 lift-home
+  switch and is measured at about 7 s against a fixed 5.00 s completion bound,
+  and any genuine miss aborted the whole sheet.
+- Change: `P115.macro` snapshots the `G65` arguments into numbered locals and
+  accepts `B<seconds>` (completion), `C<seconds>` (release), `D<seconds>`
+  (poll), `A<seconds>` (fallback dwell), and `W1` (warn-only), all defaulting to
+  the commissioned values. `Q7` measures both phases and reports them without
+  raising `error[39]`. The converter passes a `B` bound derived from
+  `pen_down_first_ms` on the first `M3` only, and warn-only mode emits the
+  fixed-dwell equivalent as `A` plus `W1`.
+- Verification: `python tools\validate_homing_macro.py` passes with the new
+  required tokens and the unchanged "observe GP27 only" scan; 51 converter
+  tests pass, including the first-down bound (`B7`/`B12`) and the exact
+  warn-only emission sequence.
+- Not verified: nothing has run on the controller. Macro argument delivery,
+  the `Q7` prints, and the warn-only fallback need the motorless macro checks
+  and the F-05A bench session; the strict guard still needs the flashed
+  `GP27_TRANSITION_LOW_MS` firmware before the converter checkbox can be
+  re-defaulted on.
+- Category: rp23cnc-software, windows-software, p115, gp27, handshake,
+  error-39, warn-only
+- Next action: upload the updated `P115.macro`, run `G65 P115 Q7` in each pen
+  state, record the phases, then run F-05A with the converter checkbox ticked.
+- Evidence: `RPSW-20260927-001`.
+
 <a id="elog-20260927-restore-dwell-default"></a>
 ### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - restore the fixed-dwell default until F-05A passes
 

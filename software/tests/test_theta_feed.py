@@ -115,15 +115,55 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         self.assertIn("M3", lines)
         # One opening-clear Q0 and one end-of-print full-retract Q0.
         self.assertEqual(lines.count("G65 P115 Q0"), 2)
-        self.assertEqual(lines.count("G65 P115 Q1"), 2)
+        self.assertEqual(sum(line.startswith("G65 P115 Q1") for line in lines), 2)
         self.assertIn("M65 P0", lines)
         self.assertIn("M64 P0", lines)
         self.assertNotIn("G4 P0.3", lines)
         self.assertNotIn("G4 P0.6", lines)
 
         first_m3 = lines.index("M3")
-        self.assertEqual(lines[first_m3 + 1], "G65 P115 Q1")
+        # The first pen-down seeks the whole GP2 retract distance, so it carries
+        # a bound wide enough for that measured ~7 s seek.
+        self.assertEqual(lines[first_m3 + 1], "G65 P115 Q1 B12")
         self.assertTrue(lines[first_m3 + 2].startswith("G1 F"))
+        self.assertIn("G65 P115 Q1", lines)
+
+    def test_handshake_first_down_bound_tracks_the_configured_first_dwell(self):
+        contours = [[(-25.0, 0.0), (25.0, 0.0)]]
+        gcode = converter.contours_to_gcode(
+            contours,
+            converter.Settings(toolhead_status_handshake=True, pen_down_first_ms=5000.0),
+        )
+        lines = gcode.splitlines()
+
+        first_m3 = lines.index("M3")
+        self.assertEqual(lines[first_m3 + 1], "G65 P115 Q1 B7")
+
+    def test_handshake_warn_only_emits_fallback_dwell_and_flag(self):
+        contours = [[(-25.0, 0.0), (25.0, 0.0)]]
+        gcode = converter.contours_to_gcode(
+            contours,
+            converter.Settings(
+                toolhead_status_handshake=True,
+                toolhead_handshake_warn_only=True,
+            ),
+        )
+        lines = gcode.splitlines()
+        handshake_lines = [line for line in lines if line.startswith("G65 P115")]
+
+        # Opening clear, first down, the M5 transition, and the end-of-print
+        # full retract. Each carries the fixed-dwell equivalent so a timeout
+        # degrades to the shipped dwell timing instead of aborting.
+        self.assertEqual(
+            handshake_lines,
+            [
+                "G65 P115 Q0 A0.8 W1",
+                "G65 P115 Q1 B12 A10 W1",
+                "G65 P115 Q1 A0.8 W1",
+                "G65 P115 Q0 A3 W1",
+            ],
+        )
+        self.assertFalse(converter.Settings().toolhead_handshake_warn_only)
 
     def test_gp27_handshake_rejects_non_m3_m5_pen_contract(self):
         with self.assertRaisesRegex(ValueError, "M5 pen-up"):

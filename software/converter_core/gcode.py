@@ -33,6 +33,36 @@ def pen_down_first_duration_ms(settings):
     return max(float(getattr(settings, "pen_down_first_ms", 0.0)), 0.0)
 
 
+def pen_dwell_duration_ms(settings, direction, is_first_down=False):
+    if direction == "down":
+        return pen_down_first_duration_ms(settings) if is_first_down else pen_down_duration_ms(settings)
+    return pen_up_duration_ms(settings)
+
+
+def handshake_command(settings, requires_transition, direction, is_first_down=False):
+    """Build the P115 call, adding the optional commissioned arguments.
+
+    P115 accepts ``B`` (completion bound), ``A`` (fallback dwell), and ``W1``
+    (warn-only). Older macros ignore the extra words, so emitting them stays
+    backward compatible: an un-updated controller keeps the 5.00 s bound and
+    its fatal timeout.
+    """
+    command = "G65 P115 Q1" if requires_transition else "G65 P115 Q0"
+    if is_first_down:
+        # The program's first M3 travels the whole GP2 retract distance and is
+        # measured at about 7 s, longer than P115's default 5.00 s completion
+        # bound. Derive the bound from the configured first-down dwell so a
+        # healthy slow seek is not reported as a handshake failure.
+        bound_s = max(5.0, pen_down_first_duration_ms(settings) / 1000.0 + 2.0)
+        command += f" B{format_float(bound_s)}"
+    if getattr(settings, "toolhead_handshake_warn_only", False):
+        fallback_s = pen_dwell_duration_ms(settings, direction, is_first_down) / 1000.0
+        if fallback_s > 0:
+            command += f" A{format_float(fallback_s)}"
+        command += " W1"
+    return command
+
+
 def append_pen_dwell(lines, settings, direction, requires_transition=True, is_first_down=False):
     # Pause after an M3/M5 pen actuation so the pen reaches the paper (or lifts
     # clear) before motion resumes. grblHAL runs the next line immediately after
@@ -46,12 +76,9 @@ def append_pen_dwell(lines, settings, direction, requires_transition=True, is_fi
         # previous M3/M5 completion from being mistaken for this command's
         # acknowledgment. The program-opening M5 uses Q0 because it may
         # already be proven clear before the program begins.
-        lines.append("G65 P115 Q1" if requires_transition else "G65 P115 Q0")
+        lines.append(handshake_command(settings, requires_transition, direction, is_first_down))
         return
-    if direction == "down":
-        ms = pen_down_first_duration_ms(settings) if is_first_down else pen_down_duration_ms(settings)
-    else:
-        ms = pen_up_duration_ms(settings)
+    ms = pen_dwell_duration_ms(settings, direction, is_first_down)
     if ms > 0:
         lines.append(f"G4 P{format_float(ms / 1000.0)}")
 
@@ -78,7 +105,11 @@ def append_full_retract(lines, settings):
     # toolhead acknowledges by asserting GP27 clear-ready when GP2 is reached.
     lines.append("M65 P0")  # assert Aux0/GP28 (active-low arm)
     if getattr(settings, "toolhead_status_handshake", False):
-        lines.append("G65 P115 Q0")  # wait for clear-ready at GP2
+        command = "G65 P115 Q0"  # wait for clear-ready at GP2
+        if getattr(settings, "toolhead_handshake_warn_only", False):
+            # Matches the fixed G4 P3.0 retract dwell used without the handshake.
+            command += " A3 W1"
+        lines.append(command)
     else:
         lines.append("G4 P3.0")  # fixed dwell covering the full retract
     lines.append("M64 P0")  # release Aux0/GP28

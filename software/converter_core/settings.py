@@ -118,6 +118,12 @@ class Settings:
     # GP27/U3-to-PRB wiring is verified, the flashed toolhead carries
     # GP27_NORMAL_STATUS_ENABLED plus GP27_TRANSITION_LOW_MS, and F-05A passes.
     toolhead_status_handshake: bool = False
+    # Only meaningful with `toolhead_status_handshake`. Emits `G65 P115 ... A<dwell> W1`
+    # so a handshake timeout prints a controller warning, dwells for the fixed-dwell
+    # equivalent, and returns instead of raising error 39 and aborting the print. The
+    # fallback is the same worst case the dwell-only default already uses, and the
+    # console warning keeps a genuinely stuck toolhead visible to the operator.
+    toolhead_handshake_warn_only: bool = False
     # End-of-print park, expressed in machine coordinates (G53). After the last
     # pen-up the toolhead moves here so the pen clears the rotating bed and the
     # paper can be removed. Defaults match the installed machine's homed rest
@@ -214,6 +220,7 @@ CHECKBOX_FIELDS = (
     ("Theta kinematics", "monotonic_theta", "Monotonic theta (r-theta style)", True),
     ("Pen", "include_z", "Use Z axis for pen up/down", False),
     ("Pen", "toolhead_status_handshake", "Wait for GP27 toolhead ready (commissioned only)", False),
+    ("Pen", "toolhead_handshake_warn_only", "Continue if the GP27 handshake times out (warn only)", False),
 )
 
 SETTING_TYPES = {field.name: field.type for field in fields(Settings)}

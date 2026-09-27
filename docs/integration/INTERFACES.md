@@ -292,6 +292,20 @@ keeps the handshake as the explicit opt-in this contract requires; re-enable it
 only after the flashed toolhead carries `GP27_NORMAL_STATUS_ENABLED` plus
 `GP27_TRANSITION_LOW_MS` and `F-05A` passes.
 
+`P115` now takes optional arguments so the guard's bounds can match the
+installed machine instead of aborting a healthy one: `B<seconds>` completion
+bound (default 5.00), `C<seconds>` release bound (default 0.50), `D<seconds>`
+poll interval (default 0.02), `A<seconds>` fallback dwell, and `W1` warn-only.
+The converter passes a `B` bound derived from `pen_down_first_ms` on the
+program's first `M3`, whose GP2 retract seek is measured at about 7 s and
+otherwise exceeds the default completion bound. `Q7` reports each phase
+without erroring so the installed hardware can be measured. `W1` prints
+`P115 WARNING ...`, dwells `A` seconds - the fixed `G4` the handshake replaced -
+and returns without `error[39]`; it is strictly the dwell-path worst case plus
+a warning, masks a stuck signal, and therefore stays an explicit opt-in. The
+strict `Q0`/`Q1` paths remain the default behaviour and still stop the program
+before the next motion block.
+
 `M5` is not the toolhead's absolute position-reference command. The planned
 local `GP2` switch establishes `LIFT_HOME` only at boot, recovery, or an
 explicit service action. Normal M5 uses the same load cell as M3, but detects

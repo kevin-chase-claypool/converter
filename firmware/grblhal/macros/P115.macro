@@ -1,26 +1,88 @@
 (P115 - bounded GP27/PRB normal-print acknowledgement wait.)
 (Call immediately after M3 or M5. Q1 requires a new low-to-high completion edge; Q0 accepts an already-clear startup state.)
+(Q7 measures the release and completion phases and reports them without raising error 39.)
+(Optional arguments: B<completion seconds> C<release seconds> D<poll seconds> A<fallback dwell seconds> W1.)
+(B, C, and D default to the commissioned 5.00 s / 0.50 s / 0.02 s values; A defaults to no dwell.)
+(W1 selects warn-only mode: a timeout prints a warning, dwells A seconds, and returns instead of error 39.)
 (Requires GP27/U3 -> PRB, $6=1, filesystem macros, NGC expressions, and enabled normal-print status.)
-(Do not call while GP28/P100 is active. Error 39 stops the program before the next motion block.)
+(Do not call while GP28/P100 is active. Strict mode stops the program before the next motion block.)
 
+(Argument registers are copied to numbered locals before anything else because the tested)
+(controller macro runtime does not retain #17 reliably after named-variable initialization.)
 #31 = #17
+#32 = #1
+#33 = #2
+#34 = #3
+#35 = #7
+#36 = #23
+
+#<q_mode> = #31
 #<poll_s> = 0.02
 #<release_wait_s> = 0.50
 #<ready_wait_s> = 5.00
+#<fallback_s> = 0
+#<warn_only> = 0
 
-o1150 if [[#31 NE 0] AND [#31 NE 1]]
-  (print,P115 invalid Q: use Q0 for initial clear or Q1 after an M3/M5 transition)
+o1160 if [[#33 GT 0]]
+  #<ready_wait_s> = #33
+o1160 endif
+o1161 if [[#34 GT 0]]
+  #<release_wait_s> = #34
+o1161 endif
+o1162 if [[#35 GT 0]]
+  #<poll_s> = #35
+o1162 endif
+o1163 if [[#32 GT 0]]
+  #<fallback_s> = #32
+o1163 endif
+o1164 if [[#36 EQ 1]]
+  #<warn_only> = 1
+o1164 endif
+
+o1150 if [[#<q_mode> NE 0] AND [#<q_mode> NE 1] AND [#<q_mode> NE 7]]
+  (print,P115 invalid Q: use Q0 for initial clear, Q1 after an M3/M5 transition, or Q7 to measure)
   o1150 error[39]
 o1150 endif
 
+(Q7 measures both phases and never raises error 39, so the operator can see which)
+(phase fails on the installed hardware without aborting a program.)
+o1170 if [#<q_mode> EQ 7]
+  #<remaining_s> = #<release_wait_s>
+  o1171 while [[#<_probe_state> NE 0] AND [#<remaining_s> GT 0]]
+    G4 P[#<poll_s>]
+    #<remaining_s> = [#<remaining_s> - #<poll_s>]
+  o1171 endwhile
+  o1172 if [#<_probe_state> EQ 0]
+    (print,P115 Q7 release observed)
+  o1172 else
+    (print,P115 Q7 release missing: GP27 stayed asserted through the release bound)
+  o1172 endif
+  #<remaining_s> = #<ready_wait_s>
+  o1173 while [[#<_probe_state> NE 1] AND [#<remaining_s> GT 0]]
+    G4 P[#<poll_s>]
+    #<remaining_s> = [#<remaining_s> - #<poll_s>]
+  o1173 endwhile
+  o1174 if [#<_probe_state> EQ 1]
+    (print,P115 Q7 completion observed)
+  o1174 else
+    (print,P115 Q7 completion missing: GP27 never asserted inside the completion bound)
+  o1174 endif
+  o115 return [1]
+o1170 endif
+
 (Q1 rejects a stale ready level from the preceding pen state.)
-o1151 if [#31 EQ 1]
+o1151 if [#<q_mode> EQ 1]
   #<remaining_s> = #<release_wait_s>
   o1152 while [[#<_probe_state> NE 0] AND [#<remaining_s> GT 0]]
     G4 P[#<poll_s>]
     #<remaining_s> = [#<remaining_s> - #<poll_s>]
   o1152 endwhile
   o1153 if [#<_probe_state> NE 0]
+    o1180 if [#<warn_only> EQ 1]
+      (print,P115 WARNING stale ready state did not clear; continuing on the fallback dwell)
+      G4 P[#<fallback_s>]
+      o115 return [0]
+    o1180 endif
     (print,P115 command completion did not clear its prior ready state)
     o1153 error[39]
   o1153 endif
@@ -33,6 +95,11 @@ o1154 while [[#<_probe_state> NE 1] AND [#<remaining_s> GT 0]]
   #<remaining_s> = [#<remaining_s> - #<poll_s>]
 o1154 endwhile
 o1155 if [#<_probe_state> NE 1]
+  o1181 if [#<warn_only> EQ 1]
+    (print,P115 WARNING toolhead ready acknowledgement timed out; continuing on the fallback dwell)
+    G4 P[#<fallback_s>]
+    o115 return [0]
+  o1181 endif
   (print,P115 toolhead ready acknowledgement timed out)
   o1155 error[39]
 o1155 endif
