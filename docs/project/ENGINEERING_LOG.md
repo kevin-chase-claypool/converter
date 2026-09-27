@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20260927-add-p115-recover-mode"></a>
+### 🟨 2026-09-27 - RP23CNC SOFTWARE/IMPLEMENTED - add a lift-and-continue recover mode to the P115 handshake
+
+- Problem: the warn-only `P115` fallback still risked dragging the pen when the
+  missed transition was an `M5` lift. The operator wants an `error[39]` miss on
+  a complex print to lift the pen and resume at the next command rather than
+  abort the sheet.
+- Change: `P115.macro` gains `W2` recover. On a timeout it warns, issues `M5`
+  to lift the pen to the fail-safe state, dwells for the pen-up clearance, and
+  returns without `error[39]`. The converter's `toolhead_handshake_warn_only`
+  setting becomes `toolhead_handshake_recover`: normal M3/M5 transitions emit
+  `A<pen-up dwell> W2`, while the end-of-print full-retract wait stays `A3 W1`
+  (warn + dwell, no lift) because the Aux0/GP28 arm drives that retract.
+- Verification: `python tools\validate_homing_macro.py` passes with exactly two
+  guarded `M5` recover lifts and no axis/Aux0 command; the converter test suite
+  passes with the recover emission sequence `Q0 A0.8 W2` / `Q1 B12 A0.8 W2` /
+  `Q1 A0.8 W2` / `Q0 A3 W1`.
+- Not verified: nothing has run on the controller; `W2` argument delivery and
+  the `M5`-then-continue path need the motorless macro checks and F-05A.
+- Category: rp23cnc-software, windows-software, p115, gp27, handshake,
+  error-39, recover
+- Next action: upload the updated `P115.macro`, run `G65 P115 Q7` in each pen
+  state, then run F-05A with the recover checkbox ticked.
+- Evidence: `RPSW-20260927-002`.
+
 <a id="elog-20260927-parameterize-p115-bounds"></a>
 ### 🟨 2026-09-27 - RP23CNC SOFTWARE/IMPLEMENTED - parameterize the P115 handshake bounds and add a warn-only mode
 

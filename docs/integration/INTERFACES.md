@@ -295,16 +295,19 @@ only after the flashed toolhead carries `GP27_NORMAL_STATUS_ENABLED` plus
 `P115` now takes optional arguments so the guard's bounds can match the
 installed machine instead of aborting a healthy one: `B<seconds>` completion
 bound (default 5.00), `C<seconds>` release bound (default 0.50), `D<seconds>`
-poll interval (default 0.02), `A<seconds>` fallback dwell, and `W1` warn-only.
+poll interval (default 0.02), `A<seconds>` fallback dwell, `W1` warn-only, and
+`W2` recover.
 The converter passes a `B` bound derived from `pen_down_first_ms` on the
 program's first `M3`, whose GP2 retract seek is measured at about 7 s and
 otherwise exceeds the default completion bound. `Q7` reports each phase
 without erroring so the installed hardware can be measured. `W1` prints
-`P115 WARNING ...`, dwells `A` seconds - the fixed `G4` the handshake replaced -
-and returns without `error[39]`; it is strictly the dwell-path worst case plus
-a warning, masks a stuck signal, and therefore stays an explicit opt-in. The
-strict `Q0`/`Q1` paths remain the default behaviour and still stop the program
-before the next motion block.
+`P115 WARNING ...`, dwells `A` seconds, and returns without `error[39]`; it is
+the end-of-print full-retract fallback. `W2` prints `P115 WARNING ...`, issues
+`M5` to lift the pen to the fail-safe state, dwells `A` seconds (the pen-up
+clearance), and returns without `error[39]`; the converter emits it around each
+normal M3/M5 transition. Both mask a stuck signal, so they stay explicit
+opt-ins and the strict `Q0`/`Q1` paths remain the default behaviour that stops
+the program before the next motion block.
 
 `M5` is not the toolhead's absolute position-reference command. The planned
 local `GP2` switch establishes `LIFT_HOME` only at boot, recovery, or an

@@ -139,31 +139,31 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         first_m3 = lines.index("M3")
         self.assertEqual(lines[first_m3 + 1], "G65 P115 Q1 B7")
 
-    def test_handshake_warn_only_emits_fallback_dwell_and_flag(self):
+    def test_handshake_recover_emits_lift_and_continue_flag(self):
         contours = [[(-25.0, 0.0), (25.0, 0.0)]]
         gcode = converter.contours_to_gcode(
             contours,
             converter.Settings(
                 toolhead_status_handshake=True,
-                toolhead_handshake_warn_only=True,
+                toolhead_handshake_recover=True,
             ),
         )
         lines = gcode.splitlines()
         handshake_lines = [line for line in lines if line.startswith("G65 P115")]
 
-        # Opening clear, first down, the M5 transition, and the end-of-print
-        # full retract. Each carries the fixed-dwell equivalent so a timeout
-        # degrades to the shipped dwell timing instead of aborting.
+        # Opening clear, first down, and the M5 transition recover by lifting
+        # the pen (W2) with the pen-up dwell as the fallback; the end-of-print
+        # full retract stays warn-only (W1) with the fixed 3 s retract dwell.
         self.assertEqual(
             handshake_lines,
             [
-                "G65 P115 Q0 A0.8 W1",
-                "G65 P115 Q1 B12 A10 W1",
-                "G65 P115 Q1 A0.8 W1",
+                "G65 P115 Q0 A0.8 W2",
+                "G65 P115 Q1 B12 A0.8 W2",
+                "G65 P115 Q1 A0.8 W2",
                 "G65 P115 Q0 A3 W1",
             ],
         )
-        self.assertFalse(converter.Settings().toolhead_handshake_warn_only)
+        self.assertFalse(converter.Settings().toolhead_handshake_recover)
 
     def test_gp27_handshake_rejects_non_m3_m5_pen_contract(self):
         with self.assertRaisesRegex(ValueError, "M5 pen-up"):

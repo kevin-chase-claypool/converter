@@ -13,6 +13,7 @@ Newest changes appear first.
 | 2026-09-27 | `WSW-20260927-003` | windows-software | implemented | [Apply the fill bleed margin by pulling back clipped passes](windows-software/2026/2026-09-27-apply-fill-margin-by-pull-back.md) |
 | 2026-09-27 | `WSW-20260927-002` | windows-software | implemented | [Accelerate fill generation with a polygon spatial index](windows-software/2026/2026-09-27-speed-up-fill-region-with-spatial-index.md) |
 | 2026-09-27 | `WSW-20260927-001` | windows-software | implemented | [Resolve inherited SVG presentation attributes](windows-software/2026/2026-09-27-resolve-inherited-svg-presentation-attributes.md) |
+| 2026-09-27 | `RPSW-20260927-002` | rp23cnc-software, windows-software | implemented | [Add a lift-and-continue recover mode to the P115 handshake](rp23cnc-software/2026/2026-09-27-add-p115-recover-mode.md) |
 | 2026-09-27 | `RPSW-20260927-001` | rp23cnc-software, windows-software | implemented | [Parameterize the P115 handshake bounds and add a warn-only mode](rp23cnc-software/2026/2026-09-27-parameterize-p115-bounds-and-warn-mode.md) |
 | 2026-09-26 | `WSW-20260926-002` | windows-software | implemented | [Cap the drawable radius at the gantry's reach](windows-software/2026/2026-09-26-cap-drawable-radius-to-gantry-reach.md) |
 | 2026-09-26 | `WSW-20260926-001` | windows-software | implemented | [Restore the generated pen-down path in the preview](windows-software/2026/2026-09-26-restore-pen-down-preview-path.md) |

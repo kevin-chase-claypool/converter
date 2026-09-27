@@ -22,8 +22,10 @@ RP23CNC/grblHAL plugin source tree in which to intercept M3/M5 invisibly.
   requires a new active assertion.
 - Bound the release and ready waits at 0.50 s and 5.00 s respectively. A
   failed wait raises grblHAL `error[39]` before the next drawing-motion block.
-- P115 observes only `#<_probe_state>` and dwell time. It must not issue
-  motion, M3/M5, Aux0, or actuator commands.
+- P115 observes only `#<_probe_state>` and dwell time in its strict, `Q7`, and
+  `W1` modes. The opt-in `W2` recover mode adds exactly one `M5` fail-safe lift
+  on timeout (pen-up, the safe direction); it still issues no motion, Aux0, or
+  actuator command.
 - GP27 normal-print status is permitted only while the magnetic state is
   fully `DISARMED`; P100 owns GP27 in every other magnetic state.
 - The Windows converter exposes this behavior as an unchecked, commissioned
@@ -33,6 +35,9 @@ RP23CNC/grblHAL plugin source tree in which to intercept M3/M5 invisibly.
 
 - A new completion edge prevents an old contact/clear indication from being
   mistaken for acknowledgement of the next command.
+- The earlier "P115 must not issue M3/M5" wording is narrowed by the opt-in
+  `W2` recover mode (2026-09-27), which permits exactly one `M5` lift on
+  timeout and no other command.
 - P115 must be installed on the controller filesystem and passed through the
   F-05A dry-contact and integrated tests before either firmware gate or
   converter option is enabled.

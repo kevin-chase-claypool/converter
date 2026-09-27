@@ -42,10 +42,10 @@ def pen_dwell_duration_ms(settings, direction, is_first_down=False):
 def handshake_command(settings, requires_transition, direction, is_first_down=False):
     """Build the P115 call, adding the optional commissioned arguments.
 
-    P115 accepts ``B`` (completion bound), ``A`` (fallback dwell), and ``W1``
-    (warn-only). Older macros ignore the extra words, so emitting them stays
-    backward compatible: an un-updated controller keeps the 5.00 s bound and
-    its fatal timeout.
+    P115 accepts ``B`` (completion bound), ``A`` (fallback dwell), ``W1``
+    (warn-only), and ``W2`` (recover: lift and continue). Older macros ignore
+    the extra words, so emitting them stays backward compatible: an un-updated
+    controller keeps the 5.00 s bound and its fatal timeout.
     """
     command = "G65 P115 Q1" if requires_transition else "G65 P115 Q0"
     if is_first_down:
@@ -55,11 +55,14 @@ def handshake_command(settings, requires_transition, direction, is_first_down=Fa
         # healthy slow seek is not reported as a handshake failure.
         bound_s = max(5.0, pen_down_first_duration_ms(settings) / 1000.0 + 2.0)
         command += f" B{format_float(bound_s)}"
-    if getattr(settings, "toolhead_handshake_warn_only", False):
-        fallback_s = pen_dwell_duration_ms(settings, direction, is_first_down) / 1000.0
-        if fallback_s > 0:
-            command += f" A{format_float(fallback_s)}"
-        command += " W1"
+    if getattr(settings, "toolhead_handshake_recover", False):
+        # On a miss the macro lifts the pen (M5) to the fail-safe state, so the
+        # fallback dwell only needs to cover the lift, not the original M3/M5
+        # transition. The first-down completion bound above is unchanged.
+        lift_s = pen_up_duration_ms(settings) / 1000.0
+        if lift_s > 0:
+            command += f" A{format_float(lift_s)}"
+        command += " W2"
     return command
 
 
@@ -106,8 +109,10 @@ def append_full_retract(lines, settings):
     lines.append("M65 P0")  # assert Aux0/GP28 (active-low arm)
     if getattr(settings, "toolhead_status_handshake", False):
         command = "G65 P115 Q0"  # wait for clear-ready at GP2
-        if getattr(settings, "toolhead_handshake_warn_only", False):
-            # Matches the fixed G4 P3.0 retract dwell used without the handshake.
+        if getattr(settings, "toolhead_handshake_recover", False):
+            # The full retract is driven by the Aux0/GP28 arm line, not M5, and
+            # the pen is already up here, so recover degrades to a warn-only
+            # dwell instead of issuing a normal-clear M5 mid-retract.
             command += " A3 W1"
         lines.append(command)
     else:

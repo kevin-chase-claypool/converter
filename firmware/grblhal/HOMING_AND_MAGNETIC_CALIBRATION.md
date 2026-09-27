@@ -258,8 +258,9 @@ window (`M3`) or a commissioned proven-clear state (`M5`). The source now has
 the controller-resident `P115.macro`: `Q1` requires GP27 to clear then assert
 for each new M3/M5 completion, while `Q0` accepts an already-clear program
 opening. It has 0.50 s stale-state and 5.00 s completion bounds and faults
-with error 39 before later motion. P115 never commands motion, M3/M5, or Aux0.
-To make that stale-state release phase reliable, the toolhead holds GP27
+with error 39 before later motion. P115 observes GP27 and dwells only; the
+opt-in `W2` recover mode additionally may issue one `M5` fail-safe lift. To
+make that stale-state release phase reliable, the toolhead holds GP27
 inactive for a guaranteed `GP27_TRANSITION_LOW_MS` (50 ms) on every M3/M5
 command edge, so the inactive-then-active completion edge is always observable
 even when the physical pen move is instantaneous (e.g. an M5 that starts from

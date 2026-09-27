@@ -10,6 +10,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-09-27 | `WSW-20260927-008` | implemented | [Restore the fixed-dwell default until F-05A passes](../windows-software/2026/2026-09-27-restore-dwell-default-until-f05a.md) | `converter`, `gp27`, `p115`, `error-39`, `f-05a`, `pen-dwell` |
+| 2026-09-27 | `RPSW-20260927-002` | implemented | [Add a lift-and-continue recover mode to the P115 handshake](2026/2026-09-27-add-p115-recover-mode.md) | `p115`, `gp27`, `handshake`, `error-39`, `recover`, `f-05a` |
 | 2026-09-27 | `RPSW-20260927-001` | implemented | [Parameterize the P115 handshake bounds and add a warn-only mode](2026/2026-09-27-parameterize-p115-bounds-and-warn-mode.md) | `p115`, `gp27`, `handshake`, `error-39`, `f-05a`, `warn-only` |
 | 2026-09-25 | `RPSW-20260925-009` | implemented | [Full retract the pen to GP2 at program end](2026/2026-09-25-full-retract-at-program-end.md) | `toolhead`, `full-retract`, `gp28`, `aux0`, `program-end`, `converter` |
 | 2026-09-25 | `RPSW-20260925-008` | implemented | [Widen the force-hold band to ±15 g (30-60 g)](2026/2026-09-25-widen-hold-band-30-60g.md) | `toolhead`, `force`, `hold-band`, `high-speed` |

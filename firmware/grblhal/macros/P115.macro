@@ -1,11 +1,13 @@
 (P115 - bounded GP27/PRB normal-print acknowledgement wait.)
 (Call immediately after M3 or M5. Q1 requires a new low-to-high completion edge; Q0 accepts an already-clear startup state.)
 (Q7 measures the release and completion phases and reports them without raising error 39.)
-(Optional arguments: B<completion seconds> C<release seconds> D<poll seconds> A<fallback dwell seconds> W1.)
+(Optional arguments: B<completion seconds> C<release seconds> D<poll seconds> A<fallback dwell seconds> W1|W2.)
 (B, C, and D default to the commissioned 5.00 s / 0.50 s / 0.02 s values; A defaults to no dwell.)
-(W1 selects warn-only mode: a timeout prints a warning, dwells A seconds, and returns instead of error 39.)
+(W1 is warn-only: a timeout prints a warning, dwells A seconds, and returns instead of error 39.)
+(W2 is recover: a timeout prints a warning, issues M5 to lift the pen to the fail-safe state, dwells A seconds, and returns.)
 (Requires GP27/U3 -> PRB, $6=1, filesystem macros, NGC expressions, and enabled normal-print status.)
 (Do not call while GP28/P100 is active. Strict mode stops the program before the next motion block.)
+(Strict/Q7/W1 modes observe GP27 and dwell only. W2 adds one guarded M5 fail-safe lift; it never moves an axis or drives Aux0.)
 
 (Argument registers are copied to numbered locals before anything else because the tested)
 (controller macro runtime does not retain #17 reliably after named-variable initialization.)
@@ -22,6 +24,7 @@
 #<ready_wait_s> = 5.00
 #<fallback_s> = 0
 #<warn_only> = 0
+#<recover> = 0
 
 o1160 if [[#33 GT 0]]
   #<ready_wait_s> = #33
@@ -38,6 +41,9 @@ o1163 endif
 o1164 if [[#36 EQ 1]]
   #<warn_only> = 1
 o1164 endif
+o1165 if [[#36 EQ 2]]
+  #<recover> = 1
+o1165 endif
 
 o1150 if [[#<q_mode> NE 0] AND [#<q_mode> NE 1] AND [#<q_mode> NE 7]]
   (print,P115 invalid Q: use Q0 for initial clear, Q1 after an M3/M5 transition, or Q7 to measure)
@@ -83,6 +89,12 @@ o1151 if [#<q_mode> EQ 1]
       G4 P[#<fallback_s>]
       o115 return [0]
     o1180 endif
+    o1182 if [#<recover> EQ 1]
+      (print,P115 WARNING stale ready state did not clear; lifting the pen and continuing)
+      M5
+      G4 P[#<fallback_s>]
+      o115 return [0]
+    o1182 endif
     (print,P115 command completion did not clear its prior ready state)
     o1153 error[39]
   o1153 endif
@@ -100,6 +112,12 @@ o1155 if [#<_probe_state> NE 1]
     G4 P[#<fallback_s>]
     o115 return [0]
   o1181 endif
+  o1183 if [#<recover> EQ 1]
+    (print,P115 WARNING toolhead ready acknowledgement timed out; lifting the pen and continuing)
+    M5
+    G4 P[#<fallback_s>]
+    o115 return [0]
+  o1183 endif
   (print,P115 toolhead ready acknowledgement timed out)
   o1155 error[39]
 o1155 endif

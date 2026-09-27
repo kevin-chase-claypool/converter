@@ -133,13 +133,16 @@ X/Y-only output, and preview/G-code parity.
     The first `M3` carries a longer `P115` completion bound derived from
     **Pen down first ms**, because that seek starts at the GP2 lift-home switch
     and takes about 7 s.
-  - **Continue if the GP27 handshake times out (warn only)** emits
-    `G65 P115 ... A<dwell> W1`. A timeout then prints a controller warning,
-    dwells for the same fixed `G4` time the handshake replaced, and lets the
-    program continue instead of aborting. It only applies with **Wait for GP27
-    toolhead ready** enabled; it trades a mid-print abort for dwell timing plus
-    a console warning, and it masks a genuinely stuck toolhead signal, so leave
-    it off unless you would rather finish the sheet than stop on a fault.
+  - **Lift pen and continue if the GP27 handshake times out** emits
+    `G65 P115 ... A<lift> W2` around each normal M3/M5 transition. A timeout
+    then prints a controller warning, issues `M5` to lift the pen to the
+    fail-safe state, dwells for the pen-up clearance, and lets the program
+    continue instead of aborting. The end-of-print full-retract wait still
+    warns and dwells (`W1`) without an extra lift. It only applies with
+    **Wait for GP27 toolhead ready** enabled; it trades a mid-print abort for a
+    lifted pen (a missed `M3` then draws that stroke in the air) plus a console
+    warning, and it masks a genuinely stuck toolhead signal, so leave it off
+    unless you would rather finish the sheet than stop on a fault.
   - **Curve round bias** (`round_bias`, default 0.05) trades lowest-cost motion vs.
     well-rounded curves. `0` = pick the cheapest theta per segment (tends to
     axis-lock, flatter curves); higher values bias theta toward the path tangent so
@@ -215,9 +218,9 @@ X/Y-only output, and preview/G-code parity.
   the GP27/U3-to-PRB wiring, and the flashed toolhead's
   `GP27_NORMAL_STATUS_ENABLED` plus `GP27_TRANSITION_LOW_MS`; if any of those is
   missing the program errors `39` mid-print. Turn it on only after F-05A passes.
-  Its companion option **Continue if the GP27 handshake times out (warn only)**
-  keeps the print running on the equivalent fixed dwell after printing
-  `P115 WARNING ...` to the controller console.
+  Its companion option **Lift pen and continue if the GP27 handshake times
+  out** keeps the print running: the macro prints `P115 WARNING ...`, issues
+  `M5` to lift the pen, dwells, and continues on the next command.
 - The converter has no XY-only export mode: every generated production program
   retains its planned A-axis words.
 - The converter does not apply a pen/TMAG XY tool offset. Generated XY positions

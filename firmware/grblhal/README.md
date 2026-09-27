@@ -57,8 +57,10 @@ at `PRB`. It does not authorize P100 motion: macro/parameter semantics, the
 normal-status interval, and all Q3/Q4 commissioning gates remain open.
 
 `macros/P115.macro` is source-ready for the later normal-print GP27
-acknowledgement. It performs bounded `PRB` polling only; it never commands an
-axis, Aux0, M3, or M5. It is not yet installed or enabled on the controller.
+acknowledgement. It performs bounded `PRB` polling only; its strict, `Q7`, and
+`W1` warn-only modes never command an axis, Aux0, M3, or M5, while the opt-in
+`W2` recover mode may issue one `M5` fail-safe lift on timeout. It is not yet
+installed or enabled on the controller.
 
 ## Current records
 

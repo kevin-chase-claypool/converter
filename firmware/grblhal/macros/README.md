@@ -47,31 +47,39 @@ each later M3/M5 transition. Q1 first waits for GP27/`PRB` to clear so an old
 ready level cannot satisfy a new command, then waits for the new assertion. Q0
 accepts an already-proven-clear opening state. Both paths default to finite
 0.50 s release and 5.00 s completion bounds and raise error 39 before following
-motion on failure. `P115` never issues a motion, M3/M5, or Aux0 command.
-It must not be uploaded, selected in the converter, or used during P100 until
-the separate normal-print commissioning gates pass.
+motion on failure. `P115` observes GP27/`PRB` and dwells only in its strict,
+`Q7`, and `W1` modes; the opt-in `W2` recover mode may issue one `M5` fail-safe
+lift on timeout. It must not be uploaded, selected in the converter, or used
+during P100 until the separate normal-print commissioning gates pass.
 
 `P115` accepts optional arguments, each defaulting to the commissioned value:
 `B<seconds>` completion bound (5.00), `C<seconds>` release bound (0.50),
-`D<seconds>` poll interval (0.02), `A<seconds>` fallback dwell, and `W1`
-warn-only. The converter passes a `B` bound derived from `pen_down_first_ms` on
-the program's first M3 only, because that one travels the whole GP2 retract
-distance (measured at about 7 s) and would otherwise exceed the 5.00 s default
-and abort a healthy program. Keep `D` at its default unless `Q7` shows the
-release phase missing an edge; the 2026-09-25 `GP27_TRANSITION_LOW_MS` firmware
-floor is the real fix for an unterminated low window.
+`D<seconds>` poll interval (0.02), `A<seconds>` fallback dwell, `W1` warn-only,
+and `W2` recover. The converter passes a `B` bound derived from
+`pen_down_first_ms` on the program's first M3 only, because that one travels
+the whole GP2 retract distance (measured at about 7 s) and would otherwise
+exceed the 5.00 s default and abort a healthy program. Keep `D` at its default
+unless `Q7` shows the release phase missing an edge; the 2026-09-25
+`GP27_TRANSITION_LOW_MS` firmware floor is the real fix for an unterminated low
+window.
 
 With `W1` a timeout prints `P115 WARNING ...`, dwells `A` seconds - the fixed
 `G4` dwell the converter would otherwise have emitted - and returns without
-error. Warn-only mode is for an operator who would rather degrade to dwell
-timing than abort a long print. It masks a genuinely stuck toolhead signal, so
-it stays an explicit opt-in and the strict paths remain the default.
+error. `W1` is the end-of-print full-retract fallback: the pen is already up
+there and the Aux0/GP28 arm drives that retract, so no extra lift is issued.
+
+With `W2` a timeout prints `P115 WARNING ...`, issues `M5` to lift the pen to
+the fail-safe state, dwells `A` seconds (the converter passes the pen-up
+clearance dwell), and returns without error. Recover mode is for a long print
+where one missed handshake should cost a stroke or a travel, not the whole
+sheet. It still masks a genuinely stuck toolhead signal and can draw the
+following stroke in the air when the missed transition was an `M3`, so it stays
+an explicit opt-in and the strict paths remain the default.
 
 `Q7` is the measure-only mode. It reports `release observed|missing` and
 `completion observed|missing` without raising error 39, so the operator can see
 which phase fails on the installed hardware before choosing bounds or turning
-on warn-only mode. Like every other P115 mode it only observes GP27/`PRB` and
-dwells.
+on recover mode.
 
 `P112.macro` is the next **survey-only** A-index stage. After fresh P111 and a
 successful Q5, run `G65 P112` without jogging X/Y/A between them. P112 moves

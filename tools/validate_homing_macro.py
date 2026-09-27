@@ -230,15 +230,21 @@ def validate_toolhead_wait_macro() -> None:
         "#<release_wait_s> = 0.50",
         "#<ready_wait_s> = 5.00",
         "#<fallback_s> = 0",
+        "#<recover> = 0",
         "o1150 if [[#<q_mode> ne 0] and [#<q_mode> ne 1] and [#<q_mode> ne 7]]",
         "o1151 if [#<q_mode> eq 1]",
         "o1152 while [[#<_probe_state> ne 0] and [#<remaining_s> gt 0]]",
         "o1154 while [[#<_probe_state> ne 1] and [#<remaining_s> gt 0]]",
         "o1170 if [#<q_mode> eq 7]",
+        "o1165 if [[#36 eq 2]]",
+        "o1182 if [#<recover> eq 1]",
+        "o1183 if [#<recover> eq 1]",
         "o1153 error[39]",
         "o1155 error[39]",
         "g4 p[#<fallback_s>]",
         "p115 warning",
+        "p115 warning stale ready state did not clear; lifting the pen and continuing",
+        "p115 warning toolhead ready acknowledgement timed out; lifting the pen and continuing",
         "p115 q7 release observed",
         "p115 q7 completion observed",
         "o115 return [0]",
@@ -251,11 +257,19 @@ def validate_toolhead_wait_macro() -> None:
         for line in text.splitlines()
         if line.strip() and not line.lstrip().startswith("(") and not line.lstrip().startswith("#")
     ]
-    forbidden = ("m3", "m5", "m64", "m65", "g0", "g1", "g38", "$h")
+    forbidden = ("m3", "m64", "m65", "g0", "g1", "g38", "$h")
     for token in forbidden:
         assert not any(token in line for line in commands), (
             f"P115 must only observe GP27, not command {token}"
         )
+    # W2 recover is the single deliberate exception to observe-only: it may
+    # issue M5 (pen-up, the fail-safe direction), exactly once per timeout
+    # branch, never an axis move or Aux0 command.
+    m5_lines = [line for line in commands if line.strip() == "m5"]
+    assert len(m5_lines) == 2, (
+        "P115 must issue exactly two guarded M5 recover lifts, one per timeout "
+        "branch"
+    )
 
 
 def validate_outer_index_survey_macro() -> None:
