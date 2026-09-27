@@ -164,15 +164,29 @@ def plan_program(contours, settings, cancel_check=None):
     )
     reach = float(getattr(settings, "machine_reach_radius_mm", 0.0))
     radius = min(bed_radius, reach) if reach > 0.0 else bed_radius
+    # The artwork's own center is placed at this offset from the bed center, so
+    # the reachable disc - which is fixed on the bed center - corresponds to the
+    # artwork point `offset` away from its own center. Clipping is expressed in
+    # artwork coordinates, hence the subtraction; the placement is then applied
+    # when the contours are moved into the bed frame.
+    placement_x = float(getattr(settings, "artwork_offset_x_mm", 0.0))
+    placement_y = float(getattr(settings, "artwork_offset_y_mm", 0.0))
+    clip_center = (source_center[0] - placement_x, source_center[1] - placement_y)
     clipped_contours = clip_contours_to_bed(
         contours,
-        source_center,
+        clip_center,
         radius,
         cancel_check,
     )
     center = (0.0, 0.0)
     clipped_contours = [
-        [(point[0] - source_center[0], point[1] - source_center[1]) for point in contour]
+        [
+            (
+                point[0] - source_center[0] + placement_x,
+                point[1] - source_center[1] + placement_y,
+            )
+            for point in contour
+        ]
         for contour in clipped_contours
     ]
     planned_jobs = []

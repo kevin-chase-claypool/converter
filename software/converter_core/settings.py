@@ -67,6 +67,12 @@ class Settings:
     # (0 - (-191.4) = 191.4 mm) is the binding one. Clip radius becomes
     # min(bed_diameter/2 - bed_margin, this).
     machine_reach_radius_mm: float = 191.4
+    # Where the artwork's own center is placed relative to the registered bed
+    # center, in machine millimetres. plan_program centers the artwork on the bed
+    # by default; these offsets move it, which is how a drawing whose bounding
+    # box is not its visual center gets placed by hand. Negative is valid.
+    artwork_offset_x_mm: float = 0.0
+    artwork_offset_y_mm: float = 0.0
     hatch_spacing_mm: float = 0.0
     hatch_angle_deg: float = 45.0
     hatch_pattern: str = "crosshatch"
@@ -190,6 +196,8 @@ TEXT_FIELD_GROUPS = (
         ("Bed margin mm", "bed_margin_mm", "6.35"),
         ("Gantry reach radius mm", "machine_reach_radius_mm", "191.4"),
         ("Pen stroke mm", "pen_diameter_mm", "0.3"),
+        ("Artwork offset X mm", "artwork_offset_x_mm", "0"),
+        ("Artwork offset Y mm", "artwork_offset_y_mm", "0"),
     )),
 )
 
@@ -306,6 +314,11 @@ def validate_settings(settings):
         value = float(getattr(settings, name))
         if not math.isfinite(value) or value < 0.0:
             raise ValueError(f"{name.replace('_', ' ')} cannot be negative.")
+    # Placement offsets are deliberately signed, so only finiteness is enforced.
+    for name in ("artwork_offset_x_mm", "artwork_offset_y_mm"):
+        value = float(getattr(settings, name))
+        if not math.isfinite(value):
+            raise ValueError(f"{name.replace('_', ' ')} must be a finite number.")
     if int(settings.shade_levels) < 1:
         raise ValueError("shade levels must be at least one.")
     if int(settings.theta_smooth_window) < 0:

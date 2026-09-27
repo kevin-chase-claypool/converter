@@ -158,6 +158,16 @@ X/Y-only output, and preview/G-code parity.
   The guide models the converter's reach radius only - it does not include the
   controller's G54 work offset, so it is not a machine-envelope check, and it is
   drawn only once a preview exists.
+- **Placing the artwork.** `Artwork offset X mm` and `Artwork offset Y mm` move
+  the artwork's center away from the registered bed center, which is how a
+  drawing whose bounding box is not its visual center gets positioned by hand.
+  Both are signed and default to `0`. In the preview, **left-drag moves the
+  artwork** and **Shift+left, middle, or right drag pans the view**; the wheel
+  zooms and a double-click resets the zoom. Dragging updates the two fields, and
+  pressing Preview re-plans with the new placement, including re-clipping to the
+  reach circle. While dragging, the displayed part is the existing plan
+  translated, so the reach circle - not the drawn artwork - is the authority on
+  what will survive the next build.
 - Pressing **Preview** shows the current build stage, percentage, and elapsed
   time. SVG parsing, motion planning, and clipping run in the background so the
   window remains responsive. The expensive contour/theta plan is built once and

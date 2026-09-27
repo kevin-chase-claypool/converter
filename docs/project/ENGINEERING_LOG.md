@@ -1,5 +1,42 @@
 # Engineering Log
 
+<a id="elog-20260927-drag-artwork-placement"></a>
+### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - drag the artwork on the bed to place it
+
+- Problem: `plan_program` centres the artwork's *bounding box* on the registered
+  bed centre, which is not its visual centre for artwork with stray marks or an
+  asymmetric outline. The F15 cutaway lands visibly down and to the left of the
+  bed centre for that reason, and there was no way to correct it.
+- Change: new signed settings `artwork_offset_x_mm` and `artwork_offset_y_mm`
+  (Preview settings). `plan_program` places the artwork centre at that offset
+  from the bed centre; the reachable disc is fixed on the bed, so the clip is
+  expressed in artwork coordinates about `source_center - offset` and the
+  placement is applied when the contours move into the bed frame. With `(0, 0)`
+  the behaviour is unchanged.
+- Preview: the vertex shader takes a `shift` uniform. Left-drag moves the
+  artwork and Shift+left, middle, or right drag pans; a `placementChanged`
+  signal writes the drag into the two settings fields. The bed and reach circles
+  stay pinned to the bed centre - they mark fixed machine geometry - and only the
+  artwork and its tool path shift.
+- Verification: planner offset `(0,0)` on `stripe_stroke_test.svg` gives
+  x[-36.765, 36.765] y[-19.350, 19.350]; offset `(10, -5)` gives
+  x[-26.765, 46.765] y[-24.350, 14.350], an exact translation with the contour
+  count unchanged. Offscreen, `set_planned_offset((10,-5))` yields delta
+  `(0,0)` and a following `set_placement((25,-5))` yields delta `(15,0)`.
+  `python -m unittest discover -s software\tests -p "test_*.py"` passes, 48 tests
+  including 5 new placement cases.
+- Not verified: the GLSL change. Compiling the vertex shader needs a real
+  OpenGL context, which this environment does not provide, so the shader was
+  reviewed by eye and everything around it tested offscreen. Confirm the preview
+  still draws on first run.
+- Rejected: moving the bed and reach circles with the drag. They mark fixed
+  machine geometry; no change was needed because `preview_center` is already
+  `plan["center"]`, the bed centre.
+- Category: windows-software, converter, preview, placement, bed
+- Next action: confirm the preview renders after the shader change, and check
+  that dragging a part past the green circle plus Preview trims it as expected.
+- Evidence: `WSW-20260927-007`.
+
 <a id="elog-20260927-preview-keep-down-connectors"></a>
 ### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - show keep-down connectors in the preview
 

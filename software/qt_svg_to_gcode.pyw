@@ -78,6 +78,10 @@ class GLPreview(QOpenGLWidget):
     GL_LINES = 0x0001
     GL_FLOAT = 0x1406
 
+    # Emitted while the artwork is dragged, in machine millimetres relative to
+    # the registered bed center, so the placement fields can follow the drag.
+    placementChanged = Signal(float, float)
+
     def __init__(self):
         super().__init__()
         self.contours = []
@@ -95,6 +99,15 @@ class GLPreview(QOpenGLWidget):
         self.reach_color = QColor("#15803d")
         self.show_pen_down_path = True
         self.show_machine_reach = True
+        # Live placement. `placement` is where the artwork should sit relative to
+        # the bed center; `planned_offset` is what the current plan already bakes
+        # in. Their difference is applied as a shader shift, so dragging moves the
+        # part immediately while the bed and reach circles stay pinned. Pressing
+        # Preview re-plans with the new offset, after which the two agree.
+        self.placement = (0.0, 0.0)
+        self.planned_offset = (0.0, 0.0)
+        self.is_placing = False
+        self.last_place_pos = None
         self.fast_render = False
         self.preview_center = (0.0, 0.0)
         self.preview_radius = 1.0
@@ -140,10 +153,11 @@ class GLPreview(QOpenGLWidget):
             uniform vec2 center;
             uniform float theta;
             uniform vec4 bounds;
+            uniform vec2 shift;
             void main() {
                 float c = cos(theta);
                 float s = sin(theta);
-                vec2 d = p - center;
+                vec2 d = (p + shift) - center;
                 vec2 r = center + vec2(d.x*c - d.y*s, d.x*s + d.y*c);
                 vec2 n = (r - bounds.xy) / (bounds.zw - bounds.xy) * 2.0 - 1.0;
                 gl_Position = vec4(n.x, n.y, 0.0, 1.0);
@@ -167,6 +181,7 @@ class GLPreview(QOpenGLWidget):
             "center": self.program.uniformLocation("center"),
             "theta": self.program.uniformLocation("theta"),
             "bounds": self.program.uniformLocation("bounds"),
+            "shift": self.program.uniformLocation("shift"),
             "color": self.program.uniformLocation("color"),
         }
         for name in ("bed_circle", "bed_radius", "debug_box", "debug_cross", "reach_circle", "artwork", "drawn_path", "travel", "motion"):
@@ -381,7 +396,15 @@ class GLPreview(QOpenGLWidget):
         event.accept()
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.LeftButton and not (event.modifiers() & Qt.ShiftModifier):
+            # Drag the part on the bed, the way a slicer moves a model. Panning
+            # moves to Shift+drag and to the middle and right buttons.
+            self.is_placing = True
+            self.last_place_pos = event.position()
+            self.setCursor(Qt.SizeAllCursor)
+            event.accept()
+            return
+        if event.button() in (Qt.LeftButton, Qt.MiddleButton, Qt.RightButton):
             self.is_panning = True
             self.last_pan_pos = event.position()
             self.setCursor(Qt.ClosedHandCursor)
@@ -390,6 +413,23 @@ class GLPreview(QOpenGLWidget):
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
+        if self.is_placing and self.last_place_pos is not None:
+            current = event.position()
+            dx = current.x() - self.last_place_pos.x()
+            dy = current.y() - self.last_place_pos.y()
+            min_x, min_y, max_x, max_y = self.adjusted_bounds()
+            span_x = max(max_x - min_x, 1e-9)
+            span_y = max(max_y - min_y, 1e-9)
+            # Screen y runs down and world y runs up, so the vertical term flips.
+            self.placement = (
+                self.placement[0] + dx / max(self.width(), 1) * span_x,
+                self.placement[1] - dy / max(self.height(), 1) * span_y,
+            )
+            self.last_place_pos = current
+            self.placementChanged.emit(self.placement[0], self.placement[1])
+            self.update()
+            event.accept()
+            return
         if self.is_panning and self.last_pan_pos is not None:
             current = event.position()
             dx = current.x() - self.last_pan_pos.x()
@@ -409,7 +449,13 @@ class GLPreview(QOpenGLWidget):
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        if event.button() == Qt.LeftButton and self.is_panning:
+        if self.is_placing and event.button() == Qt.LeftButton:
+            self.is_placing = False
+            self.last_place_pos = None
+            self.unsetCursor()
+            event.accept()
+            return
+        if self.is_panning and event.button() in (Qt.LeftButton, Qt.MiddleButton, Qt.RightButton):
             self.is_panning = False
             self.last_pan_pos = None
             self.unsetCursor()
@@ -451,6 +497,24 @@ class GLPreview(QOpenGLWidget):
         """Show the gantry's reachable radius around the registered bed center."""
         self.show_machine_reach = bool(show)
         self.update()
+
+    def set_planned_offset(self, offset):
+        """Record the placement the current plan already accounts for."""
+        self.planned_offset = (float(offset[0]), float(offset[1]))
+        self.placement = self.planned_offset
+        self.update()
+
+    def set_placement(self, offset):
+        """Move the artwork relative to the bed center, in machine millimetres."""
+        self.placement = (float(offset[0]), float(offset[1]))
+        self.update()
+
+    def placement_delta(self):
+        """How far the drag has moved the artwork past the planned placement."""
+        return (
+            self.placement[0] - self.planned_offset[0],
+            self.placement[1] - self.planned_offset[1],
+        )
 
     def active_theta(self):
         return self.theta_at_progress(self.progress)
@@ -577,6 +641,13 @@ class GLPreview(QOpenGLWidget):
         r, g, b, a = self.color_tuple(color)
         self.program.setUniformValue(loc, float(r), float(g), float(b), float(a))
 
+    def set_shift(self, shift_x, shift_y):
+        """Apply the live placement drag as a world shift for one draw call."""
+        loc = self.uniform_loc.get("shift", -1)
+        if loc < 0:
+            return
+        self.program.setUniformValue(loc, float(shift_x), float(shift_y))
+
     def upload_static_vbos(self):
         for name, arr in self.vertex_arrays.items():
             buf = self.vbos.get(name)
@@ -664,7 +735,12 @@ class GLPreview(QOpenGLWidget):
         # Pen-up travel, crosshairs, and tool markers remain hidden so it stays
         # useful as a G-code sanity check instead of becoming a cluttered view.
         self.program.setUniformValue1f(self.uniform_loc["theta"], 0.0)
+        shift_x, shift_y = self.placement_delta()
+        # The bed and reach circles are pinned to the bed center; the artwork and
+        # its tool path move with a placement drag.
+        self.set_shift(0.0, 0.0)
         self.draw_static("bed_circle", QColor("#94a3b8"), 1.5)
+        self.set_shift(shift_x, shift_y)
         # Full artwork in the undrawn color, then overdraw the portion drawn so
         # far in the drawn color — the boundary tracks where the pen is.
         self.draw_static("artwork", self.undrawn_color, 1.0)
@@ -673,6 +749,7 @@ class GLPreview(QOpenGLWidget):
             self.draw_static("drawn_path", self.drawing_color, 1.6, count=drawn_segments * 2)
         if self.show_pen_down_path:
             self.draw_static("motion", self.motion_color, 1.2)
+        self.set_shift(0.0, 0.0)
         if self.show_machine_reach:
             self.draw_static("reach_circle", self.reach_color, 2.0)
         self.program.release()
@@ -900,6 +977,7 @@ class MainWindow(QMainWindow):
         self.gl_preview = GLPreview()
         self.show_pen_down_path.toggled.connect(self.gl_preview.set_show_pen_down_path)
         self.show_machine_reach.toggled.connect(self.gl_preview.set_show_machine_reach)
+        self.gl_preview.placementChanged.connect(self.on_placement_changed)
         preview_layout.addWidget(self.gl_preview, 1)
 
         controls = QHBoxLayout()
@@ -2365,7 +2443,20 @@ class MainWindow(QMainWindow):
             f"{fmt(radius - reach)} mm; the excess is clipped."
         )
 
+    def on_placement_changed(self, x, y):
+        """Follow a preview drag so the next build places the artwork there."""
+        self.fields["artwork_offset_x_mm"].setText(f"{x:.2f}")
+        self.fields["artwork_offset_y_mm"].setText(f"{y:.2f}")
+
     def install_preview(self, settings, contours, moves, bed_center, program_gcode):
+        # The plan already places the artwork at this offset, so the preview's
+        # own placement delta starts at zero and a later drag measures from here.
+        self.gl_preview.set_planned_offset(
+            (
+                float(getattr(settings, "artwork_offset_x_mm", 0.0)),
+                float(getattr(settings, "artwork_offset_y_mm", 0.0)),
+            )
+        )
         self.moves = moves
         self.contours = contours
         self.program_lines = program_gcode.splitlines()
