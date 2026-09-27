@@ -1,5 +1,46 @@
 # Engineering Log
 
+<a id="elog-20260927-fill-margin-pull-back"></a>
+### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - apply the fill bleed margin by pulling back clipped passes
+
+- Problem: vector shading on the F15 cutaway trace put 3,342 of 10,518 hatch
+  endpoints outside the fill region, some by 10.3 mm. The clipping was correct -
+  every endpoint sat inside the region it was handed. The region was wrong:
+  `_inset_fill_region` reported 7,400 mm^2 against a true region of 10,110 mm^2,
+  adding 1,337 mm^2 outside the fill and removing 4,047 mm^2 of it.
+- Cause: that helper offset each subpath independently and chose the direction
+  from a centroid-containment guess. That is only valid for disjoint or strictly
+  nested subpaths. A bitmap trace is thousands of mutually overlapping subpaths,
+  and offsetting them independently cannot preserve even-odd parity - growing
+  one flips parity in the ring around it, so the errors compound over 4,875
+  subpaths.
+- Ruled out: a wrong fill rule. A nonzero winding test agreed with even-odd on
+  every sampled endpoint (0/120 and 120/120), so the region was genuinely being
+  computed wrongly rather than under the wrong rule.
+- Change: `software/converter_core/geometry.py` clips hatch to the fill region
+  exactly as drawn and applies the margin by shortening the ends the clip
+  created (`clip_segment_to_region(..., pull_back=...)`). A pass can therefore
+  only be shortened, never moved outward. `_inset_fill_region` was removed;
+  `inset_polygon_simple` remains in use by `concentric_region_contours`.
+- Result: endpoints outside the true fill region `3342 / 10518` -> `0 / 4440`,
+  and the geometry stage got faster rather than slower: 1.83 s -> 1.54 s.
+- Verification: well-behaved artwork barely moves - total hatch length is
+  unchanged on `kindergarten-house-sun`, `m06-xy-theta-lettering`, and the
+  Constitution preamble, and within +0.04% to -0.25% on
+  `center-magnet-raster-math`, `raster-shading-math`, and
+  `spirit-logo-purple-rgb`.
+  `python -m unittest discover -s software\tests -p "test_*.py"` passes, 37
+  tests including 2 new pull-back cases;
+  `python -m py_compile software\qt_svg_to_gcode.pyw` passes.
+- Rejected: keeping the offset where the centroid guess is valid and falling back
+  only when a self-check detects corruption. Detecting it soundly means
+  comparing two even-odd regions, which costs more than the fix.
+- Category: windows-software, converter, fill, hatch, correctness
+- Next action: judge the first plot of a corrupted-region file from scratch,
+  because the tone changes wherever the old region was wrong. Shape patterns
+  (`dots`, `circles`, lattice tiles) no longer get a boundary margin at all.
+- Evidence: `WSW-20260927-003`.
+
 <a id="elog-20260927-fill-region-spatial-index"></a>
 ### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - accelerate fill generation with a polygon spatial index
 

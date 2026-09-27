@@ -567,7 +567,7 @@ def _point_in_polygons_even_odd(point, polygons, index=None):
     return inside
 
 
-def clip_segment_to_region(a, b, polygons, index=None):
+def clip_segment_to_region(a, b, polygons, index=None, pull_back=0.0):
     if not polygons:
         return []
     ax, ay = a
@@ -603,17 +603,33 @@ def clip_segment_to_region(a, b, polygons, index=None):
     for t in ts:
         if not deduped or abs(t - deduped[-1]) > 1e-7:
             deduped.append(t)
+    length = math.hypot(dx, dy)
+    pull = (pull_back / length) if (pull_back > 0.0 and length > 1e-12) else 0.0
     segments = []
     for t0, t1 in zip(deduped, deduped[1:]):
         if t1 - t0 <= 1e-7:
             continue
         mid = (t0 + t1) / 2.0
         mid_point = (ax + dx * mid, ay + dy * mid)
-        if _point_in_polygons_even_odd(mid_point, polygons, index):
-            segments.append([
-                (ax + dx * t0, ay + dy * t0),
-                (ax + dx * t1, ay + dy * t1),
-            ])
+        if not _point_in_polygons_even_odd(mid_point, polygons, index):
+            continue
+        # `pull_back` shortens the ends the clip created so the pen stops just
+        # short of the boundary instead of touching it. The lattice is clipped
+        # to the true fill region, so this can only shorten a pass -- it can
+        # never move ink outside the region, which is what offsetting the
+        # region itself used to do.
+        s0, s1 = t0, t1
+        if pull > 0.0:
+            if t0 > 0.0:
+                s0 = t0 + pull
+            if t1 < 1.0:
+                s1 = t1 - pull
+            if s1 - s0 <= 1e-7:
+                continue
+        segments.append([
+            (ax + dx * s0, ay + dy * s0),
+            (ax + dx * s1, ay + dy * s1),
+        ])
     return segments
 
 
@@ -718,7 +734,7 @@ def rotated_region_bounds(polygons, angle_deg):
     )
 
 
-def line_region_contours(polygons, spacing, angle_deg=0.0, cancel_check=None):
+def line_region_contours(polygons, spacing, angle_deg=0.0, cancel_check=None, pull_back=0.0):
     if spacing <= 0 or not polygons:
         return []
     ang = math.radians(angle_deg)
@@ -742,7 +758,7 @@ def line_region_contours(polygons, spacing, angle_deg=0.0, cancel_check=None):
         check_cancelled(cancel_check)
         start = world(min_x - spacing, y)
         end = world(max_x + spacing, y)
-        segments = clip_segment_to_region(start, end, polygons, index)
+        segments = clip_segment_to_region(start, end, polygons, index, pull_back)
         if row % 2:
             segments = [[seg[1], seg[0]] for seg in reversed(segments)]
         contours.extend(segments)
@@ -1146,35 +1162,6 @@ def _pattern_spacing(pattern, fill_spacing, pattern_sizes=None, triangle_size=0.
     return max(fill_spacing, 1e-6)
 
 
-def _inset_fill_region(polygons, margin):
-    """Inset the even-odd fill region by *margin* (outer shrink, holes grow)."""
-    if margin <= 0 or not polygons:
-        return polygons
-    # Nesting depth is decided by testing each contour centroid against the
-    # others. The grid narrows that from every other contour to the few whose
-    # bounding box can actually contain the centroid; the parity and the
-    # resulting inset are unchanged.
-    index = _PolygonGrid(polygons)
-    result = []
-    for i, poly in enumerate(polygons):
-        if len(poly) < 3:
-            result.append(poly)
-            continue
-        cx = sum(p[0] for p in poly) / len(poly)
-        cy = sum(p[1] for p in poly) / len(poly)
-        depth = sum(
-            1
-            for j in index.candidates_for_point((cx, cy))
-            if j != i
-            and len(polygons[j]) >= 3
-            and point_in_polygon((cx, cy), polygons[j])
-        )
-        offset = margin if depth % 2 == 0 else -margin
-        inset = inset_polygon_simple(poly, offset)
-        result.append(inset if len(inset) >= 3 else poly)
-    return result
-
-
 def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0):
     return fill_region_pattern_contours([polygon], spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size, pattern_sizes, cancel_check, fill_inset)
 
@@ -1185,7 +1172,11 @@ def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_st
     fill_spacing = density_spacing(spacing, levels, darkness)
     if fill_spacing is None:
         return []
-    polygons = _inset_fill_region(polygons, fill_inset)
+    # The lattice is clipped to the fill region exactly as drawn. The bleed
+    # margin is applied later, by pulling back the ends the clip creates, rather
+    # than by offsetting each subpath: offsetting independently cannot preserve
+    # even-odd parity once subpaths overlap, and a bitmap trace is made of
+    # thousands of overlapping subpaths. See the 2026-09-27 change note.
     if pattern == "dots":
         return mark_grid_contours(polygons, _pattern_spacing(pattern, fill_spacing, pattern_sizes, triangle_size), base_angle, "dots", cancel_check)
     if pattern in ("circles", "diamonds", "hexagonal", "triangular"):
@@ -1203,13 +1194,13 @@ def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_st
         out = []
         for angle in (base_angle + 30.0, base_angle + 90.0, base_angle + 150.0):
             check_cancelled(cancel_check)
-            out.extend(line_region_contours(polygons, cubic_spacing, angle, cancel_check))
+            out.extend(line_region_contours(polygons, cubic_spacing, angle, cancel_check, fill_inset))
         return out
     angles = pattern_angles(base_angle, levels, angle_step, darkness, pattern)
     out = []
     for angle in angles:
         check_cancelled(cancel_check)
-        out.extend(line_region_contours(polygons, fill_spacing, angle, cancel_check))
+        out.extend(line_region_contours(polygons, fill_spacing, angle, cancel_check, fill_inset))
     return out
 
 

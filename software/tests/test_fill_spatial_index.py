@@ -51,26 +51,6 @@ def _random_polygons(count, seed, extent=200.0):
     return polygons
 
 
-def _reference_inset(polygons, margin):
-    """The original O(n^2) nesting classification, verbatim."""
-    result = []
-    for i, poly in enumerate(polygons):
-        if len(poly) < 3:
-            result.append(poly)
-            continue
-        cx = sum(p[0] for p in poly) / len(poly)
-        cy = sum(p[1] for p in poly) / len(poly)
-        depth = sum(
-            1
-            for j, other in enumerate(polygons)
-            if j != i and len(other) >= 3 and geometry.point_in_polygon((cx, cy), other)
-        )
-        offset = margin if depth % 2 == 0 else -margin
-        inset = geometry.inset_polygon_simple(poly, offset)
-        result.append(inset if len(inset) >= 3 else poly)
-    return result
-
-
 class FillSpatialIndexTests(unittest.TestCase):
     def setUp(self):
         self.polygons = _random_polygons(120, seed=20260927)
@@ -105,16 +85,10 @@ class FillSpatialIndexTests(unittest.TestCase):
                 msg=f"point {point}",
             )
 
-    def test_indexed_inset_matches_the_original_classification(self):
-        self.assertEqual(
-            geometry._inset_fill_region(self.polygons, 0.2),
-            _reference_inset(self.polygons, 0.2),
-        )
-
     def test_hatch_lattice_is_identical_with_and_without_the_index(self):
         # Exercise the real entry point: it builds the grid internally, so this
         # guards the wiring rather than just the grid class.
-        polygons = geometry._inset_fill_region(self.polygons, 0.2)
+        polygons = self.polygons
         indexed = geometry.line_region_contours(polygons, 3.0, 45.0)
 
         def unindexed(polygons, spacing, angle):
@@ -139,6 +113,31 @@ class FillSpatialIndexTests(unittest.TestCase):
 
         self.assertEqual(indexed, unindexed(polygons, 3.0, 45.0))
         self.assertTrue(indexed, "the fixture should produce hatch segments")
+
+    def test_pull_back_never_leaves_the_fill_region(self):
+        # The bleed margin must shorten a pass, never move ink outside the fill.
+        # Offsetting the region per subpath used to do the latter.
+        for pull in (0.2, 0.5):
+            segments = geometry.line_region_contours(self.polygons, 3.0, 45.0, None, pull)
+            self.assertTrue(segments)
+            for segment in segments:
+                for point in segment:
+                    self.assertTrue(
+                        geometry.point_in_region(point, self.polygons),
+                        msg=f"pull_back={pull} endpoint {point} escaped the fill region",
+                    )
+
+    def test_pull_back_shortens_passes(self):
+        def total(segments):
+            return sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in segments)
+
+        base = geometry.line_region_contours(self.polygons, 3.0, 45.0, None, 0.0)
+        pulled = geometry.line_region_contours(self.polygons, 3.0, 45.0, None, 0.4)
+
+        self.assertTrue(base)
+        self.assertTrue(pulled)
+        self.assertLessEqual(len(pulled), len(base))
+        self.assertLess(total(pulled), total(base))
 
 
 if __name__ == "__main__":

@@ -185,6 +185,19 @@
 
 ## Known technical debt
 
+- [ ] Give shape-pattern fills a boundary margin again.
+  Problem: the 2026-09-27 pull-back change moved the fill bleed margin into the
+  line-family clip. `dots`, `circles`, `diamonds`, `triangular`, `hexagonal`,
+  `waves`, `gyroid`, and `concentric` test the region rather than clipping a
+  pass, so a mark placed near the boundary can touch the outline.
+  Benefit: those patterns keep the same clearance from the linework that the
+  line families now have.
+  Risk: testing a mark's extremities instead of its centre is a behaviour change
+  for those patterns and drops marks near boundaries, thinning the tone.
+  Acceptance: a placed mark's full extent lies inside the region minus the
+  margin, each pattern has an identity test, and line-family output is
+  unchanged.
+
 - [ ] Index fill geometry at edge level for regions made of a few very large
   polygons.
   Problem: the 2026-09-27 polygon grid narrowed fill work by subpath count, but a
