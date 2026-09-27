@@ -276,6 +276,17 @@ class GLPreview(QOpenGLWidget):
         for contour in self.contours:
             for a, b in zip(contour, contour[1:]):
                 artwork.extend([a[0], a[1], b[0], b[1]])
+        # Keep-down connectors are drawn ink, but they are not part of the
+        # clipped contour set, so the passes would look like separate strokes
+        # even though the program joins them into one continuous serpentine.
+        # Add them to the base layer so what is previewed matches what is drawn.
+        for move in self.moves:
+            if move.get("strategy") != "keep_down_bridge":
+                continue
+            bed_start = move.get("bed_start")
+            bed_end = move.get("bed_end")
+            if bed_start is not None and bed_end is not None:
+                artwork.extend([bed_start[0], bed_start[1], bed_end[0], bed_end[1]])
 
         travel = []
         motion = []

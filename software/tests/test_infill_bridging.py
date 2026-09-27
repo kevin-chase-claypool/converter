@@ -121,6 +121,50 @@ class InfillBridgingTests(unittest.TestCase):
         )
         self.assertEqual(bridges, 0)
 
+    def _moves(self, settings):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "case.svg"
+            path.write_text(FILLED_SQUARE, encoding="utf-8")
+            contours = converter.read_svg(str(path), settings)
+            plan = converter.plan_program(contours, settings)
+            return converter.build_preview_moves(contours, settings, None, plan)
+
+    def test_bridge_moves_carry_bed_endpoints_for_the_preview(self):
+        """A connector is drawn ink, so the preview needs real bed coordinates."""
+        moves = self._moves(_settings(hatch_spacing_mm=0.3))
+
+        bridges = [m for m in moves if m.get("strategy") == "keep_down_bridge"]
+        self.assertTrue(bridges, "the dense fixture should chain passes")
+        for move in bridges:
+            self.assertGreater(
+                converter.distance(move["bed_start"], move["bed_end"]),
+                1e-9,
+                "a bridge with a zero-length bed segment cannot be previewed",
+            )
+
+    def test_dense_fill_previews_as_continuous_strokes(self):
+        """Draw moves must chain, lifting only where bridging was refused."""
+        moves = self._moves(_settings(hatch_spacing_mm=0.3))
+
+        lifts = 0
+        breaks = 0
+        previous_end = None
+        for move in moves:
+            if move.get("type") == "pen_up":
+                lifts += 1
+                previous_end = None
+            elif move.get("type") == "draw":
+                if previous_end is not None and converter.distance(
+                    previous_end, move["start"]
+                ) > 1e-9:
+                    breaks += 1
+                previous_end = move["end"]
+
+        draw_moves = sum(1 for move in moves if move.get("type") == "draw")
+        self.assertGreater(draw_moves, 100)
+        self.assertEqual(breaks, 0, "a down-stroke must not jump between passes")
+        self.assertLess(lifts, 10, f"{draw_moves} draw moves should be a few strokes")
+
 
 if __name__ == "__main__":
     unittest.main()

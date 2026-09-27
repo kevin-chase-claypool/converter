@@ -233,6 +233,8 @@ X/Y-only output, and preview/G-code parity.
   instead of one pen cycle per pass. A connector is only drawn when it is within
   `max(Fill spacing x 0.85, Pen stroke mm x 6)`, so sparse hatching still gets
   separate passes and crosshatch still lifts between its two angle families.
+  The preview draws those connectors, so a chained fill reads as one continuous
+  serpentine rather than as separate strokes.
 - The fill bleed margin is applied by pulling back the ends the clip creates,
   never by offsetting the region, so a pass cannot land outside the fill region.
   This matters for bitmap-traced artwork built from thousands of overlapping

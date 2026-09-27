@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-27 | `WSW-20260927-006` | windows-software | implemented | [Show keep-down connectors in the preview](windows-software/2026/2026-09-27-preview-keep-down-connectors.md) |
 | 2026-09-27 | `WSW-20260927-005` | windows-software | implemented | [Chain line-family infill passes instead of lifting between them](windows-software/2026/2026-09-27-chain-line-family-infill-passes.md) |
 | 2026-09-27 | `WSW-20260927-004` | windows-software | implemented | [Draw the gantry reach in the preview and report the artwork radius](windows-software/2026/2026-09-27-preview-machine-reach-guide.md) |
 | 2026-09-27 | `WSW-20260927-003` | windows-software | implemented | [Apply the fill bleed margin by pulling back clipped passes](windows-software/2026/2026-09-27-apply-fill-margin-by-pull-back.md) |

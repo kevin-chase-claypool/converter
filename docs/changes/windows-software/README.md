@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-27 | `WSW-20260927-006` | implemented | [Show keep-down connectors in the preview](2026/2026-09-27-preview-keep-down-connectors.md) | `converter`, `preview`, `infill`, `serpentine`, `pen-cycle` |
 | 2026-09-27 | `WSW-20260927-005` | implemented | [Chain line-family infill passes instead of lifting between them](2026/2026-09-27-chain-line-family-infill-passes.md) | `converter`, `infill`, `hatch`, `pen-cycle`, `serpentine`, `print-time` |
 | 2026-09-27 | `WSW-20260927-004` | implemented | [Draw the gantry reach in the preview and report the artwork radius](2026/2026-09-27-preview-machine-reach-guide.md) | `converter`, `preview`, `gantry-reach`, `scaling`, `soft-limit`, `g54` |
 | 2026-09-27 | `WSW-20260927-003` | implemented | [Apply the fill bleed margin by pulling back clipped passes](2026/2026-09-27-apply-fill-margin-by-pull-back.md) | `converter`, `fill`, `hatch`, `inset`, `clipping`, `correctness` |

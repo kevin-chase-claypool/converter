@@ -376,11 +376,14 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
             gcode = f"G1 {format_xy_command(machine_start)}"
             gcode += f" {axis}{format_float(first_motor_theta)}"
             gcode += f" F{format_float(bridge_feed)} (keep-down bridge)"
+            # The connector is drawn ink, so it needs real bed-frame endpoints or
+            # the preview cannot show the passes joined up. The previous path
+            # ends where this connector starts; this path starts where it ends.
             moves.append({
                 "type": "draw",
                 "start": last_machine_end,
                 "end": machine_start,
-                "bed_start": path[0],
+                "bed_start": previous_path[-1],
                 "bed_end": path[0],
                 "bed_theta": first_theta,
                 "motor_theta": first_motor_theta,

@@ -1,5 +1,34 @@
 # Engineering Log
 
+<a id="elog-20260927-preview-keep-down-connectors"></a>
+### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - show keep-down connectors in the preview
+
+- Problem: line-family infill began chaining passes, but the preview still drew
+  them as separate strokes, so a solid fill did not look like the continuous
+  serpentine the G-code produces.
+- Cause: the connector was already emitted as a draw move with
+  `strategy: "keep_down_bridge"`, but both of its bed endpoints were set to the
+  destination (`bed_start: path[0], bed_end: path[0]`), making it a zero-length
+  segment in the bed frame. The blue base layer and the drawn-path layer are
+  built from bed coordinates, so neither could show it.
+- Change: `software/converter_core/gcode.py` sets the bridge move's `bed_start`
+  to the previous path's last point; `software/qt_svg_to_gcode.pyw` appends each
+  keep-down connector to the base `artwork` layer, since connectors are not part
+  of the clipped contour set.
+- Verification: dense linear fill, 20 x 20 mm square at 0.3 mm spacing - 86
+  bridge moves with 0 zero-length bed segments, and 179 draw moves drawn as 6
+  strokes with 5 pen lifts and 0 discontinuities inside a down-stroke. The base
+  layer gained exactly 86 segments, matching the bridge count.
+  `python -m unittest discover -s software\tests -p "test_*.py"` passes, 43 tests.
+- Rejected: rebuilding the base layer from the draw moves. It would include the
+  connectors for free, but the moves are subdivided into sub-millimetre steps, so
+  the base layer would grow by an order of magnitude in vertices for no visual
+  gain.
+- Category: windows-software, converter, preview, infill, serpentine
+- Next action: none. The red machine-frame pen-down overlay is unchanged and
+  still diverges from the bed-frame base layer when the bed is rotated.
+- Evidence: `WSW-20260927-006`.
+
 <a id="elog-20260927-chain-line-family-infill-passes"></a>
 ### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - chain line-family infill passes instead of lifting between them
 
