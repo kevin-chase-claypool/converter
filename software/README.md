@@ -199,6 +199,14 @@ X/Y-only output, and preview/G-code parity.
   bed; it keeps emitted coordinates inside the controller's X/Y envelope so
   artwork at the rim cannot trip `Alarm:2 - Soft limit`.
 - Set `Fill spacing mm > 0` to hatch filled regions; `0` disables hatching.
+- SVG presentation attributes are resolved through the element tree, so `fill`,
+  `stroke`, `stroke-width`, `fill-opacity`, `stroke-opacity`, `visibility`, and
+  `opacity` declared on a wrapping `<g>` apply to its children the way a
+  renderer applies them. Line art that declares `fill="none"` on a group is
+  therefore stroked only and is never hatched, while an element that declares no
+  fill anywhere still takes the SVG initial value of black. `display="none"`
+  suppresses the element and its subtree, and `visibility="hidden"` or
+  `"collapse"` is inherited.
 - `Fill spacing`, the pattern size fields, and the curve `Tolerance` are treated
   as on-paper (machine-space) values. When the artwork is scaled below `1.0`,
   the fill and curve flattening are generated coarser in SVG space so the final

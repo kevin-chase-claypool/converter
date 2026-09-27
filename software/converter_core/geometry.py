@@ -93,7 +93,33 @@ def use_href(element):
     return element.get("href") or element.get("{http://www.w3.org/1999/xlink}href") or element.get("xlink:href")
 
 
-def style_value(element, name):
+# Presentation properties that inherit down the SVG element tree.
+#
+# The converter used to read presentation values from the element alone, so a
+# wrapper such as `<g fill="none" stroke="#000" stroke-width="0.7">` was
+# invisible to it. That wrapper is how Illustrator, Inkscape, and this project's
+# own sample generators emit single-pen line art. Every child then fell back to
+# the SVG initial fill of black, so outline paths were treated as solid filled
+# regions and their interiors were hatched -- which also made each child count
+# as "visible" purely because of that phantom fill. Resolving the inherited
+# values fixes the fill regions and the visibility test together.
+INHERITED_STYLE_PROPERTIES = (
+    "fill",
+    "fill-opacity",
+    "stroke",
+    "stroke-opacity",
+    "stroke-width",
+    "visibility",
+    # `opacity` composites a whole subtree in the SVG rendering model rather
+    # than inheriting, but propagating it approximates a group opacity far
+    # better than ignoring it and hatching a 50%-transparent group at full
+    # darkness.
+    "opacity",
+)
+
+
+def own_style_value(element, name):
+    """The property as declared on this element only, or None."""
     if element.get(name) is not None:
         return element.get(name)
     style = element.get("style") or ""
@@ -106,23 +132,63 @@ def style_value(element, name):
     return None
 
 
-def stroke_width(element):
-    value = style_value(element, "stroke-width")
+def style_value(element, name, inherited=None):
+    """Resolve a presentation property the way an SVG renderer would.
+
+    *inherited* carries the resolved style of the element's ancestors, so a
+    property declared once on a wrapping group reaches its children. Falling
+    through to None preserves the specification's initial values -- notably
+    `fill: black` for an element that declares no fill anywhere.
+    """
+    value = own_style_value(element, name)
+    if value is not None:
+        return value
+    if inherited:
+        return inherited.get(name)
+    return None
+
+
+def inherited_style(parent_style, element):
+    """Extend *parent_style* with the inheritable properties on *element*."""
+    style = dict(parent_style or {})
+    for name in INHERITED_STYLE_PROPERTIES:
+        value = own_style_value(element, name)
+        if value is not None:
+            style[name] = value
+    return style
+
+
+def style_hidden(element, inherited=None):
+    """True when an element and its subtree render nothing."""
+    # `display` is not inherited; it suppresses the element and its children.
+    display = own_style_value(element, "display")
+    if display is not None and display.strip().lower() == "none":
+        return True
+    visibility = style_value(element, "visibility", inherited)
+    return visibility is not None and visibility.strip().lower() in ("hidden", "collapse")
+
+
+def stroke_width(element, inherited=None):
+    value = style_value(element, "stroke-width", inherited)
     if not value:
         return 0.0
     return parse_length(value, 0.0)
 
 
-def has_visible_stroke(element):
-    stroke = style_value(element, "stroke")
-    return stroke is not None and stroke.strip().lower() != "none" and stroke_width(element) > 0
+def has_visible_stroke(element, inherited=None):
+    stroke = style_value(element, "stroke", inherited)
+    return (
+        stroke is not None
+        and stroke.strip().lower() != "none"
+        and stroke_width(element, inherited) > 0
+    )
 
 
-def has_visible_fill(element):
-    fill = style_value(element, "fill")
+def has_visible_fill(element, inherited=None):
+    fill = style_value(element, "fill", inherited)
     if fill is not None and fill.strip().lower() == "none":
         return False
-    opacity = style_value(element, "fill-opacity")
+    opacity = style_value(element, "fill-opacity", inherited)
     if opacity is not None:
         try:
             if float(opacity) <= 0:
@@ -172,8 +238,8 @@ def parse_svg_color(value):
     return None
 
 
-def fill_darkness(element):
-    color = parse_svg_color(style_value(element, "fill"))
+def fill_darkness(element, inherited=None):
+    color = parse_svg_color(style_value(element, "fill", inherited))
     if color is None:
         color = (0.0, 0.0, 0.0)
     r, g, b = color
@@ -181,7 +247,7 @@ def fill_darkness(element):
     darkness = 1.0 - luminance
     opacity = 1.0
     for name in ("fill-opacity", "opacity"):
-        value = style_value(element, name)
+        value = style_value(element, name, inherited)
         if value is None:
             continue
         try:
@@ -191,15 +257,15 @@ def fill_darkness(element):
     return max(0.0, min(darkness * opacity, 1.0))
 
 
-def stroke_darkness(element):
-    color = parse_svg_color(style_value(element, "stroke"))
+def stroke_darkness(element, inherited=None):
+    color = parse_svg_color(style_value(element, "stroke", inherited))
     if color is None:
         return 0.0
     r, g, b = color
     luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
     opacity = 1.0
     for name in ("stroke-opacity", "opacity"):
-        value = style_value(element, name)
+        value = style_value(element, name, inherited)
         if value is None:
             continue
         try:
@@ -209,11 +275,15 @@ def stroke_darkness(element):
     return max(0.0, min((1.0 - luminance) * opacity, 1.0))
 
 
-def _element_is_visible(element):
-    if has_visible_fill(element) and fill_darkness(element) > 1e-9:
+def _element_is_visible(element, inherited=None):
+    if has_visible_fill(element, inherited) and fill_darkness(element, inherited) > 1e-9:
         return True
-    stroke = style_value(element, "stroke")
-    return stroke is not None and stroke.strip().lower() != "none" and stroke_darkness(element) > 1e-9
+    stroke = style_value(element, "stroke", inherited)
+    return (
+        stroke is not None
+        and stroke.strip().lower() != "none"
+        and stroke_darkness(element, inherited) > 1e-9
+    )
 
 
 def hatch_angles_for_tone(base_angle, levels, angle_step, darkness):
@@ -1254,13 +1324,13 @@ def path_to_contours(d, tolerance, cancel_check=None):
     return contours
 
 
-def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, fill_wide_strokes=False, stroke_fill_ratio=2.0, pen_diameter=0.0):
+def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, fill_wide_strokes=False, stroke_fill_ratio=2.0, pen_diameter=0.0, inherited=None):
     check_cancelled(cancel_check)
     # Skip elements that are invisible in a single-pen plot (white/transparent
     # fill and stroke). A white knockout/background path would otherwise be
     # traced as pen strokes and its often-large geometry still costs parse and
     # plan time.
-    if not _element_is_visible(element):
+    if not _element_is_visible(element, inherited):
         return []
     tag = strip_ns(element.tag)
     contours = []
@@ -1285,13 +1355,13 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
             steps = max(24, min(360, int(2 * math.pi * max(rx, ry) / max(tolerance, 0.01))))
             contours = [[(cx + rx * math.cos(2 * math.pi * n / steps), cy + ry * math.sin(2 * math.pi * n / steps)) for n in range(steps + 1)]]
     fill_lines = []
-    if hatch_spacing > 0 and has_visible_fill(element):
-        darkness = fill_darkness(element)
+    if hatch_spacing > 0 and has_visible_fill(element, inherited):
+        darkness = fill_darkness(element, inherited)
         fill_polygons = [contour for contour in contours if len(contour) >= 3]
         if fill_polygons:
             fill_lines.extend(fill_region_pattern_contours(fill_polygons, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern, triangle_size, pattern_sizes, cancel_check, fill_inset))
-    if has_visible_stroke(element):
-        width = stroke_width(element)
+    if has_visible_stroke(element, inherited):
+        width = stroke_width(element, inherited)
         if fill_wide_strokes:
             # This mode owns stroke rendering end to end: a stroke wide enough to
             # need more than one pass is filled, and every thinner stroke stays a
@@ -1334,28 +1404,34 @@ def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_ang
     id_map = {node.get("id"): node for node in root.iter() if node.get("id")}
     contours = []
 
-    def walk(node, matrix, referenced=False, seen=None):
+    def walk(node, matrix, style, referenced=False, seen=None):
         check_cancelled(cancel_check)
         seen = seen or set()
         tag = strip_ns(node.tag)
         if tag in ("defs", "symbol") and not referenced:
             return
+        if style_hidden(node, style):
+            return
         combined = matrix @ parse_transform(node.get("transform"))
+        # Resolve this element's style once, then hand it to both the element
+        # itself and its children so inherited presentation values behave the
+        # way an SVG renderer applies them.
+        resolved = inherited_style(style, node)
         if tag == "use":
             href = use_href(node)
             if href and href.startswith("#"):
                 target_id = href[1:]
                 target = id_map.get(target_id)
                 if target is not None and target_id not in seen:
-                    walk(target, combined @ Matrix(e=parse_length(node.get("x")), f=parse_length(node.get("y"))), True, seen | {target_id})
+                    walk(target, combined @ Matrix(e=parse_length(node.get("x")), f=parse_length(node.get("y"))), resolved, True, seen | {target_id})
             return
-        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step, expand_strokes, triangle_size, pattern_sizes, cancel_check, fill_inset, fill_wide_strokes, stroke_fill_ratio, pen_diameter):
+        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step, expand_strokes, triangle_size, pattern_sizes, cancel_check, fill_inset, fill_wide_strokes, stroke_fill_ratio, pen_diameter, resolved):
             check_cancelled(cancel_check)
             contours.append([combined.apply(x, y) for x, y in contour])
         for child in list(node):
-            walk(child, combined, referenced, seen)
+            walk(child, combined, resolved, referenced, seen)
 
-    walk(root, Matrix())
+    walk(root, Matrix(), {})
     if flip_y:
         source_height = view_box_height or height or max((y for contour in contours for _, y in contour), default=0.0)
         contours = [[(x, source_height - y) for x, y in contour] for contour in contours]

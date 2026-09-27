@@ -1,5 +1,35 @@
 # Engineering Log
 
+<a id="elog-20260927-resolve-inherited-svg-presentation-attributes"></a>
+### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - resolve inherited SVG presentation attributes
+
+- Problem: enabling shading hatched the interior of every outline path instead
+  of only the regions the artwork meant to shade. `style_value()` read
+  presentation values from the element alone, so the `fill="none"` and stroke
+  declared on a wrapping `<g>` never reached any child, and each child fell back
+  to the SVG initial fill of black. `_element_is_visible()` then accepted that
+  phantom fill as proof of visibility, so one defect both drew and hatched the
+  elements.
+- Change: `software/converter_core/geometry.py` resolves `fill`, `fill-opacity`,
+  `stroke`, `stroke-opacity`, `stroke-width`, `visibility`, and `opacity`
+  through the element tree, honours `display="none"` as a subtree suppression,
+  and threads the resolved mapping through `parse_svg_geometry()`'s `walk()` into
+  `element_contours()`. The SVG initial value of black still applies when
+  nothing declares a fill, so implicit-fill artwork is unchanged.
+- Measurement: `samples/svg/kindergarten-house-sun.svg` with `Fill spacing 4` and
+  `crosshatch` produced 346 contours / 335 hatch segments before the change and
+  20 / 9 after - identical to the same file with shading disabled.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes, 31 tests including 6 new inheritance cases;
+  `python -m py_compile software\qt_svg_to_gcode.pyw` passes.
+- Rejected: treating "has a stroke and declares no fill" as stroke-only. It fixes
+  the reported file but silently drops artwork that relies on the implicit black
+  fill.
+- Category: windows-software, converter, svg, shading, fill
+- Next action: pen-relative shading (`spacing = pen_diameter / coverage`), which
+  was deferred until the fill regions could be trusted.
+- Evidence: `WSW-20260927-001`.
+
 <a id="elog-20260925-auto-clear-fault-on-pen-up"></a>
 ### 🟨 2026-09-25 - RP23CNC SOFTWARE/IMPLEMENTED - auto-clear a latched fault on pen-up
 

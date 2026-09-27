@@ -183,6 +183,22 @@
 - [ ] Document limitations and future work.
 - [ ] Complete and export the Systems Integration in Robotics report.
 
+## Documentation debt
+
+- [ ] Bring the engineering log back inside its own size and index rules.
+  Problem: `docs/project/ENGINEERING_LOG.md` is 5,665 lines against the roughly
+  1,000-line archive threshold in `AGENTS.md`, and its 74 newest entries sit
+  above the log's `---` separator, so the generated topic index does not contain
+  them. `python tools\docs_index.py --check` still passes because it only
+  compares the regenerated index against the entries below the separator.
+  Benefit: recent entries become reachable through the topic index and the log
+  matches the documented structure.
+  Risk: relocating entries is a large mechanical edit, and a mistake orphans
+  anchors that other documents link to.
+  Acceptance: every `###` entry appears exactly once below the separator, the
+  topic index links all of them, completed calendar years are archived under
+  `docs/project/engineering-log/`, and `--check` passes.
+
 ## Next concrete task
 
 Re-run F-02 with a newly generated default converter file. Then complete the
