@@ -283,6 +283,15 @@ emits it only through an explicit disabled-by-default setting. No firmware
 gate, controller macro file, or converter setting may be enabled until the
 specified force, clear, and GP27 tests pass.
 
+The 2026-09-25 default-on flip of the converter's **Wait for GP27 toolhead
+ready** checkbox was reverted on 2026-09-27. With `F-05A` still open, every
+generated program emitted a fatal `G65 P115` around each M3/M5, so a single
+handshake timeout raised `error[39]` and aborted a running print mid-job.
+`software/converter_core/settings.py` ships the fixed-dwell default again and
+keeps the handshake as the explicit opt-in this contract requires; re-enable it
+only after the flashed toolhead carries `GP27_NORMAL_STATUS_ENABLED` plus
+`GP27_TRANSITION_LOW_MS` and `F-05A` passes.
+
 `M5` is not the toolhead's absolute position-reference command. The planned
 local `GP2` switch establishes `LIFT_HOME` only at boot, recovery, or an
 explicit service action. Normal M5 uses the same load cell as M3, but detects

@@ -81,6 +81,26 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         self.assertNotRegex(gcode, r"(?m)(?:^|\s)Z[-+0-9.]")
         self.assertTrue(any(line.startswith("G1 ") and " A" in line for line in lines))
 
+    def test_default_program_avoids_the_uncommissioned_gp27_handshake(self):
+        # `G65 P115` is a fatal guard: when GP27/PRB does not show a fresh
+        # inactive-to-active edge, its bounded timeout raises error 39 and the
+        # controller aborts the streaming program mid-print. F-05A (the on-bench
+        # P115 validation) is still open, so the shipped default must emit the
+        # fixed G4 dwells; the handshake stays an explicit opt-in.
+        contours = [[(-25.0, 0.0), (25.0, 0.0)]]
+        settings = converter.Settings()
+        self.assertFalse(settings.toolhead_status_handshake)
+
+        lines = converter.contours_to_gcode(contours, settings).splitlines()
+
+        self.assertFalse(
+            [line for line in lines if line.startswith("G65 P115")],
+            "default program must not emit the uncommissioned P115 handshake",
+        )
+        self.assertIn("M5", lines)
+        self.assertIn("M3", lines)
+        self.assertTrue(any(line.startswith("G4 P") for line in lines))
+
     def test_commissioned_gp27_handshake_replaces_fixed_pen_dwells(self):
         contours = [[(-25.0, 0.0), (25.0, 0.0)]]
         gcode = converter.contours_to_gcode(

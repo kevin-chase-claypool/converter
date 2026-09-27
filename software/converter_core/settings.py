@@ -109,11 +109,15 @@ class Settings:
     pen_down_command: str = "M3"
     # Emits the controller-resident P115 acknowledgement macro after each M3/M5
     # transition, replacing the fixed G4 dwells with a closed-loop wait for the
-    # toolhead's GP27 ready signal. Enabled by default for the commissioned
-    # machine (P115.macro installed, GP27/U3 -> PRB wired, and the toolhead
-    # GP27_NORMAL_STATUS_ENABLED flag true). If the macro or wiring is missing
-    # the generated program will error 39; uncheck to fall back to fixed dwells.
-    toolhead_status_handshake: bool = True
+    # toolhead's GP27 ready signal. P115 is a fatal guard: when GP27/PRB does
+    # not show a fresh inactive-to-active edge inside its 0.50 s / 5.00 s
+    # bounds it raises error 39 and the controller aborts the streaming program
+    # mid-print. F-05A (the on-bench P115/PRB validation) is still open, so the
+    # shipped default stays on the fixed dwell path and the handshake is an
+    # explicit opt-in. Turn it on only once P115.macro is installed, the
+    # GP27/U3-to-PRB wiring is verified, the flashed toolhead carries
+    # GP27_NORMAL_STATUS_ENABLED plus GP27_TRANSITION_LOW_MS, and F-05A passes.
+    toolhead_status_handshake: bool = False
     # End-of-print park, expressed in machine coordinates (G53). After the last
     # pen-up the toolhead moves here so the pen clears the rotating bed and the
     # paper can be removed. Defaults match the installed machine's homed rest
@@ -209,7 +213,7 @@ CHECKBOX_FIELDS = (
     ("Shading", "raster_shading", "Raster shading", False),
     ("Theta kinematics", "monotonic_theta", "Monotonic theta (r-theta style)", True),
     ("Pen", "include_z", "Use Z axis for pen up/down", False),
-    ("Pen", "toolhead_status_handshake", "Wait for GP27 toolhead ready (commissioned only)", True),
+    ("Pen", "toolhead_status_handshake", "Wait for GP27 toolhead ready (commissioned only)", False),
 )
 
 SETTING_TYPES = {field.name: field.type for field in fields(Settings)}

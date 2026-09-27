@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-27 | `WSW-20260927-008` | windows-software, rp23cnc-software | implemented | [Restore the fixed-dwell default until F-05A passes](windows-software/2026/2026-09-27-restore-dwell-default-until-f05a.md) |
 | 2026-09-27 | `WSW-20260927-007` | windows-software | implemented | [Drag the artwork on the bed to place it](windows-software/2026/2026-09-27-drag-artwork-placement.md) |
 | 2026-09-27 | `WSW-20260927-006` | windows-software | implemented | [Show keep-down connectors in the preview](windows-software/2026/2026-09-27-preview-keep-down-connectors.md) |
 | 2026-09-27 | `WSW-20260927-005` | windows-software | implemented | [Chain line-family infill passes instead of lifting between them](windows-software/2026/2026-09-27-chain-line-family-infill-passes.md) |

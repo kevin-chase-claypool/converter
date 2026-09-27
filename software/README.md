@@ -31,10 +31,10 @@ Requires `PySide6` (`pip install PySide6`).
 - `M5` / `M3` pen up / down by default. `Z` moves are available only when
   **Use Z axis** is deliberately enabled; do not enable it for this machine,
   whose controller's Z slot is unwired. M3/M5 moves include a
-  `G4` settle dwell after each when the handshake is off. With **Wait for GP27
-  toolhead ready** enabled (the default for the commissioned machine) those
-  dwells are replaced by the RP23CNC-resident `G65 P115` bounded
-  acknowledgement macro.
+  `G4` settle dwell after each. Enabling **Wait for GP27 toolhead ready**
+  replaces those dwells with the RP23CNC-resident `G65 P115` bounded
+  acknowledgement macro; it stays off until that handshake path passes F-05A,
+  because a failed P115 raises error 39 and aborts the running program.
 - `M2` at end
 
 The converter normalizes the clipped SVG around its geometric center before
@@ -44,8 +44,9 @@ reference). After the final pen-up the program ends with a `G53 G0` move to a
 configured machine-coordinate park position (defaults to the homed rest
 position). First it asserts Aux0/GP28 (`M65 P0`) to request a full retract to
 the toolhead's GP2 lift-home switch, waits for the clear-ready acknowledgement
-(`G65 P115 Q0`), and releases Aux0 (`M64 P0`), so the pen is fully up before
-the gantry clears the rotating bed.
+(`G65 P115 Q0` when the handshake is enabled, otherwise the fixed `G4 P3.0`
+retract dwell), and releases Aux0 (`M64 P0`), so the pen is fully up before the
+gantry clears the rotating bed.
 
 The authoritative host-to-controller contract is
 [`../docs/integration/INTERFACES.md`](../docs/integration/INTERFACES.md).
@@ -108,8 +109,8 @@ X/Y-only output, and preview/G-code parity.
   - **Theta tangential speed mm/min** is the requested surface speed caused by
     A-axis bed rotation during drawing. It does not change X/Y-only output.
 - **Pen** — Z heights, pen cycle, pen up/down commands, Use Z, and the
-  **Wait for GP27 toolhead ready** option (enabled by default for the
-  commissioned machine).
+  **Wait for GP27 toolhead ready** option (off by default; enable it only after
+  the F-05A on-bench P115/PRB validation passes).
   - **Pen down ms** (`pen_down_ms`, default 2500) is the dwell after every
     `M3`. It covers the toolhead's warm contact seek, which starts from the
     ~1 mm `M5` clearance and finishes in 2-3 s.
@@ -123,9 +124,12 @@ X/Y-only output, and preview/G-code parity.
     when the pen is already off GP2 — for example right after a manual
     `M3`/`M5` warm-up — only wastes the extra first-dwell time.
   - Enable that option only after the `P115.macro` file is installed on the
-    RP23CNC, GP27/U3-to-`PRB` polarity is verified, and the selected pen has
-    passed contact/clear qualification. It replaces fixed `G4` dwells with a
-    bounded controller-side acknowledgement; it is not a host-PC serial wait.
+    RP23CNC, GP27/U3-to-`PRB` polarity is verified, the flashed toolhead carries
+    `GP27_NORMAL_STATUS_ENABLED` plus `GP27_TRANSITION_LOW_MS`, F-05A has
+    passed, and the selected pen has passed contact/clear qualification. It
+    replaces fixed `G4` dwells with a bounded controller-side acknowledgement;
+    it is not a host-PC serial wait. A P115 timeout raises error 39 and aborts
+    the running program, so it is a commissioning-stage option, not a default.
   - **Curve round bias** (`round_bias`, default 0.05) trades lowest-cost motion vs.
     well-rounded curves. `0` = pick the cheapest theta per segment (tends to
     axis-lock, flatter curves); higher values bias theta toward the path tangent so
@@ -194,11 +198,13 @@ X/Y-only output, and preview/G-code parity.
 
 - Leave **Use Z axis** unchecked and keep `Pen up cmd = M5`, `Pen down cmd = M3` —
   pen height is owned by the force-control loop, not commanded Z.
-- **Wait for GP27 toolhead ready** is enabled by default and emits
-  `G65 P115 Q0` after the opening M5 and `G65 P115 Q1` after every subsequent
-  M3/M5 transition. It requires `P115.macro` on the RP23CNC and the GP27/U3-to-PRB
-  wiring; if either is missing the program errors `39`. Uncheck it to fall back
-  to the fixed `G4` pen dwells.
+- **Wait for GP27 toolhead ready** is off by default, so a default program uses
+  the fixed `G4` pen dwells and cannot abort on a handshake timeout. When
+  enabled it emits `G65 P115 Q0` after the opening M5 and `G65 P115 Q1` after
+  every subsequent M3/M5 transition. That requires `P115.macro` on the RP23CNC,
+  the GP27/U3-to-PRB wiring, and the flashed toolhead's
+  `GP27_NORMAL_STATUS_ENABLED` plus `GP27_TRANSITION_LOW_MS`; if any of those is
+  missing the program errors `39` mid-print. Turn it on only after F-05A passes.
 - The converter has no XY-only export mode: every generated production program
   retains its planned A-axis words.
 - The converter does not apply a pen/TMAG XY tool offset. Generated XY positions

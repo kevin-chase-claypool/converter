@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20260927-restore-dwell-default"></a>
+### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - restore the fixed-dwell default until F-05A passes
+
+- Problem: the converter defaulted **Wait for GP27 toolhead ready** on
+  (2026-09-25), so every generated program wrapped each M3/M5 in a fatal
+  `G65 P115`. One missed GP27 completion edge raises `error[39]` and aborts the
+  streaming job mid-print; `F-05A` is still open, and the interface contract
+  still requires the fixed-dwell default until the force, clear, and GP27 tests
+  pass.
+- Change: `toolhead_status_handshake` and its Qt checkbox seed default to
+  `False`. The `G65 P115` path is unchanged and stays available as an explicit
+  opt-in for a commissioned handshake.
+- Verification: the new regression test
+  `test_default_program_avoids_the_uncommissioned_gp27_handshake` failed first
+  against the old default (`AssertionError: True is not false`) and passes after
+  the change; a default program emits no `G65 P115` line and still emits the
+  `G4` dwells; `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes, 49 tests.
+- Category: windows-software, converter, gp27, p115, error-39, dwell
+- Next action: flash the 2026-09-25 `GP27_TRANSITION_LOW_MS` firmware to the
+  toolhead and complete the F-05A bench record, then re-default the checkbox on.
+- Evidence: `WSW-20260927-008`.
+
 <a id="elog-20260927-drag-artwork-placement"></a>
 ### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - drag the artwork on the bed to place it
 
