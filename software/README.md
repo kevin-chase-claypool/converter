@@ -151,6 +151,13 @@ X/Y-only output, and preview/G-code parity.
   generated path in the Motion color; turn it off when inspecting only the
   upright artwork. Pen-up travel, crosshairs, tool marker, and pen-tip footprint
   remain hidden.
+- **Show machine reach guide** draws the `Gantry reach radius mm` boundary as a
+  green circle around the bed center, and the preview status line reports the
+  artwork radius against it. Both are measured before clipping, so artwork the
+  reach cap would trim shows up as over-scale instead of quietly disappearing.
+  The guide models the converter's reach radius only - it does not include the
+  controller's G54 work offset, so it is not a machine-envelope check, and it is
+  drawn only once a preview exists.
 - Pressing **Preview** shows the current build stage, percentage, and elapsed
   time. SVG parsing, motion planning, and clipping run in the background so the
   window remains responsive. The expensive contour/theta plan is built once and

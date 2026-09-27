@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-27 | `WSW-20260927-004` | windows-software | implemented | [Draw the gantry reach in the preview and report the artwork radius](windows-software/2026/2026-09-27-preview-machine-reach-guide.md) |
 | 2026-09-27 | `WSW-20260927-003` | windows-software | implemented | [Apply the fill bleed margin by pulling back clipped passes](windows-software/2026/2026-09-27-apply-fill-margin-by-pull-back.md) |
 | 2026-09-27 | `WSW-20260927-002` | windows-software | implemented | [Accelerate fill generation with a polygon spatial index](windows-software/2026/2026-09-27-speed-up-fill-region-with-spatial-index.md) |
 | 2026-09-27 | `WSW-20260927-001` | windows-software | implemented | [Resolve inherited SVG presentation attributes](windows-software/2026/2026-09-27-resolve-inherited-svg-presentation-attributes.md) |

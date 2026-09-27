@@ -88,7 +88,13 @@ class GLPreview(QOpenGLWidget):
         self.undrawn_color = QColor("#bcd0f5")
         self.motion_color = QColor("#be123c")
         self.gantry_color = QColor("#7f1d1d")
+        # Boundary guide: the radius the gantry can actually reach from the
+        # registered bed center. plan_program clips to it, so artwork outside it
+        # is silently trimmed; drawing it makes that visible while the scale is
+        # being chosen.
+        self.reach_color = QColor("#15803d")
         self.show_pen_down_path = True
+        self.show_machine_reach = True
         self.fast_render = False
         self.preview_center = (0.0, 0.0)
         self.preview_radius = 1.0
@@ -163,7 +169,7 @@ class GLPreview(QOpenGLWidget):
             "bounds": self.program.uniformLocation("bounds"),
             "color": self.program.uniformLocation("color"),
         }
-        for name in ("bed_circle", "bed_radius", "debug_box", "debug_cross", "artwork", "drawn_path", "travel", "motion"):
+        for name in ("bed_circle", "bed_radius", "debug_box", "debug_cross", "reach_circle", "artwork", "drawn_path", "travel", "motion"):
             buf = QOpenGLBuffer(QOpenGLBuffer.VertexBuffer)
             buf.setUsagePattern(QOpenGLBuffer.StaticDraw)
             buf.create()
@@ -253,6 +259,19 @@ class GLPreview(QOpenGLWidget):
             self.preview_center[0], self.preview_center[1] + bed_radius * 0.25,
         ]
 
+        reach_radius = float(getattr(self.settings, "machine_reach_radius_mm", 0.0))
+        reach_circle = []
+        if reach_radius > 0.0:
+            prev = (self.preview_center[0] + reach_radius, self.preview_center[1])
+            for i in range(1, 241):
+                a = i / 240.0 * math.pi * 2.0
+                curr = (
+                    self.preview_center[0] + math.cos(a) * reach_radius,
+                    self.preview_center[1] + math.sin(a) * reach_radius,
+                )
+                reach_circle.extend([prev[0], prev[1], curr[0], curr[1]])
+                prev = curr
+
         artwork = []
         for contour in self.contours:
             for a, b in zip(contour, contour[1:]):
@@ -306,6 +325,7 @@ class GLPreview(QOpenGLWidget):
             "bed_radius": array("f", bed_radius_line),
             "debug_box": array("f", debug_box),
             "debug_cross": array("f", debug_cross),
+            "reach_circle": array("f", reach_circle),
             "artwork": array("f", artwork),
             "drawn_path": array("f", drawn_path),
             "travel": array("f", travel),
@@ -414,6 +434,11 @@ class GLPreview(QOpenGLWidget):
     def set_show_pen_down_path(self, show):
         """Show only generated G1 X/Y segments, not pen-up travel clutter."""
         self.show_pen_down_path = bool(show)
+        self.update()
+
+    def set_show_machine_reach(self, show):
+        """Show the gantry's reachable radius around the registered bed center."""
+        self.show_machine_reach = bool(show)
         self.update()
 
     def active_theta(self):
@@ -637,6 +662,8 @@ class GLPreview(QOpenGLWidget):
             self.draw_static("drawn_path", self.drawing_color, 1.6, count=drawn_segments * 2)
         if self.show_pen_down_path:
             self.draw_static("motion", self.motion_color, 1.2)
+        if self.show_machine_reach:
+            self.draw_static("reach_circle", self.reach_color, 2.0)
         self.program.release()
 
 
@@ -804,6 +831,8 @@ class MainWindow(QMainWindow):
         self.motion_color_button.clicked.connect(lambda: self.choose_preview_color("motion"))
         self.show_pen_down_path = QCheckBox("Show X/Y pen-down path")
         self.show_pen_down_path.setChecked(True)
+        self.show_machine_reach = QCheckBox("Show machine reach guide")
+        self.show_machine_reach.setChecked(True)
         color_widget = QWidget()
         color_layout = QHBoxLayout(color_widget)
         color_layout.setContentsMargins(0, 0, 0, 0)
@@ -815,6 +844,7 @@ class MainWindow(QMainWindow):
         preview_box, preview_form = make_form_group("Preview settings", field_groups["Preview settings"])
         preview_form.addRow(QLabel("Colors"), color_widget)
         preview_form.addRow(self.show_pen_down_path)
+        preview_form.addRow(self.show_machine_reach)
 
         actions = QHBoxLayout()
         self.preview_button = QPushButton("Preview", clicked=self.preview)
@@ -858,6 +888,7 @@ class MainWindow(QMainWindow):
         preview_layout.setSpacing(2)
         self.gl_preview = GLPreview()
         self.show_pen_down_path.toggled.connect(self.gl_preview.set_show_pen_down_path)
+        self.show_machine_reach.toggled.connect(self.gl_preview.set_show_machine_reach)
         preview_layout.addWidget(self.gl_preview, 1)
 
         controls = QHBoxLayout()
@@ -2302,6 +2333,27 @@ class MainWindow(QMainWindow):
         ink_h = path_h + pen
         return f"path {fmt(path_w)} x {fmt(path_h)} mm, estimated ink {fmt(ink_w)} x {fmt(ink_h)} mm"
 
+    def reach_summary(self):
+        """Artwork radius against the configured gantry reach.
+
+        Measured before clipping, so artwork the reach cap would trim is
+        reported rather than quietly disappearing.
+        """
+        reach = float(getattr(self.gl_preview.settings, "machine_reach_radius_mm", 0.0))
+        source = self.raw_contours if self.raw_contours else self.contours
+        if reach <= 0.0 or not source:
+            return ""
+        min_x, min_y, max_x, max_y = converter.contour_bounds(source)
+        cx = (min_x + max_x) / 2.0
+        cy = (min_y + max_y) / 2.0
+        radius = max(math.hypot(x - cx, y - cy) for contour in source for x, y in contour)
+        if radius <= reach:
+            return f"Machine reach: artwork radius {fmt(radius)} mm is inside {fmt(reach)} mm."
+        return (
+            f"Machine reach: artwork radius {fmt(radius)} mm exceeds {fmt(reach)} mm by "
+            f"{fmt(radius - reach)} mm; the excess is clipped."
+        )
+
     def install_preview(self, settings, contours, moves, bed_center, program_gcode):
         self.moves = moves
         self.contours = contours
@@ -2410,7 +2462,10 @@ class MainWindow(QMainWindow):
         size_summary = self.size_summary()
         if size_summary:
             self.log.append(f"Pen compensation: {size_summary}.")
-        self.status.setText(f"Preview ready: {len(self.moves)} commands.")
+        reach_summary = self.reach_summary()
+        if reach_summary:
+            self.log.append(reach_summary)
+        self.status.setText(f"Preview ready: {len(self.moves)} commands. {reach_summary}")
 
     def preview_failed(self, message):
         self.preview_build_bar.setValue(0)

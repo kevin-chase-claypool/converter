@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-27 | `WSW-20260927-004` | implemented | [Draw the gantry reach in the preview and report the artwork radius](2026/2026-09-27-preview-machine-reach-guide.md) | `converter`, `preview`, `gantry-reach`, `scaling`, `soft-limit`, `g54` |
 | 2026-09-27 | `WSW-20260927-003` | implemented | [Apply the fill bleed margin by pulling back clipped passes](2026/2026-09-27-apply-fill-margin-by-pull-back.md) | `converter`, `fill`, `hatch`, `inset`, `clipping`, `correctness` |
 | 2026-09-27 | `WSW-20260927-002` | implemented | [Accelerate fill generation with a polygon spatial index](2026/2026-09-27-speed-up-fill-region-with-spatial-index.md) | `converter`, `performance`, `fill`, `hatch`, `spatial-index`, `svg` |
 | 2026-09-27 | `WSW-20260927-001` | implemented | [Resolve inherited SVG presentation attributes](2026/2026-09-27-resolve-inherited-svg-presentation-attributes.md) | `converter`, `svg`, `style-inheritance`, `shading`, `hatch`, `fill`, `line-art` |

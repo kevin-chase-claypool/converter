@@ -1,5 +1,41 @@
 # Engineering Log
 
+<a id="elog-20260927-preview-machine-reach-guide"></a>
+### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - draw the gantry reach in the preview and report the artwork radius
+
+- Problem: choosing a scale required guessing whether the artwork stayed inside
+  the area the gantry can reach. `plan_program` already clipped to
+  `machine_reach_radius_mm`, so the limit was enforced but invisible - over-scale
+  artwork was trimmed silently rather than shown.
+- Prompt: ioSender's **Program limits** panel was being read as a machine
+  envelope check. It is not one. It reads every coordinate literally, so the
+  closing `G53 G0 X-10 Y-436 (park home)` line - machine coordinates, outside
+  the work frame by design - is counted as a work coordinate and made the panel
+  claim a 597 mm Y span on a 451 mm machine. Parsing the file directly gives work
+  extents X -125.139..92.723 and Y -161.883..161.151, which with the recorded G54
+  of `-232.478, -190.154` land at machine X -357.6..-139.8 and Y -352.0..-29.0,
+  both inside the `$130=455` / `$131=451` envelope at about 78% of travel.
+- Change: `software/qt_svg_to_gcode.pyw` builds a `reach_circle` buffer of radius
+  `machine_reach_radius_mm` about the preview center, drawn in green and toggled
+  by **Show machine reach guide**. `MainWindow.reach_summary()` reports the
+  artwork radius about its own center against that reach, measured from
+  `raw_contours` before clipping, and prints the result to the preview log and
+  status line.
+- Verification: offscreen smoke test - the guide holds 480 vertices and every one
+  sits exactly 191.4000 mm from the preview center; the summary reads "artwork
+  radius 200 mm exceeds 100 mm by 100 mm; the excess is clipped" for an
+  over-scale fixture and "artwork radius 40 mm is inside 100 mm" for an in-scale
+  one. `python -m py_compile software\qt_svg_to_gcode.pyw` passes and
+  `python -m unittest discover -s software\tests -p "test_*.py"` passes, 37
+  tests.
+- Rejected: reading the envelope from the controller (`$130`, `$131`) and the
+  work offset. The converter drives neither, so it would need new settings and
+  would guess at a G54 that P100/P113 owns.
+- Category: windows-software, converter, preview, gantry-reach, soft-limit
+- Next action: none. The guide is a scaling aid only; it does not model G54, and
+  the roadmap already tracks recomputing the reach radius if the bed center moves.
+- Evidence: `WSW-20260927-004`.
+
 <a id="elog-20260927-fill-margin-pull-back"></a>
 ### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - apply the fill bleed margin by pulling back clipped passes
 
