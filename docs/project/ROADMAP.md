@@ -183,7 +183,24 @@
 - [ ] Document limitations and future work.
 - [ ] Complete and export the Systems Integration in Robotics report.
 
-## Documentation debt
+## Known technical debt
+
+- [ ] Index fill geometry at edge level for regions made of a few very large
+  polygons.
+  Problem: the 2026-09-27 polygon grid narrowed fill work by subpath count, but a
+  region built from few, enormous contours still walks every edge. The spirit
+  logo sample is 105 polygons totalling 83,233 points (largest 14,685) and its
+  geometry stage still takes 45 s; the F15 cutaway, with 4,875 tiny polygons,
+  dropped from 134 s to 1.8 s.
+  Benefit: the remaining large-polygon cases become tractable, and dense solid
+  fills stop being dominated by ray-casts over thousands of edges.
+  Risk: two new indexes (y-band buckets for the ray-cast, an edge bounding-box
+  grid for segment clipping) must stay exactly equivalent to the unindexed
+  predicates; an error would shift geometry rather than crash.
+  Acceptance: the same contour-identity check used on 2026-09-27 still reports
+  identical output for every `samples/svg/*.svg` plus the F15 cutaway, both new
+  indexes have identity tests, and the spirit logo geometry stage drops well
+  below its current 45 s.
 
 - [ ] Bring the engineering log back inside its own size and index rules.
   Problem: `docs/project/ENGINEERING_LOG.md` is 5,665 lines against the roughly

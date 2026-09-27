@@ -419,29 +419,175 @@ def point_in_region(point, polygons):
     return sum(1 for polygon in polygons if point_in_polygon(point, polygon)) % 2 == 1
 
 
-def _point_in_polygons_even_odd(point, polygons):
+# Spatial index for the fill hot paths.
+#
+# A compound path traced from a bitmap can carry thousands of subpaths (the F15
+# cutaway has 4,875 and the spirit logo 5,243). The fill code used to test every
+# one of them against every hatch row and every inset query, which is quadratic
+# in the subpath count: 23.8 M containment tests just to classify outer
+# boundaries from holes, and ~7 M segment/edge intersections per hatch angle.
+#
+# The grid changes no geometry. A query returns a *superset* of the polygons
+# whose bounding box can contain the point or overlap the segment, and the
+# caller still runs the same exact predicates -- point_in_polygon, the segment
+# intersection test, the even-odd parity accumulation. Only the number of
+# evaluations drops.
+#
+# Below _FILL_INDEX_MIN_POLYGONS the grid is not built, so the single-polygon
+# and small-region call sites behave exactly as they did before.
+_FILL_INDEX_MIN_POLYGONS = 8
+_FILL_INDEX_MAX_CELLS = 128
+
+
+class _PolygonGrid:
+    def __init__(self, polygons):
+        self.count = len(polygons)
+        self.bounds = []
+        # Closed edge lists are built once here and reused by every hatch row
+        # instead of being rebuilt per clip call.
+        self.closed = []
+        for polygon in polygons:
+            if len(polygon) < 3:
+                self.bounds.append(None)
+                self.closed.append(None)
+                continue
+            xs = [p[0] for p in polygon]
+            ys = [p[1] for p in polygon]
+            self.bounds.append((min(xs), min(ys), max(xs), max(ys)))
+            self.closed.append(
+                polygon if polygon[0] == polygon[-1] else polygon + [polygon[0]]
+            )
+        self.enabled = False
+        self.cells = None
+        self.cols = 0
+        self.cell_w = 1.0
+        self.cell_h = 1.0
+        self.lo_x = 0.0
+        self.lo_y = 0.0
+        self.hi_x = 0.0
+        self.hi_y = 0.0
+        self.stamp = [0] * self.count
+        self.generation = 0
+        boxes = [box for box in self.bounds if box is not None]
+        if self.count < _FILL_INDEX_MIN_POLYGONS or not boxes:
+            return
+        lo_x = min(box[0] for box in boxes)
+        lo_y = min(box[1] for box in boxes)
+        hi_x = max(box[2] for box in boxes)
+        hi_y = max(box[3] for box in boxes)
+        if hi_x <= lo_x or hi_y <= lo_y:
+            return
+        span = min(max(1, math.isqrt(self.count)), _FILL_INDEX_MAX_CELLS)
+        rows = span
+        self.cols = span
+        self.cell_w = (hi_x - lo_x) / span
+        self.cell_h = (hi_y - lo_y) / rows
+        self.lo_x, self.lo_y = lo_x, lo_y
+        self.hi_x, self.hi_y = hi_x, hi_y
+        self.cells = [None] * (span * rows)
+        for index, box in enumerate(self.bounds):
+            if box is None:
+                continue
+            c0, c1, r0, r1 = self._cells_for_box(box)
+            for row in range(r0, r1 + 1):
+                base = row * span
+                for col in range(c0, c1 + 1):
+                    bucket = self.cells[base + col]
+                    if bucket is None:
+                        self.cells[base + col] = [index]
+                    else:
+                        bucket.append(index)
+        self.enabled = True
+
+    def _clamp_col(self, value):
+        return max(0, min(int(value), self.cols - 1))
+
+    def _clamp_row(self, value):
+        rows = len(self.cells) // self.cols
+        return max(0, min(int(value), rows - 1))
+
+    def _cells_for_box(self, box):
+        return (
+            self._clamp_col((box[0] - self.lo_x) / self.cell_w),
+            self._clamp_col((box[2] - self.lo_x) / self.cell_w),
+            self._clamp_row((box[1] - self.lo_y) / self.cell_h),
+            self._clamp_row((box[3] - self.lo_y) / self.cell_h),
+        )
+
+    def _collect(self, c0, c1, r0, r1):
+        self.generation += 1
+        generation = self.generation
+        stamp = self.stamp
+        found = []
+        cells = self.cells
+        cols = self.cols
+        for row in range(r0, r1 + 1):
+            base = row * cols
+            for col in range(c0, c1 + 1):
+                bucket = cells[base + col]
+                if not bucket:
+                    continue
+                for index in bucket:
+                    if stamp[index] != generation:
+                        stamp[index] = generation
+                        found.append(index)
+        return found
+
+    def candidates_for_point(self, point):
+        """Polygons whose bounding box may contain *point*."""
+        if not self.enabled:
+            return range(self.count)
+        x, y = point
+        if x < self.lo_x or x > self.hi_x or y < self.lo_y or y > self.hi_y:
+            # Outside the overall bounding box, so outside every polygon.
+            return ()
+        c0, c1, r0, r1 = self._cells_for_box((x, y, x, y))
+        return self._collect(c0, c1, r0, r1)
+
+    def candidates_for_segment(self, a, b):
+        """Polygons whose bounding box may overlap segment *a*-*b*."""
+        if not self.enabled:
+            return range(self.count)
+        ax, ay = a
+        bx, by = b
+        box = (min(ax, bx), min(ay, by), max(ax, bx), max(ay, by))
+        return self._collect(*self._cells_for_box(box))
+
+
+def _point_in_polygons_even_odd(point, polygons, index=None):
     # Even-odd containment without the boundary scan. The boundary check only
     # matters for points that sit exactly on an edge, which is measure-zero for
     # a regular fill lattice; the per-edge scan it performs is otherwise pure
     # overhead in the fill hot path.
+    candidates = range(len(polygons)) if index is None else index.candidates_for_point(point)
     inside = False
-    for polygon in polygons:
-        if point_in_polygon(point, polygon):
+    for j in candidates:
+        if point_in_polygon(point, polygons[j]):
             inside = not inside
     return inside
 
 
-def clip_segment_to_region(a, b, polygons):
+def clip_segment_to_region(a, b, polygons, index=None):
     if not polygons:
         return []
     ax, ay = a
     bx, by = b
     dx, dy = bx - ax, by - ay
     ts = [0.0, 1.0]
-    for polygon in polygons:
-        if len(polygon) < 3:
-            continue
-        pts = polygon if polygon[0] == polygon[-1] else polygon + [polygon[0]]
+    if index is None:
+        candidates = range(len(polygons))
+        closed = [None] * len(polygons)
+    else:
+        candidates = index.candidates_for_segment(a, b)
+        closed = index.closed
+    for j in candidates:
+        pts = closed[j]
+        if pts is None:
+            polygon = polygons[j]
+            if len(polygon) < 3:
+                continue
+            pts = polygon if polygon[0] == polygon[-1] else polygon + [polygon[0]]
+            closed[j] = pts
         for p1, p2 in zip(pts, pts[1:]):
             ex, ey = p2[0] - p1[0], p2[1] - p1[1]
             denom = dx * ey - dy * ex
@@ -463,7 +609,7 @@ def clip_segment_to_region(a, b, polygons):
             continue
         mid = (t0 + t1) / 2.0
         mid_point = (ax + dx * mid, ay + dy * mid)
-        if _point_in_polygons_even_odd(mid_point, polygons):
+        if _point_in_polygons_even_odd(mid_point, polygons, index):
             segments.append([
                 (ax + dx * t0, ay + dy * t0),
                 (ax + dx * t1, ay + dy * t1),
@@ -584,6 +730,9 @@ def line_region_contours(polygons, spacing, angle_deg=0.0, cancel_check=None):
     def world(x, y):
         return (x * ca - y * sa, x * sa + y * ca)
 
+    # Built once for the whole angle family. Every row below then tests only the
+    # polygons whose bounding box can reach that row instead of all of them.
+    index = _PolygonGrid(polygons)
     contours = []
     # Snap to global grid so multiple angle families phase-align correctly
     # (all families share reference lines at multiples of spacing from origin)
@@ -593,7 +742,7 @@ def line_region_contours(polygons, spacing, angle_deg=0.0, cancel_check=None):
         check_cancelled(cancel_check)
         start = world(min_x - spacing, y)
         end = world(max_x + spacing, y)
-        segments = clip_segment_to_region(start, end, polygons)
+        segments = clip_segment_to_region(start, end, polygons, index)
         if row % 2:
             segments = [[seg[1], seg[0]] for seg in reversed(segments)]
         contours.extend(segments)
@@ -1001,6 +1150,11 @@ def _inset_fill_region(polygons, margin):
     """Inset the even-odd fill region by *margin* (outer shrink, holes grow)."""
     if margin <= 0 or not polygons:
         return polygons
+    # Nesting depth is decided by testing each contour centroid against the
+    # others. The grid narrows that from every other contour to the few whose
+    # bounding box can actually contain the centroid; the parity and the
+    # resulting inset are unchanged.
+    index = _PolygonGrid(polygons)
     result = []
     for i, poly in enumerate(polygons):
         if len(poly) < 3:
@@ -1010,8 +1164,10 @@ def _inset_fill_region(polygons, margin):
         cy = sum(p[1] for p in poly) / len(poly)
         depth = sum(
             1
-            for j, other in enumerate(polygons)
-            if j != i and len(other) >= 3 and point_in_polygon((cx, cy), other)
+            for j in index.candidates_for_point((cx, cy))
+            if j != i
+            and len(polygons[j]) >= 3
+            and point_in_polygon((cx, cy), polygons[j])
         )
         offset = margin if depth % 2 == 0 else -margin
         inset = inset_polygon_simple(poly, offset)

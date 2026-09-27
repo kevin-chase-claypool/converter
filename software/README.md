@@ -230,6 +230,12 @@ X/Y-only output, and preview/G-code parity.
   layers from pixel darkness. Use this for gradients, embedded images, or any SVG
   where tone is visible but not represented as separate filled vector regions.
   `Raster px/unit` controls sampling resolution; higher is more accurate and slower.
+  Because it works from rendered pixels, hatch follows darkness rather than the
+  vector fill regions: a pass can overshoot any edge by up to
+  `min(active spacing / 3, 1.0) mm`, and the outlines themselves are dark in the
+  render, so hatch runs over them. Use vector shading (Raster shading
+  *unchecked*) whenever the artwork has real filled regions and the hatch must
+  stay inside them.
 - [`../samples/svg/raster-shading-math.svg`](../samples/svg/raster-shading-math.svg)
   is an editable visual reference for the tone-to-hatch mathematics.
 - When an SVG is selected, the Qt app samples a low-resolution render. If meaningful

@@ -1,5 +1,38 @@
 # Engineering Log
 
+<a id="elog-20260927-fill-region-spatial-index"></a>
+### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - accelerate fill generation with a polygon spatial index
+
+- Problem: converting `F15_cutaway_black_white_clean_vector.svg` (one compound
+  path with 4,875 subpaths) spent 134 s in the geometry stage and 2 s in motion
+  planning, so the progress bar stalled before the work that its label named.
+  Two quadratic costs dominated: `_inset_fill_region` ran 23.8 M containment
+  tests (17 s) to classify outer boundaries from holes, and
+  `line_region_contours` clipped each of ~230 hatch rows against all 31,817
+  polygon edges (31 s per shade level). `spirit-logo-purple-rgb.svg` hit the
+  same code for 79.6 s.
+- Change: `software/converter_core/geometry.py` gains `_PolygonGrid`, a uniform
+  bounding-box grid over the fill polygons that also caches each polygon's
+  closed edge list. `_inset_fill_region` and `line_region_contours` build one
+  grid per region and pass it into `clip_segment_to_region` and
+  `_point_in_polygons_even_odd`, which still run the original exact predicates.
+  Below 8 polygons the grid is skipped so small regions are unaffected.
+- Result: F15 geometry 134.19 s -> 1.83 s; spirit logo 79.60 s -> 45.10 s.
+- Verification: geometry output is provably unchanged. The serialised contour
+  lists for every `samples/svg/*.svg` plus the F15 file hash to
+  `b8f6a5d8...b603e9e3` both before and after, and a per-file normalised
+  comparison reports ALL MATCH.
+  `python -m unittest discover -s software\tests -p "test_*.py"` passes, 36
+  tests including 5 new index-identity cases;
+  `python -m py_compile software\qt_svg_to_gcode.pyw` passes.
+- Rejected: swapping the exact containment and intersection predicates for
+  approximations. Keeping them makes the identity check meaningful.
+- Category: windows-software, converter, performance, fill, hatch
+- Next action: index at edge level for regions built from a few very large
+  polygons - the spirit logo is 105 polygons but 83,233 points, so the grid
+  cannot narrow anything and it remains 45 s.
+- Evidence: `WSW-20260927-002`.
+
 <a id="elog-20260927-resolve-inherited-svg-presentation-attributes"></a>
 ### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - resolve inherited SVG presentation attributes
 

@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-27 | `WSW-20260927-002` | windows-software | implemented | [Accelerate fill generation with a polygon spatial index](windows-software/2026/2026-09-27-speed-up-fill-region-with-spatial-index.md) |
 | 2026-09-27 | `WSW-20260927-001` | windows-software | implemented | [Resolve inherited SVG presentation attributes](windows-software/2026/2026-09-27-resolve-inherited-svg-presentation-attributes.md) |
 | 2026-09-26 | `WSW-20260926-002` | windows-software | implemented | [Cap the drawable radius at the gantry's reach](windows-software/2026/2026-09-26-cap-drawable-radius-to-gantry-reach.md) |
 | 2026-09-26 | `WSW-20260926-001` | windows-software | implemented | [Restore the generated pen-down path in the preview](windows-software/2026/2026-09-26-restore-pen-down-preview-path.md) |
