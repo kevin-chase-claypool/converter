@@ -93,7 +93,24 @@ def _is_open_contour(path, tol=0.5):
 
 def bridge_motion(prev_machine, prev_motor_theta, next_machine, next_motor_theta, center, settings):
     pattern = normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))
-    bridge_patterns = {"concentric", "triangular", "diamonds", "hexagonal"}
+    # Patterns whose consecutive passes `line_region_contours` already emits
+    # head-to-tail (it reverses every other row). Keeping the pen down across
+    # those passes turns a solid fill into one continuous zigzag instead of one
+    # pen cycle per row. The gap guards below are what make this safe: a
+    # connector is only drawn when it is short, so sparse parallel hatching
+    # still gets separate passes and crosshatch still lifts between its two
+    # angle families.
+    bridge_patterns = {
+        "concentric",
+        "triangular",
+        "diamonds",
+        "hexagonal",
+        "linear",
+        "crosshatch",
+        "diagonal",
+        "diagonal_crosshatch",
+        "cubic",
+    }
     if pattern not in bridge_patterns:
         return None
     xy_len = distance(prev_machine, next_machine)

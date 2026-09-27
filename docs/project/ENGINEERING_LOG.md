@@ -1,5 +1,43 @@
 # Engineering Log
 
+<a id="elog-20260927-chain-line-family-infill-passes"></a>
+### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - chain line-family infill passes instead of lifting between them
+
+- Problem: `line_region_contours` already emits consecutive hatch rows
+  head-to-tail - it reverses every other row for that reason - but `bridge_motion`
+  only let the pen stay down for `concentric`, `triangular`, `diamonds`, and
+  `hexagonal`. Every `linear`, `crosshatch`, `diagonal`, `diagonal_crosshatch`,
+  and `cubic` pass therefore paid its own M5 / handshake / G0 / M3 round trip.
+- Measurement: a 40 x 40 mm filled square at 0.3 mm spacing produced 183 passes,
+  184 pen cycles, 0 bridges, and a 0.424 mm connector between consecutive passes -
+  narrower than the 0.3 mm pen tip it refused to draw. Drawn path length was
+  already optimal at 5,256 mm against an ideal `area / spacing` of 5,333 mm, so
+  the whole loss was pen cycles.
+- Change: `software/converter_core/gcode.py` adds those five line-family patterns
+  to `bridge_patterns`. The existing gap guards decide whether a connector is
+  worth drawing, which makes the change self-limiting: a line-family connector
+  measures `spacing / cos(angle)`, so it exceeds `max(spacing x 0.85, pen x 6)`
+  at shading spacing and is rejected, while at fill spacing it is a fraction of a
+  millimetre and is drawn.
+- Result on `spirit-logo-purple-rgb.svg` at `Fill spacing 3`, crosshatch:
+  planned jobs 1,260 unchanged, pen cycles 1,260 -> 227, and draw length
+  53,317 -> 54,326 mm (+1.86%). Connectors total 1,009 mm, median 0.98 mm. At the
+  measured 1.2 s seek plus 0.46 s clear, that removes about 29 minutes of pen
+  actuation for about 1.4 minutes of extra drawing.
+- Verification: sparse fills are unchanged where the guard rejects the connector -
+  `linear` at 3.0 mm spacing gives 19 passes, 20 pen cycles, 0 bridges, and
+  `diagonal` at 3.0 mm gives 13 passes, 14 cycles, 0 bridges.
+  `python -m unittest discover -s software\tests -p "test_*.py"` passes, 41 tests
+  including 4 new bridging cases.
+- Rejected: a second, tighter gap rule for line families specifically. The
+  existing guard is the converter's single criterion for "short enough to draw",
+  and a per-family rule would be harder to predict.
+- Category: windows-software, converter, infill, pen-cycle, print-time
+- Next action: judge the connectors on a plot. They are drawn ink, capped at
+  `max(spacing x 0.85, pen x 6)`; invisible on dense fills, small serrations on
+  sparse shading, and the lever is the `pen x 6` floor.
+- Evidence: `WSW-20260927-005`.
+
 <a id="elog-20260927-preview-machine-reach-guide"></a>
 ### 🟨 2026-09-27 - WINDOWS SOFTWARE/IMPLEMENTED - draw the gantry reach in the preview and report the artwork radius
 

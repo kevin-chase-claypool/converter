@@ -226,6 +226,13 @@ X/Y-only output, and preview/G-code parity.
   pattern. The vector fill path treats each pattern as a full layer and clips
   pattern segments to the filled contour boundary. Compound SVG paths are clipped
   as one even-odd region, so holes cut the infill layer.
+- Consecutive passes are emitted head-to-tail, and the line families (`linear`,
+  `crosshatch`, `diagonal`, `diagonal_crosshatch`, `cubic`) and the lattices
+  `diamonds`/`triangular`/`hexagonal` keep the pen down between them when the
+  connector is short. A dense fill is therefore drawn as one continuous zigzag
+  instead of one pen cycle per pass. A connector is only drawn when it is within
+  `max(Fill spacing x 0.85, Pen stroke mm x 6)`, so sparse hatching still gets
+  separate passes and crosshatch still lifts between its two angle families.
 - The fill bleed margin is applied by pulling back the ends the clip creates,
   never by offsetting the region, so a pass cannot land outside the fill region.
   This matters for bitmap-traced artwork built from thousands of overlapping
