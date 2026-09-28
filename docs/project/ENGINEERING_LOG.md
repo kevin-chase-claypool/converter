@@ -1,5 +1,35 @@
 # Engineering Log
 
+<a id="elog-20260928-resume-from-actual-stop-17054"></a>
+### 🟨 2026-09-28 - RP23CNC SOFTWARE/OPEN - corrected the plane.gcode stop to block 17054 and rebuilt the resume there
+
+- Problem: the earlier recovery resumed at block 79297 because that was the row
+  highlighted in ioSender, but the coordinates at 79297
+  (X-38.7076 Y116.7914 A1159.0873) are nowhere near the machine. The reported DRO
+  (X-5.766 Y86.401 A5683.616) matches exactly one line in `plane.gcode`: block
+  17054, `G0 X-5.7699 Y86.4029 A5683.5875`, whose next calls are `M3` and then the
+  `G65 P115 Q1` that timed out.
+- Measurement: that is the signature of an M3 completion timeout - the pen was left
+  up at the rapid and never engaged. Block 79297 is about 62,000 lines later, so the
+  79301 resume skipped most of the plot and then ran the program's own ending (full
+  retract plus `G53` park), which is why the pen went to park.
+- Change: added `samples/gcode/plane_resume_17054_dwell.gcode`. It lifts, returns to
+  the block-17054 point, re-issues the `M3` that timed out with a fixed dwell, then
+  runs blocks 17057-79315 with every `G65 P115` wait replaced by the fixed `G4` dwell
+  (0.8 s M5, 10.0 s first M3, 2.5 s later M3, 3.0 s full retract). Removed
+  `samples/gcode/plane_resume_79297_dwell.gcode`, which resumed at the wrong point.
+- Verification: 62,278 lines; no executable `G65 P115` call remains; all 36,679
+  motion lines match `plane.gcode` 17055-79315 verbatim.
+- Not verified: not run on the machine. The failed M3 left the pen up, so confirm
+  PRB is inactive before Cycle Start.
+- Category: rp23cnc-software, windows-software, gp27, p115, error-39, f-05a,
+  recovery
+- Next action: run this resume, then upload the updated `P115.macro` and run the
+  `Q7`/F-05A bench sequence, because the M3 completion timeout is still the failure
+  to explain.
+- Evidence: `samples/gcode/plane_resume_17054_dwell.gcode`; `plane.gcode` block
+  17054.
+
 <a id="elog-20260928-plane-79297-p115-completion-timeout"></a>
 ### 🟨 2026-09-28 - RP23CNC SOFTWARE/OPEN - plane.gcode aborted on the P115 completion phase at block 79297
 
@@ -34,6 +64,9 @@
   toolhead actually needs.
 - Evidence: `samples/gcode/plane_resume_79297_dwell.gcode`;
   `firmware/grblhal/macros/P115.macro`; `RPSW-20260927-002`.
+- Correction: the stop was later identified as block 17054, not 79297. That
+  artifact was removed and replaced by `plane_resume_17054_dwell.gcode`; see the
+  2026-09-28 correction entry above.
 
 <a id="elog-20260927-add-p115-recover-mode"></a>
 ### 🟨 2026-09-27 - RP23CNC SOFTWARE/IMPLEMENTED - add a lift-and-continue recover mode to the P115 handshake
