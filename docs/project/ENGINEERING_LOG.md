@@ -14,15 +14,16 @@
   inside the completion bound. The reported DRO does not match the block-79297
   endpoint (X-38.7076 Y116.7914 A1159.0873) or any block start in the file, so
   the machine was not left at the fault point.
-- Change: added `samples/gcode/plane_resume_79297_dwell.gcode`. It lifts the pen,
-  positions to the end of block 79296 (X-38.7076 Y116.1859 A1155.21), re-draws
-  block 79297, then runs blocks 79298-79315 with the fixed `G4` dwells instead of
+- Change: added `samples/gcode/plane_resume_79297_dwell.gcode`. It skips the
+  failed call at block 79300 and does not re-run 79297-79300 (79297 was already
+  drawn), lifts the pen, positions to block 79301's point (X-39.1911 Y115.9621
+  A1159.0873), then runs blocks 79301-79315 with the fixed `G4` dwells instead of
   `G65 P115`, with A shifted +4320 motor degrees so the lead-in is about 208
   degrees instead of a one-turn spin. No controller, macro, or converter
   behaviour changed.
 - Verification: the recovery file's motion lines match `plane.gcode`
-  79297-79315 exactly apart from the A shift, its three pen transitions are
-  dwells, and the body contains no `G65 P115` call.
+  79301-79315 exactly apart from the A shift, its two pen transitions and the
+  full retract are dwells, and the body contains no `G65 P115` call.
 - Not verified: the recovery has not been run on the machine, and F-05A remains
   open. A completion timeout on a pen clear also means the pen was never proven
   clear, so confirm PRB is inactive before Cycle Start.
