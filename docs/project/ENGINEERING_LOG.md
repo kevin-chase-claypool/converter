@@ -1,5 +1,39 @@
 # Engineering Log
 
+<a id="elog-20260928-plane-79297-p115-completion-timeout"></a>
+### 🟨 2026-09-28 - RP23CNC SOFTWARE/OPEN - plane.gcode aborted on the P115 completion phase at block 79297
+
+- Problem: the `plane.gcode` production run stopped near the end of the sheet at
+  block 79297 with `[MSG:P115 toolhead ready acknowledgement timed out]` and
+  `error:39 - Value out of range` (`Ln:29`, MPos
+  -238.200,-108.725,21828.171 / DRO -5.766,86.401,5683.616).
+- Measurement: that message is P115's **completion** branch, not its release
+  branch, so GP27/PRB did go inactive inside the 0.50 s release bound and then
+  never re-asserted ready. The 2026-09-25 `GP27_TRANSITION_LOW_MS` floor is not
+  the failing step here; the toolhead did not reach contact-ready or clear-ready
+  inside the completion bound. The reported DRO does not match the block-79297
+  endpoint (X-38.7076 Y116.7914 A1159.0873) or any block start in the file, so
+  the machine was not left at the fault point.
+- Change: added `samples/gcode/plane_resume_79297_dwell.gcode`. It lifts the pen,
+  positions to the end of block 79296 (X-38.7076 Y116.1859 A1155.21), re-draws
+  block 79297, then runs blocks 79298-79315 with the fixed `G4` dwells instead of
+  `G65 P115`, with A shifted +4320 motor degrees so the lead-in is about 208
+  degrees instead of a one-turn spin. No controller, macro, or converter
+  behaviour changed.
+- Verification: the recovery file's motion lines match `plane.gcode`
+  79297-79315 exactly apart from the A shift, its three pen transitions are
+  dwells, and the body contains no `G65 P115` call.
+- Not verified: the recovery has not been run on the machine, and F-05A remains
+  open. A completion timeout on a pen clear also means the pen was never proven
+  clear, so confirm PRB is inactive before Cycle Start.
+- Category: rp23cnc-software, windows-software, gp27, p115, error-39, f-05a,
+  recovery
+- Next action: run the recovery, then upload the updated `P115.macro` and run the
+  `Q7` measure pass with F-05A to record which phase, and how long, the installed
+  toolhead actually needs.
+- Evidence: `samples/gcode/plane_resume_79297_dwell.gcode`;
+  `firmware/grblhal/macros/P115.macro`; `RPSW-20260927-002`.
+
 <a id="elog-20260927-add-p115-recover-mode"></a>
 ### 🟨 2026-09-27 - RP23CNC SOFTWARE/IMPLEMENTED - add a lift-and-continue recover mode to the P115 handshake
 
