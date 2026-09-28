@@ -1,5 +1,38 @@
 # Engineering Log
 
+<a id="elog-20260928-direct-ethernet-link"></a>
+### 🟩 2026-09-28 - HARDWARE/RP23CNC SOFTWARE/VERIFIED - direct host-to-controller Ethernet link at 10 Mbps
+
+- Objective: reach the RP23CNC over Ethernet with no router, so a second client
+  can read the controller while ioSender owns the USB port.
+- Result: link is up and verified. Host adapter `Ethernet 3` at `10.10.10.1/24`
+  with DHCP disabled and `*SpeedDuplex=2` (10BaseT Full_Duplex); controller at
+  `10.10.10.2` via `$301=0`, `$302=10.10.10.2`, `$303=10.10.10.1`,
+  `$304=255.255.255.0`. `ping 10.10.10.2` returns 2/2 replies at 1-3 ms, TTL
+  255, and Telnet 23, HTTP 80, and FTP 21 all accept connections.
+- Key finding: this adapter and the W5500 only link at **10 Mbps full duplex**.
+  Four other combinations failed with the adapter reporting `Disconnected`,
+  0 bps, zero bytes received, and the module's LEDs showing green for about a
+  second then a brief orange flash: AutoSense/straight, 100 Mbps/straight,
+  100 Mbps/crossover, and AutoSense/crossover. Both devices link normally to a
+  router on their own - the adapter at 1 Gbps, the module with a solid green LED
+  - so neither a bad cable nor a faulty device explains it.
+- Also confirmed: the W5500 has no auto-MDIX, so a direct connection needs a
+  crossover cable, while a switch port crosses internally and does not.
+- Concurrent access: a Telnet session succeeded while ioSender held the USB
+  port, and a second serial client was denied `COM9` at the same moment, so the
+  host now has two independent paths to the controller.
+- Verification: `docs/report/lab-notes/2026-09-28-direct-ethernet-link-bring-up.md`;
+  `firmware/grblhal/config/machine-settings.md` (new Network section);
+  `docs/hardware/WIRING_TABLE.md` COM-002 revised to version 0.8.
+- Rejected: routing through the house network (a router in the path was
+  undesirable), and replacing the adapter before checking whether the pair would
+  agree at a lower speed.
+- Category: hardware, rp23cnc-software, ethernet, network, telnet
+- Next action: build the live progress tracker against the Telnet port, which is
+  what this link was established to unblock.
+- Evidence: `RPSW-20260928-001`.
+
 <a id="elog-20260928-resume-from-actual-stop-17054"></a>
 ### 🟨 2026-09-28 - RP23CNC SOFTWARE/OPEN - corrected the plane.gcode stop to block 17054 and rebuilt the resume there
 

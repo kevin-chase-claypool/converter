@@ -262,7 +262,7 @@ must pass bench tests before being treated as final machine wiring.
 | ID | From device | From terminal | To device | To terminal | Signal | Cable | Status | Evidence/notes |
 |---|---|---|---|---|---|---|---|---|
 | COM-001 | Host PC | USB TBD | RP23CNC | USB-C | G-code/control | USB data cable TBD | TBD | Baseline transport candidate |
-| COM-002 | Host/network | Ethernet | RP23CNC WizNet module | Ethernet | G-code/WebUI/network | Cat5e or better | TBD | Optional adapter/build configuration |
+| COM-002 | Host/network | Ethernet | RP23CNC WizNet module | Ethernet | G-code/WebUI/network | Crossover Cat5e | bench-verified | Direct host link: Plugable USB2-E1000 (AX88178) at `*SpeedDuplex=2` (10 Mbps full duplex), host `10.10.10.1/24`, controller `10.10.10.2` (`$301=0`). The W5500 has no auto-MDX, so a switch port or a crossover cable is required; this adapter and the W5500 only link at 10 Mbps. See the 2026-09-28 lab note. |
 | COM-003 | microSD card | Card contacts | RP23CNC | microSD socket | Offline G-code | microSD | TBD | Optional transport candidate |
 
 ## Revision log
@@ -317,6 +317,7 @@ must pass bench tests before being treated as final machine wiring.
 | 2026-07-04 | 1.0 | Added an explanatory electronics layout and wiring concept HTML while retaining this table as the authority for terminal labels, connection status, and evidence | Codex | `docs/electronics_layout_and_wiring.html` |
 | 2026-07-04 | 0.9 | Added planned TMAG5273/RP2040 magnetic bed calibration adapter, center magnet, outer theta-index magnet, and gated A_HOME interface placeholders | Codex | `firmware/grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md` |
 | 2026-06-09 | 0.8 | Confirmed received controller as RP23U5XBB V1.01 from front silkscreen; recorded visible connector and Wiz850io socket installation while retaining E-17 inspection and continuity gates | Codex | `docs/report/lab-notes/2026-06-09-rp23u5xbb-v1.01-board-inspection.md` |
+| 2026-09-28 | 0.8 | COM-002 marked bench-verified with the crossover host link at 10 Mbps full duplex and the `10.10.10.x` static addressing; added the controller network settings to `firmware/grblhal/config/machine-settings.md` | Codex | 2026-09-28 direct-link lab note |
 | 2026-06-06 | 0.7 | Identified purchased RP23CNC variant as With Assembly and Ethernet Kits; added required soldering and inspection gate before pin assignment or power | Codex | Brookwood Design variant 48493912129751 |
 | 2026-06-06 | 0.6 | Replaced the fixed 5 V actuator candidate with purchased B085T73CSD adjustable modules; target output is 6.0 V and the claimed 5 A maximum remains subject to load/thermal testing | Codex | Amazon listing and tests E-14/E-15 |
 | 2026-06-06 | 0.5 | Added B0F1WB3LJ5 fixed 5 V buck as a toolhead bench-test candidate; final acceptance depends on measured actuator current, ripple, and temperature | Codex | Amazon listing and tests E-06/E-14 |

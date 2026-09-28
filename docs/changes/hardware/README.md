@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-28 | `RPSW-20260928-001` | verified | [Direct host-to-controller Ethernet link at 10 Mbps](../rp23cnc-software/2026/2026-09-28-direct-ethernet-link.md) | `grblhal`, `ethernet`, `w5500`, `network`, `telnet`, `static-ip` |
 | 2026-09-24 | `RPSW-20260924-003` | implemented | [Bound the coarse seek step and auto-recover from hard-limit overshoot](../rp23cnc-software/2026/2026-09-24-bound-coarse-seek-and-recover-hard-limit.md) | `toolhead`, `force-control`, `hard-limit`, `recovery`, `seek` |
 | 2026-09-24 | `RPSW-20260924-001` | verified | [Enable the integrated toolhead magnetic commissioning gate](../rp23cnc-software/2026/2026-09-24-enable-magnetic-commissioning-gate.md) | `p100`, `magnetic-homing`, `e-18`, `m-08`, `commissioning` |
 | 2026-09-23 | `RPSW-20260923-016` | implemented | [Widen the force-hold band to ±10 g and move relief to 15 g](../rp23cnc-software/2026/2026-09-23-widen-hold-band.md) | `t03`, `hold`, `force-band`, `reliability` |

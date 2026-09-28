@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-28 | `RPSW-20260928-001` | verified | [Direct host-to-controller Ethernet link at 10 Mbps](2026/2026-09-28-direct-ethernet-link.md) | `grblhal`, `ethernet`, `w5500`, `network`, `telnet`, `static-ip` |
 | 2026-09-27 | `WSW-20260927-008` | implemented | [Restore the fixed-dwell default until F-05A passes](../windows-software/2026/2026-09-27-restore-dwell-default-until-f05a.md) | `converter`, `gp27`, `p115`, `error-39`, `f-05a`, `pen-dwell` |
 | 2026-09-27 | `RPSW-20260927-002` | implemented | [Add a lift-and-continue recover mode to the P115 handshake](2026/2026-09-27-add-p115-recover-mode.md) | `p115`, `gp27`, `handshake`, `error-39`, `recover`, `f-05a` |
 | 2026-09-27 | `RPSW-20260927-001` | implemented | [Parameterize the P115 handshake bounds and add a warn-only mode](2026/2026-09-27-parameterize-p115-bounds-and-warn-mode.md) | `p115`, `gp27`, `handshake`, `error-39`, `f-05a`, `warn-only` |
