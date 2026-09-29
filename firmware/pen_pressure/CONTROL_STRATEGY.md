@@ -90,7 +90,7 @@ about 12 mm above the paper, so the controller first closes that gap:
   while far from the paper and 5 ms pulses once the normalized force rises above
   about 1 g, each followed by a short settle while far from the band and the
   full 300 ms settle within about 10 g of it. When the settled force crosses the
-  lower edge of the absolute 35 g target band, the controller enters
+  lower edge of the 38 g target band (28 g), the controller enters
   `HOLD_FORCE`.
 - If M3 begins with GP2 pressed, the controller releases GP2 first, takes its
   clear-of-paper tare, then continues the same descend. If M3 begins after
@@ -102,9 +102,9 @@ about 12 mm above the paper, so the controller first closes that gap:
   nearest pulse, leaving a 4-fine-pulse reserve for the final approach. The
   learned distance is a moving average of the warm seek's travel, so it tracks
   clearance drift. The pre-swap 13:1 ratio was stiction-dominated; after the
-  linear-rail carriage/bearing swap, a 25 ms coarse pulse reproduced the 60 g
+  linear-rail carriage/bearing swap, a 25 ms coarse pulse reproduced the then-60 g
   trip two pulses into a warm seek, so the pulse was shortened to 10 ms, which
-  lands near the 35 g target rather than through the 60 g limit. Both the pulse
+  lands near the 38 g target rather than through the 75 g limit. Both the pulse
   width and the 2:1 ratio remain bench candidates to re-measure on the installed
   carriage. The warm coarse phase also stops early if force rises above about
   3 g, clear of the roughly 1 g M5 clear residual.
@@ -136,7 +136,7 @@ after stopping and
 refreshes the 64-sample clear-state tare before the next normal M3. The pulse
 widths follow a real 160 x 5 ms seek that covered only about 7.5 mm and a
 three-pulse 25 ms seek that reached 35 g then briefly crossed the 60 g hard
-threshold. They are not universal per-pen travel constants. T-01J must validate
+threshold in use at the time. They are not universal per-pen travel constants. T-01J must validate
 the home seek, force response, and clearance for each installed tool before
 plotting. Production remains commissioning-gated.
 
@@ -169,7 +169,7 @@ remains invalid: the following M3 must release GP2 and use the longer tare.
 ### Bounded moving-average hold
 
 `HOLD_FORCE` uses the 16-sample moving-average force value. It does not leave
-a PWM motor command energized between corrections. Within the 30–60 g target
+a PWM motor command energized between corrections. Within the 28–48 g target
 band it sleeps the driver. Outside that band, it requires three same-direction
 out-of-band observations separated by 25 ms before issuing one full-drive 5 ms
 UP or DOWN pulse. Both directions are limited to one correction every 250 ms.

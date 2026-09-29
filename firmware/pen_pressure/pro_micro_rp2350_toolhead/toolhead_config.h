@@ -72,11 +72,11 @@ constexpr bool MECHANICAL_PRELOAD_MODE = true; // supervised bench test build
 constexpr uint32_t PEN_ENGAGE_TRAVEL_MS = 100;
 constexpr uint32_t SEEK_TIMEOUT_MS = 1500;
 // Use a bounded coarse pulse only while the pen is still clearly airborne, then
-// switch to fine pulses before the 35 g contact threshold. A 25 ms pulse moved
-// about 0.44 mm and the 2026-09-24 carriage-swap run reproduced the 60 g trip
-// with 60.1 g two coarse pulses into a warm seek. A 10 ms pulse moves about
-// 0.18 mm, so a worst-case placement lands near the 35 g target rather than
-// through the 60 g limit, while still covering ~2x a fine pulse so the seek
+// switch to fine pulses before the 38 g contact threshold. A 25 ms pulse moved
+// about 0.44 mm and the 2026-09-24 carriage-swap run reproduced the then-60 g
+// trip with 60.1 g two coarse pulses into a warm seek. A 10 ms pulse moves about
+// 0.18 mm, so a worst-case placement lands near the 38 g target rather than
+// through the 75 g limit, while still covering ~2x a fine pulse so the seek
 // stays faster than fine-only.
 constexpr uint8_t HOME_SEEK_COARSE_PULSE_MS = 10;
 constexpr uint8_t HOME_SEEK_FINE_PULSE_MS = 5;
@@ -157,8 +157,8 @@ constexpr uint8_t HOLD_CORRECTION_PWM = 255;
 // to target, so every excursion beyond the band caused a full retract and the
 // loop then rebuilt force with slow 5 ms pulses - a retract/rebuild limit
 // cycle that reads as the pen poking and never holding. Trigger 20 g above
-// target (5 g beyond the now ±15 g band top) and stop at the band top for 5 g
-// of hysteresis, which still leaves 10 g before the 75 g hard limit.
+// target (10 g beyond the now ±10 g band top) and stop at the band top for
+// 10 g of hysteresis, which still leaves 17 g before the 75 g hard limit.
 constexpr long HOLD_URGENT_RELIEF_RAW = 100775; // approximately 20 g above target
 constexpr uint32_t HOLD_URGENT_RELIEF_MAX_MS = 200;
 // Bounded auto-recovery. A hard-limit trip (recoverable overshoot) and a
@@ -235,21 +235,26 @@ constexpr uint8_t LIFT_RELEASE_REQUIRED_WINDOWS = 3;
 // E-09C fit: 5,038.77 raw/g. Selected supervised bench profile. On 2026-09-24
 // the target and contact reference were raised 5 g to keep the pen pressed
 // during motion, and on 2026-09-25 they were raised another 5 g to a 45 g
-// target (226,745 raw) with the hard limit at 75 g (377,908 raw). This stays
-// inside the E-09C 0-90 g calibration range. Force increases when raw decreases
-// under the selected upward pen-reaction assumption, hence the negative sign.
-constexpr long CONTACT_RAW_DELTA = 226745;
-constexpr long TARGET_FORCE_RAW_DELTA = 226745;
+// target. On 2026-09-29 the operator judged the marking force too heavy and
+// lowered the target and contact reference to 38 g (191,473 raw), keeping the
+// 75 g hard limit (377,908 raw). This stays inside the E-09C 0-90 g
+// calibration range. Force increases when raw decreases under the selected
+// upward pen-reaction assumption, hence the negative sign.
+constexpr long CONTACT_RAW_DELTA = 191473;
+constexpr long TARGET_FORCE_RAW_DELTA = 191473;
 constexpr long HARD_FORCE_RAW_DELTA = 377908;
 constexpr int8_t CS1238_CONTACT_FORCE_SIGN = -1;
-// Selected ±15 g target-ready band = 75,582 raw (approximately 30–60 g around
-// the 45 g target). 2026-09-23 first-print runs showed the ±5 g band was too
+// Selected ±10 g target-ready band = 50,388 raw (approximately 28–48 g around
+// the 38 g target). 2026-09-23 first-print runs showed the ±5 g band was too
 // tight for the mechanism's friction/noise: long strokes drifted out of band
 // and triggered retract/re-approach cycles. 2026-09-25 faster prints showed
 // that ±10 g still let high-speed friction spike past the band top and lift
-// the pen off the page. Widened to ±15 g (30–60 g) as a supervised bench
-// choice, not a precision setting, so the hold tolerates that drift.
-constexpr long CONTACT_READY_TOLERANCE_RAW = 75582;
+// the pen off the page, so it was widened to ±15 g (30–60 g around the 45 g
+// target) as a supervised bench choice, not a precision setting. The
+// 2026-09-29 lighter target returns to ±10 g (28–48 g) because the heavy
+// marking complaint needs the band top well below 60 g; this is the tolerance
+// that previously lifted the pen, so re-verify on T-02/T-03 before trusting it.
+constexpr long CONTACT_READY_TOLERANCE_RAW = 50388;
 constexpr uint8_t CONTACT_READY_REQUIRED_WINDOWS = 3;
 // The published contact-ready level must be LOW only for the seek/lift
 // transition; P115 Q1 depends on that. On 2026-09-29 the controller reported
@@ -268,10 +273,9 @@ constexpr uint32_t CONTACT_READY_LOST_MS = 500;
 // An accepted touch reference shifts the relative target upward, so the target
 // is clamped to keep the top of the acceptance band this far below the
 // absolute hard limit. On 2026-09-23 T-02 cycle 4 accepted a 78,727 raw
-// (15.6 g) touch, leaving only 22,048 raw before the 60 g trip; post-hold
-// creep then crossed the limit. Without the clamp the 20 g reference cap, the
-// 35 g target, and the 5 g tolerance sum to exactly the 60 g hard limit, so a
-// maximum-reference cycle would hold with its band top on the trip point.
+// (15.6 g) touch, leaving only 22,048 raw before the then-60 g trip, and
+// post-hold creep then crossed the limit. The clamp permits at most a 55 g
+// target, whose 65 g band top keeps this 10 g below the 75 g hard limit.
 constexpr long HOLD_BAND_HEADROOM_RAW = 50388; // approximately 10 g
 
 static_assert(HARD_FORCE_RAW_DELTA >

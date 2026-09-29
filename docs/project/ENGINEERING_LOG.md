@@ -1,5 +1,40 @@
 # Engineering Log
 
+<a id="elog-20260929-lower-pen-force-target"></a>
+### 🟨 2026-09-29 18:02:49 -0500 - FIRMWARE/IMPLEMENTED - lowered the pen force target to 38 g with a ±10 g band
+
+- Problem: the operator judged the installed pen's marking force slightly too
+  heavy. The integrated toolhead was holding a 45 g target with a ±15 g
+  target-ready band, so the loop could legitimately sit anywhere in 30-60 g.
+- Change: `TARGET_FORCE_RAW_DELTA` and `CONTACT_RAW_DELTA` 226,745 -> 191,473
+  raw (45 -> 38 g at the E-09C 5,038.77 raw/g scale) and
+  `CONTACT_READY_TOLERANCE_RAW` 75,582 -> 50,388 raw (±15 -> ±10 g). The 75 g
+  hard limit and the 20 g urgent-relief offset are unchanged, so the new relief
+  trigger is 58 g with 17 g before the hard limit.
+- Assumption: the request did not name a band, so ±10 g was chosen as the
+  narrowest band with prior bench history. ±5 g had already failed on
+  2026-09-23 and ±10 g was the tolerance that lifted the pen on 2026-09-25, so
+  this deliberately re-enters a known risk that T-02/T-03 must re-check.
+- Documentation: corrected the force, pulse-width, and pulse-ratio values that
+  had gone stale against the code in `firmware/README.md`,
+  `firmware/pen_pressure/README.md`, `firmware/pen_pressure/CONTROL_STRATEGY.md`,
+  `docs/integration/INTERFACES.md`, and `docs/testing/TEST_PLAN.md` (T-02/T-03).
+  `firmware/pen_pressure/README.md` also still described 25 ms coarse pulses and
+  a 13:1 coarse-pulse credit against the installed 10 ms / 2:1 constants.
+- Verification: `arduino-cli compile` passed for
+  `rp2040:rp2040:sparkfun_promicrorp2350` (82,600 bytes program, 16,236 bytes
+  globals); the force-envelope `static_assert` is compile-time, so the new
+  constants are accepted. `python tools\docs_index.py --write` and `--check`
+  passed.
+- Boundary: no bench measurement. The Pro Micro must be re-flashed, and the
+  38 g / ±10 g combination is unverified until T-02 and T-03 run on the
+  installed pen.
+- Evidence: `RPSW-20260929-004`;
+  `firmware/pen_pressure/pro_micro_rp2350_toolhead/toolhead_config.h`.
+- Category: firmware, hardware, toolhead, force-control, test
+- Next action: re-flash the toolhead, then run T-02 and T-03 and record the
+  achieved band, relief count, and whether the pen stays down on fast strokes.
+
 <a id="elog-20260929-level-1-system-decomposition"></a>
 ### 🟩 2026-09-29 14:31:39 -0500 - DOCUMENTATION/IMPLEMENTED - define the level-1 system decomposition
 

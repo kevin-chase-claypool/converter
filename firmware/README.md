@@ -149,14 +149,14 @@ integrated firmware prints its service-UART-ready line before other
 initialization. Its telemetry writer does not require a complete record to fit
 in the UART FIFO, so GP20 telemetry is not silently suppressed.
 The current supervised bench source uses GP2 as the full-retract origin for a
-bounded, two-touch M3 contact sequence (25 ms DOWN pulses far from the paper,
-then 5 ms pulses to a light 5 g surface touch; a 10 ms back-off; then 5 ms
-pulses to the lower 30 g edge of the drawing band). Its moving-average hold
-loop uses individual 5 ms corrective pulses only outside the 25–45 g band—
-never a continuous motor command; after normal M5, it retains the short 100 ms M3
-path. T-01G repeatability and T-02/T-01J powered seek qualification remain
-open, so keep the RP23CNC M3/M5 harness disconnected during initial seek
-validation and retain access to the toolhead power cutoff.
+single bounded M3 descend (10 ms DOWN pulses while far from the paper, then
+5 ms pulses once force rises above about 1 g, each with the full 300 ms settle
+near contact). It enters `HOLD_FORCE` at the lower edge of the 38 g target band,
+and its moving-average hold loop uses individual 5 ms corrective pulses only
+outside the 28–48 g band—never a continuous motor command; after normal M5, it
+retains the short 100 ms M3 path. T-01G repeatability and T-02/T-01J powered
+seek qualification remain open, so keep the RP23CNC M3/M5 harness disconnected
+during initial seek validation and retain access to the toolhead power cutoff.
 Smaller Arduino sketches also exist for safer bring-up, including a GP2/GP20
 LIFT_HOME UART-only diagnostic with no motor-related pin activity:
 [`pen_pressure/bench_motor_command/bench_motor_command.ino`](pen_pressure/bench_motor_command/bench_motor_command.ino)

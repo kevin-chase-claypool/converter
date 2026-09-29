@@ -345,25 +345,25 @@ the no-contact release band and then applies a verified clearance pulse.
 
 For the current bench setup, `MECHANICAL_PRELOAD_MODE` is enabled only in the
 supervised firmware build. At M3, GP2 pressed means a cold/full-retract start:
-the Pro Micro first closes the 12 mm gap with 25 ms full-drive DOWN pulses,
+the Pro Micro first closes the 12 mm gap with 10 ms full-drive DOWN pulses,
 sleeping between pulses and checking the CS1238 moving average after a short
 settle while far from the band, then the full 300 ms settle once force is
 within about 10 g of it. Once GP2 releases it takes a clear-of-paper tare and
 continues down, switching to 5 ms pulses once the normalized force rises above
-about 1 g. When the settled force crosses the lower edge of the absolute 35 g
-target band the
+about 1 g. When the settled force crosses the lower edge of the 38 g
+target band (28 g) the
 controller enters `HOLD_FORCE`. GP2 released means normal post-M5 clearance: it
 starts from the fresh clear-state tare. The first warm M3 after boot is
 fine-only and measures the clearance; later warm M3s traverse most of the
-learned distance with 25 ms coarse pulses, then finish with 5 ms pulses. One
-coarse pulse is credited as 13 fine pulses and the coarse budget is rounded to
+learned distance with 10 ms coarse pulses, then finish with 5 ms pulses. One
+coarse pulse is credited as 2 fine pulses and the coarse budget is rounded to
 the nearest pulse, leaving a 4-fine-pulse reserve for the final approach; the
-13:1 ratio is stiction-dominated and must be re-measured after the
+pre-swap 13:1 ratio was stiction-dominated and the pulse widths must be re-measured after the
 carriage/bearing swap. The coarse phase also stops if force rises above about
 3 g, clear of the roughly 1 g M5 clear residual. It never enters hold from a
 fixed travel time. The
 approach is bounded at 100
-pulses / 60 seconds and 30 pulses while GP2 remains pressed. The 60 g
+pulses / 60 seconds and 30 pulses while GP2 remains pressed. The 75 g
 hard-force ceiling remains absolute. Bound, sensor, and hard-force faults stop
 the motor. M5 uses a 57 ms UP clearance move, stopping immediately if GP2 is
 pressed; if GP2 stays released, the sleeping controller waits 300 ms and
@@ -377,7 +377,7 @@ pen-up-to-band wall-clock latency can be read directly from the log; periodic
 scrolling remains
 opt-in with `v`.
 
-The 60 g hard-force guard stops DOWN/hold operation. After inspecting a fault
+The 75 g hard-force guard stops DOWN/hold operation. After inspecting a fault
 and the physical pen position, `c` starts only the existing bounded UP
 recovery toward GP2 and latches manual M5. A held GP29 M3 or stale serial `e`
 cannot restart the seek after homing; a fresh `e` or deliberate `a` restores
@@ -393,19 +393,19 @@ being interpreted as surface contact. Normal M5 clearance uses a separate
  300 ms settled, 64-sample tare because clearance itself shifts that baseline.
 
 After initial contact, the moving-average force hold is pulse-bounded: it
-sleeps the DRV8833 in the 25–45 g calibrated band. Outside that band, it
+sleeps the DRV8833 in the 28–48 g calibrated band. Outside that band, it
 requires three same-direction filtered observations, 25 ms apart, before one
 5 ms correction; either direction is then limited to once per 250 ms. It never
 leaves a PWM command energized between corrections, except for an over-force
-relief: above `HOLD_URGENT_RELIEF_RAW` (5 g) of excess it drives UP
+relief: above `HOLD_URGENT_RELIEF_RAW` (20 g) of excess it drives UP
 continuously for at most `HOLD_URGENT_RELIEF_MAX_MS` (200 ms), stopping as soon
-as the force is back inside the band. The trigger sits 5 g beyond the band edge
-and relief stops at the band edge. That path is retract-only. The 60 g
+as the force is back inside the band. The trigger sits 10 g beyond the band edge
+and relief stops at the band edge. That path is retract-only. The 75 g
 hard-force guard remains independent and active.
 
 The cold-start pulse/travel limits are provisional values revised after the
 first 160 x 5 ms attempt moved only about 7.5 mm and stopped 4.5 mm above
-paper; a subsequent 25 ms-only attempt made contact but tripped the 60 g
+paper; a subsequent 25 ms-only attempt made contact but tripped the then-60 g
 guard by approximately 0.7 g. They
 must be verified by the supervised T-01J bench test for each pen before
 plotting; they are not production-qualified settings.

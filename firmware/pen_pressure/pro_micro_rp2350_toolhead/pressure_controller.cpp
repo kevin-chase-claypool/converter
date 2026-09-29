@@ -148,7 +148,7 @@ long PressureController::activeTargetForceRaw() const {
 }
 
 long PressureController::activeHardForceRaw() const {
-  // The hard-force guard is always the calibrated absolute 60 g envelope; no
+  // The hard-force guard is always the configured absolute 75 g envelope; no
   // target, reference, or clamp may enlarge it.
   return HARD_FORCE_RAW_DELTA;
 }
