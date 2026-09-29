@@ -85,7 +85,11 @@ X/Y-only output, and preview/G-code parity.
 
 ## Settings groups (Qt app)
 
-- **Geometry** — scale, tolerance, Flip Y, pen-stroke compensation, and
+Each setting lives with the thing it changes. Only **Preview settings** is
+display-only; every other group changes the emitted program.
+
+- **Geometry** — scale, tolerance, artwork placement (see *Placing the
+  artwork* below), Flip Y, pen-stroke compensation, and
   **Expand strokes to outlines** (off by default — a pen already marks its own
   width, so drawing each stroke's centerline once is correct and produces far
   fewer M3/M5 cycles than outlining the stroke width).
@@ -98,19 +102,30 @@ X/Y-only output, and preview/G-code parity.
   bed-frame line: because the controller interpolates X/Y/A linearly across one
   move, a move that spans bed rotation is subdivided so each chord stays within
   tolerance of the intended path.
-- **Shading** — fill spacing/angle/pattern, shade levels/angle step, raster shading, and
-  raster sampling resolution.
+- **Fill** — everything about hatching the artwork: spacing (0 = outlines
+  only), pattern, angle, `Fill source`, shade levels/angle step, the
+  pattern-specific size fields, and the image-tone sampling resolution. See
+  *Fill* below.
 - **Motion** — draw/feed rate and travel rate. Values that cannot describe a
   meaningful X/Y/A program (for example, zero feed, a nonpositive theta ratio,
   an invalid A-axis name, or a bed margin that leaves no drawable area) are
   rejected before preview or save.
+- **Machine** — the machine-side setup the program is clipped and parked
+  against: `Bed dia mm`, `Bed margin mm`, `Gantry reach radius mm`, and the
+  end-of-program `Park X/Y machine mm` in G53 machine coordinates.
 - **Theta kinematics** — theta axis/ratio/resolver/cost settings (`Theta ratio`
   defaults to 12 for the 60T→720T pulley pair).
+  - **Theta mode** and **Theta resolver** are combos of the implemented
+    strategies, so an unsupported value cannot be entered.
   - **Theta tangential speed mm/min** is the requested surface speed caused by
     A-axis bed rotation during drawing. It does not change X/Y-only output.
-- **Pen** — Z heights, pen cycle, pen up/down commands, Use Z, and the
-  **Wait for GP27 toolhead ready** option (off by default; enable it only after
-  the F-05A on-bench P115/PRB validation passes).
+- **Pen** — `Pen stroke mm` (the physical pen tip), Z heights, pen dwells, pen
+  up/down commands, Use Z, and the **Wait for GP27 toolhead ready** option
+  (off by default; enable it only after the F-05A on-bench P115/PRB validation
+  passes).
+  - **Pen stroke mm** (`pen_diameter_mm`, default 0.3) is the real pen tip
+    width. It drives ink-size reporting, pen-width compensation, the
+    *Fill wide strokes* threshold, and the keep-down connector gap guard.
   - **Pen down ms** (`pen_down_ms`, default 2500) is the dwell after every
     `M3`. It covers the toolhead's warm contact seek, which starts from the
     ~1 mm `M5` clearance and finishes in 2-3 s.
@@ -161,8 +176,8 @@ X/Y-only output, and preview/G-code parity.
     applied to the per-contour bed-orientation sequence. Removes bed jitter / erratic
     axis-locking; `0` disables it. Does not change the drawn shape — only how the bed
     is oriented while drawing.
-- **Preview settings** — playback speed (visualization only), bed diameter/margin, pen stroke
-  width, and three preview colors: **Undrawn** (artwork not yet drawn), **Drawn**
+- **Preview settings** — display only: playback speed, the motion estimate
+  scale, and three preview colors: **Undrawn** (artwork not yet drawn), **Drawn**
   (the drawn portion / final color), and **Motion** (the generated `G1` X/Y
   pen-down path). **Show X/Y pen-down path** is on by default and overlays that
   generated path in the Motion color; turn it off when inspecting only the
@@ -237,13 +252,37 @@ X/Y-only output, and preview/G-code parity.
   rotates freely, the safe drawable area is this circle rather than the full
   bed; it keeps emitted coordinates inside the controller's X/Y envelope so
   artwork at the rim cannot trip `Alarm:2 - Soft limit`.
-- Set `Fill spacing mm > 0` to hatch filled regions; `0` disables hatching.
+- **Fill.** `Fill spacing mm` sets the on-paper distance between fill lines
+  (default `4`); `0` plots outlines only. Fill is on by default so a conversion
+  never silently produces no fill.
+- `Fill source` decides where the fill geometry comes from:
+  - `Auto (recommended)` hatches the SVG's own shapes, and switches to image
+    tone only when the artwork's tone lives somewhere the vector path cannot
+    see it: an embedded `<image>` or a `url(#...)` gradient/pattern fill.
+  - `SVG shapes (stays inside)` always hatches the SVG's own regions. Fill is
+    clipped to those regions, so it cannot run over the outlines.
+  - `Image tone (photos, gradients)` renders the SVG and hatches its pixels.
+    It follows visible tone rather than vector regions, so a pass can overshoot
+    an edge by up to `min(active spacing / 3, 1.0) mm` and hatch runs over dark
+    outlines. `Raster px/unit` sets the sampling resolution; higher is more
+    accurate and slower.
+- A stroke-only element fills the regions its **closed** outlines enclose, so
+  line art gains interior fill instead of plotting as outlines only. Open
+  subpaths have no bounded interior and never receive fill, so fill cannot leak
+  across artwork built from open segments (the Calder Hall and F15
+  plotter-ready exports, for example). Polyline artwork that *looks* closed
+  still has to close its subpath — with `Z`, or by repeating the first point —
+  for that region to fill.
+- The Qt log reports what fill actually did after each preview, for example
+  `Fill: 4 mm crosshatch, 172 hatch passes inside the SVG's own regions.` When
+  there is nothing to hatch it says so and names the setting that would change
+  the result.
 - SVG presentation attributes are resolved through the element tree, so `fill`,
   `stroke`, `stroke-width`, `fill-opacity`, `stroke-opacity`, `visibility`, and
   `opacity` declared on a wrapping `<g>` apply to its children the way a
   renderer applies them. Line art that declares `fill="none"` on a group is
-  therefore stroked only and is never hatched, while an element that declares no
-  fill anywhere still takes the SVG initial value of black. `display="none"`
+  therefore never treated as a solid silhouette, while an element that declares
+  no fill anywhere still takes the SVG initial value of black. `display="none"`
   suppresses the element and its subtree, and `visibility="hidden"` or
   `"collapse"` is inherited.
 - `Fill spacing`, the pattern size fields, and the curve `Tolerance` are treated
@@ -277,21 +316,14 @@ X/Y-only output, and preview/G-code parity.
   left at `0`, the cell size falls back to `Fill spacing mm × 6` rather than
   `Fill spacing mm` alone, so an unset lattice does not degrade into an
   impractically dense (and slow) mesh.
-- `Shade levels > 1` turns SVG fill color into hatch density: darker fills receive
-  denser spacing while preserving the selected fill pattern.
-- `Raster shading` renders the whole SVG to a tone map first, then generates hatch
-  layers from pixel darkness. Use this for gradients, embedded images, or any SVG
-  where tone is visible but not represented as separate filled vector regions.
-  `Raster px/unit` controls sampling resolution; higher is more accurate and slower.
-  Because it works from rendered pixels, hatch follows darkness rather than the
-  vector fill regions: a pass can overshoot any edge by up to
-  `min(active spacing / 3, 1.0) mm`, and the outlines themselves are dark in the
-  render, so hatch runs over them. Use vector shading (Raster shading
-  *unchecked*) whenever the artwork has real filled regions and the hatch must
-  stay inside them.
+- `Shade levels > 1` turns fill darkness into hatch density: darker fills receive
+  denser spacing while preserving the selected fill pattern. Fill darkness comes
+  from the fill colour, or from the stroke colour for closed line-art outlines.
+  White and fully transparent elements are skipped, because a single pen cannot
+  show them.
 - [`../samples/svg/raster-shading-math.svg`](../samples/svg/raster-shading-math.svg)
   is an editable visual reference for the tone-to-hatch mathematics.
-- When an SVG is selected, the Qt app samples a low-resolution render. If meaningful
-  tone variation is detected, it automatically enables raster shading and sets
-  practical starter values (`Fill spacing mm = 4`, `Shade levels = 4`,
-  `Shade angle step = 45`). Flat single-tone art is left unchanged.
+- When an SVG is selected, the Qt app inspects how the artwork declares its
+  fill (filled elements, stroke-only elements, embedded images, paint servers)
+  and says in the log what `Auto` will do with it. Tone-carrying artwork also
+  gets tone-friendly starter values (`Shade levels = 4`, `Shade angle step = 45`).

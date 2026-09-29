@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-28 | `WSW-20260928-001` | windows-software | implemented | [Automatic fill source and an intuitive settings layout](windows-software/2026/2026-09-28-automatic-fill-and-settings-regroup.md) |
 | 2026-09-28 | `RPSW-20260928-001` | rp23cnc-software, hardware | verified | [Direct host-to-controller Ethernet link at 10 Mbps](rp23cnc-software/2026/2026-09-28-direct-ethernet-link.md) |
 | 2026-09-27 | `WSW-20260927-008` | windows-software, rp23cnc-software | implemented | [Restore the fixed-dwell default until F-05A passes](windows-software/2026/2026-09-27-restore-dwell-default-until-f05a.md) |
 | 2026-09-27 | `WSW-20260927-007` | windows-software | implemented | [Drag the artwork on the bed to place it](windows-software/2026/2026-09-27-drag-artwork-placement.md) |

@@ -1,10 +1,15 @@
-"""Regression tests for SVG presentation-attribute inheritance.
+"""Regression tests for SVG presentation-attribute inheritance and line-art fill.
 
 The converter used to read presentation values from the element alone. A
 wrapper such as ``<g fill="none" stroke="#000" stroke-width="0.7">`` therefore
 did not reach its children, every child fell back to the SVG initial fill of
 black, and outline paths were treated as solid filled regions whose interiors
 were hatched. These tests pin the inherited behaviour.
+
+Fill for stroke-only artwork is deliberately narrower than that phantom fill:
+an element that declares no visible fill contributes only the regions its
+*closed* outlines enclose (see `closed_outline_regions`). Open subpaths have no
+bounded interior, so they stay line only and no fill can leak across them.
 """
 
 import sys
@@ -56,9 +61,11 @@ def _hatch_lines(contours):
 
 class SvgStyleInheritanceTests(unittest.TestCase):
     def test_group_fill_none_reaches_its_children(self):
+        # An open subpath has no bounded interior, so an inherited fill="none"
+        # must not turn it into a filled region.
         contours = _read_svg(
             '<g fill="none" stroke="#000000" stroke-width="0.7">'
-            '<polyline points="10,10 90,10 90,90 10,90 10,10"/>'
+            '<path d="M 10 10 L 90 10 L 90 90"/>'
             "</g>"
         )
 
@@ -66,8 +73,26 @@ class SvgStyleInheritanceTests(unittest.TestCase):
         self.assertEqual(
             _hatch_lines(contours),
             [],
-            "a group that declares fill=\"none\" must not be hatched",
+            "an open outline has no interior, so it must not be hatched",
         )
+
+    def test_closed_outline_fills_its_own_interior(self):
+        """Stroke-only line art fills inside its own closed outlines."""
+        square = [(10.0, 10.0), (90.0, 10.0), (90.0, 90.0), (10.0, 90.0)]
+        contours = _read_svg(
+            '<g fill="none" stroke="#000000" stroke-width="0.7">'
+            '<polyline points="10,10 90,10 90,90 10,90 10,10"/>'
+            "</g>"
+        )
+
+        hatch = _hatch_lines(contours)
+        self.assertTrue(hatch, "a closed outline must be hatched inside")
+        for start, end in hatch:
+            for point in (start, end):
+                self.assertTrue(
+                    converter.point_in_polygon(point, square),
+                    f"fill must stay inside the closed outline, got {point}",
+                )
 
     def test_group_fill_black_still_hatches(self):
         contours = _read_svg(
@@ -112,8 +137,15 @@ class SvgStyleInheritanceTests(unittest.TestCase):
             "only the visible rectangle should contribute geometry",
         )
 
-    def test_repo_line_art_sample_is_not_hatched(self):
-        """The reported regression: shading turned line art into solid fill."""
+    def test_repo_line_art_sample_fills_only_closed_outlines(self):
+        """Fill follows the enclosed outlines instead of the artwork silhouette.
+
+        The sample's house body, door, windows, and sun are closed polylines and
+        are hatched inside their own outlines. The roof, chimney, sun rays, and
+        grass are open strokes, so they stay line only. The earlier reported
+        regression was fill leaking over the whole silhouette; this pins the
+        narrower rule that replaced it.
+        """
         sample = SAMPLES / "kindergarten-house-sun.svg"
         if not sample.exists():
             self.skipTest("sample artwork is not present")
@@ -125,11 +157,33 @@ class SvgStyleInheritanceTests(unittest.TestCase):
         )
 
         self.assertTrue(hatched, "the sample must still produce geometry")
-        self.assertEqual(
-            _hatch_lines(hatched),
-            _hatch_lines(unshaded),
-            "enabling shading must not add hatch to artwork that declares fill=\"none\"",
+        before = {tuple(map(tuple, contour)) for contour in _hatch_lines(unshaded)}
+        added = [
+            contour
+            for contour in _hatch_lines(hatched)
+            if tuple(map(tuple, contour)) not in before
+        ]
+        self.assertTrue(added, "closed outlines must gain interior fill")
+        closed_outlines = (
+            [(42, 165), (42, 103), (101, 54), (160, 103), (160, 165)],
+            [(85, 165), (85, 123), (112, 123), (112, 165)],
+            [(56, 117), (76, 117), (76, 139), (56, 139)],
+            [(126, 117), (146, 117), (146, 139), (126, 139)],
+            [
+                (177, 28), (184, 30), (189, 36), (191, 44), (189, 52), (184, 58),
+                (177, 60), (169, 58), (164, 52), (162, 44), (164, 36), (169, 30),
+            ],
         )
+        for start, end in added:
+            for point in (start, end):
+                inside = any(
+                    converter.point_in_polygon(point, polygon)
+                    for polygon in closed_outlines
+                )
+                self.assertTrue(
+                    inside,
+                    f"fill left the closed outlines of the artwork, got {point}",
+                )
 
 
 if __name__ == "__main__":

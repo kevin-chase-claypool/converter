@@ -37,7 +37,7 @@ def _settings(**overrides):
         tolerance=0.25,
         pen_diameter_mm=0.3,
         compensate_pen_width=False,
-        raster_shading=False,
+        fill_source="shapes",
     )
     values.update(overrides)
     return converter.Settings(**values)

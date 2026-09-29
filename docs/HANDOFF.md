@@ -177,8 +177,10 @@ converter README for the exact preamble and settings.
 - `hatch_polygon(polygon, spacing, angle)` runs a scanline fill and returns clipped line segments.
   Segment-level clipping is intentional: connector moves between scanlines can cross outside
   concave boundaries, so infill stays inside at the cost of more pen-up cycles.
-- Triggered by any SVG element whose `fill` is not explicitly `none` / not fully transparent (SVG
-  default = filled black). `hatch_spacing_mm` controls density (0 = disabled);
+- On by default (`hatch_spacing_mm` default 4); `0` is the explicit outline-only setting. Triggered
+  by any SVG element whose `fill` is not explicitly `none` / not fully transparent (SVG
+  default = filled black), and by the closed outlines of stroke-only elements - see the line-art
+  bullet below.
   `hatch_angle_deg` controls direction (default 45). `hatch_pattern` / "Fill pattern" selects
   OrcaSlicer-style sparse infill: `linear`, `crosshatch`, `diagonal`,
   `diagonal_crosshatch`, `diamonds`, `triangular`, `honeycomb`/`hexagonal`, `circles`, `dots`,
@@ -205,43 +207,65 @@ converter README for the exact preamble and settings.
   controls density steps for tone-driven fills. Fill darkness comes from luminance and opacity:
   white gets no hatch, gray gets lower-density infill, black gets denser infill. Missing fill still
   follows the SVG default black behavior.
-- Raster shading is implemented in the Qt app (`Raster shading` checkbox). It uses `QSvgRenderer`
-  to render the whole SVG to a transparent `QImage`, samples pixel darkness, and generates hatch
-  segments for each shade threshold. This supports gradients, embedded raster images, and artwork
-  whose visible tone is not represented as separate SVG fill colors. `Raster px/unit` controls render
-  sampling resolution; the implementation caps the rendered max dimension at 2400 px to keep planning
-  bounded. When raster shading is on, vector fill hatching is disabled and raster hatch contours are
+- Line art is fillable without a renderer step: an element that declares no visible fill
+  contributes the regions enclosed by its *closed* outline loops (`closed_outline_regions`).
+  Closure must be within `2 x tolerance`, and degenerate loops are dropped, so open subpaths never
+  invent an interior and fill cannot leak across artwork built from open segments. Fill density for
+  those regions comes from `stroke_darkness`.
+- Image-tone fill is implemented in the Qt app. It uses `QSvgRenderer` to render the whole SVG to a
+  transparent `QImage`, samples pixel darkness, and generates hatch segments for each shade
+  threshold. This supports gradients, embedded raster images, and artwork whose visible tone is not
+  represented as separate SVG fill colors. `Raster px/unit` controls render sampling resolution; the
+  implementation caps the rendered max dimension at 2400 px to keep planning bounded. When the
+  resolved fill source is `tone`, vector fill hatching is disabled and tone hatch contours are
   appended to the normal parsed vector contours.
 - For closed line-art SVGs with raster shading on, `triangular`, `diamonds`, `hexagonal`, and
   `concentric` use a closed-centerline fallback: parse closed SVG centerlines without stroke
   expansion, rasterize them as an even-odd fill mask, then clip the lattice/rings to the exact
   `QPainterPath` boundary. This avoids sampling only dark stroke pixels and makes line-art behave
   like filled regions.
-- Auto shading runs when the user selects an SVG in the Qt app. It renders a low-resolution tone
-  preview and, if the 5th-to-95th percentile darkness range is meaningful, enables `Raster shading`
-  and sets starter values (`Fill spacing mm = 4`, `Shade levels = 4`, `Shade angle step = 45`).
-  Flat single-tone artwork is left alone so silhouettes do not unexpectedly become raster-shaded.
+- `Fill source` replaces the old `Raster shading` checkbox: `auto` (default), `shapes`, or `tone`.
+  `resolve_fill_source()` classifies the file with `svg_fill_sources()` - an element/style walk that
+  never parses path geometry, so it is affordable in the file-selection handler - and picks `tone`
+  only for embedded `<image>` elements or `url(#...)` paint servers. Everything else, including
+  closed line art, stays on the vector path where fill is clipped inside the drawn regions.
+- Auto fill setup runs when the user selects an SVG in the Qt app. It logs what `Auto` resolved to
+  and, when the artwork carries image/gradient tone or meaningful tone variation, sets starter
+  values (`Shade levels = 4`, `Shade angle step = 45`). Flat single-tone artwork is left alone so
+  silhouettes do not unexpectedly become tone-shaded.
 - Settings.hatch_spacing_mm / hatch_angle_deg / hatch_pattern and the pattern-specific size map are
   threaded through `parse_svg_geometry` / `element_contours`; `shade_levels` /
   `shade_angle_step_deg` are threaded through the same path. Qt's raw-contour cache key includes
-  these fill-generation settings so changes invalidate the cache.
+  these fill-generation settings plus `fill_source` so changes invalidate the cache.
+- `parse_svg_geometry(..., stats=...)` reports how many fill contours an element contributed. The Qt
+  log prints one line per build (`Fill: <spacing> mm <pattern>, <n> hatch passes inside ...`) or an
+  actionable "nothing to hatch" message naming the setting that would change the result.
+  `PreviewWorker.notice` carries that line across to the UI thread.
 
 ### Qt UI
 - Sidebar settings are split into focused groups:
-  - **Geometry** — scale, tolerance, Flip Y, and pen-stroke compensation.
-  - **Shading** — fill spacing/angle/pattern, pattern-specific size fields, shade levels/angle
-    step, raster shading, and raster sampling. Pattern-specific rows appear only when relevant;
-    `Raster px/unit` appears only when raster shading is enabled.
+  - **Geometry** — scale, tolerance, artwork placement offsets, Flip Y, pen-stroke compensation,
+    plus the stroke rendering options.
+  - **Fill** (was *Shading*) — fill spacing/angle/pattern, fill source, pattern-specific size
+    fields, shade levels/angle step, and image-tone sampling. Pattern-specific rows appear only
+    when relevant; `Raster px/unit` is hidden only when the source is pinned to `shapes`.
   - **Motion** — draw/feed rate and travel rate.
-  - **Theta kinematics** — theta axis/ratio/resolver/cost settings, plus monotonic theta.
-  - **Pen** — Z heights, pen up/down simulation/dwell times, pen up/down commands, plus Use Z.
-  - **Preview settings** — playback speed (mm/s), bed dia/margin, pen stroke width, preview
+  - **Machine** — bed diameter/margin, gantry reach cap, and the end-of-program G53 park. These
+    clip and end the emitted program, so they are not preview settings.
+  - **Theta kinematics** — theta axis/ratio/resolver/cost settings, plus monotonic theta. `Theta
+    mode` and `Theta resolver` are combos of the implemented strategies.
+  - **Pen** — pen stroke width, Z heights, pen up/down simulation/dwell times, pen up/down
+    commands, plus Use Z and the GP27 handshake options.
+  - **Preview settings** — playback speed (mm/s), motion estimate scale, and preview
     colors. Playback speed controls the on-screen animation only. The controller-time estimate
     uses each emitted draw move's planned duration, plus dwell and modelled rapid durations;
     rapid timing remains an estimate until M-06. The playback timeline lives
     in `GLPreview.cumulative_ms` (built via `_playback_move_ms`), and `progress_after_time` uses the
     same duration source for the within-move fraction. Bump `PLAYBACK_RATE` to fast-forward long
     jobs, or scrub with the slider.
+- Checkboxes are placed by `converter.CHECKBOX_FIELDS` rather than by hand, so a setting lives in
+  exactly one group and the sidebar cannot drift from the core settings model. `FIELD_TOOLTIPS`
+  supplies the per-setting explanation shown on hover.
 - The preview command pane shows the complete generated program, including setup, M3/M5,
   G4, comments, and M2. XY-only theta omission is not available in production output.
 - Layout is now a `QSplitter`: left sidebar (settings + Convert/Preview buttons), centre

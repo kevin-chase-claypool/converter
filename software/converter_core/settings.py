@@ -73,7 +73,10 @@ class Settings:
     # box is not its visual center gets placed by hand. Negative is valid.
     artwork_offset_x_mm: float = 0.0
     artwork_offset_y_mm: float = 0.0
-    hatch_spacing_mm: float = 0.0
+    # Fill is on by default: an off-by-default fill looked like "the converter
+    # cannot hatch my artwork" instead of "fill is switched off". `0` still
+    # disables fill for outline-only plotting.
+    hatch_spacing_mm: float = 4.0
     hatch_angle_deg: float = 45.0
     hatch_pattern: str = "crosshatch"
     triangle_size_mm: float = 0.0
@@ -87,7 +90,11 @@ class Settings:
     concentric_spacing_mm: float = 0.0
     shade_levels: int = 1
     shade_angle_step_deg: float = 90.0
-    raster_shading: bool = False
+    # Where fill geometry comes from: "auto" resolves per SVG, "shapes" always
+    # hatches the vector regions (filled shapes, or regions enclosed by closed
+    # outlines), and "tone" always hatches the rendered image. See
+    # `resolve_fill_source`.
+    fill_source: str = "auto"
     raster_px_per_unit: float = 2.0
     pen_diameter_mm: float = 0.3
     pen_cycle_ms: float = 100.0
@@ -155,12 +162,18 @@ TEXT_FIELD_GROUPS = (
     ("Geometry", (
         ("Scale", "scale", "1.0"),
         ("Tolerance", "tolerance", "0.25"),
+        # Placement belongs with the artwork geometry: these two offsets move
+        # the artwork's center away from the registered bed center and therefore
+        # change the emitted program, not the view.
+        ("Artwork offset X mm", "artwork_offset_x_mm", "0"),
+        ("Artwork offset Y mm", "artwork_offset_y_mm", "0"),
         ("Stroke fill ratio", "stroke_fill_ratio", "2"),
     )),
-    ("Shading", (
-        ("Fill spacing mm", "hatch_spacing_mm", "0"),
-        ("Fill angle deg", "hatch_angle_deg", "45"),
+    ("Fill", (
+        ("Fill spacing mm", "hatch_spacing_mm", "4"),
         ("Fill pattern", "hatch_pattern", "crosshatch"),
+        ("Fill angle deg", "hatch_angle_deg", "45"),
+        ("Fill source", "fill_source", "auto"),
         ("Triangle size mm", "triangle_size_mm", "0"),
         ("Diamond size mm", "diamond_size_mm", "0"),
         ("Hex size mm", "hex_size_mm", "0"),
@@ -191,6 +204,7 @@ TEXT_FIELD_GROUPS = (
         ("Theta smooth", "theta_smooth_window", "2"),
     )),
     ("Pen", (
+        ("Pen stroke mm", "pen_diameter_mm", "0.3"),
         ("Safe Z", "safe_z", "5"),
         ("Work Z", "work_z", "0"),
         ("Pen up ms", "pen_up_ms", "800"),
@@ -198,18 +212,20 @@ TEXT_FIELD_GROUPS = (
         ("Pen down first ms", "pen_down_first_ms", "10000"),
         ("Pen up cmd", "pen_up_command", "M5"),
         ("Pen down cmd", "pen_down_command", "M3"),
+    )),
+    # Bed size, reach cap, and the end-of-print park are machine setup: they
+    # change the emitted program (clipping and the final G53 move), so they do
+    # not belong in a preview-only group.
+    ("Machine", (
+        ("Bed dia mm", "bed_diameter_mm", "457.2"),
+        ("Bed margin mm", "bed_margin_mm", "6.35"),
+        ("Gantry reach radius mm", "machine_reach_radius_mm", "191.4"),
         ("Park X machine mm", "park_x_machine", "-10"),
         ("Park Y machine mm", "park_y_machine", "-436"),
     )),
     ("Preview settings", (
         ("Preview playback speed mm/s", "print_speed", "100"),
         ("Motion estimate scale", "motion_estimate_scale", f"{DEFAULT_MOTION_ESTIMATE_SCALE:.6f}"),
-        ("Bed dia mm", "bed_diameter_mm", "457.2"),
-        ("Bed margin mm", "bed_margin_mm", "6.35"),
-        ("Gantry reach radius mm", "machine_reach_radius_mm", "191.4"),
-        ("Pen stroke mm", "pen_diameter_mm", "0.3"),
-        ("Artwork offset X mm", "artwork_offset_x_mm", "0"),
-        ("Artwork offset Y mm", "artwork_offset_y_mm", "0"),
     )),
 )
 
@@ -218,12 +234,86 @@ CHECKBOX_FIELDS = (
     ("Geometry", "compensate_pen_width", "Compensate pen stroke", True),
     ("Geometry", "expand_strokes", "Expand strokes to outlines", False),
     ("Geometry", "fill_wide_strokes", "Fill wide strokes", False),
-    ("Shading", "raster_shading", "Raster shading", False),
     ("Theta kinematics", "monotonic_theta", "Monotonic theta (r-theta style)", True),
     ("Pen", "include_z", "Use Z axis for pen up/down", False),
     ("Pen", "toolhead_status_handshake", "Wait for GP27 toolhead ready (commissioned only)", False),
     ("Pen", "toolhead_handshake_recover", "Lift pen and continue if the GP27 handshake times out", False),
 )
+
+# Human-readable labels for `fill_source`. The Qt combo shows the label and
+# stores the value, so the setting stays a short stable string.
+FILL_SOURCE_CHOICES = (
+    ("Auto (recommended)", "auto"),
+    ("SVG shapes (stays inside)", "shapes"),
+    ("Image tone (photos, gradients)", "tone"),
+)
+
+# Fields whose valid values are a fixed list. The Qt sidebar renders these as
+# combos so invalid or misspelled values cannot be entered, and `validate_settings`
+# checks them again for programmatic callers.
+HATCH_PATTERNS = (
+    "linear",
+    "crosshatch",
+    "diagonal",
+    "diagonal_crosshatch",
+    "triangular",
+    "cubic",
+    "diamonds",
+    "hexagonal",
+    "circles",
+    "dots",
+    "waves",
+    "gyroid",
+    "concentric",
+)
+
+# "optimized" is the per-contour resolver; "fixed" and "tangent" pin the bed
+# orientation. The experimental cost resolvers stay selectable through
+# `theta_resolver`.
+THETA_MODES = ("optimized", "fixed", "tangent")
+THETA_RESOLVERS = ("rtheta", "dp", "greedy")
+
+VALUE_CHOICE_FIELDS = {
+    "hatch_pattern": HATCH_PATTERNS,
+    "theta_mode": THETA_MODES,
+    "theta_resolver": THETA_RESOLVERS,
+}
+
+# Short in-UI explanations for the settings that are otherwise easy to
+# misread. Qt shows these as tooltips.
+FIELD_TOOLTIPS = {
+    "scale": "Artwork scale. 1.0 plots the SVG at its document size in millimetres.",
+    "tolerance": "How far a curve may deviate from a straight move, in mm. Larger is faster and coarser.",
+    "artwork_offset_x_mm": "Move the artwork's center off the registered bed center, in machine mm. You can also drag the artwork in the preview.",
+    "artwork_offset_y_mm": "Move the artwork's center off the registered bed center, in machine mm. You can also drag the artwork in the preview.",
+    "stroke_fill_ratio": "With 'Fill wide strokes', a stroke is filled only when its width is at least this many pen diameters.",
+    "hatch_spacing_mm": "Distance between fill lines in mm on paper. 0 turns fill off and plots outlines only.",
+    "hatch_pattern": "Fill pattern drawn inside each filled region.",
+    "hatch_angle_deg": "Rotation of the fill line family.",
+    "fill_source": "Auto hatches the SVG's own shapes, and switches to image tone only when the artwork's tone comes from an embedded image or gradient. 'SVG shapes' always stays inside the drawn regions; 'Image tone' hatches the rendered pixels.",
+    "shade_levels": "Density steps for tone: darker fill colour or image tone receives more fill families.",
+    "shade_angle_step_deg": "Angle between the fill families that darker tone adds.",
+    "raster_px_per_unit": "Image-tone sampling resolution in pixels per mm. Higher is more accurate and slower.",
+    "feed_rate": "Maximum X/Y draw speed in mm/min.",
+    "travel_rate": "Pen-up travel speed in mm/min.",
+    "theta_mode": "How the bed orientation is chosen per contour: optimized solves it, fixed holds one angle, tangent follows the path direction.",
+    "theta_resolver": "Per-segment theta solver. rtheta is the installed default; dp and greedy are fallback experiments.",
+    "pen_diameter_mm": "Physical pen tip width. Used for ink-size reporting, pen-width compensation, and the 'Fill wide strokes' threshold.",
+    "safe_z": "Z height for pen-up simulation. Only used when 'Use Z axis' is enabled.",
+    "work_z": "Z height for pen-down simulation. Only used when 'Use Z axis' is enabled.",
+    "pen_up_ms": "Dwell after M5/M3 lift. This is a fixed G4 wait; the pen height itself is owned by the toolhead.",
+    "pen_down_ms": "Dwell after M3 engage. Covers the toolhead's warm contact seek from the M5 clearance.",
+    "pen_down_first_ms": "Dwell after the program's first M3 only, because that seek starts at the GP2 lift switch.",
+    "pen_up_command": "Pen-up command. M5 for this machine.",
+    "pen_down_command": "Pen-down command. M3 for this machine.",
+    "bed_diameter_mm": "Bed diameter in mm. Clipping keeps the pen inside this circle (minus bed margin and the gantry reach cap).",
+    "bed_margin_mm": "Keeps the pen clear of the bed rim by this many mm.",
+    "machine_reach_radius_mm": "Radius the gantry can reach from the registered bed center. Artwork beyond it is clipped so soft limits are not tripped.",
+    "park_x_machine": "End-of-program park X in machine (G53) coordinates.",
+    "park_y_machine": "End-of-program park Y in machine (G53) coordinates.",
+    "print_speed": "Preview playback speed only. It does not change the emitted program.",
+    "motion_estimate_scale": "Display-only calibration of the time estimate for this machine.",
+}
 
 SETTING_TYPES = {field.name: field.type for field in fields(Settings)}
 
@@ -340,6 +430,12 @@ def validate_settings(settings):
         raise ValueError("bed margin must leave a positive drawable bed radius.")
     if str(settings.theta_axis).strip().upper() != "A":
         raise ValueError("theta axis must be A for this X/Y/A plotter.")
+    if str(settings.fill_source).strip().lower() not in ("auto", "shapes", "tone"):
+        raise ValueError("fill source must be auto, shapes, or tone.")
+    for name, choices in VALUE_CHOICE_FIELDS.items():
+        value = str(getattr(settings, name)).strip().lower()
+        if value not in choices:
+            raise ValueError(f"{name.replace('_', ' ')} must be one of: {', '.join(choices)}.")
     if settings.toolhead_status_handshake:
         if settings.include_z:
             raise ValueError(

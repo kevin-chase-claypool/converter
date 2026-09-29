@@ -1,5 +1,52 @@
 # Engineering Log
 
+<a id="elog-20260928-automatic-fill-and-settings-regroup"></a>
+### 🟩 2026-09-28 - WINDOWS SOFTWARE/IMPLEMENTED - fill resolves its own source and the sidebar follows function
+
+- Problem: the owner reported that unchecking raster shading left "only
+  outlines but no fills on the svg images", and that the app is "much too
+  complicated" to use. Both traced to the fill model, not to one wrong value:
+  vector fill and raster shading were two competing mechanisms whose result
+  depended on what the SVG happened to contain; an element with `fill="none"`
+  contributed no fill region at all; and `Fill spacing mm` defaulted to `0`,
+  which means disabled, so a fresh session produced no fill and no explanation.
+- Change: `Fill spacing mm` defaults to `4` mm. The `Raster shading` checkbox
+  became `Fill source` with `Auto` (default), `SVG shapes`, or `Image tone`.
+  Auto hatches the SVG's own regions and switches to image tone only for an
+  embedded `<image>` or a `url(#...)` paint server. Stroke-only elements now
+  contribute the regions their *closed* outlines enclose, so line art fills
+  inside its own outlines while open subpaths still contribute nothing. The
+  `Shading` group became `Fill`, and settings that change the emitted program
+  moved out of `Preview settings`: pen stroke width to `Pen`, bed
+  diameter/margin and the gantry reach cap to a new `Machine` group with the
+  G53 park, and the artwork offsets to `Geometry`.
+- Result: the owner no longer chooses between mechanisms, and the log explains
+  each build (`Fill: 4 mm crosshatch, 172 hatch passes inside the SVG's own
+  regions.`) instead of silently doing nothing. `theta_mode` and
+  `theta_resolver` are combos of implemented strategies, so a typo can no
+  longer fall back to a different planner silently.
+- Measurement: `samples/svg/kindergarten-house-sun.svg` through the real
+  `PreviewWorker` offscreen at scale 0.8 - before: 150 clipped contours and
+  1302 G-code lines with no interior fill; after: 190 contours and 2973 lines
+  with 172 hatch passes inside the house, door, windows, and sun. A traced
+  bitmap (`3383795.svg`, 823 filled paths) resolved to `shapes`: 11870 hatch
+  passes, 76876 G-code lines, 9.6 s. The open-segment Calder Hall plotter
+  export gained only 164 passes from closed glyph counters and renders
+  unchanged at plot scale.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes, 59 tests, including the new `test_fill_source.py` and the narrowed
+  line-art rule in `test_svg_style_inheritance.py`.
+- Rejected: implicitly closing every subpath (the behaviour removed by
+  WSW-20260927-001 after the owner reported leaked solid fill); detecting
+  fillability by parsing the file on selection (minutes on a 1.9 MB trace, on
+  the UI thread); and keeping the raster checkbox with only a better label.
+- Category: windows-software, converter, ui, fill, hatch, line-art
+- Risk: fill is now on by default, so outline-only plotting needs
+  `Fill spacing mm = 0`. Recorded in WSW-20260928-001.
+- Evidence: `WSW-20260928-001`.
+- Next action: run a real plot of a filled trace and a line-art sample to
+  confirm on-paper density before changing the 4 mm default again.
+
 <a id="elog-20260928-direct-ethernet-link"></a>
 ### 🟩 2026-09-28 - HARDWARE/RP23CNC SOFTWARE/VERIFIED - direct host-to-controller Ethernet link at 10 Mbps
 

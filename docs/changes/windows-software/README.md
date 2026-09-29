@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-28 | `WSW-20260928-001` | implemented | [Automatic fill source and an intuitive settings layout](2026/2026-09-28-automatic-fill-and-settings-regroup.md) | `converter`, `usability`, `fill`, `hatch`, `line-art`, `settings-layout` |
 | 2026-09-27 | `WSW-20260927-008` | implemented | [Restore the fixed-dwell default until F-05A passes](2026/2026-09-27-restore-dwell-default-until-f05a.md) | `converter`, `gp27`, `p115`, `error-39`, `f-05a`, `pen-dwell` |
 | 2026-09-27 | `WSW-20260927-007` | implemented | [Drag the artwork on the bed to place it](2026/2026-09-27-drag-artwork-placement.md) | `converter`, `preview`, `placement`, `bed`, `drag`, `g54` |
 | 2026-09-27 | `WSW-20260927-006` | implemented | [Show keep-down connectors in the preview](2026/2026-09-27-preview-keep-down-connectors.md) | `converter`, `preview`, `infill`, `serpentine`, `pen-cycle` |

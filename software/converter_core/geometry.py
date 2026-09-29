@@ -103,6 +103,12 @@ def use_href(element):
 # regions and their interiors were hatched -- which also made each child count
 # as "visible" purely because of that phantom fill. Resolving the inherited
 # values fixes the fill regions and the visibility test together.
+#
+# Line art is still fillable, but explicitly: an element that declares no
+# visible fill contributes the regions enclosed by its *closed* outlines (see
+# `closed_outline_regions`). That keeps a stroke-only path from being hatched
+# as if its whole bounding shape were solid, while still giving `fill="none"`
+# artwork interior fill that stays inside the drawn outlines.
 INHERITED_STYLE_PROPERTIES = (
     "fill",
     "fill-opacity",
@@ -284,6 +290,84 @@ def _element_is_visible(element, inherited=None):
         and stroke.strip().lower() != "none"
         and stroke_darkness(element, inherited) > 1e-9
     )
+
+
+# Elements the converter can turn into pen geometry. `text` is deliberately
+# absent because the converter does not shape glyphs.
+DRAWABLE_TAGS = ("path", "line", "polyline", "polygon", "rect", "circle", "ellipse")
+
+
+def svg_fill_sources(svg_path):
+    """Classify how an SVG declares its artwork without parsing path geometry.
+
+    Cheap enough to run while a file is selected: it walks the element tree,
+    resolves inherited presentation values, and counts drawable elements by the
+    fill geometry they contribute.
+
+    Returns a dict with:
+
+    * ``filled`` - elements that contribute a filled region to hatch.
+    * ``outline`` - elements drawn only by a visible stroke. Their closed
+      outlines still bound a fillable region.
+    * ``image`` - embedded raster images, whose tone the vector path cannot see.
+    * ``gradient`` - elements filled by a paint-server reference (``url(#...)``),
+      which the fill parser reads as the SVG initial black instead of the
+      gradient a renderer would show.
+    """
+    tree = ET.parse(svg_path)
+    root = tree.getroot()
+    id_map = {node.get("id"): node for node in root.iter() if node.get("id")}
+    counts = {"filled": 0, "outline": 0, "image": 0, "gradient": 0}
+
+    def walk(node, style, referenced=False, seen=None):
+        seen = seen or set()
+        tag = strip_ns(node.tag)
+        if tag in ("defs", "symbol") and not referenced:
+            return
+        if style_hidden(node, style):
+            return
+        resolved = inherited_style(style, node)
+        if tag == "use":
+            href = use_href(node)
+            if href and href.startswith("#"):
+                target_id = href[1:]
+                target = id_map.get(target_id)
+                if target is not None and target_id not in seen:
+                    walk(target, resolved, True, seen | {target_id})
+            return
+        if tag == "image":
+            counts["image"] += 1
+        fill = own_style_value(node, "fill")
+        if fill is None:
+            fill = resolved.get("fill") if resolved else None
+        if fill is not None and fill.strip().lower().startswith("url("):
+            counts["gradient"] += 1
+        if tag in DRAWABLE_TAGS and _element_is_visible(node, resolved):
+            counts["filled" if has_visible_fill(node, resolved) else "outline"] += 1
+        for child in list(node):
+            walk(child, resolved, referenced, seen)
+
+    walk(root, {})
+    return counts
+
+
+def resolve_fill_source(settings, svg_path):
+    """Return whether this SVG should be hatched as ``shapes`` or ``tone``.
+
+    ``fill_source = auto`` uses the vector shapes for ordinary SVG artwork and
+    falls back to the rendered image only when the tone lives somewhere the
+    vector path cannot see it: an embedded raster image, or a gradient /
+    pattern paint server. Everything else - filled traces, logos, and line art
+    with closed outlines - stays on the vector path, where fill is clipped
+    inside the drawn regions and cannot run over them.
+    """
+    source = str(getattr(settings, "fill_source", "auto") or "auto").strip().lower()
+    if source in ("shapes", "tone"):
+        return source
+    sources = svg_fill_sources(svg_path)
+    if sources["image"] or sources["gradient"]:
+        return "tone"
+    return "shapes"
 
 
 def hatch_angles_for_tone(base_angle, levels, angle_step, darkness):
@@ -1471,7 +1555,33 @@ def path_to_contours(d, tolerance, cancel_check=None):
     return contours
 
 
-def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, fill_wide_strokes=False, stroke_fill_ratio=2.0, pen_diameter=0.0, inherited=None):
+def closed_outline_regions(contours, tolerance):
+    """Polygons enclosed by an element's closed outline loops.
+
+    Single-pen line art declares `fill="none"`, so the SVG itself carries no
+    filled region to hatch. The area a pen *can* fill is the one bounded by a
+    closed outline, so those loops become the fill region for that element.
+    Open subpaths are ignored: there is no bounded interior to fill, and
+    guessing one would bleed fill across the artwork (the Calders and F15
+    plotter exports are built from open segments).
+    """
+    close_tol = max(float(tolerance) * 2.0, 1e-6)
+    min_area2 = 2.0 * close_tol * close_tol
+    polygons = []
+    for contour in contours:
+        if len(contour) < 4:
+            continue
+        if distance(contour[0], contour[-1]) > close_tol:
+            continue
+        polygon = list(contour)
+        polygon[-1] = polygon[0]
+        if abs(_polygon_signed_area2(polygon[:-1])) < min_area2:
+            continue
+        polygons.append(polygon)
+    return polygons
+
+
+def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, fill_wide_strokes=False, stroke_fill_ratio=2.0, pen_diameter=0.0, inherited=None, stats=None):
     check_cancelled(cancel_check)
     # Skip elements that are invisible in a single-pen plot (white/transparent
     # fill and stroke). A white knockout/background path would otherwise be
@@ -1502,11 +1612,19 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
             steps = max(24, min(360, int(2 * math.pi * max(rx, ry) / max(tolerance, 0.01))))
             contours = [[(cx + rx * math.cos(2 * math.pi * n / steps), cy + ry * math.sin(2 * math.pi * n / steps)) for n in range(steps + 1)]]
     fill_lines = []
-    if hatch_spacing > 0 and has_visible_fill(element, inherited):
-        darkness = fill_darkness(element, inherited)
-        fill_polygons = [contour for contour in contours if len(contour) >= 3]
+    if hatch_spacing > 0:
+        fill_polygons = []
+        if has_visible_fill(element, inherited):
+            fill_polygons = [contour for contour in contours if len(contour) >= 3]
+            darkness = fill_darkness(element, inherited)
+        elif has_visible_stroke(element, inherited):
+            # Stroke-only artwork: fill the interiors the outlines enclose.
+            fill_polygons = closed_outline_regions(contours, tolerance)
+            darkness = stroke_darkness(element, inherited)
         if fill_polygons:
             fill_lines.extend(fill_region_pattern_contours(fill_polygons, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern, triangle_size, pattern_sizes, cancel_check, fill_inset))
+            if stats is not None:
+                stats["fill_contours"] = stats.get("fill_contours", 0) + len(fill_lines)
     if has_visible_stroke(element, inherited):
         width = stroke_width(element, inherited)
         if fill_wide_strokes:
@@ -1522,7 +1640,7 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
     return contours + fill_lines
 
 
-def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, scale=1.0, fill_wide_strokes=False, stroke_fill_ratio=2.0, pen_diameter=0.0):
+def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, scale=1.0, fill_wide_strokes=False, stroke_fill_ratio=2.0, pen_diameter=0.0, stats=None):
     check_cancelled(cancel_check)
     # When the artwork is scaled down, generate the fill at the coarser SVG-space
     # spacing that matches the final on-paper density, instead of building the
@@ -1572,7 +1690,7 @@ def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_ang
                 if target is not None and target_id not in seen:
                     walk(target, combined @ Matrix(e=parse_length(node.get("x")), f=parse_length(node.get("y"))), resolved, True, seen | {target_id})
             return
-        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step, expand_strokes, triangle_size, pattern_sizes, cancel_check, fill_inset, fill_wide_strokes, stroke_fill_ratio, pen_diameter, resolved):
+        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step, expand_strokes, triangle_size, pattern_sizes, cancel_check, fill_inset, fill_wide_strokes, stroke_fill_ratio, pen_diameter, resolved, stats):
             check_cancelled(cancel_check)
             contours.append([combined.apply(x, y) for x, y in contour])
         for child in list(node):

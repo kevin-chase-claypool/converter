@@ -757,6 +757,7 @@ class GLPreview(QOpenGLWidget):
 
 class PreviewWorker(QObject):
     progress = Signal(int, str)
+    notice = Signal(str)
     finished = Signal(object)
     failed = Signal(str)
     cancelled = Signal()
@@ -777,7 +778,9 @@ class PreviewWorker(QObject):
     def run(self):
         try:
             self.progress.emit(10, "Parsing SVG geometry")
-            raw_contours = self.window.load_contours(self.svg_path, self.settings, self.is_cancelled)
+            raw_contours = self.window.load_contours(
+                self.svg_path, self.settings, self.is_cancelled, self.notice.emit
+            )
             self.progress.emit(48, f"Planning motion for {len(raw_contours)} contours")
             program_plan = converter.plan_program(raw_contours, self.settings, self.is_cancelled)
             moves = self.window.build_preview_moves(raw_contours, self.settings, self.is_cancelled, program_plan)
@@ -839,7 +842,6 @@ class MainWindow(QMainWindow):
 
         self.fields = {}
         self.field_rows = {}
-        field_groups = dict(converter.TEXT_FIELD_GROUPS)
 
         def make_form_group(title, items):
             box = QGroupBox(title)
@@ -849,69 +851,63 @@ class MainWindow(QMainWindow):
             form.setVerticalSpacing(2)
             form.setContentsMargins(8, 6, 8, 6)
             for label, key, value in items:
-                if key == "hatch_pattern":
+                if key == "fill_source":
                     edit = QComboBox()
-                    edit.addItems([
-                        "linear",
-                        "crosshatch",
-                        "diagonal",
-                        "diagonal_crosshatch",
-                        "triangular",
-                        "cubic",
-                        "diamonds",
-                        "hexagonal",
-                        "circles",
-                        "dots",
-                        "waves",
-                        "gyroid",
-                        "concentric",
-                    ])
-                    edit.setCurrentText(value)
+                    for choice_label, choice_value in converter.FILL_SOURCE_CHOICES:
+                        edit.addItem(choice_label, choice_value)
+                    edit.setCurrentIndex(max(0, edit.findData(value)))
+                elif key in converter.VALUE_CHOICE_FIELDS:
+                    edit = QComboBox()
+                    for choice in converter.VALUE_CHOICE_FIELDS[key]:
+                        edit.addItem(choice, choice)
+                    edit.setCurrentIndex(max(0, edit.findData(value)))
                 else:
                     edit = QLineEdit(value)
                     edit.setMaximumWidth(120)
                 label_widget = QLabel(label)
+                tooltip = converter.FIELD_TOOLTIPS.get(key)
+                if tooltip:
+                    edit.setToolTip(tooltip)
+                    label_widget.setToolTip(tooltip)
                 self.fields[key] = edit
                 self.field_rows[key] = (label_widget, edit)
                 form.addRow(label_widget, edit)
             return box, form
 
-        checkbox_meta = {key: (label, checked) for _group, key, label, checked in converter.CHECKBOX_FIELDS}
+        checkbox_meta = {
+            key: (group, label, checked)
+            for group, key, label, checked in converter.CHECKBOX_FIELDS
+        }
 
         def make_checkbox(key):
-            label, checked = checkbox_meta[key]
+            _group, label, checked = checkbox_meta[key]
             widget = QCheckBox(label)
             widget.setChecked(bool(checked))
+            tooltip = converter.FIELD_TOOLTIPS.get(key)
+            if tooltip:
+                widget.setToolTip(tooltip)
             return widget
 
-        self.flip_y = make_checkbox("flip_y")
-        self.use_z = make_checkbox("include_z")
-        self.compensate_pen = make_checkbox("compensate_pen_width")
-        self.expand_strokes = make_checkbox("expand_strokes")
-        self.fill_wide_strokes = make_checkbox("fill_wide_strokes")
-        self.monotonic_theta = make_checkbox("monotonic_theta")
-        self.raster_shading = make_checkbox("raster_shading")
-        self.toolhead_status_handshake = make_checkbox("toolhead_status_handshake")
-        self.toolhead_handshake_recover = make_checkbox("toolhead_handshake_recover")
+        # Checkbox placement comes from CHECKBOX_FIELDS so a setting lives in
+        # exactly one group and the sidebar cannot drift from the core model.
+        checkboxes = {key: make_checkbox(key) for key in checkbox_meta}
+        self.flip_y = checkboxes["flip_y"]
+        self.use_z = checkboxes["include_z"]
+        self.compensate_pen = checkboxes["compensate_pen_width"]
+        self.expand_strokes = checkboxes["expand_strokes"]
+        self.fill_wide_strokes = checkboxes["fill_wide_strokes"]
+        self.monotonic_theta = checkboxes["monotonic_theta"]
+        self.toolhead_status_handshake = checkboxes["toolhead_status_handshake"]
+        self.toolhead_handshake_recover = checkboxes["toolhead_handshake_recover"]
 
-        geometry_box, geometry_form = make_form_group("Geometry", field_groups["Geometry"])
-        geometry_form.addRow(self.flip_y)
-        geometry_form.addRow(self.compensate_pen)
-        geometry_form.addRow(self.expand_strokes)
-        geometry_form.addRow(self.fill_wide_strokes)
-
-        shading_box, shading_form = make_form_group("Shading", field_groups["Shading"])
-        shading_form.addRow(self.raster_shading)
-
-        motion_box, _motion_form = make_form_group("Motion", field_groups["Motion"])
-
-        theta_box, theta_form = make_form_group("Theta kinematics", field_groups["Theta kinematics"])
-        theta_form.addRow(self.monotonic_theta)
-
-        pen_box, pen_form = make_form_group("Pen", field_groups["Pen"])
-        pen_form.addRow(self.use_z)
-        pen_form.addRow(self.toolhead_status_handshake)
-        pen_form.addRow(self.toolhead_handshake_recover)
+        group_boxes = {}
+        group_forms = {}
+        for group_title, items in converter.TEXT_FIELD_GROUPS:
+            box, form = make_form_group(group_title, items)
+            group_boxes[group_title] = box
+            group_forms[group_title] = form
+        for key, (_group, _label, _checked) in checkbox_meta.items():
+            group_forms[_group].addRow(checkboxes[key])
 
         self.undrawn_color_button = QPushButton("Undrawn")
         self.undrawn_color_button.clicked.connect(lambda: self.choose_preview_color("undrawn"))
@@ -931,7 +927,8 @@ class MainWindow(QMainWindow):
         color_layout.addWidget(self.drawing_color_button)
         color_layout.addWidget(self.motion_color_button)
 
-        preview_box, preview_form = make_form_group("Preview settings", field_groups["Preview settings"])
+        preview_box = group_boxes["Preview settings"]
+        preview_form = group_forms["Preview settings"]
         preview_form.addRow(QLabel("Colors"), color_widget)
         preview_form.addRow(self.show_pen_down_path)
         preview_form.addRow(self.show_machine_reach)
@@ -956,12 +953,15 @@ class MainWindow(QMainWindow):
         sidebar_layout = QVBoxLayout(sidebar)
         sidebar_layout.setContentsMargins(0, 0, 0, 0)
         sidebar_layout.setSpacing(4)
-        sidebar_layout.addWidget(CollapsibleSection("Geometry", geometry_box, True))
-        sidebar_layout.addWidget(CollapsibleSection("Shading", shading_box, True))
-        sidebar_layout.addWidget(CollapsibleSection("Motion", motion_box, True))
-        sidebar_layout.addWidget(CollapsibleSection("Theta kinematics", theta_box, False))
-        sidebar_layout.addWidget(CollapsibleSection("Pen", pen_box, False))
-        sidebar_layout.addWidget(CollapsibleSection("Preview settings", preview_box, False))
+        expanded_groups = {"Geometry", "Fill", "Motion"}
+        for group_title, _items in converter.TEXT_FIELD_GROUPS:
+            sidebar_layout.addWidget(
+                CollapsibleSection(
+                    group_title,
+                    group_boxes[group_title],
+                    group_title in expanded_groups,
+                )
+            )
         sidebar_layout.addLayout(actions)
         sidebar_layout.addWidget(self.preview_build_bar)
         sidebar_layout.addWidget(self.preview_stage)
@@ -1025,7 +1025,7 @@ class MainWindow(QMainWindow):
         self.fields["print_speed"].textChanged.connect(lambda _text: self.on_print_speed_changed())
         self.fields["motion_estimate_scale"].textChanged.connect(lambda _text: self.on_motion_estimate_scale_changed())
         self.fields["hatch_pattern"].currentTextChanged.connect(lambda _text: self.update_pattern_settings())
-        self.raster_shading.toggled.connect(lambda _checked: self.update_pattern_settings())
+        self.fields["fill_source"].currentIndexChanged.connect(lambda _index: self.update_pattern_settings())
         self.fill_wide_strokes.toggled.connect(lambda _checked: self.update_pattern_settings())
         self.update_pattern_settings()
 
@@ -1085,26 +1085,58 @@ class MainWindow(QMainWindow):
         return {"min": values[0], "max": values[-1], "p05": lo, "p95": hi, "mean": mean, "count": len(values)}
 
     def auto_configure_shading(self, svg_path):
+        """Report what this SVG can be hatched from, and set tone starter values.
+
+        The fill *source* stays on Auto and resolves per file, so the user never
+        has to decide between vector and image tone. This only supplies
+        tone-friendly starter values when the artwork's tone comes from
+        something the vector path cannot see.
+        """
+        try:
+            sources = converter.svg_fill_sources(svg_path)
+        except Exception as exc:  # noqa: BLE001
+            self.log.append(f"Auto fill: could not inspect {os.path.basename(svg_path)}: {exc}")
+            return
+        tone_only = bool(sources["image"] or sources["gradient"])
+        if tone_only:
+            if float(self.fields["hatch_spacing_mm"].text() or 0.0) <= 0.0:
+                self.fields["hatch_spacing_mm"].setText("4")
+            if int(float(self.fields["shade_levels"].text() or 1)) < 4:
+                self.fields["shade_levels"].setText("4")
+            self.fields["shade_angle_step_deg"].setText("45")
+            reason = "embedded image" if sources["image"] else "gradient paint"
+            self.log.append(
+                f"Auto fill: this SVG carries {reason} tone, so Fill source Auto will "
+                "hatch the rendered image."
+            )
+            return
         stats = self.svg_tone_stats(svg_path)
-        if not stats:
-            return
-        tone_range = stats["p95"] - stats["p05"]
-        shadeable = tone_range >= 0.18 and stats["p95"] >= 0.25
-        if not shadeable:
-            self.log.append("Auto shading: no meaningful tone variation detected; leaving raster shading off.")
-            return
-        self.raster_shading.setChecked(True)
-        if float(self.fields["hatch_spacing_mm"].text() or 0.0) <= 0.0:
-            self.fields["hatch_spacing_mm"].setText("4")
-        if int(float(self.fields["shade_levels"].text() or 1)) < 4:
-            self.fields["shade_levels"].setText("4")
-        self.fields["shade_angle_step_deg"].setText("45")
-        if float(self.fields["raster_px_per_unit"].text() or 0.0) < 2.0:
-            self.fields["raster_px_per_unit"].setText("2")
-        self.log.append(
-            "Auto shading: tone variation detected "
-            f"(p05 {fmt(stats['p05'])}, p95 {fmt(stats['p95'])}); raster shading enabled."
-        )
+        if stats and stats["p95"] - stats["p05"] >= 0.18 and stats["p95"] >= 0.25:
+            if int(float(self.fields["shade_levels"].text() or 1)) < 4:
+                self.fields["shade_levels"].setText("4")
+            self.fields["shade_angle_step_deg"].setText("45")
+        if sources["filled"]:
+            detail = f"{sources['filled']} filled shapes"
+        elif sources["outline"]:
+            detail = f"{sources['outline']} stroke-only elements"
+        else:
+            detail = ""
+        if detail:
+            if sources["filled"]:
+                self.log.append(
+                    f"Auto fill: {detail} found, so Fill source Auto will hatch the "
+                    "SVG's own regions and stay inside them."
+                )
+            else:
+                self.log.append(
+                    f"Auto fill: {detail} found; Fill source Auto will hatch the regions "
+                    "their closed outlines enclose and stay inside them."
+                )
+        else:
+            self.log.append(
+                "Auto fill: no filled shapes or closed outlines found. "
+                "Set Fill source to Image tone if this artwork should be hatched from pixels."
+            )
 
     def pick_gcode(self):
         path, _ = QFileDialog.getSaveFileName(self, "Save G-code", "", "G-code files (*.gcode *.nc *.tap);;All files (*.*)")
@@ -1142,10 +1174,14 @@ class MainWindow(QMainWindow):
         self.update_color_buttons()
 
     def settings(self):
-        text_values = {
-            key: edit.currentText() if isinstance(edit, QComboBox) else edit.text()
-            for key, edit in self.fields.items()
-        }
+        text_values = {}
+        for key, edit in self.fields.items():
+            if isinstance(edit, QComboBox):
+                # Combos show a human label and carry the stored value as data.
+                value = edit.currentData()
+                text_values[key] = edit.currentText() if value is None else value
+            else:
+                text_values[key] = edit.text()
         bool_values = {
             "flip_y": self.flip_y.isChecked(),
             "include_z": self.use_z.isChecked(),
@@ -1153,7 +1189,6 @@ class MainWindow(QMainWindow):
             "expand_strokes": self.expand_strokes.isChecked(),
             "fill_wide_strokes": self.fill_wide_strokes.isChecked(),
             "monotonic_theta": self.monotonic_theta.isChecked(),
-            "raster_shading": self.raster_shading.isChecked(),
             "toolhead_status_handshake": self.toolhead_status_handshake.isChecked(),
             "toolhead_handshake_recover": self.toolhead_handshake_recover.isChecked(),
         }
@@ -1163,6 +1198,7 @@ class MainWindow(QMainWindow):
 
     def update_pattern_settings(self):
         pattern = converter.normalized_hatch_pattern(self.fields["hatch_pattern"].currentText())
+        fill_source = self.fields["fill_source"].currentData() or "auto"
 
         def set_visible(key, visible):
             row = self.field_rows.get(key)
@@ -1177,7 +1213,9 @@ class MainWindow(QMainWindow):
         for pattern_name, field_name in converter.PATTERN_SIZE_FIELDS.items():
             set_visible(field_name, pattern == pattern_name)
         set_visible("shade_angle_step_deg", pattern in ("linear", "crosshatch", "diagonal", "diagonal_crosshatch", "cubic", "waves", "gyroid"))
-        set_visible("raster_px_per_unit", self.raster_shading.isChecked())
+        # Sampling resolution only matters when image tone can be used, which
+        # "Auto" may still choose, so it stays visible for both.
+        set_visible("raster_px_per_unit", fill_source != "shapes")
         set_visible("stroke_fill_ratio", self.fill_wide_strokes.isChecked())
 
     def pattern_size_values(self, settings):
@@ -1206,7 +1244,7 @@ class MainWindow(QMainWindow):
             tuple(sorted(self.pattern_size_values(settings).items())),
             int(getattr(settings, "shade_levels", 1)),
             float(getattr(settings, "shade_angle_step_deg", 90.0)),
-            bool(getattr(settings, "raster_shading", False)),
+            str(getattr(settings, "fill_source", "auto")).lower(),
             float(getattr(settings, "raster_px_per_unit", 2.0)),
             bool(getattr(settings, "fill_wide_strokes", False)),
             float(getattr(settings, "stroke_fill_ratio", 2.0)),
@@ -2244,11 +2282,13 @@ class MainWindow(QMainWindow):
             return converter.chain_segments_to_paths(out)
         return out
 
-    def load_contours(self, svg_path, settings, cancel_check=None):
+    def load_contours(self, svg_path, settings, cancel_check=None, notice=None):
         converter.check_cancelled(cancel_check)
         key = self.raw_geometry_key(svg_path, settings)
         if self.raw_cache_key != key or self.raw_contours is None:
-            parse_hatch_spacing = 0.0 if getattr(settings, "raster_shading", False) else float(getattr(settings, "hatch_spacing_mm", 0.0))
+            source = converter.resolve_fill_source(settings, svg_path)
+            parse_hatch_spacing = 0.0 if source == "tone" else float(getattr(settings, "hatch_spacing_mm", 0.0))
+            fill_stats = {"fill_contours": 0}
             raw_contours = converter.parse_svg_geometry(
                 svg_path,
                 settings.tolerance,
@@ -2266,8 +2306,9 @@ class MainWindow(QMainWindow):
                 fill_wide_strokes=bool(getattr(settings, "fill_wide_strokes", False)),
                 stroke_fill_ratio=float(getattr(settings, "stroke_fill_ratio", 2.0)),
                 pen_diameter=float(getattr(settings, "pen_diameter_mm", 0.0)),
+                stats=fill_stats,
             )
-            if getattr(settings, "raster_shading", False):
+            if source == "tone":
                 pattern = converter.normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))
                 if pattern in ("concentric", "triangular", "diamonds", "hexagonal"):
                     centerline_contours = converter.parse_svg_geometry(
@@ -2286,16 +2327,53 @@ class MainWindow(QMainWindow):
                         scale=float(getattr(settings, "scale", 1.0)),
                     )
                     if pattern == "concentric":
-                        raw_contours.extend(self.concentric_from_closed_contours(centerline_contours, settings, cancel_check))
+                        tone_contours = self.concentric_from_closed_contours(centerline_contours, settings, cancel_check)
                     else:
-                        raw_contours.extend(self.lattice_from_closed_contours(centerline_contours, settings, cancel_check))
+                        tone_contours = self.lattice_from_closed_contours(centerline_contours, settings, cancel_check)
+                    raw_contours.extend(tone_contours)
+                    fill_stats["fill_contours"] += len(tone_contours)
                 else:
-                    raw_contours.extend(self.raster_shade_contours(svg_path, settings, cancel_check))
+                    tone_contours = self.raster_shade_contours(svg_path, settings, cancel_check)
+                    raw_contours.extend(tone_contours)
+                    fill_stats["fill_contours"] += len(tone_contours)
             converter.check_cancelled(cancel_check)
             self.raw_contours = raw_contours
             self.raw_cache_key = key
+            if notice:
+                notice(self.describe_fill(svg_path, settings, source, fill_stats["fill_contours"]))
         converter.check_cancelled(cancel_check)
         return converter.apply_geometry_settings(self.raw_contours, settings)
+
+    def describe_fill(self, svg_path, settings, source, fill_contours):
+        """One log line explaining what the fill settings will actually hatch."""
+        spacing = float(getattr(settings, "hatch_spacing_mm", 0.0))
+        if spacing <= 0.0:
+            return (
+                "Fill: off (Fill spacing mm = 0), so only outlines are plotted. "
+                "Set a spacing such as 4 to hatch the artwork."
+            )
+        pattern = converter.normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))
+        try:
+            sources = converter.svg_fill_sources(svg_path)
+        except Exception:  # noqa: BLE001
+            sources = {"filled": 0, "outline": 0, "image": 0, "gradient": 0}
+        if fill_contours <= 0:
+            if sources["image"] and source != "tone":
+                return (
+                    "Fill: nothing to hatch from the SVG's shapes. This artwork carries an "
+                    "embedded image, which only Fill source = Image tone can hatch."
+                )
+            if sources["image"] or sources["gradient"]:
+                return (
+                    "Fill: nothing to hatch - the image tone is too light or too small at "
+                    "the current Raster px/unit. Raise Raster px/unit or reduce Fill spacing mm."
+                )
+            return (
+                "Fill: nothing to hatch - this SVG has no filled shapes and no closed "
+                "outlines, so there is no interior to fill. Its strokes still plot."
+            )
+        where = "image tone" if source == "tone" else "the SVG's own regions"
+        return f"Fill: {spacing:g} mm {pattern}, {fill_contours} hatch passes inside {where}."
 
     def print_speed_mm_s(self):
         speed = float(self.fields["print_speed"].text())
@@ -2515,6 +2593,7 @@ class MainWindow(QMainWindow):
         self.preview_worker.moveToThread(self.preview_thread)
         self.preview_thread.started.connect(self.preview_worker.run)
         self.preview_worker.progress.connect(self.set_preview_build_progress)
+        self.preview_worker.notice.connect(self.log.append)
         self.preview_worker.finished.connect(self.preview_ready)
         self.preview_worker.failed.connect(self.preview_failed)
         self.preview_worker.cancelled.connect(self.preview_cancelled)
@@ -2618,7 +2697,7 @@ class MainWindow(QMainWindow):
             return
         try:
             settings = self.settings()
-            contours_data = self.load_contours(svg_path, settings)
+            contours_data = self.load_contours(svg_path, settings, notice=self.log.append)
             gcode = converter.contours_to_gcode(contours_data, settings)
             with open(gcode_path, "w", encoding="utf-8", newline="\n") as handle:
                 handle.write(gcode)
