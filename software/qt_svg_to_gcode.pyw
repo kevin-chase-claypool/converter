@@ -1016,17 +1016,25 @@ class MainWindow(QMainWindow):
         # Over-scale artwork is the one mistake the preview cannot show: a
         # cropped plot still looks like a complete drawing. Say it in words and
         # offer the one-click fix next to the preview it applies to.
-        self.fit_button = QPushButton("Fit to bed", clicked=self.fit_to_bed)
-        self.fit_button.setEnabled(False)
-        self.fit_button.setToolTip(
-            "Set Scale so the whole artwork fits inside the drawable reach circle."
+        self.fit_inside_button = QPushButton("Fit inside", clicked=self.fit_inside)
+        self.fit_inside_button.setEnabled(False)
+        self.fit_inside_button.setToolTip(
+            "Scale so the whole drawing stays inside the drawable reach circle, and "
+            "recenter it on the bed."
+        )
+        self.fill_bed_button = QPushButton("Fill bed", clicked=self.fill_bed)
+        self.fill_bed_button.setEnabled(False)
+        self.fill_bed_button.setToolTip(
+            "Scale so the artwork's bounds touch the drawable reach circle, and recenter "
+            "it on the bed. The four corners fall outside the circle and are clipped."
         )
         self.clip_warning = QLabel()
         self.clip_warning.setWordWrap(True)
         self.clip_warning.setStyleSheet("color: #b91c1c;")
         self.clip_warning.hide()
         clip_row = QHBoxLayout()
-        clip_row.addWidget(self.fit_button)
+        clip_row.addWidget(self.fill_bed_button)
+        clip_row.addWidget(self.fit_inside_button)
         clip_row.addWidget(self.clip_warning, 1)
         preview_layout.addLayout(clip_row)
 
@@ -2592,43 +2600,92 @@ class MainWindow(QMainWindow):
         A cropped plot still looks like a finished drawing, so an over-scale
         artwork is the one planning mistake the preview cannot show by itself.
         """
+        source = self.raw_contours if self.raw_contours else self.contours
+        reach = float(getattr(self.gl_preview.settings, "machine_reach_radius_mm", 0.0))
+        offset_x = float(self.fields["artwork_offset_x_mm"].text() or 0.0)
+        offset_y = float(self.fields["artwork_offset_y_mm"].text() or 0.0)
+        off_center = abs(offset_x) > 1e-9 or abs(offset_y) > 1e-9
+        if source and reach > 0.0:
+            # Enable each fit only when it would actually change something, so
+            # the buttons read as "available actions", not permanent furniture.
+            self.fit_inside_button.setEnabled(
+                off_center or converter.fit_scale_to_radius(source, reach) < 1.0
+            )
+            self.fill_bed_button.setEnabled(
+                off_center
+                or abs(converter.fit_scale_to_span(source, 2.0 * reach) - 1.0) > 1e-3
+            )
+        else:
+            self.fit_inside_button.setEnabled(False)
+            self.fill_bed_button.setEnabled(False)
         info = self.clip_info()
         if not info:
-            self.fit_button.setEnabled(False)
             self.clip_warning.hide()
             self.gl_preview.set_reach_warning(False)
             return
         radius, reach = info
         clipped = radius > reach
-        self.fit_button.setEnabled(clipped)
         self.gl_preview.set_reach_warning(clipped)
         if not clipped:
             self.clip_warning.hide()
             return
+        outside = (
+            "most of the drawing is outside"
+            if radius > 1.5 * reach
+            else "the corners fall outside"
+        )
         self.clip_warning.setText(
-            f"Artwork radius {fmt(radius)} mm is {radius / reach:.1f}x the {fmt(reach)} mm "
-            "reach, so only the middle of the drawing is plotted. Press Fit to bed to "
-            "scale it down."
+            f"Artwork radius {fmt(radius)} mm vs the {fmt(reach)} mm reach: {outside} the "
+            "drawable circle. Fill bed sizes the bounds to the bed (corners clipped); "
+            "Fit inside keeps the whole drawing."
         )
         self.clip_warning.show()
 
-    def fit_to_bed(self):
-        """Set Scale so the whole artwork lands inside the reach circle."""
+    def fit_inside(self):
+        """Scale so the whole drawing stays inside the reach circle."""
+        self.fit_to_bed(fill=False)
+
+    def fill_bed(self):
+        """Scale so the artwork's bounds touch the reach circle."""
+        self.fit_to_bed(fill=True)
+
+    def fit_to_bed(self, fill=False):
+        """Scale, and recenter, the artwork against the drawable reach circle.
+
+        ``fill=False`` keeps every point inside the circle; ``fill=True`` sizes
+        the bounding box to the circle's diameter so the bounds touch it and the
+        four corners are clipped. Both fits recenter the artwork on the bed,
+        because the point of the action is to place the drawing on the bed.
+        """
         reach = float(self.fields["machine_reach_radius_mm"].text() or 0.0)
         source = self.raw_contours if self.raw_contours else self.contours
         if reach <= 0.0 or not source:
-            self.log.append("Fit to bed: build a preview first so the artwork size is known.")
+            self.log.append("Fit: build a preview first so the artwork size is known.")
             return
-        factor = converter.fit_scale_to_radius(source, reach)
         current = float(self.fields["scale"].text() or 1.0)
-        if factor >= 1.0:
-            self.log.append("Fit to bed: the artwork already fits inside the reach circle.")
-            return
+        if fill:
+            factor = converter.fit_scale_to_span(source, 2.0 * reach)
+            action = "Fill bed"
+            goal = f"make the bounds touch the {fmt(reach)} mm reach circle"
+        else:
+            factor = converter.fit_scale_to_radius(source, reach)
+            action = "Fit inside"
+            goal = f"keep the whole drawing inside the {fmt(reach)} mm reach circle"
         fitted = current * factor
-        self.fields["scale"].setText(f"{fitted:.4f}")
+        if abs(fitted - current) > 1e-6:
+            self.fields["scale"].setText(f"{fitted:.4f}")
+        # A fit is a placement, so it also returns the artwork to the bed center
+        # instead of preserving a manual or dragged offset.
+        recentred = (
+            abs(float(self.fields["artwork_offset_x_mm"].text() or 0.0)) > 1e-9
+            or abs(float(self.fields["artwork_offset_y_mm"].text() or 0.0)) > 1e-9
+        )
+        self.fields["artwork_offset_x_mm"].setText("0")
+        self.fields["artwork_offset_y_mm"].setText("0")
         self.log.append(
-            f"Fit to bed: scale {fmt(current)} -> {fmt(fitted)} so the artwork fits the "
-            f"{fmt(reach)} mm reach circle. Press Preview to rebuild."
+            f"{action}: scale {fmt(current)} -> {fmt(fitted)} to {goal}"
+            + (", artwork recentred on the bed center." if recentred else ".")
+            + " Press Preview to rebuild."
         )
 
     def mark_preview_dirty(self):

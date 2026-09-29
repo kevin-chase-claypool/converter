@@ -1,5 +1,41 @@
 # Engineering Log
 
+<a id="elog-20260929-fill-bed-and-recenter-fits"></a>
+### 🟩 2026-09-29 - WINDOWS SOFTWARE/IMPLEMENTED - Fill bed sizes the bounds to the bed and both fits recenter
+
+- Problem: the owner reported that Fit to bed "shrinks the image down within the
+  bed way smaller than the bounds", that "the image bounds should touch the
+  printable bounds", and that the fit "should center it".
+- Cause: `fit_scale_to_radius()` sizes the circumscribed circle of the bounding
+  box, so the corners land on the ring and the edges sit inside it. On the
+  owner's `1157957 (1).svg` that is 300 x 225 mm inside a 382.8 mm-wide drawable
+  circle - correct for "nothing clipped", but it reads as undersized. The fit
+  also changed the size without clearing a dragged placement offset.
+- Change: the single button is replaced by **Fill bed** (`fit_scale_to_span()`,
+  bounding box sized to the drawable diameter, corners clipped, sizes both ways)
+  and **Fit inside** (`fit_scale_to_radius()`, shrink only, nothing clipped).
+  Both now clear `artwork_offset_x_mm` / `artwork_offset_y_mm`, so a fit places
+  the drawing at the bed center. Each button is enabled only while it would
+  change something, and the notice names both actions.
+- Measurement on that file: Fill bed lands at `Scale 0.2605` (375 x 281 mm,
+  corner radius 234.2 mm against the 191.4 mm reach, roughly 9% of the image
+  area clipped at the corners); Fit inside lands at `Scale 0.2085`
+  (300 x 225 mm, radius 187.4 mm).
+- Verification: 72 unit tests pass, with new `artwork_span()` /
+  `fit_scale_to_span()` cases in `software/tests/test_fit_to_bed.py`. An
+  offscreen probe against the real `MainWindow` confirmed both fits, the
+  recentring from offsets of 12.5 / -8.0 mm, the enable/disable states, and the
+  red-to-green guide transition.
+- Rejected: making the single button fill the bed (clipping is right for
+  full-bleed artwork and wrong for a logo, so both behaviours stay named), and
+  reporting a clipped-area percentage the notice cannot compute from the radius.
+- Category: windows-software, converter, ui, scale, reach, placement
+- Risk: Fill bed clips the four corners by design; the guide stays red after it
+  and Fit inside is one press away to undo. Recorded in WSW-20260929-001.
+- Evidence: `WSW-20260929-001`.
+- Next action: re-plot the owner's pattern file with Fill bed and judge the
+  clipped corners, then decide on pen-relative fill density.
+
 <a id="elog-20260928-call-out-overscale-artwork-and-stale-previews"></a>
 ### 🟩 2026-09-28 - WINDOWS SOFTWARE/IMPLEMENTED - over-scale artwork and stale previews are now visible in the preview
 

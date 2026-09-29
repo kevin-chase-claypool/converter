@@ -267,10 +267,13 @@ converter README for the exact preamble and settings.
   exactly one group and the sidebar cannot drift from the core settings model. `FIELD_TOOLTIPS`
   supplies the per-setting explanation shown on hover.
 - Over-scale artwork is reported instead of only clipped: the reach guide is drawn red while the
-  artwork radius exceeds `machine_reach_radius_mm`, the preview states the ratio, and **Fit to bed**
-  sets `Scale` from `fit_scale_to_radius()` so the drawing lands just inside the reach. Fitting only
-  ever shrinks. `artwork_radius()` measures from the artwork bounding-box center because placement
-  centers that box on the bed center.
+  artwork radius exceeds `machine_reach_radius_mm`, the preview states the ratio, and two fits are
+  offered. **Fill bed** uses `fit_scale_to_span()` to size the bounding box to the drawable diameter
+  (bounds touch the circle, four corners clipped, sizes both up and down). **Fit inside** uses
+  `fit_scale_to_radius()` to keep every point inside the circle (shrink only, matches the inscribed
+  bounding box). Both recenter the artwork on the bed center by clearing the artwork offsets.
+  `artwork_radius()` measures from the artwork bounding-box center because placement centers that
+  box on the bed center, and `artwork_span()` reports the box size the span fit targets.
 - Preview generation is manual, so `mark_preview_dirty()` marks every plan-affecting field and
   checkbox as out of date and `install_preview()` clears it. `print_speed`, `motion_estimate_scale`,
   and the two preview display toggles deliberately do not mark the preview stale.

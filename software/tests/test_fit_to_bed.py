@@ -68,9 +68,44 @@ class FitScaleTests(unittest.TestCase):
         self.assertEqual(converter.fit_scale_to_radius(_square(10.0), -5.0), 1.0)
 
     def test_scaling_up_is_never_requested(self):
-        # Fit to bed only ever shrinks: enlarging artwork that already fits
+        # "Fit inside" only ever shrinks: enlarging artwork that already fits
         # would silently change the user's Scale for no reason.
         self.assertEqual(converter.fit_scale_to_radius(_square(1.0), 1000.0), 1.0)
+
+
+class FillBedScaleTests(unittest.TestCase):
+    """`Fill bed` sizes the bounding box to the drawable diameter."""
+
+    def test_span_is_the_bounding_box_size(self):
+        self.assertEqual(converter.artwork_span(_square(10.0)), (20.0, 20.0))
+
+    def test_rectangle_span_reports_both_dimensions(self):
+        rectangle = [[(-60.0, -20.0), (60.0, -20.0), (60.0, 20.0), (-60.0, 20.0)]]
+        self.assertEqual(converter.artwork_span(rectangle), (120.0, 40.0))
+
+    def test_oversized_artwork_shrinks_until_the_bounds_touch(self):
+        limit = 191.4
+        contours = _square(500.0)
+        factor = converter.fit_scale_to_span(contours, 2.0 * limit)
+        self.assertLess(factor, 1.0)
+        scaled = [[(x * factor, y * factor) for x, y in c] for c in contours]
+        width, height = converter.artwork_span(scaled)
+        self.assertAlmostEqual(max(width, height), 2.0 * limit * 0.98, places=6)
+
+    def test_small_artwork_grows_to_the_bounds(self):
+        # Unlike "Fit inside", filling the bed is a size target in both
+        # directions: a small drawing is enlarged until its bounds touch.
+        factor = converter.fit_scale_to_span(_square(10.0), 2.0 * 191.4)
+        self.assertGreater(factor, 1.0)
+        scaled = [[(x * factor, y * factor) for x, y in _square(10.0)[0]]]
+        width, height = converter.artwork_span(scaled)
+        self.assertAlmostEqual(max(width, height), 2.0 * 191.4 * 0.98, places=6)
+
+    def test_span_of_empty_geometry_is_a_no_op(self):
+        self.assertEqual(converter.artwork_span([]), (0.0, 0.0))
+        self.assertEqual(converter.fit_scale_to_span([], 382.8), 1.0)
+        self.assertEqual(converter.fit_scale_to_span(_square(10.0), 0.0), 1.0)
+        self.assertEqual(converter.fit_scale_to_span(_square(10.0), -1.0), 1.0)
 
 
 if __name__ == "__main__":

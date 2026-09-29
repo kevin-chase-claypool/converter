@@ -1763,6 +1763,14 @@ def artwork_radius(contours):
     )
 
 
+def artwork_span(contours):
+    """Artwork bounding-box size ``(width, height)`` at the current scale."""
+    if not contours:
+        return (0.0, 0.0)
+    min_x, min_y, max_x, max_y = contour_bounds(contours)
+    return (max_x - min_x, max_y - min_y)
+
+
 def fit_scale_to_radius(contours, target_radius, margin=0.98):
     """Scale factor that fits already-scaled *contours* inside *target_radius*.
 
@@ -1782,6 +1790,26 @@ def fit_scale_to_radius(contours, target_radius, margin=0.98):
     if radius <= wanted:
         return 1.0
     return wanted / radius
+
+
+def fit_scale_to_span(contours, target_span, margin=0.98):
+    """Scale factor that makes the artwork's bounding box span *target_span*.
+
+    This is the "fill the bed" fit: the longer bounding-box side is placed on
+    the drawable diameter, so the box edges touch the drawable circle and its
+    four corners fall outside it. Unlike `fit_scale_to_radius` this sizes to the
+    target in both directions - artwork smaller than the bed grows to fill it -
+    and returns ``1.0`` only when the size is unknown.
+    """
+    target_span = float(target_span)
+    margin = float(margin)
+    if target_span <= 0.0 or margin <= 0.0:
+        return 1.0
+    width, height = artwork_span(contours)
+    longest = max(width, height)
+    if longest <= 0.0:
+        return 1.0
+    return target_span * margin / longest
 
 
 def compensate_physical_pen_width(contours, pen_diameter):
