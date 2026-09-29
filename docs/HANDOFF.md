@@ -266,6 +266,14 @@ converter README for the exact preamble and settings.
 - Checkboxes are placed by `converter.CHECKBOX_FIELDS` rather than by hand, so a setting lives in
   exactly one group and the sidebar cannot drift from the core settings model. `FIELD_TOOLTIPS`
   supplies the per-setting explanation shown on hover.
+- Over-scale artwork is reported instead of only clipped: the reach guide is drawn red while the
+  artwork radius exceeds `machine_reach_radius_mm`, the preview states the ratio, and **Fit to bed**
+  sets `Scale` from `fit_scale_to_radius()` so the drawing lands just inside the reach. Fitting only
+  ever shrinks. `artwork_radius()` measures from the artwork bounding-box center because placement
+  centers that box on the bed center.
+- Preview generation is manual, so `mark_preview_dirty()` marks every plan-affecting field and
+  checkbox as out of date and `install_preview()` clears it. `print_speed`, `motion_estimate_scale`,
+  and the two preview display toggles deliberately do not mark the preview stale.
 - The preview command pane shows the complete generated program, including setup, M3/M5,
   G4, comments, and M2. XY-only theta omission is not available in production output.
 - Layout is now a `QSplitter`: left sidebar (settings + Convert/Preview buttons), centre

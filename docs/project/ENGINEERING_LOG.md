@@ -1,5 +1,46 @@
 # Engineering Log
 
+<a id="elog-20260928-call-out-overscale-artwork-and-stale-previews"></a>
+### 🟩 2026-09-28 - WINDOWS SOFTWARE/IMPLEMENTED - over-scale artwork and stale previews are now visible in the preview
+
+- Problem: the owner reported that "the infill still looks terrible" with a
+  screenshot whose `Fill spacing mm` read `0` while the plot clearly carried
+  fill, on artwork that was silently cropped. Two planning mistakes were
+  invisible in the window: artwork too large for the reach cap, and a preview
+  that no longer matched the settings beside it.
+- Measurement: the owner's `1157957 (1).svg` (VTracer export of a 1440 x 1080
+  bitmap) is 1440 x 1080 mm at `Scale = 1.0`, radius 899.8 mm against a 191.4 mm
+  reach cap - 4.7x too big, so only the middle 21% of the image was inside the
+  circle, and that fragment alone was a 24.7 m pen-down path (~35 min). At
+  `Scale = 0.25` the same file fits and the fill renders as a shaded drawing.
+  The clipped plot still looked like a finished drawing, which is why the
+  problem went unnoticed.
+- Change: `artwork_radius()` and `fit_scale_to_radius()` in
+  `converter_core/geometry.py`; the reach guide turns red while the artwork is
+  clipped, the preview states the radius ratio, and a **Fit to bed** button sets
+  `Scale` so the drawing fits with a 2% margin (it never enlarges). Every
+  plan-affecting field and checkbox now marks the preview
+  `Settings changed since this preview - press Preview to rebuild it.`;
+  `install_preview()` clears the mark, and playback/estimate/display toggles are
+  excluded on purpose.
+- Verification: 67 unit tests pass, including 8 new cases in
+  `software/tests/test_fit_to_bed.py`. An offscreen probe against the real
+  `MainWindow` showed the warning text, the red guide, `1.0 -> 0.1842` after Fit
+  to bed, the no-op path when the artwork already fits, and stale marking for
+  field, combo, and checkbox edits but not for the display-only toggles.
+  `samples/svg/kindergarten-house-sun.svg` still converts end to end.
+- Not fixed here: fill density is still a manual millimetre guess. Pen-relative
+  shading (`spacing = pen_diameter / coverage`), the owner's recorded next
+  request, is untouched.
+- Rejected: auto-fitting the scale on file selection (size is unknown until the
+  geometry is parsed, and silently rewriting a user's field is worse than an
+  explicit button), and reporting a clipped-area percentage instead of the
+  radius ratio the clipping actually uses.
+- Category: windows-software, converter, ui, scale, reach, clipping, preview
+- Evidence: `WSW-20260928-002`.
+- Next action: have the owner re-plot `1157957 (1).svg` after Fit to bed, then
+  decide whether the fill still needs pen-relative density control.
+
 <a id="elog-20260928-automatic-fill-and-settings-regroup"></a>
 ### 🟩 2026-09-28 - WINDOWS SOFTWARE/IMPLEMENTED - fill resolves its own source and the sidebar follows function
 

@@ -1746,6 +1746,44 @@ def contour_bounds(contours):
     return min_x, min_y, max_x, max_y
 
 
+# Artwork is placed by centering its bounding box on the bed center, so the
+# radius that decides whether it fits the drawable circle is measured from that
+# same box center, not from a point the artwork happens to contain.
+def artwork_radius(contours):
+    """Largest distance from the artwork's bounding-box center to any point."""
+    if not contours:
+        return 0.0
+    min_x, min_y, max_x, max_y = contour_bounds(contours)
+    center_x = (min_x + max_x) / 2.0
+    center_y = (min_y + max_y) / 2.0
+    return max(
+        math.hypot(x - center_x, y - center_y)
+        for contour in contours
+        for x, y in contour
+    )
+
+
+def fit_scale_to_radius(contours, target_radius, margin=0.98):
+    """Scale factor that fits already-scaled *contours* inside *target_radius*.
+
+    Returns ``1.0`` when the artwork already fits or the radius is unknown, so
+    callers can multiply their current scale by the result unconditionally.
+    ``margin`` keeps the fitted artwork just inside the boundary instead of
+    touching it, which is what keeps the outermost drawn move off the limit.
+    """
+    target_radius = float(target_radius)
+    margin = float(margin)
+    if target_radius <= 0.0 or margin <= 0.0:
+        return 1.0
+    radius = artwork_radius(contours)
+    if radius <= 0.0:
+        return 1.0
+    wanted = target_radius * margin
+    if radius <= wanted:
+        return 1.0
+    return wanted / radius
+
+
 def compensate_physical_pen_width(contours, pen_diameter):
     pen_diameter = max(float(pen_diameter), 0.0)
     if pen_diameter <= 0 or not contours:

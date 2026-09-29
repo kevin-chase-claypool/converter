@@ -190,6 +190,20 @@ display-only; every other group changes the emitted program.
   The guide models the converter's reach radius only - it does not include the
   controller's G54 work offset, so it is not a machine-envelope check, and it is
   drawn only once a preview exists.
+- **Over-scale artwork is called out, not just clipped.** A cropped plot still
+  looks like a finished drawing, so when the measured artwork radius exceeds the
+  reach cap the guide turns red, the preview shows
+  `Artwork radius N mm is X.Xx the Y mm reach, so only the middle of the drawing
+  is plotted`, and a **Fit to bed** button becomes available. Fit to bed sets
+  `Scale` so the whole artwork lands just inside the reach circle (it only ever
+  shrinks, never enlarges) and asks you to press Preview. SVG document units are
+  not millimetres: a trace exported as `width="1440" height="1080"` plots
+  1440 x 1080 mm at `Scale = 1.0`, which is roughly four times the drawable
+  circle on this machine.
+- **The preview says when it is out of date.** Building a preview is manual, so
+  changing any setting that affects the plan marks the preview with
+  `Settings changed since this preview - press Preview to rebuild it.` Playback
+  speed, the motion estimate scale, and the preview display toggles do not.
 - **Placing the artwork.** `Artwork offset X mm` and `Artwork offset Y mm` move
   the artwork's center away from the registered bed center, which is how a
   drawing whose bounding box is not its visual center gets positioned by hand.

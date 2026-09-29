@@ -498,6 +498,17 @@ class GLPreview(QOpenGLWidget):
         self.show_machine_reach = bool(show)
         self.update()
 
+    def set_reach_warning(self, warning):
+        """Draw the reach guide in red when artwork is being clipped by it.
+
+        The guide is the only place the bed circle and the reachable area are
+        drawn at the same scale, so it is where an over-scale artwork is
+        visible without reading the status line.
+        """
+        self.reach_warning = bool(warning)
+        self.reach_color = QColor("#dc2626" if self.reach_warning else "#15803d")
+        self.update()
+
     def set_planned_offset(self, offset):
         """Record the placement the current plan already accounts for."""
         self.planned_offset = (float(offset[0]), float(offset[1]))
@@ -801,6 +812,7 @@ class MainWindow(QMainWindow):
         self.resize(1500, 950)
         self.moves = []
         self.contours = []
+        self.preview_dirty = False
         self.raw_contours = None
         self.raw_cache_key = None
         self.preview_index = 0
@@ -1001,6 +1013,31 @@ class MainWindow(QMainWindow):
         self.estimate.setWordWrap(True)
         preview_layout.addWidget(self.estimate)
 
+        # Over-scale artwork is the one mistake the preview cannot show: a
+        # cropped plot still looks like a complete drawing. Say it in words and
+        # offer the one-click fix next to the preview it applies to.
+        self.fit_button = QPushButton("Fit to bed", clicked=self.fit_to_bed)
+        self.fit_button.setEnabled(False)
+        self.fit_button.setToolTip(
+            "Set Scale so the whole artwork fits inside the drawable reach circle."
+        )
+        self.clip_warning = QLabel()
+        self.clip_warning.setWordWrap(True)
+        self.clip_warning.setStyleSheet("color: #b91c1c;")
+        self.clip_warning.hide()
+        clip_row = QHBoxLayout()
+        clip_row.addWidget(self.fit_button)
+        clip_row.addWidget(self.clip_warning, 1)
+        preview_layout.addLayout(clip_row)
+
+        self.stale_warning = QLabel(
+            "Settings changed since this preview - press Preview to rebuild it."
+        )
+        self.stale_warning.setWordWrap(True)
+        self.stale_warning.setStyleSheet("color: #b45309;")
+        self.stale_warning.hide()
+        preview_layout.addWidget(self.stale_warning)
+
         self.command_list = QListWidget()
         mono = QFont("Consolas", 9)
         self.command_list.setFont(mono)
@@ -1022,6 +1059,27 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.log)
 
         self.update_color_buttons()
+        # Preview generation is manual, so every field that changes the plan
+        # must flag the visible build as out of date. Playback speed and the
+        # estimate scale only affect the display and are deliberately excluded.
+        for key, edit in self.fields.items():
+            if key in ("print_speed", "motion_estimate_scale"):
+                continue
+            if isinstance(edit, QComboBox):
+                edit.currentIndexChanged.connect(lambda _index: self.mark_preview_dirty())
+            else:
+                edit.textChanged.connect(lambda _text: self.mark_preview_dirty())
+        for checkbox in (
+            self.flip_y,
+            self.compensate_pen,
+            self.expand_strokes,
+            self.fill_wide_strokes,
+            self.monotonic_theta,
+            self.use_z,
+            self.toolhead_status_handshake,
+            self.toolhead_handshake_recover,
+        ):
+            checkbox.toggled.connect(lambda _checked: self.mark_preview_dirty())
         self.fields["print_speed"].textChanged.connect(lambda _text: self.on_print_speed_changed())
         self.fields["motion_estimate_scale"].textChanged.connect(lambda _text: self.on_motion_estimate_scale_changed())
         self.fields["hatch_pattern"].currentTextChanged.connect(lambda _text: self.update_pattern_settings())
@@ -2509,20 +2567,76 @@ class MainWindow(QMainWindow):
         Measured before clipping, so artwork the reach cap would trim is
         reported rather than quietly disappearing.
         """
-        reach = float(getattr(self.gl_preview.settings, "machine_reach_radius_mm", 0.0))
-        source = self.raw_contours if self.raw_contours else self.contours
-        if reach <= 0.0 or not source:
+        info = self.clip_info()
+        if not info:
             return ""
-        min_x, min_y, max_x, max_y = converter.contour_bounds(source)
-        cx = (min_x + max_x) / 2.0
-        cy = (min_y + max_y) / 2.0
-        radius = max(math.hypot(x - cx, y - cy) for contour in source for x, y in contour)
+        radius, reach = info
         if radius <= reach:
             return f"Machine reach: artwork radius {fmt(radius)} mm is inside {fmt(reach)} mm."
         return (
             f"Machine reach: artwork radius {fmt(radius)} mm exceeds {fmt(reach)} mm by "
             f"{fmt(radius - reach)} mm; the excess is clipped."
         )
+
+    def clip_info(self):
+        """Pre-clip artwork radius and the reach cap, or None when unknown."""
+        reach = float(getattr(self.gl_preview.settings, "machine_reach_radius_mm", 0.0))
+        source = self.raw_contours if self.raw_contours else self.contours
+        if reach <= 0.0 or not source:
+            return None
+        return converter.artwork_radius(source), reach
+
+    def update_clip_warning(self):
+        """Show, next to the preview, that the artwork is being cut by the reach.
+
+        A cropped plot still looks like a finished drawing, so an over-scale
+        artwork is the one planning mistake the preview cannot show by itself.
+        """
+        info = self.clip_info()
+        if not info:
+            self.fit_button.setEnabled(False)
+            self.clip_warning.hide()
+            self.gl_preview.set_reach_warning(False)
+            return
+        radius, reach = info
+        clipped = radius > reach
+        self.fit_button.setEnabled(clipped)
+        self.gl_preview.set_reach_warning(clipped)
+        if not clipped:
+            self.clip_warning.hide()
+            return
+        self.clip_warning.setText(
+            f"Artwork radius {fmt(radius)} mm is {radius / reach:.1f}x the {fmt(reach)} mm "
+            "reach, so only the middle of the drawing is plotted. Press Fit to bed to "
+            "scale it down."
+        )
+        self.clip_warning.show()
+
+    def fit_to_bed(self):
+        """Set Scale so the whole artwork lands inside the reach circle."""
+        reach = float(self.fields["machine_reach_radius_mm"].text() or 0.0)
+        source = self.raw_contours if self.raw_contours else self.contours
+        if reach <= 0.0 or not source:
+            self.log.append("Fit to bed: build a preview first so the artwork size is known.")
+            return
+        factor = converter.fit_scale_to_radius(source, reach)
+        current = float(self.fields["scale"].text() or 1.0)
+        if factor >= 1.0:
+            self.log.append("Fit to bed: the artwork already fits inside the reach circle.")
+            return
+        fitted = current * factor
+        self.fields["scale"].setText(f"{fitted:.4f}")
+        self.log.append(
+            f"Fit to bed: scale {fmt(current)} -> {fmt(fitted)} so the artwork fits the "
+            f"{fmt(reach)} mm reach circle. Press Preview to rebuild."
+        )
+
+    def mark_preview_dirty(self):
+        """Flag that the visible preview no longer matches the settings."""
+        if not self.moves or self.preview_dirty:
+            return
+        self.preview_dirty = True
+        self.stale_warning.show()
 
     def on_placement_changed(self, x, y):
         """Follow a preview drag so the next build places the artwork there."""
@@ -2558,6 +2672,8 @@ class MainWindow(QMainWindow):
         self.slider.setMaximum(max(0, len(self.moves)))
         self.set_index(len(self.moves))
         self.gl_preview.set_preview(self.contours, self.moves, settings, center=bed_center, play_speed_mm_s=self.print_speed_mm_s())
+        self.preview_dirty = False
+        self.stale_warning.hide()
         return settings
 
     def preview(self):
@@ -2649,6 +2765,7 @@ class MainWindow(QMainWindow):
         reach_summary = self.reach_summary()
         if reach_summary:
             self.log.append(reach_summary)
+        self.update_clip_warning()
         self.status.setText(f"Preview ready: {len(self.moves)} commands. {reach_summary}")
 
     def preview_failed(self, message):
