@@ -1772,12 +1772,14 @@ def artwork_span(contours):
 
 
 def fit_scale_to_radius(contours, target_radius, margin=0.98):
-    """Scale factor that fits already-scaled *contours* inside *target_radius*.
+    """Scale factor that sizes already-scaled *contours* to *target_radius*.
 
-    Returns ``1.0`` when the artwork already fits or the radius is unknown, so
-    callers can multiply their current scale by the result unconditionally.
-    ``margin`` keeps the fitted artwork just inside the boundary instead of
-    touching it, which is what keeps the outermost drawn move off the limit.
+    This is the "fit inside" target: every point of the artwork ends up at
+    ``target_radius * margin`` from the bed center, so nothing is clipped and the
+    bounding-box corners land on the ring. It sizes in both directions - artwork
+    smaller than the target is enlarged - so callers should treat the result as a
+    size, not a cap. ``margin`` keeps the outermost drawn move just inside the
+    limit rather than exactly on it.
     """
     target_radius = float(target_radius)
     margin = float(margin)
@@ -1786,10 +1788,7 @@ def fit_scale_to_radius(contours, target_radius, margin=0.98):
     radius = artwork_radius(contours)
     if radius <= 0.0:
         return 1.0
-    wanted = target_radius * margin
-    if radius <= wanted:
-        return 1.0
-    return wanted / radius
+    return target_radius * margin / radius
 
 
 def fit_scale_to_span(contours, target_span, margin=0.98):

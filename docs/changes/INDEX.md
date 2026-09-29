@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-29 | `WSW-20260929-002` | windows-software | implemented | [Auto-fit to the bed, and fill that follows the final scale](windows-software/2026/2026-09-29-auto-fit-and-scale-aware-fill-cache.md) |
 | 2026-09-29 | `WSW-20260929-001` | windows-software | implemented | [Fill bed sizing and recentring for the fit actions](windows-software/2026/2026-09-29-fill-bed-and-recenter-fits.md) |
 | 2026-09-28 | `WSW-20260928-002` | windows-software | implemented | [Call out over-scale artwork and out-of-date previews](windows-software/2026/2026-09-28-call-out-overscale-artwork-and-stale-previews.md) |
 | 2026-09-28 | `WSW-20260928-001` | windows-software | implemented | [Automatic fill source and an intuitive settings layout](windows-software/2026/2026-09-28-automatic-fill-and-settings-regroup.md) |

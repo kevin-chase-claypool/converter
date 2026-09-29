@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-29 | `WSW-20260929-002` | implemented | [Auto-fit to the bed, and fill that follows the final scale](2026/2026-09-29-auto-fit-and-scale-aware-fill-cache.md) | `converter`, `usability`, `scale`, `reach`, `fill`, `cache` |
 | 2026-09-29 | `WSW-20260929-001` | implemented | [Fill bed sizing and recentring for the fit actions](2026/2026-09-29-fill-bed-and-recenter-fits.md) | `converter`, `usability`, `scale`, `reach`, `placement` |
 | 2026-09-28 | `WSW-20260928-002` | implemented | [Call out over-scale artwork and out-of-date previews](2026/2026-09-28-call-out-overscale-artwork-and-stale-previews.md) | `converter`, `usability`, `scale`, `reach`, `clipping`, `preview` |
 | 2026-09-28 | `WSW-20260928-001` | implemented | [Automatic fill source and an intuitive settings layout](2026/2026-09-28-automatic-fill-and-settings-regroup.md) | `converter`, `usability`, `fill`, `hatch`, `line-art`, `settings-layout` |

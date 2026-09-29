@@ -96,6 +96,10 @@ class Settings:
     # `resolve_fill_source`.
     fill_source: str = "auto"
     raster_px_per_unit: float = 2.0
+    # How `scale` is chosen. "manual" uses the field; "fill" and "inside" size
+    # the artwork to the drawable circle automatically on every build, so the
+    # artwork lands on the bed without the user computing a scale by hand.
+    fit_mode: str = "fill"
     pen_diameter_mm: float = 0.3
     pen_cycle_ms: float = 100.0
     # Measured on the integrated toolhead: M3 seeks in about 1.2 s warm and
@@ -161,6 +165,7 @@ class Settings:
 TEXT_FIELD_GROUPS = (
     ("Geometry", (
         ("Scale", "scale", "1.0"),
+        ("Fit", "fit_mode", "fill"),
         ("Tolerance", "tolerance", "0.25"),
         # Placement belongs with the artwork geometry: these two offsets move
         # the artwork's center away from the registered bed center and therefore
@@ -248,6 +253,15 @@ FILL_SOURCE_CHOICES = (
     ("Image tone (photos, gradients)", "tone"),
 )
 
+# Human-readable labels for `fit_mode`. "Fill bed" is the default because
+# settings are not persisted across launches: a manual scale would have to be
+# re-derived every session.
+FIT_MODE_CHOICES = (
+    ("Fill bed (auto)", "fill"),
+    ("Fit inside (auto)", "inside"),
+    ("Manual (use Scale)", "manual"),
+)
+
 # Fields whose valid values are a fixed list. The Qt sidebar renders these as
 # combos so invalid or misspelled values cannot be entered, and `validate_settings`
 # checks them again for programmatic callers.
@@ -291,6 +305,8 @@ FIELD_TOOLTIPS = {
     "hatch_pattern": "Fill pattern drawn inside each filled region.",
     "hatch_angle_deg": "Rotation of the fill line family.",
     "fill_source": "Auto hatches the SVG's own shapes, and switches to image tone only when the artwork's tone comes from an embedded image or gradient. 'SVG shapes' always stays inside the drawn regions; 'Image tone' hatches the rendered pixels.",
+    "fit_mode": "How Scale is chosen. 'Fill bed' sizes the artwork's bounds to the drawable circle on every build, 'Fit inside' keeps every point inside it, and 'Manual' uses the Scale field. Both auto fits override Scale, which is why the Scale box is read-only while one is selected.",
+    "scale": "Artwork scale. Set by the Fit mode while an auto fit is selected; choose Manual to type a value.",
     "shade_levels": "Density steps for tone: darker fill colour or image tone receives more fill families.",
     "shade_angle_step_deg": "Angle between the fill families that darker tone adds.",
     "raster_px_per_unit": "Image-tone sampling resolution in pixels per mm. Higher is more accurate and slower.",
@@ -432,6 +448,8 @@ def validate_settings(settings):
         raise ValueError("theta axis must be A for this X/Y/A plotter.")
     if str(settings.fill_source).strip().lower() not in ("auto", "shapes", "tone"):
         raise ValueError("fill source must be auto, shapes, or tone.")
+    if str(settings.fit_mode).strip().lower() not in ("fill", "inside", "manual"):
+        raise ValueError("fit mode must be fill, inside, or manual.")
     for name, choices in VALUE_CHOICE_FIELDS.items():
         value = str(getattr(settings, name)).strip().lower()
         if value not in choices:

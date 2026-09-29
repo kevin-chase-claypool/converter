@@ -203,14 +203,28 @@ display-only; every other group changes the emitted program.
     enlarged to fill the bed.
   - **Fit inside** keeps every point of the drawing inside the reach circle, so
     nothing is clipped. The bounding box corners land on the ring and the box
-    edges sit inside it, which leaves visible margin around the drawing. It only
-    ever shrinks.
+    edges sit inside it, which leaves visible margin around the drawing. Like
+    **Fill bed** it sizes in both directions, so a small drawing is enlarged to
+    the largest size that still fits.
   Both fits also recenter the artwork on the bed center, clearing any manual or
   dragged `Artwork offset`. SVG document units are not millimetres: a trace
   exported as `width="1440" height="1080"` plots 1440 x 1080 mm at
   `Scale = 1.0`, which is roughly four times the drawable circle on this
   machine. For that file **Fill bed** lands at `Scale 0.2605`
   (375 x 281 mm) and **Fit inside** at `Scale 0.2085` (300 x 225 mm).
+- **Fit mode.** `Scale` is normally set for you. The `Fit` setting next to it
+  chooses how:
+  - `Fill bed (auto)` (default) sizes the artwork's bounds to the drawable
+    circle on every build.
+  - `Fit inside (auto)` sizes it so every point stays inside the circle.
+  - `Manual (use Scale)` uses the `Scale` field, which is the only mode where
+    that field is editable.
+  While an auto fit is active the `Scale` box is read-only and shows the scale
+  the last build used, so nothing is hidden. The fit runs before planning, which
+  means artwork authored at a physical size - a 200 mm drawing, for example -
+  opens at the fitted size rather than its document size; choose `Manual` for
+  literal sizes. The two buttons beside the preview select the fit as well as
+  applying it, so one button press becomes the standing behaviour.
 - **The preview says when it is out of date.** Building a preview is manual, so
   changing any setting that affects the plan marks the preview with
   `Settings changed since this preview - press Preview to rebuild it.` Playback

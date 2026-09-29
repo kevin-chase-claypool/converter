@@ -1,5 +1,47 @@
 # Engineering Log
 
+<a id="elog-20260929-auto-fit-and-scale-aware-fill-cache"></a>
+### 🟩 2026-09-29 - WINDOWS SOFTWARE/IMPLEMENTED - auto-fit to the bed, and a fill cache that follows the scale
+
+- Problem: the owner asked for "an auto-fit option ... to scale the image to
+  exactly within the bounds of the printable area". The two fit buttons already
+  produced that size but only when pressed, and settings are not persisted, so
+  the scale had to be re-derived every session.
+- Defect found while building it: `raw_geometry_key()` omitted `scale`, but
+  `parse_svg_geometry` is called with `scale=` and bakes the on-paper fill
+  resolution for that scale into the parsed contours. Changing only Scale
+  reused the previous fill and multiplied it by the new scale. On
+  `samples/svg/kindergarten-house-sun.svg`, a `Scale 0.25` build following a
+  `Scale 1.0` build gave 122 contours instead of 48 - roughly four times denser
+  fill on paper than `Fill spacing mm` asked for. Every fit action changes only
+  the scale, so this was the normal path.
+- Change: `fit_mode` (`Fill bed (auto)` default, `Fit inside (auto)`,
+  `Manual (use Scale)`) with the `Scale` field read-only while an auto fit is
+  active and showing the scale the last build used. `fitted_settings()` applies
+  the fit before planning; `PreviewWorker.run()` re-reads the geometry once when
+  the scale changes, and a second build starts from the fitted scale so the
+  extra read happens once per file. `fit_scale_to_radius()` now sizes exactly
+  instead of shrinking only, so "fit inside" means the same thing in both
+  directions. The preview buttons adopt their fit as the standing mode. The
+  cache key now includes `scale` and `fit_mode`.
+- Verification: 72 unit tests pass. The cache probe now reports 48 contours for
+  both the cached and the fresh `Scale 0.25` build (was 122 for the cached one).
+  An offscreen `MainWindow` probe confirmed the fill/inside/manual sizing, the
+  once-per-file re-read, the read-only `Scale` field, and the `Scale` value
+  written back after a build. An end-to-end `PreviewWorker` run on the sample
+  logged `Auto-fit (Fill bed): Scale 1 -> 1.9672` and rebuilt 215 hatch passes
+  at the corrected density.
+- Rejected: defaulting `Fit` to `Manual` (settings do not persist, so the owner
+  would re-select it every launch), re-fitting after planning (the fill is built
+  during the geometry read), and keeping `fit_scale_to_radius()` shrink-only
+  while the auto fit sized exactly.
+- Category: windows-software, converter, ui, scale, reach, fill, cache
+- Risk: auto-fit resizes artwork that was authored at a physical size; `Manual`
+  restores literal document sizes. Recorded in WSW-20260929-002.
+- Evidence: `WSW-20260929-002`.
+- Next action: re-plot the owner's pattern file with the default auto-fit and
+  judge the size and fill density, then decide on pen-relative fill density.
+
 <a id="elog-20260929-fill-bed-and-recenter-fits"></a>
 ### 🟩 2026-09-29 - WINDOWS SOFTWARE/IMPLEMENTED - Fill bed sizes the bounds to the bed and both fits recenter
 

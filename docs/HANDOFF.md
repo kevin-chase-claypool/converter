@@ -270,10 +270,16 @@ converter README for the exact preamble and settings.
   artwork radius exceeds `machine_reach_radius_mm`, the preview states the ratio, and two fits are
   offered. **Fill bed** uses `fit_scale_to_span()` to size the bounding box to the drawable diameter
   (bounds touch the circle, four corners clipped, sizes both up and down). **Fit inside** uses
-  `fit_scale_to_radius()` to keep every point inside the circle (shrink only, matches the inscribed
-  bounding box). Both recenter the artwork on the bed center by clearing the artwork offsets.
+  `fit_scale_to_radius()` to keep every point inside the circle at the inscribed radius (sizes both
+  up and down). Both recenter the artwork on the bed center by clearing the artwork offsets.
   `artwork_radius()` measures from the artwork bounding-box center because placement centers that
   box on the bed center, and `artwork_span()` reports the box size the span fit targets.
+- `fit_mode` (`fill` default, `inside`, `manual`) makes a fit the standing behaviour instead of a
+  one-off button press. `fitted_settings()` applies it before planning, `PreviewWorker.run()`
+  re-reads the geometry once when the scale changes, and `install_preview()` writes the used scale
+  back into the read-only `Scale` field. `raw_geometry_key()` includes `scale` and `fit_mode`,
+  because `parse_svg_geometry` bakes the on-paper fill resolution for that scale into the parsed
+  contours - a missing scale in the key reused fill that was several times too dense.
 - Preview generation is manual, so `mark_preview_dirty()` marks every plan-affecting field and
   checkbox as out of date and `install_preview()` clears it. `print_speed`, `motion_estimate_scale`,
   and the two preview display toggles deliberately do not mark the preview stale.

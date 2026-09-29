@@ -21,6 +21,11 @@ related:
 
 # Fill bed sizing and recentring for the fit actions
 
+> Superseded in part by `WSW-20260929-002`: `Fit inside` now sizes the artwork
+> to the inscribed radius in both directions instead of shrinking only, and
+> `Fit bed` / `Fit inside` became the standing `Fit` mode. The sizes and the
+> recentring behaviour recorded below are unchanged.
+
 ## Summary
 
 The single **Fit to bed** button is replaced by two fits that say what they do:

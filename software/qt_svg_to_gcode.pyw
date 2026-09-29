@@ -1,4 +1,5 @@
 import bisect
+import dataclasses
 import math
 import os
 import sys
@@ -789,16 +790,28 @@ class PreviewWorker(QObject):
     def run(self):
         try:
             self.progress.emit(10, "Parsing SVG geometry")
+            settings = self.settings
             raw_contours = self.window.load_contours(
-                self.svg_path, self.settings, self.is_cancelled, self.notice.emit
+                self.svg_path, settings, self.is_cancelled, self.notice.emit
             )
+            # An auto fit needs the parsed artwork before it can size it, and the
+            # fill is generated at the on-paper resolution for that scale, so a
+            # changed scale means re-reading the geometry once.
+            fitted = self.window.fitted_settings(settings, raw_contours)
+            if fitted is not settings:
+                self.progress.emit(20, "Auto-fitting the artwork to the bed")
+                self.notice.emit(self.window.describe_fit(settings, fitted))
+                settings = fitted
+                raw_contours = self.window.load_contours(
+                    self.svg_path, settings, self.is_cancelled
+                )
             self.progress.emit(48, f"Planning motion for {len(raw_contours)} contours")
-            program_plan = converter.plan_program(raw_contours, self.settings, self.is_cancelled)
-            moves = self.window.build_preview_moves(raw_contours, self.settings, self.is_cancelled, program_plan)
+            program_plan = converter.plan_program(raw_contours, settings, self.is_cancelled)
+            moves = self.window.build_preview_moves(raw_contours, settings, self.is_cancelled, program_plan)
             self.progress.emit(78, f"Preparing {len(program_plan['contours'])} clipped contours")
             self.progress.emit(90, "Generating complete G-code listing")
-            program_gcode = converter.contours_to_gcode(raw_contours, self.settings, program_plan)
-            self.finished.emit((self.settings, program_plan["contours"], moves, program_plan["center"], program_gcode))
+            program_gcode = converter.contours_to_gcode(raw_contours, settings, program_plan)
+            self.finished.emit((settings, program_plan["contours"], moves, program_plan["center"], program_gcode))
         except converter.OperationCancelled:
             self.cancelled.emit()
         except Exception as exc:
@@ -866,6 +879,11 @@ class MainWindow(QMainWindow):
                 if key == "fill_source":
                     edit = QComboBox()
                     for choice_label, choice_value in converter.FILL_SOURCE_CHOICES:
+                        edit.addItem(choice_label, choice_value)
+                    edit.setCurrentIndex(max(0, edit.findData(value)))
+                elif key == "fit_mode":
+                    edit = QComboBox()
+                    for choice_label, choice_value in converter.FIT_MODE_CHOICES:
                         edit.addItem(choice_label, choice_value)
                     edit.setCurrentIndex(max(0, edit.findData(value)))
                 elif key in converter.VALUE_CHOICE_FIELDS:
@@ -1092,8 +1110,10 @@ class MainWindow(QMainWindow):
         self.fields["motion_estimate_scale"].textChanged.connect(lambda _text: self.on_motion_estimate_scale_changed())
         self.fields["hatch_pattern"].currentTextChanged.connect(lambda _text: self.update_pattern_settings())
         self.fields["fill_source"].currentIndexChanged.connect(lambda _index: self.update_pattern_settings())
+        self.fields["fit_mode"].currentIndexChanged.connect(lambda _index: self.update_fit_fields())
         self.fill_wide_strokes.toggled.connect(lambda _checked: self.update_pattern_settings())
         self.update_pattern_settings()
+        self.update_fit_fields()
 
     def pick_svg(self):
         path, _ = QFileDialog.getOpenFileName(self, "Choose SVG", "", "SVG files (*.svg);;All files (*.*)")
@@ -1284,6 +1304,20 @@ class MainWindow(QMainWindow):
         set_visible("raster_px_per_unit", fill_source != "shapes")
         set_visible("stroke_fill_ratio", self.fill_wide_strokes.isChecked())
 
+    def fit_mode(self):
+        return self.fields["fit_mode"].currentData() or "fill"
+
+    def update_fit_fields(self):
+        """An auto fit owns Scale, so the field shows the value but is not typed."""
+        auto = self.fit_mode() != "manual"
+        scale_edit = self.fields["scale"]
+        scale_edit.setReadOnly(auto)
+        scale_edit.setToolTip(
+            converter.FIELD_TOOLTIPS["scale"]
+            if not auto
+            else "Set by the Fit mode. Choose Fit = Manual to type a scale."
+        )
+
     def pattern_size_values(self, settings):
         return converter.pattern_size_values(settings)
 
@@ -1315,6 +1349,11 @@ class MainWindow(QMainWindow):
             bool(getattr(settings, "fill_wide_strokes", False)),
             float(getattr(settings, "stroke_fill_ratio", 2.0)),
             float(getattr(settings, "pen_diameter_mm", 0.0)),
+            # `parse_svg_geometry` generates fill at the on-paper resolution for
+            # this scale, so a scale change must invalidate the parsed geometry
+            # even though the scaling itself happens later.
+            float(getattr(settings, "scale", 1.0)),
+            str(getattr(settings, "fit_mode", "manual")).lower(),
         )
 
     def raster_shade_contours(self, svg_path, settings, cancel_check=None):
@@ -2609,7 +2648,8 @@ class MainWindow(QMainWindow):
             # Enable each fit only when it would actually change something, so
             # the buttons read as "available actions", not permanent furniture.
             self.fit_inside_button.setEnabled(
-                off_center or converter.fit_scale_to_radius(source, reach) < 1.0
+                off_center
+                or abs(converter.fit_scale_to_radius(source, reach) - 1.0) > 1e-3
             )
             self.fill_bed_button.setEnabled(
                 off_center
@@ -2642,12 +2682,22 @@ class MainWindow(QMainWindow):
         self.clip_warning.show()
 
     def fit_inside(self):
-        """Scale so the whole drawing stays inside the reach circle."""
+        """Scale so the whole drawing stays inside the reach circle, and keep it."""
+        self.select_fit_mode("inside")
         self.fit_to_bed(fill=False)
 
     def fill_bed(self):
-        """Scale so the artwork's bounds touch the reach circle."""
+        """Scale so the artwork's bounds touch the reach circle, and keep it."""
+        self.select_fit_mode("fill")
         self.fit_to_bed(fill=True)
+
+    def select_fit_mode(self, mode):
+        """Make a fit button's behaviour the standing auto-fit for this artwork."""
+        combo = self.fields["fit_mode"]
+        index = combo.findData(mode)
+        if index >= 0 and combo.currentIndex() != index:
+            combo.setCurrentIndex(index)
+            self.log.append(f"Fit mode set to {combo.itemText(index)}.")
 
     def fit_to_bed(self, fill=False):
         """Scale, and recenter, the artwork against the drawable reach circle.
@@ -2695,6 +2745,39 @@ class MainWindow(QMainWindow):
         self.preview_dirty = True
         self.stale_warning.show()
 
+    def fitted_settings(self, settings, contours):
+        """Apply the configured auto-fit to *settings* for this artwork.
+
+        Returns *settings* unchanged when the fit is manual or the artwork is
+        already at the wanted size. The caller re-reads the geometry when this
+        returns a different object, because the fill is generated at the
+        on-paper resolution of the final scale.
+        """
+        mode = str(getattr(settings, "fit_mode", "manual")).strip().lower()
+        if mode not in ("fill", "inside") or not contours:
+            return settings
+        reach = float(getattr(settings, "machine_reach_radius_mm", 0.0))
+        scale = float(getattr(settings, "scale", 0.0))
+        if reach <= 0.0 or scale <= 0.0:
+            return settings
+        if mode == "fill":
+            factor = converter.fit_scale_to_span(contours, 2.0 * reach)
+        else:
+            factor = converter.fit_scale_to_radius(contours, reach)
+        fitted = scale * factor
+        if fitted <= 0.0 or abs(fitted - scale) <= 1e-6:
+            return settings
+        return dataclasses.replace(settings, scale=fitted)
+
+    def describe_fit(self, settings, fitted):
+        """One log line naming the auto fit and the scale it chose."""
+        mode = str(getattr(settings, "fit_mode", "fill")).strip().lower()
+        named = "Fill bed" if mode == "fill" else "Fit inside"
+        return (
+            f"Auto-fit ({named}): Scale {fmt(settings.scale)} -> {fmt(fitted.scale)} "
+            f"for the {fmt(fitted.machine_reach_radius_mm)} mm reach circle."
+        )
+
     def on_placement_changed(self, x, y):
         """Follow a preview drag so the next build places the artwork there."""
         self.fields["artwork_offset_x_mm"].setText(f"{x:.2f}")
@@ -2729,6 +2812,14 @@ class MainWindow(QMainWindow):
         self.slider.setMaximum(max(0, len(self.moves)))
         self.set_index(len(self.moves))
         self.gl_preview.set_preview(self.contours, self.moves, settings, center=bed_center, play_speed_mm_s=self.print_speed_mm_s())
+        # Show the scale the build actually used, so an auto fit is visible in
+        # the field and the next build starts from it instead of re-deriving it.
+        used_scale = f"{float(getattr(settings, 'scale', 1.0)):.4f}"
+        scale_edit = self.fields["scale"]
+        if scale_edit.text() != used_scale:
+            blocked = scale_edit.blockSignals(True)
+            scale_edit.setText(used_scale)
+            scale_edit.blockSignals(blocked)
         self.preview_dirty = False
         self.stale_warning.hide()
         return settings

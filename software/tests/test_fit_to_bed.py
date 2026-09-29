@@ -43,8 +43,14 @@ class ArtworkRadiusTests(unittest.TestCase):
 
 
 class FitScaleTests(unittest.TestCase):
-    def test_artwork_inside_the_reach_is_left_alone(self):
-        self.assertEqual(converter.fit_scale_to_radius(_square(10.0), 200.0), 1.0)
+    def test_small_artwork_grows_to_the_inscribed_size(self):
+        # "Fit inside" is a size target in both directions, so the bounding-box
+        # corners land on the ring whether the artwork started too big or too
+        # small. A no-op would leave small artwork needlessly small.
+        factor = converter.fit_scale_to_radius(_square(10.0), 200.0)
+        self.assertGreater(factor, 1.0)
+        scaled = [[(x * factor, y * factor) for x, y in _square(10.0)[0]]]
+        self.assertAlmostEqual(converter.artwork_radius(scaled), 200.0 * 0.98, places=6)
 
     def test_oversized_artwork_scales_until_it_fits_with_margin(self):
         limit = 191.4
@@ -67,10 +73,11 @@ class FitScaleTests(unittest.TestCase):
         self.assertEqual(converter.fit_scale_to_radius(_square(10.0), 0.0), 1.0)
         self.assertEqual(converter.fit_scale_to_radius(_square(10.0), -5.0), 1.0)
 
-    def test_scaling_up_is_never_requested(self):
-        # "Fit inside" only ever shrinks: enlarging artwork that already fits
-        # would silently change the user's Scale for no reason.
-        self.assertEqual(converter.fit_scale_to_radius(_square(1.0), 1000.0), 1.0)
+    def test_artwork_already_at_the_target_is_a_no_op(self):
+        contours = _square(10.0)
+        radius = converter.artwork_radius(contours)
+        factor = converter.fit_scale_to_radius(contours, radius / 0.98)
+        self.assertAlmostEqual(factor, 1.0, places=9)
 
 
 class FillBedScaleTests(unittest.TestCase):
