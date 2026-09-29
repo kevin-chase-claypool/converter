@@ -10,9 +10,10 @@
   that no longer matched the settings beside it.
 - Measurement: the owner's `1157957 (1).svg` (VTracer export of a 1440 x 1080
   bitmap) is 1440 x 1080 mm at `Scale = 1.0`, radius 899.8 mm against a 191.4 mm
-  reach cap - 4.7x too big, so only the middle 21% of the image was inside the
+  reach cap - 4.7x too big, so only 7.4% of the image area was inside the
   circle, and that fragment alone was a 24.7 m pen-down path (~35 min). At
-  `Scale = 0.25` the same file fits and the fill renders as a shaded drawing.
+  `Scale = 0.25` the same file fits and the fill renders as a shaded drawing;
+  Fit to bed lands it at `Scale 0.208`.
   The clipped plot still looked like a finished drawing, which is why the
   problem went unnoticed.
 - Change: `artwork_radius()` and `fit_scale_to_radius()` in

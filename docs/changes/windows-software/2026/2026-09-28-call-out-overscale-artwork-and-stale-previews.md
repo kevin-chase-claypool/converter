@@ -52,12 +52,13 @@ bitmap) at the settings in that screenshot:
 | Artwork size at `Scale = 1.0` | 1440 x 1080 mm |
 | Artwork radius | 899.8 mm |
 | Reach cap | 191.4 mm |
-| Result | 4.7x too big; only the middle 21% of the image is inside the reach |
+| Result | 4.7x too big; only 7.4% of the image area is inside the reach (the middle 27% of its width) |
 | Pen-down path of what remains | 24.7 m (~35 min at 700 mm/min) |
 
 Nothing in the preview distinguished that from a deliberate close-up, and the
 clipping notice lived in a status line below the plot. At `Scale = 0.25` the
-same file fits (360 x 270 mm) and the fill renders as a shaded drawing.
+same file fits (360 x 270 mm) and the fill renders as a shaded drawing;
+`Fit to bed` lands it at `Scale 0.208` from the measured radius.
 
 ## Implementation
 
@@ -92,7 +93,9 @@ same file fits (360 x 270 mm) and the fill renders as a shaded drawing.
   an offset artwork, the fitted radius landing at `reach x 0.98`, no-op cases
   (empty, zero radius, negative radius, already fitting), and that fitting never
   scales up.
-- Offscreen UI probe against the real `MainWindow`:
+- Offscreen UI probe against the real `MainWindow`, using a synthetic
+  1440 x 1440 mm square (radius 1018.2 mm, 5.3x the reach cap) so the two paths
+  could be exercised without a multi-minute build:
 
 | step | result |
 |---|---|
