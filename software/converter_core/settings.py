@@ -123,11 +123,10 @@ class Settings:
     # toolhead's GP27 ready signal. P115 is a fatal guard: when GP27/PRB does
     # not show a fresh inactive-to-active edge inside its 0.50 s / 5.00 s
     # bounds it raises error 39 and the controller aborts the streaming program
-    # mid-print. F-05A (the on-bench P115/PRB validation) is still open, so the
-    # shipped default stays on the fixed dwell path and the handshake is an
-    # explicit opt-in. Turn it on only once P115.macro is installed, the
-    # GP27/U3-to-PRB wiring is verified, the flashed toolhead carries
-    # GP27_NORMAL_STATUS_ENABLED plus GP27_TRANSITION_LOW_MS, and F-05A passes.
+    # mid-print. F-05A (the on-bench P115/PRB validation) passed on 2026-09-29,
+    # so its prerequisites are met, but the shipped default deliberately stays
+    # on the fixed dwell path: the intermittent timeout seen in real printing
+    # is still unexplained and the handshake remains an explicit opt-in.
     toolhead_status_handshake: bool = False
     # Only meaningful with `toolhead_status_handshake`. Emits `G65 P115 ... A<lift> W2`
     # for the normal M3/M5 handshakes so a timeout prints a controller warning,

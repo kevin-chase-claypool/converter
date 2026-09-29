@@ -33,8 +33,9 @@ Requires `PySide6` (`pip install PySide6`).
   whose controller's Z slot is unwired. M3/M5 moves include a
   `G4` settle dwell after each. Enabling **Wait for GP27 toolhead ready**
   replaces those dwells with the RP23CNC-resident `G65 P115` bounded
-  acknowledgement macro; it stays off until that handshake path passes F-05A,
-  because a failed P115 raises error 39 and aborts the running program.
+  acknowledgement macro; it ships off by default even though that handshake
+  path passed F-05A on 2026-09-29, because a failed P115 raises error 39 and
+  aborts the running program.
 - `M2` at end
 
 The converter normalizes the clipped SVG around its geometric center before
@@ -121,8 +122,8 @@ display-only; every other group changes the emitted program.
     A-axis bed rotation during drawing. It does not change X/Y-only output.
 - **Pen** — `Pen stroke mm` (the physical pen tip), Z heights, pen dwells, pen
   up/down commands, Use Z, and the **Wait for GP27 toolhead ready** option
-  (off by default; enable it only after the F-05A on-bench P115/PRB validation
-  passes).
+  (off by default; the F-05A on-bench P115/PRB validation passed on
+  2026-09-29, so it is unblocked but unchanged).
   - **Pen stroke mm** (`pen_diameter_mm`, default 0.3) is the real pen tip
     width. It drives ink-size reporting, pen-width compensation, the
     *Fill wide strokes* threshold, and the keep-down connector gap guard.
@@ -138,10 +139,10 @@ display-only; every other group changes the emitted program.
     from the `M5` clearance height and uses `Pen down ms`. Starting a program
     when the pen is already off GP2 — for example right after a manual
     `M3`/`M5` warm-up — only wastes the extra first-dwell time.
-  - Enable that option only after the `P115.macro` file is installed on the
-    RP23CNC, GP27/U3-to-`PRB` polarity is verified, the flashed toolhead carries
-    `GP27_NORMAL_STATUS_ENABLED` plus `GP27_TRANSITION_LOW_MS`, F-05A has
-    passed, and the selected pen has passed contact/clear qualification. It
+  - That option requires the `P115.macro` file installed on the RP23CNC,
+    GP27/U3-to-`PRB` polarity verified, the flashed toolhead carrying
+    `GP27_NORMAL_STATUS_ENABLED` plus `GP27_TRANSITION_LOW_MS`, F-05A passed
+    (2026-09-29), and the selected pen qualified for contact/clear. It
     replaces fixed `G4` dwells with a bounded controller-side acknowledgement;
     it is not a host-PC serial wait. A P115 timeout raises error 39 and aborts
     the running program, so it is a commissioning-stage option, not a default.
@@ -271,7 +272,8 @@ display-only; every other group changes the emitted program.
   every subsequent M3/M5 transition. That requires `P115.macro` on the RP23CNC,
   the GP27/U3-to-PRB wiring, and the flashed toolhead's
   `GP27_NORMAL_STATUS_ENABLED` plus `GP27_TRANSITION_LOW_MS`; if any of those is
-  missing the program errors `39` mid-print. Turn it on only after F-05A passes.
+  missing the program errors `39` mid-print. F-05A passed on 2026-09-29, so the
+  option is unblocked, though it still ships off.
   Its companion option **Lift pen and continue if the GP27 handshake times
   out** keeps the print running: the macro prints `P115 WARNING ...`, issues
   `M5` to lift the pen, dwells, and continues on the next command.

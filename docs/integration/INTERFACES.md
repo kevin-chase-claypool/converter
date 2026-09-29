@@ -272,7 +272,7 @@ from the toolhead's active-low optocoupler input (M3 lights U1, whose collector
 pulls GP29 low). The controller sets `$16=1` (invert spindle enable) so `M3`
 pulls `ENA` low and `M5` leaves it high, which keeps the PEN_CLEAR fail-safe —
 loss of controller power or optocoupler current leaves GP29 high. Verified
-2026-09-23 (F-05); `F-05A` (`P115`/`PRB`) remains open.
+2026-09-23 (F-05); `F-05A` (`P115`/`PRB`) passed 2026-09-29.
 
 Version 1 continues to default to ENGAGE/PEN_CLEAR plus fixed `G4` delays. The
 source-ready optional alternative is the controller-resident `P115.macro`, not
@@ -283,23 +283,27 @@ emits it only through an explicit disabled-by-default setting. No firmware
 gate, controller macro file, or converter setting may be enabled until the
 specified force, clear, and GP27 tests pass.
 
-The 2026-09-29 F-05A dry-contact observation showed GP27/`PRB` toggling in the
-contact state while the clear state stayed steady: the ready flag asserted
-after three filtered conversions (about 4.7 ms) but released on a single
-out-of-band one while the hold loop corrects on a 250 ms cadence. The toolhead
-now holds the published level through any excursion inside the 20 g relief
-bound and releases it only after 500 ms beyond it (`RPSW-20260929-001`), so
-F-05A must additionally confirm a steady level through `HOLD_FORCE`, not only
-that each individual transition completes.
+The 2026-09-29 F-05A work first showed GP27/`PRB` toggling in the contact state
+while the clear state stayed steady: the ready flag asserted after three
+filtered conversions (about 4.7 ms) but released on a single out-of-band one
+while the hold loop corrects on a 250 ms cadence. The toolhead now holds the
+published level through any excursion inside the 20 g relief bound and releases
+it only after 500 ms beyond it (`RPSW-20260929-001`). On that build F-05A then
+passed: `Q0` accepted a verified initial clear, `Q1` observed a fresh
+inactive-then-active edge after both an `M3` and an `M5` on the real toolhead,
+the level held steady through `HOLD_FORCE`, and both a held-high and a
+never-asserting level raised `error[39]`.
 
 The 2026-09-25 default-on flip of the converter's **Wait for GP27 toolhead
 ready** checkbox was reverted on 2026-09-27. With `F-05A` still open, every
 generated program emitted a fatal `G65 P115` around each M3/M5, so a single
 handshake timeout raised `error[39]` and aborted a running print mid-job.
 `software/converter_core/settings.py` ships the fixed-dwell default again and
-keeps the handshake as the explicit opt-in this contract requires; re-enable it
-only after the flashed toolhead carries `GP27_NORMAL_STATUS_ENABLED` plus
-`GP27_TRANSITION_LOW_MS` and `F-05A` passes.
+keeps the handshake as the explicit opt-in this contract requires. Its
+preconditions are now met — the flashed toolhead carries
+`GP27_NORMAL_STATUS_ENABLED` plus `GP27_TRANSITION_LOW_MS`, and `F-05A` passed on
+2026-09-29 — but the default stays off until the project owner decides, since
+the roughly hourly `error[39]` seen in real printing is still unexplained.
 
 `P115` now takes optional arguments so the guard's bounds can match the
 installed machine instead of aborting a healthy one: `B<seconds>` completion

@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-29 | `RPSW-20260929-002` | verified | [F-05A: the commissioned GP27/PRB pen-transition acknowledgement passed](2026/2026-09-29-f-05a-gp27-prb-handshake-verified.md) | `p115`, `gp27`, `prb`, `handshake`, `f-05a`, `commissioning` |
 | 2026-09-29 | `RPSW-20260929-001` | implemented | [Hold the published contact-ready level through hold corrections](2026/2026-09-29-hold-contact-ready-hysteresis.md) | `toolhead`, `gp27`, `contact-ready`, `handshake`, `p115`, `f-05a` |
 | 2026-09-28 | `RPSW-20260928-001` | verified | [Direct host-to-controller Ethernet link at 10 Mbps](2026/2026-09-28-direct-ethernet-link.md) | `grblhal`, `ethernet`, `w5500`, `network`, `telnet`, `static-ip` |
 | 2026-09-27 | `WSW-20260927-008` | implemented | [Restore the fixed-dwell default until F-05A passes](../windows-software/2026/2026-09-27-restore-dwell-default-until-f05a.md) | `converter`, `gp27`, `p115`, `error-39`, `f-05a`, `pen-dwell` |

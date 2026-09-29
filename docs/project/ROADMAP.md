@@ -84,7 +84,7 @@
 - [x] Confirm M3/M5 tool output behavior. (`F-05`; 2026-09-23: the spindle
   `ENA` output is active-high by default, so the controller sets `$16=1`
   (invert spindle enable). M3 drives the pen down and M5 lifts it, with the
-  pen-up fail-safe intact. `F-05A` remains open.)
+  pen-up fail-safe intact. `F-05A` passed 2026-09-29.)
 - [ ] Verify B07WFGTNQC optocoupler channel direction, polarity, input current, output-side 3.3 V compatibility, and safe RP2350 logic levels before wiring `M3/M5` or `HOME_ARM`.
 - [ ] Save a complete `$` settings dump and verify persistence. (`F-06`)
 

@@ -1,5 +1,51 @@
 # Engineering Log
 
+<a id="elog-20260929-f05a-gp27-prb-acknowledgement"></a>
+### 🟩 2026-09-29 - RP23CNC SOFTWARE/VERIFIED - F-05A passed on the installed GP27/PRB handshake
+
+- Problem: `P115` had been source-ready since 2026-09-21 and the toolhead had
+  published contact- and clear-ready on GP27 since 2026-09-25, but no bench
+  session had demonstrated the two working together, so the converter's
+  handshake option stayed off and every generated program used fixed `G4`
+  dwells.
+- Measurement: with the pen parked at GP2, `Q0` accepted the verified initial
+  clear and the controller read `Pn:ZAP`; a streamed `M3` + `G65 P115 Q7 B12`
+  returned `release observed` then `completion observed` with
+  `Pn:ZAP -> ZA -> ZAP`. The streamed strict pass gave three
+  `P115 toolhead completion acknowledged` lines and no error 39. Both failure
+  paths raised `error:39 - Value out of range`: a held-high level returned
+  `P115 command completion did not clear its prior ready state`, and a
+  disconnected `PROBE SIG` conductor returned
+  `P115 toolhead ready acknowledgement timed out`. The controller input was
+  independently proven by dry-contacting `PROBE SIG` to `PROBE GND`
+  (`Pn:ZA -> ZAP`), and `U3` measured 0.147 V and 0.172 V asserted to
+  `CTRL_GND`, matching the recorded ~0.2 V bench figure.
+- Change: no production behaviour changed. Two streamed helper programs were
+  added because a single-line send cannot capture a transition edge - the seek
+  finishes before the next line is sent, so the macro only ever sees the
+  settled state.
+- Also resolved: an early `0 V` meter reading at `PROBE SIG` was a misreading
+  and briefly misdirected the session toward the return wiring. The path was
+  never faulty; several `Pn:ZA` samples that looked like a stuck-low fault were
+  simply taken during seeks and other non-ready states.
+- Not verified: the intermittent `error[39]` seen in real printing, roughly
+  once an hour, was not reproduced. The contact-ready release hysteresis in
+  `RPSW-20260929-001` is the targeted mitigation and still needs a real print
+  run.
+- Category: rp23cnc-software, windows-software, p115, gp27, prb, handshake,
+  f-05a, commissioning
+- Risk: the converter's **Wait for GP27 toolhead ready** default deliberately
+  stays off pending the owner's decision, since the hourly miss is unexplained.
+  Separately, the controller settings have drifted from the documented
+  snapshot (`$21=1`, `$24=1000.0`, `$25=4000.0`, `$110=$111=10000.000`,
+  `$131=451.000`); recorded as an open discrepancy, not a verified change.
+- Next action: run a real print with the handshake enabled and the recover
+  option on, with the toolhead live stream running, and record what the
+  toolhead is doing when an `error[39]` occurs.
+- Evidence: `docs/report/lab-notes/2026-09-29-f-05a-gp27-prb-acknowledgement-pass.md`;
+  `samples/gcode/f05a-q7-edge-check.gcode`;
+  `samples/gcode/f05a-p115-strict-pass.gcode`; `RPSW-20260929-002`.
+
 <a id="elog-20260929-hold-contact-ready-hysteresis"></a>
 ### 🟨 2026-09-29 - RP23CNC SOFTWARE/IMPLEMENTED - hold the published contact-ready level through hold corrections
 

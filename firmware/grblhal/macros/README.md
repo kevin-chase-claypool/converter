@@ -49,8 +49,10 @@ accepts an already-proven-clear opening state. Both paths default to finite
 0.50 s release and 5.00 s completion bounds and raise error 39 before following
 motion on failure. `P115` observes GP27/`PRB` and dwells only in its strict,
 `Q7`, and `W1` modes; the opt-in `W2` recover mode may issue one `M5` fail-safe
-lift on timeout. It must not be uploaded, selected in the converter, or used
-during P100 until the separate normal-print commissioning gates pass.
+lift on timeout. It must not be used during P100. The separate normal-print
+commissioning gates are now satisfied - F-05A passed on 2026-09-29 - so the
+macro may be installed and selected in the converter, which still ships the
+option off by default.
 
 `P115` accepts optional arguments, each defaulting to the commissioned value:
 `B<seconds>` completion bound (5.00), `C<seconds>` release bound (0.50),

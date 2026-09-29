@@ -84,14 +84,14 @@ work.
   **not** enable automatic approach, a target, or a force limit until the
   load-cell force path/signal discrepancy is isolated.
 - Complete actuator travel, stall, seek-timeout, and safe-fault testing.
-- Do not enable normal-print GP27 status or the converter's **Wait for GP27
-  toolhead ready** option until F-05A proves installed PRB polarity and `P115`
-  timeout behavior, T-01H proves normal M5 clearance, and the CS1238/
-  actuator gates prove truthful contact and clear status. The macro itself is
-  bounded and raises controller `error[39]`; it must be copied to the
-  controller filesystem and tested against a safe PRB fixture first. F-05A
-  must also confirm that the published GP27 level stays steady through
-  `HOLD_FORCE`, not only that each individual transition completes.
+- Normal-print GP27 status and the converter's **Wait for GP27 toolhead ready**
+  option are no longer gated on F-05A: installed PRB polarity and `P115`
+  timeout behavior passed on 2026-09-29, T-01H proves normal M5 clearance, and
+  the CS1238/actuator gates prove truthful contact and clear status. The macro
+  itself is bounded and raises controller `error[39]`, and F-05A confirmed both
+  the fresh inactive-then-active edge and that a held-high or never-asserting
+  level raises that error. The converter's checkbox still ships off by default
+  pending the project owner's decision. See the 2026-09-29 F-05A lab note.
 - Complete the remaining E-18/F-08 macro and coordinate stages for the Pro
   Micro RP2350 magnetic-output path. The 2026-09-10 motor-inert diagnostic
   passed installed Aux0/U2/GP28, local TMAG scan state, controller-visible PRB

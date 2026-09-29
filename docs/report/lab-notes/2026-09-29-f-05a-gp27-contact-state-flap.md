@@ -91,8 +91,10 @@ and A inputs and are unrelated.
 - What changed: release hysteresis, committed as `RPSW-20260929-001`. The
   level is now held through any excursion inside the 20 g urgent-relief bound
   and released only after 500 ms beyond it.
-- Repeat result: not yet available. This note records the pre-fix observation;
-  the post-fix re-check is the next action and F-05A stays open.
+- Repeat result: the post-fix re-check passed. See
+  [`2026-09-29-f-05a-gp27-prb-acknowledgement-pass.md`](2026-09-29-f-05a-gp27-prb-acknowledgement-pass.md),
+  where the level held steady in `HOLD_FORCE` and `Q1` observed a fresh edge
+  after both an `M3` and an `M5`.
 
 ## Interpretation
 

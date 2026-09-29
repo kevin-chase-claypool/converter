@@ -55,10 +55,12 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   the pen (`M5`) and continue on a long print. The converter emits `P115` only
   when its commissioning-only GP27 option is enabled. Normal `M5` ends at the load-cell
   release threshold plus a calibrated clearance pulse; it does not travel to
-  the distant `LIFT_HOME` switch. `P115` and the toolhead GP27 output remain
-  disabled until F-08, force, and clearance commissioning pass. To keep the
-  inactive-to-active edge observable, the toolhead now holds GP27 inactive for
-  a guaranteed 50 ms on every M3/M5 transition (`GP27_TRANSITION_LOW_MS`) and
+  the distant `LIFT_HOME` switch. `P115` and the toolhead GP27 output are
+  enabled once F-08, force, and clearance commissioning pass; F-05A passed on
+  2026-09-29, which unblocks the converter option, though it still ships off.
+  To keep the inactive-to-active edge observable, the toolhead now holds GP27
+  inactive for a guaranteed 50 ms on every M3/M5 transition
+  (`GP27_TRANSITION_LOW_MS`) and
   holds the published contact-ready level through the hold loop's bounded
   corrections (release after 500 ms beyond the 20 g relief bound,
   `CONTACT_READY_LOST_MS`), so the level cannot chatter in `HOLD_FORCE`.
