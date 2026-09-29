@@ -194,7 +194,7 @@ display-only; every other group changes the emitted program.
 - **Over-scale artwork is called out, not just clipped.** A cropped plot still
   looks like a finished drawing, so when the measured artwork radius exceeds the
   reach cap the guide turns red and the preview states the ratio, e.g.
-  `Artwork radius 1018.2 mm vs the 191.4 mm reach: most of the drawing is
+  `Artwork radius 1018.2 mm vs the 185.0 mm reach: most of the drawing is
   outside the drawable circle.` Two fits are offered next to that notice, each
   enabled only while it would still change something:
   - **Fill bed** sizes the bounding box to the drawable diameter, so the box
@@ -288,11 +288,17 @@ display-only; every other group changes the emitted program.
   example, emits drawing coordinates around `(0,0)`, not `(100,100)`.
 - `Bed margin mm` (default 6.35 ≈ 0.25") clips artwork inside the bed edge so the
   pen never reaches the rim.
-- `Gantry reach radius mm` (default 191.4) caps the drawable circle at the
-  gantry's reachable radius from the registered bed center. Because the bed
-  rotates freely, the safe drawable area is this circle rather than the full
-  bed; it keeps emitted coordinates inside the controller's X/Y envelope so
-  artwork at the rim cannot trip `Alarm:2 - Soft limit`.
+- `Gantry reach radius mm` (default 185.0) caps the drawable circle at the
+  gantry's reachable radius from the registered bed center, less a margin for
+  registration drift. Because the bed rotates freely, the safe drawable area is
+  this circle rather than the full bed; it keeps emitted coordinates inside the
+  controller's X/Y envelope so artwork at the rim cannot trip
+  `Alarm:2 - Soft limit`. The binding direction is +Y, the machine's home end,
+  which no controller setting can extend: with the 2026-09-29 registration
+  (`$130=455`, `$131=451`, bed center machine `-232.449, -195.270`) the four
+  margins are +X 232.4, -X 222.6, +Y 195.3 and -Y 255.7 mm. Re-derive this
+  value after every HOME + REGISTER; the +Y margin has already varied by more
+  than 5 mm between sessions.
 - **Fill.** `Fill spacing mm` sets the on-paper distance between fill lines
   (default `4`); `0` plots outlines only. Fill is on by default so a conversion
   never silently produces no fill.

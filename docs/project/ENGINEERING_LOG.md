@@ -1,5 +1,44 @@
 # Engineering Log
 
+<a id="elog-20260929-reach-radius-drift-margin"></a>
+### 🟨 2026-09-29 - WINDOWS SOFTWARE/IMPLEMENTED - re-derive the reach radius and give it a drift margin
+
+- Problem: a `samples/gcode/mom.gcode` run stopped partway through contour 8713
+  reversed with `Alarm:2 - Soft limit`, leaving the pen down. The program's own
+  geometry measures 189.81 mm maximum radius - inside the 191.4 mm cap the
+  converter had clipped to - so the file could not explain the alarm by
+  itself, and a scan of every `G0`/`G1` target found nothing outside the
+  configured envelope.
+- Cause: the cap was a literal derived once from a bed center at machine
+  `Y = -191.4`. HOME + REGISTER moves that center every session, and the
+  recorded G54 `Y` offset has been `-189.980` (2026-09-24) and `-195.270`
+  (2026-09-29) - a spread of more than 5 mm. The +Y edge is the machine's home
+  position, so the margin to it *is* the drawable radius and a few millimetres
+  of drift consumes the whole allowance.
+- Change: `machine_reach_radius_mm` default `191.4 -> 185.0`, being the binding
+  +Y margin from the 2026-09-29 registration (`$130=455`, `$131=451`, bed
+  center `-232.449, -195.270`; +X 232.449, -X 222.551, +Y 195.270, -Y 255.730)
+  less a 10 mm drift margin. The derivation, the four margins, and the
+  instruction to re-derive after every registration are recorded in the
+  settings comment and in `software/README.md`.
+- Verification: 72 unit tests pass; the re-derivation was checked against the
+  controller's `$$` and G54 readout. Nothing has been plotted from the new
+  default yet. The immediate evidence is that this artwork at 189.81 mm now
+  falls outside the cap and will be clipped.
+- Not done: the cap is still a literal. Exposing `$130`/`$131` and the
+  registered bed center in the converter, computing the cap from them, naming
+  the binding direction in the UI, and warning when the artwork radius comes
+  within a few millimetres of the cap is the durable fix and remains open.
+- Category: windows-software, rp23cnc-software, converter, clipping, soft-limit,
+  reachable-area, g54, alarm-2
+- Risk: 10 mm is a judgement covering the 5.3 mm registration spread observed
+  so far; tighten or widen it only against recorded registration data.
+- Next action: regenerate the interrupted artwork with the new default and
+  confirm it runs to completion, or continue with
+  `samples/gcode/mom_resume_56877.gcode` first.
+- Evidence: `docs/changes/windows-software/2026/2026-09-29-reach-radius-re-derived-with-drift-margin.md`;
+  `WSW-20260929-003`.
+
 <a id="elog-20260929-f05a-gp27-prb-acknowledgement"></a>
 ### 🟩 2026-09-29 - RP23CNC SOFTWARE/VERIFIED - F-05A passed on the installed GP27/PRB handshake
 

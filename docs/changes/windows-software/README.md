@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-29 | `WSW-20260929-003` | implemented | [Re-derive the reach radius and give it a registration-drift margin](2026/2026-09-29-reach-radius-re-derived-with-drift-margin.md) | `converter`, `clipping`, `soft-limit`, `reachable-area`, `g54`, `alarm-2` |
 | 2026-09-29 | `WSW-20260929-002` | implemented | [Auto-fit to the bed, and fill that follows the final scale](2026/2026-09-29-auto-fit-and-scale-aware-fill-cache.md) | `converter`, `usability`, `scale`, `reach`, `fill`, `cache` |
 | 2026-09-29 | `WSW-20260929-001` | implemented | [Fill bed sizing and recentring for the fit actions](2026/2026-09-29-fill-bed-and-recenter-fits.md) | `converter`, `usability`, `scale`, `reach`, `placement` |
 | 2026-09-29 | `RPSW-20260929-002` | verified | [F-05A: the commissioned GP27/PRB pen-transition acknowledgement passed](../rp23cnc-software/2026/2026-09-29-f-05a-gp27-prb-handshake-verified.md) | `p115`, `gp27`, `prb`, `handshake`, `f-05a`, `commissioning` |

@@ -58,15 +58,26 @@ class Settings:
     monotonic_theta: bool = True
     bed_diameter_mm: float = 457.2
     bed_margin_mm: float = 6.35
-    # Radius the gantry can actually reach from the registered bed center,
-    # in the tightest direction. The bed rotates freely, so any artwork point
-    # at radius r must be reachable at every bed angle; the safe drawable area
-    # is therefore a circle of this radius, not the full bed circle. Derived
-    # from the installed software envelope ($130=455, $131=446) and the
-    # registered bed-center offset (machine ~ -232.6, -191.4): the +Y edge
-    # (0 - (-191.4) = 191.4 mm) is the binding one. Clip radius becomes
-    # min(bed_diameter/2 - bed_margin, this).
-    machine_reach_radius_mm: float = 191.4
+    # Radius the gantry can actually reach from the registered bed center, in
+    # the tightest direction, less a margin for registration drift. The bed
+    # rotates freely, so any artwork point at radius r must be reachable at
+    # every bed angle; the safe drawable area is therefore a circle of this
+    # radius, not the full bed circle.
+    #
+    # Derived 2026-09-29 from the installed software envelope ($130=455,
+    # $131=451) and the bed center registered by the last HOME + REGISTER
+    # (machine -232.449, -195.270). Directional margins from that center are
+    # +X 232.449, -X 222.551, +Y 195.270, -Y 255.730, so +Y - the machine's
+    # home end, which no setting can extend - is the binding one. 195.270
+    # less a 10 mm margin is 185.27, entered as 185.0.
+    #
+    # Re-registering moves the bed center, so this value has to be re-derived
+    # after every registration. The +Y margin has already been observed to
+    # vary by more than 5 mm between sessions (G54 Y -189.980 on 2026-09-24,
+    # -195.270 on 2026-09-29), which is why the margin exists.
+    #
+    # Clip radius becomes min(bed_diameter/2 - bed_margin, this).
+    machine_reach_radius_mm: float = 185.0
     # Where the artwork's own center is placed relative to the registered bed
     # center, in machine millimetres. plan_program centers the artwork on the bed
     # by default; these offsets move it, which is how a drawing whose bounding
@@ -223,7 +234,7 @@ TEXT_FIELD_GROUPS = (
     ("Machine", (
         ("Bed dia mm", "bed_diameter_mm", "457.2"),
         ("Bed margin mm", "bed_margin_mm", "6.35"),
-        ("Gantry reach radius mm", "machine_reach_radius_mm", "191.4"),
+        ("Gantry reach radius mm", "machine_reach_radius_mm", "185.0"),
         ("Park X machine mm", "park_x_machine", "-10"),
         ("Park Y machine mm", "park_y_machine", "-436"),
     )),

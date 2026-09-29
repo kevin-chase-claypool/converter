@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-29 | `WSW-20260929-003` | windows-software, rp23cnc-software | implemented | [Re-derive the reach radius and give it a registration-drift margin](windows-software/2026/2026-09-29-reach-radius-re-derived-with-drift-margin.md) |
 | 2026-09-29 | `WSW-20260929-002` | windows-software | implemented | [Auto-fit to the bed, and fill that follows the final scale](windows-software/2026/2026-09-29-auto-fit-and-scale-aware-fill-cache.md) |
 | 2026-09-29 | `WSW-20260929-001` | windows-software | implemented | [Fill bed sizing and recentring for the fit actions](windows-software/2026/2026-09-29-fill-bed-and-recenter-fits.md) |
 | 2026-09-29 | `RPSW-20260929-002` | rp23cnc-software, windows-software | verified | [F-05A: the commissioned GP27/PRB pen-transition acknowledgement passed](rp23cnc-software/2026/2026-09-29-f-05a-gp27-prb-handshake-verified.md) |
