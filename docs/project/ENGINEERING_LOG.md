@@ -36,6 +36,15 @@
 - Next action: regenerate the interrupted artwork with the new default and
   confirm it runs to completion, or continue with
   `samples/gcode/mom_resume_56877.gcode` first.
+- Correction, same day: the 10 mm was first justified as a drift allowance. It
+  is not drift. grblHAL builds a homed axis's soft-limit envelope in
+  `limits_set_work_envelope()` as `[max_travel + pulloff, -pulloff]` when hard
+  limits are enabled, so `$27 = 10` shortens the homed end of X and Y by 10 mm.
+  The enforced work limits are X `-212.551..222.449` and Y
+  `-245.730..185.270`, so +Y is 185.270 mm from the bed center, not 195.27.
+  `mom.gcode` reaches work Y 189.544 - 4.27 mm outside - which is the alarm.
+  The chosen 185.0 stands; the derivation text was corrected in settings.py,
+  `software/README.md` and WSW-20260929-003.
 - Evidence: `docs/changes/windows-software/2026/2026-09-29-reach-radius-re-derived-with-drift-margin.md`;
   `WSW-20260929-003`.
 

@@ -59,22 +59,24 @@ class Settings:
     bed_diameter_mm: float = 457.2
     bed_margin_mm: float = 6.35
     # Radius the gantry can actually reach from the registered bed center, in
-    # the tightest direction, less a margin for registration drift. The bed
-    # rotates freely, so any artwork point at radius r must be reachable at
-    # every bed angle; the safe drawable area is therefore a circle of this
-    # radius, not the full bed circle.
+    # the tightest direction. The bed rotates freely, so any artwork point at
+    # radius r must be reachable at every bed angle; the safe drawable area is
+    # therefore a circle of this radius, not the full bed circle.
     #
-    # Derived 2026-09-29 from the installed software envelope ($130=455,
-    # $131=451) and the bed center registered by the last HOME + REGISTER
-    # (machine -232.449, -195.270). Directional margins from that center are
-    # +X 232.449, -X 222.551, +Y 195.270, -Y 255.730, so +Y - the machine's
-    # home end, which no setting can extend - is the binding one. 195.270
-    # less a 10 mm margin is 185.27, entered as 185.0.
+    # The binding direction is +Y, and its edge is the controller's soft-limit
+    # envelope rather than the switch position. grblHAL builds that envelope in
+    # limits_set_work_envelope() as [max_travel + pulloff, -pulloff] for a homed
+    # axis when hard limits are enabled, so $27 (homing pull-off) shrinks the
+    # homed end by that much to avoid re-triggering the switch. With $130=455,
+    # $131=451, $132/27=10 and the bed center registered by HOME + REGISTER at
+    # machine -232.449, -195.270 (2026-09-29), the enforced work-coordinate
+    # limits are X -212.551..222.449 and Y -245.730..185.270. +Y is therefore
+    # 185.270 mm from the bed center, and 185.0 leaves a hair of margin.
     #
-    # Re-registering moves the bed center, so this value has to be re-derived
-    # after every registration. The +Y margin has already been observed to
-    # vary by more than 5 mm between sessions (G54 Y -189.980 on 2026-09-24,
-    # -195.270 on 2026-09-29), which is why the margin exists.
+    # $21 matters as much as the travel values: with hard limits disabled the
+    # pull-off term is zero and the +Y edge moves back to machine 0, i.e.
+    # 195.27 mm from the same bed center. Re-derive after every registration,
+    # because the bed center, not the travel, is what moves.
     #
     # Clip radius becomes min(bed_diameter/2 - bed_margin, this).
     machine_reach_radius_mm: float = 185.0

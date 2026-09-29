@@ -289,16 +289,20 @@ display-only; every other group changes the emitted program.
 - `Bed margin mm` (default 6.35 ≈ 0.25") clips artwork inside the bed edge so the
   pen never reaches the rim.
 - `Gantry reach radius mm` (default 185.0) caps the drawable circle at the
-  gantry's reachable radius from the registered bed center, less a margin for
-  registration drift. Because the bed rotates freely, the safe drawable area is
-  this circle rather than the full bed; it keeps emitted coordinates inside the
-  controller's X/Y envelope so artwork at the rim cannot trip
-  `Alarm:2 - Soft limit`. The binding direction is +Y, the machine's home end,
-  which no controller setting can extend: with the 2026-09-29 registration
-  (`$130=455`, `$131=451`, bed center machine `-232.449, -195.270`) the four
-  margins are +X 232.4, -X 222.6, +Y 195.3 and -Y 255.7 mm. Re-derive this
-  value after every HOME + REGISTER; the +Y margin has already varied by more
-  than 5 mm between sessions.
+  gantry's reachable radius from the registered bed center. Because the bed
+  rotates freely, the safe drawable area is this circle rather than the full
+  bed; it keeps emitted coordinates inside the controller's X/Y envelope so
+  artwork at the rim cannot trip `Alarm:2 - Soft limit`.
+  The binding direction is **+Y**, and the edge is the controller's soft-limit
+  envelope, not the switch: grblHAL sets a homed axis's envelope to
+  `[max_travel + pulloff, -pulloff]` when hard limits are enabled, so `$27`
+  (homing pull-off) shortens the homed end by that amount. With `$130=455`,
+  `$131=451`, `$27=10` and the bed center registered at machine
+  `-232.449, -195.270`, the enforced work limits are X `-212.551..222.449` and
+  Y `-245.730..185.270` — so +Y is 185.270 mm from the bed center. Note that
+  `$21` matters too: with hard limits off the pull-off term is zero and the +Y
+  edge moves back to 195.27 mm. Re-derive this value after every HOME +
+  REGISTER, since the bed center is what moves.
 - **Fill.** `Fill spacing mm` sets the on-paper distance between fill lines
   (default `4`); `0` plots outlines only. Fill is on by default so a conversion
   never silently produces no fill.

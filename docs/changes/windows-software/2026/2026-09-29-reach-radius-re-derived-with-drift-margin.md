@@ -82,6 +82,26 @@ No planning or emission logic changed: the clip radius is still
 The immediate evidence is that `mom.gcode` reaches 189.81 mm, which the new cap
 now clips.
 
+## Correction, same day
+
+The first draft of this note justified the 10 mm as a drift allowance. The
+cause was then identified exactly, and it is not drift. grblHAL builds a homed
+axis's soft-limit envelope in `limits_set_work_envelope()` as
+`[max_travel + pulloff, -pulloff]` when hard limits are enabled, so `$27 = 10`
+shortens the homed end of both X and Y by 10 mm. With `$130=455`, `$131=451`
+and the bed center at machine `-232.449, -195.270`, the enforced work limits
+are X `-212.551..222.449` and Y `-245.730..185.270` - that is, **+Y is
+185.270 mm from the bed center**, not the 195.27 mm the physical travel
+suggests.
+
+`mom.gcode` reaches work Y `189.544`, which is **4.27 mm outside** that
+envelope, and that is what raised `Alarm:2`. The chosen value, `185.0`, is
+therefore correct - but as a deterministic consequence of `$27` and `$21`
+rather than as a judgement call. The settings comment and `software/README.md`
+were corrected to state the real derivation, and the alarm now has a complete
+explanation consistent with the two scans that found no offending target in
+the file.
+
 ## Struggles and rejected approaches
 
 - Leaving the value at 191.4 and only documenting the re-derivation was
