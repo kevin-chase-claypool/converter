@@ -12,7 +12,10 @@ setbacks, troubleshooting, rejected designs, and lessons learned in sequence.
 
 The report is about **integrating the subsystems** into one working pipeline:
 host conversion software → motion controller → force-controlled pen. The repo is
-organized along those subsystem lines so each maps to a report section.
+organized along those subsystem lines so each maps to a report section. Use the
+level-0 and level-1 system names and seams from
+[`../architecture/SYSTEM_ARCHITECTURE.md`](../architecture/SYSTEM_ARCHITECTURE.md)
+when the report defines system boundaries.
 
 ## Progress presentation
 
@@ -30,8 +33,9 @@ through `slide-13.png`.
 ## Suggested outline
 
 1. **Introduction / goal** — polar pen plotter: SVG in, drawn artwork out.
-2. **System architecture** — the block diagram in the root `README.md`; how the
-   three subsystems interface (G-code, the M3/M5 pen signal, the load-cell loop).
+2. **System architecture** — the level-1 systems and their seams in
+   `../architecture/SYSTEM_ARCHITECTURE.md`; the block diagram in the root
+   `README.md`; the G-code, M3/M5, and load-cell interfaces.
 3. **Host software** (`software/`) — use the `converter_core/` split to explain
    settings, SVG geometry, XY+theta kinematics, planning, G-code emission, and the
    OpenGL preview as separate integration responsibilities.

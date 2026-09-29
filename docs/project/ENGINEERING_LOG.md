@@ -1,5 +1,41 @@
 # Engineering Log
 
+<a id="elog-20260929-level-1-system-decomposition"></a>
+### 🟩 2026-09-29 14:31:39 -0500 - DOCUMENTATION/IMPLEMENTED - define the level-1 system decomposition
+
+- Problem: the architecture document grouped the machine by folder and physical
+  assembly, so cross-subsystem review could not name which system owns each side
+  of a contract, and the Systems Integration in Robotics report had no stated
+  level-0/level-1 decomposition.
+- Decision: cut the top level along integration seams. Level 0 is the plotter
+  system of interest. Level 1 is five mission-chain systems (1 host planning and
+  operator, 2 motion control, 3 motion and actuation, 4 toolhead and tool,
+  5 sensing and feedback) plus three cross-cutting systems (6 power and energy,
+  7 safety and fault handling, 8 structure, cabling, and EMC). Components such
+  as the TB6600, CS1238, and TMAG5273 remain level-2 items inside a system.
+- Change: rewrote the Subsystems section as the level-0 statement, level-1
+  tables with seams and integration evidence, and a worked
+  bed-rotation-versus-cable-wrap tradeoff; retained the former table as the
+  physical realization view and corrected its force sensor from HX711 to CS1238.
+  Added the seam-ownership table to `docs/integration/INTERFACES.md`, pointed the
+  report outline at the architecture document, and recorded `ADR-008`.
+- Verification: documentation-only; every retained statement was compared with
+  the previous revision; `python tools\docs_index.py --write` and `--check`
+  passed; the scoped `git diff` was reviewed.
+- Boundary: boundary names and seams changed only. No code, wiring, firmware, or
+  configuration behavior changed, and no test evidence is newly claimed.
+- Known issue: this entry sits above the log separator like the previous 87
+  entries, so it is not reachable from the generated topic index; the roadmap's
+  Known technical debt item covers the repair.
+- Evidence: `RPSW-20260929-003`;
+  `docs/architecture/SYSTEM_ARCHITECTURE.md`;
+  `docs/decisions/ADR-008-top-level-system-decomposition.md`.
+- Category: documentation, decision, project management, software, firmware,
+  hardware, system-architecture, interfaces
+- Next action: use the level-1 names in the report and in new impact
+  investigations, and name the owning system when a subsystem document is next
+  edited.
+
 <a id="elog-20260929-reach-radius-drift-margin"></a>
 ### 🟨 2026-09-29 - WINDOWS SOFTWARE/IMPLEMENTED - re-derive the reach radius and give it a drift margin
 

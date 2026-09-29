@@ -4,6 +4,22 @@ Logical contracts live here. Exact terminals, conductors, wire colors, voltage
 domains, and verification status live in the authoritative
 [`../hardware/WIRING_TABLE.md`](../hardware/WIRING_TABLE.md).
 
+## Seam ownership
+
+Every contract in this document joins two level-1 systems defined in
+[`../architecture/SYSTEM_ARCHITECTURE.md`](../architecture/SYSTEM_ARCHITECTURE.md).
+Changing one side of a seam means updating both documents in the same commit.
+
+| Section | Systems joined |
+|---|---|
+| Host to grblHAL | 1 Host planning and operator to 2 Motion control |
+| Axis and unit convention | 1 to 2, binding on 3 through the 12:1 drive ratio |
+| RP23CNC to stepper drivers | 2 to 3 |
+| Homing and magnetic bed calibration | 2 and 5, with the registered G54 frame handed to 1 |
+| grblHAL to toolhead | 2 to 4, with completion status sourced from 5 |
+| Toolhead internal interfaces | inside 4, with sensor elements owned by 5 |
+| Safety invariants | 7, binding on 1-6 and 8 |
+
 ## Host to grblHAL
 
 Transport is not yet fixed. Candidate transports are USB serial, Ethernet, and

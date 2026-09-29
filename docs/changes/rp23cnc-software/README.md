@@ -10,6 +10,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-09-29 | `WSW-20260929-003` | implemented | [Re-derive the reach radius and give it a registration-drift margin](../windows-software/2026/2026-09-29-reach-radius-re-derived-with-drift-margin.md) | `converter`, `clipping`, `soft-limit`, `reachable-area`, `g54`, `alarm-2` |
+| 2026-09-29 | `RPSW-20260929-003` | implemented | [Define the level-1 system decomposition](2026/2026-09-29-level-1-system-decomposition.md) | `system-architecture`, `systems-integration`, `interfaces`, `documentation`, `project-management` |
 | 2026-09-29 | `RPSW-20260929-002` | verified | [F-05A: the commissioned GP27/PRB pen-transition acknowledgement passed](2026/2026-09-29-f-05a-gp27-prb-handshake-verified.md) | `p115`, `gp27`, `prb`, `handshake`, `f-05a`, `commissioning` |
 | 2026-09-29 | `RPSW-20260929-001` | implemented | [Hold the published contact-ready level through hold corrections](2026/2026-09-29-hold-contact-ready-hysteresis.md) | `toolhead`, `gp27`, `contact-ready`, `handshake`, `p115`, `f-05a` |
 | 2026-09-28 | `RPSW-20260928-001` | verified | [Direct host-to-controller Ethernet link at 10 Mbps](2026/2026-09-28-direct-ethernet-link.md) | `grblhal`, `ethernet`, `w5500`, `network`, `telnet`, `static-ip` |
