@@ -265,7 +265,7 @@ Minimum interface:
 |---|---|---|
 | ENGAGE/PEN_CLEAR | grblHAL spindle/tool output pin state: M3 = engage, M5 = normal fast pen clear | PEN_CLEAR |
 | TOOL_FAULT | Toolhead cannot safely draw | Active/fault |
-| CONTACT_READY, optional | Contact force is stable; later the same GP27/U3 path may also report proven M5 clear outside P100 | Not ready |
+| CONTACT_READY, optional | Contact force is stable; once asserted in `HOLD_FORCE` the level is held through the hold loop's bounded corrections and releases only after a sustained excursion beyond the 20 g relief bound; later the same GP27/U3 path may also report proven M5 clear outside P100 | Not ready |
 
 The RP23CNC spindle `ENA` output is active-high by default, which is inverted
 from the toolhead's active-low optocoupler input (M3 lights U1, whose collector
@@ -282,6 +282,15 @@ raises error 39 on its bounded timeout before later motion. The converter
 emits it only through an explicit disabled-by-default setting. No firmware
 gate, controller macro file, or converter setting may be enabled until the
 specified force, clear, and GP27 tests pass.
+
+The 2026-09-29 F-05A dry-contact observation showed GP27/`PRB` toggling in the
+contact state while the clear state stayed steady: the ready flag asserted
+after three filtered conversions (about 4.7 ms) but released on a single
+out-of-band one while the hold loop corrects on a 250 ms cadence. The toolhead
+now holds the published level through any excursion inside the 20 g relief
+bound and releases it only after 500 ms beyond it (`RPSW-20260929-001`), so
+F-05A must additionally confirm a steady level through `HOLD_FORCE`, not only
+that each individual transition completes.
 
 The 2026-09-25 default-on flip of the converter's **Wait for GP27 toolhead
 ready** checkbox was reverted on 2026-09-27. With `F-05A` still open, every

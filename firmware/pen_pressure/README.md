@@ -89,7 +89,9 @@ work.
   timeout behavior, T-01H proves normal M5 clearance, and the CS1238/
   actuator gates prove truthful contact and clear status. The macro itself is
   bounded and raises controller `error[39]`; it must be copied to the
-  controller filesystem and tested against a safe PRB fixture first.
+  controller filesystem and tested against a safe PRB fixture first. F-05A
+  must also confirm that the published GP27 level stays steady through
+  `HOLD_FORCE`, not only that each individual transition completes.
 - Complete the remaining E-18/F-08 macro and coordinate stages for the Pro
   Micro RP2350 magnetic-output path. The 2026-09-10 motor-inert diagnostic
   passed installed Aux0/U2/GP28, local TMAG scan state, controller-visible PRB
@@ -137,6 +139,12 @@ stable-contact or proven-clear status, and only when the explicit gate is
 enabled. On every M3/M5 command edge while disarmed, it also holds GP27
 inactive for a guaranteed `GP27_TRANSITION_LOW_MS` (50 ms) before reasserting
 the ready status, so `P115 Q1` always sees a fresh inactive-then-active edge.
+Once contact-ready is published in `HOLD_FORCE`, that level is held through
+the hold loop's bounded corrections: it releases only after the filtered force
+stays outside the 20 g urgent-relief bound for `CONTACT_READY_LOST_MS`
+(500 ms), so neither a single out-of-band conversion nor one correction cycle
+can drop it. The 2026-09-29 bench capture showed GP27/`PRB` toggling in
+`HOLD_FORCE` before this hysteresis was added; see `RPSW-20260929-001`.
 An Aux0/GP28 assertion while disarmed and healthy requests a full retract to
 the GP2 lift-home switch (Core 0 drives `LIFTING` until GP2), used for
 end-of-print paper clearance. Fixed-size atomics carry status between cores.

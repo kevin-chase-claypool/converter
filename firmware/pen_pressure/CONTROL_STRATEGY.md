@@ -176,6 +176,15 @@ UP or DOWN pulse. Both directions are limited to one correction every 250 ms.
 The next correction requires a fresh later trend after the driver has stopped.
 The independent 75 g hard-force guard remains active throughout this state.
 
+The published `CONTACT_READY` level follows the same band but with hysteresis.
+It asserts after the same three in-band windows and is released only after the
+filtered force stays outside the 20 g urgent-relief bound for
+`CONTACT_READY_LOST_MS` (500 ms, two correction cadences). That keeps GP27
+asserted for the whole hold - the pen-transition contract the `P115`
+acknowledgement depends on - instead of dropping on a single out-of-band
+conversion while the slower correction cadence catches up. The 500 ms window
+is a supervised bench candidate for F-05A, not an accepted tuning result.
+
 That bounded cadence provides only about 15 ms of drive per second. When the
 held force exceeds the target by `HOLD_URGENT_RELIEF_RAW` (currently 20 g), the
 controller instead drives UP continuously and stops once the force is back

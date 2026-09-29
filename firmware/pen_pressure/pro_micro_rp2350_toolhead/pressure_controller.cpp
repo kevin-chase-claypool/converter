@@ -63,6 +63,7 @@ void PressureController::setState(PressureState next) {
   }
   if (next != PressureState::HOLD_FORCE) {
     contact_ready_windows_ = 0;
+    contact_ready_lost_since_ms_ = 0;
     hold_correction_pulse_active_ = false;
     hold_out_of_band_windows_ = 0;
     hold_out_of_band_direction_ = 0;
@@ -290,6 +291,7 @@ void PressureController::updateReadyState() {
   if (state_ != PressureState::HOLD_FORCE || !PRESSURE_CALIBRATION_VALID ||
       !statusFlag(STATUS_CS1238_ONLINE) || driverFaulted()) {
     contact_ready_windows_ = 0;
+    contact_ready_lost_since_ms_ = 0;
     return;
   }
   if (!new_filtered_sample_) {
@@ -299,11 +301,34 @@ void PressureController::updateReadyState() {
   const long target_error =
       std::labs(normalizedForceDelta() - activeTargetForceRaw());
   if (target_error <= CONTACT_READY_TOLERANCE_RAW) {
+    contact_ready_lost_since_ms_ = 0;
     if (contact_ready_windows_ < CONTACT_READY_REQUIRED_WINDOWS) {
       contact_ready_windows_++;
     }
-  } else {
+    return;
+  }
+  if (contact_ready_windows_ < CONTACT_READY_REQUIRED_WINDOWS) {
+    // No hold has been published yet, so a single out-of-band conversion still
+    // restarts the assert window.
     contact_ready_windows_ = 0;
+    contact_ready_lost_since_ms_ = 0;
+    return;
+  }
+  if (target_error <= CONTACT_READY_RELEASE_TOLERANCE_RAW) {
+    // Inside the wider release band the published level is held while the hold
+    // loop carries out its bounded correction. The fixed-size filter is what
+    // keeps ordinary sample noise from reaching this branch.
+    contact_ready_lost_since_ms_ = 0;
+    return;
+  }
+  // Sustained excursion beyond the urgent-relief bound: release the level only
+  // after the force has stayed outside it for the full release window.
+  const uint32_t now = millis();
+  if (contact_ready_lost_since_ms_ == 0) {
+    contact_ready_lost_since_ms_ = now;
+  } else if (now - contact_ready_lost_since_ms_ >= CONTACT_READY_LOST_MS) {
+    contact_ready_windows_ = 0;
+    contact_ready_lost_since_ms_ = 0;
   }
 }
 

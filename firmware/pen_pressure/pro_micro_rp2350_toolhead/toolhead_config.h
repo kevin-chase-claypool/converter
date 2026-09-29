@@ -251,6 +251,20 @@ constexpr int8_t CS1238_CONTACT_FORCE_SIGN = -1;
 // choice, not a precision setting, so the hold tolerates that drift.
 constexpr long CONTACT_READY_TOLERANCE_RAW = 75582;
 constexpr uint8_t CONTACT_READY_REQUIRED_WINDOWS = 3;
+// The published contact-ready level must be LOW only for the seek/lift
+// transition; P115 Q1 depends on that. On 2026-09-29 the controller reported
+// GP27/PRB toggling while an M3-held pen sat stationary, which violates that
+// contract. The assert side is fine (3 conversions of the 16-sample, 640 SPS
+// filter is about 5 ms), but release used to follow a single out-of-band
+// conversion while the hold loop that corrects an excursion only moves on a
+// 250 ms cadence. Release is now hysteretic: the level survives any excursion
+// inside the urgent-relief bound and drops only after the force stays beyond
+// it for CONTACT_READY_LOST_MS. Two correction cadences is long enough that a
+// normal hold correction or its relief cannot drop the level and short enough
+// that a genuinely lost hold is still reported. Supervised bench value: F-05A
+// must confirm a steady GP27 level in HOLD_FORCE.
+constexpr long CONTACT_READY_RELEASE_TOLERANCE_RAW = HOLD_URGENT_RELIEF_RAW;
+constexpr uint32_t CONTACT_READY_LOST_MS = 500;
 // An accepted touch reference shifts the relative target upward, so the target
 // is clamped to keep the top of the acceptance band this far below the
 // absolute hard limit. On 2026-09-23 T-02 cycle 4 accepted a 78,727 raw

@@ -112,6 +112,7 @@ class PressureController {
   uint8_t tare_count_ = 0;
   uint8_t lift_release_windows_ = 0;
   uint8_t contact_ready_windows_ = 0;
+  uint32_t contact_ready_lost_since_ms_ = 0;
   uint16_t home_seek_pulse_count_ = 0;
   uint16_t hold_urgent_relief_count_ = 0;
   uint32_t hold_urgent_relief_total_ms_ = 0;

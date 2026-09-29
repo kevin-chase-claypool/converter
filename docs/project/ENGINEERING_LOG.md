@@ -1,5 +1,42 @@
 # Engineering Log
 
+<a id="elog-20260929-hold-contact-ready-hysteresis"></a>
+### 🟨 2026-09-29 - RP23CNC SOFTWARE/IMPLEMENTED - hold the published contact-ready level through hold corrections
+
+- Problem: preparing F-05A, the owner watched the controller status stream
+  across `m5` and `m3`. `Pn:P` (the GP27/U3 `PRB` pen-transition level) stayed
+  steady after `M5` but toggled between asserted and released during the `M3`
+  contact hold while the machine sat at `MPos:0,0,0,0`. That violates the
+  contract that the only LOW is the seek/lift transition, and it makes a
+  `P115 Q1` acknowledgement able to take a momentary high as a completion edge
+  or miss the level entirely.
+- Cause: `STATUS_CONTACT_READY` asserted after three filtered CS1238
+  conversions (about 4.7 ms at 640 SPS with the 16-sample average) but reset
+  on any single conversion outside the ±15 g band. The hold loop that corrects
+  an excursion is deliberately slow - three trend windows plus a 250 ms
+  correction cadence - so the published level chattered whenever the held
+  force touched the band edge.
+- Change: release hysteresis in `updateReadyState()`. An established ready
+  level survives any excursion inside the 20 g urgent-relief bound and is
+  released only after the force stays beyond it for `CONTACT_READY_LOST_MS`
+  (500 ms, two correction cadences). The assert side, the state changes, the
+  fault paths, and the independent 75 g hard guard are unchanged.
+- Verification: `arduino-cli compile --fqbn
+  rp2040:rp2040:sparkfun_promicrorp2350` builds cleanly. Nothing has run on
+  the toolhead yet.
+- Not verified: the bench must repeat the `M3` observation and show a steady
+  `Pn:P` plus `ready=[contact:1 ...]` through `HOLD_FORCE`. If the toolhead
+  reads steady but `Pn:P` still toggles, the remaining fault is in the
+  GP27 -> U3 -> `PRB` electrical path, not the firmware.
+- Category: rp23cnc-software, toolhead, gp27, contact-ready, handshake, p115,
+  f-05a
+- Risk: `CONTACT_READY_LOST_MS = 500` is a supervised bench value; F-05A must
+  also show that a genuinely lost hold still releases the level.
+- Next action: flash this build, repeat the `m3` + `Pn:` capture with the
+  toolhead `v` stream running, then continue the F-05A `Q0`/`Q1` sequence.
+- Evidence: `docs/report/lab-notes/2026-09-29-f-05a-gp27-contact-state-flap.md`;
+  `RPSW-20260929-001`.
+
 <a id="elog-20260929-auto-fit-and-scale-aware-fill-cache"></a>
 ### 🟩 2026-09-29 - WINDOWS SOFTWARE/IMPLEMENTED - auto-fit to the bed, and a fill cache that follows the scale
 

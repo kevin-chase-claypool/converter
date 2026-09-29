@@ -58,7 +58,10 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   the distant `LIFT_HOME` switch. `P115` and the toolhead GP27 output remain
   disabled until F-08, force, and clearance commissioning pass. To keep the
   inactive-to-active edge observable, the toolhead now holds GP27 inactive for
-  a guaranteed 50 ms on every M3/M5 transition (`GP27_TRANSITION_LOW_MS`).
+  a guaranteed 50 ms on every M3/M5 transition (`GP27_TRANSITION_LOW_MS`) and
+  holds the published contact-ready level through the hold loop's bounded
+  corrections (release after 500 ms beyond the 20 g relief bound,
+  `CONTACT_READY_LOST_MS`), so the level cannot chatter in `HOLD_FORCE`.
 - **Homing and bed registration** - X/Y physical switches establish machine
   coordinates. A controller-resident `P100.macro` then uses the existing
   Aux0/GP28 arm and GP27/U3 return to capture a full center-magnet raster,
