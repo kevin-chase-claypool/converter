@@ -1,5 +1,42 @@
 # Engineering Log
 
+<a id="elog-20260930-kaleidoscope-seed-diversity"></a>
+### 🟩 2026-09-30 14:52:48 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: seeds choose a design, not just its phases
+
+- Request: "the seeds are not unique enough. there needs to be more diversity
+  added to the seeds" - seeds previously drew the same skeleton with the
+  textures swapped.
+- Change: the seed now controls structure. New `STYLES` / `style_for(seed)` -
+  floral, geometric, woven, beaded, mixed - pick the family pool, and the ring
+  order is a deterministic shuffle instead of a fixed stride. Seed-driven
+  parameters now include the ring count (+/-1), the band-width ladder exponent
+  (0.60-1.20), centre/gap/outer fractions, rim scallop density and line count,
+  starburst presence and spoke spacing, rosette depth, per-layer packing
+  density (0.80-1.30), one-or-two shape repeats per wedge, barb fork rate, mesh
+  slant direction and per-gap dressing (plain/studs/dots/both). The app shows
+  the style beside the seed.
+- Fixed while testing: the first choice function used a Weyl sequence directly
+  in the seed; a constant step can only reach a few bins of a small choice, and
+  seeds 0-9 hit just three of five styles. Replaced with a SplitMix-style
+  scrambled hash (`_roll`), still fully deterministic. The stray-chord
+  regression also needed a third refinement: deliberate slanted mesh strokes
+  are long two-point contours too, so it now only flags a chord with one end on
+  the clip frame and the other more than 5 mm inside at a different angle.
+- Verification: seeds 0-9 at intricacy 8 span four of five styles, 258-585
+  wedge contours and 6,524-14,287 points with ten distinct values in each;
+  level 10 across sampled seeds keeps 351-509 wedge contours and 8,424-12,216
+  mirrored contours. New seed-diversity test (>=3 styles, >=6 distinct contour
+  counts and point counts, >1.3x volume spread). All ten test modules pass.
+  Visual check `samples/png/gen_seed_variety.png` (seeds 0-11 at intricacy 9);
+  `docs_index --write/--check` pass.
+- Boundary: two seeds can still pick the same style (acceptable by design);
+  seeds at one intricacy now differ noticeably in plot weight, and there is
+  still no plot-time estimate in the UI.
+- Evidence: `WSW-20260930-009`.
+- Category: windows-software, kaleidoscope, generative, seeds
+- Next action: browse a hundred seeds in the app and note any style that reads
+  as a repeat before adding more pools.
+
 <a id="elog-20260930-kaleidoscope-complex-layers"></a>
 ### 🟩 2026-09-30 14:46:08 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: complex multi-layer random patterns
 

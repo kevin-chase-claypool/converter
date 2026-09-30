@@ -19,6 +19,11 @@ more elements as there is more room - and the intricacy knob deepens every
 layer instead of merely adding rings. Every family draws between angle 0 and
 angle ``wedge`` and rests on its band edges, so the caller's clip-and-mirror
 step turns each band into a continuous ring instead of a cloud of fragments.
+The seed does not merely rotate the same skeleton: it picks a composition
+style (``STYLES`` / ``style_for``), the ring count, the band-width ladder, how
+much of the disc the centre and rim take, how tightly each layer packs its
+detail and whether a shape repeats once or twice per wedge, so two seeds are
+different kinds of design.
 """
 
 from __future__ import annotations
@@ -86,11 +91,48 @@ def _count(length_mm, spacing_mm, low=1, high=240):
     return int(max(low, min(high, length_mm / max(spacing_mm, 0.05))))
 
 
-def _arc_contour(radius_of, wedge, samples):
-    """Sample ``radius_of(t)`` from angle 0 to *wedge*, t in [0, 1]."""
+def _roll(seed, slot):
+    """A deterministic, well-mixed value in [0, 1) for one (seed, slot).
+
+    A plain Weyl sequence in the seed would advance by a fixed step, so
+    consecutive seeds would land in only a few bins of any small choice. This
+    scrambles the pair with a SplitMix-style integer finaliser instead: still
+    fully deterministic from the seed, but the choices spread evenly.
+    """
+    value = (
+        int(seed) * 0x9E3779B1 + int(slot) * 0x85EBCA6B + 0x165667B1
+    ) & 0xFFFFFFFF
+    value ^= value >> 15
+    value = (value * 0x2545F491) & 0xFFFFFFFF
+    value ^= value >> 13
+    return value / 4294967296.0
+
+
+def _pick(seed, slot, count):
+    """A deterministic integer in ``0..count-1`` for one (seed, slot)."""
+    count = max(int(count), 1)
+    return int(_roll(seed, slot) * count) % count
+
+
+def _density(seed, slot=91):
+    """How tightly this seed packs a layer: 0.80 (airy) to 1.30 (packed)."""
+    return 0.80 + 0.50 * _roll(seed, slot)
+
+
+def _shuffled(items, seed):
+    """Deterministic Fisher-Yates permutation of *items* from the seed."""
+    out = list(items)
+    for index in range(len(out) - 1, 0, -1):
+        swap = _pick(seed, 100 + index, index + 1)
+        out[index], out[swap] = out[swap], out[index]
+    return out
+
+
+def _arc_contour(radius_of, wedge, samples, start=0.0):
+    """Sample ``radius_of(t)`` over *wedge* radians from *start*, t in [0, 1]."""
     samples = max(int(samples), 2)
     return [
-        _polar(radius_of(index / samples), wedge * index / samples)
+        _polar(radius_of(index / samples), start + wedge * index / samples)
         for index in range(samples + 1)
     ]
 
@@ -141,7 +183,9 @@ def _arc(centre, radius, start, end, samples=10):
     ]
 
 
-def _nested_arcs(r_in, r_out, wedge, power, spacing, samples, cancel_check=None):
+def _nested_arcs(
+    r_in, r_out, wedge, power, spacing, samples, cancel_check=None, start=0.0
+):
     """Contour lines nested inside a leaf profile, one every *spacing* mm."""
     span = r_out - r_in
     count = _count(span, spacing, 2, 40)
@@ -155,6 +199,7 @@ def _nested_arcs(r_in, r_out, wedge, power, spacing, samples, cancel_check=None)
                 + span * ratio * math.sin(math.pi * t) ** power,
                 wedge,
                 samples,
+                start,
             )
         )
     return out
@@ -174,33 +219,47 @@ def _shade_spacing(level):
 
 
 def _leaf_ring(r_in, r_out, wedge, level, seed, cancel_check=None):
-    """A large leaf with nested sub-leaves, contour fills and a vein."""
+    """One or two large leaves with nested sub-leaves, contour fills and veins."""
     span = r_out - r_in
-    power = 0.60 + 0.35 * van_der_corput(seed + 1, 5)
+    power = 0.45 + 0.60 * van_der_corput(seed + 1, 5)
     samples = 30 + 3 * level
-    out = [_leaf(0.0, wedge, r_in, r_out, power, 0.30, samples)]
+    density = _density(seed)
+    repeat = 1 + _pick(seed, 11, 2)
     nests = 1 + level // 3
-    for index in range(nests):
+    out = []
+    for rep in range(repeat):
         check_cancelled(cancel_check)
-        ratio = 1.0 - 0.75 * (index + 1) / (nests + 1)
-        out.append(
-            _leaf(
-                0.06 * wedge,
-                0.94 * wedge,
+        a0 = wedge * rep / repeat
+        a1 = wedge * (rep + 1) / repeat
+        mid, half = 0.5 * (a0 + a1), 0.5 * (a1 - a0)
+        out.append(_leaf(a0, a1, r_in, r_out, power, 0.30, samples))
+        for index in range(nests):
+            check_cancelled(cancel_check)
+            ratio = 1.0 - 0.75 * (index + 1) / (nests + 1)
+            out.append(
+                _leaf(
+                    mid - 0.88 * half,
+                    mid + 0.88 * half,
+                    r_in,
+                    r_in + span * ratio,
+                    power + 0.10,
+                    0.30,
+                    samples,
+                )
+            )
+        out.append([_polar(r_in, mid), _polar(r_in + 0.98 * span, mid)])
+        out.extend(
+            _nested_arcs(
                 r_in,
-                r_in + span * ratio,
-                power + 0.10,
-                0.30,
+                r_out,
+                a1 - a0,
+                power,
+                _shade_spacing(level) * density,
                 samples,
+                cancel_check,
+                a0,
             )
         )
-    out.extend(
-        _nested_arcs(
-            r_in, r_out, wedge, power, _shade_spacing(level), samples, cancel_check
-        )
-    )
-    mid = 0.5 * wedge
-    out.append([_polar(r_in, mid), _polar(r_in + 0.98 * span, mid)])
     return out
 
 
@@ -209,14 +268,21 @@ def _tulip(r_in, r_out, wedge, level, seed, cancel_check=None):
     span = r_out - r_in
     power = 0.55 + 0.30 * van_der_corput(seed + 3, 5)
     samples = 24 + 3 * level
-    low, high = 0.18 * wedge, 0.82 * wedge
+    density = _density(seed)
+    low = (0.12 + 0.10 * weyl(seed + 21)) * wedge
+    high = wedge - low
+    side = 0.58 + 0.20 * weyl(seed + 22)
     out = [
         _leaf(low, high, r_in, r_out, power, 0.28, samples),
-        _leaf(0.0, 0.46 * wedge, r_in, r_in + 0.72 * span, power, 0.28, samples),
-        _leaf(0.54 * wedge, wedge, r_in, r_in + 0.72 * span, power, 0.28, samples),
+        _leaf(0.0, 0.46 * wedge, r_in, r_in + side * span, power, 0.28, samples),
+        _leaf(0.54 * wedge, wedge, r_in, r_in + side * span, power, 0.28, samples),
     ]
-    window = lambda t: _clamp((t - 0.18) / 0.64, 0.0, 1.0)
-    count = _count(span, _shade_spacing(level), 2, 40)
+    lo, hi = low / wedge, high / wedge
+
+    def window(t):
+        return _clamp((t - lo) / max(hi - lo, 1e-6), 0.0, 1.0)
+
+    count = _count(span, _shade_spacing(level) * density, 2, 40)
     for index in range(count):
         check_cancelled(cancel_check)
         ratio = (index + 1) / (count + 1)
@@ -228,10 +294,10 @@ def _tulip(r_in, r_out, wedge, level, seed, cancel_check=None):
                 samples,
             )
         )
-    for side in (0.14, 0.86):
+    for tip in (0.14, 0.86):
         check_cancelled(cancel_check)
         bead = 0.10 * span
-        out.append(_ring(_polar(r_in + span * 0.62, side * wedge), bead))
+        out.append(_ring(_polar(r_in + side * span, tip * wedge), bead))
     return out
 
 
@@ -239,39 +305,53 @@ def _lens(r_in, r_out, wedge, level, seed, cancel_check=None):
     """Two arcs of different bulge crossing at the seams, bead-strung."""
     span = r_out - r_in
     samples = 34 + 4 * level
-    bulges = (0.60 + 0.40 * weyl(seed + 2), 1.40 + 0.60 * weyl(seed + 4))
+    density = _density(seed)
+    repeat = 1 + _pick(seed, 12, 2)
+    bulges = (0.45 + 0.55 * weyl(seed + 2), 1.20 + 0.90 * weyl(seed + 4))
     out = []
-    for power in bulges:
+    for rep in range(repeat):
         check_cancelled(cancel_check)
-        out.append(
-            _arc_contour(
-                lambda t, power=power: r_in + span * math.sin(math.pi * t) ** power,
-                wedge,
+        a0 = wedge * rep / repeat
+        arc = wedge / repeat
+        for power in bulges:
+            out.append(
+                _arc_contour(
+                    lambda t, power=power: r_in
+                    + span * math.sin(math.pi * t) ** power,
+                    arc,
+                    samples,
+                    a0,
+                )
+            )
+        out.extend(
+            _nested_arcs(
+                r_in,
+                r_out,
+                arc,
+                bulges[0],
+                _shade_spacing(level) * density,
                 samples,
+                cancel_check,
+                a0,
             )
         )
-    out.extend(
-        _nested_arcs(
-            r_in, r_out, wedge, bulges[0], _shade_spacing(level), samples, cancel_check
-        )
-    )
-    mid = r_in + 0.5 * span
-    count = _count(wedge * mid, 6.0 - 0.2 * level, 2, 40)
-    for index in range(count):
-        check_cancelled(cancel_check)
-        t = (index + 0.5) / count
-        bead = 0.05 * span
-        out.append(_circle(_polar(mid, wedge * t), bead, 10))
+        mid = r_in + 0.5 * span
+        count = _count(arc * mid, (6.0 - 0.2 * level) * density, 2, 40)
+        for index in range(count):
+            check_cancelled(cancel_check)
+            t = (index + 0.5) / count
+            out.append(_circle(_polar(mid, a0 + arc * t), 0.05 * span, 10))
     return out
 
 
 def _bundle(r_in, r_out, wedge, level, seed, cancel_check=None):
     """Nested topographic arches with radial ticks."""
     span = r_out - r_in
-    power = 0.70 + 0.20 * weyl(seed + 5)
+    density = _density(seed)
+    power = 0.50 + 0.55 * weyl(seed + 5)
     samples = 34 + 4 * level
     out = []
-    lines = _count(span, _shade_spacing(level), 3, 48)
+    lines = _count(span, _shade_spacing(level) * density, 3, 48)
     for index in range(lines):
         check_cancelled(cancel_check)
         amp = span * (1.0 - index / lines)
@@ -282,7 +362,7 @@ def _bundle(r_in, r_out, wedge, level, seed, cancel_check=None):
                 samples,
             )
         )
-    ticks = _count(wedge * r_out, 9.0 - 0.4 * level, 2, 30)
+    ticks = _count(wedge * r_out, (9.0 - 0.4 * level) * density, 2, 30)
     for index in range(ticks):
         check_cancelled(cancel_check)
         t = (index + 0.5) / ticks
@@ -295,8 +375,10 @@ def _bundle(r_in, r_out, wedge, level, seed, cancel_check=None):
 def _feather(r_in, r_out, wedge, level, seed, cancel_check=None):
     """A spine with radial barbs, forked at their tips, beaded every third."""
     span = r_out - r_in
-    power = 0.50 + 0.30 * van_der_corput(seed + 6, 3)
-    spine = 0.62 + 0.10 * weyl(seed + 7)
+    density = _density(seed)
+    power = 0.40 + 0.50 * van_der_corput(seed + 6, 3)
+    spine = 0.50 + 0.28 * weyl(seed + 7)
+    fork_every = 2 + _pick(seed, 13, 3)
     samples = 34 + 4 * level
 
     def envelope(t):
@@ -306,7 +388,7 @@ def _feather(r_in, r_out, wedge, level, seed, cancel_check=None):
         _arc_contour(envelope, wedge, samples),
         _arc_contour(lambda t: r_in + span * spine, wedge, samples),
     ]
-    barbs = _count(wedge * r_out, 7.0 - 0.35 * level, 4, 90)
+    barbs = _count(wedge * r_out, (7.0 - 0.35 * level) * density, 4, 90)
     for index in range(barbs):
         check_cancelled(cancel_check)
         t = (index + 0.5) / barbs
@@ -314,11 +396,11 @@ def _feather(r_in, r_out, wedge, level, seed, cancel_check=None):
         tip = envelope(t)
         angle = wedge * t
         out.append([_polar(min(base, tip), angle), _polar(max(base, tip), angle)])
-        if index % 3 == 0:
+        if index % fork_every == 0:
             fork = span * 0.10
             out.append([_polar(tip, angle), _polar(max(tip - fork, r_in), angle - 0.12 * wedge / barbs)])
             out.append([_polar(tip, angle), _polar(max(tip - fork, r_in), angle + 0.12 * wedge / barbs)])
-        if level >= 5 and index % 3 == 1:
+        if level >= 5 and index % fork_every == 1:
             bead = 0.045 * span
             out.append(_circle(_polar(max(tip - bead, r_in), angle), bead, 8))
     return out
@@ -328,9 +410,10 @@ def _scallop(r_in, r_out, wedge, level, seed, cancel_check=None):
     """A stack of nested wave lines with a bead on every crest."""
     mid = 0.5 * (r_in + r_out)
     half = 0.5 * (r_out - r_in)
-    waves = 2 + seed % 3
+    density = _density(seed)
+    waves = 1 + _pick(seed, 14, 4)
     phase = TAU * weyl(seed + 1)
-    lines = _count(2.0 * half, 2.2, 2, 14)
+    lines = _count(2.0 * half, 2.2 * density, 2, 14)
     samples = 30 + 12 * waves
     out = []
     for line in range(lines):
@@ -343,7 +426,9 @@ def _scallop(r_in, r_out, wedge, level, seed, cancel_check=None):
             return centre + amp * math.cos(TAU * waves * t + phase)
 
         out.append(_arc_contour(radius_of, wedge, samples))
-    crests = _count(wedge * (r_in + r_out) * 0.5, 5.0 - 0.2 * level, 1, 40)
+    crests = _count(
+        wedge * (r_in + r_out) * 0.5, (5.0 - 0.2 * level) * density, 1, 40
+    )
     for index in range(crests):
         check_cancelled(cancel_check)
         t = (index + 0.5) / crests
@@ -357,11 +442,14 @@ def _scallop(r_in, r_out, wedge, level, seed, cancel_check=None):
 
 def _chevron(r_in, r_out, wedge, level, seed, cancel_check=None):
     """Triangle teeth with nested inner teeth and beaded apexes."""
+    density = _density(seed)
     arc = wedge * (r_in + r_out) * 0.5
-    teeth = _count(arc, 16.0 - 0.8 * level, 1, 24)
+    teeth = _count(arc, (16.0 - 0.8 * level) * density, 1, 24)
     rise = 0.45 + 0.5 * van_der_corput(seed + 2, 3)
     peak = r_in + (r_out - r_in) * rise
     samples = 14 + 2 * level
+    inner_row = level >= 4 and _roll(seed, 15) < 0.8
+    apex_beads = level >= 6 and _roll(seed, 16) < 0.8
     out = []
     for tooth in range(teeth):
         check_cancelled(cancel_check)
@@ -373,11 +461,11 @@ def _chevron(r_in, r_out, wedge, level, seed, cancel_check=None):
         ]
         out.append(base + [_polar(peak, 0.5 * (a0 + a1))])
         inner = r_in + 0.45 * (peak - r_in)
-        if level >= 4:
+        if inner_row:
             out.append(
                 [_polar(r_in, a0), _polar(inner, 0.5 * (a0 + a1)), _polar(r_in, a1)]
             )
-        if level >= 6:
+        if apex_beads:
             out.append(_circle(_polar(peak - 0.10 * (r_out - r_in), 0.5 * (a0 + a1)), 0.06 * (r_out - r_in), 8))
     out.append(_arc_contour(lambda t: r_out, wedge, 8 + 2 * level))
     return out
@@ -386,7 +474,9 @@ def _chevron(r_in, r_out, wedge, level, seed, cancel_check=None):
 def _rays(r_in, r_out, wedge, level, seed, cancel_check=None):
     """Rayed fan with a tip arc, alternating beam lengths and tip beads."""
     span = r_out - r_in
-    count = _count(wedge * r_in, 7.0 - 0.35 * level, 1, 60)
+    density = _density(seed)
+    count = _count(wedge * r_in, (7.0 - 0.35 * level) * density, 1, 60)
+    beamed = level >= 5 and _roll(seed, 17) < 0.75
     out = []
     for index in range(count):
         check_cancelled(cancel_check)
@@ -395,7 +485,7 @@ def _rays(r_in, r_out, wedge, level, seed, cancel_check=None):
         half_width = 0.14 * wedge / count
         reach = r_in + span * (0.72 + 0.28 * van_der_corput(index + 1 + seed, 3))
         out.append([_polar(r_in, a - half_width), _polar(reach, a), _polar(r_in, a + half_width)])
-        if level >= 5:
+        if beamed:
             out.append(_circle(_polar(reach - 0.05 * span, a), 0.04 * span, 8))
     out.append(_arc_contour(lambda t: r_out, wedge, 24 + 3 * level))
     return out
@@ -404,9 +494,12 @@ def _rays(r_in, r_out, wedge, level, seed, cancel_check=None):
 def _mesh(r_in, r_out, wedge, level, seed, cancel_check=None):
     """A diamond lattice: two families of slanted lines crossing."""
     span = r_out - r_in
+    density = _density(seed)
     arc = wedge * (r_in + r_out) * 0.5
-    count = _count(arc, 6.0 - 0.28 * level, 3, 90)
+    count = _count(arc, (6.0 - 0.28 * level) * density, 3, 90)
     slant = 1.5 * wedge / count
+    if _roll(seed, 18) < 0.5:
+        slant = -slant
     out = []
     for index in range(count):
         check_cancelled(cancel_check)
@@ -421,14 +514,16 @@ def _mesh(r_in, r_out, wedge, level, seed, cancel_check=None):
 def _lace(r_in, r_out, wedge, level, seed, cancel_check=None):
     """Rows of overlapping scale arcs with bead eyes."""
     span = r_out - r_in
-    rows = _count(span, 3.6, 2, 14)
+    density = _density(seed)
+    rows = _count(span, 3.6 * density, 2, 14)
     row_h = span / rows
     arc_r = 0.45 * row_h
+    eyes = level >= 4 and _roll(seed, 19) < 0.8
     out = []
     for row in range(rows):
         check_cancelled(cancel_check)
         rho = r_in + (row + 0.95) * row_h
-        count = _count(wedge * rho, 4.4 - 0.15 * level, 2, 90)
+        count = _count(wedge * rho, (4.4 - 0.15 * level) * density, 2, 90)
         offset = 0.5 * (row % 2)
         for index in range(count):
             angle = wedge * (index + 0.5 + offset) / count
@@ -438,7 +533,7 @@ def _lace(r_in, r_out, wedge, level, seed, cancel_check=None):
             out.append(
                 _arc((cx, cy), arc_r, angle - delta, angle + delta, 9)
             )
-            if level >= 4 and (index + row) % 2 == 0:
+            if eyes and (index + row) % 2 == 0:
                 eye = 0.20 * arc_r
                 out.append(_circle(_polar(rho - eye, angle), eye, 8))
     return out
@@ -447,14 +542,16 @@ def _lace(r_in, r_out, wedge, level, seed, cancel_check=None):
 def _beadrow(r_in, r_out, wedge, level, seed, cancel_check=None):
     """Several rows of beads and stud flowers packed through the band."""
     span = r_out - r_in
-    rows = _count(span, 3.4, 2, 14)
+    density = _density(seed)
+    rows = _count(span, 3.4 * density, 2, 14)
     row_h = span / rows
+    flower_every = 2 + _pick(seed, 20, 3)
     out = []
     for row in range(rows):
         check_cancelled(cancel_check)
         rho = r_in + (row + 0.5) * row_h
         size = min(0.34 * row_h, 1.8)
-        count = _count(wedge * rho, 3.6 - 0.12 * level, 2, 90)
+        count = _count(wedge * rho, (3.6 - 0.12 * level) * density, 2, 90)
         for index in range(count):
             t = (index + 0.5) / count
             wobble = 0.20 * row_h * (2.0 * weyl(index + seed + row) - 1.0)
@@ -462,7 +559,7 @@ def _beadrow(r_in, r_out, wedge, level, seed, cancel_check=None):
                 rho + wobble, r_in + 1.1 * size, r_out - 1.1 * size
             )
             centre = _polar(centre_r, wedge * t)
-            if (index + row) % 3 == 0:
+            if (index + row) % flower_every == 0:
                 out.extend(_flower(centre, size, seed + index + row))
             else:
                 out.append(_circle(centre, size * 0.55, 10))
@@ -496,6 +593,23 @@ _FUNCTIONS = {
     "lace": _lace,
     "beadrow": _beadrow,
 }
+
+# Each seed draws from one of these style pools, so two seeds are not just the
+# same skeleton with the textures swapped: they are different kinds of design.
+STYLES = ("floral", "geometric", "woven", "beaded", "mixed")
+
+_STYLE_POOLS = {
+    "floral": ("leaf", "tulip", "lens", "scallop", "feather", "beadrow"),
+    "geometric": ("mesh", "chevron", "rays", "lace", "bundle", "lens"),
+    "woven": ("mesh", "lace", "feather", "bundle", "scallop", "chevron"),
+    "beaded": ("beadrow", "lace", "leaf", "scallop", "lens", "chevron"),
+    "mixed": FAMILIES,
+}
+
+
+def style_for(seed):
+    """The composition style this seed draws from."""
+    return STYLES[_pick(seed, 0, len(STYLES))]
 
 
 # -- ornaments and framing ----------------------------------------------
@@ -567,11 +681,14 @@ def _rosette(radius, wedge, level, seed, cancel_check=None):
     power = 0.60 + 0.35 * van_der_corput(seed + 1, 3)
     samples = 24 + 4 * level
     out = [
-        _arc_contour(lambda t: radius, wedge, 14 + 2 * level),
-        _arc_contour(lambda t: radius * 0.86, wedge, 14 + 2 * level),
+        _arc_contour(
+            lambda t, r=radius * (1.0 - 0.07 * index): r, wedge, 14 + 2 * level
+        )
+        for index in range(1 + _pick(seed, 26, 3))
     ]
-    nests = 2 + level // 3
+    nests = 1 + _pick(seed, 25, 3) + level // 4
     for index in range(nests):
+        check_cancelled(cancel_check)
         ratio = 1.0 - 0.72 * (index + 1) / (nests + 1)
         out.append(
             _leaf(
@@ -584,10 +701,18 @@ def _rosette(radius, wedge, level, seed, cancel_check=None):
                 samples,
             )
         )
-    out.append(_ring((0.0, 0.0), radius * 0.20))
-    out.append(_ring((0.0, 0.0), radius * 0.12))
-    if level >= 4:
-        out.extend(_dots(radius * 0.66, wedge, 4.0 - 0.15 * level, radius * 0.035, seed, cancel_check))
+    out.append(_ring((0.0, 0.0), radius * (0.10 + 0.08 * weyl(seed + 31))))
+    if level >= 4 and _roll(seed, 27) < 0.75:
+        out.extend(
+            _dots(
+                radius * 0.66,
+                wedge,
+                (4.0 - 0.15 * level) * _density(seed, 94),
+                radius * 0.035,
+                seed,
+                cancel_check,
+            )
+        )
     return out
 
 
@@ -595,28 +720,32 @@ def _starburst(radius, wedge, level, seed, cancel_check=None):
     """A ray ring: uneven spokes between two rings, beads between the rays."""
     if radius <= 2.0:
         return []
-    spokes = _count(wedge * radius, 9.0 - 0.4 * level, 3, 40)
+    spokes = _count(
+        wedge * radius, (9.0 - 0.4 * level) * _density(seed, 93), 3, 40
+    )
     inner = radius * 0.50
     outer = radius * 0.95
+    beads = level >= 4 and _roll(seed, 29) < 0.75
     out = []
     for index in range(spokes):
         check_cancelled(cancel_check)
         angle = wedge * (index + 0.5) / spokes
         length = inner + (outer - inner) * (0.35 + 0.65 * weyl(index + seed + 1))
         out.append([_polar(inner, angle), _polar(length, angle)])
-        if level >= 4:
-            out.append(
-                _circle(_polar(inner, angle), 0.035 * radius, 8)
-            )
-    for ratio in (0.50, 0.72, 0.95):
-        out.append(_ring((0.0, 0.0), radius * ratio))
+        if beads:
+            out.append(_circle(_polar(inner, angle), 0.035 * radius, 8))
+    rings = 2 + _pick(seed, 28, 3)
+    for index in range(rings):
+        out.append(_ring((0.0, 0.0), radius * (0.50 + 0.45 * (index + 1) / rings)))
     return out
 
 
 def _rim(radius, wedge, level, seed, cancel_check=None):
     """Scalloped multi-line outer boundary with stud and dot rows."""
-    waves = _count(wedge * radius, 11.0 - 0.5 * level, 4, 60)
-    amp = 0.014 * radius
+    density = _density(seed, 92)
+    waves = _count(wedge * radius, (13.0 - 0.6 * level) * density, 3, 60)
+    amp = radius * (0.008 + 0.012 * _roll(seed, 21))
+    lines = 2 + _pick(seed, 22, 4)
     out = [
         _arc_contour(
             lambda t: radius - amp + amp * math.cos(TAU * waves * t),
@@ -624,23 +753,28 @@ def _rim(radius, wedge, level, seed, cancel_check=None):
             18 + 6 * waves,
         )
     ]
-    for index in range(2 + level // 3):
+    for index in range(lines):
         check_cancelled(cancel_check)
         out.append(
-            _arc_contour(lambda t, r=radius * (0.988 - 0.011 * index): r, wedge, 26 + 3 * level)
+            _arc_contour(
+                lambda t, r=radius * (0.990 - 0.010 * index): r,
+                wedge,
+                26 + 3 * level,
+            )
         )
-    out.extend(
-        _studs(
-            radius * 0.930,
-            radius * 0.026,
-            4.0 - 0.15 * level,
-            radius * (0.006 + 0.0006 * level),
-            wedge,
-            seed + 3,
-            cancel_check,
+    if _roll(seed, 23) < 0.8:
+        out.extend(
+            _studs(
+                radius * 0.930,
+                radius * 0.026,
+                (4.0 - 0.15 * level) * density,
+                radius * (0.005 + 0.0006 * level),
+                wedge,
+                seed + 3,
+                cancel_check,
+            )
         )
-    )
-    if level >= 5:
+    if level >= 5 and _roll(seed, 24) < 0.7:
         out.extend(
             _dots(radius * 0.955, wedge, 4.5 - 0.2 * level, radius * 0.008, seed + 7, cancel_check)
         )
@@ -660,22 +794,33 @@ def random_pattern(seed=0, intricacy=5, radius_mm=180.0, wedge_deg=15.0, cancel_
     radius = max(float(radius_mm), 1.0)
     wedge = math.radians(max(float(wedge_deg), 0.5))
 
-    rings = 3 + (2 * level) // 3
-    centre_r = radius * (0.075 + 0.009 * level)
-    gap = radius * 0.018
-    outer = radius * 0.900
-    height = max((outer - centre_r - (rings - 1) * gap) / rings, radius * 0.04)
+    # The seed chooses the kind of design, not just its phases: the style pool,
+    # the ring count, the band-width profile, how much of the disc the centre
+    # and the rim take, and how tightly each layer packs its detail.
+    order = _shuffled(_STYLE_POOLS[style_for(seed)], seed)
+    rings = 3 + (2 * level) // 3 + _pick(seed, 1, 3) - 1
+    centre_r = radius * (0.055 + 0.020 * _roll(seed, 2) + 0.006 * level)
+    gap = radius * (0.010 + 0.014 * _roll(seed, 3))
+    outer = radius * (0.855 + 0.075 * _roll(seed, 4))
+    ladder = 0.60 + 0.60 * _roll(seed, 5)
+    dressed = _pick(seed, 6, 4)
+    burst = level >= 3 and _roll(seed, 7) < 0.75
+    span_total = outer - centre_r
+    edges = [
+        centre_r + span_total * (index / rings) ** ladder
+        for index in range(rings + 1)
+    ]
 
     contours = []
     contours.extend(_rosette(centre_r, wedge, level, seed + 5, cancel_check))
-    if level >= 3:
+    if burst:
         contours.extend(_starburst(centre_r, wedge, level, seed + 9, cancel_check))
 
     for ring in range(rings):
         check_cancelled(cancel_check)
-        name = FAMILIES[(seed + 5 * ring) % len(FAMILIES)]
-        r_in = centre_r + ring * (height + gap)
-        r_out = r_in + height
+        name = order[ring % len(order)]
+        r_in = edges[ring]
+        r_out = max(edges[ring + 1] - gap, r_in + radius * 0.03)
         contours.extend(
             _FUNCTIONS[name](r_in, r_out, wedge, level, seed + 17 * ring + 1, cancel_check)
         )
@@ -683,18 +828,31 @@ def random_pattern(seed=0, intricacy=5, radius_mm=180.0, wedge_deg=15.0, cancel_
         contours.extend(
             _separator(center_line, radius, wedge, level, seed + ring, cancel_check)
         )
-        if ring < rings - 1 and level >= 2:
-            contours.extend(
-                _studs(
-                    center_line,
-                    gap * 0.9,
-                    5.0 - 0.2 * level,
-                    radius * (0.004 + 0.0003 * level),
-                    wedge,
-                    seed + 50 + ring,
-                    cancel_check,
+        if ring < rings - 1:
+            mode = _pick(seed + 37 * ring, 30, 4) if dressed == 3 else dressed
+            if mode in (1, 3):
+                contours.extend(
+                    _studs(
+                        center_line,
+                        gap * 0.9,
+                        (5.0 - 0.2 * level) * _density(seed + ring, 95),
+                        radius * (0.004 + 0.0003 * level),
+                        wedge,
+                        seed + 50 + ring,
+                        cancel_check,
+                    )
                 )
-            )
+            if mode in (2, 3):
+                contours.extend(
+                    _dots(
+                        center_line,
+                        wedge,
+                        (4.2 - 0.18 * level) * _density(seed + ring, 96),
+                        radius * (0.0025 + 0.0002 * level),
+                        seed + 70 + ring,
+                        cancel_check,
+                    )
+                )
 
     contours.extend(_rim(radius, wedge, level, seed + 31, cancel_check))
     return contours

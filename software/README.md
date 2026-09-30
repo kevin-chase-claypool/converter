@@ -49,8 +49,13 @@ app.
   complicated the way an engraving does rather than by repeating one texture.
   The result is clipped, mirrored, offset, auto-fitted and saved exactly like an
   imported image, so one seed plus the other controls reproduces the same
-  G-code. Counts, radii and phases come from mathematical sequences (golden
-  angle, Weyl, van der Corput, Fibonacci, primes), not from unseeded noise.
+  G-code. The seed changes the *structure*, not just the phases: it picks one of
+  five composition styles (`floral`, `geometric`, `woven`, `beaded`, `mixed`),
+  the ring count, the band-width ladder, how much of the disc the centre and rim
+  take, how tightly each layer packs, and whether a shape repeats once or twice
+  per wedge - the style name is shown next to the seed. Counts, radii and phases
+  come from mathematical sequences (golden angle, Weyl, van der Corput,
+  Fibonacci, primes), not from unseeded noise.
   Intricacy 10 is a full engraving: in a 12-division 181.3 mm frame it draws
   about 13,500 mirrored contours and 310,000 points, roughly 390,000 G-code
   lines and 13,500 pen cycles; the build takes about a second and saving the

@@ -397,9 +397,11 @@ class KaleidoscopeWindow(QMainWindow):
         for widget in (self.seed, self.seed_button, self.intricacy):
             widget.setEnabled(generated)
         if generated:
-            label = "seed %d, intricacy %d" % (
-                int(self.seed.value()),
+            seed = int(self.seed.value())
+            label = "seed %d, intricacy %d (%s)" % (
+                seed,
                 int(self.intricacy.value()),
+                converter.style_for(seed),
             )
         elif self.source_path:
             label = os.path.basename(self.source_path)
@@ -603,9 +605,11 @@ class KaleidoscopeWindow(QMainWindow):
         self.save_button.setEnabled(bool(design))
         offset_x, offset_y = self._image_offset()
         if self.random_mode.isChecked():
-            source = "random pattern, seed %d, intricacy %d" % (
-                int(self.seed.value()),
+            seed = int(self.seed.value())
+            source = "random pattern, seed %d, intricacy %d, %s style" % (
+                seed,
                 int(self.intricacy.value()),
+                converter.style_for(seed),
             )
         else:
             source = os.path.basename(self.source_path)

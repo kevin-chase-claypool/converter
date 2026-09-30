@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-009` | windows-software | implemented | [Kaleidoscope: seeds choose a design, not just its phases](windows-software/2026/2026-09-30-kaleidoscope-seed-diversity.md) |
 | 2026-09-30 | `WSW-20260930-008` | windows-software | implemented | [Kaleidoscope: complex multi-layer random patterns](windows-software/2026/2026-09-30-kaleidoscope-complex-layers.md) |
 | 2026-09-30 | `WSW-20260930-007` | windows-software | implemented | [Kaleidoscope: engraving-density random patterns](windows-software/2026/2026-09-30-kaleidoscope-engraving-density.md) |
 | 2026-09-30 | `WSW-20260930-006` | windows-software | implemented | [Kaleidoscope: deterministic random-pattern generator](windows-software/2026/2026-09-30-kaleidoscope-random-pattern-generator.md) |

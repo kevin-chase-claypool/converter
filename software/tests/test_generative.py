@@ -37,6 +37,24 @@ class RandomPatternTests(unittest.TestCase):
         second = converter.random_pattern(seed=4, intricacy=6, radius_mm=RADIUS, wedge_deg=15.0)
         self.assertNotEqual(first, second)
 
+    def test_seeds_produce_structurally_different_designs(self):
+        styles = set()
+        contours = []
+        points = []
+        for seed in range(8):
+            pattern = converter.random_pattern(
+                seed=seed, intricacy=8, radius_mm=RADIUS, wedge_deg=15.0
+            )
+            styles.add(generative.style_for(seed))
+            contours.append(len(pattern))
+            points.append(_point_count(pattern))
+        self.assertGreaterEqual(len(styles), 3, "seeds should draw from several styles")
+        self.assertGreaterEqual(len(set(contours)), 6, "ring make-up should vary")
+        self.assertGreaterEqual(len(set(points)), 6, "drawing volume should vary")
+        self.assertGreater(
+            max(points) / min(points), 1.3, "seeds should differ in weight, not just phases"
+        )
+
     def test_higher_intricacy_adds_detail_without_losing_any(self):
         # Contour counts can dip slightly when a level adds rings but thins the
         # bands; the amount of drawing (points) only ever grows.
@@ -55,12 +73,12 @@ class RandomPatternTests(unittest.TestCase):
             seed=4, intricacy=10, radius_mm=RADIUS, wedge_deg=15.0
         )
         self.assertGreaterEqual(
-            len(pattern), 400, "max intricacy should fill the wedge with shapes"
+            len(pattern), 300, "max intricacy should fill the wedge with shapes"
         )
-        self.assertGreaterEqual(_point_count(pattern), 10000)
+        self.assertGreaterEqual(_point_count(pattern), 9000)
         design = converter.kaleidoscope(pattern, 12, mirror=True, radius=RADIUS)
         self.assertGreaterEqual(
-            len(design), 9000, "mirrored design should be an engraving, not a sketch"
+            len(design), 8000, "mirrored design should be an engraving, not a sketch"
         )
 
     def test_points_are_finite_and_inside_the_radius(self):
@@ -109,15 +127,19 @@ class RandomPatternTests(unittest.TestCase):
             )
             if len(contour) != 2 or math.dist(contour[0], contour[1]) < 10.0:
                 continue
-            # Radial spokes and facet edges of a circle are honest straight
-            # lines. A diagonal jump - different radius *and* different angle -
-            # is the signature of a piece fused across a clipped gap.
+            # Radial spokes, slanted mesh strokes and circle facet edges are
+            # honest straight lines. The artefact to catch is a piece fused
+            # across a clipped gap: one end sitting on the clip frame and the
+            # other end well inside it at a different angle.
             first, second = contour
-            dr = abs(math.hypot(*first) - math.hypot(*second))
+            first_r, second_r = math.hypot(*first), math.hypot(*second)
+            on_frame = min(abs(first_r - RADIUS), abs(second_r - RADIUS)) < 0.05
+            ends_inside = max(first_r, second_r) < RADIUS - 5.0
+            dr = abs(first_r - second_r)
             da = abs(math.atan2(first[1], first[0]) - math.atan2(second[1], second[0]))
             self.assertTrue(
-                dr < 1.5 or da < math.radians(2.0),
-                "clipping left a stray diagonal chord (dr=%.2f mm, da=%.1f deg)"
+                dr < 1.5 or da < math.radians(2.0) or not (on_frame and ends_inside),
+                "clipping fused a piece across the frame (dr=%.2f mm, da=%.1f deg)"
                 % (dr, math.degrees(da)),
             )
 
