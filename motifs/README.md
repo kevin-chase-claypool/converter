@@ -1,13 +1,15 @@
-# Nature motif library
+# Motif library
 
-`nature/` holds 110 black-on-white PNG silhouettes for the Kaleidoscope
-Converter's **Motif folder...** button: leaves, flowers, trees, sea life, birds,
-insects, small animals, shells, mushrooms, acorns, mountains, sun, moon,
-snowflake and water.
+Two folders of black-on-white PNGs for the Kaleidoscope Converter's **Motif
+folder...** button.
 
-Every image is drawn from code in `../tools/make_nature_motifs.py`, supersampled
-and thresholded, so the result is pure black on pure white with crisp edges and
-nothing for the tracer to guess at. The files are 1-bit, about 1 KB each.
+| Folder | What it is | Files |
+| --- | --- | --- |
+| `nature/` | Real organism silhouettes from [PhyloPic](https://www.phylopic.org): birds, cats, elephants, fish, dolphins, spiders, ants, jellyfish, butterflies, crabs, tortoises, plants and more, traced by scientists and published under CC0 / public domain / CC BY. | 150 |
+| `nature-drawn/` | The first, code-drawn set (`tools/make_nature_motifs.py`): schematic leaves, flowers, trees, shells, insects and small animals. Flat and cartoon-like, but tidy and very light to plot. | 110 |
+
+`nature/CREDITS.md` lists the taxon, contributor, licence and source of every
+downloaded file, and `nature/manifest.json` carries the same data for tooling.
 
 ## Use them
 
@@ -15,21 +17,28 @@ nothing for the tracer to guess at. The files are 1-bit, about 1 KB each.
 2. Tick **Generate a random pattern**.
 3. Press **Motif folder...** and pick `motifs/nature` (this also ticks **Use
    natural motifs in patterns**).
-4. Browse `Seed`; set `Intricacy` and, if the shapes vanish, lower the trace
-   threshold or raise `Trace detail`.
+4. Browse `Seed`; set `Intricacy`. In motif mode each shape is drawn at full
+   size with two smaller nested copies inside it, rings are separated by thin
+   bundles with flower studs and bead rows, and the copies overlap.
 
-Motif mode keeps fewer, thicker rings so the shapes stay recognisable, mixes one
-to three motifs per ring, and lets the copies overlap.
+Only the motifs a seed actually places get traced, and traced results are
+cached, so pointing at 150 files costs nothing until they are used.
 
-## Regenerate or extend
+## Regenerate, extend or swap
 
 ```powershell
-python tools\make_nature_motifs.py                 # rewrite motifs/nature
-python tools\make_nature_motifs.py --out D:\shapes # somewhere else
-python tools\make_nature_motifs.py --limit 12      # quick preview
+python tools\make_nature_motifs.py --out motifs\nature-drawn       # redraw the drawn set
+python tools\fetch_phylopic_motifs.py --out motifs\nature --limit 150   # more organisms
+python tools\fetch_nature_motifs.py --out motifs\nature --limit 120    # Commons silhouettes
 ```
 
-Add a new shape by writing a `draw(draw, size, variant)` function in
-`tools/make_nature_motifs.py` that draws in 0..1 coordinates and adding it to
-`CATALOGUE`. Point the app at any folder of PNG/JPG files - a hand-drawn or
-scanned set works too, as long as the shapes are dark on a light background.
+- `make_nature_motifs.py` draws every shape from code; add a function plus a
+  `CATALOGUE` line to extend it.
+- `fetch_phylopic_motifs.py` pulls vector organism silhouettes from PhyloPic,
+  rasterises them with Qt and writes the credits files.
+- `fetch_nature_motifs.py` pulls from Wikimedia Commons (silhouette categories,
+  pressed herbarium leaves). Wikimedia throttles bulk downloads hard, so run it
+  in small batches and expect pauses.
+
+Any folder of dark-on-light PNG/JPG artwork works too: hand-drawn scans,
+herbarium sheets, your own pen sketches.

@@ -70,9 +70,15 @@ app.
   motifs are cached until the file or those settings change, and only the
   motifs the current seed will place are traced. `Seed` decides which motifs,
   how many copies, their orientation, tilt, mirroring and packing.
-  A generated set of 110 nature silhouettes ships in `..\motifs\nature`
-  (see `..\motifs\README.md`); `..\tools\make_nature_motifs.py` redraws it or
-  writes the same set somewhere else.
+  Two sets ship ready to use (see `..\motifs\README.md`): `..\motifs\nature`
+  holds 150 real organism silhouettes from PhyloPic - birds, cats, elephants,
+  fish, dolphins, insects, jellyfish, plants - with per-file credits, and
+  `..\motifs\nature-drawn` holds the earlier code-drawn set.
+  `..\tools\fetch_phylopic_motifs.py` fetches more organisms,
+  `..\tools\make_nature_motifs.py` redraws the drawn set, and
+  `..\tools\fetch_nature_motifs.py` pulls free silhouettes from Wikimedia
+  Commons. In motif mode each shape is drawn with two smaller nested copies
+  inside it, so real outlines read as engraving rather than as flat cut-outs.
   Intricacy 10 is a full engraving: in a 12-division 181.3 mm frame it draws
   about 13,500 mirrored contours and 310,000 points, roughly 390,000 G-code
   lines and 13,500 pen cycles; the build takes about a second and saving the

@@ -1,0 +1,1352 @@
+[
+  {
+    "file": "001-indotestudo-forstenii.png",
+    "taxon": "Indotestudo forstenii",
+    "contributor": "Arkanniti Dibyawedha Adisajjana",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/1c009c8e-f085-43e2-809a-cd33b5fed63a",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "002-chasmataspis.png",
+    "taxon": "Chasmataspis",
+    "contributor": "Joel Vikberg Wernström",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/bfd3423e-773d-425a-a529-ecce9dec5c77",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "003-euproops.png",
+    "taxon": "Euproops",
+    "contributor": "Joel Vikberg Wernström",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/130ab423-057e-4f8b-be60-d20b7092bee4",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "004-leopardus-emiliae.png",
+    "taxon": "Leopardus emiliae",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/61c947a7-a067-472d-8617-d1c0ac593a6c",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "005-leopardus-guttulus.png",
+    "taxon": "Leopardus guttulus",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/bca41584-87fc-46de-9bb4-ffa416894e6b",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "006-leopardus-tilcayo.png",
+    "taxon": "Leopardus tilcayo",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/cd8df988-3943-499d-9ae5-ac7f14466d03",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "007-leopardus-pardinoides-pardinoides.png",
+    "taxon": "Leopardus pardinoides pardinoides",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/e95c17bc-864c-4a3c-b5e4-5d713bc47124",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "008-xibalbanus-tulumensis.png",
+    "taxon": "Xibalbanus tulumensis",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/4ab500a5-1178-4c34-8c6a-85f508dac56c",
+    "subject_pixels": "899x900"
+  },
+  {
+    "file": "009-rhea-pennata.png",
+    "taxon": "Rhea pennata",
+    "contributor": "Kai Caspar",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/40f348ce-a217-4f4b-8c6d-550d5ebabe70",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "010-sus-scrofa.png",
+    "taxon": "Sus scrofa",
+    "contributor": "Kai Caspar",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/5cf39625-0de7-4ffe-a28f-9c88670af448",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "011-callosciurus-prevostii.png",
+    "taxon": "Callosciurus prevostii",
+    "contributor": "Kai Caspar",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/fb1951fc-deac-4e4b-ab75-a9ffaf299243",
+    "subject_pixels": "900x895"
+  },
+  {
+    "file": "012-guiyu-oneiros.png",
+    "taxon": "Guiyu oneiros",
+    "contributor": "João Pedro Fernandes Moutinho",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/81f3148d-296b-475f-8429-b96dd02c640c",
+    "subject_pixels": "894x890"
+  },
+  {
+    "file": "013-pontoporia-blainvillei.png",
+    "taxon": "Pontoporia blainvillei",
+    "contributor": "João Pedro Fernandes Moutinho",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/f8a8c69e-23aa-458f-b394-f5f5fb9a9791",
+    "subject_pixels": "892x882"
+  },
+  {
+    "file": "014-smaug-giganteus.png",
+    "taxon": "Smaug giganteus",
+    "contributor": "Kai Caspar",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/de1ebcf8-9123-4cfb-b6de-15e83d71983b",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "015-buceros-rhinoceros.png",
+    "taxon": "Buceros rhinoceros",
+    "contributor": "Kai Caspar",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/0c276e6d-0325-413f-8f52-40eb8c98e7a5",
+    "subject_pixels": "864x892"
+  },
+  {
+    "file": "016-pentecopterus-decorahensis.png",
+    "taxon": "Pentecopterus decorahensis",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/ed02ccb0-5820-44a7-b46a-1a16a8894128",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "017-madoqua-kirkii.png",
+    "taxon": "Madoqua kirkii",
+    "contributor": "Kai Caspar",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/0498d64e-cc5f-4bd6-b385-e7dbb19355b3",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "018-fukuivenator-paradoxus.png",
+    "taxon": "Fukuivenator paradoxus",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY-SA",
+    "licence_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://www.phylopic.org/images/c5726423-86bb-49b7-b92a-044961227f55",
+    "subject_pixels": "899x892"
+  },
+  {
+    "file": "019-erethizon-dorsatum.png",
+    "taxon": "Erethizon dorsatum",
+    "contributor": "Kai Caspar",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/c55d913e-26a9-4cc1-a647-7800ac6128ce",
+    "subject_pixels": "876x891"
+  },
+  {
+    "file": "020-ursus-arctos-beringianus.png",
+    "taxon": "Ursus arctos beringianus",
+    "contributor": "Kai Caspar",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/1cddcd20-9c80-4c98-9a3a-881e724ee4e7",
+    "subject_pixels": "864x900"
+  },
+  {
+    "file": "021-elephas-maximus.png",
+    "taxon": "Elephas maximus",
+    "contributor": "Kai Caspar",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/91e44407-08f2-4b96-b8a6-ab4ce6d4d38d",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "022-cercopithecus-neglectus.png",
+    "taxon": "Cercopithecus neglectus",
+    "contributor": "Kai Caspar",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/9e345c97-358f-473f-b6d4-f8be73c0f8ec",
+    "subject_pixels": "900x857"
+  },
+  {
+    "file": "023-alces-alces.png",
+    "taxon": "Alces alces",
+    "contributor": "Kai Caspar",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/94397ceb-67dc-4dcd-93bf-1a5bf38bba61",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "024-culaea-inconstans.png",
+    "taxon": "Culaea inconstans",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/05644f43-3cbd-40e4-844d-d3d4d01ee96b",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "025-pegasus.png",
+    "taxon": "Pegasus",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/ffa66714-b650-4736-bebd-464255f0c881",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "026-hypoptychus-dybowskii.png",
+    "taxon": "Hypoptychus dybowskii",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/fdb0856d-a86c-40f0-9afa-24c18a883e00",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "027-centriscus.png",
+    "taxon": "Centriscus",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/3d8f6277-85e9-4b82-803a-d5a3670a9a29",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "028-eekaulostomus-cuevasae.png",
+    "taxon": "Eekaulostomus cuevasae",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/47ff3230-eae9-4d21-9980-7865f074504a",
+    "subject_pixels": "900x898"
+  },
+  {
+    "file": "029-notopogon-lilliei.png",
+    "taxon": "Notopogon lilliei",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/b9dd20f8-b0ff-4e2c-9047-af28c7c8c5e5",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "030-aulorhynchus-flavidus.png",
+    "taxon": "Aulorhynchus flavidus",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/b355ce4e-68f1-41d2-ac0e-41b0f9f1cef1",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "031-indostomus-paradoxus.png",
+    "taxon": "Indostomus paradoxus",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/b8e4df6c-154d-4ccf-9e4c-304a7e2944e6",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "032-fistularia.png",
+    "taxon": "Fistularia",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/4f092fc1-3693-49ed-94b3-bcb151146fff",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "033-solenostomus.png",
+    "taxon": "Solenostomus",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/da9e202f-58b6-499e-b3c1-25bd689946cc",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "034-aulostomus-maculatus.png",
+    "taxon": "Aulostomus maculatus",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY-SA",
+    "licence_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://www.phylopic.org/images/b47b3354-c92f-4de1-a2d1-a0ec79206b88",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "035-myrmeleon.png",
+    "taxon": "Myrmeleon",
+    "contributor": "Caleb M. Gordon",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/60fc28c2-d267-4de1-823d-a3af82fbf2d3",
+    "subject_pixels": "900x898"
+  },
+  {
+    "file": "036-siphonops-annulatus.png",
+    "taxon": "Siphonops annulatus",
+    "contributor": "Ryan Santos Soledade",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/fe8e712f-7ac4-4af8-a604-20e626c1bbc3",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "037-yaquinacetus-meadi.png",
+    "taxon": "Yaquinacetus meadi",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/e53f369d-de93-4980-b176-5cb20e3b4eca",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "038-isthminia-panamensis.png",
+    "taxon": "Isthminia panamensis",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/177d03c8-3590-48fe-8c13-b20571628173",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "039-steno-bredanensis.png",
+    "taxon": "Steno bredanensis",
+    "contributor": "Olesja Bogomaz",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/1eca0864-603b-419d-9866-fed26f4f4e5c",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "040-tursiops-truncatus.png",
+    "taxon": "Tursiops truncatus",
+    "contributor": "Olesja Bogomaz",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/6260355c-1f7b-491c-baa5-4268710276d6",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "041-monodon-monoceros.png",
+    "taxon": "Monodon monoceros",
+    "contributor": "Olesja Bogomaz",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/d2616332-2584-4504-a463-2bf6f9fc6412",
+    "subject_pixels": "899x900"
+  },
+  {
+    "file": "042-mesoplodon-bidens.png",
+    "taxon": "Mesoplodon bidens",
+    "contributor": "Olesja Bogomaz",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/e80893ba-8bbf-4cad-917b-d3c498664b54",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "043-hyperoodon-ampullatus.png",
+    "taxon": "Hyperoodon ampullatus",
+    "contributor": "Olesja Bogomaz",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/488786ba-dc77-4811-9d1e-048a1a2f3b7a",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "044-lagenorhynchus-albirostris.png",
+    "taxon": "Lagenorhynchus albirostris",
+    "contributor": "Olesja Bogomaz",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/19bdf10a-42b4-4736-9da8-c3171175fb0e",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "045-tursiops-aduncus.png",
+    "taxon": "Tursiops aduncus",
+    "contributor": "Olesja Bogomaz",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/cd2f33e5-9721-4da6-9014-17f09dc3e480",
+    "subject_pixels": "843x844"
+  },
+  {
+    "file": "046-leucopleurus-acutus.png",
+    "taxon": "Leucopleurus acutus",
+    "contributor": "Olesja Bogomaz",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/7b808533-b531-4642-a411-e91568c58c7a",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "047-inia-geoffrensis.png",
+    "taxon": "Inia geoffrensis",
+    "contributor": "Olesja Bogomaz",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/4b39bbf1-f37f-4d62-a2ad-1504772ba851",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "048-lagenorhynchus-obliquidens.png",
+    "taxon": "Lagenorhynchus obliquidens",
+    "contributor": "Olesja Bogomaz",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/96b2e195-21c0-4854-8e07-c0dce29a939d",
+    "subject_pixels": "899x900"
+  },
+  {
+    "file": "049-araneus-diadematus.png",
+    "taxon": "Araneus diadematus",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/2f7145fc-002c-40e8-9b35-16f95b05f0e3",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "050-columba-livia.png",
+    "taxon": "Columba livia",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/310b4994-af54-4d7b-93ac-27bbf80f7706",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "051-mammuthus-primigenius.png",
+    "taxon": "Mammuthus primigenius",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/6f0acd79-1f7d-402f-8679-dc3036b1a504",
+    "subject_pixels": "899x900"
+  },
+  {
+    "file": "052-opabinia-regalis.png",
+    "taxon": "Opabinia regalis",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/dfb89878-9fc7-4c76-9783-252f984bb5ad",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "053-tursiops-truncatus.png",
+    "taxon": "Tursiops truncatus",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/4ac248c2-da47-4c20-ad5a-30c45dc38fa0",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "054-coccinella.png",
+    "taxon": "Coccinella",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/87b5e182-6fcf-40c7-af75-af41a04ca5fd",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "055-lasius-niger.png",
+    "taxon": "Lasius niger",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/2661a1f3-77ea-4864-ac85-9fa2461f32c6",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "056-lampetra-fluviatilis.png",
+    "taxon": "Lampetra fluviatilis",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/5b0688cf-c547-457e-bb5b-61a851f82966",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "057-iguana-iguana.png",
+    "taxon": "Iguana iguana",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/99e98767-3788-41a8-80ac-2394a7e51315",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "058-brachiosaurus-altithorax.png",
+    "taxon": "Brachiosaurus altithorax",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/2003b4f6-7b8d-4c98-9797-1aca028dc2ac",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "059-orthocerida.png",
+    "taxon": "Orthocerida",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/e4f767a3-9cdc-4a14-a456-1afc400e54db",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "060-galeocerdo-cuvier.png",
+    "taxon": "Galeocerdo cuvier",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/2e07c00d-1b73-4b6f-b3b5-63ade2c7909c",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "061-galeodes.png",
+    "taxon": "Galeodes",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/d903e412-7db4-4c7e-97b0-63f47c92a826",
+    "subject_pixels": "895x898"
+  },
+  {
+    "file": "062-tetranchyroderma-swedmarki.png",
+    "taxon": "Tetranchyroderma swedmarki",
+    "contributor": "Nicolas Bekkouche",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/7525b19d-c723-43b7-b420-e6461d61693b",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "063-oregodasys-caymanensis.png",
+    "taxon": "Oregodasys caymanensis",
+    "contributor": "Nicolas Bekkouche",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/bd353b4c-1660-493d-ad46-8dd71d691d67",
+    "subject_pixels": "898x900"
+  },
+  {
+    "file": "064-erignathus-barbatus.png",
+    "taxon": "Erignathus barbatus",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/8807da49-5e38-4170-990c-677b9b508a51",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "065-genetta-maculata.png",
+    "taxon": "Genetta maculata",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/683c9c61-5a7c-4022-9fa9-19219ecedf71",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "066-leopardus-tigrinus.png",
+    "taxon": "Leopardus tigrinus",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/ef975993-7555-4581-9629-3ed38e7fd822",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "067-herpestes-flavescens.png",
+    "taxon": "Herpestes flavescens",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/09d3d84f-72d6-4e53-a361-4b741db6ab8b",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "068-neomonachus-schauinslandi.png",
+    "taxon": "Neomonachus schauinslandi",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/a227a95e-76ec-4266-b25a-9dcb96226cd7",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "069-lycalopex-culpaeus.png",
+    "taxon": "Lycalopex culpaeus",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/ab8fb3ed-6cb6-4526-bc96-0827ba96b3a3",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "070-paracynictis-selousi.png",
+    "taxon": "Paracynictis selousi",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/f951a1d4-a58d-49a1-9052-18d98b43bb4d",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "071-urva-edwardsii.png",
+    "taxon": "Urva edwardsii",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/0c68e08b-0323-4aeb-9685-6f13e4703a68",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "072-mephitis-macroura.png",
+    "taxon": "Mephitis macroura",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/f633db7b-0dc6-47b7-a9ba-d4df1d50f2d2",
+    "subject_pixels": "900x896"
+  },
+  {
+    "file": "073-lontra-longicaudis.png",
+    "taxon": "Lontra longicaudis",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/85b7c8b0-7c52-4109-9787-9911eee729a4",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "074-leopardus-geoffroyi.png",
+    "taxon": "Leopardus geoffroyi",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/620ad16e-26f6-41a5-9aba-f93abb3e2898",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "075-urva-semitorquata.png",
+    "taxon": "Urva semitorquata",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/08364af3-78ff-4976-b971-e3befe92c0ca",
+    "subject_pixels": "899x900"
+  },
+  {
+    "file": "076-genetta-piscivora.png",
+    "taxon": "Genetta piscivora",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/667b1a42-a581-4ddd-b7fe-127dc48b362a",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "077-urva-javanica.png",
+    "taxon": "Urva javanica",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/29c72f54-2e6b-467b-9c11-4a9820b7218e",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "078-xenogale-naso.png",
+    "taxon": "Xenogale naso",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/49e8b07b-1e5b-442e-b77f-3de7b26844c8",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "079-lontra-provocax.png",
+    "taxon": "Lontra provocax",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/ef328082-8d26-432e-ace8-1e44436194f6",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "080-genetta-johnstoni.png",
+    "taxon": "Genetta johnstoni",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/e6c655c7-6d90-43c3-ad2d-a27e60fdecad",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "081-puma-concolor.png",
+    "taxon": "Puma concolor",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/ee40e166-219a-48bf-bdfb-3ec97d67661d",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "082-genetta-pardina.png",
+    "taxon": "Genetta pardina",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/d184f037-b438-46ae-9c81-f73579af31dc",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "083-leopardus-pardalis.png",
+    "taxon": "Leopardus pardalis",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/321da721-724f-4f3f-93aa-d705f6f675bc",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "084-melogale-everetti.png",
+    "taxon": "Melogale everetti",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/0e9a955a-8e55-491b-a586-cc8034613247",
+    "subject_pixels": "899x899"
+  },
+  {
+    "file": "085-pelagia-noctiluca.png",
+    "taxon": "Pelagia noctiluca",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/9ecd443a-dc7f-48f2-8ecf-33d73f24f1b7",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "086-arctocephalus-pusillus.png",
+    "taxon": "Arctocephalus pusillus",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/828c6f7f-acca-4de4-90e7-15491a2881c0",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "087-phoca-caspica.png",
+    "taxon": "Phoca caspica",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/55e66e2c-1e14-4349-b418-e28ed2252a43",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "088-mungos-gambianus.png",
+    "taxon": "Mungos gambianus",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/ca73b439-e541-4340-b5ae-c743dfb68a33",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "089-zalophus-wollebaeki.png",
+    "taxon": "Zalophus wollebaeki",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/2359997c-aed8-466b-9b4e-6e5f233db1af",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "090-hemigalus-derbyanus.png",
+    "taxon": "Hemigalus derbyanus",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/9e368d3b-e70b-4ab3-8cf0-3344605dabcd",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "091-lupulella-adusta.png",
+    "taxon": "Lupulella adusta",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/8aeb18b7-e25d-4dca-8ea8-2d57f1d2ed12",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "092-eophrynus-ilfeldicus.png",
+    "taxon": "Eophrynus ilfeldicus",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/098125f7-fdcc-451c-a0e7-46df402642d3",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "093-antillostenochrus-pseudoannulatus.png",
+    "taxon": "Antillostenochrus pseudoannulatus",
+    "contributor": "Amy Beauvois",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/bc2496cc-4d71-4d12-9111-5aec3feef4fd",
+    "subject_pixels": "899x895"
+  },
+  {
+    "file": "094-martes-flavigula.png",
+    "taxon": "Martes flavigula",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/9529319e-c83b-4a0f-afa8-df8191265764",
+    "subject_pixels": "899x900"
+  },
+  {
+    "file": "095-liberiictis-kuhni.png",
+    "taxon": "Liberiictis kuhni",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/b62ebedf-8ba6-44cf-b162-d18b036e24aa",
+    "subject_pixels": "900x897"
+  },
+  {
+    "file": "096-leopardus-tigrinus.png",
+    "taxon": "Leopardus tigrinus",
+    "contributor": "Margot Michaud",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/6fec6102-e156-4175-ac55-3206b0eaf595",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "097-greta-oto.png",
+    "taxon": "Greta oto",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/e2a4994a-d6ea-42bd-a280-3c71fda01356",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "098-suricata-suricatta.png",
+    "taxon": "Suricata suricatta",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/a7243ae1-4147-45a1-a42e-fd4c95b85d4a",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "099-heliconius-charithonia.png",
+    "taxon": "Heliconius charithonia",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/39a56722-2557-49a7-bb46-9b124ce0f735",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "100-neurergus-kaiseri.png",
+    "taxon": "Neurergus kaiseri",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/4c0abb14-1b44-490e-80e6-effa0d067394",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "101-greta-oto.png",
+    "taxon": "Greta oto",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/4e7260b0-0333-4c96-9076-14c67fe5bcc6",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "102-zenaida-aurita.png",
+    "taxon": "Zenaida aurita",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/f0f6f353-32e7-4717-be55-58c36592afc1",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "103-siproeta-stelenes.png",
+    "taxon": "Siproeta stelenes",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/f9fea292-0ccf-4ab8-b11e-0d3d9c7c6ea4",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "104-siproeta-stelenes.png",
+    "taxon": "Siproeta stelenes",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/e16091b5-f7af-4626-a6dc-c5ef01f71fbb",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "105-macrocheira-kaempferi.png",
+    "taxon": "Macrocheira kaempferi",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/46a5f2b3-f860-447c-85ae-25efa648f2ac",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "106-dryadula-phaetusa.png",
+    "taxon": "Dryadula phaetusa",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/5618f99b-fbe8-45ce-863b-2a6fdc216b85",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "107-phrynops-hilarii.png",
+    "taxon": "Phrynops hilarii",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/820a5ef2-3e99-4335-9522-4b5af1746c17",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "108-julidochromis-regani.png",
+    "taxon": "Julidochromis regani",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/4c37c6f0-7934-459f-889c-8034b0a02a53",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "109-caretta-caretta.png",
+    "taxon": "Caretta caretta",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/3eb3d3d1-4db5-458a-ab03-c1092fbff140",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "110-papilio-palinurus.png",
+    "taxon": "Papilio palinurus",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/65c9d265-7541-4a3c-a275-02cacbbb6a1c",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "111-neurergus-kaiseri.png",
+    "taxon": "Neurergus kaiseri",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/929880dd-7d43-446c-808d-801310184aac",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "112-lepisosteus-oculatus.png",
+    "taxon": "Lepisosteus oculatus",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/8ed59973-73c2-4fbd-9bf0-60c07405870b",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "113-selene-vomer.png",
+    "taxon": "Selene vomer",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/64dcc905-6f31-4ac3-8864-a4e029c78c43",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "114-equus-quagga-chapmani.png",
+    "taxon": "Equus quagga chapmani",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/22f808e2-da14-4bfe-9672-0e5422d27212",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "115-siproeta-stelenes.png",
+    "taxon": "Siproeta stelenes",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/1f21b3d9-cca5-48bb-b254-32d0d5d7a191",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "116-leiolopisma-telfairii.png",
+    "taxon": "Leiolopisma telfairii",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/57abaa0a-666c-4266-8872-b75e2eac7fff",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "117-salvelinus-fontinalis.png",
+    "taxon": "Salvelinus fontinalis",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/62723107-bea2-4624-84ff-2be5f0dd0c3c",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "118-rollulus-rouloul.png",
+    "taxon": "Rollulus rouloul",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/cc466120-642c-40db-b199-ff619d791e71",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "119-valenciennea-longipinnis.png",
+    "taxon": "Valenciennea longipinnis",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/8a3097a7-39dd-4a6d-b76d-a1a944e68295",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "120-dryadula-phaetusa.png",
+    "taxon": "Dryadula phaetusa",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/91854bc9-97e0-47d7-97ba-096fcd6e283d",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "121-callorhinus-ursinus.png",
+    "taxon": "Callorhinus ursinus",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/e85871bd-7a0d-444e-afd5-c582a184f974",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "122-siproeta-stelenes.png",
+    "taxon": "Siproeta stelenes",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/850f2428-bf61-473f-b1e4-3f4cd617fd3d",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "123-trogon-collaris.png",
+    "taxon": "Trogon collaris",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/5be84622-31ef-4cc7-ab04-3078d7fe9c8a",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "124-cerianthidae.png",
+    "taxon": "Cerianthidae",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/e055c0c7-dce9-40e9-8cba-793e22e799d6",
+    "subject_pixels": "899x898"
+  },
+  {
+    "file": "125-dinichthys-herzeri.png",
+    "taxon": "Dinichthys herzeri",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/153dc697-1cca-4e3b-8684-90b96ff8bab2",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "126-rhinopycnodus-gabriellae.png",
+    "taxon": "Rhinopycnodus gabriellae",
+    "contributor": "Ryan Santos Soledade",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/39920b6c-3c18-4e8a-a91c-3ee4a225c6f7",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "127-equus-quagga-chapmani.png",
+    "taxon": "Equus quagga chapmani",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/f7d817d0-d733-493d-bd4a-3f178e0760a8",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "128-adapis-parisiensis.png",
+    "taxon": "Adapis parisiensis",
+    "contributor": "Michael Tripoli",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/65a1edb9-f616-479d-83f9-98e99a7d9d73",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "129-adapis-bruni.png",
+    "taxon": "Adapis bruni",
+    "contributor": "Michael Tripoli",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/753c5ea4-1afd-4828-8c59-e2f7aff5877e",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "130-magnadapis-intermedius.png",
+    "taxon": "Magnadapis intermedius",
+    "contributor": "Michael Tripoli",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/18d07cc2-0f32-4d89-a8c0-d42286f0227a",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "131-godinotia-neglecta.png",
+    "taxon": "Godinotia neglecta",
+    "contributor": "Michael Tripoli",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/49eea144-3d86-4c49-bb7e-fc832f8c59e7",
+    "subject_pixels": "900x898"
+  },
+  {
+    "file": "132-leptadapis-magnus.png",
+    "taxon": "Leptadapis magnus",
+    "contributor": "Michael Tripoli",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/598fae82-1820-4405-8025-0d73904a2232",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "133-darwinius-masillae.png",
+    "taxon": "Darwinius masillae",
+    "contributor": "Michael Tripoli",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/a1608588-82d4-4c97-b55c-87063c262c04",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "134-magnadapis-fredi.png",
+    "taxon": "Magnadapis fredi",
+    "contributor": "Michael Tripoli",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/aca4bc9a-be46-4622-9db6-507e14435c70",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "135-ammodramus-savannarum.png",
+    "taxon": "Ammodramus savannarum",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/089155d6-1128-4176-9583-a91e28805ba2",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "136-circus-hudsonius.png",
+    "taxon": "Circus hudsonius",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/c272f465-220d-47b5-8f3c-7750648bca1d",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "137-melanerpes-erythrocephalus.png",
+    "taxon": "Melanerpes erythrocephalus",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/db2c6c83-5682-45cc-8f7e-9b88569c99cc",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "138-morus.png",
+    "taxon": "Morus",
+    "contributor": "Raju Mondal",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/9e50a5fd-ae3d-4191-8105-dd1825b88405",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "139-contopus-virens.png",
+    "taxon": "Contopus virens",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/f224d262-1e8f-4a6b-aab6-7034378d90c9",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "140-charadrius-vociferus.png",
+    "taxon": "Charadrius vociferus",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/b07ae65c-0c42-4e2b-bc01-7416861f993b",
+    "subject_pixels": "898x898"
+  },
+  {
+    "file": "141-syrrhaptes-paradoxus.png",
+    "taxon": "Syrrhaptes paradoxus",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/0d4f8d5f-37db-45ba-9203-4fba94461d3d",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "142-chordeiles-minor.png",
+    "taxon": "Chordeiles minor",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/3a40dfe9-2e45-4448-92b7-6a1a31856a20",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "143-anas-acuta.png",
+    "taxon": "Anas acuta",
+    "contributor": "Andy Wilson",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/c965aeeb-d426-4393-8242-b8c3803c5c77",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "144-ischnothele-caudata.png",
+    "taxon": "Ischnothele caudata",
+    "contributor": "Chetan Munegowda",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/b1896266-9175-4427-b7ac-539b3582fec9",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "145-nagatitan-chaiyaphumensis.png",
+    "taxon": "Nagatitan chaiyaphumensis",
+    "contributor": "Cy Marchant",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/98e9b443-d75c-44d6-b540-a662b7779b0c",
+    "subject_pixels": "900x900"
+  },
+  {
+    "file": "146-nqwebasaurus-thwazi.png",
+    "taxon": "Nqwebasaurus thwazi",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY-SA",
+    "licence_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://www.phylopic.org/images/9afbdd26-1718-41fa-abb3-b23c4180b346",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "147-brachiosuchus-kababishensis.png",
+    "taxon": "Brachiosuchus kababishensis",
+    "contributor": "LiterallyMiguel",
+    "licence": "Public domain",
+    "licence_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+    "source": "https://www.phylopic.org/images/00a2efc2-e2ba-43ad-9d50-e28b8ff365d9",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "148-masillaraptor-parvunguis.png",
+    "taxon": "Masillaraptor parvunguis",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY-SA",
+    "licence_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://www.phylopic.org/images/3ca6f23a-87e5-42bf-8039-30c3ba29cfb8",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "149-lingwulong-shenqi.png",
+    "taxon": "Lingwulong shenqi",
+    "contributor": "T. Michael Keesey",
+    "licence": "CC BY",
+    "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://www.phylopic.org/images/14d410af-5d66-4dde-bca4-3671409fb275",
+    "subject_pixels": "900x899"
+  },
+  {
+    "file": "150-plecia-nearctica.png",
+    "taxon": "Plecia nearctica",
+    "contributor": "Caleb M. Gordon",
+    "licence": "CC0",
+    "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.phylopic.org/images/223a7fc3-abbe-4abc-b986-275f67d017de",
+    "subject_pixels": "900x900"
+  }
+]

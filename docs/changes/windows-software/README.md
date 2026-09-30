@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-014` | implemented | [Realistic nature motifs and deeper motif rings](2026/2026-09-30-realistic-nature-motifs.md) | `kaleidoscope`, `motifs`, `assets`, `generative` |
 | 2026-09-30 | `WSW-20260930-013` | implemented | [Kaleidoscope: no cap on source size or typed bounds](2026/2026-09-30-kaleidoscope-uncapped-sizes.md) | `kaleidoscope`, `interface`, `bounds` |
 | 2026-09-30 | `WSW-20260930-012` | implemented | [Kaleidoscope: zoom and pan the preview like the main converter](2026/2026-09-30-kaleidoscope-preview-zoom-pan.md) | `kaleidoscope`, `preview`, `interface` |
 | 2026-09-30 | `WSW-20260930-011` | implemented | [Nature motif library for the kaleidoscope generator](2026/2026-09-30-nature-motif-library.md) | `kaleidoscope`, `motifs`, `assets`, `tooling` |

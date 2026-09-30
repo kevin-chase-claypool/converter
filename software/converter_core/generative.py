@@ -314,9 +314,9 @@ def _motif_ring(
     scale = extent / radius_max
     flip = _roll(seed, 211) < 0.50
     tilt = 0.55 * (2.0 * _roll(seed, 212) - 1.0)
-    packed = 1.05 + 0.55 * _roll(seed, 215)
+    packed = 0.75 + 0.35 * _roll(seed, 215)
     arc = wedge * mid
-    count = max(1, min(6, int(arc * packed / max(width_max * scale, 1e-6))))
+    count = max(1, min(3, int(arc * packed / max(width_max * scale, 1e-6))))
     out = []
     for index in range(count):
         check_cancelled(cancel_check)
@@ -339,18 +339,21 @@ def _motif_ring(
                 primary, copy_scale, rotation, _polar(centre_r, angle), mirror
             )
         )
-        if len(pool) > 1 and _roll(seed + index, 301) < 0.45:
-            second = pool[_pick(seed + 5 * index, 302, len(pool))]
-            shrink = 0.40 + 0.25 * _roll(seed + index, 303)
-            overlay_r = centre_r - 0.10 * span
-            if floor is not None:
-                overlay_r = max(overlay_r, floor + extent)
+        # Nested copies of pool motifs fill the shape: 0.70, then 0.46 of the
+        # original. Three concentric outlines read the way the hatching inside
+        # an engraved leaf reads, without the plotter dragging a solid band.
+        for tier, (shrink, chance, turn) in enumerate(
+            ((0.70, 0.85, 0.55), (0.46, 0.60, 1.30)), start=1
+        ):
+            if _roll(seed + index, 301 + tier) >= chance:
+                continue
+            inner = pool[_pick(seed + 5 * index + tier, 302 + tier, len(pool))]
             out.extend(
                 _place_motif(
-                    second,
+                    inner,
                     copy_scale * shrink,
-                    rotation + 0.8 * (2.0 * _roll(seed + index, 305) - 1.0),
-                    _polar(overlay_r, angle),
+                    rotation + turn * (2.0 * _roll(seed + index, 305 + tier) - 1.0),
+                    _polar(centre_r, angle),
                     not mirror,
                 )
             )
@@ -1054,7 +1057,7 @@ def random_pattern(
                 wedge,
                 # Motif rings are the subject; do not let the separator
                 # bundles grow into heavy rings that swallow them.
-                level if not plan else max(2, level // 3),
+                level if not plan else max(2, level // 4),
                 seed + ring,
                 cancel_check,
             )

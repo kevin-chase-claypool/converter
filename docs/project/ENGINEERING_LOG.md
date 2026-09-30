@@ -1,5 +1,46 @@
 # Engineering Log
 
+<a id="elog-20260930-realistic-nature-motifs"></a>
+### 🟩 2026-09-30 16:19:26 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - realistic nature motifs and deeper motif rings
+
+- Request: "these are not 'natural' pngs i meant realistic things from nature.
+  so good pngs" and, again, "the goal is to make something akin to the
+  complexity of this and as beautiful with natural shapes" (the 9,045-path
+  reference mandala).
+- Change: `motifs/nature/` now holds 150 real organism silhouettes pulled from
+  PhyloPic - birds, cats, elephants, fish, dolphins, spiders, ants, jellyfish,
+  butterflies, crabs, tortoises and plants - each with taxon, contributor and
+  licence in `CREDITS.md` and `manifest.json`; the earlier code-drawn set moved
+  to `motifs/nature-drawn/`. New `tools/fetch_phylopic_motifs.py` samples the
+  PhyloPic index, keeps only freely licensed images, rasterises the vectors with
+  Qt and normalises them to 512 px 1-bit black-on-white. New
+  `tools/fetch_nature_motifs.py` does the same from Wikimedia Commons
+  silhouette categories and pressed-leaf collections, with throttling and a
+  largest-component filter. In motif mode each copy now carries up to two
+  nested copies from the ring pool at 0.70 and 0.46 scale, so real outlines read
+  as engraved shading; copies per ring dropped to at most three so shapes stay
+  legible.
+- Fixed while testing: the first conversion shipped white-on-black (threshold
+  polarity), the first Commons run pulled human silhouettes and carvings
+  (keyword search is not enough - silhouette categories plus a clean-border
+  test fixed it), and two density experiments were removed because they made
+  the design worse: a concentric shading band per gap painted heavy black
+  rings, and up to six overlapping copies per ring turned animals into texture.
+  Wikimedia also rate-limited the bulk run (HTTP 429), so the Commons tool now
+  throttles with backoff.
+- Verification: contact sheet `samples/png/phylopic_all.png` reviewed (150
+  recognisable organisms); designs rendered through the app path in
+  `samples/png/gen_real_motifs3.png` (seed 7 / intricacy 9 and seed 12 /
+  intricacy 10; 3,744 and 4,248 mirrored contours); all eleven test modules
+  pass; `docs_index --write/--check` pass.
+- Boundary: PhyloPic is animal-heavy, so plants and shells are thin; shapes are
+  still scaled to their band, so a wide animal in a thin ring looks squat - a
+  `Motif scale` control is the next knob.
+- Evidence: `WSW-20260930-014`.
+- Category: windows-software, kaleidoscope, motifs, assets
+- Next action: pick a favourite seed at intricacy 9 and plot it to judge the
+  real line weight of the nested outlines.
+
 <a id="elog-20260930-kaleidoscope-uncapped-sizes"></a>
 ### 🟩 2026-09-30 15:42:04 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: no cap on source size or typed bounds
 
