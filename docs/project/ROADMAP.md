@@ -90,7 +90,7 @@
 
 ## Phase 3: single-axis motion
 
-- [ ] Verify each TB6600's current and microstep configuration. Baseline: X/Y 16 microsteps and A 8 microsteps, all at 1.5 A/phase; the 12:1 A drive is 19,200 pulses per bed revolution.
+- [ ] Verify each TB6600's current and microstep configuration. Baseline: X/Y 16 microsteps and A 8 microsteps, all at 1.5 A/phase; the A drive is nominally 12:1 and measures 4331.97 A motor-degrees (19,253 pulses) per bed revolution.
 - [ ] Connect one motor without mechanics attached.
 - [ ] Complete low-speed jog test. (`M-01`)
 - [ ] Measure motor and driver temperature.
@@ -109,10 +109,12 @@
   X: 2026-09-06)
 - [x] Implement radius-aware A-axis feed planning in the converter so a target
   tangential writing speed remains bounded as pen radius changes; the software
-  handles the 12:1 motor-degree contract, combined XY/A feed, controller caps,
+  handles the 12.03324:1 motor-degree contract, combined XY/A feed, controller caps,
   and the near-center limit. (2026-09-05; M-06 hardware validation remains.)
 - [ ] Set A steps per motor-shaft degree. (`M-04`)
-- [ ] Verify the 12:1 bed ratio. (`M-05`)
+- [x] Establish the effective bed ratio. (M-05 coarse check passed 2026-09-05;
+  three P112 surveys measured 4331.97 A motor-degrees per bed revolution, now
+  used as `theta_drive_ratio = 12.03324`. See `WSW-20260930-001`.)
 - [ ] Tune max rate and acceleration one axis at a time.
 - [ ] Complete M-07 hard/soft-limit behavior. X/Y physical homing passed on
   2026-09-06 with a repeatable XY-only cycle. The conservative X/Y software
@@ -136,7 +138,7 @@
   cost across X, Y, and A motor degrees; it does not yet rank alternatives by
   measured per-axis rate/acceleration limits and grblHAL look-ahead behavior.
   After M-06 records those observations, evaluate candidate orientations by
-  predicted coordinated block time. Preserve the 12:1 A motor-degree contract,
+  predicted coordinated block time. Preserve the 12.03324:1 A motor-degree contract,
   output geometry, and existing safe caps. Acceptance: representative
   inner/mid/outer-radius paths show no lost steps or geometry change, and the
   predicted ordering agrees with measured elapsed time within a documented
@@ -163,7 +165,7 @@
 - [x] Implement the dual-core GP28/GP27 readiness and magnetic-state protocol without adding drag-chain wires. (2026-08-22 compile; E-18 remains.)
 - [x] Verify P113 end to end on the production integrated toolhead firmware. (2026-09-24: `MAGNETIC_CALIBRATION_VALID = true` build ran the full P100 Q0 to completion and wrote G54 `-232.136,-189.980,0.000,5649.193` from a center centroid at `MPos:-232.138,-219.475`; the operator then confirmed the parked pen tip perfectly centered over the magnet. E-18/M-08/M-09 accepted. See `RPSW-20260924-001`.)
 - [ ] **Arm-watchdog headroom.** An earlier P113 attempt faulted at exactly `MAG_MAX_ARM_TIME_MS` (300000 ms) after `SCAN_ACTIVE` armed, because the 21-row 100 mm raster needed about 172 s just to reach the magnet. Acceptance: unattended `G65 P113` completes with the magnet found at the worst-case raster position, either by raising the toolhead watchdog with a stated safety rationale or by shortening the raster (row pitch, scan square, or feed) and re-recording the run.
-- [ ] **Re-derive the outer A index spacing budget.** The `4320 +/- 15` A motor-degree gate was passed at `4331.818` (2026-09-11) and `4331.930` (2026-09-24), consuming about 79.5% of the tolerance on two independent runs and leaving only ~3 degrees of margin before `P100 A index spacing validation failed`. Acceptance: replace the nominal `a_expected_spacing`/`a_spacing_tolerance` pair with measured, documented values, or justify the existing gate from a repeatability study.
+- [x] **Re-derive the outer A index spacing budget.** Done 2026-09-30: three surveys (`4331.818` on 2026-09-11, `4331.930` on 2026-09-24, `4332.153` on 2026-09-30; total spread 0.335) set the P100/P112/P103 gate to `4332 +/- 10`, and the converter now emits A with the measured `theta_drive_ratio = 12.03324`. Evidence: `WSW-20260930-001` and the 2026-09-30 P112 lab note.
 - [ ] Connect grblHAL M3/M5 to toolhead ENGAGE/LIFT.
 - [ ] Verify reset and E-stop leave the toolhead safe.
 - [ ] Validate fixed G4 lift and engage dwell timing.

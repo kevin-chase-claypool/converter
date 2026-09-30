@@ -26,7 +26,7 @@ seams.
 |---|---|---|---|---|
 | 1 | Host planning and operator | SVG parsing, geometry, XY+A kinematic planning, G-code generation, preview, machine settings, and the ioSender operator session | Operator to UI; G-code program and settings to system 2 | Converter output streams and executes; `M-06` pen-free run |
 | 2 | Motion control | G-code parsing, modal state, lookahead, coordinated acceleration, step/direction generation, homing, limits | G-code contract from 1; STEP/DIR and enable to 3; X/Y home, E-stop, and PRB inputs from 5 and 7; M3/M5 and Aux0 to 4 | `F-02`, `F-03`; `M-07` X/Y homing; `M-06` coordinated X/Y/A |
-| 3 | Motion and actuation | Convert step/direction signals into motor phase current and physical motion: X/Y gantry, A bed rotation, 12:1 pulley drive, transmission | Commanded pulses from 2; mechanism to 8 | `E-01`-`E-03`; `M-01`-`M-05` axis calibration and bed-ratio check |
+| 3 | Motion and actuation | Convert step/direction signals into motor phase current and physical motion: X/Y gantry, A bed rotation, nominal 12:1 pulley drive (measured effective 12.0332:1), transmission | Commanded pulses from 2; mechanism to 8 | `E-01`-`E-03`; `M-01`-`M-05` axis calibration and bed-ratio check |
 | 4 | Toolhead and tool | Pen lift and force control, interchangeable tool mounting, M3/M5 behavior, faults local to the toolhead | M3/M5 and Aux0 from 2; GP27 status and service UART to 2 and the operator; sensor signals from 5 | `T-01`, `T-02`, `E-09F`; `F-05A` GP27/PRB completion |
 | 5 | Sensing and feedback | Pen force, magnetic bed registration, X/Y home references, toolhead telemetry | Sensor signals to 2 and 4; registered G54 frame to 1 | `F-04`; `E-09C`; `E-18`/`P113` registration |
 

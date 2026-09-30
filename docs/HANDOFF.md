@@ -35,8 +35,9 @@ Repo layout (reorganized into components):
 
 ## Machine model
 
-XY gantry + rotating bed driven by a stepper with a 60T motor pulley → 720T bed pulley (12:1).
-`Settings.theta_drive_ratio = 12` reflects this. The bed center is taken as the bbox center of the
+XY gantry + rotating bed driven by a stepper with a 60T motor pulley → 720T bed pulley (60T:720T
+nominal; the installed effective ratio measures 12.0332:1, i.e. 4331.97 A motor degrees per bed
+revolution). `Settings.theta_drive_ratio = 12.03324` reflects the measured ratio. The bed center is taken as the bbox center of the
 loaded SVG contours; rotation about that center maps bed-local coords → machine coords via
 `bed_to_machine(point, bed_theta, center)`.
 
@@ -53,12 +54,12 @@ host-to-controller contract. The production default is X/Y/A plus M3/M5;
 the controller's Z slot is unwired and receives no Z words.
 
 **Critical caveat:** `A` is already in **motor-shaft degrees** — the converter
-applies `theta_drive_ratio` (12). Firmware must convert `A` straight to motor
-steps and must not reapply the 12:1 ratio.
+applies `theta_drive_ratio` (12.03324, the measured effective ratio). Firmware
+must convert `A` straight to motor steps and must not reapply the ratio.
 
 **Radius-aware A feed:** A constant writing speed on the bed is not a constant A rate. With `A` in
 motor degrees, the rate for tangential speed `v` at radius `r` is
-`A_feed = 4320 × v / (2πr)` motor-deg/min. The converter now calculates this per drawing segment,
+`A_feed = 4331.97 × v / (2πr)` motor-deg/min. The converter now calculates this per drawing segment,
 uses a dedicated theta tangential-speed setting, combines it with the requested X/Y component speed,
 and emits a coordinated `F` capped by the installed A rate/acceleration profile. At zero radius it
 uses the capped angular plan without division by zero, for zero achieved tangential speed. Preview

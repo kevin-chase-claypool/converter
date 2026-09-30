@@ -41,7 +41,7 @@ pen-up fail-safe preserved. See [`config/machine-settings.md`](config/machine-se
 and the 2026-09-23 F-05 lab note. `F-05A`, the `P115`/`PRB` acknowledgement,
 remains open.
 
-**A convention:** A is motor-shaft degrees; the converter applies the 12:1
+**A convention:** A is motor-shaft degrees; the converter applies the measured 12.0332:1
 ratio. Controller steps-per-unit must not apply that ratio a second time.
 
 ## Magnetic registration candidate

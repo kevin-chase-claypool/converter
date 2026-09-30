@@ -14,7 +14,7 @@ merely to make the macro run.
 - X/Y limit switches establish machine coordinates only. The center magnet
   establishes the bed's actual G54 X0/Y0 after physical homing.
 - The outer magnet establishes G54 A0. A commands remain motor-shaft degrees;
-  one bed revolution is 4320 A degrees with the 12:1 drive.
+  one bed revolution measures 4331.97 A degrees (12.0332:1).
 
 ### Temporary manual XY reference
 
@@ -48,8 +48,9 @@ verified center to G53 X `-10.5` mm. The measured `223.675804` mm radius would
 cross the X `-10` mm home pull-off bound, so this remains about 2.2 mm inboard
 on the same +X line. It captures two A footprints and stops at their second-pass
 averaged center without changing G54. It accepts center-to-center spacing within
-`4320 +/- 15` A motor degrees: the installed two-footprint observation measured
-`4331.818` degrees, a repeatable 11.818-degree deviation from nominal. It is the
+`4332 +/- 10` A motor degrees: three installed two-footprint observations
+measured `4331.818`, `4331.930` and `4332.153` degrees, a repeatable
+11.97-degree deviation from the nominal 4320. It is the
 non-registering M-09 capture stage. The revised installed run completed and
 trimmed to pass-two center `MPos:-10.500,-218.363,A8610.084` without changing
 G54. The operator visually confirmed the index magnet centered beneath the
@@ -91,7 +92,8 @@ deferred G54 writes with no alarm. Recorded values: center centroid
 `MPos:-232.138,-219.475`; G54 work offset `-232.136,-189.980,0.000,5649.193`;
 outer A footprints `1264.951/1369.576` and `5597.106/5701.281`, giving a
 center-to-center spacing of `4331.930` A motor degrees against the
-`4320 +/- 15` gate. The A spacing reproduced the earlier `4331.818` measurement
+`4320 +/- 15` gate in force at the time (now the measured `4332 +/- 10`). The A
+spacing reproduced the earlier `4331.818` measurement
 to within 0.112 A motor degrees, and the X centroid reproduced to 0.013 mm. The
 operator confirmed the parked pen tip perfectly centered over the center
 magnet, so the automated registration now carries the same physical acceptance
@@ -356,8 +358,9 @@ centroid after the full raster.
 
 At the commissioned outer radius, P100 rotates A in one direction and records
 two entry/exit pairs. It validates each footprint width and requires the two
-centers to be separated by approximately 4320 A motor degrees. It averages the
-equivalent index observations, approaches from the same direction, and sets
+centers to be separated by the measured 4332 A motor degrees (`4332 +/- 10`).
+It averages the equivalent index observations, approaches from the same
+direction, and sets
 G54 A0 with `G10 L20`.
 
 The center raster must run before the A scan because the sensor is positioned

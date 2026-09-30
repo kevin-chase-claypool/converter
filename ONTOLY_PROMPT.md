@@ -55,8 +55,9 @@ to change them and the corresponding authorities are updated together:
 
 - grblHAL owns G-code parsing, motion planning, acceleration, step generation,
   homing, and limits. Do not introduce a competing parser or planner.
-- G-code `X` and `Y` are millimetres; `A` is motor-shaft degrees. The 12:1
-  bed ratio is applied by the converter, not again by grblHAL.
+- G-code `X` and `Y` are millimetres; `A` is motor-shaft degrees. The measured
+  bed ratio (12.0332:1, 4331.97 A motor-degrees per bed revolution) is applied
+  by the converter, not again by grblHAL.
 - `M3` means toolhead ENGAGE (seek then hold force); `M5` means PEN_CLEAR,
   not `LIFT_HOME`. `LIFT_HOME` is boot, recovery, or explicit service only.
 - P100 owns normal physical homing and magnetic G54 registration. The

@@ -55,12 +55,12 @@ The authoritative host-to-controller contract is
 ## Radius-aware A-axis feed
 
 The converter must not treat the A-axis portion of `F` as a fixed bed-surface
-speed. Because `A` is emitted in motor-shaft degrees and the bed reduction is
-12:1, the A rate required for a target tangential pen speed depends on the
+speed. Because `A` is emitted in motor-shaft degrees and the measured bed
+reduction is 12.0332:1, the A rate required for a target tangential pen speed
 pen's instantaneous radius from the bed center:
 
 ```text
-A_feed_motor_deg/min = (4320 × tangential_speed_mm/min) / (2π × radius_mm)
+A_feed_motor_deg/min = (4331.97 × tangential_speed_mm/min) / (2π × radius_mm)
 ```
 
 `Feed rate` remains the requested maximum X/Y component speed. The additional

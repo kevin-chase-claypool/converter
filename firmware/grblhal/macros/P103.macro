@@ -22,7 +22,7 @@
 #<edge_settle_s> = 0.10
 #<outer_radius> = 226.06
 #<a_search_degrees> = 4500.0
-#<a_expected_spacing> = 4320.0
+#<a_expected_spacing> = 4332.0
 #<a_spacing_tolerance> = 10.0
 #<a_maximum_width> = 120.0
 #<a_scan_feed> = 600.0

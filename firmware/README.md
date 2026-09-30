@@ -43,7 +43,7 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   controller sets `$16=1` (invert spindle enable); `M3` then engages and `M5`
   lifts (F-05, 2026-09-23). See
   [`grblhal/config/machine-settings.md`](grblhal/config/machine-settings.md).
-- **`A` is motor-shaft degrees** - the host already applied the 12:1 pulley
+- **`A` is motor-shaft degrees** - the host already applied the measured 12.0332:1 pulley
   ratio. Configure grblHAL's A steps-per-unit as *motor steps per degree*; do
   **not** reapply the ratio. Or set `Theta ratio = 1` in the host and own the
   ratio here. Pick exactly one place.
@@ -85,9 +85,10 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
 Q5. The bounded Q5 center-magnet raster passed, placing TMAG at
 `MPos:-232.013,-218.775`; it leaves G54/A unchanged. P112 now stages the
 outer-index survey at G53 X `-10.5` mm (about 2.2 mm inboard of the measured
-radius to clear the X home pull-off) without writing G54. Its installed
-two-footprint evidence measured `4331.818` A motor degrees per bed turn, so its
-bounded spacing gate is `4320 +/- 15`. The revised installed P112 run completed
+radius to clear the X home pull-off) without writing G54. Three installed
+two-footprint surveys (4331.818 / 4331.930 / 4332.153) measure 4331.97 A
+motor degrees per bed turn, so its bounded spacing gate is `4332 +/- 10`.
+The revised installed P112 run completed
 and parked at its pass-two center `MPos:-10.500,-218.363,A8610.084` without a
 G54 write; the operator visually confirmed the index magnet centered beneath
 the TMAG chip. With the toolhead still at that verified position, the operator

@@ -13,7 +13,7 @@ Changing one side of a seam means updating both documents in the same commit.
 | Section | Systems joined |
 |---|---|
 | Host to grblHAL | 1 Host planning and operator to 2 Motion control |
-| Axis and unit convention | 1 to 2, binding on 3 through the 12:1 drive ratio |
+| Axis and unit convention | 1 to 2, binding on 3 through the measured 12.0332:1 drive ratio |
 | RP23CNC to stepper drivers | 2 to 3 |
 | Homing and magnetic bed calibration | 2 and 5, with the registered G54 frame handed to 1 |
 | grblHAL to toolhead | 2 to 4, with completion status sourced from 5 |
@@ -72,7 +72,8 @@ sensor. The converter defaults to the M3/M5 pen contract and emits no Z words;
 the optional **Use Z axis** setting is not a production configuration for this
 machine.
 
-The converter currently applies the 12:1 bed ratio. Therefore:
+The converter applies the measured 12.0332:1 bed ratio (4331.97 A motor-degrees
+per bed revolution). Therefore:
 
 ```text
 A steps/degree = motor full-steps/rev * microsteps / 360
@@ -83,7 +84,7 @@ converter, firmware configuration, sample files, and this document together.
 
 For drawing motion, the converter accounts for bed radius when choosing A
 feed. A target tangential speed `v` at radius `r` requires
-`A_feed = 4320 × v / (2πr)` motor-deg/min. The converter uses a separate
+`A_feed = 4331.97 × v / (2πr)` motor-deg/min. The converter uses a separate
 theta tangential-speed setting, retains `Feed rate` as the maximum X/Y
 component speed, and derives one coordinated `F` from the longer component
 duration. It caps the requested A rate with the installed `$113 = 80000`
@@ -99,23 +100,25 @@ validate combined X/Y/A feed behavior.
 
 ### A-axis TB6600 baseline
 
-The observed drive ratio is 12 motor revolutions for one bed revolution. With
-the 1.8 degree, 200-full-step NEMA 17 and the received TB6600's **8-microstep**
-setting (`SW1 OFF`, `SW2 ON`, `SW3 OFF`), the initial configuration is:
+The nominal drive is a 60T to 720T pair, but three P112 outer-index surveys
+measure the installed effective ratio at 4331.97 A motor-degrees per bed
+revolution (12.0332:1), not 4320. With the 1.8 degree, 200-full-step NEMA 17
+and the received TB6600's **8-microstep** setting (`SW1 OFF`, `SW2 ON`,
+`SW3 OFF`), the configuration is:
 
 | Quantity | Value |
 |---|---:|
 | Motor pulses/revolution | 1,600 |
 | Motor steps per commanded A motor-degree | 4.444444 |
-| Motor degrees per bed revolution | 4,320 |
-| Pulses per bed revolution | 19,200 |
-| Nominal bed angle per pulse | 0.01875 degrees |
+| Motor degrees per bed revolution (measured) | 4,331.97 |
+| Pulses per bed revolution (measured ratio) | 19,253 |
+| Bed angle per pulse (measured ratio) | 0.018698 degrees |
 
 Set the grblHAL A-axis steps-per-unit (`$103`, subject to the controller's
 reported setting-number map) to **4.444444** because A commands use
 motor-shaft degrees. Do not set it to 53.333333 steps per *bed* degree: that
 would silently change the established host/controller contract. Eight
-microsteps is the recommended starting point because the 12:1 reduction already
+microsteps is the recommended starting point because the 12.0332:1 reduction already
 provides fine bed resolution; 16 or 32 microsteps would increase pulse demand
 and reduce incremental torque without a demonstrated plotting benefit. M-04
 and M-05 passed their unloaded one-motor-revolution and full-bed-revolution
@@ -125,8 +128,10 @@ The initial ioSender screenshot from the 2026-09-05 rate-ramp session showed
 `$103 = 250.000 step/deg`, but the operator corrected the setting to
 `$103 = 4.44444`; the later `$$` report confirms the corrected value. M-04
 then passed the one-motor-revolution check with `A360 F300` in both directions.
-M-05's `A4320` check now verifies the 12:1 bed ratio for unloaded bed-angle
-commands. At `$113=5000` and `$123=10 deg/sec^2`, short A-axis
+M-05's `A4320` check passed as a coarse unloaded reference, but the three P112
+surveys later established 4331.97 A motor-degrees per bed revolution; planning
+uses that measured ratio, and `A4320` is about 0.997 of a bed revolution.
+At `$113=5000` and `$123=10 deg/sec^2`, short A-axis
 moves can be dominated by acceleration and deceleration rather than steady
 speed.
 
@@ -145,8 +150,9 @@ Commission the actual scan rate through loaded A-axis M-01/M-02 testing.
 Do not use ioSender's guided Stepper calibration page as the primary A-axis
 calibration method unless its target and measured values are explicitly angular
 motor degrees. The current A procedure is the mechanical calculation above,
-followed by M-04 (`A360` for one motor revolution) and M-05 (`A4320` for one
-bed revolution). The guided page is appropriate for measured linear X/Y/Z
+followed by M-04 (`A360` for one motor revolution) and M-05 (`A4320`, a coarse
+bed-revolution reference superseded by the P112 ratio). The guided page is
+appropriate for measured linear X/Y/Z
 steps-per-unit calibration; it does not tune `$113` maximum rate or `$123`
 acceleration.
 
@@ -216,7 +222,8 @@ toolhead firmware ran `G65 P113` to completion and the automated P100 Q0 path
 produced the same contract, writing G54
 `-232.136,-189.980,0.000,5649.193` from a center centroid at
 `MPos:-232.138,-219.475` and outer A footprints spaced `4331.930` A motor
-degrees against the `4320 +/- 15` gate. Q3/Q4 remain locked as separate
+degrees against the then-current `4320 +/- 15` gate (now the measured
+`4332 +/- 10`). Q3/Q4 remain locked as separate
 diagnostic modes, and the operator confirmed the parked pen tip perfectly
 centered over the center magnet. Evidence:
 `docs/report/lab-notes/2026-09-24-e-18-m-08-p113-integrated-registration.md`;
@@ -248,7 +255,7 @@ saturated or thresholded magnetic footprint from opposing edges; it should not
 depend on an unsaturated peak.
 
 Normal A registration records two entry/exit pairs separated by one bed
-revolution, validates spacing within the currently measured `4320 +/- 15` A
+revolution, validates spacing against the measured `4332 +/- 10` A
 motor-degree gate, and averages the
 equivalent centers before setting G54 A0. Any inconsistent edge, sensor fault, motion alarm, or unknown
 toolhead-lift state exits through the abort/fault handling path instead of

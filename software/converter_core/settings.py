@@ -45,7 +45,14 @@ class Settings:
     work_z: float = 0.0
     theta_axis: str = "A"
     theta_offset: float = 0.0
-    theta_drive_ratio: float = 12.0
+    # Effective bed reduction: measured, not nominal. Three independent P112
+    # outer-index surveys (2026-09-11 4331.818, 2026-09-24 4331.930 and
+    # 2026-09-30 4332.153 A motor-degrees per bed revolution, total spread
+    # 0.335) give 4331.97 / 360 = 12.03324. The hardware is nominally a
+    # 60T:720T GT2 pair, but the emitted A values must use the effective ratio
+    # or every commanded bed revolution lands about 1 degree short. Re-derive
+    # this only from a new survey, and update the P100/P112 gate with it.
+    theta_drive_ratio: float = 12.03324
     # Bed rotation drags the pen tangentially, so bound it like the draw feed.
     theta_tangential_speed_mm_min: float = 700.0
     theta_controller_limits: ThetaControllerLimits = field(default_factory=ThetaControllerLimits)
@@ -211,7 +218,7 @@ TEXT_FIELD_GROUPS = (
     ("Theta kinematics", (
         ("Theta axis", "theta_axis", "A"),
         ("Theta offset", "theta_offset", "0"),
-        ("Theta ratio", "theta_drive_ratio", "12"),
+        ("Theta ratio", "theta_drive_ratio", "12.03324"),
         ("Theta tangential speed mm/min", "theta_tangential_speed_mm_min", "700"),
         ("Theta mode", "theta_mode", "optimized"),
         ("Theta resolver", "theta_resolver", "rtheta"),

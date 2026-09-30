@@ -69,8 +69,9 @@ o005 endif
 #<edge_settle_s> = 0.10
 #<outer_machine_x> = -10.5
 #<a_search_degrees> = 4500.0
-#<a_expected_spacing> = 4320.0
-#<a_spacing_tolerance> = 15.0
+(Installed effective ratio: 4331.97 A motor-degrees per bed revolution; three 2026 P112 surveys spread 0.335.)
+#<a_expected_spacing> = 4332.0
+#<a_spacing_tolerance> = 10.0
 #<a_maximum_width> = 120.0
 #<a_scan_feed> = 10000.0
 #<a_registration_feed> = 10000.0

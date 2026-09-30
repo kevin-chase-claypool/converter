@@ -1,5 +1,37 @@
 # Engineering Log
 
+<a id="elog-20260930-calibrated-bed-ratio"></a>
+### 🟩 2026-09-30 04:46:10 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - calibrate the bed ratio to 12.03324 from three P112 surveys
+
+- Problem: the 2026-09-30 mandala print drifted. Three independent outer-index
+  surveys measured one bed revolution at `4331.818` (2026-09-11), `4331.930`
+  (2026-09-24) and `4332.153` (2026-09-30) A motor-degrees against a converter
+  that emitted 4320 for every commanded revolution: a +0.277% scale error that
+  rotated the drawing by up to 0.95 degrees over that print's 341.3 degrees of
+  accumulated bed winding, about 3 mm at the outer radius.
+- Measurement: the 2026-09-30 `G65 P112` run captured entry/exit A
+  `21529.373/21635.123` and `25861.976/25966.826` (widths 105.750/104.850),
+  giving centres `21582.248` and `25914.401` and a spacing of `4332.153`.
+  Three-run spread 0.335 motor-degrees. A `$103`, microstep, or motor
+  step-angle error was ruled out: it would scale the count by about 2x or 0.5x,
+  not 1.0028x.
+- Change: converter `theta_drive_ratio` `12.0` -> `12.03324`, so the radius-aware
+  A feed constant becomes 4331.97 motor-degrees per bed revolution
+  automatically. The P100/P112/P103 outer-index gate moves from
+  `4320 +/- 15` to `4332 +/- 10`. Current-state docs and the roadmaps' bed-ratio
+  items were updated; the nominal 60T:720T hardware description stays nominal.
+- Verification: all 72 unit tests pass; `docs_index.py --write/--check` pass. No
+  print and no magnet-independent pointer check has been run with the new ratio
+  yet, so this is implemented, not verified.
+- Important: existing G-code files (including `samples/gcode/mom.gcode`) were
+  emitted with the old ratio and must be regenerated before reprinting.
+- Evidence: `WSW-20260930-001`;
+  `docs/report/lab-notes/2026-09-30-p112-a-index-spacing-repeat.md`.
+- Category: windows-software, rp23cnc-software, theta, kinematics, a-axis,
+  calibration, registration, drift
+- Next action: run the pointer check and a first test print with the new ratio,
+  then record both.
+
 <a id="elog-20260929-revert-pen-force-target"></a>
 ### 🟨 2026-09-29 20:01:40 -0500 - FIRMWARE/REVERTED - restored the pen force target to 45 g after a print run
 
