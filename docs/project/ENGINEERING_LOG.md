@@ -1,5 +1,45 @@
 # Engineering Log
 
+<a id="elog-20260930-kaleidoscope-natural-motifs"></a>
+### 🟩 2026-09-30 15:13:45 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: natural PNG motifs as the source of diversity
+
+- Request: "i want to use natural (i.e. shapes in nature) black and white png
+  files to be the source of the diversity", then "i want the seed to randomly
+  combine the natural shapes" and "shapes should overlap".
+- Change: `random_pattern(..., motifs=[...])` now fills every shape ring from a
+  pool of traced motif images. `motif_plan(seed, intricacy, count)` returns the
+  per-ring pools (1 + intricacy // 4 motifs, same seed choices as the
+  generator) so callers trace only what a design will use. Copies step along
+  the ring picking from the pool, about 45% overlay a smaller second motif to
+  form a hybrid, alternating copies can mirror, and `_radial_support` sizes
+  each copy by how far the shape actually reaches outward - 0.62-0.80 of the
+  band height with at most 0.10 span of drift - so radial overlap is structural
+  rather than accidental. Motif mode uses fewer, thicker rings
+  (`2 + intricacy // 3`) so the shapes stay recognisable. The app gains
+  `Motif folder...` and `Use natural motifs in patterns`, traces with the
+  existing threshold/invert/detail controls, caches per file and setting, and
+  shows the motif count beside the seed and style.
+- Fixed while testing: the first size rule used the circumradius, so a wide
+  shape turned across a band reached sideways and never overlapped; scaling by
+  the radial support fixed it. Separately, a motif test that compared two full
+  designs with `assertEqual` looked like a hang - the designs genuinely differ
+  because motif mode changes the ring count, and unittest built a difflib
+  report over a 200 KB repr. Tests now compare fingerprints or counts.
+- Verification: new motif tests (replace, overlap while inside bounds,
+  deterministic pool plan, empty-list fallback, seed variation); all ten test
+  modules pass. Headless runs with a three-file folder (leaf/shell/fish PNGs):
+  seeds 4/11/23 at intricacy 8 and 4/11/42 at intricacy 10 build in
+  0.15-0.68 s with 2,400-6,408 mirrored contours and pools of one to three
+  motifs. Visual check `samples/png/gen_motifs_overlap.png`;
+  `docs_index --write/--check` pass.
+- Boundary: results depend on the source artwork; motif mode changes the ring
+  count, so reproducibility needs the same folder and tracing settings; there
+  is no switch to turn the overlap off.
+- Evidence: `WSW-20260930-010`.
+- Category: windows-software, kaleidoscope, motifs, generative
+- Next action: run a real folder of natural silhouettes through the app and
+  judge which source images read best at ring scale.
+
 <a id="elog-20260930-kaleidoscope-seed-diversity"></a>
 ### 🟩 2026-09-30 14:52:48 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: seeds choose a design, not just its phases
 

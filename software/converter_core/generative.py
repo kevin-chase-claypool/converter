@@ -24,6 +24,15 @@ style (``STYLES`` / ``style_for``), the ring count, the band-width ladder, how
 much of the disc the centre and rim take, how tightly each layer packs its
 detail and whether a shape repeats once or twice per wedge, so two seeds are
 different kinds of design.
+
+Callers can also pass ``motifs`` - traced black-and-white artwork, for example
+silhouettes of leaves, shells or fish - to ``random_pattern``. Each shape ring
+then draws from a *pool* of seed-chosen motifs instead of a drawn family, so a
+folder of natural shapes becomes the source of the diversity while the
+separators, studs and rim keep the mandala structure. Copies pick from the pool
+as they step along the ring, a share of them overlay a smaller second motif to
+form hybrids, and every copy is deliberately larger than its band and drifts in
+and out of it, so the shapes overlap rather than sitting in tidy rows.
 """
 
 from __future__ import annotations
@@ -216,6 +225,136 @@ def _nested_arcs(
 def _shade_spacing(level):
     """Contour-line spacing inside a shape: tightens as intricacy rises."""
     return 2.6 - 0.14 * level
+
+
+def _motif_extent(motif):
+    """Bounding width and circumradius of a motif in its own units."""
+    xs = [x for contour in motif for x, _ in contour]
+    ys = [y for contour in motif for _, y in contour]
+    if not xs:
+        return 0.0, 0.0
+    width = max(max(xs) - min(xs), max(ys) - min(ys))
+    radius = max(math.hypot(x, y) for contour in motif for x, y in contour)
+    return width, radius
+
+
+def _place_motif(motif, scale, rotation, centre, flip=False):
+    """Scale, optionally mirror, rotate and move a motif to *centre*."""
+    cos_a, sin_a = math.cos(rotation), math.sin(rotation)
+    cx, cy = centre
+    out = []
+    for contour in motif:
+        points = []
+        for x, y in contour:
+            sx = x * scale
+            sy = (-y if flip else y) * scale
+            points.append(
+                (cx + sx * cos_a - sy * sin_a, cy + sx * sin_a + sy * cos_a)
+            )
+        out.append(points)
+    return out
+
+
+def _radial_support(motif, phi):
+    """How far the motif reaches along a direction *phi* (motif units).
+
+    Scaling by the circumradius alone does not guarantee that a copy reaches
+    into the neighbouring ring: a wide shape turned across the band reaches
+    sideways instead. Scaling by this support makes the radial reach explicit
+    whatever the rotation is.
+    """
+    cos_p, sin_p = math.cos(phi), math.sin(phi)
+    return max(
+        abs(x * cos_p + y * sin_p) for contour in motif for x, y in contour
+    )
+
+
+def _motif_ring(
+    motif_pool,
+    r_in,
+    r_out,
+    wedge,
+    level,
+    seed,
+    cancel_check=None,
+    limit=None,
+    floor=None,
+):
+    """Fill a band with a *mix* of motifs from *motif_pool*.
+
+    The pool holds the traced artworks this ring may use. Copies step along the
+    arc and pick from the pool as they go, so one ring can braid a leaf into a
+    shell into a fish; a share of the copies also overlay a smaller second motif
+    from the pool, which reads as a hybrid shape. Copies are deliberately bigger
+    than the band and drift in and out of it, so neighbouring shapes overlap
+    instead of sitting in tidy rows; ``limit`` and ``floor`` keep that spill
+    inside the design radius and clear of the centre. The seed chooses
+    orientation, tilt, mirroring, packing and how far the copies spill.
+    """
+    pool = [motif for motif in motif_pool if motif]
+    if not pool:
+        return []
+    span = r_out - r_in
+    extents = [_motif_extent(motif) for motif in pool]
+    width_max = max(width for width, _ in extents)
+    radius_max = max(radius for _, radius in extents)
+    if radius_max <= 1e-9:
+        return []
+    mid = 0.5 * (r_in + r_out)
+    jitter = 0.10 * span
+    # Bigger than the band on purpose: the shapes are meant to overlap the
+    # rings on either side of them. With at most 0.10 span of drift, even the
+    # lowest copy still reaches 0.52 span past the band's middle, so every
+    # copy overlaps its neighbour rather than only the lucky ones.
+    extent = span * (0.62 + 0.18 * _roll(seed, 216))
+    if limit is not None:
+        extent = min(extent, max(limit * 0.999 - mid - jitter, 0.12 * span))
+    if floor is not None:
+        extent = min(extent, max(mid - jitter - floor, 0.12 * span))
+    scale = extent / radius_max
+    flip = _roll(seed, 211) < 0.50
+    tilt = 0.55 * (2.0 * _roll(seed, 212) - 1.0)
+    packed = 1.05 + 0.55 * _roll(seed, 215)
+    arc = wedge * mid
+    count = max(1, min(6, int(arc * packed / max(width_max * scale, 1e-6))))
+    out = []
+    for index in range(count):
+        check_cancelled(cancel_check)
+        angle = wedge * (index + 0.5) / count
+        rotation = angle
+        rotation += tilt * (2.0 * weyl(index + seed) - 1.0)
+        mirror = flip and index % 2 == 1
+        centre_r = mid + jitter * (2.0 * weyl(index + seed + 1) - 1.0)
+        if floor is not None:
+            centre_r = max(centre_r, floor + extent)
+        if limit is not None:
+            centre_r = min(centre_r, limit * 0.999 - extent)
+        primary = pool[_pick(seed + 7 * index, 300, len(pool))]
+        support = _radial_support(primary, angle - rotation)
+        copy_scale = _clamp(
+            extent / max(support, 0.5 * radius_max), 0.6 * scale, 1.6 * scale
+        )
+        out.extend(
+            _place_motif(
+                primary, copy_scale, rotation, _polar(centre_r, angle), mirror
+            )
+        )
+        if len(pool) > 1 and _roll(seed + index, 301) < 0.45:
+            second = pool[_pick(seed + 5 * index, 302, len(pool))]
+            shrink = 0.40 + 0.25 * _roll(seed + index, 303)
+            overlay_r = centre_r - 0.10 * span
+            if floor is not None:
+                overlay_r = max(overlay_r, floor + extent)
+            out.extend(
+                _place_motif(
+                    second,
+                    copy_scale * shrink,
+                    rotation + 0.8 * (2.0 * _roll(seed + index, 305) - 1.0),
+                    _polar(overlay_r, angle),
+                    not mirror,
+                )
+            )
+    return out
 
 
 def _leaf_ring(r_in, r_out, wedge, level, seed, cancel_check=None):
@@ -612,6 +751,45 @@ def style_for(seed):
     return STYLES[_pick(seed, 0, len(STYLES))]
 
 
+def _ring_count(seed, level):
+    """How many shape rings this seed draws at this intricacy."""
+    return 3 + (2 * level) // 3 + _pick(seed, 1, 3) - 1
+
+
+def _motif_ring_count(seed, level):
+    """Fewer, thicker rings when natural motifs carry the design.
+
+    A ring of small repeated shapes reads as texture; a ring of a few large
+    ones reads as the shape. Motif mode therefore trades ring count for scale.
+    """
+    return 2 + level // 3 + _pick(seed, 1, 3) - 1
+
+
+def motif_plan(seed, intricacy, count, per_ring=None):
+    """The pool of motifs each shape ring draws from.
+
+    Returns one list of motif indices per shape ring; copies inside a ring pick
+    from that pool, so a ring combines several natural shapes rather than
+    repeating one. ``random_pattern`` builds the same pools, so a caller that
+    traces only the indices listed here never misses one. The pool size grows
+    with intricacy unless *per_ring* overrides it.
+    """
+    if count <= 0:
+        return []
+    level = max(1, min(int(intricacy), 10))
+    seed = int(seed) % 100000
+    picks = min(int(per_ring) if per_ring else 1 + level // 4, int(count))
+    pools = []
+    for ring in range(_motif_ring_count(seed, level)):
+        pool = []
+        for slot in range(max(picks, 1)):
+            index = _pick(seed, 200 + 40 * slot + ring, count)
+            if index not in pool:
+                pool.append(index)
+        pools.append(pool)
+    return pools
+
+
 # -- ornaments and framing ----------------------------------------------
 
 
@@ -781,24 +959,39 @@ def _rim(radius, wedge, level, seed, cancel_check=None):
     return out
 
 
-def random_pattern(seed=0, intricacy=5, radius_mm=180.0, wedge_deg=15.0, cancel_check=None):
+def random_pattern(
+    seed=0,
+    intricacy=5,
+    radius_mm=180.0,
+    wedge_deg=15.0,
+    motifs=None,
+    cancel_check=None,
+):
     """Return a mandala in millimetres, centred on the origin, y up.
 
     ``intricacy`` 1..10 deepens every layer: more shape rings, tighter contour
     shading inside each shape, and denser separators, studs and bead rows.
     ``wedge_deg`` must be the wedge the caller will clip to
     (``180/divisions``) because every ring is composed inside exactly one wedge.
+
+    ``motifs`` is an optional list of traced artworks (each a list of contours
+    in millimetres, centred on the origin, y up). When given, every shape ring
+    is filled with copies of a seed-chosen motif instead of a drawn family, and
+    the seed also chooses the copy count, orientation and mirroring. Empty or
+    missing motifs fall back to the drawn families for that ring.
     """
     seed = int(seed) % 100000
     level = max(1, min(int(intricacy), 10))
     radius = max(float(radius_mm), 1.0)
     wedge = math.radians(max(float(wedge_deg), 0.5))
+    motifs = list(motifs) if motifs else []
+    plan = motif_plan(seed, level, len(motifs))
 
     # The seed chooses the kind of design, not just its phases: the style pool,
     # the ring count, the band-width profile, how much of the disc the centre
     # and the rim take, and how tightly each layer packs its detail.
     order = _shuffled(_STYLE_POOLS[style_for(seed)], seed)
-    rings = 3 + (2 * level) // 3 + _pick(seed, 1, 3) - 1
+    rings = _motif_ring_count(seed, level) if plan else _ring_count(seed, level)
     centre_r = radius * (0.055 + 0.020 * _roll(seed, 2) + 0.006 * level)
     gap = radius * (0.010 + 0.014 * _roll(seed, 3))
     outer = radius * (0.855 + 0.075 * _roll(seed, 4))
@@ -815,15 +1008,44 @@ def random_pattern(seed=0, intricacy=5, radius_mm=180.0, wedge_deg=15.0, cancel_
     contours.extend(_rosette(centre_r, wedge, level, seed + 5, cancel_check))
     if burst:
         contours.extend(_starburst(centre_r, wedge, level, seed + 9, cancel_check))
+    if plan and level >= 4 and _roll(seed, 8) < 0.45:
+        _, motif_radius = _motif_extent(motifs[plan[0][0]])
+        if motif_radius > 1e-9:
+            contours.extend(
+                _place_motif(
+                    motifs[plan[0][0]],
+                    centre_r * 0.72 / motif_radius,
+                    0.0,
+                    (0.0, 0.0),
+                )
+            )
 
     for ring in range(rings):
         check_cancelled(cancel_check)
         name = order[ring % len(order)]
         r_in = edges[ring]
         r_out = max(edges[ring + 1] - gap, r_in + radius * 0.03)
-        contours.extend(
-            _FUNCTIONS[name](r_in, r_out, wedge, level, seed + 17 * ring + 1, cancel_check)
-        )
+        pool = [motifs[index] for index in plan[ring]] if plan else []
+        if any(pool):
+            contours.extend(
+                _motif_ring(
+                    pool,
+                    r_in,
+                    r_out,
+                    wedge,
+                    level,
+                    seed + 17 * ring + 1,
+                    cancel_check,
+                    limit=radius,
+                    floor=radius * 0.03,
+                )
+            )
+        else:
+            contours.extend(
+                _FUNCTIONS[name](
+                    r_in, r_out, wedge, level, seed + 17 * ring + 1, cancel_check
+                )
+            )
         center_line = r_out + 0.5 * gap
         contours.extend(
             _separator(center_line, radius, wedge, level, seed + ring, cancel_check)

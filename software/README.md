@@ -56,6 +56,20 @@ app.
   per wedge - the style name is shown next to the seed. Counts, radii and phases
   come from mathematical sequences (golden angle, Weyl, van der Corput,
   Fibonacci, primes), not from unseeded noise.
+- **Natural motifs.** `Motif folder...` loads a folder of black-on-white
+  PNG/JPG shapes - leaves, shells, fish, feathers - and `Use natural motifs in
+  patterns` swaps them in for the drawn shape rings while the separators, studs
+  and rim stay. Each ring draws from a pool of one to three motifs, so the seed
+  *combines* natural shapes around the ring rather than repeating one; a share
+  of the copies overlays a smaller second motif to form a hybrid, alternating
+  copies can be mirrored, and every copy is deliberately larger than its band
+  and drifts in and out of it so the shapes overlap their neighbours. The ring
+  count drops in this mode so the motifs stay large enough to recognise. The
+  `Image threshold`, `Treat light pixels as ink` and `Trace detail` settings
+  apply to the motifs too (use invert for white-on-black artwork); traced
+  motifs are cached until the file or those settings change, and only the
+  motifs the current seed will place are traced. `Seed` decides which motifs,
+  how many copies, their orientation, tilt, mirroring and packing.
   Intricacy 10 is a full engraving: in a 12-division 181.3 mm frame it draws
   about 13,500 mirrored contours and 310,000 points, roughly 390,000 G-code
   lines and 13,500 pen cycles; the build takes about a second and saving the

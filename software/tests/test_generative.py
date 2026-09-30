@@ -25,6 +25,23 @@ def _point_count(contours):
     return sum(len(contour) for contour in contours)
 
 
+def _fingerprint(contours):
+    """A cheap stand-in for a full comparison of thousands of points.
+
+    Comparing or diffing two multi-hundred-contour designs directly makes
+    unittest build a difflib report over a huge repr, which is slow enough to
+    look like a hang.
+    """
+    if not contours:
+        return (0, 0)
+    return (
+        len(contours),
+        _point_count(contours),
+        tuple(round(value, 9) for value in contours[0][0]),
+        tuple(round(value, 9) for value in contours[-1][-1]),
+    )
+
+
 class RandomPatternTests(unittest.TestCase):
     def test_same_seed_reproduces_the_same_drawing(self):
         first = converter.random_pattern(seed=7, intricacy=6, radius_mm=RADIUS, wedge_deg=15.0)
@@ -35,7 +52,7 @@ class RandomPatternTests(unittest.TestCase):
     def test_different_seeds_produce_different_drawings(self):
         first = converter.random_pattern(seed=3, intricacy=6, radius_mm=RADIUS, wedge_deg=15.0)
         second = converter.random_pattern(seed=4, intricacy=6, radius_mm=RADIUS, wedge_deg=15.0)
-        self.assertNotEqual(first, second)
+        self.assertNotEqual(_fingerprint(first), _fingerprint(second))
 
     def test_seeds_produce_structurally_different_designs(self):
         styles = set()
@@ -142,6 +159,114 @@ class RandomPatternTests(unittest.TestCase):
                 "clipping fused a piece across the frame (dr=%.2f mm, da=%.1f deg)"
                 % (dr, math.degrees(da)),
             )
+
+
+def _square_motif(size=20.0):
+    half = size / 2.0
+    return [
+        [
+            (-half, -half),
+            (half, -half),
+            (half, half),
+            (-half, half),
+            (-half, -half),
+        ]
+    ]
+
+
+class NaturalMotifTests(unittest.TestCase):
+    def test_motifs_replace_the_shape_rings(self):
+        motif = _square_motif()
+        plain = converter.random_pattern(
+            seed=5, intricacy=7, radius_mm=RADIUS, wedge_deg=15.0
+        )
+        with_motifs = converter.random_pattern(
+            seed=5, intricacy=7, radius_mm=RADIUS, wedge_deg=15.0, motifs=[motif]
+        )
+        self.assertNotEqual(_fingerprint(plain), _fingerprint(with_motifs))
+        self.assertIn(5, {len(contour) for contour in with_motifs})
+
+    def test_placed_motifs_overlap_their_band_but_stay_inside_bounds(self):
+        wedge = math.radians(15.0)
+        diamond = [
+            [(0.0, -30.0), (30.0, 0.0), (0.0, 30.0), (-30.0, 0.0), (0.0, -30.0)]
+        ]
+        for seed in (1, 4, 9):
+            placed = generative._motif_ring(
+                [diamond],
+                100.0,
+                150.0,
+                wedge,
+                6,
+                seed=seed,
+                limit=181.3,
+                floor=5.0,
+            )
+            self.assertTrue(placed)
+            beyond = 0
+            for contour in placed:
+                for x, y in contour:
+                    radius = math.hypot(x, y)
+                    self.assertGreaterEqual(radius, 5.0 - 1e-6)
+                    self.assertLessEqual(radius, 181.3 + 1e-6)
+                    if radius > 150.0:
+                        beyond += 1
+                    angle = math.atan2(y, x)
+                    self.assertGreaterEqual(angle, -0.3)
+                    self.assertLessEqual(angle, wedge + 0.3)
+            self.assertGreater(beyond, 0, "motifs should overlap into the next ring")
+
+    def test_motif_plan_is_deterministic_and_bounded(self):
+        self.assertEqual(
+            converter.motif_plan(seed=12, intricacy=8, count=5),
+            converter.motif_plan(seed=12, intricacy=8, count=5),
+        )
+        plan = converter.motif_plan(seed=12, intricacy=8, count=5)
+        self.assertTrue(plan)
+        indices = [index for pool in plan for index in pool]
+        self.assertTrue(indices)
+        self.assertTrue(all(0 <= index < 5 for index in indices))
+        self.assertTrue(all(pool for pool in plan))
+        # a ring combines several motifs, and deeper intricacy widens the pool
+        self.assertGreater(max(len(pool) for pool in plan), 1)
+        self.assertLess(
+            len(converter.motif_plan(11, 4, 9)),
+            len(converter.motif_plan(11, 10, 9)),
+        )
+        self.assertEqual(converter.motif_plan(0, 5, 0), [])
+
+    def test_empty_motifs_fall_back_to_the_drawn_families(self):
+        plain = converter.random_pattern(
+            seed=8, intricacy=6, radius_mm=RADIUS, wedge_deg=15.0
+        )
+        fallback = converter.random_pattern(
+            seed=8, intricacy=6, radius_mm=RADIUS, wedge_deg=15.0, motifs=[[]]
+        )
+        with_motif = converter.random_pattern(
+            seed=8, intricacy=6, radius_mm=RADIUS, wedge_deg=15.0, motifs=[_square_motif()]
+        )
+        self.assertTrue(fallback, "an empty motif list must not empty the design")
+        self.assertGreater(len(fallback), 0.5 * len(plain))
+        self.assertNotEqual(_fingerprint(fallback), _fingerprint(with_motif))
+
+    def test_motif_choice_varies_with_the_seed(self):
+        thin = [
+            [(0.0, -30.0), (30.0, 0.0), (0.0, 30.0), (-30.0, 0.0), (0.0, -30.0)]
+        ]
+        plans = {
+            tuple(tuple(pool) for pool in converter.motif_plan(seed, 8, 3))
+            for seed in range(10)
+        }
+        self.assertGreater(len(plans), 1)
+        for seed in range(4):
+            pattern = converter.random_pattern(
+                seed=seed,
+                intricacy=8,
+                radius_mm=RADIUS,
+                wedge_deg=15.0,
+                motifs=[_square_motif(), thin, _square_motif(40.0)],
+            )
+            self.assertTrue(pattern)
 
 
 class BandFamilyTests(unittest.TestCase):

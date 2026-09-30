@@ -166,6 +166,8 @@ class KaleidoscopeWindow(QMainWindow):
         self.setWindowTitle("Kaleidoscope Converter")
         self.source_path = ""
         self.design = []
+        self.motif_paths = []
+        self.motif_cache = {}
 
         self.preview = DesignPreview()
         right = QWidget()
@@ -224,6 +226,25 @@ class KaleidoscopeWindow(QMainWindow):
         form.addRow(self.random_mode)
         form.addRow("Seed", seed_row)
         form.addRow("Intricacy", self.intricacy)
+        self.use_motifs = QCheckBox("Use natural motifs in patterns")
+        self.use_motifs.setToolTip(
+            "Fill the shape rings with traced copies of the motif folder's "
+            "black-and-white images instead of the drawn shapes."
+        )
+        self.motif_button = QPushButton("Motif folder...")
+        self.motif_button.setToolTip(
+            "A folder of PNG/JPG shapes - leaves, shells, fish. Traced with the "
+            "threshold, invert and trace-detail settings above."
+        )
+        self.motif_label = QLabel("(none)")
+        self.motif_label.setWordWrap(True)
+        motifs_row = QHBoxLayout()
+        motifs_row.addWidget(self.motif_button)
+        motifs_row.addWidget(self.motif_label, 1)
+        form.addRow(self.use_motifs)
+        form.addRow(motifs_row)
+        self.use_motifs.toggled.connect(self.on_source_mode_changed)
+        self.motif_button.clicked.connect(self.choose_motif_folder)
         self.seed.valueChanged.connect(self.on_design_changed)
         self.seed_button.clicked.connect(self.roll_seed)
         self.intricacy.valueChanged.connect(self.on_design_changed)
@@ -392,9 +413,11 @@ class KaleidoscopeWindow(QMainWindow):
 
     def _update_source_mode(self):
         generated = self.random_mode.isChecked()
-        for widget in (self.open_button, self.threshold, self.invert, self.trace_detail):
-            widget.setEnabled(not generated)
-        for widget in (self.seed, self.seed_button, self.intricacy):
+        motifs_on = generated and self.use_motifs.isChecked()
+        self.open_button.setEnabled(not generated)
+        for widget in (self.threshold, self.invert, self.trace_detail):
+            widget.setEnabled(not generated or motifs_on)
+        for widget in (self.seed, self.seed_button, self.intricacy, self.use_motifs):
             widget.setEnabled(generated)
         if generated:
             seed = int(self.seed.value())
@@ -403,6 +426,8 @@ class KaleidoscopeWindow(QMainWindow):
                 int(self.intricacy.value()),
                 converter.style_for(seed),
             )
+            if motifs_on:
+                label += " + %d motifs" % len(self.motif_paths)
         elif self.source_path:
             label = os.path.basename(self.source_path)
         else:
@@ -420,6 +445,84 @@ class KaleidoscopeWindow(QMainWindow):
 
     def roll_seed(self):
         self.seed.setValue(random.SystemRandom().randrange(0, 100000))
+
+    def choose_motif_folder(self):
+        folder = QFileDialog.getExistingDirectory(self, "Choose a motif folder")
+        if not folder:
+            return
+        paths = sorted(
+            str(path)
+            for path in Path(folder).iterdir()
+            if path.is_file() and converter.is_raster_source(path)
+        )
+        if not paths:
+            QMessageBox.information(
+                self, "No motifs", "That folder has no PNG or JPG images."
+            )
+            return
+        self.motif_paths = paths
+        self.motif_cache = {}
+        names = ", ".join(os.path.basename(path) for path in paths[:3])
+        self.motif_label.setText(
+            "%d file%s: %s%s"
+            % (len(paths), "" if len(paths) == 1 else "s", names, ", ..." if len(paths) > 3 else "")
+        )
+        self.use_motifs.setChecked(True)
+        self.say("Loaded %d motif images." % len(paths))
+        self._update_source_mode()
+        if self._has_source() and not self._in_rebuild:
+            self.rebuild()
+
+    def _motif(self, index):
+        """Traced, centred, unit-sized contours for one motif image."""
+        path = self.motif_paths[index]
+        try:
+            stamp = os.path.getmtime(path)
+        except OSError:
+            stamp = 0.0
+        key = (
+            path,
+            stamp,
+            round(float(self.threshold.value()), 4),
+            self.invert.isChecked(),
+            round(float(self.trace_detail.value()), 4),
+        )
+        if key not in self.motif_cache:
+            traced = converter.trace_raster(
+                path,
+                max_side=700,
+                threshold=float(self.threshold.value()),
+                invert=self.invert.isChecked(),
+                tolerance=float(self.trace_detail.value()),
+            )
+            contours = (
+                converter.normalize_source(traced, 1.0, flip_y=True)[0]
+                if traced
+                else []
+            )
+            self.motif_cache[key] = contours
+        return self.motif_cache[key]
+
+    def _motifs(self):
+        """One traced motif per file, or None when the mode is off.
+
+        Only the motifs the current seed will place are traced, so a large
+        folder does not pay for images the design never uses.
+        """
+        if not (
+            self.random_mode.isChecked()
+            and self.use_motifs.isChecked()
+            and self.motif_paths
+        ):
+            return None
+        plan = converter.motif_plan(
+            int(self.seed.value()), int(self.intricacy.value()), len(self.motif_paths)
+        )
+        wanted = {index for pool in plan for index in pool}
+        return [
+            self._motif(index) if index in wanted else None
+            for index in range(len(self.motif_paths))
+        ]
 
     def on_preview_toggle(self, checked):
         self.preview.show_wedge = bool(checked)
@@ -515,6 +618,7 @@ class KaleidoscopeWindow(QMainWindow):
                 intricacy=int(self.intricacy.value()),
                 radius_mm=size_mm,
                 wedge_deg=180.0 / max(int(self.divisions.value()), 1),
+                motifs=self._motifs(),
             )
         elif converter.is_raster_source(path):
             traced = converter.trace_raster(
@@ -611,6 +715,8 @@ class KaleidoscopeWindow(QMainWindow):
                 int(self.intricacy.value()),
                 converter.style_for(seed),
             )
+            if self.use_motifs.isChecked() and self.motif_paths:
+                source += ", %d motifs" % len(self.motif_paths)
         else:
             source = os.path.basename(self.source_path)
         self.say(
