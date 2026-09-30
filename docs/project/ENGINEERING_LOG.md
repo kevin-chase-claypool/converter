@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20260930-kaleidoscope-converter"></a>
+### 🟩 2026-09-30 13:46:09 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - added the Kaleidoscope Converter app
+
+- Request: import a PNG, SVG or JPG, choose a kaleidoscope division count,
+  build a design and save G-code, as a separate app with its own launcher that
+  reuses what the main converter already learned.
+- Change: new core module `converter_core/kaleidoscope.py` - marching-squares
+  raster tracing with an iterative Douglas-Peucker simplify, half-wedge clipping
+  by bisection, `2 * divisions` mirrored placements, and source normalisation -
+  plus the PySide6 app `qt_kaleidoscope.pyw`, its flat bed-frame preview, and
+  `kaleidoscope.bat`. SVG sources keep the main app's two-pass fill-at-final-
+  scale behaviour; rasters trace to closed contours so the normal fill can still
+  shade them. The planner, polar kinematics, clipping and emitter are reused
+  unchanged.
+- Verification: new `test_kaleidoscope.py` (tracing, wedge clipping, mirror
+  symmetry, clean G-code) and all nine test modules pass. Headless Qt run with
+  `QT_QPA_PLATFORM=offscreen`: a traced circle gives 24 contours at 12 divisions
+  and 16 at 8 divisions, saving 227 G-code lines with 16 pen cycles and no
+  bridges; the spirit-logo SVG gives 400 contours and 33,675 lines with no
+  bridges. `py_compile` and `docs_index --write/--check` pass.
+- Boundary: raster import is a threshold trace, not photo-tone shading; the apex
+  is typed rather than dragged; the preview has no playback.
+- Evidence: `WSW-20260930-004`.
+- Category: windows-software, kaleidoscope, raster, tracing, application, design
+- Next action: plot a real design, tune `Image threshold` and `Trace detail`;
+  photo-tone shading and a draggable apex are the roadmap follow-ups.
+
 <a id="elog-20260930-outlines-only-default"></a>
 ### 🟨 2026-09-30 09:07:14 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - outlines-only fill default and closed-loop fill regions
 

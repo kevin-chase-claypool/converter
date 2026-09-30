@@ -21,6 +21,7 @@ For the intended P100 command/sensor/reply ownership by stage, open
 | Architecture, dependency, impact, or cross-subsystem investigation | [`../ONTOLY_PROMPT.md`](../ONTOLY_PROMPT.md) | Ontoly graph for code topology; listed subsystem authorities for physical and runtime facts |
 | Windows converter UI or behavior | [`../software/README.md`](../software/README.md) | Code under `software/`; behavior in `software/README.md` |
 | Converter algorithms or historical tradeoffs | [`HANDOFF.md`](HANDOFF.md) relevant section only | Code under `software/converter_core/`; deep rationale in `HANDOFF.md` |
+| Kaleidoscope designs (image to mirrored artwork) | [`../software/README.md`](../software/README.md) | `software/qt_kaleidoscope.pyw` and `software/converter_core/kaleidoscope.py` |
 | RP23CNC/grblHAL work | [`../firmware/README.md`](../firmware/README.md) | Relevant file under `firmware/grblhal/` |
 | Pen-pressure firmware | [`../firmware/pen_pressure/README.md`](../firmware/pen_pressure/README.md) | `firmware/pen_pressure/` |
 | Power distribution | [`hardware/POWER_DISTRIBUTION.md`](hardware/POWER_DISTRIBUTION.md) | `hardware/WIRING_TABLE.md` plus the power-only schematic |

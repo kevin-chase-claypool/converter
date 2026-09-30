@@ -9,6 +9,9 @@ with a live preview of the simulated machine motion.
   settings, SVG geometry, kinematics/planning, and G-code/preview move emission.
 - `svg_to_gcode.pyw` — a compatibility shim for older imports and simple
   `input.svg output.gcode` command-line conversion.
+- `qt_kaleidoscope.pyw` — the sibling app: imports an SVG, PNG or JPG, mirrors
+  it into N kaleidoscope divisions, and saves the same G-code contract.
+  Launched by `..\kaleidoscope.bat`; it reuses `converter_core/` unchanged.
 
 ## Run
 
@@ -20,6 +23,36 @@ or double-click `..\converter.bat` from the repo root. Runtime errors are writte
 to `qt_debug.log` in this folder.
 
 Requires `PySide6` (`pip install PySide6`).
+
+## Kaleidoscope Converter
+
+`qt_kaleidoscope.pyw` (or `..\kaleidoscope.bat`) builds an N-fold mirrored
+design from an SVG, PNG or JPG and emits the same program contract as the main
+app.
+
+- **Source.** SVG geometry goes through the same parser, fill and clipping as
+  the main app. A raster image is traced by marching squares into closed
+  contours (`converter_core.kaleidoscope.trace_raster`), so a traced region can
+  also be filled by the normal fill settings; `Image threshold`,
+  `Treat light pixels as ink` and `Trace detail` control that trace.
+- **Kaleidoscope.** The source is centred on the apex and clipped to a
+  half-wedge of `180 / Divisions` degrees, then placed `2 * Divisions` times
+  around the circle, alternating mirrored copies so 360 degrees tile exactly.
+  With `Mirror alternate sectors` off the wedge repeats without reflection,
+  which gives a pinwheel instead of mirror symmetry. `Rotate source` chooses
+  which slice the wedge samples; `Apex offset X/Y` moves the apex off the
+  artwork's bounding-box centre.
+- **Sizing.** `Source size` sets the source's longer side in millimetres.
+  `Fit to reach circle` rescales so the finished design stops just inside
+  `Gantry reach radius`; anything that still overshoots is clipped by the normal
+  planner and the log says so.
+- **Output.** `Tolerance`, `Fill spacing`, `Feed rate` and
+  `Theta tangential speed` are the same settings as the main app, and the saved
+  file uses the same preamble, pen contract, clipping and end-of-print park.
+  Fill spacing stays `0` (outlines only) by default.
+- The preview is a flat bed-frame view — bed circle, reach circle, the sampled
+  wedge and the design — with no OpenGL playback; use the main app when you want
+  the simulated machine motion.
 
 ## What it emits
 

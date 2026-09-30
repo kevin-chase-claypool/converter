@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-004` | windows-software | implemented | [Add the Kaleidoscope Converter app](windows-software/2026/2026-09-30-kaleidoscope-converter.md) |
 | 2026-09-30 | `WSW-20260930-003` | windows-software | implemented | [Default to outlines only and fill only genuinely closed loops](windows-software/2026/2026-09-30-outlines-only-default-and-closed-fill-regions.md) |
 | 2026-09-30 | `WSW-20260930-002` | windows-software | implemented | [Keep pen-down bridging off by default and tag generated fill trails](windows-software/2026/2026-09-30-tag-fill-trails-for-bridging.md) |
 | 2026-09-30 | `WSW-20260930-001` | windows-software, rp23cnc-software | implemented | [Calibrate the bed ratio from the measured A-index spacing](windows-software/2026/2026-09-30-calibrated-bed-ratio.md) |
