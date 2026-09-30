@@ -1,8 +1,8 @@
 """Fill defaults, fill-source resolution, and fill region reporting.
 
-Fill is on by default and resolves its own source, so the user does not have to
-know whether an SVG is better hatched from its vector shapes or from its
-rendered pixels.
+Fill defaults to outlines only and resolves its own source, so the user does not
+have to know whether an SVG is better hatched from its vector shapes or from its
+rendered pixels before opting into a spacing.
 """
 
 import sys
@@ -28,14 +28,33 @@ def _write_svg(body):
 
 
 class FillSourceTests(unittest.TestCase):
-    def test_fill_is_on_by_default(self):
+    def test_fill_is_off_by_default(self):
         settings = converter.Settings()
-        self.assertGreater(
+        self.assertEqual(
             settings.hatch_spacing_mm,
             0.0,
-            "fill must be on out of the box; 0 is the explicit outline-only setting",
+            "outlines only out of the box; a coarse fill left stray fragments "
+            "inside small closed shapes",
         )
         self.assertEqual(settings.fill_source, "auto")
+
+    def test_only_closed_loops_are_filled(self):
+        closed = _write_svg('<path d="M20 20 L80 20 L80 80 L20 80 Z" fill="black"/>')
+        open_path = _write_svg('<path d="M20 20 L80 20 L80 80 L20 80" fill="black"/>')
+        settings = converter.Settings(hatch_spacing_mm=2.0, fit_mode="manual")
+
+        closed_contours = converter.read_svg(str(closed), settings)
+        open_contours = converter.read_svg(str(open_path), settings)
+
+        self.assertGreater(
+            len(closed_contours), 1, "a closed filled path should still hatch"
+        )
+        self.assertEqual(
+            len(open_contours),
+            1,
+            "an open subpath has no boundary the pen draws, so it must not be "
+            "implicitly closed and filled",
+        )
 
     def test_auto_uses_shapes_for_filled_and_for_line_art(self):
         filled = _write_svg('<rect x="10" y="10" width="80" height="80" fill="black"/>')

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-003` | implemented | [Default to outlines only and fill only genuinely closed loops](2026/2026-09-30-outlines-only-default-and-closed-fill-regions.md) | `infill`, `correctness`, `defaults`, `fill-regions` |
 | 2026-09-30 | `WSW-20260930-002` | implemented | [Keep pen-down bridging off by default and tag generated fill trails](2026/2026-09-30-tag-fill-trails-for-bridging.md) | `infill`, `bridge`, `pen-up`, `correctness`, `preview` |
 | 2026-09-30 | `WSW-20260930-001` | implemented | [Calibrate the bed ratio from the measured A-index spacing](2026/2026-09-30-calibrated-bed-ratio.md) | `theta`, `kinematics`, `a-axis`, `calibration`, `registration`, `drift` |
 | 2026-09-30 | `RPSW-20260930-004` | implemented | [Require a homed frame before the park macro moves](../rp23cnc-software/2026/2026-09-30-park-macro-requires-homed-frame.md) | `iosender`, `macro`, `p116`, `p111`, `park`, `g53`, `soft-limit`, `homing`, `safety`, `failed-approach` |

@@ -1635,7 +1635,12 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
     if hatch_spacing > 0:
         fill_polygons = []
         if has_visible_fill(element, inherited):
-            fill_polygons = [contour for contour in contours if len(contour) >= 3]
+            # An SVG fill implicitly closes an open subpath, but this plotter
+            # draws only the ink the file contains: that implicit chord is a
+            # boundary the pen never draws, so the fill reads as marks floating
+            # in blank space. Require a genuinely closed loop, exactly like the
+            # stroke-only branch below.
+            fill_polygons = closed_outline_regions(contours, tolerance)
             darkness = fill_darkness(element, inherited)
         elif has_visible_stroke(element, inherited):
             # Stroke-only artwork: fill the interiors the outlines enclose.

@@ -179,10 +179,11 @@ converter README for the exact preamble and settings.
 - `hatch_polygon(polygon, spacing, angle)` runs a scanline fill and returns clipped line segments.
   Segment-level clipping is intentional: connector moves between scanlines can cross outside
   concave boundaries, so infill stays inside at the cost of more pen-up cycles.
-- On by default (`hatch_spacing_mm` default 4); `0` is the explicit outline-only setting. Triggered
-  by any SVG element whose `fill` is not explicitly `none` / not fully transparent (SVG
+- Off by default (`hatch_spacing_mm` default `0`, outlines only); a positive spacing opts in.
+  Triggered by any SVG element whose `fill` is not explicitly `none` / not fully transparent (SVG
   default = filled black), and by the closed outlines of stroke-only elements - see the line-art
-  bullet below.
+  bullet below. Only genuinely closed loops are filled: an open subpath is not implicitly closed,
+  because the pen would never draw that boundary (2026-09-30 stray-dash fix).
   `hatch_angle_deg` controls direction (default 45). `hatch_pattern` / "Fill pattern" selects
   OrcaSlicer-style sparse infill: `linear`, `crosshatch`, `diagonal`,
   `diagonal_crosshatch`, `diamonds`, `triangular`, `honeycomb`/`hexagonal`, `circles`, `dots`,

@@ -93,10 +93,11 @@ class Settings:
     # box is not its visual center gets placed by hand. Negative is valid.
     artwork_offset_x_mm: float = 0.0
     artwork_offset_y_mm: float = 0.0
-    # Fill is on by default: an off-by-default fill looked like "the converter
-    # cannot hatch my artwork" instead of "fill is switched off". `0` still
-    # disables fill for outline-only plotting.
-    hatch_spacing_mm: float = 4.0
+    # Outlines only by default. Line art is the common case here, and a fill
+    # that is coarse relative to a small closed shape leaves one or two short
+    # fragments inside it - the "random dashes" seen on 2026-09-30. A positive
+    # value opts into hatching.
+    hatch_spacing_mm: float = 0.0
     hatch_angle_deg: float = 45.0
     hatch_pattern: str = "crosshatch"
     triangle_size_mm: float = 0.0
@@ -200,7 +201,7 @@ TEXT_FIELD_GROUPS = (
         ("Stroke fill ratio", "stroke_fill_ratio", "2"),
     )),
     ("Fill", (
-        ("Fill spacing mm", "hatch_spacing_mm", "4"),
+        ("Fill spacing mm", "hatch_spacing_mm", "0"),
         ("Fill pattern", "hatch_pattern", "crosshatch"),
         ("Fill angle deg", "hatch_angle_deg", "45"),
         ("Fill source", "fill_source", "auto"),
@@ -328,7 +329,7 @@ FIELD_TOOLTIPS = {
     "artwork_offset_y_mm": "Move the artwork's center off the registered bed center, in machine mm. You can also drag the artwork in the preview.",
     "stroke_fill_ratio": "With 'Fill wide strokes', a stroke is filled only when its width is at least this many pen diameters.",
     "keep_down_bridges": "Draw a connector between two nearby generated fill trails instead of lifting the pen. Only applies between fill trails, never across the artwork's own strokes, and off by default because a connector in blank space leaves a visible mark.",
-    "hatch_spacing_mm": "Distance between fill lines in mm on paper. 0 turns fill off and plots outlines only.",
+    "hatch_spacing_mm": "Distance between fill lines in mm on paper. 0 (the default) plots outlines only.",
     "hatch_pattern": "Fill pattern drawn inside each filled region.",
     "hatch_angle_deg": "Rotation of the fill line family.",
     "fill_source": "Auto hatches the SVG's own shapes, and switches to image tone only when the artwork's tone comes from an embedded image or gradient. 'SVG shapes' always stays inside the drawn regions; 'Image tone' hatches the rendered pixels.",

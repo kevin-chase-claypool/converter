@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-003` | windows-software | implemented | [Default to outlines only and fill only genuinely closed loops](windows-software/2026/2026-09-30-outlines-only-default-and-closed-fill-regions.md) |
 | 2026-09-30 | `WSW-20260930-002` | windows-software | implemented | [Keep pen-down bridging off by default and tag generated fill trails](windows-software/2026/2026-09-30-tag-fill-trails-for-bridging.md) |
 | 2026-09-30 | `WSW-20260930-001` | windows-software, rp23cnc-software | implemented | [Calibrate the bed ratio from the measured A-index spacing](windows-software/2026/2026-09-30-calibrated-bed-ratio.md) |
 | 2026-09-30 | `RPSW-20260930-004` | rp23cnc-software, windows-software, hardware | implemented | [Require a homed frame before the park macro moves](rp23cnc-software/2026/2026-09-30-park-macro-requires-homed-frame.md) |

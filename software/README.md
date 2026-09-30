@@ -305,9 +305,13 @@ display-only; every other group changes the emitted program.
   `$21` matters too: with hard limits off the pull-off term is zero and the +Y
   edge moves back to 195.27 mm. Re-derive this value after every HOME +
   REGISTER, since the bed center is what moves.
-- **Fill.** `Fill spacing mm` sets the on-paper distance between fill lines
-  (default `4`); `0` plots outlines only. Fill is on by default so a conversion
-  never silently produces no fill.
+- **Fill.** `Fill spacing mm` sets the on-paper distance between fill lines.
+  The default is `0` — outlines only — so a conversion never adds fill the
+  artwork did not ask for. A positive value opts into hatching; keep it well
+  under the smallest feature you want filled, because a coarse spacing leaves
+  one or two short fragments inside a small closed shape. (Tone artwork with an
+  embedded image or gradient gets a 4 mm starter automatically, since outlines
+  only would draw nothing for a photo.)
 - `Fill source` decides where the fill geometry comes from:
   - `Auto (recommended)` hatches the SVG's own shapes, and switches to image
     tone only when the artwork's tone lives somewhere the vector path cannot
@@ -319,13 +323,13 @@ display-only; every other group changes the emitted program.
     an edge by up to `min(active spacing / 3, 1.0) mm` and hatch runs over dark
     outlines. `Raster px/unit` sets the sampling resolution; higher is more
     accurate and slower.
-- A stroke-only element fills the regions its **closed** outlines enclose, so
-  line art gains interior fill instead of plotting as outlines only. Open
-  subpaths have no bounded interior and never receive fill, so fill cannot leak
-  across artwork built from open segments (the Calder Hall and F15
-  plotter-ready exports, for example). Polyline artwork that *looks* closed
-  still has to close its subpath — with `Z`, or by repeating the first point —
-  for that region to fill.
+- Any element fills the regions its **closed** outlines enclose, whether it
+  declares a fill or is stroke-only. Open subpaths have no bounded interior and
+  never receive fill, so fill cannot leak across artwork built from open
+  segments (the Calder Hall and F15 plotter-ready exports, for example), and a
+  filled-but-open path is not implicitly closed into a region whose boundary the
+  pen never draws. Polyline artwork that *looks* closed still has to close its
+  subpath — with `Z`, or by repeating the first point — for that region to fill.
 - The Qt log reports what fill actually did after each preview, for example
   `Fill: 4 mm crosshatch, 172 hatch passes inside the SVG's own regions.` When
   there is nothing to hatch it says so and names the setting that would change

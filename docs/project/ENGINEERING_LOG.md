@@ -1,5 +1,33 @@
 # Engineering Log
 
+<a id="elog-20260930-outlines-only-default"></a>
+### 🟨 2026-09-30 09:07:14 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - outlines-only fill default and closed-loop fill regions
+
+- Problem: the 2026-09-30 mandala print carried short stray marks ("random
+  dashes") in blank space. Reproduction from the source SVG
+  (`1013896_OJ8XYA1.svg`, fill 4 mm, tolerance 1, four shade levels, Fit inside)
+  matched `mom.gcode` within 0.01% and attributed them to the fill: 2,806
+  fragments of 3 mm or less at 4 mm spacing, none at spacing 0. The operator had
+  always run this artwork at 0. My earlier advice to set 4 mm caused it.
+- Second defect found while measuring: 338 of 10,704 fill regions were open
+  subpaths, which SVG implicitly closes but the pen never draws, so their fill
+  floats in blank space.
+- Change: `hatch_spacing_mm` default `4.0` -> `0.0` (outlines only), and the
+  fill branch now requires a genuinely closed loop
+  (`closed_outline_regions`) instead of any contour with three or more points.
+  The app's tone starter (4 mm for embedded images/gradients) is unchanged,
+  since outlines only would draw nothing for a photo.
+- Verification: all eight test modules pass, including a new assertion that the
+  default is `0` and that an open filled path is not filled while the same path
+  with `Z` still is. On the operator's SVG: spacing 0 -> 5,448 contours and 0
+  fill fragments; spacing 4 -> 8,545 contours with 197 fewer open regions and
+  2,614 fill fragments. `docs_index --write/--check` pass.
+- Not done: no print has been made from a regenerated file yet.
+- Evidence: `WSW-20260930-003`.
+- Category: windows-software, infill, defaults, correctness, fill-regions
+- Next action: regenerate the artwork with the new default (spacing 0) and print
+  to confirm the dashes are gone.
+
 <a id="elog-20260930-park-macro-rammed-negative-y"></a>
 ### 🟥 2026-09-30 07:09:09 -0500 - RP23CNC SOFTWARE/FAILED-CORRECTED - the park macro rammed the gantry into -Y, so it now homes first
 
