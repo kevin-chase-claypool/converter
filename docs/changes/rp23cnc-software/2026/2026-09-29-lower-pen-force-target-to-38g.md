@@ -5,7 +5,7 @@ category: rp23cnc-software
 affected_categories:
   - rp23cnc-software
   - hardware
-status: implemented
+status: superseded
 components:
   - firmware/pen_pressure/pro_micro_rp2350_toolhead/toolhead_config.h
   - firmware/pen_pressure/pro_micro_rp2350_toolhead/pressure_controller.cpp
@@ -82,6 +82,8 @@ the band or the hold cadence rather than raising the target back to 45 g.
 
 ## Risks and follow-up
 
+- Superseded on 2026-09-29 by `RPSW-20260929-005`: a print run rejected the
+  38 g / ±10 g setting, and the 45 g / ±15 g values were restored.
 - The narrower band and lower target are unverified on the installed pen. The
   hold may lift the pen on fast strokes (the 2026-09-25 failure), or 38 g may
   mark too lightly for some tools.

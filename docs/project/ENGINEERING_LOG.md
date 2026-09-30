@@ -1,5 +1,33 @@
 # Engineering Log
 
+<a id="elog-20260929-revert-pen-force-target"></a>
+### 🟨 2026-09-29 20:01:40 -0500 - FIRMWARE/REVERTED - restored the pen force target to 45 g after a print run
+
+- Problem: the 38 g target with a ±10 g band from `RPSW-20260929-004` was
+  rejected after the operator watched a print run, so the setting had to go
+  back before the next drawing.
+- Change: restored `TARGET_FORCE_RAW_DELTA` and `CONTACT_RAW_DELTA` to 226,745
+  raw (45 g) and `CONTACT_READY_TOLERANCE_RAW` to 75,582 raw (±15 g, a 30-60 g
+  band). The 75 g hard limit is unchanged and the urgent-relief trigger returns
+  to 65 g. The current-state documents were restored to match.
+- Kept: the 10 ms coarse-pulse width, the 2:1 fine-pulse credit, and the 75 g
+  hard-limit text that `RPSW-20260929-004` corrected. Those were documentation
+  defects against the installed code, not part of the force decision.
+- Failure history: ±5 g failed on 2026-09-23, ±10 g was widened to ±15 g on
+  2026-09-25 for the same reason, and the 2026-09-29 ±10 g retry was rejected
+  during printing. Do not narrow the band again without fixing the drift source
+  and collecting per-stroke evidence.
+- Verification: `arduino-cli compile` passed for
+  rp2040:rp2040:sparkfun_promicrorp2350; `python tools\docs_index.py --write`
+  and `--check` passed. No bench measurement, and the toolhead must be
+  re-flashed with the restored build.
+- Missing evidence: the exact failure mode seen in the print run (lighter
+  marking versus the pen lifting) is not recorded yet; add it to T-02/T-03.
+- Evidence: `RPSW-20260929-005` (implemented); `RPSW-20260929-004` (superseded).
+- Category: firmware, hardware, toolhead, force-control, test
+- Next action: re-flash the toolhead, then record the observed failure mode and
+  re-run T-02/T-03 to confirm the restored 45 g / ±15 g behavior.
+
 <a id="elog-20260929-lower-pen-force-target"></a>
 ### 🟨 2026-09-29 18:02:49 -0500 - FIRMWARE/IMPLEMENTED - lowered the pen force target to 38 g with a ±10 g band
 

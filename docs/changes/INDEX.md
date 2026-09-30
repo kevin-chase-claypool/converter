@@ -8,7 +8,8 @@ Newest changes appear first.
 | 2026-09-29 | `WSW-20260929-003` | windows-software, rp23cnc-software | implemented | [Re-derive the reach radius and give it a registration-drift margin](windows-software/2026/2026-09-29-reach-radius-re-derived-with-drift-margin.md) |
 | 2026-09-29 | `WSW-20260929-002` | windows-software | implemented | [Auto-fit to the bed, and fill that follows the final scale](windows-software/2026/2026-09-29-auto-fit-and-scale-aware-fill-cache.md) |
 | 2026-09-29 | `WSW-20260929-001` | windows-software | implemented | [Fill bed sizing and recentring for the fit actions](windows-software/2026/2026-09-29-fill-bed-and-recenter-fits.md) |
-| 2026-09-29 | `RPSW-20260929-004` | rp23cnc-software, hardware | implemented | [Lower the pen force target to 38 g with a ±10 g band](rp23cnc-software/2026/2026-09-29-lower-pen-force-target-to-38g.md) |
+| 2026-09-29 | `RPSW-20260929-005` | rp23cnc-software, hardware | implemented | [Revert the pen force target to 45 g with a ±15 g band](rp23cnc-software/2026/2026-09-29-revert-pen-force-target-to-45g.md) |
+| 2026-09-29 | `RPSW-20260929-004` | rp23cnc-software, hardware | superseded | [Lower the pen force target to 38 g with a ±10 g band](rp23cnc-software/2026/2026-09-29-lower-pen-force-target-to-38g.md) |
 | 2026-09-29 | `RPSW-20260929-003` | windows-software, rp23cnc-software, hardware | implemented | [Define the level-1 system decomposition](rp23cnc-software/2026/2026-09-29-level-1-system-decomposition.md) |
 | 2026-09-29 | `RPSW-20260929-002` | rp23cnc-software, windows-software | verified | [F-05A: the commissioned GP27/PRB pen-transition acknowledgement passed](rp23cnc-software/2026/2026-09-29-f-05a-gp27-prb-handshake-verified.md) |
 | 2026-09-29 | `RPSW-20260929-001` | rp23cnc-software | implemented | [Hold the published contact-ready level through hold corrections](rp23cnc-software/2026/2026-09-29-hold-contact-ready-hysteresis.md) |

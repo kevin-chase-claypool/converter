@@ -8,7 +8,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
-| 2026-09-29 | `RPSW-20260929-004` | implemented | [Lower the pen force target to 38 g with a ±10 g band](../rp23cnc-software/2026/2026-09-29-lower-pen-force-target-to-38g.md) | `toolhead`, `force-control`, `pen-force`, `calibration`, `safety` |
+| 2026-09-29 | `RPSW-20260929-005` | implemented | [Revert the pen force target to 45 g with a ±15 g band](../rp23cnc-software/2026/2026-09-29-revert-pen-force-target-to-45g.md) | `toolhead`, `force-control`, `pen-force`, `revert` |
+| 2026-09-29 | `RPSW-20260929-004` | superseded | [Lower the pen force target to 38 g with a ±10 g band](../rp23cnc-software/2026/2026-09-29-lower-pen-force-target-to-38g.md) | `toolhead`, `force-control`, `pen-force`, `calibration`, `safety` |
 | 2026-09-29 | `RPSW-20260929-003` | implemented | [Define the level-1 system decomposition](../rp23cnc-software/2026/2026-09-29-level-1-system-decomposition.md) | `system-architecture`, `systems-integration`, `interfaces`, `documentation`, `project-management` |
 | 2026-09-28 | `RPSW-20260928-001` | verified | [Direct host-to-controller Ethernet link at 10 Mbps](../rp23cnc-software/2026/2026-09-28-direct-ethernet-link.md) | `grblhal`, `ethernet`, `w5500`, `network`, `telnet`, `static-ip` |
 | 2026-09-24 | `RPSW-20260924-003` | implemented | [Bound the coarse seek step and auto-recover from hard-limit overshoot](../rp23cnc-software/2026/2026-09-24-bound-coarse-seek-and-recover-hard-limit.md) | `toolhead`, `force-control`, `hard-limit`, `recovery`, `seek` |
