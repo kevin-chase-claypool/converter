@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-008` | implemented | [Kaleidoscope: complex multi-layer random patterns](2026/2026-09-30-kaleidoscope-complex-layers.md) | `kaleidoscope`, `generative`, `pattern-generator`, `density` |
 | 2026-09-30 | `WSW-20260930-007` | implemented | [Kaleidoscope: engraving-density random patterns](2026/2026-09-30-kaleidoscope-engraving-density.md) | `kaleidoscope`, `generative`, `pattern-generator`, `density` |
 | 2026-09-30 | `WSW-20260930-006` | implemented | [Kaleidoscope: deterministic random-pattern generator](2026/2026-09-30-kaleidoscope-random-pattern-generator.md) | `kaleidoscope`, `generative`, `pattern-generator`, `interface` |
 | 2026-09-30 | `WSW-20260930-005` | implemented | [Kaleidoscope: typed printable bounds and a draggable image](2026/2026-09-30-kaleidoscope-typed-bounds-and-draggable-image.md) | `kaleidoscope`, `bounds`, `dragging`, `interface` |

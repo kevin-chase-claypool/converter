@@ -1,5 +1,39 @@
 # Engineering Log
 
+<a id="elog-20260930-kaleidoscope-complex-layers"></a>
+### 🟩 2026-09-30 14:46:08 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: complex multi-layer random patterns
+
+- Request: "at the highest intricacy im still nowhere close to impressed. it
+  needs to be way more complicated" - the target is a 9,045-path engraving.
+- Change: element counts are now spacing-driven (`_count(length_mm, spacing)`)
+  so contour fills, studs, dots, barbs, scale rows and hatch lines are placed
+  one every few millimetres wherever there is room, with spacings tightening as
+  intricacy rises. Three dense families were added - diamond `mesh`, `lace`
+  scale rows with bead eyes, and multi-row `beadrow` - and `random_pattern`
+  now lays out 3-9 shape rings with a separator bundle after each, stud rows in
+  every gap, and a rim with several lines, a stud row and a dot row. The centre
+  is a layered stack of nested rosette leaves, bead dots and a ray ring.
+- Fixed while testing: the first spacing pass turned whole bands solid black
+  under `2 * divisions` mirroring, so mesh spacing widened to 3.2 mm and lace
+  rows to 2.9 mm at level 10 and separator bundles tightened to 0.8 mm; bead
+  eyes and feather tip beads were pulled inside their bands by their own radius
+  after the band test flagged 1.5 mm overshoot.
+- Verification: seed 4 / intricacy 10 / 12 divisions / 181.3 mm gives 13,488
+  mirrored contours / 308,232 points, max radius exactly 181.30 mm; headless Qt
+  build 0.55 s, preview paint 0.38 s, plan 13.3 s, emit 5.9 s, 391,320 G-code
+  lines and 13,680 pen cycles. Seed 11 gives 15,480 contours. Points rise at
+  every intricacy step for seeds 0/4/7/11/33 (e.g. seed 11: 7,093 -> 7,347 ->
+  9,014 -> 13,370). All ten test modules pass; visual checks
+  `samples/png/gen_progression.png`, `gen_complex_tuned.png`,
+  `gen_preview_complex2.png`; `docs_index --write/--check` pass.
+- Boundary: level 10 is a multi-hour plot (391k lines, 13,680 pen cycles) with
+  no warning in the UI yet; dragging the image at level 10 repaints more
+  slowly; a design is still tied to its division count.
+- Evidence: `WSW-20260930-008`.
+- Category: windows-software, kaleidoscope, generative, density
+- Next action: plot an intricacy-10 pattern and check ink load, pen-cycle wear
+  and seam alignment before advertising it as a usable default.
+
 <a id="elog-20260930-kaleidoscope-engraving-density"></a>
 ### 🟩 2026-09-30 14:38:56 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: engraving-density random patterns
 

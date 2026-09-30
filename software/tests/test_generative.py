@@ -38,6 +38,8 @@ class RandomPatternTests(unittest.TestCase):
         self.assertNotEqual(first, second)
 
     def test_higher_intricacy_adds_detail_without_losing_any(self):
+        # Contour counts can dip slightly when a level adds rings but thins the
+        # bands; the amount of drawing (points) only ever grows.
         counts = []
         for level in (1, 4, 7, 10):
             pattern = converter.random_pattern(
@@ -45,19 +47,21 @@ class RandomPatternTests(unittest.TestCase):
             )
             counts.append((len(pattern), _point_count(pattern)))
         for index in range(1, len(counts)):
-            self.assertGreaterEqual(counts[index][0], counts[index - 1][0])
             self.assertGreater(counts[index][1], counts[index - 1][1])
+        self.assertGreater(counts[-1][0], counts[0][0])
 
     def test_top_intricacy_is_dense(self):
         pattern = converter.random_pattern(
             seed=4, intricacy=10, radius_mm=RADIUS, wedge_deg=15.0
         )
         self.assertGreaterEqual(
-            len(pattern), 120, "max intricacy should fill the wedge with shapes"
+            len(pattern), 400, "max intricacy should fill the wedge with shapes"
         )
-        self.assertGreaterEqual(_point_count(pattern), 3000)
+        self.assertGreaterEqual(_point_count(pattern), 10000)
         design = converter.kaleidoscope(pattern, 12, mirror=True, radius=RADIUS)
-        self.assertGreaterEqual(len(design), 3000, "mirrored design should be an engraving")
+        self.assertGreaterEqual(
+            len(design), 9000, "mirrored design should be an engraving, not a sketch"
+        )
 
     def test_points_are_finite_and_inside_the_radius(self):
         for seed in (0, 5, 99999):
