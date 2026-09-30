@@ -1,5 +1,33 @@
 # Engineering Log
 
+<a id="elog-20260930-fill-the-gaps"></a>
+### 🟩 2026-09-30 17:43:59 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: close the empty bands in motif patterns
+
+- Request: "i really like the outer waves but i dont like how much empty space
+  there is, im seeing it in every seed".
+- Cause: four independent rules were leaving paper blank - thin teardrop leaves
+  (power 0.45-1.05) left a wedge beside each one, ring gaps were 1.0-2.4 % of
+  the radius, the outer band stopped at 0.855-0.93 while the rim started at
+  0.94, and motif mode used 3-5 thick rings instead of the drawn mode's 6-9.
+- Change: leaves are fuller (power 0.32-0.77) and doubled per wedge in about two
+  thirds of seeds; gaps are 0.5-1.5 % of the radius; the outer band reaches
+  0.900-0.948 so the rim follows immediately; motif mode now uses the drawn
+  mode's ring ladder; motif copies pack 0.85-1.25 instead of 0.75-1.10.
+  `motif_plan` now returns one pool per ring with the inner rings empty, and the
+  centre motif takes the first non-empty pool, which also fixed an IndexError
+  when the ring counts changed.
+- Verification: three seeds at intricacy 7 with the engraving folder
+  (`samples\preview\gen_fill4.png`) give 19,824 / 25,032 / 18,384 mirrored
+  contours with rings from the rosette to the rim and no white moat. All eleven
+  test modules pass, including the updated motif-plan test; all eleven test
+  modules pass; `docs_index --write/--check` pass.
+- Boundary: level 7 with engravings is now roughly double the earlier contour
+  count (a longer plot); a dark engraving crop can still dominate its band, and
+  `New selection` is the escape hatch.
+- Evidence: `WSW-20260930-020`.
+- Category: windows-software, kaleidoscope, generative, style
+- Next action: browse a dozen seeds and confirm no seed reintroduces a moat.
+
 <a id="elog-20260930-engraving-motifs"></a>
 ### 🟩 2026-09-30 17:19:55 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - engraving motifs from Haeckel plates
 

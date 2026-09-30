@@ -226,8 +226,15 @@ class NaturalMotifTests(unittest.TestCase):
         indices = [index for pool in plan for index in pool]
         self.assertTrue(indices)
         self.assertTrue(all(0 <= index < 5 for index in indices))
-        self.assertTrue(all(pool for pool in plan))
-        # a ring combines several motifs, and deeper intricacy widens the pool
+        # Only the outer two rings carry motifs: engravings are far too
+        # detailed to tile through the whole design.
+        self.assertEqual(plan[-1], sorted(plan[-1]))
+        self.assertTrue(all(plan[-2:]), "the outer two rings draw motifs")
+        self.assertEqual(
+            sum(1 for pool in plan if pool),
+            min(2, len(plan)),
+            "nothing but the outer rings uses the motif pool",
+        )
         self.assertGreater(max(len(pool) for pool in plan), 1)
         self.assertLess(
             len(converter.motif_plan(11, 4, 9)),

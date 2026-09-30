@@ -332,7 +332,7 @@ def _motif_ring(
     scale = extent / radius_max
     flip = _roll(seed, 211) < 0.50
     tilt = 0.55 * (2.0 * _roll(seed, 212) - 1.0)
-    packed = 0.75 + 0.35 * _roll(seed, 215)
+    packed = 0.85 + 0.40 * _roll(seed, 215)
     arc = wedge * mid
     count = max(1, min(3, int(arc * packed / max(width_max * scale, 1e-6))))
     out = []
@@ -386,10 +386,12 @@ def _leaf_ring(r_in, r_out, wedge, level, seed, cancel_check=None):
     leaf rather than an empty outline.
     """
     span = r_out - r_in
-    power = 0.45 + 0.60 * van_der_corput(seed + 1, 5)
+    # Fuller leaves: a thin teardrop leaves a wedge of white beside it, and a
+    # ring of them reads as mostly empty paper.
+    power = 0.32 + 0.45 * van_der_corput(seed + 1, 5)
     samples = 30 + 3 * level
     density = _density(seed)
-    repeat = 1 + _pick(seed, 11, 2)
+    repeat = 1 + (1 if _roll(seed, 11) < 0.62 else 0)
     nests = 1 + level // 3
     ribs = _count(span, (5.6 - 0.26 * level) * density, 3, 24)
     out = []
@@ -818,9 +820,11 @@ def motif_plan(seed, intricacy, count, per_ring=None):
 
     Returns one list of motif indices per shape ring; copies inside a ring pick
     from that pool, so a ring combines several natural shapes rather than
-    repeating one. ``random_pattern`` builds the same pools, so a caller that
-    traces only the indices listed here never misses one. The pool size grows
-    with intricacy unless *per_ring* overrides it.
+    repeating one. Only the outer two rings carry motifs (engravings are far
+    too detailed to tile everywhere), so the inner rings come back empty;
+    ``random_pattern`` builds the same pools, so a caller that traces only the
+    indices listed here never misses one. The pool size grows with intricacy
+    unless *per_ring* overrides it.
     """
     if count <= 0:
         return []
@@ -828,7 +832,11 @@ def motif_plan(seed, intricacy, count, per_ring=None):
     seed = int(seed) % 100000
     picks = min(int(per_ring) if per_ring else 1 + level // 4, int(count))
     pools = []
-    for ring in range(_motif_ring_count(seed, level)):
+    rings = _ring_count(seed, level)
+    for ring in range(rings):
+        if ring < rings - 2:
+            pools.append([])
+            continue
         pool = []
         for slot in range(max(picks, 1)):
             index = _pick(seed, 200 + 40 * slot + ring, count)
@@ -1039,10 +1047,12 @@ def random_pattern(
     # the ring count, the band-width profile, how much of the disc the centre
     # and the rim take, and how tightly each layer packs its detail.
     order = _shuffled(_STYLE_POOLS[style_for(seed)], seed)
-    rings = _motif_ring_count(seed, level) if plan else _ring_count(seed, level)
+    rings = _ring_count(seed, level)
     centre_r = radius * (0.055 + 0.020 * _roll(seed, 2) + 0.006 * level)
-    gap = radius * (0.010 + 0.014 * _roll(seed, 3))
-    outer = radius * (0.855 + 0.075 * _roll(seed, 4))
+    # Tight gaps and a wider outer band: the previous ranges left a visible
+    # white moat between the shape rings and before the rim in every seed.
+    gap = radius * (0.005 + 0.010 * _roll(seed, 3))
+    outer = radius * (0.900 + 0.048 * _roll(seed, 4))
     ladder = 0.60 + 0.60 * _roll(seed, 5)
     dressed = _pick(seed, 6, 4)
     burst = level >= 3 and _roll(seed, 7) < 0.75
@@ -1056,12 +1066,13 @@ def random_pattern(
     contours.extend(_rosette(centre_r, wedge, level, seed + 5, cancel_check))
     if burst:
         contours.extend(_starburst(centre_r, wedge, level, seed + 9, cancel_check))
-    if plan and level >= 4 and _roll(seed, 8) < 0.45:
-        _, motif_radius = _motif_extent(motifs[plan[0][0]])
+    centre_pool = next((pool for pool in plan if pool), [])
+    if centre_pool and level >= 4 and _roll(seed, 8) < 0.45:
+        _, motif_radius = _motif_extent(motifs[centre_pool[0]])
         if motif_radius > 1e-9:
             contours.extend(
                 _place_motif(
-                    motifs[plan[0][0]],
+                    motifs[centre_pool[0]],
                     centre_r * 0.72 / motif_radius,
                     0.0,
                     (0.0, 0.0),
@@ -1078,7 +1089,11 @@ def random_pattern(
         # the reference artwork - while the drawn hatched families fill the
         # rings inside it.
         use_motif = plan and ring >= rings - 2
-        pool = [motifs[index] for index in plan[ring]] if use_motif else []
+        pool = (
+            [motifs[index] for index in plan[ring]]
+            if use_motif and ring < len(plan)
+            else []
+        )
         if any(pool):
             contours.extend(
                 _motif_ring(
