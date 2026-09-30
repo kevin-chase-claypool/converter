@@ -10,6 +10,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-09-30 | `WSW-20260930-001` | implemented | [Calibrate the bed ratio from the measured A-index spacing](../windows-software/2026/2026-09-30-calibrated-bed-ratio.md) | `theta`, `kinematics`, `a-axis`, `calibration`, `registration`, `drift` |
+| 2026-09-30 | `RPSW-20260930-004` | implemented | [Require a homed frame before the park macro moves](2026/2026-09-30-park-macro-requires-homed-frame.md) | `iosender`, `macro`, `p116`, `p111`, `park`, `g53`, `soft-limit`, `homing`, `safety`, `failed-approach` |
 | 2026-09-30 | `RPSW-20260930-003` | implemented | [Add a manual pen-up-to-lift-home and park macro](2026/2026-09-30-manual-pen-up-and-park-macro.md) | `iosender`, `macro`, `p116`, `p115`, `lift-home`, `gp2`, `park`, `g53`, `service` |
 | 2026-09-30 | `RPSW-20260930-002` | implemented | [Widen the 40 g pen-force band back to ±15 g](2026/2026-09-30-widen-pen-force-band-to-15g.md) | `toolhead`, `force-control`, `pen-force`, `calibration`, `safety` |
 | 2026-09-30 | `RPSW-20260930-001` | implemented | [Set the pen force target to 40 g with a ±10 g band](2026/2026-09-30-set-pen-force-40g-band-10g.md) | `toolhead`, `force-control`, `pen-force`, `calibration`, `safety` |

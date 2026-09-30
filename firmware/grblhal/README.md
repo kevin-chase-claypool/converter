@@ -65,9 +65,11 @@ ships the handshake off by default.
 
 `macros/P116.macro` is the manual **PEN UP + PARK** command for an ioSender
 button: `M5` plus `G65 P115 Q0`, the `M65 P0` full-retract request to the GP2
-lift-home switch, and the `G53 G0 X-10 Y-436` off-bed park - the same sequence
-the converter emits at the end of a program. It contains no `$H` and does not
-home, and it is source-ready but not yet run on the machine. See
+lift-home switch, `G65 P111` for physical X/Y home, and the
+`G53 G0 X-10 Y-436` off-bed park. The home is mandatory: the first version
+parked without one and drove the gantry into the `-Y` end on 2026-09-30, because
+an unhomed controller has no machine frame and no soft-limit envelope, so its
+`G53` move travelled the full commanded distance from an unknown position. See
 [`macros/README.md`](macros/README.md).
 
 ## Current records

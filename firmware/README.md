@@ -71,8 +71,12 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   the bed with a `G53 G0` machine-coordinate move. The controller file
   `macros/P116.macro` exposes the same sequence as a manual ioSender button
   (`PEN UP + PARK` -> `G65 P116`) for taking paper off between runs; it proves
-  the normal M5 clearance with `P115` before any gantry move. Neither path
-  homes: both need a known machine position.
+  the normal M5 clearance with `P115`, then runs `G65 P111` to home X/Y before
+  the park. The home is required, not optional: a `G53` park on an unhomed
+  controller has no frame to park in and travels the full commanded distance
+  from an unknown position, which drove the gantry into the `-Y` end on
+  2026-09-30. The converter's program-end park inherits that precondition from
+  the `G65 P113` that precedes every run.
 - **Homing and bed registration** - X/Y physical switches establish machine
   coordinates. A controller-resident `P100.macro` then uses the existing
   Aux0/GP28 arm and GP27/U3 return to capture a full center-magnet raster,

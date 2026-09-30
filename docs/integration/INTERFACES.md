@@ -41,8 +41,8 @@ The converter emits:
 | `G4 P...` | Fixed toolhead settling delay |
 | `G65 P115 Q0/Q1` | Optional RP23CNC-local GP27/`PRB` completion wait; `Q0` is the opening clear check and `Q1` requires a new M3/M5 completion edge |
 | `M65 P0` / `M64 P0` | Assert/release Aux0/GP28; at end of print this requests the toolhead full retract to GP2 |
-| `G53 G0 X Y` | End-of-print machine-coordinate park; clears the pen off the bed |
-| `G65 P116` | Manual PEN UP + PARK: normal M5 clear, `P115` clear proof, GP2 full-retract request, off-bed `G53` park (the program-end sequence as an operator command) |
+| `G53 G0 X Y` | End-of-print machine-coordinate park; clears the pen off the bed. Requires a machine frame: it is only meaningful after homing (`G65 P113`/`P111`), and an unhomed controller does not build the X/Y soft-limit envelope that guards it |
+| `G65 P116` | Manual PEN UP + PARK: normal M5 clear, `P115` clear proof, GP2 full-retract request, physical X/Y home, then the off-bed `G53` park |
 | `M2` | Program end |
 
 Unknown or unsupported commands must cause an explicit error during test, not
@@ -59,6 +59,8 @@ to the GP2 lift-home switch, then a `G53 G0` machine-coordinate park (defaults
 to the homed rest position) so the pen clears the rotating bed for paper removal.
 The same clear, full-retract, and park sequence is available on demand from the
 ioSender `PEN UP + PARK` button, which issues the controller macro `G65 P116`.
+That macro homes X/Y through `G65 P111` before it parks, because the `G53` park
+is meaningless - and unguarded by soft limits - until the machine frame exists.
 
 ## Axis and unit convention
 

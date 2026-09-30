@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-30 | `RPSW-20260930-004` | implemented | [Require a homed frame before the park macro moves](../rp23cnc-software/2026/2026-09-30-park-macro-requires-homed-frame.md) | `iosender`, `macro`, `p116`, `p111`, `park`, `g53`, `soft-limit`, `homing`, `safety`, `failed-approach` |
 | 2026-09-30 | `RPSW-20260930-002` | implemented | [Widen the 40 g pen-force band back to ±15 g](../rp23cnc-software/2026/2026-09-30-widen-pen-force-band-to-15g.md) | `toolhead`, `force-control`, `pen-force`, `calibration`, `safety` |
 | 2026-09-30 | `RPSW-20260930-001` | implemented | [Set the pen force target to 40 g with a ±10 g band](../rp23cnc-software/2026/2026-09-30-set-pen-force-40g-band-10g.md) | `toolhead`, `force-control`, `pen-force`, `calibration`, `safety` |
 | 2026-09-29 | `RPSW-20260929-005` | implemented | [Revert the pen force target to 45 g with a ±15 g band](../rp23cnc-software/2026/2026-09-29-revert-pen-force-target-to-45g.md) | `toolhead`, `force-control`, `pen-force`, `revert` |

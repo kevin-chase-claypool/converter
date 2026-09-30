@@ -167,14 +167,16 @@
 - [ ] **Arm-watchdog headroom.** An earlier P113 attempt faulted at exactly `MAG_MAX_ARM_TIME_MS` (300000 ms) after `SCAN_ACTIVE` armed, because the 21-row 100 mm raster needed about 172 s just to reach the magnet. Acceptance: unattended `G65 P113` completes with the magnet found at the worst-case raster position, either by raising the toolhead watchdog with a stated safety rationale or by shortening the raster (row pitch, scan square, or feed) and re-recording the run.
 - [x] **Re-derive the outer A index spacing budget.** Done 2026-09-30: three surveys (`4331.818` on 2026-09-11, `4331.930` on 2026-09-24, `4332.153` on 2026-09-30; total spread 0.335) set the P100/P112/P103 gate to `4332 +/- 10`, and the converter now emits A with the measured `theta_drive_ratio = 12.03324`. Evidence: `WSW-20260930-001` and the 2026-09-30 P112 lab note.
 - [ ] Connect grblHAL M3/M5 to toolhead ENGAGE/LIFT.
-- [ ] **Verify the manual `PEN UP + PARK` macro on the machine.** From `IDLE`
-  with a registered G54, one `G65 P116` press must prove the normal M5 clear
-  with `P115`, drive the pen to the GP2 lift-home switch through the Aux0/GP28
-  full-retract request, release the arm, and park at `G53 X-10 Y-436` without
-  drag or alarm. Acceptance: the recorded `MPos` matches the park target, and a
-  stuck or faulted toolhead raises `error[39]` before the park move instead of
-  rapid-moving a pen that never left the paper. The button must also be safe to
-  press while the pen is at contact. See `RPSW-20260930-003`.
+- [ ] **Fix and re-verify the manual `PEN UP + PARK` macro.** The first press on
+  2026-09-30 drove the gantry into the `-Y` end: `G53 G0 Y-436` ran with no
+  machine frame, so it travelled the whole commanded distance from an unknown
+  position. `P116` now runs `G65 P111` before the park and no longer risks a
+  spurious magnetic arm when the pen is already at GP2. Acceptance: from cold
+  `IDLE` the button homes X/Y and parks at `G53 X-10 Y-436` with the pen clear,
+  no drag, and no alarm; an out-of-envelope target raises `Alarm:2` instead of
+  moving; a stuck or faulted toolhead raises `error[39]` before any gantry
+  move; and the press is safe while the pen is at contact. See
+  `RPSW-20260930-003` and `RPSW-20260930-004`.
 - [ ] Verify reset and E-stop leave the toolhead safe.
 - [ ] Validate fixed G4 lift and engage dwell timing.
 - [ ] Verify toolhead workload does not cause lost steps or unacceptable jitter.
@@ -194,6 +196,23 @@
 - [ ] Complete and export the Systems Integration in Robotics report.
 
 ## Known technical debt
+
+- [ ] **Park targets are literals pinned to the edge of the soft-limit
+  envelope.**
+  Problem: the converter's `park_x_machine`/`park_y_machine` defaults (`-10`,
+  `-436`) and the matching `P116` target sit 5 mm inside the enforced Y end and
+  exactly on the X pull-off edge. They are derived from `$130`, `$131`, `$27`,
+  and the registered bed centre, so drift in any of them turns the program-end
+  park into `Alarm:2`.
+  Benefit: a park target that stays valid across setting drift and registration
+  movement, and that never needs a hand edit in two places at once.
+  Risk: the off-bed room is genuinely small - the bed edge is roughly 17 mm
+  from the Y limit - so a "safer" target trades clearance for margin, and the
+  choice has to be made with the bed geometry in hand.
+  Acceptance: the target is derived from a fresh `$$` readout and the
+  registered bed centre, its margin to each envelope edge is stated in
+  `software/README.md` and `firmware/grblhal/macros/README.md`, and the
+  converter and `P116` both use the stated value.
 
 - [ ] Re-enable keep-down bridging by default once a print verifies the
   fill-trail tag.

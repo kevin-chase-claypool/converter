@@ -83,17 +83,33 @@ an explicit opt-in and the strict paths remain the default.
 which phase fails on the installed hardware before choosing bounds or turning
 on recover mode.
 
-`P116.macro` is the manual **PEN UP + PARK** operator command. It runs the same
-sequence the converter already emits at the end of a saved program, but on
-demand: `M5` plus the verified `G65 P115 Q0` clear check, then `M65 P0` to
-request the toolhead full retract to the GP2 lift-home switch, a fixed `G4 P3.0`
-bound equal to the toolhead's own `BOOT_LIFT_TIME_MS` retract bound, `M64 P0` to
-release the arm, and `G53 G0 X-10 Y-436` to park off the bed at the homed rest
-position. It contains no `$H`, so it never homes; run it from `IDLE` with a known
-machine position. It releases the arm before asserting it, so an earlier attempt
-that aborted between `M65` and `M64` still produces the rising edge the
-full-retract request needs. The park target matches the converter's
-`park_x_machine` / `park_y_machine` defaults and must stay inside `$130`/`$131`.
+`P116.macro` is the manual **PEN UP + PARK** operator command. It performs, in
+order: `M5` plus the verified `G65 P115 Q0` clear check; the `M65 P0`
+full-retract request to the GP2 lift-home switch inside the toolhead's own
+`BOOT_LIFT_TIME_MS` bound; `M64 P0` to release the arm; `G65 P111` for the one
+physical X/Y home; and `G53 G0 X-10 Y-436` to park off the bed at the homed rest
+position.
+
+The X/Y home is not decoration. **An absolute park needs a machine frame.** An
+unhomed controller has neither a machine position nor a soft-limit envelope for
+X and Y, so a `G53` park pressed from it travels the whole commanded distance
+from wherever the gantry happens to be. The park commands a little over 436 mm
+in -Y while only about 246 mm of travel exists below the registered bed centre,
+so an unhomed press runs the gantry into the end of travel. That is the
+2026-09-30 failure this revision fixes, and it is why `P116` now homes first:
+the home establishes the frame, and the controller then either allows `Y-436`
+(5 mm inside the enforced Y end) or refuses it with a soft-limit alarm instead
+of moving.
+
+The arm handling also changed in that revision. The first version released
+`Aux0`, waited 0.20 s, and asserted it again. When the pen is already parked at
+GP2 the toolhead's readiness prerequisites are met, so that pair is exactly the
+two-phase magnetic arm: the first assertion is a READY_ACK and the second,
+inside the 3.0 s `MAG_REARM_WINDOW_MS`, moves the magnetic state into
+`SCAN_ACTIVE`. The macro now releases the arm and waits `G4 P3.5` - longer than
+the rearm window - before asserting it once, so a pen already at GP2 gets no
+spurious magnetic arm and a pen off GP2 still gets its clean rising-edge
+full-retract request.
 
 The ioSender button is named `PEN UP + PARK`, has confirmation enabled, and
 issues `G65 P116`. An operator who does not want a controller-side macro file can
@@ -108,28 +124,37 @@ G54
 M5
 G65 P115 Q0
 M64 P0
-G4 P0.20
+G4 P3.5
 M65 P0
 G4 P3.0
 M64 P0
+G65 P111
 G53 G0 X-10 Y-436
 ```
 
 `G65 P115 Q0` deliberately runs before any gantry movement. An already-clear
-level or a proved clear-ready edge lets the park proceed; a stuck or faulted
+level or a proved clear-ready edge lets the sequence proceed; a stuck or faulted
 toolhead raises `error[39]` while the gantry is still over the bed, instead of
-rapid-moving a pen that never left the paper. On a controller without
-`P115.macro`, substitute the converter's `G4 P0.8` pen-up dwell, which bounds
-rather than proves the clearance. The retract's `G4 P3.0` is a bound as well, but
-the toolhead raises `GP2 lift-home not reached during retract` inside it, so a
-missed switch cannot become an unlimited retract.
+moving a pen that never left the paper. On a controller without `P115.macro`,
+substitute the converter's `G4 P0.8` pen-up dwell, which bounds rather than
+proves the clearance. The retract's `G4 P3.0` is a bound as well, but the
+toolhead raises `GP2 lift-home not reached during retract` inside it, so a missed
+switch cannot become an unlimited retract.
 
 `P116.macro` deliberately contains no `$` text at all, so no grblHAL system
 command - the `$H` home that P100 must avoid - can execute while it streams.
+The one home is `G65 P111`, which owns that system command.
 
-`P116` is source-ready and the packaged command has not been run on the machine
-yet. Its retract half - `M64 P0`, `M5`, `M65 P0`, `G4 P3.0`, `M64 P0` - was
-exercised on the installed hardware during the 2026-09-29 F-05A session.
+The park target is the converter's `park_x_machine` / `park_y_machine` default
+and it is tight: the enforced envelope is about X `-445..-10` and Y `-441..-10`,
+so `Y-436` is 5 mm from the Y end and `X-10` is on the X pull-off edge. Any
+drift in `$27`, `$130`, or `$131` turns the program-end park into a soft-limit
+alarm. Re-derive the target from a fresh `$$` readout before assuming it is
+still safe.
+
+`P116` has been pressed on the machine exactly once and failed as described
+above. The sequence has not completed a clean run yet; its retract half was also
+exercised during the 2026-09-29 F-05A session.
 
 `P112.macro` is the next **survey-only** A-index stage. After fresh P111 and a
 successful Q5, run `G65 P112` without jogging X/Y/A between them. P112 moves

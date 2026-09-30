@@ -1,5 +1,55 @@
 # Engineering Log
 
+<a id="elog-20260930-park-macro-rammed-negative-y"></a>
+### 🟥 2026-09-30 07:09:09 -0500 - RP23CNC SOFTWARE/FAILED-CORRECTED - the park macro rammed the gantry into -Y, so it now homes first
+
+- Problem: the first `PEN UP + PARK` press (`G65 P116`) drove the gantry into
+  the `-Y` end of travel. The macro ended with `G53 G0 X-10 Y-436` and had no
+  homing step, so the park was an absolute machine-coordinate move issued
+  without a machine frame.
+- Mechanism: `G53` is only meaningful once the machine has a machine position,
+  and grblHAL builds the X/Y work envelope only for homed axes. Unhomed - after
+  a power-up and an unlock - there is no frame and no soft limit to reject the
+  move, so the same line commands a little over 436 mm in `-Y` from wherever
+  the gantry physically is. The registered bed centre is machine `Y -195.270`
+  and the enforced Y end is `Y -441`, so only about 246 mm of travel exists
+  below the bed centre. `WSW-20260929-003` and its same-day correction supply
+  the envelope numbers (`$130=455`, `$131=451`, `$27=10`, `$21=1`).
+- Second defect found while investigating: the arm handling used
+  `M64 P0` / `G4 P0.20` / `M65 P0` to force a clean rising edge. With the pen
+  already parked at GP2 the toolhead's readiness prerequisites are met, so that
+  pair is exactly the two-phase magnetic arm: the first assertion is a
+  `READY_ACK` and the second, inside the 3.0 s `MAG_REARM_WINDOW_MS`, moves the
+  magnetic state into `SCAN_ACTIVE`.
+- Change: `P116` now runs `G65 P111` - the reviewed single-owner X/Y home -
+  between the GP2 full retract and the park, so the park happens with a known
+  frame and under the controller's own soft limits; an out-of-envelope target
+  is now refused as `Alarm:2` instead of being driven. The arm gap widened to
+  `G4 P3.5`, longer than the rearm window, so a single assertion is a
+  full-retract request again. The pasteable ioSender form, `firmware/README.md`,
+  `firmware/grblhal/README.md`, `firmware/grblhal/macros/README.md`, and
+  `docs/integration/INTERFACES.md` now carry the homed-frame precondition.
+- Verification: not re-run on the machine; the corrected sequence has no bench
+  evidence yet. Envelope arithmetic checked against the recorded `WSW-20260929-003`
+  numbers, and the magnetic-arm collision read out of `toolhead_config.h` and
+  `magnetic_homing.cpp`. `python tools\docs_index.py --write` and `--check`
+  pass.
+- Not verified: whether the controller was homed when it rammed. If it was, the
+  home-then-park order still applies (it is what puts the move under the soft
+  limit check) but the accepted park target itself must be re-derived before it
+  is trusted again.
+- Risk: the park target sits 5 mm inside the enforced Y end and exactly on the X
+  pull-off edge, so setting drift makes the converter's own program-end park
+  alarm too; recorded as roadmap technical debt. Homing inside the button also
+  re-zeroes the frame, so re-register with `G65 P113` before the next job.
+- Evidence: `RPSW-20260930-004`; `firmware/grblhal/macros/P116.macro`.
+- Category: rp23cnc-software, windows-software, hardware, iosender, macro, p116,
+  p111, park, g53, soft-limit, homing, safety, failed-approach
+- Next action: with the pen at contact and the controller cold, press
+  `PEN UP + PARK` and record the console output, whether the home runs before
+  any park motion, the final `MPos`, and whether the park ends 5 mm short of the
+  Y end with no alarm.
+
 <a id="elog-20260930-manual-pen-up-and-park-macro"></a>
 ### 🟨 2026-09-30 06:59:01 -0500 - RP23CNC SOFTWARE/IMPLEMENTED - add a manual pen-up-to-lift-home and park macro
 
@@ -31,6 +81,11 @@
 - Next action: press `PEN UP + PARK` from `IDLE` with a registered G54 at
   contact and record the console output, the retract behaviour, and the final
   `MPos` against `G53 X-10 Y-436`.
+- Correction, same day: the "contains no `$H` and does not home" design was
+  wrong, and the first press rammed the gantry into `-Y`. See the earlier
+  2026-09-30 07:09:09 entry and `RPSW-20260930-004`: `P116` now homes X/Y with
+  `G65 P111` before the park, and the arm gap is 3.5 s rather than 0.20 s so a
+  pen already at GP2 cannot start the two-phase magnetic arm.
 
 <a id="elog-20260930-tag-fill-trails-for-bridging"></a>
 ### 🟨 2026-09-30 06:54:17 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - keep-down bridging is off by default and only joins generated fill trails

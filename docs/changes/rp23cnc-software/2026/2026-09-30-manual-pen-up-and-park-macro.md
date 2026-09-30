@@ -128,3 +128,12 @@ bounded-and-fault-protected rather than edge-proven.
   entry point.
 - `docs/integration/INTERFACES.md`: `G65 P116` row and the manual-button note.
 - `docs/project/ROADMAP.md`: the Phase 6 bench-verification task.
+
+## Correction, same day
+
+This note's "it never homes" behaviour is superseded by `RPSW-20260930-004`.
+The first press drove the gantry into the `-Y` end because the `G53` park ran
+without a machine frame, so `P116` now runs `G65 P111` before the park. The
+arm-handling change in that note (`M64 P0`, `G4 P0.20`, `M65 P0`) is also
+superseded there: with the pen at GP2, 0.20 s is inside the toolhead's 3.0 s
+magnetic rearm window, which armed a scan instead of requesting a retract.
