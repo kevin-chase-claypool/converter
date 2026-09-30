@@ -1,5 +1,41 @@
 # Engineering Log
 
+<a id="elog-20260930-nature-motif-library"></a>
+### 🟩 2026-09-30 15:25:10 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - nature motif library for the kaleidoscope generator
+
+- Request: "create a motif folder with something like 100 black and white pngs
+  of nature" for the motif mode added earlier the same day.
+- Change: `tools/make_nature_motifs.py` draws a catalogue of nature silhouettes
+  from code - leaves (simple, oak, maple, ginkgo, fern, palm, heart, clover),
+  flowers (daisy, sunflower, tulip, lotus, bell, hibiscus, dandelion,
+  lavender), trees, sea life (fish, jellyfish, starfish, nautilus, fan shell,
+  cowrie, crab, seahorse, octopus, whale, coral, waves), birds and insects,
+  small animals (snail, turtle, rabbit, cat, elephant, hedgehog) and loose
+  nature (mushroom, acorn, pinecone, mountain, sun, moon, snowflake, grass,
+  water drop). Each is drawn at 4x, downsampled and thresholded to 1-bit, and
+  written to `motifs/nature/`; 110 files, about 125 KB. `motifs/README.md`
+  documents pointing the app at it and adding shapes.
+- Fixed while shipping: motif-mode separator bundles used the full intricacy
+  level and grew into heavy rings that swallowed the natural shapes; they now
+  use `level // 3`. The first-pass silhouettes also needed rework - ginkgo,
+  bell, lavender and maple were redrawn, and deer/fox/turtle were replaced with
+  mushroom, heart leaf, cowrie shell and water drop because their silhouettes
+  never read at motif scale.
+- Verification: contact sheet `samples/png/motif_sheet.png` (all 110) plus
+  focus sheets reviewed and iterated. Headless app against the shipped folder:
+  seeds 4/11/23 at intricacy 8 and 4/11/42 at intricacy 10 build in 0.4-0.9 s,
+  trace 9-18 of 110 images (only those the seed places) and produce
+  2,400-5,800 mirrored contours; render in
+  `samples/png/gen_nature_motifs2.png`. All ten test modules pass;
+  `docs_index --write/--check` pass.
+- Boundary: shapes with fine detail can still read as texture when a seed packs
+  them tightly; a motif scale control would help. Committing 110 binaries adds
+  ~125 KB, but they rebuild from the tracked script.
+- Evidence: `WSW-20260930-011`.
+- Category: windows-software, kaleidoscope, motifs, assets
+- Next action: run a real seed through the plotter with a motif folder and
+  judge which shapes read best in ink.
+
 <a id="elog-20260930-kaleidoscope-natural-motifs"></a>
 ### 🟩 2026-09-30 15:13:45 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: natural PNG motifs as the source of diversity
 

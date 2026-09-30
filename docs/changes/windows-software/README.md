@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-011` | implemented | [Nature motif library for the kaleidoscope generator](2026/2026-09-30-nature-motif-library.md) | `kaleidoscope`, `motifs`, `assets`, `tooling` |
 | 2026-09-30 | `WSW-20260930-010` | implemented | [Kaleidoscope: natural PNG motifs as the source of pattern diversity](2026/2026-09-30-kaleidoscope-natural-motifs.md) | `kaleidoscope`, `generative`, `motifs`, `raster` |
 | 2026-09-30 | `WSW-20260930-009` | implemented | [Kaleidoscope: seeds choose a design, not just its phases](2026/2026-09-30-kaleidoscope-seed-diversity.md) | `kaleidoscope`, `generative`, `pattern-generator`, `seeds` |
 | 2026-09-30 | `WSW-20260930-008` | implemented | [Kaleidoscope: complex multi-layer random patterns](2026/2026-09-30-kaleidoscope-complex-layers.md) | `kaleidoscope`, `generative`, `pattern-generator`, `density` |

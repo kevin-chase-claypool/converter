@@ -1048,7 +1048,16 @@ def random_pattern(
             )
         center_line = r_out + 0.5 * gap
         contours.extend(
-            _separator(center_line, radius, wedge, level, seed + ring, cancel_check)
+            _separator(
+                center_line,
+                radius,
+                wedge,
+                # Motif rings are the subject; do not let the separator
+                # bundles grow into heavy rings that swallow them.
+                level if not plan else max(2, level // 3),
+                seed + ring,
+                cancel_check,
+            )
         )
         if ring < rings - 1:
             mode = _pick(seed + 37 * ring, 30, 4) if dressed == 3 else dressed
