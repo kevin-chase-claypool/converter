@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20260930-pen-force-40g-band-10g"></a>
+### 🟨 2026-09-30 06:24:53 -0500 - FIRMWARE/IMPLEMENTED - set the pen force target to 40 g with a ±10 g band
+
+- Problem: after the 2026-09-29 38 g / ±10 g trial was rejected and 45 g /
+  ±15 g restored, the operator decided the marking force should still come down,
+  choosing 40 g with a ±10 g band (30-50 g) instead of the old 30-60 g.
+- Change: `TARGET_FORCE_RAW_DELTA` and `CONTACT_RAW_DELTA` 226,745 -> 201,551
+  raw (45 -> 40 g at 5,038.77 raw/g) and `CONTACT_READY_TOLERANCE_RAW`
+  75,582 -> 50,388 raw (±15 -> ±10 g). The 75 g hard limit and the 20 g relief
+  offset are unchanged, so the urgent-relief trigger moves from 65 g to 60 g:
+  10 g beyond the band top and 15 g below the hard limit.
+- Kept: the band bottom stays at 30 g, so the change only removes the heavier
+  half of the old band.
+- Verification: `arduino-cli compile` passed for
+  rp2040:rp2040:sparkfun_promicrorp2350 (force-envelope `static_assert`
+  evaluated); `python tools\docs_index.py --write` and `--check` passed. No
+  bench test.
+- Risk: ±10 g is the tolerance widened to ±15 g on 2026-09-25 after high-speed
+  friction lifted the pen; the lower band top (50 g) may reduce that, but it is
+  unproven. Re-verify on T-02/T-03, and adjust the band or hold cadence rather
+  than reverting silently.
+- Evidence: `RPSW-20260930-001`;
+  `firmware/pen_pressure/pro_micro_rp2350_toolhead/toolhead_config.h`.
+- Category: firmware, hardware, toolhead, force-control, calibration, safety
+- Next action: re-flash the toolhead, then run T-02/T-03 and record the achieved
+  band, relief count, and whether the pen stays down on fast strokes.
+
 <a id="elog-20260930-mom-print-was-fitted-not-clipped"></a>
 ### 🟩 2026-09-30 05:03:53 -0500 - WINDOWS SOFTWARE/VERIFIED - the printed mom.gcode was auto-fitted, not clipped
 

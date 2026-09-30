@@ -10,6 +10,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-09-30 | `WSW-20260930-001` | implemented | [Calibrate the bed ratio from the measured A-index spacing](../windows-software/2026/2026-09-30-calibrated-bed-ratio.md) | `theta`, `kinematics`, `a-axis`, `calibration`, `registration`, `drift` |
+| 2026-09-30 | `RPSW-20260930-001` | implemented | [Set the pen force target to 40 g with a ±10 g band](2026/2026-09-30-set-pen-force-40g-band-10g.md) | `toolhead`, `force-control`, `pen-force`, `calibration`, `safety` |
 | 2026-09-29 | `WSW-20260929-003` | implemented | [Re-derive the reach radius and give it a registration-drift margin](../windows-software/2026/2026-09-29-reach-radius-re-derived-with-drift-margin.md) | `converter`, `clipping`, `soft-limit`, `reachable-area`, `g54`, `alarm-2` |
 | 2026-09-29 | `RPSW-20260929-005` | implemented | [Revert the pen force target to 45 g with a ±15 g band](2026/2026-09-29-revert-pen-force-target-to-45g.md) | `toolhead`, `force-control`, `pen-force`, `revert` |
 | 2026-09-29 | `RPSW-20260929-004` | superseded | [Lower the pen force target to 38 g with a ±10 g band](2026/2026-09-29-lower-pen-force-target-to-38g.md) | `toolhead`, `force-control`, `pen-force`, `calibration`, `safety` |

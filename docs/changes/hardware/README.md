@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-30 | `RPSW-20260930-001` | implemented | [Set the pen force target to 40 g with a ±10 g band](../rp23cnc-software/2026/2026-09-30-set-pen-force-40g-band-10g.md) | `toolhead`, `force-control`, `pen-force`, `calibration`, `safety` |
 | 2026-09-29 | `RPSW-20260929-005` | implemented | [Revert the pen force target to 45 g with a ±15 g band](../rp23cnc-software/2026/2026-09-29-revert-pen-force-target-to-45g.md) | `toolhead`, `force-control`, `pen-force`, `revert` |
 | 2026-09-29 | `RPSW-20260929-004` | superseded | [Lower the pen force target to 38 g with a ±10 g band](../rp23cnc-software/2026/2026-09-29-lower-pen-force-target-to-38g.md) | `toolhead`, `force-control`, `pen-force`, `calibration`, `safety` |
 | 2026-09-29 | `RPSW-20260929-003` | implemented | [Define the level-1 system decomposition](../rp23cnc-software/2026/2026-09-29-level-1-system-decomposition.md) | `system-architecture`, `systems-integration`, `interfaces`, `documentation`, `project-management` |

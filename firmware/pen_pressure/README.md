@@ -161,10 +161,11 @@ residual. The selected upward pen-reaction assumption makes force increase as
 raw decreases. The earlier pen-cap run is retained as historical raw evidence
 only. The one-COM-port calibration application provides an installed-pen
 kitchen-scale raw-direction check. By the 2026-09-22 follow-up setting, the
-current supervised integrated build uses a 45 g target (226,745 raw) and a
-75 g hard-force limit (377,908 raw); its ±15 g target-ready band is therefore
-approximately 30–60 g. A 2026-09-29 attempt at a 38 g target with a ±10 g band
-was reverted after a print run, restoring this 45 g / ±15 g setting. These are
+current supervised integrated build uses a 40 g target (201,551 raw) and a
+75 g hard-force limit (377,908 raw); its ±10 g target-ready band is therefore
+approximately 30–50 g. The setting was 45 g / ±15 g until 2026-09-30, when the
+operator reduced the target and the band after rejecting a 2026-09-29 38 g /
+±10 g trial. These are
 selected operating settings, not a new fit
 of the calibration data. The loop still uses the fresh boot tare and 16-sample
 moving average, after the unchanged 100 ms mechanical preload. The 70 g value
@@ -190,7 +191,7 @@ The supervised `MECHANICAL_PRELOAD_MODE` uses a single bounded descend instead
 of the earlier two-touch sequence. M3 steps DOWN in 5 ms pulses with a short
 settle while far from the band and the full 300 ms settle within about 10 g of
 it, then enters `HOLD_FORCE` once the settled force crosses the lower edge of
-the 45 g target band (30 g). When M3 begins at GP2, the
+the 40 g target band (30 g). When M3 begins at GP2, the
 controller first closes the 12 mm gap with 10 ms full-drive pulses; after GP2
 releases it takes its clear-of-paper tare, then continues down, switching to
 5 ms pulses once the force reads above about 1 g. After a normal M5 it starts
@@ -222,7 +223,7 @@ its own short fresh clear-state tare, so the following normal M3 starts from
 that current unloaded baseline rather than a prior-stroke tare.
 
 Once initial contact has been found, `HOLD_FORCE` leaves the driver asleep
-inside the calibrated 30–60 g moving-average band. Outside that band it waits
+inside the calibrated 30–50 g moving-average band. Outside that band it waits
 for three same-direction out-of-band observations, 25 ms apart, before one
 5 ms UP or DOWN pulse. Both directions share the 250 ms correction cadence.
 Every hold pulse stops and sleeps before a fresh later trend can request the
@@ -230,7 +231,7 @@ next one. That bounded cadence only provides about 15 ms of drive per second,
 so when the held force exceeds the target by `HOLD_URGENT_RELIEF_RAW`
 (currently 20 g) the controller instead drives UP continuously, stopping once
 the force is back inside the band or after `HOLD_URGENT_RELIEF_MAX_MS`
-(200 ms). The trigger sits 5 g beyond the band edge and relief stops at the
+(200 ms). The trigger sits 10 g beyond the band edge and relief stops at the
 band edge, so an ordinary in-band excursion cannot start it. The relief path
 is retract-only and cannot increase force. This is the current supervised
 anti-hunting behavior, not a production-qualified tuning result.

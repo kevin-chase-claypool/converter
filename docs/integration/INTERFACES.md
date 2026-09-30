@@ -357,7 +357,7 @@ sleeping between pulses and checking the CS1238 moving average after a short
 settle while far from the band, then the full 300 ms settle once force is
 within about 10 g of it. Once GP2 releases it takes a clear-of-paper tare and
 continues down, switching to 5 ms pulses once the normalized force rises above
-about 1 g. When the settled force crosses the lower edge of the 45 g
+about 1 g. When the settled force crosses the lower edge of the 40 g
 target band (30 g) the
 controller enters `HOLD_FORCE`. GP2 released means normal post-M5 clearance: it
 starts from the fresh clear-state tare. The first warm M3 after boot is
@@ -400,13 +400,13 @@ being interpreted as surface contact. Normal M5 clearance uses a separate
  300 ms settled, 64-sample tare because clearance itself shifts that baseline.
 
 After initial contact, the moving-average force hold is pulse-bounded: it
-sleeps the DRV8833 in the 30–60 g calibrated band. Outside that band, it
+sleeps the DRV8833 in the 30–50 g calibrated band. Outside that band, it
 requires three same-direction filtered observations, 25 ms apart, before one
 5 ms correction; either direction is then limited to once per 250 ms. It never
 leaves a PWM command energized between corrections, except for an over-force
 relief: above `HOLD_URGENT_RELIEF_RAW` (20 g) of excess it drives UP
 continuously for at most `HOLD_URGENT_RELIEF_MAX_MS` (200 ms), stopping as soon
-as the force is back inside the band. The trigger sits 5 g beyond the band edge
+as the force is back inside the band. The trigger sits 10 g beyond the band edge
 and relief stops at the band edge. That path is retract-only. The 75 g
 hard-force guard remains independent and active.
 
