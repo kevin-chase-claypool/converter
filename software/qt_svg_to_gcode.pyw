@@ -926,6 +926,7 @@ class MainWindow(QMainWindow):
         self.compensate_pen = checkboxes["compensate_pen_width"]
         self.expand_strokes = checkboxes["expand_strokes"]
         self.fill_wide_strokes = checkboxes["fill_wide_strokes"]
+        self.keep_down_bridges = checkboxes["keep_down_bridges"]
         self.monotonic_theta = checkboxes["monotonic_theta"]
         self.toolhead_status_handshake = checkboxes["toolhead_status_handshake"]
         self.toolhead_handshake_recover = checkboxes["toolhead_handshake_recover"]
@@ -1100,6 +1101,7 @@ class MainWindow(QMainWindow):
             self.compensate_pen,
             self.expand_strokes,
             self.fill_wide_strokes,
+            self.keep_down_bridges,
             self.monotonic_theta,
             self.use_z,
             self.toolhead_status_handshake,
@@ -1274,6 +1276,7 @@ class MainWindow(QMainWindow):
             "compensate_pen_width": self.compensate_pen.isChecked(),
             "expand_strokes": self.expand_strokes.isChecked(),
             "fill_wide_strokes": self.fill_wide_strokes.isChecked(),
+            "keep_down_bridges": self.keep_down_bridges.isChecked(),
             "monotonic_theta": self.monotonic_theta.isChecked(),
             "toolhead_status_handshake": self.toolhead_status_handshake.isChecked(),
             "toolhead_handshake_recover": self.toolhead_handshake_recover.isChecked(),

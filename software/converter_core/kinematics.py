@@ -1,7 +1,7 @@
 import math
 
 from .cancellation import check_cancelled
-from .geometry import distance, filtered_contour, normalized_hatch_pattern, unwrap_angle
+from .geometry import distance, filtered_contour, normalized_hatch_pattern, retag_contour, unwrap_angle
 from .settings import pattern_size_override, pattern_size_values
 
 
@@ -869,7 +869,11 @@ def planned_contours(contours, settings, center, cancel_check=None):
         for item_idx, reverse_flag in candidates:
             check_cancelled(cancel_check)
             item = items[item_idx]
-            path = list(reversed(item["path"])) if reverse_flag else item["path"]
+            path = (
+                retag_contour(item["path"], reversed(item["path"]))
+                if reverse_flag
+                else item["path"]
+            )
             first_theta = first_segment_theta(path, settings, previous_theta, center, previous_machine)
             if first_theta is None:
                 continue
@@ -948,7 +952,7 @@ def _two_opt_pass(ordered, window=24, cancel_check=None):
             sub = ordered[i + 1 : best_j + 1]
             sub.reverse()
             for item in sub:
-                item["path"] = list(reversed(item["path"]))
+                item["path"] = retag_contour(item["path"], reversed(item["path"]))
                 item["reversed"] = not item.get("reversed", False)
             ordered[i + 1 : best_j + 1] = sub
     return ordered

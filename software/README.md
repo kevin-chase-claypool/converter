@@ -105,8 +105,9 @@ display-only; every other group changes the emitted program.
   tolerance of the intended path.
 - **Fill** — everything about hatching the artwork: spacing (0 = outlines
   only), pattern, angle, `Fill source`, shade levels/angle step, the
-  pattern-specific size fields, and the image-tone sampling resolution. See
-  *Fill* below.
+  pattern-specific size fields, the image-tone sampling resolution, and
+  **Keep pen down between fill trails** (off by default; it only ever joins
+  generated fill trails, never the artwork's own strokes). See *Fill* below.
 - **Motion** — draw/feed rate and travel rate. Values that cannot describe a
   meaningful X/Y/A program (for example, zero feed, a nonpositive theta ratio,
   an invalid A-axis name, or a bed margin that leaves no drawable area) are
@@ -115,7 +116,8 @@ display-only; every other group changes the emitted program.
   against: `Bed dia mm`, `Bed margin mm`, `Gantry reach radius mm`, and the
   end-of-program `Park X/Y machine mm` in G53 machine coordinates.
 - **Theta kinematics** — theta axis/ratio/resolver/cost settings (`Theta ratio`
-  defaults to 12 for the 60T→720T pulley pair).
+  defaults to 12.03324, the measured effective ratio of the 60T→720T pulley
+  pair).
   - **Theta mode** and **Theta resolver** are combos of the implemented
     strategies, so an unsupported value cannot be entered.
   - **Theta tangential speed mm/min** is the requested surface speed caused by

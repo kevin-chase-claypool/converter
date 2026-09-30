@@ -179,6 +179,12 @@ class Settings:
     # this only adds passes for strokes the pen cannot render in one line.
     fill_wide_strokes: bool = False
     stroke_fill_ratio: float = 2.0
+    # Draw a short connector between two nearby generated fill trails instead of
+    # lifting the pen (one M3/M5 cycle saved per joined pair). Off by default:
+    # the connector is only invisible inside a filled region, so this stays an
+    # explicit choice. Bridging is restricted to FillTrail contours, never the
+    # artwork's own open strokes.
+    keep_down_bridges: bool = False
 
 
 TEXT_FIELD_GROUPS = (
@@ -258,6 +264,7 @@ CHECKBOX_FIELDS = (
     ("Geometry", "compensate_pen_width", "Compensate pen stroke", True),
     ("Geometry", "expand_strokes", "Expand strokes to outlines", False),
     ("Geometry", "fill_wide_strokes", "Fill wide strokes", False),
+    ("Fill", "keep_down_bridges", "Keep pen down between fill trails", False),
     ("Theta kinematics", "monotonic_theta", "Monotonic theta (r-theta style)", True),
     ("Pen", "include_z", "Use Z axis for pen up/down", False),
     ("Pen", "toolhead_status_handshake", "Wait for GP27 toolhead ready (commissioned only)", False),
@@ -320,6 +327,7 @@ FIELD_TOOLTIPS = {
     "artwork_offset_x_mm": "Move the artwork's center off the registered bed center, in machine mm. You can also drag the artwork in the preview.",
     "artwork_offset_y_mm": "Move the artwork's center off the registered bed center, in machine mm. You can also drag the artwork in the preview.",
     "stroke_fill_ratio": "With 'Fill wide strokes', a stroke is filled only when its width is at least this many pen diameters.",
+    "keep_down_bridges": "Draw a connector between two nearby generated fill trails instead of lifting the pen. Only applies between fill trails, never across the artwork's own strokes, and off by default because a connector in blank space leaves a visible mark.",
     "hatch_spacing_mm": "Distance between fill lines in mm on paper. 0 turns fill off and plots outlines only.",
     "hatch_pattern": "Fill pattern drawn inside each filled region.",
     "hatch_angle_deg": "Rotation of the fill line family.",

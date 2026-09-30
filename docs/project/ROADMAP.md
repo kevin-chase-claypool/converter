@@ -187,6 +187,19 @@
 
 ## Known technical debt
 
+- [ ] Re-enable keep-down bridging by default once a print verifies the
+  fill-trail tag.
+  Problem: bridging only joins `FillTrail` contours now and ships off
+  (`keep_down_bridges`), because the 2026-09-30 mandala defect showed the old
+  open/closed guard could stitch artwork strokes across blank paper; no printed
+  job has verified the tagged path.
+  Benefit: dense fills return to one continuous zigzag, about 48 minutes saved
+  on the 2026-09-30 mandala job.
+  Risk: a transform that drops the tag costs pen cycles only (safe), but one
+  that ever adds the tag to artwork contours would reintroduce the defect.
+  Acceptance: a fill-heavy print with the option on shows no connector outside
+  a filled region, and the emitted bridge count matches the preview.
+
 - [ ] Give shape-pattern fills a boundary margin again.
   Problem: the 2026-09-27 pull-back change moved the fill bleed margin into the
   line-family clip. `dots`, `circles`, `diamonds`, `triangular`, `hexagonal`,

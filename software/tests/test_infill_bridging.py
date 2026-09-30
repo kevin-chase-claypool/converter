@@ -25,6 +25,16 @@ FILLED_SQUARE = (
     '<rect x="10" y="10" width="40" height="40" fill="black"/></svg>'
 )
 
+# Two open artwork strokes a bridge would happily join: 2 mm apart, well inside
+# the gap guard, and open like an infill trail. They are not fill trails, so the
+# pen must lift between them even when bridging is enabled.
+STROKE_LINES = (
+    '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">'
+    '<line x1="10" y1="20" x2="30" y2="20" stroke="black" stroke-width="0.3" fill="none"/>'
+    '<line x1="10" y1="22" x2="30" y2="22" stroke="black" stroke-width="0.3" fill="none"/>'
+    "</svg>"
+)
+
 
 def _settings(**overrides):
     values = dict(
@@ -38,6 +48,9 @@ def _settings(**overrides):
         pen_diameter_mm=0.3,
         compensate_pen_width=False,
         fill_source="shapes",
+        # The bridging tests exercise the feature itself; the shipped default is
+        # False and has its own test below.
+        keep_down_bridges=True,
     )
     values.update(overrides)
     return converter.Settings(**values)
@@ -57,6 +70,28 @@ def _emit(svg_text, settings):
 
 
 class InfillBridgingTests(unittest.TestCase):
+    def test_bridging_is_off_by_default(self):
+        _passes, contours, cycles, bridges = _emit(
+            FILLED_SQUARE, _settings(hatch_spacing_mm=0.3, keep_down_bridges=False)
+        )
+
+        self.assertEqual(bridges, 0)
+        self.assertEqual(
+            cycles,
+            len(contours),
+            "with bridging off every contour needs its own pen cycle",
+        )
+
+    def test_bridging_never_joins_the_artworks_own_strokes(self):
+        # The 2026-09-30 mandala defect: two open artwork strokes 2 mm apart sit
+        # inside the gap guard, but they are not generated fill trails, so no
+        # connector may be drawn across the blank paper between them.
+        _passes, contours, cycles, bridges = _emit(STROKE_LINES, _settings())
+
+        self.assertEqual(len(contours), 2)
+        self.assertEqual(bridges, 0)
+        self.assertEqual(cycles, 2)
+
     def test_dense_linear_fill_chains_into_a_few_pen_cycles(self):
         passes, _contours, cycles, bridges = _emit(
             FILLED_SQUARE, _settings(hatch_spacing_mm=0.3)

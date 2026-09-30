@@ -1,5 +1,35 @@
 # Engineering Log
 
+<a id="elog-20260930-tag-fill-trails-for-bridging"></a>
+### 🟨 2026-09-30 06:54:17 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - keep-down bridging is off by default and only joins generated fill trails
+
+- Problem: the 2026-09-30 mandala print showed the pen dropping in blank space
+  and zig-zagging across white paper. `mom.gcode` had 1,687 `(keep-down bridge)`
+  moves in 367 chains (largest 13 bridges over 23 mm); the pre-fit generation
+  had none. The 2026-09-24 "only between infill trails" rule was enforced as
+  "both contours are open", which cannot tell a fill trail from the mandala's
+  own open strokes, and the 0.964 fit rescale pushed those stroke gaps under the
+  3.4 mm guard.
+- Change: added `FillTrail`, a marker on contours produced by the fill code,
+  preserved across element transforms, Y flip, scaling, pen-width compensation,
+  bed clipping, plan placement, filtering and path reversal. `bridge_motion`
+  now requires the new `keep_down_bridges` setting (default off) and both
+  contours to be fill trails; the checkbox is in the Fill group and the preview
+  uses the same rule. The tag is metadata and draws nothing.
+- Verification: all eight test modules pass, including new tests that bridging
+  is off by default and that two artwork strokes 2 mm apart are never bridged.
+  On `samples/svg/spirit-logo-purple-rgb.svg`: fill off + option on -> 0
+  bridges; fill on + option on -> 68 bridges / 569 M3, versus 0 bridges / 637 M3
+  with the option off. `py_compile` and `docs_index --write/--check` pass. No
+  print has been made with the new build yet.
+- Not done: bridging ships off, so the mandala job pays roughly 48 minutes of
+  extra pen cycles until a print verifies the tagged path; tracked in the
+  roadmap.
+- Evidence: `WSW-20260930-002`.
+- Category: windows-software, infill, bridge, pen-up, correctness, preview
+- Next action: regenerate and print a fill-heavy job with the option off, then
+  optionally with it on to verify no connector appears outside a filled region.
+
 <a id="elog-20260930-pen-force-band-15g"></a>
 ### 🟨 2026-09-30 06:27:19 -0500 - FIRMWARE/IMPLEMENTED - widened the 40 g pen-force band back to ±15 g
 

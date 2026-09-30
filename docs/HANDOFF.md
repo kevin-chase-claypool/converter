@@ -155,12 +155,13 @@ converter README for the exact preamble and settings.
   machine. The net-winding cap TODO further down becomes more important when this is on.
 - Per-move `duration_ms` uses GRBL vector-feed math: `sqrt(xy_distance² + motor_theta_delta²) /
   rate × 60000`. Captures motor sweep time on rapids/travels that previously appeared instant.
-- Concentric and lattice fill modes have pen-cycle-aware keep-down bridging. `bridge_motion`
-  compares short contour-to-contour gaps against lift/travel/lower time and emits
-  `G1 ... (keep-down bridge)` when drawing the connector is cheaper. Preview uses the same logic,
-  so the estimate and saved G-code agree. Enabled for `concentric`, `triangular`, `diamonds`, and
-  `hexagonal`; other artwork still avoids arbitrary connector drawing. Gap thresholds use the
-  active pattern-specific size override when one is set, falling back to `Fill spacing mm`.
+- Fill code may keep the pen down between two nearby *generated fill trails*: `bridge_motion`
+  compares the connector against lift/travel/lower time and emits `G1 ... (keep-down bridge)`
+  when drawing it is cheaper. The shipped default is off (`keep_down_bridges`), because a
+  connector that crosses blank paper leaves a visible mark — the 2026-09-30 mandala defect.
+  Bridging is restricted to `FillTrail` contours, so the artwork's own open strokes are never
+  joined. Preview uses the same logic, so the estimate and saved G-code agree. Gap thresholds
+  use the active pattern-specific size override when one is set, falling back to `Fill spacing mm`.
 - Final park-NE move at job end.
 - Renamed "rapid" → "travel" everywhere (settings, UI labels, move type strings, JS preview).
 

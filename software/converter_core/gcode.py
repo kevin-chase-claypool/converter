@@ -2,7 +2,7 @@ import math
 import re
 
 from .cancellation import check_cancelled
-from .geometry import clip_contours_to_bed, contour_center, distance, format_float, normalized_hatch_pattern, read_svg
+from .geometry import FillTrail, clip_contours_to_bed, contour_center, distance, format_float, normalized_hatch_pattern, read_svg, retag_contour
 from .kinematics import (
     bed_to_machine,
     plan_radius_aware_draw_feed,
@@ -128,6 +128,8 @@ def _is_open_contour(path, tol=0.5):
 
 
 def bridge_motion(prev_machine, prev_motor_theta, next_machine, next_motor_theta, center, settings):
+    if not bool(getattr(settings, "keep_down_bridges", False)):
+        return None
     pattern = normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))
     # Patterns whose consecutive passes `line_region_contours` already emits
     # head-to-tail (it reverses every other row). Keeping the pen down across
@@ -216,13 +218,16 @@ def plan_program(contours, settings, cancel_check=None):
     )
     center = (0.0, 0.0)
     clipped_contours = [
-        [
-            (
-                point[0] - source_center[0] + placement_x,
-                point[1] - source_center[1] + placement_y,
-            )
-            for point in contour
-        ]
+        retag_contour(
+            contour,
+            [
+                (
+                    point[0] - source_center[0] + placement_x,
+                    point[1] - source_center[1] + placement_y,
+                )
+                for point in contour
+            ],
+        )
         for contour in clipped_contours
     ]
     planned_jobs = []
@@ -289,7 +294,14 @@ def contours_to_gcode(contours, settings, program_plan=None):
         first_motor_theta = first_theta * settings.theta_drive_ratio
         lines.append(f"(contour {planned['index'] + 1}{' reversed' if planned.get('reversed') else ''})")
         bridge = None
-        if previous_machine is not None and previous_pts is not None and _is_open_contour(previous_pts) and _is_open_contour(pts):
+        if (
+            previous_machine is not None
+            and previous_pts is not None
+            and isinstance(previous_pts, FillTrail)
+            and isinstance(pts, FillTrail)
+            and _is_open_contour(previous_pts)
+            and _is_open_contour(pts)
+        ):
             bridge = bridge_motion(
                 previous_machine,
                 previous_motor_theta,
@@ -403,7 +415,14 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
         machine_start = bed_to_machine(path[0], first_theta, center)
         first_motor_theta = first_theta * settings.theta_drive_ratio
         bridge = None
-        if last_machine_end is not None and previous_path is not None and _is_open_contour(previous_path) and _is_open_contour(path):
+        if (
+            last_machine_end is not None
+            and previous_path is not None
+            and isinstance(previous_path, FillTrail)
+            and isinstance(path, FillTrail)
+            and _is_open_contour(previous_path)
+            and _is_open_contour(path)
+        ):
             bridge = bridge_motion(
                 last_machine_end,
                 previous_motor_theta,
