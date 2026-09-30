@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-021` | implemented | [Theta drift: record the ratio in the G-code and ship a calibration plot](2026/2026-09-30-theta-drift-diagnosis-and-calibration-plot.md) | `theta`, `kinematics`, `calibration`, `diagnostics` |
 | 2026-09-30 | `WSW-20260930-020` | implemented | [Kaleidoscope: close the empty bands in motif patterns](2026/2026-09-30-kaleidoscope-fill-the-gaps.md) | `kaleidoscope`, `generative`, `style` |
 | 2026-09-30 | `WSW-20260930-019` | implemented | [Engraving motifs: Haeckel plates cut into organisms](2026/2026-09-30-kaleidoscope-engraving-motifs.md) | `kaleidoscope`, `motifs`, `assets`, `generative` |
 | 2026-09-30 | `WSW-20260930-018` | implemented | [Kaleidoscope: hatched, organic shapes in the drawn pattern generator](2026/2026-09-30-kaleidoscope-hatched-organic-shapes.md) | `kaleidoscope`, `generative`, `style` |

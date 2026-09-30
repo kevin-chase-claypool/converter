@@ -1,5 +1,43 @@
 # Engineering Log
 
+<a id="elog-20260930-theta-drift-calibration"></a>
+### 🟩 2026-09-30 18:50:42 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - theta drift: ratio recorded in the G-code, calibration plot shipped
+
+- Request: "it appears that the change to 12.033 didnt work. i'm seeing the same
+  artifacts/drift that i saw previous to the change" (photo of a plotted
+  mandala, later clarified as produced through the converter).
+- Finding: the change *is* in effect. `settings.theta_drive_ratio` = 12.03324 is
+  applied by every A-axis calculation in `gcode.py` and `kinematics.py`, no app
+  overrides it, and the file they plotted (`samples/gcode/kaleidoscope1.gcode`,
+  written 17:53) postdates the ratio commit `f872f86` (04:47 the same day). The
+  ambiguity is that nothing in a saved program said which ratio produced it, and
+  the nominal hardware ratio is exactly 12.0 (720:60 GT2), so a wrong assumed
+  ratio and a mechanical fault look identical in a finished plot.
+- Change: `contours_to_gcode` now writes
+  `(theta ratio ... motor deg per bed deg, offset ...)` and
+  `(feed ..., travel ..., tolerance ...)` into the preamble. New
+  `tools/make_theta_calibration.py` writes
+  `samples/gcode/theta-calibration.gcode`: eight radial ticks, one full circle
+  (one bed revolution) and a two-turn spiral (two more), through the production
+  planner and emitter. A ratio error grows with the turns - twice the offset on
+  the second lap - while backlash does not.
+- Fixed while building it: marks written at bed angles 360 and 720 do nothing,
+  because the bed angle follows the direction of travel and the planner picks
+  the nearest wrap; only a path that winds accumulates rotation. Regressing A
+  against `atan2(Y, X)` to read the ratio out of a file was tried and rejected -
+  X/Y are machine-frame coordinates, so the relation does not hold.
+- Verification: the calibration tool reports `A spans 13010.7 motor deg over
+  3.00 bed revolutions` (3 x 4331.97). The preamble was checked on a two-point
+  program and `test_theta_feed.py`'s preamble assertion updated. All eleven test
+  modules pass; `docs_index --write/--check` pass.
+- Boundary: the calibration result depends on measuring the spiral gap; if the
+  spiral is right, the next suspect is the controller's A steps-per-degree
+  (hardware), not the converter.
+- Evidence: `WSW-20260930-021`.
+- Category: windows-software, hardware, theta, calibration
+- Next action: plot `samples/gcode/theta-calibration.gcode`, measure the spiral
+  gap, and either correct the ratio or move to the controller's A calibration.
+
 <a id="elog-20260930-fill-the-gaps"></a>
 ### 🟩 2026-09-30 17:43:59 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: close the empty bands in motif patterns
 

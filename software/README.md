@@ -158,6 +158,11 @@ app.
 
 - `G21` (mm), `G90` (absolute), `G94` (units/minute feed), `G17` (XY plane),
   and `G54` (the registered work-coordinate frame)
+- a header comment recording the bed ratio, theta offset, feeds and tolerance
+  that produced the file, so a program can always be traced back to its motion
+  settings (`tools\make_theta_calibration.py` writes a plot that measures the
+  bed's real ratio: a circle plus a two-turn spiral, where a wrong ratio shows
+  as an offset that doubles on the second lap)
 - `G0` travel moves (pen up), `G1` draw moves (pen down)
 - `X Y` in mm in the machine's active work-coordinate frame; `A` =
   **motor-shaft degrees** (already multiplied by `Theta ratio`)
