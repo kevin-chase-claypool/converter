@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-006` | windows-software | implemented | [Kaleidoscope: deterministic random-pattern generator](windows-software/2026/2026-09-30-kaleidoscope-random-pattern-generator.md) |
 | 2026-09-30 | `WSW-20260930-005` | windows-software | implemented | [Kaleidoscope: typed printable bounds and a draggable image](windows-software/2026/2026-09-30-kaleidoscope-typed-bounds-and-draggable-image.md) |
 | 2026-09-30 | `WSW-20260930-004` | windows-software | implemented | [Add the Kaleidoscope Converter app](windows-software/2026/2026-09-30-kaleidoscope-converter.md) |
 | 2026-09-30 | `WSW-20260930-003` | windows-software | implemented | [Default to outlines only and fill only genuinely closed loops](windows-software/2026/2026-09-30-outlines-only-default-and-closed-fill-regions.md) |

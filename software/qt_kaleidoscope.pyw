@@ -1,14 +1,17 @@
-"""Kaleidoscope Converter - import an image, mirror it into N sectors, save G-code.
+"""Kaleidoscope Converter - import or generate artwork, mirror it, save G-code.
 
 This is a focused sibling of `qt_svg_to_gcode.pyw`. It reuses the converter
 core wholesale: `converter_core.kaleidoscope` builds the mirrored design and the
-existing planner, polar kinematics and emitter produce the program. Only the
-source handling, the design controls and a flat bed-frame preview are new.
+existing planner, polar kinematics and emitter produce the program, while
+`converter_core.generative` can draw the source as a sequence-driven mandala.
+Only the source handling, the design controls and a flat bed-frame preview are
+new.
 """
 
 import dataclasses
 import math
 import os
+import random
 import sys
 from pathlib import Path
 
@@ -190,13 +193,40 @@ class KaleidoscopeWindow(QMainWindow):
         self.preview.dragged.connect(self.on_image_dragged)
         self._in_rebuild = False
         self.resize(1100, 720)
-        self.say("Open an SVG, PNG or JPG, set the divisions, then Build preview.")
+        self.say(
+            "Open an SVG, PNG or JPG - or tick Generate a random pattern - "
+            "set the divisions, then Build preview."
+        )
 
     # -- UI construction -------------------------------------------------
 
     def _source_group(self):
         box = QGroupBox("Source")
         form = QFormLayout(box)
+        self.seed = QSpinBox()
+        self.seed.setRange(0, 99999)
+        self.seed.setValue(7)
+        self.seed.setToolTip("The same seed always draws the same pattern.")
+        self.seed_button = QPushButton("New seed")
+        self.seed_button.setToolTip("Roll a fresh seed and redraw.")
+        self.intricacy = QSpinBox()
+        self.intricacy.setRange(1, 10)
+        self.intricacy.setValue(5)
+        self.intricacy.setToolTip(
+            "More bands, finer waves and longer bead strings. Driven by golden-angle, "
+            "Weyl, van der Corput, Fibonacci and prime sequences."
+        )
+        self.random_mode = QCheckBox("Generate a random pattern instead of artwork")
+        self.random_mode.toggled.connect(self.on_source_mode_changed)
+        seed_row = QHBoxLayout()
+        seed_row.addWidget(self.seed)
+        seed_row.addWidget(self.seed_button)
+        form.addRow(self.random_mode)
+        form.addRow("Seed", seed_row)
+        form.addRow("Intricacy", self.intricacy)
+        self.seed.valueChanged.connect(self.on_design_changed)
+        self.seed_button.clicked.connect(self.roll_seed)
+        self.intricacy.valueChanged.connect(self.on_design_changed)
         self.open_button = QPushButton("Open artwork...")
         self.open_button.clicked.connect(self.open_source)
         self.path_label = QLabel("(none)")
@@ -238,6 +268,10 @@ class KaleidoscopeWindow(QMainWindow):
         form.addRow("Image threshold", self.threshold)
         form.addRow(self.invert)
         form.addRow("Trace detail", self.trace_detail)
+        self.source_size.setToolTip(
+            "Artwork: the longest side in millimetres. Random pattern: the outer radius."
+        )
+        self._update_source_mode()
         return box
 
     def _design_group(self):
@@ -353,6 +387,38 @@ class KaleidoscopeWindow(QMainWindow):
     def say(self, message):
         self.log.appendPlainText(message)
 
+    def _has_source(self):
+        return self.random_mode.isChecked() or bool(self.source_path)
+
+    def _update_source_mode(self):
+        generated = self.random_mode.isChecked()
+        for widget in (self.open_button, self.threshold, self.invert, self.trace_detail):
+            widget.setEnabled(not generated)
+        for widget in (self.seed, self.seed_button, self.intricacy):
+            widget.setEnabled(generated)
+        if generated:
+            label = "seed %d, intricacy %d" % (
+                int(self.seed.value()),
+                int(self.intricacy.value()),
+            )
+        elif self.source_path:
+            label = os.path.basename(self.source_path)
+        else:
+            label = "(none)"
+        self.path_label.setText(label)
+
+    def on_source_mode_changed(self, _checked=False):
+        self._update_source_mode()
+        if self._in_rebuild:
+            return
+        if self._has_source():
+            self.rebuild()
+        else:
+            self.save_button.setEnabled(False)
+
+    def roll_seed(self):
+        self.seed.setValue(random.SystemRandom().randrange(0, 100000))
+
     def on_preview_toggle(self, checked):
         self.preview.show_wedge = bool(checked)
         self.preview.update()
@@ -361,21 +427,22 @@ class KaleidoscopeWindow(QMainWindow):
         self.save_button.setEnabled(False)
         if self._in_rebuild:
             return
-        if self.source_path:
+        if self._has_source():
             self.rebuild(refit=False)
 
     def on_design_changed(self, *_args):
         self.save_button.setEnabled(False)
         if self._in_rebuild:
             return
-        if self.source_path:
+        self._update_source_mode()
+        if self._has_source():
             self.rebuild()
 
     def on_offset_changed(self, *_args):
         self.save_button.setEnabled(False)
         if self._in_rebuild:
             return
-        if self.source_path:
+        if self._has_source():
             self.rebuild(refit=False)
 
     def on_bounds_changed(self, *_args):
@@ -383,7 +450,7 @@ class KaleidoscopeWindow(QMainWindow):
         self.save_button.setEnabled(False)
         if self._in_rebuild:
             return
-        if self.source_path:
+        if self._has_source():
             self.rebuild(refit=False)
 
     def update_bounds_note(self):
@@ -402,6 +469,13 @@ class KaleidoscopeWindow(QMainWindow):
         path, _ = QFileDialog.getOpenFileName(self, "Open artwork", "", SOURCE_FILTER)
         if not path:
             return
+        if self.random_mode.isChecked():
+            self._in_rebuild = True
+            try:
+                self.random_mode.setChecked(False)
+            finally:
+                self._in_rebuild = False
+            self._update_source_mode()
         self.source_path = path
         self.path_label.setText(os.path.basename(path))
         self.say(
@@ -433,7 +507,14 @@ class KaleidoscopeWindow(QMainWindow):
         """Centred source in design millimetres, y up, with the image offset applied."""
         path = self.source_path
         size_mm = max(float(size_mm), 1.0)
-        if converter.is_raster_source(path):
+        if self.random_mode.isChecked():
+            contours = converter.random_pattern(
+                seed=int(self.seed.value()),
+                intricacy=int(self.intricacy.value()),
+                radius_mm=size_mm,
+                wedge_deg=180.0 / max(int(self.divisions.value()), 1),
+            )
+        elif converter.is_raster_source(path):
             traced = converter.trace_raster(
                 path,
                 max_side=900,
@@ -481,14 +562,14 @@ class KaleidoscopeWindow(QMainWindow):
         )
 
     def build_design(self, size_mm=None, clip_radius=None):
-        if not self.source_path:
-            raise ValueError("Open an artwork first.")
+        if not self._has_source():
+            raise ValueError("Open an artwork or switch on the random pattern first.")
         settings = self.output_settings()
         size = float(self.source_size.value()) if size_mm is None else float(size_mm)
         return settings, self._build(settings, size, clip_radius)
 
     def rebuild(self, refit=None):
-        if not self.source_path:
+        if not self._has_source():
             return
         if refit is None:
             refit = self.auto_fit.isChecked()
@@ -521,10 +602,18 @@ class KaleidoscopeWindow(QMainWindow):
         radius = max((math.hypot(x, y) for contour in design for x, y in contour), default=0.0)
         self.save_button.setEnabled(bool(design))
         offset_x, offset_y = self._image_offset()
+        if self.random_mode.isChecked():
+            source = "random pattern, seed %d, intricacy %d" % (
+                int(self.seed.value()),
+                int(self.intricacy.value()),
+            )
+        else:
+            source = os.path.basename(self.source_path)
         self.say(
-            "Design: %d divisions%s, %d contours, outer radius %.1f mm of the %.1f mm bound "
+            "Design (%s): %d divisions%s, %d contours, outer radius %.1f mm of the %.1f mm bound "
             "(reach %.1f mm, image offset %.1f, %.1f)."
             % (
+                source,
                 int(self.divisions.value()),
                 " mirrored" if self.mirror.isChecked() else "",
                 len(design),
@@ -542,7 +631,7 @@ class KaleidoscopeWindow(QMainWindow):
             )
 
     def fit_to_bounds(self):
-        if not self.source_path:
+        if not self._has_source():
             return
         try:
             target = max(float(self.fit_radius.value()), 1.0)
@@ -566,7 +655,7 @@ class KaleidoscopeWindow(QMainWindow):
 
     def on_image_dragged(self, dx, dy):
         """Move the source image inside the fixed design frame."""
-        if not self.source_path or self._in_rebuild:
+        if not self._has_source() or self._in_rebuild:
             return
         self._in_rebuild = True
         try:

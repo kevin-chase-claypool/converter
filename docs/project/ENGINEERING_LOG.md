@@ -1,5 +1,43 @@
 # Engineering Log
 
+<a id="elog-20260930-kaleidoscope-random-pattern"></a>
+### 🟩 2026-09-30 14:22:38 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: deterministic random-pattern generator
+
+- Request: add a randomizer to the Kaleidoscope Converter that "spits out a
+  random pattern into the divisions", with an adjustable intricacy, randomised
+  through mathematical sequences - and make the output beautiful.
+- Change: new `converter_core/generative.py` builds a pattern in a single wedge
+  from sequence-driven helpers (golden angle, Weyl, van der Corput, Fibonacci,
+  primes) and seven band families - scallop, petals, wicker, rays, beads,
+  chevron, spiral - composed as a central rosette, a geometric ladder of
+  `2 + intricacy // 3` bands and a beaded rim. Band curves reach both seam
+  angles, so the existing clip-and-mirror step turns them into continuous rings.
+  `qt_kaleidoscope.pyw` gained a `Generate a random pattern instead of artwork`
+  mode with `Seed`/`New seed` and `Intricacy`, routed through the same offset,
+  fit, clip, mirror, preview and save pipeline as an imported image.
+- Fixed while testing: a call-site bug passed the band edge where `_rosette`
+  expects the wedge angle, so the centre rosette was drawn as a five-turn ring
+  at exactly the clip radius and the disc clipper chopped it into long straight
+  chords across every wedge. Found by scanning the mirrored output for two-point
+  contours over 10 mm; the scan is now a regression test. The first draft
+  (independent scattered motifs) was rejected as noisy before shipping.
+- Verification: new `software/tests/test_generative.py` (8 tests) covers
+  determinism, seed variation, intricacy monotonicity, radius and wedge bounds,
+  band containment and the chord regression; all ten test modules pass.
+  Headless Qt: pattern mode with no artwork builds 384 contours fitted to
+  181.3 mm, intricacy 5 -> 9 grows 10,248 -> 22,824 points, `New seed` changes
+  the design, and saving emits 33,852 lines / 1,008 pen cycles. Visual checks:
+  3x3 seed/intricacy render grids plus the offscreen app preview
+  (`samples/png/gen_grid3.png`, `gen_preview.png`). `docs_index --write/--check`
+  pass.
+- Boundary: family geometry is composed for the current wedge, so a design is
+  only reproducible with the same `Divisions`; intricacy 9-10 is roughly 34k
+  G-code lines with no warning yet.
+- Evidence: `WSW-20260930-006`.
+- Category: windows-software, kaleidoscope, generative, interface
+- Next action: plot one generated pattern at intricacy 5 and check that the
+  mirrored seams and bead strings land as drawn.
+
 <a id="elog-20260930-kaleidoscope-typed-bounds-drag"></a>
 ### 🟩 2026-09-30 13:56:48 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: typed printable bounds and a draggable image
 

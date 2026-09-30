@@ -35,6 +35,18 @@ app.
   contours (`converter_core.kaleidoscope.trace_raster`), so a traced region can
   also be filled by the normal fill settings; `Image threshold`,
   `Treat light pixels as ink` and `Trace detail` control that trace.
+- **Random pattern.** Tick `Generate a random pattern instead of artwork` to
+  draw the source with the built-in generator instead of importing one. `Seed`
+  (with `New seed`) selects a design and `Intricacy` (1-10) grows the band
+  count, wave counts and bead strings; increasing it only ever adds detail. The
+  pattern is composed in the current wedge - a central rosette, a geometric
+  ladder of concentric bands (scallops, petals, wicker, rays, beads, chevrons,
+  spirals) and a beaded rim - and is then clipped, mirrored, offset, auto-fitted
+  and saved exactly like an imported image, so one seed plus the other controls
+  reproduces the same G-code. The counts, radii and phases come from
+  mathematical sequences (golden angle, Weyl, van der Corput, Fibonacci,
+  primes), not from unseeded noise. The artwork-only controls (open button,
+  threshold, invert, trace detail) are disabled while this mode is on.
 - **Kaleidoscope.** The source is centred on the apex and clipped to a
   half-wedge of `180 / Divisions` degrees, then placed `2 * Divisions` times
   around the circle, alternating mirrored copies so 360 degrees tile exactly.

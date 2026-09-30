@@ -4,6 +4,7 @@ from .geometry import *
 from .kinematics import *
 from .gcode import *
 from .kaleidoscope import *
+from .generative import *
 
 __all__ = [name for name in globals() if not name.startswith("_")]
 
