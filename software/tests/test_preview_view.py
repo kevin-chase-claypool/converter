@@ -357,5 +357,33 @@ class SettingsPersistenceTests(unittest.TestCase):
             self.assertLessEqual(len(contours), 200)
 
 
+@unittest.skipUnless(HAVE_QT, "PySide6 is not installed")
+class GcodeHeaderTests(unittest.TestCase):
+    """The kaleidoscope app writes the same self-documenting program header."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+        cls.module = _load_app_module()
+
+    def test_saved_gcode_records_the_theta_ratio(self):
+        converter = self.module.converter
+        window = self.module.KaleidoscopeWindow(settings_file=_temp_settings(self))
+        window.seed.setValue(4)
+        window.intricacy.setValue(2)
+        window.random_mode.setChecked(True)
+        settings = window.settings
+        plan = converter.plan_program(window.design, settings)
+        gcode = converter.contours_to_gcode(window.design, settings, plan)
+        expected = "(theta ratio %.5f motor deg per bed deg" % (
+            converter.Settings().theta_drive_ratio
+        )
+        self.assertEqual(
+            settings.theta_drive_ratio, converter.Settings().theta_drive_ratio
+        )
+        self.assertIn(expected, gcode)
+        self.assertIn("(feed ", gcode)
+
+
 if __name__ == "__main__":
     unittest.main()
