@@ -132,6 +132,14 @@ app.
   contours or 4,000 points is skipped with a log line - that means it is a
   whole drawing rather than a single shape, and the affected ring falls back to
   the drawn families.
+- **Motifs in use.** `Motifs in use` caps how many images from the folder a
+  design may draw on, and it defaults to **10**: the app picks that many at
+  random from the folder - `New selection` draws a different random set - and
+  only those are traced, offered to the generator and cached. A folder of 150
+  organisms therefore costs about ten traces instead of the whole set, which is
+  what keeps the launcher from grinding through every PNG. Raise the number if
+  you want a wider palette, lower it for a tighter look; the choice, the
+  selection and the folder all come back on the next launch.
 - **Preview view.** The preview is a flat bed-frame view — bed circle, reach
   circle, the sampled wedge and the design — with the same camera gestures as
   the main app: the wheel zooms about the cursor (10 % to 2000 %), `Shift`-drag

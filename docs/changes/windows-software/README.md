@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-017` | implemented | [Kaleidoscope: use a random set of ten motifs, not the whole folder](2026/2026-09-30-kaleidoscope-motif-selection-cap.md) | `kaleidoscope`, `motifs`, `interface` |
 | 2026-09-30 | `WSW-20260930-016` | implemented | [Kaleidoscope: remembered setup and a default motif folder](2026/2026-09-30-kaleidoscope-remembered-setup.md) | `kaleidoscope`, `interface`, `motifs` |
 | 2026-09-30 | `WSW-20260930-015` | implemented | [Kaleidoscope: auto-fit no longer overwrites typed numbers](2026/2026-09-30-kaleidoscope-non-destructive-autofit.md) | `kaleidoscope`, `interface`, `bounds` |
 | 2026-09-30 | `WSW-20260930-014` | implemented | [Realistic nature motifs and deeper motif rings](2026/2026-09-30-realistic-nature-motifs.md) | `kaleidoscope`, `motifs`, `assets`, `generative` |

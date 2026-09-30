@@ -250,16 +250,17 @@ class DesignPreview(QWidget):
 
 
 class KaleidoscopeWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, settings_file=None):
         super().__init__()
         self.setWindowTitle("Kaleidoscope Converter")
         self.source_path = ""
         self.design = []
         self.motif_folder = ""
+        self.all_motif_paths = []
         self.motif_paths = []
         self.motif_cache = {}
         self.fit_scale = 1.0
-        self._settings_file = None
+        self._settings_file = settings_file
 
         self.preview = DesignPreview()
         right = QWidget()
@@ -344,13 +345,32 @@ class KaleidoscopeWindow(QMainWindow):
         )
         self.motif_label = QLabel("(none)")
         self.motif_label.setWordWrap(True)
+        self.motif_limit = QSpinBox()
+        self.motif_limit.setRange(1, 200)
+        self.motif_limit.setValue(10)
+        self.motif_limit.setToolTip(
+            "How many images from the folder a design may use. The rest are "
+            "ignored until you pick a new selection, so a large folder is never "
+            "traced or plotted in one go."
+        )
+        self.motif_reroll_button = QPushButton("New selection")
+        self.motif_reroll_button.setToolTip(
+            "Draw a different random set from the folder."
+        )
+        limit_row = QHBoxLayout()
+        limit_row.addWidget(QLabel("Motifs in use"))
+        limit_row.addWidget(self.motif_limit)
+        limit_row.addWidget(self.motif_reroll_button)
         motifs_row = QHBoxLayout()
         motifs_row.addWidget(self.motif_button)
         motifs_row.addWidget(self.motif_label, 1)
         form.addRow(self.use_motifs)
         form.addRow(motifs_row)
+        form.addRow(limit_row)
         self.use_motifs.toggled.connect(self.on_source_mode_changed)
         self.motif_button.clicked.connect(self.choose_motif_folder)
+        self.motif_limit.valueChanged.connect(self.on_motif_limit_changed)
+        self.motif_reroll_button.clicked.connect(self.roll_motif_selection)
         self.seed.valueChanged.connect(self.on_design_changed)
         self.seed_button.clicked.connect(self.roll_seed)
         self.intricacy.valueChanged.connect(self.on_design_changed)
@@ -588,6 +608,7 @@ class KaleidoscopeWindow(QMainWindow):
             ("fill_spacing", self.fill_spacing, float),
             ("feed_rate", self.feed_rate, float),
             ("theta_speed", self.theta_speed, float),
+            ("motif_limit", self.motif_limit, int),
         )
         for key, widget, cast in numbers:
             if key not in data:
@@ -611,7 +632,11 @@ class KaleidoscopeWindow(QMainWindow):
         folder = data.get("motif_folder") or self.default_motif_folder()
         loaded = False
         if folder:
-            loaded = self.load_motif_folder(folder, announce=False)
+            loaded = self.load_motif_folder(
+                folder,
+                announce=False,
+                wanted=data.get("motif_selection") or None,
+            )
         # First run with a motif folder: come up ready to pattern with it
         # instead of making the operator set the same two ticks every launch.
         if loaded and "use_motifs" not in data:
@@ -626,6 +651,8 @@ class KaleidoscopeWindow(QMainWindow):
     def save_settings(self):
         data = {
             "motif_folder": self.motif_folder,
+            "motif_selection": list(self.motif_paths),
+            "motif_limit": int(self.motif_limit.value()),
             "source_path": self.source_path,
             "seed": int(self.seed.value()),
             "intricacy": int(self.intricacy.value()),
@@ -728,7 +755,7 @@ class KaleidoscopeWindow(QMainWindow):
             return
         self.load_motif_folder(folder)
 
-    def load_motif_folder(self, folder, announce=True):
+    def load_motif_folder(self, folder, announce=True, wanted=None):
         """Point the motif mode at *folder*; remember it for next launch."""
         paths = sorted(
             str(path)
@@ -742,23 +769,81 @@ class KaleidoscopeWindow(QMainWindow):
                 )
             return False
         self.motif_folder = str(folder)
-        self.motif_paths = paths
-        self.motif_cache = {}
-        names = ", ".join(os.path.basename(path) for path in paths[:3])
-        self.motif_label.setText(
-            "%d file%s: %s%s"
-            % (len(paths), "" if len(paths) == 1 else "s", names, ", ..." if len(paths) > 3 else "")
-        )
+        self.all_motif_paths = paths
+        # Restoring a session keeps the same files when they still exist.
+        self.select_motifs(wanted)
         self.motif_label.setToolTip(str(folder))
         if not announce:
             return True
         self.use_motifs.setChecked(True)
-        self.say("Loaded %d motif images from %s." % (len(paths), folder))
+        self.say(
+            "Loaded %s: using %d of %d images until you press New selection."
+            % (folder, len(self.motif_paths), len(paths))
+        )
         self._update_source_mode()
         self.save_settings()
         if self._has_source() and not self._in_rebuild:
             self.rebuild()
         return True
+
+    def select_motifs(self, wanted=None):
+        """Choose at most ``motif_limit`` images at random from the folder.
+
+        Only this subset is ever traced, and only this subset is offered to the
+        generator, so a folder of hundreds of images costs a handful of traces
+        rather than all of them.
+        """
+        pool = list(self.all_motif_paths)
+        limit = max(1, int(self.motif_limit.value()))
+        if wanted:
+            available = set(pool)
+            chosen = [path for path in wanted if path in available]
+            if len(chosen) > limit:
+                chosen = chosen[:limit]
+            missing = limit - len(chosen)
+            if missing > 0 and len(pool) > len(chosen):
+                rest = [path for path in pool if path not in set(chosen)]
+                chosen.extend(random.SystemRandom().sample(rest, min(missing, len(rest))))
+        elif len(pool) <= limit:
+            chosen = pool
+        else:
+            chosen = random.SystemRandom().sample(pool, limit)
+        self.motif_paths = sorted(chosen)
+        self.motif_cache = {}
+        self.refresh_motif_label()
+        return self.motif_paths
+
+    def refresh_motif_label(self):
+        total = len(self.all_motif_paths)
+        chosen = len(self.motif_paths)
+        if not total:
+            self.motif_label.setText("(none)")
+            return
+        names = ", ".join(os.path.basename(path) for path in self.motif_paths[:3])
+        more = ", ..." if chosen > 3 else ""
+        self.motif_label.setText(
+            "using %d of %d: %s%s" % (chosen, total, names, more)
+        )
+
+    def roll_motif_selection(self):
+        if not self.all_motif_paths:
+            return
+        self.select_motifs()
+        self.save_settings()
+        if self._has_source() and not self._in_rebuild:
+            self.rebuild()
+        self.say(
+            "New motif selection: %d of %d images."
+            % (len(self.motif_paths), len(self.all_motif_paths))
+        )
+
+    def on_motif_limit_changed(self, _value=None):
+        if not self.all_motif_paths or self._in_rebuild:
+            return
+        self.select_motifs()
+        self.save_settings()
+        if self._has_source():
+            self.rebuild()
 
     def _motif(self, index):
         """Traced, centred, unit-sized contours for one motif image."""

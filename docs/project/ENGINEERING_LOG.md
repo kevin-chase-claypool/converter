@@ -1,5 +1,35 @@
 # Engineering Log
 
+<a id="elog-20260930-kaleidoscope-motif-selection-cap"></a>
+### 🟩 2026-09-30 16:48:42 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: use a random set of ten motifs, not the whole folder
+
+- Request: "in order to keep the bat from attempting to render all of the pngs
+  simultaneously i want to limit it to 10, randomized within the folders
+  options".
+- Change: a motif folder is now a pool rather than a worklist. `Motifs in use`
+  (spin box, default 10) caps how many images a design may draw on;
+  `load_motif_folder` keeps the folder's full list in `all_motif_paths` and
+  `select_motifs()` draws a `random.SystemRandom()` sample into `motif_paths`,
+  which is the only list traced, cached and offered to the generator. A `New
+  selection` button re-draws the set, the label reads `using 10 of 150: ...`,
+  and `motif_limit` plus `motif_selection` are stored in the settings file so
+  the same ten come back on the next launch. `KaleidoscopeWindow` also accepts
+  an explicit `settings_file`, so tests no longer read the operator's real
+  settings.
+- Verification: new tests cover the ten-file cap on a 110-file folder, the
+  limit control (3 -> three files, 200 -> the whole folder), re-rolling
+  changing the set, and the selection surviving a save/apply round trip. A
+  headless run against `samples\png` (40 files) starts in 4.5 s with `using 10
+  of 40`, and limit 3 + reload restores the same three. All eleven test modules
+  pass; `docs_index --write/--check` pass.
+- Boundary: a ten-image selection narrows the palette, so the same animals recur
+  across seeds until `New selection` is pressed; that is the intended trade for
+  a bounded amount of tracing.
+- Evidence: `WSW-20260930-017`.
+- Category: windows-software, kaleidoscope, motifs, interface
+- Next action: browse seeds with the default ten and press New selection when
+  the palette feels stale.
+
 <a id="elog-20260930-kaleidoscope-remembered-setup"></a>
 ### 🟩 2026-09-30 16:41:11 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: remembered setup and default motif folder
 

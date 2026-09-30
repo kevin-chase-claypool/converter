@@ -10,6 +10,7 @@ drag, and an image drag must shrink in millimetres as the view is zoomed in.
 import importlib.util
 import math
 import os
+import shutil
 import sys
 import tempfile
 import unittest
@@ -34,6 +35,13 @@ def _load_app_module():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _temp_settings(test):
+    """A settings file in its own temp folder, so tests never read the real one."""
+    folder = tempfile.mkdtemp(prefix="kaleido-settings-")
+    test.addCleanup(shutil.rmtree, folder, ignore_errors=True)
+    return str(Path(folder) / "settings.json")
 
 
 @unittest.skipUnless(HAVE_QT, "PySide6 is not installed")
@@ -113,11 +121,11 @@ class SourceSizeTests(unittest.TestCase):
         cls.module = _load_app_module()
 
     def test_source_size_has_no_practical_cap(self):
-        window = self.module.KaleidoscopeWindow()
+        window = self.module.KaleidoscopeWindow(settings_file=_temp_settings(self))
         self.assertGreaterEqual(window.source_size.maximum(), 100000.0)
 
     def test_huge_source_size_is_fitted_to_the_bound(self):
-        window = self.module.KaleidoscopeWindow()
+        window = self.module.KaleidoscopeWindow(settings_file=_temp_settings(self))
         window.seed.setValue(6)
         window.intricacy.setValue(3)
         window.random_mode.setChecked(True)
@@ -141,7 +149,9 @@ class TypedNumberTests(unittest.TestCase):
         cls.module = _load_app_module()
 
     def setUp(self):
-        self.window = self.module.KaleidoscopeWindow()
+        self.window = self.module.KaleidoscopeWindow(
+            settings_file=_temp_settings(self)
+        )
         self.window.seed.setValue(5)
         self.window.intricacy.setValue(4)
         self.window.random_mode.setChecked(True)
@@ -213,8 +223,7 @@ class SettingsPersistenceTests(unittest.TestCase):
         cls.module = _load_app_module()
 
     def test_default_motif_folder_prefers_the_scratch_pngs(self):
-        window = self.module.KaleidoscopeWindow()
-        window._settings_file = None
+        window = self.module.KaleidoscopeWindow(settings_file=_temp_settings(self))
         default = window.default_motif_folder()
         self.assertTrue(default, "a default motif folder should be offered")
         root = Path(default)
@@ -225,8 +234,7 @@ class SettingsPersistenceTests(unittest.TestCase):
     def test_settings_round_trip_keeps_folder_and_numbers(self):
         with tempfile.TemporaryDirectory() as folder:
             settings = Path(folder) / "settings.json"
-            first = self.module.KaleidoscopeWindow()
-            first._settings_file = settings
+            first = self.module.KaleidoscopeWindow(settings_file=str(settings))
             first.seed.setValue(4321)
             first.intricacy.setValue(8)
             first.divisions.setValue(17)
@@ -237,8 +245,7 @@ class SettingsPersistenceTests(unittest.TestCase):
             first.save_settings()
             self.assertTrue(settings.is_file())
 
-            second = self.module.KaleidoscopeWindow()
-            second._settings_file = settings
+            second = self.module.KaleidoscopeWindow(settings_file=str(settings))
             second.apply_settings()
             self.assertEqual(second.seed.value(), 4321)
             self.assertEqual(second.intricacy.value(), 8)
@@ -256,17 +263,57 @@ class SettingsPersistenceTests(unittest.TestCase):
             self.skipTest("the shipped drawn motif folder is not present")
         with tempfile.TemporaryDirectory() as folder:
             settings = Path(folder) / "settings.json"
-            window = self.module.KaleidoscopeWindow()
-            window._settings_file = settings
+            window = self.module.KaleidoscopeWindow(settings_file=str(settings))
             window.motif_folder = str(drawn)
             window.save_settings()
 
-            restored = self.module.KaleidoscopeWindow()
-            restored._settings_file = settings
+            restored = self.module.KaleidoscopeWindow(settings_file=str(settings))
             restored.apply_settings()
             self.assertEqual(restored.motif_folder, str(drawn))
             self.assertTrue(restored.motif_paths)
-            self.assertGreater(len(restored.motif_paths), 50)
+            self.assertEqual(
+                len(restored.motif_paths), 10, "the default selection is ten images"
+            )
+            self.assertTrue(
+                set(restored.motif_paths) <= set(restored.all_motif_paths)
+            )
+
+    def test_only_the_selected_subset_is_used(self):
+        root = Path(self.module.__file__).resolve().parents[1]
+        drawn = root / "motifs" / "nature-drawn"
+        if not drawn.is_dir():
+            self.skipTest("the shipped drawn motif folder is not present")
+        window = self.module.KaleidoscopeWindow(settings_file=_temp_settings(self))
+        window.load_motif_folder(str(drawn), announce=False)
+        self.assertGreater(len(window.all_motif_paths), 10)
+        self.assertEqual(len(window.motif_paths), 10)
+        self.assertTrue(set(window.motif_paths) <= set(window.all_motif_paths))
+
+    def test_motif_limit_controls_how_many_are_used(self):
+        root = Path(self.module.__file__).resolve().parents[1]
+        drawn = root / "motifs" / "nature-drawn"
+        if not drawn.is_dir():
+            self.skipTest("the shipped drawn motif folder is not present")
+        window = self.module.KaleidoscopeWindow(settings_file=_temp_settings(self))
+        window.load_motif_folder(str(drawn), announce=False)
+        window.motif_limit.setValue(3)
+        self.assertEqual(len(window.motif_paths), 3)
+        window.motif_limit.setValue(200)
+        self.assertEqual(len(window.motif_paths), len(window.all_motif_paths))
+
+    def test_new_selection_draws_a_different_set(self):
+        root = Path(self.module.__file__).resolve().parents[1]
+        drawn = root / "motifs" / "nature-drawn"
+        if not drawn.is_dir():
+            self.skipTest("the shipped drawn motif folder is not present")
+        window = self.module.KaleidoscopeWindow(settings_file=_temp_settings(self))
+        window.load_motif_folder(str(drawn), announce=False)
+        first = set(window.motif_paths)
+        window.roll_motif_selection()
+        self.assertEqual(len(window.motif_paths), 10)
+        self.assertNotEqual(
+            first, set(window.motif_paths), "a re-roll should pick different images"
+        )
 
     def test_a_whole_drawing_is_skipped_as_a_motif(self):
         from PIL import Image, ImageDraw
@@ -281,8 +328,9 @@ class SettingsPersistenceTests(unittest.TestCase):
                     draw.rectangle([x, y, x + 12, y + 12], fill=0)
             image.save(drawing)
 
-            window = self.module.KaleidoscopeWindow()
-            window._settings_file = Path(folder) / "settings.json"
+            window = self.module.KaleidoscopeWindow(
+                settings_file=_temp_settings(self)
+            )
             self.assertTrue(window.load_motif_folder(folder, announce=False))
             self.assertEqual(window._motif(0), [], "a busy drawing is not a motif")
             self.assertIn("Skipped busy.png", window.log.toPlainText())
@@ -296,8 +344,9 @@ class SettingsPersistenceTests(unittest.TestCase):
             ImageDraw.Draw(image).ellipse([80, 120, 320, 300], fill=0)
             image.save(shape)
 
-            window = self.module.KaleidoscopeWindow()
-            window._settings_file = Path(folder) / "settings.json"
+            window = self.module.KaleidoscopeWindow(
+                settings_file=_temp_settings(self)
+            )
             self.assertTrue(window.load_motif_folder(folder, announce=False))
             contours = window._motif(0)
             self.assertTrue(contours, "one shape should be usable")
