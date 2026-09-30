@@ -9,6 +9,7 @@ new.
 """
 
 import dataclasses
+import json
 import math
 import os
 import random
@@ -254,9 +255,11 @@ class KaleidoscopeWindow(QMainWindow):
         self.setWindowTitle("Kaleidoscope Converter")
         self.source_path = ""
         self.design = []
+        self.motif_folder = ""
         self.motif_paths = []
         self.motif_cache = {}
         self.fit_scale = 1.0
+        self._settings_file = None
 
         self.preview = DesignPreview()
         right = QWidget()
@@ -287,6 +290,7 @@ class KaleidoscopeWindow(QMainWindow):
         self.reset_view_button.clicked.connect(self.preview.reset_view)
         self.preview.viewChanged.connect(self.on_view_changed)
         self._in_rebuild = False
+        self._loading = True
         self.resize(1100, 720)
         self.say(
             "Open an SVG, PNG or JPG - or tick Generate a random pattern - "
@@ -296,6 +300,11 @@ class KaleidoscopeWindow(QMainWindow):
             "Preview: wheel zooms, Shift-drag or middle/right-drag pans, plain "
             "drag moves the image inside the frame."
         )
+        self.apply_settings()
+        self._loading = False
+        self._update_source_mode()
+        if self._has_source():
+            self.rebuild()
 
     # -- UI construction -------------------------------------------------
 
@@ -533,6 +542,126 @@ class KaleidoscopeWindow(QMainWindow):
     def say(self, message):
         self.log.appendPlainText(message)
 
+    # -- remembered settings ----------------------------------------------
+
+    def settings_path(self):
+        if self._settings_file:
+            return Path(self._settings_file)
+        return Path(__file__).resolve().parent / "kaleidoscope_settings.json"
+
+    def default_motif_folder(self):
+        """Where the motif button points before the operator picks a folder.
+
+        The repo's scratch PNG folder wins when it exists - it is where the
+        owner keeps the images they actually plot - otherwise the shipped set.
+        """
+        root = Path(__file__).resolve().parents[1]
+        scratch = root / "samples" / "png"
+        if scratch.is_dir():
+            return str(scratch)
+        shipped = root / "motifs" / "nature"
+        if shipped.is_dir():
+            return str(shipped)
+        return ""
+
+    def apply_settings(self):
+        """Restore the last session before the first build."""
+        try:
+            data = json.loads(self.settings_path().read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            data = {}
+        numbers = (
+            ("seed", self.seed, int),
+            ("intricacy", self.intricacy, int),
+            ("divisions", self.divisions, int),
+            ("source_size", self.source_size, float),
+            ("center_x", self.center_x, float),
+            ("center_y", self.center_y, float),
+            ("threshold", self.threshold, float),
+            ("trace_detail", self.trace_detail, float),
+            ("rotation", self.rotation, float),
+            ("bed_diameter", self.bed_diameter, float),
+            ("bed_margin", self.bed_margin, float),
+            ("reach_radius", self.reach_radius, float),
+            ("fit_radius", self.fit_radius, float),
+            ("tolerance", self.tolerance, float),
+            ("fill_spacing", self.fill_spacing, float),
+            ("feed_rate", self.feed_rate, float),
+            ("theta_speed", self.theta_speed, float),
+        )
+        for key, widget, cast in numbers:
+            if key not in data:
+                continue
+            try:
+                widget.setValue(cast(data[key]))
+            except (TypeError, ValueError):
+                pass
+        toggles = (
+            ("mirror", self.mirror),
+            ("show_wedge", self.show_wedge),
+            ("invert", self.invert),
+            ("auto_fit", self.auto_fit),
+            ("use_motifs", self.use_motifs),
+            ("random_mode", self.random_mode),
+        )
+        for key, widget in toggles:
+            if key in data:
+                widget.setChecked(bool(data[key]))
+
+        folder = data.get("motif_folder") or self.default_motif_folder()
+        loaded = False
+        if folder:
+            loaded = self.load_motif_folder(folder, announce=False)
+        # First run with a motif folder: come up ready to pattern with it
+        # instead of making the operator set the same two ticks every launch.
+        if loaded and "use_motifs" not in data:
+            self.use_motifs.setChecked(True)
+        if loaded and "random_mode" not in data:
+            self.random_mode.setChecked(True)
+        source = data.get("source_path", "")
+        if source and Path(source).is_file():
+            self.source_path = source
+            self.path_label.setText(os.path.basename(source))
+
+    def save_settings(self):
+        data = {
+            "motif_folder": self.motif_folder,
+            "source_path": self.source_path,
+            "seed": int(self.seed.value()),
+            "intricacy": int(self.intricacy.value()),
+            "divisions": int(self.divisions.value()),
+            "source_size": float(self.source_size.value()),
+            "center_x": float(self.center_x.value()),
+            "center_y": float(self.center_y.value()),
+            "threshold": float(self.threshold.value()),
+            "trace_detail": float(self.trace_detail.value()),
+            "rotation": float(self.rotation.value()),
+            "bed_diameter": float(self.bed_diameter.value()),
+            "bed_margin": float(self.bed_margin.value()),
+            "reach_radius": float(self.reach_radius.value()),
+            "fit_radius": float(self.fit_radius.value()),
+            "tolerance": float(self.tolerance.value()),
+            "fill_spacing": float(self.fill_spacing.value()),
+            "feed_rate": float(self.feed_rate.value()),
+            "theta_speed": float(self.theta_speed.value()),
+            "mirror": self.mirror.isChecked(),
+            "show_wedge": self.show_wedge.isChecked(),
+            "invert": self.invert.isChecked(),
+            "auto_fit": self.auto_fit.isChecked(),
+            "use_motifs": self.use_motifs.isChecked(),
+            "random_mode": self.random_mode.isChecked(),
+        }
+        try:
+            self.settings_path().write_text(
+                json.dumps(data, indent=2), encoding="utf-8"
+            )
+        except OSError as exc:
+            self.say("Could not save settings: %s" % exc)
+
+    def closeEvent(self, event):  # noqa: N802 - Qt naming
+        self.save_settings()
+        super().closeEvent(event)
+
     def on_view_changed(self, zoom):
         self.zoom_label.setText("%.0f%%" % (float(zoom) * 100.0))
 
@@ -580,7 +709,7 @@ class KaleidoscopeWindow(QMainWindow):
 
     def on_source_mode_changed(self, _checked=False):
         self._update_source_mode()
-        if self._in_rebuild:
+        if self._in_rebuild or getattr(self, "_loading", False):
             return
         if self._has_source():
             self.rebuild()
@@ -591,19 +720,28 @@ class KaleidoscopeWindow(QMainWindow):
         self.seed.setValue(random.SystemRandom().randrange(0, 100000))
 
     def choose_motif_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Choose a motif folder")
+        start = self.motif_folder or self.default_motif_folder()
+        folder = QFileDialog.getExistingDirectory(
+            self, "Choose a motif folder", start
+        )
         if not folder:
             return
+        self.load_motif_folder(folder)
+
+    def load_motif_folder(self, folder, announce=True):
+        """Point the motif mode at *folder*; remember it for next launch."""
         paths = sorted(
             str(path)
             for path in Path(folder).iterdir()
             if path.is_file() and converter.is_raster_source(path)
         )
         if not paths:
-            QMessageBox.information(
-                self, "No motifs", "That folder has no PNG or JPG images."
-            )
-            return
+            if announce:
+                QMessageBox.information(
+                    self, "No motifs", "That folder has no PNG or JPG images."
+                )
+            return False
+        self.motif_folder = str(folder)
         self.motif_paths = paths
         self.motif_cache = {}
         names = ", ".join(os.path.basename(path) for path in paths[:3])
@@ -611,11 +749,16 @@ class KaleidoscopeWindow(QMainWindow):
             "%d file%s: %s%s"
             % (len(paths), "" if len(paths) == 1 else "s", names, ", ..." if len(paths) > 3 else "")
         )
+        self.motif_label.setToolTip(str(folder))
+        if not announce:
+            return True
         self.use_motifs.setChecked(True)
-        self.say("Loaded %d motif images." % len(paths))
+        self.say("Loaded %d motif images from %s." % (len(paths), folder))
         self._update_source_mode()
+        self.save_settings()
         if self._has_source() and not self._in_rebuild:
             self.rebuild()
+        return True
 
     def _motif(self, index):
         """Traced, centred, unit-sized contours for one motif image."""
@@ -634,7 +777,7 @@ class KaleidoscopeWindow(QMainWindow):
         if key not in self.motif_cache:
             traced = converter.trace_raster(
                 path,
-                max_side=700,
+                max_side=512,
                 threshold=float(self.threshold.value()),
                 invert=self.invert.isChecked(),
                 tolerance=float(self.trace_detail.value()),
@@ -644,6 +787,16 @@ class KaleidoscopeWindow(QMainWindow):
                 if traced
                 else []
             )
+            points = sum(len(contour) for contour in contours)
+            if len(contours) > 200 or points > 4000:
+                # A motif has to be one shape. A whole drawing in the folder
+                # would otherwise tile into hundreds of thousands of contours.
+                self.say(
+                    "Skipped %s as a motif: %d contours / %d points is artwork, "
+                    "not a single shape."
+                    % (os.path.basename(path), len(contours), points)
+                )
+                contours = []
             self.motif_cache[key] = contours
         return self.motif_cache[key]
 
@@ -674,14 +827,14 @@ class KaleidoscopeWindow(QMainWindow):
 
     def on_controls_changed(self, *_args):
         self.save_button.setEnabled(False)
-        if self._in_rebuild:
+        if self._in_rebuild or getattr(self, "_loading", False):
             return
         if self._has_source():
             self.rebuild(refit=False)
 
     def on_design_changed(self, *_args):
         self.save_button.setEnabled(False)
-        if self._in_rebuild:
+        if self._in_rebuild or getattr(self, "_loading", False):
             return
         self._update_source_mode()
         if self._has_source():
@@ -689,7 +842,7 @@ class KaleidoscopeWindow(QMainWindow):
 
     def on_offset_changed(self, *_args):
         self.save_button.setEnabled(False)
-        if self._in_rebuild:
+        if self._in_rebuild or getattr(self, "_loading", False):
             return
         if self._has_source():
             self.rebuild(refit=False)
@@ -697,7 +850,7 @@ class KaleidoscopeWindow(QMainWindow):
     def on_bounds_changed(self, *_args):
         self.update_bounds_note()
         self.save_button.setEnabled(False)
-        if self._in_rebuild:
+        if self._in_rebuild or getattr(self, "_loading", False):
             return
         if self._has_source():
             # With auto-fit on, following the fit radius is what the operator

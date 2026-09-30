@@ -119,6 +119,19 @@ app.
   `Theta tangential speed` are the same settings as the main app, and the saved
   file uses the same preamble, pen contract, clipping and end-of-print park.
   Fill spacing stays `0` (outlines only) by default.
+- **Remembered setup.** The app saves its settings to
+  `kaleidoscope_settings.json` next to the script (git-ignored) whenever it
+  closes and whenever a motif folder is chosen: the motif folder, source path,
+  seed, intricacy, divisions, mirror, rotation, source size, image offsets,
+  threshold, trace detail, every printable bound, tolerance, fill spacing, feed
+  rates and the mode checkboxes all come back on the next launch. On a first
+  run with no settings file, the motif folder defaults to `samples\png` if that
+  folder exists (otherwise `motifs\nature`) and both **Use natural motifs in
+  patterns** and **Generate a random pattern** are ticked, so the app opens on
+  a pattern built from those images. A file that would trace into more than 200
+  contours or 4,000 points is skipped with a log line - that means it is a
+  whole drawing rather than a single shape, and the affected ring falls back to
+  the drawn families.
 - **Preview view.** The preview is a flat bed-frame view — bed circle, reach
   circle, the sampled wedge and the design — with the same camera gestures as
   the main app: the wheel zooms about the cursor (10 % to 2000 %), `Shift`-drag

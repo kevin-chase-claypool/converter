@@ -10,6 +10,7 @@ env/
 # Logs and local runtime output
 *.log
 qt_debug.log
+kaleidoscope_settings.json
 
 # OS/editor noise
 .DS_Store

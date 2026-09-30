@@ -11,6 +11,7 @@ import importlib.util
 import math
 import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -200,6 +201,107 @@ class TypedNumberTests(unittest.TestCase):
         return max(
             math.hypot(x, y) for contour in self.window.design for x, y in contour
         )
+
+
+@unittest.skipUnless(HAVE_QT, "PySide6 is not installed")
+class SettingsPersistenceTests(unittest.TestCase):
+    """The motif folder and the typed numbers survive a restart."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+        cls.module = _load_app_module()
+
+    def test_default_motif_folder_prefers_the_scratch_pngs(self):
+        window = self.module.KaleidoscopeWindow()
+        window._settings_file = None
+        default = window.default_motif_folder()
+        self.assertTrue(default, "a default motif folder should be offered")
+        root = Path(default)
+        self.assertTrue(root.is_dir())
+        if (Path(default).parent.parent / "samples" / "png").is_dir():
+            self.assertEqual(Path(default).name, "png")
+
+    def test_settings_round_trip_keeps_folder_and_numbers(self):
+        with tempfile.TemporaryDirectory() as folder:
+            settings = Path(folder) / "settings.json"
+            first = self.module.KaleidoscopeWindow()
+            first._settings_file = settings
+            first.seed.setValue(4321)
+            first.intricacy.setValue(8)
+            first.divisions.setValue(17)
+            first.source_size.setValue(640.0)
+            first.feed_rate.setValue(950.0)
+            first.fit_radius.setValue(150.0)
+            first.random_mode.setChecked(True)
+            first.save_settings()
+            self.assertTrue(settings.is_file())
+
+            second = self.module.KaleidoscopeWindow()
+            second._settings_file = settings
+            second.apply_settings()
+            self.assertEqual(second.seed.value(), 4321)
+            self.assertEqual(second.intricacy.value(), 8)
+            self.assertEqual(second.divisions.value(), 17)
+            self.assertEqual(second.source_size.value(), 640.0)
+            self.assertEqual(second.feed_rate.value(), 950.0)
+            self.assertEqual(second.fit_radius.value(), 150.0)
+            self.assertTrue(second.random_mode.isChecked())
+            self.assertTrue(second.motif_paths or second.motif_folder == "")
+
+    def test_a_chosen_motif_folder_is_remembered(self):
+        root = Path(self.module.__file__).resolve().parents[1]
+        drawn = root / "motifs" / "nature-drawn"
+        if not drawn.is_dir():
+            self.skipTest("the shipped drawn motif folder is not present")
+        with tempfile.TemporaryDirectory() as folder:
+            settings = Path(folder) / "settings.json"
+            window = self.module.KaleidoscopeWindow()
+            window._settings_file = settings
+            window.motif_folder = str(drawn)
+            window.save_settings()
+
+            restored = self.module.KaleidoscopeWindow()
+            restored._settings_file = settings
+            restored.apply_settings()
+            self.assertEqual(restored.motif_folder, str(drawn))
+            self.assertTrue(restored.motif_paths)
+            self.assertGreater(len(restored.motif_paths), 50)
+
+    def test_a_whole_drawing_is_skipped_as_a_motif(self):
+        from PIL import Image, ImageDraw
+
+        with tempfile.TemporaryDirectory() as folder:
+            drawing = Path(folder) / "busy.png"
+            image = Image.new("L", (600, 600), 255)
+            draw = ImageDraw.Draw(image)
+            for row in range(24):
+                for col in range(24):
+                    x, y = 10 + col * 24, 10 + row * 24
+                    draw.rectangle([x, y, x + 12, y + 12], fill=0)
+            image.save(drawing)
+
+            window = self.module.KaleidoscopeWindow()
+            window._settings_file = Path(folder) / "settings.json"
+            self.assertTrue(window.load_motif_folder(folder, announce=False))
+            self.assertEqual(window._motif(0), [], "a busy drawing is not a motif")
+            self.assertIn("Skipped busy.png", window.log.toPlainText())
+
+    def test_a_single_shape_is_accepted_as_a_motif(self):
+        from PIL import Image, ImageDraw
+
+        with tempfile.TemporaryDirectory() as folder:
+            shape = Path(folder) / "shape.png"
+            image = Image.new("L", (400, 400), 255)
+            ImageDraw.Draw(image).ellipse([80, 120, 320, 300], fill=0)
+            image.save(shape)
+
+            window = self.module.KaleidoscopeWindow()
+            window._settings_file = Path(folder) / "settings.json"
+            self.assertTrue(window.load_motif_folder(folder, announce=False))
+            contours = window._motif(0)
+            self.assertTrue(contours, "one shape should be usable")
+            self.assertLessEqual(len(contours), 200)
 
 
 if __name__ == "__main__":

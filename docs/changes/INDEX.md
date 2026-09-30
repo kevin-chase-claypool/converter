@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-016` | windows-software | implemented | [Kaleidoscope: remembered setup and a default motif folder](windows-software/2026/2026-09-30-kaleidoscope-remembered-setup.md) |
 | 2026-09-30 | `WSW-20260930-015` | windows-software | implemented | [Kaleidoscope: auto-fit no longer overwrites typed numbers](windows-software/2026/2026-09-30-kaleidoscope-non-destructive-autofit.md) |
 | 2026-09-30 | `WSW-20260930-014` | windows-software | implemented | [Realistic nature motifs and deeper motif rings](windows-software/2026/2026-09-30-realistic-nature-motifs.md) |
 | 2026-09-30 | `WSW-20260930-013` | windows-software | implemented | [Kaleidoscope: no cap on source size or typed bounds](windows-software/2026/2026-09-30-kaleidoscope-uncapped-sizes.md) |

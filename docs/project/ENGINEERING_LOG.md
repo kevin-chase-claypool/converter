@@ -1,5 +1,42 @@
 # Engineering Log
 
+<a id="elog-20260930-kaleidoscope-remembered-setup"></a>
+### 🟩 2026-09-30 16:41:11 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: remembered setup and default motif folder
+
+- Request: "make this the motif folder. im tired of setting it up
+  C:\Users\jacks\Documents\Claude\converter\samples\png".
+- Change: the app now persists its setup to `software/kaleidoscope_settings.json`
+  (git-ignored) on close and whenever a motif folder is chosen, and restores it
+  at startup: motif folder, source path, seed, intricacy, divisions, mirror,
+  rotation, source size, image offsets, threshold, trace detail, every printable
+  bound, tolerance, fill spacing, feed rates and the mode checkboxes. With no
+  settings file the motif folder defaults to `samples\png` (else
+  `motifs\nature`) and both `Use natural motifs in patterns` and
+  `Generate a random pattern` start ticked, so the app opens on a pattern made
+  from that folder. Motif tracing moved to `max_side=512`, and any motif that
+  would trace into more than 200 contours or 4,000 points is skipped with a log
+  line - that is a whole drawing, not a shape - with the ring falling back to
+  the drawn families.
+- Fixed while testing: the first guard (500 contours / 8,000 points) still let
+  the folder's full-design renders through and produced a 199,176-contour
+  design; the tighter limits plus 512 px tracing bring a first launch to 2.9 s.
+  Change handlers are also suppressed with a `_loading` flag so restoring
+  settings triggers exactly one build.
+- Verification: new `SettingsPersistenceTests` (five tests) cover the default
+  folder, a save/load round trip of the numbers and the folder, remembering a
+  chosen folder with its file list, rejecting a 24x24 grid drawing as a motif,
+  and accepting a single ellipse. Headless first run with no settings file:
+  folder `...\samples\png`, both ticks on, 40 files listed, 6 candidate motifs
+  traced and all six skipped as artwork, design built in 2.9 s. All eleven test
+  modules pass; `docs_index --write/--check` pass.
+- Boundary: settings are per-user and per-checkout (a readable JSON file in the
+  project rather than the registry); a folder of full-page artwork still costs
+  one trace per used file before the guard rejects it.
+- Evidence: `WSW-20260930-016`.
+- Category: windows-software, kaleidoscope, interface, motifs
+- Next action: drop real motif PNGs into samples\png and confirm the app comes
+  up using them without any setup.
+
 <a id="elog-20260930-kaleidoscope-non-destructive-autofit"></a>
 ### 🟩 2026-09-30 16:33:02 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: auto-fit no longer overwrites typed numbers
 
