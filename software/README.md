@@ -104,9 +104,15 @@ app.
   `Theta tangential speed` are the same settings as the main app, and the saved
   file uses the same preamble, pen contract, clipping and end-of-print park.
   Fill spacing stays `0` (outlines only) by default.
-- The preview is a flat bed-frame view — bed circle, reach circle, the sampled
-  wedge and the design — with no OpenGL playback; use the main app when you want
-  the simulated machine motion.
+- **Preview view.** The preview is a flat bed-frame view — bed circle, reach
+  circle, the sampled wedge and the design — with the same camera gestures as
+  the main app: the wheel zooms about the cursor (10 % to 2000 %), `Shift`-drag
+  or middle/right-drag pans, and the `+` / `-` / `Reset view` buttons with
+  `Ctrl` `+` / `-` / `0` do the same from the keyboard. A plain drag still
+  moves the image inside the fixed frame, and that drag is scaled by the zoom,
+  so it stays accurate when you are zoomed in. The current zoom is shown next
+  to the buttons and in the preview's status line. There is no OpenGL playback;
+  use the main app when you want the simulated machine motion.
 
 ## What it emits
 

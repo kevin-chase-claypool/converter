@@ -1,5 +1,35 @@
 # Engineering Log
 
+<a id="elog-20260930-kaleidoscope-preview-zoom-pan"></a>
+### 🟩 2026-09-30 15:31:12 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: zoom and pan the preview
+
+- Request: "i want to be able to zoom and pan like i could in converter" - the
+  main app's preview already zooms with the wheel and pans on Shift/middle/right
+  drag; the kaleidoscope preview had no camera at all.
+- Change: `DesignPreview` keeps a camera (`zoom` 0.1-20x and `pan` in design
+  millimetres) with `to_screen` / `to_design` / `screen_delta_to_mm`, and the
+  bed, reach, fit-bound circles, wedge lines and design all paint through it.
+  The wheel zooms 1.15x per notch anchored on the cursor; Shift-drag and
+  middle/right drag pan; plain drag still moves the image inside the frame and
+  is scaled by the zoom so it stays accurate. `KaleidoscopeWindow` gained a
+  Preview view row (-, +, Reset view, zoom label), Ctrl +/-/0 shortcuts and a
+  startup hint; the preview draws faint origin axes plus a status line with the
+  zoom percentage.
+- Verification: new `software/tests/test_preview_view.py` (7 tests, skipped
+  without PySide6) covers the coordinate round trip at three zoom/pan
+  combinations, cursor-anchored zoom, clamping, zoom-scaled image drags,
+  panning, reset and the `viewChanged` signal. All eleven test modules pass.
+  Headless run: 4x zoom keeps (-114.956897, 162.171336) fixed under the pointer;
+  a 100 px drag is 25.7 mm at 4x against 102.6 mm at 1x; the label reads 400 %;
+  reset returns to 100 %. Render checked at 6x in
+  `samples/png/preview_zoom.png`; `docs_index --write/--check` pass.
+- Boundary: zoom is view-only and does not affect saved G-code; panning takes a
+  modifier because a plain drag was already taken by the image-move feature.
+- Evidence: `WSW-20260930-012`.
+- Category: windows-software, kaleidoscope, preview, interface
+- Next action: zoom in on a motif seam in the app and confirm the drag still
+  lands the image where intended at 8x.
+
 <a id="elog-20260930-nature-motif-library"></a>
 ### 🟩 2026-09-30 15:25:10 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - nature motif library for the kaleidoscope generator
 

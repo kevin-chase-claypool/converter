@@ -52,6 +52,7 @@ class DesignPreview(QWidget):
     """Flat bed-frame view of the design, the bed circle and the reach circle."""
 
     dragged = Signal(float, float)
+    viewChanged = Signal(float)
 
     def __init__(self):
         super().__init__()
@@ -61,101 +62,188 @@ class DesignPreview(QWidget):
         self.bounds_radius = 181.3
         self.wedge_deg = 15.0
         self.show_wedge = True
+        self.zoom = 1.0
+        self.pan = (0.0, 0.0)
         self._drag_from = None
+        self._pan_from = None
         self.setMinimumSize(360, 360)
+        self.setMouseTracking(True)
+        self.setToolTip(
+            "Wheel zooms, Shift-drag (or middle/right drag) pans, plain drag "
+            "moves the image inside the frame."
+        )
 
     def set_design(self, contours, wedge_deg):
         self.contours = contours
         self.wedge_deg = float(wedge_deg)
         self.update()
 
+    # -- view transform ----------------------------------------------------
+
+    def _base_scale(self):
+        half = max(self.bed_radius, 1.0)
+        return min(self.width(), self.height()) * 0.48 / half
+
+    def _scale(self):
+        """Millimetres to pixels at the current zoom."""
+        return self._base_scale() * self.zoom
+
+    def to_screen(self, point):
+        scale = self._scale()
+        cx, cy = self.width() / 2.0, self.height() / 2.0
+        return QPointF(
+            cx + (point[0] - self.pan[0]) * scale,
+            cy - (point[1] - self.pan[1]) * scale,
+        )
+
+    def to_design(self, position):
+        scale = max(self._scale(), 1e-9)
+        cx, cy = self.width() / 2.0, self.height() / 2.0
+        return (
+            (position.x() - cx) / scale + self.pan[0],
+            (cy - position.y()) / scale + self.pan[1],
+        )
+
+    def screen_delta_to_mm(self, dx, dy):
+        scale = max(self._scale(), 1e-9)
+        return dx / scale, -dy / scale
+
+    # -- zoom and pan, the same gestures as the main converter -------------
+
+    def set_zoom(self, factor, anchor=None):
+        factor = max(0.1, min(float(factor), 20.0))
+        if abs(factor - self.zoom) < 1e-9:
+            return
+        if anchor is None:
+            self.zoom = factor
+        else:
+            # Keep the design point under the cursor where it is.
+            world = self.to_design(anchor)
+            self.zoom = factor
+            scale = max(self._scale(), 1e-9)
+            cx, cy = self.width() / 2.0, self.height() / 2.0
+            self.pan = (
+                world[0] - (anchor.x() - cx) / scale,
+                world[1] - (cy - anchor.y()) / scale,
+            )
+        self.viewChanged.emit(self.zoom)
+        self.update()
+
+    def zoom_in(self):
+        self.set_zoom(self.zoom * 1.25)
+
+    def zoom_out(self):
+        self.set_zoom(self.zoom / 1.25)
+
+    def reset_view(self):
+        self.zoom = 1.0
+        self.pan = (0.0, 0.0)
+        self.viewChanged.emit(self.zoom)
+        self.update()
+
+    def pan_by(self, dx, dy):
+        """Pan the view by a screen-space delta in pixels."""
+        scale = max(self._scale(), 1e-9)
+        self.pan = (self.pan[0] - dx / scale, self.pan[1] + dy / scale)
+        self.update()
+
+    def wheelEvent(self, event):  # noqa: N802 - Qt naming
+        delta = event.angleDelta().y()
+        if delta == 0:
+            event.ignore()
+            return
+        self.set_zoom(
+            self.zoom * (1.15 if delta > 0 else 1.0 / 1.15), event.position()
+        )
+        event.accept()
+
     # -- dragging moves the source image inside the fixed design frame -----
 
     def mousePressEvent(self, event):  # noqa: N802 - Qt naming
-        if event.button() == Qt.LeftButton:
+        wants_pan = bool(event.modifiers() & Qt.ShiftModifier) or event.button() in (
+            Qt.MiddleButton,
+            Qt.RightButton,
+        )
+        if event.button() == Qt.LeftButton and not wants_pan:
             self._drag_from = event.position()
+        elif wants_pan:
+            self._pan_from = event.position()
+            self.setCursor(Qt.ClosedHandCursor)
 
     def mouseMoveEvent(self, event):  # noqa: N802 - Qt naming
+        position = event.position()
+        if self._pan_from is not None:
+            self.pan_by(
+                position.x() - self._pan_from.x(), position.y() - self._pan_from.y()
+            )
+            self._pan_from = position
+            return
         if self._drag_from is None:
             return
-        position = event.position()
-        scale = self._scale()
-        self.dragged.emit(
-            (position.x() - self._drag_from.x()) / scale,
-            -(position.y() - self._drag_from.y()) / scale,
+        dx, dy = self.screen_delta_to_mm(
+            position.x() - self._drag_from.x(), position.y() - self._drag_from.y()
         )
+        self.dragged.emit(dx, dy)
         self._drag_from = position
 
     def mouseReleaseEvent(self, event):  # noqa: N802 - Qt naming
         self._drag_from = None
-
-    def _scale(self):
-        half = max(self.bed_radius, 1.0)
-        return min(self.width(), self.height()) * 0.48 / half
+        self._pan_from = None
+        self.unsetCursor()
 
     def paintEvent(self, event):  # noqa: N802 - Qt naming
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing, True)
         painter.fillRect(self.rect(), QColor(250, 250, 250))
         scale = self._scale()
-        cx, cy = self.width() / 2.0, self.height() / 2.0
+        origin = self.to_screen((0.0, 0.0))
 
-        def to_screen(point):
-            return QPointF(cx + point[0] * scale, cy - point[1] * scale)
+        def circle(radius):
+            r = radius * scale
+            return QRectF(origin.x() - r, origin.y() - r, 2.0 * r, 2.0 * r)
 
-        bed = QRectF(
-            cx - self.bed_radius * scale,
-            cy - self.bed_radius * scale,
-            self.bed_radius * scale * 2.0,
-            self.bed_radius * scale * 2.0,
-        )
         painter.setPen(QPen(QColor(205, 205, 205), 1.0))
         painter.setBrush(Qt.NoBrush)
-        painter.drawEllipse(bed)
+        painter.drawEllipse(circle(self.bed_radius))
         painter.setPen(QPen(QColor(230, 180, 120), 1.2, Qt.DashLine))
-        painter.drawEllipse(
-            QRectF(
-                cx - self.reach_radius * scale,
-                cy - self.reach_radius * scale,
-                self.reach_radius * scale * 2.0,
-                self.reach_radius * scale * 2.0,
-            )
-        )
+        painter.drawEllipse(circle(self.reach_radius))
         painter.setPen(QPen(QColor(120, 160, 220), 1.4, Qt.DashLine))
-        painter.drawEllipse(
-            QRectF(
-                cx - self.bounds_radius * scale,
-                cy - self.bounds_radius * scale,
-                self.bounds_radius * scale * 2.0,
-                self.bounds_radius * scale * 2.0,
-            )
-        )
+        painter.drawEllipse(circle(self.bounds_radius))
         if self.show_wedge:
             painter.setPen(QPen(QColor(170, 200, 240), 1.0, Qt.DashLine))
             reach = self.reach_radius
             for angle in (0.0, self.wedge_deg):
                 radians = math.radians(angle)
                 painter.drawLine(
-                    to_screen((0.0, 0.0)),
-                    to_screen((reach * math.cos(radians), reach * math.sin(radians))),
+                    origin,
+                    self.to_screen(
+                        (reach * math.cos(radians), reach * math.sin(radians))
+                    ),
                 )
+        painter.setPen(QPen(QColor(225, 225, 225), 1.0))
+        painter.drawLine(
+            QPointF(origin.x(), 0.0), QPointF(origin.x(), self.height())
+        )
+        painter.drawLine(QPointF(0.0, origin.y()), QPointF(self.width(), origin.y()))
         painter.setPen(QPen(QColor(30, 30, 30), 0.9))
         for contour in self.contours:
             if len(contour) < 2:
                 continue
-            painter.drawPolyline([to_screen(point) for point in contour])
+            painter.drawPolyline([self.to_screen(point) for point in contour])
         painter.setPen(QPen(QColor(120, 120, 120), 1.0))
         painter.setFont(QFont(painter.font().family(), 8))
         painter.drawText(
             8,
             self.height() - 8,
             "design contours: %d   bed %.0f mm   reach %.0f mm   design bound %.1f mm   "
-            "drag to move the image inside the frame"
+            "zoom %.0f%%   drag moves the image - wheel zooms - Shift/middle "
+            "drag pans"
             % (
                 len(self.contours),
                 self.bed_radius * 2.0,
                 self.reach_radius,
                 self.bounds_radius,
+                self.zoom * 100.0,
             ),
         )
 
@@ -193,11 +281,19 @@ class KaleidoscopeWindow(QMainWindow):
         layout.addWidget(right, 1)
         self.setCentralWidget(central)
         self.preview.dragged.connect(self.on_image_dragged)
+        self.zoom_in_button.clicked.connect(self.preview.zoom_in)
+        self.zoom_out_button.clicked.connect(self.preview.zoom_out)
+        self.reset_view_button.clicked.connect(self.preview.reset_view)
+        self.preview.viewChanged.connect(self.on_view_changed)
         self._in_rebuild = False
         self.resize(1100, 720)
         self.say(
             "Open an SVG, PNG or JPG - or tick Generate a random pattern - "
             "set the divisions, then Build preview."
+        )
+        self.say(
+            "Preview: wheel zooms, Shift-drag or middle/right-drag pans, plain "
+            "drag moves the image inside the frame."
         )
 
     # -- UI construction -------------------------------------------------
@@ -317,6 +413,22 @@ class KaleidoscopeWindow(QMainWindow):
         form.addRow(self.mirror)
         form.addRow("Rotate source", self.rotation)
         form.addRow(self.show_wedge)
+        self.zoom_out_button = QPushButton("-")
+        self.zoom_out_button.setFixedWidth(28)
+        self.zoom_out_button.setToolTip("Zoom the preview out (Ctrl+-).")
+        self.zoom_in_button = QPushButton("+")
+        self.zoom_in_button.setFixedWidth(28)
+        self.zoom_in_button.setToolTip("Zoom the preview in (Ctrl++).")
+        self.reset_view_button = QPushButton("Reset view")
+        self.reset_view_button.setToolTip("Back to the whole bed (Ctrl+0).")
+        self.zoom_label = QLabel("100%")
+        self.zoom_label.setMinimumWidth(46)
+        view_row = QHBoxLayout()
+        view_row.addWidget(self.zoom_out_button)
+        view_row.addWidget(self.zoom_in_button)
+        view_row.addWidget(self.reset_view_button)
+        view_row.addWidget(self.zoom_label)
+        form.addRow("Preview view", view_row)
         return box
 
     def _bounds_group(self):
@@ -407,6 +519,25 @@ class KaleidoscopeWindow(QMainWindow):
 
     def say(self, message):
         self.log.appendPlainText(message)
+
+    def on_view_changed(self, zoom):
+        self.zoom_label.setText("%.0f%%" % (float(zoom) * 100.0))
+
+    def keyPressEvent(self, event):  # noqa: N802 - Qt naming
+        if event.modifiers() & Qt.ControlModifier:
+            if event.key() == Qt.Key_0:
+                self.preview.reset_view()
+                event.accept()
+                return
+            if event.key() in (Qt.Key_Plus, Qt.Key_Equal):
+                self.preview.zoom_in()
+                event.accept()
+                return
+            if event.key() == Qt.Key_Minus:
+                self.preview.zoom_out()
+                event.accept()
+                return
+        super().keyPressEvent(event)
 
     def _has_source(self):
         return self.random_mode.isChecked() or bool(self.source_path)
