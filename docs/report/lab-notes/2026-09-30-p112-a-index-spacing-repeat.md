@@ -95,6 +95,44 @@ the macro's own definition: `spacing = center2 - center1` with
   where the converter thought it was, about 2.5 mm at r = 150 mm and 3.0 mm at
   r = 185 mm. That matches the ghosting seen in that print.
 
+### Why the effective ratio is larger than 12:1
+
+A 60T to 720T pair is exactly 12:1 by tooth count; the counts alone cannot
+produce 12.0333. The measured `+11.967` motor-degrees per revolution is almost
+exactly **two belt teeth**: one motor-pulley tooth (`360/60`) and one bed-ring
+tooth (`4320/720`) are both 6 motor-degrees, so the deviation is `1.99` teeth,
+and the drive consumes about `722` belt pitches per bed revolution instead of
+`720` (`722/60 = 12.0333`, the measured ratio).
+
+Two pitches of surplus on a 720-tooth ring is a pitch mismatch of `0.278%`,
+i.e. `3.99` mm of the nominal `1440.0` mm circumference, or only `1.27` mm on
+the 458.4 mm pitch diameter. That is well inside normal FDM scale/shrink
+variation and invisible on the assembled part. When the ring's effective pitch
+is longer than the belt's, the mismatch accumulates to roughly two full pitches
+per revolution; the belt cannot stay seated, so it rides up on the tooth flanks
+and releases once per revolution and the ring ends a revolution about two teeth
+behind the belt. Candidate sources, in order:
+
+1. Printed-ring scale or shrink (0.3-0.5% is typical for FDM and often
+   uncompensated): `1.27` mm of diameter on this ring.
+2. Segment seams: a ring this size is printed in pieces, and `3.99` mm of total
+   seam/gap error produces the same two pitches.
+3. Tooth profile: the GT2 pitch is defined at the pitch line, and an approximate
+   printed profile seats the belt on the flanks or tips rather than in the
+   roots, which raises the effective radius.
+4. A belt at the long end of its pitch/length tolerance, which creates the same
+   mismatch from the other side.
+
+An electronics cause stays excluded: `$103 = 4.44444` gives exactly 19,200
+pulses per 12 motor revolutions, a microstep or step-angle error would be a
+2x/0.5x type error rather than 1.0028x, and the deviation is 53.2 pulses, not
+an integer pulse count.
+
+Confirm in the shop by measuring 100 teeth: nominal `200.00` mm each, predicted
+`200.55` mm for whichever part carries the mismatch. A belt-tension increase
+that moves the measured spacing toward 4320 confirms the ride-up mechanism
+rather than pure geometry.
+
 ## Decisions and next action
 
 1. Converter `theta_drive_ratio` set to `12.03324`; the radius-aware A feed

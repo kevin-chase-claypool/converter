@@ -84,8 +84,12 @@ converter's `theta_drive_ratio = 12.0` was wrong by +0.277%.
 ## Risks and follow-up
 
 - The root cause of the 0.277% mechanical discrepancy is not identified (belt
-  pitch, effective pulley circumference, or compliance); only the effective
-  ratio is calibrated.
+  pitch, effective pulley circumference, or compliance). The measured deviation
+  is almost exactly two belt teeth per revolution (0.278% of the 1440 mm ring
+  circumference, 1.27 mm of diameter), so the leading candidates are printed-ring
+  scale/seams and the belt's own pitch tolerance; only the effective ratio is
+  calibrated, and the 100-tooth span check that would identify the source is
+  recorded in the lab note.
 - Existing G-code files, including `samples/gcode/mom.gcode`, were emitted with
   the old ratio and must be regenerated before a reprint is expected to show
   the correction.
