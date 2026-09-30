@@ -107,6 +107,35 @@ class KaleidoscopeTests(unittest.TestCase):
         self.assertNotIn("keep-down bridge", gcode)
         self.assertIn("G53 G0", gcode, "the program must still park at the end")
 
+    def test_radius_trims_the_design_to_a_fixed_frame(self):
+        # A long bar reaches 200 mm; the design must stay inside a 120 mm frame
+        # however the source is later dragged around inside it.
+        bar = [[(0.0, 0.0), (200.0, 0.0), (200.0, 40.0), (0.0, 40.0), (0.0, 0.0)]]
+        design = converter.kaleidoscope(bar, 4, mirror=True, radius=120.0)
+
+        self.assertTrue(design)
+        radius = max(math.hypot(x, y) for contour in design for x, y in contour)
+        self.assertLessEqual(radius, 120.0 + 1e-6)
+
+    def test_closed_loop_wrapping_the_wedge_keeps_both_crossings(self):
+        # The loop starts outside the wedge, so the clipper has to open it at a
+        # boundary crossing; the buggy version dropped the wrap-around piece and
+        # left the design empty once an image was dragged around.
+        loop = [
+            [
+                (-30.0, -30.0),
+                (30.0, -30.0),
+                (30.0, 30.0),
+                (-30.0, 30.0),
+                (-30.0, -30.0),
+            ]
+        ]
+        pieces = converter.clip_to_wedge(loop, 45.0)
+
+        ys = [y for piece in pieces for _, y in piece]
+        self.assertAlmostEqual(min(ys), 0.0, delta=1e-4, msg="entry crossing kept")
+        self.assertAlmostEqual(max(ys), 30.0, delta=1e-4, msg="exit corner kept")
+
 
 if __name__ == "__main__":
     unittest.main()

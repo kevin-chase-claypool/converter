@@ -1,5 +1,36 @@
 # Engineering Log
 
+<a id="elog-20260930-kaleidoscope-typed-bounds-drag"></a>
+### 🟩 2026-09-30 13:56:48 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: typed printable bounds and a draggable image
+
+- Request: fit the design to the printable bounds already measured, type those
+  numbers instead of accepting built-in constants, and drag the image within its
+  division while the kaleidoscope and its bounds stay put.
+- Change: `clip_to_wedge` and `kaleidoscope` take an optional `radius` that
+  becomes a fixed design frame. The app gained a **Printable bounds** group
+  (typed bed diameter, bed margin, reach radius and fit radius, a fit button and
+  an auto-fit option), and dragging in the preview now shifts `Image offset X/Y`
+  in millimetres of the finished design and rebuilds without re-fitting, so the
+  frame is untouched.
+- Fixed while testing: the half-plane clipper dropped the piece that wraps
+  around the start point of a closed loop, so dragging an image whose outline
+  loop started outside the wedge emptied the design. Closed loops are now opened
+  at a boundary crossing first, degenerate pieces are dropped, and the boundary
+  bisection returns the bracket midpoint instead of whichever end was "kept".
+- Verification: all nine test modules pass, including a 200 mm bar trimmed into
+  a 120 mm frame and a closed loop starting outside the wedge that keeps both
+  boundary crossings. Headless Qt: a 180 mm fit radius clips at exactly 180.0,
+  a (-60, +25) drag keeps the design at 117.7 mm in the same frame, and typing
+  a 140 mm fit radius clips at 140.0. `docs_index --write/--check` pass.
+- Boundary: a drag can move the image far enough that the wedge samples nothing;
+  only the preview and log show it (roadmap follow-up). Typed bounds are inputs
+  to the preview and planner; the planner still clips to the real printable
+  limit.
+- Evidence: `WSW-20260930-005`.
+- Category: windows-software, kaleidoscope, bounds, dragging, interface
+- Next action: drag a real image in the app and confirm the frame stays fixed;
+  add an explicit empty-wedge warning.
+
 <a id="elog-20260930-kaleidoscope-converter"></a>
 ### 🟩 2026-09-30 13:46:09 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - added the Kaleidoscope Converter app
 

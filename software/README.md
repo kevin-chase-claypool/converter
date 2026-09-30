@@ -40,12 +40,22 @@ app.
   around the circle, alternating mirrored copies so 360 degrees tile exactly.
   With `Mirror alternate sectors` off the wedge repeats without reflection,
   which gives a pinwheel instead of mirror symmetry. `Rotate source` chooses
-  which slice the wedge samples; `Apex offset X/Y` moves the apex off the
-  artwork's bounding-box centre.
-- **Sizing.** `Source size` sets the source's longer side in millimetres.
-  `Fit to reach circle` rescales so the finished design stops just inside
-  `Gantry reach radius`; anything that still overshoots is clipped by the normal
-  planner and the log says so.
+  which slice the wedge samples.
+- **Image placement.** `Image offset X/Y` moves the source inside the fixed
+  frame, in millimetres of the finished design, and the same values can be set
+  by dragging in the preview: the wedge, the design bounds and the machine
+  limits stay where they are and only the image moves. Content pushed outside
+  the frame is clipped, so a drag can empty the wedge — the preview and log show
+  that immediately.
+- **Printable bounds.** `Bed diameter`, `Bed margin` and `Gantry reach radius`
+  are typed values that feed both the preview and the planner, with the
+  resulting `Bed allows … / reach allows …` shown underneath. `Fit radius` is
+  the radius the design is fitted to and clipped at; `Fit design to bounds`
+  scales `Source size` so the design's natural radius matches it, and
+  `Auto-fit after a division or rotation change` keeps it matched while the
+  design changes. The default 181.3 mm is 0.98 x the 185 mm reach, and the
+  planner still clips the saved program at the real printable limit if a typed
+  bound is larger.
 - **Output.** `Tolerance`, `Fill spacing`, `Feed rate` and
   `Theta tangential speed` are the same settings as the main app, and the saved
   file uses the same preamble, pen contract, clipping and end-of-print park.

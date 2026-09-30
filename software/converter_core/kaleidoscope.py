@@ -218,9 +218,34 @@ def normalize_source(contours, target_size_mm, center=None, flip_y=False):
 
 
 def _clip_halfplane(points, keep):
-    """Clip an open polyline to the half-plane where ``keep(point)`` is true."""
+    """Clip a polyline to the half-plane where ``keep(point)`` is true.
+
+    Closed loops are opened at a boundary crossing first, otherwise the piece
+    that wraps around the start point is silently dropped.
+    """
     if not points:
         return []
+    first, last = points[0], points[-1]
+    closed = (
+        len(points) >= 3
+        and abs(first[0] - last[0]) <= 1e-9
+        and abs(first[1] - last[1]) <= 1e-9
+    )
+    if closed:
+        rotated = None
+        for index in range(len(points) - 1):
+            if keep(points[index]) != keep(points[index + 1]):
+                crossing = _boundary_point(points[index], points[index + 1], keep)
+                rotated = (
+                    [crossing]
+                    + points[index + 1 :]
+                    + points[1 : index + 1]
+                    + [crossing]
+                )
+                break
+        if rotated is None:
+            return [list(points)] if keep(first) else []
+        points = rotated
     pieces = []
     previous = points[0]
     previous_kept = keep(previous)
@@ -255,11 +280,19 @@ def _boundary_point(a, b, keep, iterations=24):
             lo = mid
         else:
             hi = mid
-    return lo
+    # The bracket midpoint is the better estimate when the caller passed the
+    # unkept point first; both ends are within 2**-24 of the true crossing.
+    return ((lo[0] + hi[0]) * 0.5, (lo[1] + hi[1]) * 0.5)
 
 
-def clip_to_wedge(contours, wedge_deg, cancel_check=None):
-    """Clip contours to the half-wedge ``0..wedge_deg`` about the origin."""
+def clip_to_wedge(contours, wedge_deg, radius=None, cancel_check=None):
+    """Clip contours to the half-wedge ``0..wedge_deg`` about the origin.
+
+    ``radius`` also trims the wedge to a disc, which is what keeps a design
+    inside a fixed frame while its source image is dragged around inside it.
+    """
+    from .geometry import clip_contours_to_bed
+
     limit = math.tan(math.radians(max(float(wedge_deg), 1e-6)))
 
     def upper(point):
@@ -273,16 +306,32 @@ def clip_to_wedge(contours, wedge_deg, cancel_check=None):
         check_cancelled(cancel_check)
         for piece in _clip_halfplane(contour, upper):
             for kept in _clip_halfplane(piece, lower):
-                if len(kept) >= 2:
+                length = sum(distance(a, b) for a, b in zip(kept, kept[1:]))
+                if len(kept) >= 2 and length > 1e-6:
                     out.append(list(kept))
-    return out
+    if radius is None or float(radius) <= 0.0:
+        return out
+    return clip_contours_to_bed(out, (0.0, 0.0), float(radius), cancel_check)
 
 
-def kaleidoscope(contours, divisions, mirror=True, angle_offset_deg=0.0, cancel_check=None):
-    """Repeat the source half-wedge ``2 * divisions`` times around the origin."""
+def kaleidoscope(
+    contours,
+    divisions,
+    mirror=True,
+    angle_offset_deg=0.0,
+    radius=None,
+    cancel_check=None,
+):
+    """Repeat the source half-wedge ``2 * divisions`` times around the origin.
+
+    ``radius`` clips the design to a disc of that size. Leave it ``None`` to
+    measure a design's natural extent (the caller then scales the source so the
+    design fits a chosen bound) and pass the bound to keep designs inside a
+    fixed frame afterwards.
+    """
     count = max(1, int(divisions))
     wedge = 180.0 / count
-    pieces = clip_to_wedge(contours, wedge, cancel_check)
+    pieces = clip_to_wedge(contours, wedge, radius, cancel_check)
     offset = float(angle_offset_deg)
     out = []
     for index in range(2 * count):

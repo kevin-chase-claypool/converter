@@ -199,13 +199,14 @@
 
 - [ ] Kaleidoscope converter follow-ups.
   Problem: the new app traces rasters by threshold (no photo-tone shading), the
-  apex is typed rather than dragged, and the preview has no playback.
+  preview has no playback, and a dragged image can leave the wedge empty with
+  only the preview and log to show it.
   Benefit: photos and placement-heavy designs need fewer workarounds, and the
   main app's image-tone renderer stops being a capability only one window has.
   Risk: tone shading depends on the Qt renderer path, which currently lives in
   the main app window instead of the core.
-  Acceptance: a photo imports and plots with tonal shading, the apex can be
-  placed by dragging in the preview, and both stay inside the reach circle.
+  Acceptance: a photo imports and plots with tonal shading, an emptied wedge is
+  reported as an explicit warning, and everything stays inside the typed bounds.
 
 - [ ] **Park targets are literals pinned to the edge of the soft-limit
   envelope.**

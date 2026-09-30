@@ -12,7 +12,7 @@ import os
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QPointF, QRectF, Qt
+from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen
 from PySide6.QtWidgets import (
     QApplication,
@@ -48,19 +48,43 @@ SOURCE_FILTER = (
 class DesignPreview(QWidget):
     """Flat bed-frame view of the design, the bed circle and the reach circle."""
 
+    dragged = Signal(float, float)
+
     def __init__(self):
         super().__init__()
         self.contours = []
         self.bed_radius = 457.2 / 2.0
         self.reach_radius = 185.0
+        self.bounds_radius = 181.3
         self.wedge_deg = 15.0
         self.show_wedge = True
+        self._drag_from = None
         self.setMinimumSize(360, 360)
 
     def set_design(self, contours, wedge_deg):
         self.contours = contours
         self.wedge_deg = float(wedge_deg)
         self.update()
+
+    # -- dragging moves the source image inside the fixed design frame -----
+
+    def mousePressEvent(self, event):  # noqa: N802 - Qt naming
+        if event.button() == Qt.LeftButton:
+            self._drag_from = event.position()
+
+    def mouseMoveEvent(self, event):  # noqa: N802 - Qt naming
+        if self._drag_from is None:
+            return
+        position = event.position()
+        scale = self._scale()
+        self.dragged.emit(
+            (position.x() - self._drag_from.x()) / scale,
+            -(position.y() - self._drag_from.y()) / scale,
+        )
+        self._drag_from = position
+
+    def mouseReleaseEvent(self, event):  # noqa: N802 - Qt naming
+        self._drag_from = None
 
     def _scale(self):
         half = max(self.bed_radius, 1.0)
@@ -94,6 +118,15 @@ class DesignPreview(QWidget):
                 self.reach_radius * scale * 2.0,
             )
         )
+        painter.setPen(QPen(QColor(120, 160, 220), 1.4, Qt.DashLine))
+        painter.drawEllipse(
+            QRectF(
+                cx - self.bounds_radius * scale,
+                cy - self.bounds_radius * scale,
+                self.bounds_radius * scale * 2.0,
+                self.bounds_radius * scale * 2.0,
+            )
+        )
         if self.show_wedge:
             painter.setPen(QPen(QColor(170, 200, 240), 1.0, Qt.DashLine))
             reach = self.reach_radius
@@ -113,7 +146,14 @@ class DesignPreview(QWidget):
         painter.drawText(
             8,
             self.height() - 8,
-            f"design contours: {len(self.contours)}   bed {self.bed_radius * 2:.0f} mm   reach {self.reach_radius:.0f} mm",
+            "design contours: %d   bed %.0f mm   reach %.0f mm   design bound %.1f mm   "
+            "drag to move the image inside the frame"
+            % (
+                len(self.contours),
+                self.bed_radius * 2.0,
+                self.reach_radius,
+                self.bounds_radius,
+            ),
         )
 
 
@@ -138,6 +178,7 @@ class KaleidoscopeWindow(QMainWindow):
         panel_layout = QVBoxLayout(panel)
         panel_layout.addWidget(self._source_group())
         panel_layout.addWidget(self._design_group())
+        panel_layout.addWidget(self._bounds_group())
         panel_layout.addWidget(self._output_group())
         panel_layout.addStretch(1)
 
@@ -146,6 +187,8 @@ class KaleidoscopeWindow(QMainWindow):
         layout.addWidget(panel)
         layout.addWidget(right, 1)
         self.setCentralWidget(central)
+        self.preview.dragged.connect(self.on_image_dragged)
+        self._in_rebuild = False
         self.resize(1100, 720)
         self.say("Open an SVG, PNG or JPG, set the divisions, then Build preview.")
 
@@ -172,11 +215,14 @@ class KaleidoscopeWindow(QMainWindow):
             widget.setRange(-500.0, 500.0)
             widget.setDecimals(1)
             widget.setSuffix(" mm")
-            widget.valueChanged.connect(self.on_controls_changed)
+            widget.valueChanged.connect(self.on_offset_changed)
         centre_row = QHBoxLayout()
         centre_row.addWidget(self.center_x)
         centre_row.addWidget(self.center_y)
-        form.addRow("Apex offset X/Y", centre_row)
+        form.addRow("Image offset X/Y", centre_row)
+        hint = QLabel("Drag the preview or type millimetres of the finished design.")
+        hint.setWordWrap(True)
+        form.addRow(hint)
         self.threshold = QDoubleSpinBox()
         self.threshold.setRange(0.05, 0.95)
         self.threshold.setSingleStep(0.05)
@@ -200,25 +246,67 @@ class KaleidoscopeWindow(QMainWindow):
         self.divisions = QSpinBox()
         self.divisions.setRange(2, 64)
         self.divisions.setValue(12)
-        self.divisions.valueChanged.connect(self.on_controls_changed)
+        self.divisions.valueChanged.connect(self.on_design_changed)
         self.mirror = QCheckBox("Mirror alternate sectors")
         self.mirror.setChecked(True)
-        self.mirror.toggled.connect(self.on_controls_changed)
+        self.mirror.toggled.connect(self.on_design_changed)
         self.rotation = QDoubleSpinBox()
         self.rotation.setRange(-360.0, 360.0)
         self.rotation.setValue(0.0)
         self.rotation.setSuffix(" deg")
-        self.rotation.valueChanged.connect(self.on_controls_changed)
+        self.rotation.valueChanged.connect(self.on_design_changed)
         self.show_wedge = QCheckBox("Show sampled wedge")
         self.show_wedge.setChecked(True)
         self.show_wedge.toggled.connect(self.on_preview_toggle)
-        self.fit_button = QPushButton("Fit to reach circle")
-        self.fit_button.clicked.connect(self.fit_to_reach)
         form.addRow("Divisions", self.divisions)
         form.addRow(self.mirror)
         form.addRow("Rotate source", self.rotation)
-        form.addRow(self.fit_button)
         form.addRow(self.show_wedge)
+        return box
+
+    def _bounds_group(self):
+        box = QGroupBox("Printable bounds")
+        form = QFormLayout(box)
+        self.bed_diameter = QDoubleSpinBox()
+        self.bed_diameter.setRange(100.0, 1000.0)
+        self.bed_diameter.setValue(457.2)
+        self.bed_diameter.setSuffix(" mm")
+        self.bed_margin = QDoubleSpinBox()
+        self.bed_margin.setRange(0.0, 100.0)
+        self.bed_margin.setValue(6.35)
+        self.bed_margin.setSuffix(" mm")
+        self.reach_radius = QDoubleSpinBox()
+        self.reach_radius.setRange(10.0, 300.0)
+        self.reach_radius.setValue(185.0)
+        self.reach_radius.setSuffix(" mm")
+        self.fit_radius = QDoubleSpinBox()
+        self.fit_radius.setRange(5.0, 300.0)
+        self.fit_radius.setValue(181.3)
+        self.fit_radius.setSuffix(" mm")
+        self.fit_radius.setToolTip(
+            "Radius the design is fitted to and clipped at. Default 181.3 = 0.98 x the 185 mm reach."
+        )
+        self.auto_fit = QCheckBox("Auto-fit after a division or rotation change")
+        self.auto_fit.setChecked(True)
+        self.fit_button = QPushButton("Fit design to bounds")
+        self.fit_button.clicked.connect(self.fit_to_bounds)
+        self.bounds_note = QLabel("")
+        self.bounds_note.setWordWrap(True)
+        for widget in (
+            self.bed_diameter,
+            self.bed_margin,
+            self.reach_radius,
+            self.fit_radius,
+        ):
+            widget.valueChanged.connect(self.on_bounds_changed)
+        form.addRow("Bed diameter", self.bed_diameter)
+        form.addRow("Bed margin", self.bed_margin)
+        form.addRow("Gantry reach radius", self.reach_radius)
+        form.addRow("Fit radius", self.fit_radius)
+        form.addRow(self.fit_button)
+        form.addRow(self.auto_fit)
+        form.addRow(self.bounds_note)
+        self.update_bounds_note()
         return box
 
     def _output_group(self):
@@ -271,6 +359,44 @@ class KaleidoscopeWindow(QMainWindow):
 
     def on_controls_changed(self, *_args):
         self.save_button.setEnabled(False)
+        if self._in_rebuild:
+            return
+        if self.source_path:
+            self.rebuild(refit=False)
+
+    def on_design_changed(self, *_args):
+        self.save_button.setEnabled(False)
+        if self._in_rebuild:
+            return
+        if self.source_path:
+            self.rebuild()
+
+    def on_offset_changed(self, *_args):
+        self.save_button.setEnabled(False)
+        if self._in_rebuild:
+            return
+        if self.source_path:
+            self.rebuild(refit=False)
+
+    def on_bounds_changed(self, *_args):
+        self.update_bounds_note()
+        self.save_button.setEnabled(False)
+        if self._in_rebuild:
+            return
+        if self.source_path:
+            self.rebuild(refit=False)
+
+    def update_bounds_note(self):
+        bed = max(
+            float(self.bed_diameter.value()) / 2.0 - float(self.bed_margin.value()),
+            0.0,
+        )
+        reach = float(self.reach_radius.value())
+        self.bounds_note.setText(
+            "Bed allows %.1f mm from centre and the reach circle allows %.1f mm. "
+            "The design is fitted to, and clipped at, the Fit radius."
+            % (bed, reach)
+        )
 
     def open_source(self):
         path, _ = QFileDialog.getOpenFileName(self, "Open artwork", "", SOURCE_FILTER)
@@ -292,20 +418,20 @@ class KaleidoscopeWindow(QMainWindow):
             hatch_spacing_mm=float(self.fill_spacing.value()),
             feed_rate=float(self.feed_rate.value()),
             theta_tangential_speed_mm_min=float(self.theta_speed.value()),
+            bed_diameter_mm=float(self.bed_diameter.value()),
+            bed_margin_mm=float(self.bed_margin.value()),
+            machine_reach_radius_mm=float(self.reach_radius.value()),
             fit_mode="manual",
             scale=1.0,
             flip_y=False,
         )
 
-    def _center_override(self):
-        x = float(self.center_x.value())
-        y = float(self.center_y.value())
-        return None if abs(x) < 1e-9 and abs(y) < 1e-9 else (x, y)
+    def _image_offset(self):
+        return float(self.center_x.value()), float(self.center_y.value())
 
     def _source_contours(self, settings, size_mm):
-        """Return the centred source in millimetres, y up, before repeating."""
+        """Centred source in design millimetres, y up, with the image offset applied."""
         path = self.source_path
-        center = self._center_override()
         size_mm = max(float(size_mm), 1.0)
         if converter.is_raster_source(path):
             traced = converter.trace_raster(
@@ -317,86 +443,138 @@ class KaleidoscopeWindow(QMainWindow):
             )
             if not traced:
                 raise ValueError("Nothing dark enough to trace - lower the threshold or invert it.")
-            return converter.normalize_source(traced, size_mm, center=center, flip_y=True)[0]
-        probe = dataclasses.replace(
-            settings, scale=1.0, hatch_spacing_mm=0.0, fit_mode="manual", flip_y=False
-        )
-        raw = converter.read_svg(path, probe)
-        if not raw:
-            raise ValueError("The SVG has no drawable geometry.")
-        min_x, min_y, max_x, max_y = converter.contour_bounds(raw)
-        base_x = (min_x + max_x) / 2.0 if center is None else float(center[0])
-        base_y = (min_y + max_y) / 2.0 if center is None else float(center[1])
-        span = max(max_x - min_x, max_y - min_y, 1e-9)
-        scale = size_mm / span
-        fitted = dataclasses.replace(settings, scale=scale, fit_mode="manual", flip_y=False)
-        scaled = converter.read_svg(path, fitted)
-        return [
-            [(x - base_x * scale, -(y - base_y * scale)) for x, y in contour]
-            for contour in scaled
-        ]
+            contours = converter.normalize_source(traced, size_mm, flip_y=True)[0]
+        else:
+            probe = dataclasses.replace(
+                settings, scale=1.0, hatch_spacing_mm=0.0, fit_mode="manual", flip_y=False
+            )
+            raw = converter.read_svg(path, probe)
+            if not raw:
+                raise ValueError("The SVG has no drawable geometry.")
+            min_x, min_y, max_x, max_y = converter.contour_bounds(raw)
+            base_x = (min_x + max_x) / 2.0
+            base_y = (min_y + max_y) / 2.0
+            span = max(max_x - min_x, max_y - min_y, 1e-9)
+            scale = size_mm / span
+            fitted = dataclasses.replace(settings, scale=scale, fit_mode="manual", flip_y=False)
+            scaled = converter.read_svg(path, fitted)
+            contours = [
+                [(x - base_x * scale, -(y - base_y * scale)) for x, y in contour]
+                for contour in scaled
+            ]
+        offset_x, offset_y = self._image_offset()
+        if abs(offset_x) > 1e-9 or abs(offset_y) > 1e-9:
+            contours = [
+                [(x + offset_x, y + offset_y) for x, y in contour]
+                for contour in contours
+            ]
+        return contours
 
-    def build_design(self, size_mm=None):
-        if not self.source_path:
-            raise ValueError("Open an artwork first.")
-        settings = self.output_settings()
-        size = float(self.source_size.value()) if size_mm is None else float(size_mm)
-        source = self._source_contours(settings, size)
-        design = converter.kaleidoscope(
+    def _build(self, settings, size_mm, clip_radius):
+        source = self._source_contours(settings, size_mm)
+        return converter.kaleidoscope(
             source,
             divisions=int(self.divisions.value()),
             mirror=self.mirror.isChecked(),
             angle_offset_deg=float(self.rotation.value()),
+            radius=clip_radius,
         )
-        return settings, design
 
-    def rebuild(self):
+    def build_design(self, size_mm=None, clip_radius=None):
+        if not self.source_path:
+            raise ValueError("Open an artwork first.")
+        settings = self.output_settings()
+        size = float(self.source_size.value()) if size_mm is None else float(size_mm)
+        return settings, self._build(settings, size, clip_radius)
+
+    def rebuild(self, refit=None):
         if not self.source_path:
             return
+        if refit is None:
+            refit = self.auto_fit.isChecked()
+        self._in_rebuild = True
         try:
-            settings, design = self.build_design()
+            target = max(float(self.fit_radius.value()), 1.0)
+            size = float(self.source_size.value())
+            if refit:
+                _, natural = self.build_design(size, clip_radius=None)
+                radius = max(
+                    (math.hypot(x, y) for contour in natural for x, y in contour),
+                    default=0.0,
+                )
+                if radius > 0.0:
+                    size = min(max(size * target / radius, 10.0), 400.0)
+                    self.source_size.setValue(size)
+            settings, design = self.build_design(size, clip_radius=target)
         except Exception as exc:  # noqa: BLE001 - surfaced to the user
             self.say("Build failed: %s" % exc)
             return
+        finally:
+            self._in_rebuild = False
         self.design = design
         self.settings = settings
         self.preview.reach_radius = float(settings.machine_reach_radius_mm)
         self.preview.bed_radius = float(settings.bed_diameter_mm) / 2.0
+        self.preview.bounds_radius = target
         wedge = 180.0 / max(int(self.divisions.value()), 1)
         self.preview.set_design(design, wedge)
         radius = max((math.hypot(x, y) for contour in design for x, y in contour), default=0.0)
         self.save_button.setEnabled(bool(design))
+        offset_x, offset_y = self._image_offset()
         self.say(
-            "Design: %d divisions%s, %d contours, outer radius %.1f mm (reach %.1f mm)."
+            "Design: %d divisions%s, %d contours, outer radius %.1f mm of the %.1f mm bound "
+            "(reach %.1f mm, image offset %.1f, %.1f)."
             % (
                 int(self.divisions.value()),
                 " mirrored" if self.mirror.isChecked() else "",
                 len(design),
                 radius,
+                target,
                 float(settings.machine_reach_radius_mm),
+                offset_x,
+                offset_y,
             )
         )
-        if radius > float(settings.machine_reach_radius_mm):
+        if target > float(settings.machine_reach_radius_mm):
             self.say(
-                "Outer radius exceeds the reach circle - the planner will clip it. "
-                "Use Fit to reach circle or lower Source size."
+                "Fit radius exceeds the reach circle; the planner will clip the program at %.1f mm."
+                % float(settings.machine_reach_radius_mm)
             )
 
-    def fit_to_reach(self):
+    def fit_to_bounds(self):
         if not self.source_path:
             return
         try:
-            settings, design = self.build_design()
+            target = max(float(self.fit_radius.value()), 1.0)
+            size = float(self.source_size.value())
+            _, natural = self.build_design(size, clip_radius=None)
+            radius = max(
+                (math.hypot(x, y) for contour in natural for x, y in contour),
+                default=0.0,
+            )
         except Exception as exc:  # noqa: BLE001
             self.say("Fit failed: %s" % exc)
             return
-        radius = max((math.hypot(x, y) for contour in design for x, y in contour), default=0.0)
-        reach = float(settings.machine_reach_radius_mm)
         if radius <= 0.0:
             return
-        target = float(self.source_size.value()) * (reach * 0.98) / radius
-        self.source_size.setValue(min(max(target, 10.0), 400.0))
-        self.rebuild()
+        self._in_rebuild = True
+        try:
+            self.source_size.setValue(min(max(size * target / radius, 10.0), 400.0))
+        finally:
+            self._in_rebuild = False
+        self.rebuild(refit=False)
+
+    def on_image_dragged(self, dx, dy):
+        """Move the source image inside the fixed design frame."""
+        if not self.source_path or self._in_rebuild:
+            return
+        self._in_rebuild = True
+        try:
+            self.center_x.setValue(float(self.center_x.value()) + float(dx))
+            self.center_y.setValue(float(self.center_y.value()) + float(dy))
+        finally:
+            self._in_rebuild = False
+        self.rebuild(refit=False)
 
     def save_gcode(self):
         if not self.design:
