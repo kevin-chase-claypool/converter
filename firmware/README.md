@@ -154,7 +154,7 @@ single bounded M3 descend (10 ms DOWN pulses while far from the paper, then
 5 ms pulses once force rises above about 1 g, each with the full 300 ms settle
 near contact). It enters `HOLD_FORCE` at the lower edge of the 40 g target band,
 and its moving-average hold loop uses individual 5 ms corrective pulses only
-outside the 30–50 g band—never a continuous motor command; after normal M5, it
+outside the 25–55 g band—never a continuous motor command; after normal M5, it
 retains the short 100 ms M3 path. T-01G repeatability and T-02/T-01J powered
 seek qualification remain open, so keep the RP23CNC M3/M5 harness disconnected
 during initial seek validation and retain access to the toolhead power cutoff.

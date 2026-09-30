@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20260930-pen-force-band-15g"></a>
+### 🟨 2026-09-30 06:27:19 -0500 - FIRMWARE/IMPLEMENTED - widened the 40 g pen-force band back to ±15 g
+
+- Decision: keep the 40 g target set earlier the same day
+  (`RPSW-20260930-001`) but return the target-ready band from ±10 g to ±15 g,
+  so the hold band is 25-55 g rather than 30-50 g.
+- Why: ±10 g is the tolerance that was widened to ±15 g on 2026-09-25 after
+  high-speed friction lifted the pen, and a 2026-09-29 ±10 g trial had already
+  been rejected; the lighter target was wanted, a third narrow-band experiment
+  was not.
+- Change: `CONTACT_READY_TOLERANCE_RAW` 50,388 -> 75,582 raw. The target
+  constants stay 201,551 raw (40 g), the 75 g hard limit stays, and the 20 g
+  relief offset stays, so relief still trips at 60 g - now exactly 5 g beyond
+  the band top and 15 g below the hard limit.
+- Verification: `arduino-cli compile` passed for
+  rp2040:rp2040:sparkfun_promicrorp2350; `python tools\docs_index.py --write`
+  and `--check` passed. No bench test, and the toolhead must be re-flashed.
+- Risk: the light edge is now 25 g, 5 g below the previously validated 30 g
+  bottom, so T-02/T-03 must confirm acceptable marking near the band's lower
+  edge as well as no lift near the top.
+- Evidence: `RPSW-20260930-002`;
+  `firmware/pen_pressure/pro_micro_rp2350_toolhead/toolhead_config.h`.
+- Category: firmware, hardware, toolhead, force-control, calibration, safety
+- Next action: re-flash the toolhead, then run T-02/T-03 and record the achieved
+  band, relief count, marking quality, and whether the pen stays down on fast
+  strokes.
+
 <a id="elog-20260930-pen-force-40g-band-10g"></a>
 ### 🟨 2026-09-30 06:24:53 -0500 - FIRMWARE/IMPLEMENTED - set the pen force target to 40 g with a ±10 g band
 

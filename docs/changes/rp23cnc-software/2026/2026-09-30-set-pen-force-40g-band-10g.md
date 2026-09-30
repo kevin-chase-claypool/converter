@@ -76,6 +76,8 @@ and must be re-checked on the machine rather than assumed.
 
 ## Risks and follow-up
 
+- The ±10 g band was widened back to ±15 g later the same day by
+  `RPSW-20260930-002`; the 40 g target from this note stands.
 - Unverified on hardware. Watch for the pen lifting on fast strokes (the
   2026-09-25 failure mode) and for light marking at 40 g; if either appears,
   adjust the band or the hold cadence rather than reverting silently.

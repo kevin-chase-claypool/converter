@@ -6,6 +6,7 @@ Newest changes appear first.
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
 | 2026-09-30 | `WSW-20260930-001` | windows-software, rp23cnc-software | implemented | [Calibrate the bed ratio from the measured A-index spacing](windows-software/2026/2026-09-30-calibrated-bed-ratio.md) |
+| 2026-09-30 | `RPSW-20260930-002` | rp23cnc-software, hardware | implemented | [Widen the 40 g pen-force band back to ±15 g](rp23cnc-software/2026/2026-09-30-widen-pen-force-band-to-15g.md) |
 | 2026-09-30 | `RPSW-20260930-001` | rp23cnc-software, hardware | implemented | [Set the pen force target to 40 g with a ±10 g band](rp23cnc-software/2026/2026-09-30-set-pen-force-40g-band-10g.md) |
 | 2026-09-29 | `WSW-20260929-003` | windows-software, rp23cnc-software | implemented | [Re-derive the reach radius and give it a registration-drift margin](windows-software/2026/2026-09-29-reach-radius-re-derived-with-drift-margin.md) |
 | 2026-09-29 | `WSW-20260929-002` | windows-software | implemented | [Auto-fit to the bed, and fill that follows the final scale](windows-software/2026/2026-09-29-auto-fit-and-scale-aware-fill-cache.md) |
