@@ -1,5 +1,41 @@
 # Engineering Log
 
+<a id="elog-20260930-engraving-motifs"></a>
+### 🟩 2026-09-30 17:19:55 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - engraving motifs from Haeckel plates
+
+- Request: "add some motifs that you think will help us toward our goal" - the
+  goal being the reference mandala's hatched, organic look. The silhouette
+  library was explicitly rejected earlier ("you downloaded silhouette icons and
+  full mandalas").
+- Change: `tools/fetch_engraving_motifs.py` pulls public-domain engraving plates
+  from Wikimedia Commons (`Kunstformen der Natur`, engravings of plants,
+  botanical and zoological illustrations), trims the scan border, thresholds
+  the ink, finds the plate's drawing area between the widest white gutters,
+  crops it on an overlapping 3x2 grid, filters cells by ink density and spread,
+  and writes 512 px 1-bit black-on-white motifs with `CREDITS.md` and
+  `manifest.json`. 147 crops were harvested and curated down to 88 in
+  `motifs/nature-engravings/`, copied into `samples\png` so the app's remembered
+  folder uses them at once. Motif tracing now accepts detailed line art
+  (rejecting only above 4,000 contours / 60,000 points) and trims anything
+  above 90 strokes to its largest ones, and motif mode uses the pool only in
+  the outer two rings with drawn hatching inside.
+- Fixed while testing: connected-component segmentation shattered the
+  engravings (line art is many unconnected strokes), gutter splitting collapsed
+  each plate to one block, and a plain grid picked up captions. Letting
+  engravings fill every ring gave 143,832 contours and read as speckle; the
+  outer-band rule plus the stroke budget brings it to 12,960-18,408.
+- Verification: contact sheets `samples\preview\engraving_final.png`;
+  designs `samples\preview\gen_engraved4.png` (seed 5 / intricacy 9 =
+  18,408 contours, seed 23 / intricacy 10 = 12,960). All eleven test modules
+  pass after updating the motif-policy test; `docs_index --write/--check` pass.
+- Boundary: crops are automatic, so some carry a caption fragment or cut an
+  organism; the stroke budget protects plotting time but there is no UI control
+  for it yet.
+- Evidence: `WSW-20260930-019`.
+- Category: windows-software, kaleidoscope, motifs, assets
+- Next action: browse seeds against the engraving folder and keep the crops
+  that read best; re-crop or drop the rest.
+
 <a id="elog-20260930-kaleidoscope-hatched-organic-shapes"></a>
 ### 🟩 2026-09-30 16:54:19 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: hatched, organic shapes
 

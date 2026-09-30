@@ -48,6 +48,10 @@ SOURCE_FILTER = (
     "SVG (*.svg);;All files (*.*)"
 )
 
+# How many strokes one motif may contribute. Engravings arrive with thousands
+# of tiny hatches; keeping the boldest few dozen leaves a plottable drawing.
+MOTIF_CONTOUR_BUDGET = 90
+
 
 class DesignPreview(QWidget):
     """Flat bed-frame view of the design, the bed circle and the reach circle."""
@@ -873,15 +877,32 @@ class KaleidoscopeWindow(QMainWindow):
                 else []
             )
             points = sum(len(contour) for contour in contours)
-            if len(contours) > 200 or points > 4000:
-                # A motif has to be one shape. A whole drawing in the folder
-                # would otherwise tile into hundreds of thousands of contours.
+            if len(contours) > 4000 or points > 60000:
+                # A motif has to be one organism, not a whole drawing: an
+                # engraving *plate* or a finished mandala would otherwise tile
+                # into hundreds of thousands of contours.
                 self.say(
                     "Skipped %s as a motif: %d contours / %d points is artwork, "
                     "not a single shape."
                     % (os.path.basename(path), len(contours), points)
                 )
                 contours = []
+            elif len(contours) > MOTIF_CONTOUR_BUDGET:
+                # Engravings are thousands of tiny strokes. Keep the bold ones,
+                # in size order, so an engraving motif plots as a drawing
+                # rather than an eight-hour pen workout.
+                ranked = sorted(
+                    contours,
+                    key=lambda contour: -(
+                        (max(x for x, _ in contour) - min(x for x, _ in contour))
+                        * (max(y for _, y in contour) - min(y for _, y in contour))
+                    ),
+                )
+                contours = ranked[:MOTIF_CONTOUR_BUDGET]
+                self.say(
+                    "%s: kept the %d largest of %d strokes for plotting."
+                    % (os.path.basename(path), MOTIF_CONTOUR_BUDGET, len(ranked))
+                )
             self.motif_cache[key] = contours
         return self.motif_cache[key]
 

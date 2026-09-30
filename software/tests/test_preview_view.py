@@ -315,7 +315,7 @@ class SettingsPersistenceTests(unittest.TestCase):
             first, set(window.motif_paths), "a re-roll should pick different images"
         )
 
-    def test_a_whole_drawing_is_skipped_as_a_motif(self):
+    def test_a_whole_drawing_is_trimmed_to_its_boldest_strokes(self):
         from PIL import Image, ImageDraw
 
         with tempfile.TemporaryDirectory() as folder:
@@ -332,8 +332,12 @@ class SettingsPersistenceTests(unittest.TestCase):
                 settings_file=_temp_settings(self)
             )
             self.assertTrue(window.load_motif_folder(folder, announce=False))
-            self.assertEqual(window._motif(0), [], "a busy drawing is not a motif")
-            self.assertIn("Skipped busy.png", window.log.toPlainText())
+            contours = window._motif(0)
+            self.assertTrue(contours, "a busy drawing still yields its main strokes")
+            self.assertLessEqual(
+                len(contours), 90, "a whole drawing is trimmed to a plot budget"
+            )
+            self.assertIn("largest of", window.log.toPlainText())
 
     def test_a_single_shape_is_accepted_as_a_motif(self):
         from PIL import Image, ImageDraw

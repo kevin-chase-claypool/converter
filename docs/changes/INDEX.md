@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-019` | windows-software | implemented | [Engraving motifs: Haeckel plates cut into organisms](windows-software/2026/2026-09-30-kaleidoscope-engraving-motifs.md) |
 | 2026-09-30 | `WSW-20260930-018` | windows-software | implemented | [Kaleidoscope: hatched, organic shapes in the drawn pattern generator](windows-software/2026/2026-09-30-kaleidoscope-hatched-organic-shapes.md) |
 | 2026-09-30 | `WSW-20260930-017` | windows-software | implemented | [Kaleidoscope: use a random set of ten motifs, not the whole folder](windows-software/2026/2026-09-30-kaleidoscope-motif-selection-cap.md) |
 | 2026-09-30 | `WSW-20260930-016` | windows-software | implemented | [Kaleidoscope: remembered setup and a default motif folder](windows-software/2026/2026-09-30-kaleidoscope-remembered-setup.md) |

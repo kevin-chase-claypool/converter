@@ -1073,7 +1073,12 @@ def random_pattern(
         name = order[ring % len(order)]
         r_in = edges[ring]
         r_out = max(edges[ring + 1] - gap, r_in + radius * 0.03)
-        pool = [motifs[index] for index in plan[ring]] if plan else []
+        # Engravings are far too detailed to tile through every ring; they
+        # read as speckle. They take the outer band - the ornamental border in
+        # the reference artwork - while the drawn hatched families fill the
+        # rings inside it.
+        use_motif = plan and ring >= rings - 2
+        pool = [motifs[index] for index in plan[ring]] if use_motif else []
         if any(pool):
             contours.extend(
                 _motif_ring(
