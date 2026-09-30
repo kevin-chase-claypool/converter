@@ -1,5 +1,36 @@
 # Engineering Log
 
+<a id="elog-20260930-kaleidoscope-non-destructive-autofit"></a>
+### 🟩 2026-09-30 16:33:02 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: auto-fit no longer overwrites typed numbers
+
+- Request: "every time i make a change, for example new seed or intricacy or
+  divisions the numbers all go back to defaults ... i want to be able to change
+  those but keep the number changes that i made".
+- Cause: `rebuild(refit=True)` wrote the fitted size straight into the Source
+  size spin box, and auto-fit is on by default, so every seed, intricacy or
+  division change replaced a hand-typed source size with the fitted value.
+- Change: auto-fit now keeps a `fit_scale` for the build and multiplies the
+  source size by it instead of touching the widget (reset to 1.0 on every
+  rebuild). The log and bounds note report the active scale; the auto-fit
+  tooltip says it scales without rewriting numbers; `on_bounds_changed` refits
+  when auto-fit is on so the fit radius scales rather than crops; the
+  `Fit design to bounds` button remains the one action that writes a fitted
+  size into the field.
+- Verification: new `TypedNumberTests` in `software/tests/test_preview_view.py` -
+  rolling the seed and changing intricacy and divisions leave source size, feed
+  rate, theta speed, tolerance, fill spacing, threshold, trace detail, bed
+  diameter, bed margin, reach radius and fit radius untouched; a 777 mm source
+  keeps its number while the design still lands on the 120 mm fit radius; and
+  the Fit button is the only path that rewrites the size. All eleven test
+  modules pass; `docs_index --write/--check` pass.
+- Boundary: a design is now described by Source size plus the current fit scale,
+  so the same seed can look different under a different fit radius; the scale is
+  printed in both the log and the bounds note.
+- Evidence: `WSW-20260930-015`.
+- Category: windows-software, kaleidoscope, interface, bounds
+- Next action: set a source size by hand, change seed, intricacy and divisions
+  in one sitting, and confirm the number never moves.
+
 <a id="elog-20260930-realistic-nature-motifs"></a>
 ### 🟩 2026-09-30 16:19:26 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - realistic nature motifs and deeper motif rings
 

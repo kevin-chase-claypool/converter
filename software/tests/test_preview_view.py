@@ -130,5 +130,77 @@ class SourceSizeTests(unittest.TestCase):
         self.assertAlmostEqual(radius, target, delta=target * 0.01)
 
 
+@unittest.skipUnless(HAVE_QT, "PySide6 is not installed")
+class TypedNumberTests(unittest.TestCase):
+    """Typed settings must survive seed, intricacy and division changes."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+        cls.module = _load_app_module()
+
+    def setUp(self):
+        self.window = self.module.KaleidoscopeWindow()
+        self.window.seed.setValue(5)
+        self.window.intricacy.setValue(4)
+        self.window.random_mode.setChecked(True)
+        self.window.source_size.setValue(500.0)
+        self.window.feed_rate.setValue(1234.0)
+        self.window.tolerance.setValue(0.4)
+        self.window.fit_radius.setValue(120.0)
+        self.window.rebuild()
+
+    def test_seed_change_keeps_the_typed_numbers(self):
+        before = self.typed_values()
+        old_seed = self.window.seed.value()
+        self.window.roll_seed()
+        self.assertNotEqual(self.window.seed.value(), old_seed, "the seed itself changes")
+        self.assertEqual(self.typed_values(), before)
+        self.assertAlmostEqual(
+            self.design_radius(), 120.0, delta=1.2, msg="auto-fit still applies"
+        )
+
+    def test_intricacy_and_division_changes_keep_the_typed_numbers(self):
+        before = self.typed_values()
+        self.window.intricacy.setValue(7)
+        self.window.divisions.setValue(9)
+        self.assertEqual(self.typed_values(), before)
+        self.assertAlmostEqual(self.design_radius(), 120.0, delta=1.2)
+
+    def test_auto_fit_does_not_write_the_size_back(self):
+        self.window.source_size.setValue(777.0)
+        self.window.rebuild()
+        self.assertEqual(self.window.source_size.value(), 777.0)
+        self.assertNotAlmostEqual(self.window.fit_scale, 1.0, places=3)
+
+    def test_fit_button_is_the_one_that_writes_the_size(self):
+        self.window.source_size.setValue(777.0)
+        self.window.fit_to_bounds()
+        self.assertAlmostEqual(self.window.source_size.value(), 120.0, delta=1.2)
+        self.assertAlmostEqual(self.window.fit_scale, 1.0, places=6)
+
+    def typed_values(self):
+        """The settings a seed/intricacy/division change must never rewrite."""
+        window = self.window
+        return {
+            "source_size": window.source_size.value(),
+            "feed_rate": window.feed_rate.value(),
+            "theta_speed": window.theta_speed.value(),
+            "tolerance": window.tolerance.value(),
+            "fill_spacing": window.fill_spacing.value(),
+            "threshold": window.threshold.value(),
+            "trace_detail": window.trace_detail.value(),
+            "bed_diameter": window.bed_diameter.value(),
+            "bed_margin": window.bed_margin.value(),
+            "reach_radius": window.reach_radius.value(),
+            "fit_radius": window.fit_radius.value(),
+        }
+
+    def design_radius(self):
+        return max(
+            math.hypot(x, y) for contour in self.window.design for x, y in contour
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

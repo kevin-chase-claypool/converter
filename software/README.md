@@ -110,6 +110,11 @@ app.
   spin boxes now accept up to 1,000,000 mm (the fit radius is what actually
   keeps the plot on the bed). Auto-fit only ever rewrites `Source size`, so a
   huge source is scaled down to the fit radius before it is clipped and planned.
+  Typed numbers are never rewritten by auto-fit: changing the seed, the
+  intricacy, the divisions or the fit radius scales the drawing internally
+  (the scale is printed in the log and the bounds note) and leaves every field
+  exactly as entered. `Fit design to bounds` is the one button that writes a
+  fitted value into `Source size`.
 - **Output.** `Tolerance`, `Fill spacing`, `Feed rate` and
   `Theta tangential speed` are the same settings as the main app, and the saved
   file uses the same preamble, pen contract, clipping and end-of-print park.

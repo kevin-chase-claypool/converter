@@ -256,6 +256,7 @@ class KaleidoscopeWindow(QMainWindow):
         self.design = []
         self.motif_paths = []
         self.motif_cache = {}
+        self.fit_scale = 1.0
 
         self.preview = DesignPreview()
         right = QWidget()
@@ -461,6 +462,12 @@ class KaleidoscopeWindow(QMainWindow):
         )
         self.auto_fit = QCheckBox("Auto-fit after a division or rotation change")
         self.auto_fit.setChecked(True)
+        self.auto_fit.setToolTip(
+            "Scale the design to the Fit radius while you work without "
+            "overwriting the Source size you typed. "
+            "Fit design to bounds is the button that writes the fitted size "
+            "into Source size."
+        )
         self.fit_button = QPushButton("Fit design to bounds")
         self.fit_button.clicked.connect(self.fit_to_bounds)
         self.bounds_note = QLabel("")
@@ -693,7 +700,9 @@ class KaleidoscopeWindow(QMainWindow):
         if self._in_rebuild:
             return
         if self._has_source():
-            self.rebuild(refit=False)
+            # With auto-fit on, following the fit radius is what the operator
+            # expects; the typed numbers still stay put either way.
+            self.rebuild(refit=self.auto_fit.isChecked())
 
     def update_bounds_note(self):
         bed = max(
@@ -701,11 +710,17 @@ class KaleidoscopeWindow(QMainWindow):
             0.0,
         )
         reach = float(self.reach_radius.value())
-        self.bounds_note.setText(
+        note = (
             "Bed allows %.1f mm from centre and the reach circle allows %.1f mm. "
             "The design is fitted to, and clipped at, the Fit radius."
             % (bed, reach)
         )
+        if abs(self.fit_scale - 1.0) > 1e-4:
+            note += " Auto-fit is scaling the drawing by %.3f; Source size stays at %.1f mm." % (
+                self.fit_scale,
+                float(self.source_size.value()),
+            )
+        self.bounds_note.setText(note)
 
     def open_source(self):
         path, _ = QFileDialog.getOpenFileName(self, "Open artwork", "", SOURCE_FILTER)
@@ -820,6 +835,7 @@ class KaleidoscopeWindow(QMainWindow):
         try:
             target = max(float(self.fit_radius.value()), 1.0)
             size = float(self.source_size.value())
+            self.fit_scale = 1.0
             if refit:
                 _, natural = self.build_design(size, clip_radius=None)
                 radius = max(
@@ -827,8 +843,12 @@ class KaleidoscopeWindow(QMainWindow):
                     default=0.0,
                 )
                 if radius > 0.0:
-                    size = max(size * target / radius, self.source_size.minimum())
-                    self.source_size.setValue(size)
+                    # Auto-fit only scales the design for this build. Writing
+                    # the fitted size back into the spin box is what used to
+                    # wipe out a typed Source size whenever the seed, the
+                    # intricacy or the divisions changed.
+                    self.fit_scale = target / radius
+                    size = max(size * self.fit_scale, self.source_size.minimum())
             settings, design = self.build_design(size, clip_radius=target)
         except Exception as exc:  # noqa: BLE001 - surfaced to the user
             self.say("Build failed: %s" % exc)
@@ -871,6 +891,14 @@ class KaleidoscopeWindow(QMainWindow):
                 offset_y,
             )
         )
+        if abs(self.fit_scale - 1.0) > 1e-4:
+            self.say(
+                "Auto-fit: scaled the drawing by %.3f for this build; Source size "
+                "stays at %.1f mm. Press Fit design to bounds to bake the fitted "
+                "size into the number."
+                % (self.fit_scale, float(self.source_size.value()))
+            )
+        self.update_bounds_note()
         if target > float(settings.machine_reach_radius_mm):
             self.say(
                 "Fit radius exceeds the reach circle; the planner will clip the program at %.1f mm."
