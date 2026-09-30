@@ -48,6 +48,17 @@ class RandomPatternTests(unittest.TestCase):
             self.assertGreaterEqual(counts[index][0], counts[index - 1][0])
             self.assertGreater(counts[index][1], counts[index - 1][1])
 
+    def test_top_intricacy_is_dense(self):
+        pattern = converter.random_pattern(
+            seed=4, intricacy=10, radius_mm=RADIUS, wedge_deg=15.0
+        )
+        self.assertGreaterEqual(
+            len(pattern), 120, "max intricacy should fill the wedge with shapes"
+        )
+        self.assertGreaterEqual(_point_count(pattern), 3000)
+        design = converter.kaleidoscope(pattern, 12, mirror=True, radius=RADIUS)
+        self.assertGreaterEqual(len(design), 3000, "mirrored design should be an engraving")
+
     def test_points_are_finite_and_inside_the_radius(self):
         for seed in (0, 5, 99999):
             for level in (1, 5, 10):
@@ -92,12 +103,19 @@ class RandomPatternTests(unittest.TestCase):
             self.assertLessEqual(
                 math.hypot(*contour[0]), RADIUS + 1e-6, "mirrored point left the frame"
             )
-            if len(contour) == 2:
-                self.assertLess(
-                    math.dist(contour[0], contour[1]),
-                    10.0,
-                    "clipping left a long straight chord",
-                )
+            if len(contour) != 2 or math.dist(contour[0], contour[1]) < 10.0:
+                continue
+            # Radial spokes and facet edges of a circle are honest straight
+            # lines. A diagonal jump - different radius *and* different angle -
+            # is the signature of a piece fused across a clipped gap.
+            first, second = contour
+            dr = abs(math.hypot(*first) - math.hypot(*second))
+            da = abs(math.atan2(first[1], first[0]) - math.atan2(second[1], second[0]))
+            self.assertTrue(
+                dr < 1.5 or da < math.radians(2.0),
+                "clipping left a stray diagonal chord (dr=%.2f mm, da=%.1f deg)"
+                % (dr, math.degrees(da)),
+            )
 
 
 class BandFamilyTests(unittest.TestCase):

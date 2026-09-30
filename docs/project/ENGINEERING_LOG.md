@@ -1,5 +1,41 @@
 # Engineering Log
 
+<a id="elog-20260930-kaleidoscope-engraving-density"></a>
+### 🟩 2026-09-30 14:38:56 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: engraving-density random patterns
+
+- Request: max intricacy was not impressive - "i want a lot more going on" -
+  with a 9,045-path Illustrator mandala supplied as the target.
+- Change: the generator was recomposed from flat texture bands into an engraved
+  mandala. Families are now shape rings - shaded leaf, tulip, lens, topographic
+  bundle, feather (spine + radial barbs), scallop, chevron, rayed fan - each
+  filled with nested contour lines whose count grows with intricacy.
+  `random_pattern` lays out `2 + intricacy // 3` shape rings on a geometric
+  ladder, puts 2-4 line separators with flower studs between them, and closes
+  with a scalloped beaded rim; the centre is a shaded rosette plus a ray ring.
+  The old wicker/beads/hatch/scales/sawtooth bands were removed - as whole-band
+  textures they read as scribble.
+- Fixed while testing: the first density pass turned the centre into an inked
+  blob, because starburst spokes reaching to 0.10 of the rosette radius overlap
+  once the wedge is mirrored `2 * divisions` times. Spokes now start at half
+  the rosette radius, 3-5 per wedge. The stray-chord regression test was also
+  refined: deliberate radial spokes and circle facet edges are straight lines
+  too, so only a diagonal jump (different radius *and* angle) counts as a
+  clipped-gap artefact.
+- Verification: seed 4 / intricacy 10 / 12 divisions / 181.3 mm gives 4,056
+  mirrored contours, 96,096 points, max radius exactly 181.30 mm; headless Qt
+  build 0.11 s, `plan_program` 2.25 s, emit 1.85 s, 120,460 G-code lines and
+  4,056 pen cycles. Nine tests in `test_generative.py` (including a new density
+  floor) and all ten test modules pass. Visual checks: `samples/png/gen_dense4.png`,
+  `gen_l10.png`, `gen_div.png` (8 and 24 divisions). `docs_index --write/--check`
+  pass.
+- Boundary: max intricacy is a multi-hour plot by design and there is no
+  line-count warning yet; a design is still tied to its division count; the
+  result is more regular than the hand-drawn reference.
+- Evidence: `WSW-20260930-007`.
+- Category: windows-software, kaleidoscope, generative, density
+- Next action: plot one intricacy-8 pattern and check seam cusps, stud rows and
+  the scalloped rim against the preview.
+
 <a id="elog-20260930-kaleidoscope-random-pattern"></a>
 ### 🟩 2026-09-30 14:22:38 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: deterministic random-pattern generator
 
