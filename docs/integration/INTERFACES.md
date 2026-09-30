@@ -42,6 +42,7 @@ The converter emits:
 | `G65 P115 Q0/Q1` | Optional RP23CNC-local GP27/`PRB` completion wait; `Q0` is the opening clear check and `Q1` requires a new M3/M5 completion edge |
 | `M65 P0` / `M64 P0` | Assert/release Aux0/GP28; at end of print this requests the toolhead full retract to GP2 |
 | `G53 G0 X Y` | End-of-print machine-coordinate park; clears the pen off the bed |
+| `G65 P116` | Manual PEN UP + PARK: normal M5 clear, `P115` clear proof, GP2 full-retract request, off-bed `G53` park (the program-end sequence as an operator command) |
 | `M2` | Program end |
 
 Unknown or unsupported commands must cause an explicit error during test, not
@@ -56,6 +57,8 @@ pen-free commissioning only. After the final pen-up the program ends with a
 full-retract request (`M65 P0`, `G65 P115 Q0`, `M64 P0`) that drives the pen up
 to the GP2 lift-home switch, then a `G53 G0` machine-coordinate park (defaults
 to the homed rest position) so the pen clears the rotating bed for paper removal.
+The same clear, full-retract, and park sequence is available on demand from the
+ioSender `PEN UP + PARK` button, which issues the controller macro `G65 P116`.
 
 ## Axis and unit convention
 

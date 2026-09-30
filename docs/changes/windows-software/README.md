@@ -10,6 +10,7 @@ Newest changes appear first.
 |---|---|---|---|---|
 | 2026-09-30 | `WSW-20260930-002` | implemented | [Keep pen-down bridging off by default and tag generated fill trails](2026/2026-09-30-tag-fill-trails-for-bridging.md) | `infill`, `bridge`, `pen-up`, `correctness`, `preview` |
 | 2026-09-30 | `WSW-20260930-001` | implemented | [Calibrate the bed ratio from the measured A-index spacing](2026/2026-09-30-calibrated-bed-ratio.md) | `theta`, `kinematics`, `a-axis`, `calibration`, `registration`, `drift` |
+| 2026-09-30 | `RPSW-20260930-003` | implemented | [Add a manual pen-up-to-lift-home and park macro](../rp23cnc-software/2026/2026-09-30-manual-pen-up-and-park-macro.md) | `iosender`, `macro`, `p116`, `p115`, `lift-home`, `gp2`, `park`, `g53`, `service` |
 | 2026-09-29 | `WSW-20260929-003` | implemented | [Re-derive the reach radius and give it a registration-drift margin](2026/2026-09-29-reach-radius-re-derived-with-drift-margin.md) | `converter`, `clipping`, `soft-limit`, `reachable-area`, `g54`, `alarm-2` |
 | 2026-09-29 | `WSW-20260929-002` | implemented | [Auto-fit to the bed, and fill that follows the final scale](2026/2026-09-29-auto-fit-and-scale-aware-fill-cache.md) | `converter`, `usability`, `scale`, `reach`, `fill`, `cache` |
 | 2026-09-29 | `WSW-20260929-001` | implemented | [Fill bed sizing and recentring for the fit actions](2026/2026-09-29-fill-bed-and-recenter-fits.md) | `converter`, `usability`, `scale`, `reach`, `placement` |

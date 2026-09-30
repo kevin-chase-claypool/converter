@@ -7,6 +7,7 @@ Newest changes appear first.
 |---|---|---|---|---|
 | 2026-09-30 | `WSW-20260930-002` | windows-software | implemented | [Keep pen-down bridging off by default and tag generated fill trails](windows-software/2026/2026-09-30-tag-fill-trails-for-bridging.md) |
 | 2026-09-30 | `WSW-20260930-001` | windows-software, rp23cnc-software | implemented | [Calibrate the bed ratio from the measured A-index spacing](windows-software/2026/2026-09-30-calibrated-bed-ratio.md) |
+| 2026-09-30 | `RPSW-20260930-003` | rp23cnc-software, windows-software | implemented | [Add a manual pen-up-to-lift-home and park macro](rp23cnc-software/2026/2026-09-30-manual-pen-up-and-park-macro.md) |
 | 2026-09-30 | `RPSW-20260930-002` | rp23cnc-software, hardware | implemented | [Widen the 40 g pen-force band back to ±15 g](rp23cnc-software/2026/2026-09-30-widen-pen-force-band-to-15g.md) |
 | 2026-09-30 | `RPSW-20260930-001` | rp23cnc-software, hardware | implemented | [Set the pen force target to 40 g with a ±10 g band](rp23cnc-software/2026/2026-09-30-set-pen-force-40g-band-10g.md) |
 | 2026-09-29 | `WSW-20260929-003` | windows-software, rp23cnc-software | implemented | [Re-derive the reach radius and give it a registration-drift margin](windows-software/2026/2026-09-29-reach-radius-re-derived-with-drift-margin.md) |

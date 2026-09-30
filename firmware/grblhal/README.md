@@ -39,7 +39,7 @@ on at idle and made the pen dive at power-up. The controller sets `$16=1`
 (invert spindle enable) to correct it, so `M3` engages and `M5` lifts, with the
 pen-up fail-safe preserved. See [`config/machine-settings.md`](config/machine-settings.md)
 and the 2026-09-23 F-05 lab note. `F-05A`, the `P115`/`PRB` acknowledgement,
-remains open.
+passed on 2026-09-29.
 
 **A convention:** A is motor-shaft degrees; the converter applies the measured 12.0332:1
 ratio. Controller steps-per-unit must not apply that ratio a second time.
@@ -56,11 +56,19 @@ actual GP27/U3 motor-inert PRB/G38 transition checks, so the blue return is now
 at `PRB`. It does not authorize P100 motion: macro/parameter semantics, the
 normal-status interval, and all Q3/Q4 commissioning gates remain open.
 
-`macros/P115.macro` is source-ready for the later normal-print GP27
-acknowledgement. It performs bounded `PRB` polling only; its strict, `Q7`, and
-`W1` warn-only modes never command an axis, Aux0, M3, or M5, while the opt-in
-`W2` recover mode may issue one `M5` fail-safe lift on timeout. It is not yet
-installed or enabled on the controller.
+`macros/P115.macro` is the normal-print GP27 acknowledgement and is installed on
+the controller; F-05A ran its `Q0`/`Q1` paths against the installed build on
+2026-09-29. It performs bounded `PRB` polling only; its strict, `Q7`, and `W1`
+warn-only modes never command an axis, Aux0, M3, or M5, while the opt-in `W2`
+recover mode may issue one `M5` fail-safe lift on timeout. The converter still
+ships the handshake off by default.
+
+`macros/P116.macro` is the manual **PEN UP + PARK** command for an ioSender
+button: `M5` plus `G65 P115 Q0`, the `M65 P0` full-retract request to the GP2
+lift-home switch, and the `G53 G0 X-10 Y-436` off-bed park - the same sequence
+the converter emits at the end of a program. It contains no `$H` and does not
+home, and it is source-ready but not yet run on the machine. See
+[`macros/README.md`](macros/README.md).
 
 ## Current records
 

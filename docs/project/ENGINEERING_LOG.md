@@ -1,5 +1,37 @@
 # Engineering Log
 
+<a id="elog-20260930-manual-pen-up-and-park-macro"></a>
+### 🟨 2026-09-30 06:59:01 -0500 - RP23CNC SOFTWARE/IMPLEMENTED - add a manual pen-up-to-lift-home and park macro
+
+- Problem: the end-of-print clear -> GP2 full retract -> `G53` park sequence
+  existed only inside a saved program. Between runs the owner could not lift the
+  pen to the lift-home switch and clear the bed without starting another
+  program, homing, or jogging by hand.
+- Change: added `firmware/grblhal/macros/P116.macro` and documented the ioSender
+  button `PEN UP + PARK` (`G65 P116`). It runs the self-contained modal
+  preamble, `M5` plus `G65 P115 Q0` to prove the clearance before any gantry
+  move, `M64`/`M65` to request the GP2 full retract inside the toolhead's 3.0 s
+  `BOOT_LIFT_TIME_MS` bound, `M64` to release the arm, and `G53 G0 X-10 Y-436`
+  to park off the bed. It contains no `$H` and does not home. The pasteable
+  ioSender form is in `firmware/grblhal/macros/README.md` for a controller
+  without the file.
+- Verification: the packaged macro has not been run. Its retract half
+  (`M64 P0`, `M5`, `M65 P0`, `G4 P3.0`, `M64 P0`) ran on the installed hardware
+  during the 2026-09-29 F-05A session. Reviewed against Core 1's
+  `STATUS_FULL_RETRACT_REQUESTED` rising-edge path and Core 0's `LIFTING` and
+  retract-fault code; `python tools\docs_index.py --write` and `--check` pass.
+- Not verified: the button has never been pressed. `P115 Q0` also inherits the
+  unexplained roughly hourly `error[39]` from real printing, which here fails
+  safe by leaving the gantry in place.
+- Risk: `G53` needs a known machine position, and the park target and 3.0 s
+  bound are duplicated between the macro and the converter's park settings.
+- Evidence: `RPSW-20260930-003`; `firmware/grblhal/macros/P116.macro`.
+- Category: rp23cnc-software, windows-software, iosender, macro, p116, p115,
+  lift-home, gp2, park, g53, safety
+- Next action: press `PEN UP + PARK` from `IDLE` with a registered G54 at
+  contact and record the console output, the retract behaviour, and the final
+  `MPos` against `G53 X-10 Y-436`.
+
 <a id="elog-20260930-tag-fill-trails-for-bridging"></a>
 ### 🟨 2026-09-30 06:54:17 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - keep-down bridging is off by default and only joins generated fill trails
 

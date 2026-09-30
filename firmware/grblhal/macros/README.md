@@ -83,6 +83,54 @@ an explicit opt-in and the strict paths remain the default.
 which phase fails on the installed hardware before choosing bounds or turning
 on recover mode.
 
+`P116.macro` is the manual **PEN UP + PARK** operator command. It runs the same
+sequence the converter already emits at the end of a saved program, but on
+demand: `M5` plus the verified `G65 P115 Q0` clear check, then `M65 P0` to
+request the toolhead full retract to the GP2 lift-home switch, a fixed `G4 P3.0`
+bound equal to the toolhead's own `BOOT_LIFT_TIME_MS` retract bound, `M64 P0` to
+release the arm, and `G53 G0 X-10 Y-436` to park off the bed at the homed rest
+position. It contains no `$H`, so it never homes; run it from `IDLE` with a known
+machine position. It releases the arm before asserting it, so an earlier attempt
+that aborted between `M65` and `M64` still produces the rising edge the
+full-retract request needs. The park target matches the converter's
+`park_x_machine` / `park_y_machine` defaults and must stay inside `$130`/`$131`.
+
+The ioSender button is named `PEN UP + PARK`, has confirmation enabled, and
+issues `G65 P116`. An operator who does not want a controller-side macro file can
+put the same sequence directly in an ioSender macro:
+
+```gcode
+G21
+G90
+G94
+G17
+G54
+M5
+G65 P115 Q0
+M64 P0
+G4 P0.20
+M65 P0
+G4 P3.0
+M64 P0
+G53 G0 X-10 Y-436
+```
+
+`G65 P115 Q0` deliberately runs before any gantry movement. An already-clear
+level or a proved clear-ready edge lets the park proceed; a stuck or faulted
+toolhead raises `error[39]` while the gantry is still over the bed, instead of
+rapid-moving a pen that never left the paper. On a controller without
+`P115.macro`, substitute the converter's `G4 P0.8` pen-up dwell, which bounds
+rather than proves the clearance. The retract's `G4 P3.0` is a bound as well, but
+the toolhead raises `GP2 lift-home not reached during retract` inside it, so a
+missed switch cannot become an unlimited retract.
+
+`P116.macro` deliberately contains no `$` text at all, so no grblHAL system
+command - the `$H` home that P100 must avoid - can execute while it streams.
+
+`P116` is source-ready and the packaged command has not been run on the machine
+yet. Its retract half - `M64 P0`, `M5`, `M65 P0`, `G4 P3.0`, `M64 P0` - was
+exercised on the installed hardware during the 2026-09-29 F-05A session.
+
 `P112.macro` is the next **survey-only** A-index stage. After fresh P111 and a
 successful Q5, run `G65 P112` without jogging X/Y/A between them. P112 moves
 the TMAG along +X to G53 X `-10.5` mm: the measured `223.675804` mm radius

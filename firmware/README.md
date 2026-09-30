@@ -64,6 +64,15 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   holds the published contact-ready level through the hold loop's bounded
   corrections (release after 500 ms beyond the 20 g relief bound,
   `CONTACT_READY_LOST_MS`), so the level cannot chatter in `HOLD_FORCE`.
+- **Pen full retract and park** - the end of a saved program requests the
+  toolhead's full retract to the GP2 lift-home switch by asserting the already
+  installed Aux0/GP28 arm (`M65 P0`), waits the toolhead's own 3.0 s
+  `BOOT_LIFT_TIME_MS` retract bound, releases it (`M64 P0`), and then parks off
+  the bed with a `G53 G0` machine-coordinate move. The controller file
+  `macros/P116.macro` exposes the same sequence as a manual ioSender button
+  (`PEN UP + PARK` -> `G65 P116`) for taking paper off between runs; it proves
+  the normal M5 clearance with `P115` before any gantry move. Neither path
+  homes: both need a known machine position.
 - **Homing and bed registration** - X/Y physical switches establish machine
   coordinates. A controller-resident `P100.macro` then uses the existing
   Aux0/GP28 arm and GP27/U3 return to capture a full center-magnet raster,

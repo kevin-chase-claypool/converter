@@ -1,0 +1,43 @@
+(P116 - Pen up to the GP2 lift-home switch, then park off the bed.)
+(Manual operator command for the converter's end-of-print clear -> full retract -> G53 park.)
+(Intended for an ioSender button named PEN UP + PARK, confirmation enabled, issuing G65 P116.)
+(This macro never homes: run it from IDLE with a known machine position. Its text also)
+(contains no dollar-command at all, so no system command can execute while it streams.)
+(It requires the installed Aux0/GP28 path - M65 asserts the arm, M64 releases it - and the)
+(toolhead M5 clearance plus disarmed-Aux0 full-retract behaviour.)
+
+(Self-contained modal and frame setup, matching the converter program preamble.)
+G21
+G90
+G94
+G17
+G54
+
+(1. Normal pen-up, then prove the pen actually left the paper before any gantry move.)
+(Q0 accepts an already-clear level or waits for clear-ready; a stuck or faulted toolhead)
+(raises error 39 and stops here, so the park move is never attempted from contact.)
+M5
+G65 P115 Q0
+(A controller without the installed P115.macro substitutes the converter's pen-up dwell:)
+(G4 P0.8. That only bounds the clearance; it does not prove it.)
+
+(2. Request the full retract to the GP2 lift-home switch through the Aux0/GP28 arm.)
+(Release the arm first so the following assertion is a clean rising edge even if an)
+(earlier attempt aborted between M65 and M64. While the magnetic path is DISARMED and)
+(the pen is off GP2, the arm rising edge is an end-of-print full-retract request, not a)
+(magnetic scan, so this cannot start a P100 raster.)
+M64 P0
+G4 P0.20
+M65 P0
+(3.0 s is the toolhead's own full-retract bound (BOOT_LIFT_TIME_MS). It reports)
+(GP2 lift-home not reached during retract instead of retracting without a limit.)
+G4 P3.0
+M64 P0
+
+(3. Park off the bed at the homed rest position in machine coordinates.)
+(This is the converter's default park target; keep it inside the controller's)
+(soft-limit envelope, settings 130 and 131.)
+(The pen is already proven clear, so this move cannot drag it across the sheet.)
+G53 G0 X-10 Y-436
+(print,P116 pen-up-to-lift-home and park complete)
+o1161 return [1]
