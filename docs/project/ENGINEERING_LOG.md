@@ -1,5 +1,34 @@
 # Engineering Log
 
+<a id="elog-20260930-kaleidoscope-hatched-organic-shapes"></a>
+### 🟩 2026-09-30 16:54:19 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: hatched, organic shapes
+
+- Request: "this svg is a good example of what i ultimately want the
+  kaleidoscope.bat to do. i just want it to be more random than this"
+  (the 9,045-path reference mandala).
+- Change: the reference's style is hand-drawn leaves hatched on the inside, so
+  `_leaf_profile` now gives every leaf a normalised two-ripple irregular outline
+  and `_leaf_ring` was rebuilt around it: irregular closed outline (outer and
+  inner edge), nested interior arches, contour lines along the leaf, radial ribs
+  across it every 2-4 mm and a centre vein. Spacings (ribs 5.6 - 0.26*level mm,
+  contours 3.6 - 0.18*level mm, both scaled by the seed's packing density) keep
+  the hatching open instead of filling the shape solid. No paths were changed in
+  this turn.
+- Verification: core render through the real mirror step
+  (`samples/preview/gen_hatched3.png`): seed 3 / intricacy 9 = 447 wedge
+  contours -> 10,728 mirrored, seed 17 = 285 -> 6,840, visibly different
+  layouts. The leaf families still pass the band test (the wobble is normalised
+  so an irregular tip cannot leave its band). All eleven test modules pass;
+  `docs_index --write/--check` pass.
+- Boundary: levels 9-10 are dense plots (~10.7k contours in the sample); only
+  the leaf family has ribs so far, and tulips/lenses/bundles could take the
+  same treatment. Motif mode is unchanged.
+- Evidence: `WSW-20260930-018`.
+- Category: windows-software, kaleidoscope, generative, style
+- Next action: once the folder paths are settled, swap the flat silhouette
+  library for engraving-style artwork, which is the same vocabulary as this
+  reference.
+
 <a id="elog-20260930-kaleidoscope-motif-selection-cap"></a>
 ### 🟩 2026-09-30 16:48:42 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: use a random set of ten motifs, not the whole folder
 

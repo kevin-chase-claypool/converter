@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-018` | implemented | [Kaleidoscope: hatched, organic shapes in the drawn pattern generator](2026/2026-09-30-kaleidoscope-hatched-organic-shapes.md) | `kaleidoscope`, `generative`, `style` |
 | 2026-09-30 | `WSW-20260930-017` | implemented | [Kaleidoscope: use a random set of ten motifs, not the whole folder](2026/2026-09-30-kaleidoscope-motif-selection-cap.md) | `kaleidoscope`, `motifs`, `interface` |
 | 2026-09-30 | `WSW-20260930-016` | implemented | [Kaleidoscope: remembered setup and a default motif folder](2026/2026-09-30-kaleidoscope-remembered-setup.md) | `kaleidoscope`, `interface`, `motifs` |
 | 2026-09-30 | `WSW-20260930-015` | implemented | [Kaleidoscope: auto-fit no longer overwrites typed numbers](2026/2026-09-30-kaleidoscope-non-destructive-autofit.md) | `kaleidoscope`, `interface`, `bounds` |

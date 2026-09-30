@@ -56,6 +56,10 @@ app.
   per wedge - the style name is shown next to the seed. Counts, radii and phases
   come from mathematical sequences (golden angle, Weyl, van der Corput,
   Fibonacci, primes), not from unseeded noise.
+  Drawn shapes are hatched the way an engraved botanical plate is: a leaf is an
+  irregular outline with nested contour lines, radial ribs every few
+  millimetres and a centre vein, so the pattern reads as hand-drawn line work
+  instead of empty mechanical rings.
 - **Natural motifs.** `Motif folder...` loads a folder of black-on-white
   PNG/JPG shapes - leaves, shells, fish, feathers - and `Use natural motifs in
   patterns` swaps them in for the drawn shape rings while the separators, studs

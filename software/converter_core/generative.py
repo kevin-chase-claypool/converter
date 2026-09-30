@@ -179,6 +179,24 @@ def _leaf(a0, a1, r_base, r_tip, power, inner_ratio, samples):
     return points
 
 
+def _leaf_profile(t, power, seed):
+    """A leaf's half-width at *t* across its span, with organic wobble.
+
+    Pure ``sin(pi*t)**power`` draws a mathematical teardrop; the reference
+    artwork is hand-drawn, so two low-frequency ripples are layered on top to
+    make every leaf slightly irregular in a way that is still smooth.
+    """
+    t = _clamp(t, 0.0, 1.0)
+    base = math.sin(math.pi * t) ** power
+    # Normalised so the wobble peaks at 1.0: a leaf may be irregular but it
+    # must never grow past its band.
+    wobble = 1.0
+    wobble += 0.11 * math.sin(TAU * (2.0 + seed % 3) * t + 0.7 * weyl(seed))
+    wobble += 0.07 * math.sin(TAU * (5.0 + seed % 4) * t + 1.3 * weyl(seed + 1))
+    wobble /= 1.18
+    return base * wobble
+
+
 def _arc(centre, radius, start, end, samples=10):
     """An arc around *centre* from angle *start* to *end*."""
     cx, cy = centre
@@ -361,47 +379,74 @@ def _motif_ring(
 
 
 def _leaf_ring(r_in, r_out, wedge, level, seed, cancel_check=None):
-    """One or two large leaves with nested sub-leaves, contour fills and veins."""
+    """One or two large leaves, hatched inside like an engraving.
+
+    Each leaf is an irregular outline, a set of contour lines following its
+    length, and radial ribs across it, so the shape reads as a drawn, shaded
+    leaf rather than an empty outline.
+    """
     span = r_out - r_in
     power = 0.45 + 0.60 * van_der_corput(seed + 1, 5)
     samples = 30 + 3 * level
     density = _density(seed)
     repeat = 1 + _pick(seed, 11, 2)
     nests = 1 + level // 3
+    ribs = _count(span, (5.6 - 0.26 * level) * density, 3, 24)
     out = []
     for rep in range(repeat):
         check_cancelled(cancel_check)
         a0 = wedge * rep / repeat
         a1 = wedge * (rep + 1) / repeat
         mid, half = 0.5 * (a0 + a1), 0.5 * (a1 - a0)
-        out.append(_leaf(a0, a1, r_in, r_out, power, 0.30, samples))
+
+        def profile(t, seed=seed + rep, power=power):
+            return _leaf_profile(t, power, seed)
+
+        outline = [
+            _polar(r_in + span * profile(index / samples), a0 + (a1 - a0) * index / samples)
+            for index in range(samples + 1)
+        ]
+        outline += [
+            _polar(
+                r_in + span * 0.28 * profile(index / samples),
+                a0 + (a1 - a0) * index / samples,
+            )
+            for index in range(samples, -1, -1)
+        ]
+        out.append(outline)
         for index in range(nests):
             check_cancelled(cancel_check)
             ratio = 1.0 - 0.75 * (index + 1) / (nests + 1)
             out.append(
-                _leaf(
-                    mid - 0.88 * half,
-                    mid + 0.88 * half,
-                    r_in,
-                    r_in + span * ratio,
-                    power + 0.10,
-                    0.30,
-                    samples,
-                )
+                [
+                    _polar(
+                        r_in + span * ratio * profile(t),
+                        mid - 0.88 * half + 2.0 * 0.88 * half * t,
+                    )
+                    for t in (i / samples for i in range(samples + 1))
+                ]
             )
+        fills = _count(span, (3.6 - 0.18 * level) * density, 2, 16)
+        for index in range(fills):
+            ratio = (index + 1) / (fills + 1)
+            out.append(
+                [
+                    _polar(
+                        r_in + span * ratio * profile(t),
+                        a0 + (a1 - a0) * t,
+                    )
+                    for t in (i / samples for i in range(samples + 1))
+                ]
+            )
+        # Ribs: radial strokes across the leaf, the striped look of an
+        # engraved botanical plate.
+        for index in range(ribs):
+            check_cancelled(cancel_check)
+            t = (index + 0.5) / ribs
+            reach = r_in + span * 0.97 * profile(t)
+            angle = a0 + (a1 - a0) * t
+            out.append([_polar(r_in, angle), _polar(reach, angle)])
         out.append([_polar(r_in, mid), _polar(r_in + 0.98 * span, mid)])
-        out.extend(
-            _nested_arcs(
-                r_in,
-                r_out,
-                a1 - a0,
-                power,
-                _shade_spacing(level) * density,
-                samples,
-                cancel_check,
-                a0,
-            )
-        )
     return out
 
 
