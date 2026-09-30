@@ -99,7 +99,11 @@ app.
   `Auto-fit after a division or rotation change` keeps it matched while the
   design changes. The default 181.3 mm is 0.98 x the 185 mm reach, and the
   planner still clips the saved program at the real printable limit if a typed
-  bound is larger.
+  bound is larger. `Source size` and every bound field are free numbers: the
+  old 400 mm source cap and 300 mm bound caps were arbitrary guards, and the
+  spin boxes now accept up to 1,000,000 mm (the fit radius is what actually
+  keeps the plot on the bed). Auto-fit only ever rewrites `Source size`, so a
+  huge source is scaled down to the fit radius before it is clipped and planned.
 - **Output.** `Tolerance`, `Fill spacing`, `Feed rate` and
   `Theta tangential speed` are the same settings as the main app, and the saved
   file uses the same preamble, pen contract, clipping and end-of-print park.

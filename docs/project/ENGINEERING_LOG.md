@@ -1,5 +1,29 @@
 # Engineering Log
 
+<a id="elog-20260930-kaleidoscope-uncapped-sizes"></a>
+### 🟩 2026-09-30 15:42:04 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: no cap on source size or typed bounds
+
+- Request: "why is 400 mm the max for source size. let me go as high as i want".
+- Change: the 400 mm `Source size` cap and the 300-1000 mm bound caps were
+  arbitrary guards inherited from the main converter's bed assumptions, so they
+  are gone: source size 0.1-1,000,000 mm, image offsets +/-100,000 mm, bed
+  diameter 10-100,000 mm, bed margin to 10,000 mm, reach and fit radius to
+  100,000 mm. The two auto-fit paths clamp to the spin-box minimum instead of a
+  hard 400. The source-size tooltip now says the fit radius is what keeps the
+  plot on the bed, and the planner still clips the saved program at the real
+  printable limit with its existing warning.
+- Verification: new `SourceSizeTests` in `software/tests/test_preview_view.py` -
+  the maximum is at least 100,000 mm, and a random pattern at 250,000 mm with
+  auto-fit lands at the 181.3 mm fit radius to within 1 %. All eleven test
+  modules pass; `docs_index --write/--check` pass.
+- Boundary: with auto-fit off, a source far larger than the frame is simply
+  clipped; the log still reports outer radius versus bound, so an empty-looking
+  preview is explained there.
+- Evidence: `WSW-20260930-013`.
+- Category: windows-software, kaleidoscope, interface, bounds
+- Next action: try a source at 1000 mm with auto-fit on and confirm the fitted
+  design plots identically to the 300 mm default.
+
 <a id="elog-20260930-kaleidoscope-preview-zoom-pan"></a>
 ### 🟩 2026-09-30 15:31:12 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - kaleidoscope: zoom and pan the preview
 

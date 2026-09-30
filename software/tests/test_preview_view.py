@@ -8,6 +8,7 @@ drag, and an image drag must shrink in millimetres as the view is zoomed in.
 """
 
 import importlib.util
+import math
 import os
 import sys
 import unittest
@@ -99,6 +100,34 @@ class PreviewViewTests(unittest.TestCase):
         self.preview.reset_view()
         self.assertGreaterEqual(len(seen), 2)
         self.assertAlmostEqual(seen[-1], 1.0)
+
+
+@unittest.skipUnless(HAVE_QT, "PySide6 is not installed")
+class SourceSizeTests(unittest.TestCase):
+    """The source size is a free number; the fit radius bounds the plot."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+        cls.module = _load_app_module()
+
+    def test_source_size_has_no_practical_cap(self):
+        window = self.module.KaleidoscopeWindow()
+        self.assertGreaterEqual(window.source_size.maximum(), 100000.0)
+
+    def test_huge_source_size_is_fitted_to_the_bound(self):
+        window = self.module.KaleidoscopeWindow()
+        window.seed.setValue(6)
+        window.intricacy.setValue(3)
+        window.random_mode.setChecked(True)
+        window.source_size.setValue(250000.0)
+        window.rebuild(refit=True)
+        self.assertTrue(window.design)
+        radius = max(
+            math.hypot(x, y) for contour in window.design for x, y in contour
+        )
+        target = float(window.fit_radius.value())
+        self.assertAlmostEqual(radius, target, delta=target * 0.01)
 
 
 if __name__ == "__main__":

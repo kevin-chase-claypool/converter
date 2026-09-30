@@ -351,15 +351,21 @@ class KaleidoscopeWindow(QMainWindow):
         form.addRow(self.open_button)
         form.addRow(self.path_label)
         self.source_size = QDoubleSpinBox()
-        self.source_size.setRange(10.0, 400.0)
+        # No practical cap: the fit radius is what keeps the plot on the bed, so
+        # the source may be any size and is scaled to the frame afterwards.
+        self.source_size.setRange(0.1, 1000000.0)
         self.source_size.setValue(300.0)
         self.source_size.setSuffix(" mm")
+        self.source_size.setToolTip(
+            "Longest side of the source (or the pattern radius in random mode). "
+            "Any size: the design is fitted to the Fit radius before plotting."
+        )
         self.source_size.valueChanged.connect(self.on_controls_changed)
         form.addRow("Source size", self.source_size)
         self.center_x = QDoubleSpinBox()
         self.center_y = QDoubleSpinBox()
         for widget in (self.center_x, self.center_y):
-            widget.setRange(-500.0, 500.0)
+            widget.setRange(-100000.0, 100000.0)
             widget.setDecimals(1)
             widget.setSuffix(" mm")
             widget.valueChanged.connect(self.on_offset_changed)
@@ -435,19 +441,19 @@ class KaleidoscopeWindow(QMainWindow):
         box = QGroupBox("Printable bounds")
         form = QFormLayout(box)
         self.bed_diameter = QDoubleSpinBox()
-        self.bed_diameter.setRange(100.0, 1000.0)
+        self.bed_diameter.setRange(10.0, 100000.0)
         self.bed_diameter.setValue(457.2)
         self.bed_diameter.setSuffix(" mm")
         self.bed_margin = QDoubleSpinBox()
-        self.bed_margin.setRange(0.0, 100.0)
+        self.bed_margin.setRange(0.0, 10000.0)
         self.bed_margin.setValue(6.35)
         self.bed_margin.setSuffix(" mm")
         self.reach_radius = QDoubleSpinBox()
-        self.reach_radius.setRange(10.0, 300.0)
+        self.reach_radius.setRange(1.0, 100000.0)
         self.reach_radius.setValue(185.0)
         self.reach_radius.setSuffix(" mm")
         self.fit_radius = QDoubleSpinBox()
-        self.fit_radius.setRange(5.0, 300.0)
+        self.fit_radius.setRange(0.5, 100000.0)
         self.fit_radius.setValue(181.3)
         self.fit_radius.setSuffix(" mm")
         self.fit_radius.setToolTip(
@@ -821,7 +827,7 @@ class KaleidoscopeWindow(QMainWindow):
                     default=0.0,
                 )
                 if radius > 0.0:
-                    size = min(max(size * target / radius, 10.0), 400.0)
+                    size = max(size * target / radius, self.source_size.minimum())
                     self.source_size.setValue(size)
             settings, design = self.build_design(size, clip_radius=target)
         except Exception as exc:  # noqa: BLE001 - surfaced to the user
@@ -889,7 +895,9 @@ class KaleidoscopeWindow(QMainWindow):
             return
         self._in_rebuild = True
         try:
-            self.source_size.setValue(min(max(size * target / radius, 10.0), 400.0))
+            self.source_size.setValue(
+                max(size * target / radius, self.source_size.minimum())
+            )
         finally:
             self._in_rebuild = False
         self.rebuild(refit=False)

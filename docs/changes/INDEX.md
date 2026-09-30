@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-013` | windows-software | implemented | [Kaleidoscope: no cap on source size or typed bounds](windows-software/2026/2026-09-30-kaleidoscope-uncapped-sizes.md) |
 | 2026-09-30 | `WSW-20260930-012` | windows-software | implemented | [Kaleidoscope: zoom and pan the preview like the main converter](windows-software/2026/2026-09-30-kaleidoscope-preview-zoom-pan.md) |
 | 2026-09-30 | `WSW-20260930-011` | windows-software | implemented | [Nature motif library for the kaleidoscope generator](windows-software/2026/2026-09-30-nature-motif-library.md) |
 | 2026-09-30 | `WSW-20260930-010` | windows-software | implemented | [Kaleidoscope: natural PNG motifs as the source of pattern diversity](windows-software/2026/2026-09-30-kaleidoscope-natural-motifs.md) |
