@@ -1,5 +1,33 @@
 # Engineering Log
 
+<a id="elog-20260930-mom-print-was-fitted-not-clipped"></a>
+### 🟩 2026-09-30 05:03:53 -0500 - WINDOWS SOFTWARE/VERIFIED - the printed mom.gcode was auto-fitted, not clipped
+
+- Problem: the 2026-09-29 entry predicted that the 189.81 mm `mom.gcode`
+  artwork "will be clipped" by the new 185.0 mm reach cap, and a later
+  diagnosis repeated that the printed fan tips were cut off. Both statements
+  were wrong.
+- Measurement: comparing the printed `mom.gcode` against
+  `mom_resume_56877.gcode` (an unfitted slice of the earlier generation) in
+  bed-local coordinates gives a bounding box of 376.814 x 376.819 mm for the
+  resume versus 363.217 x 363.222 mm for the printed file - a uniform 0.96392
+  scale on both axes - with the centre moved (1.570, -1.590) mm. Maximum radius
+  189.812 -> 185.0000 mm, points beyond the cap 15,987 -> 0, and only 8 contour
+  endpoints on the cap circle, so the cap removed essentially nothing.
+- Conclusion: the printed program is the complete artwork at 96.4% scale with a
+  small placement offset, produced by the default Fill-bed auto-fit. The fit
+  rescales before the planner clips, so an over-size artwork is reduced rather
+  than truncated. There is no content loss to fix.
+- Boundary: a 1:1 print of a 189.81 mm artwork is not possible while the +Y work
+  limit is 185.27 mm from the bed centre unless the planner becomes
+  envelope-aware (choosing the bed angle so out-of-circle points face the
+  roomier -Y and +X directions).
+- Evidence: `docs/report/lab-notes/2026-09-30-mom-print-reach-fit-verification.md`.
+- Category: windows-software, documentation, converter, reach, clipping,
+  registration
+- Next action: none required for this print; decide separately whether a 1:1
+  size path (envelope-aware planning) is worth pursuing.
+
 <a id="elog-20260930-calibrated-bed-ratio"></a>
 ### 🟩 2026-09-30 04:46:10 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - calibrate the bed ratio to 12.03324 from three P112 surveys
 
