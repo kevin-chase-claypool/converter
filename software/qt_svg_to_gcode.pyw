@@ -38,7 +38,9 @@ from PySide6.QtWidgets import (
 )
 
 import converter_core as converter
-print(f"[geometry version: {getattr(converter, 'GEOMETRY_VERSION', 'OLD-no-new-patterns')}]")
+# Flushed so `qt_debug.log` names the build as soon as the app starts; it is the
+# quickest way to tell a stale window from a stale install.
+print(f"[geometry version: {getattr(converter, 'GEOMETRY_VERSION', 'OLD-no-new-patterns')}]", flush=True)
 
 # Playback wall-clock multiplier: 1.0 = real time, so the toolhead animates at
 # the configured print speed (mm/s). Bump up to fast-forward long jobs.
@@ -1086,6 +1088,12 @@ class MainWindow(QMainWindow):
         self.log.setMaximumHeight(60)
         self.log.setReadOnly(True)
         main_layout.addWidget(self.log)
+        # On-screen build marker: a window opened before a converter change
+        # keeps its old pattern list, and this is what tells the two apart.
+        self.log.append(
+            f"Converter core {getattr(converter, 'GEOMETRY_VERSION', 'OLD')}. "
+            "Fill pattern 'gradient waves (sine_gradient)' is available."
+        )
 
         self.update_color_buttons()
         # Preview generation is manual, so every field that changes the plan

@@ -41,6 +41,12 @@ class SineGradientSettingsTests(unittest.TestCase):
 
     def test_settings_model_offers_the_pattern_and_its_controls(self):
         self.assertIn("sine_gradient", converter.HATCH_PATTERNS)
+        self.assertLess(
+            converter.HATCH_PATTERNS.index("sine_gradient"),
+            3,
+            "the sidebar shows this tuple in order and the gradient option must "
+            "stay visible without scrolling the combo",
+        )
         self.assertIn(
             "gradient waves (sine_gradient)",
             converter.HATCH_PATTERN_LABELS.values(),

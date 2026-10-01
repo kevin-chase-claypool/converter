@@ -84,6 +84,12 @@ the slicer look rather than the plotter-art look.
   reads the combo's stored value rather than its text, and the resolver's
   supported-pattern set is now taken from `HATCH_PATTERNS` so the offered list
   and the accepted list cannot drift apart.
+- Second follow-up, after the option still could not be found in a running
+  window: `sine_gradient` now sits third in `HATCH_PATTERNS`, so the combo shows
+  `gradient waves (sine_gradient)` without scrolling, a test keeps it in the top
+  three, and the log pane and `qt_debug.log` print the converter core version at
+  startup (`2.3-sine-gradient`) so an open window from before a change is easy
+  to recognise.
 - `samples/svg/gradient-sine-demo.svg`: a linear fade, a radial orb and a
   vertical band for trying the pattern.
 

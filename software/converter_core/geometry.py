@@ -4,7 +4,7 @@ from xml.etree import ElementTree as ET
 from .cancellation import check_cancelled
 from .settings import CELL_PATTERNS, CELL_SPACING_SCALE, HATCH_PATTERNS, pattern_size_values
 
-GEOMETRY_VERSION = "2.2-patterns"  # concentric loops stay continuous and inside fill bounds
+GEOMETRY_VERSION = "2.3-sine-gradient"  # tone-driven gradient waves (sine_gradient)
 
 # Drop contours shorter than this (in on-paper mm). Clipping the infill lattice
 # to a polygon boundary leaves sub-pen-width slivers that draw an M3/M5 "dot"

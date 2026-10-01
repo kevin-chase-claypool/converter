@@ -319,6 +319,9 @@ FIT_MODE_CHOICES = (
 HATCH_PATTERNS = (
     "linear",
     "crosshatch",
+    # Near the top on purpose: the sidebar shows this tuple in order, and the
+    # gradient fill was effectively invisible at the bottom of the list.
+    "sine_gradient",
     "diagonal",
     "diagonal_crosshatch",
     "triangular",
@@ -328,7 +331,6 @@ HATCH_PATTERNS = (
     "circles",
     "dots",
     "waves",
-    "sine_gradient",
     "gyroid",
     "concentric",
 )
