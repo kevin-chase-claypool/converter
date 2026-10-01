@@ -1,5 +1,43 @@
 # Engineering Log
 
+<a id="elog-20261001-tolerance-inner-imprecision"></a>
+### 🟩 2026-10-01 08:25:27 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - the centre wobble was the Tolerance budget, now reported
+
+- Request: the plot from `kaleidoscope1.gcode` is pleasing, but "the outer waves
+  are not precise" and "in the center to the 4 inch radius the pen doesnt appear
+  to print as exactly as it does elsewhere. search for the reason this could be
+  occuring in software".
+- Diagnosis: not drift. The session's saved settings show `tolerance: 1.0` -
+  four times the 0.25 mm default - and tolerance is the budget for how far the
+  *commanded* path may sit from the intended line on the bed. It binds hardest
+  where the bed rotates most per millimetre of travel, which is the tight inner
+  curves and the inner sweep of the wave band.
+- Evidence: the exact design was reproduced from the saved session (seed 83382,
+  intricacy 10, 4 divisions, no motifs, fitted to 181.3 mm). Reconstructing the
+  commanded path from the G-code and comparing it with the intended bed lines,
+  at tolerance 1.0 mm, gives: 0-25 mm worst 0.899 mm (10 moves over 0.3 mm),
+  25-75 mm under 0.2 mm, 75-100 mm worst 0.677 mm (12 moves), 100-190 mm under
+  0.06 mm - exactly the two regions reported. Re-emitting at 0.25/0.10/0.05 mm
+  gives 0.245/0.100/0.050 mm worst deviation for 212,350/212,528/212,864 moves,
+  i.e. 0.1-0.3 % more moves than the 212,296 at 1.0 mm.
+- Change: `contours_to_gcode()` accepts an optional `stats` dict and records the
+  worst commanded bed deviation, its radius and the strategy that produced it,
+  reusing the deviation the subdivider already computes; the kaleidoscope app
+  logs that summary whenever a program is saved, with the hint to lower
+  `Tolerance`. New test asserts the stats exist, that a coarse tolerance leaves
+  a larger deviation than a tight one, and that 0.1 mm keeps the worst
+  deviation within 0.1 mm.
+- Verification: all fourteen test modules pass; `docs_index --write/--check`
+  pass.
+- Boundary: the report is produced on save, not on every interactive rebuild,
+  because emitting walks the whole plan. The operator's saved settings still
+  hold `tolerance: 1.0`, so the next plot needs that value changed to see the
+  improvement.
+- Evidence: `WSW-20261001-001`.
+- Category: windows-software, kaleidoscope, tolerance, kinematics
+- Next action: set Tolerance to 0.1 mm, re-save, and re-plot the same design to
+  compare the centre.
+
 <a id="elog-20260930-theta-reregistration"></a>
 ### 🟩 2026-09-30 20:59:06 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - keep the commanded A near zero (bed re-registration)
 

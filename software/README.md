@@ -129,6 +129,14 @@ app.
   tip width so the outside of the stroke lands on the intended outline), the
   gap fill bridging tolerates, and is written into the saved program's header.
   Generated patterns and traced images are not compensated.
+  `Tolerance` is the accuracy budget: the emitter subdivides each draw move so
+  the commanded path stays within that many millimetres of the intended line on
+  the bed. It binds hardest where the bed rotates most per millimetre - tight
+  curves near the centre and long sweeping arcs - so a coarse value shows up as
+  wobble in the middle of a mandala. Saving a program logs the worst deviation
+  the file actually contains and where it sits; on a 212k-move mandala, going
+  from 1.0 mm to 0.1 mm costs about 0.1 % more moves and cuts the worst
+  deviation from 0.9 mm to 0.1 mm.
 - **Remembered setup.** The app saves its settings to
   `kaleidoscope_settings.json` next to the script (git-ignored) whenever it
   closes and whenever a motif folder is chosen: the motif folder, source path,

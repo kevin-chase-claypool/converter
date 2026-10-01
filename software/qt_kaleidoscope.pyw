@@ -1229,7 +1229,8 @@ class KaleidoscopeWindow(QMainWindow):
         try:
             settings = self.settings
             plan = converter.plan_program(self.design, settings)
-            gcode = converter.contours_to_gcode(self.design, settings, plan)
+            stats = {}
+            gcode = converter.contours_to_gcode(self.design, settings, plan, stats)
             Path(path).write_text(gcode, encoding="utf-8")
         except Exception as exc:  # noqa: BLE001
             QMessageBox.critical(self, "Save failed", str(exc))
@@ -1237,6 +1238,20 @@ class KaleidoscopeWindow(QMainWindow):
             return
         blocks = gcode.count("\nM3")
         self.say("Saved %s: %d lines, %d pen cycles." % (os.path.basename(path), gcode.count("\n") + 1, blocks))
+        deviation = float(stats.get("worst_bed_deviation_mm", 0.0))
+        if deviation > 0.0:
+            self.say(
+                "Tolerance %.2f mm: worst commanded bed-path deviation about "
+                "%.3f mm at radius %.0f mm (%s). Tight curves near the centre "
+                "and long sweeping arcs show this first - lower Tolerance to "
+                "tighten it, at the cost of more moves."
+                % (
+                    float(settings.tolerance),
+                    deviation,
+                    float(stats.get("worst_bed_deviation_radius_mm", 0.0)),
+                    stats.get("worst_bed_deviation_strategy", "draw"),
+                )
+            )
 
 
 def main():

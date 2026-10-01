@@ -120,6 +120,30 @@ class ThetaWrapTests(unittest.TestCase):
     def test_the_setting_defaults_on(self):
         self.assertTrue(converter.Settings().theta_wrap)
 
+    def test_the_emitter_reports_the_worst_commanded_deviation(self):
+        """The tolerance budget is visible: what the path may still deviate."""
+        design = [
+            [
+                (
+                    (30.0 + 6.0 * math.sin(2.0 * math.pi * index / 24)) * math.cos(2.0 * math.pi * index / 24),
+                    (30.0 + 6.0 * math.sin(2.0 * math.pi * index / 24)) * math.sin(2.0 * math.pi * index / 24),
+                )
+                for index in range(25)
+            ]
+        ]
+        coarse = {}
+        tight = {}
+        for stats, tolerance in ((coarse, 1.0), (tight, 0.1)):
+            settings = dataclasses.replace(converter.Settings(), tolerance=tolerance)
+            plan = converter.plan_program(design, settings)
+            converter.contours_to_gcode(design, settings, plan, stats)
+        self.assertIn("worst_bed_deviation_mm", coarse)
+        self.assertGreater(coarse["worst_bed_deviation_mm"], 0.0)
+        self.assertLessEqual(tight["worst_bed_deviation_mm"], 0.1 + 1e-6)
+        self.assertGreater(
+            coarse["worst_bed_deviation_mm"], tight["worst_bed_deviation_mm"]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

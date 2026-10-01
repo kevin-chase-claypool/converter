@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-01 | `WSW-20261001-001` | implemented | [The centre wobble was the Tolerance budget, and it is now reported](2026/2026-10-01-tolerance-drives-inner-imprecision.md) | `kaleidoscope`, `tolerance`, `kinematics`, `diagnosis` |
 | 2026-09-30 | `WSW-20260930-023` | implemented | [Keep the commanded A small: re-register the bed each contour](2026/2026-09-30-theta-reregistration.md) | `theta`, `kinematics`, `drift`, `calibration` |
 | 2026-09-30 | `WSW-20260930-022` | implemented | [Pen tip diameter for the installed Pigma Micron 005](2026/2026-09-30-pen-width-control.md) | `pen`, `interface`, `gcode` |
 | 2026-09-30 | `WSW-20260930-021` | implemented | [Theta drift: record the ratio in the G-code and ship a calibration plot](2026/2026-09-30-theta-drift-diagnosis-and-calibration-plot.md) | `theta`, `kinematics`, `calibration`, `diagnostics` |

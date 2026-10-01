@@ -4,6 +4,7 @@ import re
 from .cancellation import check_cancelled
 from .geometry import FillTrail, clip_contours_to_bed, contour_center, distance, format_float, normalized_hatch_pattern, read_svg, retag_contour
 from .kinematics import (
+    _polar_move_deviation,
     bed_to_machine,
     plan_radius_aware_draw_feed,
     planned_contours,
@@ -278,7 +279,7 @@ def plan_program(contours, settings, cancel_check=None):
     }
 
 
-def contours_to_gcode(contours, settings, program_plan=None):
+def contours_to_gcode(contours, settings, program_plan=None, stats=None):
     validate_settings(settings)
     program_plan = program_plan or plan_program(contours, settings)
     axis = re.sub(r"[^A-Za-z]", "", settings.theta_axis.upper())[:1] or "A"
@@ -388,6 +389,21 @@ def contours_to_gcode(contours, settings, program_plan=None):
             # that spans a bed rotation bows the pen off the straight bed path.
             # Subdivide so the drawn bed path stays within tolerance.
             steps = polar_segment_steps(a, b, center, start_theta, theta, settings.tolerance)
+            if stats is not None:
+                # Report what the *commanded* path can still deviate from the
+                # intended line on the bed: the bow of a whole move divided by
+                # its subdivision. This is the number that explains wobble in
+                # tight curves near the centre and on long sweeping arcs, and it
+                # scales with the Tolerance setting.
+                residual = _polar_move_deviation(
+                    a, b, center, start_theta, theta
+                ) / max(steps, 1)
+                if residual > stats.get("worst_bed_deviation_mm", 0.0):
+                    stats["worst_bed_deviation_mm"] = residual
+                    stats["worst_bed_deviation_radius_mm"] = 0.5 * (
+                        math.hypot(*a) + math.hypot(*b)
+                    )
+                    stats["worst_bed_deviation_strategy"] = strategy
             feed_text = format_float(feed_plan["feed_rate"])
             for step in range(1, steps + 1):
                 t = step / steps
