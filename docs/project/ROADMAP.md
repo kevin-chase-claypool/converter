@@ -216,8 +216,10 @@
   [`2026-10-01-theta-a-rate-limit-lowering.md`](../report/lab-notes/2026-10-01-theta-a-rate-limit-lowering.md);
   `$113` is now `20000` (the only value that needed changing; `$123` was already
   6000) and it survived a power cycle, per `RPSW-20261001-001`. What remains is
-  the physical acceptance test in step 6 of that lab note: a full-revolution A
-  out-and-back must return a drawn mark onto itself.
+  the physical acceptance test in step 6 of that lab note: run
+  `samples/gcode/a-repeatability-test.gcode` and confirm the two radial ticks at
+  each station print on top of each other (a full-revolution A out-and-back must
+  return the drawn mark onto itself).
 
 - [ ] Sine-gradient fill follow-ups.
   Problem: `sine_gradient` is render-checked but has never been plotted, its

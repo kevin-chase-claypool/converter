@@ -109,3 +109,9 @@ A 109-key comparison of the before and after dumps shows exactly one difference:
 - `docs/integration/INTERFACES.md`: the A-rate sentence now names 20000.
 - `docs/report/lab-notes/2026-10-01-theta-a-rate-limit-lowering.md`: the dump
   and the acceptance test.
+- `tools/make_a_repeatability_test.py` and
+  `samples/gcode/a-repeatability-test.gcode`: the Cycle-Start version of the
+  acceptance test - a radial tick, two bed revolutions out and back, the tick
+  again, at r = 100 mm and r = 160 mm. Because the out-and-back cancels a pure
+  ratio error, it measures lost motion only; the ratio stays with
+  `samples/gcode/theta-calibration.gcode`.
