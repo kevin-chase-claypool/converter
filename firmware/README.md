@@ -88,6 +88,15 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   pen clear and dwell, the one physical X/Y `$H`, and then `G65 P100 Q0`.
   Q3/Q4 remain locked. See
   [`grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md`](grblhal/HOMING_AND_MAGNETIC_CALIBRATION.md).
+  Two named constants, `#<axis_center_correction_x>` and `_y`, move the
+  registered origin onto the bed's true rotation axis before the G54 write:
+  the centre magnet is not guaranteed to sit exactly on that axis, and a
+  constant error there displaces every drawing. As of 2026-10-01 the X
+  correction is `+1.25` mm; the accept/reject test is
+  `samples/gcode/center-registration-check.gcode` after `G65 P113` (a cross at
+  `G54 X0 Y0`, half a bed revolution, the same cross again - they must
+  coincide). See `RPSW-20261001-002` and
+  [`grblhal/macros/README.md`](grblhal/macros/README.md).
 - **Candidate probe capture** - the 2026-09-10/11 motor-inert candidate
   proved direct and actual GP27/U3 `PRB` transitions, A-axis G38 capture, and
   the automated non-motion `G65 P100 Q1` readiness/release handshake.

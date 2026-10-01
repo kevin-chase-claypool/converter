@@ -76,7 +76,10 @@ def validate_safety_contract(text: str) -> None:
         "#<entry> = [#5061 + #5221]",
         "#<exit> = [#5061 + #5221]",
         "#5064",
-        "g10 l20 p1 x[#<sensor_to_pen_x>] y[#<sensor_to_pen_y>]",
+        "#<axis_center_correction_x> = 1.25",
+        "#<axis_center_correction_y> = 0.0",
+        "g10 l20 p1 x[[#<sensor_to_pen_x> - #<axis_center_correction_x>]]",
+        "y[[#<sensor_to_pen_y> - #<axis_center_correction_y>]]",
         "g10 l20 p1 a0",
         "centroid approach and registration pass",
     ]
@@ -149,7 +152,7 @@ def validate_commissioning_locks(text: str) -> None:
     q5_return = lower.index(
         "p100 q5 survey complete: tmag is at calculated centroid; inspect mpos"
     )
-    first_g54_registration = lower.index("g10 l20 p1 x[#<sensor_to_pen_x>]")
+    first_g54_registration = lower.index("g10 l20 p1 x[[#<sensor_to_pen_x>")
     assert q5_return < first_g54_registration, (
         "Q5 must return before any G54 XY registration"
     )
@@ -288,7 +291,7 @@ def validate_outer_index_survey_macro() -> None:
         "#<a_exit_1> = [#5064 + #5224]",
         "#<a_entry_2> = [#5064 + #5224]",
         "#<a_exit_2> = [#5064 + #5224]",
-        "#<a_expected_spacing> = 4320.0",
+        "#<a_expected_spacing> = 4332.0",
         "#<a_scan_feed> = 10000.0",
         "#<a_registration_feed> = 10000.0",
         "#<a_pass_two_center>",
@@ -307,14 +310,18 @@ def validate_outer_index_survey_macro() -> None:
         "P112 must stop at the second observed center without a third rotation"
     )
     spacing_tolerance = assignment(text, "a_spacing_tolerance")
-    assert spacing_tolerance == 15.0, (
-        "P112 tolerance must retain the measured, bounded 15 motor-degree gate"
+    # The gate is the documented "4332 +/- 10" from the 2026-09-30 P112 surveys
+    # (three runs spread 0.335); the validator still carried the earlier
+    # 4320 / 15 expectations and had not been re-run since the ratio change.
+    assert spacing_tolerance == 10.0, (
+        "P112 tolerance must retain the measured, bounded 10 motor-degree gate"
     )
     observed_spacing = 4331.8175
-    assert abs(observed_spacing - 4320.0) <= spacing_tolerance, (
+    assert abs(observed_spacing - 4332.0) <= spacing_tolerance, (
         "P112 must accept the repeatable installed index spacing"
     )
-    assert abs(4335.1 - 4320.0) > spacing_tolerance, (
+    # 4343 is eleven motor degrees from the reference - outside the +/10 gate.
+    assert abs(4343.0 - 4332.0) > spacing_tolerance, (
         "P112 tolerance must still reject spacing outside its bounded gate"
     )
 
@@ -351,7 +358,7 @@ def validate_q0_verified_registration_path(text: str) -> None:
     lower = text.lower()
     required = [
         "#<outer_machine_x> = -10.5",
-        "#<a_spacing_tolerance> = 15.0",
+        "#<a_spacing_tolerance> = 10.0",
         "#<a_scan_feed> = 10000.0",
         "#<a_registration_feed> = 10000.0",
         "g53 g1 x[#<outer_machine_x>] f1000",
@@ -369,7 +376,7 @@ def validate_q0_verified_registration_path(text: str) -> None:
     assert "#<outer_radius>" not in lower, "Q0 must not use stale outer radius"
     assert "g10 l2 p1" not in lower, "Q0 must not rewrite G54 on survey failure"
     a_write = lower.index("g10 l20 p1 a0")
-    xy_write = lower.index("g10 l20 p1 x[#<sensor_to_pen_x>] y[#<sensor_to_pen_y>]")
+    xy_write = lower.index("g10 l20 p1 x[[#<sensor_to_pen_x>")
     assert a_write < xy_write, "Q0 must verify/register A before replacing XY"
     assert xy_write < lower.index("g54 g90 g0 x0 y0 a0"), (
         "Q0 must write both references before final G54 park"

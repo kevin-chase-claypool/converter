@@ -1,5 +1,49 @@
 # Engineering Log
 
+<a id="elog-20261001-axis-centre-correction"></a>
+### 🟩 2026-10-01 20:05:12 -0500 - RP23CNC SOFTWARE/IMPLEMENTED - P100 gains an axis-centre correction (+1.25 mm X)
+
+- Request chain: "my magnetic homing was off by 1.25mm too far to the -x, how do
+  i fix this in perpetuity" -> "we need to add -1.25mm in the x direction for the
+  offset" -> "oops. POSITIVE X not negative".
+- Change: `P100.macro` gains `#<axis_center_correction_x> = 1.25` and
+  `#<axis_center_correction_y> = 0.0`, applied as
+  `G10 L20 P1 X[[#<sensor_to_pen_x> - #<axis_center_correction_x>]] Y[[#<sensor_to_pen_y> - #<axis_center_correction_y>]]`.
+  The constants state how far the registered origin must move to sit on the
+  bed's true rotation axis, and they are subtracted because the registered
+  origin is the centroid minus the written value. They stay separate from
+  `sensor_to_pen` so a future calibration does not enter a magnet error as pen
+  geometry. `P103.macro` mirrors the initialization and carries them too.
+- Sign gotcha: the first draft *added* the constant. Deriving from the
+  validator's own model (`origin = centroid - written`) and the 2026-09-11
+  registration evidence showed that would move the origin the wrong way. The
+  write subtracts; if the cross test separates the crosses further, the
+  constant's sign is inverted.
+- Guards: `tools/validate_homing_macro.py` now requires the constants and the new
+  write form. A new `tools/check_macros.py` parse-checks every macro - one-line
+  comments with no nesting, balanced `[]` expressions, closed `if`/`while`/`sub`
+  - and it immediately caught a nested-parenthesis comment written during this
+  change, the same defect class that made ioSender refuse the repeatability file.
+  Two stale validator expectations were also corrected: P112 `a_expected_spacing`
+  4320 -> 4332 and `a_spacing_tolerance` 15 -> 10, both left over from before the
+  2026-09-30 ratio work, which means the validator had not been re-run since.
+- Acceptance: `G65 P113`, then `samples/gcode/center-registration-check.gcode` -
+  a cross at `G54 X0 Y0`, half a bed revolution, the same cross again; the
+  crosses must coincide, and a gap is twice the residual off-axis error. Pending
+  on the bench. The attribution test (`G65 P100 Q5` at A0 and A180, comparing the
+  centroids it prints) decides whether the 1.25 belongs in the axis-centre
+  constant or in `sensor_to_pen_x`.
+- Also recorded: the `sensor_to_pen` comment says "pen minus TMAG" while the
+  verified frame behaves as "TMAG minus pen"; and
+  `HOMING_AND_MAGNETIC_CALIBRATION.md` says `(0.000, -30.100)` against the
+  macro's `-29.4892`. Both need reconciling with a fresh measurement.
+- Evidence: `RPSW-20261001-002`;
+  `docs/report/lab-notes/2026-10-01-axis-centre-correction.md`.
+- Category: rp23cnc-software, hardware, grblhal, macro, registration, calibration
+- Next action: upload the revised macros, run `G65 P113` plus the cross program,
+  then the two-survey attribution test, and record which side of the chain owns
+  the 1.25 mm.
+
 <a id="elog-20261001-a-rate-limit-20000"></a>
 ### 🟩 2026-10-01 13:05:44 -0500 - RP23CNC SOFTWARE/HARDWARE - A max rate lowered to what the bed can hold
 

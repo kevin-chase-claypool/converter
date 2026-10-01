@@ -48,8 +48,24 @@ o005 endif
 (Commissioning values - replace only with dated test evidence.)
 (sensor_to_pen is pen location minus TMAG location in machine X/Y.)
 (This must be the measured installed value, not an assumed CAD orientation.)
+(Observed behaviour, 2026-09-11 registration plus the validator's model: the)
+(value written to G10 behaves as TMAG minus pen, i.e. the registered origin is)
+(centroid - written. Keep whichever sign reproduces the verified frame; a)
+(future calibration must be entered with the sign that lands the pen on G54 0,0.)
 #<sensor_to_pen_x> = 0.0
 #<sensor_to_pen_y> = -29.4892
+(Axis-centre correction: how far, in machine X/Y, the registered origin must move)
+(to sit on the bed's true rotation axis. Reported 2026-10-01 as 1.25 mm on the)
+(minus-X side, so the origin moves +1.25. It is subtracted from sensor_to_pen in)
+(the G10 write below because the origin is centroid - written.)
+(Kept separate from sensor_to_pen because the cause is not yet distinguished:)
+(either the embedded centre magnet sits off the axis, or the pen/TMAG X value is)
+(wrong. Run Q5 with the bed at A0 and again 180 degrees away - if the two)
+(centroids differ it is the magnet, and half the X/Y difference is the off-axis)
+(vector; if they match, the correction belongs in sensor_to_pen_x instead and)
+(these constants return to zero. That test is still pending.)
+#<axis_center_correction_x> = 1.25
+#<axis_center_correction_y> = 0.0
 (Candidate Q3 rectangle: measured by jog in G54, converted to G53 MPos.)
 (Q0 uses this verified rectangle; Q3 remains separately locked.)
 #<scan_min_x> = -280.0
@@ -405,7 +421,10 @@ o300 if [#31 EQ 0]
   (The long verified index-to-center return is travel, not an edge refinement.)
   G53 G1 X[#<centroid_x>] Y[#<centroid_y>] F[#<center_return_feed>]
   G54
-  G10 L20 P1 X[#<sensor_to_pen_x>] Y[#<sensor_to_pen_y>]
+  (The axis-centre correction is folded in here - subtracted, because the)
+  (registered origin is centroid minus the written value - so sensor_to_pen)
+  (keeps its meaning as the measured pen/TMAG value.)
+  G10 L20 P1 X[[#<sensor_to_pen_x> - #<axis_center_correction_x>]] Y[[#<sensor_to_pen_y> - #<axis_center_correction_y>]]
   (print,P100 center registered so G54 X0 Y0 is pen-at-center)
 o300 endif
 

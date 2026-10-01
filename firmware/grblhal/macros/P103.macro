@@ -6,6 +6,8 @@
 #<sensor_to_pen_offset_valid> = 0
 #<sensor_to_pen_x> = 0.0
 #<sensor_to_pen_y> = 0.0
+#<axis_center_correction_x> = 0.0
+#<axis_center_correction_y> = 0.0
 #<scan_min_x> = 0.0
 #<scan_max_x> = 0.0
 #<scan_min_y> = 0.0

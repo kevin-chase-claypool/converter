@@ -207,6 +207,48 @@ The ioSender production button is named `HOME + REGISTER`, has confirmation
 enabled, and issues `G65 P113`. P113 is the verified unified registration
 sequence; do not substitute Q3 or Q4.
 
+## Axis-centre correction
+
+`P100` writes `G54 X0 Y0` from the surveyed centre-magnet centroid plus the
+installed pen/TMAG offset. Two constants sit between those values and the
+`G10 L20` write:
+
+```text
+#<axis_center_correction_x> = 1.25
+#<axis_center_correction_y> = 0.0
+...
+G10 L20 P1 X[[#<sensor_to_pen_x> - #<axis_center_correction_x>]] Y[[#<sensor_to_pen_y> - #<axis_center_correction_y>]]
+```
+
+They are **how far, in machine X/Y, the registered origin must move to sit on
+the bed's true rotation axis**, and they are subtracted because the registered
+origin is the centroid minus the written value. They are deliberately separate
+from `sensor_to_pen`: an off-axis centre magnet and a wrong pen/TMAG offset look
+identical in a finished plot, and only the second is a pen-offset value.
+
+`1.25` in X was reported on 2026-10-01: the registered origin landed 1.25 mm on
+the minus-X side of the axis. To attribute it, run `G65 P100 Q5` with the bed at
+A0 and again half a revolution away - Q5 leaves TMAG on the calculated centroid
+and prints it, so the `MPos` reading each time is the centroid. If the two
+centroids differ, the magnet is off the axis and half the X/Y difference is the
+off-axis vector, so the correction stays. If they match, the error is in
+`sensor_to_pen_x`, the correction returns to zero, and that value is corrected
+instead. **That test is still pending**, so treat 1.25 as a reported correction
+rather than a measured off-axis vector.
+
+Two further notes from the same edit. `P103.macro` mirrors P100's initialization
+and now carries the two new constants. And the `sensor_to_pen` comment in P100
+says "pen minus TMAG" while the registered, verified frame behaves as "TMAG minus
+pen" - the value written to `G10` behaves as the negative of the comment's
+convention. The sign that reproduces the verified frame is the one to keep, and
+a future calibration must be entered that way; the discrepancy is recorded here
+rather than silently "fixed" in the comment.
+
+Acceptance for a correction change: run `G65 P113`, then
+`samples/gcode/center-registration-check.gcode`, which draws a cross at
+`G54 X0 Y0`, rotates the bed half a revolution, and draws it again. The crosses
+must coincide; a gap is twice the residual error.
+
 The macro expects:
 
 - grblHAL probe input and NGC expression/flow-control support;
