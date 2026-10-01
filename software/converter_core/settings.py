@@ -67,8 +67,10 @@ class Settings:
     # this the planner parks the bed and lets the gantry draw the move in X and
     # Y. Lower it when a large turn mid-stroke shows up on paper as a drag mark,
     # a slight rotation of everything after it, or a blob where the machine
-    # decelerated into the junction.
-    theta_max_step_deg: float = 10.0
+    # decelerated into the junction. 15 is the value the guard was designed
+    # around and is untested on paper with the guard enforced; 10 and 5 are the
+    # next steps down.
+    theta_max_step_deg: float = 15.0
     # Re-register the bed at every contour: subtract whole revolutions from the
     # bed angle so the commanded A never winds far from zero. Physically
     # neutral - the bed ends at the same orientation - but on a machine whose A
@@ -263,7 +265,7 @@ TEXT_FIELD_GROUPS = (
         ("Theta mode", "theta_mode", "optimized"),
         ("Theta resolver", "theta_resolver", "rtheta"),
         ("Theta weight", "theta_weight", "1.0"),
-        ("Max bed step deg", "theta_max_step_deg", "10"),
+        ("Max bed step deg", "theta_max_step_deg", "15"),
         ("Curve round bias", "round_bias", "0.05"),
         ("Smoothness factor", "smoothness_factor", "1.0"),
         ("Theta smooth", "theta_smooth_window", "2"),

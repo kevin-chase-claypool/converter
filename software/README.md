@@ -328,7 +328,7 @@ display-only; every other group changes the emitted program.
     strategies, so an unsupported value cannot be entered.
   - **Theta tangential speed mm/min** is the requested surface speed caused by
     A-axis bed rotation during drawing. It does not change X/Y-only output.
-  - **Max bed step deg** (default `10`) is the hard limit on how far the bed may
+  - **Max bed step deg** (default `15`) is the hard limit on how far the bed may
     turn inside one drawing move. Exceeding it parks the bed and lets the gantry
     trace the move in X and Y, which is exact because the artwork is already
     clipped to the reachable disc. Lower it if a large turn mid-stroke leaves a
@@ -337,7 +337,9 @@ display-only; every other group changes the emitted program.
     the bed whenever a turn is needed. Cost: less rotation means more gantry
     travel, so plots get slower — measured on a dense 461-contour mandala,
     dropping 15 -> 10 deg took the total bed rotation from 30 to 52
-    revolutions for the same drawing.
+    revolutions for the same drawing. The tuning ladder is 15 -> 10 -> 5: 15 is
+    what the guard was designed around and is the current default, and 10 and 5
+    are the field-tested steps down if a turn still marks the paper.
   - **Bed rotation is bounded where the machine cannot follow it.** The planner
     keeps the bed parked instead of swinging it when the axis-lock solution for
     a segment would rotate more than 15 deg, or when a stroke passes close

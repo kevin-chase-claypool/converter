@@ -165,6 +165,15 @@ photo, and the "waveforms drifting into adjacent waveforms" before it.
   turn can be told apart: tolerance-driven bow (lower `Tolerance`), a junction
   deceleration blob (lower this cap), or the sheet creeping under a fast pen-up
   re-orientation (lower `$113` further or clamp the sheet).
+- Final default, same day: back to **15**, at the operator's request and on the
+  evidence. The defect report that prompted 10 came from a build where the cap
+  was not enforced and the A rate was still four times the verified limit, so
+  "15 deg caused defects" was never actually tested with the guard running. 15
+  is also the cheaper setting (fewer parked moves, less gantry travel), so it is
+  the right first test; `Max bed step deg` makes 10 and 5 a field change rather
+  than a code change. The guard is enforced either way, and
+  `tools/check_gcode_motion.py` reports the cap a saved file was actually
+  written under.
 - `software/README.md`: the operator-facing note.
 - `tools/check_gcode_motion.py`: measures a saved program against the guards -
   largest bed rotation inside one drawing move, largest A rate, bare `G0`

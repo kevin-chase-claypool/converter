@@ -15,7 +15,13 @@ _EPSILON = 1e-9
 # asked the A axis for a rate no stepper can follow. A large rotation mid-stroke
 # is also where the pen drags, the sheet can creep and grblHAL decelerates into
 # the junction, so the operator can lower this without touching code.
-MAX_BED_STEP_DEG = 10.0
+#
+# 15 is the value the guard was designed around and has not yet been tested on
+# paper *with the guard actually enforced* - the earlier defect report came from
+# a build where the cap was only a cost preference and the A rate was four times
+# the verified limit. The tuning ladder is 15 -> 10 -> 5; every step costs gantry
+# travel because the bed parks more often.
+MAX_BED_STEP_DEG = 15.0
 
 
 def _max_bed_step_deg(settings):

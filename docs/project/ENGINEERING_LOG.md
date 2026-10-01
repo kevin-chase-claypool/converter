@@ -60,6 +60,16 @@
   The main app now logs the worst commanded bed-path deviation, its radius and
   its strategy after each preview, which is the number that separates a
   tolerance-driven bow from a junction blob or a creeping sheet.
+- Cap default settled back at **15** on the operator's request: "if the 15 degree
+  was never running in the fix, put it back to 15 degrees so i can test that
+  first". Correct - the earlier "defects under 15 deg" report came from a build
+  where the cap was only a soft preference and the A rate was still 80000 motor
+  deg/min, so 15 degrees with the guard enforced has never been on paper. 15 is
+  also the cheaper setting (30 bed revolutions versus 52 on the test mandala),
+  which makes it the right first test; 10 and 5 stay one field away. Conveniently
+  the operator's existing `ben.gcode` already *is* a 15 deg, guard-active file
+  (14.90 deg largest drawing step, 333 motor deg/s peak, 30 fed re-registrations,
+  no rapids, 0.025 mm bow), so it can be plotted unchanged as the first test.
 - Evidence: `RPSW-20261001-001`;
   `docs/report/lab-notes/2026-10-01-theta-a-rate-limit-lowering.md`;
   `firmware/grblhal/config/machine-settings.md`.
