@@ -166,3 +166,12 @@ photo, and the "waveforms drifting into adjacent waveforms" before it.
   deceleration blob (lower this cap), or the sheet creeping under a fast pen-up
   re-orientation (lower `$113` further or clamp the sheet).
 - `software/README.md`: the operator-facing note.
+- `tools/check_gcode_motion.py`: measures a saved program against the guards -
+  largest bed rotation inside one drawing move, largest A rate, bare `G0`
+  rotations, and the worst commanded bed-path bow with its radius and strategy -
+  so "did this file get the fix?" is answered from the file rather than from the
+  window that produced it. Run against the operator's `ben.gcode` (saved with the
+  15 deg cap in place): 14.90 deg largest drawing step, 333 motor deg/s peak,
+  30 fed re-registrations, 0 bare `G0` rotations, 0.025 mm worst bow. Run against
+  a file regenerated with the 10 deg cap: 9.92 deg, 333 motor deg/s, 24 fed
+  re-registrations, 0 rapids, 0.250 mm worst bow - PASS.

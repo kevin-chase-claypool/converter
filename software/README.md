@@ -24,6 +24,23 @@ to `qt_debug.log` in this folder.
 
 Requires `PySide6` (`pip install PySide6`).
 
+The first two lines of `qt_debug.log` (and of the window's log pane) name the
+converter core and the active A-axis guard, e.g.
+`[A guard: park above 10 deg/segment, 20000 motor deg/min, travel rotations fed]`.
+A window opened before a core change keeps the old planner in memory, so that
+line is how a stale instance is told from a current one.
+
+To check a *saved* file instead of the running app:
+
+```powershell
+python ..\tools\check_gcode_motion.py ..\samples\gcode\my-job.gcode --strict
+```
+
+It reports the largest bed rotation inside one drawing move, the largest A rate
+demanded, whether any pen-up move carries rotation as a bare `G0` rapid, and the
+worst commanded bed-path bow with its radius - measured from the file, so it
+answers "did this program get the guard?" without guessing.
+
 ## Kaleidoscope Converter
 
 `qt_kaleidoscope.pyw` (or `..\kaleidoscope.bat`) builds an N-fold mirrored

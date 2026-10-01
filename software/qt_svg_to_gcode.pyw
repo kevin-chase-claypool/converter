@@ -41,6 +41,14 @@ import converter_core as converter
 # Flushed so `qt_debug.log` names the build as soon as the app starts; it is the
 # quickest way to tell a stale window from a stale install.
 print(f"[geometry version: {getattr(converter, 'GEOMETRY_VERSION', 'OLD-no-new-patterns')}]", flush=True)
+print(
+    "[A guard: park above %.0f deg/segment, %.0f motor deg/min, travel rotations fed]"
+    % (
+        float(converter.Settings().theta_max_step_deg),
+        float(converter.Settings().theta_controller_limits.max_rate_deg_min),
+    ),
+    flush=True,
+)
 
 # Playback wall-clock multiplier: 1.0 = real time, so the toolhead animates at
 # the configured print speed (mm/s). Bump up to fast-forward long jobs.
@@ -1117,7 +1125,14 @@ class MainWindow(QMainWindow):
         # keeps its old pattern list, and this is what tells the two apart.
         self.log.append(
             f"Converter core {getattr(converter, 'GEOMETRY_VERSION', 'OLD')}. "
-            "Fill pattern 'gradient waves (sine_gradient)' is available."
+            "Fill pattern 'gradient waves (sine_gradient)' is available. "
+            "A-axis guard: the bed parks above %.0f deg per segment instead of "
+            "sweeping, and the assumed A limit is %.0f motor deg/min; pen-up "
+            "rotations are fed, never rapids."
+            % (
+                float(converter.Settings().theta_max_step_deg),
+                float(converter.Settings().theta_controller_limits.max_rate_deg_min),
+            )
         )
 
         self.update_color_buttons()
