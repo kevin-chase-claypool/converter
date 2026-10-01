@@ -226,6 +226,21 @@
   Acceptance: `gyroid` output has the same points inside a tested square or
   circle, far fewer contours, and the existing fill tests still pass.
 
+- [ ] `Raster px/unit` is per SVG user unit, but its label says per mm.
+  Problem: the 2026-10-01 fill-spacing fix converted `Fill spacing mm` and the
+  pattern sizes into user units, but `raster_px_per_unit` still multiplies the
+  viewBox directly. On a 1000-unit artwork the tone raster is rendered about
+  five times finer than "2 px/mm" asks for, so it costs more to draw, sample
+  and hold in memory, and the tooltip describes a value the field does not hold.
+  Benefit: the setting means what it says, and tone rasters stop being sized by
+  the exporter's choice of user units.
+  Risk: lowering the sampling resolution makes dark/light edges of the rendered
+  tone coarser, which changes which wave rows carry ink at a boundary. The
+  on-paper result has to be checked on a gradient before it ships.
+  Acceptance: `raster_px_per_unit` is documented and implemented as pixels per
+  paper millimetre (or renamed and documented as pixels per user unit), and a
+  render check shows the same gradient fill before and after at a scale of 1.0.
+
 - [ ] Kaleidoscope converter follow-ups.
   Problem: the new app traces rasters by threshold (no photo-tone shading), the
   preview has no playback, and a dragged image can leave the wedge empty with

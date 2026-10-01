@@ -1,5 +1,45 @@
 # Engineering Log
 
+<a id="elog-20261001-image-tone-fill-spacing-units"></a>
+### 🟩 2026-10-01 10:12:37 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - image-tone fill spacing is millimetres on paper
+
+- Request: "what settings do i need to use to provide a time-reasonable
+  render", sent with the sidebar showing `Fill spacing 2`, `Wave size 2`,
+  `Fill pattern gradient waves (sine_gradient)` and a build stuck at
+  `Parsing SVG geometry | 49.8 s`.
+- Diagnosis: the tone path rasterises in SVG user units and the pipeline scales
+  the contours by `settings.scale` afterwards, but it read `Fill spacing mm` as
+  user units. On a 1000 x 700 unit design the sine fill is
+  `12 x width x height / spacing^2` points, so `Fill spacing 2` built 1.64
+  million points for a lattice that was then shrunk - the reported hang, and a
+  quadratic error rather than a linear one. The vector path already converts.
+- Change: `raster_shade_contours` divides the requested spacing by
+  `settings.scale` once, at the top, so every tone pattern (`dots`, `circles`,
+  `diamonds`, `hexagonal`, `triangular`, `waves`, `sine_gradient`, `gyroid`,
+  `concentric` and the line families) fills at the requested paper pitch. On
+  the reported artwork at the fitted scale of 0.37, `Fill spacing 4` drops from
+  411,060 points / 2.25 s to 55,974 points / 0.30 s, and `2` from 1,644,240 /
+  7.73 s to 225,860 / 1.30 s. At `Scale 1.0` the conversion is the identity, so
+  an artwork already authored in millimetres is unchanged.
+- Operator guidance recorded in `software/README.md`: spacing is the one
+  control that matters (points fall with the square), 4-6 mm is the practical
+  starting range for a 1000-unit artwork, `Shade levels` does not apply to
+  `sine_gradient`, and `Fit = Manual` avoids the auto fit's second parse.
+- Verification: 154 tests pass, including the new
+  `software/tests/test_tone_fill_scale.py` (rows land 4.0 mm apart on paper at
+  `Scale 0.5`, halving the scale quarters the points, halving the spacing
+  quarters them again). `docs_index --write/--check` pass.
+- Boundary: a tone fill on a non-millimetre viewBox is now coarser on paper
+  than before, so a spacing tuned against the old behaviour needs to come down.
+  `Raster px/unit` still counts user units while its tooltip says millimetres;
+  recorded in the roadmap with the render check it needs.
+- Evidence: `WSW-20261001-007`;
+  `docs/changes/windows-software/2026/2026-10-01-image-tone-fill-spacing-units.md`.
+- Category: windows-software, fill, tone, performance, units
+- Next action: rebuild the reported artwork at `Fill spacing 4` and confirm the
+  build time, then decide whether the tone raster resolution needs the same
+  units conversion.
+
 <a id="elog-20261001-ornament-spacing-control"></a>
 ### 🟩 2026-10-01 09:50:37 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - ornament spacing is a control, not a constant
 

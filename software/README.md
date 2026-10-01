@@ -527,7 +527,9 @@ display-only; every other group changes the emitted program.
   as on-paper (machine-space) values. When the artwork is scaled below `1.0`,
   the fill and curve flattening are generated coarser in SVG space so the final
   on-paper density stays constant and the preview evaluates proportionally fewer
-  contours instead of building a full-resolution lattice and shrinking it.
+  contours instead of building a full-resolution lattice and shrinking it. The
+  image-tone path applies the same conversion, so `Fill spacing 4` is 4 mm on
+  paper whether the SVG is authored in millimetres or in a 1000-unit viewBox.
 - `Fill pattern` selects the infill. In list order: `linear` (parallel lines),
   `crosshatch`, `gradient waves (sine_gradient)`, `diagonal`,
   `diagonal_crosshatch`, `triangular`, `cubic` (isometric), `diamonds`,
@@ -564,6 +566,14 @@ display-only; every other group changes the emitted program.
   - `Shade levels` does not apply to this pattern: tone arrives as amplitude,
     not as extra fill families. A light gradient fades to flat hairlines rather
     than to nothing, because a hairline is the lightest mark the pen can make.
+  - Render cost follows the point count, and the point count is
+    `about 12 x width x height / (Fill spacing)^2` in SVG user units, so the
+    spacing is the one control that matters: `Fill spacing 4` is about four
+    times lighter than `2` and sixteen times lighter than `1`. A 4-6 mm spacing
+    on a 1000-unit artwork builds in well under a second; 1-2 mm on the same
+    artwork is hundreds of thousands of points to plan, preview and write out.
+    `Fit = Manual` is also faster than an auto fit, because an auto fit parses
+    the artwork twice (once to measure it, once at the fitted scale).
 - Consecutive passes are emitted head-to-tail, and the line families (`linear`,
   `crosshatch`, `diagonal`, `diagonal_crosshatch`, `cubic`) and the lattices
   `diamonds`/`triangular`/`hexagonal` keep the pen down between them when the

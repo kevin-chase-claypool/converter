@@ -1387,6 +1387,15 @@ class MainWindow(QMainWindow):
         spacing = float(getattr(settings, "hatch_spacing_mm", 0.0))
         if spacing <= 0:
             return []
+        # Fill spacing and the pattern sizes are on-paper millimetres, but this
+        # path generates in SVG user units and `apply_geometry_settings` scales
+        # the result by `settings.scale` afterwards. Convert once, at the top: on
+        # an artwork that is 1000 units wide, an unconverted "2 mm" fill is two
+        # user units, so the lattice is built ~5x too dense and then shrunk -
+        # seconds of work and hundreds of thousands of points for a 4 mm fill.
+        artwork_scale = float(getattr(settings, "scale", 1.0))
+        if not math.isfinite(artwork_scale) or artwork_scale <= 0.0:
+            artwork_scale = 1.0
         levels = max(1, int(getattr(settings, "shade_levels", 1)))
         px_per_unit = max(float(getattr(settings, "raster_px_per_unit", 2.0)), 0.1)
         renderer = QSvgRenderer(svg_path)
@@ -1437,7 +1446,7 @@ class MainWindow(QMainWindow):
         base_angle = float(getattr(settings, "hatch_angle_deg", 0.0))
         angle_step = float(getattr(settings, "shade_angle_step_deg", 90.0))
         pattern = converter.normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))
-        active_spacing = self.pattern_spacing(settings, pattern, spacing)
+        active_spacing = self.pattern_spacing(settings, pattern, spacing) / artwork_scale
         sample_step = max(0.5 / px_per_unit, min(active_spacing / 3.0, 1.0))
         min_segment = max(active_spacing * 0.5, sample_step * 2.0)
 

@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-01 | `WSW-20261001-007` | windows-software | implemented | [Image-tone fill spacing is millimetres on paper](windows-software/2026/2026-10-01-image-tone-fill-spacing-units.md) |
 | 2026-10-01 | `WSW-20261001-006` | windows-software | implemented | [Ornament spacing: the wallpaper density is a control, not a constant](windows-software/2026/2026-10-01-ornament-spacing-control.md) |
 | 2026-10-01 | `WSW-20261001-005` | windows-software | implemented | [The kaleidoscope control column scrolls instead of running off the window](windows-software/2026/2026-10-01-scrollable-kaleidoscope-sidebar.md) |
 | 2026-10-01 | `WSW-20261001-004` | windows-software | implemented | [Sine gradient: gradient tone plotted as continuous adjacent sinusoids](windows-software/2026/2026-10-01-sine-gradient-fill.md) |
