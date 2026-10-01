@@ -41,6 +41,19 @@ demanded, whether any pen-up move carries rotation as a bare `G0` rapid, and the
 worst commanded bed-path bow with its radius - measured from the file, so it
 answers "did this program get the guard?" without guessing.
 
+Two repeatability programs exist for measuring the machine itself, both safe to
+Cycle Start with the pen loaded:
+
+- `..\samples\gcode\a-repeatability-test.gcode` - the bed: a radial tick, two
+  bed revolutions out and two back with the pen down, the tick again, at
+  r = 100 mm and r = 160 mm. Ticks on top of each other means the bed returned.
+- `..\samples\gcode\y-repeatability-test.gcode` - the heavy gantry axis: a tick
+  across the axis, five runs out and back at 3000 / 6000 / 12000 / 20000 mm/min
+  with the pen up, the tick again per rung. The top rung is what a `G0` pen-up
+  travel actually runs at, because grblHAL ignores the `F` word on a rapid.
+  Regenerate either with the matching tool in `..\tools\`
+  (`make_a_repeatability_test.py`, `make_xy_repeatability_test.py --axis X`).
+
 ## Kaleidoscope Converter
 
 `qt_kaleidoscope.pyw` (or `..\kaleidoscope.bat`) builds an N-fold mirrored

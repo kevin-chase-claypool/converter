@@ -70,6 +70,25 @@
   the operator's existing `ben.gcode` already *is* a 15 deg, guard-active file
   (14.90 deg largest drawing step, 333 motor deg/s peak, 30 fed re-registrations,
   no rapids, 0.025 mm bow), so it can be plotted unchanged as the first test.
+- Heavy-axis consideration: "the Y motor is the motor that has to move the most
+  weight. like significantly more weight than the other two axes". That changes
+  where to look for the rest of the drift. Numbers: the bed amplifies error by
+  radius (one A microstep moves the paper 33 um at r = 100 mm, 60 um at the rim),
+  while one X/Y microstep is 12.5 um at any radius - so A is the *sensitive*
+  axis but Y is the *loaded* one, and on Y only a stall (not a step) is visible.
+  Where Y is loaded hardest is the pen-up travel: the converter emits `G0`, and
+  grblHAL ignores the `F` word on a rapid, so those travels run at `$111`
+  (20000 mm/min = 333 mm/s) rather than the 3000 mm/min the preview models - a
+  6.7x mismatch on the heaviest axis, and a slip there is silent at the time and
+  shifts everything drawn after it, the same signature as the A stall. Also
+  noted: parking the bed (the A guard) trades bed rotation for gantry travel, so
+  a Y-limited machine pays more of the guard's cost than a bed-limited one.
+- New measurement for it: `tools/make_xy_repeatability_test.py` writes
+  `samples/gcode/y-repeatability-test.gcode` - a tick across the axis, five fed
+  runs out and back at 3000 / 6000 / 12000 / 20000 mm/min with the pen up, and
+  the tick again per rung. Ticks that coincide mean no slip at that rate; a gap
+  along the axis is the lost motion, and the top rung reproduces what a real
+  `G0` travel does today. Roadmap item: verify the heavy gantry axis under load.
 - Evidence: `RPSW-20261001-001`;
   `docs/report/lab-notes/2026-10-01-theta-a-rate-limit-lowering.md`;
   `firmware/grblhal/config/machine-settings.md`.

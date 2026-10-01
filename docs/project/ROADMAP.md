@@ -197,6 +197,24 @@
 
 ## Known technical debt
 
+- [ ] Verify the heavy gantry axis under load.
+  Problem: the operator reports that the Y motor carries markedly more mass than
+  X or A. The converter's pen-up travels are `G0`, and grblHAL ignores the `F`
+  word on a rapid, so they run at the controller's `$110`/`$111` maximum rate
+  (20000 mm/min = 333 mm/s) while the preview assumes the 3000 mm/min travel
+  rate - a 6.7x mismatch, on the axis with the most inertia, in the direction
+  where a slip is silent at the time and shifts every row drawn afterwards.
+  Benefit: either the axis is proven to hold that rate (and the mismatch is only
+  cosmetic), or its limits come down to a value it can hold and the drift class
+  closes for X/Y as it did for A.
+  Risk: lowering `$110`/`$111` slows every rapid and makes the park move
+  noticeably longer; too low and the 30-odd bed re-registration travels in a
+  photo fill become the slowest part of the job.
+  Acceptance: `samples/gcode/y-repeatability-test.gcode` is run at the 3000 /
+  6000 / 12000 / 20000 mm/min ladder and the paired ticks at each rung coincide;
+  if a rung shows a gap, `$111`/`$121` are lowered until it does not, and the
+  measured ladder is recorded in a lab note and the grblHAL settings document.
+
 - [x] Bring the controller's A-axis limits down to what the converter assumes.
   Problem: `$113` is 80000 motor deg/min (1333 motor deg/s, 111 bed deg/s for
   the 12:1 bed) and `$123` matches it. The converter now caps its own A rates at
