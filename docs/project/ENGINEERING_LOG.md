@@ -1,5 +1,42 @@
 # Engineering Log
 
+<a id="elog-20261001-squiggle-density"></a>
+### 🟩 2026-10-01 11:31:05 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - sine gradient matches SquiggleDraw: tone drives the wiggle rate too
+
+- Report: "these are just equally sized sine waves that ignore the gradient"
+  with a preview of the traced SVG, then a pointer to
+  `beardicus/awesome-plotters` and "squiggle draw does what im wanting".
+- Source check: `gwygonik/SquiggleDraw` accumulates phase from brightness
+  (`float df = z/xsmooth; phase += df;`) and takes the crest from the same value
+  (`r = z/ystep*ymult;`), where `z` is the pixel's darkness. The converter only
+  had the crest half, and only in the image-tone path, so a shape fill drew one
+  wavelength at one amplitude - exactly the uniform lattice reported.
+- Change: `sine_gradient_region_contours` accumulates phase per sample with a
+  tone-scaled increment, and the vector path (`fill_region_pattern_contours`
+  through `parse_svg_geometry`/`element_contours`) scales the crest by the
+  element's own darkness. New `Gradient wave density %` setting: 0 keeps one
+  wavelength (the previous behaviour), 100 makes the darkest areas wiggle twice
+  as fast as the lightest, 400 five times. `Shade levels` deliberately does not
+  tighten the pitch for this pattern, because tone would then be counted twice.
+- Measurement on the 1000 x 1000-unit worst case: tone 0.2 -> 1.0 across the
+  row gives a crest of 0.4 -> 2.0 mm and a wiggle-rate ratio of 1.00 at density
+  0 and 3.1 at density 400. On the requested photo at `Fill spacing 4`, the same
+  73,996-point program builds in 0.37-0.42 s of geometry time for densities
+  0/100/300; render checks `samples/preview/photo-squiggle-density{0,100,300}.png`
+  (scratch) show the range from a clean amplitude portrait to heavy texture.
+- Verification: 164 tests pass, including the new
+  `test_density_follows_tone_into_the_wiggle_rate` (phase-modulation contract)
+  and `test_vector_fill_tone_is_amplitude_not_density` (the shapes path keeps
+  the requested pitch and varies only the crest).
+- Boundary: the traced SVG is still the wrong input for this look. It is 273
+  flat black paths, so its element tone is 1.0 everywhere and the waves stay
+  uniform however the settings are set; the photo has the tone.
+- Evidence: `WSW-20261001-004`;
+  `docs/changes/windows-software/2026/2026-10-01-sine-gradient-fill.md`.
+- Category: windows-software, fill, gradient, plotter-art
+- Next action: plot the photo at density 0 and 100 and choose the default from
+  the paper.
+
 <a id="elog-20261001-auto-fit-measures-before-filling"></a>
 ### 🟩 2026-10-01 11:06:18 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - auto fit measures the artwork before it fills it
 

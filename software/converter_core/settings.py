@@ -117,6 +117,11 @@ class Settings:
     # crest height as a percentage of the row spacing, so 50 just touches the
     # neighbouring row's baseline when the artwork is fully dark.
     gradient_wave_amplitude_pct: float = 50.0
+    # `sine_gradient` also reads how fast the wave wiggles from the tone, the
+    # way SquiggleDraw accumulates phase from brightness: 0 keeps one
+    # wavelength across a row, 100 makes the darkest areas wiggle twice as fast
+    # as the lightest, 400 five times.
+    gradient_wave_density_pct: float = 100.0
     gyroid_size_mm: float = 0.0
     cubic_size_mm: float = 0.0
     concentric_spacing_mm: float = 0.0
@@ -228,6 +233,7 @@ TEXT_FIELD_GROUPS = (
         ("Dot spacing mm", "dot_spacing_mm", "0"),
         ("Wave size mm", "wave_size_mm", "0"),
         ("Gradient wave amplitude %", "gradient_wave_amplitude_pct", "50"),
+        ("Gradient wave density %", "gradient_wave_density_pct", "100"),
         ("Gyroid size mm", "gyroid_size_mm", "0"),
         ("Cubic size mm", "cubic_size_mm", "0"),
         ("Concentric spacing mm", "concentric_spacing_mm", "0"),
@@ -381,6 +387,7 @@ FIELD_TOOLTIPS = {
     "shade_levels": "Density steps for tone: darker fill colour or image tone receives more fill families.",
     "shade_angle_step_deg": "Angle between the fill families that darker tone adds.",
     "gradient_wave_amplitude_pct": "Sine gradient only: crest height as a percentage of Fill spacing / Wave size mm. 50 makes a fully dark area's waves just touch the next row.",
+    "gradient_wave_density_pct": "Sine gradient only: how much darker tone tightens the squiggle. 0 keeps one wavelength across the row, 100 (the default) makes the darkest areas wiggle twice as fast as the lightest, 400 five times.",
     "sine_rows_connected": "Sine gradient only: join the end of one sine row to the start of the next so a gradient is drawn as one continuous stroke. Rows stay separate where the join would cross blank paper.",
     "raster_px_per_unit": "Image-tone sampling resolution in pixels per mm. Higher is more accurate and slower.",
     "feed_rate": "Maximum X/Y draw speed in mm/min.",
@@ -490,6 +497,7 @@ def validate_settings(settings):
         "dot_spacing_mm",
         "wave_size_mm",
         "gradient_wave_amplitude_pct",
+        "gradient_wave_density_pct",
         "gyroid_size_mm",
         "cubic_size_mm",
         "concentric_spacing_mm",
@@ -519,6 +527,10 @@ def validate_settings(settings):
     if float(settings.gradient_wave_amplitude_pct) > 100.0:
         raise ValueError(
             "gradient wave amplitude must not exceed 100 percent of the row spacing."
+        )
+    if float(settings.gradient_wave_density_pct) > 400.0:
+        raise ValueError(
+            "gradient wave density must not exceed 400 percent of the base wiggle."
         )
     if int(settings.theta_smooth_window) < 0:
         raise ValueError("theta smooth window cannot be negative.")

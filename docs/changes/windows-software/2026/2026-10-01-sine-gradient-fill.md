@@ -90,6 +90,18 @@ the slicer look rather than the plotter-art look.
   three, and the log pane and `qt_debug.log` print the converter core version at
   startup (`2.3-sine-gradient`) so an open window from before a change is easy
   to recognise.
+- Third follow-up, after the shape path was reported as "just equally sized sine
+  waves that ignore the gradient": the vector (SVG shapes) path now scales the
+  crest by the element's own fill or stroke darkness too, and refuses to let
+  `Shade levels` tighten the pitch at the same time, so tone is counted once.
+  On top of that, tone now drives the wiggle *rate* as well, matching
+  SquiggleDraw's `phase += z/xsmooth` rule: the phase accumulates per sample
+  with an increment proportional to the local darkness. `Gradient wave density
+  %` (default 100 = the darkest areas wiggle twice as fast as the lightest,
+  0 = the previous constant-wavelength behaviour, 400 = five times) is the gain.
+  Both are threaded through `parse_svg_geometry`/`element_contours`/
+  `fill_region_pattern_contours` so the shapes path and the image-tone path use
+  the same settings.
 - `samples/svg/gradient-sine-demo.svg`: a linear fade, a radial orb and a
   vertical band for trying the pattern.
 

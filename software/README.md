@@ -576,6 +576,11 @@ display-only; every other group changes the emitted program.
   value, and either form can be typed. The gradient entry sits in the top three
   so it is visible without scrolling, and the log pane prints the converter
   core version on startup so a window left open across a change is obvious.
+- Tone is amplitude **and** wiggle rate. This is SquiggleDraw's rule
+  (`SquiggleDraw.pde`: `r = z/ystep*ymult` for the crest and
+  `phase += z/xsmooth` for the frequency, where `z` is the pixel's darkness), so
+  a dark area gets tall, tight waves and a light one gets flat, slow ones.
+  `Gradient wave amplitude %` and `Gradient wave density %` are the two gains.
 - `Fill pattern = sine_gradient` is the gradient fill: continuous adjacent
   sinusoids whose **amplitude follows the rendered tone**. Dark areas swell the
   waves until neighbouring rows just touch; light areas flatten them out. It
@@ -598,6 +603,13 @@ display-only; every other group changes the emitted program.
     percentage of the row spacing. 50 makes the waves in a fully dark area
     touch the neighbouring row without crossing it; lower values keep the rows
     apart in the darkest areas.
+  - `Gradient wave density %` (default 100) is how much darker tone tightens
+    the squiggle, the way SquiggleDraw accumulates phase from brightness:
+    `0` keeps one wavelength across the row and varies only the crest, `100`
+    makes the darkest areas wiggle twice as fast as the lightest, `400` five
+    times. A portrait reads best around `0`-`100`, where the tone is carried by
+    crest height; higher values turn the photograph into texture, with dense
+    squiggles in the shadows and long slow waves in the highlights.
   - `Connect sine rows` (on by default) joins the end of one row to the start
     of the next, so a gradient is drawn as one continuous pen-down serpentine.
     A join that would cross blank paper still breaks, so the pen lifts rather

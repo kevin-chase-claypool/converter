@@ -1357,6 +1357,7 @@ class MainWindow(QMainWindow):
         for pattern_name, field_name in converter.PATTERN_SIZE_FIELDS.items():
             set_visible(field_name, pattern == pattern_name)
         set_visible("gradient_wave_amplitude_pct", pattern == "sine_gradient")
+        set_visible("gradient_wave_density_pct", pattern == "sine_gradient")
         set_visible("shade_angle_step_deg", pattern in ("linear", "crosshatch", "diagonal", "diagonal_crosshatch", "cubic", "waves", "gyroid"))
         # Sampling resolution only matters when image tone can be used, which
         # "Auto" may still choose, so it stays visible for both.
@@ -1403,6 +1404,7 @@ class MainWindow(QMainWindow):
             str(getattr(settings, "hatch_pattern", "crosshatch")).lower(),
             tuple(sorted(self.pattern_size_values(settings).items())),
             float(getattr(settings, "gradient_wave_amplitude_pct", 50.0)),
+            float(getattr(settings, "gradient_wave_density_pct", 100.0)),
             bool(getattr(settings, "sine_rows_connected", True)),
             int(getattr(settings, "shade_levels", 1)),
             float(getattr(settings, "shade_angle_step_deg", 90.0)),
@@ -1832,6 +1834,7 @@ class MainWindow(QMainWindow):
                 active_spacing,
                 base_angle,
                 amplitude_pct=float(getattr(settings, "gradient_wave_amplitude_pct", 50.0)),
+                density_pct=float(getattr(settings, "gradient_wave_density_pct", 100.0)),
                 connect_rows=bool(getattr(settings, "sine_rows_connected", True)),
                 cancel_check=cancel_check,
             )
@@ -2583,6 +2586,8 @@ class MainWindow(QMainWindow):
                 stroke_fill_ratio=float(getattr(settings, "stroke_fill_ratio", 2.0)),
                 pen_diameter=float(getattr(settings, "pen_diameter_mm", 0.0)),
                 stats=fill_stats,
+                gradient_amplitude_pct=float(getattr(settings, "gradient_wave_amplitude_pct", 50.0)),
+                gradient_density_pct=float(getattr(settings, "gradient_wave_density_pct", 100.0)),
             )
             if source == "tone" and fill:
                 pattern = converter.normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))

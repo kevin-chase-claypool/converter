@@ -1144,18 +1144,22 @@ def sine_gradient_region_contours(
     spacing,
     angle_deg=0.0,
     amplitude_pct=50.0,
+    density_pct=100.0,
     ink_floor=SINE_GRADIENT_INK_FLOOR,
     connect_rows=True,
     cancel_check=None,
 ):
     """Continuous adjacent sinusoids whose amplitude follows the local tone.
 
-    This is the plotter-art gradient: rows of sine curves drawn as continuous
-    strokes, with each sample's amplitude taken from the rendered darkness at
-    that sample's row baseline. A gradient therefore swells the waves where it
-    is dark and flattens them where it is light, and the tone reads as curvature
-    instead of as line density. Rows are emitted in antiphase, so at full
-    darkness the crest of one row just meets the trough of its neighbour
+    This is the plotter-art gradient, the same idea as SquiggleDraw's
+    brightness-driven sine rows: each sample's amplitude comes from the rendered
+    darkness at that sample's row baseline, and the darkness also drives how
+    fast the wave wiggles. A dark area therefore gets tall, tight squiggles and
+    a light one gets flat, slow ones, so the tone reads as shape instead of as
+    line density. ``density_pct`` is how much tone tightens the wiggle: 0 keeps
+    one wavelength across the row, 100 makes the darkest areas wiggle twice as
+    fast as the lightest, 400 five times. Rows are emitted in antiphase, so at
+    full darkness the crest of one row just meets the trough of its neighbour
     instead of crossing it.
 
     ``bounds`` is ``(left, top, right, bottom)`` and ``darkness(x, y)`` returns
@@ -1174,7 +1178,9 @@ def sine_gradient_region_contours(
     if right <= left or bottom <= top:
         return []
     amplitude = spacing * max(0.0, min(float(amplitude_pct), 100.0)) / 100.0
+    density = max(0.0, float(density_pct)) / 100.0
     wavelength = spacing * 2.0
+    wave_number = 2.0 * math.pi / max(wavelength, 1e-9)
     step = max(wavelength / float(SINE_GRADIENT_SAMPLES_PER_WAVE), 1e-6)
     floor = max(0.0, float(ink_floor))
 
@@ -1211,6 +1217,11 @@ def sine_gradient_region_contours(
     v = math.floor(min_v / spacing) * spacing
     while v <= max_v:
         check_cancelled(cancel_check)
+        # Accumulated phase, exactly as SquiggleDraw does it: the increment per
+        # step is the local brightness, so dark paper wiggles faster instead of
+        # just taller. Flat regions still get samples, which keeps the row one
+        # continuous stroke instead of a chain of separate curves.
+        phase = math.pi if row % 2 else 0.0
         phase = math.pi if row % 2 else 0.0
         runs = []
         current = []
@@ -1224,7 +1235,8 @@ def sine_gradient_region_contours(
                     runs.append(current)
                 current = []
                 continue
-            offset = amplitude * value * math.sin(2.0 * math.pi * u / wavelength + phase)
+            phase += wave_number * (1.0 + density * value) * du
+            offset = amplitude * value * math.sin(phase)
             current.append(to_world(u, v + offset))
         if len(current) >= 2:
             runs.append(current)
@@ -1434,11 +1446,11 @@ def _pattern_spacing(pattern, fill_spacing, pattern_sizes=None, triangle_size=0.
     return max(fill_spacing, 1e-6)
 
 
-def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0):
-    return fill_region_pattern_contours([polygon], spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size, pattern_sizes, cancel_check, fill_inset)
+def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, gradient_amplitude_pct=50.0, gradient_density_pct=100.0):
+    return fill_region_pattern_contours([polygon], spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size, pattern_sizes, cancel_check, fill_inset, gradient_amplitude_pct, gradient_density_pct)
 
 
-def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0):
+def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, gradient_amplitude_pct=50.0, gradient_density_pct=100.0):
     check_cancelled(cancel_check)
     pattern = normalized_hatch_pattern(pattern)
     fill_spacing = density_spacing(spacing, levels, darkness)
@@ -1467,15 +1479,27 @@ def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_st
                 cancel_check=cancel_check,
             )
         )
-    # In vector mode there is no rendered tone to read, so the tone-driven sine
-    # fill degrades to the uniform sine hatch. Gradient amplitude needs
-    # `sine_gradient_region_contours` and an image-tone source.
+    # In vector mode the tone is the element's own fill (or stroke) darkness, so
+    # the wave amplitude follows it exactly as the rendered tone does in the
+    # image-tone path: a black region gets crests, a pale one gets flat lines.
+    # Spacing is *not* darkened here - for this pattern tone is amplitude, and
+    # letting `Shade levels` also tighten the pitch would count it twice.
     if pattern == "sine_gradient":
+        pitch = _pattern_spacing(pattern, spacing, pattern_sizes, triangle_size)
+        tone = 0.0 if darkness is None else max(0.0, min(float(darkness), 1.0))
+        amplitude = pitch * max(0.0, min(float(gradient_amplitude_pct), 100.0)) / 100.0 * tone
+        # One tone for the whole element, so the pitch stays the base wavelength
+        # and the density percentage shortens it by the same rule as the
+        # image-tone path.
+        density = max(0.0, float(gradient_density_pct)) / 100.0
+        wavelength = pitch * 2.0 / (1.0 + density * tone)
         return chain_segments_to_paths(
             wave_region_contours(
                 polygons,
-                _pattern_spacing(pattern, fill_spacing, pattern_sizes, triangle_size),
+                pitch,
                 base_angle,
+                amplitude=amplitude,
+                wavelength=wavelength,
                 cancel_check=cancel_check,
             )
         )
@@ -1792,7 +1816,7 @@ def closed_outline_regions(contours, tolerance):
     return polygons
 
 
-def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, fill_wide_strokes=False, stroke_fill_ratio=2.0, pen_diameter=0.0, inherited=None, stats=None):
+def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, fill_wide_strokes=False, stroke_fill_ratio=2.0, pen_diameter=0.0, inherited=None, stats=None, gradient_amplitude_pct=50.0, gradient_density_pct=100.0):
     check_cancelled(cancel_check)
     # Skip elements that are invisible in a single-pen plot (white/transparent
     # fill and stroke). A white knockout/background path would otherwise be
@@ -1838,7 +1862,7 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
             fill_polygons = closed_outline_regions(contours, tolerance)
             darkness = stroke_darkness(element, inherited)
         if fill_polygons:
-            fill_lines.extend(fill_region_pattern_contours(fill_polygons, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern, triangle_size, pattern_sizes, cancel_check, fill_inset))
+            fill_lines.extend(fill_region_pattern_contours(fill_polygons, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern, triangle_size, pattern_sizes, cancel_check, fill_inset, gradient_amplitude_pct, gradient_density_pct))
             if stats is not None:
                 stats["fill_contours"] = stats.get("fill_contours", 0) + len(fill_lines)
     if has_visible_stroke(element, inherited):
@@ -1856,7 +1880,7 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
     return contours + [FillTrail(trail) for trail in fill_lines]
 
 
-def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, scale=1.0, fill_wide_strokes=False, stroke_fill_ratio=2.0, pen_diameter=0.0, stats=None):
+def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, scale=1.0, fill_wide_strokes=False, stroke_fill_ratio=2.0, pen_diameter=0.0, stats=None, gradient_amplitude_pct=50.0, gradient_density_pct=100.0):
     check_cancelled(cancel_check)
     # When the artwork is scaled down, generate the fill at the coarser SVG-space
     # spacing that matches the final on-paper density, instead of building the
@@ -1906,7 +1930,7 @@ def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_ang
                 if target is not None and target_id not in seen:
                     walk(target, combined @ Matrix(e=parse_length(node.get("x")), f=parse_length(node.get("y"))), resolved, True, seen | {target_id})
             return
-        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step, expand_strokes, triangle_size, pattern_sizes, cancel_check, fill_inset, fill_wide_strokes, stroke_fill_ratio, pen_diameter, resolved, stats):
+        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step, expand_strokes, triangle_size, pattern_sizes, cancel_check, fill_inset, fill_wide_strokes, stroke_fill_ratio, pen_diameter, resolved, stats, gradient_amplitude_pct, gradient_density_pct):
             check_cancelled(cancel_check)
             contours.append(retag_contour(contour, [combined.apply(x, y) for x, y in contour]))
         for child in list(node):
@@ -1947,6 +1971,8 @@ def read_svg(svg_path, settings):
         fill_wide_strokes=bool(getattr(settings, "fill_wide_strokes", False)),
         stroke_fill_ratio=float(getattr(settings, "stroke_fill_ratio", 2.0)),
         pen_diameter=float(getattr(settings, "pen_diameter_mm", 0.0)),
+        gradient_amplitude_pct=float(getattr(settings, "gradient_wave_amplitude_pct", 50.0)),
+        gradient_density_pct=float(getattr(settings, "gradient_wave_density_pct", 100.0)),
     )
     return apply_geometry_settings(contours, settings)
 
