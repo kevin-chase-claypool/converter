@@ -47,6 +47,11 @@ app.
   driven by physical spacing - contour fills, studs, dots, barbs and hatch lines
   are placed one every few millimetres along the arc - so the design gets
   complicated the way an engraving does rather than by repeating one texture.
+  The bead rows, stud flowers and dotted rings are ornaments rather than
+  structure, so they are spread at twice the pitch of the engraved hatching
+  (`generative.ORNAMENT_PITCH`): a band reads as a scatter with rhythm instead
+  of printed wallpaper. That one constant is the sparsity knob - raise it to
+  open the design up further, lower it to pack the ornaments back in.
   The result is clipped, mirrored, offset, auto-fitted and saved exactly like an
   imported image, so one seed plus the other controls reproduces the same
   G-code. The seed changes the *structure*, not just the phases: it picks one of

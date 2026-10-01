@@ -8,6 +8,9 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-023` | implemented | [Keep the commanded A small: re-register the bed each contour](../windows-software/2026/2026-09-30-theta-reregistration.md) | `theta`, `kinematics`, `drift`, `calibration` |
+| 2026-09-30 | `WSW-20260930-022` | implemented | [Pen tip diameter for the installed Pigma Micron 005](../windows-software/2026/2026-09-30-pen-width-control.md) | `pen`, `interface`, `gcode` |
+| 2026-09-30 | `WSW-20260930-021` | implemented | [Theta drift: record the ratio in the G-code and ship a calibration plot](../windows-software/2026/2026-09-30-theta-drift-diagnosis-and-calibration-plot.md) | `theta`, `kinematics`, `calibration`, `diagnostics` |
 | 2026-09-30 | `RPSW-20260930-004` | implemented | [Require a homed frame before the park macro moves](../rp23cnc-software/2026/2026-09-30-park-macro-requires-homed-frame.md) | `iosender`, `macro`, `p116`, `p111`, `park`, `g53`, `soft-limit`, `homing`, `safety`, `failed-approach` |
 | 2026-09-30 | `RPSW-20260930-002` | implemented | [Widen the 40 g pen-force band back to ±15 g](../rp23cnc-software/2026/2026-09-30-widen-pen-force-band-to-15g.md) | `toolhead`, `force-control`, `pen-force`, `calibration`, `safety` |
 | 2026-09-30 | `RPSW-20260930-001` | implemented | [Set the pen force target to 40 g with a ±10 g band](../rp23cnc-software/2026/2026-09-30-set-pen-force-40g-band-10g.md) | `toolhead`, `force-control`, `pen-force`, `calibration`, `safety` |

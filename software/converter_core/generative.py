@@ -46,6 +46,14 @@ PHI = (1.0 + 5.0**0.5) / 2.0
 WEYL_ALPHA = PHI - 1.0
 TAU = 2.0 * math.pi
 
+# Pitch multiplier for the ornament layers - the bead rows, stud flowers and
+# dotted rings that dress a band. Those layers are the ones that read as
+# printed wallpaper when they pack a band edge to edge, so they are spread at
+# this multiple of the engraved hatching's pitch. 1.0 is the old, busy
+# spacing; 2.0 roughly halves the number of ornaments and is the current
+# default. Raise it to open the design up further.
+ORNAMENT_PITCH = 2.0
+
 
 def van_der_corput(index, base=2):
     """Low-discrepancy value in [0, 1) for a positive integer *index*."""
@@ -729,21 +737,34 @@ def _lace(r_in, r_out, wedge, level, seed, cancel_check=None):
 
 
 def _beadrow(r_in, r_out, wedge, level, seed, cancel_check=None):
-    """Several rows of beads and stud flowers packed through the band."""
+    """Rows of beads and stud flowers scattered through the band.
+
+    This family is the easiest one to make look like wallpaper: rows of beads
+    that line up read as a printed grid. The rows are therefore capped, each
+    one is staggered and rotated off the previous one, and the beads vary in
+    size, so a band reads as a scatter with rhythm rather than a lattice.
+    """
     span = r_out - r_in
     density = _density(seed)
-    rows = _count(span, 3.4 * density, 2, 14)
+    rows = min(
+        _count(span, 4.6 * density * ORNAMENT_PITCH, 1, 14), 1 + level // 4
+    )
     row_h = span / rows
     flower_every = 2 + _pick(seed, 20, 3)
     out = []
     for row in range(rows):
         check_cancelled(cancel_check)
         rho = r_in + (row + 0.5) * row_h
-        size = min(0.34 * row_h, 1.8)
-        count = _count(wedge * rho, (3.6 - 0.12 * level) * density, 2, 90)
+        stagger = 0.5 * (row % 2) + 0.3 * (weyl(row + seed) - 0.5)
+        count = _count(
+            wedge * rho, (4.2 - 0.14 * level) * density * ORNAMENT_PITCH, 1, 90
+        )
         for index in range(count):
-            t = (index + 0.5) / count
-            wobble = 0.20 * row_h * (2.0 * weyl(index + seed + row) - 1.0)
+            t = (index + 0.5 + stagger) / count
+            size = min(0.34 * row_h, 2.2) * (
+                0.55 + 0.75 * van_der_corput(index + 1 + row + seed, 3)
+            )
+            wobble = 0.26 * row_h * (2.0 * weyl(index + seed + row) - 1.0)
             centre_r = _clamp(
                 rho + wobble, r_in + 1.1 * size, r_out - 1.1 * size
             )
@@ -863,7 +884,7 @@ def _flower(centre, size, seed):
 
 def _studs(circle_r, band, spacing, size, wedge, seed, cancel_check=None):
     """A ring of small flowers and beads, one every *spacing* millimetres."""
-    count = _count(wedge * circle_r, spacing, 1, 90)
+    count = _count(wedge * circle_r, spacing * ORNAMENT_PITCH, 1, 90)
     out = []
     for index in range(count):
         check_cancelled(cancel_check)
@@ -883,7 +904,7 @@ def _studs(circle_r, band, spacing, size, wedge, seed, cancel_check=None):
 
 def _dots(circle_r, wedge, spacing, size, seed, cancel_check=None):
     """A ring of tiny beads, one every *spacing* millimetres."""
-    count = _count(wedge * circle_r, spacing, 1, 160)
+    count = _count(wedge * circle_r, spacing * ORNAMENT_PITCH, 1, 160)
     out = []
     for index in range(count):
         check_cancelled(cancel_check)

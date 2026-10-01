@@ -1,5 +1,39 @@
 # Engineering Log
 
+<a id="elog-20261001-sparse-ornaments"></a>
+### 🟩 2026-10-01 09:21:41 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - sparse ornaments: the bead and stud rows stop carpeting the design
+
+- Request: "in the context of kaleidoscope.bat i want to make this
+  wallpaper-like imagery much more sparse. right now it appears everywhere",
+  sent with a crop of a band whose neighbours are all beads and stud flowers.
+- Change: new `ORNAMENT_PITCH = 2.0` in `generative.py`, a pitch multiplier for
+  the ornament layers (bead rows, stud flowers, dotted rings). `_studs()` and
+  `_dots()` divide their spacing by it, so every caller inherits it - the
+  decoration rows `random_pattern` draws between the shape rings, the stud and
+  dot rows in `_rim()`, and the dot ring in `_rosette()`. `_beadrow()` uses the
+  same pitch for its row and bead pitch and caps its rows at `1 + level // 4`,
+  on top of the staggering that was already sitting uncommitted in the worktree.
+  `_density()` was deliberately left alone: it is the packing multiplier for the
+  whole composition, so changing it also thins the hatching inside the leaves,
+  scallops and feathers, which is a different look from the one reported.
+- Verification: 133 tests across the thirteen `software/tests` modules pass,
+  including the wedge/radius and per-family band contracts. The operator's own
+  design (seed 83382, intricacy 10, 4 divisions, no motifs) drops from 1,570 to
+  906 wedge contours (12,560 to 7,248 mirrored) while the path only shortens by
+  11 % (150,626 to 133,929 mm), because the shade lines are untouched; seed 7 at
+  the same settings drops 1,285 to 621. Render check at pitch 1.0 / 1.5 / 1.8 /
+  2.0 on the reported band: 2.0 leaves clear paper between the beads, keeps the
+  stud rows reading as a deliberate band and keeps the dotted rim legible.
+  `docs_index --write/--check` pass.
+- Boundary: a taste knob, not an accuracy one. Ornaments that belong to a shape
+  rather than a band - lace scale eyes, the bead at the end of a starburst ray
+  and the two bead rings in `_tulip()` - stay at their drawn pitch. No UI control
+  was added for it.
+- Evidence: `WSW-20261001-003`.
+- Category: windows-software, kaleidoscope, generative, style
+- Next action: plot a sparse seed and judge the density on paper before deciding
+  whether it wants a per-design control next to `Region overlay`.
+
 <a id="elog-20261001-region-overlay"></a>
 ### 🟩 2026-10-01 08:43:08 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - region overlay: neighbouring bands braid
 
