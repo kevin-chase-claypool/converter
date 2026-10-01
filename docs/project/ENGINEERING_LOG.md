@@ -1,5 +1,43 @@
 # Engineering Log
 
+<a id="elog-20260930-theta-reregistration"></a>
+### 🟩 2026-09-30 20:59:06 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - keep the commanded A near zero (bed re-registration)
+
+- Request: "i wonder if the drift has anything to do with the A degrees seen in
+  DRO on iosender. at higher values i see the drift is more pronounced, at
+  values closer to 0 it looks perfect. is there any way to keep that value from
+  getting too high in converter and kaleidoscope?"
+- Diagnosis: that is the signature of an A-axis scale error - a feature's
+  positional error grows with its *commanded* angle, so a program that winds the
+  bed 19 revolutions accumulates 19 revolutions of error. The monotonic-theta
+  ordering (on by default) deliberately accumulates rotation to avoid
+  reversals, which is expensive on a real A axis.
+- Change: `_reregister_thetas()` in `gcode.py` shifts each contour's bed angles
+  by `-360 * round(first_theta / 360)` and `plan_program` applies it before
+  storing the plan, so preview, time estimate and file agree; `previous_theta`
+  becomes the re-registered value so the travel into the next contour carries
+  the correction. New `theta_wrap` setting, default on, with a main-app
+  checkbox "Re-register the bed each contour (keep A small)"; the kaleidoscope
+  app inherits it. The shift is physically neutral - a whole bed revolution
+  leaves every point where it was - so X/Y are unchanged and only A differs, by
+  whole revolutions.
+- Verification: realistic kaleidoscope design (334k moves) goes from
+  A -8,246..76,127 (19.48 bed turns) to -2,486..2,519 (1.16 turns); 333,943 of
+  333,992 X/Y pairs identical, the rest differing in the last decimal. New
+  `test_theta_wrap.py` uses a two-turn spiral plus six marks: without
+  re-registration the marks are commanded at ~8,800 motor degrees, with it at
+  ~290, and it asserts X/Y equality plus whole-revolution A differences. All
+  thirteen test modules pass; `docs_index --write/--check` pass.
+- Boundary: the travel into a re-registered contour can contain up to a full
+  bed revolution, so the plot may run slightly longer and reverse once per
+  contour at most - `theta_wrap` turns it off if that is worse. It bounds the
+  symptom; if drift scales with travel rather than commanded angle, or the
+  calibration spiral does not close, the A axis itself still needs calibrating.
+- Evidence: `WSW-20260930-023`.
+- Category: windows-software, hardware, theta, drift
+- Next action: re-plot the same design with the new default and compare the
+  outer ring against the previous plot.
+
 <a id="elog-20260930-pen-tip-diameter"></a>
 ### 🟩 2026-09-30 19:03:42 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - pen tip diameter: Pigma Micron 005 is 0.20 mm
 

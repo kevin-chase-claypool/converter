@@ -184,6 +184,26 @@ def bridge_motion(prev_machine, prev_motor_theta, next_machine, next_motor_theta
     }
 
 
+def _reregister_thetas(thetas, settings):
+    """Shift a contour's bed angles by whole revolutions.
+
+    The bed has no absolute multi-turn reference, so subtracting ``k * 360``
+    degrees of bed angle leaves every drawn point exactly where it was. What it
+    changes is the commanded A: the value ioSender's DRO shows. On a machine
+    whose A axis carries a small scale error, the positional error at a feature
+    grows with the *commanded* angle, so re-registering each contour keeps the
+    worst-case error near half a revolution instead of letting it accumulate
+    over the whole program.
+    """
+    if not getattr(settings, "theta_wrap", True) or not thetas:
+        return thetas
+    turns = round(thetas[0] / 360.0)
+    if not turns:
+        return thetas
+    shift = -360.0 * turns
+    return [theta + shift for theta in thetas]
+
+
 def plan_program(contours, settings, cancel_check=None):
     """Plan clipped contours in the G54 bed-center work frame.
 
@@ -246,6 +266,7 @@ def plan_program(contours, settings, cancel_check=None):
         )
         if not thetas:
             continue
+        thetas = _reregister_thetas(thetas, settings)
         planned_jobs.append((planned, points, thetas, strategies))
         previous_theta = thetas[-1]
         previous_machine = bed_to_machine(points[-1], thetas[-1], center)

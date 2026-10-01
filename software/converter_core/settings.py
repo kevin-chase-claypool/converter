@@ -59,6 +59,13 @@ class Settings:
     theta_mode: str = "optimized"
     theta_resolver: str = "rtheta"
     theta_weight: float = 1.0
+    # Re-register the bed at every contour: subtract whole revolutions from the
+    # bed angle so the commanded A never winds far from zero. Physically
+    # neutral - the bed ends at the same orientation - but on a machine whose A
+    # axis has a small scale error, the positional error at a feature grows
+    # with the commanded angle, so this removes most of the drift that shows up
+    # at high A values.
+    theta_wrap: bool = True
     round_bias: float = 0.05
     smoothness_factor: float = 1.0
     theta_smooth_window: int = 2
@@ -268,6 +275,12 @@ CHECKBOX_FIELDS = (
     ("Geometry", "fill_wide_strokes", "Fill wide strokes", False),
     ("Fill", "keep_down_bridges", "Keep pen down between fill trails", False),
     ("Theta kinematics", "monotonic_theta", "Monotonic theta (r-theta style)", True),
+    (
+        "Theta kinematics",
+        "theta_wrap",
+        "Re-register the bed each contour (keep A small)",
+        True,
+    ),
     ("Pen", "include_z", "Use Z axis for pen up/down", False),
     ("Pen", "toolhead_status_handshake", "Wait for GP27 toolhead ready (commissioned only)", False),
     ("Pen", "toolhead_handshake_recover", "Lift pen and continue if the GP27 handshake times out", False),
@@ -343,6 +356,7 @@ FIELD_TOOLTIPS = {
     "travel_rate": "Pen-up travel speed in mm/min.",
     "theta_mode": "How the bed orientation is chosen per contour: optimized solves it, fixed holds one angle, tangent follows the path direction.",
     "theta_resolver": "Per-segment theta solver. rtheta is the installed default; dp and greedy are fallback experiments.",
+    "theta_wrap": "Subtract whole bed revolutions at every contour so the commanded A stays near zero. The bed ends in the same place, but any small A-axis scale error stops accumulating with angle - turn this off to match older programs.",
     "pen_diameter_mm": "Physical pen tip width. Used for ink-size reporting, pen-width compensation, and the 'Fill wide strokes' threshold.",
     "safe_z": "Z height for pen-up simulation. Only used when 'Use Z axis' is enabled.",
     "work_z": "Z height for pen-down simulation. Only used when 'Use Z axis' is enabled.",

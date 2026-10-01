@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-09-30 | `WSW-20260930-023` | windows-software, hardware | implemented | [Keep the commanded A small: re-register the bed each contour](windows-software/2026/2026-09-30-theta-reregistration.md) |
 | 2026-09-30 | `WSW-20260930-022` | windows-software, hardware | implemented | [Pen tip diameter for the installed Pigma Micron 005](windows-software/2026/2026-09-30-pen-width-control.md) |
 | 2026-09-30 | `WSW-20260930-021` | windows-software, hardware | implemented | [Theta drift: record the ratio in the G-code and ship a calibration plot](windows-software/2026/2026-09-30-theta-drift-diagnosis-and-calibration-plot.md) |
 | 2026-09-30 | `WSW-20260930-020` | windows-software | implemented | [Kaleidoscope: close the empty bands in motif patterns](windows-software/2026/2026-09-30-kaleidoscope-fill-the-gaps.md) |

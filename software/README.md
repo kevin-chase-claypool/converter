@@ -169,6 +169,15 @@ app.
   settings (`tools\make_theta_calibration.py` writes a plot that measures the
   bed's real ratio: a circle plus a two-turn spiral, where a wrong ratio shows
   as an offset that doubles on the second lap)
+- the bed is re-registered at every contour by default: the planner subtracts
+  whole revolutions from the bed angles, which leaves every drawn point where it
+  was but keeps the commanded `A` within about one turn instead of letting it
+  wind up over the program. On a machine with a small A-axis scale error the
+  positional error grows with the commanded angle, so this removes most of the
+  drift seen at high `A` values. The main app exposes it as
+  `Re-register the bed each contour (keep A small)`; turn it off to reproduce
+  older programs. It bounds the symptom, not a mis-calibrated A axis - the
+  calibration plot above is still how the true ratio gets measured.
 - `G0` travel moves (pen up), `G1` draw moves (pen down)
 - `X Y` in mm in the machine's active work-coordinate frame; `A` =
   **motor-shaft degrees** (already multiplied by `Theta ratio`)
