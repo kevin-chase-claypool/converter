@@ -287,9 +287,7 @@ class KaleidoscopeWindow(QMainWindow):
 
         # Every group is open at once, so the column is taller than a laptop
         # window and would otherwise push the build and save buttons off the
-        # bottom. Widget-resizable keeps the rows as wide as the viewport and
-        # only falls back to a horizontal bar when the window is narrower than
-        # the widest row.
+        # bottom. Widget-resizable keeps the rows as wide as the viewport.
         self.sidebar = QScrollArea()
         self.sidebar.setWidgetResizable(True)
         self.sidebar.setWidget(panel)
