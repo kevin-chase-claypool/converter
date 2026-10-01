@@ -1015,12 +1015,38 @@ def _rim(radius, wedge, level, seed, cancel_check=None):
     return out
 
 
+def band_layout(seed, level, radius, region_overlay=0.20):
+    """The radial bands the shape rings are drawn in.
+
+    ``region_overlay`` is how much neighbouring regions share: 0 tiles the
+    rings edge to edge, 0.5 makes every band overlap half of its height with
+    the next one, and 0.8 leaves only a fifth of each band to itself. The bands
+    grow as they overlap so the same disc is still covered, which is what makes
+    the regions braid instead of leaving seams - no shape is stretched, each
+    ring simply draws a larger version of itself and interpenetrates its
+    neighbours.
+    """
+    level = max(1, min(int(level), 10))
+    overlay = max(0.0, min(float(region_overlay), 0.8))
+    rings = _ring_count(seed, level)
+    centre_r = radius * (0.055 + 0.020 * _roll(seed, 2) + 0.006 * level)
+    outer = radius * (0.900 + 0.048 * _roll(seed, 4))
+    span = outer - centre_r
+    height = span / (1.0 + (rings - 1) * (1.0 - overlay))
+    pitch = height * (1.0 - overlay)
+    return [
+        (centre_r + index * pitch, centre_r + index * pitch + height)
+        for index in range(rings)
+    ]
+
+
 def random_pattern(
     seed=0,
     intricacy=5,
     radius_mm=180.0,
     wedge_deg=15.0,
     motifs=None,
+    region_overlay=0.20,
     cancel_check=None,
 ):
     """Return a mandala in millimetres, centred on the origin, y up.
@@ -1035,11 +1061,18 @@ def random_pattern(
     is filled with copies of a seed-chosen motif instead of a drawn family, and
     the seed also chooses the copy count, orientation and mirroring. Empty or
     missing motifs fall back to the drawn families for that ring.
+
+    ``region_overlay`` (0..0.8) is how far each ring's shapes may grow past
+    their own band, as a fraction of the band height, so neighbouring regions
+    braid into each other. 0 keeps every shape inside its band; 0.2 is a subtle
+    overlap; 0.5 and up interpenetrate heavily, which is how the reference
+    artwork gets its density.
     """
     seed = int(seed) % 100000
     level = max(1, min(int(intricacy), 10))
     radius = max(float(radius_mm), 1.0)
     wedge = math.radians(max(float(wedge_deg), 0.5))
+    overlay = max(0.0, min(float(region_overlay), 0.8))
     motifs = list(motifs) if motifs else []
     plan = motif_plan(seed, level, len(motifs))
 
@@ -1048,19 +1081,13 @@ def random_pattern(
     # and the rim take, and how tightly each layer packs its detail.
     order = _shuffled(_STYLE_POOLS[style_for(seed)], seed)
     rings = _ring_count(seed, level)
-    centre_r = radius * (0.055 + 0.020 * _roll(seed, 2) + 0.006 * level)
+    bands = band_layout(seed, level, radius, overlay)
+    centre_r = bands[0][0]
     # Tight gaps and a wider outer band: the previous ranges left a visible
     # white moat between the shape rings and before the rim in every seed.
     gap = radius * (0.005 + 0.010 * _roll(seed, 3))
-    outer = radius * (0.900 + 0.048 * _roll(seed, 4))
-    ladder = 0.60 + 0.60 * _roll(seed, 5)
     dressed = _pick(seed, 6, 4)
     burst = level >= 3 and _roll(seed, 7) < 0.75
-    span_total = outer - centre_r
-    edges = [
-        centre_r + span_total * (index / rings) ** ladder
-        for index in range(rings + 1)
-    ]
 
     contours = []
     contours.extend(_rosette(centre_r, wedge, level, seed + 5, cancel_check))
@@ -1082,8 +1109,11 @@ def random_pattern(
     for ring in range(rings):
         check_cancelled(cancel_check)
         name = order[ring % len(order)]
-        r_in = edges[ring]
-        r_out = max(edges[ring + 1] - gap, r_in + radius * 0.03)
+        r_in, r_out = bands[ring]
+        # The bands already overlap; the separator gap only closes them up, so
+        # it shrinks as the overlay grows.
+        r_out = max(r_out - gap * (1.0 - overlay), r_in + radius * 0.03)
+        draw_in, draw_out = r_in, r_out
         # Engravings are far too detailed to tile through every ring; they
         # read as speckle. They take the outer band - the ornamental border in
         # the reference artwork - while the drawn hatched families fill the
@@ -1098,8 +1128,8 @@ def random_pattern(
             contours.extend(
                 _motif_ring(
                     pool,
-                    r_in,
-                    r_out,
+                    draw_in,
+                    draw_out,
                     wedge,
                     level,
                     seed + 17 * ring + 1,
@@ -1111,7 +1141,12 @@ def random_pattern(
         else:
             contours.extend(
                 _FUNCTIONS[name](
-                    r_in, r_out, wedge, level, seed + 17 * ring + 1, cancel_check
+                    draw_in,
+                    draw_out,
+                    wedge,
+                    level,
+                    seed + 17 * ring + 1,
+                    cancel_check,
                 )
             )
         center_line = r_out + 0.5 * gap

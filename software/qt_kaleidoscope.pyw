@@ -378,6 +378,20 @@ class KaleidoscopeWindow(QMainWindow):
         self.seed.valueChanged.connect(self.on_design_changed)
         self.seed_button.clicked.connect(self.roll_seed)
         self.intricacy.valueChanged.connect(self.on_design_changed)
+        self.region_overlay = QDoubleSpinBox()
+        self.region_overlay.setRange(0.0, 0.8)
+        self.region_overlay.setSingleStep(0.05)
+        self.region_overlay.setDecimals(2)
+        self.region_overlay.setValue(0.20)
+        self.region_overlay.setToolTip(
+            "How much neighbouring regions share, as a fraction of a band's "
+            "height. 0 tiles the rings edge to edge; 0.3 makes each band overlap "
+            "a third of its height with the next, so the shapes braid together; "
+            "0.6 and up interpenetrate heavily. Shapes keep their proportions - "
+            "the bands grow and overlap instead."
+        )
+        self.region_overlay.valueChanged.connect(self.on_design_changed)
+        form.addRow("Region overlay", self.region_overlay)
         self.open_button = QPushButton("Open artwork...")
         self.open_button.clicked.connect(self.open_source)
         self.path_label = QLabel("(none)")
@@ -611,6 +625,7 @@ class KaleidoscopeWindow(QMainWindow):
         numbers = (
             ("seed", self.seed, int),
             ("intricacy", self.intricacy, int),
+            ("region_overlay", self.region_overlay, float),
             ("divisions", self.divisions, int),
             ("source_size", self.source_size, float),
             ("center_x", self.center_x, float),
@@ -675,6 +690,7 @@ class KaleidoscopeWindow(QMainWindow):
             "source_path": self.source_path,
             "seed": int(self.seed.value()),
             "intricacy": int(self.intricacy.value()),
+            "region_overlay": float(self.region_overlay.value()),
             "divisions": int(self.divisions.value()),
             "source_size": float(self.source_size.value()),
             "center_x": float(self.center_x.value()),
@@ -1047,6 +1063,7 @@ class KaleidoscopeWindow(QMainWindow):
                 radius_mm=size_mm,
                 wedge_deg=180.0 / max(int(self.divisions.value()), 1),
                 motifs=self._motifs(),
+                region_overlay=float(self.region_overlay.value()),
             )
         elif converter.is_raster_source(path):
             traced = converter.trace_raster(

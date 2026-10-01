@@ -1,5 +1,40 @@
 # Engineering Log
 
+<a id="elog-20261001-region-overlay"></a>
+### 🟩 2026-10-01 08:43:08 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - region overlay: neighbouring bands braid
+
+- Request: "something that i want to be able to modify is how much one region
+  overlays into another, this will help the image look complex", clarified with
+  "i dont want them to stretch the overlaid region" and "i just want the regions
+  to overlap".
+- Change: new `band_layout(seed, level, radius, region_overlay)` in
+  `generative.py` lays the shape rings out so neighbours share a strip. With
+  `rings` bands over span `S`, the band height is
+  `S / (1 + (rings - 1) * (1 - overlay))` and the pitch `height * (1 - overlay)`,
+  so the bands overlap by exactly `overlay * height` and the disc still ends at
+  the same outer edge. Every family draws inside its own band, so shapes keep
+  their proportions - the rings grow and interpenetrate instead. The separator
+  gap closes as `gap * (1 - overlay)`. `random_pattern` takes
+  `region_overlay` (0-0.8, default 0.20), and the kaleidoscope app gained a
+  `Region overlay` spin box that is saved with the rest of the settings.
+- Fixed while building it: handing each family an enlarged band stretched the
+  shapes (the operator rejected that immediately), and sliding a ring's content
+  outward kept the size but displaced the ring from its own region. Both were
+  replaced by the band-overlap layout.
+- Verification: `band_layout` tiles edge to edge at 0 and overlaps exactly 30 %
+  of the band height at 0.3 with an unchanged outer edge; values clamp to
+  0-0.8; patterns stay inside the radius at overlay 0/0.4/0.8. Render check
+  `samples\preview\gen_overlay2.png` (0 / 0.3 / 0.7 at seed 42, intricacy 8).
+  App check: overlay 0.00 gives 24,792 contours, 0.60 gives 20,472 for the same
+  seed, and the value survives a restart. All fourteen test modules pass;
+  `docs_index --write/--check` pass.
+- Boundary: heavy overlay makes the shapes larger, so the design darkens and the
+  plot lengthens; above ~0.5 the engraving motif bands get busy quickly.
+- Evidence: `WSW-20261001-002`.
+- Category: windows-software, kaleidoscope, generative, interface
+- Next action: browse a few seeds at 0.2 / 0.4 / 0.6 and pick a default worth
+  shipping.
+
 <a id="elog-20261001-tolerance-inner-imprecision"></a>
 ### 🟩 2026-10-01 08:25:27 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - the centre wobble was the Tolerance budget, now reported
 

@@ -276,6 +276,56 @@ class NaturalMotifTests(unittest.TestCase):
             self.assertTrue(pattern)
 
 
+class RegionOverlayTests(unittest.TestCase):
+    """Region overlay: how much neighbouring bands share, without stretching."""
+
+    def test_zero_overlay_tiles_the_bands_edge_to_edge(self):
+        bands = generative.band_layout(7, 8, RADIUS, 0.0)
+        self.assertGreaterEqual(len(bands), 3)
+        for (_, outer), (inner, _) in zip(bands, bands[1:]):
+            self.assertAlmostEqual(outer, inner, places=9)
+        self.assertLessEqual(bands[-1][1], RADIUS)
+
+    def test_overlay_makes_neighbours_share_a_strip(self):
+        plain = generative.band_layout(7, 8, RADIUS, 0.0)
+        shared = generative.band_layout(7, 8, RADIUS, 0.3)
+        plain_height = plain[0][1] - plain[0][0]
+        height = shared[0][1] - shared[0][0]
+        overlap = shared[0][1] - shared[1][0]
+        self.assertAlmostEqual(overlap / height, 0.3, places=9)
+        self.assertGreater(height, plain_height, "bands grow as they overlap")
+        self.assertAlmostEqual(
+            shared[-1][1], plain[-1][1], places=9,
+            msg="the disc is still covered to the same outer edge",
+        )
+
+    def test_heavy_overlay_keeps_the_drawing_valid(self):
+        for overlay in (0.0, 0.4, 0.8):
+            pattern = converter.random_pattern(
+                seed=13,
+                intricacy=8,
+                radius_mm=RADIUS,
+                wedge_deg=15.0,
+                region_overlay=overlay,
+            )
+            self.assertTrue(pattern)
+            for contour in pattern:
+                for x, y in contour:
+                    self.assertLessEqual(
+                        math.hypot(x, y), RADIUS + 1e-6, "overlay left the radius"
+                    )
+
+    def test_overlay_is_clamped(self):
+        self.assertEqual(
+            generative.band_layout(3, 5, RADIUS, 2.0),
+            generative.band_layout(3, 5, RADIUS, 0.8),
+        )
+        self.assertEqual(
+            generative.band_layout(3, 5, RADIUS, -1.0),
+            generative.band_layout(3, 5, RADIUS, 0.0),
+        )
+
+
 class BandFamilyTests(unittest.TestCase):
     def test_every_family_stays_inside_its_band(self):
         wedge = math.radians(15.0)

@@ -60,6 +60,12 @@ app.
   irregular outline with nested contour lines, radial ribs every few
   millimetres and a centre vein, so the pattern reads as hand-drawn line work
   instead of empty mechanical rings.
+  `Region overlay` sets how much neighbouring radial regions share: 0 tiles the
+  rings edge to edge, 0.2 (the default) braids them slightly, 0.5 and up
+  interpenetrate heavily. The bands grow as they overlap so the disc stays
+  covered and no shape is stretched - each ring simply draws a larger version
+  of itself. This is the knob for making a design look denser and more complex
+  without adding more rings.
 - **Natural motifs.** `Motif folder...` loads a folder of black-on-white
   PNG/JPG shapes - leaves, shells, fish, feathers - and `Use natural motifs in
   patterns` swaps them in for the drawn shape rings while the separators, studs

@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-01 | `WSW-20261001-002` | windows-software | implemented | [Region overlay: neighbouring bands braid instead of tiling](windows-software/2026/2026-10-01-region-overlay.md) |
 | 2026-10-01 | `WSW-20261001-001` | windows-software | implemented | [The centre wobble was the Tolerance budget, and it is now reported](windows-software/2026/2026-10-01-tolerance-drives-inner-imprecision.md) |
 | 2026-09-30 | `WSW-20260930-023` | windows-software, hardware | implemented | [Keep the commanded A small: re-register the bed each contour](windows-software/2026/2026-09-30-theta-reregistration.md) |
 | 2026-09-30 | `WSW-20260930-022` | windows-software, hardware | implemented | [Pen tip diameter for the installed Pigma Micron 005](windows-software/2026/2026-09-30-pen-width-control.md) |
