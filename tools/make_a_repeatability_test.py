@@ -56,8 +56,8 @@ def build_program(settings, radii, revolutions, feed, tick_mm=10.0):
         f"{settings.theta_drive_ratio:.5f} motor deg per bed deg)",
         "(prerequisite: HOME and P100, so work X0 Y0 is the registered bed centre)",
         "(each station draws a radial tick, rotates out and back, redraws the tick)",
-        "(ticks on top of each other = the bed returned; a gap s mm at radius R mm",
-        " is degrees(s/R) of lost motion for that whole out-and-back)",
+        "(ticks on top of each other = the bed returned)",
+        "(a gap s mm at radius R mm is degrees(s/R) of lost motion for that out-and-back)",
         f"(stations at radii {', '.join(f'{r:g}' for r in radii)} mm; "
         f"{revolutions} revolutions each way at F{feed:g})",
         "G21",
@@ -103,6 +103,24 @@ def build_program(settings, radii, revolutions, feed, tick_mm=10.0):
     return "\n".join(lines) + "\n"
 
 
+def check_comments(program):
+    """A G-code comment must open and close on the same line.
+
+    ioSender's loader reads a parenthesized comment as a single-line token; a
+    wrapped one makes it throw `Index and length must refer to a location within
+    the string` and refuse the file, so this is checked before writing.
+    """
+    for number, line in enumerate(program.splitlines(), 1):
+        if line.count("(") != line.count(")"):
+            raise ValueError(
+                f"line {number} has an unbalanced or wrapped G-code comment: {line!r}"
+            )
+        if "(" in line and not line.rstrip().endswith(")"):
+            raise ValueError(
+                f"line {number} puts code after a comment, or wraps one: {line!r}"
+            )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -136,6 +154,7 @@ def main():
     revolutions = max(1, int(args.revolutions))
 
     program = build_program(settings, radii, revolutions, feed)
+    check_comments(program)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     # LF, like every other file in the repo.
