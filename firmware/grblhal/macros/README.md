@@ -233,8 +233,12 @@ and prints it, so the `MPos` reading each time is the centroid. If the two
 centroids differ, the magnet is off the axis and half the X/Y difference is the
 off-axis vector, so the correction stays. If they match, the error is in
 `sensor_to_pen_x`, the correction returns to zero, and that value is corrected
-instead. **That test is still pending**, so treat 1.25 as a reported correction
-rather than a measured off-axis vector.
+instead. **Verified without that test**: with the correction in place, a magnet
+held directly under the lifted pen stayed centred while the bed rotated, which
+puts the registered origin on the rotation axis. The attribution test itself was
+deliberately skipped, so treat 1.25 as a verified correction rather than a
+measured off-axis vector - if the magnet is ever re-seated, run the two surveys
+before trusting the constant.
 
 Two further notes from the same edit. `P103.macro` mirrors P100's initialization
 and now carries the two new constants. And the `sensor_to_pen` comment in P100
@@ -244,10 +248,12 @@ convention. The sign that reproduces the verified frame is the one to keep, and
 a future calibration must be entered that way; the discrepancy is recorded here
 rather than silently "fixed" in the comment.
 
-Acceptance for a correction change: run `G65 P113`, then
-`samples/gcode/center-registration-check.gcode`, which draws a cross at
+Acceptance for a correction change, either way: run `G65 P113`, then either hold
+a magnet directly under the lifted pen and rotate the bed - it must stay centred
+- or plot `samples/gcode/center-registration-check.gcode`, which draws a cross at
 `G54 X0 Y0`, rotates the bed half a revolution, and draws it again. The crosses
-must coincide; a gap is twice the residual error.
+must coincide; a gap is twice the residual error. The magnet check needs no paper
+and is the faster of the two.
 
 The macro expects:
 

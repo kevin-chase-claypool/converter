@@ -9,7 +9,7 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-10-01 | `WSW-20261001-010` | implemented | [Theta: no bed sweep the machine cannot follow](../windows-software/2026/2026-10-01-theta-centre-sweep-and-travel-limits.md) | `theta`, `kinematics`, `drift`, `safety`, `calibration` |
-| 2026-10-01 | `RPSW-20261001-002` | implemented | [Axis-centre correction in P100: the registered origin moves +1.25 mm in X](../rp23cnc-software/2026/2026-10-01-axis-centre-correction.md) | `grblhal`, `macro`, `p100`, `registration`, `calibration`, `drift` |
+| 2026-10-01 | `RPSW-20261001-002` | verified | [Axis-centre correction in P100: the registered origin moves +1.25 mm in X](../rp23cnc-software/2026/2026-10-01-axis-centre-correction.md) | `grblhal`, `macro`, `p100`, `registration`, `calibration`, `drift` |
 | 2026-10-01 | `RPSW-20261001-001` | verified | [Lower the A-axis maximum rate to 20000 motor deg/min](../rp23cnc-software/2026/2026-10-01-a-axis-rate-limit-20000.md) | `grblhal`, `settings`, `theta`, `drift`, `safety` |
 | 2026-09-30 | `WSW-20260930-023` | implemented | [Keep the commanded A small: re-register the bed each contour](../windows-software/2026/2026-09-30-theta-reregistration.md) | `theta`, `kinematics`, `drift`, `calibration` |
 | 2026-09-30 | `WSW-20260930-022` | implemented | [Pen tip diameter for the installed Pigma Micron 005](../windows-software/2026/2026-09-30-pen-width-control.md) | `pen`, `interface`, `gcode` |

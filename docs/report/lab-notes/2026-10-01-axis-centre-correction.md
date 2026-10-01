@@ -80,9 +80,18 @@ Two stale validator expectations were corrected at the same time: P112's
 `a_expected_spacing` (4320 -> 4332) and `a_spacing_tolerance` (15 -> 10), both
 left over from before the 2026-09-30 ratio work.
 
-**Physical verification: PENDING.** The cross program has not been run yet.
+**Physical verification: PASSED (2026-10-01), by a substitute for the cross
+program.** Instead of plotting the two crosses, the operator put a magnet
+directly underneath the lifted pen and rotated the bed: it stayed centred on the
+pen. That is the same acceptance condition the cross program tests - a magnet
+held at the pen's position rides the rotation axis only if that position is the
+axis - and it is faster, because it needs no paper. The registered origin is
+therefore on the bed's rotation axis with the +1.25 mm X correction in place.
 
-**Attribution test: PENDING.**
+**Attribution test: deliberately not performed.** Which side of the chain owns
+the 1.25 mm - an off-axis embedded centre magnet, or a wrong pen/TMAG X value -
+is still unattributed. The correction works either way, but knowing which it is
+matters if the magnet is ever re-seated or the pen/TMAG offset is re-measured.
 
 ## Difficulties and corrective actions
 
@@ -102,7 +111,14 @@ left over from before the 2026-09-30 ratio work.
 
 ## Conclusion
 
-The macro now compensates the reported error in one named, documented constant,
-and the guard tools require it. This note becomes verified when the cross program
-shows the two crosses coincident after `G65 P113`, and the attribution test
-decides whether the same 1.25 belongs in `sensor_to_pen_x` instead.
+**Verified.** The registered origin sits on the bed's rotation axis with
+`#<axis_center_correction_x> = 1.25` in place, checked by holding a magnet under
+the lifted pen and rotating the bed. The macro compensates the reported error in
+one named, documented constant, the guard tools require it, and the operator is
+satisfied with the result.
+
+Open, and not blocking: the error is unattributed between an off-axis centre
+magnet and a wrong pen/TMAG X value, and the macros README records that. If the
+magnet is ever re-seated or the pen/TMAG offset re-measured, revisit this
+constant - a fresh two-survey test (`G65 P100 Q5` at A0 and A180, comparing the
+centroids each run prints) settles it in two commands.

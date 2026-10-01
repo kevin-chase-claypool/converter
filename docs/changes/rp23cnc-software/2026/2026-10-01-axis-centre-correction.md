@@ -5,7 +5,7 @@ category: rp23cnc-software
 affected_categories:
   - rp23cnc-software
   - hardware
-status: implemented
+status: verified
 components:
   - firmware/grblhal/macros/P100.macro
   - firmware/grblhal/macros/P103.macro
@@ -36,9 +36,11 @@ on the bed's true rotation axis; the write subtracts them because the registered
 origin is the centroid minus the written value.
 
 The correction is reported, not measured: the operator observed the registered
-origin landing 1.25 mm on the minus-X side of the axis. The test that separates
-an off-axis centre magnet from a wrong pen/TMAG offset is defined and still
-pending.
+origin landing 1.25 mm on the minus-X side of the axis. It is now **verified on
+the machine**: with the correction in place, a magnet held directly under the
+lifted pen stayed centred while the bed rotated, so the registered origin is on
+the rotation axis. The test that attributes the error to an off-axis centre
+magnet or a wrong pen/TMAG offset was deliberately skipped and remains open.
 
 ## Reason
 
@@ -83,6 +85,11 @@ constant in that chain.
   4332) and `a_spacing_tolerance` to be 15 (documented and installed: 10). The
   validator had evidently not been re-run since that change.
 - **Pending:** the physical acceptance test, and the two-survey attribution test.
+- **Passed 2026-10-01:** the physical acceptance condition, by the operator's
+  quicker equivalent - a magnet directly under the lifted pen stays centred while
+  the bed rotates, which is what `center-registration-check.gcode` tests on
+  paper. The two-survey attribution test was not run, at the operator's choice:
+  the correction works either way, and the residue is recorded as an open item.
 
 ## Struggles and rejected approaches
 
@@ -102,8 +109,8 @@ constant in that chain.
 ## Risks and follow-up
 
 - The direction and sign have been reasoned rather than measured on paper. The
-  cross test settles it in one sheet: if the crosses separate *further* after
-  this change, the constant's sign is inverted and it becomes -1.25.
+  under-pen magnet check settles it: with the wrong sign the magnet would swing
+  away from the pen as the bed turns, and it did not.
 - A constant correction is valid only while the bed's registration attitude is
   repeatable (P100 registers A0 first, so it is) - re-seating the magnet would
   invalidate it.

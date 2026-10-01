@@ -43,6 +43,15 @@
 - Next action: upload the revised macros, run `G65 P113` plus the cross program,
   then the two-survey attribution test, and record which side of the chain owns
   the 1.25 mm.
+- **Verified the same day, by a quicker equivalent.** Instead of plotting the two
+  crosses, the operator put a magnet directly underneath the lifted pen and
+  rotated the bed: it stayed perfectly centred ("im happy with those results").
+  That is the same acceptance condition - a magnet at the pen's position rides
+  the rotation axis only if that position is the axis - and it needs no paper, so
+  it is now the recommended first check in the macros README. The two-survey
+  attribution test was deliberately skipped; whether the 1.25 mm is an off-axis
+  centre magnet or a wrong pen/TMAG X remains the only open item in this chain,
+  and it matters only if the magnet is re-seated or the offset re-measured.
 
 <a id="elog-20261001-a-rate-limit-20000"></a>
 ### 🟩 2026-10-01 13:05:44 -0500 - RP23CNC SOFTWARE/HARDWARE - A max rate lowered to what the bed can hold
