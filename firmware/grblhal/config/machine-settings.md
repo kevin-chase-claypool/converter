@@ -65,3 +65,27 @@ address and will not appear on the house network until `$301` is returned to `1`
 
 These motion values are the unloaded commissioning snapshot in
 [`build-record.md`](build-record.md); they are not a pen-loaded plotting limit.
+
+### A-axis motion limits (current, 2026-10-01)
+
+The commissioning snapshot above predates the A-axis drift work and still shows
+the unloaded X/Y rates. The values below are what the controller actually runs,
+confirmed by `$$` after a power cycle:
+
+| Setting | Value | Meaning |
+|---|---|---|
+| `$103` | `4.44444` | A steps per motor degree (x 4331.9664 = 19,253 steps per bed revolution) |
+| `$113` | `20000.000` | A max rate, motor deg/min (27.7 bed deg/s at the 12.03324:1 bed) |
+| `$123` | `6000.000` | A acceleration, motor deg/s^2 |
+| `$133` | `0.000` | Continuous A bed: no finite maximum travel |
+| `$110` / `$111` | `20000.000` | X / Y max rate, mm/min |
+| `$120` / `$121` | `1500.000` | X / Y acceleration, mm/s^2 |
+
+`$113` was `80000.000` until 2026-10-01. That is 110.8 bed deg/s, about 21 m/min
+of pen surface speed at the 185 mm rim - as fast as the X/Y rapids - which the
+12:1 bed cannot hold. The converter asked for it, the stepper stalled, and plots
+drifted by the lost angle (worst at the bed centre). See
+[`RPSW-20261001-001`](../../../docs/changes/rp23cnc-software/2026/2026-10-01-a-axis-rate-limit-20000.md)
+for the change and
+[`2026-10-01-theta-a-rate-limit-lowering.md`](../../../docs/report/lab-notes/2026-10-01-theta-a-rate-limit-lowering.md)
+for the dump and the open mark-test acceptance criterion.

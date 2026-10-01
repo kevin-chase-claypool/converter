@@ -1,5 +1,38 @@
 # Engineering Log
 
+<a id="elog-20261001-a-rate-limit-20000"></a>
+### 🟩 2026-10-01 13:05:44 -0500 - RP23CNC SOFTWARE/HARDWARE - A max rate lowered to what the bed can hold
+
+- Action: `$113` changed from `80000.000` to `20000.000` motor deg/min on the
+  RP23CNC; `$123` left at `6000.000` motor deg/s^2.
+- Reason: the retired value is 1333 motor deg/s = 110.8 bed deg/s through the
+  12.03324:1 bed, about 21 m/min of pen surface speed at the 185 mm rim - as
+  fast as the X/Y rapids, and far beyond what the bed holds. `ben.gcode` was
+  asking for 1333 motor deg/s in single drawing moves at radii of 0.35-9.1 mm
+  (up to 561 motor deg, 46.6 bed deg, in one move) and unwinding a whole bed
+  revolution as a `G0` rapid at each `theta_wrap` re-registration. The stepper
+  stalled, the stroke being drawn bent, and every contour after it rotated -
+  the fan of rows around the bed centre in the reported print. The converter
+  side of the fix is `WSW-20261001-010`; this closes the controller side.
+- Verification (software/settings): a 109-key comparison of the `$$` dumps
+  before and after shows `$113 80000.000 -> 20000.000` as the only difference,
+  and the value survived a power cycle. `$103 = 4.44444` steps per A unit x
+  4331.9664 motor deg per bed revolution = 19,253 steps per bed revolution,
+  matching the documented A calibration. 165 converter tests pass.
+- Open: the physical acceptance test - draw a reference line, run
+  `G91 G1 A4331.9664 F20000` and back, redraw, and confirm the marks coincide -
+  and the optional `theta-calibration.gcode` ratio check. The roadmap item stays
+  unchecked until that passes.
+- Boundary: every rapid that includes A is now slower (one bed revolution is
+  about 13 s instead of about 2 s). If the bed still loses position at
+  20000/6000, lower `$113` in steps and repeat the mark test.
+- Evidence: `RPSW-20261001-001`;
+  `docs/report/lab-notes/2026-10-01-theta-a-rate-limit-lowering.md`;
+  `firmware/grblhal/config/machine-settings.md`.
+- Category: rp23cnc-software, hardware, grblhal, settings, theta, drift
+- Next action: run the mark test, then plot the same artwork and check that the
+  rows stay 2 mm apart and parallel through the bed centre.
+
 <a id="elog-20261001-theta-centre-sweep-limits"></a>
 ### 🟩 2026-10-01 12:31:07 -0500 - WINDOWS SOFTWARE/HARDWARE - theta: no bed sweep the machine cannot follow
 

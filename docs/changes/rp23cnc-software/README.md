@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-01 | `RPSW-20261001-001` | implemented | [Lower the A-axis maximum rate to 20000 motor deg/min](2026/2026-10-01-a-axis-rate-limit-20000.md) | `grblhal`, `settings`, `theta`, `drift`, `safety` |
 | 2026-09-30 | `WSW-20260930-001` | implemented | [Calibrate the bed ratio from the measured A-index spacing](../windows-software/2026/2026-09-30-calibrated-bed-ratio.md) | `theta`, `kinematics`, `a-axis`, `calibration`, `registration`, `drift` |
 | 2026-09-30 | `RPSW-20260930-004` | implemented | [Require a homed frame before the park macro moves](2026/2026-09-30-park-macro-requires-homed-frame.md) | `iosender`, `macro`, `p116`, `p111`, `park`, `g53`, `soft-limit`, `homing`, `safety`, `failed-approach` |
 | 2026-09-30 | `RPSW-20260930-003` | implemented | [Add a manual pen-up-to-lift-home and park macro](2026/2026-09-30-manual-pen-up-and-park-macro.md) | `iosender`, `macro`, `p116`, `p115`, `lift-home`, `gp2`, `park`, `g53`, `service` |

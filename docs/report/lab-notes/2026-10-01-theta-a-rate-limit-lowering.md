@@ -91,15 +91,45 @@ $$
 
 ## Results
 
-PENDING - record the `$$` after the change, the mark-test outcome, and the
-calibration measurement here.
+**Settings change applied and persistent (2026-10-01).** After
+`$113=20000` and a power cycle, `$$` reports `$113=20000.000` and
+`$123=6000.000`. A 109-key comparison of the before and after dumps shows
+exactly one difference:
+
+```text
+$113: 80000.000 -> 20000.000
+```
+
+No other setting moved, so the change is isolated to the A-axis maximum rate.
+20000 motor deg/min is 333.3 motor deg/s = 27.7 bed deg/s; the retired 80000
+was 1333.3 motor deg/s = 110.8 bed deg/s = 357.8 mm/s (21.5 m/min) of pen
+surface speed at the 185 mm rim.
+
+Cross-check from the dump: `$103 = 4.44444` steps per A unit x 4331.9664 motor
+deg per bed revolution = 19,253 steps per bed revolution, matching the
+documented A calibration.
+
+**Mark test (the acceptance criterion): PENDING.** Draw a reference line, run
+`G91 G1 A4331.9664 F20000` and `G91 G1 A-4331.9664 F20000`, redraw, and record
+whether the marks coincide.
+
+**Ratio check (`theta-calibration.gcode`): PENDING / optional.**
 
 ## Difficulties and corrective actions
 
-PENDING.
+- The value was already the only one that needed changing: `$123` was 6000
+  motor deg/s^2, matching the converter's assumption, so it was left alone to
+  keep the mark test to a single variable.
+- Nothing else was touched; in particular `$103` (A steps per degree) was left
+  at the calibrated value so the ratio question stays separate from the rate
+  question.
 
 ## Conclusion
 
-PENDING. The converter-side half (`WSW-20261001-010`) is implemented and
-verified in software; this note becomes verified when the settings change and
-the mark test are recorded.
+The A-axis maximum rate is now what the bed can hold, and it survives a reboot.
+The change is recorded and isolated. This note becomes *verified* when the mark
+test shows a full-revolution out-and-back returning the pen to its mark;
+until then the drift fix rests on the software evidence in
+`WSW-20261001-010` (no drawing move over one safe bed step, no bare `G0`
+carrying bed rotation, and 1333 -> 333 motor deg/s worst-case demand in a
+local reproduction of the reported print).

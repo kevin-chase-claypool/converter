@@ -214,7 +214,10 @@
   recorded in the grblHAL document.
   Status: the "before" `$$` dump is recorded in
   [`2026-10-01-theta-a-rate-limit-lowering.md`](../report/lab-notes/2026-10-01-theta-a-rate-limit-lowering.md);
-  `$113=80000` is the only value that needs to change (`$123` is already 6000).
+  `$113` is now `20000` (the only value that needed changing; `$123` was already
+  6000) and it survived a power cycle, per `RPSW-20261001-001`. What remains is
+  the physical acceptance test in step 6 of that lab note: a full-revolution A
+  out-and-back must return a drawn mark onto itself.
 
 - [ ] Sine-gradient fill follow-ups.
   Problem: `sine_gradient` is render-checked but has never been plotted, its

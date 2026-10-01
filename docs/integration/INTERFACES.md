@@ -97,6 +97,14 @@ motor-deg/min and `$123 = 6000` motor-deg/s² profile. At the exact center,
 the angular plan remains capped and the achieved tangential speed is zero.
 Preview uses the same per-segment calculation as emitted G-code.
 
+Updated 2026-10-01: `$113` is now `20000` motor-deg/min (27.7 bed deg/s), and
+the converter assumes the same. At 80000 the converter was asking the bed for
+110.8 bed deg/s - about 21 m/min of pen surface speed at the rim - which the
+12:1 drive cannot hold; see `RPSW-20261001-001` and, for the planner side of
+the fix, `WSW-20261001-010`. Because the planner now parks the bed instead of
+sweeping more than 15 deg in one segment (or at all near the bed centre), the
+exact-centre case no longer relies on the cap alone.
+
 The acceleration bound is conservative because it treats an individual block
 as rest-to-rest. grblHAL look-ahead can carry velocity across blocks. The
 initial M-06 pen-free repeatability smoke test passed through `F20000`; the
@@ -136,9 +144,10 @@ then passed the one-motor-revolution check with `A360 F300` in both directions.
 M-05's `A4320` check passed as a coarse unloaded reference, but the three P112
 surveys later established 4331.97 A motor-degrees per bed revolution; planning
 uses that measured ratio, and `A4320` is about 0.997 of a bed revolution.
-At `$113=5000` and `$123=10 deg/sec^2`, short A-axis
-moves can be dominated by acceleration and deceleration rather than steady
-speed.
+Short A-axis moves are dominated by acceleration and deceleration rather than
+steady speed at any of these limits (the commissioning snapshot used
+`$113=5000` / `$123=10`; the installed values are now `$113=20000` /
+`$123=6000` motor-deg/s²).
 
 The continuous bed has no finite A travel, so `$133=0.000` degrees. This does
 not disable A; it prevents a fictional travel envelope from being used by
