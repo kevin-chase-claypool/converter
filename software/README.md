@@ -553,8 +553,17 @@ display-only; every other group changes the emitted program.
   = Auto` already picks that for artwork with an embedded image or a
   `url(#...)` gradient/pattern fill. With `Fill source = SVG shapes` there is no
   rendered tone to read and the pattern falls back to a uniform sine hatch.
-  - `Wave size mm` sets the row spacing when it is non-zero; it otherwise
-    follows `Fill spacing mm`. The wavelength is twice the row spacing.
+  - `Wave size mm` is the row pitch, in mm on paper. Left at `0` the rows
+    follow `Fill spacing mm`; any non-zero value **overrides** `Fill spacing
+    mm` for this pattern. It is the single scale for the whole wave: the
+    wavelength is twice the row pitch and the crest height is
+    `Gradient wave amplitude %` of the row pitch, so a 4 mm wave size gives
+    4 mm rows, an 8 mm wavelength and 2 mm crests at the default 50 %.
+    Measured on a 1000-unit artwork at `Fill spacing 4`: wave size 0 and 4 both
+    give 4 mm rows / 8 mm waves / 2 mm crests and 65,026 points, wave size 2
+    gives 2 / 4 / 1 mm and 262,236 points, and wave size 6 gives 6 / 12 / 3 mm
+    and 29,192 points. The pitch drives the point count as `1 / pitch^2`, so it
+    is the lever for build time.
   - `Gradient wave amplitude %` (default 50) is the crest height as a
     percentage of the row spacing. 50 makes the waves in a fully dark area
     touch the neighbouring row without crossing it; lower values keep the rows

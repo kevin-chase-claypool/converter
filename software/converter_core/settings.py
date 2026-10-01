@@ -374,6 +374,7 @@ FIELD_TOOLTIPS = {
     "hatch_spacing_mm": "Distance between fill lines in mm on paper. 0 (the default) plots outlines only.",
     "hatch_pattern": "Fill pattern drawn inside each filled region. 'gradient waves (sine_gradient)' carries tone as wave amplitude and needs the image-tone fill source.",
     "hatch_angle_deg": "Rotation of the fill line family.",
+    "wave_size_mm": "Wave and sine-gradient row pitch in mm on paper. 0 follows Fill spacing mm; a non-zero value overrides it. The wavelength is twice this pitch and the amplitude percentage is taken from it, so this one field scales the whole wave.",
     "fill_source": "Auto hatches the SVG's own shapes, and switches to image tone only when the artwork's tone comes from an embedded image or gradient. 'SVG shapes' always stays inside the drawn regions; 'Image tone' hatches the rendered pixels.",
     "fit_mode": "How Scale is chosen. 'Fill bed' sizes the artwork's bounds to the drawable circle on every build, 'Fit inside' keeps every point inside it, and 'Manual' uses the Scale field. Both auto fits override Scale, which is why the Scale box is read-only while one is selected.",
     "scale": "Artwork scale. Set by the Fit mode while an auto fit is selected; choose Manual to type a value.",
