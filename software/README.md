@@ -30,6 +30,11 @@ Requires `PySide6` (`pip install PySide6`).
 design from an SVG, PNG or JPG and emits the same program contract as the main
 app.
 
+- **Control column.** Every group is open at once, so the column of controls is
+  taller than a laptop window. It lives in a scroll area - scroll it down to
+  reach `Build preview` and `Save G-code...`. The sidebar is never narrower than
+  the widest row needs, so the vertical bar is the only one that appears and no
+  label or spin box is cut off.
 - **Source.** SVG geometry goes through the same parser, fill and clipping as
   the main app. A raster image is traced by marching squares into closed
   contours (`converter_core.kaleidoscope.trace_raster`), so a traced region can

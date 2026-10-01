@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
+    QScrollArea,
     QSpinBox,
     QVBoxLayout,
     QWidget,
@@ -284,9 +285,27 @@ class KaleidoscopeWindow(QMainWindow):
         panel_layout.addWidget(self._output_group())
         panel_layout.addStretch(1)
 
+        # Every group is open at once, so the column is taller than a laptop
+        # window and would otherwise push the build and save buttons off the
+        # bottom. Widget-resizable keeps the rows as wide as the viewport and
+        # only falls back to a horizontal bar when the window is narrower than
+        # the widest row.
+        self.sidebar = QScrollArea()
+        self.sidebar.setWidgetResizable(True)
+        self.sidebar.setWidget(panel)
+        # At least as wide as the column's own minimum, so a narrow window
+        # scrolls the sidebar down rather than clipping a row or growing a
+        # second scrollbar beside the vertical one.
+        self.sidebar.setMinimumWidth(
+            panel.minimumSizeHint().width()
+            + self.sidebar.verticalScrollBar().sizeHint().width()
+            + 2 * self.sidebar.frameWidth()
+            + 2
+        )
+
         central = QWidget()
         layout = QHBoxLayout(central)
-        layout.addWidget(panel)
+        layout.addWidget(self.sidebar)
         layout.addWidget(right, 1)
         self.setCentralWidget(central)
         self.preview.dragged.connect(self.on_image_dragged)

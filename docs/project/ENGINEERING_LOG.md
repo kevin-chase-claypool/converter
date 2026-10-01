@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20261001-scrollable-kaleidoscope-sidebar"></a>
+### 🟩 2026-10-01 09:38:47 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - the kaleidoscope control column scrolls
+
+- Request: "this is getting very crowded, make it scrollable", over a
+  screenshot of the control column running past the bottom of the window.
+- Change: the four control groups (`Source`, `Kaleidoscope`, `Printable
+  bounds`, `Output`) are wrapped in a `QScrollArea` stored as `self.sidebar`
+  with `setWidgetResizable(True)` - the same pattern the main converter's
+  sidebar uses. The column keeps its width and the preview keeps the rest, so
+  the bed view is unchanged. The area's minimum width is the panel's own
+  minimum size hint plus one scrollbar extent and the frame, which is what
+  stops a horizontal bar appearing beside the vertical one.
+- Verification: new `SidebarScrollTests` in `test_preview_view.py` builds the
+  real window at 1100x420, asserts the groups live in a widget-resizable
+  `QScrollArea`, that the vertical range is non-zero, and that both
+  `Build preview` and `Save G-code...` are fully inside the viewport after
+  scrolling to the bottom. Offscreen renders at 1100x720 and 1200x560: vertical
+  range 0-513 and 0-673, horizontal range 0-0. All thirteen test modules pass.
+  `docs_index --write/--check` pass.
+- Boundary: the column is still the tallest thing in the window, so the build
+  and save buttons start below the fold on a short window; a fixed footer for
+  those two buttons is the follow-up if that annoys the operator.
+- Evidence: `WSW-20261001-005`.
+- Category: windows-software, kaleidoscope, interface, usability
+- Next action: use the plotter PC at its real window size and decide whether the
+  two action buttons want a fixed footer.
+
 <a id="elog-20261001-sine-gradient-fill"></a>
 ### 🟩 2026-10-01 11:02:14 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - sine gradient: tone as continuous adjacent sinusoids
 

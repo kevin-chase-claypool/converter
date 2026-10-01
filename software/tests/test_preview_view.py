@@ -1,10 +1,13 @@
-"""Preview zoom and pan: the view transform used by the kaleidoscope window.
+"""The kaleidoscope window's preview transform and its control column.
 
 The preview draws in design millimetres and lets the operator zoom and pan the
 camera the way the main converter's preview does. These tests pin the transform
 down without needing a visible window: screen and design coordinates must round
 trip, a wheel zoom must keep the point under the cursor, panning must follow the
 drag, and an image drag must shrink in millimetres as the view is zoomed in.
+They also cover the window shell: every control group lives in a scrollable
+sidebar, so a short window scrolls to the build and save buttons instead of
+clipping them.
 """
 
 import importlib.util
@@ -22,7 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 try:
     from PySide6.QtCore import QPointF
-    from PySide6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication, QGroupBox, QScrollArea
 
     HAVE_QT = True
 except Exception:  # pragma: no cover - the app needs Qt, the core does not
@@ -355,6 +358,50 @@ class SettingsPersistenceTests(unittest.TestCase):
             contours = window._motif(0)
             self.assertTrue(contours, "one shape should be usable")
             self.assertLessEqual(len(contours), 200)
+
+
+@unittest.skipUnless(HAVE_QT, "PySide6 is not installed")
+class SidebarScrollTests(unittest.TestCase):
+    """The control column scrolls; it used to run past the bottom of the window."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+        cls.module = _load_app_module()
+
+    def _short_window(self):
+        window = self.module.KaleidoscopeWindow(settings_file=_temp_settings(self))
+        self.addCleanup(window.close)
+        window.resize(1100, 420)
+        window.show()
+        self.app.processEvents()
+        return window
+
+    def test_the_control_groups_live_in_a_resizable_scroll_area(self):
+        window = self._short_window()
+        self.assertIsInstance(window.sidebar, QScrollArea)
+        self.assertTrue(window.sidebar.widgetResizable())
+        titles = {
+            box.title() for box in window.sidebar.widget().findChildren(QGroupBox)
+        }
+        self.assertEqual(
+            titles, {"Source", "Kaleidoscope", "Printable bounds", "Output"}
+        )
+
+    def test_a_short_window_scrolls_to_the_build_and_save_buttons(self):
+        window = self._short_window()
+        bar = window.sidebar.verticalScrollBar()
+        self.assertGreater(
+            bar.maximum(), 0, "a short window must scroll the column, not clip it"
+        )
+        bar.setValue(bar.maximum())
+        self.app.processEvents()
+        viewport = window.sidebar.viewport()
+        for button in (window.build_button, window.save_button):
+            top = button.mapTo(viewport, button.rect().topLeft()).y()
+            bottom = button.mapTo(viewport, button.rect().bottomLeft()).y()
+            self.assertGreaterEqual(top, 0, button.text())
+            self.assertLessEqual(bottom, viewport.height(), button.text())
 
 
 @unittest.skipUnless(HAVE_QT, "PySide6 is not installed")
