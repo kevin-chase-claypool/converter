@@ -212,6 +212,9 @@
   matching acceleration), a full-revolution A rapid completes without losing
   steps (a mark drawn before and after lands on itself), and the setting is
   recorded in the grblHAL document.
+  Status: the "before" `$$` dump is recorded in
+  [`2026-10-01-theta-a-rate-limit-lowering.md`](../report/lab-notes/2026-10-01-theta-a-rate-limit-lowering.md);
+  `$113=80000` is the only value that needs to change (`$123` is already 6000).
 
 - [ ] Sine-gradient fill follow-ups.
   Problem: `sine_gradient` is render-checked but has never been plotted, its
