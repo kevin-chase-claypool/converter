@@ -15,7 +15,7 @@ Newest changes appear first.
 | 2026-10-01 | `WSW-20261001-003` | windows-software | implemented | [Sparse ornaments: the bead, stud and dot rows stop carpeting the design](windows-software/2026/2026-10-01-sparse-ornament-layers.md) |
 | 2026-10-01 | `WSW-20261001-002` | windows-software | implemented | [Region overlay: neighbouring bands braid instead of tiling](windows-software/2026/2026-10-01-region-overlay.md) |
 | 2026-10-01 | `WSW-20261001-001` | windows-software | implemented | [The centre wobble was the Tolerance budget, and it is now reported](windows-software/2026/2026-10-01-tolerance-drives-inner-imprecision.md) |
-| 2026-10-01 | `RPSW-20261001-001` | rp23cnc-software, windows-software, hardware | implemented | [Lower the A-axis maximum rate to 20000 motor deg/min](rp23cnc-software/2026/2026-10-01-a-axis-rate-limit-20000.md) |
+| 2026-10-01 | `RPSW-20261001-001` | rp23cnc-software, windows-software, hardware | verified | [Lower the A-axis maximum rate to 20000 motor deg/min](rp23cnc-software/2026/2026-10-01-a-axis-rate-limit-20000.md) |
 | 2026-09-30 | `WSW-20260930-023` | windows-software, hardware | implemented | [Keep the commanded A small: re-register the bed each contour](windows-software/2026/2026-09-30-theta-reregistration.md) |
 | 2026-09-30 | `WSW-20260930-022` | windows-software, hardware | implemented | [Pen tip diameter for the installed Pigma Micron 005](windows-software/2026/2026-09-30-pen-width-control.md) |
 | 2026-09-30 | `WSW-20260930-021` | windows-software, hardware | implemented | [Theta drift: record the ratio in the G-code and ship a calibration plot](windows-software/2026/2026-09-30-theta-drift-diagnosis-and-calibration-plot.md) |

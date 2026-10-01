@@ -156,9 +156,25 @@ Cross-check from the dump: `$103 = 4.44444` steps per A unit x 4331.9664 motor
 deg per bed revolution = 19,253 steps per bed revolution, matching the
 documented A calibration.
 
-**Mark test (the acceptance criterion): PENDING.** Draw a reference line, run
-`G91 G1 A4331.9664 F20000` and `G91 G1 A-4331.9664 F20000`, redraw, and record
-whether the marks coincide.
+**Mark test (the acceptance criterion): PASSED (2026-10-01).** The Cycle-Start
+program was run on paper with the pen down: at both stations (r = 100 mm and
+r = 160 mm) two bed revolutions outward and two back at `F20000` retraced the
+same circle, and both circles came out **perfect circles** - the pen rejoined its
+own line after eight revolutions of bed travel at each radius. A lost step would
+have shown as a step in the circumference and as a gap between the two radial
+ticks; neither is present, so the A axis holds position at the new
+`$113 = 20000` motor deg/min over the full 104 s of rotation.
+
+This is the acceptance criterion for the settings change. It proves the axis is
+repeatable at the *new* limit; it does not by itself prove the retired 80000 was
+losing steps - that is the optional A/B below.
+
+Optional A/B (proves the old limit was the culprit): regenerate this program
+with `python tools\make_a_repeatability_test.py --feed 80000`, set `$113=80000`,
+run it, and look for a gap in the circles or between the ticks. Then restore
+`$113=20000` and re-run to confirm the gap disappears. If the old limit produces
+clean circles too, the rate was not the cause and the centre defect needs a
+different explanation.
 
 **Ratio check (`theta-calibration.gcode`): PENDING / optional.**
 
@@ -173,10 +189,14 @@ whether the marks coincide.
 
 ## Conclusion
 
-The A-axis maximum rate is now what the bed can hold, and it survives a reboot.
-The change is recorded and isolated. This note becomes *verified* when the mark
-test shows a full-revolution out-and-back returning the pen to its mark;
-until then the drift fix rests on the software evidence in
-`WSW-20261001-010` (no drawing move over one safe bed step, no bare `G0`
-carrying bed rotation, and 1333 -> 333 motor deg/s worst-case demand in a
-local reproduction of the reported print).
+**Verified.** The A-axis maximum rate is now what the bed can hold, it survives a
+reboot, and the axis returns to its exact position after repeated full
+revolutions at the new limit - the failure mode this change exists to prevent is
+gone.
+
+The remaining check for the original defect is on the converter side: re-plot
+the artwork that fanned at the centre and confirm the rows stay 2 mm apart and
+parallel there. `WSW-20261001-010` stopped the planner from asking for bed
+sweeps it cannot justify (park instead of rotating more than 15 deg in one
+segment, or at all near the bed centre) and stopped assuming a rate above
+20000 motor deg/min, so the commands that caused the fan are no longer emitted.

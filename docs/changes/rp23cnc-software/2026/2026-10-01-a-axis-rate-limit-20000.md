@@ -6,7 +6,7 @@ affected_categories:
   - rp23cnc-software
   - windows-software
   - hardware
-status: implemented
+status: verified
 components:
   - firmware/grblhal/config/machine-settings.md
   - docs/integration/INTERFACES.md
@@ -78,6 +78,13 @@ A 109-key comparison of the before and after dumps shows exactly one difference:
   the axis really is configured in motor degrees.
 - 165 converter tests pass with the matching converter change; the roadmap item
   keeps the physical acceptance test open until it is run.
+- **Acceptance test passed 2026-10-01**: `samples/gcode/a-repeatability-test.gcode`
+  was run on paper - two bed revolutions out and two back at `F20000`, with the
+  pen down, at r = 100 mm and r = 160 mm. Both stations produced **perfect
+  circles**: the pen rejoined its own line after eight revolutions of bed travel
+  at each radius, and the two radial ticks at each station coincide. The A axis
+  therefore holds position at 20000 motor deg/min over the full 104 s of
+  rotation.
 
 ## Struggles and rejected approaches
 

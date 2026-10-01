@@ -2,8 +2,8 @@
 (one bed revolution = 4331.9664 A motor degrees; ratio 12.03324 motor deg per bed deg)
 (prerequisite: HOME and P100, so work X0 Y0 is the registered bed centre)
 (each station draws a radial tick, rotates out and back, redraws the tick)
-(ticks on top of each other = the bed returned; a gap s mm at radius R mm
- is degrees(s/R) of lost motion for that whole out-and-back)
+(ticks on top of each other = the bed returned)
+(a gap s mm at radius R mm is degrees(s/R) of lost motion for that out-and-back)
 (stations at radii 100, 160 mm; 2 revolutions each way at F20000)
 G21
 G90

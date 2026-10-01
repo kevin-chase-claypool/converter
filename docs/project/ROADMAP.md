@@ -197,7 +197,7 @@
 
 ## Known technical debt
 
-- [ ] Bring the controller's A-axis limits down to what the converter assumes.
+- [x] Bring the controller's A-axis limits down to what the converter assumes.
   Problem: `$113` is 80000 motor deg/min (1333 motor deg/s, 111 bed deg/s for
   the 12:1 bed) and `$123` matches it. The converter now caps its own A rates at
   20000 motor deg/min, but controller-side rapids - jogging, homing, and the
@@ -215,11 +215,11 @@
   Status: the "before" `$$` dump is recorded in
   [`2026-10-01-theta-a-rate-limit-lowering.md`](../report/lab-notes/2026-10-01-theta-a-rate-limit-lowering.md);
   `$113` is now `20000` (the only value that needed changing; `$123` was already
-  6000) and it survived a power cycle, per `RPSW-20261001-001`. What remains is
-  the physical acceptance test in step 6 of that lab note: run
-  `samples/gcode/a-repeatability-test.gcode` and confirm the two radial ticks at
-  each station print on top of each other (a full-revolution A out-and-back must
-  return the drawn mark onto itself).
+  6000) and it survived a power cycle, per `RPSW-20261001-001`.
+  **Verified 2026-10-01:** `samples/gcode/a-repeatability-test.gcode` produced
+  perfect circles at both r = 100 mm and r = 160 mm after two revolutions out and
+  two back at the new limit, i.e. no lost motion over 104 s of continuous bed
+  rotation, and the radial ticks at each station coincide.
 
 - [ ] Sine-gradient fill follow-ups.
   Problem: `sine_gradient` is render-checked but has never been plotted, its
