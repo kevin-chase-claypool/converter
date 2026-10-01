@@ -75,6 +75,15 @@ the slicer look rather than the plotter-art look.
   key, `Gradient wave amplitude %` is shown only for this pattern,
   `describe_fill` reports what the pattern will do, and selecting gradient
   artwork logs a one-line pointer to the new pattern.
+- Follow-up in the same session, after the option was hard to find in the
+  sidebar: the pattern combo now shows readable labels over the stored values
+  (`gradient waves (sine_gradient)`, `waves (uniform sine rows)`,
+  `cubic (isometric)`, `concentric (inset loops)`, `linear (parallel lines)`).
+  `settings.HATCH_PATTERN_LABELS`/`VALUE_CHOICE_LABELS` hold them,
+  `normalized_hatch_pattern` accepts either the label or the value, the panel
+  reads the combo's stored value rather than its text, and the resolver's
+  supported-pattern set is now taken from `HATCH_PATTERNS` so the offered list
+  and the accepted list cannot drift apart.
 - `samples/svg/gradient-sine-demo.svg`: a linear fade, a radial orb and a
   vertical band for trying the pattern.
 
@@ -93,6 +102,9 @@ the slicer look rather than the plotter-art look.
   white area between them. Render check `samples/preview/_sine_gradient_demo.png`
   (scratch, not committed) shows the linear fade and the radial orb swelling at
   their dark ends and flattening at their light ends.
+- Offscreen Qt run with every combo entry selected in turn: each label stores
+  and re-reads its canonical value, and `gradient waves (sine_gradient)` selects
+  `sine_gradient` and reveals `Gradient wave amplitude %`.
 - `svg_fill_sources` on the sample reports `gradient: 3`, and
   `resolve_fill_source` returns `tone` under `Auto`, which is what sends the
   artwork to the new generator. The headless core has no `QSvgRenderer`, so

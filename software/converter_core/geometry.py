@@ -2,7 +2,7 @@ import math
 import re
 from xml.etree import ElementTree as ET
 from .cancellation import check_cancelled
-from .settings import CELL_PATTERNS, CELL_SPACING_SCALE, pattern_size_values
+from .settings import CELL_PATTERNS, CELL_SPACING_SCALE, HATCH_PATTERNS, pattern_size_values
 
 GEOMETRY_VERSION = "2.2-patterns"  # concentric loops stay continuous and inside fill bounds
 
@@ -396,61 +396,73 @@ def hatch_angles_for_tone(base_angle, levels, angle_step, darkness):
     return [base_angle + i * angle_step for i in range(active)]
 
 
+HATCH_PATTERN_ALIASES = {
+    "line": "linear",
+    "lines": "linear",
+    "rectilinear": "linear",
+    "hatch": "linear",
+    "cross": "crosshatch",
+    "cross_hatch": "crosshatch",
+    "grid": "crosshatch",
+    "diag": "diagonal",
+    "diagonal_cross": "diagonal_crosshatch",
+    "diagonal_cross_hatch": "diagonal_crosshatch",
+    "diamond": "diamonds",
+    "triangle": "triangular",
+    "triangles": "triangular",
+    "tri": "triangular",
+    "hex": "hexagonal",
+    "hexagon": "hexagonal",
+    "honeycomb": "hexagonal",
+    "circle": "circles",
+    "dot": "dots",
+    "wave": "waves",
+    "sine": "waves",
+    "sinusoidal": "waves",
+    "gradient": "sine_gradient",
+    "gradient_wave": "sine_gradient",
+    "gradient_waves": "sine_gradient",
+    "sine_gradient": "sine_gradient",
+    "sine_wave_gradient": "sine_gradient",
+    "continuous_sine": "sine_gradient",
+    "isometric": "cubic",
+    "iso": "cubic",
+    "cube": "cubic",
+    "concentric_ring": "concentric",
+    "rings": "concentric",
+    "inset": "concentric",
+}
+
+# The settings model owns the list of selectable patterns; the resolver must
+# accept exactly the same names or a pattern could be offered and then silently
+# fall back to crosshatch.
+SUPPORTED_HATCH_PATTERNS = frozenset(HATCH_PATTERNS)
+
+
 def normalized_hatch_pattern(pattern):
-    text = str(pattern or "crosshatch").strip().lower().replace("-", "_").replace(" ", "_")
-    aliases = {
-        "line": "linear",
-        "lines": "linear",
-        "rectilinear": "linear",
-        "hatch": "linear",
-        "cross": "crosshatch",
-        "cross_hatch": "crosshatch",
-        "grid": "crosshatch",
-        "diag": "diagonal",
-        "diagonal_cross": "diagonal_crosshatch",
-        "diagonal_cross_hatch": "diagonal_crosshatch",
-        "diamond": "diamonds",
-        "triangle": "triangular",
-        "triangles": "triangular",
-        "tri": "triangular",
-        "hex": "hexagonal",
-        "hexagon": "hexagonal",
-        "honeycomb": "hexagonal",
-        "circle": "circles",
-        "dot": "dots",
-        "wave": "waves",
-        "sine": "waves",
-        "sinusoidal": "waves",
-        "gradient": "sine_gradient",
-        "gradient_wave": "sine_gradient",
-        "gradient_waves": "sine_gradient",
-        "sine_gradient": "sine_gradient",
-        "sine_wave_gradient": "sine_gradient",
-        "continuous_sine": "sine_gradient",
-        "isometric": "cubic",
-        "iso": "cubic",
-        "cube": "cubic",
-        "concentric_ring": "concentric",
-        "rings": "concentric",
-        "inset": "concentric",
-    }
-    supported = {
-        "linear",
-        "crosshatch",
-        "diagonal",
-        "diagonal_crosshatch",
-        "diamonds",
-        "triangular",
-        "hexagonal",
-        "circles",
-        "dots",
-        "waves",
-        "sine_gradient",
-        "gyroid",
-        "cubic",
-        "concentric",
-    }
-    return aliases.get(text, text if text in supported else "crosshatch")
+    """Return the canonical pattern id for a value, an alias, or a UI label.
+
+    Labels such as `gradient waves (sine_gradient)` come from
+    `settings.HATCH_PATTERN_LABELS`; the text before the parenthesis is tried
+    first, then the text inside it, which keeps the combo's readable labels
+    round-tripping to the stored value.
+    """
+    raw = str(pattern or "crosshatch").strip()
+    candidates = []
+    if "(" in raw:
+        head, _, tail = raw.partition("(")
+        candidates.append(head)
+        candidates.append(tail.rstrip(") "))
+    candidates.append(raw)
+    for candidate in candidates:
+        text = candidate.strip().lower().replace("-", "_").replace(" ", "_")
+        if not text:
+            continue
+        if text in HATCH_PATTERN_ALIASES:
+            return HATCH_PATTERN_ALIASES[text]
+        if text in SUPPORTED_HATCH_PATTERNS:
+            return text
+    return "crosshatch"
 
 
 def pattern_angles(base_angle, levels, angle_step, darkness, pattern):

@@ -41,6 +41,11 @@ class SineGradientSettingsTests(unittest.TestCase):
 
     def test_settings_model_offers_the_pattern_and_its_controls(self):
         self.assertIn("sine_gradient", converter.HATCH_PATTERNS)
+        self.assertIn(
+            "gradient waves (sine_gradient)",
+            converter.HATCH_PATTERN_LABELS.values(),
+            "the option must be findable by name in the Fill pattern list",
+        )
         self.assertEqual(
             converter.PATTERN_SIZE_FIELDS["sine_gradient"],
             "wave_size_mm",
@@ -49,6 +54,14 @@ class SineGradientSettingsTests(unittest.TestCase):
         defaults = converter.Settings()
         self.assertEqual(defaults.gradient_wave_amplitude_pct, 50.0)
         self.assertTrue(defaults.sine_rows_connected)
+
+    def test_combo_labels_round_trip_to_the_stored_pattern(self):
+        for value, label in converter.HATCH_PATTERN_LABELS.items():
+            self.assertIn(value, converter.HATCH_PATTERNS)
+            self.assertEqual(converter.normalized_hatch_pattern(label), value, label)
+        # Labels are presentation only; the value in a settings file stays short.
+        for value in converter.HATCH_PATTERNS:
+            self.assertEqual(converter.normalized_hatch_pattern(value), value)
 
     def test_amplitude_cannot_exceed_one_row_spacing(self):
         converter.validate_settings(converter.Settings(gradient_wave_amplitude_pct=100.0))

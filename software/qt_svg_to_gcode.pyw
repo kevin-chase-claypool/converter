@@ -888,8 +888,9 @@ class MainWindow(QMainWindow):
                     edit.setCurrentIndex(max(0, edit.findData(value)))
                 elif key in converter.VALUE_CHOICE_FIELDS:
                     edit = QComboBox()
+                    labels = converter.VALUE_CHOICE_LABELS.get(key, {})
                     for choice in converter.VALUE_CHOICE_FIELDS[key]:
-                        edit.addItem(choice, choice)
+                        edit.addItem(labels.get(choice, choice), choice)
                     edit.setCurrentIndex(max(0, edit.findData(value)))
                 else:
                     edit = QLineEdit(value)
@@ -1294,7 +1295,10 @@ class MainWindow(QMainWindow):
         return settings
 
     def update_pattern_settings(self):
-        pattern = converter.normalized_hatch_pattern(self.fields["hatch_pattern"].currentText())
+        # Read the stored value, not the label: the combo shows readable labels
+        # ("gradient waves (sine_gradient)") over canonical ids.
+        combo = self.fields["hatch_pattern"]
+        pattern = converter.normalized_hatch_pattern(combo.currentData() or combo.currentText())
         fill_source = self.fields["fill_source"].currentData() or "auto"
 
         def set_visible(key, visible):

@@ -60,6 +60,11 @@
   to flat hairlines rather than to nothing, the wavelength is fixed at twice the
   row spacing, and the row-end joins are up to two spacings long where two
   antiphase rows meet at full amplitude.
+- Follow-up, same session: the option could not be found in the sidebar, so the
+  `Fill pattern` combo now shows readable labels over the stored values
+  (`gradient waves (sine_gradient)`) and `normalized_hatch_pattern` accepts
+  either form. The resolver's supported-pattern set now comes from
+  `HATCH_PATTERNS`, so the offered list and the accepted list cannot drift.
 - Evidence: `WSW-20261001-004`; `software/README.md`;
   `samples/svg/gradient-sine-demo.svg`.
 - Category: windows-software, fill, gradient, tone, plotter-art

@@ -532,6 +532,10 @@ display-only; every other group changes the emitted program.
   pattern. The vector fill path treats each pattern as a full layer and clips
   pattern segments to the filled contour boundary. Compound SVG paths are clipped
   as one even-odd region, so holes cut the infill layer.
+- The pattern combo lists readable labels over the stored values, so
+  `sine_gradient` reads as `gradient waves (sine_gradient)` and `waves` as
+  `waves (uniform sine rows)`; a settings file or a script still uses the short
+  value, and either form can be typed.
 - `Fill pattern = sine_gradient` is the gradient fill: continuous adjacent
   sinusoids whose **amplitude follows the rendered tone**. Dark areas swell the
   waves until neighbouring rows just touch; light areas flatten them out. It

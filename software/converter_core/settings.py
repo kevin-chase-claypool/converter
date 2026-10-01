@@ -345,6 +345,21 @@ VALUE_CHOICE_FIELDS = {
     "theta_resolver": THETA_RESOLVERS,
 }
 
+# Readable combo labels for the values above. The stored value stays the short
+# canonical id, so settings files, the cache key, and `validate_settings` all
+# keep one spelling and `normalized_hatch_pattern` can read either form.
+HATCH_PATTERN_LABELS = {
+    "linear": "linear (parallel lines)",
+    "cubic": "cubic (isometric)",
+    "waves": "waves (uniform sine rows)",
+    "sine_gradient": "gradient waves (sine_gradient)",
+    "concentric": "concentric (inset loops)",
+}
+
+VALUE_CHOICE_LABELS = {
+    "hatch_pattern": HATCH_PATTERN_LABELS,
+}
+
 # Short in-UI explanations for the settings that are otherwise easy to
 # misread. Qt shows these as tooltips.
 FIELD_TOOLTIPS = {
@@ -355,7 +370,7 @@ FIELD_TOOLTIPS = {
     "stroke_fill_ratio": "With 'Fill wide strokes', a stroke is filled only when its width is at least this many pen diameters.",
     "keep_down_bridges": "Draw a connector between two nearby generated fill trails instead of lifting the pen. Only applies between fill trails, never across the artwork's own strokes, and off by default because a connector in blank space leaves a visible mark.",
     "hatch_spacing_mm": "Distance between fill lines in mm on paper. 0 (the default) plots outlines only.",
-    "hatch_pattern": "Fill pattern drawn inside each filled region.",
+    "hatch_pattern": "Fill pattern drawn inside each filled region. 'gradient waves (sine_gradient)' carries tone as wave amplitude and needs the image-tone fill source.",
     "hatch_angle_deg": "Rotation of the fill line family.",
     "fill_source": "Auto hatches the SVG's own shapes, and switches to image tone only when the artwork's tone comes from an embedded image or gradient. 'SVG shapes' always stays inside the drawn regions; 'Image tone' hatches the rendered pixels.",
     "fit_mode": "How Scale is chosen. 'Fill bed' sizes the artwork's bounds to the drawable circle on every build, 'Fit inside' keeps every point inside it, and 'Manual' uses the Scale field. Both auto fits override Scale, which is why the Scale box is read-only while one is selected.",
