@@ -1,5 +1,56 @@
 # Engineering Log
 
+<a id="elog-20261001-theta-centre-sweep-limits"></a>
+### 🟩 2026-10-01 12:31:07 -0500 - WINDOWS SOFTWARE/HARDWARE - theta: no bed sweep the machine cannot follow
+
+- Report chain: "the waveforms are supposed to be evenly spaced, but they're
+  tending to overlap ... might have something to do with the theta"; "the bed
+  rotated around 180 degrees as it approached the center of the bed, it was
+  printing one of the sine waves and the straight path of the sine wave bent as
+  the bed turned"; then the wide and close-up photographs of the finished plot
+  showing the rows fanned around the bed centre.
+- Diagnosis, from reconstructing all 321,587 cuts of `samples/gcode/ben.gcode`
+  into bed coordinates: the rows are exactly 2.000 mm apart and never cross as
+  commanded, so the file is even and the machine is being asked for motion it
+  cannot execute. 64 drawing moves rotate the bed more than 60 motor deg each,
+  up to **561 motor deg (46.6 bed deg) in one move**, all at radii 0.35-9.1 mm;
+  the largest A rate demanded is **1333 motor deg/s (111 bed deg/s)**, which is
+  the converter's assumed 80,000 motor deg/min cap being hit; and one pen-up
+  move carries a **full 4332 motor deg revolution as a `G0` rapid**, which is
+  `theta_wrap` re-registering the bed. A lagging bed bends the stroke being drawn
+  and rotates every contour after it - the fan around the centre, and the drift
+  into neighbouring rows before it.
+- Change: (1) a parked-bed candidate is offered when a segment's axis-lock
+  solution would rotate more than `MAX_BED_STEP_DEG` (15 deg) or when no
+  axis-lock root exists at all - the bed-centre singularity - and the usual cost
+  picks between it and the rotating options; (2) `max_rate_deg_min` drops to
+  20,000 (27.7 bed deg/s, the 700 mm/min tangential limit at a 25 mm radius)
+  from 80,000; (3) pen-up moves that rotate the bed are emitted as
+  `G1 ... F... (travel)`, never a bare `G0`, so a whole-revolution
+  re-registration is fed at a rate the A axis can hold.
+- Measurement on a local reproduction (96 mm dark disc centred on the bed
+  centre, `Fill spacing 2`, `sine_gradient`): worst drawing A rate 1333 -> 333
+  motor deg/s, drawing moves over 200 motor deg/s 2051 -> 1933 (all at the new
+  cap), moves rotating more than 30 motor deg in one `G1` 100 -> 37, and bare
+  `G0` moves carrying rotation 1 -> 0.
+- Verification: 165 tests pass, including a new centre-fill contract test (no
+  move over one safe bed step, no move over the assumed A rate, no `G0` carrying
+  rotation). The two M-06 diagnostic tests were rewritten: they now assert the
+  same limits on the radius sweep and the XY-theta lettering, whose
+  centre-crossing strokes park the bed by design.
+- Rejected on the way: ranking candidates by estimated time everywhere - it
+  parks the bed for nearly all in-disc artwork and silently switches the
+  rotating-bed feature off, which the M-06 diagnostics exist to catch.
+- Machine-side follow-up: lower `$113`/`$123` to match 20,000 motor deg/min, or
+  controller rapids (jog, home, and pure-X/Y `G0` travel) keep the old rate.
+  Recorded in the roadmap.
+- Evidence: `WSW-20261001-010`;
+  `docs/changes/windows-software/2026/2026-10-01-theta-centre-sweep-and-travel-limits.md`.
+- Category: windows-software, hardware, theta, drift, safety
+- Next action: re-plot the same artwork and check the bed centre - the rows
+  there must stay 2 mm apart and parallel - then set `$113`/`$123` on the
+  controller and repeat with the bed rotation forced (`Theta mode = x_theta`).
+
 <a id="elog-20261001-squiggle-density"></a>
 ### 🟩 2026-10-01 11:31:05 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - sine gradient matches SquiggleDraw: tone drives the wiggle rate too
 

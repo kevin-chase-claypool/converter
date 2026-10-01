@@ -1,6 +1,7 @@
 import math
 import re
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -10,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import converter_core as converter
 import converter_core.gcode as gcode_module
+from converter_core import kinematics
 
 
 class RadiusAwareThetaFeedTests(unittest.TestCase):
@@ -225,7 +227,14 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         self.assertLessEqual(max(abs(x) for x in xs), 50.0 + 1e-4)
         self.assertGreaterEqual(max(abs(x) for x in xs), 45.0)
 
-    def test_m06_radius_sweep_is_centered_and_rotates_in_both_directions(self):
+    def test_m06_radius_sweep_is_centered_and_stays_within_one_bed_step(self):
+        """The M-06 sweep is the diagnostic that used to ask for huge sweeps.
+
+        It is centred and its radii are right, and - the point of this contract -
+        no single commanded move rotates the bed further than
+        ``MAX_BED_STEP_DEG``, because beyond that the gantry can trace the same
+        bed-space line with the bed parked instead of swinging it.
+        """
         sample = Path(__file__).resolve().parents[2] / "samples" / "svg" / "m06-radius-sweep.svg"
         settings = self.settings(
             compensate_pen_width=False,
@@ -248,7 +257,7 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         }
         self.assertTrue({20.0, 50.0, 80.0}.issubset(radii))
 
-        directions = []
+        deltas = []
         for contour in re.split(r"(?=\(contour )", gcode):
             a_values = [
                 float(match.group(1))
@@ -257,11 +266,23 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
                 for match in [re.search(r"\bA([-+0-9.]+)", line)]
                 if match
             ]
-            directions.extend(b - a for a, b in zip(a_values, a_values[1:]))
-        self.assertTrue(any(delta > 1e-6 for delta in directions))
-        self.assertTrue(any(delta < -1e-6 for delta in directions))
+            deltas.extend(b - a for a, b in zip(a_values, a_values[1:]))
+        limit = kinematics.MAX_BED_STEP_DEG * settings.theta_drive_ratio
+        self.assertTrue(deltas, "the sweep must still move the bed where it can")
+        self.assertLessEqual(
+            max(abs(delta) for delta in deltas),
+            limit + 1e-6,
+            "no single move may command more than one safe bed step",
+        )
 
-    def test_m06_xy_theta_lettering_exposes_both_strategy_labels(self):
+    def test_m06_xy_theta_lettering_parks_the_bed_at_the_singularity(self):
+        """Centre-crossing strokes used to swing the bed ~80 degrees in one move.
+
+        The lettering sample crosses the bed centre, so the axis-lock roots sit
+        far apart. The planner must park the bed and let the gantry trace those
+        strokes in X and Y, and every rotating move it does emit must stay inside
+        one safe bed step.
+        """
         sample = Path(__file__).resolve().parents[2] / "samples" / "svg" / "m06-xy-theta-lettering.svg"
         settings = self.settings(
             pen_up_command="",
@@ -273,8 +294,91 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         contours = converter.read_svg(sample, settings)
         gcode = converter.contours_to_gcode(contours, settings)
 
-        self.assertIn("(x_theta)", gcode)
-        self.assertIn("(y_theta)", gcode)
+        self.assertIn("(hold)", gcode, "a centre-crossing stroke must not swing the bed")
+        deltas = []
+        for contour in re.split(r"(?=\(contour )", gcode):
+            a_values = [
+                float(match.group(1))
+                for line in contour.splitlines()
+                if line.startswith("G1 ") or line.startswith("G0 ")
+                for match in [re.search(r"\bA([-+0-9.]+)", line)]
+                if match
+            ]
+            deltas.extend(b - a for a, b in zip(a_values, a_values[1:]))
+        limit = kinematics.MAX_BED_STEP_DEG * settings.theta_drive_ratio
+        for delta in deltas:
+            self.assertLessEqual(abs(delta), limit + 1e-6)
+
+    def test_fill_centred_on_the_bed_centre_stays_inside_the_axis_limits(self):
+        """The print that stalled: a gradient fill centred on the bed centre.
+
+        Rows a couple of millimetres from the centre used to be commanded with
+        bed sweeps of tens of degrees inside a single move - 1333 motor deg/s at
+        the controller's configured A rapid - which wrapped those rows around
+        the centre on paper instead of drawing them straight. Nothing in the
+        emitted program may ask for more than one safe bed step, or for an A rate
+        above the converter's assumed limit, and no pen-up move may carry a bed
+        rotation as a bare `G0` rapid.
+        """
+        svg = (
+            '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" '
+            'viewBox="-60 -60 120 120">'
+            '<circle cx="0" cy="0" r="30" fill="#111111"/></svg>'
+        )
+        folder = tempfile.mkdtemp(prefix="theta-centre-")
+        sample = Path(folder) / "centre.svg"
+        sample.write_text(svg, encoding="utf-8")
+
+        settings = self.settings(
+            hatch_spacing_mm=2.0,
+            hatch_pattern="sine_gradient",
+            gradient_wave_amplitude_pct=40.0,
+            gradient_wave_density_pct=0.0,
+            sine_rows_connected=False,
+            fit_mode="manual",
+            scale=1.0,
+            pen_up_command="",
+            pen_down_command="",
+            pen_up_ms=0.0,
+            pen_down_ms=0.0,
+            toolhead_status_handshake=False,
+        )
+        contours = converter.read_svg(sample, settings)
+        program_plan = converter.plan_program(contours, settings)
+        gcode = converter.contours_to_gcode(contours, settings, program_plan)
+
+        ratio = settings.theta_drive_ratio
+        step_limit = kinematics.MAX_BED_STEP_DEG * ratio
+        rate_limit = settings.theta_controller_limits.max_rate_deg_min / 60.0
+        previous = None
+        worst_step = 0.0
+        worst_rate = 0.0
+        rapids_with_rotation = 0
+        for line in gcode.splitlines():
+            match = re.match(
+                r"G([01]) X(-?[\d.]+) Y(-?[\d.]+)(?: A(-?[\d.]+))?(?: F([\d.]+))?", line
+            )
+            if not match:
+                continue
+            kind, x, y, a, feed = match.groups()
+            point = (float(x), float(y), float(a) if a is not None else None)
+            if previous is not None and point[2] is not None and previous[2] is not None:
+                delta = abs(point[2] - previous[2])
+                if "(travel)" not in line:
+                    worst_step = max(worst_step, delta)
+                if delta > 1e-9:
+                    if kind == "0":
+                        rapids_with_rotation += 1
+                    elif feed:
+                        xy = math.hypot(point[0] - previous[0], point[1] - previous[1])
+                        seconds = (math.hypot(xy, delta) / float(feed)) * 60.0
+                        if seconds > 0.0:
+                            worst_rate = max(worst_rate, delta / seconds)
+            previous = (point[0], point[1], point[2])
+
+        self.assertLessEqual(worst_step, step_limit + 1e-6)
+        self.assertLessEqual(worst_rate, rate_limit * 1.01)
+        self.assertEqual(rapids_with_rotation, 0, "a pen-up rotation must be fed, not a rapid")
 
     def test_invalid_machine_motion_settings_are_rejected(self):
         for kwargs in (

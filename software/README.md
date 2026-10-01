@@ -303,6 +303,19 @@ display-only; every other group changes the emitted program.
     strategies, so an unsupported value cannot be entered.
   - **Theta tangential speed mm/min** is the requested surface speed caused by
     A-axis bed rotation during drawing. It does not change X/Y-only output.
+  - **Bed rotation is bounded where the machine cannot follow it.** The planner
+    keeps the bed parked instead of swinging it when the axis-lock solution for
+    a segment would rotate more than 15 deg, or when a stroke passes close
+    enough to the bed centre that no pure-X or pure-Y machine move exists. Those
+    strokes are traced by the gantry in X and Y, which is exact because the
+    artwork is already clipped to the reachable disc - rotation buys no reach
+    there, only risk. Pen-up moves that rotate the bed are emitted as fed moves
+    (`G1 ... F... (travel)`), never as a `G0` rapid, so a `theta_wrap`
+    re-registration of a whole revolution cannot outrun the A axis.
+  - The converter assumes the A axis can hold **20,000 motor deg/min**
+    (27.7 bed deg/s, the 700 mm/min tangential limit at a 25 mm radius). Lower
+    `$113`/`$123` on the controller to match, otherwise controller-side rapids
+    still use the old, faster setting.
 - **Pen** — `Pen stroke mm` (the physical pen tip), Z heights, pen dwells, pen
   up/down commands, Use Z, and the **Wait for GP27 toolhead ready** option
   (off by default; the F-05A on-bench P115/PRB validation passed on

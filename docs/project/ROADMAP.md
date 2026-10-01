@@ -197,6 +197,22 @@
 
 ## Known technical debt
 
+- [ ] Bring the controller's A-axis limits down to what the converter assumes.
+  Problem: `$113` is 80000 motor deg/min (1333 motor deg/s, 111 bed deg/s for
+  the 12:1 bed) and `$123` matches it. The converter now caps its own A rates at
+  20000 motor deg/min, but controller-side rapids - jogging, homing, and the
+  pure-X/Y `G0` travel the converter still emits - run at the configured rate
+  and can still stall the bed and lose steps.
+  Benefit: the whole system agrees on one A limit, so no path can command a rate
+  the bed cannot follow.
+  Risk: a lower `$113` slows every rapid that includes A; too low and a
+  `theta_wrap` re-registration becomes a visible pause. The value needs a
+  settings dump and a plot to confirm.
+  Acceptance: `$$` shows `$113`/`$123` at or below 20000 motor deg/min (with a
+  matching acceleration), a full-revolution A rapid completes without losing
+  steps (a mark drawn before and after lands on itself), and the setting is
+  recorded in the grblHAL document.
+
 - [ ] Sine-gradient fill follow-ups.
   Problem: `sine_gradient` is render-checked but has never been plotted, its
   amplitude curve is linear in tone with a fixed 0.04 ink floor, and its

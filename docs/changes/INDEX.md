@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-01 | `WSW-20261001-010` | windows-software, hardware | implemented | [Theta: no bed sweep the machine cannot follow](windows-software/2026/2026-10-01-theta-centre-sweep-and-travel-limits.md) |
 | 2026-10-01 | `WSW-20261001-009` | windows-software | implemented | [Auto fit measures the artwork before it fills it](windows-software/2026/2026-10-01-auto-fit-measures-before-filling.md) |
 | 2026-10-01 | `WSW-20261001-008` | windows-software | implemented | [Photos import directly and plot as sine-wave tone](windows-software/2026/2026-10-01-photo-raster-input.md) |
 | 2026-10-01 | `WSW-20261001-007` | windows-software | implemented | [Image-tone fill spacing is millimetres on paper](windows-software/2026/2026-10-01-image-tone-fill-spacing-units.md) |

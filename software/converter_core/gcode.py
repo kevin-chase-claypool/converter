@@ -9,6 +9,7 @@ from .kinematics import (
     plan_radius_aware_draw_feed,
     planned_contours,
     plan_contour_thetas,
+    plan_travel_move,
     polar_segment_steps,
 )
 from .settings import pattern_size_override, pattern_size_values, validate_settings
@@ -359,7 +360,23 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
                 lines.append(f"G0 {format_xy_command((x0, y0))} {axis}{format_float(first_motor_theta)} Z{format_float(settings.safe_z)}")
                 lines.append(f"G1 Z{format_float(settings.work_z)} F{format_float(settings.feed_rate)}")
             else:
-                lines.append(f"G0 {format_xy_command((x0, y0))} {axis}{format_float(first_motor_theta)}")
+                # A pen-up move that rotates the bed must not be a bare rapid:
+                # a theta re-registration unwinds a whole bed revolution here,
+                # and at the controller's configured A rapid rate that stalls the
+                # stepper and silently rotates every contour that follows.
+                travel_xy = distance(previous_machine, (x0, y0)) if previous_machine is not None else 0.0
+                travel_plan = plan_travel_move(
+                    settings,
+                    travel_xy,
+                    abs(first_motor_theta - previous_motor_theta),
+                )
+                if travel_plan is None:
+                    lines.append(f"G0 {format_xy_command((x0, y0))} {axis}{format_float(first_motor_theta)}")
+                else:
+                    lines.append(
+                        f"G1 {format_xy_command((x0, y0))} {axis}{format_float(first_motor_theta)}"
+                        f" F{format_float(travel_plan['feed_rate'])} (travel)"
+                    )
                 append_custom_command(lines, settings.pen_down_command)
                 append_pen_dwell(lines, settings, "down", is_first_down=first_pen_down_pending)
                 first_pen_down_pending = False
@@ -486,7 +503,17 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
             g0 = f"G0 {format_xy_command(machine_start)}"
             g0 += f" {axis}{format_float(first_motor_theta)}"
             initial_motor_delta = abs(first_motor_theta - previous_motor_theta)
+            initial_travel = plan_travel_move(settings, 0.0, initial_motor_delta)
             initial_travel_ms = initial_motor_delta / max(settings.travel_rate, 1e-9) * 60000.0
+            if initial_travel is not None:
+                # A pen-up move that rotates the bed is not a rapid: it gets a
+                # feed the A axis can actually hold.
+                g0 = (
+                    f"G1 {format_xy_command(machine_start)}"
+                    f" {axis}{format_float(first_motor_theta)}"
+                    f" F{format_float(initial_travel['feed_rate'])} (travel)"
+                )
+                initial_travel_ms = initial_travel["duration_ms"]
             moves.append({"type": "travel", "start": machine_start, "end": machine_start, "bed_start": path[0], "bed_end": path[0], "bed_theta": first_theta, "motor_theta": first_motor_theta, "contour": contour_index, "duration_ms": initial_travel_ms, "motion_length": initial_motor_delta, "xy_length": 0.0, "gcode": g0})
             previous_motor_theta = first_motor_theta
         elif bridge and pen_is_down:
@@ -526,9 +553,20 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
                 travel_xy = distance(last_machine_end, machine_start)
                 travel_motor = abs(first_motor_theta - previous_motor_theta)
                 travel_len = math.hypot(travel_xy, travel_motor)
+                travel_plan = plan_travel_move(settings, travel_xy, travel_motor)
                 travel_ms = travel_len / max(settings.travel_rate, 1e-9) * 60000.0
                 g0 = f"G0 {format_xy_command(machine_start)}"
                 g0 += f" {axis}{format_float(first_motor_theta)}"
+                if travel_plan is not None:
+                    # Same as the opening move: a travel that rotates the bed is
+                    # fed, not a rapid, so a re-registration cannot ask the A
+                    # axis for a whole revolution at the controller's rapid rate.
+                    g0 = (
+                        f"G1 {format_xy_command(machine_start)}"
+                        f" {axis}{format_float(first_motor_theta)}"
+                        f" F{format_float(travel_plan['feed_rate'])} (travel)"
+                    )
+                    travel_ms = travel_plan["duration_ms"]
                 moves.append({"type": "travel", "start": last_machine_end, "end": machine_start, "bed_start": path[0], "bed_end": path[0], "bed_theta": first_theta, "motor_theta": first_motor_theta, "contour": contour_index, "duration_ms": travel_ms, "motion_length": travel_len, "xy_length": travel_xy, "gcode": g0})
                 previous_motor_theta = first_motor_theta
 

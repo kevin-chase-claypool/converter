@@ -7,6 +7,16 @@ from .settings import pattern_size_override, pattern_size_values
 
 _EPSILON = 1e-9
 
+# Largest bed rotation a single planned segment may ask for before the planner
+# is allowed to hold the bed still instead. Axis-lock solutions near the bed
+# centre sit tens of degrees apart - a point a fraction of a millimetre off
+# centre can pin the root 80 degrees away - which is what commanded 79 bed
+# degrees inside one move and asked the A axis for a rate no stepper can follow.
+# Normal artwork rotates well under this per segment, so this only bites at the
+# singularity, and holding there costs the artwork nothing: the pen is inside
+# the reachable disc, so the gantry can draw the move with the bed parked.
+MAX_BED_STEP_DEG = 15.0
+
 
 def plan_radius_aware_draw_feed(start_point, end_point, center, xy_length, motor_delta, settings):
     """Return one coordinated drawing-feed plan for an X/Y/A segment.
@@ -256,12 +266,68 @@ def _rtheta_axis_plan(point, settings, previous_theta, previous_machine, center,
     return best
 
 
+def _held_segment_plan(b, settings, previous_theta, previous_machine, center):
+    """Keep the bed where it is and let the gantry take the move in X and Y."""
+    if previous_machine is None or previous_theta is None:
+        return None
+    held_machine = bed_to_machine(b, previous_theta, center) if center is not None else b
+    return {
+        "theta": previous_theta,
+        "machine": held_machine,
+        "strategy": "hold",
+        "cost": candidate_cost(
+            previous_machine, held_machine, previous_theta, previous_theta, settings
+        ),
+    }
+
+
+def plan_travel_move(settings, xy_length, motor_delta):
+    """Feed plan for a pen-up move that also rotates the bed.
+
+    Travel used to be emitted as a bare `G0`, so the controller ran it at its
+    configured A rapid rate. A `theta_wrap` re-registration unwinds a *whole bed
+    revolution* between two contours, and at 80000 motor deg/min ($113) that is
+    1333 motor deg/s - three revolutions per second of a 12:1 bed, which stalls
+    the stepper and quietly rotates every later contour. Returns None when the
+    move needs no A motion and can stay a rapid.
+    """
+    motor_delta = abs(float(motor_delta))
+    xy_length = max(float(xy_length), 0.0)
+    if motor_delta <= _EPSILON:
+        return None
+    limits = getattr(settings, "theta_controller_limits", None)
+    a_rate = max(float(getattr(limits, "max_rate_deg_min", 20000.0)), _EPSILON)
+    travel_rate = max(float(getattr(settings, "travel_rate", 1.0)), _EPSILON)
+    duration_min = max(xy_length / travel_rate, motor_delta / a_rate)
+    motion_length = math.hypot(xy_length, motor_delta)
+    return {
+        "feed_rate": motion_length / max(duration_min, _EPSILON),
+        "duration_ms": duration_min * 60000.0,
+        "motion_length": motion_length,
+        "a_rate_deg_min": motor_delta / max(duration_min, _EPSILON),
+    }
+
+
 def _rtheta_segment_plan(a, b, settings, previous_theta, previous_machine, center):
     x_plan = _rtheta_axis_plan(b, settings, previous_theta, previous_machine, center, "x_theta")
     y_plan = _rtheta_axis_plan(b, settings, previous_theta, previous_machine, center, "y_theta")
     plans = [plan for plan in (x_plan, y_plan) if plan is not None]
+    held = _held_segment_plan(b, settings, previous_theta, previous_machine, center)
     if plans:
-        return min(plans, key=lambda plan: plan["cost"])
+        best = min(plans, key=lambda plan: plan["cost"])
+        sweep = abs(best["theta"] - (previous_theta if previous_theta is not None else best["theta"]))
+        if sweep <= MAX_BED_STEP_DEG:
+            return best
+        # The axis locks want a sweep that is too large for one segment to carry.
+        # Offer the parked bed as the alternative and let the usual cost decide.
+        return min(best, held, key=lambda plan: plan["cost"]) if held is not None else best
+
+    # No axis-lock root at all: the target is too close to the bed centre for a
+    # pure-X or pure-Y machine move to reach it. Parking the bed is the honest
+    # answer there - the gantry can draw the move in X and Y, and the bed angle
+    # is not needed to place a point that is already inside the reachable disc.
+    if held is not None:
+        return held
 
     # Near the bed center, or if the pure-axis root is unreachable, fall back to
     # the nearest no-frills theta. This is a geometric singularity escape, not a
@@ -350,6 +416,27 @@ def plan_segment_kinematics(a, b, settings, previous_theta, center=None, previou
                 best_cost = cost
 
     if best is not None:
+        # If every axis-lock root wants a bed sweep bigger than one segment
+        # should carry, let the parked bed compete as well - the same rescue
+        # `_rtheta_segment_plan` applies at the bed-centre singularity.
+        if (
+            abs(best["theta"] - reference) > MAX_BED_STEP_DEG
+            and previous_machine is not None
+            and previous_theta is not None
+        ):
+            held_machine = bed_to_machine(b, previous_theta, center)
+            held = {
+                "theta": previous_theta,
+                "machine": held_machine,
+                "strategy": "hold",
+                "cost": candidate_cost(
+                    previous_machine, held_machine, previous_theta, previous_theta, settings
+                ),
+            }
+            if held["cost"] < best["cost"]:
+                best = held
+        if best["strategy"] == "hold":
+            return best
         # Relabel the winning candidate by which gantry axis did more work in
         # the realized move, so G-code labels stay accurate to motion even
         # when hold-steady wins.
