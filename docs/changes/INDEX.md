@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-01 | `WSW-20261001-004` | windows-software | implemented | [Sine gradient: gradient tone plotted as continuous adjacent sinusoids](windows-software/2026/2026-10-01-sine-gradient-fill.md) |
 | 2026-10-01 | `WSW-20261001-003` | windows-software | implemented | [Sparse ornaments: the bead, stud and dot rows stop carpeting the design](windows-software/2026/2026-10-01-sparse-ornament-layers.md) |
 | 2026-10-01 | `WSW-20261001-002` | windows-software | implemented | [Region overlay: neighbouring bands braid instead of tiling](windows-software/2026/2026-10-01-region-overlay.md) |
 | 2026-10-01 | `WSW-20261001-001` | windows-software | implemented | [The centre wobble was the Tolerance budget, and it is now reported](windows-software/2026/2026-10-01-tolerance-drives-inner-imprecision.md) |

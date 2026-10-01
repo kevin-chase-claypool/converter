@@ -421,6 +421,12 @@ def normalized_hatch_pattern(pattern):
         "wave": "waves",
         "sine": "waves",
         "sinusoidal": "waves",
+        "gradient": "sine_gradient",
+        "gradient_wave": "sine_gradient",
+        "gradient_waves": "sine_gradient",
+        "sine_gradient": "sine_gradient",
+        "sine_wave_gradient": "sine_gradient",
+        "continuous_sine": "sine_gradient",
         "isometric": "cubic",
         "iso": "cubic",
         "cube": "cubic",
@@ -439,6 +445,7 @@ def normalized_hatch_pattern(pattern):
         "circles",
         "dots",
         "waves",
+        "sine_gradient",
         "gyroid",
         "cubic",
         "concentric",
@@ -1093,6 +1100,138 @@ def wave_region_contours(polygons, spacing, angle_deg=0.0, amplitude=None, wavel
     return contours
 
 
+# Continuous adjacent sinusoids: how the tone-driven sine fill reads the
+# rendered image. A row carries no ink below this darkness, so a gradient fades
+# out instead of leaving a flat line running through its white end.
+SINE_GRADIENT_INK_FLOOR = 0.04
+# Samples per wavelength. 24 keeps a 2 x spacing wave visibly round without
+# flooding the G-code with points.
+SINE_GRADIENT_SAMPLES_PER_WAVE = 24
+
+
+def sine_gradient_region_contours(
+    bounds,
+    darkness,
+    spacing,
+    angle_deg=0.0,
+    amplitude_pct=50.0,
+    ink_floor=SINE_GRADIENT_INK_FLOOR,
+    connect_rows=True,
+    cancel_check=None,
+):
+    """Continuous adjacent sinusoids whose amplitude follows the local tone.
+
+    This is the plotter-art gradient: rows of sine curves drawn as continuous
+    strokes, with each sample's amplitude taken from the rendered darkness at
+    that sample's row baseline. A gradient therefore swells the waves where it
+    is dark and flattens them where it is light, and the tone reads as curvature
+    instead of as line density. Rows are emitted in antiphase, so at full
+    darkness the crest of one row just meets the trough of its neighbour
+    instead of crossing it.
+
+    ``bounds`` is ``(left, top, right, bottom)`` and ``darkness(x, y)`` returns
+    ``0..1`` in that same frame. Rows run along the rotated x axis, so the
+    caller never has to rotate the tone field itself.
+
+    With ``connect_rows`` the end of one row is joined to the start of the next
+    into a single pen-down serpentine. Rows whose joins pass over blank paper
+    stay separate passes: there is no ink to hide a connector in, and drawing
+    one there would leave a visible mark outside the artwork.
+    """
+    if darkness is None or spacing is None or float(spacing) <= 0.0:
+        return []
+    spacing = float(spacing)
+    left, top, right, bottom = (float(value) for value in bounds)
+    if right <= left or bottom <= top:
+        return []
+    amplitude = spacing * max(0.0, min(float(amplitude_pct), 100.0)) / 100.0
+    wavelength = spacing * 2.0
+    step = max(wavelength / float(SINE_GRADIENT_SAMPLES_PER_WAVE), 1e-6)
+    floor = max(0.0, float(ink_floor))
+
+    # Rotate about the bounds centre so the row arithmetic stays small and
+    # independent of where the artwork sits on the bed.
+    center_x = (left + right) * 0.5
+    center_y = (top + bottom) * 0.5
+    ang = math.radians(float(angle_deg))
+    ca, sa = math.cos(ang), math.sin(ang)
+
+    def to_local(x, y):
+        dx, dy = x - center_x, y - center_y
+        return (dx * ca + dy * sa, -dx * sa + dy * ca)
+
+    def to_world(u, v):
+        return (center_x + u * ca - v * sa, center_y + u * sa + v * ca)
+
+    def tone_at(x, y):
+        value = darkness(x, y)
+        if value is None:
+            return 0.0
+        return max(0.0, min(float(value), 1.0))
+
+    local = [to_local(x, y) for x, y in ((left, top), (right, top), (right, bottom), (left, bottom))]
+    min_u = min(point[0] for point in local) - spacing
+    max_u = max(point[0] for point in local) + spacing
+    min_v = min(point[1] for point in local) - spacing
+    max_v = max(point[1] for point in local) + spacing
+    steps = max(2, int(math.ceil((max_u - min_u) / step)) + 1)
+    du = (max_u - min_u) / steps
+
+    runs_per_row = []
+    row = 0
+    v = math.floor(min_v / spacing) * spacing
+    while v <= max_v:
+        check_cancelled(cancel_check)
+        phase = math.pi if row % 2 else 0.0
+        runs = []
+        current = []
+        for index in range(steps + 1):
+            check_cancelled(cancel_check)
+            u = min_u + index * du
+            base_x, base_y = to_world(u, v)
+            value = tone_at(base_x, base_y)
+            if value < floor:
+                if len(current) >= 2:
+                    runs.append(current)
+                current = []
+                continue
+            offset = amplitude * value * math.sin(2.0 * math.pi * u / wavelength + phase)
+            current.append(to_world(u, v + offset))
+        if len(current) >= 2:
+            runs.append(current)
+        runs_per_row.append(runs)
+        v += spacing
+        row += 1
+
+    if not connect_rows:
+        return [run for runs in runs_per_row for run in runs]
+
+    # Serpentine: alternate the travel direction so the end of one row meets the
+    # start of the next. A row that is blank end to end breaks the stroke where
+    # the pen has to lift anyway.
+    ordered = []
+    for index, runs in enumerate(runs_per_row):
+        if index % 2:
+            ordered.extend(list(reversed([list(reversed(run)) for run in runs])))
+        else:
+            ordered.extend(runs)
+
+    paths = []
+    current = []
+    for run in ordered:
+        if current:
+            previous = current[-1]
+            gap = distance(previous, run[0])
+            midpoint = ((previous[0] + run[0][0]) * 0.5, (previous[1] + run[0][1]) * 0.5)
+            if gap > spacing * 2.0 or tone_at(midpoint[0], midpoint[1]) < floor:
+                paths.append(current)
+                current = []
+        current.extend(run)
+    if current:
+        paths.append(current)
+    return [path for path in paths if len(path) >= 2]
+
+
 def gyroid_region_contours(polygons, spacing, angle_deg=0.0, cancel_check=None):
     """Gyroid-like 2D implicit infill clipped to the region.
 
@@ -1287,7 +1426,30 @@ def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_st
         pattern_spacing = _pattern_spacing(pattern, fill_spacing, pattern_sizes, triangle_size)
         return tile_shape_contours(polygons, pattern_spacing, base_angle, pattern, cancel_check)
     if pattern == "waves":
-        return wave_region_contours(polygons, _pattern_spacing(pattern, fill_spacing, pattern_sizes, triangle_size), base_angle, cancel_check=cancel_check)
+        # `wave_region_contours` clips one segment at a time, so a row arrives
+        # as a long run of two-point contours. Chain them back into continuous
+        # sine rows: the pen draws a wave, not a row of dots, and one row costs
+        # one M3/M5 cycle instead of one per sample.
+        return chain_segments_to_paths(
+            wave_region_contours(
+                polygons,
+                _pattern_spacing(pattern, fill_spacing, pattern_sizes, triangle_size),
+                base_angle,
+                cancel_check=cancel_check,
+            )
+        )
+    # In vector mode there is no rendered tone to read, so the tone-driven sine
+    # fill degrades to the uniform sine hatch. Gradient amplitude needs
+    # `sine_gradient_region_contours` and an image-tone source.
+    if pattern == "sine_gradient":
+        return chain_segments_to_paths(
+            wave_region_contours(
+                polygons,
+                _pattern_spacing(pattern, fill_spacing, pattern_sizes, triangle_size),
+                base_angle,
+                cancel_check=cancel_check,
+            )
+        )
     if pattern == "gyroid":
         return gyroid_region_contours(polygons, _pattern_spacing(pattern, fill_spacing, pattern_sizes, triangle_size), base_angle, cancel_check)
     if pattern == "concentric":

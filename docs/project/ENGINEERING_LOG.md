@@ -1,5 +1,44 @@
 # Engineering Log
 
+<a id="elog-20261001-sine-gradient-fill"></a>
+### 🟩 2026-10-01 11:02:14 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - sine gradient: tone as continuous adjacent sinusoids
+
+- Request: "in converter, for svg files with gradients, i need an option that
+  deals with gradients by using continuous adjacent sinusoids much like in
+  reddit/r/plotterart".
+- Change: new `Fill pattern` value `sine_gradient`. Tone is read from the
+  rendered image and carried by wave *amplitude* instead of hatch density, so a
+  gradient swells the waves at its dark end and flattens them at its light end.
+  Rows are in antiphase and are joined head to tail into one pen-down serpentine
+  unless `Connect sine rows` is turned off. New controls: `Gradient wave
+  amplitude %` (default 50 of the row spacing) and `Connect sine rows`.
+  `sine_gradient_region_contours` in `converter_core/geometry.py` is pure
+  geometry over a `darkness(x, y)` callable, so the Qt renderer supplies the
+  tone and the look is unit-testable without Qt. An ink floor of 0.04 keeps
+  white paper blank, and a join is only made when the tone continues across it.
+- Chaining fix found on the way: the vector `waves` rows were arriving as one
+  contour per clipped segment (`wave_region_contours` clips a segment at a
+  time), so a 40 mm square filled at 4 mm produced 1,200 two-point contours. The
+  wave rows now pass through `chain_segments_to_paths`: same point set, 19
+  contours, one per row. `sine_gradient` uses the same path when `Fill source`
+  is `SVG shapes` and there is no rendered tone to read.
+- Verification: 143 tests pass (133 before), including the new
+  `software/tests/test_sine_gradient.py` for amplitude-versus-tone, row
+  adjacency, the single-stroke serpentine, the blank-paper rule and the vector
+  fallback. Offscreen Qt run of the real `QSvgRenderer` -> `raster_shade_contours`
+  path on the new `samples/svg/gradient-sine-demo.svg` at `Fill spacing 3`: 65
+  passes, 18,016 points, one stroke per gradient region and no ink in the white
+  area between regions. `docs_index --write/--check` pass.
+- Boundary: render checks only, no plot on paper yet. Light gradient areas fade
+  to flat hairlines rather than to nothing, the wavelength is fixed at twice the
+  row spacing, and the row-end joins are up to two spacings long where two
+  antiphase rows meet at full amplitude.
+- Evidence: `WSW-20261001-004`; `software/README.md`;
+  `samples/svg/gradient-sine-demo.svg`.
+- Category: windows-software, fill, gradient, tone, plotter-art
+- Next action: plot the demo sample and judge the amplitude curve, the default
+  50 %, and whether the row joins read as seams or as defects.
+
 <a id="elog-20261001-sparse-ornaments"></a>
 ### 🟩 2026-10-01 09:21:41 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - sparse ornaments: the bead and stud rows stop carpeting the design
 

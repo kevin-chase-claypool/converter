@@ -521,11 +521,32 @@ display-only; every other group changes the emitted program.
   contours instead of building a full-resolution lattice and shrinking it.
 - `Fill pattern` selects OrcaSlicer-style sparse infill: `linear`, `crosshatch`,
   `diagonal`, `diagonal_crosshatch`, `diamonds`, `triangular`, `honeycomb`,
-  `circles`, or `dots`. `linear` is always one parallel-line family; darker fills
+  `circles`, or `dots`. `waves` and `sine_gradient` draw the fill as sine rows
+  instead of straight lines. `linear` is always one parallel-line family; darker fills
   increase density by reducing spacing, not by changing the pattern into another
   pattern. The vector fill path treats each pattern as a full layer and clips
   pattern segments to the filled contour boundary. Compound SVG paths are clipped
   as one even-odd region, so holes cut the infill layer.
+- `Fill pattern = sine_gradient` is the gradient fill: continuous adjacent
+  sinusoids whose **amplitude follows the rendered tone**. Dark areas swell the
+  waves until neighbouring rows just touch; light areas flatten them out. It
+  reads a gradient as curvature, so it needs an image-tone source - `Fill source
+  = Auto` already picks that for artwork with an embedded image or a
+  `url(#...)` gradient/pattern fill. With `Fill source = SVG shapes` there is no
+  rendered tone to read and the pattern falls back to a uniform sine hatch.
+  - `Wave size mm` sets the row spacing when it is non-zero; it otherwise
+    follows `Fill spacing mm`. The wavelength is twice the row spacing.
+  - `Gradient wave amplitude %` (default 50) is the crest height as a
+    percentage of the row spacing. 50 makes the waves in a fully dark area
+    touch the neighbouring row without crossing it; lower values keep the rows
+    apart in the darkest areas.
+  - `Connect sine rows` (on by default) joins the end of one row to the start
+    of the next, so a gradient is drawn as one continuous pen-down serpentine.
+    A join that would cross blank paper still breaks, so the pen lifts rather
+    than drawing a mark outside the artwork.
+  - `Shade levels` does not apply to this pattern: tone arrives as amplitude,
+    not as extra fill families. A light gradient fades to flat hairlines rather
+    than to nothing, because a hairline is the lightest mark the pen can make.
 - Consecutive passes are emitted head-to-tail, and the line families (`linear`,
   `crosshatch`, `diagonal`, `diagonal_crosshatch`, `cubic`) and the lattices
   `diamonds`/`triangular`/`hexagonal` keep the pen down between them when the
@@ -535,6 +556,10 @@ display-only; every other group changes the emitted program.
   separate passes and crosshatch still lifts between its two angle families.
   The preview draws those connectors, so a chained fill reads as one continuous
   serpentine rather than as separate strokes.
+- The `waves`/`sine_gradient` rows in the vector path arrive as chained
+  polylines: each sine row is one pen-down stroke rather than one contour per
+  clipped sample. `sine_gradient` already emits continuous rows in the tone
+  path, where `Connect sine rows` decides whether they are one stroke.
 - The fill bleed margin is applied by pulling back the ends the clip creates,
   never by offsetting the region, so a pass cannot land outside the fill region.
   This matters for bitmap-traced artwork built from thousands of overlapping
@@ -552,7 +577,13 @@ display-only; every other group changes the emitted program.
   show them.
 - [`../samples/svg/raster-shading-math.svg`](../samples/svg/raster-shading-math.svg)
   is an editable visual reference for the tone-to-hatch mathematics.
+- [`../samples/svg/gradient-sine-demo.svg`](../samples/svg/gradient-sine-demo.svg)
+  is a gradient sample: a linear fade, a radial orb and a vertical band. Select
+  it with `Fill spacing 3`, `Fill pattern sine_gradient` and the default
+  `Fill source Auto` to see tone as wave amplitude.
 - When an SVG is selected, the Qt app inspects how the artwork declares its
   fill (filled elements, stroke-only elements, embedded images, paint servers)
   and says in the log what `Auto` will do with it. Tone-carrying artwork also
-  gets tone-friendly starter values (`Shade levels = 4`, `Shade angle step = 45`).
+  gets tone-friendly starter values (`Shade levels = 4`, `Shade angle step = 45`),
+  and gradient paint also logs a reminder that `Fill pattern = sine_gradient`
+  plots it as continuous adjacent sinusoids.

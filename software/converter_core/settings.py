@@ -113,6 +113,10 @@ class Settings:
     circle_size_mm: float = 0.0
     dot_spacing_mm: float = 0.0
     wave_size_mm: float = 0.0
+    # `sine_gradient` reads its amplitude from the rendered tone. This is the
+    # crest height as a percentage of the row spacing, so 50 just touches the
+    # neighbouring row's baseline when the artwork is fully dark.
+    gradient_wave_amplitude_pct: float = 50.0
     gyroid_size_mm: float = 0.0
     cubic_size_mm: float = 0.0
     concentric_spacing_mm: float = 0.0
@@ -194,6 +198,10 @@ class Settings:
     # explicit choice. Bridging is restricted to FillTrail contours, never the
     # artwork's own open strokes.
     keep_down_bridges: bool = False
+    # `sine_gradient` only: join the end of one sine row to the start of the
+    # next so a gradient is drawn as one continuous pen-down stroke instead of
+    # one M3/M5 cycle per row. A join that would cross blank paper still breaks.
+    sine_rows_connected: bool = True
 
 
 TEXT_FIELD_GROUPS = (
@@ -219,6 +227,7 @@ TEXT_FIELD_GROUPS = (
         ("Circle size mm", "circle_size_mm", "0"),
         ("Dot spacing mm", "dot_spacing_mm", "0"),
         ("Wave size mm", "wave_size_mm", "0"),
+        ("Gradient wave amplitude %", "gradient_wave_amplitude_pct", "50"),
         ("Gyroid size mm", "gyroid_size_mm", "0"),
         ("Cubic size mm", "cubic_size_mm", "0"),
         ("Concentric spacing mm", "concentric_spacing_mm", "0"),
@@ -274,6 +283,7 @@ CHECKBOX_FIELDS = (
     ("Geometry", "expand_strokes", "Expand strokes to outlines", False),
     ("Geometry", "fill_wide_strokes", "Fill wide strokes", False),
     ("Fill", "keep_down_bridges", "Keep pen down between fill trails", False),
+    ("Fill", "sine_rows_connected", "Connect sine rows (one continuous stroke)", True),
     ("Theta kinematics", "monotonic_theta", "Monotonic theta (r-theta style)", True),
     (
         "Theta kinematics",
@@ -318,6 +328,7 @@ HATCH_PATTERNS = (
     "circles",
     "dots",
     "waves",
+    "sine_gradient",
     "gyroid",
     "concentric",
 )
@@ -351,6 +362,8 @@ FIELD_TOOLTIPS = {
     "scale": "Artwork scale. Set by the Fit mode while an auto fit is selected; choose Manual to type a value.",
     "shade_levels": "Density steps for tone: darker fill colour or image tone receives more fill families.",
     "shade_angle_step_deg": "Angle between the fill families that darker tone adds.",
+    "gradient_wave_amplitude_pct": "Sine gradient only: crest height as a percentage of Fill spacing / Wave size mm. 50 makes a fully dark area's waves just touch the next row.",
+    "sine_rows_connected": "Sine gradient only: join the end of one sine row to the start of the next so a gradient is drawn as one continuous stroke. Rows stay separate where the join would cross blank paper.",
     "raster_px_per_unit": "Image-tone sampling resolution in pixels per mm. Higher is more accurate and slower.",
     "feed_rate": "Maximum X/Y draw speed in mm/min.",
     "travel_rate": "Pen-up travel speed in mm/min.",
@@ -383,6 +396,7 @@ PATTERN_SIZE_FIELDS = {
     "circles": "circle_size_mm",
     "dots": "dot_spacing_mm",
     "waves": "wave_size_mm",
+    "sine_gradient": "wave_size_mm",
     "gyroid": "gyroid_size_mm",
     "cubic": "cubic_size_mm",
     "concentric": "concentric_spacing_mm",
@@ -457,6 +471,7 @@ def validate_settings(settings):
         "circle_size_mm",
         "dot_spacing_mm",
         "wave_size_mm",
+        "gradient_wave_amplitude_pct",
         "gyroid_size_mm",
         "cubic_size_mm",
         "concentric_spacing_mm",
@@ -483,6 +498,10 @@ def validate_settings(settings):
             raise ValueError(f"{name.replace('_', ' ')} must be a finite number.")
     if int(settings.shade_levels) < 1:
         raise ValueError("shade levels must be at least one.")
+    if float(settings.gradient_wave_amplitude_pct) > 100.0:
+        raise ValueError(
+            "gradient wave amplitude must not exceed 100 percent of the row spacing."
+        )
     if int(settings.theta_smooth_window) < 0:
         raise ValueError("theta smooth window cannot be negative.")
     if float(settings.bed_margin_mm) * 2.0 >= float(settings.bed_diameter_mm):

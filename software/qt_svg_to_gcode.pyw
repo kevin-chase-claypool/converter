@@ -927,6 +927,7 @@ class MainWindow(QMainWindow):
         self.expand_strokes = checkboxes["expand_strokes"]
         self.fill_wide_strokes = checkboxes["fill_wide_strokes"]
         self.keep_down_bridges = checkboxes["keep_down_bridges"]
+        self.sine_rows_connected = checkboxes["sine_rows_connected"]
         self.monotonic_theta = checkboxes["monotonic_theta"]
         self.toolhead_status_handshake = checkboxes["toolhead_status_handshake"]
         self.toolhead_handshake_recover = checkboxes["toolhead_handshake_recover"]
@@ -1197,6 +1198,12 @@ class MainWindow(QMainWindow):
                 f"Auto fill: this SVG carries {reason} tone, so Fill source Auto will "
                 "hatch the rendered image."
             )
+            if sources["gradient"]:
+                self.log.append(
+                    "Auto fill: gradient paint detected. Fill pattern 'sine_gradient' "
+                    "plots a gradient as continuous adjacent sinusoids whose amplitude "
+                    "follows the tone."
+                )
             return
         stats = self.svg_tone_stats(svg_path)
         if stats and stats["p95"] - stats["p05"] >= 0.18 and stats["p95"] >= 0.25:
@@ -1277,6 +1284,7 @@ class MainWindow(QMainWindow):
             "expand_strokes": self.expand_strokes.isChecked(),
             "fill_wide_strokes": self.fill_wide_strokes.isChecked(),
             "keep_down_bridges": self.keep_down_bridges.isChecked(),
+            "sine_rows_connected": self.sine_rows_connected.isChecked(),
             "monotonic_theta": self.monotonic_theta.isChecked(),
             "toolhead_status_handshake": self.toolhead_status_handshake.isChecked(),
             "toolhead_handshake_recover": self.toolhead_handshake_recover.isChecked(),
@@ -1301,6 +1309,7 @@ class MainWindow(QMainWindow):
         # affect unrelated patterns.
         for pattern_name, field_name in converter.PATTERN_SIZE_FIELDS.items():
             set_visible(field_name, pattern == pattern_name)
+        set_visible("gradient_wave_amplitude_pct", pattern == "sine_gradient")
         set_visible("shade_angle_step_deg", pattern in ("linear", "crosshatch", "diagonal", "diagonal_crosshatch", "cubic", "waves", "gyroid"))
         # Sampling resolution only matters when image tone can be used, which
         # "Auto" may still choose, so it stays visible for both.
@@ -1345,6 +1354,8 @@ class MainWindow(QMainWindow):
             float(getattr(settings, "hatch_angle_deg", 0.0)),
             str(getattr(settings, "hatch_pattern", "crosshatch")).lower(),
             tuple(sorted(self.pattern_size_values(settings).items())),
+            float(getattr(settings, "gradient_wave_amplitude_pct", 50.0)),
+            bool(getattr(settings, "sine_rows_connected", True)),
             int(getattr(settings, "shade_levels", 1)),
             float(getattr(settings, "shade_angle_step_deg", 90.0)),
             str(getattr(settings, "fill_source", "auto")).lower(),
@@ -1689,6 +1700,21 @@ class MainWindow(QMainWindow):
             for contour in converter.concentric_region_contours(loops, raster_spacing, cancel_check):
                 if len(contour) >= 3:
                     contours.append([maybe_flip(point) for point in contour])
+
+        # Tone-driven sine fill. Unlike every other pattern here the tone is
+        # carried by wave amplitude rather than by line density, so it is drawn
+        # as one pass at the full spacing instead of one layer per shade level.
+        if pattern == "sine_gradient":
+            polys = converter.sine_gradient_region_contours(
+                (view.left(), view.top(), view.right(), view.bottom()),
+                darkness_at,
+                active_spacing,
+                base_angle,
+                amplitude_pct=float(getattr(settings, "gradient_wave_amplitude_pct", 50.0)),
+                connect_rows=bool(getattr(settings, "sine_rows_connected", True)),
+                cancel_check=cancel_check,
+            )
+            return [[maybe_flip(point) for point in poly] for poly in polys]
 
         if pattern in ("circles", "dots", "diamonds", "hexagonal", "triangular"):
             angle = math.radians(base_angle)
@@ -2481,6 +2507,26 @@ class MainWindow(QMainWindow):
                 "outlines, so there is no interior to fill. Its strokes still plot."
             )
         where = "image tone" if source == "tone" else "the SVG's own regions"
+        active_spacing = self.pattern_spacing(settings, pattern, spacing)
+        if pattern == "sine_gradient":
+            if source != "tone":
+                return (
+                    f"Fill: {active_spacing:g} mm sine waves inside {where}, "
+                    f"{fill_contours} wave passes. Amplitude follows visible tone, so "
+                    "this pattern needs Fill source = Image tone (or Auto with "
+                    "gradient artwork) to read a gradient; otherwise it is a uniform "
+                    "sine hatch."
+                )
+            rows = (
+                "joined into continuous strokes"
+                if bool(getattr(settings, "sine_rows_connected", True))
+                else "as separate rows"
+            )
+            return (
+                f"Fill: {active_spacing:g} mm sine gradient waves, {fill_contours} "
+                f"wave passes inside {where}, {rows}. Amplitude follows tone, so "
+                "Shade levels do not change this pattern."
+            )
         return f"Fill: {spacing:g} mm {pattern}, {fill_contours} hatch passes inside {where}."
 
     def print_speed_mm_s(self):

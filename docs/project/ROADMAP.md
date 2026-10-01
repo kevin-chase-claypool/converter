@@ -197,6 +197,35 @@
 
 ## Known technical debt
 
+- [ ] Sine-gradient fill follow-ups.
+  Problem: `sine_gradient` is render-checked but has never been plotted, its
+  amplitude curve is linear in tone with a fixed 0.04 ink floor, and its
+  wavelength is locked to twice the row spacing. The row-end join that makes a
+  gradient one continuous stroke covers up to two row spacings where two
+  antiphase rows meet at full amplitude.
+  Benefit: an on-paper judgement of the amplitude curve and of the joins, plus a
+  wavelength control, turns a plausible-looking pattern into a chosen one.
+  Risk: the plotter-art look is subjective; the amplitude curve and the ink
+  floor are the two knobs, and changing them changes every existing gradient
+  program.
+  Acceptance: `samples/svg/gradient-sine-demo.svg` (or an equivalent gradient)
+  is plotted at `Fill spacing 3`, the light-end banding and the row joins are
+  judged from the paper, and any change to the amplitude curve or ink floor is
+  recorded with the plot as evidence.
+
+- [ ] Chain the remaining per-segment fill generators.
+  Problem: `wave_region_contours` and `gyroid_region_contours` clip one segment
+  at a time, so a vector-path fill arrives as one contour per clipped sample.
+  `waves` and `sine_gradient` now pass their rows through
+  `chain_segments_to_paths`, but `gyroid` still pays one pen cycle per segment.
+  Benefit: a continuous gyroid fill and a much smaller program, with no
+  geometric change - the point set is identical.
+  Risk: chaining merges only contours that already share endpoints, so the
+  drawing cannot change, but a future generator that emits crossing segments
+  would chain them differently.
+  Acceptance: `gyroid` output has the same points inside a tested square or
+  circle, far fewer contours, and the existing fill tests still pass.
+
 - [ ] Kaleidoscope converter follow-ups.
   Problem: the new app traces rasters by threshold (no photo-tone shading), the
   preview has no playback, and a dragged image can leave the wedge empty with
