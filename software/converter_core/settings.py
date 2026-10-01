@@ -121,7 +121,8 @@ class Settings:
     # the artwork to the drawable circle automatically on every build, so the
     # artwork lands on the bed without the user computing a scale by hand.
     fit_mode: str = "fill"
-    pen_diameter_mm: float = 0.3
+    # Sakura Pigma Micron 005: the pen the machine actually plots with.
+    pen_diameter_mm: float = 0.20
     pen_cycle_ms: float = 100.0
     # Measured on the integrated toolhead: M3 seeks in about 1.2 s warm and
     # ~2.9 s from GP2, and M5 clears in about 0.46 s. The dwell must cover the
@@ -235,7 +236,7 @@ TEXT_FIELD_GROUPS = (
         ("Theta smooth", "theta_smooth_window", "2"),
     )),
     ("Pen", (
-        ("Pen stroke mm", "pen_diameter_mm", "0.3"),
+        ("Pen stroke mm", "pen_diameter_mm", "0.20"),
         ("Safe Z", "safe_z", "5"),
         ("Work Z", "work_z", "0"),
         ("Pen up ms", "pen_up_ms", "800"),

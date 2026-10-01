@@ -1,5 +1,37 @@
 # Engineering Log
 
+<a id="elog-20260930-pen-tip-diameter"></a>
+### 🟩 2026-09-30 19:03:42 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - pen tip diameter: Pigma Micron 005 is 0.20 mm
+
+- Request: "in kaleidoscope i dont see an option for pen tip diameter like we
+  had in converter" and "im using a 005 pigma micron".
+- Change: the shared `pen_diameter_mm` default drops from 0.30 to 0.20 mm with
+  the pen named in the source; the Kaleidoscope Converter gains a
+  `Pen tip diameter` field in its Output group (0-5 mm, 0.05 mm steps),
+  initialised from that default, passed through `output_settings()` and saved
+  with the other remembered numbers; the G-code header now records it
+  (`(feed ..., tolerance ..., pen 0.20 mm)`); and `docs/hardware/BOM.md` lists
+  the Micron 005 as toolhead hardware with a note to keep the converter value in
+  step with the fitted pen.
+- Why it matters: the value drives pen-width compensation for imported SVG
+  artwork (the artwork shrinks by one tip width so the outside of the stroke
+  lands on the intended outline), the gap fill bridging tolerates (`pen x 6`),
+  and ink reporting. Generated patterns and traced images are not compensated -
+  that is why the field looked absent.
+- Verification: new `software/tests/test_pen_width.py` - default is 0.20 mm,
+  compensation shrinks a 100 mm square by exactly 0.20/0.30/0.50 mm for those
+  tips, compensation can be switched off, header records the width. A headless
+  kaleidoscope run reads 0.20 mm in the field, passes 0.20 into the planner and
+  writes `pen 0.20 mm` in the header. All twelve test modules pass;
+  `docs_index --write/--check` pass.
+- Boundary: a different tip (01 = 0.25, 03 = 0.35) needs the field and the BOM
+  changed together; fills are off by default so the bridging tolerance stays
+  inert for now.
+- Evidence: `WSW-20260930-022`.
+- Category: windows-software, hardware, pen, interface
+- Next action: plot a small square on paper and measure the line width to
+  confirm the 0.20 mm tip and the compensation.
+
 <a id="elog-20260930-theta-drift-calibration"></a>
 ### 🟩 2026-09-30 18:50:42 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - theta drift: ratio recorded in the G-code, calibration plot shipped
 

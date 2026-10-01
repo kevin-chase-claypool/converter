@@ -272,8 +272,13 @@ def contours_to_gcode(contours, settings, program_plan=None):
         # invisible in the file, which has cost a diagnosis round already.
         "(theta ratio %.5f motor deg per bed deg, offset %.3f)"
         % (settings.theta_drive_ratio, settings.theta_offset),
-        "(feed %.1f mm/min, travel %.1f mm/min, tolerance %.3f mm)"
-        % (settings.feed_rate, settings.travel_rate, settings.tolerance),
+        "(feed %.1f mm/min, travel %.1f mm/min, tolerance %.3f mm, pen %.2f mm)"
+        % (
+            settings.feed_rate,
+            settings.travel_rate,
+            settings.tolerance,
+            settings.pen_diameter_mm,
+        ),
         "G21",
         "G90",
         "G94",

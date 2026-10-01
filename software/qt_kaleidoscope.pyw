@@ -548,6 +548,19 @@ class KaleidoscopeWindow(QMainWindow):
         self.theta_speed.setValue(700.0)
         self.theta_speed.setSuffix(" mm/min")
         self.theta_speed.valueChanged.connect(self.on_controls_changed)
+        self.pen_diameter = QDoubleSpinBox()
+        self.pen_diameter.setRange(0.0, 5.0)
+        self.pen_diameter.setSingleStep(0.05)
+        self.pen_diameter.setDecimals(2)
+        self.pen_diameter.setValue(float(converter.Settings().pen_diameter_mm))
+        self.pen_diameter.setSuffix(" mm")
+        self.pen_diameter.setToolTip(
+            "Physical tip width - a Pigma Micron 005 is 0.20 mm. It sets the "
+            "pen-width compensation applied to imported SVG artwork and the "
+            "gap the fill bridging tolerates; generated patterns and traced "
+            "images are unaffected. Recorded in the saved program's header."
+        )
+        self.pen_diameter.valueChanged.connect(self.on_controls_changed)
         self.build_button = QPushButton("Build preview")
         self.build_button.clicked.connect(self.rebuild)
         self.save_button = QPushButton("Save G-code...")
@@ -557,6 +570,7 @@ class KaleidoscopeWindow(QMainWindow):
         form.addRow("Fill spacing", self.fill_spacing)
         form.addRow("Feed rate", self.feed_rate)
         form.addRow("Theta tangential speed", self.theta_speed)
+        form.addRow("Pen tip diameter", self.pen_diameter)
         form.addRow(self.build_button)
         form.addRow(self.save_button)
         return box
@@ -612,6 +626,7 @@ class KaleidoscopeWindow(QMainWindow):
             ("fill_spacing", self.fill_spacing, float),
             ("feed_rate", self.feed_rate, float),
             ("theta_speed", self.theta_speed, float),
+            ("pen_diameter", self.pen_diameter, float),
             ("motif_limit", self.motif_limit, int),
         )
         for key, widget, cast in numbers:
@@ -675,6 +690,7 @@ class KaleidoscopeWindow(QMainWindow):
             "fill_spacing": float(self.fill_spacing.value()),
             "feed_rate": float(self.feed_rate.value()),
             "theta_speed": float(self.theta_speed.value()),
+            "pen_diameter": float(self.pen_diameter.value()),
             "mirror": self.mirror.isChecked(),
             "show_wedge": self.show_wedge.isChecked(),
             "invert": self.invert.isChecked(),
@@ -1008,6 +1024,7 @@ class KaleidoscopeWindow(QMainWindow):
             hatch_spacing_mm=float(self.fill_spacing.value()),
             feed_rate=float(self.feed_rate.value()),
             theta_tangential_speed_mm_min=float(self.theta_speed.value()),
+            pen_diameter_mm=float(self.pen_diameter.value()),
             bed_diameter_mm=float(self.bed_diameter.value()),
             bed_margin_mm=float(self.bed_margin.value()),
             machine_reach_radius_mm=float(self.reach_radius.value()),

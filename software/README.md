@@ -123,6 +123,12 @@ app.
   `Theta tangential speed` are the same settings as the main app, and the saved
   file uses the same preamble, pen contract, clipping and end-of-print park.
   Fill spacing stays `0` (outlines only) by default.
+  `Pen tip diameter` records the physical tip - the machine's Sakura Pigma
+  Micron 005 is 0.20 mm, which is also the default. It sets the pen-width
+  compensation applied to imported SVG artwork (the artwork is shrunk by one
+  tip width so the outside of the stroke lands on the intended outline), the
+  gap fill bridging tolerates, and is written into the saved program's header.
+  Generated patterns and traced images are not compensated.
 - **Remembered setup.** The app saves its settings to
   `kaleidoscope_settings.json` next to the script (git-ignored) whenever it
   closes and whenever a motif folder is chosen: the motif folder, source path,
