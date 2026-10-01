@@ -230,9 +230,13 @@ app.
 
 - `G21` (mm), `G90` (absolute), `G94` (units/minute feed), `G17` (XY plane),
   and `G54` (the registered work-coordinate frame)
-- a header comment recording the bed ratio, theta offset, feeds and tolerance
-  that produced the file, so a program can always be traced back to its motion
-  settings (`tools\make_theta_calibration.py` writes a plot that measures the
+- a header comment recording the bed ratio, theta offset, feeds, tolerance and
+  the A-axis limits the planner assumed (`(A limits assumed 20000 motor
+  deg/min, 3000 motor deg/s^2)`), so a program can always be traced back to its
+  motion settings - compare that line with the controller's `$$` after any
+  settings change, because a converter assumption above what the controller
+  allows makes the emitted feeds unachievable and the time estimate optimistic
+  (`tools\make_theta_calibration.py` writes a plot that measures the
   bed's real ratio: a circle plus a two-turn spiral, where a wrong ratio shows
   as an offset that doubles on the second lap)
 - the bed is re-registered at every contour by default: the planner subtracts

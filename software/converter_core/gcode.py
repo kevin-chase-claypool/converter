@@ -302,6 +302,14 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
             settings.tolerance,
             settings.pen_diameter_mm,
         ),
+        # The A limits the planner assumed, so a file can be compared with the
+        # controller's `$$` after the fact: the two drifting apart is invisible
+        # otherwise, and it silently makes the emitted feeds unachievable.
+        "(A limits assumed %.0f motor deg/min, %.0f motor deg/s^2)"
+        % (
+            settings.theta_controller_limits.max_rate_deg_min,
+            settings.theta_controller_limits.max_acceleration_deg_s2,
+        ),
         "G21",
         "G90",
         "G94",

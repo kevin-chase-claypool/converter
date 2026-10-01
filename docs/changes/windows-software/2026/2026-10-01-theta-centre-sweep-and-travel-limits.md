@@ -184,3 +184,11 @@ photo, and the "waveforms drifting into adjacent waveforms" before it.
   30 fed re-registrations, 0 bare `G0` rotations, 0.025 mm worst bow. Run against
   a file regenerated with the 10 deg cap: 9.92 deg, 333 motor deg/s, 24 fed
   re-registrations, 0 rapids, 0.250 mm worst bow - PASS.
+- The preamble now also records the A limits the planner assumed:
+  `(A limits assumed 20000 motor deg/min, 3000 motor deg/s^2)`. It exists
+  because the controller and the converter have to agree and nothing in the file
+  used to say so: after the 2026-10-01 settings session `$113` had been lowered
+  to 8000 while the converter still assumed 20000, which makes the emitted feeds
+  unachievable (the controller clips them, so the path stays right but the time
+  estimate is optimistic) and is invisible in a saved program. The line makes
+  that comparable with `$$` at a glance.
