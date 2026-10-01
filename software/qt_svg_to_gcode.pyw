@@ -42,10 +42,12 @@ import converter_core as converter
 # quickest way to tell a stale window from a stale install.
 print(f"[geometry version: {getattr(converter, 'GEOMETRY_VERSION', 'OLD-no-new-patterns')}]", flush=True)
 print(
-    "[A guard: park above %.0f deg/segment, %.0f motor deg/min, travel rotations fed]"
+    "[A guard: park above %.0f deg/segment, %.0f motor deg/min, %.0f motor deg/s^2, "
+    "travel rotations fed]"
     % (
         float(converter.Settings().theta_max_step_deg),
         float(converter.Settings().theta_controller_limits.max_rate_deg_min),
+        float(converter.Settings().theta_controller_limits.max_acceleration_deg_s2),
     ),
     flush=True,
 )
@@ -1127,11 +1129,12 @@ class MainWindow(QMainWindow):
             f"Converter core {getattr(converter, 'GEOMETRY_VERSION', 'OLD')}. "
             "Fill pattern 'gradient waves (sine_gradient)' is available. "
             "A-axis guard: the bed parks above %.0f deg per segment instead of "
-            "sweeping, and the assumed A limit is %.0f motor deg/min; pen-up "
-            "rotations are fed, never rapids."
+            "sweeping, and the assumed A limits are %.0f motor deg/min and %.0f "
+            "motor deg/s^2; pen-up rotations are fed, never rapids."
             % (
                 float(converter.Settings().theta_max_step_deg),
                 float(converter.Settings().theta_controller_limits.max_rate_deg_min),
+                float(converter.Settings().theta_controller_limits.max_acceleration_deg_s2),
             )
         )
 
