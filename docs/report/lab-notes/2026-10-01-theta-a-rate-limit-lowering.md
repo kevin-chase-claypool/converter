@@ -178,6 +178,16 @@ different explanation.
 
 **Ratio check (`theta-calibration.gcode`): PENDING / optional.**
 
+**`$123` also lowered to 3000 motor deg/s² (same session, 2026-10-01).** Torque
+demand scales with acceleration and the bed is a large rotating mass: 6000 motor
+deg/s² is 8.7 rad/s², which is about 1.1 N·m at the bed for a 5 kg platter
+(0.09 N·m at the motor) and 3.4 N·m for a 12 kg one (0.28 N·m at the motor),
+against a NEMA17's ~0.4 N·m holding torque and less than that at speed. The
+converter's matching assumption was lowered to 3000 with it. Acceptance is the
+same plot: the A acceleration should be judged by wave *shape* (a wind-up shows
+as asymmetric or fattened crests that recover, with no net shift), not by the
+circle test, which cancels symmetric error.
+
 ## Difficulties and corrective actions
 
 - The value was already the only one that needed changing: `$123` was 6000

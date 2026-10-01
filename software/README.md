@@ -363,9 +363,10 @@ display-only; every other group changes the emitted program.
     (`G1 ... F... (travel)`), never as a `G0` rapid, so a `theta_wrap`
     re-registration of a whole revolution cannot outrun the A axis.
   - The converter assumes the A axis can hold **20,000 motor deg/min**
-    (27.7 bed deg/s, the 700 mm/min tangential limit at a 25 mm radius). Lower
-    `$113`/`$123` on the controller to match, otherwise controller-side rapids
-    still use the old, faster setting.
+    (27.7 bed deg/s, the 700 mm/min tangential limit at a 25 mm radius) and
+    **3,000 motor deg/s²** (250 bed deg/s²). Keep the controller's `$113`/`$123`
+    equal to those: torque demand scales with acceleration, so `$123` is the
+    setting that turns the bed's mass into force on the belt and motor.
 - **Pen** — `Pen stroke mm` (the physical pen tip), Z heights, pen dwells, pen
   up/down commands, Use Z, and the **Wait for GP27 toolhead ready** option
   (off by default; the F-05A on-bench P115/PRB validation passed on

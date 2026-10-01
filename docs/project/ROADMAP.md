@@ -214,6 +214,8 @@
   6000 / 12000 / 20000 mm/min ladder and the paired ticks at each rung coincide;
   if a rung shows a gap, `$111`/`$121` are lowered until it does not, and the
   measured ladder is recorded in a lab note and the grblHAL settings document.
+  Operator action 2026-10-01: `$111` lowered to 8000 mm/min (the ladder's top
+  rung then no longer matches a configured rapid; re-run the ladder to confirm).
 
 - [x] Bring the controller's A-axis limits down to what the converter assumes.
   Problem: `$113` is 80000 motor deg/min (1333 motor deg/s, 111 bed deg/s for

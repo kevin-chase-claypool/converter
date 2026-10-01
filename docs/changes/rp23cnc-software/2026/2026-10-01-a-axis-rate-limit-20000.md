@@ -30,6 +30,15 @@ related:
 `$123` stays at `6000.000` motor deg/s². Nothing else in the settings dump
 changed, and the new value survives a power cycle.
 
+Same session, later: `$123` is also brought down, to `3000.000` motor deg/s²
+(250 bed deg/s²), on the reasoning that torque demand scales with acceleration
+and the bed is a large rotating mass - 6000 motor deg/s² is 8.7 rad/s² at the
+bed, which is 1.1 N·m at the bed for a 5 kg platter and 3.4 N·m for a 12 kg one,
+i.e. 0.09-0.28 N·m at the motor against a NEMA17's ~0.4 N·m holding torque and
+less than that at speed. A slack belt turns the leftover torque into wind-up
+before the motor ever stalls. The converter's matching assumption moves with it
+so its feeds do not ask for more than the controller will give.
+
 The old value is 110.8 bed deg/s through the 12.03324:1 bed drive, which is
 about 21 m/min of pen surface speed at the 185 mm rim - as fast as the X/Y
 rapids. The bed cannot hold that; the converter asked for it, the stepper

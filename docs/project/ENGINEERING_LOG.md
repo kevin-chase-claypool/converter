@@ -89,6 +89,19 @@
   the tick again per rung. Ticks that coincide mean no slip at that rate; a gap
   along the axis is the lost motion, and the top rung reproduces what a real
   `G0` travel does today. Roadmap item: verify the heavy gantry axis under load.
+- A acceleration, the third lever: "what about the a axis acceleration? is there
+  a chance it is contributing?" Yes, plausibly, and it is a different failure
+  mode from the rate one. `$123=6000` motor deg/s² is 8.7 rad/s² at the bed =
+  ~1.1 N·m for a 5 kg platter (0.09 N·m at the motor) and 3.4 N·m for 12 kg
+  (0.28 N·m) against a NEMA17's ~0.4 N·m holding torque and less at speed; a
+  slack belt converts the leftover into wind-up *before* the motor stalls. Rate
+  too high loses steps and shifts everything after (permanent); acceleration too
+  high distorts the stroke under load and recovers (transient) - which is why
+  the A repeatability test read clean, since an out-and-back cancels symmetric
+  error. Operator is lowering `$123` to 3000 motor deg/s² together with
+  `$111` to 8000 mm/min, on limited paper; the converter's matching
+  `ThetaControllerLimits.max_acceleration_deg_s2` moves to 3000 in the same
+  session so its feeds do not ask for more than the controller will give.
 - Evidence: `RPSW-20261001-001`;
   `docs/report/lab-notes/2026-10-01-theta-a-rate-limit-lowering.md`;
   `firmware/grblhal/config/machine-settings.md`.

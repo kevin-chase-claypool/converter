@@ -24,17 +24,18 @@ def calibrated_motion_seconds(model_seconds, scale=DEFAULT_MOTION_ESTIMATE_SCALE
 class ThetaControllerLimits:
     """A-axis limits in motor-shaft units, as the converter assumes them.
 
-    These are deliberately *not* the controller's configured maxima. $113 landed
-    at 80000 motor deg/min (1333 motor deg/s, 111 bed deg/s) and the 12:1 bed
-    cannot follow that: the firmware happily plans it, the stepper stalls, and
-    the plot drifts from the lost steps. The defaults here are what the bed can
-    actually do - 20000 motor deg/min is 27.7 bed deg/s, which is the tangential
-    speed limit (700 mm/min) expressed at a 25 mm radius. Lower $113/$123 on the
-    controller to match, or the G0 rapids will still ask for the old rates.
+    These mirror what the controller is set to, and they are deliberately lower
+    than what it *could* be set to. $113 landed at 80000 motor deg/min (1333
+    motor deg/s, 111 bed deg/s) and the 12:1 bed cannot follow that: the
+    firmware plans it happily, the stepper stalls, and the plot drifts from the
+    lost steps. The installed values are now 20000 motor deg/min (27.7 bed deg/s
+    - the tangential speed limit expressed at a 25 mm radius) and 3000 motor
+    deg/s^2, because the drive's torque demand scales with acceleration and the
+    bed is a large rotating mass. Keep the controller's $113/$123 equal to these.
     """
 
     max_rate_deg_min: float = 20000.0
-    max_acceleration_deg_s2: float = 6000.0
+    max_acceleration_deg_s2: float = 3000.0
 
 @dataclass
 class Settings:
