@@ -510,6 +510,14 @@ display-only; every other group changes the emitted program.
   `.png`, `.bmp`, `.webp`, `.tif` and `.gif` as well as `.svg`; no SVG wrapper
   is needed. The image is tone, so it always hatches from its pixels - a photo
   has no vector outlines for `SVG shapes` to use.
+  - Do **not** convert the photo to a traced SVG first. A bitmap trace
+    (VTracer, Inkscape "trace bitmap", most online converters) turns continuous
+    tone into hundreds of flat shapes: the gradients are gone, `Fill source
+    Auto` resolves to `SVG shapes` because that is all the file contains, and
+    hatching each traced layer separately takes minutes. The app logs a
+    `looks like a traced bitmap` warning when it sees more than forty filled
+    elements and no image or gradient. Open the original `.jpg` instead: one
+    fill reads the tone.
   - Tone is luminance: each pixel becomes `1 - (0.2126 R + 0.7152 G + 0.0722 B)`
     times its alpha, so a colour photo is converted to grey by the same rule a
     black-and-white print would use, and that grey drives the wave amplitude
@@ -603,8 +611,9 @@ display-only; every other group changes the emitted program.
     times lighter than `2` and sixteen times lighter than `1`. A 4-6 mm spacing
     on a 1000-unit artwork builds in well under a second; 1-2 mm on the same
     artwork is hundreds of thousands of points to plan, preview and write out.
-    `Fit = Manual` is also faster than an auto fit, because an auto fit parses
-    the artwork twice (once to measure it, once at the fitted scale).
+    An auto fit reads the artwork twice - once for the outlines it measures,
+    then once to build the fill at the fitted scale - but the measuring pass
+    carries no fill, so it costs milliseconds. `Fit = Manual` skips it.
 - Consecutive passes are emitted head-to-tail, and the line families (`linear`,
   `crosshatch`, `diagonal`, `diagonal_crosshatch`, `cubic`) and the lattices
   `diamonds`/`triangular`/`hexagonal` keep the pen down between them when the

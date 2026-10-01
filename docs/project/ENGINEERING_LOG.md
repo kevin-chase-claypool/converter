@@ -1,5 +1,43 @@
 # Engineering Log
 
+<a id="elog-20261001-auto-fit-measures-before-filling"></a>
+### 🟩 2026-10-01 11:06:18 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - auto fit measures the artwork before it fills it
+
+- Report: the same stall a second time, sidebar correct (`Fill spacing 4`,
+  `gradient waves (sine_gradient)`, `Wave size 0`) and the build at 10 % after
+  `Parsing SVG geometry | 49.6 s`. The raster fix from `WSW-20261001-008` did
+  not cover it: this was an SVG.
+- Diagnosis: the preview's auto fit read the artwork twice, and the *first* read
+  built a full fill at whatever scale the Scale box still held - often 1.0 on a
+  fresh session - before the fit discarded it. On a 3000 x 2000-unit artwork at
+  `Fill spacing 4` that discarded pass is 4.5 million points, which is the
+  fifty-second stall. Cost is `12 x width x height / spacing^2`, so it grows
+  with the artwork's user units, not with the paper it finally occupies.
+- Change: `load_contours(..., fill=False)` returns outlines only (no hatch, no
+  tone fill), the cache key includes that flag, and the worker now measures,
+  fits, then fills once at the fitted scale. A manual fit fills once and skips
+  the measuring read. If the measuring read returns no contours at all - an SVG
+  that is only an embedded photo - the fit falls back to the viewBox, which
+  `artwork_bounds_mm` now supplies for rasters and SVGs alike. The stage line
+  reads `Measuring the artwork` then `Building fill geometry`.
+- Measurement, worst case (Scale box at 1.0, `Fit = Fill bed`): a 3000 x 2000
+  unit gradient SVG now fits at 0.1295 and builds 61,660 points in 3.67 s end to
+  end, where the discarded first pass alone was 4.5 M points; the photo case is
+  unchanged at 73,996 points / 4.24 s.
+- Verification: 161 tests pass, including the new
+  `test_the_measuring_pass_is_outlines_only` contract (under 20 points measured
+  where the filled read returns over 100,000). `docs_index --write/--check`
+  pass.
+- Boundary: an auto fit still parses twice by design; the measuring pass is
+  bounded by element count rather than fill density. Artwork with no measurable
+  outlines now fits to its viewBox, which is the rule a photo already follows.
+- Evidence: `WSW-20261001-009`;
+  `docs/changes/windows-software/2026/2026-10-01-auto-fit-measures-before-filling.md`.
+- Category: windows-software, fill, performance, fit, interface
+- Next action: rebuild the reported artwork and confirm the first build no
+  longer fills at the stale scale, then decide whether a second geometry cache
+  slot is worth keeping the measuring pass out of repeat builds.
+
 <a id="elog-20261001-photo-raster-input"></a>
 ### 🟩 2026-10-01 10:44:52 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - a photo imports directly and plots as sine-wave tone
 

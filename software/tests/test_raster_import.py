@@ -72,6 +72,32 @@ class RasterDetectionTests(unittest.TestCase):
             {"filled": 0, "outline": 0, "image": 1, "gradient": 0},
         )
 
+    def test_a_traced_bitmap_reports_many_flat_shapes(self):
+        """A bitmap trace is hundreds of filled paths and no tone source.
+
+        It cannot carry a gradient, and it is the input that makes the shape
+        hatch path slow, so the app has to be able to recognise it.
+        """
+        folder = Path(tempfile.mkdtemp(prefix="traced-"))
+        path = folder / "trace.svg"
+        paths = "".join(
+            f'<rect x="{index % 10}" y="{index // 10}" width="0.9" height="0.9" fill="#000000"/>'
+            for index in range(60)
+        )
+        path.write_text(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6">'
+            + paths
+            + "</svg>",
+            encoding="utf-8",
+        )
+        sources = converter.svg_fill_sources(path)
+        self.assertEqual(sources["filled"], 60)
+        self.assertEqual(sources["image"], 0)
+        self.assertEqual(sources["gradient"], 0)
+        self.assertEqual(
+            converter.resolve_fill_source(converter.Settings(), str(path)), "shapes"
+        )
+
 
 @unittest.skipUnless(HAVE_QT, "PySide6 is not installed")
 class RasterImportTests(unittest.TestCase):
@@ -99,7 +125,7 @@ class RasterImportTests(unittest.TestCase):
         self.window.fields["hatch_spacing_mm"].setText(str(spacing_mm))
         self.window.raw_cache_key = None
         self.window.raw_contours = None
-        settings = self.window.fitted_settings_for_image(
+        settings = self.window.fitted_settings_for_artwork_bounds(
             self.window.settings(), str(self.photo)
         )
         return settings, self.window.load_contours(str(self.photo), settings)
@@ -117,12 +143,12 @@ class RasterImportTests(unittest.TestCase):
         self.assertLessEqual(max(ys) - min(ys), 2.0 * reach + 1e-6)
 
     def test_the_fit_does_not_depend_on_the_scale_left_in_the_field(self):
-        first = self.window.fitted_settings_for_image(
+        first = self.window.fitted_settings_for_artwork_bounds(
             self.window.settings(), str(self.photo)
         ).scale
         stale = self.window.settings()
         stale = self.module.dataclasses.replace(stale, scale=0.05)
-        second = self.window.fitted_settings_for_image(stale, str(self.photo)).scale
+        second = self.window.fitted_settings_for_artwork_bounds(stale, str(self.photo)).scale
         self.assertAlmostEqual(first, second, places=6)
 
     def test_points_follow_paper_area_over_spacing_squared(self):

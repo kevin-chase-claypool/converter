@@ -791,30 +791,39 @@ class PreviewWorker(QObject):
 
     def run(self):
         try:
-            self.progress.emit(10, "Parsing SVG geometry")
             settings = self.settings
+            auto_fit = str(getattr(settings, "fit_mode", "manual")).strip().lower() in ("fill", "inside")
             if converter.is_raster_image(self.svg_path):
                 # A photo has no outlines to measure, so size it from its pixels
                 # before the fill is built: the fill spacing is millimetres and
                 # cannot be resolved until the paper scale is known.
-                settings = self.window.fitted_settings_for_image(settings, self.svg_path)
-            raw_contours = self.window.load_contours(
-                self.svg_path, settings, self.is_cancelled, self.notice.emit
-            )
-            # An auto fit needs the parsed artwork before it can size it, and the
-            # fill is generated at the on-paper resolution for that scale, so a
-            # changed scale means re-reading the geometry once.
-            # A raster was already fitted from its image bounds above, where the
-            # fill could be built at the fitted scale in one pass.
-            if not converter.is_raster_image(self.svg_path):
-                fitted = self.window.fitted_settings(settings, raw_contours)
+                settings = self.window.fitted_settings_for_artwork_bounds(settings, self.svg_path)
+            elif auto_fit:
+                # Measure the outlines first. An auto fit needs the artwork's
+                # size before the fill can be generated, and filling here would
+                # build the lattice at whatever scale the field still holds and
+                # throw it away: on a 3000-unit artwork that is minutes of work
+                # for geometry the fit immediately discards.
+                self.progress.emit(6, "Measuring the artwork")
+                outlines = self.window.load_contours(
+                    self.svg_path, settings, self.is_cancelled, None, fill=False
+                )
+                if outlines:
+                    fitted = self.window.fitted_settings(settings, outlines)
+                else:
+                    # Nothing measurable - an SVG that is only an embedded
+                    # photo, or empty vector content - so use its viewBox.
+                    fitted = self.window.fitted_settings_for_artwork_bounds(
+                        settings, self.svg_path
+                    )
                 if fitted is not settings:
                     self.progress.emit(20, "Auto-fitting the artwork to the bed")
                     self.notice.emit(self.window.describe_fit(settings, fitted))
                     settings = fitted
-                    raw_contours = self.window.load_contours(
-                        self.svg_path, settings, self.is_cancelled
-                    )
+            self.progress.emit(10, "Building fill geometry")
+            raw_contours = self.window.load_contours(
+                self.svg_path, settings, self.is_cancelled, self.notice.emit
+            )
             self.progress.emit(48, f"Planning motion for {len(raw_contours)} contours")
             program_plan = converter.plan_program(raw_contours, settings, self.is_cancelled)
             moves = self.window.build_preview_moves(raw_contours, settings, self.is_cancelled, program_plan)
@@ -1249,6 +1258,14 @@ class MainWindow(QMainWindow):
                     f"Auto fill: {detail} found, so Fill source Auto will hatch the "
                     "SVG's own regions and stay inside them."
                 )
+                if sources["filled"] >= 40:
+                    self.log.append(
+                        f"Auto fill: {sources['filled']} filled shapes with no image or "
+                        "gradient looks like a traced bitmap. A trace has no gradients "
+                        "left and hatching its layers separately is slow; open the "
+                        "source photo instead (Browse accepts jpg/png), where one fill "
+                        "reads the tone."
+                    )
             else:
                 self.log.append(
                     f"Auto fill: {detail} found; Fill source Auto will hatch the regions "
@@ -1371,12 +1388,13 @@ class MainWindow(QMainWindow):
     def build_preview_moves(self, contours, settings, cancel_check=None, program_plan=None):
         return converter.build_preview_moves(contours, settings, cancel_check, program_plan)
 
-    def raw_geometry_key(self, svg_path, settings):
+    def raw_geometry_key(self, svg_path, settings, fill=True):
         stat = os.stat(svg_path)
         return (
             os.path.abspath(svg_path),
             stat.st_mtime_ns,
             stat.st_size,
+            bool(fill),
             float(settings.tolerance),
             bool(settings.flip_y),
             bool(getattr(settings, "expand_strokes", False)),
@@ -1400,16 +1418,32 @@ class MainWindow(QMainWindow):
             str(getattr(settings, "fit_mode", "manual")).lower(),
         )
 
-    def image_bounds_mm(self, image_path, settings):
-        """A raster's paper-space bounds, for sizing artwork with no outlines."""
-        image = QImage(image_path)
-        if image.isNull():
-            return []
+    def artwork_bounds_mm(self, artwork_path, settings):
+        """Paper-space bounds for artwork whose outlines cannot be measured.
+
+        A raster is its pixels; an SVG with no drawable outline (one that is
+        only an embedded photo, for example) is its viewBox. Both are what an
+        auto fit has to size when `parse_svg_geometry` comes back empty.
+        """
         scale = float(getattr(settings, "scale", 1.0))
         if not math.isfinite(scale) or scale <= 0.0:
             scale = 1.0
-        width = image.width() * scale
-        height = image.height() * scale
+        if converter.is_raster_image(artwork_path):
+            image = QImage(artwork_path)
+            if image.isNull():
+                return []
+            width, height = float(image.width()), float(image.height())
+        else:
+            renderer = QSvgRenderer(artwork_path)
+            view = renderer.viewBoxF()
+            if view.isNull() or view.width() <= 0 or view.height() <= 0:
+                size = renderer.defaultSize()
+                view = QRectF(0.0, 0.0, float(size.width()), float(size.height()))
+            if view.width() <= 0 or view.height() <= 0:
+                return []
+            width, height = float(view.width()), float(view.height())
+        width *= scale
+        height *= scale
         return [
             (0.0, 0.0),
             (width, 0.0),
@@ -1418,15 +1452,15 @@ class MainWindow(QMainWindow):
             (0.0, 0.0),
         ]
 
-    def fitted_settings_for_image(self, settings, image_path):
-        """Apply the auto fit to a photo from its pixel size.
+    def fitted_settings_for_artwork_bounds(self, settings, artwork_path):
+        """Apply the auto fit to artwork that has no outlines to measure.
 
         An SVG carries outlines that say how big the artwork is; a photo does
         not, so the image bounds stand in for them. Without this the first pass
         would fill at whatever scale the field still holds - often 1.0 on a
         fresh session, which for a 4000-pixel photo is four metres of paper.
         """
-        bounds = self.image_bounds_mm(image_path, settings)
+        bounds = self.artwork_bounds_mm(artwork_path, settings)
         if not bounds:
             return settings
         return self.fitted_settings(settings, [bounds])
@@ -2503,12 +2537,21 @@ class MainWindow(QMainWindow):
             return converter.chain_segments_to_paths(out)
         return out
 
-    def load_contours(self, svg_path, settings, cancel_check=None, notice=None):
+    def load_contours(self, svg_path, settings, cancel_check=None, notice=None, fill=True):
+        """Parse the artwork, with or without its fill.
+
+        ``fill=False`` returns outlines only. An auto fit needs the artwork's
+        size before the fill can be generated - the fill spacing is
+        millimetres - so the preview measures the outlines first and builds the
+        fill once, at the fitted scale, instead of filling twice.
+        """
         converter.check_cancelled(cancel_check)
-        key = self.raw_geometry_key(svg_path, settings)
+        key = self.raw_geometry_key(svg_path, settings, fill)
         if self.raw_cache_key != key or self.raw_contours is None:
             source = converter.resolve_fill_source(settings, svg_path)
-            parse_hatch_spacing = 0.0 if source == "tone" else float(getattr(settings, "hatch_spacing_mm", 0.0))
+            parse_hatch_spacing = (
+                0.0 if source == "tone" or not fill else float(getattr(settings, "hatch_spacing_mm", 0.0))
+            )
             fill_stats = {"fill_contours": 0}
             if converter.is_raster_image(svg_path):
                 # A photo has no vector geometry at all: its tone fill is the
@@ -2541,7 +2584,7 @@ class MainWindow(QMainWindow):
                 pen_diameter=float(getattr(settings, "pen_diameter_mm", 0.0)),
                 stats=fill_stats,
             )
-            if source == "tone":
+            if source == "tone" and fill:
                 pattern = converter.normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))
                 if pattern in ("concentric", "triangular", "diamonds", "hexagonal"):
                     centerline_contours = converter.parse_svg_geometry(

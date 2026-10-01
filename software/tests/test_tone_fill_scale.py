@@ -102,6 +102,26 @@ class ToneFillScaleTests(unittest.TestCase):
         self.assertLess(first, second * 0.4)
         self.assertGreater(first, second * 0.2)
 
+    def test_the_measuring_pass_is_outlines_only(self):
+        """An auto fit measures first and fills once, at the fitted scale.
+
+        Filling the measuring pass too would build the lattice at the scale
+        left in the field - on this artwork roughly 400,000 points - and throw
+        it away as soon as the fit runs.
+        """
+        self.window.fields["hatch_spacing_mm"].setText("4")
+        self.window.fields["scale"].setText("1.0")
+        settings = self.window.settings()
+        self.window.raw_cache_key = None
+        self.window.raw_contours = None
+        measured = self.window.load_contours(self.path, settings, fill=False)
+        filled = self.window.load_contours(self.path, settings, fill=True)
+        measured_points = sum(len(contour) for contour in measured)
+        filled_points = sum(len(contour) for contour in filled)
+        self.assertTrue(measured, "the measuring pass still reports the artwork")
+        self.assertLess(measured_points, 20)
+        self.assertGreater(filled_points, 100_000)
+
     def test_a_denser_request_still_scales_with_the_square(self):
         wide = sum(len(contour) for contour in self._build(6.0, 0.4))
         tight = sum(len(contour) for contour in self._build(3.0, 0.4))
