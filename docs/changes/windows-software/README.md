@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-01 | `WSW-20261001-008` | implemented | [Photos import directly and plot as sine-wave tone](2026/2026-10-01-photo-raster-input.md) | `fill`, `tone`, `raster`, `photo`, `interface` |
 | 2026-10-01 | `WSW-20261001-007` | implemented | [Image-tone fill spacing is millimetres on paper](2026/2026-10-01-image-tone-fill-spacing-units.md) | `fill`, `tone`, `performance`, `units` |
 | 2026-10-01 | `WSW-20261001-006` | implemented | [Ornament spacing: the wallpaper density is a control, not a constant](2026/2026-10-01-ornament-spacing-control.md) | `kaleidoscope`, `generative`, `interface` |
 | 2026-10-01 | `WSW-20261001-005` | implemented | [The kaleidoscope control column scrolls instead of running off the window](2026/2026-10-01-scrollable-kaleidoscope-sidebar.md) | `kaleidoscope`, `interface`, `usability` |

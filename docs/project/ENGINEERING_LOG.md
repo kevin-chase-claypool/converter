@@ -1,5 +1,46 @@
 # Engineering Log
 
+<a id="elog-20261001-photo-raster-input"></a>
+### 🟩 2026-10-01 10:44:52 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - a photo imports directly and plots as sine-wave tone
+
+- Request: "i want to be able to import this jpg, make it black and white and
+  maintain the gradients by using the sine wave approach", sent with a portrait
+  photo.
+- Change: `Browse` accepts `.jpg/.jpeg/.png/.bmp/.webp/.tif/.tiff/.gif` as well
+  as `.svg`. A raster has no vector regions, so `resolve_fill_source` returns
+  `tone` whatever the field says, `load_contours` skips the SVG parse, and
+  `raster_shade_contours` feeds a `QImage` straight to the tone path with one
+  view unit per source pixel (exact sampling, no renderer, 2400 px cap). Tone is
+  luminance - `1 - (0.2126 R + 0.7152 G + 0.0722 B)` times alpha - so a colour
+  photo becomes grey by the same rule a monochrome print would use, and under
+  `gradient waves (sine_gradient)` that grey is the wave amplitude.
+- Sizing fix: an auto fit has no outlines to measure, so
+  `fitted_settings_for_image` sizes the artwork from the image bounds and the
+  preview thread applies it *before* the fill is generated. The fill spacing is
+  millimetres, so without that the first pass read a 4000-pixel photo at the
+  scale left in the field and either exploded or let the artwork creep. The
+  worker skips its usual second parse for rasters because the fit is already
+  final.
+- Result on the requested photo (`IMG_0514.JPG`, 773 x 1031, `Fit = Fill bed`):
+  `Fill spacing 4` gives scale 0.3517, 92 contours, 73,996 points and a
+  272 x 363 mm drawing in 4.0 s / 68,428 G-code lines; `Fill spacing 3` gives
+  131,132 points and 7.2 s. Render check
+  `samples/preview/photo-sine-gradient-4mm.png` (scratch) shows the face, the
+  log and the shirt reading through wave amplitude.
+- Verification: 159 tests pass, including the new
+  `software/tests/test_raster_import.py` for the extensions, the forced tone
+  source, the image fit (independent of the stale scale in the field) and the
+  points-versus-area-over-spacing-squared contract.
+- Boundary: a photo has tone almost everywhere, so with the 0.04 ink floor very
+  little paper stays blank - the check prints a dense mesh with the subject read
+  from amplitude, not from blank space. There is still no tone curve; if the
+  plots read washed out, `Image gamma`/contrast is the next control.
+- Evidence: `WSW-20261001-008`;
+  `docs/changes/windows-software/2026/2026-10-01-photo-raster-input.md`.
+- Category: windows-software, fill, tone, raster, photo, interface
+- Next action: plot a photo at `Fill spacing 3` and `4` and judge whether the
+  linear luminance curve needs a gamma control.
+
 <a id="elog-20261001-image-tone-fill-spacing-units"></a>
 ### 🟩 2026-10-01 10:12:37 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - image-tone fill spacing is millimetres on paper
 

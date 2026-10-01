@@ -316,6 +316,17 @@ def _element_is_visible(element, inherited=None):
 # absent because the converter does not shape glyphs.
 DRAWABLE_TAGS = ("path", "line", "polyline", "polygon", "rect", "circle", "ellipse")
 
+# A photo or a scan is a valid input: it has no vector geometry, so it is always
+# hatched from its rendered tone. The Qt app supplies the image itself.
+RASTER_IMAGE_EXTENSIONS = frozenset(
+    (".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff", ".gif")
+)
+
+
+def is_raster_image(path):
+    """True when *path* is an image file rather than SVG artwork."""
+    return str(path).strip().lower().endswith(tuple(RASTER_IMAGE_EXTENSIONS))
+
 
 def svg_fill_sources(svg_path):
     """Classify how an SVG declares its artwork without parsing path geometry.
@@ -334,6 +345,9 @@ def svg_fill_sources(svg_path):
       which the fill parser reads as the SVG initial black instead of the
       gradient a renderer would show.
     """
+    if is_raster_image(svg_path):
+        # Nothing to parse: the whole file is tone the vector path cannot see.
+        return {"filled": 0, "outline": 0, "image": 1, "gradient": 0}
     tree = ET.parse(svg_path)
     root = tree.getroot()
     id_map = {node.get("id"): node for node in root.iter() if node.get("id")}
@@ -382,6 +396,9 @@ def resolve_fill_source(settings, svg_path):
     inside the drawn regions and cannot run over them.
     """
     source = str(getattr(settings, "fill_source", "auto") or "auto").strip().lower()
+    if is_raster_image(svg_path):
+        # A raster has no vector regions to hatch, whatever the field says.
+        return "tone"
     if source in ("shapes", "tone"):
         return source
     sources = svg_fill_sources(svg_path)

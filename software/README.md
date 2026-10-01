@@ -496,14 +496,36 @@ display-only; every other group changes the emitted program.
 - `Fill source` decides where the fill geometry comes from:
   - `Auto (recommended)` hatches the SVG's own shapes, and switches to image
     tone only when the artwork's tone lives somewhere the vector path cannot
-    see it: an embedded `<image>` or a `url(#...)` gradient/pattern fill.
+    see it: an embedded `<image>`, a `url(#...)` gradient/pattern fill, or a
+    photo imported directly (see below).
   - `SVG shapes (stays inside)` always hatches the SVG's own regions. Fill is
-    clipped to those regions, so it cannot run over the outlines.
+    clipped to those regions, so it cannot run over the outlines. A raster input
+    has no vector regions, so it still resolves to image tone.
   - `Image tone (photos, gradients)` renders the SVG and hatches its pixels.
     It follows visible tone rather than vector regions, so a pass can overshoot
     an edge by up to `min(active spacing / 3, 1.0) mm` and hatch runs over dark
     outlines. `Raster px/unit` sets the sampling resolution; higher is more
     accurate and slower.
+- **A photo or scan can be opened directly.** `Browse` accepts `.jpg`, `.jpeg`,
+  `.png`, `.bmp`, `.webp`, `.tif` and `.gif` as well as `.svg`; no SVG wrapper
+  is needed. The image is tone, so it always hatches from its pixels - a photo
+  has no vector outlines for `SVG shapes` to use.
+  - Tone is luminance: each pixel becomes `1 - (0.2126 R + 0.7152 G + 0.0722 B)`
+    times its alpha, so a colour photo is converted to grey by the same rule a
+    black-and-white print would use, and that grey drives the wave amplitude
+    under `Fill pattern = gradient waves (sine_gradient)`. Dark features grow
+    waves, light ones flatten them.
+  - A raster is sampled at its own pixels (one view unit is one source pixel), so
+    `Raster px/unit` does not apply; images wider than 2400 px are scaled down
+    smoothly to that cap before sampling.
+  - An auto fit has no outlines to measure, so it sizes the artwork from the
+    image bounds. That needs the paper scale before the fill can be built at a
+    millimetre spacing, which the preview thread resolves in one pass.
+  - Practical starting point for a portrait: `Fill spacing 4`,
+    `Fill pattern gradient waves (sine_gradient)`, `Gradient wave amplitude %`
+    50, `Connect sine rows` on, `Fit = Fill bed`. A bed-filling photo is about
+    74,000 points and four seconds; at `Fill spacing 3` it is about 131,000
+    points and seven seconds.
 - Any element fills the regions its **closed** outlines enclose, whether it
   declares a fill or is stroke-only. Open subpaths have no bounded interior and
   never receive fill, so fill cannot leak across artwork built from open

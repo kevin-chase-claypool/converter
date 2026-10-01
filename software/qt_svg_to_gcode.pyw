@@ -793,20 +793,28 @@ class PreviewWorker(QObject):
         try:
             self.progress.emit(10, "Parsing SVG geometry")
             settings = self.settings
+            if converter.is_raster_image(self.svg_path):
+                # A photo has no outlines to measure, so size it from its pixels
+                # before the fill is built: the fill spacing is millimetres and
+                # cannot be resolved until the paper scale is known.
+                settings = self.window.fitted_settings_for_image(settings, self.svg_path)
             raw_contours = self.window.load_contours(
                 self.svg_path, settings, self.is_cancelled, self.notice.emit
             )
             # An auto fit needs the parsed artwork before it can size it, and the
             # fill is generated at the on-paper resolution for that scale, so a
             # changed scale means re-reading the geometry once.
-            fitted = self.window.fitted_settings(settings, raw_contours)
-            if fitted is not settings:
-                self.progress.emit(20, "Auto-fitting the artwork to the bed")
-                self.notice.emit(self.window.describe_fit(settings, fitted))
-                settings = fitted
-                raw_contours = self.window.load_contours(
-                    self.svg_path, settings, self.is_cancelled
-                )
+            # A raster was already fitted from its image bounds above, where the
+            # fill could be built at the fitted scale in one pass.
+            if not converter.is_raster_image(self.svg_path):
+                fitted = self.window.fitted_settings(settings, raw_contours)
+                if fitted is not settings:
+                    self.progress.emit(20, "Auto-fitting the artwork to the bed")
+                    self.notice.emit(self.window.describe_fit(settings, fitted))
+                    settings = fitted
+                    raw_contours = self.window.load_contours(
+                        self.svg_path, settings, self.is_cancelled
+                    )
             self.progress.emit(48, f"Planning motion for {len(raw_contours)} contours")
             program_plan = converter.plan_program(raw_contours, settings, self.is_cancelled)
             moves = self.window.build_preview_moves(raw_contours, settings, self.is_cancelled, program_plan)
@@ -1128,14 +1136,22 @@ class MainWindow(QMainWindow):
         self.update_fit_fields()
 
     def pick_svg(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Choose SVG", "", "SVG files (*.svg);;All files (*.*)")
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Choose artwork",
+            "",
+            "Artwork (*.svg *.jpg *.jpeg *.png *.bmp *.webp *.tif *.tiff *.gif);;"
+            "SVG files (*.svg);;Images (*.jpg *.jpeg *.png *.bmp *.webp *.tif *.tiff *.gif);;"
+            "All files (*.*)",
+        )
         if path:
             self.svg_path.setText(path)
             self.update_suggested_gcode_path(path)
             self.auto_configure_shading(path)
             self.raw_cache_key = None
             self.raw_contours = None
-            self.log.append("SVG selected. Press Preview to regenerate.")
+            kind = "Image" if converter.is_raster_image(path) else "SVG"
+            self.log.append(f"{kind} selected. Press Preview to regenerate.")
 
     def update_suggested_gcode_path(self, svg_path):
         if not svg_path:
@@ -1203,8 +1219,10 @@ class MainWindow(QMainWindow):
                 self.fields["shade_levels"].setText("4")
             self.fields["shade_angle_step_deg"].setText("45")
             reason = "embedded image" if sources["image"] else "gradient paint"
+            if converter.is_raster_image(svg_path):
+                reason = "photo tone"
             self.log.append(
-                f"Auto fill: this SVG carries {reason} tone, so Fill source Auto will "
+                f"Auto fill: this artwork carries {reason}, so Fill source Auto will "
                 "hatch the rendered image."
             )
             if sources["gradient"]:
@@ -1382,6 +1400,37 @@ class MainWindow(QMainWindow):
             str(getattr(settings, "fit_mode", "manual")).lower(),
         )
 
+    def image_bounds_mm(self, image_path, settings):
+        """A raster's paper-space bounds, for sizing artwork with no outlines."""
+        image = QImage(image_path)
+        if image.isNull():
+            return []
+        scale = float(getattr(settings, "scale", 1.0))
+        if not math.isfinite(scale) or scale <= 0.0:
+            scale = 1.0
+        width = image.width() * scale
+        height = image.height() * scale
+        return [
+            (0.0, 0.0),
+            (width, 0.0),
+            (width, height),
+            (0.0, height),
+            (0.0, 0.0),
+        ]
+
+    def fitted_settings_for_image(self, settings, image_path):
+        """Apply the auto fit to a photo from its pixel size.
+
+        An SVG carries outlines that say how big the artwork is; a photo does
+        not, so the image bounds stand in for them. Without this the first pass
+        would fill at whatever scale the field still holds - often 1.0 on a
+        fresh session, which for a 4000-pixel photo is four metres of paper.
+        """
+        bounds = self.image_bounds_mm(image_path, settings)
+        if not bounds:
+            return settings
+        return self.fitted_settings(settings, [bounds])
+
     def raster_shade_contours(self, svg_path, settings, cancel_check=None):
         converter.check_cancelled(cancel_check)
         spacing = float(getattr(settings, "hatch_spacing_mm", 0.0))
@@ -1397,13 +1446,26 @@ class MainWindow(QMainWindow):
         if not math.isfinite(artwork_scale) or artwork_scale <= 0.0:
             artwork_scale = 1.0
         levels = max(1, int(getattr(settings, "shade_levels", 1)))
-        px_per_unit = max(float(getattr(settings, "raster_px_per_unit", 2.0)), 0.1)
-        renderer = QSvgRenderer(svg_path)
-        view = renderer.viewBoxF()
-        if view.isNull() or view.width() <= 0 or view.height() <= 0:
-            size = renderer.defaultSize()
-            view = QRectF(0.0, 0.0, float(size.width()), float(size.height()))
         max_dim = 2400
+
+        if converter.is_raster_image(svg_path):
+            # A photo is already pixels: one view unit is one source pixel, which
+            # samples the tone exactly and needs no renderer. `Raster px/unit`
+            # cannot mean anything here, so the only scaling is the max_dim cap.
+            image = QImage(svg_path)
+            if image.isNull():
+                return []
+            image = image.convertToFormat(QImage.Format_ARGB32)
+            view = QRectF(0.0, 0.0, float(image.width()), float(image.height()))
+            px_per_unit = 1.0
+        else:
+            px_per_unit = max(float(getattr(settings, "raster_px_per_unit", 2.0)), 0.1)
+            renderer = QSvgRenderer(svg_path)
+            view = renderer.viewBoxF()
+            if view.isNull() or view.width() <= 0 or view.height() <= 0:
+                size = renderer.defaultSize()
+                view = QRectF(0.0, 0.0, float(size.width()), float(size.height()))
+
         width = max(1, int(math.ceil(view.width() * px_per_unit)))
         height = max(1, int(math.ceil(view.height() * px_per_unit)))
         scale_down = max(width / max_dim, height / max_dim, 1.0)
@@ -1412,17 +1474,21 @@ class MainWindow(QMainWindow):
             width = max(1, int(math.ceil(view.width() * px_per_unit)))
             height = max(1, int(math.ceil(view.height() * px_per_unit)))
 
-        image = QImage(width, height, QImage.Format_ARGB32)
-        image.fill(QColor(255, 255, 255, 0))
-        painter = QPainter(image)
-        renderer.render(painter, QRectF(0.0, 0.0, float(width), float(height)))
-        painter.end()
+        if not converter.is_raster_image(svg_path):
+            downscaled = QImage(width, height, QImage.Format_ARGB32)
+            downscaled.fill(QColor(255, 255, 255, 0))
+            painter = QPainter(downscaled)
+            renderer.render(painter, QRectF(0.0, 0.0, float(width), float(height)))
+            painter.end()
+            image = downscaled
+        elif (width, height) != (image.width(), image.height()):
+            image = image.scaled(width, height, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
 
         def darkness_at(x, y):
             converter.check_cancelled(cancel_check)
             px = int((x - view.left()) * px_per_unit)
             py = int((y - view.top()) * px_per_unit)
-            if px < 0 or py < 0 or px >= width or py >= height:
+            if px < 0 or py < 0 or px >= image.width() or py >= image.height():
                 return 0.0
             color = image.pixelColor(px, py)
             alpha = color.alphaF()
@@ -2444,6 +2510,18 @@ class MainWindow(QMainWindow):
             source = converter.resolve_fill_source(settings, svg_path)
             parse_hatch_spacing = 0.0 if source == "tone" else float(getattr(settings, "hatch_spacing_mm", 0.0))
             fill_stats = {"fill_contours": 0}
+            if converter.is_raster_image(svg_path):
+                # A photo has no vector geometry at all: its tone fill is the
+                # whole drawing, so skip the SVG parse and go straight to the
+                # rendered-image path.
+                raw_contours = self.raster_shade_contours(svg_path, settings, cancel_check)
+                fill_stats["fill_contours"] = len(raw_contours)
+                self.raw_contours = raw_contours
+                self.raw_cache_key = key
+                if notice:
+                    notice(self.describe_fill(svg_path, settings, "tone", len(raw_contours)))
+                converter.check_cancelled(cancel_check)
+                return converter.apply_geometry_settings(self.raw_contours, settings)
             raw_contours = converter.parse_svg_geometry(
                 svg_path,
                 settings.tolerance,
