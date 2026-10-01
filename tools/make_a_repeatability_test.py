@@ -138,7 +138,8 @@ def main():
     program = build_program(settings, radii, revolutions, feed)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(program, encoding="utf-8")
+    # LF, like every other file in the repo.
+    out.write_text(program, encoding="utf-8", newline="\n")
 
     turn = settings.theta_drive_ratio * 360.0
     per_rotation_seconds = turn / feed * 60.0
