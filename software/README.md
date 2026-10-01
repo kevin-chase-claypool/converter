@@ -30,6 +30,14 @@ Requires `PySide6` (`pip install PySide6`).
 design from an SVG, PNG or JPG and emits the same program contract as the main
 app.
 
+- **Same planner, same A-axis guard.** This window has no kinematics of its
+  own: `output_settings()` starts from `converter.Settings()` and the program is
+  produced by `plan_program` + `contours_to_gcode`, so it inherits every
+  converter rule including the bed-parking guard (no segment rotating the bed
+  more than 15 deg) and the 20000 motor deg/min assumed A limit. It therefore
+  needs a **restart** after a converter-core change, exactly like the main app;
+  the startup log names the loaded build (`Converter core <version>: A-axis
+  guard active ...`) and the same line goes to `kaleidoscope_debug.log`.
 - **Control column.** Every group is open at once, so the column of controls is
   taller than a laptop window. It lives in a scroll area - scroll it down to
   reach `Build preview` and `Save G-code...`. The sidebar is never narrower than

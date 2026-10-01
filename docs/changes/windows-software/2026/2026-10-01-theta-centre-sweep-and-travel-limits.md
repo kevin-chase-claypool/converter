@@ -141,4 +141,13 @@ photo, and the "waveforms drifting into adjacent waveforms" before it.
 - `software/converter_core/settings.py`: the A limit default and its rationale.
 - `software/tests/test_theta_feed.py`: the centre-fill contract and the rewritten
   M-06 diagnostics.
+- `software/qt_kaleidoscope.pyw`: the sibling app has no kinematics of its own -
+  it emits through `plan_program` + `contours_to_gcode` - so it inherits the
+  guard, and a test now pins that contract on a generated 461-contour design
+  (`test_kaleidoscope_output_obeys_the_a_axis_guards`: worst step 175.9 of a
+  180.5 motor deg limit, worst rate 333.3 of 333.3 motor deg/s, no bare `G0`
+  carrying rotation). What it did *not* have was any way to tell a stale window
+  from a current one, so it now prints the converter-core version and the active
+  guard in its log and to `kaleidoscope_debug.log`, the same way the main app
+  does.
 - `software/README.md`: the operator-facing note.

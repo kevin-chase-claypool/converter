@@ -42,6 +42,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import converter_core as converter
 
+# Flushed so `kaleidoscope_debug.log` names the build as soon as the app starts;
+# this window builds its programs with the same planner as the main converter,
+# and a window left open across a core change keeps the old one in memory.
+print(
+    f"[geometry version: {getattr(converter, 'GEOMETRY_VERSION', 'OLD-no-new-patterns')}]",
+    flush=True,
+)
+
 
 SOURCE_FILTER = (
     "Artwork (*.svg *.png *.jpg *.jpeg *.bmp *.gif *.tif *.tiff *.webp);;"
@@ -321,6 +329,19 @@ class KaleidoscopeWindow(QMainWindow):
         self.say(
             "Preview: wheel zooms, Shift-drag or middle/right-drag pans, plain "
             "drag moves the image inside the frame."
+        )
+        # This window emits through the same planner as the main converter, so
+        # state which build is loaded and which A-axis guard is active: a window
+        # opened before a core change keeps the old planner in memory.
+        self.say(
+            "Converter core %s: A-axis guard active - the bed parks instead of "
+            "sweeping more than %.0f deg in one segment, and the assumed A limit "
+            "is %.0f motor deg/min."
+            % (
+                getattr(converter, "GEOMETRY_VERSION", "OLD"),
+                float(getattr(converter, "MAX_BED_STEP_DEG", 0.0)),
+                float(converter.Settings().theta_controller_limits.max_rate_deg_min),
+            )
         )
         self.apply_settings()
         self._loading = False

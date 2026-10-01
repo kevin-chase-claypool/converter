@@ -37,6 +37,16 @@
 - Boundary: every rapid that includes A is now slower (one bed revolution is
   about 13 s instead of about 2 s). If the bed still loses position at
   20000/6000, lower `$113` in steps and repeat the mark test.
+- Kaleidoscope: "the most recent change needs to be applied to kaleidoscope.bat
+  as well". It already is - that app builds its programs with
+  `converter.Settings()` + `plan_program` + `contours_to_gcode` and has no
+  kinematics of its own, so it inherits the guard. Verified on a generated
+  461-contour design (seed 83382, intricacy 10): worst bed step 175.9 of an
+  180.5 motor deg limit, worst A rate 333.3 of 333.3 motor deg/s, no bare `G0`
+  carrying rotation. What was missing was visibility: the window now logs
+  `Converter core <version>: A-axis guard active ...` at startup and writes the
+  same line to `kaleidoscope_debug.log`, so an instance opened before a core
+  change can be told from a current one. A regression test pins the contract.
 - Evidence: `RPSW-20261001-001`;
   `docs/report/lab-notes/2026-10-01-theta-a-rate-limit-lowering.md`;
   `firmware/grblhal/config/machine-settings.md`.

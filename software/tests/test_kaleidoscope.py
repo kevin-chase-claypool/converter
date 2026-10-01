@@ -6,6 +6,7 @@ around the origin without losing the mirror symmetry.
 """
 
 import math
+import re
 import sys
 import tempfile
 import unittest
@@ -106,6 +107,49 @@ class KaleidoscopeTests(unittest.TestCase):
         self.assertEqual(gcode.count("\nM3"), len(design))
         self.assertNotIn("keep-down bridge", gcode)
         self.assertIn("G53 G0", gcode, "the program must still park at the end")
+
+    def test_kaleidoscope_output_obeys_the_a_axis_guards(self):
+        """This app emits through the converter's planner, so it inherits the
+        A-axis guards: no segment may rotate the bed more than
+        `MAX_BED_STEP_DEG`, no move may ask for more than the assumed A rate, and
+        no pen-up move may carry bed rotation as a bare `G0` rapid."""
+        design = converter.random_pattern(
+            seed=83382, intricacy=10, radius_mm=181.0, wedge_deg=15.0
+        )
+        settings = converter.Settings(fit_mode="manual", scale=1.0, flip_y=False)
+        gcode = converter.contours_to_gcode(design, settings)
+
+        step_limit = converter.MAX_BED_STEP_DEG * settings.theta_drive_ratio
+        rate_limit = settings.theta_controller_limits.max_rate_deg_min / 60.0
+        previous = None
+        worst_step = 0.0
+        worst_rate = 0.0
+        rapids_with_rotation = 0
+        for line in gcode.splitlines():
+            match = re.match(
+                r"G([01]) X(-?[\d.]+) Y(-?[\d.]+)(?: A(-?[\d.]+))?(?: F([\d.]+))?", line
+            )
+            if not match:
+                continue
+            kind, x, y, a, feed = match.groups()
+            point = (float(x), float(y), float(a) if a is not None else None)
+            if previous is not None and point[2] is not None and previous[2] is not None:
+                delta = abs(point[2] - previous[2])
+                if "(travel)" not in line:
+                    worst_step = max(worst_step, delta)
+                if delta > 1e-9:
+                    if kind == "0":
+                        rapids_with_rotation += 1
+                    elif feed:
+                        xy = math.hypot(point[0] - previous[0], point[1] - previous[1])
+                        seconds = (math.hypot(xy, delta) / float(feed)) * 60.0
+                        if seconds > 0.0:
+                            worst_rate = max(worst_rate, delta / seconds)
+            previous = point
+
+        self.assertLessEqual(worst_step, step_limit + 1e-6)
+        self.assertLessEqual(worst_rate, rate_limit * 1.01)
+        self.assertEqual(rapids_with_rotation, 0)
 
     def test_radius_trims_the_design_to_a_fixed_frame(self):
         # A long bar reaches 200 mm; the design must stay inside a 120 mm frame
