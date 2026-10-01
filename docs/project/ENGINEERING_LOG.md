@@ -1,5 +1,34 @@
 # Engineering Log
 
+<a id="elog-20261001-ornament-spacing-control"></a>
+### 🟩 2026-10-01 09:50:37 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - ornament spacing is a control, not a constant
+
+- Request: "i dont know where or how im supposed to modify the wallpaper-like
+  items" - the sparse default from `WSW-20261001-003` was a constant in
+  `generative.py`, which is not reachable from `kaleidoscope.bat`.
+- Change: `random_pattern(ornament_pitch=...)` takes the multiplier (clamped
+  to `MIN_ORNAMENT_PITCH` 1.0 and `MAX_ORNAMENT_PITCH` 8.0, `None` = the 2.0
+  module default) and threads it to the ornament layers only - `_studs()`,
+  `_dots()`, `_rim()`, `_rosette()` and, through the family dispatch, the bead
+  family. The app gains an `Ornament spacing` spin box under `Region overlay`
+  (1.0-8.0, 0.1 steps, default 2.0), wired to the rebuild and saved in
+  `kaleidoscope_settings.json`. `_density()` was not reused: it also thins the
+  hatching inside the shapes.
+- Verification: `OrnamentPitchTests` (default equals the constant, 1.0 > 2.0 >
+  4.0 in contour count, clamping at both ends, radius respected at the
+  extremes); the settings round trip now covers `ornament_pitch`; a new sidebar
+  test builds the real window and shows 1.0 draws more contours than 4.0. For
+  seed 83382 at intricacy 10 the mirrored design is 12,064 / 7,248 / 5,032
+  contours at pitch 1.0 / 2.0 / 4.0 while the path only falls from 150,633 to
+  126,310 mm. Renders `samples\preview\gen_ornament_pitch_1|2|4.png`. All
+  fourteen test modules pass; `docs_index --write/--check` pass.
+- Boundary: the control only bites in random-pattern mode; it stays enabled
+  beside an imported artwork exactly as `Intricacy` and `Region overlay` do.
+- Evidence: `WSW-20261001-006`.
+- Category: windows-software, kaleidoscope, generative, interface
+- Next action: sweep `Ornament spacing` with `Seed` on the plotter PC and keep
+  the value the operator settles on in `kaleidoscope_settings.json`.
+
 <a id="elog-20261001-scrollable-kaleidoscope-sidebar"></a>
 ### 🟩 2026-10-01 09:38:47 -0500 - WINDOWS SOFTWARE/IMPLEMENTED - the kaleidoscope control column scrolls
 
@@ -65,6 +94,12 @@
   (`gradient waves (sine_gradient)`) and `normalized_hatch_pattern` accepts
   either form. The resolver's supported-pattern set now comes from
   `HATCH_PATTERNS`, so the offered list and the accepted list cannot drift.
+- Second follow-up: the option is still reported missing, and the cause is a
+  window opened before the change - the sidebar is built at launch, and no
+  converter process was running when this was checked. `sine_gradient` now sits
+  third in `HATCH_PATTERNS` so it is visible without scrolling, and the log pane
+  plus `qt_debug.log` print `Converter core 2.3-sine-gradient` at startup so the
+  running build is readable at a glance.
 - Evidence: `WSW-20261001-004`; `software/README.md`;
   `samples/svg/gradient-sine-demo.svg`.
 - Category: windows-software, fill, gradient, tone, plotter-art

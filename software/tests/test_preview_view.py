@@ -244,6 +244,7 @@ class SettingsPersistenceTests(unittest.TestCase):
             first.source_size.setValue(640.0)
             first.feed_rate.setValue(950.0)
             first.fit_radius.setValue(150.0)
+            first.ornament_pitch.setValue(3.5)
             first.random_mode.setChecked(True)
             first.save_settings()
             self.assertTrue(settings.is_file())
@@ -256,6 +257,7 @@ class SettingsPersistenceTests(unittest.TestCase):
             self.assertEqual(second.source_size.value(), 640.0)
             self.assertEqual(second.feed_rate.value(), 950.0)
             self.assertEqual(second.fit_radius.value(), 150.0)
+            self.assertEqual(second.ornament_pitch.value(), 3.5)
             self.assertTrue(second.random_mode.isChecked())
             self.assertTrue(second.motif_paths or second.motif_folder == "")
 
@@ -402,6 +404,19 @@ class SidebarScrollTests(unittest.TestCase):
             bottom = button.mapTo(viewport, button.rect().bottomLeft()).y()
             self.assertGreaterEqual(top, 0, button.text())
             self.assertLessEqual(bottom, viewport.height(), button.text())
+
+    def test_the_ornament_spacing_control_reaches_the_generator(self):
+        window = self._short_window()
+        window.random_mode.setChecked(True)
+        window.ornament_pitch.setValue(1.0)
+        packed = len(window.build_design()[1])
+        window.ornament_pitch.setValue(4.0)
+        sparse = len(window.build_design()[1])
+        self.assertGreater(
+            packed,
+            sparse,
+            "the ornament-spacing control must change the drawing",
+        )
 
 
 @unittest.skipUnless(HAVE_QT, "PySide6 is not installed")

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-01 | `WSW-20261001-006` | implemented | [Ornament spacing: the wallpaper density is a control, not a constant](2026/2026-10-01-ornament-spacing-control.md) | `kaleidoscope`, `generative`, `interface` |
 | 2026-10-01 | `WSW-20261001-005` | implemented | [The kaleidoscope control column scrolls instead of running off the window](2026/2026-10-01-scrollable-kaleidoscope-sidebar.md) | `kaleidoscope`, `interface`, `usability` |
 | 2026-10-01 | `WSW-20261001-004` | implemented | [Sine gradient: gradient tone plotted as continuous adjacent sinusoids](2026/2026-10-01-sine-gradient-fill.md) | `fill`, `gradient`, `tone`, `plotter-art` |
 | 2026-10-01 | `WSW-20261001-003` | implemented | [Sparse ornaments: the bead, stud and dot rows stop carpeting the design](2026/2026-10-01-sparse-ornament-layers.md) | `kaleidoscope`, `generative`, `style` |

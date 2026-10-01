@@ -409,6 +409,23 @@ class KaleidoscopeWindow(QMainWindow):
         )
         self.region_overlay.valueChanged.connect(self.on_design_changed)
         form.addRow("Region overlay", self.region_overlay)
+        self.ornament_pitch = QDoubleSpinBox()
+        self.ornament_pitch.setRange(1.0, 8.0)
+        self.ornament_pitch.setSingleStep(0.1)
+        self.ornament_pitch.setDecimals(1)
+        self.ornament_pitch.setValue(2.0)
+        self.ornament_pitch.setSuffix(" x")
+        self.ornament_pitch.setToolTip(
+            "How far apart the wallpaper-like ornaments sit - the bead rows, "
+            "stud flowers and dotted rings that fill the bands between the "
+            "shape rings and run around the rim - as a multiple of the "
+            "engraved hatch pitch. 1.0 packs them edge to edge (the old, busy "
+            "look), 2.0 is the sparse default, and 4.0 or more leaves only a "
+            "few ornaments in a band. The shaded leaves, lenses and separators "
+            "keep their own spacing."
+        )
+        self.ornament_pitch.valueChanged.connect(self.on_design_changed)
+        form.addRow("Ornament spacing", self.ornament_pitch)
         self.open_button = QPushButton("Open artwork...")
         self.open_button.clicked.connect(self.open_source)
         self.path_label = QLabel("(none)")
@@ -643,6 +660,7 @@ class KaleidoscopeWindow(QMainWindow):
             ("seed", self.seed, int),
             ("intricacy", self.intricacy, int),
             ("region_overlay", self.region_overlay, float),
+            ("ornament_pitch", self.ornament_pitch, float),
             ("divisions", self.divisions, int),
             ("source_size", self.source_size, float),
             ("center_x", self.center_x, float),
@@ -708,6 +726,7 @@ class KaleidoscopeWindow(QMainWindow):
             "seed": int(self.seed.value()),
             "intricacy": int(self.intricacy.value()),
             "region_overlay": float(self.region_overlay.value()),
+            "ornament_pitch": float(self.ornament_pitch.value()),
             "divisions": int(self.divisions.value()),
             "source_size": float(self.source_size.value()),
             "center_x": float(self.center_x.value()),
@@ -1081,6 +1100,7 @@ class KaleidoscopeWindow(QMainWindow):
                 wedge_deg=180.0 / max(int(self.divisions.value()), 1),
                 motifs=self._motifs(),
                 region_overlay=float(self.region_overlay.value()),
+                ornament_pitch=float(self.ornament_pitch.value()),
             )
         elif converter.is_raster_source(path):
             traced = converter.trace_raster(

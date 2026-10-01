@@ -50,9 +50,14 @@ TAU = 2.0 * math.pi
 # dotted rings that dress a band. Those layers are the ones that read as
 # printed wallpaper when they pack a band edge to edge, so they are spread at
 # this multiple of the engraved hatching's pitch. 1.0 is the old, busy
-# spacing; 2.0 roughly halves the number of ornaments and is the current
-# default. Raise it to open the design up further.
+# spacing; 2.0 roughly halves the number of ornaments and is the default the
+# app offers. ``random_pattern(ornament_pitch=...)`` overrides it per design.
 ORNAMENT_PITCH = 2.0
+
+# The ornament pitch is a multiplier on a spacing, so below 1.0 the ornaments
+# would overlap and above about 8.0 they stop reading as a band.
+MIN_ORNAMENT_PITCH = 1.0
+MAX_ORNAMENT_PITCH = 8.0
 
 
 def van_der_corput(index, base=2):
@@ -736,7 +741,9 @@ def _lace(r_in, r_out, wedge, level, seed, cancel_check=None):
     return out
 
 
-def _beadrow(r_in, r_out, wedge, level, seed, cancel_check=None):
+def _beadrow(
+    r_in, r_out, wedge, level, seed, cancel_check=None, pitch=ORNAMENT_PITCH
+):
     """Rows of beads and stud flowers scattered through the band.
 
     This family is the easiest one to make look like wallpaper: rows of beads
@@ -747,7 +754,7 @@ def _beadrow(r_in, r_out, wedge, level, seed, cancel_check=None):
     span = r_out - r_in
     density = _density(seed)
     rows = min(
-        _count(span, 4.6 * density * ORNAMENT_PITCH, 1, 14), 1 + level // 4
+        _count(span, 4.6 * density * pitch, 1, 14), 1 + level // 4
     )
     row_h = span / rows
     flower_every = 2 + _pick(seed, 20, 3)
@@ -757,7 +764,7 @@ def _beadrow(r_in, r_out, wedge, level, seed, cancel_check=None):
         rho = r_in + (row + 0.5) * row_h
         stagger = 0.5 * (row % 2) + 0.3 * (weyl(row + seed) - 0.5)
         count = _count(
-            wedge * rho, (4.2 - 0.14 * level) * density * ORNAMENT_PITCH, 1, 90
+            wedge * rho, (4.2 - 0.14 * level) * density * pitch, 1, 90
         )
         for index in range(count):
             t = (index + 0.5 + stagger) / count
@@ -882,9 +889,18 @@ def _flower(centre, size, seed):
     return out
 
 
-def _studs(circle_r, band, spacing, size, wedge, seed, cancel_check=None):
+def _studs(
+    circle_r,
+    band,
+    spacing,
+    size,
+    wedge,
+    seed,
+    cancel_check=None,
+    pitch=ORNAMENT_PITCH,
+):
     """A ring of small flowers and beads, one every *spacing* millimetres."""
-    count = _count(wedge * circle_r, spacing * ORNAMENT_PITCH, 1, 90)
+    count = _count(wedge * circle_r, spacing * pitch, 1, 90)
     out = []
     for index in range(count):
         check_cancelled(cancel_check)
@@ -902,9 +918,11 @@ def _studs(circle_r, band, spacing, size, wedge, seed, cancel_check=None):
     return out
 
 
-def _dots(circle_r, wedge, spacing, size, seed, cancel_check=None):
+def _dots(
+    circle_r, wedge, spacing, size, seed, cancel_check=None, pitch=ORNAMENT_PITCH
+):
     """A ring of tiny beads, one every *spacing* millimetres."""
-    count = _count(wedge * circle_r, spacing * ORNAMENT_PITCH, 1, 160)
+    count = _count(wedge * circle_r, spacing * pitch, 1, 160)
     out = []
     for index in range(count):
         check_cancelled(cancel_check)
@@ -928,7 +946,9 @@ def _separator(radius_at, outer, wedge, level, seed, cancel_check=None):
     return out
 
 
-def _rosette(radius, wedge, level, seed, cancel_check=None):
+def _rosette(
+    radius, wedge, level, seed, cancel_check=None, pitch=ORNAMENT_PITCH
+):
     """The inner centre: nested petal leaves inside two tight rings."""
     if radius <= 1.0:
         return []
@@ -966,6 +986,7 @@ def _rosette(radius, wedge, level, seed, cancel_check=None):
                 radius * 0.035,
                 seed,
                 cancel_check,
+                pitch,
             )
         )
     return out
@@ -995,7 +1016,7 @@ def _starburst(radius, wedge, level, seed, cancel_check=None):
     return out
 
 
-def _rim(radius, wedge, level, seed, cancel_check=None):
+def _rim(radius, wedge, level, seed, cancel_check=None, pitch=ORNAMENT_PITCH):
     """Scalloped multi-line outer boundary with stud and dot rows."""
     density = _density(seed, 92)
     waves = _count(wedge * radius, (13.0 - 0.6 * level) * density, 3, 60)
@@ -1027,11 +1048,20 @@ def _rim(radius, wedge, level, seed, cancel_check=None):
                 wedge,
                 seed + 3,
                 cancel_check,
+                pitch,
             )
         )
     if level >= 5 and _roll(seed, 24) < 0.7:
         out.extend(
-            _dots(radius * 0.955, wedge, 4.5 - 0.2 * level, radius * 0.008, seed + 7, cancel_check)
+            _dots(
+                radius * 0.955,
+                wedge,
+                4.5 - 0.2 * level,
+                radius * 0.008,
+                seed + 7,
+                cancel_check,
+                pitch,
+            )
         )
     return out
 
@@ -1068,6 +1098,7 @@ def random_pattern(
     wedge_deg=15.0,
     motifs=None,
     region_overlay=0.20,
+    ornament_pitch=None,
     cancel_check=None,
 ):
     """Return a mandala in millimetres, centred on the origin, y up.
@@ -1088,12 +1119,21 @@ def random_pattern(
     braid into each other. 0 keeps every shape inside its band; 0.2 is a subtle
     overlap; 0.5 and up interpenetrate heavily, which is how the reference
     artwork gets its density.
+
+    ``ornament_pitch`` (1..8, default ``ORNAMENT_PITCH``) is how far apart the
+    ornament layers sit - the bead rows, stud flowers and dotted rings that
+    dress the bands between the shape rings and around the rim - as a multiple
+    of the engraved hatching's pitch. 1.0 packs them edge to edge and reads as
+    printed wallpaper; 2.0 is the sparse default; higher values leave a few
+    ornaments per band. It leaves the shaded shapes and the separators alone.
     """
     seed = int(seed) % 100000
     level = max(1, min(int(intricacy), 10))
     radius = max(float(radius_mm), 1.0)
     wedge = math.radians(max(float(wedge_deg), 0.5))
     overlay = max(0.0, min(float(region_overlay), 0.8))
+    pitch = ORNAMENT_PITCH if ornament_pitch is None else float(ornament_pitch)
+    pitch = max(MIN_ORNAMENT_PITCH, min(pitch, MAX_ORNAMENT_PITCH))
     motifs = list(motifs) if motifs else []
     plan = motif_plan(seed, level, len(motifs))
 
@@ -1111,7 +1151,9 @@ def random_pattern(
     burst = level >= 3 and _roll(seed, 7) < 0.75
 
     contours = []
-    contours.extend(_rosette(centre_r, wedge, level, seed + 5, cancel_check))
+    contours.extend(
+        _rosette(centre_r, wedge, level, seed + 5, cancel_check, pitch)
+    )
     if burst:
         contours.extend(_starburst(centre_r, wedge, level, seed + 9, cancel_check))
     centre_pool = next((pool for pool in plan if pool), [])
@@ -1160,6 +1202,9 @@ def random_pattern(
                 )
             )
         else:
+            # Only the bead family spends the ornament pitch; every other
+            # family lays its detail out at the hatching pitch.
+            ornament = {"pitch": pitch} if name == "beadrow" else {}
             contours.extend(
                 _FUNCTIONS[name](
                     draw_in,
@@ -1168,6 +1213,7 @@ def random_pattern(
                     level,
                     seed + 17 * ring + 1,
                     cancel_check,
+                    **ornament,
                 )
             )
         center_line = r_out + 0.5 * gap
@@ -1195,6 +1241,7 @@ def random_pattern(
                         wedge,
                         seed + 50 + ring,
                         cancel_check,
+                        pitch,
                     )
                 )
             if mode in (2, 3):
@@ -1206,8 +1253,9 @@ def random_pattern(
                         radius * (0.0025 + 0.0002 * level),
                         seed + 70 + ring,
                         cancel_check,
+                        pitch,
                     )
                 )
 
-    contours.extend(_rim(radius, wedge, level, seed + 31, cancel_check))
+    contours.extend(_rim(radius, wedge, level, seed + 31, cancel_check, pitch))
     return contours

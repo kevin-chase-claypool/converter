@@ -276,6 +276,69 @@ class NaturalMotifTests(unittest.TestCase):
             self.assertTrue(pattern)
 
 
+class OrnamentPitchTests(unittest.TestCase):
+    """Ornament spacing: the knob that decides how wallpaper-like a band is."""
+
+    def test_the_default_is_the_module_constant(self):
+        plain = converter.random_pattern(
+            seed=83382, intricacy=10, radius_mm=RADIUS, wedge_deg=45.0
+        )
+        explicit = converter.random_pattern(
+            seed=83382,
+            intricacy=10,
+            radius_mm=RADIUS,
+            wedge_deg=45.0,
+            ornament_pitch=generative.ORNAMENT_PITCH,
+        )
+        self.assertEqual(plain, explicit)
+
+    def test_a_longer_pitch_draws_fewer_ornaments(self):
+        counts = [
+            len(
+                converter.random_pattern(
+                    seed=83382,
+                    intricacy=10,
+                    radius_mm=RADIUS,
+                    wedge_deg=45.0,
+                    ornament_pitch=pitch,
+                )
+            )
+            for pitch in (1.0, 2.0, 4.0)
+        ]
+        self.assertGreater(counts[0], counts[1])
+        self.assertGreater(counts[1], counts[2])
+        # The shade lines, separators and rim are not ornaments, so even the
+        # widest pitch leaves an engraving rather than an empty disc.
+        self.assertGreater(counts[2], 100)
+
+    def test_the_pitch_is_clamped_to_the_documented_range(self):
+        def pattern(pitch):
+            return converter.random_pattern(
+                seed=5,
+                intricacy=6,
+                radius_mm=RADIUS,
+                wedge_deg=15.0,
+                ornament_pitch=pitch,
+            )
+
+        self.assertEqual(pattern(-3.0), pattern(generative.MIN_ORNAMENT_PITCH))
+        self.assertEqual(pattern(99.0), pattern(generative.MAX_ORNAMENT_PITCH))
+
+    def test_ornaments_stay_inside_the_design_at_either_extreme(self):
+        for pitch in (generative.MIN_ORNAMENT_PITCH, generative.MAX_ORNAMENT_PITCH):
+            pattern = converter.random_pattern(
+                seed=13,
+                intricacy=10,
+                radius_mm=RADIUS,
+                wedge_deg=15.0,
+                ornament_pitch=pitch,
+            )
+            self.assertTrue(pattern)
+            for contour in pattern:
+                for x, y in contour:
+                    self.assertLessEqual(math.hypot(x, y), RADIUS + 1e-6)
+
+
 class RegionOverlayTests(unittest.TestCase):
     """Region overlay: how much neighbouring bands share, without stretching."""
 

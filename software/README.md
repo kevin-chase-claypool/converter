@@ -53,10 +53,14 @@ app.
   are placed one every few millimetres along the arc - so the design gets
   complicated the way an engraving does rather than by repeating one texture.
   The bead rows, stud flowers and dotted rings are ornaments rather than
-  structure, so they are spread at twice the pitch of the engraved hatching
-  (`generative.ORNAMENT_PITCH`): a band reads as a scatter with rhythm instead
-  of printed wallpaper. That one constant is the sparsity knob - raise it to
-  open the design up further, lower it to pack the ornaments back in.
+  structure, so they have their own spacing: `Ornament spacing` (1.0-8.0,
+  default 2.0) is how far apart they sit as a multiple of the engraved
+  hatching's pitch. 1.0 packs them edge to edge and reads as printed wallpaper,
+  2.0 is the sparse default, and 4.0 or more leaves a few ornaments per band.
+  That is the control for how wallpaper-like a design looks; the shaded
+  leaves, lenses, separators and rim arcs keep their own spacing. It maps to
+  `random_pattern(ornament_pitch=...)`, whose default is
+  `generative.ORNAMENT_PITCH`.
   The result is clipped, mirrored, offset, auto-fitted and saved exactly like an
   imported image, so one seed plus the other controls reproduces the same
   G-code. The seed changes the *structure*, not just the phases: it picks one of
@@ -524,10 +528,12 @@ display-only; every other group changes the emitted program.
   the fill and curve flattening are generated coarser in SVG space so the final
   on-paper density stays constant and the preview evaluates proportionally fewer
   contours instead of building a full-resolution lattice and shrinking it.
-- `Fill pattern` selects OrcaSlicer-style sparse infill: `linear`, `crosshatch`,
-  `diagonal`, `diagonal_crosshatch`, `diamonds`, `triangular`, `honeycomb`,
-  `circles`, or `dots`. `waves` and `sine_gradient` draw the fill as sine rows
-  instead of straight lines. `linear` is always one parallel-line family; darker fills
+- `Fill pattern` selects the infill. In list order: `linear` (parallel lines),
+  `crosshatch`, `gradient waves (sine_gradient)`, `diagonal`,
+  `diagonal_crosshatch`, `triangular`, `cubic` (isometric), `diamonds`,
+  `hexagonal`, `circles`, `dots`, `waves` (uniform sine rows), `gyroid`, and
+  `concentric` (inset loops). `waves` and `sine_gradient` draw the fill as sine
+  rows instead of straight lines. `linear` is always one parallel-line family; darker fills
   increase density by reducing spacing, not by changing the pattern into another
   pattern. The vector fill path treats each pattern as a full layer and clips
   pattern segments to the filled contour boundary. Compound SVG paths are clipped
@@ -535,7 +541,9 @@ display-only; every other group changes the emitted program.
 - The pattern combo lists readable labels over the stored values, so
   `sine_gradient` reads as `gradient waves (sine_gradient)` and `waves` as
   `waves (uniform sine rows)`; a settings file or a script still uses the short
-  value, and either form can be typed.
+  value, and either form can be typed. The gradient entry sits in the top three
+  so it is visible without scrolling, and the log pane prints the converter
+  core version on startup so a window left open across a change is obvious.
 - `Fill pattern = sine_gradient` is the gradient fill: continuous adjacent
   sinusoids whose **amplitude follows the rendered tone**. Dark areas swell the
   waves until neighbouring rows just touch; light areas flatten them out. It
