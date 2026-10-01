@@ -339,7 +339,7 @@ class KaleidoscopeWindow(QMainWindow):
             "is %.0f motor deg/min."
             % (
                 getattr(converter, "GEOMETRY_VERSION", "OLD"),
-                float(getattr(converter, "MAX_BED_STEP_DEG", 0.0)),
+                float(converter.Settings().theta_max_step_deg),
                 float(converter.Settings().theta_controller_limits.max_rate_deg_min),
             )
         )

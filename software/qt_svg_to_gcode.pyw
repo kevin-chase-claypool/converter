@@ -829,8 +829,16 @@ class PreviewWorker(QObject):
             moves = self.window.build_preview_moves(raw_contours, settings, self.is_cancelled, program_plan)
             self.progress.emit(78, f"Preparing {len(program_plan['contours'])} clipped contours")
             self.progress.emit(90, "Generating complete G-code listing")
-            program_gcode = converter.contours_to_gcode(raw_contours, settings, program_plan)
-            self.finished.emit((settings, program_plan["contours"], moves, program_plan["center"], program_gcode))
+            # `stats` reports the worst commanded bed-path deviation and where it
+            # happened, which is the number to look at when a turn mid-stroke
+            # leaves a mark on paper.
+            stats = {}
+            program_gcode = converter.contours_to_gcode(
+                raw_contours, settings, program_plan, stats
+            )
+            self.finished.emit(
+                (settings, program_plan["contours"], moves, program_plan["center"], program_gcode, stats)
+            )
         except converter.OperationCancelled:
             self.cancelled.emit()
         except Exception as exc:
@@ -1418,6 +1426,9 @@ class MainWindow(QMainWindow):
             # even though the scaling itself happens later.
             float(getattr(settings, "scale", 1.0)),
             str(getattr(settings, "fit_mode", "manual")).lower(),
+            # The bed-step limit changes which point the plan may rotate to, so
+            # a geometry re-read is required when it moves.
+            float(getattr(settings, "theta_max_step_deg", 10.0)),
         )
 
     def artwork_bounds_mm(self, artwork_path, settings):
@@ -3088,10 +3099,23 @@ class MainWindow(QMainWindow):
         self.preview_stage.setText(f"{stage} | {elapsed:.1f} s")
 
     def preview_ready(self, result):
-        settings, contours, moves, bed_center, program_gcode = result
+        settings, contours, moves, bed_center, program_gcode, stats = result
         self.set_preview_build_progress(94, "Preparing OpenGL preview")
         QApplication.processEvents()
         self.install_preview(settings, contours, moves, bed_center, program_gcode)
+        deviation = float(stats.get("worst_bed_deviation_mm", 0.0)) if stats else 0.0
+        if deviation > 0.0:
+            self.log.append(
+                "Tolerance %.2f mm: worst commanded bed-path deviation about "
+                "%.2f mm at %.1f mm radius (%s). Lower Tolerance or Max bed step "
+                "deg if that shows on paper."
+                % (
+                    float(getattr(settings, "tolerance", 0.0)),
+                    deviation,
+                    float(stats.get("worst_bed_deviation_radius_mm", 0.0)),
+                    stats.get("worst_bed_deviation_strategy", "draw"),
+                )
+            )
         self.set_preview_build_progress(100, "Preview ready")
         estimate = self.update_estimate()
         if estimate:

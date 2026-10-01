@@ -47,6 +47,19 @@
   `Converter core <version>: A-axis guard active ...` at startup and writes the
   same line to `kaleidoscope_debug.log`, so an instance opened before a core
   change can be told from a current one. A regression test pins the contract.
+- Follow-up on the step cap: "i think 15 degrees might be too much ... even
+  though it's less than 15 degrees it still caused print defects. would it be a
+  problem to change it to 10 degrees instead of 15?" Two things came out of it.
+  The cap is now a **setting** (`Max bed step deg`, default 10, in the Theta
+  kinematics group, `0` allowed) and a **hard limit** - previously it only made
+  the parked bed a candidate, and a cheaper rotating option could still win, so
+  the guarantee in the docs was not actually enforced. Measured on a 461-contour
+  mandala: largest drawing step 14.62 / 9.92 / 5.00 deg at caps 15 / 10 / 5,
+  with total bed rotation 30.1 / 51.6 / 31.9 revolutions - so lowering the cap
+  bounds each move but does not monotonically reduce the bed's total motion.
+  The main app now logs the worst commanded bed-path deviation, its radius and
+  its strategy after each preview, which is the number that separates a
+  tolerance-driven bow from a junction blob or a creeping sheet.
 - Evidence: `RPSW-20261001-001`;
   `docs/report/lab-notes/2026-10-01-theta-a-rate-limit-lowering.md`;
   `firmware/grblhal/config/machine-settings.md`.

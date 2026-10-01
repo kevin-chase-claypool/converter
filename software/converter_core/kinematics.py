@@ -7,15 +7,19 @@ from .settings import pattern_size_override, pattern_size_values
 
 _EPSILON = 1e-9
 
-# Largest bed rotation a single planned segment may ask for before the planner
-# is allowed to hold the bed still instead. Axis-lock solutions near the bed
-# centre sit tens of degrees apart - a point a fraction of a millimetre off
-# centre can pin the root 80 degrees away - which is what commanded 79 bed
-# degrees inside one move and asked the A axis for a rate no stepper can follow.
-# Normal artwork rotates well under this per segment, so this only bites at the
-# singularity, and holding there costs the artwork nothing: the pen is inside
-# the reachable disc, so the gantry can draw the move with the bed parked.
-MAX_BED_STEP_DEG = 15.0
+# Default for `settings.theta_max_step_deg`: the largest bed rotation a single
+# planned segment may ask for before the planner is allowed to hold the bed
+# still instead. Axis-lock solutions near the bed centre sit tens of degrees
+# apart - a point a fraction of a millimetre off centre can pin the root 80
+# degrees away - which is what commanded 79 bed degrees inside one move and
+# asked the A axis for a rate no stepper can follow. A large rotation mid-stroke
+# is also where the pen drags, the sheet can creep and grblHAL decelerates into
+# the junction, so the operator can lower this without touching code.
+MAX_BED_STEP_DEG = 10.0
+
+
+def _max_bed_step_deg(settings):
+    return max(0.0, float(getattr(settings, "theta_max_step_deg", MAX_BED_STEP_DEG)))
 
 
 def plan_radius_aware_draw_feed(start_point, end_point, center, xy_length, motor_delta, settings):
@@ -313,14 +317,19 @@ def _rtheta_segment_plan(a, b, settings, previous_theta, previous_machine, cente
     y_plan = _rtheta_axis_plan(b, settings, previous_theta, previous_machine, center, "y_theta")
     plans = [plan for plan in (x_plan, y_plan) if plan is not None]
     held = _held_segment_plan(b, settings, previous_theta, previous_machine, center)
+    step_limit = _max_bed_step_deg(settings)
     if plans:
         best = min(plans, key=lambda plan: plan["cost"])
         sweep = abs(best["theta"] - (previous_theta if previous_theta is not None else best["theta"]))
-        if sweep <= MAX_BED_STEP_DEG:
+        if sweep <= step_limit:
             return best
-        # The axis locks want a sweep that is too large for one segment to carry.
-        # Offer the parked bed as the alternative and let the usual cost decide.
-        return min(best, held, key=lambda plan: plan["cost"]) if held is not None else best
+        # The axis locks want a sweep that is too large for one segment to carry,
+        # so park the bed and let the gantry draw the move in X and Y. This is a
+        # hard limit, not a cost preference: inside the reachable disc the parked
+        # bed can always trace the move, so no case needs the sweep.
+        if held is not None:
+            return held
+        return best
 
     # No axis-lock root at all: the target is too close to the bed centre for a
     # pure-X or pure-Y machine move to reach it. Parking the bed is the honest
@@ -420,7 +429,7 @@ def plan_segment_kinematics(a, b, settings, previous_theta, center=None, previou
         # should carry, let the parked bed compete as well - the same rescue
         # `_rtheta_segment_plan` applies at the bed-centre singularity.
         if (
-            abs(best["theta"] - reference) > MAX_BED_STEP_DEG
+            abs(best["theta"] - reference) > _max_bed_step_deg(settings)
             and previous_machine is not None
             and previous_theta is not None
         ):
@@ -433,8 +442,9 @@ def plan_segment_kinematics(a, b, settings, previous_theta, center=None, previou
                     previous_machine, held_machine, previous_theta, previous_theta, settings
                 ),
             }
-            if held["cost"] < best["cost"]:
-                best = held
+            # Hard limit: the parked bed always wins once the cap is exceeded,
+            # because inside the reachable disc it can always trace the move.
+            best = held
         if best["strategy"] == "hold":
             return best
         # Relabel the winning candidate by which gantry axis did more work in

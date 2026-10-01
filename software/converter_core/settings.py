@@ -63,6 +63,12 @@ class Settings:
     theta_mode: str = "optimized"
     theta_resolver: str = "rtheta"
     theta_weight: float = 1.0
+    # Largest bed rotation one planned segment may ask for, in bed degrees. Above
+    # this the planner parks the bed and lets the gantry draw the move in X and
+    # Y. Lower it when a large turn mid-stroke shows up on paper as a drag mark,
+    # a slight rotation of everything after it, or a blob where the machine
+    # decelerated into the junction.
+    theta_max_step_deg: float = 10.0
     # Re-register the bed at every contour: subtract whole revolutions from the
     # bed angle so the commanded A never winds far from zero. Physically
     # neutral - the bed ends at the same orientation - but on a machine whose A
@@ -257,6 +263,7 @@ TEXT_FIELD_GROUPS = (
         ("Theta mode", "theta_mode", "optimized"),
         ("Theta resolver", "theta_resolver", "rtheta"),
         ("Theta weight", "theta_weight", "1.0"),
+        ("Max bed step deg", "theta_max_step_deg", "10"),
         ("Curve round bias", "round_bias", "0.05"),
         ("Smoothness factor", "smoothness_factor", "1.0"),
         ("Theta smooth", "theta_smooth_window", "2"),
@@ -397,6 +404,7 @@ FIELD_TOOLTIPS = {
     "feed_rate": "Maximum X/Y draw speed in mm/min.",
     "travel_rate": "Pen-up travel speed in mm/min.",
     "theta_mode": "How the bed orientation is chosen per contour: optimized solves it, fixed holds one angle, tangent follows the path direction.",
+    "theta_max_step_deg": "Largest bed rotation one move may ask for, in bed degrees. Beyond this the bed parks and the gantry takes the move in X and Y. Lower it if a large turn mid-stroke leaves a drag mark, a blob, or a slight rotation of everything after it; 0 parks the bed whenever a turn is needed.",
     "theta_resolver": "Per-segment theta solver. rtheta is the installed default; dp and greedy are fallback experiments.",
     "theta_wrap": "Subtract whole bed revolutions at every contour so the commanded A stays near zero. The bed ends in the same place, but any small A-axis scale error stops accumulating with angle - turn this off to match older programs.",
     "pen_diameter_mm": "Physical pen tip width. Used for ink-size reporting, pen-width compensation, and the 'Fill wide strokes' threshold.",
@@ -528,6 +536,8 @@ def validate_settings(settings):
             raise ValueError(f"{name.replace('_', ' ')} must be a finite number.")
     if int(settings.shade_levels) < 1:
         raise ValueError("shade levels must be at least one.")
+    if not 0.0 <= float(settings.theta_max_step_deg) <= 180.0:
+        raise ValueError("max bed step must be between 0 and 180 degrees.")
     if float(settings.gradient_wave_amplitude_pct) > 100.0:
         raise ValueError(
             "gradient wave amplitude must not exceed 100 percent of the row spacing."

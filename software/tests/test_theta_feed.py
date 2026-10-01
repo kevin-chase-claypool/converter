@@ -380,6 +380,46 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         self.assertLessEqual(worst_rate, rate_limit * 1.01)
         self.assertEqual(rapids_with_rotation, 0, "a pen-up rotation must be fed, not a rapid")
 
+    def test_the_bed_step_cap_is_hard_at_any_setting(self):
+        """Lowering the cap must bound every drawing move, not just most of them.
+
+        The parked bed can always trace an in-disc move, so there is no segment
+        that needs a bigger sweep - the cap is a limit, not a preference the
+        travel cost can overrule.
+        """
+        design = converter.random_pattern(
+            seed=83382, intricacy=10, radius_mm=181.0, wedge_deg=15.0
+        )
+        for cap in (15.0, 10.0, 5.0):
+            settings = converter.Settings(
+                fit_mode="manual", scale=1.0, flip_y=False, theta_max_step_deg=cap
+            )
+            gcode = converter.contours_to_gcode(design, settings)
+            ratio = settings.theta_drive_ratio
+            previous = None
+            worst = 0.0
+            for line in gcode.splitlines():
+                match = re.match(
+                    r"G1 X(-?[\d.]+) Y(-?[\d.]+)(?: A(-?[\d.]+))?", line
+                )
+                if not match:
+                    continue
+                x, y, a = match.groups()
+                point = (float(x), float(y), float(a) if a is not None else None)
+                if (
+                    previous is not None
+                    and point[2] is not None
+                    and previous[2] is not None
+                    and "(travel)" not in line
+                ):
+                    worst = max(worst, abs(point[2] - previous[2]))
+                previous = point
+            self.assertLessEqual(
+                worst,
+                cap * ratio + 1e-6,
+                "cap %g deg: no drawing move may exceed it" % cap,
+            )
+
     def test_invalid_machine_motion_settings_are_rejected(self):
         for kwargs in (
             {"feed_rate": 0.0},

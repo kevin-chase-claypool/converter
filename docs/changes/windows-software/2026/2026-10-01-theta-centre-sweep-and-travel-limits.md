@@ -150,4 +150,19 @@ photo, and the "waveforms drifting into adjacent waveforms" before it.
   from a current one, so it now prints the converter-core version and the active
   guard in its log and to `kaleidoscope_debug.log`, the same way the main app
   does.
+- Follow-up, after the operator reported defects at turns *under* the 15 deg
+  cap ("when the print nears the nw side ... a large a axis turn is required, and
+  even though it's less than 15 degrees it still caused print defects"): the cap
+  is now a **setting** (`Max bed step deg`, default **10**) and a **hard limit**,
+  not a cost preference the travel cost could overrule. Measured on a 461-contour
+  mandala: largest drawing step 14.62 deg at cap 15, 9.92 at cap 10, 5.00 at
+  cap 5 - and the total bed rotation went 30.1 -> 51.6 -> 31.9 revolutions, so
+  the trade is real and not monotone: fewer/smaller turns are bought with more
+  gantry travel, and the bed's total motion depends on the path the cost model
+  then finds. The main app also reports the worst commanded bed-path deviation
+  and the radius where it happened after every preview, and the kaleidoscope
+  banner prints the loaded cap, so the three candidate causes of a mark at a
+  turn can be told apart: tolerance-driven bow (lower `Tolerance`), a junction
+  deceleration blob (lower this cap), or the sheet creeping under a fast pen-up
+  re-orientation (lower `$113` further or clamp the sheet).
 - `software/README.md`: the operator-facing note.
