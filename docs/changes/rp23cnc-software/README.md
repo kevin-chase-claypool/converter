@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-02 | `RPSW-20261002-001` | implemented | [Raise the M5 clearance pulse to 70 ms](2026/2026-10-02-raise-m5-clearance-to-70ms.md) | `m5`, `pen-clear`, `clearance`, `toolhead`, `drag` |
 | 2026-10-01 | `RPSW-20261001-002` | verified | [Axis-centre correction in P100: the registered origin moves +1.25 mm in X](2026/2026-10-01-axis-centre-correction.md) | `grblhal`, `macro`, `p100`, `registration`, `calibration`, `drift` |
 | 2026-10-01 | `RPSW-20261001-001` | verified | [Lower the A-axis maximum rate to 20000 motor deg/min](2026/2026-10-01-a-axis-rate-limit-20000.md) | `grblhal`, `settings`, `theta`, `drift`, `safety` |
 | 2026-09-30 | `WSW-20260930-001` | implemented | [Calibrate the bed ratio from the measured A-index spacing](../windows-software/2026/2026-09-30-calibrated-bed-ratio.md) | `theta`, `kinematics`, `a-axis`, `calibration`, `registration`, `drift` |

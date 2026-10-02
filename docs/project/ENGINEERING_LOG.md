@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20261002-raise-the-m5-clearance-pulse-to-70-ms"></a>
+### 🟨 2026-10-02 - RP23CNC SOFTWARE/IMPLEMENTED - raise the M5 clearance pulse to 70 ms
+
+- Request: the operator reported concentric drag marks outside the print and
+  attributed them to insufficient `M5` distance, asked for the current value,
+  then directed "lets change to 70ms".
+- Change: `PEN_CLEAR_EXTRA_LIFT_MS` 57 -> 70 ms in `toolhead_config.h`. The two
+  stale "100 ms clearance" comments in `pressure_controller.cpp` now reference
+  the constant. `PEN_CLEAR_VALID` stays true.
+- Why: 70 ms targets about 1.2 mm at the E-09F 1.75 mm per 100 ms rate, between
+  the reduced ~1 mm target and the larger 100 ms value the machine ran before
+  2026-09-23. The T-01H measurement and the derivation disagree (1.75 mm vs
+  ~1 mm for 57 ms), so the installed gap is the uncertain quantity.
+- Safety: the clearance state stops immediately if GP2 asserts, and 70 ms is
+  well inside the 1800 ms release timeout, so the longer pulse cannot reach the
+  home switch. Release, debounce, and the fresh clear-state tare are unchanged.
+- Verification: compiled for `rp2040:rp2040:sparkfun_promicrorp2350`;
+  `python tools\docs_index.py --write` and `--check` pass. Hardware
+  re-verification is open: no scale reading or no-drag print run was possible
+  in this session, so the 70 ms gap is an estimate.
+- Evidence: `RPSW-20261002-001`; `2026-09-25-t-01h-clearance-confirmed-across-print-runs`;
+  `2026-09-23-reduce-m5-clearance-air-gap`.
+- Category: rp23cnc-software, firmware, hardware, m5, pen-clear, clearance,
+  toolhead, drag.
+- Next action: re-run the T-01H-style no-drag check with the pen-tip gap
+  measured directly, record it as a lab note, then keep 70 ms or adjust.
+
 <a id="elog-20261002-tolerance-was-the-row-drift"></a>
 ### 🟩 2026-10-02 - WINDOWS SOFTWARE/MEASURED - the old programs were commanded to overlap their rows
 

@@ -52,10 +52,14 @@ constexpr uint32_t BOOT_LIFT_TIME_MS = 3000;
 constexpr uint32_t LIFT_VERIFY_TIMEOUT_MS = 1800;
 constexpr uint32_t PEN_CLEAR_RELEASE_TIMEOUT_MS = 1800;
 // Clearance air gap. E-09F measured about 1.75 mm per 100 ms of UP drive, so
-// 57 ms targets about 1 mm. The smaller gap shortens the next M3's travel and
+// 70 ms targets about 1.2 mm. The gap sets how far the next M3 must travel and
 // is folded into the warm-seek moving average; it must remain larger than
 // paper/bed height variation or the pen drags during pen-up travel.
-constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 57;
+//
+// 2026-10-02: raised 57 -> 70 ms. The operator reported drag marks during
+// pen-up travel on production prints at the T-01H-accepted 57 ms, so the
+// clearance value is re-opened pending the next no-drag run.
+constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 70;
 // Normal M5 changes the mechanism's unloaded CS1238 baseline. Once the
 // clearance motion has stopped, wait for the full sensing settle before
 // taking the 64-sample clear-state tare. E-09F showed that a 50 ms read is
@@ -214,12 +218,17 @@ constexpr bool GP27_NORMAL_STATUS_ENABLED = true;
 // when the transition is instantaneous. It never lengthens a normal seek/lift,
 // which already stays LOW far longer than this value.
 constexpr uint32_t GP27_TRANSITION_LOW_MS = 50;
-// 2026-09-25: T-01H accepted. The 57 ms M5 clearance was measured at about
-// 1.75 mm of pen-tip gap and cleared cleanly across production print runs and
-// a four-cycle bench capture (contact ~40-47 g, release to ~0 g). This enables
-// the clear-ready status reported to the GP27 handshake path; it does not
-// itself enable the controller wait (that stays behind GP27_NORMAL_STATUS_ENABLED).
-constexpr bool PEN_CLEAR_VALID = true;              // T-01H
+// 2026-09-25: T-01H accepted. The then-57 ms M5 clearance was measured at
+// about 1.75 mm of pen-tip gap and cleared cleanly across production print runs
+// and a four-cycle bench capture (contact ~40-47 g, release to ~0 g). This
+// enables the clear-ready status reported to the GP27 handshake path; it does
+// not itself enable the controller wait (that stays behind
+// GP27_NORMAL_STATUS_ENABLED).
+// 2026-10-02: the pulse is now 70 ms. The T-01H gap and no-drag evidence was
+// gathered at 57 ms, so the new pen-tip distance still needs a measured
+// re-check. The gate stays true because the change only increases clearance
+// above the accepted value; it does not alter release detection.
+constexpr bool PEN_CLEAR_VALID = true;              // T-01H (57 ms); 70 ms re-check open
 
 // 2026-09-22 E-09C cap-free repeat, converted using the explicitly chosen
 // opposite upward pen-reaction assumption. The 20-point fit was

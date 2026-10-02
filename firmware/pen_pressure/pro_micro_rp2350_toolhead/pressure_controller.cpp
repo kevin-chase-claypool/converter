@@ -582,9 +582,9 @@ void PressureController::service() {
         setState(PressureState::CLEARANCE_LIFT);
         break;
       }
-      // A normal M5 leaves only the measured 100 ms clearance gap. Restore
-      // that short travel quickly; HOLD_FORCE must still acquire force within
-      // M3_FORCE_ACQUIRE_TIMEOUT_MS.
+      // A normal M5 leaves only the PEN_CLEAR_EXTRA_LIFT_MS clearance gap.
+      // Restore that short travel quickly; HOLD_FORCE must still acquire force
+      // within M3_FORCE_ACQUIRE_TIMEOUT_MS.
       motorSeek();
       if (now - state_started_ms_ >= PEN_ENGAGE_TRAVEL_MS) {
         motorStop();
@@ -871,7 +871,7 @@ void PressureController::service() {
           lift_release_windows_ = 0;
         }
         if (lift_release_windows_ >= LIFT_RELEASE_REQUIRED_WINDOWS) {
-          // The candidate 100 ms is deliberately *after* the CS1238 has
+          // The clearance pulse is deliberately *after* the CS1238 has
           // confirmed release, providing a real physical air-gap margin for
           // between-line travel rather than merely an unloaded pen state.
           setState(PressureState::CLEARANCE_LIFT);

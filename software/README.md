@@ -386,7 +386,7 @@ display-only; every other group changes the emitted program.
     *Fill wide strokes* threshold, and the keep-down connector gap guard.
   - **Pen down ms** (`pen_down_ms`, default 2500) is the dwell after every
     `M3`. It covers the toolhead's warm contact seek, which starts from the
-    ~1 mm `M5` clearance and finishes in 2-3 s.
+    ~1.2 mm `M5` clearance and finishes in 2-3 s.
   - **Pen down first ms** (`pen_down_first_ms`, default 10000) is the dwell
     after the program's **first** `M3` only. The toolhead parks on the GP2 lift
     switch, so that one has to travel the whole retract distance before it
