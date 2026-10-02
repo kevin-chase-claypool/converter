@@ -191,7 +191,12 @@ app.
   the commanded path stays within that many millimetres of the intended line on
   the bed. It binds hardest where the bed rotates most per millimetre - tight
   curves near the centre and long sweeping arcs - so a coarse value shows up as
-  wobble in the middle of a mandala. Saving a program logs the worst deviation
+  wobble in the middle of a mandala, and **on a coarse value the rows themselves
+  are commanded to drift into their neighbours**: measured with
+  `tools\check_gcode_motion.py`, programs saved at `Tolerance 1.0` carried bows
+  of 1.2-1.9 mm against a 2 mm row pitch (62-95 % of a pitch), while 0.15 bounds
+  it to 0.15 mm (7 %) for about 0.15 % more moves. Keep it at 0.1-0.15 unless a
+  source is so detailed that the extra points cost too much. Saving a program logs the worst deviation
   the file actually contains and where it sits; on a 212k-move mandala, going
   from 1.0 mm to 0.1 mm costs about 0.1 % more moves and cuts the worst
   deviation from 0.9 mm to 0.1 mm.

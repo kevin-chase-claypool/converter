@@ -1,5 +1,45 @@
 # Engineering Log
 
+<a id="elog-20261002-tolerance-was-the-row-drift"></a>
+### 🟩 2026-10-02 - WINDOWS SOFTWARE/MEASURED - the old programs were commanded to overlap their rows
+
+- Request: "was the issue acceleration all along?" with a photograph of the new
+  print, followed by "i also had set the tolerance to .15" - a sixth change in
+  the same batch.
+- Answer: no. Measuring the programs that produced the bad prints with
+  `tools/check_gcode_motion.py` (worst commanded bed-path bow, from the file
+  alone) gives `mom.gcode` 1.908 mm at 18 mm radius (`fallback` strategy),
+  `kaleidoscope1.gcode` 1.599 mm at 165 mm, `mandala1.gcode` 1.232 mm at 100 mm,
+  `washington.gcode` 0.310 mm, and a re-saved `ben.gcode` 0.020 mm. Against a
+  2 mm row pitch those are 95 %, 80 %, 62 %, 16 % and 1 % of a pitch - the older
+  prints were *commanded* to let rows wander most of the way into their
+  neighbours, which is exactly the original complaint and is a converter
+  setting, not the machine.
+- Tolerance scaling on a kaleidoscope-style mandala: 0.690 mm bow at
+  `Tolerance 1.0`, 0.345 at 0.5, 0.230 at 0.25, 0.148 at 0.15, 0.100 at 0.1, for
+  18,479 -> 18,506 emitted moves - 0.15 % more. Tightening it is nearly free
+  because only the moves that bow get split. The operator is now running 0.15.
+- Failure modes now separated, each with its own number: rows drifting or
+  converging = commanded bow, bounded by `Tolerance`; the fan at the bed centre =
+  the huge sweeps the planner used to command there (46.6 deg inside one move at
+  r < 9 mm), now parked by the bed-step guard; a whole-pattern shift = lost steps
+  from the impossible A rate (1333 motor deg/s demanded), now capped at 15000
+  motor deg/min and verified by the circle test. The A *acceleration* change
+  (6000 -> 3000) remains precautionary: it addresses belt wind-up, whose symptom
+  - distorted, asymmetric crests that recover - has never been observed here.
+- Status of the batch, honestly: the new print is clean, but six things changed
+  at once (the bed-step guard, the A rate, the A acceleration, the Y rate and
+  acceleration, the axis-centre correction and the tolerance), so the clean sheet
+  proves the batch, not any single change. The tolerance evidence above is the
+  one attribution that does not need more paper, because it comes from the old
+  files themselves.
+- Evidence: `WSW-20261001-001` (extended with the table),
+  `samples/gcode/{mom,kaleidoscope1,mandala1,washington}.gcode`.
+- Category: windows-software, tolerance, fill, kinematics, diagnosis
+- Next action: keep `Tolerance` at 0.1-0.15; if a single-change attribution is
+  ever wanted, `Max bed step deg = 180` disables the parking guard in one field
+  and one sheet, and the rate/acceleration changes can then be judged against it.
+
 <a id="elog-20261001-axis-centre-correction"></a>
 ### 🟩 2026-10-01 20:05:12 -0500 - RP23CNC SOFTWARE/IMPLEMENTED - P100 gains an axis-centre correction (+1.25 mm X)
 

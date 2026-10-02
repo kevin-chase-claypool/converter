@@ -87,6 +87,45 @@ it costs almost nothing:
   changing in the app (or in `software\kaleidoscope_settings.json`) before the
   next plot is re-saved.
 
+## Follow-up 2026-10-02: the old files measured, and the numbers are large
+
+The setting was changed: the operator now runs `Tolerance = 0.15`. Measuring the
+programs that produced the bad prints, with
+`tools/check_gcode_motion.py` (which reports the worst commanded bed-path bow,
+its radius and its strategy from the file alone):
+
+| Program | Worst commanded bow | Share of a 2 mm row pitch |
+|---|---|---|
+| `mom.gcode` | **1.908 mm** at 18 mm radius (`fallback`) | **95 %** |
+| `kaleidoscope1.gcode` | **1.599 mm** at 165 mm radius (`x_theta`) | **80 %** |
+| `mandala1.gcode` | **1.232 mm** at 100 mm radius (`x_theta`) | **62 %** |
+| `washington.gcode` | 0.310 mm at 14 mm radius | 16 % |
+| `ben.gcode` (re-saved) | 0.020 mm at 1 mm radius | 1 % |
+
+So the rows in those prints were *commanded* to wander between 62 % and 95 % of
+the way into their neighbours wherever the bed rotated most per millimetre. That
+is the reported "waveforms are supposed to be evenly spaced, but they're tending
+to overlap", and it is a converter setting rather than a machine fault: no lost
+step, no slip and no belt winding produces that shape.
+
+On a kaleidoscope-style mandala the bow tracks the tolerance almost exactly -
+0.690 mm at `Tolerance 1.0`, 0.345 at 0.5, 0.230 at 0.25, **0.148 at 0.15**,
+0.100 at 0.1 - and tightening it is nearly free: 18,479 emitted moves at 1.0
+versus 18,506 at 0.1, a 0.15 % increase, because only the few moves that bow are
+split. `mom.gcode` also shows the strategy that produces the worst cases:
+`fallback`, the near-centre singularity path that the bed-step guard now parks
+instead of sweeping.
+
+The three failure modes are now separable and each has its own number:
+
+- **rows drifting or converging gradually** - the commanded bow, bounded by
+  `Tolerance`; old files 62-95 % of a row pitch, now 7 % at 0.15;
+- **a fan or tangle at the bed centre** - the huge sweeps the planner used to
+  command there (46.6 deg inside one move at r < 9 mm), now parked;
+- **a whole-pattern shift or rotation** - lost steps from the impossible A rate
+  (1333 motor deg/s demanded), now capped at 15000 motor deg/min and verified by
+  the circle test.
+
 ## Files
 
 - `software/converter_core/gcode.py`, `software/qt_kaleidoscope.pyw`,
