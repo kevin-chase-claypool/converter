@@ -106,7 +106,9 @@ class KaleidoscopeTests(unittest.TestCase):
 
         self.assertEqual(gcode.count("\nM3"), len(design))
         self.assertNotIn("keep-down bridge", gcode)
-        self.assertIn("G53 G0", gcode, "the program must still park at the end")
+        self.assertIn(
+            "G53 G1", gcode, "the program must still park at the end, at a fed rate"
+        )
 
     def test_kaleidoscope_output_obeys_the_a_axis_guards(self):
         """This app emits through the converter's planner, so it inherits the

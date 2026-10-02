@@ -253,7 +253,19 @@ app.
   `Re-register the bed each contour (keep A small)`; turn it off to reproduce
   older programs. It bounds the symptom, not a mis-calibrated A axis - the
   calibration plot above is still how the true ratio gets measured.
-- `G0` travel moves (pen up), `G1` draw moves (pen down)
+- pen-up travel is emitted as **fed `G1` moves, never `G0`**. A rapid ignores the
+  program's `F` word and runs at the controller's `$110`/`$111` maxima, so a
+  travel would run at whatever rate the controller is configured for - on this
+  machine 8000 mm/min = 133 mm/s on the Y axis that carries most of the mass -
+  while the preview, the time estimate and `Travel rate` all assumed 3000. Fed
+  travel makes the machine do what the file says: the long crossings and the
+  end-of-program park now run at the modelled rate, which is also the slowest
+  and safest the gantry ever moves. The cost is small - the whole of `ben.gcode`'s
+  1777 mm of pen-up travel takes 44 s at the modelled rate against 42 s if every
+  move ran at the 8000 ceiling - and a bed re-registration spin still runs at
+  the A rate cap, which is why its `F` is larger than `Travel rate`: the feed is
+  the coordinated rate over a path that counts A motor degrees as millimetres.
+- `G1` draw moves (pen down)
 - `X Y` in mm in the machine's active work-coordinate frame; `A` =
   **motor-shaft degrees** (already multiplied by `Theta ratio`)
 - `M5` / `M3` pen up / down by default. `Z` moves are available only when

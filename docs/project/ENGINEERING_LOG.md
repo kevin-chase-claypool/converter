@@ -1,5 +1,43 @@
 # Engineering Log
 
+<a id="elog-20261002-fed-travel-for-the-heavy-axis"></a>
+### 🟩 2026-10-02 - WINDOWS SOFTWARE/IMPLEMENTED - pen-up travel is fed, so the heavy axis never sees a rapid
+
+- Prompt: "like i said, the weight on the y motor is SIGNIFICANTLY MORE than the
+  other two motors, and requires somewhere on the neighborhood of 20x more
+  torque". At 20x, the motion that matters is the one the converter did not
+  control: `G0` pen-up travel. A rapid ignores the program's `F` word and runs at
+  `$110`/`$111`, which was 20000 mm/min (333 mm/s) and is now 8000 (133 mm/s),
+  while the preview, the time estimate and the `Travel rate` field all modelled
+  3000 mm/min (50 mm/s). The end-of-program park was the same story, 250 mm of Y.
+- Change: `plan_travel_move` now always returns a feed plan, and every pen-up
+  move - the opening move, every between-contour travel and the park - is
+  emitted as `G1 ... F<rate>`, never `G0`. Pure X/Y travel runs at `Travel rate`;
+  a travel that also rotates the bed keeps the A cap as its limit, so its `F` is
+  the coordinated rate over a path that counts A motor degrees as millimetres.
+  The preview builder emits the same strings and durations, so the estimate and
+  the file finally agree.
+- Measured on the 461-contour kaleidoscope mandala: 461 travel moves, feeds 2890
+  to 15000 (median exactly the 3000 travel rate), none below 100 mm/min, no bare
+  `G0` motion line apart from the inert `G0 F3000` preamble, and the park now
+  `G53 G1 X-10 Y-436 F3000`. On `ben.gcode`'s travel distances the change costs
+  42 s -> 44 s of travel inside a 107-minute job.
+- Bug found and fixed on the way: 454 of those 461 travels are zero-length (a
+  contour that starts where the last one ended), which produced `F0` in the first
+  cut. A zero-length travel now carries `Travel rate`, so the file never contains
+  `F0`.
+- Why it matters beyond the heavy axis: the 2026-09-30 gantry crash into the -Y
+  end happened during a rapid. Every pen-up move now runs at a rate the operator
+  chose and the preview predicts.
+- Verification: 167 tests pass, including the updated preamble, opening-travel
+  and park assertions.
+- Evidence: `software/README.md`; `software/converter_core/kinematics.py`;
+  `software/converter_core/gcode.py`.
+- Category: windows-software, kinematics, gcode, heavy-axis, safety
+- Next action: set `Travel rate` deliberately as the gantry's travel ceiling now
+  that it is the rate the machine actually runs, and check on the next plot that
+  the Y axis is no longer the loudest thing in the job.
+
 <a id="elog-20261002-raise-the-m5-clearance-pulse-to-70-ms"></a>
 ### 🟨 2026-10-02 - RP23CNC SOFTWARE/IMPLEMENTED - raise the M5 clearance pulse to 70 ms
 

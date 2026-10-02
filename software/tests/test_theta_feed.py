@@ -199,7 +199,13 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
 
         self.assertEqual(program_plan["source_center"], (125.0, 125.0))
         self.assertEqual(program_plan["center"], (0.0, 0.0))
-        self.assertIn("G0 X-25 Y-25 A0", gcode.splitlines())
+        # Pen-up travel is fed, never a bare rapid: a rapid ignores `F` and runs
+        # at the controller's axis maxima, which the heavy Y axis cannot hold.
+        self.assertTrue(
+            any(line.startswith("G1 X-25 Y-25 A0 F") and "(travel)" in line
+                for line in gcode.splitlines()),
+            "the opening travel must be a fed move",
+        )
         first_travel = next(move for move in preview_moves if move["type"] == "travel")
         self.assertEqual(first_travel["end"], (-25.0, -25.0))
 
@@ -209,7 +215,7 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         lines = gcode.splitlines()
 
         self.assertEqual(lines[-1], "M2")
-        self.assertEqual(lines[-2], "G53 G0 X-10 Y-436 (park home)")
+        self.assertEqual(lines[-2], "G53 G1 X-10 Y-436 F3000 (park home)")
 
     def test_machine_reach_radius_caps_the_drawable_area(self):
         settings = self.settings(

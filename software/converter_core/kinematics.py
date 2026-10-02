@@ -292,24 +292,36 @@ def _held_segment_plan(b, settings, previous_theta, previous_machine, center):
 
 
 def plan_travel_move(settings, xy_length, motor_delta):
-    """Feed plan for a pen-up move that also rotates the bed.
+    """Feed plan for a pen-up move, so travel runs at the modelled rate.
 
-    Travel used to be emitted as a bare `G0`, so the controller ran it at its
-    configured A rapid rate. A `theta_wrap` re-registration unwinds a *whole bed
-    revolution* between two contours, and at 80000 motor deg/min ($113) that is
-    1333 motor deg/s - three revolutions per second of a 12:1 bed, which stalls
-    the stepper and quietly rotates every later contour. Returns None when the
-    move needs no A motion and can stay a rapid.
+    Travel used to be emitted as a bare `G0`. A rapid ignores the program's `F`
+    and runs at the controller's configured axis maxima, which caused two
+    problems: a `theta_wrap` re-registration unwound a *whole bed revolution* at
+    the A rapid rate (1333 motor deg/s at the old $113, which stalls a 12:1 bed),
+    and plain X/Y travel ran at `$110`/`$111` - up to 333 mm/s - while the
+    preview modelled `travel_rate`. On a gantry whose Y axis carries most of the
+    mass, those rapids are the heaviest thing the machine is ever asked to do.
+
+    Emitting the move as a fed `G1` makes the machine run at the rate the
+    converter models, which is what the preview's timing assumes and what the
+    heavy axis can actually hold.
     """
     motor_delta = abs(float(motor_delta))
     xy_length = max(float(xy_length), 0.0)
-    if motor_delta <= _EPSILON:
-        return None
     limits = getattr(settings, "theta_controller_limits", None)
     a_rate = max(float(getattr(limits, "max_rate_deg_min", 20000.0)), _EPSILON)
     travel_rate = max(float(getattr(settings, "travel_rate", 1.0)), _EPSILON)
-    duration_min = max(xy_length / travel_rate, motor_delta / a_rate)
     motion_length = math.hypot(xy_length, motor_delta)
+    if motion_length <= _EPSILON:
+        # A re-registration that leaves the pen where it already is. Emit the
+        # travel rate anyway: the file must never carry `F0`.
+        return {
+            "feed_rate": travel_rate,
+            "duration_ms": 0.0,
+            "motion_length": 0.0,
+            "a_rate_deg_min": 0.0,
+        }
+    duration_min = max(xy_length / travel_rate, motor_delta / a_rate)
     return {
         "feed_rate": motion_length / max(duration_min, _EPSILON),
         "duration_ms": duration_min * 60000.0,
