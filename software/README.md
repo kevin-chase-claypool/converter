@@ -231,7 +231,7 @@ app.
 - `G21` (mm), `G90` (absolute), `G94` (units/minute feed), `G17` (XY plane),
   and `G54` (the registered work-coordinate frame)
 - a header comment recording the bed ratio, theta offset, feeds, tolerance and
-  the A-axis limits the planner assumed (`(A limits assumed 20000 motor
+  the A-axis limits the planner assumed (`(A limits assumed 15000 motor
   deg/min, 3000 motor deg/s^2)`), so a program can always be traced back to its
   motion settings - compare that line with the controller's `$$` after any
   settings change, because a converter assumption above what the controller
@@ -366,8 +366,9 @@ display-only; every other group changes the emitted program.
     there, only risk. Pen-up moves that rotate the bed are emitted as fed moves
     (`G1 ... F... (travel)`), never as a `G0` rapid, so a `theta_wrap`
     re-registration of a whole revolution cannot outrun the A axis.
-  - The converter assumes the A axis can hold **20,000 motor deg/min**
-    (27.7 bed deg/s, the 700 mm/min tangential limit at a 25 mm radius) and
+  - The converter assumes the A axis can hold **15,000 motor deg/min**
+    (20.8 bed deg/s; 20,000 or 27.7 bed deg/s was verified on paper first, and
+    the operator settled at 15,000 for margin) and
     **3,000 motor deg/s²** (250 bed deg/s²). Keep the controller's `$113`/`$123`
     equal to those: torque demand scales with acceleration, so `$123` is the
     setting that turns the bed's mass into force on the belt and motor.

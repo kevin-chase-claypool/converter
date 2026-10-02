@@ -75,11 +75,11 @@ confirmed by `$$` after a power cycle:
 | Setting | Value | Meaning |
 |---|---|---|
 | `$103` | `4.44444` | A steps per motor degree (x 4331.9664 = 19,253 steps per bed revolution) |
-| `$113` | `20000.000` | A max rate, motor deg/min (27.7 bed deg/s at the 12.03324:1 bed) |
+| `$113` | `15000.000` | A max rate, motor deg/min (20.8 bed deg/s at the 12.03324:1 bed) |
 | `$123` | `6000.000` | A acceleration, motor deg/s^2 |
 | `$133` | `0.000` | Continuous A bed: no finite maximum travel |
-| `$110` / `$111` | `20000.000` | X / Y max rate, mm/min |
-| `$120` / `$121` | `1500.000` | X / Y acceleration, mm/s^2 |
+| `$110` / `$111` | `20000.000` / `8000.000` | X / Y max rate, mm/min |
+| `$120` / `$121` | `1500.000` / `1000.000` | X / Y acceleration, mm/s^2 |
 
 `$113` was `80000.000` until 2026-10-01. That is 110.8 bed deg/s, about 21 m/min
 of pen surface speed at the 185 mm rim - as fast as the X/Y rapids - which the
@@ -89,3 +89,10 @@ drifted by the lost angle (worst at the bed centre). See
 for the change and
 [`2026-10-01-theta-a-rate-limit-lowering.md`](../../../docs/report/lab-notes/2026-10-01-theta-a-rate-limit-lowering.md)
 for the dump and the open mark-test acceptance criterion.
+
+2026-10-01 tuning sequence, all in one session: `$113` 80000 -> 20000 (verified
+on paper: a full-revolution out-and-back closed its circles) -> 8000 -> **15000**
+as the operator's settled value; `$123` 6000 -> **3000** (torque demand scales
+with acceleration); `$111` 20000 -> **8000** and `$121` 1500 -> **1000** for the
+heavy Y axis. The converter mirrors `$113`/`$123` and prints its assumption in
+every program preamble, so the two can be compared with `$$`.

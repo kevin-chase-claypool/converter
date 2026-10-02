@@ -52,6 +52,18 @@
   attribution test was deliberately skipped; whether the 1.25 mm is an off-axis
   centre magnet or a wrong pen/TMAG X remains the only open item in this chain,
   and it matters only if the magnet is re-seated or the offset re-measured.
+- A-rate settled at 15000: after the 8000 excursion the operator set `$113` to
+  **15000 motor deg/min** (250 motor deg/s, 20.8 bed deg/s at the 12:1 bed) -
+  inside the 27.7 bed deg/s that the circle test verified, with margin. The
+  converter's matching assumption moved from 20000 to 15000 in the same session,
+  so the preamble of every program now prints `(A limits assumed 15000 motor
+  deg/min, 3000 motor deg/s^2)` and can be compared with `$$`. Cost: one bed
+  re-registration spin is 17.3 s instead of 13.0 (about +2 minutes over the 30
+  spins in a photo fill). The A repeatability sample was regenerated at F15000 so
+  its label matches what the controller will actually run. Current controller
+  values are recorded in `firmware/grblhal/config/machine-settings.md`:
+  `$113=15000`, `$123=3000`, `$111=8000`, `$121=1000`, `$110=20000`,
+  `$120=1500`.
 
 <a id="elog-20261001-a-rate-limit-20000"></a>
 ### 🟩 2026-10-01 13:05:44 -0500 - RP23CNC SOFTWARE/HARDWARE - A max rate lowered to what the bed can hold

@@ -28,13 +28,16 @@ class ThetaControllerLimits:
     than what it *could* be set to. $113 landed at 80000 motor deg/min (1333
     motor deg/s, 111 bed deg/s) and the 12:1 bed cannot follow that: the
     firmware plans it happily, the stepper stalls, and the plot drifts from the
-    lost steps. The installed values are now 20000 motor deg/min (27.7 bed deg/s
-    - the tangential speed limit expressed at a 25 mm radius) and 3000 motor
-    deg/s^2, because the drive's torque demand scales with acceleration and the
-    bed is a large rotating mass. Keep the controller's $113/$123 equal to these.
+    lost steps. 20000 motor deg/min (27.7 bed deg/s, the tangential speed limit
+    expressed at a 25 mm radius) was verified on paper - a full-revolution
+    out-and-back closed its circles - and the operator then settled at 15000
+    (20.8 bed deg/s) for margin, with 3000 motor deg/s^2 because the drive's
+    torque demand scales with acceleration and the bed is a large rotating mass.
+    Keep the controller's $113/$123 equal to these: the preamble of every saved
+    program prints them so the two can be compared with `$$`.
     """
 
-    max_rate_deg_min: float = 20000.0
+    max_rate_deg_min: float = 15000.0
     max_acceleration_deg_s2: float = 3000.0
 
 @dataclass
