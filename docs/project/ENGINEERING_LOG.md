@@ -1,5 +1,42 @@
 # Engineering Log
 
+<a id="elog-20261002-the-kaleidoscope-app-gains-an-independent-maps-tab"></a>
+### 🟩 2026-10-02 - WINDOWS SOFTWARE/IMPLEMENTED - the kaleidoscope app gains an independent Maps tab
+
+- Request: "i want to add github user piebro plotting-maps to my kaleidoscope
+  app in a second tab", clarified as "a separate plotting function within the
+  app, a separate tab" - not a kaleidoscope mode.
+- Change: the window's central widget is now a `QTabWidget` with the existing
+  **Kaleidoscope** tab and a new **Maps** tab. The map tool saves an ordinary
+  SVG through its own save dialog and never touches the kaleidoscope source,
+  design, settings or G-code.
+- Vendoring: `software/plotting_maps/` pins upstream `b5a510d` (index.html,
+  MIT licence, d3 7.9.0, proj4js 2.9.2). Three local changes make the page
+  offline and private: `vendor/` script paths, Plausible analytics removed,
+  and the 5.9 MB demo `map.osm` fetch dropped. Provenance, hashes and the
+  update recipe are in `software/plotting_maps/README.md`.
+- Why not the live site: the tab would stop working offline and would load the
+  author's analytics into a desktop app. Why not a local HTTP server: the only
+  origin-dependent feature is the demo fetch, which is not vendored; `file://`
+  loads the page and its Blob download fine, without a listener or a possible
+  firewall prompt.
+- Verification: the full suite is 170 tests, all passing, including three new
+  `test_maps_tab.py` cases (tab structure, lazy web view, no CDN/analytics in
+  the page). An offscreen run of the real window loaded the page, rendered a
+  synthetic four-node OSM way to one `<path>`, and round-tripped
+  `downloadSVG()` through the save handler to a valid `300mm` SVG. `node
+  --check` passed on the page script.
+- Not yet verified: a real Overpass/osm.org export and a plotted sheet. The
+  page needs the `<bounds>` element those exports carry.
+- Risk: Qt WebEngine adds a Chromium runtime and helper process. It is created
+  only when the tab is first opened, and the app degrades to an explanatory
+  label when WebEngine is not installed.
+- Evidence: `WSW-20261002-001`; `software/plotting_maps/README.md`.
+- Category: windows-software, software, maps, openstreetmap, webengine,
+  documentation.
+- Next action: open the Maps tab on the machine, run one real OSM export end
+  to end, and record the plotted result as a lab note if it is used on paper.
+
 <a id="elog-20261002-fed-travel-for-the-heavy-axis"></a>
 ### 🟩 2026-10-02 - WINDOWS SOFTWARE/IMPLEMENTED - pen-up travel is fed, so the heavy axis never sees a rapid
 

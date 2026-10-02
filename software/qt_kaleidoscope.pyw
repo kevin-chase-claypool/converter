@@ -5,7 +5,9 @@ core wholesale: `converter_core.kaleidoscope` builds the mirrored design and the
 existing planner, polar kinematics and emitter produce the program, while
 `converter_core.generative` can draw the source as a sequence-driven mandala.
 Only the source handling, the design controls and a flat bed-frame preview are
-new.
+new. A second tab embeds a local copy of `piebro/plotting-maps` for turning
+OpenStreetMap exports into plotter SVGs; that tab is independent of the
+kaleidoscope pipeline.
 """
 
 import dataclasses
@@ -16,8 +18,8 @@ import random
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen
+from PySide6.QtCore import QPointF, QRectF, Qt, QUrl, Signal
+from PySide6.QtGui import QBrush, QColor, QDesktopServices, QFont, QPainter, QPen
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -34,9 +36,21 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSpinBox,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
+
+# The Maps tab embeds a vendored web app, so it needs Qt WebEngine. WebEngine
+# ships with the PySide6-Addons wheel rather than PySide6-Essentials; when it is
+# absent the tab reports the install command instead of failing the whole app.
+try:
+    from PySide6.QtWebEngineCore import QWebEngineDownloadRequest, QWebEnginePage
+    from PySide6.QtWebEngineWidgets import QWebEngineView
+except ImportError:  # pragma: no cover - depends on the installed wheel
+    QWebEngineDownloadRequest = None
+    QWebEnginePage = None
+    QWebEngineView = None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -60,6 +74,120 @@ SOURCE_FILTER = (
 # How many strokes one motif may contribute. Engravings arrive with thousands
 # of tiny hatches; keeping the boldest few dozen leaves a plottable drawing.
 MOTIF_CONTOUR_BUDGET = 90
+
+
+# The Maps tab owns this vendored page; see `plotting_maps/README.md` for its
+# upstream commit, the local modifications and the third-party licences.
+PLOTTING_MAPS_PAGE = Path(__file__).resolve().parent / "plotting_maps" / "index.html"
+
+
+if QWebEnginePage is not None:
+
+    class MapsPage(QWebEnginePage):
+        """Keep off-site links in the desktop browser, not the tool tab."""
+
+        def acceptNavigationRequest(self, url, nav_type, is_main_frame):  # noqa: N802
+            if is_main_frame and url.scheme() in ("http", "https"):
+                QDesktopServices.openUrl(url)
+                return False
+            return super().acceptNavigationRequest(url, nav_type, is_main_frame)
+
+
+class PlottingMapsTab(QWidget):
+    """Second tab: OpenStreetMap exports turned into plotter SVGs.
+
+    This is a local copy of `piebro/plotting-maps`. It is deliberately
+    independent of the kaleidoscope: `Download Map` saves an ordinary SVG
+    through a normal save dialog, and nothing here touches the kaleidoscope
+    settings, preview or G-code.
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._view = None
+        self._last_download_dir = ""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        self.note = QLabel(
+            "OpenStreetMap to plotter SVG - a local copy of piebro/plotting-maps "
+            "(MIT). Use Upload OSM Export, align the map, then Download Map. "
+            "This tab is independent of the kaleidoscope."
+        )
+        self.note.setWordWrap(True)
+        self.note.setContentsMargins(8, 6, 8, 6)
+        layout.addWidget(self.note)
+        self.placeholder = QLabel("Select this tab to start the map tool.")
+        self.placeholder.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.placeholder, 1)
+
+    def showEvent(self, event):  # noqa: N802 - Qt naming
+        super().showEvent(event)
+        self._ensure_view()
+
+    def _ensure_view(self):
+        if self._view is not None:
+            return
+        if QWebEngineView is None:
+            self.placeholder.setText(
+                "The map tool needs Qt WebEngine, which is not installed in "
+                "this Python environment.\n\nInstall it with\n\n"
+                "    pip install PySide6-Addons"
+            )
+            return
+        if not PLOTTING_MAPS_PAGE.is_file():
+            self.placeholder.setText(
+                "The vendored map tool is missing:\n%s" % PLOTTING_MAPS_PAGE
+            )
+            return
+        view = QWebEngineView(self)
+        view.setPage(MapsPage(view))
+        view.page().profile().downloadRequested.connect(self._on_download_requested)
+        view.setUrl(QUrl.fromLocalFile(str(PLOTTING_MAPS_PAGE)))
+        self.placeholder.hide()
+        self.layout().addWidget(view, 1)
+        self._view = view
+
+    def _on_download_requested(self, item):
+        suggested = item.downloadFileName() or "map.svg"
+        if self._last_download_dir:
+            suggested = os.path.join(self._last_download_dir, suggested)
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save map SVG", suggested, "SVG (*.svg);;All files (*.*)"
+        )
+        if not path:
+            item.cancel()
+            return
+        self._last_download_dir = os.path.dirname(path)
+        item.setDownloadDirectory(self._last_download_dir)
+        item.setDownloadFileName(os.path.basename(path))
+        item.stateChanged.connect(
+            lambda _state, request=item, target=path: self._download_finished(
+                request, target
+            )
+        )
+        item.accept()
+
+    def _download_finished(self, item, path):
+        state = item.state()
+        if state == QWebEngineDownloadRequest.DownloadState.DownloadCompleted:
+            self.note.setText(
+                "Saved %s - open it wherever you need it; this tab does not "
+                "feed the kaleidoscope." % path
+            )
+        elif state == QWebEngineDownloadRequest.DownloadState.DownloadInterrupted:
+            self.note.setText("The map download was interrupted. Try Download Map again.")
+
+    def shutdown(self):
+        """Release the profile hook when the window closes."""
+        if self._view is None:
+            return
+        try:
+            self._view.page().profile().downloadRequested.disconnect(
+                self._on_download_requested
+            )
+        except (RuntimeError, TypeError):
+            pass
 
 
 class DesignPreview(QWidget):
@@ -313,7 +441,14 @@ class KaleidoscopeWindow(QMainWindow):
         layout = QHBoxLayout(central)
         layout.addWidget(self.sidebar)
         layout.addWidget(right, 1)
-        self.setCentralWidget(central)
+
+        # The map tool is a separate plotting function, not a kaleidoscope
+        # mode: it keeps its own controls, its own output and its own tab.
+        self.tabs = QTabWidget()
+        self.tabs.addTab(central, "Kaleidoscope")
+        self.maps_tab = PlottingMapsTab()
+        self.tabs.addTab(self.maps_tab, "Maps")
+        self.setCentralWidget(self.tabs)
         self.preview.dragged.connect(self.on_image_dragged)
         self.zoom_in_button.clicked.connect(self.preview.zoom_in)
         self.zoom_out_button.clicked.connect(self.preview.zoom_out)
@@ -780,6 +915,7 @@ class KaleidoscopeWindow(QMainWindow):
 
     def closeEvent(self, event):  # noqa: N802 - Qt naming
         self.save_settings()
+        self.maps_tab.shutdown()
         super().closeEvent(event)
 
     def on_view_changed(self, zoom):

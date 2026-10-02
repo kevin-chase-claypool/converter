@@ -12,6 +12,8 @@ with a live preview of the simulated machine motion.
 - `qt_kaleidoscope.pyw` — the sibling app: imports an SVG, PNG or JPG, mirrors
   it into N kaleidoscope divisions, and saves the same G-code contract.
   Launched by `..\kaleidoscope.bat`; it reuses `converter_core/` unchanged.
+  Its second tab, **Maps**, embeds a local copy of `piebro/plotting-maps` for
+  turning OpenStreetMap exports into plotter SVGs.
 
 ## Run
 
@@ -22,7 +24,10 @@ python qt_svg_to_gcode.pyw
 or double-click `..\converter.bat` from the repo root. Runtime errors are written
 to `qt_debug.log` in this folder.
 
-Requires `PySide6` (`pip install PySide6`).
+Requires `PySide6` (`pip install PySide6`). The kaleidoscope's **Maps** tab
+also needs Qt WebEngine, which ships in the full `PySide6` wheel
+(`PySide6-Addons`); without it the tab reports the missing module instead of
+failing the app.
 
 The first two lines of `qt_debug.log` (and of the window's log pane) name the
 converter core and the active A-axis guard, e.g.
@@ -230,6 +235,30 @@ app.
   so it stays accurate when you are zoomed in. The current zoom is shown next
   to the buttons and in the preview's status line. There is no OpenGL playback;
   use the main app when you want the simulated machine motion.
+
+### Maps tab
+
+The window opens on the **Kaleidoscope** tab and also carries a **Maps** tab: a
+vendored, offline copy of
+[`piebro/plotting-maps`](https://github.com/piebro/plotting-maps) (MIT), which
+turns an OpenStreetMap export into a plotter SVG.
+
+- **A separate plotting function, not a mode.** The tab owns its controls and
+  its output. `Download Map` opens a normal save dialog and writes an ordinary
+  SVG; nothing there changes the kaleidoscope source, design, settings or
+  G-code, and nothing from the kaleidoscope feeds the map.
+- **Offline by construction.** `plotting_maps/` holds the page with its own
+  `d3` and `proj4` copies and no analytics, so the tab never reaches the
+  network. See `plotting_maps/README.md` for the pinned upstream commit, the
+  local modifications and the licence notes.
+- **How to use it.** On openstreetmap.org use *Export → Manually select a
+  different area → Overpass API* to download an `.osm`, then **Upload OSM
+  Export** in the tab, set the paper size, zoom and drag the map into place,
+  and **Download Map**. The saved SVG is an ordinary vector file that can be
+  loaded into either app or any other tool.
+- **Lazy start.** The web view is created the first time the tab is opened, so
+  the kaleidoscope starts as quickly as before and an environment without
+  WebEngine can still plot.
 
 ## What it emits
 

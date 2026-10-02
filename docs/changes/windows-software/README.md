@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-02 | `WSW-20261002-001` | implemented | [Add an independent Maps tab to the kaleidoscope app](2026/2026-10-02-add-plotting-maps-tab.md) | `kaleidoscope`, `maps`, `openstreetmap`, `tab`, `webengine`, `vendored` |
 | 2026-10-01 | `WSW-20261001-010` | implemented | [Theta: no bed sweep the machine cannot follow](2026/2026-10-01-theta-centre-sweep-and-travel-limits.md) | `theta`, `kinematics`, `drift`, `safety`, `calibration` |
 | 2026-10-01 | `WSW-20261001-009` | implemented | [Auto fit measures the artwork before it fills it](2026/2026-10-01-auto-fit-measures-before-filling.md) | `fill`, `performance`, `fit`, `interface` |
 | 2026-10-01 | `WSW-20261001-008` | implemented | [Photos import directly and plot as sine-wave tone](2026/2026-10-01-photo-raster-input.md) | `fill`, `tone`, `raster`, `photo`, `interface` |
