@@ -39,7 +39,7 @@ The converter emits:
 | `M3` | Toolhead ENGAGE: seek paper, then hold target force |
 | `M5` | Toolhead PEN_CLEAR: release paper by load-cell threshold, then add a calibrated clearance pulse |
 | `G4 P...` | Fixed toolhead settling delay |
-| `G65 P115 Q0/Q1` | Optional RP23CNC-local GP27/`PRB` completion wait; `Q0` is the opening clear check and `Q1` requires a new M3/M5 completion edge |
+| `G65 P115 Q0/Q1` | RP23CNC-local GP27/`PRB` completion wait, emitted by converter default since 2026-10-04; `Q0` is the opening clear check and `Q1` requires a new M3/M5 completion edge |
 | `M65 P0` / `M64 P0` | Assert/release Aux0/GP28; at end of print this requests the toolhead full retract to GP2 |
 | `G53 G0 X Y` | End-of-print machine-coordinate park; clears the pen off the bed. Requires a machine frame: it is only meaningful after homing (`G65 P113`/`P111`), and an unhomed controller does not build the X/Y soft-limit envelope that guards it |
 | `G65 P116` | Manual PEN UP + PARK: normal M5 clear, `P115` clear proof, GP2 full-retract request, physical X/Y home, then the off-bed `G53` park |
@@ -311,14 +311,16 @@ pulls `ENA` low and `M5` leaves it high, which keeps the PEN_CLEAR fail-safe —
 loss of controller power or optocoupler current leaves GP29 high. Verified
 2026-09-23 (F-05); `F-05A` (`P115`/`PRB`) passed 2026-09-29.
 
-Version 1 continues to default to ENGAGE/PEN_CLEAR plus fixed `G4` delays. The
-source-ready optional alternative is the controller-resident `P115.macro`, not
-a host-PC wait: it reads the already installed GP27/U3-to-`PRB` input, requires
-a fresh low-to-high completion edge for every ordinary M3/M5 transition, and
-raises error 39 on its bounded timeout before later motion. The converter
-emits it only through an explicit disabled-by-default setting. No firmware
-gate, controller macro file, or converter setting may be enabled until the
-specified force, clear, and GP27 tests pass.
+Version 1 defaults to ENGAGE/PEN_CLEAR with the controller-resident
+`P115.macro` acknowledgement on every ordinary M3/M5 transition (converter
+default since 2026-10-04, `WSW-20261004-001`). It is not a host-PC wait: it
+reads the already installed GP27/U3-to-`PRB` input, requires a fresh
+low-to-high completion edge, and raises error 39 on its bounded timeout before
+later motion. The fixed `G4` dwells remain one unchecked box away
+(**Wait for GP27 toolhead ready**) for a controller without `P115.macro` or a
+toolhead without `GP27_NORMAL_STATUS_ENABLED`. The preconditions were verified
+before the default changed: the specified force, clear, and GP27 tests pass,
+and F-05A passed on 2026-09-29.
 
 The 2026-09-29 F-05A work first showed GP27/`PRB` toggling in the contact state
 while the clear state stayed steady: the ready flag asserted after three
@@ -332,15 +334,13 @@ the level held steady through `HOLD_FORCE`, and both a held-high and a
 never-asserting level raised `error[39]`.
 
 The 2026-09-25 default-on flip of the converter's **Wait for GP27 toolhead
-ready** checkbox was reverted on 2026-09-27. With `F-05A` still open, every
-generated program emitted a fatal `G65 P115` around each M3/M5, so a single
-handshake timeout raised `error[39]` and aborted a running print mid-job.
-`software/converter_core/settings.py` ships the fixed-dwell default again and
-keeps the handshake as the explicit opt-in this contract requires. Its
-preconditions are now met — the flashed toolhead carries
-`GP27_NORMAL_STATUS_ENABLED` plus `GP27_TRANSITION_LOW_MS`, and `F-05A` passed on
-2026-09-29 — but the default stays off until the project owner decides, since
-the roughly hourly `error[39]` seen in real printing is still unexplained.
+ready** checkbox was reverted on 2026-09-27 because `F-05A` was still open and
+a single handshake timeout aborted a running print mid-job. F-05A passed on
+2026-09-29 and the project owner, who runs every job with both GP27 options
+checked, restored the on-by-default behaviour on 2026-10-04
+(`WSW-20261004-001`). The roughly hourly `error[39]` seen in real printing is
+still unexplained; the recover option turns it into a lifted pen plus a console
+warning, and the fixed-dwell fallback remains one unchecked box away.
 
 `P115` now takes optional arguments so the guard's bounds can match the
 installed machine instead of aborting a healthy one: `B<seconds>` completion
@@ -355,9 +355,10 @@ without erroring so the installed hardware can be measured. `W1` prints
 the end-of-print full-retract fallback. `W2` prints `P115 WARNING ...`, issues
 `M5` to lift the pen to the fail-safe state, dwells `A` seconds (the pen-up
 clearance), and returns without `error[39]`; the converter emits it around each
-normal M3/M5 transition. Both mask a stuck signal, so they stay explicit
-opt-ins and the strict `Q0`/`Q1` paths remain the default behaviour that stops
-the program before the next motion block.
+normal M3/M5 transition by default since 2026-10-04. Both `W1` and `W2` mask a
+stuck signal: unchecking **Lift pen and continue if the GP27 handshake times
+out** restores the strict `Q0`/`Q1` behaviour that stops the program before the
+next motion block.
 
 `M5` is not the toolhead's absolute position-reference command. The planned
 local `GP2` switch establishes `LIFT_HOME` only at boot, recovery, or an

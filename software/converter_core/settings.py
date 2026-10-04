@@ -177,19 +177,21 @@ class Settings:
     # toolhead's GP27 ready signal. P115 is a fatal guard: when GP27/PRB does
     # not show a fresh inactive-to-active edge inside its 0.50 s / 5.00 s
     # bounds it raises error 39 and the controller aborts the streaming program
-    # mid-print. F-05A (the on-bench P115/PRB validation) passed on 2026-09-29,
-    # so its prerequisites are met, but the shipped default deliberately stays
-    # on the fixed dwell path: the intermittent timeout seen in real printing
-    # is still unexplained and the handshake remains an explicit opt-in.
-    toolhead_status_handshake: bool = False
+    # mid-print. F-05A (the on-bench P115/PRB validation) passed on 2026-09-29
+    # and the operator runs this machine with the handshake armed on every job,
+    # so it ships on by default (2026-10-04). The intermittent timeout seen in
+    # real printing is still unexplained; unchecking this box restores the
+    # fixed-dwell fallback. WSW-20261004-001 records the tradeoff.
+    toolhead_status_handshake: bool = True
     # Only meaningful with `toolhead_status_handshake`. Emits `G65 P115 ... A<lift> W2`
     # for the normal M3/M5 handshakes so a timeout prints a controller warning,
     # issues `M5` to lift the pen to the fail-safe state, dwells for the lift, and
     # returns instead of raising error 39 and aborting the print. The end-of-print
     # full-retract wait still uses `W1` (warn + dwell, no lift) because the pen is
     # already up and the Aux0/GP28 arm drives that retract. This masks a genuinely
-    # stuck toolhead signal, so it stays an explicit opt-in.
-    toolhead_handshake_recover: bool = False
+    # stuck toolhead signal; the failure mode is a lifted pen plus a logged
+    # warning instead of a mid-print abort, which is how this machine is run.
+    toolhead_handshake_recover: bool = True
     # End-of-print park, expressed in machine coordinates (G53). After the last
     # pen-up the toolhead moves here so the pen clears the rotating bed and the
     # paper can be removed. Defaults match the installed machine's homed rest
@@ -315,8 +317,8 @@ CHECKBOX_FIELDS = (
         True,
     ),
     ("Pen", "include_z", "Use Z axis for pen up/down", False),
-    ("Pen", "toolhead_status_handshake", "Wait for GP27 toolhead ready (commissioned only)", False),
-    ("Pen", "toolhead_handshake_recover", "Lift pen and continue if the GP27 handshake times out", False),
+    ("Pen", "toolhead_status_handshake", "Wait for GP27 toolhead ready (commissioned only)", True),
+    ("Pen", "toolhead_handshake_recover", "Lift pen and continue if the GP27 handshake times out", True),
 )
 
 # Human-readable labels for `fill_source`. The Qt combo shows the label and

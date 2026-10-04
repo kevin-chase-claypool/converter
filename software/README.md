@@ -299,12 +299,13 @@ turns an OpenStreetMap export into a plotter SVG.
   **motor-shaft degrees** (already multiplied by `Theta ratio`)
 - `M5` / `M3` pen up / down by default. `Z` moves are available only when
   **Use Z axis** is deliberately enabled; do not enable it for this machine,
-  whose controller's Z slot is unwired. M3/M5 moves include a
-  `G4` settle dwell after each. Enabling **Wait for GP27 toolhead ready**
-  replaces those dwells with the RP23CNC-resident `G65 P115` bounded
-  acknowledgement macro; it ships off by default even though that handshake
-  path passed F-05A on 2026-09-29, because a failed P115 raises error 39 and
-  aborts the running program.
+  whose controller's Z slot is unwired. **Wait for GP27 toolhead ready** is on
+  by default, so each M3/M5 transition is acknowledged with the
+  RP23CNC-resident `G65 P115` bounded macro instead of a fixed `G4` dwell;
+  uncheck it to go back to the dwells if the controller is missing the handshake
+  prerequisites. Its companion **Lift pen and continue if the GP27 handshake
+  times out** is also on by default and turns a timeout into a logged warning
+  plus a pen lift instead of a mid-print abort.
 - `M2` at end
 
 The converter normalizes the clipped SVG around its geometric center before
@@ -419,9 +420,8 @@ display-only; every other group changes the emitted program.
     equal to those: torque demand scales with acceleration, so `$123` is the
     setting that turns the bed's mass into force on the belt and motor.
 - **Pen** — `Pen stroke mm` (the physical pen tip), Z heights, pen dwells, pen
-  up/down commands, Use Z, and the **Wait for GP27 toolhead ready** option
-  (off by default; the F-05A on-bench P115/PRB validation passed on
-  2026-09-29, so it is unblocked but unchanged).
+  up/down commands, Use Z, and the two GP27 handshake options (both on by
+  default since 2026-10-04; see `WSW-20261004-001`).
   - **Pen stroke mm** (`pen_diameter_mm`, default 0.3) is the real pen tip
     width. It drives ink-size reporting, pen-width compensation, the
     *Fill wide strokes* threshold, and the keep-down connector gap guard.
@@ -437,26 +437,27 @@ display-only; every other group changes the emitted program.
     from the `M5` clearance height and uses `Pen down ms`. Starting a program
     when the pen is already off GP2 — for example right after a manual
     `M3`/`M5` warm-up — only wastes the extra first-dwell time.
-  - That option requires the `P115.macro` file installed on the RP23CNC,
+  - Both GP27 options require the `P115.macro` file installed on the RP23CNC,
     GP27/U3-to-`PRB` polarity verified, the flashed toolhead carrying
     `GP27_NORMAL_STATUS_ENABLED` plus `GP27_TRANSITION_LOW_MS`, F-05A passed
-    (2026-09-29), and the selected pen qualified for contact/clear. It
-    replaces fixed `G4` dwells with a bounded controller-side acknowledgement;
-    it is not a host-PC serial wait. A P115 timeout raises error 39 and aborts
-    the running program, so it is a commissioning-stage option, not a default.
-    The first `M3` carries a longer `P115` completion bound derived from
-    **Pen down first ms**, because that seek starts at the GP2 lift-home switch
-    and takes about 7 s.
-  - **Lift pen and continue if the GP27 handshake times out** emits
-    `G65 P115 ... A<lift> W2` around each normal M3/M5 transition. A timeout
-    then prints a controller warning, issues `M5` to lift the pen to the
-    fail-safe state, dwells for the pen-up clearance, and lets the program
+    (2026-09-29), and the selected pen qualified for contact/clear. The
+    handshake replaces fixed `G4` dwells with a bounded controller-side
+    acknowledgement; it is not a host-PC serial wait. A strict P115 timeout
+    raises error 39 and aborts the running program, which is why unchecking
+    **Wait for GP27 toolhead ready** is the supported fallback. The first `M3`
+    carries a longer `P115` completion bound derived from **Pen down first
+    ms**, because that seek starts at the GP2 lift-home switch and takes about
+    7 s.
+  - **Lift pen and continue if the GP27 handshake times out** is on by default
+    and emits `G65 P115 ... A<lift> W2` around each normal M3/M5 transition. A
+    timeout then prints a controller warning, issues `M5` to lift the pen to
+    the fail-safe state, dwells for the pen-up clearance, and lets the program
     continue instead of aborting. The end-of-print full-retract wait still
     warns and dwells (`W1`) without an extra lift. It only applies with
     **Wait for GP27 toolhead ready** enabled; it trades a mid-print abort for a
     lifted pen (a missed `M3` then draws that stroke in the air) plus a console
-    warning, and it masks a genuinely stuck toolhead signal, so leave it off
-    unless you would rather finish the sheet than stop on a fault.
+    warning, and it masks a genuinely stuck toolhead signal - uncheck it to
+    stop on a fault instead of finishing the sheet.
   - **Curve round bias** (`round_bias`, default 0.05) trades lowest-cost motion vs.
     well-rounded curves. `0` = pick the cheapest theta per segment (tends to
     axis-lock, flatter curves); higher values bias theta toward the path tangent so
@@ -564,16 +565,17 @@ display-only; every other group changes the emitted program.
 
 - Leave **Use Z axis** unchecked and keep `Pen up cmd = M5`, `Pen down cmd = M3` —
   pen height is owned by the force-control loop, not commanded Z.
-- **Wait for GP27 toolhead ready** is off by default, so a default program uses
-  the fixed `G4` pen dwells and cannot abort on a handshake timeout. When
-  enabled it emits `G65 P115 Q0` after the opening M5 and `G65 P115 Q1` after
-  every subsequent M3/M5 transition. That requires `P115.macro` on the RP23CNC,
-  the GP27/U3-to-PRB wiring, and the flashed toolhead's
+- **Wait for GP27 toolhead ready** and **Lift pen and continue if the GP27
+  handshake times out** are both checked by default (2026-10-04), matching how
+  this commissioned machine is run. A default program emits `G65 P115 Q0` after
+  the opening M5 and `G65 P115 Q1` after every subsequent M3/M5 transition,
+  with the recover (`W2`/`W1`) arguments. That requires `P115.macro` on the
+  RP23CNC, the GP27/U3-to-PRB wiring, and the flashed toolhead's
   `GP27_NORMAL_STATUS_ENABLED` plus `GP27_TRANSITION_LOW_MS`; if any of those is
-  missing the program errors `39` mid-print. F-05A passed on 2026-09-29, so the
-  option is unblocked, though it still ships off.
-  Its companion option **Lift pen and continue if the GP27 handshake times
-  out** keeps the print running: the macro prints `P115 WARNING ...`, issues
+  missing the program errors `39` mid-print. Uncheck **Wait for GP27 toolhead
+  ready** to go back to the fixed `G4` dwells. F-05A passed on 2026-09-29; the
+  roughly hourly timeout seen in real printing is still unexplained, so watch
+  the console: with recover on, the macro prints `P115 WARNING ...`, issues
   `M5` to lift the pen, dwells, and continues on the next command.
 - The converter has no XY-only export mode: every generated production program
   retains its planned A-axis words.

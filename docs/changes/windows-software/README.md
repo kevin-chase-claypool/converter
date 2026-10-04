@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-04 | `WSW-20261004-001` | implemented | [Default the GP27 handshake and recover options on](2026/2026-10-04-default-gp27-handshake-and-recover.md) | `converter`, `gp27`, `p115`, `handshake`, `pen-dwell`, `defaults` |
 | 2026-10-03 | `WSW-20261003-001` | implemented | [Stipple, halftone and single-line (TSP) photo shading](2026/2026-10-03-stipple-halftone-single-line-shading.md) | `fill`, `shading`, `stipple`, `halftone`, `tsp`, `image-tone`, `plotter-art` |
 | 2026-10-02 | `WSW-20261002-001` | implemented | [Add an independent Maps tab to the kaleidoscope app](2026/2026-10-02-add-plotting-maps-tab.md) | `kaleidoscope`, `maps`, `openstreetmap`, `tab`, `webengine`, `vendored` |
 | 2026-10-01 | `WSW-20261001-010` | implemented | [Theta: no bed sweep the machine cannot follow](2026/2026-10-01-theta-centre-sweep-and-travel-limits.md) | `theta`, `kinematics`, `drift`, `safety`, `calibration` |

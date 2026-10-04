@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-04 | `WSW-20261004-001` | implemented | [Default the GP27 handshake and recover options on](../windows-software/2026/2026-10-04-default-gp27-handshake-and-recover.md) | `converter`, `gp27`, `p115`, `handshake`, `pen-dwell`, `defaults` |
 | 2026-10-02 | `RPSW-20261002-001` | implemented | [Raise the M5 clearance pulse to 70 ms](2026/2026-10-02-raise-m5-clearance-to-70ms.md) | `m5`, `pen-clear`, `clearance`, `toolhead`, `drag` |
 | 2026-10-01 | `RPSW-20261001-002` | verified | [Axis-centre correction in P100: the registered origin moves +1.25 mm in X](2026/2026-10-01-axis-centre-correction.md) | `grblhal`, `macro`, `p100`, `registration`, `calibration`, `drift` |
 | 2026-10-01 | `RPSW-20261001-001` | verified | [Lower the A-axis maximum rate to 20000 motor deg/min](2026/2026-10-01-a-axis-rate-limit-20000.md) | `grblhal`, `settings`, `theta`, `drift`, `safety` |

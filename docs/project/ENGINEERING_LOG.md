@@ -1,5 +1,31 @@
 # Engineering Log
 
+<a id="elog-20261004-gp27-handshake-and-recover-default-on"></a>
+### 🟩 2026-10-04 - WINDOWS SOFTWARE/IMPLEMENTED - GP27 handshake and recover default on
+
+- Request: "i am always using these two. make them default checked", showing
+  the **Wait for GP27 toolhead ready** and **Lift pen and continue if the GP27
+  handshake times out** Pen checkboxes.
+- Change: `toolhead_status_handshake` and `toolhead_handshake_recover` default
+  to `true` in both the core settings and the Qt checkbox seeds. A default
+  program now emits `G65 P115 Q0/Q1` with the `W2`/`W1` recover arguments
+  around every M3/M5 transition instead of the fixed `G4` dwells.
+- Reason: the operator runs every job with both options armed; this reverses
+  the 2026-09-27 opt-in restore now that F-05A has passed (2026-09-29,
+  `RPSW-20260929-002`) and the owner accepts the residual risk.
+- Verification: 26 `test_theta_feed.py` tests pass, including a new
+  unchecked-fallback test; the full suite is 190 tests, all passing; a default
+  program's four handshake lines are pinned exactly.
+- Risk: default programs depend on `P115.macro`, the GP27/U3-to-`PRB` wiring,
+  and the toolhead's `GP27_NORMAL_STATUS_ENABLED`/`GP27_TRANSITION_LOW_MS`. The
+  roughly hourly `error[39]` seen in real printing is still unexplained; with
+  recover on it becomes a lifted pen plus a console warning, and a missed `M3`
+  draws that stroke in the air.
+- Evidence: `WSW-20261004-001`; `software/README.md`;
+  `docs/integration/INTERFACES.md`.
+- Next action: keep watching the console for `P115 WARNING` during the next
+  full sheet and record whether the intermittent timeout recurs.
+
 <a id="elog-20261003-stipple-halftone-and-single-line-photo-shading"></a>
 ### 🟩 2026-10-03 - WINDOWS SOFTWARE/IMPLEMENTED - stipple, halftone and single-line photo shading
 

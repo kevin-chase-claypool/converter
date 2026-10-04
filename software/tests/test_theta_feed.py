@@ -86,21 +86,44 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         self.assertNotRegex(gcode, r"(?m)(?:^|\s)Z[-+0-9.]")
         self.assertTrue(any(line.startswith("G1 ") and " A" in line for line in lines))
 
-    def test_default_program_avoids_the_uncommissioned_gp27_handshake(self):
-        # `G65 P115` is a fatal guard: when GP27/PRB does not show a fresh
-        # inactive-to-active edge, its bounded timeout raises error 39 and the
-        # controller aborts the streaming program mid-print. F-05A (the on-bench
-        # P115 validation) is still open, so the shipped default must emit the
-        # fixed G4 dwells; the handshake stays an explicit opt-in.
+    def test_default_program_waits_for_the_gp27_handshake(self):
+        # The operator runs this commissioned machine with the GP27 handshake
+        # and its recover mode armed on every job, so both ship checked
+        # (2026-10-04). F-05A passed on 2026-09-29; the handshake replaces the
+        # fixed G4 dwells with the bounded P115 acknowledgement.
         contours = [[(-25.0, 0.0), (25.0, 0.0)]]
         settings = converter.Settings()
-        self.assertFalse(settings.toolhead_status_handshake)
+        self.assertTrue(settings.toolhead_status_handshake)
+        self.assertTrue(settings.toolhead_handshake_recover)
+
+        lines = converter.contours_to_gcode(contours, settings).splitlines()
+
+        self.assertIn("M5", lines)
+        self.assertIn("M3", lines)
+        self.assertEqual(
+            [line for line in lines if line.startswith("G65 P115")],
+            [
+                "G65 P115 Q0 A0.8 W2",
+                "G65 P115 Q1 B12 A0.8 W2",
+                "G65 P115 Q1 A0.8 W2",
+                "G65 P115 Q0 A3 W1",
+            ],
+        )
+        self.assertNotIn("G4 P0.3", lines)
+        self.assertNotIn("G4 P0.6", lines)
+
+    def test_unchecking_the_handshake_falls_back_to_fixed_dwells(self):
+        contours = [[(-25.0, 0.0), (25.0, 0.0)]]
+        settings = converter.Settings(
+            toolhead_status_handshake=False,
+            toolhead_handshake_recover=False,
+        )
 
         lines = converter.contours_to_gcode(contours, settings).splitlines()
 
         self.assertFalse(
             [line for line in lines if line.startswith("G65 P115")],
-            "default program must not emit the uncommissioned P115 handshake",
+            "the unchecked fallback must not emit the P115 handshake",
         )
         self.assertIn("M5", lines)
         self.assertIn("M3", lines)
@@ -110,7 +133,10 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         contours = [[(-25.0, 0.0), (25.0, 0.0)]]
         gcode = converter.contours_to_gcode(
             contours,
-            converter.Settings(toolhead_status_handshake=True),
+            converter.Settings(
+                toolhead_status_handshake=True,
+                toolhead_handshake_recover=False,
+            ),
         )
         lines = gcode.splitlines()
 
@@ -137,7 +163,11 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         contours = [[(-25.0, 0.0), (25.0, 0.0)]]
         gcode = converter.contours_to_gcode(
             contours,
-            converter.Settings(toolhead_status_handshake=True, pen_down_first_ms=5000.0),
+            converter.Settings(
+                toolhead_status_handshake=True,
+                toolhead_handshake_recover=False,
+                pen_down_first_ms=5000.0,
+            ),
         )
         lines = gcode.splitlines()
 
@@ -168,7 +198,7 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
                 "G65 P115 Q0 A3 W1",
             ],
         )
-        self.assertFalse(converter.Settings().toolhead_handshake_recover)
+        self.assertTrue(converter.Settings().toolhead_handshake_recover)
 
     def test_gp27_handshake_rejects_non_m3_m5_pen_contract(self):
         with self.assertRaisesRegex(ValueError, "M5 pen-up"):
