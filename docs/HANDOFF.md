@@ -187,14 +187,18 @@ converter README for the exact preamble and settings.
   `hatch_angle_deg` controls direction (default 45). `hatch_pattern` / "Fill pattern" selects
   OrcaSlicer-style sparse infill: `linear`, `crosshatch`, `diagonal`,
   `diagonal_crosshatch`, `diamonds`, `triangular`, `honeycomb`/`hexagonal`, `circles`, `dots`,
-  `waves`, `gyroid`, `cubic`, or `concentric`.
+  `waves`, `gyroid`, `cubic`, `concentric`, or `terrain` (topographic contour lines of a
+  deterministic fractal height field; `terrain_size_mm` sets the hill size and the fill
+  spacing sets the contour pitch, with tone tightening the interval through the shade
+  levels).
   `linear` is always one parallel-line family; darker fills increase density by reducing spacing
   rather than adding unrelated angle families. Vector fills treat the pattern as a full layer and
   clip pattern segments to the filled contour boundary. OrcaSlicer references used for this model:
   the infill settings wiki and pattern settings wiki.
 - Pattern-specific size overrides are available for the non-basic patterns:
   `triangle_size_mm`, `diamond_size_mm`, `hex_size_mm`, `circle_size_mm`, `dot_spacing_mm`,
-  `wave_size_mm`, `gyroid_size_mm`, `cubic_size_mm`, and `concentric_spacing_mm`. Each defaults to
+  `wave_size_mm`, `gyroid_size_mm`, `cubic_size_mm`, `concentric_spacing_mm`, and
+  `terrain_size_mm`. Each defaults to
   0, which means "use Fill spacing mm"; the Qt row appears only for its selected pattern. The
   triangular generator propagates a true 60-degree lattice through the fill and clips lattice edges
   at the boundary; boundary cells can be partial, but interior edges stay on the three lattice

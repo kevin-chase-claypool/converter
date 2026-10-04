@@ -1,5 +1,43 @@
 # Engineering Log
 
+<a id="elog-20261004-terrain-topographic-contour-fill"></a>
+### 🟩 2026-10-04 - WINDOWS SOFTWARE/IMPLEMENTED - terrain (topographic contour) fill
+
+- Request: "i want to use a propper terrain pattern for shading instead of the
+  concentric fill."
+- Change: a new `Fill pattern` value, `terrain`, fills a region with the
+  contour lines of a deterministic fractal height field - a topographic map of
+  hills - rather than `concentric`'s insets of the region's own outline.
+  `Fill spacing` is the contour pitch (calibrated so the average line pitch
+  equals it), `Terrain size mm` is the hill width (0 follows `Fill spacing x
+  8`), and tone darkens the fill by tightening the contour interval through
+  `Shade levels`, in both the vector path and the Qt image-tone path.
+- Implementation: `converter_core/shading.py` grows the terrain field and a
+  marching-squares extractor that chains its level sets into long polylines
+  (one pen stroke per contour); `geometry.py` clips them to the region and
+  dispatches the pattern; `settings.py` registers the value, label, aliases and
+  the new `Terrain size mm` field; `qt_svg_to_gcode.pyw` draws one contour
+  interval per shade layer in the photo path. `GEOMETRY_VERSION` is
+  `2.5-terrain-fill`.
+- Verification: 7 new `TerrainTests` cases plus an image-tone tone-following
+  case; the full suite is 198 tests, all passing. On
+  `samples/svg/kindergarten-house-sun.svg` at `Fill spacing 4`, the terrain
+  clips to the house and sun in 0.33 s (154 contours / 7,071 G-code lines). A
+  900 x 700 photo takes 3.0 s at 4 mm and 5.5 s at 2 mm (`Shade levels 4`).
+- Struggle: the first ladder ignored the three-octave field's gentler slope and
+  drew ~1.8x too sparse; the measured 0.55 calibration makes the average pitch
+  match `Fill spacing` across hill sizes. A power-of-two nested ladder was
+  rejected because it doubles density per shade level and paints the dark half
+  of a photo solid. Profiling found the noise function's nested closure
+  dominating the 2 mm photo build; inlining it and sharing per-axis grid
+  coordinates (also making chaining keys bit-identical) cut 6.9 s to 5.5 s.
+- Risk: on-screen geometry is verified, but the pattern has not been plotted on
+  paper; the darkest tone at `Shade levels 4` draws at `Fill spacing / 2`, and
+  the achieved ink density at that pitch is unmeasured.
+- Evidence: `WSW-20261004-002`; `software/README.md`; `docs/HANDOFF.md`.
+- Category: windows-software, software, fill, shading, terrain, topographic,
+  image-tone, plotter-art, generative.
+
 <a id="elog-20261004-gp27-handshake-and-recover-default-on"></a>
 ### 🟩 2026-10-04 - WINDOWS SOFTWARE/IMPLEMENTED - GP27 handshake and recover default on
 

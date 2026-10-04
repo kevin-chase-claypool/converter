@@ -1577,7 +1577,12 @@ class MainWindow(QMainWindow):
         base_angle = float(getattr(settings, "hatch_angle_deg", 0.0))
         angle_step = float(getattr(settings, "shade_angle_step_deg", 90.0))
         pattern = converter.normalized_hatch_pattern(getattr(settings, "hatch_pattern", "crosshatch"))
-        active_spacing = self.pattern_spacing(settings, pattern, spacing) / artwork_scale
+        # `terrain` reads Terrain size mm as the hill width, not the contour
+        # pitch, so its pitch always comes from Fill spacing.
+        if pattern == "terrain":
+            active_spacing = spacing / artwork_scale
+        else:
+            active_spacing = self.pattern_spacing(settings, pattern, spacing) / artwork_scale
         sample_step = max(0.5 / px_per_unit, min(active_spacing / 3.0, 1.0))
         min_segment = max(active_spacing * 0.5, sample_step * 2.0)
 
@@ -2061,6 +2066,30 @@ class MainWindow(QMainWindow):
         if pattern == "concentric":
             for layer in range(levels):
                 raster_concentric((layer + 1) / (levels + 1), active_spacing / math.sqrt(layer + 1))
+            return contours
+
+        # Topographic contour fill. Each shade layer draws a finer contour
+        # interval, phase-shifted off the layers above it so the extra lines
+        # interleave instead of redrawing the same curve: darker tone reads as
+        # contours crowding together on a steeper slope of the same terrain.
+        if pattern == "terrain":
+            hill_size = float(getattr(settings, "terrain_size_mm", 0.0)) / artwork_scale
+            if hill_size <= 0.0:
+                hill_size = active_spacing * converter.TERRAIN_FEATURE_SCALE
+            for layer in range(levels):
+                converter.check_cancelled(cancel_check)
+                threshold = (layer + 1) / (levels + 1)
+                layer_spacing = active_spacing / math.sqrt(layer + 1)
+                phase = (0.5 + 0.6180339887498949 * layer) % 1.0
+                for line in converter.terrain_contours(
+                    (view.left(), view.top(), view.right(), view.bottom()),
+                    layer_spacing,
+                    feature_scale=hill_size,
+                    phase=phase,
+                    min_step=sample_step,
+                    cancel_check=cancel_check,
+                ):
+                    append_active_polyline(line, threshold)
             return contours
 
         if pattern == "linear":
@@ -2775,6 +2804,13 @@ class MainWindow(QMainWindow):
                 f"Fill: {active_spacing:g} mm single-line path inside {where}, "
                 f"{fill_contours} stroke(s). Point density follows tone, so "
                 "Shade levels do not change this pattern."
+            )
+        if pattern == "terrain":
+            return (
+                f"Fill: {spacing:g} mm terrain contours inside {where}, "
+                f"{fill_contours} contour line(s). Darker shade levels tighten "
+                "the contour interval on the same hills, so Shade levels darken "
+                "this pattern."
             )
         return f"Fill: {spacing:g} mm {pattern}, {fill_contours} hatch passes inside {where}."
 

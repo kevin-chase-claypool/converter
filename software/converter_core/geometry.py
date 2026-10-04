@@ -2,16 +2,23 @@ import math
 import re
 from xml.etree import ElementTree as ET
 from .cancellation import check_cancelled
-from .settings import CELL_PATTERNS, CELL_SPACING_SCALE, HATCH_PATTERNS, pattern_size_values
+from .settings import (
+    CELL_PATTERNS,
+    CELL_SPACING_SCALE,
+    HATCH_PATTERNS,
+    TERRAIN_FEATURE_SCALE,
+    pattern_size_values,
+)
 from .shading import (
     dot_mark_contours,
     greedy_single_line,
     halftone_contours,
     stipple_mark_radius,
     stipple_points,
+    terrain_contours,
 )
 
-GEOMETRY_VERSION = "2.4-photo-shading"  # stipple, halftone and single-line tone fills
+GEOMETRY_VERSION = "2.5-terrain-fill"  # topographic contour fill
 
 # Drop contours shorter than this (in on-paper mm). Clipping the infill lattice
 # to a polygon boundary leaves sub-pen-width slivers that draw an M3/M5 "dot"
@@ -468,6 +475,12 @@ HATCH_PATTERN_ALIASES = {
     "concentric_ring": "concentric",
     "rings": "concentric",
     "inset": "concentric",
+    "terrain": "terrain",
+    "topographic": "terrain",
+    "topography": "terrain",
+    "topo": "terrain",
+    "contour": "terrain",
+    "contours": "terrain",
 }
 
 # The settings model owns the list of selectable patterns; the resolver must
@@ -1452,6 +1465,36 @@ def concentric_region_contours(polygons, spacing, cancel_check=None):
     return contours
 
 
+def terrain_region_contours(polygons, spacing, feature_scale=0.0, cancel_check=None, pull_back=0.0):
+    """Topographic contour fill clipped to the region.
+
+    Unlike `concentric`, which insets the region's own outline, the lines here
+    are level sets of a deterministic terrain field, so they wander across the
+    shape like a map's elevation contours. `spacing` is the contour pitch;
+    `feature_scale` is the hill size (0 chooses a default from the spacing).
+    """
+    if spacing <= 0 or not polygons:
+        return []
+    min_x, min_y, max_x, max_y = rotated_region_bounds(polygons, 0.0)
+    if max_x <= min_x or max_y <= min_y:
+        return []
+    lines = terrain_contours(
+        (min_x, min_y, max_x, max_y),
+        spacing,
+        feature_scale=feature_scale,
+        cancel_check=cancel_check,
+    )
+    if not lines:
+        return []
+    index = _PolygonGrid(polygons)
+    clipped = []
+    for line in lines:
+        check_cancelled(cancel_check)
+        for a, b in zip(line, line[1:]):
+            clipped.extend(clip_segment_to_region(a, b, polygons, index, pull_back))
+    return chain_segments_to_paths(clipped)
+
+
 def _pattern_spacing(pattern, fill_spacing, pattern_sizes=None, triangle_size=0.0):
     value = 0.0
     if pattern_sizes:
@@ -1580,6 +1623,22 @@ def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_st
     fill_spacing = density_spacing(spacing, levels, darkness)
     if fill_spacing is None:
         return []
+    if pattern == "terrain":
+        # The hill size stays put while tone only tightens the contour
+        # interval, so a darker region subdivides the same landforms instead
+        # of growing a smaller range of hills.
+        hill_size = 0.0
+        if pattern_sizes:
+            hill_size = float(pattern_sizes.get("terrain", 0.0))
+        if hill_size <= 0.0:
+            hill_size = max(spacing * TERRAIN_FEATURE_SCALE, 1e-6)
+        return terrain_region_contours(
+            polygons,
+            fill_spacing,
+            feature_scale=hill_size,
+            cancel_check=cancel_check,
+            pull_back=fill_inset,
+        )
     # The lattice is clipped to the fill region exactly as drawn. The bleed
     # margin is applied later, by pulling back the ends the clip creates, rather
     # than by offsetting each subpath: offsetting independently cannot preserve

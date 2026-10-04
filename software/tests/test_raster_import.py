@@ -8,6 +8,7 @@ point count staying proportional to paper area over spacing squared.
 """
 
 import importlib.util
+import math
 import os
 import sys
 import tempfile
@@ -202,6 +203,33 @@ class RasterImportTests(unittest.TestCase):
                 _settings, contours = self._build(4.0)
                 points = [point for contour in contours for point in contour]
                 self.assertGreater(len(points), 0, value)
+
+    def test_terrain_contours_follow_tone(self):
+        """`terrain` crowds its contours into the dark half of the ramp."""
+        combo = self.window.fields["hatch_pattern"]
+        combo.setCurrentIndex(combo.findData("terrain"))
+        self.window.update_pattern_settings()
+        self.window.fields["terrain_size_mm"].setText("0")
+        self.window.fields["shade_levels"].setText("4")
+        settings, contours = self._build(4.0)
+        self.assertTrue(contours)
+        xs = [point[0] for contour in contours for point in contour]
+        middle = 0.5 * (min(xs) + max(xs))
+
+        def length(predicate):
+            return sum(
+                math.hypot(b[0] - a[0], b[1] - a[1])
+                for contour in contours
+                for a, b in zip(contour, contour[1:])
+                if predicate(0.5 * (a[0] + b[0]))
+            )
+
+        dark = length(lambda x: x >= middle)
+        light = length(lambda x: x < middle)
+        self.assertGreater(dark, 0.0)
+        # The test ramp runs white (left) to black (right), so the darker half
+        # must carry visibly more contour length.
+        self.assertGreater(dark, light * 1.5)
 
     def test_photo_shading_patterns_survive_a_bed_filling_photo(self):
         """Regression: a real-scale photo dropped every stipple dot.

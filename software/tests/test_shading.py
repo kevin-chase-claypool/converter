@@ -235,5 +235,100 @@ class VectorFillTests(unittest.TestCase):
                 self.assertLessEqual(max(y for _, y in points), 40.0 + 1e-6)
 
 
+class TerrainTests(unittest.TestCase):
+    def test_pattern_is_registered_with_readable_label(self):
+        self.assertIn("terrain", converter.HATCH_PATTERNS)
+        self.assertEqual(converter.normalized_hatch_pattern("terrain"), "terrain")
+        self.assertEqual(
+            converter.PATTERN_SIZE_FIELDS["terrain"], "terrain_size_mm"
+        )
+        self.assertEqual(
+            converter.HATCH_PATTERN_LABELS["terrain"],
+            "terrain (topographic contours)",
+        )
+        for alias in ("topographic", "topo", "contour", "contours"):
+            self.assertEqual(converter.normalized_hatch_pattern(alias), "terrain")
+
+    def test_height_field_is_deterministic(self):
+        first = converter.terrain_height(11.0, 7.0, 40.0)
+        second = converter.terrain_height(11.0, 7.0, 40.0)
+        self.assertEqual(first, second)
+        self.assertNotEqual(first, converter.terrain_height(11.0, 7.0, 40.0, seed=3))
+
+    def test_contours_stay_inside_the_bounds_and_chain(self):
+        bounds = (0.0, 0.0, 120.0, 90.0)
+        lines = converter.terrain_contours(bounds, 4.0)
+        self.assertTrue(lines)
+        for line in lines:
+            self.assertGreaterEqual(len(line), 2)
+            for x, y in line:
+                self.assertGreaterEqual(x, bounds[0] - 1e-9)
+                self.assertLessEqual(x, bounds[2] + 1e-9)
+                self.assertGreaterEqual(y, bounds[1] - 1e-9)
+                self.assertLessEqual(y, bounds[3] + 1e-9)
+        # A marching-squares segment is two points; a chained contour is longer.
+        self.assertGreater(max(len(line) for line in lines), 10)
+
+    def test_tighter_spacing_draws_more_contour_length(self):
+        def total_length(spacing):
+            return sum(
+                sum(
+                    math.hypot(b[0] - a[0], b[1] - a[1])
+                    for a, b in zip(line, line[1:])
+                )
+                for line in converter.terrain_contours((0.0, 0.0, 120.0, 120.0), spacing)
+            )
+
+        wide = total_length(6.0)
+        tight = total_length(2.0)
+        self.assertGreater(wide, 0.0)
+        # Area / pitch: a pitch three times tighter draws about three times
+        # the length, and the calibration only promises the same order.
+        self.assertGreater(tight / wide, 2.0)
+
+    def test_vector_fill_darkens_with_shade_levels(self):
+        square = [(0.0, 0.0), (80.0, 0.0), (80.0, 80.0), (0.0, 80.0)]
+
+        def length(darkness):
+            contours = converter.fill_pattern_contours(
+                square, 5.0, 0.0, 4, 90.0, darkness, "terrain"
+            )
+            return sum(
+                sum(
+                    math.hypot(b[0] - a[0], b[1] - a[1])
+                    for a, b in zip(contour, contour[1:])
+                )
+                for contour in contours
+            )
+
+        self.assertGreater(length(1.0), 0.0)
+        self.assertGreater(length(1.0), length(0.25))
+
+    def test_vector_fill_is_clipped_to_the_region(self):
+        triangle = [(10.0, 10.0), (90.0, 10.0), (50.0, 80.0)]
+        contours = converter.fill_pattern_contours(
+            triangle, 4.0, 0.0, 1, 90.0, 1.0, "terrain"
+        )
+        self.assertTrue(contours)
+        # All four corners of the bounding box are outside the triangle, so a
+        # leak would put a point near one of them.
+        tol = 1e-6
+        for contour in contours:
+            for x, y in contour:
+                self.assertGreaterEqual(y, 10.0 - tol)
+                self.assertLessEqual(y, 80.0 + tol)
+                for (ax, ay), (bx, by) in zip(triangle, triangle[1:] + triangle[:1]):
+                    cross = (bx - ax) * (y - ay) - (by - ay) * (x - ax)
+                    self.assertGreaterEqual(cross, -tol, (x, y))
+
+    def test_grid_is_capped_for_a_pathological_spacing(self):
+        lines = converter.terrain_contours(
+            (0.0, 0.0, 1000.0, 1000.0), 0.05, max_cells=4096
+        )
+        self.assertTrue(lines)
+        points = sum(len(line) for line in lines)
+        self.assertLess(points, 200000)
+
+
 if __name__ == "__main__":
     unittest.main()

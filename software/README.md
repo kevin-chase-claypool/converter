@@ -682,7 +682,8 @@ display-only; every other group changes the emitted program.
   `diagonal_crosshatch`, `triangular`, `cubic` (isometric), `diamonds`,
   `hexagonal`, `circles`, `dots`, `stipple` (tone dots), `halftone` (variable
   dots), `single line (tsp)`, `waves` (uniform sine rows), `gyroid`, and
-  `concentric` (inset loops). `waves` and `sine_gradient` draw the fill as sine
+  `concentric` (inset loops), and `terrain` (topographic contours). `waves` and
+  `sine_gradient` draw the fill as sine
   rows instead of straight lines. `linear` is always one parallel-line family; darker fills
   increase density by reducing spacing, not by changing the pattern into another
   pattern. The vector fill path treats each pattern as a full layer and clips
@@ -705,6 +706,27 @@ display-only; every other group changes the emitted program.
     portrait style. `Dot spacing mm` is both the minimum point gap and the
     search grid size. It is a greedy tour, not an optimal one, so a very dense
     stipple still builds quickly.
+- `Fill pattern = terrain` is the topographic-map fill: contour lines of a
+  deterministic fractal height field, so the lines wander and close around
+  hills instead of echoing the region's own outline the way `concentric` insets
+  do. `Fill spacing` is the contour pitch; `Terrain size mm` is the width of one
+  hill (0 follows `Fill spacing mm × 8`, so the hills scale with the fill and
+  the pattern stays readable at any bed size). Both are on-paper millimetres.
+  - Tone is drawn as contour density on the same terrain: a darker fill or
+    photo tone tightens the contour interval (through `Shade levels`, exactly
+    like the line patterns), so dark areas crowd with contours and light areas
+    keep only the coarse ones. The level sets of one field never cross, so the
+    extra lines interleave between the existing ones rather than scribbling
+    over them.
+  - The vector path clips the level sets to the filled shape, so a terrain fill
+    cannot run over the artwork's outlines. The image-tone path draws it from
+    the rendered pixels, one contour interval per shade layer.
+  - Cost is comparable to the other dense fills: the field is sampled at half
+    the contour pitch and the extracted segments are chained into long strokes,
+    so one contour line is one pen-down move, not one per sample. A 4 mm
+    terrain on a bed-filling photo (900 x 700 px, `Shade levels 4`) is about
+    30,000 points and three seconds; 2 mm is about 92,000 points and five to
+    six seconds.
 - The pattern combo lists readable labels over the stored values, so
   `sine_gradient` reads as `gradient waves (sine_gradient)` and `waves` as
   `waves (uniform sine rows)`; a settings file or a script still uses the short

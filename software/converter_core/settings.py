@@ -141,6 +141,11 @@ class Settings:
     gyroid_size_mm: float = 0.0
     cubic_size_mm: float = 0.0
     concentric_spacing_mm: float = 0.0
+    # `terrain` only: the width of one hill, in mm. The fill spacing sets the
+    # contour interval; this sets how large the landforms those contours wrap
+    # around are, so the two scales can be chosen independently. 0 falls back
+    # to `Fill spacing x TERRAIN_FEATURE_SCALE`.
+    terrain_size_mm: float = 0.0
     shade_levels: int = 1
     shade_angle_step_deg: float = 90.0
     # Where fill geometry comes from: "auto" resolves per SVG, "shapes" always
@@ -255,6 +260,7 @@ TEXT_FIELD_GROUPS = (
         ("Gyroid size mm", "gyroid_size_mm", "0"),
         ("Cubic size mm", "cubic_size_mm", "0"),
         ("Concentric spacing mm", "concentric_spacing_mm", "0"),
+        ("Terrain size mm", "terrain_size_mm", "0"),
         ("Shade levels", "shade_levels", "1"),
         ("Shade angle step", "shade_angle_step_deg", "90"),
         ("Raster px/unit", "raster_px_per_unit", "2"),
@@ -361,6 +367,7 @@ HATCH_PATTERNS = (
     "waves",
     "gyroid",
     "concentric",
+    "terrain",
 )
 
 # "optimized" is the per-contour resolver; "fixed" and "tangent" pin the bed
@@ -384,6 +391,7 @@ HATCH_PATTERN_LABELS = {
     "waves": "waves (uniform sine rows)",
     "sine_gradient": "gradient waves (sine_gradient)",
     "concentric": "concentric (inset loops)",
+    "terrain": "terrain (topographic contours)",
     "stipple": "stipple (tone dots)",
     "halftone": "halftone (variable dots)",
     "tsp": "single line (tsp)",
@@ -407,6 +415,7 @@ FIELD_TOOLTIPS = {
     "hatch_angle_deg": "Rotation of the fill line family.",
     "dot_spacing_mm": "Pitch for the dot-based photo styles (dots, stipple, halftone, single line). 0 follows Fill spacing mm; a non-zero value overrides it. For stipple and single line this is the minimum distance between marks.",
     "wave_size_mm": "Wave and sine-gradient row pitch in mm on paper. 0 follows Fill spacing mm; a non-zero value overrides it. The wavelength is twice this pitch and the amplitude percentage is taken from it, so this one field scales the whole wave.",
+    "terrain_size_mm": "Terrain only: the width of one hill in mm on paper. 0 follows Fill spacing mm x 8. Fill spacing sets the contour interval and this sets the hill size, so a fine terrain on large hills needs a small spacing with a large size.",
     "fill_source": "Auto hatches the SVG's own shapes, and switches to image tone only when the artwork's tone comes from an embedded image or gradient. 'SVG shapes' always stays inside the drawn regions; 'Image tone' hatches the rendered pixels.",
     "fit_mode": "How Scale is chosen. 'Fill bed' sizes the artwork's bounds to the drawable circle on every build, 'Fit inside' keeps every point inside it, and 'Manual' uses the Scale field. Both auto fits override Scale, which is why the Scale box is read-only while one is selected.",
     "scale": "Artwork scale. Set by the Fit mode while an auto fit is selected; choose Manual to type a value.",
@@ -455,6 +464,7 @@ PATTERN_SIZE_FIELDS = {
     "gyroid": "gyroid_size_mm",
     "cubic": "cubic_size_mm",
     "concentric": "concentric_spacing_mm",
+    "terrain": "terrain_size_mm",
 }
 
 # Lattice patterns treat their dedicated "size" as the side/diameter of one
@@ -464,6 +474,11 @@ PATTERN_SIZE_FIELDS = {
 # unset cell size lands near the visual density of the equivalent line hatch.
 CELL_PATTERNS = frozenset({"triangular", "diamonds", "hexagonal", "circles"})
 CELL_SPACING_SCALE = 6.0
+
+# `terrain` fallback hill size as a multiple of the fill spacing: at 8 the
+# default fill spacing draws a handful of landforms across a typical region
+# instead of one hill or a field of pimples.
+TERRAIN_FEATURE_SCALE = 8.0
 
 
 def pattern_size_values(settings):
@@ -531,6 +546,7 @@ def validate_settings(settings):
         "gyroid_size_mm",
         "cubic_size_mm",
         "concentric_spacing_mm",
+        "terrain_size_mm",
         "pen_diameter_mm",
         "stroke_fill_ratio",
         "pen_up_ms",

@@ -10,6 +10,7 @@ sampled pixel.  Nothing here imports the Qt layer, which keeps the functions
 unit-testable without a display.
 """
 
+import bisect
 import math
 import random
 
@@ -336,3 +337,289 @@ def greedy_single_line(points, cell=None, cancel_check=None):
         grid.remove(nxt)
         current = pts[nxt]
     return [pts[index] for index in order]
+
+
+# -- terrain (topographic contour) fill --------------------------------------
+#
+# The `terrain` fill draws a region the way a topographic map draws a hillside:
+# contour lines at a fixed elevation interval. The height field is a small
+# fractal of deterministic gradient noise, so the lines wander, close around
+# peaks, and never echo the region's own outline the way `concentric` insets
+# do. Each shade step narrows the contour interval, which is what turns tone
+# into ink: a dark region is a steep slope with closely spaced contours.
+
+_TAU = 2.0 * math.pi
+_MASK32 = 0xFFFFFFFF
+
+# Sixteen fixed gradient directions, so one noise corner costs a hash and a dot
+# product instead of two trig calls.
+_TERRAIN_GRADIENTS = tuple(
+    (math.cos(_TAU * index / 16.0), math.sin(_TAU * index / 16.0))
+    for index in range(16)
+)
+
+
+def _terrain_hash(ix, iy, seed):
+    """A deterministic 32-bit hash of one integer lattice corner."""
+    value = ((ix * 0x27D4EB2D) ^ (iy * 0x165667B1) ^ (seed * 0x9E3779B1)) & _MASK32
+    value ^= value >> 15
+    value = (value * 0x2C1B3C6D) & _MASK32
+    value ^= value >> 12
+    value = (value * 0x297A2D39) & _MASK32
+    value ^= value >> 15
+    return value
+
+
+def _terrain_noise(x, y, seed):
+    """One octave of smooth gradient noise, roughly in [-0.7, 0.7]."""
+    x0 = math.floor(x)
+    y0 = math.floor(y)
+    x1 = x0 + 1
+    y1 = y0 + 1
+    fx = x - x0
+    fy = y - y0
+    u = fx * fx * fx * (fx * (fx * 6.0 - 15.0) + 10.0)
+    v = fy * fy * fy * (fy * (fy * 6.0 - 15.0) + 10.0)
+    # Computed inline: this runs once per grid sample per octave, and a nested
+    # corner() helper dominated the profile of a bed-filling photo.
+    gx, gy = _TERRAIN_GRADIENTS[_terrain_hash(x0, y0, seed) & 15]
+    n00 = gx * fx + gy * fy
+    gx, gy = _TERRAIN_GRADIENTS[_terrain_hash(x1, y0, seed) & 15]
+    n10 = gx * (fx - 1.0) + gy * fy
+    gx, gy = _TERRAIN_GRADIENTS[_terrain_hash(x0, y1, seed) & 15]
+    n01 = gx * fx + gy * (fy - 1.0)
+    gx, gy = _TERRAIN_GRADIENTS[_terrain_hash(x1, y1, seed) & 15]
+    n11 = gx * (fx - 1.0) + gy * (fy - 1.0)
+    nx0 = n00 + (n10 - n00) * u
+    nx1 = n01 + (n11 - n01) * u
+    return nx0 + (nx1 - nx0) * v
+
+
+def terrain_height(x, y, feature_scale, seed=0, octaves=3):
+    """Terrain elevation at one point, for a given hill size.
+
+    The result is centred on 0.5 and stays near [0, 1] for normal hill sizes;
+    it is not clipped, so a peak is a real peak instead of a plateau at 1.0.
+    """
+    scale = max(float(feature_scale), 1e-9)
+    total = 0.0
+    amplitude = 1.0
+    norm = 0.0
+    for octave in range(max(1, int(octaves))):
+        total += _terrain_noise(x / scale, y / scale, int(seed) + 1013 * octave) * amplitude
+        norm += amplitude
+        amplitude *= 0.5
+        scale *= 0.5
+    return 0.5 + 0.7 * (total / norm)
+
+
+def _terrain_crossing(x0, y0, v0, x1, y1, v1, level):
+    """Point where the segment's sampled values cross one contour level."""
+    denom = v1 - v0
+    t = 0.5 if abs(denom) < 1e-12 else (level - v0) / denom
+    if t < 0.0:
+        t = 0.0
+    elif t > 1.0:
+        t = 1.0
+    return (x0 + (x1 - x0) * t, y0 + (y1 - y0) * t)
+
+
+def _stitch_contour_segments(segments):
+    """Walk marching-squares segments into continuous contour lines.
+
+    Shared cell edges are interpolated from the same two samples in the same
+    order, so the two crossing points are bit-identical and the endpoints can
+    be used as dict keys directly.
+    """
+    if not segments:
+        return []
+
+    endpoints = {}
+    for index, (a, b) in enumerate(segments):
+        endpoints.setdefault(a, []).append((index, 0))
+        endpoints.setdefault(b, []).append((index, 1))
+    used = [False] * len(segments)
+
+    def take(point_key):
+        bucket = endpoints.get(point_key)
+        while bucket:
+            index, end = bucket.pop()
+            if not used[index]:
+                return index, end
+        return None
+
+    paths = []
+    for index, (a, b) in enumerate(segments):
+        if used[index]:
+            continue
+        used[index] = True
+        line = [a, b]
+        while True:
+            item = take(line[-1])
+            if item is None:
+                break
+            next_index, end = item
+            used[next_index] = True
+            seg_a, seg_b = segments[next_index]
+            line.append(seg_b if end == 0 else seg_a)
+        while True:
+            item = take(line[0])
+            if item is None:
+                break
+            next_index, end = item
+            used[next_index] = True
+            seg_a, seg_b = segments[next_index]
+            line.insert(0, seg_b if end == 0 else seg_a)
+        paths.append(line)
+    return paths
+
+
+# A level ladder this fine is already far beyond what the pen and the paper
+# filter can resolve; the cap only stops a pathological spacing choice from
+# building an enormous list of levels.
+TERRAIN_MAX_LEVELS = 96
+# Callers pass bigger grids for big fills in view units; this bounds the work
+# one region may cost regardless of the units the artwork is authored in.
+TERRAIN_MAX_CELLS = 262144
+# The sum of three noise octaves has a gentler typical slope than the straight
+# ramp `pitch / feature` assumes, so an uncalibrated ladder draws lines about
+# 1.8x farther apart than the requested pitch. This factor was measured as the
+# one that makes the average on-paper contour pitch equal `Fill spacing` for
+# hill sizes from 4x to 16x the spacing.
+TERRAIN_PITCH_CALIBRATION = 0.55
+
+
+def terrain_contours(
+    bounds,
+    spacing,
+    feature_scale=0.0,
+    phase=0.5,
+    seed=0,
+    octaves=3,
+    min_step=0.0,
+    max_cells=None,
+    cancel_check=None,
+):
+    """Topographic contour lines of a deterministic terrain field.
+
+    ``spacing`` is the requested contour pitch: where the field's slope is
+    typical, neighbouring lines sit about this far apart (in the caller's
+    units). ``feature_scale`` is the width of one hill; 0 means eight times the
+    spacing. ``phase`` chooses which rung of the level ladder is drawn, so
+    shade layers can stack finer intervals without redrawing the same lines.
+    The returned polylines are chained, so one contour line is one pen-down
+    stroke.
+    """
+    left, top, right, bottom = (float(value) for value in bounds)
+    if right <= left or bottom <= top:
+        return []
+    spacing = float(spacing)
+    if spacing <= 0.0 or not math.isfinite(spacing):
+        return []
+    feature = float(feature_scale)
+    if feature <= 0.0 or not math.isfinite(feature):
+        feature = spacing * 8.0
+    # A contour can only be resolved if the sample grid is finer than both the
+    # line pitch and the hill, and the clamp keeps at least a few ladder rungs
+    # when a caller asks for a spacing wider than the hill itself.
+    pitch = min(spacing, feature / 4.0)
+    step = min(pitch * 0.5, feature / 8.0)
+    step = max(step, float(min_step), 1e-6)
+    cols = max(1, int(math.ceil((right - left) / step)))
+    rows = max(1, int(math.ceil((bottom - top) / step)))
+    limit = TERRAIN_MAX_CELLS if max_cells is None else max(1, int(max_cells))
+    while (cols + 1) * (rows + 1) > limit:
+        cols = max(1, (cols + 1) // 2)
+        rows = max(1, (rows + 1) // 2)
+    step_x = (right - left) / cols
+    step_y = (bottom - top) / rows
+    # One shared coordinate list per axis: a neighbouring cell must compute the
+    # shared crossing from the *same* two floats, so `left + (col + 1) * step`
+    # and `x0 + step` cannot be allowed to differ by an ulp.
+    xs = [left + col * step_x for col in range(cols + 1)]
+    ys = [top + row * step_y for row in range(rows + 1)]
+
+    interval = pitch * TERRAIN_PITCH_CALIBRATION / feature
+    if interval < 1.0 / TERRAIN_MAX_LEVELS:
+        interval = 1.0 / TERRAIN_MAX_LEVELS
+    phase = float(phase) % 1.0
+    first = int(math.ceil(-phase))
+    last = int(math.floor(1.0 / interval - phase))
+    levels = [(index + phase) * interval for index in range(first, last + 1)]
+    if not levels:
+        return []
+
+    values = [
+        [
+            terrain_height(xs[col], ys[row], feature, seed, octaves)
+            for col in range(cols + 1)
+        ]
+        for row in range(rows + 1)
+    ]
+
+    segments = []
+    for row in range(rows):
+        check_cancelled(cancel_check)
+        upper = values[row]
+        lower = values[row + 1]
+        y0 = ys[row]
+        y1 = ys[row + 1]
+        for col in range(cols):
+            v00 = upper[col]
+            v10 = upper[col + 1]
+            v11 = lower[col + 1]
+            v01 = lower[col]
+            low = min(v00, v10, v11, v01)
+            high = max(v00, v10, v11, v01)
+            start = bisect.bisect_right(levels, low)
+            if start >= len(levels) or levels[start] > high:
+                continue
+            x0 = xs[col]
+            x1 = xs[col + 1]
+            for level in levels[start:]:
+                if level > high:
+                    break
+                # Canonical edge order (top: c0->c1, right: c1->c2,
+                # bottom: c3->c2, left: c0->c3) so the neighbouring cell
+                # computes the shared crossing from the same two samples and
+                # the chains join exactly.
+                edge_top = _terrain_crossing(x0, y0, v00, x1, y0, v10, level)
+                edge_right = _terrain_crossing(x1, y0, v10, x1, y1, v11, level)
+                edge_bottom = _terrain_crossing(x0, y1, v01, x1, y1, v11, level)
+                edge_left = _terrain_crossing(x0, y0, v00, x0, y1, v01, level)
+                case = (
+                    (1 if v00 > level else 0)
+                    | (2 if v10 > level else 0)
+                    | (4 if v11 > level else 0)
+                    | (8 if v01 > level else 0)
+                )
+                if case == 1 or case == 14:
+                    segments.append((edge_left, edge_top))
+                elif case == 2 or case == 13:
+                    segments.append((edge_top, edge_right))
+                elif case == 3 or case == 12:
+                    segments.append((edge_left, edge_right))
+                elif case == 4 or case == 11:
+                    segments.append((edge_right, edge_bottom))
+                elif case == 6 or case == 9:
+                    segments.append((edge_top, edge_bottom))
+                elif case == 7 or case == 8:
+                    segments.append((edge_left, edge_bottom))
+                elif case == 5:
+                    # Saddle: put the segments on the sides the centre value
+                    # says are connected, which is the standard asymptotic
+                    # decider.
+                    if (v00 + v10 + v11 + v01) * 0.25 > level:
+                        segments.append((edge_top, edge_right))
+                        segments.append((edge_left, edge_bottom))
+                    else:
+                        segments.append((edge_left, edge_top))
+                        segments.append((edge_right, edge_bottom))
+                elif case == 10:
+                    if (v00 + v10 + v11 + v01) * 0.25 > level:
+                        segments.append((edge_left, edge_top))
+                        segments.append((edge_right, edge_bottom))
+                    else:
+                        segments.append((edge_top, edge_right))
+                        segments.append((edge_left, edge_bottom))
+    return _stitch_contour_segments(segments)
