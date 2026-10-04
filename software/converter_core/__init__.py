@@ -1,6 +1,7 @@
 from .cancellation import *
 from .settings import *
 from .geometry import *
+from .shading import *
 from .kinematics import *
 from .gcode import *
 from .kaleidoscope import *

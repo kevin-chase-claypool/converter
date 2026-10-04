@@ -678,13 +678,29 @@ display-only; every other group changes the emitted program.
 - `Fill pattern` selects the infill. In list order: `linear` (parallel lines),
   `crosshatch`, `gradient waves (sine_gradient)`, `diagonal`,
   `diagonal_crosshatch`, `triangular`, `cubic` (isometric), `diamonds`,
-  `hexagonal`, `circles`, `dots`, `waves` (uniform sine rows), `gyroid`, and
+  `hexagonal`, `circles`, `dots`, `stipple` (tone dots), `halftone` (variable
+  dots), `single line (tsp)`, `waves` (uniform sine rows), `gyroid`, and
   `concentric` (inset loops). `waves` and `sine_gradient` draw the fill as sine
   rows instead of straight lines. `linear` is always one parallel-line family; darker fills
   increase density by reducing spacing, not by changing the pattern into another
   pattern. The vector fill path treats each pattern as a full layer and clips
   pattern segments to the filled contour boundary. Compound SVG paths are clipped
   as one even-odd region, so holes cut the infill layer.
+- The three dot-family photo styles read the image tone directly, so like
+  `sine_gradient` they are drawn at the requested pitch and ignore `Shade
+  levels`:
+  - `stipple` places blue-noise dots whose **density** follows tone - the
+    hand-stippled portrait look. `Dot spacing mm` is the minimum gap between
+    marks, and the field is deterministic, so the same photo always stipples the
+    same way.
+  - `halftone` places a fixed-pitch grid of dots whose **radius** follows tone
+    (ink area tracks darkness, the printed-halftone look). `Fill angle deg`
+    rotates the screen and `Dot spacing mm` sets the pitch.
+  - `single line (tsp)` stipples the photo then walks the points
+    nearest-neighbour into one continuous pen-down path - the single-line
+    portrait style. `Dot spacing mm` is both the minimum point gap and the
+    search grid size. It is a greedy tour, not an optimal one, so a very dense
+    stipple still builds quickly.
 - The pattern combo lists readable labels over the stored values, so
   `sine_gradient` reads as `gradient waves (sine_gradient)` and `waves` as
   `waves (uniform sine rows)`; a settings file or a script still uses the short

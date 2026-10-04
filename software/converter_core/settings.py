@@ -353,6 +353,9 @@ HATCH_PATTERNS = (
     "hexagonal",
     "circles",
     "dots",
+    "stipple",
+    "halftone",
+    "tsp",
     "waves",
     "gyroid",
     "concentric",
@@ -379,6 +382,9 @@ HATCH_PATTERN_LABELS = {
     "waves": "waves (uniform sine rows)",
     "sine_gradient": "gradient waves (sine_gradient)",
     "concentric": "concentric (inset loops)",
+    "stipple": "stipple (tone dots)",
+    "halftone": "halftone (variable dots)",
+    "tsp": "single line (tsp)",
 }
 
 VALUE_CHOICE_LABELS = {
@@ -397,6 +403,7 @@ FIELD_TOOLTIPS = {
     "hatch_spacing_mm": "Distance between fill lines in mm on paper. 0 (the default) plots outlines only.",
     "hatch_pattern": "Fill pattern drawn inside each filled region. 'gradient waves (sine_gradient)' carries tone as wave amplitude and needs the image-tone fill source.",
     "hatch_angle_deg": "Rotation of the fill line family.",
+    "dot_spacing_mm": "Pitch for the dot-based photo styles (dots, stipple, halftone, single line). 0 follows Fill spacing mm; a non-zero value overrides it. For stipple and single line this is the minimum distance between marks.",
     "wave_size_mm": "Wave and sine-gradient row pitch in mm on paper. 0 follows Fill spacing mm; a non-zero value overrides it. The wavelength is twice this pitch and the amplitude percentage is taken from it, so this one field scales the whole wave.",
     "fill_source": "Auto hatches the SVG's own shapes, and switches to image tone only when the artwork's tone comes from an embedded image or gradient. 'SVG shapes' always stays inside the drawn regions; 'Image tone' hatches the rendered pixels.",
     "fit_mode": "How Scale is chosen. 'Fill bed' sizes the artwork's bounds to the drawable circle on every build, 'Fit inside' keeps every point inside it, and 'Manual' uses the Scale field. Both auto fits override Scale, which is why the Scale box is read-only while one is selected.",
@@ -438,6 +445,9 @@ PATTERN_SIZE_FIELDS = {
     "hexagonal": "hex_size_mm",
     "circles": "circle_size_mm",
     "dots": "dot_spacing_mm",
+    "stipple": "dot_spacing_mm",
+    "halftone": "dot_spacing_mm",
+    "tsp": "dot_spacing_mm",
     "waves": "wave_size_mm",
     "sine_gradient": "wave_size_mm",
     "gyroid": "gyroid_size_mm",

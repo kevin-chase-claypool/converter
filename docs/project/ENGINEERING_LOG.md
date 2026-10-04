@@ -1,5 +1,34 @@
 # Engineering Log
 
+<a id="elog-20261003-stipple-halftone-and-single-line-photo-shading"></a>
+### 🟩 2026-10-03 - WINDOWS SOFTWARE/IMPLEMENTED - stipple, halftone and single-line photo shading
+
+- Request: "implement some of the most popular ways of doing this ... several
+  means of doing shading on images i import jpg, png", referring to
+  reddit/r/plotterart.
+- Change: three new `Fill pattern` values for imported photos - `stipple`
+  (blue-noise dot density), `halftone` (variable dot radius), and `tsp`
+  (stipple points walked nearest-neighbour into one continuous line). They
+  share `Dot spacing mm` as the pitch and are deterministic, so the same photo
+  marks identically on every preview and save.
+- Implementation: a new image-agnostic `converter_core/shading.py` owns the
+  generators (bounds + `inside(x, y)` + `darkness(x, y)`), reused by the vector
+  fill path and the Qt image-tone path. Tone drives density/radius/path directly,
+  so the three patterns ignore `Shade levels` the same way `sine_gradient`
+  does.
+- Verification: 14 new `test_shading.py` cases plus an image-tone integration
+  case in `test_raster_import.py`; the full suite is 184 tests, all passing.
+- Struggle: the nearest-neighbour grid's first search-radius used the wrong
+  sign and collapsed `tsp` to one point; corrected to the Chebyshev distance to
+  the grid bounding box.
+- Risk: `tsp` is a greedy tour, not optimal, and none of the three has been
+  plotted on paper yet.
+- Evidence: `WSW-20261003-001`; `software/README.md`.
+- Category: windows-software, software, plotter-art, fill, shading, stipple,
+  halftone, tsp, image-tone.
+- Next action: plot one stipple, one halftone and one single-line test sheet and
+  record the on-paper density reading.
+
 <a id="elog-20261002-the-kaleidoscope-app-gains-an-independent-maps-tab"></a>
 ### 🟩 2026-10-02 - WINDOWS SOFTWARE/IMPLEMENTED - the kaleidoscope app gains an independent Maps tab
 

@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-03 | `WSW-20261003-001` | windows-software | implemented | [Stipple, halftone and single-line (TSP) photo shading](windows-software/2026/2026-10-03-stipple-halftone-single-line-shading.md) |
 | 2026-10-02 | `WSW-20261002-001` | windows-software | implemented | [Add an independent Maps tab to the kaleidoscope app](windows-software/2026/2026-10-02-add-plotting-maps-tab.md) |
 | 2026-10-02 | `RPSW-20261002-001` | rp23cnc-software | implemented | [Raise the M5 clearance pulse to 70 ms](rp23cnc-software/2026/2026-10-02-raise-m5-clearance-to-70ms.md) |
 | 2026-10-01 | `WSW-20261001-010` | windows-software, hardware | implemented | [Theta: no bed sweep the machine cannot follow](windows-software/2026/2026-10-01-theta-centre-sweep-and-travel-limits.md) |

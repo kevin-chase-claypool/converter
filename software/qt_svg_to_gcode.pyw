@@ -1869,6 +1869,56 @@ class MainWindow(QMainWindow):
             )
             return [[maybe_flip(point) for point in poly] for poly in polys]
 
+        ink_floor = float(converter.INK_FLOOR)
+
+        def raster_inside(x, y):
+            if not (view.left() <= x <= view.right() and view.top() <= y <= view.bottom()):
+                return False
+            return darkness_at(x, y) >= ink_floor
+
+        # Tone-driven stipple: blue-noise dots whose density follows tone.
+        if pattern == "stipple":
+            points = converter.stipple_points(
+                (view.left(), view.top(), view.right(), view.bottom()),
+                raster_inside,
+                darkness_at,
+                active_spacing,
+                cancel_check=cancel_check,
+            )
+            radius = max(active_spacing * 0.055, sample_step)
+            return [
+                [maybe_flip((x - radius, y)), maybe_flip((x + radius, y))]
+                for x, y in points
+            ]
+
+        # Classic halftone: fixed-pitch dots whose radius follows tone.
+        if pattern == "halftone":
+            circles = converter.halftone_contours(
+                (view.left(), view.top(), view.right(), view.bottom()),
+                raster_inside,
+                darkness_at,
+                active_spacing,
+                base_angle,
+                cancel_check=cancel_check,
+            )
+            return [[maybe_flip(point) for point in circle] for circle in circles]
+
+        # Single-line portrait: stipple points walked into one continuous path.
+        if pattern == "tsp":
+            points = converter.stipple_points(
+                (view.left(), view.top(), view.right(), view.bottom()),
+                raster_inside,
+                darkness_at,
+                active_spacing,
+                cancel_check=cancel_check,
+            )
+            line = converter.greedy_single_line(
+                points, cell=active_spacing, cancel_check=cancel_check
+            )
+            if len(line) >= 2:
+                return [[maybe_flip(point) for point in line]]
+            return []
+
         if pattern in ("circles", "dots", "diamonds", "hexagonal", "triangular"):
             angle = math.radians(base_angle)
             ca, sa = math.cos(angle), math.sin(angle)
@@ -2701,6 +2751,24 @@ class MainWindow(QMainWindow):
             return (
                 f"Fill: {active_spacing:g} mm sine gradient waves, {fill_contours} "
                 f"wave passes inside {where}, {rows}. Amplitude follows tone, so "
+                "Shade levels do not change this pattern."
+            )
+        if pattern == "stipple":
+            return (
+                f"Fill: {active_spacing:g} mm stipple dots inside {where}, "
+                f"{fill_contours} marks. Dot density follows tone, so "
+                "Shade levels do not change this pattern."
+            )
+        if pattern == "halftone":
+            return (
+                f"Fill: {active_spacing:g} mm halftone dots inside {where}, "
+                f"{fill_contours} dots. Dot size follows tone, so "
+                "Shade levels do not change this pattern."
+            )
+        if pattern == "tsp":
+            return (
+                f"Fill: {active_spacing:g} mm single-line path inside {where}, "
+                f"{fill_contours} stroke(s). Point density follows tone, so "
                 "Shade levels do not change this pattern."
             )
         return f"Fill: {spacing:g} mm {pattern}, {fill_contours} hatch passes inside {where}."

@@ -166,6 +166,18 @@ class RasterImportTests(unittest.TestCase):
         ceiling = 12.0 * 3.14159 * reach * reach / 4.0
         self.assertLess(tight_points, ceiling * 1.3)
 
+    def test_photo_shading_patterns_build_from_pixels(self):
+        """The dot-family photo styles run through the real image-tone path."""
+        for value in ("stipple", "halftone", "tsp"):
+            with self.subTest(pattern=value):
+                combo = self.window.fields["hatch_pattern"]
+                combo.setCurrentIndex(combo.findData(value))
+                self.window.update_pattern_settings()
+                self.window.fields["dot_spacing_mm"].setText("0")
+                _settings, contours = self._build(4.0)
+                points = [point for contour in contours for point in contour]
+                self.assertGreater(len(points), 0, value)
+
 
 if __name__ == "__main__":
     unittest.main()

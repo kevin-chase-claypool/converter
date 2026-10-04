@@ -3,8 +3,9 @@ import re
 from xml.etree import ElementTree as ET
 from .cancellation import check_cancelled
 from .settings import CELL_PATTERNS, CELL_SPACING_SCALE, HATCH_PATTERNS, pattern_size_values
+from .shading import greedy_single_line, halftone_contours, stipple_points
 
-GEOMETRY_VERSION = "2.3-sine-gradient"  # tone-driven gradient waves (sine_gradient)
+GEOMETRY_VERSION = "2.4-photo-shading"  # stipple, halftone and single-line tone fills
 
 # Drop contours shorter than this (in on-paper mm). Clipping the infill lattice
 # to a polygon boundary leaves sub-pen-width slivers that draw an M3/M5 "dot"
@@ -433,6 +434,19 @@ HATCH_PATTERN_ALIASES = {
     "honeycomb": "hexagonal",
     "circle": "circles",
     "dot": "dots",
+    "stipple": "stipple",
+    "stippling": "stipple",
+    "pointillism": "stipple",
+    "halftone": "halftone",
+    "half_tone": "halftone",
+    "half-tone": "halftone",
+    "screen": "halftone",
+    "tsp": "tsp",
+    "single_line": "tsp",
+    "single-line": "tsp",
+    "singleline": "tsp",
+    "oneline": "tsp",
+    "one_line": "tsp",
     "wave": "waves",
     "sine": "waves",
     "sinusoidal": "waves",
@@ -1446,6 +1460,76 @@ def _pattern_spacing(pattern, fill_spacing, pattern_sizes=None, triangle_size=0.
     return max(fill_spacing, 1e-6)
 
 
+def _shading_bounds(polygons):
+    min_x, min_y, max_x, max_y = rotated_region_bounds(polygons, 0.0)
+    return (min_x, min_y, max_x, max_y)
+
+
+def _shading_callbacks(polygons, darkness):
+    tone = 0.0 if darkness is None else max(0.0, min(float(darkness), 1.0))
+    inside = lambda x, y: point_in_region((x, y), polygons)
+    dark = lambda x, y: tone
+    return inside, dark
+
+
+def stipple_region_contours(polygons, spacing, darkness, cancel_check=None):
+    """Tone-driven stipple dots clipped to the filled region."""
+    if spacing <= 0.0 or not polygons:
+        return []
+    inside, dark = _shading_callbacks(polygons, darkness)
+    points = stipple_points(
+        _shading_bounds(polygons),
+        inside,
+        dark,
+        spacing,
+        cancel_check=cancel_check,
+    )
+    radius = max(spacing * 0.055, 0.03)
+    contours = []
+    for x, y in points:
+        contours.extend(
+            clip_segment_to_region((x - radius, y), (x + radius, y), polygons)
+        )
+    return contours
+
+
+def halftone_region_contours(polygons, spacing, darkness, angle_deg=0.0, cancel_check=None):
+    """Variable-radius halftone dots clipped to the filled region."""
+    if spacing <= 0.0 or not polygons:
+        return []
+    inside, dark = _shading_callbacks(polygons, darkness)
+    circles = halftone_contours(
+        _shading_bounds(polygons),
+        inside,
+        dark,
+        spacing,
+        angle_deg,
+        cancel_check=cancel_check,
+    )
+    contours = []
+    for circle in circles:
+        contours.extend(clip_polyline_to_region(circle, polygons))
+    return contours
+
+
+def tsp_region_contours(polygons, spacing, darkness, cancel_check=None):
+    """Single-line stipple path clipped to the filled region."""
+    if spacing <= 0.0 or not polygons:
+        return []
+    inside, dark = _shading_callbacks(polygons, darkness)
+    points = stipple_points(
+        _shading_bounds(polygons),
+        inside,
+        dark,
+        spacing,
+        cancel_check=cancel_check,
+    )
+    line = greedy_single_line(points, cell=spacing, cancel_check=cancel_check)
+    if len(line) < 2:
+        return []
+    return chain_segments_to_paths(clip_polyline_to_region(line, polygons))
+
+
 def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, gradient_amplitude_pct=50.0, gradient_density_pct=100.0):
     return fill_region_pattern_contours([polygon], spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size, pattern_sizes, cancel_check, fill_inset, gradient_amplitude_pct, gradient_density_pct)
 
@@ -1453,6 +1537,31 @@ def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, dark
 def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, gradient_amplitude_pct=50.0, gradient_density_pct=100.0):
     check_cancelled(cancel_check)
     pattern = normalized_hatch_pattern(pattern)
+    # Photo-shading patterns read tone directly (density, dot size, or a single
+    # connected path), so like `sine_gradient` they are drawn at the requested
+    # spacing and ignore `Shade levels` instead of counting tone twice.
+    if pattern == "stipple":
+        return stipple_region_contours(
+            polygons,
+            _pattern_spacing(pattern, spacing, pattern_sizes, triangle_size),
+            darkness,
+            cancel_check,
+        )
+    if pattern == "halftone":
+        return halftone_region_contours(
+            polygons,
+            _pattern_spacing(pattern, spacing, pattern_sizes, triangle_size),
+            darkness,
+            base_angle,
+            cancel_check,
+        )
+    if pattern == "tsp":
+        return tsp_region_contours(
+            polygons,
+            _pattern_spacing(pattern, spacing, pattern_sizes, triangle_size),
+            darkness,
+            cancel_check,
+        )
     fill_spacing = density_spacing(spacing, levels, darkness)
     if fill_spacing is None:
         return []
