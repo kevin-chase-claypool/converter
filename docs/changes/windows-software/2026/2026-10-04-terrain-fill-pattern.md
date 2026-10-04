@@ -77,6 +77,10 @@ belong to the landform, not the region, and its density is what carries tone.
   count and says that `Shade levels` darkens this pattern.
 - `GEOMETRY_VERSION` is now `2.5-terrain-fill`.
 
+Later the same day the image-tone half of this was replaced: the photo's own
+shading became the elevation, so the lines trace the picture instead of the
+synthetic field (`WSW-20261004-003`). The vector path below is unchanged.
+
 ## Verification
 
 - `software/tests/test_shading.py` gains seven `TerrainTests` cases: registry

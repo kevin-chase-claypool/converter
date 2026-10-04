@@ -706,27 +706,37 @@ display-only; every other group changes the emitted program.
     portrait style. `Dot spacing mm` is both the minimum point gap and the
     search grid size. It is a greedy tour, not an optimal one, so a very dense
     stipple still builds quickly.
-- `Fill pattern = terrain` is the topographic-map fill: contour lines of a
-  deterministic fractal height field, so the lines wander and close around
-  hills instead of echoing the region's own outline the way `concentric` insets
-  do. `Fill spacing` is the contour pitch; `Terrain size mm` is the width of one
-  hill (0 follows `Fill spacing mm × 8`, so the hills scale with the fill and
-  the pattern stays readable at any bed size). Both are on-paper millimetres.
-  - Tone is drawn as contour density on the same terrain: a darker fill or
-    photo tone tightens the contour interval (through `Shade levels`, exactly
-    like the line patterns), so dark areas crowd with contours and light areas
-    keep only the coarse ones. The level sets of one field never cross, so the
-    extra lines interleave between the existing ones rather than scribbling
-    over them.
-  - The vector path clips the level sets to the filled shape, so a terrain fill
-    cannot run over the artwork's outlines. The image-tone path draws it from
-    the rendered pixels, one contour interval per shade layer.
-  - Cost is comparable to the other dense fills: the field is sampled at half
-    the contour pitch and the extracted segments are chained into long strokes,
-    so one contour line is one pen-down move, not one per sample. A 4 mm
-    terrain on a bed-filling photo (900 x 700 px, `Shade levels 4`) is about
-    30,000 points and three seconds; 2 mm is about 92,000 points and five to
-    six seconds.
+- `Fill pattern = terrain` is the topographic-map fill: contour lines drawn the
+  way a map draws a hillside, instead of `concentric`'s insets of the region's
+  own outline.
+  - **Image tone (photos, gradients): the picture's own shading is the
+    terrain.** Darker pixels are higher ground, so the lines trace the faces
+    and features of the photo - a topographic portrait - and a blown-out sky
+    stays blank paper while hair and shadows fill with contours. `Fill
+    spacing mm` is the **average gap** between neighbouring lines: the level
+    interval is sized from the image's own mean tone gradient (over its inked
+    area), so a busy photo and a soft one both draw at roughly the requested
+    density (measured 4.18 mm and 2.05 mm achieved for 4 mm and 2 mm requested
+    on a portrait). `Terrain size mm` is the smoothing radius used before
+    contouring - 0 follows `Fill spacing mm / 2`; larger values merge fine tone
+    into broader landforms. `Shade levels` does not apply, because the tone is
+    the elevation rather than a density multiplier.
+  - **Flat SVG shapes (SVG shapes fill source): a synthetic height field.**
+    A flat-filled element has no tone gradient inside it to trace, so the hills
+    come from a deterministic fractal field and the fill still reads as
+    terrain. `Terrain size mm` is then the width of one hill (0 follows
+    `Fill spacing mm × 8`) and `Shade levels` tightens the contour interval to
+    darken the fill, like the line patterns. The vector path clips the level
+    sets to the filled shape, so a terrain fill cannot run over the artwork's
+    outlines.
+  - Cost is comparable to the other dense fills: the tone is sampled at half
+    the contour pitch (never coarser than two source pixels) and the extracted
+    segments are chained into long strokes, so one contour line is one pen-down
+    move, not one per sample. The portrait above (532 x 563 px, fitted to the
+    bed) loads in 0.27 s at 4 mm and 0.6 s at 2 mm, and the 4 mm program plans
+    and saves in another 0.4 s (`tools\check_gcode_motion.py --strict` passes
+    on it). A 900 x 700 px photo is about 38,000 points in 0.45 s at 4 mm, and
+    about 74,000 points in 0.6 s at 2 mm.
 - The pattern combo lists readable labels over the stored values, so
   `sine_gradient` reads as `gradient waves (sine_gradient)` and `waves` as
   `waves (uniform sine rows)`; a settings file or a script still uses the short

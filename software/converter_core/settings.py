@@ -415,7 +415,7 @@ FIELD_TOOLTIPS = {
     "hatch_angle_deg": "Rotation of the fill line family.",
     "dot_spacing_mm": "Pitch for the dot-based photo styles (dots, stipple, halftone, single line). 0 follows Fill spacing mm; a non-zero value overrides it. For stipple and single line this is the minimum distance between marks.",
     "wave_size_mm": "Wave and sine-gradient row pitch in mm on paper. 0 follows Fill spacing mm; a non-zero value overrides it. The wavelength is twice this pitch and the amplitude percentage is taken from it, so this one field scales the whole wave.",
-    "terrain_size_mm": "Terrain only: the width of one hill in mm on paper. 0 follows Fill spacing mm x 8. Fill spacing sets the contour interval and this sets the hill size, so a fine terrain on large hills needs a small spacing with a large size.",
+    "terrain_size_mm": "Terrain only. On image tone (photos, gradients) this is the smoothing radius in mm - larger values turn the shading into broader landforms - and 0 follows Fill spacing mm / 2. On flat SVG shapes it is the width of one synthetic hill, 0 following Fill spacing mm x 8.",
     "fill_source": "Auto hatches the SVG's own shapes, and switches to image tone only when the artwork's tone comes from an embedded image or gradient. 'SVG shapes' always stays inside the drawn regions; 'Image tone' hatches the rendered pixels.",
     "fit_mode": "How Scale is chosen. 'Fill bed' sizes the artwork's bounds to the drawable circle on every build, 'Fit inside' keeps every point inside it, and 'Manual' uses the Scale field. Both auto fits override Scale, which is why the Scale box is read-only while one is selected.",
     "scale": "Artwork scale. Set by the Fit mode while an auto fit is selected; choose Manual to type a value.",

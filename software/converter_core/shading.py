@@ -424,6 +424,101 @@ def _terrain_crossing(x0, y0, v0, x1, y1, v1, level):
     return (x0 + (x1 - x0) * t, y0 + (y1 - y0) * t)
 
 
+def _marching_squares(values, xs, ys, levels, cancel_check=None):
+    """Segments of the level sets of a grid of samples.
+
+    One point (axis-aligned) per cell corner: ``values[row][col]`` sits at
+    ``(xs[col], ys[row])``. Edges are interpolated in a canonical corner order
+    (top: c0->c1, right: c1->c2, bottom: c3->c2, left: c0->c3), so the two
+    cells that share an edge compute the same crossing point bit for bit and
+    the segments can be chained exactly.
+    """
+    segments = []
+    for row in range(len(ys) - 1):
+        check_cancelled(cancel_check)
+        upper = values[row]
+        lower = values[row + 1]
+        y0 = ys[row]
+        y1 = ys[row + 1]
+        for col in range(len(xs) - 1):
+            v00 = upper[col]
+            v10 = upper[col + 1]
+            v11 = lower[col + 1]
+            v01 = lower[col]
+            low = min(v00, v10, v11, v01)
+            high = max(v00, v10, v11, v01)
+            start = bisect.bisect_right(levels, low)
+            if start >= len(levels) or levels[start] > high:
+                continue
+            x0 = xs[col]
+            x1 = xs[col + 1]
+            for level in levels[start:]:
+                if level > high:
+                    break
+                edge_top = _terrain_crossing(x0, y0, v00, x1, y0, v10, level)
+                edge_right = _terrain_crossing(x1, y0, v10, x1, y1, v11, level)
+                edge_bottom = _terrain_crossing(x0, y1, v01, x1, y1, v11, level)
+                edge_left = _terrain_crossing(x0, y0, v00, x0, y1, v01, level)
+                case = (
+                    (1 if v00 > level else 0)
+                    | (2 if v10 > level else 0)
+                    | (4 if v11 > level else 0)
+                    | (8 if v01 > level else 0)
+                )
+                if case == 1 or case == 14:
+                    segments.append((edge_left, edge_top))
+                elif case == 2 or case == 13:
+                    segments.append((edge_top, edge_right))
+                elif case == 3 or case == 12:
+                    segments.append((edge_left, edge_right))
+                elif case == 4 or case == 11:
+                    segments.append((edge_right, edge_bottom))
+                elif case == 6 or case == 9:
+                    segments.append((edge_top, edge_bottom))
+                elif case == 7 or case == 8:
+                    segments.append((edge_left, edge_bottom))
+                elif case == 5:
+                    # Saddle: put the segments on the sides the centre value
+                    # says are connected, which is the standard asymptotic
+                    # decider.
+                    if (v00 + v10 + v11 + v01) * 0.25 > level:
+                        segments.append((edge_top, edge_right))
+                        segments.append((edge_left, edge_bottom))
+                    else:
+                        segments.append((edge_left, edge_top))
+                        segments.append((edge_right, edge_bottom))
+                elif case == 10:
+                    if (v00 + v10 + v11 + v01) * 0.25 > level:
+                        segments.append((edge_left, edge_top))
+                        segments.append((edge_right, edge_bottom))
+                    else:
+                        segments.append((edge_top, edge_right))
+                        segments.append((edge_left, edge_bottom))
+    return segments
+
+
+def _contour_grid_geometry(bounds, step, min_step=0.0, max_cells=None):
+    """Shared sampling geometry for a contour grid over *bounds*."""
+    left, top, right, bottom = (float(value) for value in bounds)
+    if right <= left or bottom <= top:
+        return None
+    step = max(float(step), float(min_step), 1e-6)
+    cols = max(1, int(math.ceil((right - left) / step)))
+    rows = max(1, int(math.ceil((bottom - top) / step)))
+    limit = TERRAIN_MAX_CELLS if max_cells is None else max(1, int(max_cells))
+    while (cols + 1) * (rows + 1) > limit:
+        cols = max(1, (cols + 1) // 2)
+        rows = max(1, (rows + 1) // 2)
+    step_x = (right - left) / cols
+    step_y = (bottom - top) / rows
+    # One shared coordinate list per axis: a neighbouring cell must compute the
+    # shared crossing from the *same* two floats, so `left + (col + 1) * step`
+    # and `x0 + step` cannot be allowed to differ by an ulp.
+    xs = [left + col * step_x for col in range(cols + 1)]
+    ys = [top + row * step_y for row in range(rows + 1)]
+    return xs, ys
+
+
 def _stitch_contour_segments(segments):
     """Walk marching-squares segments into continuous contour lines.
 
@@ -524,20 +619,14 @@ def terrain_contours(
     # when a caller asks for a spacing wider than the hill itself.
     pitch = min(spacing, feature / 4.0)
     step = min(pitch * 0.5, feature / 8.0)
-    step = max(step, float(min_step), 1e-6)
-    cols = max(1, int(math.ceil((right - left) / step)))
-    rows = max(1, int(math.ceil((bottom - top) / step)))
-    limit = TERRAIN_MAX_CELLS if max_cells is None else max(1, int(max_cells))
-    while (cols + 1) * (rows + 1) > limit:
-        cols = max(1, (cols + 1) // 2)
-        rows = max(1, (rows + 1) // 2)
-    step_x = (right - left) / cols
-    step_y = (bottom - top) / rows
-    # One shared coordinate list per axis: a neighbouring cell must compute the
-    # shared crossing from the *same* two floats, so `left + (col + 1) * step`
-    # and `x0 + step` cannot be allowed to differ by an ulp.
-    xs = [left + col * step_x for col in range(cols + 1)]
-    ys = [top + row * step_y for row in range(rows + 1)]
+    geometry = _contour_grid_geometry(
+        (left, top, right, bottom), step, min_step, max_cells
+    )
+    if geometry is None:
+        return []
+    xs, ys = geometry
+    cols = len(xs) - 1
+    rows = len(ys) - 1
 
     interval = pitch * TERRAIN_PITCH_CALIBRATION / feature
     if interval < 1.0 / TERRAIN_MAX_LEVELS:
@@ -556,70 +645,144 @@ def terrain_contours(
         ]
         for row in range(rows + 1)
     ]
+    return _stitch_contour_segments(
+        _marching_squares(values, xs, ys, levels, cancel_check)
+    )
 
-    segments = []
-    for row in range(rows):
+
+# The coarea identity gives the average gap between level sets as
+# `area x interval / total variation`, so sizing the interval from the image's
+# mean tone gradient makes `Fill spacing` mean the average gap directly. The
+# factor stays a named constant because it was measured (4.09 mm and 2.03 mm
+# achieved for 4 mm and 2 mm requested on a portrait) and may need retuning if
+# the sampling or the smoothing changes.
+TERRAIN_TONE_CALIBRATION = 1.0
+# 256 tone levels is 0.4% apart, far below what the pen can show; the cap only
+# stops a nearly flat image from requesting an enormous ladder.
+TERRAIN_TONE_MAX_LEVELS = 256
+
+
+def _box_blur(values, radius):
+    """Separable moving-average blur of a rectangular grid of floats."""
+    if radius <= 0 or not values:
+        return values
+
+    def blur_line(line):
+        count = len(line)
+        prefix = [0.0] * (count + 1)
+        running = 0.0
+        for index, value in enumerate(line):
+            running += value
+            prefix[index + 1] = running
+        out = [0.0] * count
+        for index in range(count):
+            low = max(0, index - radius)
+            high = min(count, index + radius + 1)
+            out[index] = (prefix[high] - prefix[low]) / (high - low)
+        return out
+
+    rows = [blur_line(row) for row in values]
+    height = len(rows)
+    width = len(rows[0])
+    out = [[0.0] * width for _ in range(height)]
+    for col in range(width):
+        column = blur_line([rows[row][col] for row in range(height)])
+        for row in range(height):
+            out[row][col] = column[row]
+    return out
+
+
+def tone_terrain_contours(
+    bounds,
+    spacing,
+    darkness,
+    step=None,
+    blur=0.0,
+    min_step=0.0,
+    max_cells=None,
+    cancel_check=None,
+):
+    """Contour lines of the shading itself - a topographic map of the tone.
+
+    ``darkness(x, y)`` returns 0..1, and is used as the elevation, so the lines
+    trace the image's own features instead of a synthetic field. ``spacing`` is
+    the average gap between neighbouring lines: the level interval is chosen
+    from the image's mean tone gradient (the coarea identity), so a busy photo
+    and a soft one both draw at roughly the requested density. ``step`` is the
+    sampling grid pitch (0 follows half the spacing; a caller with access to
+    the source pixels passes something finer so thin features are not skipped).
+    ``blur`` is the smoothing radius in the caller's units - larger values
+    generalise the shading into broader landforms.
+    """
+    left, top, right, bottom = (float(value) for value in bounds)
+    if right <= left or bottom <= top:
+        return []
+    spacing = float(spacing)
+    if spacing <= 0.0 or not math.isfinite(spacing):
+        return []
+    pitch = spacing * 0.5 if step is None else float(step)
+    geometry = _contour_grid_geometry(
+        (left, top, right, bottom), pitch, min_step, max_cells
+    )
+    if geometry is None:
+        return []
+    xs, ys = geometry
+    sample_rows = len(ys)
+    sample_cols = len(xs)
+    step_x = (right - left) / (sample_cols - 1)
+    step_y = (bottom - top) / (sample_rows - 1)
+
+    values = []
+    for y in ys:
+        check_cancelled(cancel_check)
+        row = [_clamp01(darkness(x, y)) for x in xs]
+        values.append(row)
+
+    blur = float(blur)
+    if blur > 0.0:
+        cell = 0.5 * (step_x + step_y)
+        values = _box_blur(values, max(1, int(round(blur / max(cell, 1e-9)))))
+
+    # Mean tone gradient magnitude over the inked area: the coarea identity
+    # turns it into the average gap between level sets, so a linear ramp draws
+    # lines exactly `spacing` apart and a photo is calibrated by its own
+    # content. Blank paper is left out - it draws no lines, and counting it
+    # would tighten the inked area's pitch to compensate for area the pen
+    # never touches.
+    gradient = 0.0
+    inked = 0
+    ink_tone = 0.0
+    for row in range(sample_rows - 1):
         check_cancelled(cancel_check)
         upper = values[row]
         lower = values[row + 1]
-        y0 = ys[row]
-        y1 = ys[row + 1]
-        for col in range(cols):
-            v00 = upper[col]
-            v10 = upper[col + 1]
-            v11 = lower[col + 1]
-            v01 = lower[col]
-            low = min(v00, v10, v11, v01)
-            high = max(v00, v10, v11, v01)
-            start = bisect.bisect_right(levels, low)
-            if start >= len(levels) or levels[start] > high:
+        for col in range(sample_cols - 1):
+            cell_tone = (upper[col] + upper[col + 1] + lower[col + 1] + lower[col]) * 0.25
+            if cell_tone <= INK_FLOOR:
                 continue
-            x0 = xs[col]
-            x1 = xs[col + 1]
-            for level in levels[start:]:
-                if level > high:
-                    break
-                # Canonical edge order (top: c0->c1, right: c1->c2,
-                # bottom: c3->c2, left: c0->c3) so the neighbouring cell
-                # computes the shared crossing from the same two samples and
-                # the chains join exactly.
-                edge_top = _terrain_crossing(x0, y0, v00, x1, y0, v10, level)
-                edge_right = _terrain_crossing(x1, y0, v10, x1, y1, v11, level)
-                edge_bottom = _terrain_crossing(x0, y1, v01, x1, y1, v11, level)
-                edge_left = _terrain_crossing(x0, y0, v00, x0, y1, v01, level)
-                case = (
-                    (1 if v00 > level else 0)
-                    | (2 if v10 > level else 0)
-                    | (4 if v11 > level else 0)
-                    | (8 if v01 > level else 0)
-                )
-                if case == 1 or case == 14:
-                    segments.append((edge_left, edge_top))
-                elif case == 2 or case == 13:
-                    segments.append((edge_top, edge_right))
-                elif case == 3 or case == 12:
-                    segments.append((edge_left, edge_right))
-                elif case == 4 or case == 11:
-                    segments.append((edge_right, edge_bottom))
-                elif case == 6 or case == 9:
-                    segments.append((edge_top, edge_bottom))
-                elif case == 7 or case == 8:
-                    segments.append((edge_left, edge_bottom))
-                elif case == 5:
-                    # Saddle: put the segments on the sides the centre value
-                    # says are connected, which is the standard asymptotic
-                    # decider.
-                    if (v00 + v10 + v11 + v01) * 0.25 > level:
-                        segments.append((edge_top, edge_right))
-                        segments.append((edge_left, edge_bottom))
-                    else:
-                        segments.append((edge_left, edge_top))
-                        segments.append((edge_right, edge_bottom))
-                elif case == 10:
-                    if (v00 + v10 + v11 + v01) * 0.25 > level:
-                        segments.append((edge_left, edge_top))
-                        segments.append((edge_right, edge_bottom))
-                    else:
-                        segments.append((edge_top, edge_right))
-                        segments.append((edge_left, edge_bottom))
-    return _stitch_contour_segments(segments)
+            dx = (upper[col + 1] - upper[col]) / step_x
+            dy = (lower[col] - upper[col]) / step_y
+            gradient += math.hypot(dx, dy)
+            ink_tone += cell_tone
+            inked += 1
+    if inked == 0:
+        return []
+    mean_gradient = gradient / inked
+    if mean_gradient <= 1e-12:
+        # A flat image has no contours to draw.
+        return []
+    interval = spacing * mean_gradient * TERRAIN_TONE_CALIBRATION
+    if interval < 1.0 / TERRAIN_TONE_MAX_LEVELS:
+        interval = 1.0 / TERRAIN_TONE_MAX_LEVELS
+    if interval >= 1.0:
+        # A hard, thin drawing (a scanned line, a step edge) can have a mean
+        # slope so steep that the requested gap exceeds the whole tone range.
+        # One line through the middle of the ink still traces the subject.
+        mean_ink_tone = ink_tone / inked
+        levels = [mean_ink_tone] if 0.0 < mean_ink_tone < 1.0 else []
+    else:
+        level_count = max(1, int(math.floor(1.0 / interval)))
+        levels = [(index + 0.5) * interval for index in range(level_count)]
+    return _stitch_contour_segments(
+        _marching_squares(values, xs, ys, levels, cancel_check)
+    )

@@ -204,32 +204,44 @@ class RasterImportTests(unittest.TestCase):
                 points = [point for contour in contours for point in contour]
                 self.assertGreater(len(points), 0, value)
 
-    def test_terrain_contours_follow_tone(self):
-        """`terrain` crowds its contours into the dark half of the ramp."""
+    def test_terrain_contours_trace_the_shading(self):
+        """`terrain` draws the photo's level sets, not a texture.
+
+        A picture whose tone changes only left to right has vertical level
+        sets, so its contour lines must be near-vertical columns about `Fill
+        spacing` apart instead of noise swirls.
+        """
+        folder = Path(tempfile.mkdtemp(prefix="terrain-ramp-"))
+        ramp = folder / "ramp.png"
+        image = QImage(240, 160, QImage.Format_ARGB32)
+        for y in range(image.height()):
+            for x in range(image.width()):
+                value = int(255 * x / (image.width() - 1))
+                image.setPixelColor(x, y, QColor(value, value, value))
+        if not image.save(str(ramp)):
+            self.fail("could not write the test ramp")
+
         combo = self.window.fields["hatch_pattern"]
         combo.setCurrentIndex(combo.findData("terrain"))
         self.window.update_pattern_settings()
         self.window.fields["terrain_size_mm"].setText("0")
         self.window.fields["shade_levels"].setText("4")
-        settings, contours = self._build(4.0)
+        settings, contours = self._build(4.0, photo=ramp)
         self.assertTrue(contours)
-        xs = [point[0] for contour in contours for point in contour]
-        middle = 0.5 * (min(xs) + max(xs))
-
-        def length(predicate):
-            return sum(
-                math.hypot(b[0] - a[0], b[1] - a[1])
-                for contour in contours
-                for a, b in zip(contour, contour[1:])
-                if predicate(0.5 * (a[0] + b[0]))
-            )
-
-        dark = length(lambda x: x >= middle)
-        light = length(lambda x: x < middle)
-        self.assertGreater(dark, 0.0)
-        # The test ramp runs white (left) to black (right), so the darker half
-        # must carry visibly more contour length.
-        self.assertGreater(dark, light * 1.5)
+        positions = []
+        for contour in contours:
+            xs = [point[0] for point in contour]
+            ys = [point[1] for point in contour]
+            x_span = max(xs) - min(xs)
+            y_span = max(ys) - min(ys)
+            self.assertGreater(y_span, 5.0)
+            self.assertLess(x_span, 0.05 * y_span, "a ramp level set is vertical")
+            positions.append(sum(xs) / len(xs))
+        positions.sort()
+        gaps = [b - a for a, b in zip(positions, positions[1:])]
+        self.assertGreater(len(gaps), 8)
+        for gap in gaps:
+            self.assertAlmostEqual(gap, 4.0, delta=1.0)
 
     def test_photo_shading_patterns_survive_a_bed_filling_photo(self):
         """Regression: a real-scale photo dropped every stipple dot.

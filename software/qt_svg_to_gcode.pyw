@@ -2068,29 +2068,38 @@ class MainWindow(QMainWindow):
                 raster_concentric((layer + 1) / (levels + 1), active_spacing / math.sqrt(layer + 1))
             return contours
 
-        # Topographic contour fill. Each shade layer draws a finer contour
-        # interval, phase-shifted off the layers above it so the extra lines
-        # interleave instead of redrawing the same curve: darker tone reads as
-        # contours crowding together on a steeper slope of the same terrain.
+        # Tone-traced terrain: the image's own shading is the elevation, so the
+        # contour lines follow the faces and features instead of a synthetic
+        # field. The level interval is calibrated to the photo's mean tone
+        # gradient, so Fill spacing is the average gap between lines whatever
+        # the picture contains; Terrain size mm is the smoothing radius.
         if pattern == "terrain":
             hill_size = float(getattr(settings, "terrain_size_mm", 0.0)) / artwork_scale
-            if hill_size <= 0.0:
-                hill_size = active_spacing * converter.TERRAIN_FEATURE_SCALE
-            for layer in range(levels):
-                converter.check_cancelled(cancel_check)
-                threshold = (layer + 1) / (levels + 1)
-                layer_spacing = active_spacing / math.sqrt(layer + 1)
-                phase = (0.5 + 0.6180339887498949 * layer) % 1.0
-                for line in converter.terrain_contours(
-                    (view.left(), view.top(), view.right(), view.bottom()),
-                    layer_spacing,
-                    feature_scale=hill_size,
-                    phase=phase,
+            blur = hill_size if hill_size > 0.0 else active_spacing * 0.5
+            # Sample on the pixel centres: the outermost grid line must sit
+            # inside the image, or the tone cliff at the edge draws a rectangle
+            # of contours around the artwork.
+            edge = 0.5 / px_per_unit
+            return [
+                [maybe_flip(point) for point in line]
+                for line in converter.tone_terrain_contours(
+                    (
+                        view.left() + edge,
+                        view.top() + edge,
+                        view.right() - edge,
+                        view.bottom() - edge,
+                    ),
+                    active_spacing,
+                    darkness_at,
+                    # Two source pixels: the contour pitch only needs half the
+                    # spacing, but thin features (a scan's linework) have to be
+                    # sampled or they vanish between grid lines.
+                    step=min(active_spacing * 0.5, 2.0 / px_per_unit),
+                    blur=blur,
                     min_step=sample_step,
                     cancel_check=cancel_check,
-                ):
-                    append_active_polyline(line, threshold)
-            return contours
+                )
+            ]
 
         if pattern == "linear":
             offsets = (0.0,)
@@ -2806,11 +2815,18 @@ class MainWindow(QMainWindow):
                 "Shade levels do not change this pattern."
             )
         if pattern == "terrain":
+            if source == "tone":
+                return (
+                    "Fill: terrain contours of the image's own shading, "
+                    f"{fill_contours} contour line(s) about {spacing:g} mm apart on "
+                    "average. Darker areas are higher ground, so the lines trace the "
+                    "photo's features; Shade levels does not change this pattern."
+                )
             return (
                 f"Fill: {spacing:g} mm terrain contours inside {where}, "
-                f"{fill_contours} contour line(s). Darker shade levels tighten "
-                "the contour interval on the same hills, so Shade levels darken "
-                "this pattern."
+                f"{fill_contours} contour line(s). A flat SVG shape has no tone "
+                "gradient to trace, so its hills come from a synthetic height field "
+                "and Shade levels darken the fill."
             )
         return f"Fill: {spacing:g} mm {pattern}, {fill_contours} hatch passes inside {where}."
 

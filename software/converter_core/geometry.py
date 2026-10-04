@@ -18,7 +18,7 @@ from .shading import (
     terrain_contours,
 )
 
-GEOMETRY_VERSION = "2.5-terrain-fill"  # topographic contour fill
+GEOMETRY_VERSION = "2.6-tone-terrain"  # terrain contours follow image tone
 
 # Drop contours shorter than this (in on-paper mm). Clipping the infill lattice
 # to a polygon boundary leaves sub-pen-width slivers that draw an M3/M5 "dot"

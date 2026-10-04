@@ -1,5 +1,42 @@
 # Engineering Log
 
+<a id="elog-20261004-terrain-follows-the-photo-shading"></a>
+### 🟩 2026-10-04 - WINDOWS SOFTWARE/IMPLEMENTED - terrain follows the photo's shading
+
+- Request: operator feedback on a real portrait - "compared to
+  momandbennett.jpg it seems that the terrain mapping is verry random based on
+  the shading" - with the plotted preview showing the synthetic field's swirls
+  ignoring the faces.
+- Change: on image tone the `terrain` fill's elevation is now the photo's own
+  darkness, so the contour lines trace the picture (a topographic portrait);
+  dark pixels are high ground, a blown-out sky stays blank, and flat SVG shapes
+  keep the synthetic height field because they have no tone gradient inside an
+  element to trace.
+- Calibration: the level interval is sized from the image's mean tone gradient
+  magnitude over its inked area, so `Fill spacing mm` means the average gap
+  between lines. Measured 4.07 mm and 2.05 mm achieved for 4 mm and 2 mm
+  requests on the portrait, and a linear ramp draws exactly `spacing` apart.
+  `Terrain size mm` is the smoothing radius on image tone (0 = half the fill
+  spacing); `Shade levels` does not apply.
+- Implementation: a new `tone_terrain_contours` in `converter_core/shading.py`
+  with shared marching-squares, grid-geometry, blur and chaining helpers; the
+  Qt image-tone branch samples on pixel centres (the outer pixel row otherwise
+  drew a rectangle of contours around the artwork). `GEOMETRY_VERSION` is
+  `2.6-tone-terrain`.
+- Verification: 204 tests pass, including new tone-terrain unit tests (ramp
+  gaps, disc edge, flat field, smoothing, determinism) and a real Qt ramp test.
+  The 4 mm portrait program (402 contours / 27,410 lines) passes
+  `tools\check_gcode_motion.py --strict`.
+- Struggle: the first gradient metric averaged `|dx|` and `|dy|` and buried a
+  1.57x error in a fitted factor; a pure ramp exposed it. Normalising over
+  sloped cells instead then made hard-edged art draw nothing, so the average
+  is over the inked area.
+- Risk: flat tone draws no contours by construction (a map plateau), and a hard
+  tone edge stacks levels into a dense cliff band. Not yet plotted on paper.
+- Evidence: `WSW-20261004-003`; `software/README.md`; `docs/HANDOFF.md`.
+- Category: windows-software, software, fill, shading, terrain, topographic,
+  image-tone, plotter-art.
+
 <a id="elog-20261004-terrain-topographic-contour-fill"></a>
 ### 🟩 2026-10-04 - WINDOWS SOFTWARE/IMPLEMENTED - terrain (topographic contour) fill
 

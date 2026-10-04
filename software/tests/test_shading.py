@@ -330,5 +330,88 @@ class TerrainTests(unittest.TestCase):
         self.assertLess(points, 200000)
 
 
+class ToneTerrainTests(unittest.TestCase):
+    """The image-tone terrain traces the photo's own shading."""
+
+    def test_a_ramp_draws_vertical_lines_at_the_requested_gap(self):
+        bounds = (0.0, 0.0, 100.0, 60.0)
+        lines = converter.tone_terrain_contours(
+            bounds, 5.0, lambda x, y: x / 100.0
+        )
+        self.assertTrue(lines)
+        positions = []
+        for line in lines:
+            xs = sorted({round(point[0], 3) for point in line})
+            self.assertLessEqual(xs[-1] - xs[0], 1e-6, "a ramp level set is vertical")
+            positions.append(0.5 * (xs[0] + xs[-1]))
+        positions.sort()
+        gaps = [b - a for a, b in zip(positions, positions[1:])]
+        self.assertGreater(len(gaps), 3)
+        for gap in gaps:
+            self.assertAlmostEqual(gap, 5.0, delta=1.0)
+
+    def test_lines_stay_on_the_dark_feature(self):
+        # A dark disc on a white field: every contour belongs to the disc's
+        # edge, so none may wander into the empty background.
+        def darkness(x, y):
+            return 0.8 if math.hypot(x - 50.0, y - 50.0) <= 30.0 else 0.0
+
+        lines = converter.tone_terrain_contours(
+            (0.0, 0.0, 100.0, 100.0), 3.0, darkness, blur=1.0
+        )
+        self.assertGreater(len(lines), 3)
+        for line in lines:
+            for x, y in line:
+                radius = math.hypot(x - 50.0, y - 50.0)
+                self.assertGreaterEqual(radius, 26.0)
+                self.assertLessEqual(radius, 34.0)
+
+    def test_a_flat_field_draws_nothing(self):
+        self.assertEqual(
+            converter.tone_terrain_contours((0.0, 0.0, 50.0, 50.0), 4.0, lambda x, y: 0.5),
+            [],
+        )
+        self.assertEqual(
+            converter.tone_terrain_contours((0.0, 0.0, 50.0, 50.0), 4.0, lambda x, y: 0.0),
+            [],
+        )
+
+    def test_a_thin_dark_line_still_draws_at_a_coarse_spacing(self):
+        # A scanned line has one enormous slope and no area: without the
+        # single-level fallback the ladder exceeds the tone range and nothing
+        # is drawn at all.
+        darkness = lambda x, y: 1.0 if abs(y - 25.0) < 0.5 else 0.0
+        lines = converter.tone_terrain_contours(
+            (0.0, 0.0, 60.0, 50.0), 40.0, darkness, step=1.0, blur=1.0
+        )
+        self.assertTrue(lines)
+        for line in lines:
+            for x, y in line:
+                self.assertAlmostEqual(y, 25.0, delta=2.0)
+
+    def test_smoothing_turns_a_cliff_into_a_slope(self):
+        # A hard edge stacks every level in one cell; the smoothing radius is
+        # what turns that cliff into the graded band of a real hillside.
+        bounds = (0.0, 0.0, 100.0, 60.0)
+        darkness = lambda x, y: 1.0 if x > 50.0 else 0.0
+
+        def spread(blur):
+            lines = converter.tone_terrain_contours(bounds, 4.0, darkness, blur=blur)
+            xs = [point[0] for line in lines for point in line]
+            return max(xs) - min(xs)
+
+        self.assertLess(spread(0.0), 4.0)
+        self.assertGreater(spread(8.0), 6.0)
+
+    def test_output_is_deterministic(self):
+        def darkness(x, y):
+            return 0.5 + 0.4 * math.sin(0.2 * x) * math.cos(0.3 * y)
+
+        args = ((0.0, 0.0, 80.0, 80.0), 3.0, darkness)
+        first = converter.tone_terrain_contours(*args, blur=1.0)
+        second = converter.tone_terrain_contours(*args, blur=1.0)
+        self.assertEqual(first, second)
+
+
 if __name__ == "__main__":
     unittest.main()

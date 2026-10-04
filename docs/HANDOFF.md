@@ -188,9 +188,12 @@ converter README for the exact preamble and settings.
   OrcaSlicer-style sparse infill: `linear`, `crosshatch`, `diagonal`,
   `diagonal_crosshatch`, `diamonds`, `triangular`, `honeycomb`/`hexagonal`, `circles`, `dots`,
   `waves`, `gyroid`, `cubic`, `concentric`, or `terrain` (topographic contour lines of a
-  deterministic fractal height field; `terrain_size_mm` sets the hill size and the fill
-  spacing sets the contour pitch, with tone tightening the interval through the shade
-  levels).
+  height field). On image tone the terrain's elevation is the photo's own darkness, so the
+  contours trace the shading and `Fill spacing` is the measured average gap (the level
+  interval is sized from the image's mean tone gradient, `WSW-20261004-003`). On flat SVG
+  shapes it is a deterministic fractal field: `terrain_size_mm` sets the hill size, the fill
+  spacing sets the contour pitch, and the shade levels tighten the interval to darken the
+  fill.
   `linear` is always one parallel-line family; darker fills increase density by reducing spacing
   rather than adding unrelated angle families. Vector fills treat the pattern as a full layer and
   clip pattern segments to the filled contour boundary. OrcaSlicer references used for this model:
