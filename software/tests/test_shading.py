@@ -117,6 +117,54 @@ class StippleTests(unittest.TestCase):
         self.assertEqual(points, [])
 
 
+class StippleDotSizeTests(unittest.TestCase):
+    def test_dot_radius_never_shrinks_below_a_pen_tip(self):
+        self.assertGreaterEqual(converter.stipple_mark_radius(0.0), 0.25)
+        self.assertGreaterEqual(converter.stipple_mark_radius(0.8), 0.4)
+
+    def test_each_point_becomes_one_closed_dot_circle(self):
+        marks = converter.dot_mark_contours([(1.0, 2.0), (5.0, 6.0)], 0.75)
+        self.assertEqual(len(marks), 2)
+        for mark, (x, y) in zip(marks, [(1.0, 2.0), (5.0, 6.0)]):
+            self.assertGreater(len(mark), 6)
+            self.assertEqual(mark[0], mark[-1])
+            radius = math.hypot(mark[0][0] - x, mark[0][1] - y)
+            self.assertAlmostEqual(radius, 0.75, places=6)
+
+    def test_dots_survive_the_geometry_filter_at_a_bed_filling_scale(self):
+        """Regression: a bed-filling photo's dots were dropped as slivers.
+
+        The fill is generated in view units and then scaled to paper, where
+        ``apply_geometry_settings`` removes anything shorter than 1 mm. A dot
+        drawn as a fraction of the fill spacing vanished at real photo scales;
+        it must instead be a paper-sized circle about one pen tip across.
+        """
+        square = [(0.0, 0.0), (300.0, 0.0), (300.0, 400.0), (0.0, 400.0)]
+        scale = 0.3
+        unit_per_mm = 1.0 / scale
+        contours = converter.fill_region_pattern_contours(
+            [square],
+            4.0 * unit_per_mm,
+            0.0,
+            1,
+            90.0,
+            0.6,
+            "stipple",
+            unit_per_mm=unit_per_mm,
+            pen_diameter_mm=0.2,
+        )
+        self.assertTrue(contours)
+        settings = converter.Settings(scale=scale, hatch_pattern="stipple")
+        paper = converter.apply_geometry_settings(contours, settings)
+        self.assertTrue(paper, "stipple dots must survive the sub-pen-width filter")
+        spans = [
+            max(x for x, _ in contour) - min(x for x, _ in contour)
+            for contour in paper
+        ]
+        # A 0.25 mm dot radius is 0.5 mm across on paper before pen width.
+        self.assertGreater(min(spans), 0.3)
+
+
 class HalftoneTests(unittest.TestCase):
     def test_dot_radius_follows_tone(self):
         full = converter.halftone_contours(

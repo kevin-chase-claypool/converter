@@ -62,6 +62,11 @@ styles — stipple, halftone and single-line — were missing.
     in ink, above `INK_FLOOR` (0.04), pass a tone-weighted random draw, and are
     at least `min_dist` from every accepted point. A fixed `seed` makes the
     field reproducible.
+    - Each accepted point is plotted as a small closed circle
+      (`stipple_mark_radius` / `dot_mark_contours`), sized on paper at half the
+      pen tip or 0.25 mm radius, whichever is larger. A dot drawn as a fraction
+      of the fill spacing disappears at bed-filling scales, because
+      `apply_geometry_settings` drops any contour shorter than 1 mm on paper.
   - `halftone_contours` places a square lattice and sizes each dot
     `spacing / 2 * sqrt(tone)` so ink area tracks tone.
   - `greedy_single_line` orders points with a spatial-grid nearest-neighbour
@@ -85,7 +90,12 @@ styles — stipple, halftone and single-line — were missing.
   point once, and the vector fill path.
 - `software/tests/test_raster_import.py` gained a case that builds each pattern
   through the real Qt image-tone path from a saved PNG.
-- Full suite: 184 tests pass (`python -m unittest discover -s software/tests
+- Regression coverage: `test_shading.py` gained three dot-size cases (radius
+  floor, exactly closed circles, and a 300 x 400 unit artwork at `Scale 0.3`
+  through `apply_geometry_settings`), and `test_raster_import.py` builds a
+  1200 x 900 photo through the full `load_contours` fit-and-scale pipeline,
+  asserting every stipple dot is more than 0.3 mm across.
+- Full suite: 189 tests pass (`python -m unittest discover -s software/tests
   -p "test_*.py"`).
 
 ## Struggles and rejected approaches
@@ -97,12 +107,28 @@ Voronoi relaxation was rejected: it is the canonical stipple algorithm but needs
 an iterative centroid solver, while the tone-weighted Poisson-disc sampler here
 is simpler, deterministic and already reads as stipple.
 
+The first cut also drew each stipple dot as a short horizontal dash whose length
+was a fraction of the fill spacing (5.5 %, with a sampling-step floor). That
+survived the unit tests, which build small artworks at `Scale ~1`, but on a
+bed-filling photo (`Scale 0.35`) every dot shrank to ~0.44 mm on paper and
+`apply_geometry_settings` dropped all of them as sub-pen-width slivers -
+selecting `stipple` produced an empty program. Dots are now closed circles with
+the radius chosen in paper millimetres and divided by the artwork scale, so the
+geometry filter sees a ~1.6 mm circumference and every dot survives. The vector
+path needed the same treatment: `clip_polyline_to_region` returns one two-point
+contour per circle edge, so the clipped dot edges are re-chained with
+`chain_segments_to_paths` before they are filtered - the same fix also keeps
+small halftone dots in the vector path.
+
 ## Risks and follow-up
 
 - The single-line tour is greedy nearest-neighbour, not an optimal TSP, so it
   is faster but can leave an occasional long bridge. An optional 2-opt or
   real TSP pass would improve it at higher point counts and is left as a
   follow-up.
+- A stipple dot never shrinks below ~0.5 mm across (pen tip and 0.25 mm radius
+  floors). A user wanting finer marks needs a finer pen, not a smaller
+  `Dot spacing mm`; the pitch only sets the minimum gap between dots.
 - Stipple/halftone/tsp have not been plotted on paper yet; the on-screen
   geometry is verified, and the physical density reading still needs a test
   sheet.

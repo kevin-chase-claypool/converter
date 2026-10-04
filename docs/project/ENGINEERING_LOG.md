@@ -16,13 +16,20 @@
   fill path and the Qt image-tone path. Tone drives density/radius/path directly,
   so the three patterns ignore `Shade levels` the same way `sine_gradient`
   does.
-- Verification: 14 new `test_shading.py` cases plus an image-tone integration
-  case in `test_raster_import.py`; the full suite is 184 tests, all passing.
+- Verification: the new `test_shading.py` cases (17) plus image-tone
+  integration coverage in `test_raster_import.py`, including a 1200 x 900 photo
+  through the full fit-and-scale pipeline; the full suite is 189 tests, all
+  passing.
 - Struggle: the nearest-neighbour grid's first search-radius used the wrong
   sign and collapsed `tsp` to one point; corrected to the Chebyshev distance to
-  the grid bounding box.
+  the grid bounding box. The first stipple dots were dashes sized as a fraction
+  of the fill spacing, so `apply_geometry_settings` dropped every one of them
+  as a sub-pen-width sliver on a bed-filling photo (empty program); dots are now
+  closed circles sized on paper (half the pen tip or 0.25 mm radius) and the
+  vector path re-chains clipped dot edges before filtering.
 - Risk: `tsp` is a greedy tour, not optimal, and none of the three has been
-  plotted on paper yet.
+  plotted on paper yet. Stipple dots have a ~0.5 mm minimum size, so finer
+  marks need a finer pen rather than a smaller pitch.
 - Evidence: `WSW-20261003-001`; `software/README.md`.
 - Category: windows-software, software, plotter-art, fill, shading, stipple,
   halftone, tsp, image-tone.

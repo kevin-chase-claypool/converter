@@ -3,7 +3,13 @@ import re
 from xml.etree import ElementTree as ET
 from .cancellation import check_cancelled
 from .settings import CELL_PATTERNS, CELL_SPACING_SCALE, HATCH_PATTERNS, pattern_size_values
-from .shading import greedy_single_line, halftone_contours, stipple_points
+from .shading import (
+    dot_mark_contours,
+    greedy_single_line,
+    halftone_contours,
+    stipple_mark_radius,
+    stipple_points,
+)
 
 GEOMETRY_VERSION = "2.4-photo-shading"  # stipple, halftone and single-line tone fills
 
@@ -1472,8 +1478,14 @@ def _shading_callbacks(polygons, darkness):
     return inside, dark
 
 
-def stipple_region_contours(polygons, spacing, darkness, cancel_check=None):
-    """Tone-driven stipple dots clipped to the filled region."""
+def stipple_region_contours(polygons, spacing, darkness, cancel_check=None, unit_per_mm=1.0, pen_diameter_mm=0.0):
+    """Tone-driven stipple dots clipped to the filled region.
+
+    ``unit_per_mm`` converts the on-paper dot size into the view units the
+    fill is generated in (``1 / scale`` for the vector path), so a stipple dot
+    keeps its physical size - and survives the sub-pen-width geometry filter -
+    whatever the artwork's viewBox says.
+    """
     if spacing <= 0.0 or not polygons:
         return []
     inside, dark = _shading_callbacks(polygons, darkness)
@@ -1484,13 +1496,14 @@ def stipple_region_contours(polygons, spacing, darkness, cancel_check=None):
         spacing,
         cancel_check=cancel_check,
     )
-    radius = max(spacing * 0.055, 0.03)
-    contours = []
-    for x, y in points:
-        contours.extend(
-            clip_segment_to_region((x - radius, y), (x + radius, y), polygons)
-        )
-    return contours
+    radius = stipple_mark_radius(pen_diameter_mm) * max(float(unit_per_mm), 0.0)
+    segments = []
+    for circle in dot_mark_contours(points, radius):
+        segments.extend(clip_polyline_to_region(circle, polygons))
+    # Clipping splits a closed dot into one two-point contour per edge, and the
+    # paper-space filter would then drop each edge as a sliver. Chain the edges
+    # back so every dot stays a single closed contour of its full circumference.
+    return chain_segments_to_paths(segments)
 
 
 def halftone_region_contours(polygons, spacing, darkness, angle_deg=0.0, cancel_check=None):
@@ -1506,10 +1519,10 @@ def halftone_region_contours(polygons, spacing, darkness, angle_deg=0.0, cancel_
         angle_deg,
         cancel_check=cancel_check,
     )
-    contours = []
+    segments = []
     for circle in circles:
-        contours.extend(clip_polyline_to_region(circle, polygons))
-    return contours
+        segments.extend(clip_polyline_to_region(circle, polygons))
+    return chain_segments_to_paths(segments)
 
 
 def tsp_region_contours(polygons, spacing, darkness, cancel_check=None):
@@ -1530,11 +1543,11 @@ def tsp_region_contours(polygons, spacing, darkness, cancel_check=None):
     return chain_segments_to_paths(clip_polyline_to_region(line, polygons))
 
 
-def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, gradient_amplitude_pct=50.0, gradient_density_pct=100.0):
-    return fill_region_pattern_contours([polygon], spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size, pattern_sizes, cancel_check, fill_inset, gradient_amplitude_pct, gradient_density_pct)
+def fill_pattern_contours(polygon, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, gradient_amplitude_pct=50.0, gradient_density_pct=100.0, unit_per_mm=1.0, pen_diameter_mm=0.0):
+    return fill_region_pattern_contours([polygon], spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size, pattern_sizes, cancel_check, fill_inset, gradient_amplitude_pct, gradient_density_pct, unit_per_mm, pen_diameter_mm)
 
 
-def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, gradient_amplitude_pct=50.0, gradient_density_pct=100.0):
+def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_step, darkness, pattern, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, gradient_amplitude_pct=50.0, gradient_density_pct=100.0, unit_per_mm=1.0, pen_diameter_mm=0.0):
     check_cancelled(cancel_check)
     pattern = normalized_hatch_pattern(pattern)
     # Photo-shading patterns read tone directly (density, dot size, or a single
@@ -1546,6 +1559,8 @@ def fill_region_pattern_contours(polygons, spacing, base_angle, levels, angle_st
             _pattern_spacing(pattern, spacing, pattern_sizes, triangle_size),
             darkness,
             cancel_check,
+            unit_per_mm,
+            pen_diameter_mm,
         )
     if pattern == "halftone":
         return halftone_region_contours(
@@ -1925,7 +1940,7 @@ def closed_outline_regions(contours, tolerance):
     return polygons
 
 
-def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, fill_wide_strokes=False, stroke_fill_ratio=2.0, pen_diameter=0.0, inherited=None, stats=None, gradient_amplitude_pct=50.0, gradient_density_pct=100.0):
+def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hatch_pattern="crosshatch", shade_levels=1, shade_angle_step=90.0, expand_strokes=True, triangle_size=0.0, pattern_sizes=None, cancel_check=None, fill_inset=0.0, fill_wide_strokes=False, stroke_fill_ratio=2.0, pen_diameter=0.0, inherited=None, stats=None, gradient_amplitude_pct=50.0, gradient_density_pct=100.0, unit_per_mm=1.0):
     check_cancelled(cancel_check)
     # Skip elements that are invisible in a single-pen plot (white/transparent
     # fill and stroke). A white knockout/background path would otherwise be
@@ -1971,7 +1986,7 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
             fill_polygons = closed_outline_regions(contours, tolerance)
             darkness = stroke_darkness(element, inherited)
         if fill_polygons:
-            fill_lines.extend(fill_region_pattern_contours(fill_polygons, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern, triangle_size, pattern_sizes, cancel_check, fill_inset, gradient_amplitude_pct, gradient_density_pct))
+            fill_lines.extend(fill_region_pattern_contours(fill_polygons, hatch_spacing, hatch_angle, shade_levels, shade_angle_step, darkness, hatch_pattern, triangle_size, pattern_sizes, cancel_check, fill_inset, gradient_amplitude_pct, gradient_density_pct, unit_per_mm, pen_diameter))
             if stats is not None:
                 stats["fill_contours"] = stats.get("fill_contours", 0) + len(fill_lines)
     if has_visible_stroke(element, inherited):
@@ -2039,7 +2054,7 @@ def parse_svg_geometry(svg_path, tolerance, flip_y, hatch_spacing=0.0, hatch_ang
                 if target is not None and target_id not in seen:
                     walk(target, combined @ Matrix(e=parse_length(node.get("x")), f=parse_length(node.get("y"))), resolved, True, seen | {target_id})
             return
-        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step, expand_strokes, triangle_size, pattern_sizes, cancel_check, fill_inset, fill_wide_strokes, stroke_fill_ratio, pen_diameter, resolved, stats, gradient_amplitude_pct, gradient_density_pct):
+        for contour in element_contours(node, tolerance, hatch_spacing, hatch_angle, hatch_pattern, shade_levels, shade_angle_step, expand_strokes, triangle_size, pattern_sizes, cancel_check, fill_inset, fill_wide_strokes, stroke_fill_ratio, pen_diameter, resolved, stats, gradient_amplitude_pct, gradient_density_pct, unit_per_mm=coarsen):
             check_cancelled(cancel_check)
             contours.append(retag_contour(contour, [combined.apply(x, y) for x, y in contour]))
         for child in list(node):

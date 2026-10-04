@@ -691,7 +691,9 @@ display-only; every other group changes the emitted program.
   levels`:
   - `stipple` places blue-noise dots whose **density** follows tone - the
     hand-stippled portrait look. `Dot spacing mm` is the minimum gap between
-    marks, and the field is deterministic, so the same photo always stipples the
+    marks and each mark is a small dot (a circle about the pen tip across,
+    never under 0.5 mm), so it survives the geometry filter at bed-filling
+    scales. The field is deterministic, so the same photo always stipples the
     same way.
   - `halftone` places a fixed-pitch grid of dots whose **radius** follows tone
     (ink area tracks darkness, the printed-halftone look). `Fill angle deg`

@@ -1885,10 +1885,15 @@ class MainWindow(QMainWindow):
                 active_spacing,
                 cancel_check=cancel_check,
             )
-            radius = max(active_spacing * 0.055, sample_step)
+            # Each dot is a small closed circle sized on paper (about one pen
+            # tip), so it reads as a dot instead of a dash and survives the
+            # sub-pen-width filter that runs after the artwork scale is applied.
+            radius = converter.stipple_mark_radius(
+                float(getattr(settings, "pen_diameter_mm", 0.0))
+            ) / artwork_scale
             return [
-                [maybe_flip((x - radius, y)), maybe_flip((x + radius, y))]
-                for x, y in points
+                [maybe_flip(point) for point in circle]
+                for circle in converter.dot_mark_contours(points, radius)
             ]
 
         # Classic halftone: fixed-pitch dots whose radius follows tone.

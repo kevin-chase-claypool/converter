@@ -20,6 +20,36 @@ from .cancellation import check_cancelled
 # does not pick up a sparse film of dots or a line crossing it.
 INK_FLOOR = 0.04
 
+# A stipple mark is plotted as a tiny closed circle, not as a fraction of the
+# fill spacing: the geometry pipeline drops any contour shorter than
+# ``MIN_FILL_SEGMENT_LENGTH`` (1 mm on paper), so a small dash vanishes on a
+# bed-filling photo.  A circle of this radius has a ~1.6 mm circumference, which
+# survives the filter and reads as one pen dot.
+STIPPLE_DOT_RADIUS_MM = 0.25
+
+
+def stipple_mark_radius(pen_diameter_mm=0.0, minimum_mm=STIPPLE_DOT_RADIUS_MM):
+    """On-paper radius of one stipple dot (never smaller than a pen tip)."""
+    return max(float(pen_diameter_mm) * 0.5, float(minimum_mm))
+
+
+def dot_mark_contours(points, radius, steps=12):
+    """Draw each point as a small closed circle of ``radius`` (view units)."""
+    radius = float(radius)
+    if radius <= 0.0:
+        return []
+    steps = max(6, int(steps))
+    circle = [
+        (
+            math.cos(2.0 * math.pi * i / steps) * radius,
+            math.sin(2.0 * math.pi * i / steps) * radius,
+        )
+        for i in range(steps + 1)
+    ]
+    circle[-1] = circle[0]
+    return [[(x + dx, y + dy) for dx, dy in circle] for x, y in points]
+
+
 # Random dart throwing saturates at roughly 0.9 accepted points per
 # ``min_dist`` squared before the minimum-distance rejection starves it
 # (hex packing is ~1.15), so this cap only stops a pathological runaway and

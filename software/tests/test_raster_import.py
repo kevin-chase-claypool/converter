@@ -45,6 +45,29 @@ def _write_test_photo(path, width=240, height=160):
     return path
 
 
+def _write_large_photo(path, width=1200, height=900):
+    """A bed-filling-size photo: a grey field with lighter and darker zones.
+
+    Fast to build (no per-pixel Python loop) so the image-tone path can be
+    exercised at the paper scale of a real imported photo.
+    """
+    from PySide6.QtCore import QRect
+    from PySide6.QtGui import QPainter
+
+    image = QImage(width, height, QImage.Format_ARGB32)
+    image.fill(QColor(140, 140, 140))
+    painter = QPainter(image)
+    painter.fillRect(QRect(0, 0, width, height // 5), QColor(255, 255, 255))
+    painter.fillRect(
+        QRect(width // 4, height // 2, width // 2, height // 3), QColor(40, 40, 40)
+    )
+    painter.end()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not image.save(str(path)):
+        raise RuntimeError("could not write the test image")
+    return path
+
+
 def _load_app_module():
     path = Path(__file__).resolve().parents[1] / "qt_svg_to_gcode.pyw"
     spec = importlib.util.spec_from_file_location("qt_svg_to_gcode_app", path)
@@ -107,6 +130,7 @@ class RasterImportTests(unittest.TestCase):
         cls.module = _load_app_module()
         folder = Path(tempfile.mkdtemp(prefix="raster-import-"))
         cls.photo = _write_test_photo(folder / "ramp.png")
+        cls.large_photo = _write_large_photo(folder / "large.png")
 
     def setUp(self):
         self.window = self.module.MainWindow()
@@ -121,14 +145,15 @@ class RasterImportTests(unittest.TestCase):
         self.window.fields["wave_size_mm"].setText("0")
         self.window.fields["hatch_angle_deg"].setText("0")
 
-    def _build(self, spacing_mm):
+    def _build(self, spacing_mm, photo=None):
+        photo = photo or self.photo
         self.window.fields["hatch_spacing_mm"].setText(str(spacing_mm))
         self.window.raw_cache_key = None
         self.window.raw_contours = None
         settings = self.window.fitted_settings_for_artwork_bounds(
-            self.window.settings(), str(self.photo)
+            self.window.settings(), str(photo)
         )
-        return settings, self.window.load_contours(str(self.photo), settings)
+        return settings, self.window.load_contours(str(photo), settings)
 
     def test_a_photo_fills_from_its_pixels(self):
         settings, contours = self._build(4.0)
@@ -177,6 +202,32 @@ class RasterImportTests(unittest.TestCase):
                 _settings, contours = self._build(4.0)
                 points = [point for contour in contours for point in contour]
                 self.assertGreater(len(points), 0, value)
+
+    def test_photo_shading_patterns_survive_a_bed_filling_photo(self):
+        """Regression: a real-scale photo dropped every stipple dot.
+
+        ``load_contours`` scales the fill to paper and removes sub-millimetre
+        fragments, so the marks must be sized on paper, not as a fraction of
+        the fill spacing.
+        """
+        dot_spans = None
+        for value in ("stipple", "halftone", "tsp"):
+            with self.subTest(pattern=value):
+                combo = self.window.fields["hatch_pattern"]
+                combo.setCurrentIndex(combo.findData(value))
+                self.window.update_pattern_settings()
+                self.window.fields["dot_spacing_mm"].setText("0")
+                settings, contours = self._build(4.0, photo=self.large_photo)
+                self.assertTrue(contours, value)
+                self.assertLess(settings.scale, 0.35, "the test photo must fit the bed")
+                if value == "stipple":
+                    dot_spans = [
+                        max(x for x, _ in contour) - min(x for x, _ in contour)
+                        for contour in contours
+                    ]
+        self.assertGreater(
+            min(dot_spans), 0.3, "every stipple dot keeps a paper size"
+        )
 
 
 if __name__ == "__main__":
