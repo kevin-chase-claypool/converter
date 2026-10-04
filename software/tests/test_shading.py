@@ -350,21 +350,45 @@ class ToneTerrainTests(unittest.TestCase):
         for gap in gaps:
             self.assertAlmostEqual(gap, 5.0, delta=1.0)
 
-    def test_lines_stay_on_the_dark_feature(self):
-        # A dark disc on a white field: every contour belongs to the disc's
-        # edge, so none may wander into the empty background.
+    def test_a_hard_edge_is_thinned_to_a_few_lines(self):
+        # A dark disc on a white field is a tone cliff. Every level crosses it
+        # in the same few millimetres, so without the separation pass the edge
+        # stacks into a heavy band ("too much on outlines").
         def darkness(x, y):
             return 0.8 if math.hypot(x - 50.0, y - 50.0) <= 30.0 else 0.0
 
         lines = converter.tone_terrain_contours(
             (0.0, 0.0, 100.0, 100.0), 3.0, darkness, blur=1.0
         )
-        self.assertGreater(len(lines), 3)
+        self.assertTrue(lines)
+        self.assertLessEqual(len(lines), 3)
         for line in lines:
             for x, y in line:
                 radius = math.hypot(x - 50.0, y - 50.0)
-                self.assertGreaterEqual(radius, 26.0)
-                self.assertLessEqual(radius, 34.0)
+                self.assertGreaterEqual(radius, 25.0)
+                self.assertLessEqual(radius, 35.0)
+        rough = converter.tone_terrain_contours(
+            (0.0, 0.0, 100.0, 100.0), 3.0, darkness, blur=1.0, separation=0.0
+        )
+        self.assertGreater(len(rough), len(lines))
+
+    def test_thin_strokes_are_drawn_once_each(self):
+        centres = (80.0, 200.0, 320.0, 440.0)
+
+        def darkness(x, y):
+            return 0.9 if any(abs(y - centre) <= 1.0 for centre in centres) else 0.0
+
+        lines = converter.tone_terrain_contours(
+            (0.0, 0.0, 600.0, 520.0), 20.0, darkness, step=2.0, blur=4.0
+        )
+        for centre in centres:
+            near = [
+                line
+                for line in lines
+                if abs(sum(point[1] for point in line) / len(line) - centre) < 10.0
+            ]
+            self.assertTrue(near, f"stroke at {centre} lost")
+            self.assertLessEqual(len(near), 2, f"stroke at {centre} stacked")
 
     def test_a_flat_field_draws_nothing(self):
         self.assertEqual(

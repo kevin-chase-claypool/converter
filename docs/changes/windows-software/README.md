@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-04 | `WSW-20261004-004` | implemented | [Terrain: stop stacking contours on hard outlines](2026/2026-10-04-terrain-outline-thinning.md) | `fill`, `shading`, `terrain`, `topographic`, `image-tone`, `plotter-art` |
 | 2026-10-04 | `WSW-20261004-003` | implemented | [Terrain on image tone follows the photo's shading](2026/2026-10-04-terrain-follows-image-tone.md) | `fill`, `shading`, `terrain`, `topographic`, `image-tone`, `plotter-art` |
 | 2026-10-04 | `WSW-20261004-002` | implemented | [Terrain fill: topographic contour shading](2026/2026-10-04-terrain-fill-pattern.md) | `fill`, `shading`, `terrain`, `topographic`, `image-tone`, `plotter-art` |
 | 2026-10-04 | `WSW-20261004-001` | implemented | [Default the GP27 handshake and recover options on](2026/2026-10-04-default-gp27-handshake-and-recover.md) | `converter`, `gp27`, `p115`, `handshake`, `pen-dwell`, `defaults` |

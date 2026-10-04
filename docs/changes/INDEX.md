@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-04 | `WSW-20261004-004` | windows-software | implemented | [Terrain: stop stacking contours on hard outlines](windows-software/2026/2026-10-04-terrain-outline-thinning.md) |
 | 2026-10-04 | `WSW-20261004-003` | windows-software | implemented | [Terrain on image tone follows the photo's shading](windows-software/2026/2026-10-04-terrain-follows-image-tone.md) |
 | 2026-10-04 | `WSW-20261004-002` | windows-software | implemented | [Terrain fill: topographic contour shading](windows-software/2026/2026-10-04-terrain-fill-pattern.md) |
 | 2026-10-04 | `WSW-20261004-001` | windows-software, rp23cnc-software | implemented | [Default the GP27 handshake and recover options on](windows-software/2026/2026-10-04-default-gp27-handshake-and-recover.md) |

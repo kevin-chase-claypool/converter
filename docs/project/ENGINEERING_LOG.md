@@ -1,5 +1,38 @@
 # Engineering Log
 
+<a id="elog-20261004-terrain-outline-thinning"></a>
+### 🟩 2026-10-04 - WINDOWS SOFTWARE/IMPLEMENTED - terrain stops stacking on outlines
+
+- Request: operator preview of a CAD-style drawing - "seems like its doing too
+  much on outlines" - with every outline drawn as a thick band of near-coincident
+  terrain contours.
+- Change: the image-tone terrain's level ladder now spans the ink's own tone
+  range with at least six bands (so thin strokes are never lost between rungs),
+  and a separation pass drops any line that would come closer than half the
+  requested `Fill spacing` to a line already placed, longest line first. A hard
+  edge is traced once or twice; a soft gradient keeps its shading. A synthetic
+  900 x 700 drawing now traces one contour per stroke instead of a band per
+  stroke.
+- Calibration effect: thinning removes ink, so the portrait's whole-image
+  average gap at a 4 mm setting rises from 4.2 mm to 5.7 mm; the fill log now
+  says lines closer than half the spacing are skipped instead of claiming the
+  drawn average equals the setting.
+- Verification: 205 tests pass, including a cliff case (a dark disc keeps <= 3
+  lines where the unthinned extraction draws 6) and a thin-stroke case (four
+  2 px strokes each keep 1-2 lines). The 4 mm portrait program (825 contours /
+  22,834 lines) passes `tools\check_gcode_motion.py --strict`.
+- Struggle: the first thinning compared a contour with itself and chopped lines
+  into 8 mm dashes; darkest-first ordering let noise specks suppress real
+  lines; and a self-calibrating separation measured from the undecimated length
+  under-thinned drawings. The final rule is fixed half-spacing, longest-first,
+  one level judged as a unit.
+- Risk: thinning lightens photos and lightens outline-heavy art more; lower
+  `Fill spacing` to compensate. Thin strokes are traced as narrow loops rather
+  than single centrelines. Still not plotted on paper.
+- Evidence: `WSW-20261004-004`; `software/README.md`; `docs/HANDOFF.md`.
+- Category: windows-software, software, fill, shading, terrain, topographic,
+  image-tone, plotter-art.
+
 <a id="elog-20261004-terrain-follows-the-photo-shading"></a>
 ### 🟩 2026-10-04 - WINDOWS SOFTWARE/IMPLEMENTED - terrain follows the photo's shading
 

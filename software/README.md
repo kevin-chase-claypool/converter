@@ -713,14 +713,20 @@ display-only; every other group changes the emitted program.
     terrain.** Darker pixels are higher ground, so the lines trace the faces
     and features of the photo - a topographic portrait - and a blown-out sky
     stays blank paper while hair and shadows fill with contours. `Fill
-    spacing mm` is the **average gap** between neighbouring lines: the level
-    interval is sized from the image's own mean tone gradient (over its inked
-    area), so a busy photo and a soft one both draw at roughly the requested
-    density (measured 4.18 mm and 2.05 mm achieved for 4 mm and 2 mm requested
-    on a portrait). `Terrain size mm` is the smoothing radius used before
-    contouring - 0 follows `Fill spacing mm / 2`; larger values merge fine tone
-    into broader landforms. `Shade levels` does not apply, because the tone is
-    the elevation rather than a density multiplier.
+    spacing mm` sets the level interval from the image's own mean tone gradient
+    (over its inked area), so a busy photo and a soft one both draw at roughly
+    the requested pitch; the ladder always spans the ink's own tone range and
+    keeps at least six bands, so a thin stroke is never lost between rungs.
+    **Lines that would crowd closer than half the spacing are then skipped,
+    longest line first**: a hard tone edge (an outline, a silhouette) is traced
+    once or twice instead of stacking every level into a heavy band. Without
+    that pass a portrait's average gap matches the request (4.2 mm at 4 mm);
+    with it the portrait measures 5.7 mm because the crowded edge copies are
+    gone, so a very outline-heavy drawing needs a smaller `Fill spacing` than
+    a photo for the same ink coverage. `Terrain size mm` is the smoothing
+    radius used before contouring - 0 follows `Fill spacing mm / 2`; larger
+    values merge fine tone into broader landforms. `Shade levels` does not
+    apply, because the tone is the elevation rather than a density multiplier.
   - **Flat SVG shapes (SVG shapes fill source): a synthetic height field.**
     A flat-filled element has no tone gradient inside it to trace, so the hills
     come from a deterministic fractal field and the fill still reads as
@@ -733,10 +739,9 @@ display-only; every other group changes the emitted program.
     the contour pitch (never coarser than two source pixels) and the extracted
     segments are chained into long strokes, so one contour line is one pen-down
     move, not one per sample. The portrait above (532 x 563 px, fitted to the
-    bed) loads in 0.27 s at 4 mm and 0.6 s at 2 mm, and the 4 mm program plans
-    and saves in another 0.4 s (`tools\check_gcode_motion.py --strict` passes
-    on it). A 900 x 700 px photo is about 38,000 points in 0.45 s at 4 mm, and
-    about 74,000 points in 0.6 s at 2 mm.
+    bed) loads in 0.38 s at 4 mm (825 contours, 22,000 points) and 0.8 s at
+    2 mm (2,900 contours, 55,000 points), and the 4 mm program plans and saves
+    in another 0.5 s (`tools\check_gcode_motion.py --strict` passes on it).
 - The pattern combo lists readable labels over the stored values, so
   `sine_gradient` reads as `gradient waves (sine_gradient)` and `waves` as
   `waves (uniform sine rows)`; a settings file or a script still uses the short

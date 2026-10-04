@@ -2818,9 +2818,10 @@ class MainWindow(QMainWindow):
             if source == "tone":
                 return (
                     "Fill: terrain contours of the image's own shading, "
-                    f"{fill_contours} contour line(s) about {spacing:g} mm apart on "
-                    "average. Darker areas are higher ground, so the lines trace the "
-                    "photo's features; Shade levels does not change this pattern."
+                    f"{fill_contours} contour line(s). Darker areas are higher ground, "
+                    f"so the lines trace the photo's features; lines closer than half "
+                    f"of {spacing:g} mm are skipped so hard outlines are traced once, "
+                    "and Shade levels does not change this pattern."
                 )
             return (
                 f"Fill: {spacing:g} mm terrain contours inside {where}, "
