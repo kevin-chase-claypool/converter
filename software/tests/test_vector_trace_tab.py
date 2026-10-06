@@ -54,6 +54,8 @@ class VectorTraceTests(unittest.TestCase):
         )
         self.assertGreaterEqual(len(paths), 1)
         self.assertEqual(paths[0][0], paths[0][-1])
+        # Regression: closed loops must not collapse to two identical points.
+        self.assertGreater(len(paths[0]), 4)
 
     def test_hatch_adds_paths(self):
         outlines = vector_trace_polylines(_image(), fill="outlines")

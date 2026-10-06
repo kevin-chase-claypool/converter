@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-030` | windows-software | implemented | [Fix Vector Trace closed loops collapsing to invisible paths](windows-software/2026-10-06-vector-trace-closed-loop-fix.md) |
 | 2026-10-06 | `WSW-20261006-029` | windows-software | implemented | [High-quality tier: Stipple/TSP, Reaction-Diffusion, and Vector Trace](windows-software/2026-10-06-high-quality-stipple-rd-trace.md) |
 | 2026-10-06 | `WSW-20261006-028` | windows-software | implemented | [Add Plotterfun, Voronoi, Path Prep, and Layers tools](windows-software/2026-10-06-plotterfun-voronoi-path-prep-layers.md) |
 | 2026-10-06 | `WSW-20261006-027` | windows-software | implemented | [Group tools by input type: Photo-based and Algorithm only](windows-software/2026-10-06-photo-vs-algorithm-groups.md) |

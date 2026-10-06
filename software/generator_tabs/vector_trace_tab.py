@@ -29,6 +29,35 @@ def _polygon_area(points):
     return abs(area) / 2.0
 
 
+def _simplify_closed(points, epsilon):
+    """Douglas-Peucker for a closed loop.
+
+    The open-path algorithm is degenerate when the first and last points are
+    identical (every point appears collinear), so the loop is split at the
+    point farthest from the start and each half is simplified separately. The
+    returned path is explicitly closed.
+    """
+    loop = list(points)
+    if len(loop) >= 2 and loop[0] == loop[-1]:
+        loop = loop[:-1]
+    if len(loop) < 3:
+        return loop + [loop[0]] if loop else []
+    if epsilon <= 0:
+        return loop + [loop[0]]
+    start = loop[0]
+    far = max(
+        range(len(loop)),
+        key=lambda index: (loop[index][0] - start[0]) ** 2
+        + (loop[index][1] - start[1]) ** 2,
+    )
+    first_chain = simplify_path(loop[: far + 1], epsilon)
+    second_chain = simplify_path(loop[far:] + [loop[0]], epsilon)
+    result = first_chain[:-1] + second_chain
+    if result and result[0] != result[-1]:
+        result.append(result[0])
+    return result
+
+
 def _hatch_mask(mask, spacing_px, angle_deg):
     import numpy as np
 
@@ -133,11 +162,10 @@ def vector_trace_polylines(
                 continue
             if _polygon_area(contour) < min_area_px:
                 continue
-            closed = list(contour)
-            if closed[0] != closed[-1]:
-                closed.append(closed[0])
-            simplified = simplify_path(closed, max(0.0, simplify_px))
+            simplified = _simplify_closed(contour, max(0.0, simplify_px))
             smoothed = chaikin(simplified, max(0, min(4, smooth_passes)), closed=True)
+            if smoothed[0] != smoothed[-1]:
+                smoothed = smoothed + [smoothed[0]]
             paths.append(smoothed)
     if fill in ("hatch", "both"):
         spacing_px = max(1.0, hatch_spacing_mm / mm_per_px)
