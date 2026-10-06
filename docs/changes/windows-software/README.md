@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-009` | implemented | [Put the G-code output to the right of the preview](2026-10-06-gcode-output-right-of-preview.md) | `user-interface`, `preview`, `gcode` |
 | 2026-10-06 | `WSW-20261006-008` | implemented | [Move Preview and Cancel into the preview panel](2026-10-06-preview-buttons-in-preview-panel.md) | `user-interface`, `preview` |
 | 2026-10-06 | `WSW-20261006-007` | implemented | [Tab-driven preview in the shared preview panel](2026-10-06-tab-driven-shared-preview.md) | `user-interface`, `generators`, `preview` |
 | 2026-10-06 | `WSW-20261006-006` | implemented | [Remove redundant per-tab image pickers](2026-10-06-remove-redundant-tab-imports.md) | `user-interface`, `generators`, `import` |

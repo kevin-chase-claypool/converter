@@ -102,10 +102,10 @@ instead of repeating the import control.
 
 The artwork/G-code file row (with **Save G-code**), the **Preview** and
 **Cancel** buttons in the preview panel under the playback controls, and the
-OpenGL preview itself (status, estimate, progress, fit/clip controls) are
-window furniture outside the tab widget, so they stay visible whichever tab is
-active. Only the settings sidebar and the G-code command list belong to the
-Convert tab.
+OpenGL preview itself (status, estimate, progress, fit/clip controls), and the
+G-code command list to the right of the preview are window furniture outside
+the tab widget, so they stay visible whichever tab is active. Only the
+settings sidebar belongs to the Convert tab.
 
 ## Kaleidoscope Converter
 

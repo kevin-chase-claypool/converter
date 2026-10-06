@@ -1123,24 +1123,21 @@ class MainWindow(QMainWindow):
         self.command_list.setFont(mono)
         self.command_list.currentRowChanged.connect(self.command_selected)
 
-        convert_split = QSplitter(Qt.Horizontal)
-        convert_split.addWidget(sidebar_scroll)
-        convert_split.addWidget(self.command_list)
-        convert_split.setStretchFactor(0, 1)
-        convert_split.setStretchFactor(1, 1)
-        convert_split.setSizes([340, 460])
         convert_layout = QHBoxLayout(self.convert_root)
         convert_layout.setContentsMargins(0, 0, 0, 0)
-        convert_layout.addWidget(convert_split)
+        convert_layout.addWidget(sidebar_scroll)
+        convert_layout.addStretch(1)
 
-        # Import, export, and preview are window furniture, not tab content,
-        # so switching to a generator tab never hides them.
+        # Import, export, preview, and the G-code output are window furniture,
+        # not tab content, so switching tabs never hides them.
         main_split = QSplitter(Qt.Horizontal)
         main_split.addWidget(self.tabs)
         main_split.addWidget(preview_widget)
+        main_split.addWidget(self.command_list)
         main_split.setStretchFactor(0, 1)
         main_split.setStretchFactor(1, 1)
-        main_split.setSizes([820, 680])
+        main_split.setStretchFactor(2, 0)
+        main_split.setSizes([700, 620, 300])
         window_layout.addWidget(main_split, 1)
 
         self.log = QTextEdit()
