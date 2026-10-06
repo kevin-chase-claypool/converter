@@ -92,6 +92,12 @@ Current generator tabs:
 Each tab previews its own output; **Use in Convert** loads the generated SVG
 into the Convert tab, where Preview and Save build the normal G-code program.
 
+The artwork/G-code file row, the **Preview / Cancel / Save G-code** actions,
+and the OpenGL preview panel (playback controls, status, estimate, fit/clip
+controls) are window furniture outside the tab widget, so they stay visible
+whichever tab is active. Only the settings sidebar and the G-code command list
+belong to the Convert tab.
+
 ## Kaleidoscope Converter
 
 `qt_kaleidoscope.pyw` (or `..\kaleidoscope.bat`) builds an N-fold mirrored

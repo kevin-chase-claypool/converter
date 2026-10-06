@@ -886,26 +886,27 @@ class MainWindow(QMainWindow):
         self.build_ui()
 
     def build_ui(self):
-        root = QWidget()
-        self.convert_root = root
+        window_root = QWidget()
+        window_layout = QVBoxLayout(window_root)
+        window_layout.setContentsMargins(6, 6, 6, 6)
+        window_layout.setSpacing(4)
+        self.setCentralWidget(window_root)
+
+        self.convert_root = QWidget()
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
-        self.setCentralWidget(self.tabs)
-        self.tabs.addTab(root, "Convert")
-        main_layout = QVBoxLayout(root)
-        main_layout.setContentsMargins(6, 6, 6, 6)
-        main_layout.setSpacing(4)
+        self.tabs.addTab(self.convert_root, "Convert")
 
         file_row = QHBoxLayout()
         self.svg_path = QLineEdit()
         self.gcode_path = QLineEdit()
-        file_row.addWidget(QLabel("SVG"))
+        file_row.addWidget(QLabel("Artwork"))
         file_row.addWidget(self.svg_path, 3)
         file_row.addWidget(QPushButton("Browse", clicked=self.pick_svg))
         file_row.addWidget(QLabel("G-code"))
         file_row.addWidget(self.gcode_path, 3)
         file_row.addWidget(QPushButton("Browse", clicked=self.pick_gcode))
-        main_layout.addLayout(file_row)
+        window_layout.addLayout(file_row)
 
         self.fields = {}
         self.field_rows = {}
@@ -1016,6 +1017,7 @@ class MainWindow(QMainWindow):
         actions.addWidget(self.cancel_preview_button)
         self.save_button = QPushButton("Save G-code", clicked=self.convert)
         actions.addWidget(self.save_button)
+        window_layout.addLayout(actions)
         self.preview_build_bar = QProgressBar()
         self.preview_build_bar.setRange(0, 100)
         self.preview_build_bar.setTextVisible(True)
@@ -1037,9 +1039,6 @@ class MainWindow(QMainWindow):
                     group_title in expanded_groups,
                 )
             )
-        sidebar_layout.addLayout(actions)
-        sidebar_layout.addWidget(self.preview_build_bar)
-        sidebar_layout.addWidget(self.preview_stage)
         sidebar_layout.addStretch(1)
         sidebar.setMaximumWidth(320)
         sidebar_scroll = QScrollArea()
@@ -1075,6 +1074,8 @@ class MainWindow(QMainWindow):
         self.estimate = QLabel("Estimated time: preview an SVG to calculate.")
         self.estimate.setWordWrap(True)
         preview_layout.addWidget(self.estimate)
+        preview_layout.addWidget(self.preview_build_bar)
+        preview_layout.addWidget(self.preview_stage)
 
         # Over-scale artwork is the one mistake the preview cannot show: a
         # cropped plot still looks like a complete drawing. Say it in words and
@@ -1114,20 +1115,30 @@ class MainWindow(QMainWindow):
         self.command_list.setFont(mono)
         self.command_list.currentRowChanged.connect(self.command_selected)
 
+        convert_split = QSplitter(Qt.Horizontal)
+        convert_split.addWidget(sidebar_scroll)
+        convert_split.addWidget(self.command_list)
+        convert_split.setStretchFactor(0, 1)
+        convert_split.setStretchFactor(1, 1)
+        convert_split.setSizes([340, 460])
+        convert_layout = QHBoxLayout(self.convert_root)
+        convert_layout.setContentsMargins(0, 0, 0, 0)
+        convert_layout.addWidget(convert_split)
+
+        # Import, export, and preview are window furniture, not tab content,
+        # so switching to a generator tab never hides them.
         main_split = QSplitter(Qt.Horizontal)
-        main_split.addWidget(sidebar_scroll)
+        main_split.addWidget(self.tabs)
         main_split.addWidget(preview_widget)
-        main_split.addWidget(self.command_list)
-        main_split.setStretchFactor(0, 0)
+        main_split.setStretchFactor(0, 1)
         main_split.setStretchFactor(1, 1)
-        main_split.setStretchFactor(2, 0)
-        main_split.setSizes([300, 1100, 320])
-        main_layout.addWidget(main_split, 1)
+        main_split.setSizes([820, 680])
+        window_layout.addWidget(main_split, 1)
 
         self.log = QTextEdit()
         self.log.setMaximumHeight(60)
         self.log.setReadOnly(True)
-        main_layout.addWidget(self.log)
+        window_layout.addWidget(self.log)
         # On-screen build marker: a window opened before a converter change
         # keeps its old pattern list, and this is what tells the two apart.
         self.log.append(

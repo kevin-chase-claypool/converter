@@ -36,11 +36,27 @@ class GeneratorTabShellTests(unittest.TestCase):
     def test_convert_is_the_first_tab(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        tabs = window.centralWidget()
+        tabs = window.tabs
         self.assertIsInstance(tabs, QTabWidget)
         self.assertEqual(tabs.tabText(0), "Convert")
         self.assertIs(tabs.widget(0), window.convert_root)
         self.assertGreaterEqual(tabs.count(), 1)
+
+    def test_import_export_and_preview_stay_outside_the_tabs(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        for widget in (
+            window.svg_path,
+            window.gcode_path,
+            window.preview_button,
+            window.save_button,
+            window.gl_preview,
+            window.slider,
+        ):
+            self.assertFalse(
+                window.tabs.isAncestorOf(widget),
+                f"{widget} is hidden with the tab it lives in",
+            )
 
     def test_use_svg_rejects_missing_output(self):
         window = self.module.MainWindow()
