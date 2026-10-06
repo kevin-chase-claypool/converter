@@ -30,7 +30,8 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QSlider,
     QSplitter,
-    QTabWidget,
+    QStackedWidget,
+    QTabBar,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -895,10 +896,16 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(window_root)
 
         self.convert_root = QWidget()
-        self.tabs = QTabWidget()
-        self.tabs.setDocumentMode(True)
-        self.tabs.addTab(self.convert_root, "Convert")
-        self.tabs.currentChanged.connect(self.on_tab_changed)
+        self.stack = QStackedWidget()
+        self.stack.addWidget(self.convert_root)
+        # The tab bar is detached from the pages so it can span the whole
+        # window above the import/export row.
+        self.tab_bar = QTabBar()
+        self.tab_bar.setDocumentMode(True)
+        self.tab_bar.setExpanding(False)
+        self.tab_bar.addTab("Convert")
+        self.tab_bar.currentChanged.connect(self.on_tab_changed)
+        window_layout.addWidget(self.tab_bar)
 
         file_row = QHBoxLayout()
         self.svg_path = QLineEdit()
@@ -1126,7 +1133,7 @@ class MainWindow(QMainWindow):
         # the right of the feature settings.
         main_split = QSplitter(Qt.Horizontal)
         self.main_split = main_split
-        main_split.addWidget(self.tabs)
+        main_split.addWidget(self.stack)
         main_split.addWidget(preview_widget)
         main_split.setStretchFactor(0, 0)
         main_split.setStretchFactor(1, 1)
@@ -1187,7 +1194,7 @@ class MainWindow(QMainWindow):
 
     def active_source_tab(self):
         """The tab that supplies artwork; None when Convert is active."""
-        current = self.tabs.currentWidget()
+        current = self.stack.currentWidget()
         return None if current is self.convert_root else current
 
     def resolve_active_source(self):
@@ -1206,10 +1213,10 @@ class MainWindow(QMainWindow):
             return path, self.convert_root
         builder = getattr(tab, "build_svg", None)
         if not callable(builder):
-            name = self.tabs.tabText(self.tabs.currentIndex())
+            name = self.tab_bar.tabText(self.tab_bar.currentIndex())
             raise ValueError(f"The {name} tab cannot supply artwork.")
         self.status.setText(
-            f"Building {self.tabs.tabText(self.tabs.currentIndex())} artwork..."
+            f"Building {self.tab_bar.tabText(self.tab_bar.currentIndex())} artwork..."
         )
         QApplication.processEvents()
         path = builder()
@@ -1217,9 +1224,10 @@ class MainWindow(QMainWindow):
             raise ValueError("The generator produced no SVG.")
         return str(path), tab
 
-    def on_tab_changed(self, _index):
+    def on_tab_changed(self, index):
         """A preview belongs to one tab; switching tabs only marks it stale."""
-        current = self.tabs.currentWidget()
+        self.stack.setCurrentIndex(index)
+        current = self.stack.currentWidget()
         self.tab_preview_stale = (
             bool(self.moves)
             and self.preview_tab is not None
@@ -1260,7 +1268,8 @@ class MainWindow(QMainWindow):
             if widget is None:
                 self.log.append(f"Generator tab '{title}' failed: {error}")
                 continue
-            self.tabs.addTab(widget, title)
+            self.tab_bar.addTab(title)
+            self.stack.addWidget(widget)
             self.log.append(f"Generator tab loaded: {title}")
 
     def pick_svg(self):

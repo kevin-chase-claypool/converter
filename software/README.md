@@ -61,8 +61,9 @@ Cycle Start with the pen loaded:
 
 ## Generator tabs
 
-The main window is tabbed. The first tab, **Convert**, is the SVG/raster to
-G-code workspace described below. Additional tabs are contributed by
+The tab bar spans the top of the window, above the Artwork/G-code row. The
+first tab, **Convert**, is the SVG/raster to G-code workspace described below.
+Additional tabs are contributed by
 `software/generator_tabs/*_tab.py` modules and are discovered at startup, one
 tab per generator. A broken tab is reported in the log instead of stopping the
 app.

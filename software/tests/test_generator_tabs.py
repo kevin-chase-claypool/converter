@@ -12,7 +12,8 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 try:
-    from PySide6.QtWidgets import QApplication, QTabWidget
+    from PySide6.QtCore import QPoint
+    from PySide6.QtWidgets import QApplication, QTabBar
 
     HAVE_QT = True
 except Exception:  # pragma: no cover - the app needs Qt, the core does not
@@ -37,11 +38,20 @@ class GeneratorTabShellTests(unittest.TestCase):
     def test_convert_is_the_first_tab(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        tabs = window.tabs
-        self.assertIsInstance(tabs, QTabWidget)
-        self.assertEqual(tabs.tabText(0), "Convert")
-        self.assertIs(tabs.widget(0), window.convert_root)
-        self.assertGreaterEqual(tabs.count(), 1)
+        self.assertIsInstance(window.tab_bar, QTabBar)
+        self.assertEqual(window.tab_bar.tabText(0), "Convert")
+        self.assertIs(window.stack.widget(0), window.convert_root)
+        self.assertGreaterEqual(window.tab_bar.count(), 1)
+
+    def test_tab_bar_sits_above_the_import_row(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.resize(1500, 950)
+        window.show()
+        self.app.processEvents()
+        bar_y = window.tab_bar.mapTo(window, QPoint(0, 0)).y()
+        import_y = window.svg_path.mapTo(window, QPoint(0, 0)).y()
+        self.assertLess(bar_y, import_y)
 
     def test_import_export_and_preview_stay_outside_the_tabs(self):
         window = self.module.MainWindow()
@@ -55,7 +65,7 @@ class GeneratorTabShellTests(unittest.TestCase):
             window.slider,
         ):
             self.assertFalse(
-                window.tabs.isAncestorOf(widget),
+                window.stack.isAncestorOf(widget),
                 f"{widget} is hidden with the tab it lives in",
             )
 
@@ -73,7 +83,7 @@ class GeneratorTabShellTests(unittest.TestCase):
         self.addCleanup(window.close)
         self.assertFalse(hasattr(window, "command_list"))
         self.assertEqual(window.main_split.count(), 2)
-        self.assertIs(window.main_split.widget(0), window.tabs)
+        self.assertIs(window.main_split.widget(0), window.stack)
         self.assertIs(window.main_split.widget(1), window.preview_panel)
         tabs_width, preview_width = window.main_split.sizes()
         self.assertLessEqual(tabs_width, 420)
@@ -98,18 +108,18 @@ class GeneratorTabShellTests(unittest.TestCase):
         self.addCleanup(window.close)
         window.moves = [{"gcode": "G1"}]
         window.preview_tab = window.convert_root
-        window.tabs.setCurrentIndex(1)
+        window.tab_bar.setCurrentIndex(1)
         self.assertTrue(window.tab_preview_stale)
         self.assertFalse(window.stale_warning.isHidden())
-        window.tabs.setCurrentIndex(0)
+        window.tab_bar.setCurrentIndex(0)
         self.assertFalse(window.tab_preview_stale)
         self.assertTrue(window.stale_warning.isHidden())
 
     def test_generator_svg_runs_through_the_converter_pipeline(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        window.tabs.setCurrentIndex(1)
-        flow = window.tabs.currentWidget()
+        window.tab_bar.setCurrentIndex(1)
+        flow = window.stack.currentWidget()
         flow.page_w.setValue(60)
         flow.page_h.setValue(60)
         flow.spacing.setValue(8.0)

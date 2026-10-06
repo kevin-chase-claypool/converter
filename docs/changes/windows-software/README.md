@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-012` | implemented | [Lift the tab bar above the import and save row](2026-10-06-tab-bar-above-import-row.md) | `user-interface`, `layout` |
 | 2026-10-06 | `WSW-20261006-011` | implemented | [Make the settings pane content-width so the preview fills the rest](2026-10-06-content-width-settings-pane.md) | `user-interface`, `preview`, `layout` |
 | 2026-10-06 | `WSW-20261006-010` | implemented | [Remove the G-code command list and let the preview fill the workspace](2026-10-06-remove-gcode-command-list.md) | `user-interface`, `preview` |
 | 2026-10-06 | `WSW-20261006-009` | implemented | [Put the G-code output to the right of the preview](2026-10-06-gcode-output-right-of-preview.md) | `user-interface`, `preview`, `gcode` |
