@@ -1,9 +1,12 @@
 """Snowflake generator tab.
 
-Algorithm re-implemented in Python from the MIT-licensed vishnubob/snowflake
-(https://github.com/vishnubob/snowflake): repeated arms grow from the centre
+Independent dendritic snowflake generator, inspired by the snowflake art
+shared from the MIT-licensed vishnubob/snowflake project
+(https://github.com/vishnubob/snowflake). Repeated arms grow from the centre
 with side branches at a fixed angle, scaled and jittered per level, producing
-a radial snowflake of straight segments. Output is SVG.
+a radial snowflake of straight segments. The upstream project is a mesoscopic
+lattice-growth simulation of ice crystals; this tab is a simpler branch
+generator, not that model. Output is SVG.
 """
 
 from __future__ import annotations

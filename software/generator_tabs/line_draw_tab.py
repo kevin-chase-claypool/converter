@@ -126,7 +126,9 @@ def _simplify(points, epsilon):
     return left[:-1] + right
 
 
-def _trace_edges(mask, mm_per_px, off_x, off_y, min_length_mm, jitter, rng):
+def _trace_edges(
+    mask, mm_per_px, off_x, off_y, min_length_mm, jitter, rng, simplify_px
+):
     rows, cols = mask.shape
     pixels = [(x, y) for y in range(rows) for x in range(cols) if mask[y, x]]
     if not pixels:
@@ -158,7 +160,7 @@ def _trace_edges(mask, mm_per_px, off_x, off_y, min_length_mm, jitter, rng):
             current = nxt
         if len(chain) < 2:
             continue
-        simplified = _simplify(chain, 0.75)
+        simplified = _simplify(chain, max(0.1, float(simplify_px)))
         length_mm = sum(
             math.hypot(
                 (simplified[i + 1][0] - simplified[i][0]) * mm_per_px,
@@ -227,6 +229,8 @@ def line_draw_polylines(
     height_mm=200.0,
     margin_mm=6.0,
     seed=7,
+    resolution_px=900,
+    simplify_px=0.75,
 ):
     """Return contour and/or hatch polylines in page millimetres."""
     import numpy as np
@@ -234,7 +238,8 @@ def line_draw_polylines(
 
     image = Image.open(image_path).convert("L")
     w_px, h_px, off_x, off_y, mm_per_px = _fit_grid(
-        width_mm, height_mm, margin_mm, image.width, image.height
+        width_mm, height_mm, margin_mm, image.width, image.height,
+        max_px=max(200, int(resolution_px)),
     )
     image = image.resize((w_px, h_px), Image.LANCZOS)
     image = image.filter(ImageFilter.GaussianBlur(1.0))
@@ -249,7 +254,10 @@ def line_draw_polylines(
         gx, gy = _sobel(luminance)
         mask = _suppress_edges(gx, gy, max(0.02, float(edge_threshold_pct) / 100.0))
         paths.extend(
-            _trace_edges(mask, mm_per_px, off_x, off_y, min_length_mm, jitter, rng)
+            _trace_edges(
+                mask, mm_per_px, off_x, off_y, min_length_mm, jitter, rng,
+                simplify_px,
+            )
         )
     if mode in ("hatch", "both"):
         tone = max(0.02, min(0.98, float(hatch_tone_pct) / 100.0))
@@ -292,6 +300,10 @@ class LineDrawTab(GeneratorTab):
         style.addRow("Sketch jitter", self.jitter)
         self.min_length = double_spin(1.2, 0.2, 20.0, 0.2, 2, " mm")
         style.addRow("Min length", self.min_length)
+        self.simplify = double_spin(0.75, 0.1, 3.0, 0.05, 2, " px")
+        style.addRow("Simplify", self.simplify)
+        self.resolution = int_spin(900, 200, 1400, 50)
+        style.addRow("Resolution px", self.resolution)
         self.stroke = double_spin(0.3, 0.1, 1.2, 0.05, 2, " mm")
         style.addRow("Line width", self.stroke)
         self.seed = int_spin(7, 0, 999_999)
@@ -344,6 +356,8 @@ class LineDrawTab(GeneratorTab):
                 height_mm=self.page_h.value(),
                 margin_mm=self.margin.value(),
                 seed=self.seed.value(),
+                resolution_px=self.resolution.value(),
+                simplify_px=self.simplify.value(),
             )
         finally:
             QGuiApplication.restoreOverrideCursor()

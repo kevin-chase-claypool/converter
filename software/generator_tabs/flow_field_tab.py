@@ -1,10 +1,12 @@
 """Flow Field generator tab.
 
-Algorithm re-implemented in Python from the MIT-licensed msurguy/flow-lines
-(https://github.com/msurguy/flow-lines), which follows Jobard & Lefer's
-evenly-spaced streamline placement: seed points on a jittered grid, integrate
-through a vector field, and stop when a candidate point breaks the minimum
-separation, leaves the page, or reaches the step cap.
+Uses the evenly-spaced streamline placement concept popularised by the
+MIT-licensed msurguy/flow-lines (https://github.com/msurguy/flow-lines) and
+Jobard & Lefer: seed points on a jittered grid, integrate through a vector
+field, and stop when a candidate point breaks the minimum separation, leaves
+the page, or reaches the step cap. The upstream tool drives the field from
+user formulas; this tab's field sources (procedural noise and image gradient
+direction) are local to this project.
 
 Output is SVG; the tab hands it to the Convert tab and never writes G-code.
 """

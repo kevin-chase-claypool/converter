@@ -71,6 +71,12 @@ class LineDrawAlgorithmTests(unittest.TestCase):
     def test_same_seed_is_identical(self):
         self.assertEqual(self.render("both"), self.render("both"))
 
+    def test_resolution_and_simplify_controls(self):
+        coarse = self.render("contour", resolution_px=300, simplify_px=2.0)
+        fine = self.render("contour", resolution_px=900, simplify_px=0.2)
+        self.assertGreater(len(coarse), 0)
+        self.assertGreater(len(fine), 0)
+
     def test_svg_document_is_valid_xml(self):
         document = polylines_to_svg(self.render("both"), 80.0, 80.0, 0.3)
         root = ET.fromstring(document)

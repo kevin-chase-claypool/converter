@@ -40,6 +40,7 @@ def postcard_polylines(
     stamp_height_mm=30.0,
     divider=True,
     caption="",
+    message="",
     address="",
     text_size_mm=5.0,
     tracking_mm=0.2,
@@ -107,6 +108,23 @@ def postcard_polylines(
                 align="left",
             )
         )
+    message_lines = [line for line in message.split("\n") if line.strip()]
+    if message_lines:
+        message_y = margin + 10.0
+        for line in message_lines:
+            if message_y > height_mm - margin - 6.0:
+                break
+            paths.extend(
+                text_polylines(
+                    line,
+                    margin + 3.0,
+                    message_y,
+                    text_size_mm,
+                    tracking_mm=tracking_mm,
+                    align="left",
+                )
+            )
+            message_y += spacing
     return scale_polylines(
         paths, float(scale_pct) / 100.0, width_mm, height_mm
     )
@@ -137,6 +155,9 @@ class PostcardTab(GeneratorTab):
         text = self.add_group("Text")
         self.caption = QLineEdit()
         text.addRow("Caption", self.caption)
+        self.message = QPlainTextEdit()
+        self.message.setFixedHeight(60)
+        text.addRow("Message", self.message)
         self.address = QPlainTextEdit()
         self.address.setFixedHeight(60)
         text.addRow("Address", self.address)
@@ -177,6 +198,7 @@ class PostcardTab(GeneratorTab):
             stamp_height_mm=self.stamp_h.value(),
             divider=self.divider.isChecked(),
             caption=self.caption.text(),
+            message=self.message.toPlainText(),
             address=self.address.toPlainText(),
             text_size_mm=self.text_size.value(),
             tracking_mm=self.tracking.value(),

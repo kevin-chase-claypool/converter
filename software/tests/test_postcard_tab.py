@@ -43,6 +43,11 @@ class PostcardTests(unittest.TestCase):
         )
         self.assertGreater(len(decorated), len(plain))
 
+    def test_message_adds_strokes(self):
+        plain = postcard_polylines(message="")
+        with_message = postcard_polylines(message="Wish you were here")
+        self.assertGreater(len(with_message), len(plain))
+
     def test_same_input_is_deterministic(self):
         self.assertEqual(
             postcard_polylines(address="X"),

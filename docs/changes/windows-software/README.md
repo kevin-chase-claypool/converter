@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-020` | implemented | [Generator fidelity audit, restored options, and attribution corrections](2026-10-06-fidelity-audit-and-restorations.md) | `generators`, `documentation`, `fidelity` |
 | 2026-10-06 | `WSW-20261006-019` | implemented | [Raise Artwork scale to 1000 percent](2026-10-06-artwork-scale-range-1000.md) | `user-interface`, `generators`, `scale` |
 | 2026-10-06 | `WSW-20261006-018` | implemented | [Add Text, Substitution, and Postcard generator tabs](2026-10-06-text-substitution-postcard-tabs.md) | `user-interface`, `generators`, `text` |
 | 2026-10-06 | `WSW-20261006-017` | implemented | [Plot generator pages 1:1 so Artwork scale works](2026-10-06-generator-1to1-preview.md) | `user-interface`, `generators`, `scale` |
