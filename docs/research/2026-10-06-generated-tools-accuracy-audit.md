@@ -45,4 +45,5 @@ intentional, stated adaptation), or **open** (tracked in the roadmap).
 
 3D CSG/texturing/colour; Line Draw's upstream contour pipeline; snowflake
 lattice simulation; Text custom fonts and kerning; Substitution/Postcard/Pixel
-Art per-colour layers; Plotterfun's algorithm suite.
+Art per-colour layers. Plotterfun is not a port: the complete upstream web
+app is vendored and embedded as one tab (`WSW-20261006-028`).

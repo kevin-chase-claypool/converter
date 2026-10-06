@@ -408,7 +408,7 @@
   linedraw patch hatch. Still missing: Line Draw's upstream contour pipeline
   and Perlin sketch style; 3D CSG, surface texturing, and eye/center/up
   camera; the snowflake lattice simulation; Text custom fonts and kerning;
-  Substitution/Postcard/Pixel Art per-colour layers; Plotterfun's suite.
+  Substitution/Postcard/Pixel Art per-colour layers.
   Benefit: the tabs can honestly claim the upstream feature set, or the audit
   note states exactly what is not ported.
   Risk: 3D CSG, the lattice model, and colour layers are each large features,

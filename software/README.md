@@ -104,6 +104,13 @@ Current tools:
 - **Pixel Art** - pixel-art paths in `big` (5x5 spiral), `line` (runs), or
   `snake` (connected) mode, from vpype-pixelart: pixel pitch, overdraw, max
   grid, alpha threshold, ignore-white, page, line width, artwork scale.
+- **Plotterfun** - the complete upstream `mitxela/plotterfun` web app (22
+  algorithms) vendored under `software/plotterfun_vendor/` and embedded with
+  QtWebEngine. Load the image and choose the algorithm inside the page, then
+  press **Export SVG to plot**; requires PySide6-Addons.
+- **Layers** - splits the imported SVG by stroke/fill colour into per-layer
+  SVGs; pick a layer to preview and plot one pen at a time. The source SVG's
+  own dimensions are preserved.
 
 **Algorithm only** (generate from parameters; optional files noted):
 
@@ -147,6 +154,13 @@ Current tools:
   (line-wobbler): frequency, amplitude, frequency jitter, seed, endpoint
   wobble toggles, margin, line width, artwork scale. Runs on the current
   preview contours, so preview another tool first.
+- **Voronoi** - bounded Voronoi cells with optional Lloyd relaxation.
+  Controls: points, seed, relaxation, style (cell boundaries / site dots /
+  both), dot size, page size, margin, line width, artwork scale.
+- **Path Prep** - vpype-style cleanup of the current preview contours:
+  linemerge, deduplicate, reloop, and linesort. Controls: merge angle and
+  tolerance, duplicate tolerance, gap closing, sort/reverse, margin, line
+  width, artwork scale. Preview another tool first.
 
 Image-driven tabs read the file already loaded in the static Artwork row
 instead of repeating the import control.
@@ -190,6 +204,10 @@ work with no input (optional mesh/image sources are noted below).
 | SquiggleCam | 50 rows, frequency 150, amplitude 1.0, spacing 4 px, resolution 700 px, brightness 0, contrast 0, min 0 / max 255 | Needs an image; lower frequency raises the wiggle. |
 | Pixel Art | Mode big, pitch 0.6 mm, max grid 96, alpha 128, ignore white | Paths auto-fit the page; big mode needs 5x the pitch per pixel, line mode is denser. |
 | Wobble | Frequency 3 mm, amplitude 0.5 mm, jitter 20 %, seed 7, endpoint wobble on | Preview a tool first; Wobble processes those contours. |
+| Plotterfun | Load an image inside the page, pick an algorithm, keep its defaults, then Export SVG to plot | Requires QtWebEngine (PySide6-Addons). |
+| Voronoi | 120 points, seed 7, relax 1, cell boundaries, margin 6 mm | Raise relax for even cells; site dots show the seeds. |
+| Path Prep | Merge 5 deg / 0.05 mm, duplicate 0.05 mm, close gaps 0.2 mm, sort on | Preview a tool first; cleans those contours. |
+| Layers | Pick a colour layer (or All colours) from an imported SVG | One layer per pen; the source dimensions are kept. |
 
 ## Kaleidoscope Converter
 

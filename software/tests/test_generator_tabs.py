@@ -42,6 +42,10 @@ EXPECTED_TOOLS = [
     "SquiggleCam",
     "Pixel Art",
     "Wobble",
+    "Plotterfun",
+    "Voronoi",
+    "Path Prep",
+    "Layers",
 ]
 
 
@@ -85,7 +89,8 @@ class ToolShellTests(unittest.TestCase):
         for title, _widget, group, _description in window.generator_tools:
             groups.setdefault(group, []).append(title)
         self.assertEqual(
-            groups["Photo-based"], ["Line Draw", "SquiggleCam", "Pixel Art"]
+            groups["Photo-based"],
+            ["Line Draw", "SquiggleCam", "Pixel Art", "Plotterfun", "Layers"],
         )
         self.assertEqual(
             groups["Algorithm only"],
@@ -99,6 +104,8 @@ class ToolShellTests(unittest.TestCase):
                 "Substitution",
                 "Postcard",
                 "Wobble",
+                "Voronoi",
+                "Path Prep",
             ],
         )
         submenus = [
@@ -168,6 +175,10 @@ class ToolShellTests(unittest.TestCase):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
         for title, page, _group, _desc in window.generator_tools:
+            if title in ("Plotterfun", "Layers"):
+                # Plotterfun's controls live inside the embedded page; Layers
+                # preserves the source SVG's own dimensions.
+                continue
             self.assertTrue(hasattr(page, "scale_pct"), title)
             self.assertEqual(page.scale_pct.value(), 100, title)
             self.assertEqual(page.scale_pct.maximum(), 1000, title)
@@ -186,10 +197,21 @@ class ToolShellTests(unittest.TestCase):
                 image.putpixel((x, y), (0, 0, 0))
         image.save(image_path)
         window.svg_path.setText(image_path)
+        svg_path = str(Path(folder) / "art.svg")
+        Path(svg_path).write_text(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" '
+            'viewBox="0 0 64 64"><path d="M8,8 L56,56" stroke="#000000" '
+            'fill="none"/></svg>',
+            encoding="utf-8",
+        )
         window.contours = [
             [(10.0, 10.0), (70.0, 10.0), (70.0, 70.0), (10.0, 70.0), (10.0, 10.0)]
         ]
         for title, page, _group, _desc in window.generator_tools:
+            if title == "Plotterfun":
+                # Embedded web app; verified by its own vendor/fallback tests.
+                continue
+            window.svg_path.setText(svg_path if title == "Layers" else image_path)
             window.show_tool(title)
             # Keep the suite quick; the recommended-settings table documents
             # the full 200 x 200 mm pages.

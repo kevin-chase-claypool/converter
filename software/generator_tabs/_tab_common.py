@@ -186,3 +186,8 @@ class GeneratorTab(QWidget):
     def build_svg(self):
         """Generate this tab's SVG and return its path (implemented by tabs)."""
         raise NotImplementedError(f"{type(self).__name__} has no build_svg()")
+
+    def report_error(self, message):
+        self.status.setText(message)
+        if self.host is not None:
+            self.host.generator_status(message)

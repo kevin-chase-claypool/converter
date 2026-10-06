@@ -1507,7 +1507,15 @@ class MainWindow(QMainWindow):
             "page.\n"
             "Wobble: frequency 3 mm, amplitude 0.5 mm, jitter 20 %, seed 7, "
             "endpoint wobble on. Preview a tool first; Wobble uses its "
-            "contours.",
+            "contours.\n"
+            "Plotterfun: load an image inside the page, pick an algorithm, "
+            "keep its defaults, then Export SVG to plot.\n"
+            "Voronoi: 120 points, seed 7, relax 1, cell boundaries, margin "
+            "6 mm.\n"
+            "Path Prep: merge 5 deg / 0.05 mm, duplicate 0.05 mm, gap 0.2 mm, "
+            "sort on; preview a tool first.\n"
+            "Layers: pick a colour layer (or All colours) from an imported "
+            "SVG.",
         )
 
     def update_stale_warning(self):
@@ -1535,6 +1543,21 @@ class MainWindow(QMainWindow):
     def current_contours(self):
         """Preview contours in millimetres, for post-process tools."""
         return self.contours
+
+    def adopt_artwork(self, path):
+        """Load external tool output (for example Plotterfun) as artwork."""
+        path = str(path)
+        if not os.path.exists(path):
+            self.log.append(f"External SVG is missing: {path}")
+            return
+        self.svg_path.setText(path)
+        self.update_suggested_gcode_path(path)
+        self.auto_configure_shading(path)
+        self.raw_cache_key = None
+        self.raw_contours = None
+        self.show_tool("Convert")
+        self.status.setText("Artwork loaded - press Preview to build it.")
+        self.log.append(f"External SVG loaded as artwork: {path}")
 
     def load_generator_tabs(self):
         """Add one page per `software/generator_tabs/*_tab.py` module."""

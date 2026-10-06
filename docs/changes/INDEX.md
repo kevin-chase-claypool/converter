@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-028` | windows-software | implemented | [Add Plotterfun, Voronoi, Path Prep, and Layers tools](windows-software/2026-10-06-plotterfun-voronoi-path-prep-layers.md) |
 | 2026-10-06 | `WSW-20261006-027` | windows-software | implemented | [Group tools by input type: Photo-based and Algorithm only](windows-software/2026-10-06-photo-vs-algorithm-groups.md) |
 | 2026-10-06 | `WSW-20261006-026` | windows-software | implemented | [Recommended default settings for every tool](windows-software/2026-10-06-recommended-default-settings.md) |
 | 2026-10-06 | `WSW-20261006-025` | windows-software | implemented | [Tool accuracy audit and source-parity fixes](windows-software/2026-10-06-tools-accuracy-audit-fixes.md) |
