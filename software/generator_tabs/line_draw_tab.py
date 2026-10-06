@@ -274,6 +274,8 @@ def line_draw_polylines(
 
 class LineDrawTab(GeneratorTab):
     NAME = "line-draw"
+    GROUP = "Line art"
+    DESCRIPTION = "Raster image to edge contours and hatch."
 
     def __init__(self, host):
         super().__init__(host)

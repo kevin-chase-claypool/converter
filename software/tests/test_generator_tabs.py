@@ -1,4 +1,4 @@
-"""The generator-tab shell: discovery, ordering, and failure isolation."""
+"""The tool shell: dashboard navigation, layout, scale, and failure isolation."""
 
 import importlib.util
 import os
@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 try:
     from PySide6.QtCore import QPoint
-    from PySide6.QtWidgets import QApplication, QTabBar
+    from PySide6.QtWidgets import QApplication
 
     HAVE_QT = True
 except Exception:  # pragma: no cover - the app needs Qt, the core does not
@@ -28,53 +28,71 @@ def _load_app_module():
     return module
 
 
+EXPECTED_TOOLS = [
+    "Flow Field",
+    "Line Draw",
+    "3D Wireframe",
+    "Harmonograph",
+    "Snowflake",
+    "Truchet",
+    "Text",
+    "Substitution",
+    "Postcard",
+]
+
+
 @unittest.skipUnless(HAVE_QT, "PySide6 is not installed")
-class GeneratorTabShellTests(unittest.TestCase):
+class ToolShellTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
         cls.module = _load_app_module()
 
-    def test_convert_is_the_first_tab(self):
+    def test_convert_is_the_default_tool(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        self.assertIsInstance(window.tab_bar, QTabBar)
-        self.assertEqual(window.tab_bar.tabText(0), "Convert")
-        self.assertIs(window.stack.widget(0), window.convert_root)
-        self.assertGreaterEqual(window.tab_bar.count(), 1)
+        self.assertIs(window.stack.currentWidget(), window.convert_root)
+        self.assertEqual(window.nav_label.text(), "Convert")
+        self.assertIs(window.stack.widget(0), window.dashboard)
 
-    def test_tab_bar_sits_above_the_import_row(self):
+    def test_tool_navigation_sits_above_the_import_row(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
         window.resize(1500, 950)
         window.show()
         self.app.processEvents()
-        bar_y = window.tab_bar.mapTo(window, QPoint(0, 0)).y()
+        nav_y = window.nav_bar.mapTo(window, QPoint(0, 0)).y()
         import_y = window.svg_path.mapTo(window, QPoint(0, 0)).y()
-        self.assertLess(bar_y, import_y)
+        self.assertLess(nav_y, import_y)
 
-    def test_generator_tab_order(self):
+    def test_dashboard_tool_order(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        titles = [
-            window.tab_bar.tabText(index)
-            for index in range(window.tab_bar.count())
-        ]
-        self.assertEqual(
-            titles,
-            [
-                "Convert",
-                "Flow Field",
-                "Line Draw",
-                "3D Wireframe",
-                "Harmonograph",
-                "Snowflake",
-                "Truchet",
-                "Text",
-                "Substitution",
-                "Postcard",
-            ],
-        )
+        titles = [title for title, _widget, _group, _desc in window.generator_tools]
+        self.assertEqual(titles, EXPECTED_TOOLS)
+        self.assertEqual(window.tool_index["Convert"], window.stack.indexOf(window.convert_root))
+        for title in EXPECTED_TOOLS:
+            self.assertIn(title, window.tool_index)
+
+    def test_dashboard_button_and_back_navigation(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.show_tool("All tools")
+        self.assertIs(window.stack.currentWidget(), window.dashboard)
+        self.assertEqual(window.nav_label.text(), "All tools")
+        # No back button on the dashboard itself; it appears on tool pages.
+        self.assertTrue(window.tools_button.isHidden())
+        window.show_tool("Flow Field")
+        self.assertEqual(window.nav_label.text(), "Flow Field")
+        self.assertFalse(window.tools_button.isHidden())
+        flow = dict(
+            (title, widget)
+            for title, widget, _group, _desc in window.generator_tools
+        )["Flow Field"]
+        self.assertIs(window.stack.currentWidget(), flow)
+        with self.assertRaises(ValueError):
+            window.show_tool("All tools")
+            window.resolve_active_source()
 
     def test_settings_pane_has_no_dead_strip(self):
         window = self.module.MainWindow()
@@ -91,7 +109,7 @@ class GeneratorTabShellTests(unittest.TestCase):
         self.addCleanup(window.close)
         window.resize(630, 1000)
         window.show()
-        window.tab_bar.setCurrentIndex(1)
+        window.show_tool("Flow Field")
         self.app.processEvents()
         tab = window.stack.currentWidget()
         self.assertGreaterEqual(tab.width(), 280)
@@ -101,23 +119,18 @@ class GeneratorTabShellTests(unittest.TestCase):
             tab.status.y(), tab.controls_scroll.y() + tab.controls_scroll.height()
         )
 
-    def test_every_generator_tab_has_an_artwork_scale(self):
+    def test_every_generator_tool_has_an_artwork_scale(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        for index in range(window.tab_bar.count()):
-            window.tab_bar.setCurrentIndex(index)
-            page = window.stack.currentWidget()
-            if page is window.convert_root:
-                continue
-            label = window.tab_bar.tabText(index)
-            self.assertTrue(hasattr(page, "scale_pct"), label)
-            self.assertEqual(page.scale_pct.value(), 100, label)
-            self.assertEqual(page.scale_pct.maximum(), 1000, label)
+        for title, page, _group, _desc in window.generator_tools:
+            self.assertTrue(hasattr(page, "scale_pct"), title)
+            self.assertEqual(page.scale_pct.value(), 100, title)
+            self.assertEqual(page.scale_pct.maximum(), 1000, title)
 
     def test_generator_sources_plot_at_manual_1to1(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        window.tab_bar.setCurrentIndex(1)
+        window.show_tool("Flow Field")
         flow = window.stack.currentWidget()
         generator_settings = window.settings_for_source(flow)
         self.assertEqual(generator_settings.fit_mode, "manual")
@@ -128,7 +141,7 @@ class GeneratorTabShellTests(unittest.TestCase):
     def test_artwork_scale_survives_the_generator_pipeline(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        window.tab_bar.setCurrentIndex(1)
+        window.show_tool("Flow Field")
         flow = window.stack.currentWidget()
         flow.page_w.setValue(120)
         flow.page_h.setValue(120)
@@ -151,7 +164,7 @@ class GeneratorTabShellTests(unittest.TestCase):
         half = drawn_width()
         self.assertAlmostEqual(half / full, 0.5, delta=0.05)
 
-    def test_import_export_and_preview_stay_outside_the_tabs(self):
+    def test_import_export_and_preview_stay_outside_the_tools(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
         for widget in (
@@ -164,7 +177,7 @@ class GeneratorTabShellTests(unittest.TestCase):
         ):
             self.assertFalse(
                 window.stack.isAncestorOf(widget),
-                f"{widget} is hidden with the tab it lives in",
+                f"{widget} is hidden with the tool page it lives in",
             )
 
     def test_preview_and_cancel_live_in_the_preview_panel(self):
@@ -186,9 +199,9 @@ class GeneratorTabShellTests(unittest.TestCase):
         window.resize(1500, 950)
         window.show()
         self.app.processEvents()
-        tabs_width, preview_width = window.main_split.sizes()
-        self.assertLessEqual(tabs_width, 420)
-        self.assertGreater(preview_width, tabs_width * 2)
+        tools_width, preview_width = window.main_split.sizes()
+        self.assertLessEqual(tools_width, 420)
+        self.assertGreater(preview_width, tools_width * 2)
 
     def test_resolve_active_source_returns_the_convert_artwork(self):
         window = self.module.MainWindow()
@@ -204,22 +217,29 @@ class GeneratorTabShellTests(unittest.TestCase):
         self.assertEqual(path, handle.name)
         self.assertIs(tab, window.convert_root)
 
-    def test_switching_tabs_marks_the_preview_stale(self):
+    def test_dashboard_requires_a_tool_for_preview(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.show_tool("All tools")
+        with self.assertRaises(ValueError):
+            window.resolve_active_source()
+
+    def test_switching_tools_marks_the_preview_stale(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
         window.moves = [{"gcode": "G1"}]
         window.preview_tab = window.convert_root
-        window.tab_bar.setCurrentIndex(1)
+        window.show_tool("Flow Field")
         self.assertTrue(window.tab_preview_stale)
         self.assertFalse(window.stale_warning.isHidden())
-        window.tab_bar.setCurrentIndex(0)
+        window.show_tool("Convert")
         self.assertFalse(window.tab_preview_stale)
         self.assertTrue(window.stale_warning.isHidden())
 
     def test_generator_svg_runs_through_the_converter_pipeline(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        window.tab_bar.setCurrentIndex(1)
+        window.show_tool("Flow Field")
         flow = window.stack.currentWidget()
         flow.page_w.setValue(60)
         flow.page_h.setValue(60)

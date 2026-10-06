@@ -1,8 +1,10 @@
 # Generator tabs
 
-The converter window is a `QTabWidget`. The first tab, **Convert**, is the
-imported-artwork workspace; every `*_tab.py` module in this package is
-auto-discovered and added as one tab per generator.
+The converter window shows one tool page at a time in a `QStackedWidget`. The
+**All tools** dashboard lists every page as a card, grouped by category, and
+the navigation bar keeps a **All tools** button while a tool is open.
+**Convert** is the default page; every `*_tab.py` module in this package is
+auto-discovered and added as one tool page.
 
 Import, Preview/Save, and the preview panel are static window chrome. Pressing
 **Preview** builds the *active* tab: Convert uses the Artwork row, while a
@@ -15,6 +17,9 @@ anything - it only marks the visible preview as belonging to another tab.
 
 ```python
 TITLE = "Flow Field"
+
+GROUP = "Line art"          # dashboard group
+DESCRIPTION = "Streamlines from noise or image tone."
 
 def create_tab(host):
     return FlowFieldTab(host)
@@ -51,3 +56,6 @@ Rules:
    in a sibling `<name>_NOTICE.md` and in a module docstring.
 7. Add tests under `software/tests/test_<name>_tab.py` following the existing
    `unittest` style.
+
+The `GROUP` and `DESCRIPTION` class attributes feed the dashboard cards; keep
+the description to one short line.

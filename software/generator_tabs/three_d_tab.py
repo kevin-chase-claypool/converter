@@ -303,6 +303,8 @@ def three_d_polylines(
 
 class ThreeDTab(GeneratorTab):
     NAME = "3d-wireframe"
+    GROUP = "3D"
+    DESCRIPTION = "OBJ/STL to hidden-line vector art."
 
     def __init__(self, host):
         super().__init__(host)

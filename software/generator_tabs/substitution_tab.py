@@ -105,6 +105,8 @@ def substitution_polylines(
 
 class SubstitutionTab(GeneratorTab):
     NAME = "substitution"
+    GROUP = "Patterns"
+    DESCRIPTION = "2x2 colour-substitution patterns."
 
     def __init__(self, host):
         super().__init__(host)

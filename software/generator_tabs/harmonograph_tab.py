@@ -68,6 +68,8 @@ def harmonograph_polylines(
 
 class HarmonographTab(GeneratorTab):
     NAME = "harmonograph"
+    GROUP = "Patterns"
+    DESCRIPTION = "Damped Lissajous curves."
 
     def __init__(self, host):
         super().__init__(host)

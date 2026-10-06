@@ -19,6 +19,8 @@ ORDER = 70
 
 class TextTab(GeneratorTab):
     NAME = "text"
+    GROUP = "Text & layout"
+    DESCRIPTION = "Monoline Hershey lettering."
 
     def __init__(self, host):
         super().__init__(host)

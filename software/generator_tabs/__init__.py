@@ -9,6 +9,9 @@ must define::
     def create_tab(host):
         ...  # return a QWidget whose class implements build_svg()
 
+The tab class also sets ``GROUP`` (dashboard category) and ``DESCRIPTION``
+(one short line for its card).
+
 The tab class implements ``build_svg() -> str``: it builds the SVG for its
 current controls and returns the path. The main window's static Preview button
 calls that for the active tab and runs the shared preview/G-code pipeline, so

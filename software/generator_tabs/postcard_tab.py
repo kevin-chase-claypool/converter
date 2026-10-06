@@ -132,6 +132,8 @@ def postcard_polylines(
 
 class PostcardTab(GeneratorTab):
     NAME = "postcard"
+    GROUP = "Text & layout"
+    DESCRIPTION = "Plottable postcard back."
 
     def __init__(self, host):
         super().__init__(host)

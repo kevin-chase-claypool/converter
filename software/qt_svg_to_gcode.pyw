@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QFormLayout,
+    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
@@ -31,7 +32,6 @@ from PySide6.QtWidgets import (
     QSlider,
     QSplitter,
     QStackedWidget,
-    QTabBar,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -898,15 +898,27 @@ class MainWindow(QMainWindow):
         self.convert_root = QWidget()
         self.stack = QStackedWidget()
         self.stack.setMinimumWidth(280)
+        self.dashboard = QWidget()
+        self.stack.addWidget(self.dashboard)
         self.stack.addWidget(self.convert_root)
-        # The tab bar is detached from the pages so it can span the whole
-        # window above the import/export row.
-        self.tab_bar = QTabBar()
-        self.tab_bar.setDocumentMode(True)
-        self.tab_bar.setExpanding(False)
-        self.tab_bar.addTab("Convert")
-        self.tab_bar.currentChanged.connect(self.on_tab_changed)
-        window_layout.addWidget(self.tab_bar)
+        self.tool_index = {"All tools": 0, "Convert": 1}
+        self.generator_tools = []
+
+        # A compact navigation bar replaces the tab bar so the tool list can
+        # grow without crowding the window.
+        self.nav_bar = QWidget()
+        nav_row = QHBoxLayout(self.nav_bar)
+        nav_row.setContentsMargins(0, 0, 0, 0)
+        self.tools_button = QPushButton(
+            "\u25c0 All tools", clicked=lambda: self.show_tool("All tools")
+        )
+        self.tools_button.setVisible(False)
+        nav_row.addWidget(self.tools_button)
+        self.nav_label = QLabel("Convert")
+        self.nav_label.setStyleSheet("font-weight: 600;")
+        nav_row.addWidget(self.nav_label)
+        nav_row.addStretch(1)
+        window_layout.addWidget(self.nav_bar)
 
         file_row = QHBoxLayout()
         self.svg_path = QLineEdit()
@@ -1127,6 +1139,17 @@ class MainWindow(QMainWindow):
         convert_layout.setContentsMargins(0, 0, 0, 0)
         convert_layout.addWidget(sidebar_scroll, 1)
 
+        dashboard_scroll = QScrollArea()
+        dashboard_scroll.setWidgetResizable(True)
+        dashboard_body = QWidget()
+        self.dashboard_layout = QVBoxLayout(dashboard_body)
+        self.dashboard_layout.setContentsMargins(12, 12, 12, 12)
+        self.dashboard_layout.setSpacing(10)
+        dashboard_scroll.setWidget(dashboard_body)
+        dashboard_host = QVBoxLayout(self.dashboard)
+        dashboard_host.setContentsMargins(0, 0, 0, 0)
+        dashboard_host.addWidget(dashboard_scroll)
+
         # Import, export, and preview are window furniture, not tab content,
         # so switching tabs never hides them. The preview fills everything to
         # the right of the feature settings.
@@ -1190,6 +1213,8 @@ class MainWindow(QMainWindow):
         self.update_pattern_settings()
         self.update_fit_fields()
         self.load_generator_tabs()
+        self.build_dashboard()
+        self.show_tool("Convert")
 
     def active_source_tab(self):
         """The tab that supplies artwork; None when Convert is active."""
@@ -1202,7 +1227,10 @@ class MainWindow(QMainWindow):
         Convert returns the Artwork row's file. A generator tab is built from
         its current controls. Raises ``ValueError`` with the user-facing reason.
         """
-        tab = self.active_source_tab()
+        current = self.stack.currentWidget()
+        if current is self.dashboard:
+            raise ValueError("Open a tool from All tools, or the Convert page, first.")
+        tab = None if current is self.convert_root else current
         if tab is None:
             path = self.svg_path.text().strip()
             if not path:
@@ -1212,11 +1240,9 @@ class MainWindow(QMainWindow):
             return path, self.convert_root
         builder = getattr(tab, "build_svg", None)
         if not callable(builder):
-            name = self.tab_bar.tabText(self.tab_bar.currentIndex())
+            name = self.nav_label.text()
             raise ValueError(f"The {name} tab cannot supply artwork.")
-        self.status.setText(
-            f"Building {self.tab_bar.tabText(self.tab_bar.currentIndex())} artwork..."
-        )
+        self.status.setText(f"Building {self.nav_label.text()} artwork...")
         QApplication.processEvents()
         path = builder()
         if not path:
@@ -1238,16 +1264,63 @@ class MainWindow(QMainWindow):
             )
         return settings
 
-    def on_tab_changed(self, index):
-        """A preview belongs to one tab; switching tabs only marks it stale."""
-        self.stack.setCurrentIndex(index)
+    def on_tool_changed(self):
+        """A preview belongs to one tool; switching tools only marks it stale."""
         current = self.stack.currentWidget()
         self.tab_preview_stale = (
             bool(self.moves)
             and self.preview_tab is not None
             and current is not self.preview_tab
+            and current is not self.dashboard
         )
         self.update_stale_warning()
+
+    def show_tool(self, title):
+        """Switch to a tool page; the navigation bar never grows."""
+        index = self.tool_index.get(title)
+        if index is None:
+            return
+        self.stack.setCurrentIndex(index)
+        on_dashboard = self.stack.currentWidget() is self.dashboard
+        self.tools_button.setVisible(not on_dashboard)
+        self.nav_label.setText(title)
+        self.on_tool_changed()
+
+    def build_dashboard(self):
+        """Fill the All tools page with one card per tool, grouped."""
+        heading = QLabel("All tools")
+        heading.setStyleSheet("font-size: 16px; font-weight: 600;")
+        self.dashboard_layout.addWidget(heading)
+        hint = QLabel(
+            "Choose a tool. Artwork, preview, and Save stay available on every "
+            "page."
+        )
+        hint.setWordWrap(True)
+        hint.setStyleSheet("color: #475569;")
+        self.dashboard_layout.addWidget(hint)
+        entries = [("Convert", "Imported artwork to G-code.", "Core")]
+        entries += [
+            (title, description, group)
+            for title, _widget, group, description in self.generator_tools
+        ]
+        groups = {}
+        for title, description, group in entries:
+            groups.setdefault(group, []).append((title, description))
+        for group, items in groups.items():
+            box = QGroupBox(group)
+            grid = QGridLayout(box)
+            grid.setHorizontalSpacing(8)
+            grid.setVerticalSpacing(8)
+            for card, (title, description) in enumerate(items):
+                button = QPushButton(f"{title}\n{description}")
+                button.setMinimumHeight(64)
+                button.setToolTip(description)
+                button.clicked.connect(
+                    lambda _checked=False, name=title: self.show_tool(name)
+                )
+                grid.addWidget(button, card // 2, card % 2)
+            self.dashboard_layout.addWidget(box)
+        self.dashboard_layout.addStretch(1)
 
     def update_stale_warning(self):
         if self.tab_preview_stale:
@@ -1272,7 +1345,7 @@ class MainWindow(QMainWindow):
         return self.svg_path.text().strip()
 
     def load_generator_tabs(self):
-        """Add one tab per `software/generator_tabs/*_tab.py` module."""
+        """Add one page per `software/generator_tabs/*_tab.py` module."""
         try:
             from generator_tabs import load_tabs
         except Exception as exc:  # a missing package must not break Convert
@@ -1282,8 +1355,16 @@ class MainWindow(QMainWindow):
             if widget is None:
                 self.log.append(f"Generator tab '{title}' failed: {error}")
                 continue
-            self.tab_bar.addTab(title)
-            self.stack.addWidget(widget)
+            index = self.stack.addWidget(widget)
+            self.tool_index[title] = index
+            self.generator_tools.append(
+                (
+                    title,
+                    widget,
+                    getattr(widget, "GROUP", "Generators"),
+                    getattr(widget, "DESCRIPTION", ""),
+                )
+            )
             self.log.append(f"Generator tab loaded: {title}")
 
     def pick_svg(self):

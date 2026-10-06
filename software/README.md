@@ -61,12 +61,12 @@ Cycle Start with the pen loaded:
 
 ## Generator tabs
 
-The tab bar spans the top of the window, above the Artwork/G-code row. The
-first tab, **Convert**, is the SVG/raster to G-code workspace described below.
-Additional tabs are contributed by
-`software/generator_tabs/*_tab.py` modules and are discovered at startup, one
-tab per generator. A broken tab is reported in the log instead of stopping the
-app.
+The top navigation bar holds the current tool name and an **All tools**
+button. The **All tools** dashboard groups every tool into cards (Core, Line
+art, 3D, Patterns, Text & layout); opening a card shows that tool's settings,
+and **Convert** is the default page. Tools are contributed by
+`software/generator_tabs/*_tab.py` modules and discovered at startup, one page
+per tool; a broken tool is reported in the log instead of stopping the app.
 
 Import, **Preview / Cancel / Save G-code**, and the OpenGL preview panel are
 static window furniture: they stay visible on every tab. Pressing **Preview**
@@ -77,12 +77,12 @@ preview panel. **Save G-code** exports the active tab's result. Switching tabs
 never rebuilds anything; it marks the visible preview as belonging to another
 tab until Preview is pressed again.
 
-Tab authors: the contract and the host entry points are documented in
+Tool authors: the contract and the host entry points are documented in
 [`generator_tabs/README.md`](generator_tabs/README.md). Ported or vendored
 third-party code keeps its license and attribution in a sibling
 `<name>_NOTICE.md`.
 
-Current generator tabs:
+Current tools:
 
 - **Flow Field** - evenly spaced streamlines from a procedural noise field or
   an image's luminance gradient. Controls: source, artwork (from the static

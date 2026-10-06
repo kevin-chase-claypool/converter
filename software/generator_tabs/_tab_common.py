@@ -129,6 +129,8 @@ class GeneratorTab(QWidget):
 
     TITLE = "Generator"
     NAME = "generator"
+    GROUP = "Generators"
+    DESCRIPTION = "Generator tab."
 
     def __init__(self, host):
         super().__init__()
