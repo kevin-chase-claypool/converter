@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-001` | windows-software | implemented | [Generator tab shell in the main converter window](windows-software/2026-10-06-generator-tab-shell.md) |
 | 2026-10-04 | `WSW-20261004-004` | windows-software | implemented | [Terrain: stop stacking contours on hard outlines](windows-software/2026/2026-10-04-terrain-outline-thinning.md) |
 | 2026-10-04 | `WSW-20261004-003` | windows-software | implemented | [Terrain on image tone follows the photo's shading](windows-software/2026/2026-10-04-terrain-follows-image-tone.md) |
 | 2026-10-04 | `WSW-20261004-002` | windows-software | implemented | [Terrain fill: topographic contour shading](windows-software/2026/2026-10-04-terrain-fill-pattern.md) |

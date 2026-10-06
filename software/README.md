@@ -59,6 +59,21 @@ Cycle Start with the pen loaded:
   Regenerate either with the matching tool in `..\tools\`
   (`make_a_repeatability_test.py`, `make_xy_repeatability_test.py --axis X`).
 
+## Generator tabs
+
+The main window is tabbed. The first tab, **Convert**, is the SVG/raster to
+G-code workspace described below. Additional tabs are contributed by
+`software/generator_tabs/*_tab.py` modules and are discovered at startup, one
+tab per generator. A tab builds its artwork and calls `host.use_svg(path)` to
+load the resulting SVG into Convert, where the normal preview and G-code
+pipeline take over. A broken tab is reported in the log instead of stopping
+the app.
+
+Tab authors: the contract and the host entry points are documented in
+[`generator_tabs/README.md`](generator_tabs/README.md). Ported or vendored
+third-party code keeps its license and attribution in a sibling
+`<name>_NOTICE.md`.
+
 ## Kaleidoscope Converter
 
 `qt_kaleidoscope.pyw` (or `..\kaleidoscope.bat`) builds an N-fold mirrored

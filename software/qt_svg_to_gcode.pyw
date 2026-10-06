@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QSlider,
     QSplitter,
+    QTabWidget,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -886,7 +887,11 @@ class MainWindow(QMainWindow):
 
     def build_ui(self):
         root = QWidget()
-        self.setCentralWidget(root)
+        self.convert_root = root
+        self.tabs = QTabWidget()
+        self.tabs.setDocumentMode(True)
+        self.setCentralWidget(self.tabs)
+        self.tabs.addTab(root, "Convert")
         main_layout = QVBoxLayout(root)
         main_layout.setContentsMargins(6, 6, 6, 6)
         main_layout.setSpacing(4)
@@ -1169,6 +1174,46 @@ class MainWindow(QMainWindow):
         self.fill_wide_strokes.toggled.connect(lambda _checked: self.update_pattern_settings())
         self.update_pattern_settings()
         self.update_fit_fields()
+        self.load_generator_tabs()
+
+    def use_svg(self, path, preview=False):
+        """Load a generator tab's SVG into the Convert tab.
+
+        Generator tabs call this instead of touching the converter's controls
+        directly, so the SVG has exactly one entry point into the pipeline.
+        """
+        path = str(path)
+        if not os.path.exists(path):
+            self.log.append(f"Generator output is missing: {path}")
+            return
+        self.svg_path.setText(path)
+        self.update_suggested_gcode_path(path)
+        self.auto_configure_shading(path)
+        self.raw_cache_key = None
+        self.raw_contours = None
+        self.tabs.setCurrentWidget(self.convert_root)
+        self.status.setText("Generator output loaded - press Preview to build it.")
+        self.log.append(f"Generator output loaded into Convert: {path}")
+        if preview:
+            self.preview()
+
+    def generator_status(self, message):
+        """Status-line entry point for generator tabs."""
+        self.status.setText(str(message))
+
+    def load_generator_tabs(self):
+        """Add one tab per `software/generator_tabs/*_tab.py` module."""
+        try:
+            from generator_tabs import load_tabs
+        except Exception as exc:  # a missing package must not break Convert
+            self.log.append(f"Generator tabs unavailable: {exc}")
+            return
+        for title, widget, error in load_tabs(self):
+            if widget is None:
+                self.log.append(f"Generator tab '{title}' failed: {error}")
+                continue
+            self.tabs.addTab(widget, title)
+            self.log.append(f"Generator tab loaded: {title}")
 
     def pick_svg(self):
         path, _ = QFileDialog.getOpenFileName(
