@@ -2,7 +2,8 @@
 
 The converter window shows one tool page at a time in a `QStackedWidget`. The
 **All tools** dashboard lists every page as a card, grouped by category, and
-the navigation bar keeps a **All tools** button while a tool is open.
+the **Tools** menu selects any page (Ctrl+T opens the dashboard, Ctrl+1 is
+Convert, Ctrl+2...Ctrl+0 follow menu order).
 **Convert** is the default page; every `*_tab.py` module in this package is
 auto-discovered and added as one tool page.
 

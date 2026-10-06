@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-022` | windows-software | implemented | [Add File / Tools / View / Help menus and move tool selection into Tools](windows-software/2026-10-06-menu-bar-navigation.md) |
 | 2026-10-06 | `WSW-20261006-021` | windows-software | implemented | [Replace the tab bar with an All tools dashboard](windows-software/2026-10-06-all-tools-dashboard.md) |
 | 2026-10-06 | `WSW-20261006-020` | windows-software | implemented | [Generator fidelity audit, restored options, and attribution corrections](windows-software/2026-10-06-fidelity-audit-and-restorations.md) |
 | 2026-10-06 | `WSW-20261006-019` | windows-software | implemented | [Raise Artwork scale to 1000 percent](windows-software/2026-10-06-artwork-scale-range-1000.md) |

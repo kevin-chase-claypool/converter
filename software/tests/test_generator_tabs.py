@@ -12,7 +12,6 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 try:
-    from PySide6.QtCore import QPoint
     from PySide6.QtWidgets import QApplication
 
     HAVE_QT = True
@@ -52,18 +51,18 @@ class ToolShellTests(unittest.TestCase):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
         self.assertIs(window.stack.currentWidget(), window.convert_root)
-        self.assertEqual(window.nav_label.text(), "Convert")
+        self.assertEqual(window.current_tool, "Convert")
+        self.assertTrue(window.tool_actions["Convert"].isChecked())
         self.assertIs(window.stack.widget(0), window.dashboard)
 
-    def test_tool_navigation_sits_above_the_import_row(self):
+    def test_menu_bar_has_the_standard_menus(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        window.resize(1500, 950)
-        window.show()
-        self.app.processEvents()
-        nav_y = window.nav_bar.mapTo(window, QPoint(0, 0)).y()
-        import_y = window.svg_path.mapTo(window, QPoint(0, 0)).y()
-        self.assertLess(nav_y, import_y)
+        titles = [
+            action.text().replace("&", "")
+            for action in window.menuBar().actions()
+        ]
+        self.assertEqual(titles, ["File", "Tools", "View", "Help"])
 
     def test_dashboard_tool_order(self):
         window = self.module.MainWindow()
@@ -74,24 +73,35 @@ class ToolShellTests(unittest.TestCase):
         for title in EXPECTED_TOOLS:
             self.assertIn(title, window.tool_index)
 
-    def test_dashboard_button_and_back_navigation(self):
+    def test_tools_menu_switches_pages(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        window.show_tool("All tools")
-        self.assertIs(window.stack.currentWidget(), window.dashboard)
-        self.assertEqual(window.nav_label.text(), "All tools")
-        # No back button on the dashboard itself; it appears on tool pages.
-        self.assertTrue(window.tools_button.isHidden())
-        window.show_tool("Flow Field")
-        self.assertEqual(window.nav_label.text(), "Flow Field")
-        self.assertFalse(window.tools_button.isHidden())
+        window.tool_actions["Flow Field"].trigger()
+        self.assertEqual(window.current_tool, "Flow Field")
+        self.assertTrue(window.tool_actions["Flow Field"].isChecked())
         flow = dict(
             (title, widget)
             for title, widget, _group, _desc in window.generator_tools
         )["Flow Field"]
         self.assertIs(window.stack.currentWidget(), flow)
+        window.all_tools_action.trigger()
+        self.assertIs(window.stack.currentWidget(), window.dashboard)
+        window.tool_actions["Convert"].trigger()
+        self.assertIs(window.stack.currentWidget(), window.convert_root)
+
+    def test_status_bar_shows_the_file_paths(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.svg_path.setText("C:/art/example.svg")
+        window.gcode_path.setText("C:/art/example.gcode")
+        self.assertIn("example.svg", window.file_status.text())
+        self.assertIn("example.gcode", window.file_status.text())
+
+    def test_dashboard_requires_a_tool_for_preview(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.show_tool("All tools")
         with self.assertRaises(ValueError):
-            window.show_tool("All tools")
             window.resolve_active_source()
 
     def test_settings_pane_has_no_dead_strip(self):
@@ -168,10 +178,7 @@ class ToolShellTests(unittest.TestCase):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
         for widget in (
-            window.svg_path,
-            window.gcode_path,
             window.preview_button,
-            window.save_button,
             window.gl_preview,
             window.slider,
         ):
@@ -187,7 +194,7 @@ class ToolShellTests(unittest.TestCase):
         self.assertTrue(
             window.preview_panel.isAncestorOf(window.cancel_preview_button)
         )
-        self.assertFalse(window.preview_panel.isAncestorOf(window.save_button))
+        self.assertTrue(hasattr(window, "save_action"))
 
     def test_command_list_is_removed_and_preview_fills_the_rest(self):
         window = self.module.MainWindow()
@@ -216,13 +223,6 @@ class ToolShellTests(unittest.TestCase):
         path, tab = window.resolve_active_source()
         self.assertEqual(path, handle.name)
         self.assertIs(tab, window.convert_root)
-
-    def test_dashboard_requires_a_tool_for_preview(self):
-        window = self.module.MainWindow()
-        self.addCleanup(window.close)
-        window.show_tool("All tools")
-        with self.assertRaises(ValueError):
-            window.resolve_active_source()
 
     def test_switching_tools_marks_the_preview_stale(self):
         window = self.module.MainWindow()

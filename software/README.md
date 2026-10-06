@@ -61,12 +61,17 @@ Cycle Start with the pen loaded:
 
 ## Generator tabs
 
-The top navigation bar holds the current tool name and an **All tools**
-button. The **All tools** dashboard groups every tool into cards (Core, Line
-art, 3D, Patterns, Text & layout); opening a card shows that tool's settings,
-and **Convert** is the default page. Tools are contributed by
-`software/generator_tabs/*_tab.py` modules and discovered at startup, one page
-per tool; a broken tool is reported in the log instead of stopping the app.
+The window has the standard **File / Tools / View / Help** menu bar. **File**
+opens the artwork (Ctrl+O), sets the G-code destination (Ctrl+Shift+S), saves
+G-code (Ctrl+S), and exits. **Tools** is the tool selector: **All Tools**
+(Ctrl+T) opens the card dashboard (Core, Line art, 3D, Patterns, Text &
+layout), **Convert** is Ctrl+1, and the other tools follow in menu order with
+Ctrl+2...Ctrl+0. **View** toggles the machine reach guide, pen-down path, and
+log, and controls preview zoom; **Help** has the shortcut list (F1) and About.
+The status bar shows the current artwork and G-code paths. Tools are
+contributed by `software/generator_tabs/*_tab.py` modules and discovered at
+startup, one page per tool; a broken tool is reported in the log instead of
+stopping the app.
 
 Import, **Preview / Cancel / Save G-code**, and the OpenGL preview panel are
 static window furniture: they stay visible on every tab. Pressing **Preview**

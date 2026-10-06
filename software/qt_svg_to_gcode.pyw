@@ -8,7 +8,15 @@ import time
 from array import array
 
 from PySide6.QtCore import QObject, QPointF, QThread, QTimer, Qt, QRectF, Signal
-from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QSurfaceFormat
+from PySide6.QtGui import (
+    QAction,
+    QActionGroup,
+    QColor,
+    QImage,
+    QPainter,
+    QPainterPath,
+    QSurfaceFormat,
+)
 from PySide6.QtOpenGL import QOpenGLBuffer, QOpenGLShader, QOpenGLShaderProgram
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
 from PySide6.QtSvg import QSvgRenderer
@@ -903,35 +911,13 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.convert_root)
         self.tool_index = {"All tools": 0, "Convert": 1}
         self.generator_tools = []
+        self.tool_actions = {}
+        self.current_tool = "Convert"
 
-        # A compact navigation bar replaces the tab bar so the tool list can
-        # grow without crowding the window.
-        self.nav_bar = QWidget()
-        nav_row = QHBoxLayout(self.nav_bar)
-        nav_row.setContentsMargins(0, 0, 0, 0)
-        self.tools_button = QPushButton(
-            "\u25c0 All tools", clicked=lambda: self.show_tool("All tools")
-        )
-        self.tools_button.setVisible(False)
-        nav_row.addWidget(self.tools_button)
-        self.nav_label = QLabel("Convert")
-        self.nav_label.setStyleSheet("font-weight: 600;")
-        nav_row.addWidget(self.nav_label)
-        nav_row.addStretch(1)
-        window_layout.addWidget(self.nav_bar)
-
-        file_row = QHBoxLayout()
+        # Artwork and G-code paths are data holders now: the File menu sets
+        # them and the status bar shows them.
         self.svg_path = QLineEdit()
         self.gcode_path = QLineEdit()
-        file_row.addWidget(QLabel("Artwork"))
-        file_row.addWidget(self.svg_path, 3)
-        file_row.addWidget(QPushButton("Browse", clicked=self.pick_svg))
-        file_row.addWidget(QLabel("G-code"))
-        file_row.addWidget(self.gcode_path, 3)
-        file_row.addWidget(QPushButton("Browse", clicked=self.pick_gcode))
-        self.save_button = QPushButton("Save G-code", clicked=self.convert)
-        file_row.addWidget(self.save_button)
-        window_layout.addLayout(file_row)
 
         self.fields = {}
         self.field_rows = {}
@@ -1214,7 +1200,11 @@ class MainWindow(QMainWindow):
         self.update_fit_fields()
         self.load_generator_tabs()
         self.build_dashboard()
+        self.build_menus()
         self.show_tool("Convert")
+        self.update_file_status()
+        self.svg_path.textChanged.connect(lambda _text: self.update_file_status())
+        self.gcode_path.textChanged.connect(lambda _text: self.update_file_status())
 
     def active_source_tab(self):
         """The tab that supplies artwork; None when Convert is active."""
@@ -1240,9 +1230,9 @@ class MainWindow(QMainWindow):
             return path, self.convert_root
         builder = getattr(tab, "build_svg", None)
         if not callable(builder):
-            name = self.nav_label.text()
+            name = self.current_tool
             raise ValueError(f"The {name} tab cannot supply artwork.")
-        self.status.setText(f"Building {self.nav_label.text()} artwork...")
+        self.status.setText(f"Building {self.current_tool} artwork...")
         QApplication.processEvents()
         path = builder()
         if not path:
@@ -1276,14 +1266,16 @@ class MainWindow(QMainWindow):
         self.update_stale_warning()
 
     def show_tool(self, title):
-        """Switch to a tool page; the navigation bar never grows."""
+        """Switch to a tool page and keep the Tools menu checkmark in sync."""
         index = self.tool_index.get(title)
         if index is None:
             return
         self.stack.setCurrentIndex(index)
-        on_dashboard = self.stack.currentWidget() is self.dashboard
-        self.tools_button.setVisible(not on_dashboard)
-        self.nav_label.setText(title)
+        self.current_tool = title
+        action = getattr(self, "tool_actions", {}).get(title)
+        if action is not None and not action.isChecked():
+            action.setChecked(True)
+        self.setWindowTitle(f"{title} - SVG to XY Theta G-code Converter")
         self.on_tool_changed()
 
     def build_dashboard(self):
@@ -1321,6 +1313,149 @@ class MainWindow(QMainWindow):
                 grid.addWidget(button, card // 2, card % 2)
             self.dashboard_layout.addWidget(box)
         self.dashboard_layout.addStretch(1)
+
+    def _add_tool_action(self, menu, title, shortcut=""):
+        action = QAction(title, self)
+        action.setCheckable(True)
+        if shortcut:
+            action.setShortcut(shortcut)
+        action.triggered.connect(
+            lambda _checked=False, name=title: self.show_tool(name)
+        )
+        self.tool_action_group.addAction(action)
+        menu.addAction(action)
+        self.tool_actions[title] = action
+
+    def build_menus(self):
+        """File / Tools / View / Help menus; tool selection lives in Tools."""
+        menu = self.menuBar()
+
+        file_menu = menu.addMenu("&File")
+        open_action = QAction("&Open Artwork...", self)
+        open_action.setShortcut("Ctrl+O")
+        open_action.triggered.connect(self.pick_svg)
+        file_menu.addAction(open_action)
+        output_action = QAction("Set G-code &Destination...", self)
+        output_action.setShortcut("Ctrl+Shift+S")
+        output_action.triggered.connect(self.pick_gcode)
+        file_menu.addAction(output_action)
+        self.save_action = QAction("&Save G-code", self)
+        self.save_action.setShortcut("Ctrl+S")
+        self.save_action.triggered.connect(self.convert)
+        file_menu.addAction(self.save_action)
+        file_menu.addSeparator()
+        exit_action = QAction("E&xit", self)
+        exit_action.setShortcut("Ctrl+Q")
+        exit_action.triggered.connect(self.close)
+        file_menu.addAction(exit_action)
+
+        tools_menu = menu.addMenu("&Tools")
+        self.all_tools_action = QAction("&All Tools", self)
+        self.all_tools_action.setShortcut("Ctrl+T")
+        self.all_tools_action.triggered.connect(
+            lambda: self.show_tool("All tools")
+        )
+        tools_menu.addAction(self.all_tools_action)
+        tools_menu.addSeparator()
+        self.tool_action_group = QActionGroup(self)
+        self.tool_action_group.setExclusive(True)
+        self._add_tool_action(tools_menu, "Convert", "Ctrl+1")
+        shortcuts = [
+            "Ctrl+2", "Ctrl+3", "Ctrl+4", "Ctrl+5", "Ctrl+6",
+            "Ctrl+7", "Ctrl+8", "Ctrl+9", "Ctrl+0",
+        ]
+        groups = {}
+        for title, _widget, group, _description in self.generator_tools:
+            groups.setdefault(group, []).append(title)
+        shortcut_index = 0
+        for group, titles in groups.items():
+            submenu = tools_menu.addMenu(group)
+            for title in titles:
+                shortcut = (
+                    shortcuts[shortcut_index]
+                    if shortcut_index < len(shortcuts)
+                    else ""
+                )
+                self._add_tool_action(submenu, title, shortcut)
+                shortcut_index += 1
+
+        view_menu = menu.addMenu("&View")
+        reach_action = QAction("Machine Reach Guide", self)
+        reach_action.setCheckable(True)
+        reach_action.setChecked(self.show_machine_reach.isChecked())
+        reach_action.toggled.connect(self.show_machine_reach.setChecked)
+        self.show_machine_reach.toggled.connect(reach_action.setChecked)
+        view_menu.addAction(reach_action)
+        pen_path_action = QAction("Pen-down Path", self)
+        pen_path_action.setCheckable(True)
+        pen_path_action.setChecked(self.show_pen_down_path.isChecked())
+        pen_path_action.toggled.connect(self.show_pen_down_path.setChecked)
+        self.show_pen_down_path.toggled.connect(pen_path_action.setChecked)
+        view_menu.addAction(pen_path_action)
+        view_menu.addSeparator()
+        zoom_in_action = QAction("Zoom &In", self)
+        zoom_in_action.setShortcut("Ctrl+=")
+        zoom_in_action.triggered.connect(self.gl_preview.zoom_in)
+        view_menu.addAction(zoom_in_action)
+        zoom_out_action = QAction("Zoom &Out", self)
+        zoom_out_action.setShortcut("Ctrl+-")
+        zoom_out_action.triggered.connect(self.gl_preview.zoom_out)
+        view_menu.addAction(zoom_out_action)
+        reset_view_action = QAction("&Reset Preview View", self)
+        reset_view_action.setShortcut("Ctrl+Shift+R")
+        reset_view_action.triggered.connect(self.gl_preview.reset_zoom)
+        view_menu.addAction(reset_view_action)
+        view_menu.addSeparator()
+        log_action = QAction("Show &Log", self)
+        log_action.setCheckable(True)
+        log_action.setChecked(True)
+        log_action.toggled.connect(self.log.setVisible)
+        view_menu.addAction(log_action)
+
+        help_menu = menu.addMenu("&Help")
+        shortcuts_action = QAction("&Keyboard Shortcuts", self)
+        shortcuts_action.setShortcut("F1")
+        shortcuts_action.triggered.connect(self.show_shortcuts)
+        help_menu.addAction(shortcuts_action)
+        about_action = QAction("&About", self)
+        about_action.triggered.connect(self.show_about)
+        help_menu.addAction(about_action)
+
+        self.file_status = QLabel()
+        self.statusBar().addPermanentWidget(self.file_status, 1)
+
+    def update_file_status(self):
+        artwork = self.svg_path.text().strip() or "(none)"
+        gcode = self.gcode_path.text().strip() or "(none)"
+        self.file_status.setText(
+            f"Artwork: {artwork}    |    G-code: {gcode}"
+        )
+
+    def show_shortcuts(self):
+        QMessageBox.information(
+            self,
+            "Keyboard Shortcuts",
+            "Ctrl+O  Open artwork\n"
+            "Ctrl+Shift+S  Set G-code destination\n"
+            "Ctrl+S  Save G-code\n"
+            "Ctrl+T  All tools dashboard\n"
+            "Ctrl+1  Convert, Ctrl+2...0  other tools in menu order\n"
+            "F5 (Preview button)  Build the active tool\n"
+            "Ctrl+arrows / wheel  Zoom the preview (View menu)\n"
+            "F1  This list",
+        )
+
+    def show_about(self):
+        version = getattr(converter, "GEOMETRY_VERSION", "unknown")
+        QMessageBox.about(
+            self,
+            "About",
+            "<b>SVG to XY Theta G-code Converter</b><br>"
+            f"Converter core {version}<br>"
+            "PySide6/OpenGL preview with the All tools generator dashboard.<br>"
+            "Third-party generator notices live in "
+            "<code>software/generator_tabs/*_NOTICE.md</code>.",
+        )
 
     def update_stale_warning(self):
         if self.tab_preview_stale:
@@ -3385,7 +3520,7 @@ class MainWindow(QMainWindow):
         self.preview_button.setEnabled(False)
         self.preview_button.setText("Building...")
         self.cancel_preview_button.setEnabled(True)
-        self.save_button.setEnabled(False)
+        self.save_action.setEnabled(False)
         self.preview_build_bar.setValue(2)
         self.preview_build_bar.show()
         self.preview_stage.setProperty("stage", "Reading settings")
@@ -3493,7 +3628,7 @@ class MainWindow(QMainWindow):
         self.preview_button.setEnabled(True)
         self.preview_button.setText("Preview")
         self.cancel_preview_button.setEnabled(False)
-        self.save_button.setEnabled(True)
+        self.save_action.setEnabled(True)
         self.preview_thread = None
         self.preview_worker = None
 
