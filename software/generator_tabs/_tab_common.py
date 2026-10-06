@@ -73,6 +73,25 @@ def write_svg_document(name, document):
     return path
 
 
+def scale_polylines(polylines, factor, width_mm, height_mm):
+    """Scale every point about the page centre; 1.0 returns the input."""
+    factor = max(0.01, float(factor))
+    if abs(factor - 1.0) < 1e-9:
+        return polylines
+    centre_x = width_mm / 2.0
+    centre_y = height_mm / 2.0
+    return [
+        [
+            (
+                centre_x + (x - centre_x) * factor,
+                centre_y + (y - centre_y) * factor,
+            )
+            for x, y in line
+        ]
+        for line in polylines
+    ]
+
+
 def double_spin(value, low, high, step, decimals=2, suffix=""):
     widget = QDoubleSpinBox()
     widget.setRange(low, high)

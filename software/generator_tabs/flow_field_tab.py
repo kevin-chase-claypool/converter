@@ -23,10 +23,11 @@ from PySide6.QtWidgets import (
     QLabel,
 )
 
-from ._tab_common import GeneratorTab, double_spin, int_spin
+from ._tab_common import GeneratorTab, double_spin, int_spin, scale_polylines
 
 
 TITLE = "Flow Field"
+ORDER = 10
 
 
 def _hash01(ix, iy, seed):
@@ -290,6 +291,8 @@ class FlowFieldTab(GeneratorTab):
         page.addRow("Height", self.page_h)
         self.margin = double_spin(6, 0, 50, 1, 0, " mm")
         page.addRow("Margin", self.margin)
+        self.scale_pct = double_spin(100, 10, 200, 5, 0, " %")
+        page.addRow("Artwork scale", self.scale_pct)
 
         self.finish_controls()
         self.source.currentIndexChanged.connect(self._sync_source)
@@ -341,6 +344,12 @@ class FlowFieldTab(GeneratorTab):
             )
         finally:
             QGuiApplication.restoreOverrideCursor()
+        polylines = scale_polylines(
+            polylines,
+            self.scale_pct.value() / 100.0,
+            self.page_w.value(),
+            self.page_h.value(),
+        )
         points = sum(len(line) for line in polylines)
         return self.write_result(
             polylines,

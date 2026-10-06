@@ -87,19 +87,30 @@ Current generator tabs:
 - **Flow Field** - evenly spaced streamlines from a procedural noise field or
   an image's luminance gradient. Controls: source, artwork (from the static
   Artwork row), invert, image cutoff, seed, noise scale, octaves, spacing,
-  step, max steps, line width, page size, margin.
+  step, max steps, line width, page size, margin, artwork scale.
 - **Line Draw** - raster image to edge-traced contours plus luminance hatch.
   Controls: artwork (from the static Artwork row), invert, mode
   (contours / hatch / both), edge
   threshold, hatch spacing, hatch tone, sketch jitter, minimum length, line
-  width, seed, page size, margin.
+  width, seed, page size, margin, artwork scale.
 - **3D Wireframe** - OBJ or STL mesh to orthographic hidden-line vector art.
   Controls: model file, style (hidden-line wireframe / silhouette / all
   edges), yaw, pitch, roll, target width, sample step, page size, margin,
-  line width.
+  line width, artwork scale.
+- **Harmonograph** - damped Lissajous figures from two decaying oscillations,
+  one to four curves. Controls: seed, frequency X/Y, phase, damping, turns,
+  samples, curves, curve size, page size, margin, line width, artwork scale.
+- **Snowflake** - radial dendritic snowflakes with jittered branches.
+  Controls: seed, arms, branch depth, arm length, branch angle, branch scale,
+  angle jitter, length jitter, page size, margin, line width, artwork scale.
+- **Truchet** - Truchet tiles as quarter arcs, diagonals, or mixed. Controls:
+  seed, tile size, style, arc segments, page size, margin, line width,
+  artwork scale.
 
 Image-driven tabs read the file already loaded in the static Artwork row
 instead of repeating the import control.
+Every generator tab has an **Artwork scale** control (10-200%) that scales its
+result about the page centre.
 Generator tab controls fill the settings column, with the tab's hint and
 status text stacked below them; the settings column has a 280 px floor so it
 cannot be crushed by the preview.

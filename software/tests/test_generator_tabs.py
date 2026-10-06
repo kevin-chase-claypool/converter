@@ -53,6 +53,26 @@ class GeneratorTabShellTests(unittest.TestCase):
         import_y = window.svg_path.mapTo(window, QPoint(0, 0)).y()
         self.assertLess(bar_y, import_y)
 
+    def test_generator_tab_order(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        titles = [
+            window.tab_bar.tabText(index)
+            for index in range(window.tab_bar.count())
+        ]
+        self.assertEqual(
+            titles,
+            [
+                "Convert",
+                "Flow Field",
+                "Line Draw",
+                "3D Wireframe",
+                "Harmonograph",
+                "Snowflake",
+                "Truchet",
+            ],
+        )
+
     def test_settings_pane_has_no_dead_strip(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
@@ -77,6 +97,18 @@ class GeneratorTabShellTests(unittest.TestCase):
         self.assertGreaterEqual(
             tab.status.y(), tab.controls_scroll.y() + tab.controls_scroll.height()
         )
+
+    def test_every_generator_tab_has_an_artwork_scale(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        for index in range(window.tab_bar.count()):
+            window.tab_bar.setCurrentIndex(index)
+            page = window.stack.currentWidget()
+            if page is window.convert_root:
+                continue
+            label = window.tab_bar.tabText(index)
+            self.assertTrue(hasattr(page, "scale_pct"), label)
+            self.assertEqual(page.scale_pct.value(), 100, label)
 
     def test_import_export_and_preview_stay_outside_the_tabs(self):
         window = self.module.MainWindow()

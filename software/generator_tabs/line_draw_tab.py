@@ -27,10 +27,12 @@ from ._tab_common import (
     GeneratorTab,
     double_spin,
     int_spin,
+    scale_polylines,
 )
 
 
 TITLE = "Line Draw"
+ORDER = 20
 
 NEIGHBOURS = (
     (-1, -1), (0, -1), (1, -1),
@@ -302,6 +304,8 @@ class LineDrawTab(GeneratorTab):
         page.addRow("Height", self.page_h)
         self.margin = double_spin(6, 0, 50, 1, 0, " mm")
         page.addRow("Margin", self.margin)
+        self.scale_pct = double_spin(100, 10, 200, 5, 0, " %")
+        page.addRow("Artwork scale", self.scale_pct)
 
         self.finish_controls()
 
@@ -343,6 +347,12 @@ class LineDrawTab(GeneratorTab):
             )
         finally:
             QGuiApplication.restoreOverrideCursor()
+        polylines = scale_polylines(
+            polylines,
+            self.scale_pct.value() / 100.0,
+            self.page_w.value(),
+            self.page_h.value(),
+        )
         width = self.page_w.value()
         height = self.page_h.value()
         result = self.write_result(

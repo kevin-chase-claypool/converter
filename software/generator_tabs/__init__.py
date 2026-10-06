@@ -43,7 +43,9 @@ def load_tabs(host):
             module = import_module(f"{__name__}.{path.stem}")
             title = str(getattr(module, "TITLE", title))
             widget = module.create_tab(host)
-            tabs.append((title, widget, ""))
+            order = int(getattr(module, "ORDER", 100))
+            tabs.append((order, title, widget, ""))
         except Exception as exc:  # one broken tab must not kill the window
-            tabs.append((title, None, f"{type(exc).__name__}: {exc}"))
-    return tabs
+            tabs.append((100, title, None, f"{type(exc).__name__}: {exc}"))
+    tabs.sort(key=lambda item: (item[0], item[1]))
+    return [(title, widget, error) for _order, title, widget, error in tabs]

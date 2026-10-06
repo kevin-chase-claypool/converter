@@ -19,10 +19,16 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCursor, QGuiApplication
 from PySide6.QtWidgets import QComboBox, QLineEdit
 
-from ._tab_common import GeneratorTab, double_spin, file_picker
+from ._tab_common import (
+    GeneratorTab,
+    double_spin,
+    file_picker,
+    scale_polylines,
+)
 
 
 TITLE = "3D Wireframe"
+ORDER = 30
 
 
 def load_obj(text):
@@ -337,6 +343,8 @@ class ThreeDTab(GeneratorTab):
         page.addRow("Margin", self.margin)
         self.stroke = double_spin(0.3, 0.1, 1.2, 0.05, 2, " mm")
         page.addRow("Line width", self.stroke)
+        self.scale_pct = double_spin(100, 10, 200, 5, 0, " %")
+        page.addRow("Artwork scale", self.scale_pct)
 
         self.finish_controls()
 
@@ -360,6 +368,12 @@ class ThreeDTab(GeneratorTab):
             )
         finally:
             QGuiApplication.restoreOverrideCursor()
+        polylines = scale_polylines(
+            polylines,
+            self.scale_pct.value() / 100.0,
+            self.page_w.value(),
+            self.page_h.value(),
+        )
         return self.write_result(
             polylines,
             self.page_w.value(),
