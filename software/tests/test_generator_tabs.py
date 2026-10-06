@@ -112,6 +112,7 @@ class GeneratorTabShellTests(unittest.TestCase):
             label = window.tab_bar.tabText(index)
             self.assertTrue(hasattr(page, "scale_pct"), label)
             self.assertEqual(page.scale_pct.value(), 100, label)
+            self.assertEqual(page.scale_pct.maximum(), 1000, label)
 
     def test_generator_sources_plot_at_manual_1to1(self):
         window = self.module.MainWindow()

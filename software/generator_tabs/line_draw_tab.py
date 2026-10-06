@@ -304,7 +304,7 @@ class LineDrawTab(GeneratorTab):
         page.addRow("Height", self.page_h)
         self.margin = double_spin(6, 0, 50, 1, 0, " mm")
         page.addRow("Margin", self.margin)
-        self.scale_pct = double_spin(100, 10, 200, 5, 0, " %")
+        self.scale_pct = double_spin(100, 10, 1000, 5, 0, " %")
         page.addRow("Artwork scale", self.scale_pct)
 
         self.finish_controls()

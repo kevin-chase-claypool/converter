@@ -119,7 +119,7 @@ Current generator tabs:
 
 Image-driven tabs read the file already loaded in the static Artwork row
 instead of repeating the import control.
-Every generator tab has an **Artwork scale** control (10-200%) that scales its
+Every generator tab has an **Artwork scale** control (10-1000%) that scales its
 result about the page centre.
 The Text tab (and the Postcard tab's caption/address) uses the vendored
 public-domain Hershey simplex font in `generator_tabs/fonts/`; its use terms

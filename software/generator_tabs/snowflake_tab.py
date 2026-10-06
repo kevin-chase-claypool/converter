@@ -105,7 +105,7 @@ class SnowflakeTab(GeneratorTab):
         page.addRow("Margin", self.margin)
         self.line_width = double_spin(0.3, 0.1, 1.2, 0.05, 2, " mm")
         page.addRow("Line width", self.line_width)
-        self.scale_pct = double_spin(100, 10, 200, 5, 0, " %")
+        self.scale_pct = double_spin(100, 10, 1000, 5, 0, " %")
         page.addRow("Artwork scale", self.scale_pct)
 
         self.finish_controls()

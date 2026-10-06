@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-019` | windows-software | implemented | [Raise Artwork scale to 1000 percent](windows-software/2026-10-06-artwork-scale-range-1000.md) |
 | 2026-10-06 | `WSW-20261006-018` | windows-software | implemented | [Add Text, Substitution, and Postcard generator tabs](windows-software/2026-10-06-text-substitution-postcard-tabs.md) |
 | 2026-10-06 | `WSW-20261006-017` | windows-software | implemented | [Plot generator pages 1:1 so Artwork scale works](windows-software/2026-10-06-generator-1to1-preview.md) |
 | 2026-10-06 | `WSW-20261006-016` | windows-software | implemented | [Add Harmonograph, Snowflake, and Truchet tabs](windows-software/2026-10-06-harmonograph-snowflake-truchet-tabs.md) |
