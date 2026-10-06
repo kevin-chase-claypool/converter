@@ -4,7 +4,7 @@ Converts `.svg` artwork into `.gcode` for the XY + rotating-bed (theta) machine,
 with a live preview of the simulated machine motion.
 
 - `qt_svg_to_gcode.pyw` — the primary app: PySide6 + OpenGL preview, playback,
-  command list, and all conversion settings in one window.
+  and all conversion settings in one window.
 - `converter_core/` — the conversion engine split by responsibility:
   settings, SVG geometry, kinematics/planning, and G-code/preview move emission.
 - `svg_to_gcode.pyw` — a compatibility shim for older imports and simple
@@ -102,10 +102,10 @@ instead of repeating the import control.
 
 The artwork/G-code file row (with **Save G-code**), the **Preview** and
 **Cancel** buttons in the preview panel under the playback controls, and the
-OpenGL preview itself (status, estimate, progress, fit/clip controls), and the
-G-code command list to the right of the preview are window furniture outside
-the tab widget, so they stay visible whichever tab is active. Only the
-settings sidebar belongs to the Convert tab.
+OpenGL preview itself (status, estimate, progress, fit/clip controls) are
+window furniture outside the tab widget, so they stay visible whichever tab is
+active. The preview fills the whole area to the right of the feature settings
+pane; only the settings sidebar belongs to the Convert tab.
 
 ## Kaleidoscope Converter
 
@@ -595,9 +595,9 @@ display-only; every other group changes the emitted program.
 - Press **Cancel** during preview generation to stop an unexpectedly large job.
   Cancellation safely unwinds at geometry/planning checkpoints and keeps the
   last completed preview visible.
-- The command list is the complete generated G-code program, including modal
-  setup, M3/M5 commands, G4 dwell lines, comments, and M2. It is not a
-  shortened preview-only command list.
+- The saved `.gcode` file is the complete generated program, including modal
+  setup, M3/M5 commands, G4 dwell lines, comments, and M2. The in-app command
+  list was removed; use **Save G-code** and open the file to inspect it.
 - The controller-time estimate uses emitted draw-feed plans and configured pen
   dwell durations. Its **Motion estimate scale** is display-only: the current
   default `0.467368` comes from the pen-free M-06 radius sweep (`75.05 s`

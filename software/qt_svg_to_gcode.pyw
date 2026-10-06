@@ -8,7 +8,7 @@ import time
 from array import array
 
 from PySide6.QtCore import QObject, QPointF, QThread, QTimer, Qt, QRectF, Signal
-from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPainterPath, QSurfaceFormat
+from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QSurfaceFormat
 from PySide6.QtOpenGL import QOpenGLBuffer, QOpenGLShader, QOpenGLShaderProgram
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
 from PySide6.QtSvg import QSvgRenderer
@@ -22,8 +22,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QListWidget,
-    QListWidgetItem,
     QMainWindow,
     QMessageBox,
     QProgressBar,
@@ -1118,26 +1116,21 @@ class MainWindow(QMainWindow):
         self.stale_warning.hide()
         preview_layout.addWidget(self.stale_warning)
 
-        self.command_list = QListWidget()
-        mono = QFont("Consolas", 9)
-        self.command_list.setFont(mono)
-        self.command_list.currentRowChanged.connect(self.command_selected)
-
         convert_layout = QHBoxLayout(self.convert_root)
         convert_layout.setContentsMargins(0, 0, 0, 0)
         convert_layout.addWidget(sidebar_scroll)
         convert_layout.addStretch(1)
 
-        # Import, export, preview, and the G-code output are window furniture,
-        # not tab content, so switching tabs never hides them.
+        # Import, export, and preview are window furniture, not tab content,
+        # so switching tabs never hides them. The preview fills everything to
+        # the right of the feature settings.
         main_split = QSplitter(Qt.Horizontal)
+        self.main_split = main_split
         main_split.addWidget(self.tabs)
         main_split.addWidget(preview_widget)
-        main_split.addWidget(self.command_list)
-        main_split.setStretchFactor(0, 1)
+        main_split.setStretchFactor(0, 0)
         main_split.setStretchFactor(1, 1)
-        main_split.setStretchFactor(2, 0)
-        main_split.setSizes([700, 620, 300])
+        main_split.setSizes([680, 820])
         window_layout.addWidget(main_split, 1)
 
         self.log = QTextEdit()
@@ -3246,20 +3239,6 @@ class MainWindow(QMainWindow):
         self.moves = moves
         self.contours = contours
         self.program_lines = program_gcode.splitlines()
-        self.move_program_rows = []
-        self.program_row_to_move = {}
-        search_from = 0
-        for move_index, move in enumerate(self.moves):
-            try:
-                row = self.program_lines.index(move.get("gcode", ""), search_from)
-            except ValueError:
-                self.move_program_rows.append(None)
-                continue
-            self.move_program_rows.append(row)
-            self.program_row_to_move[row] = move_index
-            search_from = row + 1
-        self.command_list.clear()
-        self.command_list.addItems(self.program_lines)
         self.slider.setMaximum(max(0, len(self.moves)))
         self.set_index(len(self.moves))
         self.gl_preview.set_preview(self.contours, self.moves, settings, center=bed_center, play_speed_mm_s=self.print_speed_mm_s())
@@ -3442,7 +3421,7 @@ class MainWindow(QMainWindow):
             return
         self.log.append(f"Saved {lines} G-code lines from {contours} contours: {gcode_path}")
 
-    def set_index(self, index, sync_command_list=True):
+    def set_index(self, index):
         if not self.moves:
             return
         self.preview_progress = max(0.0, min(float(index), float(len(self.moves))))
@@ -3454,19 +3433,7 @@ class MainWindow(QMainWindow):
             self.slider.setValue(self.preview_index)
             self.slider.blockSignals(False)
         self.gl_preview.set_index(self.preview_progress)
-        if sync_command_list:
-            row = len(self.program_lines) - 1 if self.preview_index >= len(self.moves) else self.move_program_rows[self.preview_index]
-            if row is not None and 0 <= row < self.command_list.count() and self.command_list.currentRow() != row:
-                self.command_list.blockSignals(True)
-                self.command_list.setCurrentRow(row)
-                self.command_list.scrollToItem(self.command_list.item(row))
-                self.command_list.blockSignals(False)
         self.update_status()
-
-    def command_selected(self, row):
-        move_index = self.program_row_to_move.get(row)
-        if move_index is not None:
-            self.set_index(move_index, sync_command_list=False)
 
     def update_status(self):
         if not self.moves:
@@ -3498,7 +3465,7 @@ class MainWindow(QMainWindow):
         self.play_start_time = None
         self.gl_preview.set_fast_render(False)
         if self.moves:
-            self.set_index(self.preview_progress, sync_command_list=True)
+            self.set_index(self.preview_progress)
 
     def progress_after_time(self, start_progress, elapsed_ms):
         if not self.moves or not self.gl_preview.cumulative_ms:
@@ -3529,7 +3496,7 @@ class MainWindow(QMainWindow):
         progress = self.progress_after_time(self.play_start_progress, elapsed_ms)
         now = time.monotonic()
         follow = now - self.last_command_follow_time >= 0.25
-        self.set_index(progress, sync_command_list=follow)
+        self.set_index(progress)
         self.gl_preview.update()
         if follow:
             self.last_command_follow_time = now

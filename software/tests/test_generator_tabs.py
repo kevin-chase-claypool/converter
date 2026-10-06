@@ -12,7 +12,6 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 try:
-    from PySide6.QtCore import QPoint
     from PySide6.QtWidgets import QApplication, QTabWidget
 
     HAVE_QT = True
@@ -69,16 +68,13 @@ class GeneratorTabShellTests(unittest.TestCase):
         )
         self.assertFalse(window.preview_panel.isAncestorOf(window.save_button))
 
-    def test_gcode_output_lives_right_of_the_preview(self):
+    def test_command_list_is_removed_and_preview_fills_the_rest(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        window.resize(1500, 950)
-        window.show()
-        self.app.processEvents()
-        self.assertFalse(window.tabs.isAncestorOf(window.command_list))
-        preview_x = window.preview_panel.mapTo(window, QPoint(0, 0)).x()
-        output_x = window.command_list.mapTo(window, QPoint(0, 0)).x()
-        self.assertGreater(output_x, preview_x)
+        self.assertFalse(hasattr(window, "command_list"))
+        self.assertEqual(window.main_split.count(), 2)
+        self.assertIs(window.main_split.widget(0), window.tabs)
+        self.assertIs(window.main_split.widget(1), window.preview_panel)
 
     def test_resolve_active_source_returns_the_convert_artwork(self):
         window = self.module.MainWindow()
