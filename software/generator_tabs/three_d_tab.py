@@ -17,7 +17,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCursor, QGuiApplication
-from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton
+from PySide6.QtWidgets import QComboBox, QLineEdit
 
 from ._tab_common import GeneratorTab, double_spin, file_picker
 
@@ -338,16 +338,12 @@ class ThreeDTab(GeneratorTab):
         self.stroke = double_spin(0.3, 0.1, 1.2, 0.05, 2, " mm")
         page.addRow("Line width", self.stroke)
 
-        generate = QPushButton("Generate 3D line art")
-        generate.clicked.connect(self.generate)
-        self.add_raw(generate)
         self.finish_controls()
 
-    def generate(self):
+    def build_svg(self):
         path = self.model_path.text().strip()
         if not path:
-            self.report_error("Choose an OBJ or STL file first.")
-            return
+            raise ValueError("Choose an OBJ or STL file first.")
         QGuiApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         try:
             polylines = three_d_polylines(
@@ -362,17 +358,14 @@ class ThreeDTab(GeneratorTab):
                 sample_mm=self.sample.value(),
                 target_width_mm=self.target_width.value(),
             )
-        except Exception as exc:
-            self.report_error(f"3D render failed: {exc}")
-            return
         finally:
             QGuiApplication.restoreOverrideCursor()
-        self.set_result(
+        return self.write_result(
             polylines,
             self.page_w.value(),
             self.page_h.value(),
             self.stroke.value(),
-            f"{len(polylines)} visible segments.",
+            f"{len(polylines)} visible segments for 3D Wireframe.",
         )
 
 

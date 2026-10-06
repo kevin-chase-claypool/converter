@@ -3,6 +3,7 @@
 import importlib.util
 import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -58,11 +59,48 @@ class GeneratorTabShellTests(unittest.TestCase):
                 f"{widget} is hidden with the tab it lives in",
             )
 
-    def test_use_svg_rejects_missing_output(self):
+    def test_resolve_active_source_returns_the_convert_artwork(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        window.use_svg("definitely-not-a-real-file.svg")
-        self.assertNotEqual(window.svg_path.text(), "definitely-not-a-real-file.svg")
+        handle = tempfile.NamedTemporaryFile(
+            suffix=".svg", delete=False, mode="w", encoding="utf-8"
+        )
+        handle.write('<svg xmlns="http://www.w3.org/2000/svg"/>')
+        handle.close()
+        self.addCleanup(os.unlink, handle.name)
+        window.svg_path.setText(handle.name)
+        path, tab = window.resolve_active_source()
+        self.assertEqual(path, handle.name)
+        self.assertIs(tab, window.convert_root)
+
+    def test_switching_tabs_marks_the_preview_stale(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.moves = [{"gcode": "G1"}]
+        window.preview_tab = window.convert_root
+        window.tabs.setCurrentIndex(1)
+        self.assertTrue(window.tab_preview_stale)
+        self.assertFalse(window.stale_warning.isHidden())
+        window.tabs.setCurrentIndex(0)
+        self.assertFalse(window.tab_preview_stale)
+        self.assertTrue(window.stale_warning.isHidden())
+
+    def test_generator_svg_runs_through_the_converter_pipeline(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.tabs.setCurrentIndex(1)
+        flow = window.tabs.currentWidget()
+        flow.page_w.setValue(60)
+        flow.page_h.setValue(60)
+        flow.spacing.setValue(8.0)
+        flow.step.setValue(2.0)
+        flow.max_steps.setValue(40)
+        flow.scale.setValue(20)
+        flow.margin.setValue(4)
+        path, tab = window.resolve_active_source()
+        self.assertIs(tab, flow)
+        contours = window.load_contours(path, window.settings())
+        self.assertGreater(len(contours), 0)
 
 
 if __name__ == "__main__":

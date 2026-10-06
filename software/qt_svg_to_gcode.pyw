@@ -864,6 +864,10 @@ class MainWindow(QMainWindow):
         self.moves = []
         self.contours = []
         self.preview_dirty = False
+        self.preview_tab = None
+        self.pending_source_tab = None
+        self.pending_source_path = ""
+        self.tab_preview_stale = False
         self.raw_contours = None
         self.raw_cache_key = None
         self.preview_index = 0
@@ -896,6 +900,7 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
         self.tabs.addTab(self.convert_root, "Convert")
+        self.tabs.currentChanged.connect(self.on_tab_changed)
 
         file_row = QHBoxLayout()
         self.svg_path = QLineEdit()
@@ -1187,26 +1192,61 @@ class MainWindow(QMainWindow):
         self.update_fit_fields()
         self.load_generator_tabs()
 
-    def use_svg(self, path, preview=False):
-        """Load a generator tab's SVG into the Convert tab.
+    def active_source_tab(self):
+        """The tab that supplies artwork; None when Convert is active."""
+        current = self.tabs.currentWidget()
+        return None if current is self.convert_root else current
 
-        Generator tabs call this instead of touching the converter's controls
-        directly, so the SVG has exactly one entry point into the pipeline.
+    def resolve_active_source(self):
+        """Return ``(svg_path, source_tab)`` for the active tab.
+
+        Convert returns the Artwork row's file. A generator tab is built from
+        its current controls. Raises ``ValueError`` with the user-facing reason.
         """
-        path = str(path)
-        if not os.path.exists(path):
-            self.log.append(f"Generator output is missing: {path}")
-            return
-        self.svg_path.setText(path)
-        self.update_suggested_gcode_path(path)
-        self.auto_configure_shading(path)
-        self.raw_cache_key = None
-        self.raw_contours = None
-        self.tabs.setCurrentWidget(self.convert_root)
-        self.status.setText("Generator output loaded - press Preview to build it.")
-        self.log.append(f"Generator output loaded into Convert: {path}")
-        if preview:
-            self.preview()
+        tab = self.active_source_tab()
+        if tab is None:
+            path = self.svg_path.text().strip()
+            if not path:
+                raise ValueError("Choose an artwork file first.")
+            if not os.path.exists(path):
+                raise ValueError(f"Artwork file not found: {path}")
+            return path, self.convert_root
+        builder = getattr(tab, "build_svg", None)
+        if not callable(builder):
+            name = self.tabs.tabText(self.tabs.currentIndex())
+            raise ValueError(f"The {name} tab cannot supply artwork.")
+        self.status.setText(
+            f"Building {self.tabs.tabText(self.tabs.currentIndex())} artwork..."
+        )
+        QApplication.processEvents()
+        path = builder()
+        if not path:
+            raise ValueError("The generator produced no SVG.")
+        return str(path), tab
+
+    def on_tab_changed(self, _index):
+        """A preview belongs to one tab; switching tabs only marks it stale."""
+        current = self.tabs.currentWidget()
+        self.tab_preview_stale = (
+            bool(self.moves)
+            and self.preview_tab is not None
+            and current is not self.preview_tab
+        )
+        self.update_stale_warning()
+
+    def update_stale_warning(self):
+        if self.tab_preview_stale:
+            self.stale_warning.setText(
+                "Preview is from another tab - press Preview to rebuild."
+            )
+            self.stale_warning.show()
+        elif self.preview_dirty and self.moves:
+            self.stale_warning.setText(
+                "Settings changed since this preview - press Preview to rebuild."
+            )
+            self.stale_warning.show()
+        else:
+            self.stale_warning.hide()
 
     def generator_status(self, message):
         """Status-line entry point for generator tabs."""
@@ -3154,7 +3194,7 @@ class MainWindow(QMainWindow):
         if not self.moves or self.preview_dirty:
             return
         self.preview_dirty = True
-        self.stale_warning.show()
+        self.update_stale_warning()
 
     def fitted_settings(self, settings, contours):
         """Apply the configured auto-fit to *settings* for this artwork.
@@ -3232,16 +3272,21 @@ class MainWindow(QMainWindow):
             scale_edit.setText(used_scale)
             scale_edit.blockSignals(blocked)
         self.preview_dirty = False
-        self.stale_warning.hide()
+        self.tab_preview_stale = False
+        self.preview_tab = self.pending_source_tab
+        self.update_stale_warning()
         return settings
 
     def preview(self):
         if self.preview_thread is not None:
             return
-        svg_path = self.svg_path.text().strip()
-        if not svg_path:
-            QMessageBox.warning(self, "Preview needs an SVG", "Choose an SVG file first.")
+        try:
+            svg_path, source_tab = self.resolve_active_source()
+        except Exception as exc:
+            QMessageBox.warning(self, "Preview needs artwork", str(exc))
             return
+        self.pending_source_tab = source_tab
+        self.pending_source_path = svg_path
         try:
             settings = self.settings()
             self.raw_geometry_key(svg_path, settings)
@@ -3374,9 +3419,10 @@ class MainWindow(QMainWindow):
         super().closeEvent(event)
 
     def convert(self):
-        svg_path = self.svg_path.text().strip()
-        if not svg_path:
-            QMessageBox.warning(self, "Conversion needs an SVG", "Choose an SVG file first.")
+        try:
+            svg_path, _source_tab = self.resolve_active_source()
+        except Exception as exc:
+            QMessageBox.warning(self, "Conversion needs artwork", str(exc))
             return
         if not self.gcode_path.text().strip():
             self.update_suggested_gcode_path(svg_path)

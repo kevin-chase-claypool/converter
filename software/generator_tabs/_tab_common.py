@@ -1,8 +1,9 @@
 """Shared widgets and SVG output for generator tabs.
 
-Every generator tab is a left control column plus a QPainter preview and one
-action that hands a generated SVG to the Convert tab. This module owns that
-scaffolding so the tabs only contain their own algorithm and parameters.
+A generator tab is a control column plus a status line. It does not own a
+preview: the main window's shared preview panel builds the active tab through
+``build_svg()`` when the static Preview button is pressed, and Save G-code
+exports that same result.
 """
 
 from __future__ import annotations
@@ -12,17 +13,14 @@ import time
 import uuid
 from pathlib import Path
 
-from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QImage, QPainter, QPen
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QComboBox,
     QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QPushButton,
     QScrollArea,
     QSpinBox,
@@ -45,7 +43,6 @@ def polylines_to_svg(
     height_mm,
     stroke_mm=0.3,
     background="#ffffff",
-    extra_svg="",
 ):
     """Return an SVG document with one polyline per point sequence."""
     body = []
@@ -63,9 +60,7 @@ def polylines_to_svg(
         f'<g fill="none" stroke="#111111" stroke-width="{_fmt(stroke_mm)}" '
         'stroke-linecap="round" stroke-linejoin="round">\n'
         + "\n".join(body)
-        + "\n</g>\n"
-        + (extra_svg + "\n" if extra_svg else "")
-        + "</svg>\n"
+        + "\n</g>\n</svg>\n"
     )
 
 
@@ -110,80 +105,8 @@ def file_picker(line_edit, on_pick, title, filters):
     return button
 
 
-class PreviewCanvas(QWidget):
-    """Fits the generated page into the tab and draws its polylines."""
-
-    def __init__(self):
-        super().__init__()
-        self.setMinimumSize(360, 300)
-        self._polylines = []
-        self._width_mm = 200.0
-        self._height_mm = 200.0
-        self._background = None
-        self._color = QColor("#111111")
-
-    def set_page(self, width_mm, height_mm, polylines, background=None, color=None):
-        self._width_mm = max(1.0, float(width_mm))
-        self._height_mm = max(1.0, float(height_mm))
-        self._polylines = polylines
-        self._background = background
-        if color is not None:
-            self._color = QColor(color)
-        self.update()
-
-    def clear(self):
-        self._polylines = []
-        self._background = None
-        self.update()
-
-    def _transform(self):
-        margin = 12.0
-        scale = min(
-            (self.width() - 2 * margin) / self._width_mm,
-            (self.height() - 2 * margin) / self._height_mm,
-        )
-        scale = max(scale, 0.01)
-        offset_x = (self.width() - self._width_mm * scale) / 2.0
-        offset_y = (self.height() - self._height_mm * scale) / 2.0
-        return scale, offset_x, offset_y
-
-    def paintEvent(self, _event):
-        painter = QPainter(self)
-        painter.fillRect(self.rect(), QColor("#eef1f5"))
-        if self._background is not None:
-            painter.drawImage(
-                QRectF(0, 0, self.width(), self.height()),
-                self._background,
-            )
-        scale, offset_x, offset_y = self._transform()
-
-        def to_screen(x, y):
-            return QPointF(offset_x + x * scale, offset_y + y * scale)
-
-        page = QRectF(
-            offset_x,
-            offset_y,
-            self._width_mm * scale,
-            self._height_mm * scale,
-        )
-        painter.fillRect(page, QColor("#ffffff"))
-        painter.setPen(QPen(QColor("#9aa4b2"), 1))
-        painter.drawRect(page)
-        painter.setPen(QPen(self._color, 1.2))
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        for points in self._polylines:
-            if len(points) < 2:
-                continue
-            last = to_screen(points[0][0], points[0][1])
-            for x, y in points[1:]:
-                current = to_screen(x, y)
-                painter.drawLine(last, current)
-                last = current
-        painter.end()
-
-
 class GeneratorTab(QWidget):
-    """Left control column, right preview, and the one Convert hand-off."""
+    """Control column plus status; the shared preview builds ``build_svg()``."""
 
     TITLE = "Generator"
     NAME = "generator"
@@ -191,7 +114,6 @@ class GeneratorTab(QWidget):
     def __init__(self, host):
         super().__init__()
         self.host = host
-        self._svg_path = ""
         outer = QHBoxLayout(self)
         outer.setContentsMargins(6, 6, 6, 6)
 
@@ -202,20 +124,22 @@ class GeneratorTab(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(self.controls)
-        scroll.setMaximumWidth(340)
+        scroll.setMaximumWidth(360)
         outer.addWidget(scroll)
 
-        right = QVBoxLayout()
-        self.preview = PreviewCanvas()
-        right.addWidget(self.preview, 1)
-        self.status = QLabel("Configure the generator, then generate.")
+        info = QVBoxLayout()
+        hint = QLabel(
+            "Set this tab's controls, then press Preview. The shared preview "
+            "panel draws this tab's result, and Save G-code exports it."
+        )
+        hint.setWordWrap(True)
+        hint.setStyleSheet("color: #475569;")
+        info.addWidget(hint)
+        self.status = QLabel("Ready.")
         self.status.setWordWrap(True)
-        right.addWidget(self.status)
-        self.use_button = QPushButton("Use in Convert")
-        self.use_button.setEnabled(False)
-        self.use_button.clicked.connect(self.use_in_convert)
-        right.addWidget(self.use_button)
-        outer.addLayout(right, 1)
+        info.addWidget(self.status)
+        info.addStretch(1)
+        outer.addLayout(info, 1)
 
     def add_group(self, title):
         box = QGroupBox(title)
@@ -232,36 +156,15 @@ class GeneratorTab(QWidget):
     def finish_controls(self):
         self.controls_layout.addStretch(1)
 
-    def set_result(self, polylines, width_mm, height_mm, stroke_mm, message, background=None):
+    def write_result(self, polylines, width_mm, height_mm, stroke_mm, message):
+        """Write the generated geometry and return its SVG path."""
         document = polylines_to_svg(polylines, width_mm, height_mm, stroke_mm)
-        self._svg_path = str(write_svg_document(self.NAME, document))
-        self.preview.set_page(width_mm, height_mm, polylines, background=background)
-        self.use_button.setEnabled(bool(polylines))
+        path = str(write_svg_document(self.NAME, document))
         self.status.setText(message)
         if self.host is not None:
             self.host.generator_status(message)
+        return path
 
-    def use_in_convert(self):
-        if not self._svg_path:
-            return
-        self.host.use_svg(self._svg_path)
-
-    def report_error(self, message):
-        self.status.setText(message)
-        if self.host is not None:
-            self.host.generator_status(message)
-
-
-def preview_background(image_path, width_px=700):
-    """Load an image scaled for the preview canvas, or None."""
-    if not image_path:
-        return None
-    image = QImage(str(image_path))
-    if image.isNull():
-        return None
-    return image.scaled(
-        width_px,
-        max(1, int(width_px * image.height() / max(1, image.width()))),
-        Qt.KeepAspectRatio,
-        Qt.SmoothTransformation,
-    )
+    def build_svg(self):
+        """Generate this tab's SVG and return its path (implemented by tabs)."""
+        raise NotImplementedError(f"{type(self).__name__} has no build_svg()")

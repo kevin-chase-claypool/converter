@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QLabel,
-    QPushButton,
 )
 
 from ._tab_common import GeneratorTab, double_spin, int_spin
@@ -292,9 +291,6 @@ class FlowFieldTab(GeneratorTab):
         self.margin = double_spin(6, 0, 50, 1, 0, " mm")
         page.addRow("Margin", self.margin)
 
-        generate = QPushButton("Generate flow field")
-        generate.clicked.connect(self.generate)
-        self.add_raw(generate)
         self.finish_controls()
         self.source.currentIndexChanged.connect(self._sync_source)
         self._sync_source()
@@ -320,12 +316,11 @@ class FlowFieldTab(GeneratorTab):
             else "(use Browse in the Artwork row above)"
         )
 
-    def generate(self):
+    def build_svg(self):
         self._refresh_artwork()
         image_mode = self.source.currentData() == "image"
         if image_mode and not self._artwork:
-            self.report_error("Import an image with the Artwork row above first.")
-            return
+            raise ValueError("Import an image with the Artwork row above first.")
         QGuiApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         try:
             polylines = list(
@@ -344,18 +339,15 @@ class FlowFieldTab(GeneratorTab):
                     cutoff_pct=self.cutoff.value(),
                 )
             )
-        except Exception as exc:
-            self.report_error(f"Flow field failed: {exc}")
-            return
         finally:
             QGuiApplication.restoreOverrideCursor()
         points = sum(len(line) for line in polylines)
-        self.set_result(
+        return self.write_result(
             polylines,
             self.page_w.value(),
             self.page_h.value(),
             self.stroke.value(),
-            f"{len(polylines)} streamlines, {points} points.",
+            f"{len(polylines)} streamlines, {points} points for Flow Field.",
         )
 
 

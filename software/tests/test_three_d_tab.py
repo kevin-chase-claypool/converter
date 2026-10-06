@@ -63,11 +63,7 @@ f 5 6 7
 
 class FakeHost:
     def __init__(self):
-        self.loaded = []
         self.status = []
-
-    def use_svg(self, path, preview=False):
-        self.loaded.append((path, preview))
 
     def generator_status(self, message):
         self.status.append(message)
@@ -145,7 +141,7 @@ class ThreeDTabTests(unittest.TestCase):
         cls.app = QApplication.instance() or QApplication([])
         ThreeDAlgorithmTests.setUpClass()
 
-    def test_tab_generates_and_hands_off_svg(self):
+    def test_tab_builds_svg_for_the_shared_preview(self):
         host = FakeHost()
         tab = ThreeDTab(host)
         self.addCleanup(tab.deleteLater)
@@ -153,11 +149,10 @@ class ThreeDTabTests(unittest.TestCase):
         tab.page_w.setValue(120)
         tab.page_h.setValue(120)
         tab.sample.setValue(1.0)
-        tab.generate()
-        self.assertTrue(tab._svg_path)
-        ET.parse(tab._svg_path)
-        tab.use_in_convert()
-        self.assertEqual(len(host.loaded), 1)
+        path = tab.build_svg()
+        self.assertTrue(path)
+        ET.parse(path)
+        self.assertTrue(host.status)
 
 
 if __name__ == "__main__":

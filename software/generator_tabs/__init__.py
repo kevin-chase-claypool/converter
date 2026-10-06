@@ -7,11 +7,16 @@ must define::
     TITLE = "Tab Title"
 
     def create_tab(host):
-        ...  # return a QWidget
+        ...  # return a QWidget whose class implements build_svg()
+
+The tab class implements ``build_svg() -> str``: it builds the SVG for its
+current controls and returns the path. The main window's static Preview button
+calls that for the active tab and runs the shared preview/G-code pipeline, so
+tabs do not own a preview and do not hand artwork to another tab.
 
 ``host`` is the MainWindow and exposes:
 
-* ``host.use_svg(path, preview=False)`` - load the generated SVG into Convert
+* ``host.artwork_path()`` - the file in the static Artwork row
 * ``host.generator_status(text)`` - write the window status line
 * ``host.log`` - the bottom log widget (a ``QTextEdit``)
 

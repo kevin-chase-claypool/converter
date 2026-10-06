@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-007` | windows-software | implemented | [Tab-driven preview in the shared preview panel](windows-software/2026-10-06-tab-driven-shared-preview.md) |
 | 2026-10-06 | `WSW-20261006-006` | windows-software | implemented | [Remove redundant per-tab image pickers](windows-software/2026-10-06-remove-redundant-tab-imports.md) |
 | 2026-10-06 | `WSW-20261006-005` | windows-software | implemented | [Keep import, export, and preview static across generator tabs](windows-software/2026-10-06-static-import-export-preview.md) |
 | 2026-10-06 | `WSW-20261006-004` | windows-software | implemented | [3D Wireframe generator tab](windows-software/2026-10-06-3d-wireframe-tab.md) |

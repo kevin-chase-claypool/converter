@@ -64,10 +64,17 @@ Cycle Start with the pen loaded:
 The main window is tabbed. The first tab, **Convert**, is the SVG/raster to
 G-code workspace described below. Additional tabs are contributed by
 `software/generator_tabs/*_tab.py` modules and are discovered at startup, one
-tab per generator. A tab builds its artwork and calls `host.use_svg(path)` to
-load the resulting SVG into Convert, where the normal preview and G-code
-pipeline take over. A broken tab is reported in the log instead of stopping
-the app.
+tab per generator. A broken tab is reported in the log instead of stopping the
+app.
+
+Import, **Preview / Cancel / Save G-code**, and the OpenGL preview panel are
+static window furniture: they stay visible on every tab. Pressing **Preview**
+builds the active tab - Convert previews the Artwork row's file, while Flow
+Field, Line Draw, and 3D Wireframe build their own SVG from their controls -
+and that result runs through the same converter pipeline into the shared
+preview panel. **Save G-code** exports the active tab's result. Switching tabs
+never rebuilds anything; it marks the visible preview as belonging to another
+tab until Preview is pressed again.
 
 Tab authors: the contract and the host entry points are documented in
 [`generator_tabs/README.md`](generator_tabs/README.md). Ported or vendored
@@ -90,8 +97,6 @@ Current generator tabs:
   edges), yaw, pitch, roll, target width, sample step, page size, margin,
   line width.
 
-Each tab previews its own output; **Use in Convert** loads the generated SVG
-into the Convert tab, where Preview and Save build the normal G-code program.
 Image-driven tabs read the file already loaded in the static Artwork row
 instead of repeating the import control.
 

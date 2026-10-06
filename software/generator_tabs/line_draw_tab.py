@@ -21,14 +21,12 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QLabel,
-    QPushButton,
 )
 
 from ._tab_common import (
     GeneratorTab,
     double_spin,
     int_spin,
-    preview_background,
 )
 
 
@@ -305,9 +303,6 @@ class LineDrawTab(GeneratorTab):
         self.margin = double_spin(6, 0, 50, 1, 0, " mm")
         page.addRow("Margin", self.margin)
 
-        generate = QPushButton("Generate line art")
-        generate.clicked.connect(self.generate)
-        self.add_raw(generate)
         self.finish_controls()
 
     def showEvent(self, event):
@@ -325,12 +320,11 @@ class LineDrawTab(GeneratorTab):
             else "(use Browse in the Artwork row above)"
         )
 
-    def generate(self):
+    def build_svg(self):
         self._refresh_artwork()
         path = self._artwork
         if not path:
-            self.report_error("Import an image with the Artwork row above first.")
-            return
+            raise ValueError("Import an image with the Artwork row above first.")
         QGuiApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         try:
             polylines = line_draw_polylines(
@@ -347,19 +341,18 @@ class LineDrawTab(GeneratorTab):
                 margin_mm=self.margin.value(),
                 seed=self.seed.value(),
             )
-        except Exception as exc:
-            self.report_error(f"Line draw failed: {exc}")
-            return
         finally:
             QGuiApplication.restoreOverrideCursor()
-        self.set_result(
+        width = self.page_w.value()
+        height = self.page_h.value()
+        result = self.write_result(
             polylines,
-            self.page_w.value(),
-            self.page_h.value(),
+            width,
+            height,
             self.stroke.value(),
-            f"{len(polylines)} paths.",
-            background=preview_background(path),
+            f"{len(polylines)} paths for Line Draw.",
         )
+        return result
 
 
 def create_tab(host):

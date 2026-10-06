@@ -25,12 +25,8 @@ except Exception:  # pragma: no cover
 
 class FakeHost:
     def __init__(self, artwork=""):
-        self.loaded = []
         self.status = []
         self.artwork = artwork
-
-    def use_svg(self, path, preview=False):
-        self.loaded.append((path, preview))
 
     def generator_status(self, message):
         self.status.append(message)
@@ -88,18 +84,17 @@ class LineDrawTabTests(unittest.TestCase):
         cls.app = QApplication.instance() or QApplication([])
         LineDrawAlgorithmTests.setUpClass()
 
-    def test_tab_generates_and_hands_off_svg(self):
+    def test_tab_builds_svg_for_the_shared_preview(self):
         host = FakeHost(LineDrawAlgorithmTests.image_path)
         tab = LineDrawTab(host)
         self.addCleanup(tab.deleteLater)
         tab.page_w.setValue(80)
         tab.page_h.setValue(80)
         tab.margin.setValue(4)
-        tab.generate()
-        self.assertTrue(tab._svg_path)
-        ET.parse(tab._svg_path)
-        tab.use_in_convert()
-        self.assertEqual(len(host.loaded), 1)
+        path = tab.build_svg()
+        self.assertTrue(path)
+        ET.parse(path)
+        self.assertTrue(host.status)
 
 
 if __name__ == "__main__":
