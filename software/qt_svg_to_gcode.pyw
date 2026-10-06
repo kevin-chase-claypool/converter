@@ -1515,7 +1515,13 @@ class MainWindow(QMainWindow):
             "Path Prep: merge 5 deg / 0.05 mm, duplicate 0.05 mm, gap 0.2 mm, "
             "sort on; preview a tool first.\n"
             "Layers: pick a colour layer (or All colours) from an imported "
-            "SVG.",
+            "SVG.\n"
+            "Stipple / TSP: 600 points, 3 Lloyd passes, gamma 1.0, dots + TSP "
+            "line, dot 0.6 mm, 5 2-opt passes.\n"
+            "Reaction-Diffusion: grid 128, 4000 steps, f 0.037, k 0.060, "
+            "Da 0.16, Db 0.08, one 8-px seed, level 0.20.\n"
+            "Vector Trace: Otsu, simplify 1 px, smoothing 1, min area 6 px2, "
+            "outlines (add hatch at 1.5 mm / 45 deg to fill).",
         )
 
     def update_stale_warning(self):

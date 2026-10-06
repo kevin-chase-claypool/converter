@@ -14,7 +14,7 @@ import math
 
 from PySide6.QtWidgets import QCheckBox
 
-from ._tab_common import GeneratorTab, double_spin, scale_polylines
+from ._tab_common import GeneratorTab, double_spin, int_spin, scale_polylines
 
 
 TITLE = "Path Prep"
@@ -142,6 +142,54 @@ def _sort_lines(lines, reverse=False):
     return ordered
 
 
+def travel_distance(lines):
+    """Total pen-up travel between consecutive polylines."""
+    total = 0.0
+    for first, second in zip(lines, lines[1:]):
+        total += math.hypot(
+            second[0][0] - first[-1][0], second[0][1] - first[-1][1]
+        )
+    return total
+
+
+def _two_opt(lines, passes):
+    """Open-route 2-opt over the polyline order, flipping lines as needed."""
+    routes = [list(line) for line in lines]
+    for _ in range(max(0, int(passes))):
+        size = len(routes)
+        if size < 3:
+            break
+        best_delta = -1e-9
+        best_move = None
+        for i in range(1, size - 1):
+            for j in range(i + 1, size):
+                a_end = routes[i - 1][-1]
+                b_start = routes[i][0]
+                b_end = routes[i][-1]
+                c_end = routes[j][-1]
+                old = math.hypot(a_end[0] - b_start[0], a_end[1] - b_start[1])
+                new = math.hypot(a_end[0] - c_end[0], a_end[1] - c_end[1])
+                if j + 1 < size:
+                    after = routes[j + 1][0]
+                    old += math.hypot(
+                        c_end[0] - after[0], c_end[1] - after[1]
+                    )
+                    new += math.hypot(
+                        b_start[0] - after[0], b_start[1] - after[1]
+                    )
+                delta = new - old
+                if delta < best_delta:
+                    best_delta = delta
+                    best_move = (i, j)
+        if best_move is None:
+            break
+        i, j = best_move
+        routes[i:j + 1] = [
+            list(reversed(line)) for line in reversed(routes[i:j + 1])
+        ]
+    return routes
+
+
 def path_prep_polylines(
     polylines,
     merge_angle_deg=5.0,
@@ -150,6 +198,7 @@ def path_prep_polylines(
     gap_mm=0.2,
     sort=True,
     reverse=False,
+    optimize_passes=0,
 ):
     """Return the cleaned polylines (page placement is the tab's job)."""
     lines = [
@@ -163,6 +212,8 @@ def path_prep_polylines(
         lines = _close_gaps(lines, gap_mm)
     if sort:
         lines = _sort_lines(lines, reverse=reverse)
+    if optimize_passes > 0:
+        lines = _two_opt(lines, optimize_passes)
     return lines
 
 
@@ -189,6 +240,8 @@ class PathPrepTab(GeneratorTab):
         order.addRow("", self.sort)
         self.reverse = QCheckBox("Reverse the sorted order")
         order.addRow("", self.reverse)
+        self.optimize = int_spin(0, 0, 100, 5)
+        order.addRow("2-opt passes", self.optimize)
 
         page = self.add_group("Page")
         self.margin = double_spin(6, 0, 60, 1, 0, " mm")
@@ -221,6 +274,7 @@ class PathPrepTab(GeneratorTab):
             gap_mm=self.gap.value(),
             sort=self.sort.isChecked(),
             reverse=self.reverse.isChecked(),
+            optimize_passes=self.optimize.value(),
         )
         xs = [x for line in polylines for x, _y in line]
         ys = [y for line in polylines for _x, y in line]

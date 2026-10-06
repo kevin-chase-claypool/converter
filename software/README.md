@@ -111,6 +111,14 @@ Current tools:
 - **Layers** - splits the imported SVG by stroke/fill colour into per-layer
   SVGs; pick a layer to preview and plot one pen at a time. The source SVG's
   own dimensions are preserved.
+- **Stipple / TSP** - density stippling with weighted Lloyd relaxation and
+  route-optimized TSP art. Controls: invert, density gamma, points, Lloyd
+  passes, seed, style (dots / TSP line / both), dot size, 2-opt passes, page
+  size, margin, line width, artwork scale.
+- **Vector Trace** - clean outline tracing for logos and silhouettes.
+  Controls: Otsu/manual threshold, trace-light-regions, simplify, smoothing,
+  minimum area, fill (outlines / hatch / both), hatch spacing and angle, page
+  size, margin, line width, artwork scale.
 
 **Algorithm only** (generate from parameters; optional files noted):
 
@@ -159,8 +167,12 @@ Current tools:
   both), dot size, page size, margin, line width, artwork scale.
 - **Path Prep** - vpype-style cleanup of the current preview contours:
   linemerge, deduplicate, reloop, and linesort. Controls: merge angle and
-  tolerance, duplicate tolerance, gap closing, sort/reverse, margin, line
-  width, artwork scale. Preview another tool first.
+  tolerance, duplicate tolerance, gap closing, sort/reverse, 2-opt passes,
+  margin, line width, artwork scale. Preview another tool first.
+- **Reaction-Diffusion** - Gray-Scott patterns extracted as contour lines.
+  Controls: grid, steps, feed/kill, diffusion A/B, seeds and seed size, seed,
+  contour level and level count, page size, margin, line width, artwork
+  scale.
 
 Image-driven tabs read the file already loaded in the static Artwork row
 instead of repeating the import control.
@@ -208,6 +220,9 @@ work with no input (optional mesh/image sources are noted below).
 | Voronoi | 120 points, seed 7, relax 1, cell boundaries, margin 6 mm | Raise relax for even cells; site dots show the seeds. |
 | Path Prep | Merge 5 deg / 0.05 mm, duplicate 0.05 mm, close gaps 0.2 mm, sort on | Preview a tool first; cleans those contours. |
 | Layers | Pick a colour layer (or All colours) from an imported SVG | One layer per pen; the source dimensions are kept. |
+| Stipple / TSP | 600 points, 3 Lloyd passes, gamma 1.0, dots + TSP, dot 0.6 mm, 5 2-opt passes | TSP mode gives one continuous line; raise 2-opt passes for shorter travel. |
+| Reaction-Diffusion | Grid 128, 4000 steps, f 0.037, k 0.060, Da 0.16, Db 0.08, one seed of 8, level 0.20 | Raise steps for finer detail; grid 128 keeps the build quick. |
+| Vector Trace | Otsu, simplify 1 px, smoothing 1, min area 6 px2, outlines | Add hatch at 1.5 mm / 45 deg for filled shapes. |
 
 ## Kaleidoscope Converter
 

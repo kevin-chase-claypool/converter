@@ -46,6 +46,9 @@ EXPECTED_TOOLS = [
     "Voronoi",
     "Path Prep",
     "Layers",
+    "Stipple / TSP",
+    "Reaction-Diffusion",
+    "Vector Trace",
 ]
 
 
@@ -90,7 +93,15 @@ class ToolShellTests(unittest.TestCase):
             groups.setdefault(group, []).append(title)
         self.assertEqual(
             groups["Photo-based"],
-            ["Line Draw", "SquiggleCam", "Pixel Art", "Plotterfun", "Layers"],
+            [
+                "Line Draw",
+                "SquiggleCam",
+                "Pixel Art",
+                "Plotterfun",
+                "Layers",
+                "Stipple / TSP",
+                "Vector Trace",
+            ],
         )
         self.assertEqual(
             groups["Algorithm only"],
@@ -106,6 +117,7 @@ class ToolShellTests(unittest.TestCase):
                 "Wobble",
                 "Voronoi",
                 "Path Prep",
+                "Reaction-Diffusion",
             ],
         )
         submenus = [
@@ -211,6 +223,9 @@ class ToolShellTests(unittest.TestCase):
             if title == "Plotterfun":
                 # Embedded web app; verified by its own vendor/fallback tests.
                 continue
+            if title == "Reaction-Diffusion":
+                page.grid.setValue(48)
+                page.steps.setValue(300)
             window.svg_path.setText(svg_path if title == "Layers" else image_path)
             window.show_tool(title)
             # Keep the suite quick; the recommended-settings table documents

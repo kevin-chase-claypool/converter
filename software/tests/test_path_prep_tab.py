@@ -11,7 +11,11 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from generator_tabs._tab_common import polylines_to_svg
-from generator_tabs.path_prep_tab import PathPrepTab, path_prep_polylines
+from generator_tabs.path_prep_tab import (
+    PathPrepTab,
+    path_prep_polylines,
+    travel_distance,
+)
 
 
 try:
@@ -70,6 +74,26 @@ class PathPrepTests(unittest.TestCase):
         cleaned = path_prep_polylines([[(0.0, 0.0), (10.0, 0.0)]])
         root = ET.fromstring(polylines_to_svg(cleaned, 20.0, 20.0, 0.3))
         self.assertTrue(root.tag.endswith("svg"))
+
+    def test_two_opt_reduces_pen_up_travel(self):
+        lines = [
+            [(0.0, 0.0), (1.0, 0.0)],
+            [(30.0, 0.0), (31.0, 0.0)],
+            [(2.0, 0.0), (3.0, 0.0)],
+            [(40.0, 0.0), (41.0, 0.0)],
+            [(4.0, 0.0), (5.0, 0.0)],
+        ]
+        plain = path_prep_polylines(
+            lines, merge_angle_deg=0.0, merge_distance_mm=0.0,
+            duplicate_mm=0.0, gap_mm=0.0, sort=False,
+        )
+        optimized = path_prep_polylines(
+            lines, merge_angle_deg=0.0, merge_distance_mm=0.0,
+            duplicate_mm=0.0, gap_mm=0.0, sort=False, optimize_passes=20,
+        )
+        self.assertLess(
+            travel_distance(optimized), travel_distance(plain)
+        )
 
 
 @unittest.skipUnless(HAVE_QT, "PySide6 is not installed")

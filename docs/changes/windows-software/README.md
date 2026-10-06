@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-029` | implemented | [High-quality tier: Stipple/TSP, Reaction-Diffusion, and Vector Trace](2026-10-06-high-quality-stipple-rd-trace.md) | `generators`, `quality` |
 | 2026-10-06 | `WSW-20261006-028` | implemented | [Add Plotterfun, Voronoi, Path Prep, and Layers tools](2026-10-06-plotterfun-voronoi-path-prep-layers.md) | `user-interface`, `generators` |
 | 2026-10-06 | `WSW-20261006-027` | implemented | [Group tools by input type: Photo-based and Algorithm only](2026-10-06-photo-vs-algorithm-groups.md) | `user-interface`, `navigation`, `generators` |
 | 2026-10-06 | `WSW-20261006-026` | implemented | [Recommended default settings for every tool](2026-10-06-recommended-default-settings.md) | `user-interface`, `generators`, `defaults` |
