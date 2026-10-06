@@ -63,6 +63,21 @@ class GeneratorTabShellTests(unittest.TestCase):
             window.stack.width() - window.sidebar_scroll.width(), 4
         )
 
+    def test_generator_controls_fill_the_settings_pane(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.resize(630, 1000)
+        window.show()
+        window.tab_bar.setCurrentIndex(1)
+        self.app.processEvents()
+        tab = window.stack.currentWidget()
+        self.assertGreaterEqual(tab.width(), 280)
+        # The 6 px margins on each side are the only width the controls leave.
+        self.assertLessEqual(tab.width() - tab.controls_scroll.width(), 16)
+        self.assertGreaterEqual(
+            tab.status.y(), tab.controls_scroll.y() + tab.controls_scroll.height()
+        )
+
     def test_import_export_and_preview_stay_outside_the_tabs(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
@@ -95,6 +110,9 @@ class GeneratorTabShellTests(unittest.TestCase):
         self.assertEqual(window.main_split.count(), 2)
         self.assertIs(window.main_split.widget(0), window.stack)
         self.assertIs(window.main_split.widget(1), window.preview_panel)
+        window.resize(1500, 950)
+        window.show()
+        self.app.processEvents()
         tabs_width, preview_width = window.main_split.sizes()
         self.assertLessEqual(tabs_width, 420)
         self.assertGreater(preview_width, tabs_width * 2)

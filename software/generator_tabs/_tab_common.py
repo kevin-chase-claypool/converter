@@ -114,7 +114,7 @@ class GeneratorTab(QWidget):
     def __init__(self, host):
         super().__init__()
         self.host = host
-        outer = QHBoxLayout(self)
+        outer = QVBoxLayout(self)
         outer.setContentsMargins(6, 6, 6, 6)
 
         self.controls = QWidget()
@@ -124,7 +124,7 @@ class GeneratorTab(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(self.controls)
-        scroll.setMaximumWidth(380)
+        self.controls_scroll = scroll
         outer.addWidget(scroll, 1)
 
         hint = QLabel(

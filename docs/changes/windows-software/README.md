@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-014` | implemented | [Generator controls fill the settings column](2026-10-06-generator-controls-fill-column.md) | `user-interface`, `generators`, `layout` |
 | 2026-10-06 | `WSW-20261006-013` | implemented | [Settings pane fills its column and removes the dead strip](2026-10-06-settings-pane-fills-column.md) | `user-interface`, `layout`, `preview` |
 | 2026-10-06 | `WSW-20261006-012` | implemented | [Lift the tab bar above the import and save row](2026-10-06-tab-bar-above-import-row.md) | `user-interface`, `layout` |
 | 2026-10-06 | `WSW-20261006-011` | implemented | [Make the settings pane content-width so the preview fills the rest](2026-10-06-content-width-settings-pane.md) | `user-interface`, `preview`, `layout` |

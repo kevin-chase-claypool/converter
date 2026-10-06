@@ -100,6 +100,9 @@ Current generator tabs:
 
 Image-driven tabs read the file already loaded in the static Artwork row
 instead of repeating the import control.
+Generator tab controls fill the settings column, with the tab's hint and
+status text stacked below them; the settings column has a 280 px floor so it
+cannot be crushed by the preview.
 
 The artwork/G-code file row (with **Save G-code**), the **Preview** and
 **Cancel** buttons in the preview panel under the playback controls, and the

@@ -897,6 +897,7 @@ class MainWindow(QMainWindow):
 
         self.convert_root = QWidget()
         self.stack = QStackedWidget()
+        self.stack.setMinimumWidth(280)
         self.stack.addWidget(self.convert_root)
         # The tab bar is detached from the pages so it can span the whole
         # window above the import/export row.
