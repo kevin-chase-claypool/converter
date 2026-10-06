@@ -164,7 +164,10 @@ class Settings:
     # Measured on the integrated toolhead: M3 seeks in about 1.2 s warm and
     # ~2.9 s from GP2, and M5 clears in about 0.46 s. The dwell must cover the
     # actuation, or the drawing move starts while the pen is still in the air.
-    pen_up_ms: float = 800.0
+    # 1000 ms is the operator-chosen default: it keeps roughly half a second
+    # of margin over the measured clear time and is also the `A` fallback
+    # dwell used by the P115 recovery path.
+    pen_up_ms: float = 1000.0
     pen_down_ms: float = 2500.0
     # Program start only. The toolhead parks on the GP2 lift switch, so the
     # program's first M3 has to travel the whole retract distance before it
@@ -286,7 +289,7 @@ TEXT_FIELD_GROUPS = (
         ("Pen stroke mm", "pen_diameter_mm", "0.20"),
         ("Safe Z", "safe_z", "5"),
         ("Work Z", "work_z", "0"),
-        ("Pen up ms", "pen_up_ms", "800"),
+        ("Pen up ms", "pen_up_ms", "1000"),
         ("Pen down ms", "pen_down_ms", "2500"),
         ("Pen down first ms", "pen_down_first_ms", "10000"),
         ("Pen up cmd", "pen_up_command", "M5"),

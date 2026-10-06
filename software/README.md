@@ -593,6 +593,11 @@ display-only; every other group changes the emitted program.
   - **Pen down ms** (`pen_down_ms`, default 2500) is the dwell after every
     `M3`. It covers the toolhead's warm contact seek, which starts from the
     ~1.2 mm `M5` clearance and finishes in 2-3 s.
+  - **Pen up ms** (`pen_up_ms`, default 1000) is the dwell after every
+    `M5`/`M3` lift. The toolhead clears in about 0.46 s measured; the extra
+    margin covers the release and the settle before the next travel. With the
+    GP27 handshake on, the same value is the `A` fallback dwell the `P115`
+    recovery path uses when a handshake times out.
   - **Pen down first ms** (`pen_down_first_ms`, default 10000) is the dwell
     after the program's **first** `M3` only. The toolhead parks on the GP2 lift
     switch, so that one has to travel the whole retract distance before it

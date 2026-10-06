@@ -103,9 +103,9 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         self.assertEqual(
             [line for line in lines if line.startswith("G65 P115")],
             [
-                "G65 P115 Q0 A0.8 W2",
-                "G65 P115 Q1 B12 A0.8 W2",
-                "G65 P115 Q1 A0.8 W2",
+                "G65 P115 Q0 A1 W2",
+                "G65 P115 Q1 B12 A1 W2",
+                "G65 P115 Q1 A1 W2",
                 "G65 P115 Q0 A3 W1",
             ],
         )
@@ -192,9 +192,9 @@ class RadiusAwareThetaFeedTests(unittest.TestCase):
         self.assertEqual(
             handshake_lines,
             [
-                "G65 P115 Q0 A0.8 W2",
-                "G65 P115 Q1 B12 A0.8 W2",
-                "G65 P115 Q1 A0.8 W2",
+                "G65 P115 Q0 A1 W2",
+                "G65 P115 Q1 B12 A1 W2",
+                "G65 P115 Q1 A1 W2",
                 "G65 P115 Q0 A3 W1",
             ],
         )

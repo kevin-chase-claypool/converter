@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-031` | implemented | [Raise the pen-up dwell default to 1000 ms](2026-10-06-pen-up-dwell-1000ms.md) | `converter`, `pen`, `timing` |
 | 2026-10-06 | `WSW-20261006-030` | implemented | [Fix Vector Trace closed loops collapsing to invisible paths](2026-10-06-vector-trace-closed-loop-fix.md) | `generators`, `bug-fix`, `vector-trace` |
 | 2026-10-06 | `WSW-20261006-029` | implemented | [High-quality tier: Stipple/TSP, Reaction-Diffusion, and Vector Trace](2026-10-06-high-quality-stipple-rd-trace.md) | `generators`, `quality` |
 | 2026-10-06 | `WSW-20261006-028` | implemented | [Add Plotterfun, Voronoi, Path Prep, and Layers tools](2026-10-06-plotterfun-voronoi-path-prep-layers.md) | `user-interface`, `generators` |
