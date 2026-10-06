@@ -96,7 +96,7 @@ def squigglecam_polylines(
 
 class SquiggleCamTab(GeneratorTab):
     NAME = "squigglecam"
-    GROUP = "Line art"
+    GROUP = "Photo-based"
     DESCRIPTION = "One continuous squiggle per row from image tone."
 
     def __init__(self, host):

@@ -1298,7 +1298,13 @@ class MainWindow(QMainWindow):
         groups = {}
         for title, description, group in entries:
             groups.setdefault(group, []).append((title, description))
-        for group, items in groups.items():
+        ordered_groups = [
+            name for name in ("Core", "Photo-based", "Algorithm only")
+            if name in groups
+        ]
+        ordered_groups += [name for name in groups if name not in ordered_groups]
+        for group in ordered_groups:
+            items = groups[group]
             box = QGroupBox(group)
             grid = QGridLayout(box)
             grid.setHorizontalSpacing(8)
@@ -1350,6 +1356,7 @@ class MainWindow(QMainWindow):
         file_menu.addAction(exit_action)
 
         tools_menu = menu.addMenu("&Tools")
+        self.tools_menu = tools_menu
         self.all_tools_action = QAction("&All Tools", self)
         self.all_tools_action.setShortcut("Ctrl+T")
         self.all_tools_action.triggered.connect(
@@ -1367,8 +1374,14 @@ class MainWindow(QMainWindow):
         groups = {}
         for title, _widget, group, _description in self.generator_tools:
             groups.setdefault(group, []).append(title)
+        ordered_groups = [
+            name for name in ("Photo-based", "Algorithm only")
+            if name in groups
+        ]
+        ordered_groups += [name for name in groups if name not in ordered_groups]
         shortcut_index = 0
-        for group, titles in groups.items():
+        for group in ordered_groups:
+            titles = groups[group]
             submenu = tools_menu.addMenu(group)
             for title in titles:
                 shortcut = (

@@ -86,7 +86,7 @@ def wobble_polylines(
 
 class WobbleTab(GeneratorTab):
     NAME = "wobble"
-    GROUP = "Line art"
+    GROUP = "Algorithm only"
     DESCRIPTION = "Hand-drawn wobble for the current preview contours."
 
     def __init__(self, host):

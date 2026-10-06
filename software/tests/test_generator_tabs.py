@@ -78,6 +78,36 @@ class ToolShellTests(unittest.TestCase):
         for title in EXPECTED_TOOLS:
             self.assertIn(title, window.tool_index)
 
+    def test_tools_are_grouped_by_input_type(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        groups = {}
+        for title, _widget, group, _description in window.generator_tools:
+            groups.setdefault(group, []).append(title)
+        self.assertEqual(
+            groups["Photo-based"], ["Line Draw", "SquiggleCam", "Pixel Art"]
+        )
+        self.assertEqual(
+            groups["Algorithm only"],
+            [
+                "Flow Field",
+                "3D Wireframe",
+                "Harmonograph",
+                "Snowflake",
+                "Truchet",
+                "Text",
+                "Substitution",
+                "Postcard",
+                "Wobble",
+            ],
+        )
+        submenus = [
+            action.text()
+            for action in window.tools_menu.actions()
+            if action.menu() is not None
+        ]
+        self.assertEqual(submenus, ["Photo-based", "Algorithm only"])
+
     def test_tools_menu_switches_pages(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

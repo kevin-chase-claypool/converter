@@ -340,7 +340,7 @@ def _reverse_walk(
 
 class FlowFieldTab(GeneratorTab):
     NAME = "flow-field"
-    GROUP = "Line art"
+    GROUP = "Algorithm only"
     DESCRIPTION = "Streamlines from noise or image tone."
 
     def __init__(self, host):

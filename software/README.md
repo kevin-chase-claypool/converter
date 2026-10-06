@@ -89,24 +89,37 @@ third-party code keeps its license and attribution in a sibling
 
 Current tools:
 
-- **Flow Field** - evenly spaced streamlines from a procedural noise field, an
-  image's luminance gradient, or a user formula (angle f(x,y) or vector dx/dy,
-  with presets). Controls: source, preset, formula mode, formulas, artwork
-  (from File > Open Artwork), invert, image cutoff, seed, noise scale,
-  octaves, spacing, step, max steps, line width, page size, margin, artwork
-  scale.
+**Photo-based** (need an image from File > Open Artwork):
+
 - **Line Draw** - raster image to edge-traced contours plus luminance hatch.
   Controls: artwork (from the static Artwork row), invert, mode
   (contours / hatch / both), edge
   threshold, hatch spacing, hatch light/mid/dark thresholds (upstream
   linedraw levels 144/64/16), sketch jitter, minimum length, simplify,
   resolution, line width, seed, page size, margin, artwork scale.
+- **SquiggleCam** - one continuous squiggle per row from image tone (full
+  upstream setting set): line count, frequency, amplitude, brightness,
+  contrast, min/max brightness, pixel spacing, resolution, black-background
+  inversion, page, line width, artwork scale.
+- **Pixel Art** - pixel-art paths in `big` (5x5 spiral), `line` (runs), or
+  `snake` (connected) mode, from vpype-pixelart: pixel pitch, overdraw, max
+  grid, alpha threshold, ignore-white, page, line width, artwork scale.
+
+**Algorithm only** (generate from parameters; optional files noted):
+
+- **Flow Field** - evenly spaced streamlines from a procedural noise field, an
+  image's luminance gradient, or a user formula (angle f(x,y) or vector dx/dy,
+  with presets). Controls: source, preset, formula mode, formulas, artwork
+  (from File > Open Artwork), invert, image cutoff, seed, noise scale,
+  octaves, spacing, step, max steps, line width, page size, margin, artwork
+  scale. Optional image-edge source; works standalone on noise or formulas.
 - **3D Wireframe** - OBJ or STL mesh to orthographic hidden-line vector art.
   Built-in primitives (cube, sphere, cylinder, cone, terrain plane) and a
   perspective camera. Controls: source, file/primitive, style
   (hidden-line wireframe / silhouette / all edges), yaw, pitch, roll,
   projection, camera distance, target width, sample step, page size, margin,
-  line width, artwork scale.
+  line width, artwork scale. Works from the built-in primitives; a mesh file
+  is optional.
 - **Harmonograph** - damped Lissajous figures from two decaying oscillations,
   or the upstream physical two-pendulum + rotating-disk model. Controls:
   model, pivot/arm geometry, rotating-disk frequency, amplitudes, phases,
@@ -130,16 +143,10 @@ Current tools:
   page preset (default upstream 7x5 in landscape), divider, address lines,
   line spacing, stamp size, caption, message, address, text size, tracking,
   page size, margin, line width, artwork scale.
-- **SquiggleCam** - one continuous squiggle per row from image tone (full
-  upstream setting set): line count, frequency, amplitude, brightness,
-  contrast, min/max brightness, pixel spacing, resolution, black-background
-  inversion, page, line width, artwork scale.
-- **Pixel Art** - pixel-art paths in `big` (5x5 spiral), `line` (runs), or
-  `snake` (connected) mode, from vpype-pixelart: pixel pitch, overdraw, max
-  grid, alpha threshold, ignore-white, page, line width, artwork scale.
 - **Wobble** - hand-drawn wobble applied to the current preview contours
   (line-wobbler): frequency, amplitude, frequency jitter, seed, endpoint
-  wobble toggles, margin, line width, artwork scale.
+  wobble toggles, margin, line width, artwork scale. Runs on the current
+  preview contours, so preview another tool first.
 
 Image-driven tabs read the file already loaded in the static Artwork row
 instead of repeating the import control.
@@ -165,6 +172,8 @@ feature settings pane; only the settings sidebar belongs to the Convert page.
 
 These defaults are tuned for a 200 x 200 mm page, a 0.3 mm pen, and the 1:1
 preview. They also appear in the app under **Help > Recommended Settings**.
+Photo-based tools need an image via File > Open Artwork; algorithm-only tools
+work with no input (optional mesh/image sources are noted below).
 
 | Tool | Start from | Notes |
 |---|---|---|

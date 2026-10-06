@@ -90,7 +90,7 @@ def truchet_polylines(
 
 class TruchetTab(GeneratorTab):
     NAME = "truchet"
-    GROUP = "Patterns"
+    GROUP = "Algorithm only"
     DESCRIPTION = "Quarter-arc and diagonal tiles."
 
     def __init__(self, host):

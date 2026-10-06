@@ -78,7 +78,7 @@ def snowflake_polylines(
 
 class SnowflakeTab(GeneratorTab):
     NAME = "snowflake"
-    GROUP = "Patterns"
+    GROUP = "Algorithm only"
     DESCRIPTION = "Radial branch snowflakes."
 
     def __init__(self, host):

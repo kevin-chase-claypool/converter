@@ -262,7 +262,7 @@ def pixel_art_polylines(
 
 class PixelArtTab(GeneratorTab):
     NAME = "pixel-art"
-    GROUP = "Line art"
+    GROUP = "Photo-based"
     DESCRIPTION = "Pixel-art paths in big, line, or snake mode."
 
     def __init__(self, host):

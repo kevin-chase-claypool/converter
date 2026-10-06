@@ -177,7 +177,7 @@ def harmonograph_polylines(
 
 class HarmonographTab(GeneratorTab):
     NAME = "harmonograph"
-    GROUP = "Patterns"
+    GROUP = "Algorithm only"
     DESCRIPTION = "Physical pendulum-harmonograph or simple Lissajous."
 
     def __init__(self, host):
