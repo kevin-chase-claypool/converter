@@ -1479,6 +1479,10 @@ class MainWindow(QMainWindow):
         """Path currently in the static Artwork row, for generator tabs."""
         return self.svg_path.text().strip()
 
+    def current_contours(self):
+        """Preview contours in millimetres, for post-process tools."""
+        return self.contours
+
     def load_generator_tabs(self):
         """Add one page per `software/generator_tabs/*_tab.py` module."""
         try:

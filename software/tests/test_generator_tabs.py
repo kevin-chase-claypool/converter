@@ -37,6 +37,9 @@ EXPECTED_TOOLS = [
     "Text",
     "Substitution",
     "Postcard",
+    "SquiggleCam",
+    "Pixel Art",
+    "Wobble",
 ]
 
 

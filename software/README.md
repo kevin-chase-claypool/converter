@@ -89,10 +89,12 @@ third-party code keeps its license and attribution in a sibling
 
 Current tools:
 
-- **Flow Field** - evenly spaced streamlines from a procedural noise field or
-  an image's luminance gradient. Controls: source, artwork (from the static
-  Artwork row), invert, image cutoff, seed, noise scale, octaves, spacing,
-  step, max steps, line width, page size, margin, artwork scale.
+- **Flow Field** - evenly spaced streamlines from a procedural noise field, an
+  image's luminance gradient, or a user formula (angle f(x,y) or vector dx/dy,
+  with presets). Controls: source, preset, formula mode, formulas, artwork
+  (from File > Open Artwork), invert, image cutoff, seed, noise scale,
+  octaves, spacing, step, max steps, line width, page size, margin, artwork
+  scale.
 - **Line Draw** - raster image to edge-traced contours plus luminance hatch.
   Controls: artwork (from the static Artwork row), invert, mode
   (contours / hatch / both), edge
@@ -121,6 +123,16 @@ Current tools:
   address guide lines, and optional caption/address text. Controls: page
   preset, divider, address lines, line spacing, stamp size, caption, address,
   text size, tracking, page size, margin, line width, artwork scale.
+- **SquiggleCam** - one continuous squiggle per row from image tone (full
+  upstream setting set): line count, frequency, amplitude, brightness,
+  contrast, min/max brightness, pixel spacing, black-background inversion,
+  page, line width, artwork scale.
+- **Pixel Art** - pixel-art paths in `big` (5x5 spiral), `line` (runs), or
+  `snake` (connected) mode, from vpype-pixelart: pixel pitch, overdraw, max
+  grid, alpha threshold, ignore-white, page, line width, artwork scale.
+- **Wobble** - hand-drawn wobble applied to the current preview contours
+  (line-wobbler): frequency, amplitude, frequency jitter, seed, endpoint
+  wobble toggles, margin, line width, artwork scale.
 
 Image-driven tabs read the file already loaded in the static Artwork row
 instead of repeating the import control.

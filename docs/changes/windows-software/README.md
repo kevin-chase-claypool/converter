@@ -8,6 +8,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-024` | implemented | [Add SquiggleCam, Pixel Art, and Wobble tools](2026-10-06-squigglecam-pixel-art-wobble.md) | `user-interface`, `generators` |
+| 2026-10-06 | `WSW-20261006-023` | implemented | [Flow Field formula source](2026-10-06-flow-field-formulas.md) | `generators`, `flow-field`, `fidelity` |
 | 2026-10-06 | `WSW-20261006-022` | implemented | [Add File / Tools / View / Help menus and move tool selection into Tools](2026-10-06-menu-bar-navigation.md) | `user-interface`, `navigation` |
 | 2026-10-06 | `WSW-20261006-021` | implemented | [Replace the tab bar with an All tools dashboard](2026-10-06-all-tools-dashboard.md) | `user-interface`, `navigation` |
 | 2026-10-06 | `WSW-20261006-020` | implemented | [Generator fidelity audit, restored options, and attribution corrections](2026-10-06-fidelity-audit-and-restorations.md) | `generators`, `documentation`, `fidelity` |

@@ -26,7 +26,7 @@ upstream lattice simulation), and the remaining gaps are listed below.
 
 | Tab | Upstream options | Our options | Gap |
 |---|---|---|---|
-| Flow Field | Formula input for x/y, integration time, separation distance, line parameters, SVG export | Procedural noise or image-gradient field, seed, noise scale, octaves, spacing, step, max steps, page, line width, scale | Missing formula-driven fields and an explicit separation-distance control; favorites/permalink are web-app features (N/A). |
+| Flow Field | Formula input for x/y, integration time, separation distance, line parameters, SVG export | Procedural noise, image-gradient, or formula field (angle or vector, with presets), seed, noise scale, octaves, spacing, step, max steps, page, line width, scale | Formula-driven fields restored 2026-10-06 (`WSW-20261006-023`); separation distance is still derived from spacing; favorites/permalink are web-app features (N/A). |
 | Line Draw | Contour/hatch modes, hatch size, contour simplify, resolution, optional OpenCV, Perlin sketch style | Modes, edge threshold, hatch spacing/tone, jitter, min length, **simplify (restored)**, **resolution (restored)**, seed | Perlin-noise sketch style missing (ours is uniform jitter); OpenCV acceleration N/A; hatch is in mm rather than patch pixels. |
 | 3D Wireframe | Sphere/cube/cone/cylinder/shard/terrain primitives, OBJ/STL, vector texturing, CSG, PNG/SVG, camera eye/center/up, perspective, colours | OBJ/STL, orthographic projection, yaw/pitch/roll, hidden-line/silhouette/all edges, sample step, target width, line width, scale | Perspective camera, primitives/terrain, surface hatching, CSG, and colour handling are missing. |
 | Harmonograph | Pendulum lengths p/q, disk/paper/rotation radii, amplitudes A/B, phase offsets u/v, per-axis damping R/S, frequencies f/g and difference h, pen width, resolution, Bezier smoothing | Frequency X/Y, one phase, one damping, turns, samples, curves, curve size | The physical two-pendulum + rotating-disk model (per-axis amplitude/phase/damping, difference frequency) and Bezier smoothing are missing. |
@@ -52,7 +52,14 @@ upstream lattice simulation), and the remaining gaps are listed below.
 
 ## Not restored (tracked in the roadmap)
 
-Flow-field formula fields; Line Draw Perlin sketch style; 3D perspective,
-primitives, texturing and CSG; harmonograph's physical pendulum model and
-Bezier smoothing; snowflake lattice simulation; Text custom fonts and kerning;
-Substitution palette editing and colour layers.
+Line Draw Perlin sketch style; 3D perspective, primitives, texturing and CSG;
+harmonograph's physical pendulum model and Bezier smoothing; snowflake lattice
+simulation; Text custom fonts and kerning; Substitution palette editing and
+colour layers.
+
+## Tools added after this audit
+
+The next r/plotterart list batch added three more permissive ports:
+SquiggleCam (msurguy, MIT), Pixel Art (vpype-pixelart, MIT), and Wobble
+(cadin/line-wobbler, Unlicense). Plotterfun remains queued: it is a
+multi-algorithm suite and needs its own batch rather than a partial port.

@@ -403,11 +403,11 @@
 - [ ] Close the remaining upstream option gaps recorded in
   [`docs/research/2026-10-06-generator-tab-fidelity-audit.md`](../research/2026-10-06-generator-tab-fidelity-audit.md).
   Problem: the generator tabs are simplified ports. Restored already: Line
-  Draw simplify/resolution and Postcard message. Still missing: Flow Field
-  formula-driven fields; Line Draw Perlin sketch style; 3D perspective,
-  primitives, surface texturing and CSG; the harmonograph physical pendulum
-  model and Bezier smoothing; the snowflake lattice simulation; Text custom
-  fonts and kerning; Substitution palette editing and colour layers.
+  Draw simplify/resolution, Postcard message, and Flow Field formulas. Still
+  missing: Line Draw Perlin sketch style; 3D perspective, primitives, surface
+  texturing and CSG; the harmonograph physical pendulum model and Bezier
+  smoothing; the snowflake lattice simulation; Text custom fonts and kerning;
+  Substitution palette editing and colour layers.
   Benefit: the tabs can honestly claim the upstream feature set, or the audit
   note states exactly what is not ported.
   Risk: 3D CSG, the lattice model, and colour layers are each large features,

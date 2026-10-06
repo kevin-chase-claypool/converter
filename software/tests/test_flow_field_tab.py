@@ -13,7 +13,11 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from generator_tabs._tab_common import polylines_to_svg
-from generator_tabs.flow_field_tab import FlowFieldTab, flow_field_polylines
+from generator_tabs.flow_field_tab import (
+    FlowFieldTab,
+    compile_formula,
+    flow_field_polylines,
+)
 
 
 try:
@@ -52,6 +56,21 @@ def sample_field(**overrides):
 
 
 class FlowFieldAlgorithmTests(unittest.TestCase):
+    def test_formula_evaluator(self):
+        function = compile_formula("sin(x) + cos(y)")
+        self.assertAlmostEqual(function(0.0, 0.0), 1.0)
+        for unsafe in ("__import__('os')", "x.__class__", "lambda x: x"):
+            with self.assertRaises(ValueError):
+                compile_formula(unsafe)
+
+    def test_formula_field_produces_streamlines(self):
+        import math
+
+        polylines = sample_field(
+            field_angle=lambda x, y: math.atan2(x, -y)
+        )
+        self.assertGreaterEqual(len(polylines), 2)
+
     def test_same_seed_is_identical(self):
         first = sample_field()
         second = sample_field()
@@ -104,6 +123,20 @@ class FlowFieldTabTests(unittest.TestCase):
         self.assertTrue(path)
         ET.parse(path)
         self.assertTrue(host.status)
+
+    def test_tab_formula_mode_builds_svg(self):
+        host = FakeHost()
+        tab = FlowFieldTab(host)
+        self.addCleanup(tab.deleteLater)
+        tab.source.setCurrentIndex(tab.source.findData("formula"))
+        tab.formula_preset.setCurrentIndex(0)  # Custom: -y / x
+        tab.page_w.setValue(60)
+        tab.page_h.setValue(60)
+        tab.spacing.setValue(6.0)
+        tab.max_steps.setValue(50)
+        tab.margin.setValue(4)
+        path = tab.build_svg()
+        ET.parse(path)
 
 
 if __name__ == "__main__":

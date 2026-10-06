@@ -13,6 +13,7 @@ Output is SVG; the tab hands it to the Convert tab and never writes G-code.
 
 from __future__ import annotations
 
+import ast
 import math
 import os
 import random
@@ -23,6 +24,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QLabel,
+    QLineEdit,
 )
 
 from ._tab_common import GeneratorTab, double_spin, int_spin, scale_polylines
@@ -30,6 +32,85 @@ from ._tab_common import GeneratorTab, double_spin, int_spin, scale_polylines
 
 TITLE = "Flow Field"
 ORDER = 10
+
+_FUNCTIONS = {
+    "sin": math.sin,
+    "cos": math.cos,
+    "tan": math.tan,
+    "atan2": math.atan2,
+    "sqrt": math.sqrt,
+    "exp": math.exp,
+    "log": math.log,
+    "abs": abs,
+    "min": min,
+    "max": max,
+    "floor": math.floor,
+    "ceil": math.ceil,
+    "hypot": math.hypot,
+    "pi": math.pi,
+    "e": math.e,
+}
+_VARIABLES = {"x", "y"}
+_ALLOWED_NODES = (
+    ast.Expression,
+    ast.BinOp,
+    ast.UnaryOp,
+    ast.Call,
+    ast.Name,
+    ast.Load,
+    ast.Constant,
+    ast.Add,
+    ast.Sub,
+    ast.Mult,
+    ast.Div,
+    ast.Pow,
+    ast.Mod,
+    ast.FloorDiv,
+    ast.USub,
+    ast.UAdd,
+)
+
+
+def compile_formula(expression):
+    """Compile a safe f(x, y) expression; raises ValueError when unsafe."""
+    if not expression or not expression.strip():
+        raise ValueError("Enter a formula.")
+    try:
+        tree = ast.parse(expression, mode="eval")
+    except SyntaxError as exc:
+        raise ValueError(f"Formula syntax error: {exc.msg}") from exc
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            if not isinstance(node.func, ast.Name) or node.func.id not in _FUNCTIONS:
+                raise ValueError("Only the listed math functions may be called.")
+            if node.keywords:
+                raise ValueError("Keyword arguments are not supported.")
+        elif isinstance(node, ast.Name):
+            if node.id not in _FUNCTIONS and node.id not in _VARIABLES:
+                raise ValueError(f"Unknown name '{node.id}'.")
+        elif isinstance(node, ast.Constant) and not isinstance(
+            node.value, (int, float)
+        ):
+            raise ValueError("Only numeric constants are allowed.")
+        elif not isinstance(node, _ALLOWED_NODES):
+            raise ValueError(f"Unsupported formula syntax: {type(node).__name__}.")
+    code = compile(tree, "<formula>", "eval")
+
+    def evaluate(x, y):
+        return float(
+            eval(code, {"__builtins__": {}}, {**_FUNCTIONS, "x": x, "y": y})
+        )
+
+    return evaluate
+
+
+FORMULA_PRESETS = (
+    ("Swirl", "vector", "-y", "x"),
+    ("Radial", "vector", "x", "y"),
+    ("Vortex", "vector", "y", "-x"),
+    ("Waves", "angle", "90 + 45*sin(x/25)", ""),
+    ("Sheets", "angle", "45 + 90*sin(x/40)*cos(y/40)", ""),
+)
 
 
 def _hash01(ix, iy, seed):
@@ -126,6 +207,7 @@ def flow_field_polylines(
     image_path=None,
     invert=False,
     cutoff_pct=60,
+    field_angle=None,
     max_points=250_000,
 ):
     """Place evenly spaced streamlines; returns a list of (x, y) polylines."""
@@ -136,6 +218,8 @@ def flow_field_polylines(
     margin = max(0.0, min(float(margin_mm), min(width_mm, height_mm) / 2.0 - 1.0))
     left, right = margin, width_mm - margin
     top, bottom = margin, height_mm - margin
+    centre_x = (left + right) / 2.0
+    centre_y = (top + bottom) / 2.0
     separation = spacing * 0.9
     field = None
     if image_path:
@@ -179,6 +263,8 @@ def flow_field_polylines(
             )
 
     def angle_at(x, y):
+        if field_angle is not None:
+            return float(field_angle(x - centre_x, y - centre_y))
         fallback = noise_angle(x, y, noise_scale_mm, seed, octaves)
         if field is not None:
             return field.angle(x, y, width_mm, height_mm, fallback)
@@ -263,7 +349,21 @@ class FlowFieldTab(GeneratorTab):
         self.source = QComboBox()
         self.source.addItem("Procedural noise", "noise")
         self.source.addItem("Image edges", "image")
+        self.source.addItem("Formula", "formula")
         shape.addRow("Source", self.source)
+        self.formula_preset = QComboBox()
+        self.formula_preset.addItem("Custom", None)
+        for name, mode, first, second in FORMULA_PRESETS:
+            self.formula_preset.addItem(name, (mode, first, second))
+        shape.addRow("Preset", self.formula_preset)
+        self.formula_mode = QComboBox()
+        self.formula_mode.addItem("Angle f(x,y) deg", "angle")
+        self.formula_mode.addItem("Vector dx, dy", "vector")
+        shape.addRow("Formula mode", self.formula_mode)
+        self.formula_a = QLineEdit("-y")
+        self.formula_b = QLineEdit("x")
+        shape.addRow("f1 / dx", self.formula_a)
+        shape.addRow("f2 / dy", self.formula_b)
         self.image_label = QLabel()
         self.image_label.setWordWrap(True)
         shape.addRow("Artwork", self.image_label)
@@ -300,13 +400,33 @@ class FlowFieldTab(GeneratorTab):
 
         self.finish_controls()
         self.source.currentIndexChanged.connect(self._sync_source)
+        self.formula_mode.currentIndexChanged.connect(self._sync_source)
+        self.formula_preset.currentIndexChanged.connect(self._apply_formula_preset)
         self._sync_source()
 
     def _sync_source(self):
         image_mode = self.source.currentData() == "image"
+        formula_mode = self.source.currentData() == "formula"
         self.image_label.setEnabled(image_mode)
         self.invert.setEnabled(image_mode)
         self.cutoff.setEnabled(image_mode)
+        vector_mode = formula_mode and self.formula_mode.currentData() == "vector"
+        self.formula_preset.setEnabled(formula_mode)
+        self.formula_mode.setEnabled(formula_mode)
+        self.formula_a.setEnabled(formula_mode)
+        self.formula_b.setEnabled(vector_mode)
+
+    def _apply_formula_preset(self):
+        preset = self.formula_preset.currentData()
+        if not preset:
+            return
+        mode, first, second = preset
+        self.formula_mode.setCurrentIndex(
+            max(0, self.formula_mode.findData(mode))
+        )
+        self.formula_a.setText(first)
+        self.formula_b.setText(second)
+        self._sync_source()
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -326,8 +446,24 @@ class FlowFieldTab(GeneratorTab):
     def build_svg(self):
         self._refresh_artwork()
         image_mode = self.source.currentData() == "image"
+        formula_mode = self.source.currentData() == "formula"
         if image_mode and not self._artwork:
             raise ValueError("Import an image with the Artwork row above first.")
+        field_angle = None
+        if formula_mode:
+            if self.formula_mode.currentData() == "vector":
+                dx_fn = compile_formula(self.formula_a.text())
+                dy_fn = compile_formula(self.formula_b.text())
+
+                def field_angle(x, y):
+                    return math.atan2(dy_fn(x, y), dx_fn(x, y))
+
+            else:
+                angle_fn = compile_formula(self.formula_a.text())
+
+                def field_angle(x, y):
+                    return math.radians(angle_fn(x, y))
+
         QGuiApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         try:
             polylines = list(
@@ -344,6 +480,7 @@ class FlowFieldTab(GeneratorTab):
                     image_path=self._artwork if image_mode else None,
                     invert=self.invert.isChecked(),
                     cutoff_pct=self.cutoff.value(),
+                    field_angle=field_angle,
                 )
             )
         finally:
