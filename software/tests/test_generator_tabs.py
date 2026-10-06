@@ -53,6 +53,16 @@ class GeneratorTabShellTests(unittest.TestCase):
         import_y = window.svg_path.mapTo(window, QPoint(0, 0)).y()
         self.assertLess(bar_y, import_y)
 
+    def test_settings_pane_has_no_dead_strip(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.resize(1500, 950)
+        window.show()
+        self.app.processEvents()
+        self.assertLessEqual(
+            window.stack.width() - window.sidebar_scroll.width(), 4
+        )
+
     def test_import_export_and_preview_stay_outside_the_tabs(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

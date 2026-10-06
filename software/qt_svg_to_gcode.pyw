@@ -1043,11 +1043,10 @@ class MainWindow(QMainWindow):
                 )
             )
         sidebar_layout.addStretch(1)
-        sidebar.setMaximumWidth(320)
         sidebar_scroll = QScrollArea()
+        self.sidebar_scroll = sidebar_scroll
         sidebar_scroll.setWidgetResizable(True)
         sidebar_scroll.setWidget(sidebar)
-        sidebar_scroll.setMaximumWidth(340)
 
         preview_widget = QWidget()
         self.preview_panel = preview_widget
@@ -1125,8 +1124,7 @@ class MainWindow(QMainWindow):
 
         convert_layout = QHBoxLayout(self.convert_root)
         convert_layout.setContentsMargins(0, 0, 0, 0)
-        convert_layout.addWidget(sidebar_scroll)
-        convert_layout.addStretch(1)
+        convert_layout.addWidget(sidebar_scroll, 1)
 
         # Import, export, and preview are window furniture, not tab content,
         # so switching tabs never hides them. The preview fills everything to
