@@ -124,22 +124,19 @@ class GeneratorTab(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(self.controls)
-        scroll.setMaximumWidth(360)
-        outer.addWidget(scroll)
+        scroll.setMaximumWidth(380)
+        outer.addWidget(scroll, 1)
 
-        info = QVBoxLayout()
         hint = QLabel(
             "Set this tab's controls, then press Preview. The shared preview "
             "panel draws this tab's result, and Save G-code exports it."
         )
         hint.setWordWrap(True)
         hint.setStyleSheet("color: #475569;")
-        info.addWidget(hint)
+        outer.addWidget(hint)
         self.status = QLabel("Ready.")
         self.status.setWordWrap(True)
-        info.addWidget(self.status)
-        info.addStretch(1)
-        outer.addLayout(info, 1)
+        outer.addWidget(self.status)
 
     def add_group(self, title):
         box = QGroupBox(title)

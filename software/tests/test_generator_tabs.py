@@ -75,6 +75,9 @@ class GeneratorTabShellTests(unittest.TestCase):
         self.assertEqual(window.main_split.count(), 2)
         self.assertIs(window.main_split.widget(0), window.tabs)
         self.assertIs(window.main_split.widget(1), window.preview_panel)
+        tabs_width, preview_width = window.main_split.sizes()
+        self.assertLessEqual(tabs_width, 420)
+        self.assertGreater(preview_width, tabs_width * 2)
 
     def test_resolve_active_source_returns_the_convert_artwork(self):
         window = self.module.MainWindow()

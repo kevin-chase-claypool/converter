@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-011` | windows-software | implemented | [Make the settings pane content-width so the preview fills the rest](windows-software/2026-10-06-content-width-settings-pane.md) |
 | 2026-10-06 | `WSW-20261006-010` | windows-software | implemented | [Remove the G-code command list and let the preview fill the workspace](windows-software/2026-10-06-remove-gcode-command-list.md) |
 | 2026-10-06 | `WSW-20261006-009` | windows-software | implemented | [Put the G-code output to the right of the preview](windows-software/2026-10-06-gcode-output-right-of-preview.md) |
 | 2026-10-06 | `WSW-20261006-008` | windows-software | implemented | [Move Preview and Cancel into the preview panel](windows-software/2026-10-06-preview-buttons-in-preview-panel.md) |

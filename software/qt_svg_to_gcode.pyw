@@ -1130,7 +1130,7 @@ class MainWindow(QMainWindow):
         main_split.addWidget(preview_widget)
         main_split.setStretchFactor(0, 0)
         main_split.setStretchFactor(1, 1)
-        main_split.setSizes([680, 820])
+        main_split.setSizes([380, 1120])
         window_layout.addWidget(main_split, 1)
 
         self.log = QTextEdit()
