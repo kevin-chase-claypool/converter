@@ -911,6 +911,8 @@ class MainWindow(QMainWindow):
         file_row.addWidget(QLabel("G-code"))
         file_row.addWidget(self.gcode_path, 3)
         file_row.addWidget(QPushButton("Browse", clicked=self.pick_gcode))
+        self.save_button = QPushButton("Save G-code", clicked=self.convert)
+        file_row.addWidget(self.save_button)
         window_layout.addLayout(file_row)
 
         self.fields = {}
@@ -1014,15 +1016,6 @@ class MainWindow(QMainWindow):
         preview_form.addRow(self.show_pen_down_path)
         preview_form.addRow(self.show_machine_reach)
 
-        actions = QHBoxLayout()
-        self.preview_button = QPushButton("Preview", clicked=self.preview)
-        actions.addWidget(self.preview_button)
-        self.cancel_preview_button = QPushButton("Cancel", clicked=self.cancel_preview)
-        self.cancel_preview_button.setEnabled(False)
-        actions.addWidget(self.cancel_preview_button)
-        self.save_button = QPushButton("Save G-code", clicked=self.convert)
-        actions.addWidget(self.save_button)
-        window_layout.addLayout(actions)
         self.preview_build_bar = QProgressBar()
         self.preview_build_bar.setRange(0, 100)
         self.preview_build_bar.setTextVisible(True)
@@ -1052,6 +1045,7 @@ class MainWindow(QMainWindow):
         sidebar_scroll.setMaximumWidth(340)
 
         preview_widget = QWidget()
+        self.preview_panel = preview_widget
         preview_layout = QVBoxLayout(preview_widget)
         preview_layout.setContentsMargins(0, 0, 0, 0)
         preview_layout.setSpacing(2)
@@ -1072,6 +1066,15 @@ class MainWindow(QMainWindow):
         controls.addWidget(self.slider, 1)
         controls.addWidget(QPushButton(">|", clicked=lambda: self.set_index(len(self.moves))))
         preview_layout.addLayout(controls)
+
+        # Preview and Cancel belong with the preview they build and stop.
+        preview_actions = QHBoxLayout()
+        self.preview_button = QPushButton("Preview", clicked=self.preview)
+        preview_actions.addWidget(self.preview_button, 1)
+        self.cancel_preview_button = QPushButton("Cancel", clicked=self.cancel_preview)
+        self.cancel_preview_button.setEnabled(False)
+        preview_actions.addWidget(self.cancel_preview_button, 1)
+        preview_layout.addLayout(preview_actions)
 
         self.status = QLabel("Choose an SVG to build a preview.")
         self.status.setWordWrap(True)

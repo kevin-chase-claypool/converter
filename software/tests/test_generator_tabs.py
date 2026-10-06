@@ -59,6 +59,15 @@ class GeneratorTabShellTests(unittest.TestCase):
                 f"{widget} is hidden with the tab it lives in",
             )
 
+    def test_preview_and_cancel_live_in_the_preview_panel(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        self.assertTrue(window.preview_panel.isAncestorOf(window.preview_button))
+        self.assertTrue(
+            window.preview_panel.isAncestorOf(window.cancel_preview_button)
+        )
+        self.assertFalse(window.preview_panel.isAncestorOf(window.save_button))
+
     def test_resolve_active_source_returns_the_convert_artwork(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

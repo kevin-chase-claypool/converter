@@ -100,11 +100,12 @@ Current generator tabs:
 Image-driven tabs read the file already loaded in the static Artwork row
 instead of repeating the import control.
 
-The artwork/G-code file row, the **Preview / Cancel / Save G-code** actions,
-and the OpenGL preview panel (playback controls, status, estimate, fit/clip
-controls) are window furniture outside the tab widget, so they stay visible
-whichever tab is active. Only the settings sidebar and the G-code command list
-belong to the Convert tab.
+The artwork/G-code file row (with **Save G-code**), the **Preview** and
+**Cancel** buttons in the preview panel under the playback controls, and the
+OpenGL preview itself (status, estimate, progress, fit/clip controls) are
+window furniture outside the tab widget, so they stay visible whichever tab is
+active. Only the settings sidebar and the G-code command list belong to the
+Convert tab.
 
 ## Kaleidoscope Converter
 
