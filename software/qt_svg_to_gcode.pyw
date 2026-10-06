@@ -1223,6 +1223,21 @@ class MainWindow(QMainWindow):
             raise ValueError("The generator produced no SVG.")
         return str(path), tab
 
+    def settings_for_source(self, source_tab):
+        """Build settings for the active tab.
+
+        A generator page is already laid out in millimetres, so it is plotted
+        1:1 with the fit mode manual. The Convert tab's auto fit would
+        otherwise renormalize every generator result to the reach circle and
+        hide the tab's Artwork scale control.
+        """
+        settings = self.settings()
+        if source_tab is not self.convert_root:
+            settings = dataclasses.replace(
+                settings, fit_mode="manual", scale=1.0
+            )
+        return settings
+
     def on_tab_changed(self, index):
         """A preview belongs to one tab; switching tabs only marks it stale."""
         self.stack.setCurrentIndex(index)
@@ -3274,8 +3289,12 @@ class MainWindow(QMainWindow):
             return
         self.pending_source_tab = source_tab
         self.pending_source_path = svg_path
+        settings = self.settings_for_source(source_tab)
+        if source_tab is not self.convert_root:
+            self.log.append(
+                "Generator page plotted 1:1; Artwork scale sets its size."
+            )
         try:
-            settings = self.settings()
             self.raw_geometry_key(svg_path, settings)
         except Exception as exc:
             QMessageBox.critical(self, "Preview failed", str(exc))
@@ -3407,7 +3426,7 @@ class MainWindow(QMainWindow):
 
     def convert(self):
         try:
-            svg_path, _source_tab = self.resolve_active_source()
+            svg_path, source_tab = self.resolve_active_source()
         except Exception as exc:
             QMessageBox.warning(self, "Conversion needs artwork", str(exc))
             return
@@ -3418,7 +3437,7 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Conversion needs an output path", "Choose where to save the G-code file.")
             return
         try:
-            settings = self.settings()
+            settings = self.settings_for_source(source_tab)
             contours_data = self.load_contours(svg_path, settings, notice=self.log.append)
             gcode = converter.contours_to_gcode(contours_data, settings)
             with open(gcode_path, "w", encoding="utf-8", newline="\n") as handle:

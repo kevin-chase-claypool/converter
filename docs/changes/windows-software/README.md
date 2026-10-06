@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-017` | implemented | [Plot generator pages 1:1 so Artwork scale works](2026-10-06-generator-1to1-preview.md) | `user-interface`, `generators`, `scale` |
 | 2026-10-06 | `WSW-20261006-016` | implemented | [Add Harmonograph, Snowflake, and Truchet tabs](2026-10-06-harmonograph-snowflake-truchet-tabs.md) | `user-interface`, `generators` |
 | 2026-10-06 | `WSW-20261006-015` | implemented | [Artwork scale control on every generator tab](2026-10-06-artwork-scale-on-every-tab.md) | `user-interface`, `generators`, `scale` |
 | 2026-10-06 | `WSW-20261006-014` | implemented | [Generator controls fill the settings column](2026-10-06-generator-controls-fill-column.md) | `user-interface`, `generators`, `layout` |

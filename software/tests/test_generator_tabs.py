@@ -110,6 +110,43 @@ class GeneratorTabShellTests(unittest.TestCase):
             self.assertTrue(hasattr(page, "scale_pct"), label)
             self.assertEqual(page.scale_pct.value(), 100, label)
 
+    def test_generator_sources_plot_at_manual_1to1(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.tab_bar.setCurrentIndex(1)
+        flow = window.stack.currentWidget()
+        generator_settings = window.settings_for_source(flow)
+        self.assertEqual(generator_settings.fit_mode, "manual")
+        self.assertEqual(generator_settings.scale, 1.0)
+        convert_settings = window.settings_for_source(window.convert_root)
+        self.assertEqual(convert_settings.fit_mode, window.settings().fit_mode)
+
+    def test_artwork_scale_survives_the_generator_pipeline(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.tab_bar.setCurrentIndex(1)
+        flow = window.stack.currentWidget()
+        flow.page_w.setValue(120)
+        flow.page_h.setValue(120)
+        flow.spacing.setValue(8.0)
+        flow.step.setValue(2.0)
+        flow.max_steps.setValue(40)
+        flow.scale.setValue(20)
+        flow.margin.setValue(4)
+
+        def drawn_width():
+            path, _tab = window.resolve_active_source()
+            contours = window.load_contours(
+                path, window.settings_for_source(flow)
+            )
+            xs = [point[0] for contour in contours for point in contour]
+            return max(xs) - min(xs)
+
+        full = drawn_width()
+        flow.scale_pct.setValue(50)
+        half = drawn_width()
+        self.assertAlmostEqual(half / full, 0.5, delta=0.05)
+
     def test_import_export_and_preview_stay_outside_the_tabs(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

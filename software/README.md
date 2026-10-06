@@ -111,6 +111,9 @@ Image-driven tabs read the file already loaded in the static Artwork row
 instead of repeating the import control.
 Every generator tab has an **Artwork scale** control (10-200%) that scales its
 result about the page centre.
+Generator pages are previewed **1:1** with the auto fit skipped, so that
+Artwork scale sets the physical drawing size; imported artwork on the Convert
+tab still uses the selected Fit mode.
 Generator tab controls fill the settings column, with the tab's hint and
 status text stacked below them; the settings column has a 280 px floor so it
 cannot be crushed by the preview.
