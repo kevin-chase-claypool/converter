@@ -371,6 +371,30 @@
   topic index links all of them, completed calendar years are archived under
   `docs/project/engineering-log/`, and `--check` passes.
 
+- [ ] Integrate permissively licensed r/plotterart generators into the existing
+  converter UI.
+  Problem: the 2026-10-06 survey found 35 SVG-generating projects that are
+  safe to reuse (MIT/Unlicense/CC0) plus 14 copyleft projects, but the app has
+  no in-port for their features, so every one of them is a manual
+  export/import job. The current UI is a three-pane layout with collapsible,
+  data-driven settings groups and the Kaleidoscope app already has a tabbed
+  Maps page for a vendored web tool, so the gap is features, not window
+  structure.
+  Benefit: squiggle, linedraw, flow-field, 3D-to-SVG, monoline-text, and path
+  cleanup features become available in the app that already owns the preview
+  and G-code pipeline, without a second GUI.
+  Risk: license contamination (only Table A licenses may be copied; GPL tools
+  stay external), vendored web bundles add size and a QtWebEngine dependency,
+  and adding controls can clutter the sidebar. A new app would duplicate the
+  GUI and split maintenance.
+  Acceptance: one Table A generator is integrated end-to-end first
+  (recommended: `linedraw` as a new Fill pattern, or SquiggleCam as a vendored
+  Generators tab following the Maps-tab pattern), its license notice is
+  preserved, tests cover the new path, `software/README.md` documents the
+  control, and no `converter2.bat` or duplicated GUI is created. The full
+  shortlist and mention evidence are in
+  [`docs/research/2026-10-06-r-plotterart-svg-generators.md`](../research/2026-10-06-r-plotterart-svg-generators.md).
+
 ## Next concrete task
 
 Re-run F-02 with a newly generated default converter file. Then complete the
