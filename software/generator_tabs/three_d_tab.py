@@ -472,6 +472,8 @@ class ThreeDTab(GeneratorTab):
         self.source.addItem("Cone", "cone")
         self.source.addItem("Terrain plane", "terrain")
         model.addRow("Source", self.source)
+        # Open on a built-in primitive so Preview works without a file.
+        self.source.setCurrentIndex(self.source.findData("cube"))
         self.model_path = QLineEdit()
         model.addRow("File", self.model_path)
         self.file_button = file_picker(
@@ -513,6 +515,7 @@ class ThreeDTab(GeneratorTab):
         self.projection.addItem("Orthographic", "orthographic")
         self.projection.addItem("Perspective", "perspective")
         camera.addRow("Projection", self.projection)
+        self.projection.setCurrentIndex(self.projection.findData("perspective"))
         self.camera_distance = double_spin(4.0, 1.5, 12.0, 0.5, 1)
         camera.addRow("Camera distance (x radius)", self.camera_distance)
         self._camera_group = camera

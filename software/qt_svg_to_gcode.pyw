@@ -1417,6 +1417,9 @@ class MainWindow(QMainWindow):
         shortcuts_action.setShortcut("F1")
         shortcuts_action.triggered.connect(self.show_shortcuts)
         help_menu.addAction(shortcuts_action)
+        recommended_action = QAction("&Recommended Settings", self)
+        recommended_action.triggered.connect(self.show_recommended_settings)
+        help_menu.addAction(recommended_action)
         about_action = QAction("&About", self)
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
@@ -1455,6 +1458,43 @@ class MainWindow(QMainWindow):
             "PySide6/OpenGL preview with the All tools generator dashboard.<br>"
             "Third-party generator notices live in "
             "<code>software/generator_tabs/*_NOTICE.md</code>.",
+        )
+
+    def show_recommended_settings(self):
+        QMessageBox.information(
+            self,
+            "Recommended Starting Settings",
+            "All generators assume a 200 x 200 mm page, a 0.3 mm pen, and the "
+            "1:1 preview unless noted.\n\n"
+            "Convert: Fit bed (auto), Fill spacing 3 mm, linear or crosshatch, "
+            "feed 700 / travel 3000 mm/min.\n"
+            "Flow Field: noise source, scale 60 mm, octaves 3, spacing 3 mm, "
+            "step 1 mm, 400 steps (use spacing 4 mm for a first plot).\n"
+            "Line Draw: mode both, edge 35 %, hatch 2 mm, levels 144/64/16, "
+            "jitter 0.25 mm, simplify 0.75 px, resolution 900 px.\n"
+            "3D Wireframe: source Cube, size 2, detail 24, hidden-line "
+            "wireframe, yaw 35 / pitch -25, perspective 4x radius, target "
+            "width 140 mm, sample 0.7 mm.\n"
+            "Harmonograph: physical model, d 900 / c 800 / p 900 / q 700 mm, "
+            "A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, "
+            "disk 0.0008 Hz, 300 s, 12k samples.\n"
+            "Snowflake: 6 arms, depth 3, length 45 %, branch angle 35 deg, "
+            "branch scale 55 %, jitter 8 deg / 15 %.\n"
+            "Truchet: quarter arcs, tile 12 mm, 10 arc segments, margin 6 mm.\n"
+            "Text: size 12 mm, tracking 0.4 mm, line spacing 140 %, "
+            "alignment left.\n"
+            "Substitution: 3 colours, 4 iterations (32 x 32), colour "
+            "boundaries, margin 6 mm.\n"
+            "Postcard: 7x5 in landscape, margin 8 mm, line spacing 9 mm, "
+            "stamp 25 x 30 mm, text 6 mm, tracking 0.2 mm.\n"
+            "SquiggleCam: 50 rows, frequency 150, amplitude 1.0, spacing 4 px, "
+            "resolution 700 px, brightness 0, contrast 0, min 0 / max 255.\n"
+            "Pixel Art: mode big, pitch 0.6 mm (or line mode for denser "
+            "runs), max grid 96, alpha 128, ignore white; paths auto-fit the "
+            "page.\n"
+            "Wobble: frequency 3 mm, amplitude 0.5 mm, jitter 20 %, seed 7, "
+            "endpoint wobble on. Preview a tool first; Wobble uses its "
+            "contours.",
         )
 
     def update_stale_warning(self):

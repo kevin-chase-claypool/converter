@@ -164,7 +164,7 @@ class PostcardTab(GeneratorTab):
         self.address = QPlainTextEdit()
         self.address.setFixedHeight(60)
         text.addRow("Address", self.address)
-        self.text_size = double_spin(5.0, 3.0, 12.0, 0.5, 1, " mm")
+        self.text_size = double_spin(6.0, 3.0, 12.0, 0.5, 1, " mm")
         text.addRow("Text size", self.text_size)
         self.tracking = double_spin(0.2, -1.0, 4.0, 0.1, 2, " mm")
         text.addRow("Tracking", self.tracking)

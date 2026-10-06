@@ -205,6 +205,7 @@ def pixel_art_polylines(
     ignore_white=True,
     width_mm=200.0,
     height_mm=200.0,
+    margin_mm=6.0,
     scale_pct=100.0,
 ):
     """Return pixel-art paths in page millimetres."""
@@ -234,6 +235,26 @@ def pixel_art_polylines(
         [(page_x + x - centre_x, page_y + y - centre_y) for x, y in path]
         for path in paths
     ]
+    span_x = max(xs) - min(xs)
+    span_y = max(ys) - min(ys)
+    available_w = max(5.0, width_mm - 2 * margin_mm)
+    available_h = max(5.0, height_mm - 2 * margin_mm)
+    fit = min(
+        1.0,
+        available_w / span_x if span_x > 1e-9 else 1.0,
+        available_h / span_y if span_y > 1e-9 else 1.0,
+    )
+    if fit < 1.0:
+        paths = [
+            [
+                (
+                    page_x + (x - page_x) * fit,
+                    page_y + (y - page_y) * fit,
+                )
+                for x, y in path
+            ]
+            for path in paths
+        ]
     return scale_polylines(
         paths, float(scale_pct) / 100.0, width_mm, height_mm
     )
@@ -274,6 +295,8 @@ class PixelArtTab(GeneratorTab):
         page.addRow("Width", self.page_w)
         self.page_h = double_spin(200, 50, 1000, 10, 0, " mm")
         page.addRow("Height", self.page_h)
+        self.margin = double_spin(6, 0, 60, 1, 0, " mm")
+        page.addRow("Margin", self.margin)
         self.line_width = double_spin(0.3, 0.1, 1.2, 0.05, 2, " mm")
         page.addRow("Line width", self.line_width)
         self.scale_pct = double_spin(100, 10, 1000, 5, 0, " %")
@@ -310,6 +333,7 @@ class PixelArtTab(GeneratorTab):
             ignore_white=self.ignore_white.isChecked(),
             width_mm=self.page_w.value(),
             height_mm=self.page_h.value(),
+            margin_mm=self.margin.value(),
             scale_pct=self.scale_pct.value(),
         )
         return self.write_result(

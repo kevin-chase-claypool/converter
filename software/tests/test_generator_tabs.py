@@ -2,9 +2,11 @@
 
 import importlib.util
 import os
+import shutil
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
@@ -139,6 +141,37 @@ class ToolShellTests(unittest.TestCase):
             self.assertTrue(hasattr(page, "scale_pct"), title)
             self.assertEqual(page.scale_pct.value(), 100, title)
             self.assertEqual(page.scale_pct.maximum(), 1000, title)
+
+    def test_every_tool_builds_with_shipped_defaults(self):
+        from PIL import Image
+
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        folder = tempfile.mkdtemp(prefix="tool-defaults-")
+        self.addCleanup(shutil.rmtree, folder, ignore_errors=True)
+        image_path = str(Path(folder) / "art.png")
+        image = Image.new("RGB", (64, 64), (255, 255, 255))
+        for x in range(16, 48):
+            for y in range(16, 48):
+                image.putpixel((x, y), (0, 0, 0))
+        image.save(image_path)
+        window.svg_path.setText(image_path)
+        window.contours = [
+            [(10.0, 10.0), (70.0, 10.0), (70.0, 70.0), (10.0, 70.0), (10.0, 10.0)]
+        ]
+        for title, page, _group, _desc in window.generator_tools:
+            window.show_tool(title)
+            # Keep the suite quick; the recommended-settings table documents
+            # the full 200 x 200 mm pages.
+            for attribute in ("page_w", "page_h"):
+                widget = getattr(page, attribute, None)
+                if widget is not None:
+                    widget.setValue(80)
+            try:
+                path = page.build_svg()
+            except Exception as exc:  # noqa: BLE001 - report which tool failed
+                self.fail(f"{title} shipped defaults failed: {exc}")
+            ET.parse(path)
 
     def test_generator_sources_plot_at_manual_1to1(self):
         window = self.module.MainWindow()

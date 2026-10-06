@@ -155,12 +155,32 @@ Generator tab controls fill the settings column, with the tab's hint and
 status text stacked below them; the settings column has a 280 px floor so it
 cannot be crushed by the preview.
 
-The artwork/G-code file row (with **Save G-code**), the **Preview** and
-**Cancel** buttons in the preview panel under the playback controls, and the
-OpenGL preview itself (status, estimate, progress, fit/clip controls) are
-window furniture outside the tab widget, so they stay visible whichever tab is
-active. The preview fills the whole area to the right of the feature settings
-pane; only the settings sidebar belongs to the Convert tab.
+The menu bar, status bar, **Preview** and **Cancel** buttons in the preview
+panel, and the OpenGL preview itself (status, estimate, progress, fit/clip
+controls) are window furniture outside the tool pages, so they stay visible
+whichever tool is active. The preview fills the whole area to the right of the
+feature settings pane; only the settings sidebar belongs to the Convert page.
+
+### Recommended starting settings
+
+These defaults are tuned for a 200 x 200 mm page, a 0.3 mm pen, and the 1:1
+preview. They also appear in the app under **Help > Recommended Settings**.
+
+| Tool | Start from | Notes |
+|---|---|---|
+| Convert | Fit bed (auto), Fill spacing 3 mm, linear or crosshatch, feed 700 / travel 3000 mm/min | Imported artwork; Save G-code once the preview looks right. |
+| Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
+| Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
+| 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
+| Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |
+| Snowflake | 6 arms, depth 3, length 45 %, branch angle 35 deg, branch scale 55 %, jitter 8 deg / 15 % | Raise depth for finer detail; cap is 5. |
+| Truchet | Quarter arcs, tile 12 mm, 10 arc segments, margin 6 mm | Diagonal and mixed styles use the same grid. |
+| Text | Size 12 mm, tracking 0.4 mm, line spacing 140 %, alignment left | Uses the bundled Hershey simplex font. |
+| Substitution | 3 colours, 4 iterations (32 x 32), colour boundaries, margin 6 mm | Each extra iteration quadruples the path count. |
+| Postcard | 7x5 in landscape, margin 8 mm, line spacing 9 mm, stamp 25 x 30 mm, text 6 mm, tracking 0.2 mm | Matches the upstream default page. |
+| SquiggleCam | 50 rows, frequency 150, amplitude 1.0, spacing 4 px, resolution 700 px, brightness 0, contrast 0, min 0 / max 255 | Needs an image; lower frequency raises the wiggle. |
+| Pixel Art | Mode big, pitch 0.6 mm, max grid 96, alpha 128, ignore white | Paths auto-fit the page; big mode needs 5x the pitch per pixel, line mode is denser. |
+| Wobble | Frequency 3 mm, amplitude 0.5 mm, jitter 20 %, seed 7, endpoint wobble on | Preview a tool first; Wobble processes those contours. |
 
 ## Kaleidoscope Converter
 
