@@ -70,6 +70,9 @@ class GeneratorTabShellTests(unittest.TestCase):
                 "Harmonograph",
                 "Snowflake",
                 "Truchet",
+                "Text",
+                "Substitution",
+                "Postcard",
             ],
         )
 

@@ -106,11 +106,24 @@ Current generator tabs:
 - **Truchet** - Truchet tiles as quarter arcs, diagonals, or mixed. Controls:
   seed, tile size, style, arc segments, page size, margin, line width,
   artwork scale.
+- **Text** - monoline single-stroke text using the vendored public-domain
+  Hershey simplex font. Controls: text lines, text size, tracking, line
+  spacing, alignment, page size, margin, line width, artwork scale.
+- **Substitution** - 2x2 colour-substitution pattern from a seeded palette,
+  drawn as colour boundaries or one diagonal per cell. Controls: seed,
+  colours, iterations, style, page size, margin, line width, artwork scale.
+- **Postcard** - plottable postcard back: border, centre divider, stamp box,
+  address guide lines, and optional caption/address text. Controls: page
+  preset, divider, address lines, line spacing, stamp size, caption, address,
+  text size, tracking, page size, margin, line width, artwork scale.
 
 Image-driven tabs read the file already loaded in the static Artwork row
 instead of repeating the import control.
 Every generator tab has an **Artwork scale** control (10-200%) that scales its
 result about the page centre.
+The Text tab (and the Postcard tab's caption/address) uses the vendored
+public-domain Hershey simplex font in `generator_tabs/fonts/`; its use terms
+are in `generator_tabs/fonts/NOTICE.md`.
 Generator pages are previewed **1:1** with the auto fit skipped, so that
 Artwork scale sets the physical drawing size; imported artwork on the Convert
 tab still uses the selected Fit mode.
