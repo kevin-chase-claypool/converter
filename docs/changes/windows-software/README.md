@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-025` | implemented | [Tool accuracy audit and source-parity fixes](2026-10-06-tools-accuracy-audit-fixes.md) | `generators`, `fidelity`, `audit` |
 | 2026-10-06 | `WSW-20261006-024` | implemented | [Add SquiggleCam, Pixel Art, and Wobble tools](2026-10-06-squigglecam-pixel-art-wobble.md) | `user-interface`, `generators` |
 | 2026-10-06 | `WSW-20261006-023` | implemented | [Flow Field formula source](2026-10-06-flow-field-formulas.md) | `generators`, `flow-field`, `fidelity` |
 | 2026-10-06 | `WSW-20261006-022` | implemented | [Add File / Tools / View / Help menus and move tool selection into Tools](2026-10-06-menu-bar-navigation.md) | `user-interface`, `navigation` |

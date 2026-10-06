@@ -179,41 +179,96 @@ def _trace_edges(
     return paths
 
 
-def _hatch_runs(luminance, spacing_px, mm_per_px, off_x, off_y, dark, min_length_mm,
-                jitter, rng):
+def _hatch_patches(
+    luminance,
+    patch_px,
+    mm_per_px,
+    off_x,
+    off_y,
+    light_threshold,
+    mid_threshold,
+    dark_threshold,
+    jitter_mm,
+):
+    """Upstream linedraw hatch: fixed L and anti-diagonal strokes per patch.
+
+    Ported from `hatch()` in LingDong-/linedraw: patches above the light
+    threshold hatch nothing, the mid level adds one horizontal stroke, the
+    dark level adds a second horizontal stroke, and levels below the mid
+    threshold add the anti-diagonal. Coordinates follow the upstream
+    ``(x, y+sc/4)`` geometry with the patch size as the scale.
+    """
     rows, cols = luminance.shape
+    sc = max(1, int(patch_px))
+    light = max(0.0, min(255.0, float(light_threshold))) / 255.0
+    mid = max(0.0, min(255.0, float(mid_threshold))) / 255.0
+    dark = max(0.0, min(255.0, float(dark_threshold))) / 255.0
+    horizontal = []
+    diagonal = []
+    for y0 in range(0, rows, sc):
+        for x0 in range(0, cols, sc):
+            value = float(luminance[y0, x0])
+            if value > light:
+                continue
+            x = x0
+            y = y0
+            if value > mid:
+                horizontal.append([(x, y + sc / 4.0), (x + sc, y + sc / 4.0)])
+            elif value > dark:
+                horizontal.append([(x, y + sc / 4.0), (x + sc, y + sc / 4.0)])
+                diagonal.append([(x + sc, y), (x, y + sc)])
+            else:
+                horizontal.append([(x, y + sc / 4.0), (x + sc, y + sc / 4.0)])
+                horizontal.append(
+                    [(x, y + sc / 2.0 + sc / 4.0), (x + sc, y + sc / 2.0 + sc / 4.0)]
+                )
+                diagonal.append([(x + sc, y), (x, y + sc)])
+    # Upstream merges chains whose end meets another's start.
+    for group in (horizontal, diagonal):
+        for _ in range(2):
+            for first in group:
+                if not first:
+                    continue
+                for second in group:
+                    if second and second is not first and first[-1] == second[0]:
+                        first.extend(second[1:])
+                        second.clear()
+        group[:] = [line for line in group if line]
     paths = []
-    step = max(1.0, float(spacing_px))
-    row = step / 2.0
-    while row < rows:
-        y = int(row)
-        run_start = None
-        x = 0
-        while x <= cols:
-            is_dark = x < cols and bool(dark[y, x])
-            if is_dark and run_start is None:
-                run_start = x
-            elif not is_dark and run_start is not None:
-                length_mm = (x - run_start) * mm_per_px
-                if length_mm >= min_length_mm:
-                    jitter_x = rng.uniform(-jitter, jitter)
-                    jitter_y = rng.uniform(-jitter, jitter)
-                    paths.append(
-                        [
-                            (
-                                off_x + run_start * mm_per_px + jitter_x,
-                                off_y + (y + 0.5) * mm_per_px + jitter_y,
-                            ),
-                            (
-                                off_x + x * mm_per_px + jitter_x,
-                                off_y + (y + 0.5) * mm_per_px + jitter_y,
-                            ),
-                        ]
+    for group in (horizontal, diagonal):
+        for line in group:
+            points = []
+            for index, (px, py) in enumerate(line):
+                shake_x = 0.0
+                shake_y = 0.0
+                if jitter_mm:
+                    shake_x = (rng_noise(px * 0.05, py * 0.05) - 0.5) * 2.0 * jitter_mm
+                    shake_y = (rng_noise(px * 0.05, py * 0.05 + 17.0) - 0.5) * 2.0 * jitter_mm
+                points.append(
+                    (
+                        off_x + px * mm_per_px + shake_x,
+                        off_y + py * mm_per_px + shake_y,
                     )
-                run_start = None
-            x += 1
-        row += step
+                )
+            paths.append(points)
     return paths
+
+
+def rng_noise(x, y):
+    """Deterministic smooth value noise in [0, 1] for the hatch jitter."""
+    ix, iy = math.floor(x), math.floor(y)
+    fx, fy = x - ix, y - iy
+    sx = fx * fx * (3.0 - 2.0 * fx)
+    sy = fy * fy * (3.0 - 2.0 * fy)
+
+    def hashed(px, py):
+        value = (px * 374761393 + py * 668265263) & 0xFFFFFFFF
+        value = (value ^ (value >> 13)) * 1274126177 & 0xFFFFFFFF
+        return ((value ^ (value >> 16)) & 0xFFFFFF) / 0xFFFFFF
+
+    top = hashed(ix, iy) + (hashed(ix + 1, iy) - hashed(ix, iy)) * sx
+    bottom = hashed(ix, iy + 1) + (hashed(ix + 1, iy + 1) - hashed(ix, iy + 1)) * sx
+    return top + (bottom - top) * sy
 
 
 def line_draw_polylines(
@@ -221,7 +276,9 @@ def line_draw_polylines(
     mode="both",
     edge_threshold_pct=35,
     hatch_spacing_mm=2.0,
-    hatch_tone_pct=45,
+    hatch_light_threshold=144,
+    hatch_mid_threshold=64,
+    hatch_dark_threshold=16,
     jitter_mm=0.25,
     min_length_mm=1.2,
     invert=False,
@@ -260,13 +317,18 @@ def line_draw_polylines(
             )
         )
     if mode in ("hatch", "both"):
-        tone = max(0.02, min(0.98, float(hatch_tone_pct) / 100.0))
-        dark = luminance <= tone
-        spacing_px = max(1.0, float(hatch_spacing_mm) / mm_per_px)
+        patch_px = max(2, int(round(float(hatch_spacing_mm) / mm_per_px)))
         paths.extend(
-            _hatch_runs(
-                luminance, spacing_px, mm_per_px, off_x, off_y, dark,
-                min_length_mm, jitter, rng,
+            _hatch_patches(
+                luminance,
+                patch_px,
+                mm_per_px,
+                off_x,
+                off_y,
+                hatch_light_threshold,
+                hatch_mid_threshold,
+                hatch_dark_threshold,
+                jitter,
             )
         )
     return paths
@@ -296,8 +358,12 @@ class LineDrawTab(GeneratorTab):
         style.addRow("Edge threshold", self.threshold)
         self.hatch_spacing = double_spin(2.0, 0.6, 10.0, 0.2, 2, " mm")
         style.addRow("Hatch spacing", self.hatch_spacing)
-        self.hatch_tone = double_spin(45, 5, 95, 5, 0, " %")
-        style.addRow("Hatch tone", self.hatch_tone)
+        self.hatch_light = int_spin(144, 0, 255)
+        style.addRow("Hatch light", self.hatch_light)
+        self.hatch_mid = int_spin(64, 0, 255)
+        style.addRow("Hatch mid", self.hatch_mid)
+        self.hatch_dark = int_spin(16, 0, 255)
+        style.addRow("Hatch dark", self.hatch_dark)
         self.jitter = double_spin(0.25, 0.0, 2.0, 0.05, 2, " mm")
         style.addRow("Sketch jitter", self.jitter)
         self.min_length = double_spin(1.2, 0.2, 20.0, 0.2, 2, " mm")
@@ -350,7 +416,9 @@ class LineDrawTab(GeneratorTab):
                 mode=self.mode.currentData(),
                 edge_threshold_pct=self.threshold.value(),
                 hatch_spacing_mm=self.hatch_spacing.value(),
-                hatch_tone_pct=self.hatch_tone.value(),
+                hatch_light_threshold=self.hatch_light.value(),
+                hatch_mid_threshold=self.hatch_mid.value(),
+                hatch_dark_threshold=self.hatch_dark.value(),
                 jitter_mm=self.jitter.value(),
                 min_length_mm=self.min_length.value(),
                 invert=self.invert.isChecked(),

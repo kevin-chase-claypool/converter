@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-025` | windows-software | implemented | [Tool accuracy audit and source-parity fixes](windows-software/2026-10-06-tools-accuracy-audit-fixes.md) |
 | 2026-10-06 | `WSW-20261006-024` | windows-software | implemented | [Add SquiggleCam, Pixel Art, and Wobble tools](windows-software/2026-10-06-squigglecam-pixel-art-wobble.md) |
 | 2026-10-06 | `WSW-20261006-023` | windows-software | implemented | [Flow Field formula source](windows-software/2026-10-06-flow-field-formulas.md) |
 | 2026-10-06 | `WSW-20261006-022` | windows-software | implemented | [Add File / Tools / View / Help menus and move tool selection into Tools](windows-software/2026-10-06-menu-bar-navigation.md) |

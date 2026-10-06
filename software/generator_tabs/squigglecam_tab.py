@@ -125,6 +125,8 @@ class SquiggleCamTab(GeneratorTab):
         squiggle.addRow("Amplitude", self.amplitude)
         self.spacing = double_spin(4.0, 1.0, 16.0, 0.5, 1, " px")
         squiggle.addRow("Pixel spacing", self.spacing)
+        self.resolution = int_spin(700, 100, 1400, 50)
+        squiggle.addRow("Resolution px", self.resolution)
 
         page = self.add_group("Page")
         self.page_w = double_spin(200, 50, 1000, 10, 0, " mm")
@@ -176,6 +178,7 @@ class SquiggleCamTab(GeneratorTab):
             spacing=self.spacing.value(),
             black=self.black.isChecked(),
             scale_pct=self.scale_pct.value(),
+            max_pixels=self.resolution.value(),
         )
         return self.write_result(
             polylines,

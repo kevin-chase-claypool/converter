@@ -23,6 +23,7 @@ from ._tab_common import (
     GeneratorTab,
     double_spin,
     file_picker,
+    int_spin,
     scale_polylines,
 )
 
@@ -99,9 +100,14 @@ def _rotation(yaw_deg, pitch_deg, roll_deg):
 
 def project_vertices(
     vertices, yaw, pitch, roll, width_mm, height_mm, margin_mm,
-    target_width_mm=None,
+    target_width_mm=None, projection="orthographic", camera_distance=4.0,
 ):
-    """Orthographic projection to page millimetres; returns (points, depth)."""
+    """Project to page millimetres; returns (points, depth).
+
+    ``projection`` is ``orthographic`` or ``perspective``. For perspective,
+    ``camera_distance`` is a multiple of the model radius along +Z; depth stays
+    the view-space z so the z-buffer test is unchanged.
+    """
     matrix = _rotation(yaw, pitch, roll)
     rotated = []
     for x, y, z in vertices:
@@ -114,8 +120,22 @@ def project_vertices(
         )
     if not rotated:
         return [], []
-    xs = [p[0] for p in rotated]
-    ys = [-p[1] for p in rotated]
+    radius = max(
+        (math.sqrt(x * x + y * y + z * z) for x, y, z in rotated),
+        default=1.0,
+    ) or 1.0
+    if projection == "perspective":
+        distance = max(1.2, float(camera_distance)) * radius
+        xs = []
+        ys = []
+        for x, y, z in rotated:
+            view = max(0.05 * radius, distance - z)
+            factor = distance / view
+            xs.append(x * factor)
+            ys.append(-y * factor)
+    else:
+        xs = [p[0] for p in rotated]
+        ys = [-p[1] for p in rotated]
     depth = [p[2] for p in rotated]
     span_x = max(xs) - min(xs)
     span_y = max(ys) - min(ys)
@@ -138,6 +158,132 @@ def project_vertices(
         for x, y in zip(xs, ys)
     ]
     return points, depth
+
+
+def cube_mesh(size=2.0):
+    """Built-in cube, matching ln/Viewport.js having primitives."""
+    half = max(0.01, float(size)) / 2.0
+    vertices = [
+        (-half, -half, -half), (half, -half, -half),
+        (half, half, -half), (-half, half, -half),
+        (-half, -half, half), (half, -half, half),
+        (half, half, half), (-half, half, half),
+    ]
+    triangles = [
+        (0, 1, 2), (0, 2, 3), (4, 6, 5), (4, 7, 6),
+        (0, 4, 5), (0, 5, 1), (1, 5, 6), (1, 6, 2),
+        (2, 6, 7), (2, 7, 3), (3, 7, 4), (3, 4, 0),
+    ]
+    return vertices, triangles
+
+
+def sphere_mesh(radius=1.0, segments=24, rings=12):
+    radius = max(0.01, float(radius))
+    segments = max(3, min(64, int(segments)))
+    rings = max(2, min(64, int(rings)))
+    vertices = []
+    for ring in range(rings + 1):
+        phi = math.pi * ring / rings
+        for segment in range(segments):
+            theta = 2.0 * math.pi * segment / segments
+            vertices.append(
+                (
+                    radius * math.sin(phi) * math.cos(theta),
+                    radius * math.cos(phi),
+                    radius * math.sin(phi) * math.sin(theta),
+                )
+            )
+    triangles = []
+    for ring in range(rings):
+        for segment in range(segments):
+            first = ring * segments + segment
+            second = ring * segments + (segment + 1) % segments
+            third = (ring + 1) * segments + segment
+            fourth = (ring + 1) * segments + (segment + 1) % segments
+            triangles.append((first, second, fourth))
+            triangles.append((first, fourth, third))
+    return vertices, triangles
+
+
+def cylinder_mesh(radius=1.0, height=2.0, segments=24):
+    radius = max(0.01, float(radius))
+    half = max(0.01, float(height)) / 2.0
+    segments = max(3, min(64, int(segments)))
+    vertices = []
+    for level in (-half, half):
+        for segment in range(segments):
+            theta = 2.0 * math.pi * segment / segments
+            vertices.append(
+                (radius * math.cos(theta), level, radius * math.sin(theta))
+            )
+    triangles = []
+    for segment in range(segments):
+        nxt = (segment + 1) % segments
+        triangles.append((segment, nxt, segments + nxt))
+        triangles.append((segment, segments + nxt, segments + segment))
+    bottom = len(vertices)
+    vertices.append((0.0, -half, 0.0))
+    top = len(vertices)
+    vertices.append((0.0, half, 0.0))
+    for segment in range(segments):
+        nxt = (segment + 1) % segments
+        triangles.append((bottom, nxt, segment))
+        triangles.append((top, segments + segment, segments + nxt))
+    return vertices, triangles
+
+
+def cone_mesh(radius=1.0, height=2.0, segments=24):
+    radius = max(0.01, float(radius))
+    half = max(0.01, float(height)) / 2.0
+    segments = max(3, min(64, int(segments)))
+    vertices = []
+    for segment in range(segments):
+        theta = 2.0 * math.pi * segment / segments
+        vertices.append((radius * math.cos(theta), -half, radius * math.sin(theta)))
+    apex = len(vertices)
+    vertices.append((0.0, half, 0.0))
+    base = len(vertices)
+    vertices.append((0.0, -half, 0.0))
+    triangles = []
+    for segment in range(segments):
+        nxt = (segment + 1) % segments
+        triangles.append((segment, nxt, apex))
+        triangles.append((base, nxt, segment))
+    return vertices, triangles
+
+
+def _terrain_noise(x, y, seed):
+    value = (int(x) * 374761393 + int(y) * 668265263 + int(seed) * 1442695041) & 0xFFFFFFFF
+    value = (value ^ (value >> 13)) * 1274126177 & 0xFFFFFFFF
+    return ((value ^ (value >> 16)) & 0xFFFFFF) / 0xFFFFFF
+
+
+def terrain_mesh(size=2.0, segments=24, height=0.5, seed=7):
+    size = max(0.1, float(size))
+    segments = max(2, min(80, int(segments)))
+    height = float(height)
+    vertices = []
+    for row in range(segments + 1):
+        for col in range(segments + 1):
+            x = (col / segments - 0.5) * size
+            z = (row / segments - 0.5) * size
+            y = (
+                _terrain_noise(col, row, seed)
+                + 0.5 * _terrain_noise(col * 0.5, row * 0.5, seed + 7)
+            ) / 1.5 * height
+            vertices.append((x, y, z))
+    triangles = []
+
+    def index(row, col):
+        return row * (segments + 1) + col
+
+    for row in range(segments):
+        for col in range(segments):
+            triangles.append((index(row, col), index(row, col + 1), index(row + 1, col)))
+            triangles.append(
+                (index(row, col + 1), index(row + 1, col + 1), index(row + 1, col))
+            )
+    return vertices, triangles
 
 
 def _unique_edges(triangles):
@@ -207,7 +353,7 @@ def _rasterize(points, depth, triangles, width_mm, height_mm, px_per_mm=3.0):
 
 
 def three_d_polylines(
-    model_path,
+    model_path=None,
     style="hidden",
     yaw=35.0,
     pitch=-25.0,
@@ -219,13 +365,20 @@ def three_d_polylines(
     silhouette_deg=25.0,
     max_triangles=40_000,
     target_width_mm=None,
+    vertices=None,
+    triangles=None,
+    projection="orthographic",
+    camera_distance=4.0,
 ):
     """Return visible-edge polylines in page millimetres."""
-    data = Path(model_path).read_bytes()
-    if model_path.lower().endswith(".stl"):
-        vertices, triangles = load_stl(data)
-    else:
-        vertices, triangles = load_obj(data.decode("utf-8", errors="replace"))
+    if vertices is None or triangles is None:
+        if not model_path:
+            raise ValueError("No model file or mesh was provided.")
+        data = Path(model_path).read_bytes()
+        if model_path.lower().endswith(".stl"):
+            vertices, triangles = load_stl(data)
+        else:
+            vertices, triangles = load_obj(data.decode("utf-8", errors="replace"))
     if not vertices or not triangles:
         raise ValueError("No triangles found in the model.")
     if len(triangles) > max_triangles:
@@ -235,6 +388,8 @@ def three_d_polylines(
     points, depth = project_vertices(
         vertices, yaw, pitch, roll, width_mm, height_mm, margin_mm,
         target_width_mm=target_width_mm,
+        projection=projection,
+        camera_distance=camera_distance,
     )
     edges = _unique_edges(triangles)
     normals = _face_normals(
@@ -309,17 +464,23 @@ class ThreeDTab(GeneratorTab):
     def __init__(self, host):
         super().__init__(host)
         model = self.add_group("Model")
+        self.source = QComboBox()
+        self.source.addItem("File (OBJ/STL)", "file")
+        self.source.addItem("Cube", "cube")
+        self.source.addItem("Sphere", "sphere")
+        self.source.addItem("Cylinder", "cylinder")
+        self.source.addItem("Cone", "cone")
+        self.source.addItem("Terrain plane", "terrain")
+        model.addRow("Source", self.source)
         self.model_path = QLineEdit()
         model.addRow("File", self.model_path)
-        model.addRow(
-            "",
-            file_picker(
-                self.model_path,
-                lambda _path: None,
-                "Choose an OBJ or STL model",
-                "Models (*.obj *.stl);;All files (*.*)",
-            ),
+        self.file_button = file_picker(
+            self.model_path,
+            lambda _path: None,
+            "Choose an OBJ or STL model",
+            "Models (*.obj *.stl);;All files (*.*)",
         )
+        model.addRow("", self.file_button)
         self.style = QComboBox()
         self.style.addItem("Hidden-line wireframe", "hidden")
         self.style.addItem("Silhouette outlines", "silhouette")
@@ -336,6 +497,26 @@ class ThreeDTab(GeneratorTab):
         self.sample = double_spin(0.7, 0.2, 3.0, 0.1, 2, " mm")
         model.addRow("Sample step", self.sample)
 
+        primitive = self.add_group("Primitive")
+        self.size = double_spin(2.0, 0.2, 10.0, 0.2, 1)
+        primitive.addRow("Size", self.size)
+        self.detail = int_spin(24, 3, 64, 1)
+        primitive.addRow("Detail", self.detail)
+        self.height = double_spin(0.5, 0.0, 3.0, 0.1, 2)
+        primitive.addRow("Height", self.height)
+        self.seed = int_spin(7, 0, 999_999)
+        primitive.addRow("Seed (terrain)", self.seed)
+        self._primitive_group = primitive
+
+        camera = self.add_group("Camera")
+        self.projection = QComboBox()
+        self.projection.addItem("Orthographic", "orthographic")
+        self.projection.addItem("Perspective", "perspective")
+        camera.addRow("Projection", self.projection)
+        self.camera_distance = double_spin(4.0, 1.5, 12.0, 0.5, 1)
+        camera.addRow("Camera distance (x radius)", self.camera_distance)
+        self._camera_group = camera
+
         page = self.add_group("Page")
         self.page_w = double_spin(200, 50, 1000, 10, 0, " mm")
         page.addRow("Width", self.page_w)
@@ -349,15 +530,52 @@ class ThreeDTab(GeneratorTab):
         page.addRow("Artwork scale", self.scale_pct)
 
         self.finish_controls()
+        self.source.currentIndexChanged.connect(self._sync_source)
+        self.projection.currentIndexChanged.connect(self._sync_source)
+        self._sync_source()
+
+    def _sync_source(self):
+        is_file = self.source.currentData() == "file"
+        self.model_path.setEnabled(is_file)
+        self.file_button.setEnabled(is_file)
+        self._primitive_group.parentWidget().setVisible(not is_file)
+        self.camera_distance.setEnabled(
+            self.projection.currentData() == "perspective"
+        )
 
     def build_svg(self):
-        path = self.model_path.text().strip()
-        if not path:
-            raise ValueError("Choose an OBJ or STL file first.")
+        source = self.source.currentData()
+        vertices = triangles = None
+        path = ""
+        if source == "file":
+            path = self.model_path.text().strip()
+            if not path:
+                raise ValueError("Choose an OBJ or STL file first.")
+        elif source == "cube":
+            vertices, triangles = cube_mesh(self.size.value())
+        elif source == "sphere":
+            vertices, triangles = sphere_mesh(
+                self.size.value() / 2.0, self.detail.value(), max(3, self.detail.value() // 2)
+            )
+        elif source == "cylinder":
+            vertices, triangles = cylinder_mesh(
+                self.size.value() / 2.0, self.size.value(), self.detail.value()
+            )
+        elif source == "cone":
+            vertices, triangles = cone_mesh(
+                self.size.value() / 2.0, self.size.value(), self.detail.value()
+            )
+        else:
+            vertices, triangles = terrain_mesh(
+                self.size.value() * 2.0,
+                min(60, self.detail.value()),
+                self.height.value(),
+                self.seed.value(),
+            )
         QGuiApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         try:
             polylines = three_d_polylines(
-                path,
+                path or None,
                 style=self.style.currentData(),
                 yaw=self.yaw.value(),
                 pitch=self.pitch.value(),
@@ -367,6 +585,10 @@ class ThreeDTab(GeneratorTab):
                 margin_mm=self.margin.value(),
                 sample_mm=self.sample.value(),
                 target_width_mm=self.target_width.value(),
+                vertices=vertices,
+                triangles=triangles,
+                projection=self.projection.currentData(),
+                camera_distance=self.camera_distance.value(),
             )
         finally:
             QGuiApplication.restoreOverrideCursor()

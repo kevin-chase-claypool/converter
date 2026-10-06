@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from generator_tabs._tab_common import polylines_to_svg
 from generator_tabs.harmonograph_tab import (
     HarmonographTab,
+    harmonograph_pendulum_polylines,
     harmonograph_polylines,
 )
 
@@ -57,6 +58,19 @@ def extent(polylines, width_mm=120.0, height_mm=120.0):
 
 
 class HarmonographAlgorithmTests(unittest.TestCase):
+    def test_physical_model_is_deterministic_and_damped(self):
+        first = harmonograph_pendulum_polylines(duration_s=120, samples=1500)
+        second = harmonograph_pendulum_polylines(duration_s=120, samples=1500)
+        self.assertEqual(first, second)
+        self.assertEqual(len(first), 1)
+        loose = harmonograph_pendulum_polylines(
+            duration_s=600, samples=2000, damping_x=0.0, damping_y=0.0
+        )
+        damped = harmonograph_pendulum_polylines(
+            duration_s=600, samples=2000, damping_x=0.02, damping_y=0.02
+        )
+        self.assertLess(extent(damped), extent(loose))
+
     def test_same_seed_is_identical(self):
         self.assertEqual(sample(), sample())
 
@@ -89,3 +103,15 @@ class HarmonographTabTests(unittest.TestCase):
         path = tab.build_svg()
         ET.parse(path)
         self.assertTrue(host.status)
+
+    def test_tab_simple_model_still_builds(self):
+        host = FakeHost()
+        tab = HarmonographTab(host)
+        self.addCleanup(tab.deleteLater)
+        tab.model.setCurrentIndex(tab.model.findData("simple"))
+        tab.page_w.setValue(120)
+        tab.page_h.setValue(120)
+        tab.samples.setValue(800)
+        tab.turns.setValue(20)
+        path = tab.build_svg()
+        ET.parse(path)

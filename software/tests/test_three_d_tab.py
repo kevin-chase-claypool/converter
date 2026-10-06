@@ -15,9 +15,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from generator_tabs._tab_common import polylines_to_svg
 from generator_tabs.three_d_tab import (
     ThreeDTab,
+    cone_mesh,
+    cube_mesh,
+    cylinder_mesh,
     load_obj,
     load_stl,
     project_vertices,
+    sphere_mesh,
+    terrain_mesh,
     three_d_polylines,
 )
 
@@ -91,6 +96,30 @@ class ThreeDAlgorithmTests(unittest.TestCase):
         self.assertEqual(len(self.vertices), 8)
         self.assertEqual(len(self.triangles), 12)
 
+    def test_builtin_primitives(self):
+        vertices, triangles = cube_mesh(2.0)
+        self.assertEqual((len(vertices), len(triangles)), (8, 12))
+        for built in (
+            sphere_mesh(1.0, 16, 8),
+            cylinder_mesh(1.0, 2.0, 16),
+            cone_mesh(1.0, 2.0, 16),
+            terrain_mesh(2.0, 12, 0.5, 3),
+        ):
+            self.assertGreater(len(built[0]), 0)
+            self.assertGreater(len(built[1]), 0)
+
+    def test_perspective_magnifies_near_vertices(self):
+        points, _depth = project_vertices(
+            [(1.0, 0.0, 0.0), (1.0, 0.0, 1.0), (1.0, 0.0, 2.0)],
+            0, 0, 0, 100, 100, 5,
+            projection="perspective",
+            camera_distance=3.0,
+        )
+        # Equal model depth steps must grow as the vertices near the camera.
+        far_step = points[1][0] - points[0][0]
+        near_step = points[2][0] - points[1][0]
+        self.assertGreater(near_step, far_step * 1.2)
+
     def test_binary_stl_parses(self):
         triangle = ((0, 0, 0), (1, 0, 0), (0, 1, 0))
         payload = bytearray(b"\0" * 80) + struct.pack("<I", 1)
@@ -151,6 +180,18 @@ class ThreeDTabTests(unittest.TestCase):
         tab.sample.setValue(1.0)
         path = tab.build_svg()
         self.assertTrue(path)
+        ET.parse(path)
+        self.assertTrue(host.status)
+
+    def test_tab_primitive_with_perspective(self):
+        host = FakeHost()
+        tab = ThreeDTab(host)
+        self.addCleanup(tab.deleteLater)
+        tab.source.setCurrentIndex(tab.source.findData("cube"))
+        tab.projection.setCurrentIndex(tab.projection.findData("perspective"))
+        tab.page_w.setValue(120)
+        tab.page_h.setValue(120)
+        path = tab.build_svg()
         ET.parse(path)
         self.assertTrue(host.status)
 

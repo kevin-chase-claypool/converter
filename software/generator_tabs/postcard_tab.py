@@ -23,6 +23,7 @@ TITLE = "Postcard"
 ORDER = 90
 
 PAGE_PRESETS = (
+    ("7x5 in (178 x 127 mm)", 177.8, 127.0),
     ("5x7 in (127 x 178 mm)", 127.0, 177.8),
     ("A6 (105 x 148 mm)", 105.0, 148.0),
     ("A5 (148 x 210 mm)", 148.0, 210.0),
@@ -169,9 +170,9 @@ class PostcardTab(GeneratorTab):
         text.addRow("Tracking", self.tracking)
 
         page = self.add_group("Page")
-        self.page_w = double_spin(127, 40, 1000, 5, 1, " mm")
+        self.page_w = double_spin(177.8, 40, 1000, 5, 1, " mm")
         page.addRow("Width", self.page_w)
-        self.page_h = double_spin(177.8, 40, 1000, 5, 1, " mm")
+        self.page_h = double_spin(127.0, 40, 1000, 5, 1, " mm")
         page.addRow("Height", self.page_h)
         self.margin = double_spin(8, 2, 40, 1, 0, " mm")
         page.addRow("Margin", self.margin)

@@ -98,15 +98,21 @@ Current tools:
 - **Line Draw** - raster image to edge-traced contours plus luminance hatch.
   Controls: artwork (from the static Artwork row), invert, mode
   (contours / hatch / both), edge
-  threshold, hatch spacing, hatch tone, sketch jitter, minimum length, line
-  width, seed, page size, margin, artwork scale.
+  threshold, hatch spacing, hatch light/mid/dark thresholds (upstream
+  linedraw levels 144/64/16), sketch jitter, minimum length, simplify,
+  resolution, line width, seed, page size, margin, artwork scale.
 - **3D Wireframe** - OBJ or STL mesh to orthographic hidden-line vector art.
-  Controls: model file, style (hidden-line wireframe / silhouette / all
-  edges), yaw, pitch, roll, target width, sample step, page size, margin,
+  Built-in primitives (cube, sphere, cylinder, cone, terrain plane) and a
+  perspective camera. Controls: source, file/primitive, style
+  (hidden-line wireframe / silhouette / all edges), yaw, pitch, roll,
+  projection, camera distance, target width, sample step, page size, margin,
   line width, artwork scale.
 - **Harmonograph** - damped Lissajous figures from two decaying oscillations,
-  one to four curves. Controls: seed, frequency X/Y, phase, damping, turns,
-  samples, curves, curve size, page size, margin, line width, artwork scale.
+  or the upstream physical two-pendulum + rotating-disk model. Controls:
+  model, pivot/arm geometry, rotating-disk frequency, amplitudes, phases,
+  per-axis damping, frequencies, duration, samples, smoothing, page size,
+  margin, line width, artwork scale; the simple model keeps seed, frequency
+  X/Y, phase, damping, turns, samples, and curve count.
 - **Snowflake** - radial dendritic snowflakes with jittered branches.
   Controls: seed, arms, branch depth, arm length, branch angle, branch scale,
   angle jitter, length jitter, page size, margin, line width, artwork scale.
@@ -120,13 +126,14 @@ Current tools:
   drawn as colour boundaries or one diagonal per cell. Controls: seed,
   colours, iterations, style, page size, margin, line width, artwork scale.
 - **Postcard** - plottable postcard back: border, centre divider, stamp box,
-  address guide lines, and optional caption/address text. Controls: page
-  preset, divider, address lines, line spacing, stamp size, caption, address,
-  text size, tracking, page size, margin, line width, artwork scale.
+  address guide lines, and optional caption/message/address text. Controls:
+  page preset (default upstream 7x5 in landscape), divider, address lines,
+  line spacing, stamp size, caption, message, address, text size, tracking,
+  page size, margin, line width, artwork scale.
 - **SquiggleCam** - one continuous squiggle per row from image tone (full
   upstream setting set): line count, frequency, amplitude, brightness,
-  contrast, min/max brightness, pixel spacing, black-background inversion,
-  page, line width, artwork scale.
+  contrast, min/max brightness, pixel spacing, resolution, black-background
+  inversion, page, line width, artwork scale.
 - **Pixel Art** - pixel-art paths in `big` (5x5 spiral), `line` (runs), or
   `snake` (connected) mode, from vpype-pixelart: pixel pitch, overdraw, max
   grid, alpha threshold, ignore-white, page, line width, artwork scale.
