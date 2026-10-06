@@ -24,15 +24,19 @@ except Exception:  # pragma: no cover
 
 
 class FakeHost:
-    def __init__(self):
+    def __init__(self, artwork=""):
         self.loaded = []
         self.status = []
+        self.artwork = artwork
 
     def use_svg(self, path, preview=False):
         self.loaded.append((path, preview))
 
     def generator_status(self, message):
         self.status.append(message)
+
+    def artwork_path(self):
+        return self.artwork
 
 
 class LineDrawAlgorithmTests(unittest.TestCase):
@@ -85,10 +89,9 @@ class LineDrawTabTests(unittest.TestCase):
         LineDrawAlgorithmTests.setUpClass()
 
     def test_tab_generates_and_hands_off_svg(self):
-        host = FakeHost()
+        host = FakeHost(LineDrawAlgorithmTests.image_path)
         tab = LineDrawTab(host)
         self.addCleanup(tab.deleteLater)
-        tab.image_path.setText(LineDrawAlgorithmTests.image_path)
         tab.page_w.setValue(80)
         tab.page_h.setValue(80)
         tab.margin.setValue(4)

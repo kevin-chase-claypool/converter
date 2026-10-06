@@ -1212,6 +1212,10 @@ class MainWindow(QMainWindow):
         """Status-line entry point for generator tabs."""
         self.status.setText(str(message))
 
+    def artwork_path(self):
+        """Path currently in the static Artwork row, for generator tabs."""
+        return self.svg_path.text().strip()
+
     def load_generator_tabs(self):
         """Add one tab per `software/generator_tabs/*_tab.py` module."""
         try:

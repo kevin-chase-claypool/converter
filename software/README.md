@@ -77,11 +77,12 @@ third-party code keeps its license and attribution in a sibling
 Current generator tabs:
 
 - **Flow Field** - evenly spaced streamlines from a procedural noise field or
-  an image's luminance gradient. Controls: source, image path, invert, image
-  cutoff, seed, noise scale, octaves, spacing, step, max steps, line width,
-  page size, margin.
+  an image's luminance gradient. Controls: source, artwork (from the static
+  Artwork row), invert, image cutoff, seed, noise scale, octaves, spacing,
+  step, max steps, line width, page size, margin.
 - **Line Draw** - raster image to edge-traced contours plus luminance hatch.
-  Controls: image file, invert, mode (contours / hatch / both), edge
+  Controls: artwork (from the static Artwork row), invert, mode
+  (contours / hatch / both), edge
   threshold, hatch spacing, hatch tone, sketch jitter, minimum length, line
   width, seed, page size, margin.
 - **3D Wireframe** - OBJ or STL mesh to orthographic hidden-line vector art.
@@ -91,6 +92,8 @@ Current generator tabs:
 
 Each tab previews its own output; **Use in Convert** loads the generated SVG
 into the Convert tab, where Preview and Save build the normal G-code program.
+Image-driven tabs read the file already loaded in the static Artwork row
+instead of repeating the import control.
 
 The artwork/G-code file row, the **Preview / Cancel / Save G-code** actions,
 and the OpenGL preview panel (playback controls, status, estimate, fit/clip

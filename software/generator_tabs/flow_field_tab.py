@@ -12,6 +12,7 @@ Output is SVG; the tab hands it to the Convert tab and never writes G-code.
 from __future__ import annotations
 
 import math
+import os
 import random
 
 from PySide6.QtCore import Qt
@@ -19,11 +20,11 @@ from PySide6.QtGui import QCursor, QGuiApplication
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
-    QLineEdit,
+    QLabel,
     QPushButton,
 )
 
-from ._tab_common import GeneratorTab, double_spin, file_picker, int_spin
+from ._tab_common import GeneratorTab, double_spin, int_spin
 
 
 TITLE = "Flow Field"
@@ -259,15 +260,9 @@ class FlowFieldTab(GeneratorTab):
         self.source.addItem("Procedural noise", "noise")
         self.source.addItem("Image edges", "image")
         shape.addRow("Source", self.source)
-        self.image_path = QLineEdit()
-        browse = file_picker(
-            self.image_path,
-            lambda _path: None,
-            "Choose a field image",
-            "Images (*.png *.jpg *.jpeg *.bmp *.webp *.tif *.tiff)",
-        )
-        shape.addRow("Image", self.image_path)
-        shape.addRow("", browse)
+        self.image_label = QLabel()
+        self.image_label.setWordWrap(True)
+        shape.addRow("Artwork", self.image_label)
         self.invert = QCheckBox("Invert image tone")
         shape.addRow("", self.invert)
         self.cutoff = double_spin(60, 5, 95, 5, 0, " %")
@@ -306,11 +301,31 @@ class FlowFieldTab(GeneratorTab):
 
     def _sync_source(self):
         image_mode = self.source.currentData() == "image"
-        self.image_path.setEnabled(image_mode)
+        self.image_label.setEnabled(image_mode)
         self.invert.setEnabled(image_mode)
         self.cutoff.setEnabled(image_mode)
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        self._refresh_artwork()
+
+    def _refresh_artwork(self):
+        path = ""
+        if self.host is not None and hasattr(self.host, "artwork_path"):
+            path = self.host.artwork_path()
+        self._artwork = path
+        self.image_label.setText(
+            os.path.basename(path)
+            if path
+            else "(use Browse in the Artwork row above)"
+        )
+
     def generate(self):
+        self._refresh_artwork()
+        image_mode = self.source.currentData() == "image"
+        if image_mode and not self._artwork:
+            self.report_error("Import an image with the Artwork row above first.")
+            return
         QGuiApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         try:
             polylines = list(
@@ -324,11 +339,7 @@ class FlowFieldTab(GeneratorTab):
                     seed=self.seed.value(),
                     octaves=self.octaves.value(),
                     margin_mm=self.margin.value(),
-                    image_path=(
-                        self.image_path.text().strip()
-                        if self.source.currentData() == "image"
-                        else None
-                    ),
+                    image_path=self._artwork if image_mode else None,
                     invert=self.invert.isChecked(),
                     cutoff_pct=self.cutoff.value(),
                 )

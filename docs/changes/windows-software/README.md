@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-006` | implemented | [Remove redundant per-tab image pickers](2026-10-06-remove-redundant-tab-imports.md) | `user-interface`, `generators`, `import` |
 | 2026-10-06 | `WSW-20261006-005` | implemented | [Keep import, export, and preview static across generator tabs](2026-10-06-static-import-export-preview.md) | `user-interface`, `generators`, `preview` |
 | 2026-10-06 | `WSW-20261006-004` | implemented | [3D Wireframe generator tab](2026-10-06-3d-wireframe-tab.md) | `user-interface`, `generators`, `3d` |
 | 2026-10-06 | `WSW-20261006-003` | implemented | [Line Draw generator tab](2026-10-06-line-draw-tab.md) | `user-interface`, `generators`, `line-art` |

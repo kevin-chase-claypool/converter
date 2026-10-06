@@ -35,6 +35,9 @@ class FakeHost:
     def generator_status(self, message):
         self.status.append(message)
 
+    def artwork_path(self):
+        return ""
+
 
 def sample_field(**overrides):
     options = dict(

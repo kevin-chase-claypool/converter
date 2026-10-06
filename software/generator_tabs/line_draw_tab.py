@@ -12,6 +12,7 @@ contours or gradient waves. Output is SVG; G-code stays in the Convert tab.
 from __future__ import annotations
 
 import math
+import os
 import random
 
 from PySide6.QtCore import Qt
@@ -19,14 +20,13 @@ from PySide6.QtGui import QCursor, QGuiApplication
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
-    QLineEdit,
+    QLabel,
     QPushButton,
 )
 
 from ._tab_common import (
     GeneratorTab,
     double_spin,
-    file_picker,
     int_spin,
     preview_background,
 )
@@ -270,17 +270,9 @@ class LineDrawTab(GeneratorTab):
     def __init__(self, host):
         super().__init__(host)
         image_group = self.add_group("Image")
-        self.image_path = QLineEdit()
-        image_group.addRow("File", self.image_path)
-        image_group.addRow(
-            "",
-            file_picker(
-                self.image_path,
-                lambda _path: None,
-                "Choose an image",
-                "Images (*.png *.jpg *.jpeg *.bmp *.webp *.tif *.tiff)",
-            ),
-        )
+        self.image_label = QLabel()
+        self.image_label.setWordWrap(True)
+        image_group.addRow("Artwork", self.image_label)
         self.invert = QCheckBox("Invert tone")
         image_group.addRow("", self.invert)
 
@@ -318,10 +310,26 @@ class LineDrawTab(GeneratorTab):
         self.add_raw(generate)
         self.finish_controls()
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        self._refresh_artwork()
+
+    def _refresh_artwork(self):
+        path = ""
+        if self.host is not None and hasattr(self.host, "artwork_path"):
+            path = self.host.artwork_path()
+        self._artwork = path
+        self.image_label.setText(
+            os.path.basename(path)
+            if path
+            else "(use Browse in the Artwork row above)"
+        )
+
     def generate(self):
-        path = self.image_path.text().strip()
+        self._refresh_artwork()
+        path = self._artwork
         if not path:
-            self.report_error("Choose an image first.")
+            self.report_error("Import an image with the Artwork row above first.")
             return
         QGuiApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         try:
