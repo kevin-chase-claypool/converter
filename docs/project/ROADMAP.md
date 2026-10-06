@@ -394,6 +394,11 @@
   control, and no `converter2.bat` or duplicated GUI is created. The full
   shortlist and mention evidence are in
   [`docs/research/2026-10-06-r-plotterart-svg-generators.md`](../research/2026-10-06-r-plotterart-svg-generators.md).
+  Status 2026-10-06: the first batch is implemented and unit-tested as three
+  tabs - Flow Field (`WSW-20261006-002`), Line Draw (`WSW-20261006-003`), and
+  3D Wireframe (`WSW-20261006-004`) - with the shell from
+  `WSW-20261006-001`. Owner review on the running converter is the next gate;
+  the next batch of Table A tabs waits for that review.
 
 ## Next concrete task
 

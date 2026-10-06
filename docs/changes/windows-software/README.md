@@ -8,6 +8,9 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-06 | `WSW-20261006-004` | implemented | [3D Wireframe generator tab](2026-10-06-3d-wireframe-tab.md) | `user-interface`, `generators`, `3d` |
+| 2026-10-06 | `WSW-20261006-003` | implemented | [Line Draw generator tab](2026-10-06-line-draw-tab.md) | `user-interface`, `generators`, `line-art` |
+| 2026-10-06 | `WSW-20261006-002` | implemented | [Flow Field generator tab](2026-10-06-flow-field-tab.md) | `user-interface`, `generators`, `flow-field` |
 | 2026-10-06 | `WSW-20261006-001` | implemented | [Generator tab shell in the main converter window](2026-10-06-generator-tab-shell.md) | `user-interface`, `generators`, `converter` |
 | 2026-10-04 | `WSW-20261004-004` | implemented | [Terrain: stop stacking contours on hard outlines](2026/2026-10-04-terrain-outline-thinning.md) | `fill`, `shading`, `terrain`, `topographic`, `image-tone`, `plotter-art` |
 | 2026-10-04 | `WSW-20261004-003` | implemented | [Terrain on image tone follows the photo's shading](2026/2026-10-04-terrain-follows-image-tone.md) | `fill`, `shading`, `terrain`, `topographic`, `image-tone`, `plotter-art` |

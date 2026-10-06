@@ -74,6 +74,24 @@ Tab authors: the contract and the host entry points are documented in
 third-party code keeps its license and attribution in a sibling
 `<name>_NOTICE.md`.
 
+Current generator tabs:
+
+- **Flow Field** - evenly spaced streamlines from a procedural noise field or
+  an image's luminance gradient. Controls: source, image path, invert, image
+  cutoff, seed, noise scale, octaves, spacing, step, max steps, line width,
+  page size, margin.
+- **Line Draw** - raster image to edge-traced contours plus luminance hatch.
+  Controls: image file, invert, mode (contours / hatch / both), edge
+  threshold, hatch spacing, hatch tone, sketch jitter, minimum length, line
+  width, seed, page size, margin.
+- **3D Wireframe** - OBJ or STL mesh to orthographic hidden-line vector art.
+  Controls: model file, style (hidden-line wireframe / silhouette / all
+  edges), yaw, pitch, roll, target width, sample step, page size, margin,
+  line width.
+
+Each tab previews its own output; **Use in Convert** loads the generated SVG
+into the Convert tab, where Preview and Save build the normal G-code program.
+
 ## Kaleidoscope Converter
 
 `qt_kaleidoscope.pyw` (or `..\kaleidoscope.bat`) builds an N-fold mirrored
