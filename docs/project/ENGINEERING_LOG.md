@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20261007-preview-motion-lines-toggle"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Red motion lines toggle in the preview panel
+
+- Request: "in the preview area i need an option to turn the red lines on and
+  off" - the X/Y pen-down machine-path overlay was only toggleable from the
+  sidebar Preview-settings group and the View menu.
+- Change: the preview panel's bottom row (Fill bed / Fit inside) now carries a
+  **Red motion lines** checkbox, two-way synced with the sidebar checkbox and
+  the View > Pen-down Path action, so the overlay can be hidden where the
+  clutter is visible. Default remains on.
+- Verification: new tool-shell test asserts the checkbox lives in the preview
+  panel, defaults on, and that toggling it (in either direction) keeps the GL
+  flag, the sidebar checkbox and the menu state in step; full suite and
+  `docs_index.py --write` / `--check` pass.
+- Struggle: none; the GL state and menu sync already existed.
+- Risk: none; behavior only gains a second, closer control.
+- Evidence: `WSW-20261007-006`; `software/README.md`.
+- Category: windows-software, preview, user-interface, opengl.
+
 <a id="elog-20261007-cmyk-photo-defaults"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK defaults show faces on a real photo
 

@@ -471,6 +471,21 @@ class ToolShellTests(unittest.TestCase):
         )
         self.assertTrue(hasattr(window, "save_action"))
 
+    def test_preview_panel_has_a_red_motion_lines_toggle(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        self.assertTrue(
+            window.preview_panel.isAncestorOf(window.preview_motion_check)
+        )
+        self.assertTrue(window.preview_motion_check.isChecked())
+        window.preview_motion_check.setChecked(False)
+        self.assertFalse(window.gl_preview.show_pen_down_path)
+        self.assertFalse(window.show_pen_down_path.isChecked())
+        # The sidebar checkbox and the menu action stay in sync both ways.
+        window.show_pen_down_path.setChecked(True)
+        self.assertTrue(window.preview_motion_check.isChecked())
+        self.assertTrue(window.gl_preview.show_pen_down_path)
+
     def test_command_list_is_removed_and_preview_fills_the_rest(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

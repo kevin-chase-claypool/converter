@@ -1213,7 +1213,16 @@ class MainWindow(QMainWindow):
         self.clip_warning.setWordWrap(True)
         self.clip_warning.setStyleSheet("color: #b91c1c;")
         self.clip_warning.hide()
+        self.preview_motion_check = QCheckBox("Red motion lines")
+        self.preview_motion_check.setChecked(self.show_pen_down_path.isChecked())
+        self.preview_motion_check.setToolTip(
+            "Show the generated X/Y pen-down machine path in red. Same as "
+            "View > Pen-down Path."
+        )
+        self.preview_motion_check.toggled.connect(self.show_pen_down_path.setChecked)
+        self.show_pen_down_path.toggled.connect(self.preview_motion_check.setChecked)
         clip_row = QHBoxLayout()
+        clip_row.addWidget(self.preview_motion_check)
         clip_row.addWidget(self.fill_bed_button)
         clip_row.addWidget(self.fit_inside_button)
         clip_row.addWidget(self.clip_warning, 1)

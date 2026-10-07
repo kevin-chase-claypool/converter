@@ -67,7 +67,10 @@ G-code (Ctrl+S), and exits. **Tools** is the tool selector: **All Tools**
 (Ctrl+T) opens the card dashboard (Core, Line art, 3D, Patterns, Text &
 layout), **Convert** is Ctrl+1, and the other tools follow in menu order with
 Ctrl+2...Ctrl+0. **View** toggles the machine reach guide, pen-down path, and
-log, and controls preview zoom; **Help** has the shortcut list (F1) and About.
+log, and controls preview zoom. The preview panel also has a **Red motion
+lines** checkbox next to Fill bed / Fit inside that toggles the same pen-down
+overlay without leaving the preview (it stays in sync with the sidebar
+checkbox and the View menu). **Help** has the shortcut list (F1) and About.
 The status bar shows the current artwork and G-code paths. Tools are
 contributed by `software/generator_tabs/*_tab.py` modules and discovered at
 startup, one page per tool; a broken tool is reported in the log instead of
