@@ -11,7 +11,7 @@
   are inert in crosshatch mode; they only affect the dot screens). README's
   shipped-defaults sentence and recommended-settings row match.
 - Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
-  passes 375 tests (1 skipped, headless shader compile); the
+  passes 374 tests (1 skipped, headless shader compile); the
   shipped-defaults test asserts the new set; `docs_index.py --write` /
   `--check` pass.
 - Risk: new sessions start heavier (crosshatch 5, 6000 px, 40000 marks) -

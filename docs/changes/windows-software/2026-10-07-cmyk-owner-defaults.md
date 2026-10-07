@@ -46,7 +46,7 @@ showed the tuned crosshatch workflow (momandbennett.jpg render).
 
 ## Verification
 
-- `python -m unittest discover -s software\tests -p "test_*.py"` passes 375
+- `python -m unittest discover -s software\tests -p "test_*.py"` passes 374
   tests (1 skipped: the pre-existing headless shader compile); the
   shipped-defaults test now asserts the crosshatch style, level 5, dot
   size 100, solid dots off, 40000 marks, and 6000 px resolution.
