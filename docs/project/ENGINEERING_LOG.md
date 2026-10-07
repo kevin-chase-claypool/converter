@@ -1,5 +1,36 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-calibration-ai-handoff"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK calibration is analyzable from a scan alone
+
+- Request: the calibration documentation "should be within github so you can
+  reference it later. i should only need to give you the scanned image."
+- Change: the print-scan-analyze workflow is committed as
+  `docs/testing/CMYK_CALIBRATION.md` (linked from `docs/README.md` and the
+  CMYK section of `software/README.md`). The sheet header now prints the
+  page size and margin on their own line, and `tools/cmyk_calibrate.py`
+  rebuilds the deterministic layout from them when no manifest exists
+  (`--layout 216x279 --margin 6 --screen crosshatch`); `build_sheet(...,
+  marks=False)` produces the identical manifest without screening marks.
+- Fix: measuring the Hershey text found real overflows (up to 175 mm of
+  text on a 166 mm content box); the header is now four short lines and
+  `build_sheet` derives the required width from the font metrics and raises
+  a minimum-page hint instead of letting text run off the sheet.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 368 tests (1 skipped, headless shader compile). New tests cover the
+  manifest-only build (same rectangles/labels/fiducials, empty layers), the
+  CLI layout rebuild recovering known ink numbers from a synthetic scan, and
+  the missing-source error. Line and crosshatch sheets were re-rendered and
+  confirmed within the page; `docs_index.py --write` / `--check` pass.
+- Struggle: the first header rewrite overflowed the page; the fix now guards
+  against it by construction.
+- Risk: the scan-only path needs the printed header to be legible; deep
+  crops still need `--corners`.
+- Evidence: `WSW-20261007-009`; `docs/testing/CMYK_CALIBRATION.md`;
+  `software/generator_tabs/cmyk_sheet.py`; `tools/cmyk_calibrate.py`.
+- Category: windows-software, cmyk, calibration, test-print, ai-handoff,
+  tools.
+
 <a id="elog-20261007-cmyk-calibration-line-screens"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Calibration sheet follows the screen style, lines included
 

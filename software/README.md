@@ -146,7 +146,9 @@ Current tools:
   `python tools\cmyk_calibrate.py scan.png --manifest <name>-calibration.json`
   to report paper-relative ink transmittances and a multiply-model check for a
   print-matching preview. Ladder cells print raw tone; raise the pitch for a
-  faster calibration plot.
+  faster calibration plot. The full print-scan-analyze handoff (including
+  analyzing a scan with no manifest) is
+  [`../docs/testing/CMYK_CALIBRATION.md`](../docs/testing/CMYK_CALIBRATION.md).
 - **SquiggleCam** - one continuous squiggle per row from image tone (full
   upstream setting set): line count, frequency, amplitude, brightness,
   contrast, min/max brightness, pixel spacing, resolution, black-background

@@ -20,6 +20,7 @@ For the intended P100 command/sensor/reply ownership by stage, open
 |---|---|---|
 | Architecture, dependency, impact, or cross-subsystem investigation | [`../ONTOLY_PROMPT.md`](../ONTOLY_PROMPT.md) | Ontoly graph for code topology; listed subsystem authorities for physical and runtime facts |
 | Windows converter UI or behavior | [`../software/README.md`](../software/README.md) | Code under `software/`; behavior in `software/README.md` |
+| CMYK calibration print/scan analysis (AI handoff) | [`testing/CMYK_CALIBRATION.md`](testing/CMYK_CALIBRATION.md) | `software/generator_tabs/cmyk_sheet.py`, `tools/cmyk_calibrate.py` |
 | Converter algorithms or historical tradeoffs | [`HANDOFF.md`](HANDOFF.md) relevant section only | Code under `software/converter_core/`; deep rationale in `HANDOFF.md` |
 | Kaleidoscope designs (image to mirrored artwork) | [`../software/README.md`](../software/README.md) | `software/qt_kaleidoscope.pyw` and `software/converter_core/kaleidoscope.py` |
 | RP23CNC/grblHAL work | [`../firmware/README.md`](../firmware/README.md) | Relevant file under `firmware/grblhal/` |

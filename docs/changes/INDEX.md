@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-009` | windows-software | implemented | [Make CMYK calibration scans analyzable from the image alone](windows-software/2026-10-07-cmyk-calibration-ai-handoff.md) |
 | 2026-10-07 | `WSW-20261007-008` | windows-software | implemented | [Let the CMYK calibration sheet follow the screen style](windows-software/2026-10-07-cmyk-calibration-line-screens.md) |
 | 2026-10-07 | `WSW-20261007-007` | windows-software | implemented | [Add a labeled CMYK calibration sheet and scan tool](windows-software/2026-10-07-cmyk-calibration-sheet.md) |
 | 2026-10-07 | `WSW-20261007-006` | windows-software | implemented | [Add a Red motion lines toggle to the preview panel](windows-software/2026-10-07-preview-motion-lines-toggle.md) |

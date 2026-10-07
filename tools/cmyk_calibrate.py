@@ -15,6 +15,11 @@ of the multiply model on the two- and three-ink mix patches. Those numbers
 are what a print-matching preview needs: multiply the four ink transmittances
 in C, M, Y, K plot order over white paper.
 
+When no saved manifest is available, the layout can be rebuilt from the
+numbers printed in the sheet header (the geometry is deterministic)::
+
+    python tools\\cmyk_calibrate.py scan.png --layout 216x279 --margin 6 --screen crosshatch
+
 Scans work best; for photos keep the sheet flat and filling the frame. Pass
 ``--corners`` (x1,y1,...,x4,y4 in pixels: top-left, top-right, bottom-left,
 bottom-right fiducial centres) when automatic detection fails.
@@ -25,6 +30,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -46,6 +52,33 @@ def load_manifest(path):
     if not data.get("patches"):
         raise ValueError("The manifest contains no patches.")
     return data
+
+
+def parse_layout(text):
+    """Return ``(page_width_mm, page_height_mm)`` from e.g. ``216x279``."""
+    cleaned = str(text).lower().replace(" ", "").replace(",", "x")
+    parts = cleaned.split("x")
+    if len(parts) != 2:
+        raise ValueError("layout must look like 216x279 (mm)")
+    return float(parts[0]), float(parts[1])
+
+
+def rebuild_manifest(layout, margin_mm, screen):
+    """Rebuild the sheet manifest without a saved file (no screening)."""
+    page_w, page_h = parse_layout(layout)
+    software = Path(__file__).resolve().parents[1] / "software"
+    if str(software) not in sys.path:
+        sys.path.insert(0, str(software))
+    from generator_tabs.cmyk_sheet import build_sheet
+
+    _, manifest = build_sheet(
+        page_w,
+        page_h,
+        margin_mm=margin_mm,
+        screen=screen,
+        marks=False,
+    )
+    return manifest
 
 
 def load_image(path):
@@ -329,7 +362,7 @@ def _block_lookup(manifest):
     return blocks
 
 
-def print_report(args, image, manifest, samples, profile, detection):
+def print_report(args, image, manifest, samples, profile, detection, source):
     blocks = _block_lookup(manifest)
     settings = manifest.get("sheet_settings", {})
     print("CMYK calibration report")
@@ -337,6 +370,7 @@ def print_report(args, image, manifest, samples, profile, detection):
         f"  image  : {args.image} "
         f"({image.shape[1]} x {image.shape[0]} px, fiducials: {detection})"
     )
+    print(f"  source : {source}")
     print(
         "  sheet  : "
         f"{manifest['page']['width_mm']:g} x "
@@ -444,13 +478,33 @@ def main(argv=None):
     parser.add_argument("image", help="scan or photo of the plotted sheet")
     parser.add_argument(
         "--manifest",
-        required=True,
+        default="",
         help="<name>-calibration.json saved with the sheet's G-code",
+    )
+    parser.add_argument(
+        "--layout",
+        default="",
+        help=(
+            "rebuild the layout without a manifest: PAGE_WxPAGE_H in mm, "
+            "e.g. 216x279 (read it from the sheet header)"
+        ),
+    )
+    parser.add_argument(
+        "--margin",
+        type=float,
+        default=6.0,
+        help="page margin in mm for --layout (default 6)",
+    )
+    parser.add_argument(
+        "--screen",
+        choices=("lines", "crosshatch", "halftone"),
+        default="halftone",
+        help="sheet screen for --layout (default halftone)",
     )
     parser.add_argument(
         "--out",
         default="",
-        help="profile JSON path (default: <manifest stem>-profile.json)",
+        help="profile JSON path (default: <scan stem>-profile.json)",
     )
     parser.add_argument(
         "--corners",
@@ -462,7 +516,17 @@ def main(argv=None):
     )
     args = parser.parse_args(argv)
 
-    manifest = load_manifest(args.manifest)
+    if not args.manifest and not args.layout:
+        parser.error("give --manifest, or --layout with --margin and --screen")
+    if args.manifest:
+        manifest = load_manifest(args.manifest)
+        source = f"manifest {Path(args.manifest).name}"
+    else:
+        try:
+            manifest = rebuild_manifest(args.layout, args.margin, args.screen)
+        except ValueError as exc:
+            parser.error(str(exc))
+        source = f"rebuilt layout {args.layout} mm ({args.screen})"
     image = load_image(args.image)
     if args.corners:
         values = [
@@ -483,12 +547,12 @@ def main(argv=None):
     if not samples:
         raise SystemExit("No patches could be sampled; check image and manifest.")
     profile = fit_profile(manifest, samples)
-    print_report(args, image, manifest, samples, profile, detection)
+    print_report(args, image, manifest, samples, profile, detection, source)
     out_path = (
         Path(args.out)
         if args.out
-        else Path(args.manifest).with_name(
-            Path(args.manifest).stem + "-profile.json"
+        else Path(args.image).with_name(
+            Path(args.image).stem + "-profile.json"
         )
     )
     out_path.write_text(

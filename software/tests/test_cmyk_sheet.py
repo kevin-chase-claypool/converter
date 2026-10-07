@@ -134,6 +134,21 @@ class SheetBuilderTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             build(screen="spirals")
 
+    def test_manifest_only_build_matches_the_marked_sheet(self):
+        _, marked = build()
+        layers, plain = build(marks=False)
+        self.assertEqual(
+            [patch["rect_mm"] for patch in plain["patches"]],
+            [patch["rect_mm"] for patch in marked["patches"]],
+        )
+        self.assertEqual(
+            [patch["label"] for patch in plain["patches"]],
+            [patch["label"] for patch in marked["patches"]],
+        )
+        self.assertEqual(plain["fiducials_mm"], marked["fiducials_mm"])
+        for channel in converter.CHANNELS:
+            self.assertEqual(layers[channel], [])
+
     def test_sheet_is_deterministic(self):
         first, manifest_a = build()
         second, manifest_b = build()
@@ -250,11 +265,50 @@ class ScanToolTests(unittest.TestCase):
         with redirect_stdout(io.StringIO()):
             code = cmyk_calibrate.main(args)
         self.assertEqual(code, 0)
-        profile_path = folder / "sheet-calibration-profile.json"
+        profile_path = folder / "scan-profile.json"
         self.assertTrue(profile_path.exists())
         profile = json.loads(profile_path.read_text(encoding="utf-8"))
         self.assertEqual(profile["kind"], "cmyk-ink-profile")
         self.assertIn("c", profile["inks"])
+
+    def test_cli_rebuilds_the_layout_without_a_manifest(self):
+        folder = Path(tempfile.mkdtemp(prefix="cmyk-rebuild-"))
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        _, manifest = build()
+        image, _transform = self._render(manifest, self._transmittance())
+        scan_path = folder / "scan.png"
+        Image.fromarray((image * 255.0).astype("uint8")).save(scan_path)
+        args = [
+            str(scan_path),
+            "--layout",
+            "200x200",
+            "--margin",
+            "6",
+            "--screen",
+            "halftone",
+        ]
+        with redirect_stdout(io.StringIO()):
+            code = cmyk_calibrate.main(args)
+        self.assertEqual(code, 0)
+        profile_path = folder / "scan-profile.json"
+        self.assertTrue(profile_path.exists())
+        profile = json.loads(profile_path.read_text(encoding="utf-8"))
+        for channel, expected in self._transmittance().items():
+            actual = profile["inks"][channel]
+            for want, got in zip(expected, actual):
+                self.assertAlmostEqual(got, want, delta=0.06)
+
+    def test_cli_needs_a_manifest_or_a_layout(self):
+        folder = Path(tempfile.mkdtemp(prefix="cmyk-args-"))
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        scan_path = folder / "scan.png"
+        Image.new("RGB", (64, 64), (255, 255, 255)).save(scan_path)
+        with redirect_stdout(io.StringIO()), self.assertRaises(SystemExit):
+            cmyk_calibrate.main([str(scan_path)])
 
 
 if __name__ == "__main__":
