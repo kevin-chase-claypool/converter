@@ -203,10 +203,12 @@ class CmykTab(GeneratorTab):
             "filled dot at pen width instead of an open ring."
         )
         screen.addRow("", self.solid_dots)
-        self.levels = int_spin(4, 2, 5)
+        self.levels = int_spin(4, 2, 9)
         self.levels.setToolTip(
             "Crosshatch levels: 2 draws one line family, each extra level adds "
-            "a family at the next tone threshold and +45 degrees."
+            "a family at the next tone threshold. The first four families "
+            "step +45 degrees; further families spread evenly across the "
+            "half turn so every direction stays distinct."
         )
         screen.addRow("Hatch levels", self.levels)
         self.overdraw = int_spin(1, 1, 3)

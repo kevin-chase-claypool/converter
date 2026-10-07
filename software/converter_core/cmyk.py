@@ -445,7 +445,7 @@ def screen_channel(
 
     Styles: ``halftone`` (variable-radius dots), ``stipple`` (blue-noise
     dots), ``lines`` (parallel lines whose pitch follows tone), ``crosshatch``
-    (2-4 line families stacked by tone level), ``waves`` (sine rows whose
+    (line families stacked by tone level), ``waves`` (sine rows whose
     amplitude follows tone), ``gyroid`` (interference-field contours that
     flatten into blank paper), ``tsp`` (one greedy single line through tone
     stipple points) and ``contours`` (topographic contour lines of the tone).
@@ -490,7 +490,10 @@ def screen_channel(
             cancel_check=cancel_check,
         )
     elif style == "crosshatch":
-        passes = max(1, min(4, int(levels) - 1))
+        # Four families keep the classic 45-degree screen; further families
+        # spread evenly over the half turn so no direction repeats.
+        passes = max(1, int(levels) - 1)
+        step = 180.0 / max(4, passes)
         marks = []
         for index in range(passes):
             check_cancelled(cancel_check)
@@ -499,7 +502,7 @@ def screen_channel(
                 _line_runs(
                     darkness,
                     bounds,
-                    float(angle_deg) + index * 45.0,
+                    float(angle_deg) + index * step,
                     spacing,
                     threshold,
                     cancel_check=cancel_check,

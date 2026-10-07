@@ -124,10 +124,11 @@ class SheetBuilderTests(unittest.TestCase):
             if patch["block"] == "steps" and patch["channels"] == ["m"]
         ]
         self.assertEqual(
-            [patch["label"] for patch in steps], ["2", "3", "4", "5"]
+            [patch["label"] for patch in steps],
+            ["2", "3", "4", "5", "6", "7", "8"],
         )
         self.assertEqual(
-            [patch["levels"] for patch in steps], [2, 3, 4, 5]
+            [patch["levels"] for patch in steps], [2, 3, 4, 5, 6, 7, 8]
         )
 
     def test_mix_cells_match_the_dense_spot_spacing(self):

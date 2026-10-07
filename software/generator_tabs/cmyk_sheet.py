@@ -29,7 +29,7 @@ from ._hershey import text_polylines
 
 
 SHEET_KIND = "cmyk-calibration-sheet"
-SHEET_VERSION = 5
+SHEET_VERSION = 6
 
 # Layout constants, millimetres.
 FIDUCIAL_SIZE_MM = 6.0
@@ -50,7 +50,7 @@ HEADER_SIZE_MM = 3.2
 COVERAGE_TONES = tuple(step / 10.0 for step in range(1, 11))
 DOT_SCALES = (0.20, 0.40, 0.60, 0.80, 1.00, 1.20, 1.40)
 LINE_PITCHES = (0.6, 0.8, 1.0, 1.4, 1.8, 2.4, 3.0)
-HATCH_LEVELS = (2, 3, 4, 5)
+HATCH_LEVELS = (2, 3, 4, 5, 6, 7, 8)
 OVERDRAW_STEPS = (1, 2, 3)
 GCR_STEPS = (0.0, 0.25, 0.50, 0.75, 1.00)
 GRAY_TONE = 0.5

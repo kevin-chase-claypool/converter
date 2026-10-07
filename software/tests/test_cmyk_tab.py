@@ -190,6 +190,16 @@ class ScreeningTests(unittest.TestCase):
         )
         self.assertEqual(len(doubled), 2 * len(four))
 
+    def test_crosshatch_supports_more_than_four_families(self):
+        dark = self.np.full((32, 32), 0.9, dtype="float32")
+        six = converter.screen_channel(
+            dark, self.geometry(), style="crosshatch", spacing_mm=4.0, levels=6
+        )
+        nine = converter.screen_channel(
+            dark, self.geometry(), style="crosshatch", spacing_mm=4.0, levels=9
+        )
+        self.assertGreater(len(nine), len(six))
+
     def test_wave_gyroid_and_tsp_styles(self):
         dark = self.np.full((32, 32), 0.6, dtype="float32")
         waves = converter.screen_channel(
@@ -402,6 +412,11 @@ class CmykTabTests(unittest.TestCase):
         tab = self.make_tab()
         tab.resolution.setValue(8192)
         self.assertEqual(tab.resolution.value(), 8192)
+
+    def test_hatch_levels_allow_more_families(self):
+        tab = self.make_tab()
+        tab.levels.setValue(9)
+        self.assertEqual(tab.levels.value(), 9)
 
     def test_planning_is_background_not_a_button(self):
         tab = self.make_tab()

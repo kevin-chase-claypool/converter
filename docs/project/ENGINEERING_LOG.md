@@ -1,5 +1,27 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-crosshatch-levels"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Crosshatch screens extend past four families
+
+- Request: "is there a reason it doesnt allow for higher crosshatch levels
+  than 5?" The clamp was a 45-degree spacing assumption, not a machine
+  limit: beyond four families the next direction would repeat.
+- Change: crosshatch levels now run 2-9 (up to eight families). The first
+  four families keep +45 degree spacing; further families spread evenly
+  over the half turn (180/n). The calibration sheet's hatch ladder sweeps
+  2-8 (sheet version 6) so the extended range stays measurable.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 373 tests (1 skipped, headless shader compile), including new
+  tests for mark growth at level 9, the control range, and the sheet
+  ladder labels; `docs_index.py --write` / `--check` pass.
+- Risk: each family is a full-cell line pass, so marks and plot time scale
+  linearly with the level count.
+- Note: the owner's uncommitted sharpen work in `cmyk.py` is untouched; only
+  the screen_channel hunks were staged for this milestone.
+- Evidence: `WSW-20261007-014`; `software/converter_core/cmyk.py`;
+  `software/generator_tabs/cmyk_sheet.py`.
+- Category: windows-software, cmyk, screening, crosshatch.
+
 <a id="elog-20261007-cmyk-resolution-cap"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK resolution control is effectively uncapped
 
