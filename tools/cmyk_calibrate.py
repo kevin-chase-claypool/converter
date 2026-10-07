@@ -395,7 +395,7 @@ def print_report(args, image, manifest, samples, profile, detection):
         print("  no mix patches could be evaluated.")
     print()
     paper = np.asarray(profile["paper_rgb"], dtype=np.float64)
-    for block in ("coverage", "dots", "overdraw"):
+    for block in ("coverage", "dots", "steps", "overdraw"):
         patches = blocks.get(block, [])
         if not patches:
             continue

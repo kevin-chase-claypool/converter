@@ -8,11 +8,13 @@ drawn by the black pen), so the plotted sheet is self-describing, and the
 returned manifest records every patch rectangle in page millimetres for
 ``tools/cmyk_calibrate.py``.
 
-The sheet always uses the halftone dot screen with solid spiral dots: the
-ladders calibrate dot size, dot gain, overdraw, and ink overprint, which are
-properties of the dot screens. Other screen styles keep their normal artwork
-path. Ladder cells print raw tone (the per-ink weights are not applied);
-the GCR ramp runs the real separation with the page's weights and gamma.
+The sheet screen follows the tab's Screen style for the dot and line screens
+(halftone dots, line screen, or crosshatch levels): what you calibrate is
+what you print. The second ladder row adapts to the screen - dot size, line
+pitch, or hatch levels - and the dense spots use a tight mark spacing for
+each screen. Ladder cells print raw tone (the per-ink weights are not
+applied); the GCR ramp runs the real separation with the page's weights and
+gamma.
 """
 
 from __future__ import annotations
@@ -26,7 +28,7 @@ from ._hershey import text_polylines
 
 
 SHEET_KIND = "cmyk-calibration-sheet"
-SHEET_VERSION = 1
+SHEET_VERSION = 2
 
 # Layout constants, millimetres.
 FIDUCIAL_SIZE_MM = 6.0
@@ -53,18 +55,39 @@ FOOTER_SIZE_MM = 2.5
 
 COVERAGE_TONES = tuple(step / 10.0 for step in range(1, 11))
 DOT_SCALES = (0.20, 0.40, 0.60, 0.80, 1.00, 1.20, 1.40)
+LINE_PITCHES = (0.6, 0.8, 1.0, 1.4, 1.8, 2.4, 3.0)
+HATCH_LEVELS = (2, 3, 4, 5)
 OVERDRAW_STEPS = (1, 2, 3)
 GCR_STEPS = (0.0, 0.25, 0.50, 0.75, 1.00)
 GRAY_TONE = 0.5
+HATCH_TONE = 0.8
 MIX_SETS = (("c", "m"), ("c", "y"), ("m", "y"), ("c", "m", "y"))
 SPOT_SCALE = 1.40
+SHEET_SCREENS = ("lines", "crosshatch", "halftone")
 
-CAPTIONS = (
-    "COVERAGE % - raw tone, one row per ink (C, M, Y, K from the top)",
-    "DOT SIZE % at 50% tone (C, M, Y, K rows), then OVERDRAW 1x / 2x / 3x",
-    "GCR % on a 50% gray - full separation at the page's weights and gamma",
-    "MIXES at full tone, dense single-ink spots, then blank paper",
-)
+
+def _captions(screen):
+    if screen == "lines":
+        steps = (
+            "LINE PITCH mm at full tone (C, M, Y, K rows), then "
+            "OVERDRAW 1x / 2x / 3x"
+        )
+    elif screen == "crosshatch":
+        steps = (
+            "HATCH LEVELS at 80% tone (C, M, Y, K rows), then "
+            "OVERDRAW 1x / 2x / 3x"
+        )
+    else:
+        steps = (
+            "DOT SIZE % at 50% tone (C, M, Y, K rows), then "
+            "OVERDRAW 1x / 2x / 3x"
+        )
+    return (
+        "COVERAGE % - raw tone, one row per ink (C, M, Y, K from the top)",
+        steps,
+        "GCR % on a 50% gray - full separation at the page's weights and gamma",
+        "MIXES at full tone, dense single-ink spots, then blank paper",
+    )
 
 MIN_PAGE_HINT = (
     "The calibration sheet needs a page of about 110 x 180 mm or more; "
@@ -108,6 +131,8 @@ class _SheetBuilder:
         weights,
         gamma,
         overdraw,
+        screen="halftone",
+        levels=4,
     ):
         self.page_width_mm = float(page_width_mm)
         self.page_height_mm = float(page_height_mm)
@@ -120,6 +145,8 @@ class _SheetBuilder:
         self.weights = weights
         self.gamma = float(gamma)
         self.overdraw = max(1, min(3, int(overdraw)))
+        self.screen_style = str(screen)
+        self.levels = max(2, min(5, int(levels)))
         self.layers = {channel: [] for channel in converter.CHANNELS}
         self.patches = []
         self.fiducials = []
@@ -130,7 +157,16 @@ class _SheetBuilder:
             if len(line) >= 2:
                 self.layers["k"].append(line)
 
-    def screen(self, channel, rect, tone, dot_scale, overdraw=None):
+    def screen(
+        self,
+        channel,
+        rect,
+        tone,
+        dot_scale,
+        overdraw=None,
+        pitch_mm=None,
+        levels=None,
+    ):
         import numpy as np
 
         left, top, width, height = (float(value) for value in rect)
@@ -146,14 +182,14 @@ class _SheetBuilder:
         return converter.screen_channel(
             tone_array,
             geometry,
-            style="halftone",
-            spacing_mm=self.pitch_mm,
+            style=self.screen_style,
+            spacing_mm=self.pitch_mm if pitch_mm is None else float(pitch_mm),
             dot_scale=float(dot_scale),
             angle_deg=converter.SCREEN_ANGLES_DEG[channel],
             seed=0,
             max_marks=20000,
             pen_diameter_mm=self.pen_width_mm,
-            levels=4,
+            levels=self.levels if levels is None else int(levels),
             overdraw=self.overdraw if overdraw is None else int(overdraw),
             solid=self.solid,
         )
@@ -169,11 +205,21 @@ class _SheetBuilder:
         dot_scale,
         overdraw=None,
         gcr=None,
+        pitch_mm=None,
+        levels=None,
     ):
         self._index += 1
         for channel in channels:
             self.layers[channel].extend(
-                self.screen(channel, rect, tones[channel], dot_scale, overdraw)
+                self.screen(
+                    channel,
+                    rect,
+                    tones[channel],
+                    dot_scale,
+                    overdraw,
+                    pitch_mm=pitch_mm,
+                    levels=levels,
+                )
             )
         patch = {
             "id": f"{block}-{self._index:03d}",
@@ -190,6 +236,10 @@ class _SheetBuilder:
         }
         if gcr is not None:
             patch["gcr"] = round(float(gcr), 4)
+        if pitch_mm is not None:
+            patch["pitch_mm"] = round(float(pitch_mm), 4)
+        if levels is not None:
+            patch["levels"] = int(levels)
         self.patches.append(patch)
 
     def fiducial(self, cx, cy):
@@ -235,6 +285,8 @@ def build_sheet(
     weights=None,
     gamma=1.0,
     overdraw=1,
+    screen="halftone",
+    levels=4,
 ):
     """Return ``(layers, manifest)`` for the labeled calibration sheet.
 
@@ -244,6 +296,9 @@ def build_sheet(
     """
     import numpy as np
 
+    screen = str(screen).strip().lower()
+    if screen not in SHEET_SCREENS:
+        raise ValueError(f"screen must be one of {SHEET_SCREENS}.")
     page_w = float(page_width_mm)
     page_h = float(page_height_mm)
     margin = max(0.0, float(margin_mm))
@@ -259,7 +314,10 @@ def build_sheet(
         weights,
         gamma,
         overdraw,
+        screen=screen,
+        levels=levels,
     )
+    captions = _captions(screen)
 
     left = margin + CONTENT_INSET_MM
     right = page_w - margin - CONTENT_INSET_MM
@@ -271,7 +329,7 @@ def build_sheet(
     fixed = (
         HEADER_LINES * HEADER_LINE_MM
         + HEADER_GAP_MM
-        + len(CAPTIONS) * CAPTION_STRIP_MM
+        + len(captions) * CAPTION_STRIP_MM
         + rows * (LABEL_STRIP_MM + ROW_GAP_MM)
         + FOOTER_LINES * FOOTER_LINE_MM
         + FOOTER_GAP_MM
@@ -303,14 +361,29 @@ def build_sheet(
     weight_map = _weight_map(weights)
     y = top
     date = datetime.date.today().isoformat()
-    header = (
-        f"CMYK CALIBRATION SHEET - {date}",
-        (
+    if screen == "lines":
+        screen_line = (
+            f"line screen | pitch {_fmt(builder.pitch_mm)} mm | "
+            f"pen {_fmt(builder.pen_width_mm)} mm | "
+            f"overdraw {builder.overdraw}"
+        )
+    elif screen == "crosshatch":
+        screen_line = (
+            f"crosshatch | pitch {_fmt(builder.pitch_mm)} mm | "
+            f"hatch levels {builder.levels} | "
+            f"pen {_fmt(builder.pen_width_mm)} mm | "
+            f"overdraw {builder.overdraw}"
+        )
+    else:
+        screen_line = (
             f"halftone dots | pitch {_fmt(builder.pitch_mm)} mm | "
             f"dot {int(round(builder.dot_scale * 100))}% | "
             f"pen {_fmt(builder.pen_width_mm)} mm | "
             f"overdraw {builder.overdraw}"
-        ),
+        )
+    header = (
+        f"CMYK CALIBRATION SHEET - {date}",
+        screen_line,
         (
             f"GCR {_fmt(gcr_pct)}% | gamma {_fmt(gamma)} | weights "
             "C/M/Y/K "
@@ -356,7 +429,7 @@ def build_sheet(
             )
         y = cell_top + cell_h + ROW_GAP_MM
 
-    caption(CAPTIONS[0])
+    caption(captions[0])
     for channel in converter.CHANNELS:
         cells = [
             {
@@ -372,20 +445,49 @@ def build_sheet(
         ]
         row(cells, ladder_w)
 
-    caption(CAPTIONS[1])
+    caption(captions[1])
     for channel in converter.CHANNELS:
-        cells = [
-            {
-                "label": f"{int(round(scale * 100))}",
-                "cell": {
-                    "block": "dots",
-                    "channels": (channel,),
-                    "tones": {channel: GRAY_TONE},
-                    "dot_scale": scale,
-                },
-            }
-            for scale in DOT_SCALES
-        ]
+        if screen == "lines":
+            cells = [
+                {
+                    "label": _fmt(value),
+                    "cell": {
+                        "block": "steps",
+                        "channels": (channel,),
+                        "tones": {channel: 1.0},
+                        "dot_scale": 1.0,
+                        "pitch_mm": value,
+                    },
+                }
+                for value in LINE_PITCHES
+            ]
+        elif screen == "crosshatch":
+            cells = [
+                {
+                    "label": str(value),
+                    "cell": {
+                        "block": "steps",
+                        "channels": (channel,),
+                        "tones": {channel: HATCH_TONE},
+                        "dot_scale": 1.0,
+                        "levels": value,
+                    },
+                }
+                for value in HATCH_LEVELS
+            ]
+        else:
+            cells = [
+                {
+                    "label": f"{int(round(scale * 100))}",
+                    "cell": {
+                        "block": "steps",
+                        "channels": (channel,),
+                        "tones": {channel: GRAY_TONE},
+                        "dot_scale": scale,
+                    },
+                }
+                for scale in DOT_SCALES
+            ]
         cells += [
             {
                 "label": f"{step}x",
@@ -399,9 +501,9 @@ def build_sheet(
             }
             for step in OVERDRAW_STEPS
         ]
-        row(cells, ladder_w)
+        row(cells, cell_width(len(cells)))
 
-    caption(CAPTIONS[2])
+    caption(captions[2])
     gray = np.full((1, 1, 3), GRAY_TONE, dtype="float32")
     cells = []
     for value in GCR_STEPS:
@@ -431,7 +533,7 @@ def build_sheet(
         )
     row(cells, gcr_w)
 
-    caption(CAPTIONS[3])
+    caption(captions[3])
     cells = [
         {
             "label": "+".join(channel.upper() for channel in combo),
@@ -439,23 +541,38 @@ def build_sheet(
                 "block": "mix",
                 "channels": combo,
                 "tones": {channel: 1.0 for channel in combo},
-                "dot_scale": SPOT_SCALE,
+                "dot_scale": SPOT_SCALE if screen == "halftone" else 1.0,
             },
         }
         for combo in MIX_SETS
     ]
-    cells += [
-        {
-            "label": channel.upper(),
-            "cell": {
+    dense_pitch = max(0.35, builder.pen_width_mm * 1.15)
+    for channel in converter.CHANNELS:
+        if screen == "halftone":
+            spot = {
                 "block": "spot",
                 "channels": (channel,),
                 "tones": {channel: 1.0},
                 "dot_scale": SPOT_SCALE,
-            },
-        }
-        for channel in converter.CHANNELS
-    ]
+            }
+        elif screen == "lines":
+            spot = {
+                "block": "spot",
+                "channels": (channel,),
+                "tones": {channel: 1.0},
+                "dot_scale": 1.0,
+                "pitch_mm": dense_pitch,
+            }
+        else:
+            spot = {
+                "block": "spot",
+                "channels": (channel,),
+                "tones": {channel: 1.0},
+                "dot_scale": 1.0,
+                "pitch_mm": dense_pitch,
+                "levels": 4,
+            }
+        cells.append({"label": channel.upper(), "cell": spot})
     cells.append(
         {
             "label": "PAPER",
@@ -498,12 +615,13 @@ def build_sheet(
             "margin_mm": round(margin, 3),
         },
         "sheet_settings": {
-            "style": "halftone",
+            "style": screen,
             "solid_dots": builder.solid,
             "pitch_mm": round(builder.pitch_mm, 4),
             "dot_scale": round(builder.dot_scale, 4),
             "pen_width_mm": round(builder.pen_width_mm, 4),
             "overdraw": builder.overdraw,
+            "levels": builder.levels,
             "gcr_pct": round(builder.gcr_pct, 3),
             "gamma": round(builder.gamma, 4),
             "weights": {

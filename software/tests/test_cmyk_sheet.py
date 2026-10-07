@@ -52,7 +52,7 @@ class SheetBuilderTests(unittest.TestCase):
             blocks.setdefault(patch["block"], []).append(patch)
         self.assertEqual(len(manifest["fiducials_mm"]), 4)
         self.assertEqual(len(blocks["coverage"]), 40)
-        self.assertEqual(len(blocks["dots"]), 28)
+        self.assertEqual(len(blocks["steps"]), 28)
         self.assertEqual(len(blocks["overdraw"]), 12)
         self.assertEqual(len(blocks["gcr"]), 5)
         self.assertEqual(len(blocks["mix"]), 4)
@@ -89,6 +89,50 @@ class SheetBuilderTests(unittest.TestCase):
     def test_small_page_is_rejected(self):
         with self.assertRaises(ValueError):
             build(page_width_mm=100.0, page_height_mm=100.0)
+
+    def test_line_sheet_swaps_the_dot_ladder_for_pitch(self):
+        layers, manifest = build(screen="lines", pitch_mm=1.2)
+        self.assertEqual(manifest["sheet_settings"]["style"], "lines")
+        steps = [
+            patch
+            for patch in manifest["patches"]
+            if patch["block"] == "steps" and patch["channels"] == ["c"]
+        ]
+        self.assertEqual(
+            [patch["label"] for patch in steps],
+            ["0.6", "0.8", "1", "1.4", "1.8", "2.4", "3"],
+        )
+        self.assertEqual(
+            [patch["pitch_mm"] for patch in steps],
+            [0.6, 0.8, 1.0, 1.4, 1.8, 2.4, 3.0],
+        )
+        for channel in converter.CHANNELS:
+            self.assertTrue(layers[channel])
+        dot_layers, _ = build()
+        line_marks = sum(len(layers[channel]) for channel in converter.CHANNELS)
+        dot_marks = sum(
+            len(dot_layers[channel]) for channel in converter.CHANNELS
+        )
+        self.assertLess(line_marks, dot_marks)
+
+    def test_crosshatch_sheet_sweeps_hatch_levels(self):
+        _, manifest = build(screen="crosshatch")
+        self.assertEqual(manifest["sheet_settings"]["style"], "crosshatch")
+        steps = [
+            patch
+            for patch in manifest["patches"]
+            if patch["block"] == "steps" and patch["channels"] == ["m"]
+        ]
+        self.assertEqual(
+            [patch["label"] for patch in steps], ["2", "3", "4", "5"]
+        )
+        self.assertEqual(
+            [patch["levels"] for patch in steps], [2, 3, 4, 5]
+        )
+
+    def test_unknown_screen_is_rejected(self):
+        with self.assertRaises(ValueError):
+            build(screen="spirals")
 
     def test_sheet_is_deterministic(self):
         first, manifest_a = build()

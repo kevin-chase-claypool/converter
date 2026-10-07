@@ -465,6 +465,26 @@ class CmykTabTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             tab.build_svg()
 
+    def test_calibration_sheet_follows_the_line_screen(self):
+        tab = self.make_tab()
+        tab.page_w.setValue(200)
+        tab.page_h.setValue(200)
+        tab.pitch.setValue(2.0)
+        self.assertEqual(tab.calibration_screen.currentData(), "match")
+        tab.style.setCurrentIndex(tab.style.findData("lines"))
+        tab.calibration_mode.setChecked(True)
+        tab.build_svg()
+        self.assertEqual(
+            tab._layers_manifest["sheet_settings"]["style"], "lines"
+        )
+        tab.calibration_screen.setCurrentIndex(
+            tab.calibration_screen.findData("halftone")
+        )
+        tab.build_svg()
+        self.assertEqual(
+            tab._layers_manifest["sheet_settings"]["style"], "halftone"
+        )
+
 
 class FakeHost:
     """Minimal host: analysis is synthetic, saving writes real temp files."""

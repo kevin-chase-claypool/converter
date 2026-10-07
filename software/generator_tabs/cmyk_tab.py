@@ -246,7 +246,8 @@ class CmykTab(GeneratorTab):
         )
         self.calibration_mode.setToolTip(
             "Build a labeled calibration sheet instead of the artwork: "
-            "per-ink coverage, dot-size and overdraw ladders, a GCR ramp, "
+            "per-ink coverage and overdraw ladders, a dot-size, line-pitch, "
+            "or hatch-level ladder for the chosen sheet screen, a GCR ramp, "
             "full-tone pair mixes, dense ink spots, blank paper, and four "
             "corner fiducials. Save also writes a calibration manifest for "
             "tools\\cmyk_calibrate.py, which turns a scan of the plotted "
@@ -254,10 +255,25 @@ class CmykTab(GeneratorTab):
             "preview."
         )
         calibration.addRow("Test sheet", self.calibration_mode)
+        self.calibration_screen = QComboBox()
+        self.calibration_screen.addItem("Match the Screen style", "match")
+        self.calibration_screen.addItem(
+            "Line screen (straight strokes)", "lines"
+        )
+        self.calibration_screen.addItem("Crosshatch levels", "crosshatch")
+        self.calibration_screen.addItem("Halftone dots", "halftone")
+        self.calibration_screen.setToolTip(
+            "Marks used by the calibration sheet. Matching your art's Screen "
+            "style makes the ladders calibrate exactly what you print: dot "
+            "size for halftone, line pitch for the line screen, hatch levels "
+            "for crosshatch."
+        )
+        calibration.addRow("Sheet screen", self.calibration_screen)
         self.calibration_hint = QLabel(
             "Sheet mode uses the current pitch, dot size, pen width, "
-            "overdraw, GCR, gamma, and weights; the ladders print raw tone. "
-            "Raise Dot pitch for a faster calibration plot."
+            "overdraw, GCR, gamma, and weights; the sheet screen follows "
+            "your Screen style by default. Ladder cells print raw tone; "
+            "raise the pitch for a faster calibration plot."
         )
         self.calibration_hint.setWordWrap(True)
         self.calibration_hint.setStyleSheet("color: #475569;")
@@ -356,6 +372,7 @@ class CmykTab(GeneratorTab):
                 if self.write_boxes[channel].isChecked()
             ),
             self.calibration_mode.isChecked(),
+            self.calibration_screen.currentData(),
             settings_key,
         )
 
@@ -437,6 +454,10 @@ class CmykTab(GeneratorTab):
     def _build_calibration_layers(self):
         width = self.page_w.value()
         height = self.page_h.value()
+        screen = self.calibration_screen.currentData()
+        if screen == "match":
+            style = self.style.currentData()
+            screen = style if style in ("lines", "crosshatch") else "halftone"
         layers, manifest = build_sheet(
             width,
             height,
@@ -449,6 +470,8 @@ class CmykTab(GeneratorTab):
             weights=self._weights(),
             gamma=self.gamma.value(),
             overdraw=self.overdraw.value(),
+            screen=screen,
+            levels=self.levels.value(),
         )
         stroke = self.pen_width.value()
         files = {}

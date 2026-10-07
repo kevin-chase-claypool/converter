@@ -1,5 +1,35 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-calibration-line-screens"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Calibration sheet follows the screen style, lines included
+
+- Request: "i dont want to do this with dots. my printer is not good with
+  dots. it is good with straight lines though."
+- Change: the CMYK calibration sheet's marks now follow a **Sheet screen**
+  choice (Calibration group) that defaults to matching the art's Screen
+  style: line screen, crosshatch levels, or halftone dots. The second ladder
+  row adapts to the chosen screen - line pitch (0.6-3.0 mm at full tone),
+  hatch levels (2-5 at 80% tone), or dot size (20-140% at 50% tone) - and
+  dense single-ink spots use a tight mark spacing for line screens.
+- Numbers: line screens draw continuous strokes, so the default 200 x 200 mm
+  line sheet builds about 170/250/150 C/M/Y polylines versus roughly 2,600
+  dot marks per ink, and the four plotted passes need far fewer pen cycles.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 365 tests (1 skipped, headless shader compile). New tests cover the
+  line sheet's pitch ladder and lower mark count, the crosshatch level sweep,
+  unknown-screen rejection, and the tab's match-the-style default plus the
+  explicit override. The default line sheet was rendered to PNG and
+  inspected, and `docs_index.py --write` / `--check` pass.
+- Struggle: a builder attribute named `screen` shadowed the `screen()` method
+  and had to be renamed; a single universal ladder was rejected because a
+  dot-size ladder is meaningless to a line printer.
+- Risk: the line sheet has not been plotted yet; ink mixing on paper remains
+  the ground truth. `WSW-20261007-007` describes the earlier dot-only sheet;
+  this change supersedes that behavior.
+- Evidence: `WSW-20261007-008`; `software/README.md`;
+  `software/generator_tabs/cmyk_sheet.py`.
+- Category: windows-software, cmyk, calibration, line-screen, test-print.
+
 <a id="elog-20261007-cmyk-calibration-sheet"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK gains a labeled calibration sheet and scan tool
 

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-008` | implemented | [Let the CMYK calibration sheet follow the screen style](2026-10-07-cmyk-calibration-line-screens.md) | `cmyk`, `calibration`, `line-screen`, `crosshatch`, `test-print` |
 | 2026-10-07 | `WSW-20261007-007` | implemented | [Add a labeled CMYK calibration sheet and scan tool](2026-10-07-cmyk-calibration-sheet.md) | `cmyk`, `calibration`, `test-print`, `color-separation`, `tools` |
 | 2026-10-07 | `WSW-20261007-006` | implemented | [Add a Red motion lines toggle to the preview panel](2026-10-07-preview-motion-lines-toggle.md) | `preview`, `user-interface`, `opengl` |
 | 2026-10-07 | `WSW-20261007-005` | implemented | [Photo-ready CMYK defaults: auto levels, solid dots, 1.2 mm pitch](2026-10-07-cmyk-photo-defaults.md) | `cmyk`, `defaults`, `auto-levels`, `halftone`, `photo` |
