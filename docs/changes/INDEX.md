@@ -6,6 +6,7 @@ Newest changes appear first.
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
 | 2026-10-07 | `WSW-20261007-016` | windows-software | implemented | [Raise the CMYK max-marks cap](windows-software/2026-10-07-cmyk-max-marks-cap.md) |
+| 2026-10-07 | `WSW-20261007-015` | windows-software | implemented | [Set the CMYK defaults to the owner's tuned workflow](windows-software/2026-10-07-cmyk-owner-defaults.md) |
 | 2026-10-07 | `WSW-20261007-014` | windows-software | implemented | [Extend crosshatch screens past four families](windows-software/2026-10-07-cmyk-crosshatch-levels.md) |
 | 2026-10-07 | `WSW-20261007-013` | windows-software | implemented | [Raise the CMYK resolution cap for large sources](windows-software/2026-10-07-cmyk-resolution-cap.md) |
 | 2026-10-07 | `WSW-20261007-012` | windows-software | implemented | [Print the calibration mix cells at the dense spot spacing](windows-software/2026-10-07-cmyk-dense-mix-cells.md) |

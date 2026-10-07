@@ -401,11 +401,13 @@ class CmykTabTests(unittest.TestCase):
         tab = self.CmykTab(FakeHost(self.image_path))
         self.addCleanup(tab.deleteLater)
         self.assertTrue(tab.auto_levels.isChecked())
-        self.assertTrue(tab.solid_dots.isChecked())
+        self.assertFalse(tab.solid_dots.isChecked())
+        self.assertEqual(tab.style.currentData(), "crosshatch")
+        self.assertEqual(tab.levels.value(), 5)
         self.assertAlmostEqual(tab.pitch.value(), 1.2, places=3)
-        self.assertAlmostEqual(tab.dot_size.value(), 75.0, places=3)
-        self.assertEqual(tab.max_marks.value(), 15000)
-        self.assertEqual(tab.resolution.value(), 1200)
+        self.assertAlmostEqual(tab.dot_size.value(), 100.0, places=3)
+        self.assertEqual(tab.max_marks.value(), 40000)
+        self.assertEqual(tab.resolution.value(), 6000)
         self.assertEqual(tab.weight_k.value(), 100)
 
     def test_resolution_is_not_capped_at_2000(self):

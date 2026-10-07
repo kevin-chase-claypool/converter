@@ -159,7 +159,7 @@ class CmykTab(GeneratorTab):
         options.addRow("Ink gamma", self.gamma)
         self.gcr = double_spin(100, 0, 150, 5, 0, " %")
         options.addRow("Black (GCR)", self.gcr)
-        self.resolution = int_spin(1200, 200, 100000, 50)
+        self.resolution = int_spin(6000, 200, 100000, 50)
         self.resolution.setToolTip(
             "Longest side of the sampling image in pixels. The source is "
             "only ever downsampled, never upsampled, so values at or above "
@@ -191,19 +191,20 @@ class CmykTab(GeneratorTab):
             "TSP and contour styles use the same pitch as their local mark "
             "spacing."
         )
+        self.style.setCurrentIndex(self.style.findData("crosshatch"))
         screen.addRow("Style", self.style)
         self.pitch = double_spin(1.2, 0.6, 8.0, 0.1, 2, " mm")
         screen.addRow("Dot pitch", self.pitch)
-        self.dot_size = double_spin(75, 20, 140, 5, 0, " %")
+        self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
         screen.addRow("Dot size", self.dot_size)
         self.solid_dots = QCheckBox("Solid dots")
-        self.solid_dots.setChecked(True)
+        self.solid_dots.setChecked(False)
         self.solid_dots.setToolTip(
             "Draw each halftone dot as a two-turn spiral so it reads as a "
             "filled dot at pen width instead of an open ring."
         )
         screen.addRow("", self.solid_dots)
-        self.levels = int_spin(4, 2, 9)
+        self.levels = int_spin(5, 2, 9)
         self.levels.setToolTip(
             "Crosshatch levels: 2 draws one line family, each extra level adds "
             "a family at the next tone threshold. The first four families "
@@ -219,7 +220,7 @@ class CmykTab(GeneratorTab):
         screen.addRow("Overdraw", self.overdraw)
         self.pen_width = double_spin(0.3, 0.1, 1.2, 0.05, 2, " mm")
         screen.addRow("Pen width", self.pen_width)
-        self.max_marks = int_spin(15000, 200, 200000, 500)
+        self.max_marks = int_spin(40000, 200, 200000, 500)
         screen.addRow("Max marks/ink", self.max_marks)
         self.seed = int_spin(7, 0, 999_999)
         screen.addRow("Seed (stipple)", self.seed)
