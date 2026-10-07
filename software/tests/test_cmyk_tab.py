@@ -100,9 +100,35 @@ class ScreeningTests(unittest.TestCase):
             converter.screen_channel(white, self.geometry(), spacing_mm=4.0), []
         )
         gray = self.np.full((32, 32), 0.6, dtype="float32")
-        marks = converter.screen_channel(gray, self.geometry(), spacing_mm=4.0)
+        marks = converter.screen_channel(
+            gray, self.geometry(), spacing_mm=4.0, solid=False
+        )
         self.assertGreater(len(marks), 100)
         self.assertEqual(len(marks[0]), 9)  # closed 8-step circle
+        solid = converter.screen_channel(gray, self.geometry(), spacing_mm=4.0)
+        self.assertEqual(len(solid), len(marks))
+        self.assertEqual(len(solid[0]), 15)  # 14-step spiral reads as a dot
+
+    def test_auto_levels_stretch_a_low_key_image(self):
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-levels-")
+        self.addCleanup(lambda: __import__("shutil").rmtree(folder, ignore_errors=True))
+        path = str(Path(folder) / "lowkey.png")
+        image = Image.new("L", (32, 32))
+        for x in range(32):
+            for y in range(32):
+                image.putpixel((x, y), 90 + (x * 40) // 31)
+        image.save(path)
+        plain, _ = converter.prepare_image_tones(
+            path, 80, 80, margin_mm=4, resolution_px=64, auto_levels=False
+        )
+        stretched, _ = converter.prepare_image_tones(
+            path, 80, 80, margin_mm=4, resolution_px=64, auto_levels=True
+        )
+        plain_range = float(plain["k"].max() - plain["k"].min())
+        stretched_range = float(stretched["k"].max() - stretched["k"].min())
+        self.assertGreater(stretched_range, plain_range + 0.3)
 
     def test_mark_cap_grows_the_pitch(self):
         dark = self.np.full((32, 32), 0.9, dtype="float32")
@@ -359,6 +385,17 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(
             [ink for ink, _path in tab.preview_layers()], ["c", "y", "k"]
         )
+
+    def test_shipped_defaults_suit_a_photo(self):
+        tab = self.CmykTab(FakeHost(self.image_path))
+        self.addCleanup(tab.deleteLater)
+        self.assertTrue(tab.auto_levels.isChecked())
+        self.assertTrue(tab.solid_dots.isChecked())
+        self.assertAlmostEqual(tab.pitch.value(), 1.2, places=3)
+        self.assertAlmostEqual(tab.dot_size.value(), 75.0, places=3)
+        self.assertEqual(tab.max_marks.value(), 15000)
+        self.assertEqual(tab.resolution.value(), 1200)
+        self.assertEqual(tab.weight_k.value(), 100)
 
     def test_planning_is_background_not_a_button(self):
         tab = self.make_tab()

@@ -140,6 +140,14 @@ class CmykTab(GeneratorTab):
         image.addRow("Artwork", self.image_label)
 
         options = self.add_group("Image options")
+        self.auto_levels = QCheckBox("Stretch tonality")
+        self.auto_levels.setChecked(True)
+        self.auto_levels.setToolTip(
+            "Stretch the image luminance between its 1st and 99th percentiles "
+            "before separation, so a low-key or hazy photo uses the full tonal "
+            "range instead of screening into one flat mid-tone."
+        )
+        options.addRow("Auto levels", self.auto_levels)
         self.saturation = double_spin(100, 0, 200, 5, 0, " %")
         options.addRow("Saturation", self.saturation)
         self.contrast = double_spin(100, 25, 200, 5, 0, " %")
@@ -148,12 +156,12 @@ class CmykTab(GeneratorTab):
         options.addRow("Ink gamma", self.gamma)
         self.gcr = double_spin(100, 0, 150, 5, 0, " %")
         options.addRow("Black (GCR)", self.gcr)
-        self.resolution = int_spin(700, 200, 1400, 50)
+        self.resolution = int_spin(1200, 200, 2000, 50)
         options.addRow("Resolution px", self.resolution)
         self.weight_c = double_spin(100, 0, 150, 5, 0, " %")
         self.weight_m = double_spin(100, 0, 150, 5, 0, " %")
         self.weight_y = double_spin(100, 0, 150, 5, 0, " %")
-        self.weight_k = double_spin(80, 0, 150, 5, 0, " %")
+        self.weight_k = double_spin(100, 0, 150, 5, 0, " %")
         options.addRow("Cyan weight", self.weight_c)
         options.addRow("Magenta weight", self.weight_m)
         options.addRow("Yellow weight", self.weight_y)
@@ -175,10 +183,17 @@ class CmykTab(GeneratorTab):
             "spacing."
         )
         screen.addRow("Style", self.style)
-        self.pitch = double_spin(3.0, 0.8, 8.0, 0.2, 2, " mm")
+        self.pitch = double_spin(1.2, 0.6, 8.0, 0.1, 2, " mm")
         screen.addRow("Dot pitch", self.pitch)
-        self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
+        self.dot_size = double_spin(75, 20, 140, 5, 0, " %")
         screen.addRow("Dot size", self.dot_size)
+        self.solid_dots = QCheckBox("Solid dots")
+        self.solid_dots.setChecked(True)
+        self.solid_dots.setToolTip(
+            "Draw each halftone dot as a two-turn spiral so it reads as a "
+            "filled dot at pen width instead of an open ring."
+        )
+        screen.addRow("", self.solid_dots)
         self.levels = int_spin(4, 2, 5)
         self.levels.setToolTip(
             "Crosshatch levels: 2 draws one line family, each extra level adds "
@@ -193,7 +208,7 @@ class CmykTab(GeneratorTab):
         screen.addRow("Overdraw", self.overdraw)
         self.pen_width = double_spin(0.3, 0.1, 1.2, 0.05, 2, " mm")
         screen.addRow("Pen width", self.pen_width)
-        self.max_marks = int_spin(5000, 200, 20000, 500)
+        self.max_marks = int_spin(15000, 200, 40000, 500)
         screen.addRow("Max marks/ink", self.max_marks)
         self.seed = int_spin(7, 0, 999_999)
         screen.addRow("Seed (stipple)", self.seed)
@@ -292,6 +307,7 @@ class CmykTab(GeneratorTab):
             self.page_h.value(),
             self.margin.value(),
             self.scale_pct.value(),
+            self.auto_levels.isChecked(),
             self.saturation.value(),
             self.contrast.value(),
             self.gamma.value(),
@@ -301,6 +317,7 @@ class CmykTab(GeneratorTab):
             self.style.currentData(),
             self.pitch.value(),
             self.dot_size.value(),
+            self.solid_dots.isChecked(),
             self.pen_width.value(),
             self.levels.value(),
             self.overdraw.value(),
@@ -347,6 +364,7 @@ class CmykTab(GeneratorTab):
             gcr=self.gcr.value() / 100.0,
             weights=self._weights(),
             gamma=self.gamma.value(),
+            auto_levels=self.auto_levels.isChecked(),
         )
         width = self.page_w.value()
         height = self.page_h.value()
@@ -367,6 +385,7 @@ class CmykTab(GeneratorTab):
                 pen_diameter_mm=self.pen_width.value(),
                 levels=self.levels.value(),
                 overdraw=self.overdraw.value(),
+                solid=self.solid_dots.isChecked(),
             )
             layers[channel] = marks
             document = converter.svg_document(

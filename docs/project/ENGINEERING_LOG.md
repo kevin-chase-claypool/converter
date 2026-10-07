@@ -1,5 +1,39 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-photo-defaults"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK defaults show faces on a real photo
+
+- Request: "set up defaults for the cmyk options that should work with an
+  image i open ... i imported PXL_20211205_011351426.PORTRAIT.jpg but i cant
+  get any of these to show enough resolution as to show the faces."
+- Diagnosis on that photo: the 3 mm pitch plus the 5000-mark cap screened only
+  about 62 dots across the page; the night image's luminance spans 0.015-0.79
+  so the screens collapsed into a flat mid-dark field; and halftone dots were
+  drawn as ring outlines that read as rings instead of solid dots.
+- Change: auto levels (luminance 1st-99th percentile stretch) is on by default
+  before separation; halftone dots are drawn as two-turn spirals so each mark
+  reads solid at pen width; shipped defaults are now 1.2 mm pitch, 75 % dot
+  size, 15000 marks per ink, 1200 px resolution and 100 % C/M/Y/K weights,
+  with **Auto levels** and **Solid dots** exposed as checkboxes. Both are part
+  of the layer cache key and the background per-ink planning.
+- Verification: the owner's photo rendered through the shipped tab defaults
+  gives 1647 C / 13109 M / 13137 Y / 13572 K marks with both faces legible
+  (previous defaults: 319/2621/2614/2937 marks, no legible faces); 349 tests
+  pass (1 skipped shader compile on the headless platform), including new
+  auto-levels, solid-vs-ring dot, and shipped-defaults tests; screening the
+  default page takes ~1.25 s and one dense ink plans in 9-15 s, so the
+  automatic four-ink background planning takes about a minute and remains
+  cancellable.
+- Struggle: contrast/gamma boosting clipped the highlights, CMY softening
+  turned the page into a dark mass, and ring dots stayed mushy at any pitch;
+  the percentile stretch plus solid dots plus the finer pitch won.
+- Risk: a full-page photo screen is tens of thousands of pen cycles (many
+  hours of dwell, consistent with community CMYK plots); raise Dot pitch or
+  lower Max marks/ink for a faster pass. Not yet plotted on paper.
+- Evidence: `WSW-20261007-005`; `software/README.md`.
+- Category: windows-software, cmyk, defaults, auto-levels, halftone, photo,
+  plotter-art.
+
 <a id="elog-20261007-cmyk-background-planning"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK plans its four files automatically
 

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-005` | implemented | [Photo-ready CMYK defaults: auto levels, solid dots, 1.2 mm pitch](2026-10-07-cmyk-photo-defaults.md) | `cmyk`, `defaults`, `auto-levels`, `halftone`, `photo` |
 | 2026-10-07 | `WSW-20261007-004` | implemented | [Plan the four CMYK programs automatically; drop the Analyze button](2026-10-07-cmyk-background-planning.md) | `cmyk`, `workflow`, `preview`, `cost-analysis`, `x-theta`, `y-theta` |
 | 2026-10-07 | `WSW-20261007-003` | implemented | [Draw the CMYK preview per ink colour](2026-10-07-cmyk-ink-preview.md) | `cmyk`, `opengl`, `preview`, `color-separation`, `generator-tabs` |
 | 2026-10-07 | `WSW-20261007-002` | implemented | [Add six CMYK mark styles and an overdraw control](2026-10-07-cmyk-mark-styles.md) | `cmyk`, `color-separation`, `screening`, `line-screen`, `tsp`, `contours`, `gcode` |

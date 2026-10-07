@@ -122,6 +122,8 @@ def prepare_image_tones(
     gcr=1.0,
     weights=None,
     gamma=1.0,
+    auto_levels=True,
+    level_clip_pct=1.0,
     cancel_check=None,
 ):
     """Load a raster, fit it to the page, and return ``(tones, geometry)``.
@@ -129,6 +131,11 @@ def prepare_image_tones(
     The image is aspect-fit inside the page margins and downsampled so its
     longest side is at most ``resolution_px``. ``geometry`` records where the
     image sits in page millimetres so the screen can sample tone per dot.
+
+    ``auto_levels`` stretches the luminance between the 1st and 99th
+    percentiles before separation, so a low-key or hazy photo uses the whole
+    tonal range instead of screening into one flat mid-tone. Disable it for
+    images that are already well exposed.
     """
     from PIL import Image
     import numpy as np
@@ -150,6 +157,14 @@ def prepare_image_tones(
     pixel_h = max(8, int(round(image.height * factor)))
     image = image.resize((pixel_w, pixel_h), Image.LANCZOS)
     rgb = np.asarray(image, dtype=np.float32) / 255.0
+
+    if auto_levels:
+        luminance = rgb @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
+        clip = max(0.0, min(float(level_clip_pct), 20.0))
+        low, high = np.percentile(luminance, [clip, 100.0 - clip])
+        spread = float(high) - float(low)
+        if spread > 1e-3:
+            rgb = np.clip((rgb - float(low)) / spread, 0.0, 1.0)
 
     saturation = float(saturation)
     if abs(saturation - 1.0) > 1e-9:
@@ -375,6 +390,42 @@ def _apply_overdraw(polylines, passes, spacing):
     return out
 
 
+def _spiral_mark(cx, cy, radius, turns=2.0, steps=14):
+    """One Archimedean spiral from the centre out to ``radius``.
+
+    A plotted pen dot is an outline; a two-turn spiral reads as a filled dot
+    at pen width while keeping every mark one continuous pen-down stroke.
+    """
+    steps = max(8, int(steps))
+    points = []
+    for index in range(steps + 1):
+        t = index / steps
+        angle = 2.0 * math.pi * turns * t
+        points.append(
+            (cx + math.cos(angle) * radius * t, cy + math.sin(angle) * radius * t)
+        )
+    return points
+
+
+def solid_dots(contours, turns=2.0, steps=14):
+    """Convert closed dot contours (circles) into solid-reading spirals."""
+    marks = []
+    for contour in contours:
+        xs = [point[0] for point in contour]
+        ys = [point[1] for point in contour]
+        if len(contour) < 3 or not xs:
+            continue
+        radius = 0.5 * (max(xs) - min(xs))
+        if radius <= 1e-9:
+            continue
+        marks.append(
+            _spiral_mark(
+                sum(xs) / len(xs), sum(ys) / len(ys), radius, turns, steps
+            )
+        )
+    return marks
+
+
 def screen_channel(
     tone,
     geometry,
@@ -387,6 +438,7 @@ def screen_channel(
     pen_diameter_mm=0.3,
     levels=4,
     overdraw=1,
+    solid=True,
     cancel_check=None,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
@@ -499,6 +551,8 @@ def screen_channel(
             cancel_check=cancel_check,
             steps=8,
         )
+        if solid:
+            marks = solid_dots(marks)
     return _apply_overdraw(marks, overdraw, spacing)
 
 
