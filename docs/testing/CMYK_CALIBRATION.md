@@ -13,10 +13,10 @@ layout in [`../../software/generator_tabs/cmyk_sheet.py`](../../software/generat
 A quiet calibration sheet: the only printed text is a two-line identification
 header. The marks are per-ink coverage ladders, per-ink step ladders with the
 overdraw cells at the end of each row, a GCR ramp, mix patches (C+M, C+Y,
-M+Y, C+M+Y), dense single-ink spots, a blank paper patch, and four dark
-square fiducials in the corners with all-ink cross arms. Row order from the
-top: C, M, Y, K coverage; C, M, Y, K steps plus overdraw; GCR ramp; mixes,
-spots, paper.
+M+Y, C+M+Y, C+M+Y+K), dense single-ink spots, a blank paper patch, and four
+dark square fiducials in the corners with all-ink cross arms. Row order
+from the top: C, M, Y, K coverage; C, M, Y, K steps plus overdraw; GCR
+ramp; mixes, spots, paper.
 
 The printed header is the minimum needed to match a scan to this layout:
 

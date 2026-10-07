@@ -55,7 +55,7 @@ class SheetBuilderTests(unittest.TestCase):
         self.assertEqual(len(blocks["steps"]), 28)
         self.assertEqual(len(blocks["overdraw"]), 12)
         self.assertEqual(len(blocks["gcr"]), 5)
-        self.assertEqual(len(blocks["mix"]), 4)
+        self.assertEqual(len(blocks["mix"]), 5)
         self.assertEqual(len(blocks["spot"]), 4)
         self.assertEqual(len(blocks["paper"]), 1)
         for channel in converter.CHANNELS:
@@ -248,7 +248,7 @@ class ScanToolTests(unittest.TestCase):
             for row in profile["validation"]
             for value in row["error"]
         ]
-        self.assertEqual(len(profile["validation"]), 4)
+        self.assertEqual(len(profile["validation"]), 5)
         self.assertLess(max(errors), 0.10)
 
     def test_cli_writes_the_profile(self):

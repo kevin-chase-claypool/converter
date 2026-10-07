@@ -29,7 +29,7 @@ from ._hershey import text_polylines
 
 
 SHEET_KIND = "cmyk-calibration-sheet"
-SHEET_VERSION = 3
+SHEET_VERSION = 4
 
 # Layout constants, millimetres.
 FIDUCIAL_SIZE_MM = 6.0
@@ -55,7 +55,13 @@ OVERDRAW_STEPS = (1, 2, 3)
 GCR_STEPS = (0.0, 0.25, 0.50, 0.75, 1.00)
 GRAY_TONE = 0.5
 HATCH_TONE = 0.8
-MIX_SETS = (("c", "m"), ("c", "y"), ("m", "y"), ("c", "m", "y"))
+MIX_SETS = (
+    ("c", "m"),
+    ("c", "y"),
+    ("m", "y"),
+    ("c", "m", "y"),
+    ("c", "m", "y", "k"),
+)
 SPOT_SCALE = 1.40
 SHEET_SCREENS = ("lines", "crosshatch", "halftone")
 

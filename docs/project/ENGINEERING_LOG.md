@@ -1,5 +1,27 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-calibration-quad-mix"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Calibration mix row gains the C+M+Y+K quad
+
+- Request: "did you pack as much into that space as possible so i dont need
+  to do multiple scans?" The audit found the one real gap: black appeared
+  only in single-ink spots, so the multiply check never tested black over
+  ink.
+- Change: the mix row prints C+M, C+Y, M+Y, C+M+Y, and C+M+Y+K at full tone
+  (sheet version 4). Five mixes plus four spots and paper keep the row at
+  ten cells, so cell width matches the ladder rows and no space is added.
+  The tool needed no change: validation multiplies however many channels a
+  patch names.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 369 tests (1 skipped, headless shader compile), including the
+  sheet census and the synthetic-scan recovery with five validation rows;
+  `docs_index.py --write` / `--check` pass.
+- Risk: v3 sheets must not be analyzed with a v4 rebuild; the manifest
+  records the sheet version.
+- Evidence: `WSW-20261007-011`; `docs/testing/CMYK_CALIBRATION.md`;
+  `software/generator_tabs/cmyk_sheet.py`.
+- Category: windows-software, cmyk, calibration, test-print, ai-handoff.
+
 <a id="elog-20261007-cmyk-quiet-calibration-sheet"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Calibration sheet prints only the two header lines
 

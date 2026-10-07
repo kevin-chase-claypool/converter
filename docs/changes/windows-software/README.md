@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-011` | implemented | [Add the C+M+Y+K quad to the calibration mixes](2026-10-07-cmyk-calibration-quad-mix.md) | `cmyk`, `calibration`, `test-print`, `ai-handoff` |
 | 2026-10-07 | `WSW-20261007-010` | implemented | [Strip the calibration sheet to what a scan needs](2026-10-07-cmyk-quiet-calibration-sheet.md) | `cmyk`, `calibration`, `test-print`, `ai-handoff`, `line-screen` |
 | 2026-10-07 | `WSW-20261007-009` | implemented | [Make CMYK calibration scans analyzable from the image alone](2026-10-07-cmyk-calibration-ai-handoff.md) | `cmyk`, `calibration`, `test-print`, `ai-handoff`, `tools` |
 | 2026-10-07 | `WSW-20261007-008` | implemented | [Let the CMYK calibration sheet follow the screen style](2026-10-07-cmyk-calibration-line-screens.md) | `cmyk`, `calibration`, `line-screen`, `crosshatch`, `test-print` |
