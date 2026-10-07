@@ -219,7 +219,7 @@ class CmykTab(GeneratorTab):
         screen.addRow("Overdraw", self.overdraw)
         self.pen_width = double_spin(0.3, 0.1, 1.2, 0.05, 2, " mm")
         screen.addRow("Pen width", self.pen_width)
-        self.max_marks = int_spin(15000, 200, 40000, 500)
+        self.max_marks = int_spin(15000, 200, 200000, 500)
         screen.addRow("Max marks/ink", self.max_marks)
         self.seed = int_spin(7, 0, 999_999)
         screen.addRow("Seed (stipple)", self.seed)

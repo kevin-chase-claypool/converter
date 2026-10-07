@@ -418,6 +418,11 @@ class CmykTabTests(unittest.TestCase):
         tab.levels.setValue(9)
         self.assertEqual(tab.levels.value(), 9)
 
+    def test_max_marks_is_not_capped_at_40000(self):
+        tab = self.make_tab()
+        tab.max_marks.setValue(80000)
+        self.assertEqual(tab.max_marks.value(), 80000)
+
     def test_planning_is_background_not_a_button(self):
         tab = self.make_tab()
         self.assertFalse(hasattr(tab, "analyze_button"))

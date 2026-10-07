@@ -1,5 +1,22 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-max-marks-cap"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK max-marks cap raised to 200000
+
+- Request: "im trying to sharpen the image, so far i had to increase to
+  40000 and 5000 res, 40000 was the limit, but im wondering if it could be
+  higher."
+- Change: **Max marks/ink** now runs up to 200000 (was 40000). It caps the
+  dot-style screens (halftone, stipple, TSP); line and crosshatch screens
+  ignore it. Mark count sets the pen-cycle count, so plot time scales with
+  it.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 374 tests (1 skipped, headless shader compile), including a new
+  test that 80000 sticks; `docs_index.py --write` / `--check` pass.
+- Risk: 200000 marks is a multi-day plot at the current pen-cycle timings.
+- Evidence: `WSW-20261007-016`; `software/generator_tabs/cmyk_tab.py`.
+- Category: windows-software, cmyk, user-interface, screening.
+
 <a id="elog-20261007-cmyk-crosshatch-levels"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Crosshatch screens extend past four families
 
