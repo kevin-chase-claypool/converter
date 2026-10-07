@@ -1,5 +1,31 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-quiet-calibration-sheet"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Calibration sheet prints only the two header lines
+
+- Request: "did you get rid of all of the extra text on the calibration
+  sheet? only put what the ai needs to analyze it."
+- Change: sheet version 3 keeps only the two-line identification header
+  (`page 200x200 mm | margin 6 mm` and the `screen ...` line); all cell
+  labels, captions, and the footer are removed because the analysis reads
+  the manifest/layout, never the printed text. The freed space grows the
+  patch cells (clamped at 26 mm) and the K pass drops from ~1,270 to ~355
+  polylines on the default sheet.
+- Detector: patch cells are now large and square-ish enough to compete with
+  the corner marks, so fiducials are picked by distance to each image corner
+  with distinct candidates and a size-consistency check; otherwise the tool
+  asks for `--corners`. `--pitch`/`--levels` describe a rebuilt layout.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 369 tests (1 skipped, headless shader compile), including a new
+  every-mark-inside-the-page test; the quiet line sheet was rendered and
+  inspected; `docs_index.py --write` / `--check` pass.
+- Risk: the sheet needs the manifest or the handoff doc to be interpreted by
+  a human; the scan-only path needs the header to be legible.
+- Evidence: `WSW-20261007-010`; `docs/testing/CMYK_CALIBRATION.md`;
+  `software/generator_tabs/cmyk_sheet.py`; `tools/cmyk_calibrate.py`.
+- Category: windows-software, cmyk, calibration, test-print, ai-handoff,
+  line-screen.
+
 <a id="elog-20261007-cmyk-calibration-ai-handoff"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK calibration is analyzable from a scan alone
 

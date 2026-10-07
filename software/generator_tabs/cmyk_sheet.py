@@ -2,11 +2,12 @@
 
 The sheet is screened with the same primitives as the artwork screens
 (``converter_core.cmyk.screen_channel``), so every printed patch exercises
-the real dot geometry at the tab's current pitch, dot size, pen width, and
-overdraw. Cells are labeled with their parameter values (Hershey stroke text
-drawn by the black pen), so the plotted sheet is self-describing, and the
-returned manifest records every patch rectangle in page millimetres for
-``tools/cmyk_calibrate.py``.
+the real mark geometry at the tab's current pitch, dot size, pen width, and
+overdraw. The plotted sheet prints only a two-line identification header
+(page size, margin, and sheet screen) - the minimum a scan needs so the
+deterministic layout can be rebuilt. All cell values and rectangles live in
+the returned manifest (used by ``tools/cmyk_calibrate.py`` and
+``docs/testing/CMYK_CALIBRATION.md``), not on the paper.
 
 The sheet screen follows the tab's Screen style for the dot and line screens
 (halftone dots, line screen, or crosshatch levels): what you calibrate is
@@ -28,7 +29,7 @@ from ._hershey import text_polylines
 
 
 SHEET_KIND = "cmyk-calibration-sheet"
-SHEET_VERSION = 2
+SHEET_VERSION = 3
 
 # Layout constants, millimetres.
 FIDUCIAL_SIZE_MM = 6.0
@@ -36,22 +37,15 @@ FIDUCIAL_ARM_MM = 9.0
 FIDUCIAL_INSET_MM = 5.0
 CONTENT_INSET_MM = 11.0
 
-HEADER_LINES = 4
+HEADER_LINES = 2
 HEADER_LINE_MM = 4.2
 HEADER_GAP_MM = 1.0
-FOOTER_LINES = 2
-FOOTER_LINE_MM = 3.4
-FOOTER_GAP_MM = 0.8
 
-CAPTION_STRIP_MM = 4.6
-LABEL_STRIP_MM = 4.2
 ROW_GAP_MM = 1.5
 CELL_GAP_MM = 1.5
+MAX_CELL_H_MM = 26.0
 
 HEADER_SIZE_MM = 3.2
-CAPTION_SIZE_MM = 2.9
-LABEL_SIZE_MM = 2.9
-FOOTER_SIZE_MM = 2.5
 
 COVERAGE_TONES = tuple(step / 10.0 for step in range(1, 11))
 DOT_SCALES = (0.20, 0.40, 0.60, 0.80, 1.00, 1.20, 1.40)
@@ -64,30 +58,6 @@ HATCH_TONE = 0.8
 MIX_SETS = (("c", "m"), ("c", "y"), ("m", "y"), ("c", "m", "y"))
 SPOT_SCALE = 1.40
 SHEET_SCREENS = ("lines", "crosshatch", "halftone")
-
-
-def _captions(screen):
-    if screen == "lines":
-        steps = (
-            "LINE PITCH mm at full tone (C,M,Y,K rows), then "
-            "OVERDRAW 1x/2x/3x"
-        )
-    elif screen == "crosshatch":
-        steps = (
-            "HATCH LEVELS at 80% tone (C,M,Y,K rows), then "
-            "OVERDRAW 1x/2x/3x"
-        )
-    else:
-        steps = (
-            "DOT SIZE % at 50% tone (C,M,Y,K rows), then "
-            "OVERDRAW 1x/2x/3x"
-        )
-    return (
-        "COVERAGE % - raw tone, one row per ink (C, M, Y, K from the top)",
-        steps,
-        "GCR % on 50% gray - full separation at the page weights and gamma",
-        "MIXES at full tone, dense single-ink spots, then blank paper",
-    )
 
 
 def _fmt(value):
@@ -332,46 +302,25 @@ def build_sheet(
         levels=levels,
         build_marks=marks,
     )
-    captions = _captions(screen)
     weight_map = _weight_map(weights)
-    date = datetime.date.today().isoformat()
     if screen == "lines":
         screen_line = (
-            f"lines | pitch {_fmt(builder.pitch_mm)} mm | "
-            f"pen {_fmt(builder.pen_width_mm)} mm | "
-            f"overdraw {builder.overdraw}"
+            f"screen lines | pitch {_fmt(builder.pitch_mm)} mm"
         )
     elif screen == "crosshatch":
         screen_line = (
-            f"crosshatch | pitch {_fmt(builder.pitch_mm)} mm | "
-            f"levels {builder.levels} | "
-            f"pen {_fmt(builder.pen_width_mm)} mm | "
-            f"overdraw {builder.overdraw}"
+            f"screen crosshatch | pitch {_fmt(builder.pitch_mm)} mm | "
+            f"levels {builder.levels}"
         )
     else:
         screen_line = (
-            f"dots | pitch {_fmt(builder.pitch_mm)} mm | "
-            f"dot {int(round(builder.dot_scale * 100))}% | "
-            f"pen {_fmt(builder.pen_width_mm)} mm | "
-            f"overdraw {builder.overdraw}"
+            f"screen dots | pitch {_fmt(builder.pitch_mm)} mm | "
+            f"dot {int(round(builder.dot_scale * 100))}%"
         )
     header = (
-        f"CMYK CALIBRATION SHEET - {date}",
-        f"page {_fmt(page_w)} x {_fmt(page_h)} mm | margin {_fmt(margin)} mm",
+        f"CMYK CALIBRATION - page {_fmt(page_w)}x{_fmt(page_h)} mm | "
+        f"margin {_fmt(margin)} mm",
         screen_line,
-        (
-            f"GCR {_fmt(gcr_pct)}% | gamma {_fmt(gamma)} | weights C/M/Y/K "
-            + "/".join(
-                f"{int(round(weight_map[channel] * 100))}"
-                for channel in converter.CHANNELS
-            )
-            + "%"
-        ),
-    )
-    footer_lines = (
-        "Print C, M, Y, K in order, let the ink dry, then scan the sheet flat.",
-        r"Run: python tools\cmyk_calibrate.py scan.png --manifest "
-        "<sheet>-calibration.json",
     )
 
     left = margin + CONTENT_INSET_MM
@@ -384,15 +333,10 @@ def build_sheet(
     fixed = (
         HEADER_LINES * HEADER_LINE_MM
         + HEADER_GAP_MM
-        + len(captions) * CAPTION_STRIP_MM
-        + rows * (LABEL_STRIP_MM + ROW_GAP_MM)
-        + FOOTER_LINES * FOOTER_LINE_MM
-        + FOOTER_GAP_MM
+        + rows * ROW_GAP_MM
     )
     required_text_mm = max(
-        [_text_width(line, HEADER_SIZE_MM) for line in header]
-        + [_text_width(line, CAPTION_SIZE_MM) for line in captions]
-        + [_text_width(line, FOOTER_SIZE_MM) for line in footer_lines]
+        _text_width(line, HEADER_SIZE_MM) for line in header
     )
     min_content_w = required_text_mm + 1.0
     min_content_h = fixed + rows * 4.5
@@ -404,7 +348,7 @@ def build_sheet(
             f"{math.ceil(min_content_h + pad)} mm at this margin; raise "
             "Width/Height (or lower Margin) in the Page group."
         )
-    cell_h = min(18.0, (height - fixed) / rows)
+    cell_h = min(MAX_CELL_H_MM, (height - fixed) / rows)
 
     def cell_width(count):
         cell_w = (width - CELL_GAP_MM * (count - 1)) / count
@@ -439,33 +383,17 @@ def build_sheet(
         )
     y += HEADER_LINES * HEADER_LINE_MM + HEADER_GAP_MM
 
-    def caption(text_value):
-        nonlocal y
-        builder.text(
-            text_value, left, y + CAPTION_SIZE_MM, CAPTION_SIZE_MM
-        )
-        y += CAPTION_STRIP_MM
-
     def row(cells, cell_w):
         nonlocal y
-        cell_top = y + LABEL_STRIP_MM
         for index, spec in enumerate(cells):
             x = left + index * (cell_w + CELL_GAP_MM)
-            builder.text(
-                spec["label"],
-                x + cell_w / 2.0,
-                y + LABEL_SIZE_MM,
-                LABEL_SIZE_MM,
-                align="center",
-            )
             builder.cell(
-                (x, cell_top, cell_w, cell_h),
+                (x, y, cell_w, cell_h),
                 label=spec["label"],
                 **spec["cell"],
             )
-        y = cell_top + cell_h + ROW_GAP_MM
+        y += cell_h + ROW_GAP_MM
 
-    caption(captions[0])
     for channel in converter.CHANNELS:
         cells = [
             {
@@ -481,7 +409,6 @@ def build_sheet(
         ]
         row(cells, ladder_w)
 
-    caption(captions[1])
     for channel in converter.CHANNELS:
         if screen == "lines":
             cells = [
@@ -539,7 +466,6 @@ def build_sheet(
         ]
         row(cells, cell_width(len(cells)))
 
-    caption(captions[2])
     gray = np.full((1, 1, 3), GRAY_TONE, dtype="float32")
     cells = []
     for value in GCR_STEPS:
@@ -569,7 +495,6 @@ def build_sheet(
         )
     row(cells, gcr_w)
 
-    caption(captions[3])
     cells = [
         {
             "label": "+".join(channel.upper() for channel in combo),
@@ -622,15 +547,7 @@ def build_sheet(
     )
     row(cells, mix_w)
 
-    for index, line in enumerate(footer_lines):
-        builder.text(
-            line,
-            left,
-            y + FOOTER_SIZE_MM + index * FOOTER_LINE_MM,
-            FOOTER_SIZE_MM,
-        )
-
-    if y + FOOTER_LINES * FOOTER_LINE_MM > bottom + 1e-6:
+    if y - ROW_GAP_MM > bottom + 1e-6:
         raise ValueError(
             "The calibration sheet needs a taller page; raise Height (or "
             "lower Margin) in the Page group."

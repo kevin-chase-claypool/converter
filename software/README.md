@@ -133,14 +133,16 @@ Current tools:
   full ink - so the four layers can be judged overlaid the way they will mesh
   on paper. The red machine-motion overlay and every other tool keep their
   existing single-colour preview.
-  **Test sheet** (Calibration group) replaces Preview and Save with a labeled
+  **Test sheet** (Calibration group) replaces Preview and Save with a
   calibration page instead of the artwork: per-ink coverage and overdraw
   ladders, a dot-size, line-pitch, or hatch-level ladder, a GCR ramp,
   full-tone pair mixes, dense ink spots, blank paper, and four corner
-  fiducials. The **Sheet screen** box defaults to matching your Screen style
-  (line screen and crosshatch included), so the ladders calibrate the marks
-  you actually print; line sheets draw continuous strokes and need far fewer
-  pen cycles than dot screens. Save writes `<name>-calibration-*.gcode` plus
+  fiducials; the only printed text is a two-line identification header
+  (page, margin, screen), because the cell values live in the manifest. The
+  **Sheet screen** box defaults to matching your Screen style (line screen
+  and crosshatch included), so the ladders calibrate the marks you actually
+  print; line sheets draw continuous strokes and need far fewer pen cycles
+  than dot screens. Save writes `<name>-calibration-*.gcode` plus
   `<name>-calibration.json`; plot the four files in C, M, Y, K order, scan
   the sheet flat, and run
   `python tools\cmyk_calibrate.py scan.png --manifest <name>-calibration.json`

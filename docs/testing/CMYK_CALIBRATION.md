@@ -10,16 +10,19 @@ layout in [`../../software/generator_tabs/cmyk_sheet.py`](../../software/generat
 
 ## The image
 
-A labeled calibration sheet: per-ink coverage and step ladders, overdraw
-cells, a GCR ramp, mix patches (C+M, C+Y, M+Y, C+M+Y), dense single-ink
-spots, a blank PAPER patch, and four dark square fiducials in the corners
-with all-ink cross arms. The top-left header text records the settings:
+A quiet calibration sheet: the only printed text is a two-line identification
+header. The marks are per-ink coverage ladders, per-ink step ladders with the
+overdraw cells at the end of each row, a GCR ramp, mix patches (C+M, C+Y,
+M+Y, C+M+Y), dense single-ink spots, a blank paper patch, and four dark
+square fiducials in the corners with all-ink cross arms. Row order from the
+top: C, M, Y, K coverage; C, M, Y, K steps plus overdraw; GCR ramp; mixes,
+spots, paper.
 
-1. `CMYK CALIBRATION SHEET - <date>`
-2. `page <W> x <H> mm | margin <M> mm`
-3. the sheet screen: `lines | pitch ...`, `dots | pitch ... | dot ...%`, or
-   `crosshatch | pitch ... | levels ...`
-4. `GCR ... | gamma ... | weights ...`
+The printed header is the minimum needed to match a scan to this layout:
+
+1. `CMYK CALIBRATION - page <W>x<H> mm | margin <M> mm`
+2. `screen lines | pitch <P> mm`, `screen dots | pitch <P> mm | dot <D>%`,
+   or `screen crosshatch | pitch <P> mm | levels <L>`
 
 ## Analyze
 
@@ -31,11 +34,11 @@ with all-ink cross arms. The top-left header text records the settings:
    ```
 
 2. Scan only: read the page size, margin, and sheet screen from the header
-   and rebuild the deterministic layout (other header values are
-   descriptive):
+   and rebuild the deterministic layout. `--pitch` and `--levels` are
+   descriptive only; include them when the header shows them:
 
    ```text
-   python tools\cmyk_calibrate.py scan.png --layout 216x279 --margin 6 --screen crosshatch
+   python tools\cmyk_calibrate.py scan.png --layout 216x279 --margin 6 --screen crosshatch --pitch 0.6 --levels 4
    ```
 
 3. If fiducial detection fails (cropped or cluttered image), add

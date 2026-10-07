@@ -242,17 +242,16 @@ class CmykTab(GeneratorTab):
 
         calibration = self.add_group("Calibration")
         self.calibration_mode = QCheckBox(
-            "Labeled test sheet (tune against a real print)"
+            "Test sheet (tune against a real print)"
         )
         self.calibration_mode.setToolTip(
-            "Build a labeled calibration sheet instead of the artwork: "
+            "Build a calibration sheet instead of the artwork: "
             "per-ink coverage and overdraw ladders, a dot-size, line-pitch, "
             "or hatch-level ladder for the chosen sheet screen, a GCR ramp, "
             "full-tone pair mixes, dense ink spots, blank paper, and four "
-            "corner fiducials. Save also writes a calibration manifest for "
-            "tools\\cmyk_calibrate.py, which turns a scan of the plotted "
-            "sheet into paper-relative ink numbers for a print-matching "
-            "preview."
+            "corner fiducials. The sheet prints only a two-line "
+            "identification header; the cell values live in the calibration "
+            "manifest, which Save writes for tools\\cmyk_calibrate.py."
         )
         calibration.addRow("Test sheet", self.calibration_mode)
         self.calibration_screen = QComboBox()
@@ -272,8 +271,8 @@ class CmykTab(GeneratorTab):
         self.calibration_hint = QLabel(
             "Sheet mode uses the current pitch, dot size, pen width, "
             "overdraw, GCR, gamma, and weights; the sheet screen follows "
-            "your Screen style by default. Ladder cells print raw tone; "
-            "raise the pitch for a faster calibration plot."
+            "your Screen style by default. Only the page/screen header is "
+            "printed; raise the pitch for a faster calibration plot."
         )
         self.calibration_hint.setWordWrap(True)
         self.calibration_hint.setStyleSheet("color: #475569;")

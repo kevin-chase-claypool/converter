@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -63,7 +64,7 @@ def parse_layout(text):
     return float(parts[0]), float(parts[1])
 
 
-def rebuild_manifest(layout, margin_mm, screen):
+def rebuild_manifest(layout, margin_mm, screen, pitch_mm=None, levels=None):
     """Rebuild the sheet manifest without a saved file (no screening)."""
     page_w, page_h = parse_layout(layout)
     software = Path(__file__).resolve().parents[1] / "software"
@@ -71,12 +72,18 @@ def rebuild_manifest(layout, margin_mm, screen):
         sys.path.insert(0, str(software))
     from generator_tabs.cmyk_sheet import build_sheet
 
+    options = {}
+    if pitch_mm:
+        options["pitch_mm"] = float(pitch_mm)
+    if levels:
+        options["levels"] = int(levels)
     _, manifest = build_sheet(
         page_w,
         page_h,
         margin_mm=margin_mm,
         screen=screen,
         marks=False,
+        **options,
     )
     return manifest
 
@@ -131,7 +138,7 @@ def _component_stats(members):
     }
 
 
-def detect_fiducials(image, window_fraction=0.3):
+def detect_fiducials(image):
     """Return the four dense corner fiducials, TL, TR, BL, BR order."""
     height, width = image.shape[:2]
     factor = max(1.0, max(height, width) / 900.0)
@@ -162,30 +169,45 @@ def detect_fiducials(image, window_fraction=0.3):
         stats["score"] = stats["area"] * stats["fill"]
         candidates.append(stats)
     small_h, small_w = small.shape[:2]
-    windows = (
-        (0.0, 0.0),
-        (1.0 - window_fraction, 0.0),
-        (0.0, 1.0 - window_fraction),
-        (1.0 - window_fraction, 1.0 - window_fraction),
-    )
-    corners = []
-    for window_left, window_top in windows:
-        best = None
-        for stats in candidates:
+    corner_order = ((0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0))
+    picked_indexes = []
+    for corner_x, corner_y in corner_order:
+        best_index = None
+        best_distance = None
+        for index, stats in enumerate(candidates):
+            if index in picked_indexes:
+                continue
             x = stats["cx"] / small_w
             y = stats["cy"] / small_h
-            if not (
-                window_left <= x <= window_left + window_fraction
-                and window_top <= y <= window_top + window_fraction
-            ):
+            distance = math.hypot(x - corner_x, y - corner_y)
+            if distance > 0.6:
                 continue
-            if best is None or stats["score"] > best["score"]:
-                best = stats
-        if best is None:
+            if (
+                best_distance is None
+                or distance < best_distance - 1e-9
+                or (
+                    abs(distance - best_distance) <= 1e-9
+                    and stats["score"]
+                    > candidates[best_index]["score"]
+                )
+            ):
+                best_index = index
+                best_distance = distance
+        if best_index is None:
             raise ValueError(
                 "Could not find a dense corner fiducial; pass --corners with "
                 "the four fiducial centres in pixels."
             )
+        picked_indexes.append(best_index)
+    picked = [candidates[index] for index in picked_indexes]
+    areas = [mark["area"] for mark in picked]
+    if max(areas) > 3.0 * min(areas):
+        raise ValueError(
+            "The four corner marks differ in size; the wrong marks were "
+            "picked. Pass --corners with the four fiducial centres."
+        )
+    corners = []
+    for best in picked:
         corners.append(
             (
                 best["cx"] * width / small_w,
@@ -502,6 +524,18 @@ def main(argv=None):
         help="sheet screen for --layout (default halftone)",
     )
     parser.add_argument(
+        "--pitch",
+        type=float,
+        default=0.0,
+        help="printed pitch in mm for --layout (descriptive only)",
+    )
+    parser.add_argument(
+        "--levels",
+        type=int,
+        default=0,
+        help="printed hatch levels for --layout (descriptive only)",
+    )
+    parser.add_argument(
         "--out",
         default="",
         help="profile JSON path (default: <scan stem>-profile.json)",
@@ -523,7 +557,13 @@ def main(argv=None):
         source = f"manifest {Path(args.manifest).name}"
     else:
         try:
-            manifest = rebuild_manifest(args.layout, args.margin, args.screen)
+            manifest = rebuild_manifest(
+                args.layout,
+                args.margin,
+                args.screen,
+                args.pitch,
+                args.levels,
+            )
         except ValueError as exc:
             parser.error(str(exc))
         source = f"rebuilt layout {args.layout} mm ({args.screen})"

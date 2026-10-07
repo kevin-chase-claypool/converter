@@ -149,6 +149,17 @@ class SheetBuilderTests(unittest.TestCase):
         for channel in converter.CHANNELS:
             self.assertEqual(layers[channel], [])
 
+    def test_sheet_marks_stay_inside_the_page(self):
+        for screen in ("lines", "crosshatch", "halftone"):
+            layers, _ = build(screen=screen)
+            for channel in converter.CHANNELS:
+                for line in layers[channel]:
+                    for x, y in line:
+                        self.assertGreaterEqual(x, -1e-6, screen)
+                        self.assertGreaterEqual(y, -1e-6, screen)
+                        self.assertLessEqual(x, 200.0 + 1e-6, screen)
+                        self.assertLessEqual(y, 200.0 + 1e-6, screen)
+
     def test_sheet_is_deterministic(self):
         first, manifest_a = build()
         second, manifest_b = build()
