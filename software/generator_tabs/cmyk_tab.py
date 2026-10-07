@@ -159,7 +159,13 @@ class CmykTab(GeneratorTab):
         options.addRow("Ink gamma", self.gamma)
         self.gcr = double_spin(100, 0, 150, 5, 0, " %")
         options.addRow("Black (GCR)", self.gcr)
-        self.resolution = int_spin(1200, 200, 2000, 50)
+        self.resolution = int_spin(1200, 200, 100000, 50)
+        self.resolution.setToolTip(
+            "Longest side of the sampling image in pixels. The source is "
+            "only ever downsampled, never upsampled, so values at or above "
+            "the source size keep full detail; memory grows with the source "
+            "size you keep."
+        )
         options.addRow("Resolution px", self.resolution)
         self.weight_c = double_spin(100, 0, 150, 5, 0, " %")
         self.weight_m = double_spin(100, 0, 150, 5, 0, " %")

@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-013` | windows-software | implemented | [Raise the CMYK resolution cap for large sources](windows-software/2026-10-07-cmyk-resolution-cap.md) |
 | 2026-10-07 | `WSW-20261007-012` | windows-software | implemented | [Print the calibration mix cells at the dense spot spacing](windows-software/2026-10-07-cmyk-dense-mix-cells.md) |
 | 2026-10-07 | `WSW-20261007-011` | windows-software | implemented | [Add the C+M+Y+K quad to the calibration mixes](windows-software/2026-10-07-cmyk-calibration-quad-mix.md) |
 | 2026-10-07 | `WSW-20261007-010` | windows-software | implemented | [Strip the calibration sheet to what a scan needs](windows-software/2026-10-07-cmyk-quiet-calibration-sheet.md) |

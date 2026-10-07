@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-013` | implemented | [Raise the CMYK resolution cap for large sources](2026-10-07-cmyk-resolution-cap.md) | `cmyk`, `resolution`, `user-interface` |
 | 2026-10-07 | `WSW-20261007-012` | implemented | [Print the calibration mix cells at the dense spot spacing](2026-10-07-cmyk-dense-mix-cells.md) | `cmyk`, `calibration`, `test-print`, `ai-handoff` |
 | 2026-10-07 | `WSW-20261007-011` | implemented | [Add the C+M+Y+K quad to the calibration mixes](2026-10-07-cmyk-calibration-quad-mix.md) | `cmyk`, `calibration`, `test-print`, `ai-handoff` |
 | 2026-10-07 | `WSW-20261007-010` | implemented | [Strip the calibration sheet to what a scan needs](2026-10-07-cmyk-quiet-calibration-sheet.md) | `cmyk`, `calibration`, `test-print`, `ai-handoff`, `line-screen` |

@@ -113,6 +113,9 @@ Current tools:
   dot pitch, dot size, solid dots (spiral-filled so each mark reads as a dot,
   not a ring), hatch levels, overdraw, pen width, max marks per ink, seed,
   preview and write checkboxes per layer, page size, margin, artwork scale.
+  Resolution keeps the source image's longest side up to that many pixels
+  and never upsamples, so it accepts high-resolution sources (the control is
+  effectively uncapped; memory grows with the source size you keep).
   Shipped defaults are photo-ready: auto levels on, halftone, solid dots,
   1.2 mm pitch, 75 % dot size, 15000 marks per ink, 1200 px resolution,
   C/M/Y/K weights 100 %. The preview checkboxes decide which inks the shared OpenGL preview

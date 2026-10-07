@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-resolution-cap"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK resolution control is effectively uncapped
+
+- Request: "in cmyk feature im limited by the resolution i can increase to.
+  i need to increase quite a bit, dont put a limit on it."
+- Change: the **Resolution px** spin box range is now 200-100000 (was
+  200-2000), with a tooltip explaining that the source is only ever
+  downsampled, never upsampled, and that memory grows with the source size
+  retained. `software/README.md` carries the same note.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 371 tests (1 skipped, headless shader compile), including a new
+  test that a value of 8192 now sticks; `docs_index.py --write` / `--check`
+  pass.
+- Risk: keeping a very large source allocates memory in proportion; that is
+  the operator's choice now.
+- Evidence: `WSW-20261007-013`; `software/README.md`;
+  `software/generator_tabs/cmyk_tab.py`.
+- Category: windows-software, cmyk, resolution, user-interface.
+
 <a id="elog-20261007-cmyk-dense-mix-cells"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Calibration mix cells join the dense spot spacing
 

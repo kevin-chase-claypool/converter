@@ -398,6 +398,11 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(tab.resolution.value(), 1200)
         self.assertEqual(tab.weight_k.value(), 100)
 
+    def test_resolution_is_not_capped_at_2000(self):
+        tab = self.make_tab()
+        tab.resolution.setValue(8192)
+        self.assertEqual(tab.resolution.value(), 8192)
+
     def test_planning_is_background_not_a_button(self):
         tab = self.make_tab()
         self.assertFalse(hasattr(tab, "analyze_button"))
