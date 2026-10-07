@@ -1,5 +1,50 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-separation-tool"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK tool emits one G-code file per ink
+
+- Request: add a converter feature that breaks a PNG/JPG into CMYK components
+  and produces an individual G-code program for each ink, with the XY-theta
+  cost-efficiency requirement carried over; first survey r/plotter and
+  r/plotterart for open-source prior art.
+- Prior-art survey: the user-facing Reddit endpoints are blocked (HTTP 403),
+  so the r/PlotterArt archive was queried through PullPush (85 CMYK
+  submissions, 89 CMYK comments) and cross-checked on GitHub. The community
+  standard, DrawingBotV3, gates CMYK separation behind a closed premium tier;
+  `ohnorobo/cmyk-splitter` (MIT, Python) provides reusable RGB->CMYK + GCR
+  math, and `svenhb/plotterfun-color` (MIT web app) and
+  `serycjon/vpype-flow-imager --cmyk` (GPL CLI) are the alternative routes.
+  Report: `docs/research/2026-10-07-cmyk-separation-prior-art.md`.
+- Change: a new **CMYK** tool page splits an image into C/M/Y/K with gray
+  component replacement, per-ink weights (K defaults to 80 %) and gamma,
+  screens each ink with the repository's halftone/stipple primitives at the
+  classic 15/75/0/45 degree screen angles, and previews any combination of
+  inks through the shared OpenGL panel's layer checkboxes. **Analyze cost**
+  plans each checked ink through the real converter pipeline and reports the
+  file's x_theta/y_theta draw split plus the calibrated time; **Save 4 G-code
+  files** writes one complete program per ink from a single save dialog. The
+  main window gained a headless `analyze_program` API and a batch
+  `export_program_set` writer, and generator tabs can declare
+  `SELF_SCREENED = True` so the Fill patterns do not hatch the dots twice.
+- Verification: 334 tests pass, including the new `test_cmyk_tab.py` and the
+  updated tool-shell tests; a headless end-to-end run through the real window
+  screened a test image (41 K marks) and planned 494 moves (x_theta 147 /
+  y_theta 168, 632 G-code lines) with the normal r-theta solver; the emitted
+  K-ink file passes `tools\check_gcode_motion.py --strict` (largest bed
+  rotation 14.75 deg under the 15 deg cap, no bare G0 rotation);
+  `python tools\docs_index.py --write` / `--check` pass.
+- Struggle: the first pipeline design had the CMYK dots flowing back through
+  the Convert Fill pass, which would have hatched every dot outline a second
+  time; the explicit `SELF_SCREENED` contract fixed it. DrawingBotV3 could
+  not be reused because its CMYK feature is premium/closed.
+- Risk: nothing has been plotted on paper yet; four-ink registration is
+  mechanical, and the OpenGL preview uses one colour for all visible inks, so
+  the layer checkboxes are the identification method.
+- Evidence: `WSW-20261007-001`;
+  `docs/research/2026-10-07-cmyk-separation-prior-art.md`; `software/README.md`.
+- Category: windows-software, cmyk, color-separation, generator-tabs, gcode,
+  cost, x-theta, y-theta, plotter-art.
+
 <a id="elog-20261004-terrain-outline-thinning"></a>
 ### 🟩 2026-10-04 - WINDOWS SOFTWARE/IMPLEMENTED - terrain stops stacking on outlines
 

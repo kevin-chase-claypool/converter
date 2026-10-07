@@ -168,6 +168,7 @@ def halftone_contours(
     dot_scale=1.0,
     ink_floor=INK_FLOOR,
     cancel_check=None,
+    steps=20,
 ):
     """Classic halftone: fixed-pitch dots whose radius grows with tone.
 
@@ -208,7 +209,7 @@ def halftone_contours(
     def world(x, y):
         return (x * ca - y * sa, x * sa + y * ca)
 
-    steps = 20
+    steps = max(6, int(steps))
     max_radius = spacing * 0.5
     contours = []
     y = math.floor(min_y / spacing) * spacing

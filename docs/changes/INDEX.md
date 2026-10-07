@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-001` | windows-software | implemented | [Add the CMYK separation tool with one G-code file per ink](windows-software/2026-10-07-cmyk-separation-tool.md) |
 | 2026-10-06 | `WSW-20261006-031` | windows-software | implemented | [Raise the pen-up dwell default to 1000 ms](windows-software/2026-10-06-pen-up-dwell-1000ms.md) |
 | 2026-10-06 | `WSW-20261006-030` | windows-software | implemented | [Fix Vector Trace closed loops collapsing to invisible paths](windows-software/2026-10-06-vector-trace-closed-loop-fix.md) |
 | 2026-10-06 | `WSW-20261006-029` | windows-software | implemented | [High-quality tier: Stipple/TSP, Reaction-Diffusion, and Vector Trace](windows-software/2026-10-06-high-quality-stipple-rd-trace.md) |

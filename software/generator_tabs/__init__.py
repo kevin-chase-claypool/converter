@@ -22,10 +22,19 @@ tabs do not own a preview and do not hand artwork to another tab.
 * ``host.artwork_path()`` - the file in the static Artwork row
 * ``host.generator_status(text)`` - write the window status line
 * ``host.log`` - the bottom log widget (a ``QTextEdit``)
+* ``host.settings_for_source(tab)`` - the converter settings for this page
+* ``host.motion_estimate_scale()`` - the display-only time-estimate scale
+* ``host.analyze_program(path, settings, cancel_check=None)`` - headless
+  program build (moves, G-code, stats) for multi-layer tools
+* ``host.export_program_set(entries, base_path=None, default_base="")`` -
+  one save dialog and one ``<base>-<label>.gcode`` file per entry
 
 Tabs must be self-contained: do not edit the main window, converter settings,
 or another tab. Ported or vendored third-party code keeps its license and
 attribution in a sibling ``<name>_NOTICE.md``.
+
+A tab that draws its own tone marks (CMYK) sets ``SELF_SCREENED = True``; the
+host then disables the converter's Fill pass for that page.
 """
 
 from __future__ import annotations

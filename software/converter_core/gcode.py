@@ -12,7 +12,12 @@ from .kinematics import (
     plan_travel_move,
     polar_segment_steps,
 )
-from .settings import pattern_size_override, pattern_size_values, validate_settings
+from .settings import (
+    calibrated_motion_seconds,
+    pattern_size_override,
+    pattern_size_values,
+    validate_settings,
+)
 
 def append_custom_command(lines, command):
     for raw_line in (command or "").replace(";", "\n").splitlines():
@@ -657,3 +662,70 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
             "gcode": gcode,
         })
     return moves
+
+
+def move_strategy_length(move):
+    """Coordinated motion length of one planned move.
+
+    Uses the move's own ``motion_length`` when present; older or synthetic
+    moves fall back to the strategy's gantry axis, the same currency the
+    preview estimate displays.
+    """
+    if "motion_length" in move:
+        return float(move["motion_length"])
+    if "xy_length" in move:
+        return float(move["xy_length"])
+    start = move.get("start", (0.0, 0.0))
+    end = move.get("end", start)
+    dx = abs(end[0] - start[0])
+    dy = abs(end[1] - start[1])
+    strategy = move.get("strategy")
+    if strategy == "x_theta":
+        return dx
+    if strategy == "y_theta":
+        return dy
+    return math.hypot(dx, dy)
+
+
+def estimate_program_time(moves, motion_estimate_scale):
+    """Model and calibrated controller-time estimate for a planned program.
+
+    Shared by the main window's estimate line and by multi-layer tools that
+    need the same numbers per program without touching widgets. The returned
+    ``strategy_counts``/``strategy_mm`` split the draw moves by the solver's
+    per-segment choice (``x_theta`` vs ``y_theta``).
+    """
+    draw_mm = 0.0
+    draw_seconds = 0.0
+    travel_seconds = 0.0
+    pen_seconds = 0.0
+    strategy_counts = {}
+    strategy_mm = {}
+    for move in moves:
+        kind = move.get("type")
+        if kind == "draw":
+            length = move_strategy_length(move)
+            draw_mm += length
+            draw_seconds += float(move.get("duration_ms", 0.0)) / 1000.0
+            strategy = move.get("strategy", "tangent")
+            strategy_counts[strategy] = strategy_counts.get(strategy, 0) + 1
+            strategy_mm[strategy] = strategy_mm.get(strategy, 0.0) + length
+        elif kind == "travel":
+            travel_seconds += float(move.get("duration_ms", 0.0)) / 1000.0
+        elif kind in ("pen_up", "pen_down"):
+            pen_seconds += float(move.get("duration_ms", 0.0)) / 1000.0
+
+    model_motion_seconds = draw_seconds + travel_seconds
+    calibrated = calibrated_motion_seconds(model_motion_seconds, motion_estimate_scale)
+    return {
+        "total_seconds": calibrated + pen_seconds,
+        "model_total_seconds": model_motion_seconds + pen_seconds,
+        "draw_seconds": draw_seconds,
+        "travel_seconds": travel_seconds,
+        "pen_seconds": pen_seconds,
+        "motion_estimate_scale": float(motion_estimate_scale),
+        "calibrated_motion_seconds": calibrated,
+        "draw_mm": draw_mm,
+        "strategy_counts": strategy_counts,
+        "strategy_mm": strategy_mm,
+    }

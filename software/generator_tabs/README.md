@@ -40,6 +40,16 @@ class FlowFieldTab(GeneratorTab):
   import path.
 - `host.generator_status(text)` — write the shared status line.
 - `host.log` — the bottom log widget.
+- `host.settings_for_source(tab)` — the converter settings for this page
+  (generator tabs are plotted 1:1, and a tab with `SELF_SCREENED = True` gets
+  the Fill patterns switched off so its own tone marks are not hatched again).
+- `host.motion_estimate_scale()` — the display-only controller-time scale.
+- `host.analyze_program(svg_path, settings, cancel_check=None)` — build the
+  exact program a Preview would (moves, G-code, stats) without touching the
+  UI; safe to call from a tab's worker thread.
+- `host.export_program_set(entries, base_path=None, default_base="")` — one
+  save dialog, then one `<base>-<label>.gcode` file per `(label, gcode)`
+  entry.
 
 Rules:
 
@@ -49,8 +59,10 @@ Rules:
    `ValueError` with a user-facing message when required input is missing.
 3. Do not add a per-tab preview, a per-tab file picker, or a hand-off button.
    The static Preview/Save buttons and the shared preview panel own all of
-   that.
-4. Never write G-code directly; emit SVG only.
+   that. A multi-layer tool (CMYK) may add Analyze/Save-set buttons that call
+   the host APIs above; the host owns the dialogs and writes the files.
+4. Never write G-code directly; emit SVG and let the host's
+   `analyze_program`/`export_program_set` produce and save programs.
 5. Keep controls proportional to the generator's real parameters, and make the
    output deterministic for a given seed so it can be reviewed and tested.
 6. Ported or vendored third-party code must keep its license and attribution

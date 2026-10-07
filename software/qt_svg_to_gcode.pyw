@@ -1246,12 +1246,18 @@ class MainWindow(QMainWindow):
         1:1 with the fit mode manual. The Convert tab's auto fit would
         otherwise renormalize every generator result to the reach circle and
         hide the tab's Artwork scale control.
+
+        A tab may also declare ``SELF_SCREENED = True`` when it draws its own
+        tone marks (CMYK dots): the Fill patterns would then hatch every dot
+        outline a second time, so the fill is switched off for that page.
         """
         settings = self.settings()
         if source_tab is not self.convert_root:
             settings = dataclasses.replace(
                 settings, fit_mode="manual", scale=1.0
             )
+            if bool(getattr(source_tab, "SELF_SCREENED", False)):
+                settings = dataclasses.replace(settings, hatch_spacing_mm=0.0)
         return settings
 
     def on_tool_changed(self):
@@ -1832,6 +1838,87 @@ class MainWindow(QMainWindow):
 
     def build_preview_moves(self, contours, settings, cancel_check=None, program_plan=None):
         return converter.build_preview_moves(contours, settings, cancel_check, program_plan)
+
+    def analyze_program(self, svg_path, settings, cancel_check=None):
+        """Build the exact program a Preview would, without touching the UI.
+
+        Multi-layer tools (CMYK) call this once per layer to obtain that
+        layer's moves, G-code and stats. It mirrors ``PreviewWorker.run`` -
+        including the raster/auto-fit measurement - so the numbers match a
+        manual Preview of the same file. It is safe to call from a worker
+        thread: it never reads widgets and never writes to them.
+        """
+        converter.check_cancelled(cancel_check)
+        auto_fit = str(getattr(settings, "fit_mode", "manual")).strip().lower() in (
+            "fill",
+            "inside",
+        )
+        if converter.is_raster_image(svg_path):
+            settings = self.fitted_settings_for_artwork_bounds(settings, svg_path)
+        elif auto_fit:
+            outlines = self.load_contours(
+                svg_path, settings, cancel_check, None, fill=False
+            )
+            if outlines:
+                fitted = self.fitted_settings(settings, outlines)
+            else:
+                fitted = self.fitted_settings_for_artwork_bounds(settings, svg_path)
+            if fitted is not settings:
+                settings = fitted
+        raw_contours = self.load_contours(svg_path, settings, cancel_check, None)
+        program_plan = converter.plan_program(raw_contours, settings, cancel_check)
+        moves = self.build_preview_moves(
+            raw_contours, settings, cancel_check, program_plan
+        )
+        stats = {}
+        gcode = converter.contours_to_gcode(
+            raw_contours, settings, program_plan, stats
+        )
+        return {
+            "settings": settings,
+            "contours": program_plan["contours"],
+            "moves": moves,
+            "gcode": gcode,
+            "stats": stats,
+        }
+
+    def export_program_set(self, entries, base_path=None, default_base=""):
+        """Write one G-code file per ``(label, gcode)`` entry from one name.
+
+        Multi-layer tools pass the analyzed programs and a base name (or let
+        the single save dialog pick one); every program is written as
+        ``<base>-<label>.gcode``. Returns the written paths; an empty list
+        means the dialog was cancelled.
+        """
+        entries = list(entries)
+        if not entries:
+            return []
+        if base_path is None:
+            base_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Save G-code files",
+                default_base,
+                "G-code files (*.gcode *.nc *.tap);;All files (*.*)",
+            )
+            if not base_path:
+                return []
+        stem = str(base_path)
+        for suffix in (".gcode", ".nc", ".tap"):
+            if stem.lower().endswith(suffix):
+                stem = stem[: -len(suffix)]
+                break
+        written = []
+        for label, gcode in entries:
+            path = f"{stem}-{label}.gcode"
+            with open(path, "w", encoding="utf-8", newline="\n") as handle:
+                handle.write(gcode)
+            written.append(path)
+        self.log.append(
+            "Saved %d G-code files: %s"
+            % (len(written), ", ".join(os.path.basename(path) for path in written))
+        )
+        self.status.setText(f"Saved {len(written)} G-code files.")
+        return written
 
     def raw_geometry_key(self, svg_path, settings, fill=True):
         stat = os.stat(svg_path)
@@ -3276,20 +3363,7 @@ class MainWindow(QMainWindow):
     def move_strategy_length(self, move):
         # Full coordinated motion length; includes theta motor degrees so
         # rotation-heavy smoothing changes affect the displayed estimate.
-        if "motion_length" in move:
-            return float(move["motion_length"])
-        if "xy_length" in move:
-            return float(move["xy_length"])
-        start = move.get("start", (0.0, 0.0))
-        end = move.get("end", start)
-        dx = abs(end[0] - start[0])
-        dy = abs(end[1] - start[1])
-        strategy = move.get("strategy")
-        if strategy == "x_theta":
-            return dx
-        if strategy == "y_theta":
-            return dy
-        return math.hypot(dx, dy)
+        return converter.move_strategy_length(move)
 
     def format_duration(self, seconds):
         seconds = max(0, int(round(seconds)))
@@ -3302,42 +3376,9 @@ class MainWindow(QMainWindow):
         return f"{secs}s"
 
     def estimate_runtime(self, moves):
-        draw_mm = 0.0
-        draw_seconds = 0.0
-        travel_seconds = 0.0
-        pen_seconds = 0.0
-        strategy_counts = {}
-        for move in moves:
-            kind = move.get("type")
-            if kind == "draw":
-                draw_mm += self.move_strategy_length(move)
-                draw_seconds += float(move.get("duration_ms", 0.0)) / 1000.0
-                strategy = move.get("strategy", "tangent")
-                strategy_counts[strategy] = strategy_counts.get(strategy, 0) + 1
-            elif kind == "travel":
-                travel_seconds += float(move.get("duration_ms", 0.0)) / 1000.0
-            elif kind in ("pen_up", "pen_down"):
-                pen_seconds += float(move.get("duration_ms", 0.0)) / 1000.0
-
-        model_motion_seconds = draw_seconds + travel_seconds
-        motion_estimate_scale = self.motion_estimate_scale()
-        calibrated_motion_seconds = converter.calibrated_motion_seconds(
-            model_motion_seconds,
-            motion_estimate_scale,
+        return converter.estimate_program_time(
+            moves, self.motion_estimate_scale()
         )
-        model_total_seconds = model_motion_seconds + pen_seconds
-        total_seconds = calibrated_motion_seconds + pen_seconds
-        return {
-            "total_seconds": total_seconds,
-            "model_total_seconds": model_total_seconds,
-            "draw_seconds": draw_seconds,
-            "travel_seconds": travel_seconds,
-            "pen_seconds": pen_seconds,
-            "motion_estimate_scale": motion_estimate_scale,
-            "calibrated_motion_seconds": calibrated_motion_seconds,
-            "draw_mm": draw_mm,
-            "strategy_counts": strategy_counts,
-        }
 
     def update_estimate(self):
         if not self.moves:
@@ -3588,6 +3629,14 @@ class MainWindow(QMainWindow):
             svg_path, source_tab = self.resolve_active_source()
         except Exception as exc:
             QMessageBox.warning(self, "Preview needs artwork", str(exc))
+            return
+        busy = getattr(source_tab, "analysis_running", None)
+        if callable(busy) and busy():
+            QMessageBox.information(
+                self,
+                "Analysis running",
+                "Wait for the layer analysis to finish or cancel it, then preview.",
+            )
             return
         self.pending_source_tab = source_tab
         self.pending_source_path = svg_path

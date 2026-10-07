@@ -32,6 +32,7 @@ def _load_app_module():
 EXPECTED_TOOLS = [
     "Flow Field",
     "Line Draw",
+    "CMYK",
     "3D Wireframe",
     "Harmonograph",
     "Snowflake",
@@ -95,6 +96,7 @@ class ToolShellTests(unittest.TestCase):
             groups["Photo-based"],
             [
                 "Line Draw",
+                "CMYK",
                 "SquiggleCam",
                 "Pixel Art",
                 "Plotterfun",
@@ -250,6 +252,33 @@ class ToolShellTests(unittest.TestCase):
         self.assertEqual(generator_settings.scale, 1.0)
         convert_settings = window.settings_for_source(window.convert_root)
         self.assertEqual(convert_settings.fit_mode, window.settings().fit_mode)
+
+    def test_self_screened_tools_stop_the_fill_pass(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.show_tool("CMYK")
+        tab = window.stack.currentWidget()
+        self.assertTrue(getattr(tab, "SELF_SCREENED", False))
+        settings = window.settings_for_source(tab)
+        self.assertEqual(settings.hatch_spacing_mm, 0.0)
+        # The Convert tab keeps its own fill setting untouched.
+        window.fields["hatch_spacing_mm"].setText("3")
+        self.assertGreater(window.settings_for_source(window.convert_root).hatch_spacing_mm, 0.0)
+
+    def test_export_program_set_writes_one_file_per_entry(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        folder = tempfile.mkdtemp(prefix="export-set-")
+        self.addCleanup(shutil.rmtree, folder, ignore_errors=True)
+        base = str(Path(folder) / "art-cmyk.gcode")
+        written = window.export_program_set(
+            [("cyan", "G1 X0\n"), ("black", "G1 X1\n")], base_path=base
+        )
+        self.assertEqual(
+            [Path(path).name for path in written],
+            ["art-cmyk-cyan.gcode", "art-cmyk-black.gcode"],
+        )
+        self.assertEqual(Path(written[0]).read_text(encoding="utf-8"), "G1 X0\n")
 
     def test_artwork_scale_survives_the_generator_pipeline(self):
         window = self.module.MainWindow()
