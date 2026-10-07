@@ -14,8 +14,10 @@ motion planning as a Convert-tab program.
 
 from __future__ import annotations
 
+import json
 import os
 import threading
+from pathlib import Path
 
 from PySide6.QtCore import QObject, QThread, Qt, Signal
 from PySide6.QtGui import QCursor, QGuiApplication
@@ -31,6 +33,7 @@ from PySide6.QtWidgets import (
 import converter_core as converter
 
 from ._tab_common import GeneratorTab, double_spin, int_spin, write_svg_document
+from .cmyk_sheet import build_sheet
 
 
 TITLE = "CMYK"
@@ -237,6 +240,29 @@ class CmykTab(GeneratorTab):
             write_layout.addWidget(box)
         layers.addRow("Write files", write_row)
 
+        calibration = self.add_group("Calibration")
+        self.calibration_mode = QCheckBox(
+            "Labeled test sheet (tune against a real print)"
+        )
+        self.calibration_mode.setToolTip(
+            "Build a labeled calibration sheet instead of the artwork: "
+            "per-ink coverage, dot-size and overdraw ladders, a GCR ramp, "
+            "full-tone pair mixes, dense ink spots, blank paper, and four "
+            "corner fiducials. Save also writes a calibration manifest for "
+            "tools\\cmyk_calibrate.py, which turns a scan of the plotted "
+            "sheet into paper-relative ink numbers for a print-matching "
+            "preview."
+        )
+        calibration.addRow("Test sheet", self.calibration_mode)
+        self.calibration_hint = QLabel(
+            "Sheet mode uses the current pitch, dot size, pen width, "
+            "overdraw, GCR, gamma, and weights; the ladders print raw tone. "
+            "Raise Dot pitch for a faster calibration plot."
+        )
+        self.calibration_hint.setWordWrap(True)
+        self.calibration_hint.setStyleSheet("color: #475569;")
+        calibration.addRow("", self.calibration_hint)
+
         page = self.add_group("Page")
         self.page_w = double_spin(200, 50, 1000, 10, 0, " mm")
         page.addRow("Width", self.page_w)
@@ -267,6 +293,7 @@ class CmykTab(GeneratorTab):
         self._layer_files = {}
         self._preview_visible = []
         self._layers_key = None
+        self._layers_manifest = None
         self._analysis = None
         self._analysis_key = None
         self._thread = None
@@ -328,6 +355,7 @@ class CmykTab(GeneratorTab):
                 for channel in converter.CHANNELS
                 if self.write_boxes[channel].isChecked()
             ),
+            self.calibration_mode.isChecked(),
             settings_key,
         )
 
@@ -347,12 +375,22 @@ class CmykTab(GeneratorTab):
 
     def _ensure_layers(self):
         self._refresh_artwork()
-        path = self._artwork
-        if not path:
-            raise ValueError("Import an image with the Artwork row above first.")
         key = self._control_key()
         if self._layers_key == key and self._layers:
             return
+        if self.calibration_mode.isChecked():
+            layers, files, manifest = self._build_calibration_layers()
+        else:
+            layers, files, manifest = self._build_artwork_layers()
+        self._layers = layers
+        self._layer_files = files
+        self._layers_manifest = manifest
+        self._layers_key = key
+
+    def _build_artwork_layers(self):
+        path = self._artwork
+        if not path:
+            raise ValueError("Import an image with the Artwork row above first.")
         tones, geometry = converter.prepare_image_tones(
             path,
             self.page_w.value(),
@@ -394,9 +432,35 @@ class CmykTab(GeneratorTab):
             files[channel] = str(
                 write_svg_document(f"cmyk-{channel}", document)
             )
-        self._layers = layers
-        self._layer_files = files
-        self._layers_key = key
+        return layers, files, None
+
+    def _build_calibration_layers(self):
+        width = self.page_w.value()
+        height = self.page_h.value()
+        layers, manifest = build_sheet(
+            width,
+            height,
+            margin_mm=self.margin.value(),
+            pitch_mm=self.pitch.value(),
+            dot_scale=self.dot_size.value() / 100.0,
+            pen_width_mm=self.pen_width.value(),
+            solid=self.solid_dots.isChecked(),
+            gcr_pct=self.gcr.value(),
+            weights=self._weights(),
+            gamma=self.gamma.value(),
+            overdraw=self.overdraw.value(),
+        )
+        stroke = self.pen_width.value()
+        files = {}
+        for channel in converter.CHANNELS:
+            document = converter.svg_document(
+                {channel: layers[channel]}, width, height, stroke,
+                order=[channel],
+            )
+            files[channel] = str(
+                write_svg_document(f"cmyk-calibration-{channel}", document)
+            )
+        return layers, files, manifest
 
     def build_svg(self):
         self._ensure_layers()
@@ -420,7 +484,10 @@ class CmykTab(GeneratorTab):
             f"{converter.CHANNEL_LABELS[channel]} {len(self._layers[channel])}"
             for channel in visible
         )
-        self.status.setText(f"Screened marks: {counts}.")
+        if self.calibration_mode.isChecked():
+            self.status.setText(f"Calibration sheet: {counts} marks.")
+        else:
+            self.status.setText(f"Screened marks: {counts}.")
         if self.host is not None:
             self.host.generator_status(f"CMYK screened: {counts}.")
         return path
@@ -587,20 +654,45 @@ class CmykTab(GeneratorTab):
         if not entries:
             self.report_error("Nothing to save; preview first.")
             return
-        base = ""
+        sheet = bool(self.calibration_mode.isChecked())
+        stem = ""
         if getattr(self, "_artwork", ""):
             stem = os.path.splitext(os.path.basename(self._artwork))[0]
+        base = ""
+        if sheet:
+            base = f"{stem or 'cmyk'}-calibration.gcode"
+        elif stem:
             base = f"{stem}-cmyk.gcode"
         export = getattr(self.host, "export_program_set", None)
         if not callable(export):
             self.report_error("The host window does not provide batch saving.")
             return
         written = export(entries, None, base)
+        manifest_path = None
+        if written and sheet and self._layers_manifest is not None:
+            manifest_path = self._write_manifest(written[0], entries[0][0])
         if written:
             names = ", ".join(os.path.basename(path) for path in written)
-            self.status.setText(
-                f"Saved {len(written)} G-code files ({names})."
+            extra = (
+                f" Calibration manifest: {manifest_path.name}."
+                if manifest_path
+                else ""
             )
+            self.status.setText(
+                f"Saved {len(written)} G-code files ({names}).{extra}"
+            )
+
+    def _write_manifest(self, first_path, first_label):
+        """Write the calibration manifest next to the saved G-code files."""
+        first = Path(first_path)
+        tail = f"-{first_label}.gcode"
+        stem = first.name[: -len(tail)] if first.name.endswith(tail) else first.stem
+        path = first.parent / f"{stem}-calibration.json"
+        path.write_text(
+            json.dumps(self._layers_manifest, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        return path
 
 
 def create_tab(host):

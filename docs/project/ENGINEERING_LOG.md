@@ -1,5 +1,47 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-calibration-sheet"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK gains a labeled calibration sheet and scan tool
+
+- Request: "calibration sheet for cmyk feature" - tune the four pens against
+  a real print, like a desktop printer's numbered test page, instead of
+  guessing the ink mixing from the screen.
+- Change: the CMYK tab gains a **Test sheet** checkbox. When checked, Preview
+  and Save use a labeled page built from the same screening primitives:
+  per-ink coverage (10-100%), dot-size (20-140% at 50% tone) and overdraw
+  (1x/2x/3x) ladders, a GCR ramp on 50% gray (0-100%), full-tone pair mixes
+  (C+M, C+Y, M+Y, C+M+Y), dense single-ink spots, blank paper, and four
+  dense corner fiducials with all-ink cross arms. Saving writes
+  `<name>-calibration-<ink>.gcode` plus `<name>-calibration.json`.
+- Tool: `tools/cmyk_calibrate.py` detects the fiducials on a flat scan,
+  maps the manifest rectangles onto the image, samples every patch, and
+  reports paper-relative ink transmittances plus a measured-vs-predicted
+  multiply check on the mix patches; the numbers feed a print-matching
+  preview model.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 361 tests (1 skipped, headless shader compile). New tests cover the
+  block layout, GCR channel split, page bounds, small-page rejection,
+  determinism, recovery of known transmittances from a synthetic rotated
+  scan (within 0.06), the CLI profile write, the tab's sheet mode, and the
+  manifest written next to the saved files. The default sheet was rendered
+  to PNG and inspected for layout, and `docs_index.py --write` / `--check`
+  pass.
+- Struggle: the ladders, captions, ramp, mixes, and labels only fit the
+  default 200 x 200 mm page with a computed cell height, so smaller pages
+  are refused with a hint; corner-fiducial detection needed aspect and fill
+  filters so dark K dot fields cannot outrank the fiducials.
+- Risk: the sheet has not been plotted on paper yet. The multiply check may
+  show real ink pairs deviate from the ideal model, and the preview still
+  draws opaque per-ink colours until the measured profile feeds a multiply
+  print simulation.
+- Follow-up: the generated topic index currently links only the entries
+  below the log's `---` separator; entries added at the top (this one
+  included) are not listed there yet.
+- Evidence: `WSW-20261007-007`; `software/README.md`;
+  `software/generator_tabs/cmyk_sheet.py`; `tools/cmyk_calibrate.py`.
+- Category: windows-software, cmyk, calibration, test-print,
+  color-separation, tools.
+
 <a id="elog-20261007-preview-motion-lines-toggle"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Red motion lines toggle in the preview panel
 

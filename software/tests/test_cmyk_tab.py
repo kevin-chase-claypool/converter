@@ -1,5 +1,6 @@
 """CMYK separation, screening, layer SVGs, and per-ink cost analysis."""
 
+import json
 import os
 import sys
 import tempfile
@@ -404,6 +405,65 @@ class CmykTabTests(unittest.TestCase):
         tab.start_analysis = lambda: calls.append("plan")
         tab.on_preview_finished()
         self.assertEqual(calls, ["plan"])
+
+    def test_calibration_sheet_mode_builds_and_saves_manifest(self):
+        host = FakeHost(self.image_path)
+        tab = self.make_tab(host)
+        tab.calibration_mode.setChecked(True)
+        tab.page_w.setValue(200)
+        tab.page_h.setValue(200)
+        tab.pitch.setValue(2.0)
+        path = tab.build_svg()
+        root = ET.parse(path).getroot()
+        self.assertEqual(svg_groups(root), list(converter.CHANNELS))
+        self.assertIsNotNone(tab._layers_manifest)
+        self.assertGreater(len(tab._layers_manifest["patches"]), 80)
+        results = {
+            channel: {
+                "marks": 1,
+                "moves": 3,
+                "gcode": f"; {channel}\nG1 X0 Y0\n",
+                "lines": 2,
+                "x_count": 1,
+                "y_count": 0,
+                "x_mm": 1.0,
+                "y_mm": 0.0,
+                "draw_mm": 1.0,
+                "seconds": 1.0,
+            }
+            for channel in converter.CHANNELS
+        }
+        tab._analysis = results
+        tab._analysis_key = tab._control_key()
+        tab._write_files(results)
+        manifest_path = Path(host.saved_paths["cyan"]).with_name(
+            "art-cmyk-calibration.json"
+        )
+        self.assertTrue(manifest_path.exists())
+        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(data["kind"], "cmyk-calibration-sheet")
+        self.assertIn("Calibration manifest", tab.status.text())
+
+    def test_calibration_sheet_mode_needs_no_artwork(self):
+        tab = self.make_tab(FakeHost(""))
+        tab.calibration_mode.setChecked(True)
+        tab.page_w.setValue(200)
+        tab.page_h.setValue(200)
+        tab.pitch.setValue(2.0)
+        path = tab.build_svg()
+        self.assertTrue(Path(path).exists())
+
+    def test_calibration_mode_changes_the_layer_key(self):
+        tab = self.make_tab()
+        before = tab._control_key()
+        tab.calibration_mode.setChecked(True)
+        self.assertNotEqual(before, tab._control_key())
+
+    def test_calibration_sheet_reports_small_pages(self):
+        tab = self.make_tab()
+        tab.calibration_mode.setChecked(True)
+        with self.assertRaises(ValueError):
+            tab.build_svg()
 
 
 class FakeHost:

@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-007` | windows-software | implemented | [Add a labeled CMYK calibration sheet and scan tool](windows-software/2026-10-07-cmyk-calibration-sheet.md) |
 | 2026-10-07 | `WSW-20261007-006` | windows-software | implemented | [Add a Red motion lines toggle to the preview panel](windows-software/2026-10-07-preview-motion-lines-toggle.md) |
 | 2026-10-07 | `WSW-20261007-005` | windows-software | implemented | [Photo-ready CMYK defaults: auto levels, solid dots, 1.2 mm pitch](windows-software/2026-10-07-cmyk-photo-defaults.md) |
 | 2026-10-07 | `WSW-20261007-004` | windows-software | implemented | [Plan the four CMYK programs automatically; drop the Analyze button](windows-software/2026-10-07-cmyk-background-planning.md) |

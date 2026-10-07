@@ -133,6 +133,17 @@ Current tools:
   full ink - so the four layers can be judged overlaid the way they will mesh
   on paper. The red machine-motion overlay and every other tool keep their
   existing single-colour preview.
+  **Test sheet** (Calibration group) replaces Preview and Save with a labeled
+  calibration page instead of the artwork: per-ink coverage, dot-size and
+  overdraw ladders, a GCR ramp, full-tone pair mixes, dense ink spots, blank
+  paper, and four corner fiducials, all screened at the current pitch, dot
+  size, pen width and overdraw with the halftone dot screen. Save writes
+  `<name>-calibration-*.gcode` plus `<name>-calibration.json`; plot the four
+  files in C, M, Y, K order, scan the sheet flat, and run
+  `python tools\cmyk_calibrate.py scan.png --manifest <name>-calibration.json`
+  to report paper-relative ink transmittances and a multiply-model check for a
+  print-matching preview. Ladder cells print raw tone; raise Dot pitch for a
+  faster calibration plot.
 - **SquiggleCam** - one continuous squiggle per row from image tone (full
   upstream setting set): line count, frequency, amplitude, brightness,
   contrast, min/max brightness, pixel spacing, resolution, black-background
