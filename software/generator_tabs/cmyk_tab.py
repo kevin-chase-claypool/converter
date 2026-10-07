@@ -1,7 +1,7 @@
 """CMYK separation tab: one screened layer per ink pen.
 
 RGB -> CMYK separation (with gray-component replacement) and the per-channel
-halftone/stipple screening live in ``converter_core/cmyk.py``; the separation
+screening styles live in ``converter_core/cmyk.py``; the separation
 math follows the MIT-licensed ohnorobo/cmyk-splitter. The tab builds four
 layer SVGs, lets the shared OpenGL preview show any combination of them
 through the layer checkboxes, and asks the host to analyze/save one complete
@@ -181,11 +181,34 @@ class CmykTab(GeneratorTab):
         self.style = QComboBox()
         self.style.addItem("Halftone dots", "halftone")
         self.style.addItem("Stipple dots", "stipple")
+        self.style.addItem("Line screen (tone pitch)", "lines")
+        self.style.addItem("Crosshatch levels", "crosshatch")
+        self.style.addItem("Wave screen", "waves")
+        self.style.addItem("Interference (gyroid)", "gyroid")
+        self.style.addItem("Single line (TSP)", "tsp")
+        self.style.addItem("Topographic contours", "contours")
+        self.style.setToolTip(
+            "Dot styles use the dot pitch and dot size; line, wave, gyroid, "
+            "TSP and contour styles use the same pitch as their local mark "
+            "spacing."
+        )
         screen.addRow("Style", self.style)
         self.pitch = double_spin(3.0, 0.8, 8.0, 0.2, 2, " mm")
         screen.addRow("Dot pitch", self.pitch)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
         screen.addRow("Dot size", self.dot_size)
+        self.levels = int_spin(4, 2, 5)
+        self.levels.setToolTip(
+            "Crosshatch levels: 2 draws one line family, each extra level adds "
+            "a family at the next tone threshold and +45 degrees."
+        )
+        screen.addRow("Hatch levels", self.levels)
+        self.overdraw = int_spin(1, 1, 3)
+        self.overdraw.setToolTip(
+            "Draw every mark 1-3 times with a sub-pen offset so ballpoint ink "
+            "reads darker without changing the geometry."
+        )
+        screen.addRow("Overdraw", self.overdraw)
         self.pen_width = double_spin(0.3, 0.1, 1.2, 0.05, 2, " mm")
         screen.addRow("Pen width", self.pen_width)
         self.max_marks = int_spin(5000, 200, 20000, 500)
@@ -296,6 +319,8 @@ class CmykTab(GeneratorTab):
             self.pitch.value(),
             self.dot_size.value(),
             self.pen_width.value(),
+            self.levels.value(),
+            self.overdraw.value(),
             self.max_marks.value(),
             self.seed.value(),
             tuple(
@@ -357,6 +382,8 @@ class CmykTab(GeneratorTab):
                 seed=self.seed.value() + index,
                 max_marks=self.max_marks.value(),
                 pen_diameter_mm=self.pen_width.value(),
+                levels=self.levels.value(),
+                overdraw=self.overdraw.value(),
             )
             layers[channel] = marks
             document = converter.svg_document(

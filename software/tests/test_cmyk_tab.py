@@ -127,6 +127,74 @@ class ScreeningTests(unittest.TestCase):
         self.assertEqual(blank, [])
         self.assertGreater(len(stipple), 20)
 
+    def test_line_screen_breaks_in_white(self):
+        dark = self.np.full((32, 32), 0.7, dtype="float32")
+        lines = converter.screen_channel(
+            dark, self.geometry(), style="lines", spacing_mm=4.0
+        )
+        self.assertGreater(len(lines), 5)
+        self.assertTrue(all(len(line) > 2 for line in lines))
+        self.assertEqual(
+            converter.screen_channel(
+                self.np.zeros((32, 32), dtype="float32"),
+                self.geometry(),
+                style="lines",
+                spacing_mm=4.0,
+            ),
+            [],
+        )
+
+    def test_crosshatch_levels_and_overdraw(self):
+        dark = self.np.full((32, 32), 0.8, dtype="float32")
+        two = converter.screen_channel(
+            dark, self.geometry(), style="crosshatch", spacing_mm=4.0, levels=2
+        )
+        four = converter.screen_channel(
+            dark, self.geometry(), style="crosshatch", spacing_mm=4.0, levels=4
+        )
+        self.assertGreater(len(four), len(two))
+        doubled = converter.screen_channel(
+            dark,
+            self.geometry(),
+            style="crosshatch",
+            spacing_mm=4.0,
+            levels=4,
+            overdraw=2,
+        )
+        self.assertEqual(len(doubled), 2 * len(four))
+
+    def test_wave_gyroid_and_tsp_styles(self):
+        dark = self.np.full((32, 32), 0.6, dtype="float32")
+        waves = converter.screen_channel(
+            dark, self.geometry(), style="waves", spacing_mm=4.0
+        )
+        self.assertGreater(len(waves), 3)
+        gyroid = converter.screen_channel(
+            dark, self.geometry(), style="gyroid", spacing_mm=4.0
+        )
+        self.assertGreater(len(gyroid), 3)
+        tsp = converter.screen_channel(
+            dark, self.geometry(), style="tsp", spacing_mm=4.0, seed=1
+        )
+        self.assertEqual(len(tsp), 1)
+        self.assertGreater(len(tsp[0]), 10)
+
+    def test_contours_need_a_gradient(self):
+        ramp = self.np.tile(
+            self.np.linspace(0.0, 1.0, 32, dtype="float32"), (32, 1)
+        )
+        contours = converter.screen_channel(
+            ramp, self.geometry(), style="contours", spacing_mm=4.0
+        )
+        self.assertGreater(len(contours), 3)
+        flat = self.np.full((32, 32), 0.8, dtype="float32")
+        self.assertEqual(
+            converter.screen_channel(
+                flat, self.geometry(), style="contours", spacing_mm=4.0
+            ),
+            [],
+        )
+
     def test_svg_document_groups_and_order(self):
         polyline = [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0)]
         document = converter.svg_document(
@@ -211,6 +279,15 @@ class CmykTabTests(unittest.TestCase):
             box.setChecked(False)
         with self.assertRaises(ValueError):
             tab.build_svg()
+
+    def test_every_screen_style_builds_all_four_layers(self):
+        tab = self.make_tab()
+        tab.levels.setValue(3)
+        tab.overdraw.setValue(2)
+        for style in ("halftone", "stipple", "lines", "crosshatch", "waves", "gyroid", "tsp", "contours"):
+            tab.style.setCurrentIndex(tab.style.findData(style))
+            root = ET.parse(tab.build_svg()).getroot()
+            self.assertEqual(svg_groups(root), list(converter.CHANNELS), style)
 
     def test_analysis_worker_reports_strategy_split(self):
         from generator_tabs.cmyk_tab import ProgramAnalysisWorker

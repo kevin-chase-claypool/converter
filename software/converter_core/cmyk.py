@@ -16,7 +16,13 @@ from __future__ import annotations
 import math
 
 from .cancellation import check_cancelled
-from .shading import dot_mark_contours, halftone_contours, stipple_points
+from .shading import (
+    dot_mark_contours,
+    greedy_single_line,
+    halftone_contours,
+    stipple_points,
+    tone_terrain_contours,
+)
 
 CHANNELS = ("c", "m", "y", "k")
 CHANNEL_LABELS = {"c": "Cyan", "m": "Magenta", "y": "Yellow", "k": "Black"}
@@ -168,6 +174,189 @@ def tone_sampler(tone, geometry):
     return sample
 
 
+def _local_frame(bounds, angle_deg):
+    """Rotated bounding box of a rectangle plus the local->world basis."""
+    left, top, right, bottom = (float(value) for value in bounds)
+    angle = math.radians(float(angle_deg))
+    ca, sa = math.cos(angle), math.sin(angle)
+    cs, sn = math.cos(-angle), math.sin(-angle)
+    corners = [(left, top), (right, top), (right, bottom), (left, bottom)]
+    rotated = [(x * cs - y * sn, x * sn + y * cs) for x, y in corners]
+    return (
+        min(point[0] for point in rotated),
+        max(point[0] for point in rotated),
+        min(point[1] for point in rotated),
+        max(point[1] for point in rotated),
+        ca,
+        sa,
+    )
+
+
+def _line_runs(
+    darkness,
+    bounds,
+    angle_deg,
+    spacing,
+    threshold,
+    adaptive=False,
+    min_length_mm=0.8,
+    cancel_check=None,
+):
+    """Parallel line family, broken into runs where tone is above threshold.
+
+    With ``adaptive`` the next line's pitch grows in light areas and stays at
+    the requested spacing in dark ones, so one tone-driven line screen covers
+    a continuous tonal range instead of discrete levels.
+    """
+    min_x, max_x, min_y, max_y, ca, sa = _local_frame(bounds, angle_deg)
+    spacing = max(0.2, float(spacing))
+    sample_step = max(0.3, min(spacing * 0.5, 1.0))
+    runs = []
+    y = min_y + spacing * 0.5
+    while y <= max_y:
+        check_cancelled(cancel_check)
+        samples = []
+        x = min_x
+        while x <= max_x:
+            wx = x * ca - y * sa
+            wy = x * sa + y * ca
+            samples.append((x, darkness(wx, wy)))
+            x += sample_step
+        current = []
+        for x_value, value in samples:
+            if value >= threshold:
+                current.append((x_value, y))
+            elif current:
+                if (len(current) - 1) * sample_step >= min_length_mm:
+                    runs.append(
+                        [
+                            (px * ca - py * sa, px * sa + py * ca)
+                            for px, py in current
+                        ]
+                    )
+                current = []
+        if current and (len(current) - 1) * sample_step >= min_length_mm:
+            runs.append(
+                [(px * ca - py * sa, px * sa + py * ca) for px, py in current]
+            )
+        if adaptive:
+            tones = [value for _x, value in samples]
+            mean_tone = sum(tones) / len(tones) if tones else 0.0
+            y += spacing * (1.0 + 2.0 * (1.0 - mean_tone))
+        else:
+            y += spacing
+    return runs
+
+
+def _wave_rows(
+    darkness,
+    bounds,
+    angle_deg,
+    spacing,
+    amplitude_scale,
+    min_length_mm=0.8,
+    cancel_check=None,
+):
+    """Sine rows whose amplitude follows tone (flat white draws nothing)."""
+    min_x, max_x, min_y, max_y, ca, sa = _local_frame(bounds, angle_deg)
+    spacing = max(0.2, float(spacing))
+    sample_step = max(0.25, min(spacing * 0.25, 0.8))
+    amplitude_max = spacing * 0.5 * max(0.05, float(amplitude_scale))
+    wavelength = spacing * 2.0
+    rows = []
+    y = min_y + spacing * 0.5
+    while y <= max_y:
+        check_cancelled(cancel_check)
+        current = []
+        x = min_x
+        while x <= max_x:
+            wx = x * ca - y * sa
+            wy = x * sa + y * ca
+            value = darkness(wx, wy)
+            if value >= INK_FLOOR:
+                offset = (
+                    amplitude_max
+                    * value
+                    * math.sin(2.0 * math.pi * x / wavelength)
+                )
+                current.append((x, y + offset))
+            elif current:
+                if (len(current) - 1) * sample_step >= min_length_mm:
+                    rows.append(
+                        [
+                            (px * ca - py * sa, px * sa + py * ca)
+                            for px, py in current
+                        ]
+                    )
+                current = []
+            x += sample_step
+        if current and (len(current) - 1) * sample_step >= min_length_mm:
+            rows.append(
+                [(px * ca - py * sa, px * sa + py * ca) for px, py in current]
+            )
+        y += spacing
+    return rows
+
+
+def _field_contours(tone, geometry, spacing, kind="contours", cancel_check=None):
+    """Topographic contour lines of the tone, or of a tone-modulated field."""
+    bounds = (
+        geometry["off_x"],
+        geometry["off_y"],
+        geometry["off_x"] + geometry["width_mm"],
+        geometry["off_y"] + geometry["height_mm"],
+    )
+    pixel_mm = max(
+        geometry["width_mm"] / max(1, geometry["pixels_w"]),
+        geometry["height_mm"] / max(1, geometry["pixels_h"]),
+    )
+    step = max(pixel_mm, min(float(spacing) * 0.4, pixel_mm * 4.0))
+    base = tone_sampler(tone, geometry)
+    blur = float(spacing) * 0.25
+    if str(kind) == "gyroid":
+        k = 2.0 * math.pi / max(0.5, float(spacing))
+
+        def field(x, y):
+            value = base(x, y)
+            if value <= 0.0:
+                return 0.0
+            wave = math.sin(k * x) * math.cos(k * y) + math.sin(k * y) * math.cos(k * x)
+            # wave is in [-2, 2]; tone scales the relief so white paper is flat.
+            return max(0.0, min(1.0, 0.5 + 0.25 * value * wave))
+
+        darkness = field
+        blur = 0.0
+    else:
+        darkness = base
+    return tone_terrain_contours(
+        bounds,
+        float(spacing),
+        darkness,
+        step=step,
+        blur=blur,
+        max_cells=60000,
+        cancel_check=cancel_check,
+    )
+
+
+def _apply_overdraw(polylines, passes, spacing):
+    """Redraw every mark with a small deterministic offset (ink darkening)."""
+    passes = int(passes)
+    if passes <= 1 or not polylines:
+        return polylines
+    passes = min(3, passes)
+    radius = min(0.25, max(0.04, float(spacing) * 0.05))
+    out = list(polylines)
+    for index in range(1, passes):
+        angle = 2.0 * math.pi * index / passes
+        dx = math.cos(angle) * radius * index
+        dy = math.sin(angle) * radius * index
+        out.extend(
+            [[(x + dx, y + dy) for x, y in line] for line in polylines]
+        )
+    return out
+
+
 def screen_channel(
     tone,
     geometry,
@@ -178,9 +367,21 @@ def screen_channel(
     seed=0,
     max_marks=5000,
     pen_diameter_mm=0.3,
+    levels=4,
+    overdraw=1,
     cancel_check=None,
 ):
-    """Screen one ink channel into closed dot contours in page millimetres."""
+    """Screen one ink channel into mark polylines in page millimetres.
+
+    Styles: ``halftone`` (variable-radius dots), ``stipple`` (blue-noise
+    dots), ``lines`` (parallel lines whose pitch follows tone), ``crosshatch``
+    (2-4 line families stacked by tone level), ``waves`` (sine rows whose
+    amplitude follows tone), ``gyroid`` (interference-field contours that
+    flatten into blank paper), ``tsp`` (one greedy single line through tone
+    stipple points) and ``contours`` (topographic contour lines of the tone).
+    ``overdraw`` redraws every mark up to three times with a sub-pen offset so
+    a ballpoint reads darker without changing the geometry.
+    """
     left = geometry["off_x"]
     top = geometry["off_y"]
     right = left + geometry["width_mm"]
@@ -193,7 +394,8 @@ def screen_channel(
     def inside(x, y):
         return left <= x <= right and top <= y <= bottom
 
-    if str(style).strip().lower() == "stipple":
+    style = str(style).strip().lower()
+    if style == "stipple":
         points = stipple_points(
             bounds,
             inside,
@@ -206,24 +408,80 @@ def screen_channel(
         radius = max(float(pen_diameter_mm) / 2.0, spacing * 0.12) * max(
             0.1, float(dot_scale)
         )
-        return dot_mark_contours(points, radius, steps=8)
-
-    area = max(0.0, (right - left) * (bottom - top))
-    estimate = area / (spacing * spacing) if spacing > 0.0 else 0.0
-    if estimate > cap:
-        # Grow the pitch rather than dropping marks so the screen stays even.
-        spacing *= math.sqrt(estimate / cap)
-    return halftone_contours(
-        bounds,
-        inside,
-        darkness,
-        spacing=spacing,
-        angle_deg=angle_deg,
-        dot_scale=dot_scale,
-        ink_floor=INK_FLOOR,
-        cancel_check=cancel_check,
-        steps=8,
-    )
+        marks = dot_mark_contours(points, radius, steps=8)
+    elif style == "lines":
+        marks = _line_runs(
+            darkness,
+            bounds,
+            angle_deg,
+            spacing,
+            INK_FLOOR,
+            adaptive=True,
+            cancel_check=cancel_check,
+        )
+    elif style == "crosshatch":
+        passes = max(1, min(4, int(levels) - 1))
+        marks = []
+        for index in range(passes):
+            check_cancelled(cancel_check)
+            threshold = (index + 1) / float(passes + 1)
+            marks.extend(
+                _line_runs(
+                    darkness,
+                    bounds,
+                    float(angle_deg) + index * 45.0,
+                    spacing,
+                    threshold,
+                    cancel_check=cancel_check,
+                )
+            )
+    elif style == "waves":
+        marks = _wave_rows(
+            darkness,
+            bounds,
+            angle_deg,
+            spacing,
+            max(0.1, float(dot_scale)),
+            cancel_check=cancel_check,
+        )
+    elif style == "tsp":
+        points = stipple_points(
+            bounds,
+            inside,
+            darkness,
+            min_dist=spacing,
+            seed=seed,
+            max_points=cap,
+            cancel_check=cancel_check,
+        )
+        line = greedy_single_line(points, cell=spacing, cancel_check=cancel_check)
+        marks = [line] if len(line) >= 2 else []
+    elif style == "gyroid":
+        marks = _field_contours(
+            tone, geometry, spacing, kind="gyroid", cancel_check=cancel_check
+        )
+    elif style == "contours":
+        marks = _field_contours(
+            tone, geometry, spacing, kind="contours", cancel_check=cancel_check
+        )
+    else:
+        area = max(0.0, (right - left) * (bottom - top))
+        estimate = area / (spacing * spacing) if spacing > 0.0 else 0.0
+        if estimate > cap:
+            # Grow the pitch rather than dropping marks so the screen stays even.
+            spacing *= math.sqrt(estimate / cap)
+        marks = halftone_contours(
+            bounds,
+            inside,
+            darkness,
+            spacing=spacing,
+            angle_deg=angle_deg,
+            dot_scale=dot_scale,
+            ink_floor=INK_FLOOR,
+            cancel_check=cancel_check,
+            steps=8,
+        )
+    return _apply_overdraw(marks, overdraw, spacing)
 
 
 def _fmt(value):

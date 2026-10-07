@@ -1,5 +1,39 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-mark-styles"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK gains six more mark styles and overdraw
+
+- Request: after the first CMYK release, "what other besides dots and stipple
+  can we use?" - then "do all of the lows" from the effort-ranked menu.
+- Change: the CMYK Screen style list now offers line screen (line pitch
+  follows tone), crosshatch levels (2-4 stacked families), wave screen
+  (amplitude follows tone), interference/gyroid (tone-scaled field contours
+  that flatten into blank paper), single-line TSP, and topographic contours of
+  the tone, alongside halftone and stipple dots. A Hatch levels control sets
+  the crosshatch depth and an Overdraw control redraws any mark 1-3 times with
+  a sub-pen offset so ballpoint ink reads darker. All styles reuse the
+  repository's own shading primitives (`tone_terrain_contours`,
+  `stipple_points`, `greedy_single_line`), so the r-theta planner and M3/M5
+  contract are untouched.
+- Cost note: dot styles are many tiny closed contours; the new line, wave,
+  TSP and contour styles are continuous marks with far fewer pen lifts, which
+  is the faster option for large four-ink pages.
+- Verification: `test_cmyk_tab.py` grows to 19 tests (line runs break in
+  white, crosshatch and overdraw multiply the marks, TSP emits one path,
+  contours trace a ramp and draw nothing flat, every style builds four layer
+  groups through the tab); style smoke drew 11-289 marks per 80 mm page and 0
+  on blank white for every style; full suite and `docs_index.py --write` /
+  `--check` pass.
+- Struggle: `tsp_region_contours` takes a scalar darkness for vector fills, so
+  the TSP style reuses `stipple_points` + `greedy_single_line` directly;
+  flat-tile contours correctly draw nothing, so their test uses a tone ramp.
+- Risk: no new mark has been plotted on paper yet; gyroid/contour styles cost
+  more compute (grid sampling capped at 60000 cells per ink) but far fewer pen
+  cycles.
+- Evidence: `WSW-20261007-002`; `software/README.md`.
+- Category: windows-software, cmyk, color-separation, screening, line-screen,
+  tsp, contours, gcode, plotter-art.
+
 <a id="elog-20261007-cmyk-separation-tool"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK tool emits one G-code file per ink
 

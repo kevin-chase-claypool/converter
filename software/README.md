@@ -104,7 +104,9 @@ Current tools:
   as one layer per ink pen. Controls: artwork (from the static Artwork row),
   saturation, contrast, ink gamma, black (GCR), resolution, per-ink weights
   (K defaults lower so it does not overpower the page), screen style
-  (halftone / stipple), dot pitch, dot size, pen width, max marks per ink,
+  (halftone dots / stipple dots / line screen / crosshatch levels / wave
+  screen / interference (gyroid) / single line (TSP) / topographic contours),
+  dot pitch, dot size, hatch levels, overdraw, pen width, max marks per ink,
   seed, preview and write checkboxes per layer, page size, margin, artwork
   scale. The preview checkboxes decide which inks the shared OpenGL preview
   draws; **Analyze cost (4 files)** plans every checked ink through the same
@@ -113,6 +115,10 @@ Current tools:
   `<name>-cyan.gcode`, `-magenta`, `-yellow` and `-black` from one base name.
   The r-theta axis-cost solver and the M3/M5 pen contract are inherited
   unchanged, so each ink is as cost-efficient as a normal Convert program.
+  Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
+  alternatives to dot styles: they draw far fewer pen-lift cycles, while the
+  overdraw control darkens any style by redrawing each mark up to three times
+  with a sub-pen offset.
 - **SquiggleCam** - one continuous squiggle per row from image tone (full
   upstream setting set): line count, frequency, amplitude, brightness,
   contrast, min/max brightness, pixel spacing, resolution, black-background
@@ -222,7 +228,7 @@ work with no input (optional mesh/image sources are noted below).
 | Convert | Fit bed (auto), Fill spacing 3 mm, linear or crosshatch, feed 700 / travel 3000 mm/min | Imported artwork; Save G-code once the preview looks right. |
 | Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
-| CMYK | Halftone dots, pitch 3 mm, pen 0.3 mm, weights C/M/Y 100 % / K 80 %, black (GCR) 100 %, classic screen angles | Needs an image; Analyze cost plans each ink, Save writes four files from one base name. |
+| CMYK | Halftone dots, pitch 3 mm, dot 100 %, hatch levels 4, overdraw 1, pen 0.3 mm, weights C/M/Y 100 % / K 80 %, black (GCR) 100 %, classic screen angles | Needs an image; Analyze cost plans each ink, Save writes four files from one base name. Line/wave/TSP/contour styles plot much faster than dots. |
 | 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
 | Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |
 | Snowflake | 6 arms, depth 3, length 45 %, branch angle 35 deg, branch scale 55 %, jitter 8 deg / 15 % | Raise depth for finer detail; cap is 5. |
