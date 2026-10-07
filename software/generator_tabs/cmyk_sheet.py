@@ -29,7 +29,7 @@ from ._hershey import text_polylines
 
 
 SHEET_KIND = "cmyk-calibration-sheet"
-SHEET_VERSION = 4
+SHEET_VERSION = 5
 
 # Layout constants, millimetres.
 FIDUCIAL_SIZE_MM = 6.0
@@ -501,45 +501,35 @@ def build_sheet(
         )
     row(cells, gcr_w)
 
+    dense_pitch = max(0.35, builder.pen_width_mm * 1.15)
+
+    def dense_cell(block, channels):
+        cell = {
+            "block": block,
+            "channels": channels,
+            "tones": {channel: 1.0 for channel in channels},
+            "dot_scale": SPOT_SCALE if screen == "halftone" else 1.0,
+        }
+        if screen in ("lines", "crosshatch"):
+            cell["pitch_mm"] = dense_pitch
+        if screen == "crosshatch":
+            cell["levels"] = 4
+        return cell
+
     cells = [
         {
             "label": "+".join(channel.upper() for channel in combo),
-            "cell": {
-                "block": "mix",
-                "channels": combo,
-                "tones": {channel: 1.0 for channel in combo},
-                "dot_scale": SPOT_SCALE if screen == "halftone" else 1.0,
-            },
+            "cell": dense_cell("mix", combo),
         }
         for combo in MIX_SETS
     ]
-    dense_pitch = max(0.35, builder.pen_width_mm * 1.15)
     for channel in converter.CHANNELS:
-        if screen == "halftone":
-            spot = {
-                "block": "spot",
-                "channels": (channel,),
-                "tones": {channel: 1.0},
-                "dot_scale": SPOT_SCALE,
+        cells.append(
+            {
+                "label": channel.upper(),
+                "cell": dense_cell("spot", (channel,)),
             }
-        elif screen == "lines":
-            spot = {
-                "block": "spot",
-                "channels": (channel,),
-                "tones": {channel: 1.0},
-                "dot_scale": 1.0,
-                "pitch_mm": dense_pitch,
-            }
-        else:
-            spot = {
-                "block": "spot",
-                "channels": (channel,),
-                "tones": {channel: 1.0},
-                "dot_scale": 1.0,
-                "pitch_mm": dense_pitch,
-                "levels": 4,
-            }
-        cells.append({"label": channel.upper(), "cell": spot})
+        )
     cells.append(
         {
             "label": "PAPER",

@@ -130,6 +130,29 @@ class SheetBuilderTests(unittest.TestCase):
             [patch["levels"] for patch in steps], [2, 3, 4, 5]
         )
 
+    def test_mix_cells_match_the_dense_spot_spacing(self):
+        for screen in ("lines", "crosshatch", "halftone"):
+            _, manifest = build(screen=screen)
+            spots = {
+                patch["channels"][0]: patch
+                for patch in manifest["patches"]
+                if patch["block"] == "spot"
+            }
+            for patch in manifest["patches"]:
+                if patch["block"] != "mix":
+                    continue
+                for channel in patch["channels"]:
+                    spot = spots[channel]
+                    self.assertEqual(
+                        patch.get("pitch_mm"), spot.get("pitch_mm"), screen
+                    )
+                    self.assertEqual(
+                        patch.get("levels"), spot.get("levels"), screen
+                    )
+                    self.assertEqual(
+                        patch["dot_scale"], spot["dot_scale"], screen
+                    )
+
     def test_unknown_screen_is_rejected(self):
         with self.assertRaises(ValueError):
             build(screen="spirals")

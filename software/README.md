@@ -136,9 +136,9 @@ Current tools:
   **Test sheet** (Calibration group) replaces Preview and Save with a
   calibration page instead of the artwork: per-ink coverage and overdraw
   ladders, a dot-size, line-pitch, or hatch-level ladder, a GCR ramp,
-  full-tone mixes (pairs, triple, and the C+M+Y+K quad), dense ink spots,
-  blank paper, and four corner fiducials; the only printed text is a
-  two-line identification header
+  dense full-tone mixes (pairs, triple, and the C+M+Y+K quad) and single-ink
+  spots at the same tight spacing, blank paper, and four corner fiducials;
+  the only printed text is a two-line identification header
   (page, margin, screen), because the cell values live in the manifest. The
   **Sheet screen** box defaults to matching your Screen style (line screen
   and crosshatch included), so the ladders calibrate the marks you actually

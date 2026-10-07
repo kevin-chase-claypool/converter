@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-dense-mix-cells"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Calibration mix cells join the dense spot spacing
+
+- Request: "it just doesnt seem like this one gives you much information."
+  Correct: on the line and crosshatch screens the mix patches screened at
+  the artwork pitch, so each ink covered only ~25% of the cell and the
+  quad's four-ink overlap was ~0.4%, while the single-ink spots used a tight
+  spacing - the model check compared mismatched coverages.
+- Change: sheet version 5 shares one dense definition for mixes and spots
+  (`dot_scale` 1.40 for dots, dense pitch for lines, dense pitch + levels 4
+  for crosshatch), so the mix row is dense color fields with a real
+  overprint signal and the spot-based multipliers are consistent with it.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 370 tests (1 skipped, headless shader compile), including a new
+  test that every mix patch matches its inks' spot pitch/levels/dot scale
+  on all three screens; the default 200 x 180 mm line sheet is ~334-384
+  marks per ink; `docs_index.py --write` / `--check` pass.
+- Risk: crosshatch mix cells use three families per ink and add the most
+  marks; v4 and older sheets must be reprinted.
+- Evidence: `WSW-20261007-012`; `docs/testing/CMYK_CALIBRATION.md`;
+  `software/generator_tabs/cmyk_sheet.py`.
+- Category: windows-software, cmyk, calibration, test-print, ai-handoff.
+
 <a id="elog-20261007-cmyk-calibration-quad-mix"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Calibration mix row gains the C+M+Y+K quad
 

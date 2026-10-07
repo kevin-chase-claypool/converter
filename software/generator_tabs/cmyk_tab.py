@@ -248,8 +248,9 @@ class CmykTab(GeneratorTab):
             "Build a calibration sheet instead of the artwork: "
             "per-ink coverage and overdraw ladders, a dot-size, line-pitch, "
             "or hatch-level ladder for the chosen sheet screen, a GCR ramp, "
-            "full-tone mixes (pairs, triple, quad), dense ink spots, blank "
-            "paper, and four corner fiducials. The sheet prints only a two-line "
+            "dense full-tone mixes (pairs, triple, quad) and single-ink "
+            "spots, blank paper, and four corner fiducials. The sheet prints "
+            "only a two-line "
             "identification header; the cell values live in the calibration "
             "manifest, which Save writes for tools\\cmyk_calibrate.py."
         )
