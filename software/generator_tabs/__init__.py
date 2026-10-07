@@ -28,6 +28,9 @@ tabs do not own a preview and do not hand artwork to another tab.
   program build (moves, G-code, stats) for multi-layer tools
 * ``host.export_program_set(entries, base_path=None, default_base="")`` -
   one save dialog and one ``<base>-<label>.gcode`` file per entry
+* a tab may implement ``preview_layers()`` returning ordered
+  ``(ink, svg_path)`` pairs; the host then tags each layer's contours so the
+  shared OpenGL preview draws every ink in its own colour (CMYK)
 
 Tabs must be self-contained: do not edit the main window, converter settings,
 or another tab. Ported or vendored third-party code keeps its license and

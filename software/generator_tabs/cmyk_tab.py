@@ -268,6 +268,7 @@ class CmykTab(GeneratorTab):
 
         self._layers = {}
         self._layer_files = {}
+        self._preview_visible = []
         self._layers_key = None
         self._analysis = None
         self._analysis_key = None
@@ -401,6 +402,7 @@ class CmykTab(GeneratorTab):
         visible = self._preview_channels()
         if not visible:
             raise ValueError("Tick at least one preview layer.")
+        self._preview_visible = list(visible)
         QGuiApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         try:
             document = converter.svg_document(
@@ -421,6 +423,19 @@ class CmykTab(GeneratorTab):
         if self.host is not None:
             self.host.generator_status(f"CMYK screened: {counts}.")
         return path
+
+    def preview_layers(self):
+        """Ordered ``(ink, svg_path)`` pairs for the shared colour preview.
+
+        Called from the preview thread after ``build_svg()`` cached the layers
+        on the GUI thread, so this only reads cached state. Returning pairs
+        makes the OpenGL preview draw each ink in its own colour.
+        """
+        return [
+            (channel, self._layer_files[channel])
+            for channel in self._preview_visible
+            if channel in self._layer_files
+        ]
 
     def start_analysis(self, _checked=False):
         del _checked

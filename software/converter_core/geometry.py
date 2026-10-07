@@ -43,9 +43,21 @@ class FillTrail(list):
 
 
 def retag_contour(source, points):
-    """Rebuild ``points`` as a :class:`FillTrail` when ``source`` was one."""
+    """Rebuild ``points`` as the same tagged contour type when it has one.
+
+    ``FillTrail`` carries the keep-down-bridging tag and the CMYK preview adds
+    ``InkTrail`` for per-ink colours, so the source type and its attributes
+    must survive transforms instead of being normalized to a plain list.
+    """
     points = list(points)
-    return FillTrail(points) if isinstance(source, FillTrail) else points
+    if type(source) is list:
+        return points
+    try:
+        tagged = type(source)(points)
+    except Exception:
+        tagged = FillTrail(points)
+    tagged.__dict__.update(getattr(source, "__dict__", {}))
+    return tagged
 
 
 COMMAND_RE = re.compile(r"[MmZzLlHhVvCcSsQqTtAa]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?")

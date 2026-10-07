@@ -212,6 +212,16 @@ class ScreeningTests(unittest.TestCase):
             [converter.CHANNEL_COLORS["c"], converter.CHANNEL_COLORS["k"]],
         )
 
+    def test_ink_tags_survive_the_geometry_pipeline(self):
+        tagged = converter.tag_ink(
+            [[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]], "c"
+        )
+        moved = converter.apply_geometry_settings(tagged, converter.Settings())
+        self.assertEqual(getattr(moved[0], "ink", None), "c")
+        clipped = converter.clip_contours_to_bed(moved, (10.0, 0.0), 3.0)
+        self.assertTrue(clipped)
+        self.assertTrue(all(getattr(c, "ink", None) == "c" for c in clipped))
+
     def test_cost_table_names_both_strategies(self):
         from generator_tabs.cmyk_tab import format_seconds, format_cost_table
 
@@ -337,6 +347,18 @@ class CmykTabTests(unittest.TestCase):
             self.assertTrue(
                 Path(host.saved_paths[converter.CHANNEL_LABELS[channel].lower()]).exists()
             )
+
+    def test_preview_layers_match_the_visible_checkboxes(self):
+        tab = self.make_tab()
+        tab.build_svg()
+        self.assertEqual(
+            [ink for ink, _path in tab.preview_layers()], list(converter.CHANNELS)
+        )
+        tab.preview_boxes["m"].setChecked(False)
+        tab.build_svg()
+        self.assertEqual(
+            [ink for ink, _path in tab.preview_layers()], ["c", "y", "k"]
+        )
 
 
 class FakeHost:

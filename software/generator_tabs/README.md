@@ -51,6 +51,14 @@ class FlowFieldTab(GeneratorTab):
   save dialog, then one `<base>-<label>.gcode` file per `(label, gcode)`
   entry.
 
+Optional multi-layer hook (CMYK):
+
+- `preview_layers()` — return ordered `(ink, svg_path)` pairs for the layers
+  currently shown. The host loads each layer separately and tags its contours
+  (`converter.tag_ink`), so the shared OpenGL preview draws every ink in its
+  own colour; the contour order must match the tab's combined SVG. Tools that
+  do not implement this hook keep the single-colour preview.
+
 Rules:
 
 1. Keep the tab self-contained in this package; do not edit the main window or

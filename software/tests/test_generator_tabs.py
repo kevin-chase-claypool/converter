@@ -280,6 +280,133 @@ class ToolShellTests(unittest.TestCase):
         )
         self.assertEqual(Path(written[0]).read_text(encoding="utf-8"), "G1 X0\n")
 
+    def test_ink_vertex_colors_follow_contour_tags(self):
+        import converter_core as converter
+
+        undrawn = self.module.ink_color_floats(
+            converter.CHANNEL_COLORS["c"], undrawn_mix=0.55
+        )
+        full = self.module.ink_color_floats(converter.CHANNEL_COLORS["c"])
+        contours = converter.tag_ink([[(0.0, 0.0), (1.0, 0.0)]], "c")
+        moves = [
+            {
+                "type": "draw",
+                "strategy": "x_theta",
+                "contour": 0,
+                "bed_start": (0.0, 0.0),
+                "bed_end": (1.0, 0.0),
+            }
+        ]
+        artwork_colors, drawn_colors = self.module.ink_vertex_colors(contours, moves)
+        self.assertEqual(len(artwork_colors), 8)  # 2 vertices x RGBA
+        self.assertEqual(len(drawn_colors), 8)
+        self.assertEqual(artwork_colors[:4], list(undrawn))
+        self.assertEqual(drawn_colors[:4], list(full))
+        self.assertNotEqual(artwork_colors[:4], drawn_colors[:4])
+        # Untagged artwork keeps the single-colour preview.
+        self.assertEqual(
+            self.module.ink_vertex_colors([[(0.0, 0.0), (1.0, 0.0)]], moves),
+            (None, None),
+        )
+
+    def test_cmyk_preview_contours_carry_ink_tags(self):
+        import converter_core as converter
+        from PIL import Image
+
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        folder = tempfile.mkdtemp(prefix="cmyk-preview-tags-")
+        self.addCleanup(shutil.rmtree, folder, ignore_errors=True)
+        image_path = str(Path(folder) / "inks.png")
+        image = Image.new("RGB", (40, 40), (255, 255, 255))
+        for x in range(0, 20):
+            for y in range(0, 20):
+                image.putpixel((x, y), (0, 255, 255))      # cyan
+            for y in range(20, 40):
+                image.putpixel((x, y), (255, 0, 255))      # magenta
+        for x in range(20, 40):
+            for y in range(0, 20):
+                image.putpixel((x, y), (255, 255, 0))      # yellow
+            for y in range(20, 40):
+                image.putpixel((x, y), (0, 0, 0))          # black
+        image.save(image_path)
+        window.svg_path.setText(image_path)
+        window.show_tool("CMYK")
+        tab = window.stack.currentWidget()
+        tab.page_w.setValue(40)
+        tab.page_h.setValue(40)
+        tab.margin.setValue(4)
+        tab.pitch.setValue(4.0)
+        tab.max_marks.setValue(300)
+        path, source = window.resolve_active_source()
+        self.assertIs(source, tab)
+        window.pending_source_tab = tab
+        contours = window.load_preview_contours(
+            path, window.settings_for_source(tab)
+        )
+        self.assertEqual(
+            {getattr(contour, "ink", None) for contour in contours},
+            set(converter.CHANNELS),
+        )
+
+    def test_gl_preview_builds_buffers_for_ink_colors(self):
+        import converter_core as converter
+
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        contours = converter.tag_ink([[(0.0, 0.0), (1.0, 0.0)]], "c") + (
+            converter.tag_ink([[(0.0, 1.0), (1.0, 1.0)]], "k")
+        )
+        moves = [
+            {
+                "type": "draw",
+                "strategy": "y_theta",
+                "contour": index,
+                "bed_start": (0.0, float(index)),
+                "bed_end": (1.0, float(index)),
+                "duration_ms": 100.0,
+            }
+            for index in range(2)
+        ]
+        window.gl_preview.set_preview(
+            contours, moves, converter.Settings(), center=(0.0, 0.0)
+        )
+        self.assertIn("artwork_color", window.gl_preview.vertex_arrays)
+        self.assertEqual(window.gl_preview.color_vertex_counts["artwork"], 4)
+        self.assertEqual(window.gl_preview.color_vertex_counts["drawn_path"], 4)
+        # Untagged artwork keeps the uniform single-colour preview.
+        window.gl_preview.set_preview(
+            [[(0.0, 0.0), (1.0, 0.0)]], moves[:1], converter.Settings(), center=(0.0, 0.0)
+        )
+        self.assertNotIn("artwork_color", window.gl_preview.vertex_arrays)
+
+    def test_preview_shaders_compile_when_gl_is_available(self):
+        from PySide6.QtGui import QOffscreenSurface, QOpenGLContext
+        from PySide6.QtOpenGL import QOpenGLShader, QOpenGLShaderProgram
+
+        context = QOpenGLContext()
+        if not context.create():
+            self.skipTest("no OpenGL context on this platform")
+        surface = QOffscreenSurface()
+        surface.create()
+        if not context.makeCurrent(surface):
+            self.skipTest("offscreen OpenGL surface unavailable")
+        program = QOpenGLShaderProgram()
+        self.assertTrue(
+            program.addShaderFromSourceCode(
+                QOpenGLShader.Vertex, self.module.PREVIEW_VERTEX_SHADER
+            )
+        )
+        self.assertTrue(
+            program.addShaderFromSourceCode(
+                QOpenGLShader.Fragment, self.module.PREVIEW_FRAGMENT_SHADER
+            )
+        )
+        program.bindAttributeLocation("p", 0)
+        program.bindAttributeLocation("ink_color", 1)
+        self.assertTrue(program.link(), program.log())
+        self.assertGreaterEqual(program.uniformLocation("use_vertex_color"), 0)
+
     def test_artwork_scale_survives_the_generator_pipeline(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

@@ -1,5 +1,36 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-ink-preview"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK preview draws each ink in its own colour
+
+- Request: for the CMYK feature only, overlay the four layers in the shared
+  preview in their ink colours to judge how the inks mesh.
+- Change: CMYK contours now carry an `InkTrail` tag through scaling, pen
+  compensation and bed clipping (`retag_contour` preserves the contour type
+  and attributes). The preview loads each visible layer separately, tags its
+  contours, and the OpenGL shader mixes a new per-vertex `ink_color`
+  attribute with the existing uniform colour: not-yet-drawn marks show a pale
+  ink tint and the drawn path shows the full ink (cyan, magenta, yellow,
+  black). Layer checkboxes still select the visible inks; the red
+  machine-motion overlay and every other tool keep the single-colour preview.
+- Verification: 345 tests pass (1 skipped: the shader-compile test skips under
+  the headless `offscreen` platform, which cannot create a GL context); the
+  shaders compile and link cleanly against a real WGL context on this
+  machine; an off-screen full-window dry run through the real pipeline
+  produced a linked GL program, 175 contours / 2102 moves across inks
+  {c, m, y, k}, and 2800 artwork colour vertices matching 2800 artwork
+  vertices. `docs_index.py --write` / `--check` pass.
+- Struggle: `retag_contour` used to rebuild every tagged contour as a plain
+  `FillTrail`, discarding the ink tag; it now preserves the source type and
+  attributes, and the GL colour buffers fall back to the old single colour
+  whenever any contour is untagged.
+- Risk: colour is display-only; keep-down bridges would disable the per-ink
+  path (CMYK contours are never bridged), and paper meshing still depends on
+  pen choice, overdraw and registration.
+- Evidence: `WSW-20261007-003`; `software/README.md`.
+- Category: windows-software, cmyk, opengl, preview, color-separation,
+  generator-tabs, plotter-art.
+
 <a id="elog-20261007-cmyk-mark-styles"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK gains six more mark styles and overdraw
 

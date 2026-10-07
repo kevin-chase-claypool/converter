@@ -95,6 +95,88 @@ class CollapsibleSection(QWidget):
         self.toggle.setText(f"{marker} {title}")
 
 
+def ink_color_floats(hex_color, undrawn_mix=0.0):
+    """RGBA floats for a hex ink colour, optionally mixed toward paper white."""
+    text = str(hex_color).strip().lstrip("#")
+    if len(text) != 6:
+        return None
+    red = int(text[0:2], 16) / 255.0
+    green = int(text[2:4], 16) / 255.0
+    blue = int(text[4:6], 16) / 255.0
+    mix = max(0.0, min(float(undrawn_mix), 1.0))
+    return (
+        red + (1.0 - red) * mix,
+        green + (1.0 - green) * mix,
+        blue + (1.0 - blue) * mix,
+        1.0,
+    )
+
+
+def ink_vertex_colors(contours, moves, undrawn_mix=0.55):
+    """Return ``(artwork_colors, drawn_colors)`` for the per-ink preview.
+
+    Colours come from each contour's ``ink`` tag (the CMYK tool tags every
+    layer). The artwork array is the ink mixed toward white - the not-yet-
+    drawn look - and the drawn array is the full ink in move order. Returns
+    ``(None, None)`` when any contour is untagged or unknown, so every other
+    tool keeps the single-colour preview.
+    """
+    inks = [getattr(contour, "ink", None) for contour in contours]
+    if not contours or any(ink not in converter.CHANNEL_COLORS for ink in inks):
+        return None, None
+    artwork_colors = []
+    for contour, ink in zip(contours, inks):
+        color = ink_color_floats(converter.CHANNEL_COLORS[ink], undrawn_mix)
+        for _first, _second in zip(contour, contour[1:]):
+            artwork_colors.extend(color)
+            artwork_colors.extend(color)
+    drawn_colors = []
+    for move in moves:
+        if move.get("strategy") == "keep_down_bridge":
+            return None, None
+        if move.get("type") != "draw":
+            continue
+        if move.get("bed_start") is None or move.get("bed_end") is None:
+            return None, None
+        index = move.get("contour")
+        if not isinstance(index, int) or not 0 <= index < len(inks):
+            return None, None
+        color = ink_color_floats(converter.CHANNEL_COLORS[inks[index]])
+        drawn_colors.extend(color)
+        drawn_colors.extend(color)
+    return artwork_colors, drawn_colors
+
+
+# Preview shaders. ``ink_color`` is only consumed when the per-ink colour
+# buffers are bound (CMYK); every other tool leaves ``use_vertex_color`` at 0
+# and the existing uniform colour drives the fragment output.
+PREVIEW_VERTEX_SHADER = """attribute vec2 p;
+    attribute vec4 ink_color;
+    varying vec4 vcolor;
+    uniform vec2 center;
+    uniform float theta;
+    uniform vec4 bounds;
+    uniform vec2 shift;
+    void main() {
+        vcolor = ink_color;
+        float c = cos(theta);
+        float s = sin(theta);
+        vec2 d = (p + shift) - center;
+        vec2 r = center + vec2(d.x*c - d.y*s, d.x*s + d.y*c);
+        vec2 n = (r - bounds.xy) / (bounds.zw - bounds.xy) * 2.0 - 1.0;
+        gl_Position = vec4(n.x, n.y, 0.0, 1.0);
+    }
+"""
+
+PREVIEW_FRAGMENT_SHADER = """uniform vec4 color;
+    uniform float use_vertex_color;
+    varying vec4 vcolor;
+    void main() {
+        gl_FragColor = mix(color, vcolor, use_vertex_color);
+    }
+"""
+
+
 class GLPreview(QOpenGLWidget):
     GL_LINES = 0x0001
     GL_FLOAT = 0x1406
@@ -170,30 +252,16 @@ class GLPreview(QOpenGLWidget):
         funcs.glBlendFunc(0x0302, 0x0303)
 
         self.program = QOpenGLShaderProgram(self)
-        vertex_source = """attribute vec2 p;
-            uniform vec2 center;
-            uniform float theta;
-            uniform vec4 bounds;
-            uniform vec2 shift;
-            void main() {
-                float c = cos(theta);
-                float s = sin(theta);
-                vec2 d = (p + shift) - center;
-                vec2 r = center + vec2(d.x*c - d.y*s, d.x*s + d.y*c);
-                vec2 n = (r - bounds.xy) / (bounds.zw - bounds.xy) * 2.0 - 1.0;
-                gl_Position = vec4(n.x, n.y, 0.0, 1.0);
-            }
-        """
-        fragment_source = """uniform vec4 color;
-            void main() {
-                gl_FragColor = color;
-            }
-        """
-        if not self.program.addShaderFromSourceCode(QOpenGLShader.Vertex, vertex_source):
+        if not self.program.addShaderFromSourceCode(
+            QOpenGLShader.Vertex, PREVIEW_VERTEX_SHADER
+        ):
             print("OpenGL vertex shader failed:", self.program.log())
-        if not self.program.addShaderFromSourceCode(QOpenGLShader.Fragment, fragment_source):
+        if not self.program.addShaderFromSourceCode(
+            QOpenGLShader.Fragment, PREVIEW_FRAGMENT_SHADER
+        ):
             print("OpenGL fragment shader failed:", self.program.log())
         self.program.bindAttributeLocation("p", 0)
+        self.program.bindAttributeLocation("ink_color", 1)
         self.program_ok = self.program.link()
         if not self.program_ok:
             print("OpenGL shader link failed:", self.program.log())
@@ -204,8 +272,9 @@ class GLPreview(QOpenGLWidget):
             "bounds": self.program.uniformLocation("bounds"),
             "shift": self.program.uniformLocation("shift"),
             "color": self.program.uniformLocation("color"),
+            "use_vertex_color": self.program.uniformLocation("use_vertex_color"),
         }
-        for name in ("bed_circle", "bed_radius", "debug_box", "debug_cross", "reach_circle", "artwork", "drawn_path", "travel", "motion"):
+        for name in ("bed_circle", "bed_radius", "debug_box", "debug_cross", "reach_circle", "artwork", "artwork_color", "drawn_path", "drawn_path_color", "travel", "motion"):
             buf = QOpenGLBuffer(QOpenGLBuffer.VertexBuffer)
             buf.setUsagePattern(QOpenGLBuffer.StaticDraw)
             buf.create()
@@ -309,6 +378,7 @@ class GLPreview(QOpenGLWidget):
                 prev = curr
 
         artwork = []
+        artwork_colors, drawn_colors = ink_vertex_colors(self.contours, self.moves)
         for contour in self.contours:
             for a, b in zip(contour, contour[1:]):
                 artwork.extend([a[0], a[1], b[0], b[1]])
@@ -378,7 +448,19 @@ class GLPreview(QOpenGLWidget):
             "travel": array("f", travel),
             "motion": array("f", motion),
         }
-        self.vertex_counts = {name: len(values) // 2 for name, values in self.vertex_arrays.items()}
+        if artwork_colors is not None:
+            self.vertex_arrays["artwork_color"] = array("f", artwork_colors)
+            self.vertex_arrays["drawn_path_color"] = array("f", drawn_colors or [])
+        self.vertex_counts = {
+            name: len(values) // 2
+            for name, values in self.vertex_arrays.items()
+            if not name.endswith("_color")
+        }
+        self.color_vertex_counts = {
+            name[: -len("_color")]: len(values) // 4
+            for name, values in self.vertex_arrays.items()
+            if name.endswith("_color")
+        }
         self._vbos_dirty = True
         self._cached_bounds = None
         self._cached_bounds_key = None
@@ -691,7 +773,7 @@ class GLPreview(QOpenGLWidget):
             buf.release()
         self._vbos_dirty = False
 
-    def draw_static(self, name, color, width=1.0, count=None):
+    def draw_static(self, name, color, width=1.0, count=None, vertex_color=False):
         total = self.vertex_counts.get(name, 0)
         if count is None:
             count = total
@@ -703,12 +785,26 @@ class GLPreview(QOpenGLWidget):
         if buf is None:
             return
         funcs = self.context().functions()
+        color_buf = None
+        if vertex_color and self.color_vertex_counts.get(name, 0) >= count:
+            color_buf = self.vbos.get(name + "_color")
+        use = 1.0 if color_buf is not None else 0.0
+        color_loc = self.uniform_loc.get("use_vertex_color", -1)
+        if color_loc >= 0:
+            self.program.setUniformValue1f(color_loc, use)
         self.set_color(color)
         funcs.glLineWidth(float(width))
         buf.bind()
         self.program.enableAttributeArray(0)
         self.program.setAttributeBuffer(0, self.GL_FLOAT, 0, 2, 0)
+        if color_buf is not None:
+            color_buf.bind()
+            self.program.enableAttributeArray(1)
+            self.program.setAttributeBuffer(1, self.GL_FLOAT, 0, 4, 0)
         funcs.glDrawArrays(self.GL_LINES, 0, count)
+        if color_buf is not None:
+            self.program.disableAttributeArray(1)
+            color_buf.release()
         self.program.disableAttributeArray(0)
         buf.release()
 
@@ -724,6 +820,9 @@ class GLPreview(QOpenGLWidget):
             self.dynamic_capacity = size
         else:
             self.dynamic_vbo.write(0, data, size)
+        color_loc = self.uniform_loc.get("use_vertex_color", -1)
+        if color_loc >= 0:
+            self.program.setUniformValue1f(color_loc, 0.0)
         self.set_color(color)
         funcs.glLineWidth(float(width))
         self.program.enableAttributeArray(0)
@@ -775,10 +874,16 @@ class GLPreview(QOpenGLWidget):
         self.set_shift(shift_x, shift_y)
         # Full artwork in the undrawn color, then overdraw the portion drawn so
         # far in the drawn color — the boundary tracks where the pen is.
-        self.draw_static("artwork", self.undrawn_color, 1.0)
+        self.draw_static("artwork", self.undrawn_color, 1.0, vertex_color=True)
         drawn_segments = self.draw_segments_done(progress)
         if drawn_segments > 0:
-            self.draw_static("drawn_path", self.drawing_color, 1.6, count=drawn_segments * 2)
+            self.draw_static(
+                "drawn_path",
+                self.drawing_color,
+                1.6,
+                count=drawn_segments * 2,
+                vertex_color=True,
+            )
         if self.show_pen_down_path:
             self.draw_static("motion", self.motion_color, 1.2)
         self.set_shift(0.0, 0.0)
@@ -839,7 +944,7 @@ class PreviewWorker(QObject):
                     self.notice.emit(self.window.describe_fit(settings, fitted))
                     settings = fitted
             self.progress.emit(10, "Building fill geometry")
-            raw_contours = self.window.load_contours(
+            raw_contours = self.window.load_preview_contours(
                 self.svg_path, settings, self.is_cancelled, self.notice.emit
             )
             self.progress.emit(48, f"Planning motion for {len(raw_contours)} contours")
@@ -1919,6 +2024,35 @@ class MainWindow(QMainWindow):
         )
         self.status.setText(f"Saved {len(written)} G-code files.")
         return written
+
+    def load_preview_contours(self, svg_path, settings, cancel_check=None, notice=None):
+        """Load preview contours, tagged per ink when the tab provides layers.
+
+        A multi-layer tool (CMYK) implements ``preview_layers()`` returning
+        ordered ``(ink, svg_path)`` pairs. Each layer is loaded separately and
+        tagged with ``converter.tag_ink``, so the OpenGL preview can draw the
+        inks in their own colours; the contour order matches the combined SVG.
+        Every other tool keeps the single-file, single-colour path.
+        """
+        tab = getattr(self, "pending_source_tab", None)
+        provider = getattr(tab, "preview_layers", None) if tab is not None else None
+        if callable(provider):
+            layers = list(provider())
+            if layers:
+                contours = []
+                for ink, layer_path in layers:
+                    layer_contours = self.load_contours(
+                        layer_path, settings, cancel_check, None
+                    )
+                    contours.extend(converter.tag_ink(layer_contours, ink))
+                if notice:
+                    notice(
+                        "Ink preview: "
+                        + ", ".join(str(ink) for ink, _path in layers)
+                        + "."
+                    )
+                return contours
+        return self.load_contours(svg_path, settings, cancel_check, notice)
 
     def raw_geometry_key(self, svg_path, settings, fill=True):
         stat = os.stat(svg_path)

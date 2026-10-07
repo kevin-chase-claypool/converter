@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-003` | implemented | [Draw the CMYK preview per ink colour](2026-10-07-cmyk-ink-preview.md) | `cmyk`, `opengl`, `preview`, `color-separation`, `generator-tabs` |
 | 2026-10-07 | `WSW-20261007-002` | implemented | [Add six CMYK mark styles and an overdraw control](2026-10-07-cmyk-mark-styles.md) | `cmyk`, `color-separation`, `screening`, `line-screen`, `tsp`, `contours`, `gcode` |
 | 2026-10-07 | `WSW-20261007-001` | implemented | [Add the CMYK separation tool with one G-code file per ink](2026-10-07-cmyk-separation-tool.md) | `cmyk`, `color-separation`, `generator-tabs`, `gcode`, `cost-analysis`, `x-theta`, `y-theta` |
 | 2026-10-06 | `WSW-20261006-031` | implemented | [Raise the pen-up dwell default to 1000 ms](2026-10-06-pen-up-dwell-1000ms.md) | `converter`, `pen`, `timing` |

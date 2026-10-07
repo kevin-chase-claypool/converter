@@ -119,6 +119,11 @@ Current tools:
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times
   with a sub-pen offset.
+  While the CMYK page is active the shared OpenGL preview draws each visible
+  ink in its own colour - not yet drawn marks in a pale tint, the drawn path in
+  full ink - so the four layers can be judged overlaid the way they will mesh
+  on paper. The red machine-motion overlay and every other tool keep their
+  existing single-colour preview.
 - **SquiggleCam** - one continuous squiggle per row from image tone (full
   upstream setting set): line count, frequency, amplitude, brightness,
   contrast, min/max brightness, pixel spacing, resolution, black-background

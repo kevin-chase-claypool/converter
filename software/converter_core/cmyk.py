@@ -44,6 +44,24 @@ INK_FLOOR = 0.06
 DEFAULT_WEIGHTS = {"c": 1.0, "m": 1.0, "y": 1.0, "k": 0.8}
 
 
+class InkTrail(list):
+    """A contour tagged with the ink channel that will draw it.
+
+    The tag rides through the geometry pipeline (``retag_contour`` preserves
+    the type and attributes), so the shared OpenGL preview can draw each CMYK
+    layer in its own colour without changing the planning or G-code paths.
+    """
+
+    def __init__(self, points=(), ink=None):
+        super().__init__(points)
+        self.ink = ink
+
+
+def tag_ink(contours, ink):
+    """Return the contours as :class:`InkTrail` copies carrying *ink*."""
+    return [InkTrail(contour, ink=ink) for contour in contours]
+
+
 def _weight_map(weights):
     if weights is None:
         return dict(DEFAULT_WEIGHTS)
