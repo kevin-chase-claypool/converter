@@ -58,6 +58,10 @@ Optional multi-layer hook (CMYK):
   (`converter.tag_ink`), so the shared OpenGL preview draws every ink in its
   own colour; the contour order must match the tab's combined SVG. Tools that
   do not implement this hook keep the single-colour preview.
+- `on_preview_finished()` — called by the host after a successful preview of
+  this tab. The CMYK tab uses it to plan the four per-ink programs in the
+  background, so no separate "analyze" step or button exists; Save reuses
+  those programs.
 
 Rules:
 
@@ -67,8 +71,9 @@ Rules:
    `ValueError` with a user-facing message when required input is missing.
 3. Do not add a per-tab preview, a per-tab file picker, or a hand-off button.
    The static Preview/Save buttons and the shared preview panel own all of
-   that. A multi-layer tool (CMYK) may add Analyze/Save-set buttons that call
-   the host APIs above; the host owns the dialogs and writes the files.
+   that. A multi-layer tool (CMYK) may add a Save-set button and an
+   `on_preview_finished()` hook for background work; the host owns the dialogs
+   and writes the files.
 4. Never write G-code directly; emit SVG and let the host's
    `analyze_program`/`export_program_set` produce and save programs.
 5. Keep controls proportional to the generator's real parameters, and make the

@@ -1,5 +1,37 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-background-planning"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK plans its four files automatically
+
+- Request: "the cost analysis is something that is being performed to decide
+  which to use - xtheta or ytheta. nothing more. it doesnt need a button
+  because its a background process of the preview/saving the gcode to its 4
+  files."
+- Change: the Analyze cost button and its result table are gone. A successful
+  CMYK Preview now calls the tab's new `on_preview_finished()` host hook,
+  which plans the four per-ink programs on the existing worker thread; the
+  tab reports one compact line plus a log line per ink (marks, x_theta/y_theta
+  counts, coordinated draw length, estimate). **Save 4 G-code files** reuses
+  those programs and only re-plans when a control changed. The window tracks
+  `preview_succeeded` so the hook never runs after a cancelled or failed
+  preview, and `closeEvent` stops background planning before exit.
+- Verification: 347 tests pass (1 skipped: the shader-compile test skips on
+  the headless offscreen platform); new tests cover the missing analyze
+  button, the automatic hook, the success-only host trigger, and the one-line
+  summary; an off-screen full-window dry run pressed Preview, saw the
+  background planner start on its own and produce all four plans
+  (`Cost: C x115/y199 3m20s, ...`), then wrote the four G-code files from
+  those results. `docs_index.py --write` / `--check` pass.
+- Struggle: starting planning from `build_svg()` would race the shared
+  preview over the raw geometry cache; the host hook runs after the preview
+  thread finishes instead.
+- Risk: Preview now also pays for the four per-ink plans (cancellable worker
+  thread); Save would need the same work anyway, and a cancelled or failed
+  plan makes Save re-plan before writing.
+- Evidence: `WSW-20261007-004`; `software/README.md`.
+- Category: windows-software, cmyk, workflow, preview, cost, x-theta,
+  y-theta, gcode.
+
 <a id="elog-20261007-cmyk-ink-preview"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK preview draws each ink in its own colour
 

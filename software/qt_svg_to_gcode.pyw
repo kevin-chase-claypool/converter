@@ -979,6 +979,7 @@ class MainWindow(QMainWindow):
         self.preview_tab = None
         self.pending_source_tab = None
         self.pending_source_path = ""
+        self.preview_succeeded = False
         self.tab_preview_stale = False
         self.raw_contours = None
         self.raw_cache_key = None
@@ -3768,12 +3769,14 @@ class MainWindow(QMainWindow):
         if callable(busy) and busy():
             QMessageBox.information(
                 self,
-                "Analysis running",
-                "Wait for the layer analysis to finish or cancel it, then preview.",
+                "Planning running",
+                "Wait for the four ink programs to finish planning or cancel "
+                "them, then preview.",
             )
             return
         self.pending_source_tab = source_tab
         self.pending_source_path = svg_path
+        self.preview_succeeded = False
         settings = self.settings_for_source(source_tab)
         if source_tab is not self.convert_root:
             self.log.append(
@@ -3839,6 +3842,7 @@ class MainWindow(QMainWindow):
         self.preview_stage.setText(f"{stage} | {elapsed:.1f} s")
 
     def preview_ready(self, result):
+        self.preview_succeeded = True
         settings, contours, moves, bed_center, program_gcode, stats = result
         self.set_preview_build_progress(94, "Preparing OpenGL preview")
         QApplication.processEvents()
@@ -3900,6 +3904,12 @@ class MainWindow(QMainWindow):
         self.save_action.setEnabled(True)
         self.preview_thread = None
         self.preview_worker = None
+        if self.preview_succeeded:
+            # Optional tab hook: multi-layer tools plan their per-file
+            # programs in the background once the shared preview is live.
+            hook = getattr(self.preview_tab, "on_preview_finished", None)
+            if callable(hook):
+                hook()
 
     def closeEvent(self, event):
         if self.preview_thread is not None:
@@ -3907,6 +3917,9 @@ class MainWindow(QMainWindow):
             self.status.setText("Cancelling preview. Close again after cancellation finishes.")
             event.ignore()
             return
+        stop = getattr(self.stack.currentWidget(), "shutdown_background", None)
+        if callable(stop):
+            stop()
         super().closeEvent(event)
 
     def convert(self):

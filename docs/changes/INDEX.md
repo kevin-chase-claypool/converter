@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-004` | windows-software | implemented | [Plan the four CMYK programs automatically; drop the Analyze button](windows-software/2026-10-07-cmyk-background-planning.md) |
 | 2026-10-07 | `WSW-20261007-003` | windows-software | implemented | [Draw the CMYK preview per ink colour](windows-software/2026-10-07-cmyk-ink-preview.md) |
 | 2026-10-07 | `WSW-20261007-002` | windows-software | implemented | [Add six CMYK mark styles and an overdraw control](windows-software/2026-10-07-cmyk-mark-styles.md) |
 | 2026-10-07 | `WSW-20261007-001` | windows-software | implemented | [Add the CMYK separation tool with one G-code file per ink](windows-software/2026-10-07-cmyk-separation-tool.md) |

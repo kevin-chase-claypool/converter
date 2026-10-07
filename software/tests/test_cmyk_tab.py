@@ -222,8 +222,8 @@ class ScreeningTests(unittest.TestCase):
         self.assertTrue(clipped)
         self.assertTrue(all(getattr(c, "ink", None) == "c" for c in clipped))
 
-    def test_cost_table_names_both_strategies(self):
-        from generator_tabs.cmyk_tab import format_seconds, format_cost_table
+    def test_cost_summary_names_both_strategies(self):
+        from generator_tabs.cmyk_tab import format_cost_summary, format_seconds
 
         rows = {
             "c": {
@@ -235,10 +235,10 @@ class ScreeningTests(unittest.TestCase):
                 "seconds": 61.0,
             }
         }
-        table = format_cost_table(rows)
-        self.assertIn("x_theta", table)
-        self.assertIn("y_theta", table)
-        self.assertIn("Cyan", table)
+        summary = format_cost_summary(rows)
+        self.assertIn("x30/y12", summary)
+        self.assertIn("C ", summary)
+        self.assertIn("1m01s", summary)
         self.assertEqual(format_seconds(61.0), "1m01s")
         self.assertEqual(format_seconds(3600.0), "1h00m")
 
@@ -359,6 +359,14 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(
             [ink for ink, _path in tab.preview_layers()], ["c", "y", "k"]
         )
+
+    def test_planning_is_background_not_a_button(self):
+        tab = self.make_tab()
+        self.assertFalse(hasattr(tab, "analyze_button"))
+        calls = []
+        tab.start_analysis = lambda: calls.append("plan")
+        tab.on_preview_finished()
+        self.assertEqual(calls, ["plan"])
 
 
 class FakeHost:

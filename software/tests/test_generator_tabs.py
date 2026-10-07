@@ -407,6 +407,22 @@ class ToolShellTests(unittest.TestCase):
         self.assertTrue(program.link(), program.log())
         self.assertGreaterEqual(program.uniformLocation("use_vertex_color"), 0)
 
+    def test_preview_finished_hook_runs_for_the_previewed_tab(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.show_tool("CMYK")
+        tab = window.stack.currentWidget()
+        calls = []
+        tab.on_preview_finished = lambda: calls.append("planned")
+        window.preview_tab = tab
+        window.preview_succeeded = True
+        window.preview_thread_finished()
+        self.assertEqual(calls, ["planned"])
+        # A failed or cancelled preview must not start background planning.
+        window.preview_succeeded = False
+        window.preview_thread_finished()
+        self.assertEqual(calls, ["planned"])
+
     def test_artwork_scale_survives_the_generator_pipeline(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

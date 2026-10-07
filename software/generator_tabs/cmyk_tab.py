@@ -49,37 +49,19 @@ def format_seconds(seconds):
     return f"{secs}s"
 
 
-def format_cost_table(results):
-    """Monospace table of the per-ink x_theta/y_theta cost split."""
-    header = (
-        f"{'Ink':<8}{'marks':>7}{'moves':>7}{'x_theta':>9}"
-        f"{'y_theta':>9}{'draw mm':>10}{'est':>9}"
-    )
-    lines = [header, "-" * len(header)]
-    total_seconds = 0.0
-    total_marks = 0
-    total_x = 0
-    total_y = 0
+def format_cost_summary(results):
+    """One-line per-ink split of the planner's x_theta/y_theta choices."""
+    parts = []
     for channel in converter.CHANNELS:
         record = results.get(channel)
         if not record:
             continue
-        total_seconds += float(record["seconds"])
-        total_marks += int(record["marks"])
-        total_x += int(record["x_count"])
-        total_y += int(record["y_count"])
-        lines.append(
-            f"{converter.CHANNEL_LABELS[channel]:<8}{record['marks']:>7}"
-            f"{record['moves']:>7}{record['x_count']:>9}{record['y_count']:>9}"
-            f"{record['draw_mm']:>10.1f}{format_seconds(record['seconds']):>9}"
+        parts.append(
+            f"{converter.CHANNEL_LABELS[channel][0]} "
+            f"x{record['x_count']}/y{record['y_count']} "
+            f"{format_seconds(record['seconds'])}"
         )
-    if len(lines) > 2:
-        lines.append("-" * len(header))
-        lines.append(
-            f"{'Total':<8}{total_marks:>7}{'':>7}{total_x:>9}{total_y:>9}"
-            f"{'':>10}{format_seconds(total_seconds):>9}"
-        )
-    return "\n".join(lines)
+    return "Cost: " + ", ".join(parts) if parts else "Cost: not planned yet."
 
 
 class ProgramAnalysisWorker(QObject):
@@ -251,19 +233,19 @@ class CmykTab(GeneratorTab):
         page.addRow("Artwork scale", self.scale_pct)
 
         actions = self.add_group("G-code (4 files)")
-        self.analyze_button = QPushButton("Analyze cost (4 files)")
-        self.analyze_button.clicked.connect(self.start_analysis)
-        actions.addRow("", self.analyze_button)
         self.save_button = QPushButton("Save 4 G-code files...")
         self.save_button.clicked.connect(self.save_all)
         actions.addRow("", self.save_button)
-        self.cancel_button = QPushButton("Cancel analysis")
+        self.cancel_button = QPushButton("Cancel planning")
         self.cancel_button.setEnabled(False)
         self.cancel_button.clicked.connect(self.cancel_analysis)
         actions.addRow("", self.cancel_button)
-        self.cost_label = QLabel("Analyze to split x_theta vs y_theta per ink.")
-        self.cost_label.setWordWrap(False)
-        self.cost_label.setStyleSheet("font-family: Consolas, monospace; font-size: 11px;")
+        self.cost_label = QLabel(
+            "Preview plans the four ink programs in the background; "
+            "x_theta/y_theta is the planner's per-segment choice."
+        )
+        self.cost_label.setWordWrap(True)
+        self.cost_label.setStyleSheet("color: #475569;")
         actions.addRow("", self.cost_label)
 
         self._layers = {}
@@ -437,12 +419,21 @@ class CmykTab(GeneratorTab):
             if channel in self._layer_files
         ]
 
-    def start_analysis(self, _checked=False):
-        del _checked
+    def on_preview_finished(self):
+        """Host hook: plan the four ink programs in the background.
+
+        The shared preview already planned the combined artwork with the same
+        r-theta solver; this runs the four per-ink programs so their own
+        x_theta/y_theta choices and G-code are ready for the save, without a
+        separate user step.
+        """
+        self.start_analysis()
+
+    def start_analysis(self):
         if self._thread is not None:
             return
         if getattr(self.host, "preview_thread", None) is not None:
-            self.report_error("Finish or cancel the running preview before analyzing.")
+            self.report_error("Finish or cancel the running preview before planning.")
             return
         try:
             self._ensure_layers()
@@ -482,18 +473,17 @@ class CmykTab(GeneratorTab):
         self._thread.finished.connect(self._worker.deleteLater)
         self._thread.finished.connect(self._thread.deleteLater)
         self._thread.finished.connect(self._on_thread_finished)
-        self.analyze_button.setEnabled(False)
         self.save_button.setEnabled(False)
         self.cancel_button.setEnabled(True)
-        self.cost_label.setText("Planning...")
-        self.status.setText("Analyzing the four ink programs...")
+        self.cost_label.setText("Planning the four ink programs...")
+        self.status.setText("Planning the four ink programs...")
         self._thread.start()
 
     def cancel_analysis(self):
         if self._worker is not None:
             self._worker.cancel()
             self.cancel_button.setEnabled(False)
-            self.status.setText("Cancelling analysis...")
+            self.status.setText("Cancelling planning...")
 
     def analysis_running(self):
         """True while the layer analysis worker is planning programs."""
@@ -505,12 +495,12 @@ class CmykTab(GeneratorTab):
 
     def _on_finished(self, results):
         self._analysis = results
-        self.cost_label.setText(format_cost_table(results))
+        self.cost_label.setText(format_cost_summary(results))
         summary = ", ".join(
             f"{converter.CHANNEL_LABELS[channel]} {format_seconds(record['seconds'])}"
             for channel, record in results.items()
         )
-        message = f"CMYK cost analysis: {summary}."
+        message = f"CMYK per-ink plan ready: {summary}."
         self.status.setText(message)
         if self.host is not None:
             self.host.generator_status(message)
@@ -533,21 +523,28 @@ class CmykTab(GeneratorTab):
             self._write_files(results)
 
     def _on_failed(self, message):
-        self.report_error(f"Analysis failed: {message}")
-        self.cost_label.setText("Analysis failed.")
+        self.report_error(f"Per-ink planning failed: {message}")
+        self.cost_label.setText("Per-ink planning failed.")
         self._pending_save = False
 
     def _on_cancelled(self):
-        self.status.setText("Analysis cancelled.")
-        self.cost_label.setText("Analysis cancelled; the last result is kept.")
+        self.status.setText("Planning cancelled.")
+        self.cost_label.setText("Planning cancelled; the last result is kept.")
         self._pending_save = False
 
     def _on_thread_finished(self):
         self._thread = None
         self._worker = None
-        self.analyze_button.setEnabled(True)
         self.save_button.setEnabled(True)
         self.cancel_button.setEnabled(False)
+
+    def shutdown_background(self):
+        """Cancel and join the background planner (window close)."""
+        if self._worker is not None:
+            self._worker.cancel()
+        if self._thread is not None:
+            self._thread.quit()
+            self._thread.wait(5000)
 
     def save_all(self, _checked=False):
         del _checked
@@ -557,7 +554,7 @@ class CmykTab(GeneratorTab):
             return
         if self._analysis is None or self._analysis_key != self._control_key():
             self._pending_save = True
-            self.status.setText("Analyzing before save...")
+            self.status.setText("Planning the four ink programs before save...")
             self.start_analysis()
             return
         self._write_files(self._analysis)
@@ -569,7 +566,7 @@ class CmykTab(GeneratorTab):
             if channel in results
         ]
         if not entries:
-            self.report_error("Nothing to save; run the analysis first.")
+            self.report_error("Nothing to save; preview first.")
             return
         base = ""
         if getattr(self, "_artwork", ""):

@@ -81,9 +81,9 @@ and that result runs through the same converter pipeline into the shared
 preview panel. **Save G-code** exports the active tab's result. Switching tabs
 never rebuilds anything; it marks the visible preview as belonging to another
 tab until Preview is pressed again. Multi-layer tools (CMYK) keep that static
-Preview for the overlaid view and add their own **Analyze cost** and
-**Save 4 G-code files** buttons; the window owns the save dialog and writes
-one program per ink.
+Preview for the overlaid view; after a successful preview the four per-ink
+programs plan in the background and **Save 4 G-code files** writes them
+through one save dialog owned by the window.
 
 Tool authors: the contract and the host entry points are documented in
 [`generator_tabs/README.md`](generator_tabs/README.md). Ported or vendored
@@ -109,9 +109,11 @@ Current tools:
   dot pitch, dot size, hatch levels, overdraw, pen width, max marks per ink,
   seed, preview and write checkboxes per layer, page size, margin, artwork
   scale. The preview checkboxes decide which inks the shared OpenGL preview
-  draws; **Analyze cost (4 files)** plans every checked ink through the same
-  pipeline as Convert and reports that file's x_theta/y_theta draw split plus
-  the calibrated time estimate; **Save 4 G-code files** writes
+  draws. Pressing Preview also plans each checked ink's own program in the
+  background through the same pipeline as Convert - that planning is exactly
+  where the r-theta solver picks x_theta or y_theta per segment, and the tab
+  reports each file's split and calibrated time when it finishes.
+  **Save 4 G-code files** writes
   `<name>-cyan.gcode`, `-magenta`, `-yellow` and `-black` from one base name.
   The r-theta axis-cost solver and the M3/M5 pen contract are inherited
   unchanged, so each ink is as cost-efficient as a normal Convert program.
