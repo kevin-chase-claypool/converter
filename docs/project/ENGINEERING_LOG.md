@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-ink-profile-loading"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Measured ink profiles load into the simulation
+
+- Request: "do what you can to improve our cmyk feature," following the
+  open-source reconciliation; this is ranked improvement 1 (finish the
+  calibration loop - every reference tool concedes its preview is only
+  approximate).
+- Change: an **Ink profile...** button in the preview panel loads the
+  `*-profile.json` from `tools/cmyk_calibrate.py`; the Ink simulation then
+  multiplies the pens' measured transmittances (`set_sim_ink_colors` feeds
+  the solid colour buffer via a new `ink_colors` override in
+  `ink_vertex_colors`). The log states the loaded values; the pale/drawn
+  progress view keeps the display colours by design.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 394 tests (1 skipped, headless shader compile); new tests cover the
+  colour override and a real temp-file profile driving the GL buffer;
+  `docs_index.py --write` / `--check` pass.
+- Risk: the profile lasts for the session; persistence and editable
+  multipliers are follow-ups.
+- Evidence: `WSW-20261008-008`;
+  `docs/research/2026-10-08-cmyk-vs-open-source.md`.
+- Category: windows-software, cmyk, calibration, ink-simulation.
+
 <a id="elog-20261008-cmyk-svg-multiply-blend"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK layer SVGs blend multiplicatively
 

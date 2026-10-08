@@ -377,6 +377,53 @@ class ToolShellTests(unittest.TestCase):
         window.update_preview_visibility()
         self.assertEqual(window.gl_preview.visible_inks, {"m"})
 
+    def test_ink_vertex_colors_accept_measured_colors(self):
+        import converter_core as converter
+
+        contours = converter.tag_ink([[(0.0, 0.0), (1.0, 0.0)]], "c")
+        colors, _drawn = self.module.ink_vertex_colors(
+            contours, [], undrawn_mix=0.0, ink_colors={"c": (0.5, 0.75, 0.9)}
+        )
+        self.assertEqual(colors[:4], [0.5, 0.75, 0.9, 1.0])
+
+    def test_load_ink_profile_applies_to_the_simulation(self):
+        import converter_core as converter
+        import json as json_module
+
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        folder = tempfile.mkdtemp(prefix="ink-profile-")
+        self.addCleanup(shutil.rmtree, folder, ignore_errors=True)
+        path = str(Path(folder) / "art-profile.json")
+        with open(path, "w", encoding="utf-8") as handle:
+            json_module.dump(
+                {
+                    "kind": "cmyk-ink-profile",
+                    "inks": {
+                        "c": [0.6, 0.9, 0.95],
+                        "m": [0.9, 0.7, 0.9],
+                        "y": [0.95, 0.9, 0.4],
+                        "k": [0.3, 0.3, 0.32],
+                    },
+                },
+                handle,
+            )
+        window.load_ink_profile(path)
+        self.assertEqual(
+            window.gl_preview.sim_ink_colors["c"], (0.6, 0.9, 0.95)
+        )
+        window.gl_preview.set_preview(
+            converter.tag_ink([[(0.0, 0.0), (1.0, 0.0)]], "c"),
+            [],
+            converter.Settings(),
+            center=(0.0, 0.0),
+        )
+        stored = list(
+            window.gl_preview.vertex_arrays["artwork_solid_color"][:4]
+        )
+        for got, want in zip(stored, [0.6, 0.9, 0.95, 1.0]):
+            self.assertAlmostEqual(got, want, places=5)
+
     def test_ink_engage_summary_counts_m3s_per_ink(self):
         import converter_core as converter
 

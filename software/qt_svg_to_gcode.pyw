@@ -1,5 +1,6 @@
 import bisect
 import dataclasses
+import json
 import math
 import os
 import sys
@@ -112,8 +113,27 @@ def ink_color_floats(hex_color, undrawn_mix=0.0, alpha=1.0):
     )
 
 
+def rgb_floats(rgb, undrawn_mix=0.0, alpha=1.0):
+    """RGBA floats for an ``(r, g, b)`` triple in 0..1, mixed toward white."""
+    red, green, blue = (
+        max(0.0, min(1.0, float(value))) for value in tuple(rgb)[:3]
+    )
+    mix = max(0.0, min(float(undrawn_mix), 1.0))
+    return (
+        red + (1.0 - red) * mix,
+        green + (1.0 - green) * mix,
+        blue + (1.0 - blue) * mix,
+        max(0.0, min(float(alpha), 1.0)),
+    )
+
+
 def ink_vertex_colors(
-    contours, moves, undrawn_mix=0.55, visible_inks=None, hidden_white=False
+    contours,
+    moves,
+    undrawn_mix=0.55,
+    visible_inks=None,
+    hidden_white=False,
+    ink_colors=None,
 ):
     """Return ``(artwork_colors, drawn_colors)`` for the per-ink preview.
 
@@ -125,7 +145,9 @@ def ink_vertex_colors(
     layers by giving their vertices zero alpha, so the preview checkboxes
     apply without replanning. ``hidden_white`` gives hidden inks a white,
     zero-alpha colour instead, which is the multiply-neutral value for the
-    ink-simulation pass.
+    ink-simulation pass. ``ink_colors`` overrides an ink's colour with a
+    measured ``(r, g, b)`` triple (0..1), which is what a calibration
+    profile provides.
     """
     inks = [getattr(contour, "ink", None) for contour in contours]
     if not contours or any(ink not in converter.CHANNEL_COLORS for ink in inks):
@@ -136,13 +158,16 @@ def ink_vertex_colors(
         else (lambda ink: ink in visible_inks)
     )
     def color_for(ink, mix):
-        if shown(ink):
-            return ink_color_floats(converter.CHANNEL_COLORS[ink], mix)
-        if hidden_white:
-            return (1.0, 1.0, 1.0, 0.0)
-        return ink_color_floats(
-            converter.CHANNEL_COLORS[ink], mix, alpha=0.0
-        )
+        if not shown(ink):
+            if hidden_white:
+                return (1.0, 1.0, 1.0, 0.0)
+            return ink_color_floats(
+                converter.CHANNEL_COLORS[ink], mix, alpha=0.0
+            )
+        override = (ink_colors or {}).get(ink)
+        if override is not None:
+            return rgb_floats(override, mix)
+        return ink_color_floats(converter.CHANNEL_COLORS[ink], mix)
 
     artwork_colors = []
     for contour, ink in zip(contours, inks):
@@ -213,6 +238,7 @@ class GLPreview(QOpenGLWidget):
         # None shows every tagged ink; a set filters the drawn layers live.
         self.visible_inks = None
         self.ink_simulation = False
+        self.sim_ink_colors = None
         self.progress = 0.0
         self.settings = converter.Settings()
         self.drawing_color = QColor("#2563eb")
@@ -358,6 +384,30 @@ class GLPreview(QOpenGLWidget):
         self.ink_simulation = enabled
         self.update()
 
+    def set_sim_ink_colors(self, colors):
+        """Use measured ink transmittances for the multiply simulation.
+
+        ``colors`` maps channel keys to ``(r, g, b)`` in 0..1, exactly what
+        ``tools/cmyk_calibrate.py`` measures. ``None`` restores the display
+        ink colours.
+        """
+        if colors is None:
+            new = None
+        else:
+            new = {}
+            for key, value in colors.items():
+                triple = tuple(float(v) for v in tuple(value)[:3])
+                if len(triple) == 3:
+                    new[str(key)] = tuple(
+                        max(0.0, min(1.0, v)) for v in triple
+                    )
+        if new == self.sim_ink_colors:
+            return
+        self.sim_ink_colors = new
+        if self.contours:
+            self.rebuild_cache()
+        self.update()
+
     def _move_ink(self, move):
         index = move.get("contour")
         if isinstance(index, int) and 0 <= index < len(self.contours):
@@ -463,6 +513,7 @@ class GLPreview(QOpenGLWidget):
             undrawn_mix=0.0,
             visible_inks=self.visible_inks,
             hidden_white=True,
+            ink_colors=self.sim_ink_colors,
         )
         for contour in self.contours:
             for a, b in zip(contour, contour[1:]):
@@ -1365,9 +1416,18 @@ class MainWindow(QMainWindow):
             "coverage."
         )
         self.ink_sim_check.toggled.connect(self.gl_preview.set_ink_simulation)
+        self.ink_profile_button = QPushButton(
+            "Ink profile...", clicked=self.load_ink_profile
+        )
+        self.ink_profile_button.setToolTip(
+            "Load a *-profile.json produced by tools\\cmyk_calibrate.py; the "
+            "Ink simulation then multiplies your pens' measured colours "
+            "instead of the display colours."
+        )
         clip_row = QHBoxLayout()
         clip_row.addWidget(self.preview_motion_check)
         clip_row.addWidget(self.ink_sim_check)
+        clip_row.addWidget(self.ink_profile_button)
         clip_row.addWidget(self.fill_bed_button)
         clip_row.addWidget(self.fit_inside_button)
         clip_row.addWidget(self.clip_warning, 1)
@@ -3933,6 +3993,70 @@ class MainWindow(QMainWindow):
         if tab is None or not hasattr(tab, "preview_visible_inks"):
             return
         self.gl_preview.set_visible_inks(set(tab.preview_visible_inks()))
+
+    def load_ink_profile(self, path=None):
+        """Load a measured ink profile into the multiply simulation.
+
+        The profile comes from ``tools/cmyk_calibrate.py`` after a plotted
+        calibration sheet is scanned; its ``inks`` transmittances replace the
+        display ink colours in the ink-simulation pass.
+        """
+        if path is None:
+            path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Load ink profile",
+                "",
+                "Ink profile (*.json);;All files (*.*)",
+            )
+            if not path:
+                return
+        try:
+            with open(path, "r", encoding="utf-8") as handle:
+                data = json.load(handle)
+        except Exception as exc:  # noqa: BLE001 - user-facing setup error
+            QMessageBox.warning(
+                self, "Ink profile", f"Could not read {path}: {exc}"
+            )
+            return
+        if not isinstance(data, dict) or data.get("kind") != "cmyk-ink-profile":
+            QMessageBox.warning(
+                self,
+                "Ink profile",
+                "That file is not a cmyk-ink-profile JSON; run "
+                "tools\\cmyk_calibrate.py on a scanned sheet first.",
+            )
+            return
+        colors = {}
+        for channel, value in (data.get("inks") or {}).items():
+            if channel in converter.CHANNELS and isinstance(
+                value, (list, tuple)
+            ) and len(value) >= 3:
+                colors[channel] = tuple(float(v) for v in value[:3])
+        if not colors:
+            QMessageBox.warning(
+                self, "Ink profile", "The profile has no ink transmittances."
+            )
+            return
+        self.gl_preview.set_sim_ink_colors(colors)
+        summary = ", ".join(
+            f"{channel.upper()} ({colors[channel][0]:.2f}, "
+            f"{colors[channel][1]:.2f}, {colors[channel][2]:.2f})"
+            for channel in converter.CHANNELS
+            if channel in colors
+        )
+        name = os.path.basename(str(path))
+        self.log.append(
+            f"Ink simulation now uses measured profile {name}: {summary}"
+        )
+        self.ink_sim_check.setToolTip(
+            "CMYK preview only: multiply the ink layers over the paper white "
+            "in plot order, the way translucent pens combine. Using measured "
+            f"profile {name}."
+        )
+        self.status.setText(
+            f"Ink profile loaded ({name}); the Ink simulation now uses the "
+            "measured pen colours."
+        )
 
     def ink_engage_summary(self, contours, moves):
         """Per-ink M3 (pen-down) counts for a tagged CMYK preview.

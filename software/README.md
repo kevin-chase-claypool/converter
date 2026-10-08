@@ -76,7 +76,10 @@ order, like translucent pens, so the preview shows the finished overprint
 instead of painting each layer opaquely. Simulation strokes draw at the real
 pen width, and mixing only happens where strokes overlap: keep the effective
 pitch (Dot pitch x Artwork scale, then the tone-adaptive factor of 1-3x) at
-or below the pen width for full coverage. **Help** has the shortcut list
+or below the pen width for full coverage. An **Ink profile...** button loads
+the `*-profile.json` written by `tools\cmyk_calibrate.py`, so the simulation
+multiplies your pens' measured transmittances instead of the display ink
+colours. **Help** has the shortcut list
 (F1) and About.
 The status bar shows the current artwork and G-code paths. Tools are
 contributed by `software/generator_tabs/*_tab.py` modules and discovered at

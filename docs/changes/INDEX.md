@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-08 | `WSW-20261008-008` | windows-software | implemented | [Load measured ink profiles into the simulation](windows-software/2026-10-08-cmyk-ink-profile-loading.md) |
 | 2026-10-08 | `WSW-20261008-007` | windows-software | implemented | [Blend the CMYK layer SVGs multiplicatively](windows-software/2026-10-08-cmyk-svg-multiply-blend.md) |
 | 2026-10-08 | `WSW-20261008-006` | windows-software | implemented | [Add an Auto (photo) button to the CMYK image options](windows-software/2026-10-08-cmyk-auto-photo-button.md) |
 | 2026-10-08 | `WSW-20261008-005` | windows-software | implemented | [Set the CMYK defaults to the owner's gamma-led tuning](windows-software/2026-10-08-cmyk-gamma-led-defaults.md) |
