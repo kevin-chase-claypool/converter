@@ -120,7 +120,8 @@ Current tools:
   crosshatch at 1.2 mm pitch with hatch level 5, dot size 100 % with solid
   dots off (both only affect the dot screens), 40000 marks per ink, 6000 px
   resolution, C/M/Y/K weights 100 %. The preview checkboxes decide which inks the shared OpenGL preview
-  draws. Pressing Preview also plans each checked ink's own program in the
+  draws, and they apply instantly: every layer stays loaded, so toggling a
+  checkbox never re-screens or re-plans. Pressing Preview also plans each checked ink's own program in the
   background through the same pipeline as Convert - that planning is exactly
   where the r-theta solver picks x_theta or y_theta per segment, and the tab
   reports each file's split and calibrated time when it finishes.

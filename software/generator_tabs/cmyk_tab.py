@@ -240,6 +240,7 @@ class CmykTab(GeneratorTab):
             box = QCheckBox(converter.CHANNEL_LABELS[channel][0])
             box.setChecked(True)
             box.setToolTip(f"Show {converter.CHANNEL_LABELS[channel]} in the preview")
+            box.toggled.connect(self._on_preview_layer_toggled)
             self.preview_boxes[channel] = box
             preview_layout.addWidget(box)
         layers.addRow("Preview", preview_row)
@@ -507,24 +508,30 @@ class CmykTab(GeneratorTab):
     def build_svg(self):
         self._ensure_layers()
         visible = self._preview_channels()
-        if not visible:
-            raise ValueError("Tick at least one preview layer.")
         self._preview_visible = list(visible)
         QGuiApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         try:
             document = converter.svg_document(
-                {channel: self._layers[channel] for channel in visible},
+                {
+                    channel: self._layers[channel]
+                    for channel in converter.CHANNELS
+                },
                 self.page_w.value(),
                 self.page_h.value(),
                 self.pen_width.value(),
-                order=visible,
+                order=list(converter.CHANNELS),
             )
             path = str(write_svg_document(f"{self.NAME}-preview", document))
         finally:
             QGuiApplication.restoreOverrideCursor()
-        counts = ", ".join(
-            f"{converter.CHANNEL_LABELS[channel]} {len(self._layers[channel])}"
-            for channel in visible
+        counts = (
+            ", ".join(
+                f"{converter.CHANNEL_LABELS[channel]} "
+                f"{len(self._layers[channel])}"
+                for channel in visible
+            )
+            if visible
+            else "all inks hidden"
         )
         if self.calibration_mode.isChecked():
             self.status.setText(f"Calibration sheet: {counts} marks.")
@@ -538,14 +545,26 @@ class CmykTab(GeneratorTab):
         """Ordered ``(ink, svg_path)`` pairs for the shared colour preview.
 
         Called from the preview thread after ``build_svg()`` cached the layers
-        on the GUI thread, so this only reads cached state. Returning pairs
-        makes the OpenGL preview draw each ink in its own colour.
+        on the GUI thread, so this only reads cached state. Every layer is
+        returned - including unchecked ones - so the preview checkboxes can
+        filter the loaded layers live via ``preview_visible_inks()`` without
+        re-screening or re-planning.
         """
         return [
             (channel, self._layer_files[channel])
-            for channel in self._preview_visible
+            for channel in converter.CHANNELS
             if channel in self._layer_files
         ]
+
+    def preview_visible_inks(self):
+        """Ink keys the Preview checkboxes currently show."""
+        return self._preview_channels()
+
+    def _on_preview_layer_toggled(self, _checked=False):
+        """Apply a Preview checkbox to the shared preview immediately."""
+        notify = getattr(self.host, "update_preview_visibility", None)
+        if callable(notify):
+            notify()
 
     def on_preview_finished(self):
         """Host hook: plan the four ink programs in the background.
@@ -559,6 +578,8 @@ class CmykTab(GeneratorTab):
 
     def start_analysis(self):
         if self._thread is not None:
+            return
+        if self._analysis is not None and self._analysis_key == self._control_key():
             return
         if getattr(self.host, "preview_thread", None) is not None:
             self.report_error("Finish or cancel the running preview before planning.")

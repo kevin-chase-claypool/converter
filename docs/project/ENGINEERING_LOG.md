@@ -1,5 +1,31 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-live-preview-layers"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK preview layers toggle live
+
+- Request: "is it not possible to uncheck and get an immediate removal of
+  that color (CMY or K) with respect to the preview? Why is it having to
+  render the entirety?"
+- Diagnosis: the per-ink screening was already cached, but a checkbox change
+  only took effect on the next Preview press, which rebuilt the combined
+  SVG, re-ran the r-theta preview planner, and restarted the background
+  four-ink planning.
+- Change: all four layers now load into the shared preview once;
+  `GLPreview.set_visible_inks` hides unchecked inks by zero-alpha filtering
+  (artwork, drawn path, motion lines), and the new host hook
+  `update_preview_visibility()` applies the checkbox set immediately.
+  `start_analysis` also reuses a fresh analysis instead of re-planning when
+  nothing changed.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 378 tests (1 skipped, headless shader compile); new tests cover
+  alpha hiding, live GL filtering, the host hook, all-layer loading, and the
+  toggle notification; `docs_index.py --write` / `--check` pass.
+- Risk: the preview program always covers all four inks, so the progress
+  slider spans hidden inks too (display-only).
+- Evidence: `WSW-20261007-018`; `software/qt_svg_to_gcode.pyw`;
+  `software/generator_tabs/cmyk_tab.py`.
+- Category: windows-software, cmyk, preview, opengl, user-interface.
+
 <a id="elog-20261007-cmyk-artwork-scale"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK Artwork scale now scales the screen
 

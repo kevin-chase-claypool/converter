@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-018` | windows-software | implemented | [Filter CMYK preview layers live instead of re-rendering](windows-software/2026-10-07-cmyk-live-preview-layers.md) |
 | 2026-10-07 | `WSW-20261007-017` | windows-software | implemented | [Apply the CMYK Artwork scale to the screened marks](windows-software/2026-10-07-cmyk-artwork-scale.md) |
 | 2026-10-07 | `WSW-20261007-016` | windows-software | implemented | [Raise the CMYK max-marks cap](windows-software/2026-10-07-cmyk-max-marks-cap.md) |
 | 2026-10-07 | `WSW-20261007-015` | windows-software | implemented | [Set the CMYK defaults to the owner's tuned workflow](windows-software/2026-10-07-cmyk-owner-defaults.md) |

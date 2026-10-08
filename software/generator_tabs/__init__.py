@@ -30,7 +30,10 @@ tabs do not own a preview and do not hand artwork to another tab.
   one save dialog and one ``<base>-<label>.gcode`` file per entry
 * a tab may implement ``preview_layers()`` returning ordered
   ``(ink, svg_path)`` pairs; the host then tags each layer's contours so the
-  shared OpenGL preview draws every ink in its own colour (CMYK)
+  shared OpenGL preview draws every ink in its own colour (CMYK). A tab may
+  also implement ``preview_visible_inks()``; the host keeps every layer
+  loaded and filters drawing live, so preview checkboxes apply without
+  re-screening or re-planning
 
 Tabs must be self-contained: do not edit the main window, converter settings,
 or another tab. Ported or vendored third-party code keeps its license and

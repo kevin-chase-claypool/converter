@@ -95,7 +95,7 @@ class CollapsibleSection(QWidget):
         self.toggle.setText(f"{marker} {title}")
 
 
-def ink_color_floats(hex_color, undrawn_mix=0.0):
+def ink_color_floats(hex_color, undrawn_mix=0.0, alpha=1.0):
     """RGBA floats for a hex ink colour, optionally mixed toward paper white."""
     text = str(hex_color).strip().lstrip("#")
     if len(text) != 6:
@@ -108,25 +108,36 @@ def ink_color_floats(hex_color, undrawn_mix=0.0):
         red + (1.0 - red) * mix,
         green + (1.0 - green) * mix,
         blue + (1.0 - blue) * mix,
-        1.0,
+        max(0.0, min(float(alpha), 1.0)),
     )
 
 
-def ink_vertex_colors(contours, moves, undrawn_mix=0.55):
+def ink_vertex_colors(contours, moves, undrawn_mix=0.55, visible_inks=None):
     """Return ``(artwork_colors, drawn_colors)`` for the per-ink preview.
 
     Colours come from each contour's ``ink`` tag (the CMYK tool tags every
     layer). The artwork array is the ink mixed toward white - the not-yet-
     drawn look - and the drawn array is the full ink in move order. Returns
     ``(None, None)`` when any contour is untagged or unknown, so every other
-    tool keeps the single-colour preview.
+    tool keeps the single-colour preview. ``visible_inks`` hides the other
+    layers by giving their vertices zero alpha, so the preview checkboxes
+    apply without replanning.
     """
     inks = [getattr(contour, "ink", None) for contour in contours]
     if not contours or any(ink not in converter.CHANNEL_COLORS for ink in inks):
         return None, None
+    shown = (
+        (lambda ink: True)
+        if visible_inks is None
+        else (lambda ink: ink in visible_inks)
+    )
     artwork_colors = []
     for contour, ink in zip(contours, inks):
-        color = ink_color_floats(converter.CHANNEL_COLORS[ink], undrawn_mix)
+        color = ink_color_floats(
+            converter.CHANNEL_COLORS[ink],
+            undrawn_mix,
+            alpha=1.0 if shown(ink) else 0.0,
+        )
         for _first, _second in zip(contour, contour[1:]):
             artwork_colors.extend(color)
             artwork_colors.extend(color)
@@ -141,7 +152,11 @@ def ink_vertex_colors(contours, moves, undrawn_mix=0.55):
         index = move.get("contour")
         if not isinstance(index, int) or not 0 <= index < len(inks):
             return None, None
-        color = ink_color_floats(converter.CHANNEL_COLORS[inks[index]])
+        ink = inks[index]
+        color = ink_color_floats(
+            converter.CHANNEL_COLORS[ink],
+            alpha=1.0 if shown(ink) else 0.0,
+        )
         drawn_colors.extend(color)
         drawn_colors.extend(color)
     return artwork_colors, drawn_colors
@@ -189,6 +204,8 @@ class GLPreview(QOpenGLWidget):
         super().__init__()
         self.contours = []
         self.moves = []
+        # None shows every tagged ink; a set filters the drawn layers live.
+        self.visible_inks = None
         self.progress = 0.0
         self.settings = converter.Settings()
         self.drawing_color = QColor("#2563eb")
@@ -284,16 +301,55 @@ class GLPreview(QOpenGLWidget):
         self.dynamic_vbo.create()
         self._vbos_dirty = bool(self.vertex_arrays)
 
-    def set_preview(self, contours, moves, settings, center=None, play_speed_mm_s=None):
+    def set_preview(
+        self,
+        contours,
+        moves,
+        settings,
+        center=None,
+        play_speed_mm_s=None,
+        visible_inks=None,
+    ):
         self.contours = contours
         self.moves = moves
         self.settings = settings
+        self.visible_inks = (
+            None if visible_inks is None else set(visible_inks)
+        )
         self.override_center = center
         if play_speed_mm_s is not None:
             self.play_speed_mm_s = max(float(play_speed_mm_s), 1e-9)
         self.progress = float(len(moves))
         self.rebuild_cache()
         self.update()
+
+    def set_visible_inks(self, inks):
+        """Show only *inks* (``None`` shows every layer), without replanning.
+
+        The preview loads every CMYK layer once and filters drawing here, so
+        the layer checkboxes apply immediately instead of rebuilding the
+        screens or the G-code program.
+        """
+        new = None if inks is None else set(inks)
+        if new == self.visible_inks:
+            return
+        self.visible_inks = new
+        if self.contours:
+            self.rebuild_cache()
+        self.update()
+
+    def _move_ink(self, move):
+        index = move.get("contour")
+        if isinstance(index, int) and 0 <= index < len(self.contours):
+            return getattr(self.contours[index], "ink", None)
+        return None
+
+    def _ink_shown(self, ink):
+        return (
+            self.visible_inks is None
+            or ink is None
+            or ink in self.visible_inks
+        )
 
     def _playback_move_ms(self, move):
         # Use full coordinated motion length so theta-heavy smoothing changes
@@ -378,7 +434,9 @@ class GLPreview(QOpenGLWidget):
                 prev = curr
 
         artwork = []
-        artwork_colors, drawn_colors = ink_vertex_colors(self.contours, self.moves)
+        artwork_colors, drawn_colors = ink_vertex_colors(
+            self.contours, self.moves, visible_inks=self.visible_inks
+        )
         for contour in self.contours:
             for a, b in zip(contour, contour[1:]):
                 artwork.extend([a[0], a[1], b[0], b[1]])
@@ -409,17 +467,23 @@ class GLPreview(QOpenGLWidget):
             start = move.get("start", self.preview_center)
             end = move.get("end", start)
             self.machine_points.extend([start, end])
+            shown = self._ink_shown(self._move_ink(move))
             if move.get("type") == "travel":
-                travel.extend([start[0], start[1], end[0], end[1]])
+                if shown:
+                    travel.extend([start[0], start[1], end[0], end[1]])
             elif move.get("type") == "draw":
-                motion.extend([start[0], start[1], end[0], end[1]])
-                bed_start = move.get("bed_start")
-                bed_end = move.get("bed_end")
-                if bed_start is not None and bed_end is not None:
-                    # bed-frame artwork in draw order; the first K segments are
-                    # the portion drawn so far (shown dark over the light base).
-                    drawn_path.extend([bed_start[0], bed_start[1], bed_end[0], bed_end[1]])
-                    draw_segments += 1
+                if shown:
+                    motion.extend([start[0], start[1], end[0], end[1]])
+                    bed_start = move.get("bed_start")
+                    bed_end = move.get("bed_end")
+                    if bed_start is not None and bed_end is not None:
+                        # bed-frame artwork in draw order; the first K
+                        # segments are the portion drawn so far (shown dark
+                        # over the light base).
+                        drawn_path.extend(
+                            [bed_start[0], bed_start[1], bed_end[0], bed_end[1]]
+                        )
+                        draw_segments += 1
             draw_count_at_move.append(draw_segments)
             if "bed_theta" in move:
                 theta = (move.get("bed_theta", 0.0), move.get("motor_theta", 0.0))
@@ -3751,7 +3815,18 @@ class MainWindow(QMainWindow):
         self.program_lines = program_gcode.splitlines()
         self.slider.setMaximum(max(0, len(self.moves)))
         self.set_index(len(self.moves))
-        self.gl_preview.set_preview(self.contours, self.moves, settings, center=bed_center, play_speed_mm_s=self.print_speed_mm_s())
+        visible_inks = None
+        preview_tab = self.pending_source_tab
+        if preview_tab is not None and hasattr(preview_tab, "preview_visible_inks"):
+            visible_inks = set(preview_tab.preview_visible_inks())
+        self.gl_preview.set_preview(
+            self.contours,
+            self.moves,
+            settings,
+            center=bed_center,
+            play_speed_mm_s=self.print_speed_mm_s(),
+            visible_inks=visible_inks,
+        )
         # Show the scale the build actually used, so an auto fit is visible in
         # the field and the next build starts from it instead of re-deriving it.
         used_scale = f"{float(getattr(settings, 'scale', 1.0)):.4f}"
@@ -3765,6 +3840,18 @@ class MainWindow(QMainWindow):
         self.preview_tab = self.pending_source_tab
         self.update_stale_warning()
         return settings
+
+    def update_preview_visibility(self):
+        """Apply the active preview tab's layer checkboxes without replanning.
+
+        A tab that implements ``preview_visible_inks()`` has every layer
+        loaded into the preview at once (CMYK does this), so unchecking a
+        layer just hides it - no re-screening and no new G-code plan.
+        """
+        tab = self.preview_tab
+        if tab is None or not hasattr(tab, "preview_visible_inks"):
+            return
+        self.gl_preview.set_visible_inks(set(tab.preview_visible_inks()))
 
     def preview(self):
         if self.preview_thread is not None:

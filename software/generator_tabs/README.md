@@ -53,11 +53,15 @@ class FlowFieldTab(GeneratorTab):
 
 Optional multi-layer hook (CMYK):
 
-- `preview_layers()` — return ordered `(ink, svg_path)` pairs for the layers
-  currently shown. The host loads each layer separately and tags its contours
+- `preview_layers()` — return ordered `(ink, svg_path)` pairs for every
+  layer. The host loads each layer separately and tags its contours
   (`converter.tag_ink`), so the shared OpenGL preview draws every ink in its
   own colour; the contour order must match the tab's combined SVG. Tools that
   do not implement this hook keep the single-colour preview.
+- `preview_visible_inks()` — optional; return the ink keys the tab's preview
+  checkboxes currently show. The host keeps every layer loaded and filters
+  drawing live via `GLPreview.set_visible_inks`, so toggling a layer costs
+  neither a re-screen nor a re-plan.
 - `on_preview_finished()` — called by the host after a successful preview of
   this tab. The CMYK tab uses it to plan the four per-ink programs in the
   background, so no separate "analyze" step or button exists; Save reuses

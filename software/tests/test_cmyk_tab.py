@@ -310,7 +310,7 @@ class CmykTabTests(unittest.TestCase):
         tab.max_marks.setValue(400)
         return tab
 
-    def test_build_svg_writes_the_visible_layers(self):
+    def test_build_svg_writes_every_layer_for_the_planner(self):
         tab = self.make_tab()
         path = tab.build_svg()
         root = ET.parse(path).getroot()
@@ -318,14 +318,16 @@ class CmykTabTests(unittest.TestCase):
         tab.preview_boxes["k"].setChecked(False)
         path = tab.build_svg()
         root = ET.parse(path).getroot()
-        self.assertEqual(svg_groups(root), ["c", "m", "y"])
+        self.assertEqual(svg_groups(root), list(converter.CHANNELS))
+        self.assertEqual(tab.preview_visible_inks(), ["c", "m", "y"])
 
-    def test_preview_requires_one_layer(self):
+    def test_preview_can_hide_every_layer(self):
         tab = self.make_tab()
         for box in tab.preview_boxes.values():
             box.setChecked(False)
-        with self.assertRaises(ValueError):
-            tab.build_svg()
+        path = tab.build_svg()
+        self.assertTrue(Path(path).exists())
+        self.assertEqual(tab.preview_visible_inks(), [])
 
     def test_every_screen_style_builds_all_four_layers(self):
         tab = self.make_tab()
@@ -385,17 +387,27 @@ class CmykTabTests(unittest.TestCase):
                 Path(host.saved_paths[converter.CHANNEL_LABELS[channel].lower()]).exists()
             )
 
-    def test_preview_layers_match_the_visible_checkboxes(self):
+    def test_preview_loads_every_layer_and_filters_live(self):
         tab = self.make_tab()
         tab.build_svg()
+        # Every layer is loaded; the checkboxes only drive the live filter.
         self.assertEqual(
             [ink for ink, _path in tab.preview_layers()], list(converter.CHANNELS)
         )
         tab.preview_boxes["m"].setChecked(False)
         tab.build_svg()
         self.assertEqual(
-            [ink for ink, _path in tab.preview_layers()], ["c", "y", "k"]
+            [ink for ink, _path in tab.preview_layers()], list(converter.CHANNELS)
         )
+        self.assertEqual(tab.preview_visible_inks(), ["c", "y", "k"])
+
+    def test_preview_toggle_notifies_the_host_live(self):
+        host = FakeHost(self.image_path)
+        tab = self.make_tab(host)
+        tab.preview_boxes["m"].setChecked(False)
+        self.assertEqual(host.visibility_updates, 1)
+        tab.preview_boxes["m"].setChecked(True)
+        self.assertEqual(host.visibility_updates, 2)
 
     def test_shipped_defaults_suit_a_photo(self):
         tab = self.CmykTab(FakeHost(self.image_path))
@@ -563,6 +575,7 @@ class FakeHost:
         self.log = []
         self.saved_labels = []
         self.saved_paths = {}
+        self.visibility_updates = 0
         self._folder = tempfile.mkdtemp(prefix="cmyk-save-")
 
     def artwork_path(self):
@@ -570,6 +583,9 @@ class FakeHost:
 
     def generator_status(self, message):
         self.status.append(message)
+
+    def update_preview_visibility(self):
+        self.visibility_updates += 1
 
     def settings_for_source(self, _tab):
         return converter.Settings()

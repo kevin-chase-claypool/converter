@@ -303,11 +303,76 @@ class ToolShellTests(unittest.TestCase):
         self.assertEqual(artwork_colors[:4], list(undrawn))
         self.assertEqual(drawn_colors[:4], list(full))
         self.assertNotEqual(artwork_colors[:4], drawn_colors[:4])
+        # Hidden inks keep their vertices but drop to zero alpha.
+        artwork_hidden, drawn_hidden = self.module.ink_vertex_colors(
+            contours, moves, visible_inks=set()
+        )
+        self.assertEqual(artwork_hidden[3], 0.0)
+        self.assertEqual(drawn_hidden[3], 0.0)
         # Untagged artwork keeps the single-colour preview.
         self.assertEqual(
             self.module.ink_vertex_colors([[(0.0, 0.0), (1.0, 0.0)]], moves),
             (None, None),
         )
+
+    def test_gl_preview_filters_layers_live(self):
+        import converter_core as converter
+
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        contours = converter.tag_ink([[(0.0, 0.0), (1.0, 0.0)]], "c") + (
+            converter.tag_ink([[(0.0, 1.0), (1.0, 1.0)]], "k")
+        )
+        moves = [
+            {
+                "type": "draw",
+                "strategy": "x_theta",
+                "contour": index,
+                "bed_start": (0.0, float(index)),
+                "bed_end": (1.0, float(index)),
+                "duration_ms": 100.0,
+            }
+            for index in range(2)
+        ]
+        window.gl_preview.set_preview(
+            contours,
+            moves,
+            converter.Settings(),
+            center=(0.0, 0.0),
+            visible_inks={"c", "k"},
+        )
+        colors = window.gl_preview.vertex_arrays["artwork_color"]
+        self.assertEqual(colors[3], 1.0)
+        self.assertEqual(colors[11], 1.0)
+        window.gl_preview.set_visible_inks({"c"})
+        colors = window.gl_preview.vertex_arrays["artwork_color"]
+        self.assertEqual(colors[3], 1.0)
+        self.assertEqual(colors[11], 0.0)
+        drawn = window.gl_preview.vertex_arrays["drawn_path_color"]
+        self.assertEqual(drawn[3], 1.0)   # cyan move kept
+        self.assertEqual(drawn[11], 0.0)  # black move hidden
+        window.gl_preview.set_visible_inks(None)
+        self.assertEqual(window.gl_preview.vertex_arrays["artwork_color"][11], 1.0)
+
+    def test_update_preview_visibility_uses_the_previewed_tab(self):
+        import converter_core as converter
+
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.gl_preview.set_preview(
+            converter.tag_ink([[(0.0, 0.0), (1.0, 0.0)]], "c"),
+            [],
+            converter.Settings(),
+            center=(0.0, 0.0),
+        )
+
+        class _Tab:
+            def preview_visible_inks(self):
+                return ["m"]
+
+        window.preview_tab = _Tab()
+        window.update_preview_visibility()
+        self.assertEqual(window.gl_preview.visible_inks, {"m"})
 
     def test_cmyk_preview_contours_carry_ink_tags(self):
         import converter_core as converter
