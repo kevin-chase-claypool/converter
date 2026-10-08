@@ -22,6 +22,12 @@
   default with the 0.30 mm pen, which is also what Match pen sets.
   0.2 mm there spreads the darkest rows to 0.56 mm (about half ink in
   the deepest tone, roughly twice as fast).
+- Scale check: at the 280 % default with the 200 mm page the photo's
+  radius is 328 mm against the 185 mm reach (117 mm before scaling), so
+  the plot is a clipped middle crop and much of the ink falls off an
+  8.5 x 11 sheet (corners 177 mm). Page 216 x 280 mm at 100 % gives a
+  202 x 268 mm print at 168 mm radius - inside the reach and on the
+  paper - and Match pen then lands on 0.30 mm pitch.
 - Check: the preview palette is full-ink strokes plus pairwise
   overprints (Y x M red, C x M blue, C x Y green), i.e. the multiply
   simulation is what the flatness numbers describe.
