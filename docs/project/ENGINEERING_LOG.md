@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-soft-contrast-defaults"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Soft CMYK contrast curve and rebalanced defaults
+
+- Request: the tuned defaults "made it look like this" (posterized,
+  over-saturated ink simulation of momandbennett.jpg), then "make changes
+  that would make the drawing look better."
+- Change: contrast above 100 % now blends toward a soft S-curve instead of
+  the hard linear clamp (200 % used to map everything outside 0.25-0.75 to
+  pure white/black); defaults move to saturation 105 %, contrast 110 %,
+  GCR 80 %, weights C/M/Y 100 % and K 120 % (rectilinear, 0.10 mm pitch,
+  scale 280 %, resolution 10000, auto levels on all stay).
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 387 tests (1 skipped, headless shader compile); a new regression
+  test holds a contrast-2.0 gray ramp strictly inside 0.05-0.95 tone where
+  the old math clipped to 0/1; `docs_index.py --write` / `--check` pass.
+- Risk: previous contrast-200 % artwork renders softer at the same value.
+- Note: the owner's uncommitted sharpen work in `cmyk.py` stays unstaged.
+- Evidence: `WSW-20261008-001`; `software/README.md`;
+  `software/converter_core/cmyk.py`.
+- Category: windows-software, cmyk, tone, contrast, defaults, rectilinear.
+
 <a id="elog-20261007-cmyk-owner-tuned-rectilinear-defaults"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK defaults adopt the owner's tuned rectilinear set
 

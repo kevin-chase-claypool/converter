@@ -173,7 +173,15 @@ def prepare_image_tones(
         rgb = np.clip(rgb, 0.0, 1.0)
     contrast = float(contrast)
     if abs(contrast - 1.0) > 1e-9:
-        rgb = np.clip((rgb - 0.5) * contrast + 0.5, 0.0, 1.0)
+        if contrast < 1.0:
+            rgb = np.clip((rgb - 0.5) * contrast + 0.5, 0.0, 1.0)
+        else:
+            # Soft S-curve: strong contrast without the hard clipping that
+            # posterizes highlights and shadows. Contrast 2.0 used to clamp
+            # everything outside 0.25-0.75 to pure white or black.
+            amount = min(contrast - 1.0, 1.0)
+            curved = 0.5 + 0.5 * np.tanh((rgb - 0.5) * 3.0) / math.tanh(1.5)
+            rgb = np.clip(rgb + (curved - rgb) * amount, 0.0, 1.0)
 
     tones = rgb_to_cmyk_tone(rgb, gcr=gcr, weights=weights, gamma=gamma)
     geometry = {
