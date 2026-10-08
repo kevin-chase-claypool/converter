@@ -174,7 +174,7 @@ class CmykTab(GeneratorTab):
             "increasing without blown highlights."
         )
         options.addRow("Contrast", self.contrast)
-        self.brightness = double_spin(170, 50, 200, 5, 0, " %")
+        self.brightness = double_spin(170, 20, 200, 5, 0, " %")
         self.brightness.setToolTip(
             "Shadow-weighted brightness lift (a gamma curve that keeps the "
             "black and white points). Raise it when the plot reads too dark, "
@@ -183,7 +183,7 @@ class CmykTab(GeneratorTab):
         options.addRow("Brightness", self.brightness)
         self.gamma = double_spin(1.40, 0.2, 3.0, 0.05, 2)
         options.addRow("Ink gamma", self.gamma)
-        self.gcr = double_spin(95, 0, 150, 5, 0, " %")
+        self.gcr = double_spin(95, 0, 100, 5, 0, " %")
         options.addRow("Black (GCR)", self.gcr)
         self.resolution = int_spin(10000, 200, 100000, 50)
         self.resolution.setToolTip(

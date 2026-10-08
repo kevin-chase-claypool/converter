@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-brightness-and-gcr-limits"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Brightness reaches 20 % and GCR tops out at 100 %
+
+- Request: "i am only able to drop the brightness to 50 % and i cant get any
+  lower. also, the gcr value seems to have made a huge difference setting it
+  to 99 %. when i set it to 100 % it seems like it breaks though".
+- Change: Brightness spinner 50-200 -> 20-200; Black (GCR) 0-150 -> 0-100;
+  `rgb_to_cmyk_tone` clamps gcr to 0..1. Above 1.0 the grey component
+  exceeded the lightest ink, driving C/M/Y negative before clipping.
+- Verification: 403 tests pass (1 skipped); measured K/C means on the owner's
+  photo at 95/99/100 % (K 0.421/0.438/0.443, C 0.166/0.129/0.119), no NaNs.
+- Note: at 100 % cyan reaches zero on warm skin, so those areas are drawn by
+  K, M and Y; density is better raised with brightness, contrast or gamma.
+- Evidence: `WSW-20261008-018`.
+- Category: windows-software, cmyk, controls, gcr, brightness.
+
 <a id="elog-20261008-cmyk-rectilinear-pitch-easing"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Rectilinear pitch follows the inked tone and eases between rows
 

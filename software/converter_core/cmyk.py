@@ -90,7 +90,11 @@ def rgb_to_cmyk_tone(rgb, gcr=1.0, weights=None, gamma=1.0):
     c = 1.0 - red
     m = 1.0 - green
     y = 1.0 - blue
-    k = np.minimum(np.minimum(c, m), y) * max(0.0, float(gcr))
+    # Above 1.0 the grey component would exceed the ink with the least
+    # coverage, which drives C/M/Y negative before they are clipped: the
+    # separation stops being monotone and the layer loses its lightest ink.
+    # The control tops out at 100 %, and the maths holds there too.
+    k = np.minimum(np.minimum(c, m), y) * min(1.0, max(0.0, float(gcr)))
     k = np.clip(k, 0.0, 1.0)
     # Standard GCR: remove K from CMY. k == 0 leaves CMY untouched, which is
     # the no-black-ink case.
