@@ -374,6 +374,35 @@ class ToolShellTests(unittest.TestCase):
         window.update_preview_visibility()
         self.assertEqual(window.gl_preview.visible_inks, {"m"})
 
+    def test_ink_engage_summary_counts_m3s_per_ink(self):
+        import converter_core as converter
+
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        contours = converter.tag_ink([[(0.0, 0.0), (1.0, 0.0)]], "c") + (
+            converter.tag_ink([[(0.0, 1.0), (1.0, 1.0)]], "k")
+        )
+        moves = [
+            {"type": "pen_down", "contour": 0},
+            {"type": "draw", "contour": 0},
+            {"type": "pen_up", "contour": 0},
+            {"type": "travel", "contour": 1},
+            {"type": "pen_down", "contour": 1},
+            {"type": "draw", "contour": 1},
+            {"type": "pen_up", "contour": 1},
+            {"type": "pen_down", "contour": 1},
+            {"type": "draw", "contour": 1},
+        ]
+        summary = window.ink_engage_summary(contours, moves)
+        self.assertIn("C: 1", summary)
+        self.assertIn("M: 0", summary)
+        self.assertIn("Y: 0", summary)
+        self.assertIn("K: 2", summary)
+        # Untagged artwork leaves the preview data area unchanged.
+        self.assertEqual(
+            window.ink_engage_summary([[(0.0, 0.0), (1.0, 0.0)]], moves), ""
+        )
+
     def test_cmyk_preview_contours_carry_ink_tags(self):
         import converter_core as converter
         from PIL import Image

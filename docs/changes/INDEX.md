@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-019` | windows-software | implemented | [Show per-ink M3 counts in the preview data area](windows-software/2026-10-07-cmyk-preview-m3-counts.md) |
 | 2026-10-07 | `WSW-20261007-018` | windows-software | implemented | [Filter CMYK preview layers live instead of re-rendering](windows-software/2026-10-07-cmyk-live-preview-layers.md) |
 | 2026-10-07 | `WSW-20261007-017` | windows-software | implemented | [Apply the CMYK Artwork scale to the screened marks](windows-software/2026-10-07-cmyk-artwork-scale.md) |
 | 2026-10-07 | `WSW-20261007-016` | windows-software | implemented | [Raise the CMYK max-marks cap](windows-software/2026-10-07-cmyk-max-marks-cap.md) |

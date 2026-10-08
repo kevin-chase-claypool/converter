@@ -1255,6 +1255,10 @@ class MainWindow(QMainWindow):
         self.estimate = QLabel("Estimated time: preview an SVG to calculate.")
         self.estimate.setWordWrap(True)
         preview_layout.addWidget(self.estimate)
+        self.engage_counts = QLabel()
+        self.engage_counts.setWordWrap(True)
+        self.engage_counts.hide()
+        preview_layout.addWidget(self.engage_counts)
         preview_layout.addWidget(self.preview_build_bar)
         preview_layout.addWidget(self.preview_stage)
 
@@ -3853,6 +3857,31 @@ class MainWindow(QMainWindow):
             return
         self.gl_preview.set_visible_inks(set(tab.preview_visible_inks()))
 
+    def ink_engage_summary(self, contours, moves):
+        """Per-ink M3 (pen-down) counts for a tagged CMYK preview.
+
+        Returns an empty string for untagged artwork, so every other tool
+        keeps the preview data area unchanged.
+        """
+        inks = [getattr(contour, "ink", None) for contour in contours]
+        if not inks or any(ink not in converter.CHANNEL_COLORS for ink in inks):
+            return ""
+        counts = {channel: 0 for channel in converter.CHANNELS}
+        for move in moves:
+            if move.get("type") != "pen_down":
+                continue
+            index = move.get("contour")
+            if isinstance(index, int) and 0 <= index < len(inks):
+                ink = inks[index]
+                if ink in counts:
+                    counts[ink] += 1
+        if not any(counts.values()):
+            return ""
+        return "M3s (pen down): " + "  ".join(
+            f"{channel.upper()}: {counts[channel]}"
+            for channel in converter.CHANNELS
+        )
+
     def preview(self):
         if self.preview_thread is not None:
             return
@@ -3943,6 +3972,12 @@ class MainWindow(QMainWindow):
         self.set_preview_build_progress(94, "Preparing OpenGL preview")
         QApplication.processEvents()
         self.install_preview(settings, contours, moves, bed_center, program_gcode)
+        engage_summary = self.ink_engage_summary(self.contours, self.moves)
+        if engage_summary:
+            self.engage_counts.setText(engage_summary)
+            self.engage_counts.show()
+        else:
+            self.engage_counts.hide()
         deviation = float(stats.get("worst_bed_deviation_mm", 0.0)) if stats else 0.0
         if deviation > 0.0:
             self.log.append(

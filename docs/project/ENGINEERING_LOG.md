@@ -1,5 +1,23 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-preview-m3-counts"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Preview data shows per-ink M3 counts
+
+- Request: "in the preview data section i want to know the number of M3's
+  for each of the colors C:# , M:#, Y:#, K:#".
+- Change: CMYK previews show `M3s (pen down): C: n M: n Y: n K: n` under the
+  time estimate, counted from the planned program's `pen_down` moves per
+  tagged contour; the line hides for untagged artwork. Channel letters are
+  C/M/Y/K (not the "B" of the Black label).
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 379 tests (1 skipped, headless shader compile); the new counter
+  test covers two tagged inks and the untagged case; `docs_index.py
+  --write` / `--check` pass.
+- Risk: counts cover all four inks even when preview layers are hidden
+  (the saved files still contain them).
+- Evidence: `WSW-20261007-019`; `software/qt_svg_to_gcode.pyw`.
+- Category: windows-software, cmyk, preview, user-interface.
+
 <a id="elog-20261007-cmyk-live-preview-layers"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK preview layers toggle live
 

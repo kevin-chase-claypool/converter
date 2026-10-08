@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-019` | implemented | [Show per-ink M3 counts in the preview data area](2026-10-07-cmyk-preview-m3-counts.md) | `cmyk`, `preview`, `user-interface` |
 | 2026-10-07 | `WSW-20261007-018` | implemented | [Filter CMYK preview layers live instead of re-rendering](2026-10-07-cmyk-live-preview-layers.md) | `cmyk`, `preview`, `opengl`, `user-interface` |
 | 2026-10-07 | `WSW-20261007-017` | implemented | [Apply the CMYK Artwork scale to the screened marks](2026-10-07-cmyk-artwork-scale.md) | `cmyk`, `bugfix`, `user-interface` |
 | 2026-10-07 | `WSW-20261007-016` | implemented | [Raise the CMYK max-marks cap](2026-10-07-cmyk-max-marks-cap.md) | `cmyk`, `user-interface`, `screening` |

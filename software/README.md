@@ -121,7 +121,10 @@ Current tools:
   dots off (both only affect the dot screens), 40000 marks per ink, 6000 px
   resolution, C/M/Y/K weights 100 %. The preview checkboxes decide which inks the shared OpenGL preview
   draws, and they apply instantly: every layer stays loaded, so toggling a
-  checkbox never re-screens or re-plans. Pressing Preview also plans each checked ink's own program in the
+  checkbox never re-screens or re-plans. For CMYK previews the preview data
+  area also reports the per-ink M3 (pen-down) counts as
+  `C: n M: n Y: n K: n`, counted from the planned program.
+  Pressing Preview also plans each checked ink's own program in the
   background through the same pipeline as Convert - that planning is exactly
   where the r-theta solver picks x_theta or y_theta per segment, and the tab
   reports each file's split and calibrated time when it finishes.
