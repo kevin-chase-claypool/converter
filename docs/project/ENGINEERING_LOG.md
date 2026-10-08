@@ -1,5 +1,25 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-ink-sim-pen-width"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Ink simulation uses the real pen width
+
+- Request: "colors are still not combining well in the preview."
+- Diagnosis: mixing only happens where strokes overlap. The owner's 200 %
+  Artwork scale doubled the 0.3 mm pitch to 0.6 mm+ (worse in light tones
+  from the 1-3x adaptive factor), so rows covered ~half the paper and inks
+  met mostly at crossings; the simulation also drew a fixed 1 px stroke,
+  under-representing overlap when zoomed out.
+- Change: the simulation pass draws at `pen_diameter_mm x px_per_mm`
+  (1 px minimum); the Artwork scale and Ink simulation tooltips and
+  `software/README.md` now state the effective-pitch chain and the overlap
+  rule.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 386 tests (1 skipped, headless shader compile); the paint path is
+  not unit-testable headless; `docs_index.py --write` / `--check` pass.
+- Risk: sub-pixel pens clamp to 1 px when zoomed out.
+- Evidence: `WSW-20261007-023`; `software/qt_svg_to_gcode.pyw`.
+- Category: windows-software, cmyk, preview, ink-simulation.
+
 <a id="elog-20261007-cmyk-ink-simulation-preview"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK preview gains an ink-simulation multiply mode
 

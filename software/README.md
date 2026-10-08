@@ -73,8 +73,11 @@ overlay without leaving the preview (it stays in sync with the sidebar
 checkbox and the View menu), plus an **Ink simulation (multiply)** checkbox
 for CMYK previews: the ink layers multiply over the paper white in plot
 order, like translucent pens, so the preview shows the finished overprint
-instead of painting each layer opaquely. **Help** has the shortcut list (F1)
-and About.
+instead of painting each layer opaquely. Simulation strokes draw at the real
+pen width, and mixing only happens where strokes overlap: keep the effective
+pitch (Dot pitch x Artwork scale, then the tone-adaptive factor of 1-3x) at
+or below the pen width for full coverage. **Help** has the shortcut list
+(F1) and About.
 The status bar shows the current artwork and G-code paths. Tools are
 contributed by `software/generator_tabs/*_tab.py` modules and discovered at
 startup, one page per tool; a broken tool is reported in the log instead of

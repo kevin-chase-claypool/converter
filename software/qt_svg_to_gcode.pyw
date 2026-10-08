@@ -987,11 +987,16 @@ class GLPreview(QOpenGLWidget):
             >= artwork_total
         )
         if simulate:
+            bounds_x = max(bounds[2] - bounds[0], 1e-9)
+            px_per_mm = self.width() / bounds_x
+            pen_mm = float(
+                getattr(self.settings, "pen_diameter_mm", 0.3)
+            )
             funcs.glBlendFunc(0x0306, 0x0000)  # GL_DST_COLOR, GL_ZERO
             self.draw_static(
                 "artwork",
                 self.undrawn_color,
-                1.0,
+                max(1.0, pen_mm * px_per_mm),
                 vertex_color=True,
                 color_name="artwork_solid",
             )
@@ -1354,7 +1359,10 @@ class MainWindow(QMainWindow):
         self.ink_sim_check.setToolTip(
             "CMYK preview only: multiply the ink layers over the paper white "
             "in plot order, the way translucent pens combine, instead of "
-            "drawing each layer opaquely."
+            "drawing each layer opaquely. Strokes draw at the real pen width, "
+            "so mixing appears where they overlap - keep the effective pitch "
+            "(Dot pitch x Artwork scale) at or below the pen width for full "
+            "coverage."
         )
         self.ink_sim_check.toggled.connect(self.gl_preview.set_ink_simulation)
         clip_row = QHBoxLayout()

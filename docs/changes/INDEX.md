@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-023` | windows-software | implemented | [Ink simulation draws at the real pen width and explains the pitch chain](windows-software/2026-10-07-cmyk-ink-sim-pen-width.md) |
 | 2026-10-07 | `WSW-20261007-022` | windows-software | implemented | [Add an ink-simulation (multiply) preview for CMYK](windows-software/2026-10-07-cmyk-ink-simulation-preview.md) |
 | 2026-10-07 | `WSW-20261007-021` | windows-software | implemented | [Fix rectilinear stitching on multi-dash rows](windows-software/2026-10-07-cmyk-rectilinear-stitch-fix.md) |
 | 2026-10-07 | `WSW-20261007-020` | windows-software | implemented | [Add a rectilinear fill screen that joins rows](windows-software/2026-10-07-cmyk-rectilinear-fill.md) |

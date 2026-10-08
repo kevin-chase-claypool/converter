@@ -308,6 +308,11 @@ class CmykTab(GeneratorTab):
         self.margin = double_spin(6, 0, 50, 1, 0, " mm")
         page.addRow("Margin", self.margin)
         self.scale_pct = double_spin(100, 10, 1000, 5, 0, " %")
+        self.scale_pct.setToolTip(
+            "Scales the screened result about the page centre. The effective "
+            "line pitch scales with it, so 200 % doubles the spacing between "
+            "rows - halve Dot pitch to keep the same density."
+        )
         page.addRow("Artwork scale", self.scale_pct)
 
         actions = self.add_group("G-code (4 files)")
