@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-preview-chroma-and-pitch"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/MEASURED - Where the preview's flatness comes from, and the Dot pitch rule
+
+- Request: the wisteria preview still read flatter than the photo with
+  Auto's S 120 / C 180 / B 100 / GCR 85 / gamma 1.0 result, and the owner
+  asked whether Dot pitch should be 0.1 or 0.2 mm with a 0.30 mm pen.
+- Measurement (owner's photo, exact tone chain then the multiply ink
+  model): mean luminance matches the photo (0.518 vs 0.512) but mean
+  chroma stays ~18 % low (0.186 vs 0.227). GCR swept 40 -> 85 % left
+  chroma at 0.186 while moving luminance 0.477 -> 0.513; saturation
+  120 -> 140 % moved chroma 0.186 -> 0.208 in step with the source.
+  Chroma is set by ink coverage per area, not by where the grey sits.
+- Decision: Auto keeps its saturation formula; GCR stays a pen-time and
+  ink-load knob, not a colour knob. The linear coverage model renders
+  about 0.82 x the source chroma because half-tone coverage mixes with
+  paper white; the measured calibration profile remains the exact-match
+  step.
+- Pitch rule: printed row pitch is Dot pitch x Artwork scale, so the
+  darkest rows want roughly one pen width on paper - 0.1 mm at the 280 %
+  default with the 0.30 mm pen, which is also what Match pen sets.
+  0.2 mm there spreads the darkest rows to 0.56 mm (about half ink in
+  the deepest tone, roughly twice as fast).
+- Check: the preview palette is full-ink strokes plus pairwise
+  overprints (Y x M red, C x M blue, C x Y green), i.e. the multiply
+  simulation is what the flatness numbers describe.
+- Category: windows-software, cmyk, color-separation, measurement, defaults.
+
 <a id="elog-20261008-cmyk-auto-chroma-quartile"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Auto reads the colour quartile for saturation and GCR
 
