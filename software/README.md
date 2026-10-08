@@ -74,9 +74,12 @@ checkbox and the View menu), plus an **Ink simulation (multiply)** checkbox
 for CMYK previews: the ink layers multiply over the paper white in plot
 order, like translucent pens, so the preview shows the finished overprint
 instead of painting each layer opaquely. Simulation strokes draw at the real
-pen width, and mixing only happens where strokes overlap: keep the effective
-pitch (Dot pitch x Artwork scale, then the tone-adaptive factor of 1-3x) at
-or below the pen width for full coverage. An **Ink profile...** button loads
+pen width, and a stroke thinner than a screen pixel fades toward white by the
+fraction of a pixel it covers, so the fit-to-window view keeps the density
+the paper will get (zoom in for full-strength strokes). Mixing only happens
+where strokes overlap: keep the effective pitch (Dot pitch x Artwork scale,
+then the tone-adaptive factor of 1-3x) at or below the pen width for full
+coverage. An **Ink profile...** button loads
 the `*-profile.json` written by `tools\cmyk_calibrate.py`, so the simulation
 multiplies your pens' measured transmittances instead of the display ink
 colours. **Help** has the shortcut list

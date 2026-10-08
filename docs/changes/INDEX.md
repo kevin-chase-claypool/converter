@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-08 | `WSW-20261008-015` | windows-software | implemented | [The ink simulation stops multiplying ink it cannot draw](windows-software/2026-10-08-cmyk-preview-subpixel-ink.md) |
 | 2026-10-08 | `WSW-20261008-014` | windows-software | implemented | [Auto matches the printed tone to the photo](windows-software/2026-10-08-cmyk-auto-matches-tone.md) |
 | 2026-10-08 | `WSW-20261008-013` | windows-software | implemented | [Ink profile button no longer kills the app](windows-software/2026-10-08-cmyk-ink-profile-button-crash.md) |
 | 2026-10-08 | `WSW-20261008-012` | windows-software | implemented | [Auto (photo) also matches the pen pitch](windows-software/2026-10-08-cmyk-auto-matches-pen.md) |

@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-preview-subpixel-ink"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - The ink simulation stopped multiplying ink it cannot draw
+
+- Request: "auto was way off on gamma. cranking it up got me closer to where
+  i could at least see facial features, but it's still not great" - the owner
+  had to lift gamma 1.0 -> 2.2 on the portrait, which prints 0.638 mean paper
+  luminance against the photo's 0.434.
+- Cause: at fit-to-window zoom a simulated stroke is thinner than a screen
+  pixel but was drawn one pixel wide at full ink, so every light and mid tone
+  read about twice as dark as the plot; raising gamma was compensating for
+  the preview, not for the print.
+- Change: `GLPreview.sim_ink_strength()` = `clamp(pen width x px/mm, 0, 1)`
+  (quantised to 1/64); the simulation's vertex colours fade toward white by
+  the remainder, and `paintGL` rebuilds the cache when the strength moves.
+  Zoomed in past one pixel per pen the strokes are full strength again.
+- Verification: 401 tests pass (1 skipped, headless shader compile); a new
+  test pins 0.25 strength for a 0.30 mm pen at 1 px/mm, the faded vertex
+  colour, and 1.0 after zooming in.
+- Risk: dark areas lose a little ink too, so a saturated region reads
+  slightly light at fit zoom; zoom in for full-strength strokes.
+- Evidence: `WSW-20261008-015`; `software/README.md`.
+- Category: windows-software, cmyk, preview, ink-simulation, fidelity.
+
 <a id="elog-20261008-cmyk-auto-matches-tone"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Auto matches the printed tone to the photo
 

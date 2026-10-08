@@ -459,6 +459,35 @@ class ToolShellTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             window.load_ink_profile(False)
 
+    def test_ink_simulation_fades_strokes_thinner_than_a_pixel(self):
+        import converter_core as converter
+
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        preview = window.gl_preview
+        preview.resize(400, 400)
+        settings = converter.Settings()
+        settings.pen_diameter_mm = 0.3
+        contours = converter.tag_ink([[(0.0, 0.0), (400.0, 0.0)]], "c")
+        preview.set_preview(contours, [], settings, center=(200.0, 0.0))
+        # 400 mm of artwork across a 400 px view: the 0.30 mm pen covers a
+        # fraction of a pixel, so one simulated stroke lays down that fraction
+        # of the ink instead of a whole pixel of solid colour.
+        bounds = preview.adjusted_bounds()
+        px_per_mm = preview.width() / (bounds[2] - bounds[0])
+        strength = preview.sim_ink_strength()
+        self.assertAlmostEqual(
+            strength, round(0.3 * px_per_mm * 64.0) / 64.0, places=3
+        )
+        self.assertLess(strength, 0.5)
+        preview.set_sim_ink_colors({"c": (0.0, 0.651, 0.839)})
+        stored = list(preview.vertex_arrays["artwork_solid_color"][:4])
+        self.assertAlmostEqual(stored[0], 1.0 - strength, places=2)
+        self.assertAlmostEqual(stored[3], 1.0, places=2)
+        # Zoomed in past three pixels per pen the stroke is full strength.
+        preview.resize(2400, 2400)
+        self.assertEqual(preview.sim_ink_strength(), 1.0)
+
     def test_ink_engage_summary_counts_m3s_per_ink(self):
         import converter_core as converter
 

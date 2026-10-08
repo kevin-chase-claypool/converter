@@ -239,6 +239,9 @@ class GLPreview(QOpenGLWidget):
         self.visible_inks = None
         self.ink_simulation = False
         self.sim_ink_colors = None
+        # Ink laid down by one simulated stroke; rebuilt when the view scale
+        # changes enough that a stroke covers a different fraction of a pixel.
+        self._sim_strength = None
         self.progress = 0.0
         self.settings = converter.Settings()
         self.drawing_color = QColor("#2563eb")
@@ -408,6 +411,24 @@ class GLPreview(QOpenGLWidget):
             self.rebuild_cache()
         self.update()
 
+    def sim_ink_strength(self):
+        """Ink one simulated stroke lays down, as a fraction of full ink.
+
+        A stroke thinner than a screen pixel is still drawn one pixel wide,
+        so its colour fades toward white by the fraction of a pixel it
+        really covers. Without the fade the fit-to-window view multiplies
+        several times the ink the pen puts on paper, and light tones read
+        far darker than the plot will. Quantised so a window resize only
+        rebuilds the colour buffers a handful of times.
+        """
+        pen_mm = max(
+            0.0, float(getattr(self.settings, "pen_diameter_mm", 0.3))
+        )
+        bounds = self.adjusted_bounds()
+        px_per_mm = self.width() / max(bounds[2] - bounds[0], 1e-9)
+        covered = pen_mm * px_per_mm
+        return round(max(0.0, min(1.0, covered)) * 64.0) / 64.0
+
     def _move_ink(self, move):
         index = move.get("contour")
         if isinstance(index, int) and 0 <= index < len(self.contours):
@@ -510,7 +531,7 @@ class GLPreview(QOpenGLWidget):
         artwork_solid, _ = ink_vertex_colors(
             self.contours,
             self.moves,
-            undrawn_mix=0.0,
+            undrawn_mix=1.0 - self.sim_ink_strength(),
             visible_inks=self.visible_inks,
             hidden_white=True,
             ink_colors=self.sim_ink_colors,
@@ -1000,6 +1021,11 @@ class GLPreview(QOpenGLWidget):
         funcs.glClear(0x00004000)  # GL_COLOR_BUFFER_BIT
         if self.program is None or not self.program_ok or not self.contours:
             return
+        if self.ink_simulation:
+            strength = self.sim_ink_strength()
+            if strength != self._sim_strength:
+                self._sim_strength = strength
+                self.rebuild_cache()
         if self._vbos_dirty:
             self.upload_static_vbos()
 
