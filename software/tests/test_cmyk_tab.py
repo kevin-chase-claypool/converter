@@ -219,14 +219,53 @@ class ScreeningTests(unittest.TestCase):
             save("bright.png", bright_values)
         )
         self.assertTrue(dark["auto_levels"])
-        # A dark scene needs the full lift so its structure sits in the
-        # visible mid tones; a bright image needs no lift.
+        # A dark scene still needs the full lift so its structure sits in the
+        # visible mid tones; the tone term trades a little gamma away to keep
+        # the print's mean inside the printable window. A bright image needs
+        # no lift and prints at its own tone.
         self.assertGreaterEqual(dark["brightness"], 160)
-        self.assertGreaterEqual(dark["gamma"], 1.5)
+        self.assertGreaterEqual(dark["gamma"], 1.4)
         self.assertLessEqual(bright["brightness"], 140)
         self.assertLessEqual(bright["gamma"], 1.05)
         self.assertEqual(
             dark, converter.auto_photo_settings(save("dark2.png", dark_values))
+        )
+
+    def test_auto_photo_settings_match_the_printed_tone_to_the_photo(self):
+        import numpy as np
+        from PIL import Image
+        from converter_core import cmyk as cmyk_module
+
+        folder = tempfile.mkdtemp(prefix="cmyk-auto-tone-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        rng = np.random.default_rng(11)
+        # A bright, low-contrast field with soft structure - a stand-in for a
+        # portrait, where the detail-only search used to lift the print a stop
+        # lighter than the photo and wash the skin out.
+        values = (150 + rng.random((64, 64)) * 70).astype("uint8")
+        path = str(Path(folder) / "portrait.png")
+        Image.fromarray(np.stack([values] * 3, axis=2)).save(path)
+        chosen = converter.auto_photo_settings(path)
+
+        rgb = np.asarray(Image.open(path).convert("RGB"), dtype="float32") / 255.0
+        luminance = rgb @ np.array([0.299, 0.587, 0.114], dtype="float32")
+        low, high = np.percentile(luminance, [1.0, 99.0])
+        stretched = np.clip(
+            (luminance - low) / max(high - low, 1e-3), 0.0, 1.0
+        )
+        contrasted = cmyk_module._soft_contrast(
+            stretched, chosen["contrast"] / 100.0
+        )
+        lifted = np.power(
+            contrasted, 100.0 / max(1.0, chosen["brightness"])
+        )
+        printed = 1.0 - np.power(1.0 - lifted, chosen["gamma"])
+        # The search now aims the print's mean tone at the photo's instead of
+        # chasing detail energy wherever it leads.
+        self.assertLess(
+            abs(float(printed.mean()) - float(stretched.mean())), 0.03
         )
 
     def test_auto_photo_settings_add_contrast_when_it_helps_detail(self):

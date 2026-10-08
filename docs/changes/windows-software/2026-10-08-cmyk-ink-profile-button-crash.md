@@ -21,13 +21,13 @@ related:
 
 ## Summary
 
-Pressing **Ink profile...** shut the application down instead of opening a
+Pressing **Ink profile...** took the application down instead of opening a
 file picker. The button was wired straight to `load_ink_profile(path=None)`,
 and Qt hands a clicked slot its `checked` flag - so `path` arrived as
-`False`, the dialog was skipped, and `open(False, "r")` opened file
-descriptor 0 and took the interpreter down. The button now uses a dedicated
-`choose_ink_profile` slot that ignores the flag, and `load_ink_profile`
-refuses any argument that is not a path.
+`False`, the dialog was skipped, and the loader read file descriptor 0
+instead of a profile. The button now uses a dedicated `choose_ink_profile`
+slot that ignores the flag, and `load_ink_profile` refuses any argument that
+is not a path.
 
 ## Reason
 
@@ -45,9 +45,12 @@ followed by `with open(path, "r", encoding="utf-8") as handle:`.
 
 ## Verification
 
-- Reproduced in isolation: `open(False, "r", encoding="utf-8")` on this
-  Python 3.13.13 terminates the process with the same warning and no
-  traceback.
+- `open(False, "r", encoding="utf-8")` was checked on this Python 3.13.13
+  under both `python` and `pythonw`: it opens file descriptor 0 with the
+  RuntimeWarning instead of raising, so the press never reached a profile
+  file - the app log ends with that warning at the moment of the press. The
+  exact way the Qt process then went down could not be reproduced outside
+  the app.
 - `python -m unittest discover -s software\tests -p "test_*.py"`: 399 tests
   pass, 1 skipped (the pre-existing headless shader compile). The new test
   clicks the real button with a stubbed `QFileDialog` and asserts the

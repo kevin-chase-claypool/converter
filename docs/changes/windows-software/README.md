@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-08 | `WSW-20261008-014` | implemented | [Auto matches the printed tone to the photo](2026-10-08-cmyk-auto-matches-tone.md) | `cmyk`, `automation`, `tone`, `portraits` |
 | 2026-10-08 | `WSW-20261008-013` | implemented | [Ink profile button no longer kills the app](2026-10-08-cmyk-ink-profile-button-crash.md) | `cmyk`, `preview`, `crash`, `ink-profile` |
 | 2026-10-08 | `WSW-20261008-012` | implemented | [Auto (photo) also matches the pen pitch](2026-10-08-cmyk-auto-matches-pen.md) | `cmyk`, `screening`, `automation`, `pitch` |
 | 2026-10-08 | `WSW-20261008-011` | implemented | [Auto reads the colourful quartile for saturation and GCR](2026-10-08-cmyk-auto-chroma-quartile.md) | `cmyk`, `automation`, `color-separation` |

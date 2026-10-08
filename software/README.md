@@ -120,7 +120,10 @@ Current tools:
   (tone
   controls come from a detail search over the real curve chain: maximum mid
   tone-weighted gradient with a clipping penalty, so structure stays
-  legible instead of crushed or blown; saturation and GCR come from the
+  legible instead of crushed or blown, and the search also holds the print's
+  mean tone on the photo's, clamped to the 0.30-0.75 window a plot can
+  actually hold, so portraits are not lifted a stop too light; saturation
+  and GCR come from the
   image's colourful quartile, so a vivid subject over neutral ground keeps
   its chroma; the pitch is set to one pen width at the current artwork scale,
   the same as **Match pen**),

@@ -157,9 +157,12 @@ def auto_photo_settings(image_path, resolution_px=256):
     pipeline applies (auto levels -> soft contrast -> brightness -> ink
     gamma) for the combination with the most mid tone-weighted gradient
     energy and the least clipping, so fine structure is not lost to crushed
-    shadows or blown highlights. Saturation and GCR come from the mean
-    chroma, and auto levels stays on. Returns ``auto_levels``,
-    ``brightness``, ``contrast``, ``saturation``, ``gcr`` and ``gamma``.
+    shadows or blown highlights - and whose printed mean tone matches the
+    photo's. Very dark or very bright photos are aimed at the edge of the
+    printable window instead, because outside it a plot stops showing
+    structure at all. Saturation and GCR come from the mean chroma, and
+    auto levels stays on. Returns ``auto_levels``, ``brightness``,
+    ``contrast``, ``saturation``, ``gcr`` and ``gamma``.
     """
     from PIL import Image
     import numpy as np
@@ -194,6 +197,12 @@ def auto_photo_settings(image_path, resolution_px=256):
     if max(stretched.shape) > 128:
         stretched = stretched[::2, ::2]
 
+    # Aim the print's own mean tone at the photo's, clamped to the window a
+    # plot can actually hold: below a mean of 0.30 the sheet is a muddy ink
+    # stack and above 0.75 it is mostly paper. The clamp is what keeps very
+    # dark photos lifted and very bright ones from being darkened.
+    photo_tone = min(max(float(stretched.mean()), 0.30), 0.75)
+
     best = None
     for contrast in (120.0, 150.0, 180.0, 210.0, 240.0, 270.0, 300.0):
         contrasted = _soft_contrast(stretched, contrast / 100.0)
@@ -201,7 +210,9 @@ def auto_photo_settings(image_path, resolution_px=256):
             lifted = np.power(contrasted, 100.0 / max(1.0, brightness))
             for gamma in (1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6):
                 printed = 1.0 - np.power(1.0 - lifted, gamma)
-                score = _detail_score(printed)
+                score = _detail_score(printed) - abs(
+                    float(printed.mean()) - photo_tone
+                )
                 if best is None or score > best[0]:
                     best = (score, contrast, brightness, gamma)
     _, contrast, brightness, gamma = best

@@ -1,21 +1,48 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-auto-matches-tone"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Auto matches the printed tone to the photo
+
+- Request: "auto just looks so bad on skin tones" on the owner's portrait,
+  where Auto returned S 125 / C 180 / B 140 / GCR 90 / gamma 1.0.
+- Measurement: that chain prints at 0.511 mean paper luminance against the
+  photo's 0.434 (the detail-only search had drifted a stop light, and skin
+  is where that shows first). The wisteria photo already matched
+  (0.518 / 0.513).
+- Change: `auto_photo_settings` subtracts the printed tone error from the
+  detail score, aiming at the photo's mean clamped to a 0.30-0.75 printable
+  window, so very dark photos keep their legibility lift. The portrait now
+  returns B 100 / C 120 (printed 0.432); the wisteria is unchanged.
+- Verification: 400 tests pass (1 skipped, headless shader compile); a new
+  test pins the tone match on a bright low-contrast field where the old
+  search printed 0.044 light; the dark/bright test keeps the lift and loses
+  only its gamma expectation (1.5 -> 1.4).
+- Struggle: a pure colour fit is degenerate - the ink model adds contrast,
+  so the best `|print - photo|` is always the lowest-ink corner.
+- Risk: Auto fits the built-in display inks, not a loaded profile; skin
+  still carries the muted-image saturation boost, so drop Saturation 10-15
+  points if it reads too pink.
+- Evidence: `WSW-20261008-014`; `software/README.md`.
+- Category: windows-software, cmyk, automation, tone, portraits.
+
 <a id="elog-20261008-cmyk-ink-profile-button-crash"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - The Ink profile button killed the app
 
 - Request: "the ink profile... button crashes the app".
 - Cause: `clicked` hands the slot its `checked` flag, and
   `load_ink_profile(self, path=None)` took it as the path - the file dialog
-  was skipped and `open(False, "r")` opened file descriptor 0. Python 3.13
-  warns "bool is used as a file descriptor" (the last line of
-  `software/qt_debug.log`) and the process dies without a traceback.
+  was skipped and the loader read file descriptor 0 instead of a profile.
+  Python 3.13 warns "bool is used as a file descriptor" - the last line of
+  `software/qt_debug.log` - and the press took the app down.
 - Fix: a dedicated `choose_ink_profile(_checked=False)` slot opens the picker
   and calls `load_ink_profile(path)`, which now raises `TypeError` for
   anything that is not a path.
 - Verification: 399 tests pass (1 skipped, headless shader compile); a new
   test clicks the real button with a stubbed dialog and asserts the measured
-  colours reach the simulation; `open(False)` reproduced as a silent process
-  death.
+  colours reach the simulation; `open(False, "r")` was checked under both
+  `python` and `pythonw` and opens fd 0 rather than raising, so the
+  wrong-path read (not a JSON fault) is the verified defect. The exact way
+  the Qt process then went down could not be reproduced outside the app.
 - Evidence: `WSW-20261008-013`.
 - Category: windows-software, cmyk, preview, crash, ink-profile.
 
