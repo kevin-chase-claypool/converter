@@ -116,12 +116,14 @@ Current tools:
 - **CMYK** - RGB to CMYK separation with gray-component replacement, screened
   as one layer per ink pen. Controls: artwork (from the static Artwork row),
   an **Auto (photo)** button that analyzes the image and sets auto levels,
-  brightness, contrast, saturation, GCR and a starting gamma (tone
+  brightness, contrast, saturation, GCR, a starting gamma and the dot pitch
+  (tone
   controls come from a detail search over the real curve chain: maximum mid
   tone-weighted gradient with a clipping penalty, so structure stays
   legible instead of crushed or blown; saturation and GCR come from the
   image's colourful quartile, so a vivid subject over neutral ground keeps
-  its chroma),
+  its chroma; the pitch is set to one pen width at the current artwork scale,
+  the same as **Match pen**),
   auto levels (default on: stretch the image's 1st-99th luminance percentiles
   so low-key photos use the full tonal range), saturation, contrast,
   brightness, ink gamma, black (GCR), resolution, per-ink weights, screen style

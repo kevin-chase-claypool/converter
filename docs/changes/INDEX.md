@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-08 | `WSW-20261008-012` | windows-software | implemented | [Auto (photo) also matches the pen pitch](windows-software/2026-10-08-cmyk-auto-matches-pen.md) |
 | 2026-10-08 | `WSW-20261008-011` | windows-software | implemented | [Auto reads the colourful quartile for saturation and GCR](windows-software/2026-10-08-cmyk-auto-chroma-quartile.md) |
 | 2026-10-08 | `WSW-20261008-010` | windows-software | implemented | [Auto (photo) now searches for detail legibility](windows-software/2026-10-08-cmyk-auto-detail-search.md) |
 | 2026-10-08 | `WSW-20261008-009` | windows-software | implemented | [Add registration crosses and a pen-width pitch helper](windows-software/2026-10-08-cmyk-registration-and-pitch-helper.md) |

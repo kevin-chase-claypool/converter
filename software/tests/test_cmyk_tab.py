@@ -737,6 +737,7 @@ class CmykTabTests(unittest.TestCase):
         tab.brightness.setValue(100)
         tab.gamma.setValue(1.0)
         tab.gcr.setValue(100)
+        tab.scale_pct.setValue(150)
         tab.auto_button.click()
         values = converter.auto_photo_settings(self.image_path)
         self.assertEqual(tab.saturation.value(), values["saturation"])
@@ -745,7 +746,10 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(tab.gcr.value(), values["gcr"])
         self.assertAlmostEqual(tab.gamma.value(), values["gamma"], places=2)
         self.assertTrue(tab.auto_levels.isChecked())
+        # Auto also matches the pen: a 0.30 mm pen at 150 % wants 0.20 mm rows.
+        self.assertAlmostEqual(tab.pitch.value(), 0.2, places=2)
         self.assertIn("Auto:", tab.status.text())
+        self.assertIn("Dot pitch", tab.status.text())
 
     def test_match_pen_pitch_uses_the_effective_scale(self):
         tab = self.make_tab()

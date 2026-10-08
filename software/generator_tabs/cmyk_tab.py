@@ -422,39 +422,30 @@ class CmykTab(GeneratorTab):
         self.brightness.setValue(values["brightness"])
         self.gamma.setValue(values["gamma"])
         self.gcr.setValue(values["gcr"])
+        # The image controls are only half the fit: the screen has to put the
+        # rows down at a density the pen can hold, so Auto also matches the
+        # pen the way the Match pen button does.
+        self.pitch.setValue(self.pen_pitch_mm())
         message = (
             f"Auto: brightness {values['brightness']} %, contrast "
             f"{values['contrast']} %, saturation {values['saturation']} %, "
-            f"GCR {values['gcr']} %, gamma {values['gamma']:.2f} - tweak "
+            f"GCR {values['gcr']} %, gamma {values['gamma']:.2f}; Dot pitch "
+            f"{self.pitch.value():.2f} mm (one {self.pen_width.value():.2f} mm "
+            f"pen at {self.scale_pct.value():.0f} % artwork scale) - tweak "
             "gamma for print lightness, then press Preview."
         )
-        effective = self.pitch.value() * self.scale_pct.value() / 100.0
-        pen = max(0.01, self.pen_width.value())
-        if effective < 0.6 * pen:
-            advice = (
-                f"Effective pitch {effective:.2f} mm is below the "
-                f"{pen:.2f} mm pen - raise Dot pitch for more detail."
-            )
-        elif effective > 2.5 * pen:
-            advice = (
-                f"Effective pitch {effective:.2f} mm is much wider than the "
-                f"{pen:.2f} mm pen - lower Dot pitch for density."
-            )
-        else:
-            advice = (
-                f"Effective pitch {effective:.2f} mm is near the "
-                f"{pen:.2f} mm pen (good detail/density balance)."
-            )
-        message = message + " " + advice
         self.status.setText(message)
         if self.host is not None:
             self.host.generator_status(message)
 
+    def pen_pitch_mm(self):
+        """Dot pitch that puts full-tone rows one pen width apart on paper."""
+        scale = max(0.01, self.scale_pct.value() / 100.0)
+        return max(0.1, min(8.0, self.pen_width.value() / scale))
+
     def match_pen_pitch(self, _checked=False):
         """Set Dot pitch to one pen width at the current artwork scale."""
-        scale = max(0.01, self.scale_pct.value() / 100.0)
-        value = max(0.1, min(8.0, self.pen_width.value() / scale))
-        self.pitch.setValue(value)
+        self.pitch.setValue(self.pen_pitch_mm())
         self.status.setText(
             f"Dot pitch {self.pitch.value():.2f} mm matches the "
             f"{self.pen_width.value():.2f} mm pen at "

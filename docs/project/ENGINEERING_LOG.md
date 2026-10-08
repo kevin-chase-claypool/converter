@@ -1,5 +1,22 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-auto-matches-pen-pitch"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Auto (photo) also matches the pen pitch
+
+- Request: "is dot pitch being adjusted during the auto button press?" -
+  it was not; Auto only reported the effective pitch as text advice.
+- Change: `pen_pitch_mm()` (`clamp(pen width / artwork scale, 0.1, 8.0)`)
+  backs both **Match pen** and Auto, so pressing Auto leaves the screen at
+  one pen width on paper; the Auto status line states the chosen pitch
+  instead of an advisory that can no longer be off.
+- Verification: 398 tests pass (1 skipped, headless shader compile); the
+  Auto test now presses Auto at 150 % scale with the 0.30 mm pen and reads
+  Dot pitch 0.20 mm; `docs_index.py --write` / `--check` pass.
+- Risk: Auto overwrites a deliberately chosen Dot pitch - tune the pitch
+  after Auto if a coarser or denser screen is wanted.
+- Evidence: `WSW-20261008-012`; `software/README.md`.
+- Category: windows-software, cmyk, screening, automation, pitch.
+
 <a id="elog-20261008-cmyk-preview-chroma-and-pitch"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/MEASURED - Where the preview's flatness comes from, and the Dot pitch rule
 
