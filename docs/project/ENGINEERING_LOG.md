@@ -1,5 +1,29 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-rectilinear-defaults"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK defaults tuned for the rectilinear fill
+
+- Request: "change the settings to provide the best result for
+  rectilinear."
+- Change: the tab now defaults to **Rectilinear fill (joined rows)** at
+  **0.20 mm pitch** with **Black (GCR) 75 %** (was crosshatch, 1.2 mm,
+  100 %); artwork scale stays 100 %, auto levels on, pen 0.30 mm, overdraw
+  1, 40000 marks/ink, 6000 px resolution, weights 100 %.
+- Rationale: effective row spacing = pitch x scale x tone factor (1-3x);
+  mid tones sit at 2x the set pitch, so 0.20 mm lands near one pen width
+  (0.30 mm) and the inks genuinely overlap and mix, while dark tones fuse
+  and light tones stay sparse by design. GCR 75 % keeps every CMY channel
+  nonzero, so cyan no longer collapses into patches.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 386 tests (1 skipped, headless shader compile); the shipped-defaults
+  test asserts the new style/pitch/GCR; `docs_index.py --write` / `--check`
+  pass.
+- Risk: roughly triples the draw length of the previous setup (multi-hour
+  per-pen plans); 0.30 mm halves it if time matters more than density.
+- Evidence: `WSW-20261007-024`; `software/README.md`;
+  `software/generator_tabs/cmyk_tab.py`.
+- Category: windows-software, cmyk, defaults, rectilinear.
+
 <a id="elog-20261007-cmyk-ink-sim-pen-width"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Ink simulation uses the real pen width
 

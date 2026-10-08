@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-024` | implemented | [Tune the CMYK defaults for the rectilinear fill](2026-10-07-cmyk-rectilinear-defaults.md) | `cmyk`, `defaults`, `rectilinear` |
 | 2026-10-07 | `WSW-20261007-023` | implemented | [Ink simulation draws at the real pen width and explains the pitch chain](2026-10-07-cmyk-ink-sim-pen-width.md) | `cmyk`, `preview`, `ink-simulation` |
 | 2026-10-07 | `WSW-20261007-022` | implemented | [Add an ink-simulation (multiply) preview for CMYK](2026-10-07-cmyk-ink-simulation-preview.md) | `cmyk`, `preview`, `opengl`, `ink-simulation` |
 | 2026-10-07 | `WSW-20261007-021` | implemented | [Fix rectilinear stitching on multi-dash rows](2026-10-07-cmyk-rectilinear-stitch-fix.md) | `cmyk`, `rectilinear`, `bugfix` |

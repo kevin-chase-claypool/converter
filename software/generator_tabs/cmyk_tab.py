@@ -163,7 +163,7 @@ class CmykTab(GeneratorTab):
         options.addRow("Contrast", self.contrast)
         self.gamma = double_spin(1.0, 0.2, 3.0, 0.05, 2)
         options.addRow("Ink gamma", self.gamma)
-        self.gcr = double_spin(100, 0, 150, 5, 0, " %")
+        self.gcr = double_spin(75, 0, 150, 5, 0, " %")
         options.addRow("Black (GCR)", self.gcr)
         self.resolution = int_spin(6000, 200, 100000, 50)
         self.resolution.setToolTip(
@@ -199,9 +199,9 @@ class CmykTab(GeneratorTab):
             "their local mark spacing. Rectilinear joins consecutive rows "
             "over ink so one M3/M5 cycle covers a whole connected region."
         )
-        self.style.setCurrentIndex(self.style.findData("crosshatch"))
+        self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)
-        self.pitch = double_spin(1.2, 0.1, 8.0, 0.1, 2, " mm")
+        self.pitch = double_spin(0.2, 0.1, 8.0, 0.1, 2, " mm")
         screen.addRow("Dot pitch", self.pitch)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
         screen.addRow("Dot size", self.dot_size)
