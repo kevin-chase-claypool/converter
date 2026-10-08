@@ -111,6 +111,59 @@ def rgb_to_cmyk_tone(rgb, gcr=1.0, weights=None, gamma=1.0):
     return tones
 
 
+def auto_photo_settings(image_path, resolution_px=256):
+    """Suggest Image-options values that suit a photo automatically.
+
+    A small luminance/saturation analysis drives the set: a dark photo gets
+    a brightness and gamma lift (gamma stays the print-lightness dial the
+    operator tweaks), the inter-quartile tonal spread drives contrast, and
+    the mean saturation nudges saturation and GCR so vivid photos keep more
+    chroma. Returns ``auto_levels``, ``brightness``, ``contrast``,
+    ``saturation``, ``gcr`` and ``gamma``.
+    """
+    from PIL import Image
+    import numpy as np
+
+    image = Image.open(image_path).convert("RGB")
+    longest = max(image.width, image.height)
+    factor = min(1.0, max(32, int(resolution_px)) / float(longest))
+    if factor < 1.0:
+        image = image.resize(
+            (
+                max(8, int(round(image.width * factor))),
+                max(8, int(round(image.height * factor))),
+            ),
+            Image.LANCZOS,
+        )
+    rgb = np.asarray(image, dtype=np.float32) / 255.0
+    luminance = rgb @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
+    p25, p50, p75 = (
+        float(value) for value in np.percentile(luminance, [25, 50, 75])
+    )
+    spread = max(0.0, p75 - p25)
+    saturation = float(np.mean(rgb.max(axis=2) - rgb.min(axis=2)))
+
+    def clamp(value, low, high):
+        return max(low, min(high, value))
+
+    def round_up_to(value, step):
+        return int(round(value / step) * step)
+
+    brightness = clamp(100.0 + (0.42 - p50) * 220.0, 100.0, 180.0)
+    contrast = clamp(285.0 - spread * 350.0, 120.0, 285.0)
+    saturation_pct = clamp(100.0 + (0.30 - saturation) * 80.0, 100.0, 140.0)
+    gcr = clamp(95.0 - max(0.0, saturation - 0.18) * 120.0, 70.0, 95.0)
+    gamma = clamp(1.0 + (0.42 - p50) * 1.45, 1.0, 1.6)
+    return {
+        "auto_levels": True,
+        "brightness": round_up_to(brightness, 5),
+        "contrast": round_up_to(contrast, 5),
+        "saturation": round_up_to(saturation_pct, 5),
+        "gcr": round_up_to(gcr, 5),
+        "gamma": round(gamma / 0.05) * 0.05,
+    }
+
+
 def prepare_image_tones(
     image_path,
     width_mm,

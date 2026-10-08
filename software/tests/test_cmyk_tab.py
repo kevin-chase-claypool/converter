@@ -195,6 +195,26 @@ class ScreeningTests(unittest.TestCase):
         # 130 % brightness keeps the black point but lays less ink.
         self.assertLess(float(lifted["k"].mean()), float(base["k"].mean()) - 0.05)
 
+    def test_auto_photo_settings_fit_dark_and_bright_images(self):
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-auto-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        dark_path = str(Path(folder) / "dark.png")
+        bright_path = str(Path(folder) / "bright.png")
+        Image.new("RGB", (64, 64), (20, 20, 25)).save(dark_path)
+        Image.new("RGB", (64, 64), (180, 180, 180)).save(bright_path)
+        dark = converter.auto_photo_settings(dark_path)
+        bright = converter.auto_photo_settings(bright_path)
+        self.assertTrue(dark["auto_levels"])
+        self.assertGreaterEqual(dark["gamma"], 1.3)
+        self.assertGreaterEqual(dark["brightness"], 140)
+        self.assertEqual(bright["brightness"], 100)
+        self.assertEqual(bright["gamma"], 1.0)
+        self.assertLessEqual(bright["contrast"], dark["contrast"])
+
     def test_contrast_300_keeps_smooth_shoulders(self):
         from PIL import Image
 
@@ -640,6 +660,24 @@ class CmykTabTests(unittest.TestCase):
         tab = self.make_tab()
         tab.pitch.setValue(0.2)
         self.assertEqual(tab.pitch.value(), 0.2)
+
+    def test_auto_button_applies_photo_settings(self):
+        host = FakeHost(self.image_path)
+        tab = self.make_tab(host)
+        tab.saturation.setValue(100)
+        tab.contrast.setValue(100)
+        tab.brightness.setValue(100)
+        tab.gamma.setValue(1.0)
+        tab.gcr.setValue(100)
+        tab.auto_button.click()
+        values = converter.auto_photo_settings(self.image_path)
+        self.assertEqual(tab.saturation.value(), values["saturation"])
+        self.assertEqual(tab.contrast.value(), values["contrast"])
+        self.assertEqual(tab.brightness.value(), values["brightness"])
+        self.assertEqual(tab.gcr.value(), values["gcr"])
+        self.assertAlmostEqual(tab.gamma.value(), values["gamma"], places=2)
+        self.assertTrue(tab.auto_levels.isChecked())
+        self.assertIn("Auto:", tab.status.text())
 
     def test_max_marks_is_not_capped_at_40000(self):
         tab = self.make_tab()

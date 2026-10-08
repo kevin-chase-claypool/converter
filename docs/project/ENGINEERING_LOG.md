@@ -1,5 +1,27 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-auto-photo-button"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK gains an Auto (photo) button
+
+- Request: "is there a way we can add an 'auto' button to set it up as
+  close to a good representation of the photo as possible? ... all i had to
+  manipulate after 'auto' was gamma." Nothing removed; a starting point.
+- Change: **Auto (photo)** in Image options runs `auto_photo_settings` on
+  the artwork (256 px analysis): sets auto levels on, brightness 100-180 %
+  from the median luminance, contrast 120-285 % from the inter-quartile
+  spread, saturation 100-140 % and GCR 70-95 % from the mean chroma, and a
+  starting gamma 1.0-1.6. The status line reports the values; all controls
+  stay editable and gamma remains the lightness dial.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 392 tests (1 skipped, headless shader compile); new tests cover
+  dark/bright synthetic images and the button applying the analyzer's
+  values; `docs_index.py --write` / `--check` pass.
+- Risk: conservative heuristics (brightness never darkens, saturation never
+  lowers) - unusual images may need manual nudges.
+- Note: the owner's uncommitted sharpen work in `cmyk.py` stays unstaged.
+- Evidence: `WSW-20261008-006`; `software/README.md`.
+- Category: windows-software, cmyk, user-interface, automation, defaults.
+
 <a id="elog-20261008-cmyk-gamma-led-defaults"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK defaults adopt the gamma-led tuning
 

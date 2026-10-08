@@ -112,6 +112,8 @@ Current tools:
   resolution, line width, seed, page size, margin, artwork scale.
 - **CMYK** - RGB to CMYK separation with gray-component replacement, screened
   as one layer per ink pen. Controls: artwork (from the static Artwork row),
+  an **Auto (photo)** button that analyzes the image and sets auto levels,
+  brightness, contrast, saturation, GCR and a starting gamma,
   auto levels (default on: stretch the image's 1st-99th luminance percentiles
   so low-key photos use the full tonal range), saturation, contrast,
   brightness, ink gamma, black (GCR), resolution, per-ink weights, screen style

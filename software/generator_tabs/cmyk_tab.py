@@ -149,6 +149,14 @@ class CmykTab(GeneratorTab):
         image.addRow("Artwork", self.image_label)
 
         options = self.add_group("Image options")
+        self.auto_button = QPushButton("Auto (photo)")
+        self.auto_button.setToolTip(
+            "Analyze the artwork and set auto levels, brightness, contrast, "
+            "saturation, GCR, and a starting gamma for a faithful photo "
+            "representation. Tweak gamma for print lightness afterwards."
+        )
+        self.auto_button.clicked.connect(self.apply_auto_settings)
+        options.addRow("Auto", self.auto_button)
         self.auto_levels = QCheckBox("Stretch tonality")
         self.auto_levels.setChecked(True)
         self.auto_levels.setToolTip(
@@ -377,6 +385,33 @@ class CmykTab(GeneratorTab):
             "y": self.weight_y.value() / 100.0,
             "k": self.weight_k.value() / 100.0,
         }
+
+    def apply_auto_settings(self, _checked=False):
+        """Fit the Image-options controls to the loaded photo."""
+        self._refresh_artwork()
+        if not self._artwork:
+            self.report_error("Import an image with the Artwork row above first.")
+            return
+        try:
+            values = converter.auto_photo_settings(self._artwork)
+        except Exception as exc:  # noqa: BLE001 - user-facing setup error
+            self.report_error(f"Auto settings failed: {exc}")
+            return
+        self.auto_levels.setChecked(bool(values["auto_levels"]))
+        self.saturation.setValue(values["saturation"])
+        self.contrast.setValue(values["contrast"])
+        self.brightness.setValue(values["brightness"])
+        self.gamma.setValue(values["gamma"])
+        self.gcr.setValue(values["gcr"])
+        message = (
+            f"Auto: brightness {values['brightness']} %, contrast "
+            f"{values['contrast']} %, saturation {values['saturation']} %, "
+            f"GCR {values['gcr']} %, gamma {values['gamma']:.2f} - tweak "
+            "gamma for print lightness, then press Preview."
+        )
+        self.status.setText(message)
+        if self.host is not None:
+            self.host.generator_status(message)
 
     def _control_key(self):
         settings_key = ""

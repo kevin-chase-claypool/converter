@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-08 | `WSW-20261008-006` | windows-software | implemented | [Add an Auto (photo) button to the CMYK image options](windows-software/2026-10-08-cmyk-auto-photo-button.md) |
 | 2026-10-08 | `WSW-20261008-005` | windows-software | implemented | [Set the CMYK defaults to the owner's gamma-led tuning](windows-software/2026-10-08-cmyk-gamma-led-defaults.md) |
 | 2026-10-08 | `WSW-20261008-004` | windows-software | implemented | [Extend contrast past 200 % and push colour into the mix](windows-software/2026-10-08-cmyk-contrast-headroom-color.md) |
 | 2026-10-08 | `WSW-20261008-003` | windows-software | implemented | [Add a brightness lift and restore contrast to 200 %](windows-software/2026-10-08-cmyk-brightness-control.md) |
