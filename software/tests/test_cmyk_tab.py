@@ -195,6 +195,38 @@ class ScreeningTests(unittest.TestCase):
         # 130 % brightness keeps the black point but lays less ink.
         self.assertLess(float(lifted["k"].mean()), float(base["k"].mean()) - 0.05)
 
+    def test_contrast_300_keeps_smooth_shoulders(self):
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-contrast300-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = str(Path(folder) / "ramp.png")
+        image = Image.new("L", (16, 16))
+        for x in range(16):
+            value = int(64 + x * 127 / 15)
+            for y in range(16):
+                image.putpixel((x, y), value)
+        image.save(path)
+        tones, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=64,
+            auto_levels=False,
+            contrast=3.0,
+            gcr=1.0,
+            weights=(1, 1, 1, 1),
+        )
+        k = tones["k"]
+        # Contrast 300 steepens the soft curve past the old 200 % ceiling
+        # (a wider spread than contrast 2.0) yet keeps the shoulders finite.
+        self.assertGreater(float(k.max()) - float(k.min()), 0.85)
+        self.assertLess(float(k.max()), 0.99)
+        self.assertGreater(float(k.min()), 0.01)
+
     def test_mark_cap_grows_the_pitch(self):
         dark = self.np.full((32, 32), 0.9, dtype="float32")
         marks = converter.screen_channel(
@@ -538,8 +570,8 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(tab.style.currentData(), "rectilinear")
         self.assertEqual(tab.levels.value(), 8)
         self.assertAlmostEqual(tab.pitch.value(), 0.1, places=3)
-        self.assertAlmostEqual(tab.gcr.value(), 80.0, places=3)
-        self.assertAlmostEqual(tab.saturation.value(), 105.0, places=3)
+        self.assertAlmostEqual(tab.gcr.value(), 65.0, places=3)
+        self.assertAlmostEqual(tab.saturation.value(), 115.0, places=3)
         self.assertAlmostEqual(tab.contrast.value(), 200.0, places=3)
         self.assertAlmostEqual(tab.brightness.value(), 130.0, places=3)
         self.assertAlmostEqual(tab.dot_size.value(), 100.0, places=3)
@@ -549,7 +581,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(tab.weight_c.value(), 100.0, places=3)
         self.assertAlmostEqual(tab.weight_m.value(), 100.0, places=3)
         self.assertAlmostEqual(tab.weight_y.value(), 100.0, places=3)
-        self.assertAlmostEqual(tab.weight_k.value(), 120.0, places=3)
+        self.assertAlmostEqual(tab.weight_k.value(), 105.0, places=3)
 
     def test_resolution_is_not_capped_at_2000(self):
         tab = self.make_tab()

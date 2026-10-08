@@ -178,10 +178,21 @@ def prepare_image_tones(
             rgb = np.clip((rgb - 0.5) * contrast + 0.5, 0.0, 1.0)
         else:
             # Soft S-curve: strong contrast without the hard clipping that
-            # posterizes highlights and shadows. Contrast 2.0 used to clamp
-            # everything outside 0.25-0.75 to pure white or black.
-            amount = min(contrast - 1.0, 1.0)
-            curved = 0.5 + 0.5 * np.tanh((rgb - 0.5) * 3.0) / math.tanh(1.5)
+            # posterizes highlights and shadows. 1.0-2.0 blends from linear
+            # to a k=3 curve; above 2.0 the curve steepens (k up to 6) so the
+            # control keeps giving colour punch past the old 200 % ceiling.
+            if contrast <= 2.0:
+                amount = contrast - 1.0
+                curve_k = 3.0
+            else:
+                amount = 1.0
+                curve_k = 3.0 + 3.0 * min(contrast - 2.0, 1.0)
+            curved = (
+                0.5
+                + 0.5
+                * np.tanh((rgb - 0.5) * curve_k)
+                / math.tanh(curve_k / 2.0)
+            )
             rgb = np.clip(rgb + (curved - rgb) * amount, 0.0, 1.0)
 
     brightness = float(brightness)

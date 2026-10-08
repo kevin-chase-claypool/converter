@@ -157,9 +157,14 @@ class CmykTab(GeneratorTab):
             "range instead of screening into one flat mid-tone."
         )
         options.addRow("Auto levels", self.auto_levels)
-        self.saturation = double_spin(105, 0, 200, 5, 0, " %")
+        self.saturation = double_spin(115, 0, 200, 5, 0, " %")
         options.addRow("Saturation", self.saturation)
-        self.contrast = double_spin(200, 25, 200, 5, 0, " %")
+        self.contrast = double_spin(200, 25, 300, 5, 0, " %")
+        self.contrast.setToolTip(
+            "Soft S-curve contrast up to 300 %: above 200 % the curve keeps "
+            "steepening instead of clipping, so colour punch keeps "
+            "increasing without blown highlights."
+        )
         options.addRow("Contrast", self.contrast)
         self.brightness = double_spin(130, 50, 200, 5, 0, " %")
         self.brightness.setToolTip(
@@ -170,7 +175,7 @@ class CmykTab(GeneratorTab):
         options.addRow("Brightness", self.brightness)
         self.gamma = double_spin(1.0, 0.2, 3.0, 0.05, 2)
         options.addRow("Ink gamma", self.gamma)
-        self.gcr = double_spin(80, 0, 150, 5, 0, " %")
+        self.gcr = double_spin(65, 0, 150, 5, 0, " %")
         options.addRow("Black (GCR)", self.gcr)
         self.resolution = int_spin(10000, 200, 100000, 50)
         self.resolution.setToolTip(
@@ -183,7 +188,7 @@ class CmykTab(GeneratorTab):
         self.weight_c = double_spin(100, 0, 150, 5, 0, " %")
         self.weight_m = double_spin(100, 0, 150, 5, 0, " %")
         self.weight_y = double_spin(100, 0, 150, 5, 0, " %")
-        self.weight_k = double_spin(120, 0, 150, 5, 0, " %")
+        self.weight_k = double_spin(105, 0, 150, 5, 0, " %")
         options.addRow("Cyan weight", self.weight_c)
         options.addRow("Magenta weight", self.weight_m)
         options.addRow("Yellow weight", self.weight_y)

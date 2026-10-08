@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-08 | `WSW-20261008-004` | implemented | [Extend contrast past 200 % and push colour into the mix](2026-10-08-cmyk-contrast-headroom-color.md) | `cmyk`, `contrast`, `tone`, `defaults` |
 | 2026-10-08 | `WSW-20261008-003` | implemented | [Add a brightness lift and restore contrast to 200 %](2026-10-08-cmyk-brightness-control.md) | `cmyk`, `tone`, `brightness`, `defaults` |
 | 2026-10-08 | `WSW-20261008-002` | implemented | [Open rectilinear light tones instead of hatching them](2026-10-08-cmyk-rectilinear-light-stretch.md) | `cmyk`, `rectilinear`, `tone`, `screening` |
 | 2026-10-08 | `WSW-20261008-001` | implemented | [Soften the CMYK tone curve and rebalance the defaults](2026-10-08-cmyk-soft-contrast-defaults.md) | `cmyk`, `tone`, `contrast`, `defaults`, `rectilinear` |

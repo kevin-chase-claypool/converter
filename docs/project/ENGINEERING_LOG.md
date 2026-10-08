@@ -1,5 +1,27 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-contrast-headroom-color"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Contrast headroom to 300 % and more colour in the mixes
+
+- Request: "the problem is that contrast is maxed out, and the color
+  contrast just still isnt good."
+- Change: the Contrast control now runs to 300 % (the soft S-curve keeps
+  steepening above 200 %, k 3 -> 6, instead of being ignored), and the
+  defaults push colour into the separation: saturation 105 -> 115 %,
+  black (GCR) 80 -> 65 %, K weight 120 -> 105 %. Luminance contrast alone
+  cannot add chroma once the overprint multiplication flattens it; lower K
+  and more CMY chroma do.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 390 tests (1 skipped, headless shader compile); a new test shows
+  contrast 3.0 spreads the K range past 0.85 with finite shoulders where
+  2.0 gives ~0.70; defaults tests updated; `docs_index.py --write` /
+  `--check` pass.
+- Risk: k=6 is nearly a threshold curve - back off toward 200-240 % if
+  banding appears.
+- Note: the owner's uncommitted sharpen work in `cmyk.py` stays unstaged.
+- Evidence: `WSW-20261008-004`; `software/README.md`.
+- Category: windows-software, cmyk, contrast, tone, defaults.
+
 <a id="elog-20261008-cmyk-brightness-control"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK brightness lift, contrast restored to 200%
 
