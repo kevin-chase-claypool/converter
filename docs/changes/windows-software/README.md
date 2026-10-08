@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-022` | implemented | [Add an ink-simulation (multiply) preview for CMYK](2026-10-07-cmyk-ink-simulation-preview.md) | `cmyk`, `preview`, `opengl`, `ink-simulation` |
 | 2026-10-07 | `WSW-20261007-021` | implemented | [Fix rectilinear stitching on multi-dash rows](2026-10-07-cmyk-rectilinear-stitch-fix.md) | `cmyk`, `rectilinear`, `bugfix` |
 | 2026-10-07 | `WSW-20261007-020` | implemented | [Add a rectilinear fill screen that joins rows](2026-10-07-cmyk-rectilinear-fill.md) | `cmyk`, `screening`, `rectilinear`, `pen-cycles` |
 | 2026-10-07 | `WSW-20261007-019` | implemented | [Show per-ink M3 counts in the preview data area](2026-10-07-cmyk-preview-m3-counts.md) | `cmyk`, `preview`, `user-interface` |

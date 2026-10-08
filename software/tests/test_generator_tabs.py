@@ -580,6 +580,38 @@ class ToolShellTests(unittest.TestCase):
         self.assertTrue(window.preview_motion_check.isChecked())
         self.assertTrue(window.gl_preview.show_pen_down_path)
 
+    def test_preview_panel_has_an_ink_simulation_toggle(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        self.assertTrue(
+            window.preview_panel.isAncestorOf(window.ink_sim_check)
+        )
+        self.assertFalse(window.ink_sim_check.isChecked())
+        self.assertFalse(window.gl_preview.ink_simulation)
+        window.ink_sim_check.setChecked(True)
+        self.assertTrue(window.gl_preview.ink_simulation)
+
+    def test_gl_preview_builds_multiply_neutral_hidden_inks(self):
+        import converter_core as converter
+
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        contours = converter.tag_ink([[(0.0, 0.0), (1.0, 0.0)]], "c") + (
+            converter.tag_ink([[(0.0, 1.0), (1.0, 1.0)]], "k")
+        )
+        window.gl_preview.set_preview(
+            contours,
+            [],
+            converter.Settings(),
+            center=(0.0, 0.0),
+            visible_inks={"c"},
+        )
+        solid = window.gl_preview.vertex_arrays["artwork_solid_color"]
+        self.assertEqual(solid[3], 1.0)          # cyan multiplies fully
+        self.assertEqual(tuple(solid[8:12]), (1.0, 1.0, 1.0, 0.0))
+        pale = window.gl_preview.vertex_arrays["artwork_color"]
+        self.assertEqual(pale[11], 0.0)          # hidden ink still hidden
+
     def test_command_list_is_removed_and_preview_fills_the_rest(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

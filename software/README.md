@@ -70,7 +70,11 @@ Ctrl+2...Ctrl+0. **View** toggles the machine reach guide, pen-down path, and
 log, and controls preview zoom. The preview panel also has a **Red motion
 lines** checkbox next to Fill bed / Fit inside that toggles the same pen-down
 overlay without leaving the preview (it stays in sync with the sidebar
-checkbox and the View menu). **Help** has the shortcut list (F1) and About.
+checkbox and the View menu), plus an **Ink simulation (multiply)** checkbox
+for CMYK previews: the ink layers multiply over the paper white in plot
+order, like translucent pens, so the preview shows the finished overprint
+instead of painting each layer opaquely. **Help** has the shortcut list (F1)
+and About.
 The status bar shows the current artwork and G-code paths. Tools are
 contributed by `software/generator_tabs/*_tab.py` modules and discovered at
 startup, one page per tool; a broken tool is reported in the log instead of

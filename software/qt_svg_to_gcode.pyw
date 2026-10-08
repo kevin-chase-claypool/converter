@@ -112,7 +112,9 @@ def ink_color_floats(hex_color, undrawn_mix=0.0, alpha=1.0):
     )
 
 
-def ink_vertex_colors(contours, moves, undrawn_mix=0.55, visible_inks=None):
+def ink_vertex_colors(
+    contours, moves, undrawn_mix=0.55, visible_inks=None, hidden_white=False
+):
     """Return ``(artwork_colors, drawn_colors)`` for the per-ink preview.
 
     Colours come from each contour's ``ink`` tag (the CMYK tool tags every
@@ -121,7 +123,9 @@ def ink_vertex_colors(contours, moves, undrawn_mix=0.55, visible_inks=None):
     ``(None, None)`` when any contour is untagged or unknown, so every other
     tool keeps the single-colour preview. ``visible_inks`` hides the other
     layers by giving their vertices zero alpha, so the preview checkboxes
-    apply without replanning.
+    apply without replanning. ``hidden_white`` gives hidden inks a white,
+    zero-alpha colour instead, which is the multiply-neutral value for the
+    ink-simulation pass.
     """
     inks = [getattr(contour, "ink", None) for contour in contours]
     if not contours or any(ink not in converter.CHANNEL_COLORS for ink in inks):
@@ -131,13 +135,18 @@ def ink_vertex_colors(contours, moves, undrawn_mix=0.55, visible_inks=None):
         if visible_inks is None
         else (lambda ink: ink in visible_inks)
     )
+    def color_for(ink, mix):
+        if shown(ink):
+            return ink_color_floats(converter.CHANNEL_COLORS[ink], mix)
+        if hidden_white:
+            return (1.0, 1.0, 1.0, 0.0)
+        return ink_color_floats(
+            converter.CHANNEL_COLORS[ink], mix, alpha=0.0
+        )
+
     artwork_colors = []
     for contour, ink in zip(contours, inks):
-        color = ink_color_floats(
-            converter.CHANNEL_COLORS[ink],
-            undrawn_mix,
-            alpha=1.0 if shown(ink) else 0.0,
-        )
+        color = color_for(ink, undrawn_mix)
         for _first, _second in zip(contour, contour[1:]):
             artwork_colors.extend(color)
             artwork_colors.extend(color)
@@ -153,10 +162,7 @@ def ink_vertex_colors(contours, moves, undrawn_mix=0.55, visible_inks=None):
         if not isinstance(index, int) or not 0 <= index < len(inks):
             return None, None
         ink = inks[index]
-        color = ink_color_floats(
-            converter.CHANNEL_COLORS[ink],
-            alpha=1.0 if shown(ink) else 0.0,
-        )
+        color = color_for(ink, 0.0)
         drawn_colors.extend(color)
         drawn_colors.extend(color)
     return artwork_colors, drawn_colors
@@ -206,6 +212,7 @@ class GLPreview(QOpenGLWidget):
         self.moves = []
         # None shows every tagged ink; a set filters the drawn layers live.
         self.visible_inks = None
+        self.ink_simulation = False
         self.progress = 0.0
         self.settings = converter.Settings()
         self.drawing_color = QColor("#2563eb")
@@ -291,7 +298,7 @@ class GLPreview(QOpenGLWidget):
             "color": self.program.uniformLocation("color"),
             "use_vertex_color": self.program.uniformLocation("use_vertex_color"),
         }
-        for name in ("bed_circle", "bed_radius", "debug_box", "debug_cross", "reach_circle", "artwork", "artwork_color", "drawn_path", "drawn_path_color", "travel", "motion"):
+        for name in ("bed_circle", "bed_radius", "debug_box", "debug_cross", "reach_circle", "artwork", "artwork_color", "artwork_solid_color", "drawn_path", "drawn_path_color", "travel", "motion"):
             buf = QOpenGLBuffer(QOpenGLBuffer.VertexBuffer)
             buf.setUsagePattern(QOpenGLBuffer.StaticDraw)
             buf.create()
@@ -336,6 +343,19 @@ class GLPreview(QOpenGLWidget):
         self.visible_inks = new
         if self.contours:
             self.rebuild_cache()
+        self.update()
+
+    def set_ink_simulation(self, enabled):
+        """Render the tagged CMYK artwork as the finished overprint.
+
+        The ink layers multiply over the paper white in plot order, like
+        translucent pens, instead of painting each layer opaquely. Only
+        affects tagged artwork; every other tool is unchanged.
+        """
+        enabled = bool(enabled)
+        if enabled == self.ink_simulation:
+            return
+        self.ink_simulation = enabled
         self.update()
 
     def _move_ink(self, move):
@@ -437,6 +457,13 @@ class GLPreview(QOpenGLWidget):
         artwork_colors, drawn_colors = ink_vertex_colors(
             self.contours, self.moves, visible_inks=self.visible_inks
         )
+        artwork_solid, _ = ink_vertex_colors(
+            self.contours,
+            self.moves,
+            undrawn_mix=0.0,
+            visible_inks=self.visible_inks,
+            hidden_white=True,
+        )
         for contour in self.contours:
             for a, b in zip(contour, contour[1:]):
                 artwork.extend([a[0], a[1], b[0], b[1]])
@@ -514,6 +541,9 @@ class GLPreview(QOpenGLWidget):
         }
         if artwork_colors is not None:
             self.vertex_arrays["artwork_color"] = array("f", artwork_colors)
+            self.vertex_arrays["artwork_solid_color"] = array(
+                "f", artwork_solid
+            )
             self.vertex_arrays["drawn_path_color"] = array("f", drawn_colors or [])
         self.vertex_counts = {
             name: len(values) // 2
@@ -837,7 +867,15 @@ class GLPreview(QOpenGLWidget):
             buf.release()
         self._vbos_dirty = False
 
-    def draw_static(self, name, color, width=1.0, count=None, vertex_color=False):
+    def draw_static(
+        self,
+        name,
+        color,
+        width=1.0,
+        count=None,
+        vertex_color=False,
+        color_name=None,
+    ):
         total = self.vertex_counts.get(name, 0)
         if count is None:
             count = total
@@ -850,8 +888,9 @@ class GLPreview(QOpenGLWidget):
             return
         funcs = self.context().functions()
         color_buf = None
-        if vertex_color and self.color_vertex_counts.get(name, 0) >= count:
-            color_buf = self.vbos.get(name + "_color")
+        lookup = color_name or name
+        if vertex_color and self.color_vertex_counts.get(lookup, 0) >= count:
+            color_buf = self.vbos.get(lookup + "_color")
         use = 1.0 if color_buf is not None else 0.0
         color_loc = self.uniform_loc.get("use_vertex_color", -1)
         if color_loc >= 0:
@@ -937,17 +976,39 @@ class GLPreview(QOpenGLWidget):
         self.draw_static("bed_circle", QColor("#94a3b8"), 1.5)
         self.set_shift(shift_x, shift_y)
         # Full artwork in the undrawn color, then overdraw the portion drawn so
-        # far in the drawn color — the boundary tracks where the pen is.
-        self.draw_static("artwork", self.undrawn_color, 1.0, vertex_color=True)
-        drawn_segments = self.draw_segments_done(progress)
-        if drawn_segments > 0:
+        # far in the drawn color — the boundary tracks where the pen is. Ink
+        # simulation instead multiplies the solid ink layers over the paper,
+        # showing the finished overprint the way translucent pens combine.
+        artwork_total = self.vertex_counts.get("artwork", 0)
+        simulate = (
+            self.ink_simulation
+            and artwork_total > 0
+            and self.color_vertex_counts.get("artwork_solid", 0)
+            >= artwork_total
+        )
+        if simulate:
+            funcs.glBlendFunc(0x0306, 0x0000)  # GL_DST_COLOR, GL_ZERO
             self.draw_static(
-                "drawn_path",
-                self.drawing_color,
-                1.6,
-                count=drawn_segments * 2,
+                "artwork",
+                self.undrawn_color,
+                1.0,
                 vertex_color=True,
+                color_name="artwork_solid",
             )
+            funcs.glBlendFunc(0x0302, 0x0303)
+        else:
+            self.draw_static(
+                "artwork", self.undrawn_color, 1.0, vertex_color=True
+            )
+            drawn_segments = self.draw_segments_done(progress)
+            if drawn_segments > 0:
+                self.draw_static(
+                    "drawn_path",
+                    self.drawing_color,
+                    1.6,
+                    count=drawn_segments * 2,
+                    vertex_color=True,
+                )
         if self.show_pen_down_path:
             self.draw_static("motion", self.motion_color, 1.2)
         self.set_shift(0.0, 0.0)
@@ -1289,8 +1350,16 @@ class MainWindow(QMainWindow):
         )
         self.preview_motion_check.toggled.connect(self.show_pen_down_path.setChecked)
         self.show_pen_down_path.toggled.connect(self.preview_motion_check.setChecked)
+        self.ink_sim_check = QCheckBox("Ink simulation (multiply)")
+        self.ink_sim_check.setToolTip(
+            "CMYK preview only: multiply the ink layers over the paper white "
+            "in plot order, the way translucent pens combine, instead of "
+            "drawing each layer opaquely."
+        )
+        self.ink_sim_check.toggled.connect(self.gl_preview.set_ink_simulation)
         clip_row = QHBoxLayout()
         clip_row.addWidget(self.preview_motion_check)
+        clip_row.addWidget(self.ink_sim_check)
         clip_row.addWidget(self.fill_bed_button)
         clip_row.addWidget(self.fit_inside_button)
         clip_row.addWidget(self.clip_warning, 1)

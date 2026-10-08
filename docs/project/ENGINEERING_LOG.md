@@ -1,5 +1,29 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-ink-simulation-preview"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK preview gains an ink-simulation multiply mode
+
+- Request: "colors dont appear to be combining well. inspect." Inspection:
+  the preview paints each ink layer opaquely (last layer wins); at the
+  owner's 0.30 mm pitch - one pen width - every layer covers everything, so
+  the preview flattened toward the top inks while the real print multiplies
+  the four films. The separation itself behaves as designed (max GCR, auto
+  levels off, cyan collapsing in warm areas).
+- Change: new **Ink simulation (multiply)** checkbox in the preview panel.
+  Tagged CMYK artwork multiplies its solid ink layers over the paper white
+  in plot order (`glBlendFunc(GL_DST_COLOR, GL_ZERO)`), hidden inks multiply
+  by white (no-op), and the live layer checkboxes keep working. Other tools
+  are unchanged.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 386 tests (1 skipped, headless shader compile); new tests cover the
+  toggle plumbing and the multiply-neutral solid colour buffer;
+  `docs_index.py --write` / `--check` pass.
+- Risk: the simulation uses display ink colours until a measured calibration
+  profile is loaded; overdraw and paper texture are not simulated.
+- Evidence: `WSW-20261007-022`; `software/qt_svg_to_gcode.pyw`;
+  `software/README.md`.
+- Category: windows-software, cmyk, preview, opengl, ink-simulation.
+
 <a id="elog-20261007-cmyk-rectilinear-stitch-fix"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Rectilinear stitching fixed for multi-dash rows
 
