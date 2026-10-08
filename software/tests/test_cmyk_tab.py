@@ -246,6 +246,18 @@ class ScreeningTests(unittest.TestCase):
             max(len(line) for line in lines) * 5,
         )
 
+    def test_rectilinear_stretches_light_tone_spacing(self):
+        light = self.np.full((32, 32), 0.2, dtype="float32")
+        lines = converter.screen_channel(
+            light, self.geometry(), style="lines", spacing_mm=4.0
+        )
+        rect = converter.screen_channel(
+            light, self.geometry(), style="rectilinear", spacing_mm=4.0
+        )
+        # The rectilinear screen opens the pitch much further in light tones
+        # (6x vs 2x), so a 20% field keeps open paper instead of hatching it.
+        self.assertLess(len(rect), len(lines) * 0.7)
+
     def test_crosshatch_levels_and_overdraw(self):
         dark = self.np.full((32, 32), 0.8, dtype="float32")
         two = converter.screen_channel(

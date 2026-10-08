@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-08 | `WSW-20261008-002` | implemented | [Open rectilinear light tones instead of hatching them](2026-10-08-cmyk-rectilinear-light-stretch.md) | `cmyk`, `rectilinear`, `tone`, `screening` |
 | 2026-10-08 | `WSW-20261008-001` | implemented | [Soften the CMYK tone curve and rebalance the defaults](2026-10-08-cmyk-soft-contrast-defaults.md) | `cmyk`, `tone`, `contrast`, `defaults`, `rectilinear` |
 | 2026-10-07 | `WSW-20261007-025` | implemented | [Set the CMYK defaults to the owner's tuned rectilinear set](2026-10-07-cmyk-owner-tuned-rectilinear-defaults.md) | `cmyk`, `defaults`, `rectilinear` |
 | 2026-10-07 | `WSW-20261007-024` | implemented | [Tune the CMYK defaults for the rectilinear fill](2026-10-07-cmyk-rectilinear-defaults.md) | `cmyk`, `defaults`, `rectilinear` |

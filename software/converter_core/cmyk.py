@@ -241,6 +241,7 @@ def _line_runs(
     threshold,
     adaptive=False,
     connect=False,
+    light_stretch=2.0,
     min_length_mm=0.8,
     cancel_check=None,
 ):
@@ -251,6 +252,8 @@ def _line_runs(
     a continuous tonal range instead of discrete levels. With ``connect``
     consecutive overlapping runs are stitched into serpentine chains (never
     across blank paper), so one connected region costs one M3/M5 pen cycle.
+    ``light_stretch`` scales how far the pitch opens in the lightest tones;
+    the coverage range of one ink is roughly ``light_stretch + 1`` to 1.
     """
     min_x, max_x, min_y, max_y, ca, sa = _local_frame(bounds, angle_deg)
     spacing = max(0.2, float(spacing))
@@ -281,7 +284,9 @@ def _line_runs(
         if adaptive:
             tones = [value for _x, value in samples]
             mean_tone = sum(tones) / len(tones) if tones else 0.0
-            y += spacing * (1.0 + 2.0 * (1.0 - mean_tone))
+            y += spacing * (
+                1.0 + float(light_stretch) * (1.0 - mean_tone)
+            )
         else:
             y += spacing
     groups = (
@@ -578,6 +583,7 @@ def screen_channel(
             INK_FLOOR,
             adaptive=True,
             connect=True,
+            light_stretch=6.0,
             cancel_check=cancel_check,
         )
     elif style == "crosshatch":

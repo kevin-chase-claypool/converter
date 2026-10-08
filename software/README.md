@@ -125,7 +125,9 @@ Current tools:
   and never upsamples, so it accepts high-resolution sources (the control is
   effectively uncapped; memory grows with the source size you keep).
   Shipped defaults are the owner's tuned rectilinear set: auto levels on,
-  rectilinear fill at 0.10 mm pitch, saturation 105 %, contrast 110 %
+  rectilinear fill at 0.10 mm pitch (its light-tone stretch opens the pitch
+  up to 7x, so highlights and mid tones keep paper while dark tones fuse
+  solid), saturation 105 %, contrast 110 %
   (stronger settings use a soft S-curve and no longer clip), black (GCR)
   80 %, hatch levels 8, artwork scale 280 %, dot size 100 % with solid dots
   off (both only affect the dot screens), 40000 marks per ink, 10000 px

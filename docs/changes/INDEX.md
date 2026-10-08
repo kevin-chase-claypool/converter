@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-08 | `WSW-20261008-002` | windows-software | implemented | [Open rectilinear light tones instead of hatching them](windows-software/2026-10-08-cmyk-rectilinear-light-stretch.md) |
 | 2026-10-08 | `WSW-20261008-001` | windows-software | implemented | [Soften the CMYK tone curve and rebalance the defaults](windows-software/2026-10-08-cmyk-soft-contrast-defaults.md) |
 | 2026-10-07 | `WSW-20261007-025` | windows-software | implemented | [Set the CMYK defaults to the owner's tuned rectilinear set](windows-software/2026-10-07-cmyk-owner-tuned-rectilinear-defaults.md) |
 | 2026-10-07 | `WSW-20261007-024` | windows-software | implemented | [Tune the CMYK defaults for the rectilinear fill](windows-software/2026-10-07-cmyk-rectilinear-defaults.md) |

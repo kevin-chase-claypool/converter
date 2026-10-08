@@ -1,5 +1,29 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-rectilinear-light-stretch"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Rectilinear light tones open instead of hatching
+
+- Request: a night-photo simulation came back almost entirely black (image
+  only, after the softened defaults). Diagnosis: the rectilinear adaptive
+  pitch capped at 3x, so at 0.10 mm pitch x 280 % scale one ink could never
+  cover less than ~36 % of an inked area (0.3 mm pen over a 0.84 mm gap);
+  four films at >=36 % multiply to black in every mid and dark tone.
+- Change: `_line_runs` gains `light_stretch` (default 2.0 keeps the line
+  screen unchanged); the rectilinear fill passes 6.0, so its pitch factor is
+  1 + 6*(1 - tone) and per-ink coverage spans roughly 15 %-100 % at the
+  shipped density. Highlights keep paper, mid tones keep about half their
+  former ink, full tones still fuse solid.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 388 tests (1 skipped, headless shader compile); a new test holds a
+  20 % field below 70 % of the line screen's row count; chain, blank-band,
+  sheet, and bounds tests still pass; `docs_index.py --write` / `--check`
+  pass.
+- Risk: light areas are sparser strokes and chains fragment more there, so
+  M3 savings concentrate in mid and dark tones.
+- Note: the owner's uncommitted sharpen work in `cmyk.py` stays unstaged.
+- Evidence: `WSW-20261008-002`; `software/converter_core/cmyk.py`.
+- Category: windows-software, cmyk, rectilinear, tone, screening.
+
 <a id="elog-20261008-cmyk-soft-contrast-defaults"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Soft CMYK contrast curve and rebalanced defaults
 
