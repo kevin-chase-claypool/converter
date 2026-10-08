@@ -1,5 +1,27 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-owner-tuned-rectilinear-defaults"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK defaults adopt the owner's tuned rectilinear set
+
+- Request: "these were all great settings, set these as defaults for
+  rectilinear." The screenshots showed saturation 130 %, contrast 200 %,
+  GCR 99 %, resolution 10000 px, weights C/M/Y 120 % and K 150 %,
+  rectilinear style, hatch levels 8, pen 0.30 mm, overdraw 1, 40000
+  marks/ink, page 200 x 200 mm at margin 6 mm, artwork scale 280 %.
+- Change: those become the shipped defaults; the two screenshots disagreed
+  on dot pitch (0.20 vs 0.10 mm), and the later 0.10 mm state was used.
+  The every-tool artwork-scale convention test now expects 280 % for CMYK,
+  the one tool whose tuned default is not 1:1.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 386 tests (1 skipped, headless shader compile); the
+  shipped-defaults test asserts every value; `docs_index.py --write` /
+  `--check` pass.
+- Risk: 0.10 mm at 280 % scale with 150 % black weight is a very heavy ink
+  load - multi-hour per-pen plots; watch paper wetness.
+- Evidence: `WSW-20261007-025`; `software/README.md`;
+  `software/generator_tabs/cmyk_tab.py`.
+- Category: windows-software, cmyk, defaults, rectilinear.
+
 <a id="elog-20261007-cmyk-rectilinear-defaults"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK defaults tuned for the rectilinear fill
 

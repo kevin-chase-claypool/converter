@@ -157,15 +157,15 @@ class CmykTab(GeneratorTab):
             "range instead of screening into one flat mid-tone."
         )
         options.addRow("Auto levels", self.auto_levels)
-        self.saturation = double_spin(100, 0, 200, 5, 0, " %")
+        self.saturation = double_spin(130, 0, 200, 5, 0, " %")
         options.addRow("Saturation", self.saturation)
-        self.contrast = double_spin(100, 25, 200, 5, 0, " %")
+        self.contrast = double_spin(200, 25, 200, 5, 0, " %")
         options.addRow("Contrast", self.contrast)
         self.gamma = double_spin(1.0, 0.2, 3.0, 0.05, 2)
         options.addRow("Ink gamma", self.gamma)
-        self.gcr = double_spin(75, 0, 150, 5, 0, " %")
+        self.gcr = double_spin(99, 0, 150, 5, 0, " %")
         options.addRow("Black (GCR)", self.gcr)
-        self.resolution = int_spin(6000, 200, 100000, 50)
+        self.resolution = int_spin(10000, 200, 100000, 50)
         self.resolution.setToolTip(
             "Longest side of the sampling image in pixels. The source is "
             "only ever downsampled, never upsampled, so values at or above "
@@ -173,10 +173,10 @@ class CmykTab(GeneratorTab):
             "size you keep."
         )
         options.addRow("Resolution px", self.resolution)
-        self.weight_c = double_spin(100, 0, 150, 5, 0, " %")
-        self.weight_m = double_spin(100, 0, 150, 5, 0, " %")
-        self.weight_y = double_spin(100, 0, 150, 5, 0, " %")
-        self.weight_k = double_spin(100, 0, 150, 5, 0, " %")
+        self.weight_c = double_spin(120, 0, 150, 5, 0, " %")
+        self.weight_m = double_spin(120, 0, 150, 5, 0, " %")
+        self.weight_y = double_spin(120, 0, 150, 5, 0, " %")
+        self.weight_k = double_spin(150, 0, 150, 5, 0, " %")
         options.addRow("Cyan weight", self.weight_c)
         options.addRow("Magenta weight", self.weight_m)
         options.addRow("Yellow weight", self.weight_y)
@@ -201,7 +201,7 @@ class CmykTab(GeneratorTab):
         )
         self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)
-        self.pitch = double_spin(0.2, 0.1, 8.0, 0.1, 2, " mm")
+        self.pitch = double_spin(0.1, 0.1, 8.0, 0.1, 2, " mm")
         screen.addRow("Dot pitch", self.pitch)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
         screen.addRow("Dot size", self.dot_size)
@@ -212,7 +212,7 @@ class CmykTab(GeneratorTab):
             "filled dot at pen width instead of an open ring."
         )
         screen.addRow("", self.solid_dots)
-        self.levels = int_spin(5, 2, 9)
+        self.levels = int_spin(8, 2, 9)
         self.levels.setToolTip(
             "Crosshatch levels: 2 draws one line family, each extra level adds "
             "a family at the next tone threshold. The first four families "
@@ -307,7 +307,7 @@ class CmykTab(GeneratorTab):
         page.addRow("Height", self.page_h)
         self.margin = double_spin(6, 0, 50, 1, 0, " mm")
         page.addRow("Margin", self.margin)
-        self.scale_pct = double_spin(100, 10, 1000, 5, 0, " %")
+        self.scale_pct = double_spin(280, 10, 1000, 5, 0, " %")
         self.scale_pct.setToolTip(
             "Scales the screened result about the page centre. The effective "
             "line pitch scales with it, so 200 % doubles the spacing between "

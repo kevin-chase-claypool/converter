@@ -194,7 +194,10 @@ class ToolShellTests(unittest.TestCase):
                 # preserves the source SVG's own dimensions.
                 continue
             self.assertTrue(hasattr(page, "scale_pct"), title)
-            self.assertEqual(page.scale_pct.value(), 100, title)
+            # CMYK ships the owner's tuned rectilinear default (WSW-...-025);
+            # every other tool starts at 1:1.
+            expected = 280 if title == "CMYK" else 100
+            self.assertEqual(page.scale_pct.value(), expected, title)
             self.assertEqual(page.scale_pct.maximum(), 1000, title)
 
     def test_every_tool_builds_with_shipped_defaults(self):

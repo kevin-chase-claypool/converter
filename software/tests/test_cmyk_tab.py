@@ -460,13 +460,19 @@ class CmykTabTests(unittest.TestCase):
         self.assertTrue(tab.auto_levels.isChecked())
         self.assertFalse(tab.solid_dots.isChecked())
         self.assertEqual(tab.style.currentData(), "rectilinear")
-        self.assertEqual(tab.levels.value(), 5)
-        self.assertAlmostEqual(tab.pitch.value(), 0.2, places=3)
-        self.assertAlmostEqual(tab.gcr.value(), 75.0, places=3)
+        self.assertEqual(tab.levels.value(), 8)
+        self.assertAlmostEqual(tab.pitch.value(), 0.1, places=3)
+        self.assertAlmostEqual(tab.gcr.value(), 99.0, places=3)
+        self.assertAlmostEqual(tab.saturation.value(), 130.0, places=3)
+        self.assertAlmostEqual(tab.contrast.value(), 200.0, places=3)
         self.assertAlmostEqual(tab.dot_size.value(), 100.0, places=3)
         self.assertEqual(tab.max_marks.value(), 40000)
-        self.assertEqual(tab.resolution.value(), 6000)
-        self.assertEqual(tab.weight_k.value(), 100)
+        self.assertEqual(tab.resolution.value(), 10000)
+        self.assertAlmostEqual(tab.scale_pct.value(), 280.0, places=3)
+        self.assertAlmostEqual(tab.weight_c.value(), 120.0, places=3)
+        self.assertAlmostEqual(tab.weight_m.value(), 120.0, places=3)
+        self.assertAlmostEqual(tab.weight_y.value(), 120.0, places=3)
+        self.assertAlmostEqual(tab.weight_k.value(), 150.0, places=3)
 
     def test_resolution_is_not_capped_at_2000(self):
         tab = self.make_tab()
@@ -475,6 +481,7 @@ class CmykTabTests(unittest.TestCase):
 
     def test_artwork_scale_scales_the_screened_marks(self):
         tab = self.make_tab()
+        tab.scale_pct.setValue(100)
         tab._ensure_layers()
         full = [
             point
