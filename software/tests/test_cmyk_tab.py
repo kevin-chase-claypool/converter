@@ -161,6 +161,40 @@ class ScreeningTests(unittest.TestCase):
         self.assertGreater(float(k.min()), 0.05)
         self.assertLess(float(k.max()), 0.95)
 
+    def test_brightness_lifts_mid_tone_ink(self):
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-brightness-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = str(Path(folder) / "gray.png")
+        image = Image.new("RGB", (16, 16), (77, 77, 77))
+        image.save(path)
+        base, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=32,
+            auto_levels=False,
+            gcr=1.0,
+            weights=(1, 1, 1, 1),
+        )
+        lifted, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=32,
+            auto_levels=False,
+            gcr=1.0,
+            weights=(1, 1, 1, 1),
+            brightness=130.0,
+        )
+        # 130 % brightness keeps the black point but lays less ink.
+        self.assertLess(float(lifted["k"].mean()), float(base["k"].mean()) - 0.05)
+
     def test_mark_cap_grows_the_pitch(self):
         dark = self.np.full((32, 32), 0.9, dtype="float32")
         marks = converter.screen_channel(
@@ -506,7 +540,8 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(tab.pitch.value(), 0.1, places=3)
         self.assertAlmostEqual(tab.gcr.value(), 80.0, places=3)
         self.assertAlmostEqual(tab.saturation.value(), 105.0, places=3)
-        self.assertAlmostEqual(tab.contrast.value(), 110.0, places=3)
+        self.assertAlmostEqual(tab.contrast.value(), 200.0, places=3)
+        self.assertAlmostEqual(tab.brightness.value(), 130.0, places=3)
         self.assertAlmostEqual(tab.dot_size.value(), 100.0, places=3)
         self.assertEqual(tab.max_marks.value(), 40000)
         self.assertEqual(tab.resolution.value(), 10000)

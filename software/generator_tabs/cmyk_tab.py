@@ -159,8 +159,15 @@ class CmykTab(GeneratorTab):
         options.addRow("Auto levels", self.auto_levels)
         self.saturation = double_spin(105, 0, 200, 5, 0, " %")
         options.addRow("Saturation", self.saturation)
-        self.contrast = double_spin(110, 25, 200, 5, 0, " %")
+        self.contrast = double_spin(200, 25, 200, 5, 0, " %")
         options.addRow("Contrast", self.contrast)
+        self.brightness = double_spin(130, 50, 200, 5, 0, " %")
+        self.brightness.setToolTip(
+            "Shadow-weighted brightness lift (a gamma curve that keeps the "
+            "black and white points). Raise it when the plot reads too dark, "
+            "lower it toward 100 % for the untouched tone."
+        )
+        options.addRow("Brightness", self.brightness)
         self.gamma = double_spin(1.0, 0.2, 3.0, 0.05, 2)
         options.addRow("Ink gamma", self.gamma)
         self.gcr = double_spin(80, 0, 150, 5, 0, " %")
@@ -379,6 +386,7 @@ class CmykTab(GeneratorTab):
             self.auto_levels.isChecked(),
             self.saturation.value(),
             self.contrast.value(),
+            self.brightness.value(),
             self.gamma.value(),
             self.gcr.value(),
             self.resolution.value(),
@@ -439,6 +447,7 @@ class CmykTab(GeneratorTab):
             self.page_w.value(),
             self.page_h.value(),
             margin_mm=self.margin.value(),
+            brightness=self.brightness.value(),
             resolution_px=self.resolution.value(),
             saturation=self.saturation.value() / 100.0,
             contrast=self.contrast.value() / 100.0,

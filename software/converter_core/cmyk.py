@@ -116,6 +116,7 @@ def prepare_image_tones(
     width_mm,
     height_mm,
     margin_mm=6.0,
+    brightness=100.0,
     resolution_px=700,
     saturation=1.0,
     contrast=1.0,
@@ -182,6 +183,13 @@ def prepare_image_tones(
             amount = min(contrast - 1.0, 1.0)
             curved = 0.5 + 0.5 * np.tanh((rgb - 0.5) * 3.0) / math.tanh(1.5)
             rgb = np.clip(rgb + (curved - rgb) * amount, 0.0, 1.0)
+
+    brightness = float(brightness)
+    if abs(brightness - 100.0) > 1e-9:
+        # Shadow-weighted lift: a gamma curve that brightens mid tones and
+        # shadows while keeping the black and white points (no clipping).
+        exponent = 100.0 / max(1.0, brightness)
+        rgb = np.power(np.clip(rgb, 0.0, 1.0), exponent)
 
     tones = rgb_to_cmyk_tone(rgb, gcr=gcr, weights=weights, gamma=gamma)
     geometry = {

@@ -113,8 +113,8 @@ Current tools:
 - **CMYK** - RGB to CMYK separation with gray-component replacement, screened
   as one layer per ink pen. Controls: artwork (from the static Artwork row),
   auto levels (default on: stretch the image's 1st-99th luminance percentiles
-  so low-key photos use the full tonal range), saturation, contrast, ink
-  gamma, black (GCR), resolution, per-ink weights, screen style
+  so low-key photos use the full tonal range), saturation, contrast,
+  brightness, ink gamma, black (GCR), resolution, per-ink weights, screen style
   (halftone dots / stipple dots / line screen / crosshatch levels / wave
   screen / interference (gyroid) / single line (TSP) / topographic contours /
   rectilinear fill),
@@ -127,8 +127,8 @@ Current tools:
   Shipped defaults are the owner's tuned rectilinear set: auto levels on,
   rectilinear fill at 0.10 mm pitch (its light-tone stretch opens the pitch
   up to 7x, so highlights and mid tones keep paper while dark tones fuse
-  solid), saturation 105 %, contrast 110 %
-  (stronger settings use a soft S-curve and no longer clip), black (GCR)
+  solid), saturation 105 %, contrast 200 % (safe with the soft S-curve),
+  brightness 130 % (shadow-weighted lift), black (GCR)
   80 %, hatch levels 8, artwork scale 280 %, dot size 100 % with solid dots
   off (both only affect the dot screens), 40000 marks per ink, 10000 px
   resolution, C/M/Y/K weights 100/100/100/120 %. The preview checkboxes decide which inks the shared OpenGL preview
@@ -281,7 +281,7 @@ work with no input (optional mesh/image sources are noted below).
 | Convert | Fit bed (auto), Fill spacing 3 mm, linear or crosshatch, feed 700 / travel 3000 mm/min | Imported artwork; Save G-code once the preview looks right. |
 | Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
-| CMYK | Auto levels on, rectilinear fill at 0.10 mm pitch, saturation 105 %, contrast 110 %, black (GCR) 80 %, 40000 marks/ink, resolution 10000 px, weights 100/100/100/120 %, artwork scale 280 % | Needs an image; Preview plans each ink in the background and Save writes four files. Dense photo screens take hours to plot; raise pitch or lower Max marks/ink for a faster pass. |
+| CMYK | Auto levels on, rectilinear fill at 0.10 mm pitch, saturation 105 %, contrast 200 %, brightness 130 %, black (GCR) 80 %, 40000 marks/ink, resolution 10000 px, weights 100/100/100/120 %, artwork scale 280 % | Needs an image; Preview plans each ink in the background and Save writes four files. Dense photo screens take hours to plot; raise pitch or lower Max marks/ink for a faster pass. |
 | 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
 | Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |
 | Snowflake | 6 arms, depth 3, length 45 %, branch angle 35 deg, branch scale 55 %, jitter 8 deg / 15 % | Raise depth for finer detail; cap is 5. |

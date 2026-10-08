@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-brightness-control"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK brightness lift, contrast restored to 200%
+
+- Request: "yes the brighness is too low" and "maybe contrast too low as
+  well" after the light-stretch fix made the night photo read dark.
+- Change: new **Brightness** control in Image options (50-200 %, default
+  130 %) - a gamma lift `rgb ** (100 / brightness)` before separation that
+  brightens shadows and mid tones while keeping the black and white points.
+  Contrast default returns to 200 %, now safe under the soft S-curve.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 389 tests (1 skipped, headless shader compile); a new test shows
+  brightness 130 removes at least 0.05 mean K ink on a 30 % gray; the
+  shipped-defaults test pins brightness 130 and contrast 200;
+  `docs_index.py --write` / `--check` pass.
+- Risk: brightness stacks with auto levels and contrast; high values lift
+  shadows toward paper.
+- Note: the owner's uncommitted sharpen work in `cmyk.py` stays unstaged.
+- Evidence: `WSW-20261008-003`; `software/README.md`;
+  `software/generator_tabs/cmyk_tab.py`.
+- Category: windows-software, cmyk, tone, brightness, defaults.
+
 <a id="elog-20261008-cmyk-rectilinear-light-stretch"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Rectilinear light tones open instead of hatching
 
