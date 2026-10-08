@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-rectilinear-stitch-fix"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Rectilinear stitching fixed for multi-dash rows
+
+- Request: "something is wrong and making the serpentine nature of
+  rectilinear not occur. it seems to be the case with each of the colors."
+  Confirmed with a repro: the stitcher only compared the previous row's
+  last dash, so rows broken into several dashes (every photo row) almost
+  never joined - the rectilinear screen matched the plain line screen's
+  polyline count.
+- Change: `_stitch_runs` now matches each dash to the best-overlapping open
+  chain of the previous row (one run per chain per row; uncontinued chains
+  close at the end of the row), with the connector ink check unchanged.
+- Numbers: `samples/png/Untitled.png` 396 -> 203 polylines and
+  `samples/svg/fill2.jpg` 429 -> 214, longest chains ~1800 points; the new
+  wave-tone test chains 24 line runs into one serpentine.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 384 tests (1 skipped, headless shader compile); `docs_index.py
+  --write` / `--check` pass.
+- Risk: chains still break at near-white gaps by design.
+- Note: the owner's uncommitted sharpen work in `cmyk.py` remains unstaged.
+- Evidence: `WSW-20261007-021`; `software/converter_core/cmyk.py`.
+- Category: windows-software, cmyk, rectilinear, bugfix.
+
 <a id="elog-20261007-cmyk-rectilinear-fill"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Rectilinear fill joins rows to cut M3/M5 cycles
 

@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-021` | windows-software | implemented | [Fix rectilinear stitching on multi-dash rows](windows-software/2026-10-07-cmyk-rectilinear-stitch-fix.md) |
 | 2026-10-07 | `WSW-20261007-020` | windows-software | implemented | [Add a rectilinear fill screen that joins rows](windows-software/2026-10-07-cmyk-rectilinear-fill.md) |
 | 2026-10-07 | `WSW-20261007-019` | windows-software | implemented | [Show per-ink M3 counts in the preview data area](windows-software/2026-10-07-cmyk-preview-m3-counts.md) |
 | 2026-10-07 | `WSW-20261007-018` | windows-software | implemented | [Filter CMYK preview layers live instead of re-rendering](windows-software/2026-10-07-cmyk-live-preview-layers.md) |

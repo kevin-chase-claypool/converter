@@ -189,6 +189,33 @@ class ScreeningTests(unittest.TestCase):
         )
         self.assertGreaterEqual(len(split), 2)
 
+    def test_rectilinear_chains_photo_like_tone(self):
+        yy, xx = self.np.mgrid[0:64, 0:64]
+        tone = (
+            0.15
+            + 0.6
+            * (self.np.sin(xx / 7.0) * self.np.cos(yy / 9.0) * 0.5 + 0.5)
+        ).astype("float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": 64,
+            "pixels_h": 64,
+        }
+        lines = converter.screen_channel(
+            tone, geometry, style="lines", spacing_mm=2.0
+        )
+        chains = converter.screen_channel(
+            tone, geometry, style="rectilinear", spacing_mm=2.0
+        )
+        self.assertLess(len(chains), len(lines) * 0.5)
+        self.assertGreater(
+            max(len(chain) for chain in chains),
+            max(len(line) for line in lines) * 5,
+        )
+
     def test_crosshatch_levels_and_overdraw(self):
         dark = self.np.full((32, 32), 0.8, dtype="float32")
         two = converter.screen_channel(

@@ -291,47 +291,64 @@ def _stitch_runs(rows, darkness, ca, sa, threshold):
     """Join overlapping runs of consecutive rows into serpentine chains.
 
     A connector is only drawn when it stays over ink (its midpoint samples
-    at or above ``threshold``), so a chain never crosses blank paper.
+    at or above ``threshold``), so a chain never crosses blank paper. Each
+    run continues at most one chain and each chain grows by at most one run
+    per row, so rows that break into several dashes still chain column-wise
+    instead of only matching the row's last dash.
     """
-    chains = []
-    chain = None
-    last_span = None
+    finished = []
+    open_chains = []
     for row_runs in rows:
+        continued = [False] * len(open_chains)
+        new_open = []
         for run in row_runs:
             span = (
                 min(run[0][0], run[-1][0]),
                 max(run[0][0], run[-1][0]),
             )
-            joined = False
-            if chain is not None and last_span is not None:
+            candidates = []
+            for index, chain in enumerate(open_chains):
+                if continued[index]:
+                    continue
+                last_span = chain["span"]
                 overlap = min(last_span[1], span[1]) - max(
                     last_span[0], span[0]
                 )
                 if overlap > 0.0:
-                    point = chain[-1]
-                    oriented = (
-                        run
-                        if abs(point[0] - run[0][0])
-                        <= abs(point[0] - run[-1][0])
-                        else list(reversed(run))
-                    )
-                    next_point = oriented[0]
-                    mx = (point[0] + next_point[0]) / 2.0
-                    my = (point[1] + next_point[1]) / 2.0
-                    wx = mx * ca - my * sa
-                    wy = mx * sa + my * ca
-                    if darkness(wx, wy) >= threshold:
-                        chain.extend(oriented)
-                        last_span = span
-                        joined = True
+                    candidates.append((overlap, index))
+            candidates.sort(reverse=True)
+            joined = False
+            for _overlap, index in candidates:
+                chain = open_chains[index]
+                point = chain["points"][-1]
+                oriented = (
+                    run
+                    if abs(point[0] - run[0][0])
+                    <= abs(point[0] - run[-1][0])
+                    else list(reversed(run))
+                )
+                next_point = oriented[0]
+                mx = (point[0] + next_point[0]) / 2.0
+                my = (point[1] + next_point[1]) / 2.0
+                wx = mx * ca - my * sa
+                wy = mx * sa + my * ca
+                if darkness(wx, wy) < threshold:
+                    continue
+                chain["points"].extend(oriented)
+                chain["span"] = span
+                continued[index] = True
+                new_open.append(chain)
+                joined = True
+                break
             if not joined:
-                if chain is not None:
-                    chains.append(chain)
-                chain = list(run)
-                last_span = span
-    if chain is not None:
-        chains.append(chain)
-    return chains
+                new_open.append({"points": list(run), "span": span})
+        for index, chain in enumerate(open_chains):
+            if not continued[index]:
+                finished.append(chain["points"])
+        open_chains = new_open
+    for chain in open_chains:
+        finished.append(chain["points"])
+    return finished
 
 
 def _wave_rows(
