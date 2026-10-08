@@ -519,7 +519,7 @@ def main(argv=None):
     )
     parser.add_argument(
         "--screen",
-        choices=("lines", "crosshatch", "halftone"),
+        choices=("lines", "rectilinear", "crosshatch", "halftone"),
         default="halftone",
         help="sheet screen for --layout (default halftone)",
     )

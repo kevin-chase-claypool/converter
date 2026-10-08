@@ -232,6 +232,7 @@ def _line_runs(
     spacing,
     threshold,
     adaptive=False,
+    connect=False,
     min_length_mm=0.8,
     cancel_check=None,
 ):
@@ -239,12 +240,14 @@ def _line_runs(
 
     With ``adaptive`` the next line's pitch grows in light areas and stays at
     the requested spacing in dark ones, so one tone-driven line screen covers
-    a continuous tonal range instead of discrete levels.
+    a continuous tonal range instead of discrete levels. With ``connect``
+    consecutive overlapping runs are stitched into serpentine chains (never
+    across blank paper), so one connected region costs one M3/M5 pen cycle.
     """
     min_x, max_x, min_y, max_y, ca, sa = _local_frame(bounds, angle_deg)
     spacing = max(0.2, float(spacing))
     sample_step = max(0.3, min(spacing * 0.5, 1.0))
-    runs = []
+    rows = []
     y = min_y + spacing * 0.5
     while y <= max_y:
         check_cancelled(cancel_check)
@@ -256,29 +259,79 @@ def _line_runs(
             samples.append((x, darkness(wx, wy)))
             x += sample_step
         current = []
+        row_runs = []
         for x_value, value in samples:
             if value >= threshold:
                 current.append((x_value, y))
             elif current:
                 if (len(current) - 1) * sample_step >= min_length_mm:
-                    runs.append(
-                        [
-                            (px * ca - py * sa, px * sa + py * ca)
-                            for px, py in current
-                        ]
-                    )
+                    row_runs.append(list(current))
                 current = []
         if current and (len(current) - 1) * sample_step >= min_length_mm:
-            runs.append(
-                [(px * ca - py * sa, px * sa + py * ca) for px, py in current]
-            )
+            row_runs.append(list(current))
+        rows.append(row_runs)
         if adaptive:
             tones = [value for _x, value in samples]
             mean_tone = sum(tones) / len(tones) if tones else 0.0
             y += spacing * (1.0 + 2.0 * (1.0 - mean_tone))
         else:
             y += spacing
-    return runs
+    groups = (
+        _stitch_runs(rows, darkness, ca, sa, threshold)
+        if connect
+        else [run for row_runs in rows for run in row_runs]
+    )
+    return [
+        [(px * ca - py * sa, px * sa + py * ca) for px, py in group]
+        for group in groups
+    ]
+
+
+def _stitch_runs(rows, darkness, ca, sa, threshold):
+    """Join overlapping runs of consecutive rows into serpentine chains.
+
+    A connector is only drawn when it stays over ink (its midpoint samples
+    at or above ``threshold``), so a chain never crosses blank paper.
+    """
+    chains = []
+    chain = None
+    last_span = None
+    for row_runs in rows:
+        for run in row_runs:
+            span = (
+                min(run[0][0], run[-1][0]),
+                max(run[0][0], run[-1][0]),
+            )
+            joined = False
+            if chain is not None and last_span is not None:
+                overlap = min(last_span[1], span[1]) - max(
+                    last_span[0], span[0]
+                )
+                if overlap > 0.0:
+                    point = chain[-1]
+                    oriented = (
+                        run
+                        if abs(point[0] - run[0][0])
+                        <= abs(point[0] - run[-1][0])
+                        else list(reversed(run))
+                    )
+                    next_point = oriented[0]
+                    mx = (point[0] + next_point[0]) / 2.0
+                    my = (point[1] + next_point[1]) / 2.0
+                    wx = mx * ca - my * sa
+                    wy = mx * sa + my * ca
+                    if darkness(wx, wy) >= threshold:
+                        chain.extend(oriented)
+                        last_span = span
+                        joined = True
+            if not joined:
+                if chain is not None:
+                    chains.append(chain)
+                chain = list(run)
+                last_span = span
+    if chain is not None:
+        chains.append(chain)
+    return chains
 
 
 def _wave_rows(
@@ -444,11 +497,13 @@ def screen_channel(
     """Screen one ink channel into mark polylines in page millimetres.
 
     Styles: ``halftone`` (variable-radius dots), ``stipple`` (blue-noise
-    dots), ``lines`` (parallel lines whose pitch follows tone), ``crosshatch``
-    (line families stacked by tone level), ``waves`` (sine rows whose
-    amplitude follows tone), ``gyroid`` (interference-field contours that
-    flatten into blank paper), ``tsp`` (one greedy single line through tone
-    stipple points) and ``contours`` (topographic contour lines of the tone).
+    dots), ``lines`` (parallel lines whose pitch follows tone),
+    ``rectilinear`` (serpentine rows joined over ink, so a connected region
+    costs one M3/M5 cycle), ``crosshatch`` (line families stacked by tone
+    level), ``waves`` (sine rows whose amplitude follows tone), ``gyroid``
+    (interference-field contours that flatten into blank paper), ``tsp``
+    (one greedy single line through tone stipple points) and ``contours``
+    (topographic contour lines of the tone).
     ``overdraw`` redraws every mark up to three times with a sub-pen offset so
     a ballpoint reads darker without changing the geometry.
     """
@@ -487,6 +542,17 @@ def screen_channel(
             spacing,
             INK_FLOOR,
             adaptive=True,
+            cancel_check=cancel_check,
+        )
+    elif style == "rectilinear":
+        marks = _line_runs(
+            darkness,
+            bounds,
+            angle_deg,
+            spacing,
+            INK_FLOOR,
+            adaptive=True,
+            connect=True,
             cancel_check=cancel_check,
         )
     elif style == "crosshatch":

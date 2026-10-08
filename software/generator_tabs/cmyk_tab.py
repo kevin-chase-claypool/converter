@@ -187,19 +187,21 @@ class CmykTab(GeneratorTab):
         self.style.addItem("Halftone dots", "halftone")
         self.style.addItem("Stipple dots", "stipple")
         self.style.addItem("Line screen (tone pitch)", "lines")
+        self.style.addItem("Rectilinear fill (joined rows)", "rectilinear")
         self.style.addItem("Crosshatch levels", "crosshatch")
         self.style.addItem("Wave screen", "waves")
         self.style.addItem("Interference (gyroid)", "gyroid")
         self.style.addItem("Single line (TSP)", "tsp")
         self.style.addItem("Topographic contours", "contours")
         self.style.setToolTip(
-            "Dot styles use the dot pitch and dot size; line, wave, gyroid, "
-            "TSP and contour styles use the same pitch as their local mark "
-            "spacing."
+            "Dot styles use the dot pitch and dot size; line, rectilinear, "
+            "wave, gyroid, TSP and contour styles use the same pitch as "
+            "their local mark spacing. Rectilinear joins consecutive rows "
+            "over ink so one M3/M5 cycle covers a whole connected region."
         )
         self.style.setCurrentIndex(self.style.findData("crosshatch"))
         screen.addRow("Style", self.style)
-        self.pitch = double_spin(1.2, 0.6, 8.0, 0.1, 2, " mm")
+        self.pitch = double_spin(1.2, 0.1, 8.0, 0.1, 2, " mm")
         screen.addRow("Dot pitch", self.pitch)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
         screen.addRow("Dot size", self.dot_size)
@@ -275,6 +277,9 @@ class CmykTab(GeneratorTab):
         self.calibration_screen.addItem("Match the Screen style", "match")
         self.calibration_screen.addItem(
             "Line screen (straight strokes)", "lines"
+        )
+        self.calibration_screen.addItem(
+            "Rectilinear fill (joined rows)", "rectilinear"
         )
         self.calibration_screen.addItem("Crosshatch levels", "crosshatch")
         self.calibration_screen.addItem("Halftone dots", "halftone")
@@ -477,7 +482,11 @@ class CmykTab(GeneratorTab):
         screen = self.calibration_screen.currentData()
         if screen == "match":
             style = self.style.currentData()
-            screen = style if style in ("lines", "crosshatch") else "halftone"
+            screen = (
+                style
+                if style in ("lines", "rectilinear", "crosshatch")
+                else "halftone"
+            )
         layers, manifest = build_sheet(
             width,
             height,

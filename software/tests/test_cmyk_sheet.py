@@ -100,11 +100,11 @@ class SheetBuilderTests(unittest.TestCase):
         ]
         self.assertEqual(
             [patch["label"] for patch in steps],
-            ["0.6", "0.8", "1", "1.4", "1.8", "2.4", "3"],
+            ["0.25", "0.4", "0.6", "0.9", "1.2", "1.8", "2.4"],
         )
         self.assertEqual(
             [patch["pitch_mm"] for patch in steps],
-            [0.6, 0.8, 1.0, 1.4, 1.8, 2.4, 3.0],
+            [0.25, 0.40, 0.60, 0.90, 1.20, 1.80, 2.40],
         )
         for channel in converter.CHANNELS:
             self.assertTrue(layers[channel])
@@ -132,7 +132,7 @@ class SheetBuilderTests(unittest.TestCase):
         )
 
     def test_mix_cells_match_the_dense_spot_spacing(self):
-        for screen in ("lines", "crosshatch", "halftone"):
+        for screen in ("lines", "rectilinear", "crosshatch", "halftone"):
             _, manifest = build(screen=screen)
             spots = {
                 patch["channels"][0]: patch
@@ -153,6 +153,25 @@ class SheetBuilderTests(unittest.TestCase):
                     self.assertEqual(
                         patch["dot_scale"], spot["dot_scale"], screen
                     )
+
+    def test_rectilinear_sheet_uses_the_pitch_ladder(self):
+        _, manifest = build(screen="rectilinear", pitch_mm=1.2)
+        self.assertEqual(manifest["sheet_settings"]["style"], "rectilinear")
+        steps = [
+            patch
+            for patch in manifest["patches"]
+            if patch["block"] == "steps" and patch["channels"] == ["c"]
+        ]
+        self.assertEqual(
+            [patch["pitch_mm"] for patch in steps],
+            [0.25, 0.40, 0.60, 0.90, 1.20, 1.80, 2.40],
+        )
+        rect_layers, _ = build(screen="rectilinear")
+        line_layers, _ = build(screen="lines")
+        self.assertLess(
+            sum(len(lines) for lines in rect_layers.values()),
+            sum(len(lines) for lines in line_layers.values()),
+        )
 
     def test_unknown_screen_is_rejected(self):
         with self.assertRaises(ValueError):

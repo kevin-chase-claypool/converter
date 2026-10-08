@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-rectilinear-fill"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Rectilinear fill joins rows to cut M3/M5 cycles
+
+- Request: "if it would help to reduce the number of m3s and m5s maybe we
+  should have a rectilinear fill", then "i've tried to make it more dense,
+  but this is as dense as the rectilinear lines will go."
+- Change: new CMYK style **Rectilinear fill (joined rows)** - tone-driven
+  rows stitched into serpentine chains joined over ink (nearest end first,
+  so the stroke alternates direction), one M3/M5 per connected region. The
+  Dot pitch floor drops 0.6 -> 0.1 mm (coverage is roughly pen width /
+  pitch: 0.3 mm pen = ~25 % ink at 1.2 mm, ~50 % at 0.6 mm, solid below
+  ~0.3 mm), and the sheet's pitch ladder sweeps 0.25-2.4 mm (sheet version
+  7) with rectilinear in the sheet screens and the analyzer's `--screen`.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 383 tests (1 skipped, headless shader compile); new tests cover the
+  single-chain join, the blank-band split, all-style layer builds, the sheet
+  ladder, and the pitch floor; `docs_index.py --write` / `--check` pass.
+- Risk: the pen never lifts at the 180-degree row turns, so dwell or lag
+  there can speck; sub-0.3 mm pitches load a lot of ink.
+- Note: the owner's uncommitted sharpen work in `cmyk.py` stays unstaged;
+  only the rectilinear hunks are staged.
+- Evidence: `WSW-20261007-020`; `software/converter_core/cmyk.py`;
+  `software/generator_tabs/cmyk_sheet.py`.
+- Category: windows-software, cmyk, screening, rectilinear, pen-cycles.
+
 <a id="elog-20261007-cmyk-preview-m3-counts"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - Preview data shows per-ink M3 counts
 

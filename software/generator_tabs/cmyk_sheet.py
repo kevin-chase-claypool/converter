@@ -29,7 +29,7 @@ from ._hershey import text_polylines
 
 
 SHEET_KIND = "cmyk-calibration-sheet"
-SHEET_VERSION = 6
+SHEET_VERSION = 7
 
 # Layout constants, millimetres.
 FIDUCIAL_SIZE_MM = 6.0
@@ -49,7 +49,7 @@ HEADER_SIZE_MM = 3.2
 
 COVERAGE_TONES = tuple(step / 10.0 for step in range(1, 11))
 DOT_SCALES = (0.20, 0.40, 0.60, 0.80, 1.00, 1.20, 1.40)
-LINE_PITCHES = (0.6, 0.8, 1.0, 1.4, 1.8, 2.4, 3.0)
+LINE_PITCHES = (0.25, 0.40, 0.60, 0.90, 1.20, 1.80, 2.40)
 HATCH_LEVELS = (2, 3, 4, 5, 6, 7, 8)
 OVERDRAW_STEPS = (1, 2, 3)
 GCR_STEPS = (0.0, 0.25, 0.50, 0.75, 1.00)
@@ -63,7 +63,7 @@ MIX_SETS = (
     ("c", "m", "y", "k"),
 )
 SPOT_SCALE = 1.40
-SHEET_SCREENS = ("lines", "crosshatch", "halftone")
+SHEET_SCREENS = ("lines", "rectilinear", "crosshatch", "halftone")
 
 
 def _fmt(value):
@@ -313,6 +313,10 @@ def build_sheet(
         screen_line = (
             f"screen lines | pitch {_fmt(builder.pitch_mm)} mm"
         )
+    elif screen == "rectilinear":
+        screen_line = (
+            f"screen rectilinear | pitch {_fmt(builder.pitch_mm)} mm"
+        )
     elif screen == "crosshatch":
         screen_line = (
             f"screen crosshatch | pitch {_fmt(builder.pitch_mm)} mm | "
@@ -416,7 +420,7 @@ def build_sheet(
         row(cells, ladder_w)
 
     for channel in converter.CHANNELS:
-        if screen == "lines":
+        if screen in ("lines", "rectilinear"):
             cells = [
                 {
                     "label": _fmt(value),
@@ -510,7 +514,7 @@ def build_sheet(
             "tones": {channel: 1.0 for channel in channels},
             "dot_scale": SPOT_SCALE if screen == "halftone" else 1.0,
         }
-        if screen in ("lines", "crosshatch"):
+        if screen in ("lines", "rectilinear", "crosshatch"):
             cell["pitch_mm"] = dense_pitch
         if screen == "crosshatch":
             cell["levels"] = 4

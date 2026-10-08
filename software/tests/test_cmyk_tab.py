@@ -171,6 +171,24 @@ class ScreeningTests(unittest.TestCase):
             [],
         )
 
+    def test_rectilinear_joins_rows_and_breaks_over_blank(self):
+        dark = self.np.full((32, 32), 0.8, dtype="float32")
+        lines = converter.screen_channel(
+            dark, self.geometry(), style="lines", spacing_mm=4.0
+        )
+        joined = converter.screen_channel(
+            dark, self.geometry(), style="rectilinear", spacing_mm=4.0
+        )
+        self.assertEqual(len(joined), 1)
+        self.assertGreater(len(joined[0]), len(lines[0]))
+        self.assertLess(len(joined), len(lines))
+        band = self.np.full((32, 32), 0.8, dtype="float32")
+        band[12:20, :] = 0.0
+        split = converter.screen_channel(
+            band, self.geometry(), style="rectilinear", spacing_mm=4.0
+        )
+        self.assertGreaterEqual(len(split), 2)
+
     def test_crosshatch_levels_and_overdraw(self):
         dark = self.np.full((32, 32), 0.8, dtype="float32")
         two = converter.screen_channel(
@@ -333,7 +351,7 @@ class CmykTabTests(unittest.TestCase):
         tab = self.make_tab()
         tab.levels.setValue(3)
         tab.overdraw.setValue(2)
-        for style in ("halftone", "stipple", "lines", "crosshatch", "waves", "gyroid", "tsp", "contours"):
+        for style in ("halftone", "stipple", "lines", "rectilinear", "crosshatch", "waves", "gyroid", "tsp", "contours"):
             tab.style.setCurrentIndex(tab.style.findData(style))
             root = ET.parse(tab.build_svg()).getroot()
             self.assertEqual(svg_groups(root), list(converter.CHANNELS), style)
@@ -473,6 +491,11 @@ class CmykTabTests(unittest.TestCase):
         tab.levels.setValue(9)
         self.assertEqual(tab.levels.value(), 9)
 
+    def test_pitch_allows_solid_fill_spacing(self):
+        tab = self.make_tab()
+        tab.pitch.setValue(0.2)
+        self.assertEqual(tab.pitch.value(), 0.2)
+
     def test_max_marks_is_not_capped_at_40000(self):
         tab = self.make_tab()
         tab.max_marks.setValue(80000)
@@ -563,6 +586,18 @@ class CmykTabTests(unittest.TestCase):
         tab.build_svg()
         self.assertEqual(
             tab._layers_manifest["sheet_settings"]["style"], "halftone"
+        )
+
+    def test_calibration_sheet_follows_the_rectilinear_fill(self):
+        tab = self.make_tab()
+        tab.page_w.setValue(200)
+        tab.page_h.setValue(200)
+        tab.pitch.setValue(2.0)
+        tab.style.setCurrentIndex(tab.style.findData("rectilinear"))
+        tab.calibration_mode.setChecked(True)
+        tab.build_svg()
+        self.assertEqual(
+            tab._layers_manifest["sheet_settings"]["style"], "rectilinear"
         )
 
 

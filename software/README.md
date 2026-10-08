@@ -109,7 +109,8 @@ Current tools:
   so low-key photos use the full tonal range), saturation, contrast, ink
   gamma, black (GCR), resolution, per-ink weights, screen style
   (halftone dots / stipple dots / line screen / crosshatch levels / wave
-  screen / interference (gyroid) / single line (TSP) / topographic contours),
+  screen / interference (gyroid) / single line (TSP) / topographic contours /
+  rectilinear fill),
   dot pitch, dot size, solid dots (spiral-filled so each mark reads as a dot,
   not a ring), hatch levels, overdraw, pen width, max marks per ink, seed,
   preview and write checkboxes per layer, page size, margin, artwork scale.

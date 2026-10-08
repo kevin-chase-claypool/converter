@@ -22,8 +22,9 @@ ramp; mixes, spots, paper.
 The printed header is the minimum needed to match a scan to this layout:
 
 1. `CMYK CALIBRATION - page <W>x<H> mm | margin <M> mm`
-2. `screen lines | pitch <P> mm`, `screen dots | pitch <P> mm | dot <D>%`,
-   or `screen crosshatch | pitch <P> mm | levels <L>`
+2. `screen lines | pitch <P> mm`, `screen rectilinear | pitch <P> mm`,
+   `screen dots | pitch <P> mm | dot <D>%`, or
+   `screen crosshatch | pitch <P> mm | levels <L>`
 
 ## Analyze
 
