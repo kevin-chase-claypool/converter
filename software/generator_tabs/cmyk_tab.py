@@ -412,7 +412,13 @@ class CmykTab(GeneratorTab):
             self.report_error("Import an image with the Artwork row above first.")
             return
         try:
-            values = converter.auto_photo_settings(self._artwork)
+            values = converter.auto_photo_settings(
+                self._artwork,
+                pen_width_mm=self.pen_width.value(),
+                effective_pitch_mm=(
+                    self.pitch.value() * self.scale_pct.value() / 100.0
+                ),
+            )
         except Exception as exc:  # noqa: BLE001 - user-facing setup error
             self.report_error(f"Auto settings failed: {exc}")
             return

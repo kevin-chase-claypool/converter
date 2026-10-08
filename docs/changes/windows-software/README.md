@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-08 | `WSW-20261008-016` | implemented | [Auto renders the screen before it picks the tone](2026-10-08-cmyk-auto-models-the-screen.md) | `cmyk`, `automation`, `screening`, `density` |
 | 2026-10-08 | `WSW-20261008-015` | implemented | [The ink simulation stops multiplying ink it cannot draw](2026-10-08-cmyk-preview-subpixel-ink.md) | `cmyk`, `preview`, `ink-simulation`, `fidelity` |
 | 2026-10-08 | `WSW-20261008-014` | implemented | [Auto matches the printed tone to the photo](2026-10-08-cmyk-auto-matches-tone.md) | `cmyk`, `automation`, `tone`, `portraits` |
 | 2026-10-08 | `WSW-20261008-013` | implemented | [Ink profile button no longer kills the app](2026-10-08-cmyk-ink-profile-button-crash.md) | `cmyk`, `preview`, `crash`, `ink-profile` |

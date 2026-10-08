@@ -125,7 +125,11 @@ Current tools:
   tone-weighted gradient with a clipping penalty, so structure stays
   legible instead of crushed or blown, and the search also holds the print's
   mean tone on the photo's, clamped to the 0.30-0.75 window a plot can
-  actually hold, so portraits are not lifted a stop too light; saturation
+  actually hold, so portraits are not lifted a stop too light; it also
+  renders the rectilinear screen (Pen width and Dot pitch x Artwork scale)
+  before choosing, so a row pitch at the pen width - which inks only about a
+  fifth of a light tone - gets a darker chain instead of a washed-out plot,
+  while a screen finer than the pen gets a lighter one; saturation
   and GCR come from the
   image's colourful quartile, so a vivid subject over neutral ground keeps
   its chroma; the pitch is set to one pen width at the current artwork scale,

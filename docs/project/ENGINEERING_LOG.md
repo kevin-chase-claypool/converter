@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-auto-models-the-screen"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Auto renders the screen before it picks the tone
+
+- Request: "do it" - wire the actual screen (pen width x effective pitch)
+  into Auto, after the corrected preview showed the print arriving pale
+  (owner: "i ran auto again").
+- Cause: Auto aimed the *tone* at the photo, but the rectilinear screen inks
+  only ~1/5 of a light tone at one-pen-width rows, so the plot was washed
+  out; and the grid could not go below brightness 100 / gamma 1.0, i.e. it
+  could not ask for more ink at all.
+- Change: `auto_photo_settings(..., pen_width_mm, effective_pitch_mm)` from
+  the tab renders each candidate through the screen (row pitch, light-tone
+  stretch, ink floor, display inks) and scores the rendered luminance; the
+  screen-aware grid adds brightness 60-160 and gamma 0.6-1.6.
+- Result: portrait C 270 / B 100 / gamma 0.60 (was C 120 / B 100 / 1.0);
+  wisteria C 240 / B 60 / gamma 1.0; a screen finer than the pen now gets a
+  lighter chain automatically.
+- Verification: 402 tests pass (1 skipped); new sparse-vs-fine screen test.
+- Risk: much more ink on sparse screens - longer runs, more pooling; judge
+  the first plot on paper.
+- Evidence: `WSW-20261008-016`; `software/README.md`.
+- Category: windows-software, cmyk, automation, screening, density.
+
 <a id="elog-20261008-cmyk-preview-subpixel-ink"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - The ink simulation stopped multiplying ink it cannot draw
 

@@ -268,6 +268,33 @@ class ScreeningTests(unittest.TestCase):
             abs(float(printed.mean()) - float(stretched.mean())), 0.03
         )
 
+    def test_auto_photo_settings_compensate_a_sparse_screen(self):
+        import numpy as np
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-auto-screen-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        rng = np.random.default_rng(11)
+        values = (150 + rng.random((64, 64)) * 70).astype("uint8")
+        path = str(Path(folder) / "portrait.png")
+        Image.fromarray(np.stack([values] * 3, axis=2)).save(path)
+        plain = converter.auto_photo_settings(path)
+        sparse = converter.auto_photo_settings(
+            path, pen_width_mm=0.30, effective_pitch_mm=0.31
+        )
+        fine = converter.auto_photo_settings(
+            path, pen_width_mm=0.30, effective_pitch_mm=0.10
+        )
+        # Rows one pen width apart only ink about a fifth of a light tone, so
+        # the search has to ask for a darker chain than the tone model alone.
+        self.assertLess(sparse["gamma"], plain["gamma"])
+        self.assertLessEqual(sparse["brightness"], plain["brightness"])
+        # A screen finer than the pen over-inks the same tone and needs less.
+        self.assertGreater(fine["gamma"], sparse["gamma"])
+        self.assertGreaterEqual(fine["brightness"], sparse["brightness"])
+
     def test_auto_photo_settings_add_contrast_when_it_helps_detail(self):
         import numpy as np
         from PIL import Image, ImageFilter
@@ -778,7 +805,13 @@ class CmykTabTests(unittest.TestCase):
         tab.gcr.setValue(100)
         tab.scale_pct.setValue(150)
         tab.auto_button.click()
-        values = converter.auto_photo_settings(self.image_path)
+        values = converter.auto_photo_settings(
+            self.image_path,
+            pen_width_mm=tab.pen_width.value(),
+            effective_pitch_mm=(
+                tab.pitch.value() * tab.scale_pct.value() / 100.0
+            ),
+        )
         self.assertEqual(tab.saturation.value(), values["saturation"])
         self.assertEqual(tab.contrast.value(), values["contrast"])
         self.assertEqual(tab.brightness.value(), values["brightness"])

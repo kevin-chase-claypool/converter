@@ -150,7 +150,12 @@ def _detail_score(tone):
     return detail - 0.4 * clipped
 
 
-def auto_photo_settings(image_path, resolution_px=256):
+def auto_photo_settings(
+    image_path,
+    resolution_px=256,
+    pen_width_mm=None,
+    effective_pitch_mm=None,
+):
     """Suggest Image-options values that keep a photo's detail legible.
 
     The tone controls are chosen by searching the exact control chain the
@@ -161,7 +166,13 @@ def auto_photo_settings(image_path, resolution_px=256):
     photo's. Very dark or very bright photos are aimed at the edge of the
     printable window instead, because outside it a plot stops showing
     structure at all. Saturation and GCR come from the mean chroma, and
-    auto levels stays on. Returns ``auto_levels``, ``brightness``,
+    auto levels stays on. When ``pen_width_mm`` and ``effective_pitch_mm``
+    are given (the tab passes its Pen width and Dot pitch x Artwork scale),
+    the search renders the rectilinear screen as well: the tone the chain
+    asks for is turned into the ink the rows actually lay down
+    (``pen / row pitch``, opened up by the screen's light-tone stretch and
+    cut off below the ink floor), so a sparse screen gets a darker chain
+    instead of a washed-out plot. Returns ``auto_levels``, ``brightness``,
     ``contrast``, ``saturation``, ``gcr`` and ``gamma``.
     """
     from PIL import Image
@@ -185,6 +196,22 @@ def auto_photo_settings(image_path, resolution_px=256):
     chroma = rgb.max(axis=2) - rgb.min(axis=2)
     chroma_p75 = float(np.percentile(chroma, 75.0))
 
+    def clamp(value, low, high):
+        return max(low, min(high, value))
+
+    # Vivid photos keep more chroma in C/M/Y and less in K; muted ones lean
+    # on a little extra saturation and heavier black instead.
+    saturation = (
+        clamp(110.0 + (0.35 - chroma_p75) * 80.0, 110.0, 145.0) / 100.0
+    )
+    gcr = clamp(90.0 - max(0.0, chroma_p75 - 0.20) * 120.0, 60.0, 95.0) / 100.0
+    screen = None
+    if pen_width_mm is not None and effective_pitch_mm is not None:
+        screen = (
+            max(0.01, float(pen_width_mm)),
+            max(0.01, float(effective_pitch_mm)),
+        )
+
     # The detail search walks the same curve chain the pipeline applies,
     # including the auto-levels stretch, so it scores what the plot will
     # actually show.
@@ -204,37 +231,79 @@ def auto_photo_settings(image_path, resolution_px=256):
     photo_tone = min(max(float(stretched.mean()), 0.30), 0.75)
 
     best = None
-    for contrast in (120.0, 150.0, 180.0, 210.0, 240.0, 270.0, 300.0):
-        contrasted = _soft_contrast(stretched, contrast / 100.0)
-        for brightness in (100.0, 120.0, 140.0, 160.0, 180.0):
-            lifted = np.power(contrasted, 100.0 / max(1.0, brightness))
-            for gamma in (1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6):
-                printed = 1.0 - np.power(1.0 - lifted, gamma)
-                score = _detail_score(printed) - abs(
-                    float(printed.mean()) - photo_tone
-                )
-                if best is None or score > best[0]:
-                    best = (score, contrast, brightness, gamma)
+    if screen is None:
+        for contrast in (120.0, 150.0, 180.0, 210.0, 240.0, 270.0, 300.0):
+            contrasted = _soft_contrast(stretched, contrast / 100.0)
+            for brightness in (100.0, 120.0, 140.0, 160.0, 180.0):
+                lifted = np.power(contrasted, 100.0 / max(1.0, brightness))
+                for gamma in (1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6):
+                    printed = 1.0 - np.power(1.0 - lifted, gamma)
+                    score = _detail_score(printed) - abs(
+                        float(printed.mean()) - photo_tone
+                    )
+                    if best is None or score > best[0]:
+                        best = (score, contrast, brightness, gamma)
+    else:
+        pen_mm, pitch_mm = screen
+        filters = {}
+        for channel, color in CHANNEL_COLORS.items():
+            text = color.lstrip("#")
+            filters[channel] = np.array(
+                [int(text[index : index + 2], 16) / 255.0 for index in (0, 2, 4)],
+                dtype=np.float32,
+            )
+        levelled = np.clip(
+            (rgb - low) / max(high - low, 1e-3), 0.0, 1.0
+        )
+        gray = levelled @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
+        base = np.clip(
+            gray[..., None] + (levelled - gray[..., None]) * saturation,
+            0.0,
+            1.0,
+        )
+        if max(base.shape[0], base.shape[1]) > 128:
+            base = base[::2, ::2]
+        luminances = np.array([0.299, 0.587, 0.114], dtype=np.float32)
+        for contrast in (120.0, 150.0, 180.0, 210.0, 240.0, 270.0, 300.0):
+            contrasted = _soft_contrast(base, contrast / 100.0)
+            # The screen model needs the darker half of the controls: with a
+            # sparse screen the only way to reach the photo's tone is more
+            # ink, i.e. brightness below 100 % and gamma below 1.
+            for brightness in (60.0, 80.0, 100.0, 120.0, 140.0, 160.0, 180.0):
+                lifted = np.power(contrasted, 100.0 / max(1.0, brightness))
+                for gamma in (0.6, 0.8, 1.0, 1.2, 1.4, 1.6):
+                    tones = rgb_to_cmyk_tone(
+                        lifted, gcr=gcr, weights=(1, 1, 1, 1), gamma=gamma
+                    )
+                    rendered = np.ones_like(lifted)
+                    for channel in CHANNELS:
+                        tone = tones[channel]
+                        spacing = pitch_mm * (1.0 + 6.0 * (1.0 - tone))
+                        coverage = np.where(
+                            tone >= INK_FLOOR,
+                            np.clip(pen_mm / spacing, 0.0, 1.0),
+                            0.0,
+                        )
+                        rendered *= 1.0 - coverage[..., None] * (
+                            1.0 - filters[channel]
+                        )
+                    rendered_luminance = rendered @ luminances
+                    score = _detail_score(rendered_luminance) - abs(
+                        float(rendered_luminance.mean()) - photo_tone
+                    )
+                    if best is None or score > best[0]:
+                        best = (score, contrast, brightness, gamma)
     _, contrast, brightness, gamma = best
-
-    def clamp(value, low, high):
-        return max(low, min(high, value))
 
     def round_up_to(value, step):
         return int(round(value / step) * step)
 
-    # Vivid photos keep more chroma in C/M/Y and less in K; muted ones lean
-    # on a little extra saturation and heavier black instead.
-    saturation_pct = clamp(
-        110.0 + (0.35 - chroma_p75) * 80.0, 110.0, 145.0
-    )
-    gcr = clamp(90.0 - max(0.0, chroma_p75 - 0.20) * 120.0, 60.0, 95.0)
     return {
         "auto_levels": True,
         "brightness": round_up_to(brightness, 5),
         "contrast": round_up_to(contrast, 5),
-        "saturation": round_up_to(saturation_pct, 5),
-        "gcr": round_up_to(gcr, 5),
+        "saturation": round_up_to(saturation * 100.0, 5),
+        "gcr": round_up_to(gcr * 100.0, 5),
         "gamma": round(gamma / 0.05) * 0.05,
     }
 
