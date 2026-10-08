@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-017` | windows-software | implemented | [Apply the CMYK Artwork scale to the screened marks](windows-software/2026-10-07-cmyk-artwork-scale.md) |
 | 2026-10-07 | `WSW-20261007-016` | windows-software | implemented | [Raise the CMYK max-marks cap](windows-software/2026-10-07-cmyk-max-marks-cap.md) |
 | 2026-10-07 | `WSW-20261007-015` | windows-software | implemented | [Set the CMYK defaults to the owner's tuned workflow](windows-software/2026-10-07-cmyk-owner-defaults.md) |
 | 2026-10-07 | `WSW-20261007-014` | windows-software | implemented | [Extend crosshatch screens past four families](windows-software/2026-10-07-cmyk-crosshatch-levels.md) |

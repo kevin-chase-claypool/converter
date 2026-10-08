@@ -415,6 +415,47 @@ class CmykTabTests(unittest.TestCase):
         tab.resolution.setValue(8192)
         self.assertEqual(tab.resolution.value(), 8192)
 
+    def test_artwork_scale_scales_the_screened_marks(self):
+        tab = self.make_tab()
+        tab._ensure_layers()
+        full = [
+            point
+            for channel in converter.CHANNELS
+            for line in tab._layers[channel]
+            for point in line
+        ]
+        tab.scale_pct.setValue(50)
+        tab._ensure_layers()
+        half = [
+            point
+            for channel in converter.CHANNELS
+            for line in tab._layers[channel]
+            for point in line
+        ]
+
+        def bounds(points):
+            xs = [point[0] for point in points]
+            ys = [point[1] for point in points]
+            return min(xs), min(ys), max(xs), max(ys)
+
+        full_box = bounds(full)
+        half_box = bounds(half)
+        self.assertAlmostEqual(
+            half_box[2] - half_box[0],
+            0.5 * (full_box[2] - full_box[0]),
+            delta=0.05,
+        )
+        self.assertAlmostEqual(
+            half_box[3] - half_box[1],
+            0.5 * (full_box[3] - full_box[1]),
+            delta=0.05,
+        )
+        self.assertAlmostEqual(
+            (half_box[0] + half_box[2]) / 2.0,
+            (full_box[0] + full_box[2]) / 2.0,
+            delta=1.0,
+        )
+
     def test_hatch_levels_allow_more_families(self):
         tab = self.make_tab()
         tab.levels.setValue(9)

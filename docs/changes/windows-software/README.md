@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-07 | `WSW-20261007-017` | implemented | [Apply the CMYK Artwork scale to the screened marks](2026-10-07-cmyk-artwork-scale.md) | `cmyk`, `bugfix`, `user-interface` |
 | 2026-10-07 | `WSW-20261007-016` | implemented | [Raise the CMYK max-marks cap](2026-10-07-cmyk-max-marks-cap.md) | `cmyk`, `user-interface`, `screening` |
 | 2026-10-07 | `WSW-20261007-015` | implemented | [Set the CMYK defaults to the owner's tuned workflow](2026-10-07-cmyk-owner-defaults.md) | `cmyk`, `defaults`, `crosshatch`, `user-interface` |
 | 2026-10-07 | `WSW-20261007-014` | implemented | [Extend crosshatch screens past four families](2026-10-07-cmyk-crosshatch-levels.md) | `cmyk`, `screening`, `crosshatch` |

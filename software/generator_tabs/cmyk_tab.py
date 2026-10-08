@@ -32,7 +32,13 @@ from PySide6.QtWidgets import (
 
 import converter_core as converter
 
-from ._tab_common import GeneratorTab, double_spin, int_spin, write_svg_document
+from ._tab_common import (
+    GeneratorTab,
+    double_spin,
+    int_spin,
+    scale_polylines,
+    write_svg_document,
+)
 from .cmyk_sheet import build_sheet
 
 
@@ -434,6 +440,7 @@ class CmykTab(GeneratorTab):
         height = self.page_h.value()
         stroke = self.pen_width.value()
         style = self.style.currentData()
+        factor = self.scale_pct.value() / 100.0
         layers = {}
         files = {}
         for index, channel in enumerate(converter.CHANNELS):
@@ -451,6 +458,9 @@ class CmykTab(GeneratorTab):
                 overdraw=self.overdraw.value(),
                 solid=self.solid_dots.isChecked(),
             )
+            # Generator pages are plotted 1:1, so the tab's Artwork scale is
+            # applied to the screened marks about the page centre here.
+            marks = scale_polylines(marks, factor, width, height)
             layers[channel] = marks
             document = converter.svg_document(
                 {channel: marks}, width, height, stroke, order=[channel]

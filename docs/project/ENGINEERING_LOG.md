@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20261007-cmyk-artwork-scale"></a>
+### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK Artwork scale now scales the screen
+
+- Request: "artwork scale in cmyk feature doesnt appear to do anything."
+  Confirmed: `scale_pct` only entered the layer cache key; the screened
+  marks were never scaled, unlike every other generator tab.
+- Change: `_build_artwork_layers` applies
+  `scale_polylines(marks, scale_pct/100, width, height)` per ink before the
+  SVGs are written, so preview, planning, and G-code all see the scaled
+  geometry. The calibration sheet stays 1:1 by design.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 375 tests (1 skipped, headless shader compile); the new test
+  rebuilds at 50 % and asserts both mark spans halve about the page centre;
+  `docs_index.py --write` / `--check` pass.
+- Risk: >100 % can push marks beyond the page, as with other tabs (bed
+  clipping still applies).
+- Evidence: `WSW-20261007-017`; `software/generator_tabs/cmyk_tab.py`.
+- Category: windows-software, cmyk, bugfix, user-interface.
+
 <a id="elog-20261007-cmyk-owner-defaults"></a>
 ### 🟩 2026-10-07 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK defaults follow the owner's tuned workflow
 
