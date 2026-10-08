@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-registration-and-pitch-helper"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK registration crosses and a pen-width pitch helper
+
+- Request: "do what you can to improve our cmyk feature," following the
+  open-source reconciliation; these are ranked improvements 3 and 4
+  (pass alignment is the community's top failure mode; DrawingBotV3
+  recommends "Rescale to Pen Width").
+- Change: a Page-group **Registration** checkbox makes every ink layer draw
+  the same four small margin crosses (appended after artwork scaling, so
+  they stay at fixed page positions); a **Match pen** button beside Dot
+  pitch sets `pitch = pen width / artwork scale`, putting full-tone rows
+  about one pen width apart.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 396 tests (1 skipped, headless shader compile); new tests cover
+  identical crosses across all inks (and their absence when off) and the
+  0.15 mm result at 200 % scale with a 0.30 mm pen; `docs_index.py --write`
+  / `--check` pass.
+- Risk: the crosses verify alignment but do not correct it; margins under
+  ~2 mm clamp the arms to 0.5 mm.
+- Evidence: `WSW-20261008-009`;
+  `docs/research/2026-10-08-cmyk-vs-open-source.md`.
+- Category: windows-software, cmyk, registration, workflow, user-interface.
+
 <a id="elog-20261008-cmyk-ink-profile-loading"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Measured ink profiles load into the simulation
 

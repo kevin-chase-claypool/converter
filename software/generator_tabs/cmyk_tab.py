@@ -221,8 +221,20 @@ class CmykTab(GeneratorTab):
         )
         self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)
+        pitch_row = QWidget()
+        pitch_layout = QHBoxLayout(pitch_row)
+        pitch_layout.setContentsMargins(0, 0, 0, 0)
+        pitch_layout.setSpacing(4)
         self.pitch = double_spin(0.1, 0.1, 8.0, 0.1, 2, " mm")
-        screen.addRow("Dot pitch", self.pitch)
+        pitch_layout.addWidget(self.pitch, 1)
+        self.match_pen_button = QPushButton("Match pen")
+        self.match_pen_button.setToolTip(
+            "Set Dot pitch so full-tone rows sit about one pen width apart "
+            "at the current artwork scale (effective pitch = pitch x scale)."
+        )
+        self.match_pen_button.clicked.connect(self.match_pen_pitch)
+        pitch_layout.addWidget(self.match_pen_button)
+        screen.addRow("Dot pitch", pitch_row)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
         screen.addRow("Dot size", self.dot_size)
         self.solid_dots = QCheckBox("Solid dots")
@@ -334,6 +346,13 @@ class CmykTab(GeneratorTab):
             "rows - halve Dot pitch to keep the same density."
         )
         page.addRow("Artwork scale", self.scale_pct)
+        self.registration_marks = QCheckBox("Corner crosses (all inks)")
+        self.registration_marks.setToolTip(
+            "Draw four small crosses in the page margin, one set per ink "
+            "layer, so the four passes can be checked for alignment. Keep "
+            "the sheet still between passes."
+        )
+        page.addRow("Registration", self.registration_marks)
 
         actions = self.add_group("G-code (4 files)")
         self.save_button = QPushButton("Save 4 G-code files...")
@@ -413,6 +432,35 @@ class CmykTab(GeneratorTab):
         if self.host is not None:
             self.host.generator_status(message)
 
+    def match_pen_pitch(self, _checked=False):
+        """Set Dot pitch to one pen width at the current artwork scale."""
+        scale = max(0.01, self.scale_pct.value() / 100.0)
+        value = max(0.1, min(8.0, self.pen_width.value() / scale))
+        self.pitch.setValue(value)
+        self.status.setText(
+            f"Dot pitch {self.pitch.value():.2f} mm matches the "
+            f"{self.pen_width.value():.2f} mm pen at "
+            f"{self.scale_pct.value():.0f} % artwork scale."
+        )
+
+    def _registration_crosses(self):
+        """Four small crosses every ink draws, for four-pass alignment."""
+        width = self.page_w.value()
+        height = self.page_h.value()
+        margin = self.margin.value()
+        inset = max(2.0, min(margin, 8.0) / 2.0)
+        half = max(0.5, min(2.5, inset - 0.4))
+        crosses = []
+        for cx, cy in (
+            (inset, inset),
+            (width - inset, inset),
+            (inset, height - inset),
+            (width - inset, height - inset),
+        ):
+            crosses.append([(cx - half, cy), (cx + half, cy)])
+            crosses.append([(cx, cy - half), (cx, cy + half)])
+        return crosses
+
     def _control_key(self):
         settings_key = ""
         if self.host is not None and hasattr(self.host, "settings_for_source"):
@@ -423,6 +471,7 @@ class CmykTab(GeneratorTab):
             self.page_h.value(),
             self.margin.value(),
             self.scale_pct.value(),
+            self.registration_marks.isChecked(),
             self.auto_levels.isChecked(),
             self.saturation.value(),
             self.contrast.value(),
@@ -521,6 +570,8 @@ class CmykTab(GeneratorTab):
             # Generator pages are plotted 1:1, so the tab's Artwork scale is
             # applied to the screened marks about the page centre here.
             marks = scale_polylines(marks, factor, width, height)
+            if self.registration_marks.isChecked():
+                marks = list(marks) + self._registration_crosses()
             layers[channel] = marks
             document = converter.svg_document(
                 {channel: marks}, width, height, stroke, order=[channel]

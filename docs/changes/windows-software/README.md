@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-08 | `WSW-20261008-009` | implemented | [Add registration crosses and a pen-width pitch helper](2026-10-08-cmyk-registration-and-pitch-helper.md) | `cmyk`, `registration`, `workflow`, `user-interface` |
 | 2026-10-08 | `WSW-20261008-008` | implemented | [Load measured ink profiles into the simulation](2026-10-08-cmyk-ink-profile-loading.md) | `cmyk`, `calibration`, `ink-simulation` |
 | 2026-10-08 | `WSW-20261008-007` | implemented | [Blend the CMYK layer SVGs multiplicatively](2026-10-08-cmyk-svg-multiply-blend.md) | `cmyk`, `svg`, `preview` |
 | 2026-10-08 | `WSW-20261008-006` | implemented | [Add an Auto (photo) button to the CMYK image options](2026-10-08-cmyk-auto-photo-button.md) | `cmyk`, `user-interface`, `defaults`, `automation` |

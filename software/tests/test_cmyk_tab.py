@@ -687,6 +687,27 @@ class CmykTabTests(unittest.TestCase):
         self.assertTrue(tab.auto_levels.isChecked())
         self.assertIn("Auto:", tab.status.text())
 
+    def test_match_pen_pitch_uses_the_effective_scale(self):
+        tab = self.make_tab()
+        tab.scale_pct.setValue(200)
+        tab.pen_width.setValue(0.3)
+        tab.match_pen_pitch()
+        self.assertAlmostEqual(tab.pitch.value(), 0.15, places=2)
+        self.assertIn("matches", tab.status.text())
+
+    def test_registration_crosses_are_identical_on_every_ink(self):
+        tab = self.make_tab()
+        tab.registration_marks.setChecked(True)
+        tab._ensure_layers()
+        crosses = tab._registration_crosses()
+        self.assertEqual(len(crosses), 8)
+        for channel in converter.CHANNELS:
+            self.assertEqual(tab._layers[channel][-8:], crosses, channel)
+        tab.registration_marks.setChecked(False)
+        tab._ensure_layers()
+        for channel in converter.CHANNELS:
+            self.assertNotEqual(tab._layers[channel][-8:], crosses, channel)
+
     def test_max_marks_is_not_capped_at_40000(self):
         tab = self.make_tab()
         tab.max_marks.setValue(80000)

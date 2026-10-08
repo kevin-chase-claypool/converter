@@ -123,9 +123,12 @@ Current tools:
   (halftone dots / stipple dots / line screen / crosshatch levels / wave
   screen / interference (gyroid) / single line (TSP) / topographic contours /
   rectilinear fill),
-  dot pitch, dot size, solid dots (spiral-filled so each mark reads as a dot,
-  not a ring), hatch levels, overdraw, pen width, max marks per ink, seed,
-  preview and write checkboxes per layer, page size, margin, artwork scale.
+  dot pitch (with a **Match pen** button that sets it to one pen width at
+  the current artwork scale), dot size, solid dots (spiral-filled so each
+  mark reads as a dot, not a ring), hatch levels, overdraw, pen width, max
+  marks per ink, seed, preview and write checkboxes per layer, page size,
+  margin, artwork scale, and registration corner crosses (all four inks
+  draw the same four margin crosses so pass alignment can be checked).
   Resolution keeps the source image's longest side up to that many pixels
   and never upsamples, so it accepts high-resolution sources (the control is
   effectively uncapped; memory grows with the source size you keep).
