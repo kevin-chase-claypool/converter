@@ -456,6 +456,7 @@ def _line_runs(
     spacing = max(0.2, float(spacing))
     sample_step = max(0.3, min(spacing * 0.5, 1.0))
     rows = []
+    eased_tone = None
     y = min_y + spacing * 0.5
     while y <= max_y:
         check_cancelled(cancel_check)
@@ -479,10 +480,22 @@ def _line_runs(
             row_runs.append(list(current))
         rows.append(row_runs)
         if adaptive:
-            tones = [value for _x, value in samples]
-            mean_tone = sum(tones) / len(tones) if tones else 0.0
+            # Follow the ink the row actually lays down (not the blank paper
+            # between runs) and ease it over a few rows: a row that crosses
+            # both the subject and the background used to shift the pitch in
+            # one step, which reads as banding in smooth areas.
+            inked = [value for _x, value in samples if value >= threshold]
+            if inked:
+                mean_tone = sum(inked) / len(inked)
+                eased_tone = (
+                    mean_tone
+                    if eased_tone is None
+                    else eased_tone + (mean_tone - eased_tone) * 0.5
+                )
+            elif eased_tone is None:
+                eased_tone = 0.0
             y += spacing * (
-                1.0 + float(light_stretch) * (1.0 - mean_tone)
+                1.0 + float(light_stretch) * (1.0 - eased_tone)
             )
         else:
             y += spacing

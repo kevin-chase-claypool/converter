@@ -470,6 +470,38 @@ class ScreeningTests(unittest.TestCase):
         # (6x vs 2x), so a 20% field keeps open paper instead of hatching it.
         self.assertLess(len(rect), len(lines) * 0.7)
 
+    def test_rectilinear_eases_the_row_pitch_across_a_tone_edge(self):
+        from converter_core import cmyk as cmyk_module
+
+        # Paper above 60 mm, a 0.35 tone below it. The first inked row used to
+        # drop the pitch in one step, which reads as banding where the subject
+        # meets the background.
+        def darkness(_x, y):
+            return 0.0 if y < 60.0 else 0.35
+
+        runs = cmyk_module._line_runs(
+            darkness,
+            (0.0, 0.0, 120.0, 120.0),
+            0.0,
+            1.0,
+            cmyk_module.INK_FLOOR,
+            adaptive=True,
+            connect=True,
+            light_stretch=6.0,
+        )
+        rows = sorted({round(point[1], 3) for run in runs for point in run})
+        gaps = [
+            second - first
+            for first, second in zip(rows, rows[1:])
+            if second - first > 0.01
+        ]
+        jumps = [
+            max(first, second) / max(min(first, second), 1e-6)
+            for first, second in zip(gaps, gaps[1:])
+        ]
+        self.assertGreaterEqual(len(gaps), 5)
+        self.assertLess(max(jumps), 1.25)
+
     def test_crosshatch_levels_and_overdraw(self):
         dark = self.np.full((32, 32), 0.8, dtype="float32")
         two = converter.screen_channel(

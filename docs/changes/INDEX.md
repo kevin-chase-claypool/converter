@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-08 | `WSW-20261008-017` | windows-software | implemented | [Rectilinear pitch follows the inked tone and eases between rows](windows-software/2026-10-08-cmyk-rectilinear-pitch-easing.md) |
 | 2026-10-08 | `WSW-20261008-016` | windows-software | implemented | [Auto renders the screen before it picks the tone](windows-software/2026-10-08-cmyk-auto-models-the-screen.md) |
 | 2026-10-08 | `WSW-20261008-015` | windows-software | implemented | [The ink simulation stops multiplying ink it cannot draw](windows-software/2026-10-08-cmyk-preview-subpixel-ink.md) |
 | 2026-10-08 | `WSW-20261008-014` | windows-software | implemented | [Auto matches the printed tone to the photo](windows-software/2026-10-08-cmyk-auto-matches-tone.md) |

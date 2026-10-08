@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-rectilinear-pitch-easing"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Rectilinear pitch follows the inked tone and eases between rows
+
+- Request: "why are there striations" - rows sit one pen width apart, so tone
+  is carried by row spacing, and the spacing stepped wherever the whole-row
+  average tone changed.
+- Change: `_line_runs` advances the pitch from the mean tone of the samples
+  the row actually inks (at or above the ink floor) and eases that tone
+  half-way per row; the largest gap-to-gap jump on an edge fixture falls from
+  a step to 1.10x.
+- Verification: 403 tests pass (1 skipped); new edge-banding test asserts the
+  jump stays under 1.25x.
+- Rejected: strictly local (per-run) pitch - the rows are straight lines, so
+  it would bend them or seam the page into strips.
+- Risk: discrete rows still quantise tone; crosshatch at a fixed pitch
+  remains the uniform-screen alternative.
+- Evidence: `WSW-20261008-017`; `software/README.md`.
+- Category: windows-software, cmyk, screening, rectilinear, banding.
+
 <a id="elog-20261008-cmyk-auto-models-the-screen"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Auto renders the screen before it picks the tone
 

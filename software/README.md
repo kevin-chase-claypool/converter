@@ -152,7 +152,9 @@ Current tools:
   Shipped defaults are the owner's tuned rectilinear set: auto levels on,
   rectilinear fill at 0.10 mm pitch (its light-tone stretch opens the pitch
   up to 7x, so highlights and mid tones keep paper while dark tones fuse
-  solid), saturation 115 %, contrast 285 % (the soft S-curve keeps
+  solid, and the pitch follows the tone the row actually inks and eases
+  between rows so it does not step where the subject meets the background),
+  saturation 115 %, contrast 285 % (the soft S-curve keeps
   steepening up to 300 % instead of clipping), brightness 170 %
   (shadow-weighted lift), ink gamma 1.40 (about a third less ink in the mid
   tones), black (GCR)
