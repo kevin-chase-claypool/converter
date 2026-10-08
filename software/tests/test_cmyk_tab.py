@@ -249,6 +249,32 @@ class ScreeningTests(unittest.TestCase):
         # steepens, so the search chooses real contrast there.
         self.assertGreaterEqual(mid["contrast"], 180)
 
+    def test_auto_photo_settings_keep_colour_on_vivid_images(self):
+        import numpy as np
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-auto-colour-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        # Vivid purple/green vertical stripes against a vivid background.
+        vivid = np.zeros((64, 64, 3), dtype="uint8")
+        vivid[:, :, :] = (130, 110, 200)
+        vivid[:, ::8, :] = (60, 170, 70)
+        vivid_path = str(Path(folder) / "vivid.png")
+        Image.fromarray(vivid).save(vivid_path)
+        gray_path = str(Path(folder) / "gray.png")
+        Image.new("RGB", (64, 64), (128, 128, 128)).save(gray_path)
+        vivid_values = converter.auto_photo_settings(vivid_path)
+        gray_values = converter.auto_photo_settings(gray_path)
+        # Colourful subjects get more CMY retention (lower GCR) and a lower
+        # saturation boost than neutral ones.
+        self.assertLess(vivid_values["gcr"], gray_values["gcr"])
+        self.assertLessEqual(
+            vivid_values["saturation"], gray_values["saturation"]
+        )
+        self.assertGreaterEqual(vivid_values["saturation"], 110)
+
     def test_contrast_300_keeps_smooth_shoulders(self):
         from PIL import Image
 

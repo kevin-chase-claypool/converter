@@ -177,7 +177,10 @@ def auto_photo_settings(image_path, resolution_px=256):
         )
     rgb = np.asarray(image, dtype=np.float32) / 255.0
     luminance = rgb @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
-    saturation = float(np.mean(rgb.max(axis=2) - rgb.min(axis=2)))
+    # Use the colourful quartile, not the mean: a vivid subject against
+    # neutral background still counts as vivid.
+    chroma = rgb.max(axis=2) - rgb.min(axis=2)
+    chroma_p75 = float(np.percentile(chroma, 75.0))
 
     # The detail search walks the same curve chain the pipeline applies,
     # including the auto-levels stretch, so it scores what the plot will
@@ -209,8 +212,12 @@ def auto_photo_settings(image_path, resolution_px=256):
     def round_up_to(value, step):
         return int(round(value / step) * step)
 
-    saturation_pct = clamp(100.0 + (0.30 - saturation) * 80.0, 100.0, 140.0)
-    gcr = clamp(95.0 - max(0.0, saturation - 0.18) * 120.0, 70.0, 95.0)
+    # Vivid photos keep more chroma in C/M/Y and less in K; muted ones lean
+    # on a little extra saturation and heavier black instead.
+    saturation_pct = clamp(
+        110.0 + (0.35 - chroma_p75) * 80.0, 110.0, 145.0
+    )
+    gcr = clamp(90.0 - max(0.0, chroma_p75 - 0.20) * 120.0, 60.0, 95.0)
     return {
         "auto_levels": True,
         "brightness": round_up_to(brightness, 5),

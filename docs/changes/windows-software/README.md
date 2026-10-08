@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-08 | `WSW-20261008-011` | implemented | [Auto reads the colourful quartile for saturation and GCR](2026-10-08-cmyk-auto-chroma-quartile.md) | `cmyk`, `automation`, `color-separation` |
 | 2026-10-08 | `WSW-20261008-010` | implemented | [Auto (photo) now searches for detail legibility](2026-10-08-cmyk-auto-detail-search.md) | `cmyk`, `automation`, `tone`, `defaults` |
 | 2026-10-08 | `WSW-20261008-009` | implemented | [Add registration crosses and a pen-width pitch helper](2026-10-08-cmyk-registration-and-pitch-helper.md) | `cmyk`, `registration`, `workflow`, `user-interface` |
 | 2026-10-08 | `WSW-20261008-008` | implemented | [Load measured ink profiles into the simulation](2026-10-08-cmyk-ink-profile-loading.md) | `cmyk`, `calibration`, `ink-simulation` |

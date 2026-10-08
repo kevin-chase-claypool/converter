@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-auto-chroma-quartile"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Auto reads the colour quartile for saturation and GCR
+
+- Request: the owner's wisteria photo rendered washed out with Auto's
+  S 110 / GCR 95 - a vivid purple/green subject over neutral branches and
+  dirt, which the mean-chroma statistic under-counted.
+- Change: `auto_photo_settings` now uses the 75th percentile of per-pixel
+  chroma: saturation `clamp(110 + (0.35 - p75) * 80, 110, 145)`, GCR
+  `clamp(90 - max(0, p75 - 0.20) * 120, 60, 95)` - vivid scenes keep more
+  CMY and less K, muted ones keep the extra saturation and heavier black.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 398 tests (1 skipped, headless shader compile); a new vivid-vs-gray
+  test checks the ordering; on the owner's photo Auto moves to S 120 /
+  GCR 85; `docs_index.py --check` passes.
+- Risk: GCR down to 60 % on very colourful images trades black for ink in
+  C/M/Y; the measured calibration profile remains the exact-match step.
+- Evidence: `WSW-20261008-011`; `software/README.md`.
+- Category: windows-software, cmyk, automation, color-separation.
+
 <a id="elog-20261008-cmyk-auto-detail-search"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Auto (photo) searches the tone chain for detail
 
