@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-ink-profile-button-crash"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - The Ink profile button killed the app
+
+- Request: "the ink profile... button crashes the app".
+- Cause: `clicked` hands the slot its `checked` flag, and
+  `load_ink_profile(self, path=None)` took it as the path - the file dialog
+  was skipped and `open(False, "r")` opened file descriptor 0. Python 3.13
+  warns "bool is used as a file descriptor" (the last line of
+  `software/qt_debug.log`) and the process dies without a traceback.
+- Fix: a dedicated `choose_ink_profile(_checked=False)` slot opens the picker
+  and calls `load_ink_profile(path)`, which now raises `TypeError` for
+  anything that is not a path.
+- Verification: 399 tests pass (1 skipped, headless shader compile); a new
+  test clicks the real button with a stubbed dialog and asserts the measured
+  colours reach the simulation; `open(False)` reproduced as a silent process
+  death.
+- Evidence: `WSW-20261008-013`.
+- Category: windows-software, cmyk, preview, crash, ink-profile.
+
 <a id="elog-20261008-cmyk-auto-matches-pen-pitch"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Auto (photo) also matches the pen pitch
 

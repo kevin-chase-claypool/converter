@@ -1417,7 +1417,7 @@ class MainWindow(QMainWindow):
         )
         self.ink_sim_check.toggled.connect(self.gl_preview.set_ink_simulation)
         self.ink_profile_button = QPushButton(
-            "Ink profile...", clicked=self.load_ink_profile
+            "Ink profile...", clicked=self.choose_ink_profile
         )
         self.ink_profile_button.setToolTip(
             "Load a *-profile.json produced by tools\\cmyk_calibrate.py; the "
@@ -3994,22 +3994,33 @@ class MainWindow(QMainWindow):
             return
         self.gl_preview.set_visible_inks(set(tab.preview_visible_inks()))
 
-    def load_ink_profile(self, path=None):
+    def choose_ink_profile(self, _checked=False):
+        """The Ink profile button: pick a profile file, then load it.
+
+        ``clicked`` hands the slot its ``checked`` flag; the flag is ignored
+        here on purpose. It used to arrive as ``path``, so the dialog was
+        skipped and ``open(False)`` killed the process via file descriptor 0.
+        """
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Load ink profile",
+            "",
+            "Ink profile (*.json);;All files (*.*)",
+        )
+        if path:
+            self.load_ink_profile(path)
+
+    def load_ink_profile(self, path):
         """Load a measured ink profile into the multiply simulation.
 
         The profile comes from ``tools/cmyk_calibrate.py`` after a plotted
         calibration sheet is scanned; its ``inks`` transmittances replace the
         display ink colours in the ink-simulation pass.
         """
-        if path is None:
-            path, _ = QFileDialog.getOpenFileName(
-                self,
-                "Load ink profile",
-                "",
-                "Ink profile (*.json);;All files (*.*)",
-            )
-            if not path:
-                return
+        if not isinstance(path, (str, os.PathLike)):
+            # Never let a signal argument reach open(): a bool is file
+            # descriptor 0 and takes the whole process down.
+            raise TypeError("load_ink_profile needs a profile file path.")
         try:
             with open(path, "r", encoding="utf-8") as handle:
                 data = json.load(handle)

@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-08 | `WSW-20261008-013` | windows-software | implemented | [Ink profile button no longer kills the app](windows-software/2026-10-08-cmyk-ink-profile-button-crash.md) |
 | 2026-10-08 | `WSW-20261008-012` | windows-software | implemented | [Auto (photo) also matches the pen pitch](windows-software/2026-10-08-cmyk-auto-matches-pen.md) |
 | 2026-10-08 | `WSW-20261008-011` | windows-software | implemented | [Auto reads the colourful quartile for saturation and GCR](windows-software/2026-10-08-cmyk-auto-chroma-quartile.md) |
 | 2026-10-08 | `WSW-20261008-010` | windows-software | implemented | [Auto (photo) now searches for detail legibility](windows-software/2026-10-08-cmyk-auto-detail-search.md) |

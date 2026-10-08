@@ -424,6 +424,41 @@ class ToolShellTests(unittest.TestCase):
         for got, want in zip(stored, [0.6, 0.9, 0.95, 1.0]):
             self.assertAlmostEqual(got, want, places=5)
 
+    def test_ink_profile_button_picks_a_file_instead_of_crashing(self):
+        import json as json_module
+
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        folder = tempfile.mkdtemp(prefix="ink-profile-button-")
+        self.addCleanup(shutil.rmtree, folder, ignore_errors=True)
+        path = str(Path(folder) / "button-profile.json")
+        with open(path, "w", encoding="utf-8") as handle:
+            json_module.dump(
+                {
+                    "kind": "cmyk-ink-profile",
+                    "inks": {"c": [0.6, 0.9, 0.95]},
+                },
+                handle,
+            )
+
+        class FakeDialog:
+            @staticmethod
+            def getOpenFileName(*_args, **_kwargs):
+                return (path, "")
+
+        original = self.module.QFileDialog
+        self.module.QFileDialog = FakeDialog
+        self.addCleanup(setattr, self.module, "QFileDialog", original)
+
+        # clicked() hands the slot checked=False; taking that flag as a path
+        # used to open file descriptor 0 and kill the whole app.
+        window.ink_profile_button.click()
+        self.assertEqual(
+            window.gl_preview.sim_ink_colors["c"], (0.6, 0.9, 0.95)
+        )
+        with self.assertRaises(TypeError):
+            window.load_ink_profile(False)
+
     def test_ink_engage_summary_counts_m3s_per_ink(self):
         import converter_core as converter
 
