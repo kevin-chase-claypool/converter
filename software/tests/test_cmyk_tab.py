@@ -570,10 +570,11 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(tab.style.currentData(), "rectilinear")
         self.assertEqual(tab.levels.value(), 8)
         self.assertAlmostEqual(tab.pitch.value(), 0.1, places=3)
-        self.assertAlmostEqual(tab.gcr.value(), 65.0, places=3)
+        self.assertAlmostEqual(tab.gcr.value(), 95.0, places=3)
         self.assertAlmostEqual(tab.saturation.value(), 115.0, places=3)
-        self.assertAlmostEqual(tab.contrast.value(), 200.0, places=3)
-        self.assertAlmostEqual(tab.brightness.value(), 130.0, places=3)
+        self.assertAlmostEqual(tab.contrast.value(), 285.0, places=3)
+        self.assertAlmostEqual(tab.brightness.value(), 170.0, places=3)
+        self.assertAlmostEqual(tab.gamma.value(), 1.40, places=2)
         self.assertAlmostEqual(tab.dot_size.value(), 100.0, places=3)
         self.assertEqual(tab.max_marks.value(), 40000)
         self.assertEqual(tab.resolution.value(), 10000)
@@ -581,7 +582,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(tab.weight_c.value(), 100.0, places=3)
         self.assertAlmostEqual(tab.weight_m.value(), 100.0, places=3)
         self.assertAlmostEqual(tab.weight_y.value(), 100.0, places=3)
-        self.assertAlmostEqual(tab.weight_k.value(), 105.0, places=3)
+        self.assertAlmostEqual(tab.weight_k.value(), 100.0, places=3)
 
     def test_resolution_is_not_capped_at_2000(self):
         tab = self.make_tab()

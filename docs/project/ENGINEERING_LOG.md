@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-gamma-led-defaults"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK defaults adopt the gamma-led tuning
+
+- Request: "these changes improved things quite a bit especially gamma."
+  The owner's panel showed contrast 285 %, brightness 170 %, ink gamma
+  1.40, GCR 95 %, weights 100/100/100/100 %, saturation 115 %.
+- Change: those become the shipped defaults (rectilinear 0.10 mm pitch,
+  scale 280 %, resolution 10000, auto levels on, hatch 8, 40000 marks/ink
+  unchanged). Ink gamma is the key lever: `tone ** 1.4` lays roughly a
+  third less ink in the mid tones, countering the four-ink overprint's
+  natural darkening; brightness lifts the image and contrast 285 punches
+  through the soft curve.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 390 tests (1 skipped, headless shader compile); the
+  shipped-defaults test asserts the new values; `docs_index.py --write` /
+  `--check` pass.
+- Risk: gamma 1.40 suits a dark scene; well-exposed photos may want
+  1.0-1.2.
+- Evidence: `WSW-20261008-005`; `software/README.md`.
+- Category: windows-software, cmyk, defaults, gamma, tone.
+
 <a id="elog-20261008-cmyk-contrast-headroom-color"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Contrast headroom to 300 % and more colour in the mixes
 
