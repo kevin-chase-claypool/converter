@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-08 | `WSW-20261008-010` | windows-software | implemented | [Auto (photo) now searches for detail legibility](windows-software/2026-10-08-cmyk-auto-detail-search.md) |
 | 2026-10-08 | `WSW-20261008-009` | windows-software | implemented | [Add registration crosses and a pen-width pitch helper](windows-software/2026-10-08-cmyk-registration-and-pitch-helper.md) |
 | 2026-10-08 | `WSW-20261008-008` | windows-software | implemented | [Load measured ink profiles into the simulation](windows-software/2026-10-08-cmyk-ink-profile-loading.md) |
 | 2026-10-08 | `WSW-20261008-007` | windows-software | implemented | [Blend the CMYK layer SVGs multiplicatively](windows-software/2026-10-08-cmyk-svg-multiply-blend.md) |

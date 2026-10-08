@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-auto-detail-search"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Auto (photo) searches the tone chain for detail
+
+- Request: "improve the automatic image-to-setting pipeline. i want to get
+  the preview as close to the image as possible, right now details in the
+  preview are very hard to make out."
+- Change: `auto_photo_settings` now grid-searches the real tone chain (auto
+  levels 1-99 % -> soft contrast -> brightness -> ink gamma; 245
+  combinations) scoring mid tone-weighted gradient energy minus a clipping
+  penalty, instead of fixed median/spread formulas. The contrast curve moved
+  to a shared `_soft_contrast` so the search scores exactly what the plot
+  runs. The Auto status line adds an effective-pitch advisory versus pen
+  width.
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 397 tests (1 skipped, headless shader compile); deterministic picks
+  on synthetic textures (dark -> B180/C120/G1.6, mid -> C240, bright ->
+  B120/G1.0), ~0.04 s per image; `docs_index.py --write` / `--check` pass.
+- Struggle: the first implementation fed control percentages into the curve
+  factor and every image picked the first grid point; flat test images were
+  also useless (all scores tie by design).
+- Risk: the metric favours legibility over punch - Auto may choose lower
+  contrast than a hand-tuned look.
+- Evidence: `WSW-20261008-010`; `software/README.md`.
+- Category: windows-software, cmyk, automation, tone, defaults.
+
 <a id="elog-20261008-cmyk-registration-and-pitch-helper"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK registration crosses and a pen-width pitch helper
 

@@ -111,15 +111,55 @@ def rgb_to_cmyk_tone(rgb, gcr=1.0, weights=None, gamma=1.0):
     return tones
 
 
-def auto_photo_settings(image_path, resolution_px=256):
-    """Suggest Image-options values that suit a photo automatically.
+def _soft_contrast(rgb, contrast):
+    """The tab's contrast curve: linear below 1.0, soft S-curve above."""
+    import numpy as np
 
-    A small luminance/saturation analysis drives the set: a dark photo gets
-    a brightness and gamma lift (gamma stays the print-lightness dial the
-    operator tweaks), the inter-quartile tonal spread drives contrast, and
-    the mean saturation nudges saturation and GCR so vivid photos keep more
-    chroma. Returns ``auto_levels``, ``brightness``, ``contrast``,
-    ``saturation``, ``gcr`` and ``gamma``.
+    contrast = float(contrast)
+    if abs(contrast - 1.0) <= 1e-9:
+        return rgb
+    if contrast < 1.0:
+        return np.clip((rgb - 0.5) * contrast + 0.5, 0.0, 1.0)
+    if contrast <= 2.0:
+        amount = contrast - 1.0
+        curve_k = 3.0
+    else:
+        amount = 1.0
+        curve_k = 3.0 + 3.0 * min(contrast - 2.0, 1.0)
+    curved = (
+        0.5
+        + 0.5
+        * np.tanh((rgb - 0.5) * curve_k)
+        / math.tanh(curve_k / 2.0)
+    )
+    return np.clip(rgb + (curved - rgb) * amount, 0.0, 1.0)
+
+
+def _detail_score(tone):
+    """Mid tone-weighted gradient energy minus a clipping penalty."""
+    import numpy as np
+
+    weight = 4.0 * tone * (1.0 - tone)
+    dx = np.abs(np.diff(tone, axis=1))
+    dy = np.abs(np.diff(tone, axis=0))
+    detail = float(
+        (0.5 * (weight[:, :-1] + weight[:, 1:]) * dx).mean()
+        + (0.5 * (weight[:-1, :] + weight[1:, :]) * dy).mean()
+    )
+    clipped = float(((tone < 0.02) | (tone > 0.98)).mean())
+    return detail - 0.4 * clipped
+
+
+def auto_photo_settings(image_path, resolution_px=256):
+    """Suggest Image-options values that keep a photo's detail legible.
+
+    The tone controls are chosen by searching the exact control chain the
+    pipeline applies (auto levels -> soft contrast -> brightness -> ink
+    gamma) for the combination with the most mid tone-weighted gradient
+    energy and the least clipping, so fine structure is not lost to crushed
+    shadows or blown highlights. Saturation and GCR come from the mean
+    chroma, and auto levels stays on. Returns ``auto_levels``,
+    ``brightness``, ``contrast``, ``saturation``, ``gcr`` and ``gamma``.
     """
     from PIL import Image
     import numpy as np
@@ -137,11 +177,31 @@ def auto_photo_settings(image_path, resolution_px=256):
         )
     rgb = np.asarray(image, dtype=np.float32) / 255.0
     luminance = rgb @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
-    p25, p50, p75 = (
-        float(value) for value in np.percentile(luminance, [25, 50, 75])
-    )
-    spread = max(0.0, p75 - p25)
     saturation = float(np.mean(rgb.max(axis=2) - rgb.min(axis=2)))
+
+    # The detail search walks the same curve chain the pipeline applies,
+    # including the auto-levels stretch, so it scores what the plot will
+    # actually show.
+    low, high = (
+        float(value) for value in np.percentile(luminance, [1.0, 99.0])
+    )
+    stretched = np.clip(
+        (luminance - low) / max(high - low, 1e-3), 0.0, 1.0
+    )
+    if max(stretched.shape) > 128:
+        stretched = stretched[::2, ::2]
+
+    best = None
+    for contrast in (120.0, 150.0, 180.0, 210.0, 240.0, 270.0, 300.0):
+        contrasted = _soft_contrast(stretched, contrast / 100.0)
+        for brightness in (100.0, 120.0, 140.0, 160.0, 180.0):
+            lifted = np.power(contrasted, 100.0 / max(1.0, brightness))
+            for gamma in (1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6):
+                printed = 1.0 - np.power(1.0 - lifted, gamma)
+                score = _detail_score(printed)
+                if best is None or score > best[0]:
+                    best = (score, contrast, brightness, gamma)
+    _, contrast, brightness, gamma = best
 
     def clamp(value, low, high):
         return max(low, min(high, value))
@@ -149,11 +209,8 @@ def auto_photo_settings(image_path, resolution_px=256):
     def round_up_to(value, step):
         return int(round(value / step) * step)
 
-    brightness = clamp(100.0 + (0.42 - p50) * 220.0, 100.0, 180.0)
-    contrast = clamp(285.0 - spread * 350.0, 120.0, 285.0)
     saturation_pct = clamp(100.0 + (0.30 - saturation) * 80.0, 100.0, 140.0)
     gcr = clamp(95.0 - max(0.0, saturation - 0.18) * 120.0, 70.0, 95.0)
-    gamma = clamp(1.0 + (0.42 - p50) * 1.45, 1.0, 1.6)
     return {
         "auto_levels": True,
         "brightness": round_up_to(brightness, 5),
@@ -227,26 +284,7 @@ def prepare_image_tones(
         rgb = np.clip(rgb, 0.0, 1.0)
     contrast = float(contrast)
     if abs(contrast - 1.0) > 1e-9:
-        if contrast < 1.0:
-            rgb = np.clip((rgb - 0.5) * contrast + 0.5, 0.0, 1.0)
-        else:
-            # Soft S-curve: strong contrast without the hard clipping that
-            # posterizes highlights and shadows. 1.0-2.0 blends from linear
-            # to a k=3 curve; above 2.0 the curve steepens (k up to 6) so the
-            # control keeps giving colour punch past the old 200 % ceiling.
-            if contrast <= 2.0:
-                amount = contrast - 1.0
-                curve_k = 3.0
-            else:
-                amount = 1.0
-                curve_k = 3.0 + 3.0 * min(contrast - 2.0, 1.0)
-            curved = (
-                0.5
-                + 0.5
-                * np.tanh((rgb - 0.5) * curve_k)
-                / math.tanh(curve_k / 2.0)
-            )
-            rgb = np.clip(rgb + (curved - rgb) * amount, 0.0, 1.0)
+        rgb = _soft_contrast(rgb, contrast)
 
     brightness = float(brightness)
     if abs(brightness - 100.0) > 1e-9:

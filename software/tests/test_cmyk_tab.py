@@ -196,24 +196,58 @@ class ScreeningTests(unittest.TestCase):
         self.assertLess(float(lifted["k"].mean()), float(base["k"].mean()) - 0.05)
 
     def test_auto_photo_settings_fit_dark_and_bright_images(self):
+        import numpy as np
         from PIL import Image
 
         folder = tempfile.mkdtemp(prefix="cmyk-auto-")
         self.addCleanup(
             lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
         )
-        dark_path = str(Path(folder) / "dark.png")
-        bright_path = str(Path(folder) / "bright.png")
-        Image.new("RGB", (64, 64), (20, 20, 25)).save(dark_path)
-        Image.new("RGB", (64, 64), (180, 180, 180)).save(bright_path)
-        dark = converter.auto_photo_settings(dark_path)
-        bright = converter.auto_photo_settings(bright_path)
+        rng = np.random.default_rng(7)
+
+        def save(name, values):
+            path = str(Path(folder) / name)
+            Image.fromarray(np.stack([values] * 3, axis=2)).save(path)
+            return path
+
+        dark_values = (12 + rng.random((64, 64)) * 22).astype("uint8")
+        dark_values[10:22, 10:22] = 190
+        dark_values[40:55, 35:50] = 150
+        bright_values = (150 + rng.random((64, 64)) * 70).astype("uint8")
+        dark = converter.auto_photo_settings(save("dark.png", dark_values))
+        bright = converter.auto_photo_settings(
+            save("bright.png", bright_values)
+        )
         self.assertTrue(dark["auto_levels"])
-        self.assertGreaterEqual(dark["gamma"], 1.3)
-        self.assertGreaterEqual(dark["brightness"], 140)
-        self.assertEqual(bright["brightness"], 100)
-        self.assertEqual(bright["gamma"], 1.0)
-        self.assertLessEqual(bright["contrast"], dark["contrast"])
+        # A dark scene needs the full lift so its structure sits in the
+        # visible mid tones; a bright image needs no lift.
+        self.assertGreaterEqual(dark["brightness"], 160)
+        self.assertGreaterEqual(dark["gamma"], 1.5)
+        self.assertLessEqual(bright["brightness"], 140)
+        self.assertLessEqual(bright["gamma"], 1.05)
+        self.assertEqual(
+            dark, converter.auto_photo_settings(save("dark2.png", dark_values))
+        )
+
+    def test_auto_photo_settings_add_contrast_when_it_helps_detail(self):
+        import numpy as np
+        from PIL import Image, ImageFilter
+
+        folder = tempfile.mkdtemp(prefix="cmyk-auto-mid-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        rng = np.random.default_rng(3)
+        values = (96 + rng.random((64, 64)) * 64).astype("uint8")
+        values = np.asarray(
+            Image.fromarray(values).filter(ImageFilter.GaussianBlur(1.5))
+        )
+        path = str(Path(folder) / "mid.png")
+        Image.fromarray(np.stack([values] * 3, axis=2)).save(path)
+        mid = converter.auto_photo_settings(path)
+        # A mid-key texture has its detail energy where the soft S-curve
+        # steepens, so the search chooses real contrast there.
+        self.assertGreaterEqual(mid["contrast"], 180)
 
     def test_contrast_300_keeps_smooth_shoulders(self):
         from PIL import Image

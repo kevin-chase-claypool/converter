@@ -428,6 +428,24 @@ class CmykTab(GeneratorTab):
             f"GCR {values['gcr']} %, gamma {values['gamma']:.2f} - tweak "
             "gamma for print lightness, then press Preview."
         )
+        effective = self.pitch.value() * self.scale_pct.value() / 100.0
+        pen = max(0.01, self.pen_width.value())
+        if effective < 0.6 * pen:
+            advice = (
+                f"Effective pitch {effective:.2f} mm is below the "
+                f"{pen:.2f} mm pen - raise Dot pitch for more detail."
+            )
+        elif effective > 2.5 * pen:
+            advice = (
+                f"Effective pitch {effective:.2f} mm is much wider than the "
+                f"{pen:.2f} mm pen - lower Dot pitch for density."
+            )
+        else:
+            advice = (
+                f"Effective pitch {effective:.2f} mm is near the "
+                f"{pen:.2f} mm pen (good detail/density balance)."
+            )
+        message = message + " " + advice
         self.status.setText(message)
         if self.host is not None:
             self.host.generator_status(message)
