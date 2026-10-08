@@ -1,5 +1,23 @@
 # Engineering Log
 
+<a id="elog-20261008-cmyk-svg-multiply-blend"></a>
+### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK layer SVGs blend multiplicatively
+
+- Request: "do what you can to improve our cmyk feature," following the
+  open-source reconciliation; this closes gap 2 (exported SVGs rendered
+  opaquely in external viewers while `cmyk-splitter` sets
+  `mix-blend-mode: multiply`).
+- Change: `svg_document` writes `style="mix-blend-mode: multiply"` on every
+  ink group, so Inkscape/browser previews of the combined SVG match the Ink
+  simulation; the G-code path is untouched (contours are geometric).
+- Verification: `python -m unittest discover -s software\tests -p "test_*.py"`
+  passes 392 tests (1 skipped, headless shader compile); the SVG group test
+  asserts the style; `docs_index.py --check` passes.
+- Risk: viewers without mix-blend-mode keep painter's-order rendering.
+- Evidence: `WSW-20261008-007`;
+  `docs/research/2026-10-08-cmyk-vs-open-source.md`.
+- Category: windows-software, cmyk, svg, preview.
+
 <a id="elog-20261008-cmyk-auto-photo-button"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK gains an Auto (photo) button
 

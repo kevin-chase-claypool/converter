@@ -421,6 +421,14 @@ class ScreeningTests(unittest.TestCase):
             [group.get("stroke") for group in groups],
             [converter.CHANNEL_COLORS["c"], converter.CHANNEL_COLORS["k"]],
         )
+        # Layer groups blend multiplicatively so external SVG viewers show
+        # overprint the way the ink simulation does.
+        self.assertTrue(
+            all(
+                "mix-blend-mode" in (group.get("style") or "")
+                for group in groups
+            )
+        )
 
     def test_ink_tags_survive_the_geometry_pipeline(self):
         tagged = converter.tag_ink(

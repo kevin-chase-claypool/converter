@@ -748,7 +748,8 @@ def svg_document(layers, width_mm, height_mm, stroke_mm=0.3, order=None):
         body.append(
             f'<g fill="none" stroke="{CHANNEL_COLORS.get(channel, "#111111")}" '
             f'stroke-width="{_fmt(stroke_mm)}" stroke-linecap="round" '
-            f'stroke-linejoin="round" data-ink="{channel}">'
+            f'stroke-linejoin="round" style="mix-blend-mode: multiply" '
+            f'data-ink="{channel}">'
         )
         for points in polylines:
             if len(points) < 2:
