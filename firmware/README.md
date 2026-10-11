@@ -173,6 +173,14 @@ The service interface uses Arduino-Pico `Serial2` (hardware UART1), and the
 integrated firmware prints its service-UART-ready line before other
 initialization. Its telemetry writer does not require a complete record to fit
 in the UART FIFO, so GP20 telemetry is not silently suppressed.
+The one-shot `p` snapshot and the `v` stream also report `last_seek_travel`: the
+travel of the most recent M3 contact seek in fine-pulse equivalents (10 ms
+coarse pulses count as two). That single number is what makes the machine's
+existing M3 seek usable as a bed-height probe - a host walks the bed, runs one
+M3 per point, and reads how far the pen had to move from its M5 clearance to
+touch the surface. `tools/bed_mesh_probe.py` drives that loop for the
+Klipper-style bed mesh; it is a host-side service tool and adds no controller
+or wiring requirement.
 The current supervised bench source uses GP2 as the full-retract origin for a
 single bounded M3 descend (10 ms DOWN pulses while far from the paper, then
 5 ms pulses once force rises above about 1 g, each with the full 300 ms settle

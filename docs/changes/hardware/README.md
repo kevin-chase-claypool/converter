@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-11 | `RPSW-20261011-001` | implemented | [Bed mesh from the toolhead's M3 contact seek](../rp23cnc-software/2026/2026-10-11-bed-mesh-probe.md) | `bed-mesh`, `probing`, `toolhead`, `telemetry`, `flatness` |
 | 2026-10-11 | `HW-20261011-001` | implemented | [Bed gap map and Klipper-style tilt report](2026/2026-10-11-bed-gap-map-and-tilt-report.md) | `bed`, `flatness`, `tilt`, `runout`, `diagnosis`, `tooling` |
 | 2026-10-01 | `WSW-20261001-010` | implemented | [Theta: no bed sweep the machine cannot follow](../windows-software/2026/2026-10-01-theta-centre-sweep-and-travel-limits.md) | `theta`, `kinematics`, `drift`, `safety`, `calibration` |
 | 2026-10-01 | `RPSW-20261001-002` | verified | [Axis-centre correction in P100: the registered origin moves +1.25 mm in X](../rp23cnc-software/2026/2026-10-01-axis-centre-correction.md) | `grblhal`, `macro`, `p100`, `registration`, `calibration`, `drift` |

@@ -46,6 +46,11 @@ class PressureController {
   bool liftHomeActive() const;
   uint16_t homeSeekPulseCount() const { return home_seek_pulse_count_; }
   uint16_t warmSeekPulseEma() const { return warm_seek_pulse_ema_; }
+  // Travel used by the most recent contact seek, in fine-pulse equivalents.
+  // The M3 seek is the machine's only height measurement: probing the bed at
+  // an XY point returns how far the pen had to move from its M5 clearance to
+  // touch the surface. Exported for the bed-mesh probe in tools/.
+  uint16_t lastSeekTravelFine() const { return last_seek_travel_fine_; }
   uint16_t holdUrgentReliefCount() const { return hold_urgent_relief_count_; }
   uint32_t holdUrgentReliefTotalMs() const { return hold_urgent_relief_total_ms_; }
   uint16_t hardLimitRecoveries() const { return hard_limit_recoveries_; }
@@ -114,6 +119,7 @@ class PressureController {
   uint8_t contact_ready_windows_ = 0;
   uint32_t contact_ready_lost_since_ms_ = 0;
   uint16_t home_seek_pulse_count_ = 0;
+  uint16_t last_seek_travel_fine_ = 0;
   uint16_t hold_urgent_relief_count_ = 0;
   uint32_t hold_urgent_relief_total_ms_ = 0;
   uint16_t cs1238_rejected_samples_ = 0;

@@ -1,5 +1,27 @@
 # Engineering Log
 
+<a id="elog-20261011-bed-mesh-probe"></a>
+### 🟨 2026-10-11 - RP23CNC-SOFTWARE/IMPLEMENTED - Bed mesh probe from the toolhead M3 seek
+
+- Request: "some kind of bed leveling like klipper has ... m3 time and pen
+  pressure to dictate how the image of the round bed looks"; a service-UART
+  reflash is acceptable, rewiring is not.
+- Change: the toolhead's M3 contact seek now exports the travel it used
+  (`last_seek_travel` in the snapshot/stream telemetry; weighted coarse/fine
+  fine-pulse units), and `tools/bed_mesh_probe.py` drives the RP23NC plus the
+  toolhead to run a polar or XY mesh, one M3 per point, writing the CSV that
+  `tools/bed_tilt_map.py` renders as the Klipper-style map and screw report.
+- Verification: `--simulate` end-to-end reproduced a synthetic 0.277 mm/100 mm
+  tilt and produced the mount report; integer-EMA differencing was measured to
+  quantize travel by up to ~0.3 mm, which is why the firmware export exists.
+  Firmware is not compiled or flashed in this session; bench flash and shim
+  calibration are the next actions.
+- Next action: flash the toolhead, confirm `last_seek_travel` in `p`, calibrate
+  `--mm-per-pulse` with a 0.5 mm shim, run the first polar mesh, and tram the
+  four rail-end adjusters against it.
+- Evidence: `RPSW-20261011-001`; `tools/bed_mesh_probe.py`;
+  `firmware/pen_pressure/pro_micro_rp2350_toolhead/`.
+
 <a id="elog-20261011-bed-gap-map-and-tilt-report"></a>
 ### 🟨 2026-10-11 - HARDWARE/IMPLEMENTED - Bed gap map and Klipper-style tilt report
 

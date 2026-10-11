@@ -688,11 +688,16 @@ void PressureController::service() {
                 home_seek_pulse_count_ - warm_seek_coarse_used_;
             const uint16_t travel =
                 warm_seek_coarse_used_ * SEEK_WARM_COARSE_RATIO + fine_pulses;
+            last_seek_travel_fine_ = travel;
             warm_seek_pulse_ema_ =
                 warm_seek_pulse_ema_ == 0
                     ? travel
                     : static_cast<uint16_t>(
                           (warm_seek_pulse_ema_ * 3 + travel) / 4);
+          } else {
+            // Cold seek after the GP2 home reference is fine-pulse only, so
+            // the raw pulse count already is the travel in fine-pulse units.
+            last_seek_travel_fine_ = home_seek_pulse_count_;
           }
           m3_force_acquired_ = true;
           last_force_correction_ms_ = now;
