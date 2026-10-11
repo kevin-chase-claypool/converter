@@ -245,6 +245,7 @@ class FakeToolhead:
 
 def probe_point(robot, toolhead, args, x: float | None, y: float | None):
     values = []
+    units_seen = []
     for _ in range(args.probes_per_point):
         robot.send("M5")
         time.sleep(args.lift_settle)
@@ -266,8 +267,10 @@ def probe_point(robot, toolhead, args, x: float | None, y: float | None):
         if after is None:
             raise RuntimeError("probe timed out at X=%s Y=%s" % (x, y))
         units = travel_fine(before or {}, after, args.mm_per_pulse)
+        units_seen.append(units)
         values.append(units * args.mm_per_pulse)
-    return statistics.fmean(values), (max(values) - min(values) if len(values) > 1 else 0.0)
+    spread = (max(values) - min(values)) if len(values) > 1 else 0.0
+    return statistics.fmean(values), spread, statistics.fmean(units_seen)
 
 
 def main():
@@ -314,9 +317,9 @@ def main():
                 time.sleep(args.move_settle)
                 for k in range(args.angles):
                     angle = k * step_deg
-                    gap, spread = probe_point(robot, toolhead, args, None, None)
-                    print("r=%6.1f mm  angle=%5.1f deg  gap=%.3f mm  spread=%.3f"
-                          % (radius, angle, gap, spread))
+                    gap, spread, units = probe_point(robot, toolhead, args, None, None)
+                    print("r=%6.1f mm  angle=%5.1f deg  gap=%.3f mm (%.1f units)  spread=%.3f"
+                          % (radius, angle, gap, units, spread))
                     rows.append({"type": "ring", "x": "", "y": "",
                                  "radius_mm": "%.1f" % radius, "angle_deg": "%.1f" % angle,
                                  "gap_mm": "%.3f" % gap})
@@ -331,8 +334,9 @@ def main():
             for iy, y in enumerate(values):
                 xs = values if iy % 2 == 0 else list(reversed(values))
                 for x in xs:
-                    gap, spread = probe_point(robot, toolhead, args, x, y)
-                    print("X=%7.1f  Y=%7.1f  gap=%.3f mm  spread=%.3f" % (x, y, gap, spread))
+                    gap, spread, units = probe_point(robot, toolhead, args, x, y)
+                    print("X=%7.1f  Y=%7.1f  gap=%.3f mm (%.1f units)  spread=%.3f"
+                          % (x, y, gap, units, spread))
                     rows.append({"type": "grid", "x": "%.1f" % x, "y": "%.1f" % y,
                                  "radius_mm": "", "angle_deg": "", "gap_mm": "%.3f" % gap})
     finally:

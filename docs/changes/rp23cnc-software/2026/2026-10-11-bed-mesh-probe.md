@@ -68,7 +68,10 @@ pulses. The only missing piece was a clean per-seek travel readout.
 - Resolution: the actuator moves about 1.75 mm per 100 ms of full drive
   (E-09F), so a fine pulse is ~0.0875 mm; the map is good to roughly +/-0.05 mm
   per point after averaging and is calibrated directly by probing with and
-  without a known shim under the pencil.
+  without a known shim under the pencil. The console prints the raw travel
+  units next to the millimetres so the shim calibration uses the units directly
+  (`mm_per_pulse = shim_mm / (units_before - units_after)`), independent of the
+  default constant.
 
 ## Verification
 
