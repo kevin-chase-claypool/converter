@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-11 | `HW-20261011-001` | hardware, windows-software | implemented | [Bed gap map and Klipper-style tilt report](hardware/2026/2026-10-11-bed-gap-map-and-tilt-report.md) |
 | 2026-10-08 | `WSW-20261008-018` | windows-software | implemented | [Brightness reaches 20 % and GCR tops out at 100 %](windows-software/2026-10-08-cmyk-brightness-and-gcr-limits.md) |
 | 2026-10-08 | `WSW-20261008-017` | windows-software | implemented | [Rectilinear pitch follows the inked tone and eases between rows](windows-software/2026-10-08-cmyk-rectilinear-pitch-easing.md) |
 | 2026-10-08 | `WSW-20261008-016` | windows-software | implemented | [Auto renders the screen before it picks the tone](windows-software/2026-10-08-cmyk-auto-models-the-screen.md) |

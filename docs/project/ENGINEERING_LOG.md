@@ -1,5 +1,29 @@
 # Engineering Log
 
+<a id="elog-20261011-bed-gap-map-and-tilt-report"></a>
+### 🟨 2026-10-11 - HARDWARE/IMPLEMENTED - Bed gap map and Klipper-style tilt report
+
+- Request: "i need a 3d visual of the tilt map much like screws tilt
+  calibration in klipper" - with a measure, adjust the mechanical tilt,
+  re-scan loop, and no rewiring.
+- Change: added `tools/make_bed_gap_maps.py` (pen-up grid and bed-rotation
+  measurement programs, M0 and dwell variants) and `tools/bed_tilt_map.py`
+  (CSV template, plane/bowl fit, per-mount shim report in mm and screw turns,
+  3D surface + top-down + residual + ring-profile PNG).
+- Context: the heraldic imprecision investigation verified the commanded path
+  against the source SVG (mean 0.14 mm) and left an XY-dependent gap between
+  the carriage reference and the bed surface as the leading mechanism, since
+  feed, tolerance, tangential speed, and the 24 V Y/A rails did not remove
+  the defect.
+- Verification: synthetic demo (0.45 mm tilt + 0.10 mm warp + 0.01 mm noise)
+  recovered as 0.247 mm/100 mm at 26 deg, residual rms 0.070 mm, mount shims
+  +0.220/-0.493/+0.273 mm; `docs_index.py --check` passes. No machine motion.
+- Next action: measure the real bed (grid + rotation programs), enter the hub's
+  mount points and screw pitch, shim, re-scan, and compare PNGs; escalate to
+  warp/bearing runout if the post-plane residual stays above ~0.15 mm.
+- Evidence: `HW-20261011-001`; `tools/bed_tilt_map.py`;
+  `tools/make_bed_gap_maps.py`.
+
 <a id="elog-20261008-cmyk-brightness-and-gcr-limits"></a>
 ### 🟩 2026-10-08 - WINDOWS SOFTWARE/IMPLEMENTED - Brightness reaches 20 % and GCR tops out at 100 %
 
