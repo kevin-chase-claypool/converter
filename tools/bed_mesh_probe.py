@@ -316,8 +316,10 @@ def probe_point(robot, toolhead, args, x: float | None, y: float | None):
         units = travel_fine(before or {}, after, args.mm_per_pulse)
         units_seen.append(units)
         values.append(units * args.mm_per_pulse)
+        print("    probe %d/%d: %.1f units (%.3f mm)"
+              % (len(values), args.probes_per_point, units, units * args.mm_per_pulse))
     spread = (max(values) - min(values)) if len(values) > 1 else 0.0
-    return statistics.fmean(values), spread, statistics.fmean(units_seen)
+    return statistics.median(values), spread, statistics.median(units_seen)
 
 
 def main():
