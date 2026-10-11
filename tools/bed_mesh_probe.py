@@ -197,6 +197,8 @@ class FakeToolhead:
     def __init__(self, *_, **__):
         self.pos = (0.0, 0.0)
         self.engaged = False
+        self.lift_home = 1          # power-on state: pen at the GP2 home switch
+        self.cold = False
         self.rng = __import__("random").Random(7)
         self.ema = None
 
@@ -207,9 +209,14 @@ class FakeToolhead:
             y = float(m.group(2)) if m.group(2) else 0.0
             self.pos = (x, y)
         if line.strip() == "M3":
+            self.cold = self.lift_home == 1
             self.engaged = True
+            self.lift_home = 0
         if line.strip() == "M5":
             self.engaged = False
+            self.lift_home = 0
+        if line.strip() == "M65 P0":
+            self.lift_home = 1
 
     def snapshot(self, timeout: float = 2.0):
         x, y = self.pos
@@ -217,7 +224,8 @@ class FakeToolhead:
         height = -0.0025 * x - 0.0012 * y + 0.06 * math.cos(2 * math.atan2(y, x))
         gap = 1.2 + height  # mm from clearance to surface
         if self.engaged:
-            travel_mm = max(0.0, gap + self.rng.gauss(0.0, 0.02))
+            base = gap + (2.0 if self.cold else 0.0)
+            travel_mm = max(0.0, base + self.rng.gauss(0.0, 0.02))
             travel = travel_mm / FINE_PULSE_MM
             self.ema = travel if self.ema is None else (self.ema * 3 + travel) / 4
             return {
@@ -226,7 +234,7 @@ class FakeToolhead:
                 "last_seek_travel": int(round(travel)),
                 "force_norm_raw": 40000,
                 "cs1238_delta": 40000,
-                "lift_home": 0,
+            "lift_home": self.lift_home,
                 "contact": 1,
             }
         return {
@@ -235,7 +243,7 @@ class FakeToolhead:
             "last_seek_travel": 0,
             "force_norm_raw": 0,
             "cs1238_delta": 0,
-            "lift_home": 0,
+            "lift_home": self.lift_home,
             "contact": 0,
         }
 
@@ -249,6 +257,22 @@ def probe_point(robot, toolhead, args, x: float | None, y: float | None):
     for _ in range(args.probes_per_point):
         robot.send("M5")
         time.sleep(args.lift_settle)
+        if args.retract_each:
+            # The M5 clearance is relative to the last contact, so a warm M3
+            # only re-traverses a fixed gap. The absolute measurement is a cold
+            # seek from the GP2 lift-home switch: retract fully first.
+            robot.send("M65 P0")
+            deadline = time.time() + args.retract_timeout
+            at_home = False
+            while time.time() < deadline:
+                snap = toolhead.snapshot()
+                if snap and snap.get("lift_home") == 1:
+                    at_home = True
+                    break
+                time.sleep(args.poll_sleep)
+            robot.send("M64 P0")
+            if not at_home:
+                raise RuntimeError("toolhead never reported the GP2 home switch during retract")
         if x is not None:
             robot.send("G0 X%.3f Y%.3f" % (x, y))
             time.sleep(args.move_settle)
@@ -285,6 +309,10 @@ def main():
     parser.add_argument("--angles", type=int, default=12, help="number of bed angles per radius (default 12 = 30 deg)")
     parser.add_argument("--grid", default="100,50,0", help="grid half-pitch values; 3 values gives a 5x5 grid")
     parser.add_argument("--probes-per-point", type=int, default=2)
+    parser.add_argument("--retract-each", action=argparse.BooleanOptionalAction, default=True,
+                        help="full-retract to the GP2 home switch before every probe, so the "
+                             "travel is an absolute bed-height measurement (default: on)")
+    parser.add_argument("--retract-timeout", type=float, default=15.0)
     parser.add_argument("--mm-per-pulse", type=float, default=FINE_PULSE_MM,
                         help="calibrated mm per fine-pulse travel unit (default %.4f from 1.75 mm/100 ms)" % FINE_PULSE_MM)
     parser.add_argument("--probe-timeout", type=float, default=30.0)

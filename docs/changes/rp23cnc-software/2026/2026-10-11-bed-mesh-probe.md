@@ -96,6 +96,26 @@ pulses. The only missing piece was a clean per-seek travel readout.
   sensor, and service UART already carry the measurement; only the readout was
   missing.
 
+## Follow-up 2026-10-11: the clearance is relative, so probing must retract
+
+Reading the M5 path showed that the clearance is not an absolute height: normal
+M5 proves the no-contact release band and then adds the `PEN_CLEAR_EXTRA_LIFT_MS`
+air-gap pulse *from the last contact position*. A warm M3 therefore only
+re-traverses the same ~1.2 mm gap, and its travel carries no bed-height
+information. The absolute measurement is the cold seek that starts with GP2
+asserted: each probe point now runs `M65 P0` (arm, toolhead retracts to the
+lift-home switch), waits for `lift_home=1` in the snapshot, `M64 P0`, then `M3`.
+`tools/bed_mesh_probe.py` does this by default (`--no-retract-each` restores the
+warm-only cycle for non-probing experiments).
+
+The first firmware export also turned out to be wrong for that path: cold seeks
+mix 10 ms coarse and 5 ms fine pulses, so the raw pulse count is not linear in
+millimetres. The controller now accumulates the travel of every seek pulse in
+fine-pulse equivalents (coarse counts as two) for both warm and cold seeks, and
+the warm-seek EMA is built from that same accumulator. This is a revision of
+the same patch and needs one more flash of the same sketch; the host side is
+unchanged apart from the retract cycle.
+
 ## Risks and follow-up
 
 - Flash the patched toolhead firmware (USB or GP20/GP21 service UART), confirm

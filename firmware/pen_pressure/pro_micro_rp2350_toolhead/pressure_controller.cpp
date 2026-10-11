@@ -400,6 +400,7 @@ void PressureController::service() {
       // retract/re-seek loop if the over-force is persistent.
       hard_limit_recoveries_++;
       home_seek_pulse_count_ = 0;
+      last_seek_travel_fine_ = 0;
       home_seek_pulses_while_switch_active_ = 0;
       setState(PressureState::RELEASE_TO_CLEAR);
       return;
@@ -519,6 +520,7 @@ void PressureController::service() {
             m3_started_ms_ = now;
             m3_force_acquired_ = false;
             home_seek_pulse_count_ = 0;
+            last_seek_travel_fine_ = 0;
             home_seek_pulses_while_switch_active_ = 0;
             home_seek_pulse_active_ = false;
             home_seek_active_pulse_ms_ = 0;
@@ -657,6 +659,14 @@ void PressureController::service() {
               home_seek_active_pulse_ms_ == HOME_SEEK_COARSE_PULSE_MS) {
             warm_seek_coarse_used_++;
           }
+          // Accumulate the travel of every pulse in fine-pulse equivalents.
+          // This is what makes an M3 from the GP2 home switch an absolute
+          // bed-height measurement: coarse pulses cover twice the distance.
+          last_seek_travel_fine_ = static_cast<uint16_t>(
+              last_seek_travel_fine_ +
+              (home_seek_active_pulse_ms_ == HOME_SEEK_COARSE_PULSE_MS
+                   ? SEEK_WARM_COARSE_RATIO
+                   : 1));
           home_seek_active_pulse_ms_ = 0;
           home_seek_pulse_count_++;
           home_seek_last_pulse_ended_ms_ = now;
@@ -683,21 +693,13 @@ void PressureController::service() {
           home_seek_active_pulse_ms_ = 0;
           hard_limit_recoveries_ = 0;
           implausible_recoveries_ = 0;
+          const uint16_t travel = last_seek_travel_fine_;
           if (warm_seek_) {
-            const uint16_t fine_pulses =
-                home_seek_pulse_count_ - warm_seek_coarse_used_;
-            const uint16_t travel =
-                warm_seek_coarse_used_ * SEEK_WARM_COARSE_RATIO + fine_pulses;
-            last_seek_travel_fine_ = travel;
             warm_seek_pulse_ema_ =
                 warm_seek_pulse_ema_ == 0
                     ? travel
                     : static_cast<uint16_t>(
                           (warm_seek_pulse_ema_ * 3 + travel) / 4);
-          } else {
-            // Cold seek after the GP2 home reference is fine-pulse only, so
-            // the raw pulse count already is the travel in fine-pulse units.
-            last_seek_travel_fine_ = home_seek_pulse_count_;
           }
           m3_force_acquired_ = true;
           last_force_correction_ms_ = now;

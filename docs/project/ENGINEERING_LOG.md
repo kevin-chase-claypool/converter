@@ -16,6 +16,12 @@
   quantize travel by up to ~0.3 mm, which is why the firmware export exists.
   Firmware is not compiled or flashed in this session; bench flash and shim
   calibration are the next actions.
+- Correction the same day: the M5 clearance is relative to the last contact, so
+  a warm M3 re-traverses a fixed gap and measures nothing about the bed. The
+  probe must retract to the GP2 switch first (`M65 P0`, wait `lift_home`, `M64
+  P0`, then `M3`), and the firmware now accumulates every seek pulse in
+  fine-pulse equivalents so the cold-seek travel is linear in millimetres. One
+  more flash of the same sketch is required.
 - Next action: flash the toolhead, confirm `last_seek_travel` in `p`, calibrate
   `--mm-per-pulse` with a 0.5 mm shim, run the first polar mesh, and tram the
   four rail-end adjusters against it.
