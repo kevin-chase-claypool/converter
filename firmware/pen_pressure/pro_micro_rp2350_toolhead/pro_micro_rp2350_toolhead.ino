@@ -61,7 +61,7 @@ void printConsoleLine(const char *line) {
 void printHelp() {
   printConsoleLine(
       "Toolhead commands: ? help | p one status snapshot | v toggle 1 s live stream | "
-      "h full retract to GP2 | k two-stage probe (coarse touch, pen-up, fine touch)");
+      "h full retract to GP2 | k two-stage probe (coarse touch, pen-up, two fine touches)");
   printConsoleLine("t tare | e engage/M3 | l lift/M5 | a automatic GP29 | c clear fault");
   printConsoleLine("Default output is quiet except startup, state changes, and one fault record.");
   printConsoleLine("FAULT stops/disables the motor; inspect the cause before sending c.");

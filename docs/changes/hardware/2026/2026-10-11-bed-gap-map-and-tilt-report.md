@@ -124,3 +124,9 @@ as the Klipper panel. The plotted height is `mean(gap) - gap`, i.e. positive =
 surface closer to the pen, matching Klipper's sign convention; the top-down,
 residual, and ring panels got the same dark styling, and a grid-only run now
 notes that ring data needs a polar mesh instead of leaving an empty panel.
+
+The operator also asked for unambiguous axis directions: every 2-D panel now
+carries a blue `+X ->` and an orange `up +Y` marker plus a `0,0 bed centre`
+cross, and the 3-D panel's axis labels state `+X ->` / `+Y ->` directly. A
+grid clipped by the reach radius (holes at the corners) is rendered as a
+surface with NaN holes rather than falling back to scattered points.

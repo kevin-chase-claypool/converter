@@ -269,6 +269,7 @@ void PressureController::setManualCommand(bool enabled, bool engage) {
 void PressureController::requestProbe() {
   probe_mode_ = true;
   probe_fine_stage_ = false;
+  probe_fine_touches_done_ = 0;
   probe_backoff_remaining_ = 0;
   probe_backoff_pulse_active_ = false;
   // Probe measurements are referenced to the GP2 switch, so arm the full
@@ -721,19 +722,26 @@ void PressureController::service() {
                            last_seek_travel_fine_) /
                           4);
           }
-          if (probe_mode_ && !probe_fine_stage_) {
-            // Two-stage probe, stage 1 complete: the coarse/fine seek found the
-            // ballpark contact. Back off a fixed small distance and let the
-            // fine-only seek below take the actual measurement.
-            probe_fine_stage_ = true;
-            probe_backoff_remaining_ = PROBE_BACKOFF_FINE_PULSES;
-            probe_backoff_pulse_active_ = false;
-            probe_backoff_pulse_ended_ms_ = now;
-            setState(PressureState::PROBE_BACKOFF);
-            break;
+          if (probe_mode_) {
+            if (!probe_fine_stage_) {
+              // Stage 1 complete: ballpark contact found. Every probe gets
+              // PROBE_FINE_TOUCHES fine-only measurement touches; each one is
+              // preceded by the same small controlled pen-up.
+              probe_fine_stage_ = true;
+              probe_fine_touches_done_ = 0;
+            } else {
+              probe_fine_touches_done_++;
+            }
+            if (probe_fine_touches_done_ < PROBE_FINE_TOUCHES) {
+              probe_backoff_remaining_ = PROBE_BACKOFF_FINE_PULSES;
+              probe_backoff_pulse_active_ = false;
+              probe_backoff_pulse_ended_ms_ = now;
+              setState(PressureState::PROBE_BACKOFF);
+              break;
+            }
+            probe_mode_ = false;
+            probe_fine_stage_ = false;
           }
-          probe_mode_ = false;
-          probe_fine_stage_ = false;
           m3_force_acquired_ = true;
           last_force_correction_ms_ = now;
           setState(PressureState::HOLD_FORCE);

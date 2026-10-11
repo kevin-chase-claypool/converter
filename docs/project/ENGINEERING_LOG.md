@@ -37,6 +37,11 @@
   cycle instead of a real two-touch probe. Added the `k` two-stage probe:
   coarse seek, eight 5 ms up-pulses of pen-up, then a fine-only measurement
   seek; `probe_travel` is net travel from GP2 so back-off cancels exactly.
+- Operator follow-ups the same evening: a second fine touch per probe as a
+  repeatability check (`PROBE_FINE_TOUCHES = 2`, host prints each fine seek's
+  travel), a 10 x 10 grid option spanning +-150 mm with points beyond the
+  180 mm reach skipped, and explicit `+X`/`+Y` direction markers on every map
+  panel plus a Klipper-style gridded 3-D surface in `bed_tilt_map.py`.
 - Next action: flash the toolhead, confirm `last_seek_travel` in `p`, calibrate
   `--mm-per-pulse` with a 0.5 mm shim, run the first polar mesh, and tram the
   four rail-end adjusters against it.

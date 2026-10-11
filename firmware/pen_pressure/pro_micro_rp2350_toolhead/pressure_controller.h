@@ -135,6 +135,7 @@ class PressureController {
   bool hold_correction_down_ = false;
   bool probe_mode_ = false;
   bool probe_fine_stage_ = false;
+  uint8_t probe_fine_touches_done_ = 0;
   uint8_t probe_backoff_remaining_ = 0;
   bool probe_backoff_pulse_active_ = false;
   uint32_t probe_backoff_pulse_started_ms_ = 0;

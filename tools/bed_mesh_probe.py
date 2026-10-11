@@ -334,22 +334,27 @@ def probe_point(robot, toolhead, args, x: float | None, y: float | None):
                 "probe timed out at X=%s Y=%s; last snapshot: %s"
                 % (x, y, snap.get("raw") if snap else "no reply")
             )
-        return travel_fine({}, after, args.mm_per_pulse)
+        # probe_travel is the net distance from the switch; last_seek_travel is
+        # the travel of the final (fine) seek alone - print both so a host can
+        # see whether the two fine touches agreed.
+        return (travel_fine({}, after, args.mm_per_pulse),
+                after.get("last_seek_travel", 0))
 
     # The first touch is a conditioning pass like a two-touch probe: it seats
     # the tip and mechanism before the measured touches, and its reading is
     # discarded. The measured touches each start from a fresh GP2 retract, so
     # their travel stays an absolute, switch-referenced distance.
     for _ in range(args.condition_touches):
-        conditioning = one_touch()
-        print("    conditioning touch: %.1f units (not measured)" % conditioning)
+        conditioning, conditioning_fine = one_touch()
+        print("    conditioning touch: %.1f units (not measured)  [last fine seek %.1f]"
+              % (conditioning, conditioning_fine))
 
     for _ in range(args.probes_per_point):
-        units = one_touch()
+        units, fine = one_touch()
         units_seen.append(units)
         values.append(units * args.mm_per_pulse)
-        print("    probe %d/%d: %.1f units (%.3f mm)"
-              % (len(values), args.probes_per_point, units, units * args.mm_per_pulse))
+        print("    probe %d/%d: %.1f units (%.3f mm)  [last fine seek %.1f units]"
+              % (len(values), args.probes_per_point, units, units * args.mm_per_pulse, fine))
     spread = (max(values) - min(values)) if len(values) > 1 else 0.0
     # The probe can land in two states ~1.5 mm apart (see the bimodal series in
     # the 2026-10-11 calibration runs). A trimmed mean absorbs both a single
@@ -376,6 +381,12 @@ def main():
     parser.add_argument("--radii", default="60,120,180")
     parser.add_argument("--angles", type=int, default=12, help="number of bed angles per radius (default 12 = 30 deg)")
     parser.add_argument("--grid", default="100,50,0", help="grid half-pitch values; 3 values gives a 5x5 grid")
+    parser.add_argument("--grid-count", type=int, default=0, dest="grid_count",
+                        help="grid: number of X and Y columns spanning --grid-span (e.g. 10)")
+    parser.add_argument("--grid-span", type=float, default=0.0, dest="grid_span",
+                        help="grid: half-extent in mm (e.g. 150 for +-150)")
+    parser.add_argument("--grid-reach", type=float, default=180.0, dest="grid_reach",
+                        help="skip grid points beyond this radius from the bed centre (default 180 mm)")
     parser.add_argument("--probes-per-point", type=int, default=2)
     parser.add_argument("--condition-touches", type=int, default=0, dest="condition_touches",
                         help="extra unmeasured seating touches before the measured probes "
@@ -437,16 +448,28 @@ def main():
                         robot.send("G90")
                         time.sleep(args.move_settle)
         else:
-            half = [float(v) for v in args.grid.split(",")]
-            values = sorted(set([-v for v in half] + [0.0] + list(half)))
+            if args.grid_count and args.grid_span:
+                span, count = args.grid_span, args.grid_count
+                values = [-span + 2.0 * span * i / (count - 1) for i in range(count)]
+            else:
+                half = [float(v) for v in args.grid.split(",")]
+                values = sorted(set([-v for v in half] + [0.0] + list(half)))
+            grid_points = []
             for iy, y in enumerate(values):
-                xs = values if iy % 2 == 0 else list(reversed(values))
-                for x in xs:
-                    gap, spread, units = probe_point(robot, toolhead, args, x, y)
-                    print("X=%7.1f  Y=%7.1f  gap=%.3f mm (%.1f units)  spread=%.3f"
-                          % (x, y, gap, units, spread))
-                    rows.append({"type": "grid", "x": "%.1f" % x, "y": "%.1f" % y,
-                                 "radius_mm": "", "angle_deg": "", "gap_mm": "%.3f" % gap})
+                xs_row = values if iy % 2 == 0 else list(reversed(values))
+                for x in xs_row:
+                    if math.hypot(x, y) <= args.grid_reach:
+                        grid_points.append((x, y))
+            skipped = len(values) * len(values) - len(grid_points)
+            if skipped:
+                print("note: %d of %d grid points lie beyond the %.0f mm reach and are skipped"
+                      % (skipped, len(values) * len(values), args.grid_reach))
+            for x, y in grid_points:
+                gap, spread, units = probe_point(robot, toolhead, args, x, y)
+                print("X=%7.2f  Y=%7.2f  gap=%.3f mm (%.1f units)  spread=%.3f"
+                      % (x, y, gap, units, spread))
+                rows.append({"type": "grid", "x": "%.2f" % x, "y": "%.2f" % y,
+                             "radius_mm": "", "angle_deg": "", "gap_mm": "%.3f" % gap})
     finally:
         robot.close()
         toolhead.close()

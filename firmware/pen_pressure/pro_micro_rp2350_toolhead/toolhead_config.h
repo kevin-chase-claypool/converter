@@ -111,6 +111,11 @@ constexpr uint32_t HOME_SEEK_TIMEOUT_MS = 60000;
 // does not bias the result.
 constexpr uint8_t PROBE_BACKOFF_FINE_PULSES = 8;
 constexpr uint32_t PROBE_BACKOFF_SETTLE_MS = 60;
+// Number of fine-only measurement touches after the coarse stage. Two touches
+// give the host a repeatability check on the same footprint: agreement to a
+// pulse means the point is trustworthy, a mismatch means the mechanism is not
+// settled. The reported probe_travel is the net travel to the last touch.
+constexpr uint8_t PROBE_FINE_TOUCHES = 2;
 constexpr uint8_t HOME_SEEK_PWM = 255;
 // Coarse-to-fine switch basis. The seek stays on 25 ms coarse pulses while the
 // normalized force is below this divided by HOME_SEEK_FINE_THRESHOLD_DIVISOR

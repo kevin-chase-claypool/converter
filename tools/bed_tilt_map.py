@@ -235,6 +235,19 @@ def _plot(rows, pred, residual, mounts, out_path: Path) -> None:
     # further away, so the plotted height is mean(gap) - gap.
     height = float(gaps.mean()) - gaps
 
+    def label_directions(ax):
+        """Mark which way +X and +Y run on a 2-D panel."""
+        box = dict(facecolor="#151515", edgecolor="none", alpha=0.75, pad=1.5)
+        ax.annotate("+X \u2192", xy=(0.99, 0.02), xycoords="axes fraction",
+                    ha="right", va="bottom", fontsize=14, fontweight="bold",
+                    color="#7fd4ff", bbox=box)
+        ax.annotate("\u2191 +Y", xy=(0.01, 0.99), xycoords="axes fraction",
+                    ha="left", va="top", fontsize=14, fontweight="bold",
+                    color="#ffd27f", bbox=box)
+        ax.plot([0.0], [0.0], marker="+", color="#cccccc", markersize=10)
+        ax.annotate("0,0 bed centre", (0.0, 0.0), textcoords="offset points",
+                    xytext=(6, -12), fontsize=9, color="#cccccc")
+
     dark = {
         "figure.facecolor": "#151515",
         "axes.facecolor": "#151515",
@@ -251,13 +264,18 @@ def _plot(rows, pred, residual, mounts, out_path: Path) -> None:
         ax3d = fig.add_subplot(2, 2, 1, projection="3d")
         ux = np.unique(xs)
         uy = np.unique(ys)
-        lattice = len(ux) * len(uy) == len(xs)
-        if lattice:
-            # Klipper-style sheet: the measured lattice as a surface with grid
-            # lines, exactly like the Bed Mesh panel.
-            lookup = {(x, y): h for x, y, h in zip(xs, ys, height)}
-            gx, gy = np.meshgrid(ux, uy)
-            gz = np.array([[lookup[(x, y)] for x in ux] for y in uy])
+        # Klipper-style sheet: the measured lattice as a surface with grid
+        # lines. Missing lattice points (a grid clipped to the reach radius)
+        # become NaN holes instead of dropping the surface entirely.
+        lookup = {(round(float(x), 3), round(float(y), 3)): h
+                  for x, y, h in zip(xs, ys, height)}
+        gx, gy = np.meshgrid(ux, uy)
+        gz = np.full(gx.shape, np.nan)
+        for yi, yv in enumerate(uy):
+            for xi, xv in enumerate(ux):
+                gz[yi, xi] = lookup.get((round(float(xv), 3), round(float(yv), 3)), np.nan)
+        present = int(np.isfinite(gz).sum())
+        if present >= max(0.6 * len(xs), 6):
             surf = ax3d.plot_surface(
                 gx, gy, gz, cmap="RdYlBu_r", edgecolor="#6a6a6a",
                 linewidth=0.5, antialiased=True, rstride=1, cstride=1,
@@ -268,8 +286,10 @@ def _plot(rows, pred, residual, mounts, out_path: Path) -> None:
                 tri, height, cmap="RdYlBu_r", edgecolor="#6a6a6a", linewidth=0.3,
             )
         ax3d.set_title("bed mesh (mm, + = higher)")
-        ax3d.set_xlabel("X (mm)")
-        ax3d.set_ylabel("Y (mm)")
+        # Direction is carried in the axis labels: the tick numbers already
+        # increase along each arrow, so the label states the positive end.
+        ax3d.set_xlabel("X (mm), +X \u2192", color="#7fd4ff")
+        ax3d.set_ylabel("Y (mm), +Y \u2192", color="#ffd27f")
         try:
             ax3d.set_box_aspect((1.0, 1.0, 0.32))
         except AttributeError:
@@ -293,6 +313,7 @@ def _plot(rows, pred, residual, mounts, out_path: Path) -> None:
         ax.set_title("top-down map")
         ax.set_xlabel("bed x (mm)")
         ax.set_ylabel("bed y (mm)")
+        label_directions(ax)
         ax.grid(True, alpha=0.25)
 
         ax = fig.add_subplot(2, 2, 3)
@@ -302,6 +323,7 @@ def _plot(rows, pred, residual, mounts, out_path: Path) -> None:
         ax.set_title("residual after plane fit")
         ax.set_xlabel("bed x (mm)")
         ax.set_ylabel("bed y (mm)")
+        label_directions(ax)
         ax.grid(True, alpha=0.25)
 
         ax = fig.add_subplot(2, 2, 4)

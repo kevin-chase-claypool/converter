@@ -187,3 +187,18 @@ the coarse stage's overshoot and the back-off cancel exactly. The mode disarms
 itself on the measurement contact (and on fault/M5), so production M3 cycles
 are untouched. Telemetry adds `probe_mode`; the host tool sends `k` by default
 and needs no conditioning touches.
+
+## Follow-up 5: two fine touches, and a 10 x 10 clipped grid
+
+Operator request: one coarse stage with **two** fine measurement touches. Each
+fine touch is preceded by the same eight-pulse pen-up, and `probe_travel` is
+the net travel to the last touch; the two touches therefore act as a
+repeatability check on the same footprint (agreement to a pulse = trustworthy
+point). `PROBE_FINE_TOUCHES` in `toolhead_config.h` sets the count. The host
+tool additionally prints the fine seek travel of the last touch
+(`last_seek_travel`) next to each probe so the agreement is visible live.
+
+The probe tool also gained `--grid-count` / `--grid-span` / `--grid-reach`: a
+10 x 10 grid over +-150 mm generated from a linspace, with points beyond the
+default 180 mm reach radius skipped (12 of 100 for that span) so a square grid
+can cover the round bed without soft-limit alarms.
