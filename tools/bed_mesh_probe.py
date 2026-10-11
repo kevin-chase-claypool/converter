@@ -387,6 +387,13 @@ def main():
                         help="grid: half-extent in mm (e.g. 150 for +-150)")
     parser.add_argument("--grid-reach", type=float, default=180.0, dest="grid_reach",
                         help="skip grid points beyond this radius from the bed centre (default 180 mm)")
+    parser.add_argument("--row-interleave", action=argparse.BooleanOptionalAction, default=True,
+                        dest="row_interleave",
+                        help="alternate -Y/+Y rows so slow drift during a long scan cannot "
+                             "masquerade as tilt (default on)")
+    parser.add_argument("--revisit-every", type=int, default=0, dest="revisit_every",
+                        help="re-probe the bed centre every N points and log it to "
+                             "<out>_revisits.csv so drift can be measured (0 = off)")
     parser.add_argument("--probes-per-point", type=int, default=2)
     parser.add_argument("--condition-touches", type=int, default=0, dest="condition_touches",
                         help="extra unmeasured seating touches before the measured probes "
@@ -468,6 +475,17 @@ def main():
         csv_handle.flush()
         written += 1
 
+    revisit_handle = None
+    revisit_writer = None
+    if args.revisit_every:
+        revisit_path = out.with_name(out.stem + "_revisits.csv")
+        revisit_handle = revisit_path.open("w", newline="")
+        revisit_handle.write("# centre revisit every %d points: drift check\n" % args.revisit_every)
+        revisit_writer = csv.DictWriter(revisit_handle, fieldnames=("at_point", "gap_mm"))
+        revisit_writer.writeheader()
+        revisit_handle.flush()
+    probes_done = 0
+
     try:
         if args.mode == "polar":
             radii = [float(v) for v in args.radii.split(",")]
@@ -507,6 +525,25 @@ def main():
                 for x in xs_row:
                     if math.hypot(x, y) <= args.grid_reach:
                         grid_points.append((x, y))
+            if args.row_interleave and len(values) > 2:
+                # Alternate between the -Y and +Y extremes so a slow drift over
+                # a long scan is orthogonal to the Y axis and cannot masquerade
+                # as tilt in the plane fit.
+                order = []
+                lo, hi = 0, len(values) - 1
+                while lo <= hi:
+                    order.append(values[lo])
+                    if hi != lo:
+                        order.append(values[hi])
+                    lo += 1
+                    hi -= 1
+                interleaved = []
+                for iy, y in enumerate(order):
+                    xs_row = values if iy % 2 == 0 else list(reversed(values))
+                    for x in xs_row:
+                        if math.hypot(x, y) <= args.grid_reach:
+                            interleaved.append((x, y))
+                grid_points = interleaved
             skipped = len(values) * len(values) - len(grid_points)
             if skipped:
                 print("note: %d of %d grid points lie beyond the %.0f mm reach and are skipped"
@@ -522,10 +559,21 @@ def main():
                           % (x, y, gap, units, spread))
                     record({"type": "grid", "x": "%.2f" % x, "y": "%.2f" % y,
                             "radius_mm": "", "angle_deg": "", "gap_mm": "%.3f" % gap})
+                probes_done += 1
+                if revisit_writer is not None and probes_done % args.revisit_every == 0:
+                    revisit = measure(0.0, 0.0, "revisit")
+                    if revisit is not None:
+                        revisit_writer.writerow({"at_point": probes_done,
+                                                 "gap_mm": "%.3f" % revisit[0]})
+                        revisit_handle.flush()
+                        print("    drift check: centre reads %.3f mm after %d points"
+                              % (revisit[0], probes_done))
     finally:
         robot.close()
         toolhead.close()
         csv_handle.close()
+        if revisit_handle is not None:
+            revisit_handle.close()
     print("\nwrote %s (%d points, %d failed)" % (out, written, failed))
     print("next: python tools\\bed_tilt_map.py %s --mounts-xy=\"x1,y1;x2,y2;x3,y3;x4,y4\"" % out)
 

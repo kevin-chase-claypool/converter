@@ -208,3 +208,22 @@ For a long unattended map the host tool now retries a failed point once
 after every point, so a two-hour run can be stopped or crash without losing
 completed data. The closing summary reports how many points were written and
 how many failed.
+
+## Follow-up 6: the two-hour scan was drift-contaminated
+
+The first 10 x 10 map (88 points) read 2.12 mm/100 mm of tilt - 5.7x the
+0.38 mm/100 mm the 12-minute 5 x 5 map measured an hour earlier. Row means
+rose smoothly from 5.1 mm (first row, y = -150) to 11.5 mm (last row,
+y = +150): because the scan advanced row-by-row up Y, a slow drift over the two
+hours is indistinguishable from a Y tilt. A real 1.2 deg tilt would have been
+obvious earlier, so the drift is the suspect (pencil creeping in its mount at
+~7 um per touch over ~880 touches, and/or thermal).
+
+Two tool mitigations:
+
+- **Row interleaving** (default on): rows alternate between the -Y and +Y
+  extremes, so a linear drift is orthogonal to the Y axis and cannot bias the
+  plane fit as tilt.
+- **Centre revisits** (`--revisit-every N`): the bed centre is re-probed every
+  N points and logged to `<out>_revisits.csv`, so drift is measured rather
+  than inferred, and can be subtracted in post-processing.
