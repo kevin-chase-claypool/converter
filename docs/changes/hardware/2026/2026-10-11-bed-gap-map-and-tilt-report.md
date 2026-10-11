@@ -64,8 +64,10 @@ visual instead of ad-hoc measurements.
 - The analysis fits `gap = c + bx*x + by*y` (optionally `+ d*r^2`), prints the
   tilt in mm per 100 mm and its bed-frame direction, reports the residual rms
   and max, and produces the per-mount report from `--mounts "angle,radius;..."`
-  with the required shim thickness and equivalent screw turns at the given
-  thread pitch.
+  or `--mounts-xy "x,y;x,y;..."` (the four gantry-rail end supports are known in
+  G54 machine coordinates from the frame CAD, so Cartesian input is the normal
+  case) with the required shim thickness and equivalent screw turns at the
+  given thread pitch.
 - The PNG shows the 3D gap surface, a top-down map with mount points marked,
   the residual after the plane fit (the warp/runout signature), and the ring
   profiles per radius.

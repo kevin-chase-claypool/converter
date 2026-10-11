@@ -129,6 +129,8 @@ def main():
     parser.add_argument("--template", metavar="PATH", help="write an empty CSV template and exit")
     parser.add_argument("--mounts", default="90,200;210,200;330,200",
                         help='mount points as "angle_deg:radius_mm" pairs separated by ; (default: 3 mounts at r=200)')
+    parser.add_argument("--mounts-xy", default=None,
+                        help='mount points as "x,y;x,y;..." in G54 machine mm; overrides --mounts')
     parser.add_argument("--bed-angle", type=float, default=0.0,
                         help="bed angle in degrees during the grid sweep (default 0)")
     parser.add_argument("--pitch", type=float, default=0.7,
@@ -159,12 +161,22 @@ def main():
         float(np.sqrt((residual ** 2).mean())), float(np.abs(residual).max())))
 
     mounts = []
-    for item in args.mounts.split(";"):
-        item = item.strip()
-        if not item:
-            continue
-        angle, radius = (float(v) for v in item.split(","))
-        mounts.append((angle, radius))
+    if args.mounts_xy:
+        for item in args.mounts_xy.split(";"):
+            item = item.strip()
+            if not item:
+                continue
+            x, y = (float(v) for v in item.split(","))
+            mounts.append((math.degrees(math.atan2(y, x)), math.hypot(x, y), x, y))
+    else:
+        for item in args.mounts.split(";"):
+            item = item.strip()
+            if not item:
+                continue
+            angle, radius = (float(v) for v in item.split(","))
+            mounts.append((angle, radius,
+                           radius * math.cos(math.radians(angle)),
+                           radius * math.sin(math.radians(angle))))
 
     def predict(x, y):
         value = c + bx * x + by * y
@@ -172,17 +184,15 @@ def main():
             value += coef[3] * (x * x + y * y)
         return value
 
-    ref = float(np.mean([predict(r * math.cos(math.radians(a)), r * math.sin(math.radians(a)))
-                         for a, r in mounts])) if mounts else c
+    ref = float(np.mean([predict(mx, my) for _, _, mx, my in mounts])) if mounts else c
     print("\nmount report (reference = mean of mount heights):")
-    print("  %-16s %9s %10s %10s" % ("mount (deg, mm)", "gap mm", "shim mm", "M4 turns"))
-    for angle, radius in mounts:
-        x, y = radius * math.cos(math.radians(angle)), radius * math.sin(math.radians(angle))
-        gap = predict(x, y)
+    print("  %-22s %9s %10s %10s" % ("mount (x, y) mm", "gap mm", "shim mm", "M4 turns"))
+    for angle, radius, mx, my in mounts:
+        gap = predict(mx, my)
         delta = gap - ref
         action = "raise" if delta > 0 else "lower"
-        print("  %-16s %9.3f %10s %10s" % (
-            "(%.0f, %.0f)" % (angle, radius), gap,
+        print("  %-22s %9.3f %10s %10s" % (
+            "(%.1f, %.1f)" % (mx, my), gap,
             "%+.3f (%s)" % (delta, action), "%+.2f" % (delta / args.pitch)))
     print("  (positive shim = add that thickness under the mount / raise the surface there)")
 
@@ -233,9 +243,7 @@ def _plot(rows, pred, residual, mounts, out_path: Path) -> None:
 
     ax = fig.add_subplot(2, 2, 2)
     sc = ax.scatter(xs, ys, c=gaps, cmap="coolwarm", s=60, edgecolors="k")
-    for angle, radius in mounts:
-        mx = radius * math.cos(math.radians(angle))
-        my = radius * math.sin(math.radians(angle))
+    for angle, radius, mx, my in mounts:
         ax.plot([mx], [my], marker="X", color="k", markersize=13)
         ax.annotate("mount", (mx, my), textcoords="offset points", xytext=(6, 6))
     fig.colorbar(sc, ax=ax, label="gap (mm)")
