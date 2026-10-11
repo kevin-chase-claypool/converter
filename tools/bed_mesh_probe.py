@@ -264,6 +264,7 @@ def probe_point(robot, toolhead, args, x: float | None, y: float | None):
             robot.send("M65 P0")
             deadline = time.time() + args.retract_timeout
             at_home = False
+            snap = None
             while time.time() < deadline:
                 snap = toolhead.snapshot()
                 if snap and snap.get("lift_home") == 1:
@@ -272,13 +273,17 @@ def probe_point(robot, toolhead, args, x: float | None, y: float | None):
                 time.sleep(args.poll_sleep)
             robot.send("M64 P0")
             if not at_home:
-                raise RuntimeError("toolhead never reported the GP2 home switch during retract")
+                raise RuntimeError(
+                    "toolhead never reported the GP2 home switch during retract; last snapshot: %s"
+                    % (snap.get("raw") if snap else "no reply")
+                )
         if x is not None:
             robot.send("G0 X%.3f Y%.3f" % (x, y))
             time.sleep(args.move_settle)
         before = toolhead.snapshot()
         robot.send("M3")
         after = None
+        snap = None
         deadline = time.time() + args.probe_timeout
         while time.time() < deadline:
             snap = toolhead.snapshot()
@@ -289,7 +294,10 @@ def probe_point(robot, toolhead, args, x: float | None, y: float | None):
         robot.send("M5")
         time.sleep(args.lift_settle)
         if after is None:
-            raise RuntimeError("probe timed out at X=%s Y=%s" % (x, y))
+            raise RuntimeError(
+                "probe timed out at X=%s Y=%s; last snapshot: %s"
+                % (x, y, snap.get("raw") if snap else "no reply")
+            )
         units = travel_fine(before or {}, after, args.mm_per_pulse)
         units_seen.append(units)
         values.append(units * args.mm_per_pulse)
