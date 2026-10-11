@@ -271,7 +271,8 @@ class FakeToolhead:
 def probe_point(robot, toolhead, args, x: float | None, y: float | None):
     values = []
     units_seen = []
-    for _ in range(args.probes_per_point):
+
+    def one_touch():
         robot.send("M5")
         time.sleep(args.lift_settle)
         if args.retract_each:
@@ -308,7 +309,6 @@ def probe_point(robot, toolhead, args, x: float | None, y: float | None):
         if x is not None:
             robot.send("G0 X%.3f Y%.3f" % (x, y))
             time.sleep(args.move_settle)
-        before = toolhead.snapshot()
         robot.send("M3")
         after = None
         snap = None
@@ -326,7 +326,18 @@ def probe_point(robot, toolhead, args, x: float | None, y: float | None):
                 "probe timed out at X=%s Y=%s; last snapshot: %s"
                 % (x, y, snap.get("raw") if snap else "no reply")
             )
-        units = travel_fine(before or {}, after, args.mm_per_pulse)
+        return travel_fine({}, after, args.mm_per_pulse)
+
+    # The first touch is a conditioning pass like a two-touch probe: it seats
+    # the tip and mechanism before the measured touches, and its reading is
+    # discarded. The measured touches each start from a fresh GP2 retract, so
+    # their travel stays an absolute, switch-referenced distance.
+    for _ in range(args.condition_touches):
+        conditioning = one_touch()
+        print("    conditioning touch: %.1f units (not measured)" % conditioning)
+
+    for _ in range(args.probes_per_point):
+        units = one_touch()
         units_seen.append(units)
         values.append(units * args.mm_per_pulse)
         print("    probe %d/%d: %.1f units (%.3f mm)"
@@ -358,6 +369,9 @@ def main():
     parser.add_argument("--angles", type=int, default=12, help="number of bed angles per radius (default 12 = 30 deg)")
     parser.add_argument("--grid", default="100,50,0", help="grid half-pitch values; 3 values gives a 5x5 grid")
     parser.add_argument("--probes-per-point", type=int, default=2)
+    parser.add_argument("--condition-touches", type=int, default=1, dest="condition_touches",
+                        help="unmeasured seating touches before the measured probes (default 1, "
+                             "double-touch style: rough approach first, then measure)")
     parser.add_argument("--retract-each", action=argparse.BooleanOptionalAction, default=True,
                         help="full-retract to the GP2 home switch before every probe, so the "
                              "travel is an absolute bed-height measurement (default: on)")
