@@ -292,6 +292,10 @@ def probe_point(robot, toolhead, args, x: float | None, y: float | None):
                     "toolhead never reported the GP2 home switch during retract; last snapshot: %s"
                     % (snap.get("raw") if snap else "no reply")
                 )
+            # Let the mechanism settle on the switch before the seek: the hard
+            # retract stop preloads the thread, and probing immediately after
+            # arrival adds a few pulses of scatter between cycles.
+            time.sleep(args.home_settle)
         if x is not None:
             robot.send("G0 X%.3f Y%.3f" % (x, y))
             time.sleep(args.move_settle)
@@ -342,6 +346,8 @@ def main():
                              "'h' service command (the arm line is shared with the magnetic "
                              "readiness handshake; leave this off)")
     parser.add_argument("--retract-timeout", type=float, default=15.0)
+    parser.add_argument("--home-settle", type=float, default=0.6, dest="home_settle",
+                        help="settle time on the GP2 switch before each seek (default 0.6 s)")
     parser.add_argument("--mm-per-pulse", type=float, default=FINE_PULSE_MM,
                         help="calibrated mm per fine-pulse travel unit (default %.4f from 1.75 mm/100 ms)" % FINE_PULSE_MM)
     parser.add_argument("--probe-timeout", type=float, default=30.0)
