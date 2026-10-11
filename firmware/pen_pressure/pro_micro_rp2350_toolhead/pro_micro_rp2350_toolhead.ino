@@ -59,7 +59,9 @@ void printConsoleLine(const char *line) {
 }
 
 void printHelp() {
-  printConsoleLine("Toolhead commands: ? help | p one status snapshot | v toggle 1 s live stream");
+  printConsoleLine(
+      "Toolhead commands: ? help | p one status snapshot | v toggle 1 s live stream | "
+      "h full retract to GP2");
   printConsoleLine("t tare | e engage/M3 | l lift/M5 | a automatic GP29 | c clear fault");
   printConsoleLine("Default output is quiet except startup, state changes, and one fault record.");
   printConsoleLine("FAULT stops/disables the motor; inspect the cause before sending c.");
@@ -178,6 +180,10 @@ void dispatchServiceCommand(char command) {
     case 'l': pressure.setManualCommand(true, false); break;
     case 'a': pressure.setManualCommand(false, false); break;
     case 'c': pressure.clearFault(); break;
+    // Dedicated full retract for host tools (bed-mesh probing). Unlike the
+    // GP28/Aux0 arm line, this cannot be captured by the magnetic readiness
+    // handshake and works even while the magnetic subsystem is faulted.
+    case 'h': setStatusFlag(STATUS_FULL_RETRACT_REQUESTED, true); break;
     default: break;
   }
 }

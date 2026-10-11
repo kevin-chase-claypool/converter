@@ -141,6 +141,9 @@ class ToolheadLink:
                 return parse_telemetry(line)
         return None
 
+    def send(self, data: str):
+        self.ser.write(data.encode("ascii"))
+
     def close(self):
         self.ser.close()
 
@@ -217,6 +220,11 @@ class FakeToolhead:
             self.lift_home = 0
         if line.strip() == "M65 P0":
             self.lift_home = 1
+        if line.strip() == "h":
+            self.lift_home = 1
+
+    def send(self, data: str):
+        self._note_move(data)
 
     def snapshot(self, timeout: float = 2.0):
         x, y = self.pos
@@ -261,7 +269,13 @@ def probe_point(robot, toolhead, args, x: float | None, y: float | None):
             # The M5 clearance is relative to the last contact, so a warm M3
             # only re-traverses a fixed gap. The absolute measurement is a cold
             # seek from the GP2 lift-home switch: retract fully first.
-            robot.send("M65 P0")
+            # Preferred: the toolhead's own 'h' service command. The GP28/Aux0
+            # arm line is dual-purpose (magnetic readiness handshake vs
+            # end-of-print retract) and is not used unless asked.
+            if args.retract_via_arm:
+                robot.send("M65 P0")
+            else:
+                toolhead.send("h")
             deadline = time.time() + args.retract_timeout
             at_home = False
             snap = None
@@ -271,7 +285,8 @@ def probe_point(robot, toolhead, args, x: float | None, y: float | None):
                     at_home = True
                     break
                 time.sleep(args.poll_sleep)
-            robot.send("M64 P0")
+            if args.retract_via_arm:
+                robot.send("M64 P0")
             if not at_home:
                 raise RuntimeError(
                     "toolhead never reported the GP2 home switch during retract; last snapshot: %s"
@@ -320,6 +335,10 @@ def main():
     parser.add_argument("--retract-each", action=argparse.BooleanOptionalAction, default=True,
                         help="full-retract to the GP2 home switch before every probe, so the "
                              "travel is an absolute bed-height measurement (default: on)")
+    parser.add_argument("--retract-via-arm", action="store_true",
+                        help="retract with the RP23NC M65 P0 arm line instead of the toolhead's "
+                             "'h' service command (the arm line is shared with the magnetic "
+                             "readiness handshake; leave this off)")
     parser.add_argument("--retract-timeout", type=float, default=15.0)
     parser.add_argument("--mm-per-pulse", type=float, default=FINE_PULSE_MM,
                         help="calibrated mm per fine-pulse travel unit (default %.4f from 1.75 mm/100 ms)" % FINE_PULSE_MM)

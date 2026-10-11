@@ -116,6 +116,22 @@ the warm-seek EMA is built from that same accumulator. This is a revision of
 the same patch and needs one more flash of the same sketch; the host side is
 unchanged apart from the retract cycle.
 
+## Follow-up 2: the retract must not ride the magnetic arm line
+
+The first bench probe attempt failed with "toolhead never reported the GP2 home
+switch during retract", and the snapshot showed `mag=FAULT`. Root cause: the
+GP28/Aux0 arm line is dual-purpose. On an arm edge during normal print the
+toolhead decides between three outcomes: magnetic prerequisites ready -> start
+the registration handshake; healthy but not ready -> request the end-of-print
+full retract; already faulted -> enter another magnetic fault. A host retract
+therefore silently does nothing whenever the magnetic subsystem is faulted, and
+during production it can be captured by the registration handshake.
+
+The integrated firmware now exposes a dedicated service command `h` ("full
+retract to GP2") that sets the same `STATUS_FULL_RETRACT_REQUESTED` flag Core 0
+consumes, bypassing the arm path entirely. `tools/bed_mesh_probe.py` uses `h`
+by default; `--retract-via-arm` restores the M65 P0 behaviour for experiments.
+
 ## Risks and follow-up
 
 - Flash the patched toolhead firmware (USB or GP20/GP21 service UART), confirm

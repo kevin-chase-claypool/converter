@@ -22,6 +22,12 @@
   P0`, then `M3`), and the firmware now accumulates every seek pulse in
   fine-pulse equivalents so the cold-seek travel is linear in millimetres. One
   more flash of the same sketch is required.
+- Second correction: the GP28/Aux0 arm line is dual-purpose (magnetic
+  registration handshake vs end-of-print retract) and does nothing when the
+  magnetic subsystem is faulted - the first bench probe died on exactly that
+  (`mag=FAULT`, no retract). Added a dedicated toolhead service command `h`
+  (full retract to GP2) that sets the retract-request flag directly; the probe
+  tool uses `h` by default, `--retract-via-arm` restores M65 P0.
 - Next action: flash the toolhead, confirm `last_seek_travel` in `p`, calibrate
   `--mm-per-pulse` with a 0.5 mm shim, run the first polar mesh, and tram the
   four rail-end adjusters against it.
