@@ -407,6 +407,9 @@ def main():
     parser.add_argument("--mm-per-pulse", type=float, default=FINE_PULSE_MM,
                         help="calibrated mm per fine-pulse travel unit (default %.4f from 1.75 mm/100 ms)" % FINE_PULSE_MM)
     parser.add_argument("--probe-timeout", type=float, default=30.0)
+    parser.add_argument("--retries", type=int, default=1,
+                        help="per-point retries after a fault (each retry clears the toolhead "
+                             "fault and re-probes; default 1)")
     parser.add_argument("--lift-settle", type=float, default=0.9)
     parser.add_argument("--move-settle", type=float, default=0.4)
     parser.add_argument("--out", default="bed_mesh.csv")
@@ -426,7 +429,45 @@ def main():
         robot = RobotLink(args.robot_host, args.robot_port, args.robot_serial)
         toolhead = ToolheadLink(args.toolhead_serial)
 
-    rows = []
+    out = Path(args.out)
+    csv_handle = out.open("w", newline="")
+    csv_handle.write("# toolhead contact-seek bed mesh; gap = travel from M5 clearance to contact\n")
+    writer = csv.DictWriter(
+        csv_handle, fieldnames=("type", "x", "y", "radius_mm", "angle_deg", "gap_mm")
+    )
+    writer.writeheader()
+    csv_handle.flush()
+    written = 0
+    failed = 0
+
+    def measure(x, y, label: str):
+        """Probe with recovery: one fault must not kill a two-hour run."""
+        nonlocal failed
+        for attempt in range(1, args.retries + 2):
+            try:
+                return probe_point(robot, toolhead, args, x, y)
+            except RuntimeError as exc:
+                print("  %s failed (attempt %d): %s" % (label, attempt, exc))
+                if attempt > args.retries:
+                    failed += 1
+                    return None
+                # Clear a toolhead fault and return it to following the M5/M3
+                # line, then try the same point again.
+                try:
+                    robot.send("M5")
+                    toolhead.send("c")
+                    time.sleep(0.6)
+                    toolhead.send("a")
+                    time.sleep(1.2)
+                except Exception as recovery_error:  # noqa: BLE001
+                    print("  recovery failed: %s" % recovery_error)
+
+    def record(row):
+        nonlocal written
+        writer.writerow(row)
+        csv_handle.flush()
+        written += 1
+
     try:
         if args.mode == "polar":
             radii = [float(v) for v in args.radii.split(",")]
@@ -436,12 +477,18 @@ def main():
                 time.sleep(args.move_settle)
                 for k in range(args.angles):
                     angle = k * step_deg
-                    gap, spread, units = probe_point(robot, toolhead, args, None, None)
-                    print("r=%6.1f mm  angle=%5.1f deg  gap=%.3f mm (%.1f units)  spread=%.3f"
-                          % (radius, angle, gap, units, spread))
-                    rows.append({"type": "ring", "x": "", "y": "",
-                                 "radius_mm": "%.1f" % radius, "angle_deg": "%.1f" % angle,
-                                 "gap_mm": "%.3f" % gap})
+                    result = measure(None, None, "r=%.0f angle=%.0f" % (radius, angle))
+                    if result is None:
+                        record({"type": "ring", "x": "", "y": "",
+                                "radius_mm": "%.1f" % radius, "angle_deg": "%.1f" % angle,
+                                "gap_mm": ""})
+                    else:
+                        gap, spread, units = result
+                        print("r=%6.1f mm  angle=%5.1f deg  gap=%.3f mm (%.1f units)  spread=%.3f"
+                              % (radius, angle, gap, units, spread))
+                        record({"type": "ring", "x": "", "y": "",
+                                "radius_mm": "%.1f" % radius, "angle_deg": "%.1f" % angle,
+                                "gap_mm": "%.3f" % gap})
                     if k < args.angles - 1:
                         robot.send("G91")
                         robot.send("G1 A%.4f F6000" % (step_deg * RATIO))
@@ -465,22 +512,21 @@ def main():
                 print("note: %d of %d grid points lie beyond the %.0f mm reach and are skipped"
                       % (skipped, len(values) * len(values), args.grid_reach))
             for x, y in grid_points:
-                gap, spread, units = probe_point(robot, toolhead, args, x, y)
-                print("X=%7.2f  Y=%7.2f  gap=%.3f mm (%.1f units)  spread=%.3f"
-                      % (x, y, gap, units, spread))
-                rows.append({"type": "grid", "x": "%.2f" % x, "y": "%.2f" % y,
-                             "radius_mm": "", "angle_deg": "", "gap_mm": "%.3f" % gap})
+                result = measure(x, y, "X=%.1f Y=%.1f" % (x, y))
+                if result is None:
+                    record({"type": "grid", "x": "%.2f" % x, "y": "%.2f" % y,
+                            "radius_mm": "", "angle_deg": "", "gap_mm": ""})
+                else:
+                    gap, spread, units = result
+                    print("X=%7.2f  Y=%7.2f  gap=%.3f mm (%.1f units)  spread=%.3f"
+                          % (x, y, gap, units, spread))
+                    record({"type": "grid", "x": "%.2f" % x, "y": "%.2f" % y,
+                            "radius_mm": "", "angle_deg": "", "gap_mm": "%.3f" % gap})
     finally:
         robot.close()
         toolhead.close()
-
-    out = Path(args.out)
-    with out.open("w", newline="") as handle:
-        handle.write("# toolhead contact-seek bed mesh; gap = travel from M5 clearance to contact\n")
-        writer = csv.DictWriter(handle, fieldnames=("type", "x", "y", "radius_mm", "angle_deg", "gap_mm"))
-        writer.writeheader()
-        writer.writerows(rows)
-    print("\nwrote %s (%d points)" % (out, len(rows)))
+        csv_handle.close()
+    print("\nwrote %s (%d points, %d failed)" % (out, written, failed))
     print("next: python tools\\bed_tilt_map.py %s --mounts-xy=\"x1,y1;x2,y2;x3,y3;x4,y4\"" % out)
 
 

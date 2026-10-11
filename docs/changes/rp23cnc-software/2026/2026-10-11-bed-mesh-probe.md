@@ -202,3 +202,9 @@ The probe tool also gained `--grid-count` / `--grid-span` / `--grid-reach`: a
 10 x 10 grid over +-150 mm generated from a linspace, with points beyond the
 default 180 mm reach radius skipped (12 of 100 for that span) so a square grid
 can cover the round bed without soft-limit alarms.
+
+For a long unattended map the host tool now retries a failed point once
+(clearing the toolhead fault and re-probing) and writes the CSV **incrementally**
+after every point, so a two-hour run can be stopped or crash without losing
+completed data. The closing summary reports how many points were written and
+how many failed.
