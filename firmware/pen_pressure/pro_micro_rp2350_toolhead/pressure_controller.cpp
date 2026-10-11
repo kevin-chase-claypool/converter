@@ -693,13 +693,14 @@ void PressureController::service() {
           home_seek_active_pulse_ms_ = 0;
           hard_limit_recoveries_ = 0;
           implausible_recoveries_ = 0;
-          const uint16_t travel = last_seek_travel_fine_;
           if (warm_seek_) {
             warm_seek_pulse_ema_ =
                 warm_seek_pulse_ema_ == 0
-                    ? travel
+                    ? last_seek_travel_fine_
                     : static_cast<uint16_t>(
-                          (warm_seek_pulse_ema_ * 3 + travel) / 4);
+                          (warm_seek_pulse_ema_ * 3 +
+                           last_seek_travel_fine_) /
+                          4);
           }
           m3_force_acquired_ = true;
           last_force_correction_ms_ = now;
