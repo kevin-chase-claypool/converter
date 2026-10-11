@@ -33,6 +33,10 @@
   missed (one of five probes read 37 units instead of ~55). Added
   `probe_travel` (total travel since the retract, corrections included), and
   the host tool prefers it; median-of-repeats remains the fallback.
+- Fourth correction (operator review): the conditioning pass re-ran the coarse
+  cycle instead of a real two-touch probe. Added the `k` two-stage probe:
+  coarse seek, eight 5 ms up-pulses of pen-up, then a fine-only measurement
+  seek; `probe_travel` is net travel from GP2 so back-off cancels exactly.
 - Next action: flash the toolhead, confirm `last_seek_travel` in `p`, calibrate
   `--mm-per-pulse` with a 0.5 mm shim, run the first polar mesh, and tram the
   four rail-end adjusters against it.

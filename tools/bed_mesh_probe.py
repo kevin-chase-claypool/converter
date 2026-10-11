@@ -49,6 +49,7 @@ TELEMETRY_KEYS = (
     "warm_ema",
     "last_seek_travel",
     "probe_travel",
+    "probe_mode",
     "force_norm_raw",
     "cs1238_delta",
     "lift_home",
@@ -229,6 +230,9 @@ class FakeToolhead:
         if line.strip() == "h":
             self.lift_home = 1
             self.probe_travel = 0.0
+        if line.strip() == "k":
+            self.lift_home = 1
+            self.probe_travel = 0.0
 
     def send(self, data: str):
         self._note_move(data)
@@ -285,7 +289,10 @@ def probe_point(robot, toolhead, args, x: float | None, y: float | None):
             if args.retract_via_arm:
                 robot.send("M65 P0")
             else:
-                toolhead.send("h")
+                # 'k' arms the toolhead's two-stage probe (coarse touch,
+                # controlled pen-up, fine measurement touch) and requests the
+                # full retract in the same command.
+                toolhead.send("k")
             deadline = time.time() + args.retract_timeout
             at_home = False
             snap = None
@@ -369,9 +376,9 @@ def main():
     parser.add_argument("--angles", type=int, default=12, help="number of bed angles per radius (default 12 = 30 deg)")
     parser.add_argument("--grid", default="100,50,0", help="grid half-pitch values; 3 values gives a 5x5 grid")
     parser.add_argument("--probes-per-point", type=int, default=2)
-    parser.add_argument("--condition-touches", type=int, default=1, dest="condition_touches",
-                        help="unmeasured seating touches before the measured probes (default 1, "
-                             "double-touch style: rough approach first, then measure)")
+    parser.add_argument("--condition-touches", type=int, default=0, dest="condition_touches",
+                        help="extra unmeasured seating touches before the measured probes "
+                             "(default 0: the toolhead's two-stage probe already seats the tip)")
     parser.add_argument("--retract-each", action=argparse.BooleanOptionalAction, default=True,
                         help="full-retract to the GP2 home switch before every probe, so the "
                              "travel is an absolute bed-height measurement (default: on)")

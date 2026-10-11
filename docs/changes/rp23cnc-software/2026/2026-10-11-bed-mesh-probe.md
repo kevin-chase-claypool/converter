@@ -165,3 +165,25 @@ without the new field.
 - `tools/bed_mesh_probe.py`: host-side mesh probing and CSV output.
 - `firmware/README.md`: toolhead section documents the new field.
 - `docs/project/ENGINEERING_LOG.md`: session entry.
+
+## Follow-up 4: a proper two-stage probe
+
+The conditioning-touch approach was rejected on review: it re-ran the whole
+coarse cycle instead of doing what a two-touch probe does. The firmware now has
+a real two-stage probe, armed by the service command `k` (which also requests
+the full retract):
+
+1. **Coarse stage** - the existing cold seek from GP2 (10 ms coarse pulses with
+   the 5 ms fine finale) finds the ballpark contact.
+2. **Controlled pen-up** - eight discrete 5 ms up-pulses (~0.7 mm) with a short
+   settle, matching the drive direction of the clearance lift.
+3. **Fine stage** - `HOME_SEEK_CONTACT` re-entered with
+   `home_seek_force_fine_only_`, so the measurement approach uses 5 ms pulses
+   only, starting from just above the surface.
+
+`probe_travel` counts down-pulses positive and the pen-up pulses negative, so
+the reported value is the net distance from the GP2 switch to the fine touch -
+the coarse stage's overshoot and the back-off cancel exactly. The mode disarms
+itself on the measurement contact (and on fault/M5), so production M3 cycles
+are untouched. Telemetry adds `probe_mode`; the host tool sends `k` by default
+and needs no conditioning touches.

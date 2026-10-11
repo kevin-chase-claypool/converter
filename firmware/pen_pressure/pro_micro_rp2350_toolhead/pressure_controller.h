@@ -13,6 +13,7 @@ enum class PressureState : uint8_t {
   LIFTED,
   MECHANICAL_ENGAGE,
   HOME_SEEK_CONTACT,
+  PROBE_BACKOFF,
   SEEK_CONTACT,
   HOLD_FORCE,
   RELEASE_TO_CLEAR,
@@ -29,6 +30,10 @@ class PressureController {
   void setManualCommand(bool enabled, bool engage);
   void clearFault();
   void forceFault(const char *reason);
+  // Arm the two-stage probe for the next M3: full retract, coarse seek to the
+  // ballpark contact, a small controlled pen-up, then a fine-only measurement
+  // seek. Disarms itself when the measurement completes.
+  void requestProbe();
 
   PressureState state() const { return state_; }
   const char *stateName() const;
@@ -56,6 +61,7 @@ class PressureController {
   // after a seek stops early. This is the number a bed-mesh probe should read:
   // it is the distance from the GP2 switch down to the settled contact.
   uint32_t probeTravelFine() const { return probe_travel_fine_; }
+  bool probeMode() const { return probe_mode_; }
   uint16_t holdUrgentReliefCount() const { return hold_urgent_relief_count_; }
   uint32_t holdUrgentReliefTotalMs() const { return hold_urgent_relief_total_ms_; }
   uint16_t hardLimitRecoveries() const { return hard_limit_recoveries_; }
@@ -127,6 +133,12 @@ class PressureController {
   uint16_t last_seek_travel_fine_ = 0;
   uint32_t probe_travel_fine_ = 0;
   bool hold_correction_down_ = false;
+  bool probe_mode_ = false;
+  bool probe_fine_stage_ = false;
+  uint8_t probe_backoff_remaining_ = 0;
+  bool probe_backoff_pulse_active_ = false;
+  uint32_t probe_backoff_pulse_started_ms_ = 0;
+  uint32_t probe_backoff_pulse_ended_ms_ = 0;
   uint16_t hold_urgent_relief_count_ = 0;
   uint32_t hold_urgent_relief_total_ms_ = 0;
   uint16_t cs1238_rejected_samples_ = 0;

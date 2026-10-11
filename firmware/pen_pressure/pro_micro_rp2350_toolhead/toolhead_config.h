@@ -104,6 +104,13 @@ constexpr uint8_t HOME_SEEK_MAX_SWITCH_ACTIVE_PULSES = 30;
 // The settle dominates each bounded pulse. The timeout must allow the full
 // coarse-plus-fine pulse sequence (100 x 325 ms worst case).
 constexpr uint32_t HOME_SEEK_TIMEOUT_MS = 60000;
+// Two-stage probe (service command 'k'): after the coarse seek finds the
+// ballpark contact, back off this many fine pulses (~0.7 mm at 0.0875 mm per
+// 5 ms pulse) and take the measurement with a fine-only approach. The net
+// travel from the GP2 switch is what the host reads, so the back-off itself
+// does not bias the result.
+constexpr uint8_t PROBE_BACKOFF_FINE_PULSES = 8;
+constexpr uint32_t PROBE_BACKOFF_SETTLE_MS = 60;
 constexpr uint8_t HOME_SEEK_PWM = 255;
 // Coarse-to-fine switch basis. The seek stays on 25 ms coarse pulses while the
 // normalized force is below this divided by HOME_SEEK_FINE_THRESHOLD_DIVISOR

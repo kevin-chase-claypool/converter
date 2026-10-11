@@ -45,6 +45,7 @@ const char *PressureController::stateName() const {
     case PressureState::LIFTED: return "LIFTED";
     case PressureState::MECHANICAL_ENGAGE: return "MECHANICAL_ENGAGE";
     case PressureState::HOME_SEEK_CONTACT: return "HOME_SEEK_CONTACT";
+    case PressureState::PROBE_BACKOFF: return "PROBE_BACKOFF";
     case PressureState::SEEK_CONTACT: return "SEEK_CONTACT";
     case PressureState::HOLD_FORCE: return "HOLD_FORCE";
     case PressureState::RELEASE_TO_CLEAR: return "RELEASE_TO_CLEAR";
@@ -265,6 +266,16 @@ void PressureController::setManualCommand(bool enabled, bool engage) {
   manual_engage_ = engage;
 }
 
+void PressureController::requestProbe() {
+  probe_mode_ = true;
+  probe_fine_stage_ = false;
+  probe_backoff_remaining_ = 0;
+  probe_backoff_pulse_active_ = false;
+  // Probe measurements are referenced to the GP2 switch, so arm the full
+  // retract in the same request.
+  setStatusFlag(STATUS_FULL_RETRACT_REQUESTED, true);
+}
+
 void PressureController::publishSafetyState() {
   const bool lifted = state_ == PressureState::LIFTED;
   const bool lift_reference_ok = MECHANICAL_PRELOAD_MODE ? liftHomeActive()
@@ -336,6 +347,9 @@ void PressureController::enterFault(const char *reason) {
   fault_reason_ = reason;
   motorStop();
   setDriverEnabled(false);
+  probe_mode_ = false;
+  probe_fine_stage_ = false;
+  probe_backoff_pulse_active_ = false;
   setState(PressureState::FAULT);
 }
 
@@ -707,6 +721,19 @@ void PressureController::service() {
                            last_seek_travel_fine_) /
                           4);
           }
+          if (probe_mode_ && !probe_fine_stage_) {
+            // Two-stage probe, stage 1 complete: the coarse/fine seek found the
+            // ballpark contact. Back off a fixed small distance and let the
+            // fine-only seek below take the actual measurement.
+            probe_fine_stage_ = true;
+            probe_backoff_remaining_ = PROBE_BACKOFF_FINE_PULSES;
+            probe_backoff_pulse_active_ = false;
+            probe_backoff_pulse_ended_ms_ = now;
+            setState(PressureState::PROBE_BACKOFF);
+            break;
+          }
+          probe_mode_ = false;
+          probe_fine_stage_ = false;
           m3_force_acquired_ = true;
           last_force_correction_ms_ = now;
           setState(PressureState::HOLD_FORCE);
@@ -735,6 +762,53 @@ void PressureController::service() {
       }
       break;
     }
+
+    case PressureState::PROBE_BACKOFF:
+      if (!engage) {
+        motorStop();
+        setDriverEnabled(false);
+        probe_mode_ = false;
+        probe_fine_stage_ = false;
+        probe_backoff_pulse_active_ = false;
+        setState(PressureState::RELEASE_TO_CLEAR);
+        break;
+      }
+      if (probe_backoff_pulse_active_) {
+        if (now - probe_backoff_pulse_started_ms_ >= HOME_SEEK_FINE_PULSE_MS) {
+          motorStop();
+          setDriverEnabled(false);
+          probe_backoff_pulse_active_ = false;
+          probe_backoff_pulse_ended_ms_ = now;
+          // One fine pulse of pen-up: the net travel since the GP2 datum
+          // decreases by one fine-pulse unit.
+          if (probe_travel_fine_ > 0) {
+            probe_travel_fine_ -= 1;
+          }
+          if (probe_backoff_remaining_ > 0) {
+            probe_backoff_remaining_--;
+          }
+          if (probe_backoff_remaining_ == 0) {
+            // Stage 2: fine-only measurement seek from just above the surface.
+            home_seek_pulse_count_ = 0;
+            last_seek_travel_fine_ = 0;
+            home_seek_pulses_while_switch_active_ = 0;
+            home_seek_pulse_active_ = false;
+            home_seek_active_pulse_ms_ = 0;
+            home_seek_last_pulse_ended_ms_ = 0;
+            home_wait_for_release_tare_ = false;
+            home_seek_force_fine_only_ = true;
+            setState(PressureState::HOME_SEEK_CONTACT);
+          }
+        }
+        break;
+      }
+      if (now - probe_backoff_pulse_ended_ms_ >= PROBE_BACKOFF_SETTLE_MS) {
+        // Same drive direction as the clearance lift.
+        motorDrive(LIFT_USES_IN1_PWM, HOME_SEEK_PWM);
+        probe_backoff_pulse_started_ms_ = now;
+        probe_backoff_pulse_active_ = true;
+      }
+      break;
 
     case PressureState::SEEK_CONTACT:
       if (!engage) {

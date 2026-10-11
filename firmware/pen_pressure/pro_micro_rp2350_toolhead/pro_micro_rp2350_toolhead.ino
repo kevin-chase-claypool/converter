@@ -61,7 +61,7 @@ void printConsoleLine(const char *line) {
 void printHelp() {
   printConsoleLine(
       "Toolhead commands: ? help | p one status snapshot | v toggle 1 s live stream | "
-      "h full retract to GP2");
+      "h full retract to GP2 | k two-stage probe (coarse touch, pen-up, fine touch)");
   printConsoleLine("t tare | e engage/M3 | l lift/M5 | a automatic GP29 | c clear fault");
   printConsoleLine("Default output is quiet except startup, state changes, and one fault record.");
   printConsoleLine("FAULT stops/disables the motor; inspect the cause before sending c.");
@@ -96,7 +96,7 @@ void emitTelemetry(const char *event) {
       "cs1238_delta=%ld force_norm_raw=%ld "
       "hard_limit_raw=%ld "
       "lift_home=%d home_seek_pulses=%u/%u warm_ema=%u last_seek_travel=%u "
-      "probe_travel=%lu "
+      "probe_travel=%lu probe_mode=%d "
       "urgent_relief_count=%u urgent_relief_ms=%lu "
       "recoveries=%u "
       "cs1238_rejects=%u cs1238_last_reject=%ld "
@@ -113,6 +113,7 @@ void emitTelemetry(const char *event) {
       static_cast<unsigned int>(pressure.warmSeekPulseEma()),
       static_cast<unsigned int>(pressure.lastSeekTravelFine()),
       static_cast<unsigned long>(pressure.probeTravelFine()),
+      pressure.probeMode() ? 1 : 0,
       static_cast<unsigned int>(pressure.holdUrgentReliefCount()),
       static_cast<unsigned long>(pressure.holdUrgentReliefTotalMs()),
       static_cast<unsigned int>(pressure.hardLimitRecoveries() + pressure.implausibleRecoveries()),
@@ -186,6 +187,10 @@ void dispatchServiceCommand(char command) {
     // GP28/Aux0 arm line, this cannot be captured by the magnetic readiness
     // handshake and works even while the magnetic subsystem is faulted.
     case 'h': setStatusFlag(STATUS_FULL_RETRACT_REQUESTED, true); break;
+    // Two-stage probe: full retract, coarse seek to the ballpark contact, a
+    // small controlled pen-up, then a fine-only seek that takes the
+    // measurement (net travel from the GP2 switch is in `probe_travel`).
+    case 'k': pressure.requestProbe(); break;
     default: break;
   }
 }
