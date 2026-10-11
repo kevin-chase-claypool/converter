@@ -291,8 +291,9 @@ def probe_point(robot, toolhead, args, x: float | None, y: float | None):
             else:
                 # 'k' arms the toolhead's two-stage probe (coarse touch,
                 # controlled pen-up, fine measurement touch) and requests the
-                # full retract in the same command.
-                toolhead.send("k")
+                # full retract in the same command. 'h' is the plain full
+                # retract for toolheads without the two-stage firmware.
+                toolhead.send(args.probe_command)
             deadline = time.time() + args.retract_timeout
             at_home = False
             snap = None
@@ -387,6 +388,9 @@ def main():
                              "'h' service command (the arm line is shared with the magnetic "
                              "readiness handshake; leave this off)")
     parser.add_argument("--retract-timeout", type=float, default=15.0)
+    parser.add_argument("--probe-command", choices=("k", "h"), default="k",
+                        help="toolhead service command for the retract: 'k' two-stage probe "
+                             "(default, needs the 2026-10-11 firmware), 'h' plain full retract")
     parser.add_argument("--home-settle", type=float, default=0.6, dest="home_settle",
                         help="settle time on the GP2 switch before each seek (default 0.6 s)")
     parser.add_argument("--mm-per-pulse", type=float, default=FINE_PULSE_MM,
