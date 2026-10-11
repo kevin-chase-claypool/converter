@@ -28,6 +28,11 @@
   (`mag=FAULT`, no retract). Added a dedicated toolhead service command `h`
   (full retract to GP2) that sets the retract-request flag directly; the probe
   tool uses `h` by default, `--retract-via-arm` restores M65 P0.
+- Third correction: a seek can stop early on a force-noise spike and finish the
+  approach with downward hold-correction pulses, which the per-seek export
+  missed (one of five probes read 37 units instead of ~55). Added
+  `probe_travel` (total travel since the retract, corrections included), and
+  the host tool prefers it; median-of-repeats remains the fallback.
 - Next action: flash the toolhead, confirm `last_seek_travel` in `p`, calibrate
   `--mm-per-pulse` with a 0.5 mm shim, run the first polar mesh, and tram the
   four rail-end adjusters against it.

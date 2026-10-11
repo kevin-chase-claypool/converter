@@ -96,6 +96,7 @@ void emitTelemetry(const char *event) {
       "cs1238_delta=%ld force_norm_raw=%ld "
       "hard_limit_raw=%ld "
       "lift_home=%d home_seek_pulses=%u/%u warm_ema=%u last_seek_travel=%u "
+      "probe_travel=%lu "
       "urgent_relief_count=%u urgent_relief_ms=%lu "
       "recoveries=%u "
       "cs1238_rejects=%u cs1238_last_reject=%ld "
@@ -111,6 +112,7 @@ void emitTelemetry(const char *event) {
       static_cast<unsigned int>(HOME_SEEK_MAX_PULSES),
       static_cast<unsigned int>(pressure.warmSeekPulseEma()),
       static_cast<unsigned int>(pressure.lastSeekTravelFine()),
+      static_cast<unsigned long>(pressure.probeTravelFine()),
       static_cast<unsigned int>(pressure.holdUrgentReliefCount()),
       static_cast<unsigned long>(pressure.holdUrgentReliefTotalMs()),
       static_cast<unsigned int>(pressure.hardLimitRecoveries() + pressure.implausibleRecoveries()),

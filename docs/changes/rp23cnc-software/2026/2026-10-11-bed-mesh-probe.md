@@ -132,6 +132,19 @@ retract to GP2") that sets the same `STATUS_FULL_RETRACT_REQUESTED` flag Core 0
 consumes, bypassing the arm path entirely. `tools/bed_mesh_probe.py` uses `h`
 by default; `--retract-via-arm` restores the M65 P0 behaviour for experiments.
 
+## Follow-up 3: count the hold-correction travel after an early seek stop
+
+The first five-probe calibration at bed centre returned 55, 61, 60, 37, 55
+units: a tight cluster with one reading ~1.6 mm short. The short reading is a
+seek that stopped on a force-noise spike at the threshold; the remaining
+approach happened as downward hold-correction pulses, which the per-seek
+export does not count. The controller now keeps `probe_travel_fine_`: the total
+travel since the full-retract request, accumulating every seek pulse plus every
+downward 5 ms hold correction, reset when the retract request is consumed.
+Telemetry exports it as `probe_travel`, and the host tool prefers it over
+`last_seek_travel`. The median across repeats remains the fallback for hosts
+without the new field.
+
 ## Risks and follow-up
 
 - Flash the patched toolhead firmware (USB or GP20/GP21 service UART), confirm

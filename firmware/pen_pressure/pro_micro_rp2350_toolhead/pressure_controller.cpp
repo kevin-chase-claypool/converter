@@ -421,6 +421,8 @@ void PressureController::service() {
   // clearance lift. Consume it exactly once.
   if (statusFlag(STATUS_FULL_RETRACT_REQUESTED)) {
     setStatusFlag(STATUS_FULL_RETRACT_REQUESTED, false);
+    // A new probe/clearance session starts at the GP2 datum.
+    probe_travel_fine_ = 0;
     if (state_ != PressureState::FAULT) {
       setState(PressureState::LIFTING);
     }
@@ -651,7 +653,7 @@ void PressureController::service() {
           home_seek_active_pulse_ms_ = static_cast<uint8_t>(limits.pulse_ms);
           home_seek_pulse_active_ = true;
           break;
-        case toolhead::ContactSeekAction::STOP_PULSE:
+        case toolhead::ContactSeekAction::STOP_PULSE: {
           motorStop();
           setDriverEnabled(false);
           home_seek_pulse_active_ = false;
@@ -662,11 +664,13 @@ void PressureController::service() {
           // Accumulate the travel of every pulse in fine-pulse equivalents.
           // This is what makes an M3 from the GP2 home switch an absolute
           // bed-height measurement: coarse pulses cover twice the distance.
-          last_seek_travel_fine_ = static_cast<uint16_t>(
-              last_seek_travel_fine_ +
-              (home_seek_active_pulse_ms_ == HOME_SEEK_COARSE_PULSE_MS
-                   ? SEEK_WARM_COARSE_RATIO
-                   : 1));
+          const uint16_t pulse_units = static_cast<uint16_t>(
+              home_seek_active_pulse_ms_ == HOME_SEEK_COARSE_PULSE_MS
+                  ? SEEK_WARM_COARSE_RATIO
+                  : 1);
+          last_seek_travel_fine_ =
+              static_cast<uint16_t>(last_seek_travel_fine_ + pulse_units);
+          probe_travel_fine_ += pulse_units;
           home_seek_active_pulse_ms_ = 0;
           home_seek_pulse_count_++;
           home_seek_last_pulse_ended_ms_ = now;
@@ -686,6 +690,7 @@ void PressureController::service() {
             }
           }
           break;
+        }
         case toolhead::ContactSeekAction::CONTACT_FOUND:
           motorStop();
           setDriverEnabled(false);
@@ -781,6 +786,13 @@ void PressureController::service() {
           motorStop();
           setDriverEnabled(false);
           hold_correction_pulse_active_ = false;
+          if (hold_correction_down_) {
+            // The seek can stop early on a force-noise spike; the remaining
+            // approach happens here in 5 ms corrections. Count them so the
+            // probe travel always reaches the settled contact.
+            probe_travel_fine_ +=
+                HOLD_CORRECTION_PULSE_MS / HOME_SEEK_FINE_PULSE_MS;
+          }
           last_force_correction_ms_ = now;
         }
         break;
@@ -861,8 +873,10 @@ void PressureController::service() {
       hold_out_of_band_direction_ = 0;
       if (correction_direction < 0) {
         motorDrive(LIFT_USES_IN1_PWM, HOLD_CORRECTION_PWM);
+        hold_correction_down_ = false;
       } else {
         motorDrive(SEEK_USES_IN1_PWM, HOLD_CORRECTION_PWM);
+        hold_correction_down_ = true;
       }
       hold_correction_pulse_started_ms_ = now;
       hold_correction_pulse_active_ = true;

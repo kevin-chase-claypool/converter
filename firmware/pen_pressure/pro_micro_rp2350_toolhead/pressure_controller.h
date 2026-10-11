@@ -51,6 +51,11 @@ class PressureController {
   // an XY point returns how far the pen had to move from its M5 clearance to
   // touch the surface. Exported for the bed-mesh probe in tools/.
   uint16_t lastSeekTravelFine() const { return last_seek_travel_fine_; }
+  // Total fine-pulse-equivalent travel since the last full-retract request,
+  // including the downward hold-correction pulses that finish the approach
+  // after a seek stops early. This is the number a bed-mesh probe should read:
+  // it is the distance from the GP2 switch down to the settled contact.
+  uint32_t probeTravelFine() const { return probe_travel_fine_; }
   uint16_t holdUrgentReliefCount() const { return hold_urgent_relief_count_; }
   uint32_t holdUrgentReliefTotalMs() const { return hold_urgent_relief_total_ms_; }
   uint16_t hardLimitRecoveries() const { return hard_limit_recoveries_; }
@@ -120,6 +125,8 @@ class PressureController {
   uint32_t contact_ready_lost_since_ms_ = 0;
   uint16_t home_seek_pulse_count_ = 0;
   uint16_t last_seek_travel_fine_ = 0;
+  uint32_t probe_travel_fine_ = 0;
+  bool hold_correction_down_ = false;
   uint16_t hold_urgent_relief_count_ = 0;
   uint32_t hold_urgent_relief_total_ms_ = 0;
   uint16_t cs1238_rejected_samples_ = 0;

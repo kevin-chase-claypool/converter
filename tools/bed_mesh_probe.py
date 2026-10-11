@@ -48,6 +48,7 @@ TELEMETRY_KEYS = (
     "home_seek_pulses",
     "warm_ema",
     "last_seek_travel",
+    "probe_travel",
     "force_norm_raw",
     "cs1238_delta",
     "lift_home",
@@ -165,10 +166,13 @@ def parse_telemetry(line: str) -> dict:
 def travel_fine(before: dict, after: dict, mm_per_pulse: float):
     """Per-seek travel in fine-pulse units.
 
-    Preferred: the firmware's own per-seek travel export (added 2026-10-11).
-    Fallback for older firmware: recover the warm-seek travel from the EMA
-    step (quantized, so average more probes), else the raw pulse count.
+    Preferred: ``probe_travel`` - total travel since the full retract, which
+    includes the hold-correction pulses that finish an early-stopped seek.
+    Then the per-seek ``last_seek_travel`` export; then the EMA step (quantized,
+    so average more probes); then the raw pulse count.
     """
+    if after.get("probe_travel"):
+        return after["probe_travel"]
     if after.get("last_seek_travel"):
         return after["last_seek_travel"]
     ema_before = before.get("warm_ema", 0)
@@ -202,6 +206,7 @@ class FakeToolhead:
         self.engaged = False
         self.lift_home = 1          # power-on state: pen at the GP2 home switch
         self.cold = False
+        self.probe_travel = 0.0
         self.rng = __import__("random").Random(7)
         self.ema = None
 
@@ -220,8 +225,10 @@ class FakeToolhead:
             self.lift_home = 0
         if line.strip() == "M65 P0":
             self.lift_home = 1
+            self.probe_travel = 0.0
         if line.strip() == "h":
             self.lift_home = 1
+            self.probe_travel = 0.0
 
     def send(self, data: str):
         self._note_move(data)
@@ -235,11 +242,13 @@ class FakeToolhead:
             base = gap + (2.0 if self.cold else 0.0)
             travel_mm = max(0.0, base + self.rng.gauss(0.0, 0.02))
             travel = travel_mm / FINE_PULSE_MM
+            self.probe_travel = travel
             self.ema = travel if self.ema is None else (self.ema * 3 + travel) / 4
             return {
                 "home_seek_pulses": int(round(travel)),
                 "warm_ema": int(round(self.ema)),
                 "last_seek_travel": int(round(travel)),
+                "probe_travel": int(round(self.probe_travel)),
                 "force_norm_raw": 40000,
                 "cs1238_delta": 40000,
             "lift_home": self.lift_home,
