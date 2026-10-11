@@ -113,3 +113,14 @@ visual instead of ad-hoc measurements.
 - `tools/make_bed_gap_maps.py`: new generator for the pen-up measurement
   programs.
 - `docs/project/ENGINEERING_LOG.md`: session entry.
+
+## Follow-up 2026-10-11: Klipper-style 3D rendering
+
+The first real mesh PNG (`bed_mesh_1.png`) rendered the points as a scatter, so
+the operator asked for the Klipper Bed Mesh look. The 3D panel now draws the
+measured lattice as a continuous surface with grid lines on dark panes, a
+left-side colour bar, X/Y labels, and a flattened Z aspect - the same reading
+as the Klipper panel. The plotted height is `mean(gap) - gap`, i.e. positive =
+surface closer to the pen, matching Klipper's sign convention; the top-down,
+residual, and ring panels got the same dark styling, and a grid-only run now
+notes that ring data needs a polar mesh instead of leaving an empty panel.

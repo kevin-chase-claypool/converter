@@ -224,57 +224,106 @@ def _plot(rows, pred, residual, mounts, out_path: Path) -> None:
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    import matplotlib.tri as mtri
     from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
     xs = np.array([r[0] for r in rows])
     ys = np.array([r[1] for r in rows])
     gaps = np.array([r[2] for r in rows])
+    # Display convention: positive = surface closer to the pen (higher), which is
+    # the sign Klipper's Bed Mesh panel uses. Our gap grows when the surface is
+    # further away, so the plotted height is mean(gap) - gap.
+    height = float(gaps.mean()) - gaps
 
-    fig = plt.figure(figsize=(13, 10))
-    ax3d = fig.add_subplot(2, 2, 1, projection="3d")
-    ax3d.scatter(xs, ys, gaps, c=gaps, cmap="coolwarm")
-    grid_n = 40
-    gx, gy = np.meshgrid(np.linspace(xs.min() - 10, xs.max() + 10, grid_n),
-                         np.linspace(ys.min() - 10, ys.max() + 10, grid_n))
-    ax3d.plot_surface(gx, gy, np.full_like(gx, np.nan), alpha=0.0)  # keep axes scaled
-    ax3d.set_title("gap map (mm below reference)")
-    ax3d.set_xlabel("bed x (mm)")
-    ax3d.set_ylabel("bed y (mm)")
+    dark = {
+        "figure.facecolor": "#151515",
+        "axes.facecolor": "#151515",
+        "savefig.facecolor": "#151515",
+        "text.color": "#e8e8e8",
+        "axes.labelcolor": "#e8e8e8",
+        "axes.edgecolor": "#5a5a5a",
+        "xtick.color": "#c8c8c8",
+        "ytick.color": "#c8c8c8",
+        "grid.color": "#3a3a3a",
+    }
+    with plt.rc_context(dark):
+        fig = plt.figure(figsize=(13, 10))
+        ax3d = fig.add_subplot(2, 2, 1, projection="3d")
+        ux = np.unique(xs)
+        uy = np.unique(ys)
+        lattice = len(ux) * len(uy) == len(xs)
+        if lattice:
+            # Klipper-style sheet: the measured lattice as a surface with grid
+            # lines, exactly like the Bed Mesh panel.
+            lookup = {(x, y): h for x, y, h in zip(xs, ys, height)}
+            gx, gy = np.meshgrid(ux, uy)
+            gz = np.array([[lookup[(x, y)] for x in ux] for y in uy])
+            surf = ax3d.plot_surface(
+                gx, gy, gz, cmap="RdYlBu_r", edgecolor="#6a6a6a",
+                linewidth=0.5, antialiased=True, rstride=1, cstride=1,
+            )
+        else:
+            tri = mtri.Triangulation(xs, ys)
+            surf = ax3d.plot_trisurf(
+                tri, height, cmap="RdYlBu_r", edgecolor="#6a6a6a", linewidth=0.3,
+            )
+        ax3d.set_title("bed mesh (mm, + = higher)")
+        ax3d.set_xlabel("X (mm)")
+        ax3d.set_ylabel("Y (mm)")
+        try:
+            ax3d.set_box_aspect((1.0, 1.0, 0.32))
+        except AttributeError:
+            pass
+        for axis in (ax3d.xaxis, ax3d.yaxis, ax3d.zaxis):
+            axis.pane.set_facecolor((0.10, 0.10, 0.10, 1.0))
+            axis.pane.set_edgecolor("#5a5a5a")
+            axis._axinfo["grid"]["color"] = (0.35, 0.35, 0.35, 0.6)
+        ax3d.view_init(elev=26, azim=-58)
+        ax3d.set_zticks(np.round(np.linspace(height.min(), height.max(), 5), 2))
+        cb = fig.colorbar(surf, ax=ax3d, shrink=0.6, pad=0.13, fraction=0.05)
+        cb.set_label("mm")
 
-    ax = fig.add_subplot(2, 2, 2)
-    sc = ax.scatter(xs, ys, c=gaps, cmap="coolwarm", s=60, edgecolors="k")
-    for angle, radius, mx, my in mounts:
-        ax.plot([mx], [my], marker="X", color="k", markersize=13)
-        ax.annotate("mount", (mx, my), textcoords="offset points", xytext=(6, 6))
-    fig.colorbar(sc, ax=ax, label="gap (mm)")
-    ax.set_aspect("equal")
-    ax.set_title("top-down map")
-    ax.set_xlabel("bed x (mm)")
-    ax.set_ylabel("bed y (mm)")
+        ax = fig.add_subplot(2, 2, 2)
+        sc = ax.scatter(xs, ys, c=height, cmap="RdYlBu_r", s=70, edgecolors="#101010")
+        for angle, radius, mx, my in mounts:
+            ax.plot([mx], [my], marker="X", color="#ffffff", markersize=13)
+            ax.annotate("mount", (mx, my), textcoords="offset points", xytext=(6, 6))
+        fig.colorbar(sc, ax=ax, label="mm")
+        ax.set_aspect("equal")
+        ax.set_title("top-down map")
+        ax.set_xlabel("bed x (mm)")
+        ax.set_ylabel("bed y (mm)")
+        ax.grid(True, alpha=0.25)
 
-    ax = fig.add_subplot(2, 2, 3)
-    sc = ax.scatter(xs, ys, c=residual, cmap="coolwarm", s=60, edgecolors="k")
-    fig.colorbar(sc, ax=ax, label="residual (mm)")
-    ax.set_aspect("equal")
-    ax.set_title("residual after plane fit")
-    ax.set_xlabel("bed x (mm)")
-    ax.set_ylabel("bed y (mm)")
+        ax = fig.add_subplot(2, 2, 3)
+        sc = ax.scatter(xs, ys, c=residual, cmap="coolwarm", s=70, edgecolors="#101010")
+        fig.colorbar(sc, ax=ax, label="residual (mm)")
+        ax.set_aspect("equal")
+        ax.set_title("residual after plane fit")
+        ax.set_xlabel("bed x (mm)")
+        ax.set_ylabel("bed y (mm)")
+        ax.grid(True, alpha=0.25)
 
-    ax = fig.add_subplot(2, 2, 4)
-    rads = sorted(set(r[4] for r in rows if r[3] == "ring"))
-    for radius in rads:
-        sel = [i for i, r in enumerate(rows) if r[3] == "ring" and r[4] == radius]
-        angs = np.array([math.degrees(math.atan2(rows[i][1], rows[i][0])) % 360.0 for i in sel])
-        ax.plot(angs, gaps[sel], "o-", label="r=%.0f mm" % radius)
-    if rads:
-        ax.set_xlabel("bed angle (deg)")
-        ax.set_ylabel("gap (mm)")
-        ax.set_title("ring profiles (disc + bearing runout)")
-        ax.legend()
-    ax.grid(True, alpha=0.3)
+        ax = fig.add_subplot(2, 2, 4)
+        rads = sorted(set(r[4] for r in rows if r[3] == "ring"))
+        for radius in rads:
+            sel = [i for i, r in enumerate(rows) if r[3] == "ring" and r[4] == radius]
+            angs = np.array([math.degrees(math.atan2(rows[i][1], rows[i][0])) % 360.0 for i in sel])
+            ax.plot(angs, gaps[sel], "o-", label="r=%.0f mm" % radius)
+        if rads:
+            ax.set_xlabel("bed angle (deg)")
+            ax.set_ylabel("gap (mm)")
+            ax.set_title("ring profiles (disc + bearing runout)")
+            ax.legend()
+        else:
+            ax.text(0.5, 0.5,
+                    "no ring data\n(run a polar mesh for disc / bearing runout)",
+                    ha="center", va="center", transform=ax.transAxes)
+            ax.set_axis_off()
+        ax.grid(True, alpha=0.25)
 
-    fig.tight_layout()
-    fig.savefig(out_path, dpi=130)
+        fig.tight_layout()
+        fig.savefig(out_path, dpi=130)
     print("wrote %s" % out_path)
 
 
