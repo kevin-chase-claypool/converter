@@ -156,11 +156,16 @@ def main():
 
     tilt_deg = math.degrees(math.atan(math.hypot(bx, by)))
     tilt_dir = math.degrees(math.atan2(by, bx))
+    # The fitted plane is the GAP (pen travel), so a larger gap means the
+    # surface sits LOWER. State the bed direction explicitly to avoid the
+    # classic sign flip when reading the report.
+    low_dir = tilt_dir % 360.0
     print("readings: %d" % len(rows))
     print("plane fit: gap = %.4f %+.5f x %+.5f y%s (mm, mm)"
           % (c, bx, by, (" %+.6f r^2" % coef[3]) if args.bowl else ""))
-    print("tilt: %.3f mm across 100 mm  (%.3f deg, high side toward %.0f deg in bed frame)"
-          % (math.hypot(bx, by) * 100.0, tilt_deg, tilt_dir))
+    print("tilt: %.3f mm across 100 mm  (%.3f deg; surface is LOWER toward %.0f deg "
+          "in the G54 frame - 90 deg is +Y/north, 0 deg is +X/east)"
+          % (math.hypot(bx, by) * 100.0, tilt_deg, low_dir))
     print("residual after fit: rms %.3f mm, max %.3f mm" % (
         float(np.sqrt((residual ** 2).mean())), float(np.abs(residual).max())))
 
@@ -250,10 +255,10 @@ def _plot(rows, pred, residual, mounts, out_path: Path) -> None:
     def label_directions(ax):
         """Mark which way +X and +Y run on a 2-D panel."""
         box = dict(facecolor="#151515", edgecolor="none", alpha=0.75, pad=1.5)
-        ax.annotate("+X \u2192", xy=(0.99, 0.02), xycoords="axes fraction",
+        ax.annotate("+X (east) \u2192", xy=(0.99, 0.02), xycoords="axes fraction",
                     ha="right", va="bottom", fontsize=14, fontweight="bold",
                     color="#7fd4ff", bbox=box)
-        ax.annotate("\u2191 +Y", xy=(0.01, 0.99), xycoords="axes fraction",
+        ax.annotate("\u2191 +Y (north)", xy=(0.01, 0.99), xycoords="axes fraction",
                     ha="left", va="top", fontsize=14, fontweight="bold",
                     color="#ffd27f", bbox=box)
         ax.plot([0.0], [0.0], marker="+", color="#cccccc", markersize=10)
@@ -300,8 +305,8 @@ def _plot(rows, pred, residual, mounts, out_path: Path) -> None:
         ax3d.set_title("bed mesh (mm, + = higher)")
         # Direction is carried in the axis labels: the tick numbers already
         # increase along each arrow, so the label states the positive end.
-        ax3d.set_xlabel("X (mm), +X \u2192", color="#7fd4ff")
-        ax3d.set_ylabel("Y (mm), +Y \u2192", color="#ffd27f")
+        ax3d.set_xlabel("X (mm), +X east \u2192", color="#7fd4ff")
+        ax3d.set_ylabel("Y (mm), +Y north \u2192", color="#ffd27f")
         try:
             ax3d.set_box_aspect((1.0, 1.0, 0.32))
         except AttributeError:
@@ -310,7 +315,8 @@ def _plot(rows, pred, residual, mounts, out_path: Path) -> None:
             axis.pane.set_facecolor((0.10, 0.10, 0.10, 1.0))
             axis.pane.set_edgecolor("#5a5a5a")
             axis._axinfo["grid"]["color"] = (0.35, 0.35, 0.35, 0.6)
-        ax3d.view_init(elev=26, azim=-58)
+        # CAD-like north-up view: +X east to the right, +Y north away/up.
+        ax3d.view_init(elev=30, azim=-90)
         ax3d.set_zticks(np.round(np.linspace(height.min(), height.max(), 5), 2))
         cb = fig.colorbar(surf, ax=ax3d, shrink=0.6, pad=0.13, fraction=0.05)
         cb.set_label("mm")
