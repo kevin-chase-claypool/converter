@@ -332,7 +332,18 @@ def probe_point(robot, toolhead, args, x: float | None, y: float | None):
         print("    probe %d/%d: %.1f units (%.3f mm)"
               % (len(values), args.probes_per_point, units, units * args.mm_per_pulse))
     spread = (max(values) - min(values)) if len(values) > 1 else 0.0
-    return statistics.median(values), spread, statistics.median(units_seen)
+    # The probe can land in two states ~1.5 mm apart (see the bimodal series in
+    # the 2026-10-11 calibration runs). A trimmed mean absorbs both a single
+    # outlier and a 50/50 split, where a median would snap to one mode.
+    agg = aggregate(units_seen)
+    return agg * args.mm_per_pulse, spread, agg
+
+
+def aggregate(values):
+    if len(values) >= 4:
+        ordered = sorted(values)
+        return statistics.fmean(ordered[1:-1])
+    return statistics.fmean(values)
 
 
 def main():
