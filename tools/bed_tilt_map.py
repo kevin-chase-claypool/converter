@@ -136,6 +136,10 @@ def main():
     parser.add_argument("--pitch", type=float, default=0.7,
                         help="thread pitch of the mount screws, mm per revolution (default 0.7, M4)")
     parser.add_argument("--bowl", action="store_true", help="also fit a radial r^2 term")
+    parser.add_argument("--rail-mounts", action="store_true",
+                        help="the mount points move the RAIL ends rather than the bed: "
+                             "'raise' then means move the rail end away from the bed (up), "
+                             "and the reported sign is flipped accordingly")
     parser.add_argument("--out", default=None, help="output PNG (default: beside the CSV)")
     args = parser.parse_args()
 
@@ -186,15 +190,23 @@ def main():
 
     ref = float(np.mean([predict(mx, my) for _, _, mx, my in mounts])) if mounts else c
     print("\nmount report (reference = mean of mount heights):")
-    print("  %-22s %9s %10s %10s" % ("mount (x, y) mm", "gap mm", "shim mm", "M4 turns"))
+    what = "rail end" if args.rail_mounts else "surface"
+    print("  %-22s %9s %14s %10s" % ("mount (x, y) mm", "gap mm", "%s move mm" % what, "M4 turns"))
     for angle, radius, mx, my in mounts:
         gap = predict(mx, my)
         delta = gap - ref
+        if args.rail_mounts:
+            # Moving a rail end moves the pen reference, not the surface: a
+            # mount whose gap reads high needs its rail end brought DOWN.
+            delta = -delta
         action = "raise" if delta > 0 else "lower"
-        print("  %-22s %9.3f %10s %10s" % (
+        print("  %-22s %9.3f %14s %10s" % (
             "(%.1f, %.1f)" % (mx, my), gap,
             "%+.3f (%s)" % (delta, action), "%+.2f" % (delta / args.pitch)))
-    print("  (positive shim = add that thickness under the mount / raise the surface there)")
+    if args.rail_mounts:
+        print("  ('raise' = move the rail end up, away from the bed; 'lower' = toward the bed)")
+    else:
+        print("  (positive shim = add that thickness under the mount / raise the surface there)")
 
     ring_rows = [(math.degrees(math.atan2(r[1], r[0])) % 360.0, r[4], r[2]) for r in rows if r[3] == "ring"]
     if ring_rows:

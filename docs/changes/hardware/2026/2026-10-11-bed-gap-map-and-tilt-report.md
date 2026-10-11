@@ -130,3 +130,10 @@ carries a blue `+X ->` and an orange `up +Y` marker plus a `0,0 bed centre`
 cross, and the 3-D panel's axis labels state `+X ->` / `+Y ->` directly. A
 grid clipped by the reach radius (holes at the corners) is rendered as a
 surface with NaN holes rather than falling back to scattered points.
+
+Sign convention for rail-end adjusters: the default mount report assumes the
+adjuster moves the bed surface (a high gap needs the surface raised). The
+operator's four mounts move the **rail ends**, which move the pen reference
+instead - a high gap there needs the rail end brought *down*. `--rail-mounts`
+flips the reported direction and labels the column "rail end move" so the
+report can be followed literally with a screwdriver.
