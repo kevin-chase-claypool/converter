@@ -6,7 +6,7 @@ affected_categories:
   - windows-software
   - hardware
   - rp23cnc-software
-status: implemented
+status: verified
 components:
   - tools/make_headback_parked_test.py
   - samples/gcode/headback-parked-test.gcode
@@ -79,6 +79,14 @@ global frame slip (per-stroke implied rotation < 0.4 deg).
 - Bench: plot on a fresh sheet and compare the outline band width of the two
   copies. Expected if A-reversal lag is the cause: copy 2 (parked) keeps the
   full 2.5-2.8 mm band while copy 1 pinches toward the inner line.
+- **Bench result (2026-10-13, two-pen overlay on one sheet, photo
+  PXL_20261013_215201549):** the parked copy sits on the commanded geometry
+  (median 0.07 mm), the bed-turning copy does not. The two colours differ by
+  0.73 mm median / 1.41 mm max; a best rigid fit (rotation + translation)
+  removes only part of it (-0.52 deg, 0.29 mm), leaving 0.50 mm median /
+  1.11 mm max of genuine local shape difference along the scallop. The
+  bed-motion copy therefore carries both a net ~0.5 deg bed-angle error and
+  local reversal smearing; the parked draw is exact. Hypothesis confirmed.
 
 ## Risks and follow-up
 

@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20261013-headback-ab-result"></a>
+### 🟨 2026-10-13 - HARDWARE/MEASURED - A/B overlay result: the bed-turning copy is the defective one
+
+- The operator ran the split pair on one sheet with two Tombow pens (one
+  colour per file, second print over the first) and sent the flat photo.
+- Measurement (cyan vs magenta ink clouds in the photo, registration-free
+  nearest-pixel): the two copies differ by **0.73 mm median / 1.14 p90 /
+  1.41 mm max**. A best rigid fit (rotation -0.52 deg + 0.29 mm translation)
+  removes only part of it - the residual is **0.50 mm median / 0.84 p90 /
+  1.11 mm max**, i.e. genuine local shape difference along the scallop. The
+  copy that coincides with the commanded geometry does so to **median
+  0.07 mm** (fit score 0.10 px).
+- Reading: the parked draw is exact; the bed-motion copy carries a net
+  ~0.5 deg bed-angle error (roughly 6 motor degrees through the 21
+  reversals) plus local reversal smearing. The A-axis reversal behaviour is
+  confirmed as the source of the back-of-head outline defect. Feed rate was
+  already shown not to be the lever.
+- Next: converter strategy change - prefer the parked (gantry-only)
+  strategy on stretches whose A-reversal density exceeds a threshold - so
+  real plots stop drawing such stretches with a reversing bed. Mechanical
+  cross-check meanwhile: A drivetrain preload (belt tension, pulley grub
+  screws, 12:1 coupling).
+- Evidence: `WSW-20261013-009`; photo PXL_20261013_215201549;
+  `tmp/heraldic_diag/ab_rigid_fit.py`, `ab_rectified.png`.
+
 <a id="elog-20261013-headback-parked-test"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - Bed-parked A/B test built for the back-of-head stretch
 
