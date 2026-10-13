@@ -1,5 +1,31 @@
 # Engineering Log
 
+<a id="elog-20261013-reversal-diag-result"></a>
+### 🟨 2026-10-13 - HARDWARE/MEASURED - A-reversal diagnostic result: the drivetrain is clean - runout becomes the prime suspect
+
+- Operator ran `a-reversal-diagnostic.gcode`; all seven stations drew. Photo
+  measured (~11.1 px/mm): single-pass line width 5.6-6.1 px at the fastest
+  stations; the slow stations are ~1 px wider (ink flow - opposite of what a
+  rate-dependent backlash gap would do). No separated out/back arc lines;
+  per-reversal bed error bound ~0.1 mm at the rim.
+- Soak ticks after 60 pen-up + 40 pen-down reversals coincide within <1 px
+  (~0.09 mm at r=70) - cumulative loss < 0.08 bed degree over 100 reversals.
+  **Backlash, lost steps and belt slip are ruled out as the smear source.**
+- What remains different between the clean tests and the smeared plots: the
+  bed angle. The fixed-bed plot (one angle, constant paper height) is
+  flawless; the diagnostic turns only +/-5 deg; the real plots sweep the
+  full circle. Prime suspect: **rotational runout - bed height varying with
+  bed angle** (the operator's original hunch; static tilt was leveled, but
+  runout is height-vs-angle and would modulate pen contact/drag throughout a
+  turning plot).
+- Next: ring scan of the bed surface vs angle with the existing toolhead
+  probing (`bed_mesh_probe.py --mode polar --radii 60 --angles 24
+  --probes-per-point 3`), or a dial indicator on the rim while hand-rotating;
+  send the CSV/photo and the height-vs-angle curve decides.
+- Note: the earlier two-pen overlay's "0.52 deg rotation" is now discounted
+  as a mask/pen-seating artifact - today's direct measurements are tighter
+  and clean.
+
 <a id="elog-20261013-a-reversal-diagnostic"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - A-reversal diagnostic: separating play, lost steps, wind-up and drag
 

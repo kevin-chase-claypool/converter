@@ -74,6 +74,21 @@ the reverse path loses the position.
   while fixing it. The committed sample carries the corrected header.
 - Bench reading is done by eye/caliper on the ticks and arc pairs (a flat
   photo works too); expected run time is a few minutes.
+- **Bench result (2026-10-13, photo PXL_20261013_231214763).** All seven
+  stations drew. Measured line widths (~11.1 px/mm): single-pass baseline
+  5.6-6.1 px at the fastest stations, and the 3000 deg/min stations are only
+  ~1 px wider - that is ink flow, and it runs the *opposite* way to backlash
+  (a gap grows with rate). No separated out/back lines anywhere; the
+  per-reversal bed error is bounded at roughly 0.1 mm at the rim. The soak
+  ticks (60 pen-up + 40 pen-down reversals) coincide within <1 px (~0.09 mm
+  at r=70) - cumulative loss < 0.08 bed degree over 100 reversals, i.e.
+  under 0.001 deg per reversal. **Conclusion: the A drivetrain is clean for
+  isolated reversals.** Backlash, lost steps and belt slip are ruled out as
+  the outline-smear source; the difference between the clean tests and the
+  smeared plots must be state those tests do not exercise. Prime suspect
+  now: bed height varying with bed ANGLE (rotational runout) - the fixed-bed
+  plot holds one angle and is flawless, the diagnostic turns only +/-5 deg,
+  the real plot sweeps the full circle.
 
 ## Risks and follow-up
 
