@@ -1,22 +1,23 @@
-"""Generate the bed-parked A/B test for the back-of-head scallop stretch.
+"""Generate the back-of-head A/B test programs for the scallop stretch.
 
-Reads the heraldic program the operator plotted (source g-code), extracts the
-two pen-down runs that draw the back-of-head outline - the inner line and the
-outer scalloped line, in file order, with the pen-up travel between them -
-and writes a standalone test program containing two copies of that geometry:
+Reads the heraldic program the operator plotted, extracts the two pen-down
+runs that draw the back-of-head outline - the inner line and the outer
+scalloped line, in file order - and writes test programs built from the same
+bed-frame points, so every copy is the identical paper shape.
 
-  copy 1 ("as printed"): the same paper geometry with the original A sequence
-          - including the 16 A-direction reversals of the real plot - placed
-          at COPY1_CENTER;
-  copy 2 ("bed parked"): the identical paper geometry with A held constant,
-          so the bed never turns, placed 62 mm below copy 1.
-
-The two copies are constructed from the same bed-frame points, so their paper
-shapes are identical; only the kinematics differ. Run it on a fresh sheet and
-compare the outline band width of the two copies.
+Modes:
+  default (combined)  one program with two copies side by side:
+                      upper = bed turns exactly like the real plot (21 A
+                      reversals), lower = bed parked (pure X/Y).
+  --split             two programs that draw at the SAME location:
+                      `--out`  = the original bed motion;
+                      `--out-parked` = identical geometry, bed parked.
+                      Run one with each pen colour over the same sheet; the
+                      divergence between the colours is the kinematic error.
 
 Usage:
     python tools\\make_headback_parked_test.py
+    python tools\\make_headback_parked_test.py --split
 """
 
 from __future__ import annotations
@@ -33,16 +34,18 @@ MOVE = re.compile(
     r"^(G[01])\s+X(-?[\d.]+)\s+Y(-?[\d.]+)(?:\s+A(-?[\d.]+))?"
     r"(?:\s+F([\d.]+))?\s*(?:\(([^)]*)\))?\s*$"
 )
+SET_A = re.compile(r"^G0\s+A(-?[\d.]+)\s*(?:\(.*\))?\s*$")
 
 # Bed-frame window containing the scalloped stretch that prints collapsed.
 WINDOW = {"x": (12.0, 36.0), "y": (42.0, 76.0)}
-WINDOW_MARGIN = 6.0
 COPY1_CENTER = (-28.0, 40.0)
 COPY2_CENTER = (-28.0, -22.0)
 FEED_CLAMP = (80.0, 2500.0)
 
 SOURCE = ROOT / "samples" / "gcode" / "garysmith793-heraldic-4062900.gcode"
 OUTPUT = ROOT / "samples" / "gcode" / "headback-parked-test.gcode"
+SPLIT_OUTPUT = ROOT / "samples" / "gcode" / "headback-test-bed.gcode"
+SPLIT_PARKED = ROOT / "samples" / "gcode" / "headback-test-parked.gcode"
 
 
 def to_bed(x: float, y: float, a: float) -> tuple[float, float]:
@@ -92,6 +95,10 @@ def parse_source(path: Path):
                 runs.append(current_run)
             current_run = None
             continue
+        mA = SET_A.match(line)
+        if mA:
+            last["a"] = float(mA.group(1))
+            continue
         m = MOVE.match(line)
         if not m:
             continue
@@ -118,13 +125,7 @@ def in_window(p, margin=0.0):
     )
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--source", default=str(SOURCE))
-    ap.add_argument("--out", default=str(OUTPUT))
-    args = ap.parse_args()
-
-    moves, runs = parse_source(Path(args.source))
+def collect(moves, runs):
     hits = []
     for run in runs:
         count = sum(1 for i in run if in_window(moves[i].bed))
@@ -134,161 +135,219 @@ def main() -> None:
         raise SystemExit(
             "expected exactly two pen-down runs in the window, found %d" % len(hits)
         )
-
     (run1, n1), (run2, n2) = hits
     print("run 1: %d in-window moves (of %d in the run)" % (n1, len(run1)))
     print("run 2: %d in-window moves (of %d in the run)" % (n2, len(run2)))
 
-    def window_bounds(run):
+    def bounds(run):
         inside = [i for i in run if in_window(moves[i].bed)]
-        first, last_idx = inside[0], inside[-1]
-        start = max(run[0], first - 1)
-        end = min(run[-1], last_idx + 1)
-        return start, end
+        return max(run[0], inside[0] - 1), min(run[-1], inside[-1] + 1)
 
-    s1, e1 = window_bounds(run1)
-    s2, e2 = window_bounds(run2)
+    s1, e1 = bounds(run1)
+    s2, e2 = bounds(run2)
     seq1 = list(range(s1, e1 + 1))
     seq2 = list(range(s2, e2 + 1))
-    travel = list(range(e1 + 1, s2))
-    sequence = seq1 + travel + seq2
-
     pts = {i: moves[i].bed for i in range(len(moves))}
     xs = [pts[i][0] for i in seq1 + seq2]
     ys = [pts[i][1] for i in seq1 + seq2]
     cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
-    t1 = (COPY1_CENTER[0] - cx, COPY1_CENTER[1] - cy)
-    t2 = (COPY2_CENTER[0] - cx, COPY2_CENTER[1] - cy)
-    print("shape bbox centre (%.1f, %.1f); copy offsets %s / %s" % (cx, cy, t1, t2))
+    return {
+        "moves": moves,
+        "pts": pts,
+        "seq1": seq1,
+        "seq2": seq2,
+        "t1": (COPY1_CENTER[0] - cx, COPY1_CENTER[1] - cy),
+        "t2": (COPY2_CENTER[0] - cx, COPY2_CENTER[1] - cy),
+        "a_start": moves[seq1[0] - 1].a,
+        "a_end": moves[seq2[-1]].a,
+        "centre": (cx, cy),
+    }
 
-    a_start = moves[seq1[0] - 1].a
-    a_end = moves[seq2[-1]].a
-    theta_park = a_end / RATIO
 
-    lines: list[str] = []
-    lines.append("(head-back bed-parked A/B test - generated by make_headback_parked_test.py)")
-    lines.append("(source: %s)" % Path(args.source).name)
-    lines.append("(upper copy: as printed, bed turns, same A reversals as the real plot)")
-    lines.append("(lower copy: identical paper shape, bed parked at A%.3f)" % a_end)
-    lines.append("(both copies face the same way; compare the outline band width of each)")
-    lines.append("G21")
-    lines.append("G90")
-    lines.append("G94")
-    lines.append("G17")
-    lines.append("G54")
-    lines.append("G0 F3000")
-    lines.append("M5")
-    lines.append("G65 P115 Q0 A1 W2")
+def paper_speed(d, i):
+    moves = d["moves"]
+    prev, cur = moves[i - 1], moves[i]
+    motion = math.hypot(cur.x - prev.x, cur.y - prev.y, cur.a - prev.a)
+    paper = math.hypot(cur.bed[0] - prev.bed[0], cur.bed[1] - prev.bed[1])
+    duration = motion / max(cur.f, 1e-9)
+    if duration <= 0 or paper <= 0:
+        return FEED_CLAMP[0]
+    return min(max(paper / duration, FEED_CLAMP[0]), FEED_CLAMP[1])
 
-    # ---- copy 1: original kinematics, translated paper geometry ----
-    first_pose = seq1[0] - 1
-    px, py = moves[first_pose].bed[0] + t1[0], moves[first_pose].bed[1] + t1[1]
-    mx, my = to_machine(px, py, moves[first_pose].a)
-    lines.append("G0 A%s" % fmt(a_start))
-    lines.append("G0 X%s Y%s" % (fmt(mx), fmt(my)))
+
+def emit_header(lines, source_name, notes):
+    lines.append("(head-back A/B test - generated by make_headback_parked_test.py)")
+    lines.append("(source: %s)" % source_name)
+    lines.extend("(%s)" % n for n in notes)
+    lines.extend(["G21", "G90", "G94", "G17", "G54", "G0 F3000", "M5",
+                  "G65 P115 Q0 A1 W2"])
+
+
+def emit_pen_down(lines, first):
     lines.append("M3")
-    lines.append("G65 P115 Q1 B12 A1 W2")
+    lines.append("G65 P115 Q1 B12 A1 W2" if first else "G65 P115 Q1 A1 W2")
     lines.append("G1 F350")
-    for i in seq1:
-        px, py = pts[i][0] + t1[0], pts[i][1] + t1[1]
-        mx, my = to_machine(px, py, moves[i].a)
-        lines.append(
-            "G1 X%s Y%s A%s F%s (%s)" % (fmt(mx), fmt(my), fmt(moves[i].a), fmt(moves[i].f), moves[i].label or "draw")
-        )
-    lines.append("M5")
-    lines.append("G65 P115 Q1 A1 W2")
-    pose = seq2[0] - 1
-    px, py = pts[pose][0] + t1[0], pts[pose][1] + t1[1]
-    mx, my = to_machine(px, py, moves[pose].a)
-    lines.append("G0 X%s Y%s A%s (reposition, pen up)" % (fmt(mx), fmt(my), fmt(moves[pose].a)))
-    lines.append("M3")
-    lines.append("G65 P115 Q1 A1 W2")
-    lines.append("G1 F350")
-    for i in seq2:
-        px, py = pts[i][0] + t1[0], pts[i][1] + t1[1]
-        mx, my = to_machine(px, py, moves[i].a)
-        lines.append(
-            "G1 X%s Y%s A%s F%s (%s)" % (fmt(mx), fmt(my), fmt(moves[i].a), fmt(moves[i].f), moves[i].label or "draw")
-        )
+
+
+def emit_pen_up(lines):
     lines.append("M5")
     lines.append("G65 P115 Q1 A1 W2")
 
-    def paper_speed(i):
-        prev = moves[i - 1]
-        cur = moves[i]
-        motion = math.hypot(cur.x - prev.x, cur.y - prev.y, cur.a - prev.a)
-        paper = math.hypot(cur.bed[0] - prev.bed[0], cur.bed[1] - prev.bed[1])
-        duration = motion / max(cur.f, 1e-9)
-        if duration <= 0 or paper <= 0:
-            return FEED_CLAMP[0]
-        return min(max(paper / duration, FEED_CLAMP[0]), FEED_CLAMP[1])
 
-    # ---- copy 2: identical paper shape, bed parked ----
-    pose = seq1[0] - 1
-    px, py = pts[pose][0] + t2[0], pts[pose][1] + t2[1]
-    mx, my = to_machine(px, py, theta_park * RATIO)
-    lines.append("(copy 2: bed parked)")
-    lines.append("G0 X%s Y%s" % (fmt(mx), fmt(my)))
-    lines.append("M3")
-    lines.append("G65 P115 Q1 A1 W2")
-    lines.append("G1 F350")
-    for i in seq1:
-        px, py = pts[i][0] + t2[0], pts[i][1] + t2[1]
-        mx, my = to_machine(px, py, theta_park * RATIO)
-        lines.append("G1 X%s Y%s F%s (parked)" % (fmt(mx), fmt(my), fmt(paper_speed(i))))
-    lines.append("M5")
-    lines.append("G65 P115 Q1 A1 W2")
-    pose = seq2[0] - 1
-    px, py = pts[pose][0] + t2[0], pts[pose][1] + t2[1]
-    mx, my = to_machine(px, py, theta_park * RATIO)
-    lines.append("G0 X%s Y%s" % (fmt(mx), fmt(my)))
-    lines.append("M3")
-    lines.append("G65 P115 Q1 A1 W2")
-    lines.append("G1 F350")
-    for i in seq2:
-        px, py = pts[i][0] + t2[0], pts[i][1] + t2[1]
-        mx, my = to_machine(px, py, theta_park * RATIO)
-        lines.append("G1 X%s Y%s F%s (parked)" % (fmt(mx), fmt(my), fmt(paper_speed(i))))
-    lines.append("M5")
-    lines.append("G65 P115 Q1 A1 W2")
+def emit_postamble(lines):
+    emit_pen_up(lines)
     lines.append("M65 P0")
     lines.append("G65 P115 Q0 A3 W1")
     lines.append("M64 P0")
     lines.append("G53 G1 X-10 Y-436 F3000 (park home)")
     lines.append("M2")
 
-    out = Path(args.out)
+
+def emit_turning(lines, d, t):
+    moves, pts = d["moves"], d["pts"]
+    seq1, seq2 = d["seq1"], d["seq2"]
+    pose = seq1[0] - 1
+    mx, my = to_machine(pts[pose][0] + t[0], pts[pose][1] + t[1], moves[pose].a)
+    lines.append("G0 A%s" % fmt(moves[pose].a))
+    lines.append("G0 X%s Y%s" % (fmt(mx), fmt(my)))
+    emit_pen_down(lines, True)
+    for i in seq1:
+        mx, my = to_machine(pts[i][0] + t[0], pts[i][1] + t[1], moves[i].a)
+        lines.append("G1 X%s Y%s A%s F%s (%s)"
+                     % (fmt(mx), fmt(my), fmt(moves[i].a), fmt(moves[i].f),
+                        moves[i].label or "draw"))
+    emit_pen_up(lines)
+    pose = seq2[0] - 1
+    mx, my = to_machine(pts[pose][0] + t[0], pts[pose][1] + t[1], moves[pose].a)
+    lines.append("G0 X%s Y%s A%s (reposition, pen up)" % (fmt(mx), fmt(my), fmt(moves[pose].a)))
+    emit_pen_down(lines, False)
+    for i in seq2:
+        mx, my = to_machine(pts[i][0] + t[0], pts[i][1] + t[1], moves[i].a)
+        lines.append("G1 X%s Y%s A%s F%s (%s)"
+                     % (fmt(mx), fmt(my), fmt(moves[i].a), fmt(moves[i].f),
+                        moves[i].label or "draw"))
+    emit_pen_up(lines)
+
+
+def emit_parked(lines, d, t):
+    moves, pts = d["moves"], d["pts"]
+    seq1, seq2 = d["seq1"], d["seq2"]
+    a_park = d["a_end"]
+    lines.append("G0 A%s (park the bed)" % fmt(a_park))
+    pose = seq1[0] - 1
+    mx, my = to_machine(pts[pose][0] + t[0], pts[pose][1] + t[1], a_park)
+    lines.append("G0 X%s Y%s" % (fmt(mx), fmt(my)))
+    emit_park_down(lines, True)
+    for i in seq1:
+        mx, my = to_machine(pts[i][0] + t[0], pts[i][1] + t[1], a_park)
+        lines.append("G1 X%s Y%s F%s (parked)" % (fmt(mx), fmt(my), fmt(paper_speed(d, i))))
+    emit_pen_up(lines)
+    pose = seq2[0] - 1
+    mx, my = to_machine(pts[pose][0] + t[0], pts[pose][1] + t[1], a_park)
+    lines.append("G0 X%s Y%s" % (fmt(mx), fmt(my)))
+    emit_park_down(lines, False)
+    for i in seq2:
+        mx, my = to_machine(pts[i][0] + t[0], pts[i][1] + t[1], a_park)
+        lines.append("G1 X%s Y%s F%s (parked)" % (fmt(mx), fmt(my), fmt(paper_speed(d, i))))
+    emit_pen_up(lines)
+
+
+def emit_park_down(lines, first):
+    lines.append("M3")
+    lines.append("G65 P115 Q1 B12 A1 W2" if first else "G65 P115 Q1 A1 W2")
+    lines.append("G1 F350")
+
+
+def verify(path: Path, d, layout, expect_turning):
+    vmoves, vruns = parse_source(path)
+    draw = [r for r in vruns if len(r) > 4]
+    print("verification %s: %d pen-down runs (expect %d)" % (path.name, len(draw), len(layout)))
+    if len(draw) != len(layout):
+        return
+    worst = 0.0
+    for run, (seq, t) in zip(draw, layout):
+        for out_i, src_i in zip(run, seq):
+            ex = vmoves[out_i].bed[0] - (d["pts"][src_i][0] + t[0])
+            ey = vmoves[out_i].bed[1] - (d["pts"][src_i][1] + t[1])
+            worst = max(worst, math.hypot(ex, ey))
+    print("  max shape error vs source: %.4f mm" % worst)
+    if expect_turning:
+        a = [vmoves[i].a for run in draw for i in run]
+        flips = sum(
+            1 for k in range(1, len(a) - 1)
+            if (a[k] - a[k - 1]) * (a[k + 1] - a[k]) < 0
+            and abs(a[k] - a[k - 1]) > 0.01 and abs(a[k + 1] - a[k]) > 0.01
+        )
+        print("  A direction reversals: %d" % flips)
+    else:
+        a = [vmoves[i].a for run in draw for i in run]
+        print("  A range: %.3f deg" % (max(a) - min(a)))
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--source", default=str(SOURCE))
+    ap.add_argument("--out", default=None)
+    ap.add_argument("--out-parked", default=None)
+    ap.add_argument("--split", action="store_true",
+                    help="write two single-copy files that overlay at the same spot")
+    args = ap.parse_args()
+
+    moves, runs = parse_source(Path(args.source))
+    d = collect(moves, runs)
+    print("shape bbox centre (%.1f, %.1f); offsets %s / %s"
+          % (d["centre"][0], d["centre"][1], d["t1"], d["t2"]))
+    src_name = Path(args.source).name
+
+    if args.split:
+        out = Path(args.out) if args.out else SPLIT_OUTPUT
+        parked = Path(args.out_parked) if args.out_parked else (
+            out.with_name(out.stem + "-parked.gcode") if args.out else SPLIT_PARKED
+        )
+        lines = []
+        emit_header(lines, src_name, [
+            "copy A: the back-of-head stretch with the bed turning exactly as",
+            "in the real plot, including its 21 A-direction reversals",
+            "run this first, note the pen, swap to the second pen and run",
+            Path(parked).name, "on the same sheet - the divergence between the",
+            "two colours is the kinematic error",
+        ])
+        emit_turning(lines, d, d["t1"])
+        emit_postamble(lines)
+        out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        print("wrote %s (%d lines)" % (out, len(lines)))
+
+        lines = []
+        emit_header(lines, src_name, [
+            "copy B: the identical back-of-head stretch with the bed parked",
+            "pure X/Y - zero A reversals",
+            "run after %s with the second pen; same location, same shape"
+            % Path(out).name,
+        ])
+        emit_parked(lines, d, d["t1"])
+        emit_postamble(lines)
+        parked.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        print("wrote %s (%d lines)" % (parked, len(lines)))
+
+        verify(out, d, [(d["seq1"], d["t1"]), (d["seq2"], d["t1"])], expect_turning=True)
+        verify(parked, d, [(d["seq1"], d["t1"]), (d["seq2"], d["t1"])], expect_turning=False)
+        return
+
+    out = Path(args.out) if args.out else OUTPUT
+    lines = []
+    emit_header(lines, src_name, [
+        "upper copy: as printed, bed turns, same A reversals as the real plot",
+        "lower copy: identical paper shape, bed parked at A%s" % fmt(d["a_end"]),
+        "both copies face the same way; compare the outline band of each",
+    ])
+    emit_turning(lines, d, d["t1"])
+    emit_parked(lines, d, d["t2"])
+    emit_postamble(lines)
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("wrote %s (%d lines)" % (out, len(lines)))
-
-    # ---- verification ----
-    vmoves, vruns = parse_source(out)
-    draw_runs = [r for r in vruns if len(r) > 4]
-    print("verification: %d pen-down runs in the output (expect 4)" % len(draw_runs))
-    if len(draw_runs) == 4:
-        for name, (gen_run, src_run, off) in (
-            ("copy1 inner", (draw_runs[0], seq1, t1)),
-            ("copy1 outer", (draw_runs[1], seq2, t1)),
-            ("copy2 inner", (draw_runs[2], seq1, t2)),
-            ("copy2 outer", (draw_runs[3], seq2, t2)),
-        ):
-            err = 0.0
-            for out_i, src_i in zip(gen_run, src_run):
-                ex = vmoves[out_i].bed[0] - (pts[src_i][0] + off[0])
-                ey = vmoves[out_i].bed[1] - (pts[src_i][1] + off[1])
-                err = max(err, math.hypot(ex, ey))
-            print("  %s: max shape error vs source %.4f mm" % (name, err))
-        a1 = [vmoves[i].a for i in draw_runs[0] + draw_runs[1]]
-        flips = sum(
-            1
-            for k in range(1, len(a1) - 1)
-            if (a1[k] - a1[k - 1]) * (a1[k + 1] - a1[k]) < 0
-            and abs(a1[k] - a1[k - 1]) > 0.01
-            and abs(a1[k + 1] - a1[k]) > 0.01
-        )
-        a2 = [vmoves[i].a for i in draw_runs[2] + draw_runs[3]]
-        print("  A reversals: copy 1 (moving bed) = %d, copy 2 (parked) A range %.3f deg"
-              % (flips, max(a2) - min(a2)))
+    verify(out, d, [(d["seq1"], d["t1"]), (d["seq2"], d["t1"]),
+                    (d["seq1"], d["t2"]), (d["seq2"], d["t2"])],
+           expect_turning=True)
 
 
 if __name__ == "__main__":

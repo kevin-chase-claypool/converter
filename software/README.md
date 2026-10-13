@@ -61,8 +61,11 @@ Cycle Start with the pen loaded:
 - `..\samples\gcode\headback-parked-test.gcode` - the back-of-head scallop
   stretch drawn twice with identical paper geometry: the upper copy turns the
   bed exactly as the real plot does (21 A-direction reversals), the lower copy
-  parks the bed and draws in pure X/Y. Regenerate with
-  `..\tools\make_headback_parked_test.py` after re-plotting the source file.
+  parks the bed and draws in pure X/Y. For a two-pen overlay instead, run
+  `make_headback_parked_test.py --split`: it writes
+  `headback-test-bed.gcode` and `headback-test-parked.gcode`, which draw the
+  same shape at the same spot so the second colour reveals where the two
+  kinematics diverge. Regenerate after re-plotting the source file.
 
 ## Generator tabs
 

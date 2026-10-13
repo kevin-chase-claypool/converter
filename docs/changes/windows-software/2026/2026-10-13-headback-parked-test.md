@@ -10,6 +10,8 @@ status: implemented
 components:
   - tools/make_headback_parked_test.py
   - samples/gcode/headback-parked-test.gcode
+  - samples/gcode/headback-test-bed.gcode
+  - samples/gcode/headback-test-parked.gcode
 tags:
   - a-axis
   - reversal
@@ -25,13 +27,15 @@ related:
 
 ## Summary
 
-New generator `tools/make_headback_parked_test.py` and its output
-`samples/gcode/headback-parked-test.gcode`: the back-of-head scallop stretch
-of the heraldic outline is drawn twice on the sheet, with identical paper
-geometry - once with the bed turning exactly as in the real plot (including
-its 21 A-direction reversals), once with the bed parked so the bed never
-turns. Comparing the two copies isolates A-reversal lag as the cause of the
-outline that collapses toward the inner line.
+New generator `tools/make_headback_parked_test.py` and its outputs: the
+back-of-head scallop stretch of the heraldic outline is turned into test
+programs built from identical bed-frame geometry. The combined program
+`headback-parked-test.gcode` draws two copies side by side (bed turning vs
+bed parked). `--split` instead writes two programs - `headback-test-bed.gcode`
+(original bed motion, 21 A-direction reversals) and
+`headback-test-parked.gcode` (pure X/Y, A frozen) - that draw at the **same
+spot** so a second pen colour overlays the first; the divergence between the
+colours is the kinematic error.
 
 ## Reason
 
@@ -59,6 +63,9 @@ global frame slip (per-stroke implied rotation < 0.4 deg).
   re-registration (`G0 X Y A`), copy 2 never emits an `A` word.
 - Copy-2 feeds per move reproduce the original paper speed of the matching
   move (clamped to 80-2500 mm/min) so only the kinematics differ.
+- `--split` mode reuses the same construction with both copies at
+  `COPY1_CENTER`; each split file is self-contained (the parked file commands
+  `G0 A<a_end>` first, so it draws correctly even when run first).
 
 ## Verification
 
@@ -66,6 +73,9 @@ global frame slip (per-stroke implied rotation < 0.4 deg).
   reconstructed bed point of all four runs matches the source geometry to
   0.0001 mm; copy 1 carries 21 A-direction reversals; copy 2's A range is
   0.000 deg. Estimated drawing time: copy 1 ~2.1 min, copy 2 ~0.6 min.
+- Split mode self-check: each file has two pen-down runs, both matching the
+  source geometry to 0.0001 mm; the bed file carries 21 A reversals, the
+  parked file an A range of 0.000 deg.
 - Bench: plot on a fresh sheet and compare the outline band width of the two
   copies. Expected if A-reversal lag is the cause: copy 2 (parked) keeps the
   full 2.5-2.8 mm band while copy 1 pinches toward the inner line.
@@ -81,4 +91,6 @@ global frame slip (per-stroke implied rotation < 0.4 deg).
 
 - `tools/make_headback_parked_test.py`: generator and self-check.
 - `samples/gcode/headback-parked-test.gcode`: generated test program.
+- `samples/gcode/headback-test-bed.gcode` and
+  `samples/gcode/headback-test-parked.gcode`: the two-pen overlay pair.
 - `software/README.md`: listed with the other repeatability programs.

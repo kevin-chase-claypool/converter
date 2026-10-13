@@ -16,6 +16,13 @@
   of all four matches the source geometry to 0.0001 mm; copy 1 carries 21 A
   reversals, copy 2's A range is 0.000 deg; estimated drawing time 2.1 min
   (copy 1) + 0.6 min (copy 2).
+- Follow-up same day ("wait i thought this was 2 separate gcode files"):
+  `--split` now writes `headback-test-bed.gcode` and
+  `headback-test-parked.gcode`, which draw the identical shape at the SAME
+  spot for a two-pen overlay - run one per colour on the same sheet; the
+  divergence between the colours is the kinematic error. Each split file
+  self-checks to 0.0001 mm shape error; the bed file carries the 21
+  reversals, the parked file an A range of 0.000 deg.
 - Bench verification PENDING: plot on a fresh sheet. If copy 2 holds the
   2.5-2.8 mm band while copy 1 pinches toward the inner line, the A
   reversals are the cause and the converter fix is to prefer the parked
