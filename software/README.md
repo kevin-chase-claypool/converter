@@ -682,6 +682,15 @@ display-only; every other group changes the emitted program.
     revolutions for the same drawing. The tuning ladder is 15 -> 10 -> 5: 15 is
     what the guard was designed around and is the current default, and 10 and 5
     are the field-tested steps down if a turn still marks the paper.
+  - **Bed reversal park mm** (default `2.5`) parks the bed across stretches
+    where its own planned direction would reverse within that distance of pen
+    travel. Smooth curves never reverse and keep the bed turning; the rule
+    targets scalloped and zigzag edges, where reversing the 12:1 bed every
+    couple of millimetres smears the outline. The two-pen A/B overlay measured
+    a ~0.5 deg net angular error plus ~0.5 mm local distortion on the
+    back-of-head scallop when it turned, and a perfect match when parked. On
+    the heraldic sample with this rule it parks 420 mm of the 4298 mm pen path
+    (9.8%), all in the zigzag patches; `0` disables it.
   - **Bed rotation is bounded where the machine cannot follow it.** The planner
     keeps the bed parked instead of swinging it when the axis-lock solution for
     a segment would rotate more than 15 deg, or when a stroke passes close

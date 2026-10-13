@@ -83,6 +83,15 @@ class Settings:
     # around and is untested on paper with the guard enforced; 10 and 5 are the
     # next steps down.
     theta_max_step_deg: float = 15.0
+    # Park the bed across stretches where its own planned direction reverses
+    # more often than every this many mm of pen travel. The 12:1 bed cannot
+    # take a take-up reversal every couple of millimetres without smearing the
+    # outline: the two-pen A/B overlay of the back-of-head scallop measured a
+    # ~0.5 deg net angular error plus ~0.5 mm local distortion when that
+    # stretch was drawn with the bed turning, and a perfect match when it was
+    # drawn with the bed parked. Smooth curves never reverse, so they keep the
+    # bed; this rule only captures zigzag/scalloped edges. 0 disables it.
+    theta_reversal_park_mm: float = 2.5
     # Re-register the bed at every contour: subtract whole revolutions from the
     # bed angle so the commanded A never winds far from zero. Physically
     # neutral - the bed ends at the same orientation - but on a machine whose A
@@ -299,6 +308,7 @@ TEXT_FIELD_GROUPS = (
         ("Theta resolver", "theta_resolver", "rtheta"),
         ("Theta weight", "theta_weight", "1.0"),
         ("Max bed step deg", "theta_max_step_deg", "15"),
+        ("Bed reversal park mm", "theta_reversal_park_mm", "3"),
         ("Curve round bias", "round_bias", "0.05"),
         ("Smoothness factor", "smoothness_factor", "1.0"),
         ("Theta smooth", "theta_smooth_window", "2"),
@@ -450,6 +460,7 @@ FIELD_TOOLTIPS = {
     "travel_rate": "Pen-up travel speed in mm/min.",
     "theta_mode": "How the bed orientation is chosen per contour: optimized solves it, fixed holds one angle, tangent follows the path direction.",
     "theta_max_step_deg": "Largest bed rotation one move may ask for, in bed degrees. Beyond this the bed parks and the gantry takes the move in X and Y. Lower it if a large turn mid-stroke leaves a drag mark, a blob, or a slight rotation of everything after it; 0 parks the bed whenever a turn is needed.",
+    "theta_reversal_park_mm": "Park the bed across stretches where its own direction would reverse more often than every this many mm of pen travel. Smooth curves never reverse and keep the bed turning; this only parks zigzag/scalloped edges, where reversing the 12:1 bed every couple of millimetres smears the outline. 0 disables the rule.",
     "theta_resolver": "Per-segment theta solver. rtheta is the installed default; dp and greedy are fallback experiments.",
     "theta_wrap": "Subtract whole bed revolutions at every contour so the commanded A stays near zero. The bed ends in the same place, but any small A-axis scale error stops accumulating with angle - turn this off to match older programs.",
     "pen_diameter_mm": "Physical pen tip width. Used for ink-size reporting, pen-width compensation, and the 'Fill wide strokes' threshold.",
@@ -593,6 +604,8 @@ def validate_settings(settings):
         raise ValueError("shade levels must be at least one.")
     if not 0.0 <= float(settings.theta_max_step_deg) <= 180.0:
         raise ValueError("max bed step must be between 0 and 180 degrees.")
+    if not 0.0 <= float(settings.theta_reversal_park_mm) <= 100.0:
+        raise ValueError("bed reversal park must be between 0 and 100 mm.")
     if float(settings.gradient_wave_amplitude_pct) > 100.0:
         raise ValueError(
             "gradient wave amplitude must not exceed 100 percent of the row spacing."

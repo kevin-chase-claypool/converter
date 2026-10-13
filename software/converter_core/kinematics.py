@@ -371,28 +371,77 @@ def _rtheta_segment_plan(a, b, settings, previous_theta, previous_machine, cente
     }
 
 
+def _reversal_park_mask(path, thetas, park_mm):
+    """Segment indices inside stretches that reverse the bed within ``park_mm``.
+
+    Reversal events are segments whose bed-sweep sign flips against the
+    previous significant sweep. Consecutive events closer than ``park_mm`` of
+    pen travel mark every segment between them, so the bed parks across the
+    whole back-and-forth patch instead of toggling per spike. Smooth curves
+    sweep one way and produce no events, so they are never marked.
+    """
+    if park_mm <= 0.0 or len(path) < 3:
+        return set()
+    seg_len = [distance(path[k], path[k + 1]) for k in range(len(path) - 1)]
+    events = []
+    last_dir = 0
+    for k in range(len(thetas) - 1):
+        sweep = thetas[k + 1] - thetas[k]
+        if abs(sweep) <= 0.02:
+            continue
+        direction = 1 if sweep > 0.0 else -1
+        if last_dir and direction != last_dir:
+            events.append(k)
+        last_dir = direction
+    mask = set()
+    for e1, e2 in zip(events, events[1:]):
+        gap = sum(seg_len[e1:e2])
+        if gap <= park_mm:
+            mask.update(range(e1, e2 + 1))
+    return mask
+
+
 def _plan_contour_thetas_rtheta(path, settings, previous_theta, center, previous_machine, cancel_check=None):
     n = len(path)
     if n < 2:
         return [], []
-    theta0 = _rtheta_start_theta(settings, previous_theta)
-    thetas = [theta0] + [0.0] * (n - 1)
-    strategies = [None] * (n - 1)
-    prev_theta = theta0
-    prev_machine = bed_to_machine(path[0], theta0, center)
-    for k in range(n - 1):
-        check_cancelled(cancel_check)
-        a, b = path[k], path[k + 1]
-        if distance(a, b) <= 1e-9:
-            thetas[k + 1] = prev_theta
-            strategies[k] = "fallback"
-            continue
-        plan = _rtheta_segment_plan(a, b, settings, prev_theta, prev_machine, center)
-        thetas[k + 1] = plan["theta"]
-        strategies[k] = plan["strategy"]
-        prev_theta = plan["theta"]
-        prev_machine = plan["machine"]
-    return thetas, strategies
+
+    def run(park_mask):
+        theta0 = _rtheta_start_theta(settings, previous_theta)
+        thetas = [theta0] + [0.0] * (n - 1)
+        strategies = [None] * (n - 1)
+        prev_theta = theta0
+        prev_machine = bed_to_machine(path[0], theta0, center)
+        for k in range(n - 1):
+            check_cancelled(cancel_check)
+            a, b = path[k], path[k + 1]
+            if distance(a, b) <= 1e-9:
+                thetas[k + 1] = prev_theta
+                strategies[k] = "fallback"
+                continue
+            plan = None
+            if k in park_mask:
+                # Reversal-dense patch: keep the bed where it is and let the
+                # gantry draw the move in X and Y. The bed-frame points are the
+                # same either way, so the artwork is unchanged; only the axes
+                # doing the moving differ.
+                plan = _held_segment_plan(b, settings, prev_theta, prev_machine, center)
+            if plan is None:
+                plan = _rtheta_segment_plan(a, b, settings, prev_theta, prev_machine, center)
+            thetas[k + 1] = plan["theta"]
+            strategies[k] = plan["strategy"]
+            prev_theta = plan["theta"]
+            prev_machine = plan["machine"]
+        return thetas, strategies
+
+    thetas, strategies = run(set())
+    park_mm = max(0.0, float(getattr(settings, "theta_reversal_park_mm", 3.0)))
+    if park_mm <= 0.0:
+        return thetas, strategies
+    mask = _reversal_park_mask(path, thetas, park_mm)
+    if not mask:
+        return thetas, strategies
+    return run(mask)
 
 
 def plan_segment_kinematics(a, b, settings, previous_theta, center=None, previous_machine=None):

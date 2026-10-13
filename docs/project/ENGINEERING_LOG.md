@@ -1,5 +1,29 @@
 # Engineering Log
 
+<a id="elog-20261013-reversal-parking"></a>
+### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - Bed reversals are parked on zigzag stretches
+
+- Request: "im relying on the a axis to help make smooth round curves, is
+  your change going to kill that?" - then "ok go".
+- Change: new `theta_reversal_park_mm` setting (default 2.5 mm) plus a
+  two-pass r-theta planner. `_reversal_park_mask()` marks every segment
+  between bed-direction reversals closer than the setting; those segments
+  run the existing parked plan (bed still, gantry X/Y). Smooth curves never
+  reverse, so they keep the bed and plan exactly as before; artwork is
+  unchanged because both strategies trace the same bed-frame points.
+- Verification: 410 tests pass (7 new - mask logic, smooth-circle
+  no-parking, the real 322-point head-area run parks with constant theta
+  across holds, validator rejects out-of-range). Regenerated
+  `samples/gcode/heraldic-revpark.gcode` (operator's settings, manual 0.5
+  scale): geometry identical to their file except 9 near-centre points, and
+  420 mm of the 4298 mm path (9.8%) parks - concentrated on fur/claw/scallop
+  zigzags, 24 parked moves on the head-back stretch.
+- Operator answer on smooth curves: the rule keys off reversal density, so
+  every smooth arc keeps the bed; on this drawing the parked share is 9.8%
+  of the path, dominated by the tiny scallop features.
+- Bench plot of the regenerated file pending.
+- Evidence: `WSW-20261013-010`; `software/tests/test_reversal_parking.py`.
+
 <a id="elog-20261013-headback-ab-result"></a>
 ### 🟨 2026-10-13 - HARDWARE/MEASURED - A/B overlay result: the bed-turning copy is the defective one
 
