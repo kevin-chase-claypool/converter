@@ -1,5 +1,27 @@
 # Engineering Log
 
+<a id="elog-20261013-headback-parked-test"></a>
+### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - Bed-parked A/B test built for the back-of-head stretch
+
+- Request: "ok do it" - build the promised test that draws the back-of-head
+  scallop twice, once as printed and once with the bed parked, to prove the
+  A-reversal-lag hypothesis.
+- Change: `tools/make_headback_parked_test.py` extracts the two pen-down runs
+  covering the stretch (inner line + outer scalloped line, with the pen-up
+  travel between) from the heraldic program and writes
+  `samples/gcode/headback-parked-test.gcode`: copy 1 replays the original A
+  trajectory (21 direction reversals) at a translated paper position; copy 2
+  draws the identical bed-frame points with A frozen, in pure X/Y.
+- Self-check: four pen-down runs in the output; every reconstructed bed point
+  of all four matches the source geometry to 0.0001 mm; copy 1 carries 21 A
+  reversals, copy 2's A range is 0.000 deg; estimated drawing time 2.1 min
+  (copy 1) + 0.6 min (copy 2).
+- Bench verification PENDING: plot on a fresh sheet. If copy 2 holds the
+  2.5-2.8 mm band while copy 1 pinches toward the inner line, the A
+  reversals are the cause and the converter fix is to prefer the parked
+  strategy above a reversal-density threshold.
+- Evidence: `WSW-20261013-009`; `tools/make_headback_parked_test.py`.
+
 <a id="elog-20261013-head-back-reversal-lag"></a>
 ### 🟨 2026-10-13 - HARDWARE/MEASURED - Back of the head: the printed outline really does collapse - reversal lag on the scalloped edge
 

@@ -58,6 +58,11 @@ Cycle Start with the pen loaded:
   travel actually runs at, because grblHAL ignores the `F` word on a rapid.
   Regenerate either with the matching tool in `..\tools\`
   (`make_a_repeatability_test.py`, `make_xy_repeatability_test.py --axis X`).
+- `..\samples\gcode\headback-parked-test.gcode` - the back-of-head scallop
+  stretch drawn twice with identical paper geometry: the upper copy turns the
+  bed exactly as the real plot does (21 A-direction reversals), the lower copy
+  parks the bed and draws in pure X/Y. Regenerate with
+  `..\tools\make_headback_parked_test.py` after re-plotting the source file.
 
 ## Generator tabs
 
