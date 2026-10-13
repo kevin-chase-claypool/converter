@@ -16,6 +16,13 @@
   and bed rim/frame - which witness moves localises the fault.
 - Self-check: 128 A moves, 120 reversals, A within 0..60.2 motor deg;
   standard preamble/pen/postamble.
+- Follow-up: the first sample shipped with an unterminated header comment
+  (a two-line note split mid-parenthesis) and ioSender refused it on load.
+  The generator now paren-balance-checks every emitted line - which
+  immediately caught a second instance during the fix - and the committed
+  sample carries the corrected header. The repo file was locked by the open
+  sender at the time, so the fixed blob went in via the git index; the
+  working copy is regenerated once the sender releases it.
 - Bench run pending; it is a few minutes and needs only the pen and a
   ruler/loupe (flat photo works too).
 - Evidence: `WSW-20261013-012`.

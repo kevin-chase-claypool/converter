@@ -55,8 +55,9 @@ def main() -> None:
     lines.append("(station 4: out/back arcs at r85, 3000 - gap should scale with radius)")
     lines.append("(station 5: pen-up soak, tick/30x +/-2 bed deg cycles/tick - offset = cumulative loss)")
     lines.append("(station 6: pen-down soak at psi 180/scratch 225, 20x +/-1 bed deg, tick/cycles/tick)")
-    lines.append("(before running: sharpie witness across the 60T pinion+motor face, the bed rim+frame,")
-    lines.append("(and one belt tooth marked against one rim tooth - a whole-pitch step = 2 mm = 0.5 bed deg)")
+    lines.append("(before running: sharpie witness across the 60T pinion+motor face)")
+    lines.append("(and across the bed rim+frame, and one belt tooth against one rim tooth)")
+    lines.append("(a whole-pitch tooth step is 2 mm at the rim = 0.5 bed deg)")
     lines.extend(["G21", "G90", "G94", "G17", "G54", "G0 F3000", "M5", "G65 P115 Q0 A1 W2"])
 
     def pen_down(first: bool) -> None:
@@ -141,6 +142,12 @@ def main() -> None:
     out = Path(args.out)
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("wrote %s (%d lines)" % (out, len(lines)))
+
+    # every line must be paren-balanced: an unterminated '(' comment makes
+    # strict senders (ioSender) refuse the file
+    bad = [k + 1 for k, ln in enumerate(lines) if ln.count("(") != ln.count(")")]
+    if bad:
+        raise SystemExit("unbalanced parentheses on lines: %s" % bad)
 
     # self-check: parse back the A sequence, count reversals and A range
     import re

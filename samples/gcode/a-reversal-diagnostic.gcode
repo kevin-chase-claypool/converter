@@ -3,8 +3,9 @@
 (station 4: out/back arcs at r85, 3000 - gap should scale with radius)
 (station 5: pen-up soak, tick/30x +/-2 bed deg cycles/tick - offset = cumulative loss)
 (station 6: pen-down soak at psi 180/scratch 225, 20x +/-1 bed deg, tick/cycles/tick)
-(before running: sharpie witness across the 60T pinion+motor face, the bed rim+frame,
-(and one belt tooth marked against one rim tooth - a whole-pitch step = 2 mm = 0.5 bed deg)
+(before running: sharpie witness across the 60T pinion+motor face)
+(and across the bed rim+frame, and one belt tooth against one rim tooth)
+(a whole-pitch tooth step is 2 mm at the rim = 0.5 bed deg)
 G21
 G90
 G94

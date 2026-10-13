@@ -68,6 +68,10 @@ the reverse path loses the position.
 - Self-check on generation: 128 A moves and 120 direction reversals; A stays
   inside 0..60.2 motor degrees; the program uses the standard preamble, pen
   macros and park postamble, so it runs like a plot.
+- The generator now asserts every emitted line is parenthesis-balanced: the
+  first sample shipped with an unterminated header comment that made ioSender
+  refuse the file on load, and the balance check caught a second instance
+  while fixing it. The committed sample carries the corrected header.
 - Bench reading is done by eye/caliper on the ticks and arc pairs (a flat
   photo works too); expected run time is a few minutes.
 
