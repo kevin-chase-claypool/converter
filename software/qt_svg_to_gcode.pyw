@@ -1202,6 +1202,9 @@ class MainWindow(QMainWindow):
         self.play_start_progress = 0.0
         self.last_command_follow_time = 0.0
         self.auto_gcode_path = ""
+        # Output folder chosen from File > Set G-code Destination; multi-layer
+        # tools write their files here without a per-save dialog.
+        self.gcode_dir = ""
         self.preview_thread = None
         self.preview_worker = None
         self.preview_started_at = None
@@ -2074,10 +2077,27 @@ class MainWindow(QMainWindow):
             )
 
     def pick_gcode(self):
-        path, _ = QFileDialog.getSaveFileName(self, "Save G-code", "", "G-code files (*.gcode *.nc *.tap);;All files (*.*)")
-        if path:
-            self.gcode_path.setText(path)
-            self.auto_gcode_path = ""
+        """File > Set G-code Destination: choose the output *folder*.
+
+        Every file a tool writes lands in this folder; the names are derived
+        from the artwork and the tool's own suffixes (the CMYK tab writes four
+        layer files, for example). 2026-10-13: this used to be a save-a-file
+        dialog, which the multi-layer tabs then ignored entirely.
+        """
+        current = self.gcode_path.text().strip()
+        start_dir = os.path.dirname(current) if current else ""
+        folder = QFileDialog.getExistingDirectory(
+            self, "Choose G-code destination folder", start_dir
+        )
+        if not folder:
+            return
+        self.gcode_dir = folder
+        stem = os.path.splitext(os.path.basename(current))[0]
+        if not stem:
+            artwork = self.svg_path.text().strip()
+            stem = os.path.splitext(os.path.basename(artwork))[0] if artwork else "plot"
+        self.gcode_path.setText(os.path.join(folder, stem + ".gcode"))
+        self.auto_gcode_path = ""
 
     def update_color_buttons(self):
         for button, color in (
@@ -2239,6 +2259,11 @@ class MainWindow(QMainWindow):
         entries = list(entries)
         if not entries:
             return []
+        # A destination folder chosen from File > Set G-code Destination takes
+        # the place of the per-save dialog: derive each file's name from the
+        # tool's default base inside that folder.
+        if base_path is None and getattr(self, "gcode_dir", ""):
+            base_path = os.path.join(self.gcode_dir, default_base or "plot.gcode")
         if base_path is None:
             base_path, _ = QFileDialog.getSaveFileName(
                 self,

@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20261013-gcode-destination-folder"></a>
+### 🟨 2026-10-13 - WINDOWS SOFTWARE/IMPLEMENTED - G-code destination is a folder
+
+- Request: "set gcode destination isnt letting me choose a folder".
+- Cause: File > Set G-code Destination opened a save-a-*file* dialog, and the
+  CMYK tab ignored the result (`export_program_set(..., base_path=None)`) and
+  prompted for a file name on every save.
+- Change: the command now uses `getExistingDirectory` and records
+  `self.gcode_dir`; multi-layer exports derive `<folder>/<default_base>` with
+  no per-save dialog. Single-file Ctrl+S keeps writing the field path
+  (derived as `<folder>/<stem>.gcode`).
+- Verification: `py_compile` clean; 88 unit tests pass across
+  `test_generator_tabs` and `test_cmyk_tab`; UI walk-through pending app
+  restart.
+- Evidence: `WSW-20261013-003`; `software/qt_svg_to_gcode.pyw`.
+
 <a id="elog-20261013-reach-radius-180-cmyk-preflight"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - Reach radius 180, CMYK preflight
 
