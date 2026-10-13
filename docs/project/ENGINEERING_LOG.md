@@ -1,5 +1,22 @@
 # Engineering Log
 
+<a id="elog-20261013-pencil-sweep-vs-runout"></a>
+### 🟨 2026-10-13 - HARDWARE/MEASURED - Pencil sweep shows a static plus/minus 1 mm bed map; the open question is height vs bed ANGLE
+
+- Operator: mechanical pencil in the carriage, toolhead run across the bed:
+  the pencil-to-bed gap stays within roughly +/- 1 mm over the whole map.
+- Context recorded so this number is not over-read: the bed-fixed full plot
+  (one bed angle) is flawless with this same bed, and the toolhead's contact
+  seek per stroke absorbs static height variation - so the +/- 1 mm MAP is
+  not the smear source. The untested state is **height as a function of bed
+  angle** (rotational runout): the fixed plot holds one angle, the reversal
+  diagnostic turns only +/-5 deg, real plots sweep the full circle.
+- Next measurement (30 s manual or quantitative): keep the pencil at one
+  point, rotate the bed in 45-90 deg steps through a full turn (A += 1083
+  motor deg per 90 deg bed; a full turn is A += 4332), and watch/gauge the
+  gap at each step. Or run `bed_mesh_probe.py --mode polar --radii 60
+  --angles 24 --probes-per-point 3` for the quantitative ring.
+
 <a id="elog-20261013-reversal-diag-result"></a>
 ### 🟨 2026-10-13 - HARDWARE/MEASURED - A-reversal diagnostic result: the drivetrain is clean - runout becomes the prime suspect
 
