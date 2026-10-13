@@ -5,7 +5,7 @@ category: windows-software
 affected_categories:
   - windows-software
   - hardware
-status: implemented
+status: verified
 components:
   - samples/gcode/heraldic-bedfixed.gcode
 tags:
@@ -54,8 +54,14 @@ extreme: no bed motion at all.
   reach), so the comparison against the latest print is apples to apples.
 - Estimated plotting time ~13-15 min at 350 mm/min; the gantry carries all
   motion, so raise Feed rate for a faster second pass if the first is clean.
-- Bench result PENDING: print on a **fresh** sheet and compare the outline
-  against the latest print.
+- **Bench result (2026-10-13): flawless.** The operator printed it and
+  reports the print looks flawless all around, while every bed-turning print
+  of the same geometry smears the outline. Same scale, feed, pen and paper
+  handling - the only change was a stationary bed. This confirms the two-pen
+  A/B result at full-plot scale and convicts the bed's **reversing** motion
+  (smooth rotation was already proven clean by the r=100 mark test at
+  F30000). X/Y, pen, artwork and conversion are exonerated. Fixed mode is the
+  working quality mode until the A drivetrain's reverse play is fixed.
 
 ## Risks and follow-up
 

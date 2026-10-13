@@ -1,5 +1,29 @@
 # Engineering Log
 
+<a id="elog-20261013-bedfixed-verdict"></a>
+### 🟨 2026-10-13 - HARDWARE/MEASURED - Verdict: the bed-fixed print is flawless - the outline defect is the A axis reversing
+
+- Operator: "omfg the print looks flawless" - the full heraldic drawn with
+  Theta mode `Fixed` (bed never turns, `heraldic-bedfixed.gcode`) came out
+  clean all around, while every bed-turning print of the same geometry smears
+  the outline. Same scale, feed, pen, paper and conversion.
+- This confirms the two-pen A/B (`WSW-20261013-009`) at full-plot scale and
+  convicts the bed motion - specifically its **reversing** behaviour, since
+  smooth rotation was already proven clean (r=100 mark test at F30000 draws
+  perfect circles). X/Y gantry, pen, artwork and conversion are exonerated.
+- Also recorded: the 2.5 mm reversal-parking rule (`WSW-20261013-010`) only
+  parked 12 of the 83 outer-outline moves in the defect zone at the
+  operator's 350 settings (reversal spacing there ~3.6 mm), which is why the
+  partial rule did not fix the plot.
+- Consequences and next steps: **Fixed mode (Theta mode = Fixed) is a usable
+  quality mode today.** The cure for normal mode is the A drivetrain
+  reverse-end - 60T/720T pulley grub screws, belt tension, bed hub bolts,
+  coupling, driver current - verified by re-plotting the two-pen headback
+  pair (the two colours must coincide once the reverse play is gone). If
+  preferred software-side, widen the park rule to ~4.5 mm; parked accuracy
+  itself is already proven.
+- Evidence: `WSW-20261013-011`; `samples/gcode/heraldic-bedfixed.gcode`.
+
 <a id="elog-20261013-bedfixed-diagnostic"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - Bed-fixed full-plot diagnostic for the "outline all around" report
 

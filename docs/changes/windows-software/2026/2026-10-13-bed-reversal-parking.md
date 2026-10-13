@@ -71,7 +71,13 @@ to survive them.
   of the bed centre where point sampling dominates the comparison), and
   420 mm of the 4298 mm pen path (9.8%) is parked, concentrated on the
   fur/claw/scallop zigzags including 24 parked moves on the head-back stretch.
-- Bench plot of the regenerated file is pending.
+- **Bench follow-up (2026-10-13): insufficient coverage.** With the
+  operator's 350 mm/min settings the 2.5 mm rule parks only 12 of the 83
+  outer-outline moves through the back-of-head zone - the defect cluster's
+  reversals sit ~3.6 mm apart - and the outline defect persisted on the
+  plot. The rule is the right mechanism but needs a wider default (about
+  4-4.5 mm) or a density-based criterion. Parked-mode accuracy itself was
+  proven flawless by the bed-fixed full-plot diagnostic (`WSW-20261013-011`).
 
 ## Risks and follow-up
 
