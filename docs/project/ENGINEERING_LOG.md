@@ -1,5 +1,25 @@
 # Engineering Log
 
+<a id="elog-20261013-a-reversal-diagnostic"></a>
+### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - A-reversal diagnostic: separating play, lost steps, wind-up and drag
+
+- Operator redirect: "i still want to use the A motor ... i need to find why
+  the A motor is doing this" - the parking/Fixed workarounds are not the
+  goal; root-cause the reversal error.
+- Built `tools/make_a_reversal_diagnostic.py` +
+  `samples/gcode/a-reversal-diagnostic.gcode`: out/back arc pairs at
+  r=60 mm at 3000/6000/12000 motor deg/min (gap = lost motion per reversal;
+  rate-dependent gap = elastic/driver, flat gap = mechanical play), the same
+  at r=85 (radius scaling vs rim slop), a pen-up tick/30x +/-2 deg soak/tick
+  (cumulative loss = lost steps or slip), and a pen-down soak (drag torque).
+  Header instructs marking sharpie witnesses on the 60T pinion/motor face
+  and bed rim/frame - which witness moves localises the fault.
+- Self-check: 128 A moves, 120 reversals, A within 0..60.2 motor deg;
+  standard preamble/pen/postamble.
+- Bench run pending; it is a few minutes and needs only the pen and a
+  ruler/loupe (flat photo works too).
+- Evidence: `WSW-20261013-012`.
+
 <a id="elog-20261013-bedfixed-verdict"></a>
 ### 🟨 2026-10-13 - HARDWARE/MEASURED - Verdict: the bed-fixed print is flawless - the outline defect is the A axis reversing
 

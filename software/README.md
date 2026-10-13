@@ -71,6 +71,12 @@ Cycle Start with the pen loaded:
   whole program). The decisive outline A/B: clean everywhere means the bed
   rotation is the smear source; still wobbly means the X/Y gantry or the pen.
   Regenerate from the app by selecting **Theta mode = Fixed**.
+- `..\samples\gcode\a-reversal-diagnostic.gcode` - finds why the bed loses
+  position on reversals: out/back arc pairs at three rates and two radii
+  (mechanical play vs belt wind-up vs rate dependence), plus pen-up and
+  pen-down tick/soak/tick stations (cumulative loss and drag torque). Mark a
+  sharpie witness across the 60T pinion/motor face and the bed rim/frame
+  before running. Regenerate with `..\tools\make_a_reversal_diagnostic.py`.
 
 ## Generator tabs
 
