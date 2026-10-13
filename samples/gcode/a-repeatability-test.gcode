@@ -4,7 +4,7 @@
 (each station draws a radial tick, rotates out and back, redraws the tick)
 (ticks on top of each other = the bed returned)
 (a gap s mm at radius R mm is degrees(s/R) of lost motion for that out-and-back)
-(stations at radii 100, 160 mm; 2 revolutions each way at F15000)
+(stations at radii 100, 160 mm; 2 revolutions each way at F30000)
 G21
 G90
 G94
@@ -12,7 +12,7 @@ G17
 G54
 G0 F3000
 M5
-G4 P0.8
+G4 P1
 (station: r=100 mm)
 G0 X100 Y0
 M3
@@ -21,15 +21,15 @@ G1 F700
 G1 X95 Y0
 G1 X105 Y0
 G91
-G1 A4331.9664 F15000
-G1 A4331.9664 F15000
-G1 A-4331.9664 F15000
-G1 A-4331.9664 F15000
+G1 A4331.9664 F30000
+G1 A4331.9664 F30000
+G1 A-4331.9664 F30000
+G1 A-4331.9664 F30000
 G90
 G1 X95 Y0
 G1 X105 Y0
 M5
-G4 P0.8
+G4 P1
 (station: r=160 mm)
 G0 X160 Y0
 M3
@@ -38,14 +38,14 @@ G1 F700
 G1 X155 Y0
 G1 X165 Y0
 G91
-G1 A4331.9664 F15000
-G1 A4331.9664 F15000
-G1 A-4331.9664 F15000
-G1 A-4331.9664 F15000
+G1 A4331.9664 F30000
+G1 A4331.9664 F30000
+G1 A-4331.9664 F30000
+G1 A-4331.9664 F30000
 G90
 G1 X155 Y0
 G1 X165 Y0
 M5
-G4 P0.8
+G4 P1
 G53 G0 X-10 Y-436 (park home)
 M2

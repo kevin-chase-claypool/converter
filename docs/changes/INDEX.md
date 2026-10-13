@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-13 | `WSW-20261013-008` | windows-software, rp23cnc-software, hardware | implemented | [Converter A limits raised to 30000 / 6000; controller set to match](windows-software/2026/2026-10-13-a-limits-raised-to-30000.md) |
 | 2026-10-13 | `WSW-20261013-007` | windows-software | implemented | [Effective pitch readout, and Auto stops overwriting Dot pitch](windows-software/2026/2026-10-13-effective-pitch-readout-and-auto.md) |
 | 2026-10-13 | `WSW-20261013-006` | windows-software | implemented | [Generator tab settings now reach the preview](windows-software/2026/2026-10-13-tab-settings-reach-the-preview.md) |
 | 2026-10-13 | `WSW-20261013-005` | windows-software | implemented | [File > Save G-code routes to the active tool's own save](windows-software/2026/2026-10-13-save-gcode-routes-to-active-tool.md) |

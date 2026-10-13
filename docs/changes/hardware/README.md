@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-13 | `WSW-20261013-008` | implemented | [Converter A limits raised to 30000 / 6000; controller set to match](../windows-software/2026/2026-10-13-a-limits-raised-to-30000.md) | `a-axis`, `rate-limit`, `theta`, `outline`, `verification` |
 | 2026-10-13 | `WSW-20261013-002` | implemented | [Reach radius 180, and a CMYK set preflight against the travel window](../windows-software/2026/2026-10-13-reach-radius-180-and-cmyk-preflight.md) | `reach-radius`, `soft-limits`, `cmyk`, `preflight`, `registration` |
 | 2026-10-13 | `WSW-20261013-001` | implemented | [CMYK Pen width cap raised to 6 mm for brush pens](../windows-software/2026/2026-10-13-cmyk-pen-width-cap-6mm.md) | `cmyk`, `pen-width`, `tombow`, `controls` |
 | 2026-10-13 | `RPSW-20261013-001` | implemented | [Raise the M5 pen-clearance pulse to 90 ms](../rp23cnc-software/2026/2026-10-13-raise-m5-clearance-to-90ms.md) | `toolhead`, `pen-clear`, `m5`, `clearance` |

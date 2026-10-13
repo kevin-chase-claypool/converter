@@ -37,8 +37,16 @@ class ThetaControllerLimits:
     program prints them so the two can be compared with `$$`.
     """
 
-    max_rate_deg_min: float = 15000.0
-    max_acceleration_deg_s2: float = 3000.0
+    # 2026-10-13: raised 15000/3000 -> 30000/6000 on the operator's request.
+    # Rationale: the outer silhouette's tight stretches demand up to ~42 motor
+    # degrees per mm of pen travel, i.e. ~29,400 motor deg/min at the 700 mm/min
+    # tangential target - twice the old cap, so the planner was capping those
+    # moves. The controller now runs $113=30000 and $123=6000 (was already
+    # 6000). Verified on paper at 20000 only: regenerate and run
+    # samples/gcode/a-repeatability-test.gcode at F30000 before trusting
+    # 30000; fall back to 20000/6000 if the marks do not coincide.
+    max_rate_deg_min: float = 30000.0
+    max_acceleration_deg_s2: float = 6000.0
 
 @dataclass
 class Settings:

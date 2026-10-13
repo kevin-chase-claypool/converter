@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-13 | `WSW-20261013-008` | implemented | [Converter A limits raised to 30000 / 6000; controller set to match](2026/2026-10-13-a-limits-raised-to-30000.md) | `a-axis`, `rate-limit`, `theta`, `outline`, `verification` |
 | 2026-10-13 | `WSW-20261013-007` | implemented | [Effective pitch readout, and Auto stops overwriting Dot pitch](2026/2026-10-13-effective-pitch-readout-and-auto.md) | `cmyk`, `pitch`, `pen-width`, `controls` |
 | 2026-10-13 | `WSW-20261013-006` | implemented | [Generator tab settings now reach the preview](2026/2026-10-13-tab-settings-reach-the-preview.md) | `cmyk`, `preview`, `pen-width`, `tolerance` |
 | 2026-10-13 | `WSW-20261013-005` | implemented | [File > Save G-code routes to the active tool's own save](2026/2026-10-13-save-gcode-routes-to-active-tool.md) | `cmyk`, `save`, `file-menu`, `workflow` |

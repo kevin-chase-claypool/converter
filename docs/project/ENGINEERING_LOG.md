@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20261013-a-limits-30000"></a>
+### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - A limits raised to 30000/6000
+
+- Request: "for 1, what do i need to increase this to for it to be within the
+  demand" - then "so i set it to 30000 and 6000".
+- Mathematics: the outer silhouette's tight stretches demand ~42 motor deg of
+  bed rotation per mm of pen travel; at the 700 mm/min tangential target that
+  is ~29,400 motor deg/min, twice the old 15,000 cap - exactly the pieces
+  reported wobbly (tail bend, run to the butt, leg).
+- Change: converter `ThetaControllerLimits` 15000/3000 -> 30000/6000 to match
+  the controller's new `$113`; `a-repeatability-test.gcode` regenerated at
+  F30000 (8.7 s/rev, 69.3 s plotted rotation); preamble test updated.
+- Verification: 40 tests pass; hardware mark test at F30000 is PENDING and is
+  the acceptance gate - fall back to 20000/6000 if the ticks do not coincide.
+- Evidence: `WSW-20261013-008`; `software/converter_core/settings.py`.
+
 <a id="elog-20261013-effective-pitch-readout"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/IMPLEMENTED - Effective pitch readout; Auto stops touching Dot pitch
 
