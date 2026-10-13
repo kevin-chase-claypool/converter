@@ -108,8 +108,18 @@ class Settings:
     # 195.27 mm from the same bed center. Re-derive after every registration,
     # because the bed center, not the travel, is what moves.
     #
+    # 2026-10-13: re-derived against the live registration (G54 machine
+    # -231.214, -193.629): the work envelope is X -233.786..221.214,
+    # Y -267.371..183.629, so +Y reach is now 183.629, not 185.27 - the
+    # September registration had the bed 1.6 mm further south. A CMYK set
+    # auto-fitted to 185 clipped nothing but tripped Alarm 2 mid-plot and
+    # forced a manual resume. 180.0 keeps >=3.6 mm margin on the tight +Y
+    # side at this registration. Re-derive per the note above after any
+    # re-registration; if a future registration gains headroom, 185 may be
+    # entered again from the UI.
+    #
     # Clip radius becomes min(bed_diameter/2 - bed_margin, this).
-    machine_reach_radius_mm: float = 185.0
+    machine_reach_radius_mm: float = 180.0
     # Where the artwork's own center is placed relative to the registered bed
     # center, in machine millimetres. plan_program centers the artwork on the bed
     # by default; these offsets move it, which is how a drawing whose bounding
@@ -301,7 +311,7 @@ TEXT_FIELD_GROUPS = (
     ("Machine", (
         ("Bed dia mm", "bed_diameter_mm", "457.2"),
         ("Bed margin mm", "bed_margin_mm", "6.35"),
-        ("Gantry reach radius mm", "machine_reach_radius_mm", "185.0"),
+        ("Gantry reach radius mm", "machine_reach_radius_mm", "180.0"),
         ("Park X machine mm", "park_x_machine", "-10"),
         ("Park Y machine mm", "park_y_machine", "-436"),
     )),

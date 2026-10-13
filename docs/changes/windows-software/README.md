@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-13 | `WSW-20261013-002` | implemented | [Reach radius 180, and a CMYK set preflight against the travel window](2026/2026-10-13-reach-radius-180-and-cmyk-preflight.md) | `reach-radius`, `soft-limits`, `cmyk`, `preflight`, `registration` |
 | 2026-10-13 | `WSW-20261013-001` | implemented | [CMYK Pen width cap raised to 6 mm for brush pens](2026/2026-10-13-cmyk-pen-width-cap-6mm.md) | `cmyk`, `pen-width`, `tombow`, `controls` |
 | 2026-10-11 | `RPSW-20261011-001` | implemented | [Bed mesh from the toolhead's M3 contact seek](../rp23cnc-software/2026/2026-10-11-bed-mesh-probe.md) | `bed-mesh`, `probing`, `toolhead`, `telemetry`, `flatness` |
 | 2026-10-11 | `HW-20261011-001` | implemented | [Bed gap map and Klipper-style tilt report](../hardware/2026/2026-10-11-bed-gap-map-and-tilt-report.md) | `bed`, `flatness`, `tilt`, `runout`, `diagnosis`, `tooling` |

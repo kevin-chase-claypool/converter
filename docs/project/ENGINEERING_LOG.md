@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20261013-reach-radius-180-cmyk-preflight"></a>
+### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - Reach radius 180, CMYK preflight
+
+- Request: "is this issue fixed in converter?" - after a mid-plot Alarm 2 on
+  the CMYK yellow layer forced a manual resume.
+- Cause: the 185 mm reach default came from the 2026-09-29 registration
+  (+Y reach 185.270). The live registration (machine -231.214, -193.629) gives
+  +Y reach 183.629, so the auto-fitted layers sat 0.35-1.37 mm past the soft
+  limit; the alarm targets the block ahead, so the machine stops looking mid-bed.
+- Change: default `machine_reach_radius_mm` 185 -> 180 with both registrations
+  recorded; new `tools/check_cmyk_set.py` preflights every layer file's machine
+  bbox against the travel window from the live `--g54`.
+- Verification: preflight fails black/magenta/yellow by ~1.37 mm and cyan by
+  0.35 mm with tonight's G54; the generated resume file
+  (`IMG_0514-cmyk-yellow_resume.gcode`, clipped at work Y 183.13) passes both
+  the preflight and the motion guards.
+- Evidence: `WSW-20261013-002`; `software/converter_core/settings.py`;
+  `tools/check_cmyk_set.py`.
+
 <a id="elog-20261013-cmyk-pen-width-6mm"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK Pen width cap raised to 6 mm
 
