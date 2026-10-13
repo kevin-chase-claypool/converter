@@ -23,7 +23,7 @@
   (2) a controlled double-line test pattern drawn at the paw radius and
   measured on paper with calipers. If a real deviation is confirmed, the
   leading suspect is the x_theta/y_theta strategy switches mid-band (their
-  count was up to 15 per 40 mm of arc).
+      count runs 3-7 per 40 mm of arc on the paw strokes).
 - Evidence: `tmp/heraldic_diag/paw_width.py`, `stations_scan.py`,
   `paw_gap_local2.py`, `crop_s8_pinch.png`; no code change in this event.
 
