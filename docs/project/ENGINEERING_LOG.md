@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20261013-ratio-deadband-result"></a>
+### 🟨 2026-10-13 - HARDWARE/MEASURED - Ratio/deadband test result: calibration confirmed, direction-independent - hypothesis refuted
+
+- Operator ran `a-ratio-deadband-test.gcode`; photo measured at ~12.85 px/mm.
+  All five tick groups are single marks: 4.40 / 4.52 / 4.47 / 4.63 / 4.68 mm
+  long - a 4 mm tick plus the pen width.
+- A wrong ratio (12.000 vs the calibrated 12.03324) would stretch each
+  turn group to ~6.4 mm; a deadband/hysteresis family would stretch them
+  proportionally. Neither is present. So: one commanded revolution
+  (A += 4332) is exactly one physical revolution at all four quadrants; the
+  calibration is right and constant - the +0.28 % over the 720T/60T tooth
+  count is a stable belt ride-height offset (~0.6 mm), and constant offsets
+  fold into calibration. Directional deadband < ~0.08 bed deg,
+  hysteresis < ~0.06 bed deg.
+- Hypothesis status: refuted (in its wrong-calibration and
+  direction-dependent forms). Measured-and-cleared list now: ratio +
+  direction dependence (this test), cumulative reversal loss (soak),
+  rate-dependent arc gaps, continuous rotation, bed static flatness.
+  Remaining untested: the real program's streamed traffic - 87 blocks at
+  ~10 Hz with junction acceleration demands up to 240,000 motor deg/s^2,
+  40x the configured limit - which no smooth test can emulate.
+- Next: the slow-replay overlay (`headback-test-bed-slow.gcode` at 1/4 feed
+  versus `headback-test-parked.gcode`, two pens). If the slow copy lands on
+  the parked copy, the smear is rate-driven and the fix lives in the feed
+  schedule, with the A axis unchanged in role.
+- Evidence: `WSW-20261013-013`.
+
 <a id="elog-20261013-ratio-deadband-test"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - Ratio hypothesis: the 720T/60T tooth count is 12.000, the calibrated ratio is 12.03324
 

@@ -5,7 +5,7 @@ category: windows-software
 affected_categories:
   - windows-software
   - hardware
-status: implemented
+status: verified
 components:
   - tools/make_a_ratio_deadband_test.py
   - samples/gcode/a-ratio-deadband-test.gcode
@@ -56,11 +56,20 @@ directional deadband cancels - a real blind spot.
 
 - Self-check: 151 lines, A range -24.1..4332.0 motor deg, balanced
   parentheses, standard preamble/pen/postamble.
-- Bench reading: ticks within a pair coinciding (to pen width) = calibrated
-  ratio and no deadband; per-turn offset ~1.75 mm at r=100 = the true ratio
-  is 12.000 and the calibration must be corrected; tick1 != tick2 (or the +
-  and - families offset) = direction-dependent belt seating, a mechanical
-  fix at the belt/ring/tension rather than in software.
+- **Bench result (2026-10-13, photo PXL_20261013_234628019). All five tick
+  groups are single marks**: lengths 4.40 / 4.52 / 4.47 / 4.63 / 4.68 mm at
+  ~12.85 px/mm - a 4 mm tick plus the pen width. A wrong ratio (12.000 vs
+  12.03324) would lengthen each turn group to ~6.4 mm; a deadband or
+  hysteresis family would stretch them proportionally. Therefore:
+  one commanded revolution (A += 4332) is exactly one physical revolution
+  at all four quadrants; the calibrated 12.03324 is confirmed and constant
+  (the +0.28 % over the tooth count is a stable ~0.6 mm belt ride-height
+  offset, and constant offsets fold into calibration); no measurable
+  hysteresis (<~0.06 bed deg) and no measurable directional deadband
+  (<~0.08 bed deg at r=70). **The ratio/direction hypothesis is refuted** -
+  what remains untested is the real program's streamed traffic
+  (87 blocks at ~10 Hz with junction acceleration demands up to 240,000
+  motor deg/s^2), for which `headback-test-bed-slow.gcode` exists.
 
 ## Risks and follow-up
 
