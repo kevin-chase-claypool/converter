@@ -258,7 +258,11 @@ class CmykTab(GeneratorTab):
             "reads darker without changing the geometry."
         )
         screen.addRow("Overdraw", self.overdraw)
-        self.pen_width = double_spin(0.3, 0.1, 1.2, 0.05, 2, " mm")
+        # Cap 1.2 -> 6.0 mm (2026-10-13): the brush end of a Tombow Dual Brush
+        # water-based pen lays 1-6 mm wide strokes depending on pressure, and the
+        # model already accepts up to 8 mm downstream. The fine nib (~0.8 mm)
+        # still sits inside the range.
+        self.pen_width = double_spin(0.3, 0.1, 6.0, 0.05, 2, " mm")
         screen.addRow("Pen width", self.pen_width)
         self.max_marks = int_spin(40000, 200, 200000, 500)
         screen.addRow("Max marks/ink", self.max_marks)

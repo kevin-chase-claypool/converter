@@ -1,5 +1,17 @@
 # Engineering Log
 
+<a id="elog-20261013-cmyk-pen-width-6mm"></a>
+### 🟨 2026-10-13 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK Pen width cap raised to 6 mm
+
+- Request: "my pen diameter only goes up to 1.2, but i need to check that
+  limitation against the tombow dual water based pen tips."
+- Change: the CMYK tab's Pen width spinner range 0.1-1.2 -> 0.1-6.0 mm; the
+  downstream model already clamped to 0.1-8.0, so only the control rejected the
+  real tool width (Tombow fine nib ~0.8 mm, brush tip several mm at pressure).
+- Verification: source inspection; no test asserts the spinner maximum. Bench
+  check is the next brush-pen plot.
+- Evidence: `WSW-20261013-001`; `software/generator_tabs/cmyk_tab.py`.
+
 <a id="elog-20261013-m5-clearance-90ms"></a>
 ### 🟨 2026-10-13 - RP23CNC-SOFTWARE/IMPLEMENTED - M5 pen clearance raised to 90 ms
 

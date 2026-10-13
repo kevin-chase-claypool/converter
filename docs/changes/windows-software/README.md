@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-13 | `WSW-20261013-001` | implemented | [CMYK Pen width cap raised to 6 mm for brush pens](2026/2026-10-13-cmyk-pen-width-cap-6mm.md) | `cmyk`, `pen-width`, `tombow`, `controls` |
 | 2026-10-11 | `RPSW-20261011-001` | implemented | [Bed mesh from the toolhead's M3 contact seek](../rp23cnc-software/2026/2026-10-11-bed-mesh-probe.md) | `bed-mesh`, `probing`, `toolhead`, `telemetry`, `flatness` |
 | 2026-10-11 | `HW-20261011-001` | implemented | [Bed gap map and Klipper-style tilt report](../hardware/2026/2026-10-11-bed-gap-map-and-tilt-report.md) | `bed`, `flatness`, `tilt`, `runout`, `diagnosis`, `tooling` |
 | 2026-10-08 | `WSW-20261008-018` | implemented | [Brightness reaches 20 % and GCR tops out at 100 %](2026-10-08-cmyk-brightness-and-gcr-limits.md) | `cmyk`, `controls`, `gcr`, `brightness` |

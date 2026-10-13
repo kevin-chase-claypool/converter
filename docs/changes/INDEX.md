@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-13 | `WSW-20261013-001` | windows-software, hardware | implemented | [CMYK Pen width cap raised to 6 mm for brush pens](windows-software/2026/2026-10-13-cmyk-pen-width-cap-6mm.md) |
 | 2026-10-13 | `RPSW-20261013-001` | rp23cnc-software, hardware | implemented | [Raise the M5 pen-clearance pulse to 90 ms](rp23cnc-software/2026/2026-10-13-raise-m5-clearance-to-90ms.md) |
 | 2026-10-11 | `RPSW-20261011-001` | rp23cnc-software, hardware, windows-software | implemented | [Bed mesh from the toolhead's M3 contact seek](rp23cnc-software/2026/2026-10-11-bed-mesh-probe.md) |
 | 2026-10-11 | `HW-20261011-001` | hardware, windows-software | implemented | [Bed gap map and Klipper-style tilt report](hardware/2026/2026-10-11-bed-gap-map-and-tilt-report.md) |
