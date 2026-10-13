@@ -1,5 +1,29 @@
 # Engineering Log
 
+<a id="elog-20261013-flat-photo-gap-check"></a>
+### 🟨 2026-10-13 - HARDWARE/MEASURED - Flat photo of the 350 mm/min print: geometry holds to ~0.3 mm; per-rail gap still unprovable
+
+- The operator re-printed the heraldic at 350 mm/min tangential and sent a
+  flat (top-down) photo (PXL_20261013_210837703).
+- Fit quality: with a fixed detector the global similarity fit reaches
+  p50 2.0 px / mean 3.2 px at 7.73 px/mm -> **0.26 mm / 0.41 mm**. Central
+  (r < 60 mm) median 0.30 mm; peripheral median 0.25 mm, p90 0.89/1.07 mm.
+  The print tracks the commanded geometry; no multi-millimetre distortion.
+- Detector lessons (for future photo work): the pen lines in this photo are
+  warm-toned (r - b up to +18), so the blue-tape rejection must test `b - r`
+  rather than `r - b`, otherwise half the drawing is deleted; a local
+  z-score threshold fails in dense line areas because the lines themselves
+  inflate the local sigma; and the reconstructed bed frame is mirrored
+  relative to the paper, so the correct photo fit needs the mirror term.
+- Per-rail gap measurement on the paws remains ambiguous: local scans
+  disagree (+- 0.5..1.5 mm swings) in the paws AND in the tail control, so
+  the swings are line-pairing ambiguity in a drawing whose lines run 1-3 mm
+  apart, not machine evidence. Next step agreed: an on-paper caliper check
+  of the wide band (commanded 2.5-2.8 mm mid-stroke; claw leaves 1.0-2.3 mm
+  tapering to zero).
+- Evidence: `tmp/heraldic_diag/fit_flat.npy`, `photo_overlay_flat.png`,
+  `paw_montage_flat.png`, `ink_flat.py`; no code change in this event.
+
 <a id="elog-20261013-paw-gap-check"></a>
 ### 🟨 2026-10-13 - HARDWARE/MEASURED - Paw double-line gap: the command is constant; the photo check is inconclusive
 
