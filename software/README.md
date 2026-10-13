@@ -66,6 +66,11 @@ Cycle Start with the pen loaded:
   `headback-test-bed.gcode` and `headback-test-parked.gcode`, which draw the
   same shape at the same spot so the second colour reveals where the two
   kinematics diverge. Regenerate after re-plotting the source file.
+- `..\samples\gcode\heraldic-bedfixed.gcode` - the full heraldic drawn with
+  the bed **completely stationary** (Theta mode `Fixed`, A constant for the
+  whole program). The decisive outline A/B: clean everywhere means the bed
+  rotation is the smear source; still wobbly means the X/Y gantry or the pen.
+  Regenerate from the app by selecting **Theta mode = Fixed**.
 
 ## Generator tabs
 

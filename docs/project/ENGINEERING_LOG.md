@@ -1,5 +1,27 @@
 # Engineering Log
 
+<a id="elog-20261013-bedfixed-diagnostic"></a>
+### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - Bed-fixed full-plot diagnostic for the "outline all around" report
+
+- Operator: "it didnt work ... the problem is the outline all around the
+  lion" (the 22:32 photo is the heraldic plotted on top of the earlier A/B
+  test sheet; the red/blue remnant at the mouth is that old test).
+- Measured the photo with the new per-region pipeline: fit p90 is 1.35 mm on
+  this shot (rougher registration than the 21:08 photo), local deviations
+  concentrate at the zigzag fur/claw clusters all around (p90 1.0-1.6 mm per
+  region, worst ~3 mm), consistent with the report. Also found the 2.5 mm
+  reversal rule only parked 12 of the 83 outer-line moves in the head-back
+  box at the operator's 350 mm/min settings, and the defect cluster's
+  reversal pair is ~3.6 mm apart - between the rule's threshold and the next
+  step, so the partial rule never covered it.
+- Decisive artifact instead of more blind tuning:
+  `samples/gcode/heraldic-bedfixed.gcode` - the full heraldic with Theta mode
+  `Fixed` (A constant 0 for all 6242 draw moves, max radius 112.8 mm inside
+  the reach, geometry identical). Print on a fresh sheet: clean everywhere
+  convicts the bed rotation; still wobbly exonerates it and moves the search
+  to X/Y and the pen (existing `y-repeatability-test.gcode` for the gantry).
+- Evidence: `WSW-20261013-011`; `samples/gcode/heraldic-bedfixed.gcode`.
+
 <a id="elog-20261013-reversal-parking"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - Bed reversals are parked on zigzag stretches
 
