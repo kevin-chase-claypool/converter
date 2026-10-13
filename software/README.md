@@ -65,7 +65,11 @@ Cycle Start with the pen loaded:
   `make_headback_parked_test.py --split`: it writes
   `headback-test-bed.gcode` and `headback-test-parked.gcode`, which draw the
   same shape at the same spot so the second colour reveals where the two
-  kinematics diverge. Regenerate after re-plotting the source file.
+  kinematics diverge. `headback-test-bed-slow.gcode` is the same bed copy at
+  a quarter of its original feeds (`--split --feed-scale 0.25`) - if the slow
+  copy lands on the parked copy, the plot's outline errors come from the
+  streamed rate profile, not the geometry. Regenerate after re-plotting the
+  source file.
 - `..\samples\gcode\heraldic-bedfixed.gcode` - the full heraldic drawn with
   the bed **completely stationary** (Theta mode `Fixed`, A constant for the
   whole program). The decisive outline A/B: clean everywhere means the bed
@@ -77,6 +81,12 @@ Cycle Start with the pen loaded:
   pen-down tick/soak/tick stations (cumulative loss and drag torque). Mark a
   sharpie witness across the 60T pinion/motor face and the bed rim/frame
   before running. Regenerate with `..\tools\make_a_reversal_diagnostic.py`.
+- `..\samples\gcode\a-ratio-deadband-test.gcode` - measures the effective
+  bed ratio per quadrant (ticks before/after a commanded full revolution of
+  A=4332 motor deg) and the approach-direction deadband (ticks arriving at
+  A=0 from each side). A per-turn tick offset of ~1.75 mm at r=100 means the
+  true ratio is the pure tooth count 12.000, not the calibrated 12.03324.
+  Regenerate with `..\tools\make_a_ratio_deadband_test.py`.
 
 ## Generator tabs
 

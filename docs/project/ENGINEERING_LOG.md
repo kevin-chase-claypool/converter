@@ -1,5 +1,31 @@
 # Engineering Log
 
+<a id="elog-20261013-ratio-deadband-test"></a>
+### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - Ratio hypothesis: the 720T/60T tooth count is 12.000, the calibrated ratio is 12.03324
+
+- Operator: "my intuition is telling me that the 12:1 ratio has something to
+  do with this problem ... the bed has 720 teeth" (motor pulley is a 60T
+  GT2). Tooth count says exactly 12.000; the machine's calibrated effective
+  ratio is 12.03324 (+0.28 %).
+- Arithmetic: if the calibration is wrong, one commanded revolution
+  (A += 4332 motor deg) lands 1.0 bed degree off = 1.75 mm at r=100, and any
+  direction-dependent belt seating adds an angular step at every tension
+  flip. **Blind spot found in the earlier reversal diagnostic:** its soak
+  ticks were both approached from the same direction, so a directional
+  deadband cancels - which is why it read clean. The apparent ~1 px extra
+  width on the slow arc pairs is consistent with a ~0.1 deg deadband, but
+  ink-width confounding makes that inconclusive.
+- Built `tools/make_a_ratio_deadband_test.py` +
+  `samples/gcode/a-ratio-deadband-test.gcode`: (A) at r=100, four quadrants,
+  tick / A+=4332 at F12000 / tick / A-=4332 / tick - reads the effective
+  ratio per quadrant and hysteresis; (B) at r=70, ticks arriving at A=0 from
+  + and from -, twice each - reads the reverse deadband.
+- Readings planned: ticks coincide = calibrated ratio confirmed; ~1.75 mm
+  per-turn offset at r=100 = true ratio is 12.000 (one-line converter fix,
+  and would explain residual ~0.5 deg wrap-scale errors); tick1 != tick2 or
+  + vs - family offset = direction-dependent belt seating (mechanical).
+- Evidence: `WSW-20261013-013`.
+
 <a id="elog-20261013-pencil-sweep-vs-runout"></a>
 ### 🟨 2026-10-13 - HARDWARE/MEASURED - Pencil sweep shows a static plus/minus 1 mm bed map; the open question is height vs bed ANGLE
 
