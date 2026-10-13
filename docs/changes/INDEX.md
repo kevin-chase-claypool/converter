@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-13 | `WSW-20261013-006` | windows-software | implemented | [Generator tab settings now reach the preview](windows-software/2026/2026-10-13-tab-settings-reach-the-preview.md) |
 | 2026-10-13 | `WSW-20261013-005` | windows-software | implemented | [File > Save G-code routes to the active tool's own save](windows-software/2026/2026-10-13-save-gcode-routes-to-active-tool.md) |
 | 2026-10-13 | `WSW-20261013-004` | windows-software | implemented | [CMYK tab gets its own Path tolerance field](windows-software/2026/2026-10-13-cmyk-path-tolerance-field.md) |
 | 2026-10-13 | `WSW-20261013-003` | windows-software | implemented | [Set G-code Destination picks a folder, and multi-layer tabs use it](windows-software/2026/2026-10-13-gcode-destination-folder-picker.md) |

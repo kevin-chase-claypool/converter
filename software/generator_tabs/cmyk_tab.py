@@ -494,14 +494,27 @@ class CmykTab(GeneratorTab):
             crosses.append([(cx, cy - half), (cx, cy + half)])
         return crosses
 
+    def apply_tab_settings(self, settings):
+        """Overrides the host applies to this tab's preview and programs.
+
+        Pen width drives the ink-simulation stroke width and the tone math;
+        Path tolerance drives the polar subdivision. The host calls this from
+        settings_for_source, so preview, analysis and saved files agree.
+        """
+        return dataclasses.replace(
+            settings,
+            tolerance=self.path_tolerance.value(),
+            pen_diameter_mm=self.pen_width.value(),
+        )
+
     def _effective_settings(self):
-        """Host settings with this tab's Path tolerance applied."""
+        """Host settings with this tab's overrides applied."""
         settings = (
             self.host.settings_for_source(self)
             if self.host is not None and hasattr(self.host, "settings_for_source")
             else converter.Settings()
         )
-        return dataclasses.replace(settings, tolerance=self.path_tolerance.value())
+        return self.apply_tab_settings(settings)
 
     def _control_key(self):
         settings_key = ""

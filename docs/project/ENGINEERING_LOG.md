@@ -1,5 +1,22 @@
 # Engineering Log
 
+<a id="elog-20261013-tab-settings-reach-preview"></a>
+### 🟨 2026-10-13 - WINDOWS SOFTWARE/IMPLEMENTED - Tab overrides reach the preview
+
+- Request: "the pen width preview doesnt show the actual width that i set.
+  this is also affecting the preview."
+- Cause: the preview used `settings_for_source(tab)` only, which applies the
+  generic generator overrides; the CMYK tab's Pen width / Path tolerance were
+  applied later, on the save path alone. The ink simulation therefore drew the
+  Geometry group's pen stroke, not the tab's field.
+- Change: `settings_for_source` calls an optional `apply_tab_settings` hook;
+  the CMYK tab uses it for `pen_diameter_mm` and `tolerance`, so preview,
+  analysis and saved files share one settings object.
+- Verification: py_compile clean; 88 tests pass; bench check is toggling Ink
+  simulation and changing Pen width to see the stroke width change.
+- Evidence: `WSW-20261013-006`; `software/qt_svg_to_gcode.pyw`;
+  `software/generator_tabs/cmyk_tab.py`.
+
 <a id="elog-20261013-save-routes-to-active-tool"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/IMPLEMENTED - Ctrl+S saves the active tool
 

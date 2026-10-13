@@ -1607,6 +1607,12 @@ class MainWindow(QMainWindow):
             )
             if bool(getattr(source_tab, "SELF_SCREENED", False)):
                 settings = dataclasses.replace(settings, hatch_spacing_mm=0.0)
+            # A tab may override fields for its own output (the CMYK tab's Pen
+            # width and Path tolerance). Apply it here so the preview, the
+            # analysis, and the saved files all see the same settings.
+            hook = getattr(source_tab, "apply_tab_settings", None)
+            if callable(hook):
+                settings = hook(settings)
         return settings
 
     def on_tool_changed(self):
