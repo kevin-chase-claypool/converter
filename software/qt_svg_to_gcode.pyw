@@ -1702,7 +1702,7 @@ class MainWindow(QMainWindow):
         file_menu.addAction(output_action)
         self.save_action = QAction("&Save G-code", self)
         self.save_action.setShortcut("Ctrl+S")
-        self.save_action.triggered.connect(self.convert)
+        self.save_action.triggered.connect(self.save_active_tool)
         file_menu.addAction(self.save_action)
         file_menu.addSeparator()
         exit_action = QAction("E&xit", self)
@@ -4315,6 +4315,21 @@ class MainWindow(QMainWindow):
         if callable(stop):
             stop()
         super().closeEvent(event)
+
+    def save_active_tool(self):
+        """File > Save G-code (Ctrl+S) for the active tool.
+
+        A generator tab with its own multi-file save (the CMYK tab writes four
+        layer programs) handles the save itself; everything else runs the
+        single-file Convert flow. 2026-10-13: Ctrl+S used to always run
+        Convert, which silently wrote one combined program for a CMYK set.
+        """
+        current = self.stack.currentWidget()
+        tab_save = getattr(current, "save_all", None)
+        if callable(tab_save):
+            tab_save()
+            return
+        self.convert()
 
     def convert(self):
         try:

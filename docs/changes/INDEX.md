@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-13 | `WSW-20261013-005` | windows-software | implemented | [File > Save G-code routes to the active tool's own save](windows-software/2026/2026-10-13-save-gcode-routes-to-active-tool.md) |
 | 2026-10-13 | `WSW-20261013-004` | windows-software | implemented | [CMYK tab gets its own Path tolerance field](windows-software/2026/2026-10-13-cmyk-path-tolerance-field.md) |
 | 2026-10-13 | `WSW-20261013-003` | windows-software | implemented | [Set G-code Destination picks a folder, and multi-layer tabs use it](windows-software/2026/2026-10-13-gcode-destination-folder-picker.md) |
 | 2026-10-13 | `WSW-20261013-002` | windows-software, hardware | implemented | [Reach radius 180, and a CMYK set preflight against the travel window](windows-software/2026/2026-10-13-reach-radius-180-and-cmyk-preflight.md) |

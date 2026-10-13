@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-13 | `WSW-20261013-005` | implemented | [File > Save G-code routes to the active tool's own save](2026/2026-10-13-save-gcode-routes-to-active-tool.md) | `cmyk`, `save`, `file-menu`, `workflow` |
 | 2026-10-13 | `WSW-20261013-004` | implemented | [CMYK tab gets its own Path tolerance field](2026/2026-10-13-cmyk-path-tolerance-field.md) | `cmyk`, `tolerance`, `straightness`, `settings` |
 | 2026-10-13 | `WSW-20261013-003` | implemented | [Set G-code Destination picks a folder, and multi-layer tabs use it](2026/2026-10-13-gcode-destination-folder-picker.md) | `file-menu`, `save`, `cmyk`, `workflow` |
 | 2026-10-13 | `WSW-20261013-002` | implemented | [Reach radius 180, and a CMYK set preflight against the travel window](2026/2026-10-13-reach-radius-180-and-cmyk-preflight.md) | `reach-radius`, `soft-limits`, `cmyk`, `preflight`, `registration` |

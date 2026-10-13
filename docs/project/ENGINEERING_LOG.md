@@ -1,5 +1,19 @@
 # Engineering Log
 
+<a id="elog-20261013-save-routes-to-active-tool"></a>
+### 🟨 2026-10-13 - WINDOWS SOFTWARE/IMPLEMENTED - Ctrl+S saves the active tool
+
+- Request: "i thought we were building 4 gcodes?" - after Ctrl+S on the CMYK
+  tab produced one combined IMG_0514.gcode instead of the four layer files.
+- Cause: File > Save G-code was bound straight to `convert()`, which resolves
+  the active tab's combined artwork and writes a single program; the four-file
+  save only existed on the tab's own button.
+- Change: `save_active_tool()` delegates to the active tab's `save_all` when
+  it has one (CMYK does) and otherwise runs `convert()` unchanged.
+- Verification: py_compile clean; 88 tests pass (test_generator_tabs,
+  test_cmyk_tab); bench check is Ctrl+S on the CMYK tab.
+- Evidence: `WSW-20261013-005`; `software/qt_svg_to_gcode.pyw`.
+
 <a id="elog-20261013-cmyk-path-tolerance"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK tab gets a Path tolerance field
 
