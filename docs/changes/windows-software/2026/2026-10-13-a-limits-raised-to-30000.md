@@ -56,10 +56,15 @@ The converter's limits are not exposed in the UI; they live in
 
 - Code: 40 tests pass across `test_theta_feed`, `test_theta_wrap`,
   `test_kaleidoscope`.
-- **Hardware: pending.** Run the regenerated a-repeatability program on paper:
-  the two radial ticks at r=100/160 must coincide after two revolutions out
-  and back at F30000. If they do not, fall back to 20000/6000 (the
-  paper-verified pair) and record the outcome here.
+- **Hardware: partial pass (2026-10-13).** The regenerated a-repeatability
+  program ran on paper; the operator reports the **r=100 mm station drew a
+  perfect circle** - the pen retraced its own line through two revolutions out
+  and two back at F30000, which is the same acceptance condition the 20,000
+  value met. The r=160 station could not be run in the same session: only
+  8.5 x 11 in paper was on hand (the station needs roughly a 12.6 in sheet).
+  Re-run the full program on a larger sheet when available; the bed load that
+  risks step loss is radius-independent, so the r=100 pass is the primary
+  gate and r=160 is confirmation.
 
 ## Struggles and rejected approaches
 

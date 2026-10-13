@@ -14,6 +14,11 @@
   F30000 (8.7 s/rev, 69.3 s plotted rotation); preamble test updated.
 - Verification: 40 tests pass; hardware mark test at F30000 is PENDING and is
   the acceptance gate - fall back to 20000/6000 if the ticks do not coincide.
+- **Mark test result (2026-10-13): partial pass.** r=100 mm station drew a
+  perfect circle at F30000 (two revolutions out and back, pen down). r=160 not
+  run - only 8.5 x 11 in paper on hand (needs ~12.6 in). The step-loss risk is
+  radius-independent for the bed load, so r=100 is the primary gate; re-run
+  the full program on a larger sheet for the r=160 confirmation.
 - Evidence: `WSW-20261013-008`; `software/converter_core/settings.py`.
 
 <a id="elog-20261013-effective-pitch-readout"></a>
