@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import os
 import threading
+import dataclasses
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QThread, Qt, Signal
@@ -264,6 +265,19 @@ class CmykTab(GeneratorTab):
         # still sits inside the range.
         self.pen_width = double_spin(0.3, 0.1, 6.0, 0.05, 2, " mm")
         screen.addRow("Pen width", self.pen_width)
+        # Path-fidelity budget for this tab's output: each emitted move is
+        # subdivided so the bed-frame path stays within this of a straight
+        # line (the rotating bed bows single moves). The main tab's Geometry
+        # Tolerance does the same job but resets to 0.25 every launch, which
+        # was too coarse for the halftone rows near the centre.
+        self.path_tolerance = double_spin(0.15, 0.05, 1.0, 0.05, 2, " mm")
+        self.path_tolerance.setToolTip(
+            "Straightness budget for the rotating bed: lower keeps rows "
+            "straighter where the bed rotates most (near the centre) at the "
+            "cost of more moves. Overrides the main tab's Tolerance for CMYK "
+            "output only."
+        )
+        screen.addRow("Path tolerance", self.path_tolerance)
         self.max_marks = int_spin(40000, 200, 200000, 500)
         screen.addRow("Max marks/ink", self.max_marks)
         self.seed = int_spin(7, 0, 999_999)
@@ -480,10 +494,19 @@ class CmykTab(GeneratorTab):
             crosses.append([(cx, cy - half), (cx, cy + half)])
         return crosses
 
+    def _effective_settings(self):
+        """Host settings with this tab's Path tolerance applied."""
+        settings = (
+            self.host.settings_for_source(self)
+            if self.host is not None and hasattr(self.host, "settings_for_source")
+            else converter.Settings()
+        )
+        return dataclasses.replace(settings, tolerance=self.path_tolerance.value())
+
     def _control_key(self):
         settings_key = ""
         if self.host is not None and hasattr(self.host, "settings_for_source"):
-            settings_key = repr(self.host.settings_for_source(self))
+            settings_key = repr(self._effective_settings())
         return (
             getattr(self, "_artwork", ""),
             self.page_w.value(),
@@ -504,6 +527,7 @@ class CmykTab(GeneratorTab):
             self.dot_size.value(),
             self.solid_dots.isChecked(),
             self.pen_width.value(),
+            self.path_tolerance.value(),
             self.levels.value(),
             self.overdraw.value(),
             self.max_marks.value(),
@@ -730,11 +754,7 @@ class CmykTab(GeneratorTab):
             self.report_error("The host window does not provide program analysis.")
             return
         entries = [(channel, self._layer_files[channel]) for channel in channels]
-        settings = (
-            self.host.settings_for_source(self)
-            if hasattr(self.host, "settings_for_source")
-            else converter.Settings()
-        )
+        settings = self._effective_settings()
         scale = (
             self.host.motion_estimate_scale()
             if hasattr(self.host, "motion_estimate_scale")

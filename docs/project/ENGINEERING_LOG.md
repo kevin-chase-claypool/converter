@@ -1,5 +1,20 @@
 # Engineering Log
 
+<a id="elog-20261013-cmyk-path-tolerance"></a>
+### 🟨 2026-10-13 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK tab gets a Path tolerance field
+
+- Request: "but right now those values default to .25 when i go to cmyk" -
+  the CMYK tab inherited the main Geometry Tolerance, which resets to the
+  0.25 default every launch (settings are not persisted), so CMYK sets were
+  always emitted at 0.25 regardless of the main tab's value.
+- Change: the Screen group gains Path tolerance (default 0.15 mm, 0.05-1.0);
+  `_effective_settings()` overrides `tolerance` for this tab's analyze and
+  preview paths and is part of the preview cache key.
+- Verification: py_compile clean; 88 tests pass (test_cmyk_tab,
+  test_generator_tabs); bench check is regenerating one layer and confirming
+  the preamble prints tolerance 0.15.
+- Evidence: `WSW-20261013-004`; `software/generator_tabs/cmyk_tab.py`.
+
 <a id="elog-20261013-gcode-destination-folder"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/IMPLEMENTED - G-code destination is a folder
 
