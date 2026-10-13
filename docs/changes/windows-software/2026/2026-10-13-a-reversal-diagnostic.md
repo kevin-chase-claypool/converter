@@ -55,11 +55,13 @@ the reverse path loses the position.
 - Station 6 (pen down): the same structure with 20 cycles of +/-1 bed degree
   with the pen down so drag torque is applied; the scribble sits at psi=225
   while the ticks at psi=180 stay readable.
-- The file header instructs marking a sharpie witness across the 60T
-  pinion/motor face and across the bed rim/frame before running: if the
-  pinion witness moves, the error is at or before the pinion (grub screw /
-  lost steps); if the witnesses stay put while the bed ticks offset, the
-  error is between the pinion and the bed (belt tension, rim fastening).
+- The file header instructs marking sharpie witnesses before running: across
+  the 60T pinion/motor face, across the bed rim/frame, and one belt tooth
+  against one rim tooth. A moved pinion witness = fault at/before the pinion
+  (grub screw or lost steps); witnesses steady while ticks offset = fault
+  between pinion and bed (tension, rim fastening); a whole-pitch step on the
+  tooth witness = the belt jumped one GT2 tooth - 2 mm at the rim, which is
+  exactly 0.5 bed degree and matches the measured defect signature.
 
 ## Verification
 

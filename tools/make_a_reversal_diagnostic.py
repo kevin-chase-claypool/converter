@@ -18,10 +18,12 @@ while drawing):
      with the pen down (drag torque applied), scribbling at psi=225 so the
      ticks stay readable.
 
-Together with a sharpie witness across the 60T pinion/motor face and across
-the bed rim/frame, the results separate: shaft slip (pinion witness moves),
-lost steps (pinion witness moves with the bed), belt/rim slop (witnesses
-stay, ticks offset), and elastic wind-up (arc gap scales with rate).
+Together with sharpie witnesses - across the 60T pinion/motor face, across
+the bed rim/frame, and one belt tooth marked against one rim tooth - the
+results separate: shaft slip (pinion witness moves), lost steps (pinion
+witness moves with the bed), tooth jump (the belt-tooth witness steps by a
+whole pitch, 2 mm at the rim = 0.5 bed degree), and elastic wind-up (arc gap
+scales with rate, witnesses stay put).
 
 Usage:
     python tools\\make_a_reversal_diagnostic.py
@@ -53,7 +55,8 @@ def main() -> None:
     lines.append("(station 4: out/back arcs at r85, 3000 - gap should scale with radius)")
     lines.append("(station 5: pen-up soak, tick/30x +/-2 bed deg cycles/tick - offset = cumulative loss)")
     lines.append("(station 6: pen-down soak at psi 180/scratch 225, 20x +/-1 bed deg, tick/cycles/tick)")
-    lines.append("(before running: sharpie witness across the 60T pinion+motor face and the bed rim+frame)")
+    lines.append("(before running: sharpie witness across the 60T pinion+motor face, the bed rim+frame,")
+    lines.append("(and one belt tooth marked against one rim tooth - a whole-pitch step = 2 mm = 0.5 bed deg)")
     lines.extend(["G21", "G90", "G94", "G17", "G54", "G0 F3000", "M5", "G65 P115 Q0 A1 W2"])
 
     def pen_down(first: bool) -> None:
