@@ -203,7 +203,7 @@ def emit_postamble(lines):
     lines.append("M2")
 
 
-def emit_turning(lines, d, t):
+def emit_turning(lines, d, t, feed_scale=1.0):
     moves, pts = d["moves"], d["pts"]
     seq1, seq2 = d["seq1"], d["seq2"]
     pose = seq1[0] - 1
@@ -214,7 +214,7 @@ def emit_turning(lines, d, t):
     for i in seq1:
         mx, my = to_machine(pts[i][0] + t[0], pts[i][1] + t[1], moves[i].a)
         lines.append("G1 X%s Y%s A%s F%s (%s)"
-                     % (fmt(mx), fmt(my), fmt(moves[i].a), fmt(moves[i].f),
+                     % (fmt(mx), fmt(my), fmt(moves[i].a), fmt(moves[i].f * feed_scale),
                         moves[i].label or "draw"))
     emit_pen_up(lines)
     pose = seq2[0] - 1
@@ -224,7 +224,7 @@ def emit_turning(lines, d, t):
     for i in seq2:
         mx, my = to_machine(pts[i][0] + t[0], pts[i][1] + t[1], moves[i].a)
         lines.append("G1 X%s Y%s A%s F%s (%s)"
-                     % (fmt(mx), fmt(my), fmt(moves[i].a), fmt(moves[i].f),
+                     % (fmt(mx), fmt(my), fmt(moves[i].a), fmt(moves[i].f * feed_scale),
                         moves[i].label or "draw"))
     emit_pen_up(lines)
 
@@ -291,6 +291,8 @@ def main() -> None:
     ap.add_argument("--out-parked", default=None)
     ap.add_argument("--split", action="store_true",
                     help="write two single-copy files that overlay at the same spot")
+    ap.add_argument("--feed-scale", type=float, default=1.0,
+                    help="scale the bed-turning copy's draw feeds (e.g. 0.25 = 4x slower)")
     args = ap.parse_args()
 
     moves, runs = parse_source(Path(args.source))
@@ -308,11 +310,11 @@ def main() -> None:
         emit_header(lines, src_name, [
             "copy A: the back-of-head stretch with the bed turning exactly as",
             "in the real plot, including its 21 A-direction reversals",
-            "run this first, note the pen, swap to the second pen and run",
-            Path(parked).name, "on the same sheet - the divergence between the",
-            "two colours is the kinematic error",
+            "run this first, note the pen, then swap to the second pen and",
+            "run the parked copy on the same sheet - the divergence between",
+            "the two colours is the kinematic error",
         ])
-        emit_turning(lines, d, d["t1"])
+        emit_turning(lines, d, d["t1"], feed_scale=args.feed_scale)
         emit_postamble(lines)
         out.write_text("\n".join(lines) + "\n", encoding="utf-8")
         print("wrote %s (%d lines)" % (out, len(lines)))
@@ -321,8 +323,8 @@ def main() -> None:
         emit_header(lines, src_name, [
             "copy B: the identical back-of-head stretch with the bed parked",
             "pure X/Y - zero A reversals",
-            "run after %s with the second pen; same location, same shape"
-            % Path(out).name,
+            "run after the bed-turning copy with the second pen;",
+            "same location, same shape",
         ])
         emit_parked(lines, d, d["t1"])
         emit_postamble(lines)
@@ -340,7 +342,7 @@ def main() -> None:
         "lower copy: identical paper shape, bed parked at A%s" % fmt(d["a_end"]),
         "both copies face the same way; compare the outline band of each",
     ])
-    emit_turning(lines, d, d["t1"])
+    emit_turning(lines, d, d["t1"], feed_scale=args.feed_scale)
     emit_parked(lines, d, d["t2"])
     emit_postamble(lines)
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")

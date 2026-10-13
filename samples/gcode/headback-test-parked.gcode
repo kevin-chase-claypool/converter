@@ -2,7 +2,8 @@
 (source: garysmith793-heraldic-4062900.gcode)
 (copy B: the identical back-of-head stretch with the bed parked)
 (pure X/Y - zero A reversals)
-(run after headback-test-bed.gcode with the second pen; same location, same shape)
+(run after the bed-turning copy with the second pen;)
+(same location, same shape)
 G21
 G90
 G94

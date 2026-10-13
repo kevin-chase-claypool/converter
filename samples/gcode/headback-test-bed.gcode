@@ -2,10 +2,9 @@
 (source: garysmith793-heraldic-4062900.gcode)
 (copy A: the back-of-head stretch with the bed turning exactly as)
 (in the real plot, including its 21 A-direction reversals)
-(run this first, note the pen, swap to the second pen and run)
-(headback-test-parked.gcode)
-(on the same sheet - the divergence between the)
-(two colours is the kinematic error)
+(run this first, note the pen, then swap to the second pen and)
+(run the parked copy on the same sheet - the divergence between)
+(the two colours is the kinematic error)
 G21
 G90
 G94
