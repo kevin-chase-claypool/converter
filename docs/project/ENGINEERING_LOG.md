@@ -1,5 +1,18 @@
 # Engineering Log
 
+<a id="elog-20261013-m5-clearance-90ms"></a>
+### 🟨 2026-10-13 - RP23CNC-SOFTWARE/IMPLEMENTED - M5 pen clearance raised to 90 ms
+
+- Request: "i need the pen to lift slightly higher for m5".
+- Change: `PEN_CLEAR_EXTRA_LIFT_MS` 70 -> 90 ms of full-drive UP after the
+  force-release point (about 1.2 -> 1.55 mm at the measured 1.75 mm/100 ms
+  drive rate). Single constant in `toolhead_config.h`; M3 warm-seek learning
+  and the 100-pulse contact budget absorb the larger gap.
+- Verification: source inspection; bench re-check pending per ADR-004 (release
+  verification, first-try contact acquisition, no drag marks in pen-up travel).
+- Evidence: `RPSW-20261013-001`;
+  `firmware/pen_pressure/pro_micro_rp2350_toolhead/toolhead_config.h`.
+
 <a id="elog-20261011-bed-mesh-probe"></a>
 ### 🟨 2026-10-11 - RP23CNC-SOFTWARE/IMPLEMENTED - Bed mesh probe from the toolhead M3 seek
 

@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-13 | `RPSW-20261013-001` | implemented | [Raise the M5 pen-clearance pulse to 90 ms](2026/2026-10-13-raise-m5-clearance-to-90ms.md) | `toolhead`, `pen-clear`, `m5`, `clearance` |
 | 2026-10-11 | `RPSW-20261011-001` | implemented | [Bed mesh from the toolhead's M3 contact seek](2026/2026-10-11-bed-mesh-probe.md) | `bed-mesh`, `probing`, `toolhead`, `telemetry`, `flatness` |
 | 2026-10-04 | `WSW-20261004-001` | implemented | [Default the GP27 handshake and recover options on](../windows-software/2026/2026-10-04-default-gp27-handshake-and-recover.md) | `converter`, `gp27`, `p115`, `handshake`, `pen-dwell`, `defaults` |
 | 2026-10-02 | `RPSW-20261002-001` | implemented | [Raise the M5 clearance pulse to 70 ms](2026/2026-10-02-raise-m5-clearance-to-70ms.md) | `m5`, `pen-clear`, `clearance`, `toolhead`, `drag` |

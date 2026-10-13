@@ -59,7 +59,11 @@ constexpr uint32_t PEN_CLEAR_RELEASE_TIMEOUT_MS = 1800;
 // 2026-10-02: raised 57 -> 70 ms. The operator reported drag marks during
 // pen-up travel on production prints at the T-01H-accepted 57 ms, so the
 // clearance value is re-opened pending the next no-drag run.
-constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 70;
+// 2026-10-13: raised 70 -> 90 ms on operator request for slightly more M5
+// clearance (about +0.35 mm at the measured 1.75 mm / 100 ms drive rate,
+// ~1.55 mm above the release point). Re-check no-drag and that M3 still
+// reaches contact on the next bench run (ADR-004 validation).
+constexpr uint32_t PEN_CLEAR_EXTRA_LIFT_MS = 90;
 // Normal M5 changes the mechanism's unloaded CS1238 baseline. Once the
 // clearance motion has stopped, wait for the full sensing settle before
 // taking the 64-sample clear-state tare. E-09F showed that a 50 ms read is
