@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20261013-paw-gap-check"></a>
+### 🟨 2026-10-13 - HARDWARE/MEASURED - Paw double-line gap: the command is constant; the photo check is inconclusive
+
+- Request: "in paw regions png that is that consistent gap that SHOULD be
+  happening but the print does not look that way."
+- Commanded geometry, measured station by station on the regenerated file:
+  every paw band stroke holds a ~2.3-2.8 mm rail gap mid-stroke and narrows
+  only at the drawn folds/tips (claw leaves run 1.0-2.3 mm and taper to
+  zero). The operator's reading of the map is correct: the wide band gap is
+  constant in the file.
+- Print side, three attempts on the 2026-10-13 hand-held photo (global-fit
+  rails, wide perpendicular scans, per-station local rigid match): the local
+  match reaches 2.5-6 px residual, but the measured printed-minus-commanded
+  gap scatters +/-0.9 mm both in the paws and in a tail control window, and
+  stations near folds are hyper-sensitive to along-stroke registration
+  error. This photo cannot certify sub-millimetre gap error; the earlier
+  "pinch points are artwork" statement stands only for the fold/tip
+  locations that were visually verified.
+- Unlock options proposed to the operator: (1) a flat photo (phone parallel
+  to the bed) so a homography fit can map every rail to ~0.1-0.2 mm; or
+  (2) a controlled double-line test pattern drawn at the paw radius and
+  measured on paper with calipers. If a real deviation is confirmed, the
+  leading suspect is the x_theta/y_theta strategy switches mid-band (their
+  count was up to 15 per 40 mm of arc).
+- Evidence: `tmp/heraldic_diag/paw_width.py`, `stations_scan.py`,
+  `paw_gap_local2.py`, `crop_s8_pinch.png`; no code change in this event.
+
 <a id="elog-20261013-heraldic-replot-paw-profile"></a>
 ### 🟨 2026-10-13 - HARDWARE/MEASURED - Heraldic re-plot: paws are not rate-limited; the cap now lives at the bed center
 
