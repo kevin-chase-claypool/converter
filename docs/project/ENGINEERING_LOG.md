@@ -1,5 +1,20 @@
 # Engineering Log
 
+<a id="elog-20261013-effective-pitch-readout"></a>
+### 🟨 2026-10-13 - WINDOWS SOFTWARE/IMPLEMENTED - Effective pitch readout; Auto stops touching Dot pitch
+
+- Request: "the pitch that gets recommended doesnt seem right based on
+  whichever pen width i choose"; then "make the changes".
+- Cause: at the 280 % default artwork scale the Match pen value is
+  pen/2.8 in field units (correct in effective terms, baffling in the field),
+  and Auto re-applied that value after any manual spacing choice.
+- Change: Dot pitch row shows "= X.XX mm on paper (touching/slight
+  gap/separated rows/wide gaps)" live from pitch x scale vs pen width; Auto
+  leaves Dot pitch alone and reports the suggestion in its status message.
+- Verification: py_compile clean; 88 tests pass; the Auto test now asserts the
+  pitch is untouched.
+- Evidence: `WSW-20261013-007`; `software/generator_tabs/cmyk_tab.py`.
+
 <a id="elog-20261013-tab-settings-reach-preview"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/IMPLEMENTED - Tab overrides reach the preview
 

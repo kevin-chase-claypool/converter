@@ -235,6 +235,12 @@ class CmykTab(GeneratorTab):
         )
         self.match_pen_button.clicked.connect(self.match_pen_pitch)
         pitch_layout.addWidget(self.match_pen_button)
+        self.effective_pitch_label = QLabel("")
+        self.effective_pitch_label.setToolTip(
+            "On-paper row spacing: Dot pitch x Artwork scale. This is the "
+            "number to compare with the pen width."
+        )
+        pitch_layout.addWidget(self.effective_pitch_label)
         screen.addRow("Dot pitch", pitch_row)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
         screen.addRow("Dot size", self.dot_size)
@@ -364,6 +370,12 @@ class CmykTab(GeneratorTab):
             "rows - halve Dot pitch to keep the same density."
         )
         page.addRow("Artwork scale", self.scale_pct)
+        # Live effective-pitch readout: Dot pitch x Artwork scale is what lands
+        # on paper, and it is the number that should sit next to the pen width.
+        self.pitch.valueChanged.connect(self._update_effective_pitch)
+        self.scale_pct.valueChanged.connect(self._update_effective_pitch)
+        self.pen_width.valueChanged.connect(self._update_effective_pitch)
+        self._update_effective_pitch()
         self.registration_marks = QCheckBox("Corner crosses (all inks)")
         self.registration_marks.setToolTip(
             "Draw four small crosses in the page margin, one set per ink "
@@ -446,17 +458,14 @@ class CmykTab(GeneratorTab):
         self.brightness.setValue(values["brightness"])
         self.gamma.setValue(values["gamma"])
         self.gcr.setValue(values["gcr"])
-        # The image controls are only half the fit: the screen has to put the
-        # rows down at a density the pen can hold, so Auto also matches the
-        # pen the way the Match pen button does.
-        self.pitch.setValue(self.pen_pitch_mm())
         message = (
             f"Auto: brightness {values['brightness']} %, contrast "
             f"{values['contrast']} %, saturation {values['saturation']} %, "
             f"GCR {values['gcr']} %, gamma {values['gamma']:.2f}; Dot pitch "
-            f"{self.pitch.value():.2f} mm (one {self.pen_width.value():.2f} mm "
-            f"pen at {self.scale_pct.value():.0f} % artwork scale) - tweak "
-            "gamma for print lightness, then press Preview."
+            f"left at {self.pitch.value():.2f} mm (Match pen would suggest "
+            f"{self.pen_pitch_mm():.2f} mm for the {self.pen_width.value():.2f} "
+            f"mm pen at {self.scale_pct.value():.0f} % scale) - tweak gamma "
+            "for print lightness, then press Preview."
         )
         self.status.setText(message)
         if self.host is not None:
@@ -466,6 +475,23 @@ class CmykTab(GeneratorTab):
         """Dot pitch that puts full-tone rows one pen width apart on paper."""
         scale = max(0.01, self.scale_pct.value() / 100.0)
         return max(0.1, min(8.0, self.pen_width.value() / scale))
+
+    def _update_effective_pitch(self, *_args):
+        """Show the on-paper row spacing next to the Dot pitch field."""
+        effective = self.pitch.value() * self.scale_pct.value() / 100.0
+        pen = self.pen_width.value()
+        if pen > 0.0:
+            ratio = effective / pen
+            relation = (
+                "touching" if ratio < 1.05 else
+                "slight gap" if ratio < 1.6 else
+                "separated rows" if ratio < 2.6 else
+                "wide gaps"
+            )
+            text = "= %.2f mm on paper (%s)" % (effective, relation)
+        else:
+            text = "= %.2f mm on paper" % effective
+        self.effective_pitch_label.setText(text)
 
     def match_pen_pitch(self, _checked=False):
         """Set Dot pitch to one pen width at the current artwork scale."""

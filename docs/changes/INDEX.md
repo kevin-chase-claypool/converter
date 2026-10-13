@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-13 | `WSW-20261013-007` | windows-software | implemented | [Effective pitch readout, and Auto stops overwriting Dot pitch](windows-software/2026/2026-10-13-effective-pitch-readout-and-auto.md) |
 | 2026-10-13 | `WSW-20261013-006` | windows-software | implemented | [Generator tab settings now reach the preview](windows-software/2026/2026-10-13-tab-settings-reach-the-preview.md) |
 | 2026-10-13 | `WSW-20261013-005` | windows-software | implemented | [File > Save G-code routes to the active tool's own save](windows-software/2026/2026-10-13-save-gcode-routes-to-active-tool.md) |
 | 2026-10-13 | `WSW-20261013-004` | windows-software | implemented | [CMYK tab gets its own Path tolerance field](windows-software/2026/2026-10-13-cmyk-path-tolerance-field.md) |
