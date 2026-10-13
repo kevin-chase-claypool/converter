@@ -1,5 +1,37 @@
 # Engineering Log
 
+<a id="elog-20261013-heraldic-replot-paw-profile"></a>
+### 🟨 2026-10-13 - HARDWARE/MEASURED - Heraldic re-plot: paws are not rate-limited; the cap now lives at the bed center
+
+- Request: "i think it helped in spots, but look particularly at the all
+  four paws. it's obvious that the outline is not staying a constant
+  distance. what happens if i further drop the feedrate?"
+- Profiled the regenerated program the operator ran (tolerance 0.05 mm, A
+  limits 30000/6000; 6224 pen-down moves, 4.3 m of bed arc). The four paw
+  regions sit at radius 30-80 mm and demand at most ~13-17 motor deg of bed
+  rotation per mm of pen travel, so no paw move is rate-capped: 0 % of paw
+  arc runs below 350 mm/min, 2-8 % per paw below 500, and the median tracks
+  the commanded ~700.
+- The only capped arc left is where the path crosses the bed rotation
+  center: 16.3 % of the r < 25 mm arc cannot hold 700 mm/min, 8.0 % cannot
+  hold 500, and 0.9 % still cannot hold 350 (worst move 137 deg/mm).
+- Speed uniformity: consecutive emitted moves step F by ~15 % median /
+  ~150 % p95; A reverses direction about twice per 10 mm of paw arc
+  (backlash exposure).
+- Photo check: a fresh similarity fit of the new photo to the commanded
+  path aligns to about a line width; the paw pinch points coincide with the
+  artwork's own tapered stroke widths (thick limb, thin fur, pointed claw
+  tips), so part of the perceived "non-constant gap" is the source art, not
+  the machine. Sub-line-width wobble cannot be separated from photo
+  registration error with this method.
+- Prediction for the operator: dropping to ~350 mm/min clears ~94 % of the
+  remaining capping and roughly halves inertial/wind-up error, but cannot
+  remove backlash or artwork width variation; below ~300 mm/min stick-slip
+  risk rises again.
+- Evidence: `tmp/heraldic_diag/paw_profile2.py`, `paw_gap.py`,
+  `paw_speed.py`, `refit_newphoto.py`, `photo_overlay_1013.png`; no code
+  change in this event.
+
 <a id="elog-20261013-a-limits-30000"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - A limits raised to 30000/6000
 
