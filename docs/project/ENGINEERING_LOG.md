@@ -1,5 +1,39 @@
 # Engineering Log
 
+<a id="elog-20261013-head-back-reversal-lag"></a>
+### 🟨 2026-10-13 - HARDWARE/MEASURED - Back of the head: the printed outline really does collapse - reversal lag on the scalloped edge
+
+- Operator: "look at the outline at the back of the lion's head... that
+  whole backside has the inconsistent outline" - after the 350 mm/min print,
+  on the flat photo. This is a real, measured defect, not an impression.
+- Flat-photo measurement (fit p50 0.26 mm): along bed x 14-34, y 44-74 the
+  **outer stroke (33) has no ink at its commanded position** - median paper
+  dip at the command is 6 grey levels and 80 % of stations show no line
+  within +-0.4 mm - while the neighbouring **inner stroke (28) prints
+  exactly on its command** in the same window. The nearest ink to the outer
+  command sits ~1.4 mm toward the inner line, so the printed band pinches
+  from the commanded 2.5-2.8 mm to roughly 1 mm over a ~30 mm stretch.
+  Controls: left-arm stretch dip 116 grey (perfect); top of head 61
+  (partial).
+- Toolpath of that stretch (stroke 33, arc 1319-1359 mm): **16 A-axis
+  direction reversals in 40 mm** (87 y_theta / 27 x_theta moves), planned
+  F 350-8156 (median 2140) even in the 350 file. A per-stroke rotation fit
+  rules out a global frame shift (median <0.4 deg for every stroke), and a
+  centre-offset/ratio fit explains only 10 % of the deviation variance.
+- Interpretation: A-axis reversal lag / wind-up smears the scalloped outline
+  inward wherever the mane edge zigzags; smooth stretches are clean. The
+  700 -> 350 speed cut only slowed these tiny moves ~30 % (the acceleration
+  cap dominates at 700), which is why the defect survived it.
+- Next experiments agreed: (1) dedicated test drawing the same scallop with
+  the bed parked (gantry-only) versus normal - proves the A reversals are
+  the cause; (2) optional re-plot at tangential ~200 for a stronger rate
+  cut. If confirmed, the converter fix is to prefer the parked strategy
+  above a reversal-density threshold.
+- Evidence: `tmp/heraldic_diag/head_strokes.png` (red = inner stroke on ink,
+  blue = outer stroke on blank paper), `head_rectified_grid.png`,
+  `head_back_error.py`, `step_loss_check.py`, `center_offset_fit.py`; no
+  code change.
+
 <a id="elog-20261013-flat-photo-gap-check"></a>
 ### 🟨 2026-10-13 - HARDWARE/MEASURED - Flat photo of the 350 mm/min print: geometry holds to ~0.3 mm; per-rail gap still unprovable
 
