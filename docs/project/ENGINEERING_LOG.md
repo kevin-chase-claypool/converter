@@ -20,6 +20,16 @@
   plus a 4-tick single-angle control. Coincident ticks = centre correct;
   spread ring = |C|, with opposite ticks exactly 2|C| apart and the pattern
   centre giving C's direction.
+- **Operator measurement (2026-10-13):** after the current registration the
+  pen commanded to X0/Y0 lands **2.46 mm off the centre of the bed circle**
+  (2.0 mm east, 1.44 mm north correction). A 2.46 mm centre offset predicts
+  ~1.2 mm of drift across a 30-degree bed-angle sweep - matching the measured
+  1-1.5 mm heraldic outline errors - while being invisible to every
+  wide-span-free diagnostic (soak +/-2 deg sees only 0.09 mm; the ratio test
+  drew at one angle). Procedure agreed: jog the pen to the bed-circle centre
+  using the 2.0/1.44 mm deltas, `G10 L20 P1 X0 Y0` to set the work zero
+  there, then re-run the centre test to collapse the tick ring, then re-plot
+  the heraldic in normal mode. A-index untouched.
 - If confirmed: fix = G54 origin correction by -C (registration only, no
   rewiring; the A axis keeps its full role), and it would retro-explain the
   heraldic outline defects globally.
