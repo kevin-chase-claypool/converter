@@ -10,20 +10,26 @@ already 0.52 mm of spread. Draw with the finest pen available: a 0.15 mm
 Pigma Micron 003 makes roughly 0.2 mm offsets visible under a loupe or a
 close-up photo.
 
-Passes, in draw order:
+Passes, in draw order, with a stepped end-length code so each line is
+identifiable with calipers (total lengths for the defaults):
 
-* ``origin`` - the longest line, drawn at A = 0; the reference.
-* ``control`` - ``--control-passes`` A = 0 replays; they must sit exactly on
-  the origin, or the machine's repeatability is the story, not the bed.
+* ``origin`` - the longest line, 140 mm, drawn at A = 0; the reference.
+* ``control`` - ``--control-passes`` A = 0 replays, 120 mm; they must sit
+  exactly on the origin, or the machine's repeatability is the story, not
+  the bed.
 * ``replay`` - one pass per angle in ``--angles`` (default 90/180/270, the
-  quadrant comparison). Each replay is shorter than the origin so the
-  origin's ends stick out and identify it on the sheet.
-* ``closing`` - a final A = 0 pass after the highest angle; it must land on
-  the origin for the drivetrain to pass, and it exercises the A reversal.
+  quadrant comparison); each replay is 8 mm shorter in total length than the
+  previous one, so the default staircase is 112 / 104 / 96 mm for
+  90 / 180 / 270 deg. ``--replay-step 0`` disables the stepping.
+* ``closing`` - a final A = 0 pass after the highest angle, 128 mm; it must
+  land on the origin for the drivetrain to pass, and it exercises the A
+  reversal.
 
 Reading: a constant gap between a replay and the origin is that quadrant's
-offset; a fan opening at the ends is rotation about the centre. Adjust the
-bed tilt rail ends and re-run until the lines collapse.
+offset; a fan opening at the ends is rotation about the centre. Measure the
+gap with calipers or a straight-down photo; a caliper across a line's ends
+reads its total length and attributes it to the right angle. Adjust the bed
+tilt rail ends and re-run until the lines collapse.
 
 Requires HOME + bed registration, so G54 X0 Y0 is the physical bed centre.
 
@@ -82,6 +88,11 @@ def main() -> None:
         help="draw a final A=0 replay after the highest angle (default on)",
     )
     parser.add_argument(
+        "--replay-step", type=float, default=4.0, dest="replay_step",
+        help="each replay is this much shorter per half end, so the end "
+             "staircase identifies it (default 4 mm; 0 disables)",
+    )
+    parser.add_argument(
         "--line-angle", type=float, default=0.0, dest="line_angle",
         help="paper-frame direction of the line in degrees (default 0, along X)",
     )
@@ -99,6 +110,24 @@ def main() -> None:
         )
     if args.control_passes < 0:
         raise SystemExit("control passes cannot be negative")
+    if args.replay_step < 0:
+        raise SystemExit("replay step cannot be negative")
+
+    replay_halves = [
+        args.replay_half - args.replay_step * (index + 1)
+        for index in range(len(angles))
+    ]
+    if replay_halves and replay_halves[-1] < 20.0:
+        raise SystemExit(
+            "the shortest replay would fall under a 20 mm half length; "
+            "reduce --replay-step or --replay-half-length"
+        )
+    closing_half = args.replay_half + args.replay_step
+    if args.closing and closing_half >= args.half_length:
+        raise SystemExit(
+            "the closing pass must stay shorter than the origin; reduce "
+            "--replay-step or --replay-half-length"
+        )
 
     direction = math.radians(args.line_angle)
     ux, uy = math.cos(direction), math.sin(direction)
@@ -117,6 +146,17 @@ def main() -> None:
         "(draw order: origin, %d control passes at A=0, replays %s, closing pass)"
         % (args.control_passes, "/".join(fmt(angle) for angle in angles))
     )
+    length_bits = ["origin %s" % fmt(args.half_length * 2)]
+    if args.control_passes:
+        length_bits.append("control %s" % fmt(args.replay_half * 2))
+    if angles and args.replay_step > 0:
+        length_bits.append(
+            "replays %s" % "/".join(fmt(half * 2) for half in replay_halves)
+        )
+    if args.closing:
+        length_bits.append("closing %s" % fmt(closing_half * 2))
+    length_code = ", ".join(length_bits)
+    lines.append("(identification by total length in mm: %s)" % length_code)
     lines.extend(
         ["G21", "G90", "G94", "G17", "G54", "G0 F3000", "M5", "G65 P115 Q0 A1 W2"]
     )
@@ -141,13 +181,21 @@ def main() -> None:
         lines.append("M5")
         lines.append("G65 P115 Q1 A1 W2")
 
-    draw_pass("origin", 0.0, args.half_length)
+    draw_pass("origin, %s mm total" % fmt(args.half_length * 2), 0.0, args.half_length)
     for index in range(args.control_passes):
-        draw_pass("control %d" % (index + 1), 0.0, args.replay_half)
-    for theta in angles:
-        draw_pass("replay %s" % fmt(theta), theta, args.replay_half)
+        draw_pass(
+            "control %d, %s mm total" % (index + 1, fmt(args.replay_half * 2)),
+            0.0,
+            args.replay_half,
+        )
+    for index, theta in enumerate(angles):
+        draw_pass(
+            "replay %s, %s mm total" % (fmt(theta), fmt(replay_halves[index] * 2)),
+            theta,
+            replay_halves[index],
+        )
     if args.closing:
-        draw_pass("closing", 0.0, args.replay_half)
+        draw_pass("closing, %s mm total" % fmt(closing_half * 2), 0.0, closing_half)
 
     lines.append("M65 P0")
     lines.append("G65 P115 Q0 A3 W1")
@@ -182,6 +230,7 @@ def main() -> None:
         "passes: %d (origin 1, control %d, replays %d, closing %d)"
         % (passes, args.control_passes, len(angles), 1 if args.closing else 0)
     )
+    print("identification by total length in mm: %s" % length_code)
     print("A range %.1f..%.1f motor deg" % (min(a_values), max(a_values)))
     print(
         "max commanded radius: %.1f mm" % max(args.half_length, args.replay_half)

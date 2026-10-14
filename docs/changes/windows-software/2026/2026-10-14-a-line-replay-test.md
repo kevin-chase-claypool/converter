@@ -35,10 +35,12 @@ a constant parallel gap is that quadrant's offset (translation error), and a
 fan opening at the ends is a rotation error - 0.5 deg of rotation spreads the
 ends of a 60 mm half-line by 0.52 mm.
 
-The origin is drawn longest (70 mm half-length vs 60 mm for every replay) so
-its ends stick out and identify it on a sheet full of near-coincident lines.
-Draw with the finest pen available (a 0.15 mm Pigma Micron 003 makes ~0.2 mm
-offsets readable under a loupe or a close-up photo).
+Lines are identified by a stepped end-length code: origin 140 mm total,
+closing 128, controls 120, then the replays 112/104/96 for 90/180/270 deg -
+each replay 8 mm shorter in total length than the previous, so a caliper
+across a line's ends attributes it without any extra marks. Draw with the
+finest pen available (a 0.15 mm Pigma Micron 003 makes ~0.2 mm offsets
+readable under a loupe or a close-up photo).
 
 ## Reason
 
@@ -60,14 +62,16 @@ cannot do.
 
 - Draw order: origin (A=0), `--control-passes` A=0 replays (default 2, they
   must coincide with the origin or repeatability is the story), one replay per
-  angle in `--angles` (default quadrant angles 90/180/270), then the closing
-  A=0 pass, which also exercises the A reversal.
+  angle in `--angles` (default quadrant angles 90/180/270, each 8 mm shorter
+  in total length than the previous), then the closing A=0 pass (8 mm longer
+  than the controls), which also exercises the A reversal.
 - Rotation mapping is identical to the centre test: machine position is the
   paper-frame point rotated by the bed angle, and A is the bed angle times
   the measured 12.03324 ratio.
 - Options: `--half-length`, `--replay-half-length`, `--angles`,
-  `--control-passes`, `--closing` / `--no-closing`, `--line-angle`, `--feed`
-  (default F350). A finer shape read is one flag away:
+  `--control-passes`, `--replay-step` (0 disables the length stepping),
+  `--closing` / `--no-closing`, `--line-angle`, `--feed` (default F350). A
+  finer shape read is one flag away:
   `--angles 45,90,135,180,225,270,315`; a single replay can be re-run for
   identification with e.g. `--angles 90`.
 - The M3/M5 stations use the same `G65 P115` handshakes as the centre test,
@@ -76,8 +80,9 @@ cannot do.
 ## Verification
 
 - Generator self-checks pass: 7 passes (origin 1, control 2, replays 3,
-  closing 1), 67 lines, balanced parentheses, A range 0..3248.97 motor deg,
-  maximum commanded radius 70 mm.
+  closing 1), 68 lines, balanced parentheses, A range 0..3248.97 motor deg,
+  maximum commanded radius 70 mm; the length code prints as origin 140,
+  control 120, replays 112/104/96, closing 128.
 - `python tools\check_gcode_motion.py samples\gcode\a-line-replay-test.gcode`
   reports 0.00 deg of bed rotation inside any drawing move and 4 pen-up
   repositions carrying A as bare `G0` rapids - by design and the same motion
@@ -91,12 +96,15 @@ cannot do.
 - Rejected making the mark itself height-sensitive. The force loop normalises
   ink against bed height, so a marking test can only carry XY information;
   height stays with the probe (`bed_mesh_probe.py`) or a dial indicator.
-- Considered drawing all passes at identical lengths. Rejected: with six to
-  eight near-coincident lines the reference must be identifiable on the
-  sheet, so the origin is longer and its ends stick out at both ends.
-- Considered labelling each replay with a tick or a tag. Rejected for now to
-  keep the cluster clean; a single angle can be replayed alone
-  (`--angles 90`) when a mark needs identifying.
+- The first revision only made the origin longest and left the replays
+  identical; the operator asked how a caliper reading attributes a line to a
+  quadrant. The replays now carry the stepped end-length code (8 mm total per
+  step) and the closing pass is 8 mm longer than the controls, so even the
+  reference band is attributable.
+- Labelling ticks attached to each line were reconsidered and rejected: the
+  length code adds no ink inside the measurement band and cannot drift out of
+  step with the line it labels. A single angle can still be replayed alone
+  (`--angles 90`).
 
 ## Risks and follow-up
 

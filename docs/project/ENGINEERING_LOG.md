@@ -21,11 +21,17 @@
   pass must land on it. Same rotation mapping and P115 handshakes as
   `a-center-test.gcode`; `--angles` gives the 45 deg series or a single
   replay.
-- Verification: generator self-checks pass (7 passes, 67 lines, A range
-  0..3248.97 motor deg, max radius 70 mm, parentheses balanced);
+- Verification: generator self-checks pass (7 passes, 68 lines, A range
+  0..3248.97 motor deg, max radius 70 mm, parentheses balanced; length code
+  origin 140, control 120, replays 112/104/96, closing 128);
   `check_gcode_motion.py` reports 0.00 deg drawing-move rotation and 4
   pen-up repositions carrying A as `G0` rapids - by design, same pattern as
   the centre test.
+- Follow-up the same day (operator question: "are there markings that
+  distinguish which quadrant im looking at when measuring with my calipers?"):
+  the replays now carry a stepped end-length code - 8 mm total per step,
+  `--replay-step`, 0 disables - and the closing pass is 8 mm longer than the
+  controls, so every line in the cluster is attributable without extra marks.
 - Next action: run on the bench with the Micron 003 after HOME +
   registration; tilt the rail ends until the replays collapse onto the
   origin. If a residual remains, it belongs to the runout/warp fork
