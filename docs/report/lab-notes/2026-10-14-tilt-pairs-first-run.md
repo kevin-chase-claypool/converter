@@ -109,3 +109,38 @@ compass-based rail-end instruction.
 - The committed pairs sample is set to `--station-shift-y -25` (fresh rows
   at y = +25 / -75 on the flipped side) for a confirmation run once the
   gaps are under control.
+
+## Static gap check at the four quadrant centres (2026-10-14 evening)
+
+Pen-up gap readings with the bed left at the print's stopping angle and the
+pen at full GP2 retract (absolute values ~5-6 mm; only the differences
+matter):
+
+| quadrant | machine (X, Y) | gap mm | vs Q3 |
+|---|---|---:|---:|
+| Q1 (180 deg pair) | (+50, +50) | 6.13 | +1.12 |
+| Q2 (270 deg pair) | (-50, +50) | 5.73 | +0.72 |
+| Q3 (control) | (-50, -50) | 5.01 | reference |
+| Q4 (90 deg pair) | (+50, -50) | 5.69 | +0.68 |
+
+Plane fit: +0.54 mm per 100 mm along +X and +0.58 mm per 100 mm along +Y
+(about 0.8 percent, tilted toward the Q3-Q1 diagonal), residuals within
++/-0.07 mm - a clean plane across these four points.
+
+**Cross-check with the pairs test:** each quadrant's drawn split equals its
+static gap difference almost exactly (Q1: 1.0-1.2 mm vs 1.12; Q4:
+0.70-0.80 vs 0.68; Q2: taper to ~0.7 vs 0.72). The ink displacement tracks
+the height difference about 1:1, so the two independent measurements agree
+and fixing the heights should fix the drawings by the same amount.
+
+**Adjustment (Q3 stays the constant):** a larger gap means the surface sits
+farther from the pen, so bring that corner's rail end DOWN (toward the bed) -
+Q1 by ~1.1 mm, Q2 by ~0.7 mm, Q4 by ~0.7 mm (about 1.6 / 1.0 / 1.0 turns if
+the screws are M4 at 0.7 mm per turn); Q3's end is untouched.
+
+The amounts are those measured at the +/-50 mm spots. An adjuster sitting
+farther from the bed centre needs a proportionally larger move, so half the
+amounts first if the corner-to-mount mapping needs verifying, then re-read
+the same four spots at the same bed angle and trim. Per-adjuster numbers
+come from `bed_tilt_map.py --rail-mounts` once the four rail-end XY
+coordinates are supplied.

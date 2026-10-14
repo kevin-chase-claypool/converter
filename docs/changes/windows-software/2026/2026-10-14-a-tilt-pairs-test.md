@@ -83,6 +83,13 @@ labeled pairs give one clean measurement per quadrant.
   270 deg taper ~0.2 to 0.7 mm), so the signature is stable across sheet
   side and pen; see
   `docs/report/lab-notes/2026-10-14-tilt-pairs-first-run.md`.
+- **Static gap cross-check (2026-10-14):** pen-up tip-to-paper gaps at the
+  four quadrant centres read 5.01 (Q3 control), 5.69 (Q4), 5.73 (Q2) and
+  6.13 (Q1) mm - a clean plane of +0.54 per 100 mm in X and +0.58 per 100 mm
+  in Y with +/-0.07 mm residuals - and each quadrant's drawn split matches
+  its static gap difference ~1:1, confirming the pairs track the height map
+  through the pen-carriage coupling. Rail-end adjustment amounts derived:
+  Q1 ~1.1 mm, Q2 ~0.7 mm, Q4 ~0.7 mm down (toward the bed), Q3 untouched.
 
 ## Struggles and rejected approaches
 

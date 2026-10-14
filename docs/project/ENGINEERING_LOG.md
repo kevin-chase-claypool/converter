@@ -1,5 +1,38 @@
 # Engineering Log
 
+<a id="elog-20261014-tilt-gap-check"></a>
+### 🟨 2026-10-14 - HARDWARE/MEASURED - Four-spot pen-up gap check: clean 0.8 percent plane; pairs cross-check 1:1; rail-end moves set
+
+- Setup: operator read the pen-up tip-to-paper gap at the four quadrant
+  centres with the bed left at the print's stopping angle and the pen at full
+  GP2 retract (absolute 5-6 mm; only the differences matter).
+- Result: (X, Y) -50,-50 gap 5.01 mm (Q3 control, the constant quadrant);
+  50,-50 5.69 (+0.68); -50,50 5.73 (+0.72); 50,50 6.13 (+1.12). Plane fit:
+  +0.54 mm per 100 mm along +X and +0.58 mm per 100 mm along +Y (about
+  0.8 percent, tilted toward the Q3-Q1 diagonal), residuals within +/-0.07 mm.
+- Cross-check: each quadrant's drawn pair split (both ink runs) equals its
+  static gap difference almost exactly (Q1 1.0-1.2 vs 1.12 mm; Q4 0.70-0.80
+  vs 0.68; Q2 taper to ~0.7 vs 0.72) - two independent measurement paths
+  agree 1:1, so correcting the heights should correct the drawings by the
+  same amount.
+- Direction: a larger gap = pen reference farther from the paper at that
+  corner; the four adjusters move the rail ends, so bring the high-gap rail
+  ends DOWN (toward the bed): Q1 ~1.1 mm, Q2 ~0.7 mm, Q4 ~0.7 mm (about
+  1.6 / 1.0 / 1.0 turns if the screws are M4 at 0.7 mm per turn); Q3 is the
+  constant and stays untouched. The amounts are those at the +/-50 mm spots -
+  an adjuster farther from the centre scales with distance - so half first
+  (0.55 / 0.35 / 0.35), re-read the same four spots at the same bed angle,
+  and trim; exact per-adjuster numbers from `bed_tilt_map.py --rail-mounts`
+  once the four rail-end XY coordinates are supplied.
+- Next action: adjust, re-read the four gaps (same spots, same bed angle,
+  pen fully retracted), iterate until the spread is within ~0.1 mm; then run
+  the committed shifted pairs sample (`--station-shift-y -25`, fresh rows) on
+  the sheet and compare - acceptance is the non-control pairs collapsing to
+  the control (<= 0.15 mm).
+- Evidence: `docs/report/lab-notes/2026-10-14-tilt-pairs-first-run.md`;
+  `WSW-20261014-003`.
+- Category: hardware, bed, tilt, a-axis, measurement.
+
 <a id="elog-20261014-tilt-pairs-first-run"></a>
 ### 🟨 2026-10-14 - HARDWARE/MEASURED - Tilt-pair first run: 0.6/1.1 mm ladder with taper - frame ruled out, tilt signal found
 
