@@ -92,6 +92,15 @@ Cycle Start with the pen loaded:
   coincident = the registered centre is on the physical axis; a spread ring
   measures a centre offset C directly (opposite ticks are 2|C| apart).
   Regenerate with `..\tools\make_a_center_test.py`.
+- `..\samples\gcode\a-line-replay-test.gcode` - one origin line at A=0 (the
+  reference, like the untouched screw in a 3D-printer bed-tilt adjustment)
+  replayed at the quadrant bed angles, plus two A=0 control passes and a
+  closing A=0 pass. Every replay must land on the origin: a constant parallel
+  gap is that quadrant's offset, a fan opening at the ends is a rotation
+  error. The origin is the longest line so its ends identify it on the sheet;
+  draw with the finest pen (Micron 003) and read under a loupe or a close-up
+  photo. Run after HOME + registration. Regenerate with
+  `..\tools\make_a_line_replay_test.py`.
 - `..\samples\gcode\xy-scale-check.gcode` - measures the X/Y axis scale
   directly with the bed parked (the program contains no A words): a 200 mm
   ruler along each machine axis with marks every 50 mm, plus a 120 mm square

@@ -1,5 +1,39 @@
 # Engineering Log
 
+<a id="elog-20261014-line-replay-test"></a>
+### 🟨 2026-10-14 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Bed-angle line-replay test: origin line as the constant, quadrant replays against it
+
+- Request: "you could create a test for me that uses an origin line then
+  marks a series of angles against it. i could use my finest pigma micron 003
+  ... so that i can see how far offset each quadrant is from the 'original'
+  line. it works the same way in bed tilt on 3d printers. one point is set as
+  the constant against which each of the other 3 quadrants are measured."
+- Context: the centre-test session left a displaced tick bundle. Ink cannot
+  read bed height on this machine - the force loop holds contact force
+  constant - so a marking test can only carry XY information; a full-length
+  line separates a translation (parallel gap) from a rotation (end fan:
+  0.5 deg spreads a 60 mm half-line by 0.52 mm).
+- Change: built `tools/make_a_line_replay_test.py` +
+  `samples/gcode/a-line-replay-test.gcode`. Draw order: origin line at A=0
+  (half length 70 mm, the reference), two A=0 control passes, quadrant
+  replays at 90/180/270 (half length 60), closing A=0 pass (A-reversal
+  check). The origin's ends stick out so it is identifiable; every other
+  pass must land on it. Same rotation mapping and P115 handshakes as
+  `a-center-test.gcode`; `--angles` gives the 45 deg series or a single
+  replay.
+- Verification: generator self-checks pass (7 passes, 67 lines, A range
+  0..3248.97 motor deg, max radius 70 mm, parentheses balanced);
+  `check_gcode_motion.py` reports 0.00 deg drawing-move rotation and 4
+  pen-up repositions carrying A as `G0` rapids - by design, same pattern as
+  the centre test.
+- Next action: run on the bench with the Micron 003 after HOME +
+  registration; tilt the rail ends until the replays collapse onto the
+  origin. If a residual remains, it belongs to the runout/warp fork
+  (`HW-20261011-001`) and the polar probe is the separating measurement.
+- Evidence: `WSW-20261014-001`; `tools/make_a_line_replay_test.py`;
+  `samples/gcode/a-line-replay-test.gcode`.
+- Category: windows-software, hardware, a-axis, bed, tilt, diagnostic.
+
 <a id="elog-20261014-pen-centre-jog-correction"></a>
 ### 🟨 2026-10-14 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - Registered pen-centre jog sets the P100 correction to X 2.45, Y 0.9
 

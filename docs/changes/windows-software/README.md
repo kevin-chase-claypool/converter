@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-14 | `WSW-20261014-001` | implemented | [Bed-angle line-replay test: origin line as the constant, quadrant replays against it](2026/2026-10-14-a-line-replay-test.md) | `a-axis`, `bed`, `tilt`, `replay`, `registration`, `diagnostic` |
 | 2026-10-13 | `WSW-20261013-015` | implemented | [X/Y machine-scale check sheet](2026/2026-10-13-xy-scale-check.md) | `xy`, `scale`, `steps-per-mm`, `squareness`, `diagnostic` |
 | 2026-10-13 | `WSW-20261013-014` | implemented | [Bed-rotation-centre test](2026/2026-10-13-a-center-test.md) | `a-axis`, `centre-of-rotation`, `registration`, `diagnostic` |
 | 2026-10-13 | `WSW-20261013-013` | verified | [A-axis ratio / directional deadband test](2026/2026-10-13-a-ratio-deadband-test.md) | `a-axis`, `ratio`, `deadband`, `diagnostic` |
