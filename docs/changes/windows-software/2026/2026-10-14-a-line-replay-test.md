@@ -103,6 +103,13 @@ cannot do.
   perpendicular to the line. Operator calipers read the two X-direction
   lines long (140.78/140 = +0.56 percent, 104.91/104 = +0.88 percent). See
   `docs/report/lab-notes/2026-10-14-line-replay-first-run.md`.
+- **Second run (2026-10-14, tagged build):** all twelve end tags matched the
+  ladder within ~1 mm (attribution without tracing). The residuals
+  reproduce: 90 and 270 deg coincide at 0.62-0.65 mm from the reference,
+  180 deg at 1.16-1.22 mm (2 x the step) - the same centre-offset signature
+  as the first run (0.60 / 0.60 / 1.20). Photo-scale spans: X-direction
+  passes +0.3 percent, Y-direction ~0 percent (scale uncertainty ~0.3
+  percent).
 
 ## Struggles and rejected approaches
 

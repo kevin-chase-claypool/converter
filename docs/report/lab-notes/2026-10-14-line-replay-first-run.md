@@ -80,3 +80,26 @@ Y-direction calipers and the X/Y scale sheet.
 - Next: close-up photo, caliper the 112/96 mm lines, run
   `samples/gcode/xy-scale-check.gcode`, then one registration-constant nudge
   if the ~0.6 mm offset is confirmed.
+
+## Second run (tagged build, 21:16)
+
+Photo `PXL_20261014_211653708.jpg` (3072x4080; paper-derived scale
+12.98 px/mm). All twelve end tags matched the stepped ladder within about
+1 mm, so every line was attributable without tracing.
+
+- **Residuals reproduce the first run.** The reference group is tight to
+  about 0.1 mm after the slope is removed; the 90 and 270 deg lines coincide
+  at 0.62-0.65 mm from the reference; 180 deg sits at 1.16-1.22 mm - again
+  2 x the single step, the same centre-offset signature as run 1
+  (0.60 / 0.60 / 1.20 mm). The image-side of the offsets is opposite to the
+  first photo, so the sheets were placed differently; the machine-frame
+  direction still needs the origin's +X mark to resolve.
+- **Photo-scale spans:** X-direction passes read +0.3 percent (origin 140.4,
+  closing 128.4, control 120.4, 180 deg 104.2 mm - mutually consistent);
+  Y-direction passes read ~0 percent (90 deg 112.2, 270 deg 95.9 mm). Photo
+  scale uncertainty is ~0.3 percent, but this sits with the +0.78/+0.91 mm
+  caliper reads as a small X-long, Y-true anisotropy - the scale sheet
+  remains the clean measurement.
+- The reproducible ~0.6 mm registration residual is now the next
+  constant-nudge candidate; a direction fix needs the +X mark (or a jog
+  observation) from the operator.

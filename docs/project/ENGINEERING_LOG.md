@@ -46,6 +46,15 @@
   `--no-tags` for bare lines), so each line remains attributable from its
   tag ladder even where cluster middles merge. Sample regenerated (7 passes,
   21 drawing moves); README and change note updated.
+- Second run the same day (tagged build, `PXL_20261014_211653708.jpg`): all
+  twelve end tags matched the ladder within ~1 mm, so attribution needed no
+  tracing. Residuals reproduce the first run - reference tight to ~0.1 mm,
+  90/270 at 0.62-0.65 mm and 180 at 1.16-1.22 mm, again 2 x the single step.
+  Photo-scale spans read +0.3 percent on the X-direction passes and ~0
+  percent on the Y-direction passes (scale uncertainty ~0.3 percent),
+  keeping a small X-long anisotropy on the table. The ~0.6 mm registration
+  residual is now reproducible and is the next constant-nudge candidate; the
+  machine-frame direction still needs the origin's +X mark.
 - Next action: confirm the sheet's +X orientation, caliper the 112/96 mm
   Y-direction lines, add a close-up photo next run, run the X/Y scale sheet,
   then apply a registration-constant nudge for the ~0.60 mm offset if
