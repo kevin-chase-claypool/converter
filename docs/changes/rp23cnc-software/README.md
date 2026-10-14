@@ -9,6 +9,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-13 | `WSW-20261013-010` | implemented | [Park the bed across reversal-dense stretches](../windows-software/2026/2026-10-13-bed-reversal-parking.md) | `a-axis`, `reversal`, `scallop`, `outline`, `parking` |
+| 2026-10-13 | `WSW-20261013-009` | verified | [Back-of-head bed-parked A/B test](../windows-software/2026/2026-10-13-headback-parked-test.md) | `a-axis`, `reversal`, `backlash`, `outline`, `verification` |
 | 2026-10-13 | `WSW-20261013-008` | implemented | [Converter A limits raised to 30000 / 6000; controller set to match](../windows-software/2026/2026-10-13-a-limits-raised-to-30000.md) | `a-axis`, `rate-limit`, `theta`, `outline`, `verification` |
 | 2026-10-13 | `RPSW-20261013-001` | implemented | [Raise the M5 pen-clearance pulse to 90 ms](2026/2026-10-13-raise-m5-clearance-to-90ms.md) | `toolhead`, `pen-clear`, `m5`, `clearance` |
 | 2026-10-11 | `RPSW-20261011-001` | implemented | [Bed mesh from the toolhead's M3 contact seek](2026/2026-10-11-bed-mesh-probe.md) | `bed-mesh`, `probing`, `toolhead`, `telemetry`, `flatness` |

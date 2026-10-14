@@ -8,6 +8,13 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-13 | `WSW-20261013-015` | implemented | [X/Y machine-scale check sheet](../windows-software/2026/2026-10-13-xy-scale-check.md) | `xy`, `scale`, `steps-per-mm`, `squareness`, `diagnostic` |
+| 2026-10-13 | `WSW-20261013-014` | implemented | [Bed-rotation-centre test](../windows-software/2026/2026-10-13-a-center-test.md) | `a-axis`, `centre-of-rotation`, `registration`, `diagnostic` |
+| 2026-10-13 | `WSW-20261013-013` | verified | [A-axis ratio / directional deadband test](../windows-software/2026/2026-10-13-a-ratio-deadband-test.md) | `a-axis`, `ratio`, `deadband`, `diagnostic` |
+| 2026-10-13 | `WSW-20261013-012` | implemented | [A-axis reversal diagnostic program](../windows-software/2026/2026-10-13-a-reversal-diagnostic.md) | `a-axis`, `backlash`, `reversal`, `diagnostic` |
+| 2026-10-13 | `WSW-20261013-011` | verified | [Bed-fixed full-plot diagnostic sample](../windows-software/2026/2026-10-13-bedfixed-diagnostic.md) | `a-axis`, `diagnostic`, `outline`, `fixed-bed` |
+| 2026-10-13 | `WSW-20261013-010` | implemented | [Park the bed across reversal-dense stretches](../windows-software/2026/2026-10-13-bed-reversal-parking.md) | `a-axis`, `reversal`, `scallop`, `outline`, `parking` |
+| 2026-10-13 | `WSW-20261013-009` | verified | [Back-of-head bed-parked A/B test](../windows-software/2026/2026-10-13-headback-parked-test.md) | `a-axis`, `reversal`, `backlash`, `outline`, `verification` |
 | 2026-10-13 | `WSW-20261013-008` | implemented | [Converter A limits raised to 30000 / 6000; controller set to match](../windows-software/2026/2026-10-13-a-limits-raised-to-30000.md) | `a-axis`, `rate-limit`, `theta`, `outline`, `verification` |
 | 2026-10-13 | `WSW-20261013-002` | implemented | [Reach radius 180, and a CMYK set preflight against the travel window](../windows-software/2026/2026-10-13-reach-radius-180-and-cmyk-preflight.md) | `reach-radius`, `soft-limits`, `cmyk`, `preflight`, `registration` |
 | 2026-10-13 | `WSW-20261013-001` | implemented | [CMYK Pen width cap raised to 6 mm for brush pens](../windows-software/2026/2026-10-13-cmyk-pen-width-cap-6mm.md) | `cmyk`, `pen-width`, `tombow`, `controls` |

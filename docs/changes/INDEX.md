@@ -5,6 +5,13 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-13 | `WSW-20261013-015` | windows-software, hardware | implemented | [X/Y machine-scale check sheet](windows-software/2026/2026-10-13-xy-scale-check.md) |
+| 2026-10-13 | `WSW-20261013-014` | windows-software, hardware | implemented | [Bed-rotation-centre test](windows-software/2026/2026-10-13-a-center-test.md) |
+| 2026-10-13 | `WSW-20261013-013` | windows-software, hardware | verified | [A-axis ratio / directional deadband test](windows-software/2026/2026-10-13-a-ratio-deadband-test.md) |
+| 2026-10-13 | `WSW-20261013-012` | windows-software, hardware | implemented | [A-axis reversal diagnostic program](windows-software/2026/2026-10-13-a-reversal-diagnostic.md) |
+| 2026-10-13 | `WSW-20261013-011` | windows-software, hardware | verified | [Bed-fixed full-plot diagnostic sample](windows-software/2026/2026-10-13-bedfixed-diagnostic.md) |
+| 2026-10-13 | `WSW-20261013-010` | windows-software, hardware, rp23cnc-software | implemented | [Park the bed across reversal-dense stretches](windows-software/2026/2026-10-13-bed-reversal-parking.md) |
+| 2026-10-13 | `WSW-20261013-009` | windows-software, hardware, rp23cnc-software | verified | [Back-of-head bed-parked A/B test](windows-software/2026/2026-10-13-headback-parked-test.md) |
 | 2026-10-13 | `WSW-20261013-008` | windows-software, rp23cnc-software, hardware | implemented | [Converter A limits raised to 30000 / 6000; controller set to match](windows-software/2026/2026-10-13-a-limits-raised-to-30000.md) |
 | 2026-10-13 | `WSW-20261013-007` | windows-software | implemented | [Effective pitch readout, and Auto stops overwriting Dot pitch](windows-software/2026/2026-10-13-effective-pitch-readout-and-auto.md) |
 | 2026-10-13 | `WSW-20261013-006` | windows-software | implemented | [Generator tab settings now reach the preview](windows-software/2026/2026-10-13-tab-settings-reach-the-preview.md) |

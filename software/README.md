@@ -92,6 +92,15 @@ Cycle Start with the pen loaded:
   coincident = the registered centre is on the physical axis; a spread ring
   measures a centre offset C directly (opposite ticks are 2|C| apart).
   Regenerate with `..\tools\make_a_center_test.py`.
+- `..\samples\gcode\xy-scale-check.gcode` - measures the X/Y axis scale
+  directly with the bed parked (the program contains no A words): a 200 mm
+  ruler along each machine axis with marks every 50 mm, plus a 120 mm square
+  in the +X/+Y quadrant. Drag a steel rule over the rulers - an interval
+  that is long or short by the same fraction everywhere means `$100` (X) or
+  `$101` (Y) steps-per-mm is off by that fraction (new steps/mm = old x
+  drawn / commanded); unequal square diagonals mean X/Y skew. Needs a
+  >= 205 x 205 mm sheet (8.5x11 in portrait fits, centred). Regenerate with
+  `..\tools\make_xy_scale_check.py`.
 
 ## Generator tabs
 

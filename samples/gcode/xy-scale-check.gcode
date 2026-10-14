@@ -1,0 +1,117 @@
+(X/Y machine-scale check sheet - make_xy_scale_check.py)
+(+X = east, +Y = north on the bed; drawn around G54 X0 Y0)
+(no A words: the bed must stay parked for the whole sheet)
+(X ruler along machine X at Y-80: marks every 50 mm, ends at +/-100)
+(Y ruler along machine Y at X-80: same span and marks)
+(square 120 mm in the +X/+Y quadrant; diagonals 169.7056 mm)
+(drag a steel rule over each interval: equal numbers = scale correct)
+G21
+G90
+G94
+G17
+G54
+G0 F3000
+M5
+G65 P115 Q0 A1 W2
+(X ruler: -100 to +100 at Y-80)
+G0 X-100 Y-80
+M3
+G65 P115 Q1 B12 A1 W2
+G1 F350
+G1 X100 Y-80 F350
+M5
+G65 P115 Q1 A1 W2
+G0 X-100 Y-92
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X-100 Y-68 F350
+M5
+G65 P115 Q1 A1 W2
+G0 X-50 Y-88
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X-50 Y-72 F350
+M5
+G65 P115 Q1 A1 W2
+G0 X0 Y-88
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X0 Y-72 F350
+M5
+G65 P115 Q1 A1 W2
+G0 X50 Y-88
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X50 Y-72 F350
+M5
+G65 P115 Q1 A1 W2
+G0 X100 Y-92
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X100 Y-68 F350
+M5
+G65 P115 Q1 A1 W2
+(square: (-20,-20) to (100,100))
+G0 X-20 Y-20
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X100 Y-20 F350
+G1 X100 Y100 F350
+G1 X-20 Y100 F350
+G1 X-20 Y-20 F350
+M5
+G65 P115 Q1 A1 W2
+(Y ruler: -100 to +100 at X-80)
+G0 X-80 Y-100
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X-80 Y100 F350
+M5
+G65 P115 Q1 A1 W2
+G0 X-92 Y-100
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X-68 Y-100 F350
+M5
+G65 P115 Q1 A1 W2
+G0 X-88 Y-50
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X-72 Y-50 F350
+M5
+G65 P115 Q1 A1 W2
+G0 X-88 Y0
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X-72 Y0 F350
+M5
+G65 P115 Q1 A1 W2
+G0 X-88 Y50
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X-72 Y50 F350
+M5
+G65 P115 Q1 A1 W2
+G0 X-92 Y100
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X-68 Y100 F350
+M5
+G65 P115 Q1 A1 W2
+M65 P0
+G65 P115 Q0 A3 W1
+M64 P0
+G53 G1 X-10 Y-436 F3000 (park home)
+M2

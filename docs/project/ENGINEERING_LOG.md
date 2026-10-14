@@ -1,5 +1,48 @@
 # Engineering Log
 
+<a id="elog-20261013-steps-per-mm-check-sheet-for-x-and-y"></a>
+### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - Steps-per-mm check sheet for X and Y
+
+- Context: the centre-test bench result (clean control tick, displaced
+  eight-angle bundle) matched a 2.46 mm registration-centre offset, but a
+  G54 origin correction did not collapse the bundle. An error that grows
+  with commanded position - rather than staying constant - is what
+  remains: if `$100`/`$101` steps-per-mm are wrong, the machine's X and Y
+  scales differ, fixed-bed and single-station diagnostics stay clean, and
+  bed-turning plots smear by an amount that changes with bed angle. No
+  sample measured commanded millimetres against real millimetres.
+- Change: built `tools/make_xy_scale_check.py` +
+  `samples/gcode/xy-scale-check.gcode` - a 200 mm ruler along machine X
+  with marks every 50 mm, the same ruler along machine Y, and a 120 mm
+  square in the +X/+Y quadrant. The program contains no A words, so the
+  bed stays parked and the sheet isolates X/Y scale and squareness from
+  the rotation drivetrain.
+- Self-check: 117 lines; 1072 mm of drawing at F350 (~3.4 min, 13 pen
+  cycles); every line's parentheses balanced; no A word in any motion
+  line; maximum commanded radius 141.4 mm (inside the 165 mm bench
+  limit); `check_gcode_motion.py --strict` passes.
+- Reading guide: equal 50 mm intervals and a 200 mm end-to-end span on
+  both rulers means the scales are correct. A uniform fraction long/short
+  is the steps-per-mm error for that axis (new steps/mm = old x drawn /
+  commanded). Unequal square diagonals (nominal 169.706 mm) mean skew or
+  an X/Y scale difference.
+- Registration-offset note (operator question: "does G10 write the
+  permanent pen offset used post registration?"): `G10 L20 P1` writes the
+  NVS-backed G54 offsets (`tmp/grblhal_gcode.c` line 4511,
+  `settings_write_coord_data`), so a jog + `G10 L20 P1 X0 Y0` zero
+  survives reset and power-down. It is **not** durable against
+  registration: `G65 P113` -> `P100 Q0` rewrites G54 X/Y from the centre
+  centroid plus `#<sensor_to_pen_x/y>` (0.0 / -29.4892) and
+  `#<axis_center_correction_x/y>` (1.25 / 0.0), and rewrites G54 A.
+  A correction meant to survive every registration belongs in those P100
+  constants, not in G10.
+- Next: plot the sheet, measure the intervals and the square with a steel
+  rule; if an axis reads uniformly long or short, correct its steps/mm by
+  the measured ratio and re-run the centre test. If the rulers measure
+  true, scale is excluded and the residual belongs to the rotation-centre
+  term.
+- Evidence: `WSW-20261013-015`; `tools/make_xy_scale_check.py`.
+
 <a id="elog-20261013-center-test"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - Rotation-centre offset: the last mechanism standing
 

@@ -8,6 +8,13 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-13 | `WSW-20261013-015` | implemented | [X/Y machine-scale check sheet](2026/2026-10-13-xy-scale-check.md) | `xy`, `scale`, `steps-per-mm`, `squareness`, `diagnostic` |
+| 2026-10-13 | `WSW-20261013-014` | implemented | [Bed-rotation-centre test](2026/2026-10-13-a-center-test.md) | `a-axis`, `centre-of-rotation`, `registration`, `diagnostic` |
+| 2026-10-13 | `WSW-20261013-013` | verified | [A-axis ratio / directional deadband test](2026/2026-10-13-a-ratio-deadband-test.md) | `a-axis`, `ratio`, `deadband`, `diagnostic` |
+| 2026-10-13 | `WSW-20261013-012` | implemented | [A-axis reversal diagnostic program](2026/2026-10-13-a-reversal-diagnostic.md) | `a-axis`, `backlash`, `reversal`, `diagnostic` |
+| 2026-10-13 | `WSW-20261013-011` | verified | [Bed-fixed full-plot diagnostic sample](2026/2026-10-13-bedfixed-diagnostic.md) | `a-axis`, `diagnostic`, `outline`, `fixed-bed` |
+| 2026-10-13 | `WSW-20261013-010` | implemented | [Park the bed across reversal-dense stretches](2026/2026-10-13-bed-reversal-parking.md) | `a-axis`, `reversal`, `scallop`, `outline`, `parking` |
+| 2026-10-13 | `WSW-20261013-009` | verified | [Back-of-head bed-parked A/B test](2026/2026-10-13-headback-parked-test.md) | `a-axis`, `reversal`, `backlash`, `outline`, `verification` |
 | 2026-10-13 | `WSW-20261013-008` | implemented | [Converter A limits raised to 30000 / 6000; controller set to match](2026/2026-10-13-a-limits-raised-to-30000.md) | `a-axis`, `rate-limit`, `theta`, `outline`, `verification` |
 | 2026-10-13 | `WSW-20261013-007` | implemented | [Effective pitch readout, and Auto stops overwriting Dot pitch](2026/2026-10-13-effective-pitch-readout-and-auto.md) | `cmyk`, `pitch`, `pen-width`, `controls` |
 | 2026-10-13 | `WSW-20261013-006` | implemented | [Generator tab settings now reach the preview](2026/2026-10-13-tab-settings-reach-the-preview.md) | `cmyk`, `preview`, `pen-width`, `tolerance` |
