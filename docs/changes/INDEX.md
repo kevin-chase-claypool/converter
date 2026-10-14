@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-14 | `WSW-20261014-002` | windows-software, hardware | implemented | [Gap-map generator: configurable radii and step, matching readings CSV, sheet-fit run](windows-software/2026/2026-10-14-gap-map-sheet-run.md) |
 | 2026-10-14 | `WSW-20261014-001` | windows-software, hardware | implemented | [Bed-angle line-replay test: origin line as the constant, quadrant replays against it](windows-software/2026/2026-10-14-a-line-replay-test.md) |
 | 2026-10-14 | `RPSW-20261014-002` | rp23cnc-software, hardware | verified | [Axis-centre correction refined from the line-replay test: Y 0.9 -> 0.3](rp23cnc-software/2026/2026-10-14-axis-centre-refinement-y-0-3.md) |
 | 2026-10-14 | `RPSW-20261014-001` | rp23cnc-software, hardware | implemented | [Axis-centre correction re-measured by registered jog: X 2.45, Y 0.9](rp23cnc-software/2026/2026-10-14-axis-centre-correction-registered-jog.md) |

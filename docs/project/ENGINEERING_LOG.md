@@ -1,5 +1,29 @@
 # Engineering Log
 
+<a id="elog-20261014-gap-map-sheet-run"></a>
+### 🟨 2026-10-14 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Gauge gap-map set for the sheet-on-bed tilt scan
+
+- Operator decision: the toolhead touch probe is out for the final tilt
+  numbers - "im using a dc motor attached to a motor driver so i wont get a
+  consistent measurement like i would with a stepper". The pulse-timed DC
+  lift is a relative check at best; the mechanical gauge is the measurement
+  of record, and it never touches the paper, so the sheet already on the bed
+  carries every iteration unchanged.
+- Change: `tools/make_bed_gap_maps.py` gains `--radii`, `--bed-step`, and
+  `--dwell`, and writes a matching `gap_map_rot.csv`; the committed set was
+  regenerated for the letter sheet - rings at r = 60 / 90 mm (a 120 mm ring
+  would leave the paper), 30 deg steps, 12 stops per ring.
+- Verification: programs regenerated (M0 and dwell variants), the CSV rows
+  match the stops one-for-one, generator self-checks pass, docs checks pass.
+  Bench measurement pending.
+- Next action: read the 24 stops on the sheet already on the bed with the
+  dial indicator or feeler gauges; send the filled CSV plus the four
+  rail-end mount coordinates and the reference mount; adjust, re-scan, and
+  compare the maps.
+- Evidence: `WSW-20261014-002`; `samples/gcode/gap_map_rot.gcode`;
+  `samples/gcode/gap_map_rot.csv`.
+- Category: windows-software, hardware, bed, tilt, diagnostic.
+
 <a id="elog-20261014-line-replay-test"></a>
 ### 🟨 2026-10-14 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Bed-angle line-replay test: origin line as the constant, quadrant replays against it
 
