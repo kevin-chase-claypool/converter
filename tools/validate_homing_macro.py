@@ -77,7 +77,7 @@ def validate_safety_contract(text: str) -> None:
         "#<exit> = [#5061 + #5221]",
         "#5064",
         "#<axis_center_correction_x> = 2.45",
-        "#<axis_center_correction_y> = 0.9",
+        "#<axis_center_correction_y> = 0.3",
         "g10 l20 p1 x[[#<sensor_to_pen_x> - #<axis_center_correction_x>]]",
         "y[[#<sensor_to_pen_y> - #<axis_center_correction_y>]]",
         "g10 l20 p1 a0",

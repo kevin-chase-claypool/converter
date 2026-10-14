@@ -92,8 +92,8 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   registered origin onto the bed's true rotation axis before the G54 write:
   the centre magnet is not guaranteed to sit exactly on that axis, and a
   constant error there displaces every drawing. As of 2026-10-14 the
-  correction is `+2.45` mm X and `+0.9` mm Y, from a registered pen-centre
-  jog (`RPSW-20261014-001`); the accept/reject test is
+  correction is `+2.45` mm X and `+0.3` mm Y (Y refined from the tagged
+  line-replay test, `RPSW-20261014-002`); the accept/reject test is
   `samples/gcode/center-registration-check.gcode` after `G65 P113` (a cross at
   `G54 X0 Y0`, half a bed revolution, the same cross again - they must
   coincide), or, faster and without paper, a magnet directly under the lifted

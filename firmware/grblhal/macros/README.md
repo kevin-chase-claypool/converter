@@ -215,7 +215,7 @@ installed pen/TMAG offset. Two constants sit between those values and the
 
 ```text
 #<axis_center_correction_x> = 2.45
-#<axis_center_correction_y> = 0.9
+#<axis_center_correction_y> = 0.3
 ...
 G10 L20 P1 X[[#<sensor_to_pen_x> - #<axis_center_correction_x>]] Y[[#<sensor_to_pen_y> - #<axis_center_correction_y>]]
 ```
@@ -257,6 +257,15 @@ evidence. The update was applied on the machine on 2026-10-14 and the operator
 confirms the park lands the pen centred on the centre magnet; the rotation
 acceptance check has not been separately reported.
 
+**2026-10-14 evening refinement.** The tagged line-replay test, with the tag
+direction confirmed as +Y, measured the true axis about 0.6 mm toward -Y of
+the registered origin: the 90 and 270 deg replays land 0.6 mm off the
+reference and 180 deg at 1.2 mm - 2 x the step - reproduced across two runs.
+The Y correction therefore drops `0.9` -> `0.3`; X is unchanged. If the
+centre magnet sits on the axis, the park now lands about 0.6 mm off the
+magnet - that offset is the open magnet-versus-chain attribution, not a new
+fault; `G65 P100 Q5` at A0/A180 settles it.
+
 Two further notes from the same edit. `P103.macro` mirrors P100's initialization
 and now carries the two new constants. And the `sensor_to_pen` comment in P100
 says "pen minus TMAG" while the registered, verified frame behaves as "TMAG minus
@@ -270,7 +279,9 @@ a magnet directly under the lifted pen and rotate the bed - it must stay centred
 - or plot `samples/gcode/center-registration-check.gcode`, which draws a cross at
 `G54 X0 Y0`, rotates the bed half a revolution, and draws it again. The crosses
 must coincide; a gap is twice the residual error. The magnet check needs no paper
-and is the faster of the two.
+and is the faster of the two, but it also requires the centre magnet itself to
+lie on the axis; the cross, tick-ring, and line-replay tests judge the axis
+without that assumption.
 
 The macro expects:
 

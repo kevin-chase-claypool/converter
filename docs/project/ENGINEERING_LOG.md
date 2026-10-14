@@ -55,6 +55,13 @@
   keeping a small X-long anisotropy on the table. The ~0.6 mm registration
   residual is now reproducible and is the next constant-nudge candidate; the
   machine-frame direction still needs the origin's +X mark.
+- Direction resolved (operator: "the direction that the line endmarks point
+  is the +Y"): the replays sit opposite the tags, so the true axis sits about
+  0.6 mm toward -Y of the registered origin. Applied
+  `#<axis_center_correction_y>` 0.9 -> 0.3, X unchanged
+  (`RPSW-20261014-002`), with the expected ~0.6 mm park shift off the magnet
+  recorded as the open attribution datum; re-run the line replay to verify
+  the collapse.
 - Next action: confirm the sheet's +X orientation, caliper the 112/96 mm
   Y-direction lines, add a close-up photo next run, run the X/Y scale sheet,
   then apply a registration-constant nudge for the ~0.60 mm offset if

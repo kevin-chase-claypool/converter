@@ -100,6 +100,12 @@ Photo `PXL_20261014_211653708.jpg` (3072x4080; paper-derived scale
   scale uncertainty is ~0.3 percent, but this sits with the +0.78/+0.91 mm
   caliper reads as a small X-long, Y-true anisotropy - the scale sheet
   remains the clean measurement.
-- The reproducible ~0.6 mm registration residual is now the next
-  constant-nudge candidate; a direction fix needs the +X mark (or a jog
-  observation) from the operator.
+- **Direction resolved and correction applied (operator, evening):** the end
+  tags point toward machine +Y, so the replays sitting opposite the tags put
+  the true axis about 0.6 mm toward -Y of the registered origin
+  (`e(180) = 2C` with `C = (0, -0.6) mm`). Applied
+  `#<axis_center_correction_y>` 0.9 -> 0.3 (`RPSW-20261014-002`), X
+  unchanged. Expected: the replays collapse onto the reference within
+  registration reproducibility; if the centre magnet is on the axis, the
+  park now sits about 0.6 mm off the magnet (attribution datum, not a
+  fault).

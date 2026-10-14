@@ -61,6 +61,13 @@ o005 endif
 (0.900 mm north of the parked G54 X0 Y0, so X totals 2.45 and Y 0.9. It is)
 (subtracted from sensor_to_pen in the G10 write below because the origin is)
 (centroid - written.)
+(Refined 2026-10-14 evening: the tagged line-replay test, with the tag)
+(direction confirmed as +Y, places the true axis 0.6 mm toward -Y of the)
+(registered origin - 90/270 deg replays land 0.6 mm off the reference and)
+(180 deg at 1.2 mm = 2 x the step, reproduced across two runs. Y therefore)
+(drops by 0.6 to 0.3; X unchanged. If the centre magnet is on the axis the)
+(park now sits about 0.6 mm off that magnet - that offset is the open)
+(magnet-versus-chain attribution, not a fault.)
 (Kept separate from sensor_to_pen because the cause is not yet distinguished:)
 (either the embedded centre magnet sits off the axis, or the pen/TMAG X value is)
 (wrong. Run Q5 with the bed at A0 and again 180 degrees away - if the two)
@@ -68,7 +75,7 @@ o005 endif
 (vector; if they match, the correction belongs in sensor_to_pen_x instead and)
 (these constants return to zero. That test is still pending.)
 #<axis_center_correction_x> = 2.45
-#<axis_center_correction_y> = 0.9
+#<axis_center_correction_y> = 0.3
 (Candidate Q3 rectangle: measured by jog in G54, converted to G53 MPos.)
 (Q0 uses this verified rectangle; Q3 remains separately locked.)
 #<scan_min_x> = -280.0
