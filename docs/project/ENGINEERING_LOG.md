@@ -62,6 +62,11 @@
   (`RPSW-20261014-002`), with the expected ~0.6 mm park shift off the magnet
   recorded as the open attribution datum; re-run the line replay to verify
   the collapse.
+- Closed the same evening: the Y 0.3 `P100.macro` went onto the controller SD
+  card and the operator confirms the result looks correct ("it looks fine
+  now") - item closed with `RPSW-20261014-002` marked verified. The
+  replays-collapse check rides along with the next line-replay run; the
+  magnet-versus-chain attribution and the scale sheet stay open.
 - Next action: confirm the sheet's +X orientation, caliper the 112/96 mm
   Y-direction lines, add a close-up photo next run, run the X/Y scale sheet,
   then apply a registration-constant nudge for the ~0.60 mm offset if

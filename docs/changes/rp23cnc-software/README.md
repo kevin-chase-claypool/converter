@@ -9,7 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
-| 2026-10-14 | `RPSW-20261014-002` | implemented | [Axis-centre correction refined from the line-replay test: Y 0.9 -> 0.3](2026/2026-10-14-axis-centre-refinement-y-0-3.md) | `grblhal`, `macro`, `p100`, `registration`, `calibration`, `drift` |
+| 2026-10-14 | `RPSW-20261014-002` | verified | [Axis-centre correction refined from the line-replay test: Y 0.9 -> 0.3](2026/2026-10-14-axis-centre-refinement-y-0-3.md) | `grblhal`, `macro`, `p100`, `registration`, `calibration`, `drift` |
 | 2026-10-14 | `RPSW-20261014-001` | implemented | [Axis-centre correction re-measured by registered jog: X 2.45, Y 0.9](2026/2026-10-14-axis-centre-correction-registered-jog.md) | `grblhal`, `macro`, `p100`, `registration`, `calibration`, `drift` |
 | 2026-10-13 | `WSW-20261013-010` | implemented | [Park the bed across reversal-dense stretches](../windows-software/2026/2026-10-13-bed-reversal-parking.md) | `a-axis`, `reversal`, `scallop`, `outline`, `parking` |
 | 2026-10-13 | `WSW-20261013-009` | verified | [Back-of-head bed-parked A/B test](../windows-software/2026/2026-10-13-headback-parked-test.md) | `a-axis`, `reversal`, `backlash`, `outline`, `verification` |

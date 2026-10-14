@@ -109,3 +109,8 @@ Photo `PXL_20261014_211653708.jpg` (3072x4080; paper-derived scale
   registration reproducibility; if the centre magnet is on the axis, the
   park now sits about 0.6 mm off the magnet (attribution datum, not a
   fault).
+- **Closed (2026-10-14 evening):** the Y 0.3 `P100.macro` was copied to the
+  controller SD card; the operator confirms the result looks correct and
+  closed the item. The replays-collapse check rides along with the next
+  line-replay run; the magnet-versus-chain attribution and the X/Y scale
+  sheet remain open.

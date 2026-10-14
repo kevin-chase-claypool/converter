@@ -264,7 +264,9 @@ reference and 180 deg at 1.2 mm - 2 x the step - reproduced across two runs.
 The Y correction therefore drops `0.9` -> `0.3`; X is unchanged. If the
 centre magnet sits on the axis, the park now lands about 0.6 mm off the
 magnet - that offset is the open magnet-versus-chain attribution, not a new
-fault; `G65 P100 Q5` at A0/A180 settles it.
+fault; `G65 P100 Q5` at A0/A180 settles it. The constants were applied on
+the controller on 2026-10-14 and the operator confirms the result looks
+correct.
 
 Two further notes from the same edit. `P103.macro` mirrors P100's initialization
 and now carries the two new constants. And the `sensor_to_pen` comment in P100

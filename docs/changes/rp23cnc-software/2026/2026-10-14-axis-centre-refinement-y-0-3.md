@@ -5,7 +5,7 @@ category: rp23cnc-software
 affected_categories:
   - rp23cnc-software
   - hardware
-status: implemented
+status: verified
 components:
   - firmware/grblhal/macros/P100.macro
   - tools/validate_homing_macro.py
@@ -62,11 +62,12 @@ is the +Y") resolved the sign that photographs alone could not.
 - `python tools\validate_homing_macro.py` - P100/P115 validation passed.
 - `python tools\docs_index.py --write` / `--check` - indexes regenerated and
   valid.
-- **Pending:** upload `P100.macro`, run `G65 P113`, then re-run
-  `samples/gcode/a-line-replay-test.gcode`: the replays should collapse onto
-  the reference within registration reproducibility (~0.1 mm). Also inspect
-  where the park sits relative to the centre magnet and report the offset
-  direction - that is the attribution datum.
+- **Applied and closed (2026-10-14):** the revised `P100.macro` was copied to
+  the controller SD card, and the operator confirms the result looks correct
+  ("it looks fine now") and closed the item. The replays-collapse check
+  rides along with the next line-replay run rather than gating the close.
+- Still open separately: the magnet-versus-chain attribution (`G65 P100 Q5`
+  at A0/A180) and the X/Y scale-sheet measurement.
 
 ## Struggles and rejected approaches
 
