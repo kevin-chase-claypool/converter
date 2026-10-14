@@ -1,5 +1,34 @@
 # Engineering Log
 
+<a id="elog-20261014-tilt-pairs-test"></a>
+### 🟨 2026-10-14 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Bed-tilt quadrant pair test for caliper reading
+
+- Request: "i want to do a drawing test ... the bed's tilt is what causes the
+  line ... to either be drawn directly on top of the other line ... or
+  offset ... i want to do several of these ... with an identifier that shows
+  which quadrant is being measured ... one of the quadrants is the constant
+  while the other 3 get measured ... i will measure their offset using
+  calipers."
+- Change: built `tools/make_a_tilt_pairs_test.py` +
+  `samples/gcode/a-tilt-pairs-test.gcode`. Four separated pairs at the SW,
+  SE, NE and NW spots; each pair draws the same paper segment at A=0
+  (constant, 80 mm) and at that pair's angle (test, 66 mm); a zigzag label
+  counts the angle (1/2/3/4 teeth = control/90/180/270) and the longer line
+  of a pair is always the constant.
+- Context: the offset between a pair's lines appears through the carriage
+  runout coupling - a bed-height difference becomes a lateral shift - so the
+  pair offsets are the right thing to minimize, with the control pair as the
+  baseline; the gauge gap-map stays the direct Z measurement if the coupling
+  turns out quiet.
+- Verification: generator self-checks pass (12 strokes, A 0/90/180/270, max
+  radius 110.1 mm, layout fits the sheet on the bed and clears the earlier
+  ink); docs checks pass. Bench run and caliper readings pending.
+- Next action: run on the same sheet, caliper each pair by tooth count
+  (middle gap plus both end overhangs), make one rail-end adjustment, re-run,
+  and compare.
+- Evidence: `WSW-20261014-003`; `samples/gcode/a-tilt-pairs-test.gcode`.
+- Category: windows-software, hardware, bed, tilt, a-axis, diagnostic.
+
 <a id="elog-20261014-gap-map-sheet-run"></a>
 ### 🟨 2026-10-14 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Gauge gap-map set for the sheet-on-bed tilt scan
 

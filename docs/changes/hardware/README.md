@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-14 | `WSW-20261014-003` | implemented | [Bed-tilt quadrant pair test: four labeled A=0-versus-angle line pairs](../windows-software/2026/2026-10-14-a-tilt-pairs-test.md) | `bed`, `tilt`, `a-axis`, `diagnostic`, `calibration` |
 | 2026-10-14 | `WSW-20261014-002` | implemented | [Gap-map generator: configurable radii and step, matching readings CSV, sheet-fit run](../windows-software/2026/2026-10-14-gap-map-sheet-run.md) | `bed`, `tilt`, `gap-map`, `diagnostic`, `calibration` |
 | 2026-10-14 | `WSW-20261014-001` | implemented | [Bed-angle line-replay test: origin line as the constant, quadrant replays against it](../windows-software/2026/2026-10-14-a-line-replay-test.md) | `a-axis`, `bed`, `tilt`, `replay`, `registration`, `diagnostic` |
 | 2026-10-14 | `RPSW-20261014-002` | verified | [Axis-centre correction refined from the line-replay test: Y 0.9 -> 0.3](../rp23cnc-software/2026/2026-10-14-axis-centre-refinement-y-0-3.md) | `grblhal`, `macro`, `p100`, `registration`, `calibration`, `drift` |

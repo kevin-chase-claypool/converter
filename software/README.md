@@ -104,6 +104,17 @@ Cycle Start with the pen loaded:
   the finest pen (Micron 003) and read under a loupe or a close-up photo.
   Run after HOME + registration. Regenerate with
   `..\tools\make_a_line_replay_test.py`.
+- `..\samples\gcode\a-tilt-pairs-test.gcode` - four separated line pairs for
+  a caliper-read bed-tilt check: each pair is the same paper segment drawn
+  twice, once at A=0 (the longer 80 mm constant line) and once at that
+  pair's angle (the shorter 66 mm test line); the two should land on top of
+  each other. A zigzag label above each pair counts the angle - 1 tooth =
+  control, 2 = 90 deg, 3 = 180, 4 = 270 - and the control pair is the
+  constant quadrant the others are read against. Measure the middle gap and
+  both end overhangs with calipers; adjust the rail ends until the pairs
+  collapse onto the control. Fits the sheet already on the bed and clears
+  the earlier test's ink. Regenerate with
+  `..\tools\make_a_tilt_pairs_test.py`.
 - `..\samples\gcode\xy-scale-check.gcode` - measures the X/Y axis scale
   directly with the bed parked (the program contains no A words): a 200 mm
   ruler along each machine axis with marks every 50 mm, plus a 120 mm square
