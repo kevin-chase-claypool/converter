@@ -56,16 +56,19 @@ o005 endif
 #<sensor_to_pen_y> = -29.4892
 (Axis-centre correction: how far, in machine X/Y, the registered origin must move)
 (to sit on the bed's true rotation axis. Reported 2026-10-01 as 1.25 mm on the)
-(minus-X side, so the origin moves +1.25. It is subtracted from sensor_to_pen in)
-(the G10 write below because the origin is centroid - written.)
+(minus-X side, so the origin moves +1.25. Updated 2026-10-14 from a registered)
+(jog after G65 P113: the pen tip was centred on the magnet 1.200 mm east and)
+(0.900 mm north of the parked G54 X0 Y0, so X totals 2.45 and Y 0.9. It is)
+(subtracted from sensor_to_pen in the G10 write below because the origin is)
+(centroid - written.)
 (Kept separate from sensor_to_pen because the cause is not yet distinguished:)
 (either the embedded centre magnet sits off the axis, or the pen/TMAG X value is)
 (wrong. Run Q5 with the bed at A0 and again 180 degrees away - if the two)
 (centroids differ it is the magnet, and half the X/Y difference is the off-axis)
 (vector; if they match, the correction belongs in sensor_to_pen_x instead and)
 (these constants return to zero. That test is still pending.)
-#<axis_center_correction_x> = 1.25
-#<axis_center_correction_y> = 0.0
+#<axis_center_correction_x> = 2.45
+#<axis_center_correction_y> = 0.9
 (Candidate Q3 rectangle: measured by jog in G54, converted to G53 MPos.)
 (Q0 uses this verified rectangle; Q3 remains separately locked.)
 #<scan_min_x> = -280.0

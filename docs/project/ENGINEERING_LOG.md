@@ -1,5 +1,46 @@
 # Engineering Log
 
+<a id="elog-20261014-pen-centre-jog-correction"></a>
+### 🟨 2026-10-14 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - Registered pen-centre jog sets the P100 correction to X 2.45, Y 0.9
+
+- Request chain: "i want to modify my pen offset. where does this pen offset
+  occur? p100?" -> "after registration can i jog it to the exact center, give
+  you the number of the DRO and you adjust our pen offset based on the
+  difference" -> operator supplied the park and post-jog DROs.
+- Measurement: after `G65 P113`, the park read G54 `X-0.005 Y0.004`; the
+  operator jogged the pen tip exactly onto the centre magnet and kept
+  `X1.195 Y0.904`. These two readings are the operator-designated basis. Jog
+  delta: +1.200 mm X east, +0.900 mm Y north.
+- Change: `P100.macro` `#<axis_center_correction_x/y>` 1.25/0.0 -> 2.45/0.9.
+  The registration write now produces `G10 L20 P1 X-2.45 Y-30.3892` at the
+  centroid, so parked `G54 X0 Y0` moves by the full jog. The delta stays in
+  the axis-centre constants, not `sensor_to_pen`, because the jog measures
+  where the registered origin must sit; the pen-offset equivalent
+  `(-1.200, -30.3892)` is within 0.3 mm of the historical `-30.100`
+  measurement and remains the alternative attribution pending the Q5 A0/A180
+  test.
+- Sign: the jog *adds* to the correction because the registration write
+  subtracts it from `sensor_to_pen`; the validator model
+  (`origin = centroid - written`) and the 2026-10-01 `+1.25` update reproduce
+  the direction.
+- Conflict recorded: the 2026-10-13/14 jog-based deltas (2.0/1.44) and this
+  10-14 jog (1.200/0.900) differ by about 1 mm, and the G54 form of the 10-13
+  correction did not collapse the a-center-test tick bundle; the X/Y scale
+  sheet reading is still pending, so a constant update alone may not collapse
+  the plots.
+- Verification: `python tools\check_macros.py` and
+  `python tools\validate_homing_macro.py` pass. Bench acceptance pending:
+  after uploading the macro and re-running `G65 P113`, the magnet under the
+  lifted pen must stay centred through a bed rotation, or the a-center-test
+  tick bundle must collapse.
+- Evidence: `RPSW-20261014-001`;
+  `docs/report/lab-notes/2026-10-14-registered-pen-centre-jog.md`; operator
+  ioSender DRO readings, 2026-10-14.
+- Category: rp23cnc-software, hardware, grblhal, macro, registration,
+  calibration.
+- Next action: upload `P100.macro`, re-run `G65 P113`, run the magnet/rotation
+  acceptance check, then read the X/Y scale sheet before trusting a full fix.
+
 <a id="elog-20261013-steps-per-mm-check-sheet-for-x-and-y"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - Steps-per-mm check sheet for X and Y
 

@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-14 | `RPSW-20261014-001` | rp23cnc-software, hardware | implemented | [Axis-centre correction re-measured by registered jog: X 2.45, Y 0.9](rp23cnc-software/2026/2026-10-14-axis-centre-correction-registered-jog.md) |
 | 2026-10-13 | `WSW-20261013-015` | windows-software, hardware | implemented | [X/Y machine-scale check sheet](windows-software/2026/2026-10-13-xy-scale-check.md) |
 | 2026-10-13 | `WSW-20261013-014` | windows-software, hardware | implemented | [Bed-rotation-centre test](windows-software/2026/2026-10-13-a-center-test.md) |
 | 2026-10-13 | `WSW-20261013-013` | windows-software, hardware | verified | [A-axis ratio / directional deadband test](windows-software/2026/2026-10-13-a-ratio-deadband-test.md) |

@@ -214,8 +214,8 @@ installed pen/TMAG offset. Two constants sit between those values and the
 `G10 L20` write:
 
 ```text
-#<axis_center_correction_x> = 1.25
-#<axis_center_correction_y> = 0.0
+#<axis_center_correction_x> = 2.45
+#<axis_center_correction_y> = 0.9
 ...
 G10 L20 P1 X[[#<sensor_to_pen_x> - #<axis_center_correction_x>]] Y[[#<sensor_to_pen_y> - #<axis_center_correction_y>]]
 ```
@@ -233,12 +233,28 @@ and prints it, so the `MPos` reading each time is the centroid. If the two
 centroids differ, the magnet is off the axis and half the X/Y difference is the
 off-axis vector, so the correction stays. If they match, the error is in
 `sensor_to_pen_x`, the correction returns to zero, and that value is corrected
-instead. **Verified without that test**: with the correction in place, a magnet
-held directly under the lifted pen stayed centred while the bed rotated, which
-puts the registered origin on the rotation axis. The attribution test itself was
-deliberately skipped, so treat 1.25 as a verified correction rather than a
-measured off-axis vector - if the magnet is ever re-seated, run the two surveys
-before trusting the constant.
+instead. **Verified without that test**: with the `1.25` correction in place, a
+magnet held directly under the lifted pen stayed centred while the bed rotated,
+which puts the registered origin on the rotation axis. The attribution test
+itself was deliberately skipped, so treat the correction as a reported value
+rather than a measured off-axis vector - if the magnet is ever re-seated, run
+the two surveys before trusting it.
+
+**2026-10-14 update.** A fresh registered jog raised the totals to X `2.45`, Y
+`0.9`. After `G65 P113` parked at G54 `X0 Y0`, the operator jogged the pen tip
+exactly onto the centre magnet and kept the ioSender DRO reading `X1.195 Y0.904`
+against a park reading of `X-0.005 Y0.004`: a delta of +1.200 mm X and
++0.900 mm Y. These two readings are the operator-designated basis for the
+update. The jog delta is *added* to the correction, because the register write
+subtracts it from `sensor_to_pen`; the pen-offset equivalent would be
+`sensor_to_pen = (-1.200, -30.3892)`, within 0.3 mm of the historical `-30.100`
+Y measurement, which is recorded for the still-pending attribution test. The
+2026-10-13/14 centre-test session had measured 2.0/1.44 mm and found that a G54
+form of that correction did not collapse the eight-angle tick bundle, so that
+session and this measurement differ by about 1 mm and a constant update alone
+may not fix the plots - the X/Y scale-sheet measurement is the other open
+evidence. Physical acceptance of this update (magnet under the rotated bed, or
+`center-registration-check.gcode`) has not been run yet.
 
 Two further notes from the same edit. `P103.macro` mirrors P100's initialization
 and now carries the two new constants. And the `sensor_to_pen` comment in P100

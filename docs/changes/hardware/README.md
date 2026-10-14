@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-14 | `RPSW-20261014-001` | implemented | [Axis-centre correction re-measured by registered jog: X 2.45, Y 0.9](../rp23cnc-software/2026/2026-10-14-axis-centre-correction-registered-jog.md) | `grblhal`, `macro`, `p100`, `registration`, `calibration`, `drift` |
 | 2026-10-13 | `WSW-20261013-015` | implemented | [X/Y machine-scale check sheet](../windows-software/2026/2026-10-13-xy-scale-check.md) | `xy`, `scale`, `steps-per-mm`, `squareness`, `diagnostic` |
 | 2026-10-13 | `WSW-20261013-014` | implemented | [Bed-rotation-centre test](../windows-software/2026/2026-10-13-a-center-test.md) | `a-axis`, `centre-of-rotation`, `registration`, `diagnostic` |
 | 2026-10-13 | `WSW-20261013-013` | verified | [A-axis ratio / directional deadband test](../windows-software/2026/2026-10-13-a-ratio-deadband-test.md) | `a-axis`, `ratio`, `deadband`, `diagnostic` |
