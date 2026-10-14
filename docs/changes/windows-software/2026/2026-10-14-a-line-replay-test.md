@@ -65,13 +65,20 @@ cannot do.
   angle in `--angles` (default quadrant angles 90/180/270, each 8 mm shorter
   in total length than the previous), then the closing A=0 pass (8 mm longer
   than the controls), which also exercises the A reversal.
+- Every pass also draws a short perpendicular tag at both ends
+  (`--tag-length`, default 4 mm; `--no-tags` disables). The tags sit at the
+  same staggered positions as the line ends, so a line can be followed from
+  its tag even when the middle of the cluster overlaps other lines - added
+  after the first bench run, where merged middles made visual attribution
+  hard.
 - Rotation mapping is identical to the centre test: machine position is the
   paper-frame point rotated by the bed angle, and A is the bed angle times
   the measured 12.03324 ratio.
 - Options: `--half-length`, `--replay-half-length`, `--angles`,
   `--control-passes`, `--replay-step` (0 disables the length stepping),
-  `--closing` / `--no-closing`, `--line-angle`, `--feed` (default F350). A
-  finer shape read is one flag away:
+  `--tags` / `--no-tags`, `--tag-length`, `--closing` / `--no-closing`,
+  `--line-angle`, `--feed` (default F350). A finer shape read is one flag
+  away:
   `--angles 45,90,135,180,225,270,315`; a single replay can be re-run for
   identification with e.g. `--angles 90`.
 - The M3/M5 stations use the same `G65 P115` handshakes as the centre test,
@@ -80,9 +87,10 @@ cannot do.
 ## Verification
 
 - Generator self-checks pass: 7 passes (origin 1, control 2, replays 3,
-  closing 1), 68 lines, balanced parentheses, A range 0..3248.97 motor deg,
-  maximum commanded radius 70 mm; the length code prints as origin 140,
-  control 120, replays 112/104/96, closing 128.
+  closing 1) with 21 drawing moves and 4 mm end tags on every pass, 83
+  lines, balanced parentheses, A range 0..3248.97 motor deg, maximum
+  commanded radius 70 mm; the length code prints as origin 140, control 120,
+  replays 112/104/96, closing 128.
 - `python tools\check_gcode_motion.py samples\gcode\a-line-replay-test.gcode`
   reports 0.00 deg of bed rotation inside any drawing move and 4 pen-up
   repositions carrying A as bare `G0` rapids - by design and the same motion
@@ -106,10 +114,12 @@ cannot do.
   quadrant. The replays now carry the stepped end-length code (8 mm total per
   step) and the closing pass is 8 mm longer than the controls, so even the
   reference band is attributable.
-- Labelling ticks attached to each line were reconsidered and rejected: the
-  length code adds no ink inside the measurement band and cannot drift out of
-  step with the line it labels. A single angle can still be replayed alone
-  (`--angles 90`).
+- Labelling ticks attached to each line were first rejected, then adopted
+  after the first bench run showed merged middles: the tags are perpendicular
+  end strokes, so they add no ink inside the measurement band and cannot
+  drift out of step with the line they label (operator: "i dont know how to
+  give you that information when lines are overwriting lines"). A single
+  angle can still be replayed alone (`--angles 90`).
 
 ## Risks and follow-up
 

@@ -26,10 +26,13 @@ identifiable with calipers (total lengths for the defaults):
   reversal.
 
 Reading: a constant gap between a replay and the origin is that quadrant's
-offset; a fan opening at the ends is rotation about the centre. Measure the
-gap with calipers or a straight-down photo; a caliper across a line's ends
-reads its total length and attributes it to the right angle. Adjust the bed
-tilt rail ends and re-run until the lines collapse.
+offset; a fan opening at the ends is rotation about the centre. Every pass
+also draws a short perpendicular ``tag`` at both ends (``--tag-length``,
+default 4 mm; ``--no-tags`` draws bare lines). The tags sit at the same
+staggered positions as the line ends, so each line can be followed from its
+tag even where the middle of the cluster overlaps other lines - no tracing
+needed to attribute a line to its angle. Adjust the bed tilt rail ends and
+re-run until the lines collapse.
 
 Requires HOME + bed registration, so G54 X0 Y0 is the physical bed centre.
 
@@ -93,6 +96,15 @@ def main() -> None:
              "staircase identifies it (default 4 mm; 0 disables)",
     )
     parser.add_argument(
+        "--tags", action=argparse.BooleanOptionalAction, default=True,
+        help="draw a short perpendicular tag at both ends of every pass "
+             "(default on)",
+    )
+    parser.add_argument(
+        "--tag-length", type=float, default=4.0, dest="tag_length",
+        help="tag length in mm (default 4)",
+    )
+    parser.add_argument(
         "--line-angle", type=float, default=0.0, dest="line_angle",
         help="paper-frame direction of the line in degrees (default 0, along X)",
     )
@@ -112,6 +124,8 @@ def main() -> None:
         raise SystemExit("control passes cannot be negative")
     if args.replay_step < 0:
         raise SystemExit("replay step cannot be negative")
+    if args.tag_length < 0:
+        raise SystemExit("tag length cannot be negative")
 
     replay_halves = [
         args.replay_half - args.replay_step * (index + 1)
@@ -131,11 +145,22 @@ def main() -> None:
 
     direction = math.radians(args.line_angle)
     ux, uy = math.cos(direction), math.sin(direction)
+    tag_length = args.tag_length if args.tags else 0.0
+    perp_x, perp_y = -uy, ux
 
-    def pass_points(half: float, theta_deg: float) -> tuple[float, float, float, float]:
-        x0, y0 = to_machine(-half * ux, -half * uy, theta_deg)
-        x1, y1 = to_machine(half * ux, half * uy, theta_deg)
-        return x0, y0, x1, y1
+    def stroke_points(half: float, theta_deg: float) -> list[tuple[float, float]]:
+        paper: list[tuple[float, float]] = []
+        if tag_length > 0.0:
+            paper.append(
+                (-half * ux + tag_length * perp_x, -half * uy + tag_length * perp_y)
+            )
+        paper.append((-half * ux, -half * uy))
+        paper.append((half * ux, half * uy))
+        if tag_length > 0.0:
+            paper.append(
+                (half * ux + tag_length * perp_x, half * uy + tag_length * perp_y)
+            )
+        return [to_machine(bx, by, theta_deg) for (bx, by) in paper]
 
     lines: list[str] = []
     lines.append("(bed-angle line-replay test - make_a_line_replay_test.py)")
@@ -157,6 +182,11 @@ def main() -> None:
         length_bits.append("closing %s" % fmt(closing_half * 2))
     length_code = ", ".join(length_bits)
     lines.append("(identification by total length in mm: %s)" % length_code)
+    if tag_length > 0.0:
+        lines.append(
+            "(every pass carries a %s mm perpendicular tag at both ends; the "
+            "tag ladder repeats the length order)" % fmt(tag_length)
+        )
     lines.extend(
         ["G21", "G90", "G94", "G17", "G54", "G0 F3000", "M5", "G65 P115 Q0 A1 W2"]
     )
@@ -166,18 +196,22 @@ def main() -> None:
     def draw_pass(label: str, theta_deg: float, half: float) -> None:
         nonlocal first_down
         a = theta_deg * RATIO
-        x0, y0, x1, y1 = pass_points(half, theta_deg)
+        points = stroke_points(half, theta_deg)
         lines.append(
             "(%s: bed angle %s deg, half length %s)"
             % (label, fmt(theta_deg), fmt(half))
         )
-        lines.append("G0 X%s Y%s A%s" % (fmt(x0), fmt(y0), fmt(a)))
+        lines.append(
+            "G0 X%s Y%s A%s" % (fmt(points[0][0]), fmt(points[0][1]), fmt(a))
+        )
         lines.append("M3")
         lines.append("G65 P115 Q1 B12 A1 W2" if first_down else "G65 P115 Q1 A1 W2")
         first_down = False
-        lines.append(
-            "G1 X%s Y%s A%s F%s" % (fmt(x1), fmt(y1), fmt(a), fmt(args.feed))
-        )
+        for index, (point_x, point_y) in enumerate(points[1:]):
+            feed = " F%s" % fmt(args.feed) if index == 0 else ""
+            lines.append(
+                "G1 X%s Y%s A%s%s" % (fmt(point_x), fmt(point_y), fmt(a), feed)
+            )
         lines.append("M5")
         lines.append("G65 P115 Q1 A1 W2")
 
@@ -226,9 +260,20 @@ def main() -> None:
         raise SystemExit(
             "expected %d drawing passes, generated %d" % (passes, len(a_values))
         )
+    all_move = re.compile(r"^G1 X")
+    g1_count = sum(1 for line in lines if all_move.match(line))
+    expected_g1 = passes * (3 if tag_length > 0.0 else 1)
+    if g1_count != expected_g1:
+        raise SystemExit(
+            "expected %d drawing moves, generated %d" % (expected_g1, g1_count)
+        )
     print(
         "passes: %d (origin 1, control %d, replays %d, closing %d)"
         % (passes, args.control_passes, len(angles), 1 if args.closing else 0)
+    )
+    print(
+        "tags: %s at both ends"
+        % ("%s mm" % fmt(tag_length) if tag_length > 0.0 else "off")
     )
     print("identification by total length in mm: %s" % length_code)
     print("A range %.1f..%.1f motor deg" % (min(a_values), max(a_values)))

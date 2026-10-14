@@ -40,6 +40,12 @@
   2 x 0.602, the signature of a residual registration-centre offset of about
   0.60 mm perpendicular to the line. Bench acceptance still open; see
   `docs/report/lab-notes/2026-10-14-line-replay-first-run.md`.
+- Follow-up the same day (operator: "i dont know how to give you that
+  information when lines are overwriting lines"): every pass now draws a
+  4 mm perpendicular tag at both ends (`--tags` default on, `--tag-length`,
+  `--no-tags` for bare lines), so each line remains attributable from its
+  tag ladder even where cluster middles merge. Sample regenerated (7 passes,
+  21 drawing moves); README and change note updated.
 - Next action: confirm the sheet's +X orientation, caliper the 112/96 mm
   Y-direction lines, add a close-up photo next run, run the X/Y scale sheet,
   then apply a registration-constant nudge for the ~0.60 mm offset if
