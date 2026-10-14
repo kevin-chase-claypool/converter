@@ -18,9 +18,9 @@
   (consistent with the static ~1 mm map). The frame term is no longer the
   explanation.
 - Change: `make_a_tilt_pairs_test.py` gains `--station-shift-y` (and
-  `--station-rot`); the committed sample now uses
-  `--station-shift-y -25` so the re-run lands on clean rows on the same
-  sheet.
+  `--station-rot`). The operator flipped the sheet after the run, so the
+  committed sample keeps the original layout and the next run repeats it on
+  the now-blank other side; the shift options serve later re-runs.
 - Next action: feeler the tip-to-paper gap at the four spots, adjust the
   rail ends (raise where the gap is small, lower where it is large), re-run
   the pairs on the shifted stations and compare; caliper cross-check 180 deg

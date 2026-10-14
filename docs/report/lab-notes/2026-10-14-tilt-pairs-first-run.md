@@ -67,9 +67,10 @@ term is no longer the explanation.
 
 ## Decisions and next action
 
-- The generator gains `--station-shift-y`; the committed sample is
-  regenerated with `--station-shift-y -25` so the next run uses clean rows
-  (y = +25 and -75) on the same sheet.
+- The operator flipped the sheet after the run, so the next run repeats the
+  original station layout on the now-blank other side - a directly
+  comparable before/after. The generator gains `--station-shift-y` for
+  later re-runs once that side fills up.
 - Next: feeler-gauge the tip-to-paper gap at the four spots with the pen up
   to pin which corner is high or low and by how much; adjust the rail ends -
   raise the end where the gap is small, lower it where the gap is large,
