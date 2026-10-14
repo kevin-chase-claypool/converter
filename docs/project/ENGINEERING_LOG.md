@@ -32,9 +32,18 @@
   the replays now carry a stepped end-length code - 8 mm total per step,
   `--replay-step`, 0 disables - and the closing pass is 8 mm longer than the
   controls, so every line in the cluster is attributable without extra marks.
-- Next action: run on the bench with the Micron 003 after HOME +
-  registration; tilt the rail ends until the replays collapse onto the
-  origin. If a residual remains, it belongs to the runout/warp fork
+- First bench run the same day (photo `PXL_20261014_210030743.jpg`): operator
+  calipers read the two X-direction lines long (origin 140.78 mm vs nominal
+  140; the 180 deg replay 104.91 mm vs nominal 104). Photo analysis at
+  11.635 px/mm resolves the reference group, a line at 0.602 mm and a line
+  at 1.204 mm - 90 and 270 deg coincide at 0.602 mm and 180 deg sits at
+  2 x 0.602, the signature of a residual registration-centre offset of about
+  0.60 mm perpendicular to the line. Bench acceptance still open; see
+  `docs/report/lab-notes/2026-10-14-line-replay-first-run.md`.
+- Next action: confirm the sheet's +X orientation, caliper the 112/96 mm
+  Y-direction lines, add a close-up photo next run, run the X/Y scale sheet,
+  then apply a registration-constant nudge for the ~0.60 mm offset if
+  confirmed. If a residual survives that, it belongs to the runout/warp fork
   (`HW-20261011-001`) and the polar probe is the separating measurement.
 - Evidence: `WSW-20261014-001`; `tools/make_a_line_replay_test.py`;
   `samples/gcode/a-line-replay-test.gcode`.

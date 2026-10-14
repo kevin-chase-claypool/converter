@@ -88,8 +88,13 @@ cannot do.
   repositions carrying A as bare `G0` rapids - by design and the same motion
   pattern as `a-center-test.gcode`; that guard tool targets print files, not
   diagnostic replays.
-- **Pending:** the bench run. It needs HOME + registration first, so G54 X0
-  Y0 is the physical bed centre.
+- **First bench run (2026-10-14):** most passes coincide; the photo analysis
+  resolves the reference group plus a line at 0.602 mm and a line at
+  1.204 mm - 90 and 270 deg coincide at 0.602 mm and 180 deg sits at
+  2 x 0.602 - i.e. a residual registration-centre offset of about 0.60 mm
+  perpendicular to the line. Operator calipers read the two X-direction
+  lines long (140.78/140 = +0.56 percent, 104.91/104 = +0.88 percent). See
+  `docs/report/lab-notes/2026-10-14-line-replay-first-run.md`.
 
 ## Struggles and rejected approaches
 
