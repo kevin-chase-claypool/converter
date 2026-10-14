@@ -59,6 +59,9 @@ labeled pairs give one clean measurement per quadrant.
   proven full-retract + park trailer.
 - The layout spans about +-90 mm in X and +-62 mm in Y, fits the sheet on
   the bed, and clears the earlier test's ink at y = 0.
+- `--station-shift-y` (and `--station-rot`) move the station rows so a
+  re-run after an adjustment lands on clean paper on the same sheet; the
+  committed sample uses `--station-shift-y -25` (rows at y = +25 / -75).
 
 ## Verification
 
@@ -66,8 +69,16 @@ labeled pairs give one clean measurement per quadrant.
   A values 0/90/180/270, balanced parentheses, max commanded radius
   110.1 mm.
 - `python tools\docs_index.py --write` / `--check` - indexes valid.
-- **Pending:** the bench run and the caliper readings, then one rail-end
-  adjustment and a re-run to confirm the pairs shrink toward the control.
+- **First bench run (2026-10-14):** on the freshly registered sheet (new P100
+  Y 0.3, park magnet-verified) the control pair printed on top of itself
+  (<=0.15 mm); 90 deg ~0.6-0.7 mm lens-shaped; 180 deg ~1.0-1.2 mm with a
+  slight taper; 270 deg ~0.3-0.6 mm opening to ~0.8-1.1 mm. The ladder
+  ratio repeats the pre-fix frame values, but the frame was re-registered
+  and magnet-checked and every non-control pair tapers along the line - the
+  residual matches the bed-height-vs-angle mechanism through the pen
+  carriage instead. The sample was regenerated with
+  `--station-shift-y -25` for the next run; see
+  `docs/report/lab-notes/2026-10-14-tilt-pairs-first-run.md`.
 
 ## Struggles and rejected approaches
 

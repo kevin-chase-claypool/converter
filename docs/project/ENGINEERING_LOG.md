@@ -1,5 +1,34 @@
 # Engineering Log
 
+<a id="elog-20261014-tilt-pairs-first-run"></a>
+### 🟨 2026-10-14 - HARDWARE/MEASURED - Tilt-pair first run: 0.6/1.1 mm ladder with taper - frame ruled out, tilt signal found
+
+- Setup: re-registered with the new P100 (Y 0.3) and magnet-verified that
+  the pen parks at the magnet centre; the four labeled pairs were then drawn
+  on the same sheet (photo `PXL_20261014_215907601.jpg`, front-camera
+  mirrored; operator confirmed +X jogs image-right).
+- Result: control pair on top of itself (<=0.15 mm); 90 deg ~0.6-0.7 mm
+  lens-shaped; 180 deg ~1.0-1.2 mm with a slight taper; 270 deg ~0.3-0.6 mm
+  opening to ~0.8-1.1 mm. The single/double ladder ratio repeats the pre-fix
+  frame values - but the frame was freshly registered and magnet-verified,
+  and every non-control pair tapers along the line, which a frame offset
+  cannot do.
+- Interpretation: the residual matches the bed-height-vs-angle mechanism
+  through the pen carriage, roughly 1 percent along the NE-SW diagonal
+  (consistent with the static ~1 mm map). The frame term is no longer the
+  explanation.
+- Change: `make_a_tilt_pairs_test.py` gains `--station-shift-y` (and
+  `--station-rot`); the committed sample now uses
+  `--station-shift-y -25` so the re-run lands on clean rows on the same
+  sheet.
+- Next action: feeler the tip-to-paper gap at the four spots, adjust the
+  rail ends (raise where the gap is small, lower where it is large), re-run
+  the pairs on the shifted stations and compare; caliper cross-check 180 deg
+  ~1.0-1.2 mm and 90 deg ~0.6-0.7 mm.
+- Evidence: `WSW-20261014-003`; `samples/gcode/a-tilt-pairs-test.gcode`;
+  `docs/report/lab-notes/2026-10-14-tilt-pairs-first-run.md`.
+- Category: hardware, windows-software, bed, tilt, a-axis, diagnostic.
+
 <a id="elog-20261014-tilt-pairs-test"></a>
 ### 🟨 2026-10-14 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Bed-tilt quadrant pair test for caliper reading
 

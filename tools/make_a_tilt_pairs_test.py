@@ -17,6 +17,13 @@ pair carries a zigzag tick label above it whose number of teeth says the
 tested angle: 1 = 0 deg (control, A0 drawn twice), 2 = 90, 3 = 180,
 4 = 270 deg.
 
+``--station-shift-y`` shifts the four station positions up or down so a
+re-run after an adjustment lands on clean paper on the same sheet:
+``--station-shift-y -25`` puts the layout between the previous rows and
+uses clean bands. ``--station-rot`` rotates the stations about the sheet
+centre when there is room - the X lines extend 40 mm past each station, so
+keep the rotated stations' x positions modest.
+
 Reading: for each pair measure the perpendicular gap between the two lines
 in the middle and near both ends (a fan shows as unequal end gaps), plus
 the end overhangs - the shorter line sits 7 mm inside the longer one at each
@@ -29,6 +36,7 @@ sheet already on the bed and clears the earlier test's ink at y = 0.
 Usage:
 
     python tools\\make_a_tilt_pairs_test.py
+    python tools\\make_a_tilt_pairs_test.py --station-rot 60
 """
 
 from __future__ import annotations
@@ -64,10 +72,10 @@ def to_machine(bed_x: float, bed_y: float, theta_deg: float) -> tuple[float, flo
     return (bed_x * c - bed_y * s, bed_x * s + bed_y * c)
 
 
-def comb_points(cx: float, cy: float, teeth: int) -> list[tuple[float, float]]:
-    y_bot = cy + 8.0
-    y_top = cy + 12.0
-    x_start = cx - 41.0
+def comb_points(teeth: int) -> list[tuple[float, float]]:
+    y_bot = 8.0
+    y_top = 12.0
+    x_start = -41.0
     points: list[tuple[float, float]] = [(x_start, y_bot), (x_start, y_top)]
     for k in range(1, teeth):
         x = x_start + 5.0 * k
@@ -84,7 +92,23 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", default=str(OUTPUT))
     parser.add_argument("--feed", type=float, default=350.0)
+    parser.add_argument(
+        "--station-rot", type=float, default=0.0, dest="station_rot",
+        help="rotate the four station positions about the sheet centre, "
+             "in degrees (default 0)",
+    )
+    parser.add_argument(
+        "--station-shift-y", type=float, default=0.0, dest="station_shift_y",
+        help="shift the four station positions along Y in mm, for fresh "
+             "spots on the same sheet (default 0)",
+    )
     args = parser.parse_args()
+
+    rot = math.radians(args.station_rot)
+    rot_c, rot_s = math.cos(rot), math.sin(rot)
+
+    def rotxy(x: float, y: float) -> tuple[float, float]:
+        return (x * rot_c - y * rot_s, x * rot_s + y * rot_c)
 
     lines: list[str] = []
     lines.append("(bed-tilt quadrant pair test - make_a_tilt_pairs_test.py)")
@@ -118,20 +142,26 @@ def main() -> None:
 
     for name, theta, cx, cy in PAIRS:
         teeth = int(round(theta / 90.0)) + 1
+        ccx, ccy = rotxy(cx, cy)
+        ccy += args.station_shift_y
+        comb = [
+            (ccx + lx * rot_c - ly * rot_s, ccy + lx * rot_s + ly * rot_c)
+            for (lx, ly) in comb_points(teeth)
+        ]
         stroke(
             0.0,
-            comb_points(cx, cy, teeth),
+            comb,
             "(pair %s: %d-teeth label)" % (name, teeth),
         )
         stroke(
             0.0,
-            [(cx - CONSTANT_HALF, cy), (cx + CONSTANT_HALF, cy)],
+            [(ccx - CONSTANT_HALF, ccy), (ccx + CONSTANT_HALF, ccy)],
             "(pair %s: constant pass at A=0, %s mm)"
             % (name, fmt(CONSTANT_HALF * 2)),
         )
         stroke(
             theta,
-            [(cx - TEST_HALF, cy), (cx + TEST_HALF, cy)],
+            [(ccx - TEST_HALF, ccy), (ccx + TEST_HALF, ccy)],
             "(pair %s: test pass at bed angle %s, %s mm)"
             % (name, fmt(theta), fmt(TEST_HALF * 2)),
         )
