@@ -87,6 +87,11 @@ Cycle Start with the pen loaded:
   A=0 from each side). A per-turn tick offset of ~1.75 mm at r=100 means the
   true ratio is the pure tooth count 12.000, not the calibrated 12.03324.
   Regenerate with `..\tools\make_a_ratio_deadband_test.py`.
+- `..\samples\gcode\a-center-test.gcode` - one paper point visited at eight
+  bed angles (45 deg steps) plus a four-pass single-angle control. All ticks
+  coincident = the registered centre is on the physical axis; a spread ring
+  measures a centre offset C directly (opposite ticks are 2|C| apart).
+  Regenerate with `..\tools\make_a_center_test.py`.
 
 ## Generator tabs
 

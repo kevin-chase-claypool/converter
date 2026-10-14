@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20261013-center-test"></a>
+### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - Rotation-centre offset: the last mechanism standing
+
+- Operator: "we can rule out pen seating. it is pushed up against an inner
+  cylinder of the pen carriage equally for all pens." - the carriage nests
+  every pen identically, removing the seating confound from the two-pen
+  results.
+- The slow-replay overlay (blue = bed copy at 1/4 feeds, black = parked)
+  still showed ~1.7 mm median divergence with a two-level pattern between
+  the two strokes - i.e. rate did not change it. With seating, ratio,
+  deadband, reversal loss, arc gaps, rotation and bed flatness all measured
+  clean, the rotation-centre offset is the only mechanism that fits: a
+  bed-turn plot mis-registered by C displaces marks by C - R(-theta)C -
+  invisible at fixed theta, invisible to round trips, rate-independent, and
+  different between strokes drawn ~600 deg apart in bed angle (max ~1.7|C|).
+- Built `tools/make_a_center_test.py` + `samples/gcode/a-center-test.gcode`:
+  one paper point ticked at 8 bed angles (45 deg steps, paper-aligned ticks)
+  plus a 4-tick single-angle control. Coincident ticks = centre correct;
+  spread ring = |C|, with opposite ticks exactly 2|C| apart and the pattern
+  centre giving C's direction.
+- If confirmed: fix = G54 origin correction by -C (registration only, no
+  rewiring; the A axis keeps its full role), and it would retro-explain the
+  heraldic outline defects globally.
+- Evidence: `WSW-20261013-014`.
+
 <a id="elog-20261013-ratio-deadband-result"></a>
 ### 🟨 2026-10-13 - HARDWARE/MEASURED - Ratio/deadband test result: calibration confirmed, direction-independent - hypothesis refuted
 
