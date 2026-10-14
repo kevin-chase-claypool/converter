@@ -30,6 +30,13 @@
   using the 2.0/1.44 mm deltas, `G10 L20 P1 X0 Y0` to set the work zero
   there, then re-run the centre test to collapse the tick ring, then re-plot
   the heraldic in normal mode. A-index untouched.
+- **Centre-test bench result (2026-10-14, photo PXL_20261014_001843798):**
+  the four-pass control is a single clean line; the eight-angle group is a
+  thick striated bundle displaced up-and-right of the control - the same
+  offset and direction as the operator's 2.46 mm measurement. Two
+  independent methods now agree: the registered origin is off the rotation
+  centre. Apply the correction (jog +2.0 E / +1.44 N, `G10 L20 P1 X0 Y0`)
+  and verify by collapsing the bundle.
 - If confirmed: fix = G54 origin correction by -C (registration only, no
   rewiring; the A axis keeps its full role), and it would retro-explain the
   heraldic outline defects globally.
