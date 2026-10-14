@@ -61,7 +61,8 @@ labeled pairs give one clean measurement per quadrant.
   the bed, and clears the earlier test's ink at y = 0.
 - `--station-shift-y` (and `--station-rot`) move the station rows so a
   re-run after an adjustment lands on clean paper on a used sheet; the
-  committed sample keeps the original station layout.
+  committed sample is generated with `--station-shift-y -25` (fresh rows at
+  y = +25 / -75) for the confirmation run.
 
 ## Verification
 
@@ -76,9 +77,11 @@ labeled pairs give one clean measurement per quadrant.
   ratio repeats the pre-fix frame values, but the frame was re-registered
   and magnet-checked and every non-control pair tapers along the line - the
   residual matches the bed-height-vs-angle mechanism through the pen
-  carriage instead. After the run the operator flipped the sheet, so the
-  next run repeats the same layout on the now-blank other side for a
-  directly comparable before/after; see
+  carriage instead. The operator flipped the sheet and the same layout was
+  re-run on the blank side with a new pen: every pair reproduced within
+  ~0.05-0.1 mm (control single; 90 deg 0.70-0.80; 180 deg 1.00-1.20;
+  270 deg taper ~0.2 to 0.7 mm), so the signature is stable across sheet
+  side and pen; see
   `docs/report/lab-notes/2026-10-14-tilt-pairs-first-run.md`.
 
 ## Struggles and rejected approaches

@@ -77,3 +77,35 @@ term is no longer the explanation.
   starting with about half the difference - then re-run the pairs test on the
   shifted stations and compare. Caliper cross-check requested: 180 deg pair
   ~1.0-1.2 mm, 90 deg pair ~0.6-0.7 mm.
+
+## Second run (flipped sheet, new pen)
+
+After the first run the operator flipped the sheet, re-taped it and swapped
+to a new pen; the same program ran on the now-blank side (photo
+`PXL_20261014_224427293.jpg`). Pairs were read by their tooth labels:
+
+- control: single line, <= 0.15 mm.
+- 90 deg: ~0.70-0.80 mm.
+- 180 deg: ~1.00-1.20 mm.
+- 270 deg: tapers from ~0.1-0.2 mm at one end to ~0.7 mm (its test line
+  printed noticeably fainter than the others).
+
+Every value reproduces the first run within ~0.05-0.1 mm - on the other
+sheet side and with a different pen. The tilt signature is stable and the
+measurement is reproducible.
+
+The operator also marked the sheet with +X/+Y direction arrows plus a DRO
+coordinate whose first value was crossed out (the kept value is the true
+one at the moment the print stopped). The arrow frame read from the photo
+(+X pointing down, +Y pointing right) does not yet agree with the pairs
+arrangement, so machine directions need a wording confirmation before any
+compass-based rail-end instruction.
+
+## Decisions and next action (updated)
+
+- Immediate next step: the four-spot pen-up gap check at machine (-50,-50),
+  (50,-50), (50,50), (-50,50) - no ink, repeatable every iteration. Report
+  the smallest and largest corner and the differences.
+- The committed pairs sample is set to `--station-shift-y -25` (fresh rows
+  at y = +25 / -75 on the flipped side) for a confirmation run once the
+  gaps are under control.

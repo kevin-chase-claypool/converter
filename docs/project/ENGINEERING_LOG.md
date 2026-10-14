@@ -25,6 +25,15 @@
   rail ends (raise where the gap is small, lower where it is large), re-run
   the pairs on the shifted stations and compare; caliper cross-check 180 deg
   ~1.0-1.2 mm and 90 deg ~0.6-0.7 mm.
+- Second run the same day (flipped sheet, new pen; photo
+  `PXL_20261014_224427293.jpg`): the same layout on the blank side
+  reproduced every pair within ~0.05-0.1 mm - control single (<=0.15 mm),
+  90 deg 0.70-0.80, 180 deg 1.00-1.20, 270 deg taper ~0.1-0.2 to ~0.7 mm.
+  The tilt signature is stable across sheet side and pen. The operator
+  marked +X/+Y arrows plus a stopped-print DRO coordinate with one value
+  crossed out; the arrow frame needs a wording check before compass-based
+  rail instructions. The committed pairs sample is set to
+  `--station-shift-y -25` for the confirmation run.
 - Evidence: `WSW-20261014-003`; `samples/gcode/a-tilt-pairs-test.gcode`;
   `docs/report/lab-notes/2026-10-14-tilt-pairs-first-run.md`.
 - Category: hardware, windows-software, bed, tilt, a-axis, diagnostic.
