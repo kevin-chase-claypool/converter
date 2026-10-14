@@ -39,8 +39,9 @@ The correction stays in the axis-centre constants because the jog measures
 where the registered origin must sit, not the pen/TMAG geometry. The pen-offset
 equivalent would be `sensor_to_pen = (-1.200, -30.3892)`, within 0.3 mm of the
 historical `-30.100` Y measurement. Attribution of the error remains pending
-(Q5 at A0 and A180), and physical acceptance after the macro is re-uploaded has
-not been run yet.
+(Q5 at A0 and A180). The operator confirmed the parked pen lands centred after
+the update was applied on 2026-10-14; the rotation acceptance check remains
+open.
 
 ## Reason
 
@@ -68,10 +69,12 @@ constants (recorded 2026-10-13). The durable place is those constants.
 - `python tools\validate_homing_macro.py` - P100/P115 validation passed.
 - `python tools\docs_index.py --write` / `--check` - indexes regenerated and
   valid.
-- **Pending:** upload `P100.macro`, re-run `G65 P113`, then the acceptance
-  check - a magnet under the lifted pen must stay centred through a bed
-  rotation, or the a-center-test tick bundle must collapse, or the
-  `center-registration-check.gcode` crosses must coincide.
+- **Park confirmed on the machine (2026-10-14):** with the revised macro
+  uploaded and `G65 P113` re-run, the operator reports the parked pen lands
+  centred on the centre magnet ("it looks perfect now").
+- **Remaining acceptance:** the rotation check - a magnet under the lifted pen
+  must stay centred through a bed rotation - or the a-center-test tick bundle
+  collapsing, or the `center-registration-check.gcode` crosses coinciding.
 
 ## Struggles and rejected approaches
 

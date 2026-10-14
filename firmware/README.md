@@ -98,8 +98,9 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   `G54 X0 Y0`, half a bed revolution, the same cross again - they must
   coincide), or, faster and without paper, a magnet directly under the lifted
   pen that stays centred while the bed rotates. That check passed on
-  2026-10-01 with the earlier `+1.25` mm X value; the post-update acceptance
-  run is pending. See `RPSW-20261014-001` and
+  2026-10-01 with the earlier `+1.25` mm X value; with the 2026-10-14 values
+  the operator confirms the parked pen lands centred on the magnet, and the
+  rotation acceptance check remains open. See `RPSW-20261014-001` and
   [`grblhal/macros/README.md`](grblhal/macros/README.md).
 - **Candidate probe capture** - the 2026-09-10/11 motor-inert candidate
   proved direct and actual GP27/U3 `PRB` transitions, A-axis G38 capture, and

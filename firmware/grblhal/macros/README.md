@@ -253,8 +253,9 @@ Y measurement, which is recorded for the still-pending attribution test. The
 form of that correction did not collapse the eight-angle tick bundle, so that
 session and this measurement differ by about 1 mm and a constant update alone
 may not fix the plots - the X/Y scale-sheet measurement is the other open
-evidence. Physical acceptance of this update (magnet under the rotated bed, or
-`center-registration-check.gcode`) has not been run yet.
+evidence. The update was applied on the machine on 2026-10-14 and the operator
+confirms the park lands the pen centred on the centre magnet; the rotation
+acceptance check has not been separately reported.
 
 Two further notes from the same edit. `P103.macro` mirrors P100's initialization
 and now carries the two new constants. And the `sensor_to_pen` comment in P100

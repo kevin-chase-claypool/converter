@@ -51,9 +51,10 @@ update.
   `#<axis_center_correction_y>` 0.0 -> 0.9; the registration write becomes
   `G10 L20 P1 X-2.45 Y-30.3892` at the centroid, so the parked `G54 X0 Y0`
   moves by the full jog.
-- Acceptance: pending - requires the revised macro upload and a fresh
-  `G65 P113`, then the magnet-under-pen rotation check or
-  `samples/gcode/center-registration-check.gcode`.
+- **Park confirmed (2026-10-14):** the revised macro was uploaded and
+  `G65 P113` re-run; the operator reports the park now lands the pen centred on
+  the centre magnet. Remaining acceptance: the magnet-under-pen rotation check
+  or `samples/gcode/center-registration-check.gcode`.
 
 ## Difficulties and corrective actions
 

@@ -29,17 +29,18 @@
   sheet reading is still pending, so a constant update alone may not collapse
   the plots.
 - Verification: `python tools\check_macros.py` and
-  `python tools\validate_homing_macro.py` pass. Bench acceptance pending:
-  after uploading the macro and re-running `G65 P113`, the magnet under the
-  lifted pen must stay centred through a bed rotation, or the a-center-test
-  tick bundle must collapse.
+  `python tools\validate_homing_macro.py` pass. **Park confirmed on the
+  machine (2026-10-14):** revised macro uploaded, `G65 P113` re-run, operator
+  reports the parked pen lands centred on the centre magnet. Remaining
+  acceptance: the magnet-under-pen rotation check, or the a-center-test tick
+  bundle collapsing.
 - Evidence: `RPSW-20261014-001`;
   `docs/report/lab-notes/2026-10-14-registered-pen-centre-jog.md`; operator
   ioSender DRO readings, 2026-10-14.
 - Category: rp23cnc-software, hardware, grblhal, macro, registration,
   calibration.
-- Next action: upload `P100.macro`, re-run `G65 P113`, run the magnet/rotation
-  acceptance check, then read the X/Y scale sheet before trusting a full fix.
+- Next action: run the magnet/rotation acceptance check, then read the X/Y
+  scale sheet before trusting a full fix.
 
 <a id="elog-20261013-steps-per-mm-check-sheet-for-x-and-y"></a>
 ### 🟨 2026-10-13 - WINDOWS SOFTWARE/HARDWARE - Steps-per-mm check sheet for X and Y
