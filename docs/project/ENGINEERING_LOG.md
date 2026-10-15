@@ -1,5 +1,22 @@
 # Engineering Log
 
+<a id="elog-20261014-tilt-pairs-post-adjust"></a>
+### 🟨 2026-10-14 - HARDWARE/MEASURED - Post-adjustment pairs run: 270 deg pair collapsed; 90/180 deg still ~1 mm
+
+- After the operator's bed-mount adjustment, the pairs test ran again
+  (photo `PXL_20261014_235526094.jpg`; the sheet carries only this run's
+  four labeled pairs).
+- Result by tooth label, measured from the photo line profiles (px/mm about
+  8.5, read precision about +/-0.1-0.15 mm): control single (<= 0.2 mm);
+  90 deg ~1.0 mm steady; 180 deg ~0.9 mm with a slight taper; 270 deg
+  collapsed to a single line (was a taper opening to ~0.7 mm). 270 deg is
+  the first quadrant to come flat.
+- Pending: the four-spot pen-up gap re-read and the applied adjustment
+  amounts, to decide whether 90/180 deg need more trim. Acceptance stays:
+  every pair a single line, <= 0.15 mm.
+- Evidence: `docs/report/lab-notes/2026-10-14-tilt-pairs-first-run.md`.
+- Category: hardware, bed, tilt, a-axis, measurement.
+
 <a id="elog-20261014-tilt-gap-check"></a>
 ### 🟨 2026-10-14 - HARDWARE/MEASURED - Four-spot pen-up gap check: clean 0.8 percent plane; pairs cross-check 1:1; rail-end moves set
 

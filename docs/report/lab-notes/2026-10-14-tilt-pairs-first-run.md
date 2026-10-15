@@ -144,3 +144,24 @@ amounts first if the corner-to-mount mapping needs verifying, then re-read
 the same four spots at the same bed angle and trim. Per-adjuster numbers
 come from `bed_tilt_map.py --rail-mounts` once the four rail-end XY
 coordinates are supplied.
+
+## Third run - post bed-mount adjustment (2026-10-14 23:55)
+
+After the operator's bed-mount adjustment, the pairs test ran again (photo
+`PXL_20261014_235526094.jpg`). The sheet carries only this run's four
+labeled pairs. Pairs were read by tooth label, with the line profile
+measured in the photo (px/mm about 8.5 from the letter sheet, cross-checked
+against the 100 mm column spacing; read precision about +/-0.1-0.15 mm):
+
+| pair | label | split this run | previous runs |
+|---|---|---:|---|
+| control | 1 tooth | single line (<= 0.2 mm) | single |
+| 90 deg | 2 teeth | ~1.0 mm, steady along the line | 0.70-0.80 |
+| 180 deg | 3 teeth | ~0.9 mm, slight taper | 1.00-1.20 |
+| 270 deg | 4 teeth | collapsed - single (double-inked) line | taper ~0.1-0.2 to ~0.7 |
+
+The 270 deg pair collapsed - the first quadrant to come flat. The 90 deg
+and 180 deg pairs still split about a millimetre, roughly the same
+magnitude as before, so the pending four-spot gap re-read and the applied
+adjustment amounts will say whether those two corners simply need more
+trim or something else is at play.
