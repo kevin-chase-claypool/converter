@@ -268,8 +268,11 @@ Next measurements, before another adjuster move:
 
 The committed `gap_map_rot.gcode` scan (r = 60 / 90 mm, 30 deg steps) was
 read start to finish; the `M0` pauses worked on the installed build, and the
-24 readings are in `samples/gcode/gap_map_rot.csv`. Instrument not yet
-recorded (dial indicator or feeler stack at the pen tip; confirm).
+24 readings are in `samples/gcode/gap_map_rot.csv`. Instrument
+(operator-confirmed): hand-held digital caliper at the pen tip, best-effort
+placement - a ~+/-0.1-0.2 mm class measurement per reading. The ring spreads
+and the 60 / 240 deg dips stand well outside that; the sub-0.15 mm harmonic
+details are provisional.
 
 Raw readings (gap mm per index):
 
@@ -311,6 +314,7 @@ Next checks, cheapest first:
 3. Run the grid scan with the bed parked and the same gauge for the
    machine-frame plane at the working angle, then decide whether any rail
    trim remains.
-4. Record the instrument used, and prefer a dial indicator clamped to the
-   carriage for these scans so the pen-tip `M5` position is not in the
-   measurement chain.
+4. Prefer a dial indicator clamped to the carriage for the repeat scans so
+   neither the hand placement nor the pen-tip `M5` position is in the
+   measurement chain; a repeat with the digital caliper is still useful as
+   a same-method reproducibility check.

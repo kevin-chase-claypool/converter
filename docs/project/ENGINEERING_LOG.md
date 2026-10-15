@@ -21,8 +21,10 @@
   open.
 - Next: repeat the r = 60 ring for repeatability; re-run part of it on the
   bare disc (sheet removed); run the grid scan for the machine-frame
-  plane; record the gauge used (prefer a clamped dial indicator over the
-  pen-tip datum).
+  plane. Gauge now recorded: hand-held digital caliper (~+/-0.1-0.2 mm
+  class); the ring spreads and the 60 / 240 deg dips are outside that
+  noise, the sub-0.15 mm harmonics are provisional. Prefer a clamped dial
+  indicator for the repeat scans.
 - Evidence: `docs/report/lab-notes/2026-10-14-tilt-pairs-first-run.md`;
   `samples/gcode/gap_map_rot.csv`.
 - Category: hardware, bed, tilt, gap-map, measurement.
