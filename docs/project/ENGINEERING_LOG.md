@@ -22,11 +22,14 @@
   control untouched).
 - Remaining pairs: 90 deg and 180 deg both track one tilt of ~1 mm per
   100 mm along machine Y (the orthogonal component is at zero - hence the
-  270 deg collapse). Next trim: the two +Y-side adjusters, a half-step in
-  the opposite direction of the last move, then re-read the gaps and re-run
-  the pairs. The committed sample is regenerated with `--station-shift-y 25`
-  (fresh rows at y = -25 / +75) for the next run. Acceptance stays: every
-  pair a single line, <= 0.15 mm.
+  270 deg collapse). Next trim: the two +Y-side adjusters, a further
+  ~1 turn (0.7 mm) each - the magnitude-only pair reads cannot sign the
+  tilt, so this half-step doubles as the direction test (splits shrink ->
+  finish with a scaled second step; grow -> reverse). It also brings the
+  two +Y-side gap readings down level with the control. The committed
+  sample is regenerated with `--station-shift-y 25` (fresh rows at
+  y = -25 / +75) for the next run. Acceptance stays: every pair a single
+  line, <= 0.15 mm.
 - Evidence: `docs/report/lab-notes/2026-10-14-tilt-pairs-first-run.md`.
 - Category: hardware, bed, tilt, a-axis, measurement.
 
