@@ -165,3 +165,25 @@ and 180 deg pairs still split about a millimetre, roughly the same
 magnitude as before, so the pending four-spot gap re-read and the applied
 adjustment amounts will say whether those two corners simply need more
 trim or something else is at play.
+
+Gap re-reads after the adjustment (same four spots, pen fully retracted):
+
+| spot | before | after | vs control (after) |
+|---|---:|---:|---:|
+| Q1 (+50, +50) | 6.13 | 9.55 | +0.38 |
+| Q2 (-50, +50) | 5.73 | 9.48 | +0.31 |
+| Q3 (-50, -50) control | 5.01 | 9.17 | reference |
+| Q4 (+50, -50) | 5.69 | 8.94 | -0.23 |
+
+The plane flattened: the spread fell from 1.12 mm to 0.61 mm and Q4 crossed
+slightly past the control. Every gap, however, rose by about 3.2-4.2 mm
+(+3.6 mm on average), so the adjustment also raised the pen-vs-paper
+reference - consistent with these mounts acting on the pen side, as
+recorded on 2026-10-11. The operator's move description is still pending.
+
+The pairs pin the rest: 90 deg (~1.0 mm) and 180 deg (~0.9 mm) are both
+driven by the same single remaining tilt of about 1 mm per 100 mm along
+machine Y, while the 270 deg pair - the component along the other axis,
+now at zero - reads clean. The next trim targets that one component. The
+committed sample is regenerated with `--station-shift-y 25` (fresh rows at
+y = -25 / +75) for the next run.

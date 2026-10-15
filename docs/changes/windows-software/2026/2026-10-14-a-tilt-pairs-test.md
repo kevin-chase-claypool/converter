@@ -60,9 +60,10 @@ labeled pairs give one clean measurement per quadrant.
 - The layout spans about +-90 mm in X and +-62 mm in Y, fits the sheet on
   the bed, and clears the earlier test's ink at y = 0.
 - `--station-shift-y` (and `--station-rot`) move the station rows so a
-  re-run after an adjustment lands on clean paper on a used sheet; the
-  committed sample is generated with `--station-shift-y -25` (fresh rows at
-  y = +25 / -75) for the confirmation run.
+  re-run after an adjustment lands on clean paper on a used sheet. The
+  `-25` set (rows at y = +25 / -75) was used for the first post-adjustment
+  run; the committed sample is now regenerated with `--station-shift-y 25`
+  (fresh rows at y = -25 / +75) for the next post-trim run.
 
 ## Verification
 

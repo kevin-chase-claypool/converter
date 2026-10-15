@@ -11,9 +11,18 @@
   90 deg ~1.0 mm steady; 180 deg ~0.9 mm with a slight taper; 270 deg
   collapsed to a single line (was a taper opening to ~0.7 mm). 270 deg is
   the first quadrant to come flat.
-- Pending: the four-spot pen-up gap re-read and the applied adjustment
-  amounts, to decide whether 90/180 deg need more trim. Acceptance stays:
-  every pair a single line, <= 0.15 mm.
+- Gap re-read after the adjustment (same four spots, pen retracted):
+  Q1 9.55, Q2 9.48, Q3 9.17 (control), Q4 8.94 mm - relative to control
+  +0.38 / +0.31 / -0.23 (was +1.12 / +0.72 / +0.68). Spread 1.12 -> 0.61 mm;
+  Q4 crossed slightly past the control. All four gaps rose ~3.2-4.2 mm
+  (~+3.6 mm mean): the adjustment raised the pen-vs-paper reference,
+  consistent with these mounts acting on the pen side (2026-10-11 note).
+- Remaining pairs: 90 deg and 180 deg both track one tilt of ~1 mm per
+  100 mm along machine Y (the orthogonal component is at zero - hence the
+  270 deg collapse). The next trim targets that single component. The
+  committed sample is regenerated with `--station-shift-y 25` (fresh rows
+  at y = -25 / +75) for the next run. Acceptance stays: every pair a single
+  line, <= 0.15 mm.
 - Evidence: `docs/report/lab-notes/2026-10-14-tilt-pairs-first-run.md`.
 - Category: hardware, bed, tilt, a-axis, measurement.
 
