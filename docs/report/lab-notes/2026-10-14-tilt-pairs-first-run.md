@@ -177,9 +177,12 @@ Gap re-reads after the adjustment (same four spots, pen fully retracted):
 
 The plane flattened: the spread fell from 1.12 mm to 0.61 mm and Q4 crossed
 slightly past the control. Every gap, however, rose by about 3.2-4.2 mm
-(+3.6 mm on average), so the adjustment also raised the pen-vs-paper
-reference - consistent with these mounts acting on the pen side, as
-recorded on 2026-10-11. The operator's move description is still pending.
+(+3.6 mm on average). The operator confirms the adjustment was applied as
+prescribed (Q1 +1.12, Q2 +0.72, Q4 +0.68 mm, control untouched) and that
+the pen was replaced afterwards - the new pen seats with a shorter tip
+protrusion, so the global rise is the pen, not a mount effect. Absolute
+gaps are therefore comparable only within one pen; the differences remain
+valid.
 
 The pairs pin the rest: 90 deg (~1.0 mm) and 180 deg (~0.9 mm) are both
 driven by the same single remaining tilt of about 1 mm per 100 mm along

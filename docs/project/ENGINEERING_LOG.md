@@ -15,14 +15,18 @@
   Q1 9.55, Q2 9.48, Q3 9.17 (control), Q4 8.94 mm - relative to control
   +0.38 / +0.31 / -0.23 (was +1.12 / +0.72 / +0.68). Spread 1.12 -> 0.61 mm;
   Q4 crossed slightly past the control. All four gaps rose ~3.2-4.2 mm
-  (~+3.6 mm mean): the adjustment raised the pen-vs-paper reference,
-  consistent with these mounts acting on the pen side (2026-10-11 note).
+  (~+3.6 mm mean). Resolved: the pen was replaced after the adjustment (its
+  shorter tip protrusion seats the tip higher), so the rise is the pen, not
+  the mounts; absolute gaps compare within one pen only. The three corner
+  moves were applied as prescribed (Q1 +1.12, Q2 +0.72, Q4 +0.68 mm,
+  control untouched).
 - Remaining pairs: 90 deg and 180 deg both track one tilt of ~1 mm per
   100 mm along machine Y (the orthogonal component is at zero - hence the
-  270 deg collapse). The next trim targets that single component. The
-  committed sample is regenerated with `--station-shift-y 25` (fresh rows
-  at y = -25 / +75) for the next run. Acceptance stays: every pair a single
-  line, <= 0.15 mm.
+  270 deg collapse). Next trim: the two +Y-side adjusters, a half-step in
+  the opposite direction of the last move, then re-read the gaps and re-run
+  the pairs. The committed sample is regenerated with `--station-shift-y 25`
+  (fresh rows at y = -25 / +75) for the next run. Acceptance stays: every
+  pair a single line, <= 0.15 mm.
 - Evidence: `docs/report/lab-notes/2026-10-14-tilt-pairs-first-run.md`.
 - Category: hardware, bed, tilt, a-axis, measurement.
 
