@@ -1,5 +1,38 @@
 # Engineering Log
 
+<a id="elog-20261014-tilt-pairs-direction-trim-recheck"></a>
+### 🟨 2026-10-14 - HARDWARE/MEASURED - Direction-check trim recheck: pairs still split ~1.1-1.3 mm, not smaller; corner read spread 0.81 mm; bed-angle term suspected
+
+- Operator re-read the four corner gaps with calipers and re-ran the pairs
+  program after the direction-check trim plan; photo
+  `PXL_20261015_004437657` (phone clock is UTC = 19:44:37 CDT). Which
+  adjusters had been moved by that point is not yet confirmed.
+- Corner gaps (pen retracted): (+50,+50) 8.68, (-50,+50) 9.30, (-50,-50)
+  8.49 (control), (+50,-50) 8.94 mm; spread 0.81 mm; plane fit -0.09 mm per
+  100 mm in X, +0.28 mm per 100 mm in Y, corner residuals +/-0.27 mm. Q2 is
+  the worst corner at +0.81 mm over control. Against the earlier
+  post-adjustment read the control corner moved -0.68 mm with no mount
+  move, and the bed angle of each read was not recorded, so cross-read
+  deltas are not piecewise reliable.
+- Pairs (same photo method, +/-0.1 mm; the third-run photo re-measured the
+  same way): control single; 90 deg ~1.26 mm (third run ~0.98); 180 deg
+  ~1.09 mm (third run ~0.90); 270 deg single. The trim did not shrink the
+  splits - they read 0.2-0.3 mm larger, and the plan's rule ("shrink ->
+  finish, grow -> reverse") would point at reversing; confirm the applied
+  adjuster moves first. Both photos place the pairs at the same
+  paper-relative bands (top row ~62-64 mm below the sheet's top edge).
+- Cross-check: the static corner differences cannot produce splits this
+  large with any plane. A bed-angle-dependent term (disc plane not normal
+  to the rotation axis, or surface warp) remains the leading candidate -
+  the `HW-20261011-001` follow-up.
+- Next action: record A with every gap read and average A / A+180 reads;
+  run `gap_map_rot.gcode` (r = 60/90) for gap versus angle; add the four
+  rail-end XY for `bed_tilt_map.py --rail-mounts`; verify the
+  corner-to-adjuster mapping with one single-adjuster move before the next
+  trim.
+- Evidence: `docs/report/lab-notes/2026-10-14-tilt-pairs-first-run.md`.
+- Category: hardware, bed, tilt, a-axis, measurement.
+
 <a id="elog-20261014-tilt-pairs-post-adjust"></a>
 ### 🟨 2026-10-14 - HARDWARE/MEASURED - Post-adjustment pairs run: 270 deg pair collapsed; 90/180 deg still ~1 mm
 

@@ -91,6 +91,12 @@ labeled pairs give one clean measurement per quadrant.
   its static gap difference ~1:1, confirming the pairs track the height map
   through the pen-carriage coupling. Rail-end adjustment amounts derived:
   Q1 ~1.1 mm, Q2 ~0.7 mm, Q4 ~0.7 mm down (toward the bed), Q3 untouched.
+- **Direction-check trim recheck (2026-10-14 evening):** control and 270 deg
+  single again; 90 deg ~1.26 mm and 180 deg ~1.09 mm by the same photo
+  measure (third run re-measured ~0.98 / ~0.90), so the further trim did
+  not shrink the splits; corner read spread 0.81 mm. The static gaps no
+  longer explain the splits, so a bed-angle term is the leading candidate.
+  See the fourth-run section in the lab note.
 
 ## Struggles and rejected approaches
 

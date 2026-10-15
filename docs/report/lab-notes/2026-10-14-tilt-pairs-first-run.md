@@ -190,3 +190,76 @@ machine Y, while the 270 deg pair - the component along the other axis,
 now at zero - reads clean. The next trim targets that one component. The
 committed sample is regenerated with `--station-shift-y 25` (fresh rows at
 y = -25 / +75) for the next run.
+
+## Fourth run and corner re-read after the direction-check trim (2026-10-14 evening)
+
+Timeline note: the photo ID `PXL_20261015_004437657` is on the phone clock
+(UTC), i.e. 2026-10-14 19:44:37 CDT. The operator sent it together with a
+fresh four-corner caliper read; which adjusters had been moved by that point
+is not yet confirmed.
+
+Corner gaps as reported (same four spots as the earlier read, pen retracted,
+bed at the current park angle):
+
+| spot | machine (X, Y) | gap mm | vs control |
+|---|---|---:|---:|
+| Q1 | (+50, +50) | 8.68 | +0.19 |
+| Q2 | (-50, +50) | 9.30 | +0.81 |
+| Q3 | (-50, -50) control | 8.49 | reference |
+| Q4 | (+50, -50) | 8.94 | +0.45 |
+
+- Spread 0.81 mm (read history: 1.12 mm before the first adjustment,
+  0.61 mm after it).
+- Plane fit: -0.09 mm per 100 mm along X, +0.28 mm per 100 mm along Y,
+  corner residuals +/-0.27 mm - a twist the two earlier reads did not show
+  (+/-0.08 and +/-0.07 mm).
+- Against the post-adjustment read (9.55 / 9.48 / 9.17 / 8.94):
+  Q1 -0.87, Q2 -0.18, Q3 -0.68, Q4 0.00. The control corner moved 0.68 mm
+  with no mount move, so unless the bed angle matched, the two reads are
+  not piecewise comparable; the A value of a gap read is not recorded yet.
+- Q2 is now the single worst corner at +0.81 mm over the control.
+
+Pairs re-run (photo `PXL_20261015_004437657`; line-profile analysis,
+y-scale from the sheet height and the 100 mm row spacing, about 8.9 px/mm,
+read precision about +/-0.1 mm). The sheet is not the third run's sheet
+(that one carried an extra corner sketch this one does not), so this is a
+new run, not a re-photo. The third-run photo was re-measured with the same
+method for comparison.
+
+| pair | fourth run | third run (same method) |
+|---|---:|---:|
+| control | single (<=0.2 mm) | single |
+| 90 deg | ~1.26 mm | ~0.98 mm |
+| 180 deg | ~1.09 mm | ~0.90 mm |
+| 270 deg | single | single |
+
+- The 90 deg and 180 deg pairs still split about a millimetre; the trim did
+  not shrink them - they read 0.2-0.3 mm larger than the third run. The
+  plan's own rule ("splits shrink -> finish with a scaled second step;
+  grow -> reverse") would point at reversing, but the change is close to
+  the reading precision and the applied adjuster moves are unconfirmed, so
+  confirm before turning screws.
+- Both photos place the four pairs at the same paper-relative positions
+  (top row about 62-64 mm below the sheet's top edge), so the "next fresh
+  band" shift does not appear in what was run; the two runs sample
+  equivalent stations up to the usual 180 deg sheet-placement ambiguity.
+
+Cross-check: the static corner differences (<=0.8 mm across the read, and
+roughly 0.1-0.3 mm in the directions the pairs sample) are far smaller
+than the ~1.1-1.3 mm pair splits, and no plane can produce them. The
+leading candidate remains a bed-angle-dependent term - the disc plane not
+normal to the rotation axis, or surface warp (the queued `HW-20261011-001`
+follow-up) - which neither single-angle corner reads nor rail-end trims
+capture.
+
+Next measurements, before another adjuster move:
+
+1. Record the bed angle A with every gap read; read the four corners at A
+   and at A+180 and use the two-angle average (it cancels the wobble term).
+2. Run the committed rotation gap map
+   (`samples/gcode/gap_map_rot.gcode`, r = 60/90, 30 deg steps,
+   `gap_map_rot.csv`) and analyze with `bed_tilt_map.py` - gap versus angle
+   separates wobble from rail tilt.
+3. Supply the four rail-end XY coordinates for
+   `bed_tilt_map.py --rail-mounts`, and verify the corner-to-adjuster
+   mapping with one single-adjuster move before the next trim.
