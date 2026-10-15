@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20261014-gap-map-rotation-first-scan"></a>
+### 🟨 2026-10-14 - HARDWARE/MEASURED - Rotation gap map run: 1.18 mm spread at r=60, 0.63 at r=90; not a rigid tilt - warp/runout verdict
+
+- The committed `gap_map_rot.gcode` scan was read start to finish (24
+  stops; the `M0` pauses work on the installed build); readings in
+  `samples/gcode/gap_map_rot.csv`.
+- Result: r = 60 mean 9.01 mm, spread 1.18 (8.51 at index 60 .. 9.69 at
+  index 0); r = 90 mean 9.24 mm, spread 0.63 (8.85 .. 9.48). Harmonics
+  (index space): r = 60 two-lobe 0.31 mm plus 0.13 one-lobe and 0.14
+  three-lobe; r = 90 one-lobe 0.18 with 0.11 two-lobe.
+- `bed_tilt_map.py`: plane part only 0.078 mm per 100 mm; residual after
+  the plane fit rms 0.241 mm (max 0.726) with the verdict "not a rigid
+  tilt - expect warp/bearing runout" (r = 60 residual 0.308, r = 90
+  0.147). The two rings are mutually inconsistent with one rigid tilt
+  (rigid model rms 0.23; one-lobe phases ~106 deg off the rigid relation).
+- Meaning: the remaining gap error is a surface-shape term of the same
+  0.6-1.2 mm class as the pair splits, not a rail-plane tilt; rail-end
+  trimming cannot remove it. Sheet/tape versus disc/hub attribution is
+  open.
+- Next: repeat the r = 60 ring for repeatability; re-run part of it on the
+  bare disc (sheet removed); run the grid scan for the machine-frame
+  plane; record the gauge used (prefer a clamped dial indicator over the
+  pen-tip datum).
+- Evidence: `docs/report/lab-notes/2026-10-14-tilt-pairs-first-run.md`;
+  `samples/gcode/gap_map_rot.csv`.
+- Category: hardware, bed, tilt, gap-map, measurement.
+
 <a id="elog-20261014-tilt-pairs-direction-trim-recheck"></a>
 ### 🟨 2026-10-14 - HARDWARE/MEASURED - Direction-check trim recheck: pairs still split ~1.1-1.3 mm, not smaller; corner read spread 0.81 mm; bed-angle term suspected
 

@@ -263,3 +263,54 @@ Next measurements, before another adjuster move:
 3. Supply the four rail-end XY coordinates for
    `bed_tilt_map.py --rail-mounts`, and verify the corner-to-adjuster
    mapping with one single-adjuster move before the next trim.
+
+## Rotation gap map - first ring scan (2026-10-14, after the fourth run)
+
+The committed `gap_map_rot.gcode` scan (r = 60 / 90 mm, 30 deg steps) was
+read start to finish; the `M0` pauses worked on the installed build, and the
+24 readings are in `samples/gcode/gap_map_rot.csv`. Instrument not yet
+recorded (dial indicator or feeler stack at the pen tip; confirm).
+
+Raw readings (gap mm per index):
+
+| index | 0 | 30 | 60 | 90 | 120 | 150 | 180 | 210 | 240 | 270 | 300 | 330 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| r = 60 | 9.69 | 9.18 | 8.51 | 8.75 | 9.11 | 8.91 | 9.14 | 9.09 | 8.62 | 8.98 | 8.92 | 9.22 |
+| r = 90 | 9.02 | 8.85 | 9.39 | 9.20 | 9.48 | 9.42 | 9.31 | 9.29 | 9.39 | 9.27 | 9.26 | 9.05 |
+
+- r = 60: mean 9.01 mm, spread 1.18 mm (8.51 .. 9.69). r = 90: mean
+  9.24 mm, spread 0.63 mm (8.85 .. 9.48).
+- Harmonic content (index space): r = 60 is dominated by a two-lobe term
+  (0.31 mm, maxima near index -10 / 170 deg) plus a 0.13 one-lobe and a
+  0.14 three-lobe; fit residual rms 0.18 mm. r = 90 is mostly one-lobe
+  (0.18 mm, maximum near index 176 deg) with a small 0.11 two-lobe; fit
+  residual rms 0.10 mm.
+- `bed_tilt_map.py` verdict: plane part only 0.078 mm per 100 mm; residual
+  after the plane fit rms 0.241 mm, max 0.726 mm - "not a rigid tilt;
+  expect warp/bearing runout". Per-radius residuals: r = 60 -> 0.308 mm,
+  r = 90 -> 0.147 mm.
+- One rigid tilt (single direction, amplitude growing with radius) cannot
+  produce both rings: the best-constrained rigid model leaves rms 0.23 mm
+  and the one-lobe phases of the two rings sit ~106 deg away from the
+  rigid-tilt relation. The biggest single feature is the r = 60 two-lobe
+  dip (indices 60 and 240, about 0.5 mm below the ring mean).
+- Scale check: the gap-versus-index spread (0.6-1.2 mm) is the same class
+  as the pair-test splits (1.0-1.3 mm) the rail trims could not remove, and
+  the plane part is now tiny - the remaining error is a surface-shape term,
+  not a rail-plane tilt. Whether that shape sits in the sheet/tape or in
+  the disc/hub is not yet resolved (the scan runs on the taped sheet), and
+  how the pair-test splits couple to it still needs the follow-up checks.
+
+Next checks, cheapest first:
+
+1. Repeat the r = 60 ring (or re-read the eight extreme stops in a shuffled
+   order) to test repeatability of the 60 / 240 deg dips.
+2. Re-run part of the r = 60 ring with the sheet removed (bare disc):
+   pattern persists -> disc/hub; pattern moves with the sheet -> paper
+   ripple or tape.
+3. Run the grid scan with the bed parked and the same gauge for the
+   machine-frame plane at the working angle, then decide whether any rail
+   trim remains.
+4. Record the instrument used, and prefer a dial indicator clamped to the
+   carriage for these scans so the pen-tip `M5` position is not in the
+   measurement chain.

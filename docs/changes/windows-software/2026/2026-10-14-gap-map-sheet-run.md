@@ -64,8 +64,15 @@ adjustment iteration unchanged.
 - Generator self-checks: radii positive, bed step divides 360 into at least
   three steps, dwell positive.
 - `python tools\docs_index.py --write` / `--check` - indexes valid.
-- **Pending:** read the 24 stops and feed the filled CSV to
-  `bed_tilt_map.py` with the four rail-end mounts and `--rail-mounts`.
+- **First bench scan (2026-10-14):** all 24 stops were read (the `M0`
+  pauses work on the installed build) and analyzed: r = 60 spread 1.18 mm,
+  r = 90 0.63 mm; the plane part is only 0.078 mm per 100 mm and the
+  residual after the plane fit is rms 0.241 mm - the tool's "not a rigid
+  tilt; expect warp/bearing runout" verdict. See the rotation gap-map
+  section in the lab note.
+- **Pending:** the four rail-end mount coordinates for `--rail-mounts`, and
+  the repeat / bare-disc checks that attribute the surface shape to the
+  paper or the disc.
 
 ## Struggles and rejected approaches
 
@@ -82,7 +89,8 @@ adjustment iteration unchanged.
 - Check the tip-to-paper clearance at the first stop before starting the
   ring; the program pauses before every index so it can be eyeballed.
 - If the post-plane residual stays above ~0.15 mm, the next suspect remains
-  disc warp or bearing axial runout (`HW-20261011-001`).
+  disc warp or bearing axial runout (`HW-20261011-001`). **The first scan
+  landed there: residual rms 0.241 mm.**
 
 ## Files
 
