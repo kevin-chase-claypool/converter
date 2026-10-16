@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
 import converter_core as converter
 
 from ._tab_common import (
+    ChoiceBullets,
     GeneratorTab,
     double_spin,
     int_spin,
@@ -60,16 +61,19 @@ def format_seconds(seconds):
 
 
 def format_cost_summary(results):
-    """One-line per-ink split of the planner's x_theta/y_theta choices."""
+    """One-line per-ink cost: the planner's kinematics split, or XY only."""
     parts = []
     for channel in converter.CHANNELS:
         record = results.get(channel)
         if not record:
             continue
+        if record["x_count"] or record["y_count"]:
+            motion = f"x{record['x_count']}/y{record['y_count']}"
+        else:
+            motion = "XY only"
         parts.append(
             f"{converter.CHANNEL_LABELS[channel][0]} "
-            f"x{record['x_count']}/y{record['y_count']} "
-            f"{format_seconds(record['seconds'])}"
+            f"{motion} {format_seconds(record['seconds'])}"
         )
     return "Cost: " + ", ".join(parts) if parts else "Cost: not planned yet."
 
@@ -289,6 +293,27 @@ class CmykTab(GeneratorTab):
         self.seed = int_spin(7, 0, 999_999)
         screen.addRow("Seed (stipple)", self.seed)
 
+        # This tab's own kinematic either/or. The main tab's bullets set the
+        # Convert page; a CMYK print keeps its own choice so a precision
+        # (XY-only) pass does not depend on whichever page was used before.
+        kinematics = self.add_group("Kinematics")
+        self.theta_mode = ChoiceBullets(
+            converter.THETA_MODE_CHOICES,
+            "optimized",
+            converter.FIELD_TOOLTIPS.get("theta_mode", ""),
+        )
+        kinematics.addRow("Bed motion", self.theta_mode)
+        kinematics_hint = QLabel(
+            "Xθ/Yθ rotates the bed per segment (fast; every bed-angle error "
+            "prints). XY only parks the bed and draws with the gantry "
+            "(slower; the bed cannot add error) - use it for precision "
+            "prints. Applies to the four ink programs and the calibration "
+            "sheet."
+        )
+        kinematics_hint.setWordWrap(True)
+        kinematics_hint.setStyleSheet("color: #475569;")
+        kinematics.addRow("", kinematics_hint)
+
         layers = self.add_group("Layers")
         self.preview_boxes = {}
         preview_row = QWidget()
@@ -393,12 +418,18 @@ class CmykTab(GeneratorTab):
         self.cancel_button.clicked.connect(self.cancel_analysis)
         actions.addRow("", self.cancel_button)
         self.cost_label = QLabel(
-            "Preview plans the four ink programs in the background; "
-            "x_theta/y_theta is the planner's per-segment choice."
+            "Preview plans the four ink programs in the background using the "
+            "Bed motion choice above (Xθ/Yθ or XY only)."
         )
         self.cost_label.setWordWrap(True)
         self.cost_label.setStyleSheet("color: #475569;")
         actions.addRow("", self.cost_label)
+        self.theta_mode.changed.connect(
+            lambda _value: self.cost_label.setText(
+                "Bed motion changed; the next Preview or Save re-plans the "
+                "four inks."
+            )
+        )
 
         self._layers = {}
         self._layer_files = {}
@@ -531,6 +562,7 @@ class CmykTab(GeneratorTab):
             settings,
             tolerance=self.path_tolerance.value(),
             pen_diameter_mm=self.pen_width.value(),
+            theta_mode=self.theta_mode.value(),
         )
 
     def _effective_settings(self):
@@ -565,6 +597,7 @@ class CmykTab(GeneratorTab):
             self.pitch.value(),
             self.dot_size.value(),
             self.solid_dots.isChecked(),
+            self.theta_mode.value(),
             self.pen_width.value(),
             self.path_tolerance.value(),
             self.levels.value(),
@@ -847,14 +880,19 @@ class CmykTab(GeneratorTab):
             self.host.generator_status(message)
             if hasattr(self.host, "log"):
                 for channel, record in results.items():
+                    motion = (
+                        "x_theta %d / y_theta %d"
+                        % (record["x_count"], record["y_count"])
+                        if record["x_count"] or record["y_count"]
+                        else "XY only (bed parked)"
+                    )
                     self.host.log.append(
-                        "CMYK %s: %d marks, x_theta %d / y_theta %d, "
+                        "CMYK %s: %d marks, %s, "
                         "draw %.1f mm, estimate %s."
                         % (
                             converter.CHANNEL_LABELS[channel],
                             record["marks"],
-                            record["x_count"],
-                            record["y_count"],
+                            motion,
                             record["draw_mm"],
                             format_seconds(record["seconds"]),
                         )

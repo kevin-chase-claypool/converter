@@ -71,10 +71,10 @@ Cycle Start with the pen loaded:
   streamed rate profile, not the geometry. Regenerate after re-plotting the
   source file.
 - `..\samples\gcode\heraldic-bedfixed.gcode` - the full heraldic drawn with
-  the bed **completely stationary** (Theta mode `Fixed`, A constant for the
-  whole program). The decisive outline A/B: clean everywhere means the bed
-  rotation is the smear source; still wobbly means the X/Y gantry or the pen.
-  Regenerate from the app by selecting **Theta mode = Fixed**.
+  the bed **completely stationary** (Bed motion = `XY only`, A constant for
+  the whole program). The decisive outline A/B: clean everywhere means the
+  bed rotation is the smear source; still wobbly means the X/Y gantry or the
+  pen. Regenerate from the app with **Bed motion = XY only**.
 - `..\samples\gcode\a-reversal-diagnostic.gcode` - finds why the bed loses
   position on reversals: out/back arc pairs at three rates and two radii
   (mechanical play vs belt wind-up vs rate dependence), plus pen-up and
@@ -233,12 +233,15 @@ Current tools:
   `C: n M: n Y: n K: n`, counted from the planned program.
   Pressing Preview also plans each checked ink's own program in the
   background through the same pipeline as Convert - that planning is exactly
-  where the r-theta solver picks x_theta or y_theta per segment, and the tab
-  reports each file's split and calibrated time when it finishes.
+  where the r-theta solver picks x_theta or y_theta per segment, or holds the
+  bed still for the tab's **Kinematics** choice - and the tab reports each
+  file's split (or `XY only`) and calibrated time when it finishes.
   **Save 4 G-code files** writes
   `<name>-cyan.gcode`, `-magenta`, `-yellow` and `-black` from one base name.
   The r-theta axis-cost solver and the M3/M5 pen contract are inherited
-  unchanged, so each ink is as cost-efficient as a normal Convert program.
+  unchanged, so each ink is as cost-efficient as a normal Convert program;
+  the tab's **Bed motion** bullets (Xθ/Yθ or XY only) apply to all four ink
+  programs and to the calibration sheet.
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times
@@ -724,8 +727,15 @@ display-only; every other group changes the emitted program.
 - **Theta kinematics** — theta axis/ratio/resolver/cost settings (`Theta ratio`
   defaults to 12.03324, the measured effective ratio of the 60T→720T pulley
   pair).
-  - **Theta mode** and **Theta resolver** are combos of the implemented
-    strategies, so an unsupported value cannot be entered.
+  - **Bed motion** is the kinematic either/or, as two bullets:
+    **Xθ/Yθ (rotating bed, fast)** runs the per-segment solver (the
+    production default), and **XY only (bed parked, precise)** holds one bed
+    angle so the gantry draws the whole artwork in X and Y. XY only removes
+    every bed-angle error (tilt, runout, reversal drag) from the print at the
+    cost of gantry travel; the bed parks at `Theta offset` degrees (0 keeps
+    the artwork axes on the machine axes). **Theta resolver** stays a combo
+    of the implemented solver strategies for Xθ/Yθ, so an unsupported value
+    cannot be entered.
   - **Theta tangential speed mm/min** is the requested surface speed caused by
     A-axis bed rotation during drawing. It does not change X/Y-only output.
   - **Max bed step deg** (default `15`) is the hard limit on how far the bed may
@@ -927,8 +937,13 @@ display-only; every other group changes the emitted program.
   roughly hourly timeout seen in real printing is still unexplained, so watch
   the console: with recover on, the macro prints `P115 WARNING ...`, issues
   `M5` to lift the pen, dwells, and continues on the next command.
-- The converter has no XY-only export mode: every generated production program
-  retains its planned A-axis words.
+- The **Bed motion** bullets select the kinematics for every generated
+  program: **Xθ/Yθ** rotates the bed per segment (fast), **XY only** parks
+  the bed so the gantry draws the artwork unchanged (precise; the bed cannot
+  add tilt, runout, or reversal error). XY-only programs still carry their
+  A words - at one constant value - so ioSender and the controller see the
+  same program shape either way. The CMYK tab carries its own copy of the
+  two bullets for its four ink programs and its calibration sheet.
 - The converter does not apply a pen/TMAG XY tool offset. Generated XY positions
   remain in the machine work-coordinate frame; the controller's commissioning
   macro `P100` owns magnetic center registration, the measured `pen - TMAG`

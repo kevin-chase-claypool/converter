@@ -47,6 +47,7 @@ from PySide6.QtWidgets import (
 )
 
 import converter_core as converter
+from generator_tabs._tab_common import ChoiceBullets
 # Flushed so `qt_debug.log` names the build as soon as the app starts; it is the
 # quickest way to tell a stale window from a stale install.
 print(f"[geometry version: {getattr(converter, 'GEOMETRY_VERSION', 'OLD-no-new-patterns')}]", flush=True)
@@ -1256,6 +1257,15 @@ class MainWindow(QMainWindow):
                     for choice_label, choice_value in converter.FIT_MODE_CHOICES:
                         edit.addItem(choice_label, choice_value)
                     edit.setCurrentIndex(max(0, edit.findData(value)))
+                elif key == "theta_mode":
+                    # The kinematic either/or: rotate the bed (Xθ/Yθ) or park
+                    # it and draw in pure X/Y. Bullets, not a combo, because
+                    # the two options are mutually exclusive by construction.
+                    edit = ChoiceBullets(
+                        converter.THETA_MODE_CHOICES,
+                        value,
+                        converter.FIELD_TOOLTIPS.get("theta_mode", ""),
+                    )
                 elif key in converter.VALUE_CHOICE_FIELDS:
                     edit = QComboBox()
                     labels = converter.VALUE_CHOICE_LABELS.get(key, {})
@@ -1525,6 +1535,8 @@ class MainWindow(QMainWindow):
                 continue
             if isinstance(edit, QComboBox):
                 edit.currentIndexChanged.connect(lambda _index: self.mark_preview_dirty())
+            elif isinstance(edit, ChoiceBullets):
+                edit.changed.connect(lambda _value: self.mark_preview_dirty())
             else:
                 edit.textChanged.connect(lambda _text: self.mark_preview_dirty())
         for checkbox in (
@@ -2141,6 +2153,10 @@ class MainWindow(QMainWindow):
                 # Combos show a human label and carry the stored value as data.
                 value = edit.currentData()
                 text_values[key] = edit.currentText() if value is None else value
+            elif isinstance(edit, ChoiceBullets):
+                value = edit.value()
+                if value is not None:
+                    text_values[key] = value
             else:
                 text_values[key] = edit.text()
         bool_values = {

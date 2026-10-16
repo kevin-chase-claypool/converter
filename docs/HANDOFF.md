@@ -296,7 +296,8 @@ converter README for the exact preamble and settings.
   checkbox as out of date and `install_preview()` clears it. `print_speed`, `motion_estimate_scale`,
   and the two preview display toggles deliberately do not mark the preview stale.
 - The preview command pane shows the complete generated program, including setup, M3/M5,
-  G4, comments, and M2. XY-only theta omission is not available in production output.
+  G4, comments, and M2. The sidebar's Bed motion bullets pick Xθ/Yθ or an XY-only program
+  (the bed parks; A words remain, at one constant value) - theta words are never omitted.
 - Layout is now a `QSplitter`: left sidebar (settings + Convert/Preview buttons), centre
   GL preview with playback controls / status / estimate stacked beneath, right command list.
   Files row collapsed to one strip. Log shrunk to 60 px. Preview now gets most of the window.

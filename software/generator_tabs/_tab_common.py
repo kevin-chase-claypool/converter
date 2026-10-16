@@ -13,8 +13,9 @@ import time
 import uuid
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
+    QButtonGroup,
     QDoubleSpinBox,
     QFileDialog,
     QFormLayout,
@@ -22,6 +23,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QRadioButton,
     QScrollArea,
     QSpinBox,
     QVBoxLayout,
@@ -109,6 +111,54 @@ def int_spin(value, low, high, step=1):
     widget.setSingleStep(step)
     widget.setValue(value)
     return widget
+
+
+class ChoiceBullets(QWidget):
+    """Vertical bullet (radio) choice over canonical stored values.
+
+    ``choices`` is a sequence of ``(label, value)`` pairs - the same shape as
+    the converter's *_CHOICES tuples - so the widget shows the human label and
+    hands the settings model the stable value it already knows. Used for the
+    kinematics either/or: the rotating bed (Xθ/Yθ) or a parked bed (XY only).
+    """
+
+    changed = Signal(str)
+
+    def __init__(self, choices, value, tooltip="", parent=None):
+        super().__init__(parent)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(2)
+        self._group = QButtonGroup(self)
+        self._buttons = []
+        for label, choice in choices:
+            button = QRadioButton(label)
+            button.setProperty("choice_value", choice)
+            if tooltip:
+                button.setToolTip(tooltip)
+            self._group.addButton(button)
+            layout.addWidget(button)
+            self._buttons.append(button)
+            button.toggled.connect(self._on_toggled)
+        self.set_value(value)
+
+    def _on_toggled(self, checked):
+        if checked:
+            self.changed.emit(self.value())
+
+    def value(self):
+        for button in self._buttons:
+            if button.isChecked():
+                return button.property("choice_value")
+        return None
+
+    def set_value(self, value):
+        for button in self._buttons:
+            if button.property("choice_value") == value:
+                button.setChecked(True)
+                return
+        if self._buttons:
+            self._buttons[0].setChecked(True)
 
 
 def file_picker(line_edit, on_pick, title, filters):

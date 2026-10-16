@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import sys
 import tempfile
 import unittest
@@ -618,6 +619,23 @@ class ScreeningTests(unittest.TestCase):
         self.assertEqual(format_seconds(61.0), "1m01s")
         self.assertEqual(format_seconds(3600.0), "1h00m")
 
+    def test_cost_summary_names_xy_only(self):
+        from generator_tabs.cmyk_tab import format_cost_summary
+
+        rows = {
+            "k": {
+                "marks": 4,
+                "moves": 9,
+                "x_count": 0,
+                "y_count": 0,
+                "draw_mm": 12.0,
+                "seconds": 5.0,
+            }
+        }
+        summary = format_cost_summary(rows)
+        self.assertIn("XY only", summary)
+        self.assertIn("5s", summary)
+
 
 @unittest.skipUnless(HAVE_QT, "PySide6 is not installed")
 class CmykTabTests(unittest.TestCase):
@@ -697,6 +715,40 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(record["y_count"], 1)
         self.assertEqual(record["marks"], 2)
         self.assertGreater(record["seconds"], 0.0)
+
+    def test_kinematics_bullets_override_the_settings(self):
+        tab = self.make_tab()
+        self.assertEqual(
+            [button.property("choice_value") for button in tab.theta_mode._buttons],
+            ["optimized", "fixed"],
+            "the CMYK tab offers exactly the two kinematic bullets",
+        )
+        settings = tab.apply_tab_settings(converter.Settings())
+        self.assertEqual(settings.theta_mode, "optimized")
+        tab.theta_mode.set_value("fixed")
+        settings = tab.apply_tab_settings(converter.Settings())
+        self.assertEqual(settings.theta_mode, "fixed")
+        self.assertEqual(tab._effective_settings().theta_mode, "fixed")
+
+    def test_xy_only_layer_program_holds_the_bed(self):
+        tab = self.make_tab()
+        tab._ensure_layers()
+        tab.theta_mode.set_value("fixed")
+        settings = tab._effective_settings()
+        contours = converter.read_svg(str(tab._layer_files["k"]), settings)
+        plan = converter.plan_program(contours, settings)
+        text = converter.contours_to_gcode(contours, settings, plan)
+        angles = set()
+        for line in text.splitlines():
+            if line.startswith(("G0 ", "G1 ", "G53 ")):
+                angles.update(
+                    float(value) for value in re.findall(r"A(-?\d+\.?\d*)", line)
+                )
+        self.assertEqual(angles, {0.0}, "XY only must never rotate the bed")
+        strategies = set()
+        for _planned, _points, _thetas, labels in plan["planned_jobs"]:
+            strategies.update(label for label in labels if label)
+        self.assertEqual(strategies, {"fixed"})
 
     def test_save_writes_one_file_per_ink(self):
         host = FakeHost(self.image_path)

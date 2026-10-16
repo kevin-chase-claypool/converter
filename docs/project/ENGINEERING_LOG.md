@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261015-bed-motion-choice"></a>
+### 🟨 2026-10-15 - WINDOWS SOFTWARE/IMPLEMENTED - Bed motion bullets: Xθ/Yθ or XY only, in the sidebar and on the CMYK tab
+
+- Operator decision after the bed-tilt investigation: precision prints run
+  XY only (no bed rotation), speed-first prints keep the Xθ/Yθ solver.
+- The sidebar's raw "Theta mode" combo becomes a two-bullet **Bed motion**
+  choice (stable ids `optimized` / `fixed`); the CMYK tab gains the same
+  bullets and feeds them to its preview, its four ink programs and the
+  calibration sheet. XY only parks the bed at the theta offset (0 default)
+  and draws with the gantry; A words remain at one constant value.
+- Docs realigned: README and HANDOFF previously said the converter had "no
+  XY-only export mode"; both now describe the choice and the constant-A
+  detail.
+- Verification: new `test_kinematics_choice.py` (constant A, planned
+  thetas, drawn points, bullets widget, sidebar) and CMYK tab tests
+  (bullets override the settings, a real XY-only layer program holds A at
+  0, cost line says `XY only`); full suite 421 tests pass; a generated
+  XY-only program passes `tools\check_gcode_motion.py --strict` with 0 deg
+  rotation.
+- Evidence: `WSW-20261015-001`;
+  `docs/changes/windows-software/2026/2026-10-15-bed-motion-kinematics-choice.md`.
+- Category: windows-software, kinematics, theta, cmyk, ui.
+
 <a id="elog-20261014-gap-map-rotation-first-scan"></a>
 ### 🟨 2026-10-14 - HARDWARE/MEASURED - Rotation gap map run: 1.18 mm spread at r=60, 0.63 at r=90; not a rigid tilt - warp/runout verdict
 

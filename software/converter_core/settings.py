@@ -304,7 +304,7 @@ TEXT_FIELD_GROUPS = (
         ("Theta offset", "theta_offset", "0"),
         ("Theta ratio", "theta_drive_ratio", "12.03324"),
         ("Theta tangential speed mm/min", "theta_tangential_speed_mm_min", "700"),
-        ("Theta mode", "theta_mode", "optimized"),
+        ("Bed motion", "theta_mode", "optimized"),
         ("Theta resolver", "theta_resolver", "rtheta"),
         ("Theta weight", "theta_weight", "1.0"),
         ("Max bed step deg", "theta_max_step_deg", "15"),
@@ -375,6 +375,15 @@ FIT_MODE_CHOICES = (
     ("Manual (use Scale)", "manual"),
 )
 
+# Human-readable bullets for `theta_mode`, the kinematic either/or the Qt apps
+# show as a radio pair. The stored ids stay stable: "optimized" is the
+# rotating-bed x-theta/y-theta solver and "fixed" parks the bed so the gantry
+# draws everything in X and Y. "tangent" stays a valid settings-file/API value.
+THETA_MODE_CHOICES = (
+    ("Xθ/Yθ (rotating bed, fast)", "optimized"),
+    ("XY only (bed parked, precise)", "fixed"),
+)
+
 # Fields whose valid values are a fixed list. The Qt sidebar renders these as
 # combos so invalid or misspelled values cannot be entered, and `validate_settings`
 # checks them again for programmatic callers.
@@ -402,8 +411,9 @@ HATCH_PATTERNS = (
 )
 
 # "optimized" is the per-contour resolver; "fixed" and "tangent" pin the bed
-# orientation. The experimental cost resolvers stay selectable through
-# `theta_resolver`.
+# orientation. The Qt apps present this as the two-bullet kinematics choice
+# (THETA_MODE_CHOICES); "tangent" remains a valid settings-file/API value.
+# The experimental cost resolvers stay selectable through `theta_resolver`.
 THETA_MODES = ("optimized", "fixed", "tangent")
 THETA_RESOLVERS = ("rtheta", "dp", "greedy")
 
@@ -458,7 +468,7 @@ FIELD_TOOLTIPS = {
     "raster_px_per_unit": "Image-tone sampling resolution in pixels per mm. Higher is more accurate and slower.",
     "feed_rate": "Maximum X/Y draw speed in mm/min.",
     "travel_rate": "Pen-up travel speed in mm/min.",
-    "theta_mode": "How the bed orientation is chosen per contour: optimized solves it, fixed holds one angle, tangent follows the path direction.",
+    "theta_mode": "Xθ/Yθ rotates the bed per segment so the gantry moves one axis at a time - fastest, but every bed-angle error (tilt, runout, drag) prints. XY only parks the bed at the Theta offset angle (0 = artwork axes on machine axes) and draws with the gantry - slower, and the bed cannot add error, so use it for precision passes.",
     "theta_max_step_deg": "Largest bed rotation one move may ask for, in bed degrees. Beyond this the bed parks and the gantry takes the move in X and Y. Lower it if a large turn mid-stroke leaves a drag mark, a blob, or a slight rotation of everything after it; 0 parks the bed whenever a turn is needed.",
     "theta_reversal_park_mm": "Park the bed across stretches where its own direction would reverse more often than every this many mm of pen travel. Smooth curves never reverse and keep the bed turning; this only parks zigzag/scalloped edges, where reversing the 12:1 bed every couple of millimetres smears the outline. 0 disables the rule.",
     "theta_resolver": "Per-segment theta solver. rtheta is the installed default; dp and greedy are fallback experiments.",
