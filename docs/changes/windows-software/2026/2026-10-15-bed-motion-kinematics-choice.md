@@ -75,6 +75,24 @@ buried as a raw combo id, and the CMYK tab had no control for it at all.
   `python tools\check_gcode_motion.py <file> --strict`: 0 deg bed rotation
   in every move, 0 A rate, no pen-up rotation, strategies `fixed`.
 
+## Cost at a glance (estimator, motion scale 1.0)
+
+Same settings (`fit_mode = inside`), outline artwork, numbers from
+`estimate_program_time` plus the emitted file:
+
+| sample | mode | lines | XY path | bed turns | estimate |
+|---|---|---:|---:|---:|---:|
+| kindergarten-house-sun.svg | Xθ/Yθ | 294 | 2515 mm | 0.93 | 241 s |
+| kindergarten-house-sun.svg | XY only | 236 | 3180 mm | 0.00 | 249 s |
+| spirit-logo-purple-rgb.svg | Xθ/Yθ | 13247 | 5254 mm | 2.33 | 488 s |
+| spirit-logo-purple-rgb.svg | XY only | 13247 | 6682 mm | 0.00 | 512 s |
+
+XY only costs roughly 25-30 % more gantry path and a few percent of estimated
+time on these samples - the feed model binds both modes at the same draw
+feed, and bed rotation is itself tangential-speed-limited. What the switch
+actually removes is the entire bed-rotation error budget (tilt, runout,
+reversal drag), not just some of it.
+
 ## Struggles and rejected approaches
 
 - Rejected omitting the A words from XY-only output: one program shape for
