@@ -51,6 +51,9 @@ acceptable workaround.
   page centre (scaled by `settings.scale`), so the preview,
   `_effective_settings()` analysis and all four saved programs inherit it.
   The calibration sheet uses the same hook.
+- `converter_core/gcode.py`: the program header now records
+  `(frame center …, bed motion …)`, so a saved file states which frame and
+  kinematics produced it. Pre-fix CMYK saves read `frame artwork bbox`.
 
 ## Verification
 

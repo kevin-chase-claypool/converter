@@ -754,6 +754,9 @@ class CmykTabTests(unittest.TestCase):
         contours = converter.read_svg(str(tab._layer_files["k"]), settings)
         plan = converter.plan_program(contours, settings)
         text = converter.contours_to_gcode(contours, settings, plan)
+        self.assertIn(
+            "(frame center 30.000,30.000 mm, bed motion XY only)", text
+        )
         angles = set()
         for line in text.splitlines():
             if line.startswith(("G0 ", "G1 ", "G53 ")):

@@ -98,6 +98,16 @@ def format_xy_command(point):
     return f"X{format_float(x)} Y{format_float(y)}"
 
 
+def bed_motion_label(settings):
+    """Short label for the emitted kinematics, used in the program header."""
+    mode = str(getattr(settings, "theta_mode", "optimized")).strip().lower()
+    if mode == "fixed":
+        return "XY only"
+    if mode in ("tangent", "raw"):
+        return "tangent"
+    return "x_theta/y_theta"
+
+
 def park_home_command(settings):
     # End-of-print park in machine coordinates. G53 bypasses G54 so the pen
     # moves to the fixed homed rest position regardless of the work offset the
@@ -329,6 +339,21 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
         % (
             settings.theta_controller_limits.max_rate_deg_min,
             settings.theta_controller_limits.max_acceleration_deg_s2,
+        ),
+        # Which frame and kinematics produced the file. Multi-pass tools need
+        # this to tell a shared-page-frame save from an older per-layer one.
+        "(frame %s, bed motion %s)"
+        % (
+            (
+                "center %.3f,%.3f mm"
+                % (
+                    float(settings.frame_center_mm[0]),
+                    float(settings.frame_center_mm[1]),
+                )
+                if getattr(settings, "frame_center_mm", None) is not None
+                else "artwork bbox"
+            ),
+            bed_motion_label(settings),
         ),
         "G21",
         "G90",

@@ -13,6 +13,9 @@
   137.21 mm before; 0.00 x 0.00 mm after (all at x = 100.00, y = 100.00 mm).
 - The Artwork scale control still sizes the print: the new CMYK test shows
   the drawn radius grows with 280 % vs 100 % while the anchor stays fixed.
+- The generated G-code header now states `(frame center …, bed motion …)`.
+  A CMYK file saved before this fix reads `(frame artwork bbox, …)`, so
+  stale saves are immediately identifiable.
 - Verification: new `test_artwork_placement.py` shared-anchor case, new
   `test_cmyk_tab.py` scaled-layer case; full suite 423 tests pass
   (1 skipped). Bench print of the four corner crosses is the remaining
