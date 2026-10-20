@@ -197,6 +197,20 @@
 
 ## Known technical debt
 
+- [ ] Plan the four CMYK layer programs in one shared page frame.
+  Problem: each per-ink SVG is recentered on its own contour bounding box, so
+  unequal ink coverage shifts the four saved passes apart (reproduced at
+  132 x 137 mm on an asymmetric test image at the shipped 280 % artwork
+  scale). The preview plans one combined SVG, so it looks aligned.
+  Benefit: the four files align by construction, independent of ink coverage
+  and scale; the corner crosses then measure only real machine registration.
+  Risk: a shared frame changes placement of existing CMYK output (relative to
+  the page centre instead of each ink's centre); preview and per-ink saves
+  must use the same anchor.
+  Acceptance: an asymmetric image produces four programs with identical
+  page-anchor coordinates, a bench print shows the four corner crosses
+  overlapping, and a regression test covers the framing.
+
 - [ ] Verify the heavy gantry axis under load.
   Problem: the operator reports that the Y motor carries markedly more mass than
   X or A. The converter's pen-up travels are `G0`, and grblHAL ignores the `F`

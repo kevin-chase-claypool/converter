@@ -1,5 +1,42 @@
 # Engineering Log
 
+<a id="elog-20261020-cmyk-per-ink-frame-bug"></a>
+### 🟥 2026-10-20 - WINDOWS SOFTWARE/DIAGNOSED - CMYK four-pass misalignment: each ink file is framed on its own bounding box
+
+- Symptom: the four saved CMYK programs do not draw on top of one another;
+  re-home/re-register and `G54` / `G0 X0 Y0 A0` do not change the relative
+  offset.
+- Root cause: each ink is written to its own SVG and planned separately.
+  `plan_program` recenters every artwork on `contour_center(contours)` - the
+  bounding box of THAT ink's marks. Different ink coverage means different
+  bbox centres, so each file shifts its own coverage to the bed centre. The
+  preview is one combined four-ink SVG, so it has one bbox and looks aligned.
+- Reproduction (asymmetric quadrant image, page 200 mm, margin 6 mm, GCR
+  95 %): layer anchors without the corner crosses (the shipped default)
+  spread 47 x 49 mm at 100 % artwork scale and 132 x 137 mm at the shipped
+  280 % scale. With the optional corner crosses the spread is 0.00 mm at
+  100 %, but still 82 x 82 mm at 280 % because the scaled ink extends beyond
+  the crosses' bounding box.
+- The calibration sheet's symmetric patch layout gave the same anchor on
+  all four channels (100.00 / 100.00 mm) in the same check, but that relies
+  on layout symmetry rather than a shared frame.
+- Current workaround: print the artwork at 100 % Artwork scale (size it with
+  the Page fields instead) and tick **Corner crosses (all inks)** before
+  Preview/Save - the crosses then define the same outermost bbox in every
+  layer. Any scale above about 105 % cannot be anchored by the crosses.
+- Planned fix: plan the CMYK preview and per-ink programs in one shared page
+  frame (page centre rather than each ink's bbox), with a regression test
+  using an asymmetric image. The crosses then measure only the real machine
+  registration.
+- Smaller contributors once framing is fixed: registration-centre residual
+  (~0.5-0.6 mm class), A-axis slip/reversal (~0.5 deg bed per pass) and the
+  bed-angle tilt term in Xθ/Yθ (~1 mm class; the XY-only bullet removes the
+  latter two from the print).
+- Evidence: code at `software/converter_core/gcode.py` (`plan_program`),
+  `converter_core/geometry.py` (`contour_center`) and
+  `software/generator_tabs/cmyk_tab.py` (`_build_artwork_layers`).
+- Category: windows-software, cmyk, planner, alignment, bug.
+
 <a id="elog-20261015-bed-motion-choice"></a>
 ### 🟨 2026-10-15 - WINDOWS SOFTWARE/IMPLEMENTED - Bed motion bullets: Xθ/Yθ or XY only, in the sidebar and on the CMYK tab
 
