@@ -248,6 +248,15 @@ Current tools:
   (2026-10-20 fix, `WSW-20261020-001`). The optional corner crosses are now
   only a machine-alignment check - tick them to see the four passes overlap
   on paper, not to make the programs align.
+  **Running the four passes:** call `G65 P113` once before the set (HOME +
+  REGISTER), then run the files back to back. Each file begins with `G54`
+  and its own first fed travel to its start point, and ends with a full pen
+  retract and the `G53 ... (park home)` move, so no manual "start point"
+  jog is needed. Do **not** re-home, re-register, or change work offsets
+  (`G10`/`G92`) between passes - that starts a new frame and shifts the
+  remaining colors. `?` and `$G` are the non-motion checks: expect `Idle`
+  and the same G54 work offset before each pass. If a reset or re-home
+  happens mid-set, re-register and restart the set.
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times
