@@ -1,5 +1,25 @@
 # Engineering Log
 
+<a id="elog-20261020-cmyk-pen-alignment-crosses"></a>
+### 🟨 2026-10-20 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - CMYK pen-alignment crosses: same file run once per pen
+
+- New `tools/make_cmyk_pen_alignment.py` and
+  `samples/gcode/cmyk-pen-alignment.gcode`: five 10 mm crosses (centre and
+  corners at +-75 mm), bed parked at A = 0, run unchanged once per CMYK pen.
+- Purpose: CMYK layers are different screen angles and tone maps, so their
+  strokes are not expected to coincide. Coincident crosses measure a shared
+  pen tip offset; per-pen gaps measure the XY offsets the single stored P100
+  pen offset cannot correct.
+- Verification: generator self-checks pass (10 strokes, A constant 0, max
+  radius 109.7 mm); `check_gcode_motion.py --strict` passes with 0 deg
+  rotation and no pen-up rotation.
+- Next action: bench run with the four pens on one sheet after a single
+  registration; photograph/measure the crosses. If gaps are consistent,
+  choose repeatable pen seating or add per-ink XY offsets.
+- Evidence: `WSW-20261020-002`;
+  `docs/changes/windows-software/2026/2026-10-20-cmyk-pen-alignment-crosses.md`.
+- Category: windows-software, hardware, cmyk, alignment, pen-offset.
+
 <a id="elog-20261020-cmyk-shared-page-frame"></a>
 ### 🟩 2026-10-20 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK four ink programs now share one page frame; Artwork scale works without changing overlay
 

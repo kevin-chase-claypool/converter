@@ -124,6 +124,13 @@ Cycle Start with the pen loaded:
   drawn / commanded); unequal square diagonals mean X/Y skew. Needs a
   >= 205 x 205 mm sheet (8.5x11 in portrait fits, centred). Regenerate with
   `..\tools\make_xy_scale_check.py`.
+- `..\samples\gcode\cmyk-pen-alignment.gcode` - five crosses (centre and
+  four corners at +-75 mm) with the bed parked, for comparing the four CMYK
+  pens. Register once, then run this **same file unchanged** once per pen on
+  one sheet without re-registering; the crosses must land on one another.
+  Any per-pen gap is that pen's XY tip offset relative to the first pen,
+  which the single stored P100 pen offset cannot correct. Regenerate with
+  `..\tools\make_cmyk_pen_alignment.py`.
 
 ## Generator tabs
 

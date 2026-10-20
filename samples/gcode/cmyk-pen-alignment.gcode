@@ -1,0 +1,92 @@
+(CMYK pen-alignment crosses - make_cmyk_pen_alignment.py)
+(five crosses: centre + corners at +/-75 mm, 10 mm arms)
+(bed parked at A0; run this SAME file once per pen, no re-registration)
+(crosses coincident = shared tip offset; per-pen gaps = XY pen offsets)
+G21
+G90
+G94
+G17
+G54
+G0 F3000
+M5
+G65 P115 Q0 A1 W2
+(cross centre at 0,0 mm)
+G0 X-5 Y0 A0
+M3
+G65 P115 Q1 B12 A1 W2
+G1 F350
+G1 X5 Y0 A0 F350
+M5
+G65 P115 Q1 A1 W2
+G0 X0 Y-5 A0
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X0 Y5 A0 F350
+M5
+G65 P115 Q1 A1 W2
+(cross top-left at -75,75 mm)
+G0 X-80 Y75 A0
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X-70 Y75 A0 F350
+M5
+G65 P115 Q1 A1 W2
+G0 X-75 Y70 A0
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X-75 Y80 A0 F350
+M5
+G65 P115 Q1 A1 W2
+(cross top-right at 75,75 mm)
+G0 X70 Y75 A0
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X80 Y75 A0 F350
+M5
+G65 P115 Q1 A1 W2
+G0 X75 Y70 A0
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X75 Y80 A0 F350
+M5
+G65 P115 Q1 A1 W2
+(cross bottom-left at -75,-75 mm)
+G0 X-80 Y-75 A0
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X-70 Y-75 A0 F350
+M5
+G65 P115 Q1 A1 W2
+G0 X-75 Y-80 A0
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X-75 Y-70 A0 F350
+M5
+G65 P115 Q1 A1 W2
+(cross bottom-right at 75,-75 mm)
+G0 X70 Y-75 A0
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X80 Y-75 A0 F350
+M5
+G65 P115 Q1 A1 W2
+G0 X75 Y-80 A0
+M3
+G65 P115 Q1 A1 W2
+G1 F350
+G1 X75 Y-70 A0 F350
+M5
+G65 P115 Q1 A1 W2
+M65 P0
+G65 P115 Q0 A3 W1
+M64 P0
+G53 G1 X-10 Y-436 F3000 (park home)
+M2

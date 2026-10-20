@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-20 | `WSW-20261020-002` | implemented | [CMYK pen-alignment crosses: one file run once per pen](2026/2026-10-20-cmyk-pen-alignment-crosses.md) | `cmyk`, `alignment`, `pen-offset`, `diagnostic` |
 | 2026-10-20 | `WSW-20261020-001` | implemented | [CMYK: one shared page frame for all four ink programs](2026/2026-10-20-cmyk-shared-page-frame.md) | `cmyk`, `alignment`, `planning`, `artwork-scale`, `calibration` |
 | 2026-10-15 | `WSW-20261015-001` | implemented | [Bed motion bullets: Xθ/Yθ or XY only, in the sidebar and on the CMYK tab](2026/2026-10-15-bed-motion-kinematics-choice.md) | `kinematics`, `theta`, `xy`, `cmyk`, `ui` |
 | 2026-10-14 | `WSW-20261014-003` | implemented | [Bed-tilt quadrant pair test: four labeled A=0-versus-angle line pairs](2026/2026-10-14-a-tilt-pairs-test.md) | `bed`, `tilt`, `a-axis`, `diagnostic`, `calibration` |
