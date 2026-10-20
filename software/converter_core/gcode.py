@@ -229,6 +229,14 @@ def plan_program(contours, settings, cancel_check=None):
     validate_settings(settings)
     check_cancelled(cancel_check)
     source_center = contour_center(contours)
+    # Multi-pass tools can pin the frame themselves. CMYK passes four separate
+    # layer SVGs through this planner; their ink coverage (and therefore their
+    # bounding boxes) differ, so each layer would otherwise be centered on its
+    # own ink and the passes would not overlay. A shared anchor - the page
+    # centre - makes the scale and placement identical for every layer.
+    frame_center = getattr(settings, "frame_center_mm", None)
+    if frame_center is not None:
+        source_center = (float(frame_center[0]), float(frame_center[1]))
     bed_radius = max(
         float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0
         - float(getattr(settings, "bed_margin_mm", 0.0)),

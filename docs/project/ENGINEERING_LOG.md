@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20261020-cmyk-shared-page-frame"></a>
+### 🟩 2026-10-20 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK four ink programs now share one page frame; Artwork scale works without changing overlay
+
+- Fix for the per-ink bounding-box framing diagnosed the same day: the
+  planner accepts an optional `frame_center_mm` anchor, and the CMYK tab
+  sets it to the page centre in `apply_tab_settings`, so the preview, the
+  four per-ink programs and the calibration sheet all recenter on the same
+  point regardless of ink coverage.
+- Reproduced before/after with an asymmetric quadrant image at 280 %
+  Artwork scale and corner crosses off: layer anchors spread 131.61 x
+  137.21 mm before; 0.00 x 0.00 mm after (all at x = 100.00, y = 100.00 mm).
+- The Artwork scale control still sizes the print: the new CMYK test shows
+  the drawn radius grows with 280 % vs 100 % while the anchor stays fixed.
+- Verification: new `test_artwork_placement.py` shared-anchor case, new
+  `test_cmyk_tab.py` scaled-layer case; full suite 423 tests pass
+  (1 skipped). Bench print of the four corner crosses is the remaining
+  acceptance check for machine-level registration.
+- Evidence: `WSW-20261020-001`;
+  `docs/changes/windows-software/2026/2026-10-20-cmyk-shared-page-frame.md`.
+- Category: windows-software, cmyk, planner, alignment, artwork-scale.
+
 <a id="elog-20261020-cmyk-per-ink-frame-bug"></a>
 ### 🟥 2026-10-20 - WINDOWS SOFTWARE/DIAGNOSED - CMYK four-pass misalignment: each ink file is framed on its own bounding box
 

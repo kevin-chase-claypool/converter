@@ -54,6 +54,19 @@ class ArtworkPlacementTests(unittest.TestCase):
         self.assertAlmostEqual(cx, 0.0, places=6)
         self.assertAlmostEqual(cy, 0.0, places=6)
 
+    def test_shared_frame_anchors_different_artworks_to_the_same_point(self):
+        # Multi-pass output (CMYK) hands the planner one frame for every ink
+        # layer, so differently shaped coverage still lands in one frame.
+        settings = converter.Settings(
+            frame_center_mm=(20.0, 25.0), scale=1.0, flip_y=False
+        )
+        first = converter.plan_program([[(0.0, 0.0), (10.0, 0.0)]], settings)
+        second = converter.plan_program([[(100.0, 100.0), (110.0, 100.0)]], settings)
+        self.assertEqual(first["source_center"], (20.0, 25.0))
+        self.assertEqual(second["source_center"], (20.0, 25.0))
+        self.assertEqual(first["contours"][0][0], (-20.0, -25.0))
+        self.assertEqual(second["contours"][0][0], (80.0, 75.0))
+
     def test_offset_moves_the_artwork_by_exactly_that_amount(self):
         cx, cy = _center(_plan(10.0, -5.0))
         self.assertAlmostEqual(cx, 10.0, places=6)

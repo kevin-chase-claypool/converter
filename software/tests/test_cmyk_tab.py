@@ -1,6 +1,7 @@
 """CMYK separation, screening, layer SVGs, and per-ink cost analysis."""
 
 import json
+import math
 import os
 import re
 import sys
@@ -655,6 +656,21 @@ class CmykTabTests(unittest.TestCase):
                 image.putpixel((x, y), (0, 0, 0))
         cls.image_path = str(Path(folder) / "art.png")
         image.save(cls.image_path)
+        # A full-ink, asymmetric image: every channel carries marks in a
+        # different region, so per-ink bounding boxes differ strongly.
+        colour = Image.new("RGB", (96, 96), (255, 255, 255))
+        for x in range(96):
+            for y in range(96):
+                if x < 48 and y < 48:
+                    colour.putpixel((x, y), (0, 200, 220))
+                elif x >= 48 and y < 48:
+                    colour.putpixel((x, y), (220, 0, 150))
+                elif x < 48:
+                    colour.putpixel((x, y), (240, 220, 0))
+                else:
+                    colour.putpixel((x, y), (40, 40, 40))
+        cls.colour_path = str(Path(folder) / "colour.png")
+        colour.save(cls.colour_path)
 
     def make_tab(self, host=None):
         host = host or FakeHost(self.image_path)
@@ -749,6 +765,48 @@ class CmykTabTests(unittest.TestCase):
         for _planned, _points, _thetas, labels in plan["planned_jobs"]:
             strategies.update(label for label in labels if label)
         self.assertEqual(strategies, {"fixed"})
+
+    def test_scaled_ink_layers_share_the_page_frame(self):
+        tab = self.make_tab(FakeHost(self.colour_path))
+        tab.scale_pct.setValue(280)
+        tab.registration_marks.setChecked(False)
+        tab._ensure_layers()
+        settings = tab._effective_settings()
+        expected = (tab.page_w.value() / 2.0, tab.page_h.value() / 2.0)
+        scaled_radii = {}
+        for channel in converter.CHANNELS:
+            contours = converter.read_svg(
+                str(tab._layer_files[channel]), settings
+            )
+            plan = converter.plan_program(contours, settings)
+            anchor = plan["source_center"]
+            self.assertAlmostEqual(anchor[0], expected[0], places=6, msg=channel)
+            self.assertAlmostEqual(anchor[1], expected[1], places=6, msg=channel)
+            scaled_radii[channel] = max(
+                math.hypot(x, y)
+                for contour in plan["contours"]
+                for x, y in contour
+            )
+
+        # The Artwork scale control still sizes the print: 280 % must draw
+        # appreciably larger than 100 % while both stay in one frame.
+        tab.scale_pct.setValue(100)
+        tab._ensure_layers()
+        settings = tab._effective_settings()
+        plain_radii = []
+        for channel in converter.CHANNELS:
+            contours = converter.read_svg(
+                str(tab._layer_files[channel]), settings
+            )
+            plan = converter.plan_program(contours, settings)
+            plain_radii.append(
+                max(
+                    math.hypot(x, y)
+                    for contour in plan["contours"]
+                    for x, y in contour
+                )
+            )
+        self.assertGreater(max(scaled_radii.values()), 2.0 * max(plain_radii))
 
     def test_save_writes_one_file_per_ink(self):
         host = FakeHost(self.image_path)

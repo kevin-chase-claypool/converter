@@ -242,6 +242,12 @@ Current tools:
   unchanged, so each ink is as cost-efficient as a normal Convert program;
   the tab's **Bed motion** bullets (Xθ/Yθ or XY only) apply to all four ink
   programs and to the calibration sheet.
+  The four programs share one **page frame**: they are planned around the
+  page centre rather than each ink's own bounding box, so **Artwork scale**
+  changes the printed size while leaving the four passes co-registered
+  (2026-10-20 fix, `WSW-20261020-001`). The optional corner crosses are now
+  only a machine-alignment check - tick them to see the four passes overlap
+  on paper, not to make the programs align.
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times

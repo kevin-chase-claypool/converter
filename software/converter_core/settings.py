@@ -143,6 +143,12 @@ class Settings:
     # box is not its visual center gets placed by hand. Negative is valid.
     artwork_offset_x_mm: float = 0.0
     artwork_offset_y_mm: float = 0.0
+    # Optional shared frame anchor in parsed on-paper coordinates (SVG mm
+    # with y flipped and `scale` applied). Multi-pass tools set this so every
+    # layer is recentered on the same point - the CMYK tab passes the page
+    # centre, otherwise unequal ink coverage shifts the four passes apart.
+    # None keeps the single-artwork default: center the artwork's own bbox.
+    frame_center_mm: tuple | None = None
     # Outlines only by default. Line art is the common case here, and a fill
     # that is coarse relative to a small closed shape leaves one or two short
     # fragments inside it - the "random dashes" seen on 2026-09-30. A positive
@@ -610,6 +616,16 @@ def validate_settings(settings):
         value = float(getattr(settings, name))
         if not math.isfinite(value):
             raise ValueError(f"{name.replace('_', ' ')} must be a finite number.")
+    frame_center = getattr(settings, "frame_center_mm", None)
+    if frame_center is not None:
+        try:
+            frame_x, frame_y = (float(value) for value in frame_center)
+        except (TypeError, ValueError):
+            raise ValueError(
+                "frame center must be a pair of finite numbers or empty."
+            ) from None
+        if not (math.isfinite(frame_x) and math.isfinite(frame_y)):
+            raise ValueError("frame center must be a pair of finite numbers.")
     if int(settings.shade_levels) < 1:
         raise ValueError("shade levels must be at least one.")
     if not 0.0 <= float(settings.theta_max_step_deg) <= 180.0:

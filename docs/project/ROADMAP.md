@@ -210,6 +210,9 @@
   Acceptance: an asymmetric image produces four programs with identical
   page-anchor coordinates, a bench print shows the four corner crosses
   overlapping, and a regression test covers the framing.
+  Status 2026-10-20: implementation and regression tests complete
+  (`WSW-20261020-001`; asymmetric 280 % reproduction now 0.00 mm anchor
+  spread). Open only for the bench print of the four corner crosses.
 
 - [ ] Verify the heavy gantry axis under load.
   Problem: the operator reports that the Y motor carries markedly more mass than

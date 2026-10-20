@@ -555,14 +555,22 @@ class CmykTab(GeneratorTab):
         """Overrides the host applies to this tab's preview and programs.
 
         Pen width drives the ink-simulation stroke width and the tone math;
-        Path tolerance drives the polar subdivision. The host calls this from
-        settings_for_source, so preview, analysis and saved files agree.
+        Path tolerance drives the polar subdivision. The shared page frame
+        makes every ink layer (and the preview) recenter on the page centre
+        rather than on its own ink coverage, so the four passes overlay at
+        any Artwork scale. The host calls this from settings_for_source, so
+        preview, analysis and saved files agree.
         """
+        scale = float(settings.scale)
         return dataclasses.replace(
             settings,
             tolerance=self.path_tolerance.value(),
             pen_diameter_mm=self.pen_width.value(),
             theta_mode=self.theta_mode.value(),
+            frame_center_mm=(
+                self.page_w.value() / 2.0 * scale,
+                self.page_h.value() / 2.0 * scale,
+            ),
         )
 
     def _effective_settings(self):
