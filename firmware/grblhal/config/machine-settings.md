@@ -66,7 +66,7 @@ address and will not appear on the house network until `$301` is returned to `1`
 These motion values are the unloaded commissioning snapshot in
 [`build-record.md`](build-record.md); they are not a pen-loaded plotting limit.
 
-### A-axis motion limits (current, 2026-10-01)
+### A-axis motion limits (current, 2026-10-13)
 
 The commissioning snapshot above predates the A-axis drift work and still shows
 the unloaded X/Y rates. The values below are what the controller actually runs,
@@ -75,11 +75,16 @@ confirmed by `$$` after a power cycle:
 | Setting | Value | Meaning |
 |---|---|---|
 | `$103` | `4.44444` | A steps per motor degree (x 4331.9664 = 19,253 steps per bed revolution) |
-| `$113` | `15000.000` | A max rate, motor deg/min (20.8 bed deg/s at the 12.03324:1 bed) |
+| `$113` | `30000.000` | A max rate, motor deg/min (41.6 bed deg/s at the 12.03324:1 bed) |
 | `$123` | `6000.000` | A acceleration, motor deg/s^2 |
 | `$133` | `0.000` | Continuous A bed: no finite maximum travel |
 | `$110` / `$111` | `20000.000` / `8000.000` | X / Y max rate, mm/min |
 | `$120` / `$121` | `1500.000` / `1000.000` | X / Y acceleration, mm/s^2 |
+
+> Verify the installed values with `$$` whenever this table is used. The
+> 2026-10-14 lab-note headers still quote `$113=15000` from the older
+> 2026-10-01 table; the 2026-10-13 change record and converter were updated
+> to `30000`/`6000`, and the r = 100 mm sample passed at F30000.
 
 `$113` was `80000.000` until 2026-10-01. That is 110.8 bed deg/s, about 21 m/min
 of pen surface speed at the 185 mm rim - as fast as the X/Y rapids - which the
@@ -96,3 +101,12 @@ as the operator's settled value; `$123` 6000 -> **3000** (torque demand scales
 with acceleration); `$111` 20000 -> **8000** and `$121` 1500 -> **1000** for the
 heavy Y axis. The converter mirrors `$113`/`$123` and prints its assumption in
 every program preamble, so the two can be compared with `$$`.
+
+2026-10-13 raise: the outer silhouette's tight stretches need up to about
+42 motor degrees per millimetre of pen travel (~29,400 motor deg/min at the
+700 mm/min tangential target), so `$113`/`$123` were raised **15000/3000 ->
+30000/6000** and the converter was updated to match. The regenerated
+`a-repeatability-test.gcode` ran at F30000 and the r = 100 mm station drew a
+perfect circle through two revolutions out and two back; the r = 160 mm
+station was not run because only letter paper was available. See
+[`WSW-20261013-008`](../../../docs/changes/windows-software/2026/2026-10-13-a-limits-raised-to-30000.md).

@@ -1,5 +1,18 @@
 # Engineering Log
 
+<a id="elog-20261021-a-limit-table-correction"></a>
+### 🟨 2026-10-21 - DOCUMENTATION/CORRECTED - A-axis settings table updated to 30000/6000; verify with `$$`
+
+- `firmware/grblhal/config/machine-settings.md` still listed the
+  2026-10-01 values (`$113=15000`) after the 2026-10-13 raise to
+  30000/6000. The table, heading and rationale now record the raise and the
+  F30000 r = 100 mm repeatability pass.
+- The record is not fully consistent: the 2026-10-14 lab-note headers still
+  quote `$113=15000`, likely copied from the old table. The installed
+  `$$` dump is the authority; the converter currently assumes
+  30000/6000 and prints that assumption in every program header.
+- Category: documentation, grblhal, a-axis, settings.
+
 <a id="elog-20261021-center-hold-diameter-60"></a>
 ### 🟩 2026-10-21 - WINDOWS SOFTWARE/IMPLEMENTED - Center hold is now a 60 mm diameter (30 mm radius)
 
