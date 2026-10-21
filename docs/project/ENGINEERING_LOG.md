@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261020-center-hold-radius"></a>
+### 🟩 2026-10-20 - WINDOWS SOFTWARE/IMPLEMENTED - Center hold radius parks the bed for fine strokes near the centre
+
+- Diagnosis: CMYK wave rows wobbled near the bed centre even at Path
+  tolerance 0.05. The saved yellow file honours the tolerance (max per-move
+  bow 0.043 mm inside r = 10 mm), but the A axis is saturated there: at
+  r = 10 mm and 700 mm/min it would need ~48,000 motor deg/min against a
+  30,000 limit, and 455 of 730 segments inside r = 20 rotated the bed (up to
+  12.1 bed degrees in one move inside r = 10).
+- Change: `theta_center_hold_mm` (default 20 mm) parks the bed for drawing
+  points inside that radius, with the existing Max bed step gate applied when
+  leaving. Exposed in the Theta kinematics sidebar and as **Center hold** on
+  the CMYK tab; 0 restores the old behavior. Bed-frame artwork is unchanged.
+- Verification on the real yellow layer: all 730 near-centre segments hold
+  (was 455 rotating), contour count unchanged at 640, total hold segments
+  13,504 -> 14,078. New planner tests and CMYK tab wiring test; full suite
+  425 tests pass (1 skipped).
+- Next: bench print of the wave screen to confirm the centre rows stay
+  straight; XY only remains the whole-print precision mode.
+- Evidence: `WSW-20261020-003`;
+  `docs/changes/windows-software/2026/2026-10-20-center-hold-radius.md`.
+- Category: windows-software, theta, kinematics, cmyk, center, precision.
+
 <a id="elog-20261020-cmyk-shift-remains-physical"></a>
 ### 🟥 2026-10-20 - WINDOWS SOFTWARE/HARDWARE/DIAGNOSED - CMYK print still ~25 mm off: saved files verified frame-consistent; residual is physical
 

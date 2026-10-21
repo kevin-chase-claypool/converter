@@ -741,9 +741,12 @@ class CmykTabTests(unittest.TestCase):
         )
         settings = tab.apply_tab_settings(converter.Settings())
         self.assertEqual(settings.theta_mode, "optimized")
+        self.assertEqual(settings.theta_center_hold_mm, 20.0)
         tab.theta_mode.set_value("fixed")
+        tab.center_hold.setValue(35.0)
         settings = tab.apply_tab_settings(converter.Settings())
         self.assertEqual(settings.theta_mode, "fixed")
+        self.assertEqual(settings.theta_center_hold_mm, 35.0)
         self.assertEqual(tab._effective_settings().theta_mode, "fixed")
 
     def test_xy_only_layer_program_holds_the_bed(self):

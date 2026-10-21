@@ -303,12 +303,19 @@ class CmykTab(GeneratorTab):
             converter.FIELD_TOOLTIPS.get("theta_mode", ""),
         )
         kinematics.addRow("Bed motion", self.theta_mode)
+        self.center_hold = double_spin(20.0, 0.0, 100.0, 1.0, 0, " mm")
+        self.center_hold.setToolTip(
+            converter.FIELD_TOOLTIPS.get("theta_center_hold_mm", "")
+        )
+        kinematics.addRow("Center hold", self.center_hold)
         kinematics_hint = QLabel(
             "Xθ/Yθ rotates the bed per segment (fast; every bed-angle error "
             "prints). XY only parks the bed and draws with the gantry "
             "(slower; the bed cannot add error) - use it for precision "
             "prints. Applies to the four ink programs and the calibration "
-            "sheet."
+            "sheet. Center hold parks the bed inside that radius, where the "
+            "same paper move would otherwise demand a huge bed rotation and "
+            "fine rows can wobble."
         )
         kinematics_hint.setWordWrap(True)
         kinematics_hint.setStyleSheet("color: #475569;")
@@ -567,6 +574,7 @@ class CmykTab(GeneratorTab):
             tolerance=self.path_tolerance.value(),
             pen_diameter_mm=self.pen_width.value(),
             theta_mode=self.theta_mode.value(),
+            theta_center_hold_mm=self.center_hold.value(),
             frame_center_mm=(
                 self.page_w.value() / 2.0 * scale,
                 self.page_h.value() / 2.0 * scale,
@@ -606,6 +614,7 @@ class CmykTab(GeneratorTab):
             self.dot_size.value(),
             self.solid_dots.isChecked(),
             self.theta_mode.value(),
+            self.center_hold.value(),
             self.pen_width.value(),
             self.path_tolerance.value(),
             self.levels.value(),

@@ -92,6 +92,12 @@ class Settings:
     # drawn with the bed parked. Smooth curves never reverse, so they keep the
     # bed; this rule only captures zigzag/scalloped edges. 0 disables it.
     theta_reversal_park_mm: float = 2.5
+    # Near the bed centre the same paper move needs a huge bed rotation: at
+    # r = 10 mm and 700 mm/min the A axis would need about 48000 motor
+    # deg/min, above the controller limit, and the pen scrubs across the
+    # paper. Park the bed for drawing inside this radius - rotation buys no
+    # reach there and the gantry can draw the move exactly. 0 disables.
+    theta_center_hold_mm: float = 20.0
     # Re-register the bed at every contour: subtract whole revolutions from the
     # bed angle so the commanded A never winds far from zero. Physically
     # neutral - the bed ends at the same orientation - but on a machine whose A
@@ -315,6 +321,7 @@ TEXT_FIELD_GROUPS = (
         ("Theta weight", "theta_weight", "1.0"),
         ("Max bed step deg", "theta_max_step_deg", "15"),
         ("Bed reversal park mm", "theta_reversal_park_mm", "3"),
+        ("Center hold radius mm", "theta_center_hold_mm", "20"),
         ("Curve round bias", "round_bias", "0.05"),
         ("Smoothness factor", "smoothness_factor", "1.0"),
         ("Theta smooth", "theta_smooth_window", "2"),
@@ -477,6 +484,7 @@ FIELD_TOOLTIPS = {
     "theta_mode": "Xθ/Yθ rotates the bed per segment so the gantry moves one axis at a time - fastest, but every bed-angle error (tilt, runout, drag) prints. XY only parks the bed at the Theta offset angle (0 = artwork axes on machine axes) and draws with the gantry - slower, and the bed cannot add error, so use it for precision passes.",
     "theta_max_step_deg": "Largest bed rotation one move may ask for, in bed degrees. Beyond this the bed parks and the gantry takes the move in X and Y. Lower it if a large turn mid-stroke leaves a drag mark, a blob, or a slight rotation of everything after it; 0 parks the bed whenever a turn is needed.",
     "theta_reversal_park_mm": "Park the bed across stretches where its own direction would reverse more often than every this many mm of pen travel. Smooth curves never reverse and keep the bed turning; this only parks zigzag/scalloped edges, where reversing the 12:1 bed every couple of millimetres smears the outline. 0 disables the rule.",
+    "theta_center_hold_mm": "Park the bed for drawing inside this radius, where a straight paper move needs a very large bed rotation (at r = 10 mm and 700 mm/min the A axis would need about 48000 motor deg/min). The gantry draws those moves exactly; parking removes the A-rate saturation, scrub and reversal wobble that shows up as wavy lines near the centre. 0 disables.",
     "theta_resolver": "Per-segment theta solver. rtheta is the installed default; dp and greedy are fallback experiments.",
     "theta_wrap": "Subtract whole bed revolutions at every contour so the commanded A stays near zero. The bed ends in the same place, but any small A-axis scale error stops accumulating with angle - turn this off to match older programs.",
     "pen_diameter_mm": "Physical pen tip width. Used for ink-size reporting, pen-width compensation, and the 'Fill wide strokes' threshold.",
@@ -602,6 +610,7 @@ def validate_settings(settings):
         "pen_down_first_ms",
         "bed_margin_mm",
         "machine_reach_radius_mm",
+        "theta_center_hold_mm",
     )
     for name in positive:
         value = float(getattr(settings, name))

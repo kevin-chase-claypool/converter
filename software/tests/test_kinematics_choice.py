@@ -123,6 +123,58 @@ class XyOnlyKinematicsTests(unittest.TestCase):
         self.assertGreater(len(values), 20, "Xθ/Yθ should sweep the bed")
 
 
+class CenterHoldTests(unittest.TestCase):
+    """Fine strokes through the bed centre park the bed instead of rotating."""
+
+    @staticmethod
+    def _plan(hold_mm):
+        settings = dataclasses.replace(
+            converter.Settings(),
+            theta_mode="optimized",
+            theta_center_hold_mm=hold_mm,
+        )
+        contour = [
+            (-60.0, 0.0),
+            (-30.0, 5.0),
+            (-10.0, 2.0),
+            (0.0, 0.0),
+            (10.0, -2.0),
+            (30.0, -5.0),
+            (60.0, 0.0),
+        ]
+        return converter.plan_program([contour], settings)["planned_jobs"][0]
+
+    def test_centre_segments_hold_the_bed(self):
+        _planned, points, thetas, strategies = self._plan(20.0)
+        inside = 0
+        for index in range(len(points) - 1):
+            if (
+                math.hypot(*points[index]) <= 20.0
+                and math.hypot(*points[index + 1]) <= 20.0
+            ):
+                inside += 1
+                self.assertAlmostEqual(
+                    thetas[index + 1] - thetas[index], 0.0, places=9
+                )
+                self.assertEqual(strategies[index], "hold")
+        self.assertGreater(inside, 0, "the contour should cross the hold radius")
+        self.assertTrue(
+            any(
+                abs(thetas[index + 1] - thetas[index]) > 1e-6
+                for index in range(len(thetas) - 1)
+            ),
+            "strokes outside the radius must still use the bed",
+        )
+
+    def test_centre_hold_adds_hold_segments(self):
+        held = self._plan(20.0)[3]
+        plain = self._plan(0.0)[3]
+        self.assertGreater(
+            sum(1 for label in held if label == "hold"),
+            sum(1 for label in plain if label == "hold"),
+        )
+
+
 @unittest.skipUnless(HAVE_QT, "PySide6 is not installed")
 class ChoiceBulletsTests(unittest.TestCase):
     @classmethod

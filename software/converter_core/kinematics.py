@@ -826,10 +826,77 @@ def plan_contour_thetas(path, settings, previous_theta, center, previous_machine
     resolver = str(getattr(settings, "theta_resolver", "rtheta")).strip().lower()
     mode = str(getattr(settings, "theta_mode", "optimized")).strip().lower()
     if resolver in ("rtheta", "r-theta", "axis_cost", "axis-cost") and mode in ("optimized", "auto", "select"):
-        return _plan_contour_thetas_rtheta(path, settings, previous_theta, center, previous_machine, cancel_check)
-    if resolver == "dp" and mode in ("optimized", "auto", "select"):
-        return _plan_contour_thetas_dp(path, settings, previous_theta, center, previous_machine, cancel_check)
-    return _plan_contour_thetas_greedy(path, settings, previous_theta, center, previous_machine, cancel_check)
+        thetas, strategies = _plan_contour_thetas_rtheta(
+            path, settings, previous_theta, center, previous_machine, cancel_check
+        )
+    elif resolver == "dp" and mode in ("optimized", "auto", "select"):
+        thetas, strategies = _plan_contour_thetas_dp(
+            path, settings, previous_theta, center, previous_machine, cancel_check
+        )
+    else:
+        thetas, strategies = _plan_contour_thetas_greedy(
+            path, settings, previous_theta, center, previous_machine, cancel_check
+        )
+    return _apply_center_hold(
+        path, thetas, strategies, previous_theta, center, settings
+    )
+
+
+def _center_hold_theta(held, index, previous_theta):
+    if index == 0:
+        return previous_theta if previous_theta is not None else held[0]
+    return held[index - 1]
+
+
+def _apply_center_hold(path, thetas, strategies, previous_theta, center, settings):
+    """Park the bed for points inside ``theta_center_hold_mm``.
+
+    Near the bed centre a straight paper move needs a large bed rotation, so
+    the A axis is rate-limited and any scrub/backlash shows on the paper. The
+    bed-frame point is exact for any theta, so holding one angle there draws
+    the same artwork with the gantry and removes that error source.
+    """
+    hold_mm = max(0.0, float(getattr(settings, "theta_center_hold_mm", 0.0)))
+    if hold_mm <= 0.0 or len(thetas) < 2:
+        return thetas, strategies
+    cx, cy = center
+    radii = [math.hypot(point[0] - cx, point[1] - cy) for point in path]
+    if all(radius > hold_mm for radius in radii):
+        return thetas, strategies
+    original = list(thetas)
+    held = list(thetas)
+    hold_theta = None
+    for index, radius in enumerate(radii):
+        if radius <= hold_mm:
+            if hold_theta is None:
+                hold_theta = _center_hold_theta(held, index, previous_theta)
+            held[index] = hold_theta
+        else:
+            hold_theta = None
+    # Leaving the held region must not ask for a large sweep in one move.
+    # Keep the existing per-move rotation gate authoritative.
+    cap = _max_bed_step_deg(settings)
+    for index in range(1, len(held)):
+        delta = held[index] - held[index - 1]
+        if abs(delta) > cap:
+            held[index] = held[index - 1] + math.copysign(cap, delta)
+    labels = list(strategies)
+    for index in range(len(held) - 1):
+        changed = (
+            abs(held[index] - original[index]) > 1e-9
+            or abs(held[index + 1] - original[index + 1]) > 1e-9
+        )
+        if not changed:
+            continue
+        if abs(held[index + 1] - held[index]) <= 1e-9:
+            labels[index] = "hold"
+        else:
+            start = bed_to_machine(path[index], held[index], center)
+            end = bed_to_machine(path[index + 1], held[index + 1], center)
+            dx = abs(end[0] - start[0])
+            dy = abs(end[1] - start[1])
+            labels[index] = "x_theta" if dx >= dy else "y_theta"
+    return held, labels
 
 
 def first_segment_theta(path, settings, previous_theta, center, previous_machine):

@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-20 | `WSW-20261020-003` | windows-software | implemented | [Center hold radius: park the bed for fine strokes near the bed centre](windows-software/2026/2026-10-20-center-hold-radius.md) |
 | 2026-10-20 | `WSW-20261020-002` | windows-software, hardware | implemented | [CMYK pen-alignment crosses: one file run once per pen](windows-software/2026/2026-10-20-cmyk-pen-alignment-crosses.md) |
 | 2026-10-20 | `WSW-20261020-001` | windows-software | implemented | [CMYK: one shared page frame for all four ink programs](windows-software/2026/2026-10-20-cmyk-shared-page-frame.md) |
 | 2026-10-15 | `WSW-20261015-001` | windows-software | implemented | [Bed motion bullets: Xθ/Yθ or XY only, in the sidebar and on the CMYK tab](windows-software/2026/2026-10-15-bed-motion-kinematics-choice.md) |
