@@ -127,11 +127,11 @@ class CenterHoldTests(unittest.TestCase):
     """Fine strokes through the bed centre park the bed instead of rotating."""
 
     @staticmethod
-    def _plan(hold_mm):
+    def _plan(hold_diameter_mm):
         settings = dataclasses.replace(
             converter.Settings(),
             theta_mode="optimized",
-            theta_center_hold_mm=hold_mm,
+            theta_center_hold_diameter_mm=hold_diameter_mm,
         )
         contour = [
             (-60.0, 0.0),
@@ -145,12 +145,12 @@ class CenterHoldTests(unittest.TestCase):
         return converter.plan_program([contour], settings)["planned_jobs"][0]
 
     def test_centre_segments_hold_the_bed(self):
-        _planned, points, thetas, strategies = self._plan(20.0)
+        _planned, points, thetas, strategies = self._plan(60.0)
         inside = 0
         for index in range(len(points) - 1):
             if (
-                math.hypot(*points[index]) <= 20.0
-                and math.hypot(*points[index + 1]) <= 20.0
+                math.hypot(*points[index]) <= 30.0
+                and math.hypot(*points[index + 1]) <= 30.0
             ):
                 inside += 1
                 self.assertAlmostEqual(
@@ -167,7 +167,7 @@ class CenterHoldTests(unittest.TestCase):
         )
 
     def test_centre_hold_adds_hold_segments(self):
-        held = self._plan(20.0)[3]
+        held = self._plan(60.0)[3]
         plain = self._plan(0.0)[3]
         self.assertGreater(
             sum(1 for label in held if label == "hold"),

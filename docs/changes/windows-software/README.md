@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-21 | `WSW-20261021-001` | implemented | [Center hold is now a 60 mm diameter](2026/2026-10-21-center-hold-diameter-60.md) | `theta`, `kinematics`, `cmyk`, `center`, `precision` |
 | 2026-10-20 | `WSW-20261020-003` | implemented | [Center hold radius: park the bed for fine strokes near the bed centre](2026/2026-10-20-center-hold-radius.md) | `theta`, `kinematics`, `cmyk`, `center`, `precision` |
 | 2026-10-20 | `WSW-20261020-002` | implemented | [CMYK pen-alignment crosses: one file run once per pen](2026/2026-10-20-cmyk-pen-alignment-crosses.md) | `cmyk`, `alignment`, `pen-offset`, `diagnostic` |
 | 2026-10-20 | `WSW-20261020-001` | implemented | [CMYK: one shared page frame for all four ink programs](2026/2026-10-20-cmyk-shared-page-frame.md) | `cmyk`, `alignment`, `planning`, `artwork-scale`, `calibration` |

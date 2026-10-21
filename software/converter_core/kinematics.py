@@ -849,25 +849,29 @@ def _center_hold_theta(held, index, previous_theta):
 
 
 def _apply_center_hold(path, thetas, strategies, previous_theta, center, settings):
-    """Park the bed for points inside ``theta_center_hold_mm``.
+    """Park the bed for points inside ``theta_center_hold_diameter_mm``.
 
     Near the bed centre a straight paper move needs a large bed rotation, so
     the A axis is rate-limited and any scrub/backlash shows on the paper. The
     bed-frame point is exact for any theta, so holding one angle there draws
     the same artwork with the gantry and removes that error source.
     """
-    hold_mm = max(0.0, float(getattr(settings, "theta_center_hold_mm", 0.0)))
-    if hold_mm <= 0.0 or len(thetas) < 2:
+    hold_diameter = max(
+        0.0,
+        float(getattr(settings, "theta_center_hold_diameter_mm", 0.0)),
+    )
+    hold_radius = hold_diameter / 2.0
+    if hold_radius <= 0.0 or len(thetas) < 2:
         return thetas, strategies
     cx, cy = center
     radii = [math.hypot(point[0] - cx, point[1] - cy) for point in path]
-    if all(radius > hold_mm for radius in radii):
+    if all(radius > hold_radius for radius in radii):
         return thetas, strategies
     original = list(thetas)
     held = list(thetas)
     hold_theta = None
     for index, radius in enumerate(radii):
-        if radius <= hold_mm:
+        if radius <= hold_radius:
             if hold_theta is None:
                 hold_theta = _center_hold_theta(held, index, previous_theta)
             held[index] = hold_theta

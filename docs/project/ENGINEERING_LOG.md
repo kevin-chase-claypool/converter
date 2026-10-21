@@ -1,5 +1,27 @@
 # Engineering Log
 
+<a id="elog-20261021-center-hold-diameter-60"></a>
+### 🟩 2026-10-21 - WINDOWS SOFTWARE/IMPLEMENTED - Center hold is now a 60 mm diameter (30 mm radius)
+
+- Operator request: "lets make it 60 instead - diameter". The centre hold is
+  now specified as `theta_center_hold_diameter_mm`, default 60 mm, labelled
+  **Center hold diameter mm** in the sidebar and **Center hold** on the CMYK
+  tab (default 60, range 0-200). The planner compares each drawing point's
+  radius against half the setting.
+- Real yellow layer check: 1,190 segments fully inside r = 30; with the hold
+  disabled 712 of them rotated the bed, with the 60 mm diameter all 1,190
+  hold. Contour count unchanged at 640; total hold segments 13,504 ->
+  14,354.
+- Verification: tests updated for the diameter semantics (including the
+  reversal-parking isolation test, which now disables the centre hold
+  explicitly); full suite 425 tests pass (1 skipped).
+- Note: the larger hold covers more of the centre, so it adds gantry travel
+  there and changes default Xθ/Yθ plans; set 0 to disable. Bench print of the
+  wave screen remains the acceptance check.
+- Evidence: `WSW-20261021-001`;
+  `docs/changes/windows-software/2026/2026-10-21-center-hold-diameter-60.md`.
+- Category: windows-software, theta, kinematics, cmyk, center, precision.
+
 <a id="elog-20261020-center-hold-radius"></a>
 ### 🟩 2026-10-20 - WINDOWS SOFTWARE/IMPLEMENTED - Center hold radius parks the bed for fine strokes near the centre
 

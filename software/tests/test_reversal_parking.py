@@ -129,6 +129,9 @@ class ReversalParkPlannerTests(unittest.TestCase):
     def test_head_area_scallop_parks_and_holds_the_bed(self):
         disabled = converter.Settings()
         disabled.theta_reversal_park_mm = 0.0
+        # This test isolates the reversal-parking rule; the separate
+        # centre-hold rule would otherwise add its own holds.
+        disabled.theta_center_hold_diameter_mm = 0.0
         _, strategies_off = kinematics.plan_contour_thetas(
             HEAD_RUN, disabled, None, (0.0, 0.0), None
         )

@@ -249,9 +249,10 @@ Current tools:
   unchanged, so each ink is as cost-efficient as a normal Convert program;
   the tab's **Bed motion** bullets (Xθ/Yθ or XY only) apply to all four ink
   programs and to the calibration sheet.
-  The Kinematics group's **Center hold** (default 20 mm) parks the bed for
-  drawing inside that radius, where A-axis rate limiting and scrub otherwise
-  make fine rows wobble; set `0` to let the bed rotate everywhere.
+  The Kinematics group's **Center hold** (default 60 mm diameter, i.e. a
+  30 mm radius) parks the bed for drawing inside that circle, where A-axis
+  rate limiting and scrub otherwise make fine rows wobble; set `0` to let
+  the bed rotate everywhere.
   The four programs share one **page frame**: they are planned around the
   page centre rather than each ink's own bounding box, so **Artwork scale**
   changes the printed size while leaving the four passes co-registered
@@ -784,14 +785,14 @@ display-only; every other group changes the emitted program.
     back-of-head scallop when it turned, and a perfect match when parked. On
     the heraldic sample with this rule it parks 420 mm of the 4298 mm pen path
     (9.8%), all in the zigzag patches; `0` disables it.
-  - **Center hold radius mm** (default `20`) parks the bed for drawing points
-    inside that radius. Near the bed centre a straight paper move needs a huge
-    bed rotation - at r = 10 mm and 700 mm/min the A axis would need about
-    48,000 motor deg/min against a 30,000 limit - so the A axis is saturated,
-    reverses often, and scrubs the pen. The gantry draws the held moves
-    exactly; the bed is brought back toward the planned angle under the same
-    Max bed step gate after leaving the region. `0` restores the old behavior
-    and lets the bed rotate everywhere.
+  - **Center hold diameter mm** (default `60`, a 30 mm radius) parks the bed
+    for drawing points inside that circle. Near the bed centre a straight
+    paper move needs a huge bed rotation - at r = 10 mm and 700 mm/min the A
+    axis would need about 48,000 motor deg/min against a 30,000 limit - so
+    the A axis is saturated, reverses often, and scrubs the pen. The gantry
+    draws the held moves exactly; the bed is brought back toward the planned
+    angle under the same Max bed step gate after leaving the region. `0`
+    restores the old behavior and lets the bed rotate everywhere.
   - **Bed rotation is bounded where the machine cannot follow it.** The planner
     keeps the bed parked instead of swinging it when the axis-lock solution for
     a segment would rotate more than 15 deg, or when a stroke passes close

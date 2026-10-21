@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-21 | `WSW-20261021-001` | windows-software | implemented | [Center hold is now a 60 mm diameter](windows-software/2026/2026-10-21-center-hold-diameter-60.md) |
 | 2026-10-20 | `WSW-20261020-003` | windows-software | implemented | [Center hold radius: park the bed for fine strokes near the bed centre](windows-software/2026/2026-10-20-center-hold-radius.md) |
 | 2026-10-20 | `WSW-20261020-002` | windows-software, hardware | implemented | [CMYK pen-alignment crosses: one file run once per pen](windows-software/2026/2026-10-20-cmyk-pen-alignment-crosses.md) |
 | 2026-10-20 | `WSW-20261020-001` | windows-software | implemented | [CMYK: one shared page frame for all four ink programs](windows-software/2026/2026-10-20-cmyk-shared-page-frame.md) |
