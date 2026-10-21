@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20261020-cmyk-shift-remains-physical"></a>
+### 🟥 2026-10-20 - WINDOWS SOFTWARE/HARDWARE/DIAGNOSED - CMYK print still ~25 mm off: saved files verified frame-consistent; residual is physical
+
+- Bench print: yellow displaced roughly 25 mm from magenta. Both saved files
+  come from the fixed planner - identical headers
+  `(frame center 100.000,100.000 mm, bed motion x_theta/y_theta)` and the
+  same save time.
+- Reconstructed bed-frame geometry by inverting the A rotation: magenta
+  x [-176.75, 179.98], y [-180.00, 179.99]; yellow x [-180.00, 180.00],
+  y [-179.39, 179.95]; both clipped at the 180 mm reach circle. The session
+  layer SVGs have matching extents (within ~1.5 mm). Preview, layer SVGs and
+  saved files agree, so the bench gap is not file framing.
+- Scale: at r = 180 mm, 25 mm is about 8 deg of bed angle. A rotation about
+  the bed centre - a different A reference between passes, or A slip - is
+  the leading suspect. Pen seating and sheet movement would be translations.
+  The artwork fills the reach circle, so the rim amplifies A error
+  (1 deg is about 3.1 mm at r = 180).
+- Next: run `samples/gcode/cmyk-pen-alignment.gcode` unchanged with magenta
+  and yellow after one registration; also print the set with Bed motion =
+  XY only. Rotated crosses -> A reference/slip; translated crosses ->
+  pen/sheet. Record whether the visible gap grows toward the rim.
+- Evidence: `samples/gcode/Ben1/IMG_0514-cmyk-magenta.gcode`,
+  `...-yellow.gcode`; `WSW-20261020-001`, `WSW-20261020-002`.
+- Category: windows-software, hardware, cmyk, alignment, a-axis.
+
 <a id="elog-20261020-cmyk-pen-alignment-crosses"></a>
 ### 🟨 2026-10-20 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - CMYK pen-alignment crosses: same file run once per pen
 
