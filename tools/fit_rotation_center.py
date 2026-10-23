@@ -1,9 +1,9 @@
 """Fit a residual rotation-centre offset from the cross-replay pen test.
 
-Each measurement is ``ANGLE,DX,DY`` in degrees and millimetres. DX and DY are
-the replay-cross position minus the A=0 reference cross, positive toward the
-reference cross's +X/+Y arrowheads. Supply 90/180/270 readings when possible;
-a two-axis 180-degree cross is also sufficient.
+Each measurement is ``ANGLE,GAP_X,GAP_Y`` in degrees and millimetres. The gaps
+are the raw distances between the longer reference arms and shorter replay arms
+at that station. The default 20 mm pair baseline is subtracted before fitting.
+Supply 90/180/270 readings; a two-axis 180-degree reading is also sufficient.
 
 The result is added to P100's existing axis-centre correction because the test
 measures the residual left by the constants currently installed on the
@@ -13,9 +13,9 @@ or flash firmware.
 Usage::
 
     python tools\\fit_rotation_center.py ^
-        --measurement 90,0.6,-0.6 ^
-        --measurement 180,0,-1.2 ^
-        --measurement 270,-0.6,-0.6
+        --measurement 90,20.6,19.4 ^
+        --measurement 180,20,18.8 ^
+        --measurement 270,19.4,19.4
 """
 
 from __future__ import annotations
@@ -33,6 +33,7 @@ from converter_core.rotation_calibration import (  # noqa: E402
     current_axis_center_correction,
     fit_rotation_center,
     parse_measurement,
+    remove_pair_baseline,
 )
 
 
@@ -42,8 +43,14 @@ def main() -> None:
         "--measurement",
         action="append",
         required=True,
-        metavar="ANGLE,DX,DY",
-        help="replay cross minus reference cross; repeat for each bed angle",
+        metavar="ANGLE,GAP_X,GAP_Y",
+        help="raw reference-to-replay spans; repeat for each bed angle",
+    )
+    parser.add_argument(
+        "--baseline-mm",
+        type=float,
+        default=20.0,
+        help="nominal reference-to-replay gap in both axes (default 20)",
     )
     parser.add_argument(
         "--macro",
@@ -53,7 +60,8 @@ def main() -> None:
     args = parser.parse_args()
 
     try:
-        measurements = [parse_measurement(value) for value in args.measurement]
+        spans = [parse_measurement(value) for value in args.measurement]
+        measurements = remove_pair_baseline(spans, args.baseline_mm)
         fit = fit_rotation_center(measurements)
         macro_text = Path(args.macro).read_text(encoding="utf-8")
         current_x, current_y = current_axis_center_correction(macro_text)
@@ -73,16 +81,16 @@ def main() -> None:
     )
     for angle, predicted_x, predicted_y in fit.predictions:
         measured = next(
-            item for item in measurements if item.angle_deg % 360.0 == angle
+            item for item in spans if item.angle_deg % 360.0 == angle % 360.0
         )
         print(
-            "  %6.1f deg: measured %+7.3f,%+7.3f  predicted %+7.3f,%+7.3f"
+            "  %6.1f deg: gaps %7.3f,%7.3f  predicted %7.3f,%7.3f"
             % (
                 angle,
                 measured.offset_x_mm,
                 measured.offset_y_mm,
-                predicted_x,
-                predicted_y,
+                predicted_x + args.baseline_mm,
+                predicted_y + args.baseline_mm,
             )
         )
     print(f"  P100 current: X {current_x:.4f}, Y {current_y:.4f}")

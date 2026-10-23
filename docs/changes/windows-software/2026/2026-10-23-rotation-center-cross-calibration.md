@@ -26,8 +26,8 @@ tags:
 ## Summary
 
 Added a pen test that measures the rotating bed's residual X/Y centre offset
-with two orthogonal cross arms, plus a least-squares fitter that converts the
-90/180/270-degree readings into replacement P100
+at four separated stations, plus a least-squares fitter that converts the
+90/180/270-degree raw gap readings into replacement P100
 `axis_center_correction_x/y` constants. The correction remains in P100; the
 converter does not apply a second artwork-space offset.
 
@@ -40,18 +40,22 @@ a small vector `C` away from the true rotation axis. A half-turn makes the
 displacement `2C`, while 90 and 270 degrees expose the two perpendicular
 components with opposite X signs. A single line replay could measure only one
 component at a time and did not provide a repeatable way to calculate both
-P100 constants.
+P100 constants. The first cross implementation put all replays at one centre;
+bench feedback showed that those closely spaced, wet lines were difficult to
+read and contaminated each other, so each angle now has a separate station
+and a 20 mm nominal reference-to-replay gap.
 
 ## Implementation
 
 - `tools/make_rotation_center_calibration.py` and
-  `samples/gcode/rotation-center-calibration.gcode` draw a 330.2 mm reference
-  cross at A=0, a control, and 310.2/300.2/290.2 mm cross replays at
-  90/180/270 degrees, followed by a 280.2 mm closing A=0 pass. The layout is
-  13 inches (330.2 mm) across on 14-inch (355.6 mm) round stock, leaving
-  12.7 mm to the stock edge. The reference arrows point machine +X/+Y; every
-  other cross is shorter so its angle remains identifiable where the crosses
-  overlap.
+  `samples/gcode/rotation-center-calibration.gcode` place the 90, 180, 270,
+  and control stations at S, E, N, and W. Each station has a 40 mm A=0
+  reference cross and a 34 mm replay cross whose centre is nominally
+  `(+20,+20)` mm in the bed frame. The reference is therefore identifiable by
+  its longer arms, while the wet parallel lines remain 20 mm apart.
+- The planned footprint is 13 inches (330.2 mm) on 14-inch (355.6 mm) round
+  stock. The furthest ink is about 158.3 mm from centre, leaving more than
+  19 mm to the stock edge. A centre direction key points machine +X/+Y.
 - The replays use the same bed-frame cross transformed about G54 zero. The bed
   returns to A=0 before the sheet is read. A replay cross minus the reference
   cross is the measured `DX,DY` shift for that angle.
@@ -59,8 +63,9 @@ P100 constants.
   travel rate and A-rate cap applied, so the diagnostic introduces no bare
   `G0` bed rotation.
 - `tools/fit_rotation_center.py` reads the current constants from
-  `P100.macro`, fits the two-component centre offset, reports model residual,
-  and prints replacement constants. It does not edit or flash the macro.
+  `P100.macro`, subtracts the known pair baseline from the raw X/Y spans, fits
+  the two-component centre offset, reports model residual, and prints
+  replacement constants. It does not edit or flash the macro.
 - `software/converter_core/rotation_calibration.py` owns the reusable geometry,
   fitting, P100 parsing, and G-code construction.
 
@@ -68,18 +73,20 @@ P100 constants.
 
 - New tests cover the half-turn doubling `e(180)=2C`, exact recovery from
   synthetic 90/180/270 measurements, a two-axis half-turn measurement,
-  non-centre residual detection, P100 parsing, sign-preserving correction,
-  pass ordering, arm-length checks, indexed A values, and malformed input.
+  baseline subtraction, non-centre residual detection, P100 parsing,
+  sign-preserving correction, station layout, arm-length checks, indexed A
+  values, and malformed input.
 - `python -m unittest discover -s software\tests -p test_rotation_calibration.py -v`
-  passes 15 tests with Python 3.13.13.
+  passes 16 tests with Python 3.13.13.
 - `python tools\make_rotation_center_calibration.py` generated the committed
-  116-line sample with six length-coded crosses.
+  204-line sample with four separated reference/replay stations.
 - `python tools\check_gcode_motion.py
   samples\gcode\rotation-center-calibration.gcode --strict` passes: 0 degrees
   of A motion in every drawing move, 0 A rate, and no bare `G0` rotation.
-- A synthetic reading of `90,0.6,-0.6`, `180,0,-1.2`, `270,-0.6,-0.6`
-  recovers `C=(0,-0.6)` mm with zero model residual and changes the current
-  P100 Y correction from 0.3 to -0.3 mm as expected.
+- Synthetic raw gaps of `90,20.6,19.4`, `180,20,18.8`,
+  `270,19.4,19.4` recover `C=(0,-0.6)` mm after subtracting the 20 mm
+  baseline, with zero model residual, and change the current P100 Y correction
+  from 0.3 to -0.3 mm as expected.
 
 ## Struggles and rejected approaches
 
@@ -88,6 +95,10 @@ P100 constants.
   the encoded equation and least-squares coefficients now agree.
 - A one-line replay cannot give both X and Y offsets without a second run. The
   cross test gives both components in one stable pattern.
+- Rejected keeping all four crosses at one centre after bench feedback: a
+  sub-millimetre error intentionally puts the lines almost on top of each
+  other, and the previous wet crossing mixes their ink. The separated-pair
+  layout trades one easy calibration reading for overlap ambiguity.
 - Rejected adding a second correction stage to the converter. P100 owns the
   G54 registration and already contains the two centre constants; duplicating
   them would double-compensate every rotated drawing.
@@ -98,8 +109,8 @@ P100 constants.
 ## Risks and follow-up
 
 - The pattern is implemented but not yet bench-read. The next milestone is to
-  run it after `G65 P113`, measure the three replay crosses against the
-  reference, and record the fitted constants in a lab note.
+  run it after `G65 P113`, measure each station's two raw gaps, and record the
+  fitted constants in a lab note.
 - Photograph or scan the sheet straight down; line-width and pen choice limit
   the readable offset more than the model does. Use the finest pen available.
 - If model residual exceeds 0.20 mm, investigate bed plane/runout before

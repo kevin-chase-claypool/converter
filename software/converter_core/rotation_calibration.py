@@ -168,6 +168,24 @@ def parse_measurement(value: str) -> RotationCenterMeasurement:
     return RotationCenterMeasurement(angle, offset_x, offset_y)
 
 
+def remove_pair_baseline(
+    measurements: Iterable[RotationCenterMeasurement],
+    baseline_mm: float,
+) -> tuple[RotationCenterMeasurement, ...]:
+    """Convert raw reference-to-replay spans into centre-error vectors."""
+    baseline_mm = float(baseline_mm)
+    if baseline_mm < 0.0:
+        raise ValueError("pair baseline cannot be negative")
+    return tuple(
+        RotationCenterMeasurement(
+            measurement.angle_deg,
+            measurement.offset_x_mm - baseline_mm,
+            measurement.offset_y_mm - baseline_mm,
+        )
+        for measurement in measurements
+    )
+
+
 def current_axis_center_correction(macro_text: str) -> tuple[float, float]:
     """Read P100's current numeric axis-centre correction."""
     values = []
@@ -213,31 +231,41 @@ def validate_program_comments(program: str) -> None:
 def build_rotation_center_test_program(
     settings,
     *,
-    arm_mm: float = 165.1,
-    arm_step_mm: float = 5.0,
+    arm_mm: float = 20.0,
+    replay_arm_mm: float = 17.0,
+    baseline_mm: float = 20.0,
+    station_offset_mm: float = 120.0,
     angles: Sequence[float] = DEFAULT_ANGLES,
-    control_passes: int = 1,
-    closing: bool = True,
     sheet_diameter_mm: float = DEFAULT_SHEET_DIAMETER_MM,
     test_diameter_mm: float = DEFAULT_TEST_DIAMETER_MM,
     edge_margin_mm: float = DEFAULT_SHEET_EDGE_MARGIN_MM,
-) -> tuple[str, tuple[tuple[str, float, float], ...]]:
-    """Build a cross-replay program and return its pass manifest.
+) -> tuple[str, tuple[tuple[str, float, float, float], ...]]:
+    """Build a spaced-pair rotation-centre calibration program.
 
-    Every pass draws a paper-frame cross centred at G54 X0/Y0. The A=0 cross is
-    longest and carries +X/+Y arrowheads. Other passes are stepped shorter so
-    each replay remains attributable where the crosses overlap.
+    Four cardinal stations keep the A=0 reference and angle replay far apart.
+    At each station, a longer reference cross sits at the station origin and a
+    shorter replay cross sits at ``baseline_mm, baseline_mm`` in the bed frame.
+    The raw X gap between the vertical arms and Y gap between the horizontal
+    arms therefore starts at the baseline instead of having wet lines overlap.
     """
     arm_mm = float(arm_mm)
-    arm_step_mm = float(arm_step_mm)
+    replay_arm_mm = float(replay_arm_mm)
+    baseline_mm = float(baseline_mm)
+    station_offset_mm = float(station_offset_mm)
     sheet_diameter_mm = float(sheet_diameter_mm)
     test_diameter_mm = float(test_diameter_mm)
     edge_margin_mm = float(edge_margin_mm)
     angles = tuple(float(angle) % 360.0 for angle in angles)
-    if arm_mm < 15.0:
-        raise ValueError("reference arm must be at least 15 mm")
-    if arm_step_mm <= 0.0:
-        raise ValueError("arm step must be positive")
+    if len(angles) != 3:
+        raise ValueError("the calibration needs exactly 90, 180, and 270 degree replays")
+    if arm_mm < 10.0:
+        raise ValueError("reference arm must be at least 10 mm")
+    if replay_arm_mm <= 0.0 or replay_arm_mm >= arm_mm:
+        raise ValueError("replay arm must be positive and shorter than the reference")
+    if baseline_mm < 8.0:
+        raise ValueError("pair baseline must be at least 8 mm")
+    if station_offset_mm <= arm_mm:
+        raise ValueError("station offset must clear the reference cross")
     if sheet_diameter_mm <= 0.0:
         raise ValueError("sheet diameter must be positive")
     if test_diameter_mm <= 0.0:
@@ -247,51 +275,57 @@ def build_rotation_center_test_program(
     if edge_margin_mm < 0.0:
         raise ValueError("sheet edge margin cannot be negative")
     usable_radius = test_diameter_mm / 2.0 - edge_margin_mm
-    if arm_mm > usable_radius:
+    station_centres = (
+        (0.0, -station_offset_mm),
+        (station_offset_mm, 0.0),
+        (0.0, station_offset_mm),
+        (-station_offset_mm, 0.0),
+    )
+    pair_offsets = (
+        (-arm_mm, 0.0),
+        (arm_mm, 0.0),
+        (0.0, -arm_mm),
+        (0.0, arm_mm),
+        (baseline_mm - replay_arm_mm, baseline_mm),
+        (baseline_mm + replay_arm_mm, baseline_mm),
+        (baseline_mm, baseline_mm - replay_arm_mm),
+        (baseline_mm, baseline_mm + replay_arm_mm),
+    )
+    label_offsets = tuple(
+        (x, arm_mm + 12.0)
+        for x in (-6.0, -2.0, 2.0, 6.0)
+    )
+    pattern_radius = max(
+        math.hypot(centre_x + offset_x, centre_y + offset_y)
+        for centre_x, centre_y in station_centres
+        for offset_x, offset_y in pair_offsets + label_offsets
+    )
+    if pattern_radius > usable_radius:
         raise ValueError(
-            "reference arm %.1f mm does not fit inside the %.1f mm test area "
-            "with a %.1f mm edge margin"
-            % (arm_mm, test_diameter_mm, edge_margin_mm)
+            "pattern radius %.1f mm does not fit inside the %.1f mm test area"
+            % (pattern_radius, usable_radius)
         )
-    if control_passes < 0:
-        raise ValueError("control passes cannot be negative")
-    if not angles and not closing and control_passes == 0:
-        raise ValueError("the program must contain at least one replay")
-
-    passes: list[tuple[str, float, float]] = []
-    next_arm = arm_mm
-    passes.append(("reference", 0.0, next_arm))
-    for index in range(control_passes):
-        next_arm -= arm_step_mm
-        passes.append((f"control {index + 1}", 0.0, next_arm))
-    for angle in angles:
-        next_arm -= arm_step_mm
-        passes.append((f"replay {_fmt(angle)}", angle, next_arm))
-    if closing:
-        next_arm -= arm_step_mm
-        passes.append(("closing", 0.0, next_arm))
-    if next_arm < 10.0:
-        raise ValueError(
-            "the shortest pass would have an arm under 10 mm; reduce arm step"
-        )
+    stations = (
+        ("90", angles[0], *station_centres[0]),
+        ("180", angles[1], *station_centres[1]),
+        ("270", angles[2], *station_centres[2]),
+        ("control", 0.0, *station_centres[3]),
+    )
 
     ratio = float(getattr(settings, "theta_drive_ratio", DEFAULT_RATIO))
     feed = float(getattr(settings, "feed_rate", 700.0))
     travel = float(getattr(settings, "travel_rate", 3000.0))
     lines = [
         "(rotation-centre cross calibration - make_rotation_center_calibration.py)",
-        "(run G65 P113 first; every cross is centred on the freshly registered G54 X0 Y0)",
+        "(run G65 P113 first; G54 X0 Y0 is the freshly registered rotation origin)",
         "(layout: %s mm test on %s mm round stock, largest ink radius %s mm)"
-        % (_fmt(test_diameter_mm), _fmt(sheet_diameter_mm), _fmt(arm_mm)),
-        "(reference cross is longest and its arrowheads point machine +X and +Y)",
-        "(the other crosses replay the same bed-frame cross at their labelled bed angles)",
-        "(after the bed returns to A=0, measure each replay cross minus the reference cross)",
-        "(positive DX/DY means the replay is toward the reference arrowheads)",
-        "(longest to shortest crosses: %s)"
-        % ", ".join(
-            "%s %s mm" % (label, _fmt(2.0 * half))
-            for label, _, half in passes
-        ),
+        % (_fmt(test_diameter_mm), _fmt(sheet_diameter_mm), "%.1f" % pattern_radius),
+        "(station labels: 1 tooth=W control, 2=S 90 deg, 3=E 180 deg, 4=N 270 deg)",
+        "(inside each station the LONGER cross is A=0; the SHORTER cross is the replay)",
+        "(the replay cross is centred +%s,+%s mm from the reference in the bed frame)"
+        % (_fmt(baseline_mm), _fmt(baseline_mm)),
+        "(measure raw vertical-arm X gap and horizontal-arm Y gap at each station)",
+        "(the fitter subtracts the %s mm nominal gap from each reading)" % _fmt(baseline_mm),
         "G21",
         "G90",
         "G94",
@@ -360,34 +394,75 @@ def build_rotation_center_test_program(
         previous_machine = machine[-1]
         previous_motor_theta = motor_a
 
-    for label, angle, half in passes:
-        lines.append(
-            "(%s cross: bed angle %s deg, arm %s mm)"
-            % (label, _fmt(angle), _fmt(half))
-        )
-        draw_stroke(angle, [(-half, 0.0), (half, 0.0)])
-        draw_stroke(angle, [(0.0, -half), (0.0, half)])
+    def draw_label(station_x: float, station_y: float, teeth: int) -> None:
+        y0 = station_y + arm_mm + 8.0
+        y1 = y0 + 4.0
+        lines.append("(%d-tooth station label)" % teeth)
+        for index in range(teeth):
+            x = station_x - 2.0 * (teeth - 1) + 4.0 * index
+            draw_stroke(0.0, [(x, y0), (x, y1)])
 
-    reference_half = passes[0][2]
-    arrow_back = min(4.0, reference_half * 0.03)
+    for label, angle, station_x, station_y in stations:
+        lines.append(
+            "(%s station: bed angle %s deg, reference arm %s mm)"
+            % (label, _fmt(angle), _fmt(arm_mm))
+        )
+        draw_stroke(
+            0.0,
+            [
+                (station_x - arm_mm, station_y),
+                (station_x + arm_mm, station_y),
+            ],
+        )
+        draw_stroke(
+            0.0,
+            [
+                (station_x, station_y - arm_mm),
+                (station_x, station_y + arm_mm),
+            ],
+        )
+        replay_x = station_x + baseline_mm
+        replay_y = station_y + baseline_mm
+        draw_stroke(
+            angle,
+            [
+                (replay_x - replay_arm_mm, replay_y),
+                (replay_x + replay_arm_mm, replay_y),
+            ],
+        )
+        draw_stroke(
+            angle,
+            [
+                (replay_x, replay_y - replay_arm_mm),
+                (replay_x, replay_y + replay_arm_mm),
+            ],
+        )
+    tooth_counts = {"control": 1, "90": 2, "180": 3, "270": 4}
+    for label, _angle, station_x, station_y in stations:
+        draw_label(station_x, station_y, tooth_counts[label])
+
+    arrow_length = 20.0
+    arrow_back = 3.0
     arrow_side = arrow_back * 0.4
-    lines.append("(reference +X and +Y arrowheads; the open end of each V is positive)")
+    lines.append("(centre direction key: arrow open ends point machine +X and +Y)")
     draw_stroke(
         0.0,
         [
-            (reference_half, 0.0),
-            (reference_half - arrow_back, arrow_side),
-            (reference_half, 0.0),
-            (reference_half - arrow_back, -arrow_side),
+            (0.0, 0.0),
+            (arrow_length, 0.0),
+            (arrow_length - arrow_back, arrow_side),
+            (arrow_length, 0.0),
+            (arrow_length - arrow_back, -arrow_side),
         ],
     )
     draw_stroke(
         0.0,
         [
-            (0.0, reference_half),
-            (arrow_side, reference_half - arrow_back),
-            (0.0, reference_half),
-            (-arrow_side, reference_half - arrow_back),
+            (0.0, 0.0),
+            (0.0, arrow_length),
+            (arrow_side, arrow_length - arrow_back),
+            (0.0, arrow_length),
+            (-arrow_side, arrow_length - arrow_back),
         ],
     )
 
@@ -407,4 +482,4 @@ def build_rotation_center_test_program(
     )
     program = "\n".join(lines) + "\n"
     validate_program_comments(program)
-    return program, tuple(passes)
+    return program, stations

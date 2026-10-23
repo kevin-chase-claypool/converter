@@ -286,22 +286,23 @@ lie on the axis; the cross, tick-ring, and line-replay tests judge the axis
 without that assumption.
 
   For a quantitative correction rather than a pass/fail check, plot
-  `samples/gcode/rotation-center-calibration.gcode` after `G65 P113`. Its
-  reference cross is longest and has +X/+Y arrowheads; the 90/180/270-degree
-  replays are successively shorter so they remain identifiable. Measure each
-  replay cross relative to the reference as signed `DX,DY`, then run:
+  `samples/gcode/rotation-center-calibration.gcode` after `G65 P113`. Four
+  separated stations keep the wet lines from overlapping; at each station a
+  longer reference cross and shorter replay cross are 20 mm apart in both
+  axes. Measure the raw vertical-arm X gap and horizontal-arm Y gap, then run:
 
   ```powershell
-  python tools\fit_rotation_center.py --measurement 90,DX,DY --measurement 180,DX,DY --measurement 270,DX,DY
+  python tools\fit_rotation_center.py --baseline-mm 20 --measurement 90,GAP_X,GAP_Y --measurement 180,GAP_X,GAP_Y --measurement 270,GAP_X,GAP_Y
   ```
 
-  The tool fits `e(theta) = C - R(-theta)C`, prints the residual model error,
-  and prints replacement `#<axis_center_correction_x>` and `_y` values based
-  on the constants currently in `P100.macro`. A low residual means the two
-  constants can remove the offset; a high residual means the bed plane or
-  bearing runout is visible and must be corrected mechanically. Do not put a
-  second angle correction in the artwork converter: P100 owns the registered
-  frame, and duplicated compensation would shift the artwork twice.
+  The tool subtracts the 20 mm baseline, fits
+  `e(theta) = C - R(-theta)C`, prints the residual model error, and prints
+  replacement `#<axis_center_correction_x>` and `_y` values based on the
+  constants currently in `P100.macro`. A low residual means the two constants
+  can remove the offset; a high residual means the bed plane or bearing runout
+  is visible and must be corrected mechanically. Do not put a second angle
+  correction in the artwork converter: P100 owns the registered frame, and
+  duplicated compensation would shift the artwork twice.
 
 The macro expects:
 

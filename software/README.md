@@ -105,23 +105,21 @@ Cycle Start with the pen loaded:
   Run after HOME + registration. Regenerate with
   `..\tools\make_a_line_replay_test.py`.
 - `..\samples\gcode\rotation-center-calibration.gcode` - the calibration
-  counterpart to the line replay. Run it after `G65 P113`; it draws a long
-  reference cross at A=0 and shorter cross replays at 90/180/270 degrees,
-  all centred on G54 X0/Y0. The layout is 13 inches (330.2 mm) across on
-  14-inch (355.6 mm) round stock, leaving 12.7 mm to the stock edge. The
-  reference is longest (330.2 mm across) and its arrowheads point machine
-  +X/+Y; the other crosses step down by 10 mm across so each angle remains
-  attributable. After the bed returns to A=0, measure the horizontal gap
-  between the reference and replay vertical arms as signed `DX`, and the
-  vertical gap between their horizontal arms as signed `DY`.
-  Positive is toward the arrowheads. Then run, for example:
+  counterpart to the line replay. Run it after `G65 P113`. It uses four
+  cardinal stations on 14-inch round stock: 90, 180, 270, and a control.
+  Each station has a longer A=0 reference cross and a shorter angle replay
+  separated by a known **20 mm baseline in both axes**, so wet parallel lines
+  do not overlap. A centre direction key gives machine +X/+Y. The planned
+  footprint is 13 inches (330.2 mm), with its furthest ink about 158 mm from
+  the registered centre. Measure the raw vertical-arm X gap and horizontal-arm
+  Y gap at each station, then run:
 
   ```powershell
-  python ..\tools\fit_rotation_center.py --measurement 90,DX,DY --measurement 180,DX,DY --measurement 270,DX,DY
+  python ..\tools\fit_rotation_center.py --baseline-mm 20 --measurement 90,GAP_X,GAP_Y --measurement 180,GAP_X,GAP_Y --measurement 270,GAP_X,GAP_Y
   ```
 
-  The fitter reports the residual centre vector `C`, the residual left by
-  the centre-offset model, and replacement P100
+  The fitter subtracts the baseline, reports the residual centre vector `C`,
+  the error left by the centre-offset model, and replacement P100
   `axis_center_correction_x/y` constants. Apply the constants in P100 rather
   than compensating again in generated G-code. Regenerate with
   `..\tools\make_rotation_center_calibration.py`.

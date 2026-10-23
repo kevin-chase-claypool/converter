@@ -95,10 +95,11 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
    correction is `+2.45` mm X and `+0.3` mm Y (Y refined from the tagged
    line-replay test, `RPSW-20261014-002`). The quantitative calibration is
    `samples/gcode/rotation-center-calibration.gcode` after `G65 P113`: it
-   replays a long two-axis cross at 90/180/270 degrees, and
-   `tools/fit_rotation_center.py` converts the measured X/Y gaps into
-   replacement P100 constants. Its residual distinguishes a pure centre
-   offset from bed plane/runout, which the two constants cannot correct.
+   places separated 90/180/270 stations with parallel reference and replay
+   arms, and `tools/fit_rotation_center.py` converts the measured raw X/Y
+   gaps, after subtracting the known pair baseline, into replacement P100
+   constants. Its residual distinguishes a pure centre offset from bed
+   plane/runout, which the two constants cannot correct.
    The quicker accept/reject test remains
    `samples/gcode/center-registration-check.gcode`, or a magnet directly
    under the lifted pen that stays centred while the bed rotates. That quick

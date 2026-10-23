@@ -17,6 +17,7 @@ from converter_core.rotation_calibration import (
     current_axis_center_correction,
     fit_rotation_center,
     parse_measurement,
+    remove_pair_baseline,
 )
 
 
@@ -78,69 +79,67 @@ class RotationCenterTests(unittest.TestCase):
         )
         self.assertEqual(current_axis_center_correction(text), (2.45, 0.3))
 
+    def test_pair_baseline_is_removed_from_raw_gaps(self):
+        corrected = remove_pair_baseline(
+            [parse_measurement("90,20.6,19.4")],
+            20.0,
+        )
+        self.assertAlmostEqual(corrected[0].offset_x_mm, 0.6)
+        self.assertAlmostEqual(corrected[0].offset_y_mm, -0.6)
+        with self.assertRaises(ValueError):
+            remove_pair_baseline([], -1.0)
+
 
 class RotationCenterProgramTests(unittest.TestCase):
-    def test_program_contains_reference_controls_and_quadrant_replays(self):
-        program, passes = build_rotation_center_test_program(
-            converter.Settings(),
-            arm_mm=32.0,
-            arm_step_mm=3.0,
-            angles=(90.0, 180.0, 270.0),
-            control_passes=1,
-            closing=True,
-        )
+    def test_program_contains_four_spaced_stations(self):
+        program, stations = build_rotation_center_test_program(converter.Settings())
         self.assertEqual(
-            [name for name, _, _ in passes],
-            ["reference", "control 1", "replay 90", "replay 180", "replay 270", "closing"],
+            [name for name, _, _, _ in stations],
+            ["90", "180", "270", "control"],
         )
-        self.assertIn("(reference cross:", program)
-        self.assertIn("(replay 180 cross:", program)
-        self.assertIn("(control 1 cross:", program)
-        self.assertIn("arrowheads point machine +X and +Y", program)
+        self.assertIn("(90 station:", program)
+        self.assertIn("(180 station:", program)
+        self.assertIn("(control station:", program)
+        self.assertIn("LONGER cross is A=0", program)
+        self.assertIn("SHORTER cross is the replay", program)
+        self.assertIn("centre direction key", program)
         self.assertEqual(program.count("("), program.count(")"))
 
-    def test_program_arm_lengths_are_ordered_and_clear(self):
-        _program, passes = build_rotation_center_test_program(
-            converter.Settings(),
-            arm_mm=30.0,
-            arm_step_mm=2.0,
+    def test_default_pairs_keep_wet_lines_apart(self):
+        program, _stations = build_rotation_center_test_program(
+            converter.Settings()
         )
-        halves = [half for _, _, half in passes]
-        self.assertEqual(halves, sorted(halves, reverse=True))
-        self.assertGreaterEqual(min(halves), 10.0)
+        self.assertIn("centred +20,+20 mm", program)
+        self.assertIn("fitter subtracts the 20 mm nominal gap", program)
+        self.assertIn("reference arm 20 mm", program)
 
     def test_default_layout_fits_14_inch_round_sheet(self):
-        program, passes = build_rotation_center_test_program(converter.Settings())
-        self.assertEqual(passes[0][2], 165.1)
+        program, stations = build_rotation_center_test_program(converter.Settings())
+        self.assertEqual(
+            [(x, y) for _name, _angle, x, y in stations],
+            [(0.0, -120.0), (120.0, 0.0), (0.0, 120.0), (-120.0, 0.0)],
+        )
         self.assertIn("330.2 mm test on 355.6 mm round stock", program)
-        self.assertIn("largest ink radius 165.1 mm", program)
+        self.assertIn("largest ink radius 158.3 mm", program)
 
-    def test_oversized_cross_for_sheet_is_rejected(self):
+    def test_oversized_station_layout_is_rejected(self):
         with self.assertRaises(ValueError):
             build_rotation_center_test_program(
                 converter.Settings(),
-                arm_mm=170.0,
+                station_offset_mm=160.0,
                 sheet_diameter_mm=355.6,
                 test_diameter_mm=330.2,
-                edge_margin_mm=10.0,
             )
 
     def test_invalid_short_arm_is_rejected(self):
         with self.assertRaises(ValueError):
             build_rotation_center_test_program(
-                converter.Settings(), arm_mm=30.0, arm_step_mm=5.0
+                converter.Settings(), arm_mm=8.0
             )
 
     def test_every_replay_uses_its_indexed_bed_angle(self):
         settings = converter.Settings()
-        program, _passes = build_rotation_center_test_program(
-            settings,
-            arm_mm=30.0,
-            arm_step_mm=2.0,
-            angles=(90.0, 180.0, 270.0),
-            control_passes=0,
-            closing=False,
-        )
+        program, _stations = build_rotation_center_test_program(settings)
         a_values = {
             round(float(value), 4)
             for value in (

@@ -1,21 +1,20 @@
 """Generate the rotating-bed centre-offset calibration pen test.
 
-Run this after HOME + REGISTER. It draws a long reference cross at A=0 and
-shorter replays of the same bed-frame cross at 90/180/270 degrees. The default
-layout is 13 inches (330.2 mm) across on 14-inch (355.6 mm) round stock,
-leaving 12.7 mm of clearance to the stock edge.
-The bed returns to A=0, leaving each replay displaced by the residual
-rotation-centre error. Read the horizontal gap between vertical arms as DX and
-the vertical gap between horizontal arms as DY, both signed toward the
-reference arrowheads.
+Run this after HOME + REGISTER. It draws four separated stations on 14-inch
+round stock: 90/180/270-degree replays and an A=0 control. At each station a
+longer A=0 reference cross and a shorter replay cross are separated by a known
+20 mm baseline in both axes, so the wet strokes do not overlap. Read the raw
+vertical-arm X gap as GAP_X and the raw horizontal-arm Y gap as GAP_Y. The
+fitter subtracts the 20 mm baseline and recovers the signed centre error.
 
-Give those readings to ``tools\\fit_rotation_center.py``. It fits the physical
-axis offset and prints replacement P100 axis-centre constants.
+The planned test footprint is 13 inches (330.2 mm) on 14-inch (355.6 mm)
+stock. The default station layout reaches a 158.3 mm radius, leaving 19.5 mm
+to the stock edge. The centre direction key points machine +X/+Y.
 
 Usage::
 
     python tools\\make_rotation_center_calibration.py
-    python tools\\make_rotation_center_calibration.py --angles 180
+    python tools\\make_rotation_center_calibration.py --baseline 24
 """
 
 from __future__ import annotations
@@ -62,28 +61,28 @@ def main() -> None:
         default=DEFAULT_SHEET_EDGE_MARGIN_MM,
         help="unused radius inside the planned test diameter in mm (default 0)",
     )
-    parser.add_argument("--arm", type=float, default=165.1)
-    parser.add_argument("--arm-step", type=float, default=5.0)
+    parser.add_argument("--arm", type=float, default=20.0)
+    parser.add_argument("--replay-arm", type=float, default=17.0)
+    parser.add_argument("--baseline", type=float, default=20.0)
+    parser.add_argument("--station-offset", type=float, default=120.0)
     parser.add_argument(
         "--angles",
         default=",".join(str(angle) for angle in DEFAULT_ANGLES),
         help="comma-separated replay angles (default 90,180,270)",
     )
-    parser.add_argument("--control-passes", type=int, default=1)
-    parser.add_argument("--closing", action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
 
     try:
         angles = tuple(
             float(part) for part in args.angles.split(",") if part.strip()
         )
-        program, passes = build_rotation_center_test_program(
+        program, stations = build_rotation_center_test_program(
             converter.Settings(),
             arm_mm=args.arm,
-            arm_step_mm=args.arm_step,
+            replay_arm_mm=args.replay_arm,
+            baseline_mm=args.baseline,
+            station_offset_mm=args.station_offset,
             angles=angles,
-            control_passes=args.control_passes,
-            closing=args.closing,
             sheet_diameter_mm=args.sheet_diameter,
             test_diameter_mm=args.test_diameter,
             edge_margin_mm=args.edge_margin,
@@ -95,15 +94,23 @@ def main() -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(program, encoding="utf-8", newline="\n")
     print(f"wrote {out} ({len(program.splitlines())} lines)")
-    print("crosses:", ", ".join(f"{name}@{angle:g}deg" for name, angle, _ in passes))
     print(
-        "measure each replay relative to the longest reference cross; "
-        "positive is toward the reference arrowheads"
+        "stations:",
+        ", ".join(
+            f"{name}@{angle:g}deg ({x:g},{y:g})"
+            for name, angle, x, y in stations
+        ),
+    )
+    print(
+        "measure raw gap between the longer reference and shorter replay arms; "
+        f"the nominal gap is {args.baseline:g} mm"
     )
     print(
         "then: python tools\\fit_rotation_center.py "
-        "--measurement 90,DX,DY --measurement 180,DX,DY "
-        "--measurement 270,DX,DY"
+        "--baseline-mm "
+        f"{args.baseline:g} --measurement 90,GAP_X,GAP_Y "
+        "--measurement 180,GAP_X,GAP_Y "
+        "--measurement 270,GAP_X,GAP_Y"
     )
 
 
