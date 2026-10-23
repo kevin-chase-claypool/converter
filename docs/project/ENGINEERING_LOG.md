@@ -1,5 +1,31 @@
 # Engineering Log
 
+<a id="elog-20261023-cmyk-pen-offsets-preflight"></a>
+### 🟨 2026-10-23 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK per-ink offsets, measured alignment and save preflight
+
+- The CMYK tab now holds paper-space X/Y corrections for each ink. The
+  **Use measured offsets** helper converts the measured cross displacement
+  from `cmyk-pen-alignment.gcode` (relative to cyan) into the opposite
+  correction. Offsets translate that ink's scaled marks and registration
+  crosses while leaving the shared page frame untouched; the calibration
+  sheet keeps its geometric layout.
+- A **Pass summary** shows page, frame, bed motion, centre hold, crosses and
+  offsets. The motion preflight now runs on each generated ink program and
+  reports bed-step, A-rate, bare `G0`, and over-tolerance results; hard
+  violations block Save. Artwork sets write `<name>-set.json`.
+- The G-code analysis moved into `converter_core/motion_check.py`, so the
+  app and `tools/check_gcode_motion.py` share it. The CLI now reads the
+  tolerance stated in the file header; the real yellow bench file reports
+  one 0.056 mm move against its 0.050 mm setting while the hard guards pass.
+- Verification: new motion-check tests and CMYK tests for offsets, measured
+  conversion, shared frame, calibration isolation, preflight blocking and
+  set manifest; full suite 437 tests pass (1 skipped).
+- Next: bench-verify the four-pen cross measurement and a CMYK set. The
+  uncommitted sharpen work in `cmyk.py` was deliberately left untouched.
+- Evidence: `WSW-20261023-001`;
+  `docs/changes/windows-software/2026/2026-10-23-cmyk-pen-offsets-and-preflight.md`.
+- Category: windows-software, cmyk, alignment, pen-offset, preflight.
+
 <a id="elog-20261021-a-limit-table-correction"></a>
 ### 🟨 2026-10-21 - DOCUMENTATION/CORRECTED - A-axis settings table updated to 30000/6000; verify with `$$`
 

@@ -9,7 +9,8 @@ it, so one command answers two questions:
 It reports the largest bed rotation inside one drawing move, the largest A rate
 any move asks for, whether pen-up moves carry rotation as bare `G0` rapids, and
 the worst commanded bed-path bow with the radius and strategy that caused it -
-the number that explains a bulge on paper when the tolerance is coarse.
+the number that explains a bulge on paper when the tolerance is coarse. It also
+counts emitted moves that exceed the tolerance stated in the file header.
 
 Usage::
 
@@ -20,8 +21,6 @@ Usage::
 from __future__ import annotations
 
 import argparse
-import math
-import re
 import sys
 from pathlib import Path
 
@@ -30,102 +29,6 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "software"))
 
 import converter_core as converter  # noqa: E402
-from converter_core import kinematics  # noqa: E402
-
-
-MOVE = re.compile(
-    r"G([01])\s+X(-?[\d.]+)\s+Y(-?[\d.]+)(?:\s+A(-?[\d.]+))?(?:\s+F([\d.]+))?"
-)
-LABEL = re.compile(r"\(([a-z_ ]+)\)\s*$")
-
-
-def analyse(path, settings):
-    ratio = settings.theta_drive_ratio
-    cap = float(getattr(settings, "theta_max_step_deg", kinematics.MAX_BED_STEP_DEG))
-    rate_cap = settings.theta_controller_limits.max_rate_deg_min / 60.0
-
-    drawing = travel = hold = 0
-    strategies = {}
-    worst_step = (0.0, 0)
-    worst_rate = (0.0, 0)
-    worst_deviation = (0.0, 0.0, 0, "")
-    rapids_with_rotation = fed_rotations = unwinds = 0
-
-    previous = None
-    with open(path, encoding="utf-8", errors="replace") as handle:
-        for number, line in enumerate(handle, 1):
-            match = MOVE.match(line)
-            if not match:
-                continue
-            kind, x, y, a, feed = match.groups()
-            point = (float(x), float(y), float(a) if a is not None else None)
-            label_match = LABEL.search(line.rstrip())
-            label = label_match.group(1) if label_match else ""
-            if label:
-                strategies[label] = strategies.get(label, 0) + 1
-                if label == "hold":
-                    hold += 1
-            # A pen-up move is either a `G0` or a fed re-registration labelled
-            # `(travel)`; both carry the bed's whole-revolution unwinds, which are
-            # allowed there and irrelevant to ink.
-            is_travel = kind == "0" or label == "travel"
-            if previous is not None and point[2] is not None and previous[2] is not None:
-                delta = abs(point[2] - previous[2])
-                if is_travel:
-                    travel += 1
-                    if delta > 1e-9:
-                        if "(travel)" in line:
-                            fed_rotations += 1
-                        else:
-                            rapids_with_rotation += 1
-                    if delta > ratio * 300.0:
-                        unwinds += 1
-                else:
-                    drawing += 1
-                    if delta > worst_step[0]:
-                        worst_step = (delta, number)
-                    if delta > 1e-9 and feed:
-                        xy = math.hypot(point[0] - previous[0], point[1] - previous[1])
-                        seconds = (math.hypot(xy, delta) / float(feed)) * 60.0
-                        if seconds > 0.0 and delta / seconds > worst_rate[0]:
-                            worst_rate = (delta / seconds, number)
-                if delta > 1e-9 and not is_travel:
-                    deviation = kinematics._polar_move_deviation(
-                        (previous[0], previous[1]),
-                        (point[0], point[1]),
-                        (0.0, 0.0),
-                        previous[2] / ratio,
-                        point[2] / ratio,
-                    )
-                    if deviation > worst_deviation[0]:
-                        worst_deviation = (
-                            deviation,
-                            0.5
-                            * (
-                                math.hypot(previous[0], previous[1])
-                                + math.hypot(point[0], point[1])
-                            ),
-                            number,
-                            label or kind,
-                        )
-            previous = point
-
-    return {
-        "drawing": drawing,
-        "travel": travel,
-        "hold": hold,
-        "strategies": strategies,
-        "step": worst_step[0] / ratio,
-        "step_line": worst_step[1],
-        "rate": worst_rate[0],
-        "rate_line": worst_rate[1],
-        "deviation": worst_deviation,
-        "rapids_with_rotation": rapids_with_rotation,
-        "fed_rotations": fed_rotations,
-        "unwinds": unwinds,
-        "cap": cap,
-        "rate_cap": rate_cap,
-    }
 
 
 def main():
@@ -139,7 +42,7 @@ def main():
     args = parser.parse_args()
 
     settings = converter.Settings()
-    result = analyse(args.gcode, settings)
+    result = converter.analyse_file(args.gcode, settings)
     deviation, radius, line, label = result["deviation"]
 
     print("file: %s" % args.gcode)
@@ -163,6 +66,12 @@ def main():
         "  worst commanded bed-path bow: %.3f mm at %.0f mm radius (line %d, %s)"
         % (deviation, radius, line, label or "draw")
     )
+    if result["over_tolerance"]:
+        print(
+            "  moves exceeding the %.3f mm tolerance: %d "
+            "(the subdivision cap may have bound)"
+            % (result["tolerance"], result["over_tolerance"])
+        )
     if result["strategies"]:
         print(
             "  strategies: "
@@ -171,22 +80,7 @@ def main():
     if result["unwinds"]:
         print("  bed re-registrations (travel moves over 300 deg): %d" % result["unwinds"])
 
-    problems = []
-    if result["step"] > result["cap"] + 1e-6:
-        problems.append(
-            "a drawing move rotates %.1f deg, over the %.0f deg cap"
-            % (result["step"], result["cap"])
-        )
-    if result["rate"] > result["rate_cap"] * 1.01:
-        problems.append(
-            "a move asks for %.0f motor deg/s, over the %.0f limit"
-            % (result["rate"], result["rate_cap"])
-        )
-    if result["rapids_with_rotation"]:
-        problems.append(
-            "%d pen-up moves carry rotation as bare G0 rapids"
-            % result["rapids_with_rotation"]
-        )
+    problems = converter.preflight_problems(result)
     if problems:
         print("\nFAIL against the current guards:")
         for problem in problems:

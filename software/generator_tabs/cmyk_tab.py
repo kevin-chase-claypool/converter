@@ -14,10 +14,11 @@ motion planning as a Convert-tab program.
 
 from __future__ import annotations
 
+import dataclasses
+import datetime
 import json
 import os
 import threading
-import dataclasses
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QThread, Qt, Signal
@@ -119,6 +120,7 @@ class ProgramAnalysisWorker(QObject):
                 estimate = converter.estimate_program_time(moves, self.scale)
                 counts = estimate["strategy_counts"]
                 lengths = estimate["strategy_mm"]
+                checks = converter.analyse_gcode(data["gcode"], self.settings)
                 results[channel] = {
                     "marks": len(data["contours"]),
                     "moves": len(moves),
@@ -130,6 +132,7 @@ class ProgramAnalysisWorker(QObject):
                     "y_mm": lengths.get("y_theta", 0.0),
                     "draw_mm": estimate["draw_mm"],
                     "seconds": estimate["total_seconds"],
+                    "checks": checks,
                 }
             self.finished.emit(results)
         except converter.OperationCancelled:
@@ -321,6 +324,74 @@ class CmykTab(GeneratorTab):
         kinematics_hint.setStyleSheet("color: #475569;")
         kinematics.addRow("", kinematics_hint)
 
+        alignment = self.add_group("Pen alignment")
+        self.offset_spins = {}
+        for channel in converter.CHANNELS:
+            row = QWidget()
+            row_layout = QHBoxLayout(row)
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            row_layout.setSpacing(4)
+            x_spin = double_spin(0.0, -20.0, 20.0, 0.01, 2, " mm")
+            y_spin = double_spin(0.0, -20.0, 20.0, 0.01, 2, " mm")
+            x_spin.setToolTip(
+                "X correction for this pen, in paper millimetres. Positive "
+                "moves this ink toward +X; use the measured-alignment helper "
+                "to convert a measured displacement."
+            )
+            y_spin.setToolTip(
+                "Y correction for this pen, in paper millimetres. Positive "
+                "moves this ink toward +Y."
+            )
+            row_layout.addWidget(QLabel("X"))
+            row_layout.addWidget(x_spin)
+            row_layout.addWidget(QLabel("Y"))
+            row_layout.addWidget(y_spin)
+            row_layout.addStretch(1)
+            alignment.addRow(
+                f"{converter.CHANNEL_LABELS[channel][0]} offset", row
+            )
+            self.offset_spins[channel] = (x_spin, y_spin)
+
+        measured_hint = QLabel(
+            "Measured cross positions from cmyk-pen-alignment.gcode, "
+            "relative to cyan (positive = landed toward +X/+Y)."
+        )
+        measured_hint.setWordWrap(True)
+        measured_hint.setStyleSheet("color: #475569;")
+        alignment.addRow("", measured_hint)
+        self.measured_spins = {}
+        for channel in converter.CHANNELS:
+            row = QWidget()
+            row_layout = QHBoxLayout(row)
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            row_layout.setSpacing(4)
+            x_spin = double_spin(0.0, -20.0, 20.0, 0.01, 2, " mm")
+            y_spin = double_spin(0.0, -20.0, 20.0, 0.01, 2, " mm")
+            row_layout.addWidget(QLabel("X"))
+            row_layout.addWidget(x_spin)
+            row_layout.addWidget(QLabel("Y"))
+            row_layout.addWidget(y_spin)
+            row_layout.addStretch(1)
+            alignment.addRow(
+                f"{converter.CHANNEL_LABELS[channel][0]} measured", row
+            )
+            self.measured_spins[channel] = (x_spin, y_spin)
+        self.use_measured_button = QPushButton("Use measured offsets")
+        self.use_measured_button.setToolTip(
+            "Set each ink's correction to the opposite of its measured "
+            "displacement from cyan. Cyan is the reference and stays at 0,0."
+        )
+        self.use_measured_button.clicked.connect(self._apply_measured_offsets)
+        alignment.addRow("", self.use_measured_button)
+        offset_hint = QLabel(
+            "Offsets apply to the artwork programs and the preview. The "
+            "calibration sheet keeps its geometric layout so the scan "
+            "manifest stays valid."
+        )
+        offset_hint.setWordWrap(True)
+        offset_hint.setStyleSheet("color: #475569;")
+        alignment.addRow("", offset_hint)
+
         layers = self.add_group("Layers")
         self.preview_boxes = {}
         preview_row = QWidget()
@@ -431,6 +502,10 @@ class CmykTab(GeneratorTab):
         self.cost_label.setWordWrap(True)
         self.cost_label.setStyleSheet("color: #475569;")
         actions.addRow("", self.cost_label)
+        self.pass_summary = QLabel()
+        self.pass_summary.setWordWrap(True)
+        self.pass_summary.setStyleSheet("color: #334155;")
+        actions.addRow("Pass summary", self.pass_summary)
         self.theta_mode.changed.connect(
             lambda _value: self.cost_label.setText(
                 "Bed motion changed; the next Preview or Save re-plans the "
@@ -448,6 +523,16 @@ class CmykTab(GeneratorTab):
         self._thread = None
         self._worker = None
         self._pending_save = False
+        for channel in converter.CHANNELS:
+            for spin in self.offset_spins[channel]:
+                spin.valueChanged.connect(lambda *_: self._refresh_pass_summary())
+        for spin in (self.center_hold, self.page_w, self.page_h, self.margin):
+            spin.valueChanged.connect(lambda *_: self._refresh_pass_summary())
+        self.registration_marks.toggled.connect(
+            lambda *_: self._refresh_pass_summary()
+        )
+        self.theta_mode.changed.connect(lambda *_: self._refresh_pass_summary())
+        self._refresh_pass_summary()
         self.finish_controls()
 
     def showEvent(self, event):
@@ -472,6 +557,44 @@ class CmykTab(GeneratorTab):
             "y": self.weight_y.value() / 100.0,
             "k": self.weight_k.value() / 100.0,
         }
+
+    def _pen_offsets(self):
+        """Per-ink X/Y corrections in paper millimetres."""
+        return {
+            channel: (
+                float(self.offset_spins[channel][0].value()),
+                float(self.offset_spins[channel][1].value()),
+            )
+            for channel in converter.CHANNELS
+        }
+
+    def _measured_offsets(self):
+        """Measured cross displacement relative to cyan, in millimetres."""
+        return {
+            channel: (
+                float(self.measured_spins[channel][0].value()),
+                float(self.measured_spins[channel][1].value()),
+            )
+            for channel in converter.CHANNELS
+        }
+
+    def _apply_measured_offsets(self):
+        """Convert measured displacement into the opposite correction."""
+        for channel in converter.CHANNELS:
+            dx, dy = self._measured_offsets()[channel]
+            if channel == converter.CHANNELS[0]:
+                dx = dy = 0.0
+            self.offset_spins[channel][0].setValue(-dx)
+            self.offset_spins[channel][1].setValue(-dy)
+        self._refresh_pass_summary()
+
+    def _translate_marks(self, marks, dx, dy):
+        if not dx and not dy:
+            return marks
+        return [
+            [(x + dx, y + dy) for x, y in line]
+            for line in marks
+        ]
 
     def apply_auto_settings(self, _checked=False):
         """Fit the Image-options controls to the loaded photo."""
@@ -615,6 +738,10 @@ class CmykTab(GeneratorTab):
             self.solid_dots.isChecked(),
             self.theta_mode.value(),
             self.center_hold.value(),
+            tuple(
+                (channel,) + self._pen_offsets()[channel]
+                for channel in converter.CHANNELS
+            ),
             self.pen_width.value(),
             self.path_tolerance.value(),
             self.levels.value(),
@@ -630,6 +757,73 @@ class CmykTab(GeneratorTab):
             self.calibration_screen.currentData(),
             settings_key,
         )
+
+    def _bed_motion_label(self):
+        value = self.theta_mode.value()
+        for label, choice in converter.THETA_MODE_CHOICES:
+            if choice == value:
+                return label
+        return str(value)
+
+    def _preflight_errors(self, results):
+        problems = []
+        for channel, record in results.items():
+            checks = record.get("checks")
+            if not checks:
+                continue
+            for problem in converter.preflight_problems(checks):
+                problems.append(
+                    f"{converter.CHANNEL_LABELS[channel][0]}: {problem}"
+                )
+        return problems
+
+    def _preflight_warnings(self, results):
+        warnings = []
+        for channel, record in results.items():
+            checks = record.get("checks")
+            if not checks:
+                continue
+            if checks.get("over_tolerance"):
+                warnings.append(
+                    "%s: %d moves exceed %.3f mm tolerance"
+                    % (
+                        converter.CHANNEL_LABELS[channel][0],
+                        checks["over_tolerance"],
+                        checks["tolerance"],
+                    )
+                )
+        return warnings
+
+    def _summary_text(self, results=None):
+        offsets = self._pen_offsets()
+        offset_parts = [
+            "%s %+.2f/%+.2f"
+            % (converter.CHANNEL_LABELS[channel][0], offsets[channel][0], offsets[channel][1])
+            for channel in converter.CHANNELS
+            if offsets[channel][0] or offsets[channel][1]
+        ]
+        parts = [
+            f"page {self.page_w.value():g}x{self.page_h.value():g} mm",
+            "frame %.1f,%.1f"
+            % (self.page_w.value() / 2.0, self.page_h.value() / 2.0),
+            "bed motion %s" % self._bed_motion_label(),
+            "center hold %g mm diameter" % self.center_hold.value(),
+            "crosses %s" % ("on" if self.registration_marks.isChecked() else "off"),
+            "pen offsets %s" % (", ".join(offset_parts) if offset_parts else "none"),
+        ]
+        if results is not None:
+            errors = self._preflight_errors(results)
+            warnings = self._preflight_warnings(results)
+            if errors:
+                parts.append("preflight BLOCKED: " + "; ".join(errors))
+            elif warnings:
+                parts.append("preflight warning: " + "; ".join(warnings))
+            else:
+                parts.append("preflight OK")
+        return " | ".join(parts)
+
+    def _refresh_pass_summary(self):
+        self.pass_summary.setText(self._summary_text())
 
     def _preview_channels(self):
         return [
@@ -704,6 +898,12 @@ class CmykTab(GeneratorTab):
             marks = scale_polylines(marks, factor, width, height)
             if self.registration_marks.isChecked():
                 marks = list(marks) + self._registration_crosses()
+            # Absolute paper-space corrections for this pen. Applied after
+            # scaling so an offset is not multiplied by Artwork scale, and to
+            # the registration crosses as well, so a corrected pen brings its
+            # crosses onto the reference.
+            dx, dy = self._pen_offsets()[channel]
+            marks = self._translate_marks(marks, dx, dy)
             layers[channel] = marks
             document = converter.svg_document(
                 {channel: marks}, width, height, stroke, order=[channel]
@@ -887,6 +1087,7 @@ class CmykTab(GeneratorTab):
     def _on_finished(self, results):
         self._analysis = results
         self.cost_label.setText(format_cost_summary(results))
+        self.pass_summary.setText(self._summary_text(results))
         summary = ", ".join(
             f"{converter.CHANNEL_LABELS[channel]} {format_seconds(record['seconds'])}"
             for channel, record in results.items()
@@ -913,6 +1114,16 @@ class CmykTab(GeneratorTab):
                             record["draw_mm"],
                             format_seconds(record["seconds"]),
                         )
+                    )
+                errors = self._preflight_errors(results)
+                warnings = self._preflight_warnings(results)
+                if errors:
+                    self.host.log.append(
+                        "CMYK preflight BLOCKED: " + "; ".join(errors)
+                    )
+                elif warnings:
+                    self.host.log.append(
+                        "CMYK preflight warning: " + "; ".join(warnings)
                     )
         if self._pending_save:
             self._pending_save = False
@@ -964,6 +1175,13 @@ class CmykTab(GeneratorTab):
         if not entries:
             self.report_error("Nothing to save; preview first.")
             return
+        errors = self._preflight_errors(results)
+        if errors:
+            message = "CMYK preflight blocked save: " + "; ".join(errors)
+            self.report_error(message)
+            self.cost_label.setText(message)
+            self.pass_summary.setText(self._summary_text(results))
+            return
         sheet = bool(self.calibration_mode.isChecked())
         stem = ""
         if getattr(self, "_artwork", ""):
@@ -979,13 +1197,18 @@ class CmykTab(GeneratorTab):
             return
         written = export(entries, None, base)
         manifest_path = None
+        set_manifest_path = None
         if written and sheet and self._layers_manifest is not None:
             manifest_path = self._write_manifest(written[0], entries[0][0])
+        elif written:
+            set_manifest_path = self._write_set_manifest(written, results)
         if written:
             names = ", ".join(os.path.basename(path) for path in written)
             extra = (
                 f" Calibration manifest: {manifest_path.name}."
                 if manifest_path
+                else f" Set manifest: {set_manifest_path.name}."
+                if set_manifest_path
                 else ""
             )
             self.status.setText(
@@ -1002,6 +1225,53 @@ class CmykTab(GeneratorTab):
             json.dumps(self._layers_manifest, indent=2) + "\n",
             encoding="utf-8",
         )
+        return path
+
+    def _write_set_manifest(self, written, results):
+        """Record the frame, bed motion, offsets and preflight for a set."""
+        first = Path(written[0])
+        stem = first.stem
+        for channel in converter.CHANNELS:
+            suffix = "-" + converter.CHANNEL_LABELS[channel].lower()
+            if stem.endswith(suffix):
+                stem = stem[: -len(suffix)]
+                break
+        path = first.parent / f"{stem}-set.json"
+        channels = [channel for channel in converter.CHANNELS if channel in results]
+        data = {
+            "kind": "cmyk-print-set",
+            "version": 1,
+            "created": datetime.datetime.now().isoformat(timespec="seconds"),
+            "page": {
+                "width_mm": self.page_w.value(),
+                "height_mm": self.page_h.value(),
+                "margin_mm": self.margin.value(),
+            },
+            "frame_center_mm": [
+                self.page_w.value() / 2.0,
+                self.page_h.value() / 2.0,
+            ],
+            "bed_motion": self._bed_motion_label(),
+            "center_hold_diameter_mm": self.center_hold.value(),
+            "registration_crosses": self.registration_marks.isChecked(),
+            "pen_offsets_mm": {
+                channel: list(self._pen_offsets()[channel])
+                for channel in converter.CHANNELS
+            },
+            "notes": (
+                "Pen offsets apply to artwork programs and the preview only; "
+                "the calibration sheet keeps its geometric layout."
+            ),
+            "files": {
+                channel: Path(path_value).name
+                for channel, path_value in zip(channels, written)
+            },
+            "preflight": {
+                channel: results[channel].get("checks")
+                for channel in channels
+            },
+        }
+        path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
         return path
 
 

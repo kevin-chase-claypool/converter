@@ -268,6 +268,25 @@ Current tools:
   remaining colors. `?` and `$G` are the non-motion checks: expect `Idle`
   and the same G54 work offset before each pass. If a reset or re-home
   happens mid-set, re-register and restart the set.
+  **Pen alignment and offsets:** **Pen alignment** holds a measured X/Y
+  correction for each ink. The values are paper-space corrections, applied
+  after Artwork scale and to that ink's registration crosses as well, so a
+  corrected pen brings its crosses onto the reference. They apply to the
+  artwork programs and the preview; the calibration sheet keeps its
+  geometric layout so its scan manifest stays valid. Use
+  `samples/gcode/cmyk-pen-alignment.gcode` once per pen (one registration,
+  no re-registration between pens), enter each pen's measured displacement
+  relative to cyan, and press **Use measured offsets**; the tab applies the
+  opposite sign automatically. A single X/Y offset corrects translation
+  only - a rotation or a fan in the measured crosses is a frame/A/bed
+  problem, not a pen offset.
+  **Pass summary and preflight:** before saving, the tab shows the page,
+  shared frame, Bed motion, centre hold, crosses and pen offsets, then runs
+  the motion preflight on each ink. It checks the bed-step cap, the A-rate
+  limit, bare `G0` rotations and moves that exceed the Path tolerance;
+  hard violations block Save and warnings go to the log. A successful
+  artwork save also writes `<name>-set.json` beside the four files with the
+  frame, mode, offsets, file names and per-ink preflight results.
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times

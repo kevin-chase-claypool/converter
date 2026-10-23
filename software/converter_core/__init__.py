@@ -4,6 +4,7 @@ from .geometry import *
 from .shading import *
 from .cmyk import *
 from .kinematics import *
+from .motion_check import *
 from .gcode import *
 from .kaleidoscope import *
 from .generative import *

@@ -214,6 +214,18 @@
   (`WSW-20261020-001`; asymmetric 280 % reproduction now 0.00 mm anchor
   spread). Open only for the bench print of the four corner crosses.
 
+- [ ] Bench-verify the CMYK per-pen offsets and set preflight.
+  Problem: per-ink X/Y offsets, measured-cross conversion and save preflight
+  are implemented (`WSW-20261023-001`), but no four-pen bench measurement
+  has validated the workflow yet.
+  Benefit: separates a constant pen-tip translation from frame/A/bed error
+  and records a reproducible set manifest with every save.
+  Risk: an offset cannot correct a fan/rotation or a moving sheet; measuring
+  the crosses at centre and corners is required before trusting it.
+  Acceptance: the four pens' alignment crosses agree within the remaining
+  machine tolerance, a CMYK set overlays correctly, and its `-set.json`
+  records the measurements and preflight results.
+
 - [ ] Verify the heavy gantry axis under load.
   Problem: the operator reports that the Y motor carries markedly more mass than
   X or A. The converter's pen-up travels are `G0`, and grblHAL ignores the `F`

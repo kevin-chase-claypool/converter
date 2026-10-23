@@ -683,6 +683,27 @@ class CmykTabTests(unittest.TestCase):
         tab.max_marks.setValue(400)
         return tab
 
+    @staticmethod
+    def clean_checks():
+        return {
+            "drawing": 1,
+            "travel": 0,
+            "hold": 0,
+            "strategies": {},
+            "step": 0.0,
+            "step_line": 0,
+            "rate": 0.0,
+            "rate_line": 0,
+            "deviation": (0.0, 0.0, 0, ""),
+            "tolerance": 0.05,
+            "over_tolerance": 0,
+            "rapids_with_rotation": 0,
+            "fed_rotations": 0,
+            "unwinds": 0,
+            "cap": 15.0,
+            "rate_cap": 500.0,
+        }
+
     def test_build_svg_writes_every_layer_for_the_planner(self):
         tab = self.make_tab()
         path = tab.build_svg()
@@ -771,6 +792,131 @@ class CmykTabTests(unittest.TestCase):
         for _planned, _points, _thetas, labels in plan["planned_jobs"]:
             strategies.update(label for label in labels if label)
         self.assertEqual(strategies, {"fixed"})
+
+    def test_pen_offsets_shift_only_the_selected_ink(self):
+        tab = self.make_tab()
+        tab.registration_marks.setChecked(False)
+        tab._ensure_layers()
+        before = {
+            channel: [list(line) for line in tab._layers[channel]]
+            for channel in converter.CHANNELS
+        }
+        tab.offset_spins["m"][0].setValue(1.25)
+        tab.offset_spins["m"][1].setValue(-0.50)
+        tab._ensure_layers()
+        for channel in converter.CHANNELS:
+            dx, dy = (1.25, -0.50) if channel == "m" else (0.0, 0.0)
+            after = tab._layers[channel]
+            self.assertEqual(len(before[channel]), len(after), channel)
+            for line_before, line_after in zip(before[channel], after):
+                self.assertEqual(len(line_before), len(line_after), channel)
+                for (x0, y0), (x1, y1) in zip(line_before, line_after):
+                    self.assertAlmostEqual(x1, x0 + dx, places=6)
+                    self.assertAlmostEqual(y1, y0 + dy, places=6)
+
+    def test_measured_alignment_sets_opposite_corrections(self):
+        tab = self.make_tab()
+        tab.measured_spins["y"][0].setValue(1.20)
+        tab.measured_spins["y"][1].setValue(-0.40)
+        tab.measured_spins["c"][0].setValue(9.0)
+        tab._apply_measured_offsets()
+        self.assertAlmostEqual(
+            tab.offset_spins["y"][0].value(), -1.20, places=2
+        )
+        self.assertAlmostEqual(
+            tab.offset_spins["y"][1].value(), 0.40, places=2
+        )
+        self.assertEqual(tab.offset_spins["c"][0].value(), 0.0)
+
+    def test_pen_offsets_keep_the_shared_page_frame(self):
+        tab = self.make_tab(FakeHost(self.colour_path))
+        tab.scale_pct.setValue(280)
+        tab.offset_spins["y"][0].setValue(3.0)
+        tab.offset_spins["y"][1].setValue(-2.0)
+        tab._ensure_layers()
+        settings = tab._effective_settings()
+        expected = (tab.page_w.value() / 2.0, tab.page_h.value() / 2.0)
+        for channel in converter.CHANNELS:
+            contours = converter.read_svg(
+                str(tab._layer_files[channel]), settings
+            )
+            plan = converter.plan_program(contours, settings)
+            self.assertAlmostEqual(
+                plan["source_center"][0], expected[0], places=6, msg=channel
+            )
+            self.assertAlmostEqual(
+                plan["source_center"][1], expected[1], places=6, msg=channel
+            )
+
+    def test_calibration_sheet_ignores_pen_offsets(self):
+        tab = self.make_tab()
+        tab.calibration_mode.setChecked(True)
+        tab.page_w.setValue(200)
+        tab.page_h.setValue(200)
+        tab.pitch.setValue(2.0)
+        tab._ensure_layers()
+        before = {
+            channel: [list(line) for line in tab._layers[channel]]
+            for channel in converter.CHANNELS
+        }
+        tab.offset_spins["m"][0].setValue(2.0)
+        tab._ensure_layers()
+        for channel in converter.CHANNELS:
+            self.assertEqual(tab._layers[channel], before[channel], channel)
+
+    def test_pass_summary_reports_offsets_and_preflight(self):
+        tab = self.make_tab()
+        tab.offset_spins["m"][0].setValue(0.50)
+        text = tab._summary_text()
+        self.assertIn("pen offsets", text)
+        self.assertIn("M +0.50", text)
+        clean = {"c": {"checks": self.clean_checks()}}
+        self.assertIn("preflight OK", tab._summary_text(clean))
+        broken = self.clean_checks()
+        broken["step"] = 20.0
+        self.assertIn(
+            "preflight BLOCKED",
+            tab._summary_text({"c": {"checks": broken}}),
+        )
+
+    def test_hard_preflight_violation_blocks_save(self):
+        host = FakeHost(self.image_path)
+        tab = self.make_tab(host)
+        broken = self.clean_checks()
+        broken["rate"] = 600.0
+        results = {
+            channel: {
+                "gcode": f"; {channel}\nG1 X0 Y0\n",
+                "lines": 2,
+                "checks": dict(broken),
+            }
+            for channel in converter.CHANNELS
+        }
+        tab._write_files(results)
+        self.assertEqual(host.saved_labels, [])
+        self.assertIn("preflight blocked", tab.status.text().lower())
+
+    def test_artwork_save_writes_a_set_manifest(self):
+        host = FakeHost(self.image_path)
+        tab = self.make_tab(host)
+        tab.offset_spins["m"][0].setValue(0.75)
+        checks = self.clean_checks()
+        results = {
+            channel: {
+                "gcode": f"; {channel}\nG1 X0 Y0\n",
+                "lines": 2,
+                "checks": dict(checks),
+            }
+            for channel in converter.CHANNELS
+        }
+        tab._write_files(results)
+        manifest = Path(host.saved_paths["cyan"]).with_name("art-cmyk-set.json")
+        self.assertTrue(manifest.exists())
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        self.assertEqual(data["kind"], "cmyk-print-set")
+        self.assertAlmostEqual(data["pen_offsets_mm"]["m"][0], 0.75)
+        self.assertEqual(set(data["preflight"]), set(converter.CHANNELS))
+        self.assertIn("Set manifest", tab.status.text())
 
     def test_scaled_ink_layers_share_the_page_frame(self):
         tab = self.make_tab(FakeHost(self.colour_path))
