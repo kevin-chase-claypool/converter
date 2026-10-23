@@ -109,7 +109,8 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
    quantitative rotation acceptance is only partial: the 2026-10-23
    dense 12-station sheet has a 1.421 mm A=0 Y spread across positions and a
    0.385 mm RMS centre-model residual, so P100 remains unchanged while bed
-   plane/runout is separated. See the M-12 lab notes under
+   plane/runout is separated. A second photo reproduced the spatial spread and
+   the 0.37 mm RMS residual. See the M-12 lab notes under
    `docs/report/lab-notes/`. See
    `RPSW-20261014-001` and
    [`grblhal/macros/README.md`](grblhal/macros/README.md).

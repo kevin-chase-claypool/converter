@@ -21,6 +21,9 @@
   repeated-angle means were only 0.1-0.3 mm while within-angle positional
   scatter was 0.2-0.45 mm. The centre fit left 0.385 mm RMS / 0.551 mm maximum
   residual. P100 is unchanged; position-dependent bed/pen geometry dominates.
+- An independent second photo, `PXL_20261023_203657257.jpg`, reproduced the
+  A=0 Y spread at `1.039 mm` and the centre-model residual at 0.366 mm RMS /
+  0.501 mm maximum. The spatial conclusion is repeatable.
 - Evidence: `WSW-20261023-003`;
   `docs/changes/windows-software/2026/2026-10-23-dense-rotation-center-calibration.md`,
   `docs/report/lab-notes/2026-10-23-m-12-dense-rotation-center-analysis.md`.

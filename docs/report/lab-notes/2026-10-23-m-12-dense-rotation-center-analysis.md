@@ -114,3 +114,24 @@ give a small average correction but would not remove the visible striations.
 - If a software spatial correction is pursued, it must be tested against these
   repeated stations, including all three A=0 controls, and must not be folded
   into the P100 centre constants.
+
+## Repeat photograph (2026-10-23 20:36)
+
+The same printed sheet was photographed again as
+`PXL_20261023_203657257.jpg` and analyzed independently through its 12
+L-fiducials.
+
+- Raw A=0 Y gaps again varied strongly: `19.0659..20.1052` mm, a
+  `1.039 mm` spread.
+- Corrected 90-degree mean error: `(+0.103, -0.154)` mm.
+- Corrected 180-degree mean error: `(-0.025, -0.169)` mm.
+- Corrected 270-degree mean error: `(+0.018, -0.084)` mm.
+- Repeated-angle centre fit: `C=(+0.0001,-0.0826)` mm, RMS residual
+  `0.366 mm`, maximum residual `0.501 mm`.
+- Eleven of twelve station gaps reproduced within about `0.2 mm`; the largest
+  per-station discrepancy was about `0.6 mm` in X at `180-2`.
+
+The second image independently reproduces the same conclusion: the angular
+means are small, the A=0 spatial spread is large, and a single centre vector
+does not explain the repeated positions. Completed readings are stored in
+`samples/gcode/rotation-center-calibration-2026-10-23-repeat.csv`.

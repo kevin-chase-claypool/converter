@@ -15,6 +15,7 @@ components:
   - samples/gcode/rotation-center-calibration.gcode
   - samples/gcode/rotation-center-calibration.csv
   - samples/gcode/rotation-center-calibration-2026-10-23.csv
+  - samples/gcode/rotation-center-calibration-2026-10-23-repeat.csv
 tags:
   - theta
   - center
@@ -87,6 +88,12 @@ one-angle spot test.
   Completed readings are in
   `samples/gcode/rotation-center-calibration-2026-10-23.csv`; analysis is in
   `docs/report/lab-notes/2026-10-23-m-12-dense-rotation-center-analysis.md`.
+- **Repeat photo (2026-10-23):** the same paper was analyzed independently from
+  `PXL_20261023_203657257.jpg`. The A=0 Y spread remained `1.039 mm`; the
+  angle means stayed small, and the centre-model residual was `0.366 mm` RMS /
+  `0.501 mm` maximum. This confirms that the position-dependent field is
+  repeatable rather than a one-photo artifact. Repeat readings are in
+  `samples/gcode/rotation-center-calibration-2026-10-23-repeat.csv`.
 
 ## Struggles and rejected approaches
 
@@ -119,6 +126,8 @@ one-angle spot test.
 - `samples/gcode/rotation-center-calibration.csv`: matching measurement form.
 - `samples/gcode/rotation-center-calibration-2026-10-23.csv`: completed
   bench readings from the first dense-sheet run.
+- `samples/gcode/rotation-center-calibration-2026-10-23-repeat.csv`: completed
+  readings from the independent repeat photo.
 - `software/README.md`, `firmware/README.md`,
   `firmware/grblhal/macros/README.md`, `docs/testing/TEST_PLAN.md`,
   `docs/project/ROADMAP.md`: current usage and acceptance criteria.
