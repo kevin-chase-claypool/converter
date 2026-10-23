@@ -9,7 +9,8 @@ fitter subtracts the 20 mm baseline and recovers the signed centre error.
 
 The planned test footprint is 13 inches (330.2 mm) on 14-inch (355.6 mm)
 stock. The default station layout reaches a 158.3 mm radius, leaving 19.5 mm
-to the stock edge. The centre direction key points machine +X/+Y.
+to the stock edge. The G-code prints W0/S90/E180/N270 labels, a +X/+Y
+direction key, and an L-shaped fiducial beside every A=0 reference cross.
 
 Usage::
 

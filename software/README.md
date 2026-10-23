@@ -109,10 +109,12 @@ Cycle Start with the pen loaded:
   cardinal stations on 14-inch round stock: 90, 180, 270, and a control.
   Each station has a longer A=0 reference cross and a shorter angle replay
   separated by a known **20 mm baseline in both axes**, so wet parallel lines
-  do not overlap. A centre direction key gives machine +X/+Y. The planned
-  footprint is 13 inches (330.2 mm), with its furthest ink about 158 mm from
-  the registered centre. Measure the raw vertical-arm X gap and horizontal-arm
-  Y gap at each station, then run:
+  do not overlap. The printed sheet identifies the pairs with W0/S90/E180/N270
+  labels, marks each A=0 reference cross with a small L-shaped fiducial, and
+  includes a centre direction key for machine +X/+Y. The planned footprint is
+  13 inches (330.2 mm), with its furthest ink about 158 mm from the registered
+  centre. Measure the raw vertical-arm X gap and horizontal-arm Y gap at each
+  station, then run:
 
   ```powershell
   python ..\tools\fit_rotation_center.py --baseline-mm 20 --measurement 90,GAP_X,GAP_Y --measurement 180,GAP_X,GAP_Y --measurement 270,GAP_X,GAP_Y

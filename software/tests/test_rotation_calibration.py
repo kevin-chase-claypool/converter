@@ -101,7 +101,11 @@ class RotationCenterProgramTests(unittest.TestCase):
         self.assertIn("(180 station:", program)
         self.assertIn("(control station:", program)
         self.assertIn("LONGER cross is A=0", program)
-        self.assertIn("SHORTER cross is the replay", program)
+        self.assertIn("SHORTER cross is the angle replay", program)
+        self.assertIn("(label W0 at", program)
+        self.assertIn("(label S90 at", program)
+        self.assertIn("(label +X at", program)
+        self.assertIn("small L bracket is the datum", program)
         self.assertIn("centre direction key", program)
         self.assertEqual(program.count("("), program.count(")"))
 
@@ -109,7 +113,7 @@ class RotationCenterProgramTests(unittest.TestCase):
         program, _stations = build_rotation_center_test_program(
             converter.Settings()
         )
-        self.assertIn("centred +20,+20 mm", program)
+        self.assertIn("+20,+20 mm from the reference", program)
         self.assertIn("fitter subtracts the 20 mm nominal gap", program)
         self.assertIn("reference arm 20 mm", program)
 

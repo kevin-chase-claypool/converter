@@ -35,6 +35,45 @@ DEFAULT_SHEET_DIAMETER_MM = 355.6  # 14 in round stock
 DEFAULT_TEST_DIAMETER_MM = 330.2  # leave 1/2 in around a 14 in sheet
 
 
+# A compact single-line stroke font for on-paper calibration labels.
+_STROKE_GLYPHS = {
+    "0": (((0.0, 1.0), (0.0, 4.0), (3.0, 4.0), (3.0, 1.0), (0.0, 1.0)),),
+    "1": (((1.5, 1.0), (1.5, 4.0)),),
+    "2": (
+        ((0.0, 4.0), (3.0, 4.0), (3.0, 2.5), (0.0, 2.5), (0.0, 1.0), (3.0, 1.0)),
+    ),
+    "7": (((0.0, 4.0), (3.0, 4.0), (3.0, 1.0)),),
+    "8": (
+        ((0.0, 1.0), (0.0, 4.0), (3.0, 4.0), (3.0, 1.0), (0.0, 1.0)),
+        ((0.0, 2.5), (3.0, 2.5)),
+    ),
+    "9": (
+        ((3.0, 1.0), (3.0, 4.0), (0.0, 4.0), (0.0, 2.5), (3.0, 2.5)),
+    ),
+    "E": (
+        ((3.0, 4.0), (0.0, 4.0), (0.0, 1.0), (3.0, 1.0)),
+        ((0.0, 2.5), (2.2, 2.5)),
+    ),
+    "N": (((0.0, 1.0), (0.0, 4.0), (3.0, 1.0), (3.0, 4.0)),),
+    "S": (
+        ((3.0, 4.0), (0.0, 4.0), (0.0, 2.5), (3.0, 2.5), (3.0, 1.0), (0.0, 1.0)),
+    ),
+    "W": (((0.0, 4.0), (0.0, 1.0), (1.5, 3.0), (3.0, 1.0), (3.0, 4.0)),),
+    "X": (
+        ((0.0, 1.0), (3.0, 4.0)),
+        ((0.0, 4.0), (3.0, 1.0)),
+    ),
+    "Y": (
+        ((0.0, 4.0), (1.5, 2.5), (3.0, 4.0)),
+        ((1.5, 2.5), (1.5, 1.0)),
+    ),
+    "+": (
+        ((0.5, 2.5), (2.5, 2.5)),
+        ((1.5, 1.5), (1.5, 3.5)),
+    ),
+}
+
+
 @dataclass(frozen=True)
 class RotationCenterMeasurement:
     angle_deg: float
@@ -290,15 +329,14 @@ def build_rotation_center_test_program(
         (baseline_mm + replay_arm_mm, baseline_mm),
         (baseline_mm, baseline_mm - replay_arm_mm),
         (baseline_mm, baseline_mm + replay_arm_mm),
-    )
-    label_offsets = tuple(
-        (x, arm_mm + 12.0)
-        for x in (-6.0, -2.0, 2.0, 6.0)
+        (-arm_mm - 10.0, -arm_mm - 10.0),
+        (-arm_mm - 10.0, -arm_mm - 4.0),
+        (-arm_mm - 4.0, -arm_mm - 4.0),
     )
     pattern_radius = max(
         math.hypot(centre_x + offset_x, centre_y + offset_y)
         for centre_x, centre_y in station_centres
-        for offset_x, offset_y in pair_offsets + label_offsets
+        for offset_x, offset_y in pair_offsets
     )
     if pattern_radius > usable_radius:
         raise ValueError(
@@ -320,10 +358,9 @@ def build_rotation_center_test_program(
         "(run G65 P113 first; G54 X0 Y0 is the freshly registered rotation origin)",
         "(layout: %s mm test on %s mm round stock, largest ink radius %s mm)"
         % (_fmt(test_diameter_mm), _fmt(sheet_diameter_mm), "%.1f" % pattern_radius),
-        "(station labels: 1 tooth=W control, 2=S 90 deg, 3=E 180 deg, 4=N 270 deg)",
-        "(inside each station the LONGER cross is A=0; the SHORTER cross is the replay)",
-        "(the replay cross is centred +%s,+%s mm from the reference in the bed frame)"
-        % (_fmt(baseline_mm), _fmt(baseline_mm)),
+        "(printed cardinal labels and angles: W0 control, S90, E180, N270)",
+        "(inside each station the LONGER cross is A=0; its small L bracket is the datum)",
+        "(the SHORTER cross is the angle replay, +20,+20 mm from the reference)",
         "(measure raw vertical-arm X gap and horizontal-arm Y gap at each station)",
         "(the fitter subtracts the %s mm nominal gap from each reading)" % _fmt(baseline_mm),
         "G21",
@@ -394,13 +431,32 @@ def build_rotation_center_test_program(
         previous_machine = machine[-1]
         previous_motor_theta = motor_a
 
-    def draw_label(station_x: float, station_y: float, teeth: int) -> None:
-        y0 = station_y + arm_mm + 8.0
-        y1 = y0 + 4.0
-        lines.append("(%d-tooth station label)" % teeth)
-        for index in range(teeth):
-            x = station_x - 2.0 * (teeth - 1) + 4.0 * index
-            draw_stroke(0.0, [(x, y0), (x, y1)])
+    def draw_text(
+        text: str,
+        centre_x: float,
+        centre_y: float,
+        height_mm: float = 7.0,
+    ) -> None:
+        scale = height_mm / 5.0
+        spacing = 1.8
+        char_width = 3.0 * scale
+        total_width = len(text) * char_width + max(0, len(text) - 1) * spacing
+        start_x = centre_x - total_width / 2.0
+        base_y = centre_y - height_mm / 2.0
+        lines.append("(label %s at %s,%s)" % (text, _fmt(centre_x), _fmt(centre_y)))
+        for char_index, char in enumerate(text):
+            glyph = _STROKE_GLYPHS.get(char)
+            if glyph is None:
+                raise ValueError("no calibration stroke glyph for %r" % char)
+            char_x = start_x + char_index * (char_width + spacing)
+            for polyline in glyph:
+                draw_stroke(
+                    0.0,
+                    [
+                        (char_x + x * scale, base_y + y * scale)
+                        for x, y in polyline
+                    ],
+                )
 
     for label, angle, station_x, station_y in stations:
         lines.append(
@@ -421,6 +477,16 @@ def build_rotation_center_test_program(
                 (station_x, station_y + arm_mm),
             ],
         )
+        fiducial_x = station_x - arm_mm - 10.0
+        fiducial_y = station_y - arm_mm - 10.0
+        draw_stroke(
+            0.0,
+            [
+                (fiducial_x, fiducial_y),
+                (fiducial_x, fiducial_y + 6.0),
+                (fiducial_x + 6.0, fiducial_y + 6.0),
+            ],
+        )
         replay_x = station_x + baseline_mm
         replay_y = station_y + baseline_mm
         draw_stroke(
@@ -437,9 +503,15 @@ def build_rotation_center_test_program(
                 (replay_x, replay_y + replay_arm_mm),
             ],
         )
-    tooth_counts = {"control": 1, "90": 2, "180": 3, "270": 4}
-    for label, _angle, station_x, station_y in stations:
-        draw_label(station_x, station_y, tooth_counts[label])
+    label_positions = {
+        "control": ("W0", -55.0, 0.0),
+        "90": ("S90", 0.0, -55.0),
+        "180": ("E180", 55.0, 0.0),
+        "270": ("N270", 0.0, 55.0),
+    }
+    for label, (_text, label_x, label_y) in label_positions.items():
+        lines.append("(%s station marker)" % label)
+        draw_text(_text, label_x, label_y)
 
     arrow_length = 20.0
     arrow_back = 3.0
@@ -465,6 +537,8 @@ def build_rotation_center_test_program(
             (-arrow_side, arrow_length - arrow_back),
         ],
     )
+    draw_text("+X", 31.0, -8.0, height_mm=5.0)
+    draw_text("+Y", -8.0, 32.0, height_mm=5.0)
 
     lines.extend(
         [

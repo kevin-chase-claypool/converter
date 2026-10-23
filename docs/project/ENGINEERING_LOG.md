@@ -13,14 +13,17 @@
   closely spaced wet lines were hard to attribute and contaminated each other.
   The four separated stations now place 90 at S, 180 at E, 270 at N, and the
   control at W; each has a longer A=0 cross and shorter replay cross 20 mm
-  away in both axes. Fed travel carries the bed indexing, so the program has no
-  bare `G0` rotation.
+  away in both axes. W0/S90/E180/N270 text, a +X/+Y direction key, and
+  L-shaped reference fiducials are emitted as actual pen strokes rather than
+  comments. Fed travel carries the bed indexing, so the program has no bare
+  `G0` rotation.
 - Added `tools/fit_rotation_center.py`. Given raw `ANGLE,GAP_X,GAP_Y` readings,
   it subtracts the 20 mm baseline, fits the residual centre vector, reports
   model residual, reads the currently installed P100 constants, and prints
   replacement values. P100 remains the sole owner of the G54 correction; the
   converter does not add a second artwork-space offset.
-- Verification: 16 dedicated tests pass, including baseline removal, synthetic exact recovery
+- Verification: 16 dedicated tests and the full 453-test suite pass (1
+  OpenGL-context skip), including baseline removal, synthetic exact recovery
   and rejection of a non-centre translation; the generated sample passes the
   strict motion guard (0 drawing A motion, 0 A rate, 0 bare rapids).
 - Bench result and final constants are pending; a residual above 0.20 mm points

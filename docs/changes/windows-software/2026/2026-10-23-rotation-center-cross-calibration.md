@@ -52,7 +52,9 @@ and a 20 mm nominal reference-to-replay gap.
   and control stations at S, E, N, and W. Each station has a 40 mm A=0
   reference cross and a 34 mm replay cross whose centre is nominally
   `(+20,+20)` mm in the bed frame. The reference is therefore identifiable by
-  its longer arms, while the wet parallel lines remain 20 mm apart.
+  its longer arms and a small L-shaped fiducial, while the wet parallel lines
+  remain 20 mm apart. A compact vector stroke font prints `W0`, `S90`, `E180`,
+  and `N270` around the sheet centre plus a `+X`/`+Y` direction key.
 - The planned footprint is 13 inches (330.2 mm) on 14-inch (355.6 mm) round
   stock. The furthest ink is about 158.3 mm from centre, leaving more than
   19 mm to the stock edge. A centre direction key points machine +X/+Y.
@@ -78,8 +80,10 @@ and a 20 mm nominal reference-to-replay gap.
   values, and malformed input.
 - `python -m unittest discover -s software\tests -p test_rotation_calibration.py -v`
   passes 16 tests with Python 3.13.13.
+- The full software suite passes 453 tests with 1 OpenGL-context skip.
 - `python tools\make_rotation_center_calibration.py` generated the committed
-  204-line sample with four separated reference/replay stations.
+  351-line sample with four separated reference/replay stations, printed
+  cardinal labels, and reference fiducials.
 - `python tools\check_gcode_motion.py
   samples\gcode\rotation-center-calibration.gcode --strict` passes: 0 degrees
   of A motion in every drawing move, 0 A rate, and no bare `G0` rotation.
