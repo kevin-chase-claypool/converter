@@ -305,6 +305,7 @@ class BedCalibrationAnalysisTests(unittest.TestCase):
             len(calibration_stations()),
         )
         self.assertIn("summary", report["bed_mesh_correlation"])
+        self.assertEqual(len(report["bed_mesh_correlation"]["sha256"]), 64)
 
     def test_fiducials_remove_common_sheet_pose_before_fitting(self):
         transformed = transform_measured_csv(

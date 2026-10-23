@@ -8,6 +8,7 @@ the residual bed/A map is calculated. P100 still owns registration.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -54,15 +55,20 @@ def main():
     except OSError as error:
         raise SystemExit("cannot read measurements: %s" % error) from error
     bed_mesh_csv = None
+    bed_mesh_sha256 = ""
     if args.bed_mesh:
         try:
-            bed_mesh_csv = Path(args.bed_mesh).read_text(encoding="utf-8")
+            bed_mesh_bytes = Path(args.bed_mesh).read_bytes()
+            bed_mesh_csv = bed_mesh_bytes.decode("utf-8")
+            bed_mesh_sha256 = hashlib.sha256(bed_mesh_bytes).hexdigest()
         except OSError as error:
             raise SystemExit("cannot read bed mesh: %s" % error) from error
 
     profile, report, accepted = analyze_measurements(
         measurements_csv,
         bed_mesh_csv=bed_mesh_csv,
+        bed_mesh_source=args.bed_mesh,
+        bed_mesh_sha256=bed_mesh_sha256,
         source=measurements_path.name,
         max_cross_validation_rms_mm=args.max_cross_validation_rms_mm,
         max_cross_validation_error_mm=args.max_cross_validation_error_mm,

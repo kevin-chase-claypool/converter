@@ -170,9 +170,16 @@
   `theta-bed-compensation-v2` profile for the host planner. The converter
   applies that residual map after theta planning and P100 registration, keeps
   preview and G-code on the same subdivided points, rejects uncovered artwork,
-  and caps each correction at 5 mm (`WSW-20261023-004`). Remaining work is to
-  run the full-field sheet, review the spatial/angle/height evidence, accept
-  or reject the software map, and run its compensated verification sheet.
+  and caps each correction at 5 mm (`WSW-20261023-004`). The first full-field
+  photo resolved all 189 markers: A=0 spatial error was 0.292 mm RMS / 0.537 mm
+  maximum, leave-one-station-out profile prediction was 0.197 mm RMS / 0.552 mm
+  maximum with 66.1 % improvement, and the fitted profile passed the software
+  gates at a 1.331 mm worst correction. The bed mesh has mixed correlations
+  (A=0 Y `r=-0.548`, 90-degree `r=-0.574`, 270-degree `r=+0.744`), so both
+  position and rotation/height coupling remain physically credible. P100 stays
+  unchanged. Remaining work is to print and measure
+  `bed-error-verify.gcode`; accept the profile only if replay residuals shrink
+  without introducing a new spatial field.
 
 ## Phase 5: toolhead
 

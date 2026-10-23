@@ -143,14 +143,21 @@ Cycle Start with the pen loaded:
   at four `M0`s; let the ink dry before Cycle Start. It uses no pen swap and
   does not change G54.
 
-  Photograph the whole sheet from above, use the fiducials to rectify it, and
-  fill `measured_x_mm`/`measured_y_mm` for every mark in
-  `..\samples\gcode\bed-error-map.csv`. Then analyse the completed sheet:
+  Photograph the whole sheet from above. The photo tool finds the four
+  fiducials, 185 station Ls, and 74 label glyphs, fits the sheet transform, and
+  fills every `measured_x_mm`/`measured_y_mm` field:
+
+  ```powershell
+  python ..\tools\measure_bed_error_photo.py cal.jpg `
+    --measurement-out ..\samples\gcode\bed-error-map-measured.csv
+  ```
+
+  Then analyse the completed sheet:
 
   ```powershell
   python ..\tools\analyze_bed_error_calibration.py `
-    --measurements ..\samples\gcode\bed-error-map.csv `
-    --bed-mesh ..\bed_mesh.csv
+    --measurements ..\samples\gcode\bed-error-map-measured.csv `
+    --bed-mesh ..\samples\gcode\bed-mesh.csv
   ```
 
   The analyzer rejects missing rows, reports A=0 spatial error and A=0
@@ -171,8 +178,18 @@ Cycle Start with the pen loaded:
     --compensation ..\samples\gcode\bed-error-compensation.json
   ```
 
-  That writes `bed-error-verify.gcode` and a matching CSV. The initial
-  uncompensated and compensated sheets have not yet been bench-verified.
+  That writes `bed-error-verify.gcode` and a matching CSV.
+
+  **First full-field result (2026-10-23):** the uploaded sheet resolved exactly
+  4 fiducials, 185 station Ls, and 74 label glyphs. A=0 spatial error was
+  `0.292 mm` RMS / `0.537 mm` maximum, the A=0 control after rotation was
+  `0.176 mm` RMS / `0.369 mm` maximum, and leave-one-station-out profile
+  prediction was `0.197 mm` RMS / `0.552 mm` maximum with a `66.1 %`
+  improvement. The fitted profile is
+  `..\samples\gcode\bed-error-compensation-2026-10-23.json` (fingerprint
+  `911d2694c8c9`). The existing bed mesh shows mixed height correlation, not
+  one pure translation. The compensated verification sheet is generated but
+  has not yet been printed.
 - `..\samples\gcode\a-tilt-pairs-test.gcode` - four separated line pairs for
   a caliper-read bed-tilt check: each pair is the same paper segment drawn
   twice, once at A=0 (the longer 80 mm constant line) and once at that

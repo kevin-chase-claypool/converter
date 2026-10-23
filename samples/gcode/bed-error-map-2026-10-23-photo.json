@@ -1,0 +1,65 @@
+{
+  "assignment_distance_px": {
+    "maximum": 6.862572906744941,
+    "median": 2.57449634322952,
+    "minimum": 0.021147688362231087
+  },
+  "component_counts": {
+    "fiducials": 4,
+    "label_glyphs": 74,
+    "station_L": 185,
+    "total": 263
+  },
+  "fiducial_points_px": [
+    [
+      1816.0,
+      349.0
+    ],
+    [
+      808.0,
+      330.0
+    ],
+    [
+      779.0,
+      1355.0
+    ],
+    [
+      1815.5,
+      1367.0
+    ]
+  ],
+  "homography": [
+    [
+      4.705873624927785,
+      0.23235877868982643,
+      1306.586410211239
+    ],
+    [
+      0.09914741877968904,
+      -4.552270498649931,
+      843.1852182521636
+    ],
+    [
+      3.3184360128014364e-05,
+      0.00012670769267964315,
+      1.0
+    ]
+  ],
+  "image": "C:\\Users\\jacks\\Downloads\\cal.jpg",
+  "image_sha256": "f753d80f13922b61a41eaabfd5d181495599e4aa6163350ace7f213ee89fa12f",
+  "image_size_px": [
+    2427,
+    1828
+  ],
+  "mask_center_fraction": [
+    0.5295,
+    0.4869
+  ],
+  "mask_radius_fraction": 0.4322,
+  "threshold": 20,
+  "working_center_px": [
+    1284.567,
+    889.5663
+  ],
+  "working_radius_px": 790.0616
+}

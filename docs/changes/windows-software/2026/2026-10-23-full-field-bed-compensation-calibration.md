@@ -14,8 +14,11 @@ components:
   - software/qt_svg_to_gcode.pyw
   - tools/make_bed_error_calibration.py
   - tools/analyze_bed_error_calibration.py
+  - tools/measure_bed_error_photo.py
   - samples/gcode/bed-error-map.gcode
   - samples/gcode/bed-error-map.csv
+  - samples/gcode/bed-error-map-2026-10-23.csv
+  - samples/gcode/bed-error-compensation-2026-10-23.json
 tags:
   - theta
   - bed
@@ -77,6 +80,10 @@ are distinguishable without a multi-pen tip offset.
 - `make_bed_error_calibration.py --compensation ...` emits a compensated
   verification sheet so the same measurement analysis can be applied after a
   profile has been fitted.
+- `measure_bed_error_photo.py` identifies the four fiducials, 185 station L
+  marks, and 74 label glyphs, fits a projective sheet transform, extracts each
+  L corner, and writes the complete measurement CSV plus a deterministic
+  expected/detected overlay.
 
 ## Verification
 
@@ -89,7 +96,28 @@ are distinguishable without a multi-pen tip offset.
   sample interpolation, angle wrap, correction bounds, coverage rejection,
   synthetic field recovery, leave-one-station-out acceptance, bed-mesh
   correlation, compensated verification mode, and G-code/preview point parity.
-- The full software suite passes 474 tests with one OpenGL-context skip.
+- The full software suite passes 477 tests with one OpenGL-context skip.
+- **Bench run (2026-10-23):** photo `cal.jpg` produced the exact expected
+  component counts (4 fiducials, 185 station Ls, 74 label glyphs) and all 189
+  measurement rows. The maximum expected-to-detected marker offset was
+  `6.863 px`, well below the 10 mm lane separation.
+- A=0 spatial error was `0.292 mm` RMS / `0.537 mm` maximum. The independent
+  A=0 control after rotations measured `0.176 mm` RMS / `0.369 mm` maximum.
+- The 90/180/270 residual RMS values were `0.752 / 0.784 / 0.557 mm`.
+  Leave-one-station-out profile prediction was `0.197 mm` RMS / `0.552 mm`
+  maximum, a `66.1 %` improvement over raw station error.
+- Generated profile `bed-error-compensation-2026-10-23.json` has fingerprint
+  `911d2694c8c9`, `165.1 mm` coverage, and a `1.331 mm` maximum correction.
+  It passes the analyzer gates. `bed-error-verify.gcode` was generated from
+  that profile, reaches a maximum `163.940 mm` radius, and passes strict
+  motion analysis.
+- The existing bed mesh showed mixed coupling: A=0 Y error `r=-0.548`,
+  90-degree magnitude `r=-0.574`, and 270-degree magnitude `r=+0.744`.
+  Position and rotation/plane/carriage effects are both present.
+- Extraction thresholds 18, 20, and 22 all produced the exact `4/185/74`
+  component counts. A=0 spatial RMS stayed `0.290..0.292 mm`, leave-one-out
+  RMS stayed `0.194..0.197 mm`, and the maximum fitted correction stayed
+  `1.271..1.331 mm`.
 
 ## Struggles and rejected approaches
 
@@ -109,9 +137,9 @@ are distinguishable without a multi-pen tip offset.
 
 ## Risks and follow-up
 
-- The raw and compensated sheets have not yet been printed. The 0.35 mm RMS,
-  0.90 mm maximum, and 10 % improvement gates are software acceptance gates,
-  not bench evidence.
+- The raw measurement sheet is bench-verified, but the compensated
+  `bed-error-verify.gcode` has not yet been printed. The generated profile is
+  therefore provisional until that second-sheet verification passes.
 - Fiducial fitting removes a common affine pose. That is intentional because
   P100 owns registration, but a real global X/Y scale or skew defect belongs
   in `$100`/`$101` or mechanical alignment, not in this residual map.
@@ -134,10 +162,28 @@ are distinguishable without a multi-pen tip offset.
 - `software/qt_svg_to_gcode.pyw`: **Bed compensation JSON** file selector.
 - `tools/make_bed_error_calibration.py`: raw and compensated sheet generator.
 - `tools/analyze_bed_error_calibration.py`: measurement-to-profile CLI.
+- `tools/measure_bed_error_photo.py`: rectifies and measures the completed
+  one-pen sheet from an overhead photograph.
 - `software/tests/test_bed_compensation.py`: layout, analysis, and planner
   regression coverage.
+- `software/tests/test_bed_photo_measurement.py`: photo homography, L-corner,
+  and measurement CSV coverage.
 - `samples/gcode/bed-error-map.gcode`: ready-to-run full-field sheet.
 - `samples/gcode/bed-error-map.csv`: complete marker measurement worksheet.
+- `samples/gcode/bed-error-map-2026-10-23.csv`: completed photo measurement.
+- `samples/gcode/bed-error-map-2026-10-23-photo.json`: image hash,
+  component counts, fiducial pixels, homography, and assignment statistics.
+- `samples/gcode/bed-error-analysis-2026-10-23.json`: measured field,
+  validation, and bed-mesh correlation report.
+- `samples/gcode/bed-error-compensation-2026-10-23.json`: first fitted profile.
+- `samples/gcode/bed-error-verify.gcode`: compensated verification program.
+- `samples/gcode/bed-mesh-2026-10-11.csv`: mesh used for the correlation.
+- `docs/report/lab-notes/2026-10-23-m-12-full-field-bed-calibration.md`:
+  bench extraction, measurements, correlation, and acceptance decision.
+- `docs/report/lab-notes/assets/2026-10-23-m-12-full-field-bed-calibration.jpg`
+  and `...-overlay.jpg`: source photo and detected-marker overlay.
+- `docs/report/lab-notes/assets/2026-10-23-m-12-full-field-bed-error-vectors.png`:
+  A=0 spatial, rotation-residual, and control vector fields.
 - `software/README.md`, `docs/testing/TEST_PLAN.md`,
   `docs/project/ROADMAP.md`, `docs/integration/INTERFACES.md`: operating
   procedure, current behavior, acceptance, and ownership.

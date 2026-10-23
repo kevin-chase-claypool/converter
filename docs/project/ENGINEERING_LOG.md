@@ -1,5 +1,38 @@
 # Engineering Log
 
+<a id="elog-20261023-full-field-bed-calibration-analysis"></a>
+### 🟨 2026-10-23 - WINDOWS SOFTWARE/HARDWARE/PARTIAL - Full-field bed calibration photo and profile
+
+- The operator supplied a photographed `bed-error-map.gcode` sheet. The
+  one-color layout completed with 37 station clusters and four large
+  fiducials.
+- Added `tools/measure_bed_error_photo.py`, which extracted exactly 4 fiducial
+  components, 185 station L components, and 74 label glyphs from the
+  2427 x 1828 photo. It fitted a projective fiducial transform and populated
+  all 189 measurement rows. The maximum expected-to-detected location offset
+  was 6.863 px, well inside the 10 mm lane separation.
+- Results: raw station error 0.581 mm RMS / 1.309 mm maximum; A=0 spatial
+  error 0.292 mm RMS / 0.537 mm maximum; A=0 control 0.176 mm RMS / 0.369 mm
+  maximum. The 90/180/270 residual RMS values were 0.752 / 0.784 / 0.557 mm.
+- Leave-one-station-out profile prediction was 0.197 mm RMS / 0.552 mm
+  maximum, a 66.1 % improvement. The accepted profile has fingerprint
+  `911d2694c8c9`, 165.1 mm coverage, and a 1.331 mm maximum correction.
+- Correlation with the existing bed mesh was mixed: A=0 Y error `r=-0.548`,
+  90-degree magnitude `r=-0.574`, 180-degree `r=+0.341`, and 270-degree
+  `r=+0.744`. This supports a combined position and rotation/height coupled
+  field; the paper-inclusive mesh cannot separate paper from bed surface.
+- P100 remains unchanged. `samples/gcode/bed-error-verify.gcode` was generated
+  from the accepted profile and passes `check_gcode_motion.py --strict`; the
+  compensated sheet is still the outstanding physical verification.
+- The photo-extraction follow-up tests bring the full software suite to 477
+  passing tests with one OpenGL-context skip.
+- Evidence: `WSW-20261023-004`;
+  `docs/report/lab-notes/2026-10-23-m-12-full-field-bed-calibration.md`,
+  `samples/gcode/bed-error-map-2026-10-23.csv`,
+  `samples/gcode/bed-error-analysis-2026-10-23.json`.
+- Category: windows-software, hardware, theta, bed, calibration, compensation,
+  fiducials, planner, repeatability.
+
 <a id="elog-20261023-full-field-bed-compensation-calibration"></a>
 ### 🟨 2026-10-23 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Full-field bed compensation calibration
 

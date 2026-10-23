@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import csv
+import hashlib
 import io
 import math
 import statistics
@@ -761,6 +762,8 @@ def analyze_measurements(
     measurements_csv,
     *,
     bed_mesh_csv=None,
+    bed_mesh_source="",
+    bed_mesh_sha256="",
     source="bed-error-map.csv",
     max_cross_validation_rms_mm=0.35,
     max_cross_validation_error_mm=0.90,
@@ -881,6 +884,10 @@ def analyze_measurements(
         height_data = _height_correlations(
             stations, reference, angled, mesh_points
         )
+        height_data["source"] = bed_mesh_source
+        height_data["sha256"] = bed_mesh_sha256 or hashlib.sha256(
+            bed_mesh_csv.encode("utf-8")
+        ).hexdigest()
 
     angle_weighted_rms = statistics.fmean(
         summary.rms_mm for summary in angle_summaries.values()
