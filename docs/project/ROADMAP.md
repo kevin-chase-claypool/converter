@@ -155,7 +155,9 @@
   apply the fitted P100 constants, re-register, and show every gap returns to
   the baseline within the remaining mechanical tolerance; if fit residual
   stays above 0.20 mm, resolve bed plane/runout instead of forcing the centre
-  constants.
+  constants. Status 2026-10-23: the first photo-derived run had a control
+  within ~0.1 mm but 0.350 mm RMS / 0.412 mm max centre-model residual; P100
+  remains unchanged pending bed-plane/runout separation.
 
 ## Phase 5: toolhead
 

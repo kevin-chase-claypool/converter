@@ -105,7 +105,10 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
    under the lifted pen that stays centred while the bed rotates. That quick
    check passed on 2026-10-01 with the earlier `+1.25` mm X value; the
    operator confirmed the 2026-10-14 values park on the magnet, but the
-   quantitative rotation acceptance remains bench-pending. See
+   quantitative rotation acceptance is only partial: the 2026-10-23
+   cross-sheet photo has a good control but a 0.35 mm RMS centre-model
+   residual, so P100 remains unchanged while bed plane/runout is separated.
+   See the M-12 lab note under `docs/report/lab-notes/`. See
    `RPSW-20261014-001` and
    [`grblhal/macros/README.md`](grblhal/macros/README.md).
 - **Candidate probe capture** - the 2026-09-10/11 motor-inert candidate

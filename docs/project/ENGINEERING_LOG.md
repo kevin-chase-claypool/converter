@@ -26,10 +26,15 @@
   OpenGL-context skip), including baseline removal, synthetic exact recovery
   and rejection of a non-centre translation; the generated sample passes the
   strict motion guard (0 drawing A motion, 0 A rate, 0 bare rapids).
-- Bench result and final constants are pending; a residual above 0.20 mm points
-  to bed plane/runout instead of a correctable centre vector.
+- First bench photo `PXL_20261023_194750580.jpg` resolved the printed stations
+  through the reference crosses and L-fiducials. The W0 control was within
+  ~0.1 mm, but raw 90/180/270 gaps of `20.7819/19.5908`,
+  `20.0076/19.6381`, and `19.3944/19.6488` mm left 0.350 mm RMS / 0.412 mm
+  max residual against a pure centre model. P100 is unchanged; the residual
+  points to bed plane/runout or station-dependent structure.
 - Evidence: `WSW-20261023-002`;
-  `docs/changes/windows-software/2026/2026-10-23-rotation-center-cross-calibration.md`.
+  `docs/changes/windows-software/2026/2026-10-23-rotation-center-cross-calibration.md`,
+  `docs/report/lab-notes/2026-10-23-m-12-rotation-center-photo-calibration.md`.
 - Category: windows-software, hardware, rp23cnc-software, theta, center,
   registration, calibration.
 

@@ -91,6 +91,14 @@ and a 20 mm nominal reference-to-replay gap.
   `270,19.4,19.4` recover `C=(0,-0.6)` mm after subtracting the 20 mm
   baseline, with zero model residual, and change the current P100 Y correction
   from 0.3 to -0.3 mm as expected.
+- **Bench image check (2026-10-23):** the printed labels, scale references, and
+  L-fiducials made a perspective-corrected measurement possible from photo
+  `PXL_20261023_194750580.jpg`. The W0 control measured within ~0.1 mm, but
+  the fitted centre-only model left 0.350 mm RMS / 0.412 mm max residual.
+  Raw gaps were `90: 20.7819/19.5908`, `180: 20.0076/19.6381`, and
+  `270: 19.3944/19.6488` mm. P100 was left unchanged pending separation of
+  centre, bed-plane, and station-dependent effects. See
+  `docs/report/lab-notes/2026-10-23-m-12-rotation-center-photo-calibration.md`.
 
 ## Struggles and rejected approaches
 
@@ -120,6 +128,10 @@ and a 20 mm nominal reference-to-replay gap.
 - If model residual exceeds 0.20 mm, investigate bed plane/runout before
   changing P100. Re-register and repeat after every centre-magnet, pen/TMAG,
   rotation-axis, or bed-plane change.
+- The first bench sheet exceeds that residual threshold. A single centre
+  correction is therefore not yet qualified; the next test must distinguish
+  angle-dependent structure from station/bed-plane error without relying on
+  another casual overlay.
 
 ## Files
 
