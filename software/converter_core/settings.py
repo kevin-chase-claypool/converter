@@ -144,6 +144,9 @@ class Settings:
     #
     # Clip radius becomes min(bed_diameter/2 - bed_margin, this).
     machine_reach_radius_mm: float = 180.0
+    # Optional measured residual map from tools/analyze_bed_error_calibration.py.
+    # It is applied after planner theta selection and P100 registration.
+    bed_compensation_path: str = ""
     # Where the artwork's own center is placed relative to the registered bed
     # center, in machine millimetres. plan_program centers the artwork on the bed
     # by default; these offsets move it, which is how a drawing whose bounding
@@ -344,6 +347,7 @@ TEXT_FIELD_GROUPS = (
         ("Bed dia mm", "bed_diameter_mm", "457.2"),
         ("Bed margin mm", "bed_margin_mm", "6.35"),
         ("Gantry reach radius mm", "machine_reach_radius_mm", "180.0"),
+        ("Bed compensation JSON", "bed_compensation_path", ""),
         ("Park X machine mm", "park_x_machine", "-10"),
         ("Park Y machine mm", "park_y_machine", "-436"),
     )),
@@ -499,6 +503,7 @@ FIELD_TOOLTIPS = {
     "bed_diameter_mm": "Bed diameter in mm. Clipping keeps the pen inside this circle (minus bed margin and the gantry reach cap).",
     "bed_margin_mm": "Keeps the pen clear of the bed rim by this many mm.",
     "machine_reach_radius_mm": "Radius the gantry can reach from the registered bed center. Artwork beyond it is clipped so soft limits are not tripped.",
+    "bed_compensation_path": "Optional theta-bed-compensation-v2 JSON made by tools\\analyze_bed_error_calibration.py. It corrects measured residual bed X/Y error after P100 registration; blank disables it.",
     "park_x_machine": "End-of-program park X in machine (G53) coordinates.",
     "park_y_machine": "End-of-program park Y in machine (G53) coordinates.",
     "print_speed": "Preview playback speed only. It does not change the emitted program.",

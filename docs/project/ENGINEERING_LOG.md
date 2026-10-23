@@ -1,5 +1,48 @@
 # Engineering Log
 
+<a id="elog-20261023-full-field-bed-compensation-calibration"></a>
+### 🟨 2026-10-23 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Full-field bed compensation calibration
+
+- Two dense centre-calibration photographs showed that P100 registration was
+  not the remaining dominant error: the centre-only model left about 0.37 mm
+  RMS / 0.50 mm maximum while A=0 position spread reached 1.0-1.4 mm. Bench
+  feedback also showed that closely spaced wet marks could not be attributed
+  reliably.
+- Added `samples/gcode/bed-error-map.gcode`: one 0.20 mm pen, 37 numbered
+  stations on 50/95/150 mm rings, four pose fiducials, an A=0 reference,
+  fixed-position 90/180/270 lanes, and an A=0 control after rotation. The lanes
+  are 10 mm apart, the bed returns to A=0 at four drying `M0` pauses, and no
+  pen swap or re-registration is required. Measured ink extent is 163.754 mm
+  inside the 165.100 mm planned field on 177.800 mm round stock.
+- Added `tools/analyze_bed_error_calibration.py`. It refuses incomplete or
+  geometry-edited worksheets, removes common sheet pose with the fiducials,
+  separates A=0 spatial error from control repeatability and angular response,
+  performs leave-one-station-out validation, correlates with the bed mesh, and
+  gates profile creation at 0.35 mm RMS / 0.90 mm maximum / 10 % improvement.
+- Added optional `theta-bed-compensation-v2` planning. The host loads the
+  profile once, leaves theta selection unchanged, then adds a bounded residual
+  machine-XY correction after P100's registered rotation. Preview and G-code
+  share corrected endpoints and combined polar/compensation subdivision.
+  Coverage is enforced, each vector correction is limited to 5 mm, and a blank
+  profile path leaves the old coordinate path and header unchanged.
+- Added `--compensation` verification generation and a Machine-tab profile
+  browser. The generator can now produce `bed-error-verify.gcode` from a fitted
+  profile for a repeat measurement.
+- Verification: 474 software tests pass with one OpenGL-context skip. Raw and
+  synthetic compensated sheets pass `check_gcode_motion.py --strict` with no
+  drawing A rotation, no A-rate violation, and no bare `G0` rotation. A
+  synthetic full field recovered an accepted profile with 0.008 mm
+  leave-one-out RMS / 0.018 mm maximum and 99.2 % improvement; CLI analysis
+  against the existing bed mesh and compensated verification generation also
+  completed.
+- No paper result is claimed for the new sheet yet. The next gate is to print
+  the raw sheet, measure all 189 marks, review A=0/angle/height correlation and
+  the leave-one-station-out result, then print the compensated verification.
+- Evidence: `WSW-20261023-004`, `ADR-009`;
+  `docs/changes/windows-software/2026/2026-10-23-full-field-bed-compensation-calibration.md`.
+- Category: windows-software, hardware, theta, bed, calibration, compensation,
+  fiducials, planner, repeatability.
+
 <a id="elog-20261023-dense-rotation-center-calibration"></a>
 ### 🟨 2026-10-23 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Dense balanced rotation-centre calibration
 

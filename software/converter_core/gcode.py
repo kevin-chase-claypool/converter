@@ -12,6 +12,11 @@ from .kinematics import (
     plan_travel_move,
     polar_segment_steps,
 )
+from .bed_compensation import (
+    compensated_machine_point,
+    compensation_step_count,
+    load_bed_compensation,
+)
 from .settings import (
     calibrated_motion_seconds,
     pattern_size_override,
@@ -282,6 +287,19 @@ def plan_program(contours, settings, cancel_check=None):
         )
         for contour in clipped_contours
     ]
+    bed_compensation = load_bed_compensation(
+        getattr(settings, "bed_compensation_path", "")
+    )
+    if bed_compensation is not None:
+        coverage = bed_compensation.coverage_radius_mm
+        for contour in clipped_contours:
+            for point in contour:
+                if math.hypot(point[0], point[1]) > coverage + 1e-6:
+                    raise ValueError(
+                        "artwork reaches %.3f mm from bed center, outside the "
+                        "%.3f mm bed compensation coverage"
+                        % (math.hypot(point[0], point[1]), coverage)
+                    )
     planned_jobs = []
     previous_theta = None
     previous_machine = None
@@ -307,6 +325,7 @@ def plan_program(contours, settings, cancel_check=None):
         "source_center": source_center,
         "contours": clipped_contours,
         "planned_jobs": planned_jobs,
+        "bed_compensation": bed_compensation,
     }
 
 
@@ -315,6 +334,12 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
     program_plan = program_plan or plan_program(contours, settings)
     axis = re.sub(r"[^A-Za-z]", "", settings.theta_axis.upper())[:1] or "A"
     center = program_plan["center"]
+    bed_compensation = program_plan.get("bed_compensation")
+
+    def machine_point(point, theta):
+        return compensated_machine_point(
+            point, theta, center, bed_compensation
+        )
     # Establish the drawing file's own units, distance, feed, plane, and work
     # coordinate modes. ioSender streams these lines; it does not repair modal
     # state inherited from an earlier console command or macro.
@@ -362,6 +387,16 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
         "G54",
         f"G0 F{format_float(settings.travel_rate)}",
     ]
+    if bed_compensation is not None:
+        lines.insert(
+            5,
+            "(bed compensation %s, coverage %.3f mm, max %.3f mm)"
+            % (
+                bed_compensation.fingerprint,
+                bed_compensation.coverage_radius_mm,
+                bed_compensation.max_correction_mm,
+            ),
+        )
     if settings.include_z:
         lines.append(f"G0 Z{format_float(settings.safe_z)}")
     else:
@@ -378,7 +413,7 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
     for planned, pts, thetas, strategies in program_plan["planned_jobs"]:
         first_theta = thetas[0]
 
-        x0, y0 = bed_to_machine(pts[0], first_theta, center)
+        x0, y0 = machine_point(pts[0], first_theta)
         first_motor_theta = first_theta * settings.theta_drive_ratio
         lines.append(f"(contour {planned['index'] + 1}{' reversed' if planned.get('reversed') else ''})")
         bridge = None
@@ -442,8 +477,8 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
             theta = thetas[k + 1]
             strategy = strategies[k] or "tangent"
             start_theta = thetas[k]
-            start_machine = bed_to_machine(a, start_theta, center)
-            end_machine = bed_to_machine(b, theta, center)
+            start_machine = machine_point(a, start_theta)
+            end_machine = machine_point(b, theta)
             motor_theta = theta * settings.theta_drive_ratio
             start_motor_theta = start_theta * settings.theta_drive_ratio
             feed_plan = plan_radius_aware_draw_feed(
@@ -457,7 +492,20 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
             # One coordinated X/Y/A move interpolates linearly, so a single move
             # that spans a bed rotation bows the pen off the straight bed path.
             # Subdivide so the drawn bed path stays within tolerance.
-            steps = polar_segment_steps(a, b, center, start_theta, theta, settings.tolerance)
+            steps = max(
+                polar_segment_steps(
+                    a, b, center, start_theta, theta, settings.tolerance
+                ),
+                compensation_step_count(
+                    a,
+                    b,
+                    start_theta,
+                    theta,
+                    center,
+                    bed_compensation,
+                    settings.tolerance,
+                ),
+            )
             if stats is not None:
                 # Report what the *commanded* path can still deviate from the
                 # intended line on the bed: the bow of a whole move divided by
@@ -478,14 +526,14 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
                 t = step / steps
                 bed_point = (a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]))
                 sub_theta = start_theta + t * (theta - start_theta)
-                sx, sy = bed_to_machine(bed_point, sub_theta, center)
+                sx, sy = machine_point(bed_point, sub_theta)
                 sub_motor_theta = sub_theta * settings.theta_drive_ratio
                 lines.append(
                     f"G1 {format_xy_command((sx, sy))} {axis}{format_float(sub_motor_theta)} F{feed_text} ({strategy})"
                 )
         previous_pts = pts
         previous_theta = thetas[-1]
-        previous_machine = bed_to_machine(pts[-1], thetas[-1], center)
+        previous_machine = machine_point(pts[-1], thetas[-1])
         previous_motor_theta = previous_theta * settings.theta_drive_ratio
 
     if pen_is_down:
@@ -516,6 +564,13 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
     moves = []
     program_plan = program_plan or plan_program(contours, settings, cancel_check)
     center = program_plan["center"]
+    bed_compensation = program_plan.get("bed_compensation")
+
+    def machine_point(point, theta):
+        return compensated_machine_point(
+            point, theta, center, bed_compensation
+        )
+
     last_machine_end = None
     previous_theta = None
     previous_motor_theta = 0.0
@@ -530,7 +585,7 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
         contour_index = planned["index"]
         first_theta = thetas[0]
 
-        machine_start = bed_to_machine(path[0], first_theta, center)
+        machine_start = machine_point(path[0], first_theta)
         first_motor_theta = first_theta * settings.theta_drive_ratio
         bridge = None
         if (
@@ -628,7 +683,7 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
                 continue
             bed_theta = thetas[k + 1]
             strategy = strategies[k] or "tangent"
-            machine_end = bed_to_machine(b, bed_theta, center)
+            machine_end = machine_point(b, bed_theta)
             motor_theta = bed_theta * settings.theta_drive_ratio
             xy_len = distance(last_machine, machine_end)
             motor_delta = motor_theta - previous_motor_theta
@@ -640,29 +695,69 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
                 motor_delta,
                 settings,
             )
-            move_len = feed_plan["motion_length"]
-            move_ms = feed_plan["duration_ms"]
-            previous_motor_theta = motor_theta
-            gcode = f"G1 {format_xy_command(machine_end)} {axis}{format_float(motor_theta)} F{format_float(feed_plan['feed_rate'])} ({strategy})"
-            moves.append({
-                "type": "draw",
-                "start": last_machine,
-                "end": machine_end,
-                "bed_start": a,
-                "bed_end": b,
-                "bed_theta": bed_theta,
-                "motor_theta": motor_theta,
-                "strategy": strategy,
-                "contour": contour_index,
-                "duration_ms": move_ms,
-                "motion_length": move_len,
-                "xy_length": xy_len,
-                "feed_rate": feed_plan["feed_rate"],
-                "radius_mm": feed_plan["radius_mm"],
-                "tangential_speed_mm_min": feed_plan["tangential_speed_mm_min"],
-                "limited_by": feed_plan["limited_by"],
-                "gcode": gcode,
-            })
+            steps = max(
+                polar_segment_steps(
+                    a,
+                    b,
+                    center,
+                    thetas[k],
+                    bed_theta,
+                    settings.tolerance,
+                ),
+                compensation_step_count(
+                    a,
+                    b,
+                    thetas[k],
+                    bed_theta,
+                    center,
+                    bed_compensation,
+                    settings.tolerance,
+                ),
+            )
+            move_len = feed_plan["motion_length"] / steps
+            move_ms = feed_plan["duration_ms"] / steps
+            sub_start = last_machine
+            sub_bed_start = a
+            previous_motor_theta = thetas[k] * settings.theta_drive_ratio
+            for step in range(1, steps + 1):
+                t = step / steps
+                sub_bed_end = (
+                    a[0] + t * (b[0] - a[0]),
+                    a[1] + t * (b[1] - a[1]),
+                )
+                sub_theta = thetas[k] + t * (bed_theta - thetas[k])
+                sub_machine_end = machine_point(sub_bed_end, sub_theta)
+                sub_motor_theta = sub_theta * settings.theta_drive_ratio
+                sub_xy_len = distance(sub_start, sub_machine_end)
+                gcode = (
+                    f"G1 {format_xy_command(sub_machine_end)} "
+                    f"{axis}{format_float(sub_motor_theta)} "
+                    f"F{format_float(feed_plan['feed_rate'])} ({strategy})"
+                )
+                moves.append({
+                    "type": "draw",
+                    "start": sub_start,
+                    "end": sub_machine_end,
+                    "bed_start": sub_bed_start,
+                    "bed_end": sub_bed_end,
+                    "bed_theta": sub_theta,
+                    "motor_theta": sub_motor_theta,
+                    "strategy": strategy,
+                    "contour": contour_index,
+                    "duration_ms": move_ms,
+                    "motion_length": move_len,
+                    "xy_length": sub_xy_len,
+                    "feed_rate": feed_plan["feed_rate"],
+                    "radius_mm": feed_plan["radius_mm"],
+                    "tangential_speed_mm_min": feed_plan[
+                        "tangential_speed_mm_min"
+                    ],
+                    "limited_by": feed_plan["limited_by"],
+                    "gcode": gcode,
+                })
+                sub_start = sub_machine_end
+                sub_bed_start = sub_bed_end
+                previous_motor_theta = sub_motor_theta
             last_machine = machine_end
         previous_path = path
         previous_theta = thetas[-1]

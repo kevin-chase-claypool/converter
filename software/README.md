@@ -130,6 +130,49 @@ Cycle Start with the pen loaded:
   sheet and its independent repeat photo are retained as
   `..\samples\gcode\rotation-center-calibration-2026-10-23.csv` and
   `..\samples\gcode\rotation-center-calibration-2026-10-23-repeat.csv`.
+- `..\samples\gcode\bed-error-map.gcode` - the full-field residual calibration
+  for the position-dependent error left after registration. Run it after
+  `G65 P113` with one Pigma Micron 005 (0.20 mm) for all five passes. Its
+  37 stations cover rings at 50, 95, and 150 mm on a 13-inch test field
+  inside 14-inch round stock. Pass 1 is the A=0 spatial reference; passes
+  2-4 are the same fixed positions at 90/180/270 degrees; pass 5 is an A=0
+  control after the rotations. Each replay occupies a separate 10 mm lane
+  (north/south/east/west), so wet lines do not overwrite the reference.
+  Four large fiducials remove common photo scale/rotation/translation, and
+  every station has a printed number. The program returns to A=0 and pauses
+  at four `M0`s; let the ink dry before Cycle Start. It uses no pen swap and
+  does not change G54.
+
+  Photograph the whole sheet from above, use the fiducials to rectify it, and
+  fill `measured_x_mm`/`measured_y_mm` for every mark in
+  `..\samples\gcode\bed-error-map.csv`. Then analyse the completed sheet:
+
+  ```powershell
+  python ..\tools\analyze_bed_error_calibration.py `
+    --measurements ..\samples\gcode\bed-error-map.csv `
+    --bed-mesh ..\bed_mesh.csv
+  ```
+
+  The analyzer rejects missing rows, reports A=0 spatial error and A=0
+  control repeatability separately, removes the common sheet pose, fits the
+  90/180/270 fields, performs leave-one-station-out validation, correlates
+  the result with the optional bed mesh, and writes
+  `bed-error-analysis.json`. A validated
+  `bed-error-compensation.json` can be selected in **Machine > Bed
+  compensation JSON**. The profile is a machine-XY correction added after
+  the existing planner chooses the bed angle and after P100 registration; it
+  does not change artwork geometry or candidate selection. Its coverage is
+  checked before planning, each correction is capped at 5 mm, and blanking
+  the path restores byte-identical uncompensated output. After fitting,
+  generate a compensated verification sheet with:
+
+  ```powershell
+  python ..\tools\make_bed_error_calibration.py `
+    --compensation ..\samples\gcode\bed-error-compensation.json
+  ```
+
+  That writes `bed-error-verify.gcode` and a matching CSV. The initial
+  uncompensated and compensated sheets have not yet been bench-verified.
 - `..\samples\gcode\a-tilt-pairs-test.gcode` - four separated line pairs for
   a caliper-read bed-tilt check: each pair is the same paper segment drawn
   twice, once at A=0 (the longer 80 mm constant line) and once at that
@@ -793,8 +836,13 @@ display-only; every other group changes the emitted program.
   an invalid A-axis name, or a bed margin that leaves no drawable area) are
   rejected before preview or save.
 - **Machine** — the machine-side setup the program is clipped and parked
-  against: `Bed dia mm`, `Bed margin mm`, `Gantry reach radius mm`, and the
-  end-of-program `Park X/Y machine mm` in G53 machine coordinates.
+  against: `Bed dia mm`, `Bed margin mm`, `Gantry reach radius mm`, optional
+  `Bed compensation JSON`, and the end-of-program `Park X/Y machine mm` in
+  G53 machine coordinates. The profile contains measured residual
+  `correction(theta, bed_xy)` machine-XY vectors. It is applied after the
+  planner selects theta and after P100's registration; P100 is not rewritten.
+  Artwork points outside the profile's stated measured coverage are rejected
+  before preview or save.
 - **Theta kinematics** — theta axis/ratio/resolver/cost settings (`Theta ratio`
   defaults to 12.03324, the measured effective ratio of the 60T→720T pulley
   pair).
@@ -1027,6 +1075,13 @@ display-only; every other group changes the emitted program.
   remain in the machine work-coordinate frame; the controller's commissioning
   macro `P100` owns magnetic center registration, the measured `pen - TMAG`
   offset, and `G54 X0 Y0` so work zero means pen tip at bed center.
+- P100 also remains the owner of the physical registration centre and A index.
+  The optional bed-compensation profile is a separate residual map; its
+  fiducial fit removes common translation, rotation, and scale before fitting.
+  Do not place the same residual offset in both P100 and the profile. A saved
+  compensated program records the profile fingerprint and correction bound in
+  its header, and preview uses the same subdivided machine points as the saved
+  G-code.
 - SVG document coordinates are not machine coordinates. The converter centers
   the clipped artwork at G54 zero; a document centered at `(100,100)`, for
   example, emits drawing coordinates around `(0,0)`, not `(100,100)`.

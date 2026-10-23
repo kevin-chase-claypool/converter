@@ -48,6 +48,22 @@ The converter emits:
 Unknown or unsupported commands must cause an explicit error during test, not
 silent motion.
 
+An optional host-side bed-compensation profile may transform the planned work
+coordinates before emission:
+
+```text
+G54 machine X/Y = R(theta) * bed X/Y + correction(theta, bed X/Y)
+```
+
+This is an internal host mapping, not a new controller command or unit. The
+existing planner still chooses `theta`; compensation is added after that
+selection and after P100 registration. P100 remains the sole owner of the
+physical centre and A index. The profile declares measured XY coverage and a
+5 mm correction bound, and planning stops rather than extrapolating beyond
+either guard. Preview and emitted G-code must use the same transformed and
+subdivided points. See
+[`ADR-009`](../decisions/ADR-009-post-registration-bed-compensation.md).
+
 The converter treats the geometric center of the clipped SVG as the bed-local
 origin and emits it as `G54 X0 Y0`. SVG document coordinates are never passed
 through as absolute controller coordinates. This requires the controller's

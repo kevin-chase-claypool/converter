@@ -162,9 +162,17 @@
   required spatial-repeat measurement. The first dense run showed a 1.421 mm
   A=0 Y spread across positions and a centre-model maximum residual of
   0.551 mm; a second photo reproduced the spatial spread and a 0.501 mm
-  maximum residual. The remaining work is to correlate that spatial term with
-  the bed mesh and correct the mechanical plane/runout or validate a spatial
-  map.
+  maximum residual. A full-field one-pen sheet now measures A=0 spatial error,
+  fixed-position 90/180/270 response, and an A=0 control at 37 stations, with
+  four fiducials and isolated lanes. `tools\analyze_bed_error_calibration.py`
+  validates complete measurements, correlates them with the bed mesh, performs
+  leave-one-station-out validation, and emits an optional
+  `theta-bed-compensation-v2` profile for the host planner. The converter
+  applies that residual map after theta planning and P100 registration, keeps
+  preview and G-code on the same subdivided points, rejects uncovered artwork,
+  and caps each correction at 5 mm (`WSW-20261023-004`). Remaining work is to
+  run the full-field sheet, review the spatial/angle/height evidence, accept
+  or reject the software map, and run its compensated verification sheet.
 
 ## Phase 5: toolhead
 

@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-23 | `WSW-20261023-004` | windows-software, hardware | implemented | [Full-field bed compensation calibration](windows-software/2026/2026-10-23-full-field-bed-compensation-calibration.md) |
 | 2026-10-23 | `WSW-20261023-003` | windows-software, hardware, rp23cnc-software | implemented | [Dense balanced rotation-centre calibration](windows-software/2026/2026-10-23-dense-rotation-center-calibration.md) |
 | 2026-10-23 | `WSW-20261023-002` | windows-software, hardware, rp23cnc-software | implemented | [Rotation-centre cross calibration and P100 correction fit](windows-software/2026/2026-10-23-rotation-center-cross-calibration.md) |
 | 2026-10-23 | `WSW-20261023-001` | windows-software | implemented | [CMYK per-ink offsets, measured alignment and save preflight](windows-software/2026/2026-10-23-cmyk-pen-offsets-and-preflight.md) |

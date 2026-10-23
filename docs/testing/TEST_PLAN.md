@@ -240,7 +240,29 @@ and coordinate semantics; Q3/Q4 remain prohibited.
 | M-09 | Magnetic theta-index registration | At the measured outer radius, P100 finds two outer-magnet entry/exit pairs from one direction, validates spacing against the measured `4332 +/- 10` A motor degrees, approaches the equivalent averaged index, and repeatably sets G54 A0. 2026-09-24: footprints `1264.951/1369.576` and `5597.106/5701.281` gave `4331.930` A motor degrees of spacing and wrote G54 A0 at `5649.193`. 2026-09-30: a third survey gave `4332.153` (spread 0.335 across three runs) and the gate was re-derived to `4332 +/- 10`. |
 | M-10 | Full startup home and registration | One ioSender `G65 P113` command clears the pen, homes physical X/Y, runs P100 Q0 to register center and A, returns to G54 X0 Y0 A0, and leaves the pen lifted. 2026-09-24: completed unattended on the production integrated firmware through `P113 HOME + REGISTER wrapper complete`, parking at `MPos:-232.138,-189.975,0.000,5649.306`. |
 | M-11 | Homing abort/fault path | Missing/inconsistent magnetic edges, sensor fault, grblHAL alarm, or unknown lift state stops the current attempt, preserves diagnostics, reports status to ioSender, and requires manual recovery before retry |
-| M-12 | Rotating-bed centre-offset calibration | After `G65 P113`, plot the 13-inch `rotation-center-calibration.gcode` layout on 14-inch round stock. Its 12-station 4x3 lattice provides three repeats of A=0, 90, 180, and 270 degrees spread across the bed. At every station, enter the raw vertical-arm X gap and horizontal-arm Y gap in the companion CSV; the fitter subtracts the 20 mm baseline and mean control bias. Acceptance requires the centre-plus-spatial-repeat result to have low residual; apply P100 only if the residual is dominated by a stable common centre. **Partial 2026-10-23:** the dense run has a 1.421 mm A=0 Y spread and 0.385 mm RMS / 0.551 mm maximum centre-model residual; an independent photo reproduced the A=0 spread and 0.366 mm RMS / 0.501 mm maximum residual. Position-dependent bed/plane error dominates, so P100 was not changed. See `docs/report/lab-notes/2026-10-23-m-12-dense-rotation-center-analysis.md`. |
+| M-12 | Rotating-bed centre-offset and full-field residual calibration | After `G65 P113`, separately fit the centre-only `rotation-center-calibration.gcode` and, only if its residual remains significant, run `bed-error-map.gcode` on 14-inch round stock using one 0.20 mm pen. The full-field sheet has 37 numbered stations on 50/95/150 mm rings, four pose fiducials, an A=0 reference, fixed-position 90/180/270 lanes, and an A=0 control after the rotations. Let each of the four `M0` passes dry before continuing. Measure all mark centres in the companion CSV, then run `tools\analyze_bed_error_calibration.py` with the bed mesh. Accept a planner profile only when the report is complete, the field is repeatable, leave-one-station-out RMS is at most 0.35 mm with at most 0.90 mm maximum, the improvement is at least 10 %, and every correction is within the 5 mm bound. Regenerate with `--compensation` and verify that the replay residuals shrink on a second sheet. **Partial 2026-10-23:** the dense centre-only run has a 1.421 mm A=0 Y spread and 0.385 mm RMS / 0.551 mm maximum residual; an independent photo reproduced the A=0 spread and 0.366 mm RMS / 0.501 mm maximum residual. Position-dependent bed/plane error dominates, so P100 remains unchanged. Full-field generator, analyzer, mesh correlation, planner profile, and compensated verification mode are implemented but not yet bench-run. See `WSW-20261023-004` and `docs/report/lab-notes/2026-10-23-m-12-dense-rotation-center-analysis.md`. |
+
+### M-12 full-field bench procedure
+
+1. Install the same Sakura Pigma Micron 005 for the whole sheet. Confirm the
+   toolhead clears paper, run `G65 P113`, and leave the registered `G54` frame
+   untouched.
+2. Plot `samples\gcode\bed-error-map.gcode`. At each of the four `M0` pauses,
+   verify the pen is lifted, wait until the previous pass is visibly dry, and
+   press Cycle Start. The bed is returned to A=0 before every pause.
+3. Photograph the complete round sheet straight down. Use the four large L
+   fiducials for scale, rotation, and translation; do not use the station
+   labels as geometry.
+4. Enter every `measured_x_mm`/`measured_y_mm` marker centre in
+   `samples\gcode\bed-error-map.csv`. A partial sheet does not produce a
+   profile.
+5. Run the analyzer with the most recent `bed_mesh_probe.py` CSV. Review the
+   separate A=0 spatial, A=0 control, per-angle, leave-one-station-out, and
+   height-correlation fields before accepting the profile.
+6. Load a passing profile in **Machine > Bed compensation JSON**, plot a normal
+   verification artwork, and inspect both the A=0 and rotated geometry. Then
+   regenerate the calibration with `--compensation` and require the second
+   sheet's replay residuals to shrink without introducing new spatial error.
 
 M-01 current evidence: on 2026-09-05 the A-axis motor completed an initial
 bidirectional jog at `F120`; `A10` was counterclockwise, `A-10` was clockwise,

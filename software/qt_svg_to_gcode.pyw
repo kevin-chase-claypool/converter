@@ -1272,6 +1272,27 @@ class MainWindow(QMainWindow):
                     for choice in converter.VALUE_CHOICE_FIELDS[key]:
                         edit.addItem(labels.get(choice, choice), choice)
                     edit.setCurrentIndex(max(0, edit.findData(value)))
+                elif key == "bed_compensation_path":
+                    edit = QLineEdit(value)
+                    edit.setMinimumWidth(190)
+                    path_row = QWidget()
+                    path_layout = QHBoxLayout(path_row)
+                    path_layout.setContentsMargins(0, 0, 0, 0)
+                    path_layout.setSpacing(4)
+                    path_layout.addWidget(edit, 1)
+                    browse = QPushButton("Browse...")
+                    browse.clicked.connect(self.choose_bed_compensation_profile)
+                    path_layout.addWidget(browse)
+                    label_widget = QLabel(label)
+                    tooltip = converter.FIELD_TOOLTIPS.get(key)
+                    if tooltip:
+                        edit.setToolTip(tooltip)
+                        label_widget.setToolTip(tooltip)
+                        browse.setToolTip(tooltip)
+                    self.fields[key] = edit
+                    self.field_rows[key] = (label_widget, path_row)
+                    form.addRow(label_widget, path_row)
+                    continue
                 else:
                     edit = QLineEdit(value)
                     edit.setMaximumWidth(120)
@@ -4082,6 +4103,18 @@ class MainWindow(QMainWindow):
         )
         if path:
             self.load_ink_profile(path)
+
+    def choose_bed_compensation_profile(self, _checked=False):
+        current = self.fields["bed_compensation_path"].text().strip()
+        start_dir = os.path.dirname(current) if current else ""
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Load bed compensation profile",
+            start_dir,
+            "Bed compensation profile (*.json);;All files (*.*)",
+        )
+        if path:
+            self.fields["bed_compensation_path"].setText(path)
 
     def load_ink_profile(self, path):
         """Load a measured ink profile into the multiply simulation.
