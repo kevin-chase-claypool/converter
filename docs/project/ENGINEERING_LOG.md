@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20261023-rotation-center-cross-calibration"></a>
+### 🟨 2026-10-23 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Rotation-centre cross calibration and P100 fit
+
+- The operator reported opposite-quadrant portions of a rotating-bed print
+  separating. The existing centre-offset model predicts exactly this at a
+  half-turn: after the bed returns to A=0, its cross displacement is
+  `e(theta) = C - R(-theta)C`, so A=180 exposes `2C` while 90 and 270 expose
+  the two perpendicular components with opposite X signs.
+- Added `samples/gcode/rotation-center-calibration.gcode` and its generator:
+  a long A=0 reference cross with +X/+Y arrows, a control, and successively
+  shorter 90/180/270 replays. Fed travel carries the bed indexing, so the
+  program has no bare `G0` rotation.
+- Added `tools/fit_rotation_center.py`. Given signed `ANGLE,DX,DY` readings, it
+  fits the residual centre vector, reports model residual, reads the currently
+  installed P100 constants, and prints replacement values. P100 remains the
+  sole owner of the G54 correction; the converter does not add a second
+  artwork-space offset.
+- Verification: 15 dedicated tests pass, including synthetic exact recovery
+  and rejection of a non-centre translation; the generated sample passes the
+  strict motion guard (0 drawing A motion, 0 A rate, 0 bare rapids).
+- Bench result and final constants are pending; a residual above 0.20 mm points
+  to bed plane/runout instead of a correctable centre vector.
+- Evidence: `WSW-20261023-002`;
+  `docs/changes/windows-software/2026/2026-10-23-rotation-center-cross-calibration.md`.
+- Category: windows-software, hardware, rp23cnc-software, theta, center,
+  registration, calibration.
+
 <a id="elog-20261023-cmyk-pen-offsets-preflight"></a>
 ### 🟨 2026-10-23 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK per-ink offsets, measured alignment and save preflight
 

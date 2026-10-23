@@ -143,6 +143,18 @@
   inner/mid/outer-radius paths show no lost steps or geometry change, and the
   predicted ordering agrees with measured elapsed time within a documented
   tolerance.
+- [ ] **Calibrate the residual rotating-bed centre offset.**
+  Problem: opposite-quadrant portions of a rotating-bed print can separate
+  because G54 X0/Y0 is a small vector `C` away from the true rotation axis;
+  the returned-bed displacement is `e(theta) = C - R(-theta)C`, reaching `2C`
+  at a half-turn. Benefit: the precision error can be removed at the single P100
+  ownership point instead of requiring XY-only printing. The cross-replay
+  generator and least-squares fitter are implemented (`WSW-20261023-002`).
+  Acceptance: run `rotation-center-calibration.gcode` after `G65 P113`,
+  measure signed X/Y gaps at 90/180/270, apply the fitted P100 constants,
+  re-register, and show all replay crosses coincide within the remaining
+  mechanical tolerance; if fit residual stays above 0.20 mm, resolve bed
+  plane/runout instead of forcing the centre constants.
 
 ## Phase 5: toolhead
 

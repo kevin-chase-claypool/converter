@@ -92,16 +92,21 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   registered origin onto the bed's true rotation axis before the G54 write:
   the centre magnet is not guaranteed to sit exactly on that axis, and a
   constant error there displaces every drawing. As of 2026-10-14 the
-  correction is `+2.45` mm X and `+0.3` mm Y (Y refined from the tagged
-  line-replay test, `RPSW-20261014-002`); the accept/reject test is
-  `samples/gcode/center-registration-check.gcode` after `G65 P113` (a cross at
-  `G54 X0 Y0`, half a bed revolution, the same cross again - they must
-  coincide), or, faster and without paper, a magnet directly under the lifted
-  pen that stays centred while the bed rotates. That check passed on
-  2026-10-01 with the earlier `+1.25` mm X value; with the 2026-10-14 values
-  the operator confirms the parked pen lands centred on the magnet, and the
-  rotation acceptance check remains open. See `RPSW-20261014-001` and
-  [`grblhal/macros/README.md`](grblhal/macros/README.md).
+   correction is `+2.45` mm X and `+0.3` mm Y (Y refined from the tagged
+   line-replay test, `RPSW-20261014-002`). The quantitative calibration is
+   `samples/gcode/rotation-center-calibration.gcode` after `G65 P113`: it
+   replays a long two-axis cross at 90/180/270 degrees, and
+   `tools/fit_rotation_center.py` converts the measured X/Y gaps into
+   replacement P100 constants. Its residual distinguishes a pure centre
+   offset from bed plane/runout, which the two constants cannot correct.
+   The quicker accept/reject test remains
+   `samples/gcode/center-registration-check.gcode`, or a magnet directly
+   under the lifted pen that stays centred while the bed rotates. That quick
+   check passed on 2026-10-01 with the earlier `+1.25` mm X value; the
+   operator confirmed the 2026-10-14 values park on the magnet, but the
+   quantitative rotation acceptance remains bench-pending. See
+   `RPSW-20261014-001` and
+   [`grblhal/macros/README.md`](grblhal/macros/README.md).
 - **Candidate probe capture** - the 2026-09-10/11 motor-inert candidate
   proved direct and actual GP27/U3 `PRB` transitions, A-axis G38 capture, and
   the automated non-motion `G65 P100 Q1` readiness/release handshake.

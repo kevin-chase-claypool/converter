@@ -285,6 +285,24 @@ and is the faster of the two, but it also requires the centre magnet itself to
 lie on the axis; the cross, tick-ring, and line-replay tests judge the axis
 without that assumption.
 
+  For a quantitative correction rather than a pass/fail check, plot
+  `samples/gcode/rotation-center-calibration.gcode` after `G65 P113`. Its
+  reference cross is longest and has +X/+Y arrowheads; the 90/180/270-degree
+  replays are successively shorter so they remain identifiable. Measure each
+  replay cross relative to the reference as signed `DX,DY`, then run:
+
+  ```powershell
+  python tools\fit_rotation_center.py --measurement 90,DX,DY --measurement 180,DX,DY --measurement 270,DX,DY
+  ```
+
+  The tool fits `e(theta) = C - R(-theta)C`, prints the residual model error,
+  and prints replacement `#<axis_center_correction_x>` and `_y` values based
+  on the constants currently in `P100.macro`. A low residual means the two
+  constants can remove the offset; a high residual means the bed plane or
+  bearing runout is visible and must be corrected mechanically. Do not put a
+  second angle correction in the artwork converter: P100 owns the registered
+  frame, and duplicated compensation would shift the artwork twice.
+
 The macro expects:
 
 - grblHAL probe input and NGC expression/flow-control support;

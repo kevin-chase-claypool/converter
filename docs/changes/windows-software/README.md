@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-23 | `WSW-20261023-002` | implemented | [Rotation-centre cross calibration and P100 correction fit](2026/2026-10-23-rotation-center-cross-calibration.md) | `theta`, `center`, `registration`, `precision`, `calibration` |
 | 2026-10-23 | `WSW-20261023-001` | implemented | [CMYK per-ink offsets, measured alignment and save preflight](2026/2026-10-23-cmyk-pen-offsets-and-preflight.md) | `cmyk`, `alignment`, `pen-offset`, `preflight`, `motion-check` |
 | 2026-10-21 | `WSW-20261021-001` | implemented | [Center hold is now a 60 mm diameter](2026/2026-10-21-center-hold-diameter-60.md) | `theta`, `kinematics`, `cmyk`, `center`, `precision` |
 | 2026-10-20 | `WSW-20261020-003` | implemented | [Center hold radius: park the bed for fine strokes near the bed centre](2026/2026-10-20-center-hold-radius.md) | `theta`, `kinematics`, `cmyk`, `center`, `precision` |

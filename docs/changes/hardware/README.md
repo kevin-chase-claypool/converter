@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-23 | `WSW-20261023-002` | implemented | [Rotation-centre cross calibration and P100 correction fit](../windows-software/2026/2026-10-23-rotation-center-cross-calibration.md) | `theta`, `center`, `registration`, `precision`, `calibration` |
 | 2026-10-20 | `WSW-20261020-002` | implemented | [CMYK pen-alignment crosses: one file run once per pen](../windows-software/2026/2026-10-20-cmyk-pen-alignment-crosses.md) | `cmyk`, `alignment`, `pen-offset`, `diagnostic` |
 | 2026-10-14 | `WSW-20261014-003` | implemented | [Bed-tilt quadrant pair test: four labeled A=0-versus-angle line pairs](../windows-software/2026/2026-10-14-a-tilt-pairs-test.md) | `bed`, `tilt`, `a-axis`, `diagnostic`, `calibration` |
 | 2026-10-14 | `WSW-20261014-002` | implemented | [Gap-map generator: configurable radii and step, matching readings CSV, sheet-fit run](../windows-software/2026/2026-10-14-gap-map-sheet-run.md) | `bed`, `tilt`, `gap-map`, `diagnostic`, `calibration` |
