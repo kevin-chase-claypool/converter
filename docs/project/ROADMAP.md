@@ -182,9 +182,12 @@
   and approximately doubled the 180-degree error while leaving A=0 nearly
   unchanged. The analyzer now rotates every correction by its bed angle; the
   corrected provisional profile is `2cdf3731de4a`. P100 stays unchanged.
-  Remaining work is to print and compare the regenerated
-  `bed-error-verify.gcode`; accept the profile only if replay residuals shrink
-  without introducing a new spatial field.
+  The next attempted verification was invalid because the sheet was retaped to
+  address a bubble after printing began; marker extraction could not assign all
+  185 stations within a safe local radius. Remaining work is to prepare a fresh,
+  stationary sheet before `G65 P113`, print and compare the regenerated
+  `bed-error-verify.gcode`, and accept the profile only if replay residuals
+  shrink without introducing a new spatial field.
 
 ## Phase 5: toolhead
 

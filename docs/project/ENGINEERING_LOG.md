@@ -1,5 +1,23 @@
 # Engineering Log
 
+<a id="elog-20261023-retaped-verification-invalid"></a>
+### 🟥 2026-10-23 - HARDWARE/FAILED - Retaped verification sheet invalid
+
+- The next calibration attempt was retaped during the workflow to address a
+  paper bubble. The photo also contains long drag lines around multiple
+  stations.
+- Seed-assisted extraction found the fiducials but could not map all 185
+  station markers within a safe 24 px local radius; some residuals exceeded
+  40 px, far beyond the 10 mm lane separation.
+- Tape changes after the first mark can move or non-rigidly stretch the paper.
+  Visible fiducials cannot correct that because the first and later passes no
+  longer refer to the same sheet geometry.
+- The sheet is rejected for profile verification. No code or profile was
+  changed from it. Corrected profile `2cdf3731de4a` remains provisional pending
+  a stationary fresh-sheet run.
+- Evidence: `docs/report/lab-notes/2026-10-23-m-12-retaped-verification-invalid.md`.
+- Category: hardware, bed, calibration, paper-handling, failed-test.
+
 <a id="elog-20261023-bed-compensation-frame-error"></a>
 ### 🟥 2026-10-23 - WINDOWS SOFTWARE/HARDWARE/FAILED - First bed compensation verification exposes frame rotation defect
 

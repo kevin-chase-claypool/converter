@@ -143,6 +143,11 @@ Cycle Start with the pen loaded:
   at four `M0`s; let the ink dry before Cycle Start. It uses no pen swap and
   does not change G54.
 
+  Prepare and tape the sheet before `G65 P113`. Do not lift, retape, or adjust
+  the sheet after the first drawing mark: that moves the calibration frame and,
+  even if the fiducials remain visible, makes the result invalid. If a bubble
+  forms or the sheet shifts during the run, abort and use a fresh sheet.
+
   Photograph the whole sheet from above. The photo tool finds the four
   fiducials, 185 station Ls, and 74 label glyphs, fits the sheet transform, and
   fills every `measured_x_mm`/`measured_y_mm` field:

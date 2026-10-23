@@ -244,7 +244,10 @@ and coordinate semantics; Q3/Q4 remain prohibited.
 
 ### M-12 full-field bench procedure
 
-1. Install the same Sakura Pigma Micron 005 for the whole sheet. Confirm the
+1. Install the same Sakura Pigma Micron 005 for the whole sheet. Flatten and
+   secure the sheet completely before running `G65 P113`; do not adjust tape
+   after the first drawing mark. If a bubble or paper shift develops, abort and
+   replace the sheet rather than retaping the active calibration. Confirm the
    toolhead clears paper, run `G65 P113`, and leave the registered `G54` frame
    untouched.
 2. Plot `samples\gcode\bed-error-map.gcode`. At each of the four `M0` pauses,

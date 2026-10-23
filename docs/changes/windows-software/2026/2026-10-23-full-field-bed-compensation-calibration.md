@@ -164,6 +164,9 @@ are distinguishable without a multi-pen tip offset.
   registration change can invalidate the profile. Re-run the sheet after those
   changes and keep the honest residual, including failed gates, in the lab
   note.
+- Do not change tape or attempt to flatten a bubble after the first drawing
+  mark. A later retaped sheet could not be assigned reliably and is treated as
+  invalid rather than as compensation evidence.
 
 ## Files
 
@@ -206,6 +209,9 @@ are distinguishable without a multi-pen tip offset.
   and `...-overlay.jpg`: failed compensated verification.
 - `docs/report/lab-notes/assets/2026-10-23-m-12-bed-compensation-frame-error-vectors.png`:
   before/after vector fields that exposed the frame error.
+- `docs/report/lab-notes/2026-10-23-m-12-retaped-verification-invalid.md` and
+  `assets/2026-10-23-m-12-retaped-verification-invalid.jpg`: rejected retaped
+  sheet and handling boundary.
 - `docs/report/lab-notes/assets/2026-10-23-m-12-full-field-bed-error-vectors.png`:
   A=0 spatial, rotation-residual, and control vector fields.
 - `software/README.md`, `docs/testing/TEST_PLAN.md`,
