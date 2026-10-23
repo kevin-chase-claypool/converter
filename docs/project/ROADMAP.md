@@ -176,8 +176,13 @@
   maximum with 66.1 % improvement, and the fitted profile passed the software
   gates at a 1.331 mm worst correction. The bed mesh has mixed correlations
   (A=0 Y `r=-0.548`, 90-degree `r=-0.574`, 270-degree `r=+0.744`), so both
-  position and rotation/height coupling remain physically credible. P100 stays
-  unchanged. Remaining work is to print and measure
+  position and rotation/height coupling remain physically credible. The first
+  compensated print then failed and exposed a bed-to-machine frame-rotation
+  defect: profile `911d2694c8c9` increased overall RMS from 0.581 to 1.169 mm
+  and approximately doubled the 180-degree error while leaving A=0 nearly
+  unchanged. The analyzer now rotates every correction by its bed angle; the
+  corrected provisional profile is `2cdf3731de4a`. P100 stays unchanged.
+  Remaining work is to print and compare the regenerated
   `bed-error-verify.gcode`; accept the profile only if replay residuals shrink
   without introducing a new spatial field.
 

@@ -521,6 +521,19 @@ def error_summary(errors):
     )
 
 
+def machine_frame_correction(angle_deg, bed_error):
+    """Rotate a required bed-frame correction into machine XY."""
+    angle = math.radians(float(angle_deg))
+    cosine = math.cos(angle)
+    sine = math.sin(angle)
+    bed_x = -float(bed_error[0])
+    bed_y = -float(bed_error[1])
+    return (
+        bed_x * cosine - bed_y * sine,
+        bed_x * sine + bed_y * cosine,
+    )
+
+
 def _summary_dict(summary):
     return {
         "count": summary.count,
@@ -617,7 +630,7 @@ def _build_profile(stations, normalized_by_key, *, source):
                 )
                 error_x += residual_x
                 error_y += residual_y
-            corrections.append((-error_x, -error_y))
+            corrections.append(machine_frame_correction(angle, (error_x, error_y)))
         angle_values.append(angle)
         sample_grids.append(sample_points)
         correction_grids.append(tuple(corrections))
@@ -854,7 +867,9 @@ def analyze_measurements(
             mark = item["mark"]
             if mark.section != "station" or mark.station_id != held_out.station_id:
                 continue
-            correction_needed = (-item["error"][0], -item["error"][1])
+            correction_needed = machine_frame_correction(
+                mark.angle_deg, item["error"]
+            )
             try:
                 predicted = held_profile.correction(
                     mark.angle_deg, mark.nominal_x_mm, mark.nominal_y_mm
@@ -954,3 +969,123 @@ def analyze_measurements(
         },
     }
     return profile, report, accepted
+
+
+def compare_measurements(
+    baseline_csv,
+    verification_csv,
+    *,
+    baseline_source="baseline.csv",
+    verification_source="verification.csv",
+    max_rms_mm=0.35,
+    max_error_mm=0.90,
+    minimum_improvement_pct=30.0,
+):
+    """Compare independently normalized measurements from two printed sheets."""
+    baseline_marks = parse_measurement_csv(baseline_csv, require_complete=True)
+    verification_marks = parse_measurement_csv(
+        verification_csv, require_complete=True
+    )
+    baseline_alignment = fit_similarity(
+        tuple(mark for mark in baseline_marks if mark.section == "fiducial")
+    )
+    verification_alignment = fit_similarity(
+        tuple(mark for mark in verification_marks if mark.section == "fiducial")
+    )
+    baseline = {
+        (item["mark"].station_id, item["mark"].pass_id): item
+        for item in _normalized_errors(baseline_marks, baseline_alignment)
+        if item["mark"].section == "station"
+    }
+    verification = {
+        (item["mark"].station_id, item["mark"].pass_id): item
+        for item in _normalized_errors(verification_marks, verification_alignment)
+        if item["mark"].section == "station"
+    }
+    all_errors_before = [item["error"] for item in baseline.values()]
+    all_errors_after = [item["error"] for item in verification.values()]
+    before_summary = error_summary(all_errors_before)
+    after_summary = error_summary(all_errors_after)
+    improvement_pct = (
+        max(0.0, 100.0 * (1.0 - after_summary.rms_mm / before_summary.rms_mm))
+        if before_summary.rms_mm > 0.0
+        else 0.0
+    )
+
+    def grouped_errors(items):
+        output = {}
+        for kind in ("reference", "angle_90", "angle_180", "angle_270", "control"):
+            values = [
+                item["error"]
+                for item in items.values()
+                if item["mark"].mark_kind == kind
+            ]
+            output[kind] = error_summary(values)
+        return output
+
+    before_groups = grouped_errors(baseline)
+    after_groups = grouped_errors(verification)
+    station_comparison = []
+    for key in sorted(baseline):
+        before_mark = baseline[key]["mark"]
+        before_error = baseline[key]["error"]
+        after_error = verification[key]["error"]
+        previous_magnitude = math.hypot(*before_error)
+        current_magnitude = math.hypot(*after_error)
+        station_comparison.append(
+            {
+                "station_id": before_mark.station_id,
+                "pass_name": before_mark.pass_name,
+                "angle_deg": before_mark.angle_deg,
+                "before_x_mm": before_error[0],
+                "before_y_mm": before_error[1],
+                "after_x_mm": after_error[0],
+                "after_y_mm": after_error[1],
+                "before_magnitude_mm": previous_magnitude,
+                "after_magnitude_mm": current_magnitude,
+                "improved": current_magnitude < previous_magnitude,
+            }
+        )
+    per_angle_ok = all(
+        after_groups[kind].rms_mm <= before_groups[kind].rms_mm + 0.05
+        for kind in ("angle_90", "angle_180", "angle_270")
+    )
+    accepted = (
+        after_summary.rms_mm <= max_rms_mm
+        and after_summary.max_mm <= max_error_mm
+        and improvement_pct >= minimum_improvement_pct
+        and per_angle_ok
+    )
+    return {
+        "schema": "theta-bed-verification-comparison-v1",
+        "baseline_source": baseline_source,
+        "verification_source": verification_source,
+        "alignment": {
+            "baseline": {
+                "scale": baseline_alignment.scale,
+                "rotation_deg": baseline_alignment.rotation_deg,
+            },
+            "verification": {
+                "scale": verification_alignment.scale,
+                "rotation_deg": verification_alignment.rotation_deg,
+            },
+        },
+        "before": _summary_dict(before_summary),
+        "after": _summary_dict(after_summary),
+        "rms_improvement_pct": improvement_pct,
+        "groups": {
+            kind: {
+                "before": _summary_dict(before_groups[kind]),
+                "after": _summary_dict(after_groups[kind]),
+            }
+            for kind in before_groups
+        },
+        "every_angle_stage_not_worse": per_angle_ok,
+        "acceptance": {
+            "accepted": accepted,
+            "max_rms_mm": max_rms_mm,
+            "max_error_mm": max_error_mm,
+            "minimum_improvement_pct": minimum_improvement_pct,
+        },
+        "stations": station_comparison,
+    }

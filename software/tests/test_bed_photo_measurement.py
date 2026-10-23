@@ -42,6 +42,21 @@ class BedPhotoMeasurementTests(unittest.TestCase):
             self.assertTrue(np.allclose(mapped, image_point))
             self.assertTrue(np.allclose(restored, bed_point))
 
+    def test_seed_homography_scales_to_new_photo_size(self):
+        diagnostic = {
+            "homography": [
+                [4.0, 0.0, 100.0],
+                [0.0, 4.0, 80.0],
+                [0.0, 0.0, 1.0],
+            ],
+            "image_size_px": [100, 100],
+        }
+        transform = self.module._scaled_seed_homography(
+            diagnostic, (200, 100)
+        )
+        mapped = self.module._forward(transform, (10.0, 10.0))
+        self.assertTrue(np.allclose(mapped, (280.0, 120.0)))
+
     def test_station_vertex_uses_shared_corner_centrelines(self):
         points = tuple(
             [(x_value, 20) for x_value in range(10, 21)]

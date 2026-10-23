@@ -1,5 +1,33 @@
 # Engineering Log
 
+<a id="elog-20261023-bed-compensation-frame-error"></a>
+### 🟥 2026-10-23 - WINDOWS SOFTWARE/HARDWARE/FAILED - First bed compensation verification exposes frame rotation defect
+
+- The compensated `bed-error-map` sheet was printed from profile
+  `911d2694c8c9`. Its overhead photo contains several long pen-up drag lines,
+  but all 185 station markers remained attributable with the seeded photo
+  matcher.
+- Independent before/after comparison failed: overall raw station error rose
+  from 0.581 to 1.169 mm RMS and from 1.309 to 2.928 mm maximum. A=0 stayed
+  nearly unchanged while 90/180/270 worsened to 1.279/2.003/0.973 mm RMS.
+- The 180-degree near-doubling identified the cause: the analyzer stored
+  `-error_bed` directly as a machine correction. At a non-zero angle the
+  required vector is `-R(theta) * error_bed`; applying the unrotated vector
+  reverses/turns it in paper coordinates.
+- The profile builder now rotates every correction into machine frame, with a
+  regression test. Added independent baseline-versus-verification comparison
+  using `--compare-to` instead of fitting the verification sheet back into
+  itself.
+- Profile `911d2694c8c9` is rejected. Corrected profile `2cdf3731de4a` and its
+  regenerated `bed-error-verify.gcode` pass static checks and are ready for a
+  fresh verification print.
+- The complete suite now passes 480 tests with one OpenGL-context skip.
+- Evidence: `WSW-20261023-004`,
+  `docs/report/lab-notes/2026-10-23-m-12-bed-compensation-frame-error.md`,
+  `samples/gcode/bed-error-verify-frame-error-analysis-2026-10-23.json`.
+- Category: windows-software, hardware, theta, bed, compensation, verification,
+  failed-test.
+
 <a id="elog-20261023-full-field-bed-calibration-analysis"></a>
 ### 🟨 2026-10-23 - WINDOWS SOFTWARE/HARDWARE/PARTIAL - Full-field bed calibration photo and profile
 
@@ -15,15 +43,18 @@
   error 0.292 mm RMS / 0.537 mm maximum; A=0 control 0.176 mm RMS / 0.369 mm
   maximum. The 90/180/270 residual RMS values were 0.752 / 0.784 / 0.557 mm.
 - Leave-one-station-out profile prediction was 0.197 mm RMS / 0.552 mm
-  maximum, a 66.1 % improvement. The accepted profile has fingerprint
-  `911d2694c8c9`, 165.1 mm coverage, and a 1.331 mm maximum correction.
+  maximum, a 66.1 % improvement. The first fitted profile had fingerprint
+  `911d2694c8c9`, 165.1 mm coverage, and a 1.331 mm maximum correction; it was
+  later rejected by the compensated verification.
 - Correlation with the existing bed mesh was mixed: A=0 Y error `r=-0.548`,
   90-degree magnitude `r=-0.574`, 180-degree `r=+0.341`, and 270-degree
   `r=+0.744`. This supports a combined position and rotation/height coupled
   field; the paper-inclusive mesh cannot separate paper from bed surface.
-- P100 remains unchanged. `samples/gcode/bed-error-verify.gcode` was generated
-  from the accepted profile and passes `check_gcode_motion.py --strict`; the
-  compensated sheet is still the outstanding physical verification.
+- P100 remains unchanged. The first verification profile was rejected by the
+  compensated sheet; `samples/gcode/bed-error-verify.gcode` was regenerated
+  from corrected profile `2cdf3731de4a` and passes
+  `check_gcode_motion.py --strict`. The corrected sheet is the outstanding
+  physical verification.
 - The photo-extraction follow-up tests bring the full software suite to 477
   passing tests with one OpenGL-context skip.
 - Evidence: `WSW-20261023-004`;

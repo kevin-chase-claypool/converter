@@ -117,15 +117,15 @@
     "max_error_gate_mm": 0.9,
     "max_mm": 0.552108,
     "max_rms_gate_mm": 0.35,
-    "mean_x_mm": -0.005886,
-    "mean_y_mm": -0.019269,
+    "mean_x_mm": 4.9e-05,
+    "mean_y_mm": -0.033648,
     "minimum_improvement_pct": 10.0,
     "p95_mm": 0.364052,
     "rms_mm": 0.196878
   },
   "profile": {
     "coverage_radius_mm": 165.1,
-    "fingerprint": "911d2694c8c9",
+    "fingerprint": "2cdf3731de4a",
     "max_correction_mm": 1.330512821422162
   },
   "raw_error": {

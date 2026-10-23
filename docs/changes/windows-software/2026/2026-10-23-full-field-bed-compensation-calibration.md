@@ -69,6 +69,11 @@ are distinguishable without a multi-pen tip offset.
 - Profile validation refuses incomplete data, implausible scale, uncovered
   artwork, corrections above 5 mm, or a profile that fails the residual and
   improvement gates unless the operator explicitly overrides the gate.
+- Measured errors are bed-frame displacements. Each non-zero-angle correction
+  is rotated by its bed angle before it is stored as a machine-XY correction:
+  `C_machine = -R(theta) * error_bed`. The verification comparison uses
+  independently normalized before/after sheets rather than fitting the test
+  sheet back into itself.
 - The v2 profile stores scattered circular-sheet samples rather than a
   rectangular grid full of unmeasured corner cells. Local affine interpolation
   evaluates correction vectors for any planned bed point.
@@ -96,7 +101,7 @@ are distinguishable without a multi-pen tip offset.
   sample interpolation, angle wrap, correction bounds, coverage rejection,
   synthetic field recovery, leave-one-station-out acceptance, bed-mesh
   correlation, compensated verification mode, and G-code/preview point parity.
-- The full software suite passes 477 tests with one OpenGL-context skip.
+- The full software suite passes 480 tests with one OpenGL-context skip.
 - **Bench run (2026-10-23):** photo `cal.jpg` produced the exact expected
   component counts (4 fiducials, 185 station Ls, 74 label glyphs) and all 189
   measurement rows. The maximum expected-to-detected marker offset was
@@ -106,11 +111,15 @@ are distinguishable without a multi-pen tip offset.
 - The 90/180/270 residual RMS values were `0.752 / 0.784 / 0.557 mm`.
   Leave-one-station-out profile prediction was `0.197 mm` RMS / `0.552 mm`
   maximum, a `66.1 %` improvement over raw station error.
-- Generated profile `bed-error-compensation-2026-10-23.json` has fingerprint
-  `911d2694c8c9`, `165.1 mm` coverage, and a `1.331 mm` maximum correction.
-  It passes the analyzer gates. `bed-error-verify.gcode` was generated from
-  that profile, reaches a maximum `163.940 mm` radius, and passes strict
-  motion analysis.
+- The first profile (`911d2694c8c9`) passed the fitter but failed its
+  compensated print: overall raw RMS rose from `0.581` to `1.169 mm`, and the
+  180-degree error approximately doubled from `0.793` to `2.003 mm` RMS.
+  A=0 stayed approximately unchanged, identifying a missing bed-to-machine
+  frame rotation rather than a registration change.
+- The corrected profile has fingerprint `2cdf3731de4a`, `165.1 mm` coverage,
+  and a `1.331 mm` maximum correction. Regenerated
+  `bed-error-verify.gcode` contains that fingerprint, reaches a maximum
+  `163.940 mm` radius, and passes strict motion analysis.
 - The existing bed mesh showed mixed coupling: A=0 Y error `r=-0.548`,
   90-degree magnitude `r=-0.574`, and 270-degree magnitude `r=+0.744`.
   Position and rotation/plane/carriage effects are both present.
@@ -118,6 +127,10 @@ are distinguishable without a multi-pen tip offset.
   component counts. A=0 spatial RMS stayed `0.290..0.292 mm`, leave-one-out
   RMS stayed `0.194..0.197 mm`, and the maximum fitted correction stayed
   `1.271..1.331 mm`.
+- The first compensated verification failed, as documented below. After the
+  machine-frame rotation fix and independent verification comparison were
+  added, the full suite finished at 480 passing tests with one
+  OpenGL-context skip.
 
 ## Struggles and rejected approaches
 
@@ -137,9 +150,10 @@ are distinguishable without a multi-pen tip offset.
 
 ## Risks and follow-up
 
-- The raw measurement sheet is bench-verified, but the compensated
-  `bed-error-verify.gcode` has not yet been printed. The generated profile is
-  therefore provisional until that second-sheet verification passes.
+- The raw measurement sheet is bench-verified. The first compensated print
+  exposed the now-fixed frame-rotation defect and is rejected. Corrected
+  `bed-error-verify.gcode` has not yet been printed; profile `2cdf3731de4a`
+  remains provisional until that comparison passes.
 - Fiducial fitting removes a common affine pose. That is intentional because
   P100 owns registration, but a real global X/Y scale or skew defect belongs
   in `$100`/`$101` or mechanical alignment, not in this residual map.
@@ -177,11 +191,21 @@ are distinguishable without a multi-pen tip offset.
   validation, and bed-mesh correlation report.
 - `samples/gcode/bed-error-compensation-2026-10-23.json`: first fitted profile.
 - `samples/gcode/bed-error-verify.gcode`: compensated verification program.
+- `samples/gcode/bed-error-verify-frame-error-2026-10-23.csv`: rejected first
+  verification measurement.
+- `samples/gcode/bed-error-verify-frame-error-photo-2026-10-23.json`: rejected
+  verification extraction and image hash.
+- `samples/gcode/bed-error-verify-frame-error-analysis-2026-10-23.json`:
+  before/after comparison that exposed the frame error.
 - `samples/gcode/bed-mesh-2026-10-11.csv`: mesh used for the correlation.
 - `docs/report/lab-notes/2026-10-23-m-12-full-field-bed-calibration.md`:
   bench extraction, measurements, correlation, and acceptance decision.
 - `docs/report/lab-notes/assets/2026-10-23-m-12-full-field-bed-calibration.jpg`
   and `...-overlay.jpg`: source photo and detected-marker overlay.
+- `docs/report/lab-notes/assets/2026-10-23-m-12-bed-compensation-frame-error.jpg`
+  and `...-overlay.jpg`: failed compensated verification.
+- `docs/report/lab-notes/assets/2026-10-23-m-12-bed-compensation-frame-error-vectors.png`:
+  before/after vector fields that exposed the frame error.
 - `docs/report/lab-notes/assets/2026-10-23-m-12-full-field-bed-error-vectors.png`:
   A=0 spatial, rotation-residual, and control vector fields.
 - `software/README.md`, `docs/testing/TEST_PLAN.md`,

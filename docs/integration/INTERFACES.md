@@ -61,7 +61,9 @@ selection and after P100 registration. P100 remains the sole owner of the
 physical centre and A index. The profile declares measured XY coverage and a
 5 mm correction bound, and planning stops rather than extrapolating beyond
 either guard. Preview and emitted G-code must use the same transformed and
-subdivided points. See
+subdivided points. The analyzer converts a measured bed-frame error into a
+machine-frame correction with `-R(theta) * error_bed`; it must never store the
+unrotated bed error as machine X/Y. See
 [`ADR-009`](../decisions/ADR-009-post-registration-bed-compensation.md).
 
 The converter treats the geometric center of the clipped SVG as the bed-local

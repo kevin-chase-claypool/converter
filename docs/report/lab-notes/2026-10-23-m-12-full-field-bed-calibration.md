@@ -166,10 +166,14 @@ The map can cancel the measured lateral effect; it cannot repair the bed.
 ## Decisions and next action
 
 - Keep P100 center and A-index constants unchanged.
-- Treat `bed-error-compensation-2026-10-23.json` as the first fitted profile,
-  not yet a production-qualified machine calibration.
+- The first fitted profile (`911d2694c8c9`) was rejected after its compensated
+  verification exposed a bed-to-machine frame error; see
+  [`2026-10-23-m-12-bed-compensation-frame-error.md`](2026-10-23-m-12-bed-compensation-frame-error.md).
+- Treat the corrected profile (`2cdf3731de4a`) as provisional, not yet a
+  production-qualified machine calibration.
 - The compensated verification program is
-  `samples\gcode\bed-error-verify.gcode`, generated from that profile.
+  `samples\gcode\bed-error-verify.gcode`, regenerated from the corrected
+  profile.
 - Next: after a fresh `G65 P113`, print the verification sheet on a fresh
   14-inch round sheet, photograph it, and require the replay residuals to
   decrease without introducing a new spatial field. If they do not, inspect

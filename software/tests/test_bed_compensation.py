@@ -20,7 +20,9 @@ from converter_core.bed_calibration import (
     TEST_RADIUS_MM,
     analyze_measurements,
     calibration_stations,
+    compare_measurements,
     expected_marks,
+    machine_frame_correction,
     measurement_template_csv,
     parse_measurement_csv,
 )
@@ -131,6 +133,18 @@ def transform_measured_csv(text, *, scale, rotation_deg, dx, dy):
         measured_y = float(row["measured_y_mm"])
         row["measured_x_mm"] = cosine * measured_x - sine * measured_y + dx
         row["measured_y_mm"] = sine * measured_x + cosine * measured_y + dy
+        writer.writerow(row)
+    return output.getvalue()
+
+
+def nominal_measurement_csv(text):
+    reader = csv.DictReader(io.StringIO(text))
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=reader.fieldnames, lineterminator="\n")
+    writer.writeheader()
+    for row in reader:
+        row["measured_x_mm"] = row["nominal_x_mm"]
+        row["measured_y_mm"] = row["nominal_y_mm"]
         writer.writerow(row)
     return output.getvalue()
 
@@ -325,6 +339,26 @@ class BedCalibrationAnalysisTests(unittest.TestCase):
         self.assertTrue(accepted)
         self.assertAlmostEqual(report["alignment"]["scale"], 1.018, places=12)
         self.assertAlmostEqual(report["alignment"]["rotation_deg"], 2.5, places=12)
+
+    def test_bed_correction_is_rotated_into_machine_frame(self):
+        correction = machine_frame_correction(90.0, (1.0, 0.0))
+        self.assertAlmostEqual(correction[0], 0.0)
+        self.assertAlmostEqual(correction[1], -1.0)
+
+    def test_verification_comparison_rewards_a_clean_second_sheet(self):
+        baseline = measured_csv_for_synthetic_field()
+        comparison = compare_measurements(
+            baseline,
+            nominal_measurement_csv(baseline),
+            baseline_source="before.csv",
+            verification_source="after.csv",
+            max_rms_mm=0.35,
+            max_error_mm=0.90,
+            minimum_improvement_pct=30.0,
+        )
+        self.assertTrue(comparison["acceptance"]["accepted"])
+        self.assertEqual(comparison["after"]["rms_mm"], 0.0)
+        self.assertEqual(comparison["rms_improvement_pct"], 100.0)
 
 
 class BedCompensationPlannerIntegrationTests(unittest.TestCase):

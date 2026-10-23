@@ -9,6 +9,11 @@ writes the companion measurement CSV used by
 The defaults target a straight-down phone photo with reasonably even lighting.
 The paper must fill a substantial part of the image and the four large
 fiducials must all be visible.
+
+If pen-up drag marks connect printed components, pass the previous sheet's
+``*-photo.json`` as ``--seed-diagnostic``. The seed transform finds the four
+fiducials and unique station markers by local expected geometry instead of
+requiring an exact global component count.
 """
 
 from __future__ import annotations
@@ -113,6 +118,112 @@ def _component_corner(component, quadrant):
     )
 
 
+def _components_in_box(mask, bounds):
+    x0, y0, x1, y1 = bounds
+    cropped = mask[max(0, y0):y1, max(0, x0):x1]
+    components = _connected_components(cropped)
+    output = []
+    offset_x = max(0, x0)
+    offset_y = max(0, y0)
+    for component in components:
+        points = tuple(
+            (x_value + offset_x, y_value + offset_y)
+            for x_value, y_value in component.points
+        )
+        output.append(
+            Component(
+                points,
+                (
+                    component.bbox[0] + offset_x,
+                    component.bbox[1] + offset_y,
+                    component.bbox[2] + offset_x,
+                    component.bbox[3] + offset_y,
+                ),
+            )
+        )
+    return tuple(output)
+
+
+def _scaled_seed_homography(diagnostic, image_size):
+    seed = np.asarray(diagnostic["homography"], dtype=float)
+    old_width, old_height = diagnostic["image_size_px"]
+    new_width, new_height = image_size
+    return (
+        np.diag([new_width / old_width, new_height / old_height, 1.0])
+        @ seed
+    )
+
+
+def _layout_mask(shape, homography, radius_mm=172.0, samples=180):
+    height, width = shape
+    points = []
+    for index in range(samples):
+        angle = math.tau * index / samples
+        points.append(
+            _forward(
+                homography,
+                (
+                    radius_mm * math.cos(angle),
+                    radius_mm * math.sin(angle),
+                ),
+            )
+        )
+    image = Image.new("1", (width, height), 0)
+    ImageDraw.Draw(image).polygon([tuple(point) for point in points], fill=1)
+    return np.asarray(image, dtype=bool)
+
+
+def _seeded_fiducials(residual, expected_fiducials, seed_homography, threshold):
+    selected = []
+    for mark in expected_fiducials:
+        expected = _forward(
+            seed_homography, (mark.nominal_x_mm, mark.nominal_y_mm)
+        )
+        x_value, y_value = expected
+        candidates = _components_in_box(
+            residual > threshold,
+            (
+                int(x_value - 280),
+                int(y_value - 280),
+                int(x_value + 281),
+                int(y_value + 281),
+            ),
+        )
+        candidates = [
+            component
+            for component in candidates
+            if 100 <= len(component.points) <= 800
+            and 40 <= component.maximum_dimension <= 100
+        ]
+        if not candidates:
+            raise ValueError("no fiducial candidate near %s" % mark.station_id)
+
+        def rank(component):
+            center = np.asarray(component.points, dtype=float).mean(axis=0)
+            return np.linalg.norm(center - expected) - 0.2 * len(component.points)
+
+        selected.append(min(candidates, key=rank))
+    nominal = np.asarray(
+        [
+            (mark.nominal_x_mm, mark.nominal_y_mm)
+            for mark in expected_fiducials
+        ]
+    )
+    quadrants = (
+        (0, 0),
+        (1, 0),
+        (1, 1),
+        (0, 1),
+    )
+    image_points = np.asarray(
+        [
+            _component_corner(component, expected_quadrant)
+            for component, expected_quadrant in zip(selected, quadrants)
+        ]
+    )
+    return _fit_homography(nominal, image_points), image_points
+
+
 def _fit_homography(nominal_points, image_points):
     rows = []
     values = []
@@ -196,70 +307,98 @@ def measure_photo(
     mask_center_fraction=(0.5295, 0.4869),
     mask_radius_fraction=0.4322,
     maximum_assignment_px=8.0,
+    seed_diagnostic=None,
 ):
     source = Image.open(image_path).convert("L")
     background = source.filter(ImageFilter.GaussianBlur(blur_radius))
     gray = np.asarray(source, dtype=np.int16)
     local_background = np.asarray(background, dtype=np.int16)
     residual = local_background - gray
-    paper_mask, center, working_radius = _working_mask(
-        gray.shape,
-        center_fraction=mask_center_fraction,
-        radius_fraction=mask_radius_fraction,
-    )
-    components = _connected_components(
-        (residual > threshold) & paper_mask
-    )
-    large = tuple(
-        component
-        for component in components
-        if component.maximum_dimension > 40
-    )
-    medium = tuple(
-        component
-        for component in components
-        if 16 <= component.maximum_dimension <= 30
-    )
-    small = tuple(
-        component
-        for component in components
-        if component.maximum_dimension < 16
-    )
-    if not (len(large) == 4 and len(medium) == 185 and len(small) == 74):
-        raise ValueError(
-            "unexpected component counts: %d fiducial, %d L-mark, %d label"
-            % (len(large), len(medium), len(small))
-        )
-
-    fiducials_by_quadrant = {}
-    for component in large:
-        points = np.asarray(component.points, dtype=float)
-        component_center = points.mean(axis=0)
-        quadrant = (
-            0 if component_center[0] > center[0] else 1,
-            0 if component_center[1] < center[1] else 1,
-        )
-        fiducials_by_quadrant[quadrant] = component
-    if set(fiducials_by_quadrant) != {(0, 0), (1, 0), (1, 1), (0, 1)}:
-        raise ValueError("the four fiducials are not in four distinct quadrants")
-    quadrants = ((0, 0), (1, 0), (1, 1), (0, 1))
-    image_fiducials = np.asarray(
-        [
-            _component_corner(fiducials_by_quadrant[quadrant], quadrant)
-            for quadrant in quadrants
-        ]
-    )
     expected = expected_marks()
     expected_fiducials = tuple(
         mark for mark in expected if mark.section == "fiducial"
     )
-    nominal_fiducials = np.asarray(
-        [
-            (mark.nominal_x_mm, mark.nominal_y_mm)
-            for mark in expected_fiducials
-        ]
+    center = (
+        (source.width - 1) * mask_center_fraction[0],
+        (source.height - 1) * mask_center_fraction[1],
     )
-    homography = _fit_homography(nominal_fiducials, image_fiducials)
+    working_radius = min(source.width, source.height) * mask_radius_fraction
+    components = ()
+    large = ()
+    medium = ()
+    small = ()
+    if seed_diagnostic is None:
+        paper_mask, center, working_radius = _working_mask(
+            gray.shape,
+            center_fraction=mask_center_fraction,
+            radius_fraction=mask_radius_fraction,
+        )
+        components = _connected_components(
+            (residual > threshold) & paper_mask
+        )
+        large = tuple(
+            component
+            for component in components
+            if component.maximum_dimension > 40
+        )
+        medium = tuple(
+            component
+            for component in components
+            if 16 <= component.maximum_dimension <= 30
+        )
+        small = tuple(
+            component
+            for component in components
+            if component.maximum_dimension < 16
+        )
+        if not (len(large) == 4 and len(medium) == 185 and len(small) == 74):
+            raise ValueError(
+                "unexpected component counts: %d fiducial, %d L-mark, %d label"
+                % (len(large), len(medium), len(small))
+            )
+
+        fiducials_by_quadrant = {}
+        for component in large:
+            points = np.asarray(component.points, dtype=float)
+            component_center = points.mean(axis=0)
+            quadrant = (
+                0 if component_center[0] > center[0] else 1,
+                0 if component_center[1] < center[1] else 1,
+            )
+            fiducials_by_quadrant[quadrant] = component
+        if set(fiducials_by_quadrant) != {(0, 0), (1, 0), (1, 1), (0, 1)}:
+            raise ValueError("the four fiducials are not in four distinct quadrants")
+        quadrants = ((0, 0), (1, 0), (1, 1), (0, 1))
+        image_fiducials = np.asarray(
+            [
+                _component_corner(fiducials_by_quadrant[quadrant], quadrant)
+                for quadrant in quadrants
+            ]
+        )
+        nominal_fiducials = np.asarray(
+            [
+                (mark.nominal_x_mm, mark.nominal_y_mm)
+                for mark in expected_fiducials
+            ]
+        )
+        homography = _fit_homography(nominal_fiducials, image_fiducials)
+    else:
+        seed_homography = _scaled_seed_homography(
+            seed_diagnostic, (source.width, source.height)
+        )
+        homography, image_fiducials = _seeded_fiducials(
+            residual, expected_fiducials, seed_homography, threshold
+        )
+        paper_mask = _layout_mask(gray.shape, homography)
+        components = _connected_components(
+            (residual > threshold) & paper_mask
+        )
+        medium = tuple(
+            component
+            for component in components
+            if 60 <= len(component.points) <= 200
+            and 16 <= component.maximum_dimension <= 30
+        )
     inverse_homography = np.linalg.inv(homography)
 
     station_marks = tuple(mark for mark in expected if mark.section == "station")
@@ -316,6 +455,20 @@ def measure_photo(
             mark.nominal_y_mm,
         )
 
+    component_counts = (
+        {
+            "total": len(components),
+            "fiducials": len(large),
+            "station_L": len(medium),
+            "label_glyphs": len(small),
+        }
+        if seed_diagnostic is None
+        else {
+            "total": len(components),
+            "fiducials": len(image_fiducials),
+            "station_L_candidates": len(medium),
+        }
+    )
     diagnostic = {
         "image": str(Path(image_path).resolve()),
         "image_sha256": hashlib.sha256(Path(image_path).read_bytes()).hexdigest(),
@@ -323,12 +476,8 @@ def measure_photo(
         "threshold": threshold,
         "mask_center_fraction": list(mask_center_fraction),
         "mask_radius_fraction": mask_radius_fraction,
-        "component_counts": {
-            "total": len(components),
-            "fiducials": len(large),
-            "station_L": len(medium),
-            "label_glyphs": len(small),
-        },
+        "component_counts": component_counts,
+        "mode": "standard" if seed_diagnostic is None else "seed-assisted",
         "working_center_px": list(center),
         "working_radius_px": working_radius,
         "fiducial_points_px": image_fiducials.tolist(),
@@ -464,6 +613,11 @@ def main():
     )
     parser.add_argument("--mask-radius-fraction", type=float, default=0.4322)
     parser.add_argument("--maximum-assignment-px", type=float, default=8.0)
+    parser.add_argument(
+        "--seed-diagnostic",
+        default="",
+        help="optional prior photo diagnostic JSON for artefact-tolerant matching",
+    )
     args = parser.parse_args()
 
     mask_center_fraction = tuple(
@@ -472,6 +626,14 @@ def main():
     )
     if len(mask_center_fraction) != 2:
         raise SystemExit("--mask-center-fraction needs X,Y")
+    seed_diagnostic = None
+    if args.seed_diagnostic:
+        try:
+            seed_diagnostic = json.loads(
+                Path(args.seed_diagnostic).read_text(encoding="utf-8")
+            )
+        except (OSError, ValueError) as error:
+            raise SystemExit("cannot read seed diagnostic: %s" % error) from error
     expected, measured_by_key, diagnostic = measure_photo(
         args.image,
         threshold=args.threshold,
@@ -479,6 +641,7 @@ def main():
         mask_center_fraction=mask_center_fraction,
         mask_radius_fraction=args.mask_radius_fraction,
         maximum_assignment_px=args.maximum_assignment_px,
+        seed_diagnostic=seed_diagnostic,
     )
     measurement_path = Path(args.measurement_out)
     diagnostic_path = Path(args.diagnostic_out)
@@ -501,10 +664,17 @@ def main():
     print("wrote %s" % measurement_path)
     print("wrote %s" % diagnostic_path)
     print("wrote %s" % overlay_path)
-    print(
-        "mark components: %(fiducials)d fiducial, %(station_L)d station L, "
-        "%(label_glyphs)d label glyph" % diagnostic["component_counts"]
-    )
+    counts = diagnostic["component_counts"]
+    if "station_L" in counts:
+        print(
+            "mark components: %(fiducials)d fiducial, %(station_L)d station L, "
+            "%(label_glyphs)d label glyph" % counts
+        )
+    else:
+        print(
+            "seed-assisted components: %(fiducials)d fiducials, "
+            "%(station_L_candidates)d L candidates" % counts
+        )
     print(
         "station assignment px: min %.3f, median %.3f, max %.3f"
         % (

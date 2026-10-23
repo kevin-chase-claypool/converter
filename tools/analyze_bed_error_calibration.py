@@ -17,7 +17,10 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "software"))
 
-from converter_core.bed_calibration import analyze_measurements  # noqa: E402
+from converter_core.bed_calibration import (  # noqa: E402
+    analyze_measurements,
+    compare_measurements,
+)
 
 
 def main():
@@ -43,9 +46,20 @@ def main():
     parser.add_argument("--max-cross-validation-error-mm", type=float, default=0.90)
     parser.add_argument("--minimum-improvement-pct", type=float, default=10.0)
     parser.add_argument(
+        "--minimum-verification-improvement-pct",
+        type=float,
+        default=30.0,
+    )
+    parser.add_argument(
         "--allow-high-residual",
         action="store_true",
         help="write the profile even when validation gates fail",
+    )
+    parser.add_argument(
+        "--compare-to",
+        default="",
+        help="baseline measurement CSV; compare a verification sheet instead "
+        "of fitting another profile",
     )
     args = parser.parse_args()
 
@@ -54,6 +68,44 @@ def main():
         measurements_csv = measurements_path.read_text(encoding="utf-8")
     except OSError as error:
         raise SystemExit("cannot read measurements: %s" % error) from error
+    if args.compare_to:
+        baseline_path = Path(args.compare_to)
+        try:
+            baseline_csv = baseline_path.read_text(encoding="utf-8")
+        except OSError as error:
+            raise SystemExit("cannot read baseline measurements: %s" % error) from error
+        comparison = compare_measurements(
+            baseline_csv,
+            measurements_csv,
+            baseline_source=baseline_path.name,
+            verification_source=measurements_path.name,
+            max_rms_mm=args.max_cross_validation_rms_mm,
+            max_error_mm=args.max_cross_validation_error_mm,
+            minimum_improvement_pct=args.minimum_verification_improvement_pct,
+        )
+        report_path = Path(args.report_out)
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(
+            json.dumps(comparison, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        print("wrote comparison %s" % report_path)
+        print(
+            "raw RMS %.3f -> %.3f mm; maximum %.3f -> %.3f mm; improvement %.1f%%"
+            % (
+                comparison["before"]["rms_mm"],
+                comparison["after"]["rms_mm"],
+                comparison["before"]["max_mm"],
+                comparison["after"]["max_mm"],
+                comparison["rms_improvement_pct"],
+            )
+        )
+        print(
+            "verification %s"
+            % ("PASSED" if comparison["acceptance"]["accepted"] else "FAILED")
+        )
+        return
     bed_mesh_csv = None
     bed_mesh_sha256 = ""
     if args.bed_mesh:

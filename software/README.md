@@ -152,6 +152,10 @@ Cycle Start with the pen loaded:
     --measurement-out ..\samples\gcode\bed-error-map-measured.csv
   ```
 
+  If long pen-up drag marks connect separate components, add
+  `--seed-diagnostic <previous-photo.json>` so the matcher uses expected local
+  geometry and tolerates the extra fragments.
+
   Then analyse the completed sheet:
 
   ```powershell
@@ -180,16 +184,26 @@ Cycle Start with the pen loaded:
 
   That writes `bed-error-verify.gcode` and a matching CSV.
 
-  **First full-field result (2026-10-23):** the uploaded sheet resolved exactly
+  Compare a compensated verification photo with the original measurements:
+
+  ```powershell
+  python ..\tools\analyze_bed_error_calibration.py `
+    --measurements ..\samples\gcode\bed-error-verify-measured.csv `
+    --compare-to ..\samples\gcode\bed-error-map-measured.csv `
+    --report-out ..\samples\gcode\bed-error-verify-analysis.json
+  ```
+
+  **Full-field result (2026-10-23):** the original sheet resolved exactly
   4 fiducials, 185 station Ls, and 74 label glyphs. A=0 spatial error was
   `0.292 mm` RMS / `0.537 mm` maximum, the A=0 control after rotation was
   `0.176 mm` RMS / `0.369 mm` maximum, and leave-one-station-out profile
   prediction was `0.197 mm` RMS / `0.552 mm` maximum with a `66.1 %`
-  improvement. The fitted profile is
+  improvement. The first profile (`911d2694c8c9`) failed its compensated print
+  because its angle correction was not rotated from bed frame to machine
+  frame. The corrected profile is
   `..\samples\gcode\bed-error-compensation-2026-10-23.json` (fingerprint
-  `911d2694c8c9`). The existing bed mesh shows mixed height correlation, not
-  one pure translation. The compensated verification sheet is generated but
-  has not yet been printed.
+  `2cdf3731de4a`). Its regenerated verification sheet has not yet been
+  printed.
 - `..\samples\gcode\a-tilt-pairs-test.gcode` - four separated line pairs for
   a caliper-read bed-tilt check: each pair is the same paper segment drawn
   twice, once at A=0 (the longer 80 mm constant line) and once at that

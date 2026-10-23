@@ -28,6 +28,16 @@ samples, has explicit radial coverage, and rejects individual corrections
 above 5 mm. Its fiducial fit removes common sheet translation, rotation, and
 scale so P100 registration is not double-compensated.
 
+Measured paper errors are bed-frame displacements. Before storage, the
+required correction is rotated into machine coordinates:
+
+```text
+C_machine(theta, p) = -R(theta) * e_bed(theta, p)
+```
+
+Adding the unrotated negated bed error directly to machine X/Y is invalid for
+non-zero bed angles.
+
 P100 remains the only owner of magnetic registration and the physical rotation
 centre. No grblHAL planner, macro, work-offset, or controller contract is
 changed. A missing profile leaves the uncompensated program unchanged.
@@ -44,8 +54,10 @@ changed. A missing profile leaves the uncompensated program unchanged.
   should be accepted only after the measurement analyzer's complete-data and
   leave-one-station-out gates pass, and a compensated verification sheet must
   confirm that the residual shrinks.
-- The first 2026-10-23 full-field sheet passed the analyzer gates and produced
-  profile fingerprint `911d2694c8c9`. It remains provisional until
-  `bed-error-verify.gcode` is printed and measured.
+- The first 2026-10-23 profile (`911d2694c8c9`) passed its internal fit but
+  failed the compensated print because of the missing frame rotation. The
+  corrected profile is `2cdf3731de4a`; it remains provisional until the
+  regenerated verification sheet passes the independent before/after
+  comparison.
 - A true X/Y scale or skew defect remains a controller/mechanical calibration
   issue rather than being folded into the fiducial-normalized residual map.
