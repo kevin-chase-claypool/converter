@@ -107,9 +107,10 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
    check passed on 2026-10-01 with the earlier `+1.25` mm X value; the
    operator confirmed the 2026-10-14 values park on the magnet, but the
    quantitative rotation acceptance is only partial: the 2026-10-23
-   cross-sheet photo has a good control but a 0.35 mm RMS centre-model
-   residual, so P100 remains unchanged while bed plane/runout is separated.
-   See the M-12 lab note under `docs/report/lab-notes/`. See
+   dense 12-station sheet has a 1.421 mm A=0 Y spread across positions and a
+   0.385 mm RMS centre-model residual, so P100 remains unchanged while bed
+   plane/runout is separated. See the M-12 lab notes under
+   `docs/report/lab-notes/`. See
    `RPSW-20261014-001` and
    [`grblhal/macros/README.md`](grblhal/macros/README.md).
 - **Candidate probe capture** - the 2026-09-10/11 motor-inert candidate

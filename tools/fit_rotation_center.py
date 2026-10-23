@@ -112,7 +112,7 @@ def main() -> None:
         fit.predictions, measurements
     ):
         print(
-            "  %6.1f deg: gaps %7.3f,%7.3f  predicted %7.3f,%7.3f"
+            "  %6.1f deg: normalized gaps %7.3f,%7.3f  predicted %7.3f,%7.3f"
             % (
                 angle,
                 measured.offset_x_mm + args.baseline_mm,

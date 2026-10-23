@@ -14,6 +14,7 @@ components:
   - tools/fit_rotation_center.py
   - samples/gcode/rotation-center-calibration.gcode
   - samples/gcode/rotation-center-calibration.csv
+  - samples/gcode/rotation-center-calibration-2026-10-23.csv
 tags:
   - theta
   - center
@@ -77,6 +78,15 @@ one-angle spot test.
   drawing A motion, no A-rate violation, and no bare `G0` rotation.
 - A rendered geometric check shows a 13.9 mm minimum clear distance between
   segments from different stations.
+- **Bench run (2026-10-23):** the 12-station photo with three repeats per angle
+  was resolved through its fiducials and reference arms. At A=0 the raw Y gap
+  varied from `19.0388` to `20.4598` mm across the bed. After removing the
+  control bias, per-angle mean offsets were only about 0.1-0.3 mm, while the
+  repeated positions scattered by about 0.2-0.45 mm. The centre fit left
+  `0.385 mm` RMS / `0.551 mm` maximum residual, so P100 was not changed.
+  Completed readings are in
+  `samples/gcode/rotation-center-calibration-2026-10-23.csv`; analysis is in
+  `docs/report/lab-notes/2026-10-23-m-12-dense-rotation-center-analysis.md`.
 
 ## Struggles and rejected approaches
 
@@ -92,12 +102,11 @@ one-angle spot test.
 
 - The dense sheet is visually busier; use the printed `ANGLE-REPLICATE` labels
   and L-fiducials rather than trying to infer pair membership from crossings.
-- The test is generated and checked but not yet run. The next step is one
-  bench sheet after `G65 P113`, followed by CSV entry and photo-assisted
-  cross-check.
-- Do not change P100 unless repeated-angle residuals show a common stable
-  centre. A high residual with position-dependent disagreement means bed plane
-  or runout still needs mechanical resolution.
+- The first bench run confirms that repeated-angle residuals are dominated by
+  position-dependent disagreement. Do not change P100 from these samples.
+- The next step is to correlate the A=0 spatial residuals with the existing bed
+  mesh/probe data and determine whether a mechanical plane/runout correction or
+  a separately validated spatial compensation map is appropriate.
 
 ## Files
 
@@ -108,6 +117,8 @@ one-angle spot test.
 - `tools/fit_rotation_center.py`: repeated-angle and control-aware fit.
 - `samples/gcode/rotation-center-calibration.gcode`: 12-station bench program.
 - `samples/gcode/rotation-center-calibration.csv`: matching measurement form.
+- `samples/gcode/rotation-center-calibration-2026-10-23.csv`: completed
+  bench readings from the first dense-sheet run.
 - `software/README.md`, `firmware/README.md`,
   `firmware/grblhal/macros/README.md`, `docs/testing/TEST_PLAN.md`,
   `docs/project/ROADMAP.md`: current usage and acceptance criteria.

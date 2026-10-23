@@ -159,7 +159,10 @@
   within ~0.1 mm but 0.350 mm RMS / 0.412 mm max centre-model residual; P100
   remains unchanged pending bed-plane/runout separation. A 12-station balanced
   layout and companion CSV are now generated (`WSW-20261023-003`) for the
-  required spatial-repeat measurement.
+  required spatial-repeat measurement. The first dense run showed a 1.421 mm
+  A=0 Y spread across positions and a centre-model maximum residual of
+  0.551 mm; the remaining work is to correlate that spatial term with the bed
+  mesh and correct the mechanical plane/runout or validate a spatial map.
 
 ## Phase 5: toolhead
 

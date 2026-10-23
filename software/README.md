@@ -126,7 +126,9 @@ Cycle Start with the pen loaded:
   left by the centre-offset model, and replacement P100
   `axis_center_correction_x/y` constants. Apply the constants in P100 rather
   than compensating again in generated G-code. Regenerate with
-  `..\tools\make_rotation_center_calibration.py`.
+  `..\tools\make_rotation_center_calibration.py`. The completed first dense
+  sheet is retained as
+  `..\samples\gcode\rotation-center-calibration-2026-10-23.csv`.
 - `..\samples\gcode\a-tilt-pairs-test.gcode` - four separated line pairs for
   a caliper-read bed-tilt check: each pair is the same paper segment drawn
   twice, once at A=0 (the longer 80 mm constant line) and once at that
