@@ -16,7 +16,10 @@ from converter_core.rotation_calibration import (
     corrected_axis_center,
     current_axis_center_correction,
     fit_rotation_center,
+    measurement_template_csv,
     parse_measurement,
+    parse_measurements_csv,
+    remove_control_bias,
     remove_pair_baseline,
 )
 
@@ -89,23 +92,55 @@ class RotationCenterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             remove_pair_baseline([], -1.0)
 
+    def test_control_bias_is_averaged_and_removed(self):
+        corrected, bias = remove_control_bias(
+            (
+                RotationCenterMeasurement(0.0, 0.10, -0.20),
+                RotationCenterMeasurement(0.0, 0.30, 0.00),
+                RotationCenterMeasurement(90.0, 0.70, -0.40),
+            )
+        )
+        self.assertAlmostEqual(bias[0], 0.20)
+        self.assertAlmostEqual(bias[1], -0.10)
+        self.assertEqual(len(corrected), 1)
+        self.assertAlmostEqual(corrected[0].offset_x_mm, 0.50)
+        self.assertAlmostEqual(corrected[0].offset_y_mm, -0.30)
+
+    def test_measurement_csv_ignores_blank_rows(self):
+        measurements = parse_measurements_csv(
+            "station,angle_deg,gap_x_mm,gap_y_mm\n"
+            "0-1,0,,\n"
+            "90-1,90,20.6,19.4\n"
+        )
+        self.assertEqual(measurements, (RotationCenterMeasurement(90, 20.6, 19.4),))
+        with self.assertRaises(ValueError):
+            parse_measurements_csv(
+                "station,angle_deg,gap_x_mm,gap_y_mm\n90-1,90,20.6,\n"
+            )
+
 
 class RotationCenterProgramTests(unittest.TestCase):
-    def test_program_contains_four_spaced_stations(self):
+    def test_program_contains_balanced_spaced_stations(self):
         program, stations = build_rotation_center_test_program(converter.Settings())
         self.assertEqual(
             [name for name, _, _, _ in stations],
-            ["90", "180", "270", "control"],
+            [
+                "0-1", "0-2", "0-3",
+                "90-1", "90-2", "90-3",
+                "180-1", "180-2", "180-3",
+                "270-1", "270-2", "270-3",
+            ],
         )
-        self.assertIn("(90 station:", program)
-        self.assertIn("(180 station:", program)
-        self.assertIn("(control station:", program)
+        self.assertIn("(0-1 station:", program)
+        self.assertIn("(90-2 station:", program)
+        self.assertIn("(180-3 station:", program)
+        self.assertIn("(270-1 station:", program)
         self.assertIn("LONGER cross is A=0", program)
-        self.assertIn("SHORTER cross is the angle replay", program)
-        self.assertIn("(label W0 at", program)
-        self.assertIn("(label S90 at", program)
+        self.assertIn("SHORTER cross is the replay", program)
+        self.assertIn("(label 0-1 at", program)
+        self.assertIn("(label 90-2 at", program)
         self.assertIn("(label +X at", program)
-        self.assertIn("small L bracket is the datum", program)
+        self.assertIn("small L bracket marks the A=0 reference", program)
         self.assertIn("centre direction key", program)
         self.assertEqual(program.count("("), program.count(")"))
 
@@ -113,18 +148,34 @@ class RotationCenterProgramTests(unittest.TestCase):
         program, _stations = build_rotation_center_test_program(
             converter.Settings()
         )
-        self.assertIn("+20,+20 mm from the reference", program)
+        self.assertIn("SHORTER cross is the replay, +20,+20 mm", program)
         self.assertIn("fitter subtracts the 20 mm nominal gap", program)
-        self.assertIn("reference arm 20 mm", program)
+        self.assertIn("reference arm 18 mm", program)
 
     def test_default_layout_fits_14_inch_round_sheet(self):
         program, stations = build_rotation_center_test_program(converter.Settings())
-        self.assertEqual(
-            [(x, y) for _name, _angle, x, y in stations],
-            [(0.0, -120.0), (120.0, 0.0), (0.0, 120.0), (-120.0, 0.0)],
-        )
+        self.assertEqual(len(stations), 12)
+        self.assertAlmostEqual(stations[0][2], -90.0, places=8)
+        self.assertAlmostEqual(stations[0][3], -70.0, places=8)
         self.assertIn("330.2 mm test on 355.6 mm round stock", program)
-        self.assertIn("largest ink radius 158.3 mm", program)
+        self.assertIn("largest ink radius", program)
+
+    def test_three_replicates_keep_each_angle_balanced(self):
+        _program, stations = build_rotation_center_test_program(converter.Settings())
+        counts = {}
+        for _name, angle, _x, _y in stations:
+            counts[angle] = counts.get(angle, 0) + 1
+        self.assertEqual(set(counts), {0.0, 90.0, 180.0, 270.0})
+        self.assertEqual(set(counts.values()), {3})
+
+    def test_measurement_template_matches_generated_stations(self):
+        _program, stations = build_rotation_center_test_program(converter.Settings())
+        template = measurement_template_csv(stations)
+        rows = template.strip().splitlines()
+        self.assertEqual(rows[0], "station,angle_deg,gap_x_mm,gap_y_mm")
+        self.assertEqual(len(rows), 13)
+        self.assertEqual(rows[1], "0-1,0,,")
+        self.assertEqual(rows[-1], "270-3,270,,")
 
     def test_oversized_station_layout_is_rejected(self):
         with self.assertRaises(ValueError):

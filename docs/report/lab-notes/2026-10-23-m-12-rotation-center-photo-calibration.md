@@ -112,3 +112,5 @@ constants unchanged until that distinction is resolved.
   sheet to separate angle error from bed-position error.
 - M-12 status remains partial: image extraction and control passed; a single
   centre correction did not explain the full field.
+- Follow-up generated: `WSW-20261023-003` replaces the four-station layout
+  with 12 balanced stations and a companion CSV for the next planned sheet.

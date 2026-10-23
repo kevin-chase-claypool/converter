@@ -23,6 +23,8 @@ is added to P100's existing axis-centre constants.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import csv
+import io
 import math
 import re
 from typing import Iterable, Sequence
@@ -33,6 +35,7 @@ DEFAULT_ANGLES = (90.0, 180.0, 270.0)
 DEFAULT_SHEET_EDGE_MARGIN_MM = 0.0
 DEFAULT_SHEET_DIAMETER_MM = 355.6  # 14 in round stock
 DEFAULT_TEST_DIAMETER_MM = 330.2  # leave 1/2 in around a 14 in sheet
+DEFAULT_CALIBRATION_REPLICATES = 3
 
 
 # A compact single-line stroke font for on-paper calibration labels.
@@ -41,6 +44,20 @@ _STROKE_GLYPHS = {
     "1": (((1.5, 1.0), (1.5, 4.0)),),
     "2": (
         ((0.0, 4.0), (3.0, 4.0), (3.0, 2.5), (0.0, 2.5), (0.0, 1.0), (3.0, 1.0)),
+    ),
+    "3": (
+        ((0.0, 4.0), (3.0, 4.0), (3.0, 1.0), (0.0, 1.0)),
+        ((1.0, 2.5), (3.0, 2.5)),
+    ),
+    "4": (
+        ((0.0, 4.0), (0.0, 2.5), (3.0, 2.5)),
+        ((3.0, 4.0), (3.0, 1.0)),
+    ),
+    "5": (
+        ((3.0, 4.0), (0.0, 4.0), (0.0, 2.5), (3.0, 2.5), (3.0, 1.0), (0.0, 1.0)),
+    ),
+    "6": (
+        ((3.0, 4.0), (0.0, 4.0), (0.0, 1.0), (3.0, 1.0), (3.0, 2.5), (0.0, 2.5)),
     ),
     "7": (((0.0, 4.0), (3.0, 4.0), (3.0, 1.0)),),
     "8": (
@@ -71,6 +88,7 @@ _STROKE_GLYPHS = {
         ((0.5, 2.5), (2.5, 2.5)),
         ((1.5, 1.5), (1.5, 3.5)),
     ),
+    "-": (((0.5, 2.5), (2.5, 2.5)),),
 }
 
 
@@ -225,6 +243,71 @@ def remove_pair_baseline(
     )
 
 
+def remove_control_bias(
+    measurements: Iterable[RotationCenterMeasurement],
+) -> tuple[tuple[RotationCenterMeasurement, ...], tuple[float, float]]:
+    """Subtract the mean A=0 control error from non-control measurements.
+
+    Control rows constrain the measurement/frame bias but carry no centre
+    information themselves, so they are removed from the fit after estimating
+    that bias.
+    """
+    rows = tuple(measurements)
+    controls = [
+        item for item in rows if abs(item.angle_deg % 360.0) <= 1e-9
+    ]
+    if controls:
+        bias_x = sum(item.offset_x_mm for item in controls) / len(controls)
+        bias_y = sum(item.offset_y_mm for item in controls) / len(controls)
+    else:
+        bias_x = bias_y = 0.0
+    corrected = tuple(
+        RotationCenterMeasurement(
+            item.angle_deg,
+            item.offset_x_mm - bias_x,
+            item.offset_y_mm - bias_y,
+        )
+        for item in rows
+        if abs(item.angle_deg % 360.0) > 1e-9
+    )
+    return corrected, (bias_x, bias_y)
+
+
+def parse_measurements_csv(text: str) -> tuple[RotationCenterMeasurement, ...]:
+    """Parse the companion CSV; rows with blank gap fields are ignored."""
+    reader = csv.DictReader(io.StringIO(text))
+    required = ("angle_deg", "gap_x_mm", "gap_y_mm")
+    if reader.fieldnames is None or not set(required).issubset(reader.fieldnames):
+        raise ValueError(
+            "measurement CSV needs angle_deg, gap_x_mm, and gap_y_mm columns"
+        )
+    measurements = []
+    for row in reader:
+        values = [str(row.get(name, "")).strip() for name in required]
+        if not any(values[1:]):
+            continue
+        if not all(values):
+            raise ValueError(
+                "complete all gap fields or leave both gaps blank in every row"
+            )
+        measurements.append(parse_measurement(",".join(values)))
+    if not measurements:
+        raise ValueError("measurement CSV contains no completed rows")
+    return tuple(measurements)
+
+
+def measurement_template_csv(
+    stations: Iterable[tuple[str, float, float, float]],
+) -> str:
+    """Return an editable companion CSV for the generated stations."""
+    output = io.StringIO()
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(("station", "angle_deg", "gap_x_mm", "gap_y_mm"))
+    for label, angle, _station_x, _station_y in stations:
+        writer.writerow((label, _fmt(angle), "", ""))
+    return output.getvalue()
+
+
 def current_axis_center_correction(macro_text: str) -> tuple[float, float]:
     """Read P100's current numeric axis-centre correction."""
     values = []
@@ -270,19 +353,20 @@ def validate_program_comments(program: str) -> None:
 def build_rotation_center_test_program(
     settings,
     *,
-    arm_mm: float = 20.0,
-    replay_arm_mm: float = 17.0,
+    arm_mm: float = 18.0,
+    replay_arm_mm: float = 15.0,
     baseline_mm: float = 20.0,
     station_offset_mm: float = 120.0,
     angles: Sequence[float] = DEFAULT_ANGLES,
+    replicates: int = DEFAULT_CALIBRATION_REPLICATES,
     sheet_diameter_mm: float = DEFAULT_SHEET_DIAMETER_MM,
     test_diameter_mm: float = DEFAULT_TEST_DIAMETER_MM,
     edge_margin_mm: float = DEFAULT_SHEET_EDGE_MARGIN_MM,
 ) -> tuple[str, tuple[tuple[str, float, float, float], ...]]:
     """Build a spaced-pair rotation-centre calibration program.
 
-    Four cardinal stations keep the A=0 reference and angle replay far apart.
-    At each station, a longer reference cross sits at the station origin and a
+    A balanced circular set of stations repeats each angle around the bed. At
+    each station, a longer reference cross sits at the station origin and a
     shorter replay cross sits at ``baseline_mm, baseline_mm`` in the bed frame.
     The raw X gap between the vertical arms and Y gap between the horizontal
     arms therefore starts at the baseline instead of having wet lines overlap.
@@ -297,6 +381,8 @@ def build_rotation_center_test_program(
     angles = tuple(float(angle) % 360.0 for angle in angles)
     if len(angles) != 3:
         raise ValueError("the calibration needs exactly 90, 180, and 270 degree replays")
+    if replicates < 1 or replicates > 3:
+        raise ValueError("replicates must be between 1 and 3")
     if arm_mm < 10.0:
         raise ValueError("reference arm must be at least 10 mm")
     if replay_arm_mm <= 0.0 or replay_arm_mm >= arm_mm:
@@ -314,11 +400,45 @@ def build_rotation_center_test_program(
     if edge_margin_mm < 0.0:
         raise ValueError("sheet edge margin cannot be negative")
     usable_radius = test_diameter_mm / 2.0 - edge_margin_mm
-    station_centres = (
-        (0.0, -station_offset_mm),
-        (station_offset_mm, 0.0),
-        (0.0, station_offset_mm),
-        (-station_offset_mm, 0.0),
+    station_groups = (0.0, angles[0], angles[1], angles[2])
+    column_x = (
+        -0.75 * station_offset_mm,
+        -0.25 * station_offset_mm,
+        0.25 * station_offset_mm,
+        0.75 * station_offset_mm,
+    )
+    row_spacing = 7.0 * station_offset_mm / 12.0
+    row_y = tuple(
+        (row - (replicates - 1) / 2.0) * row_spacing
+        for row in range(replicates)
+    )
+    angle_grid = tuple(
+        tuple(
+            station_groups[(column_index + row_index) % len(station_groups)]
+            for column_index in range(4)
+        )
+        for row_index in range(replicates)
+    )
+    stations = []
+    for angle in station_groups:
+        replicate = 0
+        for row_index, row in enumerate(angle_grid):
+            for column_index, value in enumerate(row):
+                if value != angle:
+                    continue
+                replicate += 1
+                stations.append(
+                    (
+                        "%s-%d" % (_fmt(angle), replicate),
+                        angle,
+                        column_x[column_index],
+                        row_y[row_index],
+                    )
+                )
+    station_count = len(stations)
+    station_centres = tuple(
+        (station_x, station_y)
+        for _label, _angle, station_x, station_y in stations
     )
     pair_offsets = (
         (-arm_mm, 0.0),
@@ -333,23 +453,29 @@ def build_rotation_center_test_program(
         (-arm_mm - 10.0, -arm_mm - 4.0),
         (-arm_mm - 4.0, -arm_mm - 4.0),
     )
+    label_centres = tuple(
+        (station_x, station_y + arm_mm + 24.0)
+        for _label, _angle, station_x, station_y in stations
+    )
+    direction_key = (0.0, -140.0)
+    key_text_centres = (
+        (direction_key[0] + 31.0, direction_key[1] - 8.0),
+        (direction_key[0] - 8.0, direction_key[1] + 32.0),
+    )
     pattern_radius = max(
-        math.hypot(centre_x + offset_x, centre_y + offset_y)
-        for centre_x, centre_y in station_centres
-        for offset_x, offset_y in pair_offsets
+        max(math.hypot(*label_centre) for label_centre in label_centres),
+        max(math.hypot(*key_centre) for key_centre in key_text_centres),
+        max(
+            math.hypot(centre_x + offset_x, centre_y + offset_y)
+            for centre_x, centre_y in station_centres
+            for offset_x, offset_y in pair_offsets
+        ),
     )
     if pattern_radius > usable_radius:
         raise ValueError(
             "pattern radius %.1f mm does not fit inside the %.1f mm test area"
             % (pattern_radius, usable_radius)
         )
-    stations = (
-        ("90", angles[0], *station_centres[0]),
-        ("180", angles[1], *station_centres[1]),
-        ("270", angles[2], *station_centres[2]),
-        ("control", 0.0, *station_centres[3]),
-    )
-
     ratio = float(getattr(settings, "theta_drive_ratio", DEFAULT_RATIO))
     feed = float(getattr(settings, "feed_rate", 700.0))
     travel = float(getattr(settings, "travel_rate", 3000.0))
@@ -358,9 +484,9 @@ def build_rotation_center_test_program(
         "(run G65 P113 first; G54 X0 Y0 is the freshly registered rotation origin)",
         "(layout: %s mm test on %s mm round stock, largest ink radius %s mm)"
         % (_fmt(test_diameter_mm), _fmt(sheet_diameter_mm), "%.1f" % pattern_radius),
-        "(printed cardinal labels and angles: W0 control, S90, E180, N270)",
-        "(inside each station the LONGER cross is A=0; its small L bracket is the datum)",
-        "(the SHORTER cross is the angle replay, +20,+20 mm from the reference)",
+        "(%d balanced stations repeat 0/90/180/270 degrees around the bed)" % station_count,
+        "(each printed label is ANGLE-REPLICATE; its small L bracket marks the A=0 reference)",
+        "(inside each station the LONGER cross is A=0; the SHORTER cross is the replay, +20,+20 mm)",
         "(measure raw vertical-arm X gap and horizontal-arm Y gap at each station)",
         "(the fitter subtracts the %s mm nominal gap from each reading)" % _fmt(baseline_mm),
         "G21",
@@ -503,42 +629,37 @@ def build_rotation_center_test_program(
                 (replay_x, replay_y + replay_arm_mm),
             ],
         )
-    label_positions = {
-        "control": ("W0", -55.0, 0.0),
-        "90": ("S90", 0.0, -55.0),
-        "180": ("E180", 55.0, 0.0),
-        "270": ("N270", 0.0, 55.0),
-    }
-    for label, (_text, label_x, label_y) in label_positions.items():
-        lines.append("(%s station marker)" % label)
-        draw_text(_text, label_x, label_y)
+    for (label, _angle, _station_x, _station_y), (label_x, label_y) in zip(
+        stations, label_centres
+    ):
+        draw_text(label, label_x, label_y, height_mm=5.2)
 
-    arrow_length = 20.0
+    arrow_length = 18.0
     arrow_back = 3.0
     arrow_side = arrow_back * 0.4
-    lines.append("(centre direction key: arrow open ends point machine +X and +Y)")
+    lines.append("(lower-centre direction key: arrow open ends point machine +X and +Y)")
     draw_stroke(
         0.0,
         [
-            (0.0, 0.0),
-            (arrow_length, 0.0),
-            (arrow_length - arrow_back, arrow_side),
-            (arrow_length, 0.0),
-            (arrow_length - arrow_back, -arrow_side),
+            direction_key,
+            (direction_key[0] + arrow_length, direction_key[1]),
+            (direction_key[0] + arrow_length - arrow_back, direction_key[1] + arrow_side),
+            (direction_key[0] + arrow_length, direction_key[1]),
+            (direction_key[0] + arrow_length - arrow_back, direction_key[1] - arrow_side),
         ],
     )
     draw_stroke(
         0.0,
         [
-            (0.0, 0.0),
-            (0.0, arrow_length),
-            (arrow_side, arrow_length - arrow_back),
-            (0.0, arrow_length),
-            (-arrow_side, arrow_length - arrow_back),
+            direction_key,
+            (direction_key[0], direction_key[1] + arrow_length),
+            (direction_key[0] + arrow_side, direction_key[1] + arrow_length - arrow_back),
+            (direction_key[0], direction_key[1] + arrow_length),
+            (direction_key[0] - arrow_side, direction_key[1] + arrow_length - arrow_back),
         ],
     )
-    draw_text("+X", 31.0, -8.0, height_mm=5.0)
-    draw_text("+Y", -8.0, 32.0, height_mm=5.0)
+    draw_text("+X", *key_text_centres[0], height_mm=5.0)
+    draw_text("+Y", *key_text_centres[1], height_mm=5.0)
 
     lines.extend(
         [

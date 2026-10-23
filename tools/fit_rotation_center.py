@@ -3,7 +3,8 @@
 Each measurement is ``ANGLE,GAP_X,GAP_Y`` in degrees and millimetres. The gaps
 are the raw distances between the longer reference arms and shorter replay arms
 at that station. The default 20 mm pair baseline is subtracted before fitting.
-Supply 90/180/270 readings; a two-axis 180-degree reading is also sufficient.
+The 12-station sheet can be filled into its companion CSV; all completed rows
+are fitted together. A=0 control rows are averaged and removed from the result.
 
 The result is added to P100's existing axis-centre correction because the test
 measures the residual left by the constants currently installed on the
@@ -13,9 +14,11 @@ or flash firmware.
 Usage::
 
     python tools\\fit_rotation_center.py ^
-        --measurement 90,20.6,19.4 ^
-        --measurement 180,20,18.8 ^
-        --measurement 270,19.4,19.4
+        --measurements-csv samples\\gcode\\rotation-center-calibration.csv ^
+        --baseline-mm 20
+
+Repeated angles are accepted and are fitted together. Individual values can
+still be supplied with ``--measurement ANGLE,GAP_X,GAP_Y``.
 """
 
 from __future__ import annotations
@@ -33,6 +36,8 @@ from converter_core.rotation_calibration import (  # noqa: E402
     current_axis_center_correction,
     fit_rotation_center,
     parse_measurement,
+    parse_measurements_csv,
+    remove_control_bias,
     remove_pair_baseline,
 )
 
@@ -42,9 +47,13 @@ def main() -> None:
     parser.add_argument(
         "--measurement",
         action="append",
-        required=True,
+        default=[],
         metavar="ANGLE,GAP_X,GAP_Y",
         help="raw reference-to-replay spans; repeat for each bed angle",
+    )
+    parser.add_argument(
+        "--measurements-csv",
+        help="CSV with angle_deg, gap_x_mm, and gap_y_mm columns",
     )
     parser.add_argument(
         "--baseline-mm",
@@ -61,7 +70,18 @@ def main() -> None:
 
     try:
         spans = [parse_measurement(value) for value in args.measurement]
-        measurements = remove_pair_baseline(spans, args.baseline_mm)
+        if args.measurements_csv:
+            spans.extend(
+                parse_measurements_csv(
+                    Path(args.measurements_csv).read_text(encoding="utf-8")
+                )
+            )
+        if not spans:
+            raise ValueError(
+                "provide --measurements-csv or at least one --measurement"
+            )
+        with_baseline_removed = remove_pair_baseline(spans, args.baseline_mm)
+        measurements, control_bias = remove_control_bias(with_baseline_removed)
         fit = fit_rotation_center(measurements)
         macro_text = Path(args.macro).read_text(encoding="utf-8")
         current_x, current_y = current_axis_center_correction(macro_text)
@@ -69,8 +89,17 @@ def main() -> None:
         raise SystemExit(str(error)) from error
 
     suggested_x, suggested_y = corrected_axis_center(current_x, current_y, fit)
+    control_count = len(spans) - len(measurements)
     print("rotation-centre fit")
-    print(f"  measurements: {len(measurements)}")
+    print(
+        "  measurements: %d fitted, %d A=0 controls"
+        % (len(measurements), control_count)
+    )
+    if len(spans) > len(measurements):
+        print(
+            "  A=0 control bias: X %+.4f mm, Y %+.4f mm"
+            % control_bias
+        )
     print(
         "  residual centre C: X %+.4f mm, Y %+.4f mm"
         % (fit.center_x_mm, fit.center_y_mm)
@@ -79,16 +108,15 @@ def main() -> None:
         "  model residual: rms %.4f mm, max %.4f mm"
         % (fit.rms_error_mm, fit.max_error_mm)
     )
-    for angle, predicted_x, predicted_y in fit.predictions:
-        measured = next(
-            item for item in spans if item.angle_deg % 360.0 == angle % 360.0
-        )
+    for (angle, predicted_x, predicted_y), measured in zip(
+        fit.predictions, measurements
+    ):
         print(
             "  %6.1f deg: gaps %7.3f,%7.3f  predicted %7.3f,%7.3f"
             % (
                 angle,
-                measured.offset_x_mm,
-                measured.offset_y_mm,
+                measured.offset_x_mm + args.baseline_mm,
+                measured.offset_y_mm + args.baseline_mm,
                 predicted_x + args.baseline_mm,
                 predicted_y + args.baseline_mm,
             )
@@ -97,10 +125,10 @@ def main() -> None:
     print("  P100 replacement:")
     print(f"#<axis_center_correction_x> = {suggested_x:.4f}")
     print(f"#<axis_center_correction_y> = {suggested_y:.4f}")
-    if len(measurements) < 3:
+    if len(measurements) < 9 or control_count < 3:
         print(
-            "  caution: fewer than three angles cannot test the centre model; "
-            "use 90/180/270 for acceptance"
+            "  caution: the dense acceptance sheet fills nine angle rows and "
+            "three A=0 controls; this input is only a partial estimate"
         )
     if fit.max_error_mm > max(0.0, float(args.max_residual_mm)):
         print(

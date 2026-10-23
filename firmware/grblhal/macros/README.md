@@ -286,16 +286,17 @@ lie on the axis; the cross, tick-ring, and line-replay tests judge the axis
 without that assumption.
 
   For a quantitative correction rather than a pass/fail check, plot
-  `samples/gcode/rotation-center-calibration.gcode` after `G65 P113`. Four
-  separated stations keep the wet lines from overlapping; at each station a
-  longer reference cross and shorter replay cross are 20 mm apart in both
-  axes. Measure the raw vertical-arm X gap and horizontal-arm Y gap, then run:
+  `samples/gcode/rotation-center-calibration.gcode` after `G65 P113`. Twelve
+  balanced stations repeat `0/90/180/270` across the bed; at each station a
+  longer reference cross and shorter replay cross are 20 mm apart in both axes.
+  Fill the companion CSV with each station's raw vertical-arm X gap and
+  horizontal-arm Y gap, then run:
 
   ```powershell
-  python tools\fit_rotation_center.py --baseline-mm 20 --measurement 90,GAP_X,GAP_Y --measurement 180,GAP_X,GAP_Y --measurement 270,GAP_X,GAP_Y
+  python tools\fit_rotation_center.py --baseline-mm 20 --measurements-csv samples\gcode\rotation-center-calibration.csv
   ```
 
-  The tool subtracts the 20 mm baseline, fits
+  The tool subtracts the 20 mm baseline, averages the A=0 controls, fits
   `e(theta) = C - R(-theta)C`, prints the residual model error, and prints
   replacement `#<axis_center_correction_x>` and `_y` values based on the
   constants currently in `P100.macro`. A low residual means the two constants

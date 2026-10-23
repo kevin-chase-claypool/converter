@@ -1,5 +1,27 @@
 # Engineering Log
 
+<a id="elog-20261023-dense-rotation-center-calibration"></a>
+### 🟨 2026-10-23 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Dense balanced rotation-centre calibration
+
+- The first four-station photo produced a good A=0 control but did not explain
+  the 90/180/270 errors with one centre vector. The calibration now uses 12
+  stations in a 4x3 lattice: three spatially distributed repeats each of
+  0/90/180/270.
+- Every station has a 36 mm A=0 reference cross, 30 mm replay cross, L
+  fiducial, and a 20 mm baseline. Printed `ANGLE-REPLICATE` labels identify
+  each pair. A rendered layout check measured 13.9 mm minimum clear distance
+  between segments from different stations.
+- The generator now writes a companion measurement CSV. The fitter accepts all
+  completed rows, subtracts the baseline, averages A=0 controls into a bias,
+  removes that bias, and fits repeated angles together.
+- Verification: the calibration-specific suite passes; generated G-code
+  passes the strict motion guard. Bench measurement with the 12-station sheet
+  remains pending.
+- Evidence: `WSW-20261023-003`;
+  `docs/changes/windows-software/2026/2026-10-23-dense-rotation-center-calibration.md`.
+- Category: windows-software, hardware, rp23cnc-software, theta, center,
+  calibration, repeatability.
+
 <a id="elog-20261023-rotation-center-cross-calibration"></a>
 ### 🟨 2026-10-23 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Rotation-centre cross calibration and P100 fit
 

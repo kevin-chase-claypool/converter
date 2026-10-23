@@ -1,16 +1,18 @@
 """Generate the rotating-bed centre-offset calibration pen test.
 
-Run this after HOME + REGISTER. It draws four separated stations on 14-inch
-round stock: 90/180/270-degree replays and an A=0 control. At each station a
-longer A=0 reference cross and a shorter replay cross are separated by a known
-20 mm baseline in both axes, so the wet strokes do not overlap. Read the raw
-vertical-arm X gap as GAP_X and the raw horizontal-arm Y gap as GAP_Y. The
-fitter subtracts the 20 mm baseline and recovers the signed centre error.
+Run this after HOME + REGISTER. It draws 12 balanced stations around 14-inch
+round stock: three 0-degree controls and three replays each at 90/180/270
+degrees. At each station a longer A=0 reference cross and a shorter replay cross
+are separated by a known 20 mm baseline in both axes, so the wet strokes do not
+overlap. Read the raw vertical-arm X gap as GAP_X and the raw horizontal-arm Y
+gap as GAP_Y. The fitter subtracts the 20 mm baseline and recovers the signed
+error at each location.
 
 The planned test footprint is 13 inches (330.2 mm) on 14-inch (355.6 mm)
-stock. The default station layout reaches a 158.3 mm radius, leaving 19.5 mm
-to the stock edge. The G-code prints W0/S90/E180/N270 labels, a +X/+Y
-direction key, and an L-shaped fiducial beside every A=0 reference cross.
+stock. The default station layout reaches a 154.0 mm radius, leaving 23.8 mm
+to the stock edge. The G-code prints angle/replicate labels such as `0-1` and
+`270-3`, a +X/+Y direction key, and an L-shaped fiducial beside every A=0
+reference cross. It also writes a companion measurement CSV.
 
 Usage::
 
@@ -31,10 +33,12 @@ sys.path.insert(0, str(ROOT / "software"))
 import converter_core as converter  # noqa: E402
 from converter_core.rotation_calibration import (  # noqa: E402
     DEFAULT_ANGLES,
+    DEFAULT_CALIBRATION_REPLICATES,
     DEFAULT_SHEET_DIAMETER_MM,
     DEFAULT_SHEET_EDGE_MARGIN_MM,
     DEFAULT_TEST_DIAMETER_MM,
     build_rotation_center_test_program,
+    measurement_template_csv,
 )
 
 
@@ -43,6 +47,11 @@ def main() -> None:
     parser.add_argument(
         "--out",
         default=str(ROOT / "samples" / "gcode" / "rotation-center-calibration.gcode"),
+    )
+    parser.add_argument(
+        "--measurement-out",
+        default=str(ROOT / "samples" / "gcode" / "rotation-center-calibration.csv"),
+        help="editable gap worksheet written beside the G-code",
     )
     parser.add_argument(
         "--sheet-diameter",
@@ -62,10 +71,16 @@ def main() -> None:
         default=DEFAULT_SHEET_EDGE_MARGIN_MM,
         help="unused radius inside the planned test diameter in mm (default 0)",
     )
-    parser.add_argument("--arm", type=float, default=20.0)
-    parser.add_argument("--replay-arm", type=float, default=17.0)
+    parser.add_argument("--arm", type=float, default=18.0)
+    parser.add_argument("--replay-arm", type=float, default=15.0)
     parser.add_argument("--baseline", type=float, default=20.0)
     parser.add_argument("--station-offset", type=float, default=120.0)
+    parser.add_argument(
+        "--replicates",
+        type=int,
+        default=DEFAULT_CALIBRATION_REPLICATES,
+        help="repeats per angle distributed around the bed (default 3)",
+    )
     parser.add_argument(
         "--angles",
         default=",".join(str(angle) for angle in DEFAULT_ANGLES),
@@ -84,6 +99,7 @@ def main() -> None:
             baseline_mm=args.baseline,
             station_offset_mm=args.station_offset,
             angles=angles,
+            replicates=args.replicates,
             sheet_diameter_mm=args.sheet_diameter,
             test_diameter_mm=args.test_diameter,
             edge_margin_mm=args.edge_margin,
@@ -94,24 +110,24 @@ def main() -> None:
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(program, encoding="utf-8", newline="\n")
-    print(f"wrote {out} ({len(program.splitlines())} lines)")
-    print(
-        "stations:",
-        ", ".join(
-            f"{name}@{angle:g}deg ({x:g},{y:g})"
-            for name, angle, x, y in stations
-        ),
+    measurement_out = Path(args.measurement_out)
+    measurement_out.parent.mkdir(parents=True, exist_ok=True)
+    measurement_out.write_text(
+        measurement_template_csv(stations),
+        encoding="utf-8",
+        newline="\n",
     )
+    print(f"wrote {out} ({len(program.splitlines())} lines)")
+    print(f"wrote {measurement_out} (fill gap_x_mm and gap_y_mm)")
+    print("stations:", len(stations))
+    print(", ".join(f"{name}@{angle:g}deg" for name, angle, _x, _y in stations))
     print(
         "measure raw gap between the longer reference and shorter replay arms; "
         f"the nominal gap is {args.baseline:g} mm"
     )
     print(
         "then: python tools\\fit_rotation_center.py "
-        "--baseline-mm "
-        f"{args.baseline:g} --measurement 90,GAP_X,GAP_Y "
-        "--measurement 180,GAP_X,GAP_Y "
-        "--measurement 270,GAP_X,GAP_Y"
+        f"--measurements-csv {measurement_out} --baseline-mm {args.baseline:g}"
     )
 
 

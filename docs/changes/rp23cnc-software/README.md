@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-23 | `WSW-20261023-003` | implemented | [Dense balanced rotation-centre calibration](../windows-software/2026/2026-10-23-dense-rotation-center-calibration.md) | `theta`, `center`, `calibration`, `repeatability`, `bed`, `runout` |
 | 2026-10-23 | `WSW-20261023-002` | implemented | [Rotation-centre cross calibration and P100 correction fit](../windows-software/2026/2026-10-23-rotation-center-cross-calibration.md) | `theta`, `center`, `registration`, `precision`, `calibration` |
 | 2026-10-14 | `RPSW-20261014-002` | verified | [Axis-centre correction refined from the line-replay test: Y 0.9 -> 0.3](2026/2026-10-14-axis-centre-refinement-y-0-3.md) | `grblhal`, `macro`, `p100`, `registration`, `calibration`, `drift` |
 | 2026-10-14 | `RPSW-20261014-001` | implemented | [Axis-centre correction re-measured by registered jog: X 2.45, Y 0.9](2026/2026-10-14-axis-centre-correction-registered-jog.md) | `grblhal`, `macro`, `p100`, `registration`, `calibration`, `drift` |

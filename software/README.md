@@ -105,23 +105,25 @@ Cycle Start with the pen loaded:
   Run after HOME + registration. Regenerate with
   `..\tools\make_a_line_replay_test.py`.
 - `..\samples\gcode\rotation-center-calibration.gcode` - the calibration
-  counterpart to the line replay. Run it after `G65 P113`. It uses four
-  cardinal stations on 14-inch round stock: 90, 180, 270, and a control.
-  Each station has a longer A=0 reference cross and a shorter angle replay
-  separated by a known **20 mm baseline in both axes**, so wet parallel lines
-  do not overlap. The printed sheet identifies the pairs with W0/S90/E180/N270
-  labels, marks each A=0 reference cross with a small L-shaped fiducial, and
-  includes a centre direction key for machine +X/+Y. The planned footprint is
-  13 inches (330.2 mm), with its furthest ink about 158 mm from the registered
-  centre. Measure the raw vertical-arm X gap and horizontal-arm Y gap at each
-  station, then run:
+  counterpart to the line replay. Run it after `G65 P113`. It uses 12 balanced
+  stations: three repeats each of 0, 90, 180, and 270 degrees distributed in a
+  4 x 3 lattice across 14-inch round stock. Each station has a longer A=0
+  reference cross and a shorter angle replay separated by a known **20 mm
+  baseline in both axes**, so wet parallel lines do not overlap. The printed
+  sheet identifies every pair with an `ANGLE-REPLICATE` label such as `0-1` or
+  `270-3`, marks each A=0 reference cross with a small L-shaped fiducial, and
+  includes a direction key for machine +X/+Y. The furthest ink is about 154 mm
+  from the registered centre. Enter the vertical-arm X gap and horizontal-arm
+  Y gap for each printed station in the companion
+  `..\samples\gcode\rotation-center-calibration.csv`, then run:
 
   ```powershell
-  python ..\tools\fit_rotation_center.py --baseline-mm 20 --measurement 90,GAP_X,GAP_Y --measurement 180,GAP_X,GAP_Y --measurement 270,GAP_X,GAP_Y
+  python ..\tools\fit_rotation_center.py --baseline-mm 20 --measurements-csv ..\samples\gcode\rotation-center-calibration.csv
   ```
 
-  The fitter subtracts the baseline, reports the residual centre vector `C`,
-  the error left by the centre-offset model, and replacement P100
+  The fitter subtracts the baseline, averages the three A=0 controls, fits the
+  remaining repeated angles, reports the residual centre vector `C`, the error
+  left by the centre-offset model, and replacement P100
   `axis_center_correction_x/y` constants. Apply the constants in P100 rather
   than compensating again in generated G-code. Regenerate with
   `..\tools\make_rotation_center_calibration.py`.
