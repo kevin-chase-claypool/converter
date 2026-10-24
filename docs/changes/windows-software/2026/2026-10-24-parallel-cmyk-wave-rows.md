@@ -5,7 +5,7 @@ category: windows-software
 affected_categories:
   - windows-software
   - hardware
-status: implemented
+status: superseded
 components:
   - software/converter_core/cmyk.py
   - software/tests/test_cmyk_tab.py
@@ -21,6 +21,7 @@ tags:
 related:
   - WSW-20261024-004
   - WSW-20261024-005
+  - WSW-20261024-009
   - 2026-10-23-m-13-cmyk-yellow-feed-sensitivity
 ---
 
@@ -43,6 +44,10 @@ original pattern in controlled wave patches.
 The remaining defect is the Wave screen's geometric construction. Row-specific
 tone controls amplitude, so neighboring rows follow different curves. Smoothing
 those values reduced but did not eliminate convergence and divergence.
+
+The fully shared profile was superseded by `WSW-20261024-009`: it fixed
+crossings and runaway gaps, but also removed the vertical tone variation that
+creates the Wave screen's visual depth.
 
 ## Implementation
 

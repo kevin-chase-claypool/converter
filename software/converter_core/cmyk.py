@@ -38,6 +38,13 @@ SCREEN_ANGLES_DEG = {"c": 15.0, "m": 75.0, "y": 0.0, "k": 45.0}
 
 # Below this ink coverage a mark is dropped so paper stays clean.
 INK_FLOOR = 0.06
+# Preserve broad vertical image tone in wave height, but average over enough
+# rows that row-frequency detail cannot make neighbouring curves jitter.
+WAVE_DEPTH_ROW_WINDOW = 7
+# A row may not depart from its neighbour by more than this fraction of the
+# nominal pitch. The resulting gap remains between 88% and 112% of pitch,
+# keeping the intended depth variation without crossings or runaway gaps.
+WAVE_MAX_ADJACENT_GAP_FRACTION = 0.12
 # Black usually overpowers the other three pens (the r/PlotterArt threads
 # consistently report dialing it down), so its default weight is lower.
 DEFAULT_WEIGHTS = {"c": 1.0, "m": 1.0, "y": 1.0, "k": 0.8}
@@ -587,11 +594,12 @@ def _wave_rows(
     cancel_check=None,
     path_tolerance_mm=0.05,
 ):
-    """Parallel sine rows with one shared horizontal amplitude profile.
+    """Sine rows with bounded vertical tone depth.
 
-    Row-specific tone still masks each mark to the image, but it does not move
-    one row toward its neighbour. This prevents both overlap and extra-wide
-    gaps at the cost of not representing vertical tone through wave height.
+    Local tone still masks each mark to the image. A vertically smoothed tone
+    field also varies wave height across rows, preserving the depth of the
+    source image. Adjacent rows are slewed to a small fraction of the pitch, so
+    their separation can breathe without crossing or opening a runaway gap.
     Sampling is tied to the path tolerance so the emitted chords follow the
     sine instead of becoming visible facets.
     """
@@ -634,10 +642,40 @@ def _wave_rows(
             ]
         )
 
-    shared_tone = [
-        sum(row[x_index] for row in tone_rows) / max(len(tone_rows), 1)
-        for x_index in range(len(x_values))
-    ]
+    window = min(WAVE_DEPTH_ROW_WINDOW, len(tone_rows))
+    smoothed_tone = []
+    for row_index in range(len(tone_rows)):
+        low = min(
+            max(0, row_index - window // 2),
+            len(tone_rows) - window,
+        )
+        high = low + window
+        smoothed_tone.append(
+            [
+                sum(
+                    tone_rows[index][x_index] for index in range(low, high)
+                )
+                / max(window, 1)
+                for x_index in range(len(x_values))
+            ]
+        )
+    max_tone_step = min(
+        1.0,
+        spacing * WAVE_MAX_ADJACENT_GAP_FRACTION / amplitude_max,
+    )
+    depth_tone = []
+    for x_index in range(len(x_values)):
+        column = []
+        for row_index in range(len(smoothed_tone)):
+            current = smoothed_tone[row_index][x_index]
+            if column:
+                previous = column[-1]
+                current = previous + max(
+                    -max_tone_step,
+                    min(max_tone_step, current - previous),
+                )
+            column.append(current)
+        depth_tone.append(column)
 
     rows = []
     for row_index, y in enumerate(row_ys):
@@ -646,7 +684,7 @@ def _wave_rows(
         for x_index, x in enumerate(x_values):
             value = tone_rows[row_index][x_index]
             if value >= INK_FLOOR:
-                displacement_tone = shared_tone[x_index]
+                displacement_tone = depth_tone[x_index][row_index]
                 offset = (
                     amplitude_max
                     * displacement_tone

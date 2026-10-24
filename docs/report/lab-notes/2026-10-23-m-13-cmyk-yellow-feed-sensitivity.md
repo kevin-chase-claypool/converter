@@ -274,16 +274,34 @@ machine-space warp that compensates the paper.
   smoother source. Do not lower the feed or bed acceleration again to address
   this shape.
 
+### 2026-10-24 bounded spacing works; shared profile removes depth
+
+- While the next yellow print was running, the operator reported that the
+  waves were much more stable but barely varied in height. The flat appearance
+  is the intended consequence of `WSW-20261024-006`: every row used one shared
+  amplitude profile.
+- The chosen `1.2 mm` Dot pitch is not the cause. At `280 %` Artwork scale the
+  effective pitch is `3.36 mm`; increasing pitch would enlarge every wave
+  while still discarding vertical tone variation.
+- `WSW-20261024-009` restores depth with a seven-row-smoothed tone field.
+  Adjacent rows may change height by at most `12 %` of pitch, bounding
+  centerline separation to `88-112 %`.
+- The previous shared-wave change is superseded. The smooth-chord sampling
+  change remains active.
+- A fresh yellow print is required with Dot pitch `1.2 mm`, Artwork scale
+  `280 %`, Path tolerance `0.05 mm`, `F700`, and `$123=6000`.
+
 ## Decisions and next action
 
 - Restart the converter, regenerate the four Ben1 layers with Path tolerance
   `0.05 mm`, and confirm every header still contains
   `angular interpolation bed-frame`.
-- Print yellow first at `F700` with `$123=6000` and bed compensation enabled.
-  The rows should remain parallel and the individual waves should now be
-  smooth, not faceted.
-- If row spacing changes, inspect the compensated source versus paper before
-  changing machine settings. Blank image-shaped regions are expected.
+- Keep Dot pitch `1.2 mm` and Artwork scale `280 %`. Print yellow first at
+  `F700` with `$123=6000` and bed compensation enabled. The waves should now
+  have visible tonal depth, smooth curves, and bounded row spacing.
+- If spacing exceeds the bounded range, inspect the compensated source versus
+  paper before changing machine settings. Blank image-shaped regions and
+  deliberately smooth broad tone changes are expected.
 - Keep 700 mm/min as the nominal requested feed for now and use a 65 % override
   for quality-critical Xθ/Yθ yellow work until the drivetrain is improved.
 - Repeat magenta alone in **Bed motion = XY only** at the same 420 mm/min. If it

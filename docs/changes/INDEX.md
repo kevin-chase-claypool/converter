@@ -5,9 +5,10 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-24 | `WSW-20261024-009` | windows-software, hardware | implemented | [Restore bounded CMYK wave-screen depth](windows-software/2026/2026-10-24-bounded-cmyk-wave-depth.md) |
 | 2026-10-24 | `WSW-20261024-008` | windows-software | implemented | [Preserve artwork placement across reopen and reimport](windows-software/2026/2026-10-24-persist-artwork-placement.md) |
 | 2026-10-24 | `WSW-20261024-007` | windows-software, hardware | implemented | [Smooth CMYK wave-screen chords within the path budget](windows-software/2026/2026-10-24-smooth-cmyk-wave-chords.md) |
-| 2026-10-24 | `WSW-20261024-006` | windows-software, hardware | implemented | [Keep all CMYK wave rows on one shared waveform](windows-software/2026/2026-10-24-parallel-cmyk-wave-rows.md) |
+| 2026-10-24 | `WSW-20261024-006` | windows-software, hardware | superseded | [Keep all CMYK wave rows on one shared waveform](windows-software/2026/2026-10-24-parallel-cmyk-wave-rows.md) |
 | 2026-10-24 | `WSW-20261024-005` | windows-software, hardware | implemented | [Add a one-sheet CMYK wave-rotation isolation test](windows-software/2026/2026-10-24-wave-rotation-isolation-test.md) |
 | 2026-10-24 | `WSW-20261024-004` | windows-software, hardware | superseded | [Stabilize wave-screen row spacing across all CMYK inks](windows-software/2026/2026-10-24-stabilize-cmyk-wave-row-spacing.md) |
 | 2026-10-24 | `WSW-20261024-003` | windows-software, hardware | implemented | [Make bed-calibration photo matching orientation-independent](windows-software/2026/2026-10-24-orientation-independent-bed-photo-matching.md) |

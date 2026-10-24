@@ -297,16 +297,17 @@
   This excludes bed rotation and acceleration as sufficient causes.
   The remaining overlap/wide-gap defect was tone changing each row's wave
   height independently. `WSW-20261024-006` replaced that with one shared
-  horizontal amplitude profile across all rows. Its first full yellow print is
-  materially better and the large overlap pattern is gone, but the individual
-  waves remain angular. The source SVG from that print has the same corners,
-  with an `0.84 mm` median sample step. `WSW-20261024-007` now ties sine sample
-  density to the paper-space Path tolerance. Benefit: plotted image should be
-  both evenly spaced and smooth instead of carrying either geometric defect.
-  The next physical test is a newly generated full yellow layer at `F700`,
-  `0.05 mm` Path tolerance, and `$123=6000` with compensation enabled. If the
-  waves are smooth and parallel, close M-13; otherwise compare the rendered
-  source with paper before changing machine settings again.
+  horizontal amplitude profile. Its first full yellow print removed crossings
+  and runaway gaps, but also flattened the tonal depth and left angular wave
+  chords. `WSW-20261024-007` now ties sine sample density to paper-space Path
+  tolerance. `WSW-20261024-009` restores a seven-row-smoothed depth field while
+  limiting adjacent height changes to `12 %` of pitch. Benefit: the wave screen
+  can retain image depth without returning to the overlap or wide-gap failure.
+  The next physical test is a newly generated full yellow layer at Dot pitch
+  `1.2 mm`, Artwork scale `280 %`, Path tolerance `0.05 mm`, `F700`, and
+  `$123=6000` with compensation enabled. If waves have depth, smooth chords,
+  and bounded spacing, close M-13; otherwise compare the rendered source with
+  paper before changing machine settings again.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already

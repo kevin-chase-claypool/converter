@@ -1,5 +1,31 @@
 # Engineering Log
 
+<a id="elog-20261024-bounded-cmyk-wave-depth"></a>
+### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Restore bounded CMYK wave depth
+
+- The full yellow print from `WSW-20261024-006` confirmed that the shared
+  amplitude fixed crossings and runaway gaps, but the operator observed that
+  individual waves barely changed height and the pattern lost its intended
+  depth.
+- The `1.2 mm` Dot pitch is not the cause. At `280 %` Artwork scale it becomes
+  a `3.36 mm` on-paper pitch; the shared profile discarded vertical tone
+  regardless of that scale.
+- `_wave_rows` now uses a seven-row moving average of local tone to vary wave
+  amplitude again. Adjacent rows are limited to a `12 %` pitch change, keeping
+  their centerline gap inside `88-112 %` of pitch.
+- A vertical-gradient depth regression failed on the shared profile with
+  effectively zero amplitude range and now measures approximately
+  `0.89 mm`. All-angle spacing remains bounded under row-frequency tone
+  changes, and smooth-chord and blank-region regressions still pass.
+- The full CMYK suite passes 72 tests, and full converter discovery passes 507
+  tests with one skip. A fresh yellow print at the unchanged `1.2 mm` Dot
+  pitch, `280 %` Artwork scale, `F700`, and `$123=6000` is still required for
+  visual acceptance.
+- Evidence: `WSW-20261024-009`,
+  `docs/report/lab-notes/2026-10-23-m-13-cmyk-yellow-feed-sensitivity.md`.
+- Category: windows-software, cmyk, wave-screen, depth, amplitude,
+  row-spacing.
+
 <a id="elog-20261024-persist-artwork-placement"></a>
 ### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Preserve artwork placement
 

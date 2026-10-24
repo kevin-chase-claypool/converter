@@ -550,7 +550,7 @@ class ScreeningTests(unittest.TestCase):
         self.assertEqual(len(tsp), 1)
         self.assertGreater(len(tsp[0]), 10)
 
-    def test_wave_rows_keep_even_visible_spacing_across_row_tone_changes(self):
+    def test_wave_rows_keep_bounded_spacing_across_row_tone_changes(self):
         spacing = 4.0
         def value_at_x(points, x_value):
             ordered = sorted(points)
@@ -638,9 +638,11 @@ class ScreeningTests(unittest.TestCase):
                     if 0.1 <= second - first <= 2.0 * spacing
                 ]
                 self.assertGreaterEqual(len(gaps), 10)
-                self.assertLess(max(gaps) - min(gaps), 0.15)
+                self.assertGreater(min(gaps), 0.85 * spacing)
+                self.assertLess(max(gaps), 1.15 * spacing)
+                self.assertLess(max(gaps) - min(gaps), 0.3 * spacing)
 
-    def test_wave_rows_stay_parallel_across_a_vertical_tone_gradient(self):
+    def test_wave_rows_vary_depth_but_stay_bounded_on_a_vertical_gradient(self):
         spacing = 4.0
         yy, _xx = self.np.mgrid[0:64, 0:64]
         tone = (0.2 + 0.6 * yy / 63.0).astype("float32")
@@ -677,12 +679,65 @@ class ScreeningTests(unittest.TestCase):
         amplitudes.sort()
         self.assertGreaterEqual(len(amplitudes), 10)
         wave_amplitudes = [amplitude for _baseline, amplitude in amplitudes]
+        self.assertGreater(
+            max(wave_amplitudes) - min(wave_amplitudes),
+            spacing * 0.12,
+            "vertical tone must create visible depth",
+        )
         self.assertLess(
             max(wave_amplitudes) - min(wave_amplitudes),
-            0.01,
-            "adjacent wave rows must share one waveform so they cannot "
-            "overlap or open extra-wide gaps",
+            spacing * 0.35,
+            "depth variation must stay within the bounded row envelope",
         )
+
+    def test_wave_rows_restore_vertical_tone_depth_without_crossing(self):
+        spacing = 4.0
+        yy, _xx = self.np.mgrid[0:64, 0:64]
+        tone = (0.1 + 0.8 * yy / 63.0).astype("float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves",
+            spacing_mm=spacing,
+        )
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        amplitudes = []
+        crest_y = []
+        for points in waves:
+            baseline = value_at_x(points, 0.0)
+            crest = value_at_x(points, spacing / 2.0)
+            if baseline is not None and crest is not None:
+                amplitudes.append(abs(crest - baseline))
+                crest_y.append(crest)
+
+        self.assertGreaterEqual(len(amplitudes), 12)
+        self.assertGreater(
+            max(amplitudes) - min(amplitudes),
+            spacing * 0.2,
+            "vertical image tone must still create visible wave depth",
+        )
+        gaps = sorted(
+            second - first for first, second in zip(crest_y, crest_y[1:])
+        )
+        self.assertGreater(min(gaps), 0.75 * spacing)
+        self.assertLess(max(gaps), 1.25 * spacing)
 
     def test_wave_rows_approximate_the_sinusoid_within_path_tolerance(self):
         spacing = 4.0
