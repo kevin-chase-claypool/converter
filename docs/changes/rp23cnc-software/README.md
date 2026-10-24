@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-24 | `WSW-20261024-001` | implemented | [Expand full-field bed calibration to eight angles](../windows-software/2026/2026-10-24-eight-angle-bed-calibration.md) | `bed`, `compensation`, `calibration`, `angle`, `cmyk`, `striation` |
 | 2026-10-23 | `WSW-20261023-003` | implemented | [Dense balanced rotation-centre calibration](../windows-software/2026/2026-10-23-dense-rotation-center-calibration.md) | `theta`, `center`, `calibration`, `repeatability`, `bed`, `runout` |
 | 2026-10-23 | `WSW-20261023-002` | implemented | [Rotation-centre cross calibration and P100 correction fit](../windows-software/2026/2026-10-23-rotation-center-cross-calibration.md) | `theta`, `center`, `registration`, `precision`, `calibration` |
 | 2026-10-23 | `RPSW-20261023-001` | implemented | [Raise the M5 pen-clearance pulse to 130 ms](2026/2026-10-23-raise-m5-clearance-to-130ms.md) | `toolhead`, `pen-clear`, `m5`, `clearance`, `drag` |

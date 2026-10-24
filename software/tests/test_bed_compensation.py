@@ -292,19 +292,23 @@ class BedCalibrationGeneratorTests(unittest.TestCase):
         self.assertLessEqual(self.module.layout_extent_mm(), TEST_RADIUS_MM)
         self.assertGreater(self.module.layout_extent_mm(), 160.0)
 
-    def test_one_pen_five_pass_program_and_four_pauses(self):
+    def test_one_pen_nine_pass_program_and_eight_pauses(self):
         program, stations = self.module.build_program(converter.Settings())
         self.assertEqual(len(stations), 37)
-        self.assertEqual(program.count("M0 ("), 4)
+        self.assertEqual(program.count("M0 ("), 8)
         for marker in (
-            "PASS 1/5 A000-REFERENCE",
-            "PASS 2/5 A090",
-            "PASS 3/5 A180",
-            "PASS 4/5 A270",
-            "PASS 5/5 A000-CONTROL",
+            "PASS 1/9 A000-REFERENCE",
+            "PASS 2/9 A045",
+            "PASS 3/9 A090",
+            "PASS 4/9 A135",
+            "PASS 5/9 A180",
+            "PASS 6/9 A225",
+            "PASS 7/9 A270",
+            "PASS 8/9 A315",
+            "PASS 9/9 A000-CONTROL",
         ):
             self.assertIn(marker, program)
-        self.assertIn("one 0.20 mm pen for all passes", program)
+        self.assertIn("one 0.20 mm pen for all 9 passes", program)
         self.assertNotIn("install blue", program.lower())
         self.assertEqual(program.count("G53 G1"), 1)
 
@@ -352,7 +356,16 @@ class BedCalibrationAnalysisTests(unittest.TestCase):
             minimum_improvement_pct=20.0,
         )
         self.assertTrue(accepted)
-        self.assertEqual(profile.angle_values_deg, (0.0, 90.0, 180.0, 270.0))
+        self.assertEqual(
+            profile.angle_values_deg,
+            (0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0),
+        )
+        self.assertEqual(
+            report["layout"]["angle_values_deg"],
+            list(profile.angle_values_deg),
+        )
+        self.assertIn("45", report["angles"])
+        self.assertIn("315", report["angles"])
         self.assertEqual(profile.coverage_radius_mm, COVERAGE_RADIUS_MM)
         self.assertLess(report["a0_control_residual"]["max_mm"], 0.03)
         self.assertLess(report["leave_one_out"]["rms_mm"], 0.08)

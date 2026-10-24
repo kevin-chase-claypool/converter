@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-24 | `WSW-20261024-001` | implemented | [Expand full-field bed calibration to eight angles](2026/2026-10-24-eight-angle-bed-calibration.md) | `bed`, `compensation`, `calibration`, `angle`, `cmyk`, `striation` |
 | 2026-10-23 | `WSW-20261023-009` | implemented | [Add an adaptive bed-compensation curvature probe](2026/2026-10-23-adaptive-compensation-probe.md) | `bed`, `compensation`, `performance`, `algorithm`, `subdivision` |
 | 2026-10-23 | `WSW-20261023-008` | implemented | [Route the shared Cancel button to CMYK background planning](2026/2026-10-23-shared-cancel-tracks-cmyk-planning.md) | `cmyk`, `planning`, `cancel`, `ui`, `background-worker` |
 | 2026-10-23 | `WSW-20261023-007` | implemented | [Use a fast nominal preview with exact compensated G-code](2026/2026-10-23-fast-nominal-preview.md) | `bed`, `compensation`, `performance`, `preview`, `cmyk` |

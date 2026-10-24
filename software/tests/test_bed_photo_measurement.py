@@ -13,7 +13,11 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "software"))
 
-from converter_core.bed_calibration import expected_marks
+from converter_core.bed_calibration import (
+    PASS_SPECS,
+    calibration_stations,
+    expected_marks,
+)
 
 
 class BedPhotoMeasurementTests(unittest.TestCase):
@@ -85,7 +89,7 @@ class BedPhotoMeasurementTests(unittest.TestCase):
                 io.StringIO(self.module.measurement_csv(expected, measured))
             )
         )
-        self.assertEqual(len(rows), 189)
+        self.assertEqual(len(rows), 4 + len(calibration_stations()) * len(PASS_SPECS))
         self.assertTrue(all(row["measured_x_mm"] for row in rows))
         self.assertTrue(all(row["measured_y_mm"] for row in rows))
 

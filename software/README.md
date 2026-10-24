@@ -132,15 +132,15 @@ Cycle Start with the pen loaded:
   `..\samples\gcode\rotation-center-calibration-2026-10-23-repeat.csv`.
 - `..\samples\gcode\bed-error-map.gcode` - the full-field residual calibration
   for the position-dependent error left after registration. Run it after
-  `G65 P113` with one Pigma Micron 005 (0.20 mm) for all five passes. Its
+  `G65 P113` with one Pigma Micron 005 (0.20 mm) for all nine passes. Its
   37 stations cover rings at 50, 95, and 150 mm on a 13-inch test field
   inside 14-inch round stock. Pass 1 is the A=0 spatial reference; passes
-  2-4 are the same fixed positions at 90/180/270 degrees; pass 5 is an A=0
-  control after the rotations. Each replay occupies a separate 10 mm lane
-  (north/south/east/west), so wet lines do not overwrite the reference.
+  2-8 replay the same fixed positions at 45/90/135/180/225/270/315 degrees;
+  pass 9 is an A=0 control after the rotations. Each replay occupies a
+  separate 10 mm lane, so wet lines do not overwrite the reference.
   Four large fiducials remove common photo scale/rotation/translation, and
   every station has a printed number. The program returns to A=0 and pauses
-  at four `M0`s; let the ink dry before Cycle Start. It uses no pen swap and
+  at eight `M0`s; let the ink dry before Cycle Start. It uses no pen swap and
   does not change G54.
 
   Prepare and tape the sheet before `G65 P113`. Do not lift, retape, or adjust
@@ -149,7 +149,7 @@ Cycle Start with the pen loaded:
   forms or the sheet shifts during the run, abort and use a fresh sheet.
 
   Photograph the whole sheet from above. The photo tool finds the four
-  fiducials, 185 station Ls, and 74 label glyphs, fits the sheet transform, and
+  fiducials, 333 station Ls, and 74 label glyphs, fits the sheet transform, and
   fills every `measured_x_mm`/`measured_y_mm` field:
 
   ```powershell
@@ -170,8 +170,8 @@ Cycle Start with the pen loaded:
   ```
 
   The analyzer rejects missing rows, reports A=0 spatial error and A=0
-  control repeatability separately, removes the common sheet pose, fits the
-  90/180/270 fields, performs leave-one-station-out validation, correlates
+  control repeatability separately, removes the common sheet pose, fits all
+  seven intermediate-angle fields, performs leave-one-station-out validation, correlates
   the result with the optional bed mesh, and writes
   `bed-error-analysis.json`. The
   `..\samples\gcode\bed-error-compensation-2026-10-23-13p5in-extrapolated.json`
@@ -221,7 +221,7 @@ Cycle Start with the pen loaded:
     --report-out ..\samples\gcode\bed-error-verify-analysis.json
   ```
 
-  **Full-field result (2026-10-23):** the original sheet resolved exactly
+  **Previous four-angle result (2026-10-23):** the original sheet resolved exactly
   4 fiducials, 185 station Ls, and 74 label glyphs. A=0 spatial error was
   `0.292 mm` RMS / `0.537 mm` maximum, the A=0 control after rotation was
   `0.176 mm` RMS / `0.369 mm` maximum, and leave-one-station-out profile
@@ -238,6 +238,9 @@ Cycle Start with the pen loaded:
   `6.350 mm` annulus is extrapolated, not measured; its maximum boundary
   correction is `1.054 mm`, below the 5 mm safety bound. Recalibrate after any
   bed, paper-support, toolhead, carriage, pen-clamp, or registration change.
+  The current generator's eight-angle sheet is a new calibration candidate;
+  the existing default profile remains active until that sheet is measured,
+  independently verified, and accepted.
 - `..\samples\gcode\a-tilt-pairs-test.gcode` - four separated line pairs for
   a caliper-read bed-tilt check: each pair is the same paper segment drawn
   twice, once at A=0 (the longer 80 mm constant line) and once at that

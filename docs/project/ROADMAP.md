@@ -194,6 +194,12 @@
   A=270 does not justify fitting the verification sheet again; physical bed
   plane/runout work remains optional unless an application requires less than
   the accepted approximately `0.34 mm` RMS residual.
+  Status 2026-10-24: the generator and analyzer now produce a one-sheet,
+  eight-angle candidate at 0/45/90/135/180/225/270/315 degrees over the same
+  37 whole-bed stations. This replaces interpolation across 90-degree gaps
+  with measured fields at the angles used by the failing CMYK screens.
+  The existing profile remains the default until the printed sheet, independent
+  verification, and all angle-stage gates pass.
 - [ ] **Verify the extrapolated 13.5-inch compensation annulus.**
   Problem: the default `4c8270de8a74` profile extends the accepted 165.1 mm
   correction field to 171.45 mm by local-affine extrapolation. Its
@@ -203,7 +209,7 @@
   than an extrapolation assumption. Risk: continuing to treat extrapolated
   values as verified can hide a local edge or rotation/height response.
   Acceptance: print a stationary edge-band verification covering 165.1 to
-  171.45 mm at 0/90/180/270 degrees, measure it with the existing photo
+  171.45 mm at all eight calibrated angles, measure it with the existing photo
   pipeline, and show at most `0.35 mm` RMS / `0.90 mm` maximum with no angle
   stage more than `0.05 mm` worse than the inner field.
 - [ ] **Optimize exact compensation subdivision for dense artwork.**

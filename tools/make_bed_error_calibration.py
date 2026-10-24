@@ -5,10 +5,11 @@ The sheet contains:
 * a 37-station A=0 spatial lattice on rings at 50, 95, and 150 mm;
 * four large sheet fiducials that remove photo scale/translation/rotation;
 * one A=0 reference mark at every station;
-* fixed-position 90/180/270 replays, each in its own 10 mm-separated lane;
+* fixed-position 45/90/135/180/225/270/315 replays, each in its own
+  10 mm-separated lane;
 * a second A=0 lane as a control after the complete rotation sweep.
 
-Use one Pigma Micron 005 (or another 0.20 mm pen) for all five passes. The
+Use one Pigma Micron 005 (or another 0.20 mm pen) for all nine passes. The
 separated lanes remove loose-registration error from the measurement, and the
 program pauses after each pass so the ink can dry without swapping the pen.
 """
@@ -68,10 +69,21 @@ def build_program(settings, *, feed_rate=420.0, compensation=None):
     def comment(text):
         lines.append("(%s)" % str(text).replace("(", "[").replace(")", "]"))
 
-    comment("full-field bed compensation calibration v2")
-    comment("one 0.20 mm pen for all passes; do not swap or re-register")
+    comment("full-field bed compensation calibration v3")
+    comment(
+        "one 0.20 mm pen for all %d passes; do not swap or re-register"
+        % len(PASS_SPECS)
+    )
     comment("13 in planned field on 14 in round stock")
-    comment("pass lanes at each station: 90=E, 180=N, 270=W, A0 control=S")
+    comment(
+        "pass angles at every station: "
+        + ", ".join(
+            "%g" % calibration_pass.angle_deg
+            for calibration_pass in PASS_SPECS
+            if calibration_pass.mark_kind.startswith("angle_")
+        )
+        + "; A0 controls are separate"
+    )
     comment("station numbers are drawn in the A0 reference pass")
     comment("let each pass dry at the M0 pause, then Cycle Start")
     comment("run G65 P113 first and do not change G54/G92 during this sheet")
@@ -263,8 +275,8 @@ def main():
         )
     print("wrote %s (%d lines)" % (out, len(program.splitlines())))
     print(
-        "wrote %s (%d stations x 5 passes plus 4 fiducials)"
-        % (measurement_out, len(stations))
+        "wrote %s (%d stations x %d passes plus 4 fiducials)"
+        % (measurement_out, len(stations), len(PASS_SPECS))
     )
     print(
         "layout extent %.3f mm radius; test radius %.3f mm; sheet radius %.3f mm"

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-24 | `WSW-20261024-001` | implemented | [Expand full-field bed calibration to eight angles](../windows-software/2026/2026-10-24-eight-angle-bed-calibration.md) | `bed`, `compensation`, `calibration`, `angle`, `cmyk`, `striation` |
 | 2026-10-23 | `WSW-20261023-007` | implemented | [Use a fast nominal preview with exact compensated G-code](../windows-software/2026/2026-10-23-fast-nominal-preview.md) | `bed`, `compensation`, `performance`, `preview`, `cmyk` |
 | 2026-10-23 | `WSW-20261023-006` | implemented | [Extend bed compensation coverage to 13.5 inches](../windows-software/2026/2026-10-23-extend-bed-compensation-to-13-5-inches.md) | `bed`, `compensation`, `coverage`, `extrapolation`, `cmyk` |
 | 2026-10-23 | `WSW-20261023-005` | implemented | [Enable verified bed compensation by default](../windows-software/2026/2026-10-23-enable-bed-compensation-by-default.md) | `bed`, `compensation`, `defaults`, `planner`, `profile` |

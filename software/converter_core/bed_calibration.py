@@ -108,13 +108,54 @@ class ErrorSummary:
 PASS_SPECS = (
     CalibrationPass("1", "A000-REFERENCE", 0.0, 0.0, 0.0, "reference"),
     CalibrationPass(
-        "2", "A090", 90.0, LANE_OFFSET_MM, 0.0, "angle_90"
+        "2",
+        "A045",
+        45.0,
+        LANE_OFFSET_MM * math.sqrt(0.5),
+        LANE_OFFSET_MM * math.sqrt(0.5),
+        "angle_45",
     ),
-    CalibrationPass("3", "A180", 180.0, 0.0, LANE_OFFSET_MM, "angle_180"),
     CalibrationPass(
-        "4", "A270", 270.0, -LANE_OFFSET_MM, 0.0, "angle_270"
+        "3", "A090", 90.0, LANE_OFFSET_MM, 0.0, "angle_90"
     ),
-    CalibrationPass("5", "A000-CONTROL", 0.0, 0.0, -LANE_OFFSET_MM, "control"),
+    CalibrationPass(
+        "4",
+        "A135",
+        135.0,
+        -LANE_OFFSET_MM * math.sqrt(0.5),
+        LANE_OFFSET_MM * math.sqrt(0.5),
+        "angle_135",
+    ),
+    CalibrationPass("5", "A180", 180.0, 0.0, LANE_OFFSET_MM, "angle_180"),
+    CalibrationPass(
+        "6",
+        "A225",
+        225.0,
+        -LANE_OFFSET_MM * math.sqrt(0.5),
+        -LANE_OFFSET_MM * math.sqrt(0.5),
+        "angle_225",
+    ),
+    CalibrationPass(
+        "7", "A270", 270.0, -LANE_OFFSET_MM, 0.0, "angle_270"
+    ),
+    CalibrationPass(
+        "8",
+        "A315",
+        315.0,
+        LANE_OFFSET_MM * math.sqrt(0.5),
+        -LANE_OFFSET_MM * math.sqrt(0.5),
+        "angle_315",
+    ),
+    CalibrationPass("9", "A000-CONTROL", 0.0, 0.0, -LANE_OFFSET_MM, "control"),
+)
+
+PROFILE_ANGLE_VALUES_DEG = tuple(
+    sorted(
+        {
+            calibration_pass.angle_deg
+            for calibration_pass in PASS_SPECS
+        }
+    )
 )
 
 
@@ -570,7 +611,14 @@ def _build_profile(
 ):
     reference = {}
     controls = {}
-    angled = {90.0: {}, 180.0: {}, 270.0: {}}
+    angled_passes = tuple(
+        calibration_pass
+        for calibration_pass in PASS_SPECS
+        if calibration_pass.angle_deg != 0.0
+    )
+    angled = {
+        calibration_pass.angle_deg: {} for calibration_pass in angled_passes
+    }
     for station in stations:
         reference[station.station_id] = normalized_by_key[
             (station.station_id, "reference")
@@ -593,10 +641,10 @@ def _build_profile(
             calibration_pass.lane_x_mm,
             calibration_pass.lane_y_mm,
         )
-        for calibration_pass in PASS_SPECS
-        if calibration_pass.mark_kind.startswith("angle_")
+        for calibration_pass in angled_passes
     }
-    for angle in (90.0, 180.0, 270.0):
+    for calibration_pass in angled_passes:
+        angle = calibration_pass.angle_deg
         lane_samples = []
         lane_residuals = []
         lane_x_mm, lane_y_mm = lane_by_angle[angle]
@@ -622,7 +670,7 @@ def _build_profile(
     angle_values = []
     sample_grids = []
     correction_grids = []
-    for angle in (0.0, 90.0, 180.0, 270.0):
+    for angle in PROFILE_ANGLE_VALUES_DEG:
         corrections = []
         for station in stations:
             error_x, error_y = reference[station.station_id]
@@ -957,7 +1005,7 @@ def analyze_measurements(
             "test_diameter_mm": TEST_DIAMETER_MM,
             "sheet_diameter_mm": SHEET_DIAMETER_MM,
             "station_count": len(stations),
-            "angle_values_deg": [0.0, 90.0, 180.0, 270.0],
+            "angle_values_deg": list(profile.angle_values_deg),
             "fiducial_count": len(fiducials),
             "coverage_radius_mm": round(float(coverage_radius_mm), 6),
         },
@@ -1042,7 +1090,12 @@ def compare_measurements(
 
     def grouped_errors(items):
         output = {}
-        for kind in ("reference", "angle_90", "angle_180", "angle_270", "control"):
+        kinds = tuple(
+            dict.fromkeys(
+                item["mark"].mark_kind for item in items.values()
+            )
+        )
+        for kind in kinds:
             values = [
                 item["error"]
                 for item in items.values()
@@ -1076,7 +1129,8 @@ def compare_measurements(
         )
     per_angle_ok = all(
         after_groups[kind].rms_mm <= before_groups[kind].rms_mm + 0.05
-        for kind in ("angle_90", "angle_180", "angle_270")
+        for kind in before_groups
+        if kind.startswith("angle_")
     )
     accepted = (
         after_summary.rms_mm <= max_rms_mm

@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261024-eight-angle-bed-calibration"></a>
+### 🟨 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Full-field calibration expanded to eight angles
+
+- The existing one-sheet bed calibration measured 0/90/180/270 only and
+  interpolated all intermediate angles. Black and magenta wave-screen spacing
+  defects occurred at 45/75 degrees and near center, outside that measured
+  angular set.
+- The generator now prints 45/135/225/315 passes on the same whole-bed sheet,
+  retaining the 37 spatial stations, A=0 reference/control, and four
+  fiducials. The result is 333 station marks over nine passes with eight drying
+  pauses and one pen.
+- Profile construction and verification now use every measured angle rather
+  than hard-coded quadrants.
+- Verification: all 32 bed/photo tests pass; the generated program is 3,136
+  lines with a `163.754 mm` maximum ink radius inside the `165.100 mm` test
+  field, and strict G-code motion checks pass.
+- The existing default compensation profile remains unchanged until the
+  expanded sheet is printed, analyzed, and independently verified.
+- Evidence: `WSW-20261024-001`,
+  `docs/changes/windows-software/2026/2026-10-24-eight-angle-bed-calibration.md`.
+- Category: windows-software, hardware, rp23cnc-software, bed, compensation,
+  calibration, angle, cmyk, striation.
+
 <a id="elog-20261024-magenta-striation-at-low-feed"></a>
 ### 🟨 2026-10-24 - HARDWARE/PARTIAL - Magenta and black striation persist near center
 
