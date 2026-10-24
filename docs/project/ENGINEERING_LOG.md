@@ -1,5 +1,33 @@
 # Engineering Log
 
+<a id="elog-20261024-eight-angle-verification-failed"></a>
+### 🟥 2026-10-24 - HARDWARE/WINDOWS SOFTWARE/FAILED - Eight-angle compensation failed independent verification
+
+- The compensated verification program built from candidate `eda33445701f`
+  was printed on a fresh sheet and measured with all 333 stations assigned
+  (`5.961 px` median / `11.891 px` maximum assignment error).
+- Overall RMS changed from `0.708` to `0.639 mm`, only `9.8 %` improvement, and
+  maximum error rose from `1.453` to `1.574 mm`. The required gates were
+  `0.35 mm` RMS, `0.90 mm` maximum, and `30 %` improvement.
+- A45-A225 and the A0 control improved, but A0 reference, A270, and A315 became
+  worse. The worst stage was A315 at `0.963 / 1.574 mm`; A270 moved from
+  `0.540` to `0.684 mm` RMS.
+- Threshold/blur sweeps at `10/10`, `15/15`, and `20/18` produced after RMS
+  `0.65 / 0.64 / 0.64 mm`, maximum `1.62 / 1.58 / 1.57 mm`, and improvement
+  `7.8 / 9.6 / 9.8 %`, so photo extraction is not the cause.
+- Candidate `eda33445701f` is rejected. Default `4c8270de8a74` remains active.
+  The next test should repeat A0/A270/A315 with a fixed-position A0 control to
+  separate profile prediction from rotary/carriage run-to-run variation.
+- The photo matcher now excludes multi-thousand-pixel paper-edge components
+  from the fiducial group and chooses the largest qualifying component in each
+  quadrant (`WSW-20261024-003`).
+- Evidence:
+  `docs/report/lab-notes/2026-10-24-m-12-eight-angle-compensated-verification.md`
+  and
+  `samples/gcode/bed-error-verify-2026-10-24-eight-angle-analysis.json`.
+- Category: hardware, windows-software, bed, compensation, verification,
+  calibration, angle, photo, failed.
+
 <a id="elog-20261024-eight-angle-calibration-measured"></a>
 ### 🟨 2026-10-24 - WINDOWS SOFTWARE/HARDWARE/PARTIAL - Eight-angle calibration measured; candidate retained
 

@@ -54,6 +54,33 @@ class Component:
         return max(x1 - x0 + 1, y1 - y0 + 1)
 
 
+def _fiducial_sized_components(components):
+    return tuple(
+        component
+        for component in components
+        if 100 <= len(component.points) <= 800
+        and 40 <= component.maximum_dimension <= 100
+    )
+
+
+def _quadrant_fiducials(components, center):
+    fiducials_by_quadrant = {}
+    for component in components:
+        points = np.asarray(component.points, dtype=float)
+        component_center = points.mean(axis=0)
+        quadrant = (
+            0 if component_center[0] > center[0] else 1,
+            0 if component_center[1] < center[1] else 1,
+        )
+        previous = fiducials_by_quadrant.get(quadrant)
+        if previous is None or len(component.points) > len(previous.points):
+            fiducials_by_quadrant[quadrant] = component
+    quadrants = ((0, 0), (1, 0), (1, 1), (0, 1))
+    if set(fiducials_by_quadrant) != set(quadrants):
+        raise ValueError("the four fiducials are not in four distinct quadrants")
+    return tuple(fiducials_by_quadrant[quadrant] for quadrant in quadrants)
+
+
 def _connected_components(mask):
     ys, xs = np.nonzero(mask)
     remaining = set(zip(xs.tolist(), ys.tolist()))
@@ -474,11 +501,7 @@ def measure_photo(
         components = _connected_components(
             (residual > threshold) & paper_mask
         )
-        large = tuple(
-            component
-            for component in components
-            if component.maximum_dimension > 40
-        )
+        large = _fiducial_sized_components(components)
         medium = tuple(
             component
             for component in components
@@ -491,7 +514,7 @@ def measure_photo(
         )
         maximum_extra_components = 12
         if not (
-            len(large) == 4
+            4 <= len(large) <= 16
             and expected_station_count
             <= len(medium)
             <= expected_station_count + maximum_extra_components
@@ -508,22 +531,14 @@ def measure_photo(
                 )
             )
 
-        fiducials_by_quadrant = {}
-        for component in large:
-            points = np.asarray(component.points, dtype=float)
-            component_center = points.mean(axis=0)
-            quadrant = (
-                0 if component_center[0] > center[0] else 1,
-                0 if component_center[1] < center[1] else 1,
-            )
-            fiducials_by_quadrant[quadrant] = component
-        if set(fiducials_by_quadrant) != {(0, 0), (1, 0), (1, 1), (0, 1)}:
-            raise ValueError("the four fiducials are not in four distinct quadrants")
         quadrants = ((0, 0), (1, 0), (1, 1), (0, 1))
+        fiducials_in_quadrant_order = _quadrant_fiducials(large, center)
         image_fiducials = np.asarray(
             [
-                _component_corner(fiducials_by_quadrant[quadrant], quadrant)
-                for quadrant in quadrants
+                _component_corner(component, quadrant)
+                for quadrant, component in zip(
+                    quadrants, fiducials_in_quadrant_order
+                )
             ]
         )
         component_centroids = np.asarray(
@@ -551,8 +566,7 @@ def measure_photo(
             ]
         )
         ordered_components = tuple(
-            fiducials_by_quadrant[quadrants[index]]
-            for index in fiducial_order
+            fiducials_in_quadrant_order[index] for index in fiducial_order
         )
         for _iteration in range(2):
             refined_fiducials = np.asarray(

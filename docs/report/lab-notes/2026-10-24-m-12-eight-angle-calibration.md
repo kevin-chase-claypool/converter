@@ -103,5 +103,6 @@ RMS), so the new failure is dominated by angular/control behavior.
   `samples\gcode\bed-error-verify-2026-10-24-eight-angle.gcode`.
 - Measure and compare it with the original sheet using
   `--compare-to samples\gcode\bed-error-map-2026-10-24-measured.csv`.
-- If verification also fails, repeat the sheet or investigate A90/A0 rotary
-  repeatability and bed-height coupling before accepting another map.
+- The follow-up verification failed; see
+  `2026-10-24-m-12-eight-angle-compensated-verification.md`. Repeat the
+  A0/A270/A315 rotary behavior before accepting another full-field map.

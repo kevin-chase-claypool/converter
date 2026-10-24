@@ -225,6 +225,11 @@ Cycle Start with the pen loaded:
     --report-out ..\samples\gcode\bed-error-verify-analysis.json
   ```
 
+  A compensated verification sheet is evidence of the residual left after the
+  selected profile, not a new uncompensated calibration sheet. Do not fit it as
+  a replacement profile; that would reinterpret the correction the profile was
+  supposed to apply as new machine error.
+
   **Previous four-angle result (2026-10-23):** the original sheet resolved exactly
   4 fiducials, 185 station Ls, and 74 label glyphs. A=0 spatial error was
   `0.292 mm` RMS / `0.537 mm` maximum, the A=0 control after rotation was
@@ -242,16 +247,18 @@ Cycle Start with the pen loaded:
   `6.350 mm` annulus is extrapolated, not measured; its maximum boundary
   correction is `1.054 mm`, below the 5 mm safety bound. Recalibrate after any
   bed, paper-support, toolhead, carriage, pen-clamp, or registration change.
-  The current generator's eight-angle sheet is a new calibration candidate;
-  the existing default profile remains active until that sheet is measured,
-  independently verified, and accepted.
   The first eight-angle sheet was measured on 2026-10-24. A=0 spatial error was
   `0.306 mm` RMS / `0.540 mm` maximum and leave-one-station-out prediction was
   `0.297 mm` RMS / `1.032 mm` maximum with `58.0 %` improvement. The
   `1.032 mm` maximum failed the `0.90 mm` gate, dominated by the A=90 and
-  post-rotation A=0 control fields. Candidate profile `eda33445701f` and
-  `bed-error-verify-2026-10-24-eight-angle.gcode` are retained for independent
-  verification, but the candidate is not the default.
+  post-rotation A=0 control fields. Its independent compensated verification
+  reduced overall RMS only from `0.708` to `0.639 mm` (`9.8 %`) while maximum
+  rose from `1.453` to `1.574 mm`; A270 and A315 became materially worse. The
+  verification therefore failed, and candidate `eda33445701f` is rejected.
+  Extraction at three threshold/blur settings produced the same result.
+  `bed-error-verify-2026-10-24-eight-angle.gcode`, its photo/measurement,
+  overlay, and comparison report are retained as failed-test evidence. The
+  four-angle default `4c8270de8a74` remains active.
 - `..\samples\gcode\a-tilt-pairs-test.gcode` - four separated line pairs for
   a caliper-read bed-tilt check: each pair is the same paper segment drawn
   twice, once at A=0 (the longer 80 mm constant line) and once at that

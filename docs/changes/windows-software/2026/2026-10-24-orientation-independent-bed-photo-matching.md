@@ -44,7 +44,10 @@ coordinates.
 - Evaluate all non-mirrored quarter-turn assignments of the four fiducials and
   select the one with the lowest station-lattice assignment score.
 - Allow up to 12 extra medium-size components while still requiring all
-  expected station marks and exactly four fiducials.
+  expected station marks and exactly four fiducials. Filter the larger
+  fiducial group by both ink-pixel count and bounding-box dimension, and use
+  the largest qualifying component in each quadrant so paper-edge fragments do
+  not replace a fiducial.
 - Assign components by centroid using a homography-aware expected centroid.
 - Locate the station L corner in sheet coordinates by fitting the centres of
   its horizontal and vertical arms, independent of image rotation.
@@ -66,8 +69,14 @@ coordinates.
 - The measurement CSV contains all 333 station rows and passes the analyzer's
   completeness checks.
 - `py -m unittest discover -s software\tests -p "test_bed_*.py" -q` passes all
-  34 bed/photo tests.
-- The full converter suite passes 496 tests with one OpenGL-context skip.
+  36 bed/photo tests.
+- The compensated verification photo resolves four fiducials, 334 station-L
+  candidates, and 74 label glyphs. All 333 station marks assign with
+  `0.865 / 5.961 / 11.891 px` minimum / median / maximum error.
+- Threshold/blur sweeps at `10/10`, `15/15`, and `20/18` all assign all 333
+  stations and report the same failed compensated verification. Run-to-run
+  extraction is not the reason the profile failed.
+- The full converter suite passes 498 tests with one OpenGL-context skip.
 
 ## Struggles and rejected approaches
 
@@ -77,18 +86,22 @@ coordinates.
   came from fixed orientation and corner assumptions.
 - Selecting mark endpoints by bounding-box position was rejected because image
   rotation changes which bbox corner is the shared vertex.
+- Accepting every component wider than 40 px was rejected after the
+  verification photo produced six large components, including multi-thousand
+  pixel paper-edge fragments around the four real fiducials.
 
 ## Risks and follow-up
 
 - A sheet that moves during the multi-pass print remains invalid even when all
   components are found.
 - Review the generated overlay when assignment approaches the 13 px limit.
-- The expanded calibration itself still needs to pass the analyzer gates; the
-  2026-10-24 measurement is retained as partial evidence.
+- The expanded calibration failed its independent compensated verification and
+  is not the default. The matcher change only establishes that the failure is
+  in the compensation field or machine repeatability, not marker assignment.
 
 ## Files
 
-- `tools/measure_bed_error_photo.py`: orientation search, tolerant component
-  assignment, and rotation-independent corner extraction.
+- `tools/measure_bed_error_photo.py`: orientation search, fiducial filtering,
+  tolerant component assignment, and rotation-independent corner extraction.
 - `software/tests/test_bed_photo_measurement.py`: V-vertex, L-vertex, mark-count,
   and homography regressions.

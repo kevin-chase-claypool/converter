@@ -58,6 +58,49 @@ class BedPhotoMeasurementTests(unittest.TestCase):
         )
         self.assertTrue(np.allclose(corner, (20, 20)))
 
+    def test_fiducial_filter_rejects_paper_edges_and_station_marks(self):
+        def component(point_count, bbox):
+            return self.module.Component(
+                tuple((bbox[0], bbox[1]) for _ in range(point_count)),
+                bbox,
+            )
+
+        fiducial = component(250, (0, 0, 65, 65))
+        paper_edge = component(5000, (0, 0, 400, 400))
+        station_mark = component(200, (0, 0, 25, 25))
+        filtered = self.module._fiducial_sized_components(
+            (paper_edge, station_mark, fiducial)
+        )
+        self.assertEqual(filtered, (fiducial,))
+
+    def test_fiducial_selection_uses_largest_component_per_quadrant(self):
+        def component(point, point_count):
+            return self.module.Component(
+                tuple(point for _ in range(point_count)),
+                (point[0], point[1], point[0] + 60, point[1] + 60),
+            )
+
+        center = (500.0, 500.0)
+        small_candidates = (
+            component((600, 400), 120),
+            component((400, 400), 130),
+            component((600, 600), 140),
+            component((400, 600), 150),
+        )
+        selected = (
+            component((600, 400), 220),
+            component((400, 400), 230),
+            component((400, 600), 240),
+            component((600, 600), 250),
+        )
+        self.assertEqual(
+            self.module._quadrant_fiducials(
+                small_candidates + selected,
+                center,
+            ),
+            selected,
+        )
+
     def test_seed_homography_scales_to_new_photo_size(self):
         diagnostic = {
             "homography": [
