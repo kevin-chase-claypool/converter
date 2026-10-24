@@ -283,7 +283,7 @@ Cycle Start with the pen loaded:
   `wave-rotation-isolation-low-a-accel.gcode` - one-sheet CMYK wave diagnostic.
   The first file prints parked A0 plus `+5`, `+10`, `+14.5` baseline,
   reduced-feed `+14.5`, and `-14.5` degree cases. Keep the sheet mounted, set
-  `$123=3000`, and run the second file for its own parked control and
+  `$123=600`, and run the second file for its own parked control and
   reduced-acceleration `+14.5` degree case. Regenerate both with
   `..\tools\make_wave_rotation_isolation_test.py`.
 - `..\samples\gcode\cmyk-pen-alignment.gcode` - five crosses (centre and
@@ -455,12 +455,12 @@ Current tools:
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times
-  with a sub-pen offset. Wave-screen amplitude follows local tone, but its
-  displacement tone is averaged over four adjacent rows and slew-limited so
-  raster detail at the row pitch cannot make neighbouring gaps open and close.
-  The unsmoothed tone still clips each mark to the image, and broad vertical
-  shading continues to change the wave amplitude. This behavior is shared by
-  all four CMYK screen angles.
+  with a sub-pen offset. Wave-screen rows share one sinusoidal amplitude
+  profile at each horizontal position, so image tone cannot pull neighbouring
+  rows into overlap or spread them into wider gaps. Local tone still controls
+  where the waves are inked, preserving image boundaries. Vertical tone is
+  intentionally not encoded as row-to-row wave-height changes. This behavior is
+  shared by all four CMYK screen angles.
   While the CMYK page is active the shared OpenGL preview draws each visible
   ink in its own colour - not yet drawn marks in a pale tint, the drawn path in
   full ink - so the four layers can be judged overlaid the way they will mesh

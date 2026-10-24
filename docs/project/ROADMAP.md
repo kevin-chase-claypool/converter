@@ -290,24 +290,20 @@
   them. Magenta still shows severe striations at an even lower 60 % override
   (`420 mm/min`), especially on the subject's right face, and black also shows
   striation near bed center. Slow feed is not a general fix. The regenerated
-  2026-10-24 Ben1 G-code already has a uniform `3.0736 mm` row grid
-  (`0.0082 mm` RMS), while its source wave gaps varied up to `1.20 mm` because
-  each row sampled image tone independently into vertical amplitude. That
-  row-frequency aliasing is fixed in `WSW-20261024-004` for all four screen
-  angles. A post-fix print still shows the pattern, and the operator localizes
-  it to pen-down bed rotation. Correct compensated decoding confirms that every
-  emitted block is inside the path tolerance, so the remaining issue is on the
-  machine-side A/mechanical boundary rather than the wave generator.
-  Center hold remains a separate risk because it can use a different held A
-  angle per contour and the compensation residual is angle-dependent. Benefit: quality
+  2026-10-24 Ben1 G-code has a uniform `3.0736 mm` row grid (`0.0082 mm` RMS),
+  and accurate compensated decoding puts every emitted block inside the path
+  tolerance. The complete print matched its rendered source, while the
+  one-sheet rotation matrix remained clean at `$123=6000` and `$123=600`.
+  This excludes bed rotation and acceleration as sufficient causes.
+  The remaining overlap/wide-gap defect is tone changing each row's wave
+  height independently. `WSW-20261024-006` replaces that with one shared
+  horizontal amplitude profile across all rows; local tone only masks where
+  ink is present. Benefit: quality
   plotting can return to 700 mm/min once the limiting subsystem is identified,
-  instead of carrying a 30-35 % throughput penalty. The next discriminating
-  rotation matrix is now complete: all eight short-wave patches looked the
-  same with `$123=6000` and `$123=600`. Large pen-down rotation and A
-  acceleration are not sufficient causes. The next discriminating test must
-  use the dense original path or a dense crop, comparing parked A0 with the
-  current plan and investigating long-contour lookahead, accumulated
-  pen/ink/contact behavior, and X/Y traversal.
+  instead of carrying a 30-35 % throughput penalty. The next physical test is
+  a newly generated full yellow layer at `F700` with `$123=6000`. If rows now
+  remain parallel, close M-13. If overlap or extra-wide gaps remain, inspect
+  the generated source before changing machine settings again.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already

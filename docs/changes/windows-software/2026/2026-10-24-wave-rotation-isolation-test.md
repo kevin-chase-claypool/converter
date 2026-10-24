@@ -55,7 +55,7 @@ between runs.
   - case 6, middle-right: `-14.5 deg` at `F700`.
 - `wave-rotation-isolation-low-a-accel.gcode` draws a second parked control
   (case 7) and case 8 below it after the operator changes `$123` from `6000`
-  to `3000`.
+  to `600`.
 - Both files use the normal pen contract, compensation, center coordinates,
   and end park. The second file must be run without re-registering or moving
   the paper.
@@ -68,6 +68,9 @@ between runs.
   bed-space wave, and checks the bed-step/A-rate/rapid guards.
 - `python -m unittest -v software.tests.test_wave_rotation_isolation`: both
   tests pass.
+- The generated second-pass instructions now match the completed physical
+  run: they request `$123=600` and identify cases 7 and 8, and the generator
+  regression checks both statements.
 - Full converter discovery passes 502 tests with one OpenGL-context skip.
 
 ### Physical result
@@ -94,7 +97,7 @@ between runs.
 
 ## Risks and follow-up
 
-- The second file is valid only after `$$` confirms `$123=3000`; restore
+- The second file is valid only after `$$` confirms `$123=600`; restore
   `$123=6000` afterward.
 - This is a diagnostic, not a production pattern or controller calibration.
 - Results must be recorded before changing either A acceleration or the wave

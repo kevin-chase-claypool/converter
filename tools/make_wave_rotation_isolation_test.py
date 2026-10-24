@@ -6,7 +6,7 @@ taped for both runs:
 * base pass: parked A0 control, +5/+10 degree rotation cases, a +14.5 degree
   baseline, the same rotation at reduced feed, and a reverse rotation;
 * reduced-A-acceleration pass: its own parked control plus a +14.5 degree
-  case to run after changing ``$123`` from 6000 to 3000.
+  case to run after changing ``$123`` from 6000 to 600.
 
 The paper stays mounted, and ``G65 P113`` is needed only before the base
 pass. The base pass parks safely at the end; run the second file without
@@ -251,7 +251,7 @@ def ending(lines):
 
 def build_programs(bed_compensation):
     base = preamble(
-        "CMYK wave rotation isolation - base five-patch pass",
+        "CMYK wave rotation isolation - base six-patch pass",
         (
             "(inspect and photograph before changing any controller setting)",
             "(then keep the sheet mounted for the reduced-A-acceleration pass)",
@@ -260,9 +260,9 @@ def build_programs(bed_compensation):
     low = preamble(
         "CMYK wave rotation isolation - reduced A acceleration pass",
         (
-            "(before Cycle Start: set $123=3000 in the ioSender console)",
-            "(confirm $$ reports $123=3000; do not re-register or move the paper)",
-            "(this file draws case 6 only; restore $123=6000 afterward)",
+            "(before Cycle Start: set $123=600 in the ioSender console)",
+            "(confirm $$ reports $123=600; do not re-register or move the paper)",
+            "(this file draws cases 7 and 8; restore $123=6000 afterward)",
         ),
     )
     for case in CASES:

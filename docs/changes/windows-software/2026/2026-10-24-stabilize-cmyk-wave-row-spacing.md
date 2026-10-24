@@ -5,7 +5,7 @@ category: windows-software
 affected_categories:
   - windows-software
   - hardware
-status: implemented
+status: superseded
 components:
   - software/converter_core/cmyk.py
   - software/tests/test_cmyk_tab.py
@@ -22,6 +22,7 @@ tags:
   - black
 related:
   - WSW-20261007-002
+  - WSW-20261024-006
   - 2026-10-23-m-13-cmyk-yellow-feed-sensitivity
 ---
 

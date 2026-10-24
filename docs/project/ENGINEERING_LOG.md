@@ -1,5 +1,31 @@
 # Engineering Log
 
+<a id="elog-20261024-parallel-cmyk-wave-rows"></a>
+### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Keep CMYK wave rows parallel
+
+- The completed full yellow print matched the rendered source SVG, including
+  the large diagonal omissions and horizontal bands. Those macro shapes are
+  generated image content, not printer errors.
+- The eight-patch rotation/acceleration matrix was clean at `$123=6000` and
+  `$123=600`. The operator confirmed all patches looked the same.
+- The overlap and extra-wide-gap defect comes from tone changing each row's
+  vertical wave amplitude independently. `WSW-20261024-004` reduced the
+  row-frequency variation but could not make the curves parallel.
+- `_wave_rows` now computes one mean-tone amplitude profile for each horizontal
+  sample and shares it across every row. Local tone remains a mask for where
+  ink exists, so image boundaries survive, but adjacent rows cannot converge
+  or spread.
+- Regressions reproduce the old failure at `0.87 mm` amplitude variation and
+  now require less than `0.01 mm`; all four screen angles keep adjacent gaps
+  below `0.15 mm`, and blank image bands still split the waves.
+- Full converter discovery passes 503 tests with one OpenGL-context skip.
+- The physical test is now a newly generated full yellow layer at `F700` with
+  `$123=6000`. Before that, restart the converter so it loads this code.
+- Evidence: `WSW-20261024-006`,
+  `docs/report/lab-notes/2026-10-23-m-13-cmyk-yellow-feed-sensitivity.md`.
+- Category: windows-software, cmyk, wave-screen, row-spacing, overlap,
+  all-inks.
+
 <a id="elog-20261024-wave-fix-physical-failure"></a>
 ### 🟥 2026-10-24 - HARDWARE/WINDOWS SOFTWARE/FAILED - Wave tuning did not resolve physical striation
 

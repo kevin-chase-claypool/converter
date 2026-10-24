@@ -639,7 +639,7 @@ class ScreeningTests(unittest.TestCase):
                 self.assertGreaterEqual(len(gaps), 10)
                 self.assertLess(max(gaps) - min(gaps), 0.15)
 
-    def test_wave_rows_still_follow_a_smooth_vertical_tone_gradient(self):
+    def test_wave_rows_stay_parallel_across_a_vertical_tone_gradient(self):
         spacing = 4.0
         yy, _xx = self.np.mgrid[0:64, 0:64]
         tone = (0.2 + 0.6 * yy / 63.0).astype("float32")
@@ -675,17 +675,43 @@ class ScreeningTests(unittest.TestCase):
                 amplitudes.append((baseline, crest - baseline))
         amplitudes.sort()
         self.assertGreaterEqual(len(amplitudes), 10)
-        quarter = max(1, len(amplitudes) // 4)
-        light_amplitude = sum(
-            amplitude for _baseline, amplitude in amplitudes[:quarter]
-        ) / quarter
-        dark_amplitude = sum(
-            amplitude for _baseline, amplitude in amplitudes[-quarter:]
-        ) / quarter
-        self.assertGreater(
-            dark_amplitude,
-            light_amplitude * 2.3,
-            "four-row tone smoothing must preserve broad image shading",
+        wave_amplitudes = [amplitude for _baseline, amplitude in amplitudes]
+        self.assertLess(
+            max(wave_amplitudes) - min(wave_amplitudes),
+            0.01,
+            "adjacent wave rows must share one waveform so they cannot "
+            "overlap or open extra-wide gaps",
+        )
+
+    def test_wave_rows_still_break_over_blank_image_regions(self):
+        tone = self.np.ones((64, 64), dtype="float32")
+        tone[:, 28:36] = 0.0
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves",
+            spacing_mm=4.0,
+        )
+        self.assertGreater(len(waves), 4)
+        centers = [
+            (min(point[0] for point in row) + max(point[0] for point in row))
+            / 2.0
+            for row in waves
+            if max(point[0] for point in row) - min(point[0] for point in row) > 5
+        ]
+        self.assertTrue(
+            all(
+                center < 28.0 or center > 36.0
+                for center in centers
+            ),
+            "a blank image band must split the wave instead of drawing through it",
         )
 
     def test_contours_need_a_gradient(self):

@@ -5,8 +5,9 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-24 | `WSW-20261024-006` | windows-software, hardware | implemented | [Keep all CMYK wave rows on one shared waveform](windows-software/2026/2026-10-24-parallel-cmyk-wave-rows.md) |
 | 2026-10-24 | `WSW-20261024-005` | windows-software, hardware | implemented | [Add a one-sheet CMYK wave-rotation isolation test](windows-software/2026/2026-10-24-wave-rotation-isolation-test.md) |
-| 2026-10-24 | `WSW-20261024-004` | windows-software, hardware | implemented | [Stabilize wave-screen row spacing across all CMYK inks](windows-software/2026/2026-10-24-stabilize-cmyk-wave-row-spacing.md) |
+| 2026-10-24 | `WSW-20261024-004` | windows-software, hardware | superseded | [Stabilize wave-screen row spacing across all CMYK inks](windows-software/2026/2026-10-24-stabilize-cmyk-wave-row-spacing.md) |
 | 2026-10-24 | `WSW-20261024-003` | windows-software, hardware | implemented | [Make bed-calibration photo matching orientation-independent](windows-software/2026/2026-10-24-orientation-independent-bed-photo-matching.md) |
 | 2026-10-24 | `WSW-20261024-002` | windows-software, hardware | implemented | [Interpolate bed compensation in the rotating bed frame](windows-software/2026/2026-10-24-bed-frame-angular-interpolation.md) |
 | 2026-10-24 | `WSW-20261024-001` | windows-software, hardware, rp23cnc-software | implemented | [Expand full-field bed calibration to eight angles](windows-software/2026/2026-10-24-eight-angle-bed-calibration.md) |

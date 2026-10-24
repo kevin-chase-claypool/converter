@@ -58,7 +58,8 @@ class WaveRotationIsolationTests(unittest.TestCase):
                 self.assertIn(f"(case {case}:", base_text)
             self.assertIn("(case 7:", low_text)
             self.assertIn("(case 8:", low_text)
-            self.assertIn("$123=3000", low_text)
+            self.assertIn("$123=600", low_text)
+            self.assertIn("cases 7 and 8", low_text)
 
             for text in (base_text, low_text):
                 for line in text.splitlines():

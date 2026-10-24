@@ -1,4 +1,4 @@
-(CMYK wave rotation isolation - base five-patch pass)
+(CMYK wave rotation isolation - base six-patch pass)
 (one sheet: do not remove, move, or re-tape the paper between runs)
 (run G65 P113 once before the base file; do not re-register for pass two)
 (case layout: top-left 1, top-centre 2, top-right 3)

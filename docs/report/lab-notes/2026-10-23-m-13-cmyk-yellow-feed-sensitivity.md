@@ -212,8 +212,7 @@ machine-space warp that compensates the paper.
   ink coverage. The change applies to all four CMYK screen angles.
 - Controlled regressions at `15/75/0/45` degrees reduce the adjacent-gap
   spread below `0.15 mm`; the failing zero-degree fixture previously varied
-  by `2.28 mm`. A separate smooth-gradient test confirms wave amplitude still
-  follows broad image shading.
+  by `2.28 mm`.
 - A post-fix paper print was still required at that point; its result follows.
 
 ### 2026-10-24 post-fix print failed; large A rotation remains
@@ -237,18 +236,32 @@ machine-space warp that compensates the paper.
   reconstructs the current yellow bed-space path and holds A at zero. It has
   23,714 drawing moves, no bed rotation, and passes the motion checker.
 
+### 2026-10-24 full print confirms the source pattern; rows made parallel
+
+- The completed full yellow print at 17:24 visually matches the rendered
+  current yellow SVG, including the large diagonal omissions and horizontal
+  bands. Those macro shapes are generated image content, not motion errors.
+- The eight-patch one-sheet matrix ran at `$123=6000` followed by `$123=600`.
+  The operator reports that all patches look the same. Large pen-down A
+  rotation and a 10x lower A acceleration therefore did not reproduce the
+  pattern.
+- The remaining row convergence/overlap comes from tone changing each row's
+  wave height independently. Four-row smoothing reduced but did not remove it.
+- `_wave_rows` now uses one mean tone amplitude profile per horizontal sample
+  for every row. Local tone still masks each row to the image, but neighbouring
+  rows share the same waveform and cannot converge or spread.
+- The previous `WSW-20261024-004` behavior is superseded by
+  `WSW-20261024-006`. A fresh full yellow print is required to confirm the
+  visual result.
+
 ## Decisions and next action
 
-- Print `tmp/IMG_0514-cmyk-yellow-xyonly-diagnostic.gcode` after the usual
-  HOME/register step at the same `F700` and controller settings. A clean copy
-  localizes the defect to bed rotation; a failing copy moves the investigation
-  to pen contact, ink, or X/Y carriage behavior.
-- Regenerate all four Ben1 layers, require `angular interpolation bed-frame`
-  in every header, and print the yellow layer first at the same `F700`,
-  `$120=600`, and `$121=300` used for the failing run. This tests the current
-  wave generator without changing a second variable.
-- If the repaired wave screen still shows spacing bands, inspect row ink
-  continuity and toolhead contact separately before changing acceleration.
+- Restart the converter, regenerate the four Ben1 layers, and confirm every
+  header still contains `angular interpolation bed-frame`.
+- Print yellow first at `F700` with `$123=6000`. The Wave screen should now
+  retain constant visible row spacing throughout inked regions.
+- If overlap or extra-wide gaps remain, reject the shared-amplitude approach
+  and inspect the generated source before another physical print.
 - Keep 700 mm/min as the nominal requested feed for now and use a 65 % override
   for quality-critical Xθ/Yθ yellow work until the drivetrain is improved.
 - Repeat magenta alone in **Bed motion = XY only** at the same 420 mm/min. If it

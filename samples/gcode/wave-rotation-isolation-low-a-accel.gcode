@@ -4,9 +4,9 @@
 (case layout: top-left 1, top-centre 2, top-right 3)
 (middle-left 4, middle-centre 5, middle-right 6)
 (bottom-left 7 and bottom-centre 8 in the reduced-A-acceleration pass)
-(before Cycle Start: set $123=3000 in the ioSender console)
-(confirm $$ reports $123=3000; do not re-register or move the paper)
-(this file draws case 6 only; restore $123=6000 afterward)
+(before Cycle Start: set $123=600 in the ioSender console)
+(confirm $$ reports $123=600; do not re-register or move the paper)
+(this file draws cases 7 and 8; restore $123=6000 afterward)
 G21
 G90
 G94
