@@ -272,7 +272,10 @@
   (`420 mm/min`), especially on the subject's right face, and black also shows
   striation near bed center. Slow feed is not a general fix. Center hold parks
   the bed within each contour but can use a different held A angle per contour;
-  the verified compensation residual is angle-dependent. Benefit: quality
+  the verified compensation residual is angle-dependent. A fixed-angle local
+  sample preserves a 2.2 mm row pair within about 0.04 mm, so the leading
+  algorithmic suspect is changing the held angle between adjacent contours,
+  not the within-row correction. Benefit: quality
   plotting can return to 700 mm/min once the limiting subsystem is identified,
   instead of carrying a 30-35 % throughput penalty. The next discriminating
   test is magenta and black near center in XY-only at the same slow feed. If

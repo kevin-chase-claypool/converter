@@ -93,6 +93,23 @@ were not recorded.
   `173 deg`, black about `-102` to `46 deg`, and yellow about `-185` to
   `236 deg` after whole-revolution normalization.
 
+### 2026-10-24 planner-spacing clarification
+
+- The operator clarified that "striation" means adjacent wave-screen rows are
+  not equidistant after compensation. It is not a generic description of ink
+  texture or surface roughness.
+- A dense fixed-angle sampling of the installed correction field around the
+  center found that a nominal `2.2 mm` row pair remains within about
+  `0.04 mm` of the requested spacing across all four calibrated angles. The
+  local correction field therefore does not by itself introduce large
+  fixed-angle spacing jumps.
+- The center-hold planner does not use one common angle for the whole center:
+  it can set a different held A angle for each contour. The verification
+  residual is angle-dependent, with separate center-region vector offsets for
+  0/90/180/270 degrees. Adjacent rows drawn at different held angles can
+  therefore land with different residual shifts even though each row is
+  individually represented in bed coordinates.
+
 ## Difficulties and corrective actions
 
 - The exact feed-override transition point and resulting photo were not
@@ -128,6 +145,14 @@ visible where hold angles vary. Magenta/black ink flow or contrast, local bed
 height, and X/Y carriage behavior remain alternatives until a parked-bed test
 rules them in or out.
 
+For the clarified row-spacing symptom, the fixed-angle algorithm itself is not
+currently showing a large error. The unresolved mechanism is the transition
+between contours parked at different A angles, combined with imperfect
+angle-dependent correction. It is also necessary to distinguish physical paper
+spacing from Euclidean spacing in the rotated/compensated machine-coordinate
+preview; the latter is not expected to remain constant because it is the
+machine-space warp that compensates the paper.
+
 ## Decisions and next action
 
 - Keep 700 mm/min as the nominal requested feed for now and use a 65 % override
@@ -139,6 +164,11 @@ rules them in or out.
   and magenta become clean in XY only, test a center-hold implementation that
   uses one constant A angle for all center-held contours instead of selecting a
   new held angle per contour.
+- Build a deterministic planner test with two adjacent center contours that
+  starts from equal bed-space pitch, applies different held angles, and reports
+  both bed-space and machine-space spacing. The acceptance target is the
+  measured non-rigid compensation result on paper, not equal Euclidean spacing
+  in raw machine coordinates.
 - Photograph the completed magenta sheet from directly above, ideally with the
   four registration crosses enabled or with fixed sheet fiducials, so the
   striation pitch and direction can be measured.

@@ -18,6 +18,10 @@
   angle-dependent: verification RMS is `0.278 / 0.389 / 0.353 mm` at
   90/180/270 degrees. Adjacent center contours drawn at different held angles
   can therefore disagree by several tenths of a millimetre.
+- The operator clarified that the defect is unequal spacing between adjacent
+  wave-screen rows after compensation. A fixed-angle center sampling preserved
+  a nominal `2.2 mm` row pair within about `0.04 mm`; the within-row map is not
+  the leading error source. The per-contour held-angle change is.
 - No calibrated magenta photo was captured. Center-hold angle inconsistency is
   now the leading software-side hypothesis; local bed height, pen/ink flow,
   and X/Y carriage behavior remain alternatives. The next discriminating run
