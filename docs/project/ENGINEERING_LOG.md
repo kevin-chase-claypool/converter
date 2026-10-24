@@ -33,6 +33,23 @@
   lab note.
 - Category: hardware, cmyk, striation, A-axis, rotation, failed-fix.
 
+<a id="elog-20261024-wave-rotation-matrix-clean"></a>
+### 🟩 2026-10-24 - HARDWARE/MEASURED - One-sheet rotation matrix does not reproduce wave bands
+
+- The one-sheet matrix was completed with `$123=6000` for the base pass and
+  `$123=600` for the second pass.
+- The operator reports that all eight patches look the same. Neither increasing
+  pen-down A rotation nor reducing A acceleration by 10x reproduced the
+  spacing bands from the dense CMYK image.
+- This rules out large A rotation in a short wave row as a sufficient cause
+  and removes A acceleration as the leading cause.
+- The remaining investigation must use the full-density path or a dense crop,
+  focusing on long-contour lookahead, accumulated pen/ink/contact behavior,
+  X/Y traversal, and adjacent-row interactions.
+- Evidence: operator photo `cal.jpg`; M-13 rotation-isolation plan.
+- Category: hardware, cmyk, striation, A-axis, rotation, acceleration,
+  negative-result.
+
 <a id="elog-20261024-wave-row-tone-aliasing"></a>
 ### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK wave spacing bands traced to row-frequency tone aliasing
 

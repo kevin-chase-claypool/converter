@@ -53,7 +53,25 @@ sensitivity, using one mounted sheet.
 - If case 1 already shows the pattern, inspect pen contact, ink flow, X/Y
   carriage behavior, and paper mounting before changing A settings.
 
+## Results
+
+- The base file was run with `$123=6000`; the second file was run with
+  `$123=600`.
+- The operator reports that all eight patches look the same. None reproduced
+  the spacing bands seen in the full CMYK image.
+
+## Interpretation
+
+- Large bed rotation during a short pen-down wave stroke is not sufficient to
+  reproduce the defect.
+- Reducing A acceleration by 10x produced no visible benefit in this test.
+  A acceleration is therefore not the leading cause.
+- The remaining fault requires a characteristic present in the full dense
+  image path but absent from these short four-row patches, such as accumulated
+  ink/contact behavior, long-contour lookahead, X/Y traversal, or a much denser
+  sequence of adjacent wave rows.
+
 ## Record
 
-- Current status: ready to run; no result yet.
-- Keep the `$$` captures and overhead photos with the measured case map.
+- Status: complete; no anomaly reproduced.
+- Keep the `$$` captures and overhead photo with the case map.

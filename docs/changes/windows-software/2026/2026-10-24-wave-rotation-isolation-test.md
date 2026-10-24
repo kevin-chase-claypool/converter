@@ -69,6 +69,14 @@ between runs.
 - `python -m unittest -v software.tests.test_wave_rotation_isolation`: both
   tests pass.
 - Full converter discovery passes 502 tests with one OpenGL-context skip.
+
+### Physical result
+
+- The base pass ran at `$123=6000`; the second pass ran at `$123=600`.
+- The operator reports that all eight patches look the same and none
+  reproduces the full-image spacing pattern.
+- Large pen-down A rotation is not sufficient to reproduce the defect, and a
+  10x reduction in A acceleration produces no visible improvement.
 - Both generated files pass `tools/check_gcode_motion.py --strict`.
 - The largest per-block drawing rotation is `0.40 bed deg`; the largest
   commanded A rate is `108 motor deg/s`, inside the installed `15 deg` and

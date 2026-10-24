@@ -302,12 +302,12 @@
   angle per contour and the compensation residual is angle-dependent. Benefit: quality
   plotting can return to 700 mm/min once the limiting subsystem is identified,
   instead of carrying a 30-35 % throughput penalty. The next discriminating
-  test is the two-file one-sheet rotation matrix
-  (`wave-rotation-isolation-base.gcode` followed by
-  `wave-rotation-isolation-low-a-accel.gcode`). It compares parked A0,
-  increasing pen-down rotation, reduced feed, and reduced A acceleration
-  without removing or re-registering the paper. Interpret the case map in
-  `docs/report/lab-notes/2026-10-24-wave-rotation-isolation-plan.md`.
+  rotation matrix is now complete: all eight short-wave patches looked the
+  same with `$123=6000` and `$123=600`. Large pen-down rotation and A
+  acceleration are not sufficient causes. The next discriminating test must
+  use the dense original path or a dense crop, comparing parked A0 with the
+  current plan and investigating long-contour lookahead, accumulated
+  pen/ink/contact behavior, and X/Y traversal.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already
