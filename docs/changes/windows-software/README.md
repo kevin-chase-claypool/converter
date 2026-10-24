@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-24 | `WSW-20261024-007` | implemented | [Smooth CMYK wave-screen chords within the path budget](2026/2026-10-24-smooth-cmyk-wave-chords.md) | `cmyk`, `wave-screen`, `waveform`, `faceting`, `path-tolerance` |
 | 2026-10-24 | `WSW-20261024-006` | implemented | [Keep all CMYK wave rows on one shared waveform](2026/2026-10-24-parallel-cmyk-wave-rows.md) | `cmyk`, `wave-screen`, `row-spacing`, `overlap`, `parallel`, `amplitude`, `all-inks` |
 | 2026-10-24 | `WSW-20261024-005` | implemented | [Add a one-sheet CMYK wave-rotation isolation test](2026/2026-10-24-wave-rotation-isolation-test.md) | `cmyk`, `wave-screen`, `a-axis`, `rotation`, `diagnostic`, `acceleration`, `test-sheet` |
 | 2026-10-24 | `WSW-20261024-004` | superseded | [Stabilize wave-screen row spacing across all CMYK inks](2026/2026-10-24-stabilize-cmyk-wave-row-spacing.md) | `cmyk`, `wave-screen`, `row-spacing`, `amplitude`, `aliasing`, `cyan`, `magenta`, `yellow`, `black` |

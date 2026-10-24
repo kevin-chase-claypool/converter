@@ -285,10 +285,10 @@ class CmykTab(GeneratorTab):
         # was too coarse for the halftone rows near the centre.
         self.path_tolerance = double_spin(0.15, 0.05, 1.0, 0.05, 2, " mm")
         self.path_tolerance.setToolTip(
-            "Straightness budget for the rotating bed: lower keeps rows "
-            "straighter where the bed rotates most (near the centre) at the "
-            "cost of more moves. Overrides the main tab's Tolerance for CMYK "
-            "output only."
+            "Path-fidelity budget: limits both rotating-bed bow and visible "
+            "facets in sine-wave rows. Lower values produce smoother waves and "
+            "straighter paths at the cost of more moves. Overrides the main "
+            "tab's Tolerance for CMYK output only."
         )
         screen.addRow("Path tolerance", self.path_tolerance)
         self.max_marks = int_spin(40000, 200, 200000, 500)
@@ -892,6 +892,7 @@ class CmykTab(GeneratorTab):
                 levels=self.levels.value(),
                 overdraw=self.overdraw.value(),
                 solid=self.solid_dots.isChecked(),
+                path_tolerance_mm=self.path_tolerance.value() / factor,
             )
             # Generator pages are plotted 1:1, so the tab's Artwork scale is
             # applied to the screened marks about the page centre here.

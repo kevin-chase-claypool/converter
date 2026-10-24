@@ -295,15 +295,18 @@
   tolerance. The complete print matched its rendered source, while the
   one-sheet rotation matrix remained clean at `$123=6000` and `$123=600`.
   This excludes bed rotation and acceleration as sufficient causes.
-  The remaining overlap/wide-gap defect is tone changing each row's wave
-  height independently. `WSW-20261024-006` replaces that with one shared
-  horizontal amplitude profile across all rows; local tone only masks where
-  ink is present. Benefit: quality
-  plotting can return to 700 mm/min once the limiting subsystem is identified,
-  instead of carrying a 30-35 % throughput penalty. The next physical test is
-  a newly generated full yellow layer at `F700` with `$123=6000`. If rows now
-  remain parallel, close M-13. If overlap or extra-wide gaps remain, inspect
-  the generated source before changing machine settings again.
+  The remaining overlap/wide-gap defect was tone changing each row's wave
+  height independently. `WSW-20261024-006` replaced that with one shared
+  horizontal amplitude profile across all rows. Its first full yellow print is
+  materially better and the large overlap pattern is gone, but the individual
+  waves remain angular. The source SVG from that print has the same corners,
+  with an `0.84 mm` median sample step. `WSW-20261024-007` now ties sine sample
+  density to the paper-space Path tolerance. Benefit: plotted image should be
+  both evenly spaced and smooth instead of carrying either geometric defect.
+  The next physical test is a newly generated full yellow layer at `F700`,
+  `0.05 mm` Path tolerance, and `$123=6000` with compensation enabled. If the
+  waves are smooth and parallel, close M-13; otherwise compare the rendered
+  source with paper before changing machine settings again.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already

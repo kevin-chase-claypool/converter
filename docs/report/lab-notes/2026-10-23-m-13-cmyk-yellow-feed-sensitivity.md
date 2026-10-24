@@ -254,14 +254,36 @@ machine-space warp that compensates the paper.
   `WSW-20261024-006`. A fresh full yellow print is required to confirm the
   visual result.
 
+### 2026-10-24 shared waves materially improve the print; facets remain
+
+- The first full yellow print generated at 17:42 with the shared-wave source
+  started cleanly. The operator reports that it is materially better and that
+  the catastrophic overlap/wide-gap pattern is gone.
+- The remaining waves are visibly angular rather than smooth sine curves.
+- The temporary yellow source SVG from the same generation has a median
+  horizontal sample step of `0.84 mm`, about eight straight segments for one
+  full wave at the current scaled pitch. A rendered source image reproduces
+  the same corners seen on paper, so this is not bed rotation or A following.
+- The selected `0.05 mm` Path tolerance does not cover that source polyline:
+  full amplitude leaves approximately `0.13 mm` sagitta between the chord and
+  the intended sine.
+- `WSW-20261024-007` ties Wave-screen sample density to Path tolerance.
+  Because Artwork scale is applied after screening, the tab passes its
+  paper-space tolerance divided by the scale factor.
+- A fresh fully generated yellow print remains the acceptance test for the
+  smoother source. Do not lower the feed or bed acceleration again to address
+  this shape.
+
 ## Decisions and next action
 
-- Restart the converter, regenerate the four Ben1 layers, and confirm every
-  header still contains `angular interpolation bed-frame`.
-- Print yellow first at `F700` with `$123=6000`. The Wave screen should now
-  retain constant visible row spacing throughout inked regions.
-- If overlap or extra-wide gaps remain, reject the shared-amplitude approach
-  and inspect the generated source before another physical print.
+- Restart the converter, regenerate the four Ben1 layers with Path tolerance
+  `0.05 mm`, and confirm every header still contains
+  `angular interpolation bed-frame`.
+- Print yellow first at `F700` with `$123=6000` and bed compensation enabled.
+  The rows should remain parallel and the individual waves should now be
+  smooth, not faceted.
+- If row spacing changes, inspect the compensated source versus paper before
+  changing machine settings. Blank image-shaped regions are expected.
 - Keep 700 mm/min as the nominal requested feed for now and use a 65 % override
   for quality-critical Xθ/Yθ yellow work until the drivetrain is improved.
 - Repeat magenta alone in **Bed motion = XY only** at the same 420 mm/min. If it

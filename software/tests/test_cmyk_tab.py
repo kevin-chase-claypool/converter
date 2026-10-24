@@ -9,6 +9,7 @@ import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from unittest import mock
 
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -683,6 +684,41 @@ class ScreeningTests(unittest.TestCase):
             "overlap or open extra-wide gaps",
         )
 
+    def test_wave_rows_approximate_the_sinusoid_within_path_tolerance(self):
+        spacing = 4.0
+        tone = self.np.ones((64, 64), dtype="float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves",
+            spacing_mm=spacing,
+        )
+
+        row = next(points for points in waves if len(points) > 20)
+        baseline = row[0][1]
+        amplitude = spacing * 0.5
+        errors = []
+        for first, second in zip(row, row[1:]):
+            midpoint_x = (first[0] + second[0]) / 2.0
+            chord_y = (first[1] + second[1]) / 2.0
+            sine_y = baseline + amplitude * math.sin(
+                2.0 * math.pi * midpoint_x / (2.0 * spacing)
+            )
+            errors.append(abs(chord_y - sine_y))
+
+        self.assertLess(
+            max(errors),
+            0.05,
+            "wave chords must not turn the intended sine into visible facets",
+        )
+
     def test_wave_rows_still_break_over_blank_image_regions(self):
         tone = self.np.ones((64, 64), dtype="float32")
         tone[:, 28:36] = 0.0
@@ -1265,6 +1301,26 @@ class CmykTabTests(unittest.TestCase):
             (full_box[0] + full_box[2]) / 2.0,
             delta=1.0,
         )
+
+    def test_artwork_scale_keeps_wave_tolerance_in_paper_space(self):
+        tab = self.make_tab(FakeHost(self.colour_path))
+        tab.scale_pct.setValue(280)
+        tab.path_tolerance.setValue(0.05)
+        captured = []
+        screen_channel = converter.screen_channel
+
+        def capture_tolerance(*args, **kwargs):
+            captured.append(kwargs.get("path_tolerance_mm"))
+            return screen_channel(*args, **kwargs)
+
+        with mock.patch.object(
+            converter, "screen_channel", side_effect=capture_tolerance
+        ):
+            tab._ensure_layers()
+
+        self.assertEqual(len(captured), len(converter.CHANNELS))
+        for tolerance in captured:
+            self.assertAlmostEqual(tolerance, 0.05 / 2.8)
 
     def test_hatch_levels_allow_more_families(self):
         tab = self.make_tab()

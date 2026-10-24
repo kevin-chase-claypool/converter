@@ -585,18 +585,33 @@ def _wave_rows(
     amplitude_scale,
     min_length_mm=0.8,
     cancel_check=None,
+    path_tolerance_mm=0.05,
 ):
     """Parallel sine rows with one shared horizontal amplitude profile.
 
     Row-specific tone still masks each mark to the image, but it does not move
     one row toward its neighbour. This prevents both overlap and extra-wide
     gaps at the cost of not representing vertical tone through wave height.
+    Sampling is tied to the path tolerance so the emitted chords follow the
+    sine instead of becoming visible facets.
     """
     min_x, max_x, min_y, max_y, ca, sa = _local_frame(bounds, angle_deg)
     spacing = max(0.2, float(spacing))
-    sample_step = max(0.25, min(spacing * 0.25, 0.8))
     amplitude_max = spacing * 0.5 * max(0.05, float(amplitude_scale))
     wavelength = spacing * 2.0
+    # A piecewise-linear sine turns into visible facets when its samples are
+    # too far apart. Bound the sagitta against the configured path budget:
+    # max|y''| for amplitude_max * sin(2*pi*x/wavelength) is amplitude_max *
+    # (pi/spacing)^2, and a chord of length h has about h^2/8 times that
+    # curvature as its midpoint error.
+    curvature = amplitude_max * (math.pi / spacing) ** 2
+    tolerance_step = math.sqrt(
+        8.0 * max(0.001, float(path_tolerance_mm)) / curvature
+    )
+    sample_step = max(
+        0.05,
+        min(spacing * 0.25, 0.8, tolerance_step),
+    )
     row_ys = []
     y = min_y + spacing * 0.5
     while y <= max_y:
@@ -763,6 +778,7 @@ def screen_channel(
     overdraw=1,
     solid=True,
     cancel_check=None,
+    path_tolerance_mm=0.05,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
@@ -776,6 +792,8 @@ def screen_channel(
     (topographic contour lines of the tone).
     ``overdraw`` redraws every mark up to three times with a sub-pen offset so
     a ballpoint reads darker without changing the geometry.
+    ``path_tolerance_mm`` bounds the chord error of resampled wave rows; the
+    CMYK tab supplies that budget in its final paper-space units.
     """
     left = geometry["off_x"]
     top = geometry["off_y"]
@@ -853,6 +871,7 @@ def screen_channel(
             spacing,
             max(0.1, float(dot_scale)),
             cancel_check=cancel_check,
+            path_tolerance_mm=path_tolerance_mm,
         )
     elif style == "tsp":
         points = stipple_points(

@@ -62,6 +62,10 @@ those values reduced but did not eliminate convergence and divergence.
   angles and requires less than `0.15 mm` adjacent-gap variation.
 - A blank-band regression confirms waves still stop over empty image regions.
 - Full converter discovery passes 503 tests with one OpenGL-context skip.
+- The first full yellow print from this implementation was materially better:
+  the catastrophic overlap and wide-gap pattern was gone and rows remained
+  parallel. Individual waves were still visibly faceted, which led to
+  `WSW-20261024-007`.
 
 ## Struggles and rejected approaches
 
@@ -79,8 +83,8 @@ those values reduced but did not eliminate convergence and divergence.
 - Wave-screen images will look flatter vertically because tone no longer
   changes crest height. Ink presence still follows the image.
 - Every existing Wave-screen SVG and CMYK G-code file must be regenerated.
-- A fresh full yellow print is required to confirm that overlap and wide gaps
-  are gone on paper.
+- The print confirmed parallel row spacing. A fresh full yellow print after
+  `WSW-20261024-007` is still required to confirm the smoother chord sampling.
 
 ## Files
 

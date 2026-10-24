@@ -1,5 +1,31 @@
 # Engineering Log
 
+<a id="elog-20261024-smooth-cmyk-wave-chords"></a>
+### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Smooth CMYK wave chords
+
+- The first full yellow print produced with `WSW-20261024-006` is materially
+  improved: the large overlap/wide-gap pattern is gone and the rows remain
+  parallel, but the individual waves still show angular facets.
+- The temporary yellow source SVG from that run has the same facets. Its
+  median horizontal sample is `0.84 mm`, giving about eight straight segments
+  per full sine at the current scaled pitch. This matches the paper and
+  isolates the remaining rough shape to generator sampling.
+- The selected `0.05 mm` Path tolerance previously controlled only planner
+  subdivision. `_wave_rows` now also derives source sample spacing from the
+  sine's maximum curvature and that tolerance.
+- The CMYK tab divides the paper-space tolerance by Artwork scale before
+  screening, so the final scaled chords remain inside the configured budget.
+- A regression failed before the change at `0.0979 mm` chord error for a
+  `4 mm` pitch and now passes below `0.05 mm`. A CMYK integration test guards
+  the `280 %` artwork-scale handoff.
+- At the print's `1.2 mm` source pitch and `280 %` scale, paper-space samples
+  are now `0.5219 mm` apart, with `0.0498 mm` maximum chord error and about
+  `12.9` segments per full wave. Full converter discovery passes `505` tests
+  with one OpenGL-context skip.
+- Evidence: `WSW-20261024-007`,
+  `docs/report/lab-notes/2026-10-23-m-13-cmyk-yellow-feed-sensitivity.md`.
+- Category: windows-software, cmyk, wave-screen, waveform, path-tolerance.
+
 <a id="elog-20261024-parallel-cmyk-wave-rows"></a>
 ### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Keep CMYK wave rows parallel
 
