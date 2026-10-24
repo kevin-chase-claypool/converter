@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20261024-bed-frame-angular-interpolation"></a>
+### 🟥 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Bed compensation interpolation used the wrong rotating frame
+
+- The operator reported that striations worsened after enabling compensation.
+  A focused regression found that the profile blended machine-XY correction
+  vectors across bed angles, even though those vectors rotate with the bed.
+- A constant 1 mm bed-frame error sampled at 0/90 degrees produced a
+  `0.500/0.500 mm` interpolation at 45 degrees instead of the correct
+  `0.707/0.707 mm`, a `0.207 mm` residual. Across the installed profile,
+  off-cardinal corrections changed by up to `0.485 mm` after the fix.
+- Interpolation now converts neighboring corrections into the bed frame,
+  blends them there, and rotates the result into machine XY. Exact measured
+  angles remain unchanged, as do the JSON schema, profile fingerprint, and
+  5 mm bound.
+- New compensated G-code records `angular interpolation bed-frame` in its
+  header. Previous compensated files must be regenerated.
+- Verification: the failing regression and all 33 bed/photo tests pass; the
+  full converter suite passes 495 tests with one OpenGL-context skip.
+- The eight-angle calibration remains the immediate hardware test; it measures
+  the missing angular fields directly rather than relying on interpolation.
+- Evidence: `WSW-20261024-002`,
+  `docs/changes/windows-software/2026/2026-10-24-bed-frame-angular-interpolation.md`.
+- Category: windows-software, hardware, bed, compensation, angle,
+  interpolation, frame, striation.
+
 <a id="elog-20261024-eight-angle-bed-calibration"></a>
 ### 🟨 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Full-field calibration expanded to eight angles
 

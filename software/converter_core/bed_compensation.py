@@ -5,6 +5,11 @@ Values are additive corrections to the nominal machine X/Y coordinate:
 
     machine = R(theta) * bed_point + correction(theta, bed_point)
 
+Stored samples are machine-XY corrections. Between measured bed angles, they
+are first rotated back into bed coordinates, linearly interpolated there, and
+then rotated into machine coordinates at the requested angle. Blending the
+already-rotated machine vectors would shorten or misdirect the correction.
+
 P100 remains the owner of the registration centre. This profile corrects the
 residual shape/pose error left after registration. Spatial samples are stored
 as scattered bed points so a round sheet does not need fictitious measurements
@@ -13,7 +18,7 @@ in the four square-grid corners.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import hashlib
 import json
 import math
@@ -131,6 +136,11 @@ class BedCompensationProfile:
     corrections_mm: tuple[tuple[tuple[float, float], ...], ...]
     coverage_radius_mm: float
     source: str = ""
+    _bed_corrections_mm: tuple[tuple[tuple[float, float], ...], ...] = field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
 
     def __post_init__(self):
         object.__setattr__(
@@ -181,6 +191,24 @@ class BedCompensationProfile:
             normalized_corrections.append(tuple(corrections))
         object.__setattr__(self, "samples_mm", tuple(normalized_samples))
         object.__setattr__(self, "corrections_mm", tuple(normalized_corrections))
+        bed_corrections = []
+        for angle, corrections in zip(
+            self.angle_values_deg,
+            normalized_corrections,
+        ):
+            radians = math.radians(angle)
+            cosine = math.cos(radians)
+            sine = math.sin(radians)
+            bed_corrections.append(
+                tuple(
+                    (
+                        cosine * correction_x + sine * correction_y,
+                        -sine * correction_x + cosine * correction_y,
+                    )
+                    for correction_x, correction_y in corrections
+                )
+            )
+        object.__setattr__(self, "_bed_corrections_mm", tuple(bed_corrections))
 
     @property
     def identity(self) -> bool:
@@ -190,8 +218,14 @@ class BedCompensationProfile:
             for dx, dy in angle_grid
         )
 
-    def _spatial_correction(self, angle_index: int, x_mm: float, y_mm: float):
-        samples, corrections = _spatial_slice(self, angle_index)
+    def _spatial_bed_correction(
+        self,
+        angle_index: int,
+        x_mm: float,
+        y_mm: float,
+    ):
+        samples = self.samples_mm[angle_index]
+        corrections = self._bed_corrections_mm[angle_index]
         return interpolate_bed_correction(samples, corrections, x_mm, y_mm)
 
     def _angle_position(self, angle_deg: float) -> tuple[int, int, float]:
@@ -221,11 +255,21 @@ class BedCompensationProfile:
                 % self.coverage_radius_mm
             )
         i0, i1, t = self._angle_position(angle_deg)
-        x0, y0 = self._spatial_correction(i0, x_mm, y_mm)
+        bed_x0, bed_y0 = self._spatial_bed_correction(i0, x_mm, y_mm)
         if i0 == i1:
-            return x0, y0
-        x1, y1 = self._spatial_correction(i1, x_mm, y_mm)
-        return x0 * (1.0 - t) + x1 * t, y0 * (1.0 - t) + y1 * t
+            bed_x = bed_x0
+            bed_y = bed_y0
+        else:
+            bed_x1, bed_y1 = self._spatial_bed_correction(i1, x_mm, y_mm)
+            bed_x = bed_x0 * (1.0 - t) + bed_x1 * t
+            bed_y = bed_y0 * (1.0 - t) + bed_y1 * t
+        angle = math.radians(angle_deg)
+        cosine = math.cos(angle)
+        sine = math.sin(angle)
+        return (
+            bed_x * cosine - bed_y * sine,
+            bed_x * sine + bed_y * cosine,
+        )
 
     @property
     def max_correction_mm(self) -> float:

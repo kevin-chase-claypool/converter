@@ -198,8 +198,11 @@
   eight-angle candidate at 0/45/90/135/180/225/270/315 degrees over the same
   37 whole-bed stations. This replaces interpolation across 90-degree gaps
   with measured fields at the angles used by the failing CMYK screens.
-  The existing profile remains the default until the printed sheet, independent
-  verification, and all angle-stage gates pass.
+  Angular interpolation was also corrected to blend correction vectors in the
+  rotating bed frame before rotating them into machine XY. Compensated files
+  made before the `angular interpolation bed-frame` header marker must be
+  regenerated. The existing profile remains the default until the printed
+  sheet, independent verification, and all angle-stage gates pass.
 - [ ] **Verify the extrapolated 13.5-inch compensation annulus.**
   Problem: the default `4c8270de8a74` profile extends the accepted 165.1 mm
   correction field to 171.45 mm by local-affine extrapolation. Its

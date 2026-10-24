@@ -390,7 +390,8 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
     if bed_compensation is not None:
         lines.insert(
             5,
-            "(bed compensation %s, coverage %.3f mm, max %.3f mm)"
+            "(bed compensation %s, coverage %.3f mm, max %.3f mm, "
+            "angular interpolation bed-frame)"
             % (
                 bed_compensation.fingerprint,
                 bed_compensation.coverage_radius_mm,

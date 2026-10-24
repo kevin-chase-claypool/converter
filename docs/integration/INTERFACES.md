@@ -68,7 +68,10 @@ interactive preview uses nominal X/Y by default and may select the same exact
 path when **Exact compensated preview (slow)** is enabled. The analyzer
 converts a measured bed-frame error into a machine-frame correction with
 `-R(theta) * error_bed`; it must never store the unrotated bed error as machine
-X/Y. See
+X/Y. Between measured angles, the converter rotates neighboring corrections
+back into the bed frame, interpolates there, and rotates the result into
+machine XY. Newly saved compensated G-code marks this as
+`angular interpolation bed-frame`. See
 [`ADR-009`](../decisions/ADR-009-post-registration-bed-compensation.md).
 
 The converter treats the geometric center of the clipped SVG as the bed-local

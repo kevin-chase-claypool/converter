@@ -156,8 +156,37 @@ def nominal_measurement_csv(text):
 class BedCompensationProfileTests(unittest.TestCase):
     def test_angle_interpolation_and_wrap(self):
         profile = profile_for_test()
-        self.assertEqual(profile.correction(45.0, 0.0, 0.0), (1.0, 0.5))
-        self.assertEqual(profile.correction(315.0, 0.0, 0.0), (0.0, 0.0))
+        between = profile.correction(45.0, 0.0, 0.0)
+        self.assertAlmostEqual(between[0], 1.0606601717798212)
+        self.assertAlmostEqual(between[1], 0.35355339059327373)
+        wrapped = profile.correction(315.0, 0.0, 0.0)
+        self.assertAlmostEqual(wrapped[0], 0.0)
+        self.assertAlmostEqual(wrapped[1], -0.7071067811865476)
+
+    def test_angle_interpolation_rotates_a_constant_bed_error(self):
+        samples = ((-10.0, 0.0), (0.0, 10.0), (10.0, 0.0))
+        corrections = []
+        for angle in (0.0, 90.0, 180.0, 270.0):
+            corrections.append(
+                machine_frame_correction(angle, (1.0, 0.0))
+            )
+        profile = BedCompensationProfile(
+            angle_values_deg=(0.0, 90.0, 180.0, 270.0),
+            samples_mm=(samples,) * 4,
+            corrections_mm=tuple((correction,) * 3 for correction in corrections),
+            coverage_radius_mm=20.0,
+        )
+        correction = profile.correction(45.0, 0.0, 0.0)
+        self.assertAlmostEqual(correction[0], -math.sqrt(0.5))
+        self.assertAlmostEqual(correction[1], -math.sqrt(0.5))
+        machine = compensated_machine_point(
+            (1.0, 0.0),
+            45.0,
+            (0.0, 0.0),
+            profile,
+        )
+        self.assertAlmostEqual(machine[0], 0.0)
+        self.assertAlmostEqual(machine[1], 0.0)
 
     def test_spatial_interpolation(self):
         profile = BedCompensationProfile(
@@ -516,12 +545,13 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
             )
             for angle in range(360)
         )
-        self.assertAlmostEqual(boundary_max, 1.054405, places=6)
+        self.assertAlmostEqual(boundary_max, 1.053640, places=6)
         self.assertLessEqual(boundary_max, 5.0)
         gcode = converter.contours_to_gcode(
             [[(-5.0, 0.0), (5.0, 0.0)]], settings
         )
         self.assertIn("(bed compensation 4c8270de8a74,", gcode)
+        self.assertIn("angular interpolation bed-frame", gcode)
 
     def test_13_5_inch_field_clips_before_extrapolated_coverage(self):
         settings = converter.Settings(

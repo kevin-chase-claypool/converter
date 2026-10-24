@@ -915,7 +915,10 @@ display-only; every other group changes the emitted program.
   after the planner selects theta and after P100's registration; interactive
   preview uses nominal X/Y unless exact preview is enabled. P100 is not
   rewritten. Artwork points outside the profile's stated measured coverage are
-  rejected before preview or save.
+  rejected before preview or save. Between measured bed angles, the converter
+  rotates both neighboring corrections back into the bed frame, interpolates
+  there, and rotates the result into machine XY. New compensated G-code carries
+  an `angular interpolation bed-frame` header marker.
 - **Theta kinematics** — theta axis/ratio/resolver/cost settings (`Theta ratio`
   defaults to 12.03324, the measured effective ratio of the 60T→720T pulley
   pair).

@@ -153,6 +153,24 @@ spacing from Euclidean spacing in the rotated/compensated machine-coordinate
 preview; the latter is not expected to remain constant because it is the
 machine-space warp that compensates the paper.
 
+### 2026-10-24 angular interpolation frame defect
+
+- Follow-up testing found a separate compensation defect that can worsen
+  striation: the profile linearly blended already-rotated machine-XY
+  corrections between bed angles.
+- A constant 1 mm bed-frame error sampled at 0/90 degrees produced a
+  `0.500/0.500 mm` correction at 45 degrees instead of the correct
+  `0.707/0.707 mm`. The installed profile's off-cardinal corrections changed
+  by up to `0.485 mm` after converting interpolation into the rotating frame.
+- The planner now converts neighboring machine corrections back into the bed
+  frame, interpolates there, and rotates the result into machine XY. New
+  compensated G-code carries `angular interpolation bed-frame` in its header.
+- All compensated G-code saved before this change must be regenerated before
+  continuing physical comparisons.
+- This fix does not replace the eight-angle calibration: interpolation now
+  behaves correctly between samples, while the new sheet measures 45° and the
+  other previously missing angular fields directly.
+
 ## Decisions and next action
 
 - Keep 700 mm/min as the nominal requested feed for now and use a 65 % override

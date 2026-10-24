@@ -50,6 +50,19 @@ C_machine(theta, p) = -R(theta) * e_bed(theta, p)
 Adding the unrotated negated bed error directly to machine X/Y is invalid for
 non-zero bed angles.
 
+Angular interpolation also happens in the rotating bed frame. Stored corrections
+are rotated back into bed coordinates at their measured angles, interpolated
+there, and rotated into machine coordinates at the requested angle:
+
+```text
+e_0 = -R(-theta_0) * C_machine(theta_0, p)
+e_1 = -R(-theta_1) * C_machine(theta_1, p)
+C_machine(theta, p) = -R(theta) * lerp(e_0, e_1)
+```
+
+Directly interpolating the machine-frame correction vectors is invalid because
+it shortens and misdirects the correction between angular samples.
+
 P100 remains the only owner of magnetic registration and the physical rotation
 centre. No grblHAL planner, macro, work-offset, or controller contract is
 changed. Clearing or omitting the profile path leaves the uncompensated
@@ -59,6 +72,9 @@ program unchanged.
 
 - Position- and angle-dependent residual error can be corrected without
   changing the artwork or choosing a different kinematics mode.
+- New compensated G-code identifies bed-frame angular interpolation in its
+  header. Files generated before that marker used machine-frame angular blending
+  and must be regenerated before comparing compensated output.
 - Saved G-code may use the profile, and exact preview mode must share its
   corrected endpoints and subdivision. Any coverage or correction-bound
   violation stops planning.

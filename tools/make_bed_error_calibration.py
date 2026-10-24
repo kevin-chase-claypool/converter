@@ -92,6 +92,7 @@ def build_program(settings, *, feed_rate=420.0, compensation=None):
             "verification pass with bed compensation %s"
             % compensation.fingerprint
         )
+        comment("angular interpolation bed-frame")
     lines.extend(["G21", "G90", "G94", "G17", "G54"])
     converter.append_custom_command(lines, settings.pen_up_command)
     converter.append_pen_dwell(
