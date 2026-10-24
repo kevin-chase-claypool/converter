@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261023-cmyk-yellow-feed-sensitivity"></a>
+### 🟨 2026-10-23 - HARDWARE/PARTIAL - Slow feed appears to remove CMYK yellow striation
+
+- The compensated Ben1 yellow wave screen was printed at its programmed
+  `700 mm/min`; the recurring striation was visible. Continuing with a 65 %
+  feed override (`455 mm/min`) appears to eliminate it.
+- Feed override changes motion rate, not the emitted compensation coordinates.
+  Assuming uniform X/Y/A scaling, the saved file's maximum A rate falls from
+  about `254` to `165 motor deg/s`, below the independent `500 motor deg/s`
+  limit. This implicates rate-dependent bed/A dynamics rather than a static
+  mesh application error.
+- Keep `700 mm/min` as the nominal setting for now and use 455 mm/min for
+  quality-critical Xθ/Yθ CMYK work. The exact override transition and a
+  calibrated before/after image remain unrecorded.
+- A planned bed/A motor replacement is reported to use the same model currently
+  installed on Y. Acceptance will repeat the same layer at 700 mm/min after the
+  change, with direction, current, temperature, A repeatability, bed ratio, and
+  M3 contact recorded.
+- Evidence:
+  `docs/report/lab-notes/2026-10-23-m-13-cmyk-yellow-feed-sensitivity.md`.
+- Category: hardware, a-axis, feed-rate, cmyk, striation, bed-compensation,
+  motor.
+
 <a id="elog-20261023-m5-clearance-130ms"></a>
 ### 🟨 2026-10-23 - RP23CNC-SOFTWARE/IMPLEMENTED - M5 pen clearance raised to 130 ms
 
