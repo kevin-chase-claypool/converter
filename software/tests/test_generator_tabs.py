@@ -1,6 +1,7 @@
 """The tool shell: dashboard navigation, layout, scale, and failure isolation."""
 
 import importlib.util
+import json
 import os
 import shutil
 import sys
@@ -67,6 +68,35 @@ class ToolShellTests(unittest.TestCase):
         self.assertEqual(window.current_tool, "Convert")
         self.assertTrue(window.tool_actions["Convert"].isChecked())
         self.assertIs(window.stack.widget(0), window.dashboard)
+
+    def test_artwork_reimport_restores_saved_placement(self):
+        with tempfile.TemporaryDirectory(prefix="theta-layout-") as folder:
+            artwork = Path(folder) / "art.png"
+            artwork.write_bytes(b"")
+            window = self.module.MainWindow()
+            window.svg_path.setText(str(artwork))
+            window.fields["artwork_offset_x_mm"].setText("19.81")
+            window.fields["artwork_offset_y_mm"].setText("-29.65")
+            window.save_artwork_layout()
+            layout_path = self.module.artwork_layout_path(str(artwork))
+            self.assertTrue(Path(layout_path).is_file())
+            layout = json.loads(Path(layout_path).read_text(encoding="utf-8"))
+            self.assertEqual(layout["kind"], "theta-artwork-layout")
+            self.assertAlmostEqual(layout["artwork_offset_x_mm"], 19.81)
+            self.assertAlmostEqual(layout["artwork_offset_y_mm"], -29.65)
+
+            reopened = self.module.MainWindow()
+            reopened.svg_path.setText(str(artwork))
+            self.assertTrue(reopened.restore_artwork_layout(str(artwork)))
+            self.assertEqual(
+                reopened.fields["artwork_offset_x_mm"].text(), "19.81"
+            )
+            self.assertEqual(
+                reopened.fields["artwork_offset_y_mm"].text(), "-29.65"
+            )
+            self.assertEqual(reopened.gl_preview.placement, (19.81, -29.65))
+            reopened.close()
+            window.close()
 
     def test_menu_bar_has_the_standard_menus(self):
         window = self.module.MainWindow()

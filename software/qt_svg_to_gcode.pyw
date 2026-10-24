@@ -71,6 +71,11 @@ def fmt(value):
     return converter.format_float(value)
 
 
+def artwork_layout_path(artwork_path):
+    """Sidecar file that keeps placement with one artwork file."""
+    return str(artwork_path) + ".theta-layout.json"
+
+
 class CollapsibleSection(QWidget):
     def __init__(self, title, content, expanded=True):
         super().__init__()
@@ -1228,6 +1233,9 @@ class MainWindow(QMainWindow):
         self.play_start_time = None
         self.play_start_progress = 0.0
         self.last_command_follow_time = 0.0
+        self.layout_save_timer = QTimer(self)
+        self.layout_save_timer.setSingleShot(True)
+        self.layout_save_timer.timeout.connect(self.save_artwork_layout)
         self.auto_gcode_path = ""
         # Output folder chosen from File > Set G-code Destination; multi-layer
         # tools write their files here without a per-save dialog.
@@ -1378,6 +1386,11 @@ class MainWindow(QMainWindow):
             group_forms[group_title] = form
         for key, (_group, _label, _checked) in checkbox_meta.items():
             group_forms[_group].addRow(checkboxes[key])
+
+        for key in ("artwork_offset_x_mm", "artwork_offset_y_mm"):
+            self.fields[key].editingFinished.connect(
+                self._schedule_artwork_layout_save
+            )
 
         self.undrawn_color_button = QPushButton("Undrawn")
         self.undrawn_color_button.clicked.connect(lambda: self.choose_preview_color("undrawn"))
@@ -1999,9 +2012,11 @@ class MainWindow(QMainWindow):
         if not os.path.exists(path):
             self.log.append(f"External SVG is missing: {path}")
             return
+        self.save_artwork_layout()
         self.svg_path.setText(path)
         self.update_suggested_gcode_path(path)
         self.auto_configure_shading(path)
+        self.restore_artwork_layout(path)
         self.raw_cache_key = None
         self.raw_contours = None
         self.show_tool("Convert")
@@ -2041,13 +2056,83 @@ class MainWindow(QMainWindow):
             "All files (*.*)",
         )
         if path:
+            self.save_artwork_layout()
             self.svg_path.setText(path)
             self.update_suggested_gcode_path(path)
             self.auto_configure_shading(path)
+            self.restore_artwork_layout(path)
             self.raw_cache_key = None
             self.raw_contours = None
             kind = "Image" if converter.is_raster_image(path) else "SVG"
             self.log.append(f"{kind} selected. Press Preview to regenerate.")
+
+    def _schedule_artwork_layout_save(self):
+        if self.svg_path.text().strip():
+            self.layout_save_timer.start(250)
+
+    def save_artwork_layout(self):
+        """Persist source-relative placement beside the selected artwork."""
+        path = self.svg_path.text().strip()
+        if not path or not os.path.isfile(path):
+            return False
+        try:
+            offset_x = float(
+                self.fields["artwork_offset_x_mm"].text() or 0.0
+            )
+            offset_y = float(
+                self.fields["artwork_offset_y_mm"].text() or 0.0
+            )
+            if not (math.isfinite(offset_x) and math.isfinite(offset_y)):
+                raise ValueError("placement must be finite")
+            target = artwork_layout_path(path)
+            temporary = target + ".tmp"
+            with open(temporary, "w", encoding="utf-8", newline="\n") as handle:
+                json.dump(
+                    {
+                        "kind": "theta-artwork-layout",
+                        "version": 1,
+                        "artwork_offset_x_mm": offset_x,
+                        "artwork_offset_y_mm": offset_y,
+                    },
+                    handle,
+                    indent=2,
+                )
+                handle.write("\n")
+            os.replace(temporary, target)
+            return True
+        except (OSError, TypeError, ValueError) as exc:
+            self.log.append(f"Could not save artwork placement: {exc}")
+            return False
+
+    def restore_artwork_layout(self, path):
+        """Restore X/Y placement saved for this exact artwork file."""
+        path = str(path)
+        layout_path = artwork_layout_path(path)
+        if not os.path.isfile(layout_path):
+            return False
+        try:
+            with open(layout_path, "r", encoding="utf-8") as handle:
+                data = json.load(handle)
+            if (
+                data.get("kind") != "theta-artwork-layout"
+                or int(data.get("version", 0)) != 1
+            ):
+                return False
+            offset_x = float(data["artwork_offset_x_mm"])
+            offset_y = float(data["artwork_offset_y_mm"])
+            if not (math.isfinite(offset_x) and math.isfinite(offset_y)):
+                raise ValueError("placement must be finite")
+        except (OSError, TypeError, ValueError, KeyError, json.JSONDecodeError) as exc:
+            self.log.append(f"Could not restore artwork placement: {exc}")
+            return False
+        self.fields["artwork_offset_x_mm"].setText(fmt(offset_x))
+        self.fields["artwork_offset_y_mm"].setText(fmt(offset_y))
+        self.gl_preview.set_placement((offset_x, offset_y))
+        self.log.append(
+            "Restored artwork placement: X %.2f mm, Y %.2f mm."
+            % (offset_x, offset_y)
+        )
+        return True
 
     def update_suggested_gcode_path(self, svg_path):
         if not svg_path:
@@ -4053,6 +4138,7 @@ class MainWindow(QMainWindow):
         )
         self.fields["artwork_offset_x_mm"].setText("0")
         self.fields["artwork_offset_y_mm"].setText("0")
+        self._schedule_artwork_layout_save()
         self.log.append(
             f"{action}: scale {fmt(current)} -> {fmt(fitted)} to {goal}"
             + (", artwork recentred on the bed center." if recentred else ".")
@@ -4103,6 +4189,7 @@ class MainWindow(QMainWindow):
         """Follow a preview drag so the next build places the artwork there."""
         self.fields["artwork_offset_x_mm"].setText(f"{x:.2f}")
         self.fields["artwork_offset_y_mm"].setText(f"{y:.2f}")
+        self._schedule_artwork_layout_save()
 
     def install_preview(self, settings, contours, moves, bed_center, program_gcode):
         # The plan already places the artwork at this offset, so the preview's
@@ -4485,6 +4572,7 @@ class MainWindow(QMainWindow):
             self.status.setText("Cancelling preview. Close again after cancellation finishes.")
             event.ignore()
             return
+        self.save_artwork_layout()
         stop = getattr(self.stack.currentWidget(), "shutdown_background", None)
         if callable(stop):
             stop()

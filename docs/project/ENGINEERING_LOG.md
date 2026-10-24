@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20261024-persist-artwork-placement"></a>
+### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Preserve artwork placement
+
+- Closing the converter discarded artwork X/Y placement even though dragging
+  had updated the visible placement fields. Reimport therefore recentred the
+  image and disrupted regeneration.
+- The placed yellow contour was matched between the existing G-code and its
+  temporary source SVG after undoing the planner rotation and bed
+  compensation. Both endpoints independently recovered
+  `X=19.81 mm`, `Y=-29.65 mm`.
+- The converter now stores placement in `<artwork-file>.theta-layout.json`,
+  restores it on Browse/adopt, and updates it after drag, field edit, Fit, or
+  close. Writes use a temporary file and atomic replacement.
+- Added a reopen/reimport regression; the 39 generator-shell tests pass with
+  one expected OpenGL-context skip, and full converter discovery passes 506
+  tests with one skip.
+- The recovered sidecar was created for `C:\Users\jacks\Downloads\IMG_0514.JPG`
+  so reimporting that image restores the original placement.
+- Evidence: `WSW-20261024-008`.
+- Category: windows-software, artwork, placement, restart, reimport, cmyk.
+
 <a id="elog-20261024-smooth-cmyk-wave-chords"></a>
 ### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Smooth CMYK wave chords
 

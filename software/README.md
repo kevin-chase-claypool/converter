@@ -1132,7 +1132,11 @@ display-only; every other group changes the emitted program.
   artwork** and **Shift+left, middle, or right drag pans the view**; the wheel
   zooms and a double-click resets the zoom. Dragging updates the two fields, and
   pressing Preview re-plans with the new placement, including re-clipping to the
-  reach circle. While dragging, the displayed part is the existing plan
+  reach circle. Placement is saved beside the artwork as
+  `<artwork-file>.theta-layout.json` and restored when that same file is
+  imported again; editing the fields, dragging, or closing the app updates it.
+  A Fit still deliberately resets the placement to zero. While dragging, the
+  displayed part is the existing plan
   translated, so the reach circle - not the drawn artwork - is the authority on
   what will survive the next build.
 - Pressing **Preview** shows the current build stage, percentage, and elapsed
