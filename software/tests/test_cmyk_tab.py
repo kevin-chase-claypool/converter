@@ -1168,13 +1168,26 @@ class CmykTabTests(unittest.TestCase):
         tab.max_marks.setValue(80000)
         self.assertEqual(tab.max_marks.value(), 80000)
 
-    def test_planning_is_background_not_a_button(self):
-        tab = self.make_tab()
+    def test_preview_defers_exact_planning_until_save(self):
+        host = FakeHost(self.image_path)
+        tab = self.make_tab(host)
         self.assertFalse(hasattr(tab, "analyze_button"))
         calls = []
         tab.start_analysis = lambda: calls.append("plan")
         tab.on_preview_finished()
+        self.assertEqual(calls, [])
+        self.assertIn("when you save", tab.cost_label.text())
+        self.assertIn("when you save", host.status[-1])
+
+    def test_save_starts_deferred_exact_planning(self):
+        tab = self.make_tab()
+        tab._write_channels = lambda: ["k"]
+        calls = []
+        tab.start_analysis = lambda: calls.append("plan")
+        tab.save_all()
         self.assertEqual(calls, ["plan"])
+        self.assertTrue(tab._pending_save)
+        self.assertIn("before save", tab.status.text())
 
     def test_planning_state_reaches_the_shared_cancel_control(self):
         host = FakeHost(self.image_path)

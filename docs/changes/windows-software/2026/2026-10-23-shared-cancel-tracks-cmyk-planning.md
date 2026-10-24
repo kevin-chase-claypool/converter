@@ -26,16 +26,19 @@ related:
 
 The shared preview **Cancel** button now changes to **Cancel planning** and
 remains enabled while a CMYK tab is calculating its four per-ink G-code
-programs. Clicking it cancels that active background planner.
+programs. Clicking it cancels that active background planner. Exact per-ink
+planning is now deferred until Save instead of starting automatically after a
+preview.
 
 ## Reason
 
 After the fast preview completed, the preview worker was finished and its
-Cancel button became disabled. The CMYK tab immediately started a second
-background worker for the four exact programs, leaving the operator watching
-status messages such as `Planning Cyan...` with no visible way to stop it.
-The CMYK-local cancel button existed, but could be outside the visible portion
-of the scrolling controls.
+Cancel button became disabled. The CMYK tab then started a second background
+worker for the four exact programs automatically, leaving the operator
+watching status messages such as `Planning Cyan...` with no visible way to
+stop it. The CMYK-local cancel button existed, but could be outside the
+visible portion of the scrolling controls. Deferring exact planning also lets
+the preview finish without immediately consuming minutes of CPU.
 
 ## Implementation
 
@@ -44,6 +47,10 @@ of the scrolling controls.
 - The shared Cancel button retargets to the active generator worker, changes
   its label to **Cancel planning**, and disables itself while cancellation is
   pending.
+- CMYK `on_preview_finished` now reports that exact programs are deferred and
+  does not start a worker. `save_all` owns starting that worker.
+- The save-time estimate move pass is nominal; only the exact emitted G-code
+  pays the full compensation lookup cost.
 - Cancellation calls the tab's existing `cancel_analysis` path, preserving the
   worker cancellation event, status update, and last-results behavior.
 - When planning finishes or is cancelled, the shared button returns to its
@@ -59,7 +66,7 @@ of the scrolling controls.
   and disabled state.
 - A second CMYK-tab regression confirms planning start/finish controls both the
   local cancel/save buttons and the host-facing planning state.
-- The full converter suite passes `490` tests with one OpenGL-context skip.
+- The full converter suite passes `491` tests with one OpenGL-context skip.
 
 ## Struggles and rejected approaches
 

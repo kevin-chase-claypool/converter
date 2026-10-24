@@ -2312,13 +2312,14 @@ class MainWindow(QMainWindow):
         )
 
     def analyze_program(self, svg_path, settings, cancel_check=None):
-        """Build the exact program a Preview would, without touching the UI.
+        """Build exact save-time G-code plus fast nominal estimate moves.
 
         Multi-layer tools (CMYK) call this once per layer to obtain that
-        layer's moves, G-code and stats. It mirrors ``PreviewWorker.run`` -
-        including the raster/auto-fit measurement - so the numbers match a
-        manual Preview of the same file. It is safe to call from a worker
-        thread: it never reads widgets and never writes to them.
+        layer's G-code and timing estimate. The move list deliberately uses
+        nominal X/Y so save-time work does not pay the expensive compensation
+        subdivision twice; the emitted G-code still uses the selected profile
+        exactly. It is safe to call from a worker thread: it never reads
+        widgets and never writes to them.
         """
         converter.check_cancelled(cancel_check)
         auto_fit = str(getattr(settings, "fit_mode", "manual")).strip().lower() in (
@@ -2340,7 +2341,11 @@ class MainWindow(QMainWindow):
         raw_contours = self.load_contours(svg_path, settings, cancel_check, None)
         program_plan = converter.plan_program(raw_contours, settings, cancel_check)
         moves = self.build_preview_moves(
-            raw_contours, settings, cancel_check, program_plan
+            raw_contours,
+            settings,
+            cancel_check,
+            program_plan,
+            apply_compensation=False,
         )
         stats = {}
         gcode = converter.contours_to_gcode(

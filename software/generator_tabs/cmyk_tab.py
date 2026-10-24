@@ -1013,14 +1013,21 @@ class CmykTab(GeneratorTab):
             notify()
 
     def on_preview_finished(self):
-        """Host hook: plan the four ink programs in the background.
+        """Keep the fast preview responsive and defer exact G-code planning.
 
-        The shared preview already planned the combined artwork with the same
-        r-theta solver; this runs the four per-ink programs so their own
-        x_theta/y_theta choices and G-code are ready for the save, without a
-        separate user step.
+        The four exact per-ink programs can be expensive on dense screens and
+        are only required when the operator saves. Starting them automatically
+        made a completed preview look permanently busy, so Save starts and
+        owns that work instead.
         """
-        self.start_analysis()
+        message = (
+            "Preview ready. Exact four-ink programs will be planned when you "
+            "save."
+        )
+        self.cost_label.setText(message)
+        self.status.setText(message)
+        if self.host is not None and hasattr(self.host, "generator_status"):
+            self.host.generator_status(message)
 
     def start_analysis(self):
         if self._thread is not None:

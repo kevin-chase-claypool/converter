@@ -298,9 +298,9 @@ and that result runs through the same converter pipeline into the shared
 preview panel. **Save G-code** exports the active tab's result. Switching tabs
 never rebuilds anything; it marks the visible preview as belonging to another
 tab until Preview is pressed again. Multi-layer tools (CMYK) keep that static
-Preview for the overlaid view; after a successful preview the four per-ink
-programs plan in the background and **Save 4 G-code files** writes them
-through one save dialog owned by the window.
+Preview for the overlaid view; exact per-ink programs are planned when
+**Save 4 G-code files** is pressed and are written through one save dialog
+owned by the window.
 
 Tool authors: the contract and the host entry points are documented in
 [`generator_tabs/README.md`](generator_tabs/README.md). Ported or vendored
@@ -366,13 +366,14 @@ Current tools:
   checkbox never re-screens or re-plans. For CMYK previews the preview data
   area also reports the per-ink M3 (pen-down) counts as
   `C: n M: n Y: n K: n`, counted from the planned program.
-  Pressing Preview also plans each checked ink's own program in the
-  background through the same pipeline as Convert - that planning is exactly
-  where the r-theta solver picks x_theta or y_theta per segment, or holds the
-  bed still for the tab's **Kinematics** choice - and the tab reports each
-  file's split (or `XY only`) and calibrated time when it finishes. While this
-  background planning runs, the shared preview **Cancel** button changes to
-  **Cancel planning** and cancels the active CMYK worker.
+  Preview deliberately defers exact per-ink G-code generation until save so a
+  completed preview does not sit behind four large planners. Pressing **Save
+  4 G-code files** starts each checked ink's exact program through the same
+  pipeline as Convert - including the r-theta solver, the tab's **Kinematics**
+  choice, and bed compensation - then reports each file's split (or
+  `XY only`) and calibrated time. While save-time planning runs, the shared
+  preview **Cancel** button changes to **Cancel planning** and cancels the
+  active CMYK worker.
   **Save 4 G-code files** writes
   `<name>-cyan.gcode`, `-magenta`, `-yellow` and `-black` from one base name.
   The r-theta axis-cost solver and the M3/M5 pen contract are inherited

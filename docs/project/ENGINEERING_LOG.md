@@ -4,15 +4,19 @@
 ### 🟨 2026-10-23 - WINDOWS SOFTWARE/IMPLEMENTED - Shared Cancel now stops CMYK background planning
 
 - Reproduced the screenshot state: the fast preview completed and disabled its
-  Cancel button, then the CMYK tab started exact per-ink planning. The visible
-  status advanced through messages such as `Planning Cyan...` while the active
-  worker was only cancellable from a separate, potentially off-screen button.
+  Cancel button, then the CMYK tab automatically started exact per-ink
+  planning. The visible status advanced through messages such as
+  `Planning Cyan...` while the active worker was only cancellable from a
+  separate, potentially off-screen button.
 - CMYK planning start/finish now notify the host. The shared button changes to
   **Cancel planning**, routes to the active tab's `cancel_analysis`, and
   restores its normal disabled **Cancel** state when the worker finishes.
+- Exact per-ink planning is now deferred until Save; successful preview no
+  longer launches it. The save-time move estimate uses nominal X/Y while the
+  emitted G-code remains fully compensated.
 - Added regressions for the shared routing path and for CMYK planning state
   reaching both local and host controls.
-- The full converter suite passes 490 tests with one OpenGL-context skip.
+- The full converter suite passes 491 tests with one OpenGL-context skip.
 - Evidence: `WSW-20261023-008`,
   `docs/changes/windows-software/2026/2026-10-23-shared-cancel-tracks-cmyk-planning.md`.
 - Category: windows-software, cmyk, planning, cancel, ui, background-worker.
