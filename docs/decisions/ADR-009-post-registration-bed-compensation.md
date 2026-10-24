@@ -1,7 +1,6 @@
 # ADR-009: Optional post-registration host bed compensation
 
-- Status: accepted and implemented; first fitted profile awaiting compensated
-  verification print
+- Status: accepted, implemented, and bench-verified
 - Date: 2026-10-23
 
 ## Context
@@ -56,8 +55,11 @@ changed. A missing profile leaves the uncompensated program unchanged.
   confirm that the residual shrinks.
 - The first 2026-10-23 profile (`911d2694c8c9`) passed its internal fit but
   failed the compensated print because of the missing frame rotation. The
-  corrected profile is `2cdf3731de4a`; it remains provisional until the
-  regenerated verification sheet passes the independent before/after
-  comparison.
+  corrected profile `2cdf3731de4a` passed the independent before/after
+  verification: overall RMS fell from `0.581` to `0.338 mm`, maximum from
+  `1.309` to `0.752 mm`, and error by `41.9 %`. A localized residual remains
+  at station 09/14 near A=270; further accuracy requires mechanical
+  plane/runout and carriage diagnosis rather than refitting the verification
+  sheet into the profile.
 - A true X/Y scale or skew defect remains a controller/mechanical calibration
   issue rather than being folded into the fiducial-normalized residual map.

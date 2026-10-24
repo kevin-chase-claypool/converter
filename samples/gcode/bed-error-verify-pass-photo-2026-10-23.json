@@ -1,0 +1,65 @@
+{
+  "assignment_distance_px": {
+    "maximum": 4.934640214526998,
+    "median": 1.9486269544693604,
+    "minimum": 0.02026706113407116
+  },
+  "component_counts": {
+    "fiducials": 4,
+    "station_L_candidates": 235,
+    "total": 263
+  },
+  "fiducial_points_px": [
+    [
+      1828.0,
+      342.5
+    ],
+    [
+      686.0,
+      340.0
+    ],
+    [
+      615.0,
+      1511.0
+    ],
+    [
+      1859.0,
+      1532.0
+    ]
+  ],
+  "homography": [
+    [
+      5.348152755981441,
+      0.5807614168045515,
+      1243.008376570385
+    ],
+    [
+      -0.011179029368674334,
+      -5.019630816034894,
+      906.0306776401526
+    ],
+    [
+      -6.761303643366741e-05,
+      0.0003911769845278761,
+      1.0
+    ]
+  ],
+  "image": "C:\\Users\\jacks\\Downloads\\cal.jpg",
+  "image_sha256": "98ecf959dc20f9d7c71d2886ac1749f1850b5eaaa760b3064c35a8f4f1c06e7e",
+  "image_size_px": [
+    2612,
+    1967
+  ],
+  "mask_center_fraction": [
+    0.5295,
+    0.4869
+  ],
+  "mask_radius_fraction": 0.4322,
+  "mode": "seed-assisted",
+  "threshold": 20,
+  "working_center_px": [
+    1382.5245,
+    957.2454
+  ],
+  "working_radius_px": 850.1374
+}

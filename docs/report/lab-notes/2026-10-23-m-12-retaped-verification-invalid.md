@@ -94,3 +94,10 @@ bed/planner defect.
 - If a bubble develops or the sheet moves during the run, abort. Finish the
   verification on a new sheet instead of retaping the active one.
 - The corrected profile remains provisional at fingerprint `2cdf3731de4a`.
+
+## Follow-up
+
+At the time of this rejection the corrected profile was provisional. A later
+stationary verification sheet passed every acceptance gate and accepted
+profile `2cdf3731de4a`; see
+[`2026-10-23-m-12-compensated-verification-pass.md`](2026-10-23-m-12-compensated-verification-pass.md).

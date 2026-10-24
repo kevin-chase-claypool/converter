@@ -181,13 +181,18 @@
   defect: profile `911d2694c8c9` increased overall RMS from 0.581 to 1.169 mm
   and approximately doubled the 180-degree error while leaving A=0 nearly
   unchanged. The analyzer now rotates every correction by its bed angle; the
-  corrected provisional profile is `2cdf3731de4a`. P100 stays unchanged.
+  corrected profile is `2cdf3731de4a`. P100 stays unchanged.
   The next attempted verification was invalid because the sheet was retaped to
   address a bubble after printing began; marker extraction could not assign all
-  185 stations within a safe local radius. Remaining work is to prepare a fresh,
-  stationary sheet before `G65 P113`, print and compare the regenerated
-  `bed-error-verify.gcode`, and accept the profile only if replay residuals
-  shrink without introducing a new spatial field.
+  185 stations within a safe local radius. A final stationary verification
+  sheet then passed every acceptance gate: overall station RMS fell from
+  `0.581` to `0.338 mm`, maximum from `1.309` to `0.752 mm`, and error by
+  `41.9 %`; 90/180/270 RMS fell to `0.278/0.389/0.353 mm`. Profile
+  `2cdf3731de4a` is accepted for the current machine configuration. P100 and
+  its registration remain unchanged. The localized residual at station 09/14,
+  A=270 does not justify fitting the verification sheet again; physical bed
+  plane/runout work remains optional unless an application requires less than
+  the accepted approximately `0.34 mm` RMS residual.
 
 ## Phase 5: toolhead
 

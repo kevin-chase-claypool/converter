@@ -207,8 +207,12 @@ Cycle Start with the pen loaded:
   because its angle correction was not rotated from bed frame to machine
   frame. The corrected profile is
   `..\samples\gcode\bed-error-compensation-2026-10-23.json` (fingerprint
-  `2cdf3731de4a`). Its regenerated verification sheet has not yet been
-  printed.
+  `2cdf3731de4a`). Its independent compensated verification reduced overall
+  station RMS from `0.581` to `0.338 mm`, maximum from `1.309` to `0.752 mm`,
+  and error by `41.9 %`; all M-12 gates passed. The profile is accepted for
+  the current machine configuration. A localized residual remains at stations
+  09/14 near A=270, so recalibrate after any bed, paper-support, toolhead,
+  carriage, pen-clamp, or registration change.
 - `..\samples\gcode\a-tilt-pairs-test.gcode` - four separated line pairs for
   a caliper-read bed-tilt check: each pair is the same paper segment drawn
   twice, once at A=0 (the longer 80 mm constant line) and once at that

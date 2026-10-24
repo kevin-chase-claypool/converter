@@ -1,5 +1,29 @@
 # Engineering Log
 
+<a id="elog-20261023-compensated-verification-pass"></a>
+### 🟩 2026-10-23 - WINDOWS SOFTWARE/HARDWARE/PASSED - Corrected bed compensation passes independent verification
+
+- A final stationary compensated verification sheet was printed after the
+  machine-frame correction and `G65 P113`. Seed-assisted extraction assigned
+  all 185 station L corners with a `4.935 px` maximum assignment distance; the
+  retained overlay places every measured corner on its printed station.
+- Overall station RMS fell from `0.581` to `0.338 mm`, maximum from `1.309` to
+  `0.752 mm`, and residual error by `41.9 %`. The 90/180/270 RMS values fell
+  to `0.278/0.389/0.353 mm`, and every formal M-12 verification gate passed.
+- Thresholds 18, 20, and 22 agreed within `0.001 mm` RMS and `0.010 mm`
+  maximum, so the acceptance is not an extraction-threshold artifact.
+- A localized residual remains at station 09/14 near A=270. Profile
+  `2cdf3731de4a` is accepted for the current bed, carriage, toolhead, pen
+  mounting, paper support, and P100 registration. P100 is unchanged.
+- The verification sheet was not fitted back into a new profile. Doing so
+  would turn independent validation into training data; tighter accuracy now
+  requires physical plane/runout or carriage work.
+- Evidence: `WSW-20261023-004`, `ADR-009`,
+  `docs/report/lab-notes/2026-10-23-m-12-compensated-verification-pass.md`,
+  `samples/gcode/bed-error-verify-pass-analysis-2026-10-23.json`.
+- Category: windows-software, hardware, theta, bed, compensation,
+  verification, repeatability.
+
 <a id="elog-20261023-retaped-verification-invalid"></a>
 ### 🟥 2026-10-23 - HARDWARE/FAILED - Retaped verification sheet invalid
 

@@ -120,6 +120,12 @@ are distinguishable without a multi-pen tip offset.
   and a `1.331 mm` maximum correction. Regenerated
   `bed-error-verify.gcode` contains that fingerprint, reaches a maximum
   `163.940 mm` radius, and passes strict motion analysis.
+- **Bench verification (2026-10-23):** the corrected compensated sheet
+  assigned all 185 stations with `4.935 px` maximum assignment distance.
+  Overall station RMS fell from `0.581` to `0.338 mm`, maximum from `1.309` to
+  `0.752 mm`, and error by `41.9 %`. The 90/180/270 RMS values fell to
+  `0.278/0.389/0.353 mm`; every M-12 verification gate passed. Thresholds 18,
+  20, and 22 agreed within `0.001 mm` RMS and `0.010 mm` maximum.
 - The existing bed mesh showed mixed coupling: A=0 Y error `r=-0.548`,
   90-degree magnitude `r=-0.574`, and 270-degree magnitude `r=+0.744`.
   Position and rotation/plane/carriage effects are both present.
@@ -150,10 +156,12 @@ are distinguishable without a multi-pen tip offset.
 
 ## Risks and follow-up
 
-- The raw measurement sheet is bench-verified. The first compensated print
-  exposed the now-fixed frame-rotation defect and is rejected. Corrected
-  `bed-error-verify.gcode` has not yet been printed; profile `2cdf3731de4a`
-  remains provisional until that comparison passes.
+- The raw measurement sheet and corrected compensated verification are
+  bench-verified. Profile `2cdf3731de4a` is accepted for the current machine
+  configuration. A localized residual remains at stations 09/14, A=270; the
+  overall result is `0.338 mm` RMS / `0.752 mm` maximum. Do not refit from the
+  verification sheet merely to reduce that local point because it would make
+  the validation circular.
 - Fiducial fitting removes a common affine pose. That is intentional because
   P100 owns registration, but a real global X/Y scale or skew defect belongs
   in `$100`/`$101` or mechanical alignment, not in this residual map.
@@ -192,7 +200,8 @@ are distinguishable without a multi-pen tip offset.
   component counts, fiducial pixels, homography, and assignment statistics.
 - `samples/gcode/bed-error-analysis-2026-10-23.json`: measured field,
   validation, and bed-mesh correlation report.
-- `samples/gcode/bed-error-compensation-2026-10-23.json`: first fitted profile.
+- `samples/gcode/bed-error-compensation-2026-10-23.json`: corrected,
+  bench-verified profile.
 - `samples/gcode/bed-error-verify.gcode`: compensated verification program.
 - `samples/gcode/bed-error-verify-frame-error-2026-10-23.csv`: rejected first
   verification measurement.
@@ -200,6 +209,12 @@ are distinguishable without a multi-pen tip offset.
   verification extraction and image hash.
 - `samples/gcode/bed-error-verify-frame-error-analysis-2026-10-23.json`:
   before/after comparison that exposed the frame error.
+- `samples/gcode/bed-error-verify-pass-2026-10-23.csv`: passing corrected
+  verification measurement.
+- `samples/gcode/bed-error-verify-pass-photo-2026-10-23.json`: passing photo
+  extraction, image hash, pose transform, and assignment statistics.
+- `samples/gcode/bed-error-verify-pass-analysis-2026-10-23.json`: independent
+  before/after comparison and acceptance result.
 - `samples/gcode/bed-mesh-2026-10-11.csv`: mesh used for the correlation.
 - `docs/report/lab-notes/2026-10-23-m-12-full-field-bed-calibration.md`:
   bench extraction, measurements, correlation, and acceptance decision.
@@ -214,6 +229,10 @@ are distinguishable without a multi-pen tip offset.
   sheet and handling boundary.
 - `docs/report/lab-notes/assets/2026-10-23-m-12-full-field-bed-error-vectors.png`:
   A=0 spatial, rotation-residual, and control vector fields.
+- `docs/report/lab-notes/2026-10-23-m-12-compensated-verification-pass.md`,
+  `assets/2026-10-23-m-12-compensated-verification-pass.jpg`, and
+  `assets/2026-10-23-m-12-compensated-verification-pass-overlay.png`: accepted
+  run, source photo, and measured-marker overlay.
 - `software/README.md`, `docs/testing/TEST_PLAN.md`,
   `docs/project/ROADMAP.md`, `docs/integration/INTERFACES.md`: operating
   procedure, current behavior, acceptance, and ownership.

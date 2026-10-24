@@ -169,8 +169,8 @@ The map can cancel the measured lateral effect; it cannot repair the bed.
 - The first fitted profile (`911d2694c8c9`) was rejected after its compensated
   verification exposed a bed-to-machine frame error; see
   [`2026-10-23-m-12-bed-compensation-frame-error.md`](2026-10-23-m-12-bed-compensation-frame-error.md).
-- Treat the corrected profile (`2cdf3731de4a`) as provisional, not yet a
-  production-qualified machine calibration.
+- At the time of this analysis, treat the corrected profile (`2cdf3731de4a`)
+  as provisional pending its compensated verification.
 - The compensated verification program is
   `samples\gcode\bed-error-verify.gcode`, regenerated from the corrected
   profile.
@@ -179,3 +179,11 @@ The map can cancel the measured lateral effect; it cannot repair the bed.
   decrease without introducing a new spatial field. If they do not, inspect
   bed plane/runout and carriage coupling rather than accepting the software
   profile.
+
+## Follow-up
+
+The corrected profile passed the independent verification on 2026-10-23:
+overall RMS fell from `0.581` to `0.338 mm`, maximum from `1.309` to
+`0.752 mm`, and error by `41.9 %`. Profile `2cdf3731de4a` is accepted for the
+current machine configuration. See
+[`2026-10-23-m-12-compensated-verification-pass.md`](2026-10-23-m-12-compensated-verification-pass.md).
