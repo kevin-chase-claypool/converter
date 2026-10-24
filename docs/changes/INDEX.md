@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-24 | `WSW-20261024-005` | windows-software, hardware | implemented | [Add a one-sheet CMYK wave-rotation isolation test](windows-software/2026/2026-10-24-wave-rotation-isolation-test.md) |
 | 2026-10-24 | `WSW-20261024-004` | windows-software, hardware | implemented | [Stabilize wave-screen row spacing across all CMYK inks](windows-software/2026/2026-10-24-stabilize-cmyk-wave-row-spacing.md) |
 | 2026-10-24 | `WSW-20261024-003` | windows-software, hardware | implemented | [Make bed-calibration photo matching orientation-independent](windows-software/2026/2026-10-24-orientation-independent-bed-photo-matching.md) |
 | 2026-10-24 | `WSW-20261024-002` | windows-software, hardware | implemented | [Interpolate bed compensation in the rotating bed frame](windows-software/2026/2026-10-24-bed-frame-angular-interpolation.md) |

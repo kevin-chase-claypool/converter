@@ -279,6 +279,13 @@ Cycle Start with the pen loaded:
   drawn / commanded); unequal square diagonals mean X/Y skew. Needs a
   >= 205 x 205 mm sheet (8.5x11 in portrait fits, centred). Regenerate with
   `..\tools\make_xy_scale_check.py`.
+- `..\samples\gcode\wave-rotation-isolation-base.gcode` and
+  `wave-rotation-isolation-low-a-accel.gcode` - one-sheet CMYK wave diagnostic.
+  The first file prints parked A0 plus `+5`, `+10`, `+14.5` baseline,
+  reduced-feed `+14.5`, and `-14.5` degree cases. Keep the sheet mounted, set
+  `$123=3000`, and run the second file for its own parked control and
+  reduced-acceleration `+14.5` degree case. Regenerate both with
+  `..\tools\make_wave_rotation_isolation_test.py`.
 - `..\samples\gcode\cmyk-pen-alignment.gcode` - five crosses (centre and
   four corners at +-75 mm) with the bed parked, for comparing the four CMYK
   pens. Register once, then run this **same file unchanged** once per pen on

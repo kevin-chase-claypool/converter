@@ -16,9 +16,16 @@
 - A post-fix physical print still shows the pattern. The operator reports that
   it concentrates where the pen is down and the bed performs a large rotation.
   This rules out the original wave-amplitude explanation as the complete cause.
-- Prepared `tmp/IMG_0514-cmyk-yellow-xyonly-diagnostic.gcode`: the same current
-  yellow bed-space path with A held at zero. It passes the motion checker and is
-  the next controlled run.
+- Added `WSW-20261024-005`: a compact one-sheet diagnostic matrix comparing
+  parked A0 controls against `+5/+10/+14.5/-14.5 deg` pen-down rotations,
+  `+14.5 deg` at `F350`, and `+14.5 deg` with `$123=3000`. The sheet stays
+  mounted across both files.
+- The generated base and low-acceleration programs pass the motion checker;
+  the largest drawing step is `0.40 bed deg` and the largest A-rate demand is
+  `108 motor deg/s`.
+- The XY-only copy of the previous yellow path remains available, but the
+  one-sheet matrix is now the primary next test because it separates parked,
+  rotation, feed, and acceleration behavior without another paper setup.
 - If the A-parked copy is clean, investigate loaded A-axis following/elastic
   error and bed runout versus angle. If it fails, investigate pen contact, ink
   flow, and X/Y carriage behavior.
