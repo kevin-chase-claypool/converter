@@ -192,6 +192,12 @@ Cycle Start with the pen loaded:
   construction take minutes instead of seconds. The status bar states which
   preview mode was used.
 
+  Exact compensation first checks four points across each source segment. If
+  the correction is comfortably flat for the active Tolerance, it uses one
+  segment immediately; otherwise it falls back to the original 16-point
+  curvature check. This preserves the existing subdivision decisions on the
+  installed profile while removing most repeated local-affine evaluations.
+
   After fitting, generate a compensated verification sheet with:
 
   ```powershell

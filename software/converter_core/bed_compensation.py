@@ -24,6 +24,8 @@ from typing import Sequence
 SCHEMA = "theta-bed-compensation-v2"
 MAX_ABS_CORRECTION_MM = 5.0
 SPATIAL_NEIGHBOURS = 8
+FAST_COMPENSATION_PROBE_SAMPLES = 4
+FAST_COMPENSATION_PROBE_TOLERANCE_FRACTION = 0.25
 
 
 def _finite(value, name):
@@ -324,6 +326,39 @@ def compensated_machine_point(
     return machine[0] + correction[0], machine[1] + correction[1]
 
 
+def _compensation_probe_worst(
+    start,
+    end,
+    start_theta,
+    end_theta,
+    center,
+    profile,
+    machine_start,
+    machine_end,
+    chord,
+    samples,
+):
+    worst = 0.0
+    chord_x = machine_end[0] - machine_start[0]
+    chord_y = machine_end[1] - machine_start[1]
+    for index in range(1, samples):
+        t = index / samples
+        point = (
+            start[0] + t * (end[0] - start[0]),
+            start[1] + t * (end[1] - start[1]),
+        )
+        theta = start_theta + t * (end_theta - start_theta)
+        actual = compensated_machine_point(point, theta, center, profile)
+        expected_x = machine_start[0] + t * chord_x
+        expected_y = machine_start[1] + t * chord_y
+        deviation = abs(
+            (actual[0] - expected_x) * chord_y
+            - (actual[1] - expected_y) * chord_x
+        ) / chord
+        worst = max(worst, deviation)
+    return worst
+
+
 def compensation_step_count(
     start,
     end,
@@ -333,8 +368,14 @@ def compensation_step_count(
     profile,
     tolerance,
     samples=16,
+    adaptive=True,
 ) -> int:
-    """Extra subdivision needed for a varying machine-space correction."""
+    """Extra subdivision needed for a varying machine-space correction.
+
+    A few coarse probes can establish a conservative flatness margin for the
+    requested tolerance. Only uncertain segments pay for the full sample grid;
+    sharp or varying fields therefore keep the previous behavior.
+    """
     if profile is None or profile.identity:
         return 1
     tolerance = max(float(tolerance), 1e-6)
@@ -345,20 +386,37 @@ def compensation_step_count(
     chord = math.hypot(chord_x, chord_y)
     if chord <= 1e-9:
         return 1
-    worst = 0.0
-    for index in range(1, samples):
-        t = index / samples
-        point = (
-            start[0] + t * (end[0] - start[0]),
-            start[1] + t * (end[1] - start[1]),
+    probe_samples = int(samples)
+    if probe_samples <= 1:
+        return 1
+    if adaptive and probe_samples > FAST_COMPENSATION_PROBE_SAMPLES:
+        quick_worst = _compensation_probe_worst(
+            start,
+            end,
+            start_theta,
+            end_theta,
+            center,
+            profile,
+            ma,
+            mb,
+            chord,
+            FAST_COMPENSATION_PROBE_SAMPLES,
         )
-        theta = start_theta + t * (end_theta - start_theta)
-        actual = compensated_machine_point(point, theta, center, profile)
-        expected_x = ma[0] + t * chord_x
-        expected_y = ma[1] + t * chord_y
-        deviation = abs(
-            (actual[0] - expected_x) * chord_y
-            - (actual[1] - expected_y) * chord_x
-        ) / chord
-        worst = max(worst, deviation)
+        if (
+            quick_worst
+            <= tolerance * FAST_COMPENSATION_PROBE_TOLERANCE_FRACTION
+        ):
+            return 1
+    worst = _compensation_probe_worst(
+        start,
+        end,
+        start_theta,
+        end_theta,
+        center,
+        profile,
+        ma,
+        mb,
+        chord,
+        probe_samples,
+    )
     return max(1, min(600, int(math.ceil(worst / tolerance))))

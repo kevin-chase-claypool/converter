@@ -5,6 +5,7 @@ import importlib.util
 import io
 import math
 from pathlib import Path
+import random
 import sys
 import tempfile
 import unittest
@@ -15,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "software"))
 
 import converter_core as converter
+import converter_core.bed_compensation as bed_compensation_module
 import converter_core.gcode as gcode_module
 from converter_core.bed_calibration import (
     COVERAGE_RADIUS_MM,
@@ -206,6 +208,68 @@ class BedCompensationProfileTests(unittest.TestCase):
             0.01,
         )
         self.assertGreater(steps, 1)
+
+    def test_adaptive_probe_fast_exits_on_a_flat_correction(self):
+        samples = ((-10.0, -10.0), (10.0, -10.0), (10.0, 10.0), (-10.0, 10.0))
+        profile = BedCompensationProfile(
+            angle_values_deg=(0.0,),
+            samples_mm=(samples,),
+            corrections_mm=(((0.25, -0.10),) * len(samples),),
+            coverage_radius_mm=20.0,
+        )
+        with mock.patch.object(
+            bed_compensation_module,
+            "compensated_machine_point",
+            wraps=bed_compensation_module.compensated_machine_point,
+        ) as probe:
+            steps = compensation_step_count(
+                (-5.0, 0.0),
+                (5.0, 0.0),
+                0.0,
+                0.0,
+                (0.0, 0.0),
+                profile,
+                0.10,
+            )
+        self.assertEqual(steps, 1)
+        self.assertLessEqual(probe.call_count, 5)
+
+    def test_adaptive_probe_falls_back_to_full_curvature_check(self):
+        arguments = (
+            (-10.0, 0.0),
+            (10.0, 0.0),
+            0.0,
+            90.0,
+            (0.0, 0.0),
+            profile_for_test(),
+            0.01,
+        )
+        adaptive = compensation_step_count(*arguments)
+        fixed = compensation_step_count(*arguments, adaptive=False)
+        self.assertGreater(adaptive, 1)
+        self.assertEqual(adaptive, fixed)
+
+    def test_adaptive_probe_matches_full_probe_for_varying_fields(self):
+        rng = random.Random(20261023)
+        profile = profile_for_test()
+        for _index in range(200):
+            start = (rng.uniform(-9.0, 9.0), rng.uniform(-9.0, 9.0))
+            end = (rng.uniform(-9.0, 9.0), rng.uniform(-9.0, 9.0))
+            start_theta = rng.uniform(0.0, 360.0)
+            end_theta = rng.uniform(0.0, 360.0)
+            arguments = (
+                start,
+                end,
+                start_theta,
+                end_theta,
+                (0.0, 0.0),
+                profile,
+                0.01,
+            )
+            self.assertEqual(
+                compensation_step_count(*arguments),
+                compensation_step_count(*arguments, adaptive=False),
+            )
 
 
 class BedCalibrationGeneratorTests(unittest.TestCase):

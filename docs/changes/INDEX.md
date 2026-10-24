@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-23 | `WSW-20261023-009` | windows-software | implemented | [Add an adaptive bed-compensation curvature probe](windows-software/2026/2026-10-23-adaptive-compensation-probe.md) |
 | 2026-10-23 | `WSW-20261023-008` | windows-software | implemented | [Route the shared Cancel button to CMYK background planning](windows-software/2026/2026-10-23-shared-cancel-tracks-cmyk-planning.md) |
 | 2026-10-23 | `WSW-20261023-007` | windows-software, hardware | implemented | [Use a fast nominal preview with exact compensated G-code](windows-software/2026/2026-10-23-fast-nominal-preview.md) |
 | 2026-10-23 | `WSW-20261023-006` | windows-software, hardware | implemented | [Extend bed compensation coverage to 13.5 inches](windows-software/2026/2026-10-23-extend-bed-compensation-to-13-5-inches.md) |

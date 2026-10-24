@@ -1,5 +1,25 @@
 # Engineering Log
 
+<a id="elog-20261023-adaptive-compensation-probe"></a>
+### 🟨 2026-10-23 - WINDOWS SOFTWARE/IMPLEMENTED - Adaptive compensation probe reduces exact planning cost
+
+- The fixed 16-point bed-compensation curvature probe was the dominant cost.
+  Across the exact 8,699-contour CMYK field, 15,694 sampled segments produced
+  identical subdivision counts with 4 and 16 points.
+- Exact planning now performs a four-point probe and exits with one
+  subdivision when deviation is at most 25 % of Tolerance. Uncertain segments
+  fall back to the original 16-point calculation.
+- Probe time on the real-field sample fell from `8.838` to `2.673 s`, a
+  `3.31x` speedup. A 100-contour exact move build fell from `4.891` to
+  `2.423 s`, with the same 7,871 moves.
+- Randomized varying-field tests retained the full probe's subdivision counts,
+  and the fixed-sample path remains available as an oracle.
+- The full converter suite passes 494 tests with one OpenGL-context skip.
+- Evidence: `WSW-20261023-009`,
+  `docs/changes/windows-software/2026/2026-10-23-adaptive-compensation-probe.md`.
+- Category: windows-software, bed, compensation, performance, algorithm,
+  subdivision.
+
 <a id="elog-20261023-cmyk-shared-cancel"></a>
 ### 🟨 2026-10-23 - WINDOWS SOFTWARE/IMPLEMENTED - Shared Cancel now stops CMYK background planning
 

@@ -219,6 +219,12 @@
   sub-tolerance numerical bound, a dense 8,699-contour benchmark completes
   materially faster, and regression coverage includes both constant and
   sharply varying correction fields.
+  Status 2026-10-23: a four-point early-out with the original 16-point
+  fallback now preserves every subdivision count across a 15,694-segment
+  real-field sample while cutting probe time `8.838 -> 2.673 s` (`3.31x`) and
+  a 100-contour exact move build `4.891 -> 2.423 s` (`2.02x`). The remaining
+  opportunity is replacing repeated local-affine lookup with a triangulated or
+  precomputed table, then measuring a complete dense save.
 
 ## Phase 5: toolhead
 
