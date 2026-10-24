@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-24 | `WSW-20261024-004` | implemented | [Stabilize wave-screen row spacing across all CMYK inks](2026/2026-10-24-stabilize-cmyk-wave-row-spacing.md) | `cmyk`, `wave-screen`, `row-spacing`, `amplitude`, `aliasing`, `cyan`, `magenta`, `yellow`, `black` |
 | 2026-10-24 | `WSW-20261024-003` | implemented | [Make bed-calibration photo matching orientation-independent](2026/2026-10-24-orientation-independent-bed-photo-matching.md) | `bed`, `calibration`, `photo`, `fiducial`, `orientation`, `matching` |
 | 2026-10-24 | `WSW-20261024-002` | implemented | [Interpolate bed compensation in the rotating bed frame](2026/2026-10-24-bed-frame-angular-interpolation.md) | `bed`, `compensation`, `angle`, `interpolation`, `frame`, `striation` |
 | 2026-10-24 | `WSW-20261024-001` | implemented | [Expand full-field bed calibration to eight angles](2026/2026-10-24-eight-angle-bed-calibration.md) | `bed`, `compensation`, `calibration`, `angle`, `cmyk`, `striation` |

@@ -38,6 +38,17 @@ SCREEN_ANGLES_DEG = {"c": 15.0, "m": 75.0, "y": 0.0, "k": 45.0}
 
 # Below this ink coverage a mark is dropped so paper stays clean.
 INK_FLOOR = 0.06
+# A wave row turns local tone into vertical displacement. Sampling each row in
+# isolation turns pixel noise and image detail at the row pitch into visible
+# gaps that open and close between neighbouring strokes. Average the
+# displacement tone over four rows; the unsmoothed value still decides whether
+# a point is inked, so image boundaries stay sharp.
+WAVE_TONE_ROW_WINDOW = 4
+# Limit how much the displacement tone can change from one row to the next.
+# With full dot size this changes one visible gap by at most 2% of the row
+# pitch (4% between two successive gaps) instead of letting a vertical image
+# edge fan neighbouring rows far apart.
+WAVE_TONE_ROW_MAX_STEP = 0.04
 
 # Black usually overpowers the other three pens (the r/PlotterArt threads
 # consistently report dialing it down), so its default weight is lower.
@@ -587,26 +598,73 @@ def _wave_rows(
     min_length_mm=0.8,
     cancel_check=None,
 ):
-    """Sine rows whose amplitude follows tone (flat white draws nothing)."""
+    """Sine rows whose smoothly varying amplitude follows tone.
+
+    A short row window removes row-frequency tonal aliasing so neighbouring
+    waves do not visibly breathe, while the unsmoothed tone still clips each
+    mark to the image (flat white draws nothing).
+    """
     min_x, max_x, min_y, max_y, ca, sa = _local_frame(bounds, angle_deg)
     spacing = max(0.2, float(spacing))
     sample_step = max(0.25, min(spacing * 0.25, 0.8))
     amplitude_max = spacing * 0.5 * max(0.05, float(amplitude_scale))
     wavelength = spacing * 2.0
-    rows = []
+    row_ys = []
     y = min_y + spacing * 0.5
     while y <= max_y:
+        row_ys.append(y)
+        y += spacing
+
+    x_values = []
+    x = min_x
+    while x <= max_x:
+        x_values.append(x)
+        x += sample_step
+
+    tone_rows = []
+    for y in row_ys:
+        check_cancelled(cancel_check)
+        tone_rows.append(
+            [
+                darkness(x * ca - y * sa, x * sa + y * ca)
+                for x in x_values
+            ]
+        )
+
+    smoothed_tone_rows = []
+    window = min(WAVE_TONE_ROW_WINDOW, len(tone_rows))
+    for row_index in range(len(tone_rows)):
+        low = min(max(0, row_index - window // 2), len(tone_rows) - window)
+        high = low + window
+        smoothed_tone_rows.append(
+            [
+                sum(
+                    tone_rows[index][x_index] for index in range(low, high)
+                )
+                / (high - low)
+                for x_index in range(len(x_values))
+            ]
+        )
+    for x_index in range(len(x_values)):
+        for row_index in range(1, len(smoothed_tone_rows)):
+            previous = smoothed_tone_rows[row_index - 1][x_index]
+            current = smoothed_tone_rows[row_index][x_index]
+            smoothed_tone_rows[row_index][x_index] = previous + max(
+                -WAVE_TONE_ROW_MAX_STEP,
+                min(WAVE_TONE_ROW_MAX_STEP, current - previous),
+            )
+
+    rows = []
+    for row_index, y in enumerate(row_ys):
         check_cancelled(cancel_check)
         current = []
-        x = min_x
-        while x <= max_x:
-            wx = x * ca - y * sa
-            wy = x * sa + y * ca
-            value = darkness(wx, wy)
+        for x_index, x in enumerate(x_values):
+            value = tone_rows[row_index][x_index]
             if value >= INK_FLOOR:
+                displacement_tone = smoothed_tone_rows[row_index][x_index]
                 offset = (
                     amplitude_max
-                    * value
+                    * displacement_tone
                     * math.sin(2.0 * math.pi * x / wavelength)
                 )
                 current.append((x, y + offset))
@@ -619,12 +677,10 @@ def _wave_rows(
                         ]
                     )
                 current = []
-            x += sample_step
         if current and (len(current) - 1) * sample_step >= min_length_mm:
             rows.append(
                 [(px * ca - py * sa, px * sa + py * ca) for px, py in current]
             )
-        y += spacing
     return rows
 
 

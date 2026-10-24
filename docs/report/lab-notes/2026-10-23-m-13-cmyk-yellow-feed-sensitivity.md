@@ -191,8 +191,39 @@ machine-space warp that compensates the paper.
   marker, the next checks are the actual round-stock diameter and tape
   intrusion into the 6.35 mm configured rim margin.
 
+### 2026-10-24 wave-amplitude aliasing isolated
+
+- The operator confirmed that the same spacing bands occur in all four CMYK
+  G-code layers after restarting the converter.
+- The regenerated Ben1 set at 15:20 carries
+  `angular interpolation bed-frame`, uses `F700`, and records a 60 mm centre
+  hold. The current file therefore exercises the current compensation and
+  controller settings.
+- The intermediate yellow SVG has row centre pitches of exactly `3.08 mm`.
+  Reconstructing the compensated bed-space G-code gives a `3.0736 mm` row fit
+  with `0.0082 mm` RMS and `0.0465 mm` maximum residual. The motion planner is
+  not changing the baseline grid.
+- At a fixed horizontal position, the source SVG's local wave-to-wave gaps
+  ranged from about `2.38` to `3.57 mm` around that `3.08 mm` pitch. Each row
+  independently multiplied tone into the sine displacement, so vertical image
+  detail at the row frequency produced the visible spacing bands.
+- `_wave_rows` now averages displacement tone over four adjacent rows and
+  limits its change to `0.04` between rows. The unsmoothed tone still controls
+  ink coverage. The change applies to all four CMYK screen angles.
+- Controlled regressions at `15/75/0/45` degrees reduce the adjacent-gap
+  spread below `0.15 mm`; the failing zero-degree fixture previously varied
+  by `2.28 mm`. A separate smooth-gradient test confirms wave amplitude still
+  follows broad image shading.
+- No post-fix paper print has been made yet, so M-13 remains open.
+
 ## Decisions and next action
 
+- Regenerate all four Ben1 layers, require `angular interpolation bed-frame`
+  in every header, and print the yellow layer first at the same `F700`,
+  `$120=600`, and `$121=300` used for the failing run. This tests the current
+  wave generator without changing a second variable.
+- If the repaired wave screen still shows spacing bands, inspect row ink
+  continuity and toolhead contact separately before changing acceleration.
 - Keep 700 mm/min as the nominal requested feed for now and use a 65 % override
   for quality-critical Xθ/Yθ yellow work until the drivetrain is improved.
 - Repeat magenta alone in **Bed motion = XY only** at the same 420 mm/min. If it

@@ -1,5 +1,38 @@
 # Engineering Log
 
+<a id="elog-20261024-wave-row-tone-aliasing"></a>
+### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK wave spacing bands traced to row-frequency tone aliasing
+
+- The operator confirmed the spacing bands occur in all four CMYK layer files.
+  The regenerated Ben1 set uses the current compensation code and `F700`, so
+  stale output and acceleration were no longer confounders.
+- The yellow source SVG placed row centres exactly `3.08 mm` apart.
+  Reconstructing the compensated bed-space G-code produced a `3.0736 mm`
+  row fit with `0.0082 mm` RMS and `0.0465 mm` maximum residual, proving the
+  motion planner preserved the baseline grid.
+- At fixed horizontal positions, independently tone-driven wave amplitudes
+  changed the visible source gap from about `2.38` to `3.57 mm`. This was the
+  visible striation: vertical image detail at the row pitch was aliasing into
+  the waveform displacement itself.
+- `_wave_rows` now averages displacement tone over four adjacent rows and
+  limits row-to-row tone change to `0.04`. The unsmoothed mask still keeps
+  image edges sharp, while broad shading remains represented by amplitude.
+- Verification: the new regression covers CMYK screen angles `15/75/0/45`
+  degrees and limits adjacent gap spread below `0.15 mm`; the old zero-degree
+  fixture varied by `2.28 mm`. A smooth-gradient regression confirms dark-side
+  amplitudes still exceed light-side amplitudes by more than `2.3x`.
+  `test_cmyk_tab` passes 68 tests, `test_sine_gradient` passes 14, and full
+  converter discovery passes 500 tests with one OpenGL-context skip.
+- A current-version paper print remains pending. Regenerate all four layers,
+  require `angular interpolation bed-frame`, and print yellow first at the
+  failing feed and controller settings.
+- Evidence: `WSW-20261024-004`,
+  `docs/changes/windows-software/2026/2026-10-24-stabilize-cmyk-wave-row-spacing.md`,
+  and
+  `docs/report/lab-notes/2026-10-23-m-13-cmyk-yellow-feed-sensitivity.md`.
+- Category: windows-software, cmyk, wave-screen, row-spacing, amplitude,
+  aliasing, all-inks.
+
 <a id="elog-20261024-eight-angle-verification-failed"></a>
 ### 🟥 2026-10-24 - HARDWARE/WINDOWS SOFTWARE/FAILED - Eight-angle compensation failed independent verification
 

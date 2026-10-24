@@ -549,6 +549,145 @@ class ScreeningTests(unittest.TestCase):
         self.assertEqual(len(tsp), 1)
         self.assertGreater(len(tsp[0]), 10)
 
+    def test_wave_rows_keep_even_visible_spacing_across_row_tone_changes(self):
+        spacing = 4.0
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        page_mm = 64
+        pixels_per_mm = 4
+        pixel_count = page_mm * pixels_per_mm
+        yy, xx = self.np.mgrid[0:pixel_count, 0:pixel_count]
+        yy_mm = yy / pixels_per_mm
+        xx_mm = xx / pixels_per_mm
+        for angle_deg in converter.SCREEN_ANGLES_DEG.values():
+            with self.subTest(angle_deg=angle_deg):
+                radians = math.radians(angle_deg)
+                local_normal = (
+                    xx_mm * math.sin(radians) + yy_mm * math.cos(radians)
+                )
+                tone = (
+                    0.7
+                    + 0.3
+                    * self.np.sin(
+                        2.0 * self.np.pi * local_normal / (2.0 * spacing)
+                    )
+                ).astype("float32")
+                waves = converter.screen_channel(
+                    tone,
+                    {
+                        "off_x": 0.0,
+                        "off_y": 0.0,
+                        "width_mm": float(page_mm),
+                        "height_mm": float(page_mm),
+                        "pixels_w": pixel_count,
+                        "pixels_h": pixel_count,
+                    },
+                    style="waves",
+                    spacing_mm=spacing,
+                    angle_deg=angle_deg,
+                )
+                local_rows = []
+                for points in waves:
+                    local_rows.append(
+                        [
+                            (
+                                x * math.cos(radians) + y * math.sin(radians),
+                                -x * math.sin(radians) + y * math.cos(radians),
+                            )
+                            for x, y in points
+                        ]
+                    )
+
+                x_min = min(
+                    point[0] for points in local_rows for point in points
+                )
+                sample_xs = [
+                    x_min + spacing / 2.0 + index * 2.0 * spacing
+                    for index in range(8)
+                ]
+                sample_x = max(
+                    sample_xs,
+                    key=lambda candidate: sum(
+                        min(point[0] for point in row)
+                        <= candidate
+                        <= max(point[0] for point in row)
+                        for row in local_rows
+                    ),
+                )
+                # One quarter wavelength is where tone-driven amplitude has
+                # its strongest effect on the visible gap between rows.
+                ys = sorted(
+                    value
+                    for points in local_rows
+                    if (value := value_at_x(points, sample_x)) is not None
+                )
+                # End rows have a one-sided tone window; guard the field.
+                ys = ys[2:-2]
+                gaps = [
+                    second - first
+                    for first, second in zip(ys, ys[1:])
+                    if 0.1 <= second - first <= 2.0 * spacing
+                ]
+                self.assertGreaterEqual(len(gaps), 10)
+                self.assertLess(max(gaps) - min(gaps), 0.15)
+
+    def test_wave_rows_still_follow_a_smooth_vertical_tone_gradient(self):
+        spacing = 4.0
+        yy, _xx = self.np.mgrid[0:64, 0:64]
+        tone = (0.2 + 0.6 * yy / 63.0).astype("float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves",
+            spacing_mm=spacing,
+        )
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        amplitudes = []
+        for points in waves:
+            baseline = value_at_x(points, 0.0)
+            crest = value_at_x(points, spacing / 2.0)
+            if baseline is not None and crest is not None:
+                amplitudes.append((baseline, crest - baseline))
+        amplitudes.sort()
+        self.assertGreaterEqual(len(amplitudes), 10)
+        quarter = max(1, len(amplitudes) // 4)
+        light_amplitude = sum(
+            amplitude for _baseline, amplitude in amplitudes[:quarter]
+        ) / quarter
+        dark_amplitude = sum(
+            amplitude for _baseline, amplitude in amplitudes[-quarter:]
+        ) / quarter
+        self.assertGreater(
+            dark_amplitude,
+            light_amplitude * 2.3,
+            "four-row tone smoothing must preserve broad image shading",
+        )
+
     def test_contours_need_a_gradient(self):
         ramp = self.np.tile(
             self.np.linspace(0.0, 1.0, 32, dtype="float32"), (32, 1)

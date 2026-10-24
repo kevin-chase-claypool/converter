@@ -448,7 +448,12 @@ Current tools:
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times
-  with a sub-pen offset.
+  with a sub-pen offset. Wave-screen amplitude follows local tone, but its
+  displacement tone is averaged over four adjacent rows and slew-limited so
+  raster detail at the row pitch cannot make neighbouring gaps open and close.
+  The unsmoothed tone still clips each mark to the image, and broad vertical
+  shading continues to change the wave amplitude. This behavior is shared by
+  all four CMYK screen angles.
   While the CMYK page is active the shared OpenGL preview draws each visible
   ink in its own colour - not yet drawn marks in a pale tint, the drawn path in
   full ink - so the four layers can be judged overlaid the way they will mesh

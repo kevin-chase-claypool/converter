@@ -289,16 +289,20 @@
   programmed 700 mm/min; a 65 % override (`455 mm/min`) appeared to eliminate
   them. Magenta still shows severe striations at an even lower 60 % override
   (`420 mm/min`), especially on the subject's right face, and black also shows
-  striation near bed center. Slow feed is not a general fix. Center hold parks
-  the bed within each contour but can use a different held A angle per contour;
-  the verified compensation residual is angle-dependent. A fixed-angle local
-  sample preserves a 2.2 mm row pair within about 0.04 mm, so the leading
-  algorithmic suspect is changing the held angle between adjacent contours,
-  not the within-row correction. Benefit: quality
+  striation near bed center. Slow feed is not a general fix. The regenerated
+  2026-10-24 Ben1 G-code already has a uniform `3.0736 mm` row grid
+  (`0.0082 mm` RMS), while its source wave gaps varied up to `1.20 mm` because
+  each row sampled image tone independently into vertical amplitude. That
+  row-frequency aliasing is fixed in `WSW-20261024-004` for all four screen
+  angles; a post-fix paper print is now the immediate discriminator.
+  Center hold remains a separate risk because it can use a different held A
+  angle per contour and the compensation residual is angle-dependent. Benefit: quality
   plotting can return to 700 mm/min once the limiting subsystem is identified,
   instead of carrying a 30-35 % throughput penalty. The next discriminating
-  test is magenta and black near center in XY-only at the same slow feed. If
-  clean, prototype one constant center-hold A angle across the whole layer.
+  test is current-version yellow at the failing feed/settings, followed by
+  magenta and black near center in XY-only at the same slow feed if bands
+  remain. If clean, prototype one constant center-hold A angle across the
+  whole layer.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already
