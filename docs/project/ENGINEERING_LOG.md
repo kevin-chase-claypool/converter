@@ -1,19 +1,27 @@
 # Engineering Log
 
 <a id="elog-20261024-magenta-striation-at-low-feed"></a>
-### 🟨 2026-10-24 - HARDWARE/PARTIAL - Magenta striation persists at 60 % feed
+### 🟨 2026-10-24 - HARDWARE/PARTIAL - Magenta and black striation persist near center
 
 - The compensated Ben1 magenta wave screen remained severely striated at a
   60 % controller override (`420 mm/min`), especially on the subject's
-  right face. Yellow had appeared clean at 455 mm/min.
+  right face. Yellow had appeared clean at 455 mm/min. Black also shows the
+  striation near bed center; the black run's exact feed override was not
+  recorded.
 - The saved magenta file has 996 A-direction reversals versus yellow's 2,777,
   and its full-feed maximum A rate is also about `254 motor deg/s`. At 60 %
   that rate falls to about `152 motor deg/s`, so a file-wide rate or reversal
-  overload does not explain the magenta result by itself.
-- No calibrated magenta photo was captured. Magenta-only ink flow, 75-degree
-  screen overlap, paper deformation, or X/Y motion allocation remain
-  candidates. The next discriminating run is the same magenta layer at
-  `420 mm/min` in XY-only.
+  overload does not explain the magenta result by itself. Black also passes its
+  motion guard, with 11,481 hold moves and a `254 motor deg/s` full-feed peak.
+- Center hold parks the bed within each contour, but it can select a different
+  held A angle for different contours. The compensation profile is
+  angle-dependent: verification RMS is `0.278 / 0.389 / 0.353 mm` at
+  90/180/270 degrees. Adjacent center contours drawn at different held angles
+  can therefore disagree by several tenths of a millimetre.
+- No calibrated magenta photo was captured. Center-hold angle inconsistency is
+  now the leading software-side hypothesis; local bed height, pen/ink flow,
+  and X/Y carriage behavior remain alternatives. The next discriminating run
+  is the same magenta and black layers at the same slow feed in XY-only.
 - Evidence:
   `docs/report/lab-notes/2026-10-23-m-13-cmyk-yellow-feed-sensitivity.md`.
 - Category: hardware, cmyk, magenta, striation, feed-rate, kinematics,

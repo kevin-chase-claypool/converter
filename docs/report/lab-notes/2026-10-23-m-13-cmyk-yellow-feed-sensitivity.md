@@ -76,6 +76,23 @@ were not recorded.
   therefore not explained by a larger file-wide reversal count or a higher
   command-rate demand alone.
 
+### 2026-10-24 black and center-location follow-up
+
+- The operator reports that black also shows the striation near the bed center
+  and that both black and magenta defects are in the center region. The exact
+  feed override used for the black run was not recorded.
+- The black file has 11,481 `hold` moves and 726 contours containing hold
+  moves. Magenta has 9,599 hold moves and 593 such contours; yellow has 14,313
+  hold moves and 480 such contours.
+- `IMG_0514-cmyk-black.gcode` passes its motion preflight. Its full-feed maximum
+  A rate is about `254 motor deg/s`, and its largest drawing rotation is
+  `6.70 bed deg`, both inside the configured caps.
+- The center-hold implementation parks the bed within each contour, but it can
+  choose a different held A angle for different contours. The saved programs
+  contain hundreds of distinct held angles: magenta spans about `-241` to
+  `173 deg`, black about `-102` to `46 deg`, and yellow about `-185` to
+  `236 deg` after whole-revolution normalization.
+
 ## Difficulties and corrective actions
 
 - The exact feed-override transition point and resulting photo were not
@@ -96,12 +113,20 @@ static bed-compensation or G-code-coordinate error. The leading boundary for
 yellow is the rotating-bed/A drivetrain and its response under load.
 
 Magenta remains defective at an even lower speed and has fewer A reversals, so
-the yellow result cannot yet be generalized. Magenta-specific ink flow,
-overlap of its 75-degree wave screen, pen seating/contact, paper deformation
-after earlier passes, or a different X/Y motion allocation remain candidates.
-The accepted compensation profile's `0.338 mm` RMS / `0.752 mm` maximum static
-residual is common to all channels and does not by itself explain a
-magenta-only difference.
+the yellow result cannot yet be generalized. With black also failing near the
+bed center, the strongest software-side hypothesis is now **center-hold angle
+inconsistency**: the bed is parked during each center contour, but it can stop
+at a different A angle between contours. The correction profile is
+angle-dependent and its verified residual differs by angle
+(`90 deg: 0.278 mm RMS`, `180 deg: 0.389 mm`, `270 deg: 0.353 mm`), so adjacent
+center contours drawn at different held angles can disagree by several tenths
+of a millimetre even when every individual coordinate is "compensated."
+
+The accepted `0.338 mm` overall RMS / `0.752 mm` maximum static residual is
+common to all channels; the angle-dependent part is more likely to become
+visible where hold angles vary. Magenta/black ink flow or contrast, local bed
+height, and X/Y carriage behavior remain alternatives until a parked-bed test
+rules them in or out.
 
 ## Decisions and next action
 
@@ -110,6 +135,10 @@ magenta-only difference.
 - Repeat magenta alone in **Bed motion = XY only** at the same 420 mm/min. If it
   is clean, the remaining defect is rotary/A motion; if it persists, move to
   pen/ink/screen isolation.
+- Repeat black near the center under the same fixed bed angle. If both black
+  and magenta become clean in XY only, test a center-hold implementation that
+  uses one constant A angle for all center-held contours instead of selecting a
+  new held angle per contour.
 - Photograph the completed magenta sheet from directly above, ideally with the
   four registration crosses enabled or with fixed sheet fiducials, so the
   striation pitch and direction can be measured.
