@@ -14,7 +14,7 @@ carriage coupling is eliminated.
 
 ## Decision
 
-Add an optional host-side residual map with this transform:
+Add a host-side residual map with this transform:
 
 ```text
 machine_xy = R(theta) * bed_xy + correction(theta, bed_xy)
@@ -26,6 +26,11 @@ preview and G-code. The map is periodic in theta, uses measured bed-frame XY
 samples, has explicit radial coverage, and rejects individual corrections
 above 5 mm. Its fiducial fit removes common sheet translation, rotation, and
 scale so P100 registration is not double-compensated.
+
+The desktop converter selects the current verified profile by default. The
+existing Machine-tab path remains editable: **Browse...** selects a measured
+replacement, **Default** restores the verified profile, and an empty path
+disables compensation.
 
 Measured paper errors are bed-frame displacements. Before storage, the
 required correction is rotated into machine coordinates:
@@ -39,7 +44,8 @@ non-zero bed angles.
 
 P100 remains the only owner of magnetic registration and the physical rotation
 centre. No grblHAL planner, macro, work-offset, or controller contract is
-changed. A missing profile leaves the uncompensated program unchanged.
+changed. Clearing or omitting the profile path leaves the uncompensated
+program unchanged.
 
 ## Consequences
 

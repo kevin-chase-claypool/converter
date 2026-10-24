@@ -1283,12 +1283,18 @@ class MainWindow(QMainWindow):
                     browse = QPushButton("Browse...")
                     browse.clicked.connect(self.choose_bed_compensation_profile)
                     path_layout.addWidget(browse)
+                    use_default = QPushButton("Default")
+                    use_default.clicked.connect(
+                        self.reset_bed_compensation_profile
+                    )
+                    path_layout.addWidget(use_default)
                     label_widget = QLabel(label)
                     tooltip = converter.FIELD_TOOLTIPS.get(key)
                     if tooltip:
                         edit.setToolTip(tooltip)
                         label_widget.setToolTip(tooltip)
                         browse.setToolTip(tooltip)
+                        use_default.setToolTip(tooltip)
                     self.fields[key] = edit
                     self.field_rows[key] = (label_widget, path_row)
                     form.addRow(label_widget, path_row)
@@ -4115,6 +4121,11 @@ class MainWindow(QMainWindow):
         )
         if path:
             self.fields["bed_compensation_path"].setText(path)
+
+    def reset_bed_compensation_profile(self, _checked=False):
+        self.fields["bed_compensation_path"].setText(
+            converter.DEFAULT_BED_COMPENSATION_PATH
+        )
 
     def load_ink_profile(self, path):
         """Load a measured ink profile into the multiply simulation.

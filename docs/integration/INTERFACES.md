@@ -48,8 +48,10 @@ The converter emits:
 Unknown or unsupported commands must cause an explicit error during test, not
 silent motion.
 
-An optional host-side bed-compensation profile may transform the planned work
-coordinates before emission:
+The desktop converter preselects the verified host-side bed-compensation
+profile and may transform the planned work coordinates before emission. The
+Machine-tab path remains editable, and an empty path selects the uncompensated
+path:
 
 ```text
 G54 machine X/Y = R(theta) * bed X/Y + correction(theta, bed X/Y)

@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20261023-bed-compensation-default"></a>
+### 🟨 2026-10-23 - WINDOWS SOFTWARE/IMPLEMENTED - Verified bed compensation enabled by default
+
+- The main converter now initializes **Machine > Bed compensation JSON** with
+  the accepted profile `2cdf3731de4a` instead of a blank path. Normal preview
+  and saved G-code therefore include the measured correction without an
+  extra selection step.
+- The path remains editable. **Browse...** selects another measured profile,
+  **Default** restores the shipped verified profile, and clearing the path
+  explicitly restores uncompensated planning.
+- The default path is resolved from the repository location rather than the
+  process working directory. The command-line shim uses the same production
+  defaults; low-level `Settings()` remains uncompensated so diagnostic tests
+  can request raw planning explicitly.
+- Added regression coverage for the application default and explicit disable.
+  The bed-compensation/photo suite passes all 25 tests; the full converter
+  suite passes 482 tests with one OpenGL-context skip.
+- Evidence: `WSW-20261023-005`, `ADR-009`,
+  `docs/changes/windows-software/2026/2026-10-23-enable-bed-compensation-by-default.md`.
+- Category: windows-software, hardware, bed, compensation, defaults, planner.
+
 <a id="elog-20261023-compensated-verification-pass"></a>
 ### 🟩 2026-10-23 - WINDOWS SOFTWARE/HARDWARE/PASSED - Corrected bed compensation passes independent verification
 

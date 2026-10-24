@@ -1,6 +1,15 @@
 import math
+from pathlib import Path
 import re
 from dataclasses import dataclass, field, fields
+
+
+DEFAULT_BED_COMPENSATION_PATH = str(
+    Path(__file__).resolve().parents[2]
+    / "samples"
+    / "gcode"
+    / "bed-error-compensation-2026-10-23.json"
+)
 
 
 # M-06 pen-free radius sweep: 75.05 s observed movement / 160.58 s model.
@@ -144,8 +153,9 @@ class Settings:
     #
     # Clip radius becomes min(bed_diameter/2 - bed_margin, this).
     machine_reach_radius_mm: float = 180.0
-    # Optional measured residual map from tools/analyze_bed_error_calibration.py.
-    # It is applied after planner theta selection and P100 registration.
+    # Measured residual map from tools/analyze_bed_error_calibration.py. The
+    # application selects the verified profile by default; an empty path
+    # explicitly disables correction for low-level or test planning.
     bed_compensation_path: str = ""
     # Where the artwork's own center is placed relative to the registered bed
     # center, in machine millimetres. plan_program centers the artwork on the bed
@@ -347,7 +357,11 @@ TEXT_FIELD_GROUPS = (
         ("Bed dia mm", "bed_diameter_mm", "457.2"),
         ("Bed margin mm", "bed_margin_mm", "6.35"),
         ("Gantry reach radius mm", "machine_reach_radius_mm", "180.0"),
-        ("Bed compensation JSON", "bed_compensation_path", ""),
+        (
+            "Bed compensation JSON",
+            "bed_compensation_path",
+            DEFAULT_BED_COMPENSATION_PATH,
+        ),
         ("Park X machine mm", "park_x_machine", "-10"),
         ("Park Y machine mm", "park_y_machine", "-436"),
     )),
@@ -503,7 +517,7 @@ FIELD_TOOLTIPS = {
     "bed_diameter_mm": "Bed diameter in mm. Clipping keeps the pen inside this circle (minus bed margin and the gantry reach cap).",
     "bed_margin_mm": "Keeps the pen clear of the bed rim by this many mm.",
     "machine_reach_radius_mm": "Radius the gantry can reach from the registered bed center. Artwork beyond it is clipped so soft limits are not tripped.",
-    "bed_compensation_path": "Optional theta-bed-compensation-v2 JSON made by tools\\analyze_bed_error_calibration.py. It corrects measured residual bed X/Y error after P100 registration; blank disables it.",
+    "bed_compensation_path": "Verified theta-bed-compensation-v2 JSON loaded by default. It corrects measured residual bed X/Y error after P100 registration. Browse to choose another profile, click Default to restore this one, or clear the path to disable correction.",
     "park_x_machine": "End-of-program park X in machine (G53) coordinates.",
     "park_y_machine": "End-of-program park Y in machine (G53) coordinates.",
     "print_speed": "Preview playback speed only. It does not change the emitted program.",
@@ -568,6 +582,13 @@ def coerce_setting(name, text):
     if kind is float:
         return float(text)
     return str(text)
+
+
+def default_settings():
+    """Return production defaults, including the verified bed profile."""
+    return validate_settings(
+        Settings(bed_compensation_path=DEFAULT_BED_COMPENSATION_PATH)
+    )
 
 
 def settings_from_values(text_values, bool_values):

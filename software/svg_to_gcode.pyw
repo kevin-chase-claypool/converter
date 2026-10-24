@@ -7,7 +7,7 @@ from converter_core import *
 
 def _main():
     if len(sys.argv) == 3:
-        settings = Settings()
+        settings = default_settings()
         contours, lines = convert_file(sys.argv[1], sys.argv[2], settings)
         print(f"Converted {contours} contours to {lines} G-code lines: {sys.argv[2]}")
         return 0

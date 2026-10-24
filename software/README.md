@@ -173,9 +173,11 @@ Cycle Start with the pen loaded:
   control repeatability separately, removes the common sheet pose, fits the
   90/180/270 fields, performs leave-one-station-out validation, correlates
   the result with the optional bed mesh, and writes
-  `bed-error-analysis.json`. A validated
-  `bed-error-compensation.json` can be selected in **Machine > Bed
-  compensation JSON**. The profile is a machine-XY correction added after
+  `bed-error-analysis.json`. The verified
+  `..\samples\gcode\bed-error-compensation-2026-10-23.json` profile is
+  preselected in **Machine > Bed compensation JSON**. **Browse...** selects a
+  replacement; **Default** restores the verified profile; clearing the path
+  disables compensation. The profile is a machine-XY correction added after
   the existing planner chooses the bed angle and after P100 registration; it
   does not change artwork geometry or candidate selection. Its coverage is
   checked before planning, each correction is capped at 5 mm, and blanking
@@ -876,13 +878,13 @@ display-only; every other group changes the emitted program.
   an invalid A-axis name, or a bed margin that leaves no drawable area) are
   rejected before preview or save.
 - **Machine** — the machine-side setup the program is clipped and parked
-  against: `Bed dia mm`, `Bed margin mm`, `Gantry reach radius mm`, optional
-  `Bed compensation JSON`, and the end-of-program `Park X/Y machine mm` in
-  G53 machine coordinates. The profile contains measured residual
-  `correction(theta, bed_xy)` machine-XY vectors. It is applied after the
-  planner selects theta and after P100's registration; P100 is not rewritten.
-  Artwork points outside the profile's stated measured coverage are rejected
-  before preview or save.
+  against: `Bed dia mm`, `Bed margin mm`, `Gantry reach radius mm`,
+  `Bed compensation JSON` (the verified profile by default), and the
+  end-of-program `Park X/Y machine mm` in G53 machine coordinates. The profile
+  contains measured residual `correction(theta, bed_xy)` machine-XY vectors.
+  It is applied after the planner selects theta and after P100's registration;
+  P100 is not rewritten. Artwork points outside the profile's stated measured
+  coverage are rejected before preview or save.
 - **Theta kinematics** — theta axis/ratio/resolver/cost settings (`Theta ratio`
   defaults to 12.03324, the measured effective ratio of the 60T→720T pulley
   pair).
@@ -1116,12 +1118,13 @@ display-only; every other group changes the emitted program.
   macro `P100` owns magnetic center registration, the measured `pen - TMAG`
   offset, and `G54 X0 Y0` so work zero means pen tip at bed center.
 - P100 also remains the owner of the physical registration centre and A index.
-  The optional bed-compensation profile is a separate residual map; its
-  fiducial fit removes common translation, rotation, and scale before fitting.
-  Do not place the same residual offset in both P100 and the profile. A saved
-  compensated program records the profile fingerprint and correction bound in
-  its header, and preview uses the same subdivided machine points as the saved
-  G-code.
+  The bed-compensation profile is a separate residual map and the converter
+  loads the verified profile by default; clear the path to disable it or use
+  **Browse...** to select a replacement. Its fiducial fit removes common
+  translation, rotation, and scale before fitting. Do not place the same
+  residual offset in both P100 and the profile. A saved compensated program
+  records the profile fingerprint and correction bound in its header, and
+  preview uses the same subdivided machine points as the saved G-code.
 - SVG document coordinates are not machine coordinates. The converter centers
   the clipped artwork at G54 zero; a document centered at `(100,100)`, for
   example, emits drawing coordinates around `(0,0)`, not `(100,100)`.

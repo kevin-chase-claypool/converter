@@ -362,6 +362,41 @@ class BedCalibrationAnalysisTests(unittest.TestCase):
 
 
 class BedCompensationPlannerIntegrationTests(unittest.TestCase):
+    def test_application_defaults_select_the_verified_profile(self):
+        text_defaults = {
+            key: default
+            for _group, items in converter.TEXT_FIELD_GROUPS
+            for _label, key, default in items
+        }
+        profile_path = Path(text_defaults["bed_compensation_path"])
+
+        self.assertTrue(profile_path.is_file())
+        self.assertEqual(
+            converter.load_bed_compensation(str(profile_path)).fingerprint,
+            "2cdf3731de4a",
+        )
+        self.assertEqual(
+            converter.default_settings().bed_compensation_path,
+            str(profile_path),
+        )
+
+        settings = converter.settings_from_values(text_defaults, {})
+        gcode = converter.contours_to_gcode(
+            [[(-5.0, 0.0), (5.0, 0.0)]], settings
+        )
+        self.assertIn("(bed compensation 2cdf3731de4a,", gcode)
+
+    def test_explicit_empty_profile_disables_compensation(self):
+        settings = converter.Settings(
+            theta_mode="fixed",
+            theta_center_hold_diameter_mm=0,
+            bed_compensation_path="",
+        )
+        gcode = converter.contours_to_gcode(
+            [[(-5.0, 0.0), (5.0, 0.0)]], settings
+        )
+        self.assertNotIn("bed compensation", gcode)
+
     def test_gcode_and_preview_use_the_same_compensated_machine_points(self):
         settings = converter.Settings(
             theta_mode="fixed", theta_center_hold_diameter_mm=0
