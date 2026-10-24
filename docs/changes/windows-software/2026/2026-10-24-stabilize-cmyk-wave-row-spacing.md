@@ -74,7 +74,22 @@ rotary planner, or ioSender.
 - `python -m unittest -v software.tests.test_cmyk_tab`: 68 tests pass.
 - `python -m unittest -v software.tests.test_sine_gradient`: 14 tests pass.
 - Full converter discovery passes 500 tests with one OpenGL-context skip.
-- A post-fix physical CMYK print has not yet been made.
+
+### Post-fix physical check
+
+- The post-fix print used all four files regenerated at 16:30 with `F700`,
+  `0.15 mm` tolerance, a 60 mm centre hold, and the current
+  `angular interpolation bed-frame` marker.
+- The regenerated yellow source now preserves local wave gaps within
+  `0.03-0.10 mm`, instead of the previous `1.20 mm` spread.
+- Inverting the saved compensation transform gives zero G-code blocks over the
+  `0.15 mm` path budget; the worst actual bed-path bow is `0.123 mm`. The
+  earlier `64`-move / `0.504 mm` CLI warning counted machine coordinates as bed
+  coordinates and is a checker false positive.
+- The physical print still shows the pattern. The operator reports that it is
+  concentrated where the pen is down and the bed performs a large rotation.
+  This change fixes a real generator defect but does not resolve the complete
+  machine-level symptom.
 
 ## Struggles and rejected approaches
 
@@ -91,11 +106,11 @@ rotary planner, or ioSender.
 
 - Tone detail at or below the row scale is intentionally smoothed; broad
   facial and background shading remains.
-- Physical M-13 acceptance is still required. Regenerate all four Ben1 files
-  after restarting the converter, confirm `angular interpolation bed-frame`,
-  and print yellow first at the same `F700` and controller settings.
-- If spacing bands remain after a current-version print, compare the same
-  layer in XY-only at the same feed before changing acceleration again.
+- Physical M-13 now needs the exact current yellow bed-space path printed with
+  A parked: `tmp/IMG_0514-cmyk-yellow-xyonly-diagnostic.gcode`. It preserves
+  the current paper-path coordinates and holds A at zero.
+- If that copy is clean, investigate A-axis following or bed runout during
+  large drawing rotations. If it still bands, move to pen/ink/contact testing.
 
 ## Files
 

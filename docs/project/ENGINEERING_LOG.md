@@ -1,5 +1,31 @@
 # Engineering Log
 
+<a id="elog-20261024-wave-fix-physical-failure"></a>
+### 🟥 2026-10-24 - HARDWARE/WINDOWS SOFTWARE/FAILED - Wave tuning did not resolve physical striation
+
+- The current-version Ben1 set was regenerated at 16:30 from a process
+  started at 16:26. Every layer has `F700`, `0.15 mm` tolerance, the 60 mm
+  centre hold, and `angular interpolation bed-frame`.
+- The post-fix yellow source has fixed local wave-gap ranges of
+  `0.03-0.10 mm`, versus `1.20 mm` before the change. The geometry defect
+  targeted by `WSW-20261024-004` is removed.
+- The motion checker reported 64 blocks over tolerance, but it was treating
+  machine X/Y as bed coordinates. Decoding the saved compensation and rotation
+  first gives zero over-tolerance blocks and a `0.123 mm` worst bow, within
+  the `0.15 mm` budget.
+- A post-fix physical print still shows the pattern. The operator reports that
+  it concentrates where the pen is down and the bed performs a large rotation.
+  This rules out the original wave-amplitude explanation as the complete cause.
+- Prepared `tmp/IMG_0514-cmyk-yellow-xyonly-diagnostic.gcode`: the same current
+  yellow bed-space path with A held at zero. It passes the motion checker and is
+  the next controlled run.
+- If the A-parked copy is clean, investigate loaded A-axis following/elastic
+  error and bed runout versus angle. If it fails, investigate pen contact, ink
+  flow, and X/Y carriage behavior.
+- Evidence: operator-supplied `wtf2.jpg`; current Ben1 files dated 16:30; M-13
+  lab note.
+- Category: hardware, cmyk, striation, A-axis, rotation, failed-fix.
+
 <a id="elog-20261024-wave-row-tone-aliasing"></a>
 ### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - CMYK wave spacing bands traced to row-frequency tone aliasing
 

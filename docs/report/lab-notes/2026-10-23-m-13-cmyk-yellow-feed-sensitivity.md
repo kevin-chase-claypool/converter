@@ -214,10 +214,35 @@ machine-space warp that compensates the paper.
   spread below `0.15 mm`; the failing zero-degree fixture previously varied
   by `2.28 mm`. A separate smooth-gradient test confirms wave amplitude still
   follows broad image shading.
-- No post-fix paper print has been made yet, so M-13 remains open.
+- A post-fix paper print was still required at that point; its result follows.
+
+### 2026-10-24 post-fix print failed; large A rotation remains
+
+- All four regenerated files are current-version output written at 16:30,
+  with `F700`, `0.15 mm` path tolerance, a 60 mm centre hold, bed
+  compensation, and the `angular interpolation bed-frame` marker.
+- Re-measuring the yellow intermediate SVG gives fixed local wave-gap ranges
+  of only `0.03-0.10 mm` across the tested columns. The wave-amplitude alias
+  found earlier is fixed in the generated geometry.
+- The motion checker's `64` over-tolerance moves were a false positive from
+  treating machine coordinates as bed coordinates. Inverting the saved
+  compensation transform yields zero over-tolerance blocks and a worst actual
+  path bow of `0.123 mm` at line 4246, inside the `0.15 mm` budget.
+- The post-fix print still shows the pattern. The operator reports that it
+  occurs when the pen is down while the bed performs a large rotation.
+- Leading hypotheses are now A-axis elastic/following error during loaded
+  rotation, bed-height/runout change with angle, and pen drag under tangential
+  motion. The wave generator is no longer the leading cause.
+- Diagnostic prepared: `tmp/IMG_0514-cmyk-yellow-xyonly-diagnostic.gcode`
+  reconstructs the current yellow bed-space path and holds A at zero. It has
+  23,714 drawing moves, no bed rotation, and passes the motion checker.
 
 ## Decisions and next action
 
+- Print `tmp/IMG_0514-cmyk-yellow-xyonly-diagnostic.gcode` after the usual
+  HOME/register step at the same `F700` and controller settings. A clean copy
+  localizes the defect to bed rotation; a failing copy moves the investigation
+  to pen contact, ink, or X/Y carriage behavior.
 - Regenerate all four Ben1 layers, require `angular interpolation bed-frame`
   in every header, and print the yellow layer first at the same `F700`,
   `$120=600`, and `$121=300` used for the failing run. This tests the current

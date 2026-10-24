@@ -294,15 +294,16 @@
   (`0.0082 mm` RMS), while its source wave gaps varied up to `1.20 mm` because
   each row sampled image tone independently into vertical amplitude. That
   row-frequency aliasing is fixed in `WSW-20261024-004` for all four screen
-  angles; a post-fix paper print is now the immediate discriminator.
+  angles. A post-fix print still shows the pattern, and the operator localizes
+  it to pen-down bed rotation. Correct compensated decoding confirms that every
+  emitted block is inside the path tolerance, so the remaining issue is on the
+  machine-side A/mechanical boundary rather than the wave generator.
   Center hold remains a separate risk because it can use a different held A
   angle per contour and the compensation residual is angle-dependent. Benefit: quality
   plotting can return to 700 mm/min once the limiting subsystem is identified,
   instead of carrying a 30-35 % throughput penalty. The next discriminating
-  test is current-version yellow at the failing feed/settings, followed by
-  magenta and black near center in XY-only at the same slow feed if bands
-  remain. If clean, prototype one constant center-hold A angle across the
-  whole layer.
+  test is the exact current yellow path with A parked, followed by an A-axis
+  following/runout check if that copy is clean.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already
