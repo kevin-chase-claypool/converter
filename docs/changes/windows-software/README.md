@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-23 | `WSW-20261023-006` | implemented | [Extend bed compensation coverage to 13.5 inches](2026/2026-10-23-extend-bed-compensation-to-13-5-inches.md) | `bed`, `compensation`, `coverage`, `extrapolation`, `cmyk` |
 | 2026-10-23 | `WSW-20261023-005` | implemented | [Enable verified bed compensation by default](2026/2026-10-23-enable-bed-compensation-by-default.md) | `bed`, `compensation`, `defaults`, `planner`, `profile` |
 | 2026-10-23 | `WSW-20261023-004` | implemented | [Full-field bed compensation calibration](2026/2026-10-23-full-field-bed-compensation-calibration.md) | `theta`, `bed`, `calibration`, `compensation`, `fiducials`, `planner`, `repeatability` |
 | 2026-10-23 | `WSW-20261023-003` | implemented | [Dense balanced rotation-centre calibration](2026/2026-10-23-dense-rotation-center-calibration.md) | `theta`, `center`, `calibration`, `repeatability`, `bed`, `runout` |

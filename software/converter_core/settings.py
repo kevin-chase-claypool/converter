@@ -8,8 +8,12 @@ DEFAULT_BED_COMPENSATION_PATH = str(
     Path(__file__).resolve().parents[2]
     / "samples"
     / "gcode"
-    / "bed-error-compensation-2026-10-23.json"
+    / "bed-error-compensation-2026-10-23-13p5in-extrapolated.json"
 )
+DEFAULT_BED_DIAMETER_MM = 14.0 * 25.4
+DEFAULT_BED_MARGIN_MM = 0.25 * 25.4
+DEFAULT_BED_COMPENSATION_DIAMETER_MM = 13.5 * 25.4
+DEFAULT_BED_COMPENSATION_RADIUS_MM = DEFAULT_BED_COMPENSATION_DIAMETER_MM / 2.0
 
 
 # M-06 pen-free radius sweep: 75.05 s observed movement / 160.58 s model.
@@ -119,8 +123,8 @@ class Settings:
     smoothness_factor: float = 1.0
     theta_smooth_window: int = 2
     monotonic_theta: bool = True
-    bed_diameter_mm: float = 457.2
-    bed_margin_mm: float = 6.35
+    bed_diameter_mm: float = DEFAULT_BED_DIAMETER_MM
+    bed_margin_mm: float = DEFAULT_BED_MARGIN_MM
     # Radius the gantry can actually reach from the registered bed center, in
     # the tightest direction. The bed rotates freely, so any artwork point at
     # radius r must be reachable at every bed angle; the safe drawable area is
@@ -154,8 +158,9 @@ class Settings:
     # Clip radius becomes min(bed_diameter/2 - bed_margin, this).
     machine_reach_radius_mm: float = 180.0
     # Measured residual map from tools/analyze_bed_error_calibration.py. The
-    # application selects the verified profile by default; an empty path
-    # explicitly disables correction for low-level or test planning.
+    # application selects the 13.5-inch extrapolated variant of the accepted
+    # profile by default; an empty path explicitly disables correction for
+    # low-level or test planning.
     bed_compensation_path: str = ""
     # Where the artwork's own center is placed relative to the registered bed
     # center, in machine millimetres. plan_program centers the artwork on the bed
@@ -354,8 +359,8 @@ TEXT_FIELD_GROUPS = (
     # change the emitted program (clipping and the final G53 move), so they do
     # not belong in a preview-only group.
     ("Machine", (
-        ("Bed dia mm", "bed_diameter_mm", "457.2"),
-        ("Bed margin mm", "bed_margin_mm", "6.35"),
+        ("Bed dia mm", "bed_diameter_mm", "%g" % DEFAULT_BED_DIAMETER_MM),
+        ("Bed margin mm", "bed_margin_mm", "%g" % DEFAULT_BED_MARGIN_MM),
         ("Gantry reach radius mm", "machine_reach_radius_mm", "180.0"),
         (
             "Bed compensation JSON",
@@ -514,10 +519,10 @@ FIELD_TOOLTIPS = {
     "pen_down_first_ms": "Dwell after the program's first M3 only, because that seek starts at the GP2 lift switch.",
     "pen_up_command": "Pen-up command. M5 for this machine.",
     "pen_down_command": "Pen-down command. M3 for this machine.",
-    "bed_diameter_mm": "Bed diameter in mm. Clipping keeps the pen inside this circle (minus bed margin and the gantry reach cap).",
-    "bed_margin_mm": "Keeps the pen clear of the bed rim by this many mm.",
+    "bed_diameter_mm": "Physical stock diameter in mm. The default 355.6 mm (14 in) round stock minus the default 6.35 mm rim margin leaves a 342.9 mm (13.5 in) drawable diameter, matching the default extrapolated bed-compensation coverage.",
+    "bed_margin_mm": "Keeps the pen clear of the stock rim by this many mm. With 14-inch stock, the default 6.35 mm margin leaves 13.5 inches of usable diameter.",
     "machine_reach_radius_mm": "Radius the gantry can reach from the registered bed center. Artwork beyond it is clipped so soft limits are not tripped.",
-    "bed_compensation_path": "Verified theta-bed-compensation-v2 JSON loaded by default. It corrects measured residual bed X/Y error after P100 registration. Browse to choose another profile, click Default to restore this one, or clear the path to disable correction.",
+    "bed_compensation_path": "Default 13.5-inch theta-bed-compensation-v2 JSON. It reuses the accepted measured field and extrapolates the outer 6.35 mm annulus. Browse to choose another profile, click Default to restore this one, or clear the path to disable correction.",
     "park_x_machine": "End-of-program park X in machine (G53) coordinates.",
     "park_y_machine": "End-of-program park Y in machine (G53) coordinates.",
     "print_speed": "Preview playback speed only. It does not change the emitted program.",

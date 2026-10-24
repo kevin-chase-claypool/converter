@@ -1,0 +1,142 @@
+{
+  "a0_control_residual": {
+    "count": 37,
+    "max_mm": 0.369373,
+    "mean_x_mm": -0.006156,
+    "mean_y_mm": 0.114236,
+    "p95_mm": 0.324379,
+    "rms_mm": 0.175857
+  },
+  "a0_spatial_error": {
+    "count": 37,
+    "max_mm": 0.536527,
+    "mean_x_mm": 0.019074,
+    "mean_y_mm": 0.064325,
+    "p95_mm": 0.518897,
+    "rms_mm": 0.29199
+  },
+  "alignment": {
+    "fiducial_max_mm": 0.0,
+    "fiducial_rms_mm": 0.0,
+    "rotation_deg": 0.0,
+    "scale": 1.0,
+    "translation_x_mm": 0.0,
+    "translation_y_mm": 0.0
+  },
+  "angle_position_spread": {
+    "180": {
+      "count": 37,
+      "max_mm": 0.414148,
+      "mean_x_mm": -0.0,
+      "mean_y_mm": 0.0,
+      "p95_mm": 0.314922,
+      "rms_mm": 0.176537
+    },
+    "270": {
+      "count": 37,
+      "max_mm": 0.692358,
+      "mean_x_mm": -0.0,
+      "mean_y_mm": 0.0,
+      "p95_mm": 0.651482,
+      "rms_mm": 0.385069
+    },
+    "90": {
+      "count": 37,
+      "max_mm": 0.842347,
+      "mean_x_mm": 0.0,
+      "mean_y_mm": 0.0,
+      "p95_mm": 0.830159,
+      "rms_mm": 0.457022
+    }
+  },
+  "angles": {
+    "180": {
+      "count": 37,
+      "max_mm": 0.985915,
+      "mean_x_mm": 0.01834,
+      "mean_y_mm": -0.763643,
+      "p95_mm": 0.979081,
+      "rms_mm": 0.783997
+    },
+    "270": {
+      "count": 37,
+      "max_mm": 0.861707,
+      "mean_x_mm": -0.300263,
+      "mean_y_mm": -0.268096,
+      "p95_mm": 0.850812,
+      "rms_mm": 0.557056
+    },
+    "90": {
+      "count": 37,
+      "max_mm": 1.339778,
+      "mean_x_mm": 0.354118,
+      "mean_y_mm": -0.481416,
+      "p95_mm": 1.297841,
+      "rms_mm": 0.75235
+    }
+  },
+  "bed_mesh_correlation": {
+    "angles": {
+      "180": {
+        "magnitude_r": 0.340834930006582
+      },
+      "270": {
+        "magnitude_r": 0.7437827095233494
+      },
+      "90": {
+        "magnitude_r": -0.5742067193559907
+      }
+    },
+    "reference": {
+      "error_x_r": -0.186594090616214,
+      "error_y_r": -0.5478655813740236,
+      "magnitude_r": -0.32532074691582513
+    },
+    "sample_count": 37,
+    "sha256": "e99cd98458e3521676493815102b1576fba3448926dd7b67dc20b42682a0bb16",
+    "source": "samples\\gcode\\bed-mesh-2026-10-11.csv",
+    "summary": "moderate-to-strong height correlation; height coupling is plausible, but this mesh includes the paper and cannot separate paper from bed"
+  },
+  "diagnosis": "angle-dependent error remains after removing the A=0 spatial field; rotation/runout/carriage coupling remains a credible source",
+  "layout": {
+    "angle_values_deg": [
+      0.0,
+      90.0,
+      180.0,
+      270.0
+    ],
+    "coverage_radius_mm": 171.45,
+    "fiducial_count": 4,
+    "sheet_diameter_mm": 355.6,
+    "station_count": 37,
+    "test_diameter_mm": 330.2
+  },
+  "leave_one_out": {
+    "accepted": true,
+    "count": 185,
+    "improvement_pct": 66.14096021026428,
+    "max_error_gate_mm": 0.9,
+    "max_mm": 0.552108,
+    "max_rms_gate_mm": 0.35,
+    "mean_x_mm": 4.9e-05,
+    "mean_y_mm": -0.033648,
+    "minimum_improvement_pct": 10.0,
+    "p95_mm": 0.364052,
+    "rms_mm": 0.196878
+  },
+  "profile": {
+    "coverage_radius_mm": 171.45,
+    "fingerprint": "4c8270de8a74",
+    "max_correction_mm": 1.330512821422162
+  },
+  "raw_error": {
+    "count": 185,
+    "max_mm": 1.308938,
+    "mean_x_mm": 0.0276,
+    "mean_y_mm": -0.211699,
+    "p95_mm": 1.072618,
+    "rms_mm": 0.581464
+  },
+  "schema": "theta-bed-calibration-report-v1",
+  "source": "bed-error-map-2026-10-23.csv"
+}

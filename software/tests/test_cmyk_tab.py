@@ -828,6 +828,28 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertEqual(tab.offset_spins["c"][0].value(), 0.0)
 
+    def test_every_ink_inherits_the_default_extrapolated_compensation(self):
+        host = FakeHost(self.colour_path)
+        host.settings_for_source = lambda _tab: converter.default_settings()
+        tab = self.make_tab(host)
+        tab._ensure_layers()
+        settings = tab._effective_settings()
+
+        self.assertEqual(
+            Path(settings.bed_compensation_path).name,
+            "bed-error-compensation-2026-10-23-13p5in-extrapolated.json",
+        )
+        for channel in converter.CHANNELS:
+            contours = converter.read_svg(
+                str(tab._layer_files[channel]), settings
+            )
+            plan = converter.plan_program(contours, settings)
+            self.assertEqual(
+                plan["bed_compensation"].fingerprint,
+                "4c8270de8a74",
+                channel,
+            )
+
     def test_pen_offsets_keep_the_shared_page_frame(self):
         tab = self.make_tab(FakeHost(self.colour_path))
         tab.scale_pct.setValue(280)

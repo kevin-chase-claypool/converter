@@ -292,6 +292,36 @@ class BedCalibrationAnalysisTests(unittest.TestCase):
         self.assertLess(report["leave_one_out"]["rms_mm"], 0.08)
         self.assertGreater(report["leave_one_out"]["improvement_pct"], 50.0)
 
+    def test_profile_can_declare_extrapolated_coverage(self):
+        profile, report, accepted = analyze_measurements(
+            measured_csv_for_synthetic_field(),
+            source="synthetic.csv",
+            max_cross_validation_rms_mm=0.08,
+            max_cross_validation_error_mm=0.20,
+            minimum_improvement_pct=20.0,
+            coverage_radius_mm=converter.DEFAULT_BED_COMPENSATION_RADIUS_MM,
+        )
+        self.assertTrue(accepted)
+        self.assertEqual(
+            profile.coverage_radius_mm,
+            converter.DEFAULT_BED_COMPENSATION_RADIUS_MM,
+        )
+        self.assertEqual(
+            report["layout"]["coverage_radius_mm"],
+            converter.DEFAULT_BED_COMPENSATION_RADIUS_MM,
+        )
+        boundary = profile.correction(
+            0.0, converter.DEFAULT_BED_COMPENSATION_RADIUS_MM, 0.0
+        )
+        self.assertLessEqual(math.hypot(*boundary), 5.0)
+
+    def test_coverage_cannot_extend_beyond_the_calibration_stock(self):
+        with self.assertRaisesRegex(ValueError, "calibration stock radius"):
+            analyze_measurements(
+                measured_csv_for_synthetic_field(),
+                coverage_radius_mm=180.0,
+            )
+
     def test_bed_mesh_correlation_is_reported(self):
         mesh = io.StringIO()
         writer = csv.writer(mesh, lineterminator="\n")
@@ -362,7 +392,7 @@ class BedCalibrationAnalysisTests(unittest.TestCase):
 
 
 class BedCompensationPlannerIntegrationTests(unittest.TestCase):
-    def test_application_defaults_select_the_verified_profile(self):
+    def test_application_defaults_select_the_extrapolated_profile(self):
         text_defaults = {
             key: default
             for _group, items in converter.TEXT_FIELD_GROUPS
@@ -373,7 +403,7 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
         self.assertTrue(profile_path.is_file())
         self.assertEqual(
             converter.load_bed_compensation(str(profile_path)).fingerprint,
-            "2cdf3731de4a",
+            "4c8270de8a74",
         )
         self.assertEqual(
             converter.default_settings().bed_compensation_path,
@@ -381,10 +411,66 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
         )
 
         settings = converter.settings_from_values(text_defaults, {})
+        profile = converter.load_bed_compensation(
+            settings.bed_compensation_path
+        )
+        self.assertAlmostEqual(
+            profile.coverage_radius_mm,
+            converter.DEFAULT_BED_COMPENSATION_RADIUS_MM,
+            places=6,
+        )
+        self.assertAlmostEqual(
+            settings.bed_diameter_mm / 2.0 - settings.bed_margin_mm,
+            profile.coverage_radius_mm,
+            places=6,
+        )
+        boundary_max = max(
+            math.hypot(
+                *profile.correction(
+                    angle,
+                    profile.coverage_radius_mm
+                    * math.cos(math.radians(angle)),
+                    profile.coverage_radius_mm
+                    * math.sin(math.radians(angle)),
+                )
+            )
+            for angle in range(360)
+        )
+        self.assertAlmostEqual(boundary_max, 1.054405, places=6)
+        self.assertLessEqual(boundary_max, 5.0)
         gcode = converter.contours_to_gcode(
             [[(-5.0, 0.0), (5.0, 0.0)]], settings
         )
-        self.assertIn("(bed compensation 2cdf3731de4a,", gcode)
+        self.assertIn("(bed compensation 4c8270de8a74,", gcode)
+
+    def test_13_5_inch_field_clips_before_extrapolated_coverage(self):
+        settings = converter.Settings(
+            theta_mode="fixed",
+            theta_center_hold_diameter_mm=0,
+            bed_compensation_path=str(
+                ROOT
+                / "samples"
+                / "gcode"
+                / "bed-error-compensation-2026-10-23-13p5in-extrapolated.json"
+            ),
+            machine_reach_radius_mm=180.0,
+            frame_center_mm=(0.0, 0.0),
+        )
+        plan = converter.plan_program(
+            [[(160.0, 0.0), (180.0, 0.0)]], settings
+        )
+        radii = [
+            (x * x + y * y) ** 0.5
+            for contour in plan["contours"]
+            for x, y in contour
+        ]
+        self.assertTrue(radii)
+        self.assertGreater(max(radii), 170.0)
+        self.assertLessEqual(
+            max(radii),
+            converter.DEFAULT_BED_COMPENSATION_RADIUS_MM + 1e-6,
+        )
+        self.assertEqual(plan["bed_compensation"].fingerprint, "4c8270de8a74")
 
     def test_explicit_empty_profile_disables_compensation(self):
         settings = converter.Settings(

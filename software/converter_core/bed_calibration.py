@@ -561,7 +561,13 @@ def _normalized_errors(marks, alignment):
     return output
 
 
-def _build_profile(stations, normalized_by_key, *, source):
+def _build_profile(
+    stations,
+    normalized_by_key,
+    *,
+    source,
+    coverage_radius_mm=COVERAGE_RADIUS_MM,
+):
     reference = {}
     controls = {}
     angled = {90.0: {}, 180.0: {}, 270.0: {}}
@@ -639,7 +645,7 @@ def _build_profile(stations, normalized_by_key, *, source):
         angle_values_deg=tuple(angle_values),
         samples_mm=tuple(sample_grids),
         corrections_mm=tuple(correction_grids),
-        coverage_radius_mm=COVERAGE_RADIUS_MM,
+        coverage_radius_mm=coverage_radius_mm,
         source=source,
     )
     return (
@@ -781,7 +787,20 @@ def analyze_measurements(
     max_cross_validation_rms_mm=0.35,
     max_cross_validation_error_mm=0.90,
     minimum_improvement_pct=10.0,
+    coverage_radius_mm=None,
 ):
+    if coverage_radius_mm is None:
+        coverage_radius_mm = COVERAGE_RADIUS_MM
+    coverage_radius_mm = float(coverage_radius_mm)
+    if (
+        not math.isfinite(coverage_radius_mm)
+        or coverage_radius_mm <= 0.0
+        or coverage_radius_mm > SHEET_DIAMETER_MM / 2.0 + 1e-6
+    ):
+        raise ValueError(
+            "coverage radius must be positive and no larger than the "
+            "%.3f mm calibration stock radius" % (SHEET_DIAMETER_MM / 2.0)
+        )
     marks = parse_measurement_csv(measurements_csv, require_complete=True)
     fiducials = tuple(mark for mark in marks if mark.section == "fiducial")
     if len(fiducials) != 4:
@@ -800,7 +819,12 @@ def analyze_measurements(
         angle_fields,
         spatial_samples,
         reference_errors,
-    ) = _build_profile(stations, normalized_by_key, source=source)
+    ) = _build_profile(
+        stations,
+        normalized_by_key,
+        source=source,
+        coverage_radius_mm=coverage_radius_mm,
+    )
 
     raw_errors = [
         item["error"] for item in normalized if item["mark"].section == "station"
@@ -861,7 +885,10 @@ def analyze_measurements(
             _samples,
             _errors,
         ) = _build_profile(
-            subset, normalized_by_key, source=source + " leave-one-out"
+            subset,
+            normalized_by_key,
+            source=source + " leave-one-out",
+            coverage_radius_mm=coverage_radius_mm,
         )
         for item in normalized:
             mark = item["mark"]
@@ -932,6 +959,7 @@ def analyze_measurements(
             "station_count": len(stations),
             "angle_values_deg": [0.0, 90.0, 180.0, 270.0],
             "fiducial_count": len(fiducials),
+            "coverage_radius_mm": round(float(coverage_radius_mm), 6),
         },
         "alignment": {
             "scale": alignment.scale,

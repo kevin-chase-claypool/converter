@@ -32,6 +32,9 @@ profile selected. The Machine-tab path remains editable, **Browse...** selects
 a replacement profile, **Default** restores the verified profile, and clearing
 the path explicitly disables compensation.
 
+Follow-up `WSW-20261023-006` keeps this default-on behavior but changes the
+selected shipped file to the 13.5-inch extrapolated profile.
+
 ## Reason
 
 Profile `2cdf3731de4a` passed the independent M-12 verification and is the

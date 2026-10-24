@@ -193,6 +193,18 @@
   A=270 does not justify fitting the verification sheet again; physical bed
   plane/runout work remains optional unless an application requires less than
   the accepted approximately `0.34 mm` RMS residual.
+- [ ] **Verify the extrapolated 13.5-inch compensation annulus.**
+  Problem: the default `4c8270de8a74` profile extends the accepted 165.1 mm
+  correction field to 171.45 mm by local-affine extrapolation. Its
+  `1.054 mm` boundary correction is below the safety bound, but the outer
+  6.35 mm annulus has no compensated verification print. Benefit: precision
+  work can use the full 13.5-inch diameter with a measured error bound rather
+  than an extrapolation assumption. Risk: continuing to treat extrapolated
+  values as verified can hide a local edge or rotation/height response.
+  Acceptance: print a stationary edge-band verification covering 165.1 to
+  171.45 mm at 0/90/180/270 degrees, measure it with the existing photo
+  pipeline, and show at most `0.35 mm` RMS / `0.90 mm` maximum with no angle
+  stage more than `0.05 mm` worse than the inner field.
 
 ## Phase 5: toolhead
 

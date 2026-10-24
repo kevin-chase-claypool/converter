@@ -173,16 +173,22 @@ Cycle Start with the pen loaded:
   control repeatability separately, removes the common sheet pose, fits the
   90/180/270 fields, performs leave-one-station-out validation, correlates
   the result with the optional bed mesh, and writes
-  `bed-error-analysis.json`. The verified
-  `..\samples\gcode\bed-error-compensation-2026-10-23.json` profile is
-  preselected in **Machine > Bed compensation JSON**. **Browse...** selects a
-  replacement; **Default** restores the verified profile; clearing the path
+  `bed-error-analysis.json`. The
+  `..\samples\gcode\bed-error-compensation-2026-10-23-13p5in-extrapolated.json`
+  profile is preselected in **Machine > Bed compensation JSON** and covers a
+  `171.450 mm` radius (`342.900 mm` / `13.5 in` diameter). **Browse...**
+  selects a replacement; **Default** restores that profile; clearing the path
   disables compensation. The profile is a machine-XY correction added after
   the existing planner chooses the bed angle and after P100 registration; it
   does not change artwork geometry or candidate selection. Its coverage is
   checked before planning, each correction is capped at 5 mm, and blanking
   the path restores byte-identical uncompensated output. After fitting,
   generate a compensated verification sheet with:
+
+  To declare a larger field by extrapolating the same measured correction
+  samples, add `--coverage-radius-mm 171.45` to
+  `analyze_bed_error_calibration.py`. The declared radius cannot exceed the
+  calibration stock radius, and extending it does not add new measurements.
 
   ```powershell
   python ..\tools\make_bed_error_calibration.py `
@@ -207,14 +213,16 @@ Cycle Start with the pen loaded:
   prediction was `0.197 mm` RMS / `0.552 mm` maximum with a `66.1 %`
   improvement. The first profile (`911d2694c8c9`) failed its compensated print
   because its angle correction was not rotated from bed frame to machine
-  frame. The corrected profile is
+  frame. The verified core profile is
   `..\samples\gcode\bed-error-compensation-2026-10-23.json` (fingerprint
-  `2cdf3731de4a`). Its independent compensated verification reduced overall
-  station RMS from `0.581` to `0.338 mm`, maximum from `1.309` to `0.752 mm`,
-  and error by `41.9 %`; all M-12 gates passed. The profile is accepted for
-  the current machine configuration. A localized residual remains at stations
-  09/14 near A=270, so recalibrate after any bed, paper-support, toolhead,
-  carriage, pen-clamp, or registration change.
+  `2cdf3731de4a`, `165.100 mm` radius). Its independent compensated
+  verification reduced overall station RMS from `0.581` to `0.338 mm`,
+  maximum from `1.309` to `0.752 mm`, and error by `41.9 %`; all M-12 gates
+  passed. The default `13p5in-extrapolated` variant reuses those correction
+  samples and extends the local-affine field to `171.450 mm`. The outer
+  `6.350 mm` annulus is extrapolated, not measured; its maximum boundary
+  correction is `1.054 mm`, below the 5 mm safety bound. Recalibrate after any
+  bed, paper-support, toolhead, carriage, pen-clamp, or registration change.
 - `..\samples\gcode\a-tilt-pairs-test.gcode` - four separated line pairs for
   a caliper-read bed-tilt check: each pair is the same paper segment drawn
   twice, once at A=0 (the longer 80 mm constant line) and once at that
@@ -1119,18 +1127,19 @@ display-only; every other group changes the emitted program.
   offset, and `G54 X0 Y0` so work zero means pen tip at bed center.
 - P100 also remains the owner of the physical registration centre and A index.
   The bed-compensation profile is a separate residual map and the converter
-  loads the verified profile by default; clear the path to disable it or use
-  **Browse...** to select a replacement. Its fiducial fit removes common
-  translation, rotation, and scale before fitting. Do not place the same
-  residual offset in both P100 and the profile. A saved compensated program
-  records the profile fingerprint and correction bound in its header, and
-  preview uses the same subdivided machine points as the saved G-code.
+  loads the 13.5-inch extrapolated profile by default; clear the path to
+  disable it or use **Browse...** to select a replacement. Its fiducial fit
+  removes common translation, rotation, and scale before fitting. Do not place
+  the same residual offset in both P100 and the profile. A saved compensated
+  program records the profile fingerprint and correction bound in its header,
+  and preview uses the same subdivided machine points as the saved G-code.
 - SVG document coordinates are not machine coordinates. The converter centers
   the clipped artwork at G54 zero; a document centered at `(100,100)`, for
   example, emits drawing coordinates around `(0,0)`, not `(100,100)`.
-- `Bed margin mm` (default 6.35 ≈ 0.25") clips artwork inside the bed edge so the
-  pen never reaches the rim.
-- `Gantry reach radius mm` (default 185.0) caps the drawable circle at the
+- `Bed dia mm` defaults to `355.6 mm` (14-inch round stock). With the default
+  `Bed margin mm` of `6.35 mm` (0.25"), the effective `342.9 mm` (13.5-inch)
+  diameter matches the extrapolated compensation coverage.
+- `Gantry reach radius mm` (default 180.0) caps the drawable circle at the
   gantry's reachable radius from the registered bed center. Because the bed
   rotates freely, the safe drawable area is this circle rather than the full
   bed; it keeps emitted coordinates inside the controller's X/Y envelope so

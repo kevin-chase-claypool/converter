@@ -27,10 +27,13 @@ samples, has explicit radial coverage, and rejects individual corrections
 above 5 mm. Its fiducial fit removes common sheet translation, rotation, and
 scale so P100 registration is not double-compensated.
 
-The desktop converter selects the current verified profile by default. The
-existing Machine-tab path remains editable: **Browse...** selects a measured
-replacement, **Default** restores the verified profile, and an empty path
-disables compensation.
+The desktop converter selects profile `4c8270de8a74` by default. It reuses the
+bench-verified `2cdf3731de4a` correction samples and extrapolates the
+local-affine field from `165.100` to `171.450 mm`, giving a 13.5-inch
+compensated diameter. The default 14-inch stock diameter and 6.35 mm rim
+margin produce the same 171.45 mm drawable radius. The existing Machine-tab
+path remains editable: **Browse...** selects a replacement, **Default**
+restores this profile, and an empty path disables compensation.
 
 Measured paper errors are bed-frame displacements. Before storage, the
 required correction is rotated into machine coordinates:
@@ -53,8 +56,11 @@ program unchanged.
   changing the artwork or choosing a different kinematics mode.
 - Preview and saved G-code must share the profile, corrected endpoints, and
   subdivision. Any coverage or correction-bound violation stops planning.
-- The map is only valid inside its measured field and only while bed, paper
-  support, toolhead/carriage, pen clamp, and registration remain consistent.
+- The map is measured only inside its accepted 165.100 mm field. The default
+  profile extends that field to 171.450 mm by extrapolation, which remains
+  provisional until an edge-band verification passes. Either region stays
+  valid only while bed, paper support, toolhead/carriage, pen clamp, and
+  registration remain consistent.
 - This software correction is not evidence that the bed is flat. A profile
   should be accepted only after the measurement analyzer's complete-data and
   leave-one-station-out gates pass, and a compensated verification sheet must
@@ -67,5 +73,11 @@ program unchanged.
   at station 09/14 near A=270; further accuracy requires mechanical
   plane/runout and carriage diagnosis rather than refitting the verification
   sheet into the profile.
+- The default `4c8270de8a74` profile preserves the verified correction samples
+  through the original `165.100 mm` radius and extrapolates the outer
+  `6.350 mm` annulus to `171.450 mm`. Its maximum boundary correction is
+  `1.054 mm`, below the 5 mm safety bound, but the outer annulus is not
+  independently bench-verified. Verify that annulus before treating the
+  extended coverage as measured calibration.
 - A true X/Y scale or skew defect remains a controller/mechanical calibration
   issue rather than being folded into the fiducial-normalized residual map.

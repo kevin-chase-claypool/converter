@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261023-bed-compensation-13p5in"></a>
+### 🟨 2026-10-23 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Bed compensation extended to 13.5-inch coverage
+
+- The default profile is now `4c8270de8a74`, derived from the accepted
+  `2cdf3731de4a` correction samples but declaring a `171.450 mm` radius
+  (`13.5 in` diameter). The outer `6.35 mm` annulus is local-affine
+  extrapolation from the `165.100 mm` verified field.
+- The regenerated profile retains the accepted fit metrics and has a maximum
+  extrapolated boundary correction of `1.054 mm`, below the 5 mm safety bound.
+- The default stock is now 355.6 mm (14 in), so the existing 6.35 mm rim
+  margin produces the same 171.45 mm planner clip radius. A CMYK artwork
+  reaching 180 mm is clipped before the compensation coverage check.
+- Added `--coverage-radius-mm` to the calibration analyzer so future coverage
+  changes produce auditable profile files rather than a hidden runtime
+  override.
+- The bed-compensation/photo suite passes all 28 tests, the CMYK suite passes
+  all 64 tests, and the full converter suite passes 486 tests with one
+  OpenGL-context skip.
+- Evidence: `WSW-20261023-006`, `ADR-009`,
+  `samples/gcode/bed-error-compensation-2026-10-23-13p5in-extrapolated.json`.
+- Category: windows-software, hardware, bed, compensation, coverage,
+  extrapolation, cmyk.
+
 <a id="elog-20261023-bed-compensation-default"></a>
 ### 🟨 2026-10-23 - WINDOWS SOFTWARE/IMPLEMENTED - Verified bed compensation enabled by default
 

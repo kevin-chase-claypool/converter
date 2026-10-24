@@ -46,6 +46,13 @@ def main():
     parser.add_argument("--max-cross-validation-error-mm", type=float, default=0.90)
     parser.add_argument("--minimum-improvement-pct", type=float, default=10.0)
     parser.add_argument(
+        "--coverage-radius-mm",
+        type=float,
+        default=None,
+        help="declare a larger radial correction field by extrapolating the "
+        "measured default mesh; omitted keeps the generated test radius",
+    )
+    parser.add_argument(
         "--minimum-verification-improvement-pct",
         type=float,
         default=30.0,
@@ -125,6 +132,7 @@ def main():
         max_cross_validation_rms_mm=args.max_cross_validation_rms_mm,
         max_cross_validation_error_mm=args.max_cross_validation_error_mm,
         minimum_improvement_pct=args.minimum_improvement_pct,
+        coverage_radius_mm=args.coverage_radius_mm,
     )
     report_path = Path(args.report_out)
     report_path.parent.mkdir(parents=True, exist_ok=True)
