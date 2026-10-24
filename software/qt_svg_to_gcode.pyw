@@ -1157,18 +1157,44 @@ class PreviewWorker(QObject):
             )
             self.progress.emit(48, f"Planning motion for {len(raw_contours)} contours")
             program_plan = converter.plan_program(raw_contours, settings, self.is_cancelled)
-            moves = self.window.build_preview_moves(raw_contours, settings, self.is_cancelled, program_plan)
-            self.progress.emit(78, f"Preparing {len(program_plan['contours'])} clipped contours")
-            self.progress.emit(90, "Generating complete G-code listing")
-            # `stats` reports the worst commanded bed-path deviation and where it
-            # happened, which is the number to look at when a turn mid-stroke
-            # leaves a mark on paper.
-            stats = {}
-            program_gcode = converter.contours_to_gcode(
-                raw_contours, settings, program_plan, stats
+            profile_active = program_plan.get("bed_compensation") is not None
+            exact_preview = bool(
+                getattr(settings, "exact_compensated_preview", False)
             )
+            preview_compensated = bool(profile_active and exact_preview)
+            stage = (
+                "Building exact compensated preview"
+                if preview_compensated
+                else "Building fast nominal preview"
+            )
+            self.progress.emit(60, stage)
+            moves = self.window.build_preview_moves(
+                raw_contours,
+                settings,
+                self.is_cancelled,
+                program_plan,
+                apply_compensation=preview_compensated,
+            )
+            self.progress.emit(78, f"Preparing {len(program_plan['contours'])} clipped contours")
+            self.progress.emit(90, "Finalizing preview")
             self.finished.emit(
-                (settings, program_plan["contours"], moves, program_plan["center"], program_gcode, stats)
+                (
+                    settings,
+                    program_plan["contours"],
+                    moves,
+                    program_plan["center"],
+                    "",
+                    {},
+                    {
+                        "profile_active": profile_active,
+                        "preview_compensated": preview_compensated,
+                        "profile_fingerprint": (
+                            program_plan["bed_compensation"].fingerprint
+                            if profile_active
+                            else ""
+                        ),
+                    },
+                )
             )
         except converter.OperationCancelled:
             self.cancelled.emit()
@@ -1339,6 +1365,9 @@ class MainWindow(QMainWindow):
         self.monotonic_theta = checkboxes["monotonic_theta"]
         self.toolhead_status_handshake = checkboxes["toolhead_status_handshake"]
         self.toolhead_handshake_recover = checkboxes["toolhead_handshake_recover"]
+        self.exact_compensated_preview = checkboxes[
+            "exact_compensated_preview"
+        ]
 
         group_boxes = {}
         group_forms = {}
@@ -1576,6 +1605,7 @@ class MainWindow(QMainWindow):
             self.use_z,
             self.toolhead_status_handshake,
             self.toolhead_handshake_recover,
+            self.exact_compensated_preview,
         ):
             checkbox.toggled.connect(lambda _checked: self.mark_preview_dirty())
         self.fields["print_speed"].textChanged.connect(lambda _text: self.on_print_speed_changed())
@@ -2197,6 +2227,7 @@ class MainWindow(QMainWindow):
             "monotonic_theta": self.monotonic_theta.isChecked(),
             "toolhead_status_handshake": self.toolhead_status_handshake.isChecked(),
             "toolhead_handshake_recover": self.toolhead_handshake_recover.isChecked(),
+            "exact_compensated_preview": self.exact_compensated_preview.isChecked(),
         }
         settings = converter.settings_from_values(text_values, bool_values)
         self.print_speed_mm_s()
@@ -2251,8 +2282,21 @@ class MainWindow(QMainWindow):
             fallback = float(getattr(settings, "hatch_spacing_mm", 0.0))
         return converter.pattern_size_override(pattern, fallback, self.pattern_size_values(settings))
 
-    def build_preview_moves(self, contours, settings, cancel_check=None, program_plan=None):
-        return converter.build_preview_moves(contours, settings, cancel_check, program_plan)
+    def build_preview_moves(
+        self,
+        contours,
+        settings,
+        cancel_check=None,
+        program_plan=None,
+        apply_compensation=True,
+    ):
+        return converter.build_preview_moves(
+            contours,
+            settings,
+            cancel_check,
+            program_plan,
+            apply_compensation=apply_compensation,
+        )
 
     def analyze_program(self, svg_path, settings, cancel_check=None):
         """Build the exact program a Preview would, without touching the UI.
@@ -4297,7 +4341,15 @@ class MainWindow(QMainWindow):
 
     def preview_ready(self, result):
         self.preview_succeeded = True
-        settings, contours, moves, bed_center, program_gcode, stats = result
+        (
+            settings,
+            contours,
+            moves,
+            bed_center,
+            program_gcode,
+            stats,
+            preview_info,
+        ) = result
         self.set_preview_build_progress(94, "Preparing OpenGL preview")
         QApplication.processEvents()
         self.install_preview(settings, contours, moves, bed_center, program_gcode)
@@ -4322,15 +4374,34 @@ class MainWindow(QMainWindow):
             )
         self.set_preview_build_progress(100, "Preview ready")
         estimate = self.update_estimate()
+        profile_active = bool(preview_info.get("profile_active"))
+        preview_compensated = bool(preview_info.get("preview_compensated"))
+        fingerprint = str(preview_info.get("profile_fingerprint", ""))
         if estimate:
             self.log.append(
-                f"Loaded {len(self.moves)} preview moves from {len(self.program_lines)} exact G-code lines. "
+                f"Loaded {len(self.moves)} preview moves. "
                 f"Calibrated controller-time estimate {self.format_duration(estimate['total_seconds'])} "
                 f"from model {self.format_duration(estimate['model_total_seconds'])} "
                 f"at motion scale {fmt(estimate['motion_estimate_scale'])}."
             )
         else:
-            self.log.append(f"Loaded {len(self.moves)} preview moves from {len(self.program_lines)} exact G-code lines.")
+            self.log.append(f"Loaded {len(self.moves)} preview moves.")
+        if profile_active and not preview_compensated:
+            self.log.append(
+                "Fast preview uses nominal X/Y. Saved G-code will apply bed "
+                "compensation %s; enable Exact compensated preview to display "
+                "the corrected machine path." % fingerprint
+            )
+        elif preview_compensated:
+            self.log.append(
+                "Exact compensated preview uses bed compensation %s."
+                % fingerprint
+            )
+        elif not profile_active:
+            self.log.append(
+                "No bed compensation profile is active; preview and G-code "
+                "both use nominal X/Y."
+            )
         size_summary = self.size_summary()
         if size_summary:
             self.log.append(f"Pen compensation: {size_summary}.")
@@ -4338,7 +4409,17 @@ class MainWindow(QMainWindow):
         if reach_summary:
             self.log.append(reach_summary)
         self.update_clip_warning()
-        self.status.setText(f"Preview ready: {len(self.moves)} commands. {reach_summary}")
+        preview_note = (
+            f"Nominal preview; G-code uses bed compensation {fingerprint}."
+            if profile_active and not preview_compensated
+            else "Exact compensated preview."
+            if preview_compensated
+            else "Nominal preview; no bed compensation profile."
+        )
+        self.status.setText(
+            f"Preview ready: {len(self.moves)} commands. "
+            f"{preview_note} {reach_summary}"
+        )
 
     def preview_failed(self, message):
         self.preview_build_bar.setValue(0)

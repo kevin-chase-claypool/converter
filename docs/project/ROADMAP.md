@@ -168,13 +168,14 @@
   validates complete measurements, correlates them with the bed mesh, performs
   leave-one-station-out validation, and emits an optional
   `theta-bed-compensation-v2` profile for the host planner. The converter
-  applies that residual map after theta planning and P100 registration, keeps
-  preview and G-code on the same subdivided points, rejects uncovered artwork,
-  and caps each correction at 5 mm (`WSW-20261023-004`). The first full-field
-  photo resolved all 189 markers: A=0 spatial error was 0.292 mm RMS / 0.537 mm
-  maximum, leave-one-station-out profile prediction was 0.197 mm RMS / 0.552 mm
-  maximum with 66.1 % improvement, and the fitted profile passed the software
-  gates at a 1.331 mm worst correction. The bed mesh has mixed correlations
+  applies that residual map to saved G-code after theta planning and P100
+  registration, supports exact compensated preview, rejects uncovered artwork,
+  and caps each correction at 5 mm (`WSW-20261023-004`). Fast interactive
+  preview now displays nominal X/Y by default (`WSW-20261023-007`). The first
+  full-field photo resolved all 189 markers: A=0 spatial error was 0.292 mm RMS
+  / 0.537 mm maximum, leave-one-station-out profile prediction was 0.197 mm RMS
+  / 0.552 mm maximum with 66.1 % improvement, and the fitted profile passed the
+  software gates at a 1.331 mm worst correction. The bed mesh has mixed correlations
   (A=0 Y `r=-0.548`, 90-degree `r=-0.574`, 270-degree `r=+0.744`), so both
   position and rotation/height coupling remain physically credible. The first
   compensated print then failed and exposed a bed-to-machine frame-rotation
@@ -205,6 +206,19 @@
   171.45 mm at 0/90/180/270 degrees, measure it with the existing photo
   pipeline, and show at most `0.35 mm` RMS / `0.90 mm` maximum with no angle
   stage more than `0.05 mm` worse than the inner field.
+- [ ] **Optimize exact compensation subdivision for dense artwork.**
+  Problem: a combined 8,699-contour CMYK preview spends most of its time in
+  `compensation_step_count`, which evaluates the local-affine correction 16
+  times per segment even when almost every segment needs no extra subdivision.
+  The 100-contour sample required only three extra subdivisions across 7,466
+  probes but took 4.9 seconds instead of 0.06 seconds. Benefit: exact preview
+  and saved G-code become responsive for photo-screen and vector-trace work.
+  Risk: skipping or coarsening curvature probes can under-subdivide a move and
+  let the compensation field bow beyond the path tolerance. Acceptance: exact
+  preview and G-code retain their current points within a documented
+  sub-tolerance numerical bound, a dense 8,699-contour benchmark completes
+  materially faster, and regression coverage includes both constant and
+  sharply varying correction fields.
 
 ## Phase 5: toolhead
 

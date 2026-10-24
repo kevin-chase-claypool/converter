@@ -35,6 +35,11 @@ margin produce the same 171.45 mm drawable radius. The existing Machine-tab
 path remains editable: **Browse...** selects a replacement, **Default**
 restores this profile, and an empty path disables compensation.
 
+Interactive preview defaults to fast nominal X/Y so dense artwork remains
+responsive. Saved G-code always applies the selected compensation exactly.
+The **Exact compensated preview (slow)** option makes the displayed moves use
+the same correction path when coordinate parity matters for verification.
+
 Measured paper errors are bed-frame displacements. Before storage, the
 required correction is rotated into machine coordinates:
 
@@ -54,8 +59,12 @@ program unchanged.
 
 - Position- and angle-dependent residual error can be corrected without
   changing the artwork or choosing a different kinematics mode.
-- Preview and saved G-code must share the profile, corrected endpoints, and
-  subdivision. Any coverage or correction-bound violation stops planning.
+- Saved G-code may use the profile, and exact preview mode must share its
+  corrected endpoints and subdivision. Any coverage or correction-bound
+  violation stops planning.
+- Fast preview intentionally displays nominal machine X/Y and must identify
+  itself as approximate. It is suitable for composition and motion review,
+  not for measuring compensated placement on paper.
 - The map is measured only inside its accepted 165.100 mm field. The default
   profile extends that field to 171.450 mm by extrapolation, which remains
   provisional until an edge-band verification passes. Either region stays

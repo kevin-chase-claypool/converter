@@ -170,6 +170,15 @@ class ToolShellTests(unittest.TestCase):
             window.stack.width() - window.sidebar_scroll.width(), 4
         )
 
+    def test_exact_compensated_preview_is_opt_in(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        self.assertFalse(window.exact_compensated_preview.isChecked())
+        self.assertFalse(window.settings().exact_compensated_preview)
+
+        window.exact_compensated_preview.setChecked(True)
+        self.assertTrue(window.settings().exact_compensated_preview)
+
     def test_generator_controls_fill_the_settings_pane(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

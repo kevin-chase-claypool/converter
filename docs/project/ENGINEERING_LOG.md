@@ -1,5 +1,33 @@
 # Engineering Log
 
+<a id="elog-20261023-fast-nominal-preview"></a>
+### 🟨 2026-10-23 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Fast nominal preview separated from exact compensated G-code
+
+- Reproduced the reported slowdown with the exact 8,699-contour / 740,846-point
+  combined CMYK preview. `plan_program` took 4.5 seconds, but compensated
+  `build_preview_moves` remained active after several minutes; the same full
+  move build with compensation off took 2.6 seconds.
+- A 100-contour comparison took 0.063 seconds with compensation off and
+  4.891 seconds with it while producing almost identical move counts
+  (`7,869` versus `7,871`). The cost was the fixed 16-point
+  `compensation_step_count` probe and its local-affine lookups, not extra
+  geometry.
+- Interactive preview now uses nominal X/Y by default when a compensation
+  profile is active. **Exact compensated preview (slow)** is an explicit
+  Machine-tab option. Saved G-code always uses the selected compensation.
+- Preview no longer generates the complete G-code listing. G-code generation
+  remains in Convert and the CMYK/multi-file save path.
+- The exact CMYK preview's measured stages now total about 7.4 seconds in the
+  headless equivalent: 1.1 seconds read, 3.7 seconds planning, and 2.6 seconds
+  fast preview moves. The status bar and log identify nominal versus exact
+  preview.
+- The bed-compensation/photo suite passes all 29 tests, and the full converter
+  suite passes 488 tests with one OpenGL-context skip.
+- Evidence: `WSW-20261023-007`, `ADR-009`,
+  `docs/changes/windows-software/2026/2026-10-23-fast-nominal-preview.md`.
+- Category: windows-software, hardware, bed, compensation, performance,
+  preview, cmyk.
+
 <a id="elog-20261023-bed-compensation-13p5in"></a>
 ### 🟨 2026-10-23 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Bed compensation extended to 13.5-inch coverage
 

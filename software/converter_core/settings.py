@@ -162,6 +162,10 @@ class Settings:
     # profile by default; an empty path explicitly disables correction for
     # low-level or test planning.
     bed_compensation_path: str = ""
+    # The preview normally uses nominal X/Y for speed. Saved G-code always
+    # applies the selected profile; enabling this makes the preview pay the
+    # full compensation subdivision cost so displayed points match the file.
+    exact_compensated_preview: bool = False
     # Where the artwork's own center is placed relative to the registered bed
     # center, in machine millimetres. plan_program centers the artwork on the bed
     # by default; these offsets move it, which is how a drawing whose bounding
@@ -393,6 +397,12 @@ CHECKBOX_FIELDS = (
     ("Pen", "include_z", "Use Z axis for pen up/down", False),
     ("Pen", "toolhead_status_handshake", "Wait for GP27 toolhead ready (commissioned only)", True),
     ("Pen", "toolhead_handshake_recover", "Lift pen and continue if the GP27 handshake times out", True),
+    (
+        "Machine",
+        "exact_compensated_preview",
+        "Exact compensated preview (slow)",
+        False,
+    ),
 )
 
 # Human-readable labels for `fill_source`. The Qt combo shows the label and
@@ -523,6 +533,7 @@ FIELD_TOOLTIPS = {
     "bed_margin_mm": "Keeps the pen clear of the stock rim by this many mm. With 14-inch stock, the default 6.35 mm margin leaves 13.5 inches of usable diameter.",
     "machine_reach_radius_mm": "Radius the gantry can reach from the registered bed center. Artwork beyond it is clipped so soft limits are not tripped.",
     "bed_compensation_path": "Default 13.5-inch theta-bed-compensation-v2 JSON. It reuses the accepted measured field and extrapolates the outer 6.35 mm annulus. Browse to choose another profile, click Default to restore this one, or clear the path to disable correction.",
+    "exact_compensated_preview": "Use the full bed-compensation lookup while previewing. Exact previews can be dramatically slower on dense CMYK artwork. Saved G-code is always fully compensated.",
     "park_x_machine": "End-of-program park X in machine (G53) coordinates.",
     "park_y_machine": "End-of-program park Y in machine (G53) coordinates.",
     "print_speed": "Preview playback speed only. It does not change the emitted program.",

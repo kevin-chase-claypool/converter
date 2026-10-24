@@ -8,12 +8,14 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "software"))
 
 import converter_core as converter
+import converter_core.gcode as gcode_module
 from converter_core.bed_calibration import (
     COVERAGE_RADIUS_MM,
     PASS_SPECS,
@@ -411,6 +413,7 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
         )
 
         settings = converter.settings_from_values(text_defaults, {})
+        self.assertFalse(settings.exact_compensated_preview)
         profile = converter.load_bed_compensation(
             settings.bed_compensation_path
         )
@@ -471,6 +474,44 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
             converter.DEFAULT_BED_COMPENSATION_RADIUS_MM + 1e-6,
         )
         self.assertEqual(plan["bed_compensation"].fingerprint, "4c8270de8a74")
+
+    def test_fast_preview_uses_nominal_moves_without_compensation_probes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "bed.json"
+            path.write_text(profile_for_test().to_json(), encoding="utf-8")
+            settings = converter.Settings(
+                theta_mode="fixed",
+                theta_center_hold_diameter_mm=0,
+                bed_compensation_path=str(path),
+            )
+            contours = [[(-5.0, 0.0), (5.0, 0.0)]]
+            plan = converter.plan_program(contours, settings)
+            with mock.patch.object(
+                gcode_module,
+                "compensation_step_count",
+                wraps=gcode_module.compensation_step_count,
+            ) as probe:
+                fast_moves = converter.build_preview_moves(
+                    contours,
+                    settings,
+                    program_plan=plan,
+                    apply_compensation=False,
+                )
+            probe.assert_not_called()
+            gcode = converter.contours_to_gcode(
+                contours, settings, program_plan=plan
+            )
+
+        exact_moves = converter.build_preview_moves(
+            contours,
+            settings,
+            program_plan=plan,
+        )
+        self.assertIn("(bed compensation ", gcode)
+        self.assertNotEqual(
+            [move.get("gcode") for move in fast_moves],
+            [move.get("gcode") for move in exact_moves],
+        )
 
     def test_explicit_empty_profile_disables_compensation(self):
         settings = converter.Settings(

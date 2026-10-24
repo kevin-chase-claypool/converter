@@ -492,20 +492,22 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
             # One coordinated X/Y/A move interpolates linearly, so a single move
             # that spans a bed rotation bows the pen off the straight bed path.
             # Subdivide so the drawn bed path stays within tolerance.
-            steps = max(
-                polar_segment_steps(
-                    a, b, center, start_theta, theta, settings.tolerance
-                ),
-                compensation_step_count(
-                    a,
-                    b,
-                    start_theta,
-                    theta,
-                    center,
-                    bed_compensation,
-                    settings.tolerance,
-                ),
+            steps = polar_segment_steps(
+                a, b, center, start_theta, theta, settings.tolerance
             )
+            if bed_compensation is not None:
+                steps = max(
+                    steps,
+                    compensation_step_count(
+                        a,
+                        b,
+                        start_theta,
+                        theta,
+                        center,
+                        bed_compensation,
+                        settings.tolerance,
+                    ),
+                )
             if stats is not None:
                 # Report what the *commanded* path can still deviate from the
                 # intended line on the bed: the bow of a whole move divided by
@@ -558,13 +560,21 @@ def convert_file(svg_path, gcode_path, settings):
     return len(contours), len(gcode.splitlines())
 
 
-def build_preview_moves(contours, settings, cancel_check=None, program_plan=None):
+def build_preview_moves(
+    contours,
+    settings,
+    cancel_check=None,
+    program_plan=None,
+    apply_compensation=True,
+):
     validate_settings(settings)
     check_cancelled(cancel_check)
     moves = []
     program_plan = program_plan or plan_program(contours, settings, cancel_check)
     center = program_plan["center"]
-    bed_compensation = program_plan.get("bed_compensation")
+    bed_compensation = (
+        program_plan.get("bed_compensation") if apply_compensation else None
+    )
 
     def machine_point(point, theta):
         return compensated_machine_point(
@@ -695,25 +705,27 @@ def build_preview_moves(contours, settings, cancel_check=None, program_plan=None
                 motor_delta,
                 settings,
             )
-            steps = max(
-                polar_segment_steps(
-                    a,
-                    b,
-                    center,
-                    thetas[k],
-                    bed_theta,
-                    settings.tolerance,
-                ),
-                compensation_step_count(
-                    a,
-                    b,
-                    thetas[k],
-                    bed_theta,
-                    center,
-                    bed_compensation,
-                    settings.tolerance,
-                ),
+            steps = polar_segment_steps(
+                a,
+                b,
+                center,
+                thetas[k],
+                bed_theta,
+                settings.tolerance,
             )
+            if bed_compensation is not None:
+                steps = max(
+                    steps,
+                    compensation_step_count(
+                        a,
+                        b,
+                        thetas[k],
+                        bed_theta,
+                        center,
+                        bed_compensation,
+                        settings.tolerance,
+                    ),
+                )
             move_len = feed_plan["motion_length"] / steps
             move_ms = feed_plan["duration_ms"] / steps
             sub_start = last_machine

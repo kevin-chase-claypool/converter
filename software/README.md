@@ -182,13 +182,17 @@ Cycle Start with the pen loaded:
   the existing planner chooses the bed angle and after P100 registration; it
   does not change artwork geometry or candidate selection. Its coverage is
   checked before planning, each correction is capped at 5 mm, and blanking
-  the path restores byte-identical uncompensated output. After fitting,
-  generate a compensated verification sheet with:
+  the path restores byte-identical uncompensated output.
 
-  To declare a larger field by extrapolating the same measured correction
-  samples, add `--coverage-radius-mm 171.45` to
-  `analyze_bed_error_calibration.py`. The declared radius cannot exceed the
-  calibration stock radius, and extending it does not add new measurements.
+  Interactive **Preview** uses a fast nominal X/Y path while an active bed
+  profile is applied to the saved G-code. Enable **Exact compensated preview
+  (slow)** in the Machine group when the displayed machine coordinates must
+  match the file. This matters on dense CMYK pages: the combined 2026-10-23
+  preview had 8,699 contours, and exact compensation probing made its move
+  construction take minutes instead of seconds. The status bar states which
+  preview mode was used.
+
+  After fitting, generate a compensated verification sheet with:
 
   ```powershell
   python ..\tools\make_bed_error_calibration.py `
@@ -196,6 +200,11 @@ Cycle Start with the pen loaded:
   ```
 
   That writes `bed-error-verify.gcode` and a matching CSV.
+
+  To declare a larger field by extrapolating the same measured correction
+  samples, add `--coverage-radius-mm 171.45` to
+  `analyze_bed_error_calibration.py`. The declared radius cannot exceed the
+  calibration stock radius, and extending it does not add new measurements.
 
   Compare a compensated verification photo with the original measurements:
 
@@ -888,11 +897,13 @@ display-only; every other group changes the emitted program.
 - **Machine** — the machine-side setup the program is clipped and parked
   against: `Bed dia mm`, `Bed margin mm`, `Gantry reach radius mm`,
   `Bed compensation JSON` (the verified profile by default), and the
-  end-of-program `Park X/Y machine mm` in G53 machine coordinates. The profile
-  contains measured residual `correction(theta, bed_xy)` machine-XY vectors.
-  It is applied after the planner selects theta and after P100's registration;
-  P100 is not rewritten. Artwork points outside the profile's stated measured
-  coverage are rejected before preview or save.
+  end-of-program `Park X/Y machine mm` in G53 machine coordinates, plus
+  **Exact compensated preview (slow)**. The profile contains measured residual
+  `correction(theta, bed_xy)` machine-XY vectors. It is applied to saved G-code
+  after the planner selects theta and after P100's registration; interactive
+  preview uses nominal X/Y unless exact preview is enabled. P100 is not
+  rewritten. Artwork points outside the profile's stated measured coverage are
+  rejected before preview or save.
 - **Theta kinematics** — theta axis/ratio/resolver/cost settings (`Theta ratio`
   defaults to 12.03324, the measured effective ratio of the 60T→720T pulley
   pair).
@@ -1131,8 +1142,9 @@ display-only; every other group changes the emitted program.
   disable it or use **Browse...** to select a replacement. Its fiducial fit
   removes common translation, rotation, and scale before fitting. Do not place
   the same residual offset in both P100 and the profile. A saved compensated
-  program records the profile fingerprint and correction bound in its header,
-  and preview uses the same subdivided machine points as the saved G-code.
+  program records the profile fingerprint and correction bound in its header.
+  Fast preview intentionally displays nominal machine points; enable **Exact
+  compensated preview (slow)** when preview/saved-coordinate parity is needed.
 - SVG document coordinates are not machine coordinates. The converter centers
   the clipped artwork at G54 zero; a document centered at `(100,100)`, for
   example, emits drawing coordinates around `(0,0)`, not `(100,100)`.
