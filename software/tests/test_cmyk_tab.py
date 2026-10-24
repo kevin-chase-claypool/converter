@@ -1176,6 +1176,19 @@ class CmykTabTests(unittest.TestCase):
         tab.on_preview_finished()
         self.assertEqual(calls, ["plan"])
 
+    def test_planning_state_reaches_the_shared_cancel_control(self):
+        host = FakeHost(self.image_path)
+        tab = self.make_tab(host)
+        tab._set_planning_state(True)
+        self.assertTrue(tab.cancel_button.isEnabled())
+        self.assertFalse(tab.save_button.isEnabled())
+        self.assertEqual(host.planning_states[-1], (tab, True))
+
+        tab._set_planning_state(False)
+        self.assertFalse(tab.cancel_button.isEnabled())
+        self.assertTrue(tab.save_button.isEnabled())
+        self.assertEqual(host.planning_states[-1], (tab, False))
+
     def test_calibration_sheet_mode_builds_and_saves_manifest(self):
         host = FakeHost(self.image_path)
         tab = self.make_tab(host)
@@ -1278,6 +1291,7 @@ class FakeHost:
         self.saved_labels = []
         self.saved_paths = {}
         self.visibility_updates = 0
+        self.planning_states = []
         self._folder = tempfile.mkdtemp(prefix="cmyk-save-")
 
     def artwork_path(self):
@@ -1285,6 +1299,9 @@ class FakeHost:
 
     def generator_status(self, message):
         self.status.append(message)
+
+    def generator_planning_changed(self, tab, running):
+        self.planning_states.append((tab, running))
 
     def update_preview_visibility(self):
         self.visibility_updates += 1

@@ -1064,11 +1064,17 @@ class CmykTab(GeneratorTab):
         self._thread.finished.connect(self._worker.deleteLater)
         self._thread.finished.connect(self._thread.deleteLater)
         self._thread.finished.connect(self._on_thread_finished)
-        self.save_button.setEnabled(False)
-        self.cancel_button.setEnabled(True)
+        self._set_planning_state(True)
         self.cost_label.setText("Planning the four ink programs...")
         self.status.setText("Planning the four ink programs...")
         self._thread.start()
+
+    def _set_planning_state(self, running):
+        self.cancel_button.setEnabled(bool(running))
+        self.save_button.setEnabled(not bool(running))
+        notify = getattr(self.host, "generator_planning_changed", None)
+        if callable(notify):
+            notify(self, bool(running))
 
     def cancel_analysis(self):
         if self._worker is not None:
@@ -1138,12 +1144,13 @@ class CmykTab(GeneratorTab):
         self.status.setText("Planning cancelled.")
         self.cost_label.setText("Planning cancelled; the last result is kept.")
         self._pending_save = False
+        if self.host is not None and hasattr(self.host, "generator_status"):
+            self.host.generator_status("CMYK planning cancelled.")
 
     def _on_thread_finished(self):
         self._thread = None
         self._worker = None
-        self.save_button.setEnabled(True)
-        self.cancel_button.setEnabled(False)
+        self._set_planning_state(False)
 
     def shutdown_background(self):
         """Cancel and join the background planner (window close)."""

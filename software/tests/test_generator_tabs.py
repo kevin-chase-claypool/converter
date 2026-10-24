@@ -179,6 +179,31 @@ class ToolShellTests(unittest.TestCase):
         window.exact_compensated_preview.setChecked(True)
         self.assertTrue(window.settings().exact_compensated_preview)
 
+    def test_shared_cancel_targets_generator_background_planning(self):
+        class PlanningTab:
+            def __init__(self):
+                self.cancelled = 0
+
+            def analysis_running(self):
+                return True
+
+            def cancel_analysis(self):
+                self.cancelled += 1
+
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        tab = PlanningTab()
+        window.generator_planning_changed(tab, True)
+
+        self.assertTrue(window.cancel_preview_button.isEnabled())
+        self.assertEqual(window.cancel_preview_button.text(), "Cancel planning")
+        window.cancel_preview_button.click()
+        self.assertEqual(tab.cancelled, 1)
+
+        window.generator_planning_changed(tab, False)
+        self.assertFalse(window.cancel_preview_button.isEnabled())
+        self.assertEqual(window.cancel_preview_button.text(), "Cancel")
+
     def test_generator_controls_fill_the_settings_pane(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

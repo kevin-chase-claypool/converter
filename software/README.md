@@ -370,7 +370,9 @@ Current tools:
   background through the same pipeline as Convert - that planning is exactly
   where the r-theta solver picks x_theta or y_theta per segment, or holds the
   bed still for the tab's **Kinematics** choice - and the tab reports each
-  file's split (or `XY only`) and calibrated time when it finishes.
+  file's split (or `XY only`) and calibrated time when it finishes. While this
+  background planning runs, the shared preview **Cancel** button changes to
+  **Cancel planning** and cancels the active CMYK worker.
   **Save 4 G-code files** writes
   `<name>-cyan.gcode`, `-magenta`, `-yellow` and `-black` from one base name.
   The r-theta axis-cost solver and the M3/M5 pen contract are inherited

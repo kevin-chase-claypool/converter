@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-23 | `WSW-20261023-008` | implemented | [Route the shared Cancel button to CMYK background planning](2026/2026-10-23-shared-cancel-tracks-cmyk-planning.md) | `cmyk`, `planning`, `cancel`, `ui`, `background-worker` |
 | 2026-10-23 | `WSW-20261023-007` | implemented | [Use a fast nominal preview with exact compensated G-code](2026/2026-10-23-fast-nominal-preview.md) | `bed`, `compensation`, `performance`, `preview`, `cmyk` |
 | 2026-10-23 | `WSW-20261023-006` | implemented | [Extend bed compensation coverage to 13.5 inches](2026/2026-10-23-extend-bed-compensation-to-13-5-inches.md) | `bed`, `compensation`, `coverage`, `extrapolation`, `cmyk` |
 | 2026-10-23 | `WSW-20261023-005` | implemented | [Enable verified bed compensation by default](2026/2026-10-23-enable-bed-compensation-by-default.md) | `bed`, `compensation`, `defaults`, `planner`, `profile` |

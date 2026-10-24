@@ -1234,6 +1234,7 @@ class MainWindow(QMainWindow):
         self.gcode_dir = ""
         self.preview_thread = None
         self.preview_worker = None
+        self._background_planning_tab = None
         self.preview_started_at = None
         self.preview_elapsed_timer = QTimer(self)
         self.preview_elapsed_timer.timeout.connect(self.update_preview_elapsed)
@@ -1971,6 +1972,18 @@ class MainWindow(QMainWindow):
     def generator_status(self, message):
         """Status-line entry point for generator tabs."""
         self.status.setText(str(message))
+
+    def generator_planning_changed(self, source_tab, running):
+        """Expose a tab's background planner through the shared Cancel button."""
+        if running:
+            self._background_planning_tab = source_tab
+            self.cancel_preview_button.setText("Cancel planning")
+            self.cancel_preview_button.setEnabled(True)
+        elif source_tab is self._background_planning_tab:
+            self._background_planning_tab = None
+            if self.preview_worker is None:
+                self.cancel_preview_button.setText("Cancel")
+                self.cancel_preview_button.setEnabled(False)
 
     def artwork_path(self):
         """Path currently in the static Artwork row, for generator tabs."""
@@ -4289,6 +4302,7 @@ class MainWindow(QMainWindow):
         self.pause()
         self.preview_button.setEnabled(False)
         self.preview_button.setText("Building...")
+        self.cancel_preview_button.setText("Cancel")
         self.cancel_preview_button.setEnabled(True)
         self.save_action.setEnabled(False)
         self.preview_build_bar.setValue(2)
@@ -4318,13 +4332,21 @@ class MainWindow(QMainWindow):
         self.preview_thread.start()
 
     def cancel_preview(self):
-        if self.preview_worker is None:
+        if self.preview_worker is not None:
+            self.preview_worker.cancel()
+            self.cancel_preview_button.setEnabled(False)
+            self.preview_stage.setProperty("stage", "Cancelling preview")
+            self.update_preview_elapsed()
+            self.status.setText("Cancelling preview...")
             return
-        self.preview_worker.cancel()
-        self.cancel_preview_button.setEnabled(False)
-        self.preview_stage.setProperty("stage", "Cancelling preview")
-        self.update_preview_elapsed()
-        self.status.setText("Cancelling preview...")
+        tab = self._background_planning_tab
+        cancel = getattr(tab, "cancel_analysis", None)
+        running = getattr(tab, "analysis_running", None)
+        if callable(cancel) and callable(running) and running():
+            cancel()
+            self.cancel_preview_button.setEnabled(False)
+            self.cancel_preview_button.setText("Cancelling...")
+            self.status.setText("Cancelling background planning...")
 
     def set_preview_build_progress(self, percent, stage):
         self.preview_build_bar.setValue(percent)
