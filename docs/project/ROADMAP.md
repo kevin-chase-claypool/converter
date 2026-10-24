@@ -264,21 +264,25 @@
 - [ ] Verify toolhead workload does not cause lost steps or unacceptable jitter.
 - [ ] Complete a calibration drawing.
 - [ ] Complete a theta-heavy drawing.
-- [ ] **Replace the bed/A motor and re-qualify 700 mm/min drawing.**
-  Problem: the compensated CMYK yellow wave screen still shows striations at
-  the programmed 700 mm/min. A 65 % controller feed override (`455 mm/min`)
-  appears to eliminate them, while the emitted compensation coordinates remain
-  unchanged; this isolates a rate-dependent bed/A motion effect. Benefit:
-  quality plotting can return to 700 mm/min if the replacement motor provides
-  sufficient torque/margin, instead of carrying a 35 % throughput penalty.
+- [ ] **Isolate and remove magenta wave-screen striation, then re-qualify
+  700 mm/min drawing.**
+  Problem: the compensated CMYK yellow wave screen showed striations at the
+  programmed 700 mm/min; a 65 % override (`455 mm/min`) appeared to eliminate
+  them. Magenta still shows severe striations at an even lower 60 % override
+  (`420 mm/min`), especially on the subject's right face, so slow feed is not a
+  general fix and a rate-dependent bed/A effect is not yet isolated. Benefit:
+  quality plotting can return to 700 mm/min once the limiting subsystem is
+  identified, instead of carrying a 30-35 % throughput penalty. The next
+  discriminating test is the same magenta layer in XY-only at 420 mm/min.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already
   installed on Y and is not yet installed. Acceptance: record the installed
   motor identity, direction/current/temperature, A repeatability, bed-ratio
-  marker, and first-try M3 contact; then repeat the same yellow layer at
-  700 mm/min. If striation remains, run the M-13 65/75/85/100 % speed ladder and
-  keep the highest fully clean setting. Evidence:
+  marker, and first-try M3 contact; then repeat the same yellow and magenta
+  layers at 700 mm/min. If either striates, use the M-13 XY-only and feed ladder
+  to identify whether rotation, X/Y motion, or ink/screen behavior limits it.
+  Evidence:
   `docs/report/lab-notes/2026-10-23-m-13-cmyk-yellow-feed-sensitivity.md`.
 
 ## Phase 7: validation and report

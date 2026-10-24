@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20261024-magenta-striation-at-low-feed"></a>
+### 🟨 2026-10-24 - HARDWARE/PARTIAL - Magenta striation persists at 60 % feed
+
+- The compensated Ben1 magenta wave screen remained severely striated at a
+  60 % controller override (`420 mm/min`), especially on the subject's
+  right face. Yellow had appeared clean at 455 mm/min.
+- The saved magenta file has 996 A-direction reversals versus yellow's 2,777,
+  and its full-feed maximum A rate is also about `254 motor deg/s`. At 60 %
+  that rate falls to about `152 motor deg/s`, so a file-wide rate or reversal
+  overload does not explain the magenta result by itself.
+- No calibrated magenta photo was captured. Magenta-only ink flow, 75-degree
+  screen overlap, paper deformation, or X/Y motion allocation remain
+  candidates. The next discriminating run is the same magenta layer at
+  `420 mm/min` in XY-only.
+- Evidence:
+  `docs/report/lab-notes/2026-10-23-m-13-cmyk-yellow-feed-sensitivity.md`.
+- Category: hardware, cmyk, magenta, striation, feed-rate, kinematics,
+  bed-compensation.
+
 <a id="elog-20261023-cmyk-yellow-feed-sensitivity"></a>
 ### 🟨 2026-10-23 - HARDWARE/PARTIAL - Slow feed appears to remove CMYK yellow striation
 

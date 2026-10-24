@@ -1,4 +1,4 @@
-# Lab Note: 2026-10-23 - CMYK yellow wave-screen feed sensitivity
+# Lab Note: 2026-10-23 - CMYK wave-screen feed sensitivity
 
 ## Objective
 
@@ -63,6 +63,19 @@ were not recorded.
 - No fixed-feed repeat, calibrated image, or post-run measurement was captured,
   so this is partial bench evidence rather than a formal M-13 pass.
 
+### 2026-10-24 magenta follow-up
+
+- The same Ben1 set's magenta layer was run at a 60 % controller feed override,
+  or `420 mm/min`. The operator reports that striations remained very visible,
+  especially on the subject's right side of the face.
+- `IMG_0514-cmyk-magenta.gcode` normally demands a maximum A rate of
+  `254 motor deg/s`; at 60 % this falls to about `152 motor deg/s`. The file
+  has 996 A-direction reversals, fewer than the yellow layer's 2,777.
+- Magenta uses 893 planned contours and 26,850 drawing moves, versus yellow's
+  627 contours and 34,509 drawing moves. The remaining magenta defect is
+  therefore not explained by a larger file-wide reversal count or a higher
+  command-rate demand alone.
+
 ## Difficulties and corrective actions
 
 - The exact feed-override transition point and resulting photo were not
@@ -72,23 +85,37 @@ were not recorded.
   test because the bed tangential-speed setting is independent. To generate an
   equivalent whole-program rate reduction, scale both Feed rate and Theta
   tangential speed to 455 mm/min, or use a uniform controller feed override.
+- The magenta follow-up had no accompanying photograph, so the stripe
+  orientation, pitch, and exact location could not be measured.
 
 ## Interpretation
 
-The compensation coordinates remain unchanged when feed rate changes. A clean
-print at 65 % therefore indicates rate-dependent motion error, not a static
-bed-compensation or G-code-coordinate error. The leading boundary is the
-rotating-bed/A drivetrain and its response under load; the accepted
-compensation profile still has a measured `0.338 mm` RMS / `0.752 mm` maximum
-static residual but does not explain a defect that disappears with speed alone.
+The compensation coordinates remain unchanged when feed rate changes. The clean
+yellow print at 65 % therefore indicates rate-dependent motion error, not a
+static bed-compensation or G-code-coordinate error. The leading boundary for
+yellow is the rotating-bed/A drivetrain and its response under load.
+
+Magenta remains defective at an even lower speed and has fewer A reversals, so
+the yellow result cannot yet be generalized. Magenta-specific ink flow,
+overlap of its 75-degree wave screen, pen seating/contact, paper deformation
+after earlier passes, or a different X/Y motion allocation remain candidates.
+The accepted compensation profile's `0.338 mm` RMS / `0.752 mm` maximum static
+residual is common to all channels and does not by itself explain a
+magenta-only difference.
 
 ## Decisions and next action
 
 - Keep 700 mm/min as the nominal requested feed for now and use a 65 % override
-  for quality-critical Xθ/Yθ CMYK work until the drivetrain is improved.
+  for quality-critical Xθ/Yθ yellow work until the drivetrain is improved.
+- Repeat magenta alone in **Bed motion = XY only** at the same 420 mm/min. If it
+  is clean, the remaining defect is rotary/A motion; if it persists, move to
+  pen/ink/screen isolation.
+- Photograph the completed magenta sheet from directly above, ideally with the
+  four registration crosses enabled or with fixed sheet fiducials, so the
+  striation pitch and direction can be measured.
 - After installing the planned replacement bed/A motor, first repeat this same
-  yellow layer at 700 mm/min. If clean, the 65 % workaround can be retired. If
-  striation returns, run a controlled speed ladder at 65 / 75 / 85 / 100 % and
-  retain the highest fully clean setting.
+  yellow and magenta layers at 700 mm/min. If clean, the 65 % workaround can be
+  retired. If striation returns, run a controlled speed ladder at
+  45 / 60 / 70 / 80 / 100 % and retain the highest fully clean setting per ink.
 - The repeat must also confirm A direction, current, temperature, bed-ratio
   repeatability, and first-try M3 contact after the motor change.
