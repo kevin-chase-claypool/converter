@@ -46,6 +46,18 @@ class BedPhotoMeasurementTests(unittest.TestCase):
             self.assertTrue(np.allclose(mapped, image_point))
             self.assertTrue(np.allclose(restored, bed_point))
 
+    def test_fiducial_corner_uses_the_shared_vertex(self):
+        points = tuple(
+            [(x_value, 20) for x_value in range(10, 21)]
+            + [(20, y_value) for y_value in range(10, 20)]
+        )
+        component = self.module.Component(points, (10, 10, 20, 20))
+        corner = self.module._component_corner(
+            component,
+            prediction=(20, 20),
+        )
+        self.assertTrue(np.allclose(corner, (20, 20)))
+
     def test_seed_homography_scales_to_new_photo_size(self):
         diagnostic = {
             "homography": [
@@ -62,18 +74,30 @@ class BedPhotoMeasurementTests(unittest.TestCase):
         self.assertTrue(np.allclose(mapped, (280.0, 120.0)))
 
     def test_station_vertex_uses_shared_corner_centrelines(self):
-        points = tuple(
-            [(x_value, 20) for x_value in range(10, 21)]
-            + [(20, y_value) for y_value in range(10, 20)]
+        sheet_points = tuple(
+            [(x_value, 0) for x_value in range(-5, 1)]
+            + [(0, y_value) for y_value in range(1, 6)]
         )
-        component = self.module.Component(points, (10, 10, 20, 20))
         homography = np.asarray(
-            [[4.0, 0.0, 100.0], [0.0, 4.0, 80.0], [0.0, 0.0, 1.0]]
+            [[4.0, 0.0, 100.0], [0.0, -4.0, 100.0], [0.0, 0.0, 1.0]]
+        )
+        image_points = tuple(
+            (
+                int(round(4.0 * x_value + 100.0)),
+                int(round(-4.0 * y_value + 100.0)),
+            )
+            for x_value, y_value in sheet_points
+        )
+        xs = [point[0] for point in image_points]
+        ys = [point[1] for point in image_points]
+        component = self.module.Component(
+            image_points,
+            (min(xs), min(ys), max(xs), max(ys)),
         )
         vertex = self.module._station_vertex(
             component, homography, (0.0, 0.0)
         )
-        self.assertTrue(np.allclose(vertex, (20.0, 20.0)))
+        self.assertTrue(np.allclose(vertex, (100.0, 100.0)))
 
     def test_measurement_csv_contains_every_complete_mark(self):
         expected = expected_marks()

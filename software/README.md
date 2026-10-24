@@ -157,6 +157,10 @@ Cycle Start with the pen loaded:
     --measurement-out ..\samples\gcode\bed-error-map-measured.csv
   ```
 
+  The photo may be rotated; the tool selects the best non-mirrored fiducial
+  orientation and tolerates a small number of extra ink specks. Review the
+  generated overlay to confirm measured points sit on the shared L corners.
+
   If long pen-up drag marks connect separate components, add
   `--seed-diagnostic <previous-photo.json>` so the matcher uses expected local
   geometry and tolerates the extra fragments.
@@ -241,6 +245,13 @@ Cycle Start with the pen loaded:
   The current generator's eight-angle sheet is a new calibration candidate;
   the existing default profile remains active until that sheet is measured,
   independently verified, and accepted.
+  The first eight-angle sheet was measured on 2026-10-24. A=0 spatial error was
+  `0.306 mm` RMS / `0.540 mm` maximum and leave-one-station-out prediction was
+  `0.297 mm` RMS / `1.032 mm` maximum with `58.0 %` improvement. The
+  `1.032 mm` maximum failed the `0.90 mm` gate, dominated by the A=90 and
+  post-rotation A=0 control fields. Candidate profile `eda33445701f` and
+  `bed-error-verify-2026-10-24-eight-angle.gcode` are retained for independent
+  verification, but the candidate is not the default.
 - `..\samples\gcode\a-tilt-pairs-test.gcode` - four separated line pairs for
   a caliper-read bed-tilt check: each pair is the same paper segment drawn
   twice, once at A=0 (the longer 80 mm constant line) and once at that

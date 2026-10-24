@@ -201,8 +201,13 @@
   Angular interpolation was also corrected to blend correction vectors in the
   rotating bed frame before rotating them into machine XY. Compensated files
   made before the `angular interpolation bed-frame` header marker must be
-  regenerated. The existing profile remains the default until the printed
-  sheet, independent verification, and all angle-stage gates pass.
+  regenerated. The eight-angle sheet has now been measured: A0 spatial error is
+  `0.306 mm` RMS / `0.540 mm` maximum, but the A0 control (`0.684 / 0.901 mm`)
+  and A90 stage (`1.043 / 1.375 mm`) remain poor. Leave-one-out is
+  `0.297 mm` RMS / `1.032 mm` maximum with `58.0 %` improvement, so the map
+  fails the maximum gate. Candidate `eda33445701f` awaits independent
+  verification and is not the default. Investigate A90 and post-rotation A0
+  repeatability if that sheet fails.
 - [ ] **Verify the extrapolated 13.5-inch compensation annulus.**
   Problem: the default `4c8270de8a74` profile extends the accepted 165.1 mm
   correction field to 171.45 mm by local-affine extrapolation. Its

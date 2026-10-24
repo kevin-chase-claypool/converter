@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-24 | `WSW-20261024-003` | windows-software, hardware | implemented | [Make bed-calibration photo matching orientation-independent](windows-software/2026/2026-10-24-orientation-independent-bed-photo-matching.md) |
 | 2026-10-24 | `WSW-20261024-002` | windows-software, hardware | implemented | [Interpolate bed compensation in the rotating bed frame](windows-software/2026/2026-10-24-bed-frame-angular-interpolation.md) |
 | 2026-10-24 | `WSW-20261024-001` | windows-software, hardware, rp23cnc-software | implemented | [Expand full-field bed calibration to eight angles](windows-software/2026/2026-10-24-eight-angle-bed-calibration.md) |
 | 2026-10-23 | `WSW-20261023-009` | windows-software | implemented | [Add an adaptive bed-compensation curvature probe](windows-software/2026/2026-10-23-adaptive-compensation-probe.md) |

@@ -8,7 +8,10 @@ writes the companion measurement CSV used by
 
 The defaults target a straight-down phone photo with reasonably even lighting.
 The paper must fill a substantial part of the image and the four large
-fiducials must all be visible.
+fiducials must all be visible. The sheet may be rotated in the photo; the
+non-mirrored quarter-turn with the best station-lattice agreement is selected
+automatically. A small number of ink flecks or detached label fragments is
+tolerated, but every expected station mark must still be uniquely assigned.
 
 If pen-up drag marks connect printed components, pass the previous sheet's
 ``*-photo.json`` as ``--seed-diagnostic``. The seed transform finds the four
@@ -21,6 +24,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 import hashlib
+import itertools
 import json
 import math
 from pathlib import Path
@@ -33,7 +37,10 @@ from PIL import Image, ImageDraw, ImageFilter
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "software"))
 
-from converter_core.bed_calibration import expected_marks  # noqa: E402
+from converter_core.bed_calibration import MARK_ARM_MM, expected_marks  # noqa: E402
+
+
+DEFAULT_MAXIMUM_ASSIGNMENT_PX = 13.0
 
 
 @dataclass(frozen=True)
@@ -95,7 +102,7 @@ def _working_mask(
     return mask, (center_x, center_y), radius
 
 
-def _component_corner(component, quadrant):
+def _bbox_component_corner(component, quadrant):
     points = np.asarray(component.points, dtype=float)
     if quadrant == (0, 0):
         value = points[:, 0].max()
@@ -116,6 +123,57 @@ def _component_corner(component, quadrant):
     return np.array(
         [np.median(points[points[:, 1] >= value - 1, 0]), value]
     )
+
+
+def _convex_hull(points):
+    unique = sorted({(float(x), float(y)) for x, y in points})
+    if len(unique) <= 2:
+        return np.asarray(unique, dtype=float)
+
+    def cross(origin, a, b):
+        return (
+            (a[0] - origin[0]) * (b[1] - origin[1])
+            - (a[1] - origin[1]) * (b[0] - origin[0])
+        )
+
+    lower = []
+    for point in unique:
+        while len(lower) >= 2 and cross(lower[-2], lower[-1], point) <= 0:
+            lower.pop()
+        lower.append(point)
+    upper = []
+    for point in reversed(unique):
+        while len(upper) >= 2 and cross(upper[-2], upper[-1], point) <= 0:
+            upper.pop()
+        upper.append(point)
+    return np.asarray(lower[:-1] + upper[:-1], dtype=float)
+
+
+def _fiducial_corner_candidates(component):
+    hull = _convex_hull(component.points)
+    if len(hull) < 3:
+        return tuple(hull)
+    best = None
+    for first, second, third in itertools.combinations(hull, 3):
+        area = abs(
+            (second[0] - first[0]) * (third[1] - first[1])
+            - (second[1] - first[1]) * (third[0] - first[0])
+        )
+        if best is None or area > best[0]:
+            best = (area, (first, second, third))
+    return best[1]
+
+
+def _component_corner(component, quadrant=None, prediction=None):
+    """Return the V vertex closest to an expected image position."""
+    candidates = _fiducial_corner_candidates(component)
+    if prediction is not None and candidates:
+        prediction = np.asarray(prediction, dtype=float)
+        return min(
+            candidates,
+            key=lambda point: float(np.linalg.norm(point - prediction)),
+        )
+    return _bbox_component_corner(component, quadrant or (0, 0))
 
 
 def _components_in_box(mask, bounds):
@@ -217,8 +275,19 @@ def _seeded_fiducials(residual, expected_fiducials, seed_homography, threshold):
     )
     image_points = np.asarray(
         [
-            _component_corner(component, expected_quadrant)
-            for component, expected_quadrant in zip(selected, quadrants)
+            _component_corner(
+                component,
+                expected_quadrant,
+                prediction=_forward(
+                    seed_homography,
+                    (mark.nominal_x_mm, mark.nominal_y_mm),
+                ),
+            )
+            for component, expected_quadrant, mark in zip(
+                selected,
+                quadrants,
+                expected_fiducials,
+            )
         ]
     )
     return _fit_homography(nominal, image_points), image_points
@@ -271,32 +340,95 @@ def _inverse(inverse_homography, point):
 
 
 def _station_vertex(component, homography, nominal_point):
-    """Return the shared corner centre of one station L."""
-    x0, y0, x1, y1 = component.bbox
-    approximation = np.asarray([x1, y1], dtype=float)
-    origin = _forward(homography, nominal_point)
-    x_axis = _forward(
-        homography, (nominal_point[0] + 1.0, nominal_point[1])
-    ) - origin
-    y_axis = _forward(
-        homography, (nominal_point[0], nominal_point[1] + 1.0)
-    ) - origin
-    axes = np.column_stack((x_axis, y_axis))
-    axes_inverse = np.linalg.inv(axes)
-    points = np.asarray(component.points, dtype=float)
-    local = (points - approximation) @ axes_inverse.T
-    horizontal = local[
-        (local[:, 0] < -1.5) & (np.abs(local[:, 1]) < 3.0)
-    ]
-    vertical = local[
-        (local[:, 1] > 1.5) & (np.abs(local[:, 0]) < 3.0)
-    ]
-    if len(horizontal) < 5 or len(vertical) < 5:
-        return approximation
-    corner_local = np.asarray(
-        [np.median(vertical[:, 0]), np.median(horizontal[:, 1])]
+    """Return the shared corner centre of one station L in sheet coordinates."""
+    inverse_homography = np.linalg.inv(homography)
+    points = np.asarray(
+        [
+            _inverse(inverse_homography, point)
+            for point in component.points
+        ],
+        dtype=float,
     )
-    return approximation + axes @ corner_local
+    nominal = np.asarray(nominal_point, dtype=float)
+    near = points[
+        (np.abs(points[:, 0] - nominal[0]) < 6.0)
+        & (np.abs(points[:, 1] - nominal[1]) < 6.0)
+    ]
+    if len(near) < 6:
+        return tuple(_forward(homography, nominal_point))
+    horizontal = near[
+        (near[:, 0] < nominal[0] - 1.0)
+        & (np.abs(near[:, 1] - nominal[1]) < 3.0)
+    ]
+    vertical = near[
+        (near[:, 1] > nominal[1] + 1.0)
+        & (np.abs(near[:, 0] - nominal[0]) < 3.0)
+    ]
+    if len(horizontal) < 3 or len(vertical) < 3:
+        corner = (
+            float(np.percentile(near[:, 0], 98)),
+            float(np.percentile(near[:, 1], 2)),
+        )
+    else:
+        corner = (
+            float(np.median(vertical[:, 0])),
+            float(np.median(horizontal[:, 1])),
+        )
+    return tuple(_forward(homography, corner))
+
+
+def _fit_oriented_homography(
+    expected_fiducials,
+    image_fiducials,
+    station_marks,
+    component_centroids,
+):
+    """Choose the non-mirrored sheet rotation that best matches the station grid."""
+    nominal_fiducials = np.asarray(
+        [
+            (mark.nominal_x_mm, mark.nominal_y_mm)
+            for mark in expected_fiducials
+        ]
+    )
+    best = None
+    for order in itertools.permutations(range(4)):
+        ordered_fiducials = image_fiducials[list(order)]
+        homography = _fit_homography(
+            nominal_fiducials,
+            ordered_fiducials,
+        )
+        if np.linalg.det(homography) >= -1e-9:
+            continue
+        distances = []
+        for mark in station_marks:
+            expected_centroid = _forward(
+                homography,
+                (
+                    mark.nominal_x_mm - MARK_ARM_MM / 2.0,
+                    mark.nominal_y_mm + MARK_ARM_MM / 2.0,
+                ),
+            )
+            distances.append(
+                float(
+                    np.min(
+                        np.linalg.norm(
+                            component_centroids - expected_centroid,
+                            axis=1,
+                        )
+                    )
+                )
+            )
+        distances = np.asarray(distances)
+        score = (
+            float(np.median(distances)),
+            float(np.percentile(distances, 95)),
+            float(distances.mean()),
+        )
+        if best is None or score < best[0]:
+            best = (score, homography, ordered_fiducials, order)
+    if best is None:
+        raise ValueError("could not fit a non-mirrored sheet orientation")
+    return best[1], best[2], best[3], best[0]
 
 
 def measure_photo(
@@ -306,7 +438,7 @@ def measure_photo(
     blur_radius=18.0,
     mask_center_fraction=(0.5295, 0.4869),
     mask_radius_fraction=0.4322,
-    maximum_assignment_px=8.0,
+    maximum_assignment_px=DEFAULT_MAXIMUM_ASSIGNMENT_PX,
     seed_diagnostic=None,
 ):
     source = Image.open(image_path).convert("L")
@@ -317,6 +449,12 @@ def measure_photo(
     expected = expected_marks()
     expected_fiducials = tuple(
         mark for mark in expected if mark.section == "fiducial"
+    )
+    expected_station_count = sum(
+        1 for mark in expected if mark.section == "station"
+    )
+    station_marks = tuple(
+        mark for mark in expected if mark.section == "station"
     )
     center = (
         (source.width - 1) * mask_center_fraction[0],
@@ -351,10 +489,23 @@ def measure_photo(
             for component in components
             if component.maximum_dimension < 16
         )
-        if not (len(large) == 4 and len(medium) == 185 and len(small) == 74):
+        maximum_extra_components = 12
+        if not (
+            len(large) == 4
+            and expected_station_count
+            <= len(medium)
+            <= expected_station_count + maximum_extra_components
+        ):
             raise ValueError(
-                "unexpected component counts: %d fiducial, %d L-mark, %d label"
-                % (len(large), len(medium), len(small))
+                "unexpected component counts: %d fiducial, %d L-mark "
+                "(expected %d plus at most %d extras), %d label"
+                % (
+                    len(large),
+                    len(medium),
+                    expected_station_count,
+                    maximum_extra_components,
+                    len(small),
+                )
             )
 
         fiducials_by_quadrant = {}
@@ -375,13 +526,55 @@ def measure_photo(
                 for quadrant in quadrants
             ]
         )
+        component_centroids = np.asarray(
+            [
+                np.asarray(component.points, dtype=float).mean(axis=0)
+                for component in medium
+            ],
+            dtype=float,
+        )
+        (
+            homography,
+            image_fiducials,
+            fiducial_order,
+            orientation_score,
+        ) = _fit_oriented_homography(
+            expected_fiducials,
+            image_fiducials,
+            station_marks,
+            component_centroids,
+        )
         nominal_fiducials = np.asarray(
             [
                 (mark.nominal_x_mm, mark.nominal_y_mm)
                 for mark in expected_fiducials
             ]
         )
-        homography = _fit_homography(nominal_fiducials, image_fiducials)
+        ordered_components = tuple(
+            fiducials_by_quadrant[quadrants[index]]
+            for index in fiducial_order
+        )
+        for _iteration in range(2):
+            refined_fiducials = np.asarray(
+                [
+                    _component_corner(
+                        component,
+                        prediction=_forward(
+                            homography,
+                            (mark.nominal_x_mm, mark.nominal_y_mm),
+                        ),
+                    )
+                    for component, mark in zip(
+                        ordered_components,
+                        expected_fiducials,
+                    )
+                ]
+            )
+            homography = _fit_homography(
+                nominal_fiducials,
+                refined_fiducials,
+            )
+            image_fiducials = refined_fiducials
     else:
         seed_homography = _scaled_seed_homography(
             seed_diagnostic, (source.width, source.height)
@@ -399,17 +592,25 @@ def measure_photo(
             if 60 <= len(component.points) <= 200
             and 16 <= component.maximum_dimension <= 30
         )
+        fiducial_order = (0, 1, 2, 3)
+        orientation_score = (0.0, 0.0, 0.0)
     inverse_homography = np.linalg.inv(homography)
 
-    station_marks = tuple(mark for mark in expected if mark.section == "station")
     approximate_vertices = np.asarray(
-        [(component.bbox[2], component.bbox[3]) for component in medium],
+        [
+            np.asarray(component.points, dtype=float).mean(axis=0)
+            for component in medium
+        ],
         dtype=float,
     )
     candidates = []
     for expected_index, mark in enumerate(station_marks):
         expected_image = _forward(
-            homography, (mark.nominal_x_mm, mark.nominal_y_mm)
+            homography,
+            (
+                mark.nominal_x_mm - MARK_ARM_MM / 2.0,
+                mark.nominal_y_mm + MARK_ARM_MM / 2.0,
+            ),
         )
         for component_index, vertex in enumerate(approximate_vertices):
             candidates.append(
@@ -481,6 +682,12 @@ def measure_photo(
         "working_center_px": list(center),
         "working_radius_px": working_radius,
         "fiducial_points_px": image_fiducials.tolist(),
+        "fiducial_order": list(fiducial_order),
+        "orientation_score_px": {
+            "median": orientation_score[0],
+            "p95": orientation_score[1],
+            "mean": orientation_score[2],
+        },
         "assignment_distance_px": {
             "minimum": min(assignment_distances),
             "median": float(np.median(assignment_distances)),
@@ -612,7 +819,11 @@ def main():
         help="working-circle centre as x,y fractions of image width/height",
     )
     parser.add_argument("--mask-radius-fraction", type=float, default=0.4322)
-    parser.add_argument("--maximum-assignment-px", type=float, default=8.0)
+    parser.add_argument(
+        "--maximum-assignment-px",
+        type=float,
+        default=DEFAULT_MAXIMUM_ASSIGNMENT_PX,
+    )
     parser.add_argument(
         "--seed-diagnostic",
         default="",

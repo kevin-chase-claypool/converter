@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-24 | `WSW-20261024-003` | implemented | [Make bed-calibration photo matching orientation-independent](../windows-software/2026/2026-10-24-orientation-independent-bed-photo-matching.md) | `bed`, `calibration`, `photo`, `fiducial`, `orientation`, `matching` |
 | 2026-10-24 | `WSW-20261024-002` | implemented | [Interpolate bed compensation in the rotating bed frame](../windows-software/2026/2026-10-24-bed-frame-angular-interpolation.md) | `bed`, `compensation`, `angle`, `interpolation`, `frame`, `striation` |
 | 2026-10-24 | `WSW-20261024-001` | implemented | [Expand full-field bed calibration to eight angles](../windows-software/2026/2026-10-24-eight-angle-bed-calibration.md) | `bed`, `compensation`, `calibration`, `angle`, `cmyk`, `striation` |
 | 2026-10-23 | `WSW-20261023-007` | implemented | [Use a fast nominal preview with exact compensated G-code](../windows-software/2026/2026-10-23-fast-nominal-preview.md) | `bed`, `compensation`, `performance`, `preview`, `cmyk` |

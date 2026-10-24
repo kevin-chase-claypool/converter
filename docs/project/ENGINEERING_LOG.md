@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261024-eight-angle-calibration-measured"></a>
+### 🟨 2026-10-24 - WINDOWS SOFTWARE/HARDWARE/PARTIAL - Eight-angle calibration measured; candidate retained
+
+- The supplied portrait photo was measured after fixing photo-rotation,
+  extra-component, and L/V-corner matching. All 333 station marks assigned;
+  assignment error was `7.565 px` median / `12.365 px` maximum.
+- A0 spatial RMS/max was `0.306 / 0.540 mm`. The post-rotation A0 control was
+  `0.684 / 0.901 mm`, and eight-angle leave-one-station-out was
+  `0.297 mm` RMS / `1.032 mm` maximum with `58.0 %` improvement.
+- The map failed the `0.90 mm` maximum gate and is not the default. A90 was the
+  dominant angle (`1.043 / 1.375 mm`), pointing to rotary/carriage/height
+  repeatability rather than a centre-only offset.
+- Candidate `eda33445701f` and an independent verification program were
+  generated for the next physical test.
+- The photo matcher itself now handles rotated sheets, small numbers of extra
+  components, orientation-independent L corners, and V-fiducial vertices
+  (`WSW-20261024-003`). The full converter suite passes 496 tests with one
+  OpenGL-context skip.
+- Evidence: `docs/report/lab-notes/2026-10-24-m-12-eight-angle-calibration.md` and
+  `docs/changes/windows-software/2026/2026-10-24-orientation-independent-bed-photo-matching.md`.
+- Category: windows-software, hardware, bed, calibration, angles, cmyk,
+  striation.
+
 <a id="elog-20261024-bed-frame-angular-interpolation"></a>
 ### 🟥 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Bed compensation interpolation used the wrong rotating frame
 
