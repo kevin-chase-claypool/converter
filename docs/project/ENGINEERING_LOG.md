@@ -74,6 +74,12 @@
   now the leading software-side hypothesis; local bed height, pen/ink flow,
   and X/Y carriage behavior remain alternatives. The next discriminating run
   is the same magenta and black layers at the same slow feed in XY-only.
+- A later black shoulder-edge photo showed ink crossing the blue tape. The
+  Ben1 black G-code predates the rotating-frame interpolation fix, has no
+  sudden coordinate jump, and clips in bed space at `171.450 mm`. Its largest
+  old machine radius is `171.785 mm`; the corrected interpolation moves the
+  corresponding shoulder-side boundary point to `171.476 mm`. Regenerate the
+  compensated files before judging boundary containment.
 - Evidence:
   `docs/report/lab-notes/2026-10-23-m-13-cmyk-yellow-feed-sensitivity.md`.
 - Category: hardware, cmyk, magenta, striation, feed-rate, kinematics,

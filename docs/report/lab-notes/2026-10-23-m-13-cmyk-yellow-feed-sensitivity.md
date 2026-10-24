@@ -171,6 +171,26 @@ machine-space warp that compensates the paper.
   behaves correctly between samples, while the new sheet measures 45° and the
   other previously missing angular fields directly.
 
+### 2026-10-24 black edge-overrun follow-up
+
+- The operator supplied `postcal.jpg`, which shows black wave rows continuing
+  across blue edge tape near the subject's left shoulder while the nearby
+  magenta/yellow fields end earlier.
+- The Ben1 black G-code is an old compensated program: its header contains the
+  profile fingerprint but not the new `angular interpolation bed-frame`
+  marker.
+- The program has no sudden coordinate excursion. Its largest pen-down move is
+  `3.447 mm` near the bed center. The source bed-space clip reaches exactly
+  `171.450 mm`, the configured 13.5-inch drawable radius.
+- Pre-compensation clipping does allow machine-space corrections outside that
+  nominal radius. The largest old black machine radius is `171.785 mm`. After
+  replaying the recovered bed points through the corrected rotating-frame
+  interpolation, the corresponding shoulder-side boundary point moves from
+  `171.785` to `171.476 mm`.
+- If the black overrun remains after regenerating with the interpolation
+  marker, the next checks are the actual round-stock diameter and tape
+  intrusion into the 6.35 mm configured rim margin.
+
 ## Decisions and next action
 
 - Keep 700 mm/min as the nominal requested feed for now and use a 65 % override
@@ -182,6 +202,10 @@ machine-space warp that compensates the paper.
   and magenta become clean in XY only, test a center-hold implementation that
   uses one constant A angle for all center-held contours instead of selecting a
   new held angle per contour.
+- Regenerate the black Ben1 layer before judging the edge overrun. Reject any
+  compensated file that lacks `angular interpolation bed-frame`. If the new
+  file still prints on the tape, record the stock diameter and increase Bed
+  margin until the stock/tape boundary is outside the corrected edge envelope.
 - Build a deterministic planner test with two adjacent center contours that
   starts from equal bed-space pitch, applies different held angles, and reports
   both bed-space and machine-space spacing. The acceptance target is the
