@@ -52,12 +52,13 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   it requires a new inactive-to-active completion edge, then returns only when
   contact-ready or pen-clear is proven. Its finite timeout raises error 39
   before the following motion block; an opt-in recover mode can instead lift
-  the pen (`M5`) and continue on a long print. The converter emits `P115` only
-  when its commissioning-only GP27 option is enabled. Normal `M5` ends at the load-cell
-  release threshold plus a calibrated clearance pulse; it does not travel to
+  the pen (`M5`) and continue on a long print. The converter enables this
+  acknowledgement path by default; fixed `G4` dwells remain the fallback when
+  it is disabled. Normal `M5` ends at the load-cell release threshold plus the
+  current 130 ms calibrated clearance pulse; it does not travel to
   the distant `LIFT_HOME` switch. `P115` and the toolhead GP27 output are
   enabled once F-08, force, and clearance commissioning pass; F-05A passed on
-  2026-09-29, which unblocks the converter option, though it still ships off.
+  2026-09-29, and the converter enables the option by default.
   To keep the inactive-to-active edge observable, the toolhead now holds GP27
   inactive for a guaranteed 50 ms on every M3/M5 transition
   (`GP27_TRANSITION_LOW_MS`) and

@@ -66,9 +66,9 @@ fixed motor duration.
 - `M5` requests `PEN_CLEAR`. Retract until the filtered force stays below
   `F_release_off` for the configured debounce interval, then issue the bounded
   `t_clear`/pulse command and stop the actuator. The current source uses a
-  70 ms post-release lift pulse, then waits 300 ms and takes a fresh 64-sample
+  130 ms post-release lift pulse, then waits 300 ms and takes a fresh 64-sample
   clear-state tare before reporting `LIFTED`. It begins only after release is
-  confirmed; the 70 ms value is raised from the T-01H-accepted 57 ms, and its
+  confirmed; the 130 ms value was raised from 90 ms on 2026-10-23, and its
   no-drag margin is being re-measured.
 - `F_contact_on` and `F_release_off` are distinct hysteresis thresholds. Both
   must be derived from the installed, signed CS1238 force units and current
@@ -131,9 +131,10 @@ about 12 mm above the paper, so the controller first closes that gap:
   serial `c` still performs the same retract with a manual-mode latch, and `a`
   returns that manual mode to GP29.
 
-M5 applies the 70 ms UP clearance move (raised from the T-01H-accepted 57 ms,
-whose measured pen-tip gap was about 1.75 mm) and stops sooner if GP2 is
-pressed. If GP2 is not reached, it waits 300 ms
+M5 applies the 130 ms UP clearance move, estimated at about 2.28 mm above the
+release point at the E-09F measured rate, and stops sooner if GP2 is pressed.
+This replaced the T-01H-accepted 57 ms baseline after intermediate values still
+left insufficient travel clearance. If GP2 is not reached, it waits 300 ms
 after stopping and
 refreshes the 64-sample clear-state tare before the next normal M3. The pulse
 widths follow a real 160 x 5 ms seek that covered only about 7.5 mm and a
@@ -162,7 +163,7 @@ release GP2, then stops/sleeps for one second and takes a 64-sample tare. Only
 then does it evaluate the light surface-touch threshold. This makes the live
 zero refer to the actual released, clear-of-paper mechanism state.
 
-Normal M5 has a separate short clear-state tare because the 70 ms clearance
+Normal M5 has a separate short clear-state tare because the clearance
 move shifts the unloaded raw baseline enough to imitate a subsequent contact
  trend. It waits 300 ms with the motor asleep, collects 64 CS1238 samples, and
 only then makes the next normal M3 eligible. A full-GP2 M5 result intentionally

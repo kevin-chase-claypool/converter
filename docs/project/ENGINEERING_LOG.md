@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20261023-m5-clearance-130ms"></a>
+### 🟨 2026-10-23 - RP23CNC-SOFTWARE/IMPLEMENTED - M5 pen clearance raised to 130 ms
+
+- Request: the operator still observed insufficient pen clearance between
+  moves after the current 90 ms M5 setting and selected 130 ms.
+- Change: `PEN_CLEAR_EXTRA_LIFT_MS` 90 -> 130 ms of full-drive UP after the
+  force-release point, estimated at about 1.55 -> 2.28 mm above release at the
+  E-09F measured 1.75 mm/100 ms rate.
+- The host `Pen up ms` value and P115 clear-ready wait were left unchanged;
+  neither controls the physical lift height.
+- Verification: the integrated toolhead sketch compiles for
+  `rp2040:rp2040:sparkfun_promicrorp2350`. Bench verification remains open for
+  the measured pen-tip gap, 30 no-drag cycles, first-try M3 contact, and the
+  larger warm-seek travel.
+- Evidence: `RPSW-20261023-001`,
+  `docs/changes/rp23cnc-software/2026/2026-10-23-raise-m5-clearance-to-130ms.md`.
+- Category: rp23cnc-software, hardware, toolhead, pen-clear, m5, clearance,
+  drag.
+
 <a id="elog-20261023-adaptive-compensation-probe"></a>
 ### 🟨 2026-10-23 - WINDOWS SOFTWARE/IMPLEMENTED - Adaptive compensation probe reduces exact planning cost
 

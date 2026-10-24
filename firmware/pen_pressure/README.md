@@ -6,14 +6,11 @@ the grblHAL spindle-enable line as a **mode override**, not a position command.
 ## Current contract and behavior source
 
 `M3` requests contact seek and force hold; `M5` requests normal `PEN_CLEAR`.
-The converter follows both with a calibrated fixed `G4` dwell while the
-toolhead reaches the requested state. This is the default no-new-wire
-synchronization method. The repository also contains an opt-in controller-side
-`P115` acknowledgement path: after each M3/M5 transition it requires GP27/PRB
-to release and then reassert, so the next drawing move cannot use a stale ready
-level. It remains disabled until its full commissioning evidence is recorded;
-it changes neither the existing controller endpoint nor ordinary generated
-programs by default.
+The converter uses the controller-side `P115` acknowledgement path by default:
+after each M3/M5 transition it requires GP27/PRB to release and then reassert,
+so the next drawing move cannot use a stale ready level. A fixed `G4` dwell is
+the opt-out fallback when the handshake is disabled; `Pen up ms` is the fallback
+wait and does not set the toolhead's physical clearance.
 
 [`CONTROL_STRATEGY.md`](CONTROL_STRATEGY.md) is the authoritative behavior
 document for state transitions, force thresholds, per-tool preflight, profile
@@ -41,10 +38,10 @@ work.
 - T-01H accepted normal M5 `PEN_CLEAR` at 57 ms on 2026-09-25 (release
   hysteresis, debounce, and clearance all measured). The clearance lift runs
   only *after* the configured near-zero CS1238 release band is stable. The
-  pulse is now 70 ms, raised 2026-10-02 after the operator reported drag marks
-  during real pen-up travel at 57 ms; 70 ms targets about 1.2 mm from E-09F's
-  1.75 mm per 100 ms observation. The new gap and no-drag behavior are open
-  pending re-measurement.
+  pulse is now 130 ms, raised from 90 ms on 2026-10-23 after the operator still
+  reported insufficient clearance between moves. At E-09F's 1.75 mm per 100 ms
+  observation, 130 ms targets about 2.28 mm above the release point. The new
+  gap, no-drag behavior, and first-try M3 contact are open pending re-measurement.
 - Do not enable stored force-control parameters until T-01I proves that the
   accepted profile survives power cycles and that a fresh no-contact baseline
   stays RAM-only.
@@ -91,8 +88,8 @@ work.
   the CS1238/actuator gates prove truthful contact and clear status. The macro
   itself is bounded and raises controller `error[39]`, and F-05A confirmed both
   the fresh inactive-then-active edge and that a held-high or never-asserting
-  level raises that error. The converter's checkbox still ships off by default
-  pending the project owner's decision. See the 2026-09-29 F-05A lab note.
+  level raises that error. The converter enables the handshake by default. See
+  the 2026-09-29 F-05A lab note.
 - Complete the remaining E-18/F-08 macro and coordinate stages for the Pro
   Micro RP2350 magnetic-output path. The 2026-09-10 motor-inert diagnostic
   passed installed Aux0/U2/GP28, local TMAG scan state, controller-visible PRB
@@ -119,7 +116,7 @@ Prototype wiring assumptions mirror `docs/hardware/WIRING_TABLE.md`:
 | RP2350 pin | Connection |
 |---|---|
 | `GP29` / `A3` | M3/M5 command input from PC817C U1. The module has an external 10 kΩ pullup to local 3.3 V; an asserted optocoupler pulls GP29 LOW. |
-| `GP27` / `A1` | Conditioned output through U3. During every GP28/P100 state except fully `DISARMED`, it is exclusively the magnetic readiness/threshold state. Only while fully `DISARMED` may it later report contact/clear completion to installed `PRB`; normal-print status remains disabled by default. |
+| `GP27` / `A1` | Conditioned output through U3. During every GP28/P100 state except fully `DISARMED`, it is exclusively the magnetic readiness/threshold state. Only while fully `DISARMED` does it report contact/clear completion to installed `PRB`; normal-print status is enabled. |
 | `GP28` / `A2` | Two-phase arm input from PC817C U2. An assertion pulls GP28 LOW: first arm requests readiness ACK, release clears it, second arm exposes threshold state on GP27. During normal print (`DISARMED`, pen not at GP2) the same assertion requests a full retract to the GP2 lift-home switch for end-of-print paper clearance. |
 | `GP2` | `LIFT_HOME` normally-open microswitch to local `TOOL_GND`. Firmware uses `INPUT_PULLUP`; the raw pin is HIGH when released and LOW when pressed. Telemetry reports the semantic state as `lift_home=0` released and `lift_home=1` pressed/home. The current implementation reports this in native-USB and GP20/GP21 service-UART telemetry only; it does not yet control motor motion. |
 | `GP4` | DRV8833 `IN1` |
@@ -178,8 +175,8 @@ installed-pen checks.
 For a normal M5 from contact, Core 0 uses `RELEASE_TO_CLEAR`: it retracts only
 until the filtered CS1238 residual remains in the configured no-contact band
 for the required windows. It then enters `CLEARANCE_LIFT` and continues N20
-retraction for `PEN_CLEAR_EXTRA_LIFT_MS` (currently 70 ms), rechecks the clear
- band, then stops/sleeps for `PEN_CLEAR_TARE_SETTLE_MS` (currently 300 ms) and
+retraction for `PEN_CLEAR_EXTRA_LIFT_MS` (currently 130 ms), rechecks the clear
+band, then stops/sleeps for `PEN_CLEAR_TARE_SETTLE_MS` (currently 300 ms) and
 takes a fresh 64-sample clear-state tare before reaching `LIFTED`/possible
 `CLEAR_READY`. This resets the unloaded baseline shifted by the clearance
 motion before the next M3. At boot or after a
@@ -210,7 +207,7 @@ residual so a high-residual cycle cannot skip the coarse travel. It
 never enters hold from a fixed travel time. The approach is bounded at 100
 pulses / 60 seconds and 30 pulses without GP2 releasing; any limit, sensor
 loss, or overforce stops/sleeps the driver and enters `FAULT`. The 75 g
-hard-force guard is absolute. M5 keeps the 70 ms UP clearance move and stops
+hard-force guard is absolute. M5 keeps the 130 ms UP clearance move and stops
 at GP2. After an inspected fault, `c` initiates a bounded UP-only recovery to
 GP2, latches manual M5, and cannot restart contact seeking until a fresh `e`
 command or deliberate `a` return to GP29 control.
