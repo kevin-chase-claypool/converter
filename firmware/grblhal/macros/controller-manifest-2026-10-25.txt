@@ -1,0 +1,21 @@
+Remote controller: 10.10.10.2
+Filesystem root listing captured 2026-10-25 after deploying P116.macro.
+
+-rw-rw-rw-   1 user     ftp        14442 Oct 14  2026 P100.macro
+-rw-rw-rw-   1 user     ftp          270 Sep 10  2026 P101.macro
+-rw-rw-rw-   1 user     ftp          387 Sep 10  2026 P102.macro
+-rw-rw-rw-   1 user     ftp         1081 Oct 01  2026 P103.macro
+-rw-rw-rw-   1 user     ftp          280 Sep 10  2026 P104.macro
+-rw-rw-rw-   1 user     ftp          275 Sep 10  2026 P105.macro
+-rw-rw-rw-   1 user     ftp          459 Sep 11  2026 P106.macro
+-rw-rw-rw-   1 user     ftp          370 Sep 11  2026 P107.macro
+-rw-rw-rw-   1 user     ftp          571 Sep 11  2026 P108.macro
+-rw-rw-rw-   1 user     ftp          694 Sep 11  2026 P109.macro
+-rw-rw-rw-   1 user     ftp          861 Sep 11  2026 P110.macro
+-rw-rw-rw-   1 user     ftp          260 Sep 11  2026 P111.macro
+-rw-rw-rw-   1 user     ftp         3491 Sep 11  2026 P112.macro
+-rw-rw-rw-   1 user     ftp          260 Sep 11  2026 P113.macro
+-rw-rw-rw-   1 user     ftp          200 Sep 11  2026 P114.macro
+-rw-rw-rw-   1 user     ftp         4531 Sep 27  2026 P115.macro
+-rw-rw-rw-   1 user     ftp         2543 Jan 01  2026 P116.macro
+drw-rw-rw-   1 user     ftp    774995510 Jan 01 00:00 littlefs

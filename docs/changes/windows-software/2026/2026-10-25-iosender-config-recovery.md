@@ -74,9 +74,10 @@ configuration.
 
 ## Verification
 
-- Four Python regression tests cover valid backup, invalid-source refusal,
-  restore-with-preservation, and startup-entry installation/removal.
-- Full converter discovery passes `523` tests with one expected
+- Five Python regression tests cover valid backup, invalid-source refusal,
+  restore-with-preservation, startup-entry installation/removal, and preservation
+  of both operator macros in the committed recovery snapshot.
+- Full converter discovery passes `524` tests with one expected
   OpenGL-context skip.
 - The live backup run reports two macros and writes matching copies to:
   - `C:\Users\jacks\OneDrive\ioSender Backups`

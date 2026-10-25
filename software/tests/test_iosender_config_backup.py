@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
@@ -57,6 +58,24 @@ class IoSenderConfigBackupTests(unittest.TestCase):
             text=True,
             timeout=20,
         )
+
+    def test_committed_recovery_snapshot_contains_operator_macros(self):
+        config = ET.parse(ROOT / "config" / "iosender" / "ioSender-App.config")
+        macros = {
+            element.findtext("Name"): element.findtext("Code")
+            for element in config.findall("./Macros/Macro")
+        }
+        self.assertEqual(macros["HOME + REGISTER"], "G65 P113")
+        self.assertEqual(macros["PEN UP + PARK"], "G65 P116")
+        manifest = (
+            ROOT
+            / "firmware"
+            / "grblhal"
+            / "macros"
+            / "controller-manifest-2026-10-25.txt"
+        ).read_text(encoding="utf-8")
+        self.assertIn("2543", manifest)
+        self.assertIn("P116.macro", manifest)
 
     def test_valid_config_is_backed_up_with_macro_count(self):
         source = self.root / "App.config"

@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20261025-p116-macro-deployment"></a>
+### 🟨 2026-10-25 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - Deploy P116 macro
+
+- ioSender correctly transmitted `G65 P116`, but the controller returned
+  `error:84 - Could not open file`.
+- An FTP listing showed P100-P115 present and P116 missing. All 17 repository
+  macros pass `tools\check_macros.py`.
+- Uploaded the validated 2,543-byte P116 source over binary FTP. The controller
+  returned status 226 and its post-upload listing shows the matching length.
+- ioSender was reopened, reconnected at `10.10.10.2:23`, and reports `IDLE`
+  with both toolbar macros present.
+- The first clean P116 motion run remains pending. Required sequence:
+  P115 clear proof, GP2 full retract, P111 home, and G53 park without alarm.
+- Evidence: `RPSW-20261025-001`,
+  `docs/report/lab-notes/2026-10-25-p116-macro-deployment.md`,
+  `firmware/grblhal/macros/controller-manifest-2026-10-25.txt`.
+- Category: rp23cnc-software, windows-software, hardware, iosender, p116,
+  macro, deployment, error-84.
+
 <a id="elog-20261025-iosender-config-recovery"></a>
 ### 🟩 2026-10-25 - WINDOWS SOFTWARE/IMPLEMENTED - Add ioSender configuration recovery
 
@@ -14,8 +33,8 @@
 - Captured the complete live grblHAL `$$` settings and work offsets through
   ioSender's **Settings: Grbl > Backup** action. The recovered G54 values are
   `X-229.58 Y-193.733 Z0 A7003.02`.
-- Four focused backup/restore tests pass; full converter discovery passes
-  `523` tests with one expected OpenGL-context skip. Evidence:
+- Five focused backup/restore tests pass; full converter discovery passes
+  `524` tests with one expected OpenGL-context skip. Evidence:
   `WSW-20261025-001`.
 - Category: windows-software, rp23cnc-software, iosender, configuration,
   backup, restore, macros, grblhal, offsets.

@@ -156,6 +156,16 @@ still safe.
 above. The sequence has not completed a clean run yet; its retract half was also
 exercised during the 2026-09-29 F-05A session.
 
+**Deployment status 2026-10-25:** ioSender was restored with
+`PEN UP + PARK -> G65 P116`, but the controller returned
+`error:84 - Could not open file` because `P116.macro` was absent from the
+controller filesystem. The validated 2,543-byte source was uploaded over
+binary FTP; the post-upload listing is retained in
+[`controller-manifest-2026-10-25.txt`](controller-manifest-2026-10-25.txt).
+The file-layer failure is resolved. The first clean full motion run remains
+pending and must be supervised as described above. Evidence:
+[`2026-10-25-p116-macro-deployment.md`](../../../docs/report/lab-notes/2026-10-25-p116-macro-deployment.md).
+
 `P112.macro` is the next **survey-only** A-index stage. After fresh P111 and a
 successful Q5, run `G65 P112` without jogging X/Y/A between them. P112 moves
 the TMAG along +X to G53 X `-10.5` mm: the measured `223.675804` mm radius
