@@ -105,6 +105,34 @@ binds. No pen-up move contains a bare `G0` rotation.
   OpenGL-context skip.
 - No physical print of the regenerated geometry has been completed yet.
 
+### 2026-10-25 11:01 restarted-generation check
+
+- The refreshed converter process PID `22648` started at `10:55:23`. The four
+  Ben1 files and manifest were saved at `11:01:08`, so the output was generated
+  after the new converter loaded.
+- The yellow file SHA-256 is
+  `184F5736FEF1043FF22C66F8C83C1987B5465DDE0ED5E80E5FEA3EA3BE98A805`;
+  the manifest records the same hash. It contains `141,895` drawing moves and
+  declares the new `waves_zero`, effective `2.80 mm`, `1.05 mm` centerline
+  clearance recipe with compensation `4c8270de8a74`.
+- `check_gcode_motion.py --strict` passes: largest bed step `6.70 deg`,
+  largest A rate `268.4 motor deg/s`, no pen-up rotation, and worst bounded
+  path bow `0.153 mm`. Four moves exceed the nominal `0.05 mm` tolerance under
+  the existing subdivision-cap exception. All four files remain inside the
+  travel window.
+- The matching intermediate SVG is
+  `C:\Users\jacks\AppData\Local\Temp\theta_generator_tabs\cmyk-y-1792943809940-ed9efb.svg`.
+  It contains `1,116` polylines and `360,535` sampled points. Regular-column
+  gaps in the visible page measured `2.218-3.338 mm`, so the geometry is
+  clearance-safe and does not reproduce the old close-row defect.
+- The visual result still fails the depth criterion. Compared with the failed
+  08:56 source SVG, median row amplitude fell from about `1.243 mm` to
+  `0.298 mm` and peak amplitude from `1.257 mm` to `0.333 mm`. Frequency
+  density increased from `0.235-0.329` to `0.667-0.796` crossings/mm.
+- Side-by-side source rendering confirms the new result is mostly shallow,
+  dense ripples rather than the intended combination of broad waves and tighter
+  high-frequency detail. Do not print this yellow file yet.
+
 ## Difficulties and corrective actions
 
 - The failed print's effective `2.80 mm` pitch differed from the black
@@ -117,6 +145,12 @@ binds. No pen-up move contains a bare `G0` rotation.
   ordering, a slope-aware amplitude bound, and exact segment verification.
 - The failed outputs are retained because the regenerated files are not a
   substitute for a physical pass.
+- The first independent-row build preserved clearance by globally limiting
+  wave slope. On the cropped Ben1 region this reduced amplitude about fourfold
+  and made the visual pattern flatter despite increasing frequency. The next
+  attempt must allocate the clearance budget dynamically by row/local position:
+  low-frequency rows should retain more amplitude while high-frequency rows
+  stay shallow, rather than scaling every row to the most restrictive sample.
 
 ## Interpretation
 
@@ -126,15 +160,18 @@ common-carrier law also explains why changing pitch or machine acceleration had
 no effect and why all CMYK layers failed together. The new geometry changes the
 screen itself before motion planning while retaining compensation.
 
-The software evidence is strong for source geometry and clearance. Confidence
-in the complete fix remains conditional on the physical multi-pitch coupon; no
-yellow layer should be declared fixed from G-code inspection alone.
+The software evidence is strong for source geometry and clearance but shows
+that the intended visual depth is still not restored. The current yellow file
+is motion-safe, yet its preview is flatter than the failed print's source and
+should not consume another sheet. No yellow layer should be declared fixed from
+G-code inspection alone.
 
 ## Decisions and next action
 
-1. Restart the converter so it loads the new core. Do not trust a preview from
-   the existing PID `47340`.
-2. Load `samples/gcode/cmyk-wave-pitch-coupon.gcode` in ioSender with the black
+1. Do not print the current `11:01` yellow file. Preserve it as evidence and
+   replace the global slope cap with a local/row-wise amplitude budget.
+2. After that change, inspect the preview before running
+   `samples/gcode/cmyk-wave-pitch-coupon.gcode` in ioSender with the black
    `0.8 mm` pen. Use ordinary paper, tape it once, issue no pause, and press
    Cycle Start once.
 3. Set ioSender feed override to `100 %`; F700 is already in the file. Do not

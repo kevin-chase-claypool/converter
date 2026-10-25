@@ -5,7 +5,7 @@ category: windows-software
 affected_categories:
   - windows-software
   - hardware
-status: implemented
+status: failed
 components:
   - software/converter_core/cmyk.py
   - software/generator_tabs/cmyk_tab.py
@@ -108,6 +108,15 @@ hard to recover from the saved set.
 - The full CMYK-tab suite passes `86` tests. The expanded coupon suite passes
   all `4` tests. Full converter discovery passes `532` tests with one expected
   OpenGL-context skip.
+- The restarted converter then saved the actual Ben1 set at `11:01:08`. Its
+  version-2 manifest and yellow hash agree, all geometry/motion checks pass, and
+  strict motion/travel checks stay within their limits. This confirms the new
+  code was loaded and the generated file is not stale.
+- The visual depth check still failed. The new yellow source's median and
+  maximum row amplitude are about `0.298 / 0.333 mm`, versus
+  `1.243 / 1.257 mm` in the failed source. Regular-column spacing is safe at
+  `2.218-3.338 mm`, but the result reads as shallow dense ripples rather than a
+  combination of broad and fine waves. Do not print this file.
 
 ## Struggles and rejected approaches
 
@@ -125,6 +134,11 @@ hard to recover from the saved set.
 - No physical print yet validates the regenerated Ben1 set. Preview and run the
   single black multi-pitch coupon before spending another yellow layer or a
   14-inch round sheet.
+- The single global slope budget is too conservative for visual depth. It
+  protects the most restrictive high-frequency/steep sample by shrinking all
+  row amplitudes. The next design must allocate clearance locally so
+  low-frequency regions can retain larger waves without violating the pen
+  envelope.
 - The guarantee applies to centreline geometry before pen spread and machine
   following error. The radial cartridges provide a `0.25 mm` nominal ink gap,
   but a physical pass must still inspect edge contact.

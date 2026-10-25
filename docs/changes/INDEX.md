@@ -5,7 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
-| 2026-10-25 | `WSW-20261025-002` | windows-software, hardware | implemented | [Make zero-anchored CMYK wave depth pitch-independent](windows-software/2026/2026-10-25-independent-pitch-scaled-cmyk-wave-depth.md) |
+| 2026-10-25 | `WSW-20261025-002` | windows-software, hardware | failed | [Make zero-anchored CMYK wave depth pitch-independent](windows-software/2026/2026-10-25-independent-pitch-scaled-cmyk-wave-depth.md) |
 | 2026-10-25 | `WSW-20261025-001` | windows-software, rp23cnc-software | implemented | [Add ioSender configuration recovery](windows-software/2026/2026-10-25-iosender-config-recovery.md) |
 | 2026-10-25 | `RPSW-20261025-001` | rp23cnc-software, windows-software, hardware | implemented | [Deploy the P116 pen-up and park macro](rp23cnc-software/2026/2026-10-25-deploy-p116-macro.md) |
 | 2026-10-24 | `WSW-20261024-014` | windows-software, hardware | superseded | [Expand the CMYK wave coupon to a full-sheet motion matrix](windows-software/2026/2026-10-24-full-sheet-cmyk-wave-coupon.md) |

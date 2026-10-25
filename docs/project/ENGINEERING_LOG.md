@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261025-independent-wave-depth-preview-failed"></a>
+### 🟥 2026-10-25 - WINDOWS SOFTWARE/FAILED - Independent wave depth over-damped
+
+- The restarted converter process PID `22648` saved a fresh Ben1 set at
+  `11:01:08`. Its version-2 manifest, yellow hash, compensation header, strict
+  motion check, and travel-window check all agree. This is new output.
+- Regular-column source gaps remain safe at `2.218-3.338 mm`; the previous
+  neighboring-row contact defect is absent in the generated geometry.
+- The visual depth criterion failed. The new source's median/maximum row
+  amplitude is about `0.298/0.333 mm`, versus `1.243/1.257 mm` in the failed
+  source. Frequency density increased from `0.235-0.329` to
+  `0.667-0.796` crossings/mm.
+- A side-by-side rendering shows shallow dense ripples rather than broad waves
+  combined with fine detail. The single global slope budget protects the most
+  restrictive sample by shrinking every row.
+- Decision: do not print the current yellow file. The next change must allocate
+  the clearance/amplitude budget by row and local position so low-frequency
+  rows retain visible height while high-frequency rows stay shallow.
+- Evidence: `WSW-20261025-002`,
+  `docs/report/lab-notes/2026-10-25-m-13-independent-wave-depth.md`.
+- Category: windows-software, cmyk, wave-screen, depth, pitch, clearance,
+  visual-failed.
+
 <a id="elog-20261025-independent-cmyk-wave-depth"></a>
 ### 🟩 2026-10-25 - WINDOWS SOFTWARE/IMPLEMENTED - Make CMYK wave depth pitch-independent
 
