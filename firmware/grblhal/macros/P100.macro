@@ -74,12 +74,11 @@ o005 endif
 (centroids differ it is the magnet, and half the X/Y difference is the off-axis)
 (vector; if they match, the correction belongs in sensor_to_pen_x instead and)
 (these constants return to zero. That test is still pending.)
-(Revised 2026-10-25 from the center-magnet click test: after G65 P113 the pen)
-(was 1.000 mm east and 1.000 mm north of the embedded center magnet. The)
-(registered origin therefore moves 1 mm west and south, reducing both)
-(corrections by 1.000: X 2.45 -> 1.45 and Y 0.3 -> -0.70.)
+(Revised 2026-10-25 from the center-magnet click test: the registered origin)
+(moves 1.000 mm west in X and 1.000 mm north in Y. The corrections become)
+(X 2.45 -> 1.45 and Y 0.3 -> 1.3.)
 #<axis_center_correction_x> = 1.45
-#<axis_center_correction_y> = -0.7
+#<axis_center_correction_y> = 1.3
 (Candidate Q3 rectangle: measured by jog in G54, converted to G53 MPos.)
 (Q0 uses this verified rectangle; Q3 remains separately locked.)
 #<scan_min_x> = -280.0

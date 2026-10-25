@@ -1,5 +1,9 @@
 # Lab Note: 2026-10-25 - P100 center-magnet placement check
 
+> Superseded by
+> `2026-10-25-p100-center-magnet-north-1mm.md`: the final direction requires
+> the pen to move 1 mm north, giving Y `+1.30`, not Y `-0.70`.
+
 ## Objective
 
 Correct the P100 G54 registration so the physical pen tip lands at the center

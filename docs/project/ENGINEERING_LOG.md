@@ -1,7 +1,24 @@
 # Engineering Log
 
+<a id="elog-20261025-p100-center-magnet-north-correction"></a>
+### 🟨 2026-10-25 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - Move P100 center 1 mm north
+
+- The operator clarified that the registered pen must move `1.000 mm` north,
+  not south. From the previously deployed Y `0.30` correction, the new target
+  is Y `1.30`; the required X movement remains 1 mm west, so X stays `1.45`.
+- P100 now writes `G10 L20 P1 X-1.45 Y-30.7892`. Artwork placement and bed
+  compensation are unchanged.
+- The earlier source edit to Y `-0.70` was never deployed and is superseded by
+  `RPSW-20261025-003`.
+- `tools\check_macros.py` and `tools\validate_homing_macro.py` pass.
+- Controller deployment remains pending: FTP to `10.10.10.2:21` still times
+  out. Evidence: `RPSW-20261025-003`,
+  `docs/report/lab-notes/2026-10-25-p100-center-magnet-north-1mm.md`.
+- Category: rp23cnc-software, hardware, grblhal, p100, registration,
+  center-magnet, pen-center, offset.
+
 <a id="elog-20261025-p100-center-magnet-correction"></a>
-### 🟨 2026-10-25 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - Correct P100 center registration by 1 mm
+### 🟥 2026-10-25 - RP23CNC SOFTWARE/HARDWARE/SUPERSEDED - Wrong Y direction for P100 center correction
 
 - A center-magnet check after `G65 P113` found the pen parked `1.000 mm` east
   and `1.000 mm` north of the embedded magnet.
@@ -9,6 +26,8 @@
   Y `-0.70`. The G10 write subtracts these constants, so reducing each moves
   the registered origin 1 mm west and south.
 - The artwork offsets are unrelated and were not changed.
+- The Y direction was misread and corrected in the subsequent event; this
+  source change was never deployed.
 - `tools\check_macros.py` passes all 17 macros and
   `tools\validate_homing_macro.py` passes its pinned P100/P115 contract.
 - Controller deployment remains pending: FTP connection to `10.10.10.2:21`
