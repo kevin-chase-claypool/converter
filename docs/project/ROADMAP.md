@@ -131,6 +131,12 @@
   motion-time calibration. A like-for-like repeat or per-radius elapsed times
   remain before further estimator refinement. The converter now centers SVG output at G54 zero
   and the replacement sample exercises both A directions. (`M-06`)
+  Status 2026-10-25: exact grblHAL `1.1f.20260908` source confirms one shared
+  planner block and step-event count for X/Y/A; `$701=0` changes feed
+  interpretation, not synchronization. A one-sheet XY-only versus rotating
+  compensated/uncompensated discriminator is generated at
+  `samples/gcode/bed-compensation-motion-test.gcode` and awaits the physical
+  run.
 - [x] Run a pen-free converter-generated sample G-code. (House-and-sun sample
   passed 2026-09-07; it does not replace the controlled M-06 radius sweep.)
 - [ ] **Post-M-06 converter refinement — time-optimal X/Y/A candidate cost.**
@@ -341,11 +347,19 @@
   straight-down close-up of an affected pair and the same path in XY-only mode
   remain required to distinguish ink spread/gantry motion from residual A
   following error. The multi-pitch physical coupon also remains pending.
+  Status 2026-10-25: the operator found that the Y drag chain had to climb a
+  stepped transition onto the northeast rail pillar. Replacing that pillar
+  with a straight version that follows the 3030 extrusion made the XY-only
+  version of the same print look flawless. This is the leading mechanical
+  explanation for the historical striations. The rotating-bed tracking issue
+  still requires `bed-compensation-motion-test.gcode` to separate residual A
+  mechanics from compensation-induced path/subdivision dynamics.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already
-  installed on Y and is not yet installed. This task is deferred until the
-  center-hold/XY-only test localizes the current defect. Acceptance: record the
+  installed on Y and is not yet installed. The XY-only test now points away
+  from the Y motor as the primary striation cause, while the paired A test
+  remains required before accepting a rotating-bed fix. Acceptance: record the
   installed motor identity, direction/current/temperature, A repeatability,
   bed-ratio marker, and first-try M3 contact; then repeat the same yellow,
   magenta, and black layers at 700 mm/min. If any striates, use the M-13
@@ -618,7 +632,10 @@
 
 ## Next concrete task
 
-Re-run F-02 with a newly generated default converter file. Then complete the
-converter-generated M-06 inner/mid/outer-radius timing and geometry check on
-installed grblHAL. Do not enable direct P100-to-print operation until its
+After `G65 P113`, run the one-sheet
+`samples/gcode/bed-compensation-motion-test.gcode` baseline. Use its result to
+separate residual A-axis mechanics from compensation-induced motion dynamics.
+Then complete the converter-generated M-06 inner/mid/outer-radius timing and
+geometry check on installed grblHAL, and re-run F-02 with a newly generated
+default converter file. Do not enable direct P100-to-print operation until its
 commissioning and toolhead gates also pass.

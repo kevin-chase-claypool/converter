@@ -1,5 +1,38 @@
 # Engineering Log
 
+<a id="elog-20261025-drag-chain-and-xy-a-tracking"></a>
+### 🟨 2026-10-25 - HARDWARE/WINDOWS SOFTWARE/IMPLEMENTED - Identify drag-chain striation cause and isolate XY/A tracking
+
+- The operator found the Y drag chain had to climb a stepped transition onto
+  the northeast rail pillar. Replacing the pillar with a straight version that
+  follows the 3030 extrusion made the XY-only version of the same print look
+  flawless.
+- This is the leading mechanical explanation for the historical striations.
+  It is operator-reported visual evidence, not a measured before/after force,
+  current, or rotating-bed pass.
+- Exact grblHAL `1.1f.20260908` source confirms all X/Y/A words in one G1 block
+  advance from one shared step-event count. Installed `$376=1` designates A as
+  rotary and `$701=0` selects the converter's current legacy mixed-feed mode;
+  `$701` does not select independent axis timing.
+- Added one ordinary-paper black-Pigma test with identical bed-space geometry:
+  XY-only at `F700`, rotating uncompensated/compensated at `F700`, then rotating
+  uncompensated/compensated at `F350`. Each case includes rotating pen-down and
+  pen-up motion plus return witness crosses.
+- Generated `samples/gcode/bed-compensation-motion-test.gcode`: one file, no
+  pauses, `0.19 deg` maximum drawing-block rotation, `54 motor deg/s` peak A
+  rate, eight fed rotating pen-up moves, and no bare rotated `G0`.
+- Bed compensation remains enabled and unchanged. No converter or controller
+  motion setting was changed speculatively.
+- Next: run `G65 P113`, then the new test at 100 percent override. Only
+  compensated failures justify changing converter feed/subdivision planning;
+  rotating-only failures point back to residual A mechanics.
+- Evidence: `HW-20261025-001`,
+  `docs/research/2026-10-25-bed-compensation-and-simultaneous-xy-a-motion.md`,
+  `docs/report/lab-notes/2026-10-25-m-13-drag-chain-pillar.md`,
+  `docs/report/lab-notes/2026-10-25-m-06-compensation-sync-test-plan.md`.
+- Category: hardware, windows-software, rp23cnc-software, drag-chain, striation,
+  bed-compensation, rotary, tracking, m-06, m-13.
+
 <a id="elog-20261025-p100-final-y-1-01-deployed"></a>
 ### 🟨 2026-10-25 - RP23CNC SOFTWARE/HARDWARE/DEPLOYED - Refine P100 center to Y 1.01
 

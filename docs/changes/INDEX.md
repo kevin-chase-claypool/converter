@@ -14,6 +14,7 @@ Newest changes appear first.
 | 2026-10-25 | `RPSW-20261025-003` | rp23cnc-software, hardware | superseded | [Move the P100 registered pen 1 mm north](rp23cnc-software/2026/2026-10-25-p100-center-magnet-north-1mm.md) |
 | 2026-10-25 | `RPSW-20261025-002` | rp23cnc-software, hardware | superseded | [Correct P100 center registration by −1 mm X/Y](rp23cnc-software/2026/2026-10-25-p100-center-magnet-y-1-east-north.md) |
 | 2026-10-25 | `RPSW-20261025-001` | rp23cnc-software, windows-software, hardware | implemented | [Deploy the P116 pen-up and park macro](rp23cnc-software/2026/2026-10-25-deploy-p116-macro.md) |
+| 2026-10-25 | `HW-20261025-001` | hardware, windows-software, rp23cnc-software | implemented | [Drag-chain pillar repair and compensated XY/A test](hardware/2026/2026-10-25-drag-chain-pillar-and-compensation-sync.md) |
 | 2026-10-24 | `WSW-20261024-014` | windows-software, hardware | superseded | [Expand the CMYK wave coupon to a full-sheet motion matrix](windows-software/2026/2026-10-24-full-sheet-cmyk-wave-coupon.md) |
 | 2026-10-24 | `WSW-20261024-013` | windows-software, hardware | superseded | [Add zero-anchored CMYK wave depth](windows-software/2026/2026-10-24-zero-anchored-cmyk-wave-depth.md) |
 | 2026-10-24 | `WSW-20261024-012` | windows-software, hardware | implemented | [Add a compact CMYK wave comparison coupon](windows-software/2026/2026-10-24-cmyk-wave-coupon.md) |

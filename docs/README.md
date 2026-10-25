@@ -26,6 +26,7 @@ For the intended P100 command/sensor/reply ownership by stage, open
 | RP23CNC/grblHAL work | [`../firmware/README.md`](../firmware/README.md) | Relevant file under `firmware/grblhal/` |
 | Pen-pressure firmware | [`../firmware/pen_pressure/README.md`](../firmware/pen_pressure/README.md) | `firmware/pen_pressure/` |
 | Power distribution | [`hardware/POWER_DISTRIBUTION.md`](hardware/POWER_DISTRIBUTION.md) | `hardware/WIRING_TABLE.md` plus the power-only schematic |
+| Frame and Y drag-chain mechanics | [`hardware/MECHANICAL_FRAME.md`](hardware/MECHANICAL_FRAME.md) | Current physical configuration and operator evidence |
 | Wiring or pin assignment | [`hardware/WIRING_TABLE.md`](hardware/WIRING_TABLE.md) | `hardware/WIRING_TABLE.md` |
 | Part selection or electrical rating | [`hardware/BOM.md`](hardware/BOM.md) | `hardware/BOM.md` |
 | Toolhead pen mount or spring mechanics | [`hardware/TOOLHEAD_MECHANICS.md`](hardware/TOOLHEAD_MECHANICS.md) | `hardware/TOOLHEAD_MECHANICS.md` |

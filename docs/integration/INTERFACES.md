@@ -74,6 +74,23 @@ machine XY. Newly saved compensated G-code marks this as
 `angular interpolation bed-frame`. See
 [`ADR-009`](../decisions/ADR-009-post-registration-bed-compensation.md).
 
+### X/Y/A synchronization with compensation
+
+Compensation remaps only machine X/Y and may subdivide a move. It does not
+change the planned A schedule or emit a separate A-only timing segment. Every
+emitted subdivision remains one `G1 X Y A F` block, which grblHAL executes
+with a shared endpoint step-event count.
+
+The installed grblHAL `1.1f.20260908` configuration has `$376=1` (A is rotary)
+and `$701=0` (combined linear/rotary feed uses the legacy mixed-unit vector).
+The converter's feed calculation currently matches that mode. Do not enable
+`$701=1` as a synchronization fix without changing and revalidating the
+converter feed calculation; it changes G94 feed semantics rather than axis
+coordination. Compensation can still alter junction timing and torque demand
+through its X/Y remapping and subdivision. The paired physical discriminator
+and source evidence are in
+[`2026-10-25-bed-compensation-and-simultaneous-xy-a-motion.md`](../research/2026-10-25-bed-compensation-and-simultaneous-xy-a-motion.md).
+
 The converter treats the geometric center of the clipped SVG as the bed-local
 origin and emits it as `G54 X0 Y0`. SVG document coordinates are never passed
 through as absolute controller coordinates. This requires the controller's

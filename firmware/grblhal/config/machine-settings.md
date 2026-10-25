@@ -98,6 +98,8 @@ confirmed by `$$` after a power cycle:
 | `$113` | `30000.000` | A max rate, motor deg/min (41.6 bed deg/s at the 12.03324:1 bed) |
 | `$123` | `6000.000` | A acceleration, motor deg/s^2 |
 | `$133` | `0.000` | Continuous A bed: no finite maximum travel |
+| `$376` | `1` | A designated as a rotary axis; input bit 0 maps to A |
+| `$701` | `0` | Legacy mixed linear/rotary G94 feed interpretation |
 | `$110` / `$111` | `20000.000` / `8000.000` | X / Y max rate, mm/min |
 | `$120` / `$121` | `1500.000` / `1000.000` | X / Y acceleration, mm/s^2 |
 
@@ -105,6 +107,15 @@ confirmed by `$$` after a power cycle:
 > 2026-10-14 lab-note headers still quote `$113=15000` from the older
 > 2026-10-01 table; the 2026-10-13 change record and converter were updated
 > to `30000`/`6000`, and the r = 100 mm sample passed at F30000.
+
+`$376=1` designates A as rotary; grblHAL shifts the user field into the ABC
+axis mask. `$701=0` leaves combined linear/rotary G94 feed in the legacy mixed
+unit-vector mode. The converter's radius-aware feed calculation currently
+matches that mode. Setting `$701=1` changes G94 to NIST-style linear feed
+interpretation and does not select a different axis synchronization method.
+Do not change it without updating and revalidating converter feed planning.
+See
+[`2026-10-25-bed-compensation-and-simultaneous-xy-a-motion.md`](../../../docs/research/2026-10-25-bed-compensation-and-simultaneous-xy-a-motion.md).
 
 `$113` was `80000.000` until 2026-10-01. That is 110.8 bed deg/s, about 21 m/min
 of pen surface speed at the 185 mm rim - as fast as the X/Y rapids - which the

@@ -34,6 +34,9 @@ The complete `$I` capture is preserved in the dated F-01 lab note.
 - Installed boot report: grblHAL `1.1f.20260908`; `XYZA`; `[SIGNALS:HSEP]`;
   `[NEWOPT:ENUMS,RT+,HOME,ES,REBOOT,EXPR,TC,SED,ETH,YM,SD]`; `PRB` mapped to
   pin 7; `Aux out 0,P0` mapped to pin 36.
+- Matching grblHAL core source commit:
+  `c48fc078883747d8a60b7dc145273d1181cf781d`. Its `grbl.h` reports build
+  `20260908`; the live settings dump has `$376=1` and `$701=0`.
 - F-08 used `$6=1` for the installed normally-open PRB sink, then restored
   `$20=1` and `G90` at completion. Full evidence is in
   [`../../../docs/report/lab-notes/2026-09-10-e-18-motor-inert-p100-handshake.md`](../../../docs/report/lab-notes/2026-09-10-e-18-motor-inert-p100-handshake.md).
