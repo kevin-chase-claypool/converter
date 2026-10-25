@@ -1,5 +1,22 @@
 # Engineering Log
 
+<a id="elog-20261025-full-sheet-wave-matrix-passed"></a>
+### 🟩 2026-10-25 - HARDWARE/WINDOWS SOFTWARE/PASSED - Full-sheet wave matrix
+
+- Program `549dacb` completed all 16 black-pen patches in one Cycle Start on the
+  already-mounted 14-inch sheet: all four CMYK screen angles, zero-anchored
+  depth above equidistant rows, and upper parked plus lower Xtheta/Ytheta
+  matrices.
+- Enlarged photo inspection found visible tonal frequency/depth variation and
+  no adjacent-row crossings or connections in either motion mode.
+- A few isolated pen start/end specks did not connect rows. The oblique photo
+  cannot measure exact ink-edge separation.
+- Result: visual black-pen geometry pass. Do not print another black coupon;
+  proceed to one regenerated yellow Ben1 layer. Evidence:
+  `docs/report/lab-notes/2026-10-25-m-13-full-sheet-wave-matrix.md`.
+- Category: hardware, windows-software, cmyk, wave-screen, full-sheet,
+  parked-control, rotating-bed, visual-pass.
+
 <a id="elog-20261024-full-sheet-cmyk-wave-coupon"></a>
 ### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Expand CMYK wave coupon to full-sheet motion matrix
 

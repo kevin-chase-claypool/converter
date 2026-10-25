@@ -315,6 +315,11 @@
   sixteen-patch program on the mounted sheet: all four CMYK screen angles with
   zero-anchored depth above equidistant rows, first with A parked and then with
   production Xtheta/Ytheta planning. One Cycle Start completes the full matrix.
+  Status 2026-10-25: the black-pen matrix printed all 16 patches in one run.
+  Enlarged inspection showed visible frequency-driven depth and no adjacent-row
+  crossings with either motion mode. Exact edge separation was not measurable
+  from the oblique photo. Do not print another black coupon; the next gate is
+  one regenerated yellow Ben1 layer.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already
