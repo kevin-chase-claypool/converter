@@ -48,7 +48,7 @@ WAVE_MAX_ADJACENT_GAP_FRACTION = 0.12
 # The zero-anchored mode follows the open-source SquiggleDraw family: tone
 # increases both amplitude and phase rate. Keep the maximum extra phase rate
 # bounded so the path-tolerance sampler remains practical.
-WAVE_FREQUENCY_TONE_GAIN = 2.0
+WAVE_FREQUENCY_TONE_GAIN = 1.0
 # Never permit two visible row centre lines closer than this fraction of pitch.
 # Row-specific depth is ordered into this band and its amplitude is then
 # limited by a slope-aware pen-envelope calculation.
@@ -710,7 +710,7 @@ def _wave_clearance_ok(
             if row[x_index] is not None
         )
         for first_y, second_y in zip(active, active[1:]):
-            if second_y - first_y < minimum:
+            if second_y - first_y < minimum - 1e-9:
                 return False
     minimum_clearance = max(0.0, float(minimum_clearance_mm))
     if minimum_clearance:
@@ -864,32 +864,42 @@ def _wave_rows(
                     )
                     positions[row_index][x_index] = (x, y + offset)
     elif zero_anchored_depth:
-        max_tone = max(
-            (max(row) for row in smoothed_tone),
-            default=0.0,
-        )
-        max_tone_step = max(
-            (
-                abs(row[x_index] - row[x_index - 1]) / sample_step
-                for row in smoothed_tone
-                for x_index in range(1, len(row))
-            ),
-            default=0.0,
-        )
-        max_phase_slope = max_tone * (
-            math.pi
-            / spacing
-            * (1.0 + WAVE_FREQUENCY_TONE_GAIN * max_tone)
-        )
-        slope_at_full_depth = amplitude_max * (
-            max_phase_slope + max_tone_step
-        )
+        row_slope_at_full_depth = []
+        for row_index, row in enumerate(smoothed_tone):
+            active_x = [
+                x_index
+                for x_index in range(len(row))
+                if tone_rows[row_index][x_index] >= INK_FLOOR
+            ]
+            if not active_x:
+                row_slope_at_full_depth.append(0.0)
+                continue
+            max_tone = max(row[x_index] for x_index in active_x)
+            max_tone_step = max(
+                (
+                    abs(row[x_index] - row[x_index - 1])
+                    / sample_step
+                    for x_index in active_x
+                    if (
+                        x_index
+                        and tone_rows[row_index][x_index - 1] >= INK_FLOOR
+                    )
+                ),
+                default=0.0,
+            )
+            max_phase_slope = max_tone * (
+                math.pi
+                / spacing
+                * (1.0 + WAVE_FREQUENCY_TONE_GAIN * max_tone)
+            )
+            row_slope_at_full_depth.append(
+                amplitude_max * (max_phase_slope + max_tone_step)
+            )
 
         # For two x-monotone rows separated vertically by at least `gap`, a
         # slope bound M guarantees a shortest centreline distance no smaller
-        # than gap / sqrt(1 + M^2). Scale the independent row amplitudes so
-        # that this physical bound holds everywhere without repeatedly
-        # rebuilding and scanning the complete screen.
+        # than gap / sqrt(1 + M^2). Give each row its own amplitude budget so
+        # one sharp patch cannot flatten every other row.
         clearance = max(0.0, float(minimum_clearance_mm))
         vertical_gap_floor = spacing * WAVE_MIN_CENTER_GAP_FRACTION
         if clearance > spacing + 1e-9:
@@ -898,21 +908,25 @@ def _wave_rows(
                 "the effective pitch is smaller than the pen width plus "
                 "edge gap."
             )
-        if clearance <= 0.0 or slope_at_full_depth <= 1e-12:
-            safe_depth_strength = 1.0
+        if clearance <= 0.0:
+            row_depth_strength = [1.0] * len(smoothed_tone)
         elif vertical_gap_floor <= clearance:
-            safe_depth_strength = 0.0
+            row_depth_strength = [0.0] * len(smoothed_tone)
         else:
             allowed_slope = math.sqrt(
                 (vertical_gap_floor / clearance) ** 2 - 1.0
             )
-            safe_depth_strength = min(
-                1.0,
-                allowed_slope / slope_at_full_depth,
-            )
+            row_depth_strength = [
+                (
+                    1.0
+                    if slope <= 1e-12
+                    else min(1.0, allowed_slope / slope)
+                )
+                for slope in row_slope_at_full_depth
+            ]
 
         def candidate_positions(
-            depth_strength=1.0,
+            depth_scale=1.0,
         ):
             result = [
                 [None] * len(x_values)
@@ -937,7 +951,8 @@ def _wave_rows(
                         row_phases[row_index] += phase_rate * sample_step
                     offset = (
                         amplitude_max
-                        * depth_strength
+                        * depth_scale
+                        * row_depth_strength[row_index]
                         * smoothed_tone[row_index][x_index]
                         * math.sin(row_phases[row_index])
                     )
@@ -963,14 +978,14 @@ def _wave_rows(
             return result
 
         positions = candidate_positions(
-            depth_strength=safe_depth_strength
+            depth_scale=1.0
         )
         if not _wave_clearance_ok(
             positions,
             spacing,
             minimum_clearance_mm,
         ):
-            flat = candidate_positions(depth_strength=0.0)
+            flat = candidate_positions(depth_scale=0.0)
             if not _wave_clearance_ok(
                 flat,
                 spacing,
@@ -982,20 +997,20 @@ def _wave_rows(
                     "pen width and edge gap."
                 )
             low = 0.0
-            high = safe_depth_strength
+            high = 1.0
             best = flat
             for _step in range(WAVE_CLEARANCE_SEARCH_STEPS):
-                depth_strength = (low + high) * 0.5
-                candidate = candidate_positions(depth_strength=depth_strength)
+                depth_scale = (low + high) * 0.5
+                candidate = candidate_positions(depth_scale=depth_scale)
                 if _wave_clearance_ok(
                     candidate,
                     spacing,
                     minimum_clearance_mm,
                 ):
-                    low = depth_strength
+                    low = depth_scale
                     best = candidate
                 else:
-                    high = depth_strength
+                    high = depth_scale
             positions = best
     else:
         max_tone_step = min(

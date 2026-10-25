@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-25 | `WSW-20261025-003` | implemented | [Use local amplitude budgets for CMYK wave depth](../windows-software/2026/2026-10-25-local-cmyk-wave-amplitude-budget.md) | `cmyk`, `wave-screen`, `depth`, `amplitude`, `clearance`, `dot-pitch` |
 | 2026-10-25 | `WSW-20261025-002` | failed | [Make zero-anchored CMYK wave depth pitch-independent](../windows-software/2026/2026-10-25-independent-pitch-scaled-cmyk-wave-depth.md) | `cmyk`, `wave-screen`, `depth`, `dot-pitch`, `clearance`, `manifest` |
 | 2026-10-25 | `RPSW-20261025-001` | implemented | [Deploy the P116 pen-up and park macro](../rp23cnc-software/2026/2026-10-25-deploy-p116-macro.md) | `iosender`, `p116`, `macro`, `ftp`, `deployment`, `error-84` |
 | 2026-10-24 | `WSW-20261024-014` | superseded | [Expand the CMYK wave coupon to a full-sheet motion matrix](../windows-software/2026/2026-10-24-full-sheet-cmyk-wave-coupon.md) | `cmyk`, `wave-screen`, `coupon`, `test-paper`, `parked-control`, `rotating-bed`, `all-angles` |

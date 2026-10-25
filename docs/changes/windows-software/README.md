@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-25 | `WSW-20261025-003` | implemented | [Use local amplitude budgets for CMYK wave depth](2026/2026-10-25-local-cmyk-wave-amplitude-budget.md) | `cmyk`, `wave-screen`, `depth`, `amplitude`, `clearance`, `dot-pitch` |
 | 2026-10-25 | `WSW-20261025-002` | failed | [Make zero-anchored CMYK wave depth pitch-independent](2026/2026-10-25-independent-pitch-scaled-cmyk-wave-depth.md) | `cmyk`, `wave-screen`, `depth`, `dot-pitch`, `clearance`, `manifest` |
 | 2026-10-25 | `WSW-20261025-001` | implemented | [Add ioSender configuration recovery](2026/2026-10-25-iosender-config-recovery.md) | `iosender`, `configuration`, `backup`, `restore`, `macros`, `grblhal`, `offsets` |
 | 2026-10-25 | `RPSW-20261025-001` | implemented | [Deploy the P116 pen-up and park macro](../rp23cnc-software/2026/2026-10-25-deploy-p116-macro.md) | `iosender`, `p116`, `macro`, `ftp`, `deployment`, `error-84` |

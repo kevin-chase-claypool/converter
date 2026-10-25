@@ -323,14 +323,17 @@
   whose manifest, hash, motion guard, travel bounds, compensation header, and
   `2.218-3.338 mm` source gaps all pass. The preview still failed the visual
   depth criterion: median/maximum row amplitude fell to `0.298/0.333 mm` from
-  the prior source's `1.243/1.257 mm`, producing shallow dense ripples. Do not
-  print the current yellow file. Replace the single global slope cap with a
-  row/local amplitude budget that preserves broad wave height while keeping
-  high-frequency rows shallow. One ordinary-paper black program,
+  the prior source's `1.243/1.257 mm`, producing shallow dense ripples.
+  `WSW-20261025-003` replaces that global cap with per-row active-segment
+  amplitude budgets, excludes depth jumps across blank paper, and tolerates
+  floating-point noise at an exact band floor. Real Ben1 yellow now passes its
+  first clearance attempt with `1.244 mm` median peak-to-peak wave height; all
+  four screen angles pass and all four regenerated files pass strict motion
+  checks with compensation `4c8270de8a74` active. One ordinary-paper black
+  program,
   `samples/gcode/cmyk-wave-pitch-coupon.gcode`, covers all twelve combinations
-  in one run; all four regenerated Ben1 files pass strict motion checks with
-  compensation `4c8270de8a74` active. The multi-pitch physical coupon and a
-  visually accepted yellow Ben1 layer remain pending.
+  in one run. The multi-pitch physical coupon and a visually accepted yellow
+  Ben1 layer remain pending.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already

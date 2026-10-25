@@ -1,5 +1,34 @@
 # Engineering Log
 
+<a id="elog-20261025-local-cmyk-wave-amplitude-budget"></a>
+### 🟩 2026-10-25 - WINDOWS SOFTWARE/IMPLEMENTED - Use local CMYK wave amplitude budgets
+
+- The over-damped 11:01 set still used one global slope budget. A small active
+  tone patch reduced untouched-row travel from `1.187` to `0.741`, while a
+  depth edge in blank paper reduced visible travel from `1.715` to `0.565`.
+- The real screen also projected its exact `75 %` band floor as
+  `0.7499999999999929`; strict comparison then invoked the global fallback
+  despite a safe `1.53 mm` nearest segment distance.
+- Each row now receives an independent slope/amplitude budget based only on
+  adjacent samples that both carry ink. The exact band boundary receives the
+  same `1e-9` tolerance as the segment test. Frequency gain is reduced from
+  `2.0` to `1.0` to preserve visible wave height while retaining independent
+  low/high frequency behavior.
+- Real Ben1 yellow now passes clearance on its first attempt and has
+  `1.244 mm` median / `1.496 mm` maximum peak-to-peak wave height, versus about
+  `0.65 mm` median in the over-damped source. All four CMYK angles pass on
+  their first attempt.
+- Regenerated yellow has `88,467` drawing moves and passes strict motion at a
+  `5.26 deg` maximum bed step and `269 motor deg/s` peak A rate. All four Ben1
+  files and both black coupons pass strict motion and travel checks with
+  compensation active.
+- Full converter discovery passes `535` tests with one expected
+  OpenGL-context skip. Physical coupon/yellow validation remains pending.
+- Evidence: `WSW-20261025-003`,
+  `docs/report/lab-notes/2026-10-25-m-13-independent-wave-depth.md`.
+- Category: windows-software, hardware, cmyk, wave-screen, depth, amplitude,
+  clearance, dot-pitch.
+
 <a id="elog-20261025-independent-wave-depth-preview-failed"></a>
 ### 🟥 2026-10-25 - WINDOWS SOFTWARE/FAILED - Independent wave depth over-damped
 

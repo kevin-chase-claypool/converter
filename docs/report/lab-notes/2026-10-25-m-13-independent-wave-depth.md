@@ -133,6 +133,44 @@ binds. No pen-up move contains a bare `G0` rotation.
   dense ripples rather than the intended combination of broad waves and tighter
   high-frequency detail. Do not print this yellow file yet.
 
+### 2026-10-25 local amplitude-budget correction
+
+- Red test one placed a small `12 x 4 px` hard-depth patch in one active band.
+  The old global budget reduced untouched-row travel from `1.187` to `0.741`.
+- Red test two placed a steep depth change entirely over blank paper. The old
+  calculation reduced visible row travel from `1.715` to `0.565`.
+- The real screen produced an exact projected floor of
+  `0.7499999999999929` against the nominal `0.75`; strict comparison invoked
+  the global damp-to-safe fallback despite a nearest real segment distance of
+  `1.53 mm` on paper.
+- The implementation now computes each row's slope budget independently,
+  excludes transitions where either sample is blank, and allows `1e-9` for
+  the exact band floor. Frequency gain is reduced from `2.0` to `1.0` so the
+  safe rows retain visible height while light/dark frequency still differs.
+- Real Ben1 yellow now passes its first clearance check with no global scale
+  reduction. Peak-to-peak row height has `1.244 mm` median, `1.143 mm`
+  first-quartile, and `1.496 mm` maximum, up from roughly `0.65 mm` median in
+  the over-damped 11:01 source. Side-by-side rendering now shows varied
+  shallow/deep rows instead of a field of uniform tiny ripples.
+- All four angles pass their first clearance check:
+
+| Ink | Marks | Source points |
+|---|---:|---:|
+| C15 | 1,840 | 151,770 |
+| M75 | 1,859 | 205,174 |
+| Y0 | 1,115 | 240,407 |
+| K45 | 1,792 | 222,106 |
+
+- The regenerated Ben1 set was saved at `11:20:19`. Yellow SHA-256 is
+  `216152CD5EAE26206FA76CC092F109E481D4562664B056C9D6F51258CE943766`.
+  It has `88,467` drawing moves and passes strict motion checks at a
+  `5.26 deg` largest bed step and `269 motor deg/s` peak A rate.
+- All four regenerated files pass strict motion and travel-window checks with
+  compensation `4c8270de8a74` active. The failed 11:01 set is preserved under
+  `samples/gcode/Ben1/pre-local-budget-2026-10-25-1101/`.
+- Full converter discovery passes `535` tests with one expected
+  OpenGL-context skip.
+
 ## Difficulties and corrective actions
 
 - The failed print's effective `2.80 mm` pitch differed from the black
@@ -148,9 +186,12 @@ binds. No pen-up move contains a bare `G0` rotation.
 - The first independent-row build preserved clearance by globally limiting
   wave slope. On the cropped Ben1 region this reduced amplitude about fourfold
   and made the visual pattern flatter despite increasing frequency. The next
-  attempt must allocate the clearance budget dynamically by row/local position:
-  low-frequency rows should retain more amplitude while high-frequency rows
-  stay shallow, rather than scaling every row to the most restrictive sample.
+  attempt initially allocated the clearance budget by row, but blank-region
+  depth changes could still flatten a row's emitted segments.
+- The final correction considers only adjacent active samples and accepts an
+  exact projected band floor within numerical tolerance. This prevents both a
+  blank-paper depth edge and floating-point noise from activating the global
+  fallback.
 
 ## Interpretation
 
@@ -160,17 +201,17 @@ common-carrier law also explains why changing pitch or machine acceleration had
 no effect and why all CMYK layers failed together. The new geometry changes the
 screen itself before motion planning while retaining compensation.
 
-The software evidence is strong for source geometry and clearance but shows
-that the intended visual depth is still not restored. The current yellow file
-is motion-safe, yet its preview is flatter than the failed print's source and
-should not consume another sheet. No yellow layer should be declared fixed from
-G-code inspection alone.
+The software evidence now covers source depth, first-attempt clearance, motion,
+travel, and reproducibility. The corrected yellow preview has visible mixed
+wave heights instead of the over-damped uniform ripples. Physical ink-edge
+clearance and the final visual quality remain unproven until the pitch coupon
+and yellow layer are printed.
 
 ## Decisions and next action
 
-1. Do not print the current `11:01` yellow file. Preserve it as evidence and
-   replace the global slope cap with a local/row-wise amplitude budget.
-2. After that change, inspect the preview before running
+1. Restart the converter to load the corrected local-budget code and inspect
+   the regenerated yellow preview. Do not print the preserved `11:01` file.
+2. Before another full sheet, run
    `samples/gcode/cmyk-wave-pitch-coupon.gcode` in ioSender with the black
    `0.8 mm` pen. Use ordinary paper, tape it once, issue no pause, and press
    Cycle Start once.

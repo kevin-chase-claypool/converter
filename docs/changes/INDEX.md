@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-25 | `WSW-20261025-003` | windows-software, hardware | implemented | [Use local amplitude budgets for CMYK wave depth](windows-software/2026/2026-10-25-local-cmyk-wave-amplitude-budget.md) |
 | 2026-10-25 | `WSW-20261025-002` | windows-software, hardware | failed | [Make zero-anchored CMYK wave depth pitch-independent](windows-software/2026/2026-10-25-independent-pitch-scaled-cmyk-wave-depth.md) |
 | 2026-10-25 | `WSW-20261025-001` | windows-software, rp23cnc-software | implemented | [Add ioSender configuration recovery](windows-software/2026/2026-10-25-iosender-config-recovery.md) |
 | 2026-10-25 | `RPSW-20261025-001` | rp23cnc-software, windows-software, hardware | implemented | [Deploy the P116 pen-up and park macro](rp23cnc-software/2026/2026-10-25-deploy-p116-macro.md) |

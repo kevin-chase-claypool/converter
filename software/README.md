@@ -494,14 +494,18 @@ Current tools:
   open-source SquiggleDraw model: every row starts at zero displacement and
   scene tone independently drives each row's amplitude and winding rate.
   Rows are kept ordered with at least `75 %` of nominal pitch between their
-  centerlines. A slope-aware physical bound reduces only the amplitude needed
-  to preserve the `0.8 mm` pen plus `0.25 mm` paper gap; changing Dot pitch or
-  Artwork scale therefore changes the geometry rather than selecting a
-  coupon-specific behavior. The emitted finite segments are also checked by
-  their actual shortest distance. A pitch smaller than the pen envelope is
-  rejected with a planning error because no legal row spacing exists at that
-  scale. Regression coverage spans `2.80`, `3.36`, and `4.20 mm` at all four
-  CMYK screen angles. **Wave screen - equidistant rows** applies one shared
+  centerlines. Each row gets its own slope-aware amplitude budget, and only
+  transitions between samples that both contain ink are counted. A difficult
+  patch in one active row therefore no longer flattens unrelated rows, and
+  depth changes in blank paper do not constrain visible waves. The budget
+  preserves the `0.8 mm` pen plus `0.25 mm` paper gap; changing Dot pitch or
+  Artwork scale changes the geometry rather than selecting a coupon-specific
+  behavior. The emitted finite segments are also checked by their actual
+  shortest distance, with a floating-point allowance for an exact `75 %`
+  band boundary. A pitch smaller than the pen envelope is rejected with a
+  planning error because no legal row spacing exists at that scale.
+  Regression coverage spans `2.80`, `3.36`, and `4.20 mm` at all four CMYK
+  screen angles. **Wave screen - equidistant rows** applies one shared
   luminance-shaped waveform with exact vertical pitch spacing and no
   row-specific movement. Both modes let each ink channel control where that
   layer is inked. The original **Wave screen** remains available as the

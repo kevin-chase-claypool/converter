@@ -1150,6 +1150,102 @@ class ScreeningTests(unittest.TestCase):
                     "phase and safety envelope",
                 )
 
+    def test_zero_anchored_local_slope_budget_preserves_untouched_rows(self):
+        size = 128
+        spacing = 2.8
+        tone = self.np.ones((size, size), dtype="float32")
+        depth = self.np.full((size, size), 0.80, dtype="float32")
+        disturbed = depth.copy()
+        # One short, steep tonal patch must not flatten unrelated rows across
+        # the page. The old global safety scale reacted to this patch as if
+        # every row contained the same maximum slope.
+        disturbed[40:52, 60:64] = 0.10
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 64.0,
+            "height_mm": 64.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        def vertical_ranges(depth_tone):
+            waves = converter.screen_channel(
+                tone,
+                geometry,
+                style="waves_zero",
+                spacing_mm=spacing,
+                pen_diameter_mm=0.8,
+                depth_tone=depth_tone,
+            )
+            rows = sorted(
+                waves,
+                key=lambda points: sum(y for _x, y in points)
+                / len(points),
+            )
+            return [
+                max(y for _x, y in points)
+                - min(y for _x, y in points)
+                for points in rows
+            ]
+
+        uniform_ranges = vertical_ranges(depth)
+        disturbed_ranges = vertical_ranges(disturbed)
+        self.assertGreaterEqual(len(uniform_ranges), 20)
+        self.assertGreaterEqual(len(disturbed_ranges), 20)
+        typical = sorted(uniform_ranges)[len(uniform_ranges) // 2]
+        untouched = sorted(disturbed_ranges[:5])[2]
+        self.assertGreater(
+            untouched,
+            typical * 0.9,
+            "a local high-slope patch must not reduce amplitude of distant rows",
+        )
+
+    def test_zero_anchored_blank_depth_changes_do_not_limit_inked_rows(self):
+        size = 128
+        spacing = 2.8
+        ink_mask = self.np.zeros((size, size), dtype="float32")
+        ink_mask[:, :64] = 1.0
+        depth = self.np.full((size, size), 0.80, dtype="float32")
+        changed_blank = depth.copy()
+        changed_blank[:, 70:] = 0.10
+        changed_blank[40:80, 90:94] = 1.0
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 64.0,
+            "height_mm": 64.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        def visible_ranges(depth_tone):
+            waves = converter.screen_channel(
+                ink_mask,
+                geometry,
+                style="waves_zero",
+                spacing_mm=spacing,
+                pen_diameter_mm=0.8,
+                depth_tone=depth_tone,
+            )
+            ranges = []
+            for points in waves:
+                if len(points) <= 20:
+                    continue
+                ys = [y for _x, y in points]
+                ranges.append(max(ys) - min(ys))
+            return ranges
+
+        uniform = sorted(visible_ranges(depth))
+        changed = sorted(visible_ranges(changed_blank))
+        self.assertGreaterEqual(len(uniform), 10)
+        self.assertGreaterEqual(len(changed), 10)
+        self.assertGreater(
+            changed[len(changed) // 2],
+            uniform[len(uniform) // 2] * 0.9,
+            "depth changes over blank paper must not reduce ink-wave amplitude",
+        )
+
     def test_zero_anchored_waves_enforce_minimum_clearance(self):
         spacing = 4.0
         yy, xx = self.np.mgrid[0:64, 0:64]
@@ -1216,6 +1312,22 @@ class ScreeningTests(unittest.TestCase):
             ),
             "the rows are three millimetres apart at every sampled column, "
             "but the steep segments come closer than a 1.05 mm pen envelope",
+        )
+
+    def test_zero_anchored_exact_band_floor_is_safe(self):
+        import converter_core.cmyk as cmyk_core
+
+        positions = [
+            [(0.0, 1.0), (1.0, 1.0)],
+            [(0.0, 4.0), (1.0, 4.0)],
+        ]
+        self.assertTrue(
+            cmyk_core._wave_clearance_ok(
+                positions,
+                4.0,
+                minimum_clearance_mm=0.0,
+            ),
+            "an exact 75 % pitch gap must not fail on floating-point noise",
         )
 
     def test_zero_anchored_wave_chords_stay_within_path_tolerance(self):
