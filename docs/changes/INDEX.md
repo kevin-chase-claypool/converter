@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-25 | `WSW-20261025-001` | windows-software, rp23cnc-software | implemented | [Add ioSender configuration recovery](windows-software/2026/2026-10-25-iosender-config-recovery.md) |
 | 2026-10-24 | `WSW-20261024-014` | windows-software, hardware | implemented | [Expand the CMYK wave coupon to a full-sheet motion matrix](windows-software/2026/2026-10-24-full-sheet-cmyk-wave-coupon.md) |
 | 2026-10-24 | `WSW-20261024-013` | windows-software, hardware | implemented | [Add zero-anchored CMYK wave depth](windows-software/2026/2026-10-24-zero-anchored-cmyk-wave-depth.md) |
 | 2026-10-24 | `WSW-20261024-012` | windows-software, hardware | implemented | [Add a compact CMYK wave comparison coupon](windows-software/2026/2026-10-24-cmyk-wave-coupon.md) |

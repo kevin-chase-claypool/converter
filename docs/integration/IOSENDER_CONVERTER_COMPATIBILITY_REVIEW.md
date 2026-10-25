@@ -65,6 +65,31 @@ force-controlled configuration.
 4. Stream the program with the pen in its tested profile. `M3` engages contact;
    `M5` confirms clear before travel.
 
+## Configuration recovery set
+
+ioSender and grblHAL store independent configuration layers:
+
+- ioSender `App.config`: network address, window/viewer settings, jog presets,
+  and host macro buttons.
+- grblHAL `$$`: steps/mm, rates, acceleration, homing, network, I/O, and other
+  controller settings.
+- grblHAL offsets: G54 through G59 work-coordinate data.
+
+The committed ioSender recovery snapshot is
+[`config/iosender/ioSender-App.config`](../../config/iosender/ioSender-App.config).
+It preserves the direct Ethernet target `10.10.10.2:23` and the
+`HOME + REGISTER` / `PEN UP + PARK` macros. Use
+`backup-iosender-config.bat` after changing sender settings and
+`restore-iosender-config.bat` to preserve and replace a broken config.
+
+The complete 2026-10-25 controller settings and offsets are
+[`settings-2026-10-25.txt`](../../firmware/grblhal/config/settings-2026-10-25.txt)
+and
+[`offsets-2026-10-25.nc`](../../firmware/grblhal/config/offsets-2026-10-25.nc).
+Never restore all three by copying one file: restore ioSender from
+`App.config`, restore `$$` settings through the sender/controller settings
+workflow, and review the guarded `offsets.nc` program before execution.
+
 ## External-source note
 
 ioSender does not compensate for missing program modes or disabled controller

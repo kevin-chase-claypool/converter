@@ -46,6 +46,25 @@ demanded, whether any pen-up move carries rotation as a bare `G0` rapid, and the
 worst commanded bed-path bow with its radius - measured from the file, so it
 answers "did this program get the guard?" without guessing.
 
+## ioSender configuration recovery
+
+The repository keeps a validated ioSender `App.config` recovery snapshot in
+`..\config\iosender\`, including the `HOME + REGISTER` and `PEN UP + PARK`
+toolbar macros and direct Ethernet connection. Double-click
+`..\backup-iosender-config.bat` after changing ioSender settings.
+`..\restore-iosender-config.bat` restores the newest validated snapshot while
+preserving the current file as `.before-restore-*`.
+
+After changing controller settings, use **Settings: Grbl > Backup** in
+ioSender first, then run the one-click backup so the complete `$$` and offset
+files are refreshed.
+
+The startup helper
+`..\tools\install_iosender_config_backup_startup.ps1` backs up the last valid
+config at every Windows sign-in. A failed or empty active config is rejected
+and never replaces the last good backup. See
+`..\config\iosender\README.md` for the complete procedure.
+
 Two repeatability programs exist for measuring the machine itself, both safe to
 Cycle Start with the pen loaded:
 

@@ -1,0 +1,246 @@
+%
+;
+; 2026-10-25T08:50
+;
+; grblHAL
+; 1.1f.20260908
+; [OPT:VNMHSL,100,1024,4,0]
+; [NEWOPT:ENUMS,RT+,HOME,ES,REBOOT,EXPR,TC,SED,ETH,FTP,YM,SD]
+; [FIRMWARE:grblHAL]
+; [NVS STORAGE:*FLASH 4K]
+; [FREE MEMORY:368K]
+; [DRIVER:RP2350@150MHz]
+; [DRIVER VERSION:260608]
+; [DRIVER OPTIONS:SDK_2.1.0]
+; [BOARD:RP23U5XBB]
+; [AUX IO:5,2,0,0]
+; [WIZCHIP:W5500]
+; [MAC:00:08:dc:12:34:56]
+; [IP:10.10.10.2]
+; [NETCON:Telnet]
+; [PLUGIN:Bootloader Entry v0.01]
+; [PLUGIN:FS stream v1.15]
+; [PLUGIN:FS macro plugin v0.24]
+; [PLUGIN:SDCARD v1.28]
+;
+$N0=
+$N1=
+; 0 - Step pulse time
+$0=5.0
+; 1 - Step idle delay
+$1=25
+; 2 - Step pulse invert
+$2=0
+; 3 - Step direction invert
+$3=0
+; 4 - Invert stepper enable output(s)
+$4=15
+; 5 - Invert limit inputs
+$5=0
+; 6 - Invert probe inputs
+$6=1
+; 9 - PWM spindle options
+$9=1
+; 10 - Status report options
+$10=511
+; 11 - Junction deviation
+$11=0.010
+; 12 - Arc tolerance
+$12=0.002
+; 13 - Report in inches
+$13=0
+; 14 - Invert control inputs
+$14=6
+; 15 - Invert coolant outputs
+$15=0
+; 16 - Invert spindle signals
+$16=1
+; 17 - Pullup disable control inputs
+$17=0
+; 18 - Pullup disable limit inputs
+$18=0
+; 19 - Pullup disable probe inputs
+$19=0
+; 20 - Soft limits enable
+$20=1
+; 21 - Hard limits enable
+$21=1
+; 22 - Homing cycle
+$22=3
+; 23 - Homing direction invert
+$23=2
+; 24 - Homing locate feed rate
+$24=1000.0
+; 25 - Homing search seek rate
+$25=4000.0
+; 26 - Homing switch debounce delay
+$26=250
+; 27 - Homing switch pull-off distance
+$27=10.000
+; 28 - G73 Retract distance
+$28=0.100
+; 29 - Pulse delay
+$29=0.0
+; 30 - Maximum spindle speed
+$30=1000.000
+; 31 - Minimum spindle speed
+$31=0.000
+; 32 - Mode of operation
+$32=0
+; 33 - Spindle PWM frequency
+$33=5000
+; 34 - Spindle PWM off value
+$34=0.0
+; 35 - Spindle PWM min value
+$35=0.0
+; 36 - Spindle PWM max value
+$36=100.0
+; 37 - Steppers to keep enabled
+$37=0
+; 39 - Enable legacy RT commands
+$39=1
+; 40 - Limit jog commands
+$40=1
+; 41 - Parking cycle
+$41=0
+; 42 - Parking axis
+$42=2
+; 43 - Homing passes
+$43=1
+; 44 - Axes homing, first phase
+$44=3
+; 45 - Axes homing, second phase
+$45=0
+; 46 - Axes homing, third phase
+$46=0
+; 47 - Axes homing, fourth phase
+$47=0
+; 56 - Parking pull-out distance
+$56=5.0
+; 57 - Parking pull-out rate
+$57=100.0
+; 58 - Parking target
+$58=-5.0
+; 59 - Parking fast rate
+$59=500.0
+; 60 - Restore overrides
+$60=0
+; 61 - Safety door options
+$61=0
+; 62 - Sleep enable
+$62=0
+; 63 - Feed hold actions
+$63=3
+; 64 - Force init alarm
+$64=0
+; 65 - Probing options
+$65=0
+; 70 - Network Services
+$70=11
+; 100 - X-axis travel resolution
+$100=80.000
+; 101 - Y-axis travel resolution
+$101=80.000
+; 102 - Z-axis travel resolution
+$102=250.000
+; 103 - A-axis travel resolution
+$103=4.44444
+; 110 - X-axis maximum rate
+$110=8000.000
+; 111 - Y-axis maximum rate
+$111=8000.000
+; 112 - Z-axis maximum rate
+$112=500.000
+; 113 - A-axis maximum rate
+$113=30000.000
+; 120 - X-axis acceleration
+$120=300.000
+; 121 - Y-axis acceleration
+$121=300.000
+; 122 - Z-axis acceleration
+$122=10.000
+; 123 - A-axis acceleration
+$123=6000.000
+; 130 - X-axis maximum travel
+$130=455.000
+; 131 - Y-axis maximum travel
+$131=451.000
+; 132 - Z-axis maximum travel
+$132=200.000
+; 133 - A-axis maximum travel
+$133=0.000
+; 300 - Hostname
+$300=grblHAL
+; 301 - IP Mode
+$301=0
+; 302 - IP Address
+$302=10.10.10.2
+; 303 - Gateway
+$303=10.10.10.1
+; 304 - Netmask
+$304=255.255.255.0
+; 305 - Telnet port
+$305=23
+; 307 - Websocket port
+$307=80
+; 308 - FTP port
+$308=21
+; 341 - Tool change mode
+$341=0
+; 342 - Tool change probing distance
+$342=30.0
+; 343 - Tool change locate feed rate
+$343=25.0
+; 344 - Tool change search seek rate
+$344=200.0
+; 345 - Tool change probe pull-off rate
+$345=200.0
+; 346 - Tool change options
+$346=1
+; 370 - Invert I/O Port inputs
+$370=0
+; 372 - Invert I/O Port outputs
+$372=0
+; 376 - Rotary axes
+$376=1
+; 384 - Disable G92 persistence
+$384=0
+; 392 - Spindle on delay
+$392=4.0
+; 393 - Coolant on delay
+$393=1.0
+; 394 - Spindle on delay
+$394=0.0
+; 398 - Planner buffer blocks
+$398=100
+; 481 - Autoreport interval
+$481=0
+; 484 - Unlock required after E-Stop
+$484=1
+; 485 - Keep tool number over reboot
+$485=0
+; 486 - Lock coordinate systems
+$486=0
+; 534 - Output NGC debug messages
+$534=0
+; 535 - MAC Address
+$535=
+; 538 - Fast rotary go to G28
+$538=0
+; 539 - Spindle off delay
+$539=0.0
+; 650 - File systems options
+$650=0
+; 673 - Coolant on delay
+$673=0.0
+; 675 - Macro ATC options
+$675=0
+; 676 - Reset actions
+$676=15
+; 680 - Stepper enable delay
+$680=0
+; 700 - Subroutine options
+$700=0
+; 701 - Rotary options
+$701=0
+%

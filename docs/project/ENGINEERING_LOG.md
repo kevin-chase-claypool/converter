@@ -1,5 +1,25 @@
 # Engineering Log
 
+<a id="elog-20261025-iosender-config-recovery"></a>
+### 🟩 2026-10-25 - WINDOWS SOFTWARE/IMPLEMENTED - Add ioSender configuration recovery
+
+- A zero-byte ioSender `App.config` exposed that the sender had no independent
+  backup; its failed XML load also kept the file locked until ioSender exited.
+- Recreated the sender configuration, restored `HOME + REGISTER` (`G65 P113`)
+  and `PEN UP + PARK` (`G65 P116`), and verified both toolbar buttons with the
+  controller connected at `10.10.10.2:23`.
+- Added validated backup/restore utilities, a committed `App.config` snapshot,
+  and a Startup-folder backup that refuses to replace good copies with empty or
+  invalid XML.
+- Captured the complete live grblHAL `$$` settings and work offsets through
+  ioSender's **Settings: Grbl > Backup** action. The recovered G54 values are
+  `X-229.58 Y-193.733 Z0 A7003.02`.
+- Four focused backup/restore tests pass; full converter discovery passes
+  `523` tests with one expected OpenGL-context skip. Evidence:
+  `WSW-20261025-001`.
+- Category: windows-software, rp23cnc-software, iosender, configuration,
+  backup, restore, macros, grblhal, offsets.
+
 <a id="elog-20261025-full-sheet-wave-matrix-passed"></a>
 ### 🟩 2026-10-25 - HARDWARE/WINDOWS SOFTWARE/PASSED - Full-sheet wave matrix
 
