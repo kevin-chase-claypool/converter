@@ -5,7 +5,7 @@ category: windows-software
 affected_categories:
   - windows-software
   - hardware
-status: implemented
+status: superseded
 components:
   - tools/make_cmyk_wave_coupon.py
   - software/tests/test_cmyk_wave_coupon.py

@@ -304,22 +304,26 @@
   upstream research showed SquiggleDraw-family generators instead anchor each
   row at one zero point and let tone drive amplitude and winding frequency.
   `WSW-20261024-013` adds **Wave screen - zero-anchored depth**, retaining that
-  tonal frequency structure but fading it toward a common waveform whenever
-  sampled visible centerlines approach closer than `75 %` of pitch or their
-  actual emitted segments would leave less than the `0.8 mm` pen plus a
-  `0.25 mm` paper gap. A second bounded fallback reduces common amplitude when
-  even the shared waveform is too steep. The equidistant mode remains available
-  as the strict fallback. Real Ben1 screening at the production pitch measured
-  shortest centerline separations of `2.102`, `2.224`, `1.925`, and `2.103 mm`
-  for C/M/Y/K. `WSW-20261024-014` expands the black-pen coupon into one
+  tonal frequency structure. `WSW-20261024-014` expands the black-pen coupon
+  into one
   sixteen-patch program on the mounted sheet: all four CMYK screen angles with
   zero-anchored depth above equidistant rows, first with A parked and then with
   production Xtheta/Ytheta planning. One Cycle Start completes the full matrix.
   Status 2026-10-25: the black-pen matrix printed all 16 patches in one run.
   Enlarged inspection showed visible frequency-driven depth and no adjacent-row
-  crossings with either motion mode. Exact edge separation was not measurable
-  from the oblique photo. Do not print another black coupon; the next gate is
-  one regenerated yellow Ben1 layer.
+  crossings with either motion mode. The subsequent full yellow print at
+  effective `2.80 mm` pitch still looked monotonous. Its file and converter
+  process predated the independent-row change, while the prior implementation
+  supplied every row with one common phase carrier.
+  `WSW-20261025-002` now gives each row independent scene-tone phase and
+  amplitude, keeps rows ordered at `75 %` of pitch, and applies a pitch-scaled
+  slope bound for the `0.8 mm` pen plus `0.25 mm` gap before exact segment
+  verification. Regression coverage spans `2.80/3.36/4.20 mm` at all four
+  screen angles. One ordinary-paper black program,
+  `samples/gcode/cmyk-wave-pitch-coupon.gcode`, covers all twelve combinations
+  in one run; all four regenerated Ben1 files pass strict motion checks with
+  compensation `4c8270de8a74` active. Status 2026-10-25: the multi-pitch
+  physical coupon and subsequent yellow Ben1 layer remain pending.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already
@@ -329,6 +333,7 @@
   bed-ratio marker, and first-try M3 contact; then repeat the same yellow,
   magenta, and black layers at 700 mm/min. If any striates, use the M-13
   XY-only and feed ladder before treating the motor as the limit. Evidence:
+  `docs/report/lab-notes/2026-10-25-m-13-independent-wave-depth.md` and
   `docs/report/lab-notes/2026-10-23-m-13-cmyk-yellow-feed-sensitivity.md`.
 
 ## Phase 7: validation and report

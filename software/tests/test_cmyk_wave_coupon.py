@@ -124,6 +124,34 @@ class CmykWaveCouponTests(unittest.TestCase):
                 self.assertGreater(gap_spread(variable, angle_deg), 0.15)
                 self.assertLess(gap_spread(equidistant, angle_deg), 1e-6)
 
+    def test_multi_pitch_coupon_is_one_rotating_bed_program(self):
+        gcode, settings, marks = self.module.build_pitch_coupon()
+        self.assertIn("single file; 12 patches", gcode)
+        self.assertIn("2.800 / 3.360 / 4.200 mm pitch", gcode)
+        self.assertIn("columns left-to-right: C15 M75 Y0 K45", gcode)
+        self.assertEqual(settings.theta_mode, "optimized")
+        self.assertEqual(gcode.count("\nM2\n"), 1)
+        self.assertNotRegex(gcode, r"(?m)^M0\s*$")
+        self.assertGreaterEqual(len(marks), 120)
+        xs = [x for mark in marks for x, _y in mark]
+        ys = [y for mark in marks for _x, y in mark]
+        self.assertGreaterEqual(min(xs), -100.0)
+        self.assertLessEqual(max(xs), 100.0)
+        self.assertGreaterEqual(min(ys), -75.0)
+        self.assertLessEqual(max(ys), 75.0)
+
+        with tempfile.TemporaryDirectory(
+            prefix="cmyk-wave-pitch-coupon-"
+        ) as folder:
+            path = Path(folder) / "pitch-coupon.gcode"
+            path.write_text(gcode, encoding="utf-8")
+            checks = self.module.converter.analyse_file(path, settings)
+        self.assertEqual(checks["rapids_with_rotation"], 0)
+        self.assertLessEqual(checks["step"], checks["cap"])
+        self.assertLessEqual(checks["rate"], checks["rate_cap"] * 1.01)
+        self.assertIn("x_theta", checks["strategies"])
+        self.assertIn("y_theta", checks["strategies"])
+
 
 if __name__ == "__main__":
     unittest.main()

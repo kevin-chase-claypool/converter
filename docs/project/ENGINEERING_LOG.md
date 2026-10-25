@@ -1,5 +1,36 @@
 # Engineering Log
 
+<a id="elog-20261025-independent-cmyk-wave-depth"></a>
+### 🟩 2026-10-25 - WINDOWS SOFTWARE/IMPLEMENTED - Make CMYK wave depth pitch-independent
+
+- The latest full yellow print used effective pitch `2.80 mm`, not the black
+  coupon's `3.36 mm`. Its file and running converter process predated the
+  independent-row fix, and the prior zero-anchored code gave all rows one
+  common phase carrier.
+- A regression reproduced the exact symptom at `2.80`, `3.36`, and `4.20 mm`:
+  light and dark rows had identical zero-crossing counts at every pitch.
+  Independent per-row phase now makes dark rows at least `1.35x` faster than
+  light rows at all three pitches.
+- Rows now keep independent scene-tone amplitude/frequency, are ordered at
+  least `75 %` of pitch apart, and receive a pitch-scaled slope limit for the
+  `0.8 mm` pen plus `0.25 mm` edge gap before exact finite-segment verification.
+  A pitch smaller than the physical pen envelope fails explicitly.
+- All four regenerated Ben1 files pass strict motion checks with compensation
+  `4c8270de8a74` active. The yellow file has `131,879` drawing moves, a
+  `6.33 deg` maximum bed step, and a `268 motor deg/s` peak A rate.
+- The set manifest now records source and output hashes, effective pitch,
+  screen and image recipes, pen/tolerance, compensation path, and preflight.
+  The new ordinary-paper black coupon covers C15/M75/Y0/K45 at
+  `2.80/3.36/4.20 mm` in one rotating-bed program and passes strict motion
+  checks.
+- Full converter discovery passes `532` tests with one expected
+  OpenGL-context skip. Physical reproduction of the multi-pitch coupon and
+  yellow layer remains pending.
+- Evidence: `WSW-20261025-002`,
+  `docs/report/lab-notes/2026-10-25-m-13-independent-wave-depth.md`.
+- Category: windows-software, hardware, cmyk, wave-screen, dot-pitch, depth,
+  clearance, manifest.
+
 <a id="elog-20261025-p116-macro-deployment"></a>
 ### 🟨 2026-10-25 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - Deploy P116 macro
 

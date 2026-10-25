@@ -320,6 +320,12 @@ Cycle Start with the pen loaded:
   One Cycle Start completes the file. It uses the production `3.36 mm`
   on-paper pitch, `0.8 mm` pen, `F700`, bed compensation, and `0.05 mm` Path
   tolerance. Regenerate with `..\tools\make_cmyk_wave_coupon.py`.
+- `..\samples\gcode\cmyk-wave-pitch-coupon.gcode` - single-run `195 x 144 mm`
+  black-pen pitch matrix for ordinary paper. It tests `2.80`, `3.36`, and
+  `4.20 mm` pitch at C15/M75/Y0/K45 with production rotating-bed planning,
+  compensation, `F700`, and a `0.8 mm` pen. One Cycle Start completes all
+  twelve patches. Regenerate with
+  `python tools\make_cmyk_wave_coupon.py --multi-pitch`.
 
 ## Generator tabs
 
@@ -477,27 +483,31 @@ Current tools:
   the motion preflight on each ink. It checks the bed-step cap, the A-rate
   limit, bare `G0` rotations and moves that exceed the Path tolerance;
   hard violations block Save and warnings go to the log. A successful
-  artwork save also writes `<name>-set.json` beside the four files with the
-  frame, mode, offsets, file names and per-ink preflight results.
+  artwork save also writes a version-2 `<name>-set.json` beside the four files
+  with the source hash, page and motion mode, bed-compensation profile,
+  complete image/screen recipe, effective pitch, pen offsets, per-ink
+  preflight results, and SHA-256 hashes for all four G-code files.
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times
   with a sub-pen offset. **Wave screen - zero-anchored depth** follows the
   open-source SquiggleDraw model: every row starts at zero displacement and
-  scene tone drives both amplitude and winding rate. Visible centerlines keep
-  at least `75 %` of pitch separation at matching sample columns, and the
-  emitted line segments are then checked by their actual shortest distance.
-  Row-specific variation is faded toward one common waveform until the
-  centerlines keep the pen width plus a `0.25 mm` paper gap; if even that
-  common waveform is too steep, its amplitude is reduced before planning
-  fails. Both the pitch floor and pen gap are converted through Artwork scale,
-  so the limits remain physical paper limits. **Wave screen - equidistant
-  rows** applies one shared luminance-shaped waveform with exact vertical pitch
-  spacing and no row-specific movement. Both modes let each ink channel
-  control where that layer is inked. The original **Wave screen** remains
-  available as the amplitude-only variable-depth variant. **Path tolerance**
-  controls how densely each sine is sampled in paper space, so emitted chords
-  follow the shape instead of appearing as visible facets.
+  scene tone independently drives each row's amplitude and winding rate.
+  Rows are kept ordered with at least `75 %` of nominal pitch between their
+  centerlines. A slope-aware physical bound reduces only the amplitude needed
+  to preserve the `0.8 mm` pen plus `0.25 mm` paper gap; changing Dot pitch or
+  Artwork scale therefore changes the geometry rather than selecting a
+  coupon-specific behavior. The emitted finite segments are also checked by
+  their actual shortest distance. A pitch smaller than the pen envelope is
+  rejected with a planning error because no legal row spacing exists at that
+  scale. Regression coverage spans `2.80`, `3.36`, and `4.20 mm` at all four
+  CMYK screen angles. **Wave screen - equidistant rows** applies one shared
+  luminance-shaped waveform with exact vertical pitch spacing and no
+  row-specific movement. Both modes let each ink channel control where that
+  layer is inked. The original **Wave screen** remains available as the
+  amplitude-only variable-depth variant. **Path tolerance** controls how
+  densely each sine is sampled in paper space, so emitted chords follow the
+  shape instead of appearing as visible facets.
   While the CMYK page is active the shared OpenGL preview draws each visible
   ink in its own colour - not yet drawn marks in a pale tint, the drawn path in
   full ink - so the four layers can be judged overlaid the way they will mesh

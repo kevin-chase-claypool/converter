@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import dataclasses
 import datetime
+import hashlib
 import json
 import os
 import threading
@@ -1253,7 +1254,7 @@ class CmykTab(GeneratorTab):
         return path
 
     def _write_set_manifest(self, written, results):
-        """Record the frame, bed motion, offsets and preflight for a set."""
+        """Record the complete print recipe and output hashes for a set."""
         first = Path(written[0])
         stem = first.stem
         for channel in converter.CHANNELS:
@@ -1263,10 +1264,27 @@ class CmykTab(GeneratorTab):
                 break
         path = first.parent / f"{stem}-set.json"
         channels = [channel for channel in converter.CHANNELS if channel in results]
+        settings = self._effective_settings()
+        factor = self.scale_pct.value() / 100.0
+        weights = self._weights()
+        source_value = getattr(self, "_artwork", "")
+        if not source_value:
+            artwork_path = getattr(self.host, "artwork_path", None)
+            if callable(artwork_path):
+                source_value = artwork_path() or ""
+        source_path = Path(source_value) if source_value else None
         data = {
             "kind": "cmyk-print-set",
-            "version": 1,
+            "version": 2,
             "created": datetime.datetime.now().isoformat(timespec="seconds"),
+            "source": {
+                "file": source_path.name if source_path else "",
+                "sha256": (
+                    _sha256_file(source_path)
+                    if source_path is not None and source_path.is_file()
+                    else ""
+                ),
+            },
             "page": {
                 "width_mm": self.page_w.value(),
                 "height_mm": self.page_h.value(),
@@ -1278,10 +1296,48 @@ class CmykTab(GeneratorTab):
             ],
             "bed_motion": self._bed_motion_label(),
             "center_hold_diameter_mm": self.center_hold.value(),
+            "theta_mode": settings.theta_mode,
+            "bed_compensation_path": settings.bed_compensation_path,
             "registration_crosses": self.registration_marks.isChecked(),
             "pen_offsets_mm": {
                 channel: list(self._pen_offsets()[channel])
                 for channel in converter.CHANNELS
+            },
+            "screen": {
+                "style": self.style.currentData(),
+                "style_label": self.style.currentText(),
+                "dot_pitch_mm": self.pitch.value(),
+                "artwork_scale_pct": self.scale_pct.value(),
+                "effective_pitch_mm": self.pitch.value() * factor,
+                "pen_width_mm": self.pen_width.value(),
+                "dot_size_pct": self.dot_size.value(),
+                "path_tolerance_mm": self.path_tolerance.value(),
+                "minimum_centerline_clearance_mm": (
+                    self.pen_width.value()
+                    + converter.WAVE_MIN_EDGE_GAP_MM
+                ),
+                "levels": self.levels.value(),
+                "overdraw": self.overdraw.value(),
+                "solid_dots": self.solid_dots.isChecked(),
+                "seed": self.seed.value(),
+                "max_marks": self.max_marks.value(),
+                "screen_angles_deg": dict(converter.SCREEN_ANGLES_DEG),
+                "wave_frequency_tone_gain": (
+                    converter.WAVE_FREQUENCY_TONE_GAIN
+                ),
+                "wave_min_center_gap_fraction": (
+                    converter.WAVE_MIN_CENTER_GAP_FRACTION
+                ),
+            },
+            "ink_processing": {
+                "auto_levels": self.auto_levels.isChecked(),
+                "saturation_pct": self.saturation.value(),
+                "contrast_pct": self.contrast.value(),
+                "brightness_pct": self.brightness.value(),
+                "gamma": self.gamma.value(),
+                "gcr_pct": self.gcr.value(),
+                "resolution_px": self.resolution.value(),
+                "weights": weights,
             },
             "notes": (
                 "Pen offsets apply to artwork programs and the preview only; "
@@ -1291,6 +1347,11 @@ class CmykTab(GeneratorTab):
                 channel: Path(path_value).name
                 for channel, path_value in zip(channels, written)
             },
+            "file_sha256": {
+                channel: _sha256_file(Path(path_value))
+                for channel, path_value in zip(channels, written)
+                if Path(path_value).is_file()
+            },
             "preflight": {
                 channel: results[channel].get("checks")
                 for channel in channels
@@ -1298,6 +1359,14 @@ class CmykTab(GeneratorTab):
         }
         path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
         return path
+
+
+def _sha256_file(path):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
 
 
 def create_tab(host):

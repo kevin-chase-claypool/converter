@@ -1,5 +1,6 @@
 """CMYK separation, screening, layer SVGs, and per-ink cost analysis."""
 
+import hashlib
 import json
 import math
 import os
@@ -229,6 +230,48 @@ class ScreeningTests(unittest.TestCase):
         )
         # 130 % brightness keeps the black point but lays less ink.
         self.assertLess(float(lifted["k"].mean()), float(base["k"].mean()) - 0.05)
+
+    def test_ink_processing_does_not_flatten_wave_depth(self):
+        import numpy as np
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-depth-processing-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = str(Path(folder) / "gradient.png")
+        ramp = np.tile(np.linspace(20, 235, 64, dtype="uint8"), (64, 1))
+        Image.fromarray(np.stack([ramp] * 3, axis=2)).save(path)
+        neutral, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=64,
+            auto_levels=False,
+            gcr=1.0,
+            weights=(1, 1, 1, 1),
+        )
+        processed, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=64,
+            auto_levels=False,
+            saturation=1.25,
+            contrast=2.5,
+            brightness=40.0,
+            gcr=0.99,
+            weights=(1, 1, 1, 1),
+            gamma=3.0,
+        )
+        np.testing.assert_allclose(
+            processed["depth"],
+            neutral["depth"],
+            atol=1e-6,
+            err_msg="ink density controls must not saturate scene depth",
+        )
 
     def test_auto_photo_settings_fit_dark_and_bright_images(self):
         import numpy as np
@@ -851,6 +894,261 @@ class ScreeningTests(unittest.TestCase):
             "darker tone must add phase cycles while every row starts at "
             "the same zero point",
         )
+
+    def test_zero_anchored_depth_varies_frequency_per_row_across_pitches(self):
+        size = 128
+        yy, _xx = self.np.mgrid[0:size, 0:size]
+        tone = self.np.ones((size, size), dtype="float32")
+        depth = self.np.where(
+            yy < size * 0.42,
+            0.12,
+            0.92,
+        ).astype("float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": float(size),
+            "height_mm": float(size),
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        def crossings(points):
+            baseline = points[0][1]
+            signs = [1 if y > baseline else -1 for _x, y in points]
+            return sum(
+                first != second for first, second in zip(signs, signs[1:])
+            )
+
+        for spacing in (2.80, 3.36, 4.20):
+            with self.subTest(spacing=spacing):
+                waves = converter.screen_channel(
+                    tone,
+                    geometry,
+                    style="waves_zero",
+                    spacing_mm=spacing,
+                    pen_diameter_mm=0.8,
+                    depth_tone=depth,
+                )
+                rows = sorted(
+                    (points for points in waves if len(points) > 100),
+                    key=lambda points: sum(y for _x, y in points)
+                    / len(points),
+                )
+                self.assertGreaterEqual(len(rows), 20)
+                light_count = crossings(rows[1])
+                dark_count = crossings(rows[-2])
+                self.assertGreater(
+                    dark_count,
+                    light_count * 1.35,
+                    "scene depth must drive each row's winding rate; a shared "
+                    "carrier leaves every row with the same frequency",
+                )
+
+    def test_zero_anchored_depth_clearance_scales_at_all_angles_and_pitches(
+        self,
+    ):
+        import converter_core.cmyk as cmyk_core
+
+        page_mm = 64.0
+        pixels_per_mm = 4
+        pixel_count = int(page_mm * pixels_per_mm)
+        yy, xx = self.np.mgrid[0:pixel_count, 0:pixel_count]
+        yy_mm = yy / pixels_per_mm
+        xx_mm = xx / pixels_per_mm
+        tone = self.np.ones((pixel_count, pixel_count), dtype="float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": page_mm,
+            "height_mm": page_mm,
+            "pixels_w": pixel_count,
+            "pixels_h": pixel_count,
+        }
+
+        def value_at_x(points, x_value):
+            lo, hi = 0, len(points) - 1
+            while lo < hi:
+                middle = (lo + hi) // 2
+                if points[middle][0] < x_value:
+                    lo = middle + 1
+                else:
+                    hi = middle
+            if lo == 0:
+                return points[0][1] if points[0][0] == x_value else None
+            first, second = points[lo - 1], points[lo]
+            if first[0] <= x_value <= second[0]:
+                fraction = (x_value - first[0]) / max(
+                    second[0] - first[0], 1e-9
+                )
+                return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        minimum_clearance = 0.8 + converter.WAVE_MIN_EDGE_GAP_MM
+        for spacing in (2.80, 3.36, 4.20):
+            for angle_deg in converter.SCREEN_ANGLES_DEG.values():
+                with self.subTest(spacing=spacing, angle_deg=angle_deg):
+                    radians = math.radians(angle_deg)
+                    local_normal = (
+                        xx_mm * math.sin(radians)
+                        + yy_mm * math.cos(radians)
+                    )
+                    depth = (
+                        0.08
+                        + 0.84
+                        * (
+                            0.5
+                            + 0.5
+                            * self.np.sin(
+                                2.0
+                                * self.np.pi
+                                * local_normal
+                                / (3.0 * spacing)
+                            )
+                        )
+                    ).astype("float32")
+                    waves = converter.screen_channel(
+                        tone,
+                        geometry,
+                        style="waves_zero",
+                        spacing_mm=spacing,
+                        angle_deg=angle_deg,
+                        pen_diameter_mm=0.8,
+                        depth_tone=depth,
+                    )
+                    local_rows = [
+                        [
+                            (
+                                x * math.cos(radians)
+                                + y * math.sin(radians),
+                                -x * math.sin(radians)
+                                + y * math.cos(radians),
+                            )
+                            for x, y in points
+                        ]
+                        for points in waves
+                    ]
+                    local_rows.sort(
+                        key=lambda points: sum(y for _x, y in points)
+                        / len(points)
+                    )
+                    self.assertGreaterEqual(len(local_rows), 12)
+                    for first, second in zip(
+                        local_rows,
+                        local_rows[1:],
+                    ):
+                        self.assertTrue(
+                            cmyk_core._polyline_pair_is_clear(
+                                cmyk_core._polyline_segments(first),
+                                cmyk_core._polyline_segments(second),
+                                minimum_clearance,
+                            )
+                        )
+
+                    sample_xs = [
+                        page_mm * fraction
+                        for fraction in (0.2, 0.35, 0.5, 0.65, 0.8)
+                    ]
+                    for sample_x in sample_xs:
+                        ys = sorted(
+                            value
+                            for points in local_rows
+                            if (
+                                value := value_at_x(points, sample_x)
+                            )
+                            is not None
+                        )
+                        gaps = [
+                            second - first
+                            for first, second in zip(ys, ys[1:])
+                            if 0.1 <= second - first <= 1.9 * spacing
+                        ]
+                        self.assertGreaterEqual(len(gaps), 4)
+                        self.assertGreaterEqual(
+                            min(gaps),
+                            spacing
+                            * converter.WAVE_MIN_CENTER_GAP_FRACTION
+                            - 1e-6,
+                        )
+
+    def test_zero_anchored_pitch_below_pen_envelope_fails_explicitly(self):
+        tone = self.np.ones((64, 64), dtype="float32")
+        with self.assertRaisesRegex(
+            ValueError,
+            "effective pitch is smaller than the pen width plus edge gap",
+        ):
+            converter.screen_channel(
+                tone,
+                {
+                    "off_x": 0.0,
+                    "off_y": 0.0,
+                    "width_mm": 64.0,
+                    "height_mm": 64.0,
+                    "pixels_w": 64,
+                    "pixels_h": 64,
+                },
+                style="waves_zero",
+                spacing_mm=0.8,
+                pen_diameter_mm=0.8,
+            )
+
+    def test_zero_anchored_rows_vary_inside_a_clearance_safe_band(self):
+        spacing = 4.0
+        yy, xx = self.np.mgrid[0:64, 0:64]
+        tone = self.np.full((64, 64), 0.82, dtype="float32")
+        depth = (
+            0.1
+            + 0.8 * yy / 63.0
+            + 0.1 * self.np.sin(2.0 * self.np.pi * xx / 19.0)
+        ).astype("float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves_zero",
+            spacing_mm=spacing,
+            depth_tone=depth,
+        )
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        for sample_x in (8.0, 16.0, 24.0, 32.0, 40.0, 48.0):
+            with self.subTest(sample_x=sample_x):
+                ys = sorted(
+                    value
+                    for points in waves
+                    if (value := value_at_x(points, sample_x)) is not None
+                )
+                gaps = [
+                    second - first
+                    for first, second in zip(ys, ys[1:])
+                    if 2.0 < second - first < 6.0
+                ]
+                self.assertGreaterEqual(len(gaps), 10)
+                self.assertGreaterEqual(
+                    min(gaps),
+                    spacing * converter.WAVE_MIN_CENTER_GAP_FRACTION - 1e-6,
+                )
+                self.assertGreater(
+                    max(gaps) - min(gaps),
+                    0.05,
+                    "row-specific waveform depth must survive the independent "
+                    "phase and safety envelope",
+                )
 
     def test_zero_anchored_waves_enforce_minimum_clearance(self):
         spacing = 4.0
@@ -1560,8 +1858,31 @@ class CmykTabTests(unittest.TestCase):
         self.assertTrue(manifest.exists())
         data = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(data["kind"], "cmyk-print-set")
+        self.assertEqual(data["version"], 2)
         self.assertAlmostEqual(data["pen_offsets_mm"]["m"][0], 0.75)
         self.assertEqual(set(data["preflight"]), set(converter.CHANNELS))
+        self.assertEqual(
+            data["source"]["sha256"],
+            hashlib.sha256(Path(self.image_path).read_bytes()).hexdigest(),
+        )
+        self.assertEqual(
+            data["screen"]["style"],
+            tab.style.currentData(),
+        )
+        self.assertAlmostEqual(
+            data["screen"]["effective_pitch_mm"],
+            tab.pitch.value() * tab.scale_pct.value() / 100.0,
+        )
+        self.assertEqual(data["ink_processing"]["weights"]["y"], 1.0)
+        self.assertIn("bed_compensation_path", data)
+        for channel in converter.CHANNELS:
+            saved = Path(
+                host.saved_paths[converter.CHANNEL_LABELS[channel].lower()]
+            )
+            self.assertEqual(
+                data["file_sha256"][channel],
+                hashlib.sha256(saved.read_bytes()).hexdigest(),
+            )
         self.assertIn("Set manifest", tab.status.text())
 
     def test_scaled_ink_layers_share_the_page_frame(self):

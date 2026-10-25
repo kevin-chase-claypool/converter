@@ -28,6 +28,9 @@ import converter_core as converter
 
 
 DEFAULT_OUTPUT = ROOT / "samples" / "gcode" / "cmyk-wave-coupon.gcode"
+DEFAULT_PITCH_OUTPUT = (
+    ROOT / "samples" / "gcode" / "cmyk-wave-pitch-coupon.gcode"
+)
 DEFAULT_BED = (
     ROOT
     / "samples"
@@ -51,6 +54,11 @@ COUPON_ANGLES = (
     ("Y", converter.SCREEN_ANGLES_DEG["y"]),
     ("K", converter.SCREEN_ANGLES_DEG["k"]),
 )
+PITCH_COUPON_MM = (2.80, 3.36, 4.20)
+PITCH_PATCH_LEFT_MM = (-97.5, -47.5, 2.5, 52.5)
+PITCH_PATCH_TOP_MM = (-72.0, -22.0, 28.0)
+PITCH_PATCH_WIDTH_MM = 45.0
+PITCH_PATCH_HEIGHT_MM = 44.0
 
 
 def coupon_settings(theta_mode="fixed"):
@@ -79,17 +87,23 @@ def coupon_patch(
     width_mm=PATCH_WIDTH_MM,
     height_mm=PATCH_HEIGHT_MM,
     angle_deg=75.0,
+    spacing_mm=PAPER_PITCH_MM,
 ):
     """Return one patch using the real screening and planning functions."""
     yy, xx = np.mgrid[0:128, 0:256]
     tone = np.full((128, 256), 0.82, dtype=np.float32)
+    row_step_px = max(
+        1.0,
+        float(spacing_mm) * 128.0 / max(float(height_mm), 1e-9),
+    )
     # Broad two-dimensional luminance variation exposes the tonal frequency
-    # and amplitude differences across the full-size patch.
+    # and amplitude differences both along and across the wave rows.
     depth = np.clip(
         0.12
-        + 0.58 * xx / 255.0
-        + 0.22 * yy / 127.0
-        + 0.06 * np.sin(2.0 * np.pi * yy / 9.0),
+        + 0.46 * xx / 255.0
+        + 0.18 * yy / 127.0
+        + 0.17
+        * np.sin(2.0 * np.pi * yy / (8.0 * row_step_px)),
         0.0,
         1.0,
     ).astype(np.float32)
@@ -104,7 +118,7 @@ def coupon_patch(
             "pixels_h": 128,
         },
         style=style,
-        spacing_mm=PAPER_PITCH_MM,
+        spacing_mm=float(spacing_mm),
         dot_scale=1.0,
         angle_deg=float(angle_deg),
         pen_diameter_mm=PEN_WIDTH_MM,
@@ -135,6 +149,43 @@ def _coupon_matrix(theta_mode):
                 )
             )
     return marks
+
+
+def build_pitch_coupon():
+    """Build one rotating-bed coupon spanning all supported test pitches."""
+    settings = coupon_settings("optimized")
+    marks = []
+    for pitch_mm, top_mm in zip(PITCH_COUPON_MM, PITCH_PATCH_TOP_MM):
+        for left_mm, (_ink, angle_deg) in zip(
+            PITCH_PATCH_LEFT_MM,
+            COUPON_ANGLES,
+        ):
+            marks.extend(
+                coupon_patch(
+                    "waves_zero",
+                    left_mm,
+                    top_mm,
+                    width_mm=PITCH_PATCH_WIDTH_MM,
+                    height_mm=PITCH_PATCH_HEIGHT_MM,
+                    angle_deg=angle_deg,
+                    spacing_mm=pitch_mm,
+                )
+            )
+    plan = converter.plan_program(marks, settings)
+    gcode = converter.contours_to_gcode(
+        marks,
+        settings,
+        program_plan=plan,
+    )
+    banner = (
+        "(CMYK wave pitch diagnostic - single file; 12 patches)\n"
+        "(columns left-to-right: C15 M75 Y0 K45)\n"
+        "(rows top-to-bottom: 2.800 / 3.360 / 4.200 mm pitch)\n"
+        "(Xtheta-Ytheta motion, 0.800 mm pen, F700, "
+        "bed compensation enabled)\n"
+        "(field 195 x 144 mm; ordinary paper is sufficient)\n"
+    )
+    return banner + gcode, settings, marks
 
 
 def _reindexed_jobs(plan, offset):
@@ -192,11 +243,20 @@ def build_coupon():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--out", default=str(DEFAULT_OUTPUT))
+    parser.add_argument("--out")
+    parser.add_argument(
+        "--multi-pitch",
+        action="store_true",
+        help="generate the 12-patch 2.80/3.36/4.20 mm pitch coupon",
+    )
     args = parser.parse_args()
 
-    gcode, settings, marks = build_coupon()
-    output_path = Path(args.out)
+    if args.multi_pitch:
+        gcode, settings, marks = build_pitch_coupon()
+        output_path = Path(args.out or DEFAULT_PITCH_OUTPUT)
+    else:
+        gcode, settings, marks = build_coupon()
+        output_path = Path(args.out or DEFAULT_OUTPUT)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(gcode, encoding="utf-8", newline="\n")
     print(output_path)

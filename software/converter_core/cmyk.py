@@ -48,9 +48,10 @@ WAVE_MAX_ADJACENT_GAP_FRACTION = 0.12
 # The zero-anchored mode follows the open-source SquiggleDraw family: tone
 # increases both amplitude and phase rate. Keep the maximum extra phase rate
 # bounded so the path-tolerance sampler remains practical.
-WAVE_FREQUENCY_TONE_GAIN = 0.75
+WAVE_FREQUENCY_TONE_GAIN = 2.0
 # Never permit two visible row centre lines closer than this fraction of pitch.
-# Variation that would violate it is faded toward the common waveform.
+# Row-specific depth is ordered into this band and its amplitude is then
+# limited by a slope-aware pen-envelope calculation.
 WAVE_MIN_CENTER_GAP_FRACTION = 0.75
 # The second clearance check measures the actual shortest distance between
 # emitted row segments, not only their separation at matching sample columns.
@@ -386,6 +387,15 @@ def prepare_image_tones(
         if spread > 1e-3:
             rgb = np.clip((rgb - float(low)) / spread, 0.0, 1.0)
 
+    # Keep the tonal depth field tied to scene luminance. Ink-density controls
+    # may darken or lighten every plate, but they must not flatten the waveform
+    # into one frequency before screening.
+    depth_luminance = np.clip(
+        rgb @ np.array([0.299, 0.587, 0.114], dtype=np.float32),
+        0.0,
+        1.0,
+    )
+
     saturation = float(saturation)
     if abs(saturation - 1.0) > 1e-9:
         gray = rgb @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
@@ -403,14 +413,9 @@ def prepare_image_tones(
         rgb = np.power(np.clip(rgb, 0.0, 1.0), exponent)
 
     tones = rgb_to_cmyk_tone(rgb, gcr=gcr, weights=weights, gamma=gamma)
-    luminance = np.clip(
-        rgb @ np.array([0.299, 0.587, 0.114], dtype=np.float32),
-        0.0,
-        1.0,
-    )
     # Ink coverage decides where each plate is present; luminance supplies the
     # common scene depth used by wave screens even in a saturated ink channel.
-    tones["depth"] = (1.0 - luminance).astype(np.float32)
+    tones["depth"] = (1.0 - depth_luminance).astype(np.float32)
     geometry = {
         "off_x": off_x,
         "off_y": off_y,
@@ -709,10 +714,15 @@ def _wave_clearance_ok(
                 return False
     minimum_clearance = max(0.0, float(minimum_clearance_mm))
     if minimum_clearance:
-        for first_row, second_row in zip(positions, positions[1:]):
+        visible_rows = [
+            segments
+            for row in positions
+            if (segments := _polyline_segments(row))
+        ]
+        for first_row, second_row in zip(visible_rows, visible_rows[1:]):
             if not _polyline_pair_is_clear(
-                _polyline_segments(first_row),
-                _polyline_segments(second_row),
+                first_row,
+                second_row,
                 minimum_clearance,
             ):
                 return False
@@ -738,12 +748,12 @@ def _wave_rows(
     Local tone still masks each mark to the image. A vertically smoothed tone
     field also varies wave height across rows. The zero-anchored mode resets
     every phase at the left edge and lets tone increase both amplitude and
-    phase rate, matching the upstream SquiggleDraw family. A sampled clearance
-    search fades row-specific variation only when needed to prevent nearby ink
-    centerlines from approaching. The equidistant mode instead translates one
-    common waveform with no row-specific movement. The clearance test also
-    measures the shortest distance between emitted segments so steep rows
-    cannot approach through a gap between sample columns.
+    phase rate independently for each row, matching the upstream SquiggleDraw
+    family. A monotone row projection and slope-aware amplitude bound preserve
+    the pen envelope even though row frequencies differ. The equidistant mode
+    instead translates one common waveform with no row-specific movement. The
+    final clearance test measures the shortest distance between emitted
+    segments so steep rows cannot approach through a sample-column gap.
     """
     min_x, max_x, min_y, max_y, ca, sa = _local_frame(bounds, angle_deg)
     spacing = max(0.2, float(spacing))
@@ -762,7 +772,18 @@ def _wave_rows(
     frequency_gain = (
         1.0 + WAVE_FREQUENCY_TONE_GAIN if zero_anchored_depth else 1.0
     )
-    curvature = amplitude_max * (frequency_gain * math.pi / spacing) ** 2
+    texture_limit = (
+        spacing
+        * (1.0 - WAVE_MIN_CENTER_GAP_FRACTION)
+        * 0.5
+    )
+    curvature_amplitude = amplitude_max
+    if zero_anchored_depth:
+        curvature_amplitude += texture_limit
+    curvature = (
+        curvature_amplitude
+        * (frequency_gain * math.pi / spacing) ** 2
+    )
     tolerance_step = math.sqrt(
         8.0 * max(0.001, float(path_tolerance_mm)) / curvature
     )
@@ -843,98 +864,138 @@ def _wave_rows(
                     )
                     positions[row_index][x_index] = (x, y + offset)
     elif zero_anchored_depth:
-        def candidate_positions(strength, fallback_scale=1.0):
+        max_tone = max(
+            (max(row) for row in smoothed_tone),
+            default=0.0,
+        )
+        max_tone_step = max(
+            (
+                abs(row[x_index] - row[x_index - 1]) / sample_step
+                for row in smoothed_tone
+                for x_index in range(1, len(row))
+            ),
+            default=0.0,
+        )
+        max_phase_slope = max_tone * (
+            math.pi
+            / spacing
+            * (1.0 + WAVE_FREQUENCY_TONE_GAIN * max_tone)
+        )
+        slope_at_full_depth = amplitude_max * (
+            max_phase_slope + max_tone_step
+        )
+
+        # For two x-monotone rows separated vertically by at least `gap`, a
+        # slope bound M guarantees a shortest centreline distance no smaller
+        # than gap / sqrt(1 + M^2). Scale the independent row amplitudes so
+        # that this physical bound holds everywhere without repeatedly
+        # rebuilding and scanning the complete screen.
+        clearance = max(0.0, float(minimum_clearance_mm))
+        vertical_gap_floor = spacing * WAVE_MIN_CENTER_GAP_FRACTION
+        if clearance > spacing + 1e-9:
+            raise ValueError(
+                "Wave screen cannot keep adjacent pen strokes apart: "
+                "the effective pitch is smaller than the pen width plus "
+                "edge gap."
+            )
+        if clearance <= 0.0 or slope_at_full_depth <= 1e-12:
+            safe_depth_strength = 1.0
+        elif vertical_gap_floor <= clearance:
+            safe_depth_strength = 0.0
+        else:
+            allowed_slope = math.sqrt(
+                (vertical_gap_floor / clearance) ** 2 - 1.0
+            )
+            safe_depth_strength = min(
+                1.0,
+                allowed_slope / slope_at_full_depth,
+            )
+
+        def candidate_positions(
+            depth_strength=1.0,
+        ):
             result = [
                 [None] * len(x_values)
                 for _row_index in range(len(row_ys))
             ]
-            phases = [0.0] * len(row_ys)
+            row_phases = [0.0] * len(row_ys)
             for x_index, x in enumerate(x_values):
                 check_cancelled(cancel_check)
-                if x_index:
-                    for row_index in range(len(row_ys)):
+                for row_index, y in enumerate(row_ys):
+                    if tone_rows[row_index][x_index] < INK_FLOOR:
+                        continue
+                    if x_index:
                         phase_rate = (
                             math.pi
                             / spacing
                             * (
                                 1.0
                                 + WAVE_FREQUENCY_TONE_GAIN
-                                * strength
                                 * smoothed_tone[row_index][x_index]
                             )
                         )
-                        phases[row_index] += phase_rate * sample_step
-                for row_index, y in enumerate(row_ys):
-                    if tone_rows[row_index][x_index] < INK_FLOOR:
-                        continue
-                    amplitude_tone = shared_tone[x_index] + strength * (
-                        smoothed_tone[row_index][x_index]
-                        - shared_tone[x_index]
-                    )
+                        row_phases[row_index] += phase_rate * sample_step
                     offset = (
                         amplitude_max
-                        * fallback_scale
-                        * amplitude_tone
-                        * math.sin(phases[row_index])
+                        * depth_strength
+                        * smoothed_tone[row_index][x_index]
+                        * math.sin(row_phases[row_index])
                     )
                     result[row_index][x_index] = (x, y + offset)
+
+                # Independent frequency fields can move adjacent rows toward
+                # one another. Preserve each desired row shape and shift only
+                # the rows needed to restore order, so the safety pass does
+                # not collapse the whole image to one shared waveform.
+                previous_y = None
+                minimum_y_gap = spacing * WAVE_MIN_CENTER_GAP_FRACTION
+                for row_index in range(len(row_ys)):
+                    point = result[row_index][x_index]
+                    if point is None:
+                        continue
+                    if (
+                        previous_y is not None
+                        and point[1] < previous_y + minimum_y_gap
+                    ):
+                        point = (x, previous_y + minimum_y_gap)
+                        result[row_index][x_index] = point
+                    previous_y = point[1]
             return result
 
-        positions = candidate_positions(1.0)
+        positions = candidate_positions(
+            depth_strength=safe_depth_strength
+        )
         if not _wave_clearance_ok(
             positions,
             spacing,
             minimum_clearance_mm,
         ):
-            common = candidate_positions(0.0)
-            low = 0.0
-            high = 1.0
-            if _wave_clearance_ok(
-                common,
+            flat = candidate_positions(depth_strength=0.0)
+            if not _wave_clearance_ok(
+                flat,
                 spacing,
                 minimum_clearance_mm,
             ):
-                best = common
-                for _step in range(WAVE_CLEARANCE_SEARCH_STEPS):
-                    strength = (low + high) * 0.5
-                    candidate = candidate_positions(strength)
-                    if _wave_clearance_ok(
-                        candidate,
-                        spacing,
-                        minimum_clearance_mm,
-                    ):
-                        low = strength
-                        best = candidate
-                    else:
-                        high = strength
-            else:
-                # Even a shared waveform can become steep enough for adjacent
-                # pen strokes to approach. Reduce its common amplitude, while
-                # retaining the higher winding rate wherever clearance allows.
-                flat = candidate_positions(0.0, 0.0)
-                if not _wave_clearance_ok(
-                    flat,
+                raise ValueError(
+                    "Wave screen cannot keep adjacent pen strokes apart: "
+                    "the effective pitch is too small for the configured "
+                    "pen width and edge gap."
+                )
+            low = 0.0
+            high = safe_depth_strength
+            best = flat
+            for _step in range(WAVE_CLEARANCE_SEARCH_STEPS):
+                depth_strength = (low + high) * 0.5
+                candidate = candidate_positions(depth_strength=depth_strength)
+                if _wave_clearance_ok(
+                    candidate,
                     spacing,
                     minimum_clearance_mm,
                 ):
-                    raise ValueError(
-                        "Wave screen cannot keep adjacent pen strokes apart: "
-                        "the effective pitch is too small for the configured "
-                        "pen width and edge gap."
-                    )
-                best = flat
-                for _step in range(WAVE_CLEARANCE_SEARCH_STEPS):
-                    fallback_scale = (low + high) * 0.5
-                    candidate = candidate_positions(0.0, fallback_scale)
-                    if _wave_clearance_ok(
-                        candidate,
-                        spacing,
-                        minimum_clearance_mm,
-                    ):
-                        low = fallback_scale
-                        best = candidate
-                    else:
-                        high = fallback_scale
+                    low = depth_strength
+                    best = candidate
+                else:
+                    high = depth_strength
             positions = best
     else:
         max_tone_step = min(
@@ -1112,8 +1173,8 @@ def screen_channel(
     costs one M3/M5 cycle), ``crosshatch`` (line families stacked by tone
     level), ``waves`` (sine rows whose amplitude follows tone), ``waves_even``
     (identical translated wave rows with exact pitch spacing), ``waves_zero``
-    (tone-driven amplitude and phase rate with zero-anchored clearance),
-    ``gyroid``
+    (independent tone-driven row amplitude and phase rate with zero-anchored
+    clearance), ``gyroid``
     (interference-field contours that flatten into blank paper), ``tsp``
     (one greedy single line through tone stipple points) and ``contours``
     (topographic contour lines of the tone).
