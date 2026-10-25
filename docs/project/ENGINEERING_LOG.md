@@ -1,7 +1,23 @@
 # Engineering Log
 
+<a id="elog-20261025-p100-final-center-correction"></a>
+### 🟨 2026-10-25 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - Final P100 center correction Y 0.30
+
+- The controller listing showed the interim Y `-0.70` macro had already been
+  deployed: remote P100 size 15,218 bytes matched the interim source.
+- The observed requirement to move the pen 1.000 mm north therefore changes
+  the final correction to Y `-0.70 + 1.00 = +0.30`. X remains `+1.45`.
+- P100 now writes `G10 L20 P1 X-1.45 Y-29.7892`. Artwork offset and bed
+  compensation are unrelated and unchanged.
+- `tools\check_macros.py` and `tools\validate_homing_macro.py` pass.
+- Final macro upload and physical `G65 P113` center check remain pending.
+  Evidence: `RPSW-20261025-004`,
+  `docs/report/lab-notes/2026-10-25-p100-center-magnet-final-y-0-3.md`.
+- Category: rp23cnc-software, hardware, grblhal, p100, registration,
+  center-magnet, pen-center, offset.
+
 <a id="elog-20261025-p100-center-magnet-north-correction"></a>
-### 🟨 2026-10-25 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - Move P100 center 1 mm north
+### 🟥 2026-10-25 - RP23CNC SOFTWARE/HARDWARE/SUPERSEDED - P100 north move started from wrong deployed baseline
 
 - The operator clarified that the registered pen must move `1.000 mm` north,
   not south. From the previously deployed Y `0.30` correction, the new target
@@ -10,6 +26,8 @@
   compensation are unchanged.
 - The earlier source edit to Y `-0.70` was never deployed and is superseded by
   `RPSW-20261025-003`.
+- Correction: the controller listing later showed Y `-0.70` *was* deployed.
+  The final Y target is `0.30`, recorded in `RPSW-20261025-004`.
 - `tools\check_macros.py` and `tools\validate_homing_macro.py` pass.
 - Controller deployment remains pending: FTP to `10.10.10.2:21` still times
   out. Evidence: `RPSW-20261025-003`,

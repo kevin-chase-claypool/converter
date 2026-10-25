@@ -5,7 +5,7 @@ category: rp23cnc-software
 affected_categories:
   - rp23cnc-software
   - hardware
-status: implemented
+status: superseded
 components:
   - firmware/grblhal/macros/P100.macro
   - tools/validate_homing_macro.py
@@ -22,6 +22,10 @@ related:
 ---
 
 # Move the P100 registered pen 1 mm north
+
+> Superseded by `RPSW-20261025-004`: the controller listing proved that the
+> interim Y `-0.70` source was already deployed. The required 1 mm north move
+> therefore produces final Y `0.30`, not `1.30`. X remains `1.45`.
 
 ## Summary
 

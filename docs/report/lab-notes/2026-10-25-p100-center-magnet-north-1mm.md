@@ -1,5 +1,9 @@
 # Lab Note: 2026-10-25 - P100 pen must move 1 mm north
 
+> Superseded by `2026-10-25-p100-center-magnet-final-y-0-3.md`: the controller
+> was already running Y `-0.70`, so the required 1 mm north move produces final
+> Y `0.30`.
+
 ## Objective
 
 Encode the center-magnet result that the registered pen position must move
