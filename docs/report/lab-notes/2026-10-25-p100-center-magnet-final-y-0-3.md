@@ -1,5 +1,9 @@
 # Lab Note: 2026-10-25 - Final P100 center correction Y 0.30
 
+> Superseded by `2026-10-25-p100-center-magnet-y-1-3-deployed.md`: Y `0.30`
+> still left the pen approximately 1 mm south, so the final deployed Y is
+> `1.30`.
+
 ## Objective
 
 Finalize the P100 center correction after observing that the currently

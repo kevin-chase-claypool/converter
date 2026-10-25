@@ -229,7 +229,7 @@ installed pen/TMAG offset. Two constants sit between those values and the
 
 ```text
 #<axis_center_correction_x> = 1.45
-#<axis_center_correction_y> = 0.3
+#<axis_center_correction_y> = 1.3
 ...
 G10 L20 P1 X[[#<sensor_to_pen_x> - #<axis_center_correction_x>]] Y[[#<sensor_to_pen_y> - #<axis_center_correction_y>]]
 ```
@@ -282,11 +282,10 @@ fault; `G65 P100 Q5` at A0/A180 settles it. The constants were applied on
 the controller on 2026-10-14 and the operator confirms the result looks
 correct.
 
-**2026-10-25 center-magnet check.** The interim deployed source had X `1.45`
-and Y `-0.70`; the pen then needed to move `1.000 mm` north. The final Y is
-therefore `+0.30`, while X remains `+1.45` after moving the registered origin
-1 mm west. The source and validator are updated. Controller upload and a repeat
-`G65 P113` center-magnet check remain pending.
+**2026-10-25 center-magnet check.** After the first north correction reached
+Y `0.30`, the pen still needed another `1.000 mm` north. The final values are
+X `+1.45` and Y `+1.30`. The 15,228-byte macro was uploaded successfully over
+binary FTP; a repeat `G65 P113` center-magnet check remains pending.
 
 Two further notes from the same edit. `P103.macro` mirrors P100's initialization
 and now carries the two new constants. And the `sensor_to_pen` comment in P100

@@ -10,7 +10,8 @@ Newest changes appear first.
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
 | 2026-10-25 | `WSW-20261025-001` | implemented | [Add ioSender configuration recovery](../windows-software/2026/2026-10-25-iosender-config-recovery.md) | `iosender`, `configuration`, `backup`, `restore`, `macros`, `grblhal`, `offsets` |
-| 2026-10-25 | `RPSW-20261025-004` | implemented | [Set the final P100 center correction to X 1.45 / Y 0.30](2026/2026-10-25-p100-center-magnet-final-y-0-3.md) | `grblhal`, `p100`, `registration`, `center-magnet`, `pen-center`, `offset` |
+| 2026-10-25 | `RPSW-20261025-005` | implemented | [Set and deploy the final P100 Y correction to 1.30](2026/2026-10-25-p100-center-magnet-y-1-3-deployed.md) | `grblhal`, `p100`, `registration`, `center-magnet`, `pen-center`, `ftp` |
+| 2026-10-25 | `RPSW-20261025-004` | superseded | [Set the final P100 center correction to X 1.45 / Y 0.30](2026/2026-10-25-p100-center-magnet-final-y-0-3.md) | `grblhal`, `p100`, `registration`, `center-magnet`, `pen-center`, `offset` |
 | 2026-10-25 | `RPSW-20261025-003` | superseded | [Move the P100 registered pen 1 mm north](2026/2026-10-25-p100-center-magnet-north-1mm.md) | `grblhal`, `p100`, `registration`, `center-magnet`, `pen-center`, `offset` |
 | 2026-10-25 | `RPSW-20261025-002` | superseded | [Correct P100 center registration by −1 mm X/Y](2026/2026-10-25-p100-center-magnet-y-1-east-north.md) | `grblhal`, `p100`, `registration`, `center-magnet`, `pen-center`, `offset` |
 | 2026-10-25 | `RPSW-20261025-001` | implemented | [Deploy the P116 pen-up and park macro](2026/2026-10-25-deploy-p116-macro.md) | `iosender`, `p116`, `macro`, `ftp`, `deployment`, `error-84` |

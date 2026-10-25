@@ -76,9 +76,10 @@ o005 endif
 (these constants return to zero. That test is still pending.)
 (Revised 2026-10-25 from the center-magnet click test. The interim deployed)
 (source used X 1.45 and Y -0.70; the pen then needed to move 1.000 mm north.)
-(The final Y is therefore 0.30. X remains 1.45 after moving 1.000 mm west.)
+(After Y reached 0.30 it still needed another 1.000 mm north. The final Y is)
+(therefore 1.30. X remains 1.45 after moving 1.000 mm west.)
 #<axis_center_correction_x> = 1.45
-#<axis_center_correction_y> = 0.3
+#<axis_center_correction_y> = 1.3
 (Candidate Q3 rectangle: measured by jog in G54, converted to G53 MPos.)
 (Q0 uses this verified rectangle; Q3 remains separately locked.)
 #<scan_min_x> = -280.0

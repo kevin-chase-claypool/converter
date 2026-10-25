@@ -5,7 +5,7 @@ category: rp23cnc-software
 affected_categories:
   - rp23cnc-software
   - hardware
-status: implemented
+status: superseded
 components:
   - firmware/grblhal/macros/P100.macro
   - tools/validate_homing_macro.py
@@ -23,6 +23,9 @@ related:
 ---
 
 # Set the final P100 center correction to X 1.45 / Y 0.30
+
+> Superseded by `RPSW-20261025-005`: after Y `0.30` was tested, the pen still
+> needed another 1 mm north. The deployed final value is Y `1.30`.
 
 ## Summary
 
