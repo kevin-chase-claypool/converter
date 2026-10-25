@@ -300,17 +300,17 @@
   horizontal amplitude profile. Its first full yellow print removed crossings
   and runaway gaps, but also flattened the tonal depth and left angular wave
   chords. `WSW-20261024-007` now ties sine sample density to paper-space Path
-  tolerance. `WSW-20261024-009` restored a bounded depth field, but per-ink
-  coverage remained locally flat and the print was still monotonous.
-  `WSW-20261024-010` now derives the common wave depth from processed scene
-  luminance while retaining ink coverage only as the per-layer mask and keeping
-  adjacent movement bounded. Benefit: the wave screen can retain photographic
-  depth without returning to the overlap or wide-gap failure. The next physical
-  test is a newly generated yellow/magenta pair at Dot pitch `1.2 mm`, Artwork
-  scale `280 %`, Path tolerance `0.05 mm`, `F700`, and `$123=6000` with
-  compensation enabled. If waves have visible luminance depth, smooth chords,
-  and actual ink-edge clearance, close M-13; otherwise compare the rendered
-  source with paper before changing machine settings again.
+  tolerance. Bounded per-ink and then luminance-driven depth still changed row
+  separation because independent vertical amplitudes inherently move rows
+  relative to one another. `WSW-20261024-011` adds **Wave screen - equidistant
+  rows**, which translates one shared luminance-shaped waveform exactly one
+  pitch for every row. Benefit: row contact and convergence are excluded by
+  construction rather than by tuning. The original Wave screen remains the
+  variable-depth comparison mode. The next physical test is a black-pen coupon
+  at Dot pitch `1.2 mm`, Artwork scale `280 %`, Path tolerance `0.05 mm`,
+  `F700`, and `$123=6000` with compensation enabled. If spacing is exact and
+  the common wave still provides useful visual structure, close M-13; otherwise
+  reconsider how depth should be represented without moving row centre lines.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already

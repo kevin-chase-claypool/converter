@@ -602,6 +602,7 @@ def _wave_rows(
     cancel_check=None,
     path_tolerance_mm=0.05,
     depth_darkness=None,
+    equal_spacing=False,
 ):
     """Sine rows with bounded vertical tone depth.
 
@@ -661,40 +662,53 @@ def _wave_rows(
     if depth_darkness is None:
         depth_rows = tone_rows
 
-    window = min(WAVE_DEPTH_ROW_WINDOW, len(tone_rows))
-    smoothed_tone = []
-    for row_index in range(len(tone_rows)):
-        low = min(
-            max(0, row_index - window // 2),
-            len(tone_rows) - window,
+    if equal_spacing:
+        # Every row receives the same displacement at each x. The vertical
+        # distance between all row centre lines is therefore exactly `spacing`.
+        shared = [
+            sum(row[x_index] for row in depth_rows) / max(len(depth_rows), 1)
+            for x_index in range(len(x_values))
+        ]
+        depth_tone = [
+            [shared[x_index]] * len(row_ys)
+            for x_index in range(len(x_values))
+        ]
+    else:
+        window = min(WAVE_DEPTH_ROW_WINDOW, len(tone_rows))
+        smoothed_tone = []
+        for row_index in range(len(tone_rows)):
+            low = min(
+                max(0, row_index - window // 2),
+                len(tone_rows) - window,
+            )
+            high = low + window
+            smoothed_tone.append(
+                [
+                    sum(
+                        depth_rows[index][x_index]
+                        for index in range(low, high)
+                    )
+                    / max(window, 1)
+                    for x_index in range(len(x_values))
+                ]
+            )
+        max_tone_step = min(
+            1.0,
+            spacing * WAVE_MAX_ADJACENT_GAP_FRACTION / amplitude_max,
         )
-        high = low + window
-        smoothed_tone.append(
-            [
-                sum(
-                    depth_rows[index][x_index] for index in range(low, high)
-                )
-                / max(window, 1)
-                for x_index in range(len(x_values))
-            ]
-        )
-    max_tone_step = min(
-        1.0,
-        spacing * WAVE_MAX_ADJACENT_GAP_FRACTION / amplitude_max,
-    )
-    depth_tone = []
-    for x_index in range(len(x_values)):
-        column = []
-        for row_index in range(len(smoothed_tone)):
-            current = smoothed_tone[row_index][x_index]
-            if column:
-                previous = column[-1]
-                current = previous + max(
-                    -max_tone_step,
-                    min(max_tone_step, current - previous),
-                )
-            column.append(current)
-        depth_tone.append(column)
+        depth_tone = []
+        for x_index in range(len(x_values)):
+            column = []
+            for row_index in range(len(smoothed_tone)):
+                current = smoothed_tone[row_index][x_index]
+                if column:
+                    previous = column[-1]
+                    current = previous + max(
+                        -max_tone_step,
+                        min(max_tone_step, current - previous),
+                    )
+                column.append(current)
+            depth_tone.append(column)
 
     rows = []
     for row_index, y in enumerate(row_ys):
@@ -844,7 +858,8 @@ def screen_channel(
     dots), ``lines`` (parallel lines whose pitch follows tone),
     ``rectilinear`` (serpentine rows joined over ink, so a connected region
     costs one M3/M5 cycle), ``crosshatch`` (line families stacked by tone
-    level), ``waves`` (sine rows whose amplitude follows tone), ``gyroid``
+    level), ``waves`` (sine rows whose amplitude follows tone), ``waves_even``
+    (identical translated wave rows with exact pitch spacing), ``gyroid``
     (interference-field contours that flatten into blank paper), ``tsp``
     (one greedy single line through tone stipple points) and ``contours``
     (topographic contour lines of the tone).
@@ -926,7 +941,7 @@ def screen_channel(
                     cancel_check=cancel_check,
                 )
             )
-    elif style == "waves":
+    elif style in ("waves", "waves_even"):
         marks = _wave_rows(
             darkness,
             bounds,
@@ -936,6 +951,7 @@ def screen_channel(
             cancel_check=cancel_check,
             path_tolerance_mm=path_tolerance_mm,
             depth_darkness=depth_darkness,
+            equal_spacing=(style == "waves_even"),
         )
     elif style == "tsp":
         points = stipple_points(

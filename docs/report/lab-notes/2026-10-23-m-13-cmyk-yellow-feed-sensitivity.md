@@ -308,15 +308,30 @@ machine-space warp that compensates the paper.
 - The next print must demonstrate both visible depth and actual ink-edge
   clearance between rows; centerline spacing alone is not sufficient acceptance.
 
+### 2026-10-24 equidistance and per-row depth are incompatible
+
+- The repeated yellow/magenta prints still showed local convergence and too
+  little wave variation. The contradiction is geometric: changing one row's
+  vertical amplitude necessarily changes its distance from its neighbour.
+- `WSW-20261024-011` adds **Wave screen - equidistant rows** as a separate
+  style. Every row receives the same luminance-derived displacement at each x,
+  so centre spacing remains exactly the configured paper pitch.
+- The original **Wave screen** remains available as the bounded
+  variable-depth mode for comparison.
+- The equidistant mode cannot encode vertical tone through independent wave
+  heights. Depth comes from the common waveform and ink-presence mask.
+
 ## Decisions and next action
 
 - Restart the converter, regenerate the four Ben1 layers with Path tolerance
   `0.05 mm`, and confirm every header still contains
   `angular interpolation bed-frame`.
-- Keep Dot pitch `1.2 mm` and Artwork scale `280 %`. Print yellow and magenta
-  at `F700` with `$123=6000` and bed compensation enabled. The waves should
-  have visible luminance depth, smooth curves, and bounded clearance measured
-  between ink edges.
+- Keep Dot pitch `1.2 mm` and Artwork scale `280 %`. Select **Wave screen -
+  equidistant rows**, then regenerate and print with `F700`, `$123=6000`, and
+  bed compensation enabled. The geometry should have exactly uniform row
+  spacing with no possible crossings.
+- Use a black fineliner coupon for the first geometry check where practical;
+  reserve yellow for the final image once equidistance is verified.
 - If spacing exceeds the bounded range, inspect the compensated source versus
   paper before changing machine settings. Blank image-shaped regions and
   deliberately smooth broad tone changes are expected.

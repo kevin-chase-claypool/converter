@@ -455,15 +455,16 @@ Current tools:
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times
-  with a sub-pen offset. Wave-screen amplitude follows a seven-row-smoothed
-  scene-luminance field, restoring the depth of broad image shading even when
-  one CMYK separation is locally flat. Each ink channel still controls where
-  that layer is inked, preserving image boundaries. Adjacent rows are limited
-  to a `12 %` pitch change, which bounds their separation without the crossings
-  produced by independent raw row amplitudes. This behavior is shared by all
-  four CMYK screen angles. **Path tolerance** also controls how densely each
-  sine is sampled in paper space, so the emitted chords follow the curve instead
-  of appearing as visible facets; lowering it increases the point count.
+  with a sub-pen offset. The original **Wave screen** uses a
+  seven-row-smoothed scene-luminance field for bounded variable-depth waves;
+  its rows may change separation by up to `12 %` of pitch. **Wave screen -
+  equidistant rows** instead translates one shared luminance-shaped waveform
+  across every row, so row-centre separation is exactly `Dot pitch × Artwork
+  scale` and cannot converge. In both modes each ink channel controls where
+  that layer is inked, preserving image boundaries. **Path tolerance** also
+  controls how densely each sine is sampled in paper space, so the emitted
+  chords follow the curve instead of appearing as visible facets; lowering it
+  increases the point count.
   While the CMYK page is active the shared OpenGL preview draws each visible
   ink in its own colour - not yet drawn marks in a pale tint, the drawn path in
   full ink - so the four layers can be judged overlaid the way they will mesh

@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20261024-equidistant-cmyk-wave-rows"></a>
+### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Add equidistant Wave-screen rows
+
+- Repeated variable-depth prints could bring the same pair of rows close
+  together. This is inherent: different row amplitudes necessarily change
+  their separation.
+- Added a separate `waves_even` style, displayed as **Wave screen -
+  equidistant rows**. It applies one common luminance-derived displacement to
+  every row at each horizontal position, making row-centre spacing exactly the
+  configured pitch.
+- The existing `waves` mode remains the variable-depth variant with bounded
+  spacing.
+- A regression with row-varying tone confirms exact `4.000 mm` gaps at multiple
+  waveform phases while the shared waveform still varies across the page.
+- The check also passes at all four screen angles. A real Ben1 render at
+  `280 %` scale produced exact `3.360000 mm` adjacent spacing in every sampled
+  wave region for cyan, magenta, yellow, and black.
+- A complete real-image yellow validation program contains 35,765 lines and
+  passes `check_gcode_motion.py --strict`; largest step is `3.93 deg`, largest
+  A rate is `268 motor deg/s`, and worst bounded path bow is `0.053 mm`.
+- The full CMYK suite passes 76 tests and converter discovery passes 511 tests
+  with one expected OpenGL-context skip.
+- Evidence: `WSW-20261024-011`. Category: windows-software, cmyk,
+  wave-screen, equidistant, row-spacing.
+
 <a id="elog-20261024-luminance-cmyk-wave-depth"></a>
 ### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Drive CMYK depth from luminance
 

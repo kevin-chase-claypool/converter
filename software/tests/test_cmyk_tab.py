@@ -815,6 +815,147 @@ class ScreeningTests(unittest.TestCase):
             "channel is uniformly saturated",
         )
 
+    def test_equidistant_wave_rows_keep_constant_spacing(self):
+        spacing = 4.0
+        yy, xx = self.np.mgrid[0:64, 0:64]
+        tone = (
+            0.2
+            + 0.55 * xx / 63.0
+            + 0.1 * self.np.sin(2.0 * self.np.pi * yy / (2.0 * spacing))
+        ).astype("float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves_even",
+            spacing_mm=spacing,
+        )
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        crest_values = []
+        for sample_x in (2.0, 18.0, 34.0, 50.0):
+            ys = sorted(
+                value
+                for points in waves
+                if (value := value_at_x(points, sample_x)) is not None
+            )
+            gaps = [
+                second - first
+                for first, second in zip(ys, ys[1:])
+                if abs((second - first) - spacing) < 0.1
+            ]
+            self.assertGreaterEqual(len(gaps), 10)
+            self.assertLess(max(gaps) - min(gaps), 1e-5)
+            crest_values.append((sample_x, ys))
+
+        # The common waveform still changes size across the page even though
+        # every row moves by exactly the same vertical offset.
+        first_offsets = [
+            value_at_x(points, 2.0) - points[0][1]
+            for points in waves
+            if value_at_x(points, 2.0) is not None
+            and abs(points[0][0]) < 0.1
+        ]
+        later_offsets = [
+            value_at_x(points, 18.0) - points[0][1]
+            for points in waves
+            if value_at_x(points, 18.0) is not None
+            and abs(points[0][0]) < 0.1
+        ]
+        self.assertGreater(
+            abs(sum(later_offsets) / len(later_offsets)
+                - sum(first_offsets) / len(first_offsets)),
+            0.2,
+        )
+
+    def test_equidistant_wave_rows_work_at_all_screen_angles(self):
+        spacing = 4.0
+        page_mm = 64.0
+        pixels_per_mm = 4
+        pixel_count = int(page_mm * pixels_per_mm)
+        yy, xx = self.np.mgrid[0:pixel_count, 0:pixel_count]
+        xx_mm = xx / pixels_per_mm
+        yy_mm = yy / pixels_per_mm
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        for angle_deg in converter.SCREEN_ANGLES_DEG.values():
+            with self.subTest(angle_deg=angle_deg):
+                radians = math.radians(angle_deg)
+                local_u = xx_mm * math.cos(radians) + yy_mm * math.sin(radians)
+                local_v = -xx_mm * math.sin(radians) + yy_mm * math.cos(radians)
+                tone = (
+                    0.35
+                    + 0.25 * (local_u - local_u.min()) / self.np.ptp(local_u)
+                    + 0.1
+                    * self.np.sin(
+                        2.0 * self.np.pi * local_v / (2.0 * spacing)
+                    )
+                ).astype("float32")
+                waves = converter.screen_channel(
+                    tone,
+                    {
+                        "off_x": 0.0,
+                        "off_y": 0.0,
+                        "width_mm": page_mm,
+                        "height_mm": page_mm,
+                        "pixels_w": pixel_count,
+                        "pixels_h": pixel_count,
+                    },
+                    style="waves_even",
+                    spacing_mm=spacing,
+                    angle_deg=angle_deg,
+                )
+                local_rows = [
+                    [
+                        (
+                            x * math.cos(radians) + y * math.sin(radians),
+                            -x * math.sin(radians) + y * math.cos(radians),
+                        )
+                        for x, y in points
+                    ]
+                    for points in waves
+                ]
+                min_u = min(point[0] for row in local_rows for point in row)
+                max_u = max(point[0] for row in local_rows for point in row)
+                for fraction in (0.2, 0.4, 0.6, 0.8):
+                    sample_u = min_u + fraction * (max_u - min_u)
+                    ys = sorted(
+                        value
+                        for row in local_rows
+                        if (value := value_at_x(row, sample_u)) is not None
+                    )
+                    gaps = [
+                        second - first
+                        for first, second in zip(ys, ys[1:])
+                        if abs((second - first) - spacing) < 0.1
+                    ]
+                    self.assertGreaterEqual(len(gaps), 6)
+                    self.assertLess(max(gaps) - min(gaps), 1e-5)
+
     def test_wave_rows_approximate_the_sinusoid_within_path_tolerance(self):
         spacing = 4.0
         tone = self.np.ones((64, 64), dtype="float32")
@@ -1059,7 +1200,18 @@ class CmykTabTests(unittest.TestCase):
         tab = self.make_tab()
         tab.levels.setValue(3)
         tab.overdraw.setValue(2)
-        for style in ("halftone", "stipple", "lines", "rectilinear", "crosshatch", "waves", "gyroid", "tsp", "contours"):
+        for style in (
+            "halftone",
+            "stipple",
+            "lines",
+            "rectilinear",
+            "crosshatch",
+            "waves",
+            "waves_even",
+            "gyroid",
+            "tsp",
+            "contours",
+        ):
             tab.style.setCurrentIndex(tab.style.findData(style))
             root = ET.parse(tab.build_svg()).getroot()
             self.assertEqual(svg_groups(root), list(converter.CHANNELS), style)

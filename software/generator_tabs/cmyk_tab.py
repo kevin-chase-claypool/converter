@@ -218,6 +218,7 @@ class CmykTab(GeneratorTab):
         self.style.addItem("Rectilinear fill (joined rows)", "rectilinear")
         self.style.addItem("Crosshatch levels", "crosshatch")
         self.style.addItem("Wave screen", "waves")
+        self.style.addItem("Wave screen - equidistant rows", "waves_even")
         self.style.addItem("Interference (gyroid)", "gyroid")
         self.style.addItem("Single line (TSP)", "tsp")
         self.style.addItem("Topographic contours", "contours")
@@ -225,7 +226,9 @@ class CmykTab(GeneratorTab):
             "Dot styles use the dot pitch and dot size; line, rectilinear, "
             "wave, gyroid, TSP and contour styles use the same pitch as "
             "their local mark spacing. Rectilinear joins consecutive rows "
-            "over ink so one M3/M5 cycle covers a whole connected region."
+            "over ink so one M3/M5 cycle covers a whole connected region. "
+            "Wave screen allows bounded depth variation; its equidistant "
+            "variant keeps every row exactly one pitch apart."
         )
         self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)
