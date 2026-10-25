@@ -219,6 +219,7 @@ class CmykTab(GeneratorTab):
         self.style.addItem("Crosshatch levels", "crosshatch")
         self.style.addItem("Wave screen", "waves")
         self.style.addItem("Wave screen - equidistant rows", "waves_even")
+        self.style.addItem("Wave screen - zero-anchored depth", "waves_zero")
         self.style.addItem("Interference (gyroid)", "gyroid")
         self.style.addItem("Single line (TSP)", "tsp")
         self.style.addItem("Topographic contours", "contours")
@@ -228,7 +229,8 @@ class CmykTab(GeneratorTab):
             "their local mark spacing. Rectilinear joins consecutive rows "
             "over ink so one M3/M5 cycle covers a whole connected region. "
             "Wave screen allows bounded depth variation; its equidistant "
-            "variant keeps every row exactly one pitch apart."
+            "variant keeps every row exactly one pitch apart; zero-anchored "
+            "depth adds tone-driven frequency changes with clearance limits."
         )
         self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)
@@ -897,6 +899,10 @@ class CmykTab(GeneratorTab):
                 solid=self.solid_dots.isChecked(),
                 path_tolerance_mm=self.path_tolerance.value() / factor,
                 depth_tone=tones.get("depth"),
+                row_clearance_mm=(
+                    (self.pen_width.value() + converter.WAVE_MIN_EDGE_GAP_MM)
+                    / factor
+                ),
             )
             # Generator pages are plotted 1:1, so the tab's Artwork scale is
             # applied to the screened marks about the page centre here.

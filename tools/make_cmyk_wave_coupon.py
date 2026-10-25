@@ -1,7 +1,7 @@
 """Generate a small black-pen comparison of the two CMYK wave modes.
 
-The left 28 x 20 mm patch is the original variable-depth Wave screen. The
-right patch is Wave screen - equidistant rows. Both use the current production
+The left 28 x 20 mm patch is Wave screen - zero-anchored depth. The right patch
+is Wave screen - equidistant rows. Both use the current production
 effective pitch of 3.36 mm, feed 700 mm/min, and Path tolerance 0.05 mm.
 
 The bed is parked for this geometry coupon so it can be printed on ordinary
@@ -92,13 +92,13 @@ def coupon_patch(style, left_mm, top_mm, width_mm=28.0, height_mm=20.0):
 
 def build_coupon():
     settings = coupon_settings()
-    marks = coupon_patch("waves", -34.0, -10.0)
+    marks = coupon_patch("waves_zero", -34.0, -10.0)
     marks.extend(coupon_patch("waves_even", 6.0, -10.0))
     settings = converter.validate_settings(settings)
     gcode = converter.contours_to_gcode(marks, settings)
     banner = (
         "(CMYK wave coupon - black pen; ordinary paper is sufficient)\n"
-        "(left 28x20 mm: original Wave screen, variable row depth)\n"
+        "(left 28x20 mm: Wave screen - zero-anchored depth)\n"
         "(right 28x20 mm: Wave screen - equidistant rows)\n"
         "(effective pitch 3.360 mm, pen 0.800 mm, F700, A parked)\n"
     )

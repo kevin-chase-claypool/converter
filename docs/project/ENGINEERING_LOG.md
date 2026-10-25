@@ -1,5 +1,44 @@
 # Engineering Log
 
+<a id="elog-20261024-zero-anchored-cmyk-wave-depth"></a>
+### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Add zero-anchored CMYK wave depth
+
+- Upstream source review showed SquiggleDraw, SquiggleCam, Plotterfun, and the
+  SquiggleDraw Inkscape CMYK rewrite all reset each row at its baseline zero
+  point and let tone drive amplitude and phase rate. None provides an explicit
+  adjacent-row clearance guarantee.
+- Added `waves_zero`, displayed as **Wave screen - zero-anchored depth**. Every
+  row starts at phase zero; tone changes both crest height and phase rate; a
+  seven-row smoothing pass retains broad luminance.
+- If sampled visible row centerlines approach closer than `75 %` of pitch, a
+  seven-step search fades row-specific depth toward the common waveform until
+  the clearance floor passes. The search also measures the actual shortest
+  finite segment-to-segment distance, which catches steep diagonals that the
+  matching-column check misses.
+- Rows keep the `0.8 mm` pen plus a `0.25 mm` nominal paper gap. If the common
+  waveform is still too steep, its amplitude is reduced; an impossible
+  pitch/pen combination raises a planning error instead of emitting a
+  knowingly unsafe screen.
+- On the real Ben1 image at `280 %` scale, minimum shortest-segment distances
+  were `2.102`, `2.224`, `1.925`, and `2.103 mm` for C/M/Y/K, against a
+  required `1.050 mm` centerline envelope. Same-column minima were `2.543`,
+  `2.537`, `2.764`, and `2.564 mm` against the `2.520 mm` band floor.
+- A complete 49,719-line yellow validation program with 137,381 source points
+  passes the strict motion guard with a `4.87 deg` largest drawing step,
+  `268 motor deg/s` largest A rate, no pen-up rotation, and `0.080 mm` worst
+  bounded path bow. Two moves exceed the configured `0.05 mm` tolerance because
+  the subdivision cap binds; the checker still classifies the program within
+  its strict cap.
+- The black-pen coupon was refreshed to compare zero-anchored depth against
+  equidistant rows on the same gradient. Its 20 wave runs and 886 source
+  drawing points pass the strict parked-bed motion check.
+- All `81` CMYK-tab tests and `3` coupon tests pass (`84` combined). Full
+  converter discovery passes `519` tests with one expected OpenGL-context skip.
+- Evidence: `WSW-20261024-013`,
+  `docs/research/2026-10-24-wave-row-zero-points-and-clearance.md`.
+- Category: windows-software, cmyk, wave-screen, zero-point, frequency,
+  clearance, pen-edge-gap.
+
 <a id="elog-20261024-wave-row-zero-point-research"></a>
 ### 🟨 2026-10-24 - WINDOWS SOFTWARE/RESEARCHED - Review upstream wave-row zero points
 

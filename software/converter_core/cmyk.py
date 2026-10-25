@@ -45,6 +45,18 @@ WAVE_DEPTH_ROW_WINDOW = 7
 # nominal pitch. The resulting gap remains between 88% and 112% of pitch,
 # keeping the intended depth variation without crossings or runaway gaps.
 WAVE_MAX_ADJACENT_GAP_FRACTION = 0.12
+# The zero-anchored mode follows the open-source SquiggleDraw family: tone
+# increases both amplitude and phase rate. Keep the maximum extra phase rate
+# bounded so the path-tolerance sampler remains practical.
+WAVE_FREQUENCY_TONE_GAIN = 0.75
+# Never permit two visible row centre lines closer than this fraction of pitch.
+# Variation that would violate it is faded toward the common waveform.
+WAVE_MIN_CENTER_GAP_FRACTION = 0.75
+# The second clearance check measures the actual shortest distance between
+# emitted row segments, not only their separation at matching sample columns.
+# Keep at least this much bare paper between the nominal pen edges.
+WAVE_MIN_EDGE_GAP_MM = 0.25
+WAVE_CLEARANCE_SEARCH_STEPS = 7
 # Black usually overpowers the other three pens (the r/PlotterArt threads
 # consistently report dialing it down), so its default weight is lower.
 DEFAULT_WEIGHTS = {"c": 1.0, "m": 1.0, "y": 1.0, "k": 0.8}
@@ -592,6 +604,121 @@ def _stitch_runs(rows, darkness, ca, sa, threshold):
     return finished
 
 
+def _point_segment_distance(point, start, end):
+    """Return the shortest distance from *point* to a finite segment."""
+    vx = end[0] - start[0]
+    vy = end[1] - start[1]
+    wx = point[0] - start[0]
+    wy = point[1] - start[1]
+    length_sq = vx * vx + vy * vy
+    if length_sq <= 1e-18:
+        return math.hypot(wx, wy)
+    fraction = max(0.0, min(1.0, (wx * vx + wy * vy) / length_sq))
+    return math.hypot(
+        point[0] - (start[0] + fraction * vx),
+        point[1] - (start[1] + fraction * vy),
+    )
+
+
+def _segment_distance(first_a, first_b, second_a, second_b):
+    """Return the shortest distance between two finite 2-D segments."""
+    first_x = first_b[0] - first_a[0]
+    first_y = first_b[1] - first_a[1]
+    second_x = second_b[0] - second_a[0]
+    second_y = second_b[1] - second_a[1]
+    denominator = first_x * second_y - first_y * second_x
+    if abs(denominator) > 1e-12:
+        delta_x = second_a[0] - first_a[0]
+        delta_y = second_a[1] - first_a[1]
+        first_fraction = (
+            delta_x * second_y - delta_y * second_x
+        ) / denominator
+        second_fraction = (
+            delta_x * first_y - delta_y * first_x
+        ) / denominator
+        if (
+            0.0 <= first_fraction <= 1.0
+            and 0.0 <= second_fraction <= 1.0
+        ):
+            return 0.0
+    return min(
+        _point_segment_distance(first_a, second_a, second_b),
+        _point_segment_distance(first_b, second_a, second_b),
+        _point_segment_distance(second_a, first_a, first_b),
+        _point_segment_distance(second_b, first_a, first_b),
+    )
+
+
+def _polyline_segments(points):
+    """Return the non-blank segments from one row of sampled points."""
+    return [
+        (first, second)
+        for first, second in zip(points, points[1:])
+        if first is not None and second is not None
+    ]
+
+
+def _polyline_pair_is_clear(first_segments, second_segments, minimum):
+    """Check two x-monotone polylines using a linear segment sweep."""
+    if not first_segments or not second_segments:
+        return True
+    second_index = 0
+    for first_a, first_b in first_segments:
+        first_min_x = min(first_a[0], first_b[0])
+        first_max_x = max(first_a[0], first_b[0])
+        while (
+            second_index < len(second_segments)
+            and max(
+                second_segments[second_index][0][0],
+                second_segments[second_index][1][0],
+            )
+            < first_min_x - minimum
+        ):
+            second_index += 1
+        check_index = second_index
+        while check_index < len(second_segments):
+            second_a, second_b = second_segments[check_index]
+            second_min_x = min(second_a[0], second_b[0])
+            second_max_x = max(second_a[0], second_b[0])
+            if second_min_x > first_max_x + minimum:
+                break
+            if (
+                _segment_distance(first_a, first_b, second_a, second_b)
+                < minimum - 1e-9
+            ):
+                return False
+            check_index += 1
+    return True
+
+
+def _wave_clearance_ok(
+    positions,
+    spacing,
+    minimum_clearance_mm=0.0,
+):
+    """Check sampled row bands and the final segment-to-segment clearance."""
+    minimum = spacing * WAVE_MIN_CENTER_GAP_FRACTION
+    for x_index in range(len(positions[0]) if positions else 0):
+        active = sorted(
+            row[x_index][1]
+            for row in positions
+            if row[x_index] is not None
+        )
+        for first_y, second_y in zip(active, active[1:]):
+            if second_y - first_y < minimum:
+                return False
+    minimum_clearance = max(0.0, float(minimum_clearance_mm))
+    if minimum_clearance:
+        for first_row, second_row in zip(positions, positions[1:]):
+            if not _polyline_pair_is_clear(
+                _polyline_segments(first_row),
+                _polyline_segments(second_row),
+                minimum_clearance,
+            ):
+                return False
+    return True
+
+
 def _wave_rows(
     darkness,
     bounds,
@@ -603,26 +730,39 @@ def _wave_rows(
     path_tolerance_mm=0.05,
     depth_darkness=None,
     equal_spacing=False,
+    zero_anchored_depth=False,
+    minimum_clearance_mm=0.0,
 ):
-    """Sine rows with bounded vertical tone depth.
+    """Sine rows with tone-driven depth and a safety envelope.
 
     Local tone still masks each mark to the image. A vertically smoothed tone
-    field also varies wave height across rows, preserving the depth of the
-    source image. Adjacent rows are slewed to a small fraction of the pitch, so
-    their separation can breathe without crossing or opening a runaway gap.
-    Sampling is tied to the path tolerance so the emitted chords follow the
-    sine instead of becoming visible facets.
+    field also varies wave height across rows. The zero-anchored mode resets
+    every phase at the left edge and lets tone increase both amplitude and
+    phase rate, matching the upstream SquiggleDraw family. A sampled clearance
+    search fades row-specific variation only when needed to prevent nearby ink
+    centerlines from approaching. The equidistant mode instead translates one
+    common waveform with no row-specific movement. The clearance test also
+    measures the shortest distance between emitted segments so steep rows
+    cannot approach through a gap between sample columns.
     """
     min_x, max_x, min_y, max_y, ca, sa = _local_frame(bounds, angle_deg)
     spacing = max(0.2, float(spacing))
-    amplitude_max = spacing * 0.5 * max(0.05, float(amplitude_scale))
+    amplitude_scale = max(0.05, float(amplitude_scale))
+    if zero_anchored_depth:
+        # Adjacent row bands meet, but cannot overlap, at half the pitch. This
+        # keeps nearest-neighbour checking local to consecutive rows.
+        amplitude_scale = min(1.0, amplitude_scale)
+    amplitude_max = spacing * 0.5 * amplitude_scale
     wavelength = spacing * 2.0
     # A piecewise-linear sine turns into visible facets when its samples are
     # too far apart. Bound the sagitta against the configured path budget:
     # max|y''| for amplitude_max * sin(2*pi*x/wavelength) is amplitude_max *
     # (pi/spacing)^2, and a chord of length h has about h^2/8 times that
     # curvature as its midpoint error.
-    curvature = amplitude_max * (math.pi / spacing) ** 2
+    frequency_gain = (
+        1.0 + WAVE_FREQUENCY_TONE_GAIN if zero_anchored_depth else 1.0
+    )
+    curvature = amplitude_max * (frequency_gain * math.pi / spacing) ** 2
     tolerance_step = math.sqrt(
         8.0 * max(0.001, float(path_tolerance_mm)) / curvature
     )
@@ -662,36 +802,141 @@ def _wave_rows(
     if depth_darkness is None:
         depth_rows = tone_rows
 
+    window = min(WAVE_DEPTH_ROW_WINDOW, len(tone_rows))
+    smoothed_tone = []
+    for row_index in range(len(tone_rows)):
+        low = min(
+            max(0, row_index - window // 2),
+            len(tone_rows) - window,
+        )
+        high = low + window
+        smoothed_tone.append(
+            [
+                sum(
+                    depth_rows[index][x_index]
+                    for index in range(low, high)
+                )
+                / max(window, 1)
+                for x_index in range(len(x_values))
+            ]
+        )
+    shared_tone = [
+        sum(row[x_index] for row in smoothed_tone)
+        / max(len(smoothed_tone), 1)
+        for x_index in range(len(x_values))
+    ]
+
     if equal_spacing:
         # Every row receives the same displacement at each x. The vertical
         # distance between all row centre lines is therefore exactly `spacing`.
-        shared = [
-            sum(row[x_index] for row in depth_rows) / max(len(depth_rows), 1)
-            for x_index in range(len(x_values))
+        positions = [
+            [None] * len(x_values)
+            for _row_index in range(len(row_ys))
         ]
-        depth_tone = [
-            [shared[x_index]] * len(row_ys)
-            for x_index in range(len(x_values))
-        ]
-    else:
-        window = min(WAVE_DEPTH_ROW_WINDOW, len(tone_rows))
-        smoothed_tone = []
-        for row_index in range(len(tone_rows)):
-            low = min(
-                max(0, row_index - window // 2),
-                len(tone_rows) - window,
-            )
-            high = low + window
-            smoothed_tone.append(
-                [
-                    sum(
-                        depth_rows[index][x_index]
-                        for index in range(low, high)
+        for row_index, y in enumerate(row_ys):
+            for x_index, x in enumerate(x_values):
+                if tone_rows[row_index][x_index] >= INK_FLOOR:
+                    offset = (
+                        amplitude_max
+                        * shared_tone[x_index]
+                        * math.sin(2.0 * math.pi * x / wavelength)
                     )
-                    / max(window, 1)
-                    for x_index in range(len(x_values))
-                ]
-            )
+                    positions[row_index][x_index] = (x, y + offset)
+    elif zero_anchored_depth:
+        def candidate_positions(strength, fallback_scale=1.0):
+            result = [
+                [None] * len(x_values)
+                for _row_index in range(len(row_ys))
+            ]
+            phases = [0.0] * len(row_ys)
+            for x_index, x in enumerate(x_values):
+                check_cancelled(cancel_check)
+                if x_index:
+                    for row_index in range(len(row_ys)):
+                        phase_rate = (
+                            math.pi
+                            / spacing
+                            * (
+                                1.0
+                                + WAVE_FREQUENCY_TONE_GAIN
+                                * strength
+                                * smoothed_tone[row_index][x_index]
+                            )
+                        )
+                        phases[row_index] += phase_rate * sample_step
+                for row_index, y in enumerate(row_ys):
+                    if tone_rows[row_index][x_index] < INK_FLOOR:
+                        continue
+                    amplitude_tone = shared_tone[x_index] + strength * (
+                        smoothed_tone[row_index][x_index]
+                        - shared_tone[x_index]
+                    )
+                    offset = (
+                        amplitude_max
+                        * fallback_scale
+                        * amplitude_tone
+                        * math.sin(phases[row_index])
+                    )
+                    result[row_index][x_index] = (x, y + offset)
+            return result
+
+        positions = candidate_positions(1.0)
+        if not _wave_clearance_ok(
+            positions,
+            spacing,
+            minimum_clearance_mm,
+        ):
+            common = candidate_positions(0.0)
+            low = 0.0
+            high = 1.0
+            if _wave_clearance_ok(
+                common,
+                spacing,
+                minimum_clearance_mm,
+            ):
+                best = common
+                for _step in range(WAVE_CLEARANCE_SEARCH_STEPS):
+                    strength = (low + high) * 0.5
+                    candidate = candidate_positions(strength)
+                    if _wave_clearance_ok(
+                        candidate,
+                        spacing,
+                        minimum_clearance_mm,
+                    ):
+                        low = strength
+                        best = candidate
+                    else:
+                        high = strength
+            else:
+                # Even a shared waveform can become steep enough for adjacent
+                # pen strokes to approach. Reduce its common amplitude, while
+                # retaining the higher winding rate wherever clearance allows.
+                flat = candidate_positions(0.0, 0.0)
+                if not _wave_clearance_ok(
+                    flat,
+                    spacing,
+                    minimum_clearance_mm,
+                ):
+                    raise ValueError(
+                        "Wave screen cannot keep adjacent pen strokes apart: "
+                        "the effective pitch is too small for the configured "
+                        "pen width and edge gap."
+                    )
+                best = flat
+                for _step in range(WAVE_CLEARANCE_SEARCH_STEPS):
+                    fallback_scale = (low + high) * 0.5
+                    candidate = candidate_positions(0.0, fallback_scale)
+                    if _wave_clearance_ok(
+                        candidate,
+                        spacing,
+                        minimum_clearance_mm,
+                    ):
+                        low = fallback_scale
+                        best = candidate
+                    else:
+                        high = fallback_scale
+            positions = best
+    else:
         max_tone_step = min(
             1.0,
             spacing * WAVE_MAX_ADJACENT_GAP_FRACTION / amplitude_max,
@@ -709,21 +954,27 @@ def _wave_rows(
                     )
                 column.append(current)
             depth_tone.append(column)
+        positions = [
+            [None] * len(x_values)
+            for _row_index in range(len(row_ys))
+        ]
+        for row_index, y in enumerate(row_ys):
+            for x_index, x in enumerate(x_values):
+                if tone_rows[row_index][x_index] >= INK_FLOOR:
+                    offset = (
+                        amplitude_max
+                        * depth_tone[x_index][row_index]
+                        * math.sin(2.0 * math.pi * x / wavelength)
+                    )
+                    positions[row_index][x_index] = (x, y + offset)
 
     rows = []
-    for row_index, y in enumerate(row_ys):
+    for row_index in range(len(row_ys)):
         check_cancelled(cancel_check)
         current = []
-        for x_index, x in enumerate(x_values):
-            value = tone_rows[row_index][x_index]
-            if value >= INK_FLOOR:
-                displacement_tone = depth_tone[x_index][row_index]
-                offset = (
-                    amplitude_max
-                    * displacement_tone
-                    * math.sin(2.0 * math.pi * x / wavelength)
-                )
-                current.append((x, y + offset))
+        for point in positions[row_index]:
+            if point is not None:
+                current.append(point)
             elif current:
                 if (len(current) - 1) * sample_step >= min_length_mm:
                     rows.append(
@@ -851,6 +1102,7 @@ def screen_channel(
     cancel_check=None,
     path_tolerance_mm=0.05,
     depth_tone=None,
+    row_clearance_mm=None,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
@@ -859,7 +1111,9 @@ def screen_channel(
     ``rectilinear`` (serpentine rows joined over ink, so a connected region
     costs one M3/M5 cycle), ``crosshatch`` (line families stacked by tone
     level), ``waves`` (sine rows whose amplitude follows tone), ``waves_even``
-    (identical translated wave rows with exact pitch spacing), ``gyroid``
+    (identical translated wave rows with exact pitch spacing), ``waves_zero``
+    (tone-driven amplitude and phase rate with zero-anchored clearance),
+    ``gyroid``
     (interference-field contours that flatten into blank paper), ``tsp``
     (one greedy single line through tone stipple points) and ``contours``
     (topographic contour lines of the tone).
@@ -867,6 +1121,10 @@ def screen_channel(
     a ballpoint reads darker without changing the geometry.
     ``path_tolerance_mm`` bounds the chord error of resampled wave rows; the
     CMYK tab supplies that budget in its final paper-space units.
+    ``row_clearance_mm`` is the minimum centerline separation for zero-anchored
+    rows, expressed in the same pre-scale units as ``spacing_mm``. It defaults
+    to the pen diameter plus ``WAVE_MIN_EDGE_GAP_MM`` for callers that do not
+    apply a later artwork scale.
     """
     left = geometry["off_x"]
     top = geometry["off_y"]
@@ -941,7 +1199,13 @@ def screen_channel(
                     cancel_check=cancel_check,
                 )
             )
-    elif style in ("waves", "waves_even"):
+    elif style in ("waves", "waves_even", "waves_zero"):
+        if row_clearance_mm is None:
+            minimum_clearance_mm = (
+                max(0.0, float(pen_diameter_mm)) + WAVE_MIN_EDGE_GAP_MM
+            )
+        else:
+            minimum_clearance_mm = max(0.0, float(row_clearance_mm))
         marks = _wave_rows(
             darkness,
             bounds,
@@ -952,6 +1216,8 @@ def screen_channel(
             path_tolerance_mm=path_tolerance_mm,
             depth_darkness=depth_darkness,
             equal_spacing=(style == "waves_even"),
+            zero_anchored_depth=(style == "waves_zero"),
+            minimum_clearance_mm=minimum_clearance_mm,
         )
     elif style == "tsp":
         points = stipple_points(

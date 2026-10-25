@@ -815,6 +815,145 @@ class ScreeningTests(unittest.TestCase):
             "channel is uniformly saturated",
         )
 
+    def test_variable_wave_frequency_follows_tone_from_a_common_zero(self):
+        spacing = 4.0
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 64.0,
+            "height_mm": 64.0,
+            "pixels_w": 64,
+            "pixels_h": 64,
+        }
+
+        def row_for_tone(value):
+            tone = self.np.full((64, 64), value, dtype="float32")
+            waves = converter.screen_channel(
+                tone,
+                geometry,
+                style="waves_zero",
+                spacing_mm=spacing,
+                depth_tone=tone,
+            )
+            return next(points for points in waves if len(points) > 100)
+
+        def crossings(points, baseline):
+            signs = [1 if y > baseline else -1 for _x, y in points]
+            return sum(first != second for first, second in zip(signs, signs[1:]))
+
+        light = row_for_tone(0.2)
+        dark = row_for_tone(0.9)
+        light_crossings = crossings(light, light[0][1])
+        dark_crossings = crossings(dark, dark[0][1])
+        self.assertGreater(
+            dark_crossings,
+            light_crossings * 1.3,
+            "darker tone must add phase cycles while every row starts at "
+            "the same zero point",
+        )
+
+    def test_zero_anchored_waves_enforce_minimum_clearance(self):
+        spacing = 4.0
+        yy, xx = self.np.mgrid[0:64, 0:64]
+        tone = (
+            0.12
+            + 0.72 * yy / 63.0
+            + 0.1 * self.np.sin(2.0 * self.np.pi * xx / 13.0)
+        ).astype("float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves_zero",
+            spacing_mm=spacing,
+            depth_tone=tone,
+        )
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        gaps = []
+        for sample_x in (1.0, 8.0, 16.0, 24.0, 32.0, 40.0, 48.0, 56.0):
+            ys = sorted(
+                value
+                for points in waves
+                if (value := value_at_x(points, sample_x)) is not None
+            )
+            gaps.extend(
+                second - first
+                for first, second in zip(ys, ys[1:])
+                if second - first < 2.0 * spacing
+            )
+        self.assertGreaterEqual(len(gaps), 10)
+        self.assertGreaterEqual(
+            min(gaps),
+            spacing * converter.WAVE_MIN_CENTER_GAP_FRACTION - 1e-6,
+        )
+
+    def test_zero_anchored_clearance_checks_segment_distance(self):
+        import converter_core.cmyk as cmyk_core
+
+        positions = [
+            [(0.0, 0.0), (1.0, 2.75), (2.0, 0.0)],
+            [(0.0, 3.0), (1.0, 5.75), (2.0, 3.0)],
+        ]
+        self.assertFalse(
+            cmyk_core._wave_clearance_ok(
+                positions,
+                4.0,
+                minimum_clearance_mm=1.05,
+            ),
+            "the rows are three millimetres apart at every sampled column, "
+            "but the steep segments come closer than a 1.05 mm pen envelope",
+        )
+
+    def test_zero_anchored_wave_chords_stay_within_path_tolerance(self):
+        spacing = 4.0
+        tone = self.np.ones((64, 64), dtype="float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves_zero",
+            spacing_mm=spacing,
+        )
+        row = next(points for points in waves if len(points) > 100)
+        baseline = row[0][1]
+        amplitude = spacing * 0.5
+        phase_rate = (
+            math.pi
+            / spacing
+            * (1.0 + converter.WAVE_FREQUENCY_TONE_GAIN)
+        )
+        errors = []
+        for first, second in zip(row, row[1:]):
+            midpoint_x = (first[0] + second[0]) / 2.0
+            chord_y = (first[1] + second[1]) / 2.0
+            sine_y = baseline + amplitude * math.sin(
+                phase_rate * midpoint_x
+            )
+            errors.append(abs(chord_y - sine_y))
+        self.assertLess(max(errors), 0.05)
+
     def test_equidistant_wave_rows_keep_constant_spacing(self):
         spacing = 4.0
         yy, xx = self.np.mgrid[0:64, 0:64]
@@ -1208,6 +1347,7 @@ class CmykTabTests(unittest.TestCase):
             "crosshatch",
             "waves",
             "waves_even",
+            "waves_zero",
             "gyroid",
             "tsp",
             "contours",
@@ -1607,6 +1747,29 @@ class CmykTabTests(unittest.TestCase):
         for tolerance in captured:
             self.assertAlmostEqual(tolerance, 0.05 / 2.8)
         self.assertTrue(all(depth is not None for depth in captured_depth))
+
+    def test_artwork_scale_keeps_wave_clearance_in_paper_space(self):
+        tab = self.make_tab(FakeHost(self.colour_path))
+        tab.scale_pct.setValue(280)
+        tab.pen_width.setValue(0.8)
+        captured = []
+        screen_channel = converter.screen_channel
+
+        def capture_clearance(*args, **kwargs):
+            captured.append(kwargs.get("row_clearance_mm"))
+            return screen_channel(*args, **kwargs)
+
+        with mock.patch.object(
+            converter, "screen_channel", side_effect=capture_clearance
+        ):
+            tab._ensure_layers()
+
+        self.assertEqual(len(captured), len(converter.CHANNELS))
+        expected = (
+            tab.pen_width.value() + converter.WAVE_MIN_EDGE_GAP_MM
+        ) / 2.8
+        for clearance in captured:
+            self.assertAlmostEqual(clearance, expected)
 
     def test_hatch_levels_allow_more_families(self):
         tab = self.make_tab()

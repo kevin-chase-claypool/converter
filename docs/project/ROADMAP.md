@@ -300,18 +300,19 @@
   horizontal amplitude profile. Its first full yellow print removed crossings
   and runaway gaps, but also flattened the tonal depth and left angular wave
   chords. `WSW-20261024-007` now ties sine sample density to paper-space Path
-  tolerance. Bounded per-ink and then luminance-driven depth still changed row
-  separation because independent vertical amplitudes inherently move rows
-  relative to one another. `WSW-20261024-011` adds **Wave screen - equidistant
-  rows**, which translates one shared luminance-shaped waveform exactly one
-  pitch for every row. Benefit: row contact and convergence are excluded by
-  construction rather than by tuning. The original Wave screen remains the
-  variable-depth comparison mode. `WSW-20261024-012` adds a 56 x 20 mm
-  black-pen coupon comparing both modes on ordinary paper at the production
-  `3.36 mm` pitch, `F700`, and `$123=6000`. If every equidistant row remains
-  exactly one pitch apart and the common wave still provides useful visual
-  structure, close M-13; otherwise reconsider how depth should be represented
-  without moving row centre lines.
+  tolerance. `WSW-20261024-011` added an exact equidistant-row mode, while
+  upstream research showed SquiggleDraw-family generators instead anchor each
+  row at one zero point and let tone drive amplitude and winding frequency.
+  `WSW-20261024-013` adds **Wave screen - zero-anchored depth**, retaining that
+  tonal frequency structure but fading it toward a common waveform whenever
+  sampled visible centerlines approach closer than `75 %` of pitch or their
+  actual emitted segments would leave less than the `0.8 mm` pen plus a
+  `0.25 mm` paper gap. A second bounded fallback reduces common amplitude when
+  even the shared waveform is too steep. The equidistant mode remains available
+  as the strict fallback. Real Ben1 screening at the production pitch measured
+  shortest centerline separations of `2.102`, `2.224`, `1.925`, and `2.103 mm`
+  for C/M/Y/K. The refreshed black-pen coupon compares zero-anchored depth with
+  equidistant rows before another full layer.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already

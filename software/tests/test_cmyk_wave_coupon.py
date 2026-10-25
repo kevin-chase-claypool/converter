@@ -27,7 +27,7 @@ class CmykWaveCouponTests(unittest.TestCase):
 
     def test_coupon_is_small_black_pen_and_uses_both_modes(self):
         gcode, settings, marks = self.module.build_coupon()
-        self.assertIn("left 28x20 mm: original Wave screen", gcode)
+        self.assertIn("left 28x20 mm: Wave screen - zero-anchored depth", gcode)
         self.assertIn("right 28x20 mm: Wave screen - equidistant rows", gcode)
         self.assertIn("effective pitch 3.360 mm", gcode)
         self.assertIn("(feed 700.0 mm/min", gcode)
@@ -88,7 +88,7 @@ class CmykWaveCouponTests(unittest.TestCase):
                 )
             return max(gaps) - min(gaps)
 
-        variable = self.module.coupon_patch("waves", -34.0, -10.0)
+        variable = self.module.coupon_patch("waves_zero", -34.0, -10.0)
         equidistant = self.module.coupon_patch(
             "waves_even", 6.0, -10.0
         )

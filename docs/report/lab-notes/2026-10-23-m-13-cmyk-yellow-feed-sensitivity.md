@@ -321,19 +321,37 @@ machine-space warp that compensates the paper.
 - The equidistant mode cannot encode vertical tone through independent wave
   heights. Depth comes from the common waveform and ink-presence mask.
 
+### 2026-10-24 zero-anchored, tone-driven wave mode prepared
+
+- Upstream review confirmed that the SquiggleDraw family anchors each row at
+  phase zero and lets tone drive both amplitude and frequency, but does not
+  enforce row clearance.
+- `WSW-20261024-013` adds **Wave screen - zero-anchored depth** using the same
+  phase-reset model. Tone changes amplitude and phase rate. Visible centerlines
+  first keep `75 %` of pitch separation at matching columns; the generated
+  finite segments are then checked by actual shortest distance for at least the
+  pen width plus `0.25 mm` of nominal paper gap.
+- At the production `3.36 mm` pitch, the same-column band floor is `2.52 mm`
+  and the pen-envelope floor is `1.05 mm` on paper. Artwork scale converts both
+  to source-space checks.
+- The real Ben1 image measured shortest centerline separations of `2.102`,
+  `2.224`, `1.925`, and `2.103 mm` for C/M/Y/K. A complete 49,719-line yellow
+  validation program passes the strict motion guard.
+
 ### 2026-10-24 low-cost black-pen wave coupon prepared
 
 - `samples/gcode/cmyk-wave-coupon.gcode` uses ordinary paper and a black
   fineliner instead of scarce round stock and yellow ink.
-- Its left `28 x 20 mm` patch is the original variable-depth Wave screen; its
-  right patch is the equidistant-row mode using the same luminance gradient,
-  `3.36 mm` paper pitch, `75 deg` screen angle, `0.8 mm` pen, and `F700`.
+- Its left `28 x 20 mm` patch is the zero-anchored-depth mode; its right patch
+  is the equidistant-row mode using the same luminance gradient, `3.36 mm`
+  paper pitch, `75 deg` screen angle, `0.8 mm` pen, and `F700`.
 - The full comparison contains only 20 wave runs and 640 drawing points. The
   bed remains at A0, isolating generator geometry from rotary motion.
-- The original patch spans adjacent gaps of approximately `3.177-3.515 mm`;
-  the equidistant patch holds exactly `3.360 mm`.
-- The generated file passes `check_gcode_motion.py --strict` with no bed
-  rotation, no rotated rapid, and no path-bow warning.
+- The zero-anchored patch exposes image-driven wave depth and the equidistant
+  patch holds exactly `3.360 mm` vertical spacing.
+- The regenerated file has 20 wave runs and 886 source drawing points, and
+  passes `check_gcode_motion.py --strict` with no bed rotation, no rotated
+  rapid, and no path-bow warning.
 - Regenerate with `python tools\make_cmyk_wave_coupon.py`.
 
 ## Decisions and next action
@@ -342,15 +360,16 @@ machine-space warp that compensates the paper.
   `0.05 mm`, and confirm every header still contains
   `angular interpolation bed-frame`.
 - Keep Dot pitch `1.2 mm` and Artwork scale `280 %`. Select **Wave screen -
-  equidistant rows**, then regenerate and print with `F700`, `$123=6000`, and
-  bed compensation enabled. The geometry should have exactly uniform row
-  spacing with no possible crossings.
+  zero-anchored depth**, then regenerate and print with `F700`, `$123=6000`,
+  and bed compensation enabled. Compare its tonal depth against the strict
+  **Wave screen - equidistant rows** mode.
 - Use a black fineliner coupon for the first geometry check where practical;
-  reserve yellow for the final image once equidistance is verified.
+  reserve yellow for the final image once the zero-anchored geometry is
+  verified.
 - Run `samples/gcode/cmyk-wave-coupon.gcode` on ordinary paper. Confirm the
-  left patch exposes variable spacing while every right-hand row remains one
-  pitch apart. Proceed to a full layer only after that geometric comparison is
-  clean.
+  left patch exposes visible tonal frequency/depth without contact, while every
+  right-hand row remains one pitch apart. Proceed to a full layer only after
+  that geometric comparison is clean.
 - If spacing exceeds the bounded range, inspect the compensated source versus
   paper before changing machine settings. Blank image-shaped regions and
   deliberately smooth broad tone changes are expected.

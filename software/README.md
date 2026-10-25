@@ -294,10 +294,10 @@ Cycle Start with the pen loaded:
   which the single stored P100 pen offset cannot correct. Regenerate with
   `..\tools\make_cmyk_pen_alignment.py`.
 - `..\samples\gcode\cmyk-wave-coupon.gcode` - cheap black-pen geometry coupon
-  on ordinary paper. A left `28 x 20 mm` patch uses the original
-  variable-depth Wave screen; a matching right patch uses Wave screen -
-  equidistant rows. Both use the production `3.36 mm` on-paper pitch, `F700`,
-  and `0.05 mm` Path tolerance with A parked. Regenerate with
+  on ordinary paper. A left `28 x 20 mm` patch uses Wave screen -
+  zero-anchored depth; a matching right patch uses Wave screen - equidistant
+  rows. Both use the production `3.36 mm` on-paper pitch, `F700`, and
+  `0.05 mm` Path tolerance with A parked. Regenerate with
   `..\tools\make_cmyk_wave_coupon.py`.
 
 ## Generator tabs
@@ -461,16 +461,22 @@ Current tools:
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times
-  with a sub-pen offset. The original **Wave screen** uses a
-  seven-row-smoothed scene-luminance field for bounded variable-depth waves;
-  its rows may change separation by up to `12 %` of pitch. **Wave screen -
-  equidistant rows** instead translates one shared luminance-shaped waveform
-  across every row, so row-centre separation is exactly `Dot pitch × Artwork
-  scale` and cannot converge. In both modes each ink channel controls where
-  that layer is inked, preserving image boundaries. **Path tolerance** also
-  controls how densely each sine is sampled in paper space, so the emitted
-  chords follow the curve instead of appearing as visible facets; lowering it
-  increases the point count.
+  with a sub-pen offset. **Wave screen - zero-anchored depth** follows the
+  open-source SquiggleDraw model: every row starts at zero displacement and
+  scene tone drives both amplitude and winding rate. Visible centerlines keep
+  at least `75 %` of pitch separation at matching sample columns, and the
+  emitted line segments are then checked by their actual shortest distance.
+  Row-specific variation is faded toward one common waveform until the
+  centerlines keep the pen width plus a `0.25 mm` paper gap; if even that
+  common waveform is too steep, its amplitude is reduced before planning
+  fails. Both the pitch floor and pen gap are converted through Artwork scale,
+  so the limits remain physical paper limits. **Wave screen - equidistant
+  rows** applies one shared luminance-shaped waveform with exact vertical pitch
+  spacing and no row-specific movement. Both modes let each ink channel
+  control where that layer is inked. The original **Wave screen** remains
+  available as the amplitude-only variable-depth variant. **Path tolerance**
+  controls how densely each sine is sampled in paper space, so emitted chords
+  follow the shape instead of appearing as visible facets.
   While the CMYK page is active the shared OpenGL preview draws each visible
   ink in its own colour - not yet drawn marks in a pale tint, the drawn path in
   full ink - so the four layers can be judged overlaid the way they will mesh
