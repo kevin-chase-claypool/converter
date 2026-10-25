@@ -162,8 +162,12 @@ exercised during the 2026-09-29 F-05A session.
 controller filesystem. The validated 2,543-byte source was uploaded over
 binary FTP; the post-upload listing is retained in
 [`controller-manifest-2026-10-25.txt`](controller-manifest-2026-10-25.txt).
-The file-layer failure is resolved. The first clean full motion run remains
-pending and must be supervised as described above. Evidence:
+The first retry then reached P115's clear acknowledgement but returned
+`error:1` because an English comment contained nested parentheses; grblHAL
+ended the comment at the inner `)`. The source was corrected, the checker now
+rejects nested comment parentheses, and the 2,537-byte revision was uploaded.
+The first clean full motion run remains pending and must be supervised as
+described above. Evidence:
 [`2026-10-25-p116-macro-deployment.md`](../../../docs/report/lab-notes/2026-10-25-p116-macro-deployment.md).
 
 `P112.macro` is the next **survey-only** A-index stage. After fresh P111 and a

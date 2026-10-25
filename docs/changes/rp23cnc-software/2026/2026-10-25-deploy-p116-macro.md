@@ -43,26 +43,36 @@ been given the file.
 
 - Validated all 17 repository macros with `tools\check_macros.py`; all passed.
 - Uploaded the 2,543-byte `P116.macro` over binary FTP to `10.10.10.2`.
-- The controller returned FTP status 226, and its post-upload directory listing
-  reports the same 2,543-byte length as the repository source.
+- The first upload exposed a nested parenthesized comment that grblHAL parsed
+  as trailing malformed G-code after P115 cleared. Replaced it with a
+  non-nested comment and strengthened `tools\check_macros.py` to reject this
+  syntax class.
+- Re-uploaded the corrected 2,537-byte source; the controller returned FTP
+  status 226 and its post-upload directory listing reports the same length.
 - Reproduced ioSender startup with the saved configuration connected at
   `10.10.10.2:23`; both toolbar macros remain visible and state is `IDLE`.
 
 ## Verification
 
-- Local P116 SHA-256:
-  `E08313848941C752D1733153C2C1B5A1382C732FF8C71965B52696A7F742338`.
+- Corrected P116 SHA-256:
+  `CED68B30621D91CACABFDE2392818115AC1600EE41E3E122AF4E68229A3EC6CF`.
 - Controller listing retains P100-P116, recorded in
   `controller-manifest-2026-10-25.txt`.
 - The first full P116 motion path still requires a supervised clean run:
   P115 clear proof, GP2 full retract, P111 home, and final G53 park.
-- Five focused recovery tests and all `524` discovered converter tests pass,
-  with one expected OpenGL-context skip.
+- Two focused macro-syntax tests pass, including rejection of nested comment
+  parentheses. All `526` discovered converter tests pass with one expected
+  OpenGL-context skip.
 
 ## Struggles and rejected approaches
 
 - The ioSender macro was initially suspected because it had just been restored,
   but the XML command and live console both prove it sent `G65 P116`.
+- The first successful file upload exposed `error:1` after the P115 clear
+  message. P116 contained the only nested parentheses in any controller macro.
+  grblHAL ended the comment at the inner `)` and parsed the trailing text as
+  malformed G-code. The comment was rewritten without nesting, and a regression
+  now rejects nested comment parentheses.
 - FTP retrieval timed out while the controller was connected, so remote content
   could not be independently hash-compared. Upload success and equal byte count
   are the deployment evidence.

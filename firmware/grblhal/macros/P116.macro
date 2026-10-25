@@ -30,7 +30,7 @@ G65 P115 Q0
 M64 P0
 G4 P3.5
 M65 P0
-(3.0 s is the toolhead's own full-retract bound (BOOT_LIFT_TIME_MS). It reports)
+(3.0 s is the toolhead's BOOT_LIFT_TIME_MS full-retract bound. It reports)
 (GP2 lift-home not reached during retract instead of retracting without a limit.)
 G4 P3.0
 M64 P0

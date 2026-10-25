@@ -17,5 +17,5 @@ Filesystem root listing captured 2026-10-25 after deploying P116.macro.
 -rw-rw-rw-   1 user     ftp          260 Sep 11  2026 P113.macro
 -rw-rw-rw-   1 user     ftp          200 Sep 11  2026 P114.macro
 -rw-rw-rw-   1 user     ftp         4531 Sep 27  2026 P115.macro
--rw-rw-rw-   1 user     ftp         2543 Jan 01  2026 P116.macro
+-rw-rw-rw-   1 user     ftp         2537 Jan 01  2026 P116.macro
 drw-rw-rw-   1 user     ftp    774995510 Jan 01 00:00 littlefs

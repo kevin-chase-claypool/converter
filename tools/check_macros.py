@@ -41,6 +41,10 @@ def check_file(path):
         code = line
         # Strip comments the way the controller does: one per line, no nesting.
         if "(" in line:
+            if line.count("(") > 1:
+                problems.append(
+                    f"line {number}: nested parentheses inside a comment: {line.strip()[:70]}"
+                )
             if line.count("(") != line.count(")"):
                 problems.append(
                     f"line {number}: comment does not open and close on one line: {line.strip()[:70]}"

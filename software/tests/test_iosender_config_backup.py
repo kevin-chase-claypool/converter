@@ -74,7 +74,7 @@ class IoSenderConfigBackupTests(unittest.TestCase):
             / "macros"
             / "controller-manifest-2026-10-25.txt"
         ).read_text(encoding="utf-8")
-        self.assertIn("2543", manifest)
+        self.assertIn("2537", manifest)
         self.assertIn("P116.macro", manifest)
 
     def test_valid_config_is_backed_up_with_macro_count(self):

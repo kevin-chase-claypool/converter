@@ -14,8 +14,8 @@ though its stored command is `G65 P116`.
 - ioSender macro: `PEN UP + PARK`, confirmation enabled,
   code `G65 P116`.
 - Controller macro source:
-  `firmware/grblhal/macros/P116.macro`, 2,543 bytes, SHA-256
-  `E08313848941C7520D1733153C2C1B5A1382C732FF8C71965B52696A7F742338`.
+  `firmware/grblhal/macros/P116.macro`, corrected to 2,537 bytes, SHA-256
+  `CED68B30621D91CACABFDE2392818115AC1600EE41E3E122AF4E68229A3EC6CF`.
 
 ## Commands and configuration used
 
@@ -53,8 +53,15 @@ The read-only root listing is retained in
   ioSender button was transmitting the correct command.
 - `tools\check_macros.py` reported all 17 repository macros parse-safe.
 - The binary upload completed with FTP status 226.
-- The post-upload listing reports `P116.macro` at 2,543 bytes, equal to the
-  repository file.
+- The first post-upload retry opened P116 and passed P115's clear check, then
+  returned `error:1 - G-code words consist of a letter and a value`. The only
+  nested-parenthesis comment in the macro ended early at
+  `(BOOT_LIFT_TIME_MS)`, leaving `. It reports)` to be parsed as G-code.
+- Replaced that nested comment, added a regression to `check_macros.py`, and
+  re-uploaded the corrected file.
+- The final post-upload listing reports `P116.macro` at 2,537 bytes, equal to
+  the corrected repository file.
+- A manual `M64 P0` was sent after the failed retry to release Aux0.
 - ioSender was reopened, connected to `10.10.10.2:23`, reported `IDLE`, and
   still shows both restored macro buttons.
 
@@ -65,6 +72,9 @@ The read-only root listing is retained in
 - The first conclusion that the restored button had an empty/invalid command
   was disproved by both the ioSender `App.config` and console: the command was
   correct and the controller raised file-open error 84.
+- The first file upload was not sufficient: the controller parser then exposed
+  a nested-parenthesis comment that the previous checker accepted. The checker
+  now rejects any second `(` on a comment line, and P116 uses one flat comment.
 - FTP download timed out from this firmware while a second data transfer was
   attempted, so the deployed copy could not be downloaded for an independent
   SHA comparison. The successful upload response and exact remote/local byte
@@ -72,9 +82,9 @@ The read-only root listing is retained in
 
 ## Interpretation
 
-The missing controller file explains the macro failure completely. P116 is now
-present, but its complete homing/parking sequence has still not completed a
-clean supervised run on this machine.
+The missing file and malformed comment explain both observed failures. P116 is
+now present and parse-safe under the strengthened checks, but its complete
+homing/parking sequence has still not completed a clean supervised run.
 
 ## Decisions and next action
 

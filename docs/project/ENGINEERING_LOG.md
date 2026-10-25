@@ -11,6 +11,11 @@
   returned status 226 and its post-upload listing shows the matching length.
 - ioSender was reopened, reconnected at `10.10.10.2:23`, and reports `IDLE`
   with both toolbar macros present.
+- The first retry exposed a second defect after P115: P116 contained the only
+  nested comment parentheses in any macro. grblHAL ended the comment early and
+  returned `error:1` for the trailing text. Rewrote the comment without nesting,
+  strengthened `tools\check_macros.py`, and uploaded the corrected 2,537-byte
+  file. Sent manual `M64 P0` to release Aux0 after the failed retry.
 - The first clean P116 motion run remains pending. Required sequence:
   P115 clear proof, GP2 full retract, P111 home, and G53 park without alarm.
 - Evidence: `RPSW-20261025-001`,
@@ -34,7 +39,7 @@
   ioSender's **Settings: Grbl > Backup** action. The recovered G54 values are
   `X-229.58 Y-193.733 Z0 A7003.02`.
 - Five focused backup/restore tests pass; full converter discovery passes
-  `524` tests with one expected OpenGL-context skip. Evidence:
+  `526` tests with one expected OpenGL-context skip. Evidence:
   `WSW-20261025-001`.
 - Category: windows-software, rp23cnc-software, iosender, configuration,
   backup, restore, macros, grblhal, offsets.
