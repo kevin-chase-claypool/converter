@@ -5,7 +5,7 @@ category: rp23cnc-software
 affected_categories:
   - rp23cnc-software
   - hardware
-status: implemented
+status: superseded
 components:
   - firmware/grblhal/macros/P100.macro
   - tools/validate_homing_macro.py
@@ -24,6 +24,9 @@ related:
 ---
 
 # Set and deploy the final P100 Y correction to 1.30
+
+> Superseded by `RPSW-20261025-006`: after Y `1.30` tested almost centered,
+> a final 0.29 mm south adjustment produced Y `1.01`.
 
 ## Summary
 

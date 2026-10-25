@@ -1,5 +1,8 @@
 # Lab Note: 2026-10-25 - P100 final Y 1.30 deployment
 
+> Superseded by `2026-10-25-p100-center-magnet-y-1-01-deployed.md`: Y `1.30`
+> was approximately 0.29 mm north, so the deployed final Y is `1.01`.
+
 ## Objective
 
 Apply the second 1 mm northward center correction requested after the P100

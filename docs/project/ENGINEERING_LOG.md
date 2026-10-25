@@ -1,7 +1,21 @@
 # Engineering Log
 
+<a id="elog-20261025-p100-final-y-1-01-deployed"></a>
+### 🟨 2026-10-25 - RP23CNC SOFTWARE/HARDWARE/DEPLOYED - Refine P100 center to Y 1.01
+
+- After Y `1.30` tested almost centered, the pen needed a final `0.29 mm`
+  south correction. Final P100 values are X `1.45`, Y `1.01`.
+- P100 now registers with `G10 L20 P1 X-1.45 Y-30.4992`.
+- All macro checks pass. Binary FTP returned `226 Closing data connection`;
+  the controller reports the final 15,244-byte P100 file.
+- `G65 P113` and the physical center-magnet check remain pending.
+- Evidence: `RPSW-20261025-006`,
+  `docs/report/lab-notes/2026-10-25-p100-center-magnet-y-1-01-deployed.md`.
+- Category: rp23cnc-software, hardware, grblhal, p100, registration,
+  center-magnet, ftp, deployment.
+
 <a id="elog-20261025-p100-final-y-1-3-deployed"></a>
-### 🟨 2026-10-25 - RP23CNC SOFTWARE/HARDWARE/DEPLOYED - Final P100 center Y 1.30
+### 🟥 2026-10-25 - RP23CNC SOFTWARE/HARDWARE/SUPERSEDED - P100 center Y 1.30
 
 - After the P100 Y `0.30` macro was tested, the pen still needed another
   `1.000 mm` north. The final correction is X `1.45`, Y `1.30`.
@@ -11,6 +25,8 @@
 - Binary FTP upload returned `226 Closing data connection`; the controller
   reports `P100.macro` at 15,228 bytes, matching the local file.
 - `G65 P113` and the physical center-magnet/rotation check remain pending.
+- Correction: Y `1.30` was approximately 0.29 mm north; the deployed final Y
+  is `1.01`, recorded in `RPSW-20261025-006`.
 - Evidence: `RPSW-20261025-005`,
   `docs/report/lab-notes/2026-10-25-p100-center-magnet-y-1-3-deployed.md`.
 - Category: rp23cnc-software, hardware, grblhal, p100, registration,
