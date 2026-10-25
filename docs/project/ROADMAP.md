@@ -306,11 +306,12 @@
   rows**, which translates one shared luminance-shaped waveform exactly one
   pitch for every row. Benefit: row contact and convergence are excluded by
   construction rather than by tuning. The original Wave screen remains the
-  variable-depth comparison mode. The next physical test is a black-pen coupon
-  at Dot pitch `1.2 mm`, Artwork scale `280 %`, Path tolerance `0.05 mm`,
-  `F700`, and `$123=6000` with compensation enabled. If spacing is exact and
-  the common wave still provides useful visual structure, close M-13; otherwise
-  reconsider how depth should be represented without moving row centre lines.
+  variable-depth comparison mode. `WSW-20261024-012` adds a 56 x 20 mm
+  black-pen coupon comparing both modes on ordinary paper at the production
+  `3.36 mm` pitch, `F700`, and `$123=6000`. If every equidistant row remains
+  exactly one pitch apart and the common wave still provides useful visual
+  structure, close M-13; otherwise reconsider how depth should be represented
+  without moving row centre lines.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already

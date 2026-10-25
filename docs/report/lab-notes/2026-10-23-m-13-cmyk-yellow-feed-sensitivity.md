@@ -321,6 +321,21 @@ machine-space warp that compensates the paper.
 - The equidistant mode cannot encode vertical tone through independent wave
   heights. Depth comes from the common waveform and ink-presence mask.
 
+### 2026-10-24 low-cost black-pen wave coupon prepared
+
+- `samples/gcode/cmyk-wave-coupon.gcode` uses ordinary paper and a black
+  fineliner instead of scarce round stock and yellow ink.
+- Its left `28 x 20 mm` patch is the original variable-depth Wave screen; its
+  right patch is the equidistant-row mode using the same luminance gradient,
+  `3.36 mm` paper pitch, `75 deg` screen angle, `0.8 mm` pen, and `F700`.
+- The full comparison contains only 20 wave runs and 640 drawing points. The
+  bed remains at A0, isolating generator geometry from rotary motion.
+- The original patch spans adjacent gaps of approximately `3.177-3.515 mm`;
+  the equidistant patch holds exactly `3.360 mm`.
+- The generated file passes `check_gcode_motion.py --strict` with no bed
+  rotation, no rotated rapid, and no path-bow warning.
+- Regenerate with `python tools\make_cmyk_wave_coupon.py`.
+
 ## Decisions and next action
 
 - Restart the converter, regenerate the four Ben1 layers with Path tolerance
@@ -332,6 +347,10 @@ machine-space warp that compensates the paper.
   spacing with no possible crossings.
 - Use a black fineliner coupon for the first geometry check where practical;
   reserve yellow for the final image once equidistance is verified.
+- Run `samples/gcode/cmyk-wave-coupon.gcode` on ordinary paper. Confirm the
+  left patch exposes variable spacing while every right-hand row remains one
+  pitch apart. Proceed to a full layer only after that geometric comparison is
+  clean.
 - If spacing exceeds the bounded range, inspect the compensated source versus
   paper before changing machine settings. Blank image-shaped regions and
   deliberately smooth broad tone changes are expected.

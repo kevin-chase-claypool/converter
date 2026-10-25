@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-24 | `WSW-20261024-012` | implemented | [Add a compact CMYK wave comparison coupon](2026/2026-10-24-cmyk-wave-coupon.md) | `cmyk`, `wave-screen`, `coupon`, `test-paper`, `ink-consumption` |
 | 2026-10-24 | `WSW-20261024-011` | implemented | [Add an equidistant Wave-screen mode](2026/2026-10-24-equidistant-cmyk-wave-rows.md) | `cmyk`, `wave-screen`, `equidistant`, `row-spacing`, `clearance` |
 | 2026-10-24 | `WSW-20261024-010` | implemented | [Drive CMYK wave depth from scene luminance](2026/2026-10-24-luminance-driven-cmyk-wave-depth.md) | `cmyk`, `wave-screen`, `depth`, `luminance`, `amplitude` |
 | 2026-10-24 | `WSW-20261024-009` | superseded | [Restore bounded CMYK wave-screen depth](2026/2026-10-24-bounded-cmyk-wave-depth.md) | `cmyk`, `wave-screen`, `depth`, `amplitude`, `row-spacing`, `overlap` |

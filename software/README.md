@@ -293,6 +293,12 @@ Cycle Start with the pen loaded:
   Any per-pen gap is that pen's XY tip offset relative to the first pen,
   which the single stored P100 pen offset cannot correct. Regenerate with
   `..\tools\make_cmyk_pen_alignment.py`.
+- `..\samples\gcode\cmyk-wave-coupon.gcode` - cheap black-pen geometry coupon
+  on ordinary paper. A left `28 x 20 mm` patch uses the original
+  variable-depth Wave screen; a matching right patch uses Wave screen -
+  equidistant rows. Both use the production `3.36 mm` on-paper pitch, `F700`,
+  and `0.05 mm` Path tolerance with A parked. Regenerate with
+  `..\tools\make_cmyk_wave_coupon.py`.
 
 ## Generator tabs
 

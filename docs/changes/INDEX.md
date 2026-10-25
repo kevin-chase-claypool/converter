@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-24 | `WSW-20261024-012` | windows-software, hardware | implemented | [Add a compact CMYK wave comparison coupon](windows-software/2026/2026-10-24-cmyk-wave-coupon.md) |
 | 2026-10-24 | `WSW-20261024-011` | windows-software | implemented | [Add an equidistant Wave-screen mode](windows-software/2026/2026-10-24-equidistant-cmyk-wave-rows.md) |
 | 2026-10-24 | `WSW-20261024-010` | windows-software, hardware | implemented | [Drive CMYK wave depth from scene luminance](windows-software/2026/2026-10-24-luminance-driven-cmyk-wave-depth.md) |
 | 2026-10-24 | `WSW-20261024-009` | windows-software, hardware | superseded | [Restore bounded CMYK wave-screen depth](windows-software/2026/2026-10-24-bounded-cmyk-wave-depth.md) |

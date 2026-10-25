@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20261024-cmyk-wave-coupon"></a>
+### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Add compact CMYK wave coupon
+
+- Added a 56 x 20 mm black-pen coupon that compares the original
+  variable-depth Wave screen and the new equidistant-row mode on ordinary
+  paper.
+- Both patches use the real screener and planner at `3.36 mm` paper pitch,
+  `0.8 mm` pen, `F700`, `0.05 mm` tolerance, and compensation with A parked.
+- The coupon contains 20 short wave runs and 640 drawing points. The original
+  patch spans approximately `3.177-3.515 mm` adjacent gaps; the equidistant
+  patch measures exactly `3.360 mm`.
+- The strict motion checker passes with no bed rotation or rotated pen-up
+  rapid. This gives a low-paper, low-ink acceptance step before another full
+  CMYK layer.
+- Three focused coupon tests pass, and full converter discovery passes 514
+  tests with one expected OpenGL-context skip.
+- Evidence: `WSW-20261024-012`. Category: windows-software, cmyk, wave-screen,
+  coupon, test-paper.
+
 <a id="elog-20261024-equidistant-cmyk-wave-rows"></a>
 ### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Add equidistant Wave-screen rows
 
