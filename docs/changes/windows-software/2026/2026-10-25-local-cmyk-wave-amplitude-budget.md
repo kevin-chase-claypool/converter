@@ -79,8 +79,8 @@ actual segment pair was `1.53 mm` on paper.
   boundary.
 - Existing multi-pitch, all-angle, monotonic-band, finite-segment, path
   tolerance, independent-frequency, and impossible-pitch regressions pass.
-- Real Ben1 yellow at effective `2.80 mm` now has `1.244 mm` median and
-  `1.496 mm` maximum peak-to-peak wave height. The previous 11:01 build was
+- Real Ben1 yellow at effective `2.80 mm` now has `1.142 mm` median and
+  `1.354 mm` maximum peak-to-peak wave height. The previous 11:01 build was
   about `0.65 mm` median. The first clearance attempt passes with no global
   scale reduction.
 - All four real Ben1 screen angles pass on their first clearance attempt:
@@ -106,6 +106,14 @@ actual segment pair was `1.53 mm` on paper.
     `F7BF0DD6B56BFA306192591C88B6782D305747A8FC2A4A38C16C87BFCEC4DB44`
 - Full converter discovery passes `535` tests with one expected OpenGL-context
   skip.
+- The user then saved the same recipe from the restarted application at
+  `11:33:14`. Its yellow SVG hash matches the local-budget generation exactly;
+  the G-code SHA-256 is
+  `EFD6150609F31D3EA09175B62D00E0B8DBDA5808443883E666EC3DF5D3BAAFB1`
+  with `94,601` drawing moves. It passes strict motion at `5.36 deg` maximum
+  bed step, `268.8 motor deg/s` peak A rate, no pen-up rotation, and
+  `0.096 mm` worst bounded path bow. All four application-saved files remain
+  inside the travel window.
 
 ## Struggles and rejected approaches
 

@@ -148,8 +148,8 @@ binds. No pen-up move contains a bare `G0` rotation.
   the exact band floor. Frequency gain is reduced from `2.0` to `1.0` so the
   safe rows retain visible height while light/dark frequency still differs.
 - Real Ben1 yellow now passes its first clearance check with no global scale
-  reduction. Peak-to-peak row height has `1.244 mm` median, `1.143 mm`
-  first-quartile, and `1.496 mm` maximum, up from roughly `0.65 mm` median in
+  reduction. Peak-to-peak row height has `1.142 mm` median, `1.077 mm`
+  first-quartile, and `1.354 mm` maximum, up from roughly `0.65 mm` median in
   the over-damped 11:01 source. Side-by-side rendering now shows varied
   shallow/deep rows instead of a field of uniform tiny ripples.
 - All four angles pass their first clearance check:
@@ -170,6 +170,30 @@ binds. No pen-up move contains a bare `G0` rotation.
   `samples/gcode/Ben1/pre-local-budget-2026-10-25-1101/`.
 - Full converter discovery passes `535` tests with one expected
   OpenGL-context skip.
+
+### 2026-10-25 11:33 application-saved set
+
+- The user regenerated the four-file set from converter PID `37112`, which
+  started at `11:29:04` with the corrected local-budget code. The files were
+  saved at `11:33:14`.
+- The version-2 manifest records `waves_zero`, frequency gain `1.0`, effective
+  pitch `2.80 mm`, `1.05 mm` centerline clearance, F700, rotating-bed motion,
+  and bed compensation `4c8270de8a74`.
+- The application's yellow intermediate SVG SHA-256 is
+  `ABF173235ABE0400D269205D8EED148BA1593BF284384577C9E9C7C22C5087E7`,
+  byte-identical to the local-budget generation. It contains 1,115 polylines
+  and 240,407 sampled points.
+- Independent SVG measurement finds 72 visible wave rows with `1.142 mm`
+  median and `1.354 mm` maximum peak-to-peak height. Crossing density spans
+  `0.428-0.584` per millimetre; visual comparison shows varied shallow/deep
+  rows rather than the former uniform tiny ripples.
+- Application-saved yellow G-code SHA-256 is
+  `EFD6150609F31D3EA09175B62D00E0B8DBDA5808443883E666EC3DF5D3BAAFB1`
+  and the manifest hash agrees. It contains `94,601` drawing moves and passes
+  strict motion checks with a `5.36 deg` maximum bed step,
+  `268.8 motor deg/s` peak A rate, no pen-up rotation, and `0.096 mm` worst
+  bounded path bow. All four files remain inside the travel window.
+- This is a software/preview pass. No yellow ink was used for this check.
 
 ## Difficulties and corrective actions
 
@@ -209,8 +233,8 @@ and yellow layer are printed.
 
 ## Decisions and next action
 
-1. Restart the converter to load the corrected local-budget code and inspect
-   the regenerated yellow preview. Do not print the preserved `11:01` file.
+1. The restarted converter and the `11:33` yellow preview are software-verified.
+   Keep the preserved `11:01` file only as failed evidence.
 2. Before another full sheet, run
    `samples/gcode/cmyk-wave-pitch-coupon.gcode` in ioSender with the black
    `0.8 mm` pen. Use ordinary paper, tape it once, issue no pause, and press

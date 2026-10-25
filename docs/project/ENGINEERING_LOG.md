@@ -15,7 +15,7 @@
   `2.0` to `1.0` to preserve visible wave height while retaining independent
   low/high frequency behavior.
 - Real Ben1 yellow now passes clearance on its first attempt and has
-  `1.244 mm` median / `1.496 mm` maximum peak-to-peak wave height, versus about
+  `1.142 mm` median / `1.354 mm` maximum peak-to-peak wave height, versus about
   `0.65 mm` median in the over-damped source. All four CMYK angles pass on
   their first attempt.
 - Regenerated yellow has `88,467` drawing moves and passes strict motion at a
@@ -24,6 +24,11 @@
   compensation active.
 - Full converter discovery passes `535` tests with one expected
   OpenGL-context skip. Physical coupon/yellow validation remains pending.
+- The user's `11:33:14` application save reproduced the corrected source SVG
+  exactly. Yellow SHA-256 is
+  `EFD6150609F31D3EA09175B62D00E0B8DBDA5808443883E666EC3DF5D3BAAFB1`;
+  its `94,601` drawing moves pass strict motion and all four files remain in
+  the travel window.
 - Evidence: `WSW-20261025-003`,
   `docs/report/lab-notes/2026-10-25-m-13-independent-wave-depth.md`.
 - Category: windows-software, hardware, cmyk, wave-screen, depth, amplitude,

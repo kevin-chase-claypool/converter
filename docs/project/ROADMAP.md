@@ -327,7 +327,7 @@
   `WSW-20261025-003` replaces that global cap with per-row active-segment
   amplitude budgets, excludes depth jumps across blank paper, and tolerates
   floating-point noise at an exact band floor. Real Ben1 yellow now passes its
-  first clearance attempt with `1.244 mm` median peak-to-peak wave height; all
+  first clearance attempt with `1.142 mm` median peak-to-peak wave height; all
   four screen angles pass and all four regenerated files pass strict motion
   checks with compensation `4c8270de8a74` active. One ordinary-paper black
   program,
