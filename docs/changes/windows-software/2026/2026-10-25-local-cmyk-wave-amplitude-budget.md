@@ -114,6 +114,12 @@ actual segment pair was `1.53 mm` on paper.
   bed step, `268.8 motor deg/s` peak A rate, no pen-up rotation, and
   `0.096 mm` worst bounded path bow. All four application-saved files remain
   inside the travel window.
+- Decoding the application-saved yellow program back through rotation and bed
+  compensation shows the photograph's large white regions and isolated curves
+  are commanded by the yellow separation. The decoded path's minimum adjacent
+  centerline spacing is `1.649 mm`, above the `1.05 mm` requirement; no pair is
+  below that envelope. See
+  `docs/report/lab-notes/2026-10-25-m-13-independent-wave-depth.md`.
 
 ## Struggles and rejected approaches
 

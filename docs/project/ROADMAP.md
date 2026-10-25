@@ -332,8 +332,15 @@
   checks with compensation `4c8270de8a74` active. One ordinary-paper black
   program,
   `samples/gcode/cmyk-wave-pitch-coupon.gcode`, covers all twelve combinations
-  in one run. The multi-pitch physical coupon and a visually accepted yellow
-  Ben1 layer remain pending.
+  in one run. Status 2026-10-25: decoding the completed yellow G-code back
+  through A rotation and compensation reproduced the photograph's large white
+  regions and isolated arcs, proving those macro gaps are commanded yellow
+  content rather than lost synchronized moves. The decoded path's minimum
+  adjacent centerline spacing is `1.649 mm`, above the `1.05 mm` envelope.
+  The oblique photo cannot resolve reported sub-millimetre row contact. A
+  straight-down close-up of an affected pair and the same path in XY-only mode
+  remain required to distinguish ink spread/gantry motion from residual A
+  following error. The multi-pitch physical coupon also remains pending.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already

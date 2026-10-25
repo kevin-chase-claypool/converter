@@ -29,6 +29,13 @@
   `EFD6150609F31D3EA09175B62D00E0B8DBDA5808443883E666EC3DF5D3BAAFB1`;
   its `94,601` drawing moves pass strict motion and all four files remain in
   the travel window.
+- Reversing the yellow G-code through A rotation and compensation reproduced
+  the photograph's large white regions, branch-shaped gaps, isolated arcs,
+  and outer fields. The decoded 567 pen-down runs have a `1.649 mm` minimum
+  adjacent centerline spacing and no pair below the `1.05 mm` envelope.
+  Those macroscopic gaps are therefore commanded yellow content, not missing
+  bed-synchronization blocks. The oblique photo cannot resolve reported
+  sub-millimetre edge contact.
 - Evidence: `WSW-20261025-003`,
   `docs/report/lab-notes/2026-10-25-m-13-independent-wave-depth.md`.
 - Category: windows-software, hardware, cmyk, wave-screen, depth, amplitude,

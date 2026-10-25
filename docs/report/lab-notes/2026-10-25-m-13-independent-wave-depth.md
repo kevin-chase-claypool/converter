@@ -195,6 +195,34 @@ binds. No pen-up move contains a bare `G0` rotation.
   bounded path bow. All four files remain inside the travel window.
 - This is a software/preview pass. No yellow ink was used for this check.
 
+### 2026-10-25 physical yellow photo inspection
+
+- The operator supplied an overhead photograph of the completed yellow layer:
+  [original photograph](assets/2026-10-25-m-13-local-budget-yellow-photo.jpg).
+- The saved G-code was decoded back to bed space by reversing each A angle,
+  the measured 12.03324 motor-degrees per bed-degree ratio, and compensation
+  profile `4c8270de8a74`.
+- The decoded geometry contains 94,601 pen-down points in 567 runs over 115
+  visible row bands. Its bed-space extent is X `-171.429..171.426 mm` and Y
+  `-154.159..170.665 mm`.
+- A visual side-by-side comparison
+  ([decoded G-code and rotated photograph](assets/2026-10-25-m-13-local-budget-yellow-code-vs-photo.png))
+  places the large white regions, branch-shaped gaps, isolated arcs, and outer
+  yellow fields in both images. They are commanded by the yellow separation,
+  not missing motion blocks introduced by bed rotation.
+- Independent clearance measurement on the decoded G-code finds a minimum
+  centerline separation of `1.649 mm`; no adjacent pair falls below the
+  required `1.05 mm` pen envelope. The minimum same-column visible gap is
+  `2.096 mm`.
+- The photograph is oblique and cannot resolve sub-millimetre ink-edge contact.
+  It therefore neither confirms the reported touching rows nor proves the
+  machine follows perfectly; it does show that the large-scale gaps are not a
+  bed-synchronization artifact.
+- If rows physically touch, the next evidence must be a straight-down close-up
+  of that specific area, with its position relative to the registered center,
+  plus the same yellow path in XY-only mode. That will separate ink spread or
+  gantry motion from residual A following error.
+
 ## Difficulties and corrective actions
 
 - The failed print's effective `2.80 mm` pitch differed from the black
