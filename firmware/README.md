@@ -92,9 +92,11 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   Two named constants, `#<axis_center_correction_x>` and `_y`, move the
   registered origin onto the bed's true rotation axis before the G54 write:
   the centre magnet is not guaranteed to sit exactly on that axis, and a
-  constant error there displaces every drawing. As of 2026-10-14 the
-   correction is `+2.45` mm X and `+0.3` mm Y (Y refined from the tagged
-   line-replay test, `RPSW-20261014-002`). The quantitative calibration is
+  constant error there displaces every drawing. As of 2026-10-25 the
+  correction is `+1.45` mm X and `-0.70` mm Y. A center-magnet check found the
+  registered park `1.000 mm` east and north of the magnet, so both corrections
+  decreased by `1.000 mm`. Controller deployment and repeat registration remain
+  pending. The quantitative calibration is
    `samples/gcode/rotation-center-calibration.gcode` after `G65 P113`: its
    12-station balanced lattice repeats controls and 90/180/270 pairs across
    the bed, and `tools/fit_rotation_center.py` reads the companion CSV,

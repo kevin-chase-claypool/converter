@@ -1,5 +1,23 @@
 # Engineering Log
 
+<a id="elog-20261025-p100-center-magnet-correction"></a>
+### 🟨 2026-10-25 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - Correct P100 center registration by 1 mm
+
+- A center-magnet check after `G65 P113` found the pen parked `1.000 mm` east
+  and `1.000 mm` north of the embedded magnet.
+- P100's axis-center correction changes from X `2.45`, Y `0.30` to X `1.45`,
+  Y `-0.70`. The G10 write subtracts these constants, so reducing each moves
+  the registered origin 1 mm west and south.
+- The artwork offsets are unrelated and were not changed.
+- `tools\check_macros.py` passes all 17 macros and
+  `tools\validate_homing_macro.py` passes its pinned P100/P115 contract.
+- Controller deployment remains pending: FTP connection to `10.10.10.2:21`
+  timed out, so the remote P100 file was not changed.
+- Evidence: `RPSW-20261025-002`,
+  `docs/report/lab-notes/2026-10-25-p100-center-magnet-y-1-east-north.md`.
+- Category: rp23cnc-software, hardware, grblhal, p100, registration,
+  center-magnet, pen-center, offset.
+
 <a id="elog-20261025-local-cmyk-wave-amplitude-budget"></a>
 ### 🟩 2026-10-25 - WINDOWS SOFTWARE/IMPLEMENTED - Use local CMYK wave amplitude budgets
 

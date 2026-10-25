@@ -33,6 +33,11 @@ The controller macro is [`macros/P100.macro`](macros/P100.macro). It is invoked
 from ioSender with `G65 P100 Q<mode>` after the file is copied to the RP23CNC
 filesystem and the candidate build passes F-08.
 
+The current axis-center correction is X `+1.45 mm`, Y `-0.70 mm`. It was
+updated on 2026-10-25 after a registered park placed the pen `1.000 mm` east
+and north of the embedded center magnet. Controller deployment and a repeat
+`G65 P113` center check remain open.
+
 | Mode | Purpose | Current availability |
 |---:|---|---|
 | `Q0` | Full registration after physical X/Y home: center raster, two-pass A index, deferred G54 writes, pen-center park | Hardware-verified through `G65 P113` |

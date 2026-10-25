@@ -228,8 +228,8 @@ installed pen/TMAG offset. Two constants sit between those values and the
 `G10 L20` write:
 
 ```text
-#<axis_center_correction_x> = 2.45
-#<axis_center_correction_y> = 0.3
+#<axis_center_correction_x> = 1.45
+#<axis_center_correction_y> = -0.7
 ...
 G10 L20 P1 X[[#<sensor_to_pen_x> - #<axis_center_correction_x>]] Y[[#<sensor_to_pen_y> - #<axis_center_correction_y>]]
 ```
@@ -281,6 +281,15 @@ magnet - that offset is the open magnet-versus-chain attribution, not a new
 fault; `G65 P100 Q5` at A0/A180 settles it. The constants were applied on
 the controller on 2026-10-14 and the operator confirms the result looks
 correct.
+
+**2026-10-25 center-magnet check.** After `G65 P113`, the pen parked
+`1.000 mm` east and `1.000 mm` north of the embedded center magnet. The
+registered origin therefore needs to move `1.000 mm` west and south. Because
+the G10 write subtracts these constants, both correction values decrease by
+`1.000 mm`: X `2.45 -> 1.45`, Y `0.3 -> -0.70`. The source and validator are
+updated. Controller upload and a repeat `G65 P113` center-magnet check remain
+pending; the controller FTP endpoint was unreachable from the workstation
+during this source update.
 
 Two further notes from the same edit. `P103.macro` mirrors P100's initialization
 and now carries the two new constants. And the `sensor_to_pen` comment in P100
