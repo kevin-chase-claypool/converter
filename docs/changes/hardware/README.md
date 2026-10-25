@@ -8,7 +8,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
-| 2026-10-24 | `WSW-20261024-009` | implemented | [Restore bounded CMYK wave-screen depth](../windows-software/2026/2026-10-24-bounded-cmyk-wave-depth.md) | `cmyk`, `wave-screen`, `depth`, `amplitude`, `row-spacing`, `overlap` |
+| 2026-10-24 | `WSW-20261024-010` | implemented | [Drive CMYK wave depth from scene luminance](../windows-software/2026/2026-10-24-luminance-driven-cmyk-wave-depth.md) | `cmyk`, `wave-screen`, `depth`, `luminance`, `amplitude` |
+| 2026-10-24 | `WSW-20261024-009` | superseded | [Restore bounded CMYK wave-screen depth](../windows-software/2026/2026-10-24-bounded-cmyk-wave-depth.md) | `cmyk`, `wave-screen`, `depth`, `amplitude`, `row-spacing`, `overlap` |
 | 2026-10-24 | `WSW-20261024-007` | implemented | [Smooth CMYK wave-screen chords within the path budget](../windows-software/2026/2026-10-24-smooth-cmyk-wave-chords.md) | `cmyk`, `wave-screen`, `waveform`, `faceting`, `path-tolerance` |
 | 2026-10-24 | `WSW-20261024-006` | superseded | [Keep all CMYK wave rows on one shared waveform](../windows-software/2026/2026-10-24-parallel-cmyk-wave-rows.md) | `cmyk`, `wave-screen`, `row-spacing`, `overlap`, `parallel`, `amplitude`, `all-inks` |
 | 2026-10-24 | `WSW-20261024-005` | implemented | [Add a one-sheet CMYK wave-rotation isolation test](../windows-software/2026/2026-10-24-wave-rotation-isolation-test.md) | `cmyk`, `wave-screen`, `a-axis`, `rotation`, `diagnostic`, `acceleration`, `test-sheet` |

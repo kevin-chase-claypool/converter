@@ -291,14 +291,32 @@ machine-space warp that compensates the paper.
 - A fresh yellow print is required with Dot pitch `1.2 mm`, Artwork scale
   `280 %`, Path tolerance `0.05 mm`, `F700`, and `$123=6000`.
 
+### 2026-10-24 bounded depth is stable but monotone; use luminance
+
+- The first bounded-depth yellow/magenta print is generally improved. Row
+  spacing remains stable, but the individual waves are too uniform to carry the
+  intended depth.
+- The cause is the per-ink coverage field: at 1600 px the 5th-95th percentile
+  range is `0.414` for magenta and `0.798` for yellow, whereas scene luminance
+  spans `0.776`. A locally flat separation produces a flat wave.
+- One tightly spaced magenta pair was reconstructed from the G-code and
+  matched the generated source within `0.00006 mm` after undoing rotation and
+  bed compensation. It is not a lost step at magenta startup.
+- `WSW-20261024-010` now uses scene luminance as the depth field for all four
+  inks. Ink coverage still controls where each layer draws. The existing
+  seven-row smoothing and `12 %` adjacent-height limit remain.
+- The next print must demonstrate both visible depth and actual ink-edge
+  clearance between rows; centerline spacing alone is not sufficient acceptance.
+
 ## Decisions and next action
 
 - Restart the converter, regenerate the four Ben1 layers with Path tolerance
   `0.05 mm`, and confirm every header still contains
   `angular interpolation bed-frame`.
-- Keep Dot pitch `1.2 mm` and Artwork scale `280 %`. Print yellow first at
-  `F700` with `$123=6000` and bed compensation enabled. The waves should now
-  have visible tonal depth, smooth curves, and bounded row spacing.
+- Keep Dot pitch `1.2 mm` and Artwork scale `280 %`. Print yellow and magenta
+  at `F700` with `$123=6000` and bed compensation enabled. The waves should
+  have visible luminance depth, smooth curves, and bounded clearance measured
+  between ink edges.
 - If spacing exceeds the bounded range, inspect the compensated source versus
   paper before changing machine settings. Blank image-shaped regions and
   deliberately smooth broad tone changes are expected.

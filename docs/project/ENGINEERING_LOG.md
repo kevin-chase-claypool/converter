@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261024-luminance-cmyk-wave-depth"></a>
+### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Drive CMYK depth from luminance
+
+- The first bounded-depth yellow/magenta print had stable spacing but remained
+  monotonous. Per-ink tone was acting as both the ink mask and the amplitude
+  source.
+- On the Ben1 source, the 5th-95th percentile ranges were `0.414` for magenta,
+  `0.798` for yellow, and `0.776` for shared scene luminance. Locally flat ink
+  coverage therefore produced nearly identical wave heights.
+- `prepare_image_tones` now returns a luminance-derived `depth` field. The CMYK
+  tab supplies it separately to every wave layer, while each C/M/Y/K channel
+  remains only that layer's ink mask.
+- The seven-row smoothing, `12 %` adjacent-height limit, tolerance-aware chord
+  sampling, and blank-region behavior remain active.
+- The operator's locally tight magenta pair was traced through bed rotation and
+  compensation to the generated source within `0.00006 mm`; it was not a lost
+  step at magenta startup. The next print must verify physical ink-edge
+  clearance as well as restored depth.
+- Focused luminance/depth tests and all 74 CMYK tests pass; full converter
+  discovery passes 509 tests with one skip. Evidence: `WSW-20261024-010`,
+  `docs/report/lab-notes/2026-10-23-m-13-cmyk-yellow-feed-sensitivity.md`.
+- Category: windows-software, cmyk, wave-screen, depth, luminance, amplitude.
+
 <a id="elog-20261024-bounded-cmyk-wave-depth"></a>
 ### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Restore bounded CMYK wave depth
 

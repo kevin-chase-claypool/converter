@@ -391,6 +391,14 @@ def prepare_image_tones(
         rgb = np.power(np.clip(rgb, 0.0, 1.0), exponent)
 
     tones = rgb_to_cmyk_tone(rgb, gcr=gcr, weights=weights, gamma=gamma)
+    luminance = np.clip(
+        rgb @ np.array([0.299, 0.587, 0.114], dtype=np.float32),
+        0.0,
+        1.0,
+    )
+    # Ink coverage decides where each plate is present; luminance supplies the
+    # common scene depth used by wave screens even in a saturated ink channel.
+    tones["depth"] = (1.0 - luminance).astype(np.float32)
     geometry = {
         "off_x": off_x,
         "off_y": off_y,
@@ -593,6 +601,7 @@ def _wave_rows(
     min_length_mm=0.8,
     cancel_check=None,
     path_tolerance_mm=0.05,
+    depth_darkness=None,
 ):
     """Sine rows with bounded vertical tone depth.
 
@@ -633,6 +642,7 @@ def _wave_rows(
         x += sample_step
 
     tone_rows = []
+    depth_rows = []
     for y in row_ys:
         check_cancelled(cancel_check)
         tone_rows.append(
@@ -641,6 +651,15 @@ def _wave_rows(
                 for x in x_values
             ]
         )
+        if depth_darkness is not None:
+            depth_rows.append(
+                [
+                    depth_darkness(x * ca - y * sa, x * sa + y * ca)
+                    for x in x_values
+                ]
+            )
+    if depth_darkness is None:
+        depth_rows = tone_rows
 
     window = min(WAVE_DEPTH_ROW_WINDOW, len(tone_rows))
     smoothed_tone = []
@@ -653,7 +672,7 @@ def _wave_rows(
         smoothed_tone.append(
             [
                 sum(
-                    tone_rows[index][x_index] for index in range(low, high)
+                    depth_rows[index][x_index] for index in range(low, high)
                 )
                 / max(window, 1)
                 for x_index in range(len(x_values))
@@ -817,6 +836,7 @@ def screen_channel(
     solid=True,
     cancel_check=None,
     path_tolerance_mm=0.05,
+    depth_tone=None,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
@@ -841,6 +861,11 @@ def screen_channel(
     spacing = max(0.2, float(spacing_mm))
     cap = max(16, int(max_marks))
     darkness = tone_sampler(tone, geometry)
+    depth_darkness = (
+        tone_sampler(depth_tone, geometry)
+        if depth_tone is not None
+        else None
+    )
 
     def inside(x, y):
         return left <= x <= right and top <= y <= bottom
@@ -910,6 +935,7 @@ def screen_channel(
             max(0.1, float(dot_scale)),
             cancel_check=cancel_check,
             path_tolerance_mm=path_tolerance_mm,
+            depth_darkness=depth_darkness,
         )
     elif style == "tsp":
         points = stipple_points(

@@ -893,6 +893,7 @@ class CmykTab(GeneratorTab):
                 overdraw=self.overdraw.value(),
                 solid=self.solid_dots.isChecked(),
                 path_tolerance_mm=self.path_tolerance.value() / factor,
+                depth_tone=tones.get("depth"),
             )
             # Generator pages are plotted 1:1, so the tab's Artwork scale is
             # applied to the screened marks about the page centre here.

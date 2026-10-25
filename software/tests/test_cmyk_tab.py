@@ -134,6 +134,38 @@ class ScreeningTests(unittest.TestCase):
         stretched_range = float(stretched["k"].max() - stretched["k"].min())
         self.assertGreater(stretched_range, plain_range + 0.3)
 
+    def test_depth_field_uses_scene_luminance_not_ink_coverage(self):
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-depth-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = str(Path(folder) / "colour.png")
+        image = Image.new("RGB", (16, 16))
+        for x in range(16):
+            red = round(255 * x / 15)
+            for y in range(16):
+                image.putpixel((x, y), (red, 128, 0))
+        image.save(path)
+        tones, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=32,
+            auto_levels=False,
+            gcr=0.0,
+            weights=(1, 1, 1, 1),
+        )
+        self.assertAlmostEqual(
+            float(tones["m"].max() - tones["m"].min()), 0.0, places=5
+        )
+        self.assertGreater(
+            float(tones["depth"].max() - tones["depth"].min()),
+            0.25,
+        )
+
     def test_contrast_200_does_not_clip_tone_endpoints(self):
         from PIL import Image
 
@@ -738,6 +770,50 @@ class ScreeningTests(unittest.TestCase):
         )
         self.assertGreater(min(gaps), 0.75 * spacing)
         self.assertLess(max(gaps), 1.25 * spacing)
+
+    def test_wave_depth_can_follow_a_separate_luminance_field(self):
+        spacing = 4.0
+        yy, _xx = self.np.mgrid[0:64, 0:64]
+        ink_mask = self.np.ones((64, 64), dtype="float32")
+        depth_tone = (0.1 + 0.8 * yy / 63.0).astype("float32")
+        waves = converter.screen_channel(
+            ink_mask,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves",
+            spacing_mm=spacing,
+            depth_tone=depth_tone,
+        )
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        amplitudes = []
+        for points in waves:
+            baseline = value_at_x(points, 0.0)
+            crest = value_at_x(points, spacing / 2.0)
+            if baseline is not None and crest is not None:
+                amplitudes.append(abs(crest - baseline))
+        self.assertGreaterEqual(len(amplitudes), 12)
+        self.assertGreater(
+            max(amplitudes) - min(amplitudes),
+            spacing * 0.2,
+            "wave depth should follow scene luminance even where one ink "
+            "channel is uniformly saturated",
+        )
 
     def test_wave_rows_approximate_the_sinusoid_within_path_tolerance(self):
         spacing = 4.0
@@ -1362,10 +1438,12 @@ class CmykTabTests(unittest.TestCase):
         tab.scale_pct.setValue(280)
         tab.path_tolerance.setValue(0.05)
         captured = []
+        captured_depth = []
         screen_channel = converter.screen_channel
 
         def capture_tolerance(*args, **kwargs):
             captured.append(kwargs.get("path_tolerance_mm"))
+            captured_depth.append(kwargs.get("depth_tone"))
             return screen_channel(*args, **kwargs)
 
         with mock.patch.object(
@@ -1376,6 +1454,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(len(captured), len(converter.CHANNELS))
         for tolerance in captured:
             self.assertAlmostEqual(tolerance, 0.05 / 2.8)
+        self.assertTrue(all(depth is not None for depth in captured_depth))
 
     def test_hatch_levels_allow_more_families(self):
         tab = self.make_tab()

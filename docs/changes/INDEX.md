@@ -5,7 +5,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
-| 2026-10-24 | `WSW-20261024-009` | windows-software, hardware | implemented | [Restore bounded CMYK wave-screen depth](windows-software/2026/2026-10-24-bounded-cmyk-wave-depth.md) |
+| 2026-10-24 | `WSW-20261024-010` | windows-software, hardware | implemented | [Drive CMYK wave depth from scene luminance](windows-software/2026/2026-10-24-luminance-driven-cmyk-wave-depth.md) |
+| 2026-10-24 | `WSW-20261024-009` | windows-software, hardware | superseded | [Restore bounded CMYK wave-screen depth](windows-software/2026/2026-10-24-bounded-cmyk-wave-depth.md) |
 | 2026-10-24 | `WSW-20261024-008` | windows-software | implemented | [Preserve artwork placement across reopen and reimport](windows-software/2026/2026-10-24-persist-artwork-placement.md) |
 | 2026-10-24 | `WSW-20261024-007` | windows-software, hardware | implemented | [Smooth CMYK wave-screen chords within the path budget](windows-software/2026/2026-10-24-smooth-cmyk-wave-chords.md) |
 | 2026-10-24 | `WSW-20261024-006` | windows-software, hardware | superseded | [Keep all CMYK wave rows on one shared waveform](windows-software/2026/2026-10-24-parallel-cmyk-wave-rows.md) |

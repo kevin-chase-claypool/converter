@@ -5,7 +5,7 @@ category: windows-software
 affected_categories:
   - windows-software
   - hardware
-status: implemented
+status: superseded
 components:
   - software/converter_core/cmyk.py
   - software/tests/test_cmyk_tab.py
@@ -20,6 +20,7 @@ tags:
 related:
   - WSW-20261024-006
   - WSW-20261024-007
+  - WSW-20261024-010
   - 2026-10-23-m-13-cmyk-yellow-feed-sensitivity
 ---
 
@@ -41,6 +42,10 @@ operator observed that the waves no longer varied enough to create depth.
 The `1.2 mm` Dot pitch is not the cause. At `280 %` Artwork scale it produces a
 `3.36 mm` on-paper pitch, and the previous shared profile removed vertical tone
 variation regardless of pitch.
+
+The per-channel depth field was superseded by `WSW-20261024-010`, which uses a
+common scene-luminance field because an individual CMYK channel can remain
+almost uniform across a large inked region.
 
 ## Implementation
 

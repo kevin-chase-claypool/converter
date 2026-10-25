@@ -8,7 +8,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
-| 2026-10-24 | `WSW-20261024-009` | implemented | [Restore bounded CMYK wave-screen depth](2026/2026-10-24-bounded-cmyk-wave-depth.md) | `cmyk`, `wave-screen`, `depth`, `amplitude`, `row-spacing`, `overlap` |
+| 2026-10-24 | `WSW-20261024-010` | implemented | [Drive CMYK wave depth from scene luminance](2026/2026-10-24-luminance-driven-cmyk-wave-depth.md) | `cmyk`, `wave-screen`, `depth`, `luminance`, `amplitude` |
+| 2026-10-24 | `WSW-20261024-009` | superseded | [Restore bounded CMYK wave-screen depth](2026/2026-10-24-bounded-cmyk-wave-depth.md) | `cmyk`, `wave-screen`, `depth`, `amplitude`, `row-spacing`, `overlap` |
 | 2026-10-24 | `WSW-20261024-008` | implemented | [Preserve artwork placement across reopen and reimport](2026/2026-10-24-persist-artwork-placement.md) | `artwork`, `placement`, `restart`, `reimport`, `cmyk` |
 | 2026-10-24 | `WSW-20261024-007` | implemented | [Smooth CMYK wave-screen chords within the path budget](2026/2026-10-24-smooth-cmyk-wave-chords.md) | `cmyk`, `wave-screen`, `waveform`, `faceting`, `path-tolerance` |
 | 2026-10-24 | `WSW-20261024-006` | superseded | [Keep all CMYK wave rows on one shared waveform](2026/2026-10-24-parallel-cmyk-wave-rows.md) | `cmyk`, `wave-screen`, `row-spacing`, `overlap`, `parallel`, `amplitude`, `all-inks` |
