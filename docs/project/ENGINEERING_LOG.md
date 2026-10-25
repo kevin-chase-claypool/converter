@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20261024-wave-row-zero-point-research"></a>
+### 🟨 2026-10-24 - WINDOWS SOFTWARE/RESEARCHED - Review upstream wave-row zero points
+
+- Reviewed the primary source of SquiggleDraw, SquiggleCam, Plotterfun, and the
+  SquiggleDraw Inkscape CMYK rewrite.
+- SquiggleDraw and SquiggleCam explicitly reset phase to zero at every row and
+  start from the row baseline. Plotterfun does the same, including its
+  alternating-direction variant.
+- The Inkscape CMYK rewrite resets every CMY row to its baseline and negates
+  amplitude when reversing a row so direction does not alter the curve.
+- None of the reviewed projects implements a general adjacent-row clearance
+  check. SquiggleDraw caps frequency against pen width to avoid overcrowding
+  within a row, but its amplitude controls can still be set high enough for
+  inter-row contact.
+- Conclusion: the zero point is the correct phase anchor but is insufficient by
+  itself. The next candidate should combine zero-anchored per-row amplitude and
+  frequency variation with an explicit minimum-clearance pass.
+- Evidence:
+  `docs/research/2026-10-24-wave-row-zero-points-and-clearance.md`.
+- Category: windows-software, cmyk, wave-screen, zero-point, clearance.
+
 <a id="elog-20261024-cmyk-wave-coupon"></a>
 ### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Add compact CMYK wave coupon
 
