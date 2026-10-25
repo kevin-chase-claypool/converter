@@ -338,20 +338,20 @@ machine-space warp that compensates the paper.
   `2.224`, `1.925`, and `2.103 mm` for C/M/Y/K. A complete 49,719-line yellow
   validation program passes the strict motion guard.
 
-### 2026-10-24 low-cost black-pen wave coupon prepared
+### 2026-10-24 full-sheet black-pen wave matrix prepared
 
-- `samples/gcode/cmyk-wave-coupon.gcode` uses ordinary paper and a black
-  fineliner instead of scarce round stock and yellow ink.
-- Its left `28 x 20 mm` patch is the zero-anchored-depth mode; its right patch
-  is the equidistant-row mode using the same luminance gradient, `3.36 mm`
-  paper pitch, `75 deg` screen angle, `0.8 mm` pen, and `F700`.
-- The full comparison contains only 20 wave runs and 640 drawing points. The
-  bed remains at A0, isolating generator geometry from rotary motion.
-- The zero-anchored patch exposes image-driven wave depth and the equidistant
-  patch holds exactly `3.360 mm` vertical spacing.
-- The regenerated file has 20 wave runs and 886 source drawing points, and
-  passes `check_gcode_motion.py --strict` with no bed rotation, no rotated
-  rapid, and no path-bow warning.
+- `samples/gcode/cmyk-wave-coupon.gcode` uses the already-mounted 14-inch
+  sheet and one black fineliner in one uninterrupted sixteen-patch program.
+- It prints `54 x 28 mm` patches covering C15, M75, Y0, and K45 in four columns.
+  Zero-anchored depth is above equidistant rows.
+- The upper half occupies `y=-72..-10 mm` as an isolated A-parked geometry
+  control. The lower half occupies `y=10..72 mm` with production Xtheta/Ytheta
+  planning. The combined `234 x 142 mm` field is centered on the sheet.
+- It uses the production `3.36 mm` paper pitch, `0.8 mm` pen, `F700`,
+  `0.05 mm` Path tolerance, and the selected bed compensation.
+- The file contains 220 wave contours and 18,804 source drawing points. It
+  passes `check_gcode_motion.py --strict`, reaching a `5.18 deg` largest
+  drawing step and `268 motor deg/s` largest A rate with no pen-up rotation.
 - Regenerate with `python tools\make_cmyk_wave_coupon.py`.
 
 ## Decisions and next action
@@ -363,13 +363,12 @@ machine-space warp that compensates the paper.
   zero-anchored depth**, then regenerate and print with `F700`, `$123=6000`,
   and bed compensation enabled. Compare its tonal depth against the strict
   **Wave screen - equidistant rows** mode.
-- Use a black fineliner coupon for the first geometry check where practical;
-  reserve yellow for the final image once the zero-anchored geometry is
-  verified.
-- Run `samples/gcode/cmyk-wave-coupon.gcode` on ordinary paper. Confirm the
-  left patch exposes visible tonal frequency/depth without contact, while every
-  right-hand row remains one pitch apart. Proceed to a full layer only after
-  that geometric comparison is clean.
+- Run `samples/gcode/cmyk-wave-coupon.gcode` once on the mounted sheet. Confirm
+  every zero-anchored patch exposes visible tonal frequency/depth without
+  contact, while the equidistant row directly below remains one pitch apart.
+  Compare the upper parked matrix with the lower Xtheta/Ytheta matrix at each
+  screen angle. Proceed to yellow only after the full single-run matrix is
+  clean.
 - If spacing exceeds the bounded range, inspect the compensated source versus
   paper before changing machine settings. Blank image-shaped regions and
   deliberately smooth broad tone changes are expected.

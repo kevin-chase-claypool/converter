@@ -1,17 +1,20 @@
-"""Generate a small black-pen comparison of the two CMYK wave modes.
+"""Generate a full-sheet black-pen CMYK wave diagnostic.
 
-The left 28 x 20 mm patch is Wave screen - zero-anchored depth. The right patch
-is Wave screen - equidistant rows. Both use the current production
-effective pitch of 3.36 mm, feed 700 mm/min, and Path tolerance 0.05 mm.
+The single program prints sixteen 54 x 28 mm patches: all four CMYK screen
+angles in two rows, comparing zero-anchored depth with equidistant rows, then
+repeats the matrix with production Xtheta/Ytheta planning. The upper half is
+planned with A parked as an isolated geometry control. Everything uses the
+production 3.36 mm paper pitch, 0.8 mm pen, F700, and 0.05 mm tolerance.
 
-The bed is parked for this geometry coupon so it can be printed on ordinary
-paper near bed center without consuming a CMYK layer.
+The matrices fit within a 234 x 142 mm field on one already-mounted 14-inch
+sheet. One Cycle Start completes the entire diagnostic without intervention.
 """
 
 from __future__ import annotations
 
 import argparse
 import dataclasses
+import re
 from pathlib import Path
 
 import numpy as np
@@ -35,9 +38,22 @@ PAPER_PITCH_MM = 3.36
 PEN_WIDTH_MM = 0.8
 PATH_TOLERANCE_MM = 0.05
 FEED_MM_MIN = 700.0
+PATCH_WIDTH_MM = 54.0
+PATCH_HEIGHT_MM = 28.0
+PATCH_LEFT_MM = (-117.0, -57.0, 3.0, 63.0)
+PATCH_TOP_MM = {
+    "fixed": (-72.0, -38.0),
+    "optimized": (10.0, 44.0),
+}
+COUPON_ANGLES = (
+    ("C", converter.SCREEN_ANGLES_DEG["c"]),
+    ("M", converter.SCREEN_ANGLES_DEG["m"]),
+    ("Y", converter.SCREEN_ANGLES_DEG["y"]),
+    ("K", converter.SCREEN_ANGLES_DEG["k"]),
+)
 
 
-def coupon_settings():
+def coupon_settings(theta_mode="fixed"):
     return dataclasses.replace(
         converter.Settings(),
         tolerance=PATH_TOLERANCE_MM,
@@ -50,23 +66,30 @@ def coupon_settings():
         artwork_offset_y_mm=0.0,
         feed_rate=FEED_MM_MIN,
         travel_rate=3000.0,
-        theta_mode="fixed",
+        theta_mode=str(theta_mode),
         theta_center_hold_diameter_mm=60.0,
         bed_compensation_path=str(DEFAULT_BED),
     )
 
 
-def coupon_patch(style, left_mm, top_mm, width_mm=28.0, height_mm=20.0):
+def coupon_patch(
+    style,
+    left_mm,
+    top_mm,
+    width_mm=PATCH_WIDTH_MM,
+    height_mm=PATCH_HEIGHT_MM,
+    angle_deg=75.0,
+):
     """Return one patch using the real screening and planning functions."""
-    yy, xx = np.mgrid[0:96, 0:128]
-    tone = np.full((96, 128), 0.82, dtype=np.float32)
-    # Broad two-dimensional luminance variation makes the original mode's
-    # changing row amplitudes visible without adding row-frequency noise.
+    yy, xx = np.mgrid[0:128, 0:256]
+    tone = np.full((128, 256), 0.82, dtype=np.float32)
+    # Broad two-dimensional luminance variation exposes the tonal frequency
+    # and amplitude differences across the full-size patch.
     depth = np.clip(
         0.12
-        + 0.58 * xx / 127.0
-        + 0.22 * yy / 95.0
-        + 0.06 * np.sin(2.0 * np.pi * yy / 7.0),
+        + 0.58 * xx / 255.0
+        + 0.22 * yy / 127.0
+        + 0.06 * np.sin(2.0 * np.pi * yy / 9.0),
         0.0,
         1.0,
     ).astype(np.float32)
@@ -77,30 +100,92 @@ def coupon_patch(style, left_mm, top_mm, width_mm=28.0, height_mm=20.0):
             "off_y": float(top_mm),
             "width_mm": float(width_mm),
             "height_mm": float(height_mm),
-            "pixels_w": 128,
-            "pixels_h": 96,
+            "pixels_w": 256,
+            "pixels_h": 128,
         },
         style=style,
         spacing_mm=PAPER_PITCH_MM,
         dot_scale=1.0,
-        angle_deg=75.0,
+        angle_deg=float(angle_deg),
         pen_diameter_mm=PEN_WIDTH_MM,
         path_tolerance_mm=PATH_TOLERANCE_MM,
         depth_tone=depth,
     )
 
 
+def _coupon_matrix(theta_mode):
+    theta_mode = str(theta_mode).strip().lower()
+    if theta_mode not in PATCH_TOP_MM:
+        raise ValueError("theta_mode must be 'fixed' or 'optimized'.")
+    marks = []
+    for top, style in zip(
+        PATCH_TOP_MM[theta_mode],
+        ("waves_zero", "waves_even"),
+    ):
+        for left, (_ink, angle_deg) in zip(
+            PATCH_LEFT_MM,
+            COUPON_ANGLES,
+        ):
+            marks.extend(
+                coupon_patch(
+                    style,
+                    left,
+                    top,
+                    angle_deg=angle_deg,
+                )
+            )
+    return marks
+
+
+def _reindexed_jobs(plan, offset):
+    jobs = []
+    for planned, points, thetas, strategies in plan["planned_jobs"]:
+        renumbered = dict(planned)
+        renumbered["index"] = int(renumbered["index"]) + offset
+        jobs.append((renumbered, points, thetas, strategies))
+    return jobs
+
+
 def build_coupon():
-    settings = coupon_settings()
-    marks = coupon_patch("waves_zero", -34.0, -10.0)
-    marks.extend(coupon_patch("waves_even", 6.0, -10.0))
+    fixed_settings = coupon_settings("fixed")
+    parked_marks = _coupon_matrix("fixed")
+    parked_plan = converter.plan_program(parked_marks, fixed_settings)
+
+    settings = coupon_settings("optimized")
+    motion_marks = _coupon_matrix("optimized")
+    motion_plan = converter.plan_program(motion_marks, settings)
+    parked_count = len(parked_plan["planned_jobs"])
+    combined_plan = dict(parked_plan)
+    combined_plan["planned_jobs"] = (
+        parked_plan["planned_jobs"]
+        + _reindexed_jobs(motion_plan, parked_count)
+    )
+    combined_plan["contours"] = (
+        parked_plan["contours"] + motion_plan["contours"]
+    )
+
+    marks = parked_marks + motion_marks
     settings = converter.validate_settings(settings)
-    gcode = converter.contours_to_gcode(marks, settings)
+    gcode = converter.contours_to_gcode(
+        marks,
+        settings,
+        program_plan=combined_plan,
+    )
+    gcode = re.sub(
+        r"\(frame center .* bed motion .*\)",
+        "(frame center 0.000,0.000 mm, bed motion: upper A parked + "
+        "lower Xtheta/Ytheta)",
+        gcode,
+        count=1,
+    )
     banner = (
-        "(CMYK wave coupon - black pen; ordinary paper is sufficient)\n"
-        "(left 28x20 mm: Wave screen - zero-anchored depth)\n"
-        "(right 28x20 mm: Wave screen - equidistant rows)\n"
-        "(effective pitch 3.360 mm, pen 0.800 mm, F700, A parked)\n"
+        "(CMYK full-sheet wave diagnostic - single file; 16 patches)\n"
+        "(columns left-to-right: C15 M75 Y0 K45)\n"
+        "(upper 8 patches: A parked; lower 8 patches: Xtheta-Ytheta)\n"
+        "(first row of each set: zero-anchored; second: equidistant)\n"
+        "(field 234 x 142 mm centered on the mounted sheet)\n"
+        "(effective pitch 3.360 mm, pen 0.800 mm, F700, "
+        "bed compensation enabled)\n"
     )
     return banner + gcode, settings, marks
 
@@ -111,10 +196,10 @@ def main():
     args = parser.parse_args()
 
     gcode, settings, marks = build_coupon()
-    output = Path(args.out)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(gcode, encoding="utf-8", newline="\n")
-    print(output)
+    output_path = Path(args.out)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(gcode, encoding="utf-8", newline="\n")
+    print(output_path)
     print(
         "marks=%d drawing_points=%d columns=%s"
         % (

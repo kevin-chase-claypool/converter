@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20261024-full-sheet-cmyk-wave-coupon"></a>
+### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Expand CMYK wave coupon to full-sheet motion matrix
+
+- The two-patch coupon covered only the 75-degree magenta screen angle and did
+  not make efficient use of an already-mounted 14-inch sheet.
+- Replaced it with one sixteen-patch program covering C15, M75, Y0, and K45 in
+  four columns, with zero-anchored depth above equidistant rows.
+- The upper `y=-72..-10 mm` matrix is planned with A parked. The lower
+  `y=10..72 mm` matrix uses production Xtheta/Ytheta planning. Preplanned job
+  lists are combined behind one preamble and one `M2`, so one Cycle Start
+  completes everything without intervention.
+- The file contains 220 wave contours and 18,804 source drawing points at the
+  production `3.36 mm` pitch, `0.8 mm` pen, `F700`, compensation, and
+  `0.05 mm` Path tolerance.
+- The complete file passes `check_gcode_motion.py --strict`: `5.18 deg` largest
+  drawing step, `268 motor deg/s` largest A rate, and no pen-up rotation.
+- Three focused coupon tests pass; full converter discovery passes `519` tests
+  with one expected OpenGL-context skip. Evidence: `WSW-20261024-014`.
+- Category: windows-software, hardware, cmyk, wave-screen, coupon, all-angles,
+  parked-control, rotating-bed.
+
 <a id="elog-20261024-zero-anchored-cmyk-wave-depth"></a>
 ### 🟩 2026-10-24 - WINDOWS SOFTWARE/IMPLEMENTED - Add zero-anchored CMYK wave depth
 

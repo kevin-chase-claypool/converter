@@ -311,8 +311,10 @@
   even the shared waveform is too steep. The equidistant mode remains available
   as the strict fallback. Real Ben1 screening at the production pitch measured
   shortest centerline separations of `2.102`, `2.224`, `1.925`, and `2.103 mm`
-  for C/M/Y/K. The refreshed black-pen coupon compares zero-anchored depth with
-  equidistant rows before another full layer.
+  for C/M/Y/K. `WSW-20261024-014` expands the black-pen coupon into one
+  sixteen-patch program on the mounted sheet: all four CMYK screen angles with
+  zero-anchored depth above equidistant rows, first with A parked and then with
+  production Xtheta/Ytheta planning. One Cycle Start completes the full matrix.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
   The owner reports that the replacement is the same motor model already

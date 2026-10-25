@@ -73,9 +73,10 @@ The primary-source review is in
   comparison.
 - Wave sample density accounts for the higher maximum phase rate so the
   configured Path tolerance still bounds chord faceting.
-- The black-pen coupon now compares zero-anchored depth against equidistant
-  rows on the same gradient, rather than comparing the superseded original
-  mode.
+- At this milestone the black-pen coupon compared zero-anchored depth against
+  equidistant rows on the same gradient, rather than comparing the superseded
+  original mode. It was expanded to the full-sheet angle and motion matrix in
+  `WSW-20261024-014`.
 
 ## Verification
 
