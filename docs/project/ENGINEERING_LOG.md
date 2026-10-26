@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20261026-post-repair-bed-calibration"></a>
+### 🟨 2026-10-26 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Post-repair full-field bed calibration
+
+- Added a configurable station-size floor to the bed-photo measurement tool.
+  The new rotated photo makes 14 station-number glyphs exactly 16 px wide; a
+  reviewed `17 px` floor resolves exactly 4 fiducials, 333 station Ls, and
+  74 labels.
+- Candidate `efe87c63b54d` passes every profile-fitting gate: A0 spatial error
+  `0.324 / 0.626 mm`, A0 control `0.209 / 0.373 mm`, and leave-one-station-out
+  `0.212 / 0.503 mm` with `87.8 %` improvement. Maximum correction is
+  `2.988 mm`.
+- Threshold/blur sweeps from `15/15` through `22/18` keep leave-one-out RMS at
+  `0.211-0.213 mm`, maximum at `0.503-0.552 mm`, and improvement at
+  `87.7-87.8 %`.
+- The improved final A0 control and leave-one-out maximum are consistent with
+  the reported NE drag-chain pillar correction, but the candidate is not
+  active until independent compensated verification passes.
+- Generated `bed-error-verify-2026-10-26-post-repair.gcode`; it identifies the
+  candidate, has eight drying pauses, and passes strict motion preflight with
+  no bare rotating `G0`.
+- Evidence: `WSW-20261026-002`, `HW/M-12`,
+  `docs/report/lab-notes/2026-10-26-m-12-post-repair-calibration.md`.
+- Category: windows-software, hardware, bed-calibration, bed-compensation,
+  photo-measurement, M-12, drag-chain, test-paper.
+
 <a id="elog-20261026-ldo-2-8a-y-a-driver-settings"></a>
 ### 🟨 2026-10-26 - HARDWARE/PLANNED - Select 2.8 A LDO motors for Y and A
 

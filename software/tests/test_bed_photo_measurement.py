@@ -73,6 +73,23 @@ class BedPhotoMeasurementTests(unittest.TestCase):
         )
         self.assertEqual(filtered, (fiducial,))
 
+    def test_station_dimension_floor_can_exclude_large_labels(self):
+        def component(maximum_dimension):
+            return self.module.Component(
+                ((0, 0), (1, 1)),
+                (0, 0, maximum_dimension - 1, maximum_dimension - 1),
+            )
+
+        label = component(16)
+        station = component(17)
+        self.assertEqual(
+            self.module._station_sized_components(
+                (label, station),
+                minimum_dimension=17,
+            ),
+            (station,),
+        )
+
     def test_fiducial_selection_uses_largest_component_per_quadrant(self):
         def component(point, point_count):
             return self.module.Component(

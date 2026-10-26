@@ -1,0 +1,77 @@
+{
+  "assignment_distance_px": {
+    "maximum": 22.177513982466294,
+    "median": 12.968341866479621,
+    "minimum": 4.159445787562907
+  },
+  "component_counts": {
+    "fiducials": 4,
+    "label_glyphs": 74,
+    "station_L": 333,
+    "total": 411
+  },
+  "fiducial_order": [
+    1,
+    2,
+    3,
+    0
+  ],
+  "fiducial_points_px": [
+    [
+      338.0,
+      665.0
+    ],
+    [
+      284.0,
+      1715.0
+    ],
+    [
+      1386.0,
+      1773.0
+    ],
+    [
+      1396.0,
+      653.0
+    ]
+  ],
+  "homography": [
+    [
+      0.31465835225060457,
+      -4.677839101084625,
+      834.1656170897951
+    ],
+    [
+      -4.711029011931894,
+      0.2471517076477697,
+      1189.5720455491346
+    ],
+    [
+      0.00019445690544973605,
+      0.0002901991129188643,
+      1.0
+    ]
+  ],
+  "image": "C:\\Users\\jacks\\Documents\\Claude\\converter\\samples\\gcode\\bed-error-map-2026-10-26-photo.jpg",
+  "image_sha256": "d38d98d1d64bc54756f42569478d99a473101894785c284f6a696e29098a4663",
+  "image_size_px": [
+    1796,
+    2385
+  ],
+  "mask_center_fraction": [
+    0.5,
+    0.5
+  ],
+  "mask_radius_fraction": 0.47,
+  "mode": "standard",
+  "orientation_score_px": {
+    "mean": 12.634639123618868,
+    "median": 12.943521893959504,
+    "p95": 19.71593872589666
+  },
+  "threshold": 20,
+  "working_center_px": [
+    897.5,
+    1192.0
+  ],
+  "working_radius_px": 844.12
+}

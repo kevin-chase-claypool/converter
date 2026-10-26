@@ -63,6 +63,20 @@ def _fiducial_sized_components(components):
     )
 
 
+def _station_sized_components(
+    components,
+    minimum_dimension=16,
+    maximum_dimension=30,
+):
+    return tuple(
+        component
+        for component in components
+        if minimum_dimension
+        <= component.maximum_dimension
+        <= maximum_dimension
+    )
+
+
 def _quadrant_fiducials(components, center):
     fiducials_by_quadrant = {}
     for component in components:
@@ -463,6 +477,7 @@ def measure_photo(
     *,
     threshold=20,
     blur_radius=18.0,
+    minimum_station_dimension=16,
     mask_center_fraction=(0.5295, 0.4869),
     mask_radius_fraction=0.4322,
     maximum_assignment_px=DEFAULT_MAXIMUM_ASSIGNMENT_PX,
@@ -502,15 +517,14 @@ def measure_photo(
             (residual > threshold) & paper_mask
         )
         large = _fiducial_sized_components(components)
-        medium = tuple(
-            component
-            for component in components
-            if 16 <= component.maximum_dimension <= 30
+        medium = _station_sized_components(
+            components,
+            minimum_dimension=minimum_station_dimension,
         )
         small = tuple(
             component
             for component in components
-            if component.maximum_dimension < 16
+            if component.maximum_dimension < minimum_station_dimension
         )
         maximum_extra_components = 12
         if not (
@@ -602,9 +616,11 @@ def measure_photo(
         )
         medium = tuple(
             component
-            for component in components
+            for component in _station_sized_components(
+                components,
+                minimum_dimension=minimum_station_dimension,
+            )
             if 60 <= len(component.points) <= 200
-            and 16 <= component.maximum_dimension <= 30
         )
         fiducial_order = (0, 1, 2, 3)
         orientation_score = (0.0, 0.0, 0.0)
@@ -828,6 +844,15 @@ def main():
     parser.add_argument("--threshold", type=int, default=20)
     parser.add_argument("--blur-radius", type=float, default=18.0)
     parser.add_argument(
+        "--minimum-station-dimension",
+        type=int,
+        default=16,
+        help=(
+            "minimum component width or height treated as a station L; "
+            "raise this when large station labels are misclassified"
+        ),
+    )
+    parser.add_argument(
         "--mask-center-fraction",
         default="0.5295,0.4869",
         help="working-circle centre as x,y fractions of image width/height",
@@ -863,6 +888,7 @@ def main():
         args.image,
         threshold=args.threshold,
         blur_radius=args.blur_radius,
+        minimum_station_dimension=args.minimum_station_dimension,
         mask_center_fraction=mask_center_fraction,
         mask_radius_fraction=args.mask_radius_fraction,
         maximum_assignment_px=args.maximum_assignment_px,

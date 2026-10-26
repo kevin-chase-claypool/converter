@@ -179,6 +179,20 @@ Cycle Start with the pen loaded:
   The photo may be rotated; the tool selects the best non-mirrored fiducial
   orientation and tolerates a small number of extra ink specks. Review the
   generated overlay to confirm measured points sit on the shared L corners.
+  If a larger scan makes 16 px-wide station-number glyphs look like station
+  marks, raise `--minimum-station-dimension` to `17`. A wider working circle or
+  perspective-dependent matching distance may also be needed; review the
+  overlay before accepting any changed threshold.
+
+  The 2026-10-26 post-repair sheet required:
+
+  ```powershell
+  python ..\tools\measure_bed_error_photo.py cal.jpg `
+    --measurement-out ..\samples\gcode\bed-error-map-measured.csv `
+    --threshold 20 --blur-radius 18 `
+    --minimum-station-dimension 17 --maximum-assignment-px 23 `
+    --mask-center-fraction 0.5,0.5 --mask-radius-fraction 0.47
+  ```
 
   If long pen-up drag marks connect separate components, add
   `--seed-diagnostic <previous-photo.json>` so the matcher uses expected local
