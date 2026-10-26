@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20261026-ldo-2-8a-y-a-driver-settings"></a>
+### 🟨 2026-10-26 - HARDWARE/PLANNED - Select 2.8 A LDO motors for Y and A
+
+- The owner selected LDO `42STH48-2804AH` for both Y and A. The official
+  specification lists 1.8 deg, 2.8 A/phase, 0.7 ohm/phase, 0.6 mH/phase, and
+  4.2 kg-cm holding torque.
+- Keep Y at 16x microstepping and A at 8x. Their existing X/Y and A
+  steps-per-unit settings therefore remain unchanged.
+- With drivers de-energized, both Y and A use `SW4 OFF`, `SW5 OFF`, `SW6 ON`
+  for the TB6600 2.8 A / 2.9 A-peak row.
+- The current B0FQ5GBNZ1 product images supersede the earlier repository
+  transcription: `1.5 A = ON/ON/OFF`, `2.0 A = ON/OFF/OFF`, and
+  `2.8 A = OFF/OFF/ON`.
+- No motor has been installed or energized. Confirm each physical driver label,
+  motor lead/coil map, direction, temperature, supply loading, and branch-fuse
+  margin before plotting.
+- Evidence: `HW-20261026-001`, `docs/hardware/BOM.md`,
+  `docs/changes/hardware/2026/2026-10-26-ldo-2-8a-y-a-driver-settings.md`.
+- Category: hardware, rp23cnc-software, stepper, TB6600, LDO,
+  42STH48-2804AH, motor-current, microstep.
+
 <a id="elog-20261026-phase-locked-wave-depth"></a>
 ### 🟨 2026-10-26 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Restore wave depth with a shared phase
 

@@ -46,3 +46,21 @@ OFF/ON/OFF, and 1.5 A is ON/OFF/ON.
 
 Complete E-02 photographs and then E-04 conservative current setup before
 attaching a motor to an energized driver.
+
+## Correction - 2026-10-26
+
+The current B0FQ5GBNZ1 product images show the complete six-switch table:
+
+| Current / peak | SW4 | SW5 | SW6 |
+|---|---|---|---|
+| 1.5 A / 1.7 A | ON | ON | OFF |
+| 2.8 A / 2.9 A | OFF | OFF | ON |
+
+The product table also retains:
+
+- `8x`: SW1/SW2/SW3 = OFF/ON/OFF.
+- `16x`: OFF/OFF/ON.
+
+This supersedes the earlier `1.5 A = ON/OFF/ON` transcription in this note.
+The physical label on each received driver remains the final authority because
+generic TB6600 clones use incompatible tables.

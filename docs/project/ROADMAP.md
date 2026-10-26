@@ -367,10 +367,11 @@
   mechanics from compensation-induced path/subdivision dynamics.
   Risk: a stronger motor can mask rather than remove belt, bearing, carriage, or
   pen-drag dynamics; a clean print alone does not establish the limiting cause.
-  The owner reports that the replacement is the same motor model already
-  installed on Y and is not yet installed. The XY-only test now points away
-  from the Y motor as the primary striation cause, while the paired A test
-  remains required before accepting a rotating-bed fix. Acceptance: record the
+  The owner selected LDO `42STH48-2804AH` 2.8 A/phase motors for both Y and A;
+  they are not installed yet. Planned Y/A TB6600 current is 2.8 A, with Y
+  retained at 16x and A at 8x. The XY-only test now points away from the Y motor
+  as the primary striation cause, while the paired A test remains required
+  before accepting a rotating-bed fix. Acceptance: record the
   installed motor identity, direction/current/temperature, A repeatability,
   bed-ratio marker, and first-try M3 contact; then repeat the same yellow,
   magenta, and black layers at 700 mm/min. If any striates, use the M-13

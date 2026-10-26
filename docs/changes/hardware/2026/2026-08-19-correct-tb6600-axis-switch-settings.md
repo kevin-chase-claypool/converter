@@ -70,6 +70,14 @@ and change switches only with their drivers de-energized. E-03 must establish
 input polarity, E-04 must inspect all settings, and M-01 through M-05 must
 verify direction, heating, speed, and calibration.
 
+## Correction - 2026-10-26
+
+The current B0FQ5GBNZ1 product-label images show `1.5 A/1.7 A =
+ON/ON/OFF`, `2.0 A/2.2 A = ON/OFF/OFF`, and `2.8 A/2.9 A =
+OFF/OFF/ON`. The earlier `1.5 A = ON/OFF/ON` transcription above is
+superseded. `HW-20261026-001` records the corrected table and the planned
+2.8 A Y/A motors.
+
 ## Files
 
 - `docs/hardware/BOM.md`: authoritative purchased-driver configuration.

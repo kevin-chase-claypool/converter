@@ -6,6 +6,7 @@ Newest changes appear first.
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
 | 2026-10-26 | `WSW-20261026-001` | windows-software, hardware | implemented | [Restore wave depth with a shared phase](windows-software/2026/2026-10-26-phase-locked-wave-depth.md) |
+| 2026-10-26 | `HW-20261026-001` | hardware, rp23cnc-software | planned | [Plan 2.8 A LDO motors for Y and A](hardware/2026/2026-10-26-ldo-2-8a-y-a-driver-settings.md) |
 | 2026-10-25 | `WSW-20261025-004` | windows-software, hardware, rp23cnc-software | implemented | [Expand the XY/A tracking diagnostic into a full one-sheet matrix](windows-software/2026/2026-10-25-comprehensive-xy-a-tracking-matrix.md) |
 | 2026-10-25 | `WSW-20261025-003` | windows-software, hardware | implemented | [Use local amplitude budgets for CMYK wave depth](windows-software/2026/2026-10-25-local-cmyk-wave-amplitude-budget.md) |
 | 2026-10-25 | `WSW-20261025-002` | windows-software, hardware | failed | [Make zero-anchored CMYK wave depth pitch-independent](windows-software/2026/2026-10-25-independent-pitch-scaled-cmyk-wave-depth.md) |
