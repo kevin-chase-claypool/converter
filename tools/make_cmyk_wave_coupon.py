@@ -1,13 +1,18 @@
 """Generate a full-sheet black-pen CMYK wave diagnostic.
 
 The single program prints sixteen 54 x 28 mm patches: all four CMYK screen
-angles in two rows, comparing zero-anchored depth with equidistant rows, then
+angles in two rows, comparing phase-locked depth with equidistant rows, then
 repeats the matrix with production Xtheta/Ytheta planning. The upper half is
 planned with A parked as an isolated geometry control. Everything uses the
 production 3.36 mm paper pitch, 0.8 mm pen, F700, and 0.05 mm tolerance.
 
 The matrices fit within a 234 x 142 mm field on one already-mounted 14-inch
 sheet. One Cycle Start completes the entire diagnostic without intervention.
+
+``--letter`` writes a separate 8.5 x 11 paper verification matrix: all four
+CMYK angles at 2.80, 3.36, and 4.20 mm phase-locked pitch, plus one equidistant
+3.36 mm control row. The letter test keeps A parked so it isolates waveform
+geometry from bed-motion effects.
 """
 
 from __future__ import annotations
@@ -30,6 +35,9 @@ import converter_core as converter
 DEFAULT_OUTPUT = ROOT / "samples" / "gcode" / "cmyk-wave-coupon.gcode"
 DEFAULT_PITCH_OUTPUT = (
     ROOT / "samples" / "gcode" / "cmyk-wave-pitch-coupon.gcode"
+)
+DEFAULT_LETTER_OUTPUT = (
+    ROOT / "samples" / "gcode" / "cmyk-wave-letter-test.gcode"
 )
 DEFAULT_BED = (
     ROOT
@@ -59,6 +67,16 @@ PITCH_PATCH_LEFT_MM = (-97.5, -47.5, 2.5, 52.5)
 PITCH_PATCH_TOP_MM = (-72.0, -22.0, 28.0)
 PITCH_PATCH_WIDTH_MM = 45.0
 PITCH_PATCH_HEIGHT_MM = 44.0
+LETTER_PATCH_WIDTH_MM = 50.0
+LETTER_PATCH_HEIGHT_MM = 50.0
+LETTER_PATCH_LEFT_MM = (-100.0, -50.0, 0.0, 50.0)
+LETTER_PATCH_TOP_MM = (-100.0, -50.0, 0.0, 50.0)
+LETTER_ROWS = (
+    ("waves_zero", 2.80),
+    ("waves_zero", 3.36),
+    ("waves_zero", 4.20),
+    ("waves_even", 3.36),
+)
 
 
 def coupon_settings(theta_mode="fixed"):
@@ -96,14 +114,14 @@ def coupon_patch(
         1.0,
         float(spacing_mm) * 128.0 / max(float(height_mm), 1e-9),
     )
-    # Broad two-dimensional luminance variation exposes the tonal frequency
-    # and amplitude differences both along and across the wave rows.
+    # Broad two-dimensional luminance variation exposes tone-driven amplitude
+    # differences both along and across the wave rows at every screen angle.
     depth = np.clip(
-        0.12
-        + 0.46 * xx / 255.0
-        + 0.18 * yy / 127.0
-        + 0.17
-        * np.sin(2.0 * np.pi * yy / (8.0 * row_step_px)),
+        0.08
+        + 0.34 * xx / 255.0
+        + 0.42 * yy / 127.0
+        + 0.12
+        * np.sin(2.0 * np.pi * yy / (12.0 * row_step_px)),
         0.0,
         1.0,
     ).astype(np.float32)
@@ -188,6 +206,46 @@ def build_pitch_coupon():
     return banner + gcode, settings, marks
 
 
+def build_letter_test():
+    """Build the phase-locked wave verification for one 8.5 x 11 sheet."""
+    settings = coupon_settings("fixed")
+    marks = []
+    for top_mm, (style, pitch_mm) in zip(
+        LETTER_PATCH_TOP_MM,
+        LETTER_ROWS,
+    ):
+        for left_mm, (_ink, angle_deg) in zip(
+            LETTER_PATCH_LEFT_MM,
+            COUPON_ANGLES,
+        ):
+            marks.extend(
+                coupon_patch(
+                    style,
+                    left_mm,
+                    top_mm,
+                    width_mm=LETTER_PATCH_WIDTH_MM,
+                    height_mm=LETTER_PATCH_HEIGHT_MM,
+                    angle_deg=angle_deg,
+                    spacing_mm=pitch_mm,
+                )
+            )
+    plan = converter.plan_program(marks, settings)
+    gcode = converter.contours_to_gcode(
+        marks,
+        settings,
+        program_plan=plan,
+    )
+    banner = (
+        "(CMYK phase-locked wave test - 8.5 x 11 paper; 16 patches)\n"
+        "(columns left-to-right: C15 M75 Y0 K45)\n"
+        "(rows top-to-bottom: phase-locked 2.800 / 3.360 / 4.200 mm; "
+        "equidistant 3.360 mm control)\n"
+        "(A parked, 0.800 mm black pen, F700, bed compensation enabled)\n"
+        "(field 200 x 200 mm centered on the sheet)\n"
+    )
+    return banner + gcode, settings, marks
+
+
 def _reindexed_jobs(plan, offset):
     jobs = []
     for planned, points, thetas, strategies in plan["planned_jobs"]:
@@ -233,7 +291,7 @@ def build_coupon():
         "(CMYK full-sheet wave diagnostic - single file; 16 patches)\n"
         "(columns left-to-right: C15 M75 Y0 K45)\n"
         "(upper 8 patches: A parked; lower 8 patches: Xtheta-Ytheta)\n"
-        "(first row of each set: zero-anchored; second: equidistant)\n"
+        "(first row of each set: phase-locked depth; second: equidistant)\n"
         "(field 234 x 142 mm centered on the mounted sheet)\n"
         "(effective pitch 3.360 mm, pen 0.800 mm, F700, "
         "bed compensation enabled)\n"
@@ -244,14 +302,23 @@ def build_coupon():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out")
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--multi-pitch",
         action="store_true",
         help="generate the 12-patch 2.80/3.36/4.20 mm pitch coupon",
     )
+    mode.add_argument(
+        "--letter",
+        action="store_true",
+        help="generate the 16-patch 8.5 x 11 phase-locked wave test",
+    )
     args = parser.parse_args()
 
-    if args.multi_pitch:
+    if args.letter:
+        gcode, settings, marks = build_letter_test()
+        output_path = Path(args.out or DEFAULT_LETTER_OUTPUT)
+    elif args.multi_pitch:
         gcode, settings, marks = build_pitch_coupon()
         output_path = Path(args.out or DEFAULT_PITCH_OUTPUT)
     else:

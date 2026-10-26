@@ -113,6 +113,21 @@ Build a **zero-anchored variable wave** variant that:
 This preserves the useful depth behavior observed in the open-source tools while
 adding the missing clearance guarantee that those tools leave to manual tuning.
 
+## Implementation update (2026-10-26)
+
+The phase-locked interpretation was implemented after comparison with the
+first wave screen. The current **Wave screen - phase-locked depth** uses one
+common carrier for every row, tone-driven row amplitude, and the exact
+shortest-segment pen-envelope check. It does not accumulate a separate phase
+rate for each row and no longer reserves an additional 75% of pitch between
+same-column samples.
+
+On the same Ben1 image, the revised geometry roughly doubled the median visible
+wave range relative to the independent-phase iteration while remaining below
+the original phase-aligned implementation. The physical check is
+`samples/gcode/cmyk-wave-letter-test.gcode` on portrait 8.5 x 11 paper. See
+[`WSW-20261026-001`](../changes/windows-software/2026/2026-10-26-phase-locked-wave-depth.md).
+
 ## Method and limitations
 
 - Sources were read directly from the repositories through the GitHub API on

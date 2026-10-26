@@ -45,14 +45,6 @@ WAVE_DEPTH_ROW_WINDOW = 7
 # nominal pitch. The resulting gap remains between 88% and 112% of pitch,
 # keeping the intended depth variation without crossings or runaway gaps.
 WAVE_MAX_ADJACENT_GAP_FRACTION = 0.12
-# The zero-anchored mode follows the open-source SquiggleDraw family: tone
-# increases both amplitude and phase rate. Keep the maximum extra phase rate
-# bounded so the path-tolerance sampler remains practical.
-WAVE_FREQUENCY_TONE_GAIN = 1.0
-# Never permit two visible row centre lines closer than this fraction of pitch.
-# Row-specific depth is ordered into this band and its amplitude is then
-# limited by a slope-aware pen-envelope calculation.
-WAVE_MIN_CENTER_GAP_FRACTION = 0.75
 # The second clearance check measures the actual shortest distance between
 # emitted row segments, not only their separation at matching sample columns.
 # Keep at least this much bare paper between the nominal pen edges.
@@ -701,17 +693,7 @@ def _wave_clearance_ok(
     spacing,
     minimum_clearance_mm=0.0,
 ):
-    """Check sampled row bands and the final segment-to-segment clearance."""
-    minimum = spacing * WAVE_MIN_CENTER_GAP_FRACTION
-    for x_index in range(len(positions[0]) if positions else 0):
-        active = sorted(
-            row[x_index][1]
-            for row in positions
-            if row[x_index] is not None
-        )
-        for first_y, second_y in zip(active, active[1:]):
-            if second_y - first_y < minimum - 1e-9:
-                return False
+    """Check the shortest distance between adjacent visible row segments."""
     minimum_clearance = max(0.0, float(minimum_clearance_mm))
     if minimum_clearance:
         visible_rows = [
@@ -746,14 +728,11 @@ def _wave_rows(
     """Sine rows with tone-driven depth and a safety envelope.
 
     Local tone still masks each mark to the image. A vertically smoothed tone
-    field also varies wave height across rows. The zero-anchored mode resets
-    every phase at the left edge and lets tone increase both amplitude and
-    phase rate independently for each row, matching the upstream SquiggleDraw
-    family. A monotone row projection and slope-aware amplitude bound preserve
-    the pen envelope even though row frequencies differ. The equidistant mode
-    instead translates one common waveform with no row-specific movement. The
-    final clearance test measures the shortest distance between emitted
-    segments so steep rows cannot approach through a sample-column gap.
+    field also varies wave height across rows. The phase-locked depth mode
+    keeps one phase carrier across all rows and varies only their amplitude
+    from scene depth. The equidistant mode translates one common waveform with
+    no row-specific movement. Both use the final shortest-segment check to
+    preserve the configured pen envelope.
     """
     min_x, max_x, min_y, max_y, ca, sa = _local_frame(bounds, angle_deg)
     spacing = max(0.2, float(spacing))
@@ -769,20 +748,10 @@ def _wave_rows(
     # max|y''| for amplitude_max * sin(2*pi*x/wavelength) is amplitude_max *
     # (pi/spacing)^2, and a chord of length h has about h^2/8 times that
     # curvature as its midpoint error.
-    frequency_gain = (
-        1.0 + WAVE_FREQUENCY_TONE_GAIN if zero_anchored_depth else 1.0
-    )
-    texture_limit = (
-        spacing
-        * (1.0 - WAVE_MIN_CENTER_GAP_FRACTION)
-        * 0.5
-    )
     curvature_amplitude = amplitude_max
-    if zero_anchored_depth:
-        curvature_amplitude += texture_limit
     curvature = (
         curvature_amplitude
-        * (frequency_gain * math.pi / spacing) ** 2
+        * (math.pi / spacing) ** 2
     )
     tolerance_step = math.sqrt(
         8.0 * max(0.001, float(path_tolerance_mm)) / curvature
@@ -864,66 +833,13 @@ def _wave_rows(
                     )
                     positions[row_index][x_index] = (x, y + offset)
     elif zero_anchored_depth:
-        row_slope_at_full_depth = []
-        for row_index, row in enumerate(smoothed_tone):
-            active_x = [
-                x_index
-                for x_index in range(len(row))
-                if tone_rows[row_index][x_index] >= INK_FLOOR
-            ]
-            if not active_x:
-                row_slope_at_full_depth.append(0.0)
-                continue
-            max_tone = max(row[x_index] for x_index in active_x)
-            max_tone_step = max(
-                (
-                    abs(row[x_index] - row[x_index - 1])
-                    / sample_step
-                    for x_index in active_x
-                    if (
-                        x_index
-                        and tone_rows[row_index][x_index - 1] >= INK_FLOOR
-                    )
-                ),
-                default=0.0,
-            )
-            max_phase_slope = max_tone * (
-                math.pi
-                / spacing
-                * (1.0 + WAVE_FREQUENCY_TONE_GAIN * max_tone)
-            )
-            row_slope_at_full_depth.append(
-                amplitude_max * (max_phase_slope + max_tone_step)
-            )
-
-        # For two x-monotone rows separated vertically by at least `gap`, a
-        # slope bound M guarantees a shortest centreline distance no smaller
-        # than gap / sqrt(1 + M^2). Give each row its own amplitude budget so
-        # one sharp patch cannot flatten every other row.
         clearance = max(0.0, float(minimum_clearance_mm))
-        vertical_gap_floor = spacing * WAVE_MIN_CENTER_GAP_FRACTION
         if clearance > spacing + 1e-9:
             raise ValueError(
                 "Wave screen cannot keep adjacent pen strokes apart: "
                 "the effective pitch is smaller than the pen width plus "
                 "edge gap."
             )
-        if clearance <= 0.0:
-            row_depth_strength = [1.0] * len(smoothed_tone)
-        elif vertical_gap_floor <= clearance:
-            row_depth_strength = [0.0] * len(smoothed_tone)
-        else:
-            allowed_slope = math.sqrt(
-                (vertical_gap_floor / clearance) ** 2 - 1.0
-            )
-            row_depth_strength = [
-                (
-                    1.0
-                    if slope <= 1e-12
-                    else min(1.0, allowed_slope / slope)
-                )
-                for slope in row_slope_at_full_depth
-            ]
 
         def candidate_positions(
             depth_scale=1.0,
@@ -932,49 +848,18 @@ def _wave_rows(
                 [None] * len(x_values)
                 for _row_index in range(len(row_ys))
             ]
-            row_phases = [0.0] * len(row_ys)
             for x_index, x in enumerate(x_values):
                 check_cancelled(cancel_check)
                 for row_index, y in enumerate(row_ys):
                     if tone_rows[row_index][x_index] < INK_FLOOR:
                         continue
-                    if x_index:
-                        phase_rate = (
-                            math.pi
-                            / spacing
-                            * (
-                                1.0
-                                + WAVE_FREQUENCY_TONE_GAIN
-                                * smoothed_tone[row_index][x_index]
-                            )
-                        )
-                        row_phases[row_index] += phase_rate * sample_step
                     offset = (
                         amplitude_max
                         * depth_scale
-                        * row_depth_strength[row_index]
                         * smoothed_tone[row_index][x_index]
-                        * math.sin(row_phases[row_index])
+                        * math.sin(2.0 * math.pi * x / wavelength)
                     )
                     result[row_index][x_index] = (x, y + offset)
-
-                # Independent frequency fields can move adjacent rows toward
-                # one another. Preserve each desired row shape and shift only
-                # the rows needed to restore order, so the safety pass does
-                # not collapse the whole image to one shared waveform.
-                previous_y = None
-                minimum_y_gap = spacing * WAVE_MIN_CENTER_GAP_FRACTION
-                for row_index in range(len(row_ys)):
-                    point = result[row_index][x_index]
-                    if point is None:
-                        continue
-                    if (
-                        previous_y is not None
-                        and point[1] < previous_y + minimum_y_gap
-                    ):
-                        point = (x, previous_y + minimum_y_gap)
-                        result[row_index][x_index] = point
-                    previous_y = point[1]
             return result
 
         positions = candidate_positions(
@@ -1188,8 +1073,7 @@ def screen_channel(
     costs one M3/M5 cycle), ``crosshatch`` (line families stacked by tone
     level), ``waves`` (sine rows whose amplitude follows tone), ``waves_even``
     (identical translated wave rows with exact pitch spacing), ``waves_zero``
-    (independent tone-driven row amplitude and phase rate with zero-anchored
-    clearance), ``gyroid``
+    (shared phase with tone-driven row amplitude and exact clearance), ``gyroid``
     (interference-field contours that flatten into blank paper), ``tsp``
     (one greedy single line through tone stipple points) and ``contours``
     (topographic contour lines of the tone).
@@ -1197,10 +1081,10 @@ def screen_channel(
     a ballpoint reads darker without changing the geometry.
     ``path_tolerance_mm`` bounds the chord error of resampled wave rows; the
     CMYK tab supplies that budget in its final paper-space units.
-    ``row_clearance_mm`` is the minimum centerline separation for zero-anchored
-    rows, expressed in the same pre-scale units as ``spacing_mm``. It defaults
-    to the pen diameter plus ``WAVE_MIN_EDGE_GAP_MM`` for callers that do not
-    apply a later artwork scale.
+    ``row_clearance_mm`` is the minimum shortest-segment separation between
+    adjacent visible rows, expressed in the same pre-scale units as
+    ``spacing_mm``. It defaults to the pen diameter plus
+    ``WAVE_MIN_EDGE_GAP_MM`` for callers that do not apply a later artwork scale.
     """
     left = geometry["off_x"]
     top = geometry["off_y"]

@@ -1,5 +1,37 @@
 # Engineering Log
 
+<a id="elog-20261026-phase-locked-wave-depth"></a>
+### 🟨 2026-10-26 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Restore wave depth with a shared phase
+
+- The original wave screen used one common sine phase, so crests and troughs
+  aligned horizontally. The zero-anchored replacement accumulated phase
+  independently per row, then shifted rows to preserve a `75 %` pitch floor.
+  This consumed the amplitude budget and produced shallow, dense waves.
+- On the same Ben1 source image, median visible wave range measured about
+  `2.75 mm` for the original, `0.95 mm` for independent phase, and `1.93 mm`
+  after the new shared-phase implementation.
+- `waves_zero` remains the stored style key for compatibility but is displayed
+  as **Wave screen - phase-locked depth**. Every row uses one carrier and scene
+  depth scales only that row's amplitude.
+- The fixed `75 %` same-column floor and independent phase accumulator were
+  removed. The exact shortest-segment pen-envelope check remains and reduces
+  amplitude only when the configured pen plus paper gap would be violated.
+- New regression coverage confirms shared crest/trough positions, near
+  full-pitch amplitude at full tone, amplitude scaling across `2.80/3.36/4.20
+  mm`, and clearance without a fixed band fraction.
+- Added `cmyk-wave-letter-test.gcode`: sixteen `50 x 50 mm` patches on portrait
+  8.5 x 11 paper, with A parked. Rows cover phase-locked `2.80/3.36/4.20 mm`
+  pitch and an equidistant `3.36 mm` control; columns cover C15/M75/Y0/K45.
+- The letter test has `22,769` drawing moves and `287` travel moves, no pauses,
+  no bed rotation, and passes strict motion preflight. Physical execution is
+  pending.
+- Full converter discovery passes `546` tests with one expected OpenGL-context
+  skip.
+- Evidence: `WSW-20261026-001`,
+  `docs/report/lab-notes/2026-10-26-m-13-phase-locked-wave-depth.md`.
+- Category: windows-software, hardware, cmyk, wave-screen, depth, amplitude,
+  phase, clearance, test-paper.
+
 <a id="elog-20261025-comprehensive-xy-a-tracking-matrix"></a>
 ### 🟨 2026-10-25 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Expand XY/A tracking test to a full one-sheet matrix
 

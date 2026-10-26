@@ -315,7 +315,7 @@ Cycle Start with the pen loaded:
 - `..\samples\gcode\cmyk-wave-coupon.gcode` - single-run black-pen diagnostic
   for an already-mounted 14-inch sheet. It prints sixteen `54 x 28 mm` patches
   covering C15, M75, Y0 and K45 from left to right. The upper eight patches
-  test Wave screen - zero-anchored depth above equidistant rows with A parked;
+  test Wave screen - phase-locked depth above equidistant rows with A parked;
   the lower eight repeat the comparison with production Xtheta/Ytheta planning.
   One Cycle Start completes the file. It uses the production `3.36 mm`
   on-paper pitch, `0.8 mm` pen, `F700`, bed compensation, and `0.05 mm` Path
@@ -326,6 +326,12 @@ Cycle Start with the pen loaded:
   compensation, `F700`, and a `0.8 mm` pen. One Cycle Start completes all
   twelve patches. Regenerate with
   `python tools\make_cmyk_wave_coupon.py --multi-pitch`.
+- `..\samples\gcode\cmyk-wave-letter-test.gcode` - one-run black-pen
+  implementation check for portrait 8.5 x 11 paper with A parked. Four columns
+  cover C15/M75/Y0/K45. Three rows test phase-locked depth at `2.80`, `3.36`,
+  and `4.20 mm`; the fourth row is an equidistant `3.36 mm` control. The field
+  is `200 x 200 mm`, and one Cycle Start completes all sixteen patches.
+  Regenerate with `python tools\make_cmyk_wave_coupon.py --letter`.
 - `..\samples\gcode\bed-compensation-motion-test.gcode` - one-run
   compensated-versus-uncompensated XY/A tracking test for ordinary paper and a
   black `0.8 mm` Pigma Micron. Eleven cases compare parked-A horizontal and
@@ -500,20 +506,16 @@ Current tools:
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times
-  with a sub-pen offset. **Wave screen - zero-anchored depth** follows the
-  open-source SquiggleDraw model: every row starts at zero displacement and
-  scene tone independently drives each row's amplitude and winding rate.
-  Rows are kept ordered with at least `75 %` of nominal pitch between their
-  centerlines. Each row gets its own slope-aware amplitude budget, and only
-  transitions between samples that both contain ink are counted. A difficult
-  patch in one active row therefore no longer flattens unrelated rows, and
-  depth changes in blank paper do not constrain visible waves. The budget
-  preserves the `0.8 mm` pen plus `0.25 mm` paper gap; changing Dot pitch or
-  Artwork scale changes the geometry rather than selecting a coupon-specific
-  behavior. The emitted finite segments are also checked by their actual
-  shortest distance, with a floating-point allowance for an exact `75 %`
-  band boundary. A pitch smaller than the pen envelope is rejected with a
-  planning error because no legal row spacing exists at that scale.
+  with a sub-pen offset. **Wave screen - phase-locked depth** keeps one sine
+  phase across all rows while scene tone controls each row's amplitude. This
+  preserves the visual depth of the original wave screen without allowing
+  independently winding rows to converge. The emitted finite segments must
+  preserve the `0.8 mm` pen plus `0.25 mm` paper gap at their actual shortest
+  distance; there is no additional fixed fraction of the pitch reserved
+  between rows. Changing Dot pitch or Artwork scale changes the geometry rather
+  than selecting a coupon-specific behavior. A pitch smaller than the pen
+  envelope is rejected with a planning error because no legal row spacing
+  exists at that scale.
   Regression coverage spans `2.80`, `3.36`, and `4.20 mm` at all four CMYK
   screen angles. **Wave screen - equidistant rows** applies one shared
   luminance-shaped waveform with exact vertical pitch spacing and no

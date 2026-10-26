@@ -38,6 +38,7 @@ class CmykWaveCouponTests(unittest.TestCase):
         self.assertIn("upper 8 patches: A parked", gcode)
         self.assertIn("lower 8 patches: Xtheta-Ytheta", gcode)
         self.assertIn("columns left-to-right: C15 M75 Y0 K45", gcode)
+        self.assertIn("first row of each set: phase-locked depth", gcode)
         self.assertIn("effective pitch 3.360 mm", gcode)
         self.assertIn("(feed 700.0 mm/min", gcode)
         self.assertEqual(settings.theta_mode, "optimized")
@@ -67,46 +68,7 @@ class CmykWaveCouponTests(unittest.TestCase):
         self.assertIn("x_theta", checks["strategies"])
         self.assertIn("y_theta", checks["strategies"])
 
-    def test_coupon_exposes_the_spacing_difference(self):
-        def gap_spread(marks, angle_deg):
-            angle = math.radians(angle_deg)
-            cosine = math.cos(angle)
-            sine = math.sin(angle)
-            local = [
-                [
-                    (
-                        x * cosine + y * sine,
-                        -x * sine + y * cosine,
-                    )
-                    for x, y in mark
-                ]
-                for mark in marks
-            ]
-
-            def value_at(row, u_value):
-                ordered = sorted(row)
-                for first, second in zip(ordered, ordered[1:]):
-                    if first[0] <= u_value <= second[0]:
-                        fraction = (u_value - first[0]) / max(
-                            second[0] - first[0], 1e-9
-                        )
-                        return first[1] + fraction * (second[1] - first[1])
-                return None
-
-            gaps = []
-            for u_value in range(-30, 21):
-                ys = sorted(
-                    value
-                    for row in local
-                    if (value := value_at(row, u_value)) is not None
-                )
-                gaps.extend(
-                    second - first
-                    for first, second in zip(ys, ys[1:])
-                    if 2.5 < second - first < 4.2
-                )
-            return max(gaps) - min(gaps)
-
+    def test_coupon_exposes_phase_locked_depth_difference(self):
         for _ink, angle_deg in self.module.COUPON_ANGLES:
             with self.subTest(angle_deg=angle_deg):
                 variable = self.module.coupon_patch(
@@ -121,8 +83,14 @@ class CmykWaveCouponTests(unittest.TestCase):
                     -30.0,
                     angle_deg=angle_deg,
                 )
-                self.assertGreater(gap_spread(variable, angle_deg), 0.15)
-                self.assertLess(gap_spread(equidistant, angle_deg), 1e-6)
+                phase_spread = self._amplitude_spread(
+                    variable, angle_deg
+                )
+                control_spread = self._amplitude_spread(
+                    equidistant, angle_deg
+                )
+                self.assertGreater(phase_spread, 0.1)
+                self.assertGreater(phase_spread, control_spread)
 
     def test_multi_pitch_coupon_is_one_rotating_bed_program(self):
         gcode, settings, marks = self.module.build_pitch_coupon()
@@ -151,6 +119,74 @@ class CmykWaveCouponTests(unittest.TestCase):
         self.assertLessEqual(checks["rate"], checks["rate_cap"] * 1.01)
         self.assertIn("x_theta", checks["strategies"])
         self.assertIn("y_theta", checks["strategies"])
+
+    def test_letter_test_is_one_parked_implementation_check(self):
+        gcode, settings, marks = self.module.build_letter_test()
+        self.assertIn("8.5 x 11 paper; 16 patches", gcode)
+        self.assertIn(
+            "phase-locked 2.800 / 3.360 / 4.200 mm",
+            gcode,
+        )
+        self.assertIn("equidistant 3.360 mm control", gcode)
+        self.assertEqual(settings.theta_mode, "fixed")
+        self.assertEqual(gcode.count("\nM2\n"), 1)
+        self.assertNotRegex(gcode, r"(?m)^M0\s*$")
+
+        xs = [x for mark in marks for x, _y in mark]
+        ys = [y for mark in marks for _x, y in mark]
+        self.assertGreaterEqual(min(xs), -103.0)
+        self.assertLessEqual(max(xs), 103.0)
+        self.assertGreaterEqual(min(ys), -104.0)
+        self.assertLessEqual(max(ys), 104.0)
+
+        for _ink, angle_deg in self.module.COUPON_ANGLES:
+            phase_locked = self.module.coupon_patch(
+                "waves_zero",
+                -50.0,
+                -50.0,
+                width_mm=self.module.LETTER_PATCH_WIDTH_MM,
+                height_mm=self.module.LETTER_PATCH_HEIGHT_MM,
+                angle_deg=angle_deg,
+                spacing_mm=2.80,
+            )
+            control = self.module.coupon_patch(
+                "waves_even",
+                -50.0,
+                -50.0,
+                width_mm=self.module.LETTER_PATCH_WIDTH_MM,
+                height_mm=self.module.LETTER_PATCH_HEIGHT_MM,
+                angle_deg=angle_deg,
+                spacing_mm=2.80,
+            )
+            self.assertGreater(
+                self._amplitude_spread(phase_locked, angle_deg),
+                self._amplitude_spread(control, angle_deg),
+            )
+
+        with tempfile.TemporaryDirectory(
+            prefix="cmyk-wave-letter-test-"
+        ) as folder:
+            path = Path(folder) / "letter.gcode"
+            path.write_text(gcode, encoding="utf-8")
+            checks = self.module.converter.analyse_file(path, settings)
+        self.assertEqual(checks["rapids_with_rotation"], 0)
+        self.assertLessEqual(checks["step"], checks["cap"])
+        self.assertLessEqual(checks["rate"], checks["rate_cap"] * 1.01)
+        self.assertEqual(checks["over_tolerance"], 0)
+        self.assertIn("fixed", checks["strategies"])
+
+    @staticmethod
+    def _amplitude_spread(marks, angle_deg):
+        angle = math.radians(angle_deg)
+        cosine = math.cos(angle)
+        sine = math.sin(angle)
+        ranges = []
+        for mark in marks:
+            if len(mark) < 10:
+                continue
+            local_v = [-x * sine + y * cosine for x, y in mark]
+            ranges.append(max(local_v) - min(local_v))
+        return max(ranges) - min(ranges)
 
 
 if __name__ == "__main__":

@@ -858,7 +858,32 @@ class ScreeningTests(unittest.TestCase):
             "channel is uniformly saturated",
         )
 
-    def test_variable_wave_frequency_follows_tone_from_a_common_zero(self):
+    def test_depth_wave_keeps_near_full_pitch_amplitude_at_full_tone(self):
+        spacing = 4.0
+        tone = self.np.ones((128, 128), dtype="float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 128,
+                "pixels_h": 128,
+            },
+            style="waves_zero",
+            spacing_mm=spacing,
+            pen_diameter_mm=0.8,
+            depth_tone=tone,
+        )
+        ranges = [
+            max(y for _x, y in points) - min(y for _x, y in points)
+            for points in waves
+            if len(points) > 100
+        ]
+        self.assertGreater(min(ranges), spacing * 0.95)
+
+    def test_depth_wave_shares_phase_while_amplitude_follows_tone(self):
         spacing = 4.0
         geometry = {
             "off_x": 0.0,
@@ -868,34 +893,29 @@ class ScreeningTests(unittest.TestCase):
             "pixels_w": 64,
             "pixels_h": 64,
         }
-
-        def row_for_tone(value):
-            tone = self.np.full((64, 64), value, dtype="float32")
-            waves = converter.screen_channel(
-                tone,
-                geometry,
-                style="waves_zero",
-                spacing_mm=spacing,
-                depth_tone=tone,
-            )
-            return next(points for points in waves if len(points) > 100)
-
-        def crossings(points, baseline):
-            signs = [1 if y > baseline else -1 for _x, y in points]
-            return sum(first != second for first, second in zip(signs, signs[1:]))
-
-        light = row_for_tone(0.2)
-        dark = row_for_tone(0.9)
-        light_crossings = crossings(light, light[0][1])
-        dark_crossings = crossings(dark, dark[0][1])
-        self.assertGreater(
-            dark_crossings,
-            light_crossings * 1.3,
-            "darker tone must add phase cycles while every row starts at "
-            "the same zero point",
+        tone = self.np.ones((64, 64), dtype="float32")
+        yy, _xx = self.np.mgrid[0:64, 0:64]
+        depth = (0.25 + 0.7 * yy / 63.0).astype("float32")
+        rows = converter.screen_channel(
+            tone,
+            geometry,
+            style="waves_zero",
+            spacing_mm=spacing,
+            pen_diameter_mm=0.8,
+            depth_tone=depth,
         )
+        rows = [points for points in rows if len(points) > 100]
+        peaks = []
+        ranges = []
+        for points in rows:
+            ys = [y for _x, y in points]
+            ranges.append(max(ys) - min(ys))
+            first_half = [point for point in points if point[0] <= spacing]
+            peaks.append(max(first_half, key=lambda point: point[1])[0])
+        self.assertLess(max(peaks) - min(peaks), 0.2)
+        self.assertGreater(max(ranges), min(ranges) * 1.8)
 
-    def test_zero_anchored_depth_varies_frequency_per_row_across_pitches(self):
+    def test_depth_wave_scales_amplitude_not_frequency_across_pitches(self):
         size = 128
         yy, _xx = self.np.mgrid[0:size, 0:size]
         tone = self.np.ones((size, size), dtype="float32")
@@ -938,14 +958,24 @@ class ScreeningTests(unittest.TestCase):
                 self.assertGreaterEqual(len(rows), 20)
                 light_count = crossings(rows[1])
                 dark_count = crossings(rows[-2])
+                self.assertLessEqual(
+                    abs(dark_count - light_count),
+                    1,
+                    "depth must change amplitude without changing row frequency",
+                )
+                light_range = max(y for _x, y in rows[1]) - min(
+                    y for _x, y in rows[1]
+                )
+                dark_range = max(y for _x, y in rows[-2]) - min(
+                    y for _x, y in rows[-2]
+                )
                 self.assertGreater(
-                    dark_count,
-                    light_count * 1.35,
-                    "scene depth must drive each row's winding rate; a shared "
-                    "carrier leaves every row with the same frequency",
+                    dark_range,
+                    light_range * 2.0,
+                    "darker scene areas must retain visibly deeper waves",
                 )
 
-    def test_zero_anchored_depth_clearance_scales_at_all_angles_and_pitches(
+    def test_phase_locked_depth_clearance_scales_at_all_angles_and_pitches(
         self,
     ):
         import converter_core.cmyk as cmyk_core
@@ -1045,33 +1075,7 @@ class ScreeningTests(unittest.TestCase):
                             )
                         )
 
-                    sample_xs = [
-                        page_mm * fraction
-                        for fraction in (0.2, 0.35, 0.5, 0.65, 0.8)
-                    ]
-                    for sample_x in sample_xs:
-                        ys = sorted(
-                            value
-                            for points in local_rows
-                            if (
-                                value := value_at_x(points, sample_x)
-                            )
-                            is not None
-                        )
-                        gaps = [
-                            second - first
-                            for first, second in zip(ys, ys[1:])
-                            if 0.1 <= second - first <= 1.9 * spacing
-                        ]
-                        self.assertGreaterEqual(len(gaps), 4)
-                        self.assertGreaterEqual(
-                            min(gaps),
-                            spacing
-                            * converter.WAVE_MIN_CENTER_GAP_FRACTION
-                            - 1e-6,
-                        )
-
-    def test_zero_anchored_pitch_below_pen_envelope_fails_explicitly(self):
+    def test_phase_locked_pitch_below_pen_envelope_fails_explicitly(self):
         tone = self.np.ones((64, 64), dtype="float32")
         with self.assertRaisesRegex(
             ValueError,
@@ -1092,7 +1096,7 @@ class ScreeningTests(unittest.TestCase):
                 pen_diameter_mm=0.8,
             )
 
-    def test_zero_anchored_rows_vary_inside_a_clearance_safe_band(self):
+    def test_depth_wave_keeps_row_variation_within_exact_clearance(self):
         spacing = 4.0
         yy, xx = self.np.mgrid[0:64, 0:64]
         tone = self.np.full((64, 64), 0.82, dtype="float32")
@@ -1126,7 +1130,7 @@ class ScreeningTests(unittest.TestCase):
                     return first[1] + fraction * (second[1] - first[1])
             return None
 
-        for sample_x in (8.0, 16.0, 24.0, 32.0, 40.0, 48.0):
+        for sample_x in (2.0, 10.0, 18.0, 26.0, 34.0, 42.0):
             with self.subTest(sample_x=sample_x):
                 ys = sorted(
                     value
@@ -1141,16 +1145,18 @@ class ScreeningTests(unittest.TestCase):
                 self.assertGreaterEqual(len(gaps), 10)
                 self.assertGreaterEqual(
                     min(gaps),
-                    spacing * converter.WAVE_MIN_CENTER_GAP_FRACTION - 1e-6,
+                    converter.WAVE_MIN_EDGE_GAP_MM
+                    + 0.8
+                    - 1e-6,
                 )
                 self.assertGreater(
                     max(gaps) - min(gaps),
                     0.05,
-                    "row-specific waveform depth must survive the independent "
-                    "phase and safety envelope",
+                    "row-specific waveform depth must survive the clearance "
+                    "envelope",
                 )
 
-    def test_zero_anchored_local_slope_budget_preserves_untouched_rows(self):
+    def test_phase_locked_depth_preserves_untouched_rows(self):
         size = 128
         spacing = 2.8
         tone = self.np.ones((size, size), dtype="float32")
@@ -1201,7 +1207,7 @@ class ScreeningTests(unittest.TestCase):
             "a local high-slope patch must not reduce amplitude of distant rows",
         )
 
-    def test_zero_anchored_blank_depth_changes_do_not_limit_inked_rows(self):
+    def test_phase_locked_blank_depth_changes_do_not_limit_inked_rows(self):
         size = 128
         spacing = 2.8
         ink_mask = self.np.zeros((size, size), dtype="float32")
@@ -1246,58 +1252,7 @@ class ScreeningTests(unittest.TestCase):
             "depth changes over blank paper must not reduce ink-wave amplitude",
         )
 
-    def test_zero_anchored_waves_enforce_minimum_clearance(self):
-        spacing = 4.0
-        yy, xx = self.np.mgrid[0:64, 0:64]
-        tone = (
-            0.12
-            + 0.72 * yy / 63.0
-            + 0.1 * self.np.sin(2.0 * self.np.pi * xx / 13.0)
-        ).astype("float32")
-        waves = converter.screen_channel(
-            tone,
-            {
-                "off_x": 0.0,
-                "off_y": 0.0,
-                "width_mm": 64.0,
-                "height_mm": 64.0,
-                "pixels_w": 64,
-                "pixels_h": 64,
-            },
-            style="waves_zero",
-            spacing_mm=spacing,
-            depth_tone=tone,
-        )
-
-        def value_at_x(points, x_value):
-            ordered = sorted(points)
-            for first, second in zip(ordered, ordered[1:]):
-                if first[0] <= x_value <= second[0]:
-                    fraction = (x_value - first[0]) / max(
-                        second[0] - first[0], 1e-9
-                    )
-                    return first[1] + fraction * (second[1] - first[1])
-            return None
-
-        gaps = []
-        for sample_x in (1.0, 8.0, 16.0, 24.0, 32.0, 40.0, 48.0, 56.0):
-            ys = sorted(
-                value
-                for points in waves
-                if (value := value_at_x(points, sample_x)) is not None
-            )
-            gaps.extend(
-                second - first
-                for first, second in zip(ys, ys[1:])
-                if second - first < 2.0 * spacing
-            )
-        self.assertGreaterEqual(len(gaps), 10)
-        self.assertGreaterEqual(
-            min(gaps),
-            spacing * converter.WAVE_MIN_CENTER_GAP_FRACTION - 1e-6,
-        )
-
-    def test_zero_anchored_clearance_checks_segment_distance(self):
+    def test_phase_locked_clearance_checks_segment_distance(self):
         import converter_core.cmyk as cmyk_core
 
         positions = [
@@ -1314,23 +1269,23 @@ class ScreeningTests(unittest.TestCase):
             "but the steep segments come closer than a 1.05 mm pen envelope",
         )
 
-    def test_zero_anchored_exact_band_floor_is_safe(self):
+    def test_clearance_does_not_impose_a_fixed_band_floor(self):
         import converter_core.cmyk as cmyk_core
 
         positions = [
             [(0.0, 1.0), (1.0, 1.0)],
-            [(0.0, 4.0), (1.0, 4.0)],
+            [(0.0, 3.4), (1.0, 3.4)],
         ]
         self.assertTrue(
             cmyk_core._wave_clearance_ok(
                 positions,
                 4.0,
-                minimum_clearance_mm=0.0,
+                minimum_clearance_mm=1.05,
             ),
-            "an exact 75 % pitch gap must not fail on floating-point noise",
+            "2.4 mm between rows is legal when the pen envelope is clear",
         )
 
-    def test_zero_anchored_wave_chords_stay_within_path_tolerance(self):
+    def test_phase_locked_wave_chords_stay_within_path_tolerance(self):
         spacing = 4.0
         tone = self.np.ones((64, 64), dtype="float32")
         waves = converter.screen_channel(
@@ -1349,11 +1304,7 @@ class ScreeningTests(unittest.TestCase):
         row = next(points for points in waves if len(points) > 100)
         baseline = row[0][1]
         amplitude = spacing * 0.5
-        phase_rate = (
-            math.pi
-            / spacing
-            * (1.0 + converter.WAVE_FREQUENCY_TONE_GAIN)
-        )
+        phase_rate = math.pi / spacing
         errors = []
         for first, second in zip(row, row[1:]):
             midpoint_x = (first[0] + second[0]) / 2.0
@@ -1804,6 +1755,16 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(settings.theta_center_hold_diameter_mm, 70.0)
         self.assertEqual(tab._effective_settings().theta_mode, "fixed")
 
+    def test_depth_wave_style_is_labelled_phase_locked(self):
+        tab = self.make_tab()
+        index = tab.style.findData("waves_zero")
+        self.assertGreaterEqual(index, 0)
+        self.assertEqual(
+            tab.style.itemText(index),
+            "Wave screen - phase-locked depth",
+        )
+        self.assertIn("phase-locked", tab.style.toolTip())
+
     def test_xy_only_layer_program_holds_the_bed(self):
         tab = self.make_tab()
         tab._ensure_layers()
@@ -1980,6 +1941,14 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(
             data["screen"]["style"],
             tab.style.currentData(),
+        )
+        self.assertEqual(
+            data["screen"]["wave_phase_mode"],
+            "shared_zero_anchored",
+        )
+        self.assertNotIn(
+            "wave_frequency_tone_gain",
+            data["screen"],
         )
         self.assertAlmostEqual(
             data["screen"]["effective_pitch_mm"],

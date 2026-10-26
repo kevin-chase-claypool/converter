@@ -349,6 +349,15 @@
   straight-down close-up of an affected pair and the same path in XY-only mode
   remain required to distinguish ink spread/gantry motion from residual A
   following error. The multi-pitch physical coupon also remains pending.
+  Status 2026-10-26: direct comparison with the original wave screen showed
+  the independent per-row phase and fixed `75 %` same-column band had cut
+  visible depth roughly in half. `WSW-20261026-001` changes `waves_zero` to
+  **Wave screen - phase-locked depth**: one common carrier, tone-driven row
+  amplitude, and the exact pen-envelope segment check with no fixed band
+  fraction. On the same image, the median visible wave range increased from
+  about `0.95 mm` to `1.93 mm`; the original version measured about `2.75 mm`.
+  A new portrait 8.5 x 11 physical test covers all four screen angles at
+  `2.80`, `3.36`, and `4.20 mm`, plus an equidistant control.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

@@ -220,7 +220,7 @@ class CmykTab(GeneratorTab):
         self.style.addItem("Crosshatch levels", "crosshatch")
         self.style.addItem("Wave screen", "waves")
         self.style.addItem("Wave screen - equidistant rows", "waves_even")
-        self.style.addItem("Wave screen - zero-anchored depth", "waves_zero")
+        self.style.addItem("Wave screen - phase-locked depth", "waves_zero")
         self.style.addItem("Interference (gyroid)", "gyroid")
         self.style.addItem("Single line (TSP)", "tsp")
         self.style.addItem("Topographic contours", "contours")
@@ -230,8 +230,8 @@ class CmykTab(GeneratorTab):
             "their local mark spacing. Rectilinear joins consecutive rows "
             "over ink so one M3/M5 cycle covers a whole connected region. "
             "Wave screen allows bounded depth variation; its equidistant "
-            "variant keeps every row exactly one pitch apart; zero-anchored "
-            "depth adds tone-driven frequency changes with clearance limits."
+            "variant keeps every row exactly one pitch apart; phase-locked "
+            "depth varies row amplitude with tone and checks the pen envelope."
         )
         self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)
@@ -1322,12 +1322,7 @@ class CmykTab(GeneratorTab):
                 "seed": self.seed.value(),
                 "max_marks": self.max_marks.value(),
                 "screen_angles_deg": dict(converter.SCREEN_ANGLES_DEG),
-                "wave_frequency_tone_gain": (
-                    converter.WAVE_FREQUENCY_TONE_GAIN
-                ),
-                "wave_min_center_gap_fraction": (
-                    converter.WAVE_MIN_CENTER_GAP_FRACTION
-                ),
+                "wave_phase_mode": "shared_zero_anchored",
             },
             "ink_processing": {
                 "auto_levels": self.auto_levels.isChecked(),

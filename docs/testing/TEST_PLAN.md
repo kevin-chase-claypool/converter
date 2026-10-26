@@ -241,7 +241,7 @@ and coordinate semantics; Q3/Q4 remain prohibited.
 | M-10 | Full startup home and registration | One ioSender `G65 P113` command clears the pen, homes physical X/Y, runs P100 Q0 to register center and A, returns to G54 X0 Y0 A0, and leaves the pen lifted. 2026-09-24: completed unattended on the production integrated firmware through `P113 HOME + REGISTER wrapper complete`, parking at `MPos:-232.138,-189.975,0.000,5649.306`. |
 | M-11 | Homing abort/fault path | Missing/inconsistent magnetic edges, sensor fault, grblHAL alarm, or unknown lift state stops the current attempt, preserves diagnostics, reports status to ioSender, and requires manual recovery before retry |
 | M-12 | Rotating-bed centre-offset and full-field residual calibration | After `G65 P113`, separately fit the centre-only `rotation-center-calibration.gcode` and, only if its residual remains significant, run `bed-error-map.gcode` on 14-inch round stock using one 0.20 mm pen. The current one-sheet full-field test has 37 numbered stations on 50/95/150 mm rings, four pose fiducials, an A=0 reference, fixed-position lanes at 45/90/135/180/225/270/315 degrees, and an A=0 control after the rotations. Let each of the eight `M0` pauses dry before continuing. Extract all 333 station marks with `tools\measure_bed_error_photo.py`, then run `tools\analyze_bed_error_calibration.py` with the bed mesh. Accept a planner profile only when the report is complete, the field is repeatable, leave-one-station-out RMS is at most 0.35 mm with at most 0.90 mm maximum, the improvement is at least 10 %, and every correction is within the 5 mm bound. Verify it by comparing a second sheet with `--compare-to`; require at most 0.35 mm RMS / 0.90 mm maximum, at least 30 % improvement, and no angle stage worse by more than 0.05 mm. **Historical 2026-10-23:** the previous four-angle sheet produced a 0.581 mm RMS / 1.309 mm maximum station field. Corrected profile `2cdf3731de4a` remains the current default. **Failed 2026-10-24:** the eight-angle sheet measured `0.306 / 0.540 mm` A0 spatial error, `0.684 / 0.901 mm` A0 control, and `0.297 / 1.032 mm` leave-one-station-out, failing the maximum gate. Its independent compensated verification changed overall RMS from `0.708` to `0.639 mm` and maximum from `1.453` to `1.574 mm`, only `9.8 %` improvement; A270 and A315 worsened. Candidate `eda33445701f` is rejected. Threshold/blur sensitivity reproduced the failure. See the calibration and compensated-verification lab notes. |
-| M-13 | Wave-screen adjacent-row spacing and boundary containment after compensation | Measure whether source rows remain adequately separated and inside the configured drawable field after compensation and planner motion. Run each troubled CMYK layer at programmed feed and, when diagnosing A motion, at low-feed XY-only with fixed registration and overhead photos. **Historical 2026-10-23:** yellow appeared clean at 455 mm/min, while magenta at 420 mm/min and black near center still failed. **2026-10-24 software path:** compensation-frame and row-tone aliasing fixes improved the source, and accurate compensated decoding kept blocks within the `0.15 mm` path budget. The full print matched its rendered source. The rotation/acceleration matrix showed no difference at `$123=6000` versus `600`. **Open-source research:** SquiggleDraw, SquiggleCam, Plotterfun, and the SquiggleDraw Inkscape CMYK version all reset phase at a row baseline and use tone-driven amplitude/frequency, but none implements general inter-row clearance. **Passed 2026-10-25:** the sixteen-patch black-pen matrix printed all four CMYK angles with A parked and under Xtheta/Ytheta; enlarged inspection found no adjacent-row crossings. The oblique photo could not measure exact edge clearance. **Failed follow-up 2026-10-25:** the full yellow Ben1 print was still visually monotonous. It used effective `2.80 mm` pitch and a converter process/file that predated the current fix. **Local-budget fix (`WSW-20261025-003`):** each row uses its own active-segment amplitude budget, blank-paper depth changes are ignored, and an exact band floor accepts numerical tolerance. Real yellow passes on its first clearance attempt with `1.142 mm` median / `1.354 mm` maximum peak-to-peak height. The application-saved `11:33` set matches the corrected source exactly and passes strict motion/travel with compensation active. **Mechanical result 2026-10-25:** the operator found that the Y drag chain climbed a stepped transition at the northeast pillar, replaced the pillar with a straight version following the 3030 extrusion, and reports the same XY-only print now looks flawless. This is the leading explanation for the historical striations but is not yet a rotating-bed pass. **Pending:** run `bed-compensation-motion-test.gcode` to localize the remaining XY/A tracking error, then compare the physical wave coupon/yellow layer only after that discriminator passes. |
+| M-13 | Wave-screen adjacent-row spacing and boundary containment after compensation | Measure whether source rows remain adequately separated and inside the configured drawable field after compensation and planner motion. Run each troubled CMYK layer at programmed feed and, when diagnosing A motion, at low-feed XY-only with fixed registration and overhead photos. **Historical 2026-10-23:** yellow appeared clean at 455 mm/min, while magenta at 420 mm/min and black near center still failed. **2026-10-24 software path:** compensation-frame and row-tone aliasing fixes improved the source, and accurate compensated decoding kept blocks within the `0.15 mm` path budget. The full print matched its rendered source. The rotation/acceleration matrix showed no difference at `$123=6000` versus `600`. **Open-source research:** SquiggleDraw, SquiggleCam, Plotterfun, and the SquiggleDraw Inkscape CMYK version all reset phase at a row baseline and use tone-driven amplitude/frequency, but none implements general inter-row clearance. **Passed 2026-10-25:** the sixteen-patch black-pen matrix printed all four CMYK angles with A parked and under Xtheta/Ytheta; enlarged inspection found no adjacent-row crossings. The oblique photo could not measure exact edge clearance. **Failed follow-up 2026-10-25:** the full yellow Ben1 print was still visually monotonous. It used effective `2.80 mm` pitch and a converter process/file that predated the current fix. **Local-budget fix (`WSW-20261025-003`):** each row uses its own active-segment amplitude budget, blank-paper depth changes are ignored, and an exact `75 %` band-floor tolerance accepted numerical boundary noise. Real yellow passes on its first clearance attempt with `1.142 mm` median / `1.354 mm` maximum peak-to-peak height. The application-saved `11:33` set matches the corrected source exactly and passes strict motion/travel with compensation active. **Phase-lock fix (`WSW-20261026-001`):** direct comparison showed independent row phase plus the `75 %` floor had reduced median visible range to about half the original. `waves_zero` now shares one phase, varies row amplitude from scene tone, and uses only the exact pen-envelope check. Predicted median visible range rises from `0.95` to `1.93 mm`, versus `2.75 mm` for the original. **Mechanical result 2026-10-25:** the operator found that the Y drag chain climbed a stepped transition at the northeast pillar, replaced the pillar with a straight version following the 3030 extrusion, and reports the same XY-only print now looks flawless. This is the leading explanation for the historical striations but is not yet a rotating-bed pass. **Pending:** print `cmyk-wave-letter-test.gcode` on portrait 8.5 x 11 paper and verify visible row-amplitude variation, shared crest/trough positions, and no contact at all angles/pitches; then run `bed-compensation-motion-test.gcode` to localize any remaining XY/A tracking error. |
 
 ### M-12 full-field bench procedure
 
@@ -425,6 +425,39 @@ Interpret the result as follows:
 
 Procedure and static preflight evidence are recorded in
 [`2026-10-25-m-06-compensation-sync-test-plan.md`](../report/lab-notes/2026-10-25-m-06-compensation-sync-test-plan.md).
+
+### M-13 phase-locked wave paper check
+
+Generate the portrait letter-size test:
+
+```powershell
+python tools\make_cmyk_wave_coupon.py --letter
+```
+
+Run
+[`cmyk-wave-letter-test.gcode`](../../samples/gcode/cmyk-wave-letter-test.gcode)
+once on a flat, centered, fully taped 8.5 x 11 sheet with one black `0.8 mm`
+Pigma Micron. Run `G65 P113` first, confirm `$123=6000` and `$701=0`, set 100%
+override, and do not move or retape the sheet during the 16-patch program.
+The bed remains parked at A0.
+
+The columns are the four CMYK screen angles. The first three rows test
+phase-locked depth at `2.80`, `3.36`, and `4.20 mm`; the bottom row is an
+equidistant `3.36 mm` control.
+
+Acceptance:
+
+- Every row in a phase-locked patch begins and crosses its baseline at the
+  same horizontal position.
+- Tone produces visible differences in row amplitude.
+- The three pitch rows show comparable wave rhythm without a shallower
+  high-frequency ripple replacing the intended depth.
+- Adjacent rows remain visibly separated and never cross.
+- The bottom control has exact uniform row spacing.
+- All four screen angles satisfy the same criteria.
+
+Procedure, measured geometry, and limitations:
+[`2026-10-26-m-13-phase-locked-wave-depth.md`](../report/lab-notes/2026-10-26-m-13-phase-locked-wave-depth.md).
 
 Use [`m06-xy-theta-lettering.svg`](../../samples/svg/m06-xy-theta-lettering.svg)
 as a separate pen-free visual strategy check. With the current default r-theta
