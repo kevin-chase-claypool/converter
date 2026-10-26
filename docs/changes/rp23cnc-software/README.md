@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-25 | `WSW-20261025-004` | implemented | [Expand the XY/A tracking diagnostic into a full one-sheet matrix](../windows-software/2026/2026-10-25-comprehensive-xy-a-tracking-matrix.md) | `m-06`, `bed-compensation`, `rotary`, `tracking`, `feed-ladder`, `backlash`, `test-paper` |
 | 2026-10-25 | `WSW-20261025-001` | implemented | [Add ioSender configuration recovery](../windows-software/2026/2026-10-25-iosender-config-recovery.md) | `iosender`, `configuration`, `backup`, `restore`, `macros`, `grblhal`, `offsets` |
 | 2026-10-25 | `RPSW-20261025-006` | implemented | [Deploy the final P100 Y correction at 1.01 mm](2026/2026-10-25-p100-center-magnet-y-1-01-deployed.md) | `grblhal`, `p100`, `registration`, `center-magnet`, `pen-center`, `ftp` |
 | 2026-10-25 | `RPSW-20261025-005` | superseded | [Set and deploy the final P100 Y correction to 1.30](2026/2026-10-25-p100-center-magnet-y-1-3-deployed.md) | `grblhal`, `p100`, `registration`, `center-magnet`, `pen-center`, `ftp` |

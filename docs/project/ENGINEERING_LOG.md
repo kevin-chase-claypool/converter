@@ -1,5 +1,31 @@
 # Engineering Log
 
+<a id="elog-20261025-comprehensive-xy-a-tracking-matrix"></a>
+### 🟨 2026-10-25 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Expand XY/A tracking test to a full one-sheet matrix
+
+- Replaced the first five-case tracking coupon with eleven cases so one taped
+  sheet can test compensation, feed, direction, axis dominance, radius, and
+  repeatability without another setup cycle.
+- Every case redraws the same path forward and backward at requested
+  `F350/700/1200`. Paired cases cover normal and reverse sweeps, Y-dominant
+  motion, and inner-radius motion with compensation off/on.
+- Horizontal and vertical A-parked XY controls identify residual gantry or
+  drag-chain errors. Case 11 repeats the highest-risk compensated case.
+- Every rotating case includes coordinated pen-up travel from A0 to the sweep
+  and back to A0. Initial/return witness crosses expose lost position.
+- Four A0 frame crosses are drawn before and after the matrix to expose
+  cumulative loss over the complete run.
+- The one-file program has `4,235` drawing blocks, `0.62 deg` maximum
+  drawing-block rotation, `211 motor deg/s` peak A rate, `18` fed rotating
+  pen-up moves, and no bare rotated `G0`. Strict motion preflight passes.
+- Nine focused generator tests and the full `544`-test converter suite pass
+  (one expected OpenGL-context skip). Physical execution remains pending.
+- Evidence: `WSW-20261025-004`,
+  `docs/report/lab-notes/2026-10-25-m-06-compensation-sync-test-plan.md`,
+  `docs/research/2026-10-25-bed-compensation-and-simultaneous-xy-a-motion.md`.
+- Category: windows-software, hardware, rp23cnc-software, m-06,
+  bed-compensation, rotary, feed-ladder, pen-up, backlash, test-paper.
+
 <a id="elog-20261025-drag-chain-and-xy-a-tracking"></a>
 ### 🟨 2026-10-25 - HARDWARE/WINDOWS SOFTWARE/IMPLEMENTED - Identify drag-chain striation cause and isolate XY/A tracking
 

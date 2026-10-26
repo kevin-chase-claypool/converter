@@ -134,7 +134,9 @@
   Status 2026-10-25: exact grblHAL `1.1f.20260908` source confirms one shared
   planner block and step-event count for X/Y/A; `$701=0` changes feed
   interpretation, not synchronization. A one-sheet XY-only versus rotating
-  compensated/uncompensated discriminator is generated at
+  compensated/uncompensated discriminator with `F350/700/1200`, normal and
+  reverse sweeps, X/Y-dominant paths, inner-radius cases, and pen-up round
+  trips is generated at
   `samples/gcode/bed-compensation-motion-test.gcode` and awaits the physical
   run.
 - [x] Run a pen-free converter-generated sample G-code. (House-and-sun sample

@@ -328,11 +328,13 @@ Cycle Start with the pen loaded:
   `python tools\make_cmyk_wave_coupon.py --multi-pitch`.
 - `..\samples\gcode\bed-compensation-motion-test.gcode` - one-run
   compensated-versus-uncompensated XY/A tracking test for ordinary paper and a
-  black `0.8 mm` Pigma Micron. Five top-to-bottom cases use the same bed-space
-  path and A schedule: XY-only control, rotating uncompensated/compensated at
-  `F700`, then rotating uncompensated/compensated at `F350`. Each case includes
-  29-degree bed travel during both pen-down tracing and pen-up moves, plus A0
-  witness crosses that should overlay. Regenerate with
+  black `0.8 mm` Pigma Micron. Eleven cases compare parked-A horizontal and
+  vertical controls, compensated/uncompensated normal and reverse A sweeps,
+  Y-dominant motion, inner-radius motion, and a repeat of the highest-risk
+  compensated case. Every case redraws the same path at requested
+  `F350`, `F700`, and `F1200`, with forward/reverse traces, rotating pen-up
+  round trips, A0 witness crosses, and a global frame recheck that should all
+  overlay. Regenerate with
   `python tools\make_bed_compensation_motion_test.py`.
 
 ## Generator tabs

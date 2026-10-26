@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-25 | `WSW-20261025-004` | windows-software, hardware, rp23cnc-software | implemented | [Expand the XY/A tracking diagnostic into a full one-sheet matrix](windows-software/2026/2026-10-25-comprehensive-xy-a-tracking-matrix.md) |
 | 2026-10-25 | `WSW-20261025-003` | windows-software, hardware | implemented | [Use local amplitude budgets for CMYK wave depth](windows-software/2026/2026-10-25-local-cmyk-wave-amplitude-budget.md) |
 | 2026-10-25 | `WSW-20261025-002` | windows-software, hardware | failed | [Make zero-anchored CMYK wave depth pitch-independent](windows-software/2026/2026-10-25-independent-pitch-scaled-cmyk-wave-depth.md) |
 | 2026-10-25 | `WSW-20261025-001` | windows-software, rp23cnc-software | implemented | [Add ioSender configuration recovery](windows-software/2026/2026-10-25-iosender-config-recovery.md) |

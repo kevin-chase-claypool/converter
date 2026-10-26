@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-25 | `WSW-20261025-004` | implemented | [Expand the XY/A tracking diagnostic into a full one-sheet matrix](../windows-software/2026/2026-10-25-comprehensive-xy-a-tracking-matrix.md) | `m-06`, `bed-compensation`, `rotary`, `tracking`, `feed-ladder`, `backlash`, `test-paper` |
 | 2026-10-25 | `WSW-20261025-003` | implemented | [Use local amplitude budgets for CMYK wave depth](../windows-software/2026/2026-10-25-local-cmyk-wave-amplitude-budget.md) | `cmyk`, `wave-screen`, `depth`, `amplitude`, `clearance`, `dot-pitch` |
 | 2026-10-25 | `WSW-20261025-002` | failed | [Make zero-anchored CMYK wave depth pitch-independent](../windows-software/2026/2026-10-25-independent-pitch-scaled-cmyk-wave-depth.md) | `cmyk`, `wave-screen`, `depth`, `dot-pitch`, `clearance`, `manifest` |
 | 2026-10-25 | `RPSW-20261025-006` | implemented | [Deploy the final P100 Y correction at 1.01 mm](../rp23cnc-software/2026/2026-10-25-p100-center-magnet-y-1-01-deployed.md) | `grblhal`, `p100`, `registration`, `center-magnet`, `pen-center`, `ftp` |

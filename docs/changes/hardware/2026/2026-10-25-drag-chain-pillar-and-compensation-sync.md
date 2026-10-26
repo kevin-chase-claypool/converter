@@ -94,8 +94,13 @@ not synchronization.
 - Residual A-axis belt compliance, torque loss, backlash, or another mechanical
   drag source can still produce a rotating-only error.
 - Run the new ordinary-paper black-pen test before another long CMYK layer.
-- Interpret the five cases per the test plan. Only compensated cases failing
-  would justify a converter feed/subdivision change.
+- The original five cases are retained as historical implementation detail.
+  Only compensated cases failing would justify a converter feed/subdivision
+  change.
+- The same-day `WSW-20261025-004` expansion supersedes the original five-case
+  program with an eleven-case feed, direction, axis-dominance, and radius
+  matrix. The hardware finding and source conclusions in this note are
+  unchanged.
 - The existing compensated-profile calibration remains valid; this milestone
   does not replace or refit it.
 

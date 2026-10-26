@@ -234,7 +234,7 @@ and coordinate semantics; Q3/Q4 remain prohibited.
 | M-03 | X/Y dimensional calibration | Initial `$100/$101 = 80.000000` steps/mm for GT2 20T pulleys at 16 microsteps; measured error is inside project tolerance after correction |
 | M-04 | A-axis one motor revolution | With 8 microsteps and `$103 = 4.444444` steps per motor-degree, 360 commanded A motor-degrees gives one motor revolution |
 | M-05 | Bed ratio check | Commanded A for one bed revolution: 4320 nominal, 4331.97 measured (19,253 pulses at 8×) |
-| M-06 | Coordinated X/Y/A sample | Smooth motion and no lost steps. **2026-10-25:** source inspection confirms all X/Y/A endpoints share one grblHAL planner block and step-event count; installed `$701=0` changes feed interpretation only. Run `bed-compensation-motion-test.gcode` to compare XY-only, rotating uncompensated, and rotating compensated motion at fast and slow feeds. |
+| M-06 | Coordinated X/Y/A sample | Smooth motion and no lost steps. **2026-10-25:** source inspection confirms all X/Y/A endpoints share one grblHAL planner block and step-event count; installed `$701=0` changes feed interpretation only. Run `bed-compensation-motion-test.gcode` to compare parked, rotating uncompensated/compensated, normal/reverse, Y-dominant, inner-radius, and repeated motion at `F350/700/1200`, including pen-up round trips. |
 | M-07 | Homing and limits | X/Y physical home passed: repeatable machine home from physical switches with Z/A excluded. A conservative X/Y software envelope is enabled; explicit near-boundary rejection/recovery remains open. |
 | M-08 | Magnetic bed-center centroid raster | After X/Y physical homing, P100 produces multiple valid equal-pitch X chords, rejects malformed footprints, calculates the chord-width-weighted area centroid, performs the Centroid Approach and Registration Pass, and repeatably sets G54 X0/Y0. 2026-09-24: the 21-row 5 mm raster on the production integrated build completed with no rejected validation and wrote G54 `-232.136,-189.980` from a centroid at `MPos:-232.138,-219.475`; X reproduced the 2026-09-11 centroid to 0.013 mm, and the operator confirmed the parked pen tip perfectly centered over the center magnet. **2026-10-25:** after Y `1.30` tested almost centered, a final 0.29 mm south correction produced Y `1.01`. The 15,244-byte macro is deployed with X `1.45`, Y `1.01`; repeat `G65 P113` and the center-magnet check remain pending. |
 | M-09 | Magnetic theta-index registration | At the measured outer radius, P100 finds two outer-magnet entry/exit pairs from one direction, validates spacing against the measured `4332 +/- 10` A motor degrees, approaches the equivalent averaged index, and repeatably sets G54 A0. 2026-09-24: footprints `1264.951/1369.576` and `5597.106/5701.281` gave `4331.930` A motor degrees of spacing and wrote G54 A0 at `5649.193`. 2026-09-30: a third survey gave `4332.153` (spread 0.335 across three runs) and the gate was re-derived to `4332 +/- 10`. |
@@ -396,22 +396,32 @@ Use ordinary letter/A4 paper and one black `0.8 mm` Pigma Micron. Run
 `G65 P113` first, confirm `$113=30000`, `$123=6000`, `$376=1`, `$701=0`, then
 Cycle Start once at 100 percent override. The program has no pauses.
 
-The five cases use the same bed-space path and A schedule: XY-only at `F700`,
-rotating uncompensated/compensated at `F700`, then rotating
-uncompensated/compensated at `F350`. Each case has overlapping initial/return
-witness crosses and forward/reverse pen-down traces. Rotating pen-up moves
-occur before and after the traces.
+The eleven-case matrix includes horizontal and vertical parked controls,
+uncompensated/compensated normal sweeps, reverse sweeps, Y-dominant sweeps, an
+inner-radius pair, and a repeat of the highest-risk compensated case. Every
+case redraws the same bed-space path forward and backward at requested `F350`,
+`F700`, and `F1200`. Each has overlapping initial/return witness crosses;
+rotating pen-up moves occur before and after the traces. Four A0 frame crosses
+are drawn before and after the whole matrix to reveal cumulative loss.
 
 Interpret the result as follows:
 
-- All cases clean: the repaired Y mechanics and combined motion pass this
-  discriminator; proceed to the next production wave layer.
+- All cases and the final frame clean: the repaired mechanics and combined
+  motion pass this discriminator; proceed to the next production wave layer.
 - Only compensated cases fail: compensation-induced planner dynamics or feed
   planning remains; revise the converter before another production print.
-- Fast cases fail while slow cases pass: the error is rate/torque limited.
+- A fast feed overlay fails while slower overlays pass: the error is
+  rate/torque limited.
 - Rotating cases fail while XY-only passes: localize residual A-axis mechanics,
   belt compliance, backlash, or torque loss before changing compensation.
+- Normal and reverse sweeps differ: investigate direction-dependent backlash,
+  belt wind-up, or A coupling.
+- Horizontal and Y-dominant cases differ: inspect carriage/drag-chain mechanics
+  before changing compensation.
+- Mid-radius and inner cases differ: investigate radius-dependent A feed,
+  bed-centre error, and runout.
 - Witness pairs separate: position was lost during a rotating pen-up move.
+- Final frame differs: position was lost cumulatively somewhere in the run.
 
 Procedure and static preflight evidence are recorded in
 [`2026-10-25-m-06-compensation-sync-test-plan.md`](../report/lab-notes/2026-10-25-m-06-compensation-sync-test-plan.md).

@@ -1,14 +1,12 @@
-"""Generate a one-sheet compensated-versus-uncompensated tracking test.
+"""Generate a comprehensive one-sheet X/Y/A tracking diagnostic.
 
-Every case traces the same bed-space path with the same bed-angle schedule.
-The only intentional differences are whether bed compensation is applied,
-whether the bed rotates, and the requested feed. Each case draws a reference
-cross at A0, performs a rotating pen-up move, draws a forward/reverse path while
-the bed rotates, then returns at A0 and draws the same cross again. A clean
-result therefore has coincident ink at both crosses and forward/reverse traces.
+Every case uses the same bed-space path at three feed requests and draws an A0
+witness before and after a rotating pen-up round trip. Cases compare parked-A
+controls, compensated versus uncompensated motion, normal versus reverse A
+sweeps, X-dominant versus Y-dominant paths, and inner versus mid-radius motion.
 
-The program uses ordinary paper and one black Pigma Micron. It is one G-code
-file with one Cycle Start and no M0 pauses.
+The program is one G-code file with one Cycle Start and no M0 pauses. It fits on
+letter/A4 paper and uses one black 0.8 mm Pigma Micron.
 """
 
 from __future__ import annotations
@@ -39,58 +37,151 @@ DEFAULT_OUTPUT = (
 )
 
 THETA_RATIO = 12.03324
-PATH_MIN_X_MM = -45.0
-PATH_MAX_X_MM = 45.0
+FEED_LADDER_MM_MIN = (350.0, 700.0, 1200.0)
 PATH_STEP_MM = 0.6
-PATH_WAVES = 3.0
-PATH_AMPLITUDE_MM = 1.6
 A_SWEEP_DEG = 14.5
-CROSS_CENTER_X_MM = -55.0
 CROSS_ARM_MM = 2.5
-FAST_FEED_MM_MIN = 700.0
-SLOW_FEED_MM_MIN = 350.0
+WITNESS_GAP_MM = 7.0
 TRAVEL_FEED_MM_MIN = 3000.0
+FRAME_CORNERS = (
+    (-80.0, 125.0),
+    (80.0, 125.0),
+    (-80.0, -125.0),
+    (80.0, -125.0),
+)
 
 CASES = (
     {
         "id": 1,
-        "name": "XY only A parked",
-        "y_mm": 56.0,
+        "name": "XY-only horizontal control",
+        "center": (-35.0, -65.0),
+        "orientation_deg": 0.0,
+        "length_mm": 40.0,
+        "amplitude_mm": 1.2,
+        "waves": 3.0,
         "rotate": False,
         "compensate": False,
-        "feed_mm_min": FAST_FEED_MM_MIN,
+        "sweep_sign": 1,
     },
     {
         "id": 2,
-        "name": "rotating uncompensated fast",
-        "y_mm": 28.0,
-        "rotate": True,
+        "name": "XY-only vertical control",
+        "center": (0.0, -105.0),
+        "orientation_deg": 90.0,
+        "length_mm": 36.0,
+        "amplitude_mm": 1.0,
+        "waves": 3.0,
+        "rotate": False,
         "compensate": False,
-        "feed_mm_min": FAST_FEED_MM_MIN,
+        "sweep_sign": 1,
     },
     {
         "id": 3,
-        "name": "rotating compensated fast",
-        "y_mm": 0.0,
+        "name": "normal sweep uncompensated",
+        "center": (-35.0, 120.0),
+        "orientation_deg": 0.0,
+        "length_mm": 40.0,
+        "amplitude_mm": 1.2,
+        "waves": 3.0,
         "rotate": True,
-        "compensate": True,
-        "feed_mm_min": FAST_FEED_MM_MIN,
+        "compensate": False,
+        "sweep_sign": 1,
     },
     {
         "id": 4,
-        "name": "rotating uncompensated slow",
-        "y_mm": -28.0,
+        "name": "normal sweep compensated",
+        "center": (35.0, 120.0),
+        "orientation_deg": 0.0,
+        "length_mm": 40.0,
+        "amplitude_mm": 1.2,
+        "waves": 3.0,
         "rotate": True,
-        "compensate": False,
-        "feed_mm_min": SLOW_FEED_MM_MIN,
+        "compensate": True,
+        "sweep_sign": 1,
     },
     {
         "id": 5,
-        "name": "rotating compensated slow",
-        "y_mm": -56.0,
+        "name": "reverse sweep uncompensated",
+        "center": (-35.0, 75.0),
+        "orientation_deg": 0.0,
+        "length_mm": 40.0,
+        "amplitude_mm": 1.2,
+        "waves": 3.0,
+        "rotate": True,
+        "compensate": False,
+        "sweep_sign": -1,
+    },
+    {
+        "id": 6,
+        "name": "reverse sweep compensated",
+        "center": (35.0, 75.0),
+        "orientation_deg": 0.0,
+        "length_mm": 40.0,
+        "amplitude_mm": 1.2,
+        "waves": 3.0,
         "rotate": True,
         "compensate": True,
-        "feed_mm_min": SLOW_FEED_MM_MIN,
+        "sweep_sign": -1,
+    },
+    {
+        "id": 7,
+        "name": "Y-dominant sweep uncompensated",
+        "center": (-35.0, 25.0),
+        "orientation_deg": 90.0,
+        "length_mm": 36.0,
+        "amplitude_mm": 1.0,
+        "waves": 3.0,
+        "rotate": True,
+        "compensate": False,
+        "sweep_sign": 1,
+    },
+    {
+        "id": 8,
+        "name": "Y-dominant sweep compensated",
+        "center": (35.0, 25.0),
+        "orientation_deg": 90.0,
+        "length_mm": 36.0,
+        "amplitude_mm": 1.0,
+        "waves": 3.0,
+        "rotate": True,
+        "compensate": True,
+        "sweep_sign": 1,
+    },
+    {
+        "id": 9,
+        "name": "inner-radius sweep uncompensated",
+        "center": (-28.0, -15.0),
+        "orientation_deg": 30.0,
+        "length_mm": 28.0,
+        "amplitude_mm": 0.8,
+        "waves": 3.0,
+        "rotate": True,
+        "compensate": False,
+        "sweep_sign": 1,
+    },
+    {
+        "id": 10,
+        "name": "inner-radius sweep compensated",
+        "center": (28.0, -15.0),
+        "orientation_deg": 30.0,
+        "length_mm": 28.0,
+        "amplitude_mm": 0.8,
+        "waves": 3.0,
+        "rotate": True,
+        "compensate": True,
+        "sweep_sign": 1,
+    },
+    {
+        "id": 11,
+        "name": "repeat normal sweep compensated",
+        "center": (35.0, -65.0),
+        "orientation_deg": 0.0,
+        "length_mm": 40.0,
+        "amplitude_mm": 1.2,
+        "waves": 3.0,
+        "rotate": True,
+        "compensate": True,
+        "sweep_sign": 1,
     },
 )
 
@@ -119,43 +210,52 @@ def machine_point(
     )
 
 
-def path_y(x_mm: float, lane_y_mm: float) -> float:
-    fraction = (x_mm - PATH_MIN_X_MM) / (PATH_MAX_X_MM - PATH_MIN_X_MM)
-    return lane_y_mm + PATH_AMPLITUDE_MM * math.sin(
-        2.0 * math.pi * PATH_WAVES * fraction
+def rotate_local(case, u_mm: float, v_mm: float) -> tuple[float, float]:
+    angle = math.radians(float(case["orientation_deg"]))
+    cosine = math.cos(angle)
+    sine = math.sin(angle)
+    center_x, center_y = case["center"]
+    return (
+        center_x + u_mm * cosine - v_mm * sine,
+        center_y + u_mm * sine + v_mm * cosine,
     )
 
 
 def path_points(case) -> list[tuple[float, float]]:
-    count = int(
-        round((PATH_MAX_X_MM - PATH_MIN_X_MM) / PATH_STEP_MM)
+    length = float(case["length_mm"])
+    amplitude = float(case["amplitude_mm"])
+    waves = float(case["waves"])
+    count = max(1, int(round(length / PATH_STEP_MM)))
+    points = []
+    for index in range(count + 1):
+        fraction = index / count
+        u_mm = -length / 2.0 + length * fraction
+        v_mm = amplitude * math.sin(2.0 * math.pi * waves * fraction)
+        points.append(rotate_local(case, u_mm, v_mm))
+    return points
+
+
+def witness_point(case) -> tuple[float, float]:
+    return rotate_local(
+        case,
+        -float(case["length_mm"]) / 2.0 - WITNESS_GAP_MM,
+        0.0,
     )
-    return [
-        (
-            PATH_MIN_X_MM
-            + (PATH_MAX_X_MM - PATH_MIN_X_MM) * index / count,
-            path_y(
-                PATH_MIN_X_MM
-                + (PATH_MAX_X_MM - PATH_MIN_X_MM) * index / count,
-                case["y_mm"],
-            ),
-        )
-        for index in range(count + 1)
-    ]
 
 
 def theta_for_fraction(case, fraction: float) -> float:
     if not case["rotate"]:
         return 0.0
-    return -A_SWEEP_DEG + 2.0 * A_SWEEP_DEG * fraction
+    return float(case["sweep_sign"]) * A_SWEEP_DEG * (
+        2.0 * fraction - 1.0
+    )
 
 
-def case_settings(case):
-    feed = float(case["feed_mm_min"])
+def case_settings(feed_mm_min: float):
     return dataclasses.replace(
         converter.Settings(),
-        feed_rate=feed,
-        theta_tangential_speed_mm_min=feed,
+        feed_rate=float(feed_mm_min),
+        theta_tangential_speed_mm_min=float(feed_mm_min),
     )
 
 
@@ -177,7 +277,7 @@ def emit_g1(
     )
 
 
-def emit_travel(
+def emit_fixed_travel(
     lines: list[str],
     point: tuple[float, float],
     theta_deg: float,
@@ -266,47 +366,33 @@ def emit_pen_up(lines: list[str]) -> None:
     lines.append("G65 P115 Q1 A1 W2")
 
 
-def emit_case(lines: list[str], case, profile, first_pen_down: bool) -> None:
-    center = (CROSS_CENTER_X_MM, float(case["y_mm"]))
-    settings = case_settings(case)
-    requested_feed = float(case["feed_mm_min"])
-    points = path_points(case)
-    lines.append(
-        f"(case {case['id']}: {case['name']}; bed y {fmt(case['y_mm'])} mm; "
-        f"A {fmt(-A_SWEEP_DEG)} to {fmt(A_SWEEP_DEG)} to "
-        f"{fmt(-A_SWEEP_DEG)} deg; requested F{fmt(requested_feed)})"
-    )
+def emit_frame(lines: list[str], feed: float) -> None:
+    for index, center in enumerate(FRAME_CORNERS, start=1):
+        emit_cross(lines, center, feed, f"frame witness {index}")
 
-    emit_travel(
-        lines,
-        center,
-        0.0,
-        profile,
-        False,
-        "travel to case witness",
-    )
-    emit_pen_down(lines, first_pen_down)
-    emit_cross(lines, center, requested_feed, "initial witness")
-    emit_pen_up(lines)
 
-    start_theta = theta_for_fraction(case, 0.0)
-    emit_rotating_travel(
-        lines,
-        center,
-        0.0,
-        points[0],
-        start_theta,
-        profile,
-        bool(case["compensate"]),
-        "rotating pen-up to path",
-    )
-    emit_pen_down(lines, False)
-
-    for index, (first, second) in enumerate(zip(points, points[1:])):
-        start_fraction = index / (len(points) - 1)
-        end_fraction = (
-            (index + 1) / (len(points) - 1)
-        )
+def trace_pass(
+    lines: list[str],
+    case,
+    points: list[tuple[float, float]],
+    feed_mm_min: float,
+    profile,
+    reverse_path: bool,
+) -> None:
+    settings = case_settings(feed_mm_min)
+    if reverse_path:
+        indices = range(len(points) - 2, -1, -1)
+        label = "reverse trace"
+    else:
+        indices = range(len(points) - 1)
+        label = "forward trace"
+    for index in indices:
+        first_index = index + 1 if reverse_path else index
+        second_index = index if reverse_path else index + 1
+        first = points[first_index]
+        second = points[second_index]
+        start_fraction = first_index / (len(points) - 1)
+        end_fraction = second_index / (len(points) - 1)
         start_theta = theta_for_fraction(case, start_fraction)
         end_theta = theta_for_fraction(case, end_fraction)
         start_machine = machine_point(
@@ -336,71 +422,96 @@ def emit_case(lines: list[str], case, profile, first_pen_down: bool) -> None:
             feed_plan["feed_rate"],
             profile,
             bool(case["compensate"]),
-            "forward trace",
+            label,
         )
 
-    for index in range(len(points) - 2, -1, -1):
-        first = points[index + 1]
-        second = points[index]
-        start_theta = theta_for_fraction(
-            case, (index + 1) / (len(points) - 1)
-        )
-        end_theta = theta_for_fraction(case, index / (len(points) - 1))
-        start_machine = machine_point(
-            first,
-            start_theta,
-            profile,
-            bool(case["compensate"]),
-        )
-        end_machine = machine_point(
-            second,
-            end_theta,
-            profile,
-            bool(case["compensate"]),
-        )
-        feed_plan = converter.plan_radius_aware_draw_feed(
-            first,
-            second,
-            (0.0, 0.0),
-            converter.distance(start_machine, end_machine),
-            (end_theta - start_theta) * THETA_RATIO,
-            settings,
-        )
-        emit_g1(
-            lines,
-            second,
-            end_theta,
-            feed_plan["feed_rate"],
-            profile,
-            bool(case["compensate"]),
-            "reverse trace",
-        )
 
+def emit_case(lines: list[str], case, profile, first_pen_down: bool) -> None:
+    points = path_points(case)
+    witness = witness_point(case)
+    start_theta = theta_for_fraction(case, 0.0)
+    feed_text = "/".join(fmt(feed) for feed in FEED_LADDER_MM_MIN)
+    lines.append(
+        f"(case {case['id']}: {case['name']}; center "
+        f"{fmt(case['center'][0])},{fmt(case['center'][1])} mm; "
+        f"orientation {fmt(case['orientation_deg'])} deg; "
+        f"feed ladder {feed_text} mm/min)"
+    )
+
+    emit_fixed_travel(
+        lines,
+        witness,
+        0.0,
+        profile,
+        False,
+        "travel to case witness",
+    )
+    emit_pen_down(lines, first_pen_down)
+    emit_cross(lines, witness, FEED_LADDER_MM_MIN[1], "initial witness")
     emit_pen_up(lines)
+
+    emit_rotating_travel(
+        lines,
+        witness,
+        0.0,
+        points[0],
+        start_theta,
+        profile,
+        bool(case["compensate"]),
+        "pen-up transition to path",
+    )
+    emit_pen_down(lines, False)
+    for feed_mm_min in FEED_LADDER_MM_MIN:
+        lines.append(f"(feed pass {fmt(feed_mm_min)} mm/min)")
+        trace_pass(
+            lines,
+            case,
+            points,
+            feed_mm_min,
+            profile,
+            reverse_path=False,
+        )
+        trace_pass(
+            lines,
+            case,
+            points,
+            feed_mm_min,
+            profile,
+            reverse_path=True,
+        )
+    emit_pen_up(lines)
+
     emit_rotating_travel(
         lines,
         points[0],
         start_theta,
-        center,
+        witness,
         0.0,
         profile,
-        False,
-        "rotating pen-up return to witness",
+        bool(case["compensate"]),
+        "pen-up return to witness",
     )
     emit_pen_down(lines, False)
-    emit_cross(lines, center, requested_feed, "return witness")
+    emit_cross(lines, witness, FEED_LADDER_MM_MIN[1], "return witness")
     emit_pen_up(lines)
 
 
 def build_program(profile) -> str:
+    feed_text = "/".join(fmt(feed) for feed in FEED_LADDER_MM_MIN)
     lines = [
-        "(bed compensation XY/A tracking test)",
-        "(ordinary paper, black Pigma Micron, one file and one Cycle Start)",
-        "(layout top to bottom: 1 XY parked, 2 rotating no comp fast, "
-        "3 rotating comp fast, 4 rotating no comp slow, 5 rotating comp slow)",
+        "(comprehensive bed compensation XY/A tracking test)",
+        "(letter or A4 paper, black 0.8 mm Pigma Micron)",
+        "(one file, one Cycle Start, no M0 pauses)",
         "(run G65 P113 before this file; do not re-register or move the sheet)",
-        "(each initial/return witness and forward/reverse trace should coincide)",
-        "(keep $123=6000 and $701=0 for this baseline comparison)",
+        "(each case redraws the same path at the three feed requests)",
+        "(initial and return witness crosses should overlay)",
+        "(forward and reverse traces from every feed pass should overlay)",
+        f"(feed ladder {feed_text} mm/min)",
+        "(top pair 3/4 normal, next pair 5/6 reverse, then 7/8 vertical)",
+        "(middle pair 9/10 inner radius; lower-left 1 control, "
+        "lower-right 11 repeat; bottom 2 vertical control)",
+        "(four corner frame crosses are drawn at A0 before and after all cases)",
+        "(keep $113=30000, $123=6000, $376=1, $701=0)",
         "(tolerance 0.150 mm)",
         f"(A limits assumed {fmt(30000.0)} motor deg/min, "
         f"{fmt(6000.0)} motor deg/s^2)",
@@ -416,10 +527,17 @@ def build_program(profile) -> str:
         "M5",
         "G65 P115 Q0 A1 W2",
     ]
-    first_pen_down = True
+
+    emit_pen_down(lines, True)
+    emit_frame(lines, FEED_LADDER_MM_MIN[1])
+    emit_pen_up(lines)
     for case in CASES:
-        emit_case(lines, case, profile, first_pen_down)
-        first_pen_down = False
+        emit_case(lines, case, profile, False)
+    lines.append("(final frame recheck)")
+    emit_pen_down(lines, False)
+    emit_frame(lines, FEED_LADDER_MM_MIN[1])
+    emit_pen_up(lines)
+
     lines.extend(
         [
             "M65 P0",

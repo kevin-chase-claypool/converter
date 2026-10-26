@@ -132,32 +132,42 @@ but it does not make one axis finish a controller block late.
 ## Discriminating physical test
 
 [`bed-compensation-motion-test.gcode`](../../samples/gcode/bed-compensation-motion-test.gcode)
-contains five cases in one pause-free file:
+contains eleven cases in one pause-free file. Every case starts with an A0
+witness cross, performs a simultaneous rotating pen-up move, redraws the same
+bed-space path forward and back at requested `F350`, `F700`, and `F1200`,
+returns with another rotating pen-up move to A0, and draws the same witness
+cross again.
 
-| Case | Bed motion | Compensation | Requested feed |
-|---|---|---|---|
-| 1 | A parked at 0 | off | 700 mm/min |
-| 2 | rotates -14.5 through +14.5 and back | off | 700 mm/min |
-| 3 | same rotation schedule | on | 700 mm/min |
-| 4 | same rotation schedule | off | 350 mm/min |
-| 5 | same rotation schedule | on | 350 mm/min |
+| Cases | Purpose |
+|---|---|
+| 1-2 | Horizontal and vertical A-parked XY controls |
+| 3-4 | Normal A sweep, uncompensated and compensated |
+| 5-6 | Reverse A sweep, uncompensated and compensated |
+| 7-8 | Y-dominant A sweep, uncompensated and compensated |
+| 9-10 | Inner-radius diagonal sweep, uncompensated and compensated |
+| 11 | Independent repeat of the compensated normal-sweep case |
 
-Every case has the same bed-space sine path and A schedule. It starts with an
-A0 witness cross, performs a simultaneous rotating pen-up move, draws the path
-forward and immediately back over itself, returns with another simultaneous
-rotating pen-up move to A0, and draws the same witness cross again.
+Four frame crosses are drawn at A0 before the matrix and drawn again after every
+case. They expose cumulative position loss across the complete test.
 
 Interpretation:
 
-- Case 1 clean confirms the repaired Y drag-chain path and basic XY motion.
-- Cases 2 and 3 both doubled or distorted means residual A mechanics,
+- Cases 1-2 clean confirm the repaired X/Y path and basic motion.
+- Compensated and uncompensated cases both distorted means residual A mechanics,
   compliance, or torque loss is more likely than compensation.
-- Only case 3/5 distorted means compensation-induced planner dynamics or feed
-  selection remains in scope.
-- Fast cases fail while slow cases pass means dynamics or torque margin, not
+- Only compensated cases distorted means compensation-induced planner dynamics
+  or feed selection remains in scope.
+- The three feed passes separate within a case mean rate or torque margin, not
   static compensation geometry.
-- Initial and return crosses separate means position was lost during a
-  rotating pen-up move.
+- Cases 7-8 failing while 3-4 pass points to the Y carriage or dominant-Y
+  machine vectors; the reverse identifies X.
+- Cases 9-10 failing while 3-4 pass points to radius-dependent A rate or bed
+  centre/runout.
+- Cases 5-6 failing while 3-4 pass points to direction-dependent backlash or
+  belt wind-up.
+- Initial and return crosses separate means position was lost during a rotating
+  pen-up move. Separated final frame crosses mean position was lost cumulatively
+  across the run.
 - Forward and reverse traces separate while witnesses still coincide means
   transient following error recovered by the end of the move.
 
