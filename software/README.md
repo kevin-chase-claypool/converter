@@ -843,6 +843,12 @@ app.
   the file actually contains and where it sits; on a 212k-move mandala, going
   from 1.0 mm to 0.1 mm costs about 0.1 % more moves and cuts the worst
   deviation from 0.9 mm to 0.1 mm.
+  SVG Bézier curves now flatten adaptively: the converter recursively
+  subdivides a curve only until its control hull is within `Tolerance`, instead
+  of giving every cubic a fixed eight-step minimum. On the dense 7,298-path
+  mandala, the same `0.25 mm` accuracy reduced planned drawing points from
+  `560,957` to `60,762` and the saved file from `605,725` to `105,604` lines.
+  Geometry version: `2.7-adaptive-curves`.
 - **Remembered setup.** The app saves its settings to
   `kaleidoscope_settings.json` next to the script (git-ignored) whenever it
   closes and whenever a motif folder is chosen: the motif folder, source path,

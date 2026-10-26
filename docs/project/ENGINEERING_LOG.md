@@ -1,5 +1,29 @@
 # Engineering Log
 
+<a id="elog-20261026-adaptive-svg-curve-flattening"></a>
+### 🟩 2026-10-26 - WINDOWS SOFTWARE/IMPLEMENTED - Flatten SVG curves adaptively
+
+- Replaced the unconditional eight-step curve floor with de Casteljau
+  subdivision driven by each Bézier control hull and the configured Tolerance.
+- The old algorithm emitted `8,001` points for a synthetic sequence of 1,000
+  shallow cubics where one chord per curve was sufficient; the adaptive path
+  emits `1,001`. A self-loop cubic that exceeded a `0.05 mm` tolerance now
+  stays within it.
+- The dense 7,298-path mandala dropped from `560,957` to `60,762` planned
+  drawing points at the same `0.25 mm` tolerance, an `89.2 %` reduction.
+  Generated text fell from `605,725` to `105,604` lines and from `29.1 MB` to
+  `3.6 MB`.
+- The maximum measured difference from the previous dense approximation was
+  `0.187 mm`, inside the configured `0.25 mm` tolerance. The regenerated
+  compensated mandala passes strict motion preflight.
+- `GEOMETRY_VERSION` is now `2.7-adaptive-curves`.
+- Full converter discovery passes `551` tests with one expected OpenGL-context
+  skip. No new physical print was made.
+- Evidence: `WSW-20261026-004`,
+  `software/tests/test_curve_flattening.py`.
+- Category: windows-software, svg, curve-flattening, tolerance, performance,
+  gcode-density.
+
 <a id="elog-20261026-post-repair-bed-profile-verified"></a>
 ### 🟩 2026-10-26 - WINDOWS SOFTWARE/HARDWARE/VERIFIED - Promote post-repair bed profile
 

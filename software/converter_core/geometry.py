@@ -18,7 +18,7 @@ from .shading import (
     terrain_contours,
 )
 
-GEOMETRY_VERSION = "2.6-tone-terrain"  # terrain contours follow image tone
+GEOMETRY_VERSION = "2.7-adaptive-curves"
 
 # Drop contours shorter than this (in on-paper mm). Clipping the infill lattice
 # to a polygon boundary leaves sub-pen-width slivers that draw an M3/M5 "dot"
@@ -1866,7 +1866,76 @@ def quad(p0, p1, p2, t):
     return (u*u*p0[0] + 2*u*t*p1[0] + t*t*p2[0], u*u*p0[1] + 2*u*t*p1[1] + t*t*p2[1])
 
 
-def add_curve(points, fn, start, end, tolerance):
+# Eight midpoint splits bound one pathological source curve at 256 chords.
+MAX_CURVE_FLATTENING_DEPTH = 8
+
+
+def _point_segment_distance(point, start, end):
+    """Shortest distance from a point to a finite line segment."""
+    dx = end[0] - start[0]
+    dy = end[1] - start[1]
+    length_sq = dx * dx + dy * dy
+    if length_sq <= 1e-18:
+        return distance(point, start)
+    t = (
+        (point[0] - start[0]) * dx
+        + (point[1] - start[1]) * dy
+    ) / length_sq
+    t = max(0.0, min(1.0, t))
+    nearest = (start[0] + t * dx, start[1] + t * dy)
+    return distance(point, nearest)
+
+
+def _split_bezier(control_points):
+    """Split a Bezier curve at t=0.5 using de Casteljau subdivision."""
+    levels = [tuple(control_points)]
+    while len(levels[-1]) > 1:
+        previous = levels[-1]
+        levels.append(
+            tuple(
+                (
+                    (a[0] + b[0]) / 2.0,
+                    (a[1] + b[1]) / 2.0,
+                )
+                for a, b in zip(previous, previous[1:])
+            )
+        )
+    left = tuple(level[0] for level in levels)
+    right = tuple(level[-1] for level in reversed(levels))
+    return left, right
+
+
+def _append_bezier(points, control_points, tolerance, depth=0):
+    """Append the endpoint of an adaptively subdivided Bezier segment.
+
+    All interior control points keep the curve within ``tolerance`` of the
+    chord because a Bezier curve lies inside its control-point convex hull.
+    """
+    start = control_points[0]
+    end = control_points[-1]
+    flat = all(
+        _point_segment_distance(control, start, end) <= tolerance
+        for control in control_points[1:-1]
+    )
+    if flat or depth >= MAX_CURVE_FLATTENING_DEPTH:
+        points.append(end)
+        return
+    left, right = _split_bezier(control_points)
+    _append_bezier(points, left, tolerance, depth + 1)
+    _append_bezier(points, right, tolerance, depth + 1)
+
+
+def add_curve(points, fn, start, end, tolerance, control_points=None):
+    """Append a polyline approximation of a quadratic or cubic curve."""
+    if control_points is not None:
+        _append_bezier(
+            points,
+            tuple(control_points),
+            max(float(tolerance), 1e-6),
+        )
+        return
+
+    # Compatibility fallback for callers that only provide an evaluator.
     rough = distance(start, end)
     steps = max(8, min(240, int(rough / max(tolerance, 0.01)) + 8))
     for i in range(1, steps + 1):
@@ -1937,7 +2006,7 @@ def path_to_contours(d, tolerance, cancel_check=None):
                 c2 = absolutize((read_float(), read_float()), absolute)
                 p = absolutize((read_float(), read_float()), absolute)
                 p0 = current
-                add_curve(points, lambda t, p0=p0, c1=c1, c2=c2, p=p: cubic(p0, c1, c2, p, t), p0, p, tolerance)
+                _append_bezier(points, (p0, c1, c2, p), tolerance)
                 current, last_cubic, last_quad = p, c2, None
         elif op == "S":
             while i + 3 < len(tokens) and not is_cmd(i):
@@ -1945,21 +2014,21 @@ def path_to_contours(d, tolerance, cancel_check=None):
                 c2 = absolutize((read_float(), read_float()), absolute)
                 p = absolutize((read_float(), read_float()), absolute)
                 p0 = current
-                add_curve(points, lambda t, p0=p0, c1=c1, c2=c2, p=p: cubic(p0, c1, c2, p, t), p0, p, tolerance)
+                _append_bezier(points, (p0, c1, c2, p), tolerance)
                 current, last_cubic, last_quad = p, c2, None
         elif op == "Q":
             while i + 3 < len(tokens) and not is_cmd(i):
                 c = absolutize((read_float(), read_float()), absolute)
                 p = absolutize((read_float(), read_float()), absolute)
                 p0 = current
-                add_curve(points, lambda t, p0=p0, c=c, p=p: quad(p0, c, p, t), p0, p, tolerance)
+                _append_bezier(points, (p0, c, p), tolerance)
                 current, last_quad, last_cubic = p, c, None
         elif op == "T":
             while i + 1 < len(tokens) and not is_cmd(i):
                 c = (2*current[0] - last_quad[0], 2*current[1] - last_quad[1]) if last_quad else current
                 p = absolutize((read_float(), read_float()), absolute)
                 p0 = current
-                add_curve(points, lambda t, p0=p0, c=c, p=p: quad(p0, c, p, t), p0, p, tolerance)
+                _append_bezier(points, (p0, c, p), tolerance)
                 current, last_quad, last_cubic = p, c, None
         elif op == "A":
             while i + 6 < len(tokens) and not is_cmd(i):

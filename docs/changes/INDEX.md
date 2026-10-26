@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-26 | `WSW-20261026-004` | windows-software | implemented | [Flatten SVG curves adaptively within tolerance](windows-software/2026/2026-10-26-adaptive-svg-curve-flattening.md) |
 | 2026-10-26 | `WSW-20261026-003` | windows-software, hardware | verified | [Promote the independently verified post-repair bed profile](windows-software/2026/2026-10-26-promote-post-repair-bed-profile.md) |
 | 2026-10-26 | `WSW-20261026-002` | windows-software, hardware | implemented | [Make the bed-photo station-size floor configurable](windows-software/2026/2026-10-26-bed-photo-label-dimension-cutoff.md) |
 | 2026-10-26 | `WSW-20261026-001` | windows-software, hardware | implemented | [Restore wave depth with a shared phase](windows-software/2026/2026-10-26-phase-locked-wave-depth.md) |
