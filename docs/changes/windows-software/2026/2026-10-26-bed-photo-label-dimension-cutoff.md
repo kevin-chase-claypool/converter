@@ -21,7 +21,7 @@ tags:
   - M-12
   - component-size
 related:
-  - WSW-20261024-013
+  - WSW-20261024-003
   - 2026-10-26-m-12-post-repair-calibration
 ---
 
