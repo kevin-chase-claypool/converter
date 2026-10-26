@@ -220,11 +220,18 @@
   threshold/blur sensitivity sweep reproduced the failure. The next
   discriminating test is a smaller repeated A0/A270/A315 profile check with a
   fixed-position A0 control, which separates map prediction from run-to-run
-  rotary/carriage repeatability before another whole-bed fit.
+  rotary/carriage repeatability before another whole-bed fit. Status
+  2026-10-26: after the NE drag-chain pillar repair, a fresh full-field map
+  passed at `0.324 / 0.626 mm` A0 spatial error, `0.209 / 0.373 mm` A0
+  control, and `0.212 / 0.503 mm` leave-one-station-out error. Its independent
+  compensated sheet reduced overall RMS from `1.744` to `0.218 mm`, maximum
+  from `2.965` to `0.591 mm`, and every angle stage improved. Default
+  `4bad792e35ad` now carries this verified field to the existing 13.5-inch
+  coverage.
 - [ ] **Verify the extrapolated 13.5-inch compensation annulus.**
-  Problem: the default `4c8270de8a74` profile extends the accepted 165.1 mm
+  Problem: the default `4bad792e35ad` profile extends the accepted 165.1 mm
   correction field to 171.45 mm by local-affine extrapolation. Its
-  `1.054 mm` boundary correction is below the safety bound, but the outer
+  `2.783 mm` boundary correction is below the safety bound, but the outer
   6.35 mm annulus has no compensated verification print. Benefit: precision
   work can use the full 13.5-inch diameter with a measured error bound rather
   than an extrapolation assumption. Risk: continuing to treat extrapolated

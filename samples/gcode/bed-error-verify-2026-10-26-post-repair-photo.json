@@ -1,0 +1,77 @@
+{
+  "assignment_distance_px": {
+    "maximum": 9.942729759990149,
+    "median": 6.427364008796197,
+    "minimum": 3.450180244814131
+  },
+  "component_counts": {
+    "fiducials": 4,
+    "label_glyphs": 74,
+    "station_L": 333,
+    "total": 411
+  },
+  "fiducial_order": [
+    1,
+    2,
+    3,
+    0
+  ],
+  "fiducial_points_px": [
+    [
+      310.0,
+      620.0
+    ],
+    [
+      296.0,
+      1677.0
+    ],
+    [
+      1398.0,
+      1695.0
+    ],
+    [
+      1372.0,
+      576.0
+    ]
+  ],
+  "homography": [
+    [
+      0.11636221033464403,
+      -4.713292373522208,
+      828.4120466085785
+    ],
+    [
+      -4.768433750521672,
+      0.3610595916026731,
+      1132.217785022263
+    ],
+    [
+      0.00016719721663866643,
+      0.0002619634892379794,
+      1.0
+    ]
+  ],
+  "image": "C:\\Users\\jacks\\Documents\\Claude\\converter\\samples\\gcode\\bed-error-verify-2026-10-26-post-repair-photo.jpg",
+  "image_sha256": "23820c2030ee2a52576785c5e2497acbbae05395df5aeed16c32de605051a203",
+  "image_size_px": [
+    1713,
+    2275
+  ],
+  "mask_center_fraction": [
+    0.5,
+    0.5
+  ],
+  "mask_radius_fraction": 0.48,
+  "mode": "standard",
+  "orientation_score_px": {
+    "mean": 6.46852086466224,
+    "median": 6.427364008796197,
+    "p95": 7.994423340287989
+  },
+  "threshold": 20,
+  "working_center_px": [
+    856.0,
+    1137.0
+  ],
+  "working_radius_px": 822.24
+}

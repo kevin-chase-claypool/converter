@@ -23,6 +23,7 @@ tags:
 related:
   - WSW-20261024-003
   - 2026-10-26-m-12-post-repair-calibration
+  - WSW-20261026-003
 ---
 
 # Make the bed-photo station-size floor configurable
@@ -35,7 +36,8 @@ lower boundary of the station-L size range.
 
 The post-repair 2026-10-26 photo now resolves exactly four fiducials, 333
 station Ls, and 74 label glyphs. Its fitted candidate passes every M-12 fitting
-gate; independent compensated verification remains required before promotion.
+gate. The subsequent independent compensated verification also passed and
+promoted the matching profile in `WSW-20261026-003`.
 
 ## Reason
 
@@ -91,8 +93,8 @@ exclude those glyphs without changing the default behavior for earlier photos.
   centroid landing error in this rotated photo. The generated overlay was
   reviewed at full field to confirm every green measured point lands on an L
   corner.
-- The candidate has not been promoted to the default profile. A compensated
-  verification sheet must pass the independent `--compare-to` gates first.
+- The independently compensated sheet passed the `--compare-to` gates; see
+  `WSW-20261026-003` for the promotion and verification evidence.
 
 ## Files
 

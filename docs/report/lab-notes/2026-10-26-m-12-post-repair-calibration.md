@@ -122,8 +122,9 @@ angular interpolation mode.
 
 This sheet passes every profile-fitting gate and is materially more repeatable
 than the 2026-10-24 map. The large reduction in A0 control residual is
-consistent with the reported mechanical Drag-chain correction, but the template
-has not yet proven that a compensated print improves the physical result.
+consistent with the reported mechanical drag-chain correction. The subsequent
+independent compensated sheet proved that the reduction also survives on a
+fresh physical print.
 
 The residual still has angle-dependent structure and moderate-to-strong
 correlation with the bed mesh at several angles. The mesh includes the paper,
@@ -131,25 +132,12 @@ so it cannot separate paper flatness from bed/carriage height error.
 
 ## Decisions and next action
 
-- Keep candidate `efe87c63b54d` out of the active default for now.
-- Print `samples\gcode\bed-error-verify-2026-10-26-post-repair.gcode` once on an
-  independent fresh sheet after `G65 P113`, using the same 0.20 mm pen and all
-  eight drying pauses.
-- Photograph it and run:
+- The follow-up independent verification passed; see
+  `2026-10-26-m-12-post-repair-compensated-verification.md`.
+- Promote `4bad792e35ad`, the 13.5-inch extrapolated form of this measured
+  field, as the active default.
+- The separate `165.100` to `171.450 mm` edge-band verification remains open in
+  the roadmap.
 
-```powershell
-py tools\measure_bed_error_photo.py `
-  samples\gcode\bed-error-verify-2026-10-26-post-repair-photo.jpg `
-  --measurement-out samples\gcode\bed-error-verify-2026-10-26-post-repair-measured.csv `
-  --diagnostic-out samples\gcode\bed-error-verify-2026-10-26-post-repair-photo.json `
-  --overlay-out samples\gcode\bed-error-verify-2026-10-26-post-repair-overlay.jpg
-
-py tools\analyze_bed_error_calibration.py `
-  --measurements samples\gcode\bed-error-verify-2026-10-26-post-repair-measured.csv `
-  --compare-to samples\gcode\bed-error-map-2026-10-26-measured.csv `
-  --report-out samples\gcode\bed-error-verify-2026-10-26-post-repair-analysis.json
-```
-
-Promote the candidate only if the verification reaches at most `0.35 mm` RMS
-and `0.90 mm` maximum, improves by at least `30 %`, and no angle stage worsens
-by more than `0.05 mm`.
+The exact completed verification commands and measurements are recorded in the
+follow-up lab note.

@@ -1,5 +1,31 @@
 # Engineering Log
 
+<a id="elog-20261026-post-repair-bed-profile-verified"></a>
+### 🟩 2026-10-26 - WINDOWS SOFTWARE/HARDWARE/VERIFIED - Promote post-repair bed profile
+
+- The independent compensated sheet passed every M-12 gate. Overall RMS fell
+  from `1.744` to `0.218 mm`, maximum from `2.965` to `0.591 mm`, and improvement
+  was `87.5 %`; all seven rotated stages and both A0 controls improved.
+- Extraction resolved 4 fiducials, 333 station Ls, and 74 labels with
+  `3.450 / 6.427 / 9.943 px` assignment error. Threshold sweeps at `18/18`,
+  `20/18`, and `22/18` all pass.
+- The converter default is now `4bad792e35ad`, the post-repair map extended to
+  the existing 13.5-inch `171.450 mm` coverage. Its `2.783 mm` boundary
+  correction is below the 5 mm guard.
+- The measured `165.100 mm` field is independently verified. The outer
+  `6.350 mm` annulus remains extrapolated and the separate edge-band test stays
+  open in the roadmap.
+- Regenerated `bed-compensation-motion-test.gcode` with the new default; its
+  strict motion check passes with `4,235` drawing moves and no bare rotating
+  `G0`.
+- Focused planner, CMYK, motion-test, and wave-isolation suites pass (`135`
+  tests); full converter discovery passes `547` tests with one expected
+  OpenGL-context skip.
+- Evidence: `WSW-20261026-003`, M-12,
+  `docs/report/lab-notes/2026-10-26-m-12-post-repair-compensated-verification.md`.
+- Category: windows-software, hardware, bed-compensation, rotating-bed,
+  verification, default-profile, M-12.
+
 <a id="elog-20261026-post-repair-bed-calibration"></a>
 ### 🟨 2026-10-26 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Post-repair full-field bed calibration
 

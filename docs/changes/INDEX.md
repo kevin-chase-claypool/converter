@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-26 | `WSW-20261026-003` | windows-software, hardware | verified | [Promote the independently verified post-repair bed profile](windows-software/2026/2026-10-26-promote-post-repair-bed-profile.md) |
 | 2026-10-26 | `WSW-20261026-002` | windows-software, hardware | implemented | [Make the bed-photo station-size floor configurable](windows-software/2026/2026-10-26-bed-photo-label-dimension-cutoff.md) |
 | 2026-10-26 | `WSW-20261026-001` | windows-software, hardware | implemented | [Restore wave depth with a shared phase](windows-software/2026/2026-10-26-phase-locked-wave-depth.md) |
 | 2026-10-26 | `HW-20261026-001` | hardware, rp23cnc-software | planned | [Plan 2.8 A LDO motors for Y and A](hardware/2026/2026-10-26-ldo-2-8a-y-a-driver-settings.md) |

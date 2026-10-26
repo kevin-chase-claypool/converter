@@ -26,11 +26,8 @@ sys.path.insert(0, str(ROOT / "software"))
 import converter_core as converter
 
 
-DEFAULT_BED_COMPENSATION = (
-    ROOT
-    / "samples"
-    / "gcode"
-    / "bed-error-compensation-2026-10-23-13p5in-extrapolated.json"
+DEFAULT_BED_COMPENSATION = Path(
+    converter.DEFAULT_BED_COMPENSATION_PATH
 )
 DEFAULT_OUTPUT = (
     ROOT / "samples" / "gcode" / "bed-compensation-motion-test.gcode"

@@ -2,6 +2,7 @@
 
 - Status: accepted, implemented, and bench-verified
 - Date: 2026-10-23
+- Updated: 2026-10-26
 
 ## Context
 
@@ -27,9 +28,9 @@ samples, has explicit radial coverage, and rejects individual corrections
 above 5 mm. Its fiducial fit removes common sheet translation, rotation, and
 scale so P100 registration is not double-compensated.
 
-The desktop converter selects profile `4c8270de8a74` by default. It reuses the
-bench-verified `2cdf3731de4a` correction samples and extrapolates the
-local-affine field from `165.100` to `171.450 mm`, giving a 13.5-inch
+The desktop converter selects profile `4bad792e35ad` by default. It uses the
+independent 2026-10-26 post-repair correction samples through `165.100 mm` and
+extrapolates the local-affine field to `171.450 mm`, giving a 13.5-inch
 compensated diameter. The default 14-inch stock diameter and 6.35 mm rim
 margin produce the same 171.45 mm drawable radius. The existing Machine-tab
 path remains editable: **Browse...** selects a replacement, **Default**
@@ -98,11 +99,15 @@ program unchanged.
   at station 09/14 near A=270; further accuracy requires mechanical
   plane/runout and carriage diagnosis rather than refitting the verification
   sheet into the profile.
-- The default `4c8270de8a74` profile preserves the verified correction samples
-  through the original `165.100 mm` radius and extrapolates the outer
-  `6.350 mm` annulus to `171.450 mm`. Its maximum boundary correction is
-  `1.054 mm`, below the 5 mm safety bound, but the outer annulus is not
-  independently bench-verified. Verify that annulus before treating the
-  extended coverage as measured calibration.
+- The post-repair profile `4bad792e35ad` supersedes `4c8270de8a74` after the
+  NE drag-chain pillar repair. Its independent compensated verification
+  reduced overall RMS from `1.744` to `0.218 mm`, maximum from `2.965` to
+  `0.591 mm`, and improved every angle stage; all M-12 verification gates
+  passed. The result verifies the measured `165.100 mm` field.
+- The active profile extends that field through the outer `6.350 mm` annulus
+  to `171.450 mm`. Its maximum boundary correction is `2.783 mm`, below the
+  5 mm safety bound, but the outer annulus is still not independently
+  bench-verified. Verify that annulus before treating the extended coverage as
+  measured calibration.
 - A true X/Y scale or skew defect remains a controller/mechanical calibration
   issue rather than being folded into the fiducial-normalized residual map.

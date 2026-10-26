@@ -8,7 +8,7 @@ DEFAULT_BED_COMPENSATION_PATH = str(
     Path(__file__).resolve().parents[2]
     / "samples"
     / "gcode"
-    / "bed-error-compensation-2026-10-23-13p5in-extrapolated.json"
+    / "bed-error-compensation-2026-10-26-13p5in-extrapolated.json"
 )
 DEFAULT_BED_DIAMETER_MM = 14.0 * 25.4
 DEFAULT_BED_MARGIN_MM = 0.25 * 25.4

@@ -211,7 +211,7 @@ Cycle Start with the pen loaded:
   seven intermediate-angle fields, performs leave-one-station-out validation, correlates
   the result with the optional bed mesh, and writes
   `bed-error-analysis.json`. The
-  `..\samples\gcode\bed-error-compensation-2026-10-23-13p5in-extrapolated.json`
+  `..\samples\gcode\bed-error-compensation-2026-10-26-13p5in-extrapolated.json`
   profile is preselected in **Machine > Bed compensation JSON** and covers a
   `171.450 mm` radius (`342.900 mm` / `13.5 in` diameter). **Browse...**
   selects a replacement; **Default** restores that profile; clearing the path
@@ -291,7 +291,14 @@ Cycle Start with the pen loaded:
   Extraction at three threshold/blur settings produced the same result.
   `bed-error-verify-2026-10-24-eight-angle.gcode`, its photo/measurement,
   overlay, and comparison report are retained as failed-test evidence. The
-  four-angle default `4c8270de8a74` remains active.
+  post-repair full-field fit on 2026-10-26 passed at `0.324 / 0.626 mm` A0
+  spatial error, `0.209 / 0.373 mm` A0 control, and `0.212 / 0.503 mm`
+  leave-one-station-out error. Its independent compensated sheet then reduced
+  overall RMS from `1.744` to `0.218 mm`, maximum from `2.965` to `0.591 mm`,
+  and improved every angle stage; all M-12 verification gates passed. The
+  active default is now profile `4bad792e35ad`. Its measured inner field is
+  independently verified, while the existing outer `6.350 mm` annulus remains
+  an extrapolation until the separate edge-band test passes.
 - `..\samples\gcode\a-tilt-pairs-test.gcode` - four separated line pairs for
   a caliper-read bed-tilt check: each pair is the same paper segment drawn
   twice, once at A=0 (the longer 80 mm constant line) and once at that

@@ -1832,7 +1832,7 @@ class CmykTabTests(unittest.TestCase):
 
         self.assertEqual(
             Path(settings.bed_compensation_path).name,
-            "bed-error-compensation-2026-10-23-13p5in-extrapolated.json",
+            "bed-error-compensation-2026-10-26-13p5in-extrapolated.json",
         )
         for channel in converter.CHANNELS:
             contours = converter.read_svg(
@@ -1841,7 +1841,7 @@ class CmykTabTests(unittest.TestCase):
             plan = converter.plan_program(contours, settings)
             self.assertEqual(
                 plan["bed_compensation"].fingerprint,
-                "4c8270de8a74",
+                "4bad792e35ad",
                 channel,
             )
 
