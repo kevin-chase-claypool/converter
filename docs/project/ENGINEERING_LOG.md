@@ -1,5 +1,31 @@
 # Engineering Log
 
+<a id="elog-20261028-cmyk-luminance-sharpening"></a>
+### 🟨 2026-10-28 - WINDOWS SOFTWARE/IMPLEMENTED - Complete CMYK luminance sharpening
+
+- Recovered the owner's unexposed luminance unsharp mask from its partial
+  `prepare_image_tones` patch and finished the CMYK workflow around it. The
+  tab now ships with **Sharpen** enabled at 70 %, a 1.5 mm on-paper radius,
+  and editable amount/radius controls.
+- The mask runs after auto levels and before the colour and ink curves. A
+  common luminance-detail field is added to all RGB channels, avoiding
+  channel-specific edge fringes. The physical radius is converted from the
+  fitted on-paper millimetres per pixel, with Artwork scale removed before
+  preparation so the entered radius stays physical after the shared scale.
+  The calibration sheet remains unprocessed.
+- Sharpening settings now invalidate the cached CMYK layers and are recorded
+  in the version-3 print-set manifest. Existing version-2 manifests remain
+  readable; the new field is additive.
+- Verification: all `92` CMYK-tab tests and all `553` converter tests pass
+  with one expected OpenGL-context skip, including a new soft-edge regression
+  and manifest/cache checks. A visual comparison at 0/70/140 % showed facial
+  detail improving at 70 % and halos appearing at 140 %, which fixed the
+  shipped default. No physical print comparison has been made.
+- Evidence: `WSW-20261028-001`,
+  `docs/changes/windows-software/2026/2026-10-28-cmyk-luminance-sharpening.md`.
+- Category: windows-software, cmyk, image-processing, sharpening, preview,
+  manifest.
+
 <a id="elog-20261026-adaptive-svg-curve-flattening"></a>
 ### 🟩 2026-10-26 - WINDOWS SOFTWARE/IMPLEMENTED - Flatten SVG curves adaptively
 

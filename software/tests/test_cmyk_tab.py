@@ -231,6 +231,51 @@ class ScreeningTests(unittest.TestCase):
         # 130 % brightness keeps the black point but lays less ink.
         self.assertLess(float(lifted["k"].mean()), float(base["k"].mean()) - 0.05)
 
+    def test_sharpening_restores_a_soft_edge_without_shifting_the_mean(self):
+        import numpy as np
+        from PIL import Image, ImageFilter
+
+        folder = tempfile.mkdtemp(prefix="cmyk-sharpen-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = str(Path(folder) / "soft-edge.png")
+        values = np.zeros((64, 64), dtype=np.uint8)
+        values[:, 32:] = 180
+        soft = np.asarray(
+            Image.fromarray(values).filter(ImageFilter.GaussianBlur(2.0))
+        )
+        Image.fromarray(np.stack([soft] * 3, axis=2)).save(path)
+        plain, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=64,
+            auto_levels=False,
+            gcr=0.0,
+            weights=(1, 1, 1, 1),
+        )
+        sharpened, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=64,
+            auto_levels=False,
+            gcr=0.0,
+            weights=(1, 1, 1, 1),
+            sharpen_pct=100.0,
+            sharpen_radius_mm=2.0,
+        )
+        plain_gradient = float(np.abs(np.diff(plain["c"], axis=1)).max())
+        sharp_gradient = float(np.abs(np.diff(sharpened["c"], axis=1)).max())
+        self.assertGreater(sharp_gradient, plain_gradient * 1.2)
+        self.assertLess(
+            abs(float(sharpened["c"].mean()) - float(plain["c"].mean())),
+            0.01,
+        )
+
     def test_ink_processing_does_not_flatten_wave_depth(self):
         import numpy as np
         from PIL import Image
@@ -1931,7 +1976,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertTrue(manifest.exists())
         data = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(data["kind"], "cmyk-print-set")
-        self.assertEqual(data["version"], 2)
+        self.assertEqual(data["version"], 3)
         self.assertAlmostEqual(data["pen_offsets_mm"]["m"][0], 0.75)
         self.assertEqual(set(data["preflight"]), set(converter.CHANNELS))
         self.assertEqual(
@@ -1955,6 +2000,14 @@ class CmykTabTests(unittest.TestCase):
             tab.pitch.value() * tab.scale_pct.value() / 100.0,
         )
         self.assertEqual(data["ink_processing"]["weights"]["y"], 1.0)
+        self.assertEqual(
+            data["ink_processing"]["sharpening"],
+            {
+                "enabled": True,
+                "amount_pct": 70.0,
+                "radius_mm": 1.5,
+            },
+        )
         self.assertIn("bed_compensation_path", data)
         for channel in converter.CHANNELS:
             saved = Path(
@@ -2070,6 +2123,9 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(tab.saturation.value(), 115.0, places=3)
         self.assertAlmostEqual(tab.contrast.value(), 285.0, places=3)
         self.assertAlmostEqual(tab.brightness.value(), 170.0, places=3)
+        self.assertTrue(tab.sharpen.isChecked())
+        self.assertAlmostEqual(tab.sharpen_amount.value(), 70.0, places=3)
+        self.assertAlmostEqual(tab.sharpen_radius.value(), 1.5, places=3)
         self.assertAlmostEqual(tab.gamma.value(), 1.40, places=2)
         self.assertAlmostEqual(tab.dot_size.value(), 100.0, places=3)
         self.assertEqual(tab.max_marks.value(), 40000)
@@ -2079,6 +2135,45 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(tab.weight_m.value(), 100.0, places=3)
         self.assertAlmostEqual(tab.weight_y.value(), 100.0, places=3)
         self.assertAlmostEqual(tab.weight_k.value(), 100.0, places=3)
+
+    def test_sharpening_settings_reach_preparation_and_invalidate_layers(self):
+        tab = self.make_tab()
+        tab.scale_pct.setValue(200)
+        captured = []
+        prepare = converter.prepare_image_tones
+
+        def capture_prepare(*args, **kwargs):
+            captured.append(dict(kwargs))
+            return prepare(*args, **kwargs)
+
+        before = tab._control_key()
+        tab.sharpen_amount.setValue(95)
+        tab.sharpen_radius.setValue(2.2)
+        self.assertNotEqual(before, tab._control_key())
+        with (
+            mock.patch.object(
+                converter,
+                "prepare_image_tones",
+                side_effect=capture_prepare,
+            ),
+            mock.patch.object(converter, "screen_channel", return_value=[]),
+        ):
+            tab._ensure_layers()
+            tab.sharpen.setChecked(False)
+            tab._ensure_layers()
+
+        self.assertEqual(captured[0]["sharpen_pct"], 95.0)
+        self.assertAlmostEqual(
+            captured[0]["sharpen_radius_mm"],
+            2.2 / 2.0,
+            places=6,
+        )
+        self.assertEqual(captured[1]["sharpen_pct"], 0.0)
+        self.assertFalse(tab.sharpen_amount.isEnabled())
+        self.assertFalse(tab.sharpen_radius.isEnabled())
+        tab.sharpen.setChecked(True)
+        self.assertTrue(tab.sharpen_amount.isEnabled())
+        self.assertTrue(tab.sharpen_radius.isEnabled())
 
     def test_resolution_is_not_capped_at_2000(self):
         tab = self.make_tab()

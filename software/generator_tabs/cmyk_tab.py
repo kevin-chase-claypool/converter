@@ -190,6 +190,31 @@ class CmykTab(GeneratorTab):
             "lower it toward 100 % for the untouched tone."
         )
         options.addRow("Brightness", self.brightness)
+        self.sharpen = QCheckBox("Unsharp mask")
+        self.sharpen.setChecked(True)
+        self.sharpen.setToolTip(
+            "Restore small facial and edge detail before CMYK separation. "
+            "The mask is applied to luminance only, so it sharpens structure "
+            "without changing the ink balance. Turn it off for soft artwork "
+            "or an already-sharp source."
+        )
+        options.addRow("Sharpen", self.sharpen)
+        self.sharpen_amount = double_spin(70, 10, 200, 5, 0, " %")
+        self.sharpen_amount.setToolTip(
+            "Unsharp-mask strength. 70 % is the photo default; lower it if "
+            "edges show halos, and raise it for fine features that still "
+            "disappear into the screen."
+        )
+        options.addRow("Sharpen amount", self.sharpen_amount)
+        self.sharpen_radius = double_spin(1.5, 0.2, 5.0, 0.1, 1, " mm")
+        self.sharpen_radius.setToolTip(
+            "Radius of the luminance blur, in final on-paper millimetres. "
+            "A small radius restores fine detail; a larger radius emphasizes "
+            "broader local contrast and can create visible halos."
+        )
+        options.addRow("Sharpen radius", self.sharpen_radius)
+        self.sharpen.toggled.connect(self._update_sharpen_controls)
+        self._update_sharpen_controls()
         self.gamma = double_spin(1.40, 0.2, 3.0, 0.05, 2)
         options.addRow("Ink gamma", self.gamma)
         self.gcr = double_spin(95, 0, 100, 5, 0, " %")
@@ -660,6 +685,12 @@ class CmykTab(GeneratorTab):
             text = "= %.2f mm on paper" % effective
         self.effective_pitch_label.setText(text)
 
+    def _update_sharpen_controls(self, *_args):
+        """Enable the mask settings only while sharpening is selected."""
+        enabled = self.sharpen.isChecked()
+        self.sharpen_amount.setEnabled(enabled)
+        self.sharpen_radius.setEnabled(enabled)
+
     def match_pen_pitch(self, _checked=False):
         """Set Dot pitch to one pen width at the current artwork scale."""
         self.pitch.setValue(self.pen_pitch_mm())
@@ -734,6 +765,9 @@ class CmykTab(GeneratorTab):
             self.saturation.value(),
             self.contrast.value(),
             self.brightness.value(),
+            self.sharpen.isChecked(),
+            self.sharpen_amount.value(),
+            self.sharpen_radius.value(),
             self.gamma.value(),
             self.gcr.value(),
             self.resolution.value(),
@@ -863,6 +897,7 @@ class CmykTab(GeneratorTab):
         path = self._artwork
         if not path:
             raise ValueError("Import an image with the Artwork row above first.")
+        factor = self.scale_pct.value() / 100.0
         tones, geometry = converter.prepare_image_tones(
             path,
             self.page_w.value(),
@@ -876,12 +911,17 @@ class CmykTab(GeneratorTab):
             weights=self._weights(),
             gamma=self.gamma.value(),
             auto_levels=self.auto_levels.isChecked(),
+            sharpen_pct=(
+                self.sharpen_amount.value()
+                if self.sharpen.isChecked()
+                else 0.0
+            ),
+            sharpen_radius_mm=self.sharpen_radius.value() / factor,
         )
         width = self.page_w.value()
         height = self.page_h.value()
         stroke = self.pen_width.value()
         style = self.style.currentData()
-        factor = self.scale_pct.value() / 100.0
         layers = {}
         files = {}
         for index, channel in enumerate(converter.CHANNELS):
@@ -1275,7 +1315,7 @@ class CmykTab(GeneratorTab):
         source_path = Path(source_value) if source_value else None
         data = {
             "kind": "cmyk-print-set",
-            "version": 2,
+            "version": 3,
             "created": datetime.datetime.now().isoformat(timespec="seconds"),
             "source": {
                 "file": source_path.name if source_path else "",
@@ -1333,6 +1373,11 @@ class CmykTab(GeneratorTab):
                 "gcr_pct": self.gcr.value(),
                 "resolution_px": self.resolution.value(),
                 "weights": weights,
+                "sharpening": {
+                    "enabled": self.sharpen.isChecked(),
+                    "amount_pct": self.sharpen_amount.value(),
+                    "radius_mm": self.sharpen_radius.value(),
+                },
             },
             "notes": (
                 "Pen offsets apply to artwork programs and the preview only; "

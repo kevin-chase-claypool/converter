@@ -441,7 +441,8 @@ Current tools:
   the same as **Match pen**),
   auto levels (default on: stretch the image's 1st-99th luminance percentiles
   so low-key photos use the full tonal range), saturation, contrast,
-  brightness, ink gamma, black (GCR), resolution, per-ink weights, screen style
+  brightness, luminance sharpening (default on: unsharp-mask amount and
+  on-paper radius), ink gamma, black (GCR), resolution, per-ink weights, screen style
   (halftone dots / stipple dots / line screen / crosshatch levels / wave
   screen / interference (gyroid) / single line (TSP) / topographic contours /
   rectilinear fill),
@@ -462,10 +463,17 @@ Current tools:
   saturation 115 %, contrast 285 % (the soft S-curve keeps
   steepening up to 300 % instead of clipping), brightness 170 %
   (shadow-weighted lift), ink gamma 1.40 (about a third less ink in the mid
-  tones), black (GCR)
+  tones), unsharp mask on at 70 % with a 1.5 mm radius, black (GCR)
   95 %, hatch levels 8, artwork scale 280 %, dot size 100 % with solid dots
   off (both only affect the dot screens), 40000 marks per ink, 10000 px
-  resolution, C/M/Y/K weights 100/100/100/100 %. The preview checkboxes decide which inks the shared OpenGL preview
+  resolution, C/M/Y/K weights 100/100/100/100 %.
+  **Sharpen** applies its unsharp mask after auto levels and before the
+  saturation, contrast, brightness, and separation curves. The mask derives
+  detail from luminance and applies that same detail to all three RGB
+  channels, preserving the source ink balance. Its radius is in final
+  on-paper millimetres, so changing Resolution does not change the physical
+  feature scale being emphasized. Lower the amount if edges ring; the
+  calibration sheet does not use image processing. The preview checkboxes decide which inks the shared OpenGL preview
   draws, and they apply instantly: every layer stays loaded, so toggling a
   checkbox never re-screens or re-plans. For CMYK previews the preview data
   area also reports the per-ink M3 (pen-down) counts as
@@ -520,9 +528,10 @@ Current tools:
   the motion preflight on each ink. It checks the bed-step cap, the A-rate
   limit, bare `G0` rotations and moves that exceed the Path tolerance;
   hard violations block Save and warnings go to the log. A successful
-  artwork save also writes a version-2 `<name>-set.json` beside the four files
+  artwork save also writes a version-3 `<name>-set.json` beside the four files
   with the source hash, page and motion mode, bed-compensation profile,
-  complete image/screen recipe, effective pitch, pen offsets, per-ink
+  complete image/screen recipe, sharpening amount and radius, effective pitch,
+  pen offsets, per-ink
   preflight results, and SHA-256 hashes for all four G-code files.
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the

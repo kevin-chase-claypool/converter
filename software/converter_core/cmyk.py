@@ -150,6 +150,35 @@ def _soft_contrast(rgb, contrast):
     return np.clip(rgb + (curved - rgb) * amount, 0.0, 1.0)
 
 
+def _sharpen_luminance(rgb, amount_pct, radius_mm, mm_per_pixel):
+    """Apply an unsharp mask to luminance without shifting hue per channel."""
+    import numpy as np
+    from PIL import Image, ImageFilter
+
+    amount = max(0.0, float(amount_pct)) / 100.0
+    if amount <= 0.0:
+        return rgb
+    luminance = np.clip(
+        rgb @ np.array([0.299, 0.587, 0.114], dtype=np.float32),
+        0.0,
+        1.0,
+    )
+    gray = Image.fromarray(
+        np.rint(luminance * 255.0).astype(np.uint8),
+        mode="L",
+    )
+    radius_px = max(
+        0.5,
+        float(radius_mm) / max(float(mm_per_pixel), 1e-6),
+    )
+    blurred = gray.filter(ImageFilter.GaussianBlur(radius_px))
+    detail = (
+        np.asarray(gray, dtype=np.float32)
+        - np.asarray(blurred, dtype=np.float32)
+    ) / 255.0
+    return np.clip(rgb + detail[:, :, None] * amount, 0.0, 1.0)
+
+
 def _detail_score(tone):
     """Mid tone-weighted gradient energy minus a clipping penalty."""
     import numpy as np
@@ -337,6 +366,8 @@ def prepare_image_tones(
     gamma=1.0,
     auto_levels=True,
     level_clip_pct=1.0,
+    sharpen_pct=0.0,
+    sharpen_radius_mm=1.5,
     cancel_check=None,
 ):
     """Load a raster, fit it to the page, and return ``(tones, geometry)``.
@@ -349,6 +380,10 @@ def prepare_image_tones(
     percentiles before separation, so a low-key or hazy photo uses the whole
     tonal range instead of screening into one flat mid-tone. Disable it for
     images that are already well exposed.
+
+    ``sharpen_pct`` is an unsharp mask on the luminance (0 disables it): the
+    detail layer is added back to all three channels, so facial features
+    survive the dot screen instead of dissolving into mid-tone dots.
     """
     from PIL import Image
     import numpy as np
@@ -378,6 +413,14 @@ def prepare_image_tones(
         spread = float(high) - float(low)
         if spread > 1e-3:
             rgb = np.clip((rgb - float(low)) / spread, 0.0, 1.0)
+
+    mm_per_px = (scale_w / pixel_w + scale_h / pixel_h) / 2.0
+    rgb = _sharpen_luminance(
+        rgb,
+        sharpen_pct,
+        sharpen_radius_mm,
+        mm_per_px,
+    )
 
     # Keep the tonal depth field tied to scene luminance. Ink-density controls
     # may darken or lighten every plate, but they must not flatten the waveform
