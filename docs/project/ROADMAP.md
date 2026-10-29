@@ -235,10 +235,15 @@
   margin in dense CMYK work. Benefit: a smaller-station, higher-density field
   can reduce repeatable interpolation error without replacing the accepted
   profile prematurely.
-  Status 2026-10-28: `--layout dense-91` generates 91 stations at
+  Status 2026-10-28: `--layout dense-91` generated 91 stations at
   30/60/90/120/148.5 mm radii with 3 mm marks, 7 mm lanes, and 1.8 mm labels.
   Its 819 station marks plus four fiducials fit inside the 13-inch test field,
   and generation, recognition, CSV, analysis, macro, and motion tests pass.
+  Status 2026-10-29: the first physical print showed that 13 pass lanes crossed
+  their own station-number glyphs. Preserve that issued layout as `dense-91`.
+  The corrected `dense-91-v2` uses 5 mm lanes and places labels 14 mm inward,
+  with `3.790 mm` minimum label/mark separation. Calibration and compensated
+  verification files now use v2.
   Acceptance: print the dense sheet after `G65 P113`, extract every station,
   repeat it to quantify station noise, require the normal M-12 fit gates, then
   print and compare an independently compensated verification sheet. Promote

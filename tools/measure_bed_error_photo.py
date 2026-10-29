@@ -494,7 +494,7 @@ def measure_photo(
     layout = calibration_layout(layout)
     if minimum_station_dimension is None:
         minimum_station_dimension = (
-            14 if layout.layout_id == "dense-91" else 16
+            14 if layout.mark_arm_mm < STANDARD_LAYOUT.mark_arm_mm else 16
         )
     source = Image.open(image_path).convert("L")
     background = source.filter(ImageFilter.GaussianBlur(blur_radius))

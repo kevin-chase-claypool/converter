@@ -5,7 +5,7 @@ category: windows-software
 affected_categories:
   - windows-software
   - hardware
-status: implemented
+status: superseded
 components:
   - software/converter_core/bed_calibration.py
   - tools/make_bed_error_calibration.py
@@ -27,6 +27,9 @@ related:
 ---
 
 # Add a 91-station dense bed-calibration mesh
+
+> Superseded by `WSW-20261029-001`: the first physical print showed 13 pass
+> lanes crossing their own station-number glyphs. Use `dense-91-v2`.
 
 ## Summary
 

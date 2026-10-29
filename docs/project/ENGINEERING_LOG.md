@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261029-dense-bed-label-clearance"></a>
+### 🟥 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/CORRECTED - Dense bed labels collided with pass lanes
+
+- The first physical `dense-91` sheet showed marks crossing many station
+  numbers. Exact geometry reproduced 13 lane/label intersections across the
+  45/135/225/270 degree passes. Reference marks did not intersect labels, but
+  merged components would make photo extraction unreliable.
+- Preserved the issued `dense-91` layout and added corrected `dense-91-v2`.
+  Pass lanes shrink from 7 mm to 5 mm and labels move from 10 mm to 14 mm
+  inward. Minimum label-to-any-mark separation is now `3.790 mm`.
+- Generated both `bed-error-map-dense-91-v2.gcode` and
+  `bed-error-verify-dense-91-v2.gcode`, with matching 823-row CSVs and the same
+  91 station numbers. The active profile remains `4bad792e35ad`.
+- Verification: the new red-first clearance regression failed at zero distance
+  before the change and passes afterward. All `56` focused bed tests and all
+  `563` converter tests pass with one expected OpenGL-context skip; both G-code
+  files pass macro and strict motion checks. The current v1 sheet cannot be
+  repaired in place.
+- Evidence: `WSW-20261029-001`,
+  `docs/changes/windows-software/2026/2026-10-29-dense-bed-label-clearance.md`.
+- Category: windows-software, hardware, bed-calibration, dense-mesh,
+  station-label, layout-collision, photo-measurement.
+
 <a id="elog-20261028-dense-bed-calibration-mesh"></a>
 ### 🟨 2026-10-28 - WINDOWS SOFTWARE/IMPLEMENTED - Add a 91-station dense bed mesh
 

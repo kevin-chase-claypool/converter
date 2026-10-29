@@ -202,7 +202,7 @@ class BedPhotoMeasurementTests(unittest.TestCase):
             len(rows),
             4 + 91 * len(DENSE_LAYOUT.pass_specs),
         )
-        self.assertEqual({row["layout_id"] for row in rows}, {"dense-91"})
+        self.assertEqual({row["layout_id"] for row in rows}, {"dense-91-v2"})
 
     def test_dense_oriented_homography_uses_the_smaller_mark_centroid(self):
         expected = expected_marks(DENSE_LAYOUT)
