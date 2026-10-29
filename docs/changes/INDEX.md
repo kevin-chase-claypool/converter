@@ -5,10 +5,12 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-29 | `WSW-20261029-005` | windows-software, hardware | implemented | [Add a one-start pen-clear no-drag diagnostic](windows-software/2026/2026-10-29-pen-clear-no-drag-diagnostic.md) |
 | 2026-10-29 | `WSW-20261029-004` | windows-software, hardware | implemented | [Recover dense measurements from compact calibration photos](windows-software/2026/2026-10-29-compact-bed-photo-fiducials.md) |
 | 2026-10-29 | `WSW-20261029-003` | windows-software, hardware | implemented | [Run bed calibration passes with timed dwells](windows-software/2026/2026-10-29-unattended-bed-calibration-dwell.md) |
 | 2026-10-29 | `WSW-20261029-002` | windows-software, hardware | implemented | [Harden dense calibration extraction and issue v3](windows-software/2026/2026-10-29-dense-bed-v3-measurement-hardening.md) |
 | 2026-10-29 | `WSW-20261029-001` | windows-software, hardware | superseded | [Separate dense-calibration station numbers from pass lanes](windows-software/2026/2026-10-29-dense-bed-label-clearance.md) |
+| 2026-10-29 | `RPSW-20261029-001` | rp23cnc-software, hardware | implemented | [Correct P100 registration after the east overshoot](rp23cnc-software/2026/2026-10-29-p100-east-1-3-south-0-7.md) |
 | 2026-10-28 | `WSW-20261028-002` | windows-software, hardware | superseded | [Add a 91-station dense bed-calibration mesh](windows-software/2026/2026-10-28-dense-bed-calibration-mesh.md) |
 | 2026-10-28 | `WSW-20261028-001` | windows-software | implemented | [Add luminance sharpening to CMYK photo preparation](windows-software/2026/2026-10-28-cmyk-luminance-sharpening.md) |
 | 2026-10-26 | `WSW-20261026-004` | windows-software | implemented | [Flatten SVG curves adaptively within tolerance](windows-software/2026/2026-10-26-adaptive-svg-curve-flattening.md) |

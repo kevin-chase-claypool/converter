@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-29 | `RPSW-20261029-001` | implemented | [Correct P100 registration after the east overshoot](2026/2026-10-29-p100-east-1-3-south-0-7.md) | `grblhal`, `p100`, `registration`, `pen-center`, `offset` |
 | 2026-10-26 | `HW-20261026-001` | planned | [Plan 2.8 A LDO motors for Y and A](../hardware/2026/2026-10-26-ldo-2-8a-y-a-driver-settings.md) | `stepper`, `tb6600`, `ldo`, `42sth48-2804ah`, `microstep`, `motor-current` |
 | 2026-10-25 | `WSW-20261025-004` | implemented | [Expand the XY/A tracking diagnostic into a full one-sheet matrix](../windows-software/2026/2026-10-25-comprehensive-xy-a-tracking-matrix.md) | `m-06`, `bed-compensation`, `rotary`, `tracking`, `feed-ladder`, `backlash`, `test-paper` |
 | 2026-10-25 | `WSW-20261025-001` | implemented | [Add ioSender configuration recovery](../windows-software/2026/2026-10-25-iosender-config-recovery.md) | `iosender`, `configuration`, `backup`, `restore`, `macros`, `grblhal`, `offsets` |

@@ -149,6 +149,13 @@ Cycle Start with the pen loaded:
   sheet and its independent repeat photo are retained as
   `..\samples\gcode\rotation-center-calibration-2026-10-23.csv` and
   `..\samples\gcode\rotation-center-calibration-2026-10-23-repeat.csv`.
+- `..\samples\gcode\pen-clear-no-drag-30.gcode` - one-page T-01H diagnostic
+  for intermittent pen-up drag. It draws 30 isolated witness strokes and jogs
+  between them at `F300`, `F1000`, and `F3000`, using normal `M3`/`M5` plus the
+  `P115` acknowledgement around every stroke. Run after `G65 P113` on ordinary
+  paper at normal plotting height; one initial Cycle Start completes the test.
+  Any line between witnesses is a failed pen-up clearance. Regenerate with
+  `..\tools\make_pen_clear_test.py`.
 - `..\samples\gcode\bed-error-map.gcode` - the full-field residual calibration
   for the position-dependent error left after registration. Run it after
   `G65 P113` with one Pigma Micron 005 (0.20 mm) for all nine passes. Its

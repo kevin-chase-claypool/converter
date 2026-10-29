@@ -1,5 +1,42 @@
 # Engineering Log
 
+<a id="elog-20261029-p100-east-south-offset"></a>
+### 🟨 2026-10-29 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - Shift P100 registration east and south
+
+- The operator requested that the P100 registered pen move 2.3 mm east and
+  0.7 mm south from the current parked frame, then reported that east
+  overshot and requested 1.0 mm west.
+- Because increasing the P100 axis-centre correction moves the pen east/north,
+  the source values change from X `1.45 / Y 1.01` to X `2.75 / Y 0.31`.
+  `sensor_to_pen` remains `(0.0, -29.4892)`.
+- At the centroid, the registration write becomes
+  `G10 L20 P1 X-2.75 Y-29.7992`.
+- Verification: P100/P115 safety validation passes, all 17 repository macros
+  parse safely, and all 20 rotation-calibration tests pass.
+- Controller deployment is pending: TCP port 21 on `10.10.10.2` was
+  unreachable and two pings timed out. The controller retains its old macro.
+- Evidence: `RPSW-20261029-001`,
+  `docs/report/lab-notes/2026-10-29-p100-east-south-offset-deployment-pending.md`.
+- Category: rp23cnc-software, hardware, grblhal, p100, registration,
+  pen-center, offset, deployment-pending.
+
+<a id="elog-20261029-pen-clear-no-drag-diagnostic"></a>
+### 🟨 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Add one-start pen-clear diagnostic
+
+- Added `bed-error-map`-independent T-01H coverage:
+  `samples\gcode\pen-clear-no-drag-30.gcode` draws 30 isolated witness strokes
+  on ordinary paper and jogs between them at ten each of `F300`, `F1000`, and
+  `F3000`.
+- The program uses the normal `M3`/`M5` and `P115` handshakes, has no manual
+  pauses, and finishes with the normal full retract and park. It needs one
+  initial Cycle Start.
+- Verification: macro parsing and strict motion checks pass. The generated
+  program has 30 witness strokes and 30 same-height pen-up jogs.
+- Evidence: `WSW-20261029-005`,
+  `docs/changes/windows-software/2026/2026-10-29-pen-clear-no-drag-diagnostic.md`.
+- Category: windows-software, hardware, toolhead, pen-clear, T-01H,
+  diagnostic.
+
 <a id="elog-20261029-dense-v3-auto-pen-up-drag"></a>
 ### 🟥 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/FAILED - Dense v3 auto sheet shows pen-up drag
 
@@ -23,7 +60,7 @@
   `0.594 / 1.705 mm`, A0 control is `0.297 / 0.655 mm`, and leave-one-out is
   `0.676 / 3.689 mm` with `42.1 %` improvement. Keep the sheet as unaccepted
   evidence.
-- Verification: all `65` focused bed tests and all `572` converter tests pass
+- Verification: all `65` focused bed tests and all `575` converter tests pass
   with one expected OpenGL-context skip. Evidence and the reviewed travel
   overlay are in
   `docs/report/lab-notes/2026-10-29-m-12-dense-v3-auto-pen-up-drag.md`.

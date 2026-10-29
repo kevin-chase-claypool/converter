@@ -122,9 +122,9 @@ must be resolved before accepting another calibration run.
   from it.
 - Confirm which toolhead firmware binary is actually running, including whether
   `PEN_CLEAR_EXTRA_LIFT_MS=130` is deployed.
-- Run the T-01H no-drag check for at least 30 `M3`/`M5` cycles with
-  representative X/Y travel. Record the `p` status after failed-looking `M5`
-  events and test low versus high travel speed separately.
+- Run `samples\gcode\pen-clear-no-drag-30.gcode` for the T-01H no-drag check
+  on ordinary paper. Its 30 cycles cover three travel-speed groups; record the
+  `p` status after any failed-looking `M5`.
 - Inspect clamp height and the end of the pen nib if the current 130 ms build
   still leaves trails. Do not increase the pulse blindly beyond 130 ms.
 

@@ -82,7 +82,7 @@ changing the measured coordinate.
   maximum, A0 control is `0.297 / 0.655 mm`, and leave-one-out is
   `0.676 / 3.689 mm` with `42.1 %` improvement.
 - All `65` focused bed tests pass.
-- The full converter suite passes all `572` tests with one expected
+- The full converter suite passes all `575` tests with one expected
   OpenGL-context skip.
 
 ## Struggles and rejected approaches
