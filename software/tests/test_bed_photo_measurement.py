@@ -119,6 +119,21 @@ class BedPhotoMeasurementTests(unittest.TestCase):
             (fiducial,),
         )
 
+    def test_fiducial_shape_score_prefers_the_long_radial_arm(self):
+        expected = np.asarray((19.6, 34.3, 39.5))
+        fiducial = self.module.Component(
+            ((100, 100), (120, 100), (100, 135)),
+            (100, 100, 120, 135),
+        )
+        station_mark = self.module.Component(
+            ((100, 100), (122, 100), (100, 123)),
+            (100, 100, 122, 123),
+        )
+        self.assertLess(
+            self.module._fiducial_shape_error(fiducial, expected, 4.9),
+            self.module._fiducial_shape_error(station_mark, expected, 4.9),
+        )
+
     def test_station_dimension_floor_can_exclude_large_labels(self):
         def component(maximum_dimension):
             return self.module.Component(
@@ -414,12 +429,12 @@ class BedPhotoMeasurementTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            diagnostic["component_counts"]["matched_station_L"],
+            diagnostic["component_counts"]["template_refined_station_L"],
             91 * len(DENSE_LAYOUT.pass_specs),
         )
         self.assertEqual(
-            repeat_diagnostic["component_counts"]["matched_station_L"],
-            diagnostic["component_counts"]["matched_station_L"],
+            repeat_diagnostic["component_counts"]["template_refined_station_L"],
+            diagnostic["component_counts"]["template_refined_station_L"],
         )
         repeat_delta = max(
             np.linalg.norm(

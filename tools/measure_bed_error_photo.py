@@ -262,6 +262,22 @@ def _component_corner(component, quadrant=None, prediction=None):
     return _bbox_component_corner(component, quadrant or (0, 0))
 
 
+def _fiducial_shape_error(component, expected_lengths, pixel_scale):
+    corners = _fiducial_corner_candidates(component)
+    if len(corners) < 3:
+        return float("inf")
+    observed_lengths = np.sort(
+        [
+            float(np.linalg.norm(first - second))
+            for first_index, first in enumerate(corners)
+            for second in corners[first_index + 1 :]
+        ]
+    )
+    return float(
+        np.linalg.norm(observed_lengths - expected_lengths) / pixel_scale
+    )
+
+
 def _components_in_box(mask, bounds):
     x0, y0, x1, y1 = bounds
     cropped = mask[max(0, y0):y1, max(0, x0):x1]
@@ -317,7 +333,27 @@ def _layout_mask(shape, homography, radius_mm=172.0, samples=180):
     return np.asarray(image, dtype=bool)
 
 
-def _seeded_fiducials(residual, expected_fiducials, seed_homography, threshold):
+def _seeded_fiducials(
+    residual,
+    expected_fiducials,
+    seed_homography,
+    threshold,
+    layout=STANDARD_LAYOUT,
+):
+    layout = calibration_layout(layout)
+    pixel_scale = float(
+        np.linalg.svd(seed_homography[:2, :2], compute_uv=False).mean()
+    )
+    expected_lengths = np.asarray(
+        (
+            layout.fiducial_radial_arm_mm,
+            layout.fiducial_tangent_arm_mm,
+            math.hypot(
+                layout.fiducial_radial_arm_mm,
+                layout.fiducial_tangent_arm_mm,
+            ),
+        )
+    ) * pixel_scale
     selected = []
     for mark in expected_fiducials:
         expected = _forward(
@@ -339,7 +375,14 @@ def _seeded_fiducials(residual, expected_fiducials, seed_homography, threshold):
 
         def rank(component):
             center = np.asarray(component.points, dtype=float).mean(axis=0)
-            return np.linalg.norm(center - expected) - 0.2 * len(component.points)
+            shape_error = _fiducial_shape_error(
+                component,
+                expected_lengths,
+                pixel_scale,
+            )
+            center_distance = float(np.linalg.norm(center - expected))
+            score = shape_error + center_distance / (pixel_scale * 30.0)
+            return (score, center_distance, -len(component.points))
 
         selected.append(min(candidates, key=rank))
     nominal = np.asarray(
@@ -550,6 +593,7 @@ def _measure_dense_seeded_photo(
         expected_fiducials,
         seed_homography,
         fiducial_threshold,
+        layout,
     )
     inverse_homography = np.linalg.inv(homography)
     paper_mask = _layout_mask(residual.shape, homography)
@@ -565,13 +609,6 @@ def _measure_dense_seeded_photo(
             maximum_dimension=maximum_station_dimension,
         )
         if minimum_points <= len(component.points) <= maximum_points
-    )
-    candidate_centers = np.asarray(
-        [
-            np.asarray(component.points, dtype=float).mean(axis=0)
-            for component in candidates
-        ],
-        dtype=float,
     )
     by_station = {}
     for mark in station_marks:
@@ -673,78 +710,46 @@ def _measure_dense_seeded_photo(
             }
             processed.append(station)
 
-    ranked = []
-    for mark_index, mark in enumerate(station_marks):
-        shift_x, shift_y = station_results[mark.station_id]["shift"]
-        shift = np.asarray((shift_x, shift_y))
-        corner = (
-            np.asarray(
-                _forward(
-                    homography,
-                    (mark.nominal_x_mm, mark.nominal_y_mm),
-                )
-            )
-            + shift
-        )
-        left = (
-            np.asarray(
-                _forward(
-                    homography,
-                    (
-                        mark.nominal_x_mm - layout.mark_arm_mm,
-                        mark.nominal_y_mm,
-                    ),
-                )
-            )
-            + shift
-        )
-        up = (
-            np.asarray(
-                _forward(
-                    homography,
-                    (
-                        mark.nominal_x_mm,
-                        mark.nominal_y_mm + layout.mark_arm_mm,
-                    ),
-                )
-            )
-            + shift
-        )
-        centroid_prediction = (
-            corner + 0.5 * left + 0.5 * up
-        ) / 2.0
-        for component_index, center in enumerate(candidate_centers):
-            distance = float(np.linalg.norm(center - centroid_prediction))
-            if distance <= 30.0:
-                ranked.append((distance, mark_index, component_index))
-    ranked.sort()
-    assignments = {}
-    used_components = set()
-    assignment_distances = []
-    for distance, mark_index, component_index in ranked:
-        if mark_index in assignments or component_index in used_components:
-            continue
-        assignments[mark_index] = component_index
-        used_components.add(component_index)
-        assignment_distances.append(distance)
-
+    mark_results = {}
     measured_by_key = {}
-    for mark_index, mark in enumerate(station_marks):
-        shift_x, shift_y = station_results[mark.station_id]["shift"]
-        if mark_index in assignments:
-            component = candidates[assignments[mark_index]]
-            measured_corner = _station_vertex(
-                component,
-                homography,
-                (mark.nominal_x_mm, mark.nominal_y_mm),
-            )
-        else:
-            measured_corner = np.asarray(
-                _forward(
-                    homography,
-                    (mark.nominal_x_mm, mark.nominal_y_mm),
+    for mark in station_marks:
+        corner = _forward(
+            homography,
+            (mark.nominal_x_mm, mark.nominal_y_mm),
+        )
+        base_points = []
+        for arm_end in (
+            (
+                mark.nominal_x_mm - layout.mark_arm_mm,
+                mark.nominal_y_mm,
+            ),
+            (
+                mark.nominal_x_mm,
+                mark.nominal_y_mm + layout.mark_arm_mm,
+            ),
+        ):
+            endpoint = _forward(homography, arm_end)
+            for parameter in np.linspace(0.18, 0.86, 8):
+                base_points.append(
+                    corner + parameter * (endpoint - corner)
                 )
-            ) + np.asarray((shift_x, shift_y))
+        base_points = np.asarray(base_points, dtype=float)
+        group_shift = station_results[mark.station_id]["shift"]
+        best = None
+        for dy in np.arange(group_shift[1] - 5, group_shift[1] + 5.01, 1):
+            for dx in np.arange(group_shift[0] - 5, group_shift[0] + 5.01, 1):
+                score = group_score(base_points, 1, (dx, dy))
+                key = (score[0], score[1])
+                if best is None or key > best[0]:
+                    best = (key, float(dx), float(dy), score)
+        mark_results[(mark.station_id, mark.pass_id)] = {
+            "shift": [best[1], best[2]],
+            "mean_score": best[3][0],
+            "min_score": best[3][1],
+        }
+        measured_corner = (
+            np.asarray(corner) + np.asarray((best[1], best[2]))
+        )
         measured_by_key[(mark.station_id, mark.pass_id)] = tuple(
             _inverse(inverse_homography, measured_corner)
         )
@@ -755,6 +760,7 @@ def _measure_dense_seeded_photo(
         )
 
     shifts = list(station_results.values())
+    mark_scores = [value["mean_score"] for value in mark_results.values()]
     diagnostic = {
         "layout_id": layout.layout_id,
         "layout_name": layout.display_name,
@@ -772,10 +778,9 @@ def _measure_dense_seeded_photo(
             "total": len(components),
             "fiducials": len(image_fiducials),
             "station_L_candidates": len(candidates),
-            "matched_station_L": len(assignments),
-            "group_shift_fallbacks": len(station_marks) - len(assignments),
+            "template_refined_station_L": len(mark_results),
         },
-        "mode": "dense-seeded-local",
+        "mode": "dense-seeded-local-template",
         "fiducial_points_px": image_fiducials.tolist(),
         "station_group_score": {
             "minimum": min(value["min_score"] for value in shifts),
@@ -783,17 +788,17 @@ def _measure_dense_seeded_photo(
                 np.median([value["mean_score"] for value in shifts])
             ),
         },
-        "station_assignment_distance_px": {
-            "minimum": min(assignment_distances),
-            "median": float(np.median(assignment_distances)),
-            "maximum": max(assignment_distances),
+        "station_mark_score": {
+            "minimum": min(mark_scores),
+            "median": float(np.median(mark_scores)),
+            "maximum": max(mark_scores),
         },
         "station_shifts_px": station_results,
+        "station_mark_shifts_px": {
+            "%s/%s" % key: value for key, value in mark_results.items()
+        },
         "homography": homography.tolist(),
     }
-    diagnostic["assignment_distance_px"] = diagnostic[
-        "station_assignment_distance_px"
-    ]
     return expected, measured_by_key, diagnostic
 
 
@@ -964,6 +969,7 @@ def measure_photo(
             expected_fiducials,
             seed_homography,
             fiducial_threshold,
+            layout,
         )
         paper_mask = _layout_mask(gray.shape, homography)
         components = _connected_components(
@@ -1336,14 +1342,20 @@ def main():
             "seed-assisted components: %(fiducials)d fiducials, "
             "%(station_L_candidates)d L candidates" % counts
         )
-    print(
-        "station assignment px: min %.3f, median %.3f, max %.3f"
-        % (
-            diagnostic["assignment_distance_px"]["minimum"],
-            diagnostic["assignment_distance_px"]["median"],
-            diagnostic["assignment_distance_px"]["maximum"],
+    if "assignment_distance_px" in diagnostic:
+        print(
+            "station assignment px: min %.3f, median %.3f, max %.3f"
+            % (
+                diagnostic["assignment_distance_px"]["minimum"],
+                diagnostic["assignment_distance_px"]["median"],
+                diagnostic["assignment_distance_px"]["maximum"],
+            )
         )
-    )
+    else:
+        print(
+            "template-refined station marks: %(template_refined_station_L)d"
+            % counts
+        )
 
 
 if __name__ == "__main__":

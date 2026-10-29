@@ -4,22 +4,26 @@
 ### 🟥 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/FAILED - Dense v3 auto sheet shows pen-up drag
 
 - The first compact v3 auto-sheet photo contains intended station marks plus
-  faint ink on five long commanded pen-up travel commands at four visible path
-  locations. Median centerline contrast is `23-95` versus `2-5` on parallel
-  blank controls.
-- Every inspected flagged travel is preceded by `M5` and
-  `G65 P115 Q1 A1 W2`; this is not a missing converter command or planner
-  displacement. Intermittent physical clearance remains the leading cause.
+  one visually confirmed long pen-up drag. An automated contrast check raised
+  four additional candidates, but visual review did not confirm them.
+- The confirmed travel is preceded by `M5` and `G65 P115 Q1 A1 W2`; this is
+  not a missing converter command or planner displacement. Intermittent
+  physical clearance remains the leading cause.
 - The deployed toolhead build was not captured. Confirm whether the running
   firmware includes `PEN_CLEAR_EXTRA_LIFT_MS=130` and repeat the 30-cycle
   T-01H no-drag check before increasing the pulse again.
 - The 1684 x 2236 photo initially exposed an extractor limitation: all
-  fiducials were below the old 40 px/100-pixel floor. The filter now accepts
-  compact 32-120 px, 80-1,200-pixel fiducials, with a red-first regression.
-- The compact v3 extraction resolves four fiducials but moves station
-  coordinates by `2.469-3.169 mm` RMS across thresholds; profile construction
-  exceeds the 5 mm correction bound. The sheet is rejected for profile fitting.
-- Verification: all `64` focused bed tests and all `571` converter tests pass
+  fiducials were below the old 40 px/100-pixel floor. Compact fiducials are now
+  accepted and ranked by their 4 mm/7 mm V-arm pattern.
+- Proximity-only fiducial selection initially confused the bottom-left
+  fiducial with a station mark, warping the field by about 10 mm. Per-mark
+  template refinement then made all 819 station coordinates identical across
+  thresholds 20/55/70/80.
+- The corrected field still fails profile gates: A0 spatial is
+  `0.594 / 1.705 mm`, A0 control is `0.297 / 0.655 mm`, and leave-one-out is
+  `0.676 / 3.689 mm` with `42.1 %` improvement. Keep the sheet as unaccepted
+  evidence.
+- Verification: all `65` focused bed tests and all `572` converter tests pass
   with one expected OpenGL-context skip. Evidence and the reviewed travel
   overlay are in
   `docs/report/lab-notes/2026-10-29-m-12-dense-v3-auto-pen-up-drag.md`.

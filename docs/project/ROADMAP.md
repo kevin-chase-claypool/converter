@@ -254,10 +254,13 @@
   A generator option can replace the eight manual `M0` stops with five-second
   `G4` drying dwells for a one-start unattended physical run.
   Status 2026-10-29: the first v3 auto sheet showed faint ink on commanded
-  pen-up travel despite preceding `M5`/`P115` commands. Its compact photo also
-  moved station coordinates by `2.469-3.169 mm` RMS across thresholds, so no
-  profile can be fitted. Resolve T-01H lift clearance and confirm the deployed
-  130 ms toolhead build before repeating the sheet.
+  pen-up travel despite preceding `M5`/`P115` commands. Corrected fiducial
+  shape scoring and per-mark template refinement make the compact photo's
+  station coordinates identical across thresholds, but the resulting field
+  still fails at `0.594 / 1.705 mm` A0 spatial error and
+  `0.676 / 3.689 mm` leave-one-out error. Resolve T-01H lift clearance, confirm
+  the deployed 130 ms toolhead build, and investigate the remaining field
+  error before repeating the sheet.
   Acceptance: print the dense sheet after `G65 P113`, extract every station,
   repeat it to quantify station noise, require the normal M-12 fit gates, then
   print and compare an independently compensated verification sheet. Promote
