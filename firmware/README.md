@@ -93,8 +93,8 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   registered origin onto the bed's true rotation axis before the G54 write:
   the centre magnet is not guaranteed to sit exactly on that axis, and a
   constant error there displaces every drawing. As of 2026-10-29 the
-  correction is `+2.75` mm X and `+0.31` mm Y. From the prior `1.45 / 1.01`
-  frame, this moves the parked pen 1.3 mm east and 0.7 mm south. Deployment
+  correction is `+2.30` mm X and `+0.31` mm Y. From the prior `1.45 / 1.01`
+  frame, this moves the parked pen 0.85 mm east and 0.7 mm south. Deployment
   and a repeat registration check remain pending. The
   quantitative calibration is
    `samples/gcode/rotation-center-calibration.gcode` after `G65 P113`: its

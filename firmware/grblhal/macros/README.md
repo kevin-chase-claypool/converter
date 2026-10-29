@@ -228,7 +228,7 @@ installed pen/TMAG offset. Two constants sit between those values and the
 `G10 L20` write:
 
 ```text
-#<axis_center_correction_x> = 2.75
+#<axis_center_correction_x> = 2.30
 #<axis_center_correction_y> = 0.31
 ...
 G10 L20 P1 X[[#<sensor_to_pen_x> - #<axis_center_correction_x>]] Y[[#<sensor_to_pen_y> - #<axis_center_correction_y>]]
@@ -287,10 +287,10 @@ pen needed a final `0.29 mm` south correction. The final values are X `+1.45`
 and Y `+1.01`. The 15,244-byte macro was uploaded successfully over binary FTP;
 a repeat `G65 P113` center-magnet check remains pending.
 
-**2026-10-29 registered-offset adjustment.** From the current parked frame, a
-2.3 mm east and 0.7 mm south adjustment overshot in X. Returning 1.0 mm west
-leaves a net X correction of `+2.75` and Y `+0.31`. Deployment and a repeat
-center-magnet check remain pending.
+**2026-10-29 registered-offset adjustment.** Iterative registration checks
+ended at X `+2.30`, Y `+0.31`: a net 0.85 mm east and 0.7 mm south movement
+from the prior frame. Deployment and a repeat center-magnet check remain
+pending.
 
 Two further notes from the same edit. `P103.macro` mirrors P100's initialization
 and now carries the two new constants. And the `sensor_to_pen` comment in P100
