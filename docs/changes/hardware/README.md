@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-28 | `WSW-20261028-002` | implemented | [Add a 91-station dense bed-calibration mesh](../windows-software/2026/2026-10-28-dense-bed-calibration-mesh.md) | `bed-calibration`, `bed-compensation`, `dense-mesh`, `photo-measurement`, `station-layout`, `residual-error` |
 | 2026-10-26 | `WSW-20261026-003` | verified | [Promote the independently verified post-repair bed profile](../windows-software/2026/2026-10-26-promote-post-repair-bed-profile.md) | `bed-compensation`, `M-12`, `verification`, `default-profile`, `rotating-bed` |
 | 2026-10-26 | `WSW-20261026-002` | implemented | [Make the bed-photo station-size floor configurable](../windows-software/2026/2026-10-26-bed-photo-label-dimension-cutoff.md) | `bed-calibration`, `photo-measurement`, `full-field`, `M-12`, `component-size` |
 | 2026-10-26 | `WSW-20261026-001` | implemented | [Restore wave depth with a shared phase](../windows-software/2026/2026-10-26-phase-locked-wave-depth.md) | `cmyk`, `wave-screen`, `depth`, `amplitude`, `phase`, `clearance`, `test-paper` |

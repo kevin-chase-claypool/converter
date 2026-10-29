@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-28 | `WSW-20261028-002` | windows-software, hardware | implemented | [Add a 91-station dense bed-calibration mesh](windows-software/2026/2026-10-28-dense-bed-calibration-mesh.md) |
 | 2026-10-28 | `WSW-20261028-001` | windows-software | implemented | [Add luminance sharpening to CMYK photo preparation](windows-software/2026/2026-10-28-cmyk-luminance-sharpening.md) |
 | 2026-10-26 | `WSW-20261026-004` | windows-software | implemented | [Flatten SVG curves adaptively within tolerance](windows-software/2026/2026-10-26-adaptive-svg-curve-flattening.md) |
 | 2026-10-26 | `WSW-20261026-003` | windows-software, hardware | verified | [Promote the independently verified post-repair bed profile](windows-software/2026/2026-10-26-promote-post-repair-bed-profile.md) |

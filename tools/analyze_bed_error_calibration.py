@@ -18,13 +18,21 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "software"))
 
 from converter_core.bed_calibration import (  # noqa: E402
+    CALIBRATION_LAYOUTS,
     analyze_measurements,
+    calibration_layout,
     compare_measurements,
 )
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--layout",
+        choices=tuple(CALIBRATION_LAYOUTS),
+        default=None,
+        help="layout override; normally detected from the measurement CSV",
+    )
     parser.add_argument(
         "--measurements",
         default=str(ROOT / "samples" / "gcode" / "bed-error-map.csv"),
@@ -71,6 +79,7 @@ def main():
     args = parser.parse_args()
 
     measurements_path = Path(args.measurements)
+    layout = calibration_layout(args.layout) if args.layout else None
     try:
         measurements_csv = measurements_path.read_text(encoding="utf-8")
     except OSError as error:
@@ -84,6 +93,7 @@ def main():
         comparison = compare_measurements(
             baseline_csv,
             measurements_csv,
+            layout=layout,
             baseline_source=baseline_path.name,
             verification_source=measurements_path.name,
             max_rms_mm=args.max_cross_validation_rms_mm,
@@ -125,6 +135,7 @@ def main():
 
     profile, report, accepted = analyze_measurements(
         measurements_csv,
+        layout=layout,
         bed_mesh_csv=bed_mesh_csv,
         bed_mesh_source=args.bed_mesh,
         bed_mesh_sha256=bed_mesh_sha256,

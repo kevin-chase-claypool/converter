@@ -37,7 +37,12 @@ from PIL import Image, ImageDraw, ImageFilter
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "software"))
 
-from converter_core.bed_calibration import MARK_ARM_MM, expected_marks  # noqa: E402
+from converter_core.bed_calibration import (  # noqa: E402
+    CALIBRATION_LAYOUTS,
+    STANDARD_LAYOUT,
+    calibration_layout,
+    expected_marks,
+)
 
 
 DEFAULT_MAXIMUM_ASSIGNMENT_PX = 13.0
@@ -423,8 +428,10 @@ def _fit_oriented_homography(
     image_fiducials,
     station_marks,
     component_centroids,
+    layout=STANDARD_LAYOUT,
 ):
     """Choose the non-mirrored sheet rotation that best matches the station grid."""
+    layout = calibration_layout(layout)
     nominal_fiducials = np.asarray(
         [
             (mark.nominal_x_mm, mark.nominal_y_mm)
@@ -445,8 +452,8 @@ def _fit_oriented_homography(
             expected_centroid = _forward(
                 homography,
                 (
-                    mark.nominal_x_mm - MARK_ARM_MM / 2.0,
-                    mark.nominal_y_mm + MARK_ARM_MM / 2.0,
+                    mark.nominal_x_mm - layout.mark_arm_mm / 2.0,
+                    mark.nominal_y_mm + layout.mark_arm_mm / 2.0,
                 ),
             )
             distances.append(
@@ -475,20 +482,26 @@ def _fit_oriented_homography(
 def measure_photo(
     image_path,
     *,
+    layout=STANDARD_LAYOUT,
     threshold=20,
     blur_radius=18.0,
-    minimum_station_dimension=16,
+    minimum_station_dimension=None,
     mask_center_fraction=(0.5295, 0.4869),
     mask_radius_fraction=0.4322,
     maximum_assignment_px=DEFAULT_MAXIMUM_ASSIGNMENT_PX,
     seed_diagnostic=None,
 ):
+    layout = calibration_layout(layout)
+    if minimum_station_dimension is None:
+        minimum_station_dimension = (
+            14 if layout.layout_id == "dense-91" else 16
+        )
     source = Image.open(image_path).convert("L")
     background = source.filter(ImageFilter.GaussianBlur(blur_radius))
     gray = np.asarray(source, dtype=np.int16)
     local_background = np.asarray(background, dtype=np.int16)
     residual = local_background - gray
-    expected = expected_marks()
+    expected = expected_marks(layout)
     expected_fiducials = tuple(
         mark for mark in expected if mark.section == "fiducial"
     )
@@ -572,6 +585,7 @@ def measure_photo(
             image_fiducials,
             station_marks,
             component_centroids,
+            layout,
         )
         nominal_fiducials = np.asarray(
             [
@@ -614,13 +628,20 @@ def measure_photo(
         components = _connected_components(
             (residual > threshold) & paper_mask
         )
+        mark_area_ratio = (
+            layout.mark_arm_mm / STANDARD_LAYOUT.mark_arm_mm
+        ) ** 2
         medium = tuple(
             component
             for component in _station_sized_components(
                 components,
                 minimum_dimension=minimum_station_dimension,
             )
-            if 60 <= len(component.points) <= 200
+            if (
+                max(24, int(round(60 * mark_area_ratio)))
+                <= len(component.points)
+                <= max(40, int(round(200 * mark_area_ratio)))
+            )
         )
         fiducial_order = (0, 1, 2, 3)
         orientation_score = (0.0, 0.0, 0.0)
@@ -638,8 +659,8 @@ def measure_photo(
         expected_image = _forward(
             homography,
             (
-                mark.nominal_x_mm - MARK_ARM_MM / 2.0,
-                mark.nominal_y_mm + MARK_ARM_MM / 2.0,
+                mark.nominal_x_mm - layout.mark_arm_mm / 2.0,
+                mark.nominal_y_mm + layout.mark_arm_mm / 2.0,
             ),
         )
         for component_index, vertex in enumerate(approximate_vertices):
@@ -701,6 +722,8 @@ def measure_photo(
         }
     )
     diagnostic = {
+        "layout_id": layout.layout_id,
+        "layout_name": layout.display_name,
         "image": str(Path(image_path).resolve()),
         "image_sha256": hashlib.sha256(Path(image_path).read_bytes()).hexdigest(),
         "image_size_px": [source.width, source.height],
@@ -728,8 +751,14 @@ def measure_photo(
     return expected, measured_by_key, diagnostic
 
 
-def measurement_csv(expected, measured_by_key):
+def measurement_csv(
+    expected,
+    measured_by_key,
+    layout=STANDARD_LAYOUT,
+):
+    layout = calibration_layout(layout)
     columns = (
+        "layout_id",
         "section",
         "station_id",
         "ring_radius_mm",
@@ -755,6 +784,7 @@ def measurement_csv(expected, measured_by_key):
             (mark.station_id, mark.pass_id)
         ]
         row = (
+            layout.layout_id,
             mark.section,
             mark.station_id,
             value(mark.ring_radius_mm),
@@ -824,6 +854,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("image")
     parser.add_argument(
+        "--layout",
+        choices=tuple(CALIBRATION_LAYOUTS),
+        default=STANDARD_LAYOUT.layout_id,
+        help="calibration station layout used for the printed sheet",
+    )
+    parser.add_argument(
         "--measurement-out",
         default=str(
             ROOT / "samples" / "gcode" / "bed-error-map-measured.csv"
@@ -846,7 +882,7 @@ def main():
     parser.add_argument(
         "--minimum-station-dimension",
         type=int,
-        default=16,
+        default=None,
         help=(
             "minimum component width or height treated as a station L; "
             "raise this when large station labels are misclassified"
@@ -869,6 +905,7 @@ def main():
         help="optional prior photo diagnostic JSON for artefact-tolerant matching",
     )
     args = parser.parse_args()
+    layout = calibration_layout(args.layout)
 
     mask_center_fraction = tuple(
         float(value)
@@ -886,6 +923,7 @@ def main():
             raise SystemExit("cannot read seed diagnostic: %s" % error) from error
     expected, measured_by_key, diagnostic = measure_photo(
         args.image,
+        layout=layout,
         threshold=args.threshold,
         blur_radius=args.blur_radius,
         minimum_station_dimension=args.minimum_station_dimension,
@@ -900,7 +938,7 @@ def main():
     for path in (measurement_path, diagnostic_path, overlay_path):
         path.parent.mkdir(parents=True, exist_ok=True)
     measurement_path.write_text(
-        measurement_csv(expected, measured_by_key),
+        measurement_csv(expected, measured_by_key, layout),
         encoding="utf-8",
         newline="\n",
     )

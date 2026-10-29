@@ -105,49 +105,152 @@ class ErrorSummary:
     mean_y_mm: float
 
 
-PASS_SPECS = (
-    CalibrationPass("1", "A000-REFERENCE", 0.0, 0.0, 0.0, "reference"),
-    CalibrationPass(
-        "2",
-        "A045",
-        45.0,
-        LANE_OFFSET_MM * math.sqrt(0.5),
-        LANE_OFFSET_MM * math.sqrt(0.5),
-        "angle_45",
-    ),
-    CalibrationPass(
-        "3", "A090", 90.0, LANE_OFFSET_MM, 0.0, "angle_90"
-    ),
-    CalibrationPass(
-        "4",
-        "A135",
-        135.0,
-        -LANE_OFFSET_MM * math.sqrt(0.5),
-        LANE_OFFSET_MM * math.sqrt(0.5),
-        "angle_135",
-    ),
-    CalibrationPass("5", "A180", 180.0, 0.0, LANE_OFFSET_MM, "angle_180"),
-    CalibrationPass(
-        "6",
-        "A225",
-        225.0,
-        -LANE_OFFSET_MM * math.sqrt(0.5),
-        -LANE_OFFSET_MM * math.sqrt(0.5),
-        "angle_225",
-    ),
-    CalibrationPass(
-        "7", "A270", 270.0, -LANE_OFFSET_MM, 0.0, "angle_270"
-    ),
-    CalibrationPass(
-        "8",
-        "A315",
-        315.0,
-        LANE_OFFSET_MM * math.sqrt(0.5),
-        -LANE_OFFSET_MM * math.sqrt(0.5),
-        "angle_315",
-    ),
-    CalibrationPass("9", "A000-CONTROL", 0.0, 0.0, -LANE_OFFSET_MM, "control"),
+def _make_pass_specs(lane_offset_mm):
+    diagonal = float(lane_offset_mm) * math.sqrt(0.5)
+    return (
+        CalibrationPass("1", "A000-REFERENCE", 0.0, 0.0, 0.0, "reference"),
+        CalibrationPass(
+            "2",
+            "A045",
+            45.0,
+            diagonal,
+            diagonal,
+            "angle_45",
+        ),
+        CalibrationPass(
+            "3",
+            "A090",
+            90.0,
+            lane_offset_mm,
+            0.0,
+            "angle_90",
+        ),
+        CalibrationPass(
+            "4",
+            "A135",
+            135.0,
+            -diagonal,
+            diagonal,
+            "angle_135",
+        ),
+        CalibrationPass(
+            "5",
+            "A180",
+            180.0,
+            0.0,
+            lane_offset_mm,
+            "angle_180",
+        ),
+        CalibrationPass(
+            "6",
+            "A225",
+            225.0,
+            -diagonal,
+            -diagonal,
+            "angle_225",
+        ),
+        CalibrationPass(
+            "7",
+            "A270",
+            270.0,
+            -lane_offset_mm,
+            0.0,
+            "angle_270",
+        ),
+        CalibrationPass(
+            "8",
+            "A315",
+            315.0,
+            diagonal,
+            -diagonal,
+            "angle_315",
+        ),
+        CalibrationPass(
+            "9",
+            "A000-CONTROL",
+            0.0,
+            0.0,
+            -lane_offset_mm,
+            "control",
+        ),
+    )
+
+
+PASS_SPECS = _make_pass_specs(LANE_OFFSET_MM)
+
+
+@dataclass(frozen=True)
+class CalibrationLayout:
+    layout_id: str
+    display_name: str
+    ring_specs: tuple[tuple[float, int, float], ...]
+    mark_arm_mm: float
+    lane_offset_mm: float
+    label_inward_mm: float
+    label_height_mm: float
+    test_diameter_mm: float
+    fiducial_radius_mm: float
+    fiducial_angles_deg: tuple[float, ...]
+    fiducial_radial_arm_mm: float
+    fiducial_tangent_arm_mm: float
+    pass_specs: tuple[CalibrationPass, ...]
+
+    @property
+    def test_radius_mm(self):
+        return self.test_diameter_mm / 2.0
+
+
+STANDARD_LAYOUT = CalibrationLayout(
+    layout_id="standard-37",
+    display_name="37-station three-ring field",
+    ring_specs=RING_SPECS,
+    mark_arm_mm=MARK_ARM_MM,
+    lane_offset_mm=LANE_OFFSET_MM,
+    label_inward_mm=LABEL_INWARD_MM,
+    label_height_mm=2.4,
+    test_diameter_mm=TEST_DIAMETER_MM,
+    fiducial_radius_mm=FIDUCIAL_RADIUS_MM,
+    fiducial_angles_deg=(45.0, 135.0, 225.0, 315.0),
+    fiducial_radial_arm_mm=-12.0,
+    fiducial_tangent_arm_mm=7.0,
+    pass_specs=PASS_SPECS,
 )
+DENSE_LAYOUT = CalibrationLayout(
+    layout_id="dense-91",
+    display_name="91-station balanced dense field",
+    ring_specs=(
+        (30.0, 6, 30.0),
+        (60.0, 12, 15.0),
+        (90.0, 18, 10.0),
+        (120.0, 22, 8.1818181818),
+        (148.5, 32, 50.625),
+    ),
+    mark_arm_mm=3.0,
+    lane_offset_mm=7.0,
+    label_inward_mm=10.0,
+    label_height_mm=1.8,
+    test_diameter_mm=TEST_DIAMETER_MM,
+    fiducial_radius_mm=160.0,
+    fiducial_angles_deg=(45.0, 135.0, 225.0, 315.0),
+    fiducial_radial_arm_mm=4.0,
+    fiducial_tangent_arm_mm=7.0,
+    pass_specs=_make_pass_specs(7.0),
+)
+CALIBRATION_LAYOUTS = {
+    layout.layout_id: layout
+    for layout in (STANDARD_LAYOUT, DENSE_LAYOUT)
+}
+
+
+def calibration_layout(layout="standard-37"):
+    """Return a known calibration layout by id or object."""
+    if isinstance(layout, CalibrationLayout):
+        return layout
+    key = str(layout)
+    try:
+        return CALIBRATION_LAYOUTS[key]
+    except KeyError as error:
+        raise ValueError("unknown calibration layout %r" % key) from error
 
 PROFILE_ANGLE_VALUES_DEG = tuple(
     sorted(
@@ -196,12 +299,13 @@ def _fmt(value: float) -> str:
     return ("%.4f" % float(value)).rstrip("0").rstrip(".")
 
 
-def calibration_stations():
+def calibration_stations(layout=STANDARD_LAYOUT):
+    layout = calibration_layout(layout)
     stations = [
         CalibrationStation("00", 0.0, 0.0, 0.0, 0.0),
     ]
     station_number = 1
-    for ring_radius_mm, count, phase_deg in RING_SPECS:
+    for ring_radius_mm, count, phase_deg in layout.ring_specs:
         for index in range(count):
             station_angle_deg = phase_deg + index * 360.0 / count
             angle = math.radians(station_angle_deg)
@@ -218,20 +322,24 @@ def calibration_stations():
     return tuple(stations)
 
 
-def fiducial_points():
+def fiducial_points(layout=STANDARD_LAYOUT):
+    layout = calibration_layout(layout)
     points = []
-    for number, angle_deg in enumerate((45.0, 135.0, 225.0, 315.0), 1):
+    for number, angle_deg in enumerate(layout.fiducial_angles_deg, 1):
         angle = math.radians(angle_deg)
-        x_mm = FIDUCIAL_RADIUS_MM * math.cos(angle)
-        y_mm = FIDUCIAL_RADIUS_MM * math.sin(angle)
+        x_mm = layout.fiducial_radius_mm * math.cos(angle)
+        y_mm = layout.fiducial_radius_mm * math.sin(angle)
         points.append((number, angle_deg, x_mm, y_mm))
     return tuple(points)
 
 
-def station_label_position(station):
+def station_label_position(station, layout=STANDARD_LAYOUT):
+    layout = calibration_layout(layout)
     if station.ring_radius_mm <= 1e-9:
-        return station.x_mm, station.y_mm - 20.0
-    scale = (station.ring_radius_mm - LABEL_INWARD_MM) / station.ring_radius_mm
+        return station.x_mm, station.y_mm - layout.label_inward_mm
+    scale = (
+        station.ring_radius_mm - layout.label_inward_mm
+    ) / station.ring_radius_mm
     return station.x_mm * scale, station.y_mm * scale
 
 
@@ -243,7 +351,7 @@ def fiducial_mark_points(
     angle_deg,
     x_mm,
     y_mm,
-    radial_arm_mm=12.0,
+    radial_arm_mm=-12.0,
     tangent_arm_mm=7.0,
 ):
     angle = math.radians(angle_deg)
@@ -252,8 +360,8 @@ def fiducial_mark_points(
     return (
         (x_mm, y_mm),
         (
-            x_mm - radial_x * radial_arm_mm,
-            y_mm - radial_y * radial_arm_mm,
+            x_mm + radial_x * radial_arm_mm,
+            y_mm + radial_y * radial_arm_mm,
         ),
         (
             x_mm + tangent_x * tangent_arm_mm,
@@ -285,24 +393,30 @@ def station_label_points(text, x_mm, y_mm, height_mm=2.4):
     return tuple(output)
 
 
-def mark_geometry(station, calibration_pass):
+def mark_geometry(station, calibration_pass, layout=STANDARD_LAYOUT):
+    layout = calibration_layout(layout)
     target_x = station.x_mm + calibration_pass.lane_x_mm
     target_y = station.y_mm + calibration_pass.lane_y_mm
-    return target_x, target_y, l_mark_points(target_x, target_y)
+    return target_x, target_y, l_mark_points(
+        target_x,
+        target_y,
+        arm_mm=layout.mark_arm_mm,
+    )
 
 
-def expected_marks():
-    stations = calibration_stations()
+def expected_marks(layout=STANDARD_LAYOUT):
+    layout = calibration_layout(layout)
+    stations = calibration_stations(layout)
     marks = [
         CalibrationMark(
             "fiducial",
             "F%d" % number,
-            FIDUCIAL_RADIUS_MM,
+            layout.fiducial_radius_mm,
             angle_deg,
             x_mm,
             y_mm,
-            PASS_SPECS[0].pass_id,
-            PASS_SPECS[0].pass_name,
+            layout.pass_specs[0].pass_id,
+            layout.pass_specs[0].pass_name,
             "fiducial",
             0.0,
             x_mm,
@@ -310,11 +424,15 @@ def expected_marks():
             math.nan,
             math.nan,
         )
-        for number, angle_deg, x_mm, y_mm in fiducial_points()
+        for number, angle_deg, x_mm, y_mm in fiducial_points(layout)
     ]
-    for calibration_pass in PASS_SPECS:
+    for calibration_pass in layout.pass_specs:
         for station in stations:
-            target_x, target_y, _points = mark_geometry(station, calibration_pass)
+            target_x, target_y, _points = mark_geometry(
+                station,
+                calibration_pass,
+                layout,
+            )
             marks.append(
                 CalibrationMark(
                     "station",
@@ -336,12 +454,14 @@ def expected_marks():
     return tuple(marks)
 
 
-def measurement_template_csv(marks=None):
-    marks = expected_marks() if marks is None else marks
+def measurement_template_csv(marks=None, *, layout=STANDARD_LAYOUT):
+    layout = calibration_layout(layout)
+    marks = expected_marks(layout) if marks is None else marks
     output = io.StringIO()
     writer = csv.writer(output, lineterminator="\n")
     writer.writerow(
         (
+            "layout_id",
             "section",
             "station_id",
             "ring_radius_mm",
@@ -361,6 +481,7 @@ def measurement_template_csv(marks=None):
     for mark in marks:
         writer.writerow(
             (
+                layout.layout_id,
                 mark.section,
                 mark.station_id,
                 _fmt(mark.ring_radius_mm),
@@ -380,7 +501,35 @@ def measurement_template_csv(marks=None):
     return output.getvalue()
 
 
-def parse_measurement_csv(text, *, require_complete=True):
+def _measurement_layout(fieldnames, rows, layout):
+    explicit = calibration_layout(layout) if layout is not None else None
+    if "layout_id" not in (fieldnames or ()):
+        return explicit or STANDARD_LAYOUT
+    layout_ids = {
+        str(row.get("layout_id") or "").strip()
+        for row in rows
+        if str(row.get("layout_id") or "").strip()
+    }
+    if len(layout_ids) > 1:
+        raise ValueError("measurement CSV mixes calibration layouts")
+    detected = None
+    if layout_ids:
+        detected = calibration_layout(next(iter(layout_ids)))
+    if explicit is not None and detected is not None:
+        if explicit.layout_id != detected.layout_id:
+            raise ValueError(
+                "measurement CSV layout %s does not match requested layout %s"
+                % (detected.layout_id, explicit.layout_id)
+            )
+    return explicit or detected or STANDARD_LAYOUT
+
+
+def parse_measurement_csv(
+    text,
+    *,
+    require_complete=True,
+    layout=None,
+):
     reader = csv.DictReader(io.StringIO(text))
     required = {
         "section",
@@ -399,9 +548,11 @@ def parse_measurement_csv(text, *, require_complete=True):
     if reader.fieldnames is None or not required.issubset(reader.fieldnames):
         missing = sorted(required - set(reader.fieldnames or ()))
         raise ValueError("measurement CSV is missing columns: %s" % ", ".join(missing))
+    rows = list(reader)
+    layout = _measurement_layout(reader.fieldnames, rows, layout)
     marks = []
     missing_rows = []
-    for row_number, row in enumerate(reader, 2):
+    for row_number, row in enumerate(rows, 2):
         measured_x = (row.get("measured_x_mm") or "").strip()
         measured_y = (row.get("measured_y_mm") or "").strip()
         if not measured_x or not measured_y:
@@ -459,7 +610,8 @@ def parse_measurement_csv(text, *, require_complete=True):
     if len(set(keys)) != len(keys):
         raise ValueError("measurement CSV has duplicate station/pass rows")
     expected_marks_by_key = {
-        (mark.station_id, mark.pass_id): mark for mark in expected_marks()
+        (mark.station_id, mark.pass_id): mark
+        for mark in expected_marks(layout)
     }
     expected = set(expected_marks_by_key)
     actual = set(keys)
@@ -606,14 +758,16 @@ def _build_profile(
     stations,
     normalized_by_key,
     *,
+    layout=STANDARD_LAYOUT,
     source,
     coverage_radius_mm=COVERAGE_RADIUS_MM,
 ):
+    layout = calibration_layout(layout)
     reference = {}
     controls = {}
     angled_passes = tuple(
         calibration_pass
-        for calibration_pass in PASS_SPECS
+        for calibration_pass in layout.pass_specs
         if calibration_pass.angle_deg != 0.0
     )
     angled = {
@@ -828,6 +982,7 @@ def _height_correlations(stations, reference, angled, mesh_points):
 def analyze_measurements(
     measurements_csv,
     *,
+    layout=None,
     bed_mesh_csv=None,
     bed_mesh_source="",
     bed_mesh_sha256="",
@@ -849,7 +1004,14 @@ def analyze_measurements(
             "coverage radius must be positive and no larger than the "
             "%.3f mm calibration stock radius" % (SHEET_DIAMETER_MM / 2.0)
         )
-    marks = parse_measurement_csv(measurements_csv, require_complete=True)
+    reader = csv.DictReader(io.StringIO(measurements_csv))
+    rows = list(reader)
+    layout = _measurement_layout(reader.fieldnames, rows, layout)
+    marks = parse_measurement_csv(
+        measurements_csv,
+        require_complete=True,
+        layout=layout,
+    )
     fiducials = tuple(mark for mark in marks if mark.section == "fiducial")
     if len(fiducials) != 4:
         raise ValueError("the calibration needs all four fiducial measurements")
@@ -858,7 +1020,7 @@ def analyze_measurements(
     normalized_by_key = {
         (item["mark"].station_id, item["mark"].mark_kind): item for item in normalized
     }
-    stations = calibration_stations()
+    stations = calibration_stations(layout)
     (
         profile,
         reference,
@@ -870,6 +1032,7 @@ def analyze_measurements(
     ) = _build_profile(
         stations,
         normalized_by_key,
+        layout=layout,
         source=source,
         coverage_radius_mm=coverage_radius_mm,
     )
@@ -935,6 +1098,7 @@ def analyze_measurements(
         ) = _build_profile(
             subset,
             normalized_by_key,
+            layout=layout,
             source=source + " leave-one-out",
             coverage_radius_mm=coverage_radius_mm,
         )
@@ -1002,9 +1166,15 @@ def analyze_measurements(
         "schema": "theta-bed-calibration-report-v1",
         "source": source,
         "layout": {
-            "test_diameter_mm": TEST_DIAMETER_MM,
+            "id": layout.layout_id,
+            "name": layout.display_name,
+            "test_diameter_mm": layout.test_diameter_mm,
             "sheet_diameter_mm": SHEET_DIAMETER_MM,
             "station_count": len(stations),
+            "ring_count": len(layout.ring_specs),
+            "mark_arm_mm": layout.mark_arm_mm,
+            "lane_offset_mm": layout.lane_offset_mm,
+            "label_height_mm": layout.label_height_mm,
             "angle_values_deg": list(profile.angle_values_deg),
             "fiducial_count": len(fiducials),
             "coverage_radius_mm": round(float(coverage_radius_mm), 6),
@@ -1051,6 +1221,7 @@ def compare_measurements(
     baseline_csv,
     verification_csv,
     *,
+    layout=None,
     baseline_source="baseline.csv",
     verification_source="verification.csv",
     max_rms_mm=0.35,
@@ -1058,9 +1229,34 @@ def compare_measurements(
     minimum_improvement_pct=30.0,
 ):
     """Compare independently normalized measurements from two printed sheets."""
-    baseline_marks = parse_measurement_csv(baseline_csv, require_complete=True)
+    baseline_reader = csv.DictReader(io.StringIO(baseline_csv))
+    baseline_rows = list(baseline_reader)
+    baseline_layout = _measurement_layout(
+        baseline_reader.fieldnames,
+        baseline_rows,
+        layout,
+    )
+    verification_reader = csv.DictReader(io.StringIO(verification_csv))
+    verification_rows = list(verification_reader)
+    verification_layout = _measurement_layout(
+        verification_reader.fieldnames,
+        verification_rows,
+        layout,
+    )
+    if baseline_layout.layout_id != verification_layout.layout_id:
+        raise ValueError(
+            "baseline and verification measurement layouts differ: %s vs %s"
+            % (baseline_layout.layout_id, verification_layout.layout_id)
+        )
+    baseline_marks = parse_measurement_csv(
+        baseline_csv,
+        require_complete=True,
+        layout=baseline_layout,
+    )
     verification_marks = parse_measurement_csv(
-        verification_csv, require_complete=True
+        verification_csv,
+        require_complete=True,
+        layout=verification_layout,
     )
     baseline_alignment = fit_similarity(
         tuple(mark for mark in baseline_marks if mark.section == "fiducial")

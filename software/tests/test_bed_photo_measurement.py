@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "software"))
 
 from converter_core.bed_calibration import (
+    DENSE_LAYOUT,
     PASS_SPECS,
     calibration_stations,
     expected_marks,
@@ -176,6 +177,75 @@ class BedPhotoMeasurementTests(unittest.TestCase):
         self.assertEqual(len(rows), 4 + len(calibration_stations()) * len(PASS_SPECS))
         self.assertTrue(all(row["measured_x_mm"] for row in rows))
         self.assertTrue(all(row["measured_y_mm"] for row in rows))
+
+    def test_dense_measurement_csv_records_layout_and_all_819_marks(self):
+        expected = expected_marks(DENSE_LAYOUT)
+        measured = {
+            (mark.station_id, mark.pass_id): (
+                mark.nominal_x_mm,
+                mark.nominal_y_mm,
+            )
+            for mark in expected
+        }
+        rows = list(
+            csv.DictReader(
+                io.StringIO(
+                    self.module.measurement_csv(
+                        expected,
+                        measured,
+                        DENSE_LAYOUT,
+                    )
+                )
+            )
+        )
+        self.assertEqual(
+            len(rows),
+            4 + 91 * len(DENSE_LAYOUT.pass_specs),
+        )
+        self.assertEqual({row["layout_id"] for row in rows}, {"dense-91"})
+
+    def test_dense_oriented_homography_uses_the_smaller_mark_centroid(self):
+        expected = expected_marks(DENSE_LAYOUT)
+        fiducials = tuple(
+            mark for mark in expected if mark.section == "fiducial"
+        )
+        stations = tuple(
+            mark for mark in expected if mark.section == "station"
+        )
+        homography = np.asarray(
+            [[4.0, 0.0, 900.0], [0.0, -4.0, 900.0], [0.0, 0.0, 1.0]]
+        )
+        image_fiducials = np.asarray(
+            [
+                self.module._forward(
+                    homography,
+                    (mark.nominal_x_mm, mark.nominal_y_mm),
+                )
+                for mark in fiducials
+            ]
+        )
+        centroids = np.asarray(
+            [
+                self.module._forward(
+                    homography,
+                    (
+                        mark.nominal_x_mm - DENSE_LAYOUT.mark_arm_mm / 2.0,
+                        mark.nominal_y_mm + DENSE_LAYOUT.mark_arm_mm / 2.0,
+                    ),
+                )
+                for mark in stations
+            ]
+        )
+        fitted, _points, order, score = self.module._fit_oriented_homography(
+            fiducials,
+            image_fiducials,
+            stations,
+            centroids,
+            DENSE_LAYOUT,
+        )
+        self.assertEqual(order, (0, 1, 2, 3))
+        self.assertLess(score[0], 1e-6)
+        self.assertTrue(np.allclose(fitted, homography))
 
 
 if __name__ == "__main__":

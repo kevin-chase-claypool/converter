@@ -270,6 +270,16 @@ and coordinate semantics; Q3/Q4 remain prohibited.
    `--compare-to`; require the aggregate and every angle stage to improve
    without introducing new spatial error.
 
+Dense refinement is available as `--layout dense-91`. It places 91 stations at
+30/60/90/120/148.5 mm radii with smaller L marks and lanes, producing 819
+station marks plus four fiducials. Generate it with
+`tools\make_bed_error_calibration.py --layout dense-91`, pass the same layout
+to the photo tool, and retain the layout id written in the measurement CSV.
+The dense field remains an independent candidate: print it after `G65 P113`,
+run the standard M-12 fit and validation gates, reprint the compensated sheet,
+and compare it before changing the active default. The dense sheet has not yet
+been physically printed.
+
 M-01 current evidence: on 2026-09-05 the A-axis motor completed an initial
 bidirectional jog at `F120`; `A10` was counterclockwise, `A-10` was clockwise,
 and supply current was approximately `0.44 A` with a 2 A limit. The Y axis then

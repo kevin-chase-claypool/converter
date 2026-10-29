@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-28 | `WSW-20261028-002` | implemented | [Add a 91-station dense bed-calibration mesh](2026/2026-10-28-dense-bed-calibration-mesh.md) | `bed-calibration`, `bed-compensation`, `dense-mesh`, `photo-measurement`, `station-layout`, `residual-error` |
 | 2026-10-28 | `WSW-20261028-001` | implemented | [Add luminance sharpening to CMYK photo preparation](2026/2026-10-28-cmyk-luminance-sharpening.md) | `cmyk`, `sharpening`, `unsharp-mask`, `image-processing`, `preview`, `manifest` |
 | 2026-10-26 | `WSW-20261026-004` | implemented | [Flatten SVG curves adaptively within tolerance](2026/2026-10-26-adaptive-svg-curve-flattening.md) | `svg`, `curve-flattening`, `tolerance`, `gcode-density`, `performance` |
 | 2026-10-26 | `WSW-20261026-003` | verified | [Promote the independently verified post-repair bed profile](2026/2026-10-26-promote-post-repair-bed-profile.md) | `bed-compensation`, `M-12`, `verification`, `default-profile`, `rotating-bed` |

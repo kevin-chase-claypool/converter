@@ -162,6 +162,23 @@ Cycle Start with the pen loaded:
   at eight `M0`s; let the ink dry before Cycle Start. It uses no pen swap and
   does not change G54.
 
+  A denser refinement uses the same nine-angle protocol with 91 stations at
+  roughly 30 mm nearest-neighbour spacing. It uses 3 mm L arms, 7 mm lanes,
+  1.8 mm labels, and four smaller outer fiducials so the tighter station grid
+  remains readable:
+
+  ```powershell
+  python ..\tools\make_bed_error_calibration.py --layout dense-91
+  ```
+
+  That writes `bed-error-map-dense-91.gcode` and its 823-row companion CSV.
+  The dense layout covers radii 30/60/90/120/148.5 mm with a 13-inch planned
+  extent. It remains a candidate calibration until a physical sheet is
+  measured, independently compensated, and passes the same M-12 gates; it does
+  not replace the accepted `4bad792e35ad` profile. Pass `--layout dense-91` to
+  the photo tool for that sheet. The analyzer detects the layout from the
+  measurement CSV.
+
   Prepare and tape the sheet before `G65 P113`. Do not lift, retape, or adjust
   the sheet after the first drawing mark: that moves the calibration frame and,
   even if the fiducials remain visible, makes the result invalid. If a bubble

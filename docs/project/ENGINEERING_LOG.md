@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20261028-dense-bed-calibration-mesh"></a>
+### 🟨 2026-10-28 - WINDOWS SOFTWARE/IMPLEMENTED - Add a 91-station dense bed mesh
+
+- The accepted 37-station field leaves 45-65 mm radial and 22.5-45 degree
+  angular gaps. Its verified residual reaches `0.591 mm`, while reconstructed
+  Ben2 yellow motion has a `1.154 mm` minimum adjacent centerline against the
+  `1.05 mm` envelope and no commanded crossing. The remaining `0.104 mm`
+  margin makes repeatable mesh error a credible near-contact contributor.
+- Added `--layout dense-91`: 91 stations at 30/60/90/120/148.5 mm radii with
+  6/12/18/22/32 points per ring. The layout uses 3 mm L arms, 7 mm lanes,
+  1.8 mm labels, and smaller fiducials positioned clear of the outer lanes.
+- Generated `bed-error-map-dense-91.gcode` and its 823-row CSV. The sheet has
+  819 station marks plus four fiducials, reaches 164.0 mm radius, and retains
+  the original nine passes and eight drying pauses. Existing 37-station output
+  and profile remain unchanged.
+- Measurement CSVs now carry `layout_id`; photo extraction and analysis select
+  the matching geometry automatically, while older CSVs still resolve to the
+  standard layout.
+- Verification: all `55` focused bed tests and all `562` converter tests pass
+  with one expected OpenGL-context skip, including 91-station program, CSV,
+  layout-mismatch, and fiducial-clearance regressions. Macro parsing and strict
+  motion preflight pass. No physical dense sheet has been printed.
+- Evidence: `WSW-20261028-002`,
+  `docs/changes/windows-software/2026/2026-10-28-dense-bed-calibration-mesh.md`.
+- Category: windows-software, hardware, bed-calibration, bed-compensation,
+  dense-mesh, photo-measurement.
+
 <a id="elog-20261028-cmyk-luminance-sharpening"></a>
 ### 🟨 2026-10-28 - WINDOWS SOFTWARE/IMPLEMENTED - Complete CMYK luminance sharpening
 

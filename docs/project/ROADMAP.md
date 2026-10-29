@@ -228,6 +228,22 @@
   from `2.965` to `0.591 mm`, and every angle stage improved. Default
   `4bad792e35ad` now carries this verified field to the existing 13.5-inch
   coverage.
+- [ ] **Evaluate a 91-station dense bed-compensation mesh.**
+  Problem: the accepted 37-station map leaves roughly 45-65 mm radial gaps and
+  22.5-45 degree angular gaps; its independent compensated verification still
+  reaches a `0.591 mm` maximum residual, larger than the remaining row-spacing
+  margin in dense CMYK work. Benefit: a smaller-station, higher-density field
+  can reduce repeatable interpolation error without replacing the accepted
+  profile prematurely.
+  Status 2026-10-28: `--layout dense-91` generates 91 stations at
+  30/60/90/120/148.5 mm radii with 3 mm marks, 7 mm lanes, and 1.8 mm labels.
+  Its 819 station marks plus four fiducials fit inside the 13-inch test field,
+  and generation, recognition, CSV, analysis, macro, and motion tests pass.
+  Acceptance: print the dense sheet after `G65 P113`, extract every station,
+  repeat it to quantify station noise, require the normal M-12 fit gates, then
+  print and compare an independently compensated verification sheet. Promote
+  only if the dense field improves the worst residual without adding new
+  spatial or per-angle error.
 - [ ] **Verify the extrapolated 13.5-inch compensation annulus.**
   Problem: the default `4bad792e35ad` profile extends the accepted 165.1 mm
   correction field to 171.45 mm by local-affine extrapolation. Its

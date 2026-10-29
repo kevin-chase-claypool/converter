@@ -1,6 +1,6 @@
 """Build the full-field, one-pen bed compensation calibration.
 
-The sheet contains:
+The standard sheet contains:
 
 * a 37-station A=0 spatial lattice on rings at 50, 95, and 150 mm;
 * four large sheet fiducials that remove photo scale/translation/rotation;
@@ -8,6 +8,10 @@ The sheet contains:
 * fixed-position 45/90/135/180/225/270/315 replays, each in its own
   10 mm-separated lane;
 * a second A=0 lane as a control after the complete rotation sweep.
+
+The `dense-91` layout keeps the same sheet and nine-angle protocol but uses
+smaller L marks and tighter lanes to measure 91 stations at roughly 30 mm
+neighbour spacing.
 
 Use one Pigma Micron 005 (or another 0.20 mm pen) for all nine passes. The
 separated lanes remove loose-registration error from the measurement, and the
@@ -27,8 +31,9 @@ sys.path.insert(0, str(ROOT / "software"))
 
 import converter_core as converter  # noqa: E402
 from converter_core.bed_calibration import (  # noqa: E402
-    PASS_SPECS,
-    TEST_DIAMETER_MM,
+    CALIBRATION_LAYOUTS,
+    STANDARD_LAYOUT,
+    calibration_layout,
     calibration_stations,
     fiducial_mark_points,
     fiducial_points,
@@ -59,27 +64,37 @@ def to_machine(point, angle_deg, compensation=None):
     )
 
 
-def build_program(settings, *, feed_rate=420.0, compensation=None):
+def build_program(
+    settings,
+    *,
+    layout=STANDARD_LAYOUT,
+    feed_rate=420.0,
+    compensation=None,
+):
+    layout = calibration_layout(layout)
     feed_rate = float(feed_rate)
     if not math.isfinite(feed_rate) or feed_rate <= 0.0:
         raise ValueError("feed rate must be finite and positive")
-    stations = calibration_stations()
+    stations = calibration_stations(layout)
     lines = []
 
     def comment(text):
         lines.append("(%s)" % str(text).replace("(", "[").replace(")", "]"))
 
-    comment("full-field bed compensation calibration v3")
+    comment(
+        "full-field bed compensation calibration v3 - %s"
+        % layout.display_name
+    )
     comment(
         "one 0.20 mm pen for all %d passes; do not swap or re-register"
-        % len(PASS_SPECS)
+        % len(layout.pass_specs)
     )
     comment("13 in planned field on 14 in round stock")
     comment(
         "pass angles at every station: "
         + ", ".join(
             "%g" % calibration_pass.angle_deg
-            for calibration_pass in PASS_SPECS
+            for calibration_pass in layout.pass_specs
             if calibration_pass.mark_kind.startswith("angle_")
         )
         + "; A0 controls are separate"
@@ -164,34 +179,48 @@ def build_program(settings, *, feed_rate=420.0, compensation=None):
 
     # The four large, asymmetric Ls define the sheet coordinate frame. They are
     # outside the 150 mm sampling radius but remain inside the 13-inch field.
-    for number, angle_deg, x_mm, y_mm in fiducial_points():
+    for number, angle_deg, x_mm, y_mm in fiducial_points(layout):
         comment("fiducial F%d" % number)
-        draw_stroke(fiducial_mark_points(angle_deg, x_mm, y_mm), 0.0)
+        draw_stroke(
+            fiducial_mark_points(
+                angle_deg,
+                x_mm,
+                y_mm,
+                radial_arm_mm=layout.fiducial_radial_arm_mm,
+                tangent_arm_mm=layout.fiducial_tangent_arm_mm,
+            ),
+            0.0,
+        )
 
-    for pass_index, calibration_pass in enumerate(PASS_SPECS):
+    for pass_index, calibration_pass in enumerate(layout.pass_specs):
         comment(
             "PASS %d/%d %s at A=%s deg"
             % (
                 pass_index + 1,
-                len(PASS_SPECS),
+                len(layout.pass_specs),
                 calibration_pass.pass_name,
                 fmt(calibration_pass.angle_deg),
             )
         )
         if calibration_pass.mark_kind == "reference":
             for station in stations:
-                label_x, label_y = station_label_position(station)
+                label_x, label_y = station_label_position(station, layout)
                 for polyline in station_label_points(
-                    station.station_id, label_x, label_y
+                    station.station_id,
+                    label_x,
+                    label_y,
+                    height_mm=layout.label_height_mm,
                 ):
                     draw_stroke(polyline, 0.0)
         for station in stations:
             _target_x, _target_y, points = mark_geometry(
-                station, calibration_pass
+                station,
+                calibration_pass,
+                layout,
             )
             draw_stroke(points, calibration_pass.angle_deg)
-        if pass_index < len(PASS_SPECS) - 1:
-            pause_and_restore_reference(PASS_SPECS[pass_index + 1])
+        if pass_index < len(layout.pass_specs) - 1:
+            pause_and_restore_reference(layout.pass_specs[pass_index + 1])
 
     converter.append_full_retract(lines, settings)
     lines.append(converter.park_home_command(settings))
@@ -203,20 +232,31 @@ def build_program(settings, *, feed_rate=420.0, compensation=None):
     return program, stations
 
 
-def layout_extent_mm():
+def layout_extent_mm(layout=STANDARD_LAYOUT):
+    layout = calibration_layout(layout)
     maximum = 0.0
-    for station in calibration_stations():
-        for calibration_pass in PASS_SPECS:
-            _x_mm, _y_mm, points = mark_geometry(station, calibration_pass)
+    for station in calibration_stations(layout):
+        for calibration_pass in layout.pass_specs:
+            _x_mm, _y_mm, points = mark_geometry(
+                station,
+                calibration_pass,
+                layout,
+            )
             maximum = max(maximum, *(math.hypot(*point) for point in points))
-        label_x, label_y = station_label_position(station)
+        label_x, label_y = station_label_position(station, layout)
         maximum = max(maximum, math.hypot(label_x, label_y) + 3.0)
-    for _number, angle_deg, x_mm, y_mm in fiducial_points():
+    for _number, angle_deg, x_mm, y_mm in fiducial_points(layout):
         maximum = max(
             maximum,
             *(
                 math.hypot(*point)
-                for point in fiducial_mark_points(angle_deg, x_mm, y_mm)
+                for point in fiducial_mark_points(
+                    angle_deg,
+                    x_mm,
+                    y_mm,
+                    radial_arm_mm=layout.fiducial_radial_arm_mm,
+                    tangent_arm_mm=layout.fiducial_tangent_arm_mm,
+                )
             ),
         )
     return maximum
@@ -226,11 +266,17 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--out",
-        default=str(ROOT / "samples" / "gcode" / "bed-error-map.gcode"),
+        default=None,
     )
     parser.add_argument(
         "--measurement-out",
-        default=str(ROOT / "samples" / "gcode" / "bed-error-map.csv"),
+        default=None,
+    )
+    parser.add_argument(
+        "--layout",
+        choices=tuple(CALIBRATION_LAYOUTS),
+        default=STANDARD_LAYOUT.layout_id,
+        help="station density and mark footprint",
     )
     parser.add_argument("--feed", type=float, default=420.0)
     parser.add_argument(
@@ -241,22 +287,24 @@ def main():
     args = parser.parse_args()
 
     settings = converter.Settings()
+    layout = calibration_layout(args.layout)
     compensation = load_bed_compensation(args.compensation)
-    out_default = str(ROOT / "samples" / "gcode" / "bed-error-map.gcode")
-    measurement_default = str(
-        ROOT / "samples" / "gcode" / "bed-error-map.csv"
+    stem = (
+        "bed-error-verify"
+        if compensation is not None
+        else "bed-error-map"
     )
-    if compensation is not None:
-        if args.out == out_default:
-            args.out = str(
-                ROOT / "samples" / "gcode" / "bed-error-verify.gcode"
-            )
-        if args.measurement_out == measurement_default:
-            args.measurement_out = str(
-                ROOT / "samples" / "gcode" / "bed-error-verify.csv"
-            )
+    if layout.layout_id != STANDARD_LAYOUT.layout_id:
+        stem += "-" + layout.layout_id
+    if args.out is None:
+        args.out = str(ROOT / "samples" / "gcode" / (stem + ".gcode"))
+    if args.measurement_out is None:
+        args.measurement_out = str(
+            ROOT / "samples" / "gcode" / (stem + ".csv")
+        )
     program, stations = build_program(
         settings,
+        layout=layout,
         feed_rate=args.feed,
         compensation=compensation,
     )
@@ -266,22 +314,24 @@ def main():
     measurement_out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(program, encoding="utf-8", newline="\n")
     measurement_out.write_text(
-        measurement_template_csv(), encoding="utf-8", newline="\n"
+        measurement_template_csv(layout=layout),
+        encoding="utf-8",
+        newline="\n",
     )
-    extent = layout_extent_mm()
-    if extent > TEST_DIAMETER_MM / 2.0:
+    extent = layout_extent_mm(layout)
+    if extent > layout.test_radius_mm:
         raise ValueError(
             "calibration ink extends to %.3f mm, outside the %.3f mm test radius"
-            % (extent, TEST_DIAMETER_MM / 2.0)
+            % (extent, layout.test_radius_mm)
         )
     print("wrote %s (%d lines)" % (out, len(program.splitlines())))
     print(
         "wrote %s (%d stations x %d passes plus 4 fiducials)"
-        % (measurement_out, len(stations), len(PASS_SPECS))
+        % (measurement_out, len(stations), len(layout.pass_specs))
     )
     print(
         "layout extent %.3f mm radius; test radius %.3f mm; sheet radius %.3f mm"
-        % (extent, TEST_DIAMETER_MM / 2.0, 355.6 / 2.0)
+        % (extent, layout.test_radius_mm, 355.6 / 2.0)
     )
     print("use one 0.20 mm pen for all passes; wait at every M0 before continuing")
     if compensation is not None:

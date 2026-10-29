@@ -20,13 +20,18 @@ import converter_core.bed_compensation as bed_compensation_module
 import converter_core.gcode as gcode_module
 from converter_core.bed_calibration import (
     COVERAGE_RADIUS_MM,
+    DENSE_LAYOUT,
     PASS_SPECS,
+    STANDARD_LAYOUT,
     TEST_RADIUS_MM,
     analyze_measurements,
     calibration_stations,
     compare_measurements,
     expected_marks,
+    fiducial_mark_points,
+    fiducial_points,
     machine_frame_correction,
+    mark_geometry,
     measurement_template_csv,
     parse_measurement_csv,
 )
@@ -53,11 +58,12 @@ def profile_for_test():
     )
 
 
-def measured_csv_for_synthetic_field():
+def measured_csv_for_synthetic_field(layout=STANDARD_LAYOUT):
     output = io.StringIO()
     writer = csv.writer(output, lineterminator="\n")
     writer.writerow(
         (
+            "layout_id",
             "section",
             "station_id",
             "ring_radius_mm",
@@ -87,7 +93,7 @@ def measured_csv_for_synthetic_field():
             0.08 * math.sin(math.radians(angle_deg)) - 0.0015 * y_mm,
         )
 
-    for mark in expected_marks():
+    for mark in expected_marks(layout):
         if mark.section == "fiducial":
             error = (0.0, 0.0)
         elif mark.mark_kind == "reference":
@@ -106,6 +112,7 @@ def measured_csv_for_synthetic_field():
             )
         writer.writerow(
             (
+                layout.layout_id,
                 mark.section,
                 mark.station_id,
                 mark.ring_radius_mm,
@@ -321,6 +328,91 @@ class BedCalibrationGeneratorTests(unittest.TestCase):
         self.assertLessEqual(self.module.layout_extent_mm(), TEST_RADIUS_MM)
         self.assertGreater(self.module.layout_extent_mm(), 160.0)
 
+    def test_dense_layout_doubles_spatial_resolution_with_smaller_marks(self):
+        stations = calibration_stations(DENSE_LAYOUT)
+        self.assertEqual(len(stations), 91)
+        self.assertEqual(
+            {station.ring_radius_mm for station in stations},
+            {0.0, 30.0, 60.0, 90.0, 120.0, 148.5},
+        )
+        minimum_spacing = min(
+            math.hypot(
+                first.x_mm - second.x_mm,
+                first.y_mm - second.y_mm,
+            )
+            for index, first in enumerate(stations)
+            for second in stations[index + 1 :]
+        )
+        self.assertGreater(minimum_spacing, 28.0)
+        self.assertLess(DENSE_LAYOUT.mark_arm_mm, STANDARD_LAYOUT.mark_arm_mm)
+        self.assertLess(
+            DENSE_LAYOUT.lane_offset_mm,
+            STANDARD_LAYOUT.lane_offset_mm,
+        )
+        self.assertLessEqual(
+            self.module.layout_extent_mm(DENSE_LAYOUT),
+            DENSE_LAYOUT.test_radius_mm,
+        )
+
+    def test_dense_fiducials_keep_clear_of_the_outer_station_lanes(self):
+        def point_segment_distance(point, start, end):
+            vx, vy = end[0] - start[0], end[1] - start[1]
+            wx, wy = point[0] - start[0], point[1] - start[1]
+            length_sq = vx * vx + vy * vy
+            if length_sq <= 1e-15:
+                return math.hypot(wx, wy)
+            t = max(0.0, min(1.0, (wx * vx + wy * vy) / length_sq))
+            return math.hypot(
+                point[0] - start[0] - t * vx,
+                point[1] - start[1] - t * vy,
+            )
+
+        def segment_distance(a0, a1, b0, b1):
+            vx, vy = a1[0] - a0[0], a1[1] - a0[1]
+            ux, uy = b1[0] - b0[0], b1[1] - b0[1]
+            denominator = vx * uy - vy * ux
+            if abs(denominator) > 1e-12:
+                dx, dy = b0[0] - a0[0], b0[1] - a0[1]
+                t = (dx * uy - dy * ux) / denominator
+                u = (dx * vy - dy * vx) / denominator
+                if 0.0 <= t <= 1.0 and 0.0 <= u <= 1.0:
+                    return 0.0
+            return min(
+                point_segment_distance(a0, b0, b1),
+                point_segment_distance(a1, b0, b1),
+                point_segment_distance(b0, a0, a1),
+                point_segment_distance(b1, a0, a1),
+            )
+
+        fiducials = []
+        for _number, angle, x_mm, y_mm in fiducial_points(DENSE_LAYOUT):
+            points = fiducial_mark_points(
+                angle,
+                x_mm,
+                y_mm,
+                radial_arm_mm=DENSE_LAYOUT.fiducial_radial_arm_mm,
+                tangent_arm_mm=DENSE_LAYOUT.fiducial_tangent_arm_mm,
+            )
+            fiducials.extend(zip(points, points[1:]))
+        minimum = float("inf")
+        for station in calibration_stations(DENSE_LAYOUT):
+            for calibration_pass in DENSE_LAYOUT.pass_specs:
+                _x, _y, points = mark_geometry(
+                    station,
+                    calibration_pass,
+                    DENSE_LAYOUT,
+                )
+                for station_edge in zip(points, points[1:]):
+                    for fiducial_edge in fiducials:
+                        minimum = min(
+                            minimum,
+                            segment_distance(
+                                *station_edge,
+                                *fiducial_edge,
+                            ),
+                        )
+        self.assertGreater(minimum, 5.0)
+
     def test_one_pen_nine_pass_program_and_eight_pauses(self):
         program, stations = self.module.build_program(converter.Settings())
         self.assertEqual(len(stations), 37)
@@ -340,6 +432,32 @@ class BedCalibrationGeneratorTests(unittest.TestCase):
         self.assertIn("one 0.20 mm pen for all 9 passes", program)
         self.assertNotIn("install blue", program.lower())
         self.assertEqual(program.count("G53 G1"), 1)
+
+    def test_dense_program_has_91_stations_and_the_same_nine_passes(self):
+        program, stations = self.module.build_program(
+            converter.Settings(),
+            layout=DENSE_LAYOUT,
+        )
+        self.assertEqual(len(stations), 91)
+        self.assertEqual(program.count("M0 ("), 8)
+        self.assertIn("91-station balanced dense field", program)
+        self.assertIn("PASS 9/9 A000-CONTROL", program)
+        self.assertEqual(program.count("G53 G1"), 1)
+
+    def test_committed_dense_sample_matches_the_generator(self):
+        program, _stations = self.module.build_program(
+            converter.Settings(),
+            layout=DENSE_LAYOUT,
+        )
+        sample = ROOT / "samples" / "gcode" / "bed-error-map-dense-91.gcode"
+        self.assertEqual(sample.read_text(encoding="utf-8"), program)
+        csv_sample = (
+            ROOT / "samples" / "gcode" / "bed-error-map-dense-91.csv"
+        )
+        self.assertEqual(
+            csv_sample.read_text(encoding="utf-8"),
+            measurement_template_csv(layout=DENSE_LAYOUT),
+        )
 
     def test_verification_mode_uses_the_loaded_profile(self):
         samples = tuple(
@@ -367,6 +485,16 @@ class BedCalibrationGeneratorTests(unittest.TestCase):
         self.assertEqual(len(rows), 4 + 37 * len(PASS_SPECS))
         self.assertTrue(all(not row["measured_x_mm"] for row in rows))
         self.assertTrue(all(not row["measured_y_mm"] for row in rows))
+
+    def test_dense_template_has_layout_id_and_819_station_marks(self):
+        rows = list(
+            csv.DictReader(
+                io.StringIO(measurement_template_csv(layout=DENSE_LAYOUT))
+            )
+        )
+        self.assertEqual(len(rows), 4 + 91 * len(DENSE_LAYOUT.pass_specs))
+        self.assertEqual(len(rows), 823)
+        self.assertEqual({row["layout_id"] for row in rows}, {"dense-91"})
 
     def test_incomplete_measurements_are_rejected(self):
         with self.assertRaisesRegex(ValueError, "incomplete"):
@@ -399,6 +527,32 @@ class BedCalibrationAnalysisTests(unittest.TestCase):
         self.assertLess(report["a0_control_residual"]["max_mm"], 0.03)
         self.assertLess(report["leave_one_out"]["rms_mm"], 0.08)
         self.assertGreater(report["leave_one_out"]["improvement_pct"], 50.0)
+
+    def test_dense_synthetic_field_builds_a_91_station_profile(self):
+        profile, report, accepted = analyze_measurements(
+            measured_csv_for_synthetic_field(DENSE_LAYOUT),
+            source="synthetic-dense.csv",
+            max_cross_validation_rms_mm=0.08,
+            max_cross_validation_error_mm=0.20,
+            minimum_improvement_pct=20.0,
+        )
+        self.assertTrue(accepted)
+        self.assertEqual(report["layout"]["id"], "dense-91")
+        self.assertEqual(report["layout"]["station_count"], 91)
+        self.assertEqual(len(profile.samples_mm[0]), 91)
+
+    def test_measurement_layout_is_detected_and_mismatch_is_rejected(self):
+        text = measured_csv_for_synthetic_field(DENSE_LAYOUT)
+        self.assertEqual(
+            len(parse_measurement_csv(text, require_complete=True)),
+            4 + 91 * len(DENSE_LAYOUT.pass_specs),
+        )
+        with self.assertRaisesRegex(ValueError, "does not match"):
+            parse_measurement_csv(
+                text,
+                require_complete=True,
+                layout=STANDARD_LAYOUT,
+            )
 
     def test_profile_can_declare_extrapolated_coverage(self):
         profile, report, accepted = analyze_measurements(
