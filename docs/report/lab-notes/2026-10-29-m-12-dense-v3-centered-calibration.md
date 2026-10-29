@@ -40,8 +40,9 @@ python tools\analyze_bed_error_calibration.py `
 python tools\make_bed_error_calibration.py `
   --layout dense-91-v3 `
   --compensation samples\gcode\bed-error-compensation-2026-10-29-dense-v3-candidate.json `
-  --out samples\gcode\bed-error-verify-dense-91-v3-centered.gcode `
-  --measurement-out samples\gcode\bed-error-verify-dense-91-v3-centered.csv
+  --pass-dwell-seconds 5 `
+  --out samples\gcode\bed-error-verify-dense-91-v3-centered-auto.gcode `
+  --measurement-out samples\gcode\bed-error-verify-dense-91-v3-centered-auto.csv
 ```
 
 ## Procedure
@@ -92,8 +93,9 @@ physical residual.
 ## Decisions and next action
 
 - Keep profile `4bad792e35ad` active.
-- Print `samples\gcode\bed-error-verify-dense-91-v3-centered.gcode` on a fresh
-  secured sheet after `G65 P113`.
+- Print `samples\gcode\bed-error-verify-dense-91-v3-centered-auto.gcode` on a
+  fresh secured sheet after `G65 P113`; one initial Cycle Start runs all nine
+  passes with eight five-second dwells.
 - Extract and compare it to the centered baseline with `--compare-to`.
 - Promote candidate `18bfb4ed1c33` only if RMS, maximum, and every angle stage
   pass the independent-verification gates.

@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20261029-centered-dense-v3-verification-failed"></a>
+### 🟥 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/FAILED - Centered dense v3 profile fails verification
+
+- The independent compensated v3 verification sheet was threshold-repeatable
+  and improved every angle-stage RMS, but did not meet the promotion gates.
+- Overall RMS changed from `0.550` to `0.486 mm`; maximum error changed from
+  `1.163` to `1.171 mm`; improvement was `11.6 %`.
+- The required limits are `0.35 mm` RMS, `0.90 mm` maximum, and at least
+  `30 %` improvement. Candidate `18bfb4ed1c33` is rejected.
+- The active profile remains `4bad792e35ad`. The verification is retained for
+  principled refinement analysis, not as a replacement calibration sheet.
+- Evidence:
+  `docs/report/lab-notes/2026-10-29-m-12-dense-v3-centered-compensated-verification.md`.
+- Category: windows-software, hardware, bed-compensation, dense-mesh,
+  verification, failed-test.
+
 <a id="elog-20261029-centered-dense-v3-calibration"></a>
 ### 🟩 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/CANDIDATE - Centered dense v3 calibration passes fitting gates
 

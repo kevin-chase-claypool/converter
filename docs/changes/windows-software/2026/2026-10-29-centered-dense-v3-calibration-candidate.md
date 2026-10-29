@@ -5,13 +5,14 @@ category: windows-software
 affected_categories:
   - windows-software
   - hardware
-status: implemented
+status: failed
 components:
   - samples/gcode/bed-error-map-dense-91-v3-centered-measured-t55.csv
   - samples/gcode/bed-error-compensation-2026-10-29-dense-v3-candidate.json
   - samples/gcode/bed-error-analysis-dense-91-v3-centered.json
-  - samples/gcode/bed-error-verify-dense-91-v3-centered.gcode
-  - samples/gcode/bed-error-verify-dense-91-v3-centered.csv
+  - samples/gcode/bed-error-verify-dense-91-v3-centered-auto.gcode
+  - samples/gcode/bed-error-verify-dense-91-v3-centered-auto.csv
+  - samples/gcode/bed-error-verify-dense-91-v3-centered-auto-comparison.json
 tags:
   - bed-calibration
   - bed-compensation
@@ -30,8 +31,9 @@ related:
 
 The centered 91-station v3 sheet produced a complete, threshold-repeatable
 calibration candidate. Candidate `18bfb4ed1c33` passes every fitting gate and
-an independent compensated verification sheet has been generated. The active
-profile remains `4bad792e35ad` until that verification passes.
+an independent compensated verification sheet was generated. That physical
+verification failed the promotion gates, so the candidate is rejected and the
+active profile remains `4bad792e35ad`.
 
 ## Reason
 
@@ -46,8 +48,8 @@ manual point edits.
 - Use V-shape fiducial selection and per-mark template refinement.
 - Fit the field against `samples\gcode\bed-mesh-2026-10-11.csv`.
 - Write a `165.100 mm` candidate profile with a `1.142 mm` maximum correction.
-- Generate a matching dense-v3 compensated verification program with profile
-  fingerprint `18bfb4ed1c33`.
+- Generate matching manual and five-second-dwell dense-v3 compensated
+  verification programs with profile fingerprint `18bfb4ed1c33`.
 
 ## Verification
 
@@ -57,7 +59,14 @@ manual point edits.
 - Leave-one-station-out prediction: `0.274 / 0.760 mm`.
 - Improvement: `50.2 %`.
 - The generated verification program passes macro parsing and strict motion
-  checks.
+  checks. The automatic version uses eight `G4 P5` dwells and one initial
+  Cycle Start.
+- Thresholds 20/55/80 for the verification photo again produced identical
+  coordinates.
+- Independent verification improved overall RMS from `0.550` to `0.486 mm`
+  and improved every angle-stage RMS, but maximum error moved from `1.163` to
+  `1.171 mm` and improvement was only `11.6 %`. The required maximum is
+  `0.90 mm` and minimum improvement is `30 %`.
 
 ## Struggles and rejected approaches
 
@@ -68,10 +77,10 @@ evidence and was not used to excuse or alter the centered fit.
 
 ## Risks and follow-up
 
-The centered profile is not accepted until a fresh physical verification
-sheet improves overall RMS and maximum error without worsening an angle stage.
-The outer extrapolated annulus and the intermittent pen-clear behavior remain
-open.
+The centered profile is rejected for promotion. Re-analyze the verification
+residual only if a principled refinement can be justified without fitting the
+verification sheet as a replacement profile. The outer extrapolated annulus
+and the intermittent pen-clear behavior remain open.
 
 ## Files
 
@@ -82,6 +91,13 @@ open.
 - `samples/gcode/bed-error-analysis-dense-91-v3-centered.json`: complete fit
   report.
 - `samples/gcode/bed-error-verify-dense-91-v3-centered.gcode` and `.csv`:
-  fresh-sheet verification.
+  operator-confirmed fresh-sheet verification.
+- `samples/gcode/bed-error-verify-dense-91-v3-centered-auto.gcode` and `.csv`:
+  one-start verification with five-second automatic pass dwells.
+- `samples/gcode/bed-error-verify-dense-91-v3-centered-auto-photo.jpg`,
+  diagnostics, threshold measurements, and comparison JSON: independent
+  physical result.
 - `docs/report/lab-notes/2026-10-29-m-12-dense-v3-centered-calibration.md`:
   detailed bench and extraction record.
+- `docs/report/lab-notes/2026-10-29-m-12-dense-v3-centered-compensated-verification.md`:
+  independent verification and rejection evidence.

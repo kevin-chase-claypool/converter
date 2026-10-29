@@ -266,7 +266,10 @@
   `0.518 / 0.890 mm`, A0 control was `0.353 / 0.783 mm`, and leave-one-out was
   `0.274 / 0.760 mm` with `50.2 %` improvement. Candidate `18bfb4ed1c33`
   (`1.142 mm` maximum correction) is ready for independent compensated
-  verification; the active profile remains `4bad792e35ad`.
+  verification. The independent auto verification improved every angle-stage
+  RMS and reduced aggregate RMS from `0.550` to `0.486 mm`, but maximum error
+  was `1.171 mm` and improvement was only `11.6 %`; the candidate is rejected.
+  The active profile remains `4bad792e35ad`.
   Acceptance: print the dense sheet after `G65 P113`, extract every station,
   repeat it to quantify station noise, require the normal M-12 fit gates, then
   print and compare an independently compensated verification sheet. Promote

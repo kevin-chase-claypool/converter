@@ -294,8 +294,10 @@ sheet produced identical coordinates at thresholds 20/55/80. Its candidate
 `18bfb4ed1c33` passes fitting gates with `0.518 / 0.890 mm` A0 spatial error,
 `0.353 / 0.783 mm` A0 control error, and `0.274 / 0.760 mm` leave-one-out error
 with `50.2 %` improvement. The `1.142 mm` maximum correction remains below the
-safety bound. Print `bed-error-verify-dense-91-v3-centered.gcode` and compare
-it before promoting the candidate.
+safety bound. Its independent automatic verification was repeatable and reduced
+aggregate RMS from `0.550` to `0.486 mm`, but maximum error was `1.171 mm` and
+improvement was only `11.6 %`, so candidate `18bfb4ed1c33` is rejected and
+`4bad792e35ad` remains active.
 
 M-01 current evidence: on 2026-09-05 the A-axis motor completed an initial
 bidirectional jog at `F120`; `A10` was counterclockwise, `A-10` was clockwise,

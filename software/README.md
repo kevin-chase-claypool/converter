@@ -207,14 +207,16 @@ Cycle Start with the pen loaded:
   accepted when truly continuous pass changes are required; the manual `M0`
   program remains the default.
 
-  The centered v3 sheet produced a gate-passing candidate:
+  The centered v3 sheet produced a fitting-gate candidate:
   `bed-error-compensation-2026-10-29-dense-v3-candidate.json`
   (`18bfb4ed1c33`, coverage `165.100 mm`, maximum correction `1.142 mm`).
   A0 spatial error is `0.518 mm` RMS / `0.890 mm` maximum and
-  leave-one-station-out is `0.274 / 0.760 mm` with `50.2 %` improvement. Print
-  `bed-error-verify-dense-91-v3-centered.gcode` on a fresh registered sheet
-  and compare it with the centered baseline before promoting this candidate.
-  The active profile remains `4bad792e35ad`.
+  leave-one-station-out is `0.274 / 0.760 mm` with `50.2 %` improvement. Its
+  independent `bed-error-verify-dense-91-v3-centered-auto.gcode` print improved
+  every angle-stage RMS and reduced aggregate RMS from `0.550` to `0.486 mm`,
+  but its `1.171 mm` maximum and `11.6 %` improvement miss the gates.
+  Candidate `18bfb4ed1c33` is rejected; the active profile remains
+  `4bad792e35ad`.
 
   For a v3 overhead photo, start with the dense image scale and a light blur:
 
