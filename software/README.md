@@ -236,7 +236,10 @@ Cycle Start with the pen loaded:
   generated overlay to confirm measured points sit on the shared L corners.
   Each fiducial is a V, so the tool selects the common arm junction rather than
   a nearby tip; a biased seed can no longer change the sheet scale by choosing
-  the wrong fiducial endpoint.
+  the wrong fiducial endpoint. Compact overhead photos are accepted when a
+  fiducial spans at least 32 px and has at least 80 ink pixels, but still
+  require a multi-threshold overlay review because their station marks have
+  fewer pixels.
   If a larger scan makes 16 px-wide station-number glyphs look like station
   marks, raise `--minimum-station-dimension` to `17`. A wider working circle or
   perspective-dependent matching distance may also be needed; review the

@@ -108,6 +108,17 @@ class BedPhotoMeasurementTests(unittest.TestCase):
         )
         self.assertEqual(filtered, (fiducial,))
 
+    def test_fiducial_filter_accepts_smaller_overhead_capture(self):
+        points = ((100, 200),) * 103
+        fiducial = self.module.Component(
+            points,
+            (100, 200, 126, 236),
+        )
+        self.assertEqual(
+            self.module._fiducial_sized_components((fiducial,)),
+            (fiducial,),
+        )
+
     def test_station_dimension_floor_can_exclude_large_labels(self):
         def component(maximum_dimension):
             return self.module.Component(
@@ -282,8 +293,8 @@ class BedPhotoMeasurementTests(unittest.TestCase):
         self.assertTrue(np.allclose(fitted, homography))
 
     def test_dense_seeded_sheet_resolves_arm_junctions_repeatably(self):
-        scale = 6.0
-        image_size = 2100
+        scale = 5.0
+        image_size = 1750
         image_center = (image_size - 1) / 2.0
         homography = np.asarray(
             [

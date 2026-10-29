@@ -253,6 +253,11 @@
   a nearby arm tip. Calibration and compensated-verification files use v3.
   A generator option can replace the eight manual `M0` stops with five-second
   `G4` drying dwells for a one-start unattended physical run.
+  Status 2026-10-29: the first v3 auto sheet showed faint ink on commanded
+  pen-up travel despite preceding `M5`/`P115` commands. Its compact photo also
+  moved station coordinates by `2.469-3.169 mm` RMS across thresholds, so no
+  profile can be fitted. Resolve T-01H lift clearance and confirm the deployed
+  130 ms toolhead build before repeating the sheet.
   Acceptance: print the dense sheet after `G65 P113`, extract every station,
   repeat it to quantify station noise, require the normal M-12 fit gates, then
   print and compare an independently compensated verification sheet. Promote

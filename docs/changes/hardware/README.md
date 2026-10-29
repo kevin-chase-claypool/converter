@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-29 | `WSW-20261029-004` | implemented | [Accept fiducials in compact calibration photos](../windows-software/2026/2026-10-29-compact-bed-photo-fiducials.md) | `bed-calibration`, `photo-measurement`, `fiducial`, `image-scale` |
 | 2026-10-29 | `WSW-20261029-003` | implemented | [Run bed calibration passes with timed dwells](../windows-software/2026/2026-10-29-unattended-bed-calibration-dwell.md) | `bed-calibration`, `dense-mesh`, `pass-control`, `unattended`, `drying-dwell` |
 | 2026-10-29 | `WSW-20261029-002` | implemented | [Harden dense calibration extraction and issue v3](../windows-software/2026/2026-10-29-dense-bed-v3-measurement-hardening.md) | `bed-calibration`, `dense-mesh`, `photo-measurement`, `fiducial`, `marker-separation` |
 | 2026-10-29 | `WSW-20261029-001` | superseded | [Separate dense-calibration station numbers from pass lanes](../windows-software/2026/2026-10-29-dense-bed-label-clearance.md) | `bed-calibration`, `dense-mesh`, `station-label`, `layout-collision`, `photo-measurement` |

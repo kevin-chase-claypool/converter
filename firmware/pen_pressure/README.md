@@ -41,7 +41,11 @@ work.
   pulse is now 130 ms, raised from 90 ms on 2026-10-23 after the operator still
   reported insufficient clearance between moves. At E-09F's 1.75 mm per 100 ms
   observation, 130 ms targets about 2.28 mm above the release point. The new
-  gap, no-drag behavior, and first-try M3 contact are open pending re-measurement.
+  gap, no-drag behavior, and first-try M3 contact are open pending
+  re-measurement. A 2026-10-29 dense calibration sheet still showed faint ink
+  on commanded pen-up travel after `M5` and `P115`; the installed binary was
+  not captured, so confirm the deployed 130 ms build and repeat the 30-cycle
+  no-drag test before changing the pulse again.
 - Do not enable stored force-control parameters until T-01I proves that the
   accepted profile survives power cycles and that a fresh no-contact baseline
   stays RAM-only.

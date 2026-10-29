@@ -645,6 +645,16 @@ measured pen-tip gap, 30 no-drag M3/M5 cycles, first-try contact acquisition,
 and confirmation that the larger warm-seek travel remains inside its bounded
 budget. See `RPSW-20261023-001`.
 
+**2026-10-29 v3 auto-sheet failure:** the completed dense v3 photo contains
+faint ink on five long commanded pen-up travel segments, at four visible path
+locations. Each flagged segment was preceded by `M5` and `G65 P115 Q1 A1 W2`.
+Median centerline image contrast was `23-95` versus `2-5` on parallel blank
+controls. The deployed toolhead binary was not captured, so this does not yet
+prove whether the 130 ms source setting was active. Do not fit a compensation
+profile from the sheet. Confirm the flashed build and rerun the 30-cycle
+no-drag check before changing the clearance pulse again. See
+`docs/report/lab-notes/2026-10-29-m-12-dense-v3-auto-pen-up-drag.md`.
+
 **T-02 supervised home-origin seek (source implemented; bench test pending):**
 With paper/scale under the pen, adequate pen clearance, the power cutoff
 reachable, and the service UART open, send `p` and confirm

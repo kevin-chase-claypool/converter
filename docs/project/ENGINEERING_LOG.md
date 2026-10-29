@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20261029-dense-v3-auto-pen-up-drag"></a>
+### 🟥 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/FAILED - Dense v3 auto sheet shows pen-up drag
+
+- The first compact v3 auto-sheet photo contains intended station marks plus
+  faint ink on five long commanded pen-up travel commands at four visible path
+  locations. Median centerline contrast is `23-95` versus `2-5` on parallel
+  blank controls.
+- Every inspected flagged travel is preceded by `M5` and
+  `G65 P115 Q1 A1 W2`; this is not a missing converter command or planner
+  displacement. Intermittent physical clearance remains the leading cause.
+- The deployed toolhead build was not captured. Confirm whether the running
+  firmware includes `PEN_CLEAR_EXTRA_LIFT_MS=130` and repeat the 30-cycle
+  T-01H no-drag check before increasing the pulse again.
+- The 1684 x 2236 photo initially exposed an extractor limitation: all
+  fiducials were below the old 40 px/100-pixel floor. The filter now accepts
+  compact 32-120 px, 80-1,200-pixel fiducials, with a red-first regression.
+- The compact v3 extraction resolves four fiducials but moves station
+  coordinates by `2.469-3.169 mm` RMS across thresholds; profile construction
+  exceeds the 5 mm correction bound. The sheet is rejected for profile fitting.
+- Verification: all `64` focused bed tests and all `571` converter tests pass
+  with one expected OpenGL-context skip. Evidence and the reviewed travel
+  overlay are in
+  `docs/report/lab-notes/2026-10-29-m-12-dense-v3-auto-pen-up-drag.md`.
+- Evidence: `WSW-20261029-004`.
+- Category: windows-software, hardware, bed-calibration, dense-mesh,
+  pen-clear, M5, T-01H, failed-test, photo-measurement.
+
 <a id="elog-20261029-unattended-bed-calibration-dwell"></a>
 ### 🟨 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Add a one-start calibration mode
 

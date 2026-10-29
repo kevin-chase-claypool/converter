@@ -64,8 +64,8 @@ def _fiducial_sized_components(components):
     return tuple(
         component
         for component in components
-        if 100 <= len(component.points) <= 800
-        and 40 <= component.maximum_dimension <= 100
+        if 80 <= len(component.points) <= 1200
+        and 32 <= component.maximum_dimension <= 120
     )
 
 
@@ -333,12 +333,7 @@ def _seeded_fiducials(residual, expected_fiducials, seed_homography, threshold):
                 int(y_value + 281),
             ),
         )
-        candidates = [
-            component
-            for component in candidates
-            if 100 <= len(component.points) <= 800
-            and 40 <= component.maximum_dimension <= 100
-        ]
+        candidates = _fiducial_sized_components(candidates)
         if not candidates:
             raise ValueError("no fiducial candidate near %s" % mark.station_id)
 
