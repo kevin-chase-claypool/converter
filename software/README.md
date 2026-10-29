@@ -163,23 +163,49 @@ Cycle Start with the pen loaded:
   does not change G54.
 
   A denser refinement uses the same nine-angle protocol with 91 stations at
-  roughly 30 mm nearest-neighbour spacing. The corrected v2 layout uses 3 mm
-  L arms, 5 mm lanes, 1.8 mm labels placed 14 mm inward, and four smaller outer
-  fiducials so the tighter station grid and labels remain separate:
+  roughly 30 mm nearest-neighbour spacing. The current v3 layout uses 3 mm
+  L arms, 6 mm lanes, 1.8 mm labels placed 14 mm inward, and four smaller outer
+  fiducials. The wider lanes increase the closest edge separation within a
+  station to `1.2426 mm`:
 
   ```powershell
-  python ..\tools\make_bed_error_calibration.py --layout dense-91-v2
+  python ..\tools\make_bed_error_calibration.py --layout dense-91-v3
   ```
 
-  That writes `bed-error-map-dense-91-v2.gcode` and its 823-row companion CSV.
+  That writes `bed-error-map-dense-91-v3.gcode` and its 823-row companion CSV.
   The dense layout covers radii 30/60/90/120/148.5 mm with a 13-inch planned
   extent. It remains a candidate calibration until a physical sheet is
   measured, independently compensated, and passes the same M-12 gates; it does
   not replace the accepted `4bad792e35ad` profile. Pass `--layout dense-91-v2`
-  to the photo tool for that sheet. The analyzer detects the layout from the
+  only when reprocessing the rejected v2 photo. Pass `--layout dense-91-v3`
+  for a new physical sheet; the analyzer detects the layout from the
   measurement CSV. The original `dense-91` geometry is retained only to read
-  its issued files; its 7 mm lanes cross 13 station labels and should not be
+  its issued files; its 7 mm lanes cross 13 station labels. The v2 5 mm lanes
+  did not cross labels but produced threshold-dependent station coordinates
+  and failed every M-12 profile gate. Neither historical layout should be
   printed again.
+
+  Start the v3 program once, then press Cycle Start at each of its eight `M0`
+  pauses after the preceding pass dries. That is nine Cycle Start activations
+  total, including the initial start; no separate rewind or pass program is
+  needed.
+
+  For a v3 overhead photo, start with the dense image scale and a light blur:
+
+  ```powershell
+  python ..\tools\measure_bed_error_photo.py dense-v3.jpg `
+    --layout dense-91-v3 --threshold 55 --fiducial-threshold 40 `
+    --blur-radius 6 `
+    --measurement-out ..\samples\gcode\bed-error-map-dense-91-v3-measured.csv `
+    --diagnostic-out ..\samples\gcode\bed-error-map-dense-91-v3-photo.json `
+    --overlay-out ..\samples\gcode\bed-error-map-dense-91-v3-overlay.jpg
+  ```
+
+  Review the overlay, then repeat at nearby station thresholds. Do not fit the
+  sheet until the same station coordinates survive those repeats and the
+  diagnostics account for all 819 expected station marks. If drag marks merge
+  components, add `--seed-diagnostic` with a reviewed photo JSON from the same
+  camera setup.
 
   Prepare and tape the sheet before `G65 P113`. Do not lift, retape, or adjust
   the sheet after the first drawing mark: that moves the calibration frame and,
@@ -198,6 +224,9 @@ Cycle Start with the pen loaded:
   The photo may be rotated; the tool selects the best non-mirrored fiducial
   orientation and tolerates a small number of extra ink specks. Review the
   generated overlay to confirm measured points sit on the shared L corners.
+  Each fiducial is a V, so the tool selects the common arm junction rather than
+  a nearby tip; a biased seed can no longer change the sheet scale by choosing
+  the wrong fiducial endpoint.
   If a larger scan makes 16 px-wide station-number glyphs look like station
   marks, raise `--minimum-station-dimension` to `17`. A wider working circle or
   perspective-dependent matching distance may also be needed; review the

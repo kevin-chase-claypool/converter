@@ -1,5 +1,34 @@
 # Engineering Log
 
+<a id="elog-20261029-dense-bed-v2-rejected-v3"></a>
+### 🟨 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Reject dense v2 and issue v3 extraction
+
+- The completed `dense-91-v2` physical photo was not repeatable. Changing the
+  station threshold across 55/60/70/80 moved extracted coordinates by
+  `0.993-1.064 mm` RMS with maxima from `3.462` to `5.206 mm`.
+- V2 failed every fit: at threshold 55, A0 control was
+  `1.257 mm` RMS / `2.532 mm` maximum and leave-one-out was
+  `0.639 / 3.089 mm`. Nearby thresholds produced the same failure. No profile
+  was created or promoted.
+- The dense layout now has immutable `dense-91`, `dense-91-v2`, and current
+  `dense-91-v3` definitions. V3 changes only the lane offset from 5 mm to
+  6 mm, raising the closest within-station edge separation from `0.5355` to
+  `1.2426 mm`.
+- Fiducial extraction now chooses the shared V junction from its two incident
+  arms instead of the candidate nearest a seed prediction. A biased-seed
+  regression failed before the fix, then recovered all four junctions and all
+  819 synthetic v3 station marks afterward.
+- Generated v3 calibration and verification programs have 7,694/7,696 lines,
+  823-row companion CSVs, eight pauses, and accepted-profile fingerprint
+  `4bad792e35ad`. Both pass macro parsing and strict motion checks.
+- Verification: all `60` focused bed tests and all `567` converter tests pass
+  with one expected OpenGL-context skip.
+- Evidence: `WSW-20261029-002`,
+  `docs/changes/windows-software/2026/2026-10-29-dense-bed-v3-measurement-hardening.md`,
+  and `docs/report/lab-notes/2026-10-29-m-12-dense-v2-photo-rejected.md`.
+- Category: windows-software, hardware, bed-calibration, dense-mesh,
+  photo-measurement, fiducial, failed-test.
+
 <a id="elog-20261029-dense-bed-label-clearance"></a>
 ### 🟥 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/CORRECTED - Dense bed labels collided with pass lanes
 

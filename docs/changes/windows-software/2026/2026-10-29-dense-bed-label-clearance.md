@@ -5,7 +5,7 @@ category: windows-software
 affected_categories:
   - windows-software
   - hardware
-status: implemented
+status: superseded
 components:
   - software/converter_core/bed_calibration.py
   - software/tests/test_bed_compensation.py
@@ -22,6 +22,7 @@ tags:
   - photo-measurement
 related:
   - WSW-20261028-002
+  - WSW-20261029-002
 ---
 
 # Separate dense-calibration station numbers from pass lanes
@@ -89,10 +90,15 @@ the measurement CSV.
 ## Risks and follow-up
 
 The sheet currently being printed with `dense-91` cannot be repaired in place
-and must be restarted on a fresh sheet using v2. The v2 sheet has not yet
-completed a physical photo extraction. If any label still merges at print
-resolution, stop before pass 2 and report the failing station rather than
-discarding the rest of the sheet.
+and must be restarted on a fresh sheet using the current dense layout.
+
+The v2 physical sheet was subsequently completed and photographed. Its marks
+were too crowded for repeatable component assignment: changing the extraction
+threshold moved station coordinates by about `1.0 mm` RMS, the A0 control was
+`1.257 mm` RMS / `2.532 mm` maximum, and leave-one-out prediction reached
+`0.639 mm` RMS / `3.089 mm` maximum. No v2 compensation profile was accepted.
+`dense-91-v3` supersedes its 5 mm pass lanes with 6 mm lanes; see
+`WSW-20261029-002`.
 
 ## Files
 

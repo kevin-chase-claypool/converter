@@ -19,8 +19,11 @@ import converter_core as converter
 import converter_core.bed_compensation as bed_compensation_module
 import converter_core.gcode as gcode_module
 from converter_core.bed_calibration import (
+    CALIBRATION_LAYOUTS,
     COVERAGE_RADIUS_MM,
     DENSE_LAYOUT,
+    DENSE_LAYOUT_V1,
+    DENSE_LAYOUT_V2,
     PASS_SPECS,
     STANDARD_LAYOUT,
     TEST_RADIUS_MM,
@@ -355,6 +358,23 @@ class BedCalibrationGeneratorTests(unittest.TestCase):
             self.module.layout_extent_mm(DENSE_LAYOUT),
             DENSE_LAYOUT.test_radius_mm,
         )
+        self.assertAlmostEqual(
+            self.module.layout_extent_mm(DENSE_LAYOUT),
+            164.0,
+            places=6,
+        )
+
+    def test_dense_layout_versions_preserve_issued_geometry(self):
+        self.assertEqual(DENSE_LAYOUT_V1.layout_id, "dense-91")
+        self.assertEqual(DENSE_LAYOUT_V1.lane_offset_mm, 7.0)
+        self.assertEqual(DENSE_LAYOUT_V2.layout_id, "dense-91-v2")
+        self.assertEqual(DENSE_LAYOUT_V2.lane_offset_mm, 5.0)
+        self.assertEqual(DENSE_LAYOUT.layout_id, "dense-91-v3")
+        self.assertEqual(DENSE_LAYOUT.lane_offset_mm, 6.0)
+        self.assertEqual(
+            set(CALIBRATION_LAYOUTS),
+            {"standard-37", "dense-91", "dense-91-v2", "dense-91-v3"},
+        )
 
     def test_dense_labels_and_fiducials_clear_station_marks(self):
         def point_segment_distance(point, start, end):
@@ -415,7 +435,36 @@ class BedCalibrationGeneratorTests(unittest.TestCase):
                                 *fiducial_edge,
                             ),
                         )
-        self.assertGreater(minimum, 5.0)
+        self.assertGreater(minimum, 5.5)
+
+        center = calibration_stations(DENSE_LAYOUT)[0]
+        pass_edges = []
+        for calibration_pass in DENSE_LAYOUT.pass_specs:
+            _x, _y, points = mark_geometry(
+                center,
+                calibration_pass,
+                DENSE_LAYOUT,
+            )
+            pass_edges.append(
+                (
+                    calibration_pass.pass_name,
+                    tuple(zip(points, points[1:])),
+                )
+            )
+        mark_minimum = float("inf")
+        for index, (_first_name, first_edges) in enumerate(pass_edges):
+            for _second_name, second_edges in pass_edges[index + 1 :]:
+                for first_edge in first_edges:
+                    for second_edge in second_edges:
+                        mark_minimum = min(
+                            mark_minimum,
+                            segment_distance(*first_edge, *second_edge),
+                        )
+        self.assertAlmostEqual(
+            mark_minimum,
+            1.2426406871,
+            places=6,
+        )
 
         label_minimum = float("inf")
         for station in calibration_stations(DENSE_LAYOUT):
@@ -440,7 +489,7 @@ class BedCalibrationGeneratorTests(unittest.TestCase):
                         label_minimum,
                         segment_distance(*label_edge, *mark_edge),
                     )
-        self.assertGreater(label_minimum, 0.5)
+        self.assertGreater(label_minimum, 2.5)
 
     def test_one_pen_nine_pass_program_and_eight_pauses(self):
         program, stations = self.module.build_program(converter.Settings())
@@ -479,11 +528,11 @@ class BedCalibrationGeneratorTests(unittest.TestCase):
             layout=DENSE_LAYOUT,
         )
         sample = (
-            ROOT / "samples" / "gcode" / "bed-error-map-dense-91-v2.gcode"
+            ROOT / "samples" / "gcode" / "bed-error-map-dense-91-v3.gcode"
         )
         self.assertEqual(sample.read_text(encoding="utf-8"), program)
         csv_sample = (
-            ROOT / "samples" / "gcode" / "bed-error-map-dense-91-v2.csv"
+            ROOT / "samples" / "gcode" / "bed-error-map-dense-91-v3.csv"
         )
         self.assertEqual(
             csv_sample.read_text(encoding="utf-8"),
@@ -495,11 +544,11 @@ class BedCalibrationGeneratorTests(unittest.TestCase):
             ROOT
             / "samples"
             / "gcode"
-            / "bed-error-verify-dense-91-v2.gcode"
+            / "bed-error-verify-dense-91-v3.gcode"
         )
         csv_verification = verification.with_suffix(".csv")
         program = verification.read_text(encoding="utf-8")
-        self.assertIn("91-station balanced dense field v2", program)
+        self.assertIn("91-station balanced dense field v3", program)
         self.assertIn("verification pass with bed compensation", program)
         self.assertEqual(program.count("M0 ("), 8)
         self.assertEqual(
@@ -542,7 +591,7 @@ class BedCalibrationGeneratorTests(unittest.TestCase):
         )
         self.assertEqual(len(rows), 4 + 91 * len(DENSE_LAYOUT.pass_specs))
         self.assertEqual(len(rows), 823)
-        self.assertEqual({row["layout_id"] for row in rows}, {"dense-91-v2"})
+        self.assertEqual({row["layout_id"] for row in rows}, {"dense-91-v3"})
 
     def test_incomplete_measurements_are_rejected(self):
         with self.assertRaisesRegex(ValueError, "incomplete"):
@@ -585,7 +634,7 @@ class BedCalibrationAnalysisTests(unittest.TestCase):
             minimum_improvement_pct=20.0,
         )
         self.assertTrue(accepted)
-        self.assertEqual(report["layout"]["id"], "dense-91-v2")
+        self.assertEqual(report["layout"]["id"], "dense-91-v3")
         self.assertEqual(report["layout"]["station_count"], 91)
         self.assertEqual(len(profile.samples_mm[0]), 91)
 

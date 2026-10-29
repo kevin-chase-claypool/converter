@@ -8,7 +8,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
-| 2026-10-29 | `WSW-20261029-001` | implemented | [Separate dense-calibration station numbers from pass lanes](../windows-software/2026/2026-10-29-dense-bed-label-clearance.md) | `bed-calibration`, `dense-mesh`, `station-label`, `layout-collision`, `photo-measurement` |
+| 2026-10-29 | `WSW-20261029-002` | implemented | [Harden dense calibration extraction and issue v3](../windows-software/2026/2026-10-29-dense-bed-v3-measurement-hardening.md) | `bed-calibration`, `dense-mesh`, `photo-measurement`, `fiducial`, `marker-separation` |
+| 2026-10-29 | `WSW-20261029-001` | superseded | [Separate dense-calibration station numbers from pass lanes](../windows-software/2026/2026-10-29-dense-bed-label-clearance.md) | `bed-calibration`, `dense-mesh`, `station-label`, `layout-collision`, `photo-measurement` |
 | 2026-10-28 | `WSW-20261028-002` | superseded | [Add a 91-station dense bed-calibration mesh](../windows-software/2026/2026-10-28-dense-bed-calibration-mesh.md) | `bed-calibration`, `bed-compensation`, `dense-mesh`, `photo-measurement`, `station-layout`, `residual-error` |
 | 2026-10-26 | `WSW-20261026-003` | verified | [Promote the independently verified post-repair bed profile](../windows-software/2026/2026-10-26-promote-post-repair-bed-profile.md) | `bed-compensation`, `M-12`, `verification`, `default-profile`, `rotating-bed` |
 | 2026-10-26 | `WSW-20261026-002` | implemented | [Make the bed-photo station-size floor configurable](../windows-software/2026/2026-10-26-bed-photo-label-dimension-cutoff.md) | `bed-calibration`, `photo-measurement`, `full-field`, `M-12`, `component-size` |

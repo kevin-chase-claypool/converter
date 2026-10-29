@@ -1,0 +1,195 @@
+{
+  "a0_control_residual": {
+    "count": 91,
+    "max_mm": 2.921212,
+    "mean_x_mm": -0.242324,
+    "mean_y_mm": 0.070871,
+    "p95_mm": 2.296349,
+    "rms_mm": 0.815992
+  },
+  "a0_spatial_error": {
+    "count": 91,
+    "max_mm": 0.972995,
+    "mean_x_mm": 0.150176,
+    "mean_y_mm": 0.036053,
+    "p95_mm": 0.848345,
+    "rms_mm": 0.501868
+  },
+  "alignment": {
+    "fiducial_max_mm": 0.0,
+    "fiducial_rms_mm": 0.0,
+    "rotation_deg": 0.0,
+    "scale": 1.0,
+    "translation_x_mm": 0.0,
+    "translation_y_mm": 0.0
+  },
+  "angle_position_spread": {
+    "135": {
+      "count": 91,
+      "max_mm": 1.922174,
+      "mean_x_mm": 0.0,
+      "mean_y_mm": -0.0,
+      "p95_mm": 1.20276,
+      "rms_mm": 0.756363
+    },
+    "180": {
+      "count": 91,
+      "max_mm": 2.193574,
+      "mean_x_mm": 0.0,
+      "mean_y_mm": 0.0,
+      "p95_mm": 2.069662,
+      "rms_mm": 0.90818
+    },
+    "225": {
+      "count": 91,
+      "max_mm": 3.016053,
+      "mean_x_mm": -0.0,
+      "mean_y_mm": -0.0,
+      "p95_mm": 1.688425,
+      "rms_mm": 0.931453
+    },
+    "270": {
+      "count": 91,
+      "max_mm": 0.936898,
+      "mean_x_mm": 0.0,
+      "mean_y_mm": -0.0,
+      "p95_mm": 0.825411,
+      "rms_mm": 0.671017
+    },
+    "315": {
+      "count": 91,
+      "max_mm": 0.591506,
+      "mean_x_mm": 0.0,
+      "mean_y_mm": -0.0,
+      "p95_mm": 0.536913,
+      "rms_mm": 0.393319
+    },
+    "45": {
+      "count": 91,
+      "max_mm": 2.52277,
+      "mean_x_mm": -0.0,
+      "mean_y_mm": 0.0,
+      "p95_mm": 1.685024,
+      "rms_mm": 0.687864
+    },
+    "90": {
+      "count": 91,
+      "max_mm": 1.015089,
+      "mean_x_mm": 0.0,
+      "mean_y_mm": -0.0,
+      "p95_mm": 0.878397,
+      "rms_mm": 0.648508
+    }
+  },
+  "angles": {
+    "135": {
+      "count": 91,
+      "max_mm": 2.507452,
+      "mean_x_mm": 0.582785,
+      "mean_y_mm": -0.069253,
+      "p95_mm": 1.78586,
+      "rms_mm": 0.957351
+    },
+    "180": {
+      "count": 91,
+      "max_mm": 2.279276,
+      "mean_x_mm": 0.101802,
+      "mean_y_mm": -0.183246,
+      "p95_mm": 2.14596,
+      "rms_mm": 0.932059
+    },
+    "225": {
+      "count": 91,
+      "max_mm": 3.412773,
+      "mean_x_mm": 0.476665,
+      "mean_y_mm": -0.265659,
+      "p95_mm": 2.217169,
+      "rms_mm": 1.079532
+    },
+    "270": {
+      "count": 91,
+      "max_mm": 1.574367,
+      "mean_x_mm": 0.299753,
+      "mean_y_mm": -0.722876,
+      "p95_mm": 1.489027,
+      "rms_mm": 1.030856
+    },
+    "315": {
+      "count": 91,
+      "max_mm": 1.046954,
+      "mean_x_mm": 0.086764,
+      "mean_y_mm": -0.47712,
+      "p95_mm": 0.959973,
+      "rms_mm": 0.624397
+    },
+    "45": {
+      "count": 91,
+      "max_mm": 2.656834,
+      "mean_x_mm": 0.112443,
+      "mean_y_mm": 0.297931,
+      "p95_mm": 1.764291,
+      "rms_mm": 0.758
+    },
+    "90": {
+      "count": 91,
+      "max_mm": 1.72218,
+      "mean_x_mm": 0.699162,
+      "mean_y_mm": 0.105652,
+      "p95_mm": 1.584064,
+      "rms_mm": 0.959454
+    }
+  },
+  "bed_mesh_correlation": null,
+  "diagnosis": "angle-dependent error remains after removing the A=0 spatial field; rotation/runout/carriage coupling remains a credible source",
+  "layout": {
+    "angle_values_deg": [
+      0.0,
+      45.0,
+      90.0,
+      135.0,
+      180.0,
+      225.0,
+      270.0,
+      315.0
+    ],
+    "coverage_radius_mm": 165.1,
+    "fiducial_count": 4,
+    "id": "dense-91-v2",
+    "label_height_mm": 1.8,
+    "lane_offset_mm": 5.0,
+    "mark_arm_mm": 3.0,
+    "name": "91-station balanced dense field v2",
+    "ring_count": 5,
+    "sheet_diameter_mm": 355.6,
+    "station_count": 91,
+    "test_diameter_mm": 330.2
+  },
+  "leave_one_out": {
+    "accepted": false,
+    "count": 819,
+    "improvement_pct": 37.87443285747006,
+    "max_error_gate_mm": 0.9,
+    "max_mm": 3.547615,
+    "max_rms_gate_mm": 0.35,
+    "mean_x_mm": 0.03684,
+    "mean_y_mm": -0.014165,
+    "minimum_improvement_pct": 10.0,
+    "p95_mm": 1.495291,
+    "rms_mm": 0.651068
+  },
+  "profile": {
+    "coverage_radius_mm": 165.1,
+    "fingerprint": "7f071b1a1b89",
+    "max_correction_mm": 3.119953519607632
+  },
+  "raw_error": {
+    "count": 819,
+    "max_mm": 3.398602,
+    "mean_x_mm": 0.389869,
+    "mean_y_mm": -0.105475,
+    "p95_mm": 2.157384,
+    "rms_mm": 1.047988
+  },
+  "schema": "theta-bed-calibration-report-v1",
+  "source": "bed-error-map-dense-91-v2-measured-t80-b6.csv"
+}

@@ -41,6 +41,7 @@ from converter_core.bed_calibration import (  # noqa: E402
     CALIBRATION_LAYOUTS,
     STANDARD_LAYOUT,
     calibration_layout,
+    calibration_stations,
     expected_marks,
 )
 
@@ -80,6 +81,20 @@ def _station_sized_components(
         <= component.maximum_dimension
         <= maximum_dimension
     )
+
+
+def _default_station_dimensions(layout):
+    """Return the expected station-L bounding-box range at photo scale."""
+    if layout.layout_id.startswith("dense-"):
+        return 14, 60
+    return 16, 30
+
+
+def _default_station_point_bounds(layout):
+    """Return the expected station-L ink-pixel range for seeded matching."""
+    if layout.layout_id.startswith("dense-"):
+        return 40, 500
+    return 60, 200
 
 
 def _quadrant_fiducials(components, center):
@@ -211,8 +226,33 @@ def _fiducial_corner_candidates(component):
 
 
 def _component_corner(component, quadrant=None, prediction=None):
-    """Return the V vertex closest to an expected image position."""
+    """Return the shared vertex of a printed V-shaped fiducial."""
     candidates = _fiducial_corner_candidates(component)
+    if len(candidates) >= 3:
+        prediction_array = (
+            None
+            if prediction is None
+            else np.asarray(prediction, dtype=float)
+        )
+
+        def rank(point):
+            incident_lengths = sorted(
+                float(np.linalg.norm(point - other))
+                for other in candidates
+                if not np.array_equal(point, other)
+            )
+            predicted_distance = (
+                0.0
+                if prediction_array is None
+                else float(np.linalg.norm(point - prediction_array))
+            )
+            return (
+                sum(incident_lengths),
+                max(incident_lengths),
+                predicted_distance,
+            )
+
+        return min(candidates, key=rank)
     if prediction is not None and candidates:
         prediction = np.asarray(prediction, dtype=float)
         return min(
@@ -479,22 +519,324 @@ def _fit_oriented_homography(
     return best[1], best[2], best[3], best[0]
 
 
+def _measure_dense_seeded_photo(
+    image_path,
+    layout,
+    *,
+    threshold,
+    fiducial_threshold,
+    blur_radius,
+    minimum_station_dimension,
+    maximum_station_dimension,
+    seed_diagnostic,
+):
+    """Measure the tighter dense grid by matching whole station L groups."""
+    source = Image.open(image_path).convert("L")
+    residual = (
+        np.asarray(
+            source.filter(ImageFilter.GaussianBlur(blur_radius)),
+            dtype=np.int16,
+        )
+        - np.asarray(source, dtype=np.int16)
+    )
+    expected = expected_marks(layout)
+    expected_fiducials = tuple(
+        mark for mark in expected if mark.section == "fiducial"
+    )
+    station_marks = tuple(
+        mark for mark in expected if mark.section == "station"
+    )
+    seed_homography = _scaled_seed_homography(
+        seed_diagnostic,
+        (source.width, source.height),
+    )
+    homography, image_fiducials = _seeded_fiducials(
+        residual,
+        expected_fiducials,
+        seed_homography,
+        fiducial_threshold,
+    )
+    inverse_homography = np.linalg.inv(homography)
+    paper_mask = _layout_mask(residual.shape, homography)
+    components = _connected_components(
+        (residual > threshold) & paper_mask
+    )
+    minimum_points, maximum_points = _default_station_point_bounds(layout)
+    candidates = tuple(
+        component
+        for component in _station_sized_components(
+            components,
+            minimum_dimension=minimum_station_dimension,
+            maximum_dimension=maximum_station_dimension,
+        )
+        if minimum_points <= len(component.points) <= maximum_points
+    )
+    candidate_centers = np.asarray(
+        [
+            np.asarray(component.points, dtype=float).mean(axis=0)
+            for component in candidates
+        ],
+        dtype=float,
+    )
+    by_station = {}
+    for mark in station_marks:
+        by_station.setdefault(mark.station_id, []).append(mark)
+    stations = calibration_stations(layout)
+    station_groups = {}
+    for station in stations:
+        station_groups.setdefault(station.ring_radius_mm, []).append(station)
+
+    neighbor_offsets = np.asarray(
+        [(x, y) for x in (-1, 0, 1) for y in (-1, 0, 1)],
+        dtype=float,
+    )
+
+    def sample_points(points):
+        x_values = np.rint(points[:, 0]).astype(int)
+        y_values = np.rint(points[:, 1]).astype(int)
+        valid = (
+            (x_values >= 0)
+            & (y_values >= 0)
+            & (x_values < residual.shape[1])
+            & (y_values < residual.shape[0])
+        )
+        values = np.zeros(len(points), dtype=float)
+        values[valid] = residual[y_values[valid], x_values[valid]]
+        return values
+
+    def group_score(base_points, mark_count, shift):
+        shifted = base_points + np.asarray(shift)
+        samples = shifted[:, None, :] + neighbor_offsets[None, :, :]
+        values = sample_points(samples.reshape(-1, 2)).reshape(
+            len(base_points),
+            len(neighbor_offsets),
+        )
+        per_mark = values.max(axis=1).reshape(mark_count, -1).mean(axis=1)
+        return float(per_mark.mean()), float(per_mark.min())
+
+    station_results = {}
+    processed = []
+    for ring_radius in sorted(station_groups):
+        for station in station_groups[ring_radius]:
+            if processed:
+                nearest = min(
+                    processed,
+                    key=lambda item: (
+                        (item.x_mm - station.x_mm) ** 2
+                        + (item.y_mm - station.y_mm) ** 2
+                    ),
+                )
+                base_shift = station_results[nearest.station_id]["shift"]
+                search_offsets = range(-10, 11, 2)
+            else:
+                base_shift = (0.0, 0.0)
+                search_offsets = range(-60, 61, 3)
+            group = by_station[station.station_id]
+            base_points = []
+            for mark in group:
+                corner = _forward(
+                    homography,
+                    (mark.nominal_x_mm, mark.nominal_y_mm),
+                )
+                for arm_end in (
+                    (
+                        mark.nominal_x_mm - layout.mark_arm_mm,
+                        mark.nominal_y_mm,
+                    ),
+                    (
+                        mark.nominal_x_mm,
+                        mark.nominal_y_mm + layout.mark_arm_mm,
+                    ),
+                ):
+                    endpoint = _forward(homography, arm_end)
+                    for parameter in np.linspace(0.18, 0.86, 8):
+                        base_points.append(
+                            corner + parameter * (endpoint - corner)
+                        )
+            base_points = np.asarray(base_points, dtype=float)
+            best = None
+            for dy in [
+                base_shift[1] + offset for offset in search_offsets
+            ]:
+                for dx in [
+                    base_shift[0] + offset for offset in search_offsets
+                ]:
+                    score = group_score(base_points, len(group), (dx, dy))
+                    key = (score[0], score[1])
+                    if best is None or key > best[0]:
+                        best = (key, dx, dy, score)
+            for dy in np.arange(best[2] - 3, best[2] + 3.01, 1):
+                for dx in np.arange(best[1] - 3, best[1] + 3.01, 1):
+                    score = group_score(base_points, len(group), (dx, dy))
+                    key = (score[0], score[1])
+                    if key > best[0]:
+                        best = (key, dx, dy, score)
+            station_results[station.station_id] = {
+                "shift": [float(best[1]), float(best[2])],
+                "mean_score": best[3][0],
+                "min_score": best[3][1],
+            }
+            processed.append(station)
+
+    ranked = []
+    for mark_index, mark in enumerate(station_marks):
+        shift_x, shift_y = station_results[mark.station_id]["shift"]
+        shift = np.asarray((shift_x, shift_y))
+        corner = (
+            np.asarray(
+                _forward(
+                    homography,
+                    (mark.nominal_x_mm, mark.nominal_y_mm),
+                )
+            )
+            + shift
+        )
+        left = (
+            np.asarray(
+                _forward(
+                    homography,
+                    (
+                        mark.nominal_x_mm - layout.mark_arm_mm,
+                        mark.nominal_y_mm,
+                    ),
+                )
+            )
+            + shift
+        )
+        up = (
+            np.asarray(
+                _forward(
+                    homography,
+                    (
+                        mark.nominal_x_mm,
+                        mark.nominal_y_mm + layout.mark_arm_mm,
+                    ),
+                )
+            )
+            + shift
+        )
+        centroid_prediction = (
+            corner + 0.5 * left + 0.5 * up
+        ) / 2.0
+        for component_index, center in enumerate(candidate_centers):
+            distance = float(np.linalg.norm(center - centroid_prediction))
+            if distance <= 30.0:
+                ranked.append((distance, mark_index, component_index))
+    ranked.sort()
+    assignments = {}
+    used_components = set()
+    assignment_distances = []
+    for distance, mark_index, component_index in ranked:
+        if mark_index in assignments or component_index in used_components:
+            continue
+        assignments[mark_index] = component_index
+        used_components.add(component_index)
+        assignment_distances.append(distance)
+
+    measured_by_key = {}
+    for mark_index, mark in enumerate(station_marks):
+        shift_x, shift_y = station_results[mark.station_id]["shift"]
+        if mark_index in assignments:
+            component = candidates[assignments[mark_index]]
+            measured_corner = _station_vertex(
+                component,
+                homography,
+                (mark.nominal_x_mm, mark.nominal_y_mm),
+            )
+        else:
+            measured_corner = np.asarray(
+                _forward(
+                    homography,
+                    (mark.nominal_x_mm, mark.nominal_y_mm),
+                )
+            ) + np.asarray((shift_x, shift_y))
+        measured_by_key[(mark.station_id, mark.pass_id)] = tuple(
+            _inverse(inverse_homography, measured_corner)
+        )
+    for mark in expected_fiducials:
+        measured_by_key[(mark.station_id, mark.pass_id)] = (
+            mark.nominal_x_mm,
+            mark.nominal_y_mm,
+        )
+
+    shifts = list(station_results.values())
+    diagnostic = {
+        "layout_id": layout.layout_id,
+        "layout_name": layout.display_name,
+        "image": str(Path(image_path).resolve()),
+        "image_sha256": hashlib.sha256(Path(image_path).read_bytes()).hexdigest(),
+        "image_size_px": [source.width, source.height],
+        "threshold": threshold,
+        "fiducial_threshold": fiducial_threshold,
+        "blur_radius": blur_radius,
+        "station_dimension_px": {
+            "minimum": minimum_station_dimension,
+            "maximum": maximum_station_dimension,
+        },
+        "component_counts": {
+            "total": len(components),
+            "fiducials": len(image_fiducials),
+            "station_L_candidates": len(candidates),
+            "matched_station_L": len(assignments),
+            "group_shift_fallbacks": len(station_marks) - len(assignments),
+        },
+        "mode": "dense-seeded-local",
+        "fiducial_points_px": image_fiducials.tolist(),
+        "station_group_score": {
+            "minimum": min(value["min_score"] for value in shifts),
+            "median_mean": float(
+                np.median([value["mean_score"] for value in shifts])
+            ),
+        },
+        "station_assignment_distance_px": {
+            "minimum": min(assignment_distances),
+            "median": float(np.median(assignment_distances)),
+            "maximum": max(assignment_distances),
+        },
+        "station_shifts_px": station_results,
+        "homography": homography.tolist(),
+    }
+    diagnostic["assignment_distance_px"] = diagnostic[
+        "station_assignment_distance_px"
+    ]
+    return expected, measured_by_key, diagnostic
+
+
 def measure_photo(
     image_path,
     *,
     layout=STANDARD_LAYOUT,
     threshold=20,
+    fiducial_threshold=None,
     blur_radius=18.0,
     minimum_station_dimension=None,
+    maximum_station_dimension=None,
     mask_center_fraction=(0.5295, 0.4869),
     mask_radius_fraction=0.4322,
     maximum_assignment_px=DEFAULT_MAXIMUM_ASSIGNMENT_PX,
     seed_diagnostic=None,
 ):
     layout = calibration_layout(layout)
+    if fiducial_threshold is None:
+        fiducial_threshold = threshold
+    default_minimum, default_maximum = _default_station_dimensions(layout)
     if minimum_station_dimension is None:
-        minimum_station_dimension = (
-            14 if layout.mark_arm_mm < STANDARD_LAYOUT.mark_arm_mm else 16
+        minimum_station_dimension = default_minimum
+    if maximum_station_dimension is None:
+        maximum_station_dimension = default_maximum
+    if (
+        seed_diagnostic is not None
+        and layout.layout_id.startswith("dense-")
+    ):
+        return _measure_dense_seeded_photo(
+            image_path,
+            layout,
+            threshold=threshold,
+            fiducial_threshold=fiducial_threshold,
+            blur_radius=blur_radius,
+            minimum_station_dimension=minimum_station_dimension,
+            maximum_station_dimension=maximum_station_dimension,
+            seed_diagnostic=seed_diagnostic,
         )
     source = Image.open(image_path).convert("L")
     background = source.filter(ImageFilter.GaussianBlur(blur_radius))
@@ -533,6 +875,7 @@ def measure_photo(
         medium = _station_sized_components(
             components,
             minimum_dimension=minimum_station_dimension,
+            maximum_dimension=maximum_station_dimension,
         )
         small = tuple(
             component
@@ -622,7 +965,10 @@ def measure_photo(
             seed_diagnostic, (source.width, source.height)
         )
         homography, image_fiducials = _seeded_fiducials(
-            residual, expected_fiducials, seed_homography, threshold
+            residual,
+            expected_fiducials,
+            seed_homography,
+            fiducial_threshold,
         )
         paper_mask = _layout_mask(gray.shape, homography)
         components = _connected_components(
@@ -631,16 +977,18 @@ def measure_photo(
         mark_area_ratio = (
             layout.mark_arm_mm / STANDARD_LAYOUT.mark_arm_mm
         ) ** 2
+        minimum_points, maximum_points = _default_station_point_bounds(layout)
         medium = tuple(
             component
             for component in _station_sized_components(
                 components,
                 minimum_dimension=minimum_station_dimension,
+                maximum_dimension=maximum_station_dimension,
             )
             if (
-                max(24, int(round(60 * mark_area_ratio)))
+                max(minimum_points, int(round(60 * mark_area_ratio)))
                 <= len(component.points)
-                <= max(40, int(round(200 * mark_area_ratio)))
+                <= max(maximum_points, int(round(200 * mark_area_ratio)))
             )
         )
         fiducial_order = (0, 1, 2, 3)
@@ -684,7 +1032,11 @@ def measure_photo(
         assignments[expected_index] = component_index
         assignment_distances.append(distance)
     if len(assignments) != len(station_marks):
-        raise ValueError("could not assign every station L component")
+        raise ValueError(
+            "could not assign every station L component "
+            "(%d assigned from %d detected candidates for %d expected marks)"
+            % (len(assignments), len(medium), len(station_marks))
+        )
     if max(assignment_distances) > maximum_assignment_px:
         raise ValueError(
             "station assignment exceeds %.1f px: maximum %.3f px"
@@ -728,6 +1080,11 @@ def measure_photo(
         "image_sha256": hashlib.sha256(Path(image_path).read_bytes()).hexdigest(),
         "image_size_px": [source.width, source.height],
         "threshold": threshold,
+        "fiducial_threshold": fiducial_threshold,
+        "station_dimension_px": {
+            "minimum": minimum_station_dimension,
+            "maximum": maximum_station_dimension,
+        },
         "mask_center_fraction": list(mask_center_fraction),
         "mask_radius_fraction": mask_radius_fraction,
         "component_counts": component_counts,
@@ -878,6 +1235,15 @@ def main():
         ),
     )
     parser.add_argument("--threshold", type=int, default=20)
+    parser.add_argument(
+        "--fiducial-threshold",
+        type=int,
+        default=None,
+        help=(
+            "separate threshold for seeded fiducial detection; defaults to "
+            "--threshold"
+        ),
+    )
     parser.add_argument("--blur-radius", type=float, default=18.0)
     parser.add_argument(
         "--minimum-station-dimension",
@@ -886,6 +1252,15 @@ def main():
         help=(
             "minimum component width or height treated as a station L; "
             "raise this when large station labels are misclassified"
+        ),
+    )
+    parser.add_argument(
+        "--maximum-station-dimension",
+        type=int,
+        default=None,
+        help=(
+            "maximum component width or height treated as a station L; "
+            "defaults to the layout's expected marker scale"
         ),
     )
     parser.add_argument(
@@ -925,8 +1300,10 @@ def main():
         args.image,
         layout=layout,
         threshold=args.threshold,
+        fiducial_threshold=args.fiducial_threshold,
         blur_radius=args.blur_radius,
         minimum_station_dimension=args.minimum_station_dimension,
+        maximum_station_dimension=args.maximum_station_dimension,
         mask_center_fraction=mask_center_fraction,
         mask_radius_fraction=args.mask_radius_fraction,
         maximum_assignment_px=args.maximum_assignment_px,

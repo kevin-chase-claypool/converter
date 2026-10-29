@@ -5,6 +5,7 @@ import importlib.util
 import io
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 
 import numpy as np
@@ -16,8 +17,11 @@ sys.path.insert(0, str(ROOT / "software"))
 from converter_core.bed_calibration import (
     DENSE_LAYOUT,
     PASS_SPECS,
+    STANDARD_LAYOUT,
     calibration_stations,
     expected_marks,
+    fiducial_mark_points,
+    fiducial_points,
 )
 
 
@@ -47,6 +51,24 @@ class BedPhotoMeasurementTests(unittest.TestCase):
             self.assertTrue(np.allclose(mapped, image_point))
             self.assertTrue(np.allclose(restored, bed_point))
 
+    def test_dense_station_component_bounds_follow_the_marker_scale(self):
+        self.assertEqual(
+            self.module._default_station_dimensions(STANDARD_LAYOUT),
+            (16, 30),
+        )
+        self.assertEqual(
+            self.module._default_station_dimensions(DENSE_LAYOUT),
+            (14, 60),
+        )
+        self.assertEqual(
+            self.module._default_station_point_bounds(STANDARD_LAYOUT),
+            (60, 200),
+        )
+        self.assertEqual(
+            self.module._default_station_point_bounds(DENSE_LAYOUT),
+            (40, 500),
+        )
+
     def test_fiducial_corner_uses_the_shared_vertex(self):
         points = tuple(
             [(x_value, 20) for x_value in range(10, 21)]
@@ -56,6 +78,18 @@ class BedPhotoMeasurementTests(unittest.TestCase):
         corner = self.module._component_corner(
             component,
             prediction=(20, 20),
+        )
+        self.assertTrue(np.allclose(corner, (20, 20)))
+
+    def test_fiducial_corner_prefers_the_arm_junction_over_nearest_tip(self):
+        points = tuple(
+            [(x_value, 20) for x_value in range(10, 21)]
+            + [(20, y_value) for y_value in range(10, 20)]
+        )
+        component = self.module.Component(points, (10, 10, 20, 20))
+        corner = self.module._component_corner(
+            component,
+            prediction=(20, 11),
         )
         self.assertTrue(np.allclose(corner, (20, 20)))
 
@@ -202,7 +236,7 @@ class BedPhotoMeasurementTests(unittest.TestCase):
             len(rows),
             4 + 91 * len(DENSE_LAYOUT.pass_specs),
         )
-        self.assertEqual({row["layout_id"] for row in rows}, {"dense-91-v2"})
+        self.assertEqual({row["layout_id"] for row in rows}, {"dense-91-v3"})
 
     def test_dense_oriented_homography_uses_the_smaller_mark_centroid(self):
         expected = expected_marks(DENSE_LAYOUT)
@@ -246,6 +280,143 @@ class BedPhotoMeasurementTests(unittest.TestCase):
         self.assertEqual(order, (0, 1, 2, 3))
         self.assertLess(score[0], 1e-6)
         self.assertTrue(np.allclose(fitted, homography))
+
+    def test_dense_seeded_sheet_resolves_arm_junctions_repeatably(self):
+        scale = 6.0
+        image_size = 2100
+        image_center = (image_size - 1) / 2.0
+        homography = np.asarray(
+            [
+                [scale, 0.0, image_center],
+                [0.0, -scale, image_center],
+                [0.0, 0.0, 1.0],
+            ]
+        )
+        image = self.module.Image.new(
+            "L",
+            (image_size, image_size),
+            255,
+        )
+        draw = self.module.ImageDraw.Draw(image)
+
+        def image_point(x_mm, y_mm):
+            return tuple(self.module._forward(homography, (x_mm, y_mm)))
+
+        for _number, angle, x_mm, y_mm in fiducial_points(DENSE_LAYOUT):
+            points = fiducial_mark_points(
+                angle,
+                x_mm,
+                y_mm,
+                DENSE_LAYOUT.fiducial_radial_arm_mm,
+                DENSE_LAYOUT.fiducial_tangent_arm_mm,
+            )
+            for endpoint in points[1:]:
+                draw.line(
+                    (image_point(*points[0]), image_point(*endpoint)),
+                    fill=0,
+                    width=3,
+                )
+        for mark in expected_marks(DENSE_LAYOUT):
+            if mark.section != "station":
+                continue
+            draw.line(
+                (
+                    image_point(
+                        mark.nominal_x_mm - DENSE_LAYOUT.mark_arm_mm,
+                        mark.nominal_y_mm,
+                    ),
+                    image_point(mark.nominal_x_mm, mark.nominal_y_mm),
+                ),
+                fill=0,
+                width=3,
+            )
+            draw.line(
+                (
+                    image_point(mark.nominal_x_mm, mark.nominal_y_mm),
+                    image_point(
+                        mark.nominal_x_mm,
+                        mark.nominal_y_mm + DENSE_LAYOUT.mark_arm_mm,
+                    ),
+                ),
+                fill=0,
+                width=3,
+            )
+
+        biased_seed = homography.copy()
+        biased_seed[0, 2] += 30.0
+        with tempfile.TemporaryDirectory() as temporary:
+            image_path = Path(temporary) / "synthetic-dense-v3.png"
+            image.save(image_path)
+            expected, measured, diagnostic = self.module.measure_photo(
+                image_path,
+                layout=DENSE_LAYOUT,
+                threshold=55,
+                fiducial_threshold=35,
+                blur_radius=3.0,
+                minimum_station_dimension=14,
+                maximum_station_dimension=60,
+                seed_diagnostic={
+                    "homography": biased_seed.tolist(),
+                    "image_size_px": [image_size, image_size],
+                },
+            )
+            expected_repeat, measured_repeat, repeat_diagnostic = (
+                self.module.measure_photo(
+                    image_path,
+                    layout=DENSE_LAYOUT,
+                    threshold=65,
+                    fiducial_threshold=35,
+                    blur_radius=3.0,
+                    minimum_station_dimension=14,
+                    maximum_station_dimension=60,
+                    seed_diagnostic=diagnostic,
+                )
+            )
+
+        self.assertEqual(set(measured), {
+            (mark.station_id, mark.pass_id) for mark in expected
+        })
+        self.assertEqual(
+            {(mark.station_id, mark.pass_id) for mark in expected_repeat},
+            set(measured),
+        )
+        expected_fiducial_points = np.asarray(
+            [
+                self.module._forward(
+                    homography,
+                    (mark.nominal_x_mm, mark.nominal_y_mm),
+                )
+                for mark in expected
+                if mark.section == "fiducial"
+            ]
+        )
+        self.assertTrue(
+            np.allclose(
+                diagnostic["fiducial_points_px"],
+                expected_fiducial_points,
+                atol=2.0,
+            ),
+            "selected %s, expected %s"
+            % (
+                diagnostic["fiducial_points_px"],
+                expected_fiducial_points,
+            ),
+        )
+        self.assertEqual(
+            diagnostic["component_counts"]["matched_station_L"],
+            91 * len(DENSE_LAYOUT.pass_specs),
+        )
+        self.assertEqual(
+            repeat_diagnostic["component_counts"]["matched_station_L"],
+            diagnostic["component_counts"]["matched_station_L"],
+        )
+        repeat_delta = max(
+            np.linalg.norm(
+                np.asarray(measured[key]) - np.asarray(measured_repeat[key])
+            )
+            for key in measured
+        )
+        self.assertLess(repeat_delta, 0.01)
 
 
 if __name__ == "__main__":

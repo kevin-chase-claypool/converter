@@ -242,8 +242,15 @@
   Status 2026-10-29: the first physical print showed that 13 pass lanes crossed
   their own station-number glyphs. Preserve that issued layout as `dense-91`.
   The corrected `dense-91-v2` uses 5 mm lanes and places labels 14 mm inward,
-  with `3.790 mm` minimum label/mark separation. Calibration and compensated
-  verification files now use v2.
+  with `3.790 mm` minimum label/mark separation. A completed v2 physical sheet
+  then failed extraction validation: changing the component threshold moved
+  station coordinates by about `1.0 mm` RMS, A0 control reached
+  `1.257 mm` RMS / `2.532 mm` maximum, and leave-one-out reached
+  `0.639 mm` RMS / `3.089 mm` maximum. V2 is rejected as a profile source.
+  Current v3 keeps the same stations and labels but uses 6 mm lanes, increasing
+  the closest within-station edge separation from `0.5355` to `1.2426 mm`.
+  The photo tool now selects the shared V junction of each fiducial rather than
+  a nearby arm tip. Calibration and compensated-verification files use v3.
   Acceptance: print the dense sheet after `G65 P113`, extract every station,
   repeat it to quantify station noise, require the normal M-12 fit gates, then
   print and compare an independently compensated verification sheet. Promote

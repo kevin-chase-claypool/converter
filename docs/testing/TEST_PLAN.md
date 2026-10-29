@@ -253,7 +253,8 @@ and coordinate semantics; Q3/Q4 remain prohibited.
    untouched.
 2. Plot `samples\gcode\bed-error-map.gcode`. At each of the eight `M0` pauses,
    verify the pen is lifted, wait until the previous pass is visibly dry, and
-   press Cycle Start. The bed is returned to A=0 before every pause.
+   press Cycle Start. This requires one initial start plus eight resume presses
+   (nine total). The bed is returned to A=0 before every pause.
 3. Photograph the complete round sheet straight down. Use the four large L
    fiducials for scale, rotation, and translation; do not use the station
    labels as geometry.
@@ -270,17 +271,23 @@ and coordinate semantics; Q3/Q4 remain prohibited.
    `--compare-to`; require the aggregate and every angle stage to improve
    without introducing new spatial error.
 
-Dense refinement is available as `--layout dense-91-v2`. It places 91 stations
+Dense refinement is available as `--layout dense-91-v3`. It places 91 stations
 at 30/60/90/120/148.5 mm radii with smaller L marks and lanes, producing 819
 station marks plus four fiducials. Generate it with
-`tools\make_bed_error_calibration.py --layout dense-91-v2`, pass the same
+`tools\make_bed_error_calibration.py --layout dense-91-v3`, pass the same
 layout to the photo tool, and retain the layout id written in the measurement
 CSV. The original `dense-91` geometry crossed 13 lanes through station-number
-glyphs and is superseded; do not mix its measurement CSV with v2.
+glyphs. The corrected `dense-91-v2` removed those crossings, but its 5 mm
+lanes left only `0.5355 mm` between the closest edges of marks at one station.
+The physical v2 photo changed station coordinates by about `1.0 mm` RMS when
+the extraction threshold moved, and every fit failed the A0-control or
+leave-one-out gates. V2 is rejected as a profile source. V3 uses 6 mm lanes and
+raises the closest within-station edge separation to `1.2426 mm`.
 The dense field remains an independent candidate: print it after `G65 P113`,
 run the standard M-12 fit and validation gates, reprint the compensated sheet,
 and compare it before changing the active default. The dense sheet has not yet
-been physically printed.
+been physically printed with v3. Run v3 extraction at multiple thresholds and
+require the same accepted field before fitting a profile.
 
 M-01 current evidence: on 2026-09-05 the A-axis motor completed an initial
 bidirectional jog at `F120`; `A10` was counterclockwise, `A-10` was clockwise,

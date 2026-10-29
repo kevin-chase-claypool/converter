@@ -236,7 +236,7 @@ DENSE_LAYOUT_V1 = CalibrationLayout(
     fiducial_tangent_arm_mm=7.0,
     pass_specs=_make_pass_specs(7.0),
 )
-DENSE_LAYOUT = CalibrationLayout(
+DENSE_LAYOUT_V2 = CalibrationLayout(
     layout_id="dense-91-v2",
     display_name="91-station balanced dense field v2",
     ring_specs=DENSE_LAYOUT_V1.ring_specs,
@@ -251,9 +251,29 @@ DENSE_LAYOUT = CalibrationLayout(
     fiducial_tangent_arm_mm=DENSE_LAYOUT_V1.fiducial_tangent_arm_mm,
     pass_specs=_make_pass_specs(5.0),
 )
+DENSE_LAYOUT = CalibrationLayout(
+    layout_id="dense-91-v3",
+    display_name="91-station balanced dense field v3",
+    ring_specs=DENSE_LAYOUT_V2.ring_specs,
+    mark_arm_mm=DENSE_LAYOUT_V2.mark_arm_mm,
+    lane_offset_mm=6.0,
+    label_inward_mm=DENSE_LAYOUT_V2.label_inward_mm,
+    label_height_mm=DENSE_LAYOUT_V2.label_height_mm,
+    test_diameter_mm=DENSE_LAYOUT_V2.test_diameter_mm,
+    fiducial_radius_mm=DENSE_LAYOUT_V2.fiducial_radius_mm,
+    fiducial_angles_deg=DENSE_LAYOUT_V2.fiducial_angles_deg,
+    fiducial_radial_arm_mm=DENSE_LAYOUT_V2.fiducial_radial_arm_mm,
+    fiducial_tangent_arm_mm=DENSE_LAYOUT_V2.fiducial_tangent_arm_mm,
+    pass_specs=_make_pass_specs(6.0),
+)
 CALIBRATION_LAYOUTS = {
     layout.layout_id: layout
-    for layout in (STANDARD_LAYOUT, DENSE_LAYOUT_V1, DENSE_LAYOUT)
+    for layout in (
+        STANDARD_LAYOUT,
+        DENSE_LAYOUT_V1,
+        DENSE_LAYOUT_V2,
+        DENSE_LAYOUT,
+    )
 }
 
 

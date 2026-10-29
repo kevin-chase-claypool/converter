@@ -28,8 +28,9 @@ related:
 
 # Add a 91-station dense bed-calibration mesh
 
-> Superseded by `WSW-20261029-001`: the first physical print showed 13 pass
-> lanes crossing their own station-number glyphs. Use `dense-91-v2`.
+> Superseded by `WSW-20261029-002`: the issued layout crossed station-number
+> glyphs, and its 5 mm-lane replacement failed photo-repeatability gates. Use
+> `dense-91-v3` for a new dense calibration sheet.
 
 ## Summary
 
