@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20261029-promote-centered-dense-v3"></a>
+### 🟨 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/PROMOTED BY OWNER - Centered dense v3 becomes default
+
+- The project owner explicitly selected candidate `18bfb4ed1c33` as the
+  converter default despite its independent verification missing the formal
+  maximum and improvement gates.
+- The profile reduces aggregate RMS from `0.550` to `0.486 mm` and improves
+  every angle-stage RMS, but its maximum is `1.171 mm` and improvement is
+  `11.6 %`.
+- Default coverage changes from the extrapolated `171.450 mm` radius to the
+  measured `165.100 mm` radius. Default bed margin changes from `6.35` to
+  `12.7 mm`; the prior 13.5-inch profile remains explicitly selectable.
+- Promoted profile file:
+  `samples/gcode/bed-error-compensation-2026-10-29-dense-v3-centered.json`.
+  The correction maximum remains `1.142 mm`, below the 5 mm bound.
+- Focused planner and CMYK inheritance tests pass.
+- Evidence: `WSW-20261029-007`,
+  `docs/changes/windows-software/2026/2026-10-29-promote-centered-dense-v3-profile.md`.
+- Category: windows-software, hardware, bed-compensation, dense-mesh,
+  default-profile, owner-override.
+
 <a id="elog-20261029-centered-dense-v3-verification-failed"></a>
 ### 🟥 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/FAILED - Centered dense v3 profile fails verification
 
@@ -9,8 +30,10 @@
   `1.163` to `1.171 mm`; improvement was `11.6 %`.
 - The required limits are `0.35 mm` RMS, `0.90 mm` maximum, and at least
   `30 %` improvement. Candidate `18bfb4ed1c33` is rejected.
-- The active profile remains `4bad792e35ad`. The verification is retained for
-  principled refinement analysis, not as a replacement calibration sheet.
+- The active profile remained `4bad792e35ad` at the time of this verification
+  decision. The owner later chose to promote `18bfb4ed1c33` by explicit
+  override. The verification is retained for principled refinement analysis,
+  not as a replacement calibration sheet.
 - Evidence:
   `docs/report/lab-notes/2026-10-29-m-12-dense-v3-centered-compensated-verification.md`.
 - Category: windows-software, hardware, bed-compensation, dense-mesh,

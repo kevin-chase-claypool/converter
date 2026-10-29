@@ -8,7 +8,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
-| 2026-10-29 | `WSW-20261029-006` | failed | [Fit the centered dense v3 calibration candidate](../windows-software/2026/2026-10-29-centered-dense-v3-calibration-candidate.md) | `bed-calibration`, `bed-compensation`, `dense-mesh`, `p100`, `verification` |
+| 2026-10-29 | `WSW-20261029-007` | implemented | [Promote the centered dense v3 bed profile](../windows-software/2026/2026-10-29-promote-centered-dense-v3-profile.md) | `bed-compensation`, `dense-mesh`, `default-profile`, `owner-override`, `coverage` |
+| 2026-10-29 | `WSW-20261029-006` | superseded | [Fit the centered dense v3 calibration candidate](../windows-software/2026/2026-10-29-centered-dense-v3-calibration-candidate.md) | `bed-calibration`, `bed-compensation`, `dense-mesh`, `p100`, `verification` |
 | 2026-10-29 | `WSW-20261029-005` | implemented | [Add a one-start pen-clear no-drag diagnostic](../windows-software/2026/2026-10-29-pen-clear-no-drag-diagnostic.md) | `toolhead`, `pen-clear`, `M5`, `T-01H`, `drag`, `diagnostic` |
 | 2026-10-29 | `WSW-20261029-004` | implemented | [Recover dense measurements from compact calibration photos](../windows-software/2026/2026-10-29-compact-bed-photo-fiducials.md) | `bed-calibration`, `photo-measurement`, `fiducial`, `image-scale` |
 | 2026-10-29 | `WSW-20261029-003` | implemented | [Run bed calibration passes with timed dwells](../windows-software/2026/2026-10-29-unattended-bed-calibration-dwell.md) | `bed-calibration`, `dense-mesh`, `pass-control`, `unattended`, `drying-dwell` |
@@ -16,7 +17,7 @@ Newest changes appear first.
 | 2026-10-29 | `WSW-20261029-001` | superseded | [Separate dense-calibration station numbers from pass lanes](../windows-software/2026/2026-10-29-dense-bed-label-clearance.md) | `bed-calibration`, `dense-mesh`, `station-label`, `layout-collision`, `photo-measurement` |
 | 2026-10-29 | `RPSW-20261029-001` | implemented | [Correct P100 registration after the east overshoot](../rp23cnc-software/2026/2026-10-29-p100-final-x-2-30-y-0-31.md) | `grblhal`, `p100`, `registration`, `pen-center`, `offset` |
 | 2026-10-28 | `WSW-20261028-002` | superseded | [Add a 91-station dense bed-calibration mesh](../windows-software/2026/2026-10-28-dense-bed-calibration-mesh.md) | `bed-calibration`, `bed-compensation`, `dense-mesh`, `photo-measurement`, `station-layout`, `residual-error` |
-| 2026-10-26 | `WSW-20261026-003` | verified | [Promote the independently verified post-repair bed profile](../windows-software/2026/2026-10-26-promote-post-repair-bed-profile.md) | `bed-compensation`, `M-12`, `verification`, `default-profile`, `rotating-bed` |
+| 2026-10-26 | `WSW-20261026-003` | superseded | [Promote the independently verified post-repair bed profile](../windows-software/2026/2026-10-26-promote-post-repair-bed-profile.md) | `bed-compensation`, `M-12`, `verification`, `default-profile`, `rotating-bed` |
 | 2026-10-26 | `WSW-20261026-002` | implemented | [Make the bed-photo station-size floor configurable](../windows-software/2026/2026-10-26-bed-photo-label-dimension-cutoff.md) | `bed-calibration`, `photo-measurement`, `full-field`, `M-12`, `component-size` |
 | 2026-10-26 | `WSW-20261026-001` | implemented | [Restore wave depth with a shared phase](../windows-software/2026/2026-10-26-phase-locked-wave-depth.md) | `cmyk`, `wave-screen`, `depth`, `amplitude`, `phase`, `clearance`, `test-paper` |
 | 2026-10-26 | `HW-20261026-001` | planned | [Plan 2.8 A LDO motors for Y and A](2026/2026-10-26-ldo-2-8a-y-a-driver-settings.md) | `stepper`, `tb6600`, `ldo`, `42sth48-2804ah`, `microstep`, `motor-current` |

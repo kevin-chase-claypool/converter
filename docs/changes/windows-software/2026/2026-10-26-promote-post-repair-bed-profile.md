@@ -5,7 +5,7 @@ category: windows-software
 affected_categories:
   - windows-software
   - hardware
-status: verified
+status: superseded
 components:
   - software/converter_core/settings.py
   - software/tests/test_bed_compensation.py
@@ -25,6 +25,8 @@ tags:
   - verification
   - default-profile
   - rotating-bed
+related:
+  - WSW-20261029-007
 ---
 
 # Promote the independently verified post-repair bed profile

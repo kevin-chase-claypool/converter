@@ -226,9 +226,9 @@
   control, and `0.212 / 0.503 mm` leave-one-station-out error. Its independent
   compensated sheet reduced overall RMS from `1.744` to `0.218 mm`, maximum
   from `2.965` to `0.591 mm`, and every angle stage improved. Default
-  `4bad792e35ad` now carries this verified field to the existing 13.5-inch
-  coverage.
-- [ ] **Evaluate a 91-station dense bed-compensation mesh.**
+  `4bad792e35ad` carried this verified field to the prior 13.5-inch coverage
+  until the 2026-10-29 owner override.
+- [x] **Evaluate a 91-station dense bed-compensation mesh.**
   Problem: the accepted 37-station map leaves roughly 45-65 mm radial gaps and
   22.5-45 degree angular gaps; its independent compensated verification still
   reaches a `0.591 mm` maximum residual, larger than the remaining row-spacing
@@ -268,15 +268,17 @@
   (`1.142 mm` maximum correction) is ready for independent compensated
   verification. The independent auto verification improved every angle-stage
   RMS and reduced aggregate RMS from `0.550` to `0.486 mm`, but maximum error
-  was `1.171 mm` and improvement was only `11.6 %`; the candidate is rejected.
-  The active profile remains `4bad792e35ad`.
+  was `1.171 mm` and improvement was only `11.6 %`, which fails the formal
+  gates. The project owner explicitly overrode that decision and promoted
+  `18bfb4ed1c33`; it is now the default 13.0-inch profile.
   Acceptance: print the dense sheet after `G65 P113`, extract every station,
   repeat it to quantify station noise, require the normal M-12 fit gates, then
   print and compare an independently compensated verification sheet. Promote
   only if the dense field improves the worst residual without adding new
-  spatial or per-angle error.
-- [ ] **Verify the extrapolated 13.5-inch compensation annulus.**
-  Problem: the default `4bad792e35ad` profile extends the accepted 165.1 mm
+  spatial or per-angle error. Closed by documented owner override despite the
+  maximum and improvement-gate miss.
+- [ ] **Verify the optional extrapolated 13.5-inch compensation annulus.**
+  Problem: the previous `4bad792e35ad` profile extends the accepted 165.1 mm
   correction field to 171.45 mm by local-affine extrapolation. Its
   `2.783 mm` boundary correction is below the safety bound, but the outer
   6.35 mm annulus has no compensated verification print. Benefit: precision

@@ -5,7 +5,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
-| 2026-10-29 | `WSW-20261029-006` | windows-software, hardware | failed | [Fit the centered dense v3 calibration candidate](windows-software/2026/2026-10-29-centered-dense-v3-calibration-candidate.md) |
+| 2026-10-29 | `WSW-20261029-007` | windows-software, hardware | implemented | [Promote the centered dense v3 bed profile](windows-software/2026/2026-10-29-promote-centered-dense-v3-profile.md) |
+| 2026-10-29 | `WSW-20261029-006` | windows-software, hardware | superseded | [Fit the centered dense v3 calibration candidate](windows-software/2026/2026-10-29-centered-dense-v3-calibration-candidate.md) |
 | 2026-10-29 | `WSW-20261029-005` | windows-software, hardware | implemented | [Add a one-start pen-clear no-drag diagnostic](windows-software/2026/2026-10-29-pen-clear-no-drag-diagnostic.md) |
 | 2026-10-29 | `WSW-20261029-004` | windows-software, hardware | implemented | [Recover dense measurements from compact calibration photos](windows-software/2026/2026-10-29-compact-bed-photo-fiducials.md) |
 | 2026-10-29 | `WSW-20261029-003` | windows-software, hardware | implemented | [Run bed calibration passes with timed dwells](windows-software/2026/2026-10-29-unattended-bed-calibration-dwell.md) |
@@ -15,7 +16,7 @@ Newest changes appear first.
 | 2026-10-28 | `WSW-20261028-002` | windows-software, hardware | superseded | [Add a 91-station dense bed-calibration mesh](windows-software/2026/2026-10-28-dense-bed-calibration-mesh.md) |
 | 2026-10-28 | `WSW-20261028-001` | windows-software | implemented | [Add luminance sharpening to CMYK photo preparation](windows-software/2026/2026-10-28-cmyk-luminance-sharpening.md) |
 | 2026-10-26 | `WSW-20261026-004` | windows-software | implemented | [Flatten SVG curves adaptively within tolerance](windows-software/2026/2026-10-26-adaptive-svg-curve-flattening.md) |
-| 2026-10-26 | `WSW-20261026-003` | windows-software, hardware | verified | [Promote the independently verified post-repair bed profile](windows-software/2026/2026-10-26-promote-post-repair-bed-profile.md) |
+| 2026-10-26 | `WSW-20261026-003` | windows-software, hardware | superseded | [Promote the independently verified post-repair bed profile](windows-software/2026/2026-10-26-promote-post-repair-bed-profile.md) |
 | 2026-10-26 | `WSW-20261026-002` | windows-software, hardware | implemented | [Make the bed-photo station-size floor configurable](windows-software/2026/2026-10-26-bed-photo-label-dimension-cutoff.md) |
 | 2026-10-26 | `WSW-20261026-001` | windows-software, hardware | implemented | [Restore wave depth with a shared phase](windows-software/2026/2026-10-26-phase-locked-wave-depth.md) |
 | 2026-10-26 | `HW-20261026-001` | hardware, rp23cnc-software | planned | [Plan 2.8 A LDO motors for Y and A](hardware/2026/2026-10-26-ldo-2-8a-y-a-driver-settings.md) |

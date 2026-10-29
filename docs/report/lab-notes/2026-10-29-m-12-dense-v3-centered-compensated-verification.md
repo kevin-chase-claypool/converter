@@ -94,14 +94,16 @@ replacement profile.
 
 ## Interpretation
 
-Candidate `18bfb4ed1c33` is not safe to promote under the M-12 acceptance
-contract. It reduces average error modestly, but leaves a `1.171 mm` maximum
-and only achieves `11.6 %` improvement. Active profile `4bad792e35ad` remains
-the default.
+Candidate `18bfb4ed1c33` does not pass the M-12 acceptance contract. It
+reduces average error modestly, but leaves a `1.171 mm` maximum and only
+achieves `11.6 %` improvement. The project owner nevertheless selected it as
+the default after reviewing the result.
 
 ## Decisions and next action
 
-- Reject candidate `18bfb4ed1c33` for promotion.
+- Record that candidate `18bfb4ed1c33` fails the formal promotion gates.
+- The project owner explicitly overrode that gate decision and promoted the
+  candidate; see `WSW-20261029-007`.
 - Keep the centered baseline and verification data as evidence.
 - Do not use another full sheet until the residual is re-analyzed for
   refinement opportunities or the remaining error is traced mechanically.

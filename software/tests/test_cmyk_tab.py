@@ -1868,7 +1868,7 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertEqual(tab.offset_spins["c"][0].value(), 0.0)
 
-    def test_every_ink_inherits_the_default_extrapolated_compensation(self):
+    def test_every_ink_inherits_the_centered_dense_compensation(self):
         host = FakeHost(self.colour_path)
         host.settings_for_source = lambda _tab: converter.default_settings()
         tab = self.make_tab(host)
@@ -1877,7 +1877,7 @@ class CmykTabTests(unittest.TestCase):
 
         self.assertEqual(
             Path(settings.bed_compensation_path).name,
-            "bed-error-compensation-2026-10-26-13p5in-extrapolated.json",
+            "bed-error-compensation-2026-10-29-dense-v3-centered.json",
         )
         for channel in converter.CHANNELS:
             contours = converter.read_svg(
@@ -1886,7 +1886,7 @@ class CmykTabTests(unittest.TestCase):
             plan = converter.plan_program(contours, settings)
             self.assertEqual(
                 plan["bed_compensation"].fingerprint,
-                "4bad792e35ad",
+                "18bfb4ed1c33",
                 channel,
             )
 

@@ -5,7 +5,7 @@ category: windows-software
 affected_categories:
   - windows-software
   - hardware
-status: failed
+status: superseded
 components:
   - samples/gcode/bed-error-map-dense-91-v3-centered-measured-t55.csv
   - samples/gcode/bed-error-compensation-2026-10-29-dense-v3-candidate.json
@@ -22,6 +22,7 @@ tags:
 related:
   - WSW-20261029-002
   - WSW-20261029-004
+  - WSW-20261029-007
   - RPSW-20261029-001
 ---
 
@@ -32,8 +33,8 @@ related:
 The centered 91-station v3 sheet produced a complete, threshold-repeatable
 calibration candidate. Candidate `18bfb4ed1c33` passes every fitting gate and
 an independent compensated verification sheet was generated. That physical
-verification failed the promotion gates, so the candidate is rejected and the
-active profile remains `4bad792e35ad`.
+verification failed the formal promotion gates. The project owner subsequently
+promoted the candidate by explicit override; see `WSW-20261029-007`.
 
 ## Reason
 
@@ -77,10 +78,12 @@ evidence and was not used to excuse or alter the centered fit.
 
 ## Risks and follow-up
 
-The centered profile is rejected for promotion. Re-analyze the verification
-residual only if a principled refinement can be justified without fitting the
-verification sheet as a replacement profile. The outer extrapolated annulus
-and the intermittent pen-clear behavior remain open.
+The standard gate-qualified decision is rejection. The project owner
+subsequently selected this profile as the default by explicit override; see
+`WSW-20261029-007`. Re-analyze the verification residual only if a principled
+refinement can be justified without fitting the verification sheet as a
+replacement profile. Revisit the outer annulus and intermittent pen-clear
+behavior before expanding coverage.
 
 ## Files
 

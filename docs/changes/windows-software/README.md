@@ -8,7 +8,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
-| 2026-10-29 | `WSW-20261029-006` | failed | [Fit the centered dense v3 calibration candidate](2026/2026-10-29-centered-dense-v3-calibration-candidate.md) | `bed-calibration`, `bed-compensation`, `dense-mesh`, `p100`, `verification` |
+| 2026-10-29 | `WSW-20261029-007` | implemented | [Promote the centered dense v3 bed profile](2026/2026-10-29-promote-centered-dense-v3-profile.md) | `bed-compensation`, `dense-mesh`, `default-profile`, `owner-override`, `coverage` |
+| 2026-10-29 | `WSW-20261029-006` | superseded | [Fit the centered dense v3 calibration candidate](2026/2026-10-29-centered-dense-v3-calibration-candidate.md) | `bed-calibration`, `bed-compensation`, `dense-mesh`, `p100`, `verification` |
 | 2026-10-29 | `WSW-20261029-005` | implemented | [Add a one-start pen-clear no-drag diagnostic](2026/2026-10-29-pen-clear-no-drag-diagnostic.md) | `toolhead`, `pen-clear`, `M5`, `T-01H`, `drag`, `diagnostic` |
 | 2026-10-29 | `WSW-20261029-004` | implemented | [Recover dense measurements from compact calibration photos](2026/2026-10-29-compact-bed-photo-fiducials.md) | `bed-calibration`, `photo-measurement`, `fiducial`, `image-scale` |
 | 2026-10-29 | `WSW-20261029-003` | implemented | [Run bed calibration passes with timed dwells](2026/2026-10-29-unattended-bed-calibration-dwell.md) | `bed-calibration`, `dense-mesh`, `pass-control`, `unattended`, `drying-dwell` |
@@ -17,7 +18,7 @@ Newest changes appear first.
 | 2026-10-28 | `WSW-20261028-002` | superseded | [Add a 91-station dense bed-calibration mesh](2026/2026-10-28-dense-bed-calibration-mesh.md) | `bed-calibration`, `bed-compensation`, `dense-mesh`, `photo-measurement`, `station-layout`, `residual-error` |
 | 2026-10-28 | `WSW-20261028-001` | implemented | [Add luminance sharpening to CMYK photo preparation](2026/2026-10-28-cmyk-luminance-sharpening.md) | `cmyk`, `sharpening`, `unsharp-mask`, `image-processing`, `preview`, `manifest` |
 | 2026-10-26 | `WSW-20261026-004` | implemented | [Flatten SVG curves adaptively within tolerance](2026/2026-10-26-adaptive-svg-curve-flattening.md) | `svg`, `curve-flattening`, `tolerance`, `gcode-density`, `performance` |
-| 2026-10-26 | `WSW-20261026-003` | verified | [Promote the independently verified post-repair bed profile](2026/2026-10-26-promote-post-repair-bed-profile.md) | `bed-compensation`, `M-12`, `verification`, `default-profile`, `rotating-bed` |
+| 2026-10-26 | `WSW-20261026-003` | superseded | [Promote the independently verified post-repair bed profile](2026/2026-10-26-promote-post-repair-bed-profile.md) | `bed-compensation`, `M-12`, `verification`, `default-profile`, `rotating-bed` |
 | 2026-10-26 | `WSW-20261026-002` | implemented | [Make the bed-photo station-size floor configurable](2026/2026-10-26-bed-photo-label-dimension-cutoff.md) | `bed-calibration`, `photo-measurement`, `full-field`, `M-12`, `component-size` |
 | 2026-10-26 | `WSW-20261026-001` | implemented | [Restore wave depth with a shared phase](2026/2026-10-26-phase-locked-wave-depth.md) | `cmyk`, `wave-screen`, `depth`, `amplitude`, `phase`, `clearance`, `test-paper` |
 | 2026-10-25 | `WSW-20261025-004` | implemented | [Expand the XY/A tracking diagnostic into a full one-sheet matrix](2026/2026-10-25-comprehensive-xy-a-tracking-matrix.md) | `m-06`, `bed-compensation`, `rotary`, `tracking`, `feed-ladder`, `backlash`, `test-paper` |

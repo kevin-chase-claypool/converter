@@ -92,13 +92,15 @@ physical residual.
 
 ## Decisions and next action
 
-- Keep profile `4bad792e35ad` active.
+- The formal gate decision was to keep profile `4bad792e35ad` active pending
+  verification.
 - Print `samples\gcode\bed-error-verify-dense-91-v3-centered-auto.gcode` on a
   fresh secured sheet after `G65 P113`; one initial Cycle Start runs all nine
   passes with eight five-second dwells.
 - Extract and compare it to the centered baseline with `--compare-to`.
-- Promote candidate `18bfb4ed1c33` only if RMS, maximum, and every angle stage
-  pass the independent-verification gates.
+- The independent verification later missed the RMS, maximum, and improvement
+  gates. The project owner nevertheless promoted `18bfb4ed1c33` by explicit
+  override; see `WSW-20261029-007`.
 
 This closes the calibration-fitting stage only; compensated verification is
 still open.

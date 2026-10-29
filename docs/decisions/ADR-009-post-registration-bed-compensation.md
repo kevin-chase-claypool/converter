@@ -2,7 +2,7 @@
 
 - Status: accepted, implemented, and bench-verified
 - Date: 2026-10-23
-- Updated: 2026-10-26
+- Updated: 2026-10-29
 
 ## Context
 
@@ -28,13 +28,13 @@ samples, has explicit radial coverage, and rejects individual corrections
 above 5 mm. Its fiducial fit removes common sheet translation, rotation, and
 scale so P100 registration is not double-compensated.
 
-The desktop converter selects profile `4bad792e35ad` by default. It uses the
-independent 2026-10-26 post-repair correction samples through `165.100 mm` and
-extrapolates the local-affine field to `171.450 mm`, giving a 13.5-inch
-compensated diameter. The default 14-inch stock diameter and 6.35 mm rim
-margin produce the same 171.45 mm drawable radius. The existing Machine-tab
-path remains editable: **Browse...** selects a replacement, **Default**
-restores this profile, and an empty path disables compensation.
+The desktop converter selects the centered dense-v3 profile
+`18bfb4ed1c33` by default. It covers the measured `165.100 mm` radius without
+extrapolation, giving a 13.0-inch compensated diameter. The default 14-inch
+stock diameter and 12.7 mm rim margin produce the same 165.1 mm drawable
+radius. The existing Machine-tab path remains editable: **Browse...** selects a
+replacement, **Default** restores this profile, and an empty path disables
+compensation.
 
 Interactive preview defaults to fast nominal X/Y so dense artwork remains
 responsive. Saved G-code always applies the selected compensation exactly.
@@ -82,11 +82,9 @@ program unchanged.
 - Fast preview intentionally displays nominal machine X/Y and must identify
   itself as approximate. It is suitable for composition and motion review,
   not for measuring compensated placement on paper.
-- The map is measured only inside its accepted 165.100 mm field. The default
-  profile extends that field to 171.450 mm by extrapolation, which remains
-  provisional until an edge-band verification passes. Either region stays
-  valid only while bed, paper support, toolhead/carriage, pen clamp, and
-  registration remain consistent.
+- The current default profile covers only the measured 165.100 mm field. Its
+  measured coverage is valid only while bed, paper support,
+  toolhead/carriage, pen clamp, and registration remain consistent.
 - This software correction is not evidence that the bed is flat. A profile
   should be accepted only after the measurement analyzer's complete-data and
   leave-one-station-out gates pass, and a compensated verification sheet must
@@ -104,10 +102,14 @@ program unchanged.
   reduced overall RMS from `1.744` to `0.218 mm`, maximum from `2.965` to
   `0.591 mm`, and improved every angle stage; all M-12 verification gates
   passed. The result verifies the measured `165.100 mm` field.
-- The active profile extends that field through the outer `6.350 mm` annulus
-  to `171.450 mm`. Its maximum boundary correction is `2.783 mm`, below the
-  5 mm safety bound, but the outer annulus is still not independently
-  bench-verified. Verify that annulus before treating the extended coverage as
-  measured calibration.
+- The prior `4bad792e35ad` profile extended that field through the outer
+  `6.350 mm` annulus to `171.450 mm`. Its maximum boundary correction is
+  `2.783 mm`, below the 5 mm safety bound, but that annulus was not
+  independently bench-verified.
+- On 2026-10-29 the project owner explicitly promoted centered dense-v3
+  `18bfb4ed1c33` despite independent verification missing the formal maximum
+  and improvement gates. The verified field reduced every angle-stage RMS and
+  aggregate RMS, but its maximum was `1.171 mm` and improvement was `11.6 %`.
+  This is a documented owner override rather than a gate-qualified pass.
 - A true X/Y scale or skew defect remains a controller/mechanical calibration
   issue rather than being folded into the fiducial-normalized residual map.
