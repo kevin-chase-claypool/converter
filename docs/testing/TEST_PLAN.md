@@ -288,9 +288,14 @@ leave-one-out gates. V2 is rejected as a profile source. V3 uses 6 mm lanes and
 raises the closest within-station edge separation to `1.2426 mm`.
 The dense field remains an independent candidate: print it after `G65 P113`,
 run the standard M-12 fit and validation gates, reprint the compensated sheet,
-and compare it before changing the active default. The dense sheet has not yet
-been physically printed with v3. Run v3 extraction at multiple thresholds and
-require the same accepted field before fitting a profile.
+and compare it before changing the active default. **2026-10-29:** the first
+v3 sheet did not pass, but after the P100 center adjustment a fresh centered
+sheet produced identical coordinates at thresholds 20/55/80. Its candidate
+`18bfb4ed1c33` passes fitting gates with `0.518 / 0.890 mm` A0 spatial error,
+`0.353 / 0.783 mm` A0 control error, and `0.274 / 0.760 mm` leave-one-out error
+with `50.2 %` improvement. The `1.142 mm` maximum correction remains below the
+safety bound. Print `bed-error-verify-dense-91-v3-centered.gcode` and compare
+it before promoting the candidate.
 
 M-01 current evidence: on 2026-09-05 the A-axis motor completed an initial
 bidirectional jog at `F120`; `A10` was counterclockwise, `A-10` was clockwise,

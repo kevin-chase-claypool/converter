@@ -1,5 +1,23 @@
 # Engineering Log
 
+<a id="elog-20261029-centered-dense-v3-calibration"></a>
+### 🟩 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/CANDIDATE - Centered dense v3 calibration passes fitting gates
+
+- The centered v3 auto sheet produced complete measurements across thresholds
+  20/55/80 with identical station coordinates.
+- A0 spatial error is `0.518 mm` RMS / `0.890 mm` maximum, A0 control is
+  `0.353 / 0.783 mm`, and leave-one-out prediction is
+  `0.274 / 0.760 mm`; the fitted profile improves the raw field by `50.2 %`.
+- Candidate `18bfb4ed1c33` covers `165.100 mm` with a `1.142 mm` maximum
+  correction. It is not active yet: the existing `4bad792e35ad` profile remains
+  the default until the independent compensated verification passes.
+- Generated the 91-station centered verification sheet with matching numbering;
+  macro parsing and strict motion checks pass.
+- Evidence: `WSW-20261029-006`,
+  `docs/report/lab-notes/2026-10-29-m-12-dense-v3-centered-calibration.md`.
+- Category: windows-software, hardware, bed-calibration, bed-compensation,
+  dense-mesh, p100, candidate, verification-pending.
+
 <a id="elog-20261029-p100-east-south-offset"></a>
 ### 🟨 2026-10-29 - RP23CNC SOFTWARE/HARDWARE/IMPLEMENTED - Shift P100 registration east and south
 

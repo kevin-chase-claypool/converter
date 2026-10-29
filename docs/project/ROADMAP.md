@@ -261,6 +261,12 @@
   `0.676 / 3.689 mm` leave-one-out error. Resolve T-01H lift clearance, confirm
   the deployed 130 ms toolhead build, and investigate the remaining field
   error before repeating the sheet.
+  Status 2026-10-29 centered retry: after the P100 center adjustment, the next
+  v3 sheet was threshold-repeatable and passed fitting gates. A0 spatial was
+  `0.518 / 0.890 mm`, A0 control was `0.353 / 0.783 mm`, and leave-one-out was
+  `0.274 / 0.760 mm` with `50.2 %` improvement. Candidate `18bfb4ed1c33`
+  (`1.142 mm` maximum correction) is ready for independent compensated
+  verification; the active profile remains `4bad792e35ad`.
   Acceptance: print the dense sheet after `G65 P113`, extract every station,
   repeat it to quantify station noise, require the normal M-12 fit gates, then
   print and compare an independently compensated verification sheet. Promote

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-29 | `WSW-20261029-006` | implemented | [Fit the centered dense v3 calibration candidate](../windows-software/2026/2026-10-29-centered-dense-v3-calibration-candidate.md) | `bed-calibration`, `bed-compensation`, `dense-mesh`, `p100`, `verification` |
 | 2026-10-29 | `WSW-20261029-005` | implemented | [Add a one-start pen-clear no-drag diagnostic](../windows-software/2026/2026-10-29-pen-clear-no-drag-diagnostic.md) | `toolhead`, `pen-clear`, `M5`, `T-01H`, `drag`, `diagnostic` |
 | 2026-10-29 | `WSW-20261029-004` | implemented | [Recover dense measurements from compact calibration photos](../windows-software/2026/2026-10-29-compact-bed-photo-fiducials.md) | `bed-calibration`, `photo-measurement`, `fiducial`, `image-scale` |
 | 2026-10-29 | `WSW-20261029-003` | implemented | [Run bed calibration passes with timed dwells](../windows-software/2026/2026-10-29-unattended-bed-calibration-dwell.md) | `bed-calibration`, `dense-mesh`, `pass-control`, `unattended`, `drying-dwell` |
