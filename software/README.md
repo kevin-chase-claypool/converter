@@ -185,10 +185,20 @@ Cycle Start with the pen loaded:
   and failed every M-12 profile gate. Neither historical layout should be
   printed again.
 
-  Start the v3 program once, then press Cycle Start at each of its eight `M0`
-  pauses after the preceding pass dries. That is nine Cycle Start activations
-  total, including the initial start; no separate rewind or pass program is
-  needed.
+  The manual v3 program needs one initial Cycle Start plus a resume press at
+  each of its eight `M0` pauses: nine activations total. To run automatically
+  with five seconds between passes, generate the separate auto variant:
+
+  ```powershell
+  python ..\tools\make_bed_error_calibration.py `
+    --layout dense-91-v3 --pass-dwell-seconds 5
+  ```
+
+  That writes `bed-error-map-dense-91-v3-auto.gcode` and its matching CSV. The
+  auto file replaces every `M0` with `G4 P5`, returns to A=0 with the pen raised
+  between passes, and needs only the initial Cycle Start. A dwell of zero is
+  accepted when truly continuous pass changes are required; the manual `M0`
+  program remains the default.
 
   For a v3 overhead photo, start with the dense image scale and a light blur:
 

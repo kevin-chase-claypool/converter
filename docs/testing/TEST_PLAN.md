@@ -254,7 +254,10 @@ and coordinate semantics; Q3/Q4 remain prohibited.
 2. Plot `samples\gcode\bed-error-map.gcode`. At each of the eight `M0` pauses,
    verify the pen is lifted, wait until the previous pass is visibly dry, and
    press Cycle Start. This requires one initial start plus eight resume presses
-   (nine total). The bed is returned to A=0 before every pause.
+   (nine total). The bed is returned to A=0 before every pause. For a
+   fast-drying pen, `--pass-dwell-seconds 5` emits the separate `-auto`
+   program with eight `G4 P5` dwells and no manual stops; it needs one initial
+   Cycle Start.
 3. Photograph the complete round sheet straight down. Use the four large L
    fiducials for scale, rotation, and translation; do not use the station
    labels as geometry.

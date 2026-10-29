@@ -251,6 +251,8 @@
   the closest within-station edge separation from `0.5355` to `1.2426 mm`.
   The photo tool now selects the shared V junction of each fiducial rather than
   a nearby arm tip. Calibration and compensated-verification files use v3.
+  A generator option can replace the eight manual `M0` stops with five-second
+  `G4` drying dwells for a one-start unattended physical run.
   Acceptance: print the dense sheet after `G65 P113`, extract every station,
   repeat it to quantify station noise, require the normal M-12 fit gates, then
   print and compare an independently compensated verification sheet. Promote

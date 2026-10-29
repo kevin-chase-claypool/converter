@@ -70,11 +70,16 @@ def build_program(
     layout=STANDARD_LAYOUT,
     feed_rate=420.0,
     compensation=None,
+    pass_dwell_seconds=None,
 ):
     layout = calibration_layout(layout)
     feed_rate = float(feed_rate)
     if not math.isfinite(feed_rate) or feed_rate <= 0.0:
         raise ValueError("feed rate must be finite and positive")
+    if pass_dwell_seconds is not None:
+        pass_dwell_seconds = float(pass_dwell_seconds)
+        if not math.isfinite(pass_dwell_seconds) or pass_dwell_seconds < 0.0:
+            raise ValueError("pass dwell must be finite and non-negative")
     stations = calibration_stations(layout)
     lines = []
 
@@ -100,7 +105,15 @@ def build_program(
         + "; A0 controls are separate"
     )
     comment("station numbers are drawn in the A0 reference pass")
-    comment("let each pass dry at the M0 pause, then Cycle Start")
+    if pass_dwell_seconds is None:
+        comment("let each pass dry at the M0 pause, then Cycle Start")
+    elif pass_dwell_seconds > 0.0:
+        comment(
+            "automatic %s s pass dwell; one initial Cycle Start"
+            % fmt(pass_dwell_seconds)
+        )
+    else:
+        comment("continuous pass changes; one initial Cycle Start")
     comment("run G65 P113 first and do not change G54/G92 during this sheet")
     if compensation is not None:
         comment(
@@ -172,10 +185,18 @@ def build_program(
 
     def pause_and_restore_reference(next_pass):
         travel((0.0, 0.0), 0.0)
-        lines.append(
-            "M0 (allow pass to dry; install same pen only if removed; %s next)"
-            % next_pass.pass_name
-        )
+        if pass_dwell_seconds is None:
+            lines.append(
+                "M0 (allow pass to dry; install same pen only if removed; "
+                "%s next)" % next_pass.pass_name
+            )
+        elif pass_dwell_seconds > 0.0:
+            lines.append(
+                "G4 P%s (automatic pass dwell; %s next)"
+                % (fmt(pass_dwell_seconds), next_pass.pass_name)
+            )
+        else:
+            comment("%s next" % next_pass.pass_name)
 
     # The four large, asymmetric Ls define the sheet coordinate frame. They are
     # outside the 150 mm sampling radius but remain inside the 13-inch field.
@@ -280,6 +301,15 @@ def main():
     )
     parser.add_argument("--feed", type=float, default=420.0)
     parser.add_argument(
+        "--pass-dwell-seconds",
+        type=float,
+        default=None,
+        help=(
+            "replace manual M0 pass stops with this timed dwell; zero runs "
+            "passes continuously"
+        ),
+    )
+    parser.add_argument(
         "--compensation",
         default="",
         help="optional v2 profile; writes a compensated verification sheet",
@@ -296,6 +326,8 @@ def main():
     )
     if layout.layout_id != STANDARD_LAYOUT.layout_id:
         stem += "-" + layout.layout_id
+    if args.pass_dwell_seconds is not None:
+        stem += "-auto"
     if args.out is None:
         args.out = str(ROOT / "samples" / "gcode" / (stem + ".gcode"))
     if args.measurement_out is None:
@@ -307,6 +339,7 @@ def main():
         layout=layout,
         feed_rate=args.feed,
         compensation=compensation,
+        pass_dwell_seconds=args.pass_dwell_seconds,
     )
     out = Path(args.out)
     measurement_out = Path(args.measurement_out)
@@ -333,7 +366,18 @@ def main():
         "layout extent %.3f mm radius; test radius %.3f mm; sheet radius %.3f mm"
         % (extent, layout.test_radius_mm, 355.6 / 2.0)
     )
-    print("use one 0.20 mm pen for all passes; wait at every M0 before continuing")
+    if args.pass_dwell_seconds is None:
+        print(
+            "use one 0.20 mm pen for all passes; "
+            "wait at every M0 before continuing"
+        )
+    elif args.pass_dwell_seconds > 0.0:
+        print(
+            "use one 0.20 mm pen for all passes; automatic %s s pass dwell"
+            % fmt(args.pass_dwell_seconds)
+        )
+    else:
+        print("use one 0.20 mm pen for all passes; continuous pass changes")
     if compensation is not None:
         print("verification compensation fingerprint %s" % compensation.fingerprint)
 

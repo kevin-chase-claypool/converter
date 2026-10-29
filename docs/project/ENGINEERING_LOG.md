@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20261029-unattended-bed-calibration-dwell"></a>
+### 🟨 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Add a one-start calibration mode
+
+- The operator reports the installed pen dries immediately. The dense
+  calibration can now replace its eight interactive `M0` stops with timed
+  `G4` dwells while preserving the original manual program.
+- `--pass-dwell-seconds 5` generated
+  `bed-error-map-dense-91-v3-auto.gcode`: no `M0` stops, eight `G4 P5` dwells,
+  and one required initial Cycle Start. The pen is cleared and the bed returns
+  to A=0 before each dwell.
+- The generator also accepts `0` for continuous pass changes and rejects
+  negative, infinite, or NaN dwell values. Automatic output uses an `-auto`
+  suffix.
+- Verification: all `63` focused bed tests and all `570` converter tests pass
+  with one expected OpenGL-context skip. Macro parsing and strict motion checks
+  pass with the same 2,336 drawing / 1,069 travel moves as the manual sheet.
+- Evidence: `WSW-20261029-003`,
+  `docs/changes/windows-software/2026/2026-10-29-unattended-bed-calibration-dwell.md`.
+- Category: windows-software, hardware, bed-calibration, dense-mesh,
+  pass-control, unattended, drying-dwell.
+
 <a id="elog-20261029-dense-bed-v2-rejected-v3"></a>
 ### 🟨 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Reject dense v2 and issue v3 extraction
 

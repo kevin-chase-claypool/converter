@@ -522,6 +522,36 @@ class BedCalibrationGeneratorTests(unittest.TestCase):
         self.assertIn("PASS 9/9 A000-CONTROL", program)
         self.assertEqual(program.count("G53 G1"), 1)
 
+    def test_automatic_dense_program_uses_timed_pass_changes(self):
+        program, stations = self.module.build_program(
+            converter.Settings(),
+            layout=DENSE_LAYOUT,
+            pass_dwell_seconds=5.0,
+        )
+        self.assertEqual(len(stations), 91)
+        self.assertEqual(program.count("M0 ("), 0)
+        self.assertEqual(
+            program.count(
+                "G4 P5 (automatic pass dwell;"
+            ),
+            8,
+        )
+        self.assertIn(
+            "automatic 5 s pass dwell; one initial Cycle Start",
+            program,
+        )
+        self.assertEqual(program.count("G53 G1"), 1)
+
+    def test_automatic_pass_dwell_must_be_finite_and_non_negative(self):
+        for dwell in (-0.1, float("nan"), float("inf")):
+            with self.subTest(dwell=dwell):
+                with self.assertRaisesRegex(ValueError, "pass dwell"):
+                    self.module.build_program(
+                        converter.Settings(),
+                        layout=DENSE_LAYOUT,
+                        pass_dwell_seconds=dwell,
+                    )
+
     def test_committed_dense_sample_matches_the_generator(self):
         program, _stations = self.module.build_program(
             converter.Settings(),
@@ -533,6 +563,30 @@ class BedCalibrationGeneratorTests(unittest.TestCase):
         self.assertEqual(sample.read_text(encoding="utf-8"), program)
         csv_sample = (
             ROOT / "samples" / "gcode" / "bed-error-map-dense-91-v3.csv"
+        )
+        self.assertEqual(
+            csv_sample.read_text(encoding="utf-8"),
+            measurement_template_csv(layout=DENSE_LAYOUT),
+        )
+
+    def test_committed_automatic_dense_sample_matches_the_generator(self):
+        program, _stations = self.module.build_program(
+            converter.Settings(),
+            layout=DENSE_LAYOUT,
+            pass_dwell_seconds=5.0,
+        )
+        sample = (
+            ROOT
+            / "samples"
+            / "gcode"
+            / "bed-error-map-dense-91-v3-auto.gcode"
+        )
+        self.assertEqual(sample.read_text(encoding="utf-8"), program)
+        csv_sample = (
+            ROOT
+            / "samples"
+            / "gcode"
+            / "bed-error-map-dense-91-v3-auto.csv"
         )
         self.assertEqual(
             csv_sample.read_text(encoding="utf-8"),

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-29 | `WSW-20261029-003` | implemented | [Run bed calibration passes with timed dwells](2026/2026-10-29-unattended-bed-calibration-dwell.md) | `bed-calibration`, `dense-mesh`, `pass-control`, `unattended`, `drying-dwell` |
 | 2026-10-29 | `WSW-20261029-002` | implemented | [Harden dense calibration extraction and issue v3](2026/2026-10-29-dense-bed-v3-measurement-hardening.md) | `bed-calibration`, `dense-mesh`, `photo-measurement`, `fiducial`, `marker-separation` |
 | 2026-10-29 | `WSW-20261029-001` | superseded | [Separate dense-calibration station numbers from pass lanes](2026/2026-10-29-dense-bed-label-clearance.md) | `bed-calibration`, `dense-mesh`, `station-label`, `layout-collision`, `photo-measurement` |
 | 2026-10-28 | `WSW-20261028-002` | superseded | [Add a 91-station dense bed-calibration mesh](2026/2026-10-28-dense-bed-calibration-mesh.md) | `bed-calibration`, `bed-compensation`, `dense-mesh`, `photo-measurement`, `station-layout`, `residual-error` |
