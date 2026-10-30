@@ -5,7 +5,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
-| 2026-10-30 | `WSW-20261030-002` | windows-software, hardware | implemented | [Preserve exact Wave row pitch across final machine coordinates](windows-software/2026/2026-10-30-preserve-wave-row-pitch-across-compensation.md) |
+| 2026-10-30 | `WSW-20261030-003` | windows-software, hardware | implemented | [Row-lock Wave bed compensation instead of disabling it](windows-software/2026/2026-10-30-row-locked-wave-bed-compensation.md) |
+| 2026-10-30 | `WSW-20261030-002` | windows-software, hardware | superseded | [Preserve exact Wave row pitch across final machine coordinates](windows-software/2026/2026-10-30-preserve-wave-row-pitch-across-compensation.md) |
 | 2026-10-30 | `WSW-20261030-001` | windows-software | implemented | [Preserve photo fidelity in Wave-screen Auto](windows-software/2026/2026-10-30-photo-fidelity-wave-auto.md) |
 | 2026-10-29 | `WSW-20261029-008` | windows-software | implemented | [Clarify variable-depth wave spacing](windows-software/2026/2026-10-29-clarify-variable-depth-wave-spacing.md) |
 | 2026-10-29 | `WSW-20261029-007` | windows-software, hardware | implemented | [Promote the centered dense v3 bed profile](windows-software/2026/2026-10-29-promote-centered-dense-v3-profile.md) |

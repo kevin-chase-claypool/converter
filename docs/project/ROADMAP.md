@@ -437,12 +437,16 @@
   seen by the machine and was not the correct acceptance plane.
   Status 2026-10-30 final-machine check: active profile `18bfb4ed1c33`
   changed adjacent gaps by up to `0.323 mm` across all four inks. The new
-  default Wave spacing guard now removes the displacement field; canonical
+  default Wave spacing guard preserves the profile through a row-locked
+  projection: it keeps displacement common to every parallel row and discards
+  the row-normal variation that changes pitch. Canonical
   cyan/magenta/yellow/black programs have final-X/Y gap spreads of
-  `0.002476/0.002188/0.000100/0.001555 mm`, all below `0.005 mm`. The
-  converter regression and full suite pass. A fresh physical print of the
-  canonical no-compensation set remains the hardware acceptance step, and
-  that set intentionally leaves residual bed-position error uncorrected.
+  `0.002432/0.002255/0.000115/0.001541 mm`, all below `0.005 mm`, while the
+  retained fields measure `0.348/0.384/0.332/0.370 mm` RMS. The converter
+  regression and full suite pass. A fresh physical print of the canonical
+  row-locked set remains the hardware acceptance step; its comparison must
+  show whether the retained correction reduces residual error without
+  reintroducing row drift.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

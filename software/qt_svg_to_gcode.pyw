@@ -2442,6 +2442,7 @@ class MainWindow(QMainWindow):
             "moves": moves,
             "gcode": gcode,
             "stats": stats,
+            "bed_compensation": program_plan.get("bed_compensation"),
         }
 
     def export_program_set(self, entries, base_path=None, default_base=""):

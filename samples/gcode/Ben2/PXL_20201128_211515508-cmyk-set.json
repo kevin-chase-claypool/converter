@@ -18,7 +18,7 @@
   "bed_motion": "XY only (bed parked, precise)",
   "center_hold_diameter_mm": 60.0,
   "theta_mode": "fixed",
-  "bed_compensation_path": "",
+  "bed_compensation_path": "samples/gcode/bed-error-compensation-2026-10-29-dense-v3-centered.json",
   "registration_crosses": false,
   "pen_offsets_mm": {
     "c": [
@@ -90,10 +90,10 @@
     "k": "PXL_20201128_211515508-cmyk-black.gcode"
   },
   "file_sha256": {
-    "c": "5cc24d7dd32f8da43167a0dbc803109d51dba6394e92fe2cdbd21352ea274290",
-    "m": "718706cd5e275d1d883c4b265440ece353c6123807448b69c6b3befb6f028dc4",
-    "y": "590e9b4c60965edf33255a2a22885029023c382be780d675a8db03a9d1a49563",
-    "k": "2789596cb5badc4a0026726cca773a67bf88e8b1c251dcaa035fe672a5f7683b"
+    "c": "ca6c785d2219c8b278060b9cf223456a937fe532d190cd6b68d05e78104b36db",
+    "m": "d61e028c7f0c65591bf23f19d814498710d47881abed0f9a421bc126645d78c0",
+    "y": "7c356ebdd26d9d6d8f8db5508e5a763c9009af6064333d829b268f24d503d9e6",
+    "k": "d68abc16fbe8642ed04b372bd27ae2f4a3e70fc496a09dd5242707593e7816a0"
   },
   "preflight": {
     "c": {
@@ -121,7 +121,7 @@
       "unwinds": 0,
       "cap": 15.0,
       "rate_cap": 500.0,
-      "source": "XY-only equidistant regeneration without bed compensation"
+      "source": "XY-only row-locked projected-mesh regeneration"
     },
     "m": {
       "drawing": 82669,
@@ -148,7 +148,7 @@
       "unwinds": 0,
       "cap": 15.0,
       "rate_cap": 500.0,
-      "source": "XY-only equidistant regeneration without bed compensation"
+      "source": "XY-only row-locked projected-mesh regeneration"
     },
     "y": {
       "drawing": 75050,
@@ -175,7 +175,7 @@
       "unwinds": 0,
       "cap": 15.0,
       "rate_cap": 500.0,
-      "source": "XY-only equidistant regeneration without bed compensation"
+      "source": "XY-only row-locked projected-mesh regeneration"
     },
     "k": {
       "drawing": 71263,
@@ -202,7 +202,7 @@
       "unwinds": 0,
       "cap": 15.0,
       "rate_cap": 500.0,
-      "source": "XY-only equidistant regeneration without bed compensation"
+      "source": "XY-only row-locked projected-mesh regeneration"
     }
   },
   "derived_from": "PXL_20201128_211515508-cmyk-compensated-set.json",
@@ -212,32 +212,55 @@
     "sample_columns": 199,
     "adjacent_gap_mm": {
       "c": {
-        "min": 1.914111,
-        "median": 1.915526,
-        "max": 1.916586,
-        "spread": 0.002476
+        "min": 1.914045,
+        "median": 1.915527,
+        "max": 1.916477,
+        "spread": 0.002432
       },
       "m": {
-        "min": 1.914135,
-        "median": 1.915554,
-        "max": 1.916323,
-        "spread": 0.002188
+        "min": 1.914134,
+        "median": 1.915541,
+        "max": 1.916389,
+        "spread": 0.002255
       },
       "y": {
-        "min": 1.9154,
+        "min": 1.915396,
         "median": 1.915465,
-        "max": 1.9155,
-        "spread": 0.0001
+        "max": 1.915511,
+        "spread": 0.000115
       },
       "k": {
-        "min": 1.914421,
-        "median": 1.915529,
-        "max": 1.915977,
-        "spread": 0.001555
+        "min": 1.914453,
+        "median": 1.915525,
+        "max": 1.915994,
+        "spread": 0.001541
       }
     },
     "maximum_allowed_spread_mm": 0.005,
     "result": "pass",
-    "note": "Bed compensation is disabled so the exact equidistant paper grid is also the exact final machine-XY grid."
+    "note": "The measured mesh is retained through a row-locked projection; every parallel row receives the same displacement at each along-row coordinate, preserving the final machine-XY lattice.",
+    "compensation_mode": "row_locked_projection"
+  },
+  "bed_compensation": {
+    "mode": "row_locked_projection",
+    "profile_fingerprint": "18bfb4ed1c33",
+    "full_max_correction_mm": 1.1416248849726154,
+    "screen_angles_deg": {
+      "c": 15.0,
+      "m": 75.0,
+      "y": 0.0,
+      "k": 45.0
+    },
+    "projection": {
+      "axis": "along-row position",
+      "along_samples": 129,
+      "across_samples": 33
+    },
+    "per_channel_max_correction_mm": {
+      "c": 0.5492819819543076,
+      "m": 0.6781724234582688,
+      "y": 0.5585544834372854,
+      "k": 0.6142729650754623
+    }
   }
 }

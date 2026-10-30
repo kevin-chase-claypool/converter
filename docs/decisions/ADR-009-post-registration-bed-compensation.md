@@ -1,8 +1,9 @@
 # ADR-009: Optional post-registration host bed compensation
 
-- Status: accepted, implemented, and bench-verified
+- Status: accepted and implemented; base profile bench-verified, row-locked
+  Wave physical verification pending
 - Date: 2026-10-23
-- Updated: 2026-10-29
+- Updated: 2026-10-30
 
 ## Context
 
@@ -37,10 +38,21 @@ replacement, **Default** restores this profile, and an empty path disables
 compensation.
 
 CMYK **Wave screen - equidistant rows** treats exact adjacent-row pitch as a
-hard geometry constraint. Its default spacing guard clears the profile from
-the effective job because an arbitrary displacement field cannot preserve an
-exact uniform lattice. Retaining compensation for that style is an explicit
-operator opt-in and can change machine-space row spacing.
+hard geometry constraint. Its default spacing guard keeps the selected profile
+but applies a row-locked projection. The full measured field is evaluated in
+the effective screen frame, then averaged across the perpendicular row
+coordinate at each along-row position:
+
+```text
+C_row_locked(u) = average_v C_bed(u, v)
+machine_xy = R(theta) * bed_xy + R(theta) * C_row_locked(u)
+```
+
+Every parallel row receives the same displacement at a given `u`, so their
+relative spacing is unchanged. This retains the along-row and common part of
+the measured correction; the row-dependent normal part is discarded because
+it cannot coexist with an exact uniform lattice. Raw unconstrained
+compensation remains an explicit operator opt-in.
 
 Interactive preview defaults to fast nominal X/Y so dense artwork remains
 responsive. Saved G-code applies the effective compensation path exactly.
@@ -88,11 +100,14 @@ program unchanged.
 - Fast preview intentionally displays nominal machine X/Y and must identify
   itself as approximate. It is suitable for composition and motion review,
   not for measuring compensated placement on paper.
-- Exact Wave row pitch and non-uniform bed compensation cannot both be
-  guaranteed. The default Wave guard favors the regular printed lattice and
-  leaves the profile's residual positional error uncorrected. A job that
-  requires both must first remove the underlying mechanical error or use a
-  future compensation model constrained to preserve the row lattice.
+- Exact Wave row pitch and the raw non-uniform correction cannot both be
+  guaranteed. The default Wave guard retains the maximal displacement that is
+  common to all parallel rows and discards the incompatible normal variation.
+  On profile `18bfb4ed1c33`, this retains `50.9-65.5 %` of raw correction
+  energy before G-code quantization, depending on screen angle.
+- Row-locked saved G-code identifies the source profile fingerprint,
+  projection maximum, row angle, and `row_locked_projection` manifest mode.
+  It must not be described as applying the raw two-dimensional field.
 - The current default profile covers only the measured 165.100 mm field. Its
   measured coverage is valid only while bed, paper support,
   toolhead/carriage, pen clamp, and registration remain consistent.
@@ -124,3 +139,6 @@ program unchanged.
   This is a documented owner override rather than a gate-qualified pass.
 - A true X/Y scale or skew defect remains a controller/mechanical calibration
   issue rather than being folded into the fiducial-normalized residual map.
+- The four-ink final-machine audit passes, but a physical comparison print is
+  still required to establish whether the retained projected correction
+  improves the printed residual without reintroducing visible row drift.

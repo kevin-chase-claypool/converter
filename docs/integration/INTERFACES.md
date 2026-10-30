@@ -53,10 +53,14 @@ host-side bed-compensation profile `18bfb4ed1c33` and may transform the planned
 work coordinates before emission. It uses the measured `165.100 mm` radius
 without the former extrapolated outer annulus. The Machine-tab path remains
 editable, and an empty path selects the uncompensated path. The CMYK
-**Wave screen - equidistant rows** style clears this path by default through
-its spacing guard. A non-uniform displacement field changes otherwise uniform
-row spacing in final machine X/Y; unchecking the guard explicitly opts into
-that tradeoff. Other screen styles continue to inherit the selected profile:
+**Wave screen - equidistant rows** style keeps this profile by default through
+its spacing guard, but evaluates it as a **row-locked projection**. For each
+screen-frame along-row coordinate, the complete measured field is averaged
+across the perpendicular coordinate; that one displacement is applied to
+every parallel row. The raw row-normal variation is incompatible with exact
+row pitch and is not applied. Unchecking the guard applies the raw field and
+accepts non-uniform rows. Other screen styles continue to inherit the raw
+selected profile:
 
 ```text
 G54 machine X/Y = R(theta) * bed X/Y + correction(theta, bed X/Y)
@@ -68,7 +72,10 @@ selection and after P100 registration. P100 remains the sole owner of the
 physical centre and A index. The profile declares measured XY coverage and a
 5 mm correction bound, and planning stops rather than extrapolating beyond
 either guard. Compensated G-code uses the transformed and subdivided points;
-interactive preview uses nominal X/Y by default and may select the same exact
+row-locked Wave G-code additionally identifies the full profile fingerprint,
+projection maximum, and per-ink row angle in its header. Its set manifest
+records `row_locked_projection` rather than claiming the raw field was applied.
+Interactive preview uses nominal X/Y by default and may select the same exact
 path when **Exact compensated preview (slow)** is enabled. The analyzer
 converts a measured bed-frame error into a machine-frame correction with
 `-R(theta) * error_bed`; it must never store the unrotated bed error as machine

@@ -1,5 +1,35 @@
 # Engineering Log
 
+<a id="elog-20261030-row-locked-wave-bed-compensation"></a>
+### 🟨 2026-10-30 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Row-lock Wave compensation instead of disabling the mesh
+
+- The no-compensation guard from `WSW-20261030-002` proved the row failure but
+  discarded the required bed correction. The raw profile changed Ben2
+  final-machine adjacent gaps by `0.224830-0.323477 mm`.
+- Wave jobs now keep profile `18bfb4ed1c33` and apply a row-locked projection.
+  At each along-row coordinate, the full measured field is averaged across the
+  perpendicular coordinate; that common displacement is applied to every
+  parallel row. The discarded row-normal variation is the part that changes
+  pitch by construction.
+- The projected field retains `50.9-65.5 %` of raw correction energy depending
+  on ink angle. It is a constrained transform, not the raw mesh unchanged.
+- The canonical 199-column final-machine audit now measures
+  `0.002432/0.002255/0.000115/0.001541 mm` spread for
+  cyan/magenta/yellow/black, all below `0.005 mm`.
+- All four programs identify the full profile fingerprint, projection maximum,
+  full maximum, and per-ink row angle in the header. The set manifest records
+  `row_locked_projection`; the spacing checker rejects raw compensated output
+  and validates active-profile identity.
+- The four canonical files pass macro parsing and strict motion checks with
+  zero A motion. The complete converter suite passes `588` tests with one
+  expected OpenGL-context skip. A physical four-ink comparison print remains
+  required.
+- Evidence: `WSW-20261030-003`,
+  `docs/research/2026-10-30-row-locked-bed-compensation.md`, and
+  `docs/report/lab-notes/2026-10-30-ben2-yellow-row-end-boundary.md`.
+- Category: windows-software, hardware, cmyk, wave-screen, row-spacing,
+  bed-compensation, projected-mesh, final-machine-coordinates, ben2.
+
 <a id="elog-20261030-ben2-machine-space-wave-spacing"></a>
 ### 🟩 2026-10-30 - WINDOWS SOFTWARE/HARDWARE/VERIFIED - Bed compensation warped all four Ben2 row grids
 

@@ -64,29 +64,32 @@ operator's printed-row symptom. The same programs were re-audited directly
 from their emitted `X/Y` drawing commands at 199 columns in each effective
 screen frame.
 
-All four inks were checked, not only yellow. The previous canonical programs
-used compensation `18bfb4ed1c33`; the new canonical programs have the CMYK
-spacing guard enabled and an empty compensation path.
+All four inks were checked, not only yellow. The previous raw-compensated
+programs used profile `18bfb4ed1c33` unchanged. The new canonical programs keep
+that profile through a row-locked projection. The full field is averaged
+across the perpendicular coordinate at each along-row coordinate; the common
+result is then applied to every parallel row.
 
-| Ink | Compensated adjacent gap range | Canonical min / median / max | Canonical spread |
+| Ink | Raw compensated adjacent gap range | Row-locked min / median / max | Row-locked spread |
 |---|---:|---:|---:|
-| Cyan | `1.807922-2.048475 mm` | `1.914111 / 1.915526 / 1.916586 mm` | `0.002476 mm` |
-| Magenta | `1.819102-2.050997 mm` | `1.914135 / 1.915554 / 1.916323 mm` | `0.002188 mm` |
-| Yellow | `1.731065-2.054542 mm` | `1.915400 / 1.915465 / 1.915500 mm` | `0.000100 mm` |
-| Black | `1.810685-2.035515 mm` | `1.914421 / 1.915529 / 1.915977 mm` | `0.001555 mm` |
+| Cyan | `1.807922-2.048475 mm` | `1.914045 / 1.915527 / 1.916477 mm` | `0.002432 mm` |
+| Magenta | `1.819102-2.050997 mm` | `1.914134 / 1.915541 / 1.916389 mm` | `0.002255 mm` |
+| Yellow | `1.731065-2.054542 mm` | `1.915396 / 1.915465 / 1.915511 mm` | `0.000115 mm` |
+| Black | `1.810685-2.035515 mm` | `1.914453 / 1.915525 / 1.915994 mm` | `0.001541 mm` |
 
-The residual canonical variation is below `0.005 mm`, set eight times tighter
+The residual row-locked variation is below `0.005 mm`, set eight times tighter
 than the smallest row-spacing concern and about 1/320 of the `0.8 mm` pen
 width. It includes four-decimal G-code quantization and interpolation at the
 audit columns. All four canonical files pass the tightened bound.
 
-This correction supersedes the earlier statement that compensation could not
-introduce the observed row-spacing defect. Complete rows can still be omitted
-by the image mask, but the non-uniform displacement field also compressed and
-expanded surviving rows in final machine space. Disabling that field is the
-only current way to guarantee the exact row lattice. Physical residual bed
-placement remains uncorrected in these Wave jobs; unchecking the guard is the
-explicit opt-in to restore compensation at the cost of row pitch.
+This correction supersedes both the earlier paper-space conclusion and the
+temporary no-compensation workaround. Complete rows can still be omitted by
+the image mask, while the raw displacement field also compressed and expanded
+surviving rows in final machine space. The row-locked projection removes only
+the incompatible row-normal component. It retains `50.9-65.5 %` of raw
+correction energy depending on screen angle, so the active mesh measurably
+moves all four layers. Unchecking the guard applies the raw field at the cost
+of row pitch.
 
 ## Dark-region row invariant
 
@@ -104,4 +107,11 @@ Local wave depth therefore remains tone-driven without changing row ownership
 or row-to-row pitch. The superseded print used the same shared-displacement
 source layout but then passed through the non-uniform bed-compensation field.
 Any spacing change between light and dark regions in that output came after the
-Wave geometry, not from darker tone moving an individual row baseline.
+Wave geometry, not from darker tone moving an individual row baseline. The
+row-locked final transform preserves the same invariant.
+
+## Physical status
+
+The software and emitted-motion gates pass. A comparison print of these four
+canonical row-locked files is still required before accepting the projected
+correction physically.

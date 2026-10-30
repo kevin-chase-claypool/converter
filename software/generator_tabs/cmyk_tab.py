@@ -114,15 +114,21 @@ class ProgramAnalysisWorker(QObject):
                     int(100 * index / total),
                     f"Planning {converter.CHANNEL_LABELS[channel]}...",
                 )
+                channel_settings = dataclasses.replace(
+                    self.settings,
+                    row_lock_screen_angle_deg=converter.SCREEN_ANGLES_DEG[
+                        channel
+                    ],
+                )
                 data = self.host.analyze_program(
-                    svg_path, self.settings, self.is_cancelled
+                    svg_path, channel_settings, self.is_cancelled
                 )
                 moves = data["moves"]
                 estimate = converter.estimate_program_time(moves, self.scale)
                 counts = estimate["strategy_counts"]
                 lengths = estimate["strategy_mm"]
                 checks = converter.analyse_gcode(data["gcode"], self.settings)
-                results[channel] = {
+                record = {
                     "marks": len(data["contours"]),
                     "moves": len(moves),
                     "gcode": data["gcode"],
@@ -135,6 +141,19 @@ class ProgramAnalysisWorker(QObject):
                     "seconds": estimate["total_seconds"],
                     "checks": checks,
                 }
+                compensation = data.get("bed_compensation")
+                if getattr(compensation, "row_locked", False):
+                    record["compensation"] = {
+                        "mode": "row_locked_projection",
+                        "profile_fingerprint": (
+                            compensation.full_profile_fingerprint
+                        ),
+                        "projected_max_correction_mm": (
+                            compensation.max_correction_mm
+                        ),
+                        "screen_angle_deg": compensation.screen_angle_deg,
+                    }
+                results[channel] = record
             self.finished.emit(results)
         except converter.OperationCancelled:
             self.cancelled.emit()
@@ -280,15 +299,15 @@ class CmykTab(GeneratorTab):
         pitch_layout.addWidget(self.effective_pitch_label)
         screen.addRow("Dot pitch", pitch_row)
         self.preserve_wave_pitch = QCheckBox(
-            "Preserve exact row pitch (skip bed compensation)"
+            "Preserve exact row pitch (row-lock bed compensation)"
         )
         self.preserve_wave_pitch.setChecked(True)
         self.preserve_wave_pitch.setToolTip(
-            "Wave screen - equidistant rows uses this guard by default. "
-            "It omits the bed-compensation displacement field so adjacent "
-            "row spacing remains exact in the final machine X/Y commands. "
-            "Uncheck only when positional bed correction matters more than "
-            "uniform row spacing."
+            "Wave screen - equidistant rows projects the full measured "
+            "bed-compensation mesh onto one displacement common to every "
+            "parallel row. Compatible positional correction remains active "
+            "while the final row pitch stays exact. Uncheck only to apply "
+            "the raw two-dimensional field and accept non-uniform rows."
         )
         screen.addRow("Spacing guard", self.preserve_wave_pitch)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
@@ -780,8 +799,10 @@ class CmykTab(GeneratorTab):
                 self.page_h.value() / 2.0 * scale,
             ),
         )
-        if self._wave_spacing_guard_active():
-            settings = dataclasses.replace(settings, bed_compensation_path="")
+        settings = dataclasses.replace(
+            settings,
+            row_locked_compensation=self._wave_spacing_guard_active(),
+        )
         return settings
 
     def _effective_settings(self):
@@ -879,7 +900,7 @@ class CmykTab(GeneratorTab):
         return warnings
 
     def _wave_spacing_guard_active(self):
-        """Whether bed compensation would invalidate the wave row lattice."""
+        """Whether to project compensation onto the Wave row lattice."""
         return (
             not self.calibration_mode.isChecked()
             and self.style.currentData() == "waves_even"
@@ -910,12 +931,12 @@ class CmykTab(GeneratorTab):
             % (self.page_w.value() / 2.0, self.page_h.value() / 2.0),
             "bed motion %s" % self._bed_motion_label(),
             "center hold %g mm diameter" % self.center_hold.value(),
-            "row spacing guard %s"
+            "row lock %s"
             % (
                 "active"
                 if self._wave_spacing_guard_active()
                 else (
-                    "OFF - compensation may alter pitch"
+                    "OFF - raw compensation may alter pitch"
                     if (
                         not self.calibration_mode.isChecked()
                         and self.style.currentData() == "waves_even"
@@ -1389,6 +1410,27 @@ class CmykTab(GeneratorTab):
             if callable(artwork_path):
                 source_value = artwork_path() or ""
         source_path = Path(source_value) if source_value else None
+        compensation_path = settings.bed_compensation_path
+        row_locked = bool(
+            compensation_path and self._wave_spacing_guard_active()
+        )
+        profile_fingerprint = ""
+        full_max_correction_mm = None
+        if compensation_path:
+            try:
+                profile = converter.load_bed_compensation(compensation_path)
+            except (OSError, ValueError):
+                profile = None
+            if profile is not None:
+                profile_fingerprint = profile.fingerprint
+                full_max_correction_mm = profile.max_correction_mm
+        compensation_mode = (
+            "row_locked_projection"
+            if row_locked
+            else "raw_unconstrained"
+            if compensation_path
+            else "none"
+        )
         data = {
             "kind": "cmyk-print-set",
             "version": 3,
@@ -1414,6 +1456,32 @@ class CmykTab(GeneratorTab):
             "center_hold_diameter_mm": self.center_hold.value(),
             "theta_mode": settings.theta_mode,
             "bed_compensation_path": settings.bed_compensation_path,
+            "bed_compensation": {
+                "mode": compensation_mode,
+                "profile_fingerprint": profile_fingerprint,
+                "full_max_correction_mm": full_max_correction_mm,
+                "screen_angles_deg": (
+                    dict(converter.SCREEN_ANGLES_DEG) if row_locked else {}
+                ),
+                "projection": (
+                    {
+                        "axis": "along-row position",
+                        "along_samples": converter.ROW_LOCK_ALONG_SAMPLES,
+                        "across_samples": converter.ROW_LOCK_ACROSS_SAMPLES,
+                    }
+                    if row_locked
+                    else None
+                ),
+                "per_channel_max_correction_mm": {
+                    channel: results[channel]["compensation"][
+                        "projected_max_correction_mm"
+                    ]
+                    for channel in converter.CHANNELS
+                    if channel in results
+                    and results[channel].get("compensation", {}).get("mode")
+                    == "row_locked_projection"
+                },
+            },
             "registration_crosses": self.registration_marks.isChecked(),
             "pen_offsets_mm": {
                 channel: list(self._pen_offsets()[channel])

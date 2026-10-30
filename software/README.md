@@ -628,17 +628,23 @@ Current tools:
   a given X position receives the same vertical displacement; darkness cannot
   move a row baseline or pull one row toward another. Tone still masks whole
   row segments where the source image has no ink.
-  **Preserve exact row pitch (skip bed compensation)** is enabled by default
-  for this style. It clears the Machine-tab displacement profile from the
-  effective Wave job because an arbitrary correction field changes otherwise
-  uniform row spacing in final machine X/Y. Other screen styles still inherit
-  the selected profile. Unchecking the guard explicitly opts into retaining
-  bed-position correction at the cost of potentially non-uniform rows. The
-  saved set manifest records both the effective empty compensation path and
+  **Preserve exact row pitch (row-lock bed compensation)** is enabled by
+  default for this style. It keeps the selected Machine-tab profile active but
+  projects its complete measured field into displacement common to every
+  parallel row. The row-normal component is averaged out because it would
+  otherwise change pitch; the retained field still applies the profile's
+  along-row and common positional correction as the final machine-XY transform.
+  Other screen styles inherit the raw profile unchanged. Unchecking the guard
+  applies the raw two-dimensional field and explicitly accepts potentially
+  non-uniform rows. The saved manifest records `row_locked_projection`, the
+  source-profile fingerprint, per-ink screen angles, projection sampling, and
   `preserve_exact_row_pitch: true`.
   Verify a saved set with
   `python ..\tools\check_cmyk_wave_spacing.py <name>-set.json`; it checks all
-  four manifest hashes and their final-machine adjacent-row spread.
+  four manifest hashes, the row-locked header and profile identity, and their
+  final-machine adjacent-row spread. The current verified 199-column Ben2
+  spreads are `0.002432`, `0.002255`, `0.000115`, and `0.001541 mm` for
+  cyan/magenta/yellow/black.
   The emitted finite segments preserve the `0.8 mm` pen plus `0.25 mm` paper
   gap at their actual shortest distance; there is no additional fixed fraction
   of the pitch reserved between rows. Changing Dot pitch or Artwork scale
@@ -1387,9 +1393,11 @@ display-only; every other group changes the emitted program.
   The bed-compensation profile is a separate residual map and the converter
   loads the owner-promoted 13-inch centered dense-v3 profile by default; clear the path to
   disable it or use **Browse...** to select a replacement. Wave-screen jobs
-  with the default spacing guard bypass this profile because the correction
-  field is not row-pitch preserving; uncheck the guard only when positional
-  correction is more important than equidistant rows. Its fiducial fit
+  with the default spacing guard keep this profile through a row-locked
+  projection: full fields are sampled, then only displacement common to every
+  parallel row is retained so the two-dimensional correction cannot alter
+  pitch. Uncheck the guard only when the raw field is more important than
+  equidistant rows. Its fiducial fit
   removes common translation, rotation, and scale before fitting. Do not place
   the same residual offset in both P100 and the profile. A saved compensated
   program records the profile fingerprint and correction bound in its header.

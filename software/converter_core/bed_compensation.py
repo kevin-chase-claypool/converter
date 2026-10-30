@@ -14,6 +14,11 @@ P100 remains the owner of the registration centre. This profile corrects the
 residual shape/pose error left after registration. Spatial samples are stored
 as scattered bed points so a round sheet does not need fictitious measurements
 in the four square-grid corners.
+
+CMYK Wave screens can request a row-locked projection instead. It evaluates
+the same complete profile, resolves correction vectors in the ink's screen
+frame, and retains only displacement common to every parallel row. Raw
+row-normal variation is discarded because it necessarily changes row pitch.
 """
 
 from __future__ import annotations
@@ -31,6 +36,8 @@ MAX_ABS_CORRECTION_MM = 5.0
 SPATIAL_NEIGHBOURS = 8
 FAST_COMPENSATION_PROBE_SAMPLES = 4
 FAST_COMPENSATION_PROBE_TOLERANCE_FRACTION = 0.25
+ROW_LOCK_ALONG_SAMPLES = 129
+ROW_LOCK_ACROSS_SAMPLES = 33
 
 
 def _finite(value, name):
@@ -336,6 +343,227 @@ class BedCompensationProfile:
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:12]
 
 
+@dataclass(frozen=True)
+class RowLockedBedCompensation:
+    """A full profile projected onto displacement common to all parallel rows.
+
+    The measured correction is resolved in a screen frame. At each
+    along-row coordinate it is averaged across the perpendicular coordinate,
+    removing the only component that can change row-to-row pitch under the
+    equidistant-lattice contract. The resulting bed-frame displacement is
+    rotated into machine coordinates at the requested bed angle.
+    """
+
+    profile: BedCompensationProfile
+    screen_angle_deg: float
+    angle_values_deg: tuple[float, ...]
+    row_coordinates_mm: tuple[float, ...]
+    across_samples: int
+    corrections_bed_mm: tuple[tuple[tuple[float, float], ...], ...]
+
+    @classmethod
+    def from_profile(
+        cls,
+        profile: BedCompensationProfile,
+        screen_angle_deg: float,
+        along_samples: int = ROW_LOCK_ALONG_SAMPLES,
+        across_samples: int = ROW_LOCK_ACROSS_SAMPLES,
+        bed_angle_deg: float | None = None,
+    ) -> "RowLockedBedCompensation":
+        screen_angle = _finite(screen_angle_deg, "Wave screen angle") % 180.0
+        along_samples = max(3, int(along_samples))
+        across_samples = max(2, int(across_samples))
+        screen_radians = math.radians(-screen_angle)
+        cosine = math.cos(screen_radians)
+        sine = math.sin(screen_radians)
+        radius = profile.coverage_radius_mm
+        angle_values = (
+            (_finite(bed_angle_deg, "fixed bed angle") % 360.0,)
+            if bed_angle_deg is not None
+            else profile.angle_values_deg
+        )
+        row_coordinates = tuple(
+            -radius + 2.0 * radius * index / (along_samples - 1)
+            for index in range(along_samples)
+        )
+        projected_angles = []
+        for angle in angle_values:
+            angle_radians = math.radians(angle)
+            angle_cosine = math.cos(angle_radians)
+            angle_sine = math.sin(angle_radians)
+            row = []
+            for along in row_coordinates:
+                half_width = math.sqrt(
+                    max(0.0, radius * radius - along * along)
+                )
+                bed_x = 0.0
+                bed_y = 0.0
+                for index in range(across_samples):
+                    fraction = index / (across_samples - 1)
+                    across = -half_width + 2.0 * half_width * fraction
+                    sample_x = along * cosine - across * sine
+                    sample_y = along * sine + across * cosine
+                    correction_x, correction_y = profile.correction(
+                        angle, sample_x, sample_y
+                    )
+                    bed_x += (
+                        angle_cosine * correction_x
+                        + angle_sine * correction_y
+                    )
+                    bed_y += (
+                        -angle_sine * correction_x
+                        + angle_cosine * correction_y
+                    )
+                bed_x /= across_samples
+                bed_y /= across_samples
+                row.append(
+                    (
+                        bed_x * cosine + bed_y * sine,
+                        -bed_x * sine + bed_y * cosine,
+                    )
+                )
+            projected_angles.append(tuple(row))
+        return cls(
+            profile=profile,
+            screen_angle_deg=screen_angle,
+            angle_values_deg=angle_values,
+            row_coordinates_mm=row_coordinates,
+            across_samples=across_samples,
+            corrections_bed_mm=tuple(projected_angles),
+        )
+
+    @property
+    def coverage_radius_mm(self) -> float:
+        return self.profile.coverage_radius_mm
+
+    @property
+    def source(self) -> str:
+        return self.profile.source
+
+    @property
+    def row_locked(self) -> bool:
+        return True
+
+    @property
+    def full_profile_fingerprint(self) -> str:
+        return self.profile.fingerprint
+
+    @property
+    def full_max_correction_mm(self) -> float:
+        return self.profile.max_correction_mm
+
+    @property
+    def identity(self) -> bool:
+        return all(
+            abs(dx) <= 1e-12 and abs(dy) <= 1e-12
+            for angle_grid in self.corrections_bed_mm
+            for dx, dy in angle_grid
+        )
+
+    @property
+    def max_correction_mm(self) -> float:
+        return max(
+            math.hypot(dx, dy)
+            for angle_grid in self.corrections_bed_mm
+            for dx, dy in angle_grid
+        )
+
+    @property
+    def fingerprint(self) -> str:
+        payload = "%s|row-lock|%.9f|%d|%d" % (
+            self.full_profile_fingerprint,
+            self.screen_angle_deg,
+            ",".join("%.9f" % value for value in self.angle_values_deg),
+            len(self.row_coordinates_mm),
+            self.across_samples,
+        )
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:12]
+
+    def _sample(self, angle_index: int, along_mm: float):
+        coordinates = self.row_coordinates_mm
+        if along_mm <= coordinates[0]:
+            return self.corrections_bed_mm[angle_index][0]
+        if along_mm >= coordinates[-1]:
+            return self.corrections_bed_mm[angle_index][-1]
+        position = (
+            (along_mm - coordinates[0])
+            / (coordinates[-1] - coordinates[0])
+            * (len(coordinates) - 1)
+        )
+        lower = int(position)
+        fraction = position - lower
+        correction_0 = self.corrections_bed_mm[angle_index][lower]
+        correction_1 = self.corrections_bed_mm[angle_index][lower + 1]
+        return (
+            correction_0[0] * (1.0 - fraction) + correction_1[0] * fraction,
+            correction_0[1] * (1.0 - fraction) + correction_1[1] * fraction,
+        )
+
+    def _angle_position(self, angle_deg: float) -> tuple[int, int, float]:
+        angles = self.angle_values_deg
+        if len(angles) == 1:
+            return 0, 0, 0.0
+        angle = _finite(angle_deg, "bed angle") % 360.0
+        for index in range(len(angles) - 1):
+            if angle <= angles[index + 1]:
+                return (
+                    index,
+                    index + 1,
+                    (angle - angles[index])
+                    / (angles[index + 1] - angles[index]),
+                )
+        span = angles[0] + 360.0 - angles[-1]
+        wrapped_angle = angle + 360.0 if angle < angles[0] else angle
+        return len(angles) - 1, 0, (wrapped_angle - angles[-1]) / span
+
+    def correction(
+        self, angle_deg: float, x_mm: float, y_mm: float
+    ) -> tuple[float, float]:
+        if math.hypot(float(x_mm), float(y_mm)) > self.coverage_radius_mm + 1e-6:
+            raise ValueError(
+                "bed point lies outside the %.3f mm measured compensation radius"
+                % self.coverage_radius_mm
+            )
+        screen_radians = math.radians(-self.screen_angle_deg)
+        screen_cosine = math.cos(screen_radians)
+        screen_sine = math.sin(screen_radians)
+        along = x_mm * screen_cosine + y_mm * screen_sine
+        i0, i1, fraction = self._angle_position(angle_deg)
+        correction_0 = self._sample(i0, along)
+        if i0 == i1:
+            bed_x, bed_y = correction_0
+        else:
+            correction_1 = self._sample(i1, along)
+            bed_x = correction_0[0] * (1.0 - fraction) + correction_1[0] * fraction
+            bed_y = correction_0[1] * (1.0 - fraction) + correction_1[1] * fraction
+        angle = math.radians(angle_deg)
+        cosine = math.cos(angle)
+        sine = math.sin(angle)
+        return (
+            bed_x * cosine - bed_y * sine,
+            bed_x * sine + bed_y * cosine,
+        )
+
+
+def row_locked_bed_compensation(
+    profile: BedCompensationProfile | None,
+    screen_angle_deg: float,
+    along_samples: int = ROW_LOCK_ALONG_SAMPLES,
+    across_samples: int = ROW_LOCK_ACROSS_SAMPLES,
+    bed_angle_deg: float | None = None,
+):
+    """Project an optional profile onto row-common displacement."""
+    if profile is None or profile.identity:
+        return profile
+    return RowLockedBedCompensation.from_profile(
+        profile,
+        screen_angle_deg,
+        along_samples=along_samples,
+        across_samples=across_samples,
+        bed_angle_deg=bed_angle_deg,
+    )
+
+
 def load_bed_compensation(path_value: str | None):
     """Load an optional profile path; blank means no correction."""
     path_text = str(path_value or "").strip()
@@ -353,7 +581,7 @@ def compensated_machine_point(
     point: tuple[float, float],
     angle_deg: float,
     center: tuple[float, float],
-    profile: BedCompensationProfile | None,
+    profile: BedCompensationProfile | RowLockedBedCompensation | None,
 ) -> tuple[float, float]:
     angle = math.radians(angle_deg)
     cos_a = math.cos(angle)

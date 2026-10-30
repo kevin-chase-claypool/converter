@@ -246,16 +246,17 @@ and coordinate semantics; Q3/Q4 remain prohibited.
 **M-13 final-machine update 2026-10-30:** the earlier paper-space
 reconstruction removed the active compensation displacement and therefore
 missed the printed-row defect. Direct auditing of emitted machine `X/Y` found
-`0.224-0.323 mm` adjacent-gap spread across all four Ben2 inks. The new default
-Wave spacing guard removes compensation from the effective job; canonical
-cyan/magenta/yellow/black spread is now
-`0.002476/0.002188/0.000100/0.001555 mm`, below `0.005 mm`, with all four files
-passing macro and strict motion checks and zero A motion. The physical print
-now verifies the no-compensation row result and whether its residual
-bed-position error is acceptable. This supersedes the earlier statement that
-only image-mask row omission remained. A dedicated dark-tone regression also
-requires full-tone depth to exceed light-tone depth while every adjacent gap
-and row baseline remains unchanged.
+`0.224-0.323 mm` adjacent-gap spread across all four Ben2 inks. The default
+Wave spacing guard now retains profile `18bfb4ed1c33` through a row-locked
+projection, preserving the part common to every parallel row. Canonical
+cyan/magenta/yellow/black final-machine spread is now
+`0.002432/0.002255/0.000115/0.001541 mm`, below `0.005 mm`, with all four files
+passing the row-lock checker, macro parsing, and strict motion checks with zero
+A motion. The physical print now verifies both exact row spacing and whether
+the retained projected correction improves bed-position error. This
+supersedes the earlier no-compensation workaround. A dedicated dark-tone
+regression also requires full-tone depth to exceed light-tone depth while every
+adjacent gap and row baseline remains unchanged.
 
 ### M-12 full-field bench procedure
 

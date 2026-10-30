@@ -5,7 +5,7 @@ category: windows-software
 affected_categories:
   - windows-software
   - hardware
-status: implemented
+status: superseded
 components:
   - software/generator_tabs/cmyk_tab.py
   - software/tests/test_cmyk_tab.py
@@ -32,6 +32,7 @@ related:
   - WSW-20261029-008
   - WSW-20261029-007
   - ADR-009
+  - WSW-20261030-003
 ---
 
 # Preserve exact Wave row pitch across final machine coordinates
@@ -44,6 +45,10 @@ commands. The guard is disabled for non-Wave styles, can be explicitly turned
 off for a positional-correction tradeoff, and is recorded in the set manifest.
 The canonical Ben2 CMYK set has been regenerated without compensation and
 audited across all four inks.
+
+**Superseded:** the no-compensation workaround was replaced by the row-locked
+projection in `WSW-20261030-003`, which keeps the measured profile active while
+retaining exact row pitch.
 
 ## Reason
 

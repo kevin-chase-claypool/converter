@@ -162,6 +162,12 @@ class Settings:
     # default; an empty path explicitly disables correction for low-level or
     # test planning.
     bed_compensation_path: str = ""
+    # CMYK Wave screens can project the measured field onto displacement that
+    # is common to every parallel row. This keeps the equidistant lattice while
+    # retaining the compatible part of the final bed correction. The angle is
+    # the effective paper-screen angle for the current ink layer.
+    row_locked_compensation: bool = False
+    row_lock_screen_angle_deg: float = 0.0
     # The preview normally uses nominal X/Y for speed. Saved G-code always
     # applies the selected profile; enabling this makes the preview pay the
     # full compensation subdivision cost so displayed points match the file.

@@ -8,7 +8,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
-| 2026-10-30 | `WSW-20261030-002` | implemented | [Preserve exact Wave row pitch across final machine coordinates](2026/2026-10-30-preserve-wave-row-pitch-across-compensation.md) | `cmyk`, `wave-screen`, `row-spacing`, `bed-compensation`, `final-machine-coordinates`, `ben2` |
+| 2026-10-30 | `WSW-20261030-003` | implemented | [Row-lock Wave bed compensation instead of disabling it](2026/2026-10-30-row-locked-wave-bed-compensation.md) | `cmyk`, `wave-screen`, `row-spacing`, `bed-compensation`, `projected-mesh`, `final-machine-coordinates`, `ben2` |
+| 2026-10-30 | `WSW-20261030-002` | superseded | [Preserve exact Wave row pitch across final machine coordinates](2026/2026-10-30-preserve-wave-row-pitch-across-compensation.md) | `cmyk`, `wave-screen`, `row-spacing`, `bed-compensation`, `final-machine-coordinates`, `ben2` |
 | 2026-10-30 | `WSW-20261030-001` | implemented | [Preserve photo fidelity in Wave-screen Auto](2026/2026-10-30-photo-fidelity-wave-auto.md) | `cmyk`, `auto-photo`, `wave-screen`, `image-fidelity`, `exposure`, `color` |
 | 2026-10-29 | `WSW-20261029-008` | implemented | [Clarify variable-depth wave spacing](2026/2026-10-29-clarify-variable-depth-wave-spacing.md) | `cmyk`, `wave-screen`, `row-spacing`, `phase-locked`, `manifest`, `ben2` |
 | 2026-10-29 | `WSW-20261029-007` | implemented | [Promote the centered dense v3 bed profile](2026/2026-10-29-promote-centered-dense-v3-profile.md) | `bed-compensation`, `dense-mesh`, `default-profile`, `owner-override`, `coverage` |

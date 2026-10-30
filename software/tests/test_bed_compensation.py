@@ -6,6 +6,7 @@ import io
 import math
 from pathlib import Path
 import random
+import re
 import sys
 import tempfile
 import unittest
@@ -44,6 +45,7 @@ from converter_core.bed_compensation import (
     BedCompensationProfile,
     compensated_machine_point,
     compensation_step_count,
+    row_locked_bed_compensation,
 )
 
 
@@ -237,6 +239,50 @@ class BedCompensationProfileTests(unittest.TestCase):
         )
         self.assertAlmostEqual(point[0], 1.0)
         self.assertAlmostEqual(point[1], 11.0)
+
+    def test_row_locked_projection_removes_only_row_normal_variation(self):
+        samples = tuple(
+            (x_mm, y_mm)
+            for y_mm in (-10.0, 0.0, 10.0)
+            for x_mm in (-10.0, 0.0, 10.0)
+        )
+        profile = BedCompensationProfile(
+            angle_values_deg=(0.0,),
+            samples_mm=(samples,),
+            corrections_mm=(
+                tuple((0.5, 0.02 * y_mm) for _x_mm, y_mm in samples),
+            ),
+            coverage_radius_mm=20.0,
+            source="row-lock unit test",
+        )
+        projected = row_locked_bed_compensation(
+            profile,
+            screen_angle_deg=0.0,
+            along_samples=41,
+            across_samples=21,
+        )
+
+        first = compensated_machine_point(
+            (-5.0, 0.0), 0.0, (0.0, 0.0), profile
+        )
+        second = compensated_machine_point(
+            (-5.0, 2.0), 0.0, (0.0, 0.0), profile
+        )
+        self.assertNotAlmostEqual(second[1] - first[1], 2.0, places=5)
+
+        locked_first = compensated_machine_point(
+            (-5.0, 0.0), 0.0, (0.0, 0.0), projected
+        )
+        locked_second = compensated_machine_point(
+            (-5.0, 2.0), 0.0, (0.0, 0.0), projected
+        )
+        self.assertAlmostEqual(locked_second[0] - locked_first[0], 0.0)
+        self.assertAlmostEqual(locked_second[1] - locked_first[1], 2.0)
+        self.assertGreater(projected.max_correction_mm, 0.0)
+        self.assertEqual(
+            projected.full_profile_fingerprint,
+            profile.fingerprint,
+        )
 
     def test_varying_profile_adds_subdivision(self):
         steps = compensation_step_count(
@@ -974,6 +1020,81 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
             if str(move.get("gcode", "")).startswith("G1 X")
         ]
         self.assertEqual(gcode_moves, preview_moves)
+
+    def test_row_locked_gcode_keeps_two_rows_exactly_apart(self):
+        samples = tuple(
+            (x_mm, y_mm)
+            for y_mm in (-10.0, 0.0, 10.0)
+            for x_mm in (-10.0, 0.0, 10.0)
+        )
+        profile = BedCompensationProfile(
+            angle_values_deg=(0.0,),
+            samples_mm=(samples,),
+            corrections_mm=(
+                tuple((0.5, 0.02 * y_mm) for _x_mm, y_mm in samples),
+            ),
+            coverage_radius_mm=20.0,
+            source="row-lock gcode test",
+        )
+        contours = [
+            [(-5.0, -1.0), (5.0, -1.0)],
+            [(-5.0, 1.0), (5.0, 1.0)],
+        ]
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "bed.json"
+            path.write_text(profile.to_json(), encoding="utf-8")
+            fixed = dict(
+                theta_mode="fixed",
+                theta_center_hold_diameter_mm=0,
+                bed_diameter_mm=100.0,
+                bed_margin_mm=0.0,
+                machine_reach_radius_mm=100.0,
+                frame_center_mm=(0.0, 0.0),
+                bed_compensation_path=str(path),
+            )
+            raw = converter.contours_to_gcode(
+                contours,
+                converter.Settings(**fixed),
+            )
+            locked = converter.contours_to_gcode(
+                contours,
+                converter.Settings(
+                    **fixed,
+                    row_locked_compensation=True,
+                    row_lock_screen_angle_deg=0.0,
+                ),
+            )
+
+        def pen_down_y_values(gcode):
+            values = []
+            pen_down = False
+            for line in gcode.splitlines():
+                if line.startswith("M3"):
+                    pen_down = True
+                elif line.startswith("M5"):
+                    pen_down = False
+                elif pen_down and line.startswith("G1") and " X" in line:
+                    match = re.search(r"\bY(-?[\d.]+)", line)
+                    if match:
+                        values.append(float(match.group(1)))
+            return values
+
+        raw_ys = pen_down_y_values(raw)
+        locked_ys = pen_down_y_values(locked)
+        self.assertGreater(
+            abs(raw_ys[-1] - raw_ys[0]) - 2.0,
+            0.01,
+        )
+        self.assertAlmostEqual(
+            abs(locked_ys[-1] - locked_ys[0]),
+            2.0,
+            places=4,
+        )
+        self.assertIn("row-locked projection", locked)
+        self.assertIn(
+            "from full max %.3f mm" % profile.max_correction_mm,
+            locked,
+        )
 
     def test_profile_beyond_its_coverage_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:

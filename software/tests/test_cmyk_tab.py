@@ -1972,6 +1972,40 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(record["marks"], 2)
         self.assertGreater(record["seconds"], 0.0)
 
+    def test_analysis_worker_passes_each_inks_screen_angle(self):
+        from generator_tabs.cmyk_tab import ProgramAnalysisWorker
+
+        host = FakeHost(self.image_path)
+        tab = self.make_tab(host)
+        tab._ensure_layers()
+        seen = {}
+        analyze = host.analyze_program
+
+        def recording_analyze(path, settings, cancel_check=None):
+            seen[settings.row_lock_screen_angle_deg] = path
+            return analyze(path, settings, cancel_check)
+
+        host.analyze_program = recording_analyze
+        worker = ProgramAnalysisWorker(
+            host,
+            converter.Settings(row_locked_compensation=True),
+            converter.DEFAULT_MOTION_ESTIMATE_SCALE,
+            [
+                (channel, tab._layer_files[channel])
+                for channel in converter.CHANNELS
+            ],
+        )
+        results = {}
+        worker.finished.connect(results.update)
+
+        worker.run()
+
+        self.assertEqual(
+            set(seen),
+            set(converter.SCREEN_ANGLES_DEG.values()),
+        )
+        self.assertEqual(set(results), set(converter.CHANNELS))
+
     def test_kinematics_bullets_override_the_settings(self):
         tab = self.make_tab()
         self.assertEqual(
@@ -2003,7 +2037,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertIn("exactly one pitch apart", tooltip)
         self.assertIn("legacy variable-depth", tooltip)
 
-    def test_wave_spacing_guard_skips_bed_compensation(self):
+    def test_wave_spacing_guard_row_locks_bed_compensation(self):
         tab = self.make_tab()
         tab.host.settings_for_source = mock.Mock(
             return_value=converter.default_settings()
@@ -2011,7 +2045,11 @@ class CmykTabTests(unittest.TestCase):
         tab.style.setCurrentIndex(tab.style.findData("waves_even"))
 
         guarded = tab._effective_settings()
-        self.assertEqual(guarded.bed_compensation_path, "")
+        self.assertEqual(
+            guarded.bed_compensation_path,
+            converter.default_settings().bed_compensation_path,
+        )
+        self.assertTrue(guarded.row_locked_compensation)
         self.assertTrue(tab._wave_spacing_guard_active())
 
         tab.preserve_wave_pitch.setChecked(False)
@@ -2020,8 +2058,9 @@ class CmykTabTests(unittest.TestCase):
             unguarded.bed_compensation_path,
             converter.default_settings().bed_compensation_path,
         )
+        self.assertFalse(unguarded.row_locked_compensation)
         self.assertIn(
-            "compensation may alter pitch",
+            "raw compensation may alter pitch",
             tab._summary_text().lower(),
         )
 
@@ -2030,13 +2069,16 @@ class CmykTabTests(unittest.TestCase):
             tab._effective_settings().bed_compensation_path,
             converter.default_settings().bed_compensation_path,
         )
+        self.assertFalse(
+            tab._effective_settings().row_locked_compensation
+        )
         self.assertFalse(tab.preserve_wave_pitch.isEnabled())
 
         tab.style.setCurrentIndex(tab.style.findData("waves_even"))
         tab.calibration_mode.setChecked(True)
         self.assertFalse(tab._wave_spacing_guard_active())
         self.assertFalse(tab.preserve_wave_pitch.isEnabled())
-        self.assertIn("guard not applicable", tab._summary_text().lower())
+        self.assertIn("not applicable", tab._summary_text().lower())
         self.assertEqual(
             tab._effective_settings().bed_compensation_path,
             converter.default_settings().bed_compensation_path,
@@ -2236,8 +2278,23 @@ class CmykTabTests(unittest.TestCase):
             tab.pitch.value() * tab.scale_pct.value() / 100.0,
         )
         self.assertEqual(data["ink_processing"]["weights"]["y"], 1.0)
-        self.assertEqual(data["bed_compensation_path"], "")
+        self.assertEqual(
+            data["bed_compensation_path"],
+            converter.default_settings().bed_compensation_path,
+        )
         self.assertTrue(data["screen"]["preserve_exact_row_pitch"])
+        self.assertEqual(
+            data["bed_compensation"]["mode"],
+            "row_locked_projection",
+        )
+        self.assertEqual(
+            data["bed_compensation"]["profile_fingerprint"],
+            "18bfb4ed1c33",
+        )
+        self.assertEqual(
+            set(data["bed_compensation"]["screen_angles_deg"]),
+            set(converter.CHANNELS),
+        )
         self.assertEqual(
             data["ink_processing"]["sharpening"],
             {

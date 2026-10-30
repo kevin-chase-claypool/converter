@@ -16,6 +16,7 @@ from .bed_compensation import (
     compensated_machine_point,
     compensation_step_count,
     load_bed_compensation,
+    row_locked_bed_compensation,
 )
 from .settings import (
     calibrated_motion_seconds,
@@ -290,6 +291,19 @@ def plan_program(contours, settings, cancel_check=None):
     bed_compensation = load_bed_compensation(
         getattr(settings, "bed_compensation_path", "")
     )
+    if bed_compensation is not None and bool(
+        getattr(settings, "row_locked_compensation", False)
+    ):
+        bed_compensation = row_locked_bed_compensation(
+            bed_compensation,
+            float(getattr(settings, "row_lock_screen_angle_deg", 0.0)),
+            bed_angle_deg=(
+                float(settings.theta_offset)
+                if str(getattr(settings, "theta_mode", "")).strip().lower()
+                == "fixed"
+                else None
+            ),
+        )
     if bed_compensation is not None:
         coverage = bed_compensation.coverage_radius_mm
         for contour in clipped_contours:
@@ -390,12 +404,27 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
     if bed_compensation is not None:
         lines.insert(
             5,
-            "(bed compensation %s, coverage %.3f mm, max %.3f mm, "
-            "angular interpolation bed-frame)"
-            % (
-                bed_compensation.fingerprint,
-                bed_compensation.coverage_radius_mm,
-                bed_compensation.max_correction_mm,
+            (
+                "(bed compensation %s, coverage %.3f mm, "
+                "row-locked projection max %.3f mm from full max %.3f mm "
+                "at row angle %.3f deg, angular interpolation bed-frame)"
+                % (
+                    bed_compensation.full_profile_fingerprint,
+                    bed_compensation.coverage_radius_mm,
+                    bed_compensation.max_correction_mm,
+                    bed_compensation.full_max_correction_mm,
+                    bed_compensation.screen_angle_deg,
+                )
+                if getattr(bed_compensation, "row_locked", False)
+                else (
+                    "(bed compensation %s, coverage %.3f mm, max %.3f mm, "
+                    "angular interpolation bed-frame)"
+                    % (
+                        bed_compensation.fingerprint,
+                        bed_compensation.coverage_radius_mm,
+                        bed_compensation.max_correction_mm,
+                    )
+                )
             ),
         )
     if settings.include_z:

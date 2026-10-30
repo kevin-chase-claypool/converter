@@ -47,13 +47,32 @@ def load_manifest(path: Path) -> dict:
     screen = data.get("screen", {})
     if screen.get("style") != "waves_even":
         raise ValueError("manifest screen style is not waves_even")
-    if data.get("bed_compensation_path"):
-        raise ValueError(
-            "manifest applies bed compensation; final row pitch is not "
-            "guaranteed"
-        )
     if screen.get("preserve_exact_row_pitch") is not True:
         raise ValueError("manifest does not record an active row-spacing guard")
+    compensation_path = data.get("bed_compensation_path", "")
+    if compensation_path:
+        compensation = data.get("bed_compensation", {})
+        if compensation.get("mode") != "row_locked_projection":
+            raise ValueError(
+                "manifest applies raw bed compensation; final row pitch is "
+                "not guaranteed"
+            )
+        if not compensation.get("profile_fingerprint"):
+            raise ValueError(
+                "row-locked manifest does not identify its compensation profile"
+            )
+        maxima = compensation.get("per_channel_max_correction_mm", {})
+        for channel in LABELS:
+            try:
+                retained_max = float(maxima[channel])
+            except (KeyError, TypeError, ValueError) as error:
+                raise ValueError(
+                    f"row-locked manifest has no projected correction for {channel}"
+                ) from error
+            if retained_max <= 0.0:
+                raise ValueError(
+                    f"row-locked projection is inactive for {channel}"
+                )
     return data
 
 
@@ -187,14 +206,27 @@ def main(argv: list[str] | None = None) -> int:
     angles = data["screen"]["screen_angles_deg"]
     files = data["files"]
     hashes = data["file_sha256"]
+    compensation = data.get("bed_compensation", {})
+    compensation_active = bool(data.get("bed_compensation_path"))
+    profile_fingerprint = str(compensation.get("profile_fingerprint", ""))
     failed = False
 
     for channel, label in LABELS.items():
         path = base / files[channel]
         try:
+            text = path.read_text(encoding="utf-8", errors="replace")
             actual_hash = sha256_file(path)
             if actual_hash != hashes[channel]:
                 raise ValueError(f"manifest hash mismatch for {path.name}")
+            if compensation_active:
+                if "row-locked projection" not in text:
+                    raise ValueError(
+                        f"{path.name} has no row-locked projection header"
+                    )
+                if profile_fingerprint not in text:
+                    raise ValueError(
+                        f"{path.name} does not identify the active profile"
+                    )
             result = audit_program(
                 path,
                 float(angles[channel]),
