@@ -85,8 +85,9 @@ corrected print.
 
 - Stop the known-unequal `waves_zero` print and use the generated four-file
   `waves_even` set.
-- Select **Wave screen - equidistant rows** whenever constant row pitch is a
-  hard requirement.
+- Normal converter output now exposes only **Wave screen - equidistant rows**;
+  legacy variable-spacing style values are promoted unless a diagnostic tool
+  explicitly opts into the old behavior.
 - Compare the corrected print against the decoded `1.91546 mm` nominal pitch
   before reopening the planner or compensation investigation.
 

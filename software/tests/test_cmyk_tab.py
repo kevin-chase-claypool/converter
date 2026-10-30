@@ -657,7 +657,11 @@ class ScreeningTests(unittest.TestCase):
     def test_wave_gyroid_and_tsp_styles(self):
         dark = self.np.full((32, 32), 0.6, dtype="float32")
         waves = converter.screen_channel(
-            dark, self.geometry(), style="waves", spacing_mm=4.0
+            dark,
+            self.geometry(),
+            style="waves",
+            spacing_mm=4.0,
+            allow_variable_wave_spacing=True,
         )
         self.assertGreater(len(waves), 3)
         gyroid = converter.screen_channel(
@@ -712,6 +716,7 @@ class ScreeningTests(unittest.TestCase):
                         "pixels_h": pixel_count,
                     },
                     style="waves",
+                    allow_variable_wave_spacing=True,
                     spacing_mm=spacing,
                     angle_deg=angle_deg,
                 )
@@ -777,6 +782,7 @@ class ScreeningTests(unittest.TestCase):
                 "pixels_h": 64,
             },
             style="waves",
+            allow_variable_wave_spacing=True,
             spacing_mm=spacing,
         )
 
@@ -825,6 +831,7 @@ class ScreeningTests(unittest.TestCase):
                 "pixels_h": 64,
             },
             style="waves",
+            allow_variable_wave_spacing=True,
             spacing_mm=spacing,
         )
 
@@ -875,6 +882,7 @@ class ScreeningTests(unittest.TestCase):
                 "pixels_h": 64,
             },
             style="waves",
+            allow_variable_wave_spacing=True,
             spacing_mm=spacing,
             depth_tone=depth_tone,
         )
@@ -917,6 +925,7 @@ class ScreeningTests(unittest.TestCase):
                 "pixels_h": 128,
             },
             style="waves_zero",
+            allow_variable_wave_spacing=True,
             spacing_mm=spacing,
             pen_diameter_mm=0.8,
             depth_tone=tone,
@@ -945,6 +954,7 @@ class ScreeningTests(unittest.TestCase):
             tone,
             geometry,
             style="waves_zero",
+            allow_variable_wave_spacing=True,
             spacing_mm=spacing,
             pen_diameter_mm=0.8,
             depth_tone=depth,
@@ -1013,6 +1023,7 @@ class ScreeningTests(unittest.TestCase):
                     tone,
                     geometry,
                     style="waves_zero",
+                    allow_variable_wave_spacing=True,
                     spacing_mm=spacing,
                     pen_diameter_mm=0.8,
                     depth_tone=depth,
@@ -1108,6 +1119,7 @@ class ScreeningTests(unittest.TestCase):
                         tone,
                         geometry,
                         style="waves_zero",
+                        allow_variable_wave_spacing=True,
                         spacing_mm=spacing,
                         angle_deg=angle_deg,
                         pen_diameter_mm=0.8,
@@ -1159,6 +1171,7 @@ class ScreeningTests(unittest.TestCase):
                     "pixels_h": 64,
                 },
                 style="waves_zero",
+                allow_variable_wave_spacing=True,
                 spacing_mm=0.8,
                 pen_diameter_mm=0.8,
             )
@@ -1183,6 +1196,7 @@ class ScreeningTests(unittest.TestCase):
                 "pixels_h": 64,
             },
             style="waves_zero",
+            allow_variable_wave_spacing=True,
             spacing_mm=spacing,
             depth_tone=depth,
         )
@@ -1247,6 +1261,7 @@ class ScreeningTests(unittest.TestCase):
                 tone,
                 geometry,
                 style="waves_zero",
+                allow_variable_wave_spacing=True,
                 spacing_mm=spacing,
                 pen_diameter_mm=0.8,
                 depth_tone=depth_tone,
@@ -1297,6 +1312,7 @@ class ScreeningTests(unittest.TestCase):
                 ink_mask,
                 geometry,
                 style="waves_zero",
+                allow_variable_wave_spacing=True,
                 spacing_mm=spacing,
                 pen_diameter_mm=0.8,
                 depth_tone=depth_tone,
@@ -1366,6 +1382,7 @@ class ScreeningTests(unittest.TestCase):
                 "pixels_h": 64,
             },
             style="waves_zero",
+            allow_variable_wave_spacing=True,
             spacing_mm=spacing,
         )
         row = next(points for points in waves if len(points) > 100)
@@ -1523,6 +1540,43 @@ class ScreeningTests(unittest.TestCase):
                     self.assertGreaterEqual(len(gaps), 6)
                     self.assertLess(max(gaps) - min(gaps), 1e-5)
 
+    def test_legacy_wave_styles_default_to_equidistant_rows(self):
+        spacing = 4.0
+        tone = self.np.ones((64, 64), dtype="float32")
+        yy, _xx = self.np.mgrid[0:64, 0:64]
+        depth = (0.2 + 0.7 * yy / 63.0).astype("float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 64.0,
+            "height_mm": 64.0,
+            "pixels_w": 64,
+            "pixels_h": 64,
+        }
+        for angle_deg in converter.SCREEN_ANGLES_DEG.values():
+            expected = converter.screen_channel(
+                tone,
+                geometry,
+                style="waves_even",
+                spacing_mm=spacing,
+                angle_deg=angle_deg,
+                depth_tone=depth,
+            )
+            for legacy_style in ("waves", "waves_zero"):
+                with self.subTest(
+                    style=legacy_style,
+                    angle_deg=angle_deg,
+                ):
+                    actual = converter.screen_channel(
+                        tone,
+                        geometry,
+                        style=legacy_style,
+                        spacing_mm=spacing,
+                        angle_deg=angle_deg,
+                        depth_tone=depth,
+                    )
+                    self.assertEqual(actual, expected)
+
     def test_wave_rows_approximate_the_sinusoid_within_path_tolerance(self):
         spacing = 4.0
         tone = self.np.ones((64, 64), dtype="float32")
@@ -1537,6 +1591,7 @@ class ScreeningTests(unittest.TestCase):
                 "pixels_h": 64,
             },
             style="waves",
+            allow_variable_wave_spacing=True,
             spacing_mm=spacing,
         )
 
@@ -1572,6 +1627,7 @@ class ScreeningTests(unittest.TestCase):
                 "pixels_h": 64,
             },
             style="waves",
+            allow_variable_wave_spacing=True,
             spacing_mm=4.0,
         )
         self.assertGreater(len(waves), 4)
@@ -1773,9 +1829,7 @@ class CmykTabTests(unittest.TestCase):
             "lines",
             "rectilinear",
             "crosshatch",
-            "waves",
             "waves_even",
-            "waves_zero",
             "gyroid",
             "tsp",
             "contours",
@@ -1822,17 +1876,19 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(settings.theta_center_hold_diameter_mm, 70.0)
         self.assertEqual(tab._effective_settings().theta_mode, "fixed")
 
-    def test_depth_wave_style_is_labelled_phase_locked_variable_depth(self):
+    def test_cmyk_wave_selector_only_offers_exact_spacing(self):
         tab = self.make_tab()
-        index = tab.style.findData("waves_zero")
-        self.assertGreaterEqual(index, 0)
+        self.assertEqual(tab.style.findData("waves"), -1)
+        self.assertEqual(tab.style.findData("waves_zero"), -1)
+        exact = tab.style.findData("waves_even")
+        self.assertGreaterEqual(exact, 0)
         self.assertEqual(
-            tab.style.itemText(index),
-            "Wave screen - phase-locked, variable depth",
+            tab.style.itemText(exact),
+            "Wave screen - equidistant rows",
         )
         tooltip = tab.style.toolTip().lower()
-        self.assertIn("phase-locked", tooltip)
-        self.assertIn("instantaneous spacing", tooltip)
+        self.assertIn("exactly one pitch apart", tooltip)
+        self.assertIn("legacy variable-depth", tooltip)
 
     def test_xy_only_layer_program_holds_the_bed(self):
         tab = self.make_tab()

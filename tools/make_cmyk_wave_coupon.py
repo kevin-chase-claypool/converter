@@ -137,6 +137,7 @@ def coupon_patch(
         },
         style=style,
         spacing_mm=float(spacing_mm),
+        allow_variable_wave_spacing=style in ("waves", "waves_zero"),
         dot_scale=1.0,
         angle_deg=float(angle_deg),
         pen_diameter_mm=PEN_WIDTH_MM,

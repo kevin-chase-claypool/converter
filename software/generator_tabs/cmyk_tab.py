@@ -243,12 +243,7 @@ class CmykTab(GeneratorTab):
         self.style.addItem("Line screen (tone pitch)", "lines")
         self.style.addItem("Rectilinear fill (joined rows)", "rectilinear")
         self.style.addItem("Crosshatch levels", "crosshatch")
-        self.style.addItem("Wave screen", "waves")
         self.style.addItem("Wave screen - equidistant rows", "waves_even")
-        self.style.addItem(
-            "Wave screen - phase-locked, variable depth",
-            "waves_zero",
-        )
         self.style.addItem("Interference (gyroid)", "gyroid")
         self.style.addItem("Single line (TSP)", "tsp")
         self.style.addItem("Topographic contours", "contours")
@@ -257,11 +252,9 @@ class CmykTab(GeneratorTab):
             "wave, gyroid, TSP and contour styles use the same pitch as "
             "their local mark spacing. Rectilinear joins consecutive rows "
             "over ink so one M3/M5 cycle covers a whole connected region. "
-            "Wave screen allows bounded depth variation. Equidistant rows "
-            "translate one common waveform and keep every row exactly one "
-            "pitch apart. Phase-locked depth keeps crests aligned, but its "
-            "row-specific amplitude changes instantaneous spacing within the "
-            "pen envelope."
+            "Wave screen translates one common waveform to every row, so "
+            "adjacent rows remain exactly one pitch apart. Legacy variable-"
+            "depth wave values are promoted to this layout when regenerated."
         )
         self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)

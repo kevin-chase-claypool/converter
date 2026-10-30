@@ -618,26 +618,24 @@ Current tools:
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times
-  with a sub-pen offset. **Wave screen - phase-locked, variable depth** keeps
-  one sine phase across all rows while scene tone controls each row's
-  amplitude. This preserves the visual depth of the original wave screen
-  without allowing independently winding rows to converge. Its row-specific
-  amplitudes still change the instantaneous centreline gap within the allowed
-  pen envelope, so crest alignment alone does not guarantee equidistant rows.
-  The emitted finite segments must preserve the `0.8 mm` pen plus `0.25 mm`
-  paper gap at their actual shortest distance; there is no additional fixed
-  fraction of the pitch reserved between rows. Changing Dot pitch or Artwork
-  scale changes the geometry rather than selecting a coupon-specific behavior.
-  A pitch smaller than the pen envelope is rejected with a planning error
-  because no legal row spacing exists at that scale.
+  with a sub-pen offset. **Wave screen - equidistant rows** is the only Wave
+  screen exposed by the CMYK selector. It translates one common
+  luminance-shaped waveform to every row with no row-specific vertical
+  movement, so adjacent centre spacing remains exactly the configured pitch.
+  The emitted finite segments preserve the `0.8 mm` pen plus `0.25 mm` paper
+  gap at their actual shortest distance; there is no additional fixed fraction
+  of the pitch reserved between rows. Changing Dot pitch or Artwork scale
+  changes the geometry rather than selecting a coupon-specific behavior. A
+  pitch smaller than the pen envelope is rejected with a planning error because
+  no legal row spacing exists at that scale.
   Regression coverage spans `2.80`, `3.36`, and `4.20 mm` at all four CMYK
-  screen angles. **Wave screen - equidistant rows** applies one shared
-  luminance-shaped waveform with exact vertical pitch spacing and no
-  row-specific movement. Both modes let each ink channel control where that
-  layer is inked. The original **Wave screen** remains available as the
-  amplitude-only variable-depth variant. **Path tolerance** controls how
-  densely each sine is sampled in paper space, so emitted chords follow the
-  shape instead of appearing as visible facets.
+  screen angles. The normal artwork path always uses exact row pitch. Legacy
+  stored values `waves` and `waves_zero` are promoted to the equidistant
+  geometry unless a diagnostic tool explicitly requests
+  `allow_variable_wave_spacing=True`; that opt-in exists only to generate
+  comparison coupons. **Path tolerance** controls how densely each sine is
+  sampled in paper space, so emitted chords follow the shape instead of
+  appearing as visible facets.
   While the CMYK page is active the shared OpenGL preview draws each visible
   ink in its own colour - not yet drawn marks in a pale tint, the drawn path in
   full ink - so the four layers can be judged overlaid the way they will mesh

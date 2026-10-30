@@ -11,8 +11,9 @@
   `1.91546 mm` gap across the page, with only `0.000216 mm` variation at
   off-centre sampled columns. Its frame centre, compensation, image source,
   ink processing, and scale match the original recipe.
-- The UI now calls `waves_zero` **Wave screen - phase-locked, variable depth**
-  and explicitly says that row amplitude changes instantaneous spacing.
+- The normal CMYK selector now exposes only **Wave screen - equidistant rows**.
+  The core promotes legacy `waves` and `waves_zero` requests to that geometry
+  by default; only diagnostic tools can explicitly request variable spacing.
   Set manifests distinguish `identical_translated_rows`,
   `shared_zero_anchored`, and `bounded_row_depth`.
 - Corrected file hash:
@@ -23,6 +24,10 @@
   screen angles `-15/-75/0/-45 deg`) produced base pitches of
   `1.915506/1.915488/1.915457/1.915490 mm`; every observed row plane is an
   integer multiple of its layer pitch, with at most `0.001125 mm` residual.
+- Focused CMYK/coupon regression coverage passes `98` tests, including legacy
+  promotion and UI-selector guards.
+- The full converter suite passes `576` tests with one expected
+  OpenGL-context skip.
 - Evidence: `WSW-20261029-008` and
   `docs/report/lab-notes/2026-10-29-ben2-yellow-row-spacing-classification.md`;
   physical print verification remains pending.

@@ -417,10 +417,11 @@
   Status 2026-10-29: inverse-decoding the Ben2 yellow G-code separated source
   geometry from bed motion. The printed `waves_zero` program already varied
   adjacent paper-row gaps from `1.791` to `2.049 mm`; an otherwise identical
-  `waves_even` program measured a nominal `1.91546 mm`. The UI and manifests
-  now distinguish variable-depth from exact-pitch modes. A physical print of
-  the corrected yellow file remains required before deciding whether residual
-  bed-following error remains.
+  `waves_even` program measured a nominal `1.91546 mm`. The UI now exposes only
+  exact-pitch wave output, and legacy variable-depth values are promoted unless
+  a diagnostic tool explicitly opts out. A physical print of the corrected set
+  remains required before deciding whether residual bed-following error
+  remains.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

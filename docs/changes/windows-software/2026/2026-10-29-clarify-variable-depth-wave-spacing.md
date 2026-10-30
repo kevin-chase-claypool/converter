@@ -8,6 +8,7 @@ status: implemented
 components:
   - software/generator_tabs/cmyk_tab.py
   - software/tests/test_cmyk_tab.py
+  - tools/make_cmyk_wave_coupon.py
   - samples/gcode/Ben2/PXL_20201128_211515508-cmyk-cyan-equidistant.gcode
   - samples/gcode/Ben2/PXL_20201128_211515508-cmyk-magenta-equidistant.gcode
   - samples/gcode/Ben2/PXL_20201128_211515508-cmyk-yellow-equidistant.gcode
@@ -30,11 +31,11 @@ related:
 
 ## Summary
 
-The phase-locked Wave-screen option is now labelled **Wave screen -
-phase-locked, variable depth**. Its tooltip states that row-specific amplitude
-changes instantaneous row spacing even though crests remain aligned. Set
-manifests now record the actual wave layout instead of labelling every screen
-style as shared-zero-anchored.
+Normal CMYK artwork generation now has one Wave-screen choice: **Wave screen -
+equidistant rows**. The core promotes legacy `waves` and `waves_zero` requests
+to that exact-pitch geometry unless a diagnostic tool explicitly opts into
+variable spacing. Set manifests now record the actual wave layout instead of
+labelling every screen style as shared-zero-anchored.
 
 ## Reason
 
@@ -48,14 +49,18 @@ being introduced only by the bed rotation.
 
 ## Implementation
 
-- Display `waves_zero` as **Wave screen - phase-locked, variable depth**.
-- Explain in the style tooltip that shared crest phase does not imply constant
-  row pitch when each row has a different amplitude.
+- Remove the variable-spacing **Wave screen** and **phase-locked variable
+  depth** choices from the normal CMYK selector, leaving only equidistant rows.
+- Promote legacy `waves` and `waves_zero` values to `waves_even` by default in
+  `screen_channel`.
+- Add `allow_variable_wave_spacing=True` as an explicit diagnostic-only opt-in;
+  the comparison-coupon generator is the only current caller that uses it.
 - Record `wave_phase_mode` as `identical_translated_rows` for `waves_even`,
   `shared_zero_anchored` for `waves_zero`, `bounded_row_depth` for `waves`, and
   `null` for non-wave styles.
-- Add a regression that measures the changing centreline gap in the
-  phase-locked variable-depth mode.
+- Add regressions that prove legacy values produce identical geometry to
+  `waves_even` unless the diagnostic opt-in is present, and that the normal UI
+  cannot select either variable-spacing mode.
 
 ## Verification
 
@@ -79,15 +84,21 @@ being introduced only by the bed rotation.
   produces integer multiples of that pitch.
 - `python tools/check_gcode_motion.py ... --strict` and
   `python tools/check_macros.py ...` pass on all four corrected files.
+- The focused CMYK and comparison-coupon suites pass `98` tests, including
+  legacy-style promotion and UI-selector guards.
+- The full converter discovery suite passes `576` tests with one expected
+  OpenGL-context skip.
 - Method, per-column measurements, and the correction boundary are recorded in
   `docs/report/lab-notes/2026-10-29-ben2-yellow-row-spacing-classification.md`.
 
 ## Struggles and rejected approaches
 
-The shared phase makes crest/trough alignment look regular, but it cannot make
-rows equidistant while allowing each row's amplitude to follow tone. Changing
-bed compensation or adding another mesh cannot correct unequal source
-geometry. Those remain appropriate only for residual machine-position error.
+The shared phase made crest/trough alignment look regular, but it cannot make
+rows equidistant while allowing each row's amplitude to follow tone. Keeping
+that geometry available in the normal selector allowed the same defect to be
+selected again. Changing bed compensation or adding another mesh cannot
+correct unequal source geometry. Those remain appropriate only for residual
+machine-position error.
 
 ## Risks and follow-up
 
@@ -101,10 +112,13 @@ constant pitch is the hard requirement.
 
 - `software/generator_tabs/cmyk_tab.py`: explicit label, tooltip, and manifest
   phase-mode metadata.
+- `software/converter_core/cmyk.py`: legacy-style promotion and explicit
+  diagnostic opt-in.
 - `software/tests/test_cmyk_tab.py`: variable-depth spacing and manifest
   regressions.
+- `tools/make_cmyk_wave_coupon.py`: explicit diagnostic opt-in for its
+  variable-depth comparison patches.
 - `software/README.md`: current Wave-screen spacing semantics.
-- `software/converter_core/cmyk.py`: current style documentation.
 - `samples/gcode/Ben2/*-equidistant.gcode`: complete four-ink Ben2 program set
   with the original frame and exact-pitch rows.
 - `samples/gcode/Ben2/PXL_20201128_211515508-cmyk-equidistant-set.json`: shared

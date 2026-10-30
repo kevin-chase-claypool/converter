@@ -1107,6 +1107,7 @@ def screen_channel(
     path_tolerance_mm=0.05,
     depth_tone=None,
     row_clearance_mm=None,
+    allow_variable_wave_spacing=False,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
@@ -1117,7 +1118,7 @@ def screen_channel(
     level), ``waves`` (sine rows whose amplitude follows tone), ``waves_even``
     (identical translated wave rows with exact pitch spacing), ``waves_zero``
     (shared phase with tone-driven row amplitude, variable spacing, and exact
-    clearance), ``gyroid``
+    clearance; legacy diagnostic use only), ``gyroid``
     (interference-field contours that flatten into blank paper), ``tsp``
     (one greedy single line through tone stipple points) and ``contours``
     (topographic contour lines of the tone).
@@ -1129,6 +1130,10 @@ def screen_channel(
     adjacent visible rows, expressed in the same pre-scale units as
     ``spacing_mm``. It defaults to the pen diameter plus
     ``WAVE_MIN_EDGE_GAP_MM`` for callers that do not apply a later artwork scale.
+    The legacy ``waves`` and ``waves_zero`` styles are promoted to the
+    equidistant ``waves_even`` geometry unless ``allow_variable_wave_spacing``
+    is explicitly true. Diagnostic comparison tools use that opt-in; normal
+    artwork generation cannot silently emit unequal row pitch.
     """
     left = geometry["off_x"]
     top = geometry["off_y"]
@@ -1148,6 +1153,8 @@ def screen_channel(
         return left <= x <= right and top <= y <= bottom
 
     style = str(style).strip().lower()
+    if style in ("waves", "waves_zero") and not allow_variable_wave_spacing:
+        style = "waves_even"
     if style == "stipple":
         points = stipple_points(
             bounds,
