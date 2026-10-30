@@ -20,6 +20,10 @@
   full maximum, and per-ink row angle in the header. The set manifest records
   `row_locked_projection`; the spacing checker rejects raw compensated output
   and validates active-profile identity.
+- The first application preview exposed a fingerprint formatter defect:
+  the angle-list string was passed to `%d`, raising `TypeError` before
+  planning. The format now uses `%s`, and the projection regression checks the
+  generated 12-character fingerprint directly.
 - The four canonical files pass macro parsing and strict motion checks with
   zero A motion. The complete converter suite passes `588` tests with one
   expected OpenGL-context skip. A physical four-ink comparison print remains

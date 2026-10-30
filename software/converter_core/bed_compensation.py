@@ -470,7 +470,7 @@ class RowLockedBedCompensation:
 
     @property
     def fingerprint(self) -> str:
-        payload = "%s|row-lock|%.9f|%d|%d" % (
+        payload = "%s|row-lock|%.9f|%s|%d|%d" % (
             self.full_profile_fingerprint,
             self.screen_angle_deg,
             ",".join("%.9f" % value for value in self.angle_values_deg),

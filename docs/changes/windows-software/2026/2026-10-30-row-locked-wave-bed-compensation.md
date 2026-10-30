@@ -95,6 +95,10 @@ The new canonical row-locked final-machine audit at 199 columns:
 - `tools/check_gcode_motion.py --strict` passes all four with zero A motion.
 - The four emitted programs contain active row-lock headers naming
   `18bfb4ed1c33`.
+- The row-lock fingerprint formatter now uses the angle-list string with a
+  `%s` placeholder. A regression exercises the fingerprint directly; the
+  previous `%d` placeholder raised `TypeError` on the first application
+  preview and prevented G-code planning.
 - The complete converter suite passes `588` tests with one expected
   OpenGL-context skip.
 - Projected 0-degree correction RMS by screen angle is cyan `0.348369 mm`,

@@ -283,6 +283,8 @@ class BedCompensationProfileTests(unittest.TestCase):
             projected.full_profile_fingerprint,
             profile.fingerprint,
         )
+        self.assertRegex(projected.fingerprint, r"^[0-9a-f]{12}$")
+        self.assertNotEqual(projected.fingerprint, profile.fingerprint)
 
     def test_varying_profile_adds_subdivision(self):
         steps = compensation_step_count(
