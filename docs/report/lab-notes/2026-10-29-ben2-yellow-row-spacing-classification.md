@@ -1,10 +1,11 @@
-# Lab Note: 2026-10-29 - Ben2 yellow row-spacing classification
+# Lab Note: 2026-10-29 - Ben2 CMYK row-spacing classification
 
 ## Objective
 
 Determine whether the unequal yellow row gaps visible during the Ben2 print
 were already present in the saved commands or were introduced by bed rotation
-and machine calibration.
+and machine calibration, then verify the corrected spacing in all four ink
+programs.
 
 ## Configuration
 
@@ -18,10 +19,10 @@ and machine calibration.
   scale, `1.92 mm` effective pitch, seed `8`, `200 x 200 mm` page, `0.8 mm`
   pen, `F700`, and centered `60 mm` hold diameter.
 - Compensation profile: `18bfb4ed1c33`, measured radius `165.100 mm`.
-- Corrected program:
-  `samples\gcode\Ben2\PXL_20201128_211515508-cmyk-yellow-equidistant.gcode`,
-  SHA-256
-  `4BDE0728D6273F73CBA10159B210C8FE810202CFC2B3F4333B0B6E63EBCCCABD`.
+- Corrected programs:
+  `samples\gcode\Ben2\PXL_20201128_211515508-cmyk-{cyan,magenta,yellow,black}-equidistant.gcode`.
+  Their SHA-256 values are recorded in
+  `PXL_20201128_211515508-cmyk-equidistant-set.json`.
 
 ## Procedure
 
@@ -34,8 +35,13 @@ and machine calibration.
    adjacent centreline gaps.
 5. Compare the original `waves_zero` program with an otherwise identical
    `waves_even` regeneration.
+6. Repeat the paper-screen audit across all four ink angles. The SVG import
+   flips Y, so the effective screen angles are `-15`, `-75`, `0`, and `-45`
+   degrees rather than the unflipped source values.
 
 ## Results
+
+The first yellow comparison:
 
 | Program | Adjacent-gap minimum | Median | Maximum |
 |---|---:|---:|---:|
@@ -45,6 +51,18 @@ and machine calibration.
 The corrected file's off-centre sampled columns varied by at most `0.000216
 mm`. Small excursions near the bed-centre hold are the only wider values in
 the aggregate range.
+
+All four corrected layers decode to an integer row lattice:
+
+| Ink | Effective angle | Fitted base pitch | Maximum plane residual |
+|---|---:|---:|---:|
+| Cyan | `-15 deg` | `1.915506 mm` | `0.001125 mm` |
+| Magenta | `-75 deg` | `1.915488 mm` | `0.001121 mm` |
+| Yellow | `0 deg` | `1.915457 mm` | `0.000000 mm` |
+| Black | `-45 deg` | `1.915490 mm` | `0.000933 mm` |
+
+Tone-masked missing rows create exact integer multiples of one base pitch;
+they do not create a smaller or intermediate gap.
 
 The operator's accompanying paper photo visibly marked two close approaches
 between wave rows. No archived photo path is available for this chat-supplied
@@ -65,8 +83,8 @@ corrected print.
 
 ## Decision and next action
 
-- Stop the known-unequal `waves_zero` print and use the generated
-  `waves_even` file for the next yellow check.
+- Stop the known-unequal `waves_zero` print and use the generated four-file
+  `waves_even` set.
 - Select **Wave screen - equidistant rows** whenever constant row pitch is a
   hard requirement.
 - Compare the corrected print against the decoded `1.91546 mm` nominal pitch
@@ -75,8 +93,8 @@ corrected print.
 ## Verification
 
 - The source image hash matches the saved set manifest.
-- `python tools\check_macros.py` passes on the corrected file.
-- `python tools\check_gcode_motion.py --strict` passes with a largest bed step
-  of `5.74 deg`, A rate `270 motor deg/s`, and worst bounded path bow
-  `0.110 mm`.
+- `python tools\check_macros.py` passes on all four corrected files.
+- `python tools\check_gcode_motion.py --strict` passes on all four. The largest
+  observed drawing-bed step is `6.08 deg`, the largest A rate is
+  `270 motor deg/s`, and the worst bounded path bow is `0.130 mm`.
 - All `575` converter tests pass with one expected OpenGL-context skip.

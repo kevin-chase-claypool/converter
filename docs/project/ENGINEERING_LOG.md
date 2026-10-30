@@ -18,6 +18,11 @@
 - Corrected file hash:
   `4BDE0728D6273F73CBA10159B210C8FE810202CFC2B3F4333B0B6E63EBCCCABD`.
   Macro parsing and strict motion checks pass.
+- The complete corrected CMYK set now exists beside that file. Decoding all
+  four layers into their effective paper-screen frames (Y flip makes the
+  screen angles `-15/-75/0/-45 deg`) produced base pitches of
+  `1.915506/1.915488/1.915457/1.915490 mm`; every observed row plane is an
+  integer multiple of its layer pitch, with at most `0.001125 mm` residual.
 - Evidence: `WSW-20261029-008` and
   `docs/report/lab-notes/2026-10-29-ben2-yellow-row-spacing-classification.md`;
   physical print verification remains pending.
