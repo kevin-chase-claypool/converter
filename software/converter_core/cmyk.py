@@ -200,6 +200,7 @@ def auto_photo_settings(
     pen_width_mm=None,
     effective_pitch_mm=None,
     style=None,
+    dot_pitch_mm=None,
 ):
     """Suggest Image-options values that keep a photo's detail legible.
 
@@ -221,7 +222,8 @@ def auto_photo_settings(
     exposure-preserving path because its fixed row pitch masks ink rather than
     varying coverage with tone. Returns ``auto_levels``, ``brightness``,
     ``contrast``, ``saturation``, ``gcr`` and ``gamma``, plus wave-specific
-    sharpening controls.
+    sharpening and row-pitch controls when the source pitch and scale are
+    available.
     """
     from PIL import Image
     import numpy as np
@@ -262,12 +264,12 @@ def auto_photo_settings(
         )
         tonal_range = p95 - p05
         chroma_p90 = float(np.percentile(chroma, 90.0))
-        brightness = clamp(130.0 + (0.50 - p50) * 120.0, 100.0, 200.0)
+        brightness = clamp(160.0 + (0.50 - p50) * 120.0, 100.0, 200.0)
         contrast = clamp(125.0 + (0.65 - tonal_range) * 100.0, 100.0, 180.0)
-        gamma = clamp(1.05 + (0.55 - p50) * 0.75, 0.85, 1.60)
-        saturation = clamp(100.0 + (0.30 - chroma_p90) * 30.0, 90.0, 110.0)
-        gcr = clamp(85.0 + (0.15 - chroma_p90) * 120.0, 45.0, 90.0)
-        return {
+        gamma = clamp(1.45 + (0.55 - p50) * 0.75, 0.85, 1.80)
+        saturation = clamp(100.0 + (0.30 - chroma_p90) * 30.0, 90.0, 130.0)
+        gcr = clamp(70.0 - max(0.0, chroma_p90 - 0.15) * 160.0, 0.0, 85.0)
+        result = {
             "auto_levels": True,
             "brightness": round_up_to(brightness, 5),
             "contrast": round_up_to(contrast, 5),
@@ -278,6 +280,29 @@ def auto_photo_settings(
             "sharpen_pct": 100.0,
             "sharpen_radius_mm": 1.5,
         }
+        if (
+            pen_width_mm is not None
+            and effective_pitch_mm is not None
+            and dot_pitch_mm is not None
+        ):
+            current_effective = max(0.01, float(effective_pitch_mm))
+            source_pitch = max(0.01, float(dot_pitch_mm))
+            scale = current_effective / source_pitch
+            recommended_effective = max(
+                current_effective,
+                max(0.0, float(pen_width_mm)) * 3.4,
+            )
+            result["dot_pitch_mm"] = round(
+                min(
+                    8.0,
+                    max(
+                        source_pitch,
+                        round(recommended_effective / scale / 0.05) * 0.05,
+                    ),
+                ),
+                2,
+            )
+        return result
 
     # Vivid photos keep more chroma in C/M/Y and less in K; muted ones lean
     # on a little extra saturation and heavier black instead.

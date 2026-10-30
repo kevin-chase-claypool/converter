@@ -640,6 +640,7 @@ class CmykTab(GeneratorTab):
                     self.pitch.value() * self.scale_pct.value() / 100.0
                 ),
                 style=self.style.currentData(),
+                dot_pitch_mm=self.pitch.value(),
             )
         except Exception as exc:  # noqa: BLE001 - user-facing setup error
             self.report_error(f"Auto settings failed: {exc}")
@@ -650,6 +651,8 @@ class CmykTab(GeneratorTab):
         self.brightness.setValue(values["brightness"])
         self.gamma.setValue(values["gamma"])
         self.gcr.setValue(values["gcr"])
+        if "dot_pitch_mm" in values:
+            self.pitch.setValue(values["dot_pitch_mm"])
         if "sharpen" in values:
             self.sharpen.setChecked(bool(values["sharpen"]))
             self.sharpen_amount.setValue(values["sharpen_pct"])
@@ -664,8 +667,12 @@ class CmykTab(GeneratorTab):
                 if "sharpen_pct" in values
                 else ""
             )
-            + f"; Dot pitch "
-            f"left at {self.pitch.value():.2f} mm (Match pen would suggest "
+            + (
+                f"; Dot pitch set to {self.pitch.value():.2f} mm"
+                if "dot_pitch_mm" in values
+                else f"; Dot pitch left at {self.pitch.value():.2f} mm"
+            )
+            + f" (Match pen would suggest "
             f"{self.pen_pitch_mm():.2f} mm for the {self.pen_width.value():.2f} "
             f"mm pen at {self.scale_pct.value():.0f} % scale) - tweak gamma "
             "for print lightness, then press Preview."

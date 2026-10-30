@@ -8,9 +8,12 @@
   `85 %` GCR. The blue sky and pale cloud field became a dense red, magenta,
   and black screen.
 - Wave-screen Auto now uses an exposure-preserving path driven by source
-  luminance percentiles, tonal span, and 90th-percentile chroma. The loaded
-  image now resolves to `120 %` contrast, `120 %` brightness, `1.00` gamma,
-  `100 %` saturation, and `55 %` GCR with a `100 % / 1.5 mm` unsharp mask.
+  luminance percentiles, tonal span, and 90th-percentile chroma. It also opens
+  the exact row pitch to at least `3.4` pen widths so dark regions do not become
+  a fully inked stack. The loaded image now resolves to `120 %` contrast,
+  `150 %` brightness, `1.40` gamma, `100 %` saturation, `35 %` GCR, and
+  `1.20 mm` pre-scale pitch (`2.76 mm` on paper), with a `100 % / 1.5 mm`
+  unsharp mask.
 - The live preview comparison retained the blue sky region, separated the warm
   cloud highlights, and preserved the foreground without the previous
   all-over dense tint.

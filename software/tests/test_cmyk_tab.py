@@ -463,6 +463,7 @@ class ScreeningTests(unittest.TestCase):
             pen_width_mm=0.8,
             effective_pitch_mm=1.92,
             style="waves_even",
+            dot_pitch_mm=0.8,
         )
 
         self.assertTrue(values["auto_levels"])
@@ -472,12 +473,13 @@ class ScreeningTests(unittest.TestCase):
         self.assertLessEqual(values["contrast"], 160)
         self.assertGreaterEqual(values["saturation"], 90)
         self.assertLessEqual(values["saturation"], 110)
-        self.assertGreaterEqual(values["gcr"], 45)
-        self.assertLessEqual(values["gcr"], 90)
+        self.assertGreaterEqual(values["gcr"], 0)
+        self.assertLessEqual(values["gcr"], 70)
         self.assertGreaterEqual(values["gamma"], 0.85)
         self.assertLessEqual(values["gamma"], 1.40)
         self.assertEqual(values["sharpen_pct"], 100.0)
         self.assertEqual(values["sharpen_radius_mm"], 1.5)
+        self.assertGreater(values["dot_pitch_mm"], 0.8)
 
     def test_auto_photo_settings_keep_colour_on_vivid_images(self):
         import numpy as np
@@ -2445,6 +2447,7 @@ class CmykTabTests(unittest.TestCase):
                 tab.pitch.value() * tab.scale_pct.value() / 100.0
             ),
             style="waves_even",
+            dot_pitch_mm=tab.pitch.value(),
         )
 
         tab.auto_button.click()
@@ -2460,6 +2463,7 @@ class CmykTabTests(unittest.TestCase):
             tab.sharpen_radius.value(),
             values["sharpen_radius_mm"],
         )
+        self.assertAlmostEqual(tab.pitch.value(), values["dot_pitch_mm"])
 
     def test_match_pen_pitch_uses_the_effective_scale(self):
         tab = self.make_tab()

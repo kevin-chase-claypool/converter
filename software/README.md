@@ -512,14 +512,16 @@ Current tools:
     source's midtone, tonal span, and high-chroma percentile, then keeps normal
     photos near neutral saturation/contrast instead of pushing them to the
     darkest edge of the generic screen model. This preserves the sky,
-    highlights, and colour separation in the preview while row pitch remains
-    exact.
+    highlights, and colour separation in the preview. If the current pitch
+    would make each solid row cover too much of the page, Auto opens it to at
+    least `3.4` pen widths; every resulting row remains exactly equidistant.
   - For other screen styles, tone controls come from a detail search over the
     real curve chain: maximum mid tone-weighted gradient with a clipping
     penalty, plus a target print mean clamped to the printable `0.30-0.75`
     window. That search also models the rectilinear row coverage.
-  - Auto leaves the operator's Dot pitch unchanged. **Match pen** remains the
-    explicit action for setting one pen width at the current artwork scale.
+  - Auto only changes Dot pitch for Wave screen and never sets rows closer than
+    the operator's current choice. **Match pen** remains the explicit action
+    for setting one pen width at the current artwork scale.
   auto levels (default on: stretch the image's 1st-99th luminance percentiles
   so low-key photos use the full tonal range), saturation, contrast,
   brightness, luminance sharpening (default on: unsharp-mask amount and

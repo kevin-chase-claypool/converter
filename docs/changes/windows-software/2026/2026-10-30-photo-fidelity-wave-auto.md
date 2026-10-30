@@ -29,8 +29,9 @@ related:
 **Auto (photo)** now uses a separate exposure-preserving setup for the
 equidistant Wave screen. On the loaded sunset photograph it changes the old
 selection from `240 %` contrast, `60 %` brightness, `0.60` gamma, `115 %`
-saturation, and `85 %` GCR to `120 %`, `120 %`, `1.00`, `100 %`, and `55 %`
-respectively. It also applies a milder `100 %` unsharp mask at `1.5 mm`.
+saturation, and `85 %` GCR to `120 %`, `150 %`, `1.40`, `100 %`, and `35 %`
+respectively. It also widens the exact row pitch from `0.80` to `1.20 mm`
+before artwork scale and applies a milder `100 %` unsharp mask at `1.5 mm`.
 
 ## Reason
 
@@ -48,6 +49,9 @@ regions into dense red, purple, and black texture.
   luminance percentiles, tonal span, and the 90th-percentile chroma.
 - Keep auto levels enabled, but regularize contrast, brightness, gamma,
   saturation, and GCR around preservation of the photograph's normal exposure.
+- Recommend at least `3.4` pen widths between row centre lines for the Wave
+  screen. This reduces the full-ink duty cycle and preserves separated color
+  detail in dark foliage, without disturbing equidistance.
 - Return a moderate sharpening preset with the wave-specific controls and apply
   it from the CMYK tab.
 - Leave non-wave styles on the existing detail/screen-aware search.
@@ -58,7 +62,8 @@ regions into dense red, purple, and black texture.
   `PXL_20241218_215026972~2.jpg` (SHA-256
   `0DB593F75E18601BC140EF2625B7266D2AAD6540E8E0675708606063A9E82A77`),
   the new settings are saturation `100 %`, contrast `120 %`, brightness
-  `120 %`, GCR `55 %`, gamma `1.00`, sharpen `100 %`, radius `1.5 mm`.
+  `150 %`, GCR `35 %`, gamma `1.40`, dot pitch `1.20 mm` pre-scale
+  (`2.76 mm` on paper), and sharpen `100 %` at `1.5 mm`.
 - Manual converter previews compared the old extreme settings against the new
   balanced settings. The new preview retained the blue sky region, separated
   the warm cloud highlights, and kept the dark foreground without the old

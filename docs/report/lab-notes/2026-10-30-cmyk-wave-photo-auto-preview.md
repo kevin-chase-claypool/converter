@@ -42,16 +42,30 @@ The photo-fidelity path for Wave screen selects:
 auto levels: on
 saturation: 100 %
 contrast: 120 %
-brightness: 120 %
+brightness: 150 %
 sharpen: 100 % at 1.5 mm
-ink gamma: 1.00
-GCR: 55 %
+ink gamma: 1.40
+GCR: 35 %
+dot pitch: 1.20 mm before scale (2.76 mm on paper)
 ```
 
 These values were compared in the live CMYK preview at the source's current
 page and artwork scale. The revised preview exposed a distinct blue-sky region,
-kept warm cloud highlights separate from the sky, and preserved the dark
-foreground/foliage structure without imposing the old all-over dense tint.
+kept warm cloud highlights separate from the sky, and separated the dark
+foreground/foliage colors without imposing the old all-over dense tint. The
+wider pitch was necessary because the Wave screen is a binary mark mask; at the
+previous pitch, all three CMY plates covered most dark-red flower pixels.
+
+Using the same binary row-mask approximation for before/after comparison, the
+modelled average print RGB changed as follows:
+
+| Settings | Mean RGB | Mean absolute error vs source |
+|---|---:|---:|
+| Old Auto | `(0.383, 0.298, 0.293)` | `0.2362` |
+| New Auto | `(0.540, 0.469, 0.467)` | `0.2105` |
+
+The source mean is `(0.543, 0.457, 0.380)`. The new result is much closer in
+overall lightness and red/green balance while retaining the dark foreground.
 
 ## Interpretation
 
