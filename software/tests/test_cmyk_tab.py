@@ -960,6 +960,28 @@ class ScreeningTests(unittest.TestCase):
         self.assertLess(max(peaks) - min(peaks), 0.2)
         self.assertGreater(max(ranges), min(ranges) * 1.8)
 
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        ys = sorted(
+            value
+            for points in rows
+            if (value := value_at_x(points, spacing * 0.5)) is not None
+        )
+        gaps = [second - first for first, second in zip(ys, ys[1:])]
+        self.assertGreater(
+            max(gaps) - min(gaps),
+            spacing * 0.02,
+            "phase-locked depth keeps crest phase, not exact row pitch",
+        )
+
     def test_depth_wave_scales_amplitude_not_frequency_across_pitches(self):
         size = 128
         yy, _xx = self.np.mgrid[0:size, 0:size]
@@ -1800,15 +1822,17 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(settings.theta_center_hold_diameter_mm, 70.0)
         self.assertEqual(tab._effective_settings().theta_mode, "fixed")
 
-    def test_depth_wave_style_is_labelled_phase_locked(self):
+    def test_depth_wave_style_is_labelled_phase_locked_variable_depth(self):
         tab = self.make_tab()
         index = tab.style.findData("waves_zero")
         self.assertGreaterEqual(index, 0)
         self.assertEqual(
             tab.style.itemText(index),
-            "Wave screen - phase-locked depth",
+            "Wave screen - phase-locked, variable depth",
         )
-        self.assertIn("phase-locked", tab.style.toolTip())
+        tooltip = tab.style.toolTip().lower()
+        self.assertIn("phase-locked", tooltip)
+        self.assertIn("instantaneous spacing", tooltip)
 
     def test_xy_only_layer_program_holds_the_bed(self):
         tab = self.make_tab()
@@ -1961,6 +1985,7 @@ class CmykTabTests(unittest.TestCase):
     def test_artwork_save_writes_a_set_manifest(self):
         host = FakeHost(self.image_path)
         tab = self.make_tab(host)
+        tab.style.setCurrentIndex(tab.style.findData("waves_even"))
         tab.offset_spins["m"][0].setValue(0.75)
         checks = self.clean_checks()
         results = {
@@ -1989,7 +2014,7 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertEqual(
             data["screen"]["wave_phase_mode"],
-            "shared_zero_anchored",
+            "identical_translated_rows",
         )
         self.assertNotIn(
             "wave_frequency_tone_gain",

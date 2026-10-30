@@ -245,7 +245,10 @@ class CmykTab(GeneratorTab):
         self.style.addItem("Crosshatch levels", "crosshatch")
         self.style.addItem("Wave screen", "waves")
         self.style.addItem("Wave screen - equidistant rows", "waves_even")
-        self.style.addItem("Wave screen - phase-locked depth", "waves_zero")
+        self.style.addItem(
+            "Wave screen - phase-locked, variable depth",
+            "waves_zero",
+        )
         self.style.addItem("Interference (gyroid)", "gyroid")
         self.style.addItem("Single line (TSP)", "tsp")
         self.style.addItem("Topographic contours", "contours")
@@ -254,9 +257,11 @@ class CmykTab(GeneratorTab):
             "wave, gyroid, TSP and contour styles use the same pitch as "
             "their local mark spacing. Rectilinear joins consecutive rows "
             "over ink so one M3/M5 cycle covers a whole connected region. "
-            "Wave screen allows bounded depth variation; its equidistant "
-            "variant keeps every row exactly one pitch apart; phase-locked "
-            "depth varies row amplitude with tone and checks the pen envelope."
+            "Wave screen allows bounded depth variation. Equidistant rows "
+            "translate one common waveform and keep every row exactly one "
+            "pitch apart. Phase-locked depth keeps crests aligned, but its "
+            "row-specific amplitude changes instantaneous spacing within the "
+            "pen envelope."
         )
         self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)
@@ -1307,6 +1312,7 @@ class CmykTab(GeneratorTab):
         settings = self._effective_settings()
         factor = self.scale_pct.value() / 100.0
         weights = self._weights()
+        style = self.style.currentData()
         source_value = getattr(self, "_artwork", "")
         if not source_value:
             artwork_path = getattr(self.host, "artwork_path", None)
@@ -1344,7 +1350,7 @@ class CmykTab(GeneratorTab):
                 for channel in converter.CHANNELS
             },
             "screen": {
-                "style": self.style.currentData(),
+                "style": style,
                 "style_label": self.style.currentText(),
                 "dot_pitch_mm": self.pitch.value(),
                 "artwork_scale_pct": self.scale_pct.value(),
@@ -1362,7 +1368,11 @@ class CmykTab(GeneratorTab):
                 "seed": self.seed.value(),
                 "max_marks": self.max_marks.value(),
                 "screen_angles_deg": dict(converter.SCREEN_ANGLES_DEG),
-                "wave_phase_mode": "shared_zero_anchored",
+                "wave_phase_mode": {
+                    "waves": "bounded_row_depth",
+                    "waves_even": "identical_translated_rows",
+                    "waves_zero": "shared_zero_anchored",
+                }.get(style),
             },
             "ink_processing": {
                 "auto_levels": self.auto_levels.isChecked(),

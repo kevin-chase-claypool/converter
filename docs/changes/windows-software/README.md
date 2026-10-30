@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-29 | `WSW-20261029-008` | implemented | [Clarify variable-depth wave spacing](2026/2026-10-29-clarify-variable-depth-wave-spacing.md) | `cmyk`, `wave-screen`, `row-spacing`, `phase-locked`, `manifest`, `ben2` |
 | 2026-10-29 | `WSW-20261029-007` | implemented | [Promote the centered dense v3 bed profile](2026/2026-10-29-promote-centered-dense-v3-profile.md) | `bed-compensation`, `dense-mesh`, `default-profile`, `owner-override`, `coverage` |
 | 2026-10-29 | `WSW-20261029-006` | superseded | [Fit the centered dense v3 calibration candidate](2026/2026-10-29-centered-dense-v3-calibration-candidate.md) | `bed-calibration`, `bed-compensation`, `dense-mesh`, `p100`, `verification` |
 | 2026-10-29 | `WSW-20261029-005` | implemented | [Add a one-start pen-clear no-drag diagnostic](2026/2026-10-29-pen-clear-no-drag-diagnostic.md) | `toolhead`, `pen-clear`, `M5`, `T-01H`, `drag`, `diagnostic` |

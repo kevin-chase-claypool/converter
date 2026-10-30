@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-29 | `WSW-20261029-008` | windows-software | implemented | [Clarify variable-depth wave spacing](windows-software/2026/2026-10-29-clarify-variable-depth-wave-spacing.md) |
 | 2026-10-29 | `WSW-20261029-007` | windows-software, hardware | implemented | [Promote the centered dense v3 bed profile](windows-software/2026/2026-10-29-promote-centered-dense-v3-profile.md) |
 | 2026-10-29 | `WSW-20261029-006` | windows-software, hardware | superseded | [Fit the centered dense v3 calibration candidate](windows-software/2026/2026-10-29-centered-dense-v3-calibration-candidate.md) |
 | 2026-10-29 | `WSW-20261029-005` | windows-software, hardware | implemented | [Add a one-start pen-clear no-drag diagnostic](windows-software/2026/2026-10-29-pen-clear-no-drag-diagnostic.md) |

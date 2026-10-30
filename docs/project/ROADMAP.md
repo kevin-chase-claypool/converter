@@ -414,6 +414,13 @@
   about `0.95 mm` to `1.93 mm`; the original version measured about `2.75 mm`.
   A new portrait 8.5 x 11 physical test covers all four screen angles at
   `2.80`, `3.36`, and `4.20 mm`, plus an equidistant control.
+  Status 2026-10-29: inverse-decoding the Ben2 yellow G-code separated source
+  geometry from bed motion. The printed `waves_zero` program already varied
+  adjacent paper-row gaps from `1.791` to `2.049 mm`; an otherwise identical
+  `waves_even` program measured a nominal `1.91546 mm`. The UI and manifests
+  now distinguish variable-depth from exact-pitch modes. A physical print of
+  the corrected yellow file remains required before deciding whether residual
+  bed-following error remains.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

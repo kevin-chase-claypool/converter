@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20261029-ben2-wave-spacing-classification"></a>
+### 🟩 2026-10-29 - WINDOWS SOFTWARE/VERIFIED - Ben2 row-gap variation is in the saved G-code
+
+- The printed Ben2 yellow file used `waves_zero` (phase-locked,
+  variable-depth) even though the current requirement is exact row pitch.
+  Decoding its X/Y/A commands back through rotation and compensation measured
+  adjacent paper-row gaps from `1.791` to `2.049 mm`.
+- An otherwise identical `waves_even` generation holds a nominal
+  `1.91546 mm` gap across the page, with only `0.000216 mm` variation at
+  off-centre sampled columns. Its frame centre, compensation, image source,
+  ink processing, and scale match the original recipe.
+- The UI now calls `waves_zero` **Wave screen - phase-locked, variable depth**
+  and explicitly says that row amplitude changes instantaneous spacing.
+  Set manifests distinguish `identical_translated_rows`,
+  `shared_zero_anchored`, and `bounded_row_depth`.
+- Corrected file hash:
+  `4BDE0728D6273F73CBA10159B210C8FE810202CFC2B3F4333B0B6E63EBCCCABD`.
+  Macro parsing and strict motion checks pass.
+- Evidence: `WSW-20261029-008`; physical print verification remains pending.
+- Category: windows-software, cmyk, wave-screen, row-spacing, manifest, ben2.
+
 <a id="elog-20261029-promote-centered-dense-v3"></a>
 ### 🟨 2026-10-29 - WINDOWS SOFTWARE/HARDWARE/PROMOTED BY OWNER - Centered dense v3 becomes default
 

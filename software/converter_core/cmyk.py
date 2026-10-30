@@ -1116,7 +1116,8 @@ def screen_channel(
     costs one M3/M5 cycle), ``crosshatch`` (line families stacked by tone
     level), ``waves`` (sine rows whose amplitude follows tone), ``waves_even``
     (identical translated wave rows with exact pitch spacing), ``waves_zero``
-    (shared phase with tone-driven row amplitude and exact clearance), ``gyroid``
+    (shared phase with tone-driven row amplitude, variable spacing, and exact
+    clearance), ``gyroid``
     (interference-field contours that flatten into blank paper), ``tsp``
     (one greedy single line through tone stipple points) and ``contours``
     (topographic contour lines of the tone).
