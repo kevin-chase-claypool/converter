@@ -624,6 +624,10 @@ Current tools:
   screen exposed by the CMYK selector. It translates one common
   luminance-shaped waveform to every row with no row-specific vertical
   movement, so adjacent centre spacing remains exactly the configured pitch.
+  Darker tone may increase the shared waveform depth, but every visible row at
+  a given X position receives the same vertical displacement; darkness cannot
+  move a row baseline or pull one row toward another. Tone still masks whole
+  row segments where the source image has no ink.
   **Preserve exact row pitch (skip bed compensation)** is enabled by default
   for this style. It clears the Machine-tab displacement profile from the
   effective Wave job because an arbitrary correction field changes otherwise

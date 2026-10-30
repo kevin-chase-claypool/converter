@@ -87,3 +87,21 @@ expanded surviving rows in final machine space. Disabling that field is the
 only current way to guarantee the exact row lattice. Physical residual bed
 placement remains uncorrected in these Wave jobs; unchecking the guard is the
 explicit opt-in to restore compensation at the cost of row pitch.
+
+## Dark-region row invariant
+
+The operator observed that the remaining apparent spacing loss in the final
+print occurred in darker regions. A targeted generator regression now isolates
+that condition. It compares full tone with 15 % tone at the same sine phase:
+
+- Sampled common wave offset at full tone is `1.951 mm`.
+- Sampled common wave offset at 15 % tone is `0.295 mm`.
+- All 15 adjacent gaps remain exactly `4.000000 mm` at both tones.
+- Every row's baseline remains fixed; all rows receive the same vertical wave
+  displacement at a given X position.
+
+Local wave depth therefore remains tone-driven without changing row ownership
+or row-to-row pitch. The superseded print used the same shared-displacement
+source layout but then passed through the non-uniform bed-compensation field.
+Any spacing change between light and dark regions in that output came after the
+Wave geometry, not from darker tone moving an individual row baseline.

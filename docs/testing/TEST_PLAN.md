@@ -253,7 +253,9 @@ cyan/magenta/yellow/black spread is now
 passing macro and strict motion checks and zero A motion. The physical print
 now verifies the no-compensation row result and whether its residual
 bed-position error is acceptable. This supersedes the earlier statement that
-only image-mask row omission remained.
+only image-mask row omission remained. A dedicated dark-tone regression also
+requires full-tone depth to exceed light-tone depth while every adjacent gap
+and row baseline remains unchanged.
 
 ### M-12 full-field bench procedure
 

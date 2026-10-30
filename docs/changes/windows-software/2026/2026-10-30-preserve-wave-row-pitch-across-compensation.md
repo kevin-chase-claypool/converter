@@ -96,13 +96,17 @@ uncompensated displacement path.
 - `tools/check_cmyk_wave_spacing.py` verifies manifest hashes, the active
   spacing guard, empty compensation path, and all four final-machine row
   lattices in one command.
+- A dedicated dark-tone regression compares full and 15 % tone at the same
+  sine phase. The sampled common wave offset is `1.951 mm` at full tone versus
+  `0.295 mm` at 15 %, while all 15 adjacent gaps remain exactly `4.000000 mm`
+  and every row baseline remains fixed.
 - Canonical SHA-256:
   cyan `5CC24D7DD32F8DA43167A0DBC803109D51DBA6394E92FE2CDBD21352EA274290`,
   magenta `718706CD5E275D1D883C4B265440ECE353C6123807448B69C6B3BEFB6F028DC4`,
   yellow `590E9B4C60965EDF33255A2A22885029023C382BE780D675A8DB03A9D1A49563`,
   black `2789596CB5BADC4A0026726CCA773A67BF88E8B1C251DCAA035FE672A5F7683B`.
 - The focused CMYK tab suite passes `96` tests.
-- The complete converter suite passes `581` tests with one expected
+- The complete converter suite passes `582` tests with one expected
   OpenGL-context skip.
 
 ## Struggles and rejected approaches

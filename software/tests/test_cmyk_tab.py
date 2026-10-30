@@ -1510,6 +1510,76 @@ class ScreeningTests(unittest.TestCase):
             0.2,
         )
 
+    def test_dark_tone_changes_depth_without_dragging_row_baselines(self):
+        spacing = 4.0
+        _yy, xx = self.np.mgrid[0:64, 0:64]
+        tone = self.np.where(xx < 32, 1.0, 0.15).astype("float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves_even",
+            spacing_mm=spacing,
+            depth_tone=tone,
+        )
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        # Ten and forty-two millimetres are one or more full wavelengths
+        # apart. They sample dark and light tone at the same sine phase.
+        dark_x = 10.0
+        light_x = 42.0
+        rows = sorted(waves, key=lambda points: points[0][1])
+        dark_values = sorted(
+            value
+            for row in rows
+            if (value := value_at_x(row, dark_x)) is not None
+        )
+        light_values = sorted(
+            value
+            for row in rows
+            if (value := value_at_x(row, light_x)) is not None
+        )
+        dark_offsets = [
+            value_at_x(row, dark_x) - row[0][1]
+            for row in rows
+        ]
+        light_offsets = [
+            value_at_x(row, light_x) - row[0][1]
+            for row in rows
+        ]
+
+        for values in (dark_values, light_values):
+            gaps = [
+                second - first
+                for first, second in zip(values, values[1:])
+            ]
+            self.assertEqual(len(gaps), 15)
+            self.assertLess(max(gaps) - min(gaps), 1e-9)
+            self.assertAlmostEqual(sum(gaps) / len(gaps), spacing, places=9)
+
+        self.assertLess(max(dark_offsets) - min(dark_offsets), 1e-9)
+        self.assertLess(max(light_offsets) - min(light_offsets), 1e-9)
+        self.assertGreater(
+            abs(sum(dark_offsets)) / len(dark_offsets),
+            abs(sum(light_offsets)) / len(light_offsets) + 1.0,
+            "full tone must deepen the wave without changing row baselines",
+        )
+
     def test_equidistant_wave_rows_work_at_all_screen_angles(self):
         spacing = 4.0
         page_mm = 64.0

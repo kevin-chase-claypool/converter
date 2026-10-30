@@ -18,13 +18,17 @@
   guard explicitly opts back into positional correction and accepts that the
   exact row lattice is no longer guaranteed. The saved set manifest records
   the guard and effective compensation path.
+- A dedicated dark-tone regression now proves that changing from 15 % to full
+  tone increases the sampled common wave offset from `0.295` to `1.951 mm` at
+  the same sine phase while all adjacent gaps remain exactly `4.000000 mm`;
+  darkness cannot alter row baselines.
 - Canonical Ben2 files and SHA-256:
   cyan `5CC24D7DD32F8DA43167A0DBC803109D51DBA6394E92FE2CDBD21352EA274290`,
   magenta `718706CD5E275D1D883C4B265440ECE353C6123807448B69C6B3BEFB6F028DC4`,
   yellow `590E9B4C60965EDF33255A2A22885029023C382BE780D675A8DB03A9D1A49563`,
   black `2789596CB5BADC4A0026726CCA773A67BF88E8B1C251DCAA035FE672A5F7683B`.
 - All four pass macro parsing and strict motion checks with zero A motion.
-  The converter suite passes `581` tests with one expected OpenGL-context skip.
+  The converter suite passes `582` tests with one expected OpenGL-context skip.
 - Evidence: `WSW-20261030-002` and
   `docs/report/lab-notes/2026-10-30-ben2-yellow-row-end-boundary.md`.
 - Category: windows-software, hardware, cmyk, wave-screen, bed-compensation,
