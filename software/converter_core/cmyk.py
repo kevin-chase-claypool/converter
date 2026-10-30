@@ -199,6 +199,7 @@ def auto_photo_settings(
     resolution_px=256,
     pen_width_mm=None,
     effective_pitch_mm=None,
+    style=None,
 ):
     """Suggest Image-options values that keep a photo's detail legible.
 
@@ -216,8 +217,11 @@ def auto_photo_settings(
     asks for is turned into the ink the rows actually lay down
     (``pen / row pitch``, opened up by the screen's light-tone stretch and
     cut off below the ink floor), so a sparse screen gets a darker chain
-    instead of a washed-out plot. Returns ``auto_levels``, ``brightness``,
-    ``contrast``, ``saturation``, ``gcr`` and ``gamma``.
+    instead of a washed-out plot. A Wave-screen style uses a separate
+    exposure-preserving path because its fixed row pitch masks ink rather than
+    varying coverage with tone. Returns ``auto_levels``, ``brightness``,
+    ``contrast``, ``saturation``, ``gcr`` and ``gamma``, plus wave-specific
+    sharpening controls.
     """
     from PIL import Image
     import numpy as np
@@ -242,6 +246,38 @@ def auto_photo_settings(
 
     def clamp(value, low, high):
         return max(low, min(high, value))
+
+    def round_up_to(value, step):
+        return int(round(value / step) * step)
+
+    style_key = str(style or "").strip().lower()
+    if style_key in ("waves", "waves_even", "waves_zero"):
+        # The wave screen is a line mask, not a tone-varying line pitch. Its
+        # tonal range is therefore much narrower than the generic search
+        # assumes. Preserve the source's normal exposure instead of driving
+        # contrast and ink gamma to their limits to create extra gradients.
+        p05, p50, p95 = (
+            float(value)
+            for value in np.percentile(luminance, [5.0, 50.0, 95.0])
+        )
+        tonal_range = p95 - p05
+        chroma_p90 = float(np.percentile(chroma, 90.0))
+        brightness = clamp(130.0 + (0.50 - p50) * 120.0, 100.0, 200.0)
+        contrast = clamp(125.0 + (0.65 - tonal_range) * 100.0, 100.0, 180.0)
+        gamma = clamp(1.05 + (0.55 - p50) * 0.75, 0.85, 1.60)
+        saturation = clamp(100.0 + (0.30 - chroma_p90) * 30.0, 90.0, 110.0)
+        gcr = clamp(85.0 + (0.15 - chroma_p90) * 120.0, 45.0, 90.0)
+        return {
+            "auto_levels": True,
+            "brightness": round_up_to(brightness, 5),
+            "contrast": round_up_to(contrast, 5),
+            "saturation": round_up_to(saturation, 5),
+            "gcr": round_up_to(gcr, 5),
+            "gamma": round(gamma / 0.05) * 0.05,
+            "sharpen": True,
+            "sharpen_pct": 100.0,
+            "sharpen_radius_mm": 1.5,
+        }
 
     # Vivid photos keep more chroma in C/M/Y and less in K; muted ones lean
     # on a little extra saturation and heavier black instead.
@@ -338,9 +374,6 @@ def auto_photo_settings(
                     if best is None or score > best[0]:
                         best = (score, contrast, brightness, gamma)
     _, contrast, brightness, gamma = best
-
-    def round_up_to(value, step):
-        return int(round(value / step) * step)
 
     return {
         "auto_levels": True,

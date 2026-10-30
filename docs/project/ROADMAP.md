@@ -426,6 +426,11 @@
   still contained `waves_zero`, proving that A motion was not required to
   produce the spacing defect. The standard Ben2 files have been replaced with
   exact-pitch XY-only programs; a fresh physical print is the next gate.
+  Status 2026-10-30: Wave-screen Auto now preserves a normal photograph's
+  exposure and color range instead of applying the generic line-screen search.
+  This produces a substantially more faithful live preview, but a physical
+  comparison coupon remains required. Continuous-tone fidelity beyond what the
+  binary wave mask can express remains an open design question.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

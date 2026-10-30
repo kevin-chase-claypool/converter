@@ -162,7 +162,8 @@ class CmykTab(GeneratorTab):
         self.auto_button.setToolTip(
             "Analyze the artwork and set auto levels, brightness, contrast, "
             "saturation, GCR, and a starting gamma for a faithful photo "
-            "representation. Tweak gamma for print lightness afterwards."
+            "representation. Wave screens use an exposure-preserving setup; "
+            "tweak gamma for print lightness afterwards."
         )
         self.auto_button.clicked.connect(self.apply_auto_settings)
         options.addRow("Auto", self.auto_button)
@@ -638,6 +639,7 @@ class CmykTab(GeneratorTab):
                 effective_pitch_mm=(
                     self.pitch.value() * self.scale_pct.value() / 100.0
                 ),
+                style=self.style.currentData(),
             )
         except Exception as exc:  # noqa: BLE001 - user-facing setup error
             self.report_error(f"Auto settings failed: {exc}")
@@ -648,10 +650,21 @@ class CmykTab(GeneratorTab):
         self.brightness.setValue(values["brightness"])
         self.gamma.setValue(values["gamma"])
         self.gcr.setValue(values["gcr"])
+        if "sharpen" in values:
+            self.sharpen.setChecked(bool(values["sharpen"]))
+            self.sharpen_amount.setValue(values["sharpen_pct"])
+            self.sharpen_radius.setValue(values["sharpen_radius_mm"])
         message = (
             f"Auto: brightness {values['brightness']} %, contrast "
             f"{values['contrast']} %, saturation {values['saturation']} %, "
-            f"GCR {values['gcr']} %, gamma {values['gamma']:.2f}; Dot pitch "
+            f"GCR {values['gcr']} %, gamma {values['gamma']:.2f}"
+            + (
+                f", sharpen {values['sharpen_pct']:.0f} % at "
+                f"{values['sharpen_radius_mm']:.1f} mm"
+                if "sharpen_pct" in values
+                else ""
+            )
+            + f"; Dot pitch "
             f"left at {self.pitch.value():.2f} mm (Match pen would suggest "
             f"{self.pen_pitch_mm():.2f} mm for the {self.pen_width.value():.2f} "
             f"mm pen at {self.scale_pct.value():.0f} % scale) - tweak gamma "

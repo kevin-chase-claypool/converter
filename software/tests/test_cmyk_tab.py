@@ -438,6 +438,47 @@ class ScreeningTests(unittest.TestCase):
         # steepens, so the search chooses real contrast there.
         self.assertGreaterEqual(mid["contrast"], 180)
 
+    def test_wave_auto_preserves_a_normal_photo_exposure(self):
+        import numpy as np
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-wave-auto-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        yy, xx = np.mgrid[0:96, 0:128]
+        image = np.empty((96, 128, 3), dtype="float32")
+        image[:55] = (0.62, 0.73, 0.82)
+        image[:55, 55:100] = (0.92, 0.75, 0.52)
+        image[55:] = (0.20, 0.28, 0.16)
+        image[55:, 18:45] = (0.62, 0.18, 0.12)
+        image[55:, 82:115] = (0.48, 0.12, 0.09)
+        image += (xx[..., None] / 127.0 - 0.5) * 0.06
+        image = np.clip(image * 255.0, 0.0, 255.0).astype("uint8")
+        path = str(Path(folder) / "landscape.png")
+        Image.fromarray(image).save(path)
+
+        values = converter.auto_photo_settings(
+            path,
+            pen_width_mm=0.8,
+            effective_pitch_mm=1.92,
+            style="waves_even",
+        )
+
+        self.assertTrue(values["auto_levels"])
+        self.assertGreaterEqual(values["brightness"], 100)
+        self.assertLessEqual(values["brightness"], 160)
+        self.assertGreaterEqual(values["contrast"], 100)
+        self.assertLessEqual(values["contrast"], 160)
+        self.assertGreaterEqual(values["saturation"], 90)
+        self.assertLessEqual(values["saturation"], 110)
+        self.assertGreaterEqual(values["gcr"], 45)
+        self.assertLessEqual(values["gcr"], 90)
+        self.assertGreaterEqual(values["gamma"], 0.85)
+        self.assertLessEqual(values["gamma"], 1.40)
+        self.assertEqual(values["sharpen_pct"], 100.0)
+        self.assertEqual(values["sharpen_radius_mm"], 1.5)
+
     def test_auto_photo_settings_keep_colour_on_vivid_images(self):
         import numpy as np
         from PIL import Image
@@ -2389,6 +2430,36 @@ class CmykTabTests(unittest.TestCase):
         self.assertIn("Auto:", tab.status.text())
         self.assertIn("Dot pitch", tab.status.text())
         self.assertIn("Match pen would suggest", tab.status.text())
+
+    def test_auto_button_applies_wave_photo_fidelity_settings(self):
+        host = FakeHost(self.colour_path)
+        tab = self.make_tab(host)
+        tab.style.setCurrentIndex(tab.style.findData("waves_even"))
+        tab.sharpen.setChecked(False)
+        tab.sharpen_amount.setValue(70)
+        tab.sharpen_radius.setValue(1.0)
+        values = converter.auto_photo_settings(
+            self.colour_path,
+            pen_width_mm=tab.pen_width.value(),
+            effective_pitch_mm=(
+                tab.pitch.value() * tab.scale_pct.value() / 100.0
+            ),
+            style="waves_even",
+        )
+
+        tab.auto_button.click()
+
+        self.assertEqual(tab.saturation.value(), values["saturation"])
+        self.assertEqual(tab.contrast.value(), values["contrast"])
+        self.assertEqual(tab.brightness.value(), values["brightness"])
+        self.assertEqual(tab.gcr.value(), values["gcr"])
+        self.assertAlmostEqual(tab.gamma.value(), values["gamma"], places=2)
+        self.assertTrue(tab.sharpen.isChecked())
+        self.assertEqual(tab.sharpen_amount.value(), values["sharpen_pct"])
+        self.assertEqual(
+            tab.sharpen_radius.value(),
+            values["sharpen_radius_mm"],
+        )
 
     def test_match_pen_pitch_uses_the_effective_scale(self):
         tab = self.make_tab()

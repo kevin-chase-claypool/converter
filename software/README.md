@@ -506,28 +506,27 @@ Current tools:
 - **CMYK** - RGB to CMYK separation with gray-component replacement, screened
   as one layer per ink pen. Controls: artwork (from the static Artwork row),
   an **Auto (photo)** button that analyzes the image and sets auto levels,
-  brightness, contrast, saturation, GCR, a starting gamma and the dot pitch
-  (tone
-  controls come from a detail search over the real curve chain: maximum mid
-  tone-weighted gradient with a clipping penalty, so structure stays
-  legible instead of crushed or blown, and the search also holds the print's
-  mean tone on the photo's, clamped to the 0.30-0.75 window a plot can
-  actually hold, so portraits are not lifted a stop too light; it also
-  renders the rectilinear screen (Pen width and Dot pitch x Artwork scale)
-  before choosing, so a row pitch at the pen width - which inks only about a
-  fifth of a light tone - gets a darker chain instead of a washed-out plot,
-  while a screen finer than the pen gets a lighter one; saturation
-  and GCR come from the
-  image's colourful quartile, so a vivid subject over neutral ground keeps
-  its chroma; the pitch is set to one pen width at the current artwork scale,
-  the same as **Match pen**),
+  brightness, contrast, saturation, GCR, a starting gamma, and a modest
+  luminance-sharpening preset.
+  - For Wave screen, Auto uses an exposure-preserving color path. It reads the
+    source's midtone, tonal span, and high-chroma percentile, then keeps normal
+    photos near neutral saturation/contrast instead of pushing them to the
+    darkest edge of the generic screen model. This preserves the sky,
+    highlights, and colour separation in the preview while row pitch remains
+    exact.
+  - For other screen styles, tone controls come from a detail search over the
+    real curve chain: maximum mid tone-weighted gradient with a clipping
+    penalty, plus a target print mean clamped to the printable `0.30-0.75`
+    window. That search also models the rectilinear row coverage.
+  - Auto leaves the operator's Dot pitch unchanged. **Match pen** remains the
+    explicit action for setting one pen width at the current artwork scale.
   auto levels (default on: stretch the image's 1st-99th luminance percentiles
   so low-key photos use the full tonal range), saturation, contrast,
   brightness, luminance sharpening (default on: unsharp-mask amount and
   on-paper radius), ink gamma, black (GCR), resolution, per-ink weights, screen style
-  (halftone dots / stipple dots / line screen / crosshatch levels / wave
-  screen / interference (gyroid) / single line (TSP) / topographic contours /
-  rectilinear fill),
+  (halftone dots / stipple dots / line screen / crosshatch levels / wave screen
+  with equidistant rows / interference (gyroid) / single line (TSP) /
+  topographic contours / rectilinear fill),
   dot pitch (with a **Match pen** button that sets it to one pen width at
   the current artwork scale), dot size, solid dots (spiral-filled so each
   mark reads as a dot, not a ring), hatch levels, overdraw, pen width, max
