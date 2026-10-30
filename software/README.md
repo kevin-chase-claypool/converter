@@ -607,9 +607,10 @@ Current tools:
   only - a rotation or a fan in the measured crosses is a frame/A/bed
   problem, not a pen offset.
   **Pass summary and preflight:** before saving, the tab shows the page,
-  shared frame, Bed motion, centre hold, crosses and pen offsets, then runs
-  the motion preflight on each ink. It checks the bed-step cap, the A-rate
-  limit, bare `G0` rotations and moves that exceed the Path tolerance;
+  shared frame, Bed motion, centre hold, row-spacing guard, crosses and pen
+  offsets, then runs the motion preflight on each ink. It checks the bed-step
+  cap, the A-rate limit, bare `G0` rotations and moves that exceed the Path
+  tolerance;
   hard violations block Save and warnings go to the log. A successful
   artwork save also writes a version-3 `<name>-set.json` beside the four files
   with the source hash, page and motion mode, bed-compensation profile,
@@ -623,6 +624,17 @@ Current tools:
   screen exposed by the CMYK selector. It translates one common
   luminance-shaped waveform to every row with no row-specific vertical
   movement, so adjacent centre spacing remains exactly the configured pitch.
+  **Preserve exact row pitch (skip bed compensation)** is enabled by default
+  for this style. It clears the Machine-tab displacement profile from the
+  effective Wave job because an arbitrary correction field changes otherwise
+  uniform row spacing in final machine X/Y. Other screen styles still inherit
+  the selected profile. Unchecking the guard explicitly opts into retaining
+  bed-position correction at the cost of potentially non-uniform rows. The
+  saved set manifest records both the effective empty compensation path and
+  `preserve_exact_row_pitch: true`.
+  Verify a saved set with
+  `python ..\tools\check_cmyk_wave_spacing.py <name>-set.json`; it checks all
+  four manifest hashes and their final-machine adjacent-row spread.
   The emitted finite segments preserve the `0.8 mm` pen plus `0.25 mm` paper
   gap at their actual shortest distance; there is no additional fixed fraction
   of the pitch reserved between rows. Changing Dot pitch or Artwork scale
@@ -630,9 +642,9 @@ Current tools:
   pitch smaller than the pen envelope is rejected with a planning error because
   no legal row spacing exists at that scale.
   Regression coverage spans `2.80`, `3.36`, and `4.20 mm` at all four CMYK
-  screen angles. The normal artwork path always uses exact row pitch. Legacy
-  stored values `waves` and `waves_zero` are promoted to the equidistant
-  geometry unless a diagnostic tool explicitly requests
+  screen angles. With the spacing guard active, the normal artwork path uses
+  exact row pitch. Legacy stored values `waves` and `waves_zero` are promoted
+  to the equidistant geometry unless a diagnostic tool explicitly requests
   `allow_variable_wave_spacing=True`; that opt-in exists only to generate
   comparison coupons. **Path tolerance** controls how densely each sine is
   sampled in paper space, so emitted chords follow the shape instead of
@@ -1370,7 +1382,10 @@ display-only; every other group changes the emitted program.
 - P100 also remains the owner of the physical registration centre and A index.
   The bed-compensation profile is a separate residual map and the converter
   loads the owner-promoted 13-inch centered dense-v3 profile by default; clear the path to
-  disable it or use **Browse...** to select a replacement. Its fiducial fit
+  disable it or use **Browse...** to select a replacement. Wave-screen jobs
+  with the default spacing guard bypass this profile because the correction
+  field is not row-pitch preserving; uncheck the guard only when positional
+  correction is more important than equidistant rows. Its fiducial fit
   removes common translation, rotation, and scale before fitting. Do not place
   the same residual offset in both P100 and the profile. A saved compensated
   program records the profile fingerprint and correction bound in its header.

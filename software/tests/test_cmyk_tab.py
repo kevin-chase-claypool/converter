@@ -1933,6 +1933,45 @@ class CmykTabTests(unittest.TestCase):
         self.assertIn("exactly one pitch apart", tooltip)
         self.assertIn("legacy variable-depth", tooltip)
 
+    def test_wave_spacing_guard_skips_bed_compensation(self):
+        tab = self.make_tab()
+        tab.host.settings_for_source = mock.Mock(
+            return_value=converter.default_settings()
+        )
+        tab.style.setCurrentIndex(tab.style.findData("waves_even"))
+
+        guarded = tab._effective_settings()
+        self.assertEqual(guarded.bed_compensation_path, "")
+        self.assertTrue(tab._wave_spacing_guard_active())
+
+        tab.preserve_wave_pitch.setChecked(False)
+        unguarded = tab._effective_settings()
+        self.assertEqual(
+            unguarded.bed_compensation_path,
+            converter.default_settings().bed_compensation_path,
+        )
+        self.assertIn(
+            "compensation may alter pitch",
+            tab._summary_text().lower(),
+        )
+
+        tab.style.setCurrentIndex(tab.style.findData("rectilinear"))
+        self.assertEqual(
+            tab._effective_settings().bed_compensation_path,
+            converter.default_settings().bed_compensation_path,
+        )
+        self.assertFalse(tab.preserve_wave_pitch.isEnabled())
+
+        tab.style.setCurrentIndex(tab.style.findData("waves_even"))
+        tab.calibration_mode.setChecked(True)
+        self.assertFalse(tab._wave_spacing_guard_active())
+        self.assertFalse(tab.preserve_wave_pitch.isEnabled())
+        self.assertIn("guard not applicable", tab._summary_text().lower())
+        self.assertEqual(
+            tab._effective_settings().bed_compensation_path,
+            converter.default_settings().bed_compensation_path,
+        )
+
     def test_xy_only_layer_program_holds_the_bed(self):
         tab = self.make_tab()
         tab._ensure_layers()
@@ -2083,6 +2122,9 @@ class CmykTabTests(unittest.TestCase):
 
     def test_artwork_save_writes_a_set_manifest(self):
         host = FakeHost(self.image_path)
+        host.settings_for_source = mock.Mock(
+            return_value=converter.default_settings()
+        )
         tab = self.make_tab(host)
         tab.style.setCurrentIndex(tab.style.findData("waves_even"))
         tab.offset_spins["m"][0].setValue(0.75)
@@ -2124,6 +2166,8 @@ class CmykTabTests(unittest.TestCase):
             tab.pitch.value() * tab.scale_pct.value() / 100.0,
         )
         self.assertEqual(data["ink_processing"]["weights"]["y"], 1.0)
+        self.assertEqual(data["bed_compensation_path"], "")
+        self.assertTrue(data["screen"]["preserve_exact_row_pitch"])
         self.assertEqual(
             data["ink_processing"]["sharpening"],
             {

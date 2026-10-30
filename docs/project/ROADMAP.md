@@ -431,11 +431,18 @@
   This produces a substantially more faithful live preview, but a physical
   comparison coupon remains required. Continuous-tone fidelity beyond what the
   binary wave mask can express remains an open design question.
-  Status 2026-10-30 row-end check: the red-dot area from the latest Ben2 yellow
-  print was decoded against the XY-only `waves_even` program. Every surviving
-  row lay on the `1.9155 mm` lattice or an integer multiple where intervening
-  rows were omitted by the image mask. No planner or spacing correction is
-  indicated by that observation.
+  Status 2026-10-30 row-end check (superseded): the red-dot area was first
+  decoded back into paper space and appeared to remain on the `1.9155 mm`
+  lattice. That inverse transform removed the very compensation displacement
+  seen by the machine and was not the correct acceptance plane.
+  Status 2026-10-30 final-machine check: active profile `18bfb4ed1c33`
+  changed adjacent gaps by up to `0.323 mm` across all four inks. The new
+  default Wave spacing guard now removes the displacement field; canonical
+  cyan/magenta/yellow/black programs have final-X/Y gap spreads of
+  `0.002476/0.002188/0.000100/0.001555 mm`, all below `0.005 mm`. The
+  converter regression and full suite pass. A fresh physical print of the
+  canonical no-compensation set remains the hardware acceptance step, and
+  that set intentionally leaves residual bed-position error uncorrected.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

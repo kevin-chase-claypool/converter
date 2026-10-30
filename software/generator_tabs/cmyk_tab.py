@@ -279,6 +279,18 @@ class CmykTab(GeneratorTab):
         )
         pitch_layout.addWidget(self.effective_pitch_label)
         screen.addRow("Dot pitch", pitch_row)
+        self.preserve_wave_pitch = QCheckBox(
+            "Preserve exact row pitch (skip bed compensation)"
+        )
+        self.preserve_wave_pitch.setChecked(True)
+        self.preserve_wave_pitch.setToolTip(
+            "Wave screen - equidistant rows uses this guard by default. "
+            "It omits the bed-compensation displacement field so adjacent "
+            "row spacing remains exact in the final machine X/Y commands. "
+            "Uncheck only when positional bed correction matters more than "
+            "uniform row spacing."
+        )
+        screen.addRow("Spacing guard", self.preserve_wave_pitch)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
         screen.addRow("Dot size", self.dot_size)
         self.solid_dots = QCheckBox("Solid dots")
@@ -561,7 +573,17 @@ class CmykTab(GeneratorTab):
         self.registration_marks.toggled.connect(
             lambda *_: self._refresh_pass_summary()
         )
+        self.style.currentIndexChanged.connect(
+            self._update_wave_spacing_guard
+        )
+        self.preserve_wave_pitch.toggled.connect(
+            self._update_wave_spacing_guard
+        )
+        self.calibration_mode.toggled.connect(
+            self._update_wave_spacing_guard
+        )
         self.theta_mode.changed.connect(lambda *_: self._refresh_pass_summary())
+        self._update_wave_spacing_guard()
         self._refresh_pass_summary()
         self.finish_controls()
 
@@ -747,7 +769,7 @@ class CmykTab(GeneratorTab):
         preview, analysis and saved files agree.
         """
         scale = float(settings.scale)
-        return dataclasses.replace(
+        settings = dataclasses.replace(
             settings,
             tolerance=self.path_tolerance.value(),
             pen_diameter_mm=self.pen_width.value(),
@@ -758,6 +780,9 @@ class CmykTab(GeneratorTab):
                 self.page_h.value() / 2.0 * scale,
             ),
         )
+        if self._wave_spacing_guard_active():
+            settings = dataclasses.replace(settings, bed_compensation_path="")
+        return settings
 
     def _effective_settings(self):
         """Host settings with this tab's overrides applied."""
@@ -792,6 +817,7 @@ class CmykTab(GeneratorTab):
             tuple(self._weights().items()),
             self.style.currentData(),
             self.pitch.value(),
+            self._wave_spacing_guard_active(),
             self.dot_size.value(),
             self.solid_dots.isChecked(),
             self.theta_mode.value(),
@@ -852,6 +878,24 @@ class CmykTab(GeneratorTab):
                 )
         return warnings
 
+    def _wave_spacing_guard_active(self):
+        """Whether bed compensation would invalidate the wave row lattice."""
+        return (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData() == "waves_even"
+            and self.preserve_wave_pitch.isChecked()
+        )
+
+    def _update_wave_spacing_guard(self, _value=None):
+        """Keep the guard meaningful for the selected screen style."""
+        wave_selected = (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData() == "waves_even"
+        )
+        self.preserve_wave_pitch.setEnabled(wave_selected)
+        if hasattr(self, "pass_summary"):
+            self._refresh_pass_summary()
+
     def _summary_text(self, results=None):
         offsets = self._pen_offsets()
         offset_parts = [
@@ -866,6 +910,19 @@ class CmykTab(GeneratorTab):
             % (self.page_w.value() / 2.0, self.page_h.value() / 2.0),
             "bed motion %s" % self._bed_motion_label(),
             "center hold %g mm diameter" % self.center_hold.value(),
+            "row spacing guard %s"
+            % (
+                "active"
+                if self._wave_spacing_guard_active()
+                else (
+                    "OFF - compensation may alter pitch"
+                    if (
+                        not self.calibration_mode.isChecked()
+                        and self.style.currentData() == "waves_even"
+                    )
+                    else "not applicable"
+                )
+            ),
             "crosses %s" % ("on" if self.registration_marks.isChecked() else "off"),
             "pen offsets %s" % (", ".join(offset_parts) if offset_parts else "none"),
         ]
@@ -1368,6 +1425,9 @@ class CmykTab(GeneratorTab):
                 "dot_pitch_mm": self.pitch.value(),
                 "artwork_scale_pct": self.scale_pct.value(),
                 "effective_pitch_mm": self.pitch.value() * factor,
+                "preserve_exact_row_pitch": (
+                    self._wave_spacing_guard_active()
+                ),
                 "pen_width_mm": self.pen_width.value(),
                 "dot_size_pct": self.dot_size.value(),
                 "path_tolerance_mm": self.path_tolerance.value(),

@@ -36,8 +36,14 @@ radius. The existing Machine-tab path remains editable: **Browse...** selects a
 replacement, **Default** restores this profile, and an empty path disables
 compensation.
 
+CMYK **Wave screen - equidistant rows** treats exact adjacent-row pitch as a
+hard geometry constraint. Its default spacing guard clears the profile from
+the effective job because an arbitrary displacement field cannot preserve an
+exact uniform lattice. Retaining compensation for that style is an explicit
+operator opt-in and can change machine-space row spacing.
+
 Interactive preview defaults to fast nominal X/Y so dense artwork remains
-responsive. Saved G-code always applies the selected compensation exactly.
+responsive. Saved G-code applies the effective compensation path exactly.
 The **Exact compensated preview (slow)** option makes the displayed moves use
 the same correction path when coordinate parity matters for verification.
 
@@ -82,6 +88,11 @@ program unchanged.
 - Fast preview intentionally displays nominal machine X/Y and must identify
   itself as approximate. It is suitable for composition and motion review,
   not for measuring compensated placement on paper.
+- Exact Wave row pitch and non-uniform bed compensation cannot both be
+  guaranteed. The default Wave guard favors the regular printed lattice and
+  leaves the profile's residual positional error uncorrected. A job that
+  requires both must first remove the underlying mechanical error or use a
+  future compensation model constrained to preserve the row lattice.
 - The current default profile covers only the measured 165.100 mm field. Its
   measured coverage is valid only while bed, paper support,
   toolhead/carriage, pen clamp, and registration remain consistent.

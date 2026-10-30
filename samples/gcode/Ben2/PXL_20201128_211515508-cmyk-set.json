@@ -1,7 +1,7 @@
 {
   "kind": "cmyk-print-set",
   "version": 3,
-  "created": "2026-10-29T20:53:09-05:00",
+  "created": "2026-10-30T09:32:54-05:00",
   "source": {
     "file": "PXL_20201128_211515508.jpg",
     "sha256": "ddd4d5ba8ffb54bf5063039b15659a05d01628e7f82977b1f2d4dd7ef27068b2"
@@ -18,7 +18,7 @@
   "bed_motion": "XY only (bed parked, precise)",
   "center_hold_diameter_mm": 60.0,
   "theta_mode": "fixed",
-  "bed_compensation_path": "C:\\Users\\jacks\\Documents\\Claude\\converter\\samples\\gcode\\bed-error-compensation-2026-10-29-dense-v3-centered.json",
+  "bed_compensation_path": "",
   "registration_crosses": false,
   "pen_offsets_mm": {
     "c": [
@@ -44,6 +44,7 @@
     "dot_pitch_mm": 0.8,
     "artwork_scale_pct": 240.0,
     "effective_pitch_mm": 1.92,
+    "preserve_exact_row_pitch": true,
     "pen_width_mm": 0.8,
     "dot_size_pct": 100.0,
     "path_tolerance_mm": 0.05,
@@ -89,19 +90,19 @@
     "k": "PXL_20201128_211515508-cmyk-black.gcode"
   },
   "file_sha256": {
-    "c": "16fc1533d34d237a8d987af4c6bd52fc6aeb3979bbb38e8df6ecd3d69de4c2f8",
-    "m": "4fb632ac5c87fe70c4b7dccb1f7cc73287e0219fcf69701a7241aa37caa99d3b",
-    "y": "9cc04aec4b2312922623d3e909a4f9f8b50b6ec6ee3f77807e692de0c6d6f5c5",
-    "k": "1c9561e82f5e333019e459cf46601a560ff0cb9d5f423532c1adeebfad2b5d56"
+    "c": "5cc24d7dd32f8da43167a0dbc803109d51dba6394e92fe2cdbd21352ea274290",
+    "m": "718706cd5e275d1d883c4b265440ece353c6123807448b69c6b3befb6f028dc4",
+    "y": "590e9b4c60965edf33255a2a22885029023c382be780d675a8db03a9d1a49563",
+    "k": "2789596cb5badc4a0026726cca773a67bf88e8b1c251dcaa035fe672a5f7683b"
   },
   "preflight": {
     "c": {
-      "drawing": 51926,
+      "drawing": 51914,
       "travel": 1735,
       "hold": 0,
       "strategies": {
         "travel": 1736,
-        "fixed": 51926
+        "fixed": 51914
       },
       "step": 0.0,
       "step_line": 0,
@@ -120,15 +121,15 @@
       "unwinds": 0,
       "cap": 15.0,
       "rate_cap": 500.0,
-      "source": "XY-only equidistant regeneration"
+      "source": "XY-only equidistant regeneration without bed compensation"
     },
     "m": {
-      "drawing": 82696,
+      "drawing": 82669,
       "travel": 3072,
       "hold": 0,
       "strategies": {
         "travel": 3073,
-        "fixed": 82696
+        "fixed": 82669
       },
       "step": 0.0,
       "step_line": 0,
@@ -147,15 +148,15 @@
       "unwinds": 0,
       "cap": 15.0,
       "rate_cap": 500.0,
-      "source": "XY-only equidistant regeneration"
+      "source": "XY-only equidistant regeneration without bed compensation"
     },
     "y": {
-      "drawing": 75062,
+      "drawing": 75050,
       "travel": 2431,
       "hold": 0,
       "strategies": {
         "travel": 2432,
-        "fixed": 75062
+        "fixed": 75050
       },
       "step": 0.0,
       "step_line": 0,
@@ -174,15 +175,15 @@
       "unwinds": 0,
       "cap": 15.0,
       "rate_cap": 500.0,
-      "source": "XY-only equidistant regeneration"
+      "source": "XY-only equidistant regeneration without bed compensation"
     },
     "k": {
-      "drawing": 71274,
+      "drawing": 71263,
       "travel": 2873,
       "hold": 0,
       "strategies": {
         "travel": 2874,
-        "fixed": 71274
+        "fixed": 71263
       },
       "step": 0.0,
       "step_line": 0,
@@ -201,25 +202,42 @@
       "unwinds": 0,
       "cap": 15.0,
       "rate_cap": 500.0,
-      "source": "XY-only equidistant regeneration"
+      "source": "XY-only equidistant regeneration without bed compensation"
     }
   },
-  "derived_from": "PXL_20201128_211515508-cmyk-set.json",
+  "derived_from": "PXL_20201128_211515508-cmyk-compensated-set.json",
   "equidistant_audit": {
     "motion_mode": "XY only (bed parked)",
-    "method": "planned paper-space row-plane audit after SVG import, physical-pen shrink, clipping, and row masking",
-    "nominal_pitch_mm": {
-      "c": 1.915506,
-      "m": 1.915488,
-      "y": 1.915457,
-      "k": 1.91549
+    "method": "final machine-space adjacent-centreline audit at 199 columns",
+    "sample_columns": 199,
+    "adjacent_gap_mm": {
+      "c": {
+        "min": 1.914111,
+        "median": 1.915526,
+        "max": 1.916586,
+        "spread": 0.002476
+      },
+      "m": {
+        "min": 1.914135,
+        "median": 1.915554,
+        "max": 1.916323,
+        "spread": 0.002188
+      },
+      "y": {
+        "min": 1.9154,
+        "median": 1.915465,
+        "max": 1.9155,
+        "spread": 0.0001
+      },
+      "k": {
+        "min": 1.914421,
+        "median": 1.915529,
+        "max": 1.915977,
+        "spread": 0.001555
+      }
     },
-    "max_plane_residual_mm": {
-      "c": 0.001125,
-      "m": 0.001121,
-      "y": 0.0,
-      "k": 0.000933
-    },
-    "note": "Missing tone-masked rows produce integer multiples of the same pitch; they do not indicate convergence."
+    "maximum_allowed_spread_mm": 0.005,
+    "result": "pass",
+    "note": "Bed compensation is disabled so the exact equidistant paper grid is also the exact final machine-XY grid."
   }
 }

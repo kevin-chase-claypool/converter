@@ -1,15 +1,46 @@
 # Engineering Log
 
-<a id="elog-20261030-ben2-row-end-boundary"></a>
-### 🟩 2026-10-30 - WINDOWS SOFTWARE/HARDWARE/VERIFIED - Ben2 red-dot gaps are omitted rows
+<a id="elog-20261030-ben2-machine-space-wave-spacing"></a>
+### 🟩 2026-10-30 - WINDOWS SOFTWARE/HARDWARE/VERIFIED - Bed compensation warped all four Ben2 row grids
 
-- The latest Ben2 yellow print was generated from the XY-only `waves_even`
-  program with SHA-256 `9CC04A...D6F5C5`.
-- Reconstructing and sampling its planned paper paths at 19 columns found only
-  the `1.9155 mm` base pitch or exact integer multiples. No intermediate or
-  compressed gaps were present.
-- The uneven-looking areas beside the operator's red dots are where individual
-  rows terminate because the yellow image mask falls below its ink floor.
+- The earlier red-dot investigation measured the compensated lattice after
+  inverse-decoding it back into paper space. That missed the acceptance plane:
+  the rows physically execute from final machine `X/Y`, where compensation had
+  compressed and expanded adjacent gaps by up to `0.323 mm`.
+- A direct final-machine-coordinate audit at 199 columns found compensated
+  ranges of cyan `1.807922-2.048475 mm`, magenta `1.819102-2.050997 mm`,
+  yellow `1.731065-2.054542 mm`, and black `1.810685-2.035515 mm`.
+- CMYK **Wave screen - equidistant rows** now has a default spacing guard that
+  removes the displacement profile from the effective job. The same four
+  canonical programs then measure spreads of `0.002476`, `0.002188`,
+  `0.000100`, and `0.001555 mm`, all below the tightened `0.005 mm` bound.
+- Other screen styles still inherit bed compensation. Unchecking the Wave
+  guard explicitly opts back into positional correction and accepts that the
+  exact row lattice is no longer guaranteed. The saved set manifest records
+  the guard and effective compensation path.
+- Canonical Ben2 files and SHA-256:
+  cyan `5CC24D7DD32F8DA43167A0DBC803109D51DBA6394E92FE2CDBD21352EA274290`,
+  magenta `718706CD5E275D1D883C4B265440ECE353C6123807448B69C6B3BEFB6F028DC4`,
+  yellow `590E9B4C60965EDF33255A2A22885029023C382BE780D675A8DB03A9D1A49563`,
+  black `2789596CB5BADC4A0026726CCA773A67BF88E8B1C251DCAA035FE672A5F7683B`.
+- All four pass macro parsing and strict motion checks with zero A motion.
+  The converter suite passes `581` tests with one expected OpenGL-context skip.
+- Evidence: `WSW-20261030-002` and
+  `docs/report/lab-notes/2026-10-30-ben2-yellow-row-end-boundary.md`.
+- Category: windows-software, hardware, cmyk, wave-screen, bed-compensation,
+  final-machine-coordinates, row-spacing, ben2.
+
+<a id="elog-20261030-ben2-row-end-boundary"></a>
+### 🟥 2026-10-30 - WINDOWS SOFTWARE/HARDWARE/SUPERSEDED - Initial red-dot conclusion measured paper space
+
+- The initial reconstruction inverse-decoded the latest yellow program from
+  SHA-256 `9CC04A...D6F5C5` and sampled its planned paper paths at 19 columns.
+  It found only the `1.9155 mm` base pitch or integer multiples in that frame.
+- That frame concealed the compensation field's effect on the final machine
+  commands. The complete correction and all-four-ink evidence supersede this
+  conclusion.
+- Image-mask row termination remains a separate real effect, but it is not a
+  complete explanation of the observed spacing.
 - Evidence: `docs/report/lab-notes/2026-10-30-ben2-yellow-row-end-boundary.md`.
 - Category: windows-software, hardware, cmyk, wave-screen, row-ending,
   image-mask, ben2.

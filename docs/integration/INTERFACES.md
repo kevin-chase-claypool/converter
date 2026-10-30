@@ -52,7 +52,11 @@ The desktop converter preselects the owner-promoted centered dense-v3
 host-side bed-compensation profile `18bfb4ed1c33` and may transform the planned
 work coordinates before emission. It uses the measured `165.100 mm` radius
 without the former extrapolated outer annulus. The Machine-tab path remains
-editable, and an empty path selects the uncompensated path:
+editable, and an empty path selects the uncompensated path. The CMYK
+**Wave screen - equidistant rows** style clears this path by default through
+its spacing guard. A non-uniform displacement field changes otherwise uniform
+row spacing in final machine X/Y; unchecking the guard explicitly opts into
+that tradeoff. Other screen styles continue to inherit the selected profile:
 
 ```text
 G54 machine X/Y = R(theta) * bed X/Y + correction(theta, bed X/Y)
@@ -63,7 +67,7 @@ existing planner still chooses `theta`; compensation is added after that
 selection and after P100 registration. P100 remains the sole owner of the
 physical centre and A index. The profile declares measured XY coverage and a
 5 mm correction bound, and planning stops rather than extrapolating beyond
-either guard. Emitted G-code always uses the transformed and subdivided points;
+either guard. Compensated G-code uses the transformed and subdivided points;
 interactive preview uses nominal X/Y by default and may select the same exact
 path when **Exact compensated preview (slow)** is enabled. The analyzer
 converts a measured bed-frame error into a machine-frame correction with
