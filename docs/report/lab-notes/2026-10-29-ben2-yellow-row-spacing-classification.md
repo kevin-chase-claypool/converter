@@ -81,6 +81,25 @@ The result does not exclude a separate mechanical following error after the
 equidistant program is printed. That question can only be evaluated from the
 corrected print.
 
+## XY-only follow-up
+
+The operator then reported the same visual unevenness with bed motion set to
+XY only. The newest standard Ben2 set was saved at `19:36:11`, four minutes
+after the converter enforcement commit, but its manifest still contained the
+pre-fix `waves_zero` style and the old style label. The running GUI therefore
+had not loaded the new converter code.
+
+Inverse-decoding the saved XY-only yellow program produced a median gap of
+`1.915439 mm`, but individual gaps ranged from `1.885051` to `1.944691 mm` and
+hundreds of gaps did not belong to one row lattice. The bed remained fixed
+throughout, proving the bad geometry was again the saved screen style rather
+than A-axis motion.
+
+The standard four Ben2 programs were replaced with new XY-only `waves_even`
+outputs. Their manifest records `bed_motion: XY only`, `style: waves_even`, and
+`wave_phase_mode: identical_translated_rows`. The four strict motion checks
+report zero A motion.
+
 ## Decision and next action
 
 - Stop the known-unequal `waves_zero` print and use the generated four-file

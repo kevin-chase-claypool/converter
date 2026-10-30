@@ -24,6 +24,13 @@
   screen angles `-15/-75/0/-45 deg`) produced base pitches of
   `1.915506/1.915488/1.915457/1.915490 mm`; every observed row plane is an
   integer multiple of its layer pitch, with at most `0.001125 mm` residual.
+- A later XY-only Ben2 print reproduced the unequal gaps because it was saved
+  by a stale pre-fix converter process: its manifest still recorded
+  `waves_zero`. The standard four Ben2 files have now been replaced with
+  exact-pitch XY-only programs; A velocity and bed-step counts are zero in all
+  four strict motion checks. The obsolete `waves_zero` files were backed up
+  outside the repository under
+  `%TEMP%\theta-ben2-waves-zero-xy-20261029-205329`.
 - Focused CMYK/coupon regression coverage passes `98` tests, including legacy
   promotion and UI-selector guards.
 - The full converter suite passes `576` tests with one expected

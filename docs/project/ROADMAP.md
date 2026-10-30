@@ -422,6 +422,10 @@
   a diagnostic tool explicitly opts out. A physical print of the corrected set
   remains required before deciding whether residual bed-following error
   remains.
+  Status 2026-10-29 XY-only check: an XY-only regeneration from the stale GUI
+  still contained `waves_zero`, proving that A motion was not required to
+  produce the spacing defect. The standard Ben2 files have been replaced with
+  exact-pitch XY-only programs; a fresh physical print is the next gate.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

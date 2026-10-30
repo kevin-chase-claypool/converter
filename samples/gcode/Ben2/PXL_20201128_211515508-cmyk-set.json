@@ -1,0 +1,225 @@
+{
+  "kind": "cmyk-print-set",
+  "version": 3,
+  "created": "2026-10-29T20:53:09-05:00",
+  "source": {
+    "file": "PXL_20201128_211515508.jpg",
+    "sha256": "ddd4d5ba8ffb54bf5063039b15659a05d01628e7f82977b1f2d4dd7ef27068b2"
+  },
+  "page": {
+    "width_mm": 200.0,
+    "height_mm": 200.0,
+    "margin_mm": 6.0
+  },
+  "frame_center_mm": [
+    100.0,
+    100.0
+  ],
+  "bed_motion": "XY only (bed parked, precise)",
+  "center_hold_diameter_mm": 60.0,
+  "theta_mode": "fixed",
+  "bed_compensation_path": "C:\\Users\\jacks\\Documents\\Claude\\converter\\samples\\gcode\\bed-error-compensation-2026-10-29-dense-v3-centered.json",
+  "registration_crosses": false,
+  "pen_offsets_mm": {
+    "c": [
+      0.0,
+      0.0
+    ],
+    "m": [
+      0.0,
+      0.0
+    ],
+    "y": [
+      0.0,
+      0.0
+    ],
+    "k": [
+      0.0,
+      0.0
+    ]
+  },
+  "screen": {
+    "style": "waves_even",
+    "style_label": "Wave screen - equidistant rows",
+    "dot_pitch_mm": 0.8,
+    "artwork_scale_pct": 240.0,
+    "effective_pitch_mm": 1.92,
+    "pen_width_mm": 0.8,
+    "dot_size_pct": 100.0,
+    "path_tolerance_mm": 0.05,
+    "minimum_centerline_clearance_mm": 1.05,
+    "levels": 9,
+    "overdraw": 1,
+    "solid_dots": false,
+    "seed": 8,
+    "max_marks": 40000,
+    "screen_angles_deg": {
+      "c": 15.0,
+      "m": 75.0,
+      "y": 0.0,
+      "k": 45.0
+    },
+    "wave_phase_mode": "identical_translated_rows"
+  },
+  "ink_processing": {
+    "auto_levels": true,
+    "saturation_pct": 80.0,
+    "contrast_pct": 280.0,
+    "brightness_pct": 200.0,
+    "gamma": 0.5,
+    "gcr_pct": 99.0,
+    "resolution_px": 10000,
+    "weights": {
+      "c": 1.0,
+      "m": 1.0,
+      "y": 1.0,
+      "k": 1.0
+    },
+    "sharpening": {
+      "enabled": true,
+      "amount_pct": 200.0,
+      "radius_mm": 3.0
+    }
+  },
+  "notes": "Pen offsets apply to artwork programs and the preview only; the calibration sheet keeps its geometric layout.",
+  "files": {
+    "c": "PXL_20201128_211515508-cmyk-cyan.gcode",
+    "m": "PXL_20201128_211515508-cmyk-magenta.gcode",
+    "y": "PXL_20201128_211515508-cmyk-yellow.gcode",
+    "k": "PXL_20201128_211515508-cmyk-black.gcode"
+  },
+  "file_sha256": {
+    "c": "16fc1533d34d237a8d987af4c6bd52fc6aeb3979bbb38e8df6ecd3d69de4c2f8",
+    "m": "4fb632ac5c87fe70c4b7dccb1f7cc73287e0219fcf69701a7241aa37caa99d3b",
+    "y": "9cc04aec4b2312922623d3e909a4f9f8b50b6ec6ee3f77807e692de0c6d6f5c5",
+    "k": "1c9561e82f5e333019e459cf46601a560ff0cb9d5f423532c1adeebfad2b5d56"
+  },
+  "preflight": {
+    "c": {
+      "drawing": 51926,
+      "travel": 1735,
+      "hold": 0,
+      "strategies": {
+        "travel": 1736,
+        "fixed": 51926
+      },
+      "step": 0.0,
+      "step_line": 0,
+      "rate": 0.0,
+      "rate_line": 0,
+      "deviation": [
+        0.0,
+        0.0,
+        0,
+        ""
+      ],
+      "tolerance": 0.05,
+      "over_tolerance": 0,
+      "rapids_with_rotation": 0,
+      "fed_rotations": 0,
+      "unwinds": 0,
+      "cap": 15.0,
+      "rate_cap": 500.0,
+      "source": "XY-only equidistant regeneration"
+    },
+    "m": {
+      "drawing": 82696,
+      "travel": 3072,
+      "hold": 0,
+      "strategies": {
+        "travel": 3073,
+        "fixed": 82696
+      },
+      "step": 0.0,
+      "step_line": 0,
+      "rate": 0.0,
+      "rate_line": 0,
+      "deviation": [
+        0.0,
+        0.0,
+        0,
+        ""
+      ],
+      "tolerance": 0.05,
+      "over_tolerance": 0,
+      "rapids_with_rotation": 0,
+      "fed_rotations": 0,
+      "unwinds": 0,
+      "cap": 15.0,
+      "rate_cap": 500.0,
+      "source": "XY-only equidistant regeneration"
+    },
+    "y": {
+      "drawing": 75062,
+      "travel": 2431,
+      "hold": 0,
+      "strategies": {
+        "travel": 2432,
+        "fixed": 75062
+      },
+      "step": 0.0,
+      "step_line": 0,
+      "rate": 0.0,
+      "rate_line": 0,
+      "deviation": [
+        0.0,
+        0.0,
+        0,
+        ""
+      ],
+      "tolerance": 0.05,
+      "over_tolerance": 0,
+      "rapids_with_rotation": 0,
+      "fed_rotations": 0,
+      "unwinds": 0,
+      "cap": 15.0,
+      "rate_cap": 500.0,
+      "source": "XY-only equidistant regeneration"
+    },
+    "k": {
+      "drawing": 71274,
+      "travel": 2873,
+      "hold": 0,
+      "strategies": {
+        "travel": 2874,
+        "fixed": 71274
+      },
+      "step": 0.0,
+      "step_line": 0,
+      "rate": 0.0,
+      "rate_line": 0,
+      "deviation": [
+        0.0,
+        0.0,
+        0,
+        ""
+      ],
+      "tolerance": 0.05,
+      "over_tolerance": 0,
+      "rapids_with_rotation": 0,
+      "fed_rotations": 0,
+      "unwinds": 0,
+      "cap": 15.0,
+      "rate_cap": 500.0,
+      "source": "XY-only equidistant regeneration"
+    }
+  },
+  "derived_from": "PXL_20201128_211515508-cmyk-set.json",
+  "equidistant_audit": {
+    "motion_mode": "XY only (bed parked)",
+    "method": "planned paper-space row-plane audit after SVG import, physical-pen shrink, clipping, and row masking",
+    "nominal_pitch_mm": {
+      "c": 1.915506,
+      "m": 1.915488,
+      "y": 1.915457,
+      "k": 1.91549
+    },
+    "max_plane_residual_mm": {
+      "c": 0.001125,
+      "m": 0.001121,
+      "y": 0.0,
+      "k": 0.000933
+    },
+    "note": "Missing tone-masked rows produce integer multiples of the same pitch; they do not indicate convergence."
+  }
+}
