@@ -18,7 +18,9 @@
 - Corrected file hash:
   `4BDE0728D6273F73CBA10159B210C8FE810202CFC2B3F4333B0B6E63EBCCCABD`.
   Macro parsing and strict motion checks pass.
-- Evidence: `WSW-20261029-008`; physical print verification remains pending.
+- Evidence: `WSW-20261029-008` and
+  `docs/report/lab-notes/2026-10-29-ben2-yellow-row-spacing-classification.md`;
+  physical print verification remains pending.
 - Category: windows-software, cmyk, wave-screen, row-spacing, manifest, ben2.
 
 <a id="elog-20261029-promote-centered-dense-v3"></a>

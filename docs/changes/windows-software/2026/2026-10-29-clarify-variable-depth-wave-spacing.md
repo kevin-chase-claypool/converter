@@ -9,6 +9,7 @@ components:
   - software/generator_tabs/cmyk_tab.py
   - software/tests/test_cmyk_tab.py
   - samples/gcode/Ben2/PXL_20201128_211515508-cmyk-yellow-equidistant.gcode
+  - docs/report/lab-notes/2026-10-29-ben2-yellow-row-spacing-classification.md
 tags:
   - cmyk
   - wave-screen
@@ -66,6 +67,8 @@ being introduced only by the bed rotation.
   at most `0.000216 mm`.
 - `python tools/check_gcode_motion.py ... --strict` and
   `python tools/check_macros.py ...` pass on the corrected file.
+- Method, per-column measurements, and the correction boundary are recorded in
+  `docs/report/lab-notes/2026-10-29-ben2-yellow-row-spacing-classification.md`.
 
 ## Struggles and rejected approaches
 
@@ -92,3 +95,5 @@ constant pitch is the hard requirement.
 - `software/converter_core/cmyk.py`: current style documentation.
 - `samples/gcode/Ben2/PXL_20201128_211515508-cmyk-yellow-equidistant.gcode`:
   same Ben2 frame and compensation recipe with exact-pitch rows.
+- `docs/report/lab-notes/2026-10-29-ben2-yellow-row-spacing-classification.md`:
+  decoded spacing evidence and physical-test boundary.
