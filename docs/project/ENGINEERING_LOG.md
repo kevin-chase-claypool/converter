@@ -1,5 +1,19 @@
 # Engineering Log
 
+<a id="elog-20261030-ben2-row-end-boundary"></a>
+### 🟩 2026-10-30 - WINDOWS SOFTWARE/HARDWARE/VERIFIED - Ben2 red-dot gaps are omitted rows
+
+- The latest Ben2 yellow print was generated from the XY-only `waves_even`
+  program with SHA-256 `9CC04A...D6F5C5`.
+- Reconstructing and sampling its planned paper paths at 19 columns found only
+  the `1.9155 mm` base pitch or exact integer multiples. No intermediate or
+  compressed gaps were present.
+- The uneven-looking areas beside the operator's red dots are where individual
+  rows terminate because the yellow image mask falls below its ink floor.
+- Evidence: `docs/report/lab-notes/2026-10-30-ben2-yellow-row-end-boundary.md`.
+- Category: windows-software, hardware, cmyk, wave-screen, row-ending,
+  image-mask, ben2.
+
 <a id="elog-20261030-photo-fidelity-wave-auto"></a>
 ### 🟨 2026-10-30 - WINDOWS SOFTWARE/IMPLEMENTED - Preserve photo fidelity in Wave-screen Auto
 

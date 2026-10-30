@@ -431,6 +431,11 @@
   This produces a substantially more faithful live preview, but a physical
   comparison coupon remains required. Continuous-tone fidelity beyond what the
   binary wave mask can express remains an open design question.
+  Status 2026-10-30 row-end check: the red-dot area from the latest Ben2 yellow
+  print was decoded against the XY-only `waves_even` program. Every surviving
+  row lay on the `1.9155 mm` lattice or an integer multiple where intervening
+  rows were omitted by the image mask. No planner or spacing correction is
+  indicated by that observation.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only
