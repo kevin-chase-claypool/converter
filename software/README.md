@@ -628,6 +628,12 @@ Current tools:
   a given X position receives the same vertical displacement; darkness cannot
   move a row baseline or pull one row toward another. Tone still masks whole
   row segments where the source image has no ink.
+  **Vary Wave frequency across image (break banding)** is enabled by default
+  for this style. It smoothly varies the common carrier frequency by up to
+  `18 %`, using two non-matching modulation periods, so all row crests and
+  troughs do not repeat as fixed vertical bands. The phase and vertical offset
+  remain identical across every row at each X position, preserving exact row
+  pitch. Unchecking it restores the former constant-frequency carrier.
   **Preserve exact row pitch (row-lock bed compensation)** is enabled by
   default for this style. It keeps the selected Machine-tab profile active but
   projects its complete measured field into displacement common to every

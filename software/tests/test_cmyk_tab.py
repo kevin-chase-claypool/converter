@@ -1580,6 +1580,67 @@ class ScreeningTests(unittest.TestCase):
             "full tone must deepen the wave without changing row baselines",
         )
 
+    def test_phase_locked_variable_frequency_preserves_row_pitch(self):
+        spacing = 4.0
+        tone = self.np.ones((64, 64), dtype="float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves_even",
+            spacing_mm=spacing,
+            seed=7,
+            wave_frequency_variation=converter.WAVE_FREQUENCY_VARIATION,
+        )
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        for x_value in (8.0, 20.0, 32.0, 44.0, 56.0):
+            values = sorted(
+                value
+                for row in waves
+                if (value := value_at_x(row, x_value)) is not None
+            )
+            gaps = [
+                second - first
+                for first, second in zip(values, values[1:])
+            ]
+            self.assertGreaterEqual(len(gaps), 10)
+            self.assertLess(max(gaps) - min(gaps), 1e-9)
+            self.assertAlmostEqual(sum(gaps) / len(gaps), spacing, places=9)
+
+        row = max(waves, key=len)
+        peak_x = [
+            x_value
+            for index, (x_value, y_value) in enumerate(row[1:-1], start=1)
+            if y_value >= row[index - 1][1]
+            and y_value >= row[index + 1][1]
+        ]
+        peak_spacing = [
+            second - first
+            for first, second in zip(peak_x, peak_x[1:])
+        ]
+        self.assertGreaterEqual(len(peak_spacing), 4)
+        self.assertGreater(
+            max(peak_spacing) - min(peak_spacing),
+            0.1,
+            "the shared carrier must no longer repeat at one fixed frequency",
+        )
+
     def test_equidistant_wave_rows_work_at_all_screen_angles(self):
         spacing = 4.0
         page_mm = 64.0
@@ -2051,6 +2112,8 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertTrue(guarded.row_locked_compensation)
         self.assertTrue(tab._wave_spacing_guard_active())
+        self.assertTrue(tab._variable_wave_frequency_active())
+        self.assertTrue(tab.vary_wave_frequency.isEnabled())
 
         tab.preserve_wave_pitch.setChecked(False)
         unguarded = tab._effective_settings()
@@ -2073,11 +2136,15 @@ class CmykTabTests(unittest.TestCase):
             tab._effective_settings().row_locked_compensation
         )
         self.assertFalse(tab.preserve_wave_pitch.isEnabled())
+        self.assertFalse(tab.vary_wave_frequency.isEnabled())
+        self.assertFalse(tab._variable_wave_frequency_active())
 
         tab.style.setCurrentIndex(tab.style.findData("waves_even"))
         tab.calibration_mode.setChecked(True)
         self.assertFalse(tab._wave_spacing_guard_active())
         self.assertFalse(tab.preserve_wave_pitch.isEnabled())
+        self.assertFalse(tab.vary_wave_frequency.isEnabled())
+        self.assertFalse(tab._variable_wave_frequency_active())
         self.assertIn("not applicable", tab._summary_text().lower())
         self.assertEqual(
             tab._effective_settings().bed_compensation_path,
@@ -2283,6 +2350,14 @@ class CmykTabTests(unittest.TestCase):
             converter.default_settings().bed_compensation_path,
         )
         self.assertTrue(data["screen"]["preserve_exact_row_pitch"])
+        self.assertEqual(
+            data["screen"]["wave_frequency_mode"],
+            "shared_phase_modulated",
+        )
+        self.assertAlmostEqual(
+            data["screen"]["wave_frequency_variation_pct"],
+            converter.WAVE_FREQUENCY_VARIATION * 100.0,
+        )
         self.assertEqual(
             data["bed_compensation"]["mode"],
             "row_locked_projection",

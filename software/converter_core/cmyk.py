@@ -50,6 +50,10 @@ WAVE_MAX_ADJACENT_GAP_FRACTION = 0.12
 # Keep at least this much bare paper between the nominal pen edges.
 WAVE_MIN_EDGE_GAP_MM = 0.25
 WAVE_CLEARANCE_SEARCH_STEPS = 7
+# Smoothly vary the shared Wave carrier frequency across the image. The phase
+# remains common to every row, so this breaks coherent crest/trough columns
+# without changing the perpendicular distance between row baselines.
+WAVE_FREQUENCY_VARIATION = 0.18
 # Black usually overpowers the other three pens (the r/PlotterArt threads
 # consistently report dialing it down), so its default weight is lower.
 DEFAULT_WEIGHTS = {"c": 1.0, "m": 1.0, "y": 1.0, "k": 0.8}
@@ -825,6 +829,8 @@ def _wave_rows(
     equal_spacing=False,
     zero_anchored_depth=False,
     minimum_clearance_mm=0.0,
+    wave_frequency_variation=0.0,
+    seed=0,
 ):
     """Sine rows with tone-driven depth and a safety envelope.
 
@@ -832,8 +838,9 @@ def _wave_rows(
     field also varies wave height across rows. The phase-locked depth mode
     keeps one phase carrier across all rows and varies only their amplitude
     from scene depth. The equidistant mode translates one common waveform with
-    no row-specific movement. Both use the final shortest-segment check to
-    preserve the configured pen envelope.
+    no row-specific movement. Its carrier can vary frequency smoothly across
+    the image while keeping that shared phase. Both modes use the final
+    shortest-segment check to preserve the configured pen envelope.
     """
     min_x, max_x, min_y, max_y, ca, sa = _local_frame(bounds, angle_deg)
     spacing = max(0.2, float(spacing))
@@ -849,10 +856,16 @@ def _wave_rows(
     # max|y''| for amplitude_max * sin(2*pi*x/wavelength) is amplitude_max *
     # (pi/spacing)^2, and a chord of length h has about h^2/8 times that
     # curvature as its midpoint error.
+    frequency_variation = max(
+        0.0, min(0.45, float(wave_frequency_variation))
+    )
+    max_frequency_scale = (
+        1.0 + frequency_variation if equal_spacing else 1.0
+    )
     curvature_amplitude = amplitude_max
     curvature = (
         curvature_amplitude
-        * (math.pi / spacing) ** 2
+        * (max_frequency_scale * math.pi / spacing) ** 2
     )
     tolerance_step = math.sqrt(
         8.0 * max(0.001, float(path_tolerance_mm)) / curvature
@@ -872,6 +885,59 @@ def _wave_rows(
     while x <= max_x:
         x_values.append(x)
         x += sample_step
+
+    base_phases = [
+        2.0 * math.pi * (x - min_x) / wavelength for x in x_values
+    ]
+    wave_phases = base_phases
+    if equal_spacing and frequency_variation > 1e-9 and len(x_values) > 1:
+        span = max(max_x - min_x, wavelength)
+        long_period = max(wavelength * 7.0, span * 0.73)
+        short_period = max(wavelength * 2.2, span * 0.29)
+        phase_offset = (
+            2.0
+            * math.pi
+            * ((int(seed) * 0.6180339887498949) % 1.0)
+        )
+        short_phase_offset = (
+            2.0
+            * math.pi
+            * ((int(seed) * 0.4142135623730950 + 0.31) % 1.0)
+        )
+        frequency_scales = [
+            1.0
+            + frequency_variation
+            * (
+                0.67
+                * math.sin(
+                    2.0
+                    * math.pi
+                    * (x - min_x)
+                    / long_period
+                    + phase_offset
+                )
+                + 0.33
+                * math.sin(
+                    2.0
+                    * math.pi
+                    * (x - min_x)
+                    / short_period
+                    + short_phase_offset
+                )
+            )
+            for x in x_values
+        ]
+        radians_per_mm = 2.0 * math.pi / wavelength
+        wave_phases = [0.0]
+        for index in range(1, len(x_values)):
+            delta_x = x_values[index] - x_values[index - 1]
+            mean_frequency_scale = 0.5 * (
+                frequency_scales[index - 1] + frequency_scales[index]
+            )
+            wave_phases.append(
+                wave_phases[-1]
+                + radians_per_mm * mean_frequency_scale * delta_x
+            )
 
     tone_rows = []
     depth_rows = []
@@ -930,7 +996,7 @@ def _wave_rows(
                     offset = (
                         amplitude_max
                         * shared_tone[x_index]
-                        * math.sin(2.0 * math.pi * x / wavelength)
+                        * math.sin(wave_phases[x_index])
                     )
                     positions[row_index][x_index] = (x, y + offset)
     elif zero_anchored_depth:
@@ -958,7 +1024,7 @@ def _wave_rows(
                         amplitude_max
                         * depth_scale
                         * smoothed_tone[row_index][x_index]
-                        * math.sin(2.0 * math.pi * x / wavelength)
+                        * math.sin(base_phases[x_index])
                     )
                     result[row_index][x_index] = (x, y + offset)
             return result
@@ -1026,7 +1092,7 @@ def _wave_rows(
                     offset = (
                         amplitude_max
                         * depth_tone[x_index][row_index]
-                        * math.sin(2.0 * math.pi * x / wavelength)
+                        * math.sin(base_phases[x_index])
                     )
                     positions[row_index][x_index] = (x, y + offset)
 
@@ -1166,6 +1232,7 @@ def screen_channel(
     depth_tone=None,
     row_clearance_mm=None,
     allow_variable_wave_spacing=False,
+    wave_frequency_variation=0.0,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
@@ -1287,6 +1354,8 @@ def screen_channel(
             equal_spacing=(style == "waves_even"),
             zero_anchored_depth=(style == "waves_zero"),
             minimum_clearance_mm=minimum_clearance_mm,
+            wave_frequency_variation=wave_frequency_variation,
+            seed=seed,
         )
     elif style == "tsp":
         points = stipple_points(

@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-10-31 | `WSW-20261031-001` | windows-software, hardware | implemented | [Phase-modulate the Wave carrier to break vertical banding](windows-software/2026/2026-10-31-phase-modulated-wave-frequency.md) |
 | 2026-10-30 | `WSW-20261030-003` | windows-software, hardware | implemented | [Row-lock Wave bed compensation instead of disabling it](windows-software/2026/2026-10-30-row-locked-wave-bed-compensation.md) |
 | 2026-10-30 | `WSW-20261030-002` | windows-software, hardware | superseded | [Preserve exact Wave row pitch across final machine coordinates](windows-software/2026/2026-10-30-preserve-wave-row-pitch-across-compensation.md) |
 | 2026-10-30 | `WSW-20261030-001` | windows-software | implemented | [Preserve photo fidelity in Wave-screen Auto](windows-software/2026/2026-10-30-photo-fidelity-wave-auto.md) |

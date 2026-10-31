@@ -310,6 +310,17 @@ class CmykTab(GeneratorTab):
             "the raw two-dimensional field and accept non-uniform rows."
         )
         screen.addRow("Spacing guard", self.preserve_wave_pitch)
+        self.vary_wave_frequency = QCheckBox(
+            "Vary Wave frequency across image (break banding)"
+        )
+        self.vary_wave_frequency.setChecked(True)
+        self.vary_wave_frequency.setToolTip(
+            "Smoothly varies the Wave carrier frequency across the artwork "
+            "while keeping one phase and vertical displacement shared by "
+            "every row. This reduces fixed vertical crest/trough banding "
+            "without changing row-to-row pitch."
+        )
+        screen.addRow("Wave carrier", self.vary_wave_frequency)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
         screen.addRow("Dot size", self.dot_size)
         self.solid_dots = QCheckBox("Solid dots")
@@ -598,6 +609,9 @@ class CmykTab(GeneratorTab):
         self.preserve_wave_pitch.toggled.connect(
             self._update_wave_spacing_guard
         )
+        self.vary_wave_frequency.toggled.connect(
+            self._update_wave_spacing_guard
+        )
         self.calibration_mode.toggled.connect(
             self._update_wave_spacing_guard
         )
@@ -839,6 +853,7 @@ class CmykTab(GeneratorTab):
             self.style.currentData(),
             self.pitch.value(),
             self._wave_spacing_guard_active(),
+            self._variable_wave_frequency_active(),
             self.dot_size.value(),
             self.solid_dots.isChecked(),
             self.theta_mode.value(),
@@ -914,8 +929,17 @@ class CmykTab(GeneratorTab):
             and self.style.currentData() == "waves_even"
         )
         self.preserve_wave_pitch.setEnabled(wave_selected)
+        self.vary_wave_frequency.setEnabled(wave_selected)
         if hasattr(self, "pass_summary"):
             self._refresh_pass_summary()
+
+    def _variable_wave_frequency_active(self):
+        """Whether the production Wave carrier varies frequency."""
+        return (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData() == "waves_even"
+            and self.vary_wave_frequency.isChecked()
+        )
 
     def _summary_text(self, results=None):
         offsets = self._pen_offsets()
@@ -943,6 +967,12 @@ class CmykTab(GeneratorTab):
                     )
                     else "not applicable"
                 )
+            ),
+            "wave frequency %s"
+            % (
+                "varied"
+                if self._variable_wave_frequency_active()
+                else "constant"
             ),
             "crosses %s" % ("on" if self.registration_marks.isChecked() else "off"),
             "pen offsets %s" % (", ".join(offset_parts) if offset_parts else "none"),
@@ -1039,6 +1069,11 @@ class CmykTab(GeneratorTab):
                 row_clearance_mm=(
                     (self.pen_width.value() + converter.WAVE_MIN_EDGE_GAP_MM)
                     / factor
+                ),
+                wave_frequency_variation=(
+                    converter.WAVE_FREQUENCY_VARIATION
+                    if self._variable_wave_frequency_active()
+                    else 0.0
                 ),
             )
             # Generator pages are plotted 1:1, so the tab's Artwork scale is
@@ -1495,6 +1530,16 @@ class CmykTab(GeneratorTab):
                 "effective_pitch_mm": self.pitch.value() * factor,
                 "preserve_exact_row_pitch": (
                     self._wave_spacing_guard_active()
+                ),
+                "wave_frequency_mode": (
+                    "shared_phase_modulated"
+                    if self._variable_wave_frequency_active()
+                    else "constant"
+                ),
+                "wave_frequency_variation_pct": (
+                    converter.WAVE_FREQUENCY_VARIATION * 100.0
+                    if self._variable_wave_frequency_active()
+                    else 0.0
                 ),
                 "pen_width_mm": self.pen_width.value(),
                 "dot_size_pct": self.dot_size.value(),

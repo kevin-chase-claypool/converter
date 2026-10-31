@@ -447,6 +447,13 @@
   row-locked set remains the hardware acceptance step; its comparison must
   show whether the retained correction reduces residual error without
   reintroducing row drift.
+  Status 2026-10-31: the fixed-frequency common carrier produces aligned
+  crest/trough columns that can mimic striation even when row baselines are
+  exact. Production Wave output now applies a shared phase-modulated carrier
+  with up to `18 %` frequency variation across the image. The phase and
+  vertical displacement remain common to every row, preserving the spacing
+  invariant. A physical fixed-versus-variable coupon remains required to
+  separate carrier moiré from Xθ/Yθ following error, pen drag, and ink spread.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

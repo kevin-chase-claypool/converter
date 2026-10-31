@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-31 | `WSW-20261031-001` | implemented | [Phase-modulate the Wave carrier to break vertical banding](../windows-software/2026/2026-10-31-phase-modulated-wave-frequency.md) | `cmyk`, `wave-screen`, `variable-frequency`, `phase-locked`, `row-spacing`, `banding` |
 | 2026-10-30 | `WSW-20261030-003` | implemented | [Row-lock Wave bed compensation instead of disabling it](../windows-software/2026/2026-10-30-row-locked-wave-bed-compensation.md) | `cmyk`, `wave-screen`, `row-spacing`, `bed-compensation`, `projected-mesh`, `final-machine-coordinates`, `ben2` |
 | 2026-10-30 | `WSW-20261030-002` | superseded | [Preserve exact Wave row pitch across final machine coordinates](../windows-software/2026/2026-10-30-preserve-wave-row-pitch-across-compensation.md) | `cmyk`, `wave-screen`, `row-spacing`, `bed-compensation`, `final-machine-coordinates`, `ben2` |
 | 2026-10-29 | `WSW-20261029-007` | implemented | [Promote the centered dense v3 bed profile](../windows-software/2026/2026-10-29-promote-centered-dense-v3-profile.md) | `bed-compensation`, `dense-mesh`, `default-profile`, `owner-override`, `coverage` |

@@ -256,7 +256,9 @@ A motion. The physical print now verifies both exact row spacing and whether
 the retained projected correction improves bed-position error. This
 supersedes the earlier no-compensation workaround. A dedicated dark-tone
 regression also requires full-tone depth to exceed light-tone depth while every
-adjacent gap and row baseline remains unchanged.
+adjacent gap and row baseline remains unchanged. A phase-locked carrier test
+also requires the shared Wave frequency to vary across the image without
+changing any adjacent-row gap.
 
 ### M-12 full-field bench procedure
 

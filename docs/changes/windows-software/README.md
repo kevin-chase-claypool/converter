@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-10-31 | `WSW-20261031-001` | implemented | [Phase-modulate the Wave carrier to break vertical banding](2026/2026-10-31-phase-modulated-wave-frequency.md) | `cmyk`, `wave-screen`, `variable-frequency`, `phase-locked`, `row-spacing`, `banding` |
 | 2026-10-30 | `WSW-20261030-003` | implemented | [Row-lock Wave bed compensation instead of disabling it](2026/2026-10-30-row-locked-wave-bed-compensation.md) | `cmyk`, `wave-screen`, `row-spacing`, `bed-compensation`, `projected-mesh`, `final-machine-coordinates`, `ben2` |
 | 2026-10-30 | `WSW-20261030-002` | superseded | [Preserve exact Wave row pitch across final machine coordinates](2026/2026-10-30-preserve-wave-row-pitch-across-compensation.md) | `cmyk`, `wave-screen`, `row-spacing`, `bed-compensation`, `final-machine-coordinates`, `ben2` |
 | 2026-10-30 | `WSW-20261030-001` | implemented | [Preserve photo fidelity in Wave-screen Auto](2026/2026-10-30-photo-fidelity-wave-auto.md) | `cmyk`, `auto-photo`, `wave-screen`, `image-fidelity`, `exposure`, `color` |

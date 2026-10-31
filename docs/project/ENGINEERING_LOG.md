@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20261031-phase-modulated-wave-frequency"></a>
+### 🟨 2026-10-31 - WINDOWS SOFTWARE/IMPLEMENTED - Vary Wave carrier frequency without moving row baselines
+
+- The equidistant Wave screen previously used one fixed wavelength equal to
+  twice the row pitch. Every row crest and trough therefore aligned in
+  repeated vertical columns, which can create stripe-like moiré independently
+  of row spacing.
+- The carrier now varies frequency smoothly across the image using two
+  non-matching modulation periods. Default instantaneous-frequency variation
+  is `18 %`.
+- Every row still receives exactly the same phase and vertical displacement at
+  each X position. A synthetic `4 mm` pitch control measures crest intervals
+  from `6.756-9.168 mm` while every adjacent row gap remains exactly
+  `4.000000 mm`.
+- **Vary Wave frequency across image (break banding)** is enabled by default
+  for Wave screen and can be disabled for a constant-frequency comparison.
+  Set manifests record the mode and percentage.
+- Evidence: `WSW-20261031-001`.
+- Category: windows-software, hardware, cmyk, wave-screen,
+  variable-frequency, phase-locked, row-spacing, banding.
+
 <a id="elog-20261030-row-locked-wave-bed-compensation"></a>
 ### 🟨 2026-10-30 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Row-lock Wave compensation instead of disabling the mesh
 
