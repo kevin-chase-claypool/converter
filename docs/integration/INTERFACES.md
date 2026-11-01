@@ -49,11 +49,11 @@ Unknown or unsupported commands must cause an explicit error during test, not
 silent motion.
 
 The desktop converter preselects the owner-promoted expanded centered dense-v3
-host-side bed-compensation profile `057313c41e21` and may transform the planned
+host-side bed-compensation profile `f85ec410dbac` and may transform the planned
 work coordinates before emission. It retains the measured `165.100 mm` field
 from profile `18bfb4ed1c33` and extends its local-affine correction by
-`6.350 mm` to the requested `171.450 mm` radius. The Machine-tab path remains
-editable, and an empty path selects the uncompensated path. The CMYK
+`14.900 mm` to the `180.000 mm` gantry-reach radius. The Machine-tab path
+remains editable, and an empty path selects the uncompensated path. The CMYK
 **Wave screen - equidistant rows** style keeps this profile by default through
 its spacing guard, but evaluates it as a **row-locked projection**. For each
 screen-frame along-row coordinate, the complete measured field is averaged
@@ -73,7 +73,7 @@ selection and after P100 registration. P100 remains the sole owner of the
 physical centre and A index. The profile declares XY coverage and a 5 mm
 correction bound, and planning stops beyond either guard. Of that declared
 coverage, `0-165.100 mm` comes from the dense-v3 measurements; the outer
-`6.350 mm` annulus is local-affine extrapolation pending an edge-band print.
+`14.900 mm` annulus is local-affine extrapolation pending an edge-band print.
 Compensated G-code uses the transformed and subdivided points;
 row-locked Wave G-code additionally identifies the full profile fingerprint,
 projection maximum, and per-ink row angle in its header. Its set manifest

@@ -32,6 +32,7 @@ sys.path.insert(0, str(ROOT / "software"))
 import converter_core as converter  # noqa: E402
 from converter_core.bed_calibration import (  # noqa: E402
     CALIBRATION_LAYOUTS,
+    SHEET_DIAMETER_MM,
     STANDARD_LAYOUT,
     calibration_layout,
     calibration_stations,
@@ -364,7 +365,7 @@ def main():
     )
     print(
         "layout extent %.3f mm radius; test radius %.3f mm; sheet radius %.3f mm"
-        % (extent, layout.test_radius_mm, 355.6 / 2.0)
+        % (extent, layout.test_radius_mm, SHEET_DIAMETER_MM / 2.0)
     )
     if args.pass_dwell_seconds is None:
         print(

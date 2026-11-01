@@ -6,7 +6,7 @@ repeats the matrix with production Xtheta/Ytheta planning. The upper half is
 planned with A parked as an isolated geometry control. Everything uses the
 production 3.36 mm paper pitch, 0.8 mm pen, F700, and 0.05 mm tolerance.
 
-The matrices fit within a 234 x 142 mm field on one already-mounted 14-inch
+The matrices fit within a 234 x 142 mm field on one already-mounted 15-inch
 sheet. One Cycle Start completes the entire diagnostic without intervention.
 
 ``--letter`` writes a separate 8.5 x 11 paper verification matrix: all four
@@ -39,12 +39,7 @@ DEFAULT_PITCH_OUTPUT = (
 DEFAULT_LETTER_OUTPUT = (
     ROOT / "samples" / "gcode" / "cmyk-wave-letter-test.gcode"
 )
-DEFAULT_BED = (
-    ROOT
-    / "samples"
-    / "gcode"
-    / "bed-error-compensation-2026-10-23-13p5in-extrapolated.json"
-)
+DEFAULT_BED = Path(converter.DEFAULT_BED_COMPENSATION_PATH)
 PAPER_PITCH_MM = 3.36
 PEN_WIDTH_MM = 0.8
 PATH_TOLERANCE_MM = 0.05

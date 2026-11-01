@@ -126,7 +126,7 @@ Cycle Start with the pen loaded:
 - `..\samples\gcode\rotation-center-calibration.gcode` - the calibration
   counterpart to the line replay. Run it after `G65 P113`. It uses 12 balanced
   stations: three repeats each of 0, 90, 180, and 270 degrees distributed in a
-  4 x 3 lattice across 14-inch round stock. Each station has a longer A=0
+  4 x 3 lattice across 15-inch round stock. Each station has a longer A=0
   reference cross and a shorter angle replay separated by a known **20 mm
   baseline in both axes**, so wet parallel lines do not overlap. The printed
   sheet identifies every pair with an `ANGLE-REPLICATE` label such as `0-1` or
@@ -160,7 +160,7 @@ Cycle Start with the pen loaded:
   for the position-dependent error left after registration. Run it after
   `G65 P113` with one Pigma Micron 005 (0.20 mm) for all nine passes. Its
   37 stations cover rings at 50, 95, and 150 mm on a 13-inch test field
-  inside 14-inch round stock. Pass 1 is the A=0 spatial reference; passes
+  inside 15-inch round stock. Pass 1 is the A=0 spatial reference; passes
   2-8 replay the same fixed positions at 45/90/135/180/225/270/315 degrees;
   pass 9 is an A=0 control after the rotations. Each replay occupies a
   separate 10 mm lane, so wet lines do not overwrite the reference.
@@ -216,13 +216,14 @@ Cycle Start with the pen loaded:
   every angle-stage RMS and reduced aggregate RMS from `0.550` to `0.486 mm`,
   but its `1.171 mm` maximum and `11.6 %` improvement miss the gates.
   The project owner explicitly promoted `18bfb4ed1c33` anyway. On 2026-11-01
-  the owner requested a 0.5-inch larger printable diameter. Derived profile
-  `057313c41e21` keeps that profile's measured samples and corrections, then
-  extends its local-affine coverage from `165.100` to `171.450 mm`. The
-  application now defaults to the 13.5-inch field with a 6.35 mm bed margin.
-  The measured inner field has the verification result above; the new outer
-  `6.35 mm` annulus is extrapolated and remains unverified on paper. This is an
-  owner override, not a gate-qualified pass.
+  the owner corrected the stock assumption from 14 to 15 inches. Derived
+  profile `f85ec410dbac` keeps that profile's measured samples and corrections,
+  then extends its local-affine coverage from `165.100` to `180.000 mm`. The
+  default 15-inch stock and 6.35 mm rim margin leave a `368.300 mm` (14.5-inch)
+  rim-clear diameter, but the 180 mm gantry reach makes the usable circle
+  `360.000 mm` (14.173 inches). The measured inner field has the verification
+  result above; the new outer `14.900 mm` annulus is extrapolated and remains
+  unverified on paper. This is an owner override, not a gate-qualified pass.
 
   For a v3 overhead photo, start with the dense image scale and a light blur:
 
@@ -296,12 +297,12 @@ Cycle Start with the pen loaded:
   seven intermediate-angle fields, performs leave-one-station-out validation, correlates
   the result with the optional bed mesh, and writes
   `bed-error-analysis.json`. The
-  `..\samples\gcode\bed-error-compensation-2026-11-01-dense-v3-13p5in-extrapolated.json`
+  `..\samples\gcode\bed-error-compensation-2026-11-01-dense-v3-360mm-reach-extrapolated.json`
   profile is preselected in **Machine > Bed compensation JSON** and declares a
-  `171.450 mm` radius (`342.900 mm` / `13.5 in` diameter). Its measured
+  `180.000 mm` radius (`360.000 mm` / `14.173 in` diameter). Its measured
   samples still come from the centered dense-v3 field through `165.100 mm`;
-  the outer `6.350 mm` annulus is local-affine extrapolation and its extreme
-  boundary correction is `0.962 mm`. **Browse...** selects a replacement;
+  the outer `14.900 mm` annulus is local-affine extrapolation and its extreme
+  boundary correction is `1.057 mm`. **Browse...** selects a replacement;
   **Default** restores that profile; clearing the path disables compensation.
   The profile is a machine-XY correction added after the existing planner
   chooses the bed angle and after P100 registration; it does not change
@@ -333,7 +334,7 @@ Cycle Start with the pen loaded:
   That writes `bed-error-verify.gcode` and a matching CSV.
 
   To declare a larger field by extrapolating the same measured correction
-  samples, add `--coverage-radius-mm 171.45` to
+  samples, add `--coverage-radius-mm 180.0` to
   `analyze_bed_error_calibration.py`. The declared radius cannot exceed the
   calibration stock radius, and extending it does not add new measurements.
 
@@ -363,9 +364,10 @@ Cycle Start with the pen loaded:
   `2cdf3731de4a`, `165.100 mm` radius). Its independent compensated
   verification reduced overall station RMS from `0.581` to `0.338 mm`,
   maximum from `1.309` to `0.752 mm`, and error by `41.9 %`; all M-12 gates
-  passed. The default `13p5in-extrapolated` variant reuses those correction
-  samples and extends the local-affine field to `171.450 mm`. The outer
-  `6.350 mm` annulus is extrapolated, not measured; its maximum boundary
+  passed. The earlier `13p5in-extrapolated` variant reused those correction
+  samples and extended the local-affine field to `171.450 mm`. The current
+  stock-corrected profile reuses the same data to `180.000 mm`; its outer
+  `14.900 mm` annulus is extrapolated, not measured, and its maximum boundary
   correction is `1.054 mm`, below the 5 mm safety bound. Recalibrate after any
   bed, paper-support, toolhead, carriage, pen-clamp, or registration change.
   The first eight-angle sheet was measured on 2026-10-24. A=0 spatial error was
@@ -387,8 +389,8 @@ Cycle Start with the pen loaded:
   prior default was profile `4bad792e35ad`; its measured inner field was
   independently verified, while its outer `6.350 mm` annulus was extrapolated.
   The current owner-selected default is derived centered dense-v3 profile
-  `057313c41e21`. It keeps profile `18bfb4ed1c33`'s measured data while
-  declaring the requested 13.5-inch field; its outer `6.350 mm` annulus is
+  `f85ec410dbac`. It keeps profile `18bfb4ed1c33`'s measured data while
+  declaring the 180 mm gantry-limited field; its outer `14.900 mm` annulus is
   extrapolated and remains unverified.
 - `..\samples\gcode\a-tilt-pairs-test.gcode` - four separated line pairs for
   a caliper-read bed-tilt check: each pair is the same paper segment drawn
@@ -425,7 +427,7 @@ Cycle Start with the pen loaded:
   which the single stored P100 pen offset cannot correct. Regenerate with
   `..\tools\make_cmyk_pen_alignment.py`.
 - `..\samples\gcode\cmyk-wave-coupon.gcode` - single-run black-pen diagnostic
-  for an already-mounted 14-inch sheet. It prints sixteen `54 x 28 mm` patches
+  for an already-mounted 15-inch sheet. It prints sixteen `54 x 28 mm` patches
   covering C15, M75, Y0 and K45 from left to right. The upper eight patches
   test Wave screen - phase-locked depth above equidistant rows with A parked;
   the lower eight repeat the comparison with production Xtheta/Ytheta planning.
@@ -656,7 +658,7 @@ Current tools:
   which each row's amplitude follows its own locally smoothed tone. It uses
   the Machine tab's currently selected bed-compensation profile unchanged;
   the shipped default is the newer centered dense-v3 mesh
-  `057313c41e21`. The legacy mode deliberately does not row-lock compensation,
+  `f85ec410dbac`. The legacy mode deliberately does not row-lock compensation,
   so its adjacent paper-space row gaps may vary. Use it only to compare the
   old Wave geometry against the production screen on the current mesh.
   **Vary Wave frequency across image (break banding)** is enabled by default
@@ -1448,11 +1450,12 @@ display-only; every other group changes the emitted program.
 - SVG document coordinates are not machine coordinates. The converter centers
   the clipped artwork at G54 zero; a document centered at `(100,100)`, for
   example, emits drawing coordinates around `(0,0)`, not `(100,100)`.
-- `Bed dia mm` defaults to `355.6 mm` (14-inch round stock). With the default
-  `Bed margin mm` of `6.35 mm` (0.25"), the effective `342.9 mm` (13.5-inch)
-  diameter matches the derived compensation profile's declared coverage.
+- `Bed dia mm` defaults to `381.0 mm` (15-inch round stock). With the default
+  `Bed margin mm` of `6.35 mm` (0.25"), the stock permits a `368.3 mm`
+  (14.5-inch) rim-clear diameter. The default `180.0 mm` gantry-reach radius is
+  tighter, so the actual drawable and compensation diameter is `360.0 mm`.
   The underlying dense-v3 measurements end at a `165.1 mm` radius, so the
-  outer `6.35 mm` annulus is extrapolated until an edge-calibration print
+  outer `14.9 mm` annulus is extrapolated until an edge-calibration print
   verifies it.
 - `Gantry reach radius mm` (default 180.0) caps the drawable circle at the
   gantry's reachable radius from the registered bed center. Because the bed

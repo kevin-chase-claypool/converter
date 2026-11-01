@@ -270,27 +270,29 @@
   RMS and reduced aggregate RMS from `0.550` to `0.486 mm`, but maximum error
   was `1.171 mm` and improvement was only `11.6 %`, which fails the formal
   gates. The project owner explicitly overrode that decision and promoted
-  `18bfb4ed1c33`. On 2026-11-01 the owner requested a 0.5-inch larger canvas;
-  derived profile `057313c41e21` keeps the same measured samples and
-  corrections while expanding declared coverage to the default 13.5-inch
-  profile.
+  `18bfb4ed1c33`. On 2026-11-01 the owner requested a 0.5-inch larger canvas,
+  then corrected the physical stock assumption from 14 to 15 inches. Derived
+  profile `f85ec410dbac` keeps the same measured samples and corrections while
+  expanding declared coverage to the 180 mm gantry-reach limit. The 15-inch
+  stock and rim margin permit a 14.5-inch rim-clear diameter, but the gantry
+  caps the usable circle at 360 mm.
   Acceptance: print the dense sheet after `G65 P113`, extract every station,
   repeat it to quantify station noise, require the normal M-12 fit gates, then
   print and compare an independently compensated verification sheet. Promote
   only if the dense field improves the worst residual without adding new
   spatial or per-angle error. Closed by documented owner override despite the
   maximum and improvement-gate miss.
-- [ ] **Verify the default extrapolated 13.5-inch compensation annulus.**
-  Problem: derived profile `057313c41e21` extends current dense-v3 profile
-  `18bfb4ed1c33` from its measured 165.1 mm field to 171.45 mm by local-affine
-  extrapolation. Its `0.962 mm` extreme boundary correction is below the
-  safety bound, but the outer 6.35 mm annulus has no compensated verification
-  print. Benefit: precision work can use the full default 13.5-inch diameter
-  with a measured error bound rather than an extrapolation assumption. Risk:
-  continuing to treat extrapolated values as verified can hide a local edge
-  or rotation/height response.
+- [ ] **Verify the default extrapolated 180 mm compensation field.**
+  Problem: derived profile `f85ec410dbac` extends current dense-v3 profile
+  `18bfb4ed1c33` from its measured 165.1 mm field to 180.0 mm by local-affine
+  extrapolation. Its `1.057 mm` extreme boundary correction is below the
+  safety bound, but the outer 14.9 mm annulus has no compensated verification
+  print. Benefit: precision work can use the full default 360 mm gantry-limited
+  diameter with a measured error bound rather than an extrapolation
+  assumption. Risk: continuing to treat extrapolated values as verified can
+  hide a local edge or rotation/height response.
   Acceptance: print a stationary edge-band verification covering 165.1 to
-  171.45 mm at all eight calibrated angles, measure it with the existing photo
+  180.0 mm at all eight calibrated angles, measure it with the existing photo
   pipeline, and show at most `0.35 mm` RMS / `0.90 mm` maximum with no angle
   stage more than `0.05 mm` worse than the inner field.
 - [ ] **Optimize exact compensation subdivision for dense artwork.**
@@ -465,11 +467,11 @@
   production row-lock projection. This enables an old-Wave/new-mesh comparison;
   a physical print remains required and the legacy mode is not production
   output.
-  Status 2026-11-01 printable-canvas expansion: the default now uses derived
-  profile `057313c41e21`, retaining profile `18bfb4ed1c33`'s measured data and
-  extending its declared coverage to the requested 13.5-inch diameter. The
-  legacy diagnostic follows the selected profile and therefore uses
-  `057313c41e21` by default after restart.
+  Status 2026-11-01 printable-canvas correction: the owner confirmed 15-inch
+  stock. The default now uses derived profile `f85ec410dbac`, retaining profile
+  `18bfb4ed1c33`'s measured data and extending its declared coverage to the
+  180 mm gantry-reach limit. The legacy diagnostic follows the selected profile
+  and therefore uses `f85ec410dbac` by default after restart.
   Status 2026-11-01 row-return discriminator: the operator observed that
   striations cluster when the planner returns to an earlier Wave-row band.
   CMYK Wave output now offers planner-optimized, ascending-row, and

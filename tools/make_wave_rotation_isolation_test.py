@@ -30,12 +30,7 @@ sys.path.insert(0, str(ROOT / "software"))
 import converter_core as converter
 
 
-DEFAULT_BED = (
-    ROOT
-    / "samples"
-    / "gcode"
-    / "bed-error-compensation-2026-10-23-13p5in-extrapolated.json"
-)
+DEFAULT_BED = Path(converter.DEFAULT_BED_COMPENSATION_PATH)
 RATIO = 12.03324
 ROWS = 4
 ROW_PITCH_MM = 3.0

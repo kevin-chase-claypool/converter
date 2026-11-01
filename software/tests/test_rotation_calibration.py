@@ -152,12 +152,12 @@ class RotationCenterProgramTests(unittest.TestCase):
         self.assertIn("fitter subtracts the 20 mm nominal gap", program)
         self.assertIn("reference arm 18 mm", program)
 
-    def test_default_layout_fits_14_inch_round_sheet(self):
+    def test_default_layout_fits_15_inch_round_sheet(self):
         program, stations = build_rotation_center_test_program(converter.Settings())
         self.assertEqual(len(stations), 12)
         self.assertAlmostEqual(stations[0][2], -90.0, places=8)
         self.assertAlmostEqual(stations[0][3], -70.0, places=8)
-        self.assertIn("330.2 mm test on 355.6 mm round stock", program)
+        self.assertIn("330.2 mm test on 381 mm round stock", program)
         self.assertIn("largest ink radius", program)
 
     def test_three_replicates_keep_each_angle_balanced(self):
@@ -182,7 +182,7 @@ class RotationCenterProgramTests(unittest.TestCase):
             build_rotation_center_test_program(
                 converter.Settings(),
                 station_offset_mm=160.0,
-                sheet_diameter_mm=355.6,
+                sheet_diameter_mm=381.0,
                 test_diameter_mm=330.2,
             )
 

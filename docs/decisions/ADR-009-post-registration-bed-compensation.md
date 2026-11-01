@@ -3,7 +3,7 @@
 - Status: accepted and implemented; base profile bench-verified, row-locked
   Wave physical verification pending
 - Date: 2026-10-23
-- Updated: 2026-10-30
+- Updated: 2026-11-01
 
 ## Context
 
@@ -30,13 +30,13 @@ above 5 mm. Its fiducial fit removes common sheet translation, rotation, and
 scale so P100 registration is not double-compensated.
 
 The desktop converter selects expanded centered dense-v3 profile
-`057313c41e21` by default. It keeps the measured samples and corrections from
+`f85ec410dbac` by default. It keeps the measured samples and corrections from
 profile `18bfb4ed1c33` through `165.100 mm`, then extends the local-affine
-field by `6.350 mm` to a declared `171.450 mm` radius. The default 14-inch
-stock diameter and 6.35 mm rim margin produce the same 13.5-inch drawable
-diameter. The existing Machine-tab path remains editable: **Browse...**
-selects a replacement, **Default** restores this profile, and an empty path
-disables compensation.
+field by `14.900 mm` to the `180.000 mm` gantry-reach radius. The default
+15-inch stock and 6.35 mm rim margin leave a 14.5-inch rim-clear diameter, but
+the gantry reach makes the actual usable and correction diameter 360 mm. The
+existing Machine-tab path remains editable: **Browse...** selects a replacement,
+**Default** restores this profile, and an empty path disables compensation.
 
 CMYK **Wave screen - equidistant rows** treats exact adjacent-row pitch as a
 hard geometry constraint. Its default spacing guard keeps the selected profile
@@ -109,8 +109,8 @@ program unchanged.
 - Row-locked saved G-code identifies the source profile fingerprint,
   projection maximum, row angle, and `row_locked_projection` manifest mode.
   It must not be described as applying the raw two-dimensional field.
-- The current default profile declares a 171.450 mm field. Its measured
-  evidence covers only the inner 165.100 mm; the outer 6.350 mm annulus is
+- The current default profile declares a 180.000 mm field. Its measured
+  evidence covers only the inner 165.100 mm; the outer 14.900 mm annulus is
   local-affine extrapolation and has no compensated verification print yet.
   The measured field is valid only while bed, paper support,
   toolhead/carriage, pen clamp, and registration remain consistent.
@@ -146,6 +146,12 @@ program unchanged.
   corrections. The extreme declared-boundary correction is `0.962 mm`, below
   the 5 mm cap. The added 6.350 mm annulus remains an extrapolation and
   requires the roadmap's stationary edge-band verification.
+- The owner subsequently corrected the physical stock assumption: the sheets
+  are 15 inches, not 14. Profile `f85ec410dbac` retains the same measured
+  samples and corrections and extends the field to the 180 mm gantry-reach
+  limit. Its selected-angle maximum correction is `1.142 mm` and its extreme
+  boundary correction is `1.057 mm`, both below the 5 mm cap. The
+  `165.100-180.000 mm` annulus remains unverified on paper.
 - A true X/Y scale or skew defect remains a controller/mechanical calibration
   issue rather than being folded into the fiducial-normalized residual map.
 - The four-ink final-machine audit passes, but a physical comparison print is

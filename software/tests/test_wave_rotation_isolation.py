@@ -19,12 +19,9 @@ class WaveRotationIsolationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.profile = converter.BedCompensationProfile.from_json(
-            (
-                ROOT
-                / "samples"
-                / "gcode"
-                / "bed-error-compensation-2026-10-23-13p5in-extrapolated.json"
-            ).read_text(encoding="utf-8")
+            Path(converter.DEFAULT_BED_COMPENSATION_PATH).read_text(
+                encoding="utf-8"
+            )
         )
 
     def generate(self, directory):

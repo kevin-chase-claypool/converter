@@ -5,9 +5,10 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-01 | `WSW-20261101-005` | windows-software, hardware | verified | [Correct the default stock diameter to 15 inches](windows-software/2026/2026-11-01-correct-15-inch-stock.md) |
 | 2026-11-01 | `WSW-20261101-004` | windows-software | verified | [Persist each artwork's CMYK recipe across restarts](windows-software/2026/2026-11-01-persist-cmyk-artwork-recipe.md) |
 | 2026-11-01 | `WSW-20261101-003` | windows-software, hardware | implemented | [Add monotonic row ordering for CMYK Wave output](windows-software/2026/2026-11-01-wave-row-order.md) |
-| 2026-11-01 | `WSW-20261101-002` | windows-software, hardware | implemented | [Expand the default printable canvas to 13.5 inches](windows-software/2026/2026-11-01-expand-printable-canvas-13p5in.md) |
+| 2026-11-01 | `WSW-20261101-002` | windows-software, hardware | superseded | [Expand the default printable canvas to 13.5 inches](windows-software/2026/2026-11-01-expand-printable-canvas-13p5in.md) |
 | 2026-11-01 | `WSW-20261101-001` | windows-software, hardware | implemented | [Add a legacy Wave diagnostic on the current compensation mesh](windows-software/2026/2026-11-01-legacy-wave-current-mesh-diagnostic.md) |
 | 2026-10-31 | `WSW-20261031-001` | windows-software, hardware | implemented | [Phase-modulate the Wave carrier to break vertical banding](windows-software/2026/2026-10-31-phase-modulated-wave-frequency.md) |
 | 2026-10-30 | `WSW-20261030-003` | windows-software, hardware | implemented | [Row-lock Wave bed compensation instead of disabling it](windows-software/2026/2026-10-30-row-locked-wave-bed-compensation.md) |

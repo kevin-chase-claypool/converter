@@ -12,7 +12,7 @@ import statistics
 from .bed_compensation import BedCompensationProfile, interpolate_bed_correction
 
 
-SHEET_DIAMETER_MM = 355.6
+SHEET_DIAMETER_MM = 15.0 * 25.4
 TEST_DIAMETER_MM = 330.2
 TEST_RADIUS_MM = TEST_DIAMETER_MM / 2.0
 COVERAGE_RADIUS_MM = TEST_RADIUS_MM

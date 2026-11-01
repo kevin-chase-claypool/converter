@@ -33,8 +33,8 @@ from typing import Iterable, Sequence
 DEFAULT_RATIO = 12.03324
 DEFAULT_ANGLES = (90.0, 180.0, 270.0)
 DEFAULT_SHEET_EDGE_MARGIN_MM = 0.0
-DEFAULT_SHEET_DIAMETER_MM = 355.6  # 14 in round stock
-DEFAULT_TEST_DIAMETER_MM = 330.2  # leave 1/2 in around a 14 in sheet
+DEFAULT_SHEET_DIAMETER_MM = 15.0 * 25.4
+DEFAULT_TEST_DIAMETER_MM = 330.2  # keep the established 13-inch test field
 DEFAULT_CALIBRATION_REPLICATES = 3
 
 

@@ -1,6 +1,6 @@
 """Generate the rotating-bed centre-offset calibration pen test.
 
-Run this after HOME + REGISTER. It draws 12 balanced stations around 14-inch
+Run this after HOME + REGISTER. It draws 12 balanced stations around 15-inch
 round stock: three 0-degree controls and three replays each at 90/180/270
 degrees. At each station a longer A=0 reference cross and a shorter replay cross
 are separated by a known 20 mm baseline in both axes, so the wet strokes do not
@@ -8,8 +8,8 @@ overlap. Read the raw vertical-arm X gap as GAP_X and the raw horizontal-arm Y
 gap as GAP_Y. The fitter subtracts the 20 mm baseline and recovers the signed
 error at each location.
 
-The planned test footprint is 13 inches (330.2 mm) on 14-inch (355.6 mm)
-stock. The default station layout reaches a 154.0 mm radius, leaving 23.8 mm
+The planned test footprint is 13 inches (330.2 mm) on 15-inch (381.0 mm)
+stock. The default station layout reaches a 154.0 mm radius, leaving 36.5 mm
 to the stock edge. The G-code prints angle/replicate labels such as `0-1` and
 `270-3`, a +X/+Y direction key, and an L-shaped fiducial beside every A=0
 reference cross. It also writes a companion measurement CSV.
@@ -57,7 +57,7 @@ def main() -> None:
         "--sheet-diameter",
         type=float,
         default=DEFAULT_SHEET_DIAMETER_MM,
-        help="round stock diameter in mm (default 355.6, 14 in)",
+        help="round stock diameter in mm (default 381.0, 15 in)",
     )
     parser.add_argument(
         "--test-diameter",

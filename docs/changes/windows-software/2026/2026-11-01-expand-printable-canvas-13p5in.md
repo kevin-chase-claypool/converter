@@ -5,7 +5,7 @@ category: windows-software
 affected_categories:
   - windows-software
   - hardware
-status: implemented
+status: superseded
 components:
   - software/converter_core/settings.py
   - samples/gcode/bed-error-compensation-2026-11-01-dense-v3-13p5in-extrapolated.json
@@ -17,6 +17,7 @@ tags:
   - cmyk
 related:
   - WSW-20261101-001
+  - WSW-20261101-005
   - ADR-009
 ---
 

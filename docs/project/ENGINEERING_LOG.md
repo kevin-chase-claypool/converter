@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261101-correct-15-inch-stock"></a>
+### 🟩 2026-11-01 - WINDOWS SOFTWARE/HARDWARE/VERIFIED - Correct default stock to 15-inch media
+
+- The project owner confirmed the round stock is 15 inches in diameter; the
+  prior 14-inch default would unnecessarily clip the planner to a
+  `342.900 mm` drawable diameter.
+- The default stock is now `381.000 mm`. With the existing `6.350 mm` rim
+  margin, the stock itself permits a `368.300 mm` (14.5-inch) rim-clear
+  diameter, but the `180.000 mm` gantry-reach radius is tighter and makes the
+  usable and compensation diameter `360.000 mm`.
+- Derived profile `f85ec410dbac` retains centered dense-v3 profile
+  `18bfb4ed1c33`'s measured samples and corrections, then extends its
+  local-affine coverage from `165.100` to `180.000 mm`. The selected-angle
+  maximum correction is `1.142 mm` and the extreme boundary correction is
+  `1.057 mm`, below the 5 mm safety cap.
+- Calibration generators now model 15-inch round stock. The focused
+  bed-compensation, CMYK, rotation-calibration, and Wave diagnostic suites
+  pass 167 tests.
+- The complete converter suite passes 602 tests with one expected
+  OpenGL-context skip.
+- The outer `14.900 mm` annulus remains extrapolated and requires the
+  stationary edge-band verification already tracked in the roadmap.
+
 <a id="elog-20261101-persist-cmyk-artwork-recipe"></a>
 ### 🟩 2026-11-01 - WINDOWS SOFTWARE/VERIFIED - Persist each artwork's CMYK recipe across restarts
 
