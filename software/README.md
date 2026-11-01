@@ -588,6 +588,20 @@ Current tools:
   30 mm radius) parks the bed for drawing inside that circle, where A-axis
   rate limiting and scrub otherwise make fine rows wobble; set `0` to let
   the bed rotate everywhere.
+  **Row order** applies to both Wave styles. **Planner optimized (shortest
+  travel)** keeps the normal nearest-endpoint/2-opt contour ordering, which
+  may return to an already visited row band when the image is split into
+  disconnected islands. **Rows ascending** and **Rows descending** preserve
+  the generator's top-to-bottom row sequence or reverse it, skip the global
+  contour reorder, and alternate the along-row direction in a serpentine
+  sweep. Screen rows carry an exact row index through SVG parsing, so this
+  still works when tone clipping splits one row into several disconnected
+  fragments. The pen may lift across blank gaps, but it finishes the current
+  row band before entering the next. On the current Jeep image at `0.50 mm`
+  source pitch, `380 %` artwork scale, and `F3000` travel, a static contour-gap
+  estimate adds about ten minutes across all four passes versus planner
+  optimized. Use this as the next row-return striation discriminator, not as an
+  unconditional default.
   The four programs share one **page frame**: they are planned around the
   page centre rather than each ink's own bounding box, so **Artwork scale**
   changes the printed size while leaving the four passes co-registered
@@ -651,6 +665,8 @@ Current tools:
   and troughs do not repeat as fixed vertical bands. The phase and vertical
   offset remain identical across every row at each X position, preserving exact
   row pitch. Unchecking it restores the former constant-frequency carrier.
+  The selected **Row order** is saved in the set manifest and applies
+  independently of the carrier-frequency choice.
   **Preserve exact row pitch (row-lock bed compensation)** is enabled by
   default for this style. It keeps the selected Machine-tab profile active but
   projects its complete measured field into displacement common to every

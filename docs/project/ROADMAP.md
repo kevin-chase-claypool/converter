@@ -470,6 +470,18 @@
   extending its declared coverage to the requested 13.5-inch diameter. The
   legacy diagnostic follows the selected profile and therefore uses
   `057313c41e21` by default after restart.
+  Status 2026-11-01 row-return discriminator: the operator observed that
+  striations cluster when the planner returns to an earlier Wave-row band.
+  CMYK Wave output now offers planner-optimized, ascending-row, and
+  descending-row orders. The row modes carry exact row IDs through SVG parsing,
+  finish all fragments in a row, and alternate along-row direction in a
+  serpentine sweep while bypassing the generic nearest-endpoint/2-opt contour
+  reorder. A controlled grid reproduces the regression
+  (`0,6,5,3,1,7,2,4` instead of `0..7` in optimized mode) and verifies the
+  serpentine output. The current Jeep recipe's static gap estimate changes the
+  four passes by about ten minutes total at `F3000` (one ink is faster), so
+  planner-optimized remains the default until a physical row-order print
+  confirms the visual benefit.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

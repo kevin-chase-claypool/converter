@@ -14,6 +14,7 @@ import uuid
 from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
+from converter_core.geometry import retag_contour
 from PySide6.QtWidgets import (
     QButtonGroup,
     QDoubleSpinBox,
@@ -83,13 +84,16 @@ def scale_polylines(polylines, factor, width_mm, height_mm):
     centre_x = width_mm / 2.0
     centre_y = height_mm / 2.0
     return [
-        [
-            (
-                centre_x + (x - centre_x) * factor,
-                centre_y + (y - centre_y) * factor,
-            )
-            for x, y in line
-        ]
+        retag_contour(
+            line,
+            [
+                (
+                    centre_x + (x - centre_x) * factor,
+                    centre_y + (y - centre_y) * factor,
+                )
+                for x, y in line
+            ],
+        )
         for line in polylines
     ]
 

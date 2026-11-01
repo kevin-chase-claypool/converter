@@ -276,6 +276,18 @@ production pass establishes the Wave-geometry regression on the current mesh.
 The legacy mode's non-uniform row spacing remains an expected diagnostic
 limitation.
 
+**M-13 row-return discriminator 2026-11-01:** generate the same Wave layer
+three times with **Row order = Planner optimized**, **Rows ascending**, and
+**Rows descending**. Keep the image, page, scale, pitch, pen, feed, bed motion,
+and compensation profile unchanged. Verify the ascending and descending files
+finish each indexed row band before entering the next, alternate along-row
+direction in a serpentine sweep, and never return to an earlier row band while
+allowing pen-up travel across blank gaps inside the current row.
+Print the optimized and ascending variants on the same fixed sheet. If the
+quadrant-return striation disappears only in the row-ordered pass, retain that
+ordering for Wave output and record the measured elapsed-time penalty. If both
+passes show it, continue with the motion/overprint discriminator above.
+
 ### M-12 full-field bench procedure
 
 1. Install the same Sakura Pigma Micron 005 for the whole sheet. Flatten and

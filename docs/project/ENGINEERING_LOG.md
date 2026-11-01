@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20261101-wave-row-order"></a>
+### 🟨 2026-11-01 - WINDOWS SOFTWARE/IMPLEMENTED - Add monotonic row ordering for CMYK Wave output
+
+- The operator localized the remaining striations to pen returns into an
+  earlier Wave-row band to finish a disconnected image area.
+- The CMYK Kinematics group now offers planner-optimized, rows-ascending, and
+  rows-descending contour order. Row modes preserve each generated row's exact
+  identity through SVG parsing, finish split fragments in that row, and
+  alternate the along-row direction in a serpentine sweep.
+- A controlled eight-contour grid reproduces the current problem:
+  `planned_contours()` changes source order `0..7` into `0,6,5,3,1,7,2,4`.
+  The new row modes emit ascending `0..7` and descending `7..0` exactly.
+- Row modes bypass the generic nearest-endpoint/2-opt contour reorder while
+  selecting the efficient direction for each row and fragment.
+- A static contour-gap estimate for the current Jeep recipe changes predicted
+  pen-up time by `-1.7` to `+4.6 minutes` per ink, or about ten minutes added
+  across all four passes at `F3000`. Planner-optimized therefore remains the
+  default; the row modes are an opt-in physical discriminator.
+- The focused contour-order and CMYK-tab suites pass 111 tests.
+- The complete converter suite passes 601 tests with one expected
+  OpenGL-context skip.
+- Evidence: `WSW-20261101-003`.
+- Category: windows-software, hardware, cmyk, wave-screen, contour-order,
+  row-sweep, striation, planner.
+
 <a id="elog-20261101-expand-printable-canvas-13p5in"></a>
 ### 🟨 2026-11-01 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Expand printable canvas to 13.5 inches
 

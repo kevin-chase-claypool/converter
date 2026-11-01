@@ -2085,6 +2085,35 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(settings.theta_center_hold_diameter_mm, 70.0)
         self.assertEqual(tab._effective_settings().theta_mode, "fixed")
 
+    def test_wave_row_order_selector_overrides_planner_optimization(self):
+        tab = self.make_tab()
+        values = [
+            tab.contour_order.itemData(index)
+            for index in range(tab.contour_order.count())
+        ]
+        self.assertEqual(
+            values,
+            ["optimized", "rows_ascending", "rows_descending"],
+        )
+        self.assertFalse(tab.contour_order.isEnabled())
+
+        tab.style.setCurrentIndex(tab.style.findData("waves_even"))
+        self.assertTrue(tab.contour_order.isEnabled())
+        tab.contour_order.setCurrentIndex(
+            tab.contour_order.findData("rows_ascending")
+        )
+        self.assertEqual(
+            tab.apply_tab_settings(converter.Settings()).contour_order,
+            "rows_ascending",
+        )
+
+        tab.style.setCurrentIndex(tab.style.findData("rectilinear"))
+        self.assertFalse(tab.contour_order.isEnabled())
+        self.assertEqual(
+            tab.apply_tab_settings(converter.Settings()).contour_order,
+            "optimized",
+        )
+
     def test_cmyk_wave_selector_separates_production_and_legacy_modes(self):
         tab = self.make_tab()
         self.assertEqual(tab.style.findData("waves"), -1)
@@ -2358,6 +2387,9 @@ class CmykTabTests(unittest.TestCase):
         )
         tab = self.make_tab(host)
         tab.style.setCurrentIndex(tab.style.findData("waves_even"))
+        tab.contour_order.setCurrentIndex(
+            tab.contour_order.findData("rows_ascending")
+        )
         tab.offset_spins["m"][0].setValue(0.75)
         checks = self.clean_checks()
         results = {
@@ -2387,6 +2419,10 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(
             data["screen"]["wave_phase_mode"],
             "identical_translated_rows",
+        )
+        self.assertEqual(
+            data["screen"]["contour_order"],
+            "rows_ascending",
         )
         self.assertNotIn(
             "wave_frequency_tone_gain",

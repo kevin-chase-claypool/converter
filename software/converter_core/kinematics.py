@@ -1014,6 +1014,89 @@ def _ring_cells(cx, cy, r):
         yield (cx + r, cy + dy)
 
 
+def _source_order_contours(
+    items,
+    descending=False,
+    angle_deg=0.0,
+    cancel_check=None,
+):
+    """Keep generated row order and sweep alternating row directions."""
+    row_groups = {}
+    ungrouped = []
+    row_directions = {}
+    for item_idx, item in enumerate(items):
+        row_index = getattr(item["path"], "wave_row_index", None)
+        if row_index is None:
+            ungrouped.append(item_idx)
+        else:
+            row_groups.setdefault(int(row_index), []).append(item_idx)
+
+    angle = math.radians(float(angle_deg))
+    cosine, sine = math.cos(angle), math.sin(angle)
+    if not row_groups:
+        sequence = (
+            range(len(items) - 1, -1, -1)
+            if descending
+            else range(len(items))
+        )
+    else:
+        def along(item_idx):
+            path = items[item_idx]["path"]
+            return sum(
+                x_mm * cosine + y_mm * sine
+                for x_mm, y_mm in path
+            ) / len(path)
+
+        sequence = []
+        ordered_rows = sorted(row_groups, reverse=descending)
+        for row_position, row_index in enumerate(ordered_rows):
+            reverse_along = row_position % 2 == 1
+            row_directions[row_index] = reverse_along
+            sequence.extend(
+                sorted(
+                    row_groups[row_index],
+                    key=along,
+                    reverse=reverse_along,
+                )
+            )
+        sequence.extend(ungrouped)
+
+    ordered = []
+    previous_end = None
+    for item_idx in sequence:
+        check_cancelled(cancel_check)
+        item = items[item_idx]
+        path = item["path"]
+        row_index = getattr(path, "wave_row_index", None)
+        if row_index is not None:
+            reverse_along = row_directions[int(row_index)]
+            start_along = path[0][0] * cosine + path[0][1] * sine
+            end_along = path[-1][0] * cosine + path[-1][1] * sine
+            reverse_path = (
+                start_along > end_along
+                if not reverse_along
+                else end_along > start_along
+            )
+        elif previous_end is None:
+            reverse_path = bool(descending)
+        else:
+            reverse_path = distance(previous_end, path[-1]) < distance(
+                previous_end, path[0]
+            )
+        if reverse_path:
+            path = retag_contour(path, reversed(path))
+        ordered.append(
+            {
+                "item_idx": item_idx,
+                "index": item["index"],
+                "path": path,
+                "reversed": reverse_path,
+            }
+        )
+        previous_end = path[-1]
+    return ordered
+
+
 def planned_contours(contours, settings, center, cancel_check=None):
     items = []
     for index, contour in enumerate(contours):
@@ -1023,6 +1106,28 @@ def planned_contours(contours, settings, center, cancel_check=None):
             items.append({"index": index, "path": path})
     if not items:
         return []
+
+    contour_order = str(
+        getattr(settings, "contour_order", "optimized")
+    ).strip().lower()
+    if contour_order == "rows_ascending":
+        return _source_order_contours(
+            items,
+            descending=False,
+            angle_deg=float(
+                getattr(settings, "row_lock_screen_angle_deg", 0.0)
+            ),
+            cancel_check=cancel_check,
+        )
+    if contour_order == "rows_descending":
+        return _source_order_contours(
+            items,
+            descending=True,
+            angle_deg=float(
+                getattr(settings, "row_lock_screen_angle_deg", 0.0)
+            ),
+            cancel_check=cancel_check,
+        )
 
     bed_radius = max(float(getattr(settings, "bed_diameter_mm", 457.2)), 1.0) / 2.0
     cell_size = max(bed_radius / 8.0, 1.0)

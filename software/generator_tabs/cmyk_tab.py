@@ -386,6 +386,16 @@ class CmykTab(GeneratorTab):
             converter.FIELD_TOOLTIPS.get("theta_mode", ""),
         )
         kinematics.addRow("Bed motion", self.theta_mode)
+        self.contour_order = QComboBox()
+        for label, value in converter.CONTOUR_ORDER_CHOICES:
+            self.contour_order.addItem(label, value)
+        self.contour_order.setToolTip(
+            "Wave rows are generated in one screen-frame direction. Planner "
+            "optimized may return to disconnected areas in an earlier row; "
+            "the ascending and descending modes keep every row band together "
+            "so the pen completes one band before moving to the next."
+        )
+        kinematics.addRow("Row order", self.contour_order)
         self.center_hold = double_spin(60.0, 0.0, 200.0, 1.0, 0, " mm")
         self.center_hold.setToolTip(
             converter.FIELD_TOOLTIPS.get("theta_center_hold_diameter_mm", "")
@@ -620,6 +630,9 @@ class CmykTab(GeneratorTab):
         self.vary_wave_frequency.toggled.connect(
             self._update_wave_spacing_guard
         )
+        self.contour_order.currentIndexChanged.connect(
+            lambda *_: self._refresh_pass_summary()
+        )
         self.calibration_mode.toggled.connect(
             self._update_wave_spacing_guard
         )
@@ -824,6 +837,11 @@ class CmykTab(GeneratorTab):
         settings = dataclasses.replace(
             settings,
             row_locked_compensation=self._wave_spacing_guard_active(),
+            contour_order=(
+                self.contour_order.currentData()
+                if self._wave_row_order_active()
+                else "optimized"
+            ),
         )
         return settings
 
@@ -862,6 +880,8 @@ class CmykTab(GeneratorTab):
             self.pitch.value(),
             self._wave_spacing_guard_active(),
             self._variable_wave_frequency_active(),
+            self._wave_row_order_active(),
+            self.contour_order.currentData(),
             self.dot_size.value(),
             self.solid_dots.isChecked(),
             self.theta_mode.value(),
@@ -932,12 +952,17 @@ class CmykTab(GeneratorTab):
 
     def _update_wave_spacing_guard(self, _value=None):
         """Keep the guard meaningful for the selected screen style."""
-        wave_selected = (
+        equal_wave_selected = (
             not self.calibration_mode.isChecked()
             and self.style.currentData() == "waves_even"
         )
-        self.preserve_wave_pitch.setEnabled(wave_selected)
-        self.vary_wave_frequency.setEnabled(wave_selected)
+        wave_selected = (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData() in ("waves_even", "waves_zero")
+        )
+        self.preserve_wave_pitch.setEnabled(equal_wave_selected)
+        self.vary_wave_frequency.setEnabled(equal_wave_selected)
+        self.contour_order.setEnabled(wave_selected)
         if hasattr(self, "pass_summary"):
             self._refresh_pass_summary()
 
@@ -947,6 +972,14 @@ class CmykTab(GeneratorTab):
             not self.calibration_mode.isChecked()
             and self.style.currentData() == "waves_even"
             and self.vary_wave_frequency.isChecked()
+        )
+
+    def _wave_row_order_active(self):
+        """Whether Wave output uses the explicit monotonic source order."""
+        return (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData() in ("waves_even", "waves_zero")
+            and self.contour_order.currentData() != "optimized"
         )
 
     def _legacy_wave_screen_active(self):
@@ -988,6 +1021,7 @@ class CmykTab(GeneratorTab):
                 if self._variable_wave_frequency_active()
                 else "constant"
             ),
+            "row order %s" % self.contour_order.currentText().lower(),
             "crosses %s" % ("on" if self.registration_marks.isChecked() else "off"),
             "pen offsets %s" % (", ".join(offset_parts) if offset_parts else "none"),
         ]
@@ -1555,6 +1589,11 @@ class CmykTab(GeneratorTab):
                     converter.WAVE_FREQUENCY_VARIATION * 100.0
                     if self._variable_wave_frequency_active()
                     else 0.0
+                ),
+                "contour_order": (
+                    self.contour_order.currentData()
+                    if self._wave_row_order_active()
+                    else "optimized"
                 ),
                 "pen_width_mm": self.pen_width.value(),
                 "dot_size_pct": self.dot_size.value(),

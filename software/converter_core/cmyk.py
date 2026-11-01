@@ -16,6 +16,7 @@ from __future__ import annotations
 import math
 
 from .cancellation import check_cancelled
+from .geometry import WaveTrail
 from .shading import (
     dot_mark_contours,
     greedy_single_line,
@@ -1106,15 +1107,24 @@ def _wave_rows(
             elif current:
                 if (len(current) - 1) * sample_step >= min_length_mm:
                     rows.append(
-                        [
-                            (px * ca - py * sa, px * sa + py * ca)
-                            for px, py in current
-                        ]
+                        WaveTrail(
+                            [
+                                (px * ca - py * sa, px * sa + py * ca)
+                                for px, py in current
+                            ],
+                            wave_row_index=row_index,
+                        )
                     )
                 current = []
         if current and (len(current) - 1) * sample_step >= min_length_mm:
             rows.append(
-                [(px * ca - py * sa, px * sa + py * ca) for px, py in current]
+                WaveTrail(
+                    [
+                        (px * ca - py * sa, px * sa + py * ca)
+                        for px, py in current
+                    ],
+                    wave_row_index=row_index,
+                )
             )
     return rows
 
@@ -1426,7 +1436,13 @@ def svg_document(layers, width_mm, height_mm, stroke_mm=0.3, order=None):
             if len(points) < 2:
                 continue
             pairs = " ".join(f"{_fmt(x)},{_fmt(y)}" for x, y in points)
-            body.append(f'<polyline points="{pairs}"/>')
+            row_index = getattr(points, "wave_row_index", None)
+            row_attribute = (
+                f' data-wave-row="{int(row_index)}"'
+                if row_index is not None
+                else ""
+            )
+            body.append(f"<polyline{row_attribute} points=\"{pairs}\"/>")
         body.append("</g>")
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'

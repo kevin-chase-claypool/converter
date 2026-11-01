@@ -42,6 +42,14 @@ class FillTrail(list):
     """
 
 
+class WaveTrail(list):
+    """A screen row carrying its exact source row index through SVG parsing."""
+
+    def __init__(self, points=(), wave_row_index=None):
+        super().__init__(points)
+        self.wave_row_index = wave_row_index
+
+
 def retag_contour(source, points):
     """Rebuild ``points`` as the same tagged contour type when it has one.
 
@@ -2110,6 +2118,17 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
         if rx > 0 and ry > 0:
             steps = max(24, min(360, int(2 * math.pi * max(rx, ry) / max(tolerance, 0.01))))
             contours = [[(cx + rx * math.cos(2 * math.pi * n / steps), cy + ry * math.sin(2 * math.pi * n / steps)) for n in range(steps + 1)]]
+    row_index = element.get("data-wave-row")
+    if row_index is not None:
+        try:
+            parsed_row_index = int(row_index)
+        except (TypeError, ValueError):
+            parsed_row_index = None
+        if parsed_row_index is not None:
+            contours = [
+                WaveTrail(contour, wave_row_index=parsed_row_index)
+                for contour in contours
+            ]
     fill_lines = []
     if hatch_spacing > 0:
         fill_polygons = []

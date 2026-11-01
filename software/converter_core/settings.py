@@ -168,6 +168,11 @@ class Settings:
     # the effective paper-screen angle for the current ink layer.
     row_locked_compensation: bool = False
     row_lock_screen_angle_deg: float = 0.0
+    # Preserve or reverse the screen generator's row-major contour order.
+    # "optimized" keeps the generic nearest-endpoint/2-opt travel planner.
+    # The explicit row modes bypass that reordering so each Wave row is
+    # completed before the pen advances to another row band.
+    contour_order: str = "optimized"
     # The preview normally uses nominal X/Y for speed. Saved G-code always
     # applies the selected profile; enabling this makes the preview pay the
     # full compensation subdivision cost so displayed points match the file.
@@ -469,11 +474,18 @@ HATCH_PATTERNS = (
 # The experimental cost resolvers stay selectable through `theta_resolver`.
 THETA_MODES = ("optimized", "fixed", "tangent")
 THETA_RESOLVERS = ("rtheta", "dp", "greedy")
+CONTOUR_ORDER_CHOICES = (
+    ("Planner optimized (shortest travel)", "optimized"),
+    ("Rows ascending (first to last)", "rows_ascending"),
+    ("Rows descending (last to first)", "rows_descending"),
+)
+CONTOUR_ORDERS = tuple(choice for _label, choice in CONTOUR_ORDER_CHOICES)
 
 VALUE_CHOICE_FIELDS = {
     "hatch_pattern": HATCH_PATTERNS,
     "theta_mode": THETA_MODES,
     "theta_resolver": THETA_RESOLVERS,
+    "contour_order": CONTOUR_ORDERS,
 }
 
 # Readable combo labels for the values above. The stored value stays the short
