@@ -1110,22 +1110,27 @@ def planned_contours(contours, settings, center, cancel_check=None):
     contour_order = str(
         getattr(settings, "contour_order", "optimized")
     ).strip().lower()
+    row_angle_deg = float(
+        getattr(settings, "row_lock_screen_angle_deg", 0.0)
+    )
+    # Screens are rotated before SVG serialization, then parse_svg_geometry
+    # mirrors Y around the page height when flip_y is enabled. Mirroring negates
+    # the row axis angle; using the unflipped angle collapses the projection at
+    # 45 degrees and can orient each fragment unpredictably.
+    if bool(getattr(settings, "flip_y", True)):
+        row_angle_deg = -row_angle_deg
     if contour_order == "rows_ascending":
         return _source_order_contours(
             items,
             descending=False,
-            angle_deg=float(
-                getattr(settings, "row_lock_screen_angle_deg", 0.0)
-            ),
+            angle_deg=row_angle_deg,
             cancel_check=cancel_check,
         )
     if contour_order == "rows_descending":
         return _source_order_contours(
             items,
             descending=True,
-            angle_deg=float(
-                getattr(settings, "row_lock_screen_angle_deg", 0.0)
-            ),
+            angle_deg=row_angle_deg,
             cancel_check=cancel_check,
         )
 

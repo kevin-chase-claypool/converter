@@ -484,6 +484,13 @@
   four passes by about ten minutes total at `F3000` (one ink is faster), so
   planner-optimized remains the default until a physical row-order print
   confirms the visual benefit.
+  Status 2026-11-01 row-angle correction: descending row order materially
+  improved the first three CMYK passes, but black still returned among row
+  fragments. Black uses a 45° screen; row ordering had projected onto the
+  pre-`flip_y` angle, which collapses at 45° after SVG Y is mirrored. ASC and
+  DESC now use the final paper-space row axis. The 45° regression and full
+  converter suite pass, while a fresh four-pass print and elapsed-time record
+  remain required before changing the production default.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

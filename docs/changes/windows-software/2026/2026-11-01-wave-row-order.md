@@ -20,6 +20,7 @@ tags:
 related:
   - WSW-20261101-001
   - WSW-20261101-002
+  - WSW-20261101-006
   - ADR-009
 ---
 
@@ -86,6 +87,11 @@ ink, or about ten minutes across the four passes at `F3000`, versus planner
 optimized. The setting therefore remains opt-in. Print the same layer with
 optimized and ascending order on one fixed sheet; keep the row order only if
 the quadrant-return striation improves enough to justify the measured time.
+
+The first four-ink trial improved through cyan, magenta, and yellow but failed
+on the 45° black screen. The initial row-axis projection did not account for
+the normal `flip_y` transformation. `WSW-20261101-006` corrects that handedness;
+a fresh physical four-pass comparison remains the acceptance test.
 
 ## Files
 

@@ -290,6 +290,21 @@ quadrant-return striation disappears only in the row-ordered pass, retain that
 ordering for Wave output and record the measured elapsed-time penalty. If both
 passes show it, continue with the motion/overprint discriminator above.
 
+**M-13 row-direction result 2026-11-01:** the operator reported that descending
+row order significantly improved print quality. A later four-ink trial
+remained good through cyan, magenta, and yellow but failed only on black. The
+black failure was severe enough that the operator stopped the multi-hour print.
+The black screen is the 45° channel. The row-order implementation had projected
+runs onto the pre-`flip_y` screen angle; after the normal SVG Y-axis flip, the
+true row axis is the opposite angle. At 45° that error collapses the along-row
+projection to nearly zero, so run order and direction become unstable. The
+stored earlier Jeep set remains an ascending-order artifact and must not be
+treated as the later descending trial. The corrected handedness passes focused
+and full converter regressions, but a fresh four-pass physical print is still
+required before accepting row order as the production default.
+See
+`2026-11-01-m-13-cmyk-black-row-direction.md`.
+
 ### M-12 full-field bench procedure
 
 1. Install the same Sakura Pigma Micron 005 for the whole sheet. Flatten and

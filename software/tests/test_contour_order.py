@@ -37,6 +37,35 @@ def tagged_row_contours():
     ]
 
 
+def rotated_flipped_row_contours(angle_deg=45.0, height_mm=100.0):
+    """Return screen rows after the converter's normal SVG Y-axis flip.
+
+    CMYK screen angles rotate the generated rows before serializing them to
+    SVG. ``read_svg`` then flips Y around the document height. Keeping that
+    transformation in this fixture catches a row-axis sign error that an
+    unrotated test cannot see.
+    """
+    angle = np.deg2rad(float(angle_deg))
+    cosine, sine = float(np.cos(angle)), float(np.sin(angle))
+
+    def screen_to_svg(point):
+        x_mm, y_mm = point
+        return (
+            x_mm * cosine - y_mm * sine,
+            height_mm - (x_mm * sine + y_mm * cosine),
+        )
+
+    contours = []
+    for index, contour in enumerate(row_major_contours()):
+        contours.append(
+            converter.WaveTrail(
+                [screen_to_svg(point) for point in contour],
+                wave_row_index=index // 2,
+            )
+        )
+    return contours
+
+
 class ContourOrderTests(unittest.TestCase):
     def ordered_indexes(self, order, contours=None):
         settings = converter.Settings(
@@ -121,6 +150,36 @@ class ContourOrderTests(unittest.TestCase):
             ],
             [7, 8, 6, 5, 3, 4, 2, 1],
         )
+
+    def test_rotated_flipped_rows_keep_their_serpentine_direction(self):
+        angle = 45.0
+        radians = np.deg2rad(angle)
+        along = (float(np.cos(radians)), -float(np.sin(radians)))
+        for order in ("rows_ascending", "rows_descending"):
+            with self.subTest(order=order):
+                settings = converter.Settings(
+                    theta_mode="fixed",
+                    theta_center_hold_diameter_mm=0.0,
+                    bed_compensation_path="",
+                    contour_order=order,
+                    row_lock_screen_angle_deg=angle,
+                )
+                planned = converter.planned_contours(
+                    rotated_flipped_row_contours(angle),
+                    settings,
+                    (0.0, 0.0),
+                )
+                directions = []
+                for item in planned:
+                    path = item["path"]
+                    start = path[0][0] * along[0] + path[0][1] * along[1]
+                    end = path[-1][0] * along[0] + path[-1][1] * along[1]
+                    directions.append(1 if end > start else -1)
+
+                self.assertEqual(
+                    directions,
+                    [1, 1, -1, -1, 1, 1, -1, -1],
+                )
 
     def test_svg_persists_wave_row_index(self):
         document = converter.svg_document(

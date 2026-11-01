@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20261101-rotated-wave-row-direction"></a>
+### 🟨 2026-11-01 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Correct rotated Wave row direction after the SVG Y flip
+
+- Descending Wave row order significantly improved the CMYK print through
+  cyan, magenta, and yellow. Black still appeared to revisit row fragments in
+  an unstable order badly enough that the operator stopped a multi-hour print.
+- Black is the 45° screen. Row ordering projected runs onto the pre-`flip_y`
+  angle even though SVG parsing mirrors Y, making the true paper-space row axis
+  the opposite diagonal. At 45° that collapses the along-row projection to
+  nearly zero, so contour sort and reversal depend on coordinate noise.
+- The earlier stored Jeep set is ascending, not the later descending trial.
+  Its black G-code begins with contour IDs `4,3,1,2,6,5` and mixed physical row
+  directions, independently reproducing the defect.
+- `planned_contours()` now negates the row-screen angle when `flip_y` is active.
+  The 45° regression failed before the fix and now passes for both ascending and
+  descending modes.
+- The focused suites pass 125 tests. The complete converter suite passes 603
+  tests with one expected OpenGL-context skip.
+- A fresh four-pass physical print and elapsed-time record remain required
+  before row ordering becomes the production default.
+- Evidence: `WSW-20261101-006` and
+  `docs/report/lab-notes/2026-11-01-m-13-cmyk-black-row-direction.md`.
+- Category: windows-software, hardware, cmyk, wave-screen, contour-order,
+  image-flip, 45-degree, striation.
+
 <a id="elog-20261101-correct-15-inch-stock"></a>
 ### 🟩 2026-11-01 - WINDOWS SOFTWARE/HARDWARE/VERIFIED - Correct default stock to 15-inch media
 

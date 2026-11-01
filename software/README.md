@@ -598,12 +598,17 @@ Current tools:
   contour reorder, and alternate the along-row direction in a serpentine
   sweep. Screen rows carry an exact row index through SVG parsing, so this
   still works when tone clipping splits one row into several disconnected
-  fragments. The pen may lift across blank gaps, but it finishes the current
-  row band before entering the next. On the current Jeep image at `0.50 mm`
-  source pitch, `380 %` artwork scale, and `F3000` travel, a static contour-gap
-  estimate adds about ten minutes across all four passes versus planner
-  optimized. Use this as the next row-return striation discriminator, not as an
-  unconditional default.
+  fragments. Row sorting uses the final paper-space row axis, including the
+  normal SVG Y-axis flip; the apparent axis is reversed for screen angles
+  other than zero. This matters especially for the black screen's 45° angle,
+  where using the unflipped axis made disconnected runs sort and reverse
+  unpredictably. The pen may lift across blank gaps, but it finishes the
+  current row band before entering the next. On the current Jeep image at
+  `0.50 mm` source pitch, `380 %` artwork scale, and `F3000` travel, a static
+  contour-gap estimate adds about ten minutes across all four passes versus
+  planner optimized. Use this as the row-return striation discriminator, not
+  as an unconditional default, until a fresh four-pass print confirms the
+  corrected black row order.
   The four programs share one **page frame**: they are planned around the
   page centre rather than each ink's own bounding box, so **Artwork scale**
   changes the printed size while leaving the four passes co-registered
