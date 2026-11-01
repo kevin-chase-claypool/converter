@@ -2070,8 +2070,27 @@ class MainWindow(QMainWindow):
         if self.svg_path.text().strip():
             self.layout_save_timer.start(250)
 
+    def generator_layout_states(self):
+        """Collect artwork-specific state from tabs that provide it."""
+        states = {}
+        for _title, widget, _group, _description in self.generator_tools:
+            get_state = getattr(widget, "artwork_layout_state", None)
+            if not callable(get_state):
+                continue
+            try:
+                state = get_state()
+            except Exception as exc:  # noqa: BLE001 - one tab must not block save
+                self.log.append(
+                    "Could not capture generator settings for %s: %s"
+                    % (getattr(widget, "NAME", type(widget).__name__), exc)
+                )
+                continue
+            if isinstance(state, dict):
+                states[getattr(widget, "NAME", type(widget).__name__)] = state
+        return states
+
     def save_artwork_layout(self):
-        """Persist source-relative placement beside the selected artwork."""
+        """Persist placement and per-artwork recipes beside the selected file."""
         path = self.svg_path.text().strip()
         if not path or not os.path.isfile(path):
             return False
@@ -2090,9 +2109,10 @@ class MainWindow(QMainWindow):
                 json.dump(
                     {
                         "kind": "theta-artwork-layout",
-                        "version": 1,
+                        "version": 2,
                         "artwork_offset_x_mm": offset_x,
                         "artwork_offset_y_mm": offset_y,
+                        "generator_tabs": self.generator_layout_states(),
                     },
                     handle,
                     indent=2,
@@ -2105,7 +2125,7 @@ class MainWindow(QMainWindow):
             return False
 
     def restore_artwork_layout(self, path):
-        """Restore X/Y placement saved for this exact artwork file."""
+        """Restore placement and per-artwork recipes for this exact file."""
         path = str(path)
         layout_path = artwork_layout_path(path)
         if not os.path.isfile(layout_path):
@@ -2115,7 +2135,7 @@ class MainWindow(QMainWindow):
                 data = json.load(handle)
             if (
                 data.get("kind") != "theta-artwork-layout"
-                or int(data.get("version", 0)) != 1
+                or int(data.get("version", 0)) not in (1, 2)
             ):
                 return False
             offset_x = float(data["artwork_offset_x_mm"])
@@ -2128,10 +2148,35 @@ class MainWindow(QMainWindow):
         self.fields["artwork_offset_x_mm"].setText(fmt(offset_x))
         self.fields["artwork_offset_y_mm"].setText(fmt(offset_y))
         self.gl_preview.set_placement((offset_x, offset_y))
+        restored_tabs = []
+        tab_states = data.get("generator_tabs", {})
+        if int(data.get("version", 0)) >= 2 and isinstance(tab_states, dict):
+            for _title, widget, _group, _description in self.generator_tools:
+                name = getattr(widget, "NAME", type(widget).__name__)
+                restore_state = getattr(
+                    widget,
+                    "restore_artwork_layout_state",
+                    None,
+                )
+                if name not in tab_states or not callable(restore_state):
+                    continue
+                try:
+                    if restore_state(tab_states[name]):
+                        restored_tabs.append(name)
+                except (KeyError, TypeError, ValueError, AttributeError) as exc:
+                    self.log.append(
+                        "Could not restore generator settings for %s: %s"
+                        % (name, exc)
+                    )
         self.log.append(
             "Restored artwork placement: X %.2f mm, Y %.2f mm."
             % (offset_x, offset_y)
         )
+        if restored_tabs:
+            self.log.append(
+                "Restored generator recipes: %s."
+                % ", ".join(restored_tabs)
+            )
         return True
 
     def update_suggested_gcode_path(self, svg_path):

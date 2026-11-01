@@ -77,13 +77,40 @@ class ToolShellTests(unittest.TestCase):
             window.svg_path.setText(str(artwork))
             window.fields["artwork_offset_x_mm"].setText("19.81")
             window.fields["artwork_offset_y_mm"].setText("-29.65")
+            cmyk = next(
+                widget
+                for title, widget, _group, _description in window.generator_tools
+                if title == "CMYK"
+            )
+            cmyk.style.setCurrentIndex(cmyk.style.findData("waves_zero"))
+            cmyk.pitch.setValue(0.50)
+            cmyk.pen_width.setValue(0.80)
+            cmyk.path_tolerance.setValue(0.05)
+            cmyk.saturation.setValue(35.0)
+            cmyk.contrast.setValue(100.0)
+            cmyk.brightness.setValue(100.0)
+            cmyk.sharpen_amount.setValue(125.0)
+            cmyk.sharpen_radius.setValue(2.5)
+            cmyk.gamma.setValue(0.95)
+            cmyk.gcr.setValue(99.0)
+            cmyk.seed.setValue(2)
+            cmyk.theta_mode.set_value("fixed")
+            cmyk.contour_order.setCurrentIndex(
+                cmyk.contour_order.findData("rows_ascending")
+            )
+            expected_recipe = cmyk.artwork_layout_state()
             window.save_artwork_layout()
             layout_path = self.module.artwork_layout_path(str(artwork))
             self.assertTrue(Path(layout_path).is_file())
             layout = json.loads(Path(layout_path).read_text(encoding="utf-8"))
             self.assertEqual(layout["kind"], "theta-artwork-layout")
+            self.assertEqual(layout["version"], 2)
             self.assertAlmostEqual(layout["artwork_offset_x_mm"], 19.81)
             self.assertAlmostEqual(layout["artwork_offset_y_mm"], -29.65)
+            recipe = layout["generator_tabs"]["cmyk"]
+            self.assertEqual(recipe["kind"], "cmyk-recipe")
+            self.assertEqual(recipe["screen"]["style"], "waves_zero")
+            self.assertEqual(recipe["screen"]["contour_order"], "rows_ascending")
 
             reopened = self.module.MainWindow()
             reopened.svg_path.setText(str(artwork))
@@ -95,7 +122,56 @@ class ToolShellTests(unittest.TestCase):
                 reopened.fields["artwork_offset_y_mm"].text(), "-29.65"
             )
             self.assertEqual(reopened.gl_preview.placement, (19.81, -29.65))
+            reopened_cmyk = next(
+                widget
+                for title, widget, _group, _description in reopened.generator_tools
+                if title == "CMYK"
+            )
+            self.assertEqual(reopened_cmyk.style.currentData(), "waves_zero")
+            self.assertAlmostEqual(reopened_cmyk.pitch.value(), 0.50)
+            self.assertAlmostEqual(reopened_cmyk.pen_width.value(), 0.80)
+            self.assertAlmostEqual(reopened_cmyk.path_tolerance.value(), 0.05)
+            self.assertAlmostEqual(reopened_cmyk.saturation.value(), 35.0)
+            self.assertAlmostEqual(reopened_cmyk.gamma.value(), 0.95)
+            self.assertAlmostEqual(reopened_cmyk.gcr.value(), 99.0)
+            self.assertEqual(reopened_cmyk.theta_mode.value(), "fixed")
+            self.assertEqual(
+                reopened_cmyk.contour_order.currentData(),
+                "rows_ascending",
+            )
+            self.assertEqual(
+                reopened_cmyk.artwork_layout_state(),
+                expected_recipe,
+            )
             reopened.close()
+            window.close()
+
+    def test_version_one_layout_still_restores_placement(self):
+        with tempfile.TemporaryDirectory(prefix="theta-layout-v1-") as folder:
+            artwork = Path(folder) / "art.png"
+            artwork.write_bytes(b"")
+            Path(self.module.artwork_layout_path(str(artwork))).write_text(
+                json.dumps(
+                    {
+                        "kind": "theta-artwork-layout",
+                        "version": 1,
+                        "artwork_offset_x_mm": 3.25,
+                        "artwork_offset_y_mm": -4.5,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            window = self.module.MainWindow()
+            window.svg_path.setText(str(artwork))
+            self.assertTrue(window.restore_artwork_layout(str(artwork)))
+            self.assertEqual(
+                window.fields["artwork_offset_x_mm"].text(),
+                "3.25",
+            )
+            self.assertEqual(
+                window.fields["artwork_offset_y_mm"].text(),
+                "-4.5",
+            )
             window.close()
 
     def test_menu_bar_has_the_standard_menus(self):

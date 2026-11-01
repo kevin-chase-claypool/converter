@@ -1,5 +1,23 @@
 # Engineering Log
 
+<a id="elog-20261101-persist-cmyk-artwork-recipe"></a>
+### 🟩 2026-11-01 - WINDOWS SOFTWARE/VERIFIED - Persist each artwork's CMYK recipe across restarts
+
+- Restarting the converter restored the Jeep image and placement but reset the
+  CMYK controls because the sidecar stored only artwork offsets.
+- The per-artwork `.theta-layout.json` format is now version 2 and stores
+  opt-in generator-tab state. The CMYK hook captures image controls, screen
+  geometry, carrier and row ordering, kinematics, page layout, pen offsets,
+  measured alignment values, and preview/write selections.
+- Restore invalidates plan caches so the next preview rebuilds from the saved
+  recipe. Version-1 placement-only sidecars remain supported.
+- The two-window artwork re-import regression and the legacy version-1
+  restoration regression pass.
+- The complete converter suite passes 602 tests with one expected
+  OpenGL-context skip.
+- Reopening the Jeep image in the restarted application restored the complete
+  recipe and built a 242,067-move Preview.
+
 <a id="elog-20261101-wave-row-order"></a>
 ### 🟨 2026-11-01 - WINDOWS SOFTWARE/IMPLEMENTED - Add monotonic row ordering for CMYK Wave output
 

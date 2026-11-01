@@ -845,6 +845,185 @@ class CmykTab(GeneratorTab):
         )
         return settings
 
+    def artwork_layout_state(self):
+        """Return this artwork's complete CMYK recipe for the layout sidecar."""
+        return {
+            "kind": "cmyk-recipe",
+            "version": 1,
+            "image_options": {
+                "auto_levels": self.auto_levels.isChecked(),
+                "saturation_pct": self.saturation.value(),
+                "contrast_pct": self.contrast.value(),
+                "brightness_pct": self.brightness.value(),
+                "sharpen": self.sharpen.isChecked(),
+                "sharpen_pct": self.sharpen_amount.value(),
+                "sharpen_radius_mm": self.sharpen_radius.value(),
+                "gamma": self.gamma.value(),
+                "gcr_pct": self.gcr.value(),
+                "resolution_px": self.resolution.value(),
+                "weights_pct": {
+                    "c": self.weight_c.value(),
+                    "m": self.weight_m.value(),
+                    "y": self.weight_y.value(),
+                    "k": self.weight_k.value(),
+                },
+            },
+            "screen": {
+                "style": self.style.currentData(),
+                "dot_pitch_mm": self.pitch.value(),
+                "preserve_wave_pitch": self.preserve_wave_pitch.isChecked(),
+                "vary_wave_frequency": self.vary_wave_frequency.isChecked(),
+                "contour_order": self.contour_order.currentData(),
+                "dot_size_pct": self.dot_size.value(),
+                "solid_dots": self.solid_dots.isChecked(),
+                "levels": self.levels.value(),
+                "overdraw": self.overdraw.value(),
+                "pen_width_mm": self.pen_width.value(),
+                "path_tolerance_mm": self.path_tolerance.value(),
+                "max_marks": self.max_marks.value(),
+                "seed": self.seed.value(),
+            },
+            "kinematics": {
+                "theta_mode": self.theta_mode.value(),
+                "center_hold_diameter_mm": self.center_hold.value(),
+            },
+            "pen_offsets_mm": {
+                channel: list(self._pen_offsets()[channel])
+                for channel in converter.CHANNELS
+            },
+            "measured_offsets_mm": {
+                channel: list(self._measured_offsets()[channel])
+                for channel in converter.CHANNELS
+            },
+            "layers": {
+                "preview": {
+                    channel: self.preview_boxes[channel].isChecked()
+                    for channel in converter.CHANNELS
+                },
+                "write": {
+                    channel: self.write_boxes[channel].isChecked()
+                    for channel in converter.CHANNELS
+                },
+            },
+            "calibration": {
+                "enabled": self.calibration_mode.isChecked(),
+                "sheet_screen": self.calibration_screen.currentData(),
+            },
+            "page": {
+                "width_mm": self.page_w.value(),
+                "height_mm": self.page_h.value(),
+                "margin_mm": self.margin.value(),
+                "artwork_scale_pct": self.scale_pct.value(),
+                "registration_marks": self.registration_marks.isChecked(),
+            },
+        }
+
+    def restore_artwork_layout_state(self, state):
+        """Restore a saved CMYK recipe without rebuilding its generated layers."""
+        if (
+            not isinstance(state, dict)
+            or state.get("kind") != "cmyk-recipe"
+            or int(state.get("version", 0)) != 1
+        ):
+            return False
+        try:
+            image = state["image_options"]
+            self.auto_levels.setChecked(bool(image["auto_levels"]))
+            self.saturation.setValue(float(image["saturation_pct"]))
+            self.contrast.setValue(float(image["contrast_pct"]))
+            self.brightness.setValue(float(image["brightness_pct"]))
+            self.sharpen.setChecked(bool(image["sharpen"]))
+            self.sharpen_amount.setValue(float(image["sharpen_pct"]))
+            self.sharpen_radius.setValue(float(image["sharpen_radius_mm"]))
+            self.gamma.setValue(float(image["gamma"]))
+            self.gcr.setValue(float(image["gcr_pct"]))
+            self.resolution.setValue(int(image["resolution_px"]))
+            weights = image["weights_pct"]
+            self.weight_c.setValue(float(weights["c"]))
+            self.weight_m.setValue(float(weights["m"]))
+            self.weight_y.setValue(float(weights["y"]))
+            self.weight_k.setValue(float(weights["k"]))
+
+            screen = state["screen"]
+            style_index = self.style.findData(str(screen["style"]))
+            if style_index < 0:
+                raise ValueError("saved CMYK screen style is unavailable")
+            self.style.setCurrentIndex(style_index)
+            self.pitch.setValue(float(screen["dot_pitch_mm"]))
+            self.preserve_wave_pitch.setChecked(
+                bool(screen["preserve_wave_pitch"])
+            )
+            self.vary_wave_frequency.setChecked(
+                bool(screen["vary_wave_frequency"])
+            )
+            order_index = self.contour_order.findData(
+                str(screen["contour_order"])
+            )
+            if order_index < 0:
+                raise ValueError("saved CMYK row order is unavailable")
+            self.contour_order.setCurrentIndex(order_index)
+            self.dot_size.setValue(float(screen["dot_size_pct"]))
+            self.solid_dots.setChecked(bool(screen["solid_dots"]))
+            self.levels.setValue(int(screen["levels"]))
+            self.overdraw.setValue(int(screen["overdraw"]))
+            self.pen_width.setValue(float(screen["pen_width_mm"]))
+            self.path_tolerance.setValue(
+                float(screen["path_tolerance_mm"])
+            )
+            self.max_marks.setValue(int(screen["max_marks"]))
+            self.seed.setValue(int(screen["seed"]))
+
+            kinematics = state["kinematics"]
+            self.theta_mode.set_value(str(kinematics["theta_mode"]))
+            self.center_hold.setValue(
+                float(kinematics["center_hold_diameter_mm"])
+            )
+            for channel in converter.CHANNELS:
+                x_mm, y_mm = state["pen_offsets_mm"][channel]
+                self.offset_spins[channel][0].setValue(float(x_mm))
+                self.offset_spins[channel][1].setValue(float(y_mm))
+                x_mm, y_mm = state["measured_offsets_mm"][channel]
+                self.measured_spins[channel][0].setValue(float(x_mm))
+                self.measured_spins[channel][1].setValue(float(y_mm))
+            for channel in converter.CHANNELS:
+                self.preview_boxes[channel].setChecked(
+                    bool(state["layers"]["preview"][channel])
+                )
+                self.write_boxes[channel].setChecked(
+                    bool(state["layers"]["write"][channel])
+                )
+
+            calibration = state["calibration"]
+            self.calibration_mode.setChecked(bool(calibration["enabled"]))
+            screen_index = self.calibration_screen.findData(
+                str(calibration["sheet_screen"])
+            )
+            if screen_index >= 0:
+                self.calibration_screen.setCurrentIndex(screen_index)
+            page = state["page"]
+            self.page_w.setValue(float(page["width_mm"]))
+            self.page_h.setValue(float(page["height_mm"]))
+            self.margin.setValue(float(page["margin_mm"]))
+            self.scale_pct.setValue(float(page["artwork_scale_pct"]))
+            self.registration_marks.setChecked(
+                bool(page["registration_marks"])
+            )
+        except (
+            KeyError,
+            TypeError,
+            ValueError,
+            AttributeError,
+        ):
+            return False
+        self._layers = {}
+        self._layer_files = {}
+        self._layers_key = None
+        self._analysis = None
+        self._analysis_key = None
+        self._update_wave_spacing_guard()
+        self._refresh_pass_summary()
+        return True
+
     def _effective_settings(self):
         """Host settings with this tab's overrides applied."""
         settings = (

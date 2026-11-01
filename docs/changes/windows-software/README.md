@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-01 | `WSW-20261101-004` | verified | [Persist each artwork's CMYK recipe across restarts](2026/2026-11-01-persist-cmyk-artwork-recipe.md) | `artwork-layout`, `settings`, `persistence`, `cmyk`, `restart` |
 | 2026-11-01 | `WSW-20261101-003` | implemented | [Add monotonic row ordering for CMYK Wave output](2026/2026-11-01-wave-row-order.md) | `cmyk`, `wave-screen`, `contour-order`, `row-sweep`, `striation`, `planner` |
 | 2026-11-01 | `WSW-20261101-002` | implemented | [Expand the default printable canvas to 13.5 inches](2026/2026-11-01-expand-printable-canvas-13p5in.md) | `bed-compensation`, `printable-canvas`, `dense-v3`, `extrapolation`, `cmyk` |
 | 2026-11-01 | `WSW-20261101-001` | implemented | [Add a legacy Wave diagnostic on the current compensation mesh](2026/2026-11-01-legacy-wave-current-mesh-diagnostic.md) | `cmyk`, `wave-screen`, `legacy`, `diagnostic`, `bed-compensation`, `dense-v3` |
