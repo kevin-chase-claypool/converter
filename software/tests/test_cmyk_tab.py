@@ -2004,6 +2004,7 @@ class CmykTabTests(unittest.TestCase):
             "rectilinear",
             "crosshatch",
             "waves_even",
+            "waves_zero",
             "gyroid",
             "tsp",
             "contours",
@@ -2084,19 +2085,70 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(settings.theta_center_hold_diameter_mm, 70.0)
         self.assertEqual(tab._effective_settings().theta_mode, "fixed")
 
-    def test_cmyk_wave_selector_only_offers_exact_spacing(self):
+    def test_cmyk_wave_selector_separates_production_and_legacy_modes(self):
         tab = self.make_tab()
         self.assertEqual(tab.style.findData("waves"), -1)
-        self.assertEqual(tab.style.findData("waves_zero"), -1)
         exact = tab.style.findData("waves_even")
+        legacy = tab.style.findData("waves_zero")
         self.assertGreaterEqual(exact, 0)
+        self.assertGreaterEqual(legacy, 0)
         self.assertEqual(
             tab.style.itemText(exact),
             "Wave screen - equidistant rows",
         )
+        self.assertEqual(
+            tab.style.itemText(legacy),
+            "Wave screen - legacy phase-locked depth (diagnostic)",
+        )
         tooltip = tab.style.toolTip().lower()
         self.assertIn("exactly one pitch apart", tooltip)
-        self.assertIn("legacy variable-depth", tooltip)
+        self.assertIn("legacy diagnostic", tooltip)
+        self.assertIn("selected bed-compensation profile", tooltip)
+
+    def test_legacy_wave_diagnostic_keeps_selected_dense_v3_mesh(self):
+        host = FakeHost(self.colour_path)
+        host.settings_for_source = mock.Mock(
+            return_value=converter.default_settings()
+        )
+        tab = self.make_tab(host)
+        tab.style.setCurrentIndex(tab.style.findData("waves_zero"))
+
+        settings = tab._effective_settings()
+        self.assertEqual(
+            Path(settings.bed_compensation_path).name,
+            "bed-error-compensation-2026-10-29-dense-v3-centered.json",
+        )
+        self.assertFalse(settings.row_locked_compensation)
+        self.assertFalse(tab._wave_spacing_guard_active())
+        self.assertFalse(tab._variable_wave_frequency_active())
+        self.assertTrue(tab._legacy_wave_screen_active())
+        self.assertFalse(tab.preserve_wave_pitch.isEnabled())
+        self.assertFalse(tab.vary_wave_frequency.isEnabled())
+        self.assertIn(
+            "raw selected profile",
+            tab._summary_text().lower(),
+        )
+
+        with mock.patch.object(
+            converter,
+            "screen_channel",
+            wraps=converter.screen_channel,
+        ) as screen_channel:
+            tab._ensure_layers()
+        calls = screen_channel.call_args_list
+        self.assertTrue(calls)
+        for call in calls:
+            self.assertEqual(call.kwargs["style"], "waves_zero")
+            self.assertTrue(call.kwargs["allow_variable_wave_spacing"])
+            self.assertEqual(call.kwargs["wave_frequency_variation"], 0.0)
+
+        contours = converter.read_svg(
+            str(tab._layer_files["y"]), settings
+        )
+        plan = converter.plan_program(contours, settings)
+        compensation = plan["bed_compensation"]
+        self.assertEqual(compensation.fingerprint, "18bfb4ed1c33")
+        self.assertFalse(getattr(compensation, "row_locked", False))
 
     def test_wave_spacing_guard_row_locks_bed_compensation(self):
         tab = self.make_tab()
@@ -2388,6 +2440,52 @@ class CmykTabTests(unittest.TestCase):
                 hashlib.sha256(saved.read_bytes()).hexdigest(),
             )
         self.assertIn("Set manifest", tab.status.text())
+
+    def test_legacy_wave_manifest_records_current_mesh_raw_mode(self):
+        host = FakeHost(self.image_path)
+        host.settings_for_source = mock.Mock(
+            return_value=converter.default_settings()
+        )
+        tab = self.make_tab(host)
+        tab.style.setCurrentIndex(tab.style.findData("waves_zero"))
+        checks = self.clean_checks()
+        results = {
+            channel: {
+                "gcode": f"; {channel}\nG1 X0 Y0\n",
+                "lines": 2,
+                "checks": dict(checks),
+            }
+            for channel in converter.CHANNELS
+        }
+
+        tab._write_files(results)
+
+        manifest = Path(host.saved_paths["cyan"]).with_name(
+            "art-cmyk-set.json"
+        )
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        self.assertEqual(data["screen"]["style"], "waves_zero")
+        self.assertEqual(
+            data["screen"]["wave_phase_mode"],
+            "shared_zero_anchored",
+        )
+        self.assertFalse(data["screen"]["preserve_exact_row_pitch"])
+        self.assertEqual(
+            data["screen"]["wave_frequency_mode"],
+            "constant",
+        )
+        self.assertEqual(
+            data["bed_compensation"]["mode"],
+            "raw_unconstrained",
+        )
+        self.assertEqual(
+            data["bed_compensation"]["profile_fingerprint"],
+            "18bfb4ed1c33",
+        )
+        self.assertEqual(
+            Path(data["bed_compensation_path"]).name,
+            "bed-error-compensation-2026-10-29-dense-v3-centered.json",
+        )
 
     def test_scaled_ink_layers_share_the_page_frame(self):
         tab = self.make_tab(FakeHost(self.colour_path))

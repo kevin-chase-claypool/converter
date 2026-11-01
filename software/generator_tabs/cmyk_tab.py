@@ -264,6 +264,10 @@ class CmykTab(GeneratorTab):
         self.style.addItem("Rectilinear fill (joined rows)", "rectilinear")
         self.style.addItem("Crosshatch levels", "crosshatch")
         self.style.addItem("Wave screen - equidistant rows", "waves_even")
+        self.style.addItem(
+            "Wave screen - legacy phase-locked depth (diagnostic)",
+            "waves_zero",
+        )
         self.style.addItem("Interference (gyroid)", "gyroid")
         self.style.addItem("Single line (TSP)", "tsp")
         self.style.addItem("Topographic contours", "contours")
@@ -273,8 +277,11 @@ class CmykTab(GeneratorTab):
             "their local mark spacing. Rectilinear joins consecutive rows "
             "over ink so one M3/M5 cycle covers a whole connected region. "
             "Wave screen translates one common waveform to every row, so "
-            "adjacent rows remain exactly one pitch apart. Legacy variable-"
-            "depth wave values are promoted to this layout when regenerated."
+            "adjacent rows remain exactly one pitch apart. The explicitly "
+            "labeled legacy diagnostic restores tone-varying row depth while "
+            "keeping the selected bed-compensation profile. Stored legacy "
+            "values from older settings are promoted to this layout when "
+            "regenerated."
         )
         self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)
@@ -318,7 +325,8 @@ class CmykTab(GeneratorTab):
             "Smoothly varies the Wave carrier frequency across the artwork "
             "while keeping one phase and vertical displacement shared by "
             "every row. This reduces fixed vertical crest/trough banding "
-            "without changing row-to-row pitch."
+            "without changing row-to-row pitch. It does not apply to the "
+            "legacy tone-varying diagnostic."
         )
         screen.addRow("Wave carrier", self.vary_wave_frequency)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
@@ -941,6 +949,13 @@ class CmykTab(GeneratorTab):
             and self.vary_wave_frequency.isChecked()
         )
 
+    def _legacy_wave_screen_active(self):
+        """Whether the diagnostic tone-varying Wave geometry is selected."""
+        return (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData() == "waves_zero"
+        )
+
     def _summary_text(self, results=None):
         offsets = self._pen_offsets()
         offset_parts = [
@@ -949,25 +964,24 @@ class CmykTab(GeneratorTab):
             for channel in converter.CHANNELS
             if offsets[channel][0] or offsets[channel][1]
         ]
+        if self._wave_spacing_guard_active():
+            row_lock_status = "active"
+        elif self._legacy_wave_screen_active():
+            row_lock_status = "legacy diagnostic - raw selected profile"
+        elif (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData() == "waves_even"
+        ):
+            row_lock_status = "OFF - raw compensation may alter pitch"
+        else:
+            row_lock_status = "not applicable"
         parts = [
             f"page {self.page_w.value():g}x{self.page_h.value():g} mm",
             "frame %.1f,%.1f"
             % (self.page_w.value() / 2.0, self.page_h.value() / 2.0),
             "bed motion %s" % self._bed_motion_label(),
             "center hold %g mm diameter" % self.center_hold.value(),
-            "row lock %s"
-            % (
-                "active"
-                if self._wave_spacing_guard_active()
-                else (
-                    "OFF - raw compensation may alter pitch"
-                    if (
-                        not self.calibration_mode.isChecked()
-                        and self.style.currentData() == "waves_even"
-                    )
-                    else "not applicable"
-                )
-            ),
+            "row lock %s" % row_lock_status,
             "wave frequency %s"
             % (
                 "varied"
@@ -1075,6 +1089,7 @@ class CmykTab(GeneratorTab):
                     if self._variable_wave_frequency_active()
                     else 0.0
                 ),
+                allow_variable_wave_spacing=(style == "waves_zero"),
             )
             # Generator pages are plotted 1:1, so the tab's Artwork scale is
             # applied to the screened marks about the page centre here.

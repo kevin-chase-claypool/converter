@@ -454,6 +454,13 @@
   vertical displacement remain common to every row, preserving the spacing
   invariant. A physical fixed-versus-variable coupon remains required to
   separate carrier moiré from Xθ/Yθ following error, pen drag, and ink spread.
+  Status 2026-11-01: the CMYK tab now exposes the old tone-varying Wave
+  geometry as an explicitly labeled diagnostic mode while retaining the
+  currently selected bed-compensation profile. It applies profile
+  `18bfb4ed1c33` raw rather than reverting to an older mesh or inheriting the
+  production row-lock projection. This enables an old-Wave/new-mesh comparison;
+  a physical print remains required and the legacy mode is not production
+  output.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

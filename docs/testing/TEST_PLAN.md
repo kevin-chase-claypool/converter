@@ -260,6 +260,19 @@ adjacent gap and row baseline remains unchanged. A phase-locked carrier test
 also requires the shared Wave frequency to vary across the image without
 changing any adjacent-row gap.
 
+**M-13 legacy-Wave/new-mesh discriminator 2026-11-01:** use the same artwork,
+page frame, pitch, pen, feed, and `XY only` motion for both passes. Keep the
+Machine-tab compensation path at the centered dense-v3 profile
+`18bfb4ed1c33`; do not switch to an older profile. Run the production
+`waves_even` file and then the explicitly labeled legacy phase-locked depth
+diagnostic. The legacy pass must record
+`bed_compensation.mode = raw_unconstrained` and profile fingerprint
+`18bfb4ed1c33`; the production pass must record `row_locked_projection`.
+Compare the same crop for cross-row banding. A clean legacy pass and a banded
+production pass establishes the Wave-geometry regression on the current mesh.
+The legacy mode's non-uniform row spacing remains an expected diagnostic
+limitation.
+
 ### M-12 full-field bench procedure
 
 1. Install the same Sakura Pigma Micron 005 for the whole sheet. Flatten and

@@ -620,20 +620,28 @@ Current tools:
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times
-  with a sub-pen offset. **Wave screen - equidistant rows** is the only Wave
-  screen exposed by the CMYK selector. It translates one common
+  with a sub-pen offset. **Wave screen - equidistant rows** is the production
+  Wave screen. It translates one common
   luminance-shaped waveform to every row with no row-specific vertical
   movement, so adjacent centre spacing remains exactly the configured pitch.
   Darker tone may increase the shared waveform depth, but every visible row at
   a given X position receives the same vertical displacement; darkness cannot
   move a row baseline or pull one row toward another. Tone still masks whole
   row segments where the source image has no ink.
+  **Wave screen - legacy phase-locked depth (diagnostic)** is a temporary
+  comparison mode. It restores the pre-2026-10-29 `waves_zero` geometry, in
+  which each row's amplitude follows its own locally smoothed tone. It uses
+  the Machine tab's currently selected bed-compensation profile unchanged;
+  the shipped default is the newer centered dense-v3 mesh
+  `18bfb4ed1c33`. The legacy mode deliberately does not row-lock compensation,
+  so its adjacent paper-space row gaps may vary. Use it only to compare the
+  old Wave geometry against the production screen on the current mesh.
   **Vary Wave frequency across image (break banding)** is enabled by default
-  for this style. It smoothly varies the common carrier frequency by up to
-  `18 %`, using two non-matching modulation periods, so all row crests and
-  troughs do not repeat as fixed vertical bands. The phase and vertical offset
-  remain identical across every row at each X position, preserving exact row
-  pitch. Unchecking it restores the former constant-frequency carrier.
+  for the equidistant style. It smoothly varies the common carrier frequency
+  by up to `18 %`, using two non-matching modulation periods, so all row crests
+  and troughs do not repeat as fixed vertical bands. The phase and vertical
+  offset remain identical across every row at each X position, preserving exact
+  row pitch. Unchecking it restores the former constant-frequency carrier.
   **Preserve exact row pitch (row-lock bed compensation)** is enabled by
   default for this style. It keeps the selected Machine-tab profile active but
   projects its complete measured field into displacement common to every
@@ -661,8 +669,8 @@ Current tools:
   screen angles. With the spacing guard active, the normal artwork path uses
   exact row pitch. Legacy stored values `waves` and `waves_zero` are promoted
   to the equidistant geometry unless a diagnostic tool explicitly requests
-  `allow_variable_wave_spacing=True`; that opt-in exists only to generate
-  comparison coupons. **Path tolerance** controls how densely each sine is
+  `allow_variable_wave_spacing=True`; the explicitly labeled legacy diagnostic
+  uses this path. **Path tolerance** controls how densely each sine is
   sampled in paper space, so emitted chords follow the shape instead of
   appearing as visible facets.
   While the CMYK page is active the shared OpenGL preview draws each visible

@@ -1,5 +1,27 @@
 # Engineering Log
 
+<a id="elog-20261101-legacy-wave-current-mesh-diagnostic"></a>
+### 🟨 2026-11-01 - WINDOWS SOFTWARE/IMPLEMENTED - Add legacy Wave diagnostic on the current mesh
+
+- The CMYK selector now exposes **Wave screen - legacy phase-locked depth
+  (diagnostic)** alongside the production equidistant-row screen.
+- The legacy option restores the pre-2026-10-29 `waves_zero` geometry while
+  leaving the Machine-tab compensation path unchanged. With shipped defaults,
+  it applies centered dense-v3 profile `18bfb4ed1c33` raw instead of the
+  production row-locked projection.
+- The option is intentionally non-production behavior: row-specific tone
+  depth can alter adjacent paper-space row gaps.
+- Focused tests confirm the legacy route passes
+  `allow_variable_wave_spacing=True`, selects the dense-v3 profile, and plans
+  with `row_locked_compensation=False`. The selector, all four layer builds,
+  production row-lock behavior, and set-manifest test pass.
+- The full converter suite passes `591` tests with one expected OpenGL-context
+  skip.
+- Physical old-Wave/new-mesh comparison remains pending.
+- Evidence: `WSW-20261101-001`.
+- Category: windows-software, hardware, cmyk, wave-screen, legacy,
+  diagnostic, bed-compensation, dense-v3, striation.
+
 <a id="elog-20261031-phase-modulated-wave-frequency"></a>
 ### 🟨 2026-10-31 - WINDOWS SOFTWARE/IMPLEMENTED - Vary Wave carrier frequency without moving row baselines
 
