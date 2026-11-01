@@ -853,7 +853,7 @@ class BedCalibrationAnalysisTests(unittest.TestCase):
 
 
 class BedCompensationPlannerIntegrationTests(unittest.TestCase):
-    def test_application_defaults_select_centered_dense_profile(self):
+    def test_application_defaults_select_centered_dense_13_5_inch_profile(self):
         text_defaults = {
             key: default
             for _group, items in converter.TEXT_FIELD_GROUPS
@@ -864,7 +864,7 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
         self.assertTrue(profile_path.is_file())
         self.assertEqual(
             converter.load_bed_compensation(str(profile_path)).fingerprint,
-            "18bfb4ed1c33",
+            "057313c41e21",
         )
         self.assertEqual(
             converter.default_settings().bed_compensation_path,
@@ -886,6 +886,11 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
             profile.coverage_radius_mm,
             places=6,
         )
+        self.assertAlmostEqual(
+            settings.bed_diameter_mm / 2.0 - settings.bed_margin_mm,
+            13.5 * 25.4 / 2.0,
+            places=6,
+        )
         boundary_max = max(
             math.hypot(
                 *profile.correction(
@@ -898,25 +903,20 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
             )
             for angle in range(360)
         )
-        self.assertAlmostEqual(boundary_max, 0.891352, places=6)
+        self.assertAlmostEqual(boundary_max, 0.962080, places=6)
         self.assertLessEqual(boundary_max, 5.0)
         gcode = converter.contours_to_gcode(
             [[(-5.0, 0.0), (5.0, 0.0)]], settings
         )
-        self.assertIn("(bed compensation 18bfb4ed1c33,", gcode)
+        self.assertIn("(bed compensation 057313c41e21,", gcode)
         self.assertIn("angular interpolation bed-frame", gcode)
 
-    def test_13_5_inch_field_clips_before_extrapolated_coverage(self):
+    def test_default_13_5_inch_field_uses_extrapolated_coverage(self):
         settings = converter.Settings(
             theta_mode="fixed",
             theta_center_hold_diameter_mm=0,
             bed_margin_mm=6.35,
-            bed_compensation_path=str(
-                ROOT
-                / "samples"
-                / "gcode"
-                / "bed-error-compensation-2026-10-26-13p5in-extrapolated.json"
-            ),
+            bed_compensation_path=converter.DEFAULT_BED_COMPENSATION_PATH,
             machine_reach_radius_mm=180.0,
             frame_center_mm=(0.0, 0.0),
         )
@@ -934,7 +934,7 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
             max(radii),
             13.5 * 25.4 / 2.0 + 1e-6,
         )
-        self.assertEqual(plan["bed_compensation"].fingerprint, "4bad792e35ad")
+        self.assertEqual(plan["bed_compensation"].fingerprint, "057313c41e21")
 
     def test_fast_preview_uses_nominal_moves_without_compensation_probes(self):
         with tempfile.TemporaryDirectory() as temporary:

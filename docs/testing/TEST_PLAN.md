@@ -252,8 +252,10 @@ projection, preserving the part common to every parallel row. Canonical
 cyan/magenta/yellow/black final-machine spread is now
 `0.002432/0.002255/0.000115/0.001541 mm`, below `0.005 mm`, with all four files
 passing the row-lock checker, macro parsing, and strict motion checks with zero
-A motion. The physical print now verifies both exact row spacing and whether
-the retained projected correction improves bed-position error. This
+A motion. The active default is now derived profile `057313c41e21`, which keeps
+these measured corrections and extends their declared field to the requested
+13.5-inch diameter. The physical print now verifies both exact row spacing and
+whether the retained projected correction improves bed-position error. This
 supersedes the earlier no-compensation workaround. A dedicated dark-tone
 regression also requires full-tone depth to exceed light-tone depth while every
 adjacent gap and row baseline remains unchanged. A phase-locked carrier test
@@ -262,12 +264,13 @@ changing any adjacent-row gap.
 
 **M-13 legacy-Wave/new-mesh discriminator 2026-11-01:** use the same artwork,
 page frame, pitch, pen, feed, and `XY only` motion for both passes. Keep the
-Machine-tab compensation path at the centered dense-v3 profile
-`18bfb4ed1c33`; do not switch to an older profile. Run the production
+Machine-tab compensation path at the expanded centered dense-v3 profile
+`057313c41e21`; do not switch to an older profile. This profile retains the
+measured `18bfb4ed1c33` field and adds the requested outer annulus. Run the production
 `waves_even` file and then the explicitly labeled legacy phase-locked depth
 diagnostic. The legacy pass must record
 `bed_compensation.mode = raw_unconstrained` and profile fingerprint
-`18bfb4ed1c33`; the production pass must record `row_locked_projection`.
+`057313c41e21`; the production pass must record `row_locked_projection`.
 Compare the same crop for cross-row banding. A clean legacy pass and a banded
 production pass establishes the Wave-geometry regression on the current mesh.
 The legacy mode's non-uniform row spacing remains an expected diagnostic
@@ -327,8 +330,10 @@ with `50.2 %` improvement. The `1.142 mm` maximum correction remains below the
 safety bound. Its independent automatic verification was repeatable and reduced
 aggregate RMS from `0.550` to `0.486 mm`, but maximum error was `1.171 mm` and
 improvement was only `11.6 %`. The formal gate decision is failure, but the
-project owner explicitly promoted `18bfb4ed1c33`; it is now the default
-13.0-inch profile by documented override.
+project owner explicitly promoted `18bfb4ed1c33`. Derived profile
+`057313c41e21` became the default after the owner requested a 13.5-inch
+printable diameter on 2026-11-01. Its outer 6.35 mm annulus is extrapolated and
+still requires the edge-band test.
 
 M-01 current evidence: on 2026-09-05 the A-axis motor completed an initial
 bidirectional jog at `F120`; `A10` was counterclockwise, `A-10` was clockwise,

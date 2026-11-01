@@ -207,7 +207,7 @@ Cycle Start with the pen loaded:
   accepted when truly continuous pass changes are required; the manual `M0`
   program remains the default.
 
-  The centered v3 sheet produced profile `18bfb4ed1c33` (coverage
+  The centered v3 sheet produced measured profile `18bfb4ed1c33` (coverage
   `165.100 mm`, maximum correction `1.142 mm`):
   `bed-error-compensation-2026-10-29-dense-v3-centered.json`.
   A0 spatial error is `0.518 mm` RMS / `0.890 mm` maximum and
@@ -215,9 +215,14 @@ Cycle Start with the pen loaded:
   independent `bed-error-verify-dense-91-v3-centered-auto.gcode` print improved
   every angle-stage RMS and reduced aggregate RMS from `0.550` to `0.486 mm`,
   but its `1.171 mm` maximum and `11.6 %` improvement miss the gates.
-  The project owner explicitly promoted `18bfb4ed1c33` anyway. The application
-  now defaults to the measured 13-inch field with a 12.7 mm bed margin; this is
-  an owner override, not a gate-qualified pass.
+  The project owner explicitly promoted `18bfb4ed1c33` anyway. On 2026-11-01
+  the owner requested a 0.5-inch larger printable diameter. Derived profile
+  `057313c41e21` keeps that profile's measured samples and corrections, then
+  extends its local-affine coverage from `165.100` to `171.450 mm`. The
+  application now defaults to the 13.5-inch field with a 6.35 mm bed margin.
+  The measured inner field has the verification result above; the new outer
+  `6.35 mm` annulus is extrapolated and remains unverified on paper. This is an
+  owner override, not a gate-qualified pass.
 
   For a v3 overhead photo, start with the dense image scale and a light blur:
 
@@ -291,15 +296,18 @@ Cycle Start with the pen loaded:
   seven intermediate-angle fields, performs leave-one-station-out validation, correlates
   the result with the optional bed mesh, and writes
   `bed-error-analysis.json`. The
-  `..\samples\gcode\bed-error-compensation-2026-10-29-dense-v3-centered.json`
-  profile is preselected in **Machine > Bed compensation JSON** and covers a
-  measured `165.100 mm` radius (`330.200 mm` / `13.0 in` diameter). **Browse...**
-  selects a replacement; **Default** restores that profile; clearing the path
-  disables compensation. The profile is a machine-XY correction added after
-  the existing planner chooses the bed angle and after P100 registration; it
-  does not change artwork geometry or candidate selection. Its coverage is
-  checked before planning, each correction is capped at 5 mm, and blanking
-  the path restores byte-identical uncompensated output.
+  `..\samples\gcode\bed-error-compensation-2026-11-01-dense-v3-13p5in-extrapolated.json`
+  profile is preselected in **Machine > Bed compensation JSON** and declares a
+  `171.450 mm` radius (`342.900 mm` / `13.5 in` diameter). Its measured
+  samples still come from the centered dense-v3 field through `165.100 mm`;
+  the outer `6.350 mm` annulus is local-affine extrapolation and its extreme
+  boundary correction is `0.962 mm`. **Browse...** selects a replacement;
+  **Default** restores that profile; clearing the path disables compensation.
+  The profile is a machine-XY correction added after the existing planner
+  chooses the bed angle and after P100 registration; it does not change
+  artwork geometry or candidate selection. Its declared coverage is checked
+  before planning, each correction is capped at 5 mm, and blanking the path
+  restores byte-identical uncompensated output.
 
   Interactive **Preview** uses a fast nominal X/Y path while an active bed
   profile is applied to the saved G-code. Enable **Exact compensated preview
@@ -378,9 +386,10 @@ Cycle Start with the pen loaded:
   and improved every angle stage; all M-12 verification gates passed. The
   prior default was profile `4bad792e35ad`; its measured inner field was
   independently verified, while its outer `6.350 mm` annulus was extrapolated.
-  The current owner-selected default is centered dense-v3 profile
-  `18bfb4ed1c33`, which covers only the measured 13-inch field and does not
-  include that outer annulus.
+  The current owner-selected default is derived centered dense-v3 profile
+  `057313c41e21`. It keeps profile `18bfb4ed1c33`'s measured data while
+  declaring the requested 13.5-inch field; its outer `6.350 mm` annulus is
+  extrapolated and remains unverified.
 - `..\samples\gcode\a-tilt-pairs-test.gcode` - four separated line pairs for
   a caliper-read bed-tilt check: each pair is the same paper segment drawn
   twice, once at A=0 (the longer 80 mm constant line) and once at that
@@ -633,7 +642,7 @@ Current tools:
   which each row's amplitude follows its own locally smoothed tone. It uses
   the Machine tab's currently selected bed-compensation profile unchanged;
   the shipped default is the newer centered dense-v3 mesh
-  `18bfb4ed1c33`. The legacy mode deliberately does not row-lock compensation,
+  `057313c41e21`. The legacy mode deliberately does not row-lock compensation,
   so its adjacent paper-space row gaps may vary. Use it only to compare the
   old Wave geometry against the production screen on the current mesh.
   **Vary Wave frequency across image (break banding)** is enabled by default
@@ -1405,7 +1414,7 @@ display-only; every other group changes the emitted program.
   offset, and `G54 X0 Y0` so work zero means pen tip at bed center.
 - P100 also remains the owner of the physical registration centre and A index.
   The bed-compensation profile is a separate residual map and the converter
-  loads the owner-promoted 13-inch centered dense-v3 profile by default; clear the path to
+  loads the owner-promoted expanded centered dense-v3 profile by default; clear the path to
   disable it or use **Browse...** to select a replacement. Wave-screen jobs
   with the default spacing guard keep this profile through a row-locked
   projection: full fields are sampled, then only displacement common to every
@@ -1421,8 +1430,11 @@ display-only; every other group changes the emitted program.
   the clipped artwork at G54 zero; a document centered at `(100,100)`, for
   example, emits drawing coordinates around `(0,0)`, not `(100,100)`.
 - `Bed dia mm` defaults to `355.6 mm` (14-inch round stock). With the default
-  `Bed margin mm` of `12.7 mm` (0.5"), the effective `330.2 mm` (13-inch)
-  diameter matches the measured compensation coverage.
+  `Bed margin mm` of `6.35 mm` (0.25"), the effective `342.9 mm` (13.5-inch)
+  diameter matches the derived compensation profile's declared coverage.
+  The underlying dense-v3 measurements end at a `165.1 mm` radius, so the
+  outer `6.35 mm` annulus is extrapolated until an edge-calibration print
+  verifies it.
 - `Gantry reach radius mm` (default 180.0) caps the drawable circle at the
   gantry's reachable radius from the registered bed center. Because the bed
   rotates freely, the safe drawable area is this circle rather than the full

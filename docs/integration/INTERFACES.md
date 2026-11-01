@@ -48,10 +48,11 @@ The converter emits:
 Unknown or unsupported commands must cause an explicit error during test, not
 silent motion.
 
-The desktop converter preselects the owner-promoted centered dense-v3
-host-side bed-compensation profile `18bfb4ed1c33` and may transform the planned
-work coordinates before emission. It uses the measured `165.100 mm` radius
-without the former extrapolated outer annulus. The Machine-tab path remains
+The desktop converter preselects the owner-promoted expanded centered dense-v3
+host-side bed-compensation profile `057313c41e21` and may transform the planned
+work coordinates before emission. It retains the measured `165.100 mm` field
+from profile `18bfb4ed1c33` and extends its local-affine correction by
+`6.350 mm` to the requested `171.450 mm` radius. The Machine-tab path remains
 editable, and an empty path selects the uncompensated path. The CMYK
 **Wave screen - equidistant rows** style keeps this profile by default through
 its spacing guard, but evaluates it as a **row-locked projection**. For each
@@ -69,9 +70,11 @@ G54 machine X/Y = R(theta) * bed X/Y + correction(theta, bed X/Y)
 This is an internal host mapping, not a new controller command or unit. The
 existing planner still chooses `theta`; compensation is added after that
 selection and after P100 registration. P100 remains the sole owner of the
-physical centre and A index. The profile declares measured XY coverage and a
-5 mm correction bound, and planning stops rather than extrapolating beyond
-either guard. Compensated G-code uses the transformed and subdivided points;
+physical centre and A index. The profile declares XY coverage and a 5 mm
+correction bound, and planning stops beyond either guard. Of that declared
+coverage, `0-165.100 mm` comes from the dense-v3 measurements; the outer
+`6.350 mm` annulus is local-affine extrapolation pending an edge-band print.
+Compensated G-code uses the transformed and subdivided points;
 row-locked Wave G-code additionally identifies the full profile fingerprint,
 projection maximum, and per-ink row angle in its header. Its set manifest
 records `row_locked_projection` rather than claiming the raw field was applied.

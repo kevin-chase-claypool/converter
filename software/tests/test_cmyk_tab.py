@@ -2116,7 +2116,7 @@ class CmykTabTests(unittest.TestCase):
         settings = tab._effective_settings()
         self.assertEqual(
             Path(settings.bed_compensation_path).name,
-            "bed-error-compensation-2026-10-29-dense-v3-centered.json",
+            "bed-error-compensation-2026-11-01-dense-v3-13p5in-extrapolated.json",
         )
         self.assertFalse(settings.row_locked_compensation)
         self.assertFalse(tab._wave_spacing_guard_active())
@@ -2147,7 +2147,7 @@ class CmykTabTests(unittest.TestCase):
         )
         plan = converter.plan_program(contours, settings)
         compensation = plan["bed_compensation"]
-        self.assertEqual(compensation.fingerprint, "18bfb4ed1c33")
+        self.assertEqual(compensation.fingerprint, "057313c41e21")
         self.assertFalse(getattr(compensation, "row_locked", False))
 
     def test_wave_spacing_guard_row_locks_bed_compensation(self):
@@ -2270,7 +2270,7 @@ class CmykTabTests(unittest.TestCase):
 
         self.assertEqual(
             Path(settings.bed_compensation_path).name,
-            "bed-error-compensation-2026-10-29-dense-v3-centered.json",
+            "bed-error-compensation-2026-11-01-dense-v3-13p5in-extrapolated.json",
         )
         for channel in converter.CHANNELS:
             contours = converter.read_svg(
@@ -2279,7 +2279,7 @@ class CmykTabTests(unittest.TestCase):
             plan = converter.plan_program(contours, settings)
             self.assertEqual(
                 plan["bed_compensation"].fingerprint,
-                "18bfb4ed1c33",
+                "057313c41e21",
                 channel,
             )
 
@@ -2416,7 +2416,7 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertEqual(
             data["bed_compensation"]["profile_fingerprint"],
-            "18bfb4ed1c33",
+            "057313c41e21",
         )
         self.assertEqual(
             set(data["bed_compensation"]["screen_angles_deg"]),
@@ -2480,11 +2480,11 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertEqual(
             data["bed_compensation"]["profile_fingerprint"],
-            "18bfb4ed1c33",
+            "057313c41e21",
         )
         self.assertEqual(
             Path(data["bed_compensation_path"]).name,
-            "bed-error-compensation-2026-10-29-dense-v3-centered.json",
+            "bed-error-compensation-2026-11-01-dense-v3-13p5in-extrapolated.json",
         )
 
     def test_scaled_ink_layers_share_the_page_frame(self):

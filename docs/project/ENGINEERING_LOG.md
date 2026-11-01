@@ -1,5 +1,26 @@
 # Engineering Log
 
+<a id="elog-20261101-expand-printable-canvas-13p5in"></a>
+### 🟨 2026-11-01 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Expand printable canvas to 13.5 inches
+
+- The project owner requested a 0.5-inch larger printable diameter without
+  changing the current Jeep CMYK recipe.
+- The default 14-inch stock margin changed from 12.7 to 6.35 mm, increasing the
+  drawable and compensation diameter from 330.2 to 342.9 mm.
+- Profile `057313c41e21` retains the measured samples and corrections from
+  centered dense-v3 profile `18bfb4ed1c33` and expands its declared local-affine
+  coverage from 165.100 to 171.450 mm.
+- A0 spatial error remains `0.518 / 0.890 mm` RMS/max, A0 control remains
+  `0.353 / 0.783 mm`, and leave-one-station-out remains `0.274 / 0.760 mm`
+  with `50.2 %` improvement.
+- The extreme correction at the new declared boundary is 0.962080 mm, below
+  the 5 mm safety cap. The added 6.35 mm annulus is extrapolated and still
+  requires a physical edge-band verification.
+- Forty-three bed-compensation tests and 101 CMYK-tab tests pass.
+- Evidence: `WSW-20261101-002`.
+- Category: windows-software, hardware, bed-compensation, printable-canvas,
+  dense-v3, extrapolation, cmyk.
+
 <a id="elog-20261101-legacy-wave-current-mesh-diagnostic"></a>
 ### 🟨 2026-11-01 - WINDOWS SOFTWARE/IMPLEMENTED - Add legacy Wave diagnostic on the current mesh
 
