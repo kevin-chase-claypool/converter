@@ -259,8 +259,8 @@
   station coordinates identical across thresholds, but the resulting field
   still fails at `0.594 / 1.705 mm` A0 spatial error and
   `0.676 / 3.689 mm` leave-one-out error. Resolve T-01H lift clearance, confirm
-  the deployed 130 ms toolhead build, and investigate the remaining field
-  error before repeating the sheet.
+  the deployed toolhead build after the 2026-11-02 increase to 200 ms, and
+  investigate the remaining field error before repeating the sheet.
   Status 2026-10-29 centered retry: after the P100 center adjustment, the next
   v3 sheet was threshold-repeatable and passed fitting gates. A0 spatial was
   `0.518 / 0.890 mm`, A0 control was `0.353 / 0.783 mm`, and leave-one-out was

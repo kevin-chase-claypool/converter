@@ -55,7 +55,7 @@ host .gcode -> grblHAL on RP23CNC: X/Y/A motion, spindle/tool output state
   the pen (`M5`) and continue on a long print. The converter enables this
   acknowledgement path by default; fixed `G4` dwells remain the fallback when
   it is disabled. Normal `M5` ends at the load-cell release threshold plus the
-  current 130 ms calibrated clearance pulse; it does not travel to
+  current 200 ms calibrated clearance pulse; it does not travel to
   the distant `LIFT_HOME` switch. `P115` and the toolhead GP27 output are
   enabled once F-08, force, and clearance commissioning pass; F-05A passed on
   2026-09-29, and the converter enables the option by default.

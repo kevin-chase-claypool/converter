@@ -66,10 +66,10 @@ fixed motor duration.
 - `M5` requests `PEN_CLEAR`. Retract until the filtered force stays below
   `F_release_off` for the configured debounce interval, then issue the bounded
   `t_clear`/pulse command and stop the actuator. The current source uses a
-  130 ms post-release lift pulse, then waits 300 ms and takes a fresh 64-sample
+  200 ms post-release lift pulse, then waits 300 ms and takes a fresh 64-sample
   clear-state tare before reporting `LIFTED`. It begins only after release is
-  confirmed; the 130 ms value was raised from 90 ms on 2026-10-23, and its
-  no-drag margin is being re-measured.
+  confirmed; the 200 ms value was raised from 130 ms on 2026-11-02 by owner
+  direction, and its physical gap and no-drag margin are being re-measured.
 - `F_contact_on` and `F_release_off` are distinct hysteresis thresholds. Both
   must be derived from the installed, signed CS1238 force units and current
   no-contact residual; a raw ADC zero is not a valid threshold.
@@ -131,7 +131,7 @@ about 12 mm above the paper, so the controller first closes that gap:
   serial `c` still performs the same retract with a manual-mode latch, and `a`
   returns that manual mode to GP29.
 
-M5 applies the 130 ms UP clearance move, estimated at about 2.28 mm above the
+M5 applies the 200 ms UP clearance move, estimated at about 3.50 mm above the
 release point at the E-09F measured rate, and stops sooner if GP2 is pressed.
 This replaced the T-01H-accepted 57 ms baseline after intermediate values still
 left insufficient travel clearance. If GP2 is not reached, it waits 300 ms

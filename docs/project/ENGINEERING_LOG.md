@@ -1,5 +1,23 @@
 # Engineering Log
 
+<a id="elog-20261102-m5-clearance-200ms"></a>
+### 🟨 2026-11-02 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Raise M5 clearance pulse to 200 ms
+
+- At the project owner's direction, `PEN_CLEAR_EXTRA_LIFT_MS` increased from
+  `130` to `200` ms of full-drive UP after the M5 force-release point.
+- At the E-09F measured rate of about `1.75 mm` per `100 ms`, the new pulse
+  targets about `3.50 mm` above release, adding about `1.23 mm` to the prior
+  130 ms setting.
+- The existing sequence, GP2 stop guard, release debounce, 300 ms settle, and
+  fresh clear-state tare are unchanged. `PEN_CLEAR_VALID` remains true because
+  this increases clearance above the T-01H-accepted value.
+- The physical gap, 30-cycle no-drag behavior, first-try M3 contact, GP2
+  non-contact during ordinary M5, and warm-seek budget remain open.
+- The toolhead firmware compiles successfully after the change.
+- Evidence: `RPSW-20261102-001`.
+- Category: rp23cnc-software, hardware, toolhead, pen-clear, m5, clearance,
+  drag, owner-override.
+
 <a id="elog-20261101-rotating-wave-row-lock"></a>
 ### 🟨 2026-11-01 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Preserve Wave row pitch under Xθ/Yθ
 

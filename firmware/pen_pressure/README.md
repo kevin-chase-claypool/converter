@@ -38,14 +38,14 @@ work.
 - T-01H accepted normal M5 `PEN_CLEAR` at 57 ms on 2026-09-25 (release
   hysteresis, debounce, and clearance all measured). The clearance lift runs
   only *after* the configured near-zero CS1238 release band is stable. The
-  pulse is now 130 ms, raised from 90 ms on 2026-10-23 after the operator still
-  reported insufficient clearance between moves. At E-09F's 1.75 mm per 100 ms
-  observation, 130 ms targets about 2.28 mm above the release point. The new
-  gap, no-drag behavior, and first-try M3 contact are open pending
-  re-measurement. A 2026-10-29 dense calibration sheet still showed faint ink
-  on commanded pen-up travel after `M5` and `P115`; the installed binary was
-  not captured, so confirm the deployed 130 ms build and repeat the 30-cycle
-  no-drag test before changing the pulse again.
+  pulse is now 200 ms, raised from 130 ms on 2026-11-02 at the owner's
+  direction after the previous clearance was still insufficient. At E-09F's
+  1.75 mm per 100 ms observation, 200 ms targets about 3.50 mm above the
+  release point. The new gap, no-drag behavior, and first-try M3 contact are
+  open pending re-measurement. A 2026-10-29 dense calibration sheet still
+  showed faint ink on commanded pen-up travel after `M5` and `P115`; the
+  installed binary was not captured. Confirm the deployed 200 ms build and
+  repeat the 30-cycle no-drag test before accepting the new value.
 - Do not enable stored force-control parameters until T-01I proves that the
   accepted profile survives power cycles and that a fresh no-contact baseline
   stays RAM-only.
@@ -179,7 +179,7 @@ installed-pen checks.
 For a normal M5 from contact, Core 0 uses `RELEASE_TO_CLEAR`: it retracts only
 until the filtered CS1238 residual remains in the configured no-contact band
 for the required windows. It then enters `CLEARANCE_LIFT` and continues N20
-retraction for `PEN_CLEAR_EXTRA_LIFT_MS` (currently 130 ms), rechecks the clear
+retraction for `PEN_CLEAR_EXTRA_LIFT_MS` (currently 200 ms), rechecks the clear
 band, then stops/sleeps for `PEN_CLEAR_TARE_SETTLE_MS` (currently 300 ms) and
 takes a fresh 64-sample clear-state tare before reaching `LIFTED`/possible
 `CLEAR_READY`. This resets the unloaded baseline shifted by the clearance
@@ -211,7 +211,7 @@ residual so a high-residual cycle cannot skip the coarse travel. It
 never enters hold from a fixed travel time. The approach is bounded at 100
 pulses / 60 seconds and 30 pulses without GP2 releasing; any limit, sensor
 loss, or overforce stops/sleeps the driver and enters `FAULT`. The 75 g
-hard-force guard is absolute. M5 keeps the 130 ms UP clearance move and stops
+hard-force guard is absolute. M5 keeps the 200 ms UP clearance move and stops
 at GP2. After an inspected fault, `c` initiates a bounded UP-only recovery to
 GP2, latches manual M5, and cannot restart contact seeking until a fresh `e`
 command or deliberate `a` return to GP29 control.

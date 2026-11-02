@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-02 | `RPSW-20261102-001` | rp23cnc-software, hardware | implemented | [Raise the M5 pen-clearance pulse to 200 ms](rp23cnc-software/2026/2026-11-02-raise-m5-clearance-to-200ms.md) |
 | 2026-11-01 | `WSW-20261101-007` | windows-software, hardware | implemented | [Preserve Wave row pitch under Xθ/Yθ](windows-software/2026/2026-11-01-rotating-wave-row-lock.md) |
 | 2026-11-01 | `WSW-20261101-006` | windows-software, hardware | implemented | [Correct rotated Wave row direction after the SVG Y flip](windows-software/2026/2026-11-01-fix-rotated-wave-row-direction.md) |
 | 2026-11-01 | `WSW-20261101-005` | windows-software, hardware | verified | [Correct the default stock diameter to 15 inches](windows-software/2026/2026-11-01-correct-15-inch-stock.md) |
