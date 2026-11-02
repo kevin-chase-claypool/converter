@@ -1,10 +1,10 @@
-"""Verify a saved CMYK Wave set in final machine coordinates.
+"""Verify a saved CMYK Wave set in final paper-space coordinates.
 
 The Wave screen is generated as a uniform lattice in paper space. Bed
 compensation can change that lattice before the coordinates reach grblHAL.
-This checker follows the emitted pen-down ``X/Y`` commands, rotates them into
-each ink's effective screen frame, and measures adjacent row gaps at many
-columns.
+This checker follows the emitted pen-down ``X/Y/A`` commands, samples each
+linear interpolation interval, rotates the result back onto the bed, and
+measures adjacent row gaps in each ink's effective screen frame.
 
 Usage::
 
@@ -22,10 +22,8 @@ import re
 from pathlib import Path
 
 
-MOVE = re.compile(
-    r"^G[01]\s+[^;]*?X(-?[\d.]+)\s+Y(-?[\d.]+)",
-    re.IGNORECASE,
-)
+WORD = re.compile(r"([XYA])(-?\d+(?:\.\d+)?)", re.IGNORECASE)
+THETA_RATIO = re.compile(r"theta ratio\s+([\d.]+)", re.IGNORECASE)
 LABELS = {
     "c": "cyan",
     "m": "magenta",
@@ -42,8 +40,14 @@ def load_manifest(path: Path) -> dict:
     data = json.loads(path.read_text(encoding="utf-8"))
     if data.get("kind") != "cmyk-print-set":
         raise ValueError("not a CMYK print-set manifest")
-    if "XY only" not in str(data.get("bed_motion", "")):
-        raise ValueError("manifest is not an XY-only Wave set")
+    bed_motion = str(data.get("bed_motion", ""))
+    rotating = "Xθ/Yθ" in bed_motion or "xtheta/ytheta" in bed_motion.lower()
+    if not rotating and "XY only" not in bed_motion:
+        raise ValueError("manifest has no supported bed-motion mode")
+    if rotating and not bool(data.get("row_theta_lock")):
+        raise ValueError(
+            "rotating-bed manifest does not record the shared row-angle lock"
+        )
     screen = data.get("screen", {})
     if screen.get("style") != "waves_even":
         raise ValueError("manifest screen style is not waves_even")
@@ -76,10 +80,27 @@ def load_manifest(path: Path) -> dict:
     return data
 
 
-def drawing_contours(path: Path) -> list[list[tuple[float, float]]]:
-    """Return pen-down polylines from the emitted G-code."""
-    contours: list[list[tuple[float, float]]] = []
+def theta_ratio(path: Path) -> float:
+    for line in path.read_text(
+        encoding="utf-8", errors="replace"
+    ).splitlines()[:20]:
+        match = THETA_RATIO.search(line)
+        if match:
+            value = float(match.group(1))
+            if value > 0.0:
+                return value
+    raise ValueError(f"{path.name} has no positive theta ratio header")
+
+
+def drawing_contours(
+    path: Path,
+    sample_steps: int = 1,
+) -> list[list[tuple[float, float, float]]]:
+    """Return sampled pen-down paper points from the emitted G-code."""
+    sample_steps = max(1, int(sample_steps))
+    contours: list[list[tuple[float, float, float]]] = []
     current = None
+    x = y = a = 0.0
     for raw_line in path.read_text(
         encoding="utf-8", errors="replace"
     ).splitlines():
@@ -89,12 +110,25 @@ def drawing_contours(path: Path) -> list[list[tuple[float, float]]]:
             contours.append(current)
         elif line.startswith("M5"):
             current = None
-        elif current is not None:
-            match = MOVE.match(line)
-            if match:
-                current.append(
-                    (float(match.group(1)), float(match.group(2)))
-                )
+        elif line.startswith(("G0 ", "G1 ")):
+            words = {
+                key.upper(): float(value)
+                for key, value in WORD.findall(line)
+            }
+            next_x = words.get("X", x)
+            next_y = words.get("Y", y)
+            next_a = words.get("A", a)
+            if current is not None and words:
+                for index in range(sample_steps + 1):
+                    fraction = index / sample_steps
+                    current.append(
+                        (
+                            x + fraction * (next_x - x),
+                            y + fraction * (next_y - y),
+                            a + fraction * (next_a - a),
+                        )
+                    )
+            x, y, a = next_x, next_y, next_a
     return [contour for contour in contours if len(contour) > 1]
 
 
@@ -114,13 +148,46 @@ def _value_at_x(
     return None
 
 
+def _machine_to_bed_point(x_value, y_value, motor_angle, ratio):
+    theta = math.radians(-motor_angle / ratio)
+    cosine = math.cos(theta)
+    sine = math.sin(theta)
+    return (
+        x_value * cosine - y_value * sine,
+        x_value * sine + y_value * cosine,
+    )
+
+
 def audit_program(
     path: Path,
     angle_deg: float,
     nominal_pitch_mm: float,
     sample_columns: int = 199,
+    *,
+    rotating_bed: bool = False,
+    ratio: float = 1.0,
 ) -> dict[str, float | int]:
-    """Measure adjacent machine-space row gaps in the effective screen frame."""
+    """Measure adjacent paper-space row gaps in the effective screen frame."""
+    contours = drawing_contours(path, sample_steps=9 if rotating_bed else 1)
+    if rotating_bed:
+        ratio = max(float(ratio), 1e-12)
+        bed_contours = [
+            [
+                _machine_to_bed_point(
+                    x_value,
+                    y_value,
+                    a_value,
+                    ratio,
+                )
+                for x_value, y_value, a_value in contour
+            ]
+            for contour in contours
+        ]
+    else:
+        bed_contours = [
+            [(x_value, y_value) for x_value, y_value, _a in contour]
+            for contour in contours
+        ]
     theta = math.radians(-angle_deg)
     cosine = math.cos(theta)
     sine = math.sin(theta)
@@ -132,7 +199,7 @@ def audit_program(
             )
             for x_value, y_value in contour
         ]
-        for contour in drawing_contours(path)
+        for contour in bed_contours
     ]
     if not rows:
         raise ValueError(f"no pen-down contours in {path.name}")
@@ -204,6 +271,10 @@ def main(argv: list[str] | None = None) -> int:
     base = args.manifest.parent
     pitch = float(data["screen"]["effective_pitch_mm"])
     angles = data["screen"]["screen_angles_deg"]
+    rotating_bed = (
+        "Xθ/Yθ" in str(data.get("bed_motion", ""))
+        or "xtheta/ytheta" in str(data.get("bed_motion", "")).lower()
+    )
     files = data["files"]
     hashes = data["file_sha256"]
     compensation = data.get("bed_compensation", {})
@@ -227,11 +298,17 @@ def main(argv: list[str] | None = None) -> int:
                     raise ValueError(
                         f"{path.name} does not identify the active profile"
                     )
+            if rotating_bed and "shared Wave row angles" not in text:
+                raise ValueError(
+                    f"{path.name} has no shared rotating row-angle header"
+                )
             result = audit_program(
                 path,
                 float(angles[channel]),
                 pitch,
                 sample_columns=args.sample_columns,
+                rotating_bed=rotating_bed,
+                ratio=theta_ratio(path) if rotating_bed else 1.0,
             )
         except (OSError, ValueError, KeyError) as error:
             print("FAIL: %s" % error)

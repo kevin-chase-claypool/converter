@@ -4,6 +4,7 @@ import contextlib
 import importlib.util
 import io
 import json
+import math
 import tempfile
 import unittest
 from pathlib import Path
@@ -41,8 +42,8 @@ class CheckCmykWaveSpacingTests(unittest.TestCase):
                     "G1 X0 Y0 F700",
                     "G1 X10 Y0 F700",
                     "M5",
-                    "M3",
                     "G1 X0 Y2 F700",
+                    "M3",
                     "G1 X10 Y2 F700",
                     "M5",
                 )
@@ -135,6 +136,73 @@ class CheckCmykWaveSpacingTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "raw bed compensation"):
             self.checker.load_manifest(path)
+
+    def test_manifest_requires_rotating_rows_to_share_the_angle_lock(self):
+        folder = Path(tempfile.mkdtemp(prefix="cmyk-wave-manifest-"))
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = folder / "set.json"
+        data = {
+            "kind": "cmyk-print-set",
+            "bed_motion": "Xθ/Yθ (rotating bed, fast)",
+            "row_theta_lock": True,
+            "bed_compensation_path": "",
+            "screen": {
+                "style": "waves_even",
+                "preserve_exact_row_pitch": True,
+            },
+        }
+        path.write_text(json.dumps(data), encoding="utf-8")
+
+        self.assertTrue(self.checker.load_manifest(path)["row_theta_lock"])
+
+        data["row_theta_lock"] = False
+        path.write_text(json.dumps(data), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "shared row-angle lock"):
+            self.checker.load_manifest(path)
+
+    def test_audit_decodes_a_shared_rotating_bed_schedule(self):
+        folder = Path(tempfile.mkdtemp(prefix="cmyk-wave-rotating-"))
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = folder / "rows.gcode"
+        angle = math.radians(1.0)
+        end_x = 10.0 * math.cos(angle)
+        end_y = 10.0 * math.sin(angle)
+        row_offset_x = -2.0 * math.sin(angle)
+        row_offset_y = 2.0 * math.cos(angle)
+        path.write_text(
+            "\n".join(
+                (
+                    "(theta ratio 10.00000 motor deg per bed deg, offset 0.000)",
+                    f"G1 X-10 Y0 A0",
+                    "M3",
+                    f"G1 X{end_x:.8f} Y{end_y:.8f} A10",
+                    "M5",
+                    f"G1 X-10 Y2 A0",
+                    "M3",
+                    (
+                        f"G1 X{end_x + row_offset_x:.8f} "
+                        f"Y{end_y + row_offset_y:.8f} A10"
+                    ),
+                    "M5",
+                )
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        result = self.checker.audit_program(
+            path,
+            0.0,
+            2.0,
+            rotating_bed=True,
+            ratio=10.0,
+        )
+
+        self.assertLessEqual(result["spread_mm"], 0.005)
 
     def test_audit_requires_the_row_locked_header_for_an_active_profile(self):
         folder = Path(tempfile.mkdtemp(prefix="cmyk-wave-manifest-"))

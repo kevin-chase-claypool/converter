@@ -609,6 +609,15 @@ Current tools:
   planner optimized. Use this as the row-return striation discriminator, not
   as an unconditional default, until a fresh four-pass print confirms the
   corrected black row order.
+  With **Bed motion = Xθ/Yθ**, an explicit row order, and the spacing guard
+  active, the planner also uses one shared bed-angle schedule for every
+  parallel row at the same along-row position. This prevents independent
+  per-row A paths from changing the paper-space gap. The emitter adds
+  spacing-aware interpolation subdivisions so grblHAL's linear X/Y/A moves
+  cannot shorten the pitch between endpoints. Ascending and descending still
+  produce opposite row bands and alternate each row's drawing direction.
+  Turning the spacing guard off, or selecting Planner optimized, retains the
+  ordinary per-contour rotating-bed planner.
   The four programs share one **page frame**: they are planned around the
   page centre rather than each ink's own bounding box, so **Artwork scale**
   changes the printed size while leaving the four passes co-registered
@@ -688,9 +697,11 @@ Current tools:
   Verify a saved set with
   `python ..\tools\check_cmyk_wave_spacing.py <name>-set.json`; it checks all
   four manifest hashes, the row-locked header and profile identity, and their
-  final-machine adjacent-row spread. The current verified 199-column Ben2
-  spreads are `0.002432`, `0.002255`, `0.000115`, and `0.001541 mm` for
-  cyan/magenta/yellow/black.
+  final-paper adjacent-row spread. For Xθ/Yθ it samples the linear X/Y/A
+  interpolation, rotates each point back onto the bed, and requires the
+  manifest and G-code to identify the shared row-angle lock. The current
+  verified 199-column XY-only Ben2 spreads are `0.002448`, `0.002254`,
+  `0.000149`, and `0.001541 mm` for cyan/magenta/yellow/black.
   The emitted finite segments preserve the `0.8 mm` pen plus `0.25 mm` paper
   gap at their actual shortest distance; there is no additional fixed fraction
   of the pitch reserved between rows. Changing Dot pitch or Artwork scale

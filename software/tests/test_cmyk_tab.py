@@ -2240,6 +2240,7 @@ class CmykTabTests(unittest.TestCase):
         contours = converter.read_svg(str(tab._layer_files["k"]), settings)
         plan = converter.plan_program(contours, settings)
         text = converter.contours_to_gcode(contours, settings, plan)
+        self.assertIsNone(plan["wave_row_schedule"])
         self.assertIn(
             "(frame center 30.000,30.000 mm, bed motion XY only)", text
         )
@@ -2424,6 +2425,7 @@ class CmykTabTests(unittest.TestCase):
             data["screen"]["contour_order"],
             "rows_ascending",
         )
+        self.assertTrue(data["row_theta_lock"])
         self.assertNotIn(
             "wave_frequency_tone_gain",
             data["screen"],

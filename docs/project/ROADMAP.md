@@ -491,6 +491,14 @@
   DESC now use the final paper-space row axis. The 45° regression and full
   converter suite pass, while a fresh four-pass print and elapsed-time record
   remain required before changing the production default.
+  Status 2026-11-01 rotating-row lock: the owner confirmed exact row pitch in
+  the XY-only Wave screen and requested the same result with a rotating bed.
+  Xθ/Yθ plus explicit asc/desc rows and the spacing guard now shares one
+  bed-angle schedule across every parallel row and subdivides A tightly enough
+  to bound linear-interpolation pitch loss. A four-angle, two-order regression
+  holds the spread below `0.005 mm` while retaining roughly `52-80°` of A
+  travel; the controlled move count rises by about `50-65 %`. A physical
+  four-pass print and elapsed-time comparison remain open.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

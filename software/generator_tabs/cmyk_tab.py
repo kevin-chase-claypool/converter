@@ -313,8 +313,11 @@ class CmykTab(GeneratorTab):
             "Wave screen - equidistant rows projects the full measured "
             "bed-compensation mesh onto one displacement common to every "
             "parallel row. Compatible positional correction remains active "
-            "while the final row pitch stays exact. Uncheck only to apply "
-            "the raw two-dimensional field and accept non-uniform rows."
+            "while the final row pitch stays exact. With Xθ/Yθ plus "
+            "an explicit row order, all rows also share one bed-angle schedule "
+            "and spacing-aware subdivision so rotating-bed interpolation "
+            "cannot compress the row pitch. Uncheck only to apply the raw "
+            "two-dimensional field and accept non-uniform rows."
         )
         screen.addRow("Spacing guard", self.preserve_wave_pitch)
         self.vary_wave_frequency = QCheckBox(
@@ -1193,7 +1196,17 @@ class CmykTab(GeneratorTab):
             % (self.page_w.value() / 2.0, self.page_h.value() / 2.0),
             "bed motion %s" % self._bed_motion_label(),
             "center hold %g mm diameter" % self.center_hold.value(),
-            "row lock %s" % row_lock_status,
+            "row lock %s"
+            % (
+                row_lock_status
+                + (
+                    ", shared A"
+                    if row_lock_status == "active"
+                    and self.theta_mode.value() != "fixed"
+                    and self._wave_row_order_active()
+                    else ""
+                )
+            ),
             "wave frequency %s"
             % (
                 "varied"
@@ -1718,6 +1731,7 @@ class CmykTab(GeneratorTab):
             "bed_motion": self._bed_motion_label(),
             "center_hold_diameter_mm": self.center_hold.value(),
             "theta_mode": settings.theta_mode,
+            "row_theta_lock": converter.wave_row_theta_lock_enabled(settings),
             "bed_compensation_path": settings.bed_compensation_path,
             "bed_compensation": {
                 "mode": compensation_mode,

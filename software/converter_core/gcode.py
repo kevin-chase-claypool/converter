@@ -12,6 +12,7 @@ from .kinematics import (
     plan_travel_move,
     polar_segment_steps,
 )
+from .wave_rows import wave_row_theta_schedule, wave_row_thetas
 from .bed_compensation import (
     compensated_machine_point,
     compensation_step_count,
@@ -234,6 +235,15 @@ def _reregister_thetas(thetas, settings):
     return [theta + shift for theta in thetas]
 
 
+def _wave_row_step_count(start_theta, end_theta, program_plan):
+    """Bound linear X/Y/A interpolation shrinkage between adjacent rows."""
+    schedule = program_plan.get("wave_row_schedule")
+    if not schedule:
+        return 1
+    max_step = max(float(schedule.get("max_step_deg", 0.0)), 1e-9)
+    return max(1, int(math.ceil(abs(end_theta - start_theta) / max_step)))
+
+
 def plan_program(contours, settings, cancel_check=None):
     """Plan clipped contours in the G54 bed-center work frame.
 
@@ -314,20 +324,54 @@ def plan_program(contours, settings, cancel_check=None):
                         "%.3f mm bed compensation coverage"
                         % (math.hypot(point[0], point[1]), coverage)
                     )
+    ordered_contours = planned_contours(
+        clipped_contours, settings, center, cancel_check
+    )
+    wave_row_schedule = wave_row_theta_schedule(
+        ordered_contours,
+        settings,
+        center,
+        plan_contour_thetas,
+        cancel_check,
+    )
     planned_jobs = []
     previous_theta = None
     previous_machine = None
-    for planned in planned_contours(clipped_contours, settings, center, cancel_check):
+    for planned in ordered_contours:
         check_cancelled(cancel_check)
         points = planned["path"]
-        thetas, strategies = plan_contour_thetas(
-            points,
-            settings,
-            previous_theta,
-            center,
-            previous_machine,
-            cancel_check,
-        )
+        if (
+            wave_row_schedule is not None
+            and getattr(points, "wave_row_index", None) is not None
+        ):
+            thetas = wave_row_thetas(points, wave_row_schedule)
+            strategies = []
+            for first, second, first_theta, second_theta in zip(
+                points,
+                points[1:],
+                thetas,
+                thetas[1:],
+            ):
+                if abs(second_theta - first_theta) <= 1e-9:
+                    strategies.append("hold")
+                    continue
+                first_machine = bed_to_machine(first, first_theta, center)
+                second_machine = bed_to_machine(second, second_theta, center)
+                strategies.append(
+                    "x_theta"
+                    if abs(second_machine[0] - first_machine[0])
+                    >= abs(second_machine[1] - first_machine[1])
+                    else "y_theta"
+                )
+        else:
+            thetas, strategies = plan_contour_thetas(
+                points,
+                settings,
+                previous_theta,
+                center,
+                previous_machine,
+                cancel_check,
+            )
         if not thetas:
             continue
         thetas = _reregister_thetas(thetas, settings)
@@ -340,6 +384,7 @@ def plan_program(contours, settings, cancel_check=None):
         "contours": clipped_contours,
         "planned_jobs": planned_jobs,
         "bed_compensation": bed_compensation,
+        "wave_row_schedule": wave_row_schedule,
     }
 
 
@@ -354,6 +399,9 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
         return compensated_machine_point(
             point, theta, center, bed_compensation
         )
+    motion_label = bed_motion_label(settings)
+    if program_plan.get("wave_row_schedule"):
+        motion_label += ", shared Wave row angles"
     # Establish the drawing file's own units, distance, feed, plane, and work
     # coordinate modes. ioSender streams these lines; it does not repair modal
     # state inherited from an earlier console command or macro.
@@ -392,7 +440,7 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
                 if getattr(settings, "frame_center_mm", None) is not None
                 else "artwork bbox"
             ),
-            bed_motion_label(settings),
+            motion_label,
         ),
         "G21",
         "G90",
@@ -538,6 +586,10 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
                         settings.tolerance,
                     ),
                 )
+            steps = max(
+                steps,
+                _wave_row_step_count(start_theta, theta, program_plan),
+            )
             if stats is not None:
                 # Report what the *commanded* path can still deviate from the
                 # intended line on the bed: the bow of a whole move divided by
@@ -756,6 +808,14 @@ def build_preview_moves(
                         settings.tolerance,
                     ),
                 )
+            steps = max(
+                steps,
+                _wave_row_step_count(
+                    thetas[k],
+                    bed_theta,
+                    program_plan,
+                ),
+            )
             move_len = feed_plan["motion_length"] / steps
             move_ms = feed_plan["duration_ms"] / steps
             sub_start = last_machine

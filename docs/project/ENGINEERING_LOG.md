@@ -1,5 +1,33 @@
 # Engineering Log
 
+<a id="elog-20261101-rotating-wave-row-lock"></a>
+### 🟨 2026-11-01 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Preserve Wave row pitch under Xθ/Yθ
+
+- The operator confirmed that the equidistant Wave screen fixes row pitch with
+  XY-only motion and requested the same behavior with the rotating bed,
+  including descending serpentine rows.
+- Independent per-row A schedules made grblHAL's linear X/Y/A interpolation
+  change paper-space row separation. A controlled coupon had a `0.0001 mm`
+  XY-only gap spread but `0.06437 mm` under Xθ/Yθ.
+- Explicit ascending/descending rows with the spacing guard now share one
+  bed-angle schedule at each along-row position. Emitted and previewed draw
+  moves receive spacing-aware interpolation subdivisions.
+- The new regression covers both row orders and all four CMYK screen angles.
+  Final paper-space gap spreads are `0.000638`, `0.002383`, `0.001970`, and
+  `0.002153 mm`, below the `0.005 mm` bound. The shared schedules still sweep
+  about `52-80°` of A.
+- The set manifest and G-code now record the shared row-angle lock.
+  `check_cmyk_wave_spacing.py` accepts XY-only and Xθ/Yθ sets, samples
+  rotating interpolation, and rejects rotating manifests without the lock.
+- The synthetic G-code move count rises from `1,824` to `2,735-2,982`.
+  Physical print time and row quality remain to be measured.
+- The complete converter suite passes 606 tests with one expected
+  OpenGL-context skip.
+- Evidence: `WSW-20261101-007` and
+  `docs/report/lab-notes/2026-11-01-m-13-x-theta-equidistant-row-audit.md`.
+- Category: windows-software, hardware, cmyk, wave-screen, x-theta, y-theta,
+  equidistant, serpentine, row-lock.
+
 <a id="elog-20261101-rotated-wave-row-direction"></a>
 ### 🟨 2026-11-01 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Correct rotated Wave row direction after the SVG Y flip
 

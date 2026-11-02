@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-01 | `WSW-20261101-007` | implemented | [Preserve Wave row pitch under Xθ/Yθ](../windows-software/2026/2026-11-01-rotating-wave-row-lock.md) | `cmyk`, `wave-screen`, `equidistant`, `x-theta`, `y-theta`, `serpentine`, `row-lock` |
 | 2026-11-01 | `WSW-20261101-006` | implemented | [Correct rotated Wave row direction after the SVG Y flip](../windows-software/2026/2026-11-01-fix-rotated-wave-row-direction.md) | `cmyk`, `wave-screen`, `contour-order`, `row-sweep`, `image-flip`, `45-degree`, `striation` |
 | 2026-11-01 | `WSW-20261101-005` | verified | [Correct the default stock diameter to 15 inches](../windows-software/2026/2026-11-01-correct-15-inch-stock.md) | `bed-compensation`, `printable-canvas`, `stock-diameter`, `dense-v3`, `extrapolation` |
 | 2026-11-01 | `WSW-20261101-003` | implemented | [Add monotonic row ordering for CMYK Wave output](../windows-software/2026/2026-11-01-wave-row-order.md) | `cmyk`, `wave-screen`, `contour-order`, `row-sweep`, `striation`, `planner` |

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-01 | `WSW-20261101-007` | implemented | [Preserve Wave row pitch under Xθ/Yθ](2026/2026-11-01-rotating-wave-row-lock.md) | `cmyk`, `wave-screen`, `equidistant`, `x-theta`, `y-theta`, `serpentine`, `row-lock` |
 | 2026-11-01 | `WSW-20261101-006` | implemented | [Correct rotated Wave row direction after the SVG Y flip](2026/2026-11-01-fix-rotated-wave-row-direction.md) | `cmyk`, `wave-screen`, `contour-order`, `row-sweep`, `image-flip`, `45-degree`, `striation` |
 | 2026-11-01 | `WSW-20261101-005` | verified | [Correct the default stock diameter to 15 inches](2026/2026-11-01-correct-15-inch-stock.md) | `bed-compensation`, `printable-canvas`, `stock-diameter`, `dense-v3`, `extrapolation` |
 | 2026-11-01 | `WSW-20261101-004` | verified | [Persist each artwork's CMYK recipe across restarts](2026/2026-11-01-persist-cmyk-artwork-recipe.md) | `artwork-layout`, `settings`, `persistence`, `cmyk`, `restart` |

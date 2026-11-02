@@ -5,6 +5,7 @@ from .bed_calibration import *
 from .geometry import *
 from .shading import *
 from .cmyk import *
+from .wave_rows import *
 from .kinematics import *
 from .motion_check import *
 from .gcode import *

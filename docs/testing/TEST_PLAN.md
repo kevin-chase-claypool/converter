@@ -305,6 +305,20 @@ required before accepting row order as the production default.
 See
 `2026-11-01-m-13-cmyk-black-row-direction.md`.
 
+**M-13 rotating-row equidistance result 2026-11-01:** the controlled
+`waves_even` coupon initially kept an XY-only gap spread of `0.0001 mm` but
+spread to `0.06437 mm` under Xθ/Yθ. Rows were following valid paper paths, but
+each row had an independent A schedule and grblHAL's linear X/Y/A
+interpolation shortened or stretched the gap between endpoints. Explicit row
+modes with the spacing guard now share one bed-angle schedule at each along-row
+position and add spacing-bounded interpolation subdivisions. The regression
+covers ascending and descending order at 0°, 15°, 45°, and 75° and requires a
+maximum spread of `0.005 mm`; the observed controlled spreads are `0.000638`,
+`0.002383`, `0.001970`, and `0.002153 mm`. The shared schedules still sweep
+about `52-80°` of A across the coupon. The synthetic `G1` count rises from
+`1,824` to `2,735-2,982`, so print time and file size must be recorded. A fresh
+four-pass Xθ/Yθ descending print remains the physical acceptance test.
+
 ### M-12 full-field bench procedure
 
 1. Install the same Sakura Pigma Micron 005 for the whole sheet. Flatten and
