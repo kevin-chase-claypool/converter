@@ -831,6 +831,18 @@ Generator tab controls fill the settings column, with the tab's hint and
 status text stacked below them; the settings column has a 280 px floor so it
 cannot be crushed by the preview.
 
+### Turtletoy artwork
+
+[`../samples/turtletoy/ironwood.js`](../samples/turtletoy/ironwood.js) is a
+self-contained Turtletoy woodcut of a bearded lumberjack with a felling axe
+planted in a chopping block. Paste it directly into
+<https://turtletoy.net/turtle/new>; it uses only `Canvas`, `Turtle`, and the
+required `walk(i)` entry point. The checked-in
+[`preview`](../samples/preview/ironwood.png) is generated from the same path
+geometry. See the
+[`artwork notes`](../samples/turtletoy/ironwood.md) for adjustable controls,
+export guidance, and plot settings.
+
 The menu bar, status bar, **Preview** and **Cancel** buttons in the preview
 panel, and the OpenGL preview itself (status, estimate, progress, fit/clip
 controls) are window furniture outside the tool pages, so they stay visible

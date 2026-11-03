@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20261103-ironwood-turtletoy"></a>
+### 🟩 2026-11-03 - WINDOWS SOFTWARE/VERIFIED - Add Ironwood Turtletoy woodcut
+
+- Added a paste-ready Turtletoy creation that uses only `Canvas`, `Turtle`, and
+  the required `walk(i)` entry point.
+- The woodcut scene depicts a bearded flannel-clad lumberjack with one hand on
+  a long axe planted in an end-grain chopping block, framed by pines and a
+  geometric sunrise.
+- The sketch produces `272` strokes and `1,734` points within Turtletoy's
+  native `-100..100` canvas bounds.
+- Added a local Turtletoy-compatible SVG capture utility and an execution
+  regression that runs the sketch and checks its bounds and geometry counts.
+- Evidence: `WSW-20261103-001`.
+- Category: windows-software, generative-art, turtletoy, svg, plotter-art,
+  woodcut, single-pen.
+
 <a id="elog-20261102-m5-clearance-200ms"></a>
 ### 🟨 2026-11-02 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Raise M5 clearance pulse to 200 ms
 
