@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-03 | `WSW-20261103-002` | windows-software | implemented | [Join endpoint-touching contours to remove unnecessary pen lifts](windows-software/2026/2026-11-03-join-touching-contours.md) |
 | 2026-11-03 | `WSW-20261103-001` | windows-software | implemented | [Add the Ironwood lumberjack Turtletoy sketch](windows-software/2026/2026-11-03-ironwood-turtletoy.md) |
 | 2026-11-02 | `RPSW-20261102-001` | rp23cnc-software, hardware | implemented | [Raise the M5 pen-clearance pulse to 200 ms](rp23cnc-software/2026/2026-11-02-raise-m5-clearance-to-200ms.md) |
 | 2026-11-01 | `WSW-20261101-007` | windows-software, hardware | implemented | [Preserve Wave row pitch under Xθ/Yθ](windows-software/2026/2026-11-01-rotating-wave-row-lock.md) |

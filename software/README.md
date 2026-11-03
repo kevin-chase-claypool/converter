@@ -1704,6 +1704,14 @@ display-only; every other group changes the emitted program.
   separate passes and crosshatch still lifts between its two angle families.
   The preview draws those connectors, so a chained fill reads as one continuous
   serpentine rather than as separate strokes.
+- **Join touching contours (keep pen down)** in the Geometry group merges
+  ordinary open contours when one contour's end already touches the next
+  contour's start within **Path join tolerance mm** (default `0.02 mm`). This
+  removes otherwise-unnecessary M3/M5 cycles without bridging visibly separate
+  areas of the drawing. Larger gaps still produce a pen lift. Closed contours
+  are preserved, and Wave/Fill contours bypass this pass so their specialized
+  row and bridging rules remain authoritative. A small tolerance can bridge a
+  hairline gap, so keep it below the physical pen width.
 - The `waves`/`sine_gradient` rows in the vector path arrive as chained
   polylines: each sine row is one pen-down stroke rather than one contour per
   clipped sample. `sine_gradient` already emits continuous rows in the tone

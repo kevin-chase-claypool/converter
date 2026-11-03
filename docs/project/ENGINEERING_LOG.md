@@ -1,5 +1,29 @@
 # Engineering Log
 
+<a id="elog-20261103-join-touching-contours"></a>
+### 🟨 2026-11-03 - WINDOWS SOFTWARE/IMPLEMENTED - Join endpoint-touching SVG contours
+
+- The operator asked for continuous pen-down operation unless travel truly
+  requires a lift. The active cubic-space-division SVG contains many pieces of
+  connected lines encoded as separate polylines.
+- Added the opt-in **Join touching contours (keep pen down)** transform. It
+  merges open contours whose endpoints touch within `0.02 mm` by default,
+  including reversed endpoints and selecting the smallest turn at junctions.
+- Larger gaps still force pen-up travel. Closed contours remain independent,
+  and tagged Wave/Fill contours bypass the generic join.
+- The current SVG parses to `53,693` open contours; exact joins reduce this to
+  `38,389`, and the default `0.02 mm` tolerance reduces it to `38,001`,
+  eliminating `15,692` potential pen cycles before clipping and planning.
+- Focused path-join tests cover endpoint orientation, tolerances, closed loops,
+  tagged rows, G-code headers, pen-cycle reduction, and UI availability.
+- The complete converter suite passes 616 tests with one expected
+  OpenGL-context skip.
+- A complete preview and print-time comparison on the large source artwork
+  remain required.
+- Evidence: `WSW-20261103-002`.
+- Category: windows-software, svg, path-planning, pen-cycle, contour-join,
+  continuous-pen, performance.
+
 <a id="elog-20261103-ironwood-turtletoy"></a>
 ### 🟩 2026-11-03 - WINDOWS SOFTWARE/VERIFIED - Add Ironwood Turtletoy woodcut
 

@@ -3,6 +3,7 @@ import re
 
 from .cancellation import check_cancelled
 from .geometry import FillTrail, clip_contours_to_bed, contour_center, distance, format_float, normalized_hatch_pattern, read_svg, retag_contour
+from .path_join import join_touching_contours
 from .kinematics import (
     _polar_move_deviation,
     bed_to_machine,
@@ -298,6 +299,13 @@ def plan_program(contours, settings, cancel_check=None):
         )
         for contour in clipped_contours
     ]
+    contour_join = None
+    if bool(getattr(settings, "join_touching_contours", False)):
+        clipped_contours, contour_join = join_touching_contours(
+            clipped_contours,
+            getattr(settings, "path_join_tolerance_mm", 0.02),
+            cancel_check,
+        )
     bed_compensation = load_bed_compensation(
         getattr(settings, "bed_compensation_path", "")
     )
@@ -385,6 +393,7 @@ def plan_program(contours, settings, cancel_check=None):
         "planned_jobs": planned_jobs,
         "bed_compensation": bed_compensation,
         "wave_row_schedule": wave_row_schedule,
+        "contour_join": contour_join,
     }
 
 
@@ -473,6 +482,17 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
                         bed_compensation.max_correction_mm,
                     )
                 )
+            ),
+        )
+    contour_join = program_plan.get("contour_join")
+    if contour_join and contour_join.get("enabled"):
+        lines.insert(
+            5,
+            "(contour join %d -> %d contours, tolerance %.4f mm)"
+            % (
+                contour_join["before"],
+                contour_join["after"],
+                contour_join["tolerance_mm"],
             ),
         )
     if settings.include_z:

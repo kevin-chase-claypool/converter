@@ -308,6 +308,11 @@ class Settings:
     # explicit choice. Bridging is restricted to FillTrail contours, never the
     # artwork's own open strokes.
     keep_down_bridges: bool = False
+    # Merge only contours whose endpoints already touch within this small
+    # tolerance. This removes otherwise-unnecessary M3/M5 cycles without
+    # joining visibly separate areas of the drawing.
+    join_touching_contours: bool = False
+    path_join_tolerance_mm: float = 0.02
     # `sine_gradient` only: join the end of one sine row to the start of the
     # next so a gradient is drawn as one continuous pen-down stroke instead of
     # one M3/M5 cycle per row. A join that would cross blank paper still breaks.
@@ -324,6 +329,7 @@ TEXT_FIELD_GROUPS = (
         # change the emitted program, not the view.
         ("Artwork offset X mm", "artwork_offset_x_mm", "0"),
         ("Artwork offset Y mm", "artwork_offset_y_mm", "0"),
+        ("Path join tolerance mm", "path_join_tolerance_mm", "0.02"),
         ("Stroke fill ratio", "stroke_fill_ratio", "2"),
     )),
     ("Fill", (
@@ -406,6 +412,7 @@ CHECKBOX_FIELDS = (
     ("Geometry", "compensate_pen_width", "Compensate pen stroke", True),
     ("Geometry", "expand_strokes", "Expand strokes to outlines", False),
     ("Geometry", "fill_wide_strokes", "Fill wide strokes", False),
+    ("Geometry", "join_touching_contours", "Join touching contours (keep pen down)", False),
     ("Fill", "keep_down_bridges", "Keep pen down between fill trails", False),
     ("Fill", "sine_rows_connected", "Connect sine rows (one continuous stroke)", True),
     ("Theta kinematics", "monotonic_theta", "Monotonic theta (r-theta style)", True),
@@ -526,6 +533,8 @@ FIELD_TOOLTIPS = {
     "artwork_offset_y_mm": "Move the artwork's center off the registered bed center, in machine mm. You can also drag the artwork in the preview.",
     "stroke_fill_ratio": "With 'Fill wide strokes', a stroke is filled only when its width is at least this many pen diameters.",
     "keep_down_bridges": "Draw a connector between two nearby generated fill trails instead of lifting the pen. Only applies between fill trails, never across the artwork's own strokes, and off by default because a connector in blank space leaves a visible mark.",
+    "join_touching_contours": "Merge open contours whose endpoints touch within the join tolerance into one pen-down path. This removes unnecessary M3/M5 cycles without connecting visibly separate parts of the artwork.",
+    "path_join_tolerance_mm": "Maximum endpoint gap treated as touching. Keep this below the pen width; larger values add a short visible connector.",
     "hatch_spacing_mm": "Distance between fill lines in mm on paper. 0 (the default) plots outlines only.",
     "hatch_pattern": "Fill pattern drawn inside each filled region. 'gradient waves (sine_gradient)' carries tone as wave amplitude and needs the image-tone fill source.",
     "hatch_angle_deg": "Rotation of the fill line family.",
@@ -679,6 +688,7 @@ def validate_settings(settings):
         "pen_up_ms",
         "pen_down_ms",
         "pen_down_first_ms",
+        "path_join_tolerance_mm",
         "bed_margin_mm",
         "machine_reach_radius_mm",
         "theta_center_hold_diameter_mm",
@@ -712,6 +722,16 @@ def validate_settings(settings):
         raise ValueError("max bed step must be between 0 and 180 degrees.")
     if not 0.0 <= float(settings.theta_reversal_park_mm) <= 100.0:
         raise ValueError("bed reversal park must be between 0 and 100 mm.")
+    if float(settings.path_join_tolerance_mm) > 5.0:
+        raise ValueError("path join tolerance must not exceed 5 mm.")
+    if (
+        settings.join_touching_contours
+        and float(settings.path_join_tolerance_mm)
+        > float(settings.pen_diameter_mm) + 1e-9
+    ):
+        raise ValueError(
+            "path join tolerance must not exceed the physical pen width."
+        )
     if float(settings.gradient_wave_amplitude_pct) > 100.0:
         raise ValueError(
             "gradient wave amplitude must not exceed 100 percent of the row spacing."

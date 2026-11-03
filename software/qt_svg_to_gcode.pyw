@@ -1198,6 +1198,7 @@ class PreviewWorker(QObject):
                             if profile_active
                             else ""
                         ),
+                        "contour_join": program_plan.get("contour_join"),
                     },
                 )
             )
@@ -1370,6 +1371,7 @@ class MainWindow(QMainWindow):
         self.expand_strokes = checkboxes["expand_strokes"]
         self.fill_wide_strokes = checkboxes["fill_wide_strokes"]
         self.keep_down_bridges = checkboxes["keep_down_bridges"]
+        self.join_touching_contours = checkboxes["join_touching_contours"]
         self.sine_rows_connected = checkboxes["sine_rows_connected"]
         self.monotonic_theta = checkboxes["monotonic_theta"]
         self.toolhead_status_handshake = checkboxes["toolhead_status_handshake"]
@@ -2366,6 +2368,7 @@ class MainWindow(QMainWindow):
             "expand_strokes": self.expand_strokes.isChecked(),
             "fill_wide_strokes": self.fill_wide_strokes.isChecked(),
             "keep_down_bridges": self.keep_down_bridges.isChecked(),
+            "join_touching_contours": self.join_touching_contours.isChecked(),
             "sine_rows_connected": self.sine_rows_connected.isChecked(),
             "monotonic_theta": self.monotonic_theta.isChecked(),
             "toolhead_status_handshake": self.toolhead_status_handshake.isChecked(),
@@ -4546,6 +4549,18 @@ class MainWindow(QMainWindow):
             )
         else:
             self.log.append(f"Loaded {len(self.moves)} preview moves.")
+        contour_join = preview_info.get("contour_join") or {}
+        if contour_join.get("enabled"):
+            self.log.append(
+                "Contour join: %d -> %d contours, removing %d pen cycles "
+                "at %.3f mm endpoint tolerance."
+                % (
+                    int(contour_join.get("before", 0)),
+                    int(contour_join.get("after", 0)),
+                    int(contour_join.get("joined", 0)),
+                    float(contour_join.get("tolerance_mm", 0.0)),
+                )
+            )
         if profile_active and not preview_compensated:
             self.log.append(
                 "Fast preview uses nominal X/Y. Saved G-code will apply bed "
