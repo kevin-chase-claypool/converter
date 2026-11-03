@@ -164,11 +164,11 @@ const blockFace = [[22, 50], [88, 50], [82, 76], [29, 76]];
 
 // Background: a restrained treeline and a rising-sun crown.
 for (let i = 0; i < backgroundTrees; i++) {
-    const x = i % 2
+    const x = (i % 2
         ? -70 - 2 * Math.sin(i * 1.7)
-        : 76 + 2 * Math.cos(i * 1.3);
-    const y = 47 + (i % 3) * 1.5;
-    pineTree(x, y, 104 - i * 4, 20 - i * 1.1, 5);
+        : 76 + 2 * Math.cos(i * 1.3)) + 2.5 * (random() - 0.5);
+    const y = 47 + (i % 3) * 1.5 + random();
+    pineTree(x, y, 102 - i * 4, 19 - i * 1.1, 5);
 }
 for (let i = 0; i < 17; i++) {
     const angle = Math.PI + Math.PI * (i + 0.5) / 17;
@@ -191,7 +191,7 @@ for (let ring = 1; ring <= 4; ring++) {
 hatchPolygon(blockFace, woodDensity, 84, 1.2);
 for (let i = 0; i < 15; i++) {
     const x = 27 + i * 4.1;
-    const y0 = 53 + 1.5 * Math.sin(i * 1.4);
+    const y0 = 53 + 1.5 * Math.sin(i * 1.4) + 0.5 * random();
     add([[x, y0], [x - 0.8, 73 - 1.8 * Math.cos(i)]]);
 }
 
