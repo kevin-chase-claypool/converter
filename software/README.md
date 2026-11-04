@@ -1414,9 +1414,15 @@ display-only; every other group changes the emitted program.
   what will survive the next build.
 - Pressing **Preview** shows the current build stage, percentage, and elapsed
   time. SVG parsing, motion planning, and clipping run in the background so the
-  window remains responsive. The expensive contour/theta plan is built once and
-  shared by the preview and complete command-list generation. Preview and Save
-  G-code are temporarily disabled until that shared data is ready.
+  window remains responsive. Preview and Save G-code are mutually exclusive and
+  temporarily disabled while the other operation is running.
+- Pressing **Save G-code** also shows the build stage, percentage, and elapsed
+  time while it reads the active source, applies exact bed compensation,
+  subdivides the motion, and writes the file on a background worker. This keeps
+  the window responsive on dense artwork even when exact compensated G-code
+  generation takes tens of seconds. The **Cancel save** button requests a stop
+  and, if it reaches the worker before the write step, leaves the output file
+  untouched; the last completed preview remains visible.
 - Press **Cancel** during preview generation to stop an unexpectedly large job.
   Cancellation safely unwinds at geometry/planning checkpoints and keeps the
   last completed preview visible.

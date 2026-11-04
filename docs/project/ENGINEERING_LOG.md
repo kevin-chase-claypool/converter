@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20261104-background-gcode-save"></a>
+### 🟨 2026-11-04 - WINDOWS SOFTWARE/IMPLEMENTED - Move exact G-code save off the Qt UI thread
+
+- The operator reported that Save G-code appeared to freeze after importing an
+  SVG. The window was not deadlocked: the complete exact save pipeline was
+  running synchronously on Qt's GUI thread.
+- On the active artwork and settings, parsing took `0.052 s`, planning took
+  `0.161 s`, and exact compensated G-code generation took `14.108 s`.
+  The synchronous save took `14.320 s` and wrote `25,586` lines.
+- Single-file Save now snapshots its source, destination, and settings, then
+  parses, plans, compensates, subdivides, and writes on a `ConvertWorker`
+  background thread. The shared preview progress area reports the current save
+  stage and elapsed time.
+- Preview and Save cannot run concurrently. Closing requests save cancellation
+  and delays shutdown until the worker exits. Cancellation before the write
+  stage prevents a cancelled program from being emitted.
+- A regression makes exact G-code generation deliberately slow and confirms
+  that `convert()` still returns immediately, then verifies the worker writes
+  the complete output.
+- The complete converter suite passes `618` tests with one expected
+  OpenGL-context skip. Exact G-code emission itself still lacks internal
+  cancellation checks, so cancellation during that stage waits for generation
+  to return even though the UI remains responsive.
+- Evidence: `WSW-20261104-001`.
+- Category: windows-software, converter, save, qt, ui-freeze,
+  background-worker, exact-compensation, responsiveness.
+
 <a id="elog-20261103-join-touching-contours"></a>
 ### 🟨 2026-11-03 - WINDOWS SOFTWARE/IMPLEMENTED - Join endpoint-touching SVG contours
 

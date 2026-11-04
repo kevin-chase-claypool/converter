@@ -1208,6 +1208,70 @@ class PreviewWorker(QObject):
             self.failed.emit(str(exc))
 
 
+class ConvertWorker(QObject):
+    """Generate and write one exact G-code program off the UI thread."""
+
+    progress = Signal(int, str)
+    notice = Signal(str)
+    finished = Signal(object)
+    failed = Signal(str)
+    cancelled = Signal()
+
+    def __init__(self, window, svg_path, gcode_path, settings):
+        super().__init__()
+        self.window = window
+        self.svg_path = svg_path
+        self.gcode_path = gcode_path
+        self.settings = settings
+        self.cancel_event = threading.Event()
+
+    def cancel(self):
+        self.cancel_event.set()
+
+    def is_cancelled(self):
+        return self.cancel_event.is_set()
+
+    def run(self):
+        try:
+            self.progress.emit(8, "Reading artwork")
+            contours = self.window.load_contours(
+                self.svg_path,
+                self.settings,
+                self.is_cancelled,
+                self.notice.emit,
+            )
+            converter.check_cancelled(self.is_cancelled)
+            self.progress.emit(
+                35,
+                f"Planning exact G-code for {len(contours)} contours",
+            )
+            gcode = converter.contours_to_gcode(
+                contours,
+                self.settings,
+                stats={},
+            )
+            converter.check_cancelled(self.is_cancelled)
+            self.progress.emit(90, "Writing G-code")
+            with open(
+                self.gcode_path,
+                "w",
+                encoding="utf-8",
+                newline="\n",
+            ) as handle:
+                handle.write(gcode)
+            self.finished.emit(
+                {
+                    "path": self.gcode_path,
+                    "contours": len(contours),
+                    "lines": len(gcode.splitlines()),
+                }
+            )
+        except converter.OperationCancelled:
+            self.cancelled.emit()
+        except Exception as exc:
+            self.failed.emit(str(exc))
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -1243,6 +1307,9 @@ class MainWindow(QMainWindow):
         self.gcode_dir = ""
         self.preview_thread = None
         self.preview_worker = None
+        self.save_thread = None
+        self.save_worker = None
+        self.save_started_at = None
         self._background_planning_tab = None
         self.preview_started_at = None
         self.preview_elapsed_timer = QTimer(self)
@@ -4412,6 +4479,13 @@ class MainWindow(QMainWindow):
     def preview(self):
         if self.preview_thread is not None:
             return
+        if self.save_thread is not None:
+            QMessageBox.information(
+                self,
+                "Save running",
+                "Wait for G-code generation to finish or cancel it, then preview.",
+            )
+            return
         try:
             svg_path, source_tab = self.resolve_active_source()
         except Exception as exc:
@@ -4480,6 +4554,9 @@ class MainWindow(QMainWindow):
             self.update_preview_elapsed()
             self.status.setText("Cancelling preview...")
             return
+        if self.save_worker is not None:
+            self.cancel_save()
+            return
         tab = self._background_planning_tab
         cancel = getattr(tab, "cancel_analysis", None)
         running = getattr(tab, "analysis_running", None)
@@ -4496,10 +4573,15 @@ class MainWindow(QMainWindow):
         self.update_preview_elapsed()
 
     def update_preview_elapsed(self):
-        if self.preview_started_at is None:
+        started_at = (
+            self.save_started_at
+            if self.save_thread is not None
+            else self.preview_started_at
+        )
+        if started_at is None:
             return
         stage = self.preview_stage.property("stage") or "Building preview"
-        elapsed = time.monotonic() - self.preview_started_at
+        elapsed = time.monotonic() - started_at
         self.preview_stage.setText(f"{stage} | {elapsed:.1f} s")
 
     def preview_ready(self, result):
@@ -4633,6 +4715,13 @@ class MainWindow(QMainWindow):
             self.status.setText("Cancelling preview. Close again after cancellation finishes.")
             event.ignore()
             return
+        if self.save_thread is not None:
+            self.cancel_save()
+            self.status.setText(
+                "Cancelling G-code generation. Close again after cancellation finishes."
+            )
+            event.ignore()
+            return
         self.save_artwork_layout()
         stop = getattr(self.stack.currentWidget(), "shutdown_background", None)
         if callable(stop):
@@ -4655,6 +4744,16 @@ class MainWindow(QMainWindow):
         self.convert()
 
     def convert(self):
+        if self.save_thread is not None:
+            self.status.setText("G-code generation is already running.")
+            return
+        if self.preview_thread is not None:
+            QMessageBox.information(
+                self,
+                "Preview running",
+                "Wait for the preview to finish or cancel it, then save.",
+            )
+            return
         try:
             svg_path, source_tab = self.resolve_active_source()
         except Exception as exc:
@@ -4668,15 +4767,100 @@ class MainWindow(QMainWindow):
             return
         try:
             settings = self.settings_for_source(source_tab)
-            contours_data = self.load_contours(svg_path, settings, notice=self.log.append)
-            gcode = converter.contours_to_gcode(contours_data, settings)
-            with open(gcode_path, "w", encoding="utf-8", newline="\n") as handle:
-                handle.write(gcode)
-            contours, lines = len(contours_data), len(gcode.splitlines())
         except Exception as exc:
             QMessageBox.critical(self, "Conversion failed", str(exc))
             return
-        self.log.append(f"Saved {lines} G-code lines from {contours} contours: {gcode_path}")
+        self._start_save_worker(svg_path, gcode_path, settings)
+
+    def _start_save_worker(self, svg_path, gcode_path, settings):
+        self.save_started_at = time.monotonic()
+        self.save_thread = QThread(self)
+        self.save_worker = ConvertWorker(
+            self,
+            svg_path,
+            gcode_path,
+            settings,
+        )
+        self.save_worker.moveToThread(self.save_thread)
+        self.save_thread.started.connect(self.save_worker.run)
+        self.save_worker.progress.connect(self.save_progress)
+        self.save_worker.notice.connect(self.log.append)
+        self.save_worker.finished.connect(self.save_finished)
+        self.save_worker.failed.connect(self.save_failed)
+        self.save_worker.cancelled.connect(self.save_cancelled)
+        self.save_worker.finished.connect(self.save_thread.quit)
+        self.save_worker.failed.connect(self.save_thread.quit)
+        self.save_worker.cancelled.connect(self.save_thread.quit)
+        self.save_thread.finished.connect(self.save_worker.deleteLater)
+        self.save_thread.finished.connect(self.save_thread.deleteLater)
+        self.save_thread.finished.connect(self.save_thread_finished)
+        self.preview_button.setEnabled(False)
+        self.save_action.setEnabled(False)
+        self.cancel_preview_button.setText("Cancel save")
+        self.cancel_preview_button.setEnabled(True)
+        self.preview_build_bar.setRange(0, 100)
+        self.preview_build_bar.setValue(1)
+        self.preview_build_bar.setFormat("1%")
+        self.preview_build_bar.show()
+        self.preview_stage.setProperty("stage", "Preparing save")
+        self.preview_stage.setText("Preparing save | 0.0 s")
+        self.preview_stage.show()
+        self.status.setText("Generating exact G-code in the background...")
+        self.log.append("Saving: reading artwork and planning exact G-code...")
+        self.preview_elapsed_timer.start(100)
+        self.save_thread.start()
+
+    def save_progress(self, percent, stage):
+        value = max(0, min(100, int(percent)))
+        self.preview_build_bar.setRange(0, 100)
+        self.preview_build_bar.setValue(value)
+        self.preview_build_bar.setFormat(f"{value}%")
+        self.preview_stage.setProperty("stage", stage)
+        self.update_preview_elapsed()
+        self.status.setText(f"{stage}...")
+
+    def save_finished(self, result):
+        self.log.append(
+            "Saved %d G-code lines from %d contours: %s"
+            % (
+                int(result["lines"]),
+                int(result["contours"]),
+                result["path"],
+            )
+        )
+        self.status.setText(
+            "Saved %d G-code lines." % int(result["lines"])
+        )
+
+    def save_failed(self, message):
+        self.log.append(f"Save failed: {message}")
+        self.status.setText("G-code generation failed.")
+        QMessageBox.critical(self, "Conversion failed", message)
+
+    def save_cancelled(self):
+        self.log.append("G-code generation cancelled.")
+        self.status.setText("G-code generation cancelled.")
+
+    def cancel_save(self):
+        if self.save_worker is None:
+            return
+        self.save_worker.cancel()
+        self.cancel_preview_button.setEnabled(False)
+        self.preview_stage.setProperty("stage", "Cancelling save")
+        self.update_preview_elapsed()
+        self.status.setText("Cancelling G-code generation...")
+
+    def save_thread_finished(self):
+        self.save_thread = None
+        self.save_worker = None
+        self.save_started_at = None
+        self.preview_elapsed_timer.stop()
+        self.preview_build_bar.hide()
+        self.preview_stage.hide()
+        self.preview_button.setEnabled(True)
+        self.save_action.setEnabled(True)
+        self.cancel_preview_button.setText("Cancel")
+        self.cancel_preview_button.setEnabled(False)
 
     def set_index(self, index):
         if not self.moves:
