@@ -28,7 +28,7 @@ This subproject extends the existing XYθ pen plotter with an independent camera
 
 ## Goals
 
-- Synchronize camera and plotter poses, initially with **stop-and-inspect** captures.
+- **Finish each drawing before inspection**; then scan the completed artwork with overlapping CoreZB camera images and known stationary bed/camera positions. Use measured, repeatable errors to calibrate **future** prints.
 - Compare only **executed** reference strokes against actual ink, not future planned strokes.
 - Show projected path, observed ink, and quantified deviations in calibrated millimeters.
 - Use visible black circles at the embedded bed center and perimeter index positions for calibration.
@@ -47,6 +47,6 @@ This subproject extends the existing XYθ pen plotter with an independent camera
 
 ## Development order
 
-**Inventory and compatibility → CoreZB motion → synchronized image capture → camera calibration → executed-toolpath inspection → rotary characterization → validated compensation → touchscreen integration.**
+**Inventory and compatibility → CoreZB motion → post-print image scanning → camera/bed calibration → complete-artwork inspection → systematic error modeling → converter compensation for future prints → independent verification → touchscreen integration.**
 
 See [roadmap.md](roadmap.md) for actionable checklists. Keep measurements, calibration coefficients, firmware versions, and before/after tests together when implementation begins.
