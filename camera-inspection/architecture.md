@@ -27,8 +27,8 @@ For bed point p in the machine XY frame at θ=0, nominal rotated position is:
 `m = c + R(θ)(p - c)`.
 Then project from machine coordinates to the camera using calibrated extrinsics/intrinsics.
 
-## Synchronization strategy
-Start with **stop-and-inspect**: pause or inspect only completed regions, settle camera and bed, capture frame, record both controller positions, then resume. Continuous inspection requires reliable exposure-time pose synchronization and performance measurements. Camera controller motor step count alone is not a measurement of physical carriage position.
+## Synchronization strategy — post-print inspection (preferred)
+Complete the entire drawing before scanning. Then hold the bed at a known angular position, home/locate CoreZB, raster-scan the completed artwork using overlapping stationary captures, and record the camera pose and bed angle for each tile. Stitch/register tiles into paper coordinates and compare against the final intended G-code geometry. There is **no need to synchronize exposures with moving pen strokes**. Calibration profiles derived from repeatable systematic errors can adjust **future** converter output, subject to independent validation. Continuous in-process inspection is a possible later feature, not the initial design. Camera motor step count alone is not proof of physical position; camera-to-bed calibration and paper stability remain necessary.
 
 ## Boundaries
 Pen-pressure/load-cell controller is separate from ioSender. Do not invent a pressure readout or control path. The inspection pipeline is not a replacement for the machine controller.
