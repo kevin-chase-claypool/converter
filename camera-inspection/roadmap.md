@@ -17,7 +17,7 @@
 - [ ] Fork ioSender V2 and inspect code paths for grblHAL status, feed override, jog and streaming.
 - [ ] Add a safe authenticated browser-facing service; keep one motion-control authority.
 - [ ] Deliver 1280×720 UI with persistent DRO, camera, Run/Jog/Tools and progress.
-- [ ] Confirm exposure-time pose synchronization in stop-and-inspect mode.
+- [ ] Define a post-print scan command and scan-tile pose capture; no live pen-exposure synchronization required for the initial design.
 
 ## Phase 3 — Metrology and inspection
 - [ ] Calibrate optics and paper-plane projection.
@@ -49,3 +49,12 @@
 - Keep sample UI values separate from real telemetry.
 - Validate on measurements not used for fitting.
 - Treat all performance figures as hypotheses until tested.
+
+## Post-print correction cycle (preferred)
+- [ ] Print a known calibration pattern without camera interruptions.
+- [ ] Scan the completed sheet in overlapping stationary tiles with the bed at a known angle.
+- [ ] Register/stitch imagery into paper coordinates; compare measured ink centerlines with expected toolpath.
+- [ ] Separate repeatable machine errors from pen/paper/random errors using repeated test prints.
+- [ ] Fit and version a correction profile for the SVG-to-G-code converter; do not automatically compensate every observed discrepancy.
+- [ ] Test corrected G-code on new patterns and compare before/after errors independently.
+- [ ] Keep continuous inspection as a later optional research milestone.
