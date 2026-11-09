@@ -12,9 +12,9 @@ Visually compare completed physical pen strokes against the expected toolpath an
 
 Colors are UI conventions, not measurements. Suggested: green expected path, cyan detected line, red deviations, yellow unverified/incomplete regions.
 
-## Candidate pipeline
-1. Receive executed toolpath segment IDs/geometry and synchronized XYθ/camera pose.
-2. Capture a frame with known exposure conditions and calibrated image scale.
+## Candidate pipeline — completed-print scan
+1. Finish the full print; preserve the G-code and expected pen-down geometry, θ transformations and calibration profile used for that job.
+2. Hold the rotary bed at a known angle; traverse the completed artwork in overlapping CoreZB camera tiles. At each stationary capture, record camera pose, bed angle, exposure settings and image scale.
 3. Undistort image, correct paper-plane perspective, and register to machine/paper coordinates.
 4. Segment dark ink against background; remove noise and optionally skeletonize/fit line centerlines.
 5. Associate ink strokes with expected executed segments. Exclude future G-code from missing-line detection.
