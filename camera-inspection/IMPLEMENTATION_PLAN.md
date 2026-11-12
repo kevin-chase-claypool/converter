@@ -9,7 +9,7 @@ Build a camera-inspection subsystem for the XY–theta pen plotter, using a sepa
 Primary goals:
 1. Quantify and correct **systematic machine geometry errors** before drawing, particularly magnetic-origin offset, theta rotation-center error, ratio drift, backlash, and spatial distortion.
 2. Inspect a **completed** drawing against the expected SVG without requiring the camera to have been physically centered over its carriage.
-3. Later support **checkpoint inspection** during plotting and, only after reliable measurement, controlled corrective strokes.
+3. Improve **future prints** by proposing and validating new calibration/compensation profiles from accumulated post-print evidence. Real-time inspection and correction are **out of scope**.
 4. Preserve traceable evidence (raw images, poses, calibration versions, deviation maps and uncertainty), distinguishing observed errors from hypothesized causes.
 
 ## Existing architecture to preserve
@@ -29,13 +29,16 @@ Primary goals:
 - After drawing, park pen, place theta at a known stable angle, scan the completed drawing in overlapping tiles, and compare to SVG in a common paper frame.
 - Report missing/extra strokes, line-center deviation, spatial trends, and uncertainty; **no automatic redrawing**.
 
-**Phase 2 — Checkpoint inspection.**
-- At selected completed-stroke boundaries, pause pen/theta motion, inspect recent regions, compare only strokes already completed, and resume.
-- Synchronize inspection with actual G-code execution acknowledgments, not just a predicted timeline.
+**Phase 2 — Print-to-print learning and compensation.**
+- After each completed print, estimate measured residuals in a stable paper coordinate frame, distinguishing systematic patterns from measurement noise and one-off artifacts.
+- Aggregate repeatable errors across multiple prints, positions, angles, and drawing directions; retain raw evidence and confidence intervals.
+- Fit a **candidate** update to the existing converter compensation model, with separate parameters for XY origin, theta ratio/phase, and spatial error where identifiable.
+- Run an independent validation print (or reserved held-out geometry) and compare against the current profile before promotion; reject changes that worsen worst-case error or are not repeatable.
+- Version and retain every accepted profile, provide one-click rollback, and never change machine/controller homing constants implicitly.
 
-**Phase 3 — Optional concurrent inspection and correction.**
-- Inspect while drawing only after proving camera/pen clearance, frame/pose synchronization, exposure motion-blur limits, and error identifiability.
-- Corrective passes must be explicitly bounded, logged and user-authorized until validated. Excess ink cannot be undone.
+**Phase 3 — Optional automated calibration management.**
+- Automate the candidate/validation/report/approval workflow, not real-time correction. Do not move the pen to repair the just-finished artwork.
+- Prefer explicit approval until multiple cycles demonstrate that profile promotion is reliable.
 
 ## Coordinate frames and measurement model
 
@@ -103,8 +106,8 @@ Use **paper coordinates** as the canonical expected geometry; do not reconstruct
 4. **Static scan MVP:** scan a stationary known target in overlapping tiles; compare known distances without allowing per-tile fitting to erase errors.
 5. **Completed-artwork MVP:** scan finished plot at a fixed known theta; compare to original SVG, generate deviation heatmap and missing/extra-stroke report.
 6. **Validation:** compare measured offsets against independent physical measurements, repeated scans and held-out targets. Set acceptance thresholds only after measurement repeatability is established.
-7. **Checkpoint prototype:** pause safely at stroke boundary, scan and resume; verify actual completion markers and synchronization.
-8. **Optional correction:** implement only after proven error classification and safe motion limits; evaluate corrected vs uncorrected artwork on independent test prints.
+7. **Print-to-print learning:** aggregate residuals across prints, fit candidate compensation profiles, quantify repeatability and preserve uncertainty.
+8. **Profile validation and promotion:** print independent validation geometry, compare corrected vs uncorrected accuracy, then approve or reject with rollback.
 
 **Go/no-go rules:** no claim of subpixel mechanical accuracy from pixel pitch alone; no compensation based on nonrepeatable residuals; no change to P100, theta ratio, or active compensation profile without separate validation and rollback.
 
@@ -120,6 +123,10 @@ Use **paper coordinates** as the canonical expected geometry; do not reconstruct
 
 ## First coding slice
 
-Start with **offline, read-only inspection**: load expected SVG centerlines, camera calibration and a set of static sample images with known fiducials; compute a locked global image-to-paper transform and export a deviation overlay + CSV. Add synthetic unit tests for known translations, rotations, camera offset, center eccentricity, theta-ratio drift, missing strokes, and false-registration masking. Do not connect automatic pen correction or overwrite the current converter compensation pipeline in this slice.
+Start with **offline, read-only inspection**: load expected SVG centerlines, camera calibration and a set of static sample images with known fiducials; compute a locked global image-to-paper transform and export a deviation overlay + CSV. Add synthetic unit tests for known translations, rotations, camera offset, center eccentricity, theta-ratio drift, missing strokes, and false-registration masking. Do not connect real-time correction or overwrite the current converter compensation pipeline in this slice. The next slice is a versioned print-to-print calibration learner with held-out validation.
 
 Related: [Optical calibration plan](calibration.md), [magnetic registration](../docs/decisions/ADR-003-controller-owned-magnetic-registration.md), [theta drift diagnosis](../docs/changes/windows-software/2026/2026-09-30-theta-drift-diagnosis-and-calibration-plot.md), [dense rotation-center calibration](../docs/changes/windows-software/2026/2026-10-23-dense-rotation-center-calibration.md).
+
+## Architectural decision (2026-11-12): post-print learning only
+
+The intended operational loop is **draw → inspect finished print → compare with expected SVG → estimate systematic error → propose updated compensation → validate → use on subsequent prints**. This is not a real-time correction project. Each print supplies additional evidence; improvement is a measured goal, **not a guarantee of monotonic improvement**. Distinguish systematic errors from stochastic noise, paper slip, ink spread and scan-registration artifacts. Preserve the original SVG and every applied compensation profile for reproducibility. A final scan must not automatically move the pen or silently alter the current profile.
