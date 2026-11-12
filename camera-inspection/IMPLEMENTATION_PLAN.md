@@ -130,3 +130,20 @@ Related: [Optical calibration plan](calibration.md), [magnetic registration](../
 ## Architectural decision (2026-11-12): post-print learning only
 
 The intended operational loop is **draw → inspect finished print → compare with expected SVG → estimate systematic error → propose updated compensation → validate → use on subsequent prints**. This is not a real-time correction project. Each print supplies additional evidence; improvement is a measured goal, **not a guarantee of monotonic improvement**. Distinguish systematic errors from stochastic noise, paper slip, ink spread and scan-registration artifacts. Preserve the original SVG and every applied compensation profile for reproducibility. A final scan must not automatically move the pen or silently alter the current profile.
+
+## Live camera streaming and Pi HMI (required)
+
+The inspection system **must continuously deliver a camera preview to the Raspberry Pi 4**, which drives the **official Raspberry Pi Touch Display 2**. This requirement is independent of the decision to perform geometric analysis and compensation **after** each completed print.
+
+Proposed data path: **CoreXY-mounted camera → camera endpoint (ESP32-P4 Ethernet if verified) → Ethernet/PoE switch → Raspberry Pi 4 → directly attached Touch Display 2**. The Touch Display 2 is not an Ethernet video endpoint; the Pi renders its UI locally. The Pi may receive power via a compatible PoE solution, subject to actual power budget and hardware verification. The camera endpoint's sensor/driver, streaming protocol, throughput and ESP32-P4 compatibility remain engineering validation items, not settled assumptions.
+
+Functional requirements:
+- Display a responsive **live camera preview** on the Pi's Touch Display 2 during plotting, camera positioning and post-print scanning; show connection/stream health and a recoverable error state.
+- Provide a **full-resolution still-capture path** for metrology with associated timestamp, camera pose, bed angle, exposure and calibration metadata. Preview compression/resizing must never silently become the measurement source.
+- Preserve HMI machine controls (play/pause/stop/feed override), scan start/cancel, scan progress, inspection overlay and before/after comparisons.
+- Isolate streaming/display failures from the GRBL-HAL safety and motion-control path. A video disconnect must not silently command motion.
+- Avoid blocking motion control or inspection acquisition with video rendering. Design separate bounded queues/consumers for preview and still capture; define dropped-frame behavior.
+- Measure actual preview frame rate, latency, resolution, Pi CPU load, network bandwidth and full-resolution capture time on target hardware before committing to a streaming transport or UI framework.
+- Keep camera-stream service, inspection engine and HMI as separable components so inspection may continue collecting evidence without an open preview screen.
+
+This is a **live-view requirement, not a real-time drawing-correction requirement**. The system may show what the camera sees while printing, but only post-print scans update proposed compensation for later prints.
