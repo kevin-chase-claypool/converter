@@ -1,19 +1,22 @@
 # Optical calibration, rotary characterization and compensation
 
-## Proposed physical references
-The bed already has an embedded center magnet and a perimeter index magnet. Proposed process: use those locations to make **visible black circular targets** on a rigid rotating calibration surface, then remove any temporary placement magnets. The optical circles should be mechanically stable and their centers detected by circle fitting.
+## Permanent coded fiducial ring — selected concept
+- Bed: 18-inch diameter (457.2 mm); central printable area: 14-inch diameter (355.6 mm); available outer annulus: 2 inches (50.8 mm) radially. Keep all permanent bed markers outside the printable area and sufficiently close to the bed rim to leave room for painter's tape securing the paper.
+- Provisional layout: **20 unique AprilTag-family IDs** distributed approximately evenly around the rim (nominally 18° apart), approximately **12 mm square** with centers near **218 mm radius**. Exact dimensions, border/quiet zone, edge clearance, travel and detectability must be verified using the real camera, optics, lighting and mounting method before manufacture. IDs are unique; no custom hand-designed codes.
+- The magnetic **Theta index sensor is directly east (+X) of bed center**. Homing the index defines nominal θ=0°; the east-side optical station is a CoreZB camera pose above the marker ring. A designated reference tag B00 may be registered at this station at θ=0°, but do not assume its alignment from the sensor's location alone.
+- **Precision placement is not required**: markers need only be fixed, individually recognizable, visible, and approximately spaced for coverage. Commissioning measures and records each marker's actual bed-frame coordinates and orientation **relative to the homed Theta index**; never treat nominal 18° spacing as measured ground truth.
+- The registered map is a repeatable relative baseline, **not an independently calibrated absolute angular standard**. Avoid claiming it can uniquely separate Theta angle error from commissioning motion error, camera pose, or fiducial geometry. Inspect actual artwork as independent outcome evidence, with separate paper registration, and validate candidate corrections before promotion.
+- Keep bed tags mechanically stable and out of tape/pen contact. Paper fiducials are a separate reference frame; never use the bed ring as a substitute for paper registration.
 
-**Caution:** The center magnet's location is a nominal reference, not proof of the true mechanical rotation axis. Likewise, the perimeter index gives an angular reference but does not by itself prove angular accuracy.
-
-## Calibration routine
-1. Home plotter XYθ and camera CoreZB; record repeatability over multiple homing cycles.
-2. Calibrate camera intrinsics/lens distortion and camera-to-gantry mounting offset with a known physical scale.
-3. Observe the nominal center target; establish camera-to-machine alignment.
-4. Observe the perimeter target at many commanded θ angles over 360°, with stationary exposures.
-5. Fit the perimeter target trajectory to estimate actual center of rotation and orbit radius.
-6. Repeat clockwise and counterclockwise; compare directional repeatability/hysteresis.
-7. Repeat across multiple revolutions, approach speeds and temperature conditions.
-8. Measure and validate corrections on **held-out** angles and separate calibration artwork.
+## Commissioning and rolling routine
+1. Home Theta at the east-side magnetic index (nominal θ=0°); home XY and CoreZB. Check home and camera-station repeatability.
+2. Calibrate camera intrinsics, image scale, distortion, and camera-to-machine pose with appropriate known geometry.
+3. Move CoreZB to the fixed **east optical station** above the outer ring. Observe the reference tag at θ=0° and establish its ID and measured pose.
+4. Index Theta to bring each of the ~20 uniquely coded tags beneath the stationary camera; capture each tag ID and observed pose. The commanded steps are nominal guides, not assumed marker coordinates. Register the **actual** relative fiducial map, using additional camera poses/multi-angle observations where needed to constrain geometry.
+5. Repeat selected observations after homing, across multiple revolutions and from both directions to characterize return-to-index repeatability, eccentricity, backlash/hysteresis and uncertainty. Do not interpret a single marker offset as proof of angular error.
+6. During each post-print cycle, after confirmed pen park, home/index Theta and inspect a suitable subset of ring markers using Theta motion at the east station; increase coverage when repeatability or confidence is poor. This is a **post-print** check, not a mandatory pre-print scan.
+7. Register paper fiducials and scan the completed artwork with recorded Theta/camera poses; Windows matches observed ink against executed stroke trajectories.
+8. Windows fits and independently validates a candidate compensation update. Pi approves/retains the existing profile per the sync gate and automatic three-generation retention policy. Never promote based solely on a ring residual.
 
 ## Errors to characterize
 - XY offset between nominal origin and fitted rotary center.
