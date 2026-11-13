@@ -13,11 +13,11 @@
 2. Pi-local HMI presents approved sender actions, status, camera preview, and inspection results on the Touch Display 2.
 3. Pi retains the **executed** reference toolpath and records camera gantry pose and bed angle for inspection registration.
 4. ESP32-P4 captures MIPI-CSI images, uses hardware JPEG where supported, and can crop, grayscale, or threshold images in software after benchmarking. It sends JPEG/original-quality inspection images and optional derived data over Ethernet.
-5. Pi 4 performs fiducial identification, camera/bed registration, image-to-reference alignment, geometric error measurement, and future-print calibration estimates. ESP32-P4 does not own final expected-versus-actual comparison. No second independent grblHAL sender is permitted.
+5. Pi 4 orchestrates fiducial-first scanning, stores pose-tagged images and registration evidence, and serves the touchscreen; Windows performs authoritative stroke matching, geometric error fitting, and new calibration candidate generation. ESP32-P4 does not own final expected-versus-actual comparison. No second independent grblHAL sender is permitted.
 6. Physical emergency stop is independent of the browser UI.
 
 ## Coordinates
-Use a common stationary machine frame M, a rotating bed/paper frame P, and a camera frame C. The camera's image transform must include:
+Use separate frames: stationary machine M, rotating bed B, paper P, and camera C. **Never merge bed and paper registration into one calibration.** The camera's image transform must include:
 - calibrated bed center, angular zero and actual θ pose;
 - camera gantry X/Y pose and homing offsets;
 - camera mounting extrinsics, scale, lens distortion and paper plane;
@@ -36,8 +36,17 @@ Pen-pressure/load-cell controller is separate from ioSender. Do not invent a pre
 ## Distributed processing and performance plan (November 2026)
 
 - **ESP32-P4:** Camera sensor configuration, stationary still capture, hardware-assisted JPEG where supported by the selected sensor/driver, optional ROI crop/grayscale/thresholding, Ethernet transfer, and capture metadata. Preserve access to the original full-resolution image; do not irreversibly discard information during preprocessing.
-- **Pi 4 (2 GB):** Receive and archive tiles, associate each with bed angle and camera XY pose, detect fiducials, calibrate perspective and lens distortion, compare observed strokes with executed G-code, quantify errors in millimeters, and visualize findings on Touch Display 2.
+- **Pi 4 (2 GB):** Coordinate motion and fiducial-first capture, receive/archive pose-tagged tiles, offer camera preview and inspection status, publish approved calibration profiles, and transfer inspection datasets to Windows. Lightweight preview/registration checks may run locally, but not the authoritative model fitting.
 - **Pipeline:** While the CoreZB moves to the next stationary inspection position, the Pi can analyze the preceding image. Motion/capture coordination must prevent blurred frames; timestamps alone are not a substitute for verified stationary exposure.
 - **Memory budget:** Stream/process one tile or bounded batches at a time; avoid retaining full-resolution decoded images for the entire drawing in RAM. Cache compressed source images to storage for reanalysis.
 - **Performance gates:** Benchmark acquisition time, JPEG size, Ethernet throughput, preprocessing CPU/PSRAM consumption, Pi RAM/CPU, registration accuracy, and total scan time before moving additional operations to the ESP32.
-- **Responsibility boundary:** The Pi is the geometric authority. Optional ESP32 stroke extraction is a later experiment, not the initial implementation.
+- **Responsibility boundary:** Windows converter/analysis is the geometric computation authority; Pi is the approved-profile and job-execution authority. Optional ESP32 stroke extraction is a later experiment, not the initial implementation.
+
+## Mandatory two-layer fiducial registration and calibration exchange
+
+1. **Before drawing**, acquire bed fiducials and paper fiducials separately; store both transforms and confidence. Bed markers establish bed-to-machine rotary reference; paper markers establish paper-to-bed placement. Reject or flag jobs if either reference fails its validation threshold.
+2. **After drawing, before artwork inspection**, rescan bed fiducials, then paper fiducials; compare paper-to-bed registration with its pre-print baseline to detect paper movement. Hold the bed at a known angle for the subsequent tiled artwork scan.
+3. The transform chain is `p_M = T_MB(theta) * T_BP * p_P` (homogeneous coordinates); camera observations also require calibrated `T_CM`/camera intrinsics and exposure pose. Bed calibration and paper registration are separate, independently versioned records.
+4. Pi retains raw imagery, fiducial measurements, capture pose, approved model history and job manifests. Windows receives datasets and performs stroke-to-G-code correspondence, residual analysis, candidate model fitting and validation. Identical overlapping strokes can remain unidentifiable despite good fiducial registration; label them ambiguous.
+5. Windows checks the Pi's approved calibration profile ID, content hash and schema compatibility **before generating compensated G-code**. It applies the correction once using the converter's existing XYθ kinematics, submits the job with profile/hash and stroke-to-G-code manifest, and the Pi verifies the job before streaming to RP23CNC. The profile is pinned for the accepted job; new models affect future jobs only.
+6. Pi stores inspection history and approves new model versions only after independent validation. The legacy bed compensation field can remain the numerical correction engine while camera observations replace the manual acquisition workflow. No automatic self-promotion of unvalidated profiles.
