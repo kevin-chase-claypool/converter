@@ -1,8 +1,8 @@
-# 7-inch 720p touchscreen specification
+# Raspberry Pi Touch Display 2 — local HMI specification
 
 ## Physical canvas
-- Native **1280 × 720**, landscape, 16:9. Design with fixed bounded regions and no vertical scrolling.
-- Browser-based display on a frame-mounted controller; do not stretch camera images. Maintain aspect ratio and crop/letterbox as necessary.
+- Official Raspberry Pi Touch Display 2 connected directly to the Raspberry Pi 4 (2 GB); **not** a networked standalone display. The previous 1280 × 720 landscape design was a concept for different hardware and is superseded.
+- Design the UI for the Touch Display 2's native 720 × 1280 panel with software rotation as needed. Final portrait/landscape orientation and touch calibration must be verified on the mounted display. Maintain camera aspect ratio without stretching.
 - Industrial dark UI, legible DRO and practical touch targets.
 
 ## Always visible
@@ -22,5 +22,12 @@
 - Feed override percentage is a **commanded override**; feed DRO should show **reported actual feed** and must not be confused with the override.
 - No pen-force readout: the pen-pressure/load-cell system is separate from ioSender and is not accessible over the planned control link.
 - UI is a concept, not a live controller. Sample values and camera artwork are placeholders.
-- Host validates commands and machine state. No browser directly streams G-code to grblHAL.
+- Pi-hosted sender validates commands and machine state. HMI is a client of the single motion-authority sender; a second process must not independently stream G-code to grblHAL.
 - Physical E-stop remains independent of software.
+
+## Camera and inspection workload
+
+- Display a camera preview or selected still image delivered over Ethernet from ESP32-P4-ETH, with optional fiducial and error overlays generated on the Pi.
+- The Pi, not the ESP32-P4, performs final expected-versus-observed stroke comparison and reports error measurements.
+- Use low-rate preview and individual full-resolution stills for post-print inspection; continuous real-time video analysis is not required.
+- Prioritize responsive Run/Hold/Stop controls while image processing runs; isolate long-running analysis from the HMI event loop and monitor memory on the 2 GB Pi.
