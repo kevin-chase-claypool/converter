@@ -36,13 +36,13 @@ A single perimeter point's trajectory provides excellent center/orbit informatio
 ## Illustrative scale
 At radius 200 mm, 0.15° angular error corresponds to approximately 0.524 mm tangential displacement (`r * Δθ_rad`). This is an example, **not** a measured plotter error.
 
-## Required dual fiducial frames (design decision)
+## Required dual fiducial frames (post-print inspection)
 
 **Bed fiducials (B):** Permanent, mechanically stable markers referenced to the rotating bed. They define bed registration relative to the stationary machine frame M and support multi-angle rotary-center and repeatability characterization. The embedded center/index magnets are initial references, **not** proof of physical center or angular accuracy.
 
 **Paper fiducials (P):** Separate marks physically associated with each sheet, defining paper-to-bed placement `T_BP`. Their location must be known relative to the artwork and they must remain visible and undisturbed. Do not infer paper alignment from bed markers alone.
 
-**Required scans:** (1) Before printing, register B then P and store `T_MB` and `T_BP` baselines; (2) after printing, register B then P again before any stroke comparison; (3) compare pre/post paper-to-bed transforms to detect movement; (4) hold theta and scan artwork in overlapping tiles. A changed paper pose is not automatically a machine correction.
+**Required scan:** After printing, register B then P before any stroke comparison; hold theta and scan artwork in overlapping tiles. Pre-print scans are optional diagnostics only. Without a pre-print reference, post-print images cannot establish whether paper shifted during the job. A changed paper pose is not automatically a machine correction.
 
 **Transform:** `p_M = T_MB(theta) * T_BP * p_P`. Camera-to-machine mapping, lens distortion, exposure pose and uncertainty must also be calibrated. Multiple non-collinear references or equivalent constrained geometry are needed to determine the desired 2D transform; marker geometry and visibility are validation gates.
 
