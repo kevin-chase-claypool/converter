@@ -11,7 +11,7 @@ function boot(search, hash) {
   const events = {};
   const nodes = {};
   const timers = [];
-  ["app-bar", "dro", "view", "transport", "footer", "dialog-root", "splash-overlay", "splash-title", "splash-message", "splash-mode", "toast"].forEach((id) => {
+  ["app-bar", "dro", "view", "transport", "dialog-root", "splash-overlay", "splash-title", "splash-message", "splash-mode", "toast"].forEach((id) => {
     nodes[id] = {
       innerHTML: "", textContent: "", scrollTop: 0, hidden: false, focus() {}, addEventListener(event, callback) {events[id+":"+event]=callback;},
       classList:{add(){},remove(){}}, querySelector(){return {focus(){}}}
@@ -134,12 +134,14 @@ function boot(search, hash) {
   s.page("scan");
   for(let i=0;i<4;i++)s.action("advance-scan");
   assert.match(s.nodes.view.innerHTML,/100%/);
-  assert.match(s.nodes.footer.innerHTML,/Next job locked/);
+  s.page("home");
+  assert.match(s.nodes.view.innerHTML,/Next job<\/span><span>Locked/);
   s.page("sync");
   assert.match(s.nodes.view.innerHTML,/1 \(demo\)/);
   s.action("retry-sync");
   s.action("finish-evaluation");
-  assert.match(s.nodes.footer.innerHTML,/Next job ready/);
+  s.page("home");
+  assert.match(s.nodes.view.innerHTML,/Next job<\/span><span>Available/);
 }
 {
   const s=boot("?demo=1","#/settings");

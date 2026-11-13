@@ -107,8 +107,10 @@ bar, a drawer, or bottom-tab menu.** A root **Home** dashboard gives four large
 touch tiles. Opening a tile moves into a functional screen. Each child screen
 has a top-left **Back** control, the browser/system Back key works, and desktop
 Escape/Backspace also navigates back (except when Backspace is editing a form
-field). The header, five-axis readout, and bottom transport strip remain fixed;
-body content is independently scrollable when necessary.
+field). The header, five-axis readout, and bottom transport deck remain fixed;
+body content is independently scrollable when necessary. The black deck is
+sized to approximately one-sixth of the viewport height and extends to the
+bottom edge; there is no persistent footer text.
 
 The fixed **Feed Override + Start/Resume · Pause · Stop** deck is a
 machine-control surface, not navigation. It remains visible on every screen

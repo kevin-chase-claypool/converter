@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-13 | `RPSW-20261113-009` | verified | [Enlarge the black control deck and remove the footer text](2026/2026-11-13-enlarge-black-control-deck.md) | `touchscreen`, `hmi`, `transport-controls`, `layout`, `black-theme`, `footer` |
 | 2026-11-13 | `RPSW-20261113-008` | verified | [Use a dark background for the persistent control deck](2026/2026-11-13-dark-persistent-control-deck.md) | `touchscreen`, `hmi`, `transport-controls`, `feed-override`, `dark-theme`, `user-experience` |
 | 2026-11-13 | `RPSW-20261113-007` | verified | [Retain transport action colors while disabled](2026/2026-11-13-color-code-transport-states.md) | `touchscreen`, `hmi`, `transport-controls`, `color`, `disabled-state`, `user-experience` |
 | 2026-11-13 | `RPSW-20261113-006` | verified | [Make feed override persistent with Start, Pause, and Stop](2026/2026-11-13-persistent-feed-override.md) | `touchscreen`, `hmi`, `feed-override`, `transport-controls`, `user-experience`, `navigation` |

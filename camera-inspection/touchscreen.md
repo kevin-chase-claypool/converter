@@ -56,7 +56,9 @@ These are feature screens, not permanent nav tabs. Back returns to the prior pag
 
 - Header: current screen name, Back if nested, and **real/simulation/offline** connection indicator.
 - Compact raw-controller DRO: **X/Y pen axes**, **A rotary controller axis**, **Z/B CoreZB raw axes**; no invented pen force reading. In the existing repository A uses **motor-shaft degrees**; it is not the same thing as optically verified bed θ. Final controller-to-bed conversion must be explicit.
-- Status/footer: connection certainty, next-G-code submission gate; never infer permission from incomplete status.
+- Context state: connection certainty and the next-G-code submission gate appear
+  in the header/page content. There is no persistent footer strip. Never infer
+  permission from incomplete status.
 - No unverified WPos/MPos toggle. Do not present user-selectable camera Cartesian X/Y until the mechanical CoreZB kinematic transform has been implemented and checked.
 
 ## Functional screens

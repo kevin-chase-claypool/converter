@@ -423,7 +423,6 @@
     }).join("");
     root.innerHTML=renderers[page]();
     renderTransport();
-    document.getElementById("footer").innerHTML='<span>● '+(app.demo?"DEMO — no hardware control":"DISCONNECTED — UI only")+'</span><span>'+(locked()?"Next job locked":"Next job ready (demo)")+'</span>';
     root.scrollTop=0;
     if(page==="settings"||!app.settingsAttempted)refreshPiSettings(false);
   }
