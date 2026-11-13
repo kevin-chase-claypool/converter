@@ -7,7 +7,7 @@ button:disabled{cursor:not-allowed;opacity:.46;filter:grayscale(.2)}
 :focus-visible{outline:3px solid #1463e8;outline-offset:2px}
 .app-shell{height:100dvh;max-width:720px;margin:auto;background:#f7f9fc;display:grid;grid-template-rows:64px 80px minmax(0,1fr) 43px;box-shadow:0 2px 30px #31445a20}
 .app-bar{display:flex;align-items:center;gap:12px;padding:0 18px;border-bottom:1px solid #dce3ed;background:#fff}
-.bar-title{font-size:22px;font-weight:750;line-height:1.2;letter-spacing:-.5px;min-width:0;flex:1}
+.bar-title{font-size:22px;font-weight:750;line-height:1.2;letter-spacing:-.5px;min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar-sub{font-size:12px;color:#52637a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .back{width:48px;height:48px;flex-shrink:0;background:transparent;border:0;border-radius:100%;display:grid;place-items:center;font-size:29px;color:#163b7e}
 .back:hover{background:#eaf0ff}
@@ -99,3 +99,7 @@ h3{font-size:16px}
 @media(max-width:460px){.app-shell{grid-template-rows:60px 74px minmax(0,1fr) 39px}.app-bar{padding:0 12px}.bar-title{font-size:18px}.view{padding:12px 13px 18px}.dro{padding:8px 6px;gap:5px}.axis{padding:8px 2px}.axis strong{font-size:13px}.tile{min-height:136px;padding:14px}.tile b{font-size:17px}.tile small{font-size:11px}.btn{padding:8px 6px}.card{padding:14px}.tag-grid{gap:5px}}
 @media(max-height:800px){.view{padding-top:11px}.tile{min-height:125px}.stack{gap:10px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+/* Contextual motion actions, never used as a navigation menu. */
+.bar-actions{display:flex;gap:6px;flex-shrink:0}.quick{height:43px;min-width:54px;padding:0 8px;border-radius:10px;border:1px solid transparent;font-size:12px;font-weight:850}.quick-hold{background:#f6ac32;color:#252c38}.quick-stop{background:#ca3737;color:#fff}
+@media(max-width:460px){.bar-actions{gap:4px}.quick{min-width:46px;padding:0 5px;font-size:11px}.app-bar:has(.bar-actions) .bar-sub{display:none}}
