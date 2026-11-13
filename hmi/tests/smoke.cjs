@@ -10,9 +10,10 @@ new vm.Script(source, {filename:"app.js"});
 function boot(search, hash) {
   const events = {};
   const nodes = {};
-  ["app-bar", "dro", "view", "transport", "footer", "dialog-root", "toast"].forEach((id) => {
+  const timers = [];
+  ["app-bar", "dro", "view", "transport", "footer", "dialog-root", "idle-overlay", "toast"].forEach((id) => {
     nodes[id] = {
-      innerHTML: "", scrollTop: 0, focus() {}, addEventListener(event, callback) {events[id+":"+event]=callback;},
+      innerHTML: "", scrollTop: 0, hidden: id==="idle-overlay", focus() {}, addEventListener(event, callback) {events[id+":"+event]=callback;},
       classList:{add(){},remove(){}}, querySelector(){return {focus(){}}}
     };
   });
@@ -40,7 +41,11 @@ function boot(search, hash) {
     getElementById(id){return nodes[id];},
     addEventListener(name,callback){events["document:"+name]=callback;}
   };
-  vm.runInNewContext(source,{window,document,URLSearchParams,setTimeout:()=>0,clearTimeout:()=>{}});
+  vm.runInNewContext(source,{
+    window,document,URLSearchParams,
+    setTimeout(callback, milliseconds){timers.push({callback,milliseconds});return timers.length;},
+    clearTimeout(){}
+  });
   function click(id, attr, value){
     const element={disabled:false,dataset:{[attr]:value}};
     const callback=events[id+":click"];
@@ -49,7 +54,7 @@ function boot(search, hash) {
   }
   function page(to){click("view","page",to);}
   function action(what,region){click(region||"view","action",what);}
-  return {nodes,window,page,action};
+  return {nodes,window,page,action,timers,events};
 }
 {
   const s=boot("");
@@ -62,11 +67,20 @@ function boot(search, hash) {
 }
 {
   const s=boot("?demo=1");
+  const idleTimer=s.timers.find((timer)=>timer.milliseconds===300000);
+  assert.ok(idleTimer,"Missing five-minute idle timer");
+  idleTimer.callback();
+  assert.equal(s.nodes["idle-overlay"].hidden,false);
+  s.events["document:pointerdown"]({preventDefault(){},stopPropagation(){}});
+  assert.equal(s.nodes["idle-overlay"].hidden,true);
+}
+{
+  const s=boot("?demo=1");
   const cases={
     run:"Current job",feed:"Commanded feed override",jog:"Manual positioning",
     tools:"Machine tools",register:"Registration sequence",
     fiducials:"Permanent ring",camera:"Image source",pen:"Protected operations",
-    frames:"Coordinate references",inspect:"Post-print workflow",
+    frames:"Coordinate references",settings:"Display brightness",inspect:"Post-print workflow",
     scan:"Capture workflow",sync:"Inspection package",results:"Artwork comparison",
     profiles:"Approved profiles",system:"Connection health"
   };
@@ -107,9 +121,17 @@ function boot(search, hash) {
   assert.match(s.nodes.footer.innerHTML,/Next job ready/);
 }
 {
+  const s=boot("?demo=1","#/settings");
+  assert.match(s.nodes.view.innerHTML,/System power/);
+  s.action("reboot-pi");
+  assert.match(s.nodes["dialog-root"].innerHTML,/Restart the Raspberry Pi/);
+  s.action("dialog-cancel","dialog-root");
+  assert.equal(s.nodes["dialog-root"].innerHTML,"");
+}
+{
   const s=boot("?demo=1","#/sync");
   s.action("back","app-bar");
   assert.match(s.nodes.view.innerHTML,/Post-print workflow/);
   assert.equal(s.window.location.hash,"#/inspect");
 }
-console.log("HMI smoke checks passed: offline gates, 16 views, Back fallback and demo lifecycle.");
+console.log("HMI smoke checks passed: offline gates, 17 views, transport, settings, Back fallback and demo lifecycle.");

@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-13 | `RPSW-20261113-003` | implemented | [Restore Pi display settings and add confirmed power controls](2026/2026-11-13-restore-pi-settings-power-controls.md) | `touchscreen`, `hmi`, `display-brightness`, `inactivity-timeout`, `system-power`, `restart`, `poweroff`, `systemd`, `safety` |
 | 2026-11-13 | `RPSW-20261113-002` | verified | [Restore persistent transport controls on every HMI screen](2026/2026-11-13-restore-global-transport-controls.md) | `touchscreen`, `hmi`, `user-experience`, `transport-controls`, `start`, `pause`, `stop`, `accessibility` |
 | 2026-11-13 | `RPSW-20261113-001` | implemented | [Deploy the UI-only HMI kiosk to the Raspberry Pi Touch Display 2](2026/2026-11-13-deploy-hmi-kiosk.md) | `raspberry-pi`, `touch-display-2`, `hmi`, `systemd`, `wayland`, `labwc`, `chromium`, `kiosk`, `deployment` |
 | 2026-11-02 | `RPSW-20261102-001` | implemented | [Raise the M5 pen-clearance pulse to 200 ms](2026/2026-11-02-raise-m5-clearance-to-200ms.md) | `toolhead`, `pen-clear`, `m5`, `clearance`, `drag`, `owner-override` |

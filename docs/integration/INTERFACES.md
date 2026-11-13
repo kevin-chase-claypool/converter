@@ -13,6 +13,7 @@ Changing one side of a seam means updating both documents in the same commit.
 | Section | Systems joined |
 |---|---|
 | Host to grblHAL | 1 Host planning and operator to 2 Motion control |
+| HMI to Pi-local settings | 1 Host operator interface to the Raspberry Pi OS host |
 | Axis and unit convention | 1 to 2, binding on 3 through the measured 12.0332:1 drive ratio |
 | RP23CNC to stepper drivers | 2 to 3 |
 | Homing and magnetic bed calibration | 2 and 5, with the registered G54 frame handed to 1 |
@@ -47,6 +48,35 @@ The converter emits:
 
 Unknown or unsupported commands must cause an explicit error during test, not
 silent motion.
+
+## HMI to Pi-local settings
+
+The Raspberry Pi settings API is a separate allowlisted interface from the
+machine-control path. It listens only on `127.0.0.1:8765`; it must not be bound
+to the LAN or exposed through Tailscale Funnel. The browser HMI at
+`http://127.0.0.1:8766` may mutate it only from an allowed local origin.
+
+| Endpoint | Contract |
+|---|---|
+| `GET /status` | Read the active Wi-Fi connection, interface, mode, and display brightness |
+| `GET /timeout` | Read the stored HMI inactivity timeout in minutes |
+| `POST /brightness` | Set raw panel brightness from 1 through 31 |
+| `POST /timeout` | Set inactivity timeout to 0, 1, 5, 10, or 30 minutes |
+| `POST /reboot` | Request a host reboot only with body `{"confirm":"RESTART"}` |
+| `POST /poweroff` | Request host power-off only with body `{"confirm":"POWER OFF"}` |
+
+Mutating requests with a browser `Origin` header must originate from
+`http://127.0.0.1:8766` or `http://localhost:8766`. The UI asks for operator
+confirmation before restart or power-off, and the backend independently repeats
+the explicit confirmation check. A second system action while one is pending is
+rejected.
+
+These settings affect only the Raspberry Pi host. A reboot or power-off request
+does not prove grblHAL Idle, pen clearance, park completion, or safe loss of
+motion power. During real machine integration, the controls must additionally
+consult the single sender/motion supervisor before becoming enabled. Do not
+proxy this root settings API as a convenience alongside the HMI; remote settings
+require a separately authenticated same-origin adapter.
 
 The desktop converter preselects the owner-promoted expanded centered dense-v3
 host-side bed-compensation profile `f85ec410dbac` and may transform the planned

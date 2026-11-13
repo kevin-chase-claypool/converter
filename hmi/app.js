@@ -11,6 +11,7 @@
     tools: ["Tools", "home"], register: ["Optical registration", "tools"],
     fiducials: ["Fiducial diagnostics", "tools"], camera: ["Camera", "tools"],
     pen: ["Pen tools", "tools"], frames: ["Coordinates", "tools"],
+    settings: ["Pi settings", "tools"],
     inspect: ["Inspection", "home"], scan: ["Scan progress", "inspect"],
     sync: ["Windows sync", "inspect"], results: ["Results", "inspect"],
     profiles: ["Calibration profiles", "inspect"], system: ["System status", "home"]
@@ -31,7 +32,17 @@
     jogSystem: "pen",
     jogStep: 1,
     cameraMode: "preview",
-    dialog: null
+    dialog: null,
+    brightness: null,
+    timeoutMinutes: 5,
+    networkActive: "—",
+    networkMode: "—",
+    networkInterface: "—",
+    settingsAttempted: false,
+    settingsLoading: false,
+    settingsError: "",
+    systemActionPending: false,
+    idleVisible: false
   };
   if (!app.demo) app.loaded = false;
   var root = document.getElementById("view");
@@ -66,8 +77,8 @@
     pairs.forEach(function(p){ s+='<span>'+p[0]+'</span><span>'+p[1]+'</span>'; });
     return s+"</div>";
   }
-  function choose(type,value,label,current) {
-    return '<button type="button" class="choice'+(current===value?' active':'')+'" data-choose="'+type+'" data-value="'+value+'" aria-pressed="'+(current===value)+'">'+label+"</button>";
+  function choose(type,value,label,current,enabled) {
+    return '<button type="button" class="choice'+(current===value?' active':'')+'" data-choose="'+type+'" data-value="'+value+'" aria-pressed="'+(current===value)+'"'+(enabled===false?' disabled':'')+'>'+label+"</button>";
   }
   function motionBanner() {
     return app.demo ? strip("<b>DEMO MODE.</b> These controls simulate state only. No commands are sent to hardware.","warn"):
@@ -80,6 +91,77 @@
   }
   function progress(value) {
     return '<div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+value+'"><div style="width:'+value+'%"></div></div>';
+  }
+  var SETTINGS_API = "http://127.0.0.1:8765";
+  function settingsRequest(path, payload) {
+    if (typeof fetch !== "function") {
+      return Promise.reject(new Error("Local settings service unavailable"));
+    }
+    var options = {method: payload === undefined ? "GET" : "POST", headers:{}};
+    if (payload !== undefined) {
+      options.headers["Content-Type"] = "application/json";
+      options.body = JSON.stringify(payload);
+    }
+    return fetch(SETTINGS_API + path, options).then(function(response) {
+      return response.json().then(function(data) {
+        if (!response.ok) throw new Error(data.error || "Settings request failed");
+        return data;
+      });
+    });
+  }
+  function refreshPiSettings(force) {
+    if (app.settingsLoading || (!force && app.settingsAttempted)) return;
+    app.settingsAttempted = true;
+    app.settingsLoading = true;
+    app.settingsError = "";
+    Promise.all([
+      settingsRequest("/status"),
+      settingsRequest("/timeout")
+    ]).then(function(results) {
+      var network = results[0];
+      app.brightness = Number(network.brightness);
+      app.networkActive = network.active || "Not connected";
+      app.networkMode = network.mode || "unknown";
+      app.networkInterface = network.interface || "—";
+      app.timeoutMinutes = Number(results[1].minutes);
+      resetIdleTimer();
+    }).catch(function(error) {
+      app.settingsError = error.message || "Local settings service unavailable";
+    }).finally(function() {
+      app.settingsLoading = false;
+      if (app.page === "settings") render();
+    });
+  }
+  function saveBrightness(value) {
+    value = Math.max(1, Math.min(31, Number(value)));
+    app.brightness = value;
+    settingsRequest("/brightness", {value:value}).then(function() {
+      toast("Display brightness set to " + Math.round(value * 100 / 31) + "%.");
+    }).catch(function(error) {
+      toast("Brightness unavailable: " + error.message);
+    });
+  }
+  function saveTimeout(value) {
+    app.timeoutMinutes = Number(value);
+    settingsRequest("/timeout", {minutes:app.timeoutMinutes}).then(function() {
+      resetIdleTimer();
+      toast(app.timeoutMinutes ? "Display timeout set to " + app.timeoutMinutes + " minutes." : "Display timeout disabled.");
+    }).catch(function(error) {
+      toast("Timeout unavailable: " + error.message);
+    });
+  }
+  function requestSystemAction(action) {
+    var path = action === "reboot" ? "/reboot" : "/poweroff";
+    var confirmation = action === "reboot" ? "RESTART" : "POWER OFF";
+    app.systemActionPending = true;
+    render();
+    settingsRequest(path, {confirm:confirmation}).then(function(result) {
+      toast(result.message || (action === "reboot" ? "Restart requested." : "Power off requested."));
+    }).catch(function(error) {
+      app.systemActionPending = false;
+      toast("System action failed: " + error.message);
+      render();
+    });
   }
   function renderHome(){
     return '<div class="stack">'+
@@ -145,6 +227,7 @@
       nav("camera","▣","Camera inspection station","Preview, last image, and overlays")+
       nav("pen","✎","Pen and homing tools","Protected park and controller-owned macros")+
       nav("frames","⌖","Coordinates & work zero","Five-axis coordinates and reference frames")+
+      nav("settings","⏻","Pi settings & power","Display, network and safe system actions")+
       nav("system","ℹ","System diagnostics","Connection health and demo controls")+
       '</div></div>';
   }
@@ -200,6 +283,45 @@
     return '<div class="stack">'+card('<h2>Coordinate references</h2>'+
       meta([["Work offset","G54 (when supplied)"],["Pen","X / Y"],["Bed controller axis","A — motor-shaft degrees"],["CoreZB raw axes","Z / B"],["Optical rotary center","Unverified"],["Optical zero","Unverified"]])+
       strip("Optical θ=0° and the controller A-axis coordinate must be explicitly reconciled. A commanded angle is not itself an optical measurement."),false)+'</div>';
+  }
+  function renderPiSettings(){
+    var brightness = app.brightness === null ? "Reading…" :
+      (app.brightness + " / 31 · " + Math.round(app.brightness * 100 / 31) + "%");
+    var brightnessValue = app.brightness === null ? 1 : app.brightness;
+    var settingsReady = app.brightness !== null && !app.settingsError;
+    var powerEnabled = settingsReady && !app.systemActionPending && app.machine === "idle";
+    return '<div class="stack">'+
+      strip("<b>LOCAL PI CONTROLS.</b> Brightness, timeout and power actions affect this Raspberry Pi immediately. They are not simulation controls.","warn")+
+      (app.settingsError?strip("<b>Settings service unavailable.</b> "+app.settingsError,"danger"):'')+
+      card('<div class="split"><h2>Display brightness</h2>'+badge(settingsReady?"LOCAL":"CHECKING",settingsReady?"good":"warn")+'</div>'+
+        '<div class="split"><span class="field-label">Panel brightness</span><b id="brightness-label">'+brightness+'</b></div>'+
+        '<input type="range" class="slider" min="1" max="31" step="1" value="'+brightnessValue+'" data-input="brightness" aria-label="Display brightness"'+(settingsReady?'':' disabled')+'>'+
+        '<div class="choice-row">'+
+          button("25%","brightness-8","ghost",settingsReady)+
+          button("50%","brightness-16","ghost",settingsReady)+
+          button("75%","brightness-23","ghost",settingsReady)+
+          button("100%","brightness-31","ghost",settingsReady)+
+        '</div>',false)+
+      card('<h2>Display inactivity</h2>'+
+        '<p class="small muted">After the selected idle period, the HMI dims to a touch-to-resume screen.</p>'+
+        '<div class="choice-row">'+
+          choose("timeout","0","Off",String(app.timeoutMinutes),settingsReady)+
+          choose("timeout","1","1 min",String(app.timeoutMinutes),settingsReady)+
+          choose("timeout","5","5 min",String(app.timeoutMinutes),settingsReady)+
+          choose("timeout","10","10 min",String(app.timeoutMinutes),settingsReady)+
+          choose("timeout","30","30 min",String(app.timeoutMinutes),settingsReady)+
+        '</div>',false)+
+      card('<div class="split"><h2>Network status</h2>'+button("Refresh","refresh-settings","ghost",!app.settingsLoading)+'</div>'+
+        meta([["Connection",app.networkActive],["Interface",app.networkInterface],["Mode",app.networkMode]])+
+        '<p class="small muted">Wi-Fi connection changes remain unavailable here until a reliable on-screen keyboard is configured.</p>',false)+
+      card('<h2>System power</h2>'+
+        meta([["Cutting power",app.machine==="idle"?"Machine state is idle":"Stop or hold before proceeding"],["Scope","The Raspberry Pi only"]])+
+        '<div class="btn-row two">'+
+          button("Restart Pi","reboot-pi","primary",powerEnabled)+
+          button("Power off Pi","poweroff-pi","red",powerEnabled)+
+        '</div>'+
+        strip("Restart and power off always require confirmation. Ensure any plot or inspection is stopped and the pen is safely parked.","warn"),false)+
+      '</div>';
   }
   function renderInspect(){
     var s=app.demo?status():"Service unavailable";
@@ -268,7 +390,7 @@
   var renderers = {
     home:renderHome,run:renderRun,feed:renderFeed,jog:renderJog,tools:renderTools,
     register:renderRegister,fiducials:renderFiducials,camera:renderCamera,pen:renderPen,
-    frames:renderFrames,inspect:renderInspect,scan:renderScan,sync:renderSync,
+    frames:renderFrames,settings:renderPiSettings,inspect:renderInspect,scan:renderScan,sync:renderSync,
     results:renderResults,profiles:renderProfiles,system:renderSystem
   };
   function renderTransport(){
@@ -292,6 +414,7 @@
     renderTransport();
     document.getElementById("footer").innerHTML='<span>● '+(app.demo?"DEMO — no hardware control":"DISCONNECTED — UI only")+'</span><span>'+(locked()?"Next job locked":"Next job ready (demo)")+'</span>';
     root.scrollTop=0;
+    if(page==="settings"||!app.settingsAttempted)refreshPiSettings(false);
   }
   function go(page) {
     if(!pages[page])return;
@@ -316,6 +439,13 @@
     render();
   });
   document.addEventListener("keydown",function(e){
+    if(app.idleVisible){
+      hideIdle();
+      resetIdleTimer();
+      e.preventDefault();
+      return;
+    }
+    resetIdleTimer();
     if(e.key==="Escape"){
       if(app.dialog){app.dialog=null;drawDialog();e.preventDefault();}
       else if(app.page!=="home"){back();e.preventDefault();}
@@ -324,13 +454,41 @@
       back();e.preventDefault();
     }
   });
+  document.addEventListener("pointerdown",function(e){
+    if(app.idleVisible){
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    resetIdleTimer();
+  });
   var toastTimeout;
   function toast(msg){
     var t=document.getElementById("toast");t.textContent=msg;t.classList.add("visible");
     clearTimeout(toastTimeout);toastTimeout=setTimeout(function(){t.classList.remove("visible");},3000);
   }
-  function ask(title,message,proceed){
-    app.dialog={title:title,message:message,proceed:proceed};
+  var idleTimer;
+  var idleOverlay=document.getElementById("idle-overlay");
+  function hideIdle() {
+    app.idleVisible=false;
+    idleOverlay.hidden=true;
+  }
+  function showIdle() {
+    if (app.dialog || app.systemActionPending) {
+      resetIdleTimer();
+      return;
+    }
+    app.idleVisible=true;
+    idleOverlay.hidden=false;
+  }
+  function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    hideIdle();
+    if (app.timeoutMinutes > 0) {
+      idleTimer=setTimeout(showIdle,app.timeoutMinutes*60000);
+    }
+  }
+  function ask(title,message,proceed,confirmLabel){
+    app.dialog={title:title,message:message,proceed:proceed,confirmLabel:confirmLabel||"Confirm"};
     drawDialog();
   }
   function drawDialog(){
@@ -338,7 +496,7 @@
     if(!app.dialog){area.innerHTML="";return;}
     area.innerHTML='<div class="scrim" role="presentation"><section class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-body">'+
       '<h2 id="dialog-title">'+app.dialog.title+'</h2><p id="dialog-body">'+app.dialog.message+'</p>'+
-      '<div class="btn-row two">'+button("Cancel — Do Nothing","dialog-cancel","ghost",true)+button("Confirm","dialog-confirm","red",true)+'</div></section></div>';
+      '<div class="btn-row two">'+button("Cancel — Do Nothing","dialog-cancel","ghost",true)+button(app.dialog.confirmLabel,"dialog-confirm","red",true)+'</div></section></div>';
     area.querySelector('[data-action="dialog-cancel"]').focus();
   }
   function nextRegister(){
@@ -352,6 +510,18 @@
     if(name==="open-register"){go("register");return;}
     if(name==="enter-demo"){window.location.search="?demo=1";return;}
     if(name==="exit-demo"){window.location.search="";return;}
+    if(name==="refresh-settings"){refreshPiSettings(true);return;}
+    if(name.indexOf("brightness-")===0){saveBrightness(Number(name.split("-")[1]));return;}
+    if(name==="reboot-pi"){
+      if(app.machine!=="idle"){toast("Stop or safely hold the machine before restarting the Pi.");return;}
+      ask("Restart the Raspberry Pi?","All local processes will stop and the display will disconnect. Ensure any plot or inspection is stopped, the pen is safely parked, and there is no active machine motion.",function(){requestSystemAction("reboot");},"Restart Pi");
+      return;
+    }
+    if(name==="poweroff-pi"){
+      if(app.machine!=="idle"){toast("Stop or safely hold the machine before powering off the Pi.");return;}
+      ask("Power off the Raspberry Pi?","The HMI and all local services will stop, and the Touch Display will go dark. Ensure any plot or inspection is stopped and the pen is safely parked.",function(){requestSystemAction("poweroff");},"Power off");
+      return;
+    }
     if(!app.demo){toast("Unavailable: no motion supervisor is connected.");return;}
     if(name==="dialog-cancel"){app.dialog=null;drawDialog();return;}
     if(name==="dialog-confirm"){var f=app.dialog&&app.dialog.proceed;app.dialog=null;drawDialog();if(f)f();render();return;}
@@ -403,6 +573,7 @@
       if(type==="jogSystem")app.jogSystem=val;
       else if(type==="jogStep")app.jogStep=Number(val);
       else if(type==="cameraMode")app.cameraMode=val;
+      else if(type==="timeout"){saveTimeout(val);}
       render();return;
     }
     if(b.dataset.jog){
@@ -432,13 +603,19 @@
     if(e.target.dataset.input==="override"&&app.demo){
       app.override=Number(e.target.value);
       var label=document.getElementById("override-label");if(label)label.textContent=app.override+"%";
+    }else if(e.target.dataset.input==="brightness"){
+      app.brightness=Number(e.target.value);
+      var brightnessLabel=document.getElementById("brightness-label");
+      if(brightnessLabel)brightnessLabel.textContent=app.brightness+" / 31 · "+Math.round(app.brightness*100/31)+"%";
     }
   });
   root.addEventListener("change",function(e){
     if(e.target.dataset.input==="override"&&app.demo)toast("Override preview: "+app.override+"% (not sent)");
+    else if(e.target.dataset.input==="brightness")saveBrightness(app.brightness);
   });
   var initial=window.location.hash.replace(/^#\//,"");
   app.page=pages[initial]?initial:"home";
   window.history.replaceState({page:app.page,depth:0},"","#/"+app.page);
   render();
+  resetIdleTimer();
 })();

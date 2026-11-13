@@ -1,5 +1,35 @@
 # Engineering Log
 
+<a id="elog-20261113-restore-pi-settings-and-confirmed-power-controls"></a>
+### 🟨 2026-11-13 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Restore Pi settings and confirmed power controls
+
+- The browser HMI had omitted the old QML brightness, timeout, Wi-Fi, restart,
+  and shutdown settings even though the loopback settings service still held
+  the first three capabilities.
+- Added Tools → Pi settings & power with real 1-31 brightness control, a
+  touch-to-resume inactivity overlay, read-only network state, and confirmed
+  Restart Pi / Power off Pi actions.
+- Source-controlled and reinstalled the root settings service under
+  `/home/rpi/xytheta-hmi/`. It remains loopback-only, accepts mutations only
+  from the local HMI origins, and requires `RESTART` or `POWER OFF` in the
+  destructive request body.
+- Same-value brightness and timeout writes passed. Allowed-origin preflight
+  passed, foreign-origin preflight was rejected, and a reboot request with the
+  wrong confirmation returned 400 without invoking systemctl. Power-off also
+  rejected a request without its exact confirmation.
+- The inactivity timeout was temporarily set to one minute and restored to five
+  afterward. A 65-second Chromium virtual-time render showed the full-screen
+  touch-to-resume overlay.
+- The valid reboot and power-off paths were not executed. They remain an
+  approved maintenance-window test; powering off the Pi is not by itself proof
+  of plotter idle or pen park.
+- A 720×1280 Pi-settings render and 17-view smoke test passed. Wi-Fi connection
+  entry remains omitted until a dependable on-screen keyboard is available.
+- Evidence: `RPSW-20261113-003`; `hmi/pi/xytheta-settings-service.py`.
+- Category: rp23cnc-software, hardware, firmware, test, hmi, touchscreen,
+  display-brightness, inactivity-timeout, system-power, restart, poweroff,
+  systemd, safety, documentation.
+
 <a id="elog-20261113-restore-persistent-transport-controls"></a>
 ### 🟩 2026-11-13 - RP23CNC-SOFTWARE/VERIFIED - Restore persistent transport controls on every HMI screen
 

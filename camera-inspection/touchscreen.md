@@ -37,6 +37,7 @@ outside mock mode.
         Camera
         Pen tools and protected macros
         Coordinate references and work zero
+        Pi settings and power
         System status
       Inspect
         Scan progress
@@ -73,6 +74,9 @@ These are feature screens, not permanent nav tabs. Back returns to the prior pag
 - Camera: selectable preview, still and overlay views, no stretched image, clearly separated fake/real imagery.
 - Protected controller macros: existing P100/P116 registration and pen park flows where still applicable, with safety confirmations. Preserve physical retract/park semantics; M5 alone does not prove full retract.
 - Coordinate frames and diagnostics: X/Y/A/Z/B, optical center and zero, calibration uncertainty and camera-to-machine mapping.
+- Pi settings: real local brightness and inactivity controls, read-only network
+  status, and separately confirmed restart/power-off actions. These settings
+  are allowlisted Pi controls rather than motion or inspection commands.
 
 ### Inspect
 - After normal program end **M2**, sender-drained completion, controller Idle, confirmed full pen clearance/park, automatically run optical registration, ring check and post-print artwork capture. The HMI reflects a state machine: drawing, registering, scanning, waiting for Windows, evaluating, committed/ready, failure/recovery. Never automatically start after an abort or mere "100% streamed" indication.
@@ -83,7 +87,10 @@ These are feature screens, not permanent nav tabs. Back returns to the prior pag
 
 ## Integration and safety boundaries
 
-- The UI is presently **front-end only**. All hardware actions are offline-disabled; optional demo mode performs no network or hardware calls.
+- The motion, sender, camera, and inspection UI remains **front-end only** and
+  offline-disabled. The separately allowlisted Pi settings API may change local
+  brightness/timeout or request system power after explicit confirmation.
+  Optional demo mode does not turn simulated machine actions into real ones.
 - A Pi-hosted **single sender/motion supervisor** must provide trustworthy status, event timestamps, image endpoints, fault codes, commands, acknowledgments and explicit job lock state. The browser, ESP32-P4 and Windows must not independently own motion.
 - Existing program end uses **M2**, not generic M30. Honor machine-coordinate park and toolhead handshake from [../docs/integration/INTERFACES.md](../docs/integration/INTERFACES.md). Physical E-stop is separate.
 - Pi 4 handles lightweight AprilTag detection, rotary orbit fitting, capture coordination and sync queue; heavy observed-vs-expected matching and rolling profile evaluation run on Windows.
@@ -99,5 +106,8 @@ These are feature screens, not permanent nav tabs. Back returns to the prior pag
 - Test registration failure on occluded/missing B00/tags and CoreZB not homed; verify optically determined center then zero and correct controller coordinates.
 - Test queuing across disconnections, restart persistence, retry, cancel/revert, profile mismatch and no premature next-job unlock.
 - Test image acquisition/AprilTag CPU and RAM on the **2 GB Pi 4**, bounded image memory and UI responsiveness.
+- Test display brightness, inactivity dismissal, and both power confirmation
+  dialogs. Exercise valid restart/power-off only during an approved maintenance
+  window with motion stopped.
 
 See [../hmi/README.md](../hmi/README.md) for local launch and demo instructions.

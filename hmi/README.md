@@ -5,7 +5,8 @@ frontend runs in a Chromium kiosk on the Raspberry Pi Touch Display 2. There is
 **no live sender, motion supervisor, ESP32-P4 image service, calibration store,
 or Windows synchronization API** connected to these screens yet. The frontend
 deliberately never sends motor commands, G-code, machine macros, or synthetic
-calibration approvals.
+calibration approvals. Its only connected controls are the allowlisted local Pi
+display, timeout, and system-power settings described below.
 
 ## Launch on the Pi (or a desktop for review)
 
@@ -31,6 +32,8 @@ The machine-side deployment on 2026-11-13 uses:
   settings, so it was left unchanged.
 - System service `xytheta-hmi-web.service` for the static Python HTTP server,
   and user service `xytheta-hmi-kiosk.service` for Chromium.
+- System service `xytheta-settings.service` for the allowlisted loopback Pi
+  settings and power API on port 8765.
 - `~/.config/labwc/autostart` to restart the singleton kiosk service after
   labwc starts. The prior QML autostart file is backed up beside it as
   `autostart.before-xytheta-web-20261113`; the QML files remain installed for
@@ -41,6 +44,7 @@ The reproducible unit and autostart files are in
 
 ```text
 /etc/systemd/system/xytheta-hmi-web.service
+/etc/systemd/system/xytheta-settings.service
 /home/rpi/.config/systemd/user/xytheta-hmi-kiosk.service
 /home/rpi/.config/labwc/autostart
 ```
@@ -69,6 +73,32 @@ about **384 MiB proportional set size**, with **420 MiB** total system use and
 about **1.4 GiB** available on the 2 GB Pi. Recheck this budget after adding
 AprilTag processing, image storage, or a live-camera path. Do not run a second
 full HMI locally merely to provide remote access.
+
+### Local Pi settings and power
+
+**Tools → Pi settings & power** is a real local-control screen, not demo state:
+
+- Display brightness uses the existing allowlisted backlight endpoint.
+- The 0/1/5/10/30-minute inactivity setting dims the HMI to a
+  touch-to-resume overlay.
+- Wi-Fi connection and interface state are displayed read-only. Network
+  reconnection remains unavailable in the browser until a reliable on-screen
+  keyboard is configured.
+- Restart Pi and Power off Pi each require an explicit confirmation dialog.
+  The backend additionally requires the exact `RESTART` or `POWER OFF`
+  confirmation value and accepts the POST only from the local HMI origin.
+
+The settings API is source-controlled at
+[`pi/xytheta-settings-service.py`](pi/xytheta-settings-service.py) and remains
+bound to `127.0.0.1:8765`. Do not bind this root service to `0.0.0.0` or proxy
+it through Tailscale Funnel. Tailscale remote access should expose only the HMI,
+and should proxy the settings API separately with authentication if remote
+settings are eventually required.
+
+Power actions stop the HMI and its local services; they do not itself prove that
+the plotter is idle or the pen is parked. The operator confirmation says so,
+and a future motion supervisor must provide an authoritative interlock before
+these controls are enabled during machine integration.
 
 ## Navigation philosophy
 
@@ -144,7 +174,7 @@ On a development machine with Node.js, run:
 
     node hmi/tests/smoke.cjs
 
-The dependency-free smoke script checks offline lockouts, all 16 views, header
+The dependency-free smoke script checks offline lockouts, all 17 views, header
 Hold/Resume, confirmation-gated simulated completion, registration, scanning,
 sync, and direct-link Back fallback. It passed on Node.js 25.5.0 on the Windows
 development host. Node.js is not installed on RPI4-HMI, and no package was
@@ -154,7 +184,7 @@ through its loopback DevTools endpoint with coordinate-level touch input.
 ## Checks run on the first implementation
 
 - JavaScript syntax compiled successfully.
-- All 16 rendered views loaded through the navigation logic in a simulated DOM.
+- All 17 rendered views loaded through the navigation logic in a simulated DOM.
 - Synthetic journey checked: Run → verified-completion confirmation → five registration steps → four scan increments → pending package → evaluation → submission gate unlocked.
 - Start is available globally while idle, Pause while running, Resume while
   held, and Stop while running or held. The persistent strip remains visible
@@ -172,4 +202,7 @@ mock transition with a tested machine integration.
 - [styles.css](styles.css) — high-contrast portrait layout, nested menu cards, controls and confirmations.
 - [app.js](app.js) — hierarchical router, Back support, view templates, explicit offline/demo safety behavior.
 - [`deploy/`](deploy/) — installed systemd and labwc startup definitions.
+- [`pi/xytheta-settings-service.py`](pi/xytheta-settings-service.py) —
+  allowlisted local display, timeout, network-status, restart, and power-off
+  endpoint.
 - [Project HMI specification](../camera-inspection/touchscreen.md) — architecture, navigation and integration requirements.
