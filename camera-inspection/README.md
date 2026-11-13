@@ -8,13 +8,16 @@ This subproject extends the existing XYθ pen plotter with an independent camera
 
 ## Navigate the project
 
+**Runnable HMI UI preview:** [hmi/README.md](../hmi/README.md) documents the new Android-style hierarchical navigation and safe demo mode. This is a frontend prototype, **not** a deployed sender or connected optical system.
+
+
 | Document | Contents |
 |---|---|
 | **[Hardware inventory](hardware-inventory.md)** | Existing machine hardware, new CoreZB selections, explicitly owned items, purchase checklist and compatibility risks |
 | **[Architecture](architecture.md)** | Host/ESP32-P4/RP23CNC responsibilities, Ethernet, coordinate systems and synchronization |
 | **[Inspection](inspection.md)** | Captured ink vs executed G-code, projection, segmentation, error metrics and overlays |
-| **[Calibration](calibration.md)** | Mandatory independent bed and paper fiducials, pre/post registration, rotary characterization, profile versioning and validation |
-| **[Touchscreen](touchscreen.md)** | Pi Touch Display 2 HMI, X/Y/θ/feed DRO, camera, Run/Jog/Tools |
+| **[Calibration](calibration.md)** | Permanent bed AprilTag ring, optional paper fiducials, optical center/Theta-zero registration, rotary characterization and validation |
+| **[Touchscreen](touchscreen.md)** | Native 720×1280 hierarchical touch HMI, Home/Run/Jog/Tools/Inspect and Back buttons |
 | **[Roadmap](roadmap.md)** | Phases, milestones, verification tasks and unresolved decisions |
 
 ## Major subsystems
@@ -28,10 +31,10 @@ This subproject extends the existing XYθ pen plotter with an independent camera
 
 ## Goals
 
-- **Finish each drawing before inspection**; then scan bed fiducials, paper fiducials and the completed artwork with overlapping CoreZB camera images and known stationary bed/camera positions. Use measured, repeatable errors to calibrate **future** prints.
+- **Finish each drawing before inspection**; then register bed center/Theta zero from outer fiducials and scan the completed artwork (paper fiducials optional) with overlapping CoreZB camera images and known stationary bed/camera positions. Use measured, repeatable errors to calibrate **future** prints.
 - Compare only **executed** reference strokes against actual ink, not future planned strokes.
 - Show projected path, observed ink, and quantified deviations in calibrated millimeters.
-- Use visible black circles at the embedded bed center and perimeter index positions for calibration.
+- Use the permanent outer AprilTag ring for optical center and Theta-zero registration; center and index circles or magnetic sensors are not required on the camera carriage.
 - Fit multi-angle perimeter-target measurements to estimate the physical rotation center; characterize repeatable mechanical errors.
 - Validate compensation on independent test patterns before integrating into a single control layer.
 
@@ -53,8 +56,8 @@ See [roadmap.md](roadmap.md) for actionable checklists. Keep measurements, calib
 
 ## November 2026 processing split
 
-ESP32-P4-ETH handles MIPI-CSI still capture, supported JPEG encoding, optional lightweight image preprocessing and Ethernet delivery. Raspberry Pi 4 (2 GB) orchestrates post-print bed-then-paper fiducial scans, captures and archives images, manages approved profile versions, and drives Touch Display 2. Windows performs authoritative stroke-to-G-code registration, geometric error analysis, and rolling-calibration candidate fitting. Post-print tiled still-image inspection is the baseline; software remains to be implemented and benchmarked. See [architecture.md](architecture.md).
+ESP32-P4-ETH handles MIPI-CSI still capture, supported JPEG encoding, optional lightweight image preprocessing and Ethernet delivery. Raspberry Pi 4 (2 GB) orchestrates optical center-first/B00-zero registration, optional paper-marker checks and post-print artwork scans, captures and archives images, manages approved profile versions, and drives Touch Display 2. Windows performs authoritative stroke-to-G-code registration, geometric error analysis, and rolling-calibration candidate fitting. Post-print tiled still-image inspection is the baseline; software remains to be implemented and benchmarked. See [architecture.md](architecture.md).
 
 ## Post-print registration and version synchronization
 
-Every job requires **post-print bed-then-paper fiducial registration** before inspecting artwork; no routine pre-print optical registration is required. The bed frame describes rotary mechanics; the paper frame describes sheet placement and movement. Keep their models separately versioned. Windows must synchronize and verify the Pi-approved calibration profile before applying compensation through the existing converter engine, and the Pi must verify the pinned profile/hash when accepting G-code. See [architecture.md](architecture.md), [calibration.md](calibration.md), and [inspection.md](inspection.md).
+After verified safe completion, every job requires **optical bed-center and Theta-zero registration** and artwork scanning while the drawing remains taped down. Paper fiducials are optional, not mandatory, and paper movement may remain ambiguous without them. The bed frame describes rotary mechanics; the paper frame describes sheet placement when observable. Keep their models separately versioned. Windows must synchronize and verify the Pi-approved calibration profile before applying compensation through the existing converter engine, and the Pi must verify the pinned profile/hash when accepting G-code. See [architecture.md](architecture.md), [calibration.md](calibration.md), and [inspection.md](inspection.md).
