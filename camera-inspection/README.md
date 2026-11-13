@@ -2,7 +2,7 @@
 
 **Project index** · [Hardware inventory](hardware-inventory.md) · [Roadmap](roadmap.md)
 
-This subproject extends the existing XYθ pen plotter with an independent camera gantry, image-based stroke inspection, optical rotary calibration, and a remote ioSender control display.
+This subproject extends the existing XYθ pen plotter with an independent camera gantry, image-based stroke inspection, optical rotary calibration, and a Pi-hosted local sender/HMI on the Raspberry Pi Touch Display 2.
 
 > **Project status:** Design and feasibility documentation. No inspection or compensation software is claimed implemented. Purchase status is not inferred from selections or shopping carts.
 
@@ -22,8 +22,8 @@ This subproject extends the existing XYθ pen plotter with an independent camera
 1. **Existing plotter:** RP23CNC/grblHAL, XY pen gantry, θ rotating 3D-printed bed, independent pen-force subsystem.
 2. **CoreZB:** Independently homed overhead camera XY carriage on the same machine frame.
 3. **Vision node:** Proposed Waveshare ESP32-P4 Ethernet board and MIPI-CSI camera; performance to benchmark.
-4. **Supervisory host:** ioSender V2 fork on Windows remains sole authority for CNC commands and G-code streaming.
-5. **Touchscreen:** Browser-driven 7-inch 720p landscape machine display.
+4. **Supervisory host:** Raspberry Pi 4 (2 GB) is the planned local G-code sender and inspection host; sender software and integration remain to be validated. Only one sender may control RP23CNC.
+5. **Touchscreen:** Official Raspberry Pi Touch Display 2 attached directly to the Pi 4, with native resolution/orientation support.
 6. **Metrology:** Camera registration, rotary-bed center/index calibration, deviation measurement and validated compensation.
 
 ## Goals
@@ -41,7 +41,7 @@ This subproject extends the existing XYθ pen plotter with an independent camera
 - **Single motion authority:** Browser and ESP32-P4 must not independently stream commands to RP23CNC.
 - **Real measurement vs commanded coordinates:** Step counts do not establish physical accuracy.
 - **Optical reference limitations:** A center magnet may not coincide with the true rotation center; one perimeter marker does not uniquely establish all angular errors.
-- **Screen fit:** 1280×720, no scrolling, no stretched camera image; always-visible X/Y/θ/feed DRO.
+- **Screen fit:** Touch Display 2 native 720×1280 panel, rotate in software as required; no stretched camera image and always-visible X/Y/θ/feed DRO.
 - **Safety:** Physical emergency stop independent of software.
 - **Procurement honesty:** Selected/cart parts remain unconfirmed until receipts or user confirmation.
 
@@ -50,3 +50,7 @@ This subproject extends the existing XYθ pen plotter with an independent camera
 **Inventory and compatibility → CoreZB motion → post-print image scanning → camera/bed calibration → complete-artwork inspection → systematic error modeling → converter compensation for future prints → independent verification → touchscreen integration.**
 
 See [roadmap.md](roadmap.md) for actionable checklists. Keep measurements, calibration coefficients, firmware versions, and before/after tests together when implementation begins.
+
+## November 2026 processing split
+
+ESP32-P4-ETH handles MIPI-CSI still capture, supported JPEG encoding, optional lightweight image preprocessing and Ethernet delivery. Raspberry Pi 4 (2 GB) handles fiducial registration, geometry comparison against executed G-code, error estimation, calibration and Touch Display 2 presentation. Post-print tiled still-image inspection is the baseline; software remains to be implemented and benchmarked. See [architecture.md](architecture.md).
