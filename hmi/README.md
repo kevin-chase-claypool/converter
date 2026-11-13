@@ -79,8 +79,8 @@ full HMI locally merely to provide remote access.
 **Tools → Pi settings & power** is a real local-control screen, not demo state:
 
 - Display brightness uses the existing allowlisted backlight endpoint.
-- The 0/1/5/10/30-minute inactivity setting dims the HMI to a
-  touch-to-resume overlay.
+- The 0/1/5/10/30-minute inactivity setting displays the branded CMY-ring
+  splash with a touch-to-resume prompt.
 - Wi-Fi connection and interface state are displayed read-only. Network
   reconnection remains unavailable in the browser until a reliable on-screen
   keyboard is configured.
@@ -115,6 +115,10 @@ not navigation. It remains visible on every screen because operators must be
 able to pause or stop without first navigating home. All three actions remain
 disabled when no verified sender/supervisor is connected. In the demo, Pause
 changes only simulated feed-hold state.
+
+On load, the same CMY-ring visual appears as a startup splash. It clears on
+touch or automatically after four seconds. The animation uses the preserved
+static ring artwork and is disabled when reduced motion is requested.
 
 Navigation hierarchy:
 
@@ -205,4 +209,6 @@ mock transition with a tested machine integration.
 - [`pi/xytheta-settings-service.py`](pi/xytheta-settings-service.py) —
   allowlisted local display, timeout, network-status, restart, and power-off
   endpoint.
+- [`assets/cmy-ring-v12.png`](assets/cmy-ring-v12.png) — preserved CMY-ring
+  artwork used by the startup and inactivity splash.
 - [Project HMI specification](../camera-inspection/touchscreen.md) — architecture, navigation and integration requirements.

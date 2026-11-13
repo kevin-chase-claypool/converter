@@ -11,9 +11,9 @@ function boot(search, hash) {
   const events = {};
   const nodes = {};
   const timers = [];
-  ["app-bar", "dro", "view", "transport", "footer", "dialog-root", "idle-overlay", "toast"].forEach((id) => {
+  ["app-bar", "dro", "view", "transport", "footer", "dialog-root", "splash-overlay", "splash-title", "splash-message", "splash-mode", "toast"].forEach((id) => {
     nodes[id] = {
-      innerHTML: "", scrollTop: 0, hidden: id==="idle-overlay", focus() {}, addEventListener(event, callback) {events[id+":"+event]=callback;},
+      innerHTML: "", textContent: "", scrollTop: 0, hidden: false, focus() {}, addEventListener(event, callback) {events[id+":"+event]=callback;},
       classList:{add(){},remove(){}}, querySelector(){return {focus(){}}}
     };
   });
@@ -67,12 +67,18 @@ function boot(search, hash) {
 }
 {
   const s=boot("?demo=1");
+  assert.equal(s.nodes["splash-overlay"].hidden,false);
+  const startupTimer=s.timers.find((timer)=>timer.milliseconds===4000);
+  assert.ok(startupTimer,"Missing startup splash timer");
+  startupTimer.callback();
+  assert.equal(s.nodes["splash-overlay"].hidden,true);
   const idleTimer=s.timers.find((timer)=>timer.milliseconds===300000);
   assert.ok(idleTimer,"Missing five-minute idle timer");
   idleTimer.callback();
-  assert.equal(s.nodes["idle-overlay"].hidden,false);
+  assert.equal(s.nodes["splash-overlay"].hidden,false);
+  assert.equal(s.nodes["splash-title"].textContent,"DISPLAY INACTIVITY TIMEOUT");
   s.events["document:pointerdown"]({preventDefault(){},stopPropagation(){}});
-  assert.equal(s.nodes["idle-overlay"].hidden,true);
+  assert.equal(s.nodes["splash-overlay"].hidden,true);
 }
 {
   const s=boot("?demo=1");
@@ -134,4 +140,4 @@ function boot(search, hash) {
   assert.match(s.nodes.view.innerHTML,/Post-print workflow/);
   assert.equal(s.window.location.hash,"#/inspect");
 }
-console.log("HMI smoke checks passed: offline gates, 17 views, transport, settings, Back fallback and demo lifecycle.");
+console.log("HMI smoke checks passed: offline gates, 17 views, transport, settings, splash/timeout, Back fallback and demo lifecycle.");

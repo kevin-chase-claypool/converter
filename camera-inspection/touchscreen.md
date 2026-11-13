@@ -18,6 +18,9 @@ outside mock mode.
 - Light high-contrast interface, readable typography, strong disabled states,
   and large touch targets; the compact app bar, five-axis readout, and transport
   strip remain fixed. The content area scrolls when necessary.
+- A full-screen CMY-ring startup and inactivity splash provides explicit
+  touch-to-continue behavior. The startup view clears on touch or after four
+  seconds; the inactivity view retains its explanatory timeout state.
 - A fixed bottom **Start/Resume · Pause · Stop** transport strip is available on
   every screen. It is a machine-control surface rather than navigation and
   remains fully disabled until the single sender/supervisor provides verified

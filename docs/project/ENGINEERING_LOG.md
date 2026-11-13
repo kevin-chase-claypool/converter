@@ -1,5 +1,28 @@
 # Engineering Log
 
+<a id="elog-20261113-restore-branded-startup-and-inactivity-splash"></a>
+### 🟩 2026-11-13 - RP23CNC-SOFTWARE/VERIFIED - Restore branded startup and inactivity splash
+
+- Owner review found that the browser HMI had dispensed with the previous CMY
+  ring splash and replaced the timeout with a plain overlay.
+- Restored the existing 620×620 cyan-magenta-yellow artwork as a static asset,
+  with a six-second rotation around a stationary `XYθ` core and the original
+  operator-console typography.
+- The startup splash clears on touch/keyboard input or after four seconds. The
+  inactivity splash uses the same design with explicit timeout and locked-motion
+  messaging, then dismisses on touch and restarts the idle timer.
+- Rotation is disabled when reduced motion is requested. The cover dims the UI
+  without overwriting the configured panel brightness.
+- Native 720×1280 startup and timeout renders were inspected. A one-minute
+  virtual-time timeout test passed and the stored five-minute setting was
+  restored afterward.
+- Physical touch dismissal and long-duration animation stability remain open.
+- Evidence: `RPSW-20261113-004`;
+  `hmi/assets/cmy-ring-v12.png`.
+- Category: rp23cnc-software, firmware, test, hmi, touchscreen,
+  splash-screen, inactivity-timeout, branding, cmy, accessibility,
+  documentation.
+
 <a id="elog-20261113-restore-pi-settings-and-confirmed-power-controls"></a>
 ### 🟨 2026-11-13 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Restore Pi settings and confirmed power controls
 

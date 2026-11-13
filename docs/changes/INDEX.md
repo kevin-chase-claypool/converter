@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-13 | `RPSW-20261113-004` | rp23cnc-software | verified | [Restore the branded startup and inactivity splash](rp23cnc-software/2026/2026-11-13-restore-branded-splash-screen.md) |
 | 2026-11-13 | `RPSW-20261113-003` | rp23cnc-software, hardware | implemented | [Restore Pi display settings and add confirmed power controls](rp23cnc-software/2026/2026-11-13-restore-pi-settings-power-controls.md) |
 | 2026-11-13 | `RPSW-20261113-002` | rp23cnc-software | verified | [Restore persistent transport controls on every HMI screen](rp23cnc-software/2026/2026-11-13-restore-global-transport-controls.md) |
 | 2026-11-13 | `RPSW-20261113-001` | rp23cnc-software, hardware | implemented | [Deploy the UI-only HMI kiosk to the Raspberry Pi Touch Display 2](rp23cnc-software/2026/2026-11-13-deploy-hmi-kiosk.md) |

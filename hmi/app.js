@@ -42,7 +42,7 @@
     settingsLoading: false,
     settingsError: "",
     systemActionPending: false,
-    idleVisible: false
+    splashMode: "startup"
   };
   if (!app.demo) app.loaded = false;
   var root = document.getElementById("view");
@@ -439,9 +439,8 @@
     render();
   });
   document.addEventListener("keydown",function(e){
-    if(app.idleVisible){
-      hideIdle();
-      resetIdleTimer();
+    if(app.splashMode){
+      dismissSplash();
       e.preventDefault();
       return;
     }
@@ -455,9 +454,11 @@
     }
   });
   document.addEventListener("pointerdown",function(e){
-    if(app.idleVisible){
+    if(app.splashMode){
       e.preventDefault();
       e.stopPropagation();
+      dismissSplash();
+      return;
     }
     resetIdleTimer();
   });
@@ -467,22 +468,37 @@
     clearTimeout(toastTimeout);toastTimeout=setTimeout(function(){t.classList.remove("visible");},3000);
   }
   var idleTimer;
-  var idleOverlay=document.getElementById("idle-overlay");
-  function hideIdle() {
-    app.idleVisible=false;
-    idleOverlay.hidden=true;
+  var startupSplashTimer;
+  var splashOverlay=document.getElementById("splash-overlay");
+  var splashTitle=document.getElementById("splash-title");
+  var splashMessage=document.getElementById("splash-message");
+  var splashMode=document.getElementById("splash-mode");
+  function setSplash(mode) {
+    app.splashMode=mode;
+    splashOverlay.hidden=false;
+    splashOverlay.classList[mode==="timeout"?"add":"remove"]("timeout");
+    splashTitle.textContent=mode==="timeout"?"DISPLAY INACTIVITY TIMEOUT":"INITIALIZING OPERATOR INTERFACE";
+    splashMessage.textContent=mode==="timeout"?"No controller connection is configured. Motion remains locked.":"Preparing local console";
+    splashMode.textContent=app.demo?"SIMULATION · NO HARDWARE CONTROL":"UI PREVIEW · MOTION LOCKED";
+    splashOverlay.focus();
+  }
+  function dismissSplash() {
+    clearTimeout(startupSplashTimer);
+    app.splashMode=null;
+    splashOverlay.hidden=true;
+    splashOverlay.classList.remove("timeout");
+    resetIdleTimer();
   }
   function showIdle() {
     if (app.dialog || app.systemActionPending) {
       resetIdleTimer();
       return;
     }
-    app.idleVisible=true;
-    idleOverlay.hidden=false;
+    setSplash("timeout");
   }
   function resetIdleTimer() {
     clearTimeout(idleTimer);
-    hideIdle();
+    if(app.splashMode==="startup")return;
     if (app.timeoutMinutes > 0) {
       idleTimer=setTimeout(showIdle,app.timeoutMinutes*60000);
     }
@@ -617,5 +633,8 @@
   app.page=pages[initial]?initial:"home";
   window.history.replaceState({page:app.page,depth:0},"","#/"+app.page);
   render();
-  resetIdleTimer();
+  setSplash("startup");
+  startupSplashTimer=setTimeout(function(){
+    if(app.splashMode==="startup")dismissSplash();
+  },4000);
 })();

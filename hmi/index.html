@@ -17,11 +17,19 @@
     <footer id="footer" class="footer" aria-live="polite"></footer>
   </div>
   <div id="dialog-root"></div>
-  <div id="idle-overlay" class="idle-overlay" role="dialog" aria-modal="true" aria-labelledby="idle-title" hidden>
-    <div class="idle-card">
-      <div class="brand-mark idle-brand" aria-hidden="true">XYθ</div>
-      <h2 id="idle-title">Display paused</h2>
-      <p>Touch anywhere to continue.</p>
+  <div id="splash-overlay" class="splash-overlay" role="dialog" aria-modal="true" aria-labelledby="splash-title" tabindex="-1">
+    <div class="splash-content">
+      <div class="splash-stage" aria-hidden="true">
+        <img class="splash-ring" src="./assets/cmy-ring-v12.png" alt="">
+        <div class="splash-core">XYθ</div>
+      </div>
+      <div class="splash-kicker">C O N T R O L</div>
+      <div class="splash-sub">PRECISION MOTION / OPERATOR CONSOLE</div>
+      <div class="splash-rule"></div>
+      <h2 id="splash-title">INITIALIZING OPERATOR INTERFACE</h2>
+      <p id="splash-message">Preparing local console</p>
+      <div id="splash-mode" class="splash-mode">UI PREVIEW · MOTION LOCKED</div>
+      <div class="splash-hint">TOUCH ANYWHERE TO CONTINUE</div>
     </div>
   </div>
   <div id="toast" role="status" aria-live="polite"></div>

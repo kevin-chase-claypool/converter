@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-13 | `RPSW-20261113-004` | verified | [Restore the branded startup and inactivity splash](2026/2026-11-13-restore-branded-splash-screen.md) | `touchscreen`, `hmi`, `splash-screen`, `inactivity-timeout`, `branding`, `cmy`, `accessibility` |
 | 2026-11-13 | `RPSW-20261113-003` | implemented | [Restore Pi display settings and add confirmed power controls](2026/2026-11-13-restore-pi-settings-power-controls.md) | `touchscreen`, `hmi`, `display-brightness`, `inactivity-timeout`, `system-power`, `restart`, `poweroff`, `systemd`, `safety` |
 | 2026-11-13 | `RPSW-20261113-002` | verified | [Restore persistent transport controls on every HMI screen](2026/2026-11-13-restore-global-transport-controls.md) | `touchscreen`, `hmi`, `user-experience`, `transport-controls`, `start`, `pause`, `stop`, `accessibility` |
 | 2026-11-13 | `RPSW-20261113-001` | implemented | [Deploy the UI-only HMI kiosk to the Raspberry Pi Touch Display 2](2026/2026-11-13-deploy-hmi-kiosk.md) | `raspberry-pi`, `touch-display-2`, `hmi`, `systemd`, `wayland`, `labwc`, `chromium`, `kiosk`, `deployment` |
