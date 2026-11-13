@@ -1,4 +1,7 @@
-# Portrait Plotter HMI — design handoff (2026-11-11)
+# Portrait Plotter HMI — historical design handoff (2026-11-11)
+
+> **Superseded navigation and scan behavior (2026-11-13):** The newer [hierarchical HMI specification](../../camera-inspection/touchscreen.md) and [runnable browser frontend](../../hmi/README.md) replace the persistent Monitor/Analytics/Machine tabs with **Home → Run/Jog/Tools/Inspect → nested screens with Back buttons**, no bottom navigation/drawer. The newer workflow performs automatic post-print optical center-first/B00-zero registration and scanning after verified safe program completion, leaving the artwork installed; paper fiducials are optional. This file documents the older prototype discussion only. Other safety contracts here (M2, pen park handshake, single sender, A motor degrees, Z/B commissioning) remain applicable.
+
 
 **Status:** Design discussion and simulated UI prototypes only. No production HMI, converter, sender, or firmware changes implemented by this document.
 
