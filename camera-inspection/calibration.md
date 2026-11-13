@@ -53,3 +53,11 @@ At radius 200 mm, 0.15° angular error corresponds to approximately 0.524 mm tan
 ## Interpretation of bed versus paper references
 
 The **purpose of bed fiducials** is to anchor the mechanical bed frame independently of the artwork. The **purpose of paper fiducials** is to register the sheet against that anchored bed frame. Together, after printing, they allow observed ink to be compared in a consistent physical coordinate system with expected executed strokes. This separates global bed registration from paper placement in the model; it does **not** guarantee that every residual has a uniquely identifiable mechanical cause or establish when any sheet movement occurred. Do not require a routine pre-print scan merely to use these references.
+
+## Automatic rolling retention policy (required)
+
+Keep only **three approved calibration generations** on the Pi: current `N`, previous `N-1`, and two back `N-2`. Each generation retains its approved correction profile, associated compact extracted geometry, validation metrics, provenance, and hashes. A drawing that produces no approved model change does **not** advance the generation counter. A failed or canceled candidate is not an approved generation.
+
+After a newly approved generation and its records have been durably committed, atomically update the active-profile pointer, verify the retained three-generation set, then garbage-collect `N-3` and older generations **only when unreferenced by active/unresolved jobs**. Never delete the last known-good rollback target during a partially committed promotion. Recovery after reboot must be idempotent.
+
+Original JPEGs are **temporary**: retain them while scanning, synchronizing, analyzing, validating, or awaiting a final Pi-side commit acknowledgment. After Windows returns verified geometric measurements and the Pi commits the resolved calibration outcome, automatically delete the JPEGs for successful jobs. On failures, retain required recovery images until retry succeeds or an explicit Cancel Sync & Revert resolves the transaction; after cancellation, clean up temporary images automatically once the cancellation is durably acknowledged. Preserve the small outcome/error record, not indefinite image archives. No routine manual cleanup is required.
