@@ -28,7 +28,7 @@ This subproject extends the existing XYθ pen plotter with an independent camera
 
 ## Goals
 
-- **Finish each drawing before inspection**; then scan the completed artwork with overlapping CoreZB camera images and known stationary bed/camera positions. Use measured, repeatable errors to calibrate **future** prints.
+- **Finish each drawing before inspection**; then scan bed fiducials, paper fiducials and the completed artwork with overlapping CoreZB camera images and known stationary bed/camera positions. Use measured, repeatable errors to calibrate **future** prints.
 - Compare only **executed** reference strokes against actual ink, not future planned strokes.
 - Show projected path, observed ink, and quantified deviations in calibrated millimeters.
 - Use visible black circles at the embedded bed center and perimeter index positions for calibration.
@@ -53,8 +53,8 @@ See [roadmap.md](roadmap.md) for actionable checklists. Keep measurements, calib
 
 ## November 2026 processing split
 
-ESP32-P4-ETH handles MIPI-CSI still capture, supported JPEG encoding, optional lightweight image preprocessing and Ethernet delivery. Raspberry Pi 4 (2 GB) orchestrates mandatory bed-then-paper fiducial scans, captures and archives images, manages approved profile versions, and drives Touch Display 2. Windows performs authoritative stroke-to-G-code registration, geometric error analysis, and rolling-calibration candidate fitting. Post-print tiled still-image inspection is the baseline; software remains to be implemented and benchmarked. See [architecture.md](architecture.md).
+ESP32-P4-ETH handles MIPI-CSI still capture, supported JPEG encoding, optional lightweight image preprocessing and Ethernet delivery. Raspberry Pi 4 (2 GB) orchestrates post-print bed-then-paper fiducial scans, captures and archives images, manages approved profile versions, and drives Touch Display 2. Windows performs authoritative stroke-to-G-code registration, geometric error analysis, and rolling-calibration candidate fitting. Post-print tiled still-image inspection is the baseline; software remains to be implemented and benchmarked. See [architecture.md](architecture.md).
 
-## Mandatory registration and version synchronization
+## Post-print registration and version synchronization
 
-Every job requires **separate bed and paper fiducial registration before printing**, and a **bed-then-paper rescan after printing** before inspecting artwork. The bed frame describes rotary mechanics; the paper frame describes sheet placement and movement. Keep their models separately versioned. Windows must synchronize and verify the Pi-approved calibration profile before applying compensation through the existing converter engine, and the Pi must verify the pinned profile/hash when accepting G-code. See [architecture.md](architecture.md), [calibration.md](calibration.md), and [inspection.md](inspection.md).
+Every job requires **post-print bed-then-paper fiducial registration** before inspecting artwork; no routine pre-print optical registration is required. The bed frame describes rotary mechanics; the paper frame describes sheet placement and movement. Keep their models separately versioned. Windows must synchronize and verify the Pi-approved calibration profile before applying compensation through the existing converter engine, and the Pi must verify the pinned profile/hash when accepting G-code. See [architecture.md](architecture.md), [calibration.md](calibration.md), and [inspection.md](inspection.md).
