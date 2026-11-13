@@ -1,5 +1,24 @@
 # Engineering Log
 
+<a id="elog-20261113-make-feed-override-persistent"></a>
+### 🟩 2026-11-13 - RP23CNC-SOFTWARE/VERIFIED - Make feed override persistent with transport
+
+- Owner review found that Feed Override remained a separate screen while the
+  previous operator console kept feed and Start/Pause/Stop together.
+- Added the 10–200% slider, current percentage, −10%, +10%, and 100% reset to
+  the fixed bottom deck above Start/Resume, Pause, and Stop.
+- Removed the duplicate Feed Override page and Run link. Legacy `#/feed` links
+  redirect to Run, preserving bookmarks.
+- Feed remains a commanded simulation value and is disabled with the transport
+  controls outside demo mode.
+- The smoke suite now covers 16 views, feed controls on every view, feed
+  adjustment/reset, legacy redirection, and all prior UI behavior.
+- A native 720×1280 screenshot confirms the 120-pixel two-row deck leaves the
+  main page scrollable without horizontal overflow.
+- Evidence: `RPSW-20261113-006`.
+- Category: rp23cnc-software, firmware, test, hmi, touchscreen, feed-override,
+  transport-controls, user-experience, navigation, documentation.
+
 <a id="elog-20261113-group-machine-tools-by-operator-intent"></a>
 ### 🟩 2026-11-13 - RP23CNC-SOFTWARE/VERIFIED - Group Machine tools by operator intent
 

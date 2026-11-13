@@ -110,11 +110,12 @@ Escape/Backspace also navigates back (except when Backspace is editing a form
 field). The header, five-axis readout, and bottom transport strip remain fixed;
 body content is independently scrollable when necessary.
 
-The fixed **Start/Resume · Pause · Stop** strip is a machine-control surface,
-not navigation. It remains visible on every screen because operators must be
-able to pause or stop without first navigating home. All three actions remain
-disabled when no verified sender/supervisor is connected. In the demo, Pause
-changes only simulated feed-hold state.
+The fixed **Feed Override + Start/Resume · Pause · Stop** deck is a
+machine-control surface, not navigation. It remains visible on every screen
+because operators must be able to adjust commanded feed, pause, or stop without
+first navigating home. These actions remain disabled when no verified
+sender/supervisor is connected. In the demo, Pause changes only simulated
+feed-hold state.
 
 On load, the same CMY-ring visual appears as a startup splash. It clears on
 touch or automatically after four seconds. The animation uses the preserved
@@ -124,7 +125,6 @@ Navigation hierarchy:
 
     Home
       ├─ Run
-      │   ├─ Feed override
       │   └─ Camera (also under Tools)
       ├─ Jog (Pen XY / Camera ZB / Rotary A)
       ├─ Tools
@@ -144,9 +144,10 @@ Navigation hierarchy:
           ├─ Inspection results
           └─ Approved calibration profiles
 
-Light high-contrast UI, solid high-visibility Start/Pause/Stop controls, ~55px
-minimum command button heights, readable disabled states, no misleading fake
-live feed, no pen-force DRO. Global compact DRO labels are **X/Y** (pen), **A**
+Light high-contrast UI, solid high-visibility feed and Start/Pause/Stop
+controls, ~55px minimum command button heights, readable disabled states, no
+misleading fake live feed, no pen-force DRO. Global compact DRO labels are
+**X/Y** (pen), **A**
 (rotary controller), **Z/B** (raw camera/CoreZB controller axes). In the
 current project, **A is motor-shaft degrees**, not an optically verified bed
 angle; do not silently relabel it as calibrated θ. The CoreZB mechanism must
@@ -158,7 +159,9 @@ diagnostics.
 
 ## Workflow implemented as UI/demo states
 
-1. **RUN:** start/resume, feed hold, confirmation-protected stop, commanded override 10–200% and reset to 100% (demo controls only).
+1. **RUN:** start/resume, feed hold, confirmation-protected stop, commanded
+   override 10–200%, and reset to 100%. Feed and transport controls are
+   persistently available outside the scrolling page body (demo controls only).
 2. **JOG:** select Pen XY / Camera ZB / Rotary A, step 0.1/1/10, directional pad, lockout unless known-safe Idle (demo only; actual soft limits and homing not commissioned).
 3. **TOOLS → Optical registration:** center-first optical orbit fit → unique B00 east-side theta datum → outer-ring fiducials. Artwork remains taped to the bed; AprilTags must be visible. No Hall/center sensor is presumed on the camera gantry. The demo progresses through 5 steps.
 4. **INSPECT:** after verified normal end and safe pen park, optical registration → artwork scan → queued still-image package → Windows analysis and validation → Pi commit or cancel/revert acknowledgment → gate release. In demo, System status offers a **Simulate verified job completion** test path, explicitly not an actual safety signal.
@@ -185,7 +188,8 @@ On a development machine with Node.js, run:
 
     node hmi/tests/smoke.cjs
 
-The dependency-free smoke script checks offline lockouts, all 17 views, header
+The dependency-free smoke script checks offline lockouts, all 16 views, the
+persistent feed/transport deck,
 Hold/Resume, confirmation-gated simulated completion, registration, scanning,
 sync, and direct-link Back fallback. It passed on Node.js 25.5.0 on the Windows
 development host. Node.js is not installed on RPI4-HMI, and no package was
@@ -195,7 +199,7 @@ through its loopback DevTools endpoint with coordinate-level touch input.
 ## Checks run on the first implementation
 
 - JavaScript syntax compiled successfully.
-- All 17 rendered views loaded through the navigation logic in a simulated DOM.
+- All 16 rendered views loaded through the navigation logic in a simulated DOM.
 - Synthetic journey checked: Run → verified-completion confirmation → five registration steps → four scan increments → pending package → evaluation → submission gate unlocked.
 - Start is available globally while idle, Pause while running, Resume while
   held, and Stop while running or held. The persistent strip remains visible

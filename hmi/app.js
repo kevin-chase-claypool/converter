@@ -6,7 +6,7 @@
   "use strict";
   var pages = {
     home: ["Home", null],
-    run: ["Run", "home"], feed: ["Feed override", "run"],
+    run: ["Run", "home"],
     jog: ["Jog", "home"],
     tools: ["Tools", "home"], register: ["Optical registration", "tools"],
     fiducials: ["Fiducial diagnostics", "tools"], camera: ["Camera", "tools"],
@@ -54,6 +54,9 @@
     return app.demo ? statusNames[app.stage] : "Not connected";
   }
   function locked() { return !app.demo || app.stage !== "ready"; }
+  function normalizePage(value) {
+    return pages[value] ? value : (value === "feed" ? "run" : "home");
+  }
   function canJog() { return app.demo && app.machine === "idle" && app.stage === "ready"; }
   function canStart() { return app.demo && app.loaded && app.stage === "ready" && app.machine === "idle"; }
   function canHold() { return app.demo && app.machine === "run"; }
@@ -185,16 +188,8 @@
         progress(app.demo?app.progress:0),true)+
       card('<div class="split"><h2>Camera</h2>'+badge("Still/preview","blue")+'</div>'+cameraView()+
         button("Open camera views","camera-page","ghost",true),true)+
-      nav("feed","⇅","Feed override",app.demo?app.override+"% commanded override":"Adjust commanded feed and reset to 100%")+
       strip((locked()?"New G-code submission is locked or unavailable.":"Next job submission available (simulation only).")+" Physical emergency stop remains separate.","")+
       '</div>';
-  }
-  function renderFeed(){
-    return '<div class="stack">'+motionBanner()+card(
-      '<h2>Commanded feed override</h2><div class="split"><span class="muted">Override setting</span><b id="override-label">'+app.override+'%</b></div>'+
-      '<input type="range" class="slider" min="10" max="200" step="10" value="'+app.override+'" data-input="override" aria-label="Commanded feed override"'+(!app.demo?' disabled':'')+'>'+
-      '<div class="btn-row">'+button("−10%","feed-down","ghost",app.demo)+button("Reset 100%","feed-reset","primary",app.demo)+button("+10%","feed-up","ghost",app.demo)+'</div>'+
-      strip("The override is a command, not the reported actual feed rate. Final sender integration must supply and verify acknowledgements."),false)+'</div>';
   }
   function renderJog(){
     var axisHint = app.jogSystem==="pen"?"Pen X/Y axes":
@@ -394,16 +389,26 @@
         '<p class="small muted">Demo transitions are synthetic and do not prove park sensing, machine homing or image accuracy. No demonstration action talks to hardware.</p>',false)+'</div>';
   }
   var renderers = {
-    home:renderHome,run:renderRun,feed:renderFeed,jog:renderJog,tools:renderTools,
+    home:renderHome,run:renderRun,jog:renderJog,tools:renderTools,
     register:renderRegister,fiducials:renderFiducials,camera:renderCamera,pen:renderPen,
     frames:renderFrames,settings:renderPiSettings,inspect:renderInspect,scan:renderScan,sync:renderSync,
     results:renderResults,profiles:renderProfiles,system:renderSystem
   };
   function renderTransport(){
+    var feedEnabled=app.demo;
     document.getElementById("transport").innerHTML=
-      button(canResume()?"Resume":"Start",canResume()?"resume":"start","green",canResume()||canStart())+
-      button("Pause","hold","amber",canHold())+
-      button("Stop","stop","red",canStop());
+      '<div class="transport-feed">'+
+        '<span class="transport-feed-copy"><small>FEED</small><b id="override-label">'+app.override+'%</b></span>'+
+        '<button type="button" class="transport-step" data-action="feed-down"'+(feedEnabled?'':' disabled')+' aria-label="Decrease feed override by 10 percent">−10</button>'+
+        '<input type="range" class="transport-slider" min="10" max="200" step="10" value="'+app.override+'" data-input="override" aria-label="Commanded feed override"'+(feedEnabled?'':' disabled')+'>'+
+        '<button type="button" class="transport-step" data-action="feed-up"'+(feedEnabled?'':' disabled')+' aria-label="Increase feed override by 10 percent">+10</button>'+
+        '<button type="button" class="transport-reset" data-action="feed-reset"'+(feedEnabled?'':' disabled')+' aria-label="Reset feed override to 100 percent">100%</button>'+
+      '</div>'+
+      '<div class="transport-actions">'+
+        button(canResume()?"Resume":"Start",canResume()?"resume":"start","green",canResume()||canStart())+
+        button("Pause","hold","amber",canHold())+
+        button("Stop","stop","red",canStop())+
+      '</div>';
   }
   function render(){
     var page=pages[app.page]?app.page:"home";
@@ -440,8 +445,10 @@
     }
   }
   window.addEventListener("popstate",function(){
-    var next=window.location.hash.replace(/^#\//,"");
-    app.page=pages[next]?next:"home";
+    var requested=window.location.hash.replace(/^#\//,"");
+    var next=normalizePage(requested);
+    app.page=next;
+    if(next!==requested)window.history.replaceState({page:next,depth:0},"","#/"+next);
     render();
   });
   document.addEventListener("keydown",function(e){
@@ -617,26 +624,31 @@
     var b=e.target.closest("[data-action]");
     if(b&&!b.disabled)action(b.dataset.action);
   });
+  document.getElementById("transport").addEventListener("input",function(e){
+    if(e.target.dataset.input==="override"&&app.demo){
+      app.override=Number(e.target.value);
+      var label=document.getElementById("override-label");if(label)label.textContent=app.override+"%";
+    }
+  });
+  document.getElementById("transport").addEventListener("change",function(e){
+    if(e.target.dataset.input==="override"&&app.demo)toast("Override preview: "+app.override+"% (not sent)");
+  });
   document.getElementById("dialog-root").addEventListener("click",function(e){
     var b=e.target.closest("[data-action]");
     if(b)action(b.dataset.action);
   });
   root.addEventListener("input",function(e){
-    if(e.target.dataset.input==="override"&&app.demo){
-      app.override=Number(e.target.value);
-      var label=document.getElementById("override-label");if(label)label.textContent=app.override+"%";
-    }else if(e.target.dataset.input==="brightness"){
+    if(e.target.dataset.input==="brightness"){
       app.brightness=Number(e.target.value);
       var brightnessLabel=document.getElementById("brightness-label");
       if(brightnessLabel)brightnessLabel.textContent=app.brightness+" / 31 · "+Math.round(app.brightness*100/31)+"%";
     }
   });
   root.addEventListener("change",function(e){
-    if(e.target.dataset.input==="override"&&app.demo)toast("Override preview: "+app.override+"% (not sent)");
-    else if(e.target.dataset.input==="brightness")saveBrightness(app.brightness);
+    if(e.target.dataset.input==="brightness")saveBrightness(app.brightness);
   });
   var initial=window.location.hash.replace(/^#\//,"");
-  app.page=pages[initial]?initial:"home";
+  app.page=normalizePage(initial);
   window.history.replaceState({page:app.page,depth:0},"","#/"+app.page);
   render();
   setSplash("startup");

@@ -21,16 +21,15 @@ outside mock mode.
 - A full-screen CMY-ring startup and inactivity splash provides explicit
   touch-to-continue behavior. The startup view clears on touch or after four
   seconds; the inactivity view retains its explanatory timeout state.
-- A fixed bottom **Start/Resume · Pause · Stop** transport strip is available on
-  every screen. It is a machine-control surface rather than navigation and
-  remains fully disabled until the single sender/supervisor provides verified
-  state. Physical E-stop remains independent.
+- A fixed bottom **Feed Override + Start/Resume · Pause · Stop** deck is
+  available on every screen. It is a machine-control surface rather than
+  navigation and remains fully disabled until the single sender/supervisor
+  provides verified state. Physical E-stop remains independent.
 
 ## Navigation tree
 
     Home
       Run
-        Feed override
         Camera view
       Jog
         Pen XY / Camera ZB / Rotary A (mode selector inside Jog)
@@ -64,9 +63,11 @@ These are feature screens, not permanent nav tabs. Back returns to the prior pag
 
 ### Run
 - File, progress, ETA when credible, and camera preview/still thumbnail. Global
-  Start/Resume, Pause, and Stop remain available outside the scrolling body.
+  feed override, Start/Resume, Pause, and Stop remain available outside the
+  scrolling body.
 - Stop confirmation with **Cancel — Do Nothing**; state-aware enablement.
-- Feed override 10–200%, ±10%, 100% reset; distinguish commanded override from actual reported feed.
+- Persistent feed override 10–200%, ±10%, and 100% reset; distinguish commanded
+  override from actual reported feed.
 - New job remains locked until previous post-print calibration/synchronization transaction is resolved and Pi acknowledged.
 
 ### Jog

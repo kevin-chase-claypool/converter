@@ -64,6 +64,9 @@ function boot(search, hash) {
   assert.match(s.nodes.transport.innerHTML,/data-action="start"[^>]+disabled/);
   assert.match(s.nodes.transport.innerHTML,/data-action="hold"[^>]+disabled/);
   assert.match(s.nodes.transport.innerHTML,/data-action="stop"[^>]+disabled/);
+  assert.match(s.nodes.transport.innerHTML,/data-action="feed-down"[^>]+disabled/);
+  assert.match(s.nodes.transport.innerHTML,/data-action="feed-up"[^>]+disabled/);
+  assert.match(s.nodes.transport.innerHTML,/data-input="override"[^>]+disabled/);
 }
 {
   const s=boot("?demo=1");
@@ -83,7 +86,7 @@ function boot(search, hash) {
 {
   const s=boot("?demo=1");
   const cases={
-    run:"Current job",feed:"Commanded feed override",jog:"Manual positioning",
+    run:"Current job",jog:"Manual positioning",
     tools:"Machine tools",register:"Registration sequence",
     fiducials:"Permanent ring",camera:"Image source",pen:"Protected operations",
     frames:"Coordinate references",settings:"Display brightness",inspect:"Post-print workflow",
@@ -96,12 +99,19 @@ function boot(search, hash) {
     assert.match(s.nodes.transport.innerHTML,/data-action="start"/,"Missing global Start on "+page);
     assert.match(s.nodes.transport.innerHTML,/data-action="hold"[^>]+>Pause</,"Missing global Pause on "+page);
     assert.match(s.nodes.transport.innerHTML,/data-action="stop"[^>]+>Stop</,"Missing global Stop on "+page);
+    assert.match(s.nodes.transport.innerHTML,/data-action="feed-down"/,"Missing global feed decrease on "+page);
+    assert.match(s.nodes.transport.innerHTML,/data-action="feed-up"/,"Missing global feed increase on "+page);
+    assert.match(s.nodes.transport.innerHTML,/data-input="override"/,"Missing global feed slider on "+page);
   }
   s.page("tools");
   assert.equal((s.nodes.view.innerHTML.match(/class="tool-section"/g)||[]).length,3);
   assert.match(s.nodes.view.innerHTML,/Inspection & alignment/);
   assert.match(s.nodes.view.innerHTML,/Machine setup/);
   assert.match(s.nodes.view.innerHTML,/Host & diagnostics/);
+  s.action("feed-up","transport");
+  assert.match(s.nodes.transport.innerHTML,/110%/);
+  s.action("feed-reset","transport");
+  assert.match(s.nodes.transport.innerHTML,/100%/);
   s.page("system");
   s.action("start","transport");
   assert.doesNotMatch(s.nodes.transport.innerHTML,/data-action="hold"[^>]+disabled/);
@@ -145,4 +155,9 @@ function boot(search, hash) {
   assert.match(s.nodes.view.innerHTML,/Post-print workflow/);
   assert.equal(s.window.location.hash,"#/inspect");
 }
-console.log("HMI smoke checks passed: offline gates, 17 views, transport, settings, splash/timeout, Back fallback and demo lifecycle.");
+{
+  const s=boot("?demo=1","#/feed");
+  assert.equal(s.window.location.hash,"#/run");
+  assert.match(s.nodes.view.innerHTML,/Current job/);
+}
+console.log("HMI smoke checks passed: offline gates, 16 views, persistent feed/transport, settings, splash/timeout, Back fallback and demo lifecycle.");
