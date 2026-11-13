@@ -97,6 +97,11 @@ function boot(search, hash) {
     assert.match(s.nodes.transport.innerHTML,/data-action="hold"[^>]+>Pause</,"Missing global Pause on "+page);
     assert.match(s.nodes.transport.innerHTML,/data-action="stop"[^>]+>Stop</,"Missing global Stop on "+page);
   }
+  s.page("tools");
+  assert.equal((s.nodes.view.innerHTML.match(/class="tool-section"/g)||[]).length,3);
+  assert.match(s.nodes.view.innerHTML,/Inspection & alignment/);
+  assert.match(s.nodes.view.innerHTML,/Machine setup/);
+  assert.match(s.nodes.view.innerHTML,/Host & diagnostics/);
   s.page("system");
   s.action("start","transport");
   assert.doesNotMatch(s.nodes.transport.innerHTML,/data-action="hold"[^>]+disabled/);

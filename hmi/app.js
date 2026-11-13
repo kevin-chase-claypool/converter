@@ -221,15 +221,21 @@
       '</div>';
   }
   function renderTools(){
-    return '<div class="stack"><h1>Machine tools</h1><div class="nav-list">'+
-      nav("register","◎","Optical registration","Bed center first, then B00 Theta zero")+
-      nav("fiducials","▦","Fiducial diagnostics","20 permanent outer-ring AprilTags")+
-      nav("camera","▣","Camera inspection station","Preview, last image, and overlays")+
-      nav("pen","✎","Pen and homing tools","Protected park and controller-owned macros")+
-      nav("frames","⌖","Coordinates & work zero","Five-axis coordinates and reference frames")+
-      nav("settings","⏻","Pi settings & power","Display, network and safe system actions")+
-      nav("system","ℹ","System diagnostics","Connection health and demo controls")+
-      '</div></div>';
+    function toolSection(title,caption,items){
+      return '<section class="tool-section"><div class="tool-section-head"><h2>'+title+'</h2><span>'+caption+'</span></div><div class="nav-list">'+items+'</div></section>';
+    }
+    return '<div class="stack"><div class="section-head"><h1>Machine tools</h1>'+badge("3 groups","blue")+'</div>'+
+      toolSection("Inspection & alignment","Optical reference and camera",
+        nav("register","◎","Optical registration","Bed center first, then B00 Theta zero")+
+        nav("fiducials","▦","Fiducial diagnostics","20 permanent outer-ring AprilTags")+
+        nav("camera","▣","Camera inspection station","Preview, last image, and overlays"))+
+      toolSection("Machine setup","Motion, macros, and coordinates",
+        nav("pen","✎","Pen, homing & macros","Protected operations and controller-owned sequences")+
+        nav("frames","⌖","Coordinates & work zero","Five-axis coordinates and reference frames"))+
+      toolSection("Host & diagnostics","Pi services and connection health",
+        nav("settings","⏻","Pi settings & power","Display, network and safe system actions")+
+        nav("system","ℹ","System diagnostics","Connection health and demo controls"))+
+      '</div>';
   }
   function regSteps(){
     var labels=["Home CoreZB and verify geometry","Fit bed center from rotating fiducials","Align B00 to calibrated east-side θ=0°","Check outer fiducial ring","Save registration evidence"];

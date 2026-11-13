@@ -128,12 +128,16 @@ Navigation hierarchy:
       │   └─ Camera (also under Tools)
       ├─ Jog (Pen XY / Camera ZB / Rotary A)
       ├─ Tools
-      │   ├─ Optical registration
-      │   ├─ Fiducial diagnostics
-      │   ├─ Camera
-      │   ├─ Pen tools / protected macros
-      │   ├─ Coordinates / work zero
-      │   └─ System status
+      │   ├─ Inspection & alignment
+      │   │   ├─ Optical registration
+      │   │   ├─ Fiducial diagnostics
+      │   │   └─ Camera
+      │   ├─ Machine setup
+      │   │   ├─ Pen, homing & macros
+      │   │   └─ Coordinates / work zero
+      │   └─ Host & diagnostics
+      │       ├─ Pi settings & power
+      │       └─ System status
       └─ Inspect
           ├─ Scan progress
           ├─ Windows sync & recovery
@@ -148,6 +152,9 @@ current project, **A is motor-shaft degrees**, not an optically verified bed
 angle; do not silently relabel it as calibrated θ. The CoreZB mechanism must
 not be presented as Cartesian camera X/Y until the kinematics are actually
 commissioned. Actual feed reporting is distinct from commanded feed override.
+The Tools hub groups destinations by operator intent rather than presenting one
+undifferentiated list: inspection/alignment, machine setup, and host
+diagnostics.
 
 ## Workflow implemented as UI/demo states
 

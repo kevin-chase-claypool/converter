@@ -35,13 +35,16 @@ outside mock mode.
       Jog
         Pen XY / Camera ZB / Rotary A (mode selector inside Jog)
       Tools
-        Optical registration
-        Fiducial diagnostics
-        Camera
-        Pen tools and protected macros
-        Coordinate references and work zero
-        Pi settings and power
-        System status
+        Inspection & alignment
+          Optical registration
+          Fiducial diagnostics
+          Camera
+        Machine setup
+          Pen tools and protected macros
+          Coordinate references and work zero
+        Host & diagnostics
+          Pi settings and power
+          System status
       Inspect
         Scan progress
         Windows synchronization / recovery
@@ -72,6 +75,9 @@ These are feature screens, not permanent nav tabs. Back returns to the prior pag
 - No direct browser-to-controller stream; only one sender/motion authority.
 
 ### Tools
+- The hub divides destinations into **Inspection & alignment**, **Machine
+  setup**, and **Host & diagnostics** groups so operators can scan by intent
+  without adding another navigation level.
 - Optical registration with steps: (1) home CoreZB and establish calibrated pose; (2) estimate **physical bed center first** from multi-angle ring observations; (3) align uniquely coded B00 to the east station for optical θ=0°; (4) inspect ring; (5) save confidence/measurements. **Drawing/paper remains taped down**. All 20 peripheral tags must be unobstructed as needed.
 - Fiducial diagnostics: 20 distinct B00–B19 identities, visibility/quality/position and capture errors.
 - Camera: selectable preview, still and overlay views, no stretched image, clearly separated fake/real imagery.

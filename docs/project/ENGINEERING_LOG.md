@@ -1,5 +1,21 @@
 # Engineering Log
 
+<a id="elog-20261113-group-machine-tools-by-operator-intent"></a>
+### 🟩 2026-11-13 - RP23CNC-SOFTWARE/VERIFIED - Group Machine tools by operator intent
+
+- Owner review found the seven-item Machine tools page difficult to scan as a
+  flat list.
+- Grouped the same destinations under Inspection & alignment, Machine setup,
+  and Host & diagnostics. Each group has a concise intent description.
+- Added no extra navigation level and changed no route, control availability,
+  or safety behavior.
+- The smoke suite verifies exactly three groups and the existing 17 views. A
+  native 720×1280 screenshot confirms all seven large rows fit with the fixed
+  DRO and transport strip.
+- Evidence: `RPSW-20261113-005`.
+- Category: rp23cnc-software, firmware, test, hmi, touchscreen, navigation,
+  machine-tools, user-experience, information-architecture, documentation.
+
 <a id="elog-20261113-restore-branded-startup-and-inactivity-splash"></a>
 ### 🟩 2026-11-13 - RP23CNC-SOFTWARE/VERIFIED - Restore branded startup and inactivity splash
 

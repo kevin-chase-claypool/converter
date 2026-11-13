@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-13 | `RPSW-20261113-005` | verified | [Group Machine tools by operator intent](2026/2026-11-13-group-machine-tools.md) | `touchscreen`, `hmi`, `navigation`, `machine-tools`, `user-experience`, `information-architecture` |
 | 2026-11-13 | `RPSW-20261113-004` | verified | [Restore the branded startup and inactivity splash](2026/2026-11-13-restore-branded-splash-screen.md) | `touchscreen`, `hmi`, `splash-screen`, `inactivity-timeout`, `branding`, `cmy`, `accessibility` |
 | 2026-11-13 | `RPSW-20261113-003` | implemented | [Restore Pi display settings and add confirmed power controls](2026/2026-11-13-restore-pi-settings-power-controls.md) | `touchscreen`, `hmi`, `display-brightness`, `inactivity-timeout`, `system-power`, `restart`, `poweroff`, `systemd`, `safety` |
 | 2026-11-13 | `RPSW-20261113-002` | verified | [Restore persistent transport controls on every HMI screen](2026/2026-11-13-restore-global-transport-controls.md) | `touchscreen`, `hmi`, `user-experience`, `transport-controls`, `start`, `pause`, `stop`, `accessibility` |

@@ -36,6 +36,11 @@ h3{font-size:16px}
 .card{background:#fff;border:1px solid #d8e0ec;border-radius:17px;padding:17px;display:grid;gap:12px;box-shadow:0 1px 2px #20315408}
 .card.compact{padding:13px;gap:8px}
 .nav-list{display:grid;gap:9px}
+.tool-section{display:grid;gap:8px}
+.tool-section+.tool-section{margin-top:7px}
+.tool-section-head{display:grid;gap:3px;padding:2px 4px}
+.tool-section-head h2{font-size:15px;color:#354b67;letter-spacing:.055em;text-transform:uppercase}
+.tool-section-head span{font-size:11px;color:#64758a}
 .nav-item{width:100%;border:1px solid #d8e0ec;background:#fff;border-radius:15px;min-height:76px;padding:14px 16px;display:flex;align-items:center;gap:14px;text-align:left;color:#142740;box-shadow:0 1px 2px #20315408}
 .nav-item:hover{background:#f0f5ff;border-color:#a6bfe9}
 .nav-icon{width:46px;height:46px;border-radius:12px;background:#eaf0ff;color:#165acb;display:grid;place-items:center;font-size:23px;flex-shrink:0}
