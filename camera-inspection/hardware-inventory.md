@@ -7,7 +7,7 @@
 | Hardware | Model / details | Status | Notes |
 |---|---|---|---|
 | Main controller | RP23CNC, grblHAL | Owned / in use | Ethernet to ioSender |
-| Host | Windows laptop, ioSender V2 | Owned / in use | Job sender |
+| Machine-side host | Raspberry Pi 4, 2 GB | Owned / being configured | Planned G-code sender, inspection computation and local HMI; Windows laptop retained for development |
 | Microcontrollers | Raspberry Pi Pico 2; Pro Micro RP2350 | Used/discussed | Final role of each to verify |
 | X/Y drivers | BTT TMC2209 v1.3 | Owned / in use | |
 | θ driver | TB6600 | Owned / in use | 12 V initially; 24 V considered |
@@ -43,12 +43,12 @@
 | Network switch | Steloproad 3-port Gigabit PoE switch, 12–48 V advertised | **Selected; purchase unconfirmed** | Actual port count, 12 V input and PoE output capability |
 | Lighting | BTF-LIGHTING 12 V, 4000 K COB LED strip | **Selected; purchase unconfirmed** | Two ~500 mm stationary segments, wiring |
 | Gantry structure | Independent CoreZB overhead camera XY; 3030 extrusion | **Planned** | Rail length, motor brackets, alignment |
-| Motors and drivers | CoreZB stepper pair, drivers | **Not finalized** | Torque, controller allocation, supply |
+| Motors and drivers | Two 17HS15-1504S-X1 steppers and TB6600 drivers proposed for CoreZB | **Planned; installation unverified** | Axis/controller mapping, torque and supply budget |
 | Belts, pulleys, idlers | GT2/CoreXY-style | **Planned** | Belt width, geometry, tensioning |
 | Linear guides | Rails and carriages | **Not finalized** | Exact size/length |
 | Camera mount | Rigid, adjustable mount | **Planned** | Tilt and optical offset calibration |
-| Display | 7-inch 1280×720 landscape touchscreen | **Specified; purchase unconfirmed** | Actual display model, touch connection |
-| Display host | Ethernet-connected browser-capable SBC | **Planned** | Model, power, browser performance |
+| Display | Official Raspberry Pi Touch Display 2 | **User-reported in use/possession** | Direct Pi connection, orientation and enclosure |
+| Display host | Raspberry Pi 4 (2 GB) | **Owned / configured** | Shared G-code sender and inspection workload; no separate display SBC |
 | Network cabling | Cat6A ~10 ft, drag-chain-rated option | **Discussed; purchase unconfirmed** | Flex rating, cable routing |
 | PoE injector | Standalone PoE injector | **Considered** | May not be needed with suitable switch |
 | Power conversion | 12 V fused distribution, 5 V buck as needed | Existing distribution; additions planned | Load and protection calculations |
@@ -80,9 +80,17 @@ Check receipts or delivered parts before changing any selection to **Purchased**
 
 ## 5. Integration checks
 
-1. Count Ethernet endpoints: PC, RP23CNC, ESP32-P4 and display host. Confirm switch ports before buying.
+1. Count Ethernet endpoints: Pi 4, RP23CNC, and ESP32-P4; laptop is optional for development. Confirm switch ports before buying.
 2. Verify 12 V switch input and whether it can actually supply required PoE at that input.
 3. Confirm exact ESP32-P4 CSI driver and OV5647 compatibility before committing to cable/mount.
 4. Confirm camera exposure timestamp can be associated with camera gantry pose and θ pose.
 5. Distinguish encoder/motor command resolution from independently measured position accuracy.
 6. Preserve original receipts/part numbers and record installed revision once confirmed.
+
+## November 2026 architecture and power updates
+
+- Retain existing **12 V, 10 A (120 W)** plotter supply as the selected system power source; do not assume a measured 120 W margin. Recalculate worst-case simultaneous motor, lighting, network, PoE, Pi and display demand before final wiring.
+- Pi 4 is the **2 GB** model; inspection must use bounded image buffers and disk-backed tile storage.
+- Pi 4 Touch Display 2 replaces the previously planned standalone Ethernet touchscreen. Pi power arrangement includes a Geekworm UPS/battery solution under integration; verify actual board model, battery path, PoE HAT removal, safe shutdown, and cooling clearance before documenting final wiring.
+- ESP32-P4-ETH is the camera capture/preprocessing node; the Pi performs reference-versus-actual geometric comparison. Exact CSI camera/driver compatibility remains a validation item.
+- Do not mark legacy shopping-list parts purchased without explicit confirmation; some earlier checklist entries are superseded by the new Pi/display selection.
