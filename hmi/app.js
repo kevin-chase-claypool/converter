@@ -282,7 +282,7 @@
     if(page!=="home") bar='<button class="back" type="button" data-action="back" aria-label="Go back">‹</button>';
     document.getElementById("app-bar").innerHTML=bar+
       '<div class="bar-title">'+pages[page][0]+'<div class="bar-sub">XY-Theta Plotter · '+(app.demo?"SIMULATION":"UI PREVIEW")+'</div></div>'+
-      badge(app.demo?"DEMO":"OFFLINE",app.demo?"blue":"warn");
+      (canStop()?'<div class="bar-actions"><button type="button" class="quick quick-hold" data-action="'+(canResume()?"resume":"hold")+'">'+(canResume()?"Resume":"Hold")+'</button><button type="button" class="quick quick-stop" data-action="stop">Stop</button></div>':badge(app.demo?"DEMO":"OFFLINE",app.demo?"blue":"warn"));
     var ax=app.positions;
     document.getElementById("dro").innerHTML=["X","Y","A","Z","B"].map(function(a){
       return '<div class="axis"><small>'+a+(a==="A"?" °":" mm")+'</small><strong>'+(app.demo?ax[a].toFixed(a==="A"?1:2):"—")+'</strong></div>';
@@ -294,14 +294,19 @@
   function go(page) {
     if(!pages[page])return;
     app.page=page;
-    window.history.pushState({page:page},"","#/"+page);
+    var depth=(window.history.state&&window.history.state.depth||0)+1;
+    window.history.pushState({page:page,depth:depth},"","#/"+page);
     render();
     root.focus({preventScroll:true});
   }
   function back(){
     if(app.page==="home")return;
-    if(window.history.state&&window.history.state.page===app.page&&window.history.length>1)window.history.back();
-    else go(pages[app.page][1]||"home");
+    if(window.history.state&&window.history.state.depth>0)window.history.back();
+    else {
+      app.page=pages[app.page][1]||"home";
+      window.history.replaceState({page:app.page,depth:0},"","#/"+app.page);
+      render();root.focus({preventScroll:true});
+    }
   }
   window.addEventListener("popstate",function(){
     var next=window.location.hash.replace(/^#\//,"");
@@ -410,7 +415,8 @@
     if(b.dataset.action)action(b.dataset.action);
   });
   document.getElementById("app-bar").addEventListener("click",function(e){
-    if(e.target.closest('[data-action="back"]'))back();
+    var b=e.target.closest("[data-action]");
+    if(b)action(b.dataset.action);
   });
   document.getElementById("dialog-root").addEventListener("click",function(e){
     var b=e.target.closest("[data-action]");
@@ -427,6 +433,6 @@
   });
   var initial=window.location.hash.replace(/^#\//,"");
   app.page=pages[initial]?initial:"home";
-  window.history.replaceState({page:app.page},"","#/"+app.page);
+  window.history.replaceState({page:app.page,depth:0},"","#/"+app.page);
   render();
 })();
