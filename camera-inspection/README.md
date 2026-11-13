@@ -8,7 +8,10 @@ This subproject extends the existing XYθ pen plotter with an independent camera
 
 ## Navigate the project
 
-**Runnable HMI UI preview:** [hmi/README.md](../hmi/README.md) documents the new Android-style hierarchical navigation and safe demo mode. This is a frontend prototype, **not** a deployed sender or connected optical system.
+**Deployed HMI UI:** [hmi/README.md](../hmi/README.md) documents the Android-style
+hierarchical navigation, safe demo mode, and RPI4-HMI kiosk deployment. This is
+the deployed touchscreen frontend, **not** a live sender or connected optical
+system.
 
 
 | Document | Contents |

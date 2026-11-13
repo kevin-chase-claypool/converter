@@ -1,6 +1,11 @@
 # XY-Theta Touch Display 2 HMI — navigable frontend
 
-**Status: committed, runnable browser UI only.** There is **no live sender, motion supervisor, ESP32-P4 image service, calibration store, or Windows synchronization API** connected to these screens yet. The frontend deliberately never sends motor commands, G-code, machine macros, or synthetic calibration approvals.
+**Status: browser UI deployed to RPI4-HMI; no machine backend yet.** The
+frontend runs in a Chromium kiosk on the Raspberry Pi Touch Display 2. There is
+**no live sender, motion supervisor, ESP32-P4 image service, calibration store,
+or Windows synchronization API** connected to these screens yet. The frontend
+deliberately never sends motor commands, G-code, machine macros, or synthetic
+calibration approvals.
 
 ## Launch on the Pi (or a desktop for review)
 
@@ -12,6 +17,56 @@ Run from the repository root:
 Open **http://127.0.0.1:8080/** in Chromium. For a dedicated Pi kiosk, open the URL with Chromium's --kiosk flag once screen orientation, touch mapping, startup, screen blanking, and display scaling have been verified. The interface targets the official **720×1280 portrait Touch Display 2**, is responsive to smaller browser windows, and uses no external JavaScript/CSS libraries.
 
 **Interactive demo:** open **http://127.0.0.1:8080/?demo=1** or use **Home → System status → Try interactive demo**. Every screen is marked **SIMULATION** and every motion-related interaction changes *only* local mock state. Demo exists to exercise navigation, confirmation dialogs, lockouts and scan/sync progress before backend integration. No demo state is a measurement, captured image or successful hardware command. Without demo mode, the screen says **OFFLINE** and all hardware actions are unavailable.
+
+## Deployed RPI4-HMI configuration
+
+The machine-side deployment on 2026-11-13 uses:
+
+- Debian 13 (Trixie) on a Raspberry Pi 4, Raspberry Pi Touch Display 2 at the
+  active DSI mode **720×1280**, Wayland/labwc, and Chromium 156.
+- `/home/rpi/xytheta-hmi/` for the three static UI files, matching commit
+  `a8ecec1`.
+- Loopback URL **http://127.0.0.1:8766/?demo=1**. The existing
+  `xytheta-settings.service` owns port 8765 for Wi-Fi, brightness, and timeout
+  settings, so it was left unchanged.
+- System service `xytheta-hmi-web.service` for the static Python HTTP server,
+  and user service `xytheta-hmi-kiosk.service` for Chromium.
+- `~/.config/labwc/autostart` to restart the singleton kiosk service after
+  labwc starts. The prior QML autostart file is backed up beside it as
+  `autostart.before-xytheta-web-20261113`; the QML files remain installed for
+  manual fallback.
+
+The reproducible unit and autostart files are in
+[`deploy/`](deploy/). Their installed locations are:
+
+```text
+/etc/systemd/system/xytheta-hmi-web.service
+/home/rpi/.config/systemd/user/xytheta-hmi-kiosk.service
+/home/rpi/.config/labwc/autostart
+```
+
+Current-session verification included HTTP `200 OK`, a mapped Wayland
+Chromium kiosk, one kiosk service, and the requested screens at 720×1280 with
+no horizontal overflow or undersized visible buttons. A Chrome DevTools touch
+test exercised Home → Tools → Optical registration, Run/Camera, Jog, Inspect →
+Windows sync/Calibration profiles, explicit Back paths, and cancel/confirm
+dialog dismissal. A cold reboot and physical finger contact were not performed
+in this deployment session, so boot persistence and panel-level touch mapping
+remain acceptance checks.
+
+### Remote access
+
+Tailscale is not currently installed or active on RPI4-HMI. If remote access is
+added, keep the HMI server bound to loopback and proxy only its port through
+Tailscale Serve rather than binding Python to `0.0.0.0`. The same browser UI can
+then serve both the local touchscreen and an authenticated tailnet client
+without exposing another controller or camera API.
+
+The measured browser footprint while the UI-only deployment was active was
+about **384 MiB proportional set size**, with **420 MiB** total system use and
+about **1.4 GiB** available on the 2 GB Pi. Recheck this budget after adding
+AprilTag processing, image storage, or a live-camera path. Do not run a second
+full HMI locally merely to provide remote access.
 
 ## Navigation philosophy
 
@@ -68,7 +123,12 @@ On a development machine with Node.js, run:
 
     node hmi/tests/smoke.cjs
 
-The dependency-free smoke script checks offline lockouts, all 16 views, header Hold/Resume, confirmation-gated simulated completion, registration, scanning, sync, and direct-link Back fallback. The same test logic was exercised in a sandboxed JavaScript harness during authoring; on-device browser and physical hardware tests are still outstanding.
+The dependency-free smoke script checks offline lockouts, all 16 views, header
+Hold/Resume, confirmation-gated simulated completion, registration, scanning,
+sync, and direct-link Back fallback. It passed on Node.js 25.5.0 on the Windows
+development host. Node.js is not installed on RPI4-HMI, and no package was
+installed solely for this test. The deployed Chromium page was instead tested
+through its loopback DevTools endpoint with coordinate-level touch input.
 
 ## Checks run on the first implementation
 
@@ -77,11 +137,16 @@ The dependency-free smoke script checks offline lockouts, all 16 views, header H
 - Synthetic journey checked: Run → verified-completion confirmation → five registration steps → four scan increments → pending package → evaluation → submission gate unlocked.
 - Contextual Hold action appeared on the header during a simulated active run.
 
-**Not yet tested:** actual Touch Display 2 720×1280 rendering/touch, Chromium kiosk lifecycle, focus trapping, touchscreen multi-hour stability, photo transfer performance, Pi CPU/RAM during AprilTag detection, controller alarms, state staleness, any real jog/macro/feed control, or calibration accuracy. Never confuse a tested mock transition with a tested machine integration.
+**Not yet tested:** cold-boot persistence, physical finger/multitouch mapping,
+focus trapping, touchscreen multi-hour stability, photo transfer performance,
+Pi CPU/RAM during AprilTag detection, controller alarms, state staleness, any
+real jog/macro/feed control, or calibration accuracy. Never confuse a tested
+mock transition with a tested machine integration.
 
 ## Files
 
 - [index.html](index.html) — accessible shell, app bar, five-axis DRO, content viewport.
 - [styles.css](styles.css) — high-contrast portrait layout, nested menu cards, controls and confirmations.
 - [app.js](app.js) — hierarchical router, Back support, view templates, explicit offline/demo safety behavior.
+- [`deploy/`](deploy/) — installed systemd and labwc startup definitions.
 - [Project HMI specification](../camera-inspection/touchscreen.md) — architecture, navigation and integration requirements.

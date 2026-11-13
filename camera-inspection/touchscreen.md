@@ -1,10 +1,19 @@
 # Raspberry Pi Touch Display 2 — HMI specification (November 2026)
 
-**Implementation status:** The standalone, runnable frontend now lives in [../hmi/](../hmi/README.md). It has navigation, responsive layout and an explicitly marked interactive simulation. **Not deployed to the Pi; not attached to a live sender, motor controller, camera or calibration service.** Hardware actions remain disabled outside mock mode.
+**Implementation status:** The standalone frontend lives in
+[../hmi/](../hmi/README.md) and is deployed as an RPI4-HMI Chromium kiosk on
+the Touch Display 2. It has navigation, responsive layout and an explicitly
+marked interactive simulation. It is **not attached to a live sender, motor
+controller, camera or calibration service.** Hardware actions remain disabled
+outside mock mode.
 
 ## Device and design system
 
-- Official Touch Display 2 connected directly to Raspberry Pi 4 (2 GB); target **720×1280 portrait**. Orientation, touch mapping, kiosk startup and exact physical fit must be validated on-device.
+- Official Touch Display 2 connected directly to Raspberry Pi 4 (2 GB);
+  **720×1280 portrait** is active on RPI4-HMI under Wayland/labwc. Chromium is
+  pinned to device scale 1 and the rendered UI has been checked at that exact
+  viewport. Physical finger/multitouch mapping and cold-boot persistence remain
+  open.
 - Material/Android-inspired **hierarchical screens**, **not** Android's bottom navigation/menu drawer and **not** four persistent tabs. Large **Home** buttons lead to Run, Jog, Tools and Inspect. Nested features have an explicit Back button; browser/system Back and Escape also work.
 - Light high-contrast interface, readable typography, strong disabled states, large touch targets; fixed compact app bar and five-axis readout. The content area can scroll when necessary, but bottom navigation never overlays it.
 - Contextual Hold/Resume and Stop buttons remain available in the top app bar during active plotting (once real control is integrated). Physical E-stop remains independent.

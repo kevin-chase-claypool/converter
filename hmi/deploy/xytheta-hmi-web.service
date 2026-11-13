@@ -1,0 +1,38 @@
+# Static UI server for the RPI4-HMI deployment.
+# The existing settings API owns loopback port 8765, so the HMI uses 8766.
+[Unit]
+Description=XY-Theta HMI static web server
+Documentation=https://github.com/kevin-chase-claypool/converter/tree/main/hmi
+After=network.target
+ConditionPathExists=/home/rpi/xytheta-hmi/index.html
+
+[Service]
+Type=simple
+User=rpi
+Group=rpi
+WorkingDirectory=/home/rpi/xytheta-hmi
+ExecStart=/usr/bin/python3 -m http.server 8766 --bind 127.0.0.1 --directory /home/rpi/xytheta-hmi
+Restart=on-failure
+RestartSec=2s
+UMask=0077
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=read-only
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+SystemCallArchitectures=native
+Environment=PYTHONDONTWRITEBYTECODE=1
+
+[Install]
+WantedBy=multi-user.target

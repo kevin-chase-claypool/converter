@@ -1,5 +1,34 @@
 # Engineering Log
 
+<a id="elog-20261113-deploy-ui-only-hmi-kiosk-to-touch-display-2"></a>
+### 🟨 2026-11-13 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Deploy UI-only HMI kiosk to Touch Display 2
+
+- RPI4-HMI now serves commit `a8ecec1`'s browser HMI at
+  `127.0.0.1:8766` and runs it as a fullscreen Chromium kiosk on the active
+  `720x1280` DSI display under Wayland/labwc.
+- The original static-file deployment was not reachable: the earlier Python
+  process exited with `Address already in use` because the existing
+  `xytheta-settings.service` owns loopback port 8765. The settings API was
+  preserved unchanged.
+- Added a hardened system service for the static server and a restart-managed
+  user service for Chromium. The labwc autostart now starts the singleton kiosk;
+  the legacy QML launcher and files are retained as a manual fallback.
+- The active legacy QML UI was stopped only after the Chromium kiosk was
+  running. The kiosk held a Wayland connection and loaded the expected HMI URL.
+- Verification covered HTTP `200 OK`, exact source hashes, all requested
+  navigation paths, nested Back behavior, dialog cancellation, coordinate-level
+  touch input, `720x1280` scale-1 layout, horizontal overflow, and touch-target
+  sizes. The dependency-free repository smoke test also passed on the Windows
+  Node.js host; Node.js was not installed on the Pi.
+- A cold reboot and physical finger/multitouch mapping remain open. No sender,
+  camera, calibration, or motion backend was connected, and no hardware motion
+  command was sent.
+- Evidence: `RPSW-20261113-001`; `hmi/deploy/`;
+  `hmi/README.md`; `camera-inspection/touchscreen.md`.
+- Category: rp23cnc-software, hardware, firmware, test, deployment, hmi,
+  raspberry-pi, touch-display-2, systemd, wayland, labwc, chromium, kiosk,
+  documentation, project management.
+
 <a id="elog-20261104-background-gcode-save"></a>
 ### 🟨 2026-11-04 - WINDOWS SOFTWARE/IMPLEMENTED - Move exact G-code save off the Qt UI thread
 

@@ -1,0 +1,27 @@
+# User service started by hmi/deploy/labwc-autostart after labwc is available.
+[Unit]
+Description=XY-Theta HMI Chromium kiosk
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Environment=DISPLAY=:0
+Environment=WAYLAND_DISPLAY=wayland-0
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=XDG_SESSION_TYPE=wayland
+Environment=XDG_CURRENT_DESKTOP=labwc:wlroots
+ExecStartPre=/usr/bin/curl --silent --show-error --fail --output /dev/null --retry 30 --retry-delay 1 --retry-connrefused http://127.0.0.1:8766/
+ExecStart=/usr/bin/chromium --kiosk --ozone-platform=wayland --force-device-scale-factor=1 --app=http://127.0.0.1:8766/?demo=1 --user-data-dir=/home/rpi/.local/share/xytheta-hmi/chromium --no-first-run --no-default-browser-check --disable-session-crashed-bubble --disable-infobars --disable-component-update --disable-background-networking --disable-sync --disable-extensions --disable-features=Translate,MediaRouter,OptimizationHints --overscroll-history-navigation=0 --password-store=basic
+Restart=always
+RestartSec=3s
+TimeoutStopSec=10s
+NoNewPrivileges=true
+PrivateTmp=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryHigh=512M
+MemoryMax=768M
+
+[Install]
+WantedBy=default.target

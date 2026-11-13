@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-13 | `RPSW-20261113-001` | rp23cnc-software, hardware | implemented | [Deploy the UI-only HMI kiosk to the Raspberry Pi Touch Display 2](rp23cnc-software/2026/2026-11-13-deploy-hmi-kiosk.md) |
 | 2026-11-04 | `WSW-20261104-001` | windows-software | implemented | [Generate and save G-code without freezing the converter](windows-software/2026/2026-11-04-background-gcode-save.md) |
 | 2026-11-03 | `WSW-20261103-002` | windows-software | implemented | [Join endpoint-touching contours to remove unnecessary pen lifts](windows-software/2026/2026-11-03-join-touching-contours.md) |
 | 2026-11-03 | `WSW-20261103-001` | windows-software | implemented | [Add the Ironwood lumberjack Turtletoy sketch](windows-software/2026/2026-11-03-ironwood-turtletoy.md) |

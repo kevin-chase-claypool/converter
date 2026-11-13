@@ -16,7 +16,12 @@
 ## Phase 2 — Host integration
 - [ ] Fork ioSender V2 and inspect code paths for grblHAL status, feed override, jog and streaming.
 - [ ] Add a safe authenticated browser-facing service; keep one motion-control authority.
-- [ ] Deliver 1280×720 UI with persistent DRO, camera, Run/Jog/Tools and progress.
+- [x] Deliver the 720×1280 portrait UI with persistent DRO and
+  Home/Run/Jog/Tools/Inspect navigation, then deploy it to the RPI4-HMI
+  Chromium kiosk (`RPSW-20261113-001`). Camera and machine values remain
+  demo/placeholder data.
+- [ ] Connect the deployed HMI to a safe authenticated status/command service,
+  live camera preview, and real progress/fault state.
 - [ ] Define a post-print scan command and scan-tile pose capture; no live pen-exposure synchronization required for the initial design.
 
 ## Phase 3 — Metrology and inspection
