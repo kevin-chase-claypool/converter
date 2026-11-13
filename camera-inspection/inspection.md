@@ -15,9 +15,9 @@ Colors are UI conventions, not measurements. Suggested: green expected path, cya
 ## Candidate pipeline — completed-print scan
 1. Finish the full print; preserve the G-code and expected pen-down geometry, θ transformations and calibration profile used for that job.
 2. Hold the rotary bed at a known angle; traverse the completed artwork in overlapping CoreZB camera tiles. At each stationary capture, record camera pose, bed angle, exposure settings and image scale.
-3. Undistort image, correct paper-plane perspective, and register to machine/paper coordinates.
+3. **Mandatory first scans:** locate bed fiducials, then paper fiducials, and validate separate bed-to-machine and paper-to-bed transforms. Compare with pre-print fiducial baselines for sheet movement. Undistort images and register camera observations to both frames before artwork matching.
 4. Segment dark ink against background; remove noise and optionally skeletonize/fit line centerlines.
-5. Associate ink strokes with expected executed segments. Exclude future G-code from missing-line detection.
+5. On Windows, associate ink strokes with expected executed segments using the converter's stroke-to-G-code manifest and fiducial-registered expected geometry; label indistinguishable overlapping strokes ambiguous. Exclude future G-code from missing-line detection.
 6. Compute nearest-centerline deviation, mean/RMS/max, coverage/missing length, and confidence.
 7. Render projected/actual/difference layers and return results with frame timestamp and pose.
 
@@ -38,3 +38,9 @@ Plausible on-device targets: acquisition, grayscale/threshold segmentation, ROI 
 - Different ink colors, widths, and lighting.
 - Different camera locations and θ angles.
 - Compare reported error against independent physical measurements.
+
+## Stroke provenance and distributed workflow
+
+The converter should emit a job manifest mapping stable stroke IDs to source SVG geometry, executed G-code block ranges, full commanded XYθ trajectories, expected paper-frame ink paths, converter version and pinned calibration profile/hash. The Pi stores it alongside nominal/corrected G-code and pose-tagged images. Windows performs authoritative correspondence and residual fitting after receiving the inspection dataset; the Pi manages acquisition, local preview and approved-profile synchronization.
+
+Bed fiducials must be scanned before paper fiducials both before printing and after printing, and neither can substitute for the other. Registration quality gates must precede any automatic compensation proposal. A single stationary-theta scan can contain evidence from strokes drawn at many theta angles **if** their execution trajectories are retained, but does not by itself guarantee a uniquely identifiable theta-error model.
