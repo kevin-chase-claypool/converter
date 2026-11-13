@@ -35,3 +35,17 @@ A single perimeter point's trajectory provides excellent center/orbit informatio
 
 ## Illustrative scale
 At radius 200 mm, 0.15° angular error corresponds to approximately 0.524 mm tangential displacement (`r * Δθ_rad`). This is an example, **not** a measured plotter error.
+
+## Required dual fiducial frames (design decision)
+
+**Bed fiducials (B):** Permanent, mechanically stable markers referenced to the rotating bed. They define bed registration relative to the stationary machine frame M and support multi-angle rotary-center and repeatability characterization. The embedded center/index magnets are initial references, **not** proof of physical center or angular accuracy.
+
+**Paper fiducials (P):** Separate marks physically associated with each sheet, defining paper-to-bed placement `T_BP`. Their location must be known relative to the artwork and they must remain visible and undisturbed. Do not infer paper alignment from bed markers alone.
+
+**Required scans:** (1) Before printing, register B then P and store `T_MB` and `T_BP` baselines; (2) after printing, register B then P again before any stroke comparison; (3) compare pre/post paper-to-bed transforms to detect movement; (4) hold theta and scan artwork in overlapping tiles. A changed paper pose is not automatically a machine correction.
+
+**Transform:** `p_M = T_MB(theta) * T_BP * p_P`. Camera-to-machine mapping, lens distortion, exposure pose and uncertainty must also be calibrated. Multiple non-collinear references or equivalent constrained geometry are needed to determine the desired 2D transform; marker geometry and visibility are validation gates.
+
+**Versioning:** Persist bed/rotary model versions separately from per-job paper registration records, with raw measurements, confidence, time, camera calibration and machine configuration. Windows generates compensation candidates from matched ink/G-code residuals; Pi stores approved profiles and historical records. Candidate updates must be validated on independent patterns before promotion.
+
+**Identifiability:** Fiducials remove global registration ambiguity, but do not necessarily identify which of two coincident strokes deposited ink or uniquely separate angular error from other physical effects. Preserve ambiguous observations rather than training on invented correspondences.
