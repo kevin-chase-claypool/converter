@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-13 | `RPSW-20261113-008` | rp23cnc-software | verified | [Use a dark background for the persistent control deck](rp23cnc-software/2026/2026-11-13-dark-persistent-control-deck.md) |
 | 2026-11-13 | `RPSW-20261113-007` | rp23cnc-software | verified | [Retain transport action colors while disabled](rp23cnc-software/2026/2026-11-13-color-code-transport-states.md) |
 | 2026-11-13 | `RPSW-20261113-006` | rp23cnc-software | verified | [Make feed override persistent with Start, Pause, and Stop](rp23cnc-software/2026/2026-11-13-persistent-feed-override.md) |
 | 2026-11-13 | `RPSW-20261113-005` | rp23cnc-software | verified | [Group Machine tools by operator intent](rp23cnc-software/2026/2026-11-13-group-machine-tools.md) |
