@@ -13,8 +13,8 @@ This subproject extends the existing XYθ pen plotter with an independent camera
 | **[Hardware inventory](hardware-inventory.md)** | Existing machine hardware, new CoreZB selections, explicitly owned items, purchase checklist and compatibility risks |
 | **[Architecture](architecture.md)** | Host/ESP32-P4/RP23CNC responsibilities, Ethernet, coordinate systems and synchronization |
 | **[Inspection](inspection.md)** | Captured ink vs executed G-code, projection, segmentation, error metrics and overlays |
-| **[Calibration](calibration.md)** | Center/index circles, fitted rotation center, eccentricity, angular error, backlash and correction validation |
-| **[Touchscreen](touchscreen.md)** | 7-inch 1280×720 landscape UI, X/Y/θ/feed DRO, camera, Run/Jog/Tools |
+| **[Calibration](calibration.md)** | Mandatory independent bed and paper fiducials, pre/post registration, rotary characterization, profile versioning and validation |
+| **[Touchscreen](touchscreen.md)** | Pi Touch Display 2 HMI, X/Y/θ/feed DRO, camera, Run/Jog/Tools |
 | **[Roadmap](roadmap.md)** | Phases, milestones, verification tasks and unresolved decisions |
 
 ## Major subsystems
@@ -22,7 +22,7 @@ This subproject extends the existing XYθ pen plotter with an independent camera
 1. **Existing plotter:** RP23CNC/grblHAL, XY pen gantry, θ rotating 3D-printed bed, independent pen-force subsystem.
 2. **CoreZB:** Independently homed overhead camera XY carriage on the same machine frame.
 3. **Vision node:** Proposed Waveshare ESP32-P4 Ethernet board and MIPI-CSI camera; performance to benchmark.
-4. **Supervisory host:** Raspberry Pi 4 (2 GB) is the planned local G-code sender and inspection host; sender software and integration remain to be validated. Only one sender may control RP23CNC.
+4. **Supervisory host:** Raspberry Pi 4 (2 GB) is the planned local G-code sender, capture coordinator and approved-calibration store; sender software and integration remain to be validated. Only one sender may control RP23CNC.
 5. **Touchscreen:** Official Raspberry Pi Touch Display 2 attached directly to the Pi 4, with native resolution/orientation support.
 6. **Metrology:** Camera registration, rotary-bed center/index calibration, deviation measurement and validated compensation.
 
@@ -53,4 +53,8 @@ See [roadmap.md](roadmap.md) for actionable checklists. Keep measurements, calib
 
 ## November 2026 processing split
 
-ESP32-P4-ETH handles MIPI-CSI still capture, supported JPEG encoding, optional lightweight image preprocessing and Ethernet delivery. Raspberry Pi 4 (2 GB) handles fiducial registration, geometry comparison against executed G-code, error estimation, calibration and Touch Display 2 presentation. Post-print tiled still-image inspection is the baseline; software remains to be implemented and benchmarked. See [architecture.md](architecture.md).
+ESP32-P4-ETH handles MIPI-CSI still capture, supported JPEG encoding, optional lightweight image preprocessing and Ethernet delivery. Raspberry Pi 4 (2 GB) orchestrates mandatory bed-then-paper fiducial scans, captures and archives images, manages approved profile versions, and drives Touch Display 2. Windows performs authoritative stroke-to-G-code registration, geometric error analysis, and rolling-calibration candidate fitting. Post-print tiled still-image inspection is the baseline; software remains to be implemented and benchmarked. See [architecture.md](architecture.md).
+
+## Mandatory registration and version synchronization
+
+Every job requires **separate bed and paper fiducial registration before printing**, and a **bed-then-paper rescan after printing** before inspecting artwork. The bed frame describes rotary mechanics; the paper frame describes sheet placement and movement. Keep their models separately versioned. Windows must synchronize and verify the Pi-approved calibration profile before applying compensation through the existing converter engine, and the Pi must verify the pinned profile/hash when accepting G-code. See [architecture.md](architecture.md), [calibration.md](calibration.md), and [inspection.md](inspection.md).
