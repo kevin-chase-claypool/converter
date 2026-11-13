@@ -49,3 +49,7 @@ At radius 200 mm, 0.15° angular error corresponds to approximately 0.524 mm tan
 **Versioning:** Persist bed/rotary model versions separately from per-job paper registration records, with raw measurements, confidence, time, camera calibration and machine configuration. Windows generates compensation candidates from matched ink/G-code residuals; Pi stores approved profiles and historical records. Candidate updates must be validated on independent patterns before promotion.
 
 **Identifiability:** Fiducials remove global registration ambiguity, but do not necessarily identify which of two coincident strokes deposited ink or uniquely separate angular error from other physical effects. Preserve ambiguous observations rather than training on invented correspondences.
+
+## Interpretation of bed versus paper references
+
+The **purpose of bed fiducials** is to anchor the mechanical bed frame independently of the artwork. The **purpose of paper fiducials** is to register the sheet against that anchored bed frame. Together, after printing, they allow observed ink to be compared in a consistent physical coordinate system with expected executed strokes. This separates global bed registration from paper placement in the model; it does **not** guarantee that every residual has a uniquely identifiable mechanical cause or establish when any sheet movement occurred. Do not require a routine pre-print scan merely to use these references.
