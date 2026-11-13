@@ -42,10 +42,10 @@ Pen-pressure/load-cell controller is separate from ioSender. Do not invent a pre
 - **Performance gates:** Benchmark acquisition time, JPEG size, Ethernet throughput, preprocessing CPU/PSRAM consumption, Pi RAM/CPU, registration accuracy, and total scan time before moving additional operations to the ESP32.
 - **Responsibility boundary:** Windows converter/analysis is the geometric computation authority; Pi is the approved-profile and job-execution authority. Optional ESP32 stroke extraction is a later experiment, not the initial implementation.
 
-## Mandatory two-layer fiducial registration and calibration exchange
+## Post-print two-layer fiducial registration and calibration exchange
 
-1. **Before drawing**, acquire bed fiducials and paper fiducials separately; store both transforms and confidence. Bed markers establish bed-to-machine rotary reference; paper markers establish paper-to-bed placement. Reject or flag jobs if either reference fails its validation threshold.
-2. **After drawing, before artwork inspection**, rescan bed fiducials, then paper fiducials; compare paper-to-bed registration with its pre-print baseline to detect paper movement. Hold the bed at a known angle for the subsequent tiled artwork scan.
+1. **After drawing, before artwork inspection**, scan bed fiducials first and paper fiducials second; estimate independent bed-to-machine and paper-to-bed transforms with confidence. Hold the bed at a known angle for the subsequent tiled artwork scan. No pre-print optical scan is required for normal jobs.
+2. Optional pre-print fiducial captures are reserved for diagnostics or controlled experiments; without a baseline, post-print registration cannot prove whether paper moved during printing.
 3. The transform chain is `p_M = T_MB(theta) * T_BP * p_P` (homogeneous coordinates); camera observations also require calibrated `T_CM`/camera intrinsics and exposure pose. Bed calibration and paper registration are separate, independently versioned records.
 4. Pi retains raw imagery, fiducial measurements, capture pose, approved model history and job manifests. Windows receives datasets and performs stroke-to-G-code correspondence, residual analysis, candidate model fitting and validation. Identical overlapping strokes can remain unidentifiable despite good fiducial registration; label them ambiguous.
 5. Windows checks the Pi's approved calibration profile ID, content hash and schema compatibility **before generating compensated G-code**. It applies the correction once using the converter's existing XYθ kinematics, submits the job with profile/hash and stroke-to-G-code manifest, and the Pi verifies the job before streaming to RP23CNC. The profile is pinned for the accepted job; new models affect future jobs only.
