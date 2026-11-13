@@ -35,6 +35,9 @@ button:disabled{cursor:not-allowed;opacity:.46;filter:grayscale(.2)}
 .transport-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
 .transport .btn{min-height:52px;border-radius:12px;font-size:15px}
 .transport .btn:disabled{opacity:1;background:#e7ecf3!important;color:#5c6b7f!important;border-color:#cbd5e2!important}
+.transport-actions .btn.green:disabled{background:#2f7255!important;color:#e6f1eb!important;border-color:#437b63!important}
+.transport-actions .btn.amber:disabled{background:#d9b64e!important;color:#4a3c19!important;border-color:#c5a340!important}
+.transport-actions .btn.red:disabled{background:#b74b50!important;color:#fae7e7!important;border-color:#9f4145!important}
 h1,h2,h3,p{margin:0}
 h1{font-size:24px;letter-spacing:-.6px}
 h2{font-size:19px;letter-spacing:-.4px}

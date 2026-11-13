@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-13 | `RPSW-20261113-007` | verified | [Retain transport action colors while disabled](2026/2026-11-13-color-code-transport-states.md) | `touchscreen`, `hmi`, `transport-controls`, `color`, `disabled-state`, `user-experience` |
 | 2026-11-13 | `RPSW-20261113-006` | verified | [Make feed override persistent with Start, Pause, and Stop](2026/2026-11-13-persistent-feed-override.md) | `touchscreen`, `hmi`, `feed-override`, `transport-controls`, `user-experience`, `navigation` |
 | 2026-11-13 | `RPSW-20261113-005` | verified | [Group Machine tools by operator intent](2026/2026-11-13-group-machine-tools.md) | `touchscreen`, `hmi`, `navigation`, `machine-tools`, `user-experience`, `information-architecture` |
 | 2026-11-13 | `RPSW-20261113-004` | verified | [Restore the branded startup and inactivity splash](2026/2026-11-13-restore-branded-splash-screen.md) | `touchscreen`, `hmi`, `splash-screen`, `inactivity-timeout`, `branding`, `cmy`, `accessibility` |

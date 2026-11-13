@@ -145,9 +145,11 @@ Navigation hierarchy:
           └─ Approved calibration profiles
 
 Light high-contrast UI, solid high-visibility feed and Start/Pause/Stop
-controls, ~55px minimum command button heights, readable disabled states, no
-misleading fake live feed, no pen-force DRO. Global compact DRO labels are
-**X/Y** (pen), **A**
+controls, ~55px minimum command button heights, and readable disabled states.
+Transport actions retain their green, amber, and red identity colors even while
+disabled rather than collapsing into one generic grey. There is no misleading
+fake live feed or pen-force DRO. Global compact DRO labels are **X/Y** (pen),
+**A**
 (rotary controller), **Z/B** (raw camera/CoreZB controller axes). In the
 current project, **A is motor-shaft degrees**, not an optically verified bed
 angle; do not silently relabel it as calibrated θ. The CoreZB mechanism must
