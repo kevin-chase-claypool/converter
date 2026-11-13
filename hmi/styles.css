@@ -5,7 +5,7 @@ button,input,select{font:inherit}
 button{touch-action:manipulation;cursor:pointer}
 button:disabled{cursor:not-allowed;opacity:.46;filter:grayscale(.2)}
 :focus-visible{outline:3px solid #1463e8;outline-offset:2px}
-.app-shell{height:100dvh;max-width:720px;margin:auto;background:#f7f9fc;display:grid;grid-template-rows:64px 80px minmax(0,1fr) 43px;box-shadow:0 2px 30px #31445a20}
+.app-shell{height:100dvh;max-width:720px;margin:auto;background:#f7f9fc;display:grid;grid-template-rows:64px 80px minmax(0,1fr) 68px 43px;box-shadow:0 2px 30px #31445a20}
 .app-bar{display:flex;align-items:center;gap:12px;padding:0 18px;border-bottom:1px solid #dce3ed;background:#fff}
 .bar-title{font-size:22px;font-weight:750;line-height:1.2;letter-spacing:-.5px;min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar-sub{font-size:12px;color:#52637a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -22,6 +22,9 @@ button:disabled{cursor:not-allowed;opacity:.46;filter:grayscale(.2)}
 .view:focus{outline:none}
 .footer{display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:12px;background:#edf2f8;color:#445875;border-top:1px solid #dce3ed;gap:8px}
 .footer span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.transport{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:8px 18px;background:#fff;border-top:1px solid #cbd6e4;box-shadow:0 -5px 18px #2031540b}
+.transport .btn{min-height:52px;border-radius:12px;font-size:15px}
+.transport .btn:disabled{opacity:1;background:#e7ecf3!important;color:#5c6b7f!important;border-color:#cbd5e2!important}
 h1,h2,h3,p{margin:0}
 h1{font-size:24px;letter-spacing:-.6px}
 h2{font-size:19px;letter-spacing:-.4px}
@@ -94,12 +97,8 @@ h3{font-size:16px}
 .scrim{position:fixed;inset:0;background:#1b2a3e99;display:grid;place-items:center;padding:18px;z-index:20}
 .dialog{width:min(100%,430px);background:white;border-radius:20px;padding:22px;display:grid;gap:16px;box-shadow:0 12px 60px #0004}
 .dialog h2{font-size:23px}
-#toast{position:fixed;bottom:58px;left:50%;transform:translateX(-50%);z-index:30;background:#1e304b;color:#fff;border-radius:12px;padding:12px 17px;min-width:160px;max-width:90vw;box-shadow:0 8px 24px #0003;display:none;text-align:center;font-size:14px}
+#toast{position:fixed;bottom:118px;left:50%;transform:translateX(-50%);z-index:30;background:#1e304b;color:#fff;border-radius:12px;padding:12px 17px;min-width:160px;max-width:90vw;box-shadow:0 8px 24px #0003;display:none;text-align:center;font-size:14px}
 #toast.visible{display:block}
-@media(max-width:460px){.app-shell{grid-template-rows:60px 74px minmax(0,1fr) 39px}.app-bar{padding:0 12px}.bar-title{font-size:18px}.view{padding:12px 13px 18px}.dro{padding:8px 6px;gap:5px}.axis{padding:8px 2px}.axis strong{font-size:13px}.tile{min-height:136px;padding:14px}.tile b{font-size:17px}.tile small{font-size:11px}.btn{padding:8px 6px}.card{padding:14px}.tag-grid{gap:5px}}
+@media(max-width:460px){.app-shell{grid-template-rows:60px 74px minmax(0,1fr) 58px 39px}.app-bar{padding:0 12px}.bar-title{font-size:18px}.view{padding:12px 13px 18px}.dro{padding:8px 6px;gap:5px}.axis{padding:8px 2px}.axis strong{font-size:13px}.tile{min-height:136px;padding:14px}.tile b{font-size:17px}.tile small{font-size:11px}.btn{padding:8px 6px}.card{padding:14px}.tag-grid{gap:5px}.transport{padding:6px 12px;gap:5px}.transport .btn{min-height:46px;font-size:13px}#toast{bottom:104px}}
 @media(max-height:800px){.view{padding-top:11px}.tile{min-height:125px}.stack{gap:10px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
-
-/* Contextual motion actions, never used as a navigation menu. */
-.bar-actions{display:flex;gap:6px;flex-shrink:0}.quick{height:43px;min-width:54px;padding:0 8px;border-radius:10px;border:1px solid transparent;font-size:12px;font-weight:850}.quick-hold{background:#f6ac32;color:#252c38}.quick-stop{background:#ca3737;color:#fff}
-@media(max-width:460px){.bar-actions{gap:4px}.quick{min-width:46px;padding:0 5px;font-size:11px}.app-bar:has(.bar-actions) .bar-sub{display:none}}

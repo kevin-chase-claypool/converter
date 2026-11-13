@@ -100,12 +100,7 @@
     return '<div class="stack">'+motionBanner()+
       card('<div class="split"><h2>Current job</h2>'+badge(app.demo?app.machine.toUpperCase():"NO SENDER",app.demo?"blue":"warn")+'</div>'+
         meta([["File",app.demo?"calibration_test.gcode":"No G-code loaded"],["Progress",app.demo?app.progress+"%":"—"],["ETA","Unavailable"]])+
-        progress(app.demo?app.progress:0)+
-        '<div class="btn-row">'+
-          button(app.machine==="hold"?"Resume":"Start",app.machine==="hold"?"resume":"start","green",canResume()||canStart())+
-          button("Hold","hold","amber",canHold())+
-          button("Stop","stop","red",canStop())+
-        '</div>',true)+
+        progress(app.demo?app.progress:0),true)+
       card('<div class="split"><h2>Camera</h2>'+badge("Still/preview","blue")+'</div>'+cameraView()+
         button("Open camera views","camera-page","ghost",true),true)+
       nav("feed","⇅","Feed override",app.demo?app.override+"% commanded override":"Adjust commanded feed and reset to 100%")+
@@ -276,18 +271,25 @@
     frames:renderFrames,inspect:renderInspect,scan:renderScan,sync:renderSync,
     results:renderResults,profiles:renderProfiles,system:renderSystem
   };
+  function renderTransport(){
+    document.getElementById("transport").innerHTML=
+      button(canResume()?"Resume":"Start",canResume()?"resume":"start","green",canResume()||canStart())+
+      button("Pause","hold","amber",canHold())+
+      button("Stop","stop","red",canStop());
+  }
   function render(){
     var page=pages[app.page]?app.page:"home";
     var bar = '<div class="brand-mark" aria-hidden="true">XYθ</div>';
     if(page!=="home") bar='<button class="back" type="button" data-action="back" aria-label="Go back">‹</button>';
     document.getElementById("app-bar").innerHTML=bar+
       '<div class="bar-title">'+pages[page][0]+'<div class="bar-sub">XY-Theta Plotter · '+(app.demo?"SIMULATION":"UI PREVIEW")+'</div></div>'+
-      (canStop()?'<div class="bar-actions"><button type="button" class="quick quick-hold" data-action="'+(canResume()?"resume":"hold")+'">'+(canResume()?"Resume":"Hold")+'</button><button type="button" class="quick quick-stop" data-action="stop">Stop</button></div>':badge(app.demo?"DEMO":"OFFLINE",app.demo?"blue":"warn"));
+      badge(app.demo?"DEMO":"OFFLINE",app.demo?"blue":"warn");
     var ax=app.positions;
     document.getElementById("dro").innerHTML=["X","Y","A","Z","B"].map(function(a){
       return '<div class="axis"><small>'+a+(a==="A"?" °":" mm")+'</small><strong>'+(app.demo?ax[a].toFixed(a==="A"?1:2):"—")+'</strong></div>';
     }).join("");
     root.innerHTML=renderers[page]();
+    renderTransport();
     document.getElementById("footer").innerHTML='<span>● '+(app.demo?"DEMO — no hardware control":"DISCONNECTED — UI only")+'</span><span>'+(locked()?"Next job locked":"Next job ready (demo)")+'</span>';
     root.scrollTop=0;
   }
@@ -417,6 +419,10 @@
   document.getElementById("app-bar").addEventListener("click",function(e){
     var b=e.target.closest("[data-action]");
     if(b)action(b.dataset.action);
+  });
+  document.getElementById("transport").addEventListener("click",function(e){
+    var b=e.target.closest("[data-action]");
+    if(b&&!b.disabled)action(b.dataset.action);
   });
   document.getElementById("dialog-root").addEventListener("click",function(e){
     var b=e.target.closest("[data-action]");

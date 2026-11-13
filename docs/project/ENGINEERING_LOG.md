@@ -1,5 +1,25 @@
 # Engineering Log
 
+<a id="elog-20261113-restore-persistent-transport-controls"></a>
+### 🟩 2026-11-13 - RP23CNC-SOFTWARE/VERIFIED - Restore persistent transport controls on every HMI screen
+
+- Owner review found that the browser HMI lost the always-visible Start, Pause,
+  and Stop deck during its move to hierarchical navigation.
+- Added a fixed grid row for Start/Resume, Pause, and Stop on every screen. It
+  is explicitly a machine-control surface, not a bottom navigation menu.
+- The app-bar quick actions and the duplicate Run-card action row were removed
+  so each state has one transport location. Pause maps to feed hold; Resume
+  appears while held; Stop retains its confirmation.
+- Controls remain disabled outside demo mode until a verified sender/supervisor
+  is connected. Disabled transport contrast was improved for the light theme.
+- The expanded dependency-free smoke test covers all 16 views, global start,
+  Pause-to-Resume transition, and Stop cancellation from a non-Run screen.
+- Native 720×1280 rendering was visually checked before deployment. Physical
+  touch, cold boot, and acknowledged real-controller behavior remain open.
+- Evidence: `RPSW-20261113-002`; `hmi/tests/smoke.cjs`.
+- Category: rp23cnc-software, firmware, test, hmi, touchscreen,
+  user-experience, transport-controls, start, pause, stop, documentation.
+
 <a id="elog-20261113-deploy-ui-only-hmi-kiosk-to-touch-display-2"></a>
 ### 🟨 2026-11-13 - RP23CNC-SOFTWARE/HARDWARE/IMPLEMENTED - Deploy UI-only HMI kiosk to Touch Display 2
 

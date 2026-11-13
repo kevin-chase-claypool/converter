@@ -10,7 +10,7 @@ new vm.Script(source, {filename:"app.js"});
 function boot(search, hash) {
   const events = {};
   const nodes = {};
-  ["app-bar", "dro", "view", "footer", "dialog-root", "toast"].forEach((id) => {
+  ["app-bar", "dro", "view", "transport", "footer", "dialog-root", "toast"].forEach((id) => {
     nodes[id] = {
       innerHTML: "", scrollTop: 0, focus() {}, addEventListener(event, callback) {events[id+":"+event]=callback;},
       classList:{add(){},remove(){}}, querySelector(){return {focus(){}}}
@@ -55,10 +55,10 @@ function boot(search, hash) {
   const s=boot("");
   assert.match(s.nodes.view.innerHTML,/Machine overview/);
   assert.match(s.nodes.view.innerHTML,/Read-only preview/);
-  s.page("run");
-  assert.match(s.nodes.view.innerHTML,/data-action="start"[^>]+disabled/);
-  assert.match(s.nodes.view.innerHTML,/data-action="hold"[^>]+disabled/);
-  assert.match(s.nodes.view.innerHTML,/data-action="stop"[^>]+disabled/);
+  assert.match(s.nodes.transport.innerHTML,/>Start<\/button>/);
+  assert.match(s.nodes.transport.innerHTML,/data-action="start"[^>]+disabled/);
+  assert.match(s.nodes.transport.innerHTML,/data-action="hold"[^>]+disabled/);
+  assert.match(s.nodes.transport.innerHTML,/data-action="stop"[^>]+disabled/);
 }
 {
   const s=boot("?demo=1");
@@ -73,13 +73,22 @@ function boot(search, hash) {
   for(const [page,text] of Object.entries(cases)){
     s.page(page);
     assert.ok(s.nodes.view.innerHTML.includes(text),"Failed page "+page);
+    assert.match(s.nodes.transport.innerHTML,/data-action="start"/,"Missing global Start on "+page);
+    assert.match(s.nodes.transport.innerHTML,/data-action="hold"[^>]+>Pause</,"Missing global Pause on "+page);
+    assert.match(s.nodes.transport.innerHTML,/data-action="stop"[^>]+>Stop</,"Missing global Stop on "+page);
   }
-  s.page("run");
-  s.action("start");
-  assert.match(s.nodes["app-bar"].innerHTML,/data-action="hold"/);
-  s.action("hold","app-bar");
-  assert.match(s.nodes["app-bar"].innerHTML,/data-action="resume"/);
-  s.action("resume","app-bar");
+  s.page("system");
+  s.action("start","transport");
+  assert.doesNotMatch(s.nodes.transport.innerHTML,/data-action="hold"[^>]+disabled/);
+  s.action("hold","transport");
+  assert.match(s.nodes.transport.innerHTML,/data-action="resume"[^>]*>Resume</);
+  assert.doesNotMatch(s.nodes.transport.innerHTML,/data-action="resume"[^>]+disabled/);
+  s.action("resume","transport");
+  s.page("tools");
+  s.action("stop","transport");
+  assert.match(s.nodes["dialog-root"].innerHTML,/Stop the current job/);
+  s.action("dialog-cancel","dialog-root");
+  assert.equal(s.nodes["dialog-root"].innerHTML,"");
   s.page("system");
   s.action("sim-complete");
   assert.match(s.nodes["dialog-root"].innerHTML,/Simulate verified completion/);

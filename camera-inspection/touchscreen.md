@@ -15,8 +15,13 @@ outside mock mode.
   viewport. Physical finger/multitouch mapping and cold-boot persistence remain
   open.
 - Material/Android-inspired **hierarchical screens**, **not** Android's bottom navigation/menu drawer and **not** four persistent tabs. Large **Home** buttons lead to Run, Jog, Tools and Inspect. Nested features have an explicit Back button; browser/system Back and Escape also work.
-- Light high-contrast interface, readable typography, strong disabled states, large touch targets; fixed compact app bar and five-axis readout. The content area can scroll when necessary, but bottom navigation never overlays it.
-- Contextual Hold/Resume and Stop buttons remain available in the top app bar during active plotting (once real control is integrated). Physical E-stop remains independent.
+- Light high-contrast interface, readable typography, strong disabled states,
+  and large touch targets; the compact app bar, five-axis readout, and transport
+  strip remain fixed. The content area scrolls when necessary.
+- A fixed bottom **Start/Resume · Pause · Stop** transport strip is available on
+  every screen. It is a machine-control surface rather than navigation and
+  remains fully disabled until the single sender/supervisor provides verified
+  state. Physical E-stop remains independent.
 
 ## Navigation tree
 
@@ -51,7 +56,8 @@ These are feature screens, not permanent nav tabs. Back returns to the prior pag
 ## Functional screens
 
 ### Run
-- File, progress, ETA when credible, camera preview/still thumbnail, Start/Resume/Hold/Stop.
+- File, progress, ETA when credible, and camera preview/still thumbnail. Global
+  Start/Resume, Pause, and Stop remain available outside the scrolling body.
 - Stop confirmation with **Cancel — Do Nothing**; state-aware enablement.
 - Feed override 10–200%, ±10%, 100% reset; distinguish commanded override from actual reported feed.
 - New job remains locked until previous post-print calibration/synchronization transaction is resolved and Pi acknowledged.
@@ -86,7 +92,8 @@ These are feature screens, not permanent nav tabs. Back returns to the prior pag
 ## Acceptance and testing
 
 - Navigable Home/Run/Jog/Tools/Inspect and nested paths; explicit Back and OS/keyboard Back support; no bottom nav or drawer.
-- Readable 720×1280 layout across all screens; check overflow, touch sizes, dialogs and active Hold/Stop on the actual Pi.
+- Readable 720×1280 layout across all screens; check overflow, touch sizes,
+  dialogs, and persistent Start/Pause/Stop state changes on the actual Pi.
 - Verify simulations never send commands and cannot be confused with real hardware telemetry.
 - Test normal M2 completion, early M2, hold, abort, alarm, reset, disconnect, failed pen park and uncertain camera/controller status; reject unsafe inspection starts.
 - Test registration failure on occluded/missing B00/tags and CoreZB not homed; verify optically determined center then zero and correct controller coordinates.

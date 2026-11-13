@@ -50,9 +50,11 @@ Chromium kiosk, one kiosk service, and the requested screens at 720×1280 with
 no horizontal overflow or undersized visible buttons. A Chrome DevTools touch
 test exercised Home → Tools → Optical registration, Run/Camera, Jog, Inspect →
 Windows sync/Calibration profiles, explicit Back paths, and cancel/confirm
-dialog dismissal. A cold reboot and physical finger contact were not performed
-in this deployment session, so boot persistence and panel-level touch mapping
-remain acceptance checks.
+dialog dismissal. The persistent transport strip was separately verified on
+all screens at 720×1280, including Start, Pause-to-Resume, and Stop-dialog
+cancellation from Tools. A cold reboot and physical finger contact were not
+performed in this deployment session, so boot persistence and panel-level touch
+mapping remain acceptance checks.
 
 ### Remote access
 
@@ -70,7 +72,19 @@ full HMI locally merely to provide remote access.
 
 ## Navigation philosophy
 
-**Android-style hierarchical navigation without Android's persistent navigation bar, a drawer, or bottom-tab menu.** A root **Home** dashboard gives four large touch tiles. Opening a tile moves into a functional screen. Each child screen has a top-left **Back** control, the browser/system Back key works, and desktop Escape/Backspace also navigates back (except when Backspace is editing a form field). The header and five-axis readout remain fixed; body content is independently scrollable when necessary, never covered by navigation chrome. During a simulated active run, contextual **Hold / Resume** and **Stop** are available in the top app bar, not hidden in a distant submenu.
+**Android-style hierarchical navigation without Android's persistent navigation
+bar, a drawer, or bottom-tab menu.** A root **Home** dashboard gives four large
+touch tiles. Opening a tile moves into a functional screen. Each child screen
+has a top-left **Back** control, the browser/system Back key works, and desktop
+Escape/Backspace also navigates back (except when Backspace is editing a form
+field). The header, five-axis readout, and bottom transport strip remain fixed;
+body content is independently scrollable when necessary.
+
+The fixed **Start/Resume · Pause · Stop** strip is a machine-control surface,
+not navigation. It remains visible on every screen because operators must be
+able to pause or stop without first navigating home. All three actions remain
+disabled when no verified sender/supervisor is connected. In the demo, Pause
+changes only simulated feed-hold state.
 
 Navigation hierarchy:
 
@@ -92,7 +106,14 @@ Navigation hierarchy:
           ├─ Inspection results
           └─ Approved calibration profiles
 
-Light high-contrast UI, solid high-visibility Run/Hold/Stop controls, ~55px minimum command button heights, readable disabled states, no misleading fake live feed, no pen-force DRO. Global compact DRO labels are **X/Y** (pen), **A** (rotary controller), **Z/B** (raw camera/CoreZB controller axes). In the current project, **A is motor-shaft degrees**, not an optically verified bed angle; do not silently relabel it as calibrated θ. The CoreZB mechanism must not be presented as Cartesian camera X/Y until the kinematics are actually commissioned. Actual feed reporting is distinct from commanded feed override.
+Light high-contrast UI, solid high-visibility Start/Pause/Stop controls, ~55px
+minimum command button heights, readable disabled states, no misleading fake
+live feed, no pen-force DRO. Global compact DRO labels are **X/Y** (pen), **A**
+(rotary controller), **Z/B** (raw camera/CoreZB controller axes). In the
+current project, **A is motor-shaft degrees**, not an optically verified bed
+angle; do not silently relabel it as calibrated θ. The CoreZB mechanism must
+not be presented as Cartesian camera X/Y until the kinematics are actually
+commissioned. Actual feed reporting is distinct from commanded feed override.
 
 ## Workflow implemented as UI/demo states
 
@@ -135,7 +156,9 @@ through its loopback DevTools endpoint with coordinate-level touch input.
 - JavaScript syntax compiled successfully.
 - All 16 rendered views loaded through the navigation logic in a simulated DOM.
 - Synthetic journey checked: Run → verified-completion confirmation → five registration steps → four scan increments → pending package → evaluation → submission gate unlocked.
-- Contextual Hold action appeared on the header during a simulated active run.
+- Start is available globally while idle, Pause while running, Resume while
+  held, and Stop while running or held. The persistent strip remains visible
+  on every screen.
 
 **Not yet tested:** cold-boot persistence, physical finger/multitouch mapping,
 focus trapping, touchscreen multi-hour stability, photo transfer performance,
