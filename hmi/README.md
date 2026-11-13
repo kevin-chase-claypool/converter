@@ -62,6 +62,14 @@ A **single authenticated Pi-local motion supervisor / sender** must own the RP23
 
 **Do not activate motion buttons merely because a server responds.** Require an audited single-authority action contract, controller and toolhead safety testing, an explicit enablement mechanism, and on-device validation.
 
+## Smoke tests
+
+On a development machine with Node.js, run:
+
+    node hmi/tests/smoke.cjs
+
+The dependency-free smoke script checks offline lockouts, all 16 views, header Hold/Resume, confirmation-gated simulated completion, registration, scanning, sync, and direct-link Back fallback. The same test logic was exercised in a sandboxed JavaScript harness during authoring; on-device browser and physical hardware tests are still outstanding.
+
 ## Checks run on the first implementation
 
 - JavaScript syntax compiled successfully.
