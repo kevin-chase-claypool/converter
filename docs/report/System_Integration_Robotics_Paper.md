@@ -91,17 +91,17 @@ The integration method followed a deliberate dependency order. A test was allowe
 
 Figure 2 summarizes the sequence. The sequence is a verification dependency graph, not a calendar. Some activities repeated when new evidence invalidated an earlier assumption.
 
-Each test was treated as a record rather than a recollection. The project test plan defines acceptance criteria, and the lab notes capture configuration, commands, measurements, photographs, and disposition [7]. For significant tests, the record includes the exact firmware or controller configuration when available. A test that could not be reproduced was kept as a limitation rather than rounded up to a pass.
+Each test was treated as a record within the project test plan that defined acceptance criteria, while lab notes captured configuration, commands, measurements, photographs and disposition [7]. For significant tests, the record includes the exact firmware or controller configuration when available. A test that could not be reproduced was stored as a limitation rather than rounded up to a pass.
 
 The main evidence categories were:
 
 - electrical inspection and signal tests before connection or power;
 - no-load or pen-free motion tests before force-loaded plotting;
 - coordinate and ratio checks using physical references;
-- command-level tests that exercised normal, stale, and missing-status cases;
+- command-level tests that exercised normal, stale and missing status cases;
 - calibrated force measurements against known masses;
 - independent drawings used to compare baseline and corrected geometry;
-- photographs and measured images that preserve what the machine actually produced.
+- photographs and measured images taken to preserve records of what the machine actually produced.
 
 FIGURE: docs/report/paper_assets/figure_02_commissioning_sequence.png | Staged commissioning sequence used to expose interface failures before they reached a complete plot. | 6.35
 
@@ -111,7 +111,7 @@ The integration process rejected three kinds of false confidence. A connection w
 
 ## Coordinate scale and the measured drive ratio
 
-The rotating bed was initially treated as a nominal 12 to 1 drive, which would make 4320 motor degrees equal one bed revolution. Three independent magnetic surveys measured 4331.818, 4331.930, and 4332.153 motor degrees [12]. Their mean was 4331.97 motor degrees, or 12.0332 motor degrees per bed degree, with a total spread of 0.335 degrees. The deviation was small per revolution but consequential across many rotations.
+The rotating bed was initially treated as a nominal 12 to 1 drive, a measurement provided by the difference between the ‘A’ motor pulley GT2 tooth count (60T) versus the 3d-printed bed GT2 tooth count (720T) where 4320 motor degrees equal one bed revolution. Three independent magnetic surveys measured 4331.818, 4331.930, and 4332.153 motor degrees [12]. Their mean was 4331.97 motor degrees, or 12.0332 motor degrees per bed degree, with a total spread of 0.335 degrees. The deviation was small per revolution but consequential across many rotations.
 
 At a radius of 150 mm, the uncorrected ratio produced about 2.5 mm of accumulated displacement; at 185 mm, it produced about 3.0 mm. Earlier artwork showed ghosting that was consistent with this magnitude. The correction established 4331.97 motor degrees per revolution as the single host-side constant and changed the registration acceptance band to 4332 plus or minus 10 motor degrees. A repeatability program then drove the bed out and back at two radii at the reduced command limit. The radial ticks returned on their original lines, providing physical evidence that the angular scale and rate could be held over repeated revolutions.
 
@@ -145,13 +145,13 @@ The replacement CS1238 path was calibrated with known masses under a strict sens
 
 FIGURE: docs/report/paper_assets/figure_04_force_calibration.png | Known-mass CS1238 calibration. The linear fit establishes a measurement scale; the guarded actuator tests separately establish whether the integrated pen can use that scale safely. | 5.65
 
-The corrected actuator workflow separated three conditions: the mechanism is clear, the tip has made contact, and the contact force is stable enough to publish as ready. A guarded test reached 40.0 g and 40.4 g in two cycles and held for five seconds. A separate clear sequence released the tip and produced an approximately 1.75 mm visible air gap. Later review found that one nominally successful trace had started from a loaded tare and ended through pulse-budget safeguards, so that trace was not accepted as repeatability evidence.
+The corrected actuator workflow separated three conditions: the mechanism is unobstructed, the tip has made contact, and the contact force is stable enough to publish as ready. A guarded test reached 40.0 g and 40.4 g in two cycles and held for five seconds. A separate clear sequence released the tip and produced an approximately 1.75 mm visible air gap. Later review found that one nominally successful trace had started from a loaded tare and ended through pulse-budget safeguards, so that trace was not accepted as repeatability evidence.
 
 This distinction is a central result of the project. Sensor calibration, mechanical behavior, and control qualification are separate claims. The system now uses bounded pulses, driver sleep between corrections, a hard-force limit, stale-sensor rejection, and a safe-lift path. It still treats the tool profile as supervised until the required repeated clear and per-tool checks are complete.
 
 ## M3 and M5 as physical contracts
 
-M3 and M5 initially appeared to be simple digital commands. Their integrated meaning is more demanding. M3 means seek contact and enter force hold. M5 means release from paper and create clearance. M5 is not a command to travel to the distant full-retract switch, which is reserved for boot, recovery, or service.
+M3 and M5 initially appeared to be simple digital commands. Their integrated behaviors are much more demanding. M3 means seek contact and enter force hold. M5 means release from paper and create clearance. M5 is not a command to travel to the distant full-retract switch, which is reserved for boot, recovery, or service.
 
 The first controller-to-toolhead test exposed a polarity error. The controller's spindle-enable output was active-high by default, while the toolhead interface expected the asserted state to pull low. At power-up the toolhead saw a permanent M3 request and exhausted its contact-seek pulse budget. Inverting the controller output restored M3 down and M5 up, and disconnecting the command wire left the toolhead in the lifted fail-safe state.
 
