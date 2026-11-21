@@ -121,6 +121,36 @@ FIGURE: docs/report/paper_assets/figure_03_bed_ratio_ghosting.jpg | Retained upp
 
 The lesson is not simply that the gear ratio was not exactly 12 to 1. The important integration result is that a nominal mechanical parameter must be measured through the complete assembled chain, then assigned to one owner. Applying the ratio in both the host and controller would have produced a different error that looked equally plausible.
 
+MATH: Nominal bed drive ratio from the 60-tooth motor pulley and 720-tooth bed pulley
+$$
+i=\frac{720}{60}=12
+$$
+
+MATH: Nominal motor-shaft angle for one bed revolution
+$$
+A_{\mathrm{nominal}}=i\times360°=4,320°_{\mathrm{motor}}
+$$
+
+MATH: Motor pulses per revolution with 1.8 degree steps and eight microsteps
+$$
+N_{\mathrm{motor}}=(360°/1.8°)\times8=1,600\;\mathrm{pulses/rev}
+$$
+
+MATH: Bed pulses per revolution with the nominal 12-to-1 reduction
+$$
+N_{\mathrm{bed}}=N_{\mathrm{motor}}\times12=19,200\;\mathrm{pulses}
+$$
+
+MATH: Nominal motor-shaft angle derived from bed and motor pulse counts
+$$
+A_{\mathrm{nominal}}=\frac{19,200}{1,600/360}=4,320°_{\mathrm{motor}}
+$$
+
+MATH: Measured bed drive ratio from the P112 survey
+$$
+i_{\mathrm{measured}}=\frac{4,331.97°}{360°}=12.03325
+$$
+
 ## Motion calibration and the danger of a precise but invalid measurement
 
 The first calibration sequence also revealed how easily a measurement can mislead. A short Y test was run while the controller was still in absolute mode and produced an unexpectedly long move. The mode was corrected, and a 100 mm relative move then measured exactly 100 mm and returned to its reference. The X calibration encountered a different issue. A first 10 mm observation suggested a large correction, but a 100 mm caliper check produced 100.36 mm and led to a proportionally calculated adjustment. A later operator recheck restored the 80 steps per millimeter baseline. The final accepted setting therefore rested on the longer, repeated check, not on the short observation.
