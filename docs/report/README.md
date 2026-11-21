@@ -20,21 +20,25 @@ and toolhead controller as black boxes. It evaluates their interfaces,
 commissioning sequence, failures, corrective actions, verified results, and
 remaining qualification work.
 
-The 20-page render uses a cover, a 15-page main body, references, and three
-appendices. It includes the verified bed-ratio, registration, force-calibration,
-M3/M5 handshake, emergency-stop, mechanical repair, and compensated-error
-results. Appendix B maps the paper's evidence to the seven ABET Criterion 3
-student outcomes without claiming unobserved teamwork evidence. Open risks are
-stated explicitly, including the unverified 200 ms clearance behavior, the rare
+The 21-page render uses a cover, a main body, references, and three appendices.
+It includes the verified bed-ratio, registration, force-calibration, M3/M5
+handshake, emergency-stop, mechanical repair, and compensated-error results.
+Appendix B maps the paper's evidence to the seven ABET Criterion 3 student
+outcomes without claiming unobserved teamwork evidence. Open risks are stated
+explicitly, including the unverified 200 ms clearance behavior, the rare
 handshake timeout, outer compensation extrapolation, and incomplete loaded
 electrical and thermal characterization.
 
 Regenerate the DOCX and figure assets with
 [`build_system_integration_paper.py`](build_system_integration_paper.py) in the
-Codex workspace dependency runtime. The generated PDF was exported through
-Microsoft Word because the packaged documentation renderer could not locate
-LibreOffice. The final DOCX passed an accessibility audit with no findings,
-and all 20 rendered pages were visually inspected.
+Codex workspace dependency runtime. Math blocks use standard `$$...$$` LaTeX in
+the Markdown source and are converted to editable Word equations through the
+bundled Node.js runtime and Microsoft Office's `MML2OMML.XSL`. Set
+`REPORT_NODE`, `REPORT_NODE_MODULES`, or `MML2OMML_XSL` when those tools are not
+at their standard locations. The generated PDF was exported through Microsoft
+Word because the packaged documentation renderer could not locate LibreOffice.
+The final DOCX passed an accessibility audit with no findings, and all rendered
+pages were visually inspected.
 
 Use [`LAB_NOTE_TEMPLATE.md`](LAB_NOTE_TEMPLATE.md) for bench work. Keep dated
 notes under `lab-notes/` so measurements and design changes can be cited later.

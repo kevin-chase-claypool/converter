@@ -115,6 +115,10 @@ The rotating bed was initially treated as a nominal 12 to 1 drive, which would m
 
 At a radius of 150 mm, the uncorrected ratio produced about 2.5 mm of accumulated displacement; at 185 mm, it produced about 3.0 mm. Earlier artwork showed ghosting that was consistent with this magnitude. The correction established 4331.97 motor degrees per revolution as the single host-side constant and changed the registration acceptance band to 4332 plus or minus 10 motor degrees. A repeatability program then drove the bed out and back at two radii at the reduced command limit. The radial ticks returned on their original lines, providing physical evidence that the angular scale and rate could be held over repeated revolutions.
 
+Figure 3 shows the retained upper-field photograph from the 30 September mandala print. Repeated contours are visible where a single draw path was intended. The image documents the observed defect but does not measure its cause on its own. The causal evidence is the independent P112 outer-index measurement, which put the effective ratio 0.277 percent above the nominal 12 to 1 value and predicted the observed magnitude at the outer radius.
+
+FIGURE: docs/report/paper_assets/figure_03_bed_ratio_ghosting.jpg | Retained upper-field photograph from the 30 September mandala print made before the measured bed-ratio correction. Repeated, slightly offset contours document the observed ghosting; the P112 survey, not this photograph alone, establishes the drive-ratio cause. | 5.85
+
 The lesson is not simply that the gear ratio was not exactly 12 to 1. The important integration result is that a nominal mechanical parameter must be measured through the complete assembled chain, then assigned to one owner. Applying the ratio in both the host and controller would have produced a different error that looked equally plausible.
 
 ## Motion calibration and the danger of a precise but invalid measurement
@@ -163,7 +167,28 @@ The Y drag chain originally climbed a stepped transition on a northeast frame pi
 
 This result is intentionally limited. It strongly supports a mechanical cause, but it does not complete the rotating-bed motion test. The machine has several coupled sources of visible error: bed runout, carriage and belt dynamics, cable drag, angular rate, and host-side geometric correction. The integration method treats the physical observation as evidence for one causal branch and leaves the simultaneous X/Y/A discriminator as follow-up work.
 
-The A-axis command rate was also reduced from 80,000 to 20,000 motor degrees per minute after analysis showed the former value asked the bed for an implausibly high surface speed at the outer radius. The lower setting survived a power cycle, and repeated full-bed rotations at two radii returned the reference marks without lost motion. This is a system-level correction: a controller setting, host assumption, and physical capability were brought back into one defensible range.
+The A-axis command rate was initially reduced from 80,000 to 20,000 motor degrees per minute after the former value was found to request an implausibly high surface speed at the outer radius. With the measured ratio `k = 12.03324` motor degrees per bed degree [12], the controller rate `R_A` and pen radius `r` imply a tangential surface speed of
+
+MATH: A-axis command rate converted to tangential surface speed
+$$
+v(r)=\frac{\pi r R_A}{180k}
+$$
+
+At the 185 mm rim, the retired and accepted command rates produce
+
+MATH: Surface speed at the 185 mm rim for the retired 80000 motor degree per minute command
+$$
+v(185)=\frac{\pi(185)(80000)}{180(12.03324)}\approx 21466\;\mathrm{mm/min}\approx 21.47\;\mathrm{m/min}
+$$
+
+MATH: Surface speed at the 185 mm rim for the accepted 20000 motor degree per minute command
+$$
+v(185)=\frac{\pi(185)(20000)}{180(12.03324)}\approx 5367\;\mathrm{mm/min}\approx 5.37\;\mathrm{m/min}
+$$
+
+The ratio of the two results is 20,000 / 80,000, or one quarter, because the geometric relation is linear in the commanded motor rate. The lower setting therefore reduced the requested rim speed by 16.1 m/min. It survived a power cycle, and repeated full-bed rotations at two radii returned the reference marks without lost motion.
+
+The controller and converter were later raised together to 30,000 motor degrees per minute after outer-silhouette planning showed that tight stretches needed about 29,400 motor degrees per minute at the 700 mm/min drawing target. The regenerated full-revolution test passed at 30,000 motor degrees per minute with the pen at 100 mm radius; the 160 mm station has not yet been rerun at that setting. This is a system-level correction: a controller setting, host assumption, and physical capability were brought back into one defensible range.
 
 ## Registration residual and geometric compensation
 
@@ -171,7 +196,7 @@ Physical registration gives the machine a valid origin, but it cannot remove all
 
 After a mechanical repair, an independent compensated verification sheet reduced overall RMS from 1.744 mm to 0.218 mm, an 87.5 percent improvement. Maximum error fell from 2.965 mm to 0.591 mm, an 80.1 percent reduction [11]. All measured angle stages improved, and the result remained within the acceptance gates when the image extraction threshold was varied.
 
-Figure 4 shows the physical calibration sheet and Figure 5 shows the pre/post comparison. The improvement is a system result: the map included measured registration error, the correction preserved the angular frame, and the second sheet was an independent check rather than a refit of the first.
+Figure 5 shows the physical calibration sheet and Figure 6 shows the pre/post comparison. The improvement is a system result: the map included measured registration error, the correction preserved the angular frame, and the second sheet was an independent check rather than a refit of the first.
 
 The image processing was treated as part of the measurement system. A photograph can be distorted by perspective, glare, tape, ink bleed, or a paper sheet that moved during the run. The acceptance process therefore required complete fiducial and station recognition, repeated extraction at different thresholds, and an unchanged assignment of station identity. A result that depended on a single image-processing setting was not accepted. This makes the reported error reduction stronger than a visual before-and-after comparison, while still limiting the result to the measured bed and camera setup.
 
@@ -193,9 +218,9 @@ The integration method now preserves failed tests and rejected candidates alongs
 
 The machine now performs the complete black-box path: artwork and settings produce ordered G-code, the operator application streams that program, the motion controller coordinates X, Y, and A, M3 and M5 request tool states, and the toolhead produces contact or clearance. Complete command-driven and converter-generated plots have been produced. Several physical artifacts use the full rotating-bed field rather than a short motion demonstration.
 
-FIGURE: docs/report/paper_assets/figure_06_completed_plot.jpg | Completed full-sheet wave matrix produced by the integrated plotting path. The artifact is used as evidence of end-to-end operation and as a source of visual failure modes. | 3.85
+FIGURE: docs/report/paper_assets/figure_06_completed_plot.jpg | Completed full-sheet wave matrix produced by the integrated plotting path. The artifact is used as evidence of end-to-end operation and as a source of visual failure modes. | 3.50
 
-The wave matrix in Figure 6 is an example of a completed artwork-scale output. It also exposes why visual inspection alone is insufficient. A sheet can look deliberate while containing invisible registration error, a narrow-row defect, or a pen-clearance trace. That is why the results combine completed plots, measured calibration artifacts, and interface tests.
+The wave matrix in Figure 7 is an example of a completed artwork-scale output. It also exposes why visual inspection alone is insufficient. A sheet can look deliberate while containing invisible registration error, a narrow-row defect, or a pen-clearance trace. That is why the results combine completed plots, measured calibration artifacts, and interface tests.
 
 ## Measured performance
 
@@ -316,7 +341,7 @@ TABLE: Primary evidence used in the paper | 1.05,2.65,2.85
 | E-17 and F-01 | Board inspection and firmware identification | Establishes controller hardware and baseline |
 | E-03 and F-03 | Driver signal and unpowered step/dir tests | Establishes controller-to-driver electrical behavior |
 | M-03 | X and Y 100 mm calibration notes | Supports axis scale and reverse-travel checks |
-| M-05 and P112 | Bed ratio and outer-index surveys | Establishes 12.0332 to 1 angular ratio |
+| M-05, P112, and 30 September print photographs | Bed ratio, outer-index surveys, and retained pre-correction artwork | Establishes the 12.0332 to 1 angular ratio and documents the visible ghosting |
 | M-07 and P113 | Homing, center-magnet registration, and A-index integration | Establishes startup coordinate frame |
 | E-09C and E-09F | Known-mass calibration and guarded force hold | Establishes force conversion and bounded behavior |
 | F-05 and F-05A | M3/M5 polarity and completion handshake | Establishes command semantics and fail-closed behavior |

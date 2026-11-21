@@ -63,6 +63,20 @@ Three independent within-run surveys now agree:
 
 Mean `4331.967`, total spread `0.335` motor-degrees.
 
+## Retained visual evidence
+
+The upper-field photograph retained with this record is
+[`assets/2026-09-30-mom-pretuning-mandala-upper-field.png`](assets/2026-09-30-mom-pretuning-mandala-upper-field.png).
+It records the mandala print made before the drive-ratio correction and shows
+repeated, slightly offset contours where a single drawn path was intended.
+SHA-256:
+`52D6DE205140C4DCD02CB7BF83E04C8ADC7931700807AA6E07AAD641DD025E91`.
+
+The photograph is qualitative evidence of the observed print defect. The
+measurement above supplies the cause and magnitude: the old command scale ended
+each revolution about 12 motor-degrees short, producing the reported outer-edge
+ghosting.
+
 Cross-check from the stored work offset: the G54 A offset in force
 (`21585.285`, written at the previous registration's pass-two centre) lies
 `3.037` motor-degrees from this run's first-pass centre (`21582.248`). That is

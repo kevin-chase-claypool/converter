@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import json
 import math
+import os
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 from docx import Document
 from docx.enum.section import WD_SECTION
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
-from docx.oxml import OxmlElement
+from docx.oxml import OxmlElement, parse_xml
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
 from PIL import Image, ImageDraw, ImageFont, ImageOps
@@ -18,6 +22,8 @@ ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "docs" / "report" / "System_Integration_Robotics_Paper.md"
 OUTPUT = ROOT / "docs" / "report" / "System_Integration_Robotics_Paper.docx"
 ASSETS = ROOT / "docs" / "report" / "paper_assets"
+LATEX_TO_MATHML = ROOT / "docs" / "report" / "latex_to_mathml.mjs"
+MATHML_NAMESPACE = "http://www.w3.org/1998/Math/MathML"
 
 NAVY = "#22364D"
 BLUE = "#4278A6"
@@ -277,6 +283,22 @@ def create_registration_artifact() -> Path:
     return path
 
 
+def create_bed_ratio_ghosting() -> Path:
+    source = (
+        ROOT
+        / "docs"
+        / "report"
+        / "lab-notes"
+        / "assets"
+        / "2026-09-30-mom-pretuning-mandala-upper-field.png"
+    )
+    image = Image.open(source).convert("RGB")
+    image = ImageOps.expand(image, border=16, fill=WHITE)
+    path = ASSETS / "figure_03_bed_ratio_ghosting.jpg"
+    image.save(path, quality=94, subsampling=0, dpi=(300, 300))
+    return path
+
+
 def create_force_calibration() -> Path:
     base = (
         ROOT
@@ -357,7 +379,8 @@ def create_completed_plot() -> Path:
         / "2026-10-25-m-13-full-sheet-wave-matrix.jpg"
     )
     image = Image.open(source).convert("RGB")
-    image.thumbnail((1000, 1300), Image.Resampling.LANCZOS)
+    image = image.crop((0, 180, image.width, 1980))
+    image.thumbnail((1000, 1000), Image.Resampling.LANCZOS)
     image = ImageOps.expand(image, border=16, fill=WHITE)
     path = ASSETS / "figure_06_completed_plot.jpg"
     image.save(path, quality=92, subsampling=0, dpi=(300, 300))
@@ -369,6 +392,7 @@ def create_figures() -> None:
     create_system_architecture()
     create_machine_overview()
     create_commissioning_sequence()
+    create_bed_ratio_ghosting()
     create_registration_artifact()
     create_force_calibration()
     create_error_chart()
@@ -380,6 +404,135 @@ def parse_metadata(text: str) -> dict[str, str]:
     for match in re.finditer(r"<!--([A-Z]+):\s*(.*?)-->", text):
         metadata[match.group(1)] = match.group(2).strip()
     return metadata
+
+
+def parse_math_blocks(text: str) -> list[dict[str, str]]:
+    """Extract MATH captions and their following LaTeX display blocks."""
+    pattern = re.compile(
+        r"(?m)^MATH:\s*(?P<caption>[^\r\n]+)\s*\r?\n\$\$(?P<latex>.*?)\$\$",
+        re.DOTALL,
+    )
+    return [
+        {
+            "caption": match.group("caption").strip(),
+            "latex": match.group("latex").strip(),
+        }
+        for match in pattern.finditer(text)
+    ]
+
+
+def report_node_modules(node_executable: str) -> Path:
+    configured = os.environ.get("REPORT_NODE_MODULES")
+    if configured:
+        return Path(configured)
+
+    for entry in os.environ.get("NODE_PATH", "").split(os.pathsep):
+        if entry:
+            return Path(entry)
+
+    # The Codex workspace runtime places node.exe in dependencies/node/bin and
+    # its packages beside it in dependencies/node/node_modules.
+    derived = Path(node_executable).resolve().parent.parent / "node_modules"
+    if derived.is_dir():
+        return derived
+    raise RuntimeError(
+        "Cannot locate the report equation runtime. Set REPORT_NODE_MODULES to "
+        "the Node.js package directory that contains @oai/artifact-tool."
+    )
+
+
+def latex_to_mathml(blocks: list[dict[str, str]]) -> list[str]:
+    if not blocks:
+        return []
+
+    node_executable = os.environ.get("REPORT_NODE") or shutil.which("node")
+    if not node_executable:
+        raise RuntimeError(
+            "Cannot locate Node.js for report equations. Set REPORT_NODE to the "
+            "Codex workspace Node.js executable."
+        )
+
+    artifact_tool = (
+        report_node_modules(node_executable)
+        / "@oai"
+        / "artifact-tool"
+        / "dist"
+        / "artifact_tool.mjs"
+    )
+    if not artifact_tool.is_file():
+        raise RuntimeError(
+            f"Cannot locate the report equation renderer at {artifact_tool}."
+        )
+
+    environment = os.environ.copy()
+    environment["ARTIFACT_TOOL_URL"] = artifact_tool.as_uri()
+    result = subprocess.run(
+        [node_executable, str(LATEX_TO_MATHML)],
+        input=json.dumps([block["latex"] for block in blocks]),
+        text=True,
+        encoding="utf-8",
+        capture_output=True,
+        check=False,
+        cwd=ROOT,
+        env=environment,
+    )
+    if result.returncode:
+        details = result.stderr.strip() or result.stdout.strip()
+        raise RuntimeError(f"LaTeX to MathML conversion failed: {details}")
+
+    mathml = json.loads(result.stdout)
+    if not isinstance(mathml, list) or len(mathml) != len(blocks):
+        raise RuntimeError("LaTeX conversion returned an unexpected equation count.")
+    return mathml
+
+
+def mml2omml_transform():
+    configured = os.environ.get("MML2OMML_XSL")
+    candidates = [Path(configured)] if configured else []
+    for programs in (
+        os.environ.get("ProgramFiles"),
+        os.environ.get("ProgramFiles(x86)"),
+    ):
+        if programs:
+            candidates.append(
+                Path(programs)
+                / "Microsoft Office"
+                / "root"
+                / "Office16"
+                / "MML2OMML.XSL"
+            )
+
+    stylesheet = next((path for path in candidates if path.is_file()), None)
+    if stylesheet is None:
+        raise RuntimeError(
+            "Cannot locate Microsoft Office MML2OMML.XSL. Install Office or set "
+            "MML2OMML_XSL to that file before building the equation-bearing report."
+        )
+
+    from lxml import etree
+
+    return etree.XSLT(etree.parse(str(stylesheet)))
+
+
+def mathml_to_omml(mathml: str, transform) -> object:
+    from lxml import etree
+
+    source = mathml.replace(
+        "<math ",
+        f'<math xmlns="{MATHML_NAMESPACE}" ',
+        1,
+    )
+    result = transform(etree.fromstring(source.encode("utf-8")))
+    return parse_xml(etree.tostring(result.getroot(), encoding="unicode"))
+
+
+def add_math_equation(doc: Document, omml) -> None:
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_before = Pt(3)
+    p.paragraph_format.space_after = Pt(3)
+    p.paragraph_format.line_spacing = 1.0
+    p._p.append(omml)
 
 
 def set_cell_border(cell, color: str = "D9D9D9", size: str = "6") -> None:
@@ -736,7 +889,11 @@ def add_reference(doc: Document, text: str) -> None:
     add_inline_markup(p, text, base_size=9.5)
 
 
-def build_document(metadata: dict[str, str], body_text: str) -> None:
+def build_document(
+    metadata: dict[str, str],
+    body_text: str,
+    equation_omml: list[object],
+) -> None:
     doc = Document()
     configure_document(doc, metadata)
     add_title_page(doc, metadata)
@@ -745,6 +902,7 @@ def build_document(metadata: dict[str, str], body_text: str) -> None:
     idx = 0
     figure_number = 0
     table_number = 0
+    equation_number = 0
     while idx < len(lines):
         line = lines[idx].rstrip()
         stripped = line.strip()
@@ -764,6 +922,21 @@ def build_document(metadata: dict[str, str], body_text: str) -> None:
             figure_number += 1
             add_figure(doc, image, caption, width, figure_number)
             idx += 1
+            continue
+        if stripped.startswith("MATH:"):
+            caption = stripped[len("MATH:") :].strip()
+            if idx + 1 >= len(lines) or lines[idx + 1].strip() != "$$":
+                raise ValueError(f"MATH block {caption!r} must start with a $$ line.")
+            closing = idx + 2
+            while closing < len(lines) and lines[closing].strip() != "$$":
+                closing += 1
+            if closing >= len(lines):
+                raise ValueError(f"MATH block {caption!r} is missing its closing $$.")
+            if equation_number >= len(equation_omml):
+                raise ValueError(f"No generated equation for MATH block {caption!r}.")
+            add_math_equation(doc, equation_omml[equation_number])
+            equation_number += 1
+            idx = closing + 1
             continue
         if stripped.startswith("TABLE:"):
             caption, widths, rows, idx = parse_table_block(lines, idx)
@@ -810,6 +983,7 @@ def build_document(metadata: dict[str, str], body_text: str) -> None:
                 or nxt == "PAGEBREAK"
                 or nxt.startswith("#")
                 or nxt.startswith("FIGURE:")
+                or nxt.startswith("MATH:")
                 or nxt.startswith("TABLE:")
                 or nxt.startswith("- ")
                 or nxt.startswith("REF:")
@@ -827,7 +1001,13 @@ def main() -> None:
     create_figures()
     text = SOURCE.read_text(encoding="utf-8")
     metadata = parse_metadata(text)
-    build_document(metadata, text)
+    blocks = parse_math_blocks(text)
+    transform = mml2omml_transform() if blocks else None
+    equations = [
+        mathml_to_omml(mathml, transform)
+        for mathml in latex_to_mathml(blocks)
+    ]
+    build_document(metadata, text, equations)
     print(OUTPUT)
 
 
