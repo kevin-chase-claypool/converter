@@ -68,9 +68,13 @@ def _rounded_box(
 
 
 def _arrow(draw: ImageDraw.ImageDraw, start: tuple[int, int], end: tuple[int, int], color: str = NAVY, width: int = 7) -> None:
+    if start[0] != end[0] and start[1] != end[1]:
+        raise ValueError(f"Arrow must be straight: {start} -> {end}")
+    if end[0] < start[0] or end[1] < start[1]:
+        raise ValueError(f"Arrow must point east or south: {start} -> {end}")
     draw.line((start, end), fill=color, width=width)
     angle = math.atan2(end[1] - start[1], end[0] - start[0])
-    head = 24
+    head = max(24, int(width * 3))
     left = (
         end[0] - head * math.cos(angle - math.pi / 6),
         end[1] - head * math.sin(angle - math.pi / 6),
@@ -105,24 +109,41 @@ def _center_text(
         y += line_h + spacing
 
 
+def _interface_label(
+    draw: ImageDraw.ImageDraw,
+    center: tuple[int, int],
+    text: str,
+    font: ImageFont.FreeTypeFont,
+) -> None:
+    bbox = draw.textbbox((0, 0), text, font=font)
+    width = bbox[2] - bbox[0]
+    height = bbox[3] - bbox[1]
+    draw.text(
+        (center[0] - width / 2, center[1] - height / 2 - bbox[1]),
+        text,
+        font=font,
+        fill=NAVY,
+    )
+
+
 def create_system_architecture() -> Path:
     img = Image.new("RGB", (2400, 1260), WHITE)
     draw = ImageDraw.Draw(img)
     title_font = _font(62, True)
     box_font = _font(45, True)
     body_font = _font(36)
-    label_font = _font(30, True)
+    label_font = _font(32, True)
     section_font = _font(34, True)
 
     draw.text((80, 46), "INTERFACES AND SUBSYSTEM OWNERSHIP", font=title_font, fill=NAVY)
 
     boxes = {
-        "operator": (55, 220, 370, 500),
-        "host": (445, 220, 850, 500),
-        "motion": (925, 220, 1360, 500),
-        "motion_stage": (1435, 220, 1925, 500),
-        "toolhead": (925, 655, 1360, 930),
-        "result": (1435, 655, 1925, 930),
+        "operator": (45, 210, 435, 500),
+        "host": (645, 210, 1075, 500),
+        "motion": (1285, 210, 1715, 500),
+        "motion_stage": (1925, 210, 2355, 500),
+        "toolhead": (1285, 720, 1715, 1000),
+        "result": (1925, 720, 2355, 1000),
     }
     fills = {
         "operator": PALE_GRAY,
@@ -143,28 +164,29 @@ def create_system_architecture() -> Path:
     for key, box in boxes.items():
         _rounded_box(draw, box, fills[key])
         title, body = labels[key]
-        _center_text(draw, (box[0] + 15, box[1] + 25, box[2] - 15, box[1] + 150), title, box_font)
-        _center_text(draw, (box[0] + 15, box[1] + 155, box[2] - 15, box[3] - 25), body, body_font, MID_GRAY)
+        _center_text(draw, (box[0] + 20, box[1] + 22, box[2] - 20, box[1] + 155), title, box_font)
+        _center_text(draw, (box[0] + 25, box[1] + 165, box[2] - 25, box[3] - 24), body, body_font, MID_GRAY)
 
-    _arrow(draw, (370, 360), (445, 360))
-    _arrow(draw, (850, 360), (925, 360))
-    _arrow(draw, (1360, 360), (1435, 360))
-    _arrow(draw, (1140, 500), (1140, 655))
-    _arrow(draw, (1505, 500), (1670, 655))
-    _arrow(draw, (1360, 790), (1435, 790))
-    draw.text((392, 320), "artwork", font=label_font, fill=NAVY)
-    draw.text((866, 320), "G-code", font=label_font, fill=NAVY)
-    draw.text((1375, 320), "STEP / DIR", font=label_font, fill=NAVY)
-    draw.text((1160, 560), "M3 / M5", font=label_font, fill=NAVY)
-    draw.text((1350, 555), "ready / fault", font=label_font, fill=NAVY)
-    draw.text((1380, 750), "force", font=label_font, fill=NAVY)
+    _arrow(draw, (435, 365), (645, 365), width=10)
+    _arrow(draw, (1075, 365), (1285, 365), width=10)
+    _arrow(draw, (1715, 365), (1925, 365), width=10)
+    _arrow(draw, (1500, 500), (1500, 720), width=10)
+    _arrow(draw, (2180, 500), (2180, 720), width=10)
+    _arrow(draw, (1715, 860), (1925, 860), width=10)
 
-    bottom_y = 1010
-    draw.text((55, 975), "CROSS CUTTING SYSTEMS", font=section_font, fill=NAVY)
+    _interface_label(draw, (540, 315), "artwork", label_font)
+    _interface_label(draw, (1180, 315), "G-code", label_font)
+    _interface_label(draw, (1820, 315), "STEP / DIR", label_font)
+    _interface_label(draw, (1585, 600), "M3 / M5", label_font)
+    _interface_label(draw, (2045, 600), "ready / fault", label_font)
+    _interface_label(draw, (1820, 805), "force", label_font)
+
+    bottom_y = 1070
+    draw.text((55, 1028), "CROSS CUTTING SYSTEMS", font=section_font, fill=NAVY)
     support = [
-        ((55, bottom_y, 650, 1190), "Registration and feedback", "Home switches  |  TMAG5273  |  load cell  |  readiness"),
-        ((690, bottom_y, 1450, 1190), "Power and safety", "Protected rails  |  opto isolation  |  E-stop  |  bounded force and timeouts"),
-        ((1490, bottom_y, 2345, 1190), "Structure and cabling", "Frame  |  drag chains  |  strain relief  |  protective earth"),
+        ((45, bottom_y, 750, 1225), "Registration and feedback", "Home switches  |  TMAG5273  |  load cell  |  readiness"),
+        ((790, bottom_y, 1495, 1225), "Power and safety", "Protected rails  |  opto isolation  |  E-stop  |  bounded force and timeouts"),
+        ((1535, bottom_y, 2355, 1225), "Structure and cabling", "Frame  |  drag chains  |  strain relief  |  protective earth"),
     ]
     for box, title, body in support:
         _rounded_box(draw, box, PALE_GRAY, outline=MID_GRAY, radius=22, width=3)
