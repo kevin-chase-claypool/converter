@@ -225,15 +225,15 @@ def create_commissioning_sequence() -> Path:
         ("5", "Tool state handshake", "Require a fresh physical completion", "F-05  |  F-05A"),
         ("6", "Physical accuracy", "Measure the sheet and close the loop", "M-12  |  M-13"),
     ]
-    positions = [(70, 175), (1010, 175), (70, 485), (1010, 485), (70, 795), (1010, 795)]
-    card_w = 920
+    positions = [(70, 175), (1100, 175), (70, 485), (1100, 485), (70, 795), (1100, 795)]
+    card_w = 830
     card_h = 245
     number_font = _font(50, True)
     for index, ((number, title, body, tests), (x1, y1)) in enumerate(zip(steps, positions)):
         box = (x1, y1, x1 + card_w, y1 + card_h)
         fill = PALE_BLUE if index % 2 == 0 else PALE_GRAY
         _rounded_box(draw, box, fill)
-        circle = (x1 - 2, y1 + 62, x1 + 122, y1 + 186)
+        circle = (x1 + 18, y1 + 62, x1 + 140, y1 + 186)
         draw.ellipse(circle, fill=NAVY, outline=NAVY, width=4)
         bbox = draw.textbbox((0, 0), number, font=number_font)
         draw.text(
@@ -245,13 +245,15 @@ def create_commissioning_sequence() -> Path:
             font=number_font,
             fill=WHITE,
         )
-        draw.text((x1 + 145, y1 + 30), title, font=step_font, fill=NAVY)
-        draw.text((x1 + 145, y1 + 90), body, font=body_font, fill=DARK)
-        draw.text((x1 + 145, y1 + 151), tests, font=test_font, fill=BLUE)
+        draw.text((x1 + 165, y1 + 30), title, font=step_font, fill=NAVY)
+        draw.text((x1 + 165, y1 + 90), body, font=body_font, fill=DARK)
+        draw.text((x1 + 165, y1 + 151), tests, font=test_font, fill=BLUE)
 
-    _arrow(draw, (990, 298), (1008, 298), color=MID_GRAY, width=5)
-    _arrow(draw, (540, 420), (540, 483), color=MID_GRAY, width=5)
-    _arrow(draw, (540, 730), (540, 793), color=MID_GRAY, width=5)
+    _arrow(draw, (900, 298), (1100, 298), color=NAVY, width=8)
+    _arrow(draw, (900, 608), (1100, 608), color=NAVY, width=8)
+    _arrow(draw, (900, 918), (1100, 918), color=NAVY, width=8)
+    _arrow(draw, (485, 420), (485, 483), color=NAVY, width=8)
+    _arrow(draw, (485, 730), (485, 793), color=NAVY, width=8)
 
     path = ASSETS / "figure_02_commissioning_sequence.png"
     img.save(path, dpi=(300, 300))
