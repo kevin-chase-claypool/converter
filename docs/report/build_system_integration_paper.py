@@ -651,12 +651,14 @@ def add_figure(doc: Document, image: Path, caption: str, width: float, number: i
     run.italic = True
 
 
-def add_table(doc: Document, caption: str, widths: list[float], rows: list[list[str]]) -> None:
+def add_table(doc: Document, caption: str, widths: list[float], rows: list[list[str]], number: int) -> None:
     cap = doc.add_paragraph()
     cap.alignment = WD_ALIGN_PARAGRAPH.LEFT
     cap.paragraph_format.keep_with_next = True
     cap.paragraph_format.space_before = Pt(7)
     cap.paragraph_format.space_after = Pt(5)
+    number_run = cap.add_run(f"Table {number}. ")
+    set_run_font(number_run, WORD_HEAD_FONT, 10, True, NAVY)
     run = cap.add_run(caption)
     set_run_font(run, WORD_HEAD_FONT, 10, True, NAVY)
 
@@ -740,6 +742,7 @@ def build_document(metadata: dict[str, str], body_text: str) -> None:
     lines = body_text.splitlines()
     idx = 0
     figure_number = 0
+    table_number = 0
     while idx < len(lines):
         line = lines[idx].rstrip()
         stripped = line.strip()
@@ -762,7 +765,8 @@ def build_document(metadata: dict[str, str], body_text: str) -> None:
             continue
         if stripped.startswith("TABLE:"):
             caption, widths, rows, idx = parse_table_block(lines, idx)
-            add_table(doc, caption, widths, rows)
+            table_number += 1
+            add_table(doc, caption, widths, rows, table_number)
             continue
         if stripped.startswith("# "):
             heading = stripped[2:].strip()
