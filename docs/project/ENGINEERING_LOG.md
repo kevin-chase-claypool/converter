@@ -1,5 +1,34 @@
 # Engineering Log
 
+<a id="elog-20261121-systems-integration-paper"></a>
+### 🟩 2026-11-21 - MIXED/DOCUMENTATION - Complete the Systems Integration in Robotics paper
+
+- Built the standalone paper from the architecture, interface, test-plan,
+  lab-note, roadmap, and engineering-log evidence record.
+- Kept host planning and controller software outside the technical scope by
+  treating each software system as a black box with an observable contract.
+- Documented the main integration difficulties and corrections: measured
+  rotating-bed ratio, short-measurement calibration error, magnetic center and
+  angular registration, HX711 rejection and CS1238 calibration, M3/M5 polarity
+  and timing, completion-handshake failure injection, drag-chain friction,
+  angular rate limits, and compensated geometry.
+- Separated verified capability from remaining qualification work, including
+  the new 200 ms clearance value, the rare handshake timeout, the expanded
+  extrapolated compensation field, and incomplete loaded electrical and
+  thermal tests.
+- Added an ABET Criterion 3 evidence map that identifies strong support for
+  Outcomes 1, 2, 4, 6, and 7, qualifies the written-communication evidence for
+  Outcome 3, and explicitly leaves Outcome 5 to separate team-process evidence.
+- Added the editable DOCX, PDF export, Markdown source, reproducible figure
+  generator, paper figures, and report README entry.
+- Final Word render has 20 pages: a cover, a 15-page main body, references, and
+  three appendices. Every rendered page was visually checked. The DOCX
+  accessibility audit reports zero high, medium, or low findings.
+- Evidence: `docs/report/System_Integration_Robotics_Paper.docx` and
+  `docs/report/System_Integration_Robotics_Paper.pdf`.
+- Category: windows-software, rp23cnc-software, hardware, documentation,
+  report, test, safety.
+
 <a id="elog-20261113-make-feed-override-persistent"></a>
 ### 🟩 2026-11-13 - RP23CNC-SOFTWARE/VERIFIED - Make feed override persistent with transport
 

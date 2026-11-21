@@ -527,10 +527,14 @@
 - [ ] Record force error during straight, curved, and bed-rotation moves.
 - [ ] Photograph the final wiring and mechanical configuration.
 - [ ] Archive final firmware build record, pin map, and settings.
-- [ ] Summarize successful implementations.
-- [ ] Summarize struggles, failed tests, and rejected approaches chronologically.
-- [ ] Document limitations and future work.
-- [ ] Complete and export the Systems Integration in Robotics report.
+- [x] Summarize successful implementations in the report.
+- [x] Summarize struggles, failed tests, and rejected approaches in the report.
+- [x] Document limitations and future work in the report.
+- [x] Complete and export the Systems Integration in Robotics report.
+  Final DOCX and PDF:
+  [`System_Integration_Robotics_Paper.docx`](../report/System_Integration_Robotics_Paper.docx)
+  and
+  [`System_Integration_Robotics_Paper.pdf`](../report/System_Integration_Robotics_Paper.pdf).
 
 ## Known technical debt
 

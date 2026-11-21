@@ -3,6 +3,39 @@
 Working area for the end-of-semester report on this project. Drop drafts, figures,
 and exports here.
 
+## Final paper
+
+The submission-ready Systems Integration in Robotics paper is available in
+three forms:
+
+- [`System_Integration_Robotics_Paper.pdf`](System_Integration_Robotics_Paper.pdf)
+  - fixed-layout submission copy;
+- [`System_Integration_Robotics_Paper.docx`](System_Integration_Robotics_Paper.docx)
+  - editable Word copy;
+- [`System_Integration_Robotics_Paper.md`](System_Integration_Robotics_Paper.md)
+  - canonical text source.
+
+The paper treats the host planner, operator application, motion controller,
+and toolhead controller as black boxes. It evaluates their interfaces,
+commissioning sequence, failures, corrective actions, verified results, and
+remaining qualification work.
+
+The 20-page render uses a cover, a 15-page main body, references, and three
+appendices. It includes the verified bed-ratio, registration, force-calibration,
+M3/M5 handshake, emergency-stop, mechanical repair, and compensated-error
+results. Appendix B maps the paper's evidence to the seven ABET Criterion 3
+student outcomes without claiming unobserved teamwork evidence. Open risks are
+stated explicitly, including the unverified 200 ms clearance behavior, the rare
+handshake timeout, outer compensation extrapolation, and incomplete loaded
+electrical and thermal characterization.
+
+Regenerate the DOCX and figure assets with
+[`build_system_integration_paper.py`](build_system_integration_paper.py) in the
+Codex workspace dependency runtime. The generated PDF was exported through
+Microsoft Word because the packaged documentation renderer could not locate
+LibreOffice. The final DOCX passed an accessibility audit with no findings,
+and all 20 rendered pages were visually inspected.
+
 Use [`LAB_NOTE_TEMPLATE.md`](LAB_NOTE_TEMPLATE.md) for bench work. Keep dated
 notes under `lab-notes/` so measurements and design changes can be cited later.
 The project-wide chronology is maintained in
