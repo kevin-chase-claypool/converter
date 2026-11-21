@@ -630,7 +630,7 @@ def add_title_page(doc: Document, metadata: dict[str, str]) -> None:
     doc.add_page_break()
 
 
-def add_figure(doc: Document, image: Path, caption: str, width: float) -> None:
+def add_figure(doc: Document, image: Path, caption: str, width: float, number: int) -> None:
     if not image.exists():
         raise FileNotFoundError(f"Missing figure: {image}")
     p = doc.add_paragraph()
@@ -644,6 +644,8 @@ def add_figure(doc: Document, image: Path, caption: str, width: float) -> None:
     cap = doc.add_paragraph()
     cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
     cap.paragraph_format.space_after = Pt(10)
+    number_run = cap.add_run(f"Figure {number}. ")
+    set_run_font(number_run, WORD_BODY_FONT, 9.0, True, "4D5560")
     run = cap.add_run(caption)
     set_run_font(run, WORD_BODY_FONT, 9.0, False, "4D5560")
     run.italic = True
@@ -737,6 +739,7 @@ def build_document(metadata: dict[str, str], body_text: str) -> None:
 
     lines = body_text.splitlines()
     idx = 0
+    figure_number = 0
     while idx < len(lines):
         line = lines[idx].rstrip()
         stripped = line.strip()
@@ -753,7 +756,8 @@ def build_document(metadata: dict[str, str], body_text: str) -> None:
             image = ROOT / parts[0]
             caption = parts[1]
             width = float(parts[2]) if len(parts) > 2 else 5.8
-            add_figure(doc, image, caption, width)
+            figure_number += 1
+            add_figure(doc, image, caption, width, figure_number)
             idx += 1
             continue
         if stripped.startswith("TABLE:"):

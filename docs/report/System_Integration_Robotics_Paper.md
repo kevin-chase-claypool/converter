@@ -171,7 +171,7 @@ Physical registration gives the machine a valid origin, but it cannot remove all
 
 After a mechanical repair, an independent compensated verification sheet reduced overall RMS from 1.744 mm to 0.218 mm, an 87.5 percent improvement. Maximum error fell from 2.965 mm to 0.591 mm, an 80.1 percent reduction [11]. All measured angle stages improved, and the result remained within the acceptance gates when the image extraction threshold was varied.
 
-Figure 3 shows the physical calibration sheet and Figure 5 shows the pre/post comparison. The improvement is a system result: the map included measured registration error, the correction preserved the angular frame, and the second sheet was an independent check rather than a refit of the first.
+Figure 4 shows the physical calibration sheet and Figure 5 shows the pre/post comparison. The improvement is a system result: the map included measured registration error, the correction preserved the angular frame, and the second sheet was an independent check rather than a refit of the first.
 
 The image processing was treated as part of the measurement system. A photograph can be distorted by perspective, glare, tape, ink bleed, or a paper sheet that moved during the run. The acceptance process therefore required complete fiducial and station recognition, repeated extraction at different thresholds, and an unchanged assignment of station identity. A result that depended on a single image-processing setting was not accepted. This makes the reported error reduction stronger than a visual before-and-after comparison, while still limiting the result to the measured bed and camera setup.
 
