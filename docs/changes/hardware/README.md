@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-21 | `WSW-20261121-002` | verified | [Show the later dense-v3 bed-compensation comparison](../windows-software/2026/2026-11-21-report-dense-v3-before-after.md) | `report`, `bed-calibration`, `bed-compensation`, `dense-mesh`, `before-after` |
 | 2026-11-21 | `WSW-20261121-001` | verified | [Add A-axis command-rate equations to the report](../windows-software/2026/2026-11-21-a-axis-rate-equations.md) | `report`, `theta`, `rate-limit`, `equations` |
 | 2026-11-13 | `RPSW-20261113-003` | implemented | [Restore Pi display settings and add confirmed power controls](../rp23cnc-software/2026/2026-11-13-restore-pi-settings-power-controls.md) | `touchscreen`, `hmi`, `display-brightness`, `inactivity-timeout`, `system-power`, `restart`, `poweroff`, `systemd`, `safety` |
 | 2026-11-13 | `RPSW-20261113-001` | implemented | [Deploy the UI-only HMI kiosk to the Raspberry Pi Touch Display 2](../rp23cnc-software/2026/2026-11-13-deploy-hmi-kiosk.md) | `raspberry-pi`, `touch-display-2`, `hmi`, `systemd`, `wayland`, `labwc`, `chromium`, `kiosk`, `deployment` |

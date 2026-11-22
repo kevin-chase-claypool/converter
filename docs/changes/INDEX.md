@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-21 | `WSW-20261121-002` | windows-software, hardware | verified | [Show the later dense-v3 bed-compensation comparison](windows-software/2026/2026-11-21-report-dense-v3-before-after.md) |
 | 2026-11-21 | `WSW-20261121-001` | windows-software, rp23cnc-software, hardware | verified | [Add A-axis command-rate equations to the report](windows-software/2026/2026-11-21-a-axis-rate-equations.md) |
 | 2026-11-13 | `RPSW-20261113-009` | rp23cnc-software | verified | [Enlarge the black control deck and remove the footer text](rp23cnc-software/2026/2026-11-13-enlarge-black-control-deck.md) |
 | 2026-11-13 | `RPSW-20261113-008` | rp23cnc-software | verified | [Use a dark background for the persistent control deck](rp23cnc-software/2026/2026-11-13-dark-persistent-control-deck.md) |

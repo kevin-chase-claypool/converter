@@ -267,19 +267,65 @@ def create_commissioning_sequence() -> Path:
 
 
 def create_registration_artifact() -> Path:
-    source = (
-        ROOT
-        / "docs"
-        / "report"
-        / "lab-notes"
-        / "assets"
-        / "2026-10-23-m-12-bed-compensation-frame-error.jpg"
+    sources = (
+        (
+            "PRE",
+            ROOT
+            / "samples"
+            / "gcode"
+            / "bed-error-map-dense-91-v3-centered-overlay-t55.jpg",
+        ),
+        (
+            "POST",
+            ROOT
+            / "samples"
+            / "gcode"
+            / "bed-error-verify-dense-91-v3-centered-auto-overlay-t55.jpg",
+        ),
     )
-    image = Image.open(source).convert("RGB")
-    image.thumbnail((1100, 1100), Image.Resampling.LANCZOS)
-    image = ImageOps.expand(image, border=16, fill=WHITE)
+    panel_width = 920
+    panel_height = 1160
+    label_height = 70
+    gap = 40
+    margin = 40
+    canvas = Image.new(
+        "RGB",
+        (margin * 2 + panel_width * 2 + gap, margin * 2 + label_height + panel_height),
+        WHITE,
+    )
+    draw = ImageDraw.Draw(canvas)
+    label_font = _font(42, True)
+    for index, (label, source) in enumerate(sources):
+        panel = Image.open(source).convert("RGB")
+        panel = ImageOps.fit(
+            panel,
+            (panel_width, panel_height),
+            method=Image.Resampling.LANCZOS,
+            centering=(0.5, 0.5),
+        )
+        x = margin + index * (panel_width + gap)
+        y = margin + label_height
+        canvas.paste(panel, (x, y))
+        draw.rectangle(
+            (x, y, x + panel_width, y + panel_height),
+            outline=MID_GRAY,
+            width=3,
+        )
+        text = (
+            "PRE - uncompensated dense-v3 field"
+            if label == "PRE"
+            else "POST - after dense-v3 compensation"
+        )
+        bbox = draw.textbbox((0, 0), text, font=label_font)
+        draw.text(
+            (x + (panel_width - (bbox[2] - bbox[0])) / 2, margin + 5),
+            text,
+            font=label_font,
+            fill=NAVY,
+        )
+
     path = ASSETS / "figure_03_registration_artifact.jpg"
-    image.save(path, quality=92, subsampling=0, dpi=(300, 300))
+    canvas.save(path, quality=94, subsampling=0, dpi=(300, 300))
     return path
 
 
