@@ -37,6 +37,11 @@ maximum error than the first post-repair baseline. It also preserves the
 qualification boundary because the latest candidate missed the formal promotion
 gates and was selected by owner override.
 
+The report explains that mesh density has diminishing returns after the dominant
+repeatable field has been removed. The latest independent result did not reach
+the `0.274 mm` leave-one-station-out prediction, so the remaining error includes
+variation that a static spatial map cannot reliably cancel.
+
 ## Implementation
 
 The report builder now creates a two-panel PRE/POST image from the retained
