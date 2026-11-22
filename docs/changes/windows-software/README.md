@@ -8,7 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
-| 2026-11-21 | `WSW-20261121-002` | verified | [Show the later dense-v3 bed-compensation comparison](2026/2026-11-21-report-dense-v3-before-after.md) | `report`, `bed-calibration`, `bed-compensation`, `dense-mesh`, `before-after` |
+| 2026-11-21 | `WSW-20261121-002` | verified | [Show the first and latest bed-compensation results](2026/2026-11-21-report-dense-v3-before-after.md) | `report`, `bed-calibration`, `bed-compensation`, `dense-mesh`, `before-after` |
 | 2026-11-21 | `WSW-20261121-001` | verified | [Add A-axis command-rate equations to the report](2026/2026-11-21-a-axis-rate-equations.md) | `report`, `theta`, `rate-limit`, `equations` |
 | 2026-11-04 | `WSW-20261104-001` | implemented | [Generate and save G-code without freezing the converter](2026/2026-11-04-background-gcode-save.md) | `converter`, `save`, `qt`, `ui-freeze`, `background-worker`, `exact-compensation`, `responsiveness` |
 | 2026-11-03 | `WSW-20261103-002` | implemented | [Join endpoint-touching contours to remove unnecessary pen lifts](2026/2026-11-03-join-touching-contours.md) | `svg`, `path-planning`, `pen-cycle`, `contour-join`, `continuous-pen`, `performance` |

@@ -366,12 +366,19 @@ def create_error_chart() -> Path:
     img = Image.new("RGB", (1900, 1050), WHITE)
     draw = ImageDraw.Draw(img)
     title_font = _font(46, True)
+    subtitle_font = _font(23)
     label_font = _font(30)
     tick_font = _font(28)
-    legend_font = _font(27)
+    legend_font = _font(23)
 
-    draw.text((95, 48), "POST REPAIR BED ERROR REDUCTION", font=title_font, fill=NAVY)
-    left, top, right, bottom = 165, 175, 1780, 870
+    draw.text((95, 30), "BED ERROR REDUCTION: FIRST VS LATEST", font=title_font, fill=NAVY)
+    draw.text(
+        (95, 86),
+        "First post-repair verification (2026-10-26) and latest dense-v3 calibration (2026-10-29)",
+        font=subtitle_font,
+        fill=MID_GRAY,
+    )
+    left, top, right, bottom = 165, 250, 1780, 880
     y_max = 3.2
 
     def yp(value: float) -> int:
@@ -384,31 +391,46 @@ def create_error_chart() -> Path:
 
     draw.line((left, top, left, bottom), fill=NAVY, width=4)
     draw.line((left, bottom, right, bottom), fill=NAVY, width=4)
-    draw.text((25, 105), "Error mm", font=label_font, fill=NAVY)
+    draw.text((25, 165), "Error mm", font=label_font, fill=NAVY)
 
     groups = [
-        ("Overall RMS", 1.744, 0.218),
-        ("Maximum", 2.965, 0.591),
+        ("Overall RMS", 1.744, 0.218, 0.550, 0.486),
+        ("Maximum", 2.965, 0.591, 1.163, 1.171),
     ]
-    group_centers = [570, 1300]
-    bar_w = 250
-    for (label, baseline, compensated), cx in zip(groups, group_centers):
+    group_centers = [570, 1320]
+    bar_w = 120
+    for (label, first_baseline, first_compensated, latest_baseline, latest_compensated), cx in zip(
+        groups, group_centers
+    ):
         for offset, value, color in (
-            (-150, baseline, "#8EA2B5"),
-            (150, compensated, BLUE),
+            (-195, first_baseline, "#8EA2B5"),
+            (-65, first_compensated, BLUE),
+            (65, latest_baseline, "#D8C49A"),
+            (195, latest_compensated, "#5A9A73"),
         ):
             x1 = cx + offset - bar_w // 2
             x2 = cx + offset + bar_w // 2
             y1 = yp(value)
             draw.rounded_rectangle((x1, y1, x2, bottom - 2), radius=8, fill=color)
-            draw.text((x1 + 45, y1 - 44), f"{value:.3f}", font=tick_font, fill=DARK)
+            bbox = draw.textbbox((0, 0), f"{value:.3f}", font=tick_font)
+            draw.text(
+                (x1 + (bar_w - (bbox[2] - bbox[0])) / 2, y1 - 39),
+                f"{value:.3f}",
+                font=tick_font,
+                fill=DARK,
+            )
         bbox = draw.textbbox((0, 0), label, font=label_font)
         draw.text((cx - (bbox[2] - bbox[0]) / 2, bottom + 35), label, font=label_font, fill=DARK)
 
-    draw.rounded_rectangle((1260, 60, 1300, 100), radius=4, fill="#8EA2B5")
-    draw.text((1315, 58), "Baseline", font=legend_font, fill=DARK)
-    draw.rounded_rectangle((1515, 60, 1555, 100), radius=4, fill=BLUE)
-    draw.text((1570, 58), "Compensated", font=legend_font, fill=DARK)
+    legend = (
+        (500, "#8EA2B5", "First baseline"),
+        (810, BLUE, "First compensated"),
+        (1135, "#D8C49A", "Latest baseline"),
+        (1450, "#5A9A73", "Latest compensated"),
+    )
+    for x, color, text in legend:
+        draw.rounded_rectangle((x, 145, x + 34, 177), radius=4, fill=color)
+        draw.text((x + 45, 139), text, font=legend_font, fill=DARK)
 
     path = ASSETS / "figure_05_error_improvement.png"
     img.save(path, dpi=(300, 300))

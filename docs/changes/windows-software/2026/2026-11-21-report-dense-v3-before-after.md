@@ -18,19 +18,24 @@ tags:
   - before-after
 ---
 
-# Show the later dense-v3 bed-compensation comparison
+# Show the first and latest bed-compensation results
 
 ## Summary
 
 Figure 5 now compares the later 91-station dense-v3 calibration field before
 and after compensation instead of showing a single earlier calibration
-photograph. The report states that the denser measurement represented a more
-complete spatial model than the earlier sheets.
+photograph. Figure 6 now shows the first post-repair baseline and compensated
+result together with the latest dense-v3 baseline and compensated result. The
+report states that the denser measurement represented a more complete spatial
+model than the earlier sheets.
 
-The caption records the measured comparison: overall RMS fell from `0.550` to
-`0.486 mm` (`11.6%`), while maximum error remained essentially unchanged at
-`1.171 mm`. It also preserves the qualification boundary because this candidate
-missed the formal promotion gates and was selected by owner override.
+The Figure 5 caption records the measured dense-v3 comparison: overall RMS fell
+from `0.550` to `0.486 mm` (`11.6%`), while maximum error remained essentially
+unchanged at `1.171 mm`. The Figure 6 chart shows both measurement epochs and
+states that the latest residual is `72.1%` lower in RMS and `60.5%` lower in
+maximum error than the first post-repair baseline. It also preserves the
+qualification boundary because the latest candidate missed the formal promotion
+gates and was selected by owner override.
 
 ## Implementation
 
