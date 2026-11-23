@@ -959,11 +959,13 @@ Generator pages are previewed **1:1** with the auto fit skipped, so that
 Artwork scale sets the physical drawing size; imported artwork on the Convert
 tab still uses the selected Fit mode.
 Generator tab controls fill the settings column, with the tab's hint and
-status text stacked below them. The settings column starts wide enough for the
-visible Convert controls, expands when a wider settings group is opened, and
-keeps a 280 px floor so it cannot be crushed by the preview. The preview's
-checkbox and fit actions occupy two rows so they do not force the settings
-column into a horizontal scrollbar.
+status text stacked below them. The settings column sizes itself to the active
+tool's visible controls, expands when a wider settings group is opened, and
+keeps a 280 px floor so it cannot be crushed by the preview. Selecting **CMYK**
+therefore widens the column automatically for its long Screen rows instead of
+requiring a manual splitter drag. The preview's checkbox and fit actions
+occupy two rows so they do not force the settings column into a horizontal
+scrollbar.
 
 ### Turtletoy artwork
 

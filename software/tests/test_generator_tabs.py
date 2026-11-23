@@ -325,6 +325,30 @@ class ToolShellTests(unittest.TestCase):
             tab.status.y(), tab.controls_scroll.y() + tab.controls_scroll.height()
         )
 
+    def test_wide_generator_controls_grow_the_settings_pane(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.resize(1500, 950)
+        window.show()
+        self.app.processEvents()
+        start_width = window.stack.width()
+
+        window.show_tool("CMYK")
+        self.app.processEvents()
+
+        tab = window.stack.currentWidget()
+        self.assertGreater(window.stack.width(), start_width)
+        self.assertGreaterEqual(
+            window.stack.width(), window.tools_pane_control_width()
+        )
+        self.assertEqual(
+            tab.controls_scroll.horizontalScrollBar().maximum(), 0
+        )
+        self.assertGreater(
+            window.preview_panel.width(),
+            window.preview_panel.minimumSizeHint().width(),
+        )
+
     def test_every_generator_tool_has_an_artwork_scale(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

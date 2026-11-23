@@ -1727,7 +1727,26 @@ class MainWindow(QMainWindow):
         QTimer.singleShot(0, self.fit_tools_pane_to_controls)
 
     def tools_pane_control_width(self):
-        """Width needed to show the visible settings controls without clipping."""
+        """Width needed to show the active tool's controls without clipping."""
+        current = self.stack.currentWidget()
+        controls_scroll = getattr(current, "controls_scroll", None)
+        if current is not self.convert_root and controls_scroll is not None:
+            content = controls_scroll.widget()
+            margins = (
+                current.layout().contentsMargins()
+                if current.layout() is not None
+                else None
+            )
+            horizontal_margins = (
+                margins.left() + margins.right() if margins is not None else 0
+            )
+            return max(
+                self.stack.minimumWidth(),
+                content.minimumSizeHint().width()
+                + controls_scroll.verticalScrollBar().sizeHint().width()
+                + 2 * controls_scroll.frameWidth()
+                + horizontal_margins,
+            )
         sidebar = self.sidebar_scroll.widget()
         return (
             max(self.stack.minimumWidth(), sidebar.minimumSizeHint().width())
@@ -1830,6 +1849,7 @@ class MainWindow(QMainWindow):
             action.setChecked(True)
         self.setWindowTitle(f"{title} - SVG to XY Theta G-code Converter")
         self.on_tool_changed()
+        QTimer.singleShot(0, self.fit_tools_pane_to_controls)
 
     def build_dashboard(self):
         """Fill the All tools page with one card per tool, grouped."""
