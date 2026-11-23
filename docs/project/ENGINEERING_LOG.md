@@ -1,5 +1,38 @@
 # Engineering Log
 
+<a id="elog-20261123-cmyk-edge-flow-independent-ink-networks"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Restore four independent edge-flow ink networks
+
+- Native-resolution crops of the reference CMYK print showed separate screen
+  directions in flat regions and different tone-following networks per ink.
+  The owner also confirmed the required output is four overlapping G-code
+  files, matching the existing CMYK feature.
+- The shared processed-RGB guide, union coverage, common streamline occupancy,
+  and common 45 degree fallback were rejected. They reduced multicolor
+  fringing but collapsed the reference's four-screen behavior into one
+  contour-heavy mask.
+- Each plate now derives its structure tensor from its own processed CMYK tone
+  and keeps its classic fallback screen angle: cyan 15, magenta 75, yellow 0,
+  and black 45 degrees. Per-ink seeds remain distinct.
+- All four programs keep the same page frame, scale, registration crosses, pen
+  offsets, preview, compensation, and preflight. Save continues to write four
+  separate G-code files; the preview multiplies them only for display.
+- Edge-flow retains the paper-space pen-envelope conversion for scaled
+  artwork and the larger seed-candidate budget so a requested fine pitch is
+  not silently coarsened by the mark cap.
+- A flat-field regression proves the fallback direction changes the traced
+  streamlines. Independent-mask, per-ink guide, scaled page-frame, and
+  four-file save regressions pass.
+- All 113 CMYK tab tests pass. Complete converter discovery passes 633 tests
+  with one expected OpenGL-context skip.
+- A 1200 px software render of `IMG_0514.JPG` completed in 18.61 s with
+  pen-down marks C 4542, M 5307, Y 6295, and K 6137. It shows four separately
+  colored networks, but remains software evidence rather than a physical print.
+- Evidence: `WSW-20261123-001`;
+  `docs/changes/windows-software/2026/2026-11-23-cmyk-edge-flow-independent-ink-networks.md`.
+- Category: windows-software, cmyk, edge-flow, structure-tensor, per-ink-screen,
+  streamline, four-file-output, portrait, physical-validation-pending.
+
 <a id="elog-20261122-cmyk-edge-flow-shared-network"></a>
 ### 🟨 2026-11-22 - WINDOWS SOFTWARE/IMPLEMENTED - Share edge-flow streamline geometry across CMYK
 

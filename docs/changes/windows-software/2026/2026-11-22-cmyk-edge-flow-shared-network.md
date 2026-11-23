@@ -4,7 +4,7 @@ date: 2026-11-22
 category: windows-software
 affected_categories:
   - windows-software
-status: implemented
+status: superseded
 components:
   - software/converter_core/cmyk.py
   - software/converter_core/structure_tensor.py
@@ -22,6 +22,10 @@ related:
 ---
 
 # Make edge-flow CMYK plates share one streamline network
+
+Superseded by `WSW-20261123-001`: the reference and requested output contract
+require four independent, overlapping ink networks rather than one common
+centerline network.
 
 ## Summary
 

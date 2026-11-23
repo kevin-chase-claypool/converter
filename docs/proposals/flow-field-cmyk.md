@@ -1,6 +1,9 @@
-# Tentative feature: Flow-Field CMYK (structure-tensor streamline hatching)
+# Implemented feature: Flow-Field CMYK (structure-tensor streamline hatching)
 
-**Status:** Proposed / backlog only — not implemented or enabled.
+**Status:** Implemented as the CMYK **Edge-flow streamlines** screen. Current
+behavior and the software-selected recipe are in
+[`../../software/README.md`](../../software/README.md); the current change
+record is `WSW-20261123-001`.
 
 ## Intent
 Add an optional CMYK rendering mode to the converter that replaces fixed-angle hatch patterns with smooth vector-field-guided streamlines following image contours and forms. Preserve the current CMYK method and all existing output behavior by default.
@@ -11,15 +14,14 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 3. Extract a tangent direction (minor-eigenvalue eigenvector) to follow edges/forms; estimate directional coherence from eigenvalues. Treat directions as **unoriented** (theta equivalent to theta + pi) to avoid streamline flips.
 4. Smooth the direction field and blend toward a configurable fixed fallback angle where structure is weak/ambiguous. Guard low-gradient regions and avoid abrupt transitions.
 5. Trace evenly spaced streamlines using stable numerical integration, seed distribution, minimum-distance/collision checks, bounds clipping, and curvature limits.
-6. Use the **same geometric direction field across CMYK channels**, but independently modulate streamline coverage/density per channel. Investigate added passes in darker regions, adaptive spacing, or a hybrid. Avoid excessive ink stacking and preserve light areas.
+6. Build an independent direction field from each CMYK channel's own processed tone, with that ink's classic fallback screen angle. Save four separate, page-registered programs so they overlap as four physical pen passes. Add passes in darker regions and preserve light areas.
 7. Emit continuous, stroke-only SVG centerlines compatible with the existing SVG-to-G-code path (no fills, text, or defs); retain units, coordinate mapping, and pen-change/channel separation.
 
-## Candidate UI controls (initial values for experimentation, not calibrated)
-- Rendering mode: existing CMYK / Flow-Field CMYK (opt-in)
-- Base line spacing: 1.2 mm
-- Tensor smoothing radius: 12 image pixels (account for processing resolution)
-- Coherence threshold: 0.25
-- Fallback direction: 45 degrees
+## Current controls (software-selected starting values)
+- Rendering mode: **Edge-flow streamlines** in the existing CMYK Screen style
+- Base line spacing: `0.31 mm` seed pitch
+- Tensor smoothing radius: `2.0 mm` on paper
+- Fallback direction: cyan 15, magenta 75, yellow 0, black 45 degrees
 - Maximum density layers: 3
 - Density method: extra layers / adaptive spacing / hybrid
 - Optional preview of each channel and composite
@@ -41,4 +43,5 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 ## Source idea
 User-provided description of a Reddit artist's method: image gradients -> blurred structure tensor -> smooth edge-following direction field -> evenly spaced streamlines -> extra layers in dark regions -> fixed-angle fallback where structure is unclear.
 
-**Decision pending:** Final algorithm, parameters, interface placement, and implementation priority after a review of the existing converter code.
+Physical four-pass validation, final pitch, smoothing, layer count, and pen
+order remain pending.

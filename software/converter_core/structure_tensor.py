@@ -1,12 +1,10 @@
 """Edge-following streamline screening for photograph-derived CMYK plates.
 
-The direction field is built once from the shared processed-RGB guide, or from
-a 2D luminance guide when one is supplied: image gradients form a structure
-tensor, the tensor is blurred, and its edge-tangent eigenvector becomes a
-smooth orientation field. Coherence blends that field toward a fixed screen
-angle where the image has little structure. Each ink supplies its own tone
-mask and density layers, so the four plates share one coherent drawing while
-retaining independent CMYK coverage.
+Each plate supplies its tone image as the guide: image gradients form a
+structure tensor, the tensor is blurred, and its edge-tangent eigenvector
+becomes a smooth orientation field. Coherence blends that field toward the
+plate's fixed screen angle where the image has little structure. The four
+plates keep independent tone networks while sharing the same page frame.
 """
 
 from __future__ import annotations
@@ -14,6 +12,9 @@ from __future__ import annotations
 import math
 
 from .cancellation import check_cancelled
+
+
+EDGE_FLOW_CHROMA_WEIGHT = 0.35
 
 
 def _field_geometry(guide, geometry, max_side=900):
@@ -71,12 +72,27 @@ def _blur_float_field(field, radius_px):
 
 
 def _structure_tensor_velocity(guide, geometry, smoothing_mm, fallback_angle_deg):
-    """Return edge-following unit vectors for one shared structure field."""
+    """Return edge-following unit vectors for one structure field."""
     import numpy as np
 
     guide_values = np.asarray(guide, dtype=np.float32)
     if guide_values.ndim == 2:
         fields = (guide_values,)
+    elif guide_values.ndim == 3 and guide_values.shape[2] >= 3:
+        # Keep colour-only boundaries, but make luminance the primary form
+        # guide. Summing raw RGB gradients equally let chrome-heavy JPEG
+        # boundaries redirect facial streamlines and produced a painted-mask
+        # look. Two opponent-colour fields contribute at reduced amplitude,
+        # which preserves equal-luminance edges without overpowering forms.
+        red = guide_values[:, :, 0]
+        green = guide_values[:, :, 1]
+        blue = guide_values[:, :, 2]
+        luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue
+        fields = (
+            luminance,
+            EDGE_FLOW_CHROMA_WEIGHT * (red - green),
+            EDGE_FLOW_CHROMA_WEIGHT * (0.5 * (red + green) - blue),
+        )
     elif guide_values.ndim == 3 and guide_values.shape[2] >= 1:
         fields = tuple(
             guide_values[:, :, index]
@@ -185,10 +201,9 @@ def trace_structure_streamlines(
     seed,
     ink_floor,
     tone_at,
-    coverage_at=None,
     cancel_check=None,
 ):
-    """Trace tone-masked streamlines through a shared structure tensor."""
+    """Trace evenly spaced streamlines through one tone-derived tensor."""
     import numpy as np
 
     left = float(geometry["off_x"])
@@ -198,7 +213,11 @@ def trace_structure_streamlines(
     area = max(1e-6, (right - left) * (bottom - top))
     layer_count = max(1, min(6, int(layers)))
     cap = max(16, int(max_marks))
-    seed_cap = max(32, cap // layer_count)
+    # A seed is only a candidate: occupancy merges many of them into a long
+    # streamline and the actual mark count is checked below. Budget several
+    # candidates per allowed mark so the UI's fine pitch is not silently
+    # coarsened on large pages before tracing has a chance to merge them.
+    seed_cap = max(32, (cap * 8) // layer_count)
     base_pitch = max(float(spacing), math.sqrt(area / max(1, seed_cap)))
 
     velocity_x, velocity_y, field_geometry = _structure_tensor_velocity(
@@ -207,7 +226,6 @@ def trace_structure_streamlines(
         max(0.1, float(smoothing_mm)),
         fallback_angle_deg,
     )
-    coverage_at = tone_at if coverage_at is None else coverage_at
     field_w = max(1, int(field_geometry["pixels_w"]))
     field_h = max(1, int(field_geometry["pixels_h"]))
     pixel_x = field_geometry["width_mm"] / field_w
@@ -248,7 +266,7 @@ def trace_structure_streamlines(
             y += direction * my * step_mm
             if not (left <= x <= right and top <= y <= bottom):
                 break
-            if coverage_at(x, y) < max(float(ink_floor), threshold):
+            if tone_at(x, y) < max(float(ink_floor), threshold):
                 break
             ix, iy = field_cell(x, y)
             if occupied[iy, ix]:
@@ -281,7 +299,7 @@ def trace_structure_streamlines(
             check_cancelled(cancel_check)
             x = x0 + (0.5 * base_pitch if row % 2 else 0.0)
             while x <= right and len(marks) < cap:
-                if coverage_at(x, y) < max(float(ink_floor), threshold):
+                if tone_at(x, y) < max(float(ink_floor), threshold):
                     x += base_pitch
                     continue
                 ix, iy = field_cell(x, y)
@@ -292,35 +310,18 @@ def trace_structure_streamlines(
                 back = trace(-1.0, x, y, threshold, occupied)
                 forward = trace(1.0, x, y, threshold, occupied)
                 points = list(reversed(back)) + [(x, y)] + forward
-                visible = []
-                visible_runs = []
-                for point in points:
-                    if tone_at(point[0], point[1]) >= max(
-                        float(ink_floor), threshold
-                    ):
-                        visible.append(point)
-                    elif visible:
-                        visible_runs.append(visible)
-                        visible = []
-                if visible:
-                    visible_runs.append(visible)
-
-                for run in visible_runs:
-                    if len(marks) >= cap:
-                        break
-                    length = sum(
-                        math.hypot(
-                            second[0] - first[0],
-                            second[1] - first[1],
-                        )
-                        for first, second in zip(run, run[1:])
+                length = sum(
+                    math.hypot(
+                        second[0] - first[0],
+                        second[1] - first[1],
                     )
-                    if len(run) >= 3 and length >= minimum_length:
-                        marks.append(run)
+                    for first, second in zip(points, points[1:])
+                )
+                if len(points) >= 3 and length >= minimum_length:
+                    marks.append(points)
 
-                # The complete common path reserves its cells even where this
-                # particular ink has no coverage. That keeps every later ink on
-                # the same streamline instead of selecting a neighbouring line.
+                # Reserve the path so later seeds in this plate cannot place a
+                # neighbouring duplicate within one pen envelope.
                 for px, py in points:
                     cx, cy = field_cell(px, py)
                     xlo = max(0, cx - radius)

@@ -4,7 +4,7 @@ date: 2026-11-22
 category: windows-software
 affected_categories:
   - windows-software
-status: implemented
+status: superseded
 components:
   - software/converter_core/structure_tensor.py
   - software/converter_core/cmyk.py
@@ -22,6 +22,9 @@ related:
 ---
 
 # Preserve color-only detail in edge-flow CMYK
+
+Superseded by `WSW-20261123-001`: edge-flow now uses each ink's own tone image
+as its structure guide instead of one processed-RGB guide shared by all four.
 
 ## Summary
 

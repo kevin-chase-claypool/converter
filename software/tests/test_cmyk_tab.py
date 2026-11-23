@@ -186,7 +186,7 @@ class ScreeningTests(unittest.TestCase):
             0.85,
         )
 
-    def test_edge_flow_channels_share_geometry_across_tone_masks(self):
+    def test_edge_flow_plates_keep_independent_tone_networks(self):
         size = 96
         coords = self.np.arange(size, dtype="float32")
         xx, yy = self.np.meshgrid(coords, coords)
@@ -213,7 +213,6 @@ class ScreeningTests(unittest.TestCase):
             "flow_layers": 1,
             "depth_tone": guide,
             "flow_guide": guide,
-            "flow_coverage": coverage,
         }
 
         cyan = converter.screen_channel(cyan_tone, geometry, **common)
@@ -228,8 +227,85 @@ class ScreeningTests(unittest.TestCase):
 
         cyan_points = points(cyan)
         magenta_points = points(magenta)
+        self.assertGreater(len(cyan_points), 20)
         self.assertGreater(len(magenta_points), 20)
-        self.assertTrue(magenta_points.issubset(cyan_points))
+        self.assertNotEqual(cyan_points, magenta_points)
+
+    def test_edge_flow_mark_cap_does_not_coarsen_a_dense_fine_pitch(self):
+        size = 800
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 200.0,
+            "height_mm": 200.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+        guide = self.np.ones((size, size), dtype="float32")
+        coverage = self.np.zeros((size, size), dtype="float32")
+        coverage[300:500, 300:500] = 0.9
+
+        marks = converter.screen_channel(
+            coverage,
+            geometry,
+            style="edge_flow",
+            spacing_mm=0.31,
+            angle_deg=0.0,
+            seed=7,
+            max_marks=200000,
+            pen_diameter_mm=0.3,
+            path_tolerance_mm=0.15,
+            depth_tone=guide,
+            flow_guide=guide,
+            flow_smoothing_mm=2.0,
+            flow_layers=3,
+        )
+
+        self.assertGreater(len(marks), 180)
+
+    def test_edge_flow_plate_angle_controls_flat_field_direction(self):
+        size = 96
+        tone = self.np.full((size, size), 0.8, dtype="float32")
+        guide = self.np.full((size, size), 0.5, dtype="float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+        common = {
+            "style": "edge_flow",
+            "spacing_mm": 8.0,
+            "seed": 7,
+            "max_marks": 240,
+            "flow_smoothing_mm": 2.0,
+            "flow_layers": 1,
+            "depth_tone": guide,
+            "flow_guide": guide,
+        }
+
+        horizontal = converter.screen_channel(
+            tone, geometry, angle_deg=0.0, **common
+        )
+        vertical = converter.screen_channel(
+            tone, geometry, angle_deg=90.0, **common
+        )
+
+        def vertical_fraction(marks):
+            ratios = []
+            for line in marks:
+                for first, second in zip(line, line[1:]):
+                    dx = second[0] - first[0]
+                    dy = second[1] - first[1]
+                    length = math.hypot(dx, dy)
+                    if length > 0.0:
+                        ratios.append(abs(dy) / length)
+            return sum(ratios) / len(ratios)
+
+        self.assertLess(vertical_fraction(horizontal), 0.25)
+        self.assertGreater(vertical_fraction(vertical), 0.75)
 
     def test_edge_flow_uses_fixed_angle_without_structure(self):
         tone = self.np.full((40, 40), 0.8, dtype="float32")
@@ -2245,17 +2321,22 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(restored.flow_smoothing.value(), 2.5)
         self.assertEqual(restored.flow_layers.value(), 2)
 
-    def test_edge_flow_passes_processed_color_guide_to_every_ink(self):
+    def test_edge_flow_passes_each_inks_tone_and_screen_angle(self):
         tab = self.make_tab()
         tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.scale_pct.setValue(260)
         guides = []
         seeds = []
         coverage = []
+        pen_widths = []
+        angles = []
 
         def capture_guide(*args, **kwargs):
             guides.append(kwargs.get("flow_guide"))
             seeds.append(kwargs.get("seed"))
             coverage.append(kwargs.get("flow_coverage"))
+            pen_widths.append(kwargs.get("pen_diameter_mm"))
+            angles.append(kwargs.get("angle_deg"))
             return []
 
         with mock.patch.object(
@@ -2267,12 +2348,26 @@ class CmykTabTests(unittest.TestCase):
 
         self.assertEqual(len(guides), len(converter.CHANNELS))
         self.assertTrue(all(guide is not None for guide in guides))
-        self.assertTrue(
-            all(len(guide.shape) == 3 and guide.shape[2] == 3 for guide in guides)
+        self.assertTrue(all(guide.ndim == 2 for guide in guides))
+        self.assertEqual(len({id(guide) for guide in guides}), 4)
+        self.assertEqual(
+            seeds,
+            [7 + index for index in range(len(converter.CHANNELS))],
         )
-        self.assertEqual(len(set(seeds)), 1)
-        self.assertTrue(all(mask is not None for mask in coverage))
-        self.assertTrue(all(mask is coverage[0] for mask in coverage))
+        self.assertTrue(all(mask is None for mask in coverage))
+        self.assertTrue(
+            all(
+                abs(width - tab.pen_width.value() / 2.6) < 1e-9
+                for width in pen_widths
+            )
+        )
+        self.assertEqual(
+            angles,
+            [
+                converter.SCREEN_ANGLES_DEG[channel]
+                for channel in converter.CHANNELS
+            ],
+        )
 
     def test_analysis_worker_reports_strategy_split(self):
         from generator_tabs.cmyk_tab import ProgramAnalysisWorker
@@ -2873,6 +2968,7 @@ class CmykTabTests(unittest.TestCase):
 
     def test_scaled_ink_layers_share_the_page_frame(self):
         tab = self.make_tab(FakeHost(self.colour_path))
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
         tab.scale_pct.setValue(280)
         tab.registration_marks.setChecked(False)
         tab._ensure_layers()
@@ -2916,6 +3012,8 @@ class CmykTabTests(unittest.TestCase):
     def test_save_writes_one_file_per_ink(self):
         host = FakeHost(self.image_path)
         tab = self.make_tab(host)
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.scale_pct.setValue(260)
         tab._ensure_layers()
         results = {
             channel: {
@@ -2936,6 +3034,15 @@ class CmykTabTests(unittest.TestCase):
         tab._analysis_key = tab._control_key()
         tab._write_files(results)
         self.assertEqual(host.saved_labels, ["cyan", "magenta", "yellow", "black"])
+        self.assertEqual(len(set(host.saved_paths.values())), 4)
+        manifest = Path(host.saved_paths["cyan"]).with_name(
+            "art-cmyk-set.json"
+        )
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        self.assertEqual(
+            data["screen"]["flow_guide"],
+            "per_ink_tone_structure_tensor",
+        )
         for channel in converter.CHANNELS:
             self.assertTrue(
                 Path(host.saved_paths[converter.CHANNEL_LABELS[channel].lower()]).exists()

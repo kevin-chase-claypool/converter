@@ -317,9 +317,9 @@ class CmykTab(GeneratorTab):
             "labeled legacy diagnostic restores tone-varying row depth while "
             "keeping the selected bed-compensation profile. Stored legacy "
             "values from older settings are promoted to this layout when "
-            "regenerated. Edge-flow streamlines follow blurred RGB and "
-            "brightness structure across one shared direction field and use "
-            "extra tone-triggered layers in darker areas."
+            "regenerated. Edge-flow streamlines follow blurred tone structure "
+            "for each ink, use that ink's fixed screen angle where structure "
+            "is weak, and add extra tone-triggered layers in darker areas."
         )
         self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)
@@ -383,7 +383,7 @@ class CmykTab(GeneratorTab):
         self.flow_layers.setToolTip(
             "Edge-flow only: one base streamline layer plus extra offset "
             "layers where this ink is dark. More layers increase tonal range "
-            "and plotting time without changing the shared direction field."
+            "and plotting time without changing this ink's direction field."
         )
         screen.addRow("Flow layers", self.flow_layers)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
@@ -1375,26 +1375,25 @@ class CmykTab(GeneratorTab):
                 spacing_mm=self.pitch.value(),
                 dot_scale=self.dot_size.value() / 100.0,
                 angle_deg=converter.SCREEN_ANGLES_DEG[channel],
-                # Edge-flow plates share one streamline network. Per-ink seed
-                # offsets move the same facial contour into four different
-                # starting grids, producing visible rainbow fringes when the
-                # four passes are overlaid. Other screens deliberately keep
-                # the per-ink offset so their angles do not collapse to one
-                # moire pattern.
-                seed=(
-                    self.seed.value()
-                    if style == "edge_flow"
-                    else self.seed.value() + index
-                ),
+                seed=self.seed.value() + index,
                 max_marks=self.max_marks.value(),
-                pen_diameter_mm=self.pen_width.value(),
+                # Edge-flow occupancy is calculated in the tab's pre-scale
+                # coordinate frame; convert the final paper pen envelope back
+                # into that frame or Artwork scale widens every neatline.
+                pen_diameter_mm=(
+                    self.pen_width.value() / factor
+                    if style == "edge_flow"
+                    else self.pen_width.value()
+                ),
                 levels=self.levels.value(),
                 overdraw=self.overdraw.value(),
                 solid=self.solid_dots.isChecked(),
                 path_tolerance_mm=self.path_tolerance.value() / factor,
                 depth_tone=tones.get("depth"),
-                flow_guide=tones.get("flow_rgb"),
-                flow_coverage=tones.get("flow_coverage"),
+                # Each pen keeps its own tone network, like every other CMYK
+                # screen, while the shared page frame and registration marks
+                # keep the four independently saved programs in register.
+                flow_guide=tones[channel],
                 row_clearance_mm=(
                     (self.pen_width.value() + converter.WAVE_MIN_EDGE_GAP_MM)
                     / factor
@@ -1927,7 +1926,7 @@ class CmykTab(GeneratorTab):
                     else None
                 ),
                 "flow_guide": (
-                    "shared_processed_rgb_structure_tensor_union_coverage"
+                    "per_ink_tone_structure_tensor"
                     if style == "edge_flow"
                     else None
                 ),

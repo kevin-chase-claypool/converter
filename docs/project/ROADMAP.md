@@ -579,18 +579,21 @@
 
 - [ ] Bench-verify edge-flow CMYK streamlines and select a starting recipe.
   Problem: the new structure-tensor screen is covered by synthetic geometry
-  and UI tests (`WSW-20261122-002`); its shared guide now uses all processed
-  RGB channels so color-only boundaries survive (`WSW-20261122-003`). No
-  printed four-pass portrait has established a useful pitch, smoothing
-  radius, layer count, or pen order.
+  and UI tests (`WSW-20261122-002`). Each ink now derives its own tone-based
+  direction field and keeps its classic fallback screen angle, producing four
+  independent G-code networks (`WSW-20261123-001`). No printed four-pass
+  portrait has established a useful pitch, smoothing radius, layer count, or
+  pen order.
   Benefit: one validated recipe turns the visual method into a repeatable
   portrait workflow and records where extra dark-tone layers become too dense.
   Risk: fine streamlines expose pen-up drag, felt-tip spread, four-ink overlay
   error, and long plotting times; a source photo of an existing print also
   feeds wall/paper edges into the structure field as real ink structure.
-  Status 2026-11-22: the live 1600 px preview selected the balanced three-layer
-  software recipe now recorded in `software/README.md`; the original
-  `1.2 mm` / `2.5 mm` recommendation rendered too broad for this portrait.
+  Status 2026-11-23: the reference print was re-inspected at native resolution
+  and confirmed to use separate per-ink screen directions. The shared RGB
+  guide and common streamline network were rejected and replaced. A corrected
+  1200 px software render now produces four independent overlapping networks;
+  the current three-layer recipe remains software-selected only.
   Acceptance: print a pre-cropped portrait with the README starting recipe
   after one HOME + REGISTER; inspect line separation, drag, overlay, and elapsed
   time; then record the selected recipe in a lab note and revise the README
