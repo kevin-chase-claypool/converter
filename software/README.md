@@ -529,10 +529,10 @@ Current tools:
   - For Edge-flow streamlines, Auto tunes the image curve, separation, and
     black extraction without changing Dot pitch. Edge-flow's path-local tone
     gating leaves more paper than a solid row screen, so the selected curve
-    uses normal photo brightness, stronger midtone contrast, and a lower ink
-    gamma. That keeps enough separate yellow/magenta strokes through bright
-    skin to show the source gradient instead of reducing the portrait to a
-    sparse sketch.
+    uses normal photo brightness, stronger midtone contrast, lower ink gamma,
+    and a moderate saturation/GCR balance. That keeps enough separate
+    yellow/magenta strokes through bright skin without pushing the whole face
+    into a red-orange wash.
   - For other screen styles, tone controls come from a detail search over the
     real curve chain: maximum mid tone-weighted gradient with a clipping
     penalty, plus a target print mean clamped to the printable `0.30-0.75`
@@ -591,11 +591,13 @@ Current tools:
   Pen width and Artwork scale: it sets Dot pitch to `1.5` effective pen widths,
   Flow smoothing to about `2.5` pen widths (clamped to `1.2-2.0 mm`), uses two
   layers for pens at or below `0.7 mm` and three layers above that, and lowers
-  Path tolerance to at most `0.10 mm`. It selects Edge-flow if another screen
-  style was active and intentionally changes the saved layout; Auto remains
-  image-only. For a `0.6 mm` pen at `260 %` scale this gives a `0.35 mm`
-  source pitch (`0.91 mm` effective), `1.5 mm` smoothing, two layers, and
-  `0.10 mm` tolerance.
+  Path tolerance to at most `0.10 mm`. It also enables **Continuous Black
+  keylines**, which retain the strongest coherent luminance boundaries in the
+  Black plate while the color plates remain tone-gated. It selects Edge-flow
+  if another screen style was active and intentionally changes the saved
+  layout; Auto remains image-only. For a `0.6 mm` pen at `260 %` scale this
+  gives a `0.35 mm` source pitch (`0.91 mm` effective), `1.5 mm` smoothing,
+  two layers, Black keylines, and `0.10 mm` tolerance.
   The implementation lives in
   [`converter_core/structure_tensor.py`](converter_core/structure_tensor.py);
   output uses the existing four-file CMYK save, preview, offset, and G-code
@@ -605,16 +607,18 @@ Current tools:
   discussion; this implementation is repository-native and independently
   tested. Software rendering is verified, but no edge-flow four-pass sheet has
   yet established the best pitch, smoothing, or layer count on paper.
-  For the current portrait, Auto selects auto levels on; saturation 120 %,
-  contrast 235 %, brightness 100 %, sharpening off; ink gamma 0.70; and black
-  (GCR) 85 %. It leaves the existing `0.31 mm` source pitch and `260 %`
-  artwork scale alone (`0.81 mm` effective) and uses the tab's 1600 px
+  For the current portrait, Auto selects auto levels on; saturation 110 %,
+  contrast 220 %, brightness 105 %, sharpening off; ink gamma 0.75; and black
+  (GCR) 80 %. It leaves the existing source pitch and artwork scale alone and
+  uses the tab's 1600 px
   resolution, C/M/Y weights 100 % and K 90 %, `4.0 mm` flow smoothing, five
   flow layers, `0.8 mm` pen width, `0.15 mm` path tolerance, 200000 marks per
-  ink, and seed 7. A four-network software render now keeps separate yellow,
-  magenta, cyan, and black density through the bright face while still
-  leaving paper gaps. This is a repeatable software starting point, not a
-  physical print optimum; tune it against the pen set and paper.
+  ink, and seed 7. Pressing **Fine detail** changes those flow controls to the
+  pen-aware recipe and enables Black keylines. A four-network software render
+  now keeps separate yellow, magenta, cyan, and black density through the
+  bright face while still leaving paper gaps. This is a repeatable software
+  starting point, not a physical print optimum; tune it against the pen set
+  and paper.
   Resolution keeps the source image's longest side up to that many pixels
   and never upsamples, so it accepts high-resolution sources (the control is
   effectively uncapped; memory grows with the source size you keep).
@@ -950,7 +954,7 @@ work with no input (optional mesh/image sources are noted below).
 | Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
 | CMYK | Auto levels on, rectilinear fill at 0.10 mm pitch, saturation 115 %, contrast 285 %, brightness 170 %, ink gamma 1.40, black (GCR) 95 %, 40000 marks/ink, resolution 10000 px, weights 100/100/100/100 %, artwork scale 280 % | Needs an image; Preview plans each ink in the background and Save writes four files. Dense photo screens take hours to plot; raise pitch or lower Max marks/ink for a faster pass. |
-| CMYK edge-flow | Auto levels on; saturation 120 %, contrast 235 %, brightness 100 %, sharpening off; gamma 0.70, GCR 85 %, resolution 1600 px, weights 100/100/100/90 %; keep the operator-picked Edge-flow pitch and artwork scale, then use Flow smoothing 4.0 mm, Flow layers 5, pen 0.8 mm, tolerance 0.15 mm, 200000 marks/ink, seed 7 on 200 x 200 mm | Software-selected starting point for a pre-cropped portrait. Auto adjusts image processing only and does not overwrite the saved screen layout. Each ink applies its own mask, seed, continuous local tone fraction, and fallback screen over one strength-gated luminance flow; Save writes four separate overprinted G-code files. Check density and pen-set separation on paper before using it as a production recipe. |
+| CMYK edge-flow | Auto levels on; saturation 110 %, contrast 220 %, brightness 105 %, sharpening off; gamma 0.75, GCR 80 %, resolution 1600 px, weights 100/100/100/90 %; keep the operator-picked Edge-flow pitch and artwork scale. Use **Fine detail** for pen-aware pitch/smoothing/layers, Continuous Black keylines, and tolerance no larger than 0.10 mm. | Software-selected starting point for a pre-cropped portrait. Auto adjusts image processing only and does not overwrite the saved screen layout. Each ink applies its own mask, seed, continuous local tone fraction, and fallback screen over one strength-gated luminance flow; the Black plate can keep coherent boundaries continuous while color remains tone-gated. Save writes four separate overprinted G-code files. Check density and pen-set separation on paper before using it as a production recipe. |
 | 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
 | Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |
 | Snowflake | 6 arms, depth 3, length 45 %, branch angle 35 deg, branch scale 55 %, jitter 8 deg / 15 % | Raise depth for finer detail; cap is 5. |

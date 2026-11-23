@@ -186,6 +186,53 @@ class ScreeningTests(unittest.TestCase):
             0.85,
         )
 
+    def test_edge_flow_black_keylines_strengthen_coherent_edges(self):
+        size = 96
+        guide = self.np.zeros((size, size), dtype="float32")
+        guide[:, size // 2 :] = 1.0
+        tone = self.np.full((size, size), 0.08, dtype="float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+        common = {
+            "style": "edge_flow",
+            "spacing_mm": 8.0,
+            "angle_deg": 0.0,
+            "seed": 7,
+            "max_marks": 500,
+            "flow_smoothing_mm": 1.0,
+            "flow_layers": 1,
+            "depth_tone": guide,
+            "flow_guide": guide,
+        }
+
+        tone_gated = converter.screen_channel(tone, geometry, **common)
+        keylined = converter.screen_channel(
+            tone,
+            geometry,
+            flow_keylines=True,
+            **common,
+        )
+
+        def ink_length(marks):
+            return sum(
+                math.hypot(
+                    second[0] - first[0],
+                    second[1] - first[1],
+                )
+                for line in marks
+                for first, second in zip(line, line[1:])
+            )
+
+        # The low-tone screen alone leaves a broken vertical edge. Continuous
+        # keylines retain more of that path without changing where it runs.
+        self.assertGreater(ink_length(keylined), ink_length(tone_gated) * 1.4)
+
     def test_edge_flow_plates_keep_independent_tone_networks(self):
         size = 96
         coords = self.np.arange(size, dtype="float32")
@@ -910,8 +957,10 @@ class ScreeningTests(unittest.TestCase):
         self.assertLessEqual(values["gamma"], 0.85)
         self.assertGreaterEqual(values["contrast"], 220)
         self.assertLessEqual(values["contrast"], 275)
+        self.assertGreaterEqual(values["saturation"], 100)
+        self.assertLessEqual(values["saturation"], 120)
         self.assertGreaterEqual(values["gcr"], 65)
-        self.assertLessEqual(values["gcr"], 90)
+        self.assertLessEqual(values["gcr"], 85)
         self.assertNotIn("dot_pitch_mm", values)
 
         tones, _geometry = converter.prepare_image_tones(
@@ -2475,11 +2524,13 @@ class CmykTabTests(unittest.TestCase):
         tab.style.setCurrentIndex(style_index)
         tab.flow_smoothing.setValue(2.5)
         tab.flow_layers.setValue(2)
+        tab.flow_keylines.setChecked(True)
 
         state = tab.artwork_layout_state()
         self.assertEqual(state["screen"]["style"], "edge_flow")
         self.assertAlmostEqual(state["screen"]["flow_smoothing_mm"], 2.5)
         self.assertEqual(state["screen"]["flow_layers"], 2)
+        self.assertTrue(state["screen"]["preserve_black_keylines"])
 
         root = ET.parse(tab.build_svg()).getroot()
         self.assertEqual(svg_groups(root), list(converter.CHANNELS))
@@ -2489,6 +2540,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(restored.style.currentData(), "edge_flow")
         self.assertAlmostEqual(restored.flow_smoothing.value(), 2.5)
         self.assertEqual(restored.flow_layers.value(), 2)
+        self.assertTrue(restored.flow_keylines.isChecked())
 
     def test_edge_flow_passes_shared_guide_and_per_ink_screen(self):
         tab = self.make_tab()
@@ -3529,6 +3581,7 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertAlmostEqual(tab.flow_smoothing.value(), 1.5, places=1)
         self.assertEqual(tab.flow_layers.value(), 2)
+        self.assertTrue(tab.flow_keylines.isChecked())
         self.assertAlmostEqual(tab.path_tolerance.value(), 0.10, places=2)
         self.assertIn("Fine detail", tab.status.text())
 

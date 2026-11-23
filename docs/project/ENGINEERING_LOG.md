@@ -1,5 +1,41 @@
 # Engineering Log
 
+<a id="elog-20261123-cmyk-edge-flow-black-keylines"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Preserve Black portrait keylines
+
+- The owner compared the portrait render with the source. The overall
+  silhouette and wood/shirt color families were recognizable, but the mouth
+  and teeth merged into a dark knot, small eye highlights vanished, and the
+  collar seams were under-described. Skin also leaned too orange and the
+  blurred background carried excessive yellow/black texture.
+- The existing continuous-tone field was behaving correctly: path-local gating
+  broke compact high-contrast boundaries into the same segments as ordinary
+  facial tone.
+- The structure tensor now returns a normalized edge-confidence field.
+  Optional **Continuous Black keylines** raises coverage only on high-strength,
+  high-coherence Black paths. C/M/Y remain tone-gated, avoiding a blanket
+  four-color outline around every shadow.
+- **Fine detail** enables Black keylines and persists the choice. Existing
+  artwork recipes default the flag off until the preset is applied.
+- A synthetic low-tone edge gained over `1.4x` continuous Black length while
+  retaining the coherent direction. A software comparison showed improved
+  eyes, nostrils, lip line, collar, and wood with about `17 %` more Black ink
+  length; this is a moderate Black-detail addition, not a change to the color
+  plates.
+- Edge-flow Auto was retuned from brightness 100 %, contrast 235 %,
+  saturation 120 %, GCR 85 %, gamma 0.70 to brightness 105 %, contrast 220 %,
+  saturation 110 %, GCR 80 %, and gamma 0.75. The comparison retains facial
+  density while reducing the red-orange cast.
+- All `120` CMYK tab tests pass. Complete converter discovery passes `640`
+  tests with one expected OpenGL-context skip.
+- Physical four-pass opacity, pen spread, and the calibrated ink profile
+  remain unverified. Focused background suppression is still a separate
+  subject-mask problem.
+- Evidence: `WSW-20261123-007`;
+  `docs/changes/windows-software/2026/2026-11-23-cmyk-edge-flow-black-keylines.md`.
+- Category: windows-software, cmyk, edge-flow, keylines, portrait,
+  color-balance, physical-validation-pending.
+
 <a id="elog-20261123-cmyk-edge-flow-fine-detail-preset"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Add an Edge-flow fine-detail preset
 

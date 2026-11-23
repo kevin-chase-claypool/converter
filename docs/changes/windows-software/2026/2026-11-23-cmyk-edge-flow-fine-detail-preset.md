@@ -17,6 +17,7 @@ tags:
 related:
   - WSW-20261123-003
   - WSW-20261123-005
+  - WSW-20261123-007
   - docs/proposals/flow-field-cmyk.md
 ---
 
@@ -56,6 +57,7 @@ between strokes.
 - For a `0.6 mm` pen at `260 %` scale, the preset selects `0.35 mm` source
   pitch (`0.91 mm` effective), `1.5 mm` smoothing, two layers, and `0.10 mm`
   tolerance.
+- `WSW-20261123-007` extends this preset to enable Continuous Black keylines.
 
 ## Verification
 

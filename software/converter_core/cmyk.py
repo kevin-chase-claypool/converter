@@ -323,16 +323,16 @@ def auto_photo_settings(
         )
         tonal_range = p95 - p05
         chroma_p90 = float(np.percentile(chroma, 90.0))
-        brightness = clamp(100.0 + (0.42 - p50) * 90.0, 85.0, 125.0)
-        contrast = clamp(235.0 + (0.65 - tonal_range) * 70.0, 190.0, 275.0)
-        gamma = clamp(0.72 + (p50 - 0.42) * 0.40, 0.60, 0.95)
+        brightness = clamp(104.0 + (0.42 - p50) * 90.0, 85.0, 125.0)
+        contrast = clamp(220.0 + (0.65 - tonal_range) * 70.0, 190.0, 275.0)
+        gamma = clamp(0.76 + (p50 - 0.42) * 0.40, 0.60, 0.95)
         saturation = clamp(
-            120.0 + (0.30 - chroma_p90) * 30.0,
-            110.0,
-            140.0,
+            108.0 + (0.30 - chroma_p90) * 30.0,
+            100.0,
+            135.0,
         )
         gcr = clamp(
-            88.0 - max(0.0, chroma_p90 - 0.18) * 40.0,
+            83.0 - max(0.0, chroma_p90 - 0.18) * 40.0,
             65.0,
             90.0,
         )
@@ -1285,6 +1285,7 @@ def screen_channel(
     flow_smoothing_mm=None,
     flow_layers=3,
     flow_guide=None,
+    flow_keylines=False,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
@@ -1313,6 +1314,8 @@ def screen_channel(
     adjacent visible rows, expressed in the same pre-scale units as
     ``spacing_mm``. It defaults to the pen diameter plus
     ``WAVE_MIN_EDGE_GAP_MM`` for callers that do not apply a later artwork scale.
+    ``flow_keylines`` keeps the strongest coherent structure boundaries
+    continuous in the current plate. The CMYK tab enables it only for Black.
     The legacy ``waves`` and ``waves_zero`` styles are promoted to the
     equidistant ``waves_even`` geometry unless ``allow_variable_wave_spacing``
     is explicitly true. Diagnostic comparison tools use that opt-in; normal
@@ -1458,6 +1461,7 @@ def screen_channel(
             seed,
             INK_FLOOR,
             darkness,
+            keylines=bool(flow_keylines),
             cancel_check=cancel_check,
         )
     else:

@@ -27,11 +27,13 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 - Maximum density layers: 5 for the current portrait recipe
 - Tone method: deterministic path-local `4-8 mm` ink segments, with extra
   layers for darker coverage and no shared 2D block lattice
-- Auto image curve for the current portrait: brightness 100 %, contrast 235 %,
-  saturation 120 %, GCR 85 %, gamma 0.70
+- Auto image curve for the current portrait: brightness 105 %, contrast 220 %,
+  saturation 110 %, GCR 80 %, gamma 0.75
 - Fine-detail preset: 1.5 effective pen widths, smoothing near 2.5 pen widths
   clamped to `1.2-2.0 mm`, two layers at or below a `0.7 mm` pen and three
   above it, and Path tolerance no larger than `0.10 mm`
+- Optional Continuous Black keylines: preserve high-coherence structure
+  boundaries in the Black plate while leaving C/M/Y tone-gated
 - Optional preview of each channel and composite
 
 ## Implementation plan

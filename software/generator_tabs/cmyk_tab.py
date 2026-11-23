@@ -400,6 +400,15 @@ class CmykTab(GeneratorTab):
         )
         self.detail_button.clicked.connect(self.apply_detail_preset)
         screen.addRow("Precision", self.detail_button)
+        self.flow_keylines = QCheckBox("Continuous Black keylines")
+        self.flow_keylines.setChecked(False)
+        self.flow_keylines.setToolTip(
+            "Edge-flow only: keep the strongest coherent luminance boundaries "
+            "continuous in the Black plate. Tone-gated color plates remain "
+            "unchanged, so eyes, nostrils, lip edges, teeth, and collar seams "
+            "gain a stable keyline without a blanket outline."
+        )
+        screen.addRow("Keylines", self.flow_keylines)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
         screen.addRow("Dot size", self.dot_size)
         self.solid_dots = QCheckBox("Solid dots")
@@ -887,6 +896,7 @@ class CmykTab(GeneratorTab):
         self.pitch.setValue(max(0.1, min(8.0, pitch)))
         self.flow_smoothing.setValue(smoothing)
         self.flow_layers.setValue(layers)
+        self.flow_keylines.setChecked(True)
         self.path_tolerance.setValue(
             min(self.path_tolerance.value(), tolerance)
         )
@@ -897,7 +907,8 @@ class CmykTab(GeneratorTab):
             f"{effective_pitch:.2f} mm on paper "
             f"({effective_pitch / pen:.2f} pen widths); Flow smoothing "
             f"{self.flow_smoothing.value():.1f} mm; "
-            f"Flow layers {self.flow_layers.value()}; Path tolerance "
+            f"Flow layers {self.flow_layers.value()}; Black keylines on; "
+            f"Path tolerance "
             f"{self.path_tolerance.value():.2f} mm. Preview to compare."
         )
         self.status.setText(message)
@@ -986,6 +997,7 @@ class CmykTab(GeneratorTab):
                 "contour_order": self.contour_order.currentData(),
                 "flow_smoothing_mm": self.flow_smoothing.value(),
                 "flow_layers": self.flow_layers.value(),
+                "preserve_black_keylines": self.flow_keylines.isChecked(),
                 "dot_size_pct": self.dot_size.value(),
                 "solid_dots": self.solid_dots.isChecked(),
                 "levels": self.levels.value(),
@@ -1078,6 +1090,9 @@ class CmykTab(GeneratorTab):
                 float(screen.get("flow_smoothing_mm", 2.5))
             )
             self.flow_layers.setValue(int(screen.get("flow_layers", 3)))
+            self.flow_keylines.setChecked(
+                bool(screen.get("preserve_black_keylines", False))
+            )
             self.dot_size.setValue(float(screen["dot_size_pct"]))
             self.solid_dots.setChecked(bool(screen["solid_dots"]))
             self.levels.setValue(int(screen["levels"]))
@@ -1266,6 +1281,7 @@ class CmykTab(GeneratorTab):
         self.contour_order.setEnabled(wave_selected)
         self.flow_smoothing.setEnabled(flow_selected)
         self.flow_layers.setEnabled(flow_selected)
+        self.flow_keylines.setEnabled(flow_selected)
         if hasattr(self, "pass_summary"):
             self._refresh_pass_summary()
 
@@ -1460,6 +1476,11 @@ class CmykTab(GeneratorTab):
                 allow_variable_wave_spacing=(style == "waves_zero"),
                 flow_smoothing_mm=self.flow_smoothing.value() / factor,
                 flow_layers=self.flow_layers.value(),
+                flow_keylines=(
+                    style == "edge_flow"
+                    and channel == "k"
+                    and self.flow_keylines.isChecked()
+                ),
             )
             # Generator pages are plotted 1:1, so the tab's Artwork scale is
             # applied to the screened marks about the page centre here.
@@ -1978,6 +1999,11 @@ class CmykTab(GeneratorTab):
                     self.flow_layers.value()
                     if style == "edge_flow"
                     else None
+                ),
+                "preserve_black_keylines": (
+                    self.flow_keylines.isChecked()
+                    if style == "edge_flow"
+                    else False
                 ),
                 "flow_guide": (
                     "strength_gated_shared_luminance_structure_tensor_"

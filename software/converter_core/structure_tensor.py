@@ -89,7 +89,7 @@ def _blur_float_field(field, radius_px):
 
 
 def _structure_tensor_velocity(guide, geometry, smoothing_mm, fallback_angle_deg):
-    """Return edge-following unit vectors for one structure field."""
+    """Return edge-following vectors and edge confidence for one field."""
     import numpy as np
 
     guide_values = np.asarray(guide, dtype=np.float32)
@@ -188,6 +188,7 @@ def _structure_tensor_velocity(guide, geometry, smoothing_mm, fallback_angle_deg
     return (
         (velocity_x / norm).astype(np.float32),
         (velocity_y / norm).astype(np.float32),
+        guided.astype(np.float32),
         field_geometry,
     )
 
@@ -222,6 +223,32 @@ def _bilinear_velocity(velocity_x, velocity_y, field_geometry, x, y):
     return float(sample(velocity_x)), float(sample(velocity_y))
 
 
+def _bilinear_scalar(field, field_geometry, x, y):
+    """Sample one field at a page coordinate."""
+    left = float(field_geometry["off_x"])
+    top = float(field_geometry["off_y"])
+    width = max(1e-8, float(field_geometry["width_mm"]))
+    height = max(1e-8, float(field_geometry["height_mm"]))
+    if not (left <= x <= left + width and top <= y <= top + height):
+        return 0.0
+
+    rows, cols = field.shape
+    px = (x - left) / width * max(0, cols - 1)
+    py = (y - top) / height * max(0, rows - 1)
+    x0 = max(0, min(cols - 1, int(math.floor(px))))
+    y0 = max(0, min(rows - 1, int(math.floor(py))))
+    x1 = min(cols - 1, x0 + 1)
+    y1 = min(rows - 1, y0 + 1)
+    fx = max(0.0, min(1.0, px - x0))
+    fy = max(0.0, min(1.0, py - y0))
+    return float(
+        field[y0, x0] * (1.0 - fx) * (1.0 - fy)
+        + field[y0, x1] * fx * (1.0 - fy)
+        + field[y1, x0] * (1.0 - fx) * fy
+        + field[y1, x1] * fx * fy
+    )
+
+
 def _tone_gated_runs(
     points,
     tone_at,
@@ -230,8 +257,10 @@ def _tone_gated_runs(
     path_key,
     layer,
     minimum_length,
+    edge_at=None,
+    keyline_strength=0.0,
 ):
-    """Split one traced path into locally tone-selected ink runs."""
+    """Split one traced path into local tone and optional keyline runs."""
     runs = []
     current = []
     distance = 0.0
@@ -249,6 +278,17 @@ def _tone_gated_runs(
                 ),
             )
         )
+        if (
+            layer == 0
+            and edge_at is not None
+            and keyline_strength > 0.0
+        ):
+            edge = min(1.0, max(0.0, float(edge_at(point[0], point[1]))))
+            keyline = min(
+                1.0,
+                max(0.0, (edge - 0.30) / 0.45),
+            )
+            coverage = max(coverage, keyline * keyline_strength)
         ink = (
             coverage > 0.0
             and _path_tone_threshold(
@@ -299,6 +339,7 @@ def trace_structure_streamlines(
     seed,
     ink_floor,
     tone_at,
+    keylines=False,
     cancel_check=None,
 ):
     """Trace evenly spaced streamlines through one tone-derived tensor.
@@ -325,11 +366,13 @@ def trace_structure_streamlines(
     seed_cap = max(32, (cap * 8) // layer_count)
     base_pitch = max(float(spacing), math.sqrt(area / max(1, seed_cap)))
 
-    velocity_x, velocity_y, field_geometry = _structure_tensor_velocity(
-        guide,
-        geometry,
-        max(0.1, float(smoothing_mm)),
-        fallback_angle_deg,
+    velocity_x, velocity_y, edge_field, field_geometry = (
+        _structure_tensor_velocity(
+            guide,
+            geometry,
+            max(0.1, float(smoothing_mm)),
+            fallback_angle_deg,
+        )
     )
     field_w = max(1, int(field_geometry["pixels_w"]))
     field_h = max(1, int(field_geometry["pixels_h"]))
@@ -369,6 +412,9 @@ def trace_structure_streamlines(
 
     def sample_velocity(x, y):
         return _bilinear_velocity(velocity_x, velocity_y, field_geometry, x, y)
+
+    def sample_edge(x, y):
+        return _bilinear_scalar(edge_field, field_geometry, x, y)
 
     def field_cell(x, y):
         ix = int((x - left) / max(1e-8, right - left) * field_w)
@@ -456,6 +502,8 @@ def trace_structure_streamlines(
                         path_key,
                         layer,
                         visible_minimum_length,
+                        sample_edge if keylines else None,
+                        0.92 if keylines else 0.0,
                     )
                     marks.extend(visible_runs)
                     if len(marks) > cap:

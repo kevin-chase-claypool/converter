@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-23 | `WSW-20261123-007` | windows-software | implemented | [Preserve Black portrait keylines and refine Edge-flow Auto color](windows-software/2026/2026-11-23-cmyk-edge-flow-black-keylines.md) |
 | 2026-11-23 | `WSW-20261123-006` | windows-software | implemented | [Add a pen-aware Edge-flow fine-detail preset](windows-software/2026/2026-11-23-cmyk-edge-flow-fine-detail-preset.md) |
 | 2026-11-23 | `WSW-20261123-005` | windows-software | implemented | [Make Edge-flow Auto preserve portrait density](windows-software/2026/2026-11-23-cmyk-edge-flow-auto-density.md) |
 | 2026-11-23 | `WSW-20261123-004` | windows-software | implemented | [Remove block matrix from edge-flow tone](windows-software/2026/2026-11-23-cmyk-edge-flow-path-local-tone.md) |
