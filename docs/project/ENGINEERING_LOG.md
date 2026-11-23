@@ -1,23 +1,24 @@
 # Engineering Log
 
-<a id="elog-20261123-process-yellow-preview"></a>
-### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Use pure process yellow in the CMYK preview
+<a id="elog-20261123-tombow-process-preview"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Use the Tombow process palette in the CMYK preview
 
-- The owner identified that the generic yellow ink, `#f0c400`, was a brownish
-  display approximation for the Tombow Process Yellow marker in use. In the
-  multiply preview it darkened red and green as well as blue, creating an
-  artificial brown/yellow cast before physical ink calibration.
-- `CHANNEL_COLORS["y"]` is now `#ffff00`. The same value drives CMYK SVG layer
-  colours, the OpenGL preview layer, and the generic Auto colour model.
-- A regression pins the process-yellow value. The existing measured
-  `*-profile.json` path remains authoritative for real pens.
+- The owner uses Tombow Process Yellow, Process Blue, Magenta, and Black, and
+  asked that the OpenGL preview mix those physical process inks. The old
+  display values were unrelated generic approximations, and the yellow
+  `#f0c400` darkened red and green as well as blue.
+- `TOMBOW_PROCESS_COLORS` now defines blue `#00aeef`, magenta `#ec008c`,
+  process yellow `#ffff00`, and black `#231f20`. The same palette drives CMYK
+  SVG layer colours, the OpenGL preview, and the generic Auto colour model.
+- A regression pins all four values. The existing measured `*-profile.json`
+  path remains authoritative for the real pens and paper.
 - A portrait software render now shows lemon process yellow instead of the
   previous brown/orange yellow.
 - Complete converter discovery passes `657` tests with one expected
   OpenGL-context skip.
 - Evidence: `WSW-20261123-012`.
-- Category: windows-software, cmyk, process-yellow, preview,
-  ink-simulation, color-management.
+- Category: windows-software, cmyk, tombow, process-blue, process-magenta,
+  process-yellow, preview, ink-simulation, color-management.
 
 <a id="elog-20261123-cmyk-color-profile-pen-down"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Color-manage CMYK inputs and reduce adjacent pen lifts

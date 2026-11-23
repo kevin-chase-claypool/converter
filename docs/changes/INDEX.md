@@ -5,7 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
-| 2026-11-23 | `WSW-20261123-012` | windows-software | implemented | [Use pure process yellow in the CMYK preview](windows-software/2026/2026-11-23-process-yellow-preview-color.md) |
+| 2026-11-23 | `WSW-20261123-012` | windows-software | implemented | [Use the Tombow process palette in the CMYK preview](windows-software/2026/2026-11-23-tombow-process-preview-colors.md) |
 | 2026-11-23 | `WSW-20261123-011` | windows-software | implemented | [Color-manage CMYK sources and reduce adjacent pen lifts](windows-software/2026/2026-11-23-cmyk-color-profile-and-pen-down-chaining.md) |
 | 2026-11-23 | `WSW-20261123-010` | windows-software | implemented | [Strengthen Fine detail edge separation and sharpening](windows-software/2026/2026-11-23-cmyk-fine-detail-edge-separation.md) |
 | 2026-11-23 | `WSW-20261123-009` | windows-software | implemented | [Make Fine detail a reversible toggle](windows-software/2026/2026-11-23-cmyk-fine-detail-reversible-toggle.md) |

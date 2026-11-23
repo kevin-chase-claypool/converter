@@ -12,6 +12,9 @@ components:
 tags:
   - cmyk
   - color-management
+  - tombow
+  - process-blue
+  - process-magenta
   - process-yellow
   - preview
   - ink-simulation
@@ -20,29 +23,31 @@ related:
   - WSW-20261007-007
 ---
 
-# Use pure process yellow in the CMYK preview
+# Use the Tombow process palette in the CMYK preview
 
 ## Summary
 
 The operator uses Tombow Process Yellow, Process Blue, Magenta, and Black
-markers. The generic process-yellow ink is now `#ffff00` instead of
-`#f0c400`, so uncalibrated CMYK multiply previews remove blue as process
-yellow should without also darkening red and green into a brown cast.
+markers. All four generic fallback colours now match that process-marker set
+instead of mixing a corrected yellow with older unrelated approximations.
 
 ## Reason
 
 The previous yellow had `R=240` and `G=196`. In the multiply simulation that
 made yellow darken red and green substantially, so warm skin, wood, and
 background highlights looked brown before any physical ink calibration was
-applied. Tombow Process Yellow should be much closer to `#ffff00`.
+applied. Tombow Process Yellow should be much closer to `#ffff00`. The other
+channels were also generic approximations rather than one coherent marker set.
 
 ## Implementation
 
-- `CHANNEL_COLORS["y"]` is now `#ffff00`.
+- `TOMBOW_PROCESS_COLORS` now defines blue `#00aeef`, magenta `#ec008c`,
+  process yellow `#ffff00`, and black `#231f20`; `CHANNEL_COLORS` uses that
+  palette.
 - The same constant drives per-ink SVG stroke colour, the OpenGL CMYK preview,
   and the generic ink model used by Auto colour analysis.
-- A regression pins the process-yellow value so it cannot silently regress to
-  a warm display approximation.
+- A regression pins all four values so they cannot silently regress to mixed
+  display approximations.
 - A measured ink profile still replaces these generic process colours in the
   multiply preview.
 
@@ -51,8 +56,8 @@ applied. Tombow Process Yellow should be much closer to `#ffff00`.
 - The CMYK tab suite passes `134` tests.
 - Complete converter discovery passes `657` tests with one expected
   OpenGL-context skip.
-- A software render of the active portrait confirms the yellow reads as a
-  lemon process tone rather than brown/orange.
+- A software render of the active portrait confirms yellow reads as a lemon
+  process tone rather than brown/orange.
 - Physical pen colour remains dependent on the measured ink profile.
 
 ## Struggles and rejected approaches
@@ -64,12 +69,12 @@ process yellow rather than a brown display colour.
 
 ## Risks and follow-up
 
-`#ffff00` is an ideal process-yellow display model, not a claim about the
-measured yellow pen. Print and scan the CMYK calibration sheet to determine
-the actual pen transmittance for production colour matching.
+These are display approximations, not claims about measured Tombow ink
+transmittance. Print and scan the CMYK calibration sheet to determine the
+actual pen values for production colour matching.
 
 ## Files
 
-- `software/converter_core/cmyk.py`: pure process-yellow definition.
+- `software/converter_core/cmyk.py`: explicit Tombow process palette.
 - `software/tests/test_cmyk_tab.py`: colour regression.
 - `software/README.md`: current preview behaviour.

@@ -62,8 +62,17 @@ class SeparationTests(unittest.TestCase):
         self.assertAlmostEqual(float(tones["c"][0, 0]), 1.0, places=5)
         self.assertAlmostEqual(float(tones["k"][0, 0]), 0.0, places=5)
 
-    def test_process_yellow_preview_filter_is_pure_yellow(self):
-        self.assertEqual(converter.CHANNEL_COLORS["y"].lower(), "#ffff00")
+    def test_tombow_process_preview_colours_are_explicit(self):
+        self.assertEqual(
+            converter.CHANNEL_COLORS,
+            {
+                "c": "#00aeef",
+                "m": "#ec008c",
+                "y": "#ffff00",
+                "k": "#231f20",
+            },
+        )
+        self.assertEqual(converter.CHANNEL_COLORS, converter.TOMBOW_PROCESS_COLORS)
 
     def test_gcr_zero_keeps_the_gray_in_cmy(self):
         import numpy as np

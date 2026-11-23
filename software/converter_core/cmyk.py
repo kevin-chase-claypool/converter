@@ -29,14 +29,15 @@ from .structure_tensor import trace_structure_streamlines
 
 CHANNELS = ("c", "m", "y", "k")
 CHANNEL_LABELS = {"c": "Cyan", "m": "Magenta", "y": "Yellow", "k": "Black"}
-CHANNEL_COLORS = {
-    "c": "#00a6d6",
-    "m": "#d6009a",
-    # Ideal process yellow mainly removes blue. A warm/dark yellow here turns
-    # the multiply proof brown before physical ink calibration is applied.
+# Uncalibrated display approximations for the Tombow process-marker set.
+# Measured ink profiles override these values in the OpenGL multiply preview.
+TOMBOW_PROCESS_COLORS = {
+    "c": "#00aeef",
+    "m": "#ec008c",
     "y": "#ffff00",
-    "k": "#222222",
+    "k": "#231f20",
 }
+CHANNEL_COLORS = dict(TOMBOW_PROCESS_COLORS)
 
 # Classic rotated screens: C 15, M 75, Y 0, K 45 degrees.
 SCREEN_ANGLES_DEG = {"c": 15.0, "m": 75.0, "y": 0.0, "k": 45.0}

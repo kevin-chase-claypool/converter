@@ -8,7 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
-| 2026-11-23 | `WSW-20261123-012` | implemented | [Use pure process yellow in the CMYK preview](2026/2026-11-23-process-yellow-preview-color.md) | `cmyk`, `color-management`, `process-yellow`, `preview`, `ink-simulation` |
+| 2026-11-23 | `WSW-20261123-012` | implemented | [Use the Tombow process palette in the CMYK preview](2026/2026-11-23-tombow-process-preview-colors.md) | `cmyk`, `color-management`, `tombow`, `process-blue`, `process-magenta`, `process-yellow`, `preview`, `ink-simulation` |
 | 2026-11-23 | `WSW-20261123-011` | implemented | [Color-manage CMYK sources and reduce adjacent pen lifts](2026/2026-11-23-cmyk-color-profile-and-pen-down-chaining.md) | `cmyk`, `color-management`, `display-p3`, `icc`, `pen-down`, `path-chaining`, `toolpath-efficiency`, `continuous` |
 | 2026-11-23 | `WSW-20261123-010` | implemented | [Strengthen Fine detail edge separation and sharpening](2026/2026-11-23-cmyk-fine-detail-edge-separation.md) | `cmyk`, `edge-flow`, `fine-detail`, `keylines`, `sharpening` |
 | 2026-11-23 | `WSW-20261123-009` | implemented | [Make Fine detail a reversible toggle](2026/2026-11-23-cmyk-fine-detail-reversible-toggle.md) | `cmyk`, `edge-flow`, `fine-detail`, `toggle`, `user-interface` |

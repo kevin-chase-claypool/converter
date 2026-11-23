@@ -480,11 +480,11 @@ then the tone-adaptive factor of 1-3x) at or below the pen width for full
 coverage. An **Ink profile...** button loads
 the `*-profile.json` written by `tools\cmyk_calibrate.py`, so the simulation
 multiplies your pens' measured transmittances instead of the display ink
-colours. The generic process-yellow simulation is `#ffff00`, matching the
-lemon direction of the Tombow Process Yellow pen rather than the former warm
-display approximation. It mainly removes blue instead of adding a brown/dark
-component. A measured profile remains authoritative for the actual Tombow
-Process Yellow, Process Blue, Magenta, and Black inks on paper.
+colours. The uncalibrated display approximation now matches the Tombow process
+marker set: Process Blue `#00aeef`, Magenta `#ec008c`, Process Yellow
+`#ffff00`, and Black `#231f20`. These values drive both the layer colours and
+the OpenGL multiply mixing, so yellow mainly removes blue and magenta remains
+vivid. A measured profile remains authoritative for the actual inks on paper.
 **Help** has the shortcut list
 (F1) and About.
 The status bar shows the current artwork and G-code paths. Tools are
