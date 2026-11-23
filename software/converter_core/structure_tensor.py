@@ -20,6 +20,22 @@ EDGE_FLOW_CHROMA_WEIGHT = 0.35
 EDGE_FLOW_STRENGTH_SCALE_FLOOR = 1.0e-4
 
 
+def _ordered_tone_threshold(x, y, pitch, seed, layer):
+    """Stable low-discrepancy tone threshold within one small screen cell."""
+    pitch = max(1e-6, float(pitch))
+    column = int(math.floor(float(x) / pitch))
+    row = int(math.floor(float(y) / pitch))
+    value = (
+        column * 374761393
+        + row * 668265263
+        + int(seed) * 2246822519
+        + int(layer) * 3266489917
+    ) & 0xFFFFFFFF
+    value = ((value ^ (value >> 13)) * 1274126177) & 0xFFFFFFFF
+    value ^= value >> 16
+    return (float(value) + 0.5) / 4294967296.0
+
+
 def _field_geometry(guide, geometry, max_side=900):
     """Downsample only the direction-field grid, preserving page geometry."""
     import numpy as np
@@ -208,6 +224,65 @@ def _bilinear_velocity(velocity_x, velocity_y, field_geometry, x, y):
     return float(sample(velocity_x)), float(sample(velocity_y))
 
 
+def _tone_gated_runs(
+    points,
+    tone_at,
+    threshold,
+    tone_cell,
+    seed,
+    layer,
+    minimum_length,
+):
+    """Split one traced path into locally tone-selected ink runs."""
+    runs = []
+    current = []
+    for point in points:
+        point_tone = float(tone_at(point[0], point[1]))
+        coverage = (
+            min(1.0, max(0.0, point_tone))
+            if layer == 0
+            else min(
+                1.0,
+                max(
+                    0.0,
+                    (point_tone - threshold)
+                    / max(1e-6, 1.0 - threshold),
+                ),
+            )
+        )
+        ink = (
+            coverage > 0.0
+            and _ordered_tone_threshold(
+                point[0],
+                point[1],
+                tone_cell,
+                seed,
+                layer,
+            )
+            < float(coverage)
+        )
+        if ink:
+            current.append(point)
+        elif current:
+            runs.append(current)
+            current = []
+    if current:
+        runs.append(current)
+    return [
+        run
+        for run in runs
+        if len(run) >= 2
+        and sum(
+            math.hypot(
+                second[0] - first[0],
+                second[1] - first[1],
+            )
+            for first, second in zip(run, run[1:])
+        )
+        >= minimum_length
+    ]
+
+
 def trace_structure_streamlines(
     guide,
     geometry,
@@ -223,7 +298,14 @@ def trace_structure_streamlines(
     tone_at,
     cancel_check=None,
 ):
-    """Trace evenly spaced streamlines through one tone-derived tensor."""
+    """Trace evenly spaced streamlines through one tone-derived tensor.
+
+    ``layers`` is the maximum number of overlapping streamline networks. Each
+    network owns an equal part of the ink's tone range, and a deterministic
+    ordered threshold keeps only the fraction of each traced path that the
+    local tone asks for. This preserves a continuous highlight ramp instead of
+    drawing every path in full and changing only the number of stacked layers.
+    """
     import numpy as np
 
     left = float(geometry["off_x"])
@@ -257,6 +339,26 @@ def trace_structure_streamlines(
     )
     minimum_pen_gap = max(0.0, float(pen_diameter_mm)) * 0.72
     minimum_length = max(1.0, base_pitch * 0.45)
+    tone_cell = max(
+        4.0,
+        min(
+            8.0,
+            max(
+                base_pitch * 3.0,
+                max(0.0, float(pen_diameter_mm)) * 3.0,
+            ),
+        ),
+    )
+    visible_minimum_length = max(
+        0.5,
+        min(
+            3.0,
+            max(
+                minimum_length,
+                max(0.0, float(pen_diameter_mm)) * 0.75,
+            ),
+        ),
+    )
     maximum_steps = max(
         32,
         min(4000, int((right - left + bottom - top) / step_mm)),
@@ -297,11 +399,10 @@ def trace_structure_streamlines(
     marks = []
     for layer in range(layer_count):
         check_cancelled(cancel_check)
-        threshold = (
-            0.0
-            if layer == 0
-            else min(0.90, 0.22 + 0.24 * float(layer - 1))
-        )
+        # Layer zero covers the open-paper end of the tonal range. Deeper
+        # layers take progressively darker bands, so their density grows only
+        # after the previous network has reached full coverage.
+        threshold = 0.0 if layer == 0 else float(layer) / layer_count
         occupied = np.zeros((field_h, field_w), dtype=bool)
         separation = max(
             minimum_pen_gap,
@@ -338,7 +439,18 @@ def trace_structure_streamlines(
                     for first, second in zip(points, points[1:])
                 )
                 if len(points) >= 3 and length >= minimum_length:
-                    marks.append(points)
+                    visible_runs = _tone_gated_runs(
+                        points,
+                        tone_at,
+                        threshold,
+                        tone_cell,
+                        seed,
+                        layer,
+                        visible_minimum_length,
+                    )
+                    marks.extend(visible_runs)
+                    if len(marks) > cap:
+                        del marks[cap:]
 
                 # Reserve the path so later seeds in this plate cannot place a
                 # neighbouring duplicate within one pen envelope.

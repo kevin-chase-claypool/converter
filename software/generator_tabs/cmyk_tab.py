@@ -216,8 +216,10 @@ class CmykTab(GeneratorTab):
         self.auto_button.setToolTip(
             "Analyze the artwork and set auto levels, brightness, contrast, "
             "saturation, GCR, and a starting gamma for a faithful photo "
-            "representation. Wave screens use an exposure-preserving setup; "
-            "tweak gamma for print lightness afterwards."
+            "representation. Wave and Edge-flow screens use exposure-preserving "
+            "setups; Edge-flow also opens a too-fine pitch to 1.5 pen widths so "
+            "its tone-density ramp remains visible. Tweak gamma for print "
+            "lightness afterwards."
         )
         self.auto_button.clicked.connect(self.apply_auto_settings)
         options.addRow("Auto", self.auto_button)
@@ -319,8 +321,8 @@ class CmykTab(GeneratorTab):
             "values from older settings are promoted to this layout when "
             "regenerated. Edge-flow streamlines follow one shared blurred "
             "luminance structure, use each ink's fixed screen angle where that "
-            "structure is weak, and add extra tone-triggered layers in darker "
-            "areas."
+            "structure is weak, and vary each streamline's local ink fraction "
+            "with tone. Extra layers deepen only the darker parts of that ramp."
         )
         self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)
@@ -383,8 +385,11 @@ class CmykTab(GeneratorTab):
         self.flow_layers = int_spin(3, 1, 6)
         self.flow_layers.setToolTip(
             "Edge-flow only: one base streamline layer plus extra offset "
-            "layers where this ink is dark. More layers increase tonal range "
-            "and plotting time without changing the shared luminance field."
+            "layers where this ink is dark. Local ink coverage selects a "
+            "continuous mix of those layers instead of switching whole-face "
+            "hatches between discrete shades. More layers increase shadow "
+            "density and plotting time without changing the shared luminance "
+            "field."
         )
         screen.addRow("Flow layers", self.flow_layers)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
@@ -1929,7 +1934,8 @@ class CmykTab(GeneratorTab):
                     else None
                 ),
                 "flow_guide": (
-                    "strength_gated_shared_luminance_structure_tensor"
+                    "strength_gated_shared_luminance_structure_tensor_"
+                    "continuous_tone"
                     if style == "edge_flow"
                     else None
                 ),

@@ -1,5 +1,49 @@
 # Engineering Log
 
+<a id="elog-20261123-cmyk-edge-flow-continuous-tone"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Preserve continuous color tone in edge-flow CMYK
+
+- The reference portrait and the `IMG_0514.JPG` software render still differed
+  most clearly at the bright forehead: the reference carried a continuous
+  yellow-to-magenta gradient, while the boy render collapsed broad regions
+  into one dense orange/red hatched field.
+- Tone measurements ruled out a missing source gradient. In the tested face
+  crop, the `yellow - magenta` 10th-to-90th percentile span was `0.235`, and
+  the two channel maps correlated at `0.901`. The loss happened after
+  separation.
+- The old edge-flow layer thresholds created wide density plateaus: every
+  path above the ink floor was full density until the next discrete layer
+  activated. The generic Auto search also treated edge flow like a sparse
+  rectilinear row screen and selected `brightness 80 %` / `gamma 0.80` for the
+  tested setup. At a `0.8 mm` pen and `0.31 mm` effective pitch, adjacent ink
+  closed before tone could vary.
+- Each traced streamline now keeps a deterministic fraction of its path based
+  on local channel tone in `4-8 mm` paper cells. Highlights leave paper gaps;
+  shadows approach continuous strokes. Deeper Flow layers activate in darker
+  bands, increasing shadow density without making the lightest coverage
+  binary.
+- Edge-flow Auto now preserves normal photo exposure, retains more warm CMY,
+  and limits black extraction. For the tested portrait it selects
+  `brightness 115 %`, `contrast 140 %`, `saturation 115 %`, `GCR 75 %`, and
+  `gamma 1.10`. It raises an effective pitch below `1.5` pen widths.
+- Seed-only acceptance was rejected because paths crossed tone changes at full
+  density. Fine `1-2 mm` dither cells produced speckle. Lower GCR or brighter
+  exposure alone did not remove the layer plateaus.
+- New regressions cover six tone levels with strictly increasing ink length and
+  the warm-portrait Auto behavior. All `116` CMYK tab tests pass; complete
+  converter discovery passes `636` tests with one expected OpenGL-context
+  skip.
+- An `800 px` software render at `1.2 mm` effective pitch and three layers now
+  retains white forehead paper plus separate yellow, magenta, cyan, and black
+  streaks. The manifest records
+  `strength_gated_shared_luminance_structure_tensor_continuous_tone`.
+- Physical four-pass overlay, pen spread, ink opacity, final pitch, and layer
+  count remain unverified on paper.
+- Evidence: `WSW-20261123-003`;
+  `docs/changes/windows-software/2026/2026-11-23-cmyk-edge-flow-continuous-tone.md`.
+- Category: windows-software, cmyk, edge-flow, continuous-tone, tone-response,
+  auto-exposure, highlight-gradient, portrait, physical-validation-pending.
+
 <a id="elog-20261123-cmyk-edge-flow-strength-gated-shared-guide"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Gate edge-flow guidance by structure strength
 

@@ -429,6 +429,46 @@ class ScreeningTests(unittest.TestCase):
         self.assertGreater(light_length, 0.0)
         self.assertGreater(dark_length, light_length * 1.35)
 
+    def test_edge_flow_tone_ramp_has_no_broad_density_plateaus(self):
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": 80,
+            "pixels_h": 80,
+        }
+        guide = self.np.full((80, 80), 0.5, dtype="float32")
+
+        def total_length(tone_value):
+            tone = self.np.full((80, 80), tone_value, dtype="float32")
+            marks = converter.screen_channel(
+                tone,
+                geometry,
+                style="edge_flow",
+                spacing_mm=4.0,
+                angle_deg=0.0,
+                seed=7,
+                max_marks=2000,
+                flow_smoothing_mm=2.0,
+                flow_layers=3,
+                flow_guide=guide,
+            )
+            return sum(
+                math.hypot(b[0] - a[0], b[1] - a[1])
+                for line in marks
+                for a, b in zip(line, line[1:])
+            )
+
+        lengths = [
+            total_length(value)
+            for value in (0.12, 0.18, 0.24, 0.32, 0.42, 0.55)
+        ]
+        self.assertTrue(
+            all(first < second for first, second in zip(lengths, lengths[1:]))
+        )
+        self.assertGreater(lengths[-1], lengths[0] * 3.0)
+
     def test_halftone_marks_follow_tone(self):
         white = self.np.zeros((32, 32), dtype="float32")
         self.assertEqual(
@@ -810,6 +850,42 @@ class ScreeningTests(unittest.TestCase):
         self.assertEqual(values["sharpen_pct"], 100.0)
         self.assertEqual(values["sharpen_radius_mm"], 1.5)
         self.assertGreater(values["dot_pitch_mm"], 0.8)
+
+    def test_edge_flow_auto_preserves_highlights_and_opens_a_tight_pitch(self):
+        import numpy as np
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-edge-auto-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        # Warm highlight-to-shadow portrait ramp: the case where a generic
+        # sparse-screen search used to choose gamma 0.8 and bury the forehead.
+        yy, xx = np.mgrid[0:96, 0:128]
+        image = np.empty((96, 128, 3), dtype="float32")
+        image[:] = (0.10, 0.16, 0.08)
+        image[8:88, 30:98] = (0.88, 0.66, 0.52)
+        image[8:88, 30:98, 0] += (1.0 - xx[8:88, 30:98] / 127.0) * 0.09
+        image = np.clip(image * 255.0, 0.0, 255.0).astype("uint8")
+        path = str(Path(folder) / "warm-portrait.png")
+        Image.fromarray(image).save(path)
+
+        values = converter.auto_photo_settings(
+            path,
+            pen_width_mm=0.8,
+            effective_pitch_mm=0.31,
+            style="edge_flow",
+            dot_pitch_mm=0.31,
+        )
+
+        self.assertTrue(values["auto_levels"])
+        self.assertGreaterEqual(values["brightness"], 100)
+        self.assertGreaterEqual(values["gamma"], 0.90)
+        self.assertGreaterEqual(values["contrast"], 120)
+        self.assertLessEqual(values["contrast"], 190)
+        self.assertGreaterEqual(values["gcr"], 50)
+        self.assertLessEqual(values["gcr"], 90)
+        self.assertGreaterEqual(values["dot_pitch_mm"], 1.2)
 
     def test_auto_photo_settings_keep_colour_on_vivid_images(self):
         import numpy as np
@@ -3086,7 +3162,7 @@ class CmykTabTests(unittest.TestCase):
         data = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(
             data["screen"]["flow_guide"],
-            "strength_gated_shared_luminance_structure_tensor",
+            "strength_gated_shared_luminance_structure_tensor_continuous_tone",
         )
         for channel in converter.CHANNELS:
             self.assertTrue(

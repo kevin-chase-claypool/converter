@@ -224,12 +224,12 @@ def auto_photo_settings(
     asks for is turned into the ink the rows actually lay down
     (``pen / row pitch``, opened up by the screen's light-tone stretch and
     cut off below the ink floor), so a sparse screen gets a darker chain
-    instead of a washed-out plot. A Wave-screen style uses a separate
-    exposure-preserving path because its fixed row pitch masks ink rather than
-    varying coverage with tone. Returns ``auto_levels``, ``brightness``,
-    ``contrast``, ``saturation``, ``gcr`` and ``gamma``, plus wave-specific
-    sharpening and row-pitch controls when the source pitch and scale are
-    available.
+    instead of a washed-out plot. Wave and Edge-flow styles use separate
+    exposure-preserving paths because their fixed geometry masks ink rather
+    than behaving like the sparse rectilinear row model. Returns
+    ``auto_levels``, ``brightness``, ``contrast``, ``saturation``, ``gcr`` and
+    ``gamma``, plus style-specific sharpening and row-pitch controls when the
+    source pitch and scale are available.
     """
     from PIL import Image
     import numpy as np
@@ -304,6 +304,63 @@ def auto_photo_settings(
                     max(
                         source_pitch,
                         round(recommended_effective / scale / 0.05) * 0.05,
+                    ),
+                ),
+                2,
+            )
+        return result
+
+    if style_key == "edge_flow":
+        # Edge-flow already varies line density with tone. Treating it like a
+        # rectilinear row screen makes Auto darken and crush the very
+        # highlights whose continuous colour gradient the streamlines carry.
+        # Preserve normal photo exposure and use a gentler color separation:
+        # enough black to anchor deep shadows without burying warm mid tones.
+        p05, p50, p95 = (
+            float(value)
+            for value in np.percentile(luminance, [5.0, 50.0, 95.0])
+        )
+        tonal_range = p95 - p05
+        chroma_p90 = float(np.percentile(chroma, 90.0))
+        brightness = clamp(110.0 + (0.50 - p50) * 80.0, 95.0, 150.0)
+        contrast = clamp(140.0 + (0.65 - tonal_range) * 60.0, 120.0, 190.0)
+        gamma = clamp(1.05 + (0.52 - p50) * 0.50, 0.90, 1.30)
+        saturation = clamp(
+            115.0 + (0.30 - chroma_p90) * 30.0,
+            105.0,
+            140.0,
+        )
+        gcr = clamp(
+            80.0 - max(0.0, chroma_p90 - 0.18) * 100.0,
+            50.0,
+            90.0,
+        )
+        result = {
+            "auto_levels": True,
+            "brightness": round_up_to(brightness, 5),
+            "contrast": round_up_to(contrast, 5),
+            "saturation": round_up_to(saturation, 5),
+            "gcr": round_up_to(gcr, 5),
+            "gamma": round(gamma / 0.05) * 0.05,
+        }
+        if (
+            pen_width_mm is not None
+            and effective_pitch_mm is not None
+            and dot_pitch_mm is not None
+        ):
+            current_effective = max(0.01, float(effective_pitch_mm))
+            source_pitch = max(0.01, float(dot_pitch_mm))
+            factor = current_effective / source_pitch
+            recommended_effective = max(
+                current_effective,
+                max(0.0, float(pen_width_mm)) * 1.5,
+            )
+            result["dot_pitch_mm"] = round(
+                min(
+                    8.0,
+                    max(
+                        source_pitch,
+                        round(recommended_effective / factor / 0.05) * 0.05,
                     ),
                 ),
                 2,

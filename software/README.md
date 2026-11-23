@@ -526,13 +526,18 @@ Current tools:
     highlights, and colour separation in the preview. If the current pitch
     would make each solid row cover too much of the page, Auto opens it to at
     least `3.4` pen widths; every resulting row remains exactly equidistant.
+  - For Edge-flow streamlines, Auto also preserves normal photo exposure and
+    keeps a warmer separation with less black in the highlight-to-midtone
+    range. If the current pitch is finer than `1.5` pen widths, Auto opens it
+    to that spacing so channel density can still reproduce tone instead of
+    every surviving streamline covering its whole neighbourhood solid.
   - For other screen styles, tone controls come from a detail search over the
     real curve chain: maximum mid tone-weighted gradient with a clipping
     penalty, plus a target print mean clamped to the printable `0.30-0.75`
     window. That search also models the rectilinear row coverage.
-  - Auto only changes Dot pitch for Wave screen and never sets rows closer than
-    the operator's current choice. **Match pen** remains the explicit action
-    for setting one pen width at the current artwork scale.
+  - Auto only changes Dot pitch for Wave and Edge-flow screens, and never sets
+    rows closer than the operator's current choice. **Match pen** remains the
+    explicit action for setting one pen width at the current artwork scale.
   auto levels (default on: stretch the image's 1st-99th luminance percentiles
   so low-key photos use the full tonal range), saturation, contrast,
   brightness, luminance sharpening (default on: unsharp-mask amount and
@@ -553,9 +558,14 @@ Current tools:
   Structure strength and coherence gate that guidance, so broad tone or noise
   keeps the screen direction instead of becoming stacked contour bands.
   Each ink then applies its own dense-tone mask, seed offset, and fixed screen
-  direction. The fallback angles are cyan 15 degrees, magenta 75, yellow 0, and
-  black 45, so the plates interleave like a conventional four-screen print
-  instead of collapsing to one synthetic direction.
+  direction. Local tone controls the ink fraction along each streamline at
+  deterministic `4-8 mm` screen cells: a highlight keeps only a sparse part of
+  the path, while a shadow approaches a continuous stroke. That makes a
+  yellow-to-magenta highlight ramp visible instead of turning every plate above
+  the ink floor into a solid wash. The fallback angles are cyan 15 degrees,
+  magenta 75, yellow 0, and black 45, so the plates interleave like a
+  conventional four-screen print instead of collapsing to one synthetic
+  direction.
   The four plates use the same page frame, artwork scale, registration crosses,
   pen offsets, and G-code contract, but remain independent pen programs.
   Preview multiplies them to show the combined print; Save writes cyan,
@@ -563,13 +573,15 @@ Current tools:
   four-file overprint workflow as the other CMYK screens, not one flattened
   composite program.
   **Flow layers** (default 3) adds offset streamline families only where that
-  ink is darker; more layers increase tonal depth, point count, and plotting
-  time. **Flow smoothing** (default 2.5 mm on paper) controls how far the
-  tensor is blurred, trading fine surface texture for longer, calmer contours.
-  Dot pitch sets seed separation, Path tolerance controls trace resampling,
-  and Max marks/ink caps each plate. If the cap requires a coarser seed pitch,
-  the screen grows the pitch rather than randomly dropping lines. The
-  implementation lives in
+  ink is darker; more layers increase shadow density, point count, and
+  plotting time. **Flow smoothing** (default 2.5 mm on paper) controls how far
+  the tensor is blurred, trading fine surface texture for longer, calmer
+  contours. Dot pitch sets seed separation, Path tolerance controls trace
+  resampling, and Max marks/ink caps each plate. If the cap requires a coarser
+  seed pitch, the screen grows the pitch rather than randomly dropping lines.
+  Keep the effective pitch at least `1.5` pen widths when highlights must show
+  tone; a pitch finer than the physical pen leaves no white paper to vary.
+  The implementation lives in
   [`converter_core/structure_tensor.py`](converter_core/structure_tensor.py);
   output uses the existing four-file CMYK save, preview, offset, and G-code
   contract, and the Test sheet's **Sheet screen** can match this style. The
@@ -578,15 +590,17 @@ Current tools:
   discussion; this implementation is repository-native and independently
   tested. Software rendering is verified, but no edge-flow four-pass sheet has
   yet established the best pitch, smoothing, or layer count on paper.
-  The current software-selected portrait starting point uses auto levels on;
-  saturation 110 %, contrast 120 %, brightness 105 %, sharpening off; ink gamma
-  1.1; black (GCR) 85 %; resolution 1600 px; C/M/Y weights 100 % and K 90 %;
-  `0.31 mm` seed pitch; `2.0 mm` flow smoothing; three flow layers; `0.8 mm`
-  pen width; `0.15 mm` path tolerance; 200000 marks per ink; seed 7; and a
-  150 % artwork scale on a 200 x 200 mm page with a 6 mm margin. A corrected
-  four-network software render retains the colored facial, clothing, wood, and
-  background structure. This is a repeatable software starting point, not a
-  physical print optimum; tune it against the pen set and paper.
+  The current Auto-selected portrait starting point uses auto levels on;
+  saturation 115 %, contrast 140 %, brightness 115 %, sharpening off; ink gamma
+  1.1; black (GCR) 75 %; resolution 1600 px; C/M/Y weights 100 % and K 90 %;
+  `0.8 mm` source seed pitch (`1.2 mm` effective at 150 % artwork scale);
+  `2.0 mm` flow smoothing; three flow layers; `0.8 mm` pen width; `0.15 mm`
+  path tolerance; 200000 marks per ink; seed 7; and a 150 % artwork scale on a
+  200 x 200 mm page with a 6 mm margin. A four-network software render now
+  keeps white paper through the forehead and carries separate yellow,
+  magenta, cyan/black, facial, clothing, wood, and background structures. This
+  is a repeatable software starting point, not a physical print optimum; tune
+  it against the pen set and paper.
   Resolution keeps the source image's longest side up to that many pixels
   and never upsamples, so it accepts high-resolution sources (the control is
   effectively uncapped; memory grows with the source size you keep).
@@ -922,7 +936,7 @@ work with no input (optional mesh/image sources are noted below).
 | Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
 | CMYK | Auto levels on, rectilinear fill at 0.10 mm pitch, saturation 115 %, contrast 285 %, brightness 170 %, ink gamma 1.40, black (GCR) 95 %, 40000 marks/ink, resolution 10000 px, weights 100/100/100/100 %, artwork scale 280 % | Needs an image; Preview plans each ink in the background and Save writes four files. Dense photo screens take hours to plot; raise pitch or lower Max marks/ink for a faster pass. |
-| CMYK edge-flow | Auto levels on; saturation 110 %, contrast 120 %, brightness 105 %, sharpening off; gamma 1.10, GCR 85 %, resolution 1600 px, weights 100/100/100/90 %; Edge-flow streamlines at 0.31 mm pitch, Flow smoothing 2.0 mm, Flow layers 3, pen 0.8 mm, tolerance 0.15 mm, 200000 marks/ink, seed 7, artwork scale 150 % on 200 x 200 mm | Software-selected starting point for a pre-cropped portrait. Each ink applies its own mask, seed, and fallback screen over one strength-gated luminance flow; Save writes four separate overprinted G-code files. Check density and pen-set separation on paper before using it as a production recipe. |
+| CMYK edge-flow | Auto levels on; saturation 115 %, contrast 140 %, brightness 115 %, sharpening off; gamma 1.10, GCR 75 %, resolution 1600 px, weights 100/100/100/90 %; Edge-flow streamlines at 0.8 mm source pitch (1.2 mm effective at 150 % scale), Flow smoothing 2.0 mm, Flow layers 3, pen 0.8 mm, tolerance 0.15 mm, 200000 marks/ink, seed 7, artwork scale 150 % on 200 x 200 mm | Software-selected starting point for a pre-cropped portrait. Each ink applies its own mask, seed, continuous local tone fraction, and fallback screen over one strength-gated luminance flow; Save writes four separate overprinted G-code files. Check density and pen-set separation on paper before using it as a production recipe. |
 | 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
 | Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |
 | Snowflake | 6 arms, depth 3, length 45 %, branch angle 35 deg, branch scale 55 %, jitter 8 deg / 15 % | Raise depth for finer detail; cap is 5. |

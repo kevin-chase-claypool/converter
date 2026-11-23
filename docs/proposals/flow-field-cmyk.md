@@ -13,18 +13,19 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 2. Compute image luminance gradients (Ix, Iy). Construct a local structure tensor from Ix², IxIy, Iy² and Gaussian-smooth its components.
 3. Extract a tangent direction (minor-eigenvalue eigenvector) to follow edges/forms; estimate directional coherence from eigenvalues. Treat directions as **unoriented** (theta equivalent to theta + pi) to avoid streamline flips.
 4. Smooth the direction field and blend toward a configurable fixed fallback angle where structure is weak/ambiguous. Guard low-gradient regions and avoid abrupt transitions.
-5. Trace evenly spaced streamlines using stable numerical integration, seed distribution, minimum-distance/collision checks, bounds clipping, and curvature limits.
-6. Build one strength-gated luminance direction field for image form. Give each CMYK plate its own coverage mask, seed, density layers, and classic fallback screen angle. Save four separate, page-registered programs so they overlap as four physical pen passes.
+5. Trace evenly spaced streamlines using stable numerical integration, seed distribution, minimum-distance/collision checks, bounds clipping, and curvature limits. Modulate the visible fraction of each path with local channel tone instead of switching whole-face density bands.
+6. Build one strength-gated luminance direction field for image form. Give each CMYK plate its own coverage mask, seed, continuous tone fraction, extra shadow layers, and classic fallback screen angle. Save four separate, page-registered programs so they overlap as four physical pen passes.
 7. Emit continuous, stroke-only SVG centerlines compatible with the existing SVG-to-G-code path (no fills, text, or defs); retain units, coordinate mapping, and pen-change/channel separation.
 
 ## Current controls (software-selected starting values)
 - Rendering mode: **Edge-flow streamlines** in the existing CMYK Screen style
-- Base line spacing: `0.31 mm` seed pitch
+- Base line spacing: `0.8 mm` source pitch / `1.2 mm` effective at 150 % scale
 - Tensor smoothing radius: `2.0 mm` on paper
 - Guidance gate: tensor strength plus coherence; weak structure keeps screen
 - Fallback direction: cyan 15, magenta 75, yellow 0, black 45 degrees
 - Maximum density layers: 3
-- Density method: extra layers / adaptive spacing / hybrid
+- Tone method: deterministic `4-8 mm` local ink fractions along each path,
+  with extra layers for darker coverage
 - Optional preview of each channel and composite
 
 ## Implementation plan
