@@ -185,6 +185,7 @@ def trace_structure_streamlines(
     seed,
     ink_floor,
     tone_at,
+    coverage_at=None,
     cancel_check=None,
 ):
     """Trace tone-masked streamlines through a shared structure tensor."""
@@ -206,6 +207,7 @@ def trace_structure_streamlines(
         max(0.1, float(smoothing_mm)),
         fallback_angle_deg,
     )
+    coverage_at = tone_at if coverage_at is None else coverage_at
     field_w = max(1, int(field_geometry["pixels_w"]))
     field_h = max(1, int(field_geometry["pixels_h"]))
     pixel_x = field_geometry["width_mm"] / field_w
@@ -246,7 +248,7 @@ def trace_structure_streamlines(
             y += direction * my * step_mm
             if not (left <= x <= right and top <= y <= bottom):
                 break
-            if tone_at(x, y) < max(float(ink_floor), threshold):
+            if coverage_at(x, y) < max(float(ink_floor), threshold):
                 break
             ix, iy = field_cell(x, y)
             if occupied[iy, ix]:
@@ -279,7 +281,7 @@ def trace_structure_streamlines(
             check_cancelled(cancel_check)
             x = x0 + (0.5 * base_pitch if row % 2 else 0.0)
             while x <= right and len(marks) < cap:
-                if tone_at(x, y) < max(float(ink_floor), threshold):
+                if coverage_at(x, y) < max(float(ink_floor), threshold):
                     x += base_pitch
                     continue
                 ix, iy = field_cell(x, y)
@@ -290,19 +292,42 @@ def trace_structure_streamlines(
                 back = trace(-1.0, x, y, threshold, occupied)
                 forward = trace(1.0, x, y, threshold, occupied)
                 points = list(reversed(back)) + [(x, y)] + forward
-                length = sum(
-                    math.hypot(second[0] - first[0], second[1] - first[1])
-                    for first, second in zip(points, points[1:])
-                )
-                if len(points) >= 3 and length >= minimum_length:
-                    marks.append(points)
-                    for px, py in points:
-                        cx, cy = field_cell(px, py)
-                        xlo = max(0, cx - radius)
-                        xhi = min(field_w, cx + radius + 1)
-                        ylo = max(0, cy - radius)
-                        yhi = min(field_h, cy + radius + 1)
-                        occupied[ylo:yhi, xlo:xhi] = True
+                visible = []
+                visible_runs = []
+                for point in points:
+                    if tone_at(point[0], point[1]) >= max(
+                        float(ink_floor), threshold
+                    ):
+                        visible.append(point)
+                    elif visible:
+                        visible_runs.append(visible)
+                        visible = []
+                if visible:
+                    visible_runs.append(visible)
+
+                for run in visible_runs:
+                    if len(marks) >= cap:
+                        break
+                    length = sum(
+                        math.hypot(
+                            second[0] - first[0],
+                            second[1] - first[1],
+                        )
+                        for first, second in zip(run, run[1:])
+                    )
+                    if len(run) >= 3 and length >= minimum_length:
+                        marks.append(run)
+
+                # The complete common path reserves its cells even where this
+                # particular ink has no coverage. That keeps every later ink on
+                # the same streamline instead of selecting a neighbouring line.
+                for px, py in points:
+                    cx, cy = field_cell(px, py)
+                    xlo = max(0, cx - radius)
+                    xhi = min(field_w, cx + radius + 1)
+                    ylo = max(0, cy - radius)
+                    yhi = min(field_h, cy + radius + 1)
+                    occupied[ylo:yhi, xlo:xhi] = True
                 x += base_pitch
             y += base_pitch
             row += 1

@@ -18,6 +18,7 @@ tags:
   - image-screening
 related:
   - WSW-20261122-002
+  - WSW-20261122-004
 ---
 
 # Preserve color-only detail in edge-flow CMYK
@@ -29,8 +30,10 @@ channels instead of reducing the source to luminance first. Chromatic
 boundaries with little or no luminance difference can therefore steer the
 streamlines instead of disappearing into the fixed-angle fallback.
 
-The preview still uses one shared geometry for all four inks, while each ink
-retains its own CMYK tone mask and density layers.
+The processed-RGB guide was shared immediately. A later fix,
+`WSW-20261122-004`, also makes the traced streamline network and layer
+placement common; without that step the per-ink masks still produced visible
+rainbow fringes at the same edge.
 
 ## Reason
 
@@ -54,7 +57,9 @@ conversion.
   the separate luminance `depth` field, so this change does not alter the
   existing Wave behavior.
 - The saved manifest identifies the guide mode as
-  `shared_processed_rgb_structure_tensor`.
+  `shared_processed_rgb_structure_tensor`. `WSW-20261122-004` extends this
+  identifier to `shared_processed_rgb_structure_tensor_union_coverage` after
+  shared streamline geometry is added.
 
 ## Verification
 

@@ -22,6 +22,7 @@ tags:
 related:
   - WSW-20261023-001
   - WSW-20261122-003
+  - WSW-20261122-004
   - docs/testing/CMYK_CALIBRATION.md
 ---
 
@@ -70,7 +71,10 @@ NumPy/Pillow implementation, tests, and job contract.
   pipeline remain authoritative.
 - The direction field is shared across inks, but each ink is masked by its own
   separated coverage. This keeps the C/M/Y/K passes visually registered on the
-  same forms without forcing equal ink density.
+  same forms without forcing equal ink density. The first implementation still
+  used a different seed and occupancy map per ink; `WSW-20261122-004` later
+  makes the streamline network itself common. Per-ink selection then masks or
+  splits those shared paths.
 - The calibration sheet can match edge-flow output. Its manifest records the
   screen style, pitch, smoothing, layer count, and shared-guide mode.
 

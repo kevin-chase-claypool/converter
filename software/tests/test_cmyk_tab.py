@@ -186,6 +186,51 @@ class ScreeningTests(unittest.TestCase):
             0.85,
         )
 
+    def test_edge_flow_channels_share_geometry_across_tone_masks(self):
+        size = 96
+        coords = self.np.arange(size, dtype="float32")
+        xx, yy = self.np.meshgrid(coords, coords)
+        guide = (xx + yy) / float(2 * (size - 1))
+        coverage = self.np.full((size, size), 0.9, dtype="float32")
+        cyan_tone = coverage.copy()
+        magenta_tone = coverage.copy()
+        magenta_tone[:, size // 2 :] = 0.0
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+        common = {
+            "style": "edge_flow",
+            "spacing_mm": 8.0,
+            "angle_deg": 0.0,
+            "seed": 7,
+            "max_marks": 240,
+            "flow_smoothing_mm": 4.0,
+            "flow_layers": 1,
+            "depth_tone": guide,
+            "flow_guide": guide,
+            "flow_coverage": coverage,
+        }
+
+        cyan = converter.screen_channel(cyan_tone, geometry, **common)
+        magenta = converter.screen_channel(magenta_tone, geometry, **common)
+
+        def points(marks):
+            return {
+                (round(x, 6), round(y, 6))
+                for line in marks
+                for x, y in line
+            }
+
+        cyan_points = points(cyan)
+        magenta_points = points(magenta)
+        self.assertGreater(len(magenta_points), 20)
+        self.assertTrue(magenta_points.issubset(cyan_points))
+
     def test_edge_flow_uses_fixed_angle_without_structure(self):
         tone = self.np.full((40, 40), 0.8, dtype="float32")
         guide = self.np.full((40, 40), 0.5, dtype="float32")
@@ -2204,9 +2249,13 @@ class CmykTabTests(unittest.TestCase):
         tab = self.make_tab()
         tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
         guides = []
+        seeds = []
+        coverage = []
 
         def capture_guide(*args, **kwargs):
             guides.append(kwargs.get("flow_guide"))
+            seeds.append(kwargs.get("seed"))
+            coverage.append(kwargs.get("flow_coverage"))
             return []
 
         with mock.patch.object(
@@ -2221,6 +2270,9 @@ class CmykTabTests(unittest.TestCase):
         self.assertTrue(
             all(len(guide.shape) == 3 and guide.shape[2] == 3 for guide in guides)
         )
+        self.assertEqual(len(set(seeds)), 1)
+        self.assertTrue(all(mask is not None for mask in coverage))
+        self.assertTrue(all(mask is coverage[0] for mask in coverage))
 
     def test_analysis_worker_reports_strategy_split(self):
         from generator_tabs.cmyk_tab import ProgramAnalysisWorker

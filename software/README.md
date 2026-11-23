@@ -556,6 +556,13 @@ Current tools:
   still decide which lines receive cyan, magenta, yellow, or black. Weak or
   flat structure blends to the ink's fixed screen angle instead of following
   image noise.
+  All four plates use the same seed and the union of their ink masks to trace
+  one common streamline network. Each ink then selects or splits portions of
+  those identical paths by its own tone threshold. Coincident CMYK coverage
+  therefore overprints on the same centerline instead of placing cyan,
+  magenta, yellow, and black on adjacent offset lines, which avoids the
+  rainbow-fringe or "clown" appearance. Dark-area layer placement is also
+  shared, while each plate still decides whether it contributes ink.
   **Flow layers** (default 3) adds offset streamline families only where that
   ink is darker; more layers increase tonal depth, point count, and plotting
   time. **Flow smoothing** (default 2.5 mm on paper) controls how far the

@@ -518,6 +518,13 @@ def prepare_image_tones(
     # Edge-flow needs the processed colour image, including chroma-only
     # boundaries that disappear when the image is reduced to luminance.
     tones["flow_rgb"] = np.clip(rgb, 0.0, 1.0).astype(np.float32)
+    # Trace one common streamline network wherever any ink is present. Each
+    # plate then masks that same network by its own tone, so coincident CMYK
+    # coverage prints neutral where the source is neutral instead of moving
+    # each ink onto a different neighbouring streamline.
+    tones["flow_coverage"] = np.maximum.reduce(
+        [tones[channel] for channel in CHANNELS]
+    ).astype(np.float32)
     # Ink coverage decides where each plate is present; luminance supplies the
     # common scene depth used by wave screens even in a saturated ink channel.
     tones["depth"] = (1.0 - depth_luminance).astype(np.float32)
@@ -1253,6 +1260,7 @@ def screen_channel(
     flow_smoothing_mm=None,
     flow_layers=3,
     flow_guide=None,
+    flow_coverage=None,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
@@ -1273,6 +1281,9 @@ def screen_channel(
     a ballpoint reads darker without changing the geometry.
     ``path_tolerance_mm`` bounds the chord error of resampled wave rows; the
     CMYK tab supplies that budget in its final paper-space units.
+    ``flow_coverage`` is the optional union of all CMYK ink masks. Edge-flow
+    uses it to place and trace one shared streamline network, then masks those
+    common paths with this channel's ``tone``.
     ``row_clearance_mm`` is the minimum shortest-segment separation between
     adjacent visible rows, expressed in the same pre-scale units as
     ``spacing_mm``. It defaults to the pen diameter plus
@@ -1299,6 +1310,11 @@ def screen_channel(
         flow_guide
         if flow_guide is not None
         else depth_tone if depth_tone is not None else tone
+    )
+    flow_darkness = (
+        tone_sampler(flow_coverage, geometry)
+        if flow_coverage is not None
+        else darkness
     )
 
     def inside(x, y):
@@ -1422,6 +1438,7 @@ def screen_channel(
             seed,
             INK_FLOOR,
             darkness,
+            coverage_at=flow_darkness,
             cancel_check=cancel_check,
         )
     else:

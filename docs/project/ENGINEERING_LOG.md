@@ -1,5 +1,31 @@
 # Engineering Log
 
+<a id="elog-20261122-cmyk-edge-flow-shared-network"></a>
+### 🟨 2026-11-22 - WINDOWS SOFTWARE/IMPLEMENTED - Share edge-flow streamline geometry across CMYK
+
+- The color-aware structure tensor restored chroma-only detail, but each ink
+  still used a different seed and tone-driven occupancy map. At enlarged
+  preview scale the four plates occupied neighboring lines, producing strong
+  rainbow fringes that made the portrait read like a clown.
+- Edge-flow now uses one seed for all four plates and traces on the maximum of
+  the separated CMYK masks. The common path reserves shared cells, then each
+  ink masks or splits that same path with its own tone threshold.
+- Other screen styles keep their per-ink seed offsets. Only edge-flow changes,
+  and the existing four-file save, registration, offset, bed-compensation, and
+  G-code contracts remain unchanged.
+- A seed regression went from four distinct values to one. A new two-tone
+  geometry test proves every magenta point lies on the cyan streamline path
+  when both use the same coverage field.
+- All 111 CMYK test-module tests pass. Complete converter discovery passes 631
+  tests with one expected OpenGL-context skip.
+- The live 1600 px portrait preview now renders mostly neutral mixed-ink
+  contours with localized color accents, replacing the saturated rainbow
+  fringe. Physical four-pen overlay and ink saturation still require a print.
+- Evidence: `WSW-20261122-004`;
+  `docs/changes/windows-software/2026/2026-11-22-cmyk-edge-flow-shared-network.md`.
+- Category: windows-software, cmyk, edge-flow, streamline, registration,
+  shared-geometry, portrait, physical-validation-pending.
+
 <a id="elog-20261122-cmyk-edge-flow-color-detail"></a>
 ### 🟨 2026-11-22 - WINDOWS SOFTWARE/IMPLEMENTED - Preserve color-only detail in edge-flow CMYK
 

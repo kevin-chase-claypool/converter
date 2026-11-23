@@ -1375,7 +1375,17 @@ class CmykTab(GeneratorTab):
                 spacing_mm=self.pitch.value(),
                 dot_scale=self.dot_size.value() / 100.0,
                 angle_deg=converter.SCREEN_ANGLES_DEG[channel],
-                seed=self.seed.value() + index,
+                # Edge-flow plates share one streamline network. Per-ink seed
+                # offsets move the same facial contour into four different
+                # starting grids, producing visible rainbow fringes when the
+                # four passes are overlaid. Other screens deliberately keep
+                # the per-ink offset so their angles do not collapse to one
+                # moire pattern.
+                seed=(
+                    self.seed.value()
+                    if style == "edge_flow"
+                    else self.seed.value() + index
+                ),
                 max_marks=self.max_marks.value(),
                 pen_diameter_mm=self.pen_width.value(),
                 levels=self.levels.value(),
@@ -1384,6 +1394,7 @@ class CmykTab(GeneratorTab):
                 path_tolerance_mm=self.path_tolerance.value() / factor,
                 depth_tone=tones.get("depth"),
                 flow_guide=tones.get("flow_rgb"),
+                flow_coverage=tones.get("flow_coverage"),
                 row_clearance_mm=(
                     (self.pen_width.value() + converter.WAVE_MIN_EDGE_GAP_MM)
                     / factor
@@ -1916,7 +1927,7 @@ class CmykTab(GeneratorTab):
                     else None
                 ),
                 "flow_guide": (
-                    "shared_processed_rgb_structure_tensor"
+                    "shared_processed_rgb_structure_tensor_union_coverage"
                     if style == "edge_flow"
                     else None
                 ),
