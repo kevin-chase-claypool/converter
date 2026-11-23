@@ -577,6 +577,20 @@
   machine tolerance, a CMYK set overlays correctly, and its `-set.json`
   records the measurements and preflight results.
 
+- [ ] Bench-verify edge-flow CMYK streamlines and select a starting recipe.
+  Problem: the new structure-tensor screen is covered by synthetic geometry
+  and UI tests (`WSW-20261122-002`), but no printed four-pass portrait has
+  established a useful pitch, smoothing radius, layer count, or pen order.
+  Benefit: one validated recipe turns the visual method into a repeatable
+  portrait workflow and records where extra dark-tone layers become too dense.
+  Risk: fine streamlines expose pen-up drag, felt-tip spread, four-ink overlay
+  error, and long plotting times; a source photo of an existing print also
+  feeds wall/paper edges into the structure field as real ink structure.
+  Acceptance: print a pre-cropped A4 portrait at `1.2 mm` seed pitch,
+  `2.5 mm` smoothing, and three layers after one HOME + REGISTER; inspect line
+  separation, drag, overlay, and elapsed time; then record the selected recipe
+  in the lab note, README preset, and any revised defaults.
+
 - [ ] Verify the heavy gantry axis under load.
   Problem: the operator reports that the Y motor carries markedly more mass than
   X or A. The converter's pen-up travels are `G0`, and grblHAL ignores the `F`

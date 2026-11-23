@@ -23,8 +23,9 @@ The printed header is the minimum needed to match a scan to this layout:
 
 1. `CMYK CALIBRATION - page <W>x<H> mm | margin <M> mm`
 2. `screen lines | pitch <P> mm`, `screen rectilinear | pitch <P> mm`,
-   `screen dots | pitch <P> mm | dot <D>%`, or
-   `screen crosshatch | pitch <P> mm | levels <L>`
+   `screen dots | pitch <P> mm | dot <D>%`,
+   `screen crosshatch | pitch <P> mm | levels <L>`, or
+   `screen edge flow | pitch <P> mm | layers <L>`
 
 ## Analyze
 
@@ -42,6 +43,10 @@ The printed header is the minimum needed to match a scan to this layout:
    ```text
    python tools\cmyk_calibrate.py scan.png --layout 216x279 --margin 6 --screen crosshatch --pitch 0.6 --levels 4
    ```
+
+   The CLI also accepts `--screen edge_flow` when rebuilding an edge-flow
+   sheet without its manifest. `--pitch` remains descriptive; the saved
+   manifest is the authoritative record of the flow settings.
 
 3. If fiducial detection fails (cropped or cluttered image), add
    `--corners x1,y1,...,x4,y4` with the fiducial centres in pixels, order

@@ -99,6 +99,127 @@ class ScreeningTests(unittest.TestCase):
             "pixels_h": 32,
         }
 
+    def test_edge_flow_streamlines_follow_structure_orientation(self):
+        size = 80
+        coords = self.np.arange(size, dtype="float32")
+        xx, yy = self.np.meshgrid(coords, coords)
+        guide = (xx + yy) / float(2 * (size - 1))
+        tone = self.np.full((size, size), 0.85, dtype="float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        marks = converter.screen_channel(
+            tone,
+            geometry,
+            style="edge_flow",
+            spacing_mm=8.0,
+            angle_deg=0.0,
+            max_marks=200,
+            flow_smoothing_mm=4.0,
+            flow_layers=1,
+            depth_tone=guide,
+        )
+
+        long_segments = []
+        for line in marks:
+            for first, second in zip(line, line[1:]):
+                dx = second[0] - first[0]
+                dy = second[1] - first[1]
+                length = math.hypot(dx, dy)
+                if length >= 0.5:
+                    # The guide gradient is (1, 1), so edge-directed paths
+                    # should run along the perpendicular (-1, 1).
+                    alignment = abs(dy - dx) / (math.sqrt(2.0) * length)
+                    long_segments.append(alignment)
+        self.assertGreater(len(long_segments), 20)
+        self.assertGreater(
+            sum(long_segments) / len(long_segments),
+            0.85,
+        )
+
+    def test_edge_flow_uses_fixed_angle_without_structure(self):
+        tone = self.np.full((40, 40), 0.8, dtype="float32")
+        guide = self.np.full((40, 40), 0.5, dtype="float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": 40,
+            "pixels_h": 40,
+        }
+
+        marks = converter.screen_channel(
+            tone,
+            geometry,
+            style="edge_flow",
+            spacing_mm=9.0,
+            angle_deg=30.0,
+            max_marks=120,
+            flow_smoothing_mm=3.0,
+            flow_layers=1,
+            depth_tone=guide,
+        )
+
+        alignments = []
+        expected_x = math.cos(math.radians(30.0))
+        expected_y = math.sin(math.radians(30.0))
+        for line in marks:
+            for first, second in zip(line, line[1:]):
+                dx = second[0] - first[0]
+                dy = second[1] - first[1]
+                length = math.hypot(dx, dy)
+                if length >= 0.5:
+                    alignments.append(
+                        abs(dx * expected_x + dy * expected_y) / length
+                    )
+        self.assertGreater(len(alignments), 20)
+        self.assertGreater(
+            sum(alignments) / len(alignments),
+            0.98,
+        )
+
+    def test_edge_flow_adds_layers_to_darker_ink(self):
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": 40,
+            "pixels_h": 40,
+        }
+        guide = self.np.full((40, 40), 0.5, dtype="float32")
+
+        def total_length(tone_value):
+            tone = self.np.full((40, 40), tone_value, dtype="float32")
+            marks = converter.screen_channel(
+                tone,
+                geometry,
+                style="edge_flow",
+                spacing_mm=9.0,
+                angle_deg=0.0,
+                max_marks=160,
+                flow_smoothing_mm=3.0,
+                flow_layers=3,
+                depth_tone=guide,
+            )
+            return sum(
+                math.hypot(b[0] - a[0], b[1] - a[1])
+                for line in marks
+                for a, b in zip(line, line[1:])
+            )
+
+        light_length = total_length(0.34)
+        dark_length = total_length(0.95)
+        self.assertGreater(light_length, 0.0)
+        self.assertGreater(dark_length, light_length * 1.35)
+
     def test_halftone_marks_follow_tone(self):
         white = self.np.zeros((32, 32), dtype="float32")
         self.assertEqual(
@@ -2008,10 +2129,33 @@ class CmykTabTests(unittest.TestCase):
             "gyroid",
             "tsp",
             "contours",
+            "edge_flow",
         ):
             tab.style.setCurrentIndex(tab.style.findData(style))
             root = ET.parse(tab.build_svg()).getroot()
             self.assertEqual(svg_groups(root), list(converter.CHANNELS), style)
+
+    def test_edge_flow_controls_build_and_round_trip(self):
+        tab = self.make_tab()
+        style_index = tab.style.findData("edge_flow")
+        self.assertGreaterEqual(style_index, 0)
+        tab.style.setCurrentIndex(style_index)
+        tab.flow_smoothing.setValue(2.5)
+        tab.flow_layers.setValue(2)
+
+        state = tab.artwork_layout_state()
+        self.assertEqual(state["screen"]["style"], "edge_flow")
+        self.assertAlmostEqual(state["screen"]["flow_smoothing_mm"], 2.5)
+        self.assertEqual(state["screen"]["flow_layers"], 2)
+
+        root = ET.parse(tab.build_svg()).getroot()
+        self.assertEqual(svg_groups(root), list(converter.CHANNELS))
+
+        restored = self.make_tab()
+        self.assertTrue(restored.restore_artwork_layout_state(state))
+        self.assertEqual(restored.style.currentData(), "edge_flow")
+        self.assertAlmostEqual(restored.flow_smoothing.value(), 2.5)
+        self.assertEqual(restored.flow_layers.value(), 2)
 
     def test_analysis_worker_reports_strategy_split(self):
         from generator_tabs.cmyk_tab import ProgramAnalysisWorker
@@ -3081,6 +3225,18 @@ class CmykTabTests(unittest.TestCase):
         tab.build_svg()
         self.assertEqual(
             tab._layers_manifest["sheet_settings"]["style"], "rectilinear"
+        )
+
+    def test_calibration_sheet_follows_edge_flow(self):
+        tab = self.make_tab()
+        tab.page_w.setValue(200)
+        tab.page_h.setValue(200)
+        tab.pitch.setValue(2.0)
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.calibration_mode.setChecked(True)
+        tab.build_svg()
+        self.assertEqual(
+            tab._layers_manifest["sheet_settings"]["style"], "edge_flow"
         )
 
 

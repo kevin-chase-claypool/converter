@@ -1,5 +1,44 @@
 # Engineering Log
 
+<a id="elog-20261122-edge-flow-cmyk-streamlines"></a>
+### 🟨 2026-11-22 - WINDOWS SOFTWARE/IMPLEMENTED - Add edge-flow CMYK streamlines
+
+- The public r/PlotterArt CMYK portrait inspired a new continuous CMYK screen:
+  gradients feed one shared, blurred structure tensor whose edge tangents
+  guide evenly seeded streamlines; darker plate coverage adds density layers,
+  and weak structure falls back to the ink's fixed screen angle.
+- The method was rebuilt from the author's public explanation because the
+  original script is not published. No third-party code was copied. The post,
+  image, and complete method comment were retrieved through a public Redlib
+  mirror after Reddit challenged anonymous access from this host.
+- `converter_core/structure_tensor.py` keeps the tensor and tracing code
+  separate from the CMYK orchestration. The direction field uses scene
+  luminance across all four inks, while each channel keeps its own tone mask,
+  threshold, density layers, angle fallback, and mark cap.
+- The new **Edge-flow streamlines** style adds Flow smoothing (`2.5 mm` default)
+  and Flow layers (`3` default), persists both in the CMYK recipe, records them
+  in the print-set manifest, and remains available through the existing
+  preview, four-file save, registration, offset, compensation, and G-code
+  paths.
+- The calibration sheet can match edge flow, and `tools/cmyk_calibrate.py`
+  accepts the corresponding screen when rebuilding from a layout.
+- Red-green tests cover diagonal structure alignment, flat-field fixed-angle
+  fallback, dark-tone layer growth, UI recipe round-trip, and calibration
+  matching. All 108 CMYK-tab tests and all 16 sheet/scan-tool tests pass.
+- The complete converter discovery suite passes `628` tests with one expected
+  OpenGL-context skip; documentation checks pass for all 509 change notes.
+- A 900 px portrait software render completed in `1.69 s` at `1.2 mm` seed
+  pitch, `2.5 mm` smoothing, and three layers and visibly followed facial and
+  clothing form. This is not a paper result and does not establish final pitch
+  or ink order.
+- The shipped rectilinear default, existing recipes, row-lock compensation,
+  and G-code contracts are unchanged. A four-pen physical sheet remains the
+  next validation gate.
+- Evidence: `WSW-20261122-002`;
+  `docs/changes/windows-software/2026/2026-11-22-edge-flow-cmyk-streamlines.md`.
+- Category: windows-software, cmyk, edge-flow, structure-tensor, streamlines,
+  portrait, image-screening, calibration, physical-validation-pending.
+
 <a id="elog-20261122-cmyk-shared-row-lock-translation"></a>
 ### 🟨 2026-11-22 - WINDOWS SOFTWARE/IMPLEMENTED - Normalize CMYK row-lock translation across inks
 

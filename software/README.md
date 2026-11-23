@@ -538,14 +538,38 @@ Current tools:
   brightness, luminance sharpening (default on: unsharp-mask amount and
   on-paper radius), ink gamma, black (GCR), resolution, per-ink weights, screen style
   (halftone dots / stipple dots / line screen / crosshatch levels / wave screen
-  with equidistant rows / interference (gyroid) / single line (TSP) /
-  topographic contours / rectilinear fill),
+  with equidistant rows / edge-flow streamlines / interference (gyroid) /
+  single line (TSP) / topographic contours / rectilinear fill),
   dot pitch (with a **Match pen** button that sets it to one pen width at
   the current artwork scale), dot size, solid dots (spiral-filled so each
   mark reads as a dot, not a ring), hatch levels, overdraw, pen width, max
   marks per ink, seed, preview and write checkboxes per layer, page size,
   margin, artwork scale, and registration corner crosses (all four inks
   draw the same four margin crosses so pass alignment can be checked).
+  **Edge-flow streamlines** is a separate continuous screen for portraits and
+  textured photographs. One shared direction field is built from scene
+  luminance rather than independently for each ink: image gradients form a
+  structure tensor, Gaussian-like blur smooths that tensor, and its
+  edge-tangent orientation is traced as evenly seeded streamlines. Each CMYK
+  plate supplies its own tone mask, so coverage and GCR still decide which
+  lines receive cyan, magenta, yellow, or black. Weak or flat structure blends
+  to the ink's fixed screen angle instead of following image noise.
+  **Flow layers** (default 3) adds offset streamline families only where that
+  ink is darker; more layers increase tonal depth, point count, and plotting
+  time. **Flow smoothing** (default 2.5 mm on paper) controls how far the
+  tensor is blurred, trading fine surface texture for longer, calmer contours.
+  Dot pitch sets seed separation, Path tolerance controls trace resampling,
+  and Max marks/ink caps each plate. If the cap requires a coarser seed pitch,
+  the screen grows the pitch rather than randomly dropping lines. The
+  implementation lives in
+  [`converter_core/structure_tensor.py`](converter_core/structure_tensor.py);
+  output uses the existing four-file CMYK save, preview, offset, and G-code
+  contract, and the Test sheet's **Sheet screen** can match this style. The
+  source method was prompted by the public
+  [First CMYK conversion](https://www.reddit.com/r/PlotterArt/comments/1xva9n7/first_cmyk_conversion/)
+  discussion; this implementation is repository-native and independently
+  tested. Software rendering is verified, but no edge-flow four-pass sheet has
+  yet established the best pitch, smoothing, or layer count on paper.
   Resolution keeps the source image's longest side up to that many pixels
   and never upsamples, so it accepts high-resolution sources (the control is
   effectively uncapped; memory grows with the source size you keep).
@@ -656,10 +680,11 @@ Current tools:
   complete image/screen recipe, sharpening amount and radius, effective pitch,
   pen offsets, per-ink
   preflight results, and SHA-256 hashes for all four G-code files.
-  Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
-  alternatives to dot styles: they draw far fewer pen-lift cycles, while the
-  overdraw control darkens any style by redrawing each mark up to three times
-  with a sub-pen offset. **Wave screen - equidistant rows** is the production
+  Line, rectilinear, wave, edge-flow, gyroid, TSP and contour styles are the
+  continuous-mark alternatives to dot styles: they draw far fewer pen-lift
+  cycles, while the overdraw control darkens any style by redrawing each mark
+  up to three times with a sub-pen offset. **Wave screen - equidistant rows**
+  is the production
   Wave screen. It translates one common
   luminance-shaped waveform to every row with no row-specific vertical
   movement, so adjacent centre spacing remains exactly the configured pitch.
@@ -880,6 +905,7 @@ work with no input (optional mesh/image sources are noted below).
 | Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
 | CMYK | Auto levels on, rectilinear fill at 0.10 mm pitch, saturation 115 %, contrast 285 %, brightness 170 %, ink gamma 1.40, black (GCR) 95 %, 40000 marks/ink, resolution 10000 px, weights 100/100/100/100 %, artwork scale 280 % | Needs an image; Preview plans each ink in the background and Save writes four files. Dense photo screens take hours to plot; raise pitch or lower Max marks/ink for a faster pass. |
+| CMYK edge-flow | Auto levels on, Edge-flow streamlines at 1.2 mm pitch, Flow smoothing 2.5 mm, Flow layers 3, pen width and GCR tuned to the pen set | Start from a pre-cropped portrait. Use 4-6 layers only after a one-page test shows the ink set can carry that density without clogging or excessive plotting time. |
 | 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
 | Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |
 | Snowflake | 6 arms, depth 3, length 45 %, branch angle 35 deg, branch scale 55 %, jitter 8 deg / 15 % | Raise depth for finer detail; cap is 5. |

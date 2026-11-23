@@ -24,6 +24,7 @@ from .shading import (
     stipple_points,
     tone_terrain_contours,
 )
+from .structure_tensor import trace_structure_streamlines
 
 CHANNELS = ("c", "m", "y", "k")
 CHANNEL_LABELS = {"c": "Cyan", "m": "Magenta", "y": "Yellow", "k": "Black"}
@@ -1243,6 +1244,8 @@ def screen_channel(
     row_clearance_mm=None,
     allow_variable_wave_spacing=False,
     wave_frequency_variation=0.0,
+    flow_smoothing_mm=None,
+    flow_layers=3,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
@@ -1255,8 +1258,10 @@ def screen_channel(
     (shared phase with tone-driven row amplitude, variable spacing, and exact
     clearance; legacy diagnostic use only), ``gyroid``
     (interference-field contours that flatten into blank paper), ``tsp``
-    (one greedy single line through tone stipple points) and ``contours``
-    (topographic contour lines of the tone).
+    (one greedy single line through tone stipple points), ``contours``
+    (topographic contour lines of the tone), and ``edge_flow`` (tone-masked
+    streamlines through a blurred structure tensor, with a fixed-angle
+    fallback where the guide has no clear direction).
     ``overdraw`` redraws every mark up to three times with a sub-pen offset so
     a ballpoint reads darker without changing the geometry.
     ``path_tolerance_mm`` bounds the chord error of resampled wave rows; the
@@ -1283,6 +1288,7 @@ def screen_channel(
         if depth_tone is not None
         else None
     )
+    flow_guide = depth_tone if depth_tone is not None else tone
 
     def inside(x, y):
         return left <= x <= right and top <= y <= bottom
@@ -1386,6 +1392,26 @@ def screen_channel(
     elif style == "contours":
         marks = _field_contours(
             tone, geometry, spacing, kind="contours", cancel_check=cancel_check
+        )
+    elif style == "edge_flow":
+        marks = trace_structure_streamlines(
+            flow_guide,
+            geometry,
+            spacing,
+            angle_deg,
+            flow_layers,
+            cap,
+            pen_diameter_mm,
+            path_tolerance_mm,
+            (
+                max(0.25, float(flow_smoothing_mm))
+                if flow_smoothing_mm is not None
+                else max(0.25, float(path_tolerance_mm) * 4.0)
+            ),
+            seed,
+            INK_FLOOR,
+            darkness,
+            cancel_check=cancel_check,
         )
     else:
         area = max(0.0, (right - left) * (bottom - top))

@@ -132,7 +132,13 @@ class SheetBuilderTests(unittest.TestCase):
         )
 
     def test_mix_cells_match_the_dense_spot_spacing(self):
-        for screen in ("lines", "rectilinear", "crosshatch", "halftone"):
+        for screen in (
+            "lines",
+            "rectilinear",
+            "crosshatch",
+            "halftone",
+            "edge_flow",
+        ):
             _, manifest = build(screen=screen)
             spots = {
                 patch["channels"][0]: patch
@@ -193,7 +199,7 @@ class SheetBuilderTests(unittest.TestCase):
             self.assertEqual(layers[channel], [])
 
     def test_sheet_marks_stay_inside_the_page(self):
-        for screen in ("lines", "crosshatch", "halftone"):
+        for screen in ("lines", "crosshatch", "halftone", "edge_flow"):
             layers, _ = build(screen=screen)
             for channel in converter.CHANNELS:
                 for line in layers[channel]:

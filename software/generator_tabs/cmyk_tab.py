@@ -296,6 +296,7 @@ class CmykTab(GeneratorTab):
         self.style.addItem("Halftone dots", "halftone")
         self.style.addItem("Stipple dots", "stipple")
         self.style.addItem("Line screen (tone pitch)", "lines")
+        self.style.addItem("Edge-flow streamlines (structure tensor)", "edge_flow")
         self.style.addItem("Rectilinear fill (joined rows)", "rectilinear")
         self.style.addItem("Crosshatch levels", "crosshatch")
         self.style.addItem("Wave screen - equidistant rows", "waves_even")
@@ -316,7 +317,9 @@ class CmykTab(GeneratorTab):
             "labeled legacy diagnostic restores tone-varying row depth while "
             "keeping the selected bed-compensation profile. Stored legacy "
             "values from older settings are promoted to this layout when "
-            "regenerated."
+            "regenerated. Edge-flow streamlines follow blurred image structure "
+            "across one shared direction field and use extra tone-triggered "
+            "layers in darker areas."
         )
         self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)
@@ -367,6 +370,22 @@ class CmykTab(GeneratorTab):
             "legacy tone-varying diagnostic."
         )
         screen.addRow("Wave carrier", self.vary_wave_frequency)
+        self.flow_smoothing = double_spin(
+            2.5, 0.2, 10.0, 0.1, 1, " mm"
+        )
+        self.flow_smoothing.setToolTip(
+            "Edge-flow only: blur radius for the structure tensor. Larger "
+            "values make longer, calmer contours; smaller values follow fine "
+            "texture and can become noisy."
+        )
+        screen.addRow("Flow smoothing", self.flow_smoothing)
+        self.flow_layers = int_spin(3, 1, 6)
+        self.flow_layers.setToolTip(
+            "Edge-flow only: one base streamline layer plus extra offset "
+            "layers where this ink is dark. More layers increase tonal range "
+            "and plotting time without changing the shared direction field."
+        )
+        screen.addRow("Flow layers", self.flow_layers)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
         screen.addRow("Dot size", self.dot_size)
         self.solid_dots = QCheckBox("Solid dots")
@@ -570,11 +589,12 @@ class CmykTab(GeneratorTab):
         )
         self.calibration_screen.addItem("Crosshatch levels", "crosshatch")
         self.calibration_screen.addItem("Halftone dots", "halftone")
+        self.calibration_screen.addItem("Edge-flow streamlines", "edge_flow")
         self.calibration_screen.setToolTip(
             "Marks used by the calibration sheet. Matching your art's Screen "
             "style makes the ladders calibrate exactly what you print: dot "
             "size for halftone, line pitch for the line screen, hatch levels "
-            "for crosshatch."
+            "for crosshatch, and pitch plus layer count for edge flow."
         )
         calibration.addRow("Sheet screen", self.calibration_screen)
         self.calibration_hint = QLabel(
@@ -912,6 +932,8 @@ class CmykTab(GeneratorTab):
                 "preserve_wave_pitch": self.preserve_wave_pitch.isChecked(),
                 "vary_wave_frequency": self.vary_wave_frequency.isChecked(),
                 "contour_order": self.contour_order.currentData(),
+                "flow_smoothing_mm": self.flow_smoothing.value(),
+                "flow_layers": self.flow_layers.value(),
                 "dot_size_pct": self.dot_size.value(),
                 "solid_dots": self.solid_dots.isChecked(),
                 "levels": self.levels.value(),
@@ -1000,6 +1022,10 @@ class CmykTab(GeneratorTab):
             if order_index < 0:
                 raise ValueError("saved CMYK row order is unavailable")
             self.contour_order.setCurrentIndex(order_index)
+            self.flow_smoothing.setValue(
+                float(screen.get("flow_smoothing_mm", 2.5))
+            )
+            self.flow_layers.setValue(int(screen.get("flow_layers", 3)))
             self.dot_size.setValue(float(screen["dot_size_pct"]))
             self.solid_dots.setChecked(bool(screen["solid_dots"]))
             self.levels.setValue(int(screen["levels"]))
@@ -1099,6 +1125,8 @@ class CmykTab(GeneratorTab):
             self._variable_wave_frequency_active(),
             self._wave_row_order_active(),
             self.contour_order.currentData(),
+            self.flow_smoothing.value(),
+            self.flow_layers.value(),
             self.dot_size.value(),
             self.solid_dots.isChecked(),
             self.theta_mode.value(),
@@ -1169,6 +1197,10 @@ class CmykTab(GeneratorTab):
 
     def _update_wave_spacing_guard(self, _value=None):
         """Keep the guard meaningful for the selected screen style."""
+        flow_selected = (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData() == "edge_flow"
+        )
         equal_wave_selected = (
             not self.calibration_mode.isChecked()
             and self.style.currentData() == "waves_even"
@@ -1180,6 +1212,8 @@ class CmykTab(GeneratorTab):
         self.preserve_wave_pitch.setEnabled(equal_wave_selected)
         self.vary_wave_frequency.setEnabled(equal_wave_selected)
         self.contour_order.setEnabled(wave_selected)
+        self.flow_smoothing.setEnabled(flow_selected)
+        self.flow_layers.setEnabled(flow_selected)
         if hasattr(self, "pass_summary"):
             self._refresh_pass_summary()
 
@@ -1252,6 +1286,14 @@ class CmykTab(GeneratorTab):
             "crosses %s" % ("on" if self.registration_marks.isChecked() else "off"),
             "pen offsets %s" % (", ".join(offset_parts) if offset_parts else "none"),
         ]
+        if (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData() == "edge_flow"
+        ):
+            parts.append(
+                "edge flow %.1f mm smoothing, %d layers"
+                % (self.flow_smoothing.value(), self.flow_layers.value())
+            )
         if results is not None:
             errors = self._preflight_errors(results)
             warnings = self._preflight_warnings(results)
@@ -1351,6 +1393,8 @@ class CmykTab(GeneratorTab):
                     else 0.0
                 ),
                 allow_variable_wave_spacing=(style == "waves_zero"),
+                flow_smoothing_mm=self.flow_smoothing.value() / factor,
+                flow_layers=self.flow_layers.value(),
             )
             # Generator pages are plotted 1:1, so the tab's Artwork scale is
             # applied to the screened marks about the page centre here.
@@ -1380,7 +1424,7 @@ class CmykTab(GeneratorTab):
             style = self.style.currentData()
             screen = (
                 style
-                if style in ("lines", "rectilinear", "crosshatch")
+                if style in ("lines", "rectilinear", "crosshatch", "edge_flow")
                 else "halftone"
             )
         layers, manifest = build_sheet(
@@ -1397,6 +1441,8 @@ class CmykTab(GeneratorTab):
             overdraw=self.overdraw.value(),
             screen=screen,
             levels=self.levels.value(),
+            flow_smoothing_mm=self.flow_smoothing.value(),
+            flow_layers=self.flow_layers.value(),
         )
         stroke = self.pen_width.value()
         files = {}
@@ -1857,6 +1903,21 @@ class CmykTab(GeneratorTab):
                     self.contour_order.currentData()
                     if self._wave_row_order_active()
                     else "optimized"
+                ),
+                "flow_smoothing_mm": (
+                    self.flow_smoothing.value()
+                    if style == "edge_flow"
+                    else None
+                ),
+                "flow_layers": (
+                    self.flow_layers.value()
+                    if style == "edge_flow"
+                    else None
+                ),
+                "flow_guide": (
+                    "shared_scene_luminance_structure_tensor"
+                    if style == "edge_flow"
+                    else None
                 ),
                 "pen_width_mm": self.pen_width.value(),
                 "dot_size_pct": self.dot_size.value(),
