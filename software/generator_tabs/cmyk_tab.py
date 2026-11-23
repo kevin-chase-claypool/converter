@@ -399,7 +399,7 @@ class CmykTab(GeneratorTab):
             "widths, smoothing near 2.5 pen widths, fewer density layers, "
             "and Path tolerance no larger than 0.10 mm."
         )
-        self.detail_button.clicked.connect(self.apply_detail_preset)
+        self.detail_button.clicked.connect(self.toggle_detail_preset)
         screen.addRow("Precision", self.detail_button)
         self.flow_keylines = QCheckBox("Continuous Black keylines")
         self.flow_keylines.setChecked(False)
@@ -692,6 +692,7 @@ class CmykTab(GeneratorTab):
         self._layers_manifest = None
         self._analysis = None
         self._analysis_key = None
+        self._detail_preset_snapshot = None
         self._thread = None
         self._worker = None
         self._pending_save = False
@@ -930,6 +931,77 @@ class CmykTab(GeneratorTab):
             <= target["tolerance"] + 1e-6
         )
 
+    def _detail_control_state(self):
+        """Capture the controls changed by the Fine detail toggle."""
+        return {
+            "style": self.style.currentData(),
+            "calibration": self.calibration_mode.isChecked(),
+            "pitch": self.pitch.value(),
+            "smoothing": self.flow_smoothing.value(),
+            "layers": self.flow_layers.value(),
+            "tolerance": self.path_tolerance.value(),
+            "keylines": self.flow_keylines.isChecked(),
+        }
+
+    def _restore_detail_control_state(self, state):
+        """Restore one validated pre-Fine-detail control snapshot."""
+        if not isinstance(state, dict):
+            return False
+        try:
+            style = str(state["style"])
+            style_index = self.style.findData(style)
+            if style_index < 0:
+                return False
+            self.calibration_mode.setChecked(bool(state["calibration"]))
+            self.style.setCurrentIndex(style_index)
+            self.pitch.setValue(float(state["pitch"]))
+            self.flow_smoothing.setValue(float(state["smoothing"]))
+            self.flow_layers.setValue(int(state["layers"]))
+            self.path_tolerance.setValue(float(state["tolerance"]))
+            self.flow_keylines.setChecked(bool(state["keylines"]))
+        except (KeyError, TypeError, ValueError):
+            return False
+        self._update_detail_preset_indicator()
+        return True
+
+    def toggle_detail_preset(self, _checked=False):
+        """Apply Fine detail, or restore the controls saved before it."""
+        if self.detail_button.isChecked():
+            self._detail_preset_snapshot = self._detail_control_state()
+            self.apply_detail_preset()
+            return
+        snapshot = self._detail_preset_snapshot
+        used_fallback = snapshot is None
+        if used_fallback:
+            snapshot = {
+                "style": "edge_flow",
+                "calibration": False,
+                "pitch": self.pitch.value(),
+                "smoothing": 2.5,
+                "layers": 3,
+                "tolerance": 0.15,
+                "keylines": False,
+            }
+        if self._restore_detail_control_state(snapshot):
+            message = (
+                "Fine detail off. No previous-layout snapshot was available; "
+                "restored standard Edge-flow defaults. Press Preview to "
+                "rebuild."
+                if used_fallback
+                else (
+                    "Fine detail off. Restored the controls from before the "
+                    "preset; press Preview to rebuild."
+                )
+            )
+        else:
+            message = (
+                "Fine detail off, but the previous controls were "
+                "unavailable. Press Preview to inspect the current layout."
+            )
+        self.status.setText(message)
+        if self.host is not None:
+            self.host.generator_status(message)
+
     def _update_detail_preset_indicator(self, *_args):
         """Show whether the current Edge-flow controls match Fine detail."""
         active = self._detail_preset_active()
@@ -947,9 +1019,13 @@ class CmykTab(GeneratorTab):
             base
             + (
                 " Status: active. These controls still match the preset; "
-                "changing any preset-related control clears this indicator."
+                "click again to restore the controls saved before Fine "
+                "detail."
                 if active
-                else " Status: not active. Click to apply the preset."
+                else (
+                    " Status: not active. Click to apply the preset and save "
+                    "the current controls for later restoration."
+                )
             )
         )
 
@@ -959,6 +1035,7 @@ class CmykTab(GeneratorTab):
         if edge_flow < 0:
             self.report_error("Edge-flow streamlines are not available.")
             return
+        self.calibration_mode.setChecked(False)
         self.style.setCurrentIndex(edge_flow)
         target = self._detail_preset_values()
         scale = target["scale"]
@@ -1078,6 +1155,12 @@ class CmykTab(GeneratorTab):
                 "max_marks": self.max_marks.value(),
                 "seed": self.seed.value(),
             },
+            "fine_detail_previous": (
+                dict(self._detail_preset_snapshot)
+                if self._detail_preset_active()
+                and self._detail_preset_snapshot is not None
+                else None
+            ),
             "kinematics": {
                 "theta_mode": self.theta_mode.value(),
                 "center_hold_diameter_mm": self.center_hold.value(),
@@ -1174,6 +1257,11 @@ class CmykTab(GeneratorTab):
             )
             self.max_marks.setValue(int(screen["max_marks"]))
             self.seed.setValue(int(screen["seed"]))
+            previous = state.get("fine_detail_previous")
+            self._detail_preset_snapshot = (
+                dict(previous) if isinstance(previous, dict) else None
+            )
+            self._update_detail_preset_indicator()
 
             kinematics = state["kinematics"]
             self.theta_mode.set_value(str(kinematics["theta_mode"]))
@@ -1223,6 +1311,7 @@ class CmykTab(GeneratorTab):
         self._analysis = None
         self._analysis_key = None
         self._update_wave_spacing_guard()
+        self._update_detail_preset_indicator()
         self._refresh_pass_summary()
         return True
 

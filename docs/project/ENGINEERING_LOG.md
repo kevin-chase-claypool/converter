@@ -1,8 +1,40 @@
 # Engineering Log
 
+<a id="elog-20261123-cmyk-fine-detail-reversible-toggle"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Make Fine detail a reversible toggle
+
+- The owner reported that the new Fine detail button remained checked after
+  repeated clicks. The first implementation updated the indicator correctly,
+  but every click still called the apply action, so it could never toggle
+  off.
+- Activation now snapshots the current style, calibration state, pitch,
+  smoothing, layers, Path tolerance, and Black-keyline choice before applying
+  the preset.
+- A second click restores that snapshot and clears the checkmark. Manual edits
+  still clear the active state first, and the next click records the edited
+  layout as the new restore point.
+- The prior-layout snapshot is stored as `fine_detail_previous` in the artwork
+  recipe, so closing and reopening the image does not lose the reversible
+  state.
+- Recipes created before this change may already match Fine detail without a
+  snapshot. Toggling those off uses the documented Edge-flow fallback:
+  unchanged pitch, `2.5 mm` smoothing, three layers, `0.15 mm` tolerance, and
+  keylines off.
+- Applying Fine detail now also exits calibration-sheet mode so the button
+  cannot appear inactive solely because the sheet mode overrides the artwork
+  screen.
+- New regressions cover exact control restoration, snapshot round-trip through
+  the artwork recipe, and the legacy-recipe fallback. All `124` CMYK tab tests
+  pass. Complete converter discovery passes `644` tests with one expected
+  OpenGL-context skip.
+- Evidence: `WSW-20261123-009`; supersedes `WSW-20261123-008` click behavior.
+- Category: windows-software, cmyk, edge-flow, fine-detail, toggle,
+  user-interface, recipe-persistence.
+
 <a id="elog-20261123-cmyk-fine-detail-state-indicator"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Show Fine detail active state
 
+- Superseded by `WSW-20261123-009`, which makes the checked state reversible.
 - The owner observed that clicking **Fine detail** gave no persistent
   indication that the preset had been applied. Because the action changes
   several controls, the result was difficult to distinguish from a button

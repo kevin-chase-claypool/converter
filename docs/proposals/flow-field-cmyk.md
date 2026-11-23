@@ -34,6 +34,8 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
   above it, and Path tolerance no larger than `0.10 mm`
 - Fine detail reports a checked/`✓` state only while every preset control
   still matches; manual edits clear it
+- Fine detail is reversible: activation saves the prior edge-flow layout, and
+  deactivation restores it and clears the checkmark
 - Optional Continuous Black keylines: preserve high-coherence structure
   boundaries in the Black plate while leaving C/M/Y tone-gated
 - Optional preview of each channel and composite

@@ -5,7 +5,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
-| 2026-11-23 | `WSW-20261123-008` | windows-software | implemented | [Show whether the Fine detail preset is active](windows-software/2026/2026-11-23-cmyk-fine-detail-state-indicator.md) |
+| 2026-11-23 | `WSW-20261123-009` | windows-software | implemented | [Make Fine detail a reversible toggle](windows-software/2026/2026-11-23-cmyk-fine-detail-reversible-toggle.md) |
+| 2026-11-23 | `WSW-20261123-008` | windows-software | superseded | [Show whether the Fine detail preset is active](windows-software/2026/2026-11-23-cmyk-fine-detail-state-indicator.md) |
 | 2026-11-23 | `WSW-20261123-007` | windows-software | implemented | [Preserve Black portrait keylines and refine Edge-flow Auto color](windows-software/2026/2026-11-23-cmyk-edge-flow-black-keylines.md) |
 | 2026-11-23 | `WSW-20261123-006` | windows-software | implemented | [Add a pen-aware Edge-flow fine-detail preset](windows-software/2026/2026-11-23-cmyk-edge-flow-fine-detail-preset.md) |
 | 2026-11-23 | `WSW-20261123-005` | windows-software | implemented | [Make Edge-flow Auto preserve portrait density](windows-software/2026/2026-11-23-cmyk-edge-flow-auto-density.md) |

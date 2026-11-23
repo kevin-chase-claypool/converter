@@ -3618,6 +3618,74 @@ class CmykTabTests(unittest.TestCase):
         tab.flow_keylines.setChecked(False)
         self.assertFalse(tab.detail_button.isChecked())
 
+    def test_fine_detail_toggle_restores_previous_controls(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.pen_width.setValue(0.6)
+        tab.scale_pct.setValue(260)
+        tab.pitch.setValue(0.65)
+        tab.flow_smoothing.setValue(4.0)
+        tab.flow_layers.setValue(5)
+        tab.path_tolerance.setValue(0.15)
+        tab.flow_keylines.setChecked(False)
+
+        tab.detail_button.click()
+        self.assertTrue(tab.detail_button.isChecked())
+
+        tab.detail_button.click()
+        self.assertFalse(tab.detail_button.isChecked())
+        self.assertEqual(tab.style.currentData(), "edge_flow")
+        self.assertAlmostEqual(tab.pitch.value(), 0.65, places=2)
+        self.assertAlmostEqual(tab.flow_smoothing.value(), 4.0, places=1)
+        self.assertEqual(tab.flow_layers.value(), 5)
+        self.assertAlmostEqual(tab.path_tolerance.value(), 0.15, places=2)
+        self.assertFalse(tab.flow_keylines.isChecked())
+        self.assertIn("Fine detail off", tab.status.text())
+
+    def test_fine_detail_toggle_snapshot_round_trips(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.pen_width.setValue(0.6)
+        tab.scale_pct.setValue(260)
+        tab.flow_smoothing.setValue(4.0)
+        tab.flow_layers.setValue(5)
+        tab.path_tolerance.setValue(0.15)
+        tab.flow_keylines.setChecked(False)
+        tab.detail_button.click()
+
+        state = tab.artwork_layout_state()
+        self.assertIsNotNone(state["fine_detail_previous"])
+        restored = self.make_tab()
+        self.assertTrue(restored.restore_artwork_layout_state(state))
+        self.assertTrue(restored.detail_button.isChecked())
+
+        restored.detail_button.click()
+        self.assertFalse(restored.detail_button.isChecked())
+        self.assertAlmostEqual(restored.flow_smoothing.value(), 4.0, places=1)
+        self.assertEqual(restored.flow_layers.value(), 5)
+        self.assertFalse(restored.flow_keylines.isChecked())
+
+    def test_fine_detail_old_active_recipe_uses_off_fallback(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.pen_width.setValue(0.6)
+        tab.scale_pct.setValue(260)
+        tab.detail_button.click()
+        state = tab.artwork_layout_state()
+        state["fine_detail_previous"] = None
+
+        restored = self.make_tab()
+        self.assertTrue(restored.restore_artwork_layout_state(state))
+        self.assertTrue(restored.detail_button.isChecked())
+        restored.detail_button.click()
+
+        self.assertFalse(restored.detail_button.isChecked())
+        self.assertAlmostEqual(restored.flow_smoothing.value(), 2.5, places=1)
+        self.assertEqual(restored.flow_layers.value(), 3)
+        self.assertAlmostEqual(restored.path_tolerance.value(), 0.15, places=2)
+        self.assertFalse(restored.flow_keylines.isChecked())
+        self.assertIn("standard Edge-flow defaults", restored.status.text())
+
     def test_registration_crosses_are_identical_on_every_ink(self):
         tab = self.make_tab()
         tab.registration_marks.setChecked(True)

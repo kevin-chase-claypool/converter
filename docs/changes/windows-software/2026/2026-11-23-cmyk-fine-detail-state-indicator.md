@@ -4,7 +4,7 @@ date: 2026-11-23
 category: windows-software
 affected_categories:
   - windows-software
-status: implemented
+status: superseded
 components:
   - software/generator_tabs/cmyk_tab.py
   - software/tests/test_cmyk_tab.py
@@ -16,6 +16,7 @@ tags:
 related:
   - WSW-20261123-006
   - WSW-20261123-007
+  - WSW-20261123-009
   - docs/proposals/flow-field-cmyk.md
 ---
 
@@ -27,6 +28,9 @@ The CMYK **Fine detail** button now displays its current state. It is checked
 and reads **Fine detail ✓** only while the Edge-flow controls still match the
 pen-aware preset. Editing any preset-related control clears the indicator
 immediately.
+
+`WSW-20261123-009` supersedes the momentary click behavior with a reversible
+toggle and restorable previous layout.
 
 ## Reason
 

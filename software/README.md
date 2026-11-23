@@ -600,7 +600,13 @@ Current tools:
   two layers, Black keylines, and `0.10 mm` tolerance. The button is checked
   and reads **Fine detail ✓** while those controls still match the preset.
   Changing the pen, scale, pitch, smoothing, layers, tolerance, keyline
-  choice, screen style, or calibration mode clears the indicator.
+  choice, screen style, or calibration mode clears the indicator. Clicking
+  again while active restores the controls saved immediately before Fine
+  detail was applied and clears the checkmark. The snapshot is stored in the
+  artwork recipe so reopening the same image preserves the toggle's prior
+  layout. Older recipes that were already in the preset state without a saved
+  snapshot fall back to smoothing `2.5 mm`, three layers, keylines off, and
+  `0.15 mm` tolerance when switched off.
   The implementation lives in
   [`converter_core/structure_tensor.py`](converter_core/structure_tensor.py);
   output uses the existing four-file CMYK save, preview, offset, and G-code
