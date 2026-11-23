@@ -17,6 +17,12 @@
 - A 1000 px software render of the reported `IMG_0514.JPG` retained visible
   eye, mouth, shirt, pocket, wood, and background structure that the
   luminance-only guide lost. The result remains a software render.
+- The live 1600 px converter preview then selected the balanced three-layer
+  recipe now recorded in `software/README.md`: `0.31 mm` seed pitch,
+  `2.0 mm` flow smoothing, three layers, and the tuned image/GCR controls.
+  It retained the reference portrait's facial and clothing detail while the
+  two-layer variant lost depth and the four-layer variant began to close
+  nearby lines. This is a starting recipe, not a paper-verified optimum.
 - The complete converter discovery suite passes `630` tests with one expected
   OpenGL-context skip.
 - Documentation indexing and link validation pass for all 510 change notes.

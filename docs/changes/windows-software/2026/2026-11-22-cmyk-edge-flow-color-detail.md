@@ -66,6 +66,11 @@ conversion.
 - A software render of the reported `IMG_0514.JPG` with the retained RGB guide
   preserved substantially more facial, shirt, wood, and background detail than
   the luminance-only version. The image still needs a physical pen test.
+- The software-selected starting recipe is recorded in `software/README.md`.
+  It uses three flow layers, `2.0 mm` smoothing, and a `0.31 mm` seed pitch;
+  the lighter two-layer version lost tonal depth and the four-layer version
+  reduced separation. The live 1600 px preview reported pen-down counts of
+  C 4252, M 4910, Y 5709, and K 5821.
 - The complete converter discovery suite passes `630` tests with one expected
   OpenGL-context skip.
 - Documentation indexing and link validation pass for all `510` change notes.

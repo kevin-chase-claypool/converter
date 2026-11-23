@@ -572,6 +572,17 @@ Current tools:
   discussion; this implementation is repository-native and independently
   tested. Software rendering is verified, but no edge-flow four-pass sheet has
   yet established the best pitch, smoothing, or layer count on paper.
+  The current software-selected portrait starting point uses auto levels on;
+  saturation 110 %, contrast 120 %, brightness 105 %, sharpening off; ink gamma
+  1.1; black (GCR) 85 %; resolution 1600 px; C/M/Y weights 100 % and K 90 %;
+  `0.31 mm` seed pitch; `2.0 mm` flow smoothing; three flow layers; `0.8 mm`
+  pen width; `0.15 mm` path tolerance; 200000 marks per ink; seed 7; and a
+  150 % artwork scale on a 200 x 200 mm page with a 6 mm margin. It preserved
+  the color-only facial, clothing, wood, and background detail in the
+  2026-11-22 owner portrait, while the lighter two-layer and denser four-layer
+  variants lost either tonal depth or separation. This is a repeatable software
+  starting point, not a physical print optimum; tune it against the pen set and
+  paper.
   Resolution keeps the source image's longest side up to that many pixels
   and never upsamples, so it accepts high-resolution sources (the control is
   effectively uncapped; memory grows with the source size you keep).
@@ -907,7 +918,7 @@ work with no input (optional mesh/image sources are noted below).
 | Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
 | CMYK | Auto levels on, rectilinear fill at 0.10 mm pitch, saturation 115 %, contrast 285 %, brightness 170 %, ink gamma 1.40, black (GCR) 95 %, 40000 marks/ink, resolution 10000 px, weights 100/100/100/100 %, artwork scale 280 % | Needs an image; Preview plans each ink in the background and Save writes four files. Dense photo screens take hours to plot; raise pitch or lower Max marks/ink for a faster pass. |
-| CMYK edge-flow | Auto levels on, Edge-flow streamlines at 1.2 mm pitch, Flow smoothing 2.5 mm, Flow layers 3, pen width and GCR tuned to the pen set | Start from a pre-cropped portrait. Use 4-6 layers only after a one-page test shows the ink set can carry that density without clogging or excessive plotting time. |
+| CMYK edge-flow | Auto levels on; saturation 110 %, contrast 120 %, brightness 105 %, sharpening off; gamma 1.10, GCR 85 %, resolution 1600 px, weights 100/100/100/90 %; Edge-flow streamlines at 0.31 mm pitch, Flow smoothing 2.0 mm, Flow layers 3, pen 0.8 mm, tolerance 0.15 mm, 200000 marks/ink, seed 7, artwork scale 150 % on 200 x 200 mm | Software-selected starting point for a pre-cropped portrait. It preserves color-only detail and supplies more depth than two layers; check four-layer density and pen-set separation on paper before using it as a production recipe. |
 | 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
 | Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |
 | Snowflake | 6 arms, depth 3, length 45 %, branch angle 35 deg, branch scale 55 %, jitter 8 deg / 15 % | Raise depth for finer detail; cap is 5. |

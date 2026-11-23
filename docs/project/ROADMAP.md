@@ -588,10 +588,13 @@
   Risk: fine streamlines expose pen-up drag, felt-tip spread, four-ink overlay
   error, and long plotting times; a source photo of an existing print also
   feeds wall/paper edges into the structure field as real ink structure.
-  Acceptance: print a pre-cropped A4 portrait at `1.2 mm` seed pitch,
-  `2.5 mm` smoothing, and three layers after one HOME + REGISTER; inspect line
-  separation, drag, overlay, and elapsed time; then record the selected recipe
-  in the lab note, README preset, and any revised defaults.
+  Status 2026-11-22: the live 1600 px preview selected the balanced three-layer
+  software recipe now recorded in `software/README.md`; the original
+  `1.2 mm` / `2.5 mm` recommendation rendered too broad for this portrait.
+  Acceptance: print a pre-cropped portrait with the README starting recipe
+  after one HOME + REGISTER; inspect line separation, drag, overlay, and elapsed
+  time; then record the selected recipe in a lab note and revise the README
+  preset or defaults if paper changes the choice.
 
 - [ ] Verify the heavy gantry axis under load.
   Problem: the operator reports that the Y motor carries markedly more mass than
