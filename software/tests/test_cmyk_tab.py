@@ -62,6 +62,9 @@ class SeparationTests(unittest.TestCase):
         self.assertAlmostEqual(float(tones["c"][0, 0]), 1.0, places=5)
         self.assertAlmostEqual(float(tones["k"][0, 0]), 0.0, places=5)
 
+    def test_process_yellow_preview_filter_is_pure_yellow(self):
+        self.assertEqual(converter.CHANNEL_COLORS["y"].lower(), "#ffff00")
+
     def test_gcr_zero_keeps_the_gray_in_cmy(self):
         import numpy as np
 

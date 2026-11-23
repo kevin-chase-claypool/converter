@@ -32,7 +32,9 @@ CHANNEL_LABELS = {"c": "Cyan", "m": "Magenta", "y": "Yellow", "k": "Black"}
 CHANNEL_COLORS = {
     "c": "#00a6d6",
     "m": "#d6009a",
-    "y": "#f0c400",
+    # Ideal process yellow mainly removes blue. A warm/dark yellow here turns
+    # the multiply proof brown before physical ink calibration is applied.
+    "y": "#ffff00",
     "k": "#222222",
 }
 
