@@ -1287,6 +1287,8 @@ def screen_channel(
     flow_guide=None,
     flow_keylines=False,
     flow_color_quiet=0.0,
+    flow_tone_segment_mm=None,
+    flow_max_path_mm=None,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
@@ -1320,6 +1322,11 @@ def screen_channel(
     ``flow_color_quiet`` reduces coverage beside those coherent boundaries;
     the CMYK tab applies it only to the color plates when Black keylines are
     active.
+    ``flow_tone_segment_mm`` optionally overrides the normal `4-8 mm`
+    path-local tone interval so compact facial features can change ink state
+    inside a smaller area.
+    ``flow_max_path_mm`` limits each traced color streamline to a short local
+    mark instead of allowing it to run across the whole face.
     The legacy ``waves`` and ``waves_zero`` styles are promoted to the
     equidistant ``waves_even`` geometry unless ``allow_variable_wave_spacing``
     is explicitly true. Diagnostic comparison tools use that opt-in; normal
@@ -1467,6 +1474,8 @@ def screen_channel(
             darkness,
             keylines=bool(flow_keylines),
             color_quiet=max(0.0, min(1.0, float(flow_color_quiet))),
+            tone_segment_mm=flow_tone_segment_mm,
+            max_path_mm=flow_max_path_mm,
             cancel_check=cancel_check,
         )
     else:

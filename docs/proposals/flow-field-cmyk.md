@@ -29,9 +29,10 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
   layers for darker coverage and no shared 2D block lattice
 - Auto image curve for the current portrait: brightness 105 %, contrast 220 %,
   saturation 110 %, GCR 80 %, gamma 0.75
-- Fine-detail preset: 1.5 effective pen widths, smoothing near 2.5 pen widths
-  clamped to `1.2-2.0 mm`, two layers at or below a `0.7 mm` pen and three
-  above it, and Path tolerance no larger than `0.10 mm`
+- Fine-detail preset: one effective pen width, smoothing near two pen widths
+  clamped to `1.0-1.5 mm`, five low-offset layers, `2 mm` path-local tone
+  intervals, marks capped near `12 mm`, and Path tolerance no larger
+  than `0.10 mm`
 - Fine detail reports a checked/`✓` state only while every preset control
   still matches; manual edits clear it
 - Fine detail is reversible: activation saves the prior edge-flow layout, and

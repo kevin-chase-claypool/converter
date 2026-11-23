@@ -343,6 +343,8 @@ def trace_structure_streamlines(
     tone_at,
     keylines=False,
     color_quiet=0.0,
+    tone_segment_mm=None,
+    max_path_mm=None,
     cancel_check=None,
 ):
     """Trace evenly spaced streamlines through one tone-derived tensor.
@@ -388,15 +390,19 @@ def trace_structure_streamlines(
     )
     minimum_pen_gap = max(0.0, float(pen_diameter_mm)) * 0.72
     minimum_length = max(1.0, base_pitch * 0.45)
-    tone_segment = max(
-        4.0,
-        min(
-            8.0,
-            max(
-                base_pitch * 3.0,
-                max(0.0, float(pen_diameter_mm)) * 3.0,
+    tone_segment = (
+        max(0.8, min(8.0, float(tone_segment_mm)))
+        if tone_segment_mm is not None
+        else max(
+            4.0,
+            min(
+                8.0,
+                max(
+                    base_pitch * 3.0,
+                    max(0.0, float(pen_diameter_mm)) * 3.0,
+                ),
             ),
-        ),
+        )
     )
     visible_minimum_length = max(
         0.5,
@@ -424,9 +430,16 @@ def trace_structure_streamlines(
         iy = int((y - top) / max(1e-8, bottom - top) * field_h)
         return max(0, min(field_w - 1, ix)), max(0, min(field_h - 1, iy))
 
+    path_limit = (
+        max(0.1, float(max_path_mm)) * 0.5
+        if max_path_mm is not None
+        else None
+    )
+
     def trace(direction, start_x, start_y, threshold, occupied):
         points = []
         x, y = start_x, start_y
+        traveled = 0.0
         for _ in range(maximum_steps):
             vx, vy = sample_velocity(x, y)
             if abs(vx) + abs(vy) < 1e-6:
@@ -436,8 +449,10 @@ def trace_structure_streamlines(
             mx, my = sample_velocity(mid_x, mid_y)
             if abs(mx) + abs(my) < 1e-6:
                 mx, my = vx, vy
-            x += direction * mx * step_mm
-            y += direction * my * step_mm
+            next_x = x + direction * mx * step_mm
+            next_y = y + direction * my * step_mm
+            traveled += math.hypot(next_x - x, next_y - y)
+            x, y = next_x, next_y
             if not (left <= x <= right and top <= y <= bottom):
                 break
             if tone_at(x, y) < max(float(ink_floor), threshold):
@@ -446,6 +461,8 @@ def trace_structure_streamlines(
             if occupied[iy, ix]:
                 break
             points.append((x, y))
+            if path_limit is not None and traveled >= path_limit:
+                break
         return points
 
     marks = []

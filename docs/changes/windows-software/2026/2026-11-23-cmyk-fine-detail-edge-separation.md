@@ -28,11 +28,12 @@ related:
 
 ## Summary
 
-Fine detail now does more than reduce pitch and layer count. It enables a
-`60 %` unsharp mask at `1.5 mm` on paper and quiets C/M/Y coverage beside the
-strongest coherent Black keylines. The result preserves more eye, nostril,
-mouth, tooth, and collar structure without returning to the five-layer,
-wide-smoothing portrait.
+Fine detail is now a dense microflow preset: one effective pen width, five
+low-offset layers, `2 mm` tone intervals, and marks capped near `12 mm`.
+It enables a `60 %` unsharp mask at `1.5 mm` on paper and quiets C/M/Y
+coverage beside the strongest coherent Black keylines. The result preserves
+more eye, nostril, mouth, tooth, and collar structure without returning to the
+wide-smoothing, full-page contour portrait.
 
 ## Reason
 
@@ -40,13 +41,19 @@ The previous Fine detail render reduced tensor blur successfully, but color
 streamlines still crossed directly beside the Black keylines. In the physical
 overprint, those neighboring colors can bury the single Black boundary. The
 photo had also lost some fine luminance contrast before screening because
-Fine detail did not alter sharpening.
+Fine detail did not alter sharpening. Long `4-8 mm` tone intervals also let a
+single random decision fill or erase most of the narrow tooth region.
 
 ## Implementation
 
 - Fine detail enables Unsharp mask at `60 %`, radius `1.5 mm`.
+- Dot pitch is reduced to one effective pen width, Flow smoothing to two pen
+  widths clamped to `1.0-1.5 mm`, and Flow layers becomes five.
+- Path-local tone intervals are reduced to `2 mm` in paper space. Every
+  streamline is capped near `12 mm`, long enough to preserve local form but
+  short enough to avoid cross-face contours.
 - The edge-confidence field is now used in two roles: stronger continuous
-  coverage on the Black plate, and `65 %` lower tone coverage beside the same
+  coverage on the Black plate, and `25 %` lower tone coverage beside the same
   high-confidence boundaries on C/M/Y.
 - The color plates remain independently seeded and tone-gated away from those
   edges. There is no shared color mask or synthetic outline.
@@ -58,14 +65,17 @@ Fine detail did not alter sharpening.
 
 - A synthetic coherent edge regression verifies that color-edge quieting
   reduces ink length while preserving the under-keyline Black result.
-- Per-ink capture verifies C/M/Y receive `0.65` edge quieting and Black does
-  not; Black alone receives the continuous keyline boost.
+- A short-mark regression verifies the Fine-detail `12 mm` cap keeps individual
+  emitted marks bounded including integration-step overshoot.
+- Per-ink capture verifies C/M/Y receive `0.25` edge quieting and Black does
+  not; Black alone receives the continuous keyline boost. It also verifies the
+  `2 mm` tone interval and `12 mm` mark cap are supplied in pre-scale units.
 - Fine detail tests verify `60 %` / `1.5 mm` sharpening, active-state tracking,
   exact toggle restoration, snapshot round-trip, and legacy fallback.
 - A `600 px` software comparison shows the keylined-and-sharpened face with
   clearer eye, nostril, lip, tooth, and collar boundaries than the keyline-only
   version, while retaining the source color density.
-- All `126` CMYK tab tests pass. Complete converter discovery passes `646`
+- All `128` CMYK tab tests pass. Complete converter discovery passes `648`
   tests with one expected OpenGL-context skip.
 
 ## Struggles and rejected approaches

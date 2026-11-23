@@ -588,19 +588,20 @@ Current tools:
   Keep the effective pitch at least `1.5` pen widths when highlights must show
   tone; a pitch finer than the physical pen leaves no white paper to vary.
   The explicit **Fine detail** action fits a portrait screen to the current
-  Pen width and Artwork scale: it sets Dot pitch to `1.5` effective pen widths,
-  Flow smoothing to about `2.5` pen widths (clamped to `1.2-2.0 mm`), uses two
-  layers for pens at or below `0.7 mm` and three layers above that, and lowers
-  Path tolerance to at most `0.10 mm`. It also enables **Continuous Black
-  keylines (edge separation)**: the Black plate keeps the strongest coherent
-  boundaries continuous, while C/M/Y reduce coverage by `65 %` beside those
-  same high-confidence edges. A mild `60 %` unsharp mask at `1.5 mm` restores
-  small facial contrast without changing the preset's physical spacing. It
-  selects Edge-flow if another screen style was active and intentionally
-  changes the saved layout; Auto remains image-only. For a `0.6 mm` pen at
-  `260 %` scale this gives a `0.35 mm` source pitch (`0.91 mm` effective),
-  `1.5 mm` smoothing, two layers, Black keylines with color-edge separation,
-  and `0.10 mm` tolerance. The button is checked
+  Pen width and Artwork scale: it sets Dot pitch to one effective pen width,
+  Flow smoothing to about two pen widths (clamped to `1.0-1.5 mm`), uses five
+  low-offset layers, shortens marks to about `12 mm`, shortens path-local
+  tone intervals to `2 mm`, and lowers Path tolerance to at most `0.10 mm`.
+  It also enables **Continuous Black keylines (edge separation)**: the Black
+  plate keeps the strongest coherent boundaries continuous, while C/M/Y
+  reduce coverage by `25 %` beside those same high-confidence edges. A mild
+  `60 %` unsharp mask at `1.5 mm` restores small facial contrast without
+  changing the preset's physical spacing. It selects Edge-flow if another
+  screen style was active and intentionally changes the saved layout; Auto
+  remains image-only. For a `0.6 mm` pen at `260 %` scale this gives a
+  `0.25 mm` source pitch (`0.65 mm` effective), `1.2 mm` smoothing, five
+  layers, Black keylines with color-edge separation, `2 mm` tone breaks,
+  approximately `12 mm` marks, and `0.10 mm` tolerance. The button is checked
   and reads **Fine detail ✓** while those controls still match the preset.
   Changing the pen, scale, pitch, smoothing, layers, tolerance, keyline
   choice, sharpening controls, screen style, or calibration mode clears the

@@ -217,8 +217,8 @@ class CmykTab(GeneratorTab):
             "Analyze the artwork and set auto levels, brightness, contrast, "
             "saturation, GCR, and a starting gamma for a faithful photo "
             "representation. Wave and Edge-flow screens use exposure-preserving "
-            "setups; Edge-flow also opens a too-fine pitch to 1.5 pen widths so "
-            "its tone-density ramp remains visible. Tweak gamma for print "
+            "setups. Edge-flow leaves screen geometry unchanged; use Fine "
+            "detail for a pen-aware microflow layout. Tweak gamma for print "
             "lightness afterwards."
         )
         self.auto_button.clicked.connect(self.apply_auto_settings)
@@ -395,10 +395,10 @@ class CmykTab(GeneratorTab):
         self.detail_button = QPushButton("Fine detail")
         self.detail_button.setCheckable(True)
         self.detail_button.setToolTip(
-            "Edge-flow only: set a pen-aware portrait screen at 1.5 pen "
-            "widths, smoothing near 2.5 pen widths, fewer density layers, "
-            "Continuous Black keylines, a mild unsharp mask, and Path "
-            "tolerance no larger than 0.10 mm."
+            "Edge-flow only: set a pen-aware portrait screen at one pen width, "
+            "smoothing near two pen widths, five low-offset layers, short "
+            "color marks, Black keylines with edge separation, a mild unsharp "
+            "mask, and Path tolerance no larger than 0.10 mm."
         )
         self.detail_button.clicked.connect(self.toggle_detail_preset)
         screen.addRow("Precision", self.detail_button)
@@ -906,15 +906,15 @@ class CmykTab(GeneratorTab):
             "pen": pen,
             "pitch": max(
                 0.1,
-                min(8.0, round(pen * 1.5 / scale / 0.05) * 0.05),
+                min(8.0, round(pen / scale / 0.05) * 0.05),
             ),
             "smoothing": round(
-                max(1.2, min(2.0, pen * 2.5)) / 0.1
+                max(1.0, min(1.5, pen * 2.0)) / 0.1
             ) * 0.1,
             "tolerance": round(
                 max(0.05, min(0.10, pen * 0.15)) / 0.05
             ) * 0.05,
-            "layers": 2 if pen <= 0.7 else 3,
+            "layers": 5,
         }
 
     def _detail_preset_active(self):
@@ -1032,10 +1032,10 @@ class CmykTab(GeneratorTab):
             "Fine detail ✓" if active else "Fine detail"
         )
         base = (
-            "Edge-flow only: set a pen-aware portrait screen at 1.5 pen "
-            "widths, smoothing near 2.5 pen widths, fewer density layers, "
-            "Continuous Black keylines, a 60 % / 1.5 mm unsharp mask, and "
-            "Path tolerance no larger than 0.10 mm."
+            "Edge-flow only: set a pen-aware portrait screen at one pen width, "
+            "smoothing near two pen widths, five low-offset layers, short "
+            "color marks, Black keylines with edge separation, a 60 % / "
+            "1.5 mm unsharp mask, and Path tolerance no larger than 0.10 mm."
         )
         self.detail_button.setToolTip(
             base
@@ -1668,11 +1668,23 @@ class CmykTab(GeneratorTab):
                     and self.flow_keylines.isChecked()
                 ),
                 flow_color_quiet=(
-                    0.65
+                    0.25
                     if style == "edge_flow"
                     and channel != "k"
                     and self.flow_keylines.isChecked()
                     else 0.0
+                ),
+                flow_tone_segment_mm=(
+                    2.0 / factor
+                    if style == "edge_flow"
+                    and self._detail_preset_active()
+                    else None
+                ),
+                flow_max_path_mm=(
+                    12.0 / factor
+                    if style == "edge_flow"
+                    and self._detail_preset_active()
+                    else None
                 ),
             )
             # Generator pages are plotted 1:1, so the tab's Artwork scale is

@@ -7,10 +7,17 @@
   streamlines still crossed directly beside the Black keylines. The resulting
   physical overprint risk is that neighboring color buries the single Black
   boundary.
+- The normal path-local tone interval is `4-8 mm`, which is larger than the
+  mouth and tooth region. A single acceptance interval could therefore fill
+  or erase most of that detail.
+- Fine detail now uses a one-pen-width pitch, smoothing near two pen widths,
+  five low-offset layers, `2 mm` path-local tone intervals, and a mark cap near
+  `12 mm`. Black keyline paths receive the same cap, while their high-confidence
+  boost keeps local eye and lip boundaries continuous.
 - The preset now enables a `60 %` unsharp mask at `1.5 mm` on paper. A
   software comparison showed slightly better facial contrast without noise
   severe enough to reject.
-- When keylines are active, C/M/Y coverage is reduced by `65 %` beside the
+- When keylines are active, C/M/Y coverage is reduced by `25 %` beside the
   strongest coherent edges. Black alone receives the continuous keyline boost;
   color remains independently seeded and tone-gated away from those edges.
 - Fine-detail active state now includes sharpening checkbox, amount, and
@@ -18,12 +25,15 @@
 - The keyline control is labeled **Continuous Black keylines (edge
   separation)** so the paired color quieting is visible to the operator.
 - A synthetic edge regression verifies color ink length decreases under
-  quieting. Per-plate capture verifies C/M/Y receive `0.65` quieting while
+  quieting. Per-plate capture verifies C/M/Y receive `0.25` quieting while
   Black does not.
+- A short-mark regression verifies each capped mark remains bounded including
+  integration overshoot. Per-plate capture verifies the `2 mm` tone interval
+  and `12 mm` cap are converted into pre-scale units.
 - A `600 px` comparison showed clearer eye, nostril, lip, tooth, and collar
   boundaries than keylines without sharpening or color separation, while the
   face retained its yellow/magenta density.
-- All `126` CMYK tab tests pass. Complete converter discovery passes `646`
+- All `128` CMYK tab tests pass. Complete converter discovery passes `648`
   tests with one expected OpenGL-context skip.
 - Physical four-pass ink spread, opacity, and paper response remain unverified.
 - Evidence: `WSW-20261123-010`.

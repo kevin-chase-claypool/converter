@@ -278,6 +278,47 @@ class ScreeningTests(unittest.TestCase):
 
         self.assertLess(ink_length(quieted), ink_length(normal) * 0.95)
 
+    def test_edge_flow_can_limit_each_mark_to_a_short_local_stroke(self):
+        size = 96
+        coords = self.np.arange(size, dtype="float32")
+        xx, yy = self.np.meshgrid(coords, coords)
+        guide = (xx + yy) / float(2 * (size - 1))
+        tone = self.np.full((size, size), 0.9, dtype="float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        marks = converter.screen_channel(
+            tone,
+            geometry,
+            style="edge_flow",
+            spacing_mm=8.0,
+            angle_deg=0.0,
+            seed=7,
+            max_marks=500,
+            flow_smoothing_mm=2.0,
+            flow_layers=1,
+            flow_guide=guide,
+            flow_max_path_mm=4.0,
+        )
+
+        longest = max(
+            sum(
+                math.hypot(
+                    second[0] - first[0],
+                    second[1] - first[1],
+                )
+                for first, second in zip(line, line[1:])
+            )
+            for line in marks
+        )
+        self.assertLessEqual(longest, 4.6)
+
     def test_edge_flow_plates_keep_independent_tone_networks(self):
         size = 96
         coords = self.np.arange(size, dtype="float32")
@@ -2598,6 +2639,8 @@ class CmykTabTests(unittest.TestCase):
         angles = []
         keyline_flags = []
         color_quiet = []
+        tone_segments = []
+        max_paths = []
 
         def capture_guide(*args, **kwargs):
             guides.append(kwargs.get("flow_guide"))
@@ -2607,6 +2650,8 @@ class CmykTabTests(unittest.TestCase):
             angles.append(kwargs.get("angle_deg"))
             keyline_flags.append(kwargs.get("flow_keylines"))
             color_quiet.append(kwargs.get("flow_color_quiet"))
+            tone_segments.append(kwargs.get("flow_tone_segment_mm"))
+            max_paths.append(kwargs.get("flow_max_path_mm"))
             return []
 
         tab.flow_keylines.setChecked(True)
@@ -2640,7 +2685,36 @@ class CmykTabTests(unittest.TestCase):
             ],
         )
         self.assertEqual(keyline_flags, [False, False, False, True])
-        self.assertEqual(color_quiet, [0.65, 0.65, 0.65, 0.0])
+        self.assertEqual(color_quiet, [0.25, 0.25, 0.25, 0.0])
+        self.assertTrue(all(value is None for value in tone_segments))
+        self.assertTrue(all(value is None for value in max_paths))
+
+    def test_fine_detail_uses_two_mm_tone_segments_on_paper(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.pen_width.setValue(0.6)
+        tab.scale_pct.setValue(260)
+        tab.detail_button.click()
+        tone_segments = []
+        max_paths = []
+
+        def capture_segment(*args, **kwargs):
+            tone_segments.append(kwargs.get("flow_tone_segment_mm"))
+            max_paths.append(kwargs.get("flow_max_path_mm"))
+            return []
+
+        with mock.patch.object(
+            converter,
+            "screen_channel",
+            side_effect=capture_segment,
+        ):
+            tab._ensure_layers()
+
+        self.assertEqual(len(tone_segments), len(converter.CHANNELS))
+        for value in tone_segments:
+            self.assertAlmostEqual(value, 2.0 / 2.6, places=6)
+        for value in max_paths:
+            self.assertAlmostEqual(value, 12.0 / 2.6, places=6)
 
     def test_analysis_worker_reports_strategy_split(self):
         from generator_tabs.cmyk_tab import ProgramAnalysisWorker
@@ -3629,14 +3703,14 @@ class CmykTabTests(unittest.TestCase):
 
         self.assertTrue(tab.detail_button.isChecked())
         self.assertIn("✓", tab.detail_button.text())
-        self.assertAlmostEqual(tab.pitch.value(), 0.35, places=2)
+        self.assertAlmostEqual(tab.pitch.value(), 0.25, places=2)
         self.assertAlmostEqual(
             tab.pitch.value() * tab.scale_pct.value() / 100.0,
-            0.91,
+            0.65,
             places=2,
         )
-        self.assertAlmostEqual(tab.flow_smoothing.value(), 1.5, places=1)
-        self.assertEqual(tab.flow_layers.value(), 2)
+        self.assertAlmostEqual(tab.flow_smoothing.value(), 1.2, places=1)
+        self.assertEqual(tab.flow_layers.value(), 5)
         self.assertTrue(tab.flow_keylines.isChecked())
         self.assertTrue(tab.sharpen.isChecked())
         self.assertAlmostEqual(tab.sharpen_amount.value(), 60.0, places=1)
@@ -3649,9 +3723,9 @@ class CmykTabTests(unittest.TestCase):
         self.assertFalse(tab.detail_button.isChecked())
         tab.detail_button.click()
         self.assertTrue(tab.detail_button.isChecked())
-        self.assertAlmostEqual(tab.pitch.value(), 0.80, places=2)
-        self.assertAlmostEqual(tab.flow_smoothing.value(), 2.0, places=1)
-        self.assertEqual(tab.flow_layers.value(), 3)
+        self.assertAlmostEqual(tab.pitch.value(), 0.55, places=2)
+        self.assertAlmostEqual(tab.flow_smoothing.value(), 1.5, places=1)
+        self.assertEqual(tab.flow_layers.value(), 5)
 
     def test_fine_detail_indicator_clears_when_layout_is_edited(self):
         tab = self.make_tab()
