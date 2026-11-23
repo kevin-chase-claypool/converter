@@ -349,6 +349,51 @@ class ScreeningTests(unittest.TestCase):
             0.98,
         )
 
+    def test_edge_flow_weak_tonal_gradient_keeps_screen_direction(self):
+        size = 80
+        tone = self.np.full((size, size), 0.8, dtype="float32")
+        weak_x = self.np.linspace(
+            0.5,
+            0.5005,
+            size,
+            dtype="float32",
+        )
+        guide = self.np.tile(weak_x, (size, 1))
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        marks = converter.screen_channel(
+            tone,
+            geometry,
+            style="edge_flow",
+            spacing_mm=8.0,
+            angle_deg=0.0,
+            max_marks=200,
+            flow_smoothing_mm=1.0,
+            flow_layers=1,
+            flow_guide=guide,
+        )
+
+        vertical_fraction = []
+        for line in marks:
+            for first, second in zip(line, line[1:]):
+                dx = second[0] - first[0]
+                dy = second[1] - first[1]
+                length = math.hypot(dx, dy)
+                if length > 0.0:
+                    vertical_fraction.append(abs(dy) / length)
+        self.assertGreater(len(vertical_fraction), 20)
+        self.assertLess(
+            sum(vertical_fraction) / len(vertical_fraction),
+            0.25,
+        )
+
     def test_edge_flow_adds_layers_to_darker_ink(self):
         geometry = {
             "off_x": 0.0,
@@ -2321,7 +2366,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(restored.flow_smoothing.value(), 2.5)
         self.assertEqual(restored.flow_layers.value(), 2)
 
-    def test_edge_flow_passes_each_inks_tone_and_screen_angle(self):
+    def test_edge_flow_passes_shared_guide_and_per_ink_screen(self):
         tab = self.make_tab()
         tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
         tab.scale_pct.setValue(260)
@@ -2349,7 +2394,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(len(guides), len(converter.CHANNELS))
         self.assertTrue(all(guide is not None for guide in guides))
         self.assertTrue(all(guide.ndim == 2 for guide in guides))
-        self.assertEqual(len({id(guide) for guide in guides}), 4)
+        self.assertTrue(all(guide is guides[0] for guide in guides))
         self.assertEqual(
             seeds,
             [7 + index for index in range(len(converter.CHANNELS))],
@@ -3041,7 +3086,7 @@ class CmykTabTests(unittest.TestCase):
         data = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(
             data["screen"]["flow_guide"],
-            "per_ink_tone_structure_tensor",
+            "strength_gated_shared_luminance_structure_tensor",
         )
         for channel in converter.CHANNELS:
             self.assertTrue(

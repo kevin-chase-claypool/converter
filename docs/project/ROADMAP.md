@@ -579,11 +579,11 @@
 
 - [ ] Bench-verify edge-flow CMYK streamlines and select a starting recipe.
   Problem: the new structure-tensor screen is covered by synthetic geometry
-  and UI tests (`WSW-20261122-002`). Each ink now derives its own tone-based
-  direction field and keeps its classic fallback screen angle, producing four
-  independent G-code networks (`WSW-20261123-001`). No printed four-pass
-  portrait has established a useful pitch, smoothing radius, layer count, or
-  pen order.
+  and UI tests (`WSW-20261122-002`). The four plates now share one
+  strength-gated luminance guide while keeping independent masks, seeds,
+  fallback screen angles, and G-code files (`WSW-20261123-002`). No printed
+  four-pass portrait has established a useful pitch, smoothing radius, layer
+  count, or pen order.
   Benefit: one validated recipe turns the visual method into a repeatable
   portrait workflow and records where extra dark-tone layers become too dense.
   Risk: fine streamlines expose pen-up drag, felt-tip spread, four-ink overlay
@@ -591,9 +591,11 @@
   feeds wall/paper edges into the structure field as real ink structure.
   Status 2026-11-23: the reference print was re-inspected at native resolution
   and confirmed to use separate per-ink screen directions. The shared RGB
-  guide and common streamline network were rejected and replaced. A corrected
-  1200 px software render now produces four independent overlapping networks;
-  the current three-layer recipe remains software-selected only.
+  guide and common streamline network were rejected. Per-ink tone guides were
+  then also replaced: they made colours chase conflicting contours. Tensor
+  strength and coherence now gate a shared luminance form, so weak tone falls
+  back to each plate's screen direction. The current three-layer recipe remains
+  software-selected only.
   Acceptance: print a pre-cropped portrait with the README starting recipe
   after one HOME + REGISTER; inspect line separation, drag, overlay, and elapsed
   time; then record the selected recipe in a lab note and revise the README

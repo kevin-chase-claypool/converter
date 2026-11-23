@@ -1,10 +1,10 @@
 """Edge-following streamline screening for photograph-derived CMYK plates.
 
-Each plate supplies its tone image as the guide: image gradients form a
-structure tensor, the tensor is blurred, and its edge-tangent eigenvector
-becomes a smooth orientation field. Coherence blends that field toward the
-plate's fixed screen angle where the image has little structure. The four
-plates keep independent tone networks while sharing the same page frame.
+The caller supplies one guide image: gradients form a structure tensor, the
+tensor is blurred, and its edge-tangent eigenvector becomes a smooth
+orientation field. Coherence and tensor strength blend that field toward the
+plate's fixed screen angle in weak or flat areas. CMYK plates share the
+luminance guide but keep independent tone networks and screen directions.
 """
 
 from __future__ import annotations
@@ -15,6 +15,9 @@ from .cancellation import check_cancelled
 
 
 EDGE_FLOW_CHROMA_WEIGHT = 0.35
+# Tensor trace is the squared gradient energy. Below this floor the guide is
+# noise or broad tone, not a form boundary that should redirect every screen.
+EDGE_FLOW_STRENGTH_SCALE_FLOOR = 1.0e-4
 
 
 def _field_geometry(guide, geometry, max_side=900):
@@ -137,6 +140,22 @@ def _structure_tensor_velocity(guide, geometry, smoothing_mm, fallback_angle_deg
     root = np.sqrt(delta * delta + 4.0 * jxy * jxy)
     safe_root = np.maximum(root, 1e-8)
     coherence = np.clip(root / np.maximum(trace, 1e-8), 0.0, 1.0)
+    positive_trace = trace[trace > 1e-12]
+    strength_scale = (
+        max(
+            EDGE_FLOW_STRENGTH_SCALE_FLOOR,
+            float(np.percentile(positive_trace, 85)),
+        )
+        if positive_trace.size
+        else EDGE_FLOW_STRENGTH_SCALE_FLOOR
+    )
+    strength_floor = strength_scale * 0.08
+    strength = np.clip(
+        (trace - strength_floor)
+        / max(1e-8, strength_scale - strength_floor),
+        0.0,
+        1.0,
+    )
 
     cos_twice = np.clip(delta / safe_root, -1.0, 1.0)
     sin_twice = np.clip(2.0 * jxy / safe_root, -1.0, 1.0)
@@ -147,7 +166,8 @@ def _structure_tensor_velocity(guide, geometry, smoothing_mm, fallback_angle_deg
     fallback_radians = math.radians(float(fallback_angle_deg))
     fallback_x = math.cos(fallback_radians)
     fallback_y = math.sin(fallback_radians)
-    guided = np.clip((coherence - 0.03) / 0.18, 0.0, 1.0)
+    coherence_gate = np.clip((coherence - 0.10) / 0.25, 0.0, 1.0)
+    guided = coherence_gate * strength
     velocity_x = guided * (-sin_phi) + (1.0 - guided) * fallback_x
     velocity_y = guided * cos_phi + (1.0 - guided) * fallback_y
     norm = np.maximum(np.hypot(velocity_x, velocity_y), 1e-8)

@@ -1270,9 +1270,10 @@ def screen_channel(
     a ballpoint reads darker without changing the geometry.
     ``path_tolerance_mm`` bounds the chord error of resampled wave rows; the
     CMYK tab supplies that budget in its final paper-space units.
-    Edge-flow uses this channel's ``tone`` by default as its structure guide.
-    Each CMYK plate therefore builds its own tone-aware direction network and
-    fallback screen while all four remain on the same page frame.
+    Edge-flow uses ``flow_guide`` when supplied, otherwise ``depth_tone`` or
+    this channel's ``tone``. The CMYK tab supplies the shared luminance field,
+    so all four plates follow one image form while their masks, seeds, and
+    fallback screen angles remain independent.
     ``row_clearance_mm`` is the minimum shortest-segment separation between
     adjacent visible rows, expressed in the same pre-scale units as
     ``spacing_mm``. It defaults to the pen diameter plus

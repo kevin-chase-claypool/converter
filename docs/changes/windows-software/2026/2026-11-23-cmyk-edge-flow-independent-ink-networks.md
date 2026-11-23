@@ -22,9 +22,14 @@ related:
   - WSW-20261122-002
   - WSW-20261122-003
   - WSW-20261122-004
+  - WSW-20261123-002
 ---
 
 # Keep edge-flow CMYK as four independent ink networks
+
+`WSW-20261123-002` later corrects the guide selection: the four independent
+ink networks now share one strength-gated luminance flow instead of each ink
+using its own tone field.
 
 ## Summary
 

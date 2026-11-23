@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-23 | `WSW-20261123-002` | windows-software | implemented | [Gate edge-flow guidance with structure strength](windows-software/2026/2026-11-23-cmyk-edge-flow-strength-gated-shared-guide.md) |
 | 2026-11-23 | `WSW-20261123-001` | windows-software | implemented | [Keep edge-flow CMYK as four independent ink networks](windows-software/2026/2026-11-23-cmyk-edge-flow-independent-ink-networks.md) |
 | 2026-11-22 | `WSW-20261122-004` | windows-software | superseded | [Make edge-flow CMYK plates share one streamline network](windows-software/2026/2026-11-22-cmyk-edge-flow-shared-network.md) |
 | 2026-11-22 | `WSW-20261122-003` | windows-software | superseded | [Preserve color-only detail in edge-flow CMYK](windows-software/2026/2026-11-22-cmyk-edge-flow-color-detail.md) |

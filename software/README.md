@@ -547,15 +547,15 @@ Current tools:
   margin, artwork scale, and registration corner crosses (all four inks
   draw the same four margin crosses so pass alignment can be checked).
   **Edge-flow streamlines** is a separate continuous screen for portraits and
-  textured photographs. Each CMYK plate builds an independent direction field
-  from its own processed tone image: tone gradients form a structure tensor,
-  Gaussian-like blur smooths it, and its edge-tangent orientation is traced as
-  evenly seeded streamlines. Weak or flat structure blends to that ink's fixed
-  screen direction instead of following image noise. The four fallback angles
-  are cyan 15 degrees, magenta 75, yellow 0, and black 45, so the plates
-  interleave like a conventional four-screen print rather than collapsing to
-  one synthetic direction. A later seed offset keeps their dark-tone layers
-  distinct.
+  textured photographs. One shared luminance guide supplies the image form:
+  its gradients form a structure tensor, Gaussian-like blur smooths it, and
+  its edge-tangent orientation is traced as evenly seeded streamlines.
+  Structure strength and coherence gate that guidance, so broad tone or noise
+  keeps the screen direction instead of becoming stacked contour bands.
+  Each ink then applies its own dense-tone mask, seed offset, and fixed screen
+  direction. The fallback angles are cyan 15 degrees, magenta 75, yellow 0, and
+  black 45, so the plates interleave like a conventional four-screen print
+  instead of collapsing to one synthetic direction.
   The four plates use the same page frame, artwork scale, registration crosses,
   pen offsets, and G-code contract, but remain independent pen programs.
   Preview multiplies them to show the combined print; Save writes cyan,
@@ -922,7 +922,7 @@ work with no input (optional mesh/image sources are noted below).
 | Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
 | CMYK | Auto levels on, rectilinear fill at 0.10 mm pitch, saturation 115 %, contrast 285 %, brightness 170 %, ink gamma 1.40, black (GCR) 95 %, 40000 marks/ink, resolution 10000 px, weights 100/100/100/100 %, artwork scale 280 % | Needs an image; Preview plans each ink in the background and Save writes four files. Dense photo screens take hours to plot; raise pitch or lower Max marks/ink for a faster pass. |
-| CMYK edge-flow | Auto levels on; saturation 110 %, contrast 120 %, brightness 105 %, sharpening off; gamma 1.10, GCR 85 %, resolution 1600 px, weights 100/100/100/90 %; Edge-flow streamlines at 0.31 mm pitch, Flow smoothing 2.0 mm, Flow layers 3, pen 0.8 mm, tolerance 0.15 mm, 200000 marks/ink, seed 7, artwork scale 150 % on 200 x 200 mm | Software-selected starting point for a pre-cropped portrait. Each ink has its own tone network and fallback screen direction; Save writes four separate overprinted G-code files. Check density and pen-set separation on paper before using it as a production recipe. |
+| CMYK edge-flow | Auto levels on; saturation 110 %, contrast 120 %, brightness 105 %, sharpening off; gamma 1.10, GCR 85 %, resolution 1600 px, weights 100/100/100/90 %; Edge-flow streamlines at 0.31 mm pitch, Flow smoothing 2.0 mm, Flow layers 3, pen 0.8 mm, tolerance 0.15 mm, 200000 marks/ink, seed 7, artwork scale 150 % on 200 x 200 mm | Software-selected starting point for a pre-cropped portrait. Each ink applies its own mask, seed, and fallback screen over one strength-gated luminance flow; Save writes four separate overprinted G-code files. Check density and pen-set separation on paper before using it as a production recipe. |
 | 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
 | Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |
 | Snowflake | 6 arms, depth 3, length 45 %, branch angle 35 deg, branch scale 55 %, jitter 8 deg / 15 % | Raise depth for finer detail; cap is 5. |

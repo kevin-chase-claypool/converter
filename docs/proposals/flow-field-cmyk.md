@@ -14,13 +14,14 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 3. Extract a tangent direction (minor-eigenvalue eigenvector) to follow edges/forms; estimate directional coherence from eigenvalues. Treat directions as **unoriented** (theta equivalent to theta + pi) to avoid streamline flips.
 4. Smooth the direction field and blend toward a configurable fixed fallback angle where structure is weak/ambiguous. Guard low-gradient regions and avoid abrupt transitions.
 5. Trace evenly spaced streamlines using stable numerical integration, seed distribution, minimum-distance/collision checks, bounds clipping, and curvature limits.
-6. Build an independent direction field from each CMYK channel's own processed tone, with that ink's classic fallback screen angle. Save four separate, page-registered programs so they overlap as four physical pen passes. Add passes in darker regions and preserve light areas.
+6. Build one strength-gated luminance direction field for image form. Give each CMYK plate its own coverage mask, seed, density layers, and classic fallback screen angle. Save four separate, page-registered programs so they overlap as four physical pen passes.
 7. Emit continuous, stroke-only SVG centerlines compatible with the existing SVG-to-G-code path (no fills, text, or defs); retain units, coordinate mapping, and pen-change/channel separation.
 
 ## Current controls (software-selected starting values)
 - Rendering mode: **Edge-flow streamlines** in the existing CMYK Screen style
 - Base line spacing: `0.31 mm` seed pitch
 - Tensor smoothing radius: `2.0 mm` on paper
+- Guidance gate: tensor strength plus coherence; weak structure keeps screen
 - Fallback direction: cyan 15, magenta 75, yellow 0, black 45 degrees
 - Maximum density layers: 3
 - Density method: extra layers / adaptive spacing / hybrid

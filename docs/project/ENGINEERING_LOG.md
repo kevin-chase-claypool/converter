@@ -1,5 +1,38 @@
 # Engineering Log
 
+<a id="elog-20261123-cmyk-edge-flow-strength-gated-shared-guide"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Gate edge-flow guidance by structure strength
+
+- Side-by-side owner screenshots showed the current edge-flow output still
+  dominated by nested contour bands, while the reference used one image form
+  with a fine multi-direction CMYK hatch.
+- Tensor diagnostics found that approximately `92 %` of the portrait was
+  treated as edge-guided. Coherence stayed high in low-gradient regions, so a
+  coherence threshold alone could not distinguish form from weak tone.
+- Per-ink tone guides were rejected because cyan, magenta, yellow, and black
+  selected conflicting contours within the same face and clothing surfaces.
+  The four plates now share one processed-luminance guide.
+- Tensor trace scale and directional coherence jointly gate guidance. Strong
+  edges turn the streamlines; weak tone and texture retain each ink's classic
+  fallback angle. A minimum strength scale rejects low-amplitude noise.
+- Independent ink masks, seeds, density layers, fallback angles, page
+  registration, preview multiplication, and four separate G-code outputs are
+  unchanged. The manifest records
+  `strength_gated_shared_luminance_structure_tensor`.
+- The strong diagonal-gradient regression remains guided. A new weak-gradient
+  regression proves nearly flat tone falls back to the selected screen angle.
+- All 114 CMYK tab tests pass. A 1200 px software render completed in 14.11 s
+  with pen-down marks C 4024, M 4697, Y 5968, and K 5284. It shows
+  cross-direction hatching in low-structure regions while retaining strong
+  facial, hair, and clothing contours.
+- Physical four-pass overlay, pen spread, final pitch, and layer count remain
+  unverified on paper.
+- Evidence: `WSW-20261123-002`;
+  `docs/changes/windows-software/2026/2026-11-23-cmyk-edge-flow-strength-gated-shared-guide.md`.
+- Category: windows-software, cmyk, edge-flow, structure-tensor, strength-gate,
+  shared-luminance, per-ink-screen, four-file-output,
+  physical-validation-pending.
+
 <a id="elog-20261123-cmyk-edge-flow-independent-ink-networks"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Restore four independent edge-flow ink networks
 
