@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-23 | `WSW-20261123-005` | implemented | [Make Edge-flow Auto preserve portrait density](2026/2026-11-23-cmyk-edge-flow-auto-density.md) | `cmyk`, `edge-flow`, `auto-exposure`, `tone-density`, `portrait` |
 | 2026-11-23 | `WSW-20261123-004` | implemented | [Remove block matrix from edge-flow tone](2026/2026-11-23-cmyk-edge-flow-path-local-tone.md) | `cmyk`, `edge-flow`, `continuous-tone`, `path-local`, `block-artifact`, `portrait` |
 | 2026-11-23 | `WSW-20261123-003` | implemented | [Preserve continuous color tone in edge-flow CMYK](2026/2026-11-23-cmyk-edge-flow-continuous-tone.md) | `cmyk`, `edge-flow`, `continuous-tone`, `tone-response`, `auto-exposure`, `highlight-gradient`, `portrait` |
 | 2026-11-23 | `WSW-20261123-002` | implemented | [Gate edge-flow guidance with structure strength](2026/2026-11-23-cmyk-edge-flow-strength-gated-shared-guide.md) | `cmyk`, `edge-flow`, `structure-tensor`, `strength-gate`, `shared-luminance`, `per-ink-screen`, `four-file-output` |

@@ -3,7 +3,7 @@
 **Status:** Implemented as the CMYK **Edge-flow streamlines** screen. Current
 behavior and the software-selected recipe are in
 [`../../software/README.md`](../../software/README.md); the current change
-record is `WSW-20261123-001`.
+record is `WSW-20261123-005`.
 
 ## Intent
 Add an optional CMYK rendering mode to the converter that replaces fixed-angle hatch patterns with smooth vector-field-guided streamlines following image contours and forms. Preserve the current CMYK method and all existing output behavior by default.
@@ -19,13 +19,16 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 
 ## Current controls (software-selected starting values)
 - Rendering mode: **Edge-flow streamlines** in the existing CMYK Screen style
-- Base line spacing: `0.8 mm` source pitch / `1.2 mm` effective at 150 % scale
-- Tensor smoothing radius: `2.0 mm` on paper
+- Base line spacing: operator-owned Edge-flow pitch and artwork scale; Auto
+  does not change either
+- Tensor smoothing radius: `4.0 mm` on paper for the current portrait recipe
 - Guidance gate: tensor strength plus coherence; weak structure keeps screen
 - Fallback direction: cyan 15, magenta 75, yellow 0, black 45 degrees
-- Maximum density layers: 3
+- Maximum density layers: 5 for the current portrait recipe
 - Tone method: deterministic path-local `4-8 mm` ink segments, with extra
   layers for darker coverage and no shared 2D block lattice
+- Auto image curve for the current portrait: brightness 100 %, contrast 235 %,
+  saturation 120 %, GCR 85 %, gamma 0.70
 - Optional preview of each channel and composite
 
 ## Implementation plan

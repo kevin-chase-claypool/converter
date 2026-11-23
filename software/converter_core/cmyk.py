@@ -229,7 +229,8 @@ def auto_photo_settings(
     than behaving like the sparse rectilinear row model. Returns
     ``auto_levels``, ``brightness``, ``contrast``, ``saturation``, ``gcr`` and
     ``gamma``, plus style-specific sharpening and row-pitch controls when the
-    source pitch and scale are available.
+    source pitch and scale are available. Edge-flow treats its pitch as
+    operator-owned layout and never returns a replacement for it.
     """
     from PIL import Image
     import numpy as np
@@ -311,31 +312,31 @@ def auto_photo_settings(
         return result
 
     if style_key == "edge_flow":
-        # Edge-flow already varies line density with tone. Treating it like a
-        # rectilinear row screen makes Auto darken and crush the very
-        # highlights whose continuous colour gradient the streamlines carry.
-        # Preserve normal photo exposure and use a gentler color separation:
-        # enough black to anchor deep shadows without burying warm mid tones.
+        # Edge-flow's path-local tone gating leaves more paper than a solid row
+        # screen. A neutral-exposure recommendation therefore looks washed out
+        # once the streamlines are broken by tone. Keep normal photo brightness
+        # but strengthen the mid-tone curve and low-ink gamma so the bright
+        # yellow/magenta ramp retains enough separate strokes to read.
         p05, p50, p95 = (
             float(value)
             for value in np.percentile(luminance, [5.0, 50.0, 95.0])
         )
         tonal_range = p95 - p05
         chroma_p90 = float(np.percentile(chroma, 90.0))
-        brightness = clamp(110.0 + (0.50 - p50) * 80.0, 95.0, 150.0)
-        contrast = clamp(140.0 + (0.65 - tonal_range) * 60.0, 120.0, 190.0)
-        gamma = clamp(1.05 + (0.52 - p50) * 0.50, 0.90, 1.30)
+        brightness = clamp(100.0 + (0.42 - p50) * 90.0, 85.0, 125.0)
+        contrast = clamp(235.0 + (0.65 - tonal_range) * 70.0, 190.0, 275.0)
+        gamma = clamp(0.72 + (p50 - 0.42) * 0.40, 0.60, 0.95)
         saturation = clamp(
-            115.0 + (0.30 - chroma_p90) * 30.0,
-            105.0,
+            120.0 + (0.30 - chroma_p90) * 30.0,
+            110.0,
             140.0,
         )
         gcr = clamp(
-            80.0 - max(0.0, chroma_p90 - 0.18) * 100.0,
-            50.0,
+            88.0 - max(0.0, chroma_p90 - 0.18) * 40.0,
+            65.0,
             90.0,
         )
-        result = {
+        return {
             "auto_levels": True,
             "brightness": round_up_to(brightness, 5),
             "contrast": round_up_to(contrast, 5),
@@ -343,29 +344,6 @@ def auto_photo_settings(
             "gcr": round_up_to(gcr, 5),
             "gamma": round(gamma / 0.05) * 0.05,
         }
-        if (
-            pen_width_mm is not None
-            and effective_pitch_mm is not None
-            and dot_pitch_mm is not None
-        ):
-            current_effective = max(0.01, float(effective_pitch_mm))
-            source_pitch = max(0.01, float(dot_pitch_mm))
-            factor = current_effective / source_pitch
-            recommended_effective = max(
-                current_effective,
-                max(0.0, float(pen_width_mm)) * 1.5,
-            )
-            result["dot_pitch_mm"] = round(
-                min(
-                    8.0,
-                    max(
-                        source_pitch,
-                        round(recommended_effective / factor / 0.05) * 0.05,
-                    ),
-                ),
-                2,
-            )
-        return result
 
     # Vivid photos keep more chroma in C/M/Y and less in K; muted ones lean
     # on a little extra saturation and heavier black instead.

@@ -775,6 +775,7 @@ class CmykTab(GeneratorTab):
         try:
             values = converter.auto_photo_settings(
                 self._artwork,
+                resolution_px=self.resolution.value(),
                 pen_width_mm=self.pen_width.value(),
                 effective_pitch_mm=(
                     self.pitch.value() * self.scale_pct.value() / 100.0

@@ -1,5 +1,39 @@
 # Engineering Log
 
+<a id="elog-20261123-cmyk-edge-flow-auto-density"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Make Edge-flow Auto preserve portrait density
+
+- The owner pressed **Auto (photo)** on `IMG_0514.JPG` and the portrait became
+  a sparse sketch. The saved recipe was `0.31 mm` source pitch at `260 %`
+  artwork scale, `4.0 mm` Flow smoothing, and five Flow layers; Auto changed
+  the pitch to `0.45 mm` and selected brightness 115 %, contrast 140 %,
+  saturation 115 %, GCR 75 %, and gamma 1.10.
+- The first diagnostic compared the saved curve with exposure-only Auto at
+  the same artwork scale. The two Auto renders were nearly identical, while
+  the saved curve had roughly `52 %` mean channel coverage and the Auto curve
+  about `32 %`. Pitch was not the primary failure.
+- Edge-flow Auto now changes image controls only and leaves the persisted dot
+  pitch and artwork scale alone. Its curve holds normal brightness, raises
+  midtone contrast, lowers ink gamma, and uses enough black to retain local
+  color density after path-local gating. For this portrait it selects
+  brightness 100 %, contrast 235 %, saturation 120 %, GCR 85 %, and gamma
+  0.70.
+- The tab now passes its configured 1600 px resolution into Auto analysis
+  instead of using the API's 256 px default.
+- A software render with the saved five-layer, `4.0 mm`-smoothing geometry
+  restored separate yellow, magenta, cyan, and black density through the face
+  while retaining paper gaps. The old Auto render in the same comparison
+  remained visibly washed out.
+- New regressions verify the denser tone coverage and that Edge-flow Auto
+  preserves a `0.31 mm` pitch at `260 %` scale. Complete converter discovery
+  passes `638` tests with one expected OpenGL-context skip.
+- Physical four-pass overlay, pen spread, ink opacity, the mouth treatment
+  from `WSW-20261123-003`, and final pitch/layer tuning remain unverified.
+- Evidence: `WSW-20261123-005`;
+  `docs/changes/windows-software/2026/2026-11-23-cmyk-edge-flow-auto-density.md`.
+- Category: windows-software, cmyk, edge-flow, auto-exposure, tone-density,
+  non-destructive-layout, portrait, physical-validation-pending.
+
 <a id="elog-20261123-cmyk-edge-flow-path-local-tone"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Remove block matrix from edge-flow tone
 

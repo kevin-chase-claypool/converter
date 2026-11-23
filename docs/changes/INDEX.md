@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-23 | `WSW-20261123-005` | windows-software | implemented | [Make Edge-flow Auto preserve portrait density](windows-software/2026/2026-11-23-cmyk-edge-flow-auto-density.md) |
 | 2026-11-23 | `WSW-20261123-004` | windows-software | implemented | [Remove block matrix from edge-flow tone](windows-software/2026/2026-11-23-cmyk-edge-flow-path-local-tone.md) |
 | 2026-11-23 | `WSW-20261123-003` | windows-software | implemented | [Preserve continuous color tone in edge-flow CMYK](windows-software/2026/2026-11-23-cmyk-edge-flow-continuous-tone.md) |
 | 2026-11-23 | `WSW-20261123-002` | windows-software | implemented | [Gate edge-flow guidance with structure strength](windows-software/2026/2026-11-23-cmyk-edge-flow-strength-gated-shared-guide.md) |

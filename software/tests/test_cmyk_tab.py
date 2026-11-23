@@ -876,7 +876,7 @@ class ScreeningTests(unittest.TestCase):
         self.assertEqual(values["sharpen_radius_mm"], 1.5)
         self.assertGreater(values["dot_pitch_mm"], 0.8)
 
-    def test_edge_flow_auto_preserves_highlights_and_opens_a_tight_pitch(self):
+    def test_edge_flow_auto_preserves_highlights_and_midtone_density(self):
         import numpy as np
         from PIL import Image
 
@@ -904,13 +904,36 @@ class ScreeningTests(unittest.TestCase):
         )
 
         self.assertTrue(values["auto_levels"])
-        self.assertGreaterEqual(values["brightness"], 100)
-        self.assertGreaterEqual(values["gamma"], 0.90)
-        self.assertGreaterEqual(values["contrast"], 120)
-        self.assertLessEqual(values["contrast"], 190)
-        self.assertGreaterEqual(values["gcr"], 50)
+        self.assertGreaterEqual(values["brightness"], 95)
+        self.assertLessEqual(values["brightness"], 125)
+        self.assertGreaterEqual(values["gamma"], 0.60)
+        self.assertLessEqual(values["gamma"], 0.85)
+        self.assertGreaterEqual(values["contrast"], 220)
+        self.assertLessEqual(values["contrast"], 275)
+        self.assertGreaterEqual(values["gcr"], 65)
         self.assertLessEqual(values["gcr"], 90)
-        self.assertGreaterEqual(values["dot_pitch_mm"], 1.2)
+        self.assertNotIn("dot_pitch_mm", values)
+
+        tones, _geometry = converter.prepare_image_tones(
+            path,
+            100,
+            100,
+            margin_mm=6,
+            brightness=values["brightness"],
+            saturation=values["saturation"] / 100.0,
+            contrast=values["contrast"] / 100.0,
+            gcr=values["gcr"] / 100.0,
+            weights=(1.0, 1.0, 1.0, 0.9),
+            gamma=values["gamma"],
+            auto_levels=values["auto_levels"],
+        )
+        mean_coverage = float(
+            np.mean([tones[channel].mean() for channel in converter.CHANNELS])
+        )
+        # Neutral-exposure edge-flow Auto left only about 32% mean channel
+        # coverage and broke the portrait into a sparse sketch. The bright
+        # warm ramp needs enough ink left after path-local tone gating.
+        self.assertGreaterEqual(mean_coverage, 0.50)
 
     def test_auto_photo_settings_keep_colour_on_vivid_images(self):
         import numpy as np
@@ -3445,6 +3468,39 @@ class CmykTabTests(unittest.TestCase):
             values["sharpen_radius_mm"],
         )
         self.assertAlmostEqual(tab.pitch.value(), values["dot_pitch_mm"])
+
+    def test_edge_flow_auto_preserves_the_physical_pitch(self):
+        host = FakeHost(self.image_path)
+        tab = self.make_tab(host)
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.pitch.setValue(0.31)
+        tab.scale_pct.setValue(260)
+        tab.resolution.setValue(1600)
+        captured = {}
+        auto_settings = converter.auto_photo_settings
+
+        def capture_settings(*args, **kwargs):
+            captured["values"] = auto_settings(*args, **kwargs)
+            captured["kwargs"] = kwargs
+            return captured["values"]
+
+        with mock.patch.object(
+            converter,
+            "auto_photo_settings",
+            side_effect=capture_settings,
+        ):
+            tab.auto_button.click()
+        values = captured["values"]
+
+        self.assertEqual(tab.contrast.value(), values["contrast"])
+        self.assertEqual(tab.brightness.value(), values["brightness"])
+        self.assertAlmostEqual(tab.gamma.value(), values["gamma"], places=2)
+        self.assertAlmostEqual(tab.pitch.value(), 0.31, places=3)
+        self.assertEqual(
+            captured["kwargs"]["resolution_px"],
+            1600,
+        )
+        self.assertIn("Dot pitch left at 0.31 mm", tab.status.text())
 
     def test_match_pen_pitch_uses_the_effective_scale(self):
         tab = self.make_tab()
