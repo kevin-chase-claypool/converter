@@ -1,11 +1,12 @@
 """Edge-following streamline screening for photograph-derived CMYK plates.
 
-The direction field is built once from the shared scene guide: image
-gradients form a structure tensor, the tensor is blurred, and its
-edge-tangent eigenvector becomes a smooth orientation field. Coherence blends
-that field toward a fixed screen angle where the image has little structure.
-Each ink supplies its own tone mask and density layers, so the four plates
-share one coherent drawing while retaining independent CMYK coverage.
+The direction field is built once from the shared processed-RGB guide, or from
+a 2D luminance guide when one is supplied: image gradients form a structure
+tensor, the tensor is blurred, and its edge-tangent eigenvector becomes a
+smooth orientation field. Coherence blends that field toward a fixed screen
+angle where the image has little structure. Each ink supplies its own tone
+mask and density layers, so the four plates share one coherent drawing while
+retaining independent CMYK coverage.
 """
 
 from __future__ import annotations
@@ -73,11 +74,39 @@ def _structure_tensor_velocity(guide, geometry, smoothing_mm, fallback_angle_deg
     """Return edge-following unit vectors for one shared structure field."""
     import numpy as np
 
-    field, field_geometry = _field_geometry(guide, geometry)
-    gradient_y, gradient_x = np.gradient(field)
-    jxx = gradient_x * gradient_x
-    jxy = gradient_x * gradient_y
-    jyy = gradient_y * gradient_y
+    guide_values = np.asarray(guide, dtype=np.float32)
+    if guide_values.ndim == 2:
+        fields = (guide_values,)
+    elif guide_values.ndim == 3 and guide_values.shape[2] >= 1:
+        fields = tuple(
+            guide_values[:, :, index]
+            for index in range(guide_values.shape[2])
+        )
+    else:
+        raise ValueError("Structure guide must be a 2D or channel-last image.")
+
+    jxx = None
+    jxy = None
+    jyy = None
+    field_geometry = None
+    for source in fields:
+        field, current_geometry = _field_geometry(source, geometry)
+        field_geometry = current_geometry
+        gradient_y, gradient_x = np.gradient(field)
+        channel_jxx = gradient_x * gradient_x
+        channel_jxy = gradient_x * gradient_y
+        channel_jyy = gradient_y * gradient_y
+        if jxx is None:
+            jxx = channel_jxx
+            jxy = channel_jxy
+            jyy = channel_jyy
+        else:
+            jxx += channel_jxx
+            jxy += channel_jxy
+            jyy += channel_jyy
+
+    if field_geometry is None:
+        raise ValueError("Structure guide must contain at least one channel.")
 
     pixel_x = field_geometry["width_mm"] / max(1, field_geometry["pixels_w"])
     pixel_y = field_geometry["height_mm"] / max(1, field_geometry["pixels_h"])

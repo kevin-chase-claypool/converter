@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-22 | `WSW-20261122-003` | implemented | [Preserve color-only detail in edge-flow CMYK](2026/2026-11-22-cmyk-edge-flow-color-detail.md) | `cmyk`, `edge-flow`, `structure-tensor`, `color-detail`, `portrait`, `image-screening` |
 | 2026-11-22 | `WSW-20261122-002` | implemented | [Add edge-flow streamline screening to the CMYK tool](2026/2026-11-22-edge-flow-cmyk-streamlines.md) | `cmyk`, `edge-flow`, `structure-tensor`, `streamlines`, `portrait`, `image-screening`, `calibration`, `reddit` |
 | 2026-11-22 | `WSW-20261122-001` | implemented | [Normalize CMYK row-lock translation across all four inks](2026/2026-11-22-cmyk-shared-row-lock-translation.md) | `cmyk`, `registration`, `row-lock`, `bed-compensation`, `shared-translation`, `g54`, `p100` |
 | 2026-11-21 | `WSW-20261121-003` | verified | [Finalize the owner-reviewed Word report](2026/2026-11-21-final-report-word-revision.md) | `report`, `editorial`, `word`, `final-revision` |

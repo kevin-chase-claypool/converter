@@ -143,6 +143,49 @@ class ScreeningTests(unittest.TestCase):
             0.85,
         )
 
+    def test_edge_flow_keeps_color_only_detail(self):
+        size = 96
+        tone = self.np.full((size, size), 0.9, dtype="float32")
+        # These colours have equal luminance but a strong chromatic boundary.
+        color_guide = self.np.zeros((size, size, 3), dtype="float32")
+        color_guide[:, : size // 2] = (1.0, 0.0, 0.0)
+        color_guide[:, size // 2 :] = (0.0, 0.509, 0.0)
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        marks = converter.screen_channel(
+            tone,
+            geometry,
+            style="edge_flow",
+            spacing_mm=8.0,
+            angle_deg=0.0,
+            max_marks=200,
+            flow_smoothing_mm=1.0,
+            flow_layers=1,
+            flow_guide=color_guide,
+        )
+
+        vertical_segments = []
+        for line in marks:
+            for first, second in zip(line, line[1:]):
+                dx = second[0] - first[0]
+                dy = second[1] - first[1]
+                length = math.hypot(dx, dy)
+                midpoint_x = 0.5 * (first[0] + second[0])
+                if length >= 0.5 and abs(midpoint_x - 50.0) <= 6.0:
+                    vertical_segments.append(abs(dy) / length)
+        self.assertGreater(len(vertical_segments), 5)
+        self.assertGreater(
+            sum(vertical_segments) / len(vertical_segments),
+            0.85,
+        )
+
     def test_edge_flow_uses_fixed_angle_without_structure(self):
         tone = self.np.full((40, 40), 0.8, dtype="float32")
         guide = self.np.full((40, 40), 0.5, dtype="float32")
@@ -2156,6 +2199,28 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(restored.style.currentData(), "edge_flow")
         self.assertAlmostEqual(restored.flow_smoothing.value(), 2.5)
         self.assertEqual(restored.flow_layers.value(), 2)
+
+    def test_edge_flow_passes_processed_color_guide_to_every_ink(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        guides = []
+
+        def capture_guide(*args, **kwargs):
+            guides.append(kwargs.get("flow_guide"))
+            return []
+
+        with mock.patch.object(
+            converter,
+            "screen_channel",
+            side_effect=capture_guide,
+        ):
+            tab._ensure_layers()
+
+        self.assertEqual(len(guides), len(converter.CHANNELS))
+        self.assertTrue(all(guide is not None for guide in guides))
+        self.assertTrue(
+            all(len(guide.shape) == 3 and guide.shape[2] == 3 for guide in guides)
+        )
 
     def test_analysis_worker_reports_strategy_split(self):
         from generator_tabs.cmyk_tab import ProgramAnalysisWorker

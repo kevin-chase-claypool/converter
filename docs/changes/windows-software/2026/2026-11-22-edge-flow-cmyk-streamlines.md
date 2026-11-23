@@ -21,6 +21,7 @@ tags:
   - reddit
 related:
   - WSW-20261023-001
+  - WSW-20261122-003
   - docs/testing/CMYK_CALIBRATION.md
 ---
 
@@ -116,6 +117,9 @@ coarsen the effective seed pitch; that is intentional and recorded, but the
 preview does not yet label the exact internally increased pitch. The method
 also depends on a pre-cropped source with useful luminance structure; a photo
 of a print includes the wall and paper edges as real image structure.
+
+The initial shared luminance-only guide lost color-only detail and was
+superseded by the processed-RGB guide in `WSW-20261122-003`.
 
 The next physical gate is a one-page A4 portrait at `1.2 mm` pitch, `2.5 mm`
 smoothing, three layers, normal GCR, and one HOME + REGISTER, followed by a

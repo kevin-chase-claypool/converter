@@ -1,5 +1,35 @@
 # Engineering Log
 
+<a id="elog-20261122-cmyk-edge-flow-color-detail"></a>
+### 🟨 2026-11-22 - WINDOWS SOFTWARE/IMPLEMENTED - Preserve color-only detail in edge-flow CMYK
+
+- The first edge-flow portrait used the scene luminance as its only structure
+  guide. That discarded chromatic boundaries whose brightness is similar, so
+  broad luminance isophotes replaced facial, clothing, wood, and background
+  detail compared with the reference conversion.
+- The processed RGB image is now retained during CMYK preparation and supplied
+  to the structure-tensor builder. Each RGB channel contributes its own
+  `Jxx/Jxy/Jyy` components, which are summed before the tensor is blurred.
+- A synthetic equal-luminance red/green boundary reproduces the failure before
+  the change: the direction field only had the horizontal fixed-angle fallback.
+  After the change, streamlines at that boundary run vertically along it. All
+  seven focused edge-flow tests pass.
+- A 1000 px software render of the reported `IMG_0514.JPG` retained visible
+  eye, mouth, shirt, pocket, wood, and background structure that the
+  luminance-only guide lost. The result remains a software render.
+- The complete converter discovery suite passes `630` tests with one expected
+  OpenGL-context skip.
+- Documentation indexing and link validation pass for all 510 change notes.
+- The manifest now identifies
+  `shared_processed_rgb_structure_tensor`. Existing CMYK tone masks, density
+  layers, four-file save, registration, and G-code contracts are unchanged.
+- Physical edge-flow pitch, density, overlay, and pen saturation still require
+  the pending four-pass bench sheet.
+- Evidence: `WSW-20261122-003` and
+  `docs/changes/windows-software/2026/2026-11-22-cmyk-edge-flow-color-detail.md`.
+- Category: windows-software, cmyk, edge-flow, structure-tensor, color-detail,
+  portrait, image-screening, physical-validation-pending.
+
 <a id="elog-20261122-edge-flow-cmyk-streamlines"></a>
 ### 🟨 2026-11-22 - WINDOWS SOFTWARE/IMPLEMENTED - Add edge-flow CMYK streamlines
 

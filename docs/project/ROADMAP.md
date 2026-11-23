@@ -579,8 +579,10 @@
 
 - [ ] Bench-verify edge-flow CMYK streamlines and select a starting recipe.
   Problem: the new structure-tensor screen is covered by synthetic geometry
-  and UI tests (`WSW-20261122-002`), but no printed four-pass portrait has
-  established a useful pitch, smoothing radius, layer count, or pen order.
+  and UI tests (`WSW-20261122-002`); its shared guide now uses all processed
+  RGB channels so color-only boundaries survive (`WSW-20261122-003`). No
+  printed four-pass portrait has established a useful pitch, smoothing
+  radius, layer count, or pen order.
   Benefit: one validated recipe turns the visual method into a repeatable
   portrait workflow and records where extra dark-tone layers become too dense.
   Risk: fine streamlines expose pen-up drag, felt-tip spread, four-ink overlay

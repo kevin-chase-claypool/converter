@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-22 | `WSW-20261122-003` | windows-software | implemented | [Preserve color-only detail in edge-flow CMYK](windows-software/2026/2026-11-22-cmyk-edge-flow-color-detail.md) |
 | 2026-11-22 | `WSW-20261122-002` | windows-software | implemented | [Add edge-flow streamline screening to the CMYK tool](windows-software/2026/2026-11-22-edge-flow-cmyk-streamlines.md) |
 | 2026-11-22 | `WSW-20261122-001` | windows-software, hardware | implemented | [Normalize CMYK row-lock translation across all four inks](windows-software/2026/2026-11-22-cmyk-shared-row-lock-translation.md) |
 | 2026-11-21 | `WSW-20261121-003` | windows-software | verified | [Finalize the owner-reviewed Word report](windows-software/2026/2026-11-21-final-report-word-revision.md) |

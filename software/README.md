@@ -547,13 +547,15 @@ Current tools:
   margin, artwork scale, and registration corner crosses (all four inks
   draw the same four margin crosses so pass alignment can be checked).
   **Edge-flow streamlines** is a separate continuous screen for portraits and
-  textured photographs. One shared direction field is built from scene
-  luminance rather than independently for each ink: image gradients form a
-  structure tensor, Gaussian-like blur smooths that tensor, and its
-  edge-tangent orientation is traced as evenly seeded streamlines. Each CMYK
-  plate supplies its own tone mask, so coverage and GCR still decide which
-  lines receive cyan, magenta, yellow, or black. Weak or flat structure blends
-  to the ink's fixed screen angle instead of following image noise.
+  textured photographs. One shared direction field is built from the processed
+  RGB source rather than independently for each ink: gradients from all three
+  color channels form the structure tensor, so color-only boundaries survive
+  even when their luminance is nearly equal. Gaussian-like blur smooths that
+  tensor, and its edge-tangent orientation is traced as evenly seeded
+  streamlines. Each CMYK plate supplies its own tone mask, so coverage and GCR
+  still decide which lines receive cyan, magenta, yellow, or black. Weak or
+  flat structure blends to the ink's fixed screen angle instead of following
+  image noise.
   **Flow layers** (default 3) adds offset streamline families only where that
   ink is darker; more layers increase tonal depth, point count, and plotting
   time. **Flow smoothing** (default 2.5 mm on paper) controls how far the

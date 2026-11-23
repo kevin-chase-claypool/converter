@@ -317,9 +317,9 @@ class CmykTab(GeneratorTab):
             "labeled legacy diagnostic restores tone-varying row depth while "
             "keeping the selected bed-compensation profile. Stored legacy "
             "values from older settings are promoted to this layout when "
-            "regenerated. Edge-flow streamlines follow blurred image structure "
-            "across one shared direction field and use extra tone-triggered "
-            "layers in darker areas."
+            "regenerated. Edge-flow streamlines follow blurred RGB and "
+            "brightness structure across one shared direction field and use "
+            "extra tone-triggered layers in darker areas."
         )
         self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)
@@ -1383,6 +1383,7 @@ class CmykTab(GeneratorTab):
                 solid=self.solid_dots.isChecked(),
                 path_tolerance_mm=self.path_tolerance.value() / factor,
                 depth_tone=tones.get("depth"),
+                flow_guide=tones.get("flow_rgb"),
                 row_clearance_mm=(
                     (self.pen_width.value() + converter.WAVE_MIN_EDGE_GAP_MM)
                     / factor
@@ -1915,7 +1916,7 @@ class CmykTab(GeneratorTab):
                     else None
                 ),
                 "flow_guide": (
-                    "shared_scene_luminance_structure_tensor"
+                    "shared_processed_rgb_structure_tensor"
                     if style == "edge_flow"
                     else None
                 ),

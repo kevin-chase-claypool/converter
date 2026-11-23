@@ -448,6 +448,9 @@ def prepare_image_tones(
     ``sharpen_pct`` is an unsharp mask on the luminance (0 disables it): the
     detail layer is added back to all three channels, so facial features
     survive the dot screen instead of dissolving into mid-tone dots.
+
+    The returned mapping also contains the internal ``depth`` luminance field
+    and the post-adjustment ``flow_rgb`` image used by edge-flow screening.
     """
     from PIL import Image
     import numpy as np
@@ -512,6 +515,9 @@ def prepare_image_tones(
         rgb = np.power(np.clip(rgb, 0.0, 1.0), exponent)
 
     tones = rgb_to_cmyk_tone(rgb, gcr=gcr, weights=weights, gamma=gamma)
+    # Edge-flow needs the processed colour image, including chroma-only
+    # boundaries that disappear when the image is reduced to luminance.
+    tones["flow_rgb"] = np.clip(rgb, 0.0, 1.0).astype(np.float32)
     # Ink coverage decides where each plate is present; luminance supplies the
     # common scene depth used by wave screens even in a saturated ink channel.
     tones["depth"] = (1.0 - depth_luminance).astype(np.float32)
@@ -1246,6 +1252,7 @@ def screen_channel(
     wave_frequency_variation=0.0,
     flow_smoothing_mm=None,
     flow_layers=3,
+    flow_guide=None,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
@@ -1288,7 +1295,11 @@ def screen_channel(
         if depth_tone is not None
         else None
     )
-    flow_guide = depth_tone if depth_tone is not None else tone
+    flow_guide = (
+        flow_guide
+        if flow_guide is not None
+        else depth_tone if depth_tone is not None else tone
+    )
 
     def inside(x, y):
         return left <= x <= right and top <= y <= bottom
