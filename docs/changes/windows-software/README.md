@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-23 | `WSW-20261123-008` | implemented | [Show whether the Fine detail preset is active](2026/2026-11-23-cmyk-fine-detail-state-indicator.md) | `cmyk`, `edge-flow`, `fine-detail`, `user-interface` |
 | 2026-11-23 | `WSW-20261123-007` | implemented | [Preserve Black portrait keylines and refine Edge-flow Auto color](2026/2026-11-23-cmyk-edge-flow-black-keylines.md) | `cmyk`, `edge-flow`, `keylines`, `portrait`, `color-balance` |
 | 2026-11-23 | `WSW-20261123-006` | implemented | [Add a pen-aware Edge-flow fine-detail preset](2026/2026-11-23-cmyk-edge-flow-fine-detail-preset.md) | `cmyk`, `edge-flow`, `fine-detail`, `pen-width`, `portrait` |
 | 2026-11-23 | `WSW-20261123-005` | implemented | [Make Edge-flow Auto preserve portrait density](2026/2026-11-23-cmyk-edge-flow-auto-density.md) | `cmyk`, `edge-flow`, `auto-exposure`, `tone-density`, `portrait` |

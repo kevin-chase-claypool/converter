@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20261123-cmyk-fine-detail-state-indicator"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Show Fine detail active state
+
+- The owner observed that clicking **Fine detail** gave no persistent
+  indication that the preset had been applied. Because the action changes
+  several controls, the result was difficult to distinguish from a button
+  that did nothing.
+- The button is now checkable, reads **Fine detail ✓** while active, and its
+  tooltip states active or not active.
+- Active state is derived from the real controls rather than a remembered
+  flag: Edge-flow style, calculated pitch, smoothing, layer count, acceptable
+  Path tolerance, and Continuous Black keylines must all still match.
+- Pen width, Artwork scale, pitch, smoothing, layers, tolerance, keylines,
+  screen style, and calibration changes refresh the indicator. A manual edit
+  therefore clears it without retaining a misleading "on" state.
+- The button remains an apply action; clicking it while active reapplies the
+  current pen-aware targets. It does not restore an unrelated previous recipe,
+  because no prior-state snapshot is stored.
+- Focused regressions cover application, clearing after a smoothing edit,
+  clearing after disabling keylines, and successful reapplication. All `121`
+  CMYK tab tests pass. Complete converter discovery passes `641` tests with
+  one expected OpenGL-context skip.
+- Evidence: `WSW-20261123-008`;
+  `docs/changes/windows-software/2026/2026-11-23-cmyk-fine-detail-state-indicator.md`.
+- Category: windows-software, cmyk, edge-flow, fine-detail, user-interface,
+  state-indicator.
+
 <a id="elog-20261123-cmyk-edge-flow-black-keylines"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Preserve Black portrait keylines
 

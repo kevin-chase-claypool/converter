@@ -597,7 +597,10 @@ Current tools:
   if another screen style was active and intentionally changes the saved
   layout; Auto remains image-only. For a `0.6 mm` pen at `260 %` scale this
   gives a `0.35 mm` source pitch (`0.91 mm` effective), `1.5 mm` smoothing,
-  two layers, Black keylines, and `0.10 mm` tolerance.
+  two layers, Black keylines, and `0.10 mm` tolerance. The button is checked
+  and reads **Fine detail ✓** while those controls still match the preset.
+  Changing the pen, scale, pitch, smoothing, layers, tolerance, keyline
+  choice, screen style, or calibration mode clears the indicator.
   The implementation lives in
   [`converter_core/structure_tensor.py`](converter_core/structure_tensor.py);
   output uses the existing four-file CMYK save, preview, offset, and G-code

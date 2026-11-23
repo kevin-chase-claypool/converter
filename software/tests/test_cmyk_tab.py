@@ -3570,9 +3570,13 @@ class CmykTabTests(unittest.TestCase):
         tab.flow_smoothing.setValue(4.0)
         tab.flow_layers.setValue(5)
         tab.path_tolerance.setValue(0.15)
+        self.assertFalse(tab.detail_button.isChecked())
+        self.assertEqual(tab.detail_button.text(), "Fine detail")
 
         tab.detail_button.click()
 
+        self.assertTrue(tab.detail_button.isChecked())
+        self.assertIn("✓", tab.detail_button.text())
         self.assertAlmostEqual(tab.pitch.value(), 0.35, places=2)
         self.assertAlmostEqual(
             tab.pitch.value() * tab.scale_pct.value() / 100.0,
@@ -3587,10 +3591,32 @@ class CmykTabTests(unittest.TestCase):
 
         tab.pen_width.setValue(0.8)
         tab.scale_pct.setValue(150)
+        self.assertFalse(tab.detail_button.isChecked())
         tab.detail_button.click()
+        self.assertTrue(tab.detail_button.isChecked())
         self.assertAlmostEqual(tab.pitch.value(), 0.80, places=2)
         self.assertAlmostEqual(tab.flow_smoothing.value(), 2.0, places=1)
         self.assertEqual(tab.flow_layers.value(), 3)
+
+    def test_fine_detail_indicator_clears_when_layout_is_edited(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.pen_width.setValue(0.6)
+        tab.scale_pct.setValue(260)
+
+        tab.detail_button.click()
+        self.assertTrue(tab.detail_button.isChecked())
+        self.assertIn("active", tab.detail_button.toolTip())
+
+        tab.flow_smoothing.setValue(2.4)
+        self.assertFalse(tab.detail_button.isChecked())
+        self.assertEqual(tab.detail_button.text(), "Fine detail")
+        self.assertIn("not active", tab.detail_button.toolTip())
+
+        tab.detail_button.click()
+        self.assertTrue(tab.detail_button.isChecked())
+        tab.flow_keylines.setChecked(False)
+        self.assertFalse(tab.detail_button.isChecked())
 
     def test_registration_crosses_are_identical_on_every_ink(self):
         tab = self.make_tab()

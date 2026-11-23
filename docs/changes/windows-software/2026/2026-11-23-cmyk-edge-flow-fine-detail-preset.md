@@ -18,6 +18,7 @@ related:
   - WSW-20261123-003
   - WSW-20261123-005
   - WSW-20261123-007
+  - WSW-20261123-008
   - docs/proposals/flow-field-cmyk.md
 ---
 
@@ -58,6 +59,7 @@ between strokes.
   pitch (`0.91 mm` effective), `1.5 mm` smoothing, two layers, and `0.10 mm`
   tolerance.
 - `WSW-20261123-007` extends this preset to enable Continuous Black keylines.
+- `WSW-20261123-008` adds an active-state indicator to the preset button.
 
 ## Verification
 

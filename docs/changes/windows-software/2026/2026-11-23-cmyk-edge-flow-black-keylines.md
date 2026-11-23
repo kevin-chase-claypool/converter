@@ -20,6 +20,7 @@ related:
   - WSW-20261123-003
   - WSW-20261123-005
   - WSW-20261123-006
+  - WSW-20261123-008
   - docs/proposals/flow-field-cmyk.md
 ---
 

@@ -32,6 +32,8 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 - Fine-detail preset: 1.5 effective pen widths, smoothing near 2.5 pen widths
   clamped to `1.2-2.0 mm`, two layers at or below a `0.7 mm` pen and three
   above it, and Path tolerance no larger than `0.10 mm`
+- Fine detail reports a checked/`✓` state only while every preset control
+  still matches; manual edits clear it
 - Optional Continuous Black keylines: preserve high-coherence structure
   boundaries in the Black plate while leaving C/M/Y tone-gated
 - Optional preview of each channel and composite

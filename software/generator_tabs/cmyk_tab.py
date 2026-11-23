@@ -393,6 +393,7 @@ class CmykTab(GeneratorTab):
         )
         screen.addRow("Flow layers", self.flow_layers)
         self.detail_button = QPushButton("Fine detail")
+        self.detail_button.setCheckable(True)
         self.detail_button.setToolTip(
             "Edge-flow only: set a pen-aware portrait screen at 1.5 pen "
             "widths, smoothing near 2.5 pen widths, fewer density layers, "
@@ -718,7 +719,20 @@ class CmykTab(GeneratorTab):
             self._update_wave_spacing_guard
         )
         self.theta_mode.changed.connect(lambda *_: self._refresh_pass_summary())
+        for signal in (
+            self.style.currentIndexChanged,
+            self.pitch.valueChanged,
+            self.scale_pct.valueChanged,
+            self.pen_width.valueChanged,
+            self.flow_smoothing.valueChanged,
+            self.flow_layers.valueChanged,
+            self.path_tolerance.valueChanged,
+            self.flow_keylines.toggled,
+            self.calibration_mode.toggled,
+        ):
+            signal.connect(self._update_detail_preset_indicator)
         self._update_wave_spacing_guard()
+        self._update_detail_preset_indicator()
         self._refresh_pass_summary()
         self.finish_controls()
 
@@ -876,6 +890,69 @@ class CmykTab(GeneratorTab):
             f"{self.scale_pct.value():.0f} % artwork scale."
         )
 
+    def _detail_preset_values(self):
+        """Return the current pen-aware Fine detail target values."""
+        scale = max(0.01, self.scale_pct.value() / 100.0)
+        pen = max(0.1, self.pen_width.value())
+        return {
+            "scale": scale,
+            "pen": pen,
+            "pitch": max(
+                0.1,
+                min(8.0, round(pen * 1.5 / scale / 0.05) * 0.05),
+            ),
+            "smoothing": round(
+                max(1.2, min(2.0, pen * 2.5)) / 0.1
+            ) * 0.1,
+            "tolerance": round(
+                max(0.05, min(0.10, pen * 0.15)) / 0.05
+            ) * 0.05,
+            "layers": 2 if pen <= 0.7 else 3,
+        }
+
+    def _detail_preset_active(self):
+        """Whether the controls still match the current Fine detail preset."""
+        if (
+            self.calibration_mode.isChecked()
+            or self.style.currentData() != "edge_flow"
+            or not self.flow_keylines.isChecked()
+        ):
+            return False
+        target = self._detail_preset_values()
+        return (
+            abs(self.pitch.value() - target["pitch"]) <= 0.011
+            and abs(
+                self.flow_smoothing.value() - target["smoothing"]
+            )
+            <= 0.051
+            and self.flow_layers.value() == target["layers"]
+            and self.path_tolerance.value()
+            <= target["tolerance"] + 1e-6
+        )
+
+    def _update_detail_preset_indicator(self, *_args):
+        """Show whether the current Edge-flow controls match Fine detail."""
+        active = self._detail_preset_active()
+        self.detail_button.setChecked(active)
+        self.detail_button.setText(
+            "Fine detail ✓" if active else "Fine detail"
+        )
+        base = (
+            "Edge-flow only: set a pen-aware portrait screen at 1.5 pen "
+            "widths, smoothing near 2.5 pen widths, fewer density layers, "
+            "Continuous Black keylines, and Path tolerance no larger than "
+            "0.10 mm."
+        )
+        self.detail_button.setToolTip(
+            base
+            + (
+                " Status: active. These controls still match the preset; "
+                "changing any preset-related control clears this indicator."
+                if active
+                else " Status: not active. Click to apply the preset."
+            )
+        )
+
     def apply_detail_preset(self, _checked=False):
         """Fit Edge-flow geometry to the physical pen for portrait detail."""
         edge_flow = self.style.findData("edge_flow")
@@ -883,22 +960,15 @@ class CmykTab(GeneratorTab):
             self.report_error("Edge-flow streamlines are not available.")
             return
         self.style.setCurrentIndex(edge_flow)
-        scale = max(0.01, self.scale_pct.value() / 100.0)
-        pen = max(0.1, self.pen_width.value())
-        pitch = round(pen * 1.5 / scale / 0.05) * 0.05
-        smoothing = round(
-            max(1.2, min(2.0, pen * 2.5)) / 0.1
-        ) * 0.1
-        tolerance = round(
-            max(0.05, min(0.10, pen * 0.15)) / 0.05
-        ) * 0.05
-        layers = 2 if pen <= 0.7 else 3
-        self.pitch.setValue(max(0.1, min(8.0, pitch)))
-        self.flow_smoothing.setValue(smoothing)
-        self.flow_layers.setValue(layers)
+        target = self._detail_preset_values()
+        scale = target["scale"]
+        pen = target["pen"]
+        self.pitch.setValue(target["pitch"])
+        self.flow_smoothing.setValue(target["smoothing"])
+        self.flow_layers.setValue(target["layers"])
         self.flow_keylines.setChecked(True)
         self.path_tolerance.setValue(
-            min(self.path_tolerance.value(), tolerance)
+            min(self.path_tolerance.value(), target["tolerance"])
         )
         effective_pitch = self.pitch.value() * scale
         message = (
@@ -914,6 +984,7 @@ class CmykTab(GeneratorTab):
         self.status.setText(message)
         if self.host is not None:
             self.host.generator_status(message)
+        self._update_detail_preset_indicator()
 
     def _registration_crosses(self):
         """Four small crosses every ink draws, for four-pass alignment."""
