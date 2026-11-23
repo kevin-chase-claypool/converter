@@ -260,11 +260,28 @@ def _tone_gated_runs(
     edge_at=None,
     keyline_strength=0.0,
     edge_quiet=0.0,
+    bridge_mm=0.0,
 ):
-    """Split one traced path into local tone and optional keyline runs."""
+    """Split one traced path into local tone and optional keyline runs.
+
+    A positive ``bridge_mm`` retains short non-inking gaps inside the current
+    run. The connector still follows the traced streamline, so a dark passage
+    costs one pen-down cycle instead of a lift and independent M3/M5 pair for
+    every local phase break. Gaps longer than the bridge remain paper.
+    """
     runs = []
     current = []
-    distance = 0.0
+    bridge = max(0.0, float(bridge_mm))
+    ink_flags = []
+    cumulative = [0.0]
+    for first, second in zip(points, points[1:]):
+        cumulative.append(
+            cumulative[-1]
+            + math.hypot(
+                second[0] - first[0],
+                second[1] - first[1],
+            )
+        )
     for index, point in enumerate(points):
         point_tone = float(tone_at(point[0], point[1]))
         coverage = (
@@ -294,23 +311,37 @@ def _tone_gated_runs(
         ink = (
             coverage > 0.0
             and _path_tone_threshold(
-                distance,
+                cumulative[index],
                 path_key,
                 tone_segment,
                 layer,
             )
             < float(coverage)
         )
+        ink_flags.append(bool(ink))
+
+    gap_start = None
+    for index, (point, ink) in enumerate(zip(points, ink_flags)):
         if ink:
-            current.append(point)
-        elif current:
-            runs.append(current)
-            current = []
-        if index + 1 < len(points):
-            distance += math.hypot(
-                points[index + 1][0] - point[0],
-                points[index + 1][1] - point[1],
-            )
+            if current and gap_start is not None:
+                gap = cumulative[index] - cumulative[gap_start]
+                if gap <= bridge + 1e-9:
+                    current.extend(points[gap_start:index + 1])
+                else:
+                    runs.append(current)
+                    current = [point]
+            else:
+                current.append(point)
+            gap_start = None
+        elif current and gap_start is None:
+            gap_start = index
+
+        if current and gap_start is not None:
+            gap = cumulative[index] - cumulative[gap_start]
+            if gap > bridge + 1e-9:
+                runs.append(current)
+                current = []
+                gap_start = None
     if current:
         runs.append(current)
     return [
@@ -345,6 +376,7 @@ def trace_structure_streamlines(
     color_quiet=0.0,
     tone_segment_mm=None,
     max_path_mm=None,
+    bridge_mm=0.0,
     cancel_check=None,
 ):
     """Trace evenly spaced streamlines through one tone-derived tensor.
@@ -354,6 +386,8 @@ def trace_structure_streamlines(
     path-local threshold keeps only the fraction of each traced path that the
     local tone asks for. The break positions depend on distance along that
     streamline, so adjacent paths do not form a visible block matrix.
+    ``bridge_mm`` retains short tone-off gaps inside one pen-down run so the
+    local screen does not multiply toolhead cycles in dense passages.
     """
     import numpy as np
 
@@ -529,6 +563,7 @@ def trace_structure_streamlines(
                         ),
                         0.92 if keylines else 0.0,
                         color_quiet,
+                        bridge_mm,
                     )
                     marks.extend(visible_runs)
                     if len(marks) > cap:

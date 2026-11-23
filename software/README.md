@@ -519,6 +519,11 @@ Current tools:
   an **Auto (photo)** button that analyzes the image and sets auto levels,
   brightness, contrast, saturation, GCR, a starting gamma, and a modest
   luminance-sharpening preset.
+  - Embedded image colour profiles are converted to sRGB before auto levels,
+    sharpening, and CMYK separation. This is required for wide-gamut sources
+    such as Display P3 photographs; treating their raw RGB numbers as sRGB
+    shifts skin, foliage, and saturated colours. EXIF orientation is applied
+    first, so portrait images are screened in their displayed orientation.
   - For Wave screen, Auto uses an exposure-preserving color path. It reads the
     source's midtone, tonal span, and high-chroma percentile, then keeps normal
     photos near neutral saturation/contrast instead of pushing them to the
@@ -548,7 +553,8 @@ Current tools:
   on-paper radius), ink gamma, black (GCR), resolution, per-ink weights, screen style
   (halftone dots / stipple dots / line screen / crosshatch levels / wave screen
   with equidistant rows / edge-flow streamlines / interference (gyroid) /
-  single line (TSP) / topographic contours / rectilinear fill),
+  single line (TSP) / topographic contours / rectilinear fill / continuous
+  row screen),
   dot pitch (with a **Match pen** button that sets it to one pen width at
   the current artwork scale), dot size, solid dots (spiral-filled so each
   mark reads as a dot, not a ring), hatch levels, overdraw, pen width, max
@@ -572,6 +578,20 @@ Current tools:
   magenta 75, yellow 0, and black 45, so the plates interleave like a
   conventional four-screen print instead of collapsing to one synthetic
   direction.
+  **Continuous row screen (adjacent joins)** uses the tone-driven Rectilinear
+  row pitch and then joins the nearest non-overlapping adjacent row runs,
+  even when their ends do not overlap. Most of each ink therefore becomes a
+  few long pen-down chains instead of hundreds of row fragments. The joins
+  draw visible connector ink, the result follows straight screen angles rather
+  than Edge-flow contours, and a fully blank row band can still end a chain.
+  **Pen-down chain** is enabled by default for open-line screens. It orders
+  endpoint-nearby marks head-to-tail and draws a connector only up to the
+  adjacent **Keep pen down** gap (default `5.0 mm`). Edge-flow also bridges up
+  to `4 mm` of tone-off gaps along the same streamline. This removes repeated
+  M3/M5 cycles without forcing one cross-page line; larger gaps remain normal
+  pen-up travel. Raise the gap to remove more cycles, or lower it to keep a
+  stricter source screen. Closed shapes, tagged Wave rows, and TSP output stay
+  separate.
   The four plates use the same page frame, artwork scale, registration crosses,
   pen offsets, and G-code contract, but remain independent pen programs.
   Preview multiplies them to show the combined print; Save writes cyan,
@@ -969,6 +989,7 @@ work with no input (optional mesh/image sources are noted below).
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
 | CMYK | Auto levels on, rectilinear fill at 0.10 mm pitch, saturation 115 %, contrast 285 %, brightness 170 %, ink gamma 1.40, black (GCR) 95 %, 40000 marks/ink, resolution 10000 px, weights 100/100/100/100 %, artwork scale 280 % | Needs an image; Preview plans each ink in the background and Save writes four files. Dense photo screens take hours to plot; raise pitch or lower Max marks/ink for a faster pass. |
 | CMYK edge-flow | Auto levels on; saturation 110 %, contrast 220 %, brightness 105 %, sharpening off; gamma 0.75, GCR 80 %, resolution 1600 px, weights 100/100/100/90 %; keep the operator-picked Edge-flow pitch and artwork scale. Use **Fine detail** for pen-aware pitch/smoothing/layers, Black keylines with color-edge separation, 60 % / 1.5 mm sharpening, and tolerance no larger than 0.10 mm. | Software-selected starting point for a pre-cropped portrait. Auto adjusts image processing only and does not overwrite the saved screen layout. Each ink applies its own mask, seed, continuous local tone fraction, and fallback screen over one strength-gated luminance flow. Fine detail keeps coherent Black boundaries continuous and quiets color beside them. Save writes four separate overprinted G-code files. Check density and pen-set separation on paper before using it as a production recipe. |
+| CMYK continuous | Use the same image curve as the CMYK recipe, then choose **Continuous row screen (adjacent joins)** and keep **Pen-down chain** on with a `5 mm` gap. | Fastest starting point for an image where fewer M3/M5 cycles matter more than Edge-flow contour texture. Straight screen directions remain visible, and all joins print connector ink. A fully blank row band can still lift. |
 | 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
 | Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |
 | Snowflake | 6 arms, depth 3, length 45 %, branch angle 35 deg, branch scale 55 %, jitter 8 deg / 15 % | Raise depth for finer detail; cap is 5. |

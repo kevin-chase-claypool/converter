@@ -13,6 +13,7 @@ G-code.
 
 from __future__ import annotations
 
+import io
 import math
 
 from .cancellation import check_cancelled
@@ -132,6 +133,31 @@ def rgb_to_cmyk_tone(rgb, gcr=1.0, weights=None, gamma=1.0):
     return tones
 
 
+def _load_color_managed_image(image_path):
+    """Open an image as sRGB and apply EXIF orientation."""
+    from PIL import Image, ImageCms, ImageOps
+
+    with Image.open(image_path) as source:
+        image = ImageOps.exif_transpose(source)
+        profile = image.info.get("icc_profile")
+        if profile and image.mode in ("RGB", "RGBA"):
+            try:
+                source_profile = ImageCms.ImageCmsProfile(io.BytesIO(profile))
+                target_profile = ImageCms.createProfile("sRGB")
+                image = ImageCms.profileToProfile(
+                    image.convert("RGB"),
+                    source_profile,
+                    target_profile,
+                    outputMode="RGB",
+                    renderingIntent=ImageCms.Intent.PERCEPTUAL,
+                )
+            except (ImageCms.PyCMSError, OSError, ValueError):
+                image = image.convert("RGB")
+        else:
+            image = image.convert("RGB")
+    return image
+
+
 def _soft_contrast(rgb, contrast):
     """The tab's contrast curve: linear below 1.0, soft S-curve above."""
     import numpy as np
@@ -235,7 +261,7 @@ def auto_photo_settings(
     from PIL import Image
     import numpy as np
 
-    image = Image.open(image_path).convert("RGB")
+    image = _load_color_managed_image(image_path)
     longest = max(image.width, image.height)
     factor = min(1.0, max(32, int(resolution_px)) / float(longest))
     if factor < 1.0:
@@ -493,7 +519,7 @@ def prepare_image_tones(
     check_cancelled(cancel_check)
     draw_w = max(5.0, float(width_mm) - 2.0 * float(margin_mm))
     draw_h = max(5.0, float(height_mm) - 2.0 * float(margin_mm))
-    image = Image.open(image_path).convert("RGB")
+    image = _load_color_managed_image(image_path)
     scale = min(draw_w / image.width, draw_h / image.height)
     scale_w = max(1.0, image.width * scale)
     scale_h = max(1.0, image.height * scale)
@@ -612,6 +638,7 @@ def _line_runs(
     connect=False,
     light_stretch=2.0,
     min_length_mm=0.8,
+    connect_gap_mm=0.0,
     cancel_check=None,
 ):
     """Parallel line family, broken into runs where tone is above threshold.
@@ -619,8 +646,10 @@ def _line_runs(
     With ``adaptive`` the next line's pitch grows in light areas and stays at
     the requested spacing in dark ones, so one tone-driven line screen covers
     a continuous tonal range instead of discrete levels. With ``connect``
-    consecutive overlapping runs are stitched into serpentine chains (never
-    across blank paper), so one connected region costs one M3/M5 pen cycle.
+    consecutive overlapping runs are stitched into serpentine chains.
+    ``connect_gap_mm`` additionally joins the nearest row-run endpoints within
+    that bridge, so adjacent lines can share one pen-down stroke at the cost
+    of a visible connector.
     ``light_stretch`` scales how far the pitch opens in the lightest tones;
     the coverage range of one ink is roughly ``light_stretch + 1`` to 1.
     """
@@ -672,7 +701,14 @@ def _line_runs(
         else:
             y += spacing
     groups = (
-        _stitch_runs(rows, darkness, ca, sa, threshold)
+        _stitch_runs(
+            rows,
+            darkness,
+            ca,
+            sa,
+            threshold,
+            connect_gap_mm,
+        )
         if connect
         else [run for row_runs in rows for run in row_runs]
     )
@@ -682,15 +718,22 @@ def _line_runs(
     ]
 
 
-def _stitch_runs(rows, darkness, ca, sa, threshold):
-    """Join overlapping runs of consecutive rows into serpentine chains.
+def _stitch_runs(
+    rows,
+    darkness,
+    ca,
+    sa,
+    threshold,
+    connect_gap_mm=0.0,
+):
+    """Join adjacent row runs into serpentine pen-down chains.
 
-    A connector is only drawn when it stays over ink (its midpoint samples
-    at or above ``threshold``), so a chain never crosses blank paper. Each
-    run continues at most one chain and each chain grows by at most one run
-    per row, so rows that break into several dashes still chain column-wise
-    instead of only matching the row's last dash.
+    Overlapping runs are joined when their connector stays over ink. When no
+    overlapping run is available, ``connect_gap_mm`` permits a direct bridge
+    to the nearest adjacent run endpoint. Each run continues at most one chain
+    and each chain grows by at most one run per row.
     """
+    connect_gap_mm = max(0.0, float(connect_gap_mm))
     finished = []
     open_chains = []
     for row_runs in rows:
@@ -701,7 +744,8 @@ def _stitch_runs(rows, darkness, ca, sa, threshold):
                 min(run[0][0], run[-1][0]),
                 max(run[0][0], run[-1][0]),
             )
-            candidates = []
+            overlapping = []
+            nearby = []
             for index, chain in enumerate(open_chains):
                 if continued[index]:
                     continue
@@ -709,12 +753,6 @@ def _stitch_runs(rows, darkness, ca, sa, threshold):
                 overlap = min(last_span[1], span[1]) - max(
                     last_span[0], span[0]
                 )
-                if overlap > 0.0:
-                    candidates.append((overlap, index))
-            candidates.sort(reverse=True)
-            joined = False
-            for _overlap, index in candidates:
-                chain = open_chains[index]
                 point = chain["points"][-1]
                 oriented = (
                     run
@@ -723,18 +761,36 @@ def _stitch_runs(rows, darkness, ca, sa, threshold):
                     else list(reversed(run))
                 )
                 next_point = oriented[0]
+                gap = math.hypot(
+                    next_point[0] - point[0],
+                    next_point[1] - point[1],
+                )
                 mx = (point[0] + next_point[0]) / 2.0
                 my = (point[1] + next_point[1]) / 2.0
                 wx = mx * ca - my * sa
                 wy = mx * sa + my * ca
-                if darkness(wx, wy) < threshold:
-                    continue
+                if overlap > 0.0 and darkness(wx, wy) >= threshold:
+                    overlapping.append((-overlap, gap, index, oriented))
+                if gap <= connect_gap_mm + 1e-9:
+                    nearby.append((gap, index, oriented))
+            overlapping.sort(key=lambda item: item[:3])
+            nearby.sort(key=lambda item: (item[0], item[1]))
+            joined = False
+            candidate = (
+                (overlapping[0][2], overlapping[0][3])
+                if overlapping
+                else (nearby[0][1], nearby[0][2])
+                if nearby
+                else None
+            )
+            if candidate is not None:
+                index, oriented = candidate
+                chain = open_chains[index]
                 chain["points"].extend(oriented)
                 chain["span"] = span
                 continued[index] = True
                 new_open.append(chain)
                 joined = True
-                break
             if not joined:
                 new_open.append({"points": list(run), "span": span})
         for index, chain in enumerate(open_chains):
@@ -1289,13 +1345,16 @@ def screen_channel(
     flow_color_quiet=0.0,
     flow_tone_segment_mm=None,
     flow_max_path_mm=None,
+    flow_bridge_mm=0.0,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
     Styles: ``halftone`` (variable-radius dots), ``stipple`` (blue-noise
     dots), ``lines`` (parallel lines whose pitch follows tone),
     ``rectilinear`` (serpentine rows joined over ink, so a connected region
-    costs one M3/M5 cycle), ``crosshatch`` (line families stacked by tone
+    costs one M3/M5 cycle), ``continuous`` (tone-pitch rows whose nearest
+    adjacent runs are also bridged into long pen-down chains), ``crosshatch``
+    (line families stacked by tone
     level), ``waves`` (sine rows whose amplitude follows tone), ``waves_even``
     (identical translated wave rows with exact pitch spacing), ``waves_zero``
     (shared phase with tone-driven row amplitude, variable spacing, and exact
@@ -1327,6 +1386,8 @@ def screen_channel(
     inside a smaller area.
     ``flow_max_path_mm`` limits each traced color streamline to a short local
     mark instead of allowing it to run across the whole face.
+    ``flow_bridge_mm`` draws short tone-off gaps along the same streamline so
+    dense passages do not spend a full M3/M5 cycle on every local phase break.
     The legacy ``waves`` and ``waves_zero`` styles are promoted to the
     equidistant ``waves_even`` geometry unless ``allow_variable_wave_spacing``
     is explicitly true. Diagnostic comparison tools use that opt-in; normal
@@ -1391,6 +1452,19 @@ def screen_channel(
             adaptive=True,
             connect=True,
             light_stretch=6.0,
+            cancel_check=cancel_check,
+        )
+    elif style == "continuous":
+        marks = _line_runs(
+            darkness,
+            bounds,
+            angle_deg,
+            spacing,
+            INK_FLOOR,
+            adaptive=True,
+            connect=True,
+            light_stretch=6.0,
+            connect_gap_mm=float("inf"),
             cancel_check=cancel_check,
         )
     elif style == "crosshatch":
@@ -1476,6 +1550,7 @@ def screen_channel(
             color_quiet=max(0.0, min(1.0, float(flow_color_quiet))),
             tone_segment_mm=flow_tone_segment_mm,
             max_path_mm=flow_max_path_mm,
+            bridge_mm=flow_bridge_mm,
             cancel_check=cancel_check,
         )
     else:

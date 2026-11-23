@@ -81,6 +81,63 @@ class SeparationTests(unittest.TestCase):
         self.assertAlmostEqual(float(tones["c"][0, 0]), 0.0, places=6)
         self.assertAlmostEqual(float(tones["m"][0, 0]), 0.25, places=5)
 
+    def test_embedded_icc_profile_is_converted_to_srgb(self):
+        from PIL import Image
+
+        with tempfile.TemporaryDirectory(prefix="cmyk-icc-") as folder:
+            path = Path(folder) / "tagged.png"
+            Image.new("RGB", (8, 8), (180, 70, 30)).save(
+                path,
+                icc_profile=b"test profile",
+            )
+            converted = Image.new("RGB", (8, 8), (90, 40, 20))
+            with mock.patch(
+                "PIL.ImageCms.ImageCmsProfile",
+                return_value=object(),
+            ) as profile, mock.patch(
+                "PIL.ImageCms.createProfile",
+                return_value=object(),
+            ) as target, mock.patch(
+                "PIL.ImageCms.profileToProfile",
+                return_value=converted,
+            ) as transform:
+                tones, _geometry = converter.prepare_image_tones(
+                    path,
+                    60.0,
+                    60.0,
+                    margin_mm=4.0,
+                    resolution_px=32,
+                )
+
+        profile.assert_called_once()
+        target.assert_called_once_with("sRGB")
+        transform.assert_called_once()
+        self.assertEqual(tones["k"].shape, (8, 8))
+
+    def test_exif_orientation_is_applied_before_layout(self):
+        from PIL import Image
+
+        with tempfile.TemporaryDirectory(prefix="cmyk-exif-") as folder:
+            path = Path(folder) / "rotated.jpg"
+            image = Image.new("RGB", (8, 4), "white")
+            exif = Image.Exif()
+            exif[274] = 6
+            image.save(path, exif=exif)
+            _tones, geometry = converter.prepare_image_tones(
+                path,
+                100.0,
+                100.0,
+                margin_mm=6.0,
+                resolution_px=100,
+            )
+
+        self.assertLess(geometry["width_mm"], geometry["height_mm"])
+        self.assertAlmostEqual(
+            geometry["width_mm"] / geometry["height_mm"],
+            0.5,
+            places=5,
+        )
+
 
 class ScreeningTests(unittest.TestCase):
     @classmethod
@@ -1185,6 +1242,31 @@ class ScreeningTests(unittest.TestCase):
             band, self.geometry(), style="rectilinear", spacing_mm=4.0
         )
         self.assertGreaterEqual(len(split), 2)
+
+    def test_continuous_screen_joins_nearest_adjacent_row_runs(self):
+        tone = self.np.zeros((32, 32), dtype="float32")
+        for y in range(32):
+            if y % 2:
+                tone[y, 20:] = 1.0
+            else:
+                tone[y, :12] = 1.0
+
+        rectilinear = converter.screen_channel(
+            tone,
+            self.geometry(),
+            style="rectilinear",
+            spacing_mm=4.0,
+        )
+        continuous = converter.screen_channel(
+            tone,
+            self.geometry(),
+            style="continuous",
+            spacing_mm=4.0,
+        )
+
+        self.assertGreater(len(rectilinear), 20)
+        self.assertEqual(len(continuous), 1)
+        self.assertGreater(len(continuous[0]), 500)
 
     def test_rectilinear_chains_photo_like_tone(self):
         yy, xx = self.np.mgrid[0:64, 0:64]
@@ -2591,6 +2673,7 @@ class CmykTabTests(unittest.TestCase):
             "stipple",
             "lines",
             "rectilinear",
+            "continuous",
             "crosshatch",
             "waves_even",
             "waves_zero",
@@ -2627,6 +2710,43 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(restored.flow_smoothing.value(), 2.5)
         self.assertEqual(restored.flow_layers.value(), 2)
         self.assertTrue(restored.flow_keylines.isChecked())
+
+    def test_pen_down_chain_round_trips_with_the_artwork_recipe(self):
+        tab = self.make_tab()
+        tab.chain_marks.setChecked(False)
+        tab.chain_gap.setValue(8.5)
+
+        state = tab.artwork_layout_state()
+        self.assertFalse(state["screen"]["chain_marks"])
+        self.assertAlmostEqual(state["screen"]["chain_gap_mm"], 8.5)
+
+        restored = self.make_tab()
+        self.assertTrue(restored.restore_artwork_layout_state(state))
+        self.assertFalse(restored.chain_marks.isChecked())
+        self.assertAlmostEqual(restored.chain_gap.value(), 8.5)
+
+    def test_pen_down_chain_joins_short_marks_before_svg_export(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.chain_marks.setChecked(True)
+        tab.chain_gap.setValue(5.0)
+        short_marks = [
+            [(10.0, 20.0), (20.0, 20.0)],
+            [(21.5, 20.0), (30.0, 20.0)],
+        ]
+        with mock.patch.object(
+            converter,
+            "screen_channel",
+            return_value=short_marks,
+        ):
+            tab._ensure_layers()
+
+        for channel in converter.CHANNELS:
+            self.assertEqual(len(tab._layers[channel]), 1)
+            self.assertEqual(
+                tab._pen_chain_stats[channel]["connections"],
+                1,
+            )
 
     def test_edge_flow_passes_shared_guide_and_per_ink_screen(self):
         tab = self.make_tab()

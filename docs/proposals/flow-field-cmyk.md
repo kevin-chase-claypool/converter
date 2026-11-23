@@ -27,6 +27,17 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 - Maximum density layers: 5 for the current portrait recipe
 - Tone method: deterministic path-local `4-8 mm` ink segments, with extra
   layers for darker coverage and no shared 2D block lattice
+- Embedded ICC profiles, including Display P3, are converted to sRGB before
+  image analysis and separation; EXIF orientation is applied first
+- Optional **Pen-down chain** joins open mark endpoints within `5 mm` by
+  default and records per-channel before/after counts, connector count, and
+  connector length in the set manifest
+- Edge-flow additionally bridges up to `4 mm` of tone-off gaps along the same
+  streamline when the pen-down chain is enabled
+- **Continuous row screen (adjacent joins)** is a speed-oriented alternative:
+  tone-pitch rows join nearest non-overlapping adjacent runs into a few long
+  chains, accepting visible straight connectors in exchange for fewer M3/M5
+  cycles
 - Auto image curve for the current portrait: brightness 105 %, contrast 220 %,
   saturation 110 %, GCR 80 %, gamma 0.75
 - Fine-detail preset: one effective pen width, smoothing near two pen widths
@@ -51,6 +62,8 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 
 ## Acceptance criteria
 - Existing CMYK workflow remains the default and unaffected.
+- Embedded wide-gamut image profiles are converted to sRGB before CMYK
+  separation, with EXIF orientation preserved.
 - New mode produces valid continuous stroke-only SVG paths and runs through the current converter without special G-code handling.
 - Lines visibly follow coherent image structures; weak-structure regions use a stable fallback direction.
 - Darker channel regions produce greater appropriate ink coverage without pathological overplotting.

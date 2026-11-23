@@ -596,6 +596,16 @@
   strength and coherence now gate a shared luminance form, so weak tone falls
   back to each plate's screen direction. The current three-layer recipe remains
   software-selected only.
+  Status 2026-11-23 colour and time: wide-gamut source profiles are converted
+  to sRGB before separation, and open marks can be chained within an
+  operator-set adjacent gap. A speed-oriented continuous row style is also
+  available. The recipe measured at the start of this work drops from about
+  `23,500` marks to `10,596` with the default adjacent bridge. The later
+  Fine-detail recipe drops from `120,676` to `13,533` before planner
+  compaction; its exact set emits `7,884` M3 sequences and passes the strict
+  motion checker. The continuous row screen produces `530` / `482` marks for
+  the two recipes. A physical four-pass comparison must still choose between
+  image fidelity, visible connectors, and elapsed time.
   Acceptance: print a pre-cropped portrait with the README starting recipe
   after one HOME + REGISTER; inspect line separation, drag, overlay, and elapsed
   time; then record the selected recipe in a lab note and revise the README

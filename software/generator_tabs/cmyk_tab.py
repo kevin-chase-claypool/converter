@@ -300,6 +300,10 @@ class CmykTab(GeneratorTab):
         self.style.addItem("Line screen (tone pitch)", "lines")
         self.style.addItem("Edge-flow streamlines (structure tensor)", "edge_flow")
         self.style.addItem("Rectilinear fill (joined rows)", "rectilinear")
+        self.style.addItem(
+            "Continuous row screen (adjacent joins)",
+            "continuous",
+        )
         self.style.addItem("Crosshatch levels", "crosshatch")
         self.style.addItem("Wave screen - equidistant rows", "waves_even")
         self.style.addItem(
@@ -319,7 +323,9 @@ class CmykTab(GeneratorTab):
             "labeled legacy diagnostic restores tone-varying row depth while "
             "keeping the selected bed-compensation profile. Stored legacy "
             "values from older settings are promoted to this layout when "
-            "regenerated. Edge-flow streamlines follow one shared blurred "
+            "regenerated. Continuous row screen also bridges nearest adjacent "
+            "row runs, trading short visible connectors for far fewer pen "
+            "lifts. Edge-flow streamlines follow one shared blurred "
             "luminance structure, use each ink's fixed screen angle where that "
             "structure is weak, and vary each streamline's local ink fraction "
             "with tone. Extra layers deepen only the darker parts of that ramp."
@@ -392,6 +398,28 @@ class CmykTab(GeneratorTab):
             "field."
         )
         screen.addRow("Flow layers", self.flow_layers)
+        continuity_row = QWidget()
+        continuity_layout = QHBoxLayout(continuity_row)
+        continuity_layout.setContentsMargins(0, 0, 0, 0)
+        continuity_layout.setSpacing(4)
+        self.chain_marks = QCheckBox("Keep pen down")
+        self.chain_marks.setChecked(True)
+        self.chain_gap = double_spin(5.0, 0.5, 50.0, 0.5, 1, " mm")
+        continuity_layout.addWidget(self.chain_marks)
+        continuity_layout.addWidget(self.chain_gap, 1)
+        self.chain_marks.setToolTip(
+            "Chain the nearest open mark endpoints into the same M3/M5 "
+            "drawing stroke. A connector up to the shown gap remains visible "
+            "ink. Edge-flow also bridges up to 4 mm of tone-off gaps along "
+            "the same streamline. Raise the gap to spend more drawing time "
+            "to remove more pen lifts; lower it for a stricter image."
+        )
+        self.chain_gap.setToolTip(
+            "Maximum direct connector length between open screen marks when "
+            "Keep pen down is enabled. Closed shapes and tagged Wave rows "
+            "remain separate."
+        )
+        screen.addRow("Pen-down chain", continuity_row)
         self.detail_button = QPushButton("Fine detail")
         self.detail_button.setCheckable(True)
         self.detail_button.setToolTip(
@@ -696,6 +724,7 @@ class CmykTab(GeneratorTab):
         self._analysis = None
         self._analysis_key = None
         self._detail_preset_snapshot = None
+        self._pen_chain_stats = {}
         self._thread = None
         self._worker = None
         self._pending_save = False
@@ -716,6 +745,8 @@ class CmykTab(GeneratorTab):
         self.vary_wave_frequency.toggled.connect(
             self._update_wave_spacing_guard
         )
+        self.chain_marks.toggled.connect(self._update_wave_spacing_guard)
+        self.chain_gap.valueChanged.connect(self._update_wave_spacing_guard)
         self.contour_order.currentIndexChanged.connect(
             lambda *_: self._refresh_pass_summary()
         )
@@ -1172,6 +1203,8 @@ class CmykTab(GeneratorTab):
                 "flow_smoothing_mm": self.flow_smoothing.value(),
                 "flow_layers": self.flow_layers.value(),
                 "preserve_black_keylines": self.flow_keylines.isChecked(),
+                "chain_marks": self.chain_marks.isChecked(),
+                "chain_gap_mm": self.chain_gap.value(),
                 "dot_size_pct": self.dot_size.value(),
                 "solid_dots": self.solid_dots.isChecked(),
                 "levels": self.levels.value(),
@@ -1273,6 +1306,8 @@ class CmykTab(GeneratorTab):
             self.flow_keylines.setChecked(
                 bool(screen.get("preserve_black_keylines", False))
             )
+            self.chain_marks.setChecked(bool(screen.get("chain_marks", True)))
+            self.chain_gap.setValue(float(screen.get("chain_gap_mm", 5.0)))
             self.dot_size.setValue(float(screen["dot_size_pct"]))
             self.solid_dots.setChecked(bool(screen["solid_dots"]))
             self.levels.setValue(int(screen["levels"]))
@@ -1336,6 +1371,7 @@ class CmykTab(GeneratorTab):
         self._layers_key = None
         self._analysis = None
         self._analysis_key = None
+        self._pen_chain_stats = {}
         self._update_wave_spacing_guard()
         self._update_detail_preset_indicator()
         self._refresh_pass_summary()
@@ -1380,6 +1416,8 @@ class CmykTab(GeneratorTab):
             self.contour_order.currentData(),
             self.flow_smoothing.value(),
             self.flow_layers.value(),
+            self.chain_marks.isChecked(),
+            self.chain_gap.value(),
             self.dot_size.value(),
             self.solid_dots.isChecked(),
             self.theta_mode.value(),
@@ -1448,6 +1486,15 @@ class CmykTab(GeneratorTab):
             and self.preserve_wave_pitch.isChecked()
         )
 
+    def _pen_chain_active(self):
+        """Whether open per-ink marks may be joined into longer strokes."""
+        return (
+            not self.calibration_mode.isChecked()
+            and self.chain_marks.isChecked()
+            and self.style.currentData()
+            not in ("waves_even", "waves_zero", "tsp")
+        )
+
     def _update_wave_spacing_guard(self, _value=None):
         """Keep the guard meaningful for the selected screen style."""
         flow_selected = (
@@ -1468,6 +1515,15 @@ class CmykTab(GeneratorTab):
         self.flow_smoothing.setEnabled(flow_selected)
         self.flow_layers.setEnabled(flow_selected)
         self.flow_keylines.setEnabled(flow_selected)
+        chain_available = (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData()
+            not in ("waves_even", "waves_zero", "tsp")
+        )
+        self.chain_marks.setEnabled(chain_available)
+        self.chain_gap.setEnabled(
+            chain_available and self.chain_marks.isChecked()
+        )
         if hasattr(self, "pass_summary"):
             self._refresh_pass_summary()
 
@@ -1548,6 +1604,10 @@ class CmykTab(GeneratorTab):
                 "edge flow %.1f mm smoothing, %d layers"
                 % (self.flow_smoothing.value(), self.flow_layers.value())
             )
+        if self._pen_chain_active():
+            parts.append(
+                "pen-down chain up to %.1f mm" % self.chain_gap.value()
+            )
         if results is not None:
             errors = self._preflight_errors(results)
             warnings = self._preflight_warnings(results)
@@ -1621,6 +1681,7 @@ class CmykTab(GeneratorTab):
         style = self.style.currentData()
         layers = {}
         files = {}
+        pen_chain_stats = {}
         for index, channel in enumerate(converter.CHANNELS):
             marks = converter.screen_channel(
                 tones[channel],
@@ -1686,10 +1747,23 @@ class CmykTab(GeneratorTab):
                     and self._detail_preset_active()
                     else None
                 ),
+                flow_bridge_mm=(
+                    min(4.0, self.chain_gap.value()) / factor
+                    if style == "edge_flow"
+                    and self._pen_chain_active()
+                    else 0.0
+                ),
             )
             # Generator pages are plotted 1:1, so the tab's Artwork scale is
             # applied to the screened marks about the page centre here.
             marks = scale_polylines(marks, factor, width, height)
+            if self._pen_chain_active():
+                marks, pen_chain_stats[channel] = (
+                    converter.chain_nearby_contours(
+                        marks,
+                        max_gap_mm=self.chain_gap.value(),
+                    )
+                )
             if self.registration_marks.isChecked():
                 marks = list(marks) + self._registration_crosses()
             # Absolute paper-space corrections for this pen. Applied after
@@ -1705,6 +1779,7 @@ class CmykTab(GeneratorTab):
             files[channel] = str(
                 write_svg_document(f"cmyk-{channel}", document)
             )
+        self._pen_chain_stats = pen_chain_stats
         return layers, files, None
 
     def _build_calibration_layers(self):
@@ -2216,6 +2291,17 @@ class CmykTab(GeneratorTab):
                     if style == "edge_flow"
                     else None
                 ),
+                "pen_down_chain": {
+                    "enabled": self._pen_chain_active(),
+                    "max_gap_mm": self.chain_gap.value(),
+                    "local_flow_bridge_mm": (
+                        min(4.0, self.chain_gap.value())
+                        if style == "edge_flow"
+                        and self._pen_chain_active()
+                        else 0.0
+                    ),
+                    "channels": self._pen_chain_stats,
+                },
                 "pen_width_mm": self.pen_width.value(),
                 "dot_size_pct": self.dot_size.value(),
                 "path_tolerance_mm": self.path_tolerance.value(),

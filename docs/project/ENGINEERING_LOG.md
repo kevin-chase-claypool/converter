@@ -1,5 +1,40 @@
 # Engineering Log
 
+<a id="elog-20261123-cmyk-color-profile-pen-down"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Color-manage CMYK inputs and reduce adjacent pen lifts
+
+- The current portrait source carries a Display P3 ICC profile. The CMYK
+  pipeline previously interpreted its raw channel values as sRGB, which
+  shifted skin, foliage, and saturation before gray-component replacement.
+- CMYK image loading and Auto analysis now apply EXIF orientation and convert
+  embedded ICC profiles to sRGB with perceptual rendering. Unsupported or
+  malformed profiles fall back without preventing conversion.
+- The owner reported that pen-up cycles, not drawing distance alone, dominate
+  plot time. The saved Edge-flow recipe contained about `23,500` open marks
+  across four inks.
+- Edge-flow now bridges up to `4 mm` of tone-off gap along one streamline. A
+  separate nearest-endpoint chain joins open marks only within the operator's
+  **Keep pen down** gap, default `5.0 mm`. Closed shapes and tagged Wave rows
+  remain separate.
+- With those adjacent settings, the recipe measured at the start of the work
+  drops from `23,516` to `10,596` marks. A `12 mm` endpoint gap measures
+  `3,832`, but visibly adds longer diagonals and was not made the default.
+- The later active Fine-detail recipe drops from `120,676` raw marks to
+  `13,533` after the default chain. Its exact four-channel G-code emits `7,884`
+  M3 sequences and all four files pass
+  `tools/check_gcode_motion.py --strict`.
+- A new **Continuous row screen (adjacent joins)** joins nearest adjacent
+  rectilinear row runs and measures `530` / `482` marks for the two recipes.
+  It is a speed-oriented alternative, not an automatic replacement for
+  Edge-flow.
+- The focused CMYK/path-join suite passes `145` tests and complete converter
+  discovery passes `656` tests with one expected OpenGL-context skip.
+  Physical four-pass density, connector visibility, and pen-ink colour remain
+  unverified.
+- Evidence: `WSW-20261123-011`.
+- Category: windows-software, cmyk, color-management, display-p3, icc,
+  pen-down, path-chaining, continuous-screen, physical-validation-pending.
+
 <a id="elog-20261123-cmyk-fine-detail-edge-separation"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Strengthen Fine detail edge separation
 
