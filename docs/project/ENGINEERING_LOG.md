@@ -1,5 +1,35 @@
 # Engineering Log
 
+<a id="elog-20261123-cmyk-fine-detail-edge-separation"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Strengthen Fine detail edge separation
+
+- Fine detail had reduced tensor blur and layer stacking, but C/M/Y
+  streamlines still crossed directly beside the Black keylines. The resulting
+  physical overprint risk is that neighboring color buries the single Black
+  boundary.
+- The preset now enables a `60 %` unsharp mask at `1.5 mm` on paper. A
+  software comparison showed slightly better facial contrast without noise
+  severe enough to reject.
+- When keylines are active, C/M/Y coverage is reduced by `65 %` beside the
+  strongest coherent edges. Black alone receives the continuous keyline boost;
+  color remains independently seeded and tone-gated away from those edges.
+- Fine-detail active state now includes sharpening checkbox, amount, and
+  radius. The reversible snapshot captures and restores all three.
+- The keyline control is labeled **Continuous Black keylines (edge
+  separation)** so the paired color quieting is visible to the operator.
+- A synthetic edge regression verifies color ink length decreases under
+  quieting. Per-plate capture verifies C/M/Y receive `0.65` quieting while
+  Black does not.
+- A `600 px` comparison showed clearer eye, nostril, lip, tooth, and collar
+  boundaries than keylines without sharpening or color separation, while the
+  face retained its yellow/magenta density.
+- All `126` CMYK tab tests pass. Complete converter discovery passes `646`
+  tests with one expected OpenGL-context skip.
+- Physical four-pass ink spread, opacity, and paper response remain unverified.
+- Evidence: `WSW-20261123-010`.
+- Category: windows-software, cmyk, edge-flow, fine-detail, keylines,
+  sharpening, edge-separation, physical-validation-pending.
+
 <a id="elog-20261123-cmyk-fine-detail-reversible-toggle"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Make Fine detail a reversible toggle
 

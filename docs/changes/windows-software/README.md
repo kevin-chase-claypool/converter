@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-23 | `WSW-20261123-010` | implemented | [Strengthen Fine detail edge separation and sharpening](2026/2026-11-23-cmyk-fine-detail-edge-separation.md) | `cmyk`, `edge-flow`, `fine-detail`, `keylines`, `sharpening` |
 | 2026-11-23 | `WSW-20261123-009` | implemented | [Make Fine detail a reversible toggle](2026/2026-11-23-cmyk-fine-detail-reversible-toggle.md) | `cmyk`, `edge-flow`, `fine-detail`, `toggle`, `user-interface` |
 | 2026-11-23 | `WSW-20261123-008` | superseded | [Show whether the Fine detail preset is active](2026/2026-11-23-cmyk-fine-detail-state-indicator.md) | `cmyk`, `edge-flow`, `fine-detail`, `user-interface` |
 | 2026-11-23 | `WSW-20261123-007` | implemented | [Preserve Black portrait keylines and refine Edge-flow Auto color](2026/2026-11-23-cmyk-edge-flow-black-keylines.md) | `cmyk`, `edge-flow`, `keylines`, `portrait`, `color-balance` |

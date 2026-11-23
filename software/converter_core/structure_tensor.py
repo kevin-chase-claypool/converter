@@ -259,6 +259,7 @@ def _tone_gated_runs(
     minimum_length,
     edge_at=None,
     keyline_strength=0.0,
+    edge_quiet=0.0,
 ):
     """Split one traced path into local tone and optional keyline runs."""
     runs = []
@@ -278,17 +279,18 @@ def _tone_gated_runs(
                 ),
             )
         )
-        if (
-            layer == 0
-            and edge_at is not None
-            and keyline_strength > 0.0
+        if edge_at is not None and (
+            keyline_strength > 0.0 or edge_quiet > 0.0
         ):
             edge = min(1.0, max(0.0, float(edge_at(point[0], point[1]))))
             keyline = min(
                 1.0,
                 max(0.0, (edge - 0.30) / 0.45),
             )
-            coverage = max(coverage, keyline * keyline_strength)
+            if edge_quiet > 0.0:
+                coverage *= 1.0 - min(1.0, edge_quiet) * keyline
+            if layer == 0 and keyline_strength > 0.0:
+                coverage = max(coverage, keyline * keyline_strength)
         ink = (
             coverage > 0.0
             and _path_tone_threshold(
@@ -340,6 +342,7 @@ def trace_structure_streamlines(
     ink_floor,
     tone_at,
     keylines=False,
+    color_quiet=0.0,
     cancel_check=None,
 ):
     """Trace evenly spaced streamlines through one tone-derived tensor.
@@ -502,8 +505,13 @@ def trace_structure_streamlines(
                         path_key,
                         layer,
                         visible_minimum_length,
-                        sample_edge if keylines else None,
+                        (
+                            sample_edge
+                            if keylines or color_quiet > 0.0
+                            else None
+                        ),
                         0.92 if keylines else 0.0,
+                        color_quiet,
                     )
                     marks.extend(visible_runs)
                     if len(marks) > cap:

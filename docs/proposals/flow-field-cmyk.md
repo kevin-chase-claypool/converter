@@ -36,8 +36,9 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
   still matches; manual edits clear it
 - Fine detail is reversible: activation saves the prior edge-flow layout, and
   deactivation restores it and clears the checkmark
-- Optional Continuous Black keylines: preserve high-coherence structure
-  boundaries in the Black plate while leaving C/M/Y tone-gated
+- Optional Continuous Black keylines with edge separation: preserve
+  high-coherence boundaries in Black and reduce C/M/Y coverage beside them
+- Fine detail sharpening: 60 %, 1.5 mm unsharp mask on the photo luminance
 - Optional preview of each channel and composite
 
 ## Implementation plan

@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-23 | `WSW-20261123-010` | windows-software | implemented | [Strengthen Fine detail edge separation and sharpening](windows-software/2026/2026-11-23-cmyk-fine-detail-edge-separation.md) |
 | 2026-11-23 | `WSW-20261123-009` | windows-software | implemented | [Make Fine detail a reversible toggle](windows-software/2026/2026-11-23-cmyk-fine-detail-reversible-toggle.md) |
 | 2026-11-23 | `WSW-20261123-008` | windows-software | superseded | [Show whether the Fine detail preset is active](windows-software/2026/2026-11-23-cmyk-fine-detail-state-indicator.md) |
 | 2026-11-23 | `WSW-20261123-007` | windows-software | implemented | [Preserve Black portrait keylines and refine Edge-flow Auto color](windows-software/2026/2026-11-23-cmyk-edge-flow-black-keylines.md) |

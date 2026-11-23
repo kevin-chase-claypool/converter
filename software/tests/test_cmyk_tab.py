@@ -233,6 +233,51 @@ class ScreeningTests(unittest.TestCase):
         # keylines retain more of that path without changing where it runs.
         self.assertGreater(ink_length(keylined), ink_length(tone_gated) * 1.4)
 
+    def test_edge_flow_color_quiet_reduces_coverage_at_keylines(self):
+        size = 96
+        guide = self.np.zeros((size, size), dtype="float32")
+        guide[:, size // 2 :] = 1.0
+        tone = self.np.full((size, size), 0.30, dtype="float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+        common = {
+            "style": "edge_flow",
+            "spacing_mm": 8.0,
+            "angle_deg": 0.0,
+            "seed": 7,
+            "max_marks": 500,
+            "flow_smoothing_mm": 1.0,
+            "flow_layers": 2,
+            "depth_tone": guide,
+            "flow_guide": guide,
+        }
+
+        normal = converter.screen_channel(tone, geometry, **common)
+        quieted = converter.screen_channel(
+            tone,
+            geometry,
+            flow_color_quiet=0.65,
+            **common,
+        )
+
+        def ink_length(marks):
+            return sum(
+                math.hypot(
+                    second[0] - first[0],
+                    second[1] - first[1],
+                )
+                for line in marks
+                for first, second in zip(line, line[1:])
+            )
+
+        self.assertLess(ink_length(quieted), ink_length(normal) * 0.95)
+
     def test_edge_flow_plates_keep_independent_tone_networks(self):
         size = 96
         coords = self.np.arange(size, dtype="float32")
@@ -2551,6 +2596,8 @@ class CmykTabTests(unittest.TestCase):
         coverage = []
         pen_widths = []
         angles = []
+        keyline_flags = []
+        color_quiet = []
 
         def capture_guide(*args, **kwargs):
             guides.append(kwargs.get("flow_guide"))
@@ -2558,8 +2605,11 @@ class CmykTabTests(unittest.TestCase):
             coverage.append(kwargs.get("flow_coverage"))
             pen_widths.append(kwargs.get("pen_diameter_mm"))
             angles.append(kwargs.get("angle_deg"))
+            keyline_flags.append(kwargs.get("flow_keylines"))
+            color_quiet.append(kwargs.get("flow_color_quiet"))
             return []
 
+        tab.flow_keylines.setChecked(True)
         with mock.patch.object(
             converter,
             "screen_channel",
@@ -2589,6 +2639,8 @@ class CmykTabTests(unittest.TestCase):
                 for channel in converter.CHANNELS
             ],
         )
+        self.assertEqual(keyline_flags, [False, False, False, True])
+        self.assertEqual(color_quiet, [0.65, 0.65, 0.65, 0.0])
 
     def test_analysis_worker_reports_strategy_split(self):
         from generator_tabs.cmyk_tab import ProgramAnalysisWorker
@@ -3586,6 +3638,9 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(tab.flow_smoothing.value(), 1.5, places=1)
         self.assertEqual(tab.flow_layers.value(), 2)
         self.assertTrue(tab.flow_keylines.isChecked())
+        self.assertTrue(tab.sharpen.isChecked())
+        self.assertAlmostEqual(tab.sharpen_amount.value(), 60.0, places=1)
+        self.assertAlmostEqual(tab.sharpen_radius.value(), 1.5, places=1)
         self.assertAlmostEqual(tab.path_tolerance.value(), 0.10, places=2)
         self.assertIn("Fine detail", tab.status.text())
 
@@ -3618,6 +3673,11 @@ class CmykTabTests(unittest.TestCase):
         tab.flow_keylines.setChecked(False)
         self.assertFalse(tab.detail_button.isChecked())
 
+        tab.detail_button.click()
+        self.assertTrue(tab.detail_button.isChecked())
+        tab.sharpen_amount.setValue(40.0)
+        self.assertFalse(tab.detail_button.isChecked())
+
     def test_fine_detail_toggle_restores_previous_controls(self):
         tab = self.make_tab()
         tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
@@ -3628,6 +3688,7 @@ class CmykTabTests(unittest.TestCase):
         tab.flow_layers.setValue(5)
         tab.path_tolerance.setValue(0.15)
         tab.flow_keylines.setChecked(False)
+        tab.sharpen.setChecked(False)
 
         tab.detail_button.click()
         self.assertTrue(tab.detail_button.isChecked())
@@ -3640,6 +3701,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(tab.flow_layers.value(), 5)
         self.assertAlmostEqual(tab.path_tolerance.value(), 0.15, places=2)
         self.assertFalse(tab.flow_keylines.isChecked())
+        self.assertFalse(tab.sharpen.isChecked())
         self.assertIn("Fine detail off", tab.status.text())
 
     def test_fine_detail_toggle_snapshot_round_trips(self):
@@ -3651,6 +3713,7 @@ class CmykTabTests(unittest.TestCase):
         tab.flow_layers.setValue(5)
         tab.path_tolerance.setValue(0.15)
         tab.flow_keylines.setChecked(False)
+        tab.sharpen.setChecked(False)
         tab.detail_button.click()
 
         state = tab.artwork_layout_state()
@@ -3664,6 +3727,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(restored.flow_smoothing.value(), 4.0, places=1)
         self.assertEqual(restored.flow_layers.value(), 5)
         self.assertFalse(restored.flow_keylines.isChecked())
+        self.assertFalse(restored.sharpen.isChecked())
 
     def test_fine_detail_old_active_recipe_uses_off_fallback(self):
         tab = self.make_tab()
@@ -3684,7 +3748,29 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(restored.flow_layers.value(), 3)
         self.assertAlmostEqual(restored.path_tolerance.value(), 0.15, places=2)
         self.assertFalse(restored.flow_keylines.isChecked())
+        self.assertFalse(restored.sharpen.isChecked())
         self.assertIn("standard Edge-flow defaults", restored.status.text())
+
+    def test_old_fine_detail_snapshot_without_sharpen_fields_restores(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.pen_width.setValue(0.6)
+        tab.scale_pct.setValue(260)
+        tab.sharpen.setChecked(False)
+        tab.detail_button.click()
+        state = tab.artwork_layout_state()
+        previous = state["fine_detail_previous"]
+        previous.pop("sharpen")
+        previous.pop("sharpen_pct")
+        previous.pop("sharpen_radius_mm")
+
+        restored = self.make_tab()
+        self.assertTrue(restored.restore_artwork_layout_state(state))
+        restored.detail_button.click()
+
+        self.assertFalse(restored.detail_button.isChecked())
+        self.assertFalse(restored.sharpen.isChecked())
+        self.assertNotIn("unavailable", restored.status.text())
 
     def test_registration_crosses_are_identical_on_every_ink(self):
         tab = self.make_tab()

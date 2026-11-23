@@ -592,15 +592,19 @@ Current tools:
   Flow smoothing to about `2.5` pen widths (clamped to `1.2-2.0 mm`), uses two
   layers for pens at or below `0.7 mm` and three layers above that, and lowers
   Path tolerance to at most `0.10 mm`. It also enables **Continuous Black
-  keylines**, which retain the strongest coherent luminance boundaries in the
-  Black plate while the color plates remain tone-gated. It selects Edge-flow
-  if another screen style was active and intentionally changes the saved
-  layout; Auto remains image-only. For a `0.6 mm` pen at `260 %` scale this
-  gives a `0.35 mm` source pitch (`0.91 mm` effective), `1.5 mm` smoothing,
-  two layers, Black keylines, and `0.10 mm` tolerance. The button is checked
+  keylines (edge separation)**: the Black plate keeps the strongest coherent
+  boundaries continuous, while C/M/Y reduce coverage by `65 %` beside those
+  same high-confidence edges. A mild `60 %` unsharp mask at `1.5 mm` restores
+  small facial contrast without changing the preset's physical spacing. It
+  selects Edge-flow if another screen style was active and intentionally
+  changes the saved layout; Auto remains image-only. For a `0.6 mm` pen at
+  `260 %` scale this gives a `0.35 mm` source pitch (`0.91 mm` effective),
+  `1.5 mm` smoothing, two layers, Black keylines with color-edge separation,
+  and `0.10 mm` tolerance. The button is checked
   and reads **Fine detail ✓** while those controls still match the preset.
   Changing the pen, scale, pitch, smoothing, layers, tolerance, keyline
-  choice, screen style, or calibration mode clears the indicator. Clicking
+  choice, sharpening controls, screen style, or calibration mode clears the
+  indicator. Clicking
   again while active restores the controls saved immediately before Fine
   detail was applied and clears the checkmark. The snapshot is stored in the
   artwork recipe so reopening the same image preserves the toggle's prior
@@ -963,7 +967,7 @@ work with no input (optional mesh/image sources are noted below).
 | Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
 | CMYK | Auto levels on, rectilinear fill at 0.10 mm pitch, saturation 115 %, contrast 285 %, brightness 170 %, ink gamma 1.40, black (GCR) 95 %, 40000 marks/ink, resolution 10000 px, weights 100/100/100/100 %, artwork scale 280 % | Needs an image; Preview plans each ink in the background and Save writes four files. Dense photo screens take hours to plot; raise pitch or lower Max marks/ink for a faster pass. |
-| CMYK edge-flow | Auto levels on; saturation 110 %, contrast 220 %, brightness 105 %, sharpening off; gamma 0.75, GCR 80 %, resolution 1600 px, weights 100/100/100/90 %; keep the operator-picked Edge-flow pitch and artwork scale. Use **Fine detail** for pen-aware pitch/smoothing/layers, Continuous Black keylines, and tolerance no larger than 0.10 mm. | Software-selected starting point for a pre-cropped portrait. Auto adjusts image processing only and does not overwrite the saved screen layout. Each ink applies its own mask, seed, continuous local tone fraction, and fallback screen over one strength-gated luminance flow; the Black plate can keep coherent boundaries continuous while color remains tone-gated. Save writes four separate overprinted G-code files. Check density and pen-set separation on paper before using it as a production recipe. |
+| CMYK edge-flow | Auto levels on; saturation 110 %, contrast 220 %, brightness 105 %, sharpening off; gamma 0.75, GCR 80 %, resolution 1600 px, weights 100/100/100/90 %; keep the operator-picked Edge-flow pitch and artwork scale. Use **Fine detail** for pen-aware pitch/smoothing/layers, Black keylines with color-edge separation, 60 % / 1.5 mm sharpening, and tolerance no larger than 0.10 mm. | Software-selected starting point for a pre-cropped portrait. Auto adjusts image processing only and does not overwrite the saved screen layout. Each ink applies its own mask, seed, continuous local tone fraction, and fallback screen over one strength-gated luminance flow. Fine detail keeps coherent Black boundaries continuous and quiets color beside them. Save writes four separate overprinted G-code files. Check density and pen-set separation on paper before using it as a production recipe. |
 | 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
 | Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |
 | Snowflake | 6 arms, depth 3, length 45 %, branch angle 35 deg, branch scale 55 %, jitter 8 deg / 15 % | Raise depth for finer detail; cap is 5. |

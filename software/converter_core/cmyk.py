@@ -1286,6 +1286,7 @@ def screen_channel(
     flow_layers=3,
     flow_guide=None,
     flow_keylines=False,
+    flow_color_quiet=0.0,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
@@ -1316,6 +1317,9 @@ def screen_channel(
     ``WAVE_MIN_EDGE_GAP_MM`` for callers that do not apply a later artwork scale.
     ``flow_keylines`` keeps the strongest coherent structure boundaries
     continuous in the current plate. The CMYK tab enables it only for Black.
+    ``flow_color_quiet`` reduces coverage beside those coherent boundaries;
+    the CMYK tab applies it only to the color plates when Black keylines are
+    active.
     The legacy ``waves`` and ``waves_zero`` styles are promoted to the
     equidistant ``waves_even`` geometry unless ``allow_variable_wave_spacing``
     is explicitly true. Diagnostic comparison tools use that opt-in; normal
@@ -1462,6 +1466,7 @@ def screen_channel(
             INK_FLOOR,
             darkness,
             keylines=bool(flow_keylines),
+            color_quiet=max(0.0, min(1.0, float(flow_color_quiet))),
             cancel_check=cancel_check,
         )
     else:

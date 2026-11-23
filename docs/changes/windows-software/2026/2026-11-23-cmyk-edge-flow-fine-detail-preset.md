@@ -19,6 +19,7 @@ related:
   - WSW-20261123-005
   - WSW-20261123-007
   - WSW-20261123-008
+  - WSW-20261123-010
   - docs/proposals/flow-field-cmyk.md
 ---
 
@@ -60,6 +61,7 @@ between strokes.
   tolerance.
 - `WSW-20261123-007` extends this preset to enable Continuous Black keylines.
 - `WSW-20261123-008` adds an active-state indicator to the preset button.
+- `WSW-20261123-010` adds edge separation and mild luminance sharpening.
 
 ## Verification
 

@@ -38,7 +38,8 @@ checked every time.
 ## Implementation
 
 - Activation snapshots screen style, calibration state, pitch, smoothing,
-  layer count, Path tolerance, and Black-keyline state before applying.
+  layer count, Path tolerance, Black-keyline state, and sharpening controls
+  before applying.
 - A click while checked restores that snapshot. A click while unchecked saves
   the current controls and applies the preset.
 - The snapshot is saved in the artwork recipe with

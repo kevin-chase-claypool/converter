@@ -397,17 +397,20 @@ class CmykTab(GeneratorTab):
         self.detail_button.setToolTip(
             "Edge-flow only: set a pen-aware portrait screen at 1.5 pen "
             "widths, smoothing near 2.5 pen widths, fewer density layers, "
-            "and Path tolerance no larger than 0.10 mm."
+            "Continuous Black keylines, a mild unsharp mask, and Path "
+            "tolerance no larger than 0.10 mm."
         )
         self.detail_button.clicked.connect(self.toggle_detail_preset)
         screen.addRow("Precision", self.detail_button)
-        self.flow_keylines = QCheckBox("Continuous Black keylines")
+        self.flow_keylines = QCheckBox(
+            "Continuous Black keylines (edge separation)"
+        )
         self.flow_keylines.setChecked(False)
         self.flow_keylines.setToolTip(
             "Edge-flow only: keep the strongest coherent luminance boundaries "
-            "continuous in the Black plate. Tone-gated color plates remain "
-            "unchanged, so eyes, nostrils, lip edges, teeth, and collar seams "
-            "gain a stable keyline without a blanket outline."
+            "continuous in the Black plate. C/M/Y are lightly quieted beside "
+            "those same boundaries so eyes, nostrils, lip edges, teeth, and "
+            "collar seams read without a blanket outline."
         )
         screen.addRow("Keylines", self.flow_keylines)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
@@ -729,6 +732,9 @@ class CmykTab(GeneratorTab):
             self.flow_layers.valueChanged,
             self.path_tolerance.valueChanged,
             self.flow_keylines.toggled,
+            self.sharpen.toggled,
+            self.sharpen_amount.valueChanged,
+            self.sharpen_radius.valueChanged,
             self.calibration_mode.toggled,
         ):
             signal.connect(self._update_detail_preset_indicator)
@@ -929,6 +935,9 @@ class CmykTab(GeneratorTab):
             and self.flow_layers.value() == target["layers"]
             and self.path_tolerance.value()
             <= target["tolerance"] + 1e-6
+            and self.sharpen.isChecked()
+            and abs(self.sharpen_amount.value() - 60.0) <= 0.1
+            and abs(self.sharpen_radius.value() - 1.5) <= 0.01
         )
 
     def _detail_control_state(self):
@@ -941,6 +950,9 @@ class CmykTab(GeneratorTab):
             "layers": self.flow_layers.value(),
             "tolerance": self.path_tolerance.value(),
             "keylines": self.flow_keylines.isChecked(),
+            "sharpen": self.sharpen.isChecked(),
+            "sharpen_pct": self.sharpen_amount.value(),
+            "sharpen_radius_mm": self.sharpen_radius.value(),
         }
 
     def _restore_detail_control_state(self, state):
@@ -959,6 +971,13 @@ class CmykTab(GeneratorTab):
             self.flow_layers.setValue(int(state["layers"]))
             self.path_tolerance.setValue(float(state["tolerance"]))
             self.flow_keylines.setChecked(bool(state["keylines"]))
+            self.sharpen.setChecked(bool(state.get("sharpen", False)))
+            self.sharpen_amount.setValue(
+                float(state.get("sharpen_pct", 100.0))
+            )
+            self.sharpen_radius.setValue(
+                float(state.get("sharpen_radius_mm", 2.5))
+            )
         except (KeyError, TypeError, ValueError):
             return False
         self._update_detail_preset_indicator()
@@ -981,6 +1000,9 @@ class CmykTab(GeneratorTab):
                 "layers": 3,
                 "tolerance": 0.15,
                 "keylines": False,
+                "sharpen": False,
+                "sharpen_pct": self.sharpen_amount.value(),
+                "sharpen_radius_mm": self.sharpen_radius.value(),
             }
         if self._restore_detail_control_state(snapshot):
             message = (
@@ -1012,8 +1034,8 @@ class CmykTab(GeneratorTab):
         base = (
             "Edge-flow only: set a pen-aware portrait screen at 1.5 pen "
             "widths, smoothing near 2.5 pen widths, fewer density layers, "
-            "Continuous Black keylines, and Path tolerance no larger than "
-            "0.10 mm."
+            "Continuous Black keylines, a 60 % / 1.5 mm unsharp mask, and "
+            "Path tolerance no larger than 0.10 mm."
         )
         self.detail_button.setToolTip(
             base
@@ -1044,6 +1066,9 @@ class CmykTab(GeneratorTab):
         self.flow_smoothing.setValue(target["smoothing"])
         self.flow_layers.setValue(target["layers"])
         self.flow_keylines.setChecked(True)
+        self.sharpen.setChecked(True)
+        self.sharpen_amount.setValue(60.0)
+        self.sharpen_radius.setValue(1.5)
         self.path_tolerance.setValue(
             min(self.path_tolerance.value(), target["tolerance"])
         )
@@ -1055,6 +1080,7 @@ class CmykTab(GeneratorTab):
             f"({effective_pitch / pen:.2f} pen widths); Flow smoothing "
             f"{self.flow_smoothing.value():.1f} mm; "
             f"Flow layers {self.flow_layers.value()}; Black keylines on; "
+            f"Sharpen 60 % / 1.5 mm; "
             f"Path tolerance "
             f"{self.path_tolerance.value():.2f} mm. Preview to compare."
         )
@@ -1640,6 +1666,13 @@ class CmykTab(GeneratorTab):
                     style == "edge_flow"
                     and channel == "k"
                     and self.flow_keylines.isChecked()
+                ),
+                flow_color_quiet=(
+                    0.65
+                    if style == "edge_flow"
+                    and channel != "k"
+                    and self.flow_keylines.isChecked()
+                    else 0.0
                 ),
             )
             # Generator pages are plotted 1:1, so the tab's Artwork scale is
