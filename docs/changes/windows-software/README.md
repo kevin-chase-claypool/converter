@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-22 | `WSW-20261122-001` | implemented | [Normalize CMYK row-lock translation across all four inks](2026/2026-11-22-cmyk-shared-row-lock-translation.md) | `cmyk`, `registration`, `row-lock`, `bed-compensation`, `shared-translation`, `g54`, `p100` |
 | 2026-11-21 | `WSW-20261121-003` | verified | [Finalize the owner-reviewed Word report](2026/2026-11-21-final-report-word-revision.md) | `report`, `editorial`, `word`, `final-revision` |
 | 2026-11-21 | `WSW-20261121-002` | verified | [Show the first and latest bed-compensation results](2026/2026-11-21-report-dense-v3-before-after.md) | `report`, `bed-calibration`, `bed-compensation`, `dense-mesh`, `before-after` |
 | 2026-11-21 | `WSW-20261121-001` | verified | [Add A-axis command-rate equations to the report](2026/2026-11-21-a-axis-rate-equations.md) | `report`, `theta`, `rate-limit`, `equations` |

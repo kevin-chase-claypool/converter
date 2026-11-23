@@ -38,6 +38,7 @@ FAST_COMPENSATION_PROBE_SAMPLES = 4
 FAST_COMPENSATION_PROBE_TOLERANCE_FRACTION = 0.25
 ROW_LOCK_ALONG_SAMPLES = 129
 ROW_LOCK_ACROSS_SAMPLES = 33
+ROW_LOCK_TRANSLATION_SAMPLES = 65
 
 
 def _finite(value, name):
@@ -360,6 +361,82 @@ class RowLockedBedCompensation:
     row_coordinates_mm: tuple[float, ...]
     across_samples: int
     corrections_bed_mm: tuple[tuple[tuple[float, float], ...], ...]
+    translation_domain_radius_mm: float
+    translation_samples_per_axis: int
+    translation_sample_count: int
+    raw_translation_means_mm: tuple[tuple[float, float], ...]
+    common_translation_mm: tuple[float, float]
+
+    @staticmethod
+    def _interpolate_row(
+        rows: tuple[tuple[float, float], ...],
+        coordinates: tuple[float, ...],
+        along_mm: float,
+    ) -> tuple[float, float]:
+        if along_mm <= coordinates[0]:
+            return rows[0]
+        if along_mm >= coordinates[-1]:
+            return rows[-1]
+        position = (
+            (along_mm - coordinates[0])
+            / (coordinates[-1] - coordinates[0])
+            * (len(coordinates) - 1)
+        )
+        lower = int(position)
+        fraction = position - lower
+        first = rows[lower]
+        second = rows[lower + 1]
+        return (
+            first[0] * (1.0 - fraction) + second[0] * fraction,
+            first[1] * (1.0 - fraction) + second[1] * fraction,
+        )
+
+    @classmethod
+    def _normalize_translation(
+        cls,
+        projected_angles: tuple,
+        row_coordinates: tuple[float, ...],
+        screen_angle_deg: float,
+        radius_mm: float,
+        samples_per_axis: int,
+    ):
+        points = row_lock_translation_points(radius_mm, samples_per_axis)
+        if not points:
+            raise ValueError("row-lock translation domain has no samples")
+        screen_radians = math.radians(-screen_angle_deg)
+        cosine = math.cos(screen_radians)
+        sine = math.sin(screen_radians)
+        raw_means = []
+        normalized_angles = []
+        for rows in projected_angles:
+            mean_x = 0.0
+            mean_y = 0.0
+            projected = []
+            for x_mm, y_mm in points:
+                along = x_mm * cosine + y_mm * sine
+                projected.append(
+                    cls._interpolate_row(
+                        rows, row_coordinates, along
+                    )
+                )
+                mean_x += projected[-1][0]
+                mean_y += projected[-1][1]
+            mean = (mean_x / len(points), mean_y / len(points))
+            raw_means.append(mean)
+            # The measured profile's fiducial fit already removed common sheet
+            # translation. Re-adding the arithmetic channel mean would
+            # reintroduce a registration translation that P100 owns.
+            normalized_angles.append(
+                tuple(
+                    (value[0] - mean[0], value[1] - mean[1])
+                    for value in rows
+                )
+            )
+        return (
+            tuple(normalized_angles),
+            tuple(raw_means),
+            len(points),
+        )
 
     @classmethod
     def from_profile(
@@ -423,13 +500,30 @@ class RowLockedBedCompensation:
                     )
                 )
             projected_angles.append(tuple(row))
+        projected_angles = tuple(projected_angles)
+        (
+            projected_angles,
+            raw_translation_means,
+            translation_sample_count,
+        ) = cls._normalize_translation(
+            projected_angles,
+            row_coordinates,
+            screen_angle,
+            radius,
+            ROW_LOCK_TRANSLATION_SAMPLES,
+        )
         return cls(
             profile=profile,
             screen_angle_deg=screen_angle,
             angle_values_deg=angle_values,
             row_coordinates_mm=row_coordinates,
             across_samples=across_samples,
-            corrections_bed_mm=tuple(projected_angles),
+            corrections_bed_mm=projected_angles,
+            translation_domain_radius_mm=radius,
+            translation_samples_per_axis=ROW_LOCK_TRANSLATION_SAMPLES,
+            translation_sample_count=translation_sample_count,
+            raw_translation_means_mm=raw_translation_means,
+            common_translation_mm=(0.0, 0.0),
         )
 
     @property
@@ -470,12 +564,17 @@ class RowLockedBedCompensation:
 
     @property
     def fingerprint(self) -> str:
-        payload = "%s|row-lock|%.9f|%s|%d|%d" % (
+        raw_means = ",".join(
+            "%.9f,%.9f" % mean for mean in self.raw_translation_means_mm
+        )
+        payload = "%s|row-lock|%.9f|%s|%d|%d|zero-shared|%d|%s" % (
             self.full_profile_fingerprint,
             self.screen_angle_deg,
             ",".join("%.9f" % value for value in self.angle_values_deg),
             len(self.row_coordinates_mm),
             self.across_samples,
+            self.translation_samples_per_axis,
+            raw_means,
         )
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:12]
 
@@ -543,6 +642,100 @@ class RowLockedBedCompensation:
             bed_x * cosine - bed_y * sine,
             bed_x * sine + bed_y * cosine,
         )
+
+
+def row_lock_translation_points(
+    radius_mm: float,
+    samples_per_axis: int = ROW_LOCK_TRANSLATION_SAMPLES,
+):
+    """Deterministic common bed-frame samples for cross-ink normalization."""
+    radius = max(0.0, _finite(radius_mm, "row-lock translation radius"))
+    samples = max(3, int(samples_per_axis))
+    points = []
+    for row_index in range(samples):
+        y_mm = -radius + 2.0 * radius * row_index / (samples - 1)
+        for column_index in range(samples):
+            x_mm = -radius + 2.0 * radius * column_index / (samples - 1)
+            if math.hypot(x_mm, y_mm) <= radius + 1e-9:
+                points.append((x_mm, y_mm))
+    return tuple(points)
+
+
+@dataclass(frozen=True)
+class RowLockedBedCompensationSet:
+    """Angle-specific row-lock projections normalized once for a CMYK set."""
+
+    profile_fingerprint: str
+    screen_angles_deg: tuple[float, ...]
+    projections: tuple[RowLockedBedCompensation, ...]
+    common_translation_mm: tuple[float, float]
+    translation_domain_radius_mm: float
+    translation_samples_per_axis: int
+    translation_sample_count: int
+
+    def for_screen_angle(self, screen_angle_deg: float):
+        angle = _finite(screen_angle_deg, "Wave screen angle") % 180.0
+        for projection in self.projections:
+            if abs(projection.screen_angle_deg - angle) <= 1e-9:
+                return projection
+        raise ValueError(
+            "no row-lock projection was prepared for %.3f deg" % angle
+        )
+
+    @property
+    def fingerprint(self) -> str:
+        payload = "%s|%s|%s" % (
+            self.profile_fingerprint,
+            ",".join(
+                "%.9f" % angle for angle in self.screen_angles_deg
+            ),
+            ",".join(projection.fingerprint for projection in self.projections),
+        )
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:12]
+
+
+def row_locked_bed_compensation_set(
+    profile: BedCompensationProfile | None,
+    screen_angles_deg: Sequence[float],
+    along_samples: int = ROW_LOCK_ALONG_SAMPLES,
+    across_samples: int = ROW_LOCK_ACROSS_SAMPLES,
+    bed_angle_deg: float | None = None,
+):
+    """Build one shared-translation projection for every supplied ink angle."""
+    if profile is None or profile.identity:
+        return None
+    angles = tuple(
+        sorted(
+            {
+                _finite(angle, "Wave screen angle") % 180.0
+                for angle in screen_angles_deg
+            }
+        )
+    )
+    if not angles:
+        raise ValueError("row-lock projection set needs a screen angle")
+    projections = tuple(
+        RowLockedBedCompensation.from_profile(
+            profile,
+            angle,
+            along_samples=along_samples,
+            across_samples=across_samples,
+            bed_angle_deg=bed_angle_deg,
+        )
+        for angle in angles
+    )
+    first = projections[0]
+    return RowLockedBedCompensationSet(
+        profile_fingerprint=profile.fingerprint,
+        screen_angles_deg=angles,
+        projections=projections,
+        # Zero is intentional: the profile fit already removed common sheet
+        # translation, and P100 remains the sole registration authority.
+        common_translation_mm=(0.0, 0.0),
+        translation_domain_radius_mm=first.translation_domain_radius_mm,
+        translation_samples_per_axis=first.translation_samples_per_axis,
+        translation_sample_count=first.translation_sample_count,
+    )
 
 
 def row_locked_bed_compensation(

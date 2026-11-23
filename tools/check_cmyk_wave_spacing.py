@@ -77,6 +77,33 @@ def load_manifest(path: Path) -> dict:
                 raise ValueError(
                     f"row-locked projection is inactive for {channel}"
                 )
+        if int(data.get("version", 0)) >= 4:
+            normalization = compensation.get(
+                "translation_normalization", {}
+            )
+            if normalization.get("mode") != "shared_zero_mean":
+                raise ValueError(
+                    "row-locked manifest has no shared translation "
+                    "normalization"
+                )
+            common = normalization.get("common_mean_mm")
+            try:
+                common_x, common_y = (float(value) for value in common)
+            except (TypeError, ValueError) as error:
+                raise ValueError(
+                    "shared translation manifest has no common mean"
+                ) from error
+            if abs(common_x) > 1e-9 or abs(common_y) > 1e-9:
+                raise ValueError(
+                    "shared translation manifest does not use zero common mean"
+                )
+            raw_means = compensation.get(
+                "per_channel_raw_translation_means_mm", {}
+            )
+            if set(raw_means) != set(LABELS):
+                raise ValueError(
+                    "row-locked manifest has incomplete raw translation means"
+                )
     return data
 
 

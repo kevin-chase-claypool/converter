@@ -137,6 +137,49 @@ class CheckCmykWaveSpacingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "raw bed compensation"):
             self.checker.load_manifest(path)
 
+    def test_manifest_requires_zero_shared_translation_for_version_4(self):
+        folder = Path(tempfile.mkdtemp(prefix="cmyk-wave-manifest-"))
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = folder / "set.json"
+        data = {
+            "kind": "cmyk-print-set",
+            "version": 4,
+            "bed_motion": "XY only (bed parked, precise)",
+            "bed_compensation_path": "bed.json",
+            "bed_compensation": {
+                "mode": "row_locked_projection",
+                "profile_fingerprint": "f85ec410dbac",
+                "translation_normalization": {
+                    "mode": "shared_zero_mean",
+                    "common_mean_mm": [0.0, 0.0],
+                },
+                "per_channel_raw_translation_means_mm": {
+                    channel: [[0.1, -0.2]] for channel in ("c", "m", "y", "k")
+                },
+                "per_channel_max_correction_mm": {
+                    channel: 0.5 for channel in ("c", "m", "y", "k")
+                },
+            },
+            "screen": {
+                "style": "waves_even",
+                "preserve_exact_row_pitch": True,
+            },
+        }
+        path.write_text(json.dumps(data), encoding="utf-8")
+
+        self.assertEqual(
+            self.checker.load_manifest(path)["version"], 4
+        )
+
+        data["bed_compensation"]["translation_normalization"][
+            "common_mean_mm"
+        ] = [0.1, 0.0]
+        path.write_text(json.dumps(data), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "zero common mean"):
+            self.checker.load_manifest(path)
+
     def test_manifest_requires_rotating_rows_to_share_the_angle_lock(self):
         folder = Path(tempfile.mkdtemp(prefix="cmyk-wave-manifest-"))
         self.addCleanup(

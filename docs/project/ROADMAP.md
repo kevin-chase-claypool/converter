@@ -499,6 +499,16 @@
   holds the spread below `0.005 mm` while retaining roughly `52-80°` of A
   travel; the controlled move count rises by about `50-65 %`. A physical
   four-pass print and elapsed-time comparison remain open.
+  Status 2026-11-22 cross-channel translation: row-lock compensation now
+  normalizes cyan/magenta/yellow/black on one common domain and substitutes a
+  shared zero translation. The CMYK worker prepares all four projections once,
+  so save order cannot select the offset. The red emission regression measured
+  `0.059483 mm` cyan-to-yellow before the fix and now holds all four means
+  within `0.0002 mm`; both fixed-bed and Xθ/Yθ row-spacing regressions remain
+  below `0.005 mm`. Local field differences remain (up to about `0.75 mm`
+  software-coordinate delta relative to yellow), so full overlay/warp
+  correction is still unchecked. A fresh four-pass physical test after one
+  HOME + REGISTER is the remaining acceptance gate.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

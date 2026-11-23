@@ -2068,6 +2068,60 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertEqual(set(results), set(converter.CHANNELS))
 
+    def test_analysis_worker_prepares_the_row_lock_set_once(self):
+        from generator_tabs.cmyk_tab import ProgramAnalysisWorker
+
+        host = FakeHost(self.image_path)
+        tab = self.make_tab(host)
+        tab._ensure_layers()
+        seen = []
+        analyze = host.analyze_program
+
+        def recording_analyze(path, settings, cancel_check=None):
+            seen.append(
+                (
+                    settings.row_lock_screen_angle_deg,
+                    settings.row_lock_projection.fingerprint,
+                )
+            )
+            return analyze(path, settings, cancel_check)
+
+        host.analyze_program = recording_analyze
+        defaults = converter.default_settings()
+        settings = converter.Settings(
+            row_locked_compensation=True,
+            bed_compensation_path=defaults.bed_compensation_path,
+        )
+        worker = ProgramAnalysisWorker(
+            host,
+            settings,
+            converter.DEFAULT_MOTION_ESTIMATE_SCALE,
+            [
+                (channel, tab._layer_files[channel])
+                for channel in converter.CHANNELS
+            ],
+        )
+        results = {}
+        worker.finished.connect(results.update)
+
+        with mock.patch.object(
+            converter,
+            "row_locked_bed_compensation_set",
+            wraps=converter.row_locked_bed_compensation_set,
+        ) as prepare:
+            worker.run()
+
+        prepare.assert_called_once()
+        self.assertEqual(set(results), set(converter.CHANNELS))
+        self.assertEqual(
+            {angle for angle, _fingerprint in seen},
+            set(converter.SCREEN_ANGLES_DEG.values()),
+        )
+        self.assertEqual(
+            len({fingerprint for _angle, fingerprint in seen}),
+            len(converter.CHANNELS),
+        )
+
     def test_kinematics_bullets_override_the_settings(self):
         tab = self.make_tab()
         self.assertEqual(
@@ -2398,6 +2452,23 @@ class CmykTabTests(unittest.TestCase):
                 "gcode": f"; {channel}\nG1 X0 Y0\n",
                 "lines": 2,
                 "checks": dict(checks),
+                "compensation": {
+                    "mode": "row_locked_projection",
+                    "projected_max_correction_mm": 0.5,
+                    "raw_translation_means_mm": [
+                        [0.17, 0.16],
+                        [-0.02, 0.23],
+                        [0.21, 0.11],
+                        [0.08, 0.21],
+                        [0.00, 0.00],
+                        [0.00, 0.00],
+                        [0.00, 0.00],
+                        [0.00, 0.00],
+                    ],
+                    "common_translation_mm": [0.0, 0.0],
+                    "translation_domain_radius_mm": 180.0,
+                    "translation_samples_per_axis": 65,
+                },
             }
             for channel in converter.CHANNELS
         }
@@ -2406,7 +2477,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertTrue(manifest.exists())
         data = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(data["kind"], "cmyk-print-set")
-        self.assertEqual(data["version"], 3)
+        self.assertEqual(data["version"], 4)
         self.assertAlmostEqual(data["pen_offsets_mm"]["m"][0], 0.75)
         self.assertEqual(set(data["preflight"]), set(converter.CHANNELS))
         self.assertEqual(
@@ -2455,6 +2526,20 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(
             data["bed_compensation"]["profile_fingerprint"],
             "f85ec410dbac",
+        )
+        normalization = data["bed_compensation"][
+            "translation_normalization"
+        ]
+        self.assertEqual(normalization["mode"], "shared_zero_mean")
+        self.assertEqual(normalization["domain"], "compensation_coverage_disk")
+        self.assertEqual(normalization["common_mean_mm"], [0.0, 0.0])
+        self.assertEqual(
+            set(
+                data["bed_compensation"][
+                    "per_channel_raw_translation_means_mm"
+                ]
+            ),
+            set(converter.CHANNELS),
         )
         self.assertEqual(
             set(data["bed_compensation"]["screen_angles_deg"]),

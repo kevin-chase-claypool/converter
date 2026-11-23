@@ -1,5 +1,51 @@
 # Engineering Log
 
+<a id="elog-20261122-cmyk-shared-row-lock-translation"></a>
+### 🟨 2026-11-22 - WINDOWS SOFTWARE/IMPLEMENTED - Normalize CMYK row-lock translation across inks
+
+- Reproduced a cross-channel registration defect in the default row-lock
+  transform: identical paper points and the same profile `f85ec410dbac`
+  received different global machine-XY translations for the four screen
+  angles. The G54 frame was already shared.
+- A new emission regression failed before the fix with a `0.059483 mm`
+  cyan-to-yellow centroid separation over the identical common-domain point
+  set. With raw compensation or no compensation the separation was zero, but
+  those approaches either altered row pitch or removed the intended profile.
+- Row lock now samples each measured bed-angle slice on one deterministic
+  common 65-by-65 bed-frame grid clipped to the coverage disk, subtracts that
+  ink's own per-angle mean, and substitutes a shared `(0, 0) mm` translation.
+  Zero avoids re-adding the common registration translation that the profile
+  fiducial fit removed and P100 owns.
+- The CMYK worker builds the complete four-angle projection set once before
+  planning any ink. The immutable matching projection is passed through each
+  layer plan and validated against the selected profile fingerprint and screen
+  angle, so preview/save order cannot determine the offset.
+- The constant translation leaves each along-row field and all adjacent-row
+  differences unchanged. Both XY-only and Xθ/Yθ tests cover all four screen
+  angles, both row orders, and compensated/uncompensated behavior; every row
+  spread remains below `0.005 mm`.
+- The fixed regression now holds the four emitted centroids within
+  `0.0002 mm`, limited by three-decimal G-code quantization. Reversed projection
+  input produces the same fingerprints, and raw shared-profile output remains
+  identical across all ink angles.
+- The normalized default fields still differ locally. Relative to yellow,
+  software-domain RMS/max deltas are cyan `0.125914/0.443952 mm`, magenta
+  `0.328551/0.753089 mm`, and black `0.219316/0.533614 mm`. This is not a full
+  overlay correction and must not be described as one.
+- Set manifests move to version 4 and record `shared_zero_mean`, the common
+  domain, raw means by measured angle, and the zero shared vector.
+- The focused bed-compensation, CMYK, rotating-row, and manifest suites pass
+  `158` tests. The complete converter discovery suite passes `623` tests with
+  one expected OpenGL-context skip. The documentation indexer validates all
+  `508` change notes.
+- A fresh four-file physical run with corner crosses after one HOME + REGISTER
+  remains required. No P100, G54, controller, A-axis, or pen-geometry change
+  was made.
+- Evidence: `WSW-20261122-001`, ADR-009, and
+  `docs/report/lab-notes/2026-11-22-cmyk-shared-row-lock-translation-software.md`.
+- Category: windows-software, hardware, cmyk, registration, g54, p100,
+  bed-compensation, row-lock, shared-translation, physical-validation-pending.
+
 <a id="elog-20261121-systems-integration-paper"></a>
 ### 🟩 2026-11-21 - MIXED/DOCUMENTATION - Complete the Systems Integration in Robotics paper
 

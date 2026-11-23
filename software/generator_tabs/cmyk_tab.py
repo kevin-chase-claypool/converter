@@ -105,6 +105,24 @@ class ProgramAnalysisWorker(QObject):
     def run(self):
         try:
             results = {}
+            row_lock_set = None
+            if (
+                self.settings.row_locked_compensation
+                and self.settings.bed_compensation_path
+            ):
+                profile = converter.load_bed_compensation(
+                    self.settings.bed_compensation_path
+                )
+                row_lock_set = converter.row_locked_bed_compensation_set(
+                    profile,
+                    tuple(converter.SCREEN_ANGLES_DEG.values()),
+                    bed_angle_deg=(
+                        float(self.settings.theta_offset)
+                        if str(self.settings.theta_mode).strip().lower()
+                        == "fixed"
+                        else None
+                    ),
+                )
             total = max(1, len(self.entries))
             for index, (channel, svg_path) in enumerate(self.entries):
                 if self.is_cancelled():
@@ -114,11 +132,15 @@ class ProgramAnalysisWorker(QObject):
                     int(100 * index / total),
                     f"Planning {converter.CHANNEL_LABELS[channel]}...",
                 )
+                screen_angle = converter.SCREEN_ANGLES_DEG[channel]
                 channel_settings = dataclasses.replace(
                     self.settings,
-                    row_lock_screen_angle_deg=converter.SCREEN_ANGLES_DEG[
-                        channel
-                    ],
+                    row_lock_screen_angle_deg=screen_angle,
+                    row_lock_projection=(
+                        row_lock_set.for_screen_angle(screen_angle)
+                        if row_lock_set is not None
+                        else None
+                    ),
                 )
                 data = self.host.analyze_program(
                     svg_path, channel_settings, self.is_cancelled
@@ -152,6 +174,19 @@ class ProgramAnalysisWorker(QObject):
                             compensation.max_correction_mm
                         ),
                         "screen_angle_deg": compensation.screen_angle_deg,
+                        "raw_translation_means_mm": [
+                            list(value)
+                            for value in compensation.raw_translation_means_mm
+                        ],
+                        "common_translation_mm": list(
+                            compensation.common_translation_mm
+                        ),
+                        "translation_domain_radius_mm": (
+                            compensation.translation_domain_radius_mm
+                        ),
+                        "translation_samples_per_axis": (
+                            compensation.translation_samples_per_axis
+                        ),
                     }
                 results[channel] = record
             self.finished.emit(results)
@@ -1707,9 +1742,19 @@ class CmykTab(GeneratorTab):
             if compensation_path
             else "none"
         )
+        row_lock_records = {
+            channel: results[channel]["compensation"]
+            for channel in converter.CHANNELS
+            if channel in results
+            and results[channel].get("compensation", {}).get("mode")
+            == "row_locked_projection"
+        }
+        translation_sample = next(
+            iter(row_lock_records.values()), None
+        )
         data = {
             "kind": "cmyk-print-set",
-            "version": 3,
+            "version": 4,
             "created": datetime.datetime.now().isoformat(timespec="seconds"),
             "source": {
                 "file": source_path.name if source_path else "",
@@ -1749,6 +1794,31 @@ class CmykTab(GeneratorTab):
                     if row_locked
                     else None
                 ),
+                "translation_normalization": (
+                    {
+                        "mode": "shared_zero_mean",
+                        "domain": "compensation_coverage_disk",
+                        "radius_mm": translation_sample[
+                            "translation_domain_radius_mm"
+                        ],
+                        "samples_per_axis": translation_sample[
+                            "translation_samples_per_axis"
+                        ],
+                        "common_mean_mm": list(
+                            translation_sample["common_translation_mm"]
+                        ),
+                        "p100_reason": (
+                            "The profile fiducial fit already removed common "
+                            "registration translation; P100 remains its owner."
+                        ),
+                    }
+                    if translation_sample is not None
+                    else None
+                ),
+                "per_channel_raw_translation_means_mm": {
+                    channel: record["raw_translation_means_mm"]
+                    for channel, record in row_lock_records.items()
+                },
                 "per_channel_max_correction_mm": {
                     channel: results[channel]["compensation"][
                         "projected_max_correction_mm"

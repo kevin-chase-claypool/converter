@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-22 | `WSW-20261122-001` | windows-software, hardware | implemented | [Normalize CMYK row-lock translation across all four inks](windows-software/2026/2026-11-22-cmyk-shared-row-lock-translation.md) |
 | 2026-11-21 | `WSW-20261121-003` | windows-software | verified | [Finalize the owner-reviewed Word report](windows-software/2026/2026-11-21-final-report-word-revision.md) |
 | 2026-11-21 | `WSW-20261121-002` | windows-software, hardware | verified | [Show the first and latest bed-compensation results](windows-software/2026/2026-11-21-report-dense-v3-before-after.md) |
 | 2026-11-21 | `WSW-20261121-001` | windows-software, rp23cnc-software, hardware | verified | [Add A-axis command-rate equations to the report](windows-software/2026/2026-11-21-a-axis-rate-equations.md) |

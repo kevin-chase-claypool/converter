@@ -121,109 +121,131 @@ class WaveXThetaRowsTests(unittest.TestCase):
         page_mm = 64.0
         _yy, xx = np.mgrid[0:128, 0:128]
         tone = (0.35 + 0.45 * xx / 127.0).astype("float32")
-        for order in ("rows_ascending", "rows_descending"):
-            for angle_deg in converter.SCREEN_ANGLES_DEG.values():
-                with self.subTest(order=order, angle_deg=angle_deg):
-                    marks = converter.screen_channel(
-                        tone,
-                        {
-                            "off_x": 0.0,
-                            "off_y": 0.0,
-                            "width_mm": page_mm,
-                            "height_mm": page_mm,
-                            "pixels_w": 128,
-                            "pixels_h": 128,
-                        },
-                        style="waves_even",
-                        spacing_mm=4.0,
+        defaults = converter.default_settings()
+        profile = converter.load_bed_compensation(
+            defaults.bed_compensation_path
+        )
+        shared = converter.row_locked_bed_compensation_set(
+            profile,
+            tuple(converter.SCREEN_ANGLES_DEG.values()),
+        )
+        for compensated in (False, True):
+            for order in ("rows_ascending", "rows_descending"):
+                for angle_deg in converter.SCREEN_ANGLES_DEG.values():
+                    with self.subTest(
+                        compensated=compensated,
+                        order=order,
                         angle_deg=angle_deg,
-                        pen_diameter_mm=0.8,
-                        row_clearance_mm=1.05,
-                    )
-                    document = converter.svg_document(
-                        {"y": marks},
-                        page_mm,
-                        page_mm,
-                        0.8,
-                        order=["y"],
-                    )
-                    settings = converter.Settings(
-                        theta_mode="optimized",
-                        theta_center_hold_diameter_mm=0.0,
-                        bed_compensation_path="",
-                        row_locked_compensation=True,
-                        row_lock_screen_angle_deg=angle_deg,
-                        contour_order=order,
-                        frame_center_mm=(
-                            page_mm / 2.0,
-                            page_mm / 2.0,
-                        ),
-                        flip_y=True,
-                        tolerance=0.05,
-                        pen_diameter_mm=0.8,
-                    )
+                    ):
+                        marks = converter.screen_channel(
+                            tone,
+                            {
+                                "off_x": 0.0,
+                                "off_y": 0.0,
+                                "width_mm": page_mm,
+                                "height_mm": page_mm,
+                                "pixels_w": 128,
+                                "pixels_h": 128,
+                            },
+                            style="waves_even",
+                            spacing_mm=4.0,
+                            angle_deg=angle_deg,
+                            pen_diameter_mm=0.8,
+                            row_clearance_mm=1.05,
+                        )
+                        document = converter.svg_document(
+                            {"y": marks},
+                            page_mm,
+                            page_mm,
+                            0.8,
+                            order=["y"],
+                        )
+                        settings = converter.Settings(
+                            theta_mode="optimized",
+                            theta_center_hold_diameter_mm=0.0,
+                            bed_compensation_path=(
+                                defaults.bed_compensation_path
+                                if compensated
+                                else ""
+                            ),
+                            row_locked_compensation=True,
+                            row_lock_screen_angle_deg=angle_deg,
+                            row_lock_projection=(
+                                shared.for_screen_angle(angle_deg)
+                                if compensated
+                                else None
+                            ),
+                            contour_order=order,
+                            frame_center_mm=(
+                                page_mm / 2.0,
+                                page_mm / 2.0,
+                            ),
+                            flip_y=True,
+                            tolerance=0.05,
+                            pen_diameter_mm=0.8,
+                        )
 
-                    with tempfile.TemporaryDirectory() as folder:
-                        path = Path(folder) / "waves.svg"
-                        path.write_text(document, encoding="utf-8")
-                        contours = converter.read_svg(str(path), settings)
-                        program_plan = converter.plan_program(
-                            contours,
-                            settings,
-                        )
-                        schedule = program_plan["wave_row_schedule"]
-                        self.assertIsNotNone(schedule)
-                        self.assertGreater(
-                            max(schedule["thetas"])
-                            - min(schedule["thetas"]),
-                            1.0,
-                            "the shared schedule should still use the bed",
-                        )
-                        for _planned, _points, thetas, _labels in (
-                            program_plan["planned_jobs"]
-                        ):
-                            self.assertLessEqual(
-                                max(
-                                    abs(second - first)
-                                    for first, second in zip(
-                                        thetas,
-                                        thetas[1:],
-                                    )
-                                ),
-                                settings.theta_max_step_deg + 1e-6,
+                        with tempfile.TemporaryDirectory() as folder:
+                            path = Path(folder) / "waves.svg"
+                            path.write_text(document, encoding="utf-8")
+                            contours = converter.read_svg(str(path), settings)
+                            program_plan = converter.plan_program(
+                                contours,
+                                settings,
                             )
-                        gcode = converter.contours_to_gcode(
-                            contours,
-                            settings,
-                            program_plan,
-                        )
+                            schedule = program_plan["wave_row_schedule"]
+                            self.assertIsNotNone(schedule)
+                            self.assertGreater(
+                                max(schedule["thetas"])
+                                - min(schedule["thetas"]),
+                                1.0,
+                                "the shared schedule should still use the bed",
+                            )
+                            for _planned, _points, thetas, _labels in (
+                                program_plan["planned_jobs"]
+                            ):
+                                self.assertLessEqual(
+                                    max(
+                                        abs(second - first)
+                                        for first, second in zip(
+                                            thetas,
+                                            thetas[1:],
+                                        )
+                                    ),
+                                    settings.theta_max_step_deg + 1e-6,
+                                )
+                            gcode = converter.contours_to_gcode(
+                                contours,
+                                settings,
+                                program_plan,
+                            )
 
-                    contour_ids = [
-                        int(match.group(1))
-                        for line in gcode.splitlines()
-                        if (match := CONTOUR.match(line))
-                    ]
-                    self.assertEqual(
-                        contour_ids,
-                        sorted(
+                        contour_ids = [
+                            int(match.group(1))
+                            for line in gcode.splitlines()
+                            if (match := CONTOUR.match(line))
+                        ]
+                        self.assertEqual(
                             contour_ids,
-                            reverse=order == "rows_descending",
-                        ),
-                    )
-                    self.assertIn("shared Wave row angles", gcode)
-                    spread = row_gap_spread(
-                        decoded_rows(
-                            gcode,
-                            settings.theta_drive_ratio,
-                        ),
-                        angle_deg,
-                    )
-                    self.assertLessEqual(
-                        spread,
-                        0.005,
-                        "rotating-bed interpolation must not change "
-                        "Wave row pitch",
-                    )
+                            sorted(
+                                contour_ids,
+                                reverse=order == "rows_descending",
+                            ),
+                        )
+                        self.assertIn("shared Wave row angles", gcode)
+                        spread = row_gap_spread(
+                            decoded_rows(
+                                gcode,
+                                settings.theta_drive_ratio,
+                            ),
+                            angle_deg,
+                        )
+                        self.assertLessEqual(
+                            spread,
+                            0.005,
+                            "rotating-bed interpolation must not change "
+                            "Wave row pitch",
+                        )
 
 
 if __name__ == "__main__":

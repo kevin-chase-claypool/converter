@@ -651,7 +651,7 @@ Current tools:
   cap, the A-rate limit, bare `G0` rotations and moves that exceed the Path
   tolerance;
   hard violations block Save and warnings go to the log. A successful
-  artwork save also writes a version-3 `<name>-set.json` beside the four files
+  artwork save also writes a version-4 `<name>-set.json` beside the four files
   with the source hash, page and motion mode, bed-compensation profile,
   complete image/screen recipe, sharpening amount and radius, effective pitch,
   pen offsets, per-ink
@@ -689,19 +689,37 @@ Current tools:
   parallel row. The row-normal component is averaged out because it would
   otherwise change pitch; the retained field still applies the profile's
   along-row and common positional correction as the final machine-XY transform.
+  The four screen angles can otherwise produce different spatial mean vectors
+  from the same profile. The CMYK worker therefore prepares all four
+  projections once on a deterministic common bed-frame sampling disk, removes
+  each angle slice's own mean, and substitutes one common `(0, 0) mm`
+  translation. Zero is deliberate: the calibration fiducial fit already
+  removed common registration translation, so adding the arithmetic mean of
+  the four inks would move the whole set relative to P100 registration.
+  Processing order cannot choose the shared vector.
   Other screen styles inherit the raw profile unchanged. Unchecking the guard
   applies the raw two-dimensional field and explicitly accepts potentially
   non-uniform rows. The saved manifest records `row_locked_projection`, the
-  source-profile fingerprint, per-ink screen angles, projection sampling, and
-  `preserve_exact_row_pitch: true`.
+  source-profile fingerprint, per-ink screen angles, projection sampling,
+  `shared_zero_mean` translation normalization, raw means by angle,
+  `preserve_exact_row_pitch: true`, and the exact common domain.
   Verify a saved set with
   `python ..\tools\check_cmyk_wave_spacing.py <name>-set.json`; it checks all
-  four manifest hashes, the row-locked header and profile identity, and their
-  final-paper adjacent-row spread. For Xθ/Yθ it samples the linear X/Y/A
+  four manifest hashes, the row-locked header and profile identity, the
+  version-4 zero shared-translation record, and their final-paper adjacent-row
+  spread. For Xθ/Yθ it samples the linear X/Y/A
   interpolation, rotates each point back onto the bed, and requires the
   manifest and G-code to identify the shared row-angle lock. The current
   verified 199-column XY-only Ben2 spreads are `0.002448`, `0.002254`,
   `0.000149`, and `0.001541 mm` for cyan/magenta/yellow/black.
+  Shared translation removes the systematic per-ink global offset only. The
+  default normalized fields still differ locally: relative to yellow, the
+  software-domain RMS/max differences are cyan `0.125914/0.443952 mm`,
+  magenta `0.328551/0.753089 mm`, and black `0.219316/0.533614 mm`. Those are
+  coordinate differences, not measured paper residuals, and they are why this
+  feature must not yet be described as complete local warp or overlay
+  correction. A fresh four-file physical run after one registration remains
+  required.
   The emitted finite segments preserve the `0.8 mm` pen plus `0.25 mm` paper
   gap at their actual shortest distance; there is no additional fixed fraction
   of the pitch reserved between rows. Changing Dot pitch or Artwork scale

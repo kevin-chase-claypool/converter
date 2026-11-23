@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-22 | `WSW-20261122-001` | implemented | [Normalize CMYK row-lock translation across all four inks](../windows-software/2026/2026-11-22-cmyk-shared-row-lock-translation.md) | `cmyk`, `registration`, `row-lock`, `bed-compensation`, `shared-translation`, `g54`, `p100` |
 | 2026-11-21 | `WSW-20261121-002` | verified | [Show the first and latest bed-compensation results](../windows-software/2026/2026-11-21-report-dense-v3-before-after.md) | `report`, `bed-calibration`, `bed-compensation`, `dense-mesh`, `before-after` |
 | 2026-11-21 | `WSW-20261121-001` | verified | [Add A-axis command-rate equations to the report](../windows-software/2026/2026-11-21-a-axis-rate-equations.md) | `report`, `theta`, `rate-limit`, `equations` |
 | 2026-11-13 | `RPSW-20261113-003` | implemented | [Restore Pi display settings and add confirmed power controls](../rp23cnc-software/2026/2026-11-13-restore-pi-settings-power-controls.md) | `touchscreen`, `hmi`, `display-brightness`, `inactivity-timeout`, `system-power`, `restart`, `poweroff`, `systemd`, `safety` |

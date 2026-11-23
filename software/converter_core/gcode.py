@@ -312,16 +312,40 @@ def plan_program(contours, settings, cancel_check=None):
     if bed_compensation is not None and bool(
         getattr(settings, "row_locked_compensation", False)
     ):
-        bed_compensation = row_locked_bed_compensation(
-            bed_compensation,
-            float(getattr(settings, "row_lock_screen_angle_deg", 0.0)),
-            bed_angle_deg=(
-                float(settings.theta_offset)
-                if str(getattr(settings, "theta_mode", "")).strip().lower()
-                == "fixed"
-                else None
-            ),
+        screen_angle = float(
+            getattr(settings, "row_lock_screen_angle_deg", 0.0)
         )
+        prepared = getattr(settings, "row_lock_projection", None)
+        if prepared is not None:
+            if not getattr(prepared, "row_locked", False):
+                raise ValueError("prepared row-lock projection is invalid")
+            if (
+                prepared.full_profile_fingerprint
+                != bed_compensation.fingerprint
+            ):
+                raise ValueError(
+                    "prepared row-lock projection does not match the selected "
+                    "bed-compensation profile"
+                )
+            if abs(prepared.screen_angle_deg - (screen_angle % 180.0)) > 1e-9:
+                raise ValueError(
+                    "prepared row-lock projection does not match the ink "
+                    "screen angle"
+                )
+            bed_compensation = prepared
+        else:
+            bed_compensation = row_locked_bed_compensation(
+                bed_compensation,
+                screen_angle,
+                bed_angle_deg=(
+                    float(settings.theta_offset)
+                    if str(
+                        getattr(settings, "theta_mode", "")
+                    ).strip().lower()
+                    == "fixed"
+                    else None
+                ),
+            )
     if bed_compensation is not None:
         coverage = bed_compensation.coverage_radius_mm
         for contour in clipped_contours:
@@ -464,13 +488,17 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
             (
                 "(bed compensation %s, coverage %.3f mm, "
                 "row-locked projection max %.3f mm from full max %.3f mm "
-                "at row angle %.3f deg, angular interpolation bed-frame)"
+                "at row angle %.3f deg, shared translation %.3f,%.3f mm "
+                "on a %.3f mm common disk, angular interpolation bed-frame)"
                 % (
                     bed_compensation.full_profile_fingerprint,
                     bed_compensation.coverage_radius_mm,
                     bed_compensation.max_correction_mm,
                     bed_compensation.full_max_correction_mm,
                     bed_compensation.screen_angle_deg,
+                    bed_compensation.common_translation_mm[0],
+                    bed_compensation.common_translation_mm[1],
+                    bed_compensation.translation_domain_radius_mm,
                 )
                 if getattr(bed_compensation, "row_locked", False)
                 else (

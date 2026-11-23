@@ -45,7 +45,9 @@ from converter_core.bed_compensation import (
     BedCompensationProfile,
     compensated_machine_point,
     compensation_step_count,
+    row_lock_translation_points,
     row_locked_bed_compensation,
+    row_locked_bed_compensation_set,
 )
 
 
@@ -285,6 +287,42 @@ class BedCompensationProfileTests(unittest.TestCase):
         )
         self.assertRegex(projected.fingerprint, r"^[0-9a-f]{12}$")
         self.assertNotEqual(projected.fingerprint, profile.fingerprint)
+
+    def test_cmyk_row_lock_set_is_order_independent_and_zero_mean(self):
+        angles = (15.0, 75.0, 0.0, 45.0)
+        first = row_locked_bed_compensation_set(
+            profile_for_test(), angles, along_samples=41, across_samples=21
+        )
+        second = row_locked_bed_compensation_set(
+            profile_for_test(),
+            tuple(reversed(angles)),
+            along_samples=41,
+            across_samples=21,
+        )
+
+        self.assertEqual(first.fingerprint, second.fingerprint)
+        self.assertEqual(first.screen_angles_deg, tuple(sorted(angles)))
+        self.assertEqual(first.common_translation_mm, (0.0, 0.0))
+        points = row_lock_translation_points(20.0)
+        for projection in first.projections:
+            equivalent = second.for_screen_angle(
+                projection.screen_angle_deg
+            )
+            self.assertEqual(projection.fingerprint, equivalent.fingerprint)
+            self.assertTrue(
+                any(
+                    math.hypot(x_mm, y_mm) > 1e-9
+                    for x_mm, y_mm in projection.raw_translation_means_mm
+                )
+            )
+            for bed_angle in projection.angle_values_deg:
+                values = [
+                    projection.correction(bed_angle, x_mm, y_mm)
+                    for x_mm, y_mm in points
+                ]
+                mean_x = sum(value[0] for value in values) / len(values)
+                mean_y = sum(value[1] for value in values) / len(values)
+                self.assertLess(math.hypot(mean_x, mean_y), 1e-9)
 
     def test_varying_profile_adds_subdivision(self):
         steps = compensation_step_count(
@@ -1098,6 +1136,121 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
             "from full max %.3f mm" % profile.max_correction_mm,
             locked,
         )
+
+    def test_cmyk_row_lock_emits_one_shared_translation(self):
+        profile = converter.load_bed_compensation(
+            converter.default_settings().bed_compensation_path
+        )
+        radius = profile.coverage_radius_mm
+        samples_per_axis = 65
+        rows = []
+        for row_index in range(samples_per_axis):
+            y_mm = -radius + 2.0 * radius * row_index / (
+                samples_per_axis - 1
+            )
+            row = []
+            for column_index in range(samples_per_axis):
+                x_mm = -radius + 2.0 * radius * column_index / (
+                    samples_per_axis - 1
+                )
+                if math.hypot(x_mm, y_mm) <= radius + 1e-9:
+                    row.append((x_mm, y_mm))
+            if not row:
+                continue
+            if len(rows) % 2:
+                row.reverse()
+            rows.extend(row)
+        contours = [rows]
+        fixed = dict(
+            theta_mode="fixed",
+            theta_center_hold_diameter_mm=0.0,
+            theta_offset=0.0,
+            tolerance=1.0,
+            bed_diameter_mm=400.0,
+            bed_margin_mm=0.0,
+            machine_reach_radius_mm=200.0,
+            frame_center_mm=(0.0, 0.0),
+            bed_compensation_path=str(
+                Path(
+                    converter.default_settings().bed_compensation_path
+                )
+            ),
+        )
+        shared = row_locked_bed_compensation_set(
+            profile,
+            tuple(converter.SCREEN_ANGLES_DEG.values()),
+        )
+        means = {}
+        for channel, angle in converter.SCREEN_ANGLES_DEG.items():
+            settings = converter.Settings(
+                **fixed,
+                row_locked_compensation=True,
+                row_lock_screen_angle_deg=angle,
+                row_lock_projection=shared.for_screen_angle(angle),
+            )
+            program = converter.contours_to_gcode(contours, settings)
+            pen_down = False
+            emitted = []
+            for line in program.splitlines():
+                if line.startswith("M3"):
+                    pen_down = True
+                elif line.startswith("M5"):
+                    pen_down = False
+                elif pen_down and line.startswith("G1"):
+                    match_x = re.search(r"\bX(-?[\d.]+)", line)
+                    match_y = re.search(r"\bY(-?[\d.]+)", line)
+                    if match_x and match_y:
+                        emitted.append(
+                            (
+                                float(match_x.group(1)),
+                                float(match_y.group(1)),
+                            )
+                        )
+            self.assertGreaterEqual(len(emitted), samples_per_axis)
+            means[channel] = (
+                sum(point[0] for point in emitted) / len(emitted),
+                sum(point[1] for point in emitted) / len(emitted),
+            )
+
+        reference = means["y"]
+        for channel, mean in means.items():
+            self.assertLess(
+                math.hypot(mean[0] - reference[0], mean[1] - reference[1]),
+                2e-4,
+                "%s retained a different global XY translation: %r vs %r"
+                % (channel, mean, reference),
+            )
+
+    def test_raw_shared_profile_still_maps_every_ink_identically(self):
+        profile_path = converter.default_settings().bed_compensation_path
+        contours = [
+            [(-5.0, -3.0), (5.0, -3.0)],
+            [(-5.0, 3.0), (5.0, 3.0)],
+            [(-2.0, -5.0), (-2.0, 5.0)],
+        ]
+        common = dict(
+            theta_mode="fixed",
+            theta_center_hold_diameter_mm=0.0,
+            theta_offset=0.0,
+            bed_diameter_mm=100.0,
+            bed_margin_mm=0.0,
+            machine_reach_radius_mm=50.0,
+            frame_center_mm=(0.0, 0.0),
+            bed_compensation_path=profile_path,
+            row_locked_compensation=False,
+        )
+        programs = {
+            converter.contours_to_gcode(
+                contours,
+                converter.Settings(
+                    **common,
+                    row_lock_screen_angle_deg=angle,
+                ),
+            )
+            for angle in converter.SCREEN_ANGLES_DEG.values()
+        }
+
+        self.assertEqual(len(programs), 1)
 
     def test_profile_beyond_its_coverage_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:

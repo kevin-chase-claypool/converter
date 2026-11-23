@@ -1,9 +1,9 @@
 # ADR-009: Optional post-registration host bed compensation
 
 - Status: accepted and implemented; base profile bench-verified, row-locked
-  Wave physical verification pending
+  Wave physical verification pending; shared cross-ink translation implemented
 - Date: 2026-10-23
-- Updated: 2026-11-01
+- Updated: 2026-11-22
 
 ## Context
 
@@ -54,6 +54,29 @@ relative spacing is unchanged. This retains the along-row and common part of
 the measured correction; the row-dependent normal part is discarded because
 it cannot coexist with an exact uniform lattice. Raw unconstrained
 compensation remains an explicit operator opt-in.
+
+The four projected fields also need one common translation. Resolving the same
+measured profile on the cyan, magenta, yellow, and black row axes produces
+different spatial means, so identical paper coordinates otherwise receive
+different final machine XY translations even though every file selects the same
+G54 frame. CMYK therefore prepares the complete four-angle projection set once
+before layer planning. Every ink samples a deterministic common bed-frame grid
+clipped to the profile coverage, subtracts its own per-angle mean, and adds the
+same common translation:
+
+```text
+C_corrected(angle, p) = C_angle(p) - mean_angle + common_mean
+common_mean = (0, 0)
+```
+
+Zero is the selected common vector because the profile's fiducial fit already
+removed common sheet translation. The arithmetic mean of the four projected
+fields is a sampling residual, not a correction owned by this transform, and
+adding it would jointly shift the set relative to P100 registration. A
+constant per-angle translation does not change any adjacent-row difference.
+The prepared set is immutable and independent of ink processing order; every
+layer plan validates the source-profile fingerprint and screen angle before it
+can use the projection.
 
 Interactive preview defaults to fast nominal X/Y so dense artwork remains
 responsive. Saved G-code applies the effective compensation path exactly.
@@ -109,6 +132,18 @@ program unchanged.
 - Row-locked saved G-code identifies the source profile fingerprint,
   projection maximum, row angle, and `row_locked_projection` manifest mode.
   It must not be described as applying the raw two-dimensional field.
+- Shared-translation normalization removes the systematic inter-ink global XY
+  offset. It does not remove local pointwise differences between the four
+  projected fields. On the default profile, relative to yellow, the
+  software-domain RMS/max differences are cyan `0.125914/0.443952 mm`,
+  magenta `0.328551/0.753089 mm`, and black `0.219316/0.533614 mm`.
+- Set-manifest version 4 records `shared_zero_mean`, the common sampling
+  domain, the raw projection means by measured bed angle, and the zero common
+  vector. Older row-lock manifests do not identify cross-channel
+  normalization.
+- The G54 frame, P100 registration, controller motion, A-axis calibration, and
+  pen geometry are unchanged. A physical four-file comparison after one
+  HOME + REGISTER remains necessary before claiming overlay improvement.
 - The current default profile declares a 180.000 mm field. Its measured
   evidence covers only the inner 165.100 mm; the outer 14.900 mm annulus is
   local-affine extrapolation and has no compensated verification print yet.

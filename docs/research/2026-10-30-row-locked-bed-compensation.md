@@ -98,6 +98,54 @@ All four are below the existing `0.005 mm` bound. The result is a 199-column
 machine-space audit of emitted `X/Y`, not an inverse-decoded paper-space
 measurement.
 
+## Cross-channel translation issue found later
+
+The first row-lock implementation applied one independently computed
+projection per ink. That still met each ink's row-spacing invariant, but it
+did not meet a cross-ink registration invariant. A 2D correction field
+resolved on four different screen axes can have four different spatial mean
+vectors even when every file uses the same measured profile and G54 frame.
+
+On the default profile `f85ec410dbac`, a parked-bed emission audit over an
+identical common-domain point set measured a `0.059483 mm` cyan-to-yellow
+global centroid difference before normalization. Disabling compensation or
+sharing the raw profile made the difference zero, but neither retained the
+row-lock correction. Treating one channel's mean as the set translation would
+make output depend on save or preview order.
+
+The selected correction normalizes each projection on one common bed-frame
+domain:
+
+```text
+C_corrected(angle, p) = C_angle(p) - mean_angle + common_mean
+common_mean = (0, 0)
+```
+
+The common domain is a deterministic 65-by-65 sample grid clipped to the
+profile's coverage disk. The CMYK worker builds all four projections once and
+then emits them in any order with the same result. Each measured bed-angle
+slice has zero mean over the domain; linear interpolation between zero-mean
+slices therefore also has zero mean. Subtracting a constant does not alter
+along-row variation or adjacent-row pitch.
+
+The arithmetic mean of the four raw means was rejected as the common vector.
+The measured profile's fiducial fit already removes common sheet translation;
+re-adding a nonzero common mean would translate the complete CMYK set relative
+to P100 registration. The zero choice avoids that double compensation.
+
+Translation normalization leaves local pointwise disagreement. Relative to
+yellow over the common domain, the normalized default-profile fields retain:
+
+| Pair | RMS difference | Maximum difference |
+|---|---:|---:|
+| Cyan - Yellow | `0.125914 mm` | `0.443952 mm` |
+| Magenta - Yellow | `0.328551 mm` | `0.753089 mm` |
+| Black - Yellow | `0.219316 mm` | `0.533614 mm` |
+
+These are software coordinate deltas, not a paper overlay result. The residual
+varies with screen angle because the row-normal part discarded for pitch
+preservation is not the same on every ink axis.
+
 ## Constraints and follow-up
 
 - The present audit contract is XY-only because a changing bed angle adds a
@@ -107,6 +155,9 @@ measurement.
   `row_locked_projection` from `full_unconstrained`.
 - A physical comparison print remains mandatory. Software geometry does not
   prove that the compensated pen position improves on the machine.
+- Shared translation now passes in both XY-only and Xθ/Yθ planner regressions,
+  but the remaining local differences require the physical four-cross run
+  after one HOME + REGISTER before making any full-overlay claim.
 - `docs/report/lab-notes/2026-10-30-ben2-yellow-row-end-boundary.md` contains
   the prior raw-compensation evidence; this note supersedes its recommendation
   to omit the profile from Wave jobs.

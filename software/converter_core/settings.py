@@ -174,6 +174,12 @@ class Settings:
     # the effective paper-screen angle for the current ink layer.
     row_locked_compensation: bool = False
     row_lock_screen_angle_deg: float = 0.0
+    # CMYK prepares all four angle projections once and passes the matching
+    # immutable object into each layer plan. This internal handoff is excluded
+    # from settings comparisons and persistence because it is derived state.
+    row_lock_projection: object | None = field(
+        default=None, repr=False, compare=False
+    )
     # Preserve or reverse the screen generator's row-major contour order.
     # "optimized" keeps the generic nearest-endpoint/2-opt travel planner.
     # The explicit row modes bypass that reordering so each Wave row is
