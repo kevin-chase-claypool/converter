@@ -20,10 +20,14 @@ tags:
   - portrait
 related:
   - WSW-20261123-002
+  - WSW-20261123-004
   - docs/proposals/flow-field-cmyk.md
 ---
 
 # Preserve continuous color tone in edge-flow CMYK
+
+`WSW-20261123-004` replaces the initial two-dimensional cell lattice with
+path-local tone segments after the owner observed square block artifacts.
 
 ## Summary
 
@@ -56,10 +60,11 @@ Two conversion behaviours caused that loss:
 
 - Candidate streamline paths are traced through the existing strength-gated
   shared luminance field.
-- Each CMYK plate evaluates its own processed tone along the path. A
-  deterministic low-discrepancy threshold within `4-8 mm` paper cells keeps
-  the local tone fraction of the path: highlights draw sparse segments, while
-  shadows approach a continuous stroke.
+- Each CMYK plate evaluates its own processed tone along the path. The initial
+  implementation used a deterministic threshold in `4-8 mm` paper cells;
+  `WSW-20261123-004` replaces that lattice with path-local `4-8 mm` tone
+  segments so highlights draw sparsely and shadows approach a continuous
+  stroke without a block matrix.
 - `Flow layers` remains the maximum number of offset networks. Additional
   layers activate in progressively darker tone bands, so they deepen shadows
   instead of making the lightest coverage binary.
@@ -100,17 +105,21 @@ quantized it. Increasing the layer count also retained wide steps.
 Using only seed-level acceptance produced longer paths but allowed one stream
 to over-ink a tone change it crossed. Fine `1-2 mm` dither cells restored a
 continuous ramp but fragmented the artwork into speckle. The selected
-`4-8 mm` cells balance local color response with continuous pen strokes.
+`4-8 mm` intervals balance local color response with continuous pen strokes.
+
+The first selected implementation used two-dimensional cells. The owner
+correctly identified the resulting square-block matrix; fixed cells were
+abandoned in favor of path-relative break positions.
 
 A lower GCR alone lightened the face but did not fix the missing ramp. A
 brighter Auto pass alone restored exposure but still produced binary hatches.
 
 ## Risks and follow-up
 
-The `4-8 mm` tone-cell range and the `1.5` pitch multiplier are software
-heuristics selected from one portrait and synthetic tone ramps. Pen spread,
-ink opacity, paper, and the final four-pass overlay can change the best
-settings. A physical edge-flow sheet remains the next validation gate.
+The path-local `4-8 mm` tone-segment range and the `1.5` pitch multiplier are
+software heuristics selected from one portrait and synthetic tone ramps. Pen
+spread, ink opacity, paper, and the final four-pass overlay can change the
+best settings. A physical edge-flow sheet remains the next validation gate.
 
 ## Files
 

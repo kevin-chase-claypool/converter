@@ -24,8 +24,8 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 - Guidance gate: tensor strength plus coherence; weak structure keeps screen
 - Fallback direction: cyan 15, magenta 75, yellow 0, black 45 degrees
 - Maximum density layers: 3
-- Tone method: deterministic `4-8 mm` local ink fractions along each path,
-  with extra layers for darker coverage
+- Tone method: deterministic path-local `4-8 mm` ink segments, with extra
+  layers for darker coverage and no shared 2D block lattice
 - Optional preview of each channel and composite
 
 ## Implementation plan

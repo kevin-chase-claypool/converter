@@ -20,15 +20,13 @@ EDGE_FLOW_CHROMA_WEIGHT = 0.35
 EDGE_FLOW_STRENGTH_SCALE_FLOOR = 1.0e-4
 
 
-def _ordered_tone_threshold(x, y, pitch, seed, layer):
-    """Stable low-discrepancy tone threshold within one small screen cell."""
-    pitch = max(1e-6, float(pitch))
-    column = int(math.floor(float(x) / pitch))
-    row = int(math.floor(float(y) / pitch))
+def _path_tone_threshold(distance_mm, path_key, segment_mm, layer):
+    """Stable tone threshold at one position along a single streamline."""
+    segment_mm = max(1e-6, float(segment_mm))
+    segment = int(math.floor(max(0.0, float(distance_mm)) / segment_mm))
     value = (
-        column * 374761393
-        + row * 668265263
-        + int(seed) * 2246822519
+        segment * 374761393
+        + int(path_key) * 668265263
         + int(layer) * 3266489917
     ) & 0xFFFFFFFF
     value = ((value ^ (value >> 13)) * 1274126177) & 0xFFFFFFFF
@@ -228,15 +226,16 @@ def _tone_gated_runs(
     points,
     tone_at,
     threshold,
-    tone_cell,
-    seed,
+    tone_segment,
+    path_key,
     layer,
     minimum_length,
 ):
     """Split one traced path into locally tone-selected ink runs."""
     runs = []
     current = []
-    for point in points:
+    distance = 0.0
+    for index, point in enumerate(points):
         point_tone = float(tone_at(point[0], point[1]))
         coverage = (
             min(1.0, max(0.0, point_tone))
@@ -252,11 +251,10 @@ def _tone_gated_runs(
         )
         ink = (
             coverage > 0.0
-            and _ordered_tone_threshold(
-                point[0],
-                point[1],
-                tone_cell,
-                seed,
+            and _path_tone_threshold(
+                distance,
+                path_key,
+                tone_segment,
                 layer,
             )
             < float(coverage)
@@ -266,6 +264,11 @@ def _tone_gated_runs(
         elif current:
             runs.append(current)
             current = []
+        if index + 1 < len(points):
+            distance += math.hypot(
+                points[index + 1][0] - point[0],
+                points[index + 1][1] - point[1],
+            )
     if current:
         runs.append(current)
     return [
@@ -302,9 +305,9 @@ def trace_structure_streamlines(
 
     ``layers`` is the maximum number of overlapping streamline networks. Each
     network owns an equal part of the ink's tone range, and a deterministic
-    ordered threshold keeps only the fraction of each traced path that the
-    local tone asks for. This preserves a continuous highlight ramp instead of
-    drawing every path in full and changing only the number of stacked layers.
+    path-local threshold keeps only the fraction of each traced path that the
+    local tone asks for. The break positions depend on distance along that
+    streamline, so adjacent paths do not form a visible block matrix.
     """
     import numpy as np
 
@@ -339,7 +342,7 @@ def trace_structure_streamlines(
     )
     minimum_pen_gap = max(0.0, float(pen_diameter_mm)) * 0.72
     minimum_length = max(1.0, base_pitch * 0.45)
-    tone_cell = max(
+    tone_segment = max(
         4.0,
         min(
             8.0,
@@ -352,7 +355,7 @@ def trace_structure_streamlines(
     visible_minimum_length = max(
         0.5,
         min(
-            3.0,
+            2.5,
             max(
                 minimum_length,
                 max(0.0, float(pen_diameter_mm)) * 0.75,
@@ -439,12 +442,18 @@ def trace_structure_streamlines(
                     for first, second in zip(points, points[1:])
                 )
                 if len(points) >= 3 and length >= minimum_length:
+                    path_key = (
+                        int(round((x - left) / base_pitch)) * 73856093
+                        ^ int(round((y - top) / base_pitch)) * 19349663
+                        ^ int(seed) * 83492791
+                        ^ int(layer) * 2654435761
+                    ) & 0xFFFFFFFF
                     visible_runs = _tone_gated_runs(
                         points,
                         tone_at,
                         threshold,
-                        tone_cell,
-                        seed,
+                        tone_segment,
+                        path_key,
                         layer,
                         visible_minimum_length,
                     )

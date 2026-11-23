@@ -469,6 +469,31 @@ class ScreeningTests(unittest.TestCase):
         )
         self.assertGreater(lengths[-1], lengths[0] * 3.0)
 
+    def test_edge_flow_tone_breaks_are_path_local_not_a_2d_grid(self):
+        from converter_core import structure_tensor
+
+        distances = [index * 0.25 for index in range(96)]
+        first = [
+            structure_tensor._path_tone_threshold(
+                distance,
+                1001,
+                4.0,
+                0,
+            )
+            for distance in distances
+        ]
+        second = [
+            structure_tensor._path_tone_threshold(
+                distance,
+                2002,
+                4.0,
+                0,
+            )
+            for distance in distances
+        ]
+        self.assertGreater(len(set(first)), 4)
+        self.assertNotEqual(first, second)
+
     def test_halftone_marks_follow_tone(self):
         white = self.np.zeros((32, 32), dtype="float32")
         self.assertEqual(

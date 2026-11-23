@@ -1,5 +1,36 @@
 # Engineering Log
 
+<a id="elog-20261123-cmyk-edge-flow-path-local-tone"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Remove block matrix from edge-flow tone
+
+- The owner reviewed the first continuous-tone render and correctly identified
+  a matrix of rectangular blocks. The cause was the new tone threshold's
+  `4-8 mm` two-dimensional page cells: every crossing streamline inherited the
+  same cell boundaries.
+- Tone break positions now advance with arc length through each individual
+  streamline. A deterministic path key mixes the seed, layer, and starting
+  cell, so neighbouring paths have independent phases while local tone still
+  controls the inked fraction.
+- Whole-path acceptance was rejected because one path could cross from a
+  highlight into shadow at full density. Smaller 2D cells were also rejected:
+  they reduced block size but replaced it with speckle.
+- Streamline direction, the shared strength-gated luminance guide, per-ink
+  coverage and fallback angles, Flow layers, preview multiplication, and the
+  four separate G-code files are unchanged.
+- A new regression verifies that two paths have different threshold sequences
+  at matching distances and that each sequence varies along its path. All
+  `117` CMYK tab tests pass.
+- An `800 px` software render at `1.2 mm` effective pitch shows irregular
+  path-relative tonal breaks through the portrait without the square lattice.
+- Complete converter discovery passes `637` tests with one expected
+  OpenGL-context skip.
+- Physical four-pass overlay, pen spread, ink opacity, final pitch, and layer
+  count remain unverified on paper.
+- Evidence: `WSW-20261123-004`;
+  `docs/changes/windows-software/2026/2026-11-23-cmyk-edge-flow-path-local-tone.md`.
+- Category: windows-software, cmyk, edge-flow, continuous-tone, path-local,
+  block-artifact, portrait, physical-validation-pending.
+
 <a id="elog-20261123-cmyk-edge-flow-continuous-tone"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Preserve continuous color tone in edge-flow CMYK
 
@@ -17,10 +48,11 @@
   rectilinear row screen and selected `brightness 80 %` / `gamma 0.80` for the
   tested setup. At a `0.8 mm` pen and `0.31 mm` effective pitch, adjacent ink
   closed before tone could vary.
-- Each traced streamline now keeps a deterministic fraction of its path based
-  on local channel tone in `4-8 mm` paper cells. Highlights leave paper gaps;
-  shadows approach continuous strokes. Deeper Flow layers activate in darker
-  bands, increasing shadow density without making the lightest coverage
+- Each traced streamline keeps a deterministic fraction of its path based on
+  local channel tone in `4-8 mm` paper cells. Highlights leave paper gaps;
+  shadows approach continuous strokes. The cell lattice was replaced by
+  path-local segments in `WSW-20261123-004`. Deeper Flow layers activate in
+  darker bands, increasing shadow density without making the lightest coverage
   binary.
 - Edge-flow Auto now preserves normal photo exposure, retains more warm CMY,
   and limits black extraction. For the tested portrait it selects

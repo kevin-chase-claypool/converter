@@ -559,8 +559,10 @@ Current tools:
   keeps the screen direction instead of becoming stacked contour bands.
   Each ink then applies its own dense-tone mask, seed offset, and fixed screen
   direction. Local tone controls the ink fraction along each streamline at
-  deterministic `4-8 mm` screen cells: a highlight keeps only a sparse part of
-  the path, while a shadow approaches a continuous stroke. That makes a
+  deterministic `4-8 mm` path-local segments: a highlight keeps only a sparse
+  part of the path, while a shadow approaches a continuous stroke. Break
+  positions follow arc length and a path-specific phase, so neighbouring
+  streamlines do not share a grid of square block boundaries. That makes a
   yellow-to-magenta highlight ramp visible instead of turning every plate above
   the ink floor into a solid wash. The fallback angles are cyan 15 degrees,
   magenta 75, yellow 0, and black 45, so the plates interleave like a
