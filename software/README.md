@@ -466,18 +466,18 @@ G-code (Ctrl+S), and exits. **Tools** is the tool selector: **All Tools**
 layout), **Convert** is Ctrl+1, and the other tools follow in menu order with
 Ctrl+2...Ctrl+0. **View** toggles the machine reach guide, pen-down path, and
 log, and controls preview zoom. The preview panel also has a **Red motion
-lines** checkbox next to Fill bed / Fit inside that toggles the same pen-down
-overlay without leaving the preview (it stays in sync with the sidebar
-checkbox and the View menu), plus an **Ink simulation (multiply)** checkbox
-for CMYK previews: the ink layers multiply over the paper white in plot
-order, like translucent pens, so the preview shows the finished overprint
-instead of painting each layer opaquely. Simulation strokes draw at the real
-pen width, and a stroke thinner than a screen pixel fades toward white by the
-fraction of a pixel it covers, so the fit-to-window view keeps the density
-the paper will get (zoom in for full-strength strokes). Mixing only happens
-where strokes overlap: keep the effective pitch (Dot pitch x Artwork scale,
-then the tone-adaptive factor of 1-3x) at or below the pen width for full
-coverage. An **Ink profile...** button loads
+lines** checkbox that toggles the same pen-down overlay without leaving the
+preview. It starts **off** and stays in sync with the sidebar checkbox and the
+View menu. The **Ink simulation (multiply)** checkbox starts **on** for CMYK
+previews: the ink layers multiply over the paper white in plot order, like
+translucent pens, so the preview shows the finished overprint instead of
+painting each layer opaquely. Simulation strokes draw at the real pen width,
+and a stroke thinner than a screen pixel fades toward white by the fraction of
+a pixel it covers, so the fit-to-window view keeps the density the paper will
+get (zoom in for full-strength strokes). Mixing only happens where strokes
+overlap: keep the effective pitch (Dot pitch x Artwork scale, then the
+tone-adaptive factor of 1-3x) at or below the pen width for full coverage. An
+**Ink profile...** button loads
 the `*-profile.json` written by `tools\cmyk_calibrate.py`, so the simulation
 multiplies your pens' measured transmittances instead of the display ink
 colours. The uncalibrated display approximation now matches the Tombow process
@@ -959,8 +959,11 @@ Generator pages are previewed **1:1** with the auto fit skipped, so that
 Artwork scale sets the physical drawing size; imported artwork on the Convert
 tab still uses the selected Fit mode.
 Generator tab controls fill the settings column, with the tab's hint and
-status text stacked below them; the settings column has a 280 px floor so it
-cannot be crushed by the preview.
+status text stacked below them. The settings column starts wide enough for the
+visible Convert controls, expands when a wider settings group is opened, and
+keeps a 280 px floor so it cannot be crushed by the preview. The preview's
+checkbox and fit actions occupy two rows so they do not force the settings
+column into a horizontal scrollbar.
 
 ### Turtletoy artwork
 

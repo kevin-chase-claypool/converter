@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-23 | `WSW-20261123-013` | implemented | [Auto-size the settings pane and set preview defaults](2026/2026-11-23-auto-size-settings-pane-and-preview-defaults.md) | `user-interface`, `layout`, `preview`, `ink-simulation`, `settings` |
 | 2026-11-23 | `WSW-20261123-012` | implemented | [Use the Tombow process palette in the CMYK preview](2026/2026-11-23-tombow-process-preview-colors.md) | `cmyk`, `color-management`, `tombow`, `process-blue`, `process-magenta`, `process-yellow`, `preview`, `ink-simulation` |
 | 2026-11-23 | `WSW-20261123-011` | implemented | [Color-manage CMYK sources and reduce adjacent pen lifts](2026/2026-11-23-cmyk-color-profile-and-pen-down-chaining.md) | `cmyk`, `color-management`, `display-p3`, `icc`, `pen-down`, `path-chaining`, `toolpath-efficiency`, `continuous` |
 | 2026-11-23 | `WSW-20261123-010` | implemented | [Strengthen Fine detail edge separation and sharpening](2026/2026-11-23-cmyk-fine-detail-edge-separation.md) | `cmyk`, `edge-flow`, `fine-detail`, `keylines`, `sharpening` |

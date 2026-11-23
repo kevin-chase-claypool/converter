@@ -825,14 +825,16 @@ class ToolShellTests(unittest.TestCase):
         self.assertTrue(
             window.preview_panel.isAncestorOf(window.preview_motion_check)
         )
-        self.assertTrue(window.preview_motion_check.isChecked())
-        window.preview_motion_check.setChecked(False)
         self.assertFalse(window.gl_preview.show_pen_down_path)
         self.assertFalse(window.show_pen_down_path.isChecked())
-        # The sidebar checkbox and the menu action stay in sync both ways.
-        window.show_pen_down_path.setChecked(True)
-        self.assertTrue(window.preview_motion_check.isChecked())
+        self.assertFalse(window.preview_motion_check.isChecked())
+        window.preview_motion_check.setChecked(True)
         self.assertTrue(window.gl_preview.show_pen_down_path)
+        self.assertTrue(window.preview_motion_check.isChecked())
+        # The sidebar checkbox and the menu action stay in sync both ways.
+        window.show_pen_down_path.setChecked(False)
+        self.assertFalse(window.preview_motion_check.isChecked())
+        self.assertFalse(window.gl_preview.show_pen_down_path)
 
     def test_preview_panel_has_an_ink_simulation_toggle(self):
         window = self.module.MainWindow()
@@ -840,10 +842,10 @@ class ToolShellTests(unittest.TestCase):
         self.assertTrue(
             window.preview_panel.isAncestorOf(window.ink_sim_check)
         )
-        self.assertFalse(window.ink_sim_check.isChecked())
-        self.assertFalse(window.gl_preview.ink_simulation)
-        window.ink_sim_check.setChecked(True)
         self.assertTrue(window.gl_preview.ink_simulation)
+        self.assertTrue(window.ink_sim_check.isChecked())
+        window.ink_sim_check.setChecked(False)
+        self.assertFalse(window.gl_preview.ink_simulation)
 
     def test_gl_preview_builds_multiply_neutral_hidden_inks(self):
         import converter_core as converter
@@ -877,8 +879,38 @@ class ToolShellTests(unittest.TestCase):
         window.show()
         self.app.processEvents()
         tools_width, preview_width = window.main_split.sizes()
-        self.assertLessEqual(tools_width, 420)
-        self.assertGreater(preview_width, tools_width * 2)
+        self.assertGreaterEqual(
+            tools_width, window.tools_pane_control_width()
+        )
+        self.assertEqual(
+            window.sidebar_scroll.horizontalScrollBar().maximum(), 0
+        )
+        self.assertGreater(preview_width, 500)
+
+    def test_opening_a_wide_control_group_grows_the_settings_pane(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.resize(1500, 950)
+        window.show()
+        self.app.processEvents()
+        start_width = window.stack.width()
+        section = next(
+            section
+            for section in window.sidebar_sections
+            if section.toggle.text().endswith("Theta kinematics")
+        )
+        self.assertFalse(section.content.isVisible())
+
+        section.toggle.setChecked(True)
+        self.app.processEvents()
+
+        self.assertGreater(window.stack.width(), start_width)
+        self.assertGreaterEqual(
+            window.stack.width(), window.tools_pane_control_width()
+        )
+        self.assertEqual(
+            window.sidebar_scroll.horizontalScrollBar().maximum(), 0
+        )
 
     def test_resolve_active_source_returns_the_convert_artwork(self):
         window = self.module.MainWindow()

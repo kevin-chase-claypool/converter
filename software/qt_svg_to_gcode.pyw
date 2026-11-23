@@ -243,7 +243,7 @@ class GLPreview(QOpenGLWidget):
         self.moves = []
         # None shows every tagged ink; a set filters the drawn layers live.
         self.visible_inks = None
-        self.ink_simulation = False
+        self.ink_simulation = True
         self.sim_ink_colors = None
         # Ink laid down by one simulated stroke; rebuilt when the view scale
         # changes enough that a stroke covers a different fraction of a pixel.
@@ -259,7 +259,7 @@ class GLPreview(QOpenGLWidget):
         # is silently trimmed; drawing it makes that visible while the scale is
         # being chosen.
         self.reach_color = QColor("#15803d")
-        self.show_pen_down_path = True
+        self.show_pen_down_path = False
         self.show_machine_reach = True
         # Live placement. `placement` is where the artwork should sit relative to
         # the bed center; `planned_offset` is what the current plan already bakes
@@ -1468,7 +1468,7 @@ class MainWindow(QMainWindow):
         self.motion_color_button = QPushButton("Motion")
         self.motion_color_button.clicked.connect(lambda: self.choose_preview_color("motion"))
         self.show_pen_down_path = QCheckBox("Show X/Y pen-down path")
-        self.show_pen_down_path.setChecked(True)
+        self.show_pen_down_path.setChecked(False)
         self.show_machine_reach = QCheckBox("Show machine reach guide")
         self.show_machine_reach.setChecked(True)
         color_widget = QWidget()
@@ -1497,15 +1497,16 @@ class MainWindow(QMainWindow):
         sidebar_layout = QVBoxLayout(sidebar)
         sidebar_layout.setContentsMargins(0, 0, 0, 0)
         sidebar_layout.setSpacing(4)
+        self.sidebar_sections = []
         expanded_groups = {"Geometry", "Fill", "Motion"}
         for group_title, _items in converter.TEXT_FIELD_GROUPS:
-            sidebar_layout.addWidget(
-                CollapsibleSection(
-                    group_title,
-                    group_boxes[group_title],
-                    group_title in expanded_groups,
-                )
+            section = CollapsibleSection(
+                group_title,
+                group_boxes[group_title],
+                group_title in expanded_groups,
             )
+            self.sidebar_sections.append(section)
+            sidebar_layout.addWidget(section)
         sidebar_layout.addStretch(1)
         sidebar_scroll = QScrollArea()
         self.sidebar_scroll = sidebar_scroll
@@ -1520,6 +1521,9 @@ class MainWindow(QMainWindow):
         self.gl_preview = GLPreview()
         self.show_pen_down_path.toggled.connect(self.gl_preview.set_show_pen_down_path)
         self.show_machine_reach.toggled.connect(self.gl_preview.set_show_machine_reach)
+        self.gl_preview.set_show_pen_down_path(
+            self.show_pen_down_path.isChecked()
+        )
         self.gl_preview.placementChanged.connect(self.on_placement_changed)
         preview_layout.addWidget(self.gl_preview, 1)
 
@@ -1585,6 +1589,7 @@ class MainWindow(QMainWindow):
         self.preview_motion_check.toggled.connect(self.show_pen_down_path.setChecked)
         self.show_pen_down_path.toggled.connect(self.preview_motion_check.setChecked)
         self.ink_sim_check = QCheckBox("Ink simulation (multiply)")
+        self.ink_sim_check.setChecked(True)
         self.ink_sim_check.setToolTip(
             "CMYK preview only: multiply the ink layers over the paper white "
             "in plot order, the way translucent pens combine, instead of "
@@ -1594,6 +1599,7 @@ class MainWindow(QMainWindow):
             "coverage."
         )
         self.ink_sim_check.toggled.connect(self.gl_preview.set_ink_simulation)
+        self.gl_preview.set_ink_simulation(self.ink_sim_check.isChecked())
         self.ink_profile_button = QPushButton(
             "Ink profile...", clicked=self.choose_ink_profile
         )
@@ -1602,14 +1608,20 @@ class MainWindow(QMainWindow):
             "Ink simulation then multiplies your pens' measured colours "
             "instead of the display colours."
         )
-        clip_row = QHBoxLayout()
-        clip_row.addWidget(self.preview_motion_check)
-        clip_row.addWidget(self.ink_sim_check)
-        clip_row.addWidget(self.ink_profile_button)
-        clip_row.addWidget(self.fill_bed_button)
-        clip_row.addWidget(self.fit_inside_button)
-        clip_row.addWidget(self.clip_warning, 1)
-        preview_layout.addLayout(clip_row)
+        # Keep the preview's minimum width below the settings content's width.
+        # A single row of every checkbox and action used to force a 974 px
+        # preview floor, which blocked the sidebar from fitting its controls.
+        render_row = QHBoxLayout()
+        render_row.addWidget(self.preview_motion_check)
+        render_row.addWidget(self.ink_sim_check)
+        render_row.addStretch(1)
+        preview_layout.addLayout(render_row)
+        fit_row = QHBoxLayout()
+        fit_row.addWidget(self.ink_profile_button)
+        fit_row.addWidget(self.fill_bed_button)
+        fit_row.addWidget(self.fit_inside_button)
+        fit_row.addWidget(self.clip_warning, 1)
+        preview_layout.addLayout(fit_row)
 
         self.stale_warning = QLabel(
             "Settings changed since this preview - press Preview to rebuild it."
@@ -1644,6 +1656,12 @@ class MainWindow(QMainWindow):
         main_split.setStretchFactor(0, 0)
         main_split.setStretchFactor(1, 1)
         main_split.setSizes([380, 1120])
+        for section in self.sidebar_sections:
+            section.toggle.toggled.connect(
+                lambda _checked: QTimer.singleShot(
+                    0, self.fit_tools_pane_to_controls
+                )
+            )
         window_layout.addWidget(main_split, 1)
 
         self.log = QTextEdit()
@@ -1706,6 +1724,28 @@ class MainWindow(QMainWindow):
         self.update_file_status()
         self.svg_path.textChanged.connect(lambda _text: self.update_file_status())
         self.gcode_path.textChanged.connect(lambda _text: self.update_file_status())
+        QTimer.singleShot(0, self.fit_tools_pane_to_controls)
+
+    def tools_pane_control_width(self):
+        """Width needed to show the visible settings controls without clipping."""
+        sidebar = self.sidebar_scroll.widget()
+        return (
+            max(self.stack.minimumWidth(), sidebar.minimumSizeHint().width())
+            + self.sidebar_scroll.verticalScrollBar().sizeHint().width()
+            + 2 * self.sidebar_scroll.frameWidth()
+        )
+
+    def fit_tools_pane_to_controls(self):
+        """Grow the settings pane to its controls without squeezing the preview."""
+        sizes = self.main_split.sizes()
+        total = sum(sizes)
+        if total <= 0:
+            return
+        preview_floor = self.preview_panel.minimumSizeHint().width()
+        available = max(self.stack.minimumWidth(), total - preview_floor)
+        target = min(self.tools_pane_control_width(), available)
+        if target > sizes[0]:
+            self.main_split.setSizes([target, total - target])
 
     def active_source_tab(self):
         """The tab that supplies artwork; None when Convert is active."""
