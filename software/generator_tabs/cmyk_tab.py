@@ -392,6 +392,14 @@ class CmykTab(GeneratorTab):
             "field."
         )
         screen.addRow("Flow layers", self.flow_layers)
+        self.detail_button = QPushButton("Fine detail")
+        self.detail_button.setToolTip(
+            "Edge-flow only: set a pen-aware portrait screen at 1.5 pen "
+            "widths, smoothing near 2.5 pen widths, fewer density layers, "
+            "and Path tolerance no larger than 0.10 mm."
+        )
+        self.detail_button.clicked.connect(self.apply_detail_preset)
+        screen.addRow("Precision", self.detail_button)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
         screen.addRow("Dot size", self.dot_size)
         self.solid_dots = QCheckBox("Solid dots")
@@ -858,6 +866,43 @@ class CmykTab(GeneratorTab):
             f"{self.pen_width.value():.2f} mm pen at "
             f"{self.scale_pct.value():.0f} % artwork scale."
         )
+
+    def apply_detail_preset(self, _checked=False):
+        """Fit Edge-flow geometry to the physical pen for portrait detail."""
+        edge_flow = self.style.findData("edge_flow")
+        if edge_flow < 0:
+            self.report_error("Edge-flow streamlines are not available.")
+            return
+        self.style.setCurrentIndex(edge_flow)
+        scale = max(0.01, self.scale_pct.value() / 100.0)
+        pen = max(0.1, self.pen_width.value())
+        pitch = round(pen * 1.5 / scale / 0.05) * 0.05
+        smoothing = round(
+            max(1.2, min(2.0, pen * 2.5)) / 0.1
+        ) * 0.1
+        tolerance = round(
+            max(0.05, min(0.10, pen * 0.15)) / 0.05
+        ) * 0.05
+        layers = 2 if pen <= 0.7 else 3
+        self.pitch.setValue(max(0.1, min(8.0, pitch)))
+        self.flow_smoothing.setValue(smoothing)
+        self.flow_layers.setValue(layers)
+        self.path_tolerance.setValue(
+            min(self.path_tolerance.value(), tolerance)
+        )
+        effective_pitch = self.pitch.value() * scale
+        message = (
+            f"Fine detail for a {pen:.2f} mm pen: Dot pitch "
+            f"{self.pitch.value():.2f} mm = "
+            f"{effective_pitch:.2f} mm on paper "
+            f"({effective_pitch / pen:.2f} pen widths); Flow smoothing "
+            f"{self.flow_smoothing.value():.1f} mm; "
+            f"Flow layers {self.flow_layers.value()}; Path tolerance "
+            f"{self.path_tolerance.value():.2f} mm. Preview to compare."
+        )
+        self.status.setText(message)
+        if self.host is not None:
+            self.host.generator_status(message)
 
     def _registration_crosses(self):
         """Four small crosses every ink draws, for four-pass alignment."""

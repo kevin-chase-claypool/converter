@@ -3510,6 +3510,35 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(tab.pitch.value(), 0.15, places=2)
         self.assertIn("matches", tab.status.text())
 
+    def test_fine_detail_preset_scales_edge_flow_to_the_pen(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.pen_width.setValue(0.6)
+        tab.scale_pct.setValue(260)
+        tab.flow_smoothing.setValue(4.0)
+        tab.flow_layers.setValue(5)
+        tab.path_tolerance.setValue(0.15)
+
+        tab.detail_button.click()
+
+        self.assertAlmostEqual(tab.pitch.value(), 0.35, places=2)
+        self.assertAlmostEqual(
+            tab.pitch.value() * tab.scale_pct.value() / 100.0,
+            0.91,
+            places=2,
+        )
+        self.assertAlmostEqual(tab.flow_smoothing.value(), 1.5, places=1)
+        self.assertEqual(tab.flow_layers.value(), 2)
+        self.assertAlmostEqual(tab.path_tolerance.value(), 0.10, places=2)
+        self.assertIn("Fine detail", tab.status.text())
+
+        tab.pen_width.setValue(0.8)
+        tab.scale_pct.setValue(150)
+        tab.detail_button.click()
+        self.assertAlmostEqual(tab.pitch.value(), 0.80, places=2)
+        self.assertAlmostEqual(tab.flow_smoothing.value(), 2.0, places=1)
+        self.assertEqual(tab.flow_layers.value(), 3)
+
     def test_registration_crosses_are_identical_on_every_ink(self):
         tab = self.make_tab()
         tab.registration_marks.setChecked(True)

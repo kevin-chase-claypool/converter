@@ -29,6 +29,9 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
   layers for darker coverage and no shared 2D block lattice
 - Auto image curve for the current portrait: brightness 100 %, contrast 235 %,
   saturation 120 %, GCR 85 %, gamma 0.70
+- Fine-detail preset: 1.5 effective pen widths, smoothing near 2.5 pen widths
+  clamped to `1.2-2.0 mm`, two layers at or below a `0.7 mm` pen and three
+  above it, and Path tolerance no larger than `0.10 mm`
 - Optional preview of each channel and composite
 
 ## Implementation plan

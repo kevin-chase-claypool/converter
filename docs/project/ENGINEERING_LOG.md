@@ -1,5 +1,37 @@
 # Engineering Log
 
+<a id="elog-20261123-cmyk-edge-flow-fine-detail-preset"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Add an Edge-flow fine-detail preset
+
+- The owner reviewed a `0.6 mm`-pen face render and asked for more precise
+  eye, nose, and lip structure. The saved `260 %`-scale recipe used `4.0 mm`
+  Flow smoothing, five Flow layers, and `0.45 mm` source pitch.
+- Same-scale software renders separated the causes. Five-layer
+  sub-pen-offset networks filled each dark region quickly, especially after
+  the new Auto curve increased ink coverage rather than leaving sparse gaps.
+  The `4.0 mm` tensor blur also merged compact facial boundaries.
+- Reducing pitch alone was rejected: it adds seed density and can over-ink a
+  dark face. The new explicit **Fine detail** preset instead uses `1.5`
+  effective pen widths, smoothing near `2.5` pen widths clamped to
+  `1.2-2.0 mm`, two layers for a `0.6 mm` pen, and Path tolerance at or below
+  `0.10 mm`.
+- At `0.6 mm` pen and `260 %` scale the preset selects `0.35 mm` source pitch
+  (`0.91 mm` effective), `1.5 mm` smoothing, two layers, and `0.10 mm`
+  tolerance. At `0.8 mm` pen and `150 %` scale it selects `0.80 mm` source
+  pitch (`1.2 mm` effective), `2.0 mm` smoothing, and three layers.
+- A `600 px` four-ink software comparison showed the eye, nose, and lip
+  boundaries remaining more distinct than in the five-layer/`4.0 mm`
+  smoothing render while preserving facial color separation.
+- The new preset regression passes, and complete converter discovery passes
+  `639` tests with one expected OpenGL-context skip.
+- The action explicitly changes saved Edge-flow layout; Auto remains
+  image-only. Pen spread, ink opacity, paper response, and the separate
+  continuous Black-keyline treatment for the mouth remain unverified.
+- Evidence: `WSW-20261123-006`;
+  `docs/changes/windows-software/2026/2026-11-23-cmyk-edge-flow-fine-detail-preset.md`.
+- Category: windows-software, cmyk, edge-flow, fine-detail, pen-width,
+  portrait, physical-validation-pending.
+
 <a id="elog-20261123-cmyk-edge-flow-auto-density"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Make Edge-flow Auto preserve portrait density
 

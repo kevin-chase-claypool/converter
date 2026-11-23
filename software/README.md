@@ -587,6 +587,15 @@ Current tools:
   seed pitch, the screen grows the pitch rather than randomly dropping lines.
   Keep the effective pitch at least `1.5` pen widths when highlights must show
   tone; a pitch finer than the physical pen leaves no white paper to vary.
+  The explicit **Fine detail** action fits a portrait screen to the current
+  Pen width and Artwork scale: it sets Dot pitch to `1.5` effective pen widths,
+  Flow smoothing to about `2.5` pen widths (clamped to `1.2-2.0 mm`), uses two
+  layers for pens at or below `0.7 mm` and three layers above that, and lowers
+  Path tolerance to at most `0.10 mm`. It selects Edge-flow if another screen
+  style was active and intentionally changes the saved layout; Auto remains
+  image-only. For a `0.6 mm` pen at `260 %` scale this gives a `0.35 mm`
+  source pitch (`0.91 mm` effective), `1.5 mm` smoothing, two layers, and
+  `0.10 mm` tolerance.
   The implementation lives in
   [`converter_core/structure_tensor.py`](converter_core/structure_tensor.py);
   output uses the existing four-file CMYK save, preview, offset, and G-code
