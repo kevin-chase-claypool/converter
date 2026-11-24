@@ -26,6 +26,7 @@ from .shading import (
     tone_terrain_contours,
 )
 from .structure_tensor import (
+    edge_flow_coverage_factor,
     trace_shared_structure_streamlines,
     trace_structure_streamlines,
 )
@@ -701,6 +702,7 @@ def _auto_screen_coverage(
     style_key,
     pen_width_mm,
     effective_pitch_mm,
+    flow_layers=3,
 ):
     """Approximate the area each ink covers after Auto's screen pass."""
     import numpy as np
@@ -720,6 +722,20 @@ def _auto_screen_coverage(
                 0.0,
             )
         return coverage
+    if style_key == "edge_flow":
+        area_factor = edge_flow_coverage_factor(
+            pen_mm,
+            pitch_mm,
+            flow_layers,
+        )
+        return {
+            channel: np.clip(
+                tones[channel] * area_factor,
+                0.0,
+                1.0,
+            )
+            for channel in CHANNELS
+        }
     area_factor = min(1.0, pen_mm / pitch_mm)
     return {
         channel: np.clip(tones[channel] * area_factor, 0.0, 1.0)
@@ -774,6 +790,7 @@ def auto_photo_settings(
     style=None,
     dot_pitch_mm=None,
     ink_colors=None,
+    flow_layers=3,
 ):
     """Choose image controls from detail, tone, and process-ink accuracy.
 
@@ -851,6 +868,7 @@ def auto_photo_settings(
             style_key,
             pen_width_mm,
             effective_pitch_mm,
+            flow_layers,
         )
         predicted = predict_cmyk_rgb(coverage, ink_colors=ink_colors)
         return _auto_prediction_metrics(

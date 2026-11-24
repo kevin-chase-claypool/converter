@@ -1,5 +1,39 @@
 # Engineering Log
 
+<a id="elog-20261123-edge-flow-tone-phase-penups"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Correct shared Edge-flow tone gating and penups
+
+- A rendered check of the live `IMG_0514.JPG` recipe showed the new shared
+  Edge-flow network was black-dominated: `95.4 %` of the inked union rendered
+  below `0.2` luminance, `13.1 %` had all four inks, and the coverage-only Auto
+  estimate still claimed `4.7/255`.
+- The cause was correlated stopping: all four channels used the same path,
+  layer, arc-length threshold, and therefore the same local ink runs whenever
+  their tone fields were similar.
+- A full revert was rejected after rendering the parent snapshot. It reduced
+  four-way overlap to `0.59 %` and dark union pixels to `67.6 %`, but restored
+  the independent rainbow/speckle path networks.
+- Shared geometry is retained. Each ink now gets an independent deterministic
+  phase salt and a normalized pen-width/pitch/layer occupancy budget. Auto uses
+  the same occupancy factor and labels the result a coverage estimate.
+- The existing `5 mm` adjacent chain is enabled for Edge-flow. On the live
+  portrait it reduced corrected M3 sequences from `18,081` to `7,965` while
+  raising ink area from `32.96 %` to `36.30 %`; dark union pixels stayed near
+  `65 %` and four-way overlap stayed below `0.6 %`.
+- The live `260 %` portrait has a `305.46 mm` radius against `180 mm` reach.
+  The owner confirmed that this is an intentional circular crop that fills the
+  bed, so production keeps manual `1.0 / 260 %` and offsets
+  `-3.17, -28.74 mm`. **Fit inside** gives about `153.21 %` equivalent scale
+  only when the whole uncropped image is wanted. A live UI check found
+  generator sources reset explicit fits to manual `1.0`; that path now
+  preserves an operator-requested fit and reports its effective radius.
+- The CMYK test module passes `139` tests. Complete converter discovery passes
+  `665` tests with one expected OpenGL-context skip.
+- Evidence: `WSW-20261123-018`.
+- Category: windows-software, cmyk, edge-flow, shared-path, tone-gating,
+  black-overprint, auto-prediction, pen-down, toolpath-efficiency,
+  physical-validation-pending.
+
 <a id="elog-20261123-shared-edge-flow-paths"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Share Edge-flow paths across CMYK inks
 

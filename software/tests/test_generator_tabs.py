@@ -420,6 +420,30 @@ class ToolShellTests(unittest.TestCase):
         convert_settings = window.settings_for_source(window.convert_root)
         self.assertEqual(convert_settings.fit_mode, window.settings().fit_mode)
 
+    def test_explicit_fit_inside_applies_to_generator_sources(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.show_tool("Flow Field")
+        flow = window.stack.currentWidget()
+        window.raw_contours = [
+            [
+                (-200.0, -200.0),
+                (200.0, -200.0),
+                (200.0, 200.0),
+                (-200.0, 200.0),
+                (-200.0, -200.0),
+            ]
+        ]
+        window.fields["scale"].setText("1")
+        window.fields["machine_reach_radius_mm"].setText("180")
+        window.fit_inside()
+
+        settings = window.settings_for_source(flow)
+        self.assertEqual(settings.fit_mode, "inside")
+        self.assertLess(settings.scale, 1.0)
+        radius, reach = window.clip_info()
+        self.assertLessEqual(radius, reach + 1e-6)
+
     def test_self_screened_tools_stop_the_fill_pass(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

@@ -1289,6 +1289,10 @@ class MainWindow(QMainWindow):
         self.raw_cache_key = None
         self.preview_index = 0
         self.preview_progress = 0.0
+        # Generator pages default to 1:1 so their own Artwork scale governs
+        # size. An explicit fit action must override that default for this
+        # artwork instead of being discarded in settings_for_source().
+        self.generator_fit_override = False
         self.drawing_color = QColor("#2563eb")
         self.undrawn_color = QColor("#bcd0f5")
         self.motion_color = QColor("#be123c")
@@ -1802,10 +1806,12 @@ class MainWindow(QMainWindow):
     def settings_for_source(self, source_tab):
         """Build settings for the active tab.
 
-        A generator page is already laid out in millimetres, so it is plotted
+        A generator page is already laid out in millimetres, so it defaults to
         1:1 with the fit mode manual. The Convert tab's auto fit would
         otherwise renormalize every generator result to the reach circle and
-        hide the tab's Artwork scale control.
+        hide the tab's Artwork scale control. An explicit **Fit inside** or
+        **Fill bed** action opts this artwork into that fit for every generator
+        source instead of being discarded here.
 
         A tab may also declare ``SELF_SCREENED = True`` when it draws its own
         tone marks (CMYK dots): the Fill patterns would then hatch every dot
@@ -1813,9 +1819,10 @@ class MainWindow(QMainWindow):
         """
         settings = self.settings()
         if source_tab is not self.convert_root:
-            settings = dataclasses.replace(
-                settings, fit_mode="manual", scale=1.0
-            )
+            if not self.generator_fit_is_active():
+                settings = dataclasses.replace(
+                    settings, fit_mode="manual", scale=1.0
+                )
             if bool(getattr(source_tab, "SELF_SCREENED", False)):
                 settings = dataclasses.replace(settings, hatch_spacing_mm=0.0)
             # A tab may override fields for its own output (the CMYK tab's Pen
@@ -1825,6 +1832,18 @@ class MainWindow(QMainWindow):
             if callable(hook):
                 settings = hook(settings)
         return settings
+
+    def generator_fit_is_active(self):
+        """Whether an explicit auto-fit owns generator-tab scale."""
+        if self.generator_fit_override:
+            return True
+        if self.fit_mode() == "manual":
+            return False
+        try:
+            scale = float(self.fields["scale"].text() or 1.0)
+        except ValueError:
+            return False
+        return math.isfinite(scale) and scale > 0.0 and abs(scale - 1.0) > 1e-6
 
     def on_tool_changed(self):
         """A preview belongs to one tool; switching tools only marks it stale."""
@@ -4220,10 +4239,28 @@ class MainWindow(QMainWindow):
     def clip_info(self):
         """Pre-clip artwork radius and the reach cap, or None when unknown."""
         reach = float(getattr(self.gl_preview.settings, "machine_reach_radius_mm", 0.0))
-        source = self.raw_contours if self.raw_contours else self.contours
+        source = self.clip_source_contours()
         if reach <= 0.0 or not source:
             return None
         return converter.artwork_radius(source), reach
+
+    def clip_source_contours(self):
+        """Return source contours with an explicit generator fit applied."""
+        source = self.raw_contours if self.raw_contours else self.contours
+        tab = self.active_source_tab()
+        if (
+            source
+            and tab is not None
+            and tab is not self.convert_root
+            and self.generator_fit_is_active()
+        ):
+            fitted = converter.apply_geometry_settings(
+                source,
+                self.settings_for_source(tab),
+            )
+            if fitted:
+                source = fitted
+        return source
 
     def update_clip_warning(self):
         """Show, next to the preview, that the artwork is being cut by the reach.
@@ -4231,7 +4268,7 @@ class MainWindow(QMainWindow):
         A cropped plot still looks like a finished drawing, so an over-scale
         artwork is the one planning mistake the preview cannot show by itself.
         """
-        source = self.raw_contours if self.raw_contours else self.contours
+        source = self.clip_source_contours()
         reach = float(getattr(self.gl_preview.settings, "machine_reach_radius_mm", 0.0))
         offset_x = float(self.fields["artwork_offset_x_mm"].text() or 0.0)
         offset_y = float(self.fields["artwork_offset_y_mm"].text() or 0.0)
@@ -4285,6 +4322,7 @@ class MainWindow(QMainWindow):
 
     def select_fit_mode(self, mode):
         """Make a fit button's behaviour the standing auto-fit for this artwork."""
+        self.generator_fit_override = True
         combo = self.fields["fit_mode"]
         index = combo.findData(mode)
         if index >= 0 and combo.currentIndex() != index:

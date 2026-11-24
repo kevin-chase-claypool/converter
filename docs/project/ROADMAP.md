@@ -580,9 +580,10 @@
 - [ ] Bench-verify edge-flow CMYK streamlines and select a starting recipe.
   Problem: the new structure-tensor screen is covered by synthetic geometry
   and UI tests (`WSW-20261122-002`). The four plates share one strength-gated
-  luminance guide and one streamline path network; per-ink tone gating and
-  G-code remain separate (`WSW-20261123-017`). No printed four-pass portrait
-  has established a useful pitch, smoothing radius, layer count, or pen order.
+  luminance guide and one streamline path network; per-ink deterministic tone
+  phases and G-code remain separate (`WSW-20261123-018`). No printed four-pass
+  portrait has established a useful pitch, smoothing radius, layer count, or
+  pen order.
   Benefit: one validated recipe turns the visual method into a repeatable
   portrait workflow and records where extra dark-tone layers become too dense.
   Risk: fine streamlines expose pen-up drag, felt-tip spread, four-ink overlay
@@ -599,9 +600,13 @@
   colour reproduction over the reference print's independent per-ink screen
   tracks. Edge-flow now traces one shared geometry and gates each ink along
   that same path, so local CMYK mixtures can overprint instead of appearing as
-  spatially separated colours. The per-channel fallback angles and
-  post-screen connector chain are retained for other styles but not used for
-  this shared Edge-flow network.
+  spatially separated colours. Similar channel tones use independent phase
+  salts and a normalized pen/pitch/layer occupancy budget; the initial
+  correlated gate drove `95.4 %` of the inked union below `0.2` luminance and
+  made `13.1 %` of it four-ink overlap. The corrected software render measures
+  `65.1 %` dark and `0.52 %` four-ink overlap after the adjacent chain. The
+  per-channel fallback angles remain for other styles, and the local connector
+  chain is now used for shared Edge-flow to control penups.
   Status 2026-11-23 colour and time: wide-gamut source profiles are converted
   to sRGB before separation, and open marks can be chained within an
   operator-set adjacent gap. A speed-oriented continuous row style is also
@@ -610,12 +615,22 @@
   Fine-detail recipe drops from `120,676` to `13,533` before planner
   compaction; its exact set emits `7,884` M3 sequences and passes the strict
   motion checker. The continuous row screen produces `530` / `482` marks for
-  the two recipes. A physical four-pass comparison must still choose between
-  image fidelity, visible connectors, and elapsed time.
+  the two recipes. On the current portrait recipe the corrected gate produces
+  `18,081` raw M3 sequences; the `5 mm` adjacent chain reduces that to `7,965`.
+  A physical four-pass comparison must still choose between image fidelity,
+  visible connectors, and elapsed time.
+  Status 2026-11-23 fit gate: explicit **Fit inside** previously changed the
+  global field but generator sources reset it to manual 1:1. Generator fit now
+  reaches Preview, Save, and the effective reach warning. The owner confirmed
+  that the portrait's `305.46 mm` layout is an intentional circular crop, so
+  production keeps manual `1.0 / 260 %`; Fit inside's approximately
+  `153.21 %` equivalent scale is only for an uncropped image.
   Acceptance: print a pre-cropped portrait with the README starting recipe
-  after one HOME + REGISTER; inspect line separation, drag, overlay, and elapsed
-  time; then record the selected recipe in a lab note and revise the README
-  preset or defaults if paper changes the choice.
+  after one HOME + REGISTER; preserve the intentional `260 %` circular crop
+  unless the test explicitly compares the whole-image Fit-inside layout;
+  inspect black overlap, line separation, connector ink, drag, registration,
+  clipping, and elapsed time; then record the selected recipe in a lab note and
+  revise the README preset or defaults if paper changes the choice.
 
 - [ ] Verify the heavy gantry axis under load.
   Problem: the operator reports that the Y motor carries markedly more mass than

@@ -3,7 +3,7 @@
 **Status:** Implemented as the CMYK **Edge-flow streamlines** screen. Current
 behavior and the software-selected recipe are in
 [`../../software/README.md`](../../software/README.md); the current change
-record is `WSW-20261123-005`.
+record is `WSW-20261123-018`.
 
 ## Intent
 Add an optional CMYK rendering mode to the converter that replaces fixed-angle hatch patterns with smooth vector-field-guided streamlines following image contours and forms. Preserve the current CMYK method and all existing output behavior by default.
@@ -15,10 +15,11 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 4. Smooth the direction field and blend toward a configurable fixed fallback angle where structure is weak/ambiguous. Guard low-gradient regions and avoid abrupt transitions.
 5. Trace evenly spaced streamlines using stable numerical integration, seed distribution, minimum-distance/collision checks, bounds clipping, and curvature limits. Modulate the visible fraction of each path with local channel tone instead of switching whole-face density bands.
 6. Build one strength-gated luminance direction field and one shared
-   streamline geometry for image form. Give each CMYK plate its own continuous
-   tone fraction and keyline adjustment along those common paths, then save
-   four separate, page-registered programs so requested mixtures overprint
-   locally.
+   streamline geometry for image form. Give each CMYK plate its own
+   deterministic tone phase, normalized occupancy budget, and keyline
+   adjustment along those common paths, then save four separate,
+   page-registered programs so requested mixtures overprint locally without
+   correlated four-ink black runs.
 7. Emit continuous, stroke-only SVG centerlines compatible with the existing SVG-to-G-code path (no fills, text, or defs); retain units, coordinate mapping, and pen-change/channel separation.
 
 ## Current controls (software-selected starting values)
@@ -29,14 +30,16 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 - Guidance gate: tensor strength plus coherence; weak structure keeps screen
 - Fallback direction: one shared 0-degree screen where structure is weak
 - Maximum density layers: 5 for the current portrait recipe
-- Tone method: deterministic path-local `4-8 mm` ink segments, with extra
-  layers for darker coverage and no shared 2D block lattice
+- Tone method: deterministic path-local ink segments with a per-ink phase salt
+  and a pen-width/pitch/layer occupancy budget; additional layers add local
+  depth without adding every layer at full channel occupancy, and there is no
+  shared 2D block lattice
 - Embedded ICC profiles, including Display P3, are converted to sRGB before
   image analysis and separation; EXIF orientation is applied first
-- **Pen-down chain** remains available for other screens. Edge-flow uses its
-  shared path geometry and may bridge up to `4 mm` of tone-off gaps along that
-  same path; the separate nearest-endpoint chain is not applied because its
-  cross-path connectors would separate the CMYK colour mixture
+- **Pen-down chain** remains available for other screens. Edge-flow bridges up
+  to `4 mm` of tone-off gaps along the same shared path and also chains its
+  per-ink marks within the operator's adjacent gap. The connectors add visible
+  local ink but materially reduce M3/M5 cycles.
 - **Continuous row screen (adjacent joins)** is a speed-oriented alternative:
   tone-pitch rows join nearest non-overlapping adjacent runs into a few long
   chains, accepting visible straight connectors in exchange for fewer M3/M5
@@ -45,8 +48,9 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
   predicted process-ink colour error across Auto levels, brightness, contrast,
   saturation, GCR, and gamma. All four ink weights reset to 100 %. For the
   current portrait and `0.52 mm` effective pitch the result is Auto levels off,
-  brightness 140 %, contrast 140 %, saturation 90 %, GCR 100 %, gamma 0.75,
-  with modelled RGB error `4.7/255`
+  brightness 80 %, contrast 260 %, saturation 90 %, GCR 90 %, gamma 0.60,
+  with a coverage RGB estimate of `32.8/255`. The earlier `4.7/255` figure was
+  a coverage-only claim and is retired.
 - Fine-detail preset: one effective pen width, smoothing near two pen widths
   clamped to `1.0-1.5 mm`, five low-offset layers, `2 mm` path-local tone
   intervals, marks capped near `12 mm`, and Path tolerance no larger
@@ -74,6 +78,10 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 - New mode produces valid continuous stroke-only SVG paths and runs through the current converter without special G-code handling.
 - Lines visibly follow coherent image structures; weak-structure regions use a stable fallback direction.
 - Darker channel regions produce greater appropriate ink coverage without pathological overplotting.
+- Similar channel tones use independent phases on the shared geometry; rendered
+  four-ink overlap stays a small fraction of the inked union.
+- Adjacent per-ink marks are chained when their gap is within the operator's
+  pen-down limit, without turning the shared layer budget into black mass.
 - Deterministic results for fixed settings/seed; no infinite tracing loops; reasonable bounds on output size and runtime.
 
 ## Source idea

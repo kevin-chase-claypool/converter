@@ -20,7 +20,25 @@ EDGE_FLOW_CHROMA_WEIGHT = 0.35
 EDGE_FLOW_STRENGTH_SCALE_FLOOR = 1.0e-4
 
 
-def _path_tone_threshold(distance_mm, path_key, segment_mm, layer):
+def edge_flow_coverage_factor(
+    pen_diameter_mm,
+    pitch_mm,
+    layers,
+):
+    """Approximate one channel's rendered occupancy on a shared network."""
+    pen_mm = max(0.01, float(pen_diameter_mm))
+    pitch = max(0.01, float(pitch_mm))
+    layer_count = max(1, min(6, int(layers)))
+    return min(1.0, pen_mm / pitch) / math.sqrt(layer_count)
+
+
+def _path_tone_threshold(
+    distance_mm,
+    path_key,
+    segment_mm,
+    layer,
+    channel_salt=0,
+):
     """Stable tone threshold at one position along a single streamline."""
     segment_mm = max(1e-6, float(segment_mm))
     segment = int(math.floor(max(0.0, float(distance_mm)) / segment_mm))
@@ -28,6 +46,7 @@ def _path_tone_threshold(distance_mm, path_key, segment_mm, layer):
         segment * 374761393
         + int(path_key) * 668265263
         + int(layer) * 3266489917
+        + int(channel_salt) * 2246822519
     ) & 0xFFFFFFFF
     value = ((value ^ (value >> 13)) * 1274126177) & 0xFFFFFFFF
     value ^= value >> 16
@@ -261,6 +280,8 @@ def _tone_gated_runs(
     keyline_strength=0.0,
     edge_quiet=0.0,
     bridge_mm=0.0,
+    coverage_scale=None,
+    channel_salt=0,
 ):
     """Split one traced path into local tone and optional keyline runs.
 
@@ -268,6 +289,9 @@ def _tone_gated_runs(
     run. The connector still follows the traced streamline, so a dark passage
     costs one pen-down cycle instead of a lift and independent M3/M5 pair for
     every local phase break. Gaps longer than the bridge remain paper.
+    ``coverage_scale`` supplies the shared Edge-flow occupancy budget. The
+    ``channel_salt`` decorrelates each ink's deterministic phase while every
+    ink still samples the same path coordinates.
     """
     runs = []
     current = []
@@ -284,18 +308,25 @@ def _tone_gated_runs(
         )
     for index, point in enumerate(points):
         point_tone = float(tone_at(point[0], point[1]))
-        coverage = (
-            min(1.0, max(0.0, point_tone))
-            if layer == 0
-            else min(
-                1.0,
-                max(
-                    0.0,
-                    (point_tone - threshold)
-                    / max(1e-6, 1.0 - threshold),
-                ),
+        if coverage_scale is None:
+            coverage = (
+                min(1.0, max(0.0, point_tone))
+                if layer == 0
+                else min(
+                    1.0,
+                    max(
+                        0.0,
+                        (point_tone - threshold)
+                        / max(1e-6, 1.0 - threshold),
+                    ),
+                )
             )
-        )
+        else:
+            coverage = min(
+                1.0,
+                max(0.0, point_tone)
+                * max(0.0, float(coverage_scale)),
+            )
         if edge_at is not None and (
             keyline_strength > 0.0 or edge_quiet > 0.0
         ):
@@ -315,6 +346,7 @@ def _tone_gated_runs(
                 path_key,
                 tone_segment,
                 layer,
+                channel_salt,
             )
             < float(coverage)
         )
@@ -404,7 +436,6 @@ def trace_structure_streamlines(
     # coarsened on large pages before tracing has a chance to merge them.
     seed_cap = max(32, (cap * 8) // layer_count)
     base_pitch = max(float(spacing), math.sqrt(area / max(1, seed_cap)))
-
     velocity_x, velocity_y, edge_field, field_geometry = (
         _structure_tensor_velocity(
             guide,
@@ -610,9 +641,11 @@ def trace_shared_structure_streamlines(
 
     The geometry is generated once from the maximum channel coverage, so each
     path has one position and direction for all process inks. Per-channel tone
-    still decides which arc-length segments receive each ink. This keeps the
-    four colour separations co-located where the image requests a mixture
-    instead of allowing each ink to drift onto an independent path.
+    still decides which arc-length segments receive each ink. Independent
+    deterministic phases prevent similar tone fields from selecting the exact
+    same segments and turning every shared path into four-ink black. The shared
+    coordinates still permit local process-colour mixtures where ink segments
+    coincide, without returning to four independent, drifting path networks.
     """
     import numpy as np
 
@@ -628,6 +661,19 @@ def trace_shared_structure_streamlines(
     cap = max(16, int(max_marks))
     seed_cap = max(32, (cap * 8) // layer_count)
     base_pitch = max(float(spacing), math.sqrt(area / max(1, seed_cap)))
+    # Shared layers reuse one path network instead of four independent ones.
+    # Normalize the per-channel occupancy and salt each phase so similar tones
+    # do not select the same arc lengths. Auto uses this same area factor, so
+    # its estimate reflects the sparse stroke geometry instead of raw tone.
+    shared_coverage_scale = edge_flow_coverage_factor(
+        pen_diameter_mm,
+        base_pitch,
+        layer_count,
+    )
+    channel_salts = {
+        channel: index + 1
+        for index, channel in enumerate(channel_names)
+    }
     coverage_field = np.maximum.reduce(
         [np.asarray(tones[channel], dtype=np.float32) for channel in channel_names]
     )
@@ -810,6 +856,8 @@ def trace_shared_structure_streamlines(
                             0.92 if keylines and channel == "k" else 0.0,
                             quiet,
                             bridge_mm,
+                            shared_coverage_scale,
+                            channel_salts[channel],
                         )
                         marks[channel].extend(visible_runs)
                         if len(marks[channel]) > cap:

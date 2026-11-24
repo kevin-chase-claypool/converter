@@ -4,7 +4,7 @@ date: 2026-11-23
 category: windows-software
 affected_categories:
   - windows-software
-status: implemented
+status: superseded
 components:
   - software/converter_core/structure_tensor.py
   - software/converter_core/cmyk.py
@@ -21,12 +21,16 @@ tags:
   - shared-path
   - registration
 related:
+  - WSW-20261123-018
   - WSW-20261123-016
   - WSW-20261123-015
   - WSW-20261123-005
 ---
 
 # Share Edge-flow path geometry across CMYK inks
+
+Superseded by `WSW-20261123-018`, which keeps the shared geometry but replaces
+the correlated tone gate and re-enables local adjacent chaining.
 
 ## Summary
 

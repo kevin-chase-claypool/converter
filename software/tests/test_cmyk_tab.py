@@ -451,14 +451,13 @@ class ScreeningTests(unittest.TestCase):
         self.assertLessEqual(longest, 4.6)
 
     def test_edge_flow_plates_share_one_geometry_network(self):
+        from converter_core import structure_tensor
+
         size = 96
         coords = self.np.arange(size, dtype="float32")
         xx, yy = self.np.meshgrid(coords, coords)
         guide = (xx + yy) / float(2 * (size - 1))
         coverage = self.np.full((size, size), 0.9, dtype="float32")
-        cyan_tone = coverage.copy()
-        magenta_tone = coverage.copy()
-        magenta_tone[:, size // 2 :] = 0.0
         geometry = {
             "off_x": 0.0,
             "off_y": 0.0,
@@ -467,41 +466,152 @@ class ScreeningTests(unittest.TestCase):
             "pixels_w": size,
             "pixels_h": size,
         }
+        calls = []
+
+        def capture_gating(points, *args):
+            calls.append((tuple(points), int(args[-1])))
+            return [[points[0], points[-1]]]
+
+        with mock.patch.object(
+            structure_tensor,
+            "_tone_gated_runs",
+            side_effect=capture_gating,
+        ):
+            converter.screen_cmyk_edge_flow(
+                {
+                    "c": coverage,
+                    "m": coverage,
+                    "y": coverage,
+                    "k": coverage,
+                    "depth": guide,
+                },
+                geometry,
+                spacing_mm=8.0,
+                pen_diameter_mm=1.0,
+                path_tolerance_mm=0.2,
+                flow_smoothing_mm=4.0,
+                flow_layers=1,
+                max_marks=240,
+                seed=7,
+                flow_guide=guide,
+            )
+
+        self.assertGreaterEqual(len(calls), len(converter.CHANNELS))
+        for start in range(0, len(calls), len(converter.CHANNELS)):
+            group = calls[start : start + len(converter.CHANNELS)]
+            self.assertEqual(len(group), len(converter.CHANNELS))
+            self.assertEqual(
+                {salt for _points, salt in group},
+                set(range(1, len(converter.CHANNELS) + 1)),
+            )
+            self.assertTrue(
+                all(points == group[0][0] for points, _salt in group[1:])
+            )
+
+    def test_shared_edge_flow_does_not_render_as_a_black_mass(self):
+        from PIL import Image, ImageDraw
+
+        size = 48
+        image = self.np.ones((size, size, 3), dtype="float32")
+        image[:] = (0.11, 0.18, 0.10)
+        image[4:44, 11:37] = (0.92, 0.70, 0.54)
+        tones = converter.rgb_to_cmyk_tone(
+            image,
+            gcr=1.0,
+            gamma=0.70,
+        )
+        luminance = image @ self.np.array(
+            [0.299, 0.587, 0.114],
+            dtype="float32",
+        )
+        tones["depth"] = 1.0 - luminance
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 80.0,
+            "height_mm": 80.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
         marks = converter.screen_cmyk_edge_flow(
-            {
-                "c": cyan_tone,
-                "m": magenta_tone,
-                "y": cyan_tone,
-                "k": cyan_tone,
-                "depth": guide,
-            },
+            tones,
             geometry,
-            spacing_mm=8.0,
-            pen_diameter_mm=1.0,
-            path_tolerance_mm=0.2,
-            flow_smoothing_mm=4.0,
-            flow_layers=1,
-            max_marks=240,
+            spacing_mm=1.2,
+            pen_diameter_mm=0.6,
+            path_tolerance_mm=0.12,
+            flow_smoothing_mm=2.0,
+            flow_layers=3,
+            max_marks=200000,
             seed=7,
-            flow_guide=guide,
+            keylines=True,
+            color_quiet=0.25,
+            tone_segment_mm=2.0,
+            max_path_mm=12.0,
+            bridge_mm=1.5,
+            flow_guide=tones["depth"],
         )
 
-        def points(marks):
-            return {
-                (round(x, 6), round(y, 6))
-                for line in marks
-                for x, y in line
-            }
+        pixels_per_mm = 4
+        pixels = 80 * pixels_per_mm
+        pen_pixels = 2
+        masks = []
+        for channel in converter.CHANNELS:
+            mask = Image.new("L", (pixels, pixels), 0)
+            draw = ImageDraw.Draw(mask)
+            for line in marks[channel]:
+                points = [
+                    (
+                        int(round(x * pixels_per_mm)),
+                        int(round(y * pixels_per_mm)),
+                    )
+                    for x, y in line
+                ]
+                if len(points) >= 2:
+                    draw.line(
+                        points,
+                        fill=255,
+                        width=pen_pixels,
+                        joint="curve",
+                    )
+            masks.append(
+                self.np.asarray(mask, dtype="float32") / 255.0
+            )
 
-        cyan_points = points(marks["c"])
-        magenta_points = points(marks["m"])
-        self.assertGreater(len(cyan_points), 20)
-        self.assertGreater(len(magenta_points), 20)
+        stack = self.np.stack(masks, axis=-1)
+        union = stack.max(axis=-1) > 0.0
+        self.assertGreater(int(union.sum()), 100)
+        rendered = self.np.ones((pixels, pixels, 3), dtype="float32")
+        for index, factor in enumerate(
+            converter.ink_transmittance_matrix()
+        ):
+            rendered *= 1.0 - stack[..., index : index + 1] * (
+                1.0 - factor
+            )
+        rendered_luminance = rendered @ self.np.array(
+            [0.299, 0.587, 0.114],
+            dtype="float32",
+        )
+
+        all_four_over_union = float(
+            (stack.min(axis=-1) > 0.0).sum() / union.sum()
+        )
+        black_over_union = float(
+            (stack[..., 3] > 0.0).sum() / union.sum()
+        )
+        dark_over_union = float(
+            (rendered_luminance[union] < 0.20).mean()
+        )
+        self.assertLessEqual(
+            sum(len(marks[channel]) for channel in converter.CHANNELS),
+            700,
+        )
+        self.assertLess(all_four_over_union, 0.08)
+        self.assertLess(black_over_union, 0.75)
+        self.assertLess(dark_over_union, 0.70)
         self.assertGreater(
-            len(cyan_points & magenta_points),
-            len(magenta_points) * 0.9,
+            float(rendered_luminance[union].mean()),
+            0.20,
         )
-        self.assertTrue(magenta_points.issubset(cyan_points))
 
     def test_edge_flow_mark_cap_does_not_coarsen_a_dense_fine_pitch(self):
         size = 800
@@ -1203,7 +1313,11 @@ class ScreeningTests(unittest.TestCase):
         )
 
         self.assertFalse(values["auto_levels"])
-        self.assertLessEqual(values["predicted_rgb_error"], 4.0)
+        # The shared Edge-flow gate is opportunistic along a sparse streamline
+        # network. Reporting a single-digit error here would repeat the old
+        # coverage-only deception; the estimate must reflect that missing ink.
+        self.assertGreaterEqual(values["predicted_rgb_error"], 10.0)
+        self.assertLessEqual(values["predicted_rgb_error"], 22.0)
         self.assertEqual(
             values["weights"],
             {"c": 100.0, "m": 100.0, "y": 100.0, "k": 100.0},
@@ -2935,7 +3049,7 @@ class CmykTabTests(unittest.TestCase):
                 1,
             )
 
-    def test_shared_edge_flow_skips_cross_path_chaining(self):
+    def test_shared_edge_flow_chains_short_marks_to_reduce_penups(self):
         tab = self.make_tab()
         tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
         tab.chain_marks.setChecked(True)
@@ -2955,10 +3069,10 @@ class CmykTabTests(unittest.TestCase):
             tab._ensure_layers()
 
         for channel in converter.CHANNELS:
-            self.assertEqual(len(tab._layers[channel]), 2)
+            self.assertEqual(len(tab._layers[channel]), 1)
             self.assertEqual(
                 tab._pen_chain_stats[channel]["connections"],
-                0,
+                1,
             )
 
     def test_edge_flow_builds_one_shared_network_for_all_inks(self):
@@ -3637,11 +3751,12 @@ class CmykTabTests(unittest.TestCase):
             anchor = plan["source_center"]
             self.assertAlmostEqual(anchor[0], expected[0], places=6, msg=channel)
             self.assertAlmostEqual(anchor[1], expected[1], places=6, msg=channel)
-            scaled_radii[channel] = max(
-                math.hypot(x, y)
-                for contour in plan["contours"]
-                for x, y in contour
-            )
+            if plan["contours"]:
+                scaled_radii[channel] = max(
+                    math.hypot(x, y)
+                    for contour in plan["contours"]
+                    for x, y in contour
+                )
 
         # The Artwork scale control still sizes the print: 280 % must draw
         # appreciably larger than 100 % while both stay in one frame.
@@ -3654,13 +3769,16 @@ class CmykTabTests(unittest.TestCase):
                 str(tab._layer_files[channel]), settings
             )
             plan = converter.plan_program(contours, settings)
-            plain_radii.append(
-                max(
-                    math.hypot(x, y)
-                    for contour in plan["contours"]
-                    for x, y in contour
+            if plan["contours"]:
+                plain_radii.append(
+                    max(
+                        math.hypot(x, y)
+                        for contour in plan["contours"]
+                        for x, y in contour
+                    )
                 )
-            )
+        self.assertTrue(scaled_radii)
+        self.assertTrue(plain_radii)
         self.assertGreater(max(scaled_radii.values()), 2.0 * max(plain_radii))
 
     def test_save_writes_one_file_per_ink(self):
@@ -3922,7 +4040,7 @@ class CmykTabTests(unittest.TestCase):
         # stands; the status line suggests what Match pen would set instead.
         self.assertAlmostEqual(tab.pitch.value(), pitch_before, places=3)
         self.assertIn("Auto:", tab.status.text())
-        self.assertIn("predicted RGB error", tab.status.text())
+        self.assertIn("coverage RGB error estimate", tab.status.text())
         self.assertIn("Dot pitch", tab.status.text())
         self.assertIn("Match pen would suggest", tab.status.text())
 
@@ -3990,6 +4108,10 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(
             captured["kwargs"]["resolution_px"],
             1600,
+        )
+        self.assertEqual(
+            captured["kwargs"]["flow_layers"],
+            tab.flow_layers.value(),
         )
         self.assertIn("Dot pitch left at 0.31 mm", tab.status.text())
 

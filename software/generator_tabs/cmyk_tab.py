@@ -217,7 +217,8 @@ class CmykTab(GeneratorTab):
             "Analyze the artwork and fit auto levels, brightness, contrast, "
             "saturation, GCR, gamma, and ink weights against the active "
             "process-ink response. Screen geometry and Dot pitch stay as "
-            "configured. The status line reports the predicted RGB error."
+            "configured. The status line reports an occupancy-based RGB "
+            "estimate, not a paper-validated print-accuracy claim."
         )
         self.auto_button.clicked.connect(self.apply_auto_settings)
         options.addRow("Auto", self.auto_button)
@@ -877,6 +878,7 @@ class CmykTab(GeneratorTab):
                 style=self.style.currentData(),
                 dot_pitch_mm=self.pitch.value(),
                 ink_colors=self._active_ink_colors(),
+                flow_layers=self.flow_layers.value(),
             )
         except Exception as exc:  # noqa: BLE001 - user-facing setup error
             self.report_error(f"Auto settings failed: {exc}")
@@ -918,7 +920,7 @@ class CmykTab(GeneratorTab):
                 else ""
             )
             + (
-                f", predicted RGB error "
+                f", coverage RGB error estimate "
                 f"{values['predicted_rgb_error']:.1f}/255"
                 if "predicted_rgb_error" in values
                 else ""
@@ -1818,11 +1820,7 @@ class CmykTab(GeneratorTab):
                 marks, pen_chain_stats[channel] = (
                     converter.chain_nearby_contours(
                         marks,
-                        max_gap_mm=(
-                            0.0
-                            if style == "edge_flow"
-                            else self.chain_gap.value()
-                        ),
+                        max_gap_mm=self.chain_gap.value(),
                     )
                 )
             if self.registration_marks.isChecked():
