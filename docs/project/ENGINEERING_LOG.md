@@ -1,5 +1,22 @@
 # Engineering Log
 
+<a id="elog-20261124-screen-chain-preview-tags"></a>
+### 🟨 2026-11-24 - WINDOWS SOFTWARE/FIXED - Preserve screen-chain tags in CMYK previews
+
+- The saved Ben3 yellow program already contained `456` M3 commands and `1,323`
+  keep-down bridges, down from the prior `1,898` pen-down strokes, but the
+  preview still reported approximately the pre-bridge M3 count and time.
+- `tag_ink()` converted every preview contour to a plain `InkTrail`, discarding
+  the `ScreenTrail` subtype used by the post-planner bridge decision.
+- Ink tagging now preserves tagged contour subtypes and their attributes while
+  adding the ink channel, so preview planning uses the same bridges as save.
+- A focused regression covers the metadata path; full application restart,
+  Preview, and Save are required for a running process to load the source fix.
+- Evidence: `WSW-20261124-002`;
+  `docs/changes/windows-software/2026/2026-11-24-preserve-screen-chain-preview-tags.md`.
+- Category: windows-software, cmyk, preview, pen-up, metadata, physical-
+  validation-pending.
+
 <a id="elog-20261124-post-planner-screen-chaining"></a>
 ### 🟨 2026-11-24 - WINDOWS SOFTWARE/IMPLEMENTED - Chain screen contours after Xθ/Yθ planning
 

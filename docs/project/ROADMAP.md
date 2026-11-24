@@ -623,8 +623,10 @@
   is faster than lift/travel/lower and remains inside the same operator gap;
   larger gaps still lift. Replaying the Ben3 order predicts M3 reductions from
   `1919/2118/1942/1898` to `620/510/579/524` for K/C/M/Y
-  (`WSW-20261124-001`). A physical four-pass comparison must still choose
-  between image fidelity, visible connectors, and elapsed time.
+  (`WSW-20261124-001`). `WSW-20261124-002` preserves the same tags through
+  CMYK ink preview, so displayed M3 counts and time estimates use the saved
+  bridge decisions. A physical four-pass comparison must still choose between
+  image fidelity, visible connectors, and elapsed time.
   Status 2026-11-23 fit gate: explicit **Fit inside** previously changed the
   global field but generator sources reset it to manual 1:1. Generator fit now
   reaches Preview, Save, and the effective reach warning. The owner confirmed

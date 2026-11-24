@@ -710,7 +710,9 @@ Current tools:
   draws, and they apply instantly: every layer stays loaded, so toggling a
   checkbox never re-screens or re-plans. For CMYK previews the preview data
   area also reports the per-ink M3 (pen-down) counts as
-  `C: n M: n Y: n K: n`, counted from the planned program.
+  `C: n M: n Y: n K: n`, counted from the preview moves after any
+  post-planner screen chaining. These counts and the preview time estimate
+  therefore match the saved program's pen-cycle decisions.
   Preview deliberately defers exact per-ink G-code generation until save so a
   completed preview does not sit behind four large planners. Pressing **Save
   4 G-code files** starts each checked ink's exact program through the same

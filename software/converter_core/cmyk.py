@@ -17,7 +17,7 @@ import io
 import math
 
 from .cancellation import check_cancelled
-from .geometry import ScreenTrail, WaveTrail
+from .geometry import ScreenTrail, WaveTrail, retag_contour
 from .shading import (
     dot_mark_contours,
     greedy_single_line,
@@ -238,8 +238,16 @@ class InkTrail(list):
 
 
 def tag_ink(contours, ink):
-    """Return the contours as :class:`InkTrail` copies carrying *ink*."""
-    return [InkTrail(contour, ink=ink) for contour in contours]
+    """Return copies carrying *ink* without discarding geometry tags."""
+    tagged = []
+    for contour in contours:
+        if type(contour) is list:
+            tagged.append(InkTrail(contour, ink=ink))
+            continue
+        copy = retag_contour(contour, contour)
+        copy.ink = ink
+        tagged.append(copy)
+    return tagged
 
 
 def _weight_map(weights):

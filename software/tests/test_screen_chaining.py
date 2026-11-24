@@ -180,6 +180,22 @@ class ScreenChainingTests(unittest.TestCase):
         self.assertEqual(len(contours), 1)
         self.assertIsInstance(contours[0], converter.ScreenTrail)
 
+    def test_ink_preview_tag_preserves_screen_chain_eligibility(self):
+        contours = [
+            converter.ScreenTrail([(0.0, 0.0), (10.0, 0.0)]),
+            converter.ScreenTrail([(12.0, 0.0), (20.0, 0.0)]),
+        ]
+
+        tagged = converter.tag_ink(contours, "y")
+
+        self.assertIsInstance(tagged[0], converter.ScreenTrail)
+        self.assertEqual(tagged[0].ink, "y")
+        moves = converter.build_preview_moves(tagged, _settings())
+        self.assertEqual(
+            sum(move.get("strategy") == "keep_down_bridge" for move in moves),
+            1,
+        )
+
     def test_preview_marks_the_screen_connector_as_drawn_ink(self):
         contours = [
             converter.ScreenTrail([(0.0, 0.0), (10.0, 0.0)]),
