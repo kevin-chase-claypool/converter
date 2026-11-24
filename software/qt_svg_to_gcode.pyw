@@ -181,6 +181,21 @@ def ink_vertex_colors(
         for _first, _second in zip(contour, contour[1:]):
             artwork_colors.extend(color)
             artwork_colors.extend(color)
+    # The preview geometry appends keep-down bridges after the contour
+    # geometry. Their colour entries must follow in the same order or the
+    # simulation guard sees a short solid-color buffer and silently falls back
+    # to the ordinary per-ink line rendering.
+    for move in moves:
+        if move.get("strategy") != "keep_down_bridge":
+            continue
+        if move.get("bed_start") is None or move.get("bed_end") is None:
+            continue
+        index = move.get("contour")
+        if not isinstance(index, int) or not 0 <= index < len(inks):
+            return None, None
+        color = color_for(inks[index], undrawn_mix)
+        artwork_colors.extend(color)
+        artwork_colors.extend(color)
     drawn_colors = []
     for move in moves:
         if move.get("type") != "draw":

@@ -43,7 +43,10 @@ optimization appear to have done nothing.
 The GPU preview also deliberately returned `(None, None)` from
 `ink_vertex_colors()` whenever any keep-down bridge was present. Once the
 preview tag was preserved, that fallback rendered every plate with the default
-blue colour instead of the four process inks.
+blue colour instead of the four process inks. After that fallback was removed,
+the join still appended bridge vertices to the artwork without appending their
+matching `artwork_solid_color` entries. The simulation guard therefore saw a
+short color buffer and silently used ordinary line rendering.
 
 ## Implementation
 
@@ -53,15 +56,17 @@ renderer. `ScreenTrail` therefore reaches preview planning unchanged, while the
 preview still knows which ink should be drawn.
 
 Per-ink vertex colours now include bridge moves using the bridge's contour
-index, so a connector is rendered in the same ink as the lines it joins.
+index, so a connector is rendered in the same ink as the lines it joins. Both
+the artwork and draw-order color arrays append bridges in the same order as the
+preview geometry, allowing the multiply simulation to remain enabled.
 
 ## Verification
 
 - A focused regression asserts that `tag_ink(ScreenTrail, "y")` returns a
   `ScreenTrail` carrying `ink="y"`.
 - A renderer regression includes a `keep_down_bridge` draw move and verifies
-  that its vertices receive the originating contour's cyan colour instead of
-  falling back to the uniform preview colour.
+  that both artwork and draw-order color arrays contain its originating cyan
+  colour and full vertex count instead of falling back to plain rendering.
 - The existing screen-chain tests verify that preview planning emits
   keep-down bridges, reduces pen-cycle time, and matches emitted G-code.
 - The complete converter suite passes 682 tests with one expected
