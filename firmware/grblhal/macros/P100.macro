@@ -81,8 +81,13 @@ o005 endif
 (2026-10-29: iterative registration checks ended at X 2.30 and Y 0.31, a net)
 (0.85 mm east and 0.7 mm south from the prior 1.45 / 1.01 frame. The X path)
 (was 1.45 -> 3.75 east overshoot -> 2.75 west 1.0 -> 2.30 west 0.45.)
-#<axis_center_correction_x> = 2.30
-#<axis_center_correction_y> = 0.31
+(2026-11-24: another HOME + REGISTER check required the registered pen to)
+(move 1.20 mm north and 1.000 mm west from the 2.30 / 0.31 source frame. Y)
+(therefore rises by 1.20 to 1.51; X falls by 1.000 to 1.30. This source)
+(change has not been uploaded from this workstation: controller FTP/Telnet)
+(at 10.10.10.2 were unreachable during the edit.)
+#<axis_center_correction_x> = 1.30
+#<axis_center_correction_y> = 1.51
 (Candidate Q3 rectangle: measured by jog in G54, converted to G53 MPos.)
 (Q0 uses this verified rectangle; Q3 remains separately locked.)
 #<scan_min_x> = -280.0

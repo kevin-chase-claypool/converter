@@ -228,8 +228,8 @@ installed pen/TMAG offset. Two constants sit between those values and the
 `G10 L20` write:
 
 ```text
-#<axis_center_correction_x> = 2.30
-#<axis_center_correction_y> = 0.31
+#<axis_center_correction_x> = 1.30
+#<axis_center_correction_y> = 1.51
 ...
 G10 L20 P1 X[[#<sensor_to_pen_x> - #<axis_center_correction_x>]] Y[[#<sensor_to_pen_y> - #<axis_center_correction_y>]]
 ```
@@ -292,13 +292,22 @@ ended at X `+2.30`, Y `+0.31`: a net 0.85 mm east and 0.7 mm south movement
 from the prior frame. Deployment and a repeat center-magnet check remain
 pending.
 
-Two further notes from the same edit. `P103.macro` mirrors P100's initialization
-and now carries the two new constants. And the `sensor_to_pen` comment in P100
-says "pen minus TMAG" while the registered, verified frame behaves as "TMAG minus
-pen" - the value written to `G10` behaves as the negative of the comment's
-convention. The sign that reproduces the verified frame is the one to keep, and
-a future calibration must be entered that way; the discrepancy is recorded here
-rather than silently "fixed" in the comment.
+**2026-11-24 registered-offset adjustment.** Another `HOME + REGISTER` check
+required the parked pen to move 1.20 mm north and 1.000 mm west from the
+`2.30 / 0.31` source frame. Because increasing the correction moves the
+registered pen east/north, the new constants are X `+1.30`, Y `+1.51`. The
+registration write becomes `G10 L20 P1 X-1.30 Y-30.9992`. Macro validation
+passed; controller upload and the repeat center-magnet check remain pending
+because ports 21 and 23 on `10.10.10.2` were unreachable.
+
+`P103.macro` declares the same variable names with inert zero values for its
+non-motion initialization diagnostic; it is not a deployed calibration copy.
+The `sensor_to_pen` comment in P100 says "pen minus TMAG" while the registered,
+verified frame behaves as "TMAG minus pen" - the value written to `G10`
+behaves as the negative of the comment's convention. The sign that reproduces
+the verified frame is the one to keep, and a future calibration must be entered
+that way; the discrepancy is recorded here rather than silently "fixed" in the
+comment.
 
 Acceptance for a correction change, either way: run `G65 P113`, then either hold
 a magnet directly under the lifted pen and rotate the bed - it must stay centred

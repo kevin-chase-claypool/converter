@@ -1,5 +1,25 @@
 # Engineering Log
 
+<a id="elog-20261124-p100-north-west-offset"></a>
+### 🟨 2026-11-24 - RP23CNC SOFTWARE/IMPLEMENTED - Move P100 1.2 mm north and 1.0 mm west
+
+- The operator reported another `HOME + REGISTER` placement error and requested
+  a 1.20 mm north plus 1.000 mm west movement.
+- P100's correction moves from X `2.30`, Y `0.31` to X `1.30`, Y `1.51`;
+  increasing it moves the registered pen east/north.
+- The unchanged `sensor_to_pen` vector produces
+  `G10 L20 P1 X-1.30 Y-30.9992`.
+- The P100/P115 safety validator and all 17 macro parsers pass. The 15,819-byte
+  local macro has SHA-256
+  `DABBA2E165B02A7752E1510C330DFDE0D1B9105BBAB3C31E628B5CE554C8AA8F`.
+- Controller upload and physical repeat are pending: ports 21 and 23 on
+  `10.10.10.2` were unreachable. Confirm the remote base before deploying,
+  because the local delta was applied to the tracked `2.30 / 0.31` frame.
+- Evidence: `RPSW-20261124-001`;
+  `docs/report/lab-notes/2026-11-24-p100-north-west-offset.md`.
+- Category: rp23cnc-software, hardware, p100, registration, pen-center, offset,
+  deployment-pending.
+
 <a id="elog-20261123-restore-independent-edge-flow"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Restore independent per-ink Edge-flow networks
 

@@ -9,6 +9,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-24 | `RPSW-20261124-001` | implemented | [Move the P100 registered pen 1.2 mm north and 1.0 mm west](2026/2026-11-24-p100-north-1-2-west-1-0.md) | `grblhal`, `p100`, `registration`, `pen-center`, `offset`, `deployment-pending` |
 | 2026-11-21 | `WSW-20261121-001` | verified | [Add A-axis command-rate equations to the report](../windows-software/2026/2026-11-21-a-axis-rate-equations.md) | `report`, `theta`, `rate-limit`, `equations` |
 | 2026-11-13 | `RPSW-20261113-009` | verified | [Enlarge the black control deck and remove the footer text](2026/2026-11-13-enlarge-black-control-deck.md) | `touchscreen`, `hmi`, `transport-controls`, `layout`, `black-theme`, `footer` |
 | 2026-11-13 | `RPSW-20261113-008` | verified | [Use a dark background for the persistent control deck](2026/2026-11-13-dark-persistent-control-deck.md) | `touchscreen`, `hmi`, `transport-controls`, `feed-override`, `dark-theme`, `user-experience` |
