@@ -48,6 +48,7 @@ from .cmyk_sheet import build_sheet
 
 TITLE = "CMYK"
 ORDER = 25
+EDGE_FLOW_STYLES = ("edge_flow", "edge_flow_shared")
 
 
 def format_seconds(seconds):
@@ -320,7 +321,14 @@ class CmykTab(GeneratorTab):
         self.style.addItem("Halftone dots", "halftone")
         self.style.addItem("Stipple dots", "stipple")
         self.style.addItem("Line screen (tone pitch)", "lines")
-        self.style.addItem("Edge-flow streamlines (structure tensor)", "edge_flow")
+        self.style.addItem(
+            "Edge-flow streamlines (per-ink networks)",
+            "edge_flow",
+        )
+        self.style.addItem(
+            "Shared Edge-flow (experimental co-located CMYK)",
+            "edge_flow_shared",
+        )
         self.style.addItem("Rectilinear fill (joined rows)", "rectilinear")
         self.style.addItem(
             "Continuous row screen (adjacent joins)",
@@ -347,11 +355,11 @@ class CmykTab(GeneratorTab):
             "values from older settings are promoted to this layout when "
             "regenerated. Continuous row screen also bridges nearest adjacent "
             "row runs, trading short visible connectors for far fewer pen "
-            "lifts. Edge-flow traces one common blurred-luminance streamline "
-            "network for all four inks, then varies each ink's fraction along "
-            "those same path segments. Shared paths keep CMYK overprints "
-            "co-located for photo reproduction; extra layers deepen only the "
-            "darker parts of the tone ramp."
+            "lifts. Edge-flow traces a separate equally spaced streamline "
+            "network for each ink from the blurred luminance structure, using "
+            "that ink's local tone, seed, fallback angle, and extra dark-tone "
+            "layers. The experimental shared Edge-flow variant instead traces "
+            "one common CMYK network and gates each ink along its segments."
         )
         self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)
@@ -413,10 +421,10 @@ class CmykTab(GeneratorTab):
         screen.addRow("Flow smoothing", self.flow_smoothing)
         self.flow_layers = int_spin(3, 1, 6)
         self.flow_layers.setToolTip(
-            "Edge-flow only: one shared base streamline network plus common "
-            "offset layers. Each ink gates those same paths by local tone, "
-            "so darker mixtures build on co-located geometry. More layers "
-            "increase shadow density and plotting time."
+            "Edge-flow only: a base streamline layer plus extra offset layers "
+            "where that ink is dark. The default reddit-style screen traces a "
+            "separate network for every pen; the experimental shared style "
+            "uses common paths. More layers increase shadow density and time."
         )
         screen.addRow("Flow layers", self.flow_layers)
         continuity_row = QWidget()
@@ -431,14 +439,14 @@ class CmykTab(GeneratorTab):
         self.chain_marks.setToolTip(
             "Chain the nearest open mark endpoints into the same M3/M5 "
             "drawing stroke. A connector up to the shown gap remains visible "
-            "ink. Edge-flow uses shared CMYK paths and bridges up to 4 mm "
-            "along each path; it does not apply the cross-path connector "
-            "chain, which would separate the colours."
+            "ink. Edge-flow also bridges up to 4 mm of tone-off gaps along "
+            "each individual streamline before applying this nearest-endpoint "
+            "chain."
         )
         self.chain_gap.setToolTip(
             "Maximum direct connector length between open screen marks when "
-            "Keep pen down is enabled outside Edge-flow. Closed shapes and "
-            "tagged Wave rows remain separate."
+            "Keep pen down is enabled. Closed shapes and tagged Wave rows "
+            "remain separate."
         )
         screen.addRow("Pen-down chain", continuity_row)
         self.detail_button = QPushButton("Fine detail")
@@ -1006,7 +1014,7 @@ class CmykTab(GeneratorTab):
         """Whether the controls still match the current Fine detail preset."""
         if (
             self.calibration_mode.isChecked()
-            or self.style.currentData() != "edge_flow"
+            or not self._edge_flow_style_active()
             or not self.flow_keylines.isChecked()
         ):
             return False
@@ -1560,12 +1568,16 @@ class CmykTab(GeneratorTab):
             not in ("waves_even", "waves_zero", "tsp")
         )
 
+    def _edge_flow_style_active(self):
+        """Whether the selected screen uses Edge-flow geometry."""
+        return (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData() in EDGE_FLOW_STYLES
+        )
+
     def _update_wave_spacing_guard(self, _value=None):
         """Keep the guard meaningful for the selected screen style."""
-        flow_selected = (
-            not self.calibration_mode.isChecked()
-            and self.style.currentData() == "edge_flow"
-        )
+        flow_selected = self._edge_flow_style_active()
         equal_wave_selected = (
             not self.calibration_mode.isChecked()
             and self.style.currentData() == "waves_even"
@@ -1661,13 +1673,18 @@ class CmykTab(GeneratorTab):
             "crosses %s" % ("on" if self.registration_marks.isChecked() else "off"),
             "pen offsets %s" % (", ".join(offset_parts) if offset_parts else "none"),
         ]
-        if (
-            not self.calibration_mode.isChecked()
-            and self.style.currentData() == "edge_flow"
-        ):
+        if self._edge_flow_style_active():
             parts.append(
-                "edge flow %.1f mm smoothing, %d layers"
-                % (self.flow_smoothing.value(), self.flow_layers.value())
+                "edge flow %s, %.1f mm smoothing, %d layers"
+                % (
+                    (
+                        "shared"
+                        if self.style.currentData() == "edge_flow_shared"
+                        else "per-ink networks"
+                    ),
+                    self.flow_smoothing.value(),
+                    self.flow_layers.value(),
+                )
             )
         if self._pen_chain_active():
             parts.append(
@@ -1749,7 +1766,8 @@ class CmykTab(GeneratorTab):
         files = {}
         pen_chain_stats = {}
         shared_edge_marks = None
-        if style == "edge_flow":
+        edge_flow_active = style in EDGE_FLOW_STYLES
+        if style == "edge_flow_shared":
             shared_edge_marks = converter.screen_cmyk_edge_flow(
                 tones,
                 geometry,
@@ -1793,12 +1811,50 @@ class CmykTab(GeneratorTab):
                     angle_deg=converter.SCREEN_ANGLES_DEG[channel],
                     seed=self.seed.value() + index,
                     max_marks=self.max_marks.value(),
-                    pen_diameter_mm=self.pen_width.value(),
+                    pen_diameter_mm=(
+                        self.pen_width.value() / factor
+                        if edge_flow_active
+                        else self.pen_width.value()
+                    ),
                     levels=self.levels.value(),
                     overdraw=self.overdraw.value(),
                     solid=self.solid_dots.isChecked(),
                     path_tolerance_mm=self.path_tolerance.value() / factor,
                     depth_tone=tones.get("depth"),
+                    flow_smoothing_mm=(
+                        self.flow_smoothing.value() / factor
+                        if edge_flow_active
+                        else None
+                    ),
+                    flow_layers=self.flow_layers.value(),
+                    flow_guide=tones["depth"] if edge_flow_active else None,
+                    flow_keylines=(
+                        self.flow_keylines.isChecked()
+                        and channel == "k"
+                        if edge_flow_active
+                        else False
+                    ),
+                    flow_color_quiet=(
+                        0.25
+                        if edge_flow_active and channel != "k"
+                        and self.flow_keylines.isChecked()
+                        else 0.0
+                    ),
+                    flow_tone_segment_mm=(
+                        2.0 / factor
+                        if edge_flow_active and self._detail_preset_active()
+                        else None
+                    ),
+                    flow_max_path_mm=(
+                        12.0 / factor
+                        if edge_flow_active and self._detail_preset_active()
+                        else None
+                    ),
+                    flow_bridge_mm=(
+                        min(4.0, self.chain_gap.value()) / factor
+                        if edge_flow_active and self._pen_chain_active()
+                        else 0.0
+                    ),
                     row_clearance_mm=(
                         (
                             self.pen_width.value()
@@ -1847,11 +1903,19 @@ class CmykTab(GeneratorTab):
         screen = self.calibration_screen.currentData()
         if screen == "match":
             style = self.style.currentData()
-            screen = (
-                style
-                if style in ("lines", "rectilinear", "crosshatch", "edge_flow")
-                else "halftone"
-            )
+            if style == "edge_flow_shared":
+                screen = "edge_flow"
+            else:
+                screen = (
+                    style
+                    if style in (
+                        "lines",
+                        "rectilinear",
+                        "crosshatch",
+                        "edge_flow",
+                    )
+                    else "halftone"
+                )
         layers, manifest = build_sheet(
             width,
             height,
@@ -2331,39 +2395,45 @@ class CmykTab(GeneratorTab):
                 ),
                 "flow_smoothing_mm": (
                     self.flow_smoothing.value()
-                    if style == "edge_flow"
+                    if style in EDGE_FLOW_STYLES
                     else None
                 ),
                 "flow_layers": (
                     self.flow_layers.value()
-                    if style == "edge_flow"
+                    if style in EDGE_FLOW_STYLES
                     else None
                 ),
                 "preserve_black_keylines": (
                     self.flow_keylines.isChecked()
-                    if style == "edge_flow"
+                    if style in EDGE_FLOW_STYLES
                     else False
                 ),
                 "flow_guide": (
-                    "strength_gated_shared_luminance_structure_tensor_"
-                    "continuous_tone"
-                    if style == "edge_flow"
+                    (
+                        "strength_gated_shared_luminance_structure_tensor_"
+                        "continuous_tone"
+                        if style == "edge_flow_shared"
+                        else "strength_gated_luminance_structure_tensor_"
+                        "per_ink_networks_continuous_tone"
+                    )
+                    if style in EDGE_FLOW_STYLES
                     else None
                 ),
                 "edge_flow_path_network": (
-                    "shared_all_inks"
-                    if style == "edge_flow"
+                    (
+                        "shared_all_inks"
+                        if style == "edge_flow_shared"
+                        else "per_ink"
+                    )
+                    if style in EDGE_FLOW_STYLES
                     else None
                 ),
                 "pen_down_chain": {
-                    "enabled": (
-                        self._pen_chain_active()
-                        and style != "edge_flow"
-                    ),
+                    "enabled": self._pen_chain_active(),
                     "max_gap_mm": self.chain_gap.value(),
                     "local_flow_bridge_mm": (
                         min(4.0, self.chain_gap.value())
-                        if style == "edge_flow"
+                        if style in EDGE_FLOW_STYLES
                         and self._pen_chain_active()
                         else 0.0
                     ),

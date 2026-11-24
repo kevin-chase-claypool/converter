@@ -521,7 +521,7 @@ def _auto_photo_baseline_settings(
             )
         return result
 
-    if style_key == "edge_flow":
+    if style_key in ("edge_flow", "edge_flow_shared"):
         # Edge-flow's path-local tone gating leaves more paper than a solid row
         # screen. A neutral-exposure recommendation therefore looks washed out
         # once the streamlines are broken by tone. Keep normal photo brightness
@@ -722,7 +722,7 @@ def _auto_screen_coverage(
                 0.0,
             )
         return coverage
-    if style_key == "edge_flow":
+    if style_key in ("edge_flow", "edge_flow_shared"):
         area_factor = edge_flow_coverage_factor(
             pen_mm,
             pitch_mm,
@@ -888,7 +888,7 @@ def auto_photo_settings(
         "gamma": float(baseline["gamma"]),
         "gcr": float(baseline["gcr"]),
     }
-    if style_key == "edge_flow":
+    if style_key in ("edge_flow", "edge_flow_shared"):
         ranges = {
             "auto_levels": auto_level_choices,
             "saturation": (90, 100, 110, 120, 130),
@@ -1814,7 +1814,7 @@ def screen_cmyk_edge_flow(
     flow_guide=None,
     cancel_check=None,
 ):
-    """Screen all CMYK inks through one shared Edge-flow path network."""
+    """Screen all CMYK inks through one experimental shared path network."""
     spacing = max(0.2, float(spacing_mm))
     marks = trace_shared_structure_streamlines(
         flow_guide if flow_guide is not None else tones.get("depth"),

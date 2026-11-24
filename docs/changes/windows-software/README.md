@@ -8,7 +8,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
-| 2026-11-23 | `WSW-20261123-018` | implemented | [Correct shared Edge-flow tone gating, penups, and generator fits](2026/2026-11-23-shared-edge-flow-tone-phase-penups.md) | `cmyk`, `edge-flow`, `shared-path`, `tone-gating`, `black-overprint`, `photo-reproduction`, `auto-prediction`, `pen-down`, `toolpath-efficiency` |
+| 2026-11-23 | `WSW-20261123-019` | implemented | [Restore independent per-ink Edge-flow networks](2026/2026-11-23-restore-independent-edge-flow.md) | `cmyk`, `edge-flow`, `per-ink`, `structure-tensor`, `four-file-output`, `photo-reproduction`, `pen-down` |
+| 2026-11-23 | `WSW-20261123-018` | superseded | [Correct shared Edge-flow tone gating, penups, and generator fits](2026/2026-11-23-shared-edge-flow-tone-phase-penups.md) | `cmyk`, `edge-flow`, `shared-path`, `tone-gating`, `black-overprint`, `photo-reproduction`, `auto-prediction`, `pen-down`, `toolpath-efficiency` |
 | 2026-11-23 | `WSW-20261123-017` | superseded | [Share Edge-flow path geometry across CMYK inks](2026/2026-11-23-shared-edge-flow-cmyk-paths.md) | `cmyk`, `edge-flow`, `photo-reproduction`, `color-management`, `shared-path`, `registration` |
 | 2026-11-23 | `WSW-20261123-016` | implemented | [Make CMYK Auto optimize the process-colour prediction](2026/2026-11-23-auto-fit-cmyk-process-color.md) | `cmyk`, `auto`, `color-management`, `process-inks`, `edge-flow`, `portrait` |
 | 2026-11-23 | `WSW-20261123-015` | implemented | [Match CMYK separation to the process-ink response](2026/2026-11-23-process-ink-color-separation.md) | `cmyk`, `color-management`, `process-inks`, `tombow`, `calibration`, `ink-simulation`, `preview` |

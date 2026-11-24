@@ -579,11 +579,11 @@
 
 - [ ] Bench-verify edge-flow CMYK streamlines and select a starting recipe.
   Problem: the new structure-tensor screen is covered by synthetic geometry
-  and UI tests (`WSW-20261122-002`). The four plates share one strength-gated
-  luminance guide and one streamline path network; per-ink deterministic tone
-  phases and G-code remain separate (`WSW-20261123-018`). No printed four-pass
-  portrait has established a useful pitch, smoothing radius, layer count, or
-  pen order.
+  and UI tests (`WSW-20261122-002`). The production screen uses one
+  strength-gated luminance guide but four independently seeded and angled
+  streamline networks (`WSW-20261123-019`); G-code and tone masks remain
+  separate per ink. No printed four-pass portrait has established a useful
+  pitch, smoothing radius, layer count, or pen order.
   Benefit: one validated recipe turns the visual method into a repeatable
   portrait workflow and records where extra dark-tone layers become too dense.
   Risk: fine streamlines expose pen-up drag, felt-tip spread, four-ink overlay
@@ -596,17 +596,18 @@
   strength and coherence now gate a shared luminance form, so weak tone falls
   back to each plate's screen direction. The current three-layer recipe remains
   software-selected only.
-  Status 2026-11-23 reproduction accuracy: the owner prioritized photographic
-  colour reproduction over the reference print's independent per-ink screen
-  tracks. Edge-flow now traces one shared geometry and gates each ink along
-  that same path, so local CMYK mixtures can overprint instead of appearing as
-  spatially separated colours. Similar channel tones use independent phase
-  salts and a normalized pen/pitch/layer occupancy budget; the initial
-  correlated gate drove `95.4 %` of the inked union below `0.2` luminance and
-  made `13.1 %` of it four-ink overlap. The corrected software render measures
-  `65.1 %` dark and `0.52 %` four-ink overlap after the adjacent chain. The
-  per-channel fallback angles remain for other styles, and the local connector
-  chain is now used for shared Edge-flow to control penups.
+  Status 2026-11-23 reproduction accuracy: the owner confirmed that the
+  reference print's four independently screened plates are part of the
+  intended workflow. The default Edge-flow now restores it: a shared
+  luminance guide drives four separate pen networks with independent seeds,
+  fallback angles, tone masks, and dark-tone layers. An explicitly labeled
+  experimental shared-network style remains selectable for comparison.
+  `WSW-20261123-018` corrected that option's correlated gate from `95.4 %`
+  dark ink-union pixels and `13.1 %` four-ink overlap to approximately
+  `65.1 %` dark and `0.52 %` four-ink overlap after the adjacent chain.
+  A rendered check of the restored independent networks produced `61.9 %`
+  dark ink-union pixels and `0.10 %` four-ink overlap, with visibly separate
+  per-ink colour paths.
   Status 2026-11-23 colour and time: wide-gamut source profiles are converted
   to sRGB before separation, and open marks can be chained within an
   operator-set adjacent gap. A speed-oriented continuous row style is also

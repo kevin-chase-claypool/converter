@@ -4,7 +4,7 @@ date: 2026-11-23
 category: windows-software
 affected_categories:
   - windows-software
-status: implemented
+status: superseded
 components:
   - software/converter_core/structure_tensor.py
   - software/converter_core/cmyk.py
@@ -26,12 +26,17 @@ tags:
   - pen-down
   - toolpath-efficiency
 related:
+  - WSW-20261123-019
   - WSW-20261123-017
   - WSW-20261123-016
   - WSW-20261123-011
 ---
 
 # Correct shared Edge-flow tone gating, penups, and generator fits
+
+Superseded by `WSW-20261123-019`, which restores independent per-ink Edge-flow
+as the production style and keeps this corrected shared renderer as an explicit
+experimental option.
 
 ## Summary
 

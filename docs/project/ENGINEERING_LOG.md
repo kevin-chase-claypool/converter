@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20261123-restore-independent-edge-flow"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Restore independent per-ink Edge-flow networks
+
+- The owner supplied the reference print and the artist's explanation:
+  gradients -> structure tensor -> blurred direction field -> evenly spaced
+  streamlines -> extra dark-tone layers -> fixed fallback angle.
+- `c3f07ed` had replaced that four-network workflow with one co-located
+  network. `WSW-20261123-018` fixed the shared network's black overprint but
+  left the reference workflow unavailable.
+- The production `edge_flow` style now calls `screen_channel()` once per ink,
+  with independent seeds and the C/M/Y/K fallback angles. Black-only keylines
+  and non-Black edge quieting remain channel-specific.
+- The corrected co-located renderer is retained as the explicitly labeled
+  `edge_flow_shared` experimental style.
+- A regression asserts four independent screening calls, four distinct layer
+  files, the expected seed/angle pattern, and no shared-network call for the
+  default style. The manifest records `edge_flow_path_network: per_ink`.
+- A rendered live-portrait check produced `61.91 %` dark ink-union pixels,
+  `0.10 %` four-ink overlap, and `0.304` mean luminance on the inked union,
+  restoring independently coloured linework without the shared renderer's
+  black mass.
+- The CMYK tab suite passes `62` tests. Complete converter discovery passes
+  `666` tests with one expected OpenGL-context skip.
+- Evidence: `WSW-20261123-019`.
+- Category: windows-software, cmyk, edge-flow, per-ink, structure-tensor,
+  four-file-output, photo-reproduction, physical-validation-pending.
+
 <a id="elog-20261123-edge-flow-tone-phase-penups"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Correct shared Edge-flow tone gating and penups
 

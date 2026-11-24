@@ -450,7 +450,7 @@ class ScreeningTests(unittest.TestCase):
         )
         self.assertLessEqual(longest, 4.6)
 
-    def test_edge_flow_plates_share_one_geometry_network(self):
+    def test_shared_edge_flow_plates_share_one_geometry_network(self):
         from converter_core import structure_tensor
 
         size = 96
@@ -2983,6 +2983,7 @@ class CmykTabTests(unittest.TestCase):
             "tsp",
             "contours",
             "edge_flow",
+            "edge_flow_shared",
         ):
             tab.style.setCurrentIndex(tab.style.findData(style))
             root = ET.parse(tab.build_svg()).getroot()
@@ -3051,7 +3052,7 @@ class CmykTabTests(unittest.TestCase):
 
     def test_shared_edge_flow_chains_short_marks_to_reduce_penups(self):
         tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow_shared"))
         tab.chain_marks.setChecked(True)
         tab.chain_gap.setValue(5.0)
         short_marks = [
@@ -3075,9 +3076,9 @@ class CmykTabTests(unittest.TestCase):
                 1,
             )
 
-    def test_edge_flow_builds_one_shared_network_for_all_inks(self):
+    def test_shared_edge_flow_builds_one_network_for_all_inks(self):
         tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow_shared"))
         tab.scale_pct.setValue(260)
         captured = {}
         calls = []
@@ -3110,6 +3111,63 @@ class CmykTabTests(unittest.TestCase):
         self.assertIsNone(captured["kwargs"]["tone_segment_mm"])
         self.assertIsNone(captured["kwargs"]["max_path_mm"])
 
+    def test_edge_flow_builds_four_independent_ink_networks(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.chain_marks.setChecked(False)
+        tab.flow_keylines.setChecked(True)
+        tab.scale_pct.setValue(260)
+        calls = []
+
+        def capture_channel(tone, geometry, **kwargs):
+            calls.append((tone, geometry, kwargs))
+            seed = int(kwargs["seed"])
+            return [
+                [
+                    (float(seed), 10.0),
+                    (float(seed + 1), 20.0),
+                ]
+            ]
+
+        with mock.patch.object(
+            converter,
+            "screen_channel",
+            side_effect=capture_channel,
+        ), mock.patch.object(
+            converter,
+            "screen_cmyk_edge_flow",
+            side_effect=AssertionError("default Edge-flow must be per-ink"),
+        ):
+            tab._ensure_layers()
+
+        self.assertEqual(len(calls), len(converter.CHANNELS))
+        self.assertEqual(
+            [call[2]["seed"] for call in calls],
+            [tab.seed.value() + index for index in range(4)],
+        )
+        self.assertEqual(
+            [call[2]["angle_deg"] for call in calls],
+            [
+                converter.SCREEN_ANGLES_DEG[channel]
+                for channel in converter.CHANNELS
+            ],
+        )
+        self.assertTrue(
+            all(
+                call[2]["flow_guide"] is calls[0][2]["flow_guide"]
+                for call in calls
+            )
+        )
+        self.assertEqual(
+            [call[2]["flow_keylines"] for call in calls],
+            [False, False, False, True],
+        )
+        self.assertEqual(
+            [call[2]["flow_color_quiet"] for call in calls],
+            [0.25, 0.25, 0.25, 0.0],
+        )
+        self.assertEqual(len(set(tab._layer_files.values())), 4)
+
     def test_fine_detail_uses_two_mm_tone_segments_on_paper(self):
         tab = self.make_tab()
         tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
@@ -3120,18 +3178,18 @@ class CmykTabTests(unittest.TestCase):
         max_paths = []
 
         def capture_segment(*args, **kwargs):
-            tone_segments.append(kwargs.get("tone_segment_mm"))
-            max_paths.append(kwargs.get("max_path_mm"))
-            return {channel: [] for channel in converter.CHANNELS}
+            tone_segments.append(kwargs.get("flow_tone_segment_mm"))
+            max_paths.append(kwargs.get("flow_max_path_mm"))
+            return []
 
         with mock.patch.object(
             converter,
-            "screen_cmyk_edge_flow",
+            "screen_channel",
             side_effect=capture_segment,
         ):
             tab._ensure_layers()
 
-        self.assertEqual(len(tone_segments), 1)
+        self.assertEqual(len(tone_segments), len(converter.CHANNELS))
         for value in tone_segments:
             self.assertAlmostEqual(value, 2.0 / 2.6, places=6)
         for value in max_paths:
@@ -3813,7 +3871,12 @@ class CmykTabTests(unittest.TestCase):
         data = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(
             data["screen"]["flow_guide"],
-            "strength_gated_shared_luminance_structure_tensor_continuous_tone",
+            "strength_gated_luminance_structure_tensor_"
+            "per_ink_networks_continuous_tone",
+        )
+        self.assertEqual(
+            data["screen"]["edge_flow_path_network"],
+            "per_ink",
         )
         for channel in converter.CHANNELS:
             self.assertTrue(

@@ -3,7 +3,7 @@
 **Status:** Implemented as the CMYK **Edge-flow streamlines** screen. Current
 behavior and the software-selected recipe are in
 [`../../software/README.md`](../../software/README.md); the current change
-record is `WSW-20261123-018`.
+record is `WSW-20261123-019`.
 
 ## Intent
 Add an optional CMYK rendering mode to the converter that replaces fixed-angle hatch patterns with smooth vector-field-guided streamlines following image contours and forms. Preserve the current CMYK method and all existing output behavior by default.
@@ -14,12 +14,15 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 3. Extract a tangent direction (minor-eigenvalue eigenvector) to follow edges/forms; estimate directional coherence from eigenvalues. Treat directions as **unoriented** (theta equivalent to theta + pi) to avoid streamline flips.
 4. Smooth the direction field and blend toward a configurable fixed fallback angle where structure is weak/ambiguous. Guard low-gradient regions and avoid abrupt transitions.
 5. Trace evenly spaced streamlines using stable numerical integration, seed distribution, minimum-distance/collision checks, bounds clipping, and curvature limits. Modulate the visible fraction of each path with local channel tone instead of switching whole-face density bands.
-6. Build one strength-gated luminance direction field and one shared
-   streamline geometry for image form. Give each CMYK plate its own
-   deterministic tone phase, normalized occupancy budget, and keyline
-   adjustment along those common paths, then save four separate,
-   page-registered programs so requested mixtures overprint locally without
-   correlated four-ink black runs.
+6. Build one strength-gated luminance direction field, then trace four
+   independently seeded and fallback-angled streamline networks, one for each
+   CMYK plate. Apply each ink's own tone mask, dark-tone layers, and optional
+   keyline adjustment, then save four separate page-registered G-code
+   programs.
+6a. Retain one explicitly labeled experimental shared-network renderer for
+    comparison. Its independent phases and normalized occupancy prevent the
+    correlated four-ink black runs that made the first shared prototype
+    unusable.
 7. Emit continuous, stroke-only SVG centerlines compatible with the existing SVG-to-G-code path (no fills, text, or defs); retain units, coordinate mapping, and pen-change/channel separation.
 
 ## Current controls (software-selected starting values)
@@ -28,18 +31,17 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
   does not change either
 - Tensor smoothing radius: `4.0 mm` on paper for the current portrait recipe
 - Guidance gate: tensor strength plus coherence; weak structure keeps screen
-- Fallback direction: one shared 0-degree screen where structure is weak
+- Fallback direction: each ink's own fixed screen angle where structure is weak
 - Maximum density layers: 5 for the current portrait recipe
-- Tone method: deterministic path-local ink segments with a per-ink phase salt
-  and a pen-width/pitch/layer occupancy budget; additional layers add local
-  depth without adding every layer at full channel occupancy, and there is no
-  shared 2D block lattice
+- Tone method: deterministic path-local ink segments on four independent
+  networks; additional layers add local depth only on the darker plate, and
+  there is no shared 2D block lattice
 - Embedded ICC profiles, including Display P3, are converted to sRGB before
   image analysis and separation; EXIF orientation is applied first
-- **Pen-down chain** remains available for other screens. Edge-flow bridges up
-  to `4 mm` of tone-off gaps along the same shared path and also chains its
-  per-ink marks within the operator's adjacent gap. The connectors add visible
-  local ink but materially reduce M3/M5 cycles.
+- **Pen-down chain** bridges up to `4 mm` of tone-off gaps along each
+  individual streamline and also chains per-ink marks within the operator's
+  adjacent gap. The connectors add visible local ink but materially reduce
+  M3/M5 cycles.
 - **Continuous row screen (adjacent joins)** is a speed-oriented alternative:
   tone-pitch rows join nearest non-overlapping adjacent runs into a few long
   chains, accepting visible straight connectors in exchange for fewer M3/M5
@@ -67,7 +69,8 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 ## Implementation plan
 - Inspect current CMYK UI, raster processing, SVG generation, and XY-Theta G-code constraints before choosing integration points.
 - Prototype monochrome structure-guided streamlines first; test portraits, landscapes, smooth gradients, flat backgrounds, and sharp geometric edges.
-- Extend to CMYK channels with co-located coverage and registration checks.
+- Extend to CMYK channels with four independent pen networks and registration
+  checks, while keeping any co-located experiment explicit.
 - Compare runtime, SVG path count, pen lifts, overlap, total path length, and visual quality against the existing mode.
 - Add regression tests confirming the existing CMYK output is unchanged unless Flow-Field CMYK is explicitly selected.
 
@@ -78,10 +81,10 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 - New mode produces valid continuous stroke-only SVG paths and runs through the current converter without special G-code handling.
 - Lines visibly follow coherent image structures; weak-structure regions use a stable fallback direction.
 - Darker channel regions produce greater appropriate ink coverage without pathological overplotting.
-- Similar channel tones use independent phases on the shared geometry; rendered
-  four-ink overlap stays a small fraction of the inked union.
+- Default Edge-flow produces four distinct per-ink path networks and saves four
+  independently screened G-code programs.
 - Adjacent per-ink marks are chained when their gap is within the operator's
-  pen-down limit, without turning the shared layer budget into black mass.
+  pen-down limit.
 - Deterministic results for fixed settings/seed; no infinite tracing loops; reasonable bounds on output size and runtime.
 
 ## Source idea
