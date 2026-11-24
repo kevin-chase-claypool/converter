@@ -468,6 +468,21 @@ def plan_program(contours, settings, cancel_check=None):
     frame_center = getattr(settings, "frame_center_mm", None)
     if frame_center is not None:
         source_center = (float(frame_center[0]), float(frame_center[1]))
+    bed_compensation = load_bed_compensation(
+        getattr(settings, "bed_compensation_path", "")
+    )
+    compensation_margin = 0.0
+    if bed_compensation is not None and not bed_compensation.identity:
+        compensation_margin = max(
+            float(getattr(bed_compensation, "max_correction_mm", 0.0)),
+            float(
+                getattr(
+                    bed_compensation,
+                    "full_max_correction_mm",
+                    0.0,
+                )
+            ),
+        )
     bed_radius = max(
         float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0
         - float(getattr(settings, "bed_margin_mm", 0.0)),
@@ -475,6 +490,14 @@ def plan_program(contours, settings, cancel_check=None):
     )
     reach = float(getattr(settings, "machine_reach_radius_mm", 0.0))
     radius = min(bed_radius, reach) if reach > 0.0 else bed_radius
+    # Coverage clipping happens in the uncompensated bed frame. Reserve the
+    # profile's maximum correction so an outward correction cannot put the
+    # final machine point beyond the configured reach.
+    radius = max(0.0, radius - compensation_margin)
+    if radius <= 0.0:
+        raise ValueError(
+            "bed compensation consumes the entire machine reach"
+        )
     # The artwork's own center is placed at this offset from the bed center, so
     # the reachable disc - which is fixed on the bed center - corresponds to the
     # artwork point `offset` away from its own center. Clipping is expressed in
@@ -510,9 +533,6 @@ def plan_program(contours, settings, cancel_check=None):
             getattr(settings, "path_join_tolerance_mm", 0.02),
             cancel_check,
         )
-    bed_compensation = load_bed_compensation(
-        getattr(settings, "bed_compensation_path", "")
-    )
     if bed_compensation is not None and bool(
         getattr(settings, "row_locked_compensation", False)
     ):
@@ -620,6 +640,9 @@ def plan_program(contours, settings, cancel_check=None):
         "contours": clipped_contours,
         "planned_jobs": planned_jobs,
         "bed_compensation": bed_compensation,
+        "planning_radius_mm": radius,
+        "compensation_safety_margin_mm": compensation_margin,
+        "machine_reach_radius_mm": reach,
         "wave_row_schedule": wave_row_schedule,
         "contour_join": contour_join,
     }
@@ -735,6 +758,21 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
             5,
             f"(screen chain up to {format_float(screen_chain_gap)} mm "
             "after X/Y/A planner order)",
+        )
+    compensation_margin = float(
+        program_plan.get("compensation_safety_margin_mm", 0.0)
+    )
+    machine_reach = float(
+        program_plan.get("machine_reach_radius_mm", 0.0)
+    )
+    if compensation_margin > 0.0 and machine_reach > 0.0:
+        lines.insert(
+            5,
+            "(reach guard %.3f mm, planning radius %.3f mm)"
+            % (
+                machine_reach,
+                float(program_plan.get("planning_radius_mm", machine_reach)),
+            ),
         )
     if settings.include_z:
         lines.append(f"G0 Z{format_float(settings.safe_z)}")

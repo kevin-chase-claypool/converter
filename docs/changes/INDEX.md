@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-24 | `WSW-20261124-003` | windows-software, hardware | implemented | [Guard machine reach after bed compensation](windows-software/2026/2026-11-24-post-compensation-reach-guard.md) |
 | 2026-11-24 | `WSW-20261124-002` | windows-software | implemented | [Preserve screen-chain tags in the CMYK preview](windows-software/2026/2026-11-24-preserve-screen-chain-preview-tags.md) |
 | 2026-11-24 | `WSW-20261124-001` | windows-software | implemented | [Chain adjacent screen contours after Xθ/Yθ planning](windows-software/2026/2026-11-24-post-planner-screen-chaining.md) |
 | 2026-11-24 | `RPSW-20261124-001` | rp23cnc-software, hardware | implemented | [Move the P100 registered pen 1.2 mm north and 1.0 mm west](rp23cnc-software/2026/2026-11-24-p100-north-1-2-west-1-0.md) |

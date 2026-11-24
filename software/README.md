@@ -1664,7 +1664,11 @@ display-only; every other group changes the emitted program.
   gantry's reachable radius from the registered bed center. Because the bed
   rotates freely, the safe drawable area is this circle rather than the full
   bed; it keeps emitted coordinates inside the controller's X/Y envelope so
-  artwork at the rim cannot trip `Alarm:2 - Soft limit`.
+  artwork at the rim cannot trip `Alarm:2 - Soft limit`. Before clipping, the
+  converter subtracts the active profile's maximum correction from this radius
+  so compensation cannot push a final machine point back outside the limit.
+  The saved header records the reach and effective planning radius, and
+  preflight blocks any emitted G54 point outside the declared reach.
   The binding direction is **+Y**, and the edge is the controller's soft-limit
   envelope, not the switch: grblHAL sets a homed axis's envelope to
   `[max_travel + pulloff, -pulloff]` when hard limits are enabled, so `$27`

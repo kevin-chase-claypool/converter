@@ -1,5 +1,23 @@
 # Engineering Log
 
+<a id="elog-20261124-post-compensation-reach-guard"></a>
+### 🟨 2026-11-24 - WINDOWS SOFTWARE/IMPLEMENTED - Guard reach after bed compensation
+
+- The magenta pass exposed 132 points beyond the nominal 180 mm radius in the
+  145,000-155,000 block window. Its maximum was `180.547 mm`, with X
+  `180.5312 mm` beyond the controller's displayed `179.434 mm` maximum.
+- The base artwork had been clipped at 180 mm before the profile's maximum
+  `1.142 mm` correction was added, and preflight did not check final XY radius.
+- Planning now reserves that correction and clips at `178.858 mm`; generated
+  headers record the reach guard, and preflight rejects any final G54 point
+  beyond 180 mm.
+- The full converter suite passes 684 tests with one expected OpenGL-context
+  skip. The existing pre-guard magenta file is rejected at `180.568 mm`.
+- Evidence: `WSW-20261124-003`;
+  `docs/changes/windows-software/2026/2026-11-24-post-compensation-reach-guard.md`.
+- Category: windows-software, hardware, reach, soft-limits, bed-compensation,
+  cmyk, physical-validation-pending.
+
 <a id="elog-20261124-screen-chain-preview-tags"></a>
 ### 🟨 2026-11-24 - WINDOWS SOFTWARE/FIXED - Preserve screen-chain tags in CMYK previews
 

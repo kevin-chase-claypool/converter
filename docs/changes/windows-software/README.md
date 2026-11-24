@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-24 | `WSW-20261124-003` | implemented | [Guard machine reach after bed compensation](2026/2026-11-24-post-compensation-reach-guard.md) | `reach`, `soft-limits`, `bed-compensation`, `preflight`, `cmyk`, `magenta` |
 | 2026-11-24 | `WSW-20261124-002` | implemented | [Preserve screen-chain tags in the CMYK preview](2026/2026-11-24-preserve-screen-chain-preview-tags.md) | `cmyk`, `preview`, `pen-up`, `screen-trail`, `ink-trail`, `metadata` |
 | 2026-11-24 | `WSW-20261124-001` | implemented | [Chain adjacent screen contours after Xθ/Yθ planning](2026/2026-11-24-post-planner-screen-chaining.md) | `cmyk`, `edge-flow`, `pen-up`, `pen-down-chain`, `x-theta`, `y-theta`, `print-time`, `screen-geometry` |
 | 2026-11-23 | `WSW-20261123-019` | implemented | [Restore independent per-ink Edge-flow networks](2026/2026-11-23-restore-independent-edge-flow.md) | `cmyk`, `edge-flow`, `per-ink`, `structure-tensor`, `four-file-output`, `photo-reproduction`, `pen-down` |
