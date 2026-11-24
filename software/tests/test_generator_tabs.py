@@ -506,6 +506,37 @@ class ToolShellTests(unittest.TestCase):
             (None, None),
         )
 
+    def test_ink_vertex_colors_include_keep_down_bridges(self):
+        import converter_core as converter
+
+        full = self.module.ink_color_floats(converter.CHANNEL_COLORS["c"])
+        contours = converter.tag_ink([[(0.0, 0.0), (1.0, 0.0)]], "c")
+        moves = [
+            {
+                "type": "draw",
+                "strategy": "x_theta",
+                "contour": 0,
+                "bed_start": (0.0, 0.0),
+                "bed_end": (1.0, 0.0),
+            },
+            {
+                "type": "draw",
+                "strategy": "keep_down_bridge",
+                "contour": 0,
+                "bed_start": (1.0, 0.0),
+                "bed_end": (1.2, 0.0),
+            },
+        ]
+
+        artwork_colors, drawn_colors = self.module.ink_vertex_colors(
+            contours,
+            moves,
+        )
+
+        self.assertIsNotNone(artwork_colors)
+        self.assertEqual(len(drawn_colors), 16)
+        self.assertEqual(drawn_colors[8:12], list(full))
+
     def test_gl_preview_filters_layers_live(self):
         import converter_core as converter
 

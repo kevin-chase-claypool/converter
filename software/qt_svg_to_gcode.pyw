@@ -183,8 +183,6 @@ def ink_vertex_colors(
             artwork_colors.extend(color)
     drawn_colors = []
     for move in moves:
-        if move.get("strategy") == "keep_down_bridge":
-            return None, None
         if move.get("type") != "draw":
             continue
         if move.get("bed_start") is None or move.get("bed_end") is None:

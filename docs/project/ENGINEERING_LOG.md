@@ -10,6 +10,10 @@
   the `ScreenTrail` subtype used by the post-planner bridge decision.
 - Ink tagging now preserves tagged contour subtypes and their attributes while
   adding the ink channel, so preview planning uses the same bridges as save.
+- The GL renderer had also rejected all per-ink vertex colours whenever a
+  keep-down bridge existed. Bridge moves now inherit the contour ink colour, so
+  the preview remains a four-colour multiply image instead of collapsing to
+  the default blue.
 - A focused regression covers the metadata path; full application restart,
   Preview, and Save are required for a running process to load the source fix.
 - Evidence: `WSW-20261124-002`;
