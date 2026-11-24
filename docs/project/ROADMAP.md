@@ -294,8 +294,9 @@
   Status 2026-11-24: a magenta edge run exposed final compensation points at
   `180.547 mm` after base clipping. `WSW-20261124-003` now reserves the
   profile's maximum correction, clipping at `178.858 mm`, and preflight rejects
-  any emitted G54 point beyond the declared reach. The extrapolated outer band
-  is still unverified and must be printed with the new guard.
+  any emitted G54 point beyond the declared reach. The four Ben3 programs were
+  regenerated under this guard; the extrapolated outer band remains physically
+  unverified.
   Acceptance: print a stationary edge-band verification covering 165.1 to
   180.0 mm at all eight calibrated angles, measure it with the existing photo
   pipeline, and show at most `0.35 mm` RMS / `0.90 mm` maximum with no angle

@@ -13,6 +13,9 @@
   beyond 180 mm.
 - The full converter suite passes 684 tests with one expected OpenGL-context
   skip. The existing pre-guard magenta file is rejected at `180.568 mm`.
+- The four Ben3 programs were regenerated with the unchanged recipe. Preflight
+  passes with maximum radii `179.373/179.241/179.255/179.275 mm` for C/M/Y/K;
+  cyan and black are ready for the next physical passes.
 - Evidence: `WSW-20261124-003`;
   `docs/changes/windows-software/2026/2026-11-24-post-compensation-reach-guard.md`.
 - Category: windows-software, hardware, reach, soft-limits, bed-compensation,

@@ -68,6 +68,17 @@ profile's correction was added, and preflight did not inspect final XY radius.
   skip.
 - The current pre-guard magenta file is rejected at `180.568 mm`, proving the
   detector catches the physical run that prompted this change.
+- The complete Ben3 set was regenerated with the unchanged recipe. All four
+  programs preflight clean:
+
+  | Ink | Blocks | `M3` | Max radius |
+  |---|---:|---:|---:|
+  | Cyan | 141,611 | 531 | 179.373 mm |
+  | Magenta | 145,455 | 537 | 179.241 mm |
+  | Yellow | 161,038 | 458 | 179.255 mm |
+  | Black | 194,667 | 573 | 179.275 mm |
+
+  Each header records reach `180.000 mm` and planning radius `178.858 mm`.
 
 ## Struggles and rejected approaches
 
@@ -85,8 +96,8 @@ profile's correction was added, and preflight did not inspect final XY radius.
   physically verified.
 - The final low-level safety bound is still grblHAL and its soft limits; the
   converter guard uses the declared machine-reach radius.
-- Cyan and black must be regenerated and their preflight must pass before those
-  plates are printed.
+- Cyan and black have been regenerated and pass envelope preflight; physical
+  edge quality still requires the planned printed comparison.
 
 ## Files
 
