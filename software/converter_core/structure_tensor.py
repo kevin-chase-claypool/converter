@@ -583,3 +583,248 @@ def trace_structure_streamlines(
             row += 1
 
     return marks
+
+
+def trace_shared_structure_streamlines(
+    guide,
+    tones,
+    geometry,
+    spacing,
+    fallback_angle_deg,
+    layers,
+    max_marks,
+    pen_diameter_mm,
+    path_tolerance_mm,
+    smoothing_mm,
+    seed,
+    ink_floor,
+    channels,
+    keylines=False,
+    color_quiet=0.0,
+    tone_segment_mm=None,
+    max_path_mm=None,
+    bridge_mm=0.0,
+    cancel_check=None,
+):
+    """Trace one common streamline network and gate every ink along it.
+
+    The geometry is generated once from the maximum channel coverage, so each
+    path has one position and direction for all process inks. Per-channel tone
+    still decides which arc-length segments receive each ink. This keeps the
+    four colour separations co-located where the image requests a mixture
+    instead of allowing each ink to drift onto an independent path.
+    """
+    import numpy as np
+
+    channel_names = tuple(channels)
+    if not channel_names:
+        return {}
+    left = float(geometry["off_x"])
+    top = float(geometry["off_y"])
+    right = left + float(geometry["width_mm"])
+    bottom = top + float(geometry["height_mm"])
+    area = max(1e-6, (right - left) * (bottom - top))
+    layer_count = max(1, min(6, int(layers)))
+    cap = max(16, int(max_marks))
+    seed_cap = max(32, (cap * 8) // layer_count)
+    base_pitch = max(float(spacing), math.sqrt(area / max(1, seed_cap)))
+    coverage_field = np.maximum.reduce(
+        [np.asarray(tones[channel], dtype=np.float32) for channel in channel_names]
+    )
+    coverage_at = lambda x, y: _bilinear_scalar(
+        coverage_field,
+        geometry,
+        x,
+        y,
+    )
+    channel_at = {
+        channel: (
+            lambda x, y, field=np.asarray(
+                tones[channel],
+                dtype=np.float32,
+            ): _bilinear_scalar(field, geometry, x, y)
+        )
+        for channel in channel_names
+    }
+
+    velocity_x, velocity_y, edge_field, field_geometry = (
+        _structure_tensor_velocity(
+            guide,
+            geometry,
+            max(0.1, float(smoothing_mm)),
+            fallback_angle_deg,
+        )
+    )
+    field_w = max(1, int(field_geometry["pixels_w"]))
+    field_h = max(1, int(field_geometry["pixels_h"]))
+    pixel_x = field_geometry["width_mm"] / field_w
+    pixel_y = field_geometry["height_mm"] / field_h
+    pixel_mm = max(1e-6, 0.5 * (pixel_x + pixel_y))
+    step_mm = max(
+        pixel_mm * 0.72,
+        min(base_pitch * 0.28, max(0.10, float(path_tolerance_mm) * 1.8)),
+    )
+    minimum_pen_gap = max(0.0, float(pen_diameter_mm)) * 0.72
+    minimum_length = max(1.0, base_pitch * 0.45)
+    tone_segment = (
+        max(0.8, min(8.0, float(tone_segment_mm)))
+        if tone_segment_mm is not None
+        else max(
+            4.0,
+            min(
+                8.0,
+                max(
+                    base_pitch * 3.0,
+                    max(0.0, float(pen_diameter_mm)) * 3.0,
+                ),
+            ),
+        )
+    )
+    visible_minimum_length = max(
+        0.5,
+        min(
+            2.5,
+            max(
+                minimum_length,
+                max(0.0, float(pen_diameter_mm)) * 0.75,
+            ),
+        ),
+    )
+    maximum_steps = max(
+        32,
+        min(4000, int((right - left + bottom - top) / step_mm)),
+    )
+
+    def sample_velocity(x, y):
+        return _bilinear_velocity(velocity_x, velocity_y, field_geometry, x, y)
+
+    def sample_edge(x, y):
+        return _bilinear_scalar(edge_field, field_geometry, x, y)
+
+    def field_cell(x, y):
+        ix = int((x - left) / max(1e-8, right - left) * field_w)
+        iy = int((y - top) / max(1e-8, bottom - top) * field_h)
+        return max(0, min(field_w - 1, ix)), max(0, min(field_h - 1, iy))
+
+    path_limit = (
+        max(0.1, float(max_path_mm)) * 0.5
+        if max_path_mm is not None
+        else None
+    )
+
+    def trace(direction, start_x, start_y, threshold, occupied):
+        points = []
+        x, y = start_x, start_y
+        traveled = 0.0
+        for _ in range(maximum_steps):
+            vx, vy = sample_velocity(x, y)
+            if abs(vx) + abs(vy) < 1e-6:
+                break
+            mid_x = x + direction * vx * step_mm * 0.5
+            mid_y = y + direction * vy * step_mm * 0.5
+            mx, my = sample_velocity(mid_x, mid_y)
+            if abs(mx) + abs(my) < 1e-6:
+                mx, my = vx, vy
+            next_x = x + direction * mx * step_mm
+            next_y = y + direction * my * step_mm
+            traveled += math.hypot(next_x - x, next_y - y)
+            x, y = next_x, next_y
+            if not (left <= x <= right and top <= y <= bottom):
+                break
+            if coverage_at(x, y) < max(float(ink_floor), threshold):
+                break
+            ix, iy = field_cell(x, y)
+            if occupied[iy, ix]:
+                break
+            points.append((x, y))
+            if path_limit is not None and traveled >= path_limit:
+                break
+        return points
+
+    marks = {channel: [] for channel in channel_names}
+    path_count = 0
+    for layer in range(layer_count):
+        check_cancelled(cancel_check)
+        threshold = 0.0 if layer == 0 else float(layer) / layer_count
+        occupied = np.zeros((field_h, field_w), dtype=bool)
+        separation = max(
+            minimum_pen_gap,
+            base_pitch * (0.72 if layer else 0.58),
+        )
+        radius = max(1, int(math.ceil(separation / max(pixel_x, pixel_y))))
+        phase_x = (float(seed) + 0.61803398875 * (layer + 1)) % 1.0
+        phase_y = (float(seed) * 0.377 + 0.75487766625 * (layer + 1)) % 1.0
+        x0 = left + phase_x * base_pitch
+        y0 = top + phase_y * base_pitch
+
+        y = y0
+        row = 0
+        while y <= bottom and path_count < cap:
+            check_cancelled(cancel_check)
+            x = x0 + (0.5 * base_pitch if row % 2 else 0.0)
+            while x <= right and path_count < cap:
+                if coverage_at(x, y) < max(float(ink_floor), threshold):
+                    x += base_pitch
+                    continue
+                ix, iy = field_cell(x, y)
+                if occupied[iy, ix]:
+                    x += base_pitch
+                    continue
+
+                back = trace(-1.0, x, y, threshold, occupied)
+                forward = trace(1.0, x, y, threshold, occupied)
+                points = list(reversed(back)) + [(x, y)] + forward
+                length = sum(
+                    math.hypot(
+                        second[0] - first[0],
+                        second[1] - first[1],
+                    )
+                    for first, second in zip(points, points[1:])
+                )
+                if len(points) >= 3 and length >= minimum_length:
+                    path_key = (
+                        int(round((x - left) / base_pitch)) * 73856093
+                        ^ int(round((y - top) / base_pitch)) * 19349663
+                        ^ int(seed) * 83492791
+                        ^ int(layer) * 2654435761
+                    ) & 0xFFFFFFFF
+                    for channel in channel_names:
+                        quiet = (
+                            min(1.0, max(0.0, float(color_quiet)))
+                            if channel != "k"
+                            else 0.0
+                        )
+                        visible_runs = _tone_gated_runs(
+                            points,
+                            channel_at[channel],
+                            threshold,
+                            tone_segment,
+                            path_key,
+                            layer,
+                            visible_minimum_length,
+                            (
+                                sample_edge
+                                if (keylines and channel == "k") or quiet > 0.0
+                                else None
+                            ),
+                            0.92 if keylines and channel == "k" else 0.0,
+                            quiet,
+                            bridge_mm,
+                        )
+                        marks[channel].extend(visible_runs)
+                        if len(marks[channel]) > cap:
+                            del marks[channel][cap:]
+                    path_count += 1
+
+                for px, py in points:
+                    cx, cy = field_cell(px, py)
+                    xlo = max(0, cx - radius)
+                    xhi = min(field_w, cx + radius + 1)
+                    ylo = max(0, cy - radius)
+                    yhi = min(field_h, cy + radius + 1)
+                    occupied[ylo:yhi, xlo:xhi] = True
+                x += base_pitch
+            y += base_pitch
+            row += 1
+
+    return marks

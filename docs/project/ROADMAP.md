@@ -579,11 +579,10 @@
 
 - [ ] Bench-verify edge-flow CMYK streamlines and select a starting recipe.
   Problem: the new structure-tensor screen is covered by synthetic geometry
-  and UI tests (`WSW-20261122-002`). The four plates now share one
-  strength-gated luminance guide while keeping independent masks, seeds,
-  fallback screen angles, and G-code files (`WSW-20261123-002`). No printed
-  four-pass portrait has established a useful pitch, smoothing radius, layer
-  count, or pen order.
+  and UI tests (`WSW-20261122-002`). The four plates share one strength-gated
+  luminance guide and one streamline path network; per-ink tone gating and
+  G-code remain separate (`WSW-20261123-017`). No printed four-pass portrait
+  has established a useful pitch, smoothing radius, layer count, or pen order.
   Benefit: one validated recipe turns the visual method into a repeatable
   portrait workflow and records where extra dark-tone layers become too dense.
   Risk: fine streamlines expose pen-up drag, felt-tip spread, four-ink overlay
@@ -596,6 +595,13 @@
   strength and coherence now gate a shared luminance form, so weak tone falls
   back to each plate's screen direction. The current three-layer recipe remains
   software-selected only.
+  Status 2026-11-23 reproduction accuracy: the owner prioritized photographic
+  colour reproduction over the reference print's independent per-ink screen
+  tracks. Edge-flow now traces one shared geometry and gates each ink along
+  that same path, so local CMYK mixtures can overprint instead of appearing as
+  spatially separated colours. The per-channel fallback angles and
+  post-screen connector chain are retained for other styles but not used for
+  this shared Edge-flow network.
   Status 2026-11-23 colour and time: wide-gamut source profiles are converted
   to sRGB before separation, and open marks can be chained within an
   operator-set adjacent gap. A speed-oriented continuous row style is also

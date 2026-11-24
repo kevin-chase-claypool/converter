@@ -25,7 +25,10 @@ from .shading import (
     stipple_points,
     tone_terrain_contours,
 )
-from .structure_tensor import trace_structure_streamlines
+from .structure_tensor import (
+    trace_shared_structure_streamlines,
+    trace_structure_streamlines,
+)
 
 CHANNELS = ("c", "m", "y", "k")
 CHANNEL_LABELS = {"c": "Cyan", "m": "Magenta", "y": "Yellow", "k": "Black"}
@@ -1771,6 +1774,63 @@ def solid_dots(contours, turns=2.0, steps=14):
             )
         )
     return marks
+
+
+def screen_cmyk_edge_flow(
+    tones,
+    geometry,
+    spacing_mm,
+    pen_diameter_mm,
+    path_tolerance_mm,
+    flow_smoothing_mm=None,
+    flow_layers=3,
+    max_marks=5000,
+    seed=0,
+    overdraw=1,
+    keylines=False,
+    color_quiet=0.0,
+    tone_segment_mm=None,
+    max_path_mm=None,
+    bridge_mm=0.0,
+    fallback_angle_deg=0.0,
+    flow_guide=None,
+    cancel_check=None,
+):
+    """Screen all CMYK inks through one shared Edge-flow path network."""
+    spacing = max(0.2, float(spacing_mm))
+    marks = trace_shared_structure_streamlines(
+        flow_guide if flow_guide is not None else tones.get("depth"),
+        tones,
+        geometry,
+        spacing,
+        float(fallback_angle_deg),
+        flow_layers,
+        max(16, int(max_marks)),
+        pen_diameter_mm,
+        path_tolerance_mm,
+        (
+            max(0.25, float(flow_smoothing_mm))
+            if flow_smoothing_mm is not None
+            else max(0.25, float(path_tolerance_mm) * 4.0)
+        ),
+        seed,
+        INK_FLOOR,
+        CHANNELS,
+        keylines=bool(keylines),
+        color_quiet=max(0.0, min(1.0, float(color_quiet))),
+        tone_segment_mm=tone_segment_mm,
+        max_path_mm=max_path_mm,
+        bridge_mm=bridge_mm,
+        cancel_check=cancel_check,
+    )
+    return {
+        channel: _apply_overdraw(
+            marks.get(channel, []),
+            overdraw,
+            spacing,
+        )
+        for channel in CHANNELS
+    }
 
 
 def screen_channel(

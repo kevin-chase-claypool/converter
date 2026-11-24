@@ -450,7 +450,7 @@ class ScreeningTests(unittest.TestCase):
         )
         self.assertLessEqual(longest, 4.6)
 
-    def test_edge_flow_plates_keep_independent_tone_networks(self):
+    def test_edge_flow_plates_share_one_geometry_network(self):
         size = 96
         coords = self.np.arange(size, dtype="float32")
         xx, yy = self.np.meshgrid(coords, coords)
@@ -467,20 +467,24 @@ class ScreeningTests(unittest.TestCase):
             "pixels_w": size,
             "pixels_h": size,
         }
-        common = {
-            "style": "edge_flow",
-            "spacing_mm": 8.0,
-            "angle_deg": 0.0,
-            "seed": 7,
-            "max_marks": 240,
-            "flow_smoothing_mm": 4.0,
-            "flow_layers": 1,
-            "depth_tone": guide,
-            "flow_guide": guide,
-        }
-
-        cyan = converter.screen_channel(cyan_tone, geometry, **common)
-        magenta = converter.screen_channel(magenta_tone, geometry, **common)
+        marks = converter.screen_cmyk_edge_flow(
+            {
+                "c": cyan_tone,
+                "m": magenta_tone,
+                "y": cyan_tone,
+                "k": cyan_tone,
+                "depth": guide,
+            },
+            geometry,
+            spacing_mm=8.0,
+            pen_diameter_mm=1.0,
+            path_tolerance_mm=0.2,
+            flow_smoothing_mm=4.0,
+            flow_layers=1,
+            max_marks=240,
+            seed=7,
+            flow_guide=guide,
+        )
 
         def points(marks):
             return {
@@ -489,11 +493,15 @@ class ScreeningTests(unittest.TestCase):
                 for x, y in line
             }
 
-        cyan_points = points(cyan)
-        magenta_points = points(magenta)
+        cyan_points = points(marks["c"])
+        magenta_points = points(marks["m"])
         self.assertGreater(len(cyan_points), 20)
         self.assertGreater(len(magenta_points), 20)
-        self.assertNotEqual(cyan_points, magenta_points)
+        self.assertGreater(
+            len(cyan_points & magenta_points),
+            len(magenta_points) * 0.9,
+        )
+        self.assertTrue(magenta_points.issubset(cyan_points))
 
     def test_edge_flow_mark_cap_does_not_coarsen_a_dense_fine_pitch(self):
         size = 800
@@ -2905,9 +2913,8 @@ class CmykTabTests(unittest.TestCase):
         self.assertFalse(restored.chain_marks.isChecked())
         self.assertAlmostEqual(restored.chain_gap.value(), 8.5)
 
-    def test_pen_down_chain_joins_short_marks_before_svg_export(self):
+    def test_pen_down_chain_joins_short_marks_for_non_edge_flow(self):
         tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
         tab.chain_marks.setChecked(True)
         tab.chain_gap.setValue(5.0)
         short_marks = [
@@ -2928,66 +2935,66 @@ class CmykTabTests(unittest.TestCase):
                 1,
             )
 
-    def test_edge_flow_passes_shared_guide_and_per_ink_screen(self):
+    def test_shared_edge_flow_skips_cross_path_chaining(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.chain_marks.setChecked(True)
+        tab.chain_gap.setValue(5.0)
+        short_marks = [
+            [(10.0, 20.0), (20.0, 20.0)],
+            [(21.5, 20.0), (30.0, 20.0)],
+        ]
+        with mock.patch.object(
+            converter,
+            "screen_cmyk_edge_flow",
+            return_value={
+                channel: list(short_marks)
+                for channel in converter.CHANNELS
+            },
+        ):
+            tab._ensure_layers()
+
+        for channel in converter.CHANNELS:
+            self.assertEqual(len(tab._layers[channel]), 2)
+            self.assertEqual(
+                tab._pen_chain_stats[channel]["connections"],
+                0,
+            )
+
+    def test_edge_flow_builds_one_shared_network_for_all_inks(self):
         tab = self.make_tab()
         tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
         tab.scale_pct.setValue(260)
-        guides = []
-        seeds = []
-        coverage = []
-        pen_widths = []
-        angles = []
-        keyline_flags = []
-        color_quiet = []
-        tone_segments = []
-        max_paths = []
+        captured = {}
+        calls = []
 
-        def capture_guide(*args, **kwargs):
-            guides.append(kwargs.get("flow_guide"))
-            seeds.append(kwargs.get("seed"))
-            coverage.append(kwargs.get("flow_coverage"))
-            pen_widths.append(kwargs.get("pen_diameter_mm"))
-            angles.append(kwargs.get("angle_deg"))
-            keyline_flags.append(kwargs.get("flow_keylines"))
-            color_quiet.append(kwargs.get("flow_color_quiet"))
-            tone_segments.append(kwargs.get("flow_tone_segment_mm"))
-            max_paths.append(kwargs.get("flow_max_path_mm"))
-            return []
+        def capture_shared(*args, **kwargs):
+            captured["args"] = args
+            captured["kwargs"] = kwargs
+            calls.append((args, kwargs))
+            return {channel: [] for channel in converter.CHANNELS}
 
         tab.flow_keylines.setChecked(True)
         with mock.patch.object(
             converter,
-            "screen_channel",
-            side_effect=capture_guide,
+            "screen_cmyk_edge_flow",
+            side_effect=capture_shared,
         ):
             tab._ensure_layers()
 
-        self.assertEqual(len(guides), len(converter.CHANNELS))
-        self.assertTrue(all(guide is not None for guide in guides))
-        self.assertTrue(all(guide.ndim == 2 for guide in guides))
-        self.assertTrue(all(guide is guides[0] for guide in guides))
-        self.assertEqual(
-            seeds,
-            [7 + index for index in range(len(converter.CHANNELS))],
+        self.assertEqual(len(calls), 1)
+        tones, geometry = captured["args"]
+        self.assertIs(captured["kwargs"]["flow_guide"], tones["depth"])
+        self.assertEqual(captured["kwargs"]["seed"], 7)
+        self.assertAlmostEqual(
+            captured["kwargs"]["pen_diameter_mm"],
+            tab.pen_width.value() / 2.6,
+            places=6,
         )
-        self.assertTrue(all(mask is None for mask in coverage))
-        self.assertTrue(
-            all(
-                abs(width - tab.pen_width.value() / 2.6) < 1e-9
-                for width in pen_widths
-            )
-        )
-        self.assertEqual(
-            angles,
-            [
-                converter.SCREEN_ANGLES_DEG[channel]
-                for channel in converter.CHANNELS
-            ],
-        )
-        self.assertEqual(keyline_flags, [False, False, False, True])
-        self.assertEqual(color_quiet, [0.25, 0.25, 0.25, 0.0])
-        self.assertTrue(all(value is None for value in tone_segments))
-        self.assertTrue(all(value is None for value in max_paths))
+        self.assertTrue(captured["kwargs"]["keylines"])
+        self.assertEqual(captured["kwargs"]["color_quiet"], 0.25)
+        self.assertIsNone(captured["kwargs"]["tone_segment_mm"])
+        self.assertIsNone(captured["kwargs"]["max_path_mm"])
 
     def test_fine_detail_uses_two_mm_tone_segments_on_paper(self):
         tab = self.make_tab()
@@ -2999,18 +3006,18 @@ class CmykTabTests(unittest.TestCase):
         max_paths = []
 
         def capture_segment(*args, **kwargs):
-            tone_segments.append(kwargs.get("flow_tone_segment_mm"))
-            max_paths.append(kwargs.get("flow_max_path_mm"))
-            return []
+            tone_segments.append(kwargs.get("tone_segment_mm"))
+            max_paths.append(kwargs.get("max_path_mm"))
+            return {channel: [] for channel in converter.CHANNELS}
 
         with mock.patch.object(
             converter,
-            "screen_channel",
+            "screen_cmyk_edge_flow",
             side_effect=capture_segment,
         ):
             tab._ensure_layers()
 
-        self.assertEqual(len(tone_segments), len(converter.CHANNELS))
+        self.assertEqual(len(tone_segments), 1)
         for value in tone_segments:
             self.assertAlmostEqual(value, 2.0 / 2.6, places=6)
         for value in max_paths:

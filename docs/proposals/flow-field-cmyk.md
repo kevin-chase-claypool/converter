@@ -14,7 +14,11 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 3. Extract a tangent direction (minor-eigenvalue eigenvector) to follow edges/forms; estimate directional coherence from eigenvalues. Treat directions as **unoriented** (theta equivalent to theta + pi) to avoid streamline flips.
 4. Smooth the direction field and blend toward a configurable fixed fallback angle where structure is weak/ambiguous. Guard low-gradient regions and avoid abrupt transitions.
 5. Trace evenly spaced streamlines using stable numerical integration, seed distribution, minimum-distance/collision checks, bounds clipping, and curvature limits. Modulate the visible fraction of each path with local channel tone instead of switching whole-face density bands.
-6. Build one strength-gated luminance direction field for image form. Give each CMYK plate its own coverage mask, seed, continuous tone fraction, extra shadow layers, and classic fallback screen angle. Save four separate, page-registered programs so they overlap as four physical pen passes.
+6. Build one strength-gated luminance direction field and one shared
+   streamline geometry for image form. Give each CMYK plate its own continuous
+   tone fraction and keyline adjustment along those common paths, then save
+   four separate, page-registered programs so requested mixtures overprint
+   locally.
 7. Emit continuous, stroke-only SVG centerlines compatible with the existing SVG-to-G-code path (no fills, text, or defs); retain units, coordinate mapping, and pen-change/channel separation.
 
 ## Current controls (software-selected starting values)
@@ -23,17 +27,16 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
   does not change either
 - Tensor smoothing radius: `4.0 mm` on paper for the current portrait recipe
 - Guidance gate: tensor strength plus coherence; weak structure keeps screen
-- Fallback direction: cyan 15, magenta 75, yellow 0, black 45 degrees
+- Fallback direction: one shared 0-degree screen where structure is weak
 - Maximum density layers: 5 for the current portrait recipe
 - Tone method: deterministic path-local `4-8 mm` ink segments, with extra
   layers for darker coverage and no shared 2D block lattice
 - Embedded ICC profiles, including Display P3, are converted to sRGB before
   image analysis and separation; EXIF orientation is applied first
-- Optional **Pen-down chain** joins open mark endpoints within `5 mm` by
-  default and records per-channel before/after counts, connector count, and
-  connector length in the set manifest
-- Edge-flow additionally bridges up to `4 mm` of tone-off gaps along the same
-  streamline when the pen-down chain is enabled
+- **Pen-down chain** remains available for other screens. Edge-flow uses its
+  shared path geometry and may bridge up to `4 mm` of tone-off gaps along that
+  same path; the separate nearest-endpoint chain is not applied because its
+  cross-path connectors would separate the CMYK colour mixture
 - **Continuous row screen (adjacent joins)** is a speed-oriented alternative:
   tone-pitch rows join nearest non-overlapping adjacent runs into a few long
   chains, accepting visible straight connectors in exchange for fewer M3/M5
@@ -60,7 +63,7 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 ## Implementation plan
 - Inspect current CMYK UI, raster processing, SVG generation, and XY-Theta G-code constraints before choosing integration points.
 - Prototype monochrome structure-guided streamlines first; test portraits, landscapes, smooth gradients, flat backgrounds, and sharp geometric edges.
-- Extend to CMYK channels with independent coverage and registration checks.
+- Extend to CMYK channels with co-located coverage and registration checks.
 - Compare runtime, SVG path count, pen lifts, overlap, total path length, and visual quality against the existing mode.
 - Add regression tests confirming the existing CMYK output is unchanged unless Flow-Field CMYK is explicitly selected.
 

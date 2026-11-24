@@ -580,20 +580,18 @@ Current tools:
   **Edge-flow streamlines** is a separate continuous screen for portraits and
   textured photographs. One shared luminance guide supplies the image form:
   its gradients form a structure tensor, Gaussian-like blur smooths it, and
-  its edge-tangent orientation is traced as evenly seeded streamlines.
-  Structure strength and coherence gate that guidance, so broad tone or noise
-  keeps the screen direction instead of becoming stacked contour bands.
-  Each ink then applies its own dense-tone mask, seed offset, and fixed screen
-  direction. Local tone controls the ink fraction along each streamline at
-  deterministic `4-8 mm` path-local segments: a highlight keeps only a sparse
-  part of the path, while a shadow approaches a continuous stroke. Break
-  positions follow arc length and a path-specific phase, so neighbouring
-  streamlines do not share a grid of square block boundaries. That makes a
-  yellow-to-magenta highlight ramp visible instead of turning every plate above
-  the ink floor into a solid wash. The fallback angles are cyan 15 degrees,
-  magenta 75, yellow 0, and black 45, so the plates interleave like a
-  conventional four-screen print instead of collapsing to one synthetic
-  direction.
+  its edge-tangent orientation is traced as one shared streamline network for
+  all four inks. Structure strength and coherence gate that guidance, so broad
+  tone or noise keeps one common screen direction instead of becoming stacked
+  contour bands.
+  Local channel tone decides which arc-length segments receive each ink along
+  those same paths. Deterministic `4-8 mm` path-local thresholds let a
+  highlight keep only a sparse part of a path while a shadow approaches a
+  continuous stroke. Because cyan, magenta, yellow, and black share the same
+  coordinates and path phase, requested colour mixtures overprint locally
+  instead of drifting into independent coloured tracks. Black keylines may
+  boost Black on a shared path while C/M/Y coverage is quieted beside the same
+  edge.
   **Continuous row screen (adjacent joins)** uses the tone-driven Rectilinear
   row pitch and then joins the nearest non-overlapping adjacent row runs,
   even when their ends do not overlap. Most of each ink therefore becomes a
@@ -603,11 +601,10 @@ Current tools:
   **Pen-down chain** is enabled by default for open-line screens. It orders
   endpoint-nearby marks head-to-tail and draws a connector only up to the
   adjacent **Keep pen down** gap (default `5.0 mm`). Edge-flow also bridges up
-  to `4 mm` of tone-off gaps along the same streamline. This removes repeated
-  M3/M5 cycles without forcing one cross-page line; larger gaps remain normal
-  pen-up travel. Raise the gap to remove more cycles, or lower it to keep a
-  stricter source screen. Closed shapes, tagged Wave rows, and TSP output stay
-  separate.
+  to `4 mm` of tone-off gaps along the same shared streamline. The separate
+  nearest-endpoint chain is not applied to Edge-flow because its cross-path
+  connectors would break the co-located colour geometry. Closed shapes, tagged
+  Wave rows, and TSP output stay separate.
   The four plates use the same page frame, artwork scale, registration crosses,
   pen offsets, and G-code contract, but remain independent pen programs.
   Preview multiplies them to show the combined print; Save writes cyan,

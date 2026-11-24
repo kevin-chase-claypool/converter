@@ -1,5 +1,33 @@
 # Engineering Log
 
+<a id="elog-20261123-shared-edge-flow-paths"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Share Edge-flow paths across CMYK inks
+
+- The owner prioritized photographic reproduction over the reference print's
+  independent per-ink screen directions.
+- The portrait preview exposed the spatial defect: process separation could
+  predict a local CMYK mixture, but Edge-flow called the tracer separately for
+  each ink. Cyan, magenta, yellow, and black landed on different paths, so the
+  mixture appeared as separated coloured streaks rather than local overprint.
+- Edge-flow now traces one common structure-tensor geometry and gates every
+  channel along the same path coordinates and arc-length phase. Per-ink tone
+  still chooses which segments receive each colour, and Black keylines remain
+  channel-specific.
+- The shared screen is generated once in the CMYK tab. The separate
+  nearest-endpoint chain is skipped for Edge-flow because cross-path
+  connectors would undo the geometric alignment; the existing `4 mm` bridge
+  still follows the same shared streamline.
+- A synthetic regression requires more than `90 %` shared point overlap. On
+  the current portrait at reduced validation resolution, overlap against the
+  smaller channel ranges from `54 %` to `97 %`.
+- Focused Edge-flow tests pass `20`, and the complete CMYK tab suite passes
+  `138`; complete converter discovery passes `663` with one expected
+  OpenGL-context skip. Physical four-pass density, bleed, registration, and
+  the common fallback direction remain unverified.
+- Evidence: `WSW-20261123-017`.
+- Category: windows-software, cmyk, edge-flow, photo-reproduction,
+  color-management, shared-path, registration, physical-validation-pending.
+
 <a id="elog-20261123-auto-process-color"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Auto fits the process-colour prediction
 
