@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-23 | `WSW-20261123-015` | windows-software | implemented | [Match CMYK separation to the process-ink response](windows-software/2026/2026-11-23-process-ink-color-separation.md) |
 | 2026-11-23 | `WSW-20261123-014` | windows-software | implemented | [Fit the active generator's settings column](windows-software/2026/2026-11-23-fit-active-generator-controls.md) |
 | 2026-11-23 | `WSW-20261123-013` | windows-software | implemented | [Auto-size the settings pane and set preview defaults](windows-software/2026/2026-11-23-auto-size-settings-pane-and-preview-defaults.md) |
 | 2026-11-23 | `WSW-20261123-012` | windows-software | implemented | [Use the Tombow process palette in the CMYK preview](windows-software/2026/2026-11-23-tombow-process-preview-colors.md) |

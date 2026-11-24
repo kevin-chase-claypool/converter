@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-23 | `WSW-20261123-015` | implemented | [Match CMYK separation to the process-ink response](2026/2026-11-23-process-ink-color-separation.md) | `cmyk`, `color-management`, `process-inks`, `tombow`, `calibration`, `ink-simulation`, `preview` |
 | 2026-11-23 | `WSW-20261123-014` | implemented | [Fit the active generator's settings column](2026/2026-11-23-fit-active-generator-controls.md) | `user-interface`, `layout`, `generator-tabs`, `cmyk`, `settings` |
 | 2026-11-23 | `WSW-20261123-013` | implemented | [Auto-size the settings pane and set preview defaults](2026/2026-11-23-auto-size-settings-pane-and-preview-defaults.md) | `user-interface`, `layout`, `preview`, `ink-simulation`, `settings` |
 | 2026-11-23 | `WSW-20261123-012` | implemented | [Use the Tombow process palette in the CMYK preview](2026/2026-11-23-tombow-process-preview-colors.md) | `cmyk`, `color-management`, `tombow`, `process-blue`, `process-magenta`, `process-yellow`, `preview`, `ink-simulation` |

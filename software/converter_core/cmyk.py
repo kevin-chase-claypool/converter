@@ -29,8 +29,8 @@ from .structure_tensor import trace_structure_streamlines
 
 CHANNELS = ("c", "m", "y", "k")
 CHANNEL_LABELS = {"c": "Cyan", "m": "Magenta", "y": "Yellow", "k": "Black"}
-# Uncalibrated display approximations for the Tombow process-marker set.
-# Measured ink profiles override these values in the OpenGL multiply preview.
+# Nominal full-coverage transmittances for the Tombow process-marker set.
+# Measured ink profiles override these values in separation and the preview.
 TOMBOW_PROCESS_COLORS = {
     "c": "#00aeef",
     "m": "#ec008c",
@@ -38,6 +38,161 @@ TOMBOW_PROCESS_COLORS = {
     "k": "#231f20",
 }
 CHANNEL_COLORS = dict(TOMBOW_PROCESS_COLORS)
+
+
+def ink_transmittance_matrix(ink_colors=None):
+    """Return full-coverage RGB transmittances in C, M, Y, K order."""
+    import numpy as np
+
+    colors = dict(CHANNEL_COLORS)
+    if ink_colors:
+        colors.update(
+            {
+                str(channel): value
+                for channel, value in ink_colors.items()
+                if channel in CHANNELS
+            }
+        )
+    matrix = []
+    for channel in CHANNELS:
+        value = colors[channel]
+        if isinstance(value, str):
+            text = value.strip().lstrip("#")
+            if len(text) != 6:
+                raise ValueError(
+                    f"{channel} ink colour must be a six-digit hex value"
+                )
+            triple = [
+                int(text[index : index + 2], 16) / 255.0
+                for index in (0, 2, 4)
+            ]
+        else:
+            triple = [float(component) for component in tuple(value)[:3]]
+            if len(triple) != 3:
+                raise ValueError(
+                    f"{channel} ink transmittance needs three RGB values"
+                )
+        matrix.append(np.clip(triple, 1e-4, 1.0))
+    return np.asarray(matrix, dtype=np.float64)
+
+
+def predict_cmyk_rgb(tones, ink_colors=None):
+    """Predict paper-relative RGB from C/M/Y/K screen coverage.
+
+    Each channel is the fraction of the paper covered by that full ink. The
+    process inks then multiply as independent transmittance filters:
+
+    ``result = product(1 - coverage * (1 - full_ink_transmittance))``.
+
+    This is the same model used by the OpenGL multiply preview and by the
+    calibration-sheet validator.
+    """
+    import numpy as np
+
+    coverage = np.stack(
+        [np.asarray(tones[channel], dtype=np.float64) for channel in CHANNELS],
+        axis=-1,
+    )
+    factors = ink_transmittance_matrix(ink_colors)
+    rendered = np.ones(coverage.shape[:-1] + (3,), dtype=np.float64)
+    for index in range(len(CHANNELS)):
+        rendered *= 1.0 - coverage[..., index : index + 1] * (
+            1.0 - factors[index]
+        )
+    return np.clip(rendered, 0.0, 1.0)
+
+
+def _refine_process_tones(rgb, tones, ink_colors=None, gcr=1.0):
+    """Refine C/M/Y coverage against the known full-ink response.
+
+    K keeps the requested GCR policy. A damped Gauss-Newton solve then adjusts
+    C/M/Y for chromatic colour, and the refined result is accepted per pixel
+    only when it predicts less RGB error than the plain channel-complement
+    separation. Nearly neutral pixels remain K-led at high GCR rather than
+    turning pure black into a four-pen maximum-density stack.
+    """
+    import numpy as np
+
+    target = np.clip(np.asarray(rgb, dtype=np.float64), 0.0, 1.0)
+    cmy = np.stack(
+        [np.asarray(tones[channel], dtype=np.float64) for channel in "cmy"],
+        axis=-1,
+    )
+    black = np.asarray(tones["k"], dtype=np.float64)
+    shape = cmy.shape[:-1]
+    flat_target = target.reshape(-1, 3)
+    flat_cmy = cmy.reshape(-1, 3)
+    flat_black = black.reshape(-1)
+    refined = np.empty_like(flat_cmy)
+    chroma = flat_target.max(axis=1) - flat_target.min(axis=1)
+    refinable = (chroma > 0.02) | (float(gcr) < 0.99)
+
+    factors = ink_transmittance_matrix(ink_colors)
+    cmy_effects = 1.0 - factors[:3]
+    black_factor = 1.0 - factors[3]
+    chunk_size = 65536
+    identity = np.eye(3, dtype=np.float64)[None, :, :] * 1e-6
+
+    def predicted(values, base_factor):
+        response = 1.0 - values[:, :, None] * cmy_effects[None, :, :]
+        return np.prod(response, axis=1) * base_factor
+
+    for start in range(0, len(flat_cmy), chunk_size):
+        stop = min(start + chunk_size, len(flat_cmy))
+        baseline = flat_cmy[start:stop].copy()
+        values = baseline.copy()
+        target_chunk = flat_target[start:stop]
+        base_factor = (
+            1.0
+            - flat_black[start:stop, None]
+            * black_factor[None, :]
+        )
+        for _iteration in range(4):
+            response = (
+                1.0 - values[:, :, None] * cmy_effects[None, :, :]
+            )
+            predicted_rgb = np.prod(response, axis=1) * base_factor
+            residual = target_chunk - predicted_rgb
+            products = (
+                response[:, 1, :] * response[:, 2, :],
+                response[:, 0, :] * response[:, 2, :],
+                response[:, 0, :] * response[:, 1, :],
+            )
+            jacobian = np.empty((stop - start, 3, 3), dtype=np.float64)
+            for index in range(3):
+                jacobian[:, index, :] = (
+                    -cmy_effects[index][None, :]
+                    * products[index]
+                    * base_factor
+                )
+            step = np.linalg.solve(
+                jacobian + identity,
+                residual[:, :, None],
+            )[:, :, 0]
+            values = np.clip(
+                values + np.clip(step, -0.35, 0.35),
+                0.0,
+                1.0,
+            )
+
+        baseline_error = np.mean(
+            (predicted(baseline, base_factor) - target_chunk) ** 2,
+            axis=1,
+        )
+        refined_error = np.mean(
+            (predicted(values, base_factor) - target_chunk) ** 2,
+            axis=1,
+        )
+        refined[start:stop] = np.where(
+            (refinable[start:stop] & (refined_error < baseline_error))[:, None],
+            values,
+            baseline,
+        )
+
+    result = dict(tones)
+    for index, channel in enumerate("cmy"):
+        result[channel] = refined[:, index].reshape(shape).astype(np.float32)
+    return result
 
 # Classic rotated screens: C 15, M 75, Y 0, K 45 degrees.
 SCREEN_ANGLES_DEG = {"c": 15.0, "m": 75.0, "y": 0.0, "k": 45.0}
@@ -94,13 +249,24 @@ def _weight_map(weights):
     return dict(zip(CHANNELS, values))
 
 
-def rgb_to_cmyk_tone(rgb, gcr=1.0, weights=None, gamma=1.0):
+def rgb_to_cmyk_tone(
+    rgb,
+    gcr=1.0,
+    weights=None,
+    gamma=1.0,
+    ink_colors=None,
+    color_match=True,
+):
     """Return ink-coverage arrays in 0..1 (0 = paper, 1 = full ink).
 
     ``rgb`` is an ``(h, w, 3)`` array in 0..1. ``gcr`` scales how much of the
     gray component is moved into K (0 = no black extraction, 1 = standard
-    GCR), and each channel's coverage is multiplied by its weight before the
-    optional ``gamma`` curve is applied.
+    GCR). When ``color_match`` is true, C/M/Y are refined from the known
+    process-ink transmittances so their predicted overprint follows the input
+    colour; the refinement is accepted only where it improves that prediction.
+    ``ink_colors`` accepts measured paper-relative transmittances. Each
+    channel's final coverage is multiplied by its weight before the optional
+    ``gamma`` curve is applied.
     """
     import numpy as np
 
@@ -124,10 +290,19 @@ def rgb_to_cmyk_tone(rgb, gcr=1.0, weights=None, gamma=1.0):
     m = np.where(k > 0.0, (m - k) / denominator, m)
     y = np.where(k > 0.0, (y - k) / denominator, y)
 
+    raw_tones = {"c": c, "m": m, "y": y, "k": k}
+    if color_match:
+        raw_tones = _refine_process_tones(
+            values,
+            raw_tones,
+            ink_colors=ink_colors,
+            gcr=min(1.0, max(0.0, float(gcr))),
+        )
+
     weight_map = _weight_map(weights)
     gamma = max(1e-3, float(gamma))
     tones = {}
-    for channel, array in (("c", c), ("m", m), ("y", y), ("k", k)):
+    for channel, array in raw_tones.items():
         tone = np.clip(array, 0.0, 1.0) * weight_map[channel]
         tone = np.clip(tone, 0.0, 1.0)
         if abs(gamma - 1.0) > 1e-9:
@@ -236,6 +411,7 @@ def auto_photo_settings(
     effective_pitch_mm=None,
     style=None,
     dot_pitch_mm=None,
+    ink_colors=None,
 ):
     """Suggest Image-options values that keep a photo's detail legible.
 
@@ -258,7 +434,8 @@ def auto_photo_settings(
     than behaving like the sparse rectilinear row model. Returns
     ``auto_levels``, ``brightness``, ``contrast``, ``saturation``, ``gcr`` and
     ``gamma``, plus style-specific sharpening and row-pitch controls when the
-    source pitch and scale are available. Edge-flow treats its pitch as
+    source pitch and scale are available. ``ink_colors`` supplies measured
+    full-ink transmittances when available. Edge-flow treats its pitch as
     operator-owned layout and never returns a replacement for it.
     """
     from PIL import Image
@@ -420,13 +597,12 @@ def auto_photo_settings(
                         best = (score, contrast, brightness, gamma)
     else:
         pen_mm, pitch_mm = screen
-        filters = {}
-        for channel, color in CHANNEL_COLORS.items():
-            text = color.lstrip("#")
-            filters[channel] = np.array(
-                [int(text[index : index + 2], 16) / 255.0 for index in (0, 2, 4)],
-                dtype=np.float32,
+        filters = dict(
+            zip(
+                CHANNELS,
+                ink_transmittance_matrix(ink_colors).astype(np.float32),
             )
+        )
         levelled = np.clip(
             (rgb - low) / max(high - low, 1e-3), 0.0, 1.0
         )
@@ -448,7 +624,11 @@ def auto_photo_settings(
                 lifted = np.power(contrasted, 100.0 / max(1.0, brightness))
                 for gamma in (0.6, 0.8, 1.0, 1.2, 1.4, 1.6):
                     tones = rgb_to_cmyk_tone(
-                        lifted, gcr=gcr, weights=(1, 1, 1, 1), gamma=gamma
+                        lifted,
+                        gcr=gcr,
+                        weights=(1, 1, 1, 1),
+                        gamma=gamma,
+                        ink_colors=ink_colors,
                     )
                     rendered = np.ones_like(lifted)
                     for channel in CHANNELS:
@@ -496,6 +676,8 @@ def prepare_image_tones(
     level_clip_pct=1.0,
     sharpen_pct=0.0,
     sharpen_radius_mm=1.5,
+    ink_colors=None,
+    color_match=True,
     cancel_check=None,
 ):
     """Load a raster, fit it to the page, and return ``(tones, geometry)``.
@@ -512,6 +694,8 @@ def prepare_image_tones(
     ``sharpen_pct`` is an unsharp mask on the luminance (0 disables it): the
     detail layer is added back to all three channels, so facial features
     survive the dot screen instead of dissolving into mid-tone dots.
+    ``ink_colors`` supplies measured paper-relative C/M/Y/K transmittances to
+    the separation model; nominal process colours are used when absent.
 
     The returned mapping also contains the internal ``depth`` luminance field
     used by Wave screening.
@@ -578,7 +762,14 @@ def prepare_image_tones(
         exponent = 100.0 / max(1.0, brightness)
         rgb = np.power(np.clip(rgb, 0.0, 1.0), exponent)
 
-    tones = rgb_to_cmyk_tone(rgb, gcr=gcr, weights=weights, gamma=gamma)
+    tones = rgb_to_cmyk_tone(
+        rgb,
+        gcr=gcr,
+        weights=weights,
+        gamma=gamma,
+        ink_colors=ink_colors,
+        color_match=color_match,
+    )
     # Ink coverage decides where each plate is present; luminance supplies the
     # common scene depth used by wave screens even in a saturated ink channel.
     tones["depth"] = (1.0 - depth_luminance).astype(np.float32)

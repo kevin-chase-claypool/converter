@@ -58,7 +58,7 @@ The tool writes `<scan stem>-profile.json`.
 ## Read the output
 
 - `inks.c/m/y/k` - paper-relative ink transmittance at full coverage. These
-  are the multipliers for the print-simulation preview:
+  are the multipliers for separation and the print-simulation preview:
   `result = paper x C x M x Y x K` in C, M, Y, K plot order.
 - `validation` - measured vs predicted values for the mix patches. A small
   mean error (about 8/255 or less) means pure multiply matches this pen set;
@@ -70,7 +70,8 @@ The tool writes `<scan stem>-profile.json`.
 
 ## Then
 
-Report the ink numbers and the multiply verdict. These profile numbers are
-the input for the CMYK multiply print-simulation preview (follow-up to
-`WSW-20261007-007`); keep profiles named by pen set and paper, because a
-pen, paper, or pressure change invalidates them.
+Report the ink numbers and the multiply verdict. Load the profile with
+**Ink profile...**; CMYK separation then solves its C/M/Y coverage against
+those measured transmittances, and the preview uses the same response. Keep
+profiles named by pen set and paper, because a pen, paper, or pressure change
+invalidates them.

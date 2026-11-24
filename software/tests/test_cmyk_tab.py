@@ -78,7 +78,12 @@ class SeparationTests(unittest.TestCase):
         import numpy as np
 
         gray = np.full((1, 1, 3), 0.5, dtype="float32")
-        tones = converter.rgb_to_cmyk_tone(gray, gcr=0.0, weights=(1, 1, 1, 1))
+        tones = converter.rgb_to_cmyk_tone(
+            gray,
+            gcr=0.0,
+            weights=(1, 1, 1, 1),
+            color_match=False,
+        )
         self.assertAlmostEqual(float(tones["k"][0, 0]), 0.0, places=5)
         for channel in ("c", "m", "y"):
             self.assertAlmostEqual(float(tones[channel][0, 0]), 0.5, places=5)
@@ -88,10 +93,67 @@ class SeparationTests(unittest.TestCase):
 
         gray = np.full((1, 1, 3), 0.5, dtype="float32")
         tones = converter.rgb_to_cmyk_tone(
-            gray, gcr=0.0, weights=(0.0, 1.0, 1.0, 1.0), gamma=2.0
+            gray,
+            gcr=0.0,
+            weights=(0.0, 1.0, 1.0, 1.0),
+            gamma=2.0,
+            color_match=False,
         )
         self.assertAlmostEqual(float(tones["c"][0, 0]), 0.0, places=6)
         self.assertAlmostEqual(float(tones["m"][0, 0]), 0.25, places=5)
+
+    def test_process_ink_model_matches_gray_and_skin_tones(self):
+        import numpy as np
+
+        target = np.array(
+            [[[0.50, 0.50, 0.50], [0.75, 0.20, 0.18]]],
+            dtype="float32",
+        )
+        plain = converter.rgb_to_cmyk_tone(
+            target,
+            gcr=0.8,
+            weights=(1, 1, 1, 1),
+            color_match=False,
+        )
+        matched = converter.rgb_to_cmyk_tone(
+            target,
+            gcr=0.8,
+            weights=(1, 1, 1, 1),
+        )
+        plain_error = np.linalg.norm(
+            converter.predict_cmyk_rgb(
+                {channel: plain[channel][0, 0] for channel in converter.CHANNELS}
+            )
+            - target[0, 0],
+            axis=-1,
+        )
+        matched_error = np.linalg.norm(
+            converter.predict_cmyk_rgb(
+                {
+                    channel: matched[channel][0, 0]
+                    for channel in converter.CHANNELS
+                }
+            )
+            - target[0, 0],
+            axis=-1,
+        )
+        self.assertTrue(np.all(matched_error < plain_error))
+        self.assertTrue(np.all(matched_error < 0.005))
+
+    def test_measured_ink_colors_drive_the_process_prediction(self):
+        import numpy as np
+
+        tones = {
+            channel: np.zeros((1, 1), dtype="float32")
+            for channel in converter.CHANNELS
+        }
+        tones["c"][0, 0] = 1.0
+        measured = {"c": (0.2, 0.9, 0.7)}
+        predicted = converter.predict_cmyk_rgb(
+            {channel: tones[channel][0, 0] for channel in converter.CHANNELS},
+            ink_colors=measured,
+        )
+        np.testing.assert_allclose(predicted, [0.2, 0.9, 0.7], atol=1e-7)
 
     def test_embedded_icc_profile_is_converted_to_srgb(self):
         from PIL import Image
@@ -755,6 +817,7 @@ class ScreeningTests(unittest.TestCase):
             auto_levels=False,
             gcr=0.0,
             weights=(1, 1, 1, 1),
+            color_match=False,
         )
         self.assertAlmostEqual(
             float(tones["m"].max() - tones["m"].min()), 0.0, places=5

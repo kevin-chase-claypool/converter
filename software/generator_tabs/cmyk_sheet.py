@@ -495,7 +495,11 @@ def build_sheet(
     cells = []
     for value in GCR_STEPS:
         tones = converter.rgb_to_cmyk_tone(
-            gray, gcr=value, weights=weights, gamma=gamma
+            gray,
+            gcr=value,
+            weights=weights,
+            gamma=gamma,
+            color_match=False,
         )
         tone_map = {
             channel: float(tones[channel][0, 0])

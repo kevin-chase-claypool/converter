@@ -572,10 +572,19 @@ class ToolShellTests(unittest.TestCase):
                 },
                 handle,
             )
+        cmyk = next(
+            widget
+            for title, widget, _group, _description in window.generator_tools
+            if title == "CMYK"
+        )
+        key_before = cmyk._control_key()
         window.load_ink_profile(path)
         self.assertEqual(
             window.gl_preview.sim_ink_colors["c"], (0.6, 0.9, 0.95)
         )
+        self.assertEqual(window.active_ink_colors()["c"], (0.6, 0.9, 0.95))
+        self.assertEqual(cmyk._active_ink_colors()["c"], (0.6, 0.9, 0.95))
+        self.assertNotEqual(cmyk._control_key(), key_before)
         window.gl_preview.set_preview(
             converter.tag_ink([[(0.0, 0.0), (1.0, 0.0)]], "c"),
             [],

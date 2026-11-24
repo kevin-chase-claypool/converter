@@ -1605,8 +1605,8 @@ class MainWindow(QMainWindow):
         )
         self.ink_profile_button.setToolTip(
             "Load a *-profile.json produced by tools\\cmyk_calibrate.py; the "
-            "Ink simulation then multiplies your pens' measured colours "
-            "instead of the display colours."
+            "Ink simulation and CMYK separation then use your pens' measured "
+            "response instead of the nominal process colours."
         )
         # Keep the preview's minimum width below the settings content's width.
         # A single row of every checkbox and action used to force a 974 px
@@ -2130,6 +2130,16 @@ class MainWindow(QMainWindow):
     def artwork_path(self):
         """Path currently in the static Artwork row, for generator tabs."""
         return self.svg_path.text().strip()
+
+    def active_ink_colors(self):
+        """Measured process-ink transmittances currently loaded, if any."""
+        colors = self.gl_preview.sim_ink_colors
+        if not colors:
+            return None
+        return {
+            channel: tuple(float(component) for component in values)
+            for channel, values in colors.items()
+        }
 
     def current_contours(self):
         """Preview contours in millimetres, for post-process tools."""
@@ -4491,6 +4501,7 @@ class MainWindow(QMainWindow):
             )
             return
         self.gl_preview.set_sim_ink_colors(colors)
+        self.mark_preview_dirty()
         summary = ", ".join(
             f"{channel.upper()} ({colors[channel][0]:.2f}, "
             f"{colors[channel][1]:.2f}, {colors[channel][2]:.2f})"
@@ -4502,13 +4513,14 @@ class MainWindow(QMainWindow):
             f"Ink simulation now uses measured profile {name}: {summary}"
         )
         self.ink_sim_check.setToolTip(
-            "CMYK preview only: multiply the ink layers over the paper white "
-            "in plot order, the way translucent pens combine. Using measured "
-            f"profile {name}."
+            "CMYK preview: multiply the ink layers over the paper white in "
+            "plot order, the way translucent pens combine. Separation and "
+            f"simulation use measured profile {name}."
         )
         self.status.setText(
             f"Ink profile loaded ({name}); the Ink simulation now uses the "
-            "measured pen colours."
+            "measured pen colours and CMYK separation will use the same "
+            "measured response on the next Preview."
         )
 
     def ink_engage_summary(self, contours, moves):

@@ -273,8 +273,17 @@ class CmykTab(GeneratorTab):
         self.sharpen.toggled.connect(self._update_sharpen_controls)
         self._update_sharpen_controls()
         self.gamma = double_spin(1.40, 0.2, 3.0, 0.05, 2)
+        self.gamma.setToolTip(
+            "Ink-density curve applied after the process-ink colour match. "
+            "1.0 preserves the predicted colour most closely; lower values "
+            "add coverage and higher values lighten every plate."
+        )
         options.addRow("Ink gamma", self.gamma)
         self.gcr = double_spin(95, 0, 100, 5, 0, " %")
+        self.gcr.setToolTip(
+            "How much neutral density moves to the Black pen during process-"
+            "ink matching. Higher values protect chromatic C/M/Y for colour."
+        )
         options.addRow("Black (GCR)", self.gcr)
         self.resolution = int_spin(10000, 200, 100000, 50)
         self.resolution.setToolTip(
@@ -288,6 +297,20 @@ class CmykTab(GeneratorTab):
         self.weight_m = double_spin(100, 0, 150, 5, 0, " %")
         self.weight_y = double_spin(100, 0, 150, 5, 0, " %")
         self.weight_k = double_spin(100, 0, 150, 5, 0, " %")
+        for spin, channel in zip(
+            (
+                self.weight_c,
+                self.weight_m,
+                self.weight_y,
+                self.weight_k,
+            ),
+            converter.CHANNELS,
+        ):
+            spin.setToolTip(
+                f"Final {converter.CHANNEL_LABELS[channel]} coverage scale "
+                "after process-ink matching. 100 % keeps the predicted "
+                "coverage; change this only to deliberately bias the print."
+            )
         options.addRow("Cyan weight", self.weight_c)
         options.addRow("Magenta weight", self.weight_m)
         options.addRow("Yellow weight", self.weight_y)
@@ -797,6 +820,11 @@ class CmykTab(GeneratorTab):
             "k": self.weight_k.value() / 100.0,
         }
 
+    def _active_ink_colors(self):
+        """Measured process-ink transmittances loaded by the host, if any."""
+        getter = getattr(self.host, "active_ink_colors", None)
+        return getter() if callable(getter) else None
+
     def _pen_offsets(self):
         """Per-ink X/Y corrections in paper millimetres."""
         return {
@@ -851,6 +879,7 @@ class CmykTab(GeneratorTab):
                 ),
                 style=self.style.currentData(),
                 dot_pitch_mm=self.pitch.value(),
+                ink_colors=self._active_ink_colors(),
             )
         except Exception as exc:  # noqa: BLE001 - user-facing setup error
             self.report_error(f"Auto settings failed: {exc}")
@@ -1390,6 +1419,7 @@ class CmykTab(GeneratorTab):
         settings_key = ""
         if self.host is not None and hasattr(self.host, "settings_for_source"):
             settings_key = repr(self._effective_settings())
+        ink_profile = self._active_ink_colors() or {}
         return (
             getattr(self, "_artwork", ""),
             self.page_w.value(),
@@ -1408,6 +1438,16 @@ class CmykTab(GeneratorTab):
             self.gcr.value(),
             self.resolution.value(),
             tuple(self._weights().items()),
+            tuple(
+                (
+                    channel,
+                    tuple(
+                        round(float(component), 5)
+                        for component in ink_profile.get(channel, ())
+                    ),
+                )
+                for channel in converter.CHANNELS
+            ),
             self.style.currentData(),
             self.pitch.value(),
             self._wave_spacing_guard_active(),
@@ -1674,6 +1714,7 @@ class CmykTab(GeneratorTab):
                 else 0.0
             ),
             sharpen_radius_mm=self.sharpen_radius.value() / factor,
+            ink_colors=self._active_ink_colors(),
         )
         width = self.page_w.value()
         height = self.page_h.value()
@@ -2330,6 +2371,19 @@ class CmykTab(GeneratorTab):
                 "gcr_pct": self.gcr.value(),
                 "resolution_px": self.resolution.value(),
                 "weights": weights,
+                "color_model": "process-ink-multiply-v1",
+                "ink_transmittances": {
+                    channel: [
+                        round(float(component), 4)
+                        for component in values
+                    ]
+                    for channel, values in zip(
+                        converter.CHANNELS,
+                        converter.ink_transmittance_matrix(
+                            self._active_ink_colors()
+                        ),
+                    )
+                },
                 "sharpening": {
                     "enabled": self.sharpen.isChecked(),
                     "amount_pct": self.sharpen_amount.value(),

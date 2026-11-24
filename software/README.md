@@ -478,13 +478,14 @@ get (zoom in for full-strength strokes). Mixing only happens where strokes
 overlap: keep the effective pitch (Dot pitch x Artwork scale, then the
 tone-adaptive factor of 1-3x) at or below the pen width for full coverage. An
 **Ink profile...** button loads
-the `*-profile.json` written by `tools\cmyk_calibrate.py`, so the simulation
-multiplies your pens' measured transmittances instead of the display ink
-colours. The uncalibrated display approximation now matches the Tombow process
-marker set: Process Blue `#00aeef`, Magenta `#ec008c`, Process Yellow
-`#ffff00`, and Black `#231f20`. These values drive both the layer colours and
-the OpenGL multiply mixing, so yellow mainly removes blue and magenta remains
-vivid. A measured profile remains authoritative for the actual inks on paper.
+the `*-profile.json` written by `tools\cmyk_calibrate.py`, so both separation
+and the simulation use your pens' measured transmittances instead of the
+nominal process values. The uncalibrated display approximation now matches the
+Tombow process marker set: Process Blue `#00aeef`, Magenta `#ec008c`, Process
+Yellow `#ffff00`, and Black `#231f20`. These values drive both the layer
+colours and the OpenGL multiply mixing, so yellow mainly removes blue and
+magenta remains vivid. A measured profile remains authoritative for the
+actual inks on paper.
 **Help** has the shortcut list
 (F1) and About.
 The status bar shows the current artwork and G-code paths. Tools are
@@ -566,6 +567,16 @@ Current tools:
   marks per ink, seed, preview and write checkboxes per layer, page size,
   margin, artwork scale, and registration corner crosses (all four inks
   draw the same four margin crosses so pass alignment can be checked).
+  Separation now starts with the normal channel-complement estimate, then
+  refines cyan, magenta, and yellow through the known process-ink multiply
+  response. The refined coverage is accepted only where its predicted RGB is
+  closer to the processed source than the plain estimate, so nominal process
+  inks improve the starting colour without affecting the screening machinery.
+  Black remains governed by **Black (GCR)**. Ink weights and **Ink gamma** are
+  deliberate adjustments applied after that match; keeping weights at 100 %
+  and gamma at 1.0 preserves the closest prediction. A loaded measured ink
+  profile replaces the nominal process response for both separation and
+  preview.
   **Edge-flow streamlines** is a separate continuous screen for portraits and
   textured photographs. One shared luminance guide supplies the image form:
   its gradients form a structure tensor, Gaussian-like blur smooths it, and

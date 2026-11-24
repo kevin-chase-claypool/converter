@@ -1,5 +1,41 @@
 # Engineering Log
 
+<a id="elog-20261123-process-ink-separation"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Use the process-ink response during CMYK separation
+
+- The owner pointed out that a defined process-ink set should make output
+  predictable rather than merely explain an approximate preview.
+- The nominal Tombow colours already drove SVG layer colours and the OpenGL
+  multiply preview, but separation still used only complementary RGB channel
+  values. The software therefore knew how the inks combine without using that
+  knowledge to choose C/M/Y coverage.
+- `ink_transmittance_matrix()` now normalizes nominal or measured full-ink
+  transmittances, and `predict_cmyk_rgb()` evaluates the same area-coverage
+  multiply model used by the preview.
+- Separation keeps the channel-complement estimate and GCR-selected Black,
+  then refines chromatic pixels with a bounded, damped Gauss-Newton solve.
+  The refined C/M/Y value is accepted only when its modeled RGB error is lower,
+  so out-of-gamut or difficult colours retain the baseline.
+- Nearly neutral pixels remain K-led at high GCR. This prevents a 100 % Black
+  target from turning into a maximum-density four-pen stack.
+- A loaded `*-profile.json` now reaches image preparation, the generic Auto
+  screen model, the CMYK layer-cache key, separation, preview, and the saved
+  set manifest. The calibration sheet deliberately keeps its raw GCR ladder
+  so it measures requested splits rather than pre-correcting itself.
+- Synthetic neutral prediction improves from RGB RMS `0.041` to `0.001`.
+  A representative skin target improves from approximately `0.060` to below
+  `0.001`.
+- CMYK tab tests pass `136`, calibration-sheet tests pass `16`, tool-shell
+  tests pass `42` with one expected OpenGL skip, and complete converter
+  discovery passes `661` tests with the same skip.
+- Ink weights and gamma remain deliberate post-match adjustments; values away
+  from 100 % and 1.0 intentionally move the result away from the closest
+  predicted colour. Nominal transmittances also do not replace a measured
+  profile for the installed pen/paper combination.
+- Evidence: `WSW-20261123-015`.
+- Category: windows-software, cmyk, color-management, process-inks, tombow,
+  calibration, ink-simulation, preview, physical-validation-pending.
+
 <a id="elog-20261123-tombow-process-preview"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Use the Tombow process palette in the CMYK preview
 
