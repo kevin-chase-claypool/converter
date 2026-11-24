@@ -618,8 +618,13 @@
   motion checker. The continuous row screen produces `530` / `482` marks for
   the two recipes. On the current portrait recipe the corrected gate produces
   `18,081` raw M3 sequences; the `5 mm` adjacent chain reduces that to `7,965`.
-  A physical four-pass comparison must still choose between image fidelity,
-  visible connectors, and elapsed time.
+  Status 2026-11-24: generated screen contours now chain again after the
+  Xθ/Yθ planner selects their final order. A connector is drawn only when it
+  is faster than lift/travel/lower and remains inside the same operator gap;
+  larger gaps still lift. Replaying the Ben3 order predicts M3 reductions from
+  `1919/2118/1942/1898` to `620/510/579/524` for K/C/M/Y
+  (`WSW-20261124-001`). A physical four-pass comparison must still choose
+  between image fidelity, visible connectors, and elapsed time.
   Status 2026-11-23 fit gate: explicit **Fit inside** previously changed the
   global field but generator sources reset it to manual 1:1. Generator fit now
   reaches Preview, Save, and the effective reach warning. The owner confirmed

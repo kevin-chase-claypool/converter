@@ -440,8 +440,9 @@ class CmykTab(GeneratorTab):
             "Chain the nearest open mark endpoints into the same M3/M5 "
             "drawing stroke. A connector up to the shown gap remains visible "
             "ink. Edge-flow also bridges up to 4 mm of tone-off gaps along "
-            "each individual streamline before applying this nearest-endpoint "
-            "chain."
+            "each individual streamline. After Xθ/Yθ planning, the final "
+            "ordered contours are chained again within this same gap while "
+            "real gaps remain pen lifts."
         )
         self.chain_gap.setToolTip(
             "Maximum direct connector length between open screen marks when "
@@ -865,7 +866,10 @@ class CmykTab(GeneratorTab):
         if not dx and not dy:
             return marks
         return [
-            [(x + dx, y + dy) for x, y in line]
+            converter.retag_contour(
+                line,
+                [(x + dx, y + dy) for x, y in line],
+            )
             for line in marks
         ]
 
@@ -1229,6 +1233,11 @@ class CmykTab(GeneratorTab):
                 self.contour_order.currentData()
                 if self._wave_row_order_active()
                 else "optimized"
+            ),
+            screen_chain_gap_mm=(
+                self.chain_gap.value()
+                if self._pen_chain_active()
+                else 0.0
             ),
         )
         return settings
@@ -1688,7 +1697,8 @@ class CmykTab(GeneratorTab):
             )
         if self._pen_chain_active():
             parts.append(
-                "pen-down chain up to %.1f mm" % self.chain_gap.value()
+                "pen-down chain up to %.1f mm after Xθ/Yθ order"
+                % self.chain_gap.value()
             )
         if results is not None:
             errors = self._preflight_errors(results)
@@ -1879,6 +1889,10 @@ class CmykTab(GeneratorTab):
                         max_gap_mm=self.chain_gap.value(),
                     )
                 )
+                marks = [
+                    converter.ScreenTrail(mark)
+                    for mark in marks
+                ]
             if self.registration_marks.isChecked():
                 marks = list(marks) + self._registration_crosses()
             # Absolute paper-space corrections for this pen. Applied after
@@ -2431,6 +2445,10 @@ class CmykTab(GeneratorTab):
                 "pen_down_chain": {
                     "enabled": self._pen_chain_active(),
                     "max_gap_mm": self.chain_gap.value(),
+                    "planner_order": True,
+                    "bridge_decision": (
+                        "draw_connector_vs_lift_travel_lower"
+                    ),
                     "local_flow_bridge_mm": (
                         min(4.0, self.chain_gap.value())
                         if style in EDGE_FLOW_STYLES

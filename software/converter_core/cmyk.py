@@ -17,7 +17,7 @@ import io
 import math
 
 from .cancellation import check_cancelled
-from .geometry import WaveTrail
+from .geometry import ScreenTrail, WaveTrail
 from .shading import (
     dot_mark_contours,
     greedy_single_line,
@@ -2140,7 +2140,14 @@ def svg_document(layers, width_mm, height_mm, stroke_mm=0.3, order=None):
                 if row_index is not None
                 else ""
             )
-            body.append(f"<polyline{row_attribute} points=\"{pairs}\"/>")
+            screen_attribute = (
+                ' data-screen-chain="1"'
+                if isinstance(points, ScreenTrail)
+                else ""
+            )
+            body.append(
+                f"<polyline{row_attribute}{screen_attribute} points=\"{pairs}\"/>"
+            )
         body.append("</g>")
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'

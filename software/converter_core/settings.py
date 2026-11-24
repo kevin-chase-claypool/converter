@@ -314,6 +314,9 @@ class Settings:
     # explicit choice. Bridging is restricted to FillTrail contours, never the
     # artwork's own open strokes.
     keep_down_bridges: bool = False
+    # Explicitly tagged CMYK/screen marks may also be joined after the X/Y/A
+    # contour planner orders them. Zero disables post-planner screen chaining.
+    screen_chain_gap_mm: float = 0.0
     # Merge only contours whose endpoints already touch within this small
     # tolerance. This removes otherwise-unnecessary M3/M5 cycles without
     # joining visibly separate areas of the drawing.
@@ -695,6 +698,7 @@ def validate_settings(settings):
         "pen_down_ms",
         "pen_down_first_ms",
         "path_join_tolerance_mm",
+        "screen_chain_gap_mm",
         "bed_margin_mm",
         "machine_reach_radius_mm",
         "theta_center_hold_diameter_mm",

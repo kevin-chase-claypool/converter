@@ -3028,6 +3028,29 @@ class CmykTabTests(unittest.TestCase):
         self.assertFalse(restored.chain_marks.isChecked())
         self.assertAlmostEqual(restored.chain_gap.value(), 8.5)
 
+    def test_pen_down_chain_gap_reaches_post_planner_settings(self):
+        tab = self.make_tab()
+        tab.chain_marks.setChecked(True)
+        tab.chain_gap.setValue(6.5)
+
+        settings = tab.apply_tab_settings(converter.Settings())
+
+        self.assertAlmostEqual(settings.screen_chain_gap_mm, 6.5)
+        tab.chain_marks.setChecked(False)
+        settings = tab.apply_tab_settings(converter.Settings())
+        self.assertEqual(settings.screen_chain_gap_mm, 0.0)
+
+    def test_pen_offset_translation_preserves_screen_chain_tag(self):
+        tab = self.make_tab()
+        marks = [
+            converter.ScreenTrail([(0.0, 0.0), (10.0, 0.0)]),
+        ]
+
+        translated = tab._translate_marks(marks, 1.0, 2.0)
+
+        self.assertIsInstance(translated[0], converter.ScreenTrail)
+        self.assertEqual(translated[0], [(1.0, 2.0), (11.0, 2.0)])
+
     def test_pen_down_chain_joins_short_marks_for_non_edge_flow(self):
         tab = self.make_tab()
         tab.chain_marks.setChecked(True)
@@ -3045,6 +3068,10 @@ class CmykTabTests(unittest.TestCase):
 
         for channel in converter.CHANNELS:
             self.assertEqual(len(tab._layers[channel]), 1)
+            self.assertIsInstance(
+                tab._layers[channel][0],
+                converter.ScreenTrail,
+            )
             self.assertEqual(
                 tab._pen_chain_stats[channel]["connections"],
                 1,

@@ -1,5 +1,25 @@
 # Engineering Log
 
+<a id="elog-20261124-post-planner-screen-chaining"></a>
+### 🟨 2026-11-24 - WINDOWS SOFTWARE/IMPLEMENTED - Chain screen contours after Xθ/Yθ planning
+
+- The Ben3 CMYK files still required 1,899-2,118 pen-down strokes per ink even
+  though 73-77% of the consecutive planner transitions ended within the
+  configured 5 mm chain gap.
+- Generated CMYK marks now carry a screen-chain tag through SVG serialization.
+  After the existing Xθ/Yθ planner chooses order and direction, the emitter
+  draws a same-ink connector when it is faster than lift, travel, and lower.
+- Gaps above the limit, closed contours, ordinary SVG line art, and connectors
+  slower than a pen cycle still lift.
+- Replaying the current Ben3 order predicts `620/510/579/524` M3 strokes for
+  K/C/M/Y instead of `1919/2118/1942/1898`.
+- The full converter suite passes 680 tests with one expected OpenGL-context
+  skip. Physical four-pass density and colour comparison remain pending.
+- Evidence: `WSW-20261124-001`;
+  `docs/changes/windows-software/2026/2026-11-24-post-planner-screen-chaining.md`.
+- Category: windows-software, cmyk, edge-flow, pen-up, x-theta, y-theta,
+  print-time, physical-validation-pending.
+
 <a id="elog-20261124-p100-north-west-offset"></a>
 ### 🟨 2026-11-24 - RP23CNC SOFTWARE/IMPLEMENTED - Move P100 1.2 mm north and 1.0 mm west
 

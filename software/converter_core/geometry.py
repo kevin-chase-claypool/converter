@@ -42,6 +42,17 @@ class FillTrail(list):
     """
 
 
+class ScreenTrail(list):
+    """An open generated screen mark eligible for planner-ordered chaining.
+
+    Screen marks are intentionally tagged instead of every open SVG stroke,
+    because connecting arbitrary artwork strokes draws visible bridges across
+    blank paper. The tag is serialized to ``data-screen-chain`` and restored
+    after SVG parsing so the X/Y/A planner can keep adjacent same-ink marks
+    down after choosing their cost-minimised order.
+    """
+
+
 class WaveTrail(list):
     """A screen row carrying its exact source row index through SVG parsing."""
 
@@ -2118,6 +2129,12 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
         if rx > 0 and ry > 0:
             steps = max(24, min(360, int(2 * math.pi * max(rx, ry) / max(tolerance, 0.01))))
             contours = [[(cx + rx * math.cos(2 * math.pi * n / steps), cy + ry * math.sin(2 * math.pi * n / steps)) for n in range(steps + 1)]]
+    screen_chain = (
+        str(element.get("data-screen-chain", "")).strip().lower()
+        in ("1", "true", "yes")
+    )
+    if screen_chain:
+        contours = [ScreenTrail(contour) for contour in contours]
     row_index = element.get("data-wave-row")
     if row_index is not None:
         try:

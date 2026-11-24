@@ -604,9 +604,15 @@ Current tools:
   endpoint-nearby marks head-to-tail and draws a connector only up to the
   adjacent **Keep pen down** gap (default `5.0 mm`). Edge-flow also bridges up
   to `4 mm` of tone-off gaps along each individual streamline, then applies
-  that adjacent chain within each ink. Its connectors draw visible ink, but
-  they are local and substantially reduce the M3/M5 count. Closed shapes,
-  tagged Wave rows, and TSP output stay separate.
+  that adjacent chain within each ink. Screen contours are tagged through the
+  generated SVG. After the Xθ/Yθ planner chooses their final order and
+  direction, adjacent tagged contours in the same ink are chained again across
+  the same gap when drawing the connector is faster than lifting, travelling,
+  and lowering again. This second pass is what turns short planner-adjacent
+  fragments into one continuous M3 stroke. A real gap, a closed contour, or a
+  connector that would be slower than a lift remains a pen-up. Its connectors
+  draw visible ink, but they are local and substantially reduce the M3/M5
+  count. Ordinary SVG strokes and tagged Wave/TSP output stay separate.
   The four plates use the same page frame, artwork scale, registration crosses,
   pen offsets, and G-code contract, but remain independent pen programs.
   Preview multiplies them to show the combined print; Save writes cyan,
