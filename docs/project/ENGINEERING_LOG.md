@@ -1,5 +1,35 @@
 # Engineering Log
 
+<a id="elog-20261123-auto-process-color"></a>
+### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Auto fits the process-colour prediction
+
+- The owner asked why CMYK Auto did not use the now process-aware ink model to
+  choose the most accurate image controls.
+- Auto keeps its previous detail/exposure result as a baseline, then evaluates
+  nearby Auto-level, brightness, contrast, saturation, gamma, and GCR choices
+  through the image curve, process separation, screen-area estimate, and
+  multiply preview model.
+- The objective combines predicted RGB error, chroma error, mean-tone drift,
+  detail shortfall, and clipping. The selected status reports predicted RGB
+  error in `0-255` units.
+- Auto resets all ink weights to `100 %`; weights are deliberate output biases,
+  and optimizing them independently made the whole print lighter to reduce
+  error.
+- For `IMG_0514.JPG` at `0.52 mm` effective pitch, the former heuristic
+  predicted `33.9/255` RGB RMS. Auto now selects Auto levels off, brightness
+  `140 %`, contrast `140 %`, saturation `90 %`, GCR `100 %`, gamma `0.75`,
+  all weights `100 %`, and predicts `4.7/255`.
+- A synthetic Edge-flow colour card verifies that the selected Auto result
+  improves process-model RGB error over the detail-only baseline. Focused Auto
+  regressions pass `12` cases; the CMYK tab passes `137` and complete converter
+  discovery passes `662` with one expected OpenGL-context skip.
+- Wave retains its exposure-preserving Auto path: applying the generic area
+  estimate produced `56.5/255`, so row coverage needs its own validated model
+  before Auto can honestly claim colour accuracy there.
+- Evidence: `WSW-20261123-016`.
+- Category: windows-software, cmyk, auto, color-management, process-inks,
+  edge-flow, portrait, physical-validation-pending.
+
 <a id="elog-20261123-process-ink-separation"></a>
 ### 🟨 2026-11-23 - WINDOWS SOFTWARE/IMPLEMENTED - Use the process-ink response during CMYK separation
 

@@ -537,17 +537,17 @@ Current tools:
     highlights, and colour separation in the preview. If the current pitch
     would make each solid row cover too much of the page, Auto opens it to at
     least `3.4` pen widths; every resulting row remains exactly equidistant.
-  - For Edge-flow streamlines, Auto tunes the image curve, separation, and
-    black extraction without changing Dot pitch. Edge-flow's path-local tone
-    gating leaves more paper than a solid row screen, so the selected curve
-    uses normal photo brightness, stronger midtone contrast, lower ink gamma,
-    and a moderate saturation/GCR balance. That keeps enough separate
-    yellow/magenta strokes through bright skin without pushing the whole face
-    into a red-orange wash.
-  - For other screen styles, tone controls come from a detail search over the
-    real curve chain: maximum mid tone-weighted gradient with a clipping
-    penalty, plus a target print mean clamped to the printable `0.30-0.75`
-    window. That search also models the rectilinear row coverage.
+  - Edge-flow and the general screen styles start from a detail/exposure
+    search over the real curve chain. Auto then evaluates those candidates
+    through the active process-ink multiply model and searches Auto levels,
+    saturation, contrast, brightness, gamma, and GCR for lower predicted RGB
+    error, while retaining penalties for lost detail, mean-tone drift, and
+    clipping. It resets all four ink weights to `100 %`; the status line
+    reports the predicted RGB error in 0-255 units.
+  - The **Wave** screen retains its separate exposure-preserving path. Its row
+    coverage is geometry-dependent rather than a direct ink-area fraction, so
+    it keeps the established photo-fidelity setup instead of claiming a
+    falsely precise colour match.
   - Auto only changes Dot pitch for the Wave screen. Edge-flow spacing is
     treated as persisted layout and is left exactly as the operator set it;
     the status line still reports the current effective pitch. **Match pen**
@@ -657,18 +657,15 @@ Current tools:
   discussion; this implementation is repository-native and independently
   tested. Software rendering is verified, but no edge-flow four-pass sheet has
   yet established the best pitch, smoothing, or layer count on paper.
-  For the current portrait, Auto selects auto levels on; saturation 110 %,
-  contrast 220 %, brightness 105 %, sharpening off; ink gamma 0.75; and black
-  (GCR) 80 %. It leaves the existing source pitch and artwork scale alone and
-  uses the tab's 1600 px
-  resolution, C/M/Y weights 100 % and K 90 %, `4.0 mm` flow smoothing, five
-  flow layers, `0.8 mm` pen width, `0.15 mm` path tolerance, 200000 marks per
-  ink, and seed 7. Pressing **Fine detail** changes those flow controls to the
-  pen-aware recipe and enables Black keylines. A four-network software render
-  now keeps separate yellow, magenta, cyan, and black density through the
-  bright face while still leaving paper gaps. This is a repeatable software
-  starting point, not a physical print optimum; tune it against the pen set
-  and paper.
+  For the current portrait at `0.52 mm` effective pitch, Auto selects Auto
+  levels off, saturation 90 %, contrast 140 %, brightness 140 %, gamma 0.75,
+  GCR 100 %, and all four ink weights at 100 %. It leaves the existing source
+  pitch and artwork scale alone and predicts `4.7/255` mean RGB RMS, compared
+  with `33.9/255` for the former detail-only curve. The saved recipe retains
+  its `4.0 mm` flow smoothing, five flow layers, `0.8 mm` pen width,
+  `0.15 mm` path tolerance, 200000 marks per ink, and seed 7 unless Fine
+  detail changes them. This is still a software-selected starting point, not
+  a physical print optimum; tune it against the pen set and paper.
   Resolution keeps the source image's longest side up to that many pixels
   and never upsamples, so it accepts high-resolution sources (the control is
   effectively uncapped; memory grows with the source size you keep).
@@ -1009,7 +1006,7 @@ work with no input (optional mesh/image sources are noted below).
 | Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
 | CMYK | Auto levels on, rectilinear fill at 0.10 mm pitch, saturation 115 %, contrast 285 %, brightness 170 %, ink gamma 1.40, black (GCR) 95 %, 40000 marks/ink, resolution 10000 px, weights 100/100/100/100 %, artwork scale 280 % | Needs an image; Preview plans each ink in the background and Save writes four files. Dense photo screens take hours to plot; raise pitch or lower Max marks/ink for a faster pass. |
-| CMYK edge-flow | Auto levels on; saturation 110 %, contrast 220 %, brightness 105 %, sharpening off; gamma 0.75, GCR 80 %, resolution 1600 px, weights 100/100/100/90 %; keep the operator-picked Edge-flow pitch and artwork scale. Use **Fine detail** for pen-aware pitch/smoothing/layers, Black keylines with color-edge separation, 60 % / 1.5 mm sharpening, and tolerance no larger than 0.10 mm. | Software-selected starting point for a pre-cropped portrait. Auto adjusts image processing only and does not overwrite the saved screen layout. Each ink applies its own mask, seed, continuous local tone fraction, and fallback screen over one strength-gated luminance flow. Fine detail keeps coherent Black boundaries continuous and quiets color beside them. Save writes four separate overprinted G-code files. Check density and pen-set separation on paper before using it as a production recipe. |
+| CMYK edge-flow | Start with Auto levels off; saturation 90 %, contrast 140 %, brightness 140 %, gamma 0.75, GCR 100 %, resolution 1600 px, weights 100/100/100/100 % for the current portrait; keep the operator-picked Edge-flow pitch and artwork scale. Use **Fine detail** for pen-aware pitch/smoothing/layers, Black keylines with color-edge separation, 60 % / 1.5 mm sharpening, and tolerance no larger than 0.10 mm. | Auto starts from the portrait detail curve and then minimizes predicted process-RGB error while retaining tone/detail penalties. It does not overwrite the saved screen layout. Each ink applies its own mask, seed, continuous local tone fraction, and fallback screen over one strength-gated luminance flow. Fine detail keeps coherent Black boundaries continuous and quiets color beside them. Save writes four separate overprinted G-code files. Check density and pen-set separation on paper before using it as a production recipe. |
 | CMYK continuous | Use the same image curve as the CMYK recipe, then choose **Continuous row screen (adjacent joins)** and keep **Pen-down chain** on with a `5 mm` gap. | Fastest starting point for an image where fewer M3/M5 cycles matter more than Edge-flow contour texture. Straight screen directions remain visible, and all joins print connector ink. A fully blank row band can still lift. |
 | 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
 | Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |

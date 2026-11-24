@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-23 | `WSW-20261123-016` | windows-software | implemented | [Make CMYK Auto optimize the process-colour prediction](windows-software/2026/2026-11-23-auto-fit-cmyk-process-color.md) |
 | 2026-11-23 | `WSW-20261123-015` | windows-software | implemented | [Match CMYK separation to the process-ink response](windows-software/2026/2026-11-23-process-ink-color-separation.md) |
 | 2026-11-23 | `WSW-20261123-014` | windows-software | implemented | [Fit the active generator's settings column](windows-software/2026/2026-11-23-fit-active-generator-controls.md) |
 | 2026-11-23 | `WSW-20261123-013` | windows-software | implemented | [Auto-size the settings pane and set preview defaults](windows-software/2026/2026-11-23-auto-size-settings-pane-and-preview-defaults.md) |

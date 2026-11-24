@@ -404,7 +404,7 @@ def _detail_score(tone):
     return detail - 0.4 * clipped
 
 
-def auto_photo_settings(
+def _auto_photo_baseline_settings(
     image_path,
     resolution_px=256,
     pen_width_mm=None,
@@ -658,6 +658,266 @@ def auto_photo_settings(
         "gcr": round_up_to(gcr * 100.0, 5),
         "gamma": round(gamma / 0.05) * 0.05,
     }
+
+
+def _auto_curve_rgb(
+    rgb,
+    low,
+    high,
+    auto_levels,
+    saturation_pct,
+    contrast_pct,
+    brightness_pct,
+):
+    """Apply Auto's image curve to a sampled RGB array."""
+    import numpy as np
+
+    values = np.asarray(rgb, dtype=np.float32)
+    if auto_levels:
+        values = np.clip(
+            (values - float(low)) / max(float(high - low), 1e-3),
+            0.0,
+            1.0,
+        )
+    saturation = float(saturation_pct) / 100.0
+    gray = values @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
+    values = np.clip(
+        gray[..., None] + (values - gray[..., None]) * saturation,
+        0.0,
+        1.0,
+    )
+    values = _soft_contrast(values, float(contrast_pct) / 100.0)
+    return np.power(
+        np.clip(values, 0.0, 1.0),
+        100.0 / max(1.0, float(brightness_pct)),
+    )
+
+
+def _auto_screen_coverage(
+    tones,
+    style_key,
+    pen_width_mm,
+    effective_pitch_mm,
+):
+    """Approximate the area each ink covers after Auto's screen pass."""
+    import numpy as np
+
+    if pen_width_mm is None or effective_pitch_mm is None:
+        return {channel: tones[channel] for channel in CHANNELS}
+    pen_mm = max(0.01, float(pen_width_mm))
+    pitch_mm = max(0.01, float(effective_pitch_mm))
+    coverage = {}
+    if style_key in ("rectilinear", "continuous"):
+        for channel in CHANNELS:
+            tone = tones[channel]
+            spacing = pitch_mm * (1.0 + 6.0 * (1.0 - tone))
+            coverage[channel] = np.where(
+                tone >= INK_FLOOR,
+                np.clip(pen_mm / spacing, 0.0, 1.0),
+                0.0,
+            )
+        return coverage
+    area_factor = min(1.0, pen_mm / pitch_mm)
+    return {
+        channel: np.clip(tones[channel] * area_factor, 0.0, 1.0)
+        for channel in CHANNELS
+    }
+
+
+def _auto_prediction_metrics(source_rgb, predicted_rgb, target_tone):
+    """Score colour, tone, detail, and clipping for an Auto candidate."""
+    import numpy as np
+
+    luminances = np.array([0.299, 0.587, 0.114], dtype=np.float64)
+    source = np.asarray(source_rgb, dtype=np.float64)
+    predicted = np.asarray(predicted_rgb, dtype=np.float64)
+    source_luminance = source @ luminances
+    predicted_luminance = predicted @ luminances
+    delta = predicted - source
+    rgb_rmse = float(np.sqrt(np.mean(delta ** 2)))
+    chroma_error = float(
+        np.mean(
+            np.abs(
+                (predicted - predicted_luminance[..., None])
+                - (source - source_luminance[..., None])
+            )
+        )
+    )
+    tone_error = abs(float(predicted_luminance.mean()) - float(target_tone))
+    source_detail = float(_detail_score(source_luminance))
+    predicted_detail = float(_detail_score(predicted_luminance))
+    detail_shortfall = max(
+        0.0,
+        1.0 - predicted_detail / max(source_detail, 1e-6),
+    )
+    clipping = float(
+        ((predicted_luminance < 0.02) | (predicted_luminance > 0.98)).mean()
+    )
+    score = (
+        0.75 * rgb_rmse
+        + 0.25 * chroma_error
+        + 0.75 * tone_error
+        + 0.02 * detail_shortfall
+        + 0.01 * clipping
+    )
+    return score, rgb_rmse
+
+
+def auto_photo_settings(
+    image_path,
+    resolution_px=256,
+    pen_width_mm=None,
+    effective_pitch_mm=None,
+    style=None,
+    dot_pitch_mm=None,
+    ink_colors=None,
+):
+    """Choose image controls from detail, tone, and process-ink accuracy.
+
+    The style-specific detail/exposure baseline remains the starting point.
+    Auto then evaluates that baseline and nearby control combinations through
+    the process-ink model, choosing the lowest combined colour, tone, detail,
+    and clipping error. Screen geometry and Dot pitch remain operator-owned.
+    """
+    from PIL import Image
+    import numpy as np
+
+    baseline = _auto_photo_baseline_settings(
+        image_path,
+        resolution_px=resolution_px,
+        pen_width_mm=pen_width_mm,
+        effective_pitch_mm=effective_pitch_mm,
+        style=style,
+        dot_pitch_mm=dot_pitch_mm,
+        ink_colors=ink_colors,
+    )
+
+    image = _load_color_managed_image(image_path)
+    analysis_factor = min(1.0, 128.0 / max(image.width, image.height))
+    if analysis_factor < 1.0:
+        image = image.resize(
+            (
+                max(8, int(round(image.width * analysis_factor))),
+                max(8, int(round(image.height * analysis_factor))),
+            ),
+            Image.LANCZOS,
+        )
+    source_rgb = np.asarray(image, dtype=np.float32) / 255.0
+    luminances = np.array([0.299, 0.587, 0.114], dtype=np.float32)
+    luminance = source_rgb @ luminances
+    low, high = (
+        float(value) for value in np.percentile(luminance, [1.0, 99.0])
+    )
+    source_tone = float(luminance.mean())
+    target_tone = min(max(source_tone, 0.30), 0.75)
+    auto_level_choices = (
+        (True,)
+        if source_tone < 0.30 or source_tone > 0.90
+        else (True, False)
+    )
+    style_key = str(style or "").strip().lower()
+    if style_key in ("waves", "waves_even", "waves_zero"):
+        result = dict(baseline)
+        result["weights"] = {
+            "c": 100.0,
+            "m": 100.0,
+            "y": 100.0,
+            "k": 100.0,
+        }
+        return result
+
+    def evaluate(candidate):
+        processed = _auto_curve_rgb(
+            source_rgb,
+            low,
+            high,
+            candidate["auto_levels"],
+            candidate["saturation"],
+            candidate["contrast"],
+            candidate["brightness"],
+        )
+        tones = rgb_to_cmyk_tone(
+            processed,
+            gcr=candidate["gcr"] / 100.0,
+            weights=(1, 1, 1, 1),
+            gamma=candidate["gamma"],
+            ink_colors=ink_colors,
+        )
+        coverage = _auto_screen_coverage(
+            tones,
+            style_key,
+            pen_width_mm,
+            effective_pitch_mm,
+        )
+        predicted = predict_cmyk_rgb(coverage, ink_colors=ink_colors)
+        return _auto_prediction_metrics(
+            source_rgb,
+            predicted,
+            target_tone,
+        )
+
+    def round_to_five(value):
+        return int(round(float(value) / 5.0) * 5.0)
+
+    candidate = {
+        "auto_levels": bool(baseline["auto_levels"]),
+        "saturation": float(baseline["saturation"]),
+        "contrast": float(baseline["contrast"]),
+        "brightness": float(baseline["brightness"]),
+        "gamma": float(baseline["gamma"]),
+        "gcr": float(baseline["gcr"]),
+    }
+    if style_key == "edge_flow":
+        ranges = {
+            "auto_levels": auto_level_choices,
+            "saturation": (90, 100, 110, 120, 130),
+            "contrast": (100, 140, 180, 220, 260),
+            "brightness": (80, 100, 120, 140, 160),
+            "gamma": (0.60, 0.70, 0.80, 0.90, 1.00, 1.10, 1.20),
+            "gcr": (60, 70, 80, 90, 100),
+        }
+    else:
+        ranges = {
+            "auto_levels": auto_level_choices,
+            "saturation": (100, 110, 120, 130, 140),
+            "contrast": (120, 160, 200, 240, 280, 300),
+            "brightness": (80, 100, 120, 140, 160, 180, 200),
+            "gamma": (0.60, 0.80, 1.00, 1.20, 1.40, 1.60),
+            "gcr": (60, 75, 90, 100),
+        }
+
+    best_score, best_error = evaluate(candidate)
+    for _round in range(3):
+        changed = False
+        for key, choices in ranges.items():
+            values = sorted(set(choices) | {candidate[key]})
+            for value in values:
+                trial = dict(candidate)
+                trial[key] = value
+                score, error = evaluate(trial)
+                if score < best_score - 1e-9:
+                    candidate = trial
+                    best_score = score
+                    best_error = error
+                    changed = True
+        if not changed:
+            break
+
+    result = dict(baseline)
+    result.update(candidate)
+    result["saturation"] = round_to_five(candidate["saturation"])
+    result["contrast"] = round_to_five(candidate["contrast"])
+    result["brightness"] = round_to_five(candidate["brightness"])
+    result["gcr"] = round_to_five(candidate["gcr"])
+    result["gamma"] = round(candidate["gamma"] / 0.05) * 0.05
+    result["weights"] = {
+        "c": 100.0,
+        "m": 100.0,
+        "y": 100.0,
+        "k": 100.0,
+    }
+    result["predicted_rgb_error"] = round(best_error * 255.0, 1)
+    return result
 
 
 def prepare_image_tones(

@@ -214,12 +214,10 @@ class CmykTab(GeneratorTab):
         options = self.add_group("Image options")
         self.auto_button = QPushButton("Auto (photo)")
         self.auto_button.setToolTip(
-            "Analyze the artwork and set auto levels, brightness, contrast, "
-            "saturation, GCR, and a starting gamma for a faithful photo "
-            "representation. Wave and Edge-flow screens use exposure-preserving "
-            "setups. Edge-flow leaves screen geometry unchanged; use Fine "
-            "detail for a pen-aware microflow layout. Tweak gamma for print "
-            "lightness afterwards."
+            "Analyze the artwork and fit auto levels, brightness, contrast, "
+            "saturation, GCR, gamma, and ink weights against the active "
+            "process-ink response. Screen geometry and Dot pitch stay as "
+            "configured. The status line reports the predicted RGB error."
         )
         self.auto_button.clicked.connect(self.apply_auto_settings)
         options.addRow("Auto", self.auto_button)
@@ -890,6 +888,18 @@ class CmykTab(GeneratorTab):
         self.brightness.setValue(values["brightness"])
         self.gamma.setValue(values["gamma"])
         self.gcr.setValue(values["gcr"])
+        if "weights" in values:
+            weights = values["weights"]
+            for spin, channel in zip(
+                (
+                    self.weight_c,
+                    self.weight_m,
+                    self.weight_y,
+                    self.weight_k,
+                ),
+                converter.CHANNELS,
+            ):
+                spin.setValue(float(weights[channel]))
         if "dot_pitch_mm" in values:
             self.pitch.setValue(values["dot_pitch_mm"])
         if "sharpen" in values:
@@ -900,6 +910,20 @@ class CmykTab(GeneratorTab):
             f"Auto: brightness {values['brightness']} %, contrast "
             f"{values['contrast']} %, saturation {values['saturation']} %, "
             f"GCR {values['gcr']} %, gamma {values['gamma']:.2f}"
+            + (
+                f", weights {values['weights']['c']:.0f}/"
+                f"{values['weights']['m']:.0f}/"
+                f"{values['weights']['y']:.0f}/"
+                f"{values['weights']['k']:.0f} %"
+                if "weights" in values
+                else ""
+            )
+            + (
+                f", predicted RGB error "
+                f"{values['predicted_rgb_error']:.1f}/255"
+                if "predicted_rgb_error" in values
+                else ""
+            )
             + (
                 f", sharpen {values['sharpen_pct']:.0f} % at "
                 f"{values['sharpen_radius_mm']:.1f} mm"

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-23 | `WSW-20261123-016` | implemented | [Make CMYK Auto optimize the process-colour prediction](2026/2026-11-23-auto-fit-cmyk-process-color.md) | `cmyk`, `auto`, `color-management`, `process-inks`, `edge-flow`, `portrait` |
 | 2026-11-23 | `WSW-20261123-015` | implemented | [Match CMYK separation to the process-ink response](2026/2026-11-23-process-ink-color-separation.md) | `cmyk`, `color-management`, `process-inks`, `tombow`, `calibration`, `ink-simulation`, `preview` |
 | 2026-11-23 | `WSW-20261123-014` | implemented | [Fit the active generator's settings column](2026/2026-11-23-fit-active-generator-controls.md) | `user-interface`, `layout`, `generator-tabs`, `cmyk`, `settings` |
 | 2026-11-23 | `WSW-20261123-013` | implemented | [Auto-size the settings pane and set preview defaults](2026/2026-11-23-auto-size-settings-pane-and-preview-defaults.md) | `user-interface`, `layout`, `preview`, `ink-simulation`, `settings` |

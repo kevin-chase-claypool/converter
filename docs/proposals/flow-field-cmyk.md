@@ -38,8 +38,12 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
   tone-pitch rows join nearest non-overlapping adjacent runs into a few long
   chains, accepting visible straight connectors in exchange for fewer M3/M5
   cycles
-- Auto image curve for the current portrait: brightness 105 %, contrast 220 %,
-  saturation 110 %, GCR 80 %, gamma 0.75
+- Auto now starts from the portrait detail curve, then selects the lowest
+  predicted process-ink colour error across Auto levels, brightness, contrast,
+  saturation, GCR, and gamma. All four ink weights reset to 100 %. For the
+  current portrait and `0.52 mm` effective pitch the result is Auto levels off,
+  brightness 140 %, contrast 140 %, saturation 90 %, GCR 100 %, gamma 0.75,
+  with modelled RGB error `4.7/255`
 - Fine-detail preset: one effective pen width, smoothing near two pen widths
   clamped to `1.0-1.5 mm`, five low-offset layers, `2 mm` path-local tone
   intervals, marks capped near `12 mm`, and Path tolerance no larger

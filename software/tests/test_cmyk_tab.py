@@ -1078,9 +1078,10 @@ class ScreeningTests(unittest.TestCase):
         self.assertGreater(fine["gamma"], sparse["gamma"])
         self.assertGreaterEqual(fine["brightness"], sparse["brightness"])
 
-    def test_auto_photo_settings_add_contrast_when_it_helps_detail(self):
+    def test_auto_photo_settings_preserve_detail_without_extra_contrast(self):
         import numpy as np
         from PIL import Image, ImageFilter
+        from converter_core import cmyk as cmyk_module
 
         folder = tempfile.mkdtemp(prefix="cmyk-auto-mid-")
         self.addCleanup(
@@ -1094,9 +1095,34 @@ class ScreeningTests(unittest.TestCase):
         path = str(Path(folder) / "mid.png")
         Image.fromarray(np.stack([values] * 3, axis=2)).save(path)
         mid = converter.auto_photo_settings(path)
-        # A mid-key texture has its detail energy where the soft S-curve
-        # steepens, so the search chooses real contrast there.
-        self.assertGreaterEqual(mid["contrast"], 180)
+        rgb = np.asarray(Image.open(path).convert("RGB"), dtype=np.float32) / 255.0
+        luminance = rgb @ np.array(
+            [0.299, 0.587, 0.114],
+            dtype=np.float32,
+        )
+        low, high = np.percentile(luminance, [1.0, 99.0])
+        processed = cmyk_module._auto_curve_rgb(
+            rgb,
+            low,
+            high,
+            mid["auto_levels"],
+            mid["saturation"],
+            mid["contrast"],
+            mid["brightness"],
+        )
+        tones = converter.rgb_to_cmyk_tone(
+            processed,
+            gcr=mid["gcr"] / 100.0,
+            weights=(1, 1, 1, 1),
+            gamma=mid["gamma"],
+        )
+        predicted = converter.predict_cmyk_rgb(tones)
+        source_detail = cmyk_module._detail_score(luminance)
+        predicted_detail = cmyk_module._detail_score(
+            predicted @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
+        )
+        self.assertLessEqual(mid["predicted_rgb_error"], 3.0)
+        self.assertGreaterEqual(predicted_detail, source_detail * 0.9)
 
     def test_wave_auto_preserves_a_normal_photo_exposure(self):
         import numpy as np
@@ -1168,17 +1194,12 @@ class ScreeningTests(unittest.TestCase):
             dot_pitch_mm=0.31,
         )
 
-        self.assertTrue(values["auto_levels"])
-        self.assertGreaterEqual(values["brightness"], 95)
-        self.assertLessEqual(values["brightness"], 125)
-        self.assertGreaterEqual(values["gamma"], 0.60)
-        self.assertLessEqual(values["gamma"], 0.85)
-        self.assertGreaterEqual(values["contrast"], 220)
-        self.assertLessEqual(values["contrast"], 275)
-        self.assertGreaterEqual(values["saturation"], 100)
-        self.assertLessEqual(values["saturation"], 120)
-        self.assertGreaterEqual(values["gcr"], 65)
-        self.assertLessEqual(values["gcr"], 85)
+        self.assertFalse(values["auto_levels"])
+        self.assertLessEqual(values["predicted_rgb_error"], 4.0)
+        self.assertEqual(
+            values["weights"],
+            {"c": 100.0, "m": 100.0, "y": 100.0, "k": 100.0},
+        )
         self.assertNotIn("dot_pitch_mm", values)
 
         tones, _geometry = converter.prepare_image_tones(
@@ -1190,17 +1211,101 @@ class ScreeningTests(unittest.TestCase):
             saturation=values["saturation"] / 100.0,
             contrast=values["contrast"] / 100.0,
             gcr=values["gcr"] / 100.0,
-            weights=(1.0, 1.0, 1.0, 0.9),
+            weights=tuple(
+                values["weights"][channel] / 100.0
+                for channel in converter.CHANNELS
+            ),
             gamma=values["gamma"],
             auto_levels=values["auto_levels"],
         )
         mean_coverage = float(
             np.mean([tones[channel].mean() for channel in converter.CHANNELS])
         )
-        # Neutral-exposure edge-flow Auto left only about 32% mean channel
-        # coverage and broke the portrait into a sparse sketch. The bright
-        # warm ramp needs enough ink left after path-local tone gating.
-        self.assertGreaterEqual(mean_coverage, 0.50)
+        # Colour fitting still has to leave enough ink for the path-local
+        # portrait screen rather than washing it into a sparse sketch.
+        self.assertGreaterEqual(mean_coverage, 0.38)
+
+    def test_edge_flow_auto_improves_the_process_ink_prediction(self):
+        import numpy as np
+        from PIL import Image
+        from converter_core import cmyk as cmyk_module
+
+        folder = tempfile.mkdtemp(prefix="cmyk-auto-process-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        image = np.empty((64, 96, 3), dtype=np.uint8)
+        image[:, :, :] = (92, 112, 64)
+        image[4:30, 8:88] = (224, 185, 158)
+        image[34:58, 10:42] = (126, 82, 54)
+        image[34:58, 50:86] = (58, 126, 146)
+        path = str(Path(folder) / "colour-card.png")
+        Image.fromarray(image).save(path)
+
+        baseline = cmyk_module._auto_photo_baseline_settings(
+            path,
+            pen_width_mm=0.5,
+            effective_pitch_mm=0.52,
+            style="edge_flow",
+        )
+        chosen = converter.auto_photo_settings(
+            path,
+            pen_width_mm=0.5,
+            effective_pitch_mm=0.52,
+            style="edge_flow",
+            dot_pitch_mm=0.2,
+        )
+
+        source = (
+            np.asarray(Image.open(path).convert("RGB"), dtype=np.float32)
+            / 255.0
+        )
+        luminance = source @ np.array(
+            [0.299, 0.587, 0.114],
+            dtype=np.float32,
+        )
+        low, high = np.percentile(luminance, [1.0, 99.0])
+
+        def predicted_error(values):
+            processed = cmyk_module._auto_curve_rgb(
+                source,
+                low,
+                high,
+                values["auto_levels"],
+                values["saturation"],
+                values["contrast"],
+                values["brightness"],
+            )
+            weights = values.get(
+                "weights",
+                {"c": 100.0, "m": 100.0, "y": 100.0, "k": 100.0},
+            )
+            tones = converter.rgb_to_cmyk_tone(
+                processed,
+                gcr=values["gcr"] / 100.0,
+                weights=tuple(
+                    weights[channel] / 100.0
+                    for channel in converter.CHANNELS
+                ),
+                gamma=values["gamma"],
+            )
+            coverage = cmyk_module._auto_screen_coverage(
+                tones,
+                "edge_flow",
+                0.5,
+                0.52,
+            )
+            predicted = converter.predict_cmyk_rgb(coverage)
+            return float(np.sqrt(np.mean((predicted - source) ** 2)))
+
+        baseline_error = predicted_error(baseline)
+        chosen_error = predicted_error(chosen)
+        self.assertLess(chosen_error, baseline_error)
+        self.assertAlmostEqual(
+            chosen["predicted_rgb_error"],
+            round(chosen_error * 255.0, 1),
+            places=1,
+        )
 
     def test_auto_photo_settings_keep_colour_on_vivid_images(self):
         import numpy as np
@@ -3796,17 +3901,21 @@ class CmykTabTests(unittest.TestCase):
             effective_pitch_mm=(
                 tab.pitch.value() * tab.scale_pct.value() / 100.0
             ),
+            style=tab.style.currentData(),
+            dot_pitch_mm=tab.pitch.value(),
         )
         self.assertEqual(tab.saturation.value(), values["saturation"])
         self.assertEqual(tab.contrast.value(), values["contrast"])
         self.assertEqual(tab.brightness.value(), values["brightness"])
         self.assertEqual(tab.gcr.value(), values["gcr"])
         self.assertAlmostEqual(tab.gamma.value(), values["gamma"], places=2)
+        self.assertEqual(tab.weight_y.value(), values["weights"]["y"])
         self.assertTrue(tab.auto_levels.isChecked())
         # Auto no longer touches Dot pitch: the operator's spacing choice
         # stands; the status line suggests what Match pen would set instead.
         self.assertAlmostEqual(tab.pitch.value(), pitch_before, places=3)
         self.assertIn("Auto:", tab.status.text())
+        self.assertIn("predicted RGB error", tab.status.text())
         self.assertIn("Dot pitch", tab.status.text())
         self.assertIn("Match pen would suggest", tab.status.text())
 
@@ -3834,6 +3943,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(tab.brightness.value(), values["brightness"])
         self.assertEqual(tab.gcr.value(), values["gcr"])
         self.assertAlmostEqual(tab.gamma.value(), values["gamma"], places=2)
+        self.assertEqual(tab.weight_y.value(), values["weights"]["y"])
         self.assertTrue(tab.sharpen.isChecked())
         self.assertEqual(tab.sharpen_amount.value(), values["sharpen_pct"])
         self.assertEqual(
@@ -3868,6 +3978,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(tab.contrast.value(), values["contrast"])
         self.assertEqual(tab.brightness.value(), values["brightness"])
         self.assertAlmostEqual(tab.gamma.value(), values["gamma"], places=2)
+        self.assertEqual(tab.weight_y.value(), values["weights"]["y"])
         self.assertAlmostEqual(tab.pitch.value(), 0.31, places=3)
         self.assertEqual(
             captured["kwargs"]["resolution_px"],
