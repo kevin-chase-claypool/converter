@@ -3773,6 +3773,35 @@ class CmykTabTests(unittest.TestCase):
             )
         self.assertIn("Set manifest", tab.status.text())
 
+    def test_set_manifest_records_the_global_artwork_placement(self):
+        host = FakeHost(self.image_path)
+        host.settings_for_source = mock.Mock(
+            return_value=converter.Settings(
+                artwork_offset_x_mm=-3.17,
+                artwork_offset_y_mm=-28.74,
+            )
+        )
+        tab = self.make_tab(host)
+        results = {
+            channel: {
+                "gcode": f"; {channel}\nG1 X0 Y0\n",
+                "lines": 2,
+                "checks": self.clean_checks(),
+            }
+            for channel in converter.CHANNELS
+        }
+
+        tab._write_files(results)
+
+        manifest = Path(host.saved_paths["cyan"]).with_name(
+            "art-cmyk-set.json"
+        )
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        self.assertEqual(
+            data["artwork_placement_mm"],
+            [-3.17, -28.74],
+        )
+
     def test_legacy_wave_manifest_records_current_mesh_raw_mode(self):
         host = FakeHost(self.image_path)
         host.settings_for_source = mock.Mock(

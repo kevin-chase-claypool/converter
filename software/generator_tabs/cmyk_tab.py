@@ -2322,6 +2322,10 @@ class CmykTab(GeneratorTab):
                 self.page_w.value() / 2.0,
                 self.page_h.value() / 2.0,
             ],
+            "artwork_placement_mm": [
+                float(settings.artwork_offset_x_mm),
+                float(settings.artwork_offset_y_mm),
+            ],
             "bed_motion": self._bed_motion_label(),
             "center_hold_diameter_mm": self.center_hold.value(),
             "theta_mode": settings.theta_mode,

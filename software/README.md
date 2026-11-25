@@ -796,9 +796,13 @@ Current tools:
   hard violations block Save and warnings go to the log. A successful
   artwork save also writes a version-4 `<name>-set.json` beside the four files
   with the source hash, page and motion mode, bed-compensation profile,
-  complete image/screen recipe, sharpening amount and radius, effective pitch,
-  pen offsets, per-ink
+  artwork placement, complete image/screen recipe, sharpening amount and
+  radius, effective pitch, pen offsets, per-ink
   preflight results, and SHA-256 hashes for all four G-code files.
+  A non-zero artwork placement is also written into every G-code header, for
+  example `(artwork placement -3.170,-28.740 mm)`. Before a multi-pass print,
+  confirm that all four headers and `artwork_placement_mm` in the set manifest
+  match the placement used for the earlier passes.
   Line, rectilinear, wave, edge-flow, gyroid, TSP and contour styles are the
   continuous-mark alternatives to dot styles: they draw far fewer pen-lift
   cycles, while the overdraw control darkens any style by redrawing each mark
@@ -1577,10 +1581,12 @@ display-only; every other group changes the emitted program.
   closing the app update it. The current version stores the complete CMYK
   recipe, including image controls, screen geometry, Row order, kinematics,
   page layout, pen offsets, and layer selections. Version-1 sidecars still
-  restore their original placement fields. A Fit still deliberately resets the
-  placement to zero. While dragging, the displayed part is the existing plan
-  translated, so the reach circle - not the drawn artwork - is the authority on
-  what will survive the next build.
+  restore their original placement fields. Reimporting an image logs
+  `Restored artwork placement: X ... mm, Y ... mm.`; check that line before
+  regenerating a later CMYK pass. A Fit still deliberately resets the placement
+  to zero. While dragging, the displayed part is the existing plan translated,
+  so the reach circle - not the drawn artwork - is the authority on what will
+  survive the next build.
 - Pressing **Preview** shows the current build stage, percentage, and elapsed
   time. SVG parsing, motion planning, and clipping run in the background so the
   window remains responsive. Preview and Save G-code are mutually exclusive and

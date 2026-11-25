@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-24 | `WSW-20261124-004` | implemented | [Record artwork placement in CMYK outputs](2026/2026-11-24-record-artwork-placement-in-cmyk-outputs.md) | `cmyk`, `artwork-placement`, `registration`, `manifest`, `gcode-header`, `physical-validation-pending` |
 | 2026-11-24 | `WSW-20261124-003` | implemented | [Guard machine reach after bed compensation](2026/2026-11-24-post-compensation-reach-guard.md) | `reach`, `soft-limits`, `bed-compensation`, `preflight`, `cmyk`, `magenta` |
 | 2026-11-24 | `WSW-20261124-002` | implemented | [Preserve screen-chain tags in the CMYK preview](2026/2026-11-24-preserve-screen-chain-preview-tags.md) | `cmyk`, `preview`, `pen-up`, `screen-trail`, `ink-trail`, `metadata` |
 | 2026-11-24 | `WSW-20261124-001` | implemented | [Chain adjacent screen contours after Xθ/Yθ planning](2026/2026-11-24-post-planner-screen-chaining.md) | `cmyk`, `edge-flow`, `pen-up`, `pen-down-chain`, `x-theta`, `y-theta`, `print-time`, `screen-geometry` |

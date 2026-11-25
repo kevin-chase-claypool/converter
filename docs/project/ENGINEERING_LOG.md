@@ -1,5 +1,23 @@
 # Engineering Log
 
+<a id="elog-20261124-record-cmyk-artwork-placement"></a>
+### 🟨 2026-11-24 - WINDOWS SOFTWARE/IMPLEMENTED - Record artwork placement in CMYK outputs
+
+- The printed cyan/black shoulders appeared shifted relative to the earlier
+  yellow/magenta passes. Bed-frame comparison of the saved programs found the
+  same approximately `3.5 mm X, 27.5 mm Y` translation on all four inks,
+  matching omission of the saved `-3.17 mm / -28.74 mm` artwork placement.
+- Non-zero placement is now written into every G-code header, and the set
+  manifest records `artwork_placement_mm`. Focused tests failed on the missing
+  fields and pass after the change.
+- This makes the failure visible but does not replace the required physical
+  test: regenerate all four plates, verify placement and bed-space alignment,
+  then run them from one unchanged HOME + REGISTER.
+- Evidence: `WSW-20261124-004`;
+  `docs/changes/windows-software/2026/2026-11-24-record-artwork-placement-in-cmyk-outputs.md`.
+- Category: windows-software, hardware, cmyk, artwork-placement, registration,
+  manifest, physical-validation-pending.
+
 <a id="elog-20261124-post-compensation-reach-guard"></a>
 ### 🟨 2026-11-24 - WINDOWS SOFTWARE/IMPLEMENTED - Guard reach after bed compensation
 

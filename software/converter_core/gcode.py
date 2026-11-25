@@ -709,6 +709,17 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
         "G54",
         f"G0 F{format_float(settings.travel_rate)}",
     ]
+    placement_x = float(getattr(settings, "artwork_offset_x_mm", 0.0))
+    placement_y = float(getattr(settings, "artwork_offset_y_mm", 0.0))
+    if abs(placement_x) > 1e-9 or abs(placement_y) > 1e-9:
+        lines.insert(
+            5,
+            "(artwork placement %s,%s mm)"
+            % (
+                f"{placement_x:.3f}",
+                f"{placement_y:.3f}",
+            ),
+        )
     if bed_compensation is not None:
         lines.insert(
             5,
