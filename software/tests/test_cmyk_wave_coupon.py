@@ -24,6 +24,14 @@ class CmykWaveCouponTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.module = load_generator()
+        cls._build_cache = {}
+
+    @classmethod
+    def build_once(cls, name):
+        if name not in cls._build_cache:
+            builder = getattr(cls.module, name)
+            cls._build_cache[name] = builder()
+        return cls._build_cache[name]
 
     def test_coupon_is_one_file_with_all_angles_and_motions(self):
         self.assertEqual(
@@ -33,7 +41,7 @@ class CmykWaveCouponTests(unittest.TestCase):
                 for ink in self.module.converter.CHANNELS
             ),
         )
-        gcode, settings, marks = self.module.build_coupon()
+        gcode, settings, marks = self.build_once("build_coupon")
         self.assertIn("single file", gcode)
         self.assertIn("upper 8 patches: A parked", gcode)
         self.assertIn("lower 8 patches: Xtheta-Ytheta", gcode)
@@ -54,7 +62,7 @@ class CmykWaveCouponTests(unittest.TestCase):
         self.assertLessEqual(max(ys), 74.0)
 
     def test_coupon_passes_motion_guards(self):
-        gcode, settings, _marks = self.module.build_coupon()
+        gcode, settings, _marks = self.build_once("build_coupon")
         with tempfile.TemporaryDirectory(
             prefix="cmyk-wave-coupon-"
         ) as folder:
@@ -93,7 +101,7 @@ class CmykWaveCouponTests(unittest.TestCase):
                 self.assertGreater(phase_spread, control_spread)
 
     def test_multi_pitch_coupon_is_one_rotating_bed_program(self):
-        gcode, settings, marks = self.module.build_pitch_coupon()
+        gcode, settings, marks = self.build_once("build_pitch_coupon")
         self.assertIn("single file; 12 patches", gcode)
         self.assertIn("2.800 / 3.360 / 4.200 mm pitch", gcode)
         self.assertIn("columns left-to-right: C15 M75 Y0 K45", gcode)
@@ -121,7 +129,7 @@ class CmykWaveCouponTests(unittest.TestCase):
         self.assertIn("y_theta", checks["strategies"])
 
     def test_letter_test_is_one_parked_implementation_check(self):
-        gcode, settings, marks = self.module.build_letter_test()
+        gcode, settings, marks = self.build_once("build_letter_test")
         self.assertIn("8.5 x 11 paper; 16 patches", gcode)
         self.assertIn(
             "phase-locked 2.800 / 3.360 / 4.200 mm",

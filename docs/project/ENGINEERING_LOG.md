@@ -1,5 +1,33 @@
 # Engineering Log
 
+<a id="elog-20261125-streamline-converter-test-suite"></a>
+### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Split and streamline the converter test suite
+
+- The CMYK tests occupied one `4,389`-line module with `147` tests spanning
+  separation, image processing, screens, Wave geometry, and Qt UI behavior.
+  The test count itself did not consume model context; loading that single file
+  did.
+- The file is now seven focused modules. A source comparison found all `147`
+  original CMYK test names in the split set, with no missing or added names.
+- Deterministic setup was reused where safe: one Wave coupon build, four cached
+  angle-specific Wave SVG documents, and grouped Qt fixture scenarios. Eight
+  fixture-heavy test methods became three subtest methods without dropping
+  assertions, reducing discovery from `690` to `682` cases.
+- The angle-pitch regression dropped from an instrumented `15.7 s` to `9.7 s`.
+  Four preview fixture classes dropped from an instrumented aggregate `53.2 s`
+  to `20.6 s`.
+- The largest converter test module is now `1,706` lines instead of `4,389`;
+  focused CMYK modules range from `108` to `1,069` lines.
+- All `147` CMYK tests pass. Complete converter discovery passes `682` tests
+  with one expected OpenGL-context skip.
+- Quiet commands are documented so passing test names do not flood future agent
+  sessions. Buffering the full suite took `185.1 s` and was rejected; the quiet
+  unbuffered run took `147.4 s`, compared with `148.6 s` before the refactor.
+- Evidence: `WSW-20261125-001`;
+  `docs/changes/windows-software/2026/2026-11-25-streamline-converter-test-suite.md`.
+- Category: windows-software, tests, performance, context-window, cmyk,
+  unittest, maintainability.
+
 <a id="elog-20261124-restore-cmyk-photo-highlight-density"></a>
 ### 🟨 2026-11-24 - WINDOWS SOFTWARE/IMPLEMENTED - Restore open highlight density in recommended CMYK photos
 

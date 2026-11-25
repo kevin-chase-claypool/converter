@@ -71,19 +71,6 @@ def decoded_rows(gcode, ratio):
     return rows
 
 
-def value_at_x(points, x_value):
-    for first, second in zip(points, points[1:]):
-        lower, upper = sorted((first[0], second[0]))
-        if not lower - 1e-9 <= x_value <= upper + 1e-9:
-            continue
-        delta = second[0] - first[0]
-        if abs(delta) <= 1e-12:
-            continue
-        fraction = (x_value - first[0]) / delta
-        return first[1] + fraction * (second[1] - first[1])
-    return None
-
-
 def row_gap_spread(rows, angle_deg):
     angle = math.radians(-angle_deg)
     cosine = math.cos(angle)
@@ -100,13 +87,34 @@ def row_gap_spread(rows, angle_deg):
     ]
     xs = [point[0] for row in screen_rows for point in row]
     low, high = min(xs), max(xs)
+    samples = np.linspace(
+        low + 0.1 * (high - low),
+        high - 0.1 * (high - low),
+        81,
+    )
+    sampled_rows = []
+    for row in screen_rows:
+        points = np.asarray(row, dtype=float)
+        order = np.argsort(points[:, 0], kind="stable")
+        row_x = points[order, 0]
+        row_y = points[order, 1]
+        inside = (samples >= row_x[0] - 1e-9) & (
+            samples <= row_x[-1] + 1e-9
+        )
+        values = np.full(samples.shape, np.nan, dtype=float)
+        values[inside] = np.interp(
+            samples[inside],
+            row_x,
+            row_y,
+        )
+        sampled_rows.append(values)
     gaps = []
-    for fraction in np.linspace(0.1, 0.9, 81):
-        x_value = low + fraction * (high - low)
+    stacked = np.vstack(sampled_rows)
+    for column in stacked.T:
         values = sorted(
             value
-            for row in screen_rows
-            if (value := value_at_x(row, x_value)) is not None
+            for value in column
+            if not np.isnan(value)
         )
         gaps.extend(
             second - first
@@ -129,6 +137,32 @@ class WaveXThetaRowsTests(unittest.TestCase):
             profile,
             tuple(converter.SCREEN_ANGLES_DEG.values()),
         )
+        screened = {}
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": page_mm,
+            "height_mm": page_mm,
+            "pixels_w": 128,
+            "pixels_h": 128,
+        }
+        for angle_deg in converter.SCREEN_ANGLES_DEG.values():
+            marks = converter.screen_channel(
+                tone,
+                geometry,
+                style="waves_even",
+                spacing_mm=4.0,
+                angle_deg=angle_deg,
+                pen_diameter_mm=0.8,
+                row_clearance_mm=1.05,
+            )
+            screened[angle_deg] = converter.svg_document(
+                {"y": marks},
+                page_mm,
+                page_mm,
+                0.8,
+                order=["y"],
+            )
         for compensated in (False, True):
             for order in ("rows_ascending", "rows_descending"):
                 for angle_deg in converter.SCREEN_ANGLES_DEG.values():
@@ -137,29 +171,7 @@ class WaveXThetaRowsTests(unittest.TestCase):
                         order=order,
                         angle_deg=angle_deg,
                     ):
-                        marks = converter.screen_channel(
-                            tone,
-                            {
-                                "off_x": 0.0,
-                                "off_y": 0.0,
-                                "width_mm": page_mm,
-                                "height_mm": page_mm,
-                                "pixels_w": 128,
-                                "pixels_h": 128,
-                            },
-                            style="waves_even",
-                            spacing_mm=4.0,
-                            angle_deg=angle_deg,
-                            pen_diameter_mm=0.8,
-                            row_clearance_mm=1.05,
-                        )
-                        document = converter.svg_document(
-                            {"y": marks},
-                            page_mm,
-                            page_mm,
-                            0.8,
-                            order=["y"],
-                        )
+                        document = screened[angle_deg]
                         settings = converter.Settings(
                             theta_mode="optimized",
                             theta_center_hold_diameter_mm=0.0,

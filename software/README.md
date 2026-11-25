@@ -46,6 +46,36 @@ demanded, whether any pen-up move carries rotation as a bare `G0` rapid, and the
 worst commanded bed-path bow with its radius - measured from the file, so it
 answers "did this program get the guard?" without guessing.
 
+## Tests
+
+The converter suite is organized for targeted runs. Use quiet mode (`-q`) to
+keep the output to the final summary. Do not use `unittest -b` for the full
+suite on this project: capturing every passing test's large planner output is
+measurably slower.
+
+```powershell
+# CMYK separation, image processing, screens, Wave geometry, and UI
+python -m unittest -q `
+  software.tests.test_cmyk_separation `
+  software.tests.test_cmyk_edge_flow `
+  software.tests.test_cmyk_photo `
+  software.tests.test_cmyk_screen_styles `
+  software.tests.test_cmyk_wave `
+  software.tests.test_cmyk_contract `
+  software.tests.test_cmyk_tab
+
+# One focused module
+python -m unittest -q software.tests.test_path_join
+
+# Complete converter suite
+python -m unittest discover -q -s software\tests -p "test_*.py"
+```
+
+The complete discovery run currently contains 682 test cases. Repeated generator
+tab contracts retain their per-tab class names and failure locations, while
+related slow setup scenarios use subtests to avoid rebuilding the same Qt
+window or generated coupon.
+
 ## ioSender configuration recovery
 
 The repository keeps a validated ioSender `App.config` recovery snapshot in
