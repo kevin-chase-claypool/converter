@@ -1,5 +1,27 @@
 # Engineering Log
 
+<a id="elog-20261124-one-click-cmyk-photo-defaults"></a>
+### 🟨 2026-11-24 - WINDOWS SOFTWARE/IMPLEMENTED - Make Edge-flow CMYK photo defaults one-click
+
+- The production Edge-flow workflow was implemented, but reaching it required
+  manual coordination of style, pitch, layers, smoothing, continuity, colour,
+  sharpening, and mark limits.
+- The existing CMYK tab now opens with a **Recommended** group and one
+  prominent **Use recommended photo defaults** action. It installs the full
+  per-ink Edge-flow baseline, then runs the existing image Auto analysis.
+- The action preserves page size, artwork scale, pen width, all X/Y pen
+  offsets, and bed motion. The effective pitch targets `1.2 mm` on paper or
+  `1.25` pen widths, whichever is larger.
+- The successful status directs the operator to **Preview**, then **Save 4
+  G-code files**. Advanced controls remain available and unchanged.
+- The complete converter suite passes 688 tests with one expected
+  OpenGL-context skip. No machine motion was started; Golden Sunset runtime
+  inspection and a physical four-pass sheet remain pending.
+- Evidence: `WSW-20261124-005`;
+  `docs/changes/windows-software/2026/2026-11-24-one-click-cmyk-photo-defaults.md`.
+- Category: windows-software, cmyk, edge-flow, photo-defaults, auto-color,
+  four-file-output, physical-validation-pending.
+
 <a id="elog-20261124-record-cmyk-artwork-placement"></a>
 ### 🟨 2026-11-24 - WINDOWS SOFTWARE/IMPLEMENTED - Record artwork placement in CMYK outputs
 

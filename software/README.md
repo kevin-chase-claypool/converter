@@ -521,9 +521,16 @@ Current tools:
   linedraw levels 144/64/16), sketch jitter, minimum length, simplify,
   resolution, line width, seed, page size, margin, artwork scale.
 - **CMYK** - RGB to CMYK separation with gray-component replacement, screened
-  as one layer per ink pen. Controls: artwork (from the static Artwork row),
-  an **Auto (photo)** button that analyzes the image and sets auto levels,
-  brightness, contrast, saturation, GCR, a starting gamma, and a modest
+  as one layer per ink pen. For a normal photo, open the artwork, press
+  **Use recommended photo defaults**, inspect **Preview**, then press
+  **Save 4 G-code files**. The one action selects the per-ink Edge-flow
+  workflow, installs the complete photo baseline below, runs automatic image
+  colour analysis, and leaves page size, artwork scale, pen width, pen
+  offsets, and bed motion unchanged. The advanced controls remain available
+  for deliberate tuning; they need no adjustment for the recommended path.
+  Controls: artwork (from the static Artwork row), the recommended action,
+  and an **Auto (photo)** button that analyzes the image and sets auto levels,
+  brightness, contrast, saturation, GCR, a starting gamma, and a
   luminance-sharpening preset.
   - Embedded image colour profiles are converted to sRGB before auto levels,
     sharpening, and CMYK separation. This is required for wide-gamut sources
@@ -554,8 +561,9 @@ Current tools:
     treated as persisted layout and is left exactly as the operator set it;
     the status line still reports the current effective pitch. **Match pen**
     remains the explicit action for setting one pen width at the current
-    artwork scale.
-  auto levels (default on: stretch the image's 1st-99th luminance percentiles
+    artwork scale. The recommended action sets the Edge-flow pitch before
+    invoking Auto.
+  auto levels (default off: stretch the image's 1st-99th luminance percentiles
   so low-key photos use the full tonal range), saturation, contrast,
   brightness, luminance sharpening (default on: unsharp-mask amount and
   on-paper radius), ink gamma, black (GCR), resolution, per-ink weights, screen style
@@ -665,17 +673,15 @@ Current tools:
   discussion; this implementation is repository-native and independently
   tested. Software rendering is verified, but no edge-flow four-pass sheet has
   yet established the best pitch, smoothing, or layer count on paper.
-  With the corrected occupancy model, Auto on the current portrait at `0.52 mm`
-  effective pitch selects Auto levels off, saturation 90 %, contrast 260 %,
-  brightness 80 %, gamma 0.60, GCR 90 %, and all four weights at 100 %. It
-  reports a `32.8/255` coverage RGB estimate, not the former `4.7/255` claim
-  that came from coverage without shared-line overlap. That measured recipe is
-  intentionally darker than the saved soft portrait recipe below; check both
-  on paper before selecting one. The saved recipe retains its softening
-  curve, `1.0 mm` flow smoothing, five flow layers, `0.5 mm` pen width,
-  `0.05 mm` path tolerance, 200000 marks per ink, and seed 7 unless Fine
-  detail changes them. This is still a software-selected starting point, not
-  a physical print optimum; tune it against the pen set and paper.
+  The recommended pitch adapts the Reddit-reference spacing to the installed
+  pen and current artwork scale. At the shipped `0.30 mm` pen and `280 %`
+  scale it selects a `0.45 mm` source pitch, which is `1.26 mm` on paper. At a
+  `0.90 mm` pen and `200 %` scale it selects `0.60 mm` for `1.20 mm`; larger
+  pens target `1.25` pen widths on paper. Auto still evaluates the actual
+  image and may refine the colour curve, while the physical pitch, smoothing,
+  layers, and continuity controls remain the recommended baseline. This is a
+  software-selected starting point, not a paper-validated optimum; inspect
+  the four saved programs and a physical sheet against the installed pen set.
   For `IMG_0514.JPG` on the `200 x 200 mm` CMYK page, the `260 %` live layout
   intentionally crops the portrait to fill the full drawable circle. Its
   bounding radius is about `305.46 mm` against the `180 mm` reach, so the
@@ -688,18 +694,16 @@ Current tools:
   Resolution keeps the source image's longest side up to that many pixels
   and never upsamples, so it accepts high-resolution sources (the control is
   effectively uncapped; memory grows with the source size you keep).
-  Shipped defaults are the owner's tuned rectilinear set: auto levels on,
-  rectilinear fill at 0.10 mm pitch (its light-tone stretch opens the pitch
-  up to 7x, so highlights and mid tones keep paper while dark tones fuse
-  solid, and the pitch follows the tone the row actually inks and eases
-  between rows so it does not step where the subject meets the background),
-  saturation 115 %, contrast 285 % (the soft S-curve keeps
-  steepening up to 300 % instead of clipping), brightness 170 %
-  (shadow-weighted lift), ink gamma 1.40 (about a third less ink in the mid
-  tones), unsharp mask on at 70 % with a 1.5 mm radius, black (GCR)
-  95 %, hatch levels 8, artwork scale 280 %, dot size 100 % with solid dots
-  off (both only affect the dot screens), 40000 marks per ink, 10000 px
-  resolution, C/M/Y/K weights 100/100/100/100 %.
+  Shipped defaults are now the one-click Edge-flow photo baseline: auto
+  levels off, saturation 90 %, contrast 220 %, brightness 80 %, ink gamma
+  0.60, black (GCR) 90 %, C/M/Y/K weights 100/100/100/100 %, an unsharp mask
+  of 100 % at 1.5 mm, three Flow layers, 2.5 mm Flow smoothing, Continuous
+  Black keylines off, Pen-down chain on with a 5.0 mm gap, Path tolerance
+  0.10 mm, Max marks/ink 200000, seed 7, artwork scale 280 %, resolution
+  10000 px, and hatch levels 8. Pressing the recommended action after Auto
+  replaces the screen recipe but preserves page size, artwork scale, pen
+  width, pen offsets, and bed motion. Existing artwork recipes keep their
+  saved advanced layout until the operator deliberately presses the button.
   **Sharpen** applies its unsharp mask after auto levels and before the
   saturation, contrast, brightness, and separation curves. The mask derives
   detail from luminance and applies that same detail to all three RGB
@@ -1032,8 +1036,8 @@ work with no input (optional mesh/image sources are noted below).
 | Convert | Fit bed (auto), Fill spacing 3 mm, linear or crosshatch, feed 700 / travel 3000 mm/min | Imported artwork; Save G-code once the preview looks right. |
 | Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
-| CMYK | Auto levels on, rectilinear fill at 0.10 mm pitch, saturation 115 %, contrast 285 %, brightness 170 %, ink gamma 1.40, black (GCR) 95 %, 40000 marks/ink, resolution 10000 px, weights 100/100/100/100 %, artwork scale 280 % | Needs an image; Preview plans each ink in the background and Save writes four files. Dense photo screens take hours to plot; raise pitch or lower Max marks/ink for a faster pass. |
-| CMYK edge-flow | Start with Auto levels off; saturation 90 %, contrast 140 %, brightness 140 %, gamma 0.75, GCR 100 %, resolution 1600 px, weights 100/100/100/100 % for the current soft portrait; keep the operator-picked Edge-flow pitch and artwork scale. The current portrait deliberately stays at `260 %` for its circular crop; use **Fit inside** only for a whole uncropped image. Use **Fine detail** for pen-aware pitch/smoothing/layers, Black keylines with color-edge separation, 60 % / 1.5 mm sharpening, and tolerance no larger than 0.10 mm. | This is the Reddit-reference workflow: the shared luminance guide defines the image form, while C/M/Y/K follow separate streamline networks with independent seeds, tone masks, fallback angles, and dark-tone layers. Auto minimizes the coverage-model process-RGB estimate without overwriting the saved screen layout. The adjacent chain reduces penups at the cost of visible connector ink. Fine detail keeps coherent Black boundaries continuous and quiets color beside them. Save writes four separate overprinted G-code files. The explicitly labeled shared Edge-flow style is an experimental co-located alternative. Check density, black overlap, connector marks, registration, and pen-set separation on paper before using it as a production recipe. |
+| CMYK photo (recommended) | Open an image, press **Use recommended photo defaults**, inspect **Preview**, then press **Save 4 G-code files**. The action installs per-ink Edge-flow, three Flow layers, 2.5 mm smoothing, a `1.2 mm` on-paper pitch target adapted to pen width and scale, keylines off, chaining on at `5 mm`, `0.10 mm` tolerance, 200000 marks/ink, saturation 90 %, contrast 220 %, brightness 80 %, gamma 0.60, GCR 90 %, weights 100/100/100/100 %, and 100 % sharpening at 1.5 mm. | One-click start for a normal photo. It runs image colour Auto while preserving page size, artwork scale, pen width, pen offsets, and bed motion. Preview plans the four inks in the background; Save writes four separate overprinted programs. Inspect density, connector ink, registration, and reach before a physical pass. |
+| CMYK Edge-flow tuning | Press **Use recommended photo defaults** first. Adjust the advanced controls only if the inspected output needs a deliberate change; **Fine detail** remains available for pen-aware pitch/smoothing/layers and Black keylines. | This is the Reddit-reference workflow: the shared luminance guide defines the image form, while C/M/Y/K follow separate streamline networks with independent seeds, tone masks, fallback angles, and dark-tone layers. The explicitly labeled shared Edge-flow style is an experimental co-located alternative. |
 | CMYK continuous | Use the same image curve as the CMYK recipe, then choose **Continuous row screen (adjacent joins)** and keep **Pen-down chain** on with a `5 mm` gap. | Fastest starting point for an image where fewer M3/M5 cycles matter more than Edge-flow contour texture. Straight screen directions remain visible, and all joins print connector ink. A fully blank row band can still lift. |
 | 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
 | Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |

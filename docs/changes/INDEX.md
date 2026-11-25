@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-24 | `WSW-20261124-005` | windows-software | implemented | [Make Edge-flow CMYK photo defaults one-click](windows-software/2026/2026-11-24-one-click-cmyk-photo-defaults.md) |
 | 2026-11-24 | `WSW-20261124-004` | windows-software, hardware | implemented | [Record artwork placement in CMYK outputs](windows-software/2026/2026-11-24-record-artwork-placement-in-cmyk-outputs.md) |
 | 2026-11-24 | `WSW-20261124-003` | windows-software, hardware | implemented | [Guard machine reach after bed compensation](windows-software/2026/2026-11-24-post-compensation-reach-guard.md) |
 | 2026-11-24 | `WSW-20261124-002` | windows-software | implemented | [Preserve screen-chain tags in the CMYK preview](windows-software/2026/2026-11-24-preserve-screen-chain-preview-tags.md) |

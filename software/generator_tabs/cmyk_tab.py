@@ -49,6 +49,21 @@ from .cmyk_sheet import build_sheet
 TITLE = "CMYK"
 ORDER = 25
 EDGE_FLOW_STYLES = ("edge_flow", "edge_flow_shared")
+REFERENCE_PHOTO_EFFECTIVE_PITCH_MM = 1.2
+REFERENCE_PHOTO_FLOW_SMOOTHING_MM = 2.5
+REFERENCE_PHOTO_FLOW_LAYERS = 3
+
+
+def reference_photo_pitch_mm(pen_width_mm, scale_pct):
+    """Return source pitch for the recommended on-paper photo spacing."""
+    scale = max(0.01, float(scale_pct) / 100.0)
+    pen_width = max(0.1, float(pen_width_mm))
+    target_mm = max(
+        REFERENCE_PHOTO_EFFECTIVE_PITCH_MM,
+        pen_width * 1.25,
+    )
+    source_mm = min(8.0, max(0.1, target_mm / scale))
+    return round(source_mm / 0.05) * 0.05
 
 
 def format_seconds(seconds):
@@ -207,6 +222,28 @@ class CmykTab(GeneratorTab):
 
     def __init__(self, host):
         super().__init__(host)
+        recommended = self.add_group("Recommended")
+        start_here = QLabel(
+            "Start here for a normal photo. This one button sets color "
+            "matching, Edge-flow screening, density, and pen-down continuity. "
+            "The controls below are advanced options and do not need tuning."
+        )
+        start_here.setWordWrap(True)
+        start_here.setStyleSheet("color: #334155;")
+        recommended.addRow(start_here)
+        self.reference_button = QPushButton(
+            "Use recommended photo defaults"
+        )
+        self.reference_button.setToolTip(
+            "Apply the complete portrait workflow: automatic image color "
+            "matching, per-ink Edge-flow, three dark-tone layers, 2.5 mm "
+            "structure smoothing, a pen-aware pitch targeting 1.2 mm on "
+            "paper, and 5 mm pen-down chaining. Page size, artwork scale, "
+            "pen offsets, and bed motion are preserved."
+        )
+        self.reference_button.clicked.connect(self.apply_reference_defaults)
+        recommended.addRow("", self.reference_button)
+
         image = self.add_group("Image")
         self.image_label = QLabel()
         self.image_label.setWordWrap(True)
@@ -224,23 +261,23 @@ class CmykTab(GeneratorTab):
         self.auto_button.clicked.connect(self.apply_auto_settings)
         options.addRow("Auto", self.auto_button)
         self.auto_levels = QCheckBox("Stretch tonality")
-        self.auto_levels.setChecked(True)
+        self.auto_levels.setChecked(False)
         self.auto_levels.setToolTip(
             "Stretch the image luminance between its 1st and 99th percentiles "
             "before separation, so a low-key or hazy photo uses the full tonal "
             "range instead of screening into one flat mid-tone."
         )
         options.addRow("Auto levels", self.auto_levels)
-        self.saturation = double_spin(115, 0, 200, 5, 0, " %")
+        self.saturation = double_spin(90, 0, 200, 5, 0, " %")
         options.addRow("Saturation", self.saturation)
-        self.contrast = double_spin(285, 25, 300, 5, 0, " %")
+        self.contrast = double_spin(220, 25, 300, 5, 0, " %")
         self.contrast.setToolTip(
             "Soft S-curve contrast up to 300 %: above 200 % the curve keeps "
             "steepening instead of clipping, so colour punch keeps "
             "increasing without blown highlights."
         )
         options.addRow("Contrast", self.contrast)
-        self.brightness = double_spin(170, 20, 200, 5, 0, " %")
+        self.brightness = double_spin(80, 20, 200, 5, 0, " %")
         self.brightness.setToolTip(
             "Shadow-weighted brightness lift (a gamma curve that keeps the "
             "black and white points). Raise it when the plot reads too dark, "
@@ -256,11 +293,11 @@ class CmykTab(GeneratorTab):
             "or an already-sharp source."
         )
         options.addRow("Sharpen", self.sharpen)
-        self.sharpen_amount = double_spin(70, 10, 200, 5, 0, " %")
+        self.sharpen_amount = double_spin(100, 10, 200, 5, 0, " %")
         self.sharpen_amount.setToolTip(
-            "Unsharp-mask strength. 70 % is the photo default; lower it if "
-            "edges show halos, and raise it for fine features that still "
-            "disappear into the screen."
+            "Unsharp-mask strength. 100 % is the recommended photo default; "
+            "lower it if edges show halos, and raise it for fine features "
+            "that still disappear into the screen."
         )
         options.addRow("Sharpen amount", self.sharpen_amount)
         self.sharpen_radius = double_spin(1.5, 0.2, 5.0, 0.1, 1, " mm")
@@ -272,14 +309,14 @@ class CmykTab(GeneratorTab):
         options.addRow("Sharpen radius", self.sharpen_radius)
         self.sharpen.toggled.connect(self._update_sharpen_controls)
         self._update_sharpen_controls()
-        self.gamma = double_spin(1.40, 0.2, 3.0, 0.05, 2)
+        self.gamma = double_spin(0.60, 0.2, 3.0, 0.05, 2)
         self.gamma.setToolTip(
             "Ink-density curve applied after the process-ink colour match. "
             "1.0 preserves the predicted colour most closely; lower values "
             "add coverage and higher values lighten every plate."
         )
         options.addRow("Ink gamma", self.gamma)
-        self.gcr = double_spin(95, 0, 100, 5, 0, " %")
+        self.gcr = double_spin(90, 0, 100, 5, 0, " %")
         self.gcr.setToolTip(
             "How much neutral density moves to the Black pen during process-"
             "ink matching. Higher values protect chromatic C/M/Y for colour."
@@ -361,13 +398,20 @@ class CmykTab(GeneratorTab):
             "layers. The experimental shared Edge-flow variant instead traces "
             "one common CMYK network and gates each ink along its segments."
         )
-        self.style.setCurrentIndex(self.style.findData("rectilinear"))
+        self.style.setCurrentIndex(self.style.findData("edge_flow"))
         screen.addRow("Style", self.style)
         pitch_row = QWidget()
         pitch_layout = QHBoxLayout(pitch_row)
         pitch_layout.setContentsMargins(0, 0, 0, 0)
         pitch_layout.setSpacing(4)
-        self.pitch = double_spin(0.1, 0.1, 8.0, 0.1, 2, " mm")
+        self.pitch = double_spin(
+            reference_photo_pitch_mm(0.3, 280),
+            0.1,
+            8.0,
+            0.05,
+            2,
+            " mm",
+        )
         pitch_layout.addWidget(self.pitch, 1)
         self.match_pen_button = QPushButton("Match pen")
         self.match_pen_button.setToolTip(
@@ -505,7 +549,7 @@ class CmykTab(GeneratorTab):
         # line (the rotating bed bows single moves). The main tab's Geometry
         # Tolerance does the same job but resets to 0.25 every launch, which
         # was too coarse for the halftone rows near the centre.
-        self.path_tolerance = double_spin(0.15, 0.05, 1.0, 0.05, 2, " mm")
+        self.path_tolerance = double_spin(0.10, 0.05, 1.0, 0.05, 2, " mm")
         self.path_tolerance.setToolTip(
             "Path-fidelity budget: limits both rotating-bed bow and visible "
             "facets in sine-wave rows. Lower values produce smoother waves and "
@@ -513,7 +557,7 @@ class CmykTab(GeneratorTab):
             "tab's Tolerance for CMYK output only."
         )
         screen.addRow("Path tolerance", self.path_tolerance)
-        self.max_marks = int_spin(40000, 200, 200000, 500)
+        self.max_marks = int_spin(200000, 200, 200000, 500)
         screen.addRow("Max marks/ink", self.max_marks)
         self.seed = int_spin(7, 0, 999_999)
         screen.addRow("Seed (stipple)", self.seed)
@@ -873,6 +917,84 @@ class CmykTab(GeneratorTab):
             for line in marks
         ]
 
+    def apply_reference_defaults(self, _checked=False):
+        """Apply the complete photo recipe without touching physical setup."""
+        del _checked
+        self.calibration_mode.setChecked(False)
+        style_index = self.style.findData("edge_flow")
+        if style_index >= 0:
+            self.style.setCurrentIndex(style_index)
+        self.auto_levels.setChecked(False)
+        self.saturation.setValue(90)
+        self.contrast.setValue(220)
+        self.brightness.setValue(80)
+        self.sharpen.setChecked(True)
+        self.sharpen_amount.setValue(100)
+        self.sharpen_radius.setValue(1.5)
+        self.gamma.setValue(0.60)
+        self.gcr.setValue(90)
+        for spin in (
+            self.weight_c,
+            self.weight_m,
+            self.weight_y,
+            self.weight_k,
+        ):
+            spin.setValue(100)
+        self.flow_smoothing.setValue(REFERENCE_PHOTO_FLOW_SMOOTHING_MM)
+        self.flow_layers.setValue(REFERENCE_PHOTO_FLOW_LAYERS)
+        self.flow_keylines.setChecked(False)
+        self.chain_marks.setChecked(True)
+        self.chain_gap.setValue(5.0)
+        self.dot_size.setValue(100)
+        self.solid_dots.setChecked(False)
+        self.overdraw.setValue(1)
+        self.path_tolerance.setValue(0.10)
+        self.max_marks.setValue(200000)
+        self.seed.setValue(7)
+        self.pitch.setValue(
+            reference_photo_pitch_mm(
+                self.pen_width.value(),
+                self.scale_pct.value(),
+            )
+        )
+        self._refresh_artwork()
+        if not self._artwork:
+            message = (
+                "Recommended photo controls are ready. Open artwork, then "
+                "apply this button again for automatic color matching."
+            )
+            self.status.setText(message)
+            if self.host is not None and hasattr(self.host, "generator_status"):
+                self.host.generator_status(message)
+            return False
+
+        QGuiApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        try:
+            self.status.setText("Analyzing photo for recommended defaults...")
+            QGuiApplication.processEvents()
+            values = self.apply_auto_settings()
+        finally:
+            QGuiApplication.restoreOverrideCursor()
+        if values is None:
+            return False
+
+        effective_pitch = (
+            self.pitch.value() * self.scale_pct.value() / 100.0
+        )
+        message = (
+            "Recommended photo defaults ready: Edge-flow, "
+            f"{self.flow_layers.value()} layers, "
+            f"{self.flow_smoothing.value():.1f} mm smoothing, "
+            f"{effective_pitch:.2f} mm on-paper pitch. "
+            "Press Preview, then Save 4 G-code files."
+        )
+        self.cost_label.setText(message)
+        self.status.setText(message)
+        if self.host is not None and hasattr(self.host, "generator_status"):
+            self.host.generator_status(message)
+        self._refresh_pass_summary()
+        return True
+
     def apply_auto_settings(self, _checked=False):
         """Fit the Image-options controls to the loaded photo."""
         self._refresh_artwork()
@@ -894,7 +1016,7 @@ class CmykTab(GeneratorTab):
             )
         except Exception as exc:  # noqa: BLE001 - user-facing setup error
             self.report_error(f"Auto settings failed: {exc}")
-            return
+            return None
         self.auto_levels.setChecked(bool(values["auto_levels"]))
         self.saturation.setValue(values["saturation"])
         self.contrast.setValue(values["contrast"])
@@ -956,6 +1078,7 @@ class CmykTab(GeneratorTab):
         self.status.setText(message)
         if self.host is not None:
             self.host.generator_status(message)
+        return values
 
     def pen_pitch_mm(self):
         """Dot pitch that puts full-tone rows one pen width apart on paper."""

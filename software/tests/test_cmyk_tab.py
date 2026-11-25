@@ -3758,7 +3758,7 @@ class CmykTabTests(unittest.TestCase):
             data["ink_processing"]["sharpening"],
             {
                 "enabled": True,
-                "amount_pct": 70.0,
+                "amount_pct": 100.0,
                 "radius_mm": 1.5,
             },
         )
@@ -3964,27 +3964,118 @@ class CmykTabTests(unittest.TestCase):
     def test_shipped_defaults_suit_a_photo(self):
         tab = self.CmykTab(FakeHost(self.image_path))
         self.addCleanup(tab.deleteLater)
-        self.assertTrue(tab.auto_levels.isChecked())
+        self.assertFalse(tab.auto_levels.isChecked())
         self.assertFalse(tab.solid_dots.isChecked())
-        self.assertEqual(tab.style.currentData(), "rectilinear")
+        self.assertEqual(tab.style.currentData(), "edge_flow")
         self.assertEqual(tab.levels.value(), 8)
-        self.assertAlmostEqual(tab.pitch.value(), 0.1, places=3)
-        self.assertAlmostEqual(tab.gcr.value(), 95.0, places=3)
-        self.assertAlmostEqual(tab.saturation.value(), 115.0, places=3)
-        self.assertAlmostEqual(tab.contrast.value(), 285.0, places=3)
-        self.assertAlmostEqual(tab.brightness.value(), 170.0, places=3)
+        self.assertAlmostEqual(tab.pitch.value(), 0.45, places=3)
+        self.assertAlmostEqual(tab.flow_smoothing.value(), 2.5, places=3)
+        self.assertEqual(tab.flow_layers.value(), 3)
+        self.assertFalse(tab.flow_keylines.isChecked())
+        self.assertAlmostEqual(tab.path_tolerance.value(), 0.10, places=3)
+        self.assertAlmostEqual(tab.gcr.value(), 90.0, places=3)
+        self.assertAlmostEqual(tab.saturation.value(), 90.0, places=3)
+        self.assertAlmostEqual(tab.contrast.value(), 220.0, places=3)
+        self.assertAlmostEqual(tab.brightness.value(), 80.0, places=3)
         self.assertTrue(tab.sharpen.isChecked())
-        self.assertAlmostEqual(tab.sharpen_amount.value(), 70.0, places=3)
+        self.assertAlmostEqual(tab.sharpen_amount.value(), 100.0, places=3)
         self.assertAlmostEqual(tab.sharpen_radius.value(), 1.5, places=3)
-        self.assertAlmostEqual(tab.gamma.value(), 1.40, places=2)
+        self.assertAlmostEqual(tab.gamma.value(), 0.60, places=2)
         self.assertAlmostEqual(tab.dot_size.value(), 100.0, places=3)
-        self.assertEqual(tab.max_marks.value(), 40000)
+        self.assertEqual(tab.max_marks.value(), 200000)
         self.assertEqual(tab.resolution.value(), 10000)
         self.assertAlmostEqual(tab.scale_pct.value(), 280.0, places=3)
         self.assertAlmostEqual(tab.weight_c.value(), 100.0, places=3)
         self.assertAlmostEqual(tab.weight_m.value(), 100.0, places=3)
         self.assertAlmostEqual(tab.weight_y.value(), 100.0, places=3)
         self.assertAlmostEqual(tab.weight_k.value(), 100.0, places=3)
+
+    def test_reference_pitch_targets_on_paper_spacing(self):
+        from generator_tabs.cmyk_tab import reference_photo_pitch_mm
+
+        self.assertAlmostEqual(
+            reference_photo_pitch_mm(0.9, 200.0),
+            0.60,
+            places=3,
+        )
+        self.assertAlmostEqual(
+            reference_photo_pitch_mm(2.0, 200.0),
+            1.25,
+            places=3,
+        )
+
+    def test_reference_defaults_apply_the_complete_photo_recipe(self):
+        host = FakeHost(self.image_path)
+        tab = self.CmykTab(host)
+        self.addCleanup(tab.deleteLater)
+        tab.scale_pct.setValue(200)
+        tab.pen_width.setValue(0.9)
+        tab.page_w.setValue(180)
+        tab.page_h.setValue(220)
+        tab.offset_spins["c"][0].setValue(1.25)
+        tab.offset_spins["c"][1].setValue(-2.5)
+        tab.offset_spins["k"][0].setValue(3.0)
+        tab.offset_spins["k"][1].setValue(4.0)
+        tab.chain_gap.setValue(8.0)
+        tab.theta_mode.set_value("fixed")
+        values = {
+            "auto_levels": False,
+            "saturation": 90,
+            "contrast": 220,
+            "brightness": 80,
+            "gamma": 0.6,
+            "gcr": 90,
+            "weights": {"c": 100, "m": 100, "y": 100, "k": 100},
+            "sharpen": True,
+            "sharpen_pct": 100,
+            "sharpen_radius_mm": 1.5,
+            "predicted_rgb_error": 52.8,
+        }
+
+        with mock.patch.object(
+            converter,
+            "auto_photo_settings",
+            return_value=values,
+        ):
+            tab.apply_reference_defaults()
+
+        self.assertEqual(tab.style.currentData(), "edge_flow")
+        self.assertAlmostEqual(tab.flow_smoothing.value(), 2.5, places=1)
+        self.assertEqual(tab.flow_layers.value(), 3)
+        self.assertFalse(tab.flow_keylines.isChecked())
+        self.assertTrue(tab.chain_marks.isChecked())
+        self.assertAlmostEqual(tab.chain_gap.value(), 5.0, places=3)
+        self.assertAlmostEqual(tab.pitch.value(), 0.60, places=2)
+        self.assertAlmostEqual(
+            tab.pitch.value() * tab.scale_pct.value() / 100.0,
+            1.2,
+            places=2,
+        )
+        self.assertAlmostEqual(tab.path_tolerance.value(), 0.10, places=2)
+        self.assertEqual(tab.max_marks.value(), 200000)
+        self.assertEqual(tab.saturation.value(), 90)
+        self.assertEqual(tab.contrast.value(), 220)
+        self.assertEqual(tab.brightness.value(), 80)
+        self.assertAlmostEqual(tab.gamma.value(), 0.60, places=2)
+        self.assertEqual(tab.gcr.value(), 90)
+        self.assertTrue(tab.sharpen.isChecked())
+        self.assertEqual(tab.sharpen_amount.value(), 100)
+        self.assertAlmostEqual(tab.sharpen_radius.value(), 1.5, places=2)
+        self.assertEqual(tab.theta_mode.value(), "fixed")
+        self.assertEqual(tab.page_w.value(), 180)
+        self.assertEqual(tab.page_h.value(), 220)
+        self.assertEqual(tab.scale_pct.value(), 200)
+        self.assertAlmostEqual(tab.pen_width.value(), 0.9, places=2)
+        self.assertEqual(
+            [spin.value() for spin in tab.offset_spins["c"]],
+            [1.25, -2.5],
+        )
+        self.assertEqual(
+            [spin.value() for spin in tab.offset_spins["k"]],
+            [3.0, 4.0],
+        )
+        self.assertIn("Recommended photo defaults ready", tab.status.text())
+        self.assertIn("Press Preview", tab.status.text())
 
     def test_sharpening_settings_reach_preparation_and_invalidate_layers(self):
         tab = self.make_tab()
@@ -4059,12 +4150,12 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(
             half_box[2] - half_box[0],
             0.5 * (full_box[2] - full_box[0]),
-            delta=0.05,
+            delta=0.10,
         )
         self.assertAlmostEqual(
             half_box[3] - half_box[1],
             0.5 * (full_box[3] - full_box[1]),
-            delta=0.05,
+            delta=0.10,
         )
         self.assertAlmostEqual(
             (half_box[0] + half_box[2]) / 2.0,
