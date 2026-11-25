@@ -76,8 +76,28 @@ continuity, or colour curve unless the operator knew the reference recipe.
   tolerance was tighter than the new `0.10 mm` path budget. The measured
   difference was `0.0639 mm`; the test now uses the recipe's `0.10 mm`
   physical tolerance.
-- No machine motion was started. Golden Sunset Preview and four-file G-code
-  inspection remain the next runtime gate before any physical print.
+- The converter was restarted and Golden Sunset loaded its previous saved
+  recipe: `0.75 mm` pitch, `0.5 mm` smoothing, one Flow layer, `0.05 mm`
+  tolerance, and seed 8. The recommended action replaced those screen controls
+  with Edge-flow, three layers, `2.5 mm` smoothing, a `1.20 mm` effective
+  pitch, `0.10 mm` tolerance, and seed 7.
+- The action preserved the restored physical setup: `200 x 200 mm` page,
+  `200 %` artwork scale, `0.90 mm` pen, zero pen offsets, Xθ/Yθ bed motion,
+  `59 mm` center-hold diameter, and `-0.910 / -4.490 mm` artwork placement.
+- Golden Sunset Preview completed in `31.4 s` with 873,992 preview moves and
+  a `4 h 7 m 22 s` controller-time estimate. The four saved files have
+  matching SHA-256 values in the set manifest and identical page, placement,
+  reach-guard, and chaining headers.
+- Saved M3/M5 counts are C `523/524`, M `589/590`, Y `629/630`, and K
+  `636/637`. `check_gcode_motion.py` passes every file for the bed-step cap,
+  A-rate limit, and no bare `G0` rotation; maximum XY radii are
+  `179.319/179.283/179.389/179.354 mm` for C/M/Y/K.
+- Preflight warns that C/M/Y/K have `8/35/40/15` planner moves above the
+  `0.100 mm` path budget, with worst reported bows of
+  `0.153/0.245/0.250/0.269 mm`. These are tolerance warnings, not hard-guard
+  failures, and require visual inspection on a physical sheet.
+- No machine motion was started. The four saved programs are ready for the
+  next supervised physical print check.
 
 ## Struggles and rejected approaches
 
@@ -96,8 +116,11 @@ Auto still refines colour controls for the loaded image, so the exact colour
 curve can differ from the baseline. The pitch/smoothing/layer/continuity recipe
 and physical settings are deterministic. Existing artwork recipes retain their
 saved advanced controls until the operator deliberately presses the button.
+The Golden Sunset page retains its saved `200 %` scale, so its corners are
+clipped by the circular reach guard without changing the centre composition.
 A physical four-pass sheet remains necessary to validate density, connector
-ink, registration, black overlap, and pen-set separation.
+ink, registration, black overlap, pen-set separation, and whether the bounded
+preflight deviations are visible.
 
 ## Files
 

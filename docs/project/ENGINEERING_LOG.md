@@ -15,8 +15,19 @@
 - The successful status directs the operator to **Preview**, then **Save 4
   G-code files**. Advanced controls remain available and unchanged.
 - The complete converter suite passes 688 tests with one expected
-  OpenGL-context skip. No machine motion was started; Golden Sunset runtime
-  inspection and a physical four-pass sheet remain pending.
+  OpenGL-context skip.
+- Restarted runtime verification with Golden Sunset replaced its old
+  `0.75 mm / 0.5 mm / 1 layer / seed 8` recipe with the recommended
+  `1.20 mm effective / 2.5 mm / 3 layers / seed 7` recipe while preserving
+  the `200 x 200 mm` page, `200 %` scale, `0.90 mm` pen, zero offsets,
+  Xθ/Yθ motion, `59 mm` center hold, and `-0.910 / -4.490 mm` placement.
+- Preview completed in `31.4 s`. All four saved G-code hashes match the set
+  manifest; motion preflight passes the bed-step, A-rate, and no-bare-G0-
+  rotation guards, with maximum XY radii below `180 mm`.
+- The set reports small path-tolerance warnings: C/M/Y/K have
+  `8/35/40/15` moves above `0.100 mm`, with worst bows up to `0.269 mm`.
+  No machine motion was started; physical four-pass validation remains
+  pending.
 - Evidence: `WSW-20261124-005`;
   `docs/changes/windows-software/2026/2026-11-24-one-click-cmyk-photo-defaults.md`.
 - Category: windows-software, cmyk, edge-flow, photo-defaults, auto-color,
