@@ -530,29 +530,28 @@ def _auto_photo_baseline_settings(
         return result
 
     if style_key in ("edge_flow", "edge_flow_shared"):
-        # Edge-flow's path-local tone gating leaves more paper than a solid row
-        # screen. A neutral-exposure recommendation therefore looks washed out
-        # once the streamlines are broken by tone. Keep normal photo brightness
-        # but strengthen the mid-tone curve and low-ink gamma so the bright
-        # yellow/magenta ramp retains enough separate strokes to read.
+        # Edge-flow is a sparse, path-local screen. Its recommended recipe
+        # keeps normal exposure and moderate contrast so broad skin and
+        # highlight planes retain paper; density comes from the pen-aware
+        # pitch and dark-tone layers rather than crushing the photograph.
         p05, p50, p95 = (
             float(value)
             for value in np.percentile(luminance, [5.0, 50.0, 95.0])
         )
         tonal_range = p95 - p05
         chroma_p90 = float(np.percentile(chroma, 90.0))
-        brightness = clamp(104.0 + (0.42 - p50) * 90.0, 85.0, 125.0)
-        contrast = clamp(220.0 + (0.65 - tonal_range) * 70.0, 190.0, 275.0)
-        gamma = clamp(0.76 + (p50 - 0.42) * 0.40, 0.60, 0.95)
+        brightness = clamp(112.0 + (0.42 - p50) * 70.0, 100.0, 135.0)
+        contrast = clamp(175.0 + (0.65 - tonal_range) * 50.0, 140.0, 180.0)
+        gamma = clamp(1.00 + (p50 - 0.42) * 0.35, 1.00, 1.20)
         saturation = clamp(
             108.0 + (0.30 - chroma_p90) * 30.0,
-            100.0,
-            135.0,
+            105.0,
+            120.0,
         )
         gcr = clamp(
-            83.0 - max(0.0, chroma_p90 - 0.18) * 40.0,
-            65.0,
-            90.0,
+            80.0 - max(0.0, chroma_p90 - 0.18) * 40.0,
+            60.0,
+            80.0,
         )
         return {
             "auto_levels": True,
@@ -561,6 +560,9 @@ def _auto_photo_baseline_settings(
             "saturation": round_up_to(saturation, 5),
             "gcr": round_up_to(gcr, 5),
             "gamma": round(gamma / 0.05) * 0.05,
+            "sharpen": True,
+            "sharpen_pct": 60.0,
+            "sharpen_radius_mm": 1.5,
         }
 
     # Vivid photos keep more chroma in C/M/Y and less in K; muted ones lean
@@ -899,11 +901,11 @@ def auto_photo_settings(
     if style_key in ("edge_flow", "edge_flow_shared"):
         ranges = {
             "auto_levels": auto_level_choices,
-            "saturation": (90, 100, 110, 120, 130),
-            "contrast": (100, 140, 180, 220, 260),
-            "brightness": (80, 100, 120, 140, 160),
-            "gamma": (0.60, 0.70, 0.80, 0.90, 1.00, 1.10, 1.20),
-            "gcr": (60, 70, 80, 90, 100),
+            "saturation": (105, 110, 115, 120),
+            "contrast": (120, 140, 160, 180),
+            "brightness": (100, 110, 120, 130, 140),
+            "gamma": (1.00, 1.10, 1.20, 1.30),
+            "gcr": (60, 70, 80),
         }
     else:
         ranges = {

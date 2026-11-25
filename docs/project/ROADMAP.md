@@ -639,6 +639,15 @@
   that the portrait's `305.46 mm` layout is an intentional circular crop, so
   production keeps manual `1.0 / 260 %`; Fit inside's approximately
   `153.21 %` equivalent scale is only for an uncropped image.
+  Status 2026-11-24 ink density: the Golden Sunset comparison exposed
+  near-solid overprint from a `1.20 mm` pitch under a `0.90 mm` pen, plus Auto
+  selecting brightness 80 %, contrast 220 %, gamma 0.60, GCR 90 %. The
+  recommended recipe now targets two pen widths with a `1.2 mm` floor,
+  constrains Edge-flow Auto to exposure-preserving color controls, uses 60 %
+  sharpening, and limits adjacent chaining to `1.0 mm`. The fixed 14-inch
+  software render raised paper coverage in the tested face region from
+  `12.3 %` to `42.0 %` and reduced magenta/yellow overlap from `34.3 %` to
+  `11.1 %`.
   Acceptance: print a pre-cropped portrait with the README starting recipe
   after one HOME + REGISTER; preserve the intentional `260 %` circular crop
   unless the test explicitly compares the whole-image Fit-inside layout;

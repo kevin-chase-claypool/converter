@@ -1,5 +1,42 @@
 # Engineering Log
 
+<a id="elog-20261124-restore-cmyk-photo-highlight-density"></a>
+### 🟨 2026-11-24 - WINDOWS SOFTWARE/IMPLEMENTED - Restore open highlight density in recommended CMYK photos
+
+- The owner's four-pen Golden Sunset render had only `12.3 %` paper in the
+  tested face region, with magenta/yellow overlap over `34.3 %` and `25.8 %`
+  dark pixels. The 14-inch circular print used a `0.90 mm` pen at a
+  `1.20 mm` effective pitch, only `1.33` pen widths between center lines.
+- Edge-flow Auto moved that image to brightness `80 %`, contrast `220 %`,
+  gamma `0.60`, GCR `90 %`, and `100 %` sharpening. Its coverage-model color
+  error did not represent the visually saturated intersections of four
+  independently seeded networks.
+- The recommended pitch now targets two pen widths with the existing
+  `1.2 mm` floor. At the owner's `0.90 mm / 200 %` layout it selects a
+  `0.90 mm` source pitch and `1.80 mm` effective pitch. The 14-inch target is
+  the existing approximately `360 mm` circular layout inside the `180 mm`
+  reach radius.
+- The one-click baseline now uses saturation `115 %`, contrast `150 %`,
+  brightness `115 %`, gamma `1.10`, GCR `75 %`, and `60 %` sharpening.
+  Edge-flow Auto is constrained to brightness `100-140 %`, contrast
+  `120-180 %`, saturation `105-120 %`, gamma `1.00-1.30`, and GCR `60-80 %`.
+- Adjacent keep-down chaining is limited to `1.0 mm` by the recommended
+  action. Short connectors still reduce pen cycles, while endpoints several
+  screen rows apart no longer draw long facial ink bridges.
+- Two focused regressions failed on the old pitch and Auto behavior and pass
+  after the change. All `147` CMYK tab tests pass; complete converter
+  discovery passes `690` tests with one expected OpenGL-context skip.
+- The fixed 14-inch-equivalent software render kept `42.0 %` paper in the same
+  face region, reduced magenta/yellow overlap to `11.1 %`, and reduced dark
+  pixels to `6.6 %`. Auto selected brightness `100 %`, contrast `180 %`,
+  saturation `120 %`, gamma `1.00`, GCR `80 %`, and `60 %` sharpening.
+- No machine motion or physical four-pass sheet was started. Felt-tip spread,
+  registration, connector visibility, and elapsed time remain pending.
+- Evidence: `WSW-20261124-006`;
+  `docs/changes/windows-software/2026/2026-11-24-restore-cmyk-photo-highlight-density.md`.
+- Category: windows-software, cmyk, edge-flow, photo-fidelity, ink-density,
+  auto-exposure, pen-width, 14-inch, physical-validation-pending.
+
 <a id="elog-20261124-cmyk-face-gradient-diagnosis"></a>
 ### 🟨 2026-11-24 - WINDOWS SOFTWARE/DIAGNOSED - CMYK face gradient differs through ink density and screen structure
 

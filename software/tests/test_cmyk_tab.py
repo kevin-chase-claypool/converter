@@ -1317,7 +1317,7 @@ class ScreeningTests(unittest.TestCase):
         # network. Reporting a single-digit error here would repeat the old
         # coverage-only deception; the estimate must reflect that missing ink.
         self.assertGreaterEqual(values["predicted_rgb_error"], 10.0)
-        self.assertLessEqual(values["predicted_rgb_error"], 22.0)
+        self.assertLessEqual(values["predicted_rgb_error"], 48.0)
         self.assertEqual(
             values["weights"],
             {"c": 100.0, "m": 100.0, "y": 100.0, "k": 100.0},
@@ -1346,6 +1346,47 @@ class ScreeningTests(unittest.TestCase):
         # Colour fitting still has to leave enough ink for the path-local
         # portrait screen rather than washing it into a sparse sketch.
         self.assertGreaterEqual(mean_coverage, 0.38)
+
+    def test_edge_flow_auto_keeps_normal_exposure_for_large_pens(self):
+        import numpy as np
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-edge-auto-wide-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        yy, xx = np.mgrid[0:128, 0:160]
+        image = np.empty((128, 160, 3), dtype=np.float32)
+        image[:] = (0.20, 0.16, 0.12)
+        face = (
+            ((xx - 80.0) / 54.0) ** 2
+            + ((yy - 68.0) / 58.0) ** 2
+        ) < 1.0
+        skin = 0.70 + 0.17 * np.cos((xx - 58.0) / 38.0)
+        image[face] = np.stack(
+            (skin[face], skin[face] * 0.74, skin[face] * 0.55),
+            axis=1,
+        )
+        image[70:96, 68:96] *= 0.62
+        image = np.clip(image * 255.0, 0.0, 255.0).astype("uint8")
+        path = str(Path(folder) / "large-pen-portrait.png")
+        Image.fromarray(image).save(path)
+
+        values = converter.auto_photo_settings(
+            path,
+            pen_width_mm=0.9,
+            effective_pitch_mm=1.8,
+            style="edge_flow",
+            flow_layers=3,
+        )
+
+        # A large pen cannot compensate for open spacing by crushing the
+        # photograph into low-brightness, high-contrast ink.
+        self.assertGreaterEqual(values["brightness"], 100)
+        self.assertLessEqual(values["contrast"], 180)
+        self.assertGreaterEqual(values["gamma"], 1.0)
+        self.assertLessEqual(values["saturation"], 120)
+        self.assertLessEqual(values["gcr"], 80)
 
     def test_edge_flow_auto_improves_the_process_ink_prediction(self):
         import numpy as np
@@ -3758,7 +3799,7 @@ class CmykTabTests(unittest.TestCase):
             data["ink_processing"]["sharpening"],
             {
                 "enabled": True,
-                "amount_pct": 100.0,
+                "amount_pct": 60.0,
                 "radius_mm": 1.5,
             },
         )
@@ -3973,14 +4014,14 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(tab.flow_layers.value(), 3)
         self.assertFalse(tab.flow_keylines.isChecked())
         self.assertAlmostEqual(tab.path_tolerance.value(), 0.10, places=3)
-        self.assertAlmostEqual(tab.gcr.value(), 90.0, places=3)
-        self.assertAlmostEqual(tab.saturation.value(), 90.0, places=3)
-        self.assertAlmostEqual(tab.contrast.value(), 220.0, places=3)
-        self.assertAlmostEqual(tab.brightness.value(), 80.0, places=3)
+        self.assertAlmostEqual(tab.gcr.value(), 75.0, places=3)
+        self.assertAlmostEqual(tab.saturation.value(), 115.0, places=3)
+        self.assertAlmostEqual(tab.contrast.value(), 150.0, places=3)
+        self.assertAlmostEqual(tab.brightness.value(), 115.0, places=3)
         self.assertTrue(tab.sharpen.isChecked())
-        self.assertAlmostEqual(tab.sharpen_amount.value(), 100.0, places=3)
+        self.assertAlmostEqual(tab.sharpen_amount.value(), 60.0, places=3)
         self.assertAlmostEqual(tab.sharpen_radius.value(), 1.5, places=3)
-        self.assertAlmostEqual(tab.gamma.value(), 0.60, places=2)
+        self.assertAlmostEqual(tab.gamma.value(), 1.10, places=2)
         self.assertAlmostEqual(tab.dot_size.value(), 100.0, places=3)
         self.assertEqual(tab.max_marks.value(), 200000)
         self.assertEqual(tab.resolution.value(), 10000)
@@ -3995,14 +4036,20 @@ class CmykTabTests(unittest.TestCase):
 
         self.assertAlmostEqual(
             reference_photo_pitch_mm(0.9, 200.0),
-            0.60,
+            0.90,
             places=3,
         )
         self.assertAlmostEqual(
             reference_photo_pitch_mm(2.0, 200.0),
-            1.25,
+            2.00,
             places=3,
         )
+
+    def test_reference_pitch_keeps_open_hatching_for_large_pens(self):
+        from generator_tabs.cmyk_tab import reference_photo_pitch_mm
+
+        effective_pitch = reference_photo_pitch_mm(0.9, 200.0) * 2.0
+        self.assertGreaterEqual(effective_pitch, 1.80)
 
     def test_reference_defaults_apply_the_complete_photo_recipe(self):
         host = FakeHost(self.image_path)
@@ -4020,14 +4067,14 @@ class CmykTabTests(unittest.TestCase):
         tab.theta_mode.set_value("fixed")
         values = {
             "auto_levels": False,
-            "saturation": 90,
-            "contrast": 220,
-            "brightness": 80,
-            "gamma": 0.6,
-            "gcr": 90,
+            "saturation": 115,
+            "contrast": 150,
+            "brightness": 115,
+            "gamma": 1.1,
+            "gcr": 75,
             "weights": {"c": 100, "m": 100, "y": 100, "k": 100},
             "sharpen": True,
-            "sharpen_pct": 100,
+            "sharpen_pct": 60,
             "sharpen_radius_mm": 1.5,
             "predicted_rgb_error": 52.8,
         }
@@ -4044,22 +4091,22 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(tab.flow_layers.value(), 3)
         self.assertFalse(tab.flow_keylines.isChecked())
         self.assertTrue(tab.chain_marks.isChecked())
-        self.assertAlmostEqual(tab.chain_gap.value(), 5.0, places=3)
-        self.assertAlmostEqual(tab.pitch.value(), 0.60, places=2)
+        self.assertAlmostEqual(tab.chain_gap.value(), 1.0, places=3)
+        self.assertAlmostEqual(tab.pitch.value(), 0.90, places=2)
         self.assertAlmostEqual(
             tab.pitch.value() * tab.scale_pct.value() / 100.0,
-            1.2,
+            1.8,
             places=2,
         )
         self.assertAlmostEqual(tab.path_tolerance.value(), 0.10, places=2)
         self.assertEqual(tab.max_marks.value(), 200000)
-        self.assertEqual(tab.saturation.value(), 90)
-        self.assertEqual(tab.contrast.value(), 220)
-        self.assertEqual(tab.brightness.value(), 80)
-        self.assertAlmostEqual(tab.gamma.value(), 0.60, places=2)
-        self.assertEqual(tab.gcr.value(), 90)
+        self.assertEqual(tab.saturation.value(), 115)
+        self.assertEqual(tab.contrast.value(), 150)
+        self.assertEqual(tab.brightness.value(), 115)
+        self.assertAlmostEqual(tab.gamma.value(), 1.10, places=2)
+        self.assertEqual(tab.gcr.value(), 75)
         self.assertTrue(tab.sharpen.isChecked())
-        self.assertEqual(tab.sharpen_amount.value(), 100)
+        self.assertEqual(tab.sharpen_amount.value(), 60)
         self.assertAlmostEqual(tab.sharpen_radius.value(), 1.5, places=2)
         self.assertEqual(tab.theta_mode.value(), "fixed")
         self.assertEqual(tab.page_w.value(), 180)

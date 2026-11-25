@@ -28,31 +28,31 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 ## Current controls (software-selected starting values)
 - Rendering mode: **Edge-flow streamlines** in the existing CMYK Screen style
 - Base line spacing: operator-owned Edge-flow pitch and artwork scale; Auto
-  does not change either
-- Tensor smoothing radius: `4.0 mm` on paper for the current portrait recipe
+  does not change either. The recommended photo action targets two pen widths
+  on paper with a `1.2 mm` minimum pitch.
+- Tensor smoothing radius: `2.5 mm` on paper for the recommended photo recipe
 - Guidance gate: tensor strength plus coherence; weak structure keeps screen
 - Fallback direction: each ink's own fixed screen angle where structure is weak
-- Maximum density layers: 5 for the current portrait recipe
+- Maximum density layers: 3 for the recommended photo recipe
 - Tone method: deterministic path-local ink segments on four independent
   networks; additional layers add local depth only on the darker plate, and
   there is no shared 2D block lattice
 - Embedded ICC profiles, including Display P3, are converted to sRGB before
   image analysis and separation; EXIF orientation is applied first
-- **Pen-down chain** bridges up to `4 mm` of tone-off gaps along each
-  individual streamline and also chains per-ink marks within the operator's
-  adjacent gap. The connectors add visible local ink but materially reduce
-  M3/M5 cycles.
+- **Pen-down chain** bridges tone-off gaps along each individual streamline
+  and also chains per-ink marks within the operator's adjacent gap. The
+  recommended photo action limits that adjacent gap to `1.0 mm`; its connectors
+  add visible local ink but cannot cross several screen rows.
 - **Continuous row screen (adjacent joins)** is a speed-oriented alternative:
   tone-pitch rows join nearest non-overlapping adjacent runs into a few long
   chains, accepting visible straight connectors in exchange for fewer M3/M5
   cycles
-- Auto now starts from the portrait detail curve, then selects the lowest
-  predicted process-ink colour error across Auto levels, brightness, contrast,
-  saturation, GCR, and gamma. All four ink weights reset to 100 %. For the
-  current portrait and `0.52 mm` effective pitch the result is Auto levels off,
-  brightness 80 %, contrast 260 %, saturation 90 %, GCR 90 %, gamma 0.60,
-  with a coverage RGB estimate of `32.8/255`. The earlier `4.7/255` figure was
-  a coverage-only claim and is retired.
+- Auto starts from the portrait detail curve, then selects the lowest
+  predicted process-ink colour error inside an exposure-preserving Edge-flow
+  window: brightness `100-140 %`, contrast `120-180 %`, saturation
+  `105-120 %`, gamma `1.00-1.30`, and GCR `60-80 %`. All four ink weights
+  reset to 100 %. The estimate remains a coverage-model RGB error, not a
+  paper-validated colour claim.
 - Fine-detail preset: one effective pen width, smoothing near two pen widths
   clamped to `1.0-1.5 mm`, five low-offset layers, `2 mm` path-local tone
   intervals, marks capped near `12 mm`, and Path tolerance no larger

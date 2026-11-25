@@ -50,8 +50,10 @@ TITLE = "CMYK"
 ORDER = 25
 EDGE_FLOW_STYLES = ("edge_flow", "edge_flow_shared")
 REFERENCE_PHOTO_EFFECTIVE_PITCH_MM = 1.2
+REFERENCE_PHOTO_PEN_PITCH_MULTIPLIER = 2.0
 REFERENCE_PHOTO_FLOW_SMOOTHING_MM = 2.5
 REFERENCE_PHOTO_FLOW_LAYERS = 3
+REFERENCE_PHOTO_CHAIN_GAP_MM = 1.0
 
 
 def reference_photo_pitch_mm(pen_width_mm, scale_pct):
@@ -60,7 +62,7 @@ def reference_photo_pitch_mm(pen_width_mm, scale_pct):
     pen_width = max(0.1, float(pen_width_mm))
     target_mm = max(
         REFERENCE_PHOTO_EFFECTIVE_PITCH_MM,
-        pen_width * 1.25,
+        pen_width * REFERENCE_PHOTO_PEN_PITCH_MULTIPLIER,
     )
     source_mm = min(8.0, max(0.1, target_mm / scale))
     return round(source_mm / 0.05) * 0.05
@@ -268,16 +270,16 @@ class CmykTab(GeneratorTab):
             "range instead of screening into one flat mid-tone."
         )
         options.addRow("Auto levels", self.auto_levels)
-        self.saturation = double_spin(90, 0, 200, 5, 0, " %")
+        self.saturation = double_spin(115, 0, 200, 5, 0, " %")
         options.addRow("Saturation", self.saturation)
-        self.contrast = double_spin(220, 25, 300, 5, 0, " %")
+        self.contrast = double_spin(150, 25, 300, 5, 0, " %")
         self.contrast.setToolTip(
             "Soft S-curve contrast up to 300 %: above 200 % the curve keeps "
             "steepening instead of clipping, so colour punch keeps "
             "increasing without blown highlights."
         )
         options.addRow("Contrast", self.contrast)
-        self.brightness = double_spin(80, 20, 200, 5, 0, " %")
+        self.brightness = double_spin(115, 20, 200, 5, 0, " %")
         self.brightness.setToolTip(
             "Shadow-weighted brightness lift (a gamma curve that keeps the "
             "black and white points). Raise it when the plot reads too dark, "
@@ -293,11 +295,11 @@ class CmykTab(GeneratorTab):
             "or an already-sharp source."
         )
         options.addRow("Sharpen", self.sharpen)
-        self.sharpen_amount = double_spin(100, 10, 200, 5, 0, " %")
+        self.sharpen_amount = double_spin(60, 10, 200, 5, 0, " %")
         self.sharpen_amount.setToolTip(
-            "Unsharp-mask strength. 100 % is the recommended photo default; "
-            "lower it if edges show halos, and raise it for fine features "
-            "that still disappear into the screen."
+            "Unsharp-mask strength. 60 % is the recommended Edge-flow photo "
+            "default; lower it if edges show halos, and raise it for fine "
+            "features that still disappear into the screen."
         )
         options.addRow("Sharpen amount", self.sharpen_amount)
         self.sharpen_radius = double_spin(1.5, 0.2, 5.0, 0.1, 1, " mm")
@@ -309,14 +311,14 @@ class CmykTab(GeneratorTab):
         options.addRow("Sharpen radius", self.sharpen_radius)
         self.sharpen.toggled.connect(self._update_sharpen_controls)
         self._update_sharpen_controls()
-        self.gamma = double_spin(0.60, 0.2, 3.0, 0.05, 2)
+        self.gamma = double_spin(1.10, 0.2, 3.0, 0.05, 2)
         self.gamma.setToolTip(
             "Ink-density curve applied after the process-ink colour match. "
             "1.0 preserves the predicted colour most closely; lower values "
             "add coverage and higher values lighten every plate."
         )
         options.addRow("Ink gamma", self.gamma)
-        self.gcr = double_spin(90, 0, 100, 5, 0, " %")
+        self.gcr = double_spin(75, 0, 100, 5, 0, " %")
         self.gcr.setToolTip(
             "How much neutral density moves to the Black pen during process-"
             "ink matching. Higher values protect chromatic C/M/Y for colour."
@@ -925,14 +927,14 @@ class CmykTab(GeneratorTab):
         if style_index >= 0:
             self.style.setCurrentIndex(style_index)
         self.auto_levels.setChecked(False)
-        self.saturation.setValue(90)
-        self.contrast.setValue(220)
-        self.brightness.setValue(80)
+        self.saturation.setValue(115)
+        self.contrast.setValue(150)
+        self.brightness.setValue(115)
         self.sharpen.setChecked(True)
-        self.sharpen_amount.setValue(100)
+        self.sharpen_amount.setValue(60)
         self.sharpen_radius.setValue(1.5)
-        self.gamma.setValue(0.60)
-        self.gcr.setValue(90)
+        self.gamma.setValue(1.10)
+        self.gcr.setValue(75)
         for spin in (
             self.weight_c,
             self.weight_m,
@@ -944,7 +946,7 @@ class CmykTab(GeneratorTab):
         self.flow_layers.setValue(REFERENCE_PHOTO_FLOW_LAYERS)
         self.flow_keylines.setChecked(False)
         self.chain_marks.setChecked(True)
-        self.chain_gap.setValue(5.0)
+        self.chain_gap.setValue(REFERENCE_PHOTO_CHAIN_GAP_MM)
         self.dot_size.setValue(100)
         self.solid_dots.setChecked(False)
         self.overdraw.setValue(1)

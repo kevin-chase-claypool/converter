@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-24 | `WSW-20261124-006` | implemented | [Restore open highlights in recommended CMYK photos](2026/2026-11-24-restore-cmyk-photo-highlight-density.md) | `cmyk`, `edge-flow`, `photo-fidelity`, `ink-density`, `auto-exposure`, `pen-width`, `14-inch`, `physical-validation-pending` |
 | 2026-11-24 | `WSW-20261124-005` | implemented | [Make Edge-flow CMYK photo defaults one-click](2026/2026-11-24-one-click-cmyk-photo-defaults.md) | `cmyk`, `edge-flow`, `photo-defaults`, `one-click`, `auto-color`, `physical-validation-pending` |
 | 2026-11-24 | `WSW-20261124-004` | implemented | [Record artwork placement in CMYK outputs](2026/2026-11-24-record-artwork-placement-in-cmyk-outputs.md) | `cmyk`, `artwork-placement`, `registration`, `manifest`, `gcode-header`, `physical-validation-pending` |
 | 2026-11-24 | `WSW-20261124-003` | implemented | [Guard machine reach after bed compensation](2026/2026-11-24-post-compensation-reach-guard.md) | `reach`, `soft-limits`, `bed-compensation`, `preflight`, `cmyk`, `magenta` |
