@@ -6,6 +6,7 @@ affected_categories:
   - windows-software
 status: implemented
 components:
+  - software/qt_svg_to_gcode.pyw
   - software/generator_tabs/_plotterfun_web.py
   - software/generator_tabs/plotterfun_extended_tab.py
   - software/generator_tabs/plotterfun_tab.py
@@ -52,6 +53,11 @@ Chromium blocks its ES-module workers. Its production output also assumed the
 absolute `/labs/plotterfun-extended/` base path and retained `crossorigin`
 attributes unsuitable for a local static host.
 
+The first embedded run also exposed a Qt rendering incompatibility. The
+converter forces an OpenGL 2.1 top-level context, while Qt Quick initialized
+its own RHI backend; `QQuickWidget` then received no QRhi, showed a blank widget,
+and made export appear unresponsive.
+
 ## Implementation
 
 - `_plotterfun_web.py` provides the shared WebEngine tab, export capture, and a
@@ -65,6 +71,12 @@ attributes unsuitable for a local static host.
   the tool as **Plotterfun Extended** at tool shortcut `Ctrl+7`.
 - The existing Plotterfun tab was refactored onto the shared host without
   changing its 22-algorithm page or export behaviour.
+- `qt_svg_to_gcode.pyw` now sets `QSG_RHI_BACKEND=opengl` before importing
+  Qt, shares OpenGL contexts before creating `QApplication`, and explicitly
+  selects the OpenGL Qt Quick graphics API. This gives `QQuickWidget` and the
+  main OpenGL preview a compatible RHI.
+- Export serialization now guards a missing `<svg>` and returns an explicit
+  warning instead of silently doing nothing.
 - The build uses relative asset URLs and removes `crossorigin` attributes from
   the generated index. Runtime assets are stored under
   `software/plotterfun_extended_vendor/`.
@@ -84,15 +96,17 @@ attributes unsuitable for a local static host.
 - A visible-converter UI run opened **Plotterfun Extended**, loaded the current
   Golden Sunset PNG through **Use current artwork**, and remained running. The
   hidden file input then contained one accepted image file.
-- The full converter harness opened the Extended tool and exited without the
-  native crash shown by the standalone WebEngine destruction probe. The crash
-  was confined to the throwaway probe destroying browser objects while Python
-  was shutting down; the product path shuts down cleanly.
+- After the RHI fix, the visible converter rendered the full Plotterfun
+  Extended interface instead of a blank black panel. A redirected stderr run
+  contained none of the previous `QQuickWidget`/`QRhi` errors.
+- The full converter opened the Extended tool, loaded the current artwork, and
+  remained running. Export capture now reports an empty-page warning instead of
+  failing silently.
 - Vendor tests confirm the page bundle, worker chunks, WASM asset, MIT license,
   loopback server, current-artwork route, missing-WebEngine fallback, and
   pinned upstream commit.
 - Generator discovery and layout tests include the new tool.
-- Complete converter discovery passes `697` tests in `234.384 s` with the one
+- Complete converter discovery passes `699` tests in `177.008 s` with the one
   expected OpenGL-context skip.
 
 ## Struggles and rejected approaches
@@ -106,9 +120,10 @@ Porting only the Flow Field worker into Python was rejected because the owner
 asked to use Plotterfun Extended itself; vendoring the complete page also keeps
 its color, depth, face-boundary, and 40-algorithm workflows available.
 
-The user-supplied Windows crash dialog was reproduced only by an ad-hoc test
-that closed QWebEngine objects during interpreter teardown. The actual full
-converter path was exercised repeatedly and did not reproduce it.
+An ad-hoc teardown probe also exposed a shutdown access violation, but the
+blank-page/no-op export failure was traced separately to the QRhi mismatch
+above. The actual full-converter path was exercised after the fix and did not
+reproduce either failure.
 
 ## Risks and follow-up
 
@@ -124,6 +139,7 @@ the converter's shared structure-tensor ink-plane renderer.
 ## Files
 
 - `software/generator_tabs/_plotterfun_web.py`: shared local web host.
+- `software/qt_svg_to_gcode.pyw`: compatible Qt Quick/OpenGL startup.
 - `software/generator_tabs/plotterfun_tab.py`: existing Plotterfun moved onto
   the shared host.
 - `software/generator_tabs/plotterfun_extended_tab.py`: new tool entry point.

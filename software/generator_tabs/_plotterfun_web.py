@@ -254,8 +254,10 @@ class PlotterfunWebTab(QWidget):
         if self.view is None:
             return
         self.view.page().runJavaScript(
-            "new XMLSerializer().serializeToString("
-            "document.querySelector('svg'))",
+            "(() => {"
+            "const svg = document.querySelector('svg');"
+            "return svg ? new XMLSerializer().serializeToString(svg) : '';"
+            "})()",
             self._svg_captured,
         )
 

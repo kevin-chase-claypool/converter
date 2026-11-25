@@ -70,6 +70,12 @@ class ToolShellTests(unittest.TestCase):
         self.assertTrue(window.tool_actions["Convert"].isChecked())
         self.assertIs(window.stack.widget(0), window.dashboard)
 
+    def test_qt_quick_uses_the_converter_opengl_backend(self):
+        self.assertEqual(os.environ.get("QSG_RHI_BACKEND"), "opengl")
+        self.assertTrue(
+            callable(self.module.configure_qt_quick_for_opengl)
+        )
+
     def test_artwork_reimport_restores_saved_placement(self):
         with tempfile.TemporaryDirectory(prefix="theta-layout-") as folder:
             artwork = Path(folder) / "art.png"

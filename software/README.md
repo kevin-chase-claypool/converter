@@ -1009,7 +1009,9 @@ Current tools:
   Convert. The static build is served from a loopback-only HTTP server because
   Chromium blocks its module workers under `file://`. It adds about 4.9 MB to
   the repository. Depth uses a local luminance proxy; optional face landmarks
-  may download their model on first use. Requires PySide6-Addons.
+  may download their model on first use. Use the toolbar **Export SVG to plot**
+  to import the result; the page's blue **Download SVG** only downloads a
+  standalone file. Requires PySide6-Addons.
 - **Layers** - splits the imported SVG by stroke/fill colour into per-layer
   SVGs; pick a layer to preview and plot one pen at a time. The source SVG's
   own dimensions are preserved.

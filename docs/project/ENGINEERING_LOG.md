@@ -23,10 +23,19 @@
 - An offscreen QtWebEngine load exposed the complete 40-algorithm React UI.
   A visible UI run selected the tool, loaded the Golden Sunset artwork through
   **Use current artwork**, and remained running.
-- The observed Windows access-violation dialog was reproduced only by a
-  throwaway probe destroying QWebEngine objects during interpreter shutdown;
-  the full converter harness and interactive application exited cleanly.
-- Complete converter discovery passes `697` tests in `234.384 s` with one
+- The first visible embedded run was blank and made export appear unresponsive.
+  `qt_debug.log` reported that the top-level OpenGL window was incompatible
+  with `QQuickWidget` composition and that no QRhi could be obtained.
+- The app now sets `QSG_RHI_BACKEND=opengl` before Qt initialization, enables
+  shared OpenGL contexts, and explicitly selects OpenGL for Qt Quick. The
+  visible Extended UI then rendered correctly and the redirected Qt stderr was
+  clean of QRhi errors.
+- Export serialization now checks for an SVG before serializing and shows a
+  warning when the page has not produced output.
+- An ad-hoc teardown probe also exposed a shutdown access violation; the
+  actual full-converter path was exercised after the RHI fix and remained
+  stable.
+- Complete converter discovery passes `699` tests in `177.008 s` with one
   expected OpenGL-context skip.
 - Plotterfun Extended uses independent per-channel CMYK jobs. It remains a
   second workflow for direct comparison and algorithm exploration; it does not

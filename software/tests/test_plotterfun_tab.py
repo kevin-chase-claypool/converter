@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 from urllib.request import urlopen
 
 
@@ -15,7 +16,7 @@ from generator_tabs import _plotterfun_web, plotterfun_extended_tab, plotterfun_
 
 
 try:
-    from PySide6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication, QMessageBox
 
     HAVE_QT = True
 except Exception:  # pragma: no cover
@@ -122,6 +123,18 @@ class PlotterfunFallbackTests(unittest.TestCase):
         self.assertEqual(len(host.adopted), 1)
         self.assertTrue(Path(host.adopted[0]).exists())
         self.assertIn("loaded the current artwork", host.statuses[-1])
+
+    def test_empty_export_reports_instead_of_silently_failing(self):
+        original = _plotterfun_web.HAVE_WEBENGINE
+        _plotterfun_web.HAVE_WEBENGINE = False
+        try:
+            tab = plotterfun_extended_tab.create_tab(FakeHost())
+            self.addCleanup(tab.deleteLater)
+            with mock.patch.object(QMessageBox, "warning") as warning:
+                tab._svg_captured("")
+        finally:
+            _plotterfun_web.HAVE_WEBENGINE = original
+        warning.assert_called_once()
 
 
 class PlotterfunLocalServerTests(unittest.TestCase):

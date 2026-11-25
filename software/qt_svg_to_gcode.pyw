@@ -8,7 +8,18 @@ import threading
 import time
 from array import array
 
-from PySide6.QtCore import QObject, QPointF, QThread, QTimer, Qt, QRectF, Signal
+os.environ.setdefault("QSG_RHI_BACKEND", "opengl")
+
+from PySide6.QtCore import (
+    QCoreApplication,
+    QObject,
+    QPointF,
+    QThread,
+    QTimer,
+    Qt,
+    QRectF,
+    Signal,
+)
 from PySide6.QtGui import (
     QAction,
     QActionGroup,
@@ -20,6 +31,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtOpenGL import QOpenGLBuffer, QOpenGLShader, QOpenGLShaderProgram
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
+from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
     QApplication,
@@ -65,6 +77,16 @@ print(
 # Playback wall-clock multiplier: 1.0 = real time, so the toolhead animates at
 # the configured print speed (mm/s). Bump up to fast-forward long jobs.
 PLAYBACK_RATE = 1.0
+
+
+def configure_qt_quick_for_opengl():
+    """Make embedded Qt Quick/WebEngine share the app's OpenGL context."""
+    QCoreApplication.setAttribute(
+        Qt.ApplicationAttribute.AA_ShareOpenGLContexts
+    )
+    QQuickWindow.setGraphicsApi(
+        QSGRendererInterface.GraphicsApi.OpenGL
+    )
 
 
 def fmt(value):
@@ -5067,6 +5089,7 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
+    configure_qt_quick_for_opengl()
     gl_format = QSurfaceFormat()
     gl_format.setRenderableType(QSurfaceFormat.OpenGL)
     gl_format.setVersion(2, 1)
