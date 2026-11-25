@@ -1,5 +1,41 @@
 # Engineering Log
 
+<a id="elog-20261125-plotterfun-extended-tab"></a>
+### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Embed Plotterfun Extended
+
+- The owner requested direct use of Plotterfun Extended after comparing its
+  40-algorithm and CMYK workflows with the converter-native result.
+- The production build from `msurguy/plotterfun-extended` commit
+  `00bf56dd872db8797486e021c26345929463e985` is now vendored locally and
+  exposed as a **Plotterfun Extended** tool at `Ctrl+7`.
+- The existing Plotterfun tab and the extended tab share one QtWebEngine host.
+  The extended build is served from an ephemeral loopback-only HTTP server
+  because its ES-module workers cannot load from `file://`.
+- **Use current artwork** exposes only the converter's selected image through
+  a same-origin endpoint and injects it into the page's hidden file input. The
+  page's current SVG can then be captured back into Convert with **Export SVG
+  to plot**.
+- The bundle adds about `32.3 MB`; its pinned MIT license and provenance are in
+  `plotterfun_extended_NOTICE.md`. The optional Transformers depth runtime was
+  removed and replaced by a local luminance-depth proxy, reducing the bundle to
+  about `4.9 MB` and avoiding a false-positive Mistral key in generated
+  runtime text. `npm audit --omit=dev` reports zero production vulnerabilities.
+- An offscreen QtWebEngine load exposed the complete 40-algorithm React UI.
+  A visible UI run selected the tool, loaded the Golden Sunset artwork through
+  **Use current artwork**, and remained running.
+- The observed Windows access-violation dialog was reproduced only by a
+  throwaway probe destroying QWebEngine objects during interpreter shutdown;
+  the full converter harness and interactive application exited cleanly.
+- Complete converter discovery passes `697` tests in `238.124 s` with one
+  expected OpenGL-context skip.
+- Plotterfun Extended uses independent per-channel CMYK jobs. It remains a
+  second workflow for direct comparison and algorithm exploration; it does not
+  replace the shared tensor/ink-plane renderer.
+- Evidence: `WSW-20261125-006`;
+  `docs/changes/windows-software/2026/2026-11-25-plotterfun-extended-tab.md`.
+- Category: windows-software, plotterfun-extended, webengine, cmyk,
+  flow-field, depth, face-boundary, third-party.
+
 <a id="elog-20261125-coherent-flow-scene-depth-layers"></a>
 ### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Gate coherent dark layers by scene depth
 

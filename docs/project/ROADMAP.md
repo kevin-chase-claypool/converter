@@ -891,6 +891,14 @@
   3D Wireframe (`WSW-20261006-004`) - with the shell from
   `WSW-20261006-001`. Owner review on the running converter is the next gate;
   the next batch of Table A tabs waits for that review.
+  Status 2026-11-25 Plotterfun Extended: the MIT-licensed
+  `msurguy/plotterfun-extended` production build is available as a local
+  embedded tool (`WSW-20261125-006`). It provides 40 algorithms, CMYK/RGB/
+  custom channel workflows, optional luminance-depth and face masks,
+  current-artwork loading, and SVG capture back into Convert. The 4.9 MB bundle
+  uses a loopback-only server and QtWebEngine; depth is local, while optional
+  face landmarks may require a first-use network download. This extends the
+  in-port strategy but does not complete the full generator shortlist.
 
 - [ ] Close the remaining upstream option gaps recorded in
   [`docs/research/2026-10-06-generator-tab-fidelity-audit.md`](../research/2026-10-06-generator-tab-fidelity-audit.md).

@@ -45,6 +45,7 @@ EXPECTED_TOOLS = [
     "Pixel Art",
     "Wobble",
     "Plotterfun",
+    "Plotterfun Extended",
     "Voronoi",
     "Path Prep",
     "Layers",
@@ -206,6 +207,7 @@ class ToolShellTests(unittest.TestCase):
                 "SquiggleCam",
                 "Pixel Art",
                 "Plotterfun",
+                "Plotterfun Extended",
                 "Layers",
                 "Stipple / TSP",
                 "Vector Trace",
@@ -353,8 +355,8 @@ class ToolShellTests(unittest.TestCase):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
         for title, page, _group, _desc in window.generator_tools:
-            if title in ("Plotterfun", "Layers"):
-                # Plotterfun's controls live inside the embedded page; Layers
+            if title in ("Plotterfun", "Plotterfun Extended", "Layers"):
+                # Plotterfun controls live inside the embedded pages; Layers
                 # preserves the source SVG's own dimensions.
                 continue
             self.assertTrue(hasattr(page, "scale_pct"), title)
@@ -389,8 +391,8 @@ class ToolShellTests(unittest.TestCase):
             [(10.0, 10.0), (70.0, 10.0), (70.0, 70.0), (10.0, 70.0), (10.0, 10.0)]
         ]
         for title, page, _group, _desc in window.generator_tools:
-            if title == "Plotterfun":
-                # Embedded web app; verified by its own vendor/fallback tests.
+            if title in ("Plotterfun", "Plotterfun Extended"):
+                # Embedded web apps; verified by their vendor/fallback tests.
                 continue
             if title == "Reaction-Diffusion":
                 page.grid.setValue(48)

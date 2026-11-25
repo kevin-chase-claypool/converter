@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-25 | `WSW-20261125-006` | windows-software | implemented | [Embed Plotterfun Extended as a local converter tool](windows-software/2026/2026-11-25-plotterfun-extended-tab.md) |
 | 2026-11-25 | `WSW-20261125-005` | windows-software | implemented | [Gate coherent dark layers by scene depth](windows-software/2026/2026-11-25-coherent-flow-scene-depth-layers.md) |
 | 2026-11-25 | `WSW-20261125-004` | windows-software | implemented | [Add a coherent shared-geometry CMYK color-flow renderer](windows-software/2026/2026-11-25-coherent-color-flow.md) |
 | 2026-11-25 | `WSW-20261125-003` | windows-software | implemented | [Compress Edge-flow pitch continuously in darker tone](windows-software/2026/2026-11-25-edge-flow-density-pitch.md) |

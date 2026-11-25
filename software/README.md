@@ -24,10 +24,10 @@ python qt_svg_to_gcode.pyw
 or double-click `..\converter.bat` from the repo root. Runtime errors are written
 to `qt_debug.log` in this folder.
 
-Requires `PySide6` (`pip install PySide6`). The kaleidoscope's **Maps** tab
-also needs Qt WebEngine, which ships in the full `PySide6` wheel
-(`PySide6-Addons`); without it the tab reports the missing module instead of
-failing the app.
+Requires `PySide6` (`pip install PySide6`). The **Plotterfun**, **Plotterfun
+Extended**, and kaleidoscope **Maps** tabs need Qt WebEngine, which ships in
+the full `PySide6` wheel (`PySide6-Addons`); without it those tabs report the
+missing module instead of failing the app.
 
 The first two lines of `qt_debug.log` (and of the window's log pane) name the
 converter core and the active A-axis guard, e.g.
@@ -999,6 +999,17 @@ Current tools:
   algorithms) vendored under `software/plotterfun_vendor/` and embedded with
   QtWebEngine. Load the image and choose the algorithm inside the page, then
   press **Export SVG to plot**; requires PySide6-Addons.
+- **Plotterfun Extended** - the pinned
+  `msurguy/plotterfun-extended` production build (40 algorithms), embedded as a
+  local tab. It adds CMYK/RGB/custom channel workflows, luminance-depth
+  algorithms, face-boundary masking, field copies, and route optimization.
+  **Use current artwork** sends the converter's selected image into the page
+  without a second file picker. Choose the algorithm and output mode there,
+  then press **Export SVG to plot** to adopt the generated SVG back into
+  Convert. The static build is served from a loopback-only HTTP server because
+  Chromium blocks its module workers under `file://`. It adds about 4.9 MB to
+  the repository. Depth uses a local luminance proxy; optional face landmarks
+  may download their model on first use. Requires PySide6-Addons.
 - **Layers** - splits the imported SVG by stroke/fill colour into per-layer
   SVGs; pick a layer to preview and plot one pen at a time. The source SVG's
   own dimensions are preserved.
@@ -1128,6 +1139,7 @@ work with no input (optional mesh/image sources are noted below).
 | Pixel Art | Mode big, pitch 0.6 mm, max grid 96, alpha 128, ignore white | Paths auto-fit the page; big mode needs 5x the pitch per pixel, line mode is denser. |
 | Wobble | Frequency 3 mm, amplitude 0.5 mm, jitter 20 %, seed 7, endpoint wobble on | Preview a tool first; Wobble processes those contours. |
 | Plotterfun | Load an image inside the page, pick an algorithm, keep its defaults, then Export SVG to plot | Requires QtWebEngine (PySide6-Addons). |
+| Plotterfun Extended | Select a local image, choose Flow Field/Contours/another algorithm, set CMYK output if appropriate, then Export SVG to plot. **Use current artwork** avoids reopening the converter's image. | Includes 40 algorithms and optional luminance-depth/face masking. Depth is local; optional face landmarks may require a first-use download. |
 | Voronoi | 120 points, seed 7, relax 1, cell boundaries, margin 6 mm | Raise relax for even cells; site dots show the seeds. |
 | Path Prep | Merge 5 deg / 0.05 mm, duplicate 0.05 mm, close gaps 0.2 mm, sort on | Preview a tool first; cleans those contours. |
 | Layers | Pick a colour layer (or All colours) from an imported SVG | One layer per pen; the source dimensions are kept. |
