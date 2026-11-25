@@ -1,5 +1,50 @@
 # Engineering Log
 
+<a id="elog-20261124-cmyk-face-gradient-diagnosis"></a>
+### 🟨 2026-11-24 - WINDOWS SOFTWARE/DIAGNOSED - CMYK face gradient differs through ink density and screen structure
+
+- Compared the Golden Sunset source, the software multiply render of its four
+  generated layers, and the public Reddit reference. The subjects and paper
+  sizes differ, so exact pixel or colour matching is not a valid target; the
+  screening behaviour is still directly comparable.
+- In the current face region, the four rendered ink masks cover cyan `14.0 %`,
+  magenta `50.6 %`, yellow `65.0 %`, and black `25.3 %`; magenta plus yellow
+  overlap covers `34.3 %`. Only `12.3 %` of that region remains paper white.
+- A cropped Reddit face region retains `24.8 %` near-white paper-like pixels
+  and `14.2 %` dark pixels, versus `13.9 %` and `25.8 %` in the current
+  software render. The current result is therefore both darker and more
+  heavily overprinted.
+- The current recipe uses a `0.90 mm` pen at `1.20 mm` effective pitch, or
+  `1.33` pen widths. The reference was plotted on A4 with Stabilo fineliners,
+  typically much narrower than the installed pen; the observed open hatching
+  is closer to two or more pen widths between centre lines. The absolute
+  `1.20 mm` recommended-pitch floor therefore becomes dense on the large pen.
+- Auto selected saturation `90 %`, contrast `220 %`, brightness `80 %`, gamma
+  `0.60`, GCR `90 %`, and `100 %` sharpening at `1.5 mm`. Its search scores a
+  simplified per-pixel ink-area estimate using
+  `min(1, pen/pitch) / sqrt(layers)`, not the visible interaction of the four
+  independently seeded streamline networks. A low numerical colour error can
+  still produce saturated crossing strokes, crushed facial midtones, and
+  little white paper in the preview.
+- The reference keeps broad paper-white facial planes and uses sparse
+  form-following coloured strokes to carry shading. The current output fills
+  most of those planes with separate cyan, magenta, yellow, and black networks;
+  this is primarily a coverage/path-layout mismatch, not a missing RGB-to-CMYK
+  conversion.
+- No converter source or physical machine state changed during this diagnosis.
+  The next decision is a fixed-image software sweep of effective pitch,
+  sharpening, and exposure before changing the recommended preset or Auto
+  scoring. Periodic streamlines and shared-network alternatives remain
+  unverified comparisons.
+- Evidence: `tmp/cmyk_gradient_comparison.png`,
+  `tmp/converter_numeric_cmyk_preview.png`, `tmp/reddit_cmyk_reference.jpg`,
+  `tmp/render_numeric_cmyk_preview.py`; `software/README.md`;
+  `docs/changes/windows-software/2026/2026-11-23-cmyk-edge-flow-continuous-tone.md`;
+  `docs/changes/windows-software/2026/2026-11-23-cmyk-edge-flow-strength-gated-shared-guide.md`;
+  `docs/changes/windows-software/2026/2026-11-24-one-click-cmyk-photo-defaults.md`.
+- Category: windows-software, cmyk, edge-flow, photo-fidelity, ink-density,
+  auto-color, diagnostic, physical-validation-pending.
+
 <a id="elog-20261124-one-click-cmyk-photo-defaults"></a>
 ### 🟨 2026-11-24 - WINDOWS SOFTWARE/IMPLEMENTED - Make Edge-flow CMYK photo defaults one-click
 
