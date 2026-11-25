@@ -3,7 +3,7 @@
 **Status:** Implemented as the CMYK **Edge-flow streamlines** screen. Current
 behavior and the software-selected recipe are in
 [`../../software/README.md`](../../software/README.md); the current change
-record is `WSW-20261125-002`.
+record is `WSW-20261125-003`.
 
 ## Intent
 Add an optional CMYK rendering mode to the converter that replaces fixed-angle hatch patterns with smooth vector-field-guided streamlines following image contours and forms. Preserve the current CMYK method and all existing output behavior by default.
@@ -19,7 +19,12 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
    the shared image-form direction; only near-flat or incoherent texture falls
    back. Avoid abrupt transitions and let the form continue across temporary
    single-ink tone gaps.
-5. Trace evenly spaced streamlines using stable numerical integration, seed distribution, minimum-distance/collision checks, bounds clipping, and curvature limits. Modulate the visible fraction of each path with local channel tone instead of switching whole-face density bands.
+5. Trace streamlines with stable numerical integration, seed distribution,
+   minimum-distance/collision checks, bounds clipping, and curvature limits.
+   Start from the operator's base pitch, then continuously shorten the
+   neighbour-to-neighbour pitch as local ink tone darkens. Clamp the result to
+   a pen-safe minimum. Modulate the visible fraction of each path with local
+   channel tone instead of switching whole-face density bands.
 6. Build one strength-gated multichannel direction field, then trace four
    independently seeded and fallback-angled streamline networks, one for each
    CMYK plate. Apply each ink's own tone mask, dark-tone layers, and optional
@@ -41,6 +46,9 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
   tone gradients; moderate structure keeps the shared image direction
 - Fallback direction: each ink's own fixed screen angle only where structure is
   weak or ambiguous
+- Shade compression: `60 %` for the recommended photo recipe; at
+  full local tone the target spacing is `40 %` of Dot pitch, bounded at
+  `0.9` pen widths
 - Maximum density layers: 3 for the recommended photo recipe
 - Tone method: deterministic path-local ink segments on four independent
   networks, all traced through the same image-form field. The shared scene-depth
@@ -64,9 +72,9 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
   reset to 100 %. The estimate remains a coverage-model RGB error, not a
   paper-validated colour claim.
 - Fine-detail preset: one effective pen width, smoothing near two pen widths
-  clamped to `1.0-1.5 mm`, five low-offset layers, `2 mm` path-local tone
-  intervals, marks capped near `12 mm`, and Path tolerance no larger
-  than `0.10 mm`
+  clamped to `1.0-1.5 mm`, five low-offset layers, `65 %` continuous pitch
+  compression, `2 mm` path-local tone intervals, marks capped near `12 mm`,
+  and Path tolerance no larger than `0.10 mm`
 - Fine detail reports a checked/`✓` state only while every preset control
   still matches; manual edits clear it
 - Fine detail is reversible: activation saves the prior edge-flow layout, and

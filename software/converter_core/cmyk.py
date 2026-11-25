@@ -713,6 +713,7 @@ def _auto_screen_coverage(
     pen_width_mm,
     effective_pitch_mm,
     flow_layers=3,
+    flow_pitch_compression=0.0,
 ):
     """Approximate the area each ink covers after Auto's screen pass."""
     import numpy as np
@@ -733,14 +734,20 @@ def _auto_screen_coverage(
             )
         return coverage
     if style_key in ("edge_flow", "edge_flow_shared"):
-        area_factor = edge_flow_coverage_factor(
+        base_factor = edge_flow_coverage_factor(
             pen_mm,
             pitch_mm,
             flow_layers,
         )
+        compression = min(
+            0.9,
+            max(0.0, float(flow_pitch_compression)),
+        )
         return {
             channel: np.clip(
-                tones[channel] * area_factor,
+                tones[channel]
+                * base_factor
+                * (1.0 + compression * tones[channel]),
                 0.0,
                 1.0,
             )
@@ -801,6 +808,7 @@ def auto_photo_settings(
     dot_pitch_mm=None,
     ink_colors=None,
     flow_layers=3,
+    flow_pitch_compression=0.0,
 ):
     """Choose image controls from detail, tone, and process-ink accuracy.
 
@@ -879,6 +887,7 @@ def auto_photo_settings(
             pen_width_mm,
             effective_pitch_mm,
             flow_layers,
+            flow_pitch_compression,
         )
         predicted = predict_cmyk_rgb(coverage, ink_colors=ink_colors)
         return _auto_prediction_metrics(
@@ -1826,6 +1835,7 @@ def screen_cmyk_edge_flow(
     tone_segment_mm=None,
     max_path_mm=None,
     bridge_mm=0.0,
+    flow_pitch_compression=0.0,
     fallback_angle_deg=0.0,
     flow_guide=None,
     cancel_check=None,
@@ -1859,6 +1869,7 @@ def screen_cmyk_edge_flow(
         tone_segment_mm=tone_segment_mm,
         max_path_mm=max_path_mm,
         bridge_mm=bridge_mm,
+        pitch_compression=flow_pitch_compression,
         cancel_check=cancel_check,
     )
     return {
@@ -1899,6 +1910,7 @@ def screen_channel(
     flow_tone_segment_mm=None,
     flow_max_path_mm=None,
     flow_bridge_mm=0.0,
+    flow_pitch_compression=0.0,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
@@ -1943,6 +1955,8 @@ def screen_channel(
     mark instead of allowing it to run across the whole face.
     ``flow_bridge_mm`` draws short tone-off gaps along the same streamline so
     dense passages do not spend a full M3/M5 cycle on every local phase break.
+    ``flow_pitch_compression`` moves neighbouring streamlines closer as local
+    ink tone darkens. Zero keeps the classic fixed spacing.
     The legacy ``waves`` and ``waves_zero`` styles are promoted to the
     equidistant ``waves_even`` geometry unless ``allow_variable_wave_spacing``
     is explicitly true. Diagnostic comparison tools use that opt-in; normal
@@ -2112,6 +2126,7 @@ def screen_channel(
             tone_segment_mm=flow_tone_segment_mm,
             max_path_mm=flow_max_path_mm,
             bridge_mm=flow_bridge_mm,
+            pitch_compression=flow_pitch_compression,
             cancel_check=cancel_check,
         )
     else:

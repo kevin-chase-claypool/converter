@@ -622,6 +622,67 @@ class CmykEdgeFlowTests(unittest.TestCase):
             0.75,
         )
 
+    def test_edge_flow_pitch_compresses_continuously_in_dark_tone(self):
+        from converter_core import structure_tensor
+
+        base_pitch = 2.0
+        pitches = [
+            structure_tensor._edge_flow_local_pitch(
+                base_pitch,
+                tone,
+                pen_diameter_mm=0.5,
+                compression=0.8,
+            )
+            for tone in (0.0, 0.25, 0.5, 0.75, 1.0)
+        ]
+        self.assertEqual(pitches[0], base_pitch)
+        self.assertTrue(
+            all(first > second for first, second in zip(pitches, pitches[1:]))
+        )
+        self.assertGreaterEqual(pitches[-1], 0.45)
+
+        size = 160
+        tone = self.np.full((size, size), 0.9, dtype="float32")
+        guide = self.np.full((size, size), 0.5, dtype="float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+        common = {
+            "style": "edge_flow",
+            "spacing_mm": 5.0,
+            "seed": 7,
+            "max_marks": 2000,
+            "pen_diameter_mm": 0.5,
+            "path_tolerance_mm": 0.1,
+            "flow_smoothing_mm": 2.0,
+            "flow_layers": 1,
+            "flow_guide": guide,
+        }
+        fixed = converter.screen_channel(tone, geometry, **common)
+        compressed = converter.screen_channel(
+            tone,
+            geometry,
+            flow_pitch_compression=0.7,
+            **common,
+        )
+
+        def ink_length(marks):
+            return sum(
+                math.hypot(
+                    second[0] - first[0],
+                    second[1] - first[1],
+                )
+                for line in marks
+                for first, second in zip(line, line[1:])
+            )
+
+        self.assertGreater(ink_length(compressed), ink_length(fixed) * 1.25)
+
     def test_edge_flow_adds_layers_to_darker_ink(self):
         geometry = {
             "off_x": 0.0,

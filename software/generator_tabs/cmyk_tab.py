@@ -53,6 +53,7 @@ REFERENCE_PHOTO_EFFECTIVE_PITCH_MM = 1.2
 REFERENCE_PHOTO_PEN_PITCH_MULTIPLIER = 2.0
 REFERENCE_PHOTO_FLOW_SMOOTHING_MM = 2.5
 REFERENCE_PHOTO_FLOW_LAYERS = 3
+REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT = 60.0
 REFERENCE_PHOTO_CHAIN_GAP_MM = 1.0
 
 
@@ -468,12 +469,31 @@ class CmykTab(GeneratorTab):
         screen.addRow("Flow smoothing", self.flow_smoothing)
         self.flow_layers = int_spin(3, 1, 6)
         self.flow_layers.setToolTip(
-            "Edge-flow only: a base streamline layer plus extra offset layers "
-            "where that ink is dark. The default reddit-style screen traces a "
-            "separate network for every pen; the experimental shared style "
-            "uses common paths. More layers increase shadow density and time."
+            "Edge-flow only: extra complete streamline networks that activate "
+            "in progressively darker tone bands. Use this for stepped density; "
+            "Shade compression below provides the continuous tightening "
+            "between individual lines. More layers increase build time."
         )
         screen.addRow("Flow layers", self.flow_layers)
+        self.flow_pitch_compression = double_spin(
+            REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT,
+            0.0,
+            90.0,
+            5.0,
+            0,
+            " %",
+        )
+        self.flow_pitch_compression.setToolTip(
+            "Edge-flow only: continuously move neighbouring streamlines "
+            "closer as the ink darkens. 0 % keeps one fixed pitch everywhere; "
+            "90 % contracts the darkest areas to 10 % of Dot pitch, bounded "
+            "by a pen-safe minimum. This produces the reference's varying line "
+            "spacing in gradients instead of adding only whole extra layers."
+        )
+        screen.addRow(
+            "Shade compression",
+            self.flow_pitch_compression,
+        )
         continuity_row = QWidget()
         continuity_layout = QHBoxLayout(continuity_row)
         continuity_layout.setContentsMargins(0, 0, 0, 0)
@@ -838,6 +858,7 @@ class CmykTab(GeneratorTab):
             self.pen_width.valueChanged,
             self.flow_smoothing.valueChanged,
             self.flow_layers.valueChanged,
+            self.flow_pitch_compression.valueChanged,
             self.path_tolerance.valueChanged,
             self.flow_keylines.toggled,
             self.sharpen.toggled,
@@ -945,6 +966,9 @@ class CmykTab(GeneratorTab):
             spin.setValue(100)
         self.flow_smoothing.setValue(REFERENCE_PHOTO_FLOW_SMOOTHING_MM)
         self.flow_layers.setValue(REFERENCE_PHOTO_FLOW_LAYERS)
+        self.flow_pitch_compression.setValue(
+            REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT
+        )
         self.flow_keylines.setChecked(False)
         self.chain_marks.setChecked(True)
         self.chain_gap.setValue(REFERENCE_PHOTO_CHAIN_GAP_MM)
@@ -988,6 +1012,7 @@ class CmykTab(GeneratorTab):
             "Recommended photo defaults ready: Edge-flow, "
             f"{self.flow_layers.value()} layers, "
             f"{self.flow_smoothing.value():.1f} mm smoothing, "
+            f"{self.flow_pitch_compression.value():.0f} % pitch compression, "
             f"{effective_pitch:.2f} mm on-paper pitch. "
             "Press Preview, then Save 4 G-code files."
         )
@@ -1016,6 +1041,9 @@ class CmykTab(GeneratorTab):
                 dot_pitch_mm=self.pitch.value(),
                 ink_colors=self._active_ink_colors(),
                 flow_layers=self.flow_layers.value(),
+                flow_pitch_compression=(
+                    self.flow_pitch_compression.value() / 100.0
+                ),
             )
         except Exception as exc:  # noqa: BLE001 - user-facing setup error
             self.report_error(f"Auto settings failed: {exc}")
@@ -1138,6 +1166,7 @@ class CmykTab(GeneratorTab):
                 max(0.05, min(0.10, pen * 0.15)) / 0.05
             ) * 0.05,
             "layers": 5,
+            "pitch_compression": 65.0,
         }
 
     def _detail_preset_active(self):
@@ -1156,6 +1185,11 @@ class CmykTab(GeneratorTab):
             )
             <= 0.051
             and self.flow_layers.value() == target["layers"]
+            and abs(
+                self.flow_pitch_compression.value()
+                - target["pitch_compression"]
+            )
+            <= 0.1
             and self.path_tolerance.value()
             <= target["tolerance"] + 1e-6
             and self.sharpen.isChecked()
@@ -1171,6 +1205,7 @@ class CmykTab(GeneratorTab):
             "pitch": self.pitch.value(),
             "smoothing": self.flow_smoothing.value(),
             "layers": self.flow_layers.value(),
+            "pitch_compression": self.flow_pitch_compression.value(),
             "tolerance": self.path_tolerance.value(),
             "keylines": self.flow_keylines.isChecked(),
             "sharpen": self.sharpen.isChecked(),
@@ -1192,6 +1227,14 @@ class CmykTab(GeneratorTab):
             self.pitch.setValue(float(state["pitch"]))
             self.flow_smoothing.setValue(float(state["smoothing"]))
             self.flow_layers.setValue(int(state["layers"]))
+            self.flow_pitch_compression.setValue(
+                float(
+                    state.get(
+                        "pitch_compression",
+                        REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT,
+                    )
+                )
+            )
             self.path_tolerance.setValue(float(state["tolerance"]))
             self.flow_keylines.setChecked(bool(state["keylines"]))
             self.sharpen.setChecked(bool(state.get("sharpen", False)))
@@ -1221,6 +1264,9 @@ class CmykTab(GeneratorTab):
                 "pitch": self.pitch.value(),
                 "smoothing": 2.5,
                 "layers": 3,
+                "pitch_compression": (
+                    REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT
+                ),
                 "tolerance": 0.15,
                 "keylines": False,
                 "sharpen": False,
@@ -1257,7 +1303,8 @@ class CmykTab(GeneratorTab):
         base = (
             "Edge-flow only: set a pen-aware portrait screen at one pen width, "
             "smoothing near two pen widths, five low-offset layers, short "
-            "color marks, Black keylines with edge separation, a 60 % / "
+            "color marks, 65 % shade-pitch compression, Black keylines with "
+            "edge separation, a 60 % / "
             "1.5 mm unsharp mask, and Path tolerance no larger than 0.10 mm."
         )
         self.detail_button.setToolTip(
@@ -1288,6 +1335,9 @@ class CmykTab(GeneratorTab):
         self.pitch.setValue(target["pitch"])
         self.flow_smoothing.setValue(target["smoothing"])
         self.flow_layers.setValue(target["layers"])
+        self.flow_pitch_compression.setValue(
+            target["pitch_compression"]
+        )
         self.flow_keylines.setChecked(True)
         self.sharpen.setChecked(True)
         self.sharpen_amount.setValue(60.0)
@@ -1302,7 +1352,9 @@ class CmykTab(GeneratorTab):
             f"{effective_pitch:.2f} mm on paper "
             f"({effective_pitch / pen:.2f} pen widths); Flow smoothing "
             f"{self.flow_smoothing.value():.1f} mm; "
-            f"Flow layers {self.flow_layers.value()}; Black keylines on; "
+            f"Flow layers {self.flow_layers.value()}; pitch compression "
+            f"{self.flow_pitch_compression.value():.0f} %; "
+            "Black keylines on; "
             f"Sharpen 60 % / 1.5 mm; "
             f"Path tolerance "
             f"{self.path_tolerance.value():.2f} mm. Preview to compare."
@@ -1399,6 +1451,9 @@ class CmykTab(GeneratorTab):
                 "contour_order": self.contour_order.currentData(),
                 "flow_smoothing_mm": self.flow_smoothing.value(),
                 "flow_layers": self.flow_layers.value(),
+                "flow_pitch_compression_pct": (
+                    self.flow_pitch_compression.value()
+                ),
                 "preserve_black_keylines": self.flow_keylines.isChecked(),
                 "chain_marks": self.chain_marks.isChecked(),
                 "chain_gap_mm": self.chain_gap.value(),
@@ -1500,6 +1555,14 @@ class CmykTab(GeneratorTab):
                 float(screen.get("flow_smoothing_mm", 2.5))
             )
             self.flow_layers.setValue(int(screen.get("flow_layers", 3)))
+            self.flow_pitch_compression.setValue(
+                float(
+                    screen.get(
+                        "flow_pitch_compression_pct",
+                        REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT,
+                    )
+                )
+            )
             self.flow_keylines.setChecked(
                 bool(screen.get("preserve_black_keylines", False))
             )
@@ -1624,6 +1687,7 @@ class CmykTab(GeneratorTab):
             self.contour_order.currentData(),
             self.flow_smoothing.value(),
             self.flow_layers.value(),
+            self.flow_pitch_compression.value(),
             self.chain_marks.isChecked(),
             self.chain_gap.value(),
             self.dot_size.value(),
@@ -1726,6 +1790,7 @@ class CmykTab(GeneratorTab):
         self.contour_order.setEnabled(wave_selected)
         self.flow_smoothing.setEnabled(flow_selected)
         self.flow_layers.setEnabled(flow_selected)
+        self.flow_pitch_compression.setEnabled(flow_selected)
         self.flow_keylines.setEnabled(flow_selected)
         chain_available = (
             not self.calibration_mode.isChecked()
@@ -1810,7 +1875,8 @@ class CmykTab(GeneratorTab):
         ]
         if self._edge_flow_style_active():
             parts.append(
-                "edge flow %s, %.1f mm smoothing, %d layers"
+                "edge flow %s, %.1f mm smoothing, %d layers, %.0f%% "
+                "pitch compression"
                 % (
                     (
                         "shared"
@@ -1819,6 +1885,7 @@ class CmykTab(GeneratorTab):
                     ),
                     self.flow_smoothing.value(),
                     self.flow_layers.value(),
+                    self.flow_pitch_compression.value(),
                 )
             )
         if self._pen_chain_active():
@@ -1912,6 +1979,9 @@ class CmykTab(GeneratorTab):
                 path_tolerance_mm=self.path_tolerance.value() / factor,
                 flow_smoothing_mm=self.flow_smoothing.value() / factor,
                 flow_layers=self.flow_layers.value(),
+                flow_pitch_compression=(
+                    self.flow_pitch_compression.value() / 100.0
+                ),
                 max_marks=self.max_marks.value(),
                 seed=self.seed.value(),
                 overdraw=self.overdraw.value(),
@@ -1963,6 +2033,11 @@ class CmykTab(GeneratorTab):
                         else None
                     ),
                     flow_layers=self.flow_layers.value(),
+                    flow_pitch_compression=(
+                        self.flow_pitch_compression.value() / 100.0
+                        if edge_flow_active
+                        else 0.0
+                    ),
                     flow_guide=(
                         tones["flow_guide"] if edge_flow_active else None
                     ),
@@ -2077,6 +2152,9 @@ class CmykTab(GeneratorTab):
             levels=self.levels.value(),
             flow_smoothing_mm=self.flow_smoothing.value(),
             flow_layers=self.flow_layers.value(),
+            flow_pitch_compression=(
+                self.flow_pitch_compression.value() / 100.0
+            ),
         )
         stroke = self.pen_width.value()
         files = {}
@@ -2549,6 +2627,11 @@ class CmykTab(GeneratorTab):
                 ),
                 "flow_layers": (
                     self.flow_layers.value()
+                    if style in EDGE_FLOW_STYLES
+                    else None
+                ),
+                "flow_pitch_compression_pct": (
+                    self.flow_pitch_compression.value()
                     if style in EDGE_FLOW_STYLES
                     else None
                 ),

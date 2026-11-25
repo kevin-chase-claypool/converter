@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-25 | `WSW-20261125-003` | windows-software | implemented | [Compress Edge-flow pitch continuously in darker tone](windows-software/2026/2026-11-25-edge-flow-density-pitch.md) |
 | 2026-11-25 | `WSW-20261125-002` | windows-software | implemented | [Guide CMYK streamlines with a multichannel image field](windows-software/2026/2026-11-25-cmyk-multichannel-edge-flow.md) |
 | 2026-11-25 | `WSW-20261125-001` | windows-software | implemented | [Split and streamline the converter test suite](windows-software/2026/2026-11-25-streamline-converter-test-suite.md) |
 | 2026-11-24 | `WSW-20261124-006` | windows-software | implemented | [Restore open highlights in recommended CMYK photos](windows-software/2026/2026-11-24-restore-cmyk-photo-highlight-density.md) |

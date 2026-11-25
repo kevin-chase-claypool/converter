@@ -631,10 +631,13 @@ Current tools:
   truncates the form: the shared scene-depth field lets the traced path
   continue, while that ink's tone still controls which path intervals draw.
   Each network applies its own tone mask, so color changes can follow a contour
-  without C/M/Y/K collapsing onto one coincident four-pen centerline. Extra
-  `Flow layers` add darker-area paths only on the plate that needs them. This
-  is the production workflow prompted by the public Reddit reference; Save
-  writes those four independently screened layers as four G-code files.
+  without C/M/Y/K collapsing onto one coincident four-pen centerline. As a
+  plate darkens, neighbouring streamlines are traced progressively closer
+  together; light areas keep the base Dot pitch, while shadows compress toward
+  a pen-safe minimum. Extra `Flow layers` still add complete darker-tone
+  networks on the plate that needs them. This is the production workflow
+  prompted by the public Reddit reference; Save writes those four
+  independently screened layers as four G-code files.
   **Shared Edge-flow (experimental co-located CMYK)** is a separate selectable
   style. It traces one common coordinate network and gates each ink locally,
   using independent phases and a normalized occupancy budget so similar tones
@@ -665,9 +668,18 @@ Current tools:
   magenta, yellow, and black to four separate G-code files. This is the same
   four-file overprint workflow as the other CMYK screens, not one flattened
   composite program.
-  **Flow layers** (default 3) adds offset streamline families only where that
-  ink is darker; more layers increase shadow detail, point count, and plotting
-  time. Independent Edge-flow grows four separate path families. The shared
+  **Shade compression** (default 60 %) is the continuous tone-to-spacing
+  control. At a local ink tone `t`, the target pitch is
+  `Dot pitch x (1 - compression x t)`, clamped to `0.9` pen widths. A value of
+  `0 %` keeps a fixed grid; `60 %` lets full-tone shadows reach `40 %` of the
+  base pitch; `90 %` is the densest setting and can approach solid coverage.
+  Neighbouring streamlines are seeded along the tensor field at this local
+  distance, so gradients compress gradually rather than switching at a few
+  broad tone thresholds.
+  **Flow layers** (default 3) adds complete offset streamline families in
+  progressively darker tone bands; more layers increase shadow detail, point
+  count, and plotting time beyond the continuous pitch compression.
+  Independent Edge-flow grows four separate path families. The shared
   experimental style instead normalizes each channel's layer occupancy so the
   layers are not multiplied into a black stack. **Flow smoothing** (default
   2.5 mm on paper) controls how far
@@ -681,8 +693,9 @@ Current tools:
   The explicit **Fine detail** action fits a portrait screen to the current
   Pen width and Artwork scale: it sets Dot pitch to one effective pen width,
   Flow smoothing to about two pen widths (clamped to `1.0-1.5 mm`), uses five
-  low-offset layers, shortens marks to about `12 mm`, shortens path-local
-  tone intervals to `2 mm`, and lowers Path tolerance to at most `0.10 mm`.
+  low-offset layers, sets Shade compression to `65 %`, shortens marks to
+  about `12 mm`, shortens path-local tone intervals to `2 mm`, and lowers Path
+  tolerance to at most `0.10 mm`.
   It also enables **Continuous Black keylines (edge separation)**: the Black
   plate keeps the strongest coherent boundaries continuous, while C/M/Y
   reduce coverage by `25 %` beside those same high-confidence edges. A mild
@@ -738,7 +751,8 @@ Current tools:
   Shipped defaults are now the one-click Edge-flow photo baseline: auto
   levels off, saturation 115 %, contrast 150 %, brightness 115 %, ink gamma
   1.10, black (GCR) 75 %, C/M/Y/K weights 100/100/100/100 %, an unsharp mask
-  of 60 % at 1.5 mm, three Flow layers, 2.5 mm Flow smoothing, Continuous
+  of 60 % at 1.5 mm, three Flow layers, 60 % Shade compression, 2.5 mm
+  Flow smoothing, Continuous
   Black keylines off, Pen-down chain on, Path tolerance 0.10 mm, Max marks/ink
   200000, seed 7, artwork scale 280 %, resolution 10000 px, and hatch levels
   8. The recommended action uses a 1.0 mm adjacent chain so short connectors
@@ -1079,8 +1093,8 @@ work with no input (optional mesh/image sources are noted below).
 | Convert | Fit bed (auto), Fill spacing 3 mm, linear or crosshatch, feed 700 / travel 3000 mm/min | Imported artwork; Save G-code once the preview looks right. |
 | Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
-| CMYK photo (recommended) | Open an image, press **Use recommended photo defaults**, inspect **Preview**, then press **Save 4 G-code files**. The action installs per-ink Edge-flow, three Flow layers, 2.5 mm smoothing, a `2.0` pen-width effective pitch with a `1.2 mm` floor, keylines off, chaining on at `1 mm`, `0.10 mm` tolerance, 200000 marks/ink, saturation 115 %, contrast 150 %, brightness 115 %, gamma 1.10, GCR 75 %, weights 100/100/100/100 %, and 60 % sharpening at 1.5 mm. Auto may refine color within exposure-preserving bounds. | One-click start for a normal photo. It runs image colour Auto while preserving page size, artwork scale, pen width, pen offsets, and bed motion. Preview plans the four inks in the background; Save writes four separate overprinted programs. Inspect density, connector ink, registration, and reach before a physical pass. |
-| CMYK Edge-flow tuning | Press **Use recommended photo defaults** first. Adjust the advanced controls only if the inspected output needs a deliberate change; **Fine detail** remains available for pen-aware pitch/smoothing/layers and Black keylines. | This is the Reddit-reference workflow: one blurred multichannel image-form tensor defines the contour and gradient direction, while C/M/Y/K follow separate streamline networks with independent seeds, tone masks, fallback angles, and dark-tone layers. The shared scene-depth field keeps a form continuous across a temporary color gap; the explicitly labeled shared Edge-flow style remains an experimental co-located alternative. |
+| CMYK photo (recommended) | Open an image, press **Use recommended photo defaults**, inspect **Preview**, then press **Save 4 G-code files**. The action installs per-ink Edge-flow, three Flow layers, 60 % continuous Shade compression, 2.5 mm smoothing, a `2.0` pen-width effective pitch with a `1.2 mm` floor, keylines off, chaining on at `1 mm`, `0.10 mm` tolerance, 200000 marks/ink, saturation 115 %, contrast 150 %, brightness 115 %, gamma 1.10, GCR 75 %, weights 100/100/100/100 %, and 60 % sharpening at 1.5 mm. Auto may refine color within exposure-preserving bounds. | One-click start for a normal photo. It runs image colour Auto while preserving page size, artwork scale, pen width, pen offsets, and bed motion. Preview plans the four inks in the background; Save writes four separate overprinted programs. Inspect density, connector ink, registration, and reach before a physical pass. |
+| CMYK Edge-flow tuning | Press **Use recommended photo defaults** first. Adjust **Shade compression** for continuous gradient shading, then **Flow layers** only for additional stepped shadow density. **Fine detail** remains available for pen-aware pitch/smoothing/layers and Black keylines. | This is the Reddit-reference workflow: one blurred multichannel image-form tensor defines direction, while C/M/Y/K follow separate streamline networks with independent seeds, tone masks, fallback angles, continuous density-driven pitch, and dark-tone layers. The shared scene-depth field keeps a form continuous across a temporary color gap; the explicitly labeled shared Edge-flow style remains an experimental co-located alternative. |
 | CMYK continuous | Use the same image curve as the CMYK recipe, then choose **Continuous row screen (adjacent joins)** and keep **Pen-down chain** on with a `5 mm` gap. | Fastest starting point for an image where fewer M3/M5 cycles matter more than Edge-flow contour texture. Straight screen directions remain visible, and all joins print connector ink. A fully blank row band can still lift. |
 | 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
 | Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |

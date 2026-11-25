@@ -1,5 +1,34 @@
 # Engineering Log
 
+<a id="elog-20261125-edge-flow-density-pitch"></a>
+### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Compress Edge-flow pitch continuously in darker tone
+
+- The owner identified the remaining visual difference: the reference tightens
+  the spacing between individual streamlines through gradients and shadows,
+  while the converter only added complete darker-tone layers at a fixed base
+  pitch.
+- Edge-flow now maps local ink tone to a continuous target pitch,
+  `base × (1 - compression × tone)`, bounded at `0.9` pen widths. Accepted paths
+  seed parallel neighbours normal to their curve at that local distance, and
+  occupancy uses the same position-dependent separation.
+- The new **Shade compression** control defaults to `60 %` in the
+  recommended photo recipe and `65 %` in Fine detail. At `0 %`, candidate order
+  is unchanged; the fixed-pitch mark counts exactly match the preceding render.
+  Flow layers remain available for additional stepped shadow networks.
+- On `IMG_0514.JPG`, `60 %` compression raised fixed-pitch mark counts from
+  C/M/Y/K `2,912/2,932/4,837/1,931` to `3,542/3,502/7,113/2,157`. The visual
+  comparison is `tmp/edge-flow-variants.png`.
+- Focused Edge-flow/tab/sheet tests pass `100`; CMYK photo tests pass `17`;
+  complete converter discovery passes `684` tests with one expected
+  OpenGL-context skip in `159.951 s`.
+- More marks mean more plotting time, and centerlines closer than pen spread can
+  merge physically. The best compression for the reference print remains
+  unverified until a physical four-pass overlay.
+- Evidence: `WSW-20261125-003`;
+  `docs/changes/windows-software/2026/2026-11-25-edge-flow-density-pitch.md`.
+- Category: windows-software, cmyk, edge-flow, streamline, variable-pitch,
+  density, portrait, physical-validation-pending.
+
 <a id="elog-20261125-cmyk-multichannel-edge-flow"></a>
 ### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Guide CMYK streamlines with a multichannel image field
 

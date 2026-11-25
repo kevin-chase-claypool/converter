@@ -153,12 +153,17 @@ class CmykTabTests(unittest.TestCase):
         tab.style.setCurrentIndex(style_index)
         tab.flow_smoothing.setValue(2.5)
         tab.flow_layers.setValue(2)
+        tab.flow_pitch_compression.setValue(55)
         tab.flow_keylines.setChecked(True)
 
         state = tab.artwork_layout_state()
         self.assertEqual(state["screen"]["style"], "edge_flow")
         self.assertAlmostEqual(state["screen"]["flow_smoothing_mm"], 2.5)
         self.assertEqual(state["screen"]["flow_layers"], 2)
+        self.assertEqual(
+            state["screen"]["flow_pitch_compression_pct"],
+            55,
+        )
         self.assertTrue(state["screen"]["preserve_black_keylines"])
 
         root = ET.parse(tab.build_svg()).getroot()
@@ -169,6 +174,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(restored.style.currentData(), "edge_flow")
         self.assertAlmostEqual(restored.flow_smoothing.value(), 2.5)
         self.assertEqual(restored.flow_layers.value(), 2)
+        self.assertEqual(restored.flow_pitch_compression.value(), 55)
         self.assertTrue(restored.flow_keylines.isChecked())
 
     def test_pen_down_chain_round_trips_with_the_artwork_recipe(self):
@@ -287,6 +293,10 @@ class CmykTabTests(unittest.TestCase):
             captured["kwargs"]["flow_guide"],
             tones["flow_guide"],
         )
+        self.assertAlmostEqual(
+            captured["kwargs"]["flow_pitch_compression"],
+            tab.flow_pitch_compression.value() / 100.0,
+        )
         self.assertEqual(
             len(captured["kwargs"]["flow_guide"]),
             len(converter.CHANNELS) + 1,
@@ -353,6 +363,13 @@ class CmykTabTests(unittest.TestCase):
             all(
                 call[2]["flow_support_tone"]
                 is calls[0][2]["flow_support_tone"]
+                for call in calls
+            )
+        )
+        self.assertTrue(
+            all(
+                call[2]["flow_pitch_compression"]
+                == calls[0][2]["flow_pitch_compression"]
                 for call in calls
             )
         )
@@ -1142,6 +1159,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(tab.pitch.value(), 0.45, places=3)
         self.assertAlmostEqual(tab.flow_smoothing.value(), 2.5, places=3)
         self.assertEqual(tab.flow_layers.value(), 3)
+        self.assertEqual(tab.flow_pitch_compression.value(), 60)
         self.assertFalse(tab.flow_keylines.isChecked())
         self.assertAlmostEqual(tab.path_tolerance.value(), 0.10, places=3)
         self.assertAlmostEqual(tab.gcr.value(), 75.0, places=3)
@@ -1219,6 +1237,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(tab.style.currentData(), "edge_flow")
         self.assertAlmostEqual(tab.flow_smoothing.value(), 2.5, places=1)
         self.assertEqual(tab.flow_layers.value(), 3)
+        self.assertEqual(tab.flow_pitch_compression.value(), 60)
         self.assertFalse(tab.flow_keylines.isChecked())
         self.assertTrue(tab.chain_marks.isChecked())
         self.assertAlmostEqual(tab.chain_gap.value(), 1.0, places=3)
@@ -1500,6 +1519,10 @@ class CmykTabTests(unittest.TestCase):
             captured["kwargs"]["flow_layers"],
             tab.flow_layers.value(),
         )
+        self.assertAlmostEqual(
+            captured["kwargs"]["flow_pitch_compression"],
+            tab.flow_pitch_compression.value() / 100.0,
+        )
         self.assertIn("Dot pitch left at 0.31 mm", tab.status.text())
 
     def test_match_pen_pitch_uses_the_effective_scale(self):
@@ -1533,6 +1556,7 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertAlmostEqual(tab.flow_smoothing.value(), 1.2, places=1)
         self.assertEqual(tab.flow_layers.value(), 5)
+        self.assertEqual(tab.flow_pitch_compression.value(), 65)
         self.assertTrue(tab.flow_keylines.isChecked())
         self.assertTrue(tab.sharpen.isChecked())
         self.assertAlmostEqual(tab.sharpen_amount.value(), 60.0, places=1)
@@ -1548,6 +1572,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(tab.pitch.value(), 0.55, places=2)
         self.assertAlmostEqual(tab.flow_smoothing.value(), 1.5, places=1)
         self.assertEqual(tab.flow_layers.value(), 5)
+        self.assertEqual(tab.flow_pitch_compression.value(), 65)
 
     def test_fine_detail_indicator_clears_when_layout_is_edited(self):
         tab = self.make_tab()
@@ -1582,6 +1607,7 @@ class CmykTabTests(unittest.TestCase):
         tab.pitch.setValue(0.65)
         tab.flow_smoothing.setValue(4.0)
         tab.flow_layers.setValue(5)
+        tab.flow_pitch_compression.setValue(35)
         tab.path_tolerance.setValue(0.15)
         tab.flow_keylines.setChecked(False)
         tab.sharpen.setChecked(False)
@@ -1595,6 +1621,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(tab.pitch.value(), 0.65, places=2)
         self.assertAlmostEqual(tab.flow_smoothing.value(), 4.0, places=1)
         self.assertEqual(tab.flow_layers.value(), 5)
+        self.assertEqual(tab.flow_pitch_compression.value(), 35)
         self.assertAlmostEqual(tab.path_tolerance.value(), 0.15, places=2)
         self.assertFalse(tab.flow_keylines.isChecked())
         self.assertFalse(tab.sharpen.isChecked())
@@ -1607,6 +1634,7 @@ class CmykTabTests(unittest.TestCase):
         tab.scale_pct.setValue(260)
         tab.flow_smoothing.setValue(4.0)
         tab.flow_layers.setValue(5)
+        tab.flow_pitch_compression.setValue(35)
         tab.path_tolerance.setValue(0.15)
         tab.flow_keylines.setChecked(False)
         tab.sharpen.setChecked(False)
@@ -1622,6 +1650,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertFalse(restored.detail_button.isChecked())
         self.assertAlmostEqual(restored.flow_smoothing.value(), 4.0, places=1)
         self.assertEqual(restored.flow_layers.value(), 5)
+        self.assertEqual(restored.flow_pitch_compression.value(), 35)
         self.assertFalse(restored.flow_keylines.isChecked())
         self.assertFalse(restored.sharpen.isChecked())
 
@@ -1642,6 +1671,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertFalse(restored.detail_button.isChecked())
         self.assertAlmostEqual(restored.flow_smoothing.value(), 2.5, places=1)
         self.assertEqual(restored.flow_layers.value(), 3)
+        self.assertEqual(restored.flow_pitch_compression.value(), 60)
         self.assertAlmostEqual(restored.path_tolerance.value(), 0.15, places=2)
         self.assertFalse(restored.flow_keylines.isChecked())
         self.assertFalse(restored.sharpen.isChecked())
@@ -1817,10 +1847,17 @@ class CmykTabTests(unittest.TestCase):
         tab.page_h.setValue(200)
         tab.pitch.setValue(2.0)
         tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
+        tab.flow_pitch_compression.setValue(45)
         tab.calibration_mode.setChecked(True)
         tab.build_svg()
         self.assertEqual(
             tab._layers_manifest["sheet_settings"]["style"], "edge_flow"
+        )
+        self.assertAlmostEqual(
+            tab._layers_manifest["sheet_settings"][
+                "flow_pitch_compression"
+            ],
+            0.45,
         )
 
 

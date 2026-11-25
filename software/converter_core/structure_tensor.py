@@ -11,6 +11,7 @@ directions while following the same image form where it is clear.
 from __future__ import annotations
 
 import math
+from collections import deque
 
 from .cancellation import check_cancelled
 
@@ -22,6 +23,30 @@ EDGE_FLOW_STRENGTH_SCALE_FLOOR = 4.0e-7
 EDGE_FLOW_STRENGTH_PERCENTILE = 60.0
 EDGE_FLOW_COHERENCE_LOW = 0.02
 EDGE_FLOW_COHERENCE_HIGH = 0.18
+EDGE_FLOW_MAX_PITCH_COMPRESSION = 0.90
+EDGE_FLOW_MIN_PITCH_PEN_RATIO = 0.90
+
+
+def _edge_flow_local_pitch(
+    base_pitch,
+    tone,
+    pen_diameter_mm,
+    compression,
+):
+    """Return the continuous streamline pitch at one local ink tone."""
+    base = max(1e-6, float(base_pitch))
+    darkness = min(1.0, max(0.0, float(tone)))
+    amount = min(
+        EDGE_FLOW_MAX_PITCH_COMPRESSION,
+        max(0.0, float(compression)),
+    )
+    pitch = base * (1.0 - amount * darkness)
+    pen_floor = (
+        max(0.05, float(pen_diameter_mm) * EDGE_FLOW_MIN_PITCH_PEN_RATIO)
+        if float(pen_diameter_mm) > 0.0
+        else 0.0
+    )
+    return max(pen_floor, min(base, pitch))
 
 
 def edge_flow_coverage_factor(
@@ -435,6 +460,7 @@ def trace_structure_streamlines(
     ink_floor,
     tone_at,
     support_at=None,
+    pitch_compression=0.0,
     keylines=False,
     color_quiet=0.0,
     tone_segment_mm=None,
@@ -451,6 +477,9 @@ def trace_structure_streamlines(
     streamline, so adjacent paths do not form a visible block matrix.
     ``support_at`` controls whether the form continues through a local colour
     gap; ``tone_at`` still decides which parts of that path receive this ink.
+    ``pitch_compression`` reduces the spacing between neighbouring streamlines
+    continuously as local ink tone approaches full darkness. It is normalized
+    from 0 (fixed pitch) to 1 (maximum compression).
     ``bridge_mm`` retains short tone-off gaps inside one pen-down run so the
     local screen does not multiply toolhead cycles in dense passages.
     """
@@ -535,6 +564,12 @@ def trace_structure_streamlines(
     )
 
     support_sampler = tone_at if support_at is None else support_at
+    pitch_sampler = lambda x, y: _edge_flow_local_pitch(
+        base_pitch,
+        tone_at(x, y),
+        pen_diameter_mm,
+        pitch_compression,
+    )
 
     def trace(direction, start_x, start_y, threshold, occupied):
         points = []
@@ -573,15 +608,137 @@ def trace_structure_streamlines(
         # after the previous network has reached full coverage.
         threshold = 0.0 if layer == 0 else float(layer) / layer_count
         occupied = np.zeros((field_h, field_w), dtype=bool)
-        separation = max(
-            minimum_pen_gap,
-            base_pitch * (0.72 if layer else 0.58),
-        )
-        radius = max(1, int(math.ceil(separation / max(pixel_x, pixel_y))))
+        queued = np.zeros((field_h, field_w), dtype=bool)
+        pending = deque()
         phase_x = (float(seed) + 0.61803398875 * (layer + 1)) % 1.0
         phase_y = (float(seed) * 0.377 + 0.75487766625 * (layer + 1)) % 1.0
         x0 = left + phase_x * base_pitch
         y0 = top + phase_y * base_pitch
+
+        def reserve_path(points):
+            """Reserve each point with its local pen-safe separation."""
+            for px, py in points:
+                local_pitch = pitch_sampler(px, py)
+                separation = max(
+                    minimum_pen_gap,
+                    local_pitch * (0.72 if layer else 0.58),
+                )
+                radius = max(
+                    1,
+                    int(
+                        math.ceil(
+                            separation / max(pixel_x, pixel_y)
+                        )
+                    ),
+                )
+                cx, cy = field_cell(px, py)
+                xlo = max(0, cx - radius)
+                xhi = min(field_w, cx + radius + 1)
+                ylo = max(0, cy - radius)
+                yhi = min(field_h, cy + radius + 1)
+                occupied[ylo:yhi, xlo:xhi] = True
+
+        def enqueue_neighbour(seed_x, seed_y):
+            if (
+                not (left <= seed_x <= right and top <= seed_y <= bottom)
+                or support_sampler(seed_x, seed_y)
+                < max(float(ink_floor), threshold)
+            ):
+                return
+            sx, sy = field_cell(seed_x, seed_y)
+            if occupied[sy, sx] or queued[sy, sx]:
+                return
+            queued[sy, sx] = True
+            pending.append((seed_x, seed_y))
+
+        def queue_neighbours(points):
+            """Seed parallel streamlines at the local compressed pitch."""
+            traveled = 0.0
+            next_seed = 0.0
+            for first, second in zip(points, points[1:]):
+                traveled += math.hypot(
+                    second[0] - first[0],
+                    second[1] - first[1],
+                )
+                if traveled < next_seed:
+                    continue
+                local_pitch = pitch_sampler(first[0], first[1])
+                vx, vy = sample_velocity(first[0], first[1])
+                norm = math.hypot(vx, vy)
+                if norm <= 1e-8:
+                    continue
+                normal_x = -vy / norm
+                normal_y = vx / norm
+                for direction in (-1.0, 1.0):
+                    enqueue_neighbour(
+                        first[0] + direction * normal_x * local_pitch,
+                        first[1] + direction * normal_y * local_pitch,
+                    )
+                next_seed = traveled + max(
+                    step_mm * 4.0,
+                    minimum_pen_gap,
+                    local_pitch * 0.65,
+                )
+
+        def try_candidate(start_x, start_y):
+            """Trace and emit one candidate, then fill its neighbourhood."""
+            if (
+                support_sampler(start_x, start_y)
+                < max(float(ink_floor), threshold)
+            ):
+                return False
+            ix, iy = field_cell(start_x, start_y)
+            if occupied[iy, ix]:
+                return False
+
+            back = trace(-1.0, start_x, start_y, threshold, occupied)
+            forward = trace(1.0, start_x, start_y, threshold, occupied)
+            points = (
+                list(reversed(back))
+                + [(start_x, start_y)]
+                + forward
+            )
+            length = sum(
+                math.hypot(
+                    second[0] - first[0],
+                    second[1] - first[1],
+                )
+                for first, second in zip(points, points[1:])
+            )
+            accepted = len(points) >= 3 and length >= minimum_length
+            if accepted:
+                path_key = (
+                    int(round((start_x - left) / base_pitch)) * 73856093
+                    ^ int(round((start_y - top) / base_pitch)) * 19349663
+                    ^ int(seed) * 83492791
+                    ^ int(layer) * 2654435761
+                ) & 0xFFFFFFFF
+                visible_runs = _tone_gated_runs(
+                    points,
+                    tone_at,
+                    threshold,
+                    tone_segment,
+                    path_key,
+                    layer,
+                    visible_minimum_length,
+                    (
+                        sample_edge
+                        if keylines or color_quiet > 0.0
+                        else None
+                    ),
+                    0.92 if keylines else 0.0,
+                    color_quiet,
+                    bridge_mm,
+                )
+                marks.extend(visible_runs)
+                if len(marks) > cap:
+                    del marks[cap:]
+
+            # Reserve even a short path so a later seed cannot duplicate it.
+            reserve_path(points)
+            if accepted and float(pitch_compression) > 0.0:
+                queue_neighbours(points)
+            return accepted
 
         y = y0
         row = 0
@@ -589,62 +746,11 @@ def trace_structure_streamlines(
             check_cancelled(cancel_check)
             x = x0 + (0.5 * base_pitch if row % 2 else 0.0)
             while x <= right and len(marks) < cap:
-                if support_sampler(x, y) < max(float(ink_floor), threshold):
-                    x += base_pitch
-                    continue
-                ix, iy = field_cell(x, y)
-                if occupied[iy, ix]:
-                    x += base_pitch
-                    continue
-
-                back = trace(-1.0, x, y, threshold, occupied)
-                forward = trace(1.0, x, y, threshold, occupied)
-                points = list(reversed(back)) + [(x, y)] + forward
-                length = sum(
-                    math.hypot(
-                        second[0] - first[0],
-                        second[1] - first[1],
-                    )
-                    for first, second in zip(points, points[1:])
-                )
-                if len(points) >= 3 and length >= minimum_length:
-                    path_key = (
-                        int(round((x - left) / base_pitch)) * 73856093
-                        ^ int(round((y - top) / base_pitch)) * 19349663
-                        ^ int(seed) * 83492791
-                        ^ int(layer) * 2654435761
-                    ) & 0xFFFFFFFF
-                    visible_runs = _tone_gated_runs(
-                        points,
-                        tone_at,
-                        threshold,
-                        tone_segment,
-                        path_key,
-                        layer,
-                        visible_minimum_length,
-                        (
-                            sample_edge
-                            if keylines or color_quiet > 0.0
-                            else None
-                        ),
-                        0.92 if keylines else 0.0,
-                        color_quiet,
-                        bridge_mm,
-                    )
-                    marks.extend(visible_runs)
-                    if len(marks) > cap:
-                        del marks[cap:]
-
-                # Reserve the path so later seeds in this plate cannot place a
-                # neighbouring duplicate within one pen envelope.
-                for px, py in points:
-                    cx, cy = field_cell(px, py)
-                    xlo = max(0, cx - radius)
-                    xhi = min(field_w, cx + radius + 1)
-                    ylo = max(0, cy - radius)
-                    yhi = min(field_h, cy + radius + 1)
-                    occupied[ylo:yhi, xlo:xhi] = True
-                x += base_pitch
+                try_candidate(x, y)
+                while pending and len(marks) < cap:
+                    next_x, next_y = pending.popleft()
+                    try_candidate(next_x, next_y)
+                x += pitch_sampler(x, y)
             y += base_pitch
             row += 1
 
@@ -670,6 +776,7 @@ def trace_shared_structure_streamlines(
     tone_segment_mm=None,
     max_path_mm=None,
     bridge_mm=0.0,
+    pitch_compression=0.0,
     cancel_check=None,
 ):
     """Trace one common streamline network and gate every ink along it.
@@ -681,6 +788,8 @@ def trace_shared_structure_streamlines(
     same segments and turning every shared path into four-ink black. The shared
     coordinates still permit local process-colour mixtures where ink segments
     coincide, without returning to four independent, drifting path networks.
+    ``pitch_compression`` contracts neighbouring common paths as the strongest
+    local ink coverage darkens.
     """
     import numpy as np
 
@@ -822,21 +931,156 @@ def trace_shared_structure_streamlines(
                 break
         return points
 
+    pitch_sampler = lambda x, y: _edge_flow_local_pitch(
+        base_pitch,
+        coverage_at(x, y),
+        pen_diameter_mm,
+        pitch_compression,
+    )
+
     marks = {channel: [] for channel in channel_names}
     path_count = 0
     for layer in range(layer_count):
         check_cancelled(cancel_check)
         threshold = 0.0 if layer == 0 else float(layer) / layer_count
         occupied = np.zeros((field_h, field_w), dtype=bool)
-        separation = max(
-            minimum_pen_gap,
-            base_pitch * (0.72 if layer else 0.58),
-        )
-        radius = max(1, int(math.ceil(separation / max(pixel_x, pixel_y))))
+        queued = np.zeros((field_h, field_w), dtype=bool)
+        pending = deque()
         phase_x = (float(seed) + 0.61803398875 * (layer + 1)) % 1.0
         phase_y = (float(seed) * 0.377 + 0.75487766625 * (layer + 1)) % 1.0
         x0 = left + phase_x * base_pitch
         y0 = top + phase_y * base_pitch
+
+        def reserve_path(points):
+            for px, py in points:
+                local_pitch = pitch_sampler(px, py)
+                separation = max(
+                    minimum_pen_gap,
+                    local_pitch * (0.72 if layer else 0.58),
+                )
+                radius = max(
+                    1,
+                    int(
+                        math.ceil(
+                            separation / max(pixel_x, pixel_y)
+                        )
+                    ),
+                )
+                cx, cy = field_cell(px, py)
+                xlo = max(0, cx - radius)
+                xhi = min(field_w, cx + radius + 1)
+                ylo = max(0, cy - radius)
+                yhi = min(field_h, cy + radius + 1)
+                occupied[ylo:yhi, xlo:xhi] = True
+
+        def enqueue_neighbour(seed_x, seed_y):
+            if (
+                not (left <= seed_x <= right and top <= seed_y <= bottom)
+                or coverage_at(seed_x, seed_y)
+                < max(float(ink_floor), threshold)
+            ):
+                return
+            sx, sy = field_cell(seed_x, seed_y)
+            if occupied[sy, sx] or queued[sy, sx]:
+                return
+            queued[sy, sx] = True
+            pending.append((seed_x, seed_y))
+
+        def queue_neighbours(points):
+            traveled = 0.0
+            next_seed = 0.0
+            for first, second in zip(points, points[1:]):
+                traveled += math.hypot(
+                    second[0] - first[0],
+                    second[1] - first[1],
+                )
+                if traveled < next_seed:
+                    continue
+                local_pitch = pitch_sampler(first[0], first[1])
+                vx, vy = sample_velocity(first[0], first[1])
+                norm = math.hypot(vx, vy)
+                if norm <= 1e-8:
+                    continue
+                normal_x = -vy / norm
+                normal_y = vx / norm
+                for direction in (-1.0, 1.0):
+                    enqueue_neighbour(
+                        first[0] + direction * normal_x * local_pitch,
+                        first[1] + direction * normal_y * local_pitch,
+                    )
+                next_seed = traveled + max(
+                    step_mm * 4.0,
+                    minimum_pen_gap,
+                    local_pitch * 0.65,
+                )
+
+        def try_candidate(start_x, start_y):
+            nonlocal path_count
+            if (
+                coverage_at(start_x, start_y)
+                < max(float(ink_floor), threshold)
+            ):
+                return False
+            ix, iy = field_cell(start_x, start_y)
+            if occupied[iy, ix]:
+                return False
+
+            back = trace(-1.0, start_x, start_y, threshold, occupied)
+            forward = trace(1.0, start_x, start_y, threshold, occupied)
+            points = (
+                list(reversed(back))
+                + [(start_x, start_y)]
+                + forward
+            )
+            length = sum(
+                math.hypot(
+                    second[0] - first[0],
+                    second[1] - first[1],
+                )
+                for first, second in zip(points, points[1:])
+            )
+            accepted = len(points) >= 3 and length >= minimum_length
+            if accepted:
+                path_key = (
+                    int(round((start_x - left) / base_pitch)) * 73856093
+                    ^ int(round((start_y - top) / base_pitch)) * 19349663
+                    ^ int(seed) * 83492791
+                    ^ int(layer) * 2654435761
+                ) & 0xFFFFFFFF
+                for channel in channel_names:
+                    quiet = (
+                        min(1.0, max(0.0, float(color_quiet)))
+                        if channel != "k"
+                        else 0.0
+                    )
+                    visible_runs = _tone_gated_runs(
+                        points,
+                        channel_at[channel],
+                        threshold,
+                        tone_segment,
+                        path_key,
+                        layer,
+                        visible_minimum_length,
+                        (
+                            sample_edge
+                            if (keylines and channel == "k") or quiet > 0.0
+                            else None
+                        ),
+                        0.92 if keylines and channel == "k" else 0.0,
+                        quiet,
+                        bridge_mm,
+                        shared_coverage_scale,
+                        channel_salts[channel],
+                    )
+                    marks[channel].extend(visible_runs)
+                    if len(marks[channel]) > cap:
+                        del marks[channel][cap:]
+                path_count += 1
+
+            reserve_path(points)
+            if accepted and float(pitch_compression) > 0.0:
+                queue_neighbours(points)
+            return accepted
 
         y = y0
         row = 0
@@ -844,69 +1088,11 @@ def trace_shared_structure_streamlines(
             check_cancelled(cancel_check)
             x = x0 + (0.5 * base_pitch if row % 2 else 0.0)
             while x <= right and path_count < cap:
-                if coverage_at(x, y) < max(float(ink_floor), threshold):
-                    x += base_pitch
-                    continue
-                ix, iy = field_cell(x, y)
-                if occupied[iy, ix]:
-                    x += base_pitch
-                    continue
-
-                back = trace(-1.0, x, y, threshold, occupied)
-                forward = trace(1.0, x, y, threshold, occupied)
-                points = list(reversed(back)) + [(x, y)] + forward
-                length = sum(
-                    math.hypot(
-                        second[0] - first[0],
-                        second[1] - first[1],
-                    )
-                    for first, second in zip(points, points[1:])
-                )
-                if len(points) >= 3 and length >= minimum_length:
-                    path_key = (
-                        int(round((x - left) / base_pitch)) * 73856093
-                        ^ int(round((y - top) / base_pitch)) * 19349663
-                        ^ int(seed) * 83492791
-                        ^ int(layer) * 2654435761
-                    ) & 0xFFFFFFFF
-                    for channel in channel_names:
-                        quiet = (
-                            min(1.0, max(0.0, float(color_quiet)))
-                            if channel != "k"
-                            else 0.0
-                        )
-                        visible_runs = _tone_gated_runs(
-                            points,
-                            channel_at[channel],
-                            threshold,
-                            tone_segment,
-                            path_key,
-                            layer,
-                            visible_minimum_length,
-                            (
-                                sample_edge
-                                if (keylines and channel == "k") or quiet > 0.0
-                                else None
-                            ),
-                            0.92 if keylines and channel == "k" else 0.0,
-                            quiet,
-                            bridge_mm,
-                            shared_coverage_scale,
-                            channel_salts[channel],
-                        )
-                        marks[channel].extend(visible_runs)
-                        if len(marks[channel]) > cap:
-                            del marks[channel][cap:]
-                    path_count += 1
-
-                for px, py in points:
-                    cx, cy = field_cell(px, py)
-                    xlo = max(0, cx - radius)
-                    xhi = min(field_w, cx + radius + 1)
-                    ylo = max(0, cy - radius)
-                    yhi = min(field_h, cy + radius + 1)
-                    occupied[ylo:yhi, xlo:xhi] = True
-                x += base_pitch
+                try_candidate(x, y)
+                while pending and path_count < cap:
+                    next_x, next_y = pending.popleft()
+                    try_candidate(next_x, next_y)
+                x += pitch_sampler(x, y)
             y += base_pitch
             row += 1
 

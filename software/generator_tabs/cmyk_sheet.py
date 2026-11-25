@@ -114,6 +114,7 @@ class _SheetBuilder:
         levels=4,
         flow_smoothing_mm=2.5,
         flow_layers=3,
+        flow_pitch_compression=0.6,
         build_marks=True,
     ):
         self.page_width_mm = float(page_width_mm)
@@ -131,6 +132,10 @@ class _SheetBuilder:
         self.levels = max(2, min(5, int(levels)))
         self.flow_smoothing_mm = max(0.2, float(flow_smoothing_mm))
         self.flow_layers = max(1, min(6, int(flow_layers)))
+        self.flow_pitch_compression = max(
+            0.0,
+            min(0.9, float(flow_pitch_compression)),
+        )
         self.build_marks = bool(build_marks)
         self.layers = {channel: [] for channel in converter.CHANNELS}
         self.patches = []
@@ -183,6 +188,7 @@ class _SheetBuilder:
             solid=self.solid,
             flow_smoothing_mm=self.flow_smoothing_mm,
             flow_layers=self.flow_layers,
+            flow_pitch_compression=self.flow_pitch_compression,
         )
 
     def cell(
@@ -282,6 +288,7 @@ def build_sheet(
     levels=4,
     flow_smoothing_mm=2.5,
     flow_layers=3,
+    flow_pitch_compression=0.6,
     marks=True,
 ):
     """Return ``(layers, manifest)`` for the labeled calibration sheet.
@@ -316,6 +323,7 @@ def build_sheet(
         levels=levels,
         flow_smoothing_mm=flow_smoothing_mm,
         flow_layers=flow_layers,
+        flow_pitch_compression=flow_pitch_compression,
         build_marks=marks,
     )
     weight_map = _weight_map(weights)
@@ -335,7 +343,8 @@ def build_sheet(
     elif screen == "edge_flow":
         screen_line = (
             f"screen edge flow | pitch {_fmt(builder.pitch_mm)} mm | "
-            f"layers {builder.flow_layers}"
+            f"layers {builder.flow_layers} | compression "
+            f"{_fmt(builder.flow_pitch_compression * 100.0)}%"
         )
     else:
         screen_line = (
@@ -591,6 +600,10 @@ def build_sheet(
             "levels": builder.levels,
             "flow_smoothing_mm": round(builder.flow_smoothing_mm, 4),
             "flow_layers": builder.flow_layers,
+            "flow_pitch_compression": round(
+                builder.flow_pitch_compression,
+                4,
+            ),
             "gcr_pct": round(builder.gcr_pct, 3),
             "gamma": round(builder.gamma, 4),
             "weights": {
