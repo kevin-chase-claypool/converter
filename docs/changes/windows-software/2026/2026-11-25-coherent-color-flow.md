@@ -34,6 +34,9 @@ related:
 
 # Add a coherent shared-geometry CMYK color-flow renderer
 
+`WSW-20261125-005` later changes dark-layer activation and coherent Shade
+compression to follow scene-depth luminance rather than maximum ink coverage.
+
 ## Summary
 
 The CMYK tab now offers **Coherent color flow (shared geometry, ink planes)**,

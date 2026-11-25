@@ -30,6 +30,8 @@ EDGE_FLOW_KEYLINE_BASE_WEIGHT = 0.55
 EDGE_FLOW_KEYLINE_PERCENTILE = 85.0
 EDGE_FLOW_KEYLINE_LOW = 0.30
 EDGE_FLOW_KEYLINE_HIGH = 0.80
+EDGE_FLOW_DARK_LAYER_START = 0.40
+EDGE_FLOW_DARK_LAYER_END = 0.90
 
 
 def _edge_flow_local_pitch(
@@ -555,6 +557,8 @@ def _coherent_ink_runs(
     threshold,
     minimum_length,
     ink_floor,
+    layer_support_at=None,
+    layer_support_threshold=0.0,
     edge_at=None,
     keyline_strength=0.0,
     edge_quiet=0.0,
@@ -642,6 +646,12 @@ def _coherent_ink_runs(
     active_floor = max(float(ink_floor), float(threshold))
     flags = {channel: [False] * len(points) for channel in channel_names}
     for index in range(len(points)):
+        if (
+            layer_support_at is not None
+            and float(layer_support_at(*points[index]))
+            < float(layer_support_threshold)
+        ):
+            continue
         scores = {
             channel: smoothed[channel][index]
             for channel in channel_names
@@ -1082,6 +1092,16 @@ def trace_shared_structure_streamlines(
         x,
         y,
     )
+    layer_support_field = np.asarray(
+        tones.get("depth", coverage_field),
+        dtype=np.float32,
+    )
+    layer_support_at = lambda x, y: _bilinear_scalar(
+        layer_support_field,
+        geometry,
+        x,
+        y,
+    )
     channel_at = {
         channel: (
             lambda x, y, field=np.asarray(
@@ -1207,9 +1227,14 @@ def trace_shared_structure_streamlines(
                 break
         return points
 
+    pitch_tone_at = (
+        layer_support_at
+        if coherent_color
+        else coverage_at
+    )
     pitch_sampler = lambda x, y: _edge_flow_local_pitch(
         base_pitch,
-        coverage_at(x, y),
+        pitch_tone_at(x, y),
         pen_diameter_mm,
         pitch_compression,
     )
@@ -1224,7 +1249,19 @@ def trace_shared_structure_streamlines(
             edge_field,
             fallback_angles[layer % len(fallback_angles)],
         )
-        threshold = 0.0 if layer == 0 else float(layer) / layer_count
+        threshold = (
+            0.0
+            if layer == 0
+            else (
+                EDGE_FLOW_DARK_LAYER_START
+                + (
+                    EDGE_FLOW_DARK_LAYER_END
+                    - EDGE_FLOW_DARK_LAYER_START
+                )
+                * (layer - 1)
+                / max(1, layer_count - 1)
+            )
+        )
         occupied = np.zeros((field_h, field_w), dtype=bool)
         queued = np.zeros((field_h, field_w), dtype=bool)
         pending = deque()
@@ -1260,6 +1297,10 @@ def trace_shared_structure_streamlines(
                 not (left <= seed_x <= right and top <= seed_y <= bottom)
                 or coverage_at(seed_x, seed_y)
                 < max(float(ink_floor), threshold)
+                or (
+                    coherent_color
+                    and layer_support_at(seed_x, seed_y) < threshold
+                )
             ):
                 return
             sx, sy = field_cell(seed_x, seed_y)
@@ -1301,6 +1342,10 @@ def trace_shared_structure_streamlines(
             if (
                 coverage_at(start_x, start_y)
                 < max(float(ink_floor), threshold)
+                or (
+                    coherent_color
+                    and layer_support_at(start_x, start_y) < threshold
+                )
             ):
                 return False
             ix, iy = field_cell(start_x, start_y)
@@ -1331,6 +1376,8 @@ def trace_shared_structure_streamlines(
                         threshold,
                         visible_minimum_length,
                         ink_floor,
+                        layer_support_at if coherent_color else None,
+                        threshold if coherent_color else 0.0,
                         sample_keyline,
                         0.86 if keylines else 0.0,
                         color_quiet,

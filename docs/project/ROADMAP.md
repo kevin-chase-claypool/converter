@@ -673,6 +673,15 @@
   pixels being converted into ink; transparent areas now read as paper.
   These measurements are software-only and do not establish final paper
   density or connector behavior.
+  Status 2026-11-25 scene-depth gate: the first coherent renderer used the
+  strongest ink channel for dark layers and pitch compression, so bright
+  yellow/magenta skin activated all layers and compressed like a shadow. A red
+  regression measured `3267.56 mm` of three-layer yellow against
+  `1164.94 mm` for one layer at only `0.12` scene depth. Extra layers and
+  coherent shade compression now use scene depth, with additional layer
+  thresholds spanning `40-90 %`. Bright and middle tones stay on the base
+  network; a dark-field test requires more than `1.40x` extra coverage.
+  Physical validation remains open.
   Acceptance: print a pre-cropped portrait with the README starting recipe
   after one HOME + REGISTER; preserve the intentional `260 %` circular crop
   unless the test explicitly compares the whole-image Fit-inside layout;

@@ -1,5 +1,43 @@
 # Engineering Log
 
+<a id="elog-20261125-coherent-flow-scene-depth-layers"></a>
+### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Gate coherent dark layers by scene depth
+
+- The owner supplied a live coherent-flow preview showing repeated nested
+  color contours across bright faces. The renderer was using maximum channel
+  coverage for both extra-layer activation and shade compression. Strong
+  yellow/magenta coverage therefore made highlights behave like shadows.
+- A red regression isolated the bug: at `0.12` scene depth and `0.82` yellow
+  coverage, three coherent layers produced `3267.56 mm` of visible yellow
+  against `1164.94 mm` for one layer.
+- Coherent layer seeding, path acceptance, visible-run gating, and shade
+  compression now sample common scene-depth luminance. Additional layers
+  interpolate from a `40 %` to `90 %` depth threshold; per-ink Edge-flow keeps
+  its existing channel-tone model.
+- One- and three-layer output now match within `2 %` at `0.12` and `0.36`
+  scene depth. An `0.88`-depth fixture requires more than `1.40x` three-layer
+  ink, and compression at that depth grows beyond `1.30x`.
+- The full-circle Golden Sunset comparison reduced coherent Black ink length
+  from `20,240.4` to `15,412.9 mm`, magenta from `53,670.5` to
+  `47,894.6 mm`, and yellow from `81,236.5` to `64,862.5 mm`.
+- `msurguy/plotterfun-extended` at
+  `00bf56dd872db8797486e021c26345929463e985` was inspected as an external
+  cross-check. Its flow-field worker also derives density spacing from source
+  brightness and masks transparent pixels, but its CMYK path invokes workers
+  independently per channel and does not implement shared tensor-guided ink
+  planes. It was used as design evidence only; no source code was copied.
+- Focused CMYK Edge-flow, separation, photo, tab, and sheet modules pass `137`
+  tests in `38.635 s` with the expected calibration CLI usage text.
+- Complete converter discovery passes `694` tests in `154.523 s` with one
+  expected OpenGL-context skip.
+- Physical density and the best scene-depth thresholds remain unverified.
+- Evidence: `WSW-20261125-005`;
+  `docs/changes/windows-software/2026/2026-11-25-coherent-flow-scene-depth-layers.md`;
+  `tmp/coherent-flow-compare.png`.
+- Category: windows-software, cmyk, edge-flow, coherent-color-flow,
+  scene-depth, dark-layers, pitch-compression, portrait,
+  physical-validation-pending.
+
 <a id="elog-20261125-coherent-color-flow"></a>
 ### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Add coherent shared-geometry CMYK color flow
 

@@ -633,8 +633,11 @@ Current tools:
   Along each path, channel coverage is smoothed over a 6 mm paper-space
   window. A long run keeps its dominant ink, or a second ink when it is within
   `72 %` of the dominant coverage, so one local colour plane does not break
-  into independently phased dashes. Darker regions add offset parallel
-  geometry layers and continuously tighten local pitch. **Continuous Black
+  into independently phased dashes. Additional layers and shade compression
+  are owned by scene-depth luminance, not by the strongest saturated ink: a
+  bright yellow or magenta face remains one base network, while the first
+  extra layer starts at `40 %` scene depth and the final allowed layer
+  approaches `90 %`. **Continuous Black
   keylines** reserve strong Black strokes for tensor-coherent boundaries;
   ordinary Black tone receives a lower coherent-flow weight while keylines
   are active, so dark background texture does not become a black wash.
@@ -680,7 +683,9 @@ Current tools:
   four-file overprint workflow as the other CMYK screens, not one flattened
   composite program.
   **Shade compression** (default 60 %) is the continuous tone-to-spacing
-  control. At a local ink tone `t`, the target pitch is
+  control. Per-ink Edge-flow uses local ink tone `t`; coherent color flow uses
+  common scene depth so a saturated highlight is not mistaken for a shadow.
+  The target pitch is
   `Dot pitch x (1 - compression x t)`, clamped to `0.9` pen widths. A value of
   `0 %` keeps a fixed grid; `60 %` lets full-tone shadows reach `40 %` of the
   base pitch; `90 %` is the densest setting and can approach solid coverage.
@@ -691,8 +696,9 @@ Current tools:
   progressively darker tone bands; more layers increase shadow detail, point
   count, and plotting time beyond the continuous pitch compression.
   Coherent color flow treats each layer as another parallel geometric family
-  and assigns ink planes along the shared path. Legacy per-ink Edge-flow grows
-  four separate path families. The shared experimental style instead
+  and assigns ink planes along the shared path; its extra families use
+  scene-depth thresholds from `40 %` to `90 %`. Legacy per-ink Edge-flow grows
+  four separate path families by channel tone. The shared experimental style instead
   normalizes each channel's layer occupancy so the layers are not multiplied
   into a black stack. **Flow smoothing** (default 2.5 mm on paper) controls how far
   the tensor is blurred, trading fine surface texture for longer, calmer

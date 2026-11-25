@@ -928,6 +928,122 @@ class CmykEdgeFlowTests(unittest.TestCase):
         self.assertGreater(horizontal, 20)
         self.assertGreater(vertical, 20)
 
+    def test_coherent_color_flow_gates_extra_layers_by_scene_depth(self):
+        size = 128
+        coords = self.np.arange(size, dtype="float32")
+        xx, yy = self.np.meshgrid(coords, coords)
+        guide = (xx + yy) / float(2 * (size - 1))
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        def ink_length(depth):
+            tones = {
+                "c": self.np.zeros((size, size), dtype="float32"),
+                "m": self.np.zeros((size, size), dtype="float32"),
+                "y": self.np.full((size, size), 0.82, dtype="float32"),
+                "k": self.np.zeros((size, size), dtype="float32"),
+                "depth": self.np.full(
+                    (size, size),
+                    depth,
+                    dtype="float32",
+                ),
+            }
+            common = {
+                "spacing_mm": 6.0,
+                "pen_diameter_mm": 0.8,
+                "path_tolerance_mm": 0.12,
+                "flow_smoothing_mm": 2.0,
+                "max_marks": 3000,
+                "seed": 7,
+                "flow_guide": guide,
+            }
+            one_layer = converter.screen_coherent_color_flow(
+                tones,
+                geometry,
+                flow_layers=1,
+                **common,
+            )
+            three_layers = converter.screen_coherent_color_flow(
+                tones,
+                geometry,
+                flow_layers=3,
+                **common,
+            )
+
+            def length(marks):
+                return sum(
+                    math.hypot(second[0] - first[0], second[1] - first[1])
+                    for line in marks["y"]
+                    for first, second in zip(line, line[1:])
+                )
+
+            return length(one_layer), length(three_layers)
+
+        bright_one, bright_three = ink_length(0.12)
+        mid_one, mid_three = ink_length(0.36)
+        dark_one, dark_three = ink_length(0.88)
+        self.assertAlmostEqual(bright_three, bright_one, delta=bright_one * 0.02)
+        self.assertAlmostEqual(mid_three, mid_one, delta=mid_one * 0.02)
+        self.assertGreater(dark_three, dark_one * 1.40)
+
+    def test_coherent_shade_compression_follows_scene_depth(self):
+        size = 128
+        coords = self.np.arange(size, dtype="float32")
+        xx, yy = self.np.meshgrid(coords, coords)
+        guide = (xx + yy) / float(2 * (size - 1))
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        def ink_length(depth, compression):
+            tones = {
+                "c": self.np.zeros((size, size), dtype="float32"),
+                "m": self.np.zeros((size, size), dtype="float32"),
+                "y": self.np.full((size, size), 0.82, dtype="float32"),
+                "k": self.np.zeros((size, size), dtype="float32"),
+                "depth": self.np.full(
+                    (size, size),
+                    depth,
+                    dtype="float32",
+                ),
+            }
+            marks = converter.screen_coherent_color_flow(
+                tones,
+                geometry,
+                spacing_mm=6.0,
+                pen_diameter_mm=0.8,
+                path_tolerance_mm=0.12,
+                flow_smoothing_mm=2.0,
+                flow_layers=1,
+                flow_pitch_compression=compression,
+                max_marks=3000,
+                seed=7,
+                flow_guide=guide,
+            )
+            return sum(
+                math.hypot(second[0] - first[0], second[1] - first[1])
+                for line in marks["y"]
+                for first, second in zip(line, line[1:])
+            )
+
+        bright_fixed = ink_length(0.12, 0.0)
+        bright_compressed = ink_length(0.12, 0.8)
+        dark_fixed = ink_length(0.88, 0.0)
+        dark_compressed = ink_length(0.88, 0.8)
+        self.assertLess(bright_compressed, bright_fixed * 1.12)
+        self.assertGreater(dark_compressed, dark_fixed * 1.30)
+
     def test_coherent_color_flow_black_keylines_stay_on_structure(self):
         size = 128
         coords = self.np.arange(size, dtype="float32")

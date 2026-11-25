@@ -34,8 +34,9 @@ CMYK output, page-registration, preview, and G-code contracts.
    each path, smooth every channel's coverage over paper-space arc length and
    keep a dominant ink plus one close secondary ink. Tone changes therefore
    follow long local color planes instead of independent per-channel random
-   intervals. Additional layers add offset parallel geometry only in darker
-   regions.
+   intervals. The base layer carries the image; additional layers add offset
+   parallel geometry only where common scene-depth luminance crosses their
+   `40-90 %` dark-region thresholds.
 6a. Apply a self-guided edge-preserving simplification before sharpening and
     separation. This reduces pores, sensor texture, and fine fabric noise
     without moving strong eyes, glasses, silhouettes, or plaid boundaries.
@@ -66,9 +67,9 @@ CMYK output, page-registration, preview, and G-code contracts.
 - Maximum density layers: 3 for the recommended photo recipe
 - Tone method: contiguous smoothed ink planes along a common geometry network.
   A 6 mm paper-space coverage window keeps long runs; a second ink is retained
-  when it reaches `72 %` of the dominant coverage. Additional layers add
-  offset parallel geometry in darker regions instead of random short
-  fragments.
+  when it reaches `72 %` of the dominant coverage. Coherent Shade compression
+  and additional layers use common scene depth, so saturated bright color
+  remains on the base network while offset parallel geometry grows in shadows.
 - Embedded ICC profiles, including Display P3, are converted to sRGB before
   image analysis and separation; EXIF orientation is applied first
 - **Pen-down chain** bridges up to `4 mm` of coverage gaps along one coherent
