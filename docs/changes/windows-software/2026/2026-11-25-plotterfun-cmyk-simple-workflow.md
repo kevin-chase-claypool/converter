@@ -4,7 +4,7 @@ date: 2026-11-25
 category: windows-software
 affected_categories:
   - windows-software
-status: implemented
+status: superseded
 components:
   - software/generator_tabs/_plotterfun_cmyk.py
   - software/generator_tabs/_plotterfun_gcode.py
@@ -27,11 +27,17 @@ tags:
   - tone
   - gcr
 related:
+  - WSW-20261125-008
   - WSW-20261125-006
   - WSW-20261007-012
 ---
 
 # Simplify Plotterfun Extended and generate registered Y/M/C/K G-code
+
+`WSW-20261125-008` supersedes Plotterfun as the primary color workflow after
+the owner found its independently traced channel geometry produced incorrect
+hue and contrast. Plotterfun Extended remains available as an experimental
+comparison tool.
 
 ## Summary
 

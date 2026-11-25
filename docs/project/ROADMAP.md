@@ -897,15 +897,17 @@
   custom channel workflows, optional luminance-depth and face masks,
   current-artwork loading, and SVG capture back into Convert. The 4.9 MB bundle
   uses a loopback-only server and QtWebEngine; depth is local, while optional
-  face landmarks may require a first-use network download. A simplified
-  three-step workflow now hides the upstream sidebar, starts Flow Field or
-  another selected style automatically, and creates four page-registered
-  G-code programs plus a manifest in physical Yellow/Magenta/Cyan/Black order
-  (`WSW-20261125-007`). Internal SVGs stay out of the selected output folder.
-  The live colorful-photo check confirmed tone-dependent Flow Field density and
-  strong black/GCR participation, and all four programs pass strict motion
-  preflight. A physical four-pass overlay print remains open. This extends the
-  in-port strategy but does not complete the full generator shortlist.
+  face landmarks may require a first-use network download. Plotterfun's
+  independently traced CMYK channels remain available for comparison, but they
+  do not meet the color target (`WSW-20261125-007` is superseded by
+  `WSW-20261125-008`). **CMYK Photo** is now the guided production path: it
+  uses the native coherent shared-geometry color renderer, GCR-aware automatic
+  color analysis, a 250 mm page inside the 14-inch circle, and writes numbered
+  Y/M/C/K G-code programs. The full CMYK tuner remains behind **Advanced
+  settings**. A live colorful-photo run kept every output within `174.817 mm`
+  of bed center and all four programs passed strict Xθ/Yθ motion preflight. A
+  physical four-pass color/registration comparison remains open. This extends
+  the in-port strategy but does not complete the full generator shortlist.
 
 - [ ] Close the remaining upstream option gaps recorded in
   [`docs/research/2026-10-06-generator-tab-fidelity-audit.md`](../research/2026-10-06-generator-tab-fidelity-audit.md).

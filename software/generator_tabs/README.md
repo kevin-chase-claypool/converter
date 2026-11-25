@@ -74,6 +74,14 @@ it splits the page into four internal SVGs, calls
 writes the resulting Y/M/C/K G-code as a set. The internal SVGs stay outside the
 selected G-code folder.
 
+The production **CMYK Photo** page subclasses the full CMYK tuner but hides its
+control column by default. Its guided card owns the folder choice and invokes
+the same `build_svg()`, preview, `analyze_program()`, and four-file export path
+as the advanced page. Its 250 mm page keeps the complete printed square inside
+the 14-inch circle, and its output order is Y/M/C/K. The guided presentation
+may hide the main window's Preview/playback/fit chrome while it is active; it
+must restore those widgets when switching to advanced or leaving the tool.
+
 Rules:
 
 1. Keep the tab self-contained in this package; do not edit the main window or

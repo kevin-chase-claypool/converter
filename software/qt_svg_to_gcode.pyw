@@ -1566,7 +1566,9 @@ class MainWindow(QMainWindow):
         self.gl_preview.placementChanged.connect(self.on_placement_changed)
         preview_layout.addWidget(self.gl_preview, 1)
 
-        controls = QHBoxLayout()
+        self.preview_transport = QWidget()
+        controls = QHBoxLayout(self.preview_transport)
+        controls.setContentsMargins(0, 0, 0, 0)
         controls.addWidget(QPushButton("|<", clicked=lambda: self.set_index(0)))
         controls.addWidget(QPushButton("<", clicked=lambda: self.set_index(self.preview_index - 1)))
         controls.addWidget(QPushButton("Play", clicked=self.play))
@@ -1576,7 +1578,7 @@ class MainWindow(QMainWindow):
         self.slider.valueChanged.connect(self.set_index)
         controls.addWidget(self.slider, 1)
         controls.addWidget(QPushButton(">|", clicked=lambda: self.set_index(len(self.moves))))
-        preview_layout.addLayout(controls)
+        preview_layout.addWidget(self.preview_transport)
 
         # Preview and Cancel belong with the preview they build and stop.
         preview_actions = QHBoxLayout()
@@ -1768,6 +1770,12 @@ class MainWindow(QMainWindow):
     def tools_pane_control_width(self):
         """Width needed to show the active tool's controls without clipping."""
         current = self.stack.currentWidget()
+        preferred = getattr(current, "preferred_tool_pane_width", None)
+        if callable(preferred):
+            return max(
+                self.stack.minimumWidth(),
+                int(preferred()),
+            )
         controls_scroll = getattr(current, "controls_scroll", None)
         if current is not self.convert_root and controls_scroll is not None:
             content = controls_scroll.widget()
@@ -1801,6 +1809,15 @@ class MainWindow(QMainWindow):
             return
         preview_floor = self.preview_panel.minimumSizeHint().width()
         available = max(self.stack.minimumWidth(), total - preview_floor)
+        preferred = getattr(
+            self.stack.currentWidget(),
+            "preferred_tool_pane_width",
+            None,
+        )
+        if callable(preferred):
+            target = min(int(preferred()), available)
+            self.main_split.setSizes([target, total - target])
+            return
         target = min(self.tools_pane_control_width(), available)
         if target > sizes[0]:
             self.main_split.setSizes([target, total - target])

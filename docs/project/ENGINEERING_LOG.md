@@ -1,5 +1,43 @@
 # Engineering Log
 
+<a id="elog-20261125-guided-color-cmyk-photo"></a>
+### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Make native coherent CMYK the guided color path
+
+- The owner reported that the Plotterfun CMYK result had the wrong hue,
+  brightness, and contrast and also showed artwork beyond the expected
+  14-inch visual boundary. Source review showed that Plotterfun traces each
+  process ink independently, unlike the shared structure-tensor geometry
+  requested for the reference color workflow.
+- **CMYK Photo** now opens in a guided image-led screen with one primary
+  **Create 4 G-code files** action. It selects coherent shared-geometry color
+  flow, runs automatic color analysis with GCR, previews the four layers, and
+  writes numbered `01-yellow`, `02-magenta`, `03-cyan`, and `04-black`
+  programs. The complete existing CMYK tuner remains under **Advanced
+  settings**.
+- The guided page is `250 x 250 mm`; its `176.78 mm` corner radius is inside
+  the `177.8 mm` radius of a 14-inch print circle. The shared preview displays
+  the reach circles around the image instead of the bare square Plotterfun
+  canvas.
+- The first guided pass still looked sparse. The revised screen displays the
+  source photo immediately in both the card and main canvas, hides the generic
+  Preview/playback/fit chrome, and restores it only in advanced mode.
+- The full native workflow was exercised on the supplied colorful photo. It
+  emitted four nonempty programs with GCR `80 %`; maximum measured XY radius
+  was `174.817 mm`. Yellow had `266,988` drawing moves, magenta `136,910`,
+  cyan `130,937`, and black `106,191`; every program passed strict Xθ/Yθ
+  motion preflight with no bare-rotation rapids.
+- Plotterfun Extended remains available as an experimental independent-channel
+  comparison and its dashboard description now points to **CMYK Photo** for
+  color matching.
+- Focused CMYK, guided-workflow, and generator-shell modules pass `121` tests
+  with the expected OpenGL-context skip. Complete converter discovery passes
+  `719` tests in `151.103 s` with that same skip. Physical hue, density, and
+  registration validation remain open.
+- Evidence: `WSW-20261125-008`;
+  `docs/changes/windows-software/2026/2026-11-25-guided-color-cmyk-photo.md`.
+- Category: windows-software, cmyk, color-match, gcr,
+  coherent-color-flow, guided-ui, fourteen-inch-bounds, x-theta, y-theta.
+
 <a id="elog-20261125-plotterfun-cmyk-simple-workflow"></a>
 ### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Generate four registered CMYK G-code programs from Plotterfun
 

@@ -20,8 +20,8 @@ VENDOR_PAGE = (
 class PlotterfunExtendedTab(PlotterfunWebTab):
     GROUP = "Photo-based"
     DESCRIPTION = (
-        "Locally built Plotterfun Extended with 40 algorithms, CMYK/RGB/"
-        "custom channels, and optional depth or face masks."
+        "Experimental independent-channel comparison; use CMYK Photo for "
+        "color matching."
     )
 
     def __init__(self, host):

@@ -206,6 +206,7 @@ class GeneratorTab(QWidget):
             "Set this tab's controls, then press Preview. The shared preview "
             "panel draws this tab's result, and Save G-code exports it."
         )
+        self.guidance = hint
         hint.setWordWrap(True)
         hint.setStyleSheet("color: #475569;")
         outer.addWidget(hint)

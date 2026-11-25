@@ -22,14 +22,18 @@ import os
 import threading
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QThread, Qt, Signal
-from PySide6.QtGui import QCursor, QGuiApplication
+from PySide6.QtCore import QEvent, QObject, QThread, Qt, Signal
+from PySide6.QtGui import QCursor, QGuiApplication, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
+    QFileDialog,
+    QFrame,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QPushButton,
+    QVBoxLayout,
     QWidget,
 )
 
@@ -46,7 +50,7 @@ from ._tab_common import (
 from .cmyk_sheet import build_sheet
 
 
-TITLE = "CMYK"
+TITLE = "CMYK Photo"
 ORDER = 25
 EDGE_FLOW_STYLES = (
     "edge_flow",
@@ -226,6 +230,7 @@ class CmykTab(GeneratorTab):
     # The tab draws its own halftone marks; the Convert-tab fill must not
     # hatch every dot outline a second time.
     SELF_SCREENED = True
+    WRITE_ORDER = converter.CHANNELS
 
     def __init__(self, host):
         super().__init__(host)
@@ -2456,11 +2461,16 @@ class CmykTab(GeneratorTab):
             return
         self._write_files(self._analysis)
 
+    def _output_label(self, channel):
+        return converter.CHANNEL_LABELS[channel].lower()
+
     def _write_files(self, results):
+        channels = [
+            channel for channel in self.WRITE_ORDER if channel in results
+        ]
         entries = [
-            (converter.CHANNEL_LABELS[channel].lower(), results[channel]["gcode"])
-            for channel in converter.CHANNELS
-            if channel in results
+            (self._output_label(channel), results[channel]["gcode"])
+            for channel in channels
         ]
         if not entries:
             self.report_error("Nothing to save; preview first.")
@@ -2485,7 +2495,9 @@ class CmykTab(GeneratorTab):
         if not callable(export):
             self.report_error("The host window does not provide batch saving.")
             return
-        written = export(entries, None, base)
+        base_path = getattr(self, "_next_export_base_path", None)
+        self._next_export_base_path = None
+        written = export(entries, base_path, base)
         manifest_path = None
         set_manifest_path = None
         if written and sheet and self._layers_manifest is not None:
@@ -2521,13 +2533,15 @@ class CmykTab(GeneratorTab):
         """Record the complete print recipe and output hashes for a set."""
         first = Path(written[0])
         stem = first.stem
-        for channel in converter.CHANNELS:
-            suffix = "-" + converter.CHANNEL_LABELS[channel].lower()
+        channels = [
+            channel for channel in self.WRITE_ORDER if channel in results
+        ]
+        for channel in channels:
+            suffix = "-" + self._output_label(channel)
             if stem.endswith(suffix):
                 stem = stem[: -len(suffix)]
                 break
         path = first.parent / f"{stem}-set.json"
-        channels = [channel for channel in converter.CHANNELS if channel in results]
         settings = self._effective_settings()
         factor = self.scale_pct.value() / 100.0
         weights = self._weights()
@@ -2573,6 +2587,9 @@ class CmykTab(GeneratorTab):
             "kind": "cmyk-print-set",
             "version": 4,
             "created": datetime.datetime.now().isoformat(timespec="seconds"),
+            "print_order": [
+                self._output_label(channel) for channel in channels
+            ],
             "source": {
                 "file": source_path.name if source_path else "",
                 "sha256": (
@@ -2823,6 +2840,480 @@ class CmykTab(GeneratorTab):
         return path
 
 
+class CmykPhotoTab(CmykTab):
+    """One-action color workflow with the complete CMYK tuner behind it."""
+
+    NAME = "cmyk"
+    WRITE_ORDER = ("y", "m", "c", "k")
+    GUIDED_HOST_CONTROLS = (
+        "ink_profile_button",
+        "fill_bed_button",
+        "fit_inside_button",
+        "preview_motion_check",
+        "ink_sim_check",
+        "preview_transport",
+    )
+
+    def __init__(self, host):
+        super().__init__(host)
+        self._guided_mode = True
+        self._quick_pending_save = False
+        self._next_export_base_path = None
+        self._last_quick_folder = ""
+        self._source_pixmap = QPixmap()
+        preview_widget = getattr(host, "gl_preview", None)
+        self._preview_placeholder = QLabel(
+            preview_widget if preview_widget is not None else self
+        )
+        self._preview_placeholder.setAlignment(Qt.AlignCenter)
+        self._preview_placeholder.setAttribute(
+            Qt.WA_TransparentForMouseEvents,
+            True,
+        )
+        self._preview_placeholder.hide()
+        if preview_widget is not None:
+            preview_widget.installEventFilter(self)
+        self.page_w.setValue(250)
+        self.page_h.setValue(250)
+        self.margin.setValue(5)
+        self.scale_pct.setValue(100)
+        self._build_guided_layout()
+        self._show_guided_mode(True)
+
+    def _build_guided_layout(self):
+        self.guided_bar = QWidget()
+        bar = QHBoxLayout(self.guided_bar)
+        bar.setContentsMargins(2, 2, 2, 2)
+        title = QLabel("Guided color setup")
+        title.setStyleSheet("font-weight: 600;")
+        bar.addWidget(title, 1)
+        self.advanced_button = QPushButton("Advanced settings")
+        self.advanced_button.setCheckable(True)
+        self.advanced_button.toggled.connect(self._toggle_advanced)
+        bar.addWidget(self.advanced_button)
+
+        self.guided_panel = QWidget()
+        guided_layout = QVBoxLayout(self.guided_panel)
+        guided_layout.setContentsMargins(0, 0, 0, 0)
+        guided_layout.setSpacing(8)
+        card = QFrame()
+        card.setObjectName("cmykGuidedCard")
+        card.setStyleSheet(
+            "QFrame#cmykGuidedCard {"
+            "  background: palette(base);"
+            "  border: 1px solid palette(mid);"
+            "  border-radius: 10px;"
+            "}"
+            "QLabel#cmykGuidedTitle {"
+            "  color: palette(text);"
+            "  font-size: 16px;"
+            "  font-weight: 700;"
+            "}"
+            "QLabel#cmykGuidedBody {"
+            "  color: palette(text);"
+            "  font-size: 11px;"
+            "}"
+            "QLabel#cmykGuidedImage {"
+            "  color: palette(text);"
+            "  background: palette(button);"
+            "  border-radius: 6px;"
+            "  padding: 8px;"
+            "  font-size: 11px;"
+            "}"
+            "QPushButton#cmykCreateButton {"
+            "  background: #2563eb;"
+            "  color: white;"
+            "  border: none;"
+            "  border-radius: 7px;"
+            "  padding: 13px 14px;"
+            "  font-size: 13px;"
+            "  font-weight: 700;"
+            "}"
+            "QPushButton#cmykCreateButton:hover {"
+            "  background: #1d4ed8;"
+            "}"
+            "QPushButton#cmykCreateButton:disabled {"
+            "  background: palette(mid);"
+            "  color: palette(disabled-text);"
+            "}"
+        )
+        body = QVBoxLayout(card)
+        body.setContentsMargins(18, 16, 18, 16)
+        body.setSpacing(10)
+        heading = QLabel("Color-matched CMYK photo")
+        heading.setObjectName("cmykGuidedTitle")
+        body.addWidget(heading)
+        description = QLabel(
+            "Uses the current image, matches tone through shared coherent "
+            "flow, and creates one program for each physical pen."
+        )
+        description.setObjectName("cmykGuidedBody")
+        description.setWordWrap(True)
+        body.addWidget(description)
+        self.guided_preview = QLabel()
+        self.guided_preview.setObjectName("cmykGuidedImage")
+        self.guided_preview.setMinimumHeight(170)
+        self.guided_preview.setMaximumHeight(210)
+        self.guided_preview.setAlignment(Qt.AlignCenter)
+        body.addWidget(self.guided_preview)
+        self.guided_image = QLabel()
+        self.guided_image.setObjectName("cmykGuidedImage")
+        self.guided_image.setWordWrap(True)
+        body.addWidget(self.guided_image)
+        self.quick_create_button = QPushButton("Create 4 G-code files…")
+        self.quick_create_button.setObjectName("cmykCreateButton")
+        self.quick_create_button.setToolTip(
+            "Use the current image, apply color-matched photo defaults, show "
+            "the preview, and save four programs in Yellow, Magenta, Cyan, "
+            "Black print order."
+        )
+        self.quick_create_button.clicked.connect(self.create_guided_set)
+        body.addWidget(self.quick_create_button)
+        order = QLabel(
+            "14-inch-safe page  •  Y → M → C → K  •  Xθ/Yθ optimized"
+        )
+        order.setObjectName("cmykGuidedBody")
+        order.setWordWrap(True)
+        body.addWidget(order)
+        self.profile_note = QLabel()
+        self.profile_note.setObjectName("cmykGuidedBody")
+        self.profile_note.setWordWrap(True)
+        body.addWidget(self.profile_note)
+        guided_layout.addWidget(card)
+        guided_layout.addStretch(1)
+
+        layout = self.layout()
+        layout.insertWidget(0, self.guided_bar)
+        layout.insertWidget(1, self.guided_panel, 1)
+        self._refresh_guided_image()
+
+    def _toggle_advanced(self, enabled):
+        self._show_guided_mode(not bool(enabled))
+        self._apply_host_guided_visibility()
+        fit = getattr(self.host, "fit_tools_pane_to_controls", None)
+        if callable(fit):
+            fit()
+
+    def _show_guided_mode(self, guided):
+        self._guided_mode = bool(guided)
+        self.guided_panel.setVisible(self._guided_mode)
+        self.controls_scroll.setVisible(not self._guided_mode)
+        self.guidance.setVisible(not self._guided_mode)
+        self.advanced_button.blockSignals(True)
+        self.advanced_button.setChecked(not self._guided_mode)
+        self.advanced_button.setText(
+            "Back to guided setup"
+            if not self._guided_mode
+            else "Advanced settings"
+        )
+        self.advanced_button.blockSignals(False)
+        if self._guided_mode and hasattr(self, "guided_image"):
+            self._refresh_artwork()
+
+    def preferred_tool_pane_width(self):
+        if self._guided_mode:
+            return 410
+        return self.controls.minimumSizeHint().width() + 34
+
+    def _refresh_artwork(self):
+        super()._refresh_artwork()
+        self._refresh_guided_image()
+
+    def _refresh_guided_image(self):
+        if not hasattr(self, "guided_image"):
+            return
+        path = getattr(self, "_artwork", "")
+        pixmap = QPixmap(path) if path else QPixmap()
+        self._source_pixmap = pixmap
+        if not pixmap.isNull():
+            self.guided_preview.setPixmap(
+                pixmap.scaled(
+                    360,
+                    200,
+                    Qt.KeepAspectRatio,
+                    Qt.SmoothTransformation,
+                )
+            )
+            self.guided_preview.setText("")
+        else:
+            self.guided_preview.clear()
+            self.guided_preview.setText(
+                "Image preview appears here"
+                if path
+                else "Choose a photo to begin"
+            )
+        self.guided_image.setText(
+            "Current image: " + (Path(path).name or "(none)")
+            if path
+            else "No image selected. Create will ask you to choose one."
+        )
+        if hasattr(self, "profile_note"):
+            self.profile_note.setText(
+                "Using the loaded measured pen profile."
+                if self._active_ink_colors()
+                else (
+                    "Using default process-ink colors. For the closest paper "
+                    "match, load a measured pen profile in Advanced settings."
+                )
+            )
+        self._update_preview_placeholder()
+
+    def _update_preview_placeholder(self):
+        if not hasattr(self, "_preview_placeholder"):
+            return
+        preview = getattr(self.host, "gl_preview", None)
+        if preview is None:
+            return
+        self._preview_placeholder.setGeometry(preview.rect())
+        self._preview_placeholder.setStyleSheet(
+            "QLabel {"
+            "  background: palette(base);"
+            "  color: palette(text);"
+            "  font-size: 12px;"
+            "  padding: 24px;"
+            "}"
+        )
+        if self._source_pixmap.isNull():
+            self._preview_placeholder.clear()
+            self._preview_placeholder.setText(
+                "Choose a photo, then create the four CMYK programs."
+            )
+        else:
+            width = max(120, preview.width() - 48)
+            height = max(120, preview.height() - 48)
+            self._preview_placeholder.setPixmap(
+                self._source_pixmap.scaled(
+                    width,
+                    height,
+                    Qt.KeepAspectRatio,
+                    Qt.SmoothTransformation,
+                )
+            )
+        visible = (
+            self._guided_mode
+            and self.isVisible()
+            and not getattr(self.host, "moves", None)
+        )
+        self._preview_placeholder.setVisible(visible)
+        if visible:
+            self._preview_placeholder.raise_()
+
+    def _output_label(self, channel):
+        label = converter.CHANNEL_LABELS[channel].lower()
+        return f"{self.WRITE_ORDER.index(channel) + 1:02d}-{label}"
+
+    def _apply_quick_defaults(self):
+        # A 250 mm square has a 176.78 mm corner radius, keeping the complete
+        # page inside the 355.6 mm (14 in) print circle.
+        self.page_w.setValue(250)
+        self.page_h.setValue(250)
+        self.margin.setValue(5)
+        self.scale_pct.setValue(100)
+        self.registration_marks.setChecked(True)
+        self.theta_mode.set_value("optimized")
+        return self.apply_reference_defaults()
+
+    def _expected_quick_paths(self, folder, base_name):
+        base = Path(folder) / base_name
+        paths = [
+            Path(f"{base}-{self._output_label(channel)}.gcode")
+            for channel in self.WRITE_ORDER
+        ]
+        return paths + [Path(f"{base}-set.json")]
+
+    def create_guided_set(self):
+        if self.analysis_running():
+            self.report_error("The four CMYK programs are already being built.")
+            return
+        if getattr(self.host, "preview_thread", None) is not None:
+            self.report_error("Wait for the current preview to finish.")
+            return
+        if getattr(self.host, "save_thread", None) is not None:
+            self.report_error("Wait for the current save to finish.")
+            return
+        self._refresh_artwork()
+        if not self._artwork:
+            pick = getattr(self.host, "pick_svg", None)
+            if callable(pick):
+                pick()
+                QGuiApplication.processEvents()
+                self._refresh_artwork()
+        if not self._artwork:
+            QMessageBox.warning(
+                self,
+                "Choose a photo",
+                "Choose the image you want to print, then try again.",
+            )
+            return
+        source = Path(self._artwork)
+        initial = self._last_quick_folder or str(source.parent)
+        folder = QFileDialog.getExistingDirectory(
+            self,
+            "Choose one folder for the four CMYK G-code files",
+            initial,
+        )
+        if not folder:
+            self.report_error("CMYK G-code creation cancelled.")
+            return
+        self._last_quick_folder = folder
+        base_name = f"{source.stem}-cmyk"
+        existing = [
+            path
+            for path in self._expected_quick_paths(folder, base_name)
+            if path.exists()
+        ]
+        if existing:
+            answer = QMessageBox.question(
+                self,
+                "Replace the existing CMYK set?",
+                (
+                    f"{len(existing)} matching file(s) already exist in "
+                    f"{folder}. Replace them?"
+                ),
+                QMessageBox.StandardButton.Yes
+                | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                self.report_error("CMYK G-code creation cancelled.")
+                return
+        self._next_export_base_path = str(
+            Path(folder) / f"{base_name}.gcode"
+        )
+        if not self._apply_quick_defaults():
+            self._next_export_base_path = None
+            return
+        self._quick_pending_save = True
+        self._set_quick_busy(True, "Building the color preview…")
+        preview = getattr(self.host, "preview", None)
+        if not callable(preview):
+            self._quick_pending_save = False
+            self._next_export_base_path = None
+            self._set_quick_busy(False)
+            self.report_error("The converter cannot start a preview.")
+            return
+        preview()
+        thread = getattr(self.host, "preview_thread", None)
+        if thread is None:
+            self._quick_pending_save = False
+            self._next_export_base_path = None
+            self._set_quick_busy(False)
+            return
+        thread.finished.connect(self._guided_preview_finished)
+
+    def _guided_preview_finished(self):
+        if not self._quick_pending_save:
+            return
+        self._quick_pending_save = False
+        self._next_export_base_path = None
+        self._set_quick_busy(False)
+        self.report_error("Preview did not complete; no files were saved.")
+
+    def on_preview_finished(self):
+        super().on_preview_finished()
+        if not self._quick_pending_save:
+            return
+        self._quick_pending_save = False
+        self._set_quick_busy(True, "Planning the four optimized programs…")
+        self.save_all()
+
+    def _set_planning_state(self, running):
+        super()._set_planning_state(running)
+        if hasattr(self, "quick_create_button"):
+            self._set_quick_busy(
+                running,
+                "Creating the four CMYK files…"
+                if running
+                else None,
+            )
+
+    def _on_failed(self, message):
+        self._next_export_base_path = None
+        super()._on_failed(message)
+
+    def _on_cancelled(self):
+        self._next_export_base_path = None
+        super()._on_cancelled()
+        if hasattr(self, "quick_create_button"):
+            self._set_quick_busy(False)
+
+    def _set_quick_busy(self, busy, message=None):
+        self.quick_create_button.setEnabled(not busy)
+        self.advanced_button.setEnabled(not busy)
+        self.quick_create_button.setText(
+            message if message else "Create 4 G-code files…"
+        )
+        if self._guided_mode:
+            cancel = getattr(self.host, "cancel_preview_button", None)
+            if cancel is not None:
+                cancel.setVisible(bool(busy))
+        if busy:
+            self._preview_placeholder.hide()
+        else:
+            self._update_preview_placeholder()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self._refresh_guided_image()
+        self._apply_host_guided_visibility()
+
+    def hideEvent(self, event):
+        self._preview_placeholder.hide()
+        self._restore_host_controls()
+        super().hideEvent(event)
+
+    def _apply_host_guided_visibility(self):
+        guided = bool(self._guided_mode)
+        preview = getattr(self.host, "preview_button", None)
+        cancel = getattr(self.host, "cancel_preview_button", None)
+        if preview is not None:
+            preview.setVisible(not guided)
+        if cancel is not None:
+            cancel.setVisible(not guided)
+        for name in self.GUIDED_HOST_CONTROLS:
+            control = getattr(self.host, name, None)
+            if control is not None:
+                control.setVisible(not guided)
+        if guided:
+            self._update_preview_placeholder()
+            status = getattr(self.host, "status", None)
+            if callable(getattr(status, "setText", None)):
+                status.setText(
+                    "Ready to create your four CMYK G-code files."
+                )
+            estimate = getattr(self.host, "estimate", None)
+            if callable(getattr(estimate, "setText", None)):
+                estimate.setText(
+                    "One color-matched page, fitted inside the 14-inch "
+                    "print circle."
+                )
+        else:
+            self._preview_placeholder.hide()
+            status = getattr(self.host, "status", None)
+            if callable(getattr(status, "setText", None)):
+                status.setText("Advanced CMYK controls are ready.")
+            estimate = getattr(self.host, "estimate", None)
+            if callable(getattr(estimate, "setText", None)):
+                estimate.setText(
+                    "Preview builds the four layers; saving plans exact "
+                    "Xθ/Yθ G-code."
+                )
+
+    def _restore_host_controls(self):
+        for name in ("preview_button", "cancel_preview_button") + (
+            self.GUIDED_HOST_CONTROLS
+        ):
+            control = getattr(self.host, name, None)
+            if control is not None:
+                control.setVisible(True)
+
+    def eventFilter(self, watched, event):
+        preview = getattr(self.host, "gl_preview", None)
+        if watched is preview and event.type() == QEvent.Type.Resize:
+            self._update_preview_placeholder()
+        return super().eventFilter(watched, event)
+
+
 def _sha256_file(path):
     digest = hashlib.sha256()
     with Path(path).open("rb") as stream:
@@ -2832,4 +3323,4 @@ def _sha256_file(path):
 
 
 def create_tab(host):
-    return CmykTab(host)
+    return CmykPhotoTab(host)

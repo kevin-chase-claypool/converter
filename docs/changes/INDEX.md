@@ -5,7 +5,8 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
-| 2026-11-25 | `WSW-20261125-007` | windows-software | implemented | [Simplify Plotterfun Extended and generate registered Y/M/C/K G-code](windows-software/2026/2026-11-25-plotterfun-cmyk-simple-workflow.md) |
+| 2026-11-25 | `WSW-20261125-008` | windows-software | implemented | [Make native coherent CMYK the guided color workflow](windows-software/2026/2026-11-25-guided-color-cmyk-photo.md) |
+| 2026-11-25 | `WSW-20261125-007` | windows-software | superseded | [Simplify Plotterfun Extended and generate registered Y/M/C/K G-code](windows-software/2026/2026-11-25-plotterfun-cmyk-simple-workflow.md) |
 | 2026-11-25 | `WSW-20261125-006` | windows-software | implemented | [Embed Plotterfun Extended as a local converter tool](windows-software/2026/2026-11-25-plotterfun-extended-tab.md) |
 | 2026-11-25 | `WSW-20261125-005` | windows-software | implemented | [Gate coherent dark layers by scene depth](windows-software/2026/2026-11-25-coherent-flow-scene-depth-layers.md) |
 | 2026-11-25 | `WSW-20261125-004` | windows-software | implemented | [Add a coherent shared-geometry CMYK color-flow renderer](windows-software/2026/2026-11-25-coherent-color-flow.md) |

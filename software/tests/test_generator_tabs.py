@@ -33,7 +33,7 @@ def _load_app_module():
 EXPECTED_TOOLS = [
     "Flow Field",
     "Line Draw",
-    "CMYK",
+    "CMYK Photo",
     "3D Wireframe",
     "Harmonograph",
     "Snowflake",
@@ -87,7 +87,7 @@ class ToolShellTests(unittest.TestCase):
             cmyk = next(
                 widget
                 for title, widget, _group, _description in window.generator_tools
-                if title == "CMYK"
+                if title == "CMYK Photo"
             )
             cmyk.style.setCurrentIndex(cmyk.style.findData("waves_zero"))
             cmyk.pitch.setValue(0.50)
@@ -132,7 +132,7 @@ class ToolShellTests(unittest.TestCase):
             reopened_cmyk = next(
                 widget
                 for title, widget, _group, _description in reopened.generator_tools
-                if title == "CMYK"
+                if title == "CMYK Photo"
             )
             self.assertEqual(reopened_cmyk.style.currentData(), "waves_zero")
             self.assertAlmostEqual(reopened_cmyk.pitch.value(), 0.50)
@@ -209,7 +209,7 @@ class ToolShellTests(unittest.TestCase):
             groups["Photo-based"],
             [
                 "Line Draw",
-                "CMYK",
+                "CMYK Photo",
                 "SquiggleCam",
                 "Pixel Art",
                 "Plotterfun",
@@ -242,6 +242,25 @@ class ToolShellTests(unittest.TestCase):
             if action.menu() is not None
         ]
         self.assertEqual(submenus, ["Photo-based", "Algorithm only"])
+
+    def test_cmyk_photo_guided_mode_hides_advanced_preview_chrome(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.show()
+        window.show_tool("CMYK Photo")
+        self.app.processEvents()
+        tab = window.stack.currentWidget()
+        self.assertTrue(tab.guided_panel.isVisible())
+        self.assertFalse(window.preview_button.isVisible())
+        self.assertFalse(window.cancel_preview_button.isVisible())
+        self.assertFalse(window.ink_profile_button.isVisible())
+        self.assertFalse(window.preview_transport.isVisible())
+        tab.advanced_button.click()
+        self.app.processEvents()
+        self.assertTrue(window.preview_button.isVisible())
+        self.assertTrue(window.cancel_preview_button.isVisible())
+        self.assertTrue(window.ink_profile_button.isVisible())
+        self.assertTrue(window.preview_transport.isVisible())
 
     def test_tools_menu_switches_pages(self):
         window = self.module.MainWindow()
@@ -341,10 +360,14 @@ class ToolShellTests(unittest.TestCase):
         self.app.processEvents()
         start_width = window.stack.width()
 
-        window.show_tool("CMYK")
+        window.show_tool("CMYK Photo")
         self.app.processEvents()
 
         tab = window.stack.currentWidget()
+        self.assertTrue(tab.guided_panel.isVisible())
+        self.assertFalse(tab.controls_scroll.isVisible())
+        tab.advanced_button.click()
+        self.app.processEvents()
         self.assertGreater(window.stack.width(), start_width)
         self.assertGreaterEqual(
             window.stack.width(), window.tools_pane_control_width()
@@ -368,7 +391,7 @@ class ToolShellTests(unittest.TestCase):
             self.assertTrue(hasattr(page, "scale_pct"), title)
             # CMYK ships the owner's tuned rectilinear default (WSW-...-025);
             # every other tool starts at 1:1.
-            expected = 280 if title == "CMYK" else 100
+            expected = 100
             self.assertEqual(page.scale_pct.value(), expected, title)
             self.assertEqual(page.scale_pct.maximum(), 1000, title)
 
@@ -455,7 +478,7 @@ class ToolShellTests(unittest.TestCase):
     def test_self_screened_tools_stop_the_fill_pass(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        window.show_tool("CMYK")
+        window.show_tool("CMYK Photo")
         tab = window.stack.currentWidget()
         self.assertTrue(getattr(tab, "SELF_SCREENED", False))
         settings = window.settings_for_source(tab)
@@ -689,7 +712,7 @@ class ToolShellTests(unittest.TestCase):
         cmyk = next(
             widget
             for title, widget, _group, _description in window.generator_tools
-            if title == "CMYK"
+            if title == "CMYK Photo"
         )
         key_before = cmyk._control_key()
         window.load_ink_profile(path)
@@ -826,7 +849,7 @@ class ToolShellTests(unittest.TestCase):
                 image.putpixel((x, y), (0, 0, 0))          # black
         image.save(image_path)
         window.svg_path.setText(image_path)
-        window.show_tool("CMYK")
+        window.show_tool("CMYK Photo")
         tab = window.stack.currentWidget()
         tab.page_w.setValue(40)
         tab.page_h.setValue(40)
@@ -905,7 +928,7 @@ class ToolShellTests(unittest.TestCase):
     def test_preview_finished_hook_runs_for_the_previewed_tab(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        window.show_tool("CMYK")
+        window.show_tool("CMYK Photo")
         tab = window.stack.currentWidget()
         calls = []
         tab.on_preview_finished = lambda: calls.append("planned")

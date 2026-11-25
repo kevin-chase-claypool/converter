@@ -71,7 +71,7 @@ python -m unittest -q software.tests.test_path_join
 python -m unittest discover -q -s software\tests -p "test_*.py"
 ```
 
-The complete discovery run currently contains 714 test cases. Repeated generator
+The complete discovery run currently contains 719 test cases. Repeated generator
 tab contracts retain their per-tab class names and failure locations, while
 related slow setup scenarios use subtests to avoid rebuilding the same Qt
 window or generated coupon.
@@ -524,16 +524,15 @@ startup, one page per tool; a broken tool is reported in the log instead of
 stopping the app.
 
 Import, **Preview / Cancel / Save G-code**, and the OpenGL preview panel are
-static window furniture: they stay visible on every tab. Pressing **Preview**
-builds the active tab - Convert previews the Artwork row's file, while Flow
-Field, Line Draw, and 3D Wireframe build their own SVG from their controls -
-and that result runs through the same converter pipeline into the shared
-preview panel. **Save G-code** exports the active tab's result. Switching tabs
-never rebuilds anything; it marks the visible preview as belonging to another
-tab until Preview is pressed again. Multi-layer tools (CMYK) keep that static
-Preview for the overlaid view; exact per-ink programs are planned when
-**Save 4 G-code files** is pressed and are written through one save dialog
-owned by the window.
+static window furniture. Pressing **Preview** builds the active tab - Convert
+previews the Artwork row's file, while Flow Field, Line Draw, and 3D Wireframe
+build their own SVG from their controls - and that result runs through the
+same converter pipeline into the shared preview panel. **Save G-code** exports
+the active tab's result. Switching tabs never rebuilds anything; it marks the
+visible preview as belonging to another tab until Preview is pressed again.
+**CMYK Photo** is the guided exception: it starts with one image-led action,
+hides the static Preview/playback/fit chrome, and restores the complete CMYK
+tuner under **Advanced settings**.
 
 Tool authors: the contract and the host entry points are documented in
 [`generator_tabs/README.md`](generator_tabs/README.md). Ported or vendored
@@ -550,18 +549,27 @@ Current tools:
   threshold, hatch spacing, hatch light/mid/dark thresholds (upstream
   linedraw levels 144/64/16), sketch jitter, minimum length, simplify,
   resolution, line width, seed, page size, margin, artwork scale.
-- **CMYK** - RGB to CMYK separation with gray-component replacement, screened
-  as one layer per ink pen. For a normal photo, open the artwork, press
-  **Use recommended photo defaults**, inspect **Preview**, then press
-  **Save 4 G-code files**. The one action selects the coherent color-flow
-  workflow, installs the complete photo baseline below, runs automatic image
-  colour analysis, and leaves page size, artwork scale, pen width, pen
-  offsets, and bed motion unchanged. The advanced controls remain available
-  for deliberate tuning; they need no adjustment for the recommended path.
-  Controls: artwork (from the static Artwork row), the recommended action,
-  and an **Auto (photo)** button that analyzes the image and sets auto levels,
-  brightness, contrast, saturation, GCR, a starting gamma, and a
-  luminance-sharpening preset.
+- **CMYK Photo** - the guided RGB-to-CMYK color workflow. Open an image, then
+  press **Create 4 G-code files**. If needed, the action asks for the image and
+  one output folder. It applies the recommended coherent color-flow recipe,
+  runs automatic color analysis with GCR enabled, shows the shared preview,
+  and writes four numbered programs in physical Yellow, Magenta, Cyan, Black
+  order.
+  - The guided page is `250 x 250 mm`. Its corner radius is `176.78 mm`, inside
+    the `177.8 mm` radius of the 14-inch print circle.
+  - The screen shows the source image immediately in the large preview, then
+    replaces it with the four-layer print preview. The static Preview,
+    playback, fill, and ink-profile controls are hidden until **Advanced
+    settings** is opened.
+  - Open **Advanced settings** for the complete existing CMYK tuner. The
+    recommended controls set coherent shared geometry, three tone layers,
+    `2.5 mm` structure smoothing, `60 %` pitch compression, black keylines,
+    pen-aware pitch, chaining, saturation, contrast, brightness, gamma, GCR,
+    ink weights, and sharpening. The active measured ink profile is used when
+    loaded.
+  - **Plotterfun Extended** remains available as an experimental comparison.
+    It runs its selected algorithm independently per CMYK channel and is not
+    the color-matched production path.
   - Embedded image colour profiles are converted to sRGB before auto levels,
     sharpening, and CMYK separation. This is required for wide-gamut sources
     such as Display P3 photographs; treating their raw RGB numbers as sRGB
@@ -1030,6 +1038,10 @@ Current tools:
   tonal density as well as edges. The generated files preserve those differences
   in their drawing counts.
 
+  This remains an experimental comparison for the separate upstream channel
+  geometry. Use **CMYK Photo** for the production coherent color workflow and
+  measured-profile-aware tone matching.
+
   **Advanced controls** reveals the full upstream sidebar, including all 40
   algorithms, RGB/custom channels, luminance-depth controls, face-boundary
   masking, field copies, route optimization, and page settings. In advanced
@@ -1119,11 +1131,11 @@ tab still uses the selected Fit mode.
 Generator tab controls fill the settings column, with the tab's hint and
 status text stacked below them. The settings column sizes itself to the active
 tool's visible controls, expands when a wider settings group is opened, and
-keeps a 280 px floor so it cannot be crushed by the preview. Selecting **CMYK**
-therefore widens the column automatically for its long Screen rows instead of
-requiring a manual splitter drag. The preview's checkbox and fit actions
-occupy two rows so they do not force the settings column into a horizontal
-scrollbar.
+keeps a 280 px floor so it cannot be crushed by the preview. **CMYK Photo**
+starts in a compact guided column; opening **Advanced settings** widens it for
+the long Screen rows instead of requiring a manual splitter drag. The preview's
+checkbox and fit actions occupy two rows so they do not force the settings
+column into a horizontal scrollbar.
 
 ### Turtletoy artwork
 
@@ -1155,8 +1167,8 @@ work with no input (optional mesh/image sources are noted below).
 | Convert | Fit bed (auto), Fill spacing 3 mm, linear or crosshatch, feed 700 / travel 3000 mm/min | Imported artwork; Save G-code once the preview looks right. |
 | Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
-| CMYK photo (recommended) | Open an image, press **Use recommended photo defaults**, inspect **Preview**, then press **Save 4 G-code files**. The action installs coherent color flow, three Flow layers, 60 % continuous Shade compression, 2.5 mm smoothing, edge-preserving source simplification at 65 % of that radius, Black keylines on, a `2.0` pen-width effective pitch with a `1.2 mm` floor, chaining on at `1 mm`, `0.10 mm` tolerance, 200000 marks/ink, saturation 115 %, contrast 150 %, brightness 115 %, gamma 1.10, GCR 75 %, weights 100/100/100/100 %, and 60 % sharpening at 1.5 mm. Auto may refine color within exposure-preserving bounds. | One-click start for a normal photo. It runs image colour Auto while preserving page size, artwork scale, pen width, pen offsets, and bed motion. Preview plans the four inks in the background; Save writes four separate overprinted programs. Inspect density, connector ink, registration, and reach before a physical pass. |
-| CMYK coherent-flow tuning | Press **Use recommended photo defaults** first. Adjust **Shade compression** for continuous gradient shading, **Flow layers** for additional offset dark-region geometry, and **Flow smoothing** for both source simplification and orientation calmness. **Fine detail** remains available as the prior per-ink precision mode. | This is the Reddit-reference workflow: one blurred multichannel image-form tensor defines direction, and long shared streamlines receive contiguous local CMYK ink planes. Darker areas gain offset layers, weak areas use layer-specific fixed angles, and Black keylines preserve subject structure. The prior per-ink and stochastic shared Edge-flow modes remain explicit comparison paths. |
+| CMYK Photo (recommended) | Open an image, inspect the source preview, then press **Create 4 G-code files** and choose one folder. | Applies coherent color flow, three Flow layers, 60 % continuous Shade compression, 2.5 mm smoothing, edge-preserving simplification, Black keylines, pen-aware pitch, chaining, automatic color analysis with GCR, and a 250 mm page inside the 14-inch circle. Writes numbered Y/M/C/K programs and a manifest. Advanced settings expose the complete tuner. |
+| CMYK coherent-flow tuning | Open **Advanced settings** and press **Use recommended photo defaults** first. Adjust **Shade compression** for continuous gradient shading, **Flow layers** for additional offset dark-region geometry, and **Flow smoothing** for both source simplification and orientation calmness. **Fine detail** remains available as the prior per-ink precision mode. | This is the Reddit-reference workflow: one blurred multichannel image-form tensor defines direction, and long shared streamlines receive contiguous local CMYK ink planes. Darker areas gain offset layers, weak areas use layer-specific fixed angles, and Black keylines preserve subject structure. Plotterfun's independent-channel networks remain an explicit experimental comparison. |
 | CMYK continuous | Use the same image curve as the CMYK recipe, then choose **Continuous row screen (adjacent joins)** and keep **Pen-down chain** on with a `5 mm` gap. | Fastest starting point for an image where fewer M3/M5 cycles matter more than Edge-flow contour texture. Straight screen directions remain visible, and all joins print connector ink. A fully blank row band can still lift. |
 | 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
 | Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |
@@ -1760,7 +1772,7 @@ display-only; every other group changes the emitted program.
   the bed so the gantry draws the artwork unchanged (precise; the bed cannot
   add tilt, runout, or reversal error). XY-only programs still carry their
   A words - at one constant value - so ioSender and the controller see the
-  same program shape either way. The CMYK tab carries its own copy of the
+  same program shape either way. CMYK Photo carries its own copy of the
   two bullets for its four ink programs and its calibration sheet.
 - The converter does not apply a pen/TMAG XY tool offset. Generated XY positions
   remain in the machine work-coordinate frame; the controller's commissioning
