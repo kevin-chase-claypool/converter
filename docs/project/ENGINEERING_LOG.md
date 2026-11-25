@@ -1,5 +1,39 @@
 # Engineering Log
 
+<a id="elog-20261125-cmyk-multichannel-edge-flow"></a>
+### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Guide CMYK streamlines with a multichannel image field
+
+- The owner again compared the CMYK render with the reference and reiterated
+  the required method: image gradients, a blurred structure tensor, evenly
+  spaced streamlines, extra dark-tone layers, and a fixed-angle fallback only
+  where structure is unclear.
+- The implementation already followed those steps, but its absolute tensor
+  floor classified broad facial gradients as noise. On the supplied portrait,
+  field diagnostics found a mean guidance weight of only `0.284`, with `14.0%`
+  of positions above `0.90`; most broad planes therefore remained on four
+  unrelated fallback angles.
+- The guide now combines scene luminance with the existing C/M/Y/K tone
+  gradients without allocating another full-resolution image. Moderate
+  coherent colour and tonal structure keeps the shared edge-tangent direction;
+  weak, flat, and incoherent texture still uses each ink's fixed angle.
+- Per-ink networks now use shared scene depth to continue the traced form across
+  temporary tone gaps while each channel's own tone gates its visible path
+  intervals. The four independently saved pen networks, dark-tone layers, and
+  experimental shared-coordinate mode remain intact.
+- After the change the same portrait field measured mean guidance weight
+  `0.681`, median `0.766`, and `42.3%` above `0.90`. Focused Edge-flow/tab tests
+  pass `83`; CMYK photo tests pass `17`; complete converter discovery passes
+  `683` tests with one expected OpenGL-context skip in `153.902 s`.
+- Stronger guidance can bend lines across low-contrast texture, so `Flow
+  smoothing` remains the detail/calmness control. Physical four-pass density,
+  pen spread, registration, and paper response remain unverified.
+- Evidence: `WSW-20261125-002`;
+  `docs/changes/windows-software/2026/2026-11-25-cmyk-multichannel-edge-flow.md`;
+  `tmp/edge-flow-variants.png`.
+- Category: windows-software, cmyk, edge-flow, structure-tensor,
+  multichannel, streamline, color-detail, portrait,
+  physical-validation-pending.
+
 <a id="elog-20261125-streamline-converter-test-suite"></a>
 ### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Split and streamline the converter test suite
 

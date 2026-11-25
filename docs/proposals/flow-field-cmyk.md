@@ -3,18 +3,24 @@
 **Status:** Implemented as the CMYK **Edge-flow streamlines** screen. Current
 behavior and the software-selected recipe are in
 [`../../software/README.md`](../../software/README.md); the current change
-record is `WSW-20261123-019`.
+record is `WSW-20261125-002`.
 
 ## Intent
 Add an optional CMYK rendering mode to the converter that replaces fixed-angle hatch patterns with smooth vector-field-guided streamlines following image contours and forms. Preserve the current CMYK method and all existing output behavior by default.
 
 ## Proposed processing
 1. Load raster artwork and derive CMYK channel coverage values using the converter's existing color-separation conventions.
-2. Compute image luminance gradients (Ix, Iy). Construct a local structure tensor from Ix², IxIy, Iy² and Gaussian-smooth its components.
+2. Compute gradients across scene luminance and the separated C/M/Y/K tone
+   maps. Construct a local multichannel structure tensor from each channel's
+   `Ix², IxIy, Iy²` terms and Gaussian-smooth the summed components.
 3. Extract a tangent direction (minor-eigenvalue eigenvector) to follow edges/forms; estimate directional coherence from eigenvalues. Treat directions as **unoriented** (theta equivalent to theta + pi) to avoid streamline flips.
-4. Smooth the direction field and blend toward a configurable fixed fallback angle where structure is weak/ambiguous. Guard low-gradient regions and avoid abrupt transitions.
+4. Smooth the direction field and blend toward each plate's fixed fallback
+   angle where structure is weak/ambiguous. Moderate coherent gradients retain
+   the shared image-form direction; only near-flat or incoherent texture falls
+   back. Avoid abrupt transitions and let the form continue across temporary
+   single-ink tone gaps.
 5. Trace evenly spaced streamlines using stable numerical integration, seed distribution, minimum-distance/collision checks, bounds clipping, and curvature limits. Modulate the visible fraction of each path with local channel tone instead of switching whole-face density bands.
-6. Build one strength-gated luminance direction field, then trace four
+6. Build one strength-gated multichannel direction field, then trace four
    independently seeded and fallback-angled streamline networks, one for each
    CMYK plate. Apply each ink's own tone mask, dark-tone layers, and optional
    keyline adjustment, then save four separate page-registered G-code
@@ -31,12 +37,16 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
   does not change either. The recommended photo action targets two pen widths
   on paper with a `1.2 mm` minimum pitch.
 - Tensor smoothing radius: `2.5 mm` on paper for the recommended photo recipe
-- Guidance gate: tensor strength plus coherence; weak structure keeps screen
-- Fallback direction: each ink's own fixed screen angle where structure is weak
+- Guidance gate: tensor strength plus coherence across luminance and C/M/Y/K
+  tone gradients; moderate structure keeps the shared image direction
+- Fallback direction: each ink's own fixed screen angle only where structure is
+  weak or ambiguous
 - Maximum density layers: 3 for the recommended photo recipe
 - Tone method: deterministic path-local ink segments on four independent
-  networks; additional layers add local depth only on the darker plate, and
-  there is no shared 2D block lattice
+  networks, all traced through the same image-form field. The shared scene-depth
+  field controls path continuation while each plate's tone controls ink
+  intervals. Additional layers add local depth only on the darker plate, and
+  there is no shared 2D block lattice.
 - Embedded ICC profiles, including Display P3, are converted to sRGB before
   image analysis and separation; EXIF orientation is applied first
 - **Pen-down chain** bridges tone-off gaps along each individual streamline

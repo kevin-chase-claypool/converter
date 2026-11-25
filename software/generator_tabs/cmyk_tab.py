@@ -395,10 +395,11 @@ class CmykTab(GeneratorTab):
             "regenerated. Continuous row screen also bridges nearest adjacent "
             "row runs, trading short visible connectors for far fewer pen "
             "lifts. Edge-flow traces a separate equally spaced streamline "
-            "network for each ink from the blurred luminance structure, using "
-            "that ink's local tone, seed, fallback angle, and extra dark-tone "
-            "layers. The experimental shared Edge-flow variant instead traces "
-            "one common CMYK network and gates each ink along its segments."
+            "network for each ink through one blurred multichannel image-form "
+            "tensor, using that ink's local tone, seed, fallback angle, and "
+            "extra dark-tone layers. The experimental shared Edge-flow variant "
+            "instead traces one common CMYK network and gates each ink along "
+            "its segments."
         )
         self.style.setCurrentIndex(self.style.findData("edge_flow"))
         screen.addRow("Style", self.style)
@@ -1931,7 +1932,7 @@ class CmykTab(GeneratorTab):
                     if self._pen_chain_active()
                     else 0.0
                 ),
-                flow_guide=tones["depth"],
+                flow_guide=tones["flow_guide"],
             )
         for index, channel in enumerate(converter.CHANNELS):
             if shared_edge_marks is not None:
@@ -1962,7 +1963,12 @@ class CmykTab(GeneratorTab):
                         else None
                     ),
                     flow_layers=self.flow_layers.value(),
-                    flow_guide=tones["depth"] if edge_flow_active else None,
+                    flow_guide=(
+                        tones["flow_guide"] if edge_flow_active else None
+                    ),
+                    flow_support_tone=(
+                        tones["depth"] if edge_flow_active else None
+                    ),
                     flow_keylines=(
                         self.flow_keylines.isChecked()
                         and channel == "k"

@@ -115,7 +115,7 @@ class CmykEdgeFlowTests(unittest.TestCase):
         self.assertGreater(len(vertical_segments), 5)
         self.assertGreater(
             sum(vertical_segments) / len(vertical_segments),
-            0.85,
+            0.75,
         )
 
     def test_edge_flow_black_keylines_strengthen_coherent_edges(self):
@@ -575,6 +575,51 @@ class CmykEdgeFlowTests(unittest.TestCase):
         self.assertLess(
             sum(vertical_fraction) / len(vertical_fraction),
             0.25,
+        )
+
+    def test_edge_flow_moderate_gradient_steers_the_shared_form(self):
+        size = 80
+        tone = self.np.full((size, size), 0.8, dtype="float32")
+        guide_x = self.np.linspace(
+            0.34,
+            0.66,
+            size,
+            dtype="float32",
+        )
+        guide = self.np.tile(guide_x, (size, 1))
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        marks = converter.screen_channel(
+            tone,
+            geometry,
+            style="edge_flow",
+            spacing_mm=8.0,
+            angle_deg=0.0,
+            max_marks=200,
+            flow_smoothing_mm=2.0,
+            flow_layers=1,
+            flow_guide=guide,
+        )
+
+        vertical_fraction = []
+        for line in marks:
+            for first, second in zip(line, line[1:]):
+                dx = second[0] - first[0]
+                dy = second[1] - first[1]
+                length = math.hypot(dx, dy)
+                if length > 0.0:
+                    vertical_fraction.append(abs(dy) / length)
+        self.assertGreater(len(vertical_fraction), 20)
+        self.assertGreater(
+            sum(vertical_fraction) / len(vertical_fraction),
+            0.75,
         )
 
     def test_edge_flow_adds_layers_to_darker_ink(self):

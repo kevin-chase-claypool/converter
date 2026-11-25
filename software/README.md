@@ -621,12 +621,17 @@ Current tools:
   profile replaces the nominal process response for both separation and
   preview.
   **Edge-flow streamlines** is a separate continuous screen for portraits and
-  textured photographs. One shared luminance guide supplies the image form:
-  its gradients form a structure tensor, Gaussian-like blur smooths it, and
-  its edge-tangent orientation traces four independently seeded streamline
-  networks, one for each pen. Each network uses that ink's local tone mask and
-  fixed fallback angle, so weak or structureless regions keep the per-ink
-  screen angles instead of collapsing into one common direction. Extra
+  textured photographs. One shared multichannel guide supplies the image form:
+  gradients from scene luminance and the separated C/M/Y/K tone maps form a
+  structure tensor, Gaussian-like blur smooths it, and its edge-tangent
+  orientation traces four independently seeded streamline networks, one for
+  each pen. Moderate coherent gradients retain the shared form direction;
+  only weak, flat, or ambiguous texture blends back to each ink's fixed screen
+  angle. A channel falling briefly below its local ink threshold no longer
+  truncates the form: the shared scene-depth field lets the traced path
+  continue, while that ink's tone still controls which path intervals draw.
+  Each network applies its own tone mask, so color changes can follow a contour
+  without C/M/Y/K collapsing onto one coincident four-pen centerline. Extra
   `Flow layers` add darker-area paths only on the plate that needs them. This
   is the production workflow prompted by the public Reddit reference; Save
   writes those four independently screened layers as four G-code files.
@@ -1075,7 +1080,7 @@ work with no input (optional mesh/image sources are noted below).
 | Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
 | CMYK photo (recommended) | Open an image, press **Use recommended photo defaults**, inspect **Preview**, then press **Save 4 G-code files**. The action installs per-ink Edge-flow, three Flow layers, 2.5 mm smoothing, a `2.0` pen-width effective pitch with a `1.2 mm` floor, keylines off, chaining on at `1 mm`, `0.10 mm` tolerance, 200000 marks/ink, saturation 115 %, contrast 150 %, brightness 115 %, gamma 1.10, GCR 75 %, weights 100/100/100/100 %, and 60 % sharpening at 1.5 mm. Auto may refine color within exposure-preserving bounds. | One-click start for a normal photo. It runs image colour Auto while preserving page size, artwork scale, pen width, pen offsets, and bed motion. Preview plans the four inks in the background; Save writes four separate overprinted programs. Inspect density, connector ink, registration, and reach before a physical pass. |
-| CMYK Edge-flow tuning | Press **Use recommended photo defaults** first. Adjust the advanced controls only if the inspected output needs a deliberate change; **Fine detail** remains available for pen-aware pitch/smoothing/layers and Black keylines. | This is the Reddit-reference workflow: the shared luminance guide defines the image form, while C/M/Y/K follow separate streamline networks with independent seeds, tone masks, fallback angles, and dark-tone layers. The explicitly labeled shared Edge-flow style is an experimental co-located alternative. |
+| CMYK Edge-flow tuning | Press **Use recommended photo defaults** first. Adjust the advanced controls only if the inspected output needs a deliberate change; **Fine detail** remains available for pen-aware pitch/smoothing/layers and Black keylines. | This is the Reddit-reference workflow: one blurred multichannel image-form tensor defines the contour and gradient direction, while C/M/Y/K follow separate streamline networks with independent seeds, tone masks, fallback angles, and dark-tone layers. The shared scene-depth field keeps a form continuous across a temporary color gap; the explicitly labeled shared Edge-flow style remains an experimental co-located alternative. |
 | CMYK continuous | Use the same image curve as the CMYK recipe, then choose **Continuous row screen (adjacent joins)** and keep **Pen-down chain** on with a `5 mm` gap. | Fastest starting point for an image where fewer M3/M5 cycles matter more than Edge-flow contour texture. Straight screen directions remain visible, and all joins print connector ink. A fully blank row band can still lift. |
 | 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
 | Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |

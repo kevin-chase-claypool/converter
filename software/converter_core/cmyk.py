@@ -1064,6 +1064,12 @@ def prepare_image_tones(
     # Ink coverage decides where each plate is present; luminance supplies the
     # common scene depth used by wave screens even in a saturated ink channel.
     tones["depth"] = (1.0 - depth_luminance).astype(np.float32)
+    # A multichannel guide keeps chromatic boundaries whose luminance is nearly
+    # equal. The tuple reuses the separated arrays instead of allocating a
+    # second full-resolution RGB image.
+    tones["flow_guide"] = tuple(
+        tones[channel] for channel in CHANNELS
+    ) + (tones["depth"],)
     geometry = {
         "off_x": off_x,
         "off_y": off_y,
@@ -1827,7 +1833,11 @@ def screen_cmyk_edge_flow(
     """Screen all CMYK inks through one experimental shared path network."""
     spacing = max(0.2, float(spacing_mm))
     marks = trace_shared_structure_streamlines(
-        flow_guide if flow_guide is not None else tones.get("depth"),
+        (
+            flow_guide
+            if flow_guide is not None
+            else tones.get("flow_guide", tones.get("depth"))
+        ),
         tones,
         geometry,
         spacing,
@@ -1883,6 +1893,7 @@ def screen_channel(
     flow_smoothing_mm=None,
     flow_layers=3,
     flow_guide=None,
+    flow_support_tone=None,
     flow_keylines=False,
     flow_color_quiet=0.0,
     flow_tone_segment_mm=None,
@@ -1911,9 +1922,11 @@ def screen_channel(
     ``path_tolerance_mm`` bounds the chord error of resampled wave rows; the
     CMYK tab supplies that budget in its final paper-space units.
     Edge-flow uses ``flow_guide`` when supplied, otherwise ``depth_tone`` or
-    this channel's ``tone``. The CMYK tab supplies the shared luminance field,
+    this channel's ``tone``. The CMYK tab supplies a multi-channel image guide,
     so all four plates follow one image form while their masks, seeds, and
-    fallback screen angles remain independent.
+    fallback screen angles remain independent. ``flow_support_tone`` controls
+    where a streamline may continue; when supplied, a temporary low value in
+    one ink no longer truncates the shared image form.
     ``row_clearance_mm`` is the minimum shortest-segment separation between
     adjacent visible rows, expressed in the same pre-scale units as
     ``spacing_mm``. It defaults to the pen diameter plus
@@ -1952,6 +1965,11 @@ def screen_channel(
         flow_guide
         if flow_guide is not None
         else depth_tone if depth_tone is not None else tone
+    )
+    flow_support_darkness = (
+        tone_sampler(flow_support_tone, geometry)
+        if flow_support_tone is not None
+        else None
     )
 
     def inside(x, y):
@@ -2088,6 +2106,7 @@ def screen_channel(
             seed,
             INK_FLOOR,
             darkness,
+            support_at=flow_support_darkness,
             keylines=bool(flow_keylines),
             color_quiet=max(0.0, min(1.0, float(flow_color_quiet))),
             tone_segment_mm=flow_tone_segment_mm,

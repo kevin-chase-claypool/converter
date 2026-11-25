@@ -1,10 +1,11 @@
 """Edge-following streamline screening for photograph-derived CMYK plates.
 
-The caller supplies one guide image: gradients form a structure tensor, the
-tensor is blurred, and its edge-tangent eigenvector becomes a smooth
-orientation field. Coherence and tensor strength blend that field toward the
-plate's fixed screen angle in weak or flat areas. CMYK plates share the
-luminance guide but keep independent tone networks and screen directions.
+The caller supplies one image-form guide: gradients from its luminance and
+colour channels form a structure tensor, the tensor is blurred, and its
+edge-tangent eigenvector becomes a smooth orientation field. Coherence and
+tensor strength blend that shared field toward each plate's fixed screen angle
+in weak or flat areas. CMYK plates keep independent tone networks and fallback
+directions while following the same image form where it is clear.
 """
 
 from __future__ import annotations
@@ -17,7 +18,10 @@ from .cancellation import check_cancelled
 EDGE_FLOW_CHROMA_WEIGHT = 0.35
 # Tensor trace is the squared gradient energy. Below this floor the guide is
 # noise or broad tone, not a form boundary that should redirect every screen.
-EDGE_FLOW_STRENGTH_SCALE_FLOOR = 1.0e-4
+EDGE_FLOW_STRENGTH_SCALE_FLOOR = 4.0e-7
+EDGE_FLOW_STRENGTH_PERCENTILE = 60.0
+EDGE_FLOW_COHERENCE_LOW = 0.02
+EDGE_FLOW_COHERENCE_HIGH = 0.18
 
 
 def edge_flow_coverage_factor(
@@ -61,7 +65,10 @@ def _field_geometry(guide, geometry, max_side=900):
     rows, cols = np.asarray(guide).shape
     factor = min(1.0, float(max_side) / max(1, max(rows, cols)))
     if factor >= 0.999:
-        return np.asarray(guide, dtype=np.float32), dict(geometry)
+        field_geometry = dict(geometry)
+        field_geometry["pixels_w"] = cols
+        field_geometry["pixels_h"] = rows
+        return np.asarray(guide, dtype=np.float32), field_geometry
 
     field_w = max(8, int(round(cols * factor)))
     field_h = max(8, int(round(rows * factor)))
@@ -111,31 +118,40 @@ def _structure_tensor_velocity(guide, geometry, smoothing_mm, fallback_angle_deg
     """Return edge-following vectors and edge confidence for one field."""
     import numpy as np
 
-    guide_values = np.asarray(guide, dtype=np.float32)
-    if guide_values.ndim == 2:
-        fields = (guide_values,)
-    elif guide_values.ndim == 3 and guide_values.shape[2] >= 3:
-        # Keep colour-only boundaries, but make luminance the primary form
-        # guide. Summing raw RGB gradients equally let chrome-heavy JPEG
-        # boundaries redirect facial streamlines and produced a painted-mask
-        # look. Two opponent-colour fields contribute at reduced amplitude,
-        # which preserves equal-luminance edges without overpowering forms.
-        red = guide_values[:, :, 0]
-        green = guide_values[:, :, 1]
-        blue = guide_values[:, :, 2]
-        luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue
-        fields = (
-            luminance,
-            EDGE_FLOW_CHROMA_WEIGHT * (red - green),
-            EDGE_FLOW_CHROMA_WEIGHT * (0.5 * (red + green) - blue),
-        )
-    elif guide_values.ndim == 3 and guide_values.shape[2] >= 1:
-        fields = tuple(
-            guide_values[:, :, index]
-            for index in range(guide_values.shape[2])
-        )
+    if (
+        isinstance(guide, (tuple, list))
+        and guide
+        and all(np.asarray(field).ndim == 2 for field in guide)
+    ):
+        fields = tuple(np.asarray(field, dtype=np.float32) for field in guide)
     else:
-        raise ValueError("Structure guide must be a 2D or channel-last image.")
+        guide_values = np.asarray(guide, dtype=np.float32)
+        if guide_values.ndim == 2:
+            fields = (guide_values,)
+        elif guide_values.ndim == 3 and guide_values.shape[2] >= 3:
+            # Keep colour-only boundaries, but make luminance the primary form
+            # guide. Summing raw RGB gradients equally let chrome-heavy JPEG
+            # boundaries redirect facial streamlines and produced a painted-mask
+            # look. Two opponent-colour fields contribute at reduced amplitude,
+            # which preserves equal-luminance edges without overpowering forms.
+            red = guide_values[:, :, 0]
+            green = guide_values[:, :, 1]
+            blue = guide_values[:, :, 2]
+            luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue
+            fields = (
+                luminance,
+                EDGE_FLOW_CHROMA_WEIGHT * (red - green),
+                EDGE_FLOW_CHROMA_WEIGHT * (0.5 * (red + green) - blue),
+            )
+        elif guide_values.ndim == 3 and guide_values.shape[2] >= 1:
+            fields = tuple(
+                guide_values[:, :, index]
+                for index in range(guide_values.shape[2])
+            )
+        else:
+            raise ValueError(
+                "Structure guide must be a 2D image or a sequence of 2D fields."
+            )
 
     jxx = None
     jxy = None
@@ -177,12 +193,17 @@ def _structure_tensor_velocity(guide, geometry, smoothing_mm, fallback_angle_deg
     strength_scale = (
         max(
             EDGE_FLOW_STRENGTH_SCALE_FLOOR,
-            float(np.percentile(positive_trace, 85)),
+            float(
+                np.percentile(
+                    positive_trace,
+                    EDGE_FLOW_STRENGTH_PERCENTILE,
+                )
+            ),
         )
         if positive_trace.size
         else EDGE_FLOW_STRENGTH_SCALE_FLOOR
     )
-    strength_floor = strength_scale * 0.08
+    strength_floor = strength_scale * 0.02
     strength = np.clip(
         (trace - strength_floor)
         / max(1e-8, strength_scale - strength_floor),
@@ -199,8 +220,17 @@ def _structure_tensor_velocity(guide, geometry, smoothing_mm, fallback_angle_deg
     fallback_radians = math.radians(float(fallback_angle_deg))
     fallback_x = math.cos(fallback_radians)
     fallback_y = math.sin(fallback_radians)
-    coherence_gate = np.clip((coherence - 0.10) / 0.25, 0.0, 1.0)
-    guided = coherence_gate * strength
+    coherence_gate = np.clip(
+        (coherence - EDGE_FLOW_COHERENCE_LOW)
+        / (EDGE_FLOW_COHERENCE_HIGH - EDGE_FLOW_COHERENCE_LOW),
+        0.0,
+        1.0,
+    )
+    # Coherence and tensor strength describe different parts of confidence.
+    # Multiplying them twice suppresses broad facial planes even when their
+    # isophotes are clear. The square root keeps the blend continuous while
+    # allowing moderate gradients to retain the shared form direction.
+    guided = np.sqrt(np.clip(coherence_gate * strength, 0.0, 1.0))
     velocity_x = guided * (-sin_phi) + (1.0 - guided) * fallback_x
     velocity_y = guided * cos_phi + (1.0 - guided) * fallback_y
     norm = np.maximum(np.hypot(velocity_x, velocity_y), 1e-8)
@@ -404,6 +434,7 @@ def trace_structure_streamlines(
     seed,
     ink_floor,
     tone_at,
+    support_at=None,
     keylines=False,
     color_quiet=0.0,
     tone_segment_mm=None,
@@ -418,6 +449,8 @@ def trace_structure_streamlines(
     path-local threshold keeps only the fraction of each traced path that the
     local tone asks for. The break positions depend on distance along that
     streamline, so adjacent paths do not form a visible block matrix.
+    ``support_at`` controls whether the form continues through a local colour
+    gap; ``tone_at`` still decides which parts of that path receive this ink.
     ``bridge_mm`` retains short tone-off gaps inside one pen-down run so the
     local screen does not multiply toolhead cycles in dense passages.
     """
@@ -501,6 +534,8 @@ def trace_structure_streamlines(
         else None
     )
 
+    support_sampler = tone_at if support_at is None else support_at
+
     def trace(direction, start_x, start_y, threshold, occupied):
         points = []
         x, y = start_x, start_y
@@ -520,7 +555,7 @@ def trace_structure_streamlines(
             x, y = next_x, next_y
             if not (left <= x <= right and top <= y <= bottom):
                 break
-            if tone_at(x, y) < max(float(ink_floor), threshold):
+            if support_sampler(x, y) < max(float(ink_floor), threshold):
                 break
             ix, iy = field_cell(x, y)
             if occupied[iy, ix]:
@@ -554,7 +589,7 @@ def trace_structure_streamlines(
             check_cancelled(cancel_check)
             x = x0 + (0.5 * base_pitch if row % 2 else 0.0)
             while x <= right and len(marks) < cap:
-                if tone_at(x, y) < max(float(ink_floor), threshold):
+                if support_sampler(x, y) < max(float(ink_floor), threshold):
                     x += base_pitch
                     continue
                 ix, iy = field_cell(x, y)

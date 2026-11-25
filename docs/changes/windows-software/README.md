@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-25 | `WSW-20261125-002` | implemented | [Guide CMYK streamlines with a multichannel image field](2026/2026-11-25-cmyk-multichannel-edge-flow.md) | `cmyk`, `edge-flow`, `structure-tensor`, `streamline`, `image-gradients`, `color-detail`, `portrait`, `physical-validation-pending` |
 | 2026-11-25 | `WSW-20261125-001` | implemented | [Split and streamline the converter test suite](2026/2026-11-25-streamline-converter-test-suite.md) | `tests`, `performance`, `context-window`, `cmyk`, `unittest`, `maintainability` |
 | 2026-11-24 | `WSW-20261124-006` | implemented | [Restore open highlights in recommended CMYK photos](2026/2026-11-24-restore-cmyk-photo-highlight-density.md) | `cmyk`, `edge-flow`, `photo-fidelity`, `ink-density`, `auto-exposure`, `pen-width`, `14-inch`, `physical-validation-pending` |
 | 2026-11-24 | `WSW-20261124-005` | implemented | [Make Edge-flow CMYK photo defaults one-click](2026/2026-11-24-one-click-cmyk-photo-defaults.md) | `cmyk`, `edge-flow`, `photo-defaults`, `one-click`, `auto-color`, `physical-validation-pending` |

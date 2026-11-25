@@ -283,7 +283,14 @@ class CmykTabTests(unittest.TestCase):
 
         self.assertEqual(len(calls), 1)
         tones, geometry = captured["args"]
-        self.assertIs(captured["kwargs"]["flow_guide"], tones["depth"])
+        self.assertIs(
+            captured["kwargs"]["flow_guide"],
+            tones["flow_guide"],
+        )
+        self.assertEqual(
+            len(captured["kwargs"]["flow_guide"]),
+            len(converter.CHANNELS) + 1,
+        )
         self.assertEqual(captured["kwargs"]["seed"], 7)
         self.assertAlmostEqual(
             captured["kwargs"]["pen_diameter_mm"],
@@ -339,6 +346,13 @@ class CmykTabTests(unittest.TestCase):
         self.assertTrue(
             all(
                 call[2]["flow_guide"] is calls[0][2]["flow_guide"]
+                for call in calls
+            )
+        )
+        self.assertTrue(
+            all(
+                call[2]["flow_support_tone"]
+                is calls[0][2]["flow_support_tone"]
                 for call in calls
             )
         )
