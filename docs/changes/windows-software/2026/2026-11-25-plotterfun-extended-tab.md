@@ -92,7 +92,7 @@ attributes unsuitable for a local static host.
   loopback server, current-artwork route, missing-WebEngine fallback, and
   pinned upstream commit.
 - Generator discovery and layout tests include the new tool.
-- Complete converter discovery passes `697` tests in `238.124 s` with the one
+- Complete converter discovery passes `697` tests in `234.384 s` with the one
   expected OpenGL-context skip.
 
 ## Struggles and rejected approaches

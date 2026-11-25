@@ -26,7 +26,7 @@
 - The observed Windows access-violation dialog was reproduced only by a
   throwaway probe destroying QWebEngine objects during interpreter shutdown;
   the full converter harness and interactive application exited cleanly.
-- Complete converter discovery passes `697` tests in `238.124 s` with one
+- Complete converter discovery passes `697` tests in `234.384 s` with one
   expected OpenGL-context skip.
 - Plotterfun Extended uses independent per-channel CMYK jobs. It remains a
   second workflow for direct comparison and algorithm exploration; it does not
