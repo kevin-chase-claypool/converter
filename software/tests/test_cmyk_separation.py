@@ -189,6 +189,26 @@ class SeparationTests(unittest.TestCase):
             places=5,
         )
 
+    def test_transparent_pixels_become_paper_not_black_ink(self):
+        from PIL import Image
+
+        with tempfile.TemporaryDirectory(prefix="cmyk-alpha-") as folder:
+            path = Path(folder) / "cutout.png"
+            Image.new("RGBA", (8, 8), (0, 0, 0, 0)).save(path)
+            tones, _geometry = converter.prepare_image_tones(
+                path,
+                60.0,
+                60.0,
+                margin_mm=4.0,
+                resolution_px=32,
+                auto_levels=False,
+                brightness=100.0,
+                color_match=False,
+            )
+
+        for channel in converter.CHANNELS:
+            self.assertLess(float(tones[channel].max()), 1e-6)
+
 
 if __name__ == "__main__":
     unittest.main()

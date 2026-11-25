@@ -585,11 +585,11 @@
 
 - [ ] Bench-verify edge-flow CMYK streamlines and select a starting recipe.
   Problem: the new structure-tensor screen is covered by synthetic geometry
-  and UI tests (`WSW-20261122-002`). The production screen uses one
-  strength-gated luminance guide but four independently seeded and angled
-  streamline networks (`WSW-20261123-019`); G-code and tone masks remain
-  separate per ink. No printed four-pass portrait has established a useful
-  pitch, smoothing radius, layer count, or pen order.
+  and UI tests (`WSW-20261122-002`). The recommended photo action now uses one
+  shared coherent geometry with contiguous local CMYK ink planes
+  (`WSW-20261125-004`); the prior four-network and stochastic shared modes
+  remain selectable. No printed four-pass portrait has established a useful
+  pitch, smoothing radius, layer count, keyline density, or pen order.
   Benefit: one validated recipe turns the visual method into a repeatable
   portrait workflow and records where extra dark-tone layers become too dense.
   Risk: fine streamlines expose pen-up drag, felt-tip spread, four-ink overlay
@@ -648,6 +648,16 @@
   software render raised paper coverage in the tested face region from
   `12.3 %` to `42.0 %` and reduced magenta/yellow overlap from `34.3 %` to
   `11.1 %`.
+  Status 2026-11-25 coherent geometry: on the open Golden Sunset source at
+  identical layout and screen controls, coherent color flow raised the
+  mark-length 90th percentile from `16.24` to `29.18 mm`, raised the maximum
+  from `142.26` to `378.80 mm`, and reduced the share below `5 mm` from
+  `46.6 %` to `40.8 %`. The recommended action now selects this style,
+  enables Black keylines, and uses a guided source filter at 65 % of Flow
+  smoothing. The same comparison also exposed and fixed transparent black PNG
+  pixels being converted into ink; transparent areas now read as paper.
+  These measurements are software-only and do not establish final paper
+  density or connector behavior.
   Acceptance: print a pre-cropped portrait with the README starting recipe
   after one HOME + REGISTER; preserve the intentional `260 %` circular crop
   unless the test explicitly compares the whole-image Fit-inside layout;

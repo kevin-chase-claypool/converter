@@ -48,7 +48,11 @@ from .cmyk_sheet import build_sheet
 
 TITLE = "CMYK"
 ORDER = 25
-EDGE_FLOW_STYLES = ("edge_flow", "edge_flow_shared")
+EDGE_FLOW_STYLES = (
+    "edge_flow",
+    "edge_flow_shared",
+    "edge_flow_coherent",
+)
 REFERENCE_PHOTO_EFFECTIVE_PITCH_MM = 1.2
 REFERENCE_PHOTO_PEN_PITCH_MULTIPLIER = 2.0
 REFERENCE_PHOTO_FLOW_SMOOTHING_MM = 2.5
@@ -366,6 +370,10 @@ class CmykTab(GeneratorTab):
             "edge_flow",
         )
         self.style.addItem(
+            "Coherent color flow (shared geometry, ink planes)",
+            "edge_flow_coherent",
+        )
+        self.style.addItem(
             "Shared Edge-flow (experimental co-located CMYK)",
             "edge_flow_shared",
         )
@@ -399,8 +407,11 @@ class CmykTab(GeneratorTab):
             "network for each ink through one blurred multichannel image-form "
             "tensor, using that ink's local tone, seed, fallback angle, and "
             "extra dark-tone layers. The experimental shared Edge-flow variant "
-            "instead traces one common CMYK network and gates each ink along "
-            "its segments."
+            "instead traces one common CMYK network and gates each ink with "
+            "independent stochastic phases. Coherent color flow also shares "
+            "one streamline form, but assigns contiguous local ink planes "
+            "along each long path and reserves Black keylines for coherent "
+            "structure. It is the recommended portrait renderer."
         )
         self.style.setCurrentIndex(self.style.findData("edge_flow"))
         screen.addRow("Style", self.style)
@@ -462,9 +473,11 @@ class CmykTab(GeneratorTab):
             2.5, 0.2, 10.0, 0.1, 1, " mm"
         )
         self.flow_smoothing.setToolTip(
-            "Edge-flow only: blur radius for the structure tensor. Larger "
-            "values make longer, calmer contours; smaller values follow fine "
-            "texture and can become noisy."
+            "Edge-flow only: blur radius for the structure tensor. Coherent "
+            "color flow also uses 65 % of this radius for edge-preserving "
+            "source simplification. Larger values make broader color planes "
+            "and longer, calmer contours; smaller values follow fine texture "
+            "and can become noisy."
         )
         screen.addRow("Flow smoothing", self.flow_smoothing)
         self.flow_layers = int_spin(3, 1, 6)
@@ -472,7 +485,9 @@ class CmykTab(GeneratorTab):
             "Edge-flow only: extra complete streamline networks that activate "
             "in progressively darker tone bands. Use this for stepped density; "
             "Shade compression below provides the continuous tightening "
-            "between individual lines. More layers increase build time."
+            "between individual lines. Coherent color flow uses those layers "
+            "as offset parallel geometry rather than independent color "
+            "fragments. More layers increase build time."
         )
         screen.addRow("Flow layers", self.flow_layers)
         self.flow_pitch_compression = double_spin(
@@ -945,7 +960,7 @@ class CmykTab(GeneratorTab):
         """Apply the complete photo recipe without touching physical setup."""
         del _checked
         self.calibration_mode.setChecked(False)
-        style_index = self.style.findData("edge_flow")
+        style_index = self.style.findData("edge_flow_coherent")
         if style_index >= 0:
             self.style.setCurrentIndex(style_index)
         self.auto_levels.setChecked(False)
@@ -969,7 +984,7 @@ class CmykTab(GeneratorTab):
         self.flow_pitch_compression.setValue(
             REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT
         )
-        self.flow_keylines.setChecked(False)
+        self.flow_keylines.setChecked(True)
         self.chain_marks.setChecked(True)
         self.chain_gap.setValue(REFERENCE_PHOTO_CHAIN_GAP_MM)
         self.dot_size.setValue(100)
@@ -1009,7 +1024,7 @@ class CmykTab(GeneratorTab):
             self.pitch.value() * self.scale_pct.value() / 100.0
         )
         message = (
-            "Recommended photo defaults ready: Edge-flow, "
+            "Recommended photo defaults ready: coherent color flow, "
             f"{self.flow_layers.value()} layers, "
             f"{self.flow_smoothing.value():.1f} mm smoothing, "
             f"{self.flow_pitch_compression.value():.0f} % pitch compression, "
@@ -1879,9 +1894,13 @@ class CmykTab(GeneratorTab):
                 "pitch compression"
                 % (
                     (
-                        "shared"
-                        if self.style.currentData() == "edge_flow_shared"
-                        else "per-ink networks"
+                        "coherent shared geometry"
+                        if self.style.currentData() == "edge_flow_coherent"
+                        else (
+                            "shared stochastic"
+                            if self.style.currentData() == "edge_flow_shared"
+                            else "per-ink networks"
+                        )
                     ),
                     self.flow_smoothing.value(),
                     self.flow_layers.value(),
@@ -1940,6 +1959,9 @@ class CmykTab(GeneratorTab):
         if not path:
             raise ValueError("Import an image with the Artwork row above first.")
         factor = self.scale_pct.value() / 100.0
+        style = self.style.currentData()
+        edge_flow_active = style in EDGE_FLOW_STYLES
+        coherent_style = style == "edge_flow_coherent"
         tones, geometry = converter.prepare_image_tones(
             path,
             self.page_w.value(),
@@ -1959,18 +1981,55 @@ class CmykTab(GeneratorTab):
                 else 0.0
             ),
             sharpen_radius_mm=self.sharpen_radius.value() / factor,
+            edge_simplify_mm=(
+                self.flow_smoothing.value() * 0.65 / factor
+                if coherent_style
+                else 0.0
+            ),
             ink_colors=self._active_ink_colors(),
         )
         width = self.page_w.value()
         height = self.page_h.value()
         stroke = self.pen_width.value()
-        style = self.style.currentData()
         layers = {}
         files = {}
         pen_chain_stats = {}
         shared_edge_marks = None
-        edge_flow_active = style in EDGE_FLOW_STYLES
-        if style == "edge_flow_shared":
+        if coherent_style:
+            shared_edge_marks = converter.screen_coherent_color_flow(
+                tones,
+                geometry,
+                spacing_mm=self.pitch.value(),
+                pen_diameter_mm=self.pen_width.value() / factor,
+                path_tolerance_mm=self.path_tolerance.value() / factor,
+                flow_smoothing_mm=self.flow_smoothing.value() / factor,
+                flow_layers=self.flow_layers.value(),
+                flow_pitch_compression=(
+                    self.flow_pitch_compression.value() / 100.0
+                ),
+                max_marks=self.max_marks.value(),
+                seed=self.seed.value(),
+                overdraw=self.overdraw.value(),
+                keylines=self.flow_keylines.isChecked(),
+                color_quiet=(
+                    0.25 if self.flow_keylines.isChecked() else 0.0
+                ),
+                color_hold_mm=6.0 / factor,
+                color_mix_ratio=0.72,
+                bridge_mm=(
+                    max(4.0, self.chain_gap.value()) / factor
+                    if self._pen_chain_active()
+                    else 0.0
+                ),
+                fallback_angles_deg=[
+                    converter.SCREEN_ANGLES_DEG[channel]
+                    for channel in converter.CHANNELS[
+                        : self.flow_layers.value()
+                    ]
+                ],
+                flow_guide=tones["flow_guide"],
+            )
+        elif style == "edge_flow_shared":
             shared_edge_marks = converter.screen_cmyk_edge_flow(
                 tones,
                 geometry,
@@ -2123,7 +2182,7 @@ class CmykTab(GeneratorTab):
         screen = self.calibration_screen.currentData()
         if screen == "match":
             style = self.style.currentData()
-            if style == "edge_flow_shared":
+            if style in ("edge_flow_shared", "edge_flow_coherent"):
                 screen = "edge_flow"
             else:
                 screen = (
@@ -2642,23 +2701,43 @@ class CmykTab(GeneratorTab):
                 ),
                 "flow_guide": (
                     (
-                        "strength_gated_shared_luminance_structure_tensor_"
-                        "continuous_tone"
-                        if style == "edge_flow_shared"
-                        else "strength_gated_luminance_structure_tensor_"
-                        "per_ink_networks_continuous_tone"
+                        "strength_gated_multichannel_structure_tensor_"
+                        "coherent_ink_planes"
+                        if style == "edge_flow_coherent"
+                        else (
+                            "strength_gated_shared_luminance_structure_tensor_"
+                            "continuous_tone"
+                            if style == "edge_flow_shared"
+                            else "strength_gated_luminance_structure_tensor_"
+                            "per_ink_networks_continuous_tone"
+                        )
                     )
                     if style in EDGE_FLOW_STYLES
                     else None
                 ),
                 "edge_flow_path_network": (
                     (
-                        "shared_all_inks"
-                        if style == "edge_flow_shared"
-                        else "per_ink"
+                        "shared_coherent_ink_planes"
+                        if style == "edge_flow_coherent"
+                        else (
+                            "shared_all_inks"
+                            if style == "edge_flow_shared"
+                            else "per_ink"
+                        )
                     )
                     if style in EDGE_FLOW_STYLES
                     else None
+                ),
+                "source_edge_preserving_simplify_mm": (
+                    self.flow_smoothing.value() * 0.65
+                    if style == "edge_flow_coherent"
+                    else 0.0
+                ),
+                "coherent_color_hold_mm": (
+                    6.0 if style == "edge_flow_coherent" else None
+                ),
+                "coherent_color_mix_ratio": (
+                    0.72 if style == "edge_flow_coherent" else None
                 ),
                 "pen_down_chain": {
                     "enabled": self._pen_chain_active(),

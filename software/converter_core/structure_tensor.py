@@ -10,6 +10,7 @@ directions while following the same image form where it is clear.
 
 from __future__ import annotations
 
+import bisect
 import math
 from collections import deque
 
@@ -25,6 +26,10 @@ EDGE_FLOW_COHERENCE_LOW = 0.02
 EDGE_FLOW_COHERENCE_HIGH = 0.18
 EDGE_FLOW_MAX_PITCH_COMPRESSION = 0.90
 EDGE_FLOW_MIN_PITCH_PEN_RATIO = 0.90
+EDGE_FLOW_KEYLINE_BASE_WEIGHT = 0.55
+EDGE_FLOW_KEYLINE_PERCENTILE = 85.0
+EDGE_FLOW_KEYLINE_LOW = 0.30
+EDGE_FLOW_KEYLINE_HIGH = 0.80
 
 
 def _edge_flow_local_pitch(
@@ -139,8 +144,55 @@ def _blur_float_field(field, radius_px):
     return result
 
 
-def _structure_tensor_velocity(guide, geometry, smoothing_mm, fallback_angle_deg):
-    """Return edge-following vectors and edge confidence for one field."""
+def edge_preserving_simplify(
+    image,
+    radius_mm,
+    mm_per_px,
+    epsilon=0.01,
+):
+    """Smooth low-contrast texture while retaining strong image boundaries.
+
+    This is a compact self-guided filter. It uses the same soft box blur as the
+    structure tensor, so the converter does not acquire another imaging
+    dependency. ``radius_mm`` is measured on the finished page.
+    """
+    import numpy as np
+
+    values = np.asarray(image, dtype=np.float32)
+    radius = max(
+        0,
+        int(
+            round(
+                max(0.0, float(radius_mm))
+                / max(1e-6, float(mm_per_px))
+            )
+        ),
+    )
+    if radius < 1 or values.size == 0:
+        return values.copy()
+
+    source = values if values.ndim == 3 else values[..., None]
+    output = np.empty_like(source, dtype=np.float32)
+    threshold = max(1e-8, float(epsilon))
+    for index in range(source.shape[2]):
+        channel = source[..., index]
+        mean = _blur_float_field(channel, radius)
+        variance = np.maximum(
+            _blur_float_field(channel * channel, radius) - mean * mean,
+            0.0,
+        )
+        gain = variance / (variance + threshold)
+        offset = mean - gain * mean
+        output[..., index] = (
+            _blur_float_field(gain, radius) * channel
+            + _blur_float_field(offset, radius)
+        )
+    result = np.clip(output, 0.0, 1.0)
+    return result if values.ndim == 3 else result[..., 0]
+
+
+def _structure_tensor_components(guide, geometry, smoothing_mm):
+    """Return the edge tangent, guidance weight, and confidence field."""
     import numpy as np
 
     if (
@@ -228,10 +280,29 @@ def _structure_tensor_velocity(guide, geometry, smoothing_mm, fallback_angle_deg
         if positive_trace.size
         else EDGE_FLOW_STRENGTH_SCALE_FLOOR
     )
+    keyline_scale = (
+        max(
+            EDGE_FLOW_STRENGTH_SCALE_FLOOR,
+            float(
+                np.percentile(
+                    positive_trace,
+                    EDGE_FLOW_KEYLINE_PERCENTILE,
+                )
+            ),
+        )
+        if positive_trace.size
+        else EDGE_FLOW_STRENGTH_SCALE_FLOOR
+    )
     strength_floor = strength_scale * 0.02
     strength = np.clip(
         (trace - strength_floor)
         / max(1e-8, strength_scale - strength_floor),
+        0.0,
+        1.0,
+    )
+    keyline_energy = np.clip(
+        (trace - strength_floor)
+        / max(1e-8, keyline_scale - strength_floor),
         0.0,
         1.0,
     )
@@ -242,9 +313,6 @@ def _structure_tensor_velocity(guide, geometry, smoothing_mm, fallback_angle_deg
     sin_phi = np.where(sin_twice < 0.0, -sin_phi, sin_phi)
     cos_phi = np.sqrt(np.clip((1.0 + cos_twice) * 0.5, 0.0, 1.0))
 
-    fallback_radians = math.radians(float(fallback_angle_deg))
-    fallback_x = math.cos(fallback_radians)
-    fallback_y = math.sin(fallback_radians)
     coherence_gate = np.clip(
         (coherence - EDGE_FLOW_COHERENCE_LOW)
         / (EDGE_FLOW_COHERENCE_HIGH - EDGE_FLOW_COHERENCE_LOW),
@@ -256,15 +324,49 @@ def _structure_tensor_velocity(guide, geometry, smoothing_mm, fallback_angle_deg
     # isophotes are clear. The square root keeps the blend continuous while
     # allowing moderate gradients to retain the shared form direction.
     guided = np.sqrt(np.clip(coherence_gate * strength, 0.0, 1.0))
-    velocity_x = guided * (-sin_phi) + (1.0 - guided) * fallback_x
-    velocity_y = guided * cos_phi + (1.0 - guided) * fallback_y
+    keyline = np.sqrt(np.clip(coherence * keyline_energy, 0.0, 1.0))
+    return (
+        (-sin_phi).astype(np.float32),
+        cos_phi.astype(np.float32),
+        guided.astype(np.float32),
+        keyline.astype(np.float32),
+        field_geometry,
+    )
+
+
+def _blend_structure_velocity(
+    tangent_x,
+    tangent_y,
+    guided,
+    fallback_angle_deg,
+):
+    """Blend one tangent field toward a fixed screen direction."""
+    import numpy as np
+
+    fallback_radians = math.radians(float(fallback_angle_deg))
+    fallback_x = math.cos(fallback_radians)
+    fallback_y = math.sin(fallback_radians)
+    velocity_x = guided * tangent_x + (1.0 - guided) * fallback_x
+    velocity_y = guided * tangent_y + (1.0 - guided) * fallback_y
     norm = np.maximum(np.hypot(velocity_x, velocity_y), 1e-8)
     return (
         (velocity_x / norm).astype(np.float32),
         (velocity_y / norm).astype(np.float32),
-        guided.astype(np.float32),
-        field_geometry,
     )
+
+
+def _structure_tensor_velocity(guide, geometry, smoothing_mm, fallback_angle_deg):
+    """Return edge-following vectors and edge confidence for one field."""
+    tangent_x, tangent_y, guided, _keyline, field_geometry = (
+        _structure_tensor_components(guide, geometry, smoothing_mm)
+    )
+    velocity_x, velocity_y = _blend_structure_velocity(
+        tangent_x,
+        tangent_y,
+        guided,
+        fallback_angle_deg,
+    )
+    return velocity_x, velocity_y, guided, field_geometry
 
 
 def _bilinear_velocity(velocity_x, velocity_y, field_geometry, x, y):
@@ -444,6 +546,150 @@ def _tone_gated_runs(
         )
         >= minimum_length
     ]
+
+
+def _coherent_ink_runs(
+    points,
+    channel_at,
+    channels,
+    threshold,
+    minimum_length,
+    ink_floor,
+    edge_at=None,
+    keyline_strength=0.0,
+    edge_quiet=0.0,
+    bridge_mm=0.0,
+    hold_mm=4.0,
+    mix_ratio=0.72,
+):
+    """Assign contiguous local ink planes along one shared streamline.
+
+    Unlike the path-local stochastic tone gate, this helper smooths each
+    channel's coverage along arc length and keeps membership continuous. A
+    second ink is retained only when it is close enough to the dominant tone to
+    read as part of the same color plane.
+    """
+    if len(points) < 2:
+        return {}
+
+    channel_names = tuple(channels)
+    if not channel_names:
+        return {}
+    cumulative = [0.0]
+    for first, second in zip(points, points[1:]):
+        cumulative.append(
+            cumulative[-1]
+            + math.hypot(second[0] - first[0], second[1] - first[1])
+        )
+
+    samples = {channel: [] for channel in channel_names}
+    keyline_values = []
+    for x, y in points:
+        keyline = 0.0
+        if edge_at is not None and (
+            keyline_strength > 0.0 or edge_quiet > 0.0
+        ):
+            keyline = min(
+                1.0,
+                max(
+                    0.0,
+                    (
+                        float(edge_at(x, y))
+                        - EDGE_FLOW_KEYLINE_LOW
+                    )
+                    / (EDGE_FLOW_KEYLINE_HIGH - EDGE_FLOW_KEYLINE_LOW),
+                ),
+            )
+        keyline_values.append(keyline)
+        for channel in channel_names:
+            value = min(
+                1.0,
+                max(0.0, float(channel_at[channel](x, y))),
+            )
+            if channel != "k" and edge_quiet > 0.0:
+                value *= 1.0 - min(1.0, float(edge_quiet)) * keyline
+            if channel == "k" and keyline_strength > 0.0:
+                value *= EDGE_FLOW_KEYLINE_BASE_WEIGHT
+                value = max(
+                    value,
+                    keyline * min(1.0, float(keyline_strength)),
+                )
+            samples[channel].append(value)
+
+    half_window = max(0.25, float(hold_mm) * 0.5)
+    smoothed = {}
+    for channel in channel_names:
+        values = samples[channel]
+        prefix = [0.0]
+        for value in values:
+            prefix.append(prefix[-1] + value)
+        channel_values = []
+        for index in range(len(points)):
+            low = bisect.bisect_left(
+                cumulative,
+                cumulative[index] - half_window,
+            )
+            high = bisect.bisect_right(
+                cumulative,
+                cumulative[index] + half_window,
+            )
+            count = max(1, high - low)
+            channel_values.append(
+                (prefix[high] - prefix[low]) / count
+            )
+        smoothed[channel] = channel_values
+
+    active_floor = max(float(ink_floor), float(threshold))
+    flags = {channel: [False] * len(points) for channel in channel_names}
+    for index in range(len(points)):
+        scores = {
+            channel: smoothed[channel][index]
+            for channel in channel_names
+        }
+        strongest = max(scores.values(), default=0.0)
+        if strongest < active_floor:
+            continue
+        primary = max(channel_names, key=scores.get)
+        for channel in channel_names:
+            score = scores[channel]
+            if score >= active_floor and (
+                channel == primary
+                or score >= strongest * max(0.0, float(mix_ratio))
+            ):
+                flags[channel][index] = True
+
+    bridge = max(0.0, float(bridge_mm))
+    runs = {}
+    for channel in channel_names:
+        channel_flags = flags[channel]
+        index = 0
+        while index < len(channel_flags):
+            if not channel_flags[index]:
+                gap_start = index
+                while index < len(channel_flags) and not channel_flags[index]:
+                    index += 1
+                if (
+                    0 < gap_start
+                    and index < len(channel_flags)
+                    and cumulative[index] - cumulative[gap_start] <= bridge
+                ):
+                    for fill in range(gap_start, index):
+                        channel_flags[fill] = True
+                continue
+            start = index
+            while index < len(channel_flags) and channel_flags[index]:
+                index += 1
+            end = index
+            if end - start < 2:
+                continue
+            run = points[start:end]
+            run_length = sum(
+                math.hypot(second[0] - first[0], second[1] - first[1])
+                for first, second in zip(run, run[1:])
+            )
+            if run_length >= minimum_length:
+                runs.setdefault(channel, []).append(run)
+    return runs
 
 
 def trace_structure_streamlines(
@@ -777,6 +1023,10 @@ def trace_shared_structure_streamlines(
     max_path_mm=None,
     bridge_mm=0.0,
     pitch_compression=0.0,
+    color_mode="phase",
+    fallback_angles_deg=None,
+    color_hold_mm=4.0,
+    color_mix_ratio=0.72,
     cancel_check=None,
 ):
     """Trace one common streamline network and gate every ink along it.
@@ -790,6 +1040,11 @@ def trace_shared_structure_streamlines(
     coincide, without returning to four independent, drifting path networks.
     ``pitch_compression`` contracts neighbouring common paths as the strongest
     local ink coverage darkens.
+
+    ``color_mode="coherent"`` replaces stochastic per-channel arc-length gates
+    with contiguous local ink planes. Ordinary shared mode keeps its established
+    phase-gated behavior. ``fallback_angles_deg`` optionally gives each density
+    layer its own fixed screen direction where the image field is weak.
     """
     import numpy as np
 
@@ -837,13 +1092,26 @@ def trace_shared_structure_streamlines(
         for channel in channel_names
     }
 
-    velocity_x, velocity_y, edge_field, field_geometry = (
-        _structure_tensor_velocity(
+    coherent_color = str(color_mode).strip().lower() == "coherent"
+    fallback_angles = (
+        tuple(float(value) for value in fallback_angles_deg)
+        if fallback_angles_deg is not None
+        else (float(fallback_angle_deg),)
+    )
+    if not fallback_angles:
+        fallback_angles = (float(fallback_angle_deg),)
+    tangent_x, tangent_y, edge_field, keyline_field, field_geometry = (
+        _structure_tensor_components(
             guide,
             geometry,
             max(0.1, float(smoothing_mm)),
-            fallback_angle_deg,
         )
+    )
+    velocity_x, velocity_y = _blend_structure_velocity(
+        tangent_x,
+        tangent_y,
+        edge_field,
+        fallback_angles[0],
     )
     field_w = max(1, int(field_geometry["pixels_w"]))
     field_h = max(1, int(field_geometry["pixels_h"]))
@@ -891,6 +1159,9 @@ def trace_shared_structure_streamlines(
     def sample_edge(x, y):
         return _bilinear_scalar(edge_field, field_geometry, x, y)
 
+    def sample_keyline(x, y):
+        return _bilinear_scalar(keyline_field, field_geometry, x, y)
+
     def field_cell(x, y):
         ix = int((x - left) / max(1e-8, right - left) * field_w)
         iy = int((y - top) / max(1e-8, bottom - top) * field_h)
@@ -921,7 +1192,12 @@ def trace_shared_structure_streamlines(
             x, y = next_x, next_y
             if not (left <= x <= right and top <= y <= bottom):
                 break
-            if coverage_at(x, y) < max(float(ink_floor), threshold):
+            support_threshold = (
+                float(ink_floor)
+                if coherent_color
+                else max(float(ink_floor), threshold)
+            )
+            if coverage_at(x, y) < support_threshold:
                 break
             ix, iy = field_cell(x, y)
             if occupied[iy, ix]:
@@ -942,6 +1218,12 @@ def trace_shared_structure_streamlines(
     path_count = 0
     for layer in range(layer_count):
         check_cancelled(cancel_check)
+        velocity_x, velocity_y = _blend_structure_velocity(
+            tangent_x,
+            tangent_y,
+            edge_field,
+            fallback_angles[layer % len(fallback_angles)],
+        )
         threshold = 0.0 if layer == 0 else float(layer) / layer_count
         occupied = np.zeros((field_h, field_w), dtype=bool)
         queued = np.zeros((field_h, field_w), dtype=bool)
@@ -1041,40 +1323,60 @@ def trace_shared_structure_streamlines(
             )
             accepted = len(points) >= 3 and length >= minimum_length
             if accepted:
-                path_key = (
-                    int(round((start_x - left) / base_pitch)) * 73856093
-                    ^ int(round((start_y - top) / base_pitch)) * 19349663
-                    ^ int(seed) * 83492791
-                    ^ int(layer) * 2654435761
-                ) & 0xFFFFFFFF
-                for channel in channel_names:
-                    quiet = (
-                        min(1.0, max(0.0, float(color_quiet)))
-                        if channel != "k"
-                        else 0.0
-                    )
-                    visible_runs = _tone_gated_runs(
+                if coherent_color:
+                    visible = _coherent_ink_runs(
                         points,
-                        channel_at[channel],
+                        channel_at,
+                        channel_names,
                         threshold,
-                        tone_segment,
-                        path_key,
-                        layer,
                         visible_minimum_length,
-                        (
-                            sample_edge
-                            if (keylines and channel == "k") or quiet > 0.0
-                            else None
-                        ),
-                        0.92 if keylines and channel == "k" else 0.0,
-                        quiet,
+                        ink_floor,
+                        sample_keyline,
+                        0.86 if keylines else 0.0,
+                        color_quiet,
                         bridge_mm,
-                        shared_coverage_scale,
-                        channel_salts[channel],
+                        color_hold_mm,
+                        color_mix_ratio,
                     )
-                    marks[channel].extend(visible_runs)
-                    if len(marks[channel]) > cap:
-                        del marks[channel][cap:]
+                    for channel in channel_names:
+                        marks[channel].extend(visible.get(channel, []))
+                        if len(marks[channel]) > cap:
+                            del marks[channel][cap:]
+                else:
+                    path_key = (
+                        int(round((start_x - left) / base_pitch)) * 73856093
+                        ^ int(round((start_y - top) / base_pitch)) * 19349663
+                        ^ int(seed) * 83492791
+                        ^ int(layer) * 2654435761
+                    ) & 0xFFFFFFFF
+                    for channel in channel_names:
+                        quiet = (
+                            min(1.0, max(0.0, float(color_quiet)))
+                            if channel != "k"
+                            else 0.0
+                        )
+                        visible_runs = _tone_gated_runs(
+                            points,
+                            channel_at[channel],
+                            threshold,
+                            tone_segment,
+                            path_key,
+                            layer,
+                            visible_minimum_length,
+                            (
+                                sample_edge
+                                if (keylines and channel == "k") or quiet > 0.0
+                                else None
+                            ),
+                            0.92 if keylines and channel == "k" else 0.0,
+                            quiet,
+                            bridge_mm,
+                            shared_coverage_scale,
+                            channel_salts[channel],
+                        )
+                        marks[channel].extend(visible_runs)
+                        if len(marks[channel]) > cap:
+                            del marks[channel][cap:]
                 path_count += 1
 
             reserve_path(points)

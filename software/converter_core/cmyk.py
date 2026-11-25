@@ -26,6 +26,7 @@ from .shading import (
     tone_terrain_contours,
 )
 from .structure_tensor import (
+    edge_preserving_simplify,
     edge_flow_coverage_factor,
     trace_shared_structure_streamlines,
     trace_structure_streamlines,
@@ -330,12 +331,21 @@ def _load_color_managed_image(image_path):
     with Image.open(image_path) as source:
         image = ImageOps.exif_transpose(source)
         profile = image.info.get("icc_profile")
-        if profile and image.mode in ("RGB", "RGBA"):
+        if image.mode in ("RGBA", "LA") or "transparency" in image.info:
+            rgba = image.convert("RGBA")
+            background = Image.new(
+                "RGBA",
+                rgba.size,
+                (255, 255, 255, 255),
+            )
+            background.alpha_composite(rgba)
+            image = background.convert("RGB")
+        if profile and image.mode == "RGB":
             try:
                 source_profile = ImageCms.ImageCmsProfile(io.BytesIO(profile))
                 target_profile = ImageCms.createProfile("sRGB")
                 image = ImageCms.profileToProfile(
-                    image.convert("RGB"),
+                    image,
                     source_profile,
                     target_profile,
                     outputMode="RGB",
@@ -529,7 +539,11 @@ def _auto_photo_baseline_settings(
             )
         return result
 
-    if style_key in ("edge_flow", "edge_flow_shared"):
+    if style_key in (
+        "edge_flow",
+        "edge_flow_shared",
+        "edge_flow_coherent",
+    ):
         # Edge-flow is a sparse, path-local screen. Its recommended recipe
         # keeps normal exposure and moderate contrast so broad skin and
         # highlight planes retain paper; density comes from the pen-aware
@@ -733,7 +747,11 @@ def _auto_screen_coverage(
                 0.0,
             )
         return coverage
-    if style_key in ("edge_flow", "edge_flow_shared"):
+    if style_key in (
+        "edge_flow",
+        "edge_flow_shared",
+        "edge_flow_coherent",
+    ):
         base_factor = edge_flow_coverage_factor(
             pen_mm,
             pitch_mm,
@@ -907,7 +925,11 @@ def auto_photo_settings(
         "gamma": float(baseline["gamma"]),
         "gcr": float(baseline["gcr"]),
     }
-    if style_key in ("edge_flow", "edge_flow_shared"):
+    if style_key in (
+        "edge_flow",
+        "edge_flow_shared",
+        "edge_flow_coherent",
+    ):
         ranges = {
             "auto_levels": auto_level_choices,
             "saturation": (105, 110, 115, 120),
@@ -976,6 +998,8 @@ def prepare_image_tones(
     level_clip_pct=1.0,
     sharpen_pct=0.0,
     sharpen_radius_mm=1.5,
+    edge_simplify_mm=0.0,
+    edge_simplify_epsilon=0.01,
     ink_colors=None,
     color_match=True,
     cancel_check=None,
@@ -994,6 +1018,10 @@ def prepare_image_tones(
     ``sharpen_pct`` is an unsharp mask on the luminance (0 disables it): the
     detail layer is added back to all three channels, so facial features
     survive the dot screen instead of dissolving into mid-tone dots.
+    ``edge_simplify_mm`` applies a self-guided edge-preserving smoothing before
+    sharpening. The coherent color-flow style uses it to merge pores, fabric
+    noise, and compression texture into broader color planes without moving
+    glasses, eyes, silhouettes, or other strong boundaries.
     ``ink_colors`` supplies measured paper-relative C/M/Y/K transmittances to
     the separation model; nominal process colours are used when absent.
 
@@ -1030,6 +1058,13 @@ def prepare_image_tones(
             rgb = np.clip((rgb - float(low)) / spread, 0.0, 1.0)
 
     mm_per_px = (scale_w / pixel_w + scale_h / pixel_h) / 2.0
+    if float(edge_simplify_mm) > 0.0:
+        rgb = edge_preserving_simplify(
+            rgb,
+            edge_simplify_mm,
+            mm_per_px,
+            epsilon=edge_simplify_epsilon,
+        )
     rgb = _sharpen_luminance(
         rgb,
         sharpen_pct,
@@ -1870,6 +1905,83 @@ def screen_cmyk_edge_flow(
         max_path_mm=max_path_mm,
         bridge_mm=bridge_mm,
         pitch_compression=flow_pitch_compression,
+        cancel_check=cancel_check,
+    )
+    return {
+        channel: _apply_overdraw(
+            marks.get(channel, []),
+            overdraw,
+            spacing,
+        )
+        for channel in CHANNELS
+    }
+
+
+def screen_coherent_color_flow(
+    tones,
+    geometry,
+    spacing_mm,
+    pen_diameter_mm,
+    path_tolerance_mm,
+    flow_smoothing_mm=None,
+    flow_layers=3,
+    max_marks=5000,
+    seed=0,
+    overdraw=1,
+    keylines=False,
+    color_quiet=0.0,
+    color_hold_mm=4.0,
+    color_mix_ratio=0.72,
+    bridge_mm=0.0,
+    flow_pitch_compression=0.0,
+    fallback_angles_deg=None,
+    flow_guide=None,
+    cancel_check=None,
+):
+    """Screen one coherent shared geometry into contiguous CMYK ink planes.
+
+    The streamline network is traced once per density layer through the image
+    form. Each path then keeps a stable local ink assignment instead of
+    switching independently for every plate at every path-local tone interval.
+    Dark-tone layers add offset parallel geometry, and Black keyline boosting
+    remains confined to high-confidence image structure.
+    """
+    spacing = max(0.2, float(spacing_mm))
+    if fallback_angles_deg is None:
+        fallback_angles_deg = tuple(
+            SCREEN_ANGLES_DEG[channel]
+            for channel in CHANNELS
+        )
+    marks = trace_shared_structure_streamlines(
+        (
+            flow_guide
+            if flow_guide is not None
+            else tones.get("flow_guide", tones.get("depth"))
+        ),
+        tones,
+        geometry,
+        spacing,
+        0.0,
+        flow_layers,
+        max(16, int(max_marks)),
+        pen_diameter_mm,
+        path_tolerance_mm,
+        (
+            max(0.25, float(flow_smoothing_mm))
+            if flow_smoothing_mm is not None
+            else max(0.25, float(path_tolerance_mm) * 4.0)
+        ),
+        seed,
+        INK_FLOOR,
+        CHANNELS,
+        keylines=bool(keylines),
+        color_quiet=max(0.0, min(1.0, float(color_quiet))),
+        bridge_mm=bridge_mm,
+        pitch_compression=flow_pitch_compression,
+        color_mode="coherent",
+        fallback_angles_deg=fallback_angles_deg,
+        color_hold_mm=color_hold_mm,
+        color_mix_ratio=color_mix_ratio,
         cancel_check=cancel_check,
     )
     return {

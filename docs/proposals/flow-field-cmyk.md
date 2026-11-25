@@ -3,10 +3,16 @@
 **Status:** Implemented as the CMYK **Edge-flow streamlines** screen. Current
 behavior and the software-selected recipe are in
 [`../../software/README.md`](../../software/README.md); the current change
-record is `WSW-20261125-003`.
+record is `WSW-20261125-004`.
 
 ## Intent
-Add an optional CMYK rendering mode to the converter that replaces fixed-angle hatch patterns with smooth vector-field-guided streamlines following image contours and forms. Preserve the current CMYK method and all existing output behavior by default.
+Add an optional CMYK rendering mode to the converter that replaces fixed-angle
+hatch patterns with smooth vector-field-guided streamlines following image
+contours and forms. The recommended photo action now selects **Coherent color
+flow**, which owns one shared streamline geometry per density layer and assigns
+contiguous local ink planes along it. The prior per-ink and stochastic shared
+Edge-flow modes remain available for comparison. Preserve the existing four-file
+CMYK output, page-registration, preview, and G-code contracts.
 
 ## Proposed processing
 1. Load raster artwork and derive CMYK channel coverage values using the converter's existing color-separation conventions.
@@ -23,21 +29,29 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
    minimum-distance/collision checks, bounds clipping, and curvature limits.
    Start from the operator's base pitch, then continuously shorten the
    neighbour-to-neighbour pitch as local ink tone darkens. Clamp the result to
-   a pen-safe minimum. Modulate the visible fraction of each path with local
-   channel tone instead of switching whole-face density bands.
-6. Build one strength-gated multichannel direction field, then trace four
-   independently seeded and fallback-angled streamline networks, one for each
-   CMYK plate. Apply each ink's own tone mask, dark-tone layers, and optional
-   keyline adjustment, then save four separate page-registered G-code
-   programs.
-6a. Retain one explicitly labeled experimental shared-network renderer for
-    comparison. Its independent phases and normalized occupancy prevent the
-    correlated four-ink black runs that made the first shared prototype
-    unusable.
+   a pen-safe minimum.
+6. In coherent color flow, trace one shared geometry per density layer. Along
+   each path, smooth every channel's coverage over paper-space arc length and
+   keep a dominant ink plus one close secondary ink. Tone changes therefore
+   follow long local color planes instead of independent per-channel random
+   intervals. Additional layers add offset parallel geometry only in darker
+   regions.
+6a. Apply a self-guided edge-preserving simplification before sharpening and
+    separation. This reduces pores, sensor texture, and fine fabric noise
+    without moving strong eyes, glasses, silhouettes, or plaid boundaries.
+6b. Boost Black only where tensor guidance confidence is high, and reduce
+    ordinary Black weight while keylines are active. Weak image structure
+    falls back to the cyan 15°, magenta 75°, yellow 0°, and black 45° family
+    across successive layers.
+6c. Retain the legacy per-ink renderer and the explicitly labeled
+    stochastic shared-network renderer for comparison. Both still save four
+    page-registered programs.
 7. Emit continuous, stroke-only SVG centerlines compatible with the existing SVG-to-G-code path (no fills, text, or defs); retain units, coordinate mapping, and pen-change/channel separation.
 
 ## Current controls (software-selected starting values)
-- Rendering mode: **Edge-flow streamlines** in the existing CMYK Screen style
+- Rendering mode: **Coherent color flow (shared geometry, ink planes)** from
+  **Use recommended photo defaults**; the prior Edge-flow modes remain
+  selectable in the CMYK Screen style
 - Base line spacing: operator-owned Edge-flow pitch and artwork scale; Auto
   does not change either. The recommended photo action targets two pen widths
   on paper with a `1.2 mm` minimum pitch.
@@ -50,17 +64,17 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
   full local tone the target spacing is `40 %` of Dot pitch, bounded at
   `0.9` pen widths
 - Maximum density layers: 3 for the recommended photo recipe
-- Tone method: deterministic path-local ink segments on four independent
-  networks, all traced through the same image-form field. The shared scene-depth
-  field controls path continuation while each plate's tone controls ink
-  intervals. Additional layers add local depth only on the darker plate, and
-  there is no shared 2D block lattice.
+- Tone method: contiguous smoothed ink planes along a common geometry network.
+  A 6 mm paper-space coverage window keeps long runs; a second ink is retained
+  when it reaches `72 %` of the dominant coverage. Additional layers add
+  offset parallel geometry in darker regions instead of random short
+  fragments.
 - Embedded ICC profiles, including Display P3, are converted to sRGB before
   image analysis and separation; EXIF orientation is applied first
-- **Pen-down chain** bridges tone-off gaps along each individual streamline
-  and also chains per-ink marks within the operator's adjacent gap. The
-  recommended photo action limits that adjacent gap to `1.0 mm`; its connectors
-  add visible local ink but cannot cross several screen rows.
+- **Pen-down chain** bridges up to `4 mm` of coverage gaps along one coherent
+  shared path, then chains adjacent marks within the operator's gap. The
+  recommended photo action limits that adjacent gap to `1.0 mm`; its
+  connectors add visible local ink but cannot cross several screen rows.
 - **Continuous row screen (adjacent joins)** is a speed-oriented alternative:
   tone-pitch rows join nearest non-overlapping adjacent runs into a few long
   chains, accepting visible straight connectors in exchange for fewer M3/M5
@@ -71,7 +85,8 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
   `105-120 %`, gamma `1.00-1.30`, and GCR `60-80 %`. All four ink weights
   reset to 100 %. The estimate remains a coverage-model RGB error, not a
   paper-validated colour claim.
-- Fine-detail preset: one effective pen width, smoothing near two pen widths
+- Legacy per-ink Fine-detail preset: one effective pen width, smoothing near
+  two pen widths
   clamped to `1.0-1.5 mm`, five low-offset layers, `65 %` continuous pitch
   compression, `2 mm` path-local tone intervals, marks capped near `12 mm`,
   and Path tolerance no larger than `0.10 mm`
@@ -99,10 +114,13 @@ Add an optional CMYK rendering mode to the converter that replaces fixed-angle h
 - New mode produces valid continuous stroke-only SVG paths and runs through the current converter without special G-code handling.
 - Lines visibly follow coherent image structures; weak-structure regions use a stable fallback direction.
 - Darker channel regions produce greater appropriate ink coverage without pathological overplotting.
-- Default Edge-flow produces four distinct per-ink path networks and saves four
-  independently screened G-code programs.
-- Adjacent per-ink marks are chained when their gap is within the operator's
-  pen-down limit.
+- Default program menus still expose the prior per-ink and stochastic shared
+  methods, while **Use recommended photo defaults** selects coherent color
+  flow. All modes save four independently screened G-code programs.
+- Long coherent paths retain contiguous local ink planes; dark regions add
+  offset geometry and flat regions retain a fixed-angle screen.
+- Coherent local ink runs and adjacent per-ink marks are chained only within
+  the operator's visible-ink and pen-down limits.
 - Deterministic results for fixed settings/seed; no infinite tracing loops; reasonable bounds on output size and runtime.
 
 ## Source idea

@@ -141,6 +141,7 @@ class CmykTabTests(unittest.TestCase):
             "contours",
             "edge_flow",
             "edge_flow_shared",
+            "edge_flow_coherent",
         ):
             tab.style.setCurrentIndex(tab.style.findData(style))
             root = ET.parse(tab.build_svg()).getroot()
@@ -311,6 +312,66 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(captured["kwargs"]["color_quiet"], 0.25)
         self.assertIsNone(captured["kwargs"]["tone_segment_mm"])
         self.assertIsNone(captured["kwargs"]["max_path_mm"])
+
+    def test_coherent_color_flow_builds_one_network_with_layer_angles(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow_coherent"))
+        tab.flow_layers.setValue(3)
+        tab.flow_keylines.setChecked(True)
+        tab.scale_pct.setValue(200)
+        captured = {}
+        calls = []
+
+        def capture_coherent(*args, **kwargs):
+            captured["args"] = args
+            captured["kwargs"] = kwargs
+            calls.append((args, kwargs))
+            return {channel: [] for channel in converter.CHANNELS}
+
+        prepare = converter.prepare_image_tones
+
+        def capture_prepare(*args, **kwargs):
+            captured["prepare"] = dict(kwargs)
+            return prepare(*args, **kwargs)
+
+        with mock.patch.object(
+            converter,
+            "prepare_image_tones",
+            side_effect=capture_prepare,
+        ), mock.patch.object(
+            converter,
+            "screen_coherent_color_flow",
+            side_effect=capture_coherent,
+        ), mock.patch.object(
+            converter,
+            "screen_channel",
+            side_effect=AssertionError(
+                "coherent color flow must build shared geometry"
+            ),
+        ):
+            tab._ensure_layers()
+
+        self.assertEqual(len(calls), 1)
+        tones, geometry = captured["args"]
+        self.assertIs(captured["kwargs"]["flow_guide"], tones["flow_guide"])
+        self.assertEqual(
+            captured["kwargs"]["fallback_angles_deg"],
+            [
+                converter.SCREEN_ANGLES_DEG[channel]
+                for channel in converter.CHANNELS[:3]
+            ],
+        )
+        self.assertTrue(captured["kwargs"]["keylines"])
+        self.assertAlmostEqual(
+            captured["kwargs"]["pen_diameter_mm"],
+            tab.pen_width.value() / 2.0,
+            places=6,
+        )
+        self.assertAlmostEqual(
+            captured["prepare"]["edge_simplify_mm"],
+            tab.flow_smoothing.value() * 0.65 / 2.0,
+            places=6,
+        )
 
     def test_edge_flow_builds_four_independent_ink_networks(self):
         tab = self.make_tab()
@@ -1127,6 +1188,61 @@ class CmykTabTests(unittest.TestCase):
                 Path(host.saved_paths[converter.CHANNEL_LABELS[channel].lower()]).exists()
             )
 
+    def test_coherent_flow_manifest_records_shared_ink_planes(self):
+        host = FakeHost(self.image_path)
+        tab = self.make_tab(host)
+        tab.style.setCurrentIndex(tab.style.findData("edge_flow_coherent"))
+        tab.flow_smoothing.setValue(3.0)
+        tab.flow_keylines.setChecked(True)
+        tab._ensure_layers()
+        results = {
+            channel: {
+                "marks": 1,
+                "moves": 3,
+                "gcode": f"; {channel}\nG1 X0 Y0\n",
+                "lines": 2,
+                "x_count": 1,
+                "y_count": 0,
+                "x_mm": 1.0,
+                "y_mm": 0.0,
+                "draw_mm": 1.0,
+                "seconds": 1.0,
+            }
+            for channel in converter.CHANNELS
+        }
+        tab._analysis = results
+        tab._analysis_key = tab._control_key()
+        tab._write_files(results)
+        manifest = Path(host.saved_paths["cyan"]).with_name(
+            "art-cmyk-set.json"
+        )
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+
+        self.assertEqual(
+            data["screen"]["flow_guide"],
+            "strength_gated_multichannel_structure_tensor_"
+            "coherent_ink_planes",
+        )
+        self.assertEqual(
+            data["screen"]["edge_flow_path_network"],
+            "shared_coherent_ink_planes",
+        )
+        self.assertAlmostEqual(
+            data["screen"]["source_edge_preserving_simplify_mm"],
+            1.95,
+            places=6,
+        )
+        self.assertAlmostEqual(
+            data["screen"]["coherent_color_hold_mm"],
+            6.0,
+            places=6,
+        )
+        self.assertAlmostEqual(
+            data["screen"]["coherent_color_mix_ratio"],
+            0.72,
+            places=6,
+        )
+
     def test_preview_loads_every_layer_and_filters_live(self):
         tab = self.make_tab()
         tab.build_svg()
@@ -1234,11 +1350,14 @@ class CmykTabTests(unittest.TestCase):
         ):
             tab.apply_reference_defaults()
 
-        self.assertEqual(tab.style.currentData(), "edge_flow")
+        self.assertEqual(
+            tab.style.currentData(),
+            "edge_flow_coherent",
+        )
         self.assertAlmostEqual(tab.flow_smoothing.value(), 2.5, places=1)
         self.assertEqual(tab.flow_layers.value(), 3)
         self.assertEqual(tab.flow_pitch_compression.value(), 60)
-        self.assertFalse(tab.flow_keylines.isChecked())
+        self.assertTrue(tab.flow_keylines.isChecked())
         self.assertTrue(tab.chain_marks.isChecked())
         self.assertAlmostEqual(tab.chain_gap.value(), 1.0, places=3)
         self.assertAlmostEqual(tab.pitch.value(), 0.90, places=2)

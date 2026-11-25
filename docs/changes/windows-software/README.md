@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-25 | `WSW-20261125-004` | implemented | [Add a coherent shared-geometry CMYK color-flow renderer](2026/2026-11-25-coherent-color-flow.md) | `cmyk`, `edge-flow`, `coherent-color-flow`, `streamline`, `ink-planes`, `edge-preserving`, `keylines`, `transparency`, `portrait`, `physical-validation-pending` |
 | 2026-11-25 | `WSW-20261125-003` | implemented | [Compress Edge-flow pitch continuously in darker tone](2026/2026-11-25-edge-flow-density-pitch.md) | `cmyk`, `edge-flow`, `streamline`, `variable-pitch`, `density`, `portrait`, `physical-validation-pending` |
 | 2026-11-25 | `WSW-20261125-002` | implemented | [Guide CMYK streamlines with a multichannel image field](2026/2026-11-25-cmyk-multichannel-edge-flow.md) | `cmyk`, `edge-flow`, `structure-tensor`, `streamline`, `image-gradients`, `color-detail`, `portrait`, `physical-validation-pending` |
 | 2026-11-25 | `WSW-20261125-001` | implemented | [Split and streamline the converter test suite](2026/2026-11-25-streamline-converter-test-suite.md) | `tests`, `performance`, `context-window`, `cmyk`, `unittest`, `maintainability` |

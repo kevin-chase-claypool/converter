@@ -783,6 +783,249 @@ class CmykEdgeFlowTests(unittest.TestCase):
         self.assertGreater(len(set(first)), 4)
         self.assertNotEqual(first, second)
 
+    def test_coherent_color_flow_keeps_long_ink_runs(self):
+        size = 160
+        coords = self.np.arange(size, dtype="float32")
+        xx, yy = self.np.meshgrid(coords, coords)
+        guide = (xx + yy) / float(2 * (size - 1))
+        tones = {
+            "c": self.np.zeros((size, size), dtype="float32"),
+            "m": self.np.zeros((size, size), dtype="float32"),
+            "y": self.np.full((size, size), 0.82, dtype="float32"),
+            "k": self.np.zeros((size, size), dtype="float32"),
+            "depth": self.np.full((size, size), 0.5, dtype="float32"),
+        }
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        marks = converter.screen_coherent_color_flow(
+            tones,
+            geometry,
+            spacing_mm=8.0,
+            pen_diameter_mm=1.0,
+            path_tolerance_mm=0.15,
+            flow_smoothing_mm=3.0,
+            flow_layers=1,
+            max_marks=2000,
+            seed=7,
+            flow_guide=guide,
+        )
+
+        lengths = [
+            sum(
+                math.hypot(second[0] - first[0], second[1] - first[1])
+                for first, second in zip(line, line[1:])
+            )
+            for line in marks["y"]
+        ]
+        self.assertTrue(lengths)
+        self.assertGreater(max(lengths), 55.0)
+        self.assertGreater(
+            sum(length for length in lengths if length >= 20.0),
+            sum(lengths) * 0.70,
+        )
+        self.assertEqual(marks["c"], [])
+        self.assertEqual(marks["m"], [])
+        self.assertEqual(marks["k"], [])
+
+    def test_coherent_color_flow_assigns_local_ink_planes(self):
+        size = 128
+        coords = self.np.arange(size, dtype="float32")
+        xx, yy = self.np.meshgrid(coords, coords)
+        guide = yy / float(size - 1)
+        tones = {
+            "c": self.np.zeros((size, size), dtype="float32"),
+            "m": self.np.zeros((size, size), dtype="float32"),
+            "y": self.np.zeros((size, size), dtype="float32"),
+            "k": self.np.zeros((size, size), dtype="float32"),
+            "depth": self.np.full((size, size), 0.5, dtype="float32"),
+        }
+        tones["y"][:, : size // 2] = 0.82
+        tones["m"][:, size // 2 :] = 0.82
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        marks = converter.screen_coherent_color_flow(
+            tones,
+            geometry,
+            spacing_mm=6.0,
+            pen_diameter_mm=1.0,
+            path_tolerance_mm=0.12,
+            flow_smoothing_mm=1.0,
+            flow_layers=1,
+            max_marks=2000,
+            seed=11,
+            flow_guide=guide,
+        )
+
+        def ink_length(lines):
+            return sum(
+                math.hypot(second[0] - first[0], second[1] - first[1])
+                for line in lines
+                for first, second in zip(line, line[1:])
+            )
+
+        self.assertGreater(ink_length(marks["y"]), 80.0)
+        self.assertGreater(ink_length(marks["m"]), 80.0)
+        self.assertEqual(ink_length(marks["c"]), 0.0)
+        self.assertEqual(ink_length(marks["k"]), 0.0)
+
+    def test_coherent_color_flow_uses_layer_fallback_angles(self):
+        size = 112
+        guide = self.np.full((size, size), 0.5, dtype="float32")
+        tones = {
+            "c": self.np.zeros((size, size), dtype="float32"),
+            "m": self.np.zeros((size, size), dtype="float32"),
+            "y": self.np.full((size, size), 0.82, dtype="float32"),
+            "k": self.np.zeros((size, size), dtype="float32"),
+            "depth": self.np.full((size, size), 0.5, dtype="float32"),
+        }
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        marks = converter.screen_coherent_color_flow(
+            tones,
+            geometry,
+            spacing_mm=8.0,
+            pen_diameter_mm=1.0,
+            path_tolerance_mm=0.12,
+            flow_smoothing_mm=2.0,
+            flow_layers=2,
+            max_marks=2000,
+            seed=7,
+            fallback_angles_deg=[0.0, 90.0],
+            flow_guide=guide,
+        )
+
+        horizontal = 0
+        vertical = 0
+        for line in marks["y"]:
+            for first, second in zip(line, line[1:]):
+                dx = abs(second[0] - first[0])
+                dy = abs(second[1] - first[1])
+                if dx > 0.5 and dy < dx * 0.1:
+                    horizontal += 1
+                elif dy > 0.5 and dx < dy * 0.1:
+                    vertical += 1
+        self.assertGreater(horizontal, 20)
+        self.assertGreater(vertical, 20)
+
+    def test_coherent_color_flow_black_keylines_stay_on_structure(self):
+        size = 128
+        coords = self.np.arange(size, dtype="float32")
+        xx, yy = self.np.meshgrid(coords, coords)
+        guide = self.np.zeros((size, size), dtype="float32")
+        guide[:, size // 2 :] = 1.0
+        tones = {
+            "c": self.np.zeros((size, size), dtype="float32"),
+            "m": self.np.zeros((size, size), dtype="float32"),
+            "y": self.np.full((size, size), 0.55, dtype="float32"),
+            "k": self.np.full((size, size), 0.05, dtype="float32"),
+            "depth": self.np.full((size, size), 0.5, dtype="float32"),
+        }
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+        common = {
+            "spacing_mm": 7.0,
+            "pen_diameter_mm": 1.0,
+            "path_tolerance_mm": 0.12,
+            "flow_smoothing_mm": 1.0,
+            "flow_layers": 1,
+            "max_marks": 1000,
+            "seed": 7,
+            "flow_guide": guide,
+        }
+
+        normal = converter.screen_coherent_color_flow(
+            tones,
+            geometry,
+            **common,
+        )
+        keylined = converter.screen_coherent_color_flow(
+            tones,
+            geometry,
+            keylines=True,
+            color_quiet=0.25,
+            **common,
+        )
+
+        def ink_length(lines):
+            return sum(
+                math.hypot(second[0] - first[0], second[1] - first[1])
+                for line in lines
+                for first, second in zip(line, line[1:])
+            )
+
+        self.assertGreater(
+            ink_length(keylined["k"]),
+            max(30.0, ink_length(normal["k"]) * 2.0),
+        )
+        self.assertGreater(
+            ink_length(keylined["y"]),
+            ink_length(normal["y"]) * 0.45,
+        )
+
+    def test_edge_preserving_simplify_keeps_the_strong_boundary(self):
+        from converter_core import structure_tensor
+
+        size = 96
+        coords = self.np.arange(size, dtype="float32")
+        xx, yy = self.np.meshgrid(coords, coords)
+        image = self.np.full((size, size, 3), 0.55, dtype="float32")
+        checker = ((xx.astype(int) + yy.astype(int)) % 2) * 0.08
+        image += checker[..., None]
+        image[:, size // 2 :] = self.np.clip(
+            image[:, size // 2 :] + 0.32,
+            0.0,
+            1.0,
+        )
+
+        simplified = structure_tensor.edge_preserving_simplify(
+            image,
+            radius_mm=4.0,
+            mm_per_px=1.0,
+            epsilon=0.01,
+        )
+
+        interior = slice(8, 36)
+        left_texture_before = float(image[interior, interior, 0].std())
+        left_texture_after = float(simplified[interior, interior, 0].std())
+        edge_before = float(
+            image[:, size // 2 - 2 : size // 2 + 2, 0].mean()
+            - image[:, size // 2 - 6 : size // 2 - 2, 0].mean()
+        )
+        edge_after = float(
+            simplified[:, size // 2 - 2 : size // 2 + 2, 0].mean()
+            - simplified[:, size // 2 - 6 : size // 2 - 2, 0].mean()
+        )
+
+        self.assertLess(left_texture_after, left_texture_before * 0.55)
+        self.assertGreater(edge_after, edge_before * 0.80)
+
 
 if __name__ == "__main__":
     unittest.main()

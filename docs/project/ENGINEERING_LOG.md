@@ -1,5 +1,42 @@
 # Engineering Log
 
+<a id="elog-20261125-coherent-color-flow"></a>
+### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Add coherent shared-geometry CMYK color flow
+
+- The owner identified that the reference's long color strokes were not
+  reproduced by the existing four independently seeded, path-gated networks.
+  Source inspection confirmed the geometry was traced correctly but then
+  converted into stochastic `4-8 mm` dashes per ink. On the open Golden Sunset
+  selfie with its live layout, `46.6 %` of final paper-space marks were under
+  `5 mm` and the mark-length 90th percentile was `16.24 mm`.
+- The new **Coherent color flow** style traces one shared geometry per density
+  layer. Channel coverage is smoothed over paper-space arc length, keeping a
+  dominant ink and an optional close secondary ink as contiguous local color
+  planes. Dark layers add offset geometry, and weak areas use cyan 15°,
+  magenta 75°, yellow 0°, and black 45° layer fallbacks.
+- Black keylines are gated by high tensor confidence and reduce ordinary Black
+  weight so dark texture does not become a four-pen or black wash. A
+  self-guided edge-preserving filter simplifies source texture before
+  sharpening and separation.
+- At identical screen settings the coherent render raised the 90th percentile
+  mark length to `29.18 mm`, maximum to `378.80 mm`, and reduced marks below
+  `5 mm` to `40.8 %`. The contact sheet is `tmp/coherent-flow-compare.png`.
+- The circular PNG uses transparent black RGB outside its subject. The loader
+  now composites alpha onto white paper; the prior conversion had been turning
+  the entire surround into dense black ink.
+- Focused CMYK Edge-flow, separation, photo, and tab tests pass `119`.
+- Complete converter discovery passes `692` tests in `135.933 s` with one
+  expected OpenGL-context skip.
+- The old per-ink and stochastic shared modes remain available. The new style
+  is software-selected by **Use recommended photo defaults**, but no physical
+  four-pass sheet has selected its final pitch, keyline density, or color-mix
+  ratio.
+- Evidence: `WSW-20261125-004`;
+  `docs/changes/windows-software/2026/2026-11-25-coherent-color-flow.md`.
+- Category: windows-software, cmyk, edge-flow, coherent-color-flow,
+  streamline, ink-planes, keylines, transparency, portrait,
+  physical-validation-pending.
+
 <a id="elog-20261125-edge-flow-density-pitch"></a>
 ### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Compress Edge-flow pitch continuously in darker tone
 
