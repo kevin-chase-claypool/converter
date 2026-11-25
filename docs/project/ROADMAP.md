@@ -554,6 +554,21 @@
 
 ## Known technical debt
 
+- [ ] Split structure-tensor geometry generation from CMYK ink assignment.
+  Problem: `software/converter_core/structure_tensor.py` now combines
+  edge-preserving source preprocessing, tensor construction, legacy per-ink
+  tracing, shared tracing, local pitch, and coherent ink-plane assignment in
+  one approximately `1,500`-line module. The coherent renderer is verified,
+  but another screen style would increase coupling and make focused testing
+  harder.
+  Benefit: a small geometry module can trace reusable streamline paths while
+  the CMYK layer owns tone/color assignment and keyline policy.
+  Risk: moving the implementation can accidentally change candidate order,
+  seed phases, occupancy, or output geometry, invalidating saved comparisons.
+  Acceptance: helper extraction preserves byte-equivalent geometry for fixed
+  seeds across legacy per-ink, stochastic shared, and coherent modes; the
+  focused Edge-flow suite and complete converter discovery still pass.
+
 - [ ] Plan the four CMYK layer programs in one shared page frame.
   Problem: each per-ink SVG is recentered on its own contour bounding box, so
   unequal ink coverage shifts the four saved passes apart (reproduced at

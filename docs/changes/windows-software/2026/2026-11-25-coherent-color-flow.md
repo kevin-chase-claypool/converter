@@ -100,10 +100,11 @@ contract.
   while retaining at least `80 %` of a strong boundary step.
 - A transparent-RGBA fixture confirms all four separated tone arrays remain
   below `1e-6`.
-- On the open Golden Sunset selfie at identical layout and screen settings,
-  coherent color flow raised the mark-length 90th percentile from `16.24` to
-  `29.18 mm`, raised the maximum from `142.26` to `378.80 mm`, and reduced the
-  sub-`5 mm` share from `46.6 %` to `40.8 %`. The diagnostic contact sheet is
+- On the open Golden Sunset selfie with the same scale, pitch, pen width,
+  smoothing radius, layer count, and compression, coherent color flow (with
+  keylines) raised the mark-length 90th percentile from `16.24` to `29.18 mm`,
+  raised the maximum from `142.26` to `378.80 mm`, and reduced the sub-`5 mm`
+  share from `46.6 %` to `40.8 %`. The diagnostic contact sheet is
   `tmp/coherent-flow-compare.png` and is not a tracked artifact.
 - Focused CMYK Edge-flow, separation, photo, and tab modules pass `119` tests.
 - Complete converter discovery passes `692` tests in `135.933 s` with the one
@@ -139,6 +140,11 @@ image's structure. The current source remains much busier and higher-key than
 the reference, so exact tonal and color matching cannot be claimed. Pen spread,
 four-pass registration, connector visibility, elapsed time, and the best
 pitch/layer combination remain physical validation work.
+
+`structure_tensor.py` now owns source simplification, tensor construction,
+legacy tracing, shared tracing, and coherent ink assignment. Split geometry
+generation from ink assignment before adding another renderer; the concrete
+acceptance criteria are tracked in `docs/project/ROADMAP.md`.
 
 ## Files
 

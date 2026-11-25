@@ -18,7 +18,8 @@
   weight so dark texture does not become a four-pen or black wash. A
   self-guided edge-preserving filter simplifies source texture before
   sharpening and separation.
-- At identical screen settings the coherent render raised the 90th percentile
+- With the same scale, pitch, pen width, smoothing, layer count, and
+  compression, the coherent render (with keylines) raised the 90th percentile
   mark length to `29.18 mm`, maximum to `378.80 mm`, and reduced marks below
   `5 mm` to `40.8 %`. The contact sheet is `tmp/coherent-flow-compare.png`.
 - The circular PNG uses transparent black RGB outside its subject. The loader
