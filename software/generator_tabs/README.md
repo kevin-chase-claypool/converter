@@ -67,6 +67,13 @@ Optional multi-layer hook (CMYK):
   background, so no separate "analyze" step or button exists; Save reuses
   those programs.
 
+An embedded application may own a file workflow when its generated document
+already contains named process inks. Plotterfun Extended uses this exception:
+it splits the page into four internal SVGs, calls
+`host.analyze_program(...)` for each layer with one shared fitted frame, and
+writes the resulting Y/M/C/K G-code as a set. The internal SVGs stay outside the
+selected G-code folder.
+
 Rules:
 
 1. Keep the tab self-contained in this package; do not edit the main window or
@@ -78,8 +85,10 @@ Rules:
    that. A multi-layer tool (CMYK) may add a Save-set button and an
    `on_preview_finished()` hook for background work; the host owns the dialogs
    and writes the files.
-4. Never write G-code directly; emit SVG and let the host's
-   `analyze_program`/`export_program_set` produce and save programs.
+4. Do not implement a second converter. Emit SVG and let the host's
+   `analyze_program`/`export_program_set` produce and save programs. A
+   multi-file embedded workflow may stage the host-generated programs when its
+   output contract is one complete print set.
 5. Keep controls proportional to the generator's real parameters, and make the
    output deterministic for a given seed so it can be reviewed and tested.
 6. Ported or vendored third-party code must keep its license and attribution

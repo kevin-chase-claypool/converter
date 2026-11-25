@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import mimetypes
 import threading
 from functools import partial
@@ -19,6 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ._plotterfun_simple import PlotterfunSimpleWorkflowMixin
 from ._tab_common import write_svg_document
 
 
@@ -103,7 +105,7 @@ class _LocalStaticServer:
         self._server = None
 
 
-class PlotterfunWebTab(QWidget):
+class PlotterfunWebTab(PlotterfunSimpleWorkflowMixin, QWidget):
     """Embed a local Plotterfun page and export its current SVG."""
 
     def __init__(
@@ -116,6 +118,7 @@ class PlotterfunWebTab(QWidget):
         export_slug,
         serve_http=False,
         allow_current_artwork=False,
+        simple_workflow=False,
     ):
         super().__init__()
         self.host = host
@@ -123,11 +126,71 @@ class PlotterfunWebTab(QWidget):
         self.description = description
         self.page_path = Path(page_path)
         self.export_slug = export_slug
+        self.simple_workflow = bool(simple_workflow)
         self._last_export = ""
         self._server = None
         self.view = None
+        self._advanced_mode = False
+        self._last_cmyk_folder = ""
+        self._pending_cmyk_folder = None
+        self._pending_cmyk_base = ""
+        self._pending_cmyk_source = ""
+        self._pending_cmyk_algorithm = ""
+        self._pending_cmyk_settings = None
+        self._cmyk_capture_polls = 0
+        self._current_artwork_polls = 0
+        self._use_image_polls = 0
+        self._saved_workspace_sizes = None
+        self._gcode_thread = None
+        self._gcode_worker = None
 
         layout = QVBoxLayout(self)
+        self.simple_status = None
+        self.style_combo = None
+        self.export_cmyk_button = None
+        self.advanced_button = None
+        if self.simple_workflow:
+            self._build_simple_controls(layout)
+        else:
+            self._build_standard_controls(
+                layout,
+                allow_current_artwork=allow_current_artwork,
+            )
+
+        if HAVE_WEBENGINE and self.page_path.exists():
+            self.view = QWebEngineView()
+            self.view.setMinimumHeight(420)
+            self.view.loadFinished.connect(self._web_load_finished)
+            if serve_http:
+                self._server = _LocalStaticServer(
+                    self.page_path.parent,
+                    artwork_path_getter=(
+                        self._current_artwork_path
+                        if allow_current_artwork
+                        else None
+                    ),
+                )
+                self.view.load(QUrl(self._server.url))
+            else:
+                self.view.load(QUrl.fromLocalFile(str(self.page_path)))
+            layout.addWidget(self.view, 1)
+        else:
+            self.export_button.setEnabled(False)
+            if self.use_current_button is not None:
+                self.use_current_button.setEnabled(False)
+            if self.export_cmyk_button is not None:
+                self.export_cmyk_button.setEnabled(False)
+            if self.advanced_button is not None:
+                self.advanced_button.setEnabled(False)
+            message = QLabel(
+                "QtWebEngine is required for the embedded Plotterfun app. "
+                "Install the full PySide6 wheel (PySide6-Addons) and restart. "
+                f"The vendored page is at {self.page_path}."
+            )
+            message.setWordWrap(True)
+            layout.addWidget(message, 1)
+
+    def _build_standard_controls(self, layout, *, allow_current_artwork):
         row = QHBoxLayout()
         hint = QLabel(
             "Load an image and choose an algorithm inside the page, then "
@@ -152,38 +215,43 @@ class PlotterfunWebTab(QWidget):
         row.addWidget(self.export_button)
         layout.addLayout(row)
 
-        if HAVE_WEBENGINE and self.page_path.exists():
-            self.view = QWebEngineView()
-            self.view.setMinimumHeight(420)
-            if serve_http:
-                self._server = _LocalStaticServer(
-                    self.page_path.parent,
-                    artwork_path_getter=(
-                        self._current_artwork_path
-                        if allow_current_artwork
-                        else None
-                    ),
-                )
-                self.view.load(QUrl(self._server.url))
-            else:
-                self.view.load(QUrl.fromLocalFile(str(self.page_path)))
-            layout.addWidget(self.view, 1)
-        else:
-            self.export_button.setEnabled(False)
-            if self.use_current_button is not None:
-                self.use_current_button.setEnabled(False)
-            message = QLabel(
-                "QtWebEngine is required for the embedded Plotterfun app. "
-                "Install the full PySide6 wheel (PySide6-Addons) and restart. "
-                f"The vendored page is at {self.page_path}."
-            )
-            message.setWordWrap(True)
-            layout.addWidget(message, 1)
+    def _set_status(self, message):
+        if self.simple_status is not None:
+            self.simple_status.setText(str(message))
+        status = getattr(self.host, "generator_status", None)
+        if callable(status):
+            status(str(message))
+
+    def _web_load_finished(self, ok):
+        if not ok:
+            self._set_status(f"{self.title} could not load its local page.")
+            return
+        if self.simple_workflow:
+            QTimer.singleShot(200, self._apply_simple_page_mode)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        QTimer.singleShot(0, self._update_workspace_focus)
+
+    def hideEvent(self, event):
+        self._update_workspace_focus()
+        super().hideEvent(event)
 
     def _current_artwork_path(self):
         getter = getattr(self.host, "artwork_path", None)
         value = getter() if callable(getter) else getter
         return str(value or "").strip()
+
+    def apply_tab_settings(self, settings):
+        """Auto-fit the shared page frame for Plotterfun's pixel viewBox."""
+        if not self.simple_workflow:
+            return settings
+        return dataclasses.replace(
+            settings,
+            fit_mode="inside",
+            scale=1.0,
+            hatch_spacing_mm=0.0,
+        )
 
     def use_current_artwork(self):
         if self.view is None:
@@ -196,6 +264,9 @@ class PlotterfunWebTab(QWidget):
                 "Select an artwork image in the converter first.",
             )
             return
+        self._current_artwork_polls = 0
+        self._use_image_polls = 0
+        self._set_status(f"{self.title} is loading the current artwork…")
         self.view.page().runJavaScript(
             """
             (async () => {
@@ -223,10 +294,7 @@ class PlotterfunWebTab(QWidget):
             self._current_artwork_loaded,
         )
 
-    def _current_artwork_loaded(self, result):
-        if result:
-            self._report_current_artwork(True)
-            return
+    def _current_artwork_loaded(self, _result):
         # QtWebEngine does not await the async fetch promise before invoking
         # this callback. Verify the hidden input after the browser event loop
         # has had a chance to process the synthetic file change.
@@ -237,8 +305,18 @@ class PlotterfunWebTab(QWidget):
             return
         self.view.page().runJavaScript(
             "Boolean(document.querySelector('input[type=file]')?.files?.length)",
-            self._report_current_artwork,
+            self._current_artwork_verified,
         )
+
+    def _current_artwork_verified(self, loaded):
+        if loaded:
+            self._report_current_artwork(True)
+            return
+        self._current_artwork_polls += 1
+        if self._current_artwork_polls < 30:
+            QTimer.singleShot(200, self._verify_current_artwork)
+            return
+        self._report_current_artwork(False)
 
     def _report_current_artwork(self, loaded):
         message = (
@@ -246,9 +324,10 @@ class PlotterfunWebTab(QWidget):
             if loaded
             else f"{self.title} could not load the current artwork."
         )
-        status = getattr(self.host, "generator_status", None)
-        if callable(status):
-            status(message)
+        self._set_status(message)
+        if loaded and self.simple_workflow:
+            self._use_image_polls = 0
+            QTimer.singleShot(120, self._activate_page_image)
 
     def export_svg(self):
         if self.view is None:
@@ -285,6 +364,9 @@ class PlotterfunWebTab(QWidget):
         )
 
     def closeEvent(self, event):
+        shutdown = getattr(self, "shutdown_background", None)
+        if callable(shutdown):
+            shutdown()
         if self._server is not None:
             self._server.close()
             self._server = None

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-25 | `WSW-20261125-007` | implemented | [Simplify Plotterfun Extended and generate registered Y/M/C/K G-code](2026/2026-11-25-plotterfun-cmyk-simple-workflow.md) | `plotterfun-extended`, `cmyk`, `gcode`, `registration`, `user-interface`, `print-workflow`, `flow-field`, `tone`, `gcr` |
 | 2026-11-25 | `WSW-20261125-006` | implemented | [Embed Plotterfun Extended as a local converter tool](2026/2026-11-25-plotterfun-extended-tab.md) | `plotterfun`, `plotterfun-extended`, `webengine`, `cmyk`, `flow-field`, `depth`, `face-boundary`, `third-party` |
 | 2026-11-25 | `WSW-20261125-005` | implemented | [Gate coherent dark layers by scene depth](2026/2026-11-25-coherent-flow-scene-depth-layers.md) | `cmyk`, `edge-flow`, `coherent-color-flow`, `scene-depth`, `dark-layers`, `pitch-compression`, `portrait`, `physical-validation-pending` |
 | 2026-11-25 | `WSW-20261125-004` | implemented | [Add a coherent shared-geometry CMYK color-flow renderer](2026/2026-11-25-coherent-color-flow.md) | `cmyk`, `edge-flow`, `coherent-color-flow`, `streamline`, `ink-planes`, `edge-preserving`, `keylines`, `transparency`, `portrait`, `physical-validation-pending` |

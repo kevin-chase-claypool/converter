@@ -464,6 +464,51 @@ class ToolShellTests(unittest.TestCase):
         window.fields["hatch_spacing_mm"].setText("3")
         self.assertGreater(window.settings_for_source(window.convert_root).hatch_spacing_mm, 0.0)
 
+    def test_plotterfun_cmyk_layers_use_one_fitted_page_and_make_gcode(self):
+        from generator_tabs._plotterfun_cmyk import write_cmyk_svg_set
+
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        tab = next(
+            widget
+            for title, widget, _group, _description in window.generator_tools
+            if title == "Plotterfun Extended"
+        )
+        settings = window.settings_for_source(tab)
+        self.assertEqual(settings.fit_mode, "inside")
+        self.assertEqual(settings.hatch_spacing_mm, 0.0)
+        page_svg = (
+            '<svg xmlns="http://www.w3.org/2000/svg" width="8in" '
+            'height="6in" viewBox="0 0 800 600">'
+            '<g id="cyan"><path d="M100,100 L180,120" stroke="#00ffff" '
+            'stroke-width="2" fill="none"/></g>'
+            '<g id="magenta"><path d="M200,140 L280,180" '
+            'stroke="#ff00ff" stroke-width="2" fill="none"/></g>'
+            '<g id="yellow"><path d="M300,220 L380,240" '
+            'stroke="#ffff00" stroke-width="2" fill="none"/></g>'
+            '<g id="black"><path d="M410,280 L390,300" '
+            'stroke="#000000" stroke-width="2" fill="none"/></g>'
+            "</svg>"
+        )
+        with tempfile.TemporaryDirectory(prefix="plotterfun-gcode-") as folder:
+            exported = write_cmyk_svg_set(
+                page_svg,
+                Path(folder),
+                base_name="portrait",
+            )
+            analyses = [
+                window.analyze_program(str(layer.path), settings)
+                for layer in exported.layers
+            ]
+        self.assertTrue(
+            all("M3" in analysis["gcode"] for analysis in analyses)
+        )
+        scales = {
+            round(float(analysis["settings"].scale), 9)
+            for analysis in analyses
+        }
+        self.assertEqual(len(scales), 1)
+
     def test_export_program_set_writes_one_file_per_entry(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

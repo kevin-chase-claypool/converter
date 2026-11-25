@@ -897,7 +897,14 @@
   custom channel workflows, optional luminance-depth and face masks,
   current-artwork loading, and SVG capture back into Convert. The 4.9 MB bundle
   uses a loopback-only server and QtWebEngine; depth is local, while optional
-  face landmarks may require a first-use network download. This extends the
+  face landmarks may require a first-use network download. A simplified
+  three-step workflow now hides the upstream sidebar, starts Flow Field or
+  another selected style automatically, and creates four page-registered
+  G-code programs plus a manifest in physical Yellow/Magenta/Cyan/Black order
+  (`WSW-20261125-007`). Internal SVGs stay out of the selected output folder.
+  The live colorful-photo check confirmed tone-dependent Flow Field density and
+  strong black/GCR participation, and all four programs pass strict motion
+  preflight. A physical four-pass overlay print remains open. This extends the
   in-port strategy but does not complete the full generator shortlist.
 
 - [ ] Close the remaining upstream option gaps recorded in

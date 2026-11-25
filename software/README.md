@@ -71,7 +71,7 @@ python -m unittest -q software.tests.test_path_join
 python -m unittest discover -q -s software\tests -p "test_*.py"
 ```
 
-The complete discovery run currently contains 682 test cases. Repeated generator
+The complete discovery run currently contains 714 test cases. Repeated generator
 tab contracts retain their per-tab class names and failure locations, while
 related slow setup scenarios use subtests to avoid rebuilding the same Qt
 window or generated coupon.
@@ -1001,17 +1001,45 @@ Current tools:
   press **Export SVG to plot**; requires PySide6-Addons.
 - **Plotterfun Extended** - the pinned
   `msurguy/plotterfun-extended` production build (40 algorithms), embedded as a
-  local tab. It adds CMYK/RGB/custom channel workflows, luminance-depth
-  algorithms, face-boundary masking, field copies, and route optimization.
-  **Use current artwork** sends the converter's selected image into the page
-  without a second file picker. Choose the algorithm and output mode there,
-  then press **Export SVG to plot** to adopt the generated SVG back into
-  Convert. The static build is served from a loopback-only HTTP server because
-  Chromium blocks its module workers under `file://`. It adds about 4.9 MB to
-  the repository. Depth uses a local luminance proxy; optional face landmarks
-  may download their model on first use. Use the toolbar **Export SVG to plot**
-  to import the result; the page's blue **Download SVG** only downloads a
-  standalone file. Requires PySide6-Addons.
+  local tab. The default view is a three-step CMYK workflow:
+  1. **Use current artwork** loads the converter's selected image and presses
+     the page's internal **Use image** action automatically.
+  2. **Style** chooses Flow Field, Contours, Linedraw, Stipple, Crosshatch,
+     Halftone, or Squiggle. The page is forced to CMYK with K included.
+  3. **Create Y/M/C/K G-code files...** asks for one folder, then writes
+     `<artwork>-01-yellow.gcode`, `<artwork>-02-magenta.gcode`,
+     `<artwork>-03-cyan.gcode`, `<artwork>-04-black.gcode`, and
+     `<artwork>-cmyk-set.json` there.
+
+  The split SVG layers are internal intermediates in the system temporary
+  folder; the selected folder receives only the four ready-to-run programs and
+  manifest. Every layer keeps the page frame and the same four registration
+  crosses, then uses one shared **Fit inside** scale, so the converter cannot
+  independently resize or centre an ink. Each layer runs through the normal
+  Convert analysis path, preserving bed compensation, pen settings, and motion
+  guards. The manifest records the hashes, source image, algorithm, line and
+  contour counts, and physical print order: Yellow, Magenta, Cyan, Black. Run
+  the numbered files on the same sheet without moving or re-registering the
+  paper. A missing channel is written as a registered boundary-only program and
+  is identified in the manifest rather than silently omitted.
+
+  Flow Field is the recommended default for color work. Its streamline
+  separation tightens in darker image regions, so shading changes the printed
+  pitch instead of mapping only to stroke color. CMYK separation also sends the
+  gray component to the black channel; the K program therefore contributes to
+  tonal density as well as edges. The generated files preserve those differences
+  in their drawing counts.
+
+  **Advanced controls** reveals the full upstream sidebar, including all 40
+  algorithms, RGB/custom channels, luminance-depth controls, face-boundary
+  masking, field copies, route optimization, and page settings. In advanced
+  mode, **Open combined SVG in Convert** adopts the unsplit page as Convert
+  artwork. The upstream blue **Download SVG** button downloads only that
+  combined page; it does not create the four G-code programs. The static build is
+  served from a loopback-only HTTP server because Chromium blocks its module
+  workers under `file://`. It adds about 4.9 MB to the repository. Depth uses
+  a local luminance proxy; optional face landmarks may download their model on
+  first use. Requires PySide6-Addons.
 - **Layers** - splits the imported SVG by stroke/fill colour into per-layer
   SVGs; pick a layer to preview and plot one pen at a time. The source SVG's
   own dimensions are preserved.
@@ -1141,7 +1169,7 @@ work with no input (optional mesh/image sources are noted below).
 | Pixel Art | Mode big, pitch 0.6 mm, max grid 96, alpha 128, ignore white | Paths auto-fit the page; big mode needs 5x the pitch per pixel, line mode is denser. |
 | Wobble | Frequency 3 mm, amplitude 0.5 mm, jitter 20 %, seed 7, endpoint wobble on | Preview a tool first; Wobble processes those contours. |
 | Plotterfun | Load an image inside the page, pick an algorithm, keep its defaults, then Export SVG to plot | Requires QtWebEngine (PySide6-Addons). |
-| Plotterfun Extended | Select a local image, choose Flow Field/Contours/another algorithm, set CMYK output if appropriate, then Export SVG to plot. **Use current artwork** avoids reopening the converter's image. | Includes 40 algorithms and optional luminance-depth/face masking. Depth is local; optional face landmarks may require a first-use download. |
+| Plotterfun Extended | Press **Use current artwork**, choose a Style, then **Create Y/M/C/K G-code files** and select one folder. | Writes four page-registered G-code programs plus a manifest; split SVGs stay internal. Run `01-yellow`, `02-magenta`, `03-cyan`, then `04-black` on one sheet. Flow Field ties darker tone to tighter spacing, and K carries the gray component. Advanced controls expose the full 40-algorithm page. |
 | Voronoi | 120 points, seed 7, relax 1, cell boundaries, margin 6 mm | Raise relax for even cells; site dots show the seeds. |
 | Path Prep | Merge 5 deg / 0.05 mm, duplicate 0.05 mm, close gaps 0.2 mm, sort on | Preview a tool first; cleans those contours. |
 | Layers | Pick a colour layer (or All colours) from an imported SVG | One layer per pen; the source dimensions are kept. |

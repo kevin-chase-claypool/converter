@@ -33,6 +33,7 @@ class PlotterfunExtendedTab(PlotterfunWebTab):
             export_slug="plotterfun-extended",
             serve_http=True,
             allow_current_artwork=True,
+            simple_workflow=True,
         )
 
 

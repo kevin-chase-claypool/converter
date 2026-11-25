@@ -1,5 +1,52 @@
 # Engineering Log
 
+<a id="elog-20261125-plotterfun-cmyk-simple-workflow"></a>
+### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Generate four registered CMYK G-code programs from Plotterfun
+
+- The owner reported that Plotterfun Extended was cluttered and asked whether
+  the page's blue **Download SVG** button produced four CMYK files. It did not;
+  it emitted one combined SVG. The owner then clarified that the useful output
+  is four ready-to-run G-code files, one per physical ink, with SVGs used only
+  as background intermediates.
+- Plotterfun Extended now defaults to a three-step workflow: use the current
+  artwork, choose one of seven mark-making styles, then create the Y/M/C/K
+  G-code set in one folder. The full upstream sidebar remains behind
+  **Advanced controls**.
+- The captured page is split by its `yellow`, `magenta`, `cyan`, and `black`
+  groups. Internal cyan/yellow paint is normalized to black so the single-pen
+  parser cannot discard those process colors as near-white artwork. Every layer
+  keeps the page frame, defs, clip paths, and the same four registration
+  crosses.
+- All four layers use one Plotterfun-specific **Fit inside** transform, then run
+  through the main `analyze_program` path. The selected folder receives
+  `01-yellow.gcode`, `02-magenta.gcode`, `03-cyan.gcode`, and
+  `04-black.gcode`, plus `*-cmyk-set.json`; it receives no SVG clutter. The
+  split SVG set remains in the system temporary folder and is referenced by the
+  manifest.
+- Flow Field keeps its tone-dependent streamline spacing, and Plotterfun's CMYK
+  separation keeps K enabled. A live run on the supplied colorful photograph
+  produced black `6,311,363` bytes and `106,340` drawing moves versus CMY
+  `682,047` / `606,359` / `2,089,190` bytes; this confirms the dark-area pitch
+  and gray-component contribution are present in the final K program.
+- The first live review exposed a dark-theme contrast failure and a cramped
+  embedded preview beside the unused GL pane. The card now uses the application
+  palette, simple mode uses the full workspace, and advanced mode restores the
+  standard preview.
+- The first page-capture bridge returned no JavaScript object through
+  QtWebEngine. Returning JSON text fixed readiness and SVG capture. A second
+  conversion issue treated Plotterfun's 800 x 600 viewBox as millimetres and
+  clipped almost all paths; shared auto-fit corrected the scale.
+- Focused Plotterfun split, G-code, and UI tests pass `21` tests. Complete
+  converter discovery passes `714` tests in `135.680 s` with one expected
+  OpenGL-context skip.
+  All four live Flow Field programs pass `check_gcode_motion.py --strict`.
+- No physical four-pass overlay has been printed, so registration and final
+  color match remain bench-validation risks rather than accepted results.
+- Evidence: `WSW-20261125-007`;
+  `docs/changes/windows-software/2026/2026-11-25-plotterfun-cmyk-simple-workflow.md`.
+- Category: windows-software, plotterfun-extended, cmyk, gcode, registration,
+  user-interface, flow-field, tone, gcr, print-workflow.
+
 <a id="elog-20261125-plotterfun-extended-tab"></a>
 ### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Embed Plotterfun Extended
 
