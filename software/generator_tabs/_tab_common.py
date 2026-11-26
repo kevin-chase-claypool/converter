@@ -196,7 +196,6 @@ class GeneratorTab(QWidget):
         self.controls_layout = QVBoxLayout(self.controls)
         self.controls_layout.setContentsMargins(0, 0, 0, 0)
         self.controls_layout.setSpacing(6)
-        self.group_boxes = {}
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(self.controls)
@@ -207,7 +206,6 @@ class GeneratorTab(QWidget):
             "Set this tab's controls, then press Preview. The shared preview "
             "panel draws this tab's result, and Save G-code exports it."
         )
-        self.guidance = hint
         hint.setWordWrap(True)
         hint.setStyleSheet("color: #475569;")
         outer.addWidget(hint)
@@ -222,7 +220,6 @@ class GeneratorTab(QWidget):
         form.setHorizontalSpacing(6)
         form.setVerticalSpacing(3)
         self.controls_layout.addWidget(box)
-        self.group_boxes[title] = box
         return form
 
     def add_raw(self, widget):

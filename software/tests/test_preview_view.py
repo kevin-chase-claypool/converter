@@ -123,9 +123,12 @@ class SourceSizeTests(unittest.TestCase):
         cls.app = QApplication.instance() or QApplication([])
         cls.module = _load_app_module()
 
-    def test_source_size_is_free_and_auto_fit_bounds_the_plot(self):
+    def test_source_size_has_no_practical_cap(self):
         window = self.module.KaleidoscopeWindow(settings_file=_temp_settings(self))
         self.assertGreaterEqual(window.source_size.maximum(), 100000.0)
+
+    def test_huge_source_size_is_fitted_to_the_bound(self):
+        window = self.module.KaleidoscopeWindow(settings_file=_temp_settings(self))
         window.seed.setValue(6)
         window.intricacy.setValue(3)
         window.random_mode.setChecked(True)
@@ -161,45 +164,34 @@ class TypedNumberTests(unittest.TestCase):
         self.window.fit_radius.setValue(120.0)
         self.window.rebuild()
 
-    def test_generation_changes_keep_the_typed_numbers(self):
-        with self.subTest("seed"):
-            before = self.typed_values()
-            old_seed = self.window.seed.value()
-            self.window.roll_seed()
-            self.assertNotEqual(
-                self.window.seed.value(),
-                old_seed,
-                "the seed itself changes",
-            )
-            self.assertEqual(self.typed_values(), before)
-            self.assertAlmostEqual(
-                self.design_radius(),
-                120.0,
-                delta=1.2,
-                msg="auto-fit still applies",
-            )
+    def test_seed_change_keeps_the_typed_numbers(self):
+        before = self.typed_values()
+        old_seed = self.window.seed.value()
+        self.window.roll_seed()
+        self.assertNotEqual(self.window.seed.value(), old_seed, "the seed itself changes")
+        self.assertEqual(self.typed_values(), before)
+        self.assertAlmostEqual(
+            self.design_radius(), 120.0, delta=1.2, msg="auto-fit still applies"
+        )
 
-        with self.subTest("intricacy and divisions"):
-            before = self.typed_values()
-            self.window.intricacy.setValue(7)
-            self.window.divisions.setValue(9)
-            self.assertEqual(self.typed_values(), before)
-            self.assertAlmostEqual(self.design_radius(), 120.0, delta=1.2)
+    def test_intricacy_and_division_changes_keep_the_typed_numbers(self):
+        before = self.typed_values()
+        self.window.intricacy.setValue(7)
+        self.window.divisions.setValue(9)
+        self.assertEqual(self.typed_values(), before)
+        self.assertAlmostEqual(self.design_radius(), 120.0, delta=1.2)
 
-        with self.subTest("auto fit"):
-            self.window.source_size.setValue(777.0)
-            self.window.rebuild()
-            self.assertEqual(self.window.source_size.value(), 777.0)
-            self.assertNotAlmostEqual(self.window.fit_scale, 1.0, places=3)
+    def test_auto_fit_does_not_write_the_size_back(self):
+        self.window.source_size.setValue(777.0)
+        self.window.rebuild()
+        self.assertEqual(self.window.source_size.value(), 777.0)
+        self.assertNotAlmostEqual(self.window.fit_scale, 1.0, places=3)
 
-        with self.subTest("fit button"):
-            self.window.fit_to_bounds()
-            self.assertAlmostEqual(
-                self.window.source_size.value(),
-                120.0,
-                delta=1.2,
-            )
-            self.assertAlmostEqual(self.window.fit_scale, 1.0, places=6)
+    def test_fit_button_is_the_one_that_writes_the_size(self):
+        self.window.source_size.setValue(777.0)
+        self.window.fit_to_bounds()
+        self.assertAlmostEqual(self.window.source_size.value(), 120.0, delta=1.2)
+        self.assertAlmostEqual(self.window.fit_scale, 1.0, places=6)
 
     def typed_values(self):
         """The settings a seed/intricacy/division change must never rewrite."""
@@ -291,40 +283,42 @@ class SettingsPersistenceTests(unittest.TestCase):
                 set(restored.motif_paths) <= set(restored.all_motif_paths)
             )
 
-    def test_motif_selection_subset_limit_and_reroll(self):
+    def test_only_the_selected_subset_is_used(self):
         root = Path(self.module.__file__).resolve().parents[1]
         drawn = root / "motifs" / "nature-drawn"
         if not drawn.is_dir():
             self.skipTest("the shipped drawn motif folder is not present")
         window = self.module.KaleidoscopeWindow(settings_file=_temp_settings(self))
         window.load_motif_folder(str(drawn), announce=False)
+        self.assertGreater(len(window.all_motif_paths), 10)
+        self.assertEqual(len(window.motif_paths), 10)
+        self.assertTrue(set(window.motif_paths) <= set(window.all_motif_paths))
 
-        with self.subTest("default subset"):
-            self.assertGreater(len(window.all_motif_paths), 10)
-            self.assertEqual(len(window.motif_paths), 10)
-            self.assertTrue(
-                set(window.motif_paths) <= set(window.all_motif_paths)
-            )
+    def test_motif_limit_controls_how_many_are_used(self):
+        root = Path(self.module.__file__).resolve().parents[1]
+        drawn = root / "motifs" / "nature-drawn"
+        if not drawn.is_dir():
+            self.skipTest("the shipped drawn motif folder is not present")
+        window = self.module.KaleidoscopeWindow(settings_file=_temp_settings(self))
+        window.load_motif_folder(str(drawn), announce=False)
+        window.motif_limit.setValue(3)
+        self.assertEqual(len(window.motif_paths), 3)
+        window.motif_limit.setValue(200)
+        self.assertEqual(len(window.motif_paths), len(window.all_motif_paths))
 
-        with self.subTest("motif limit"):
-            window.motif_limit.setValue(3)
-            self.assertEqual(len(window.motif_paths), 3)
-            window.motif_limit.setValue(200)
-            self.assertEqual(
-                len(window.motif_paths),
-                len(window.all_motif_paths),
-            )
-
-        with self.subTest("reroll"):
-            window.motif_limit.setValue(10)
-            first = set(window.motif_paths)
-            window.roll_motif_selection()
-            self.assertEqual(len(window.motif_paths), 10)
-            self.assertNotEqual(
-                first,
-                set(window.motif_paths),
-                "a re-roll should pick different images",
-            )
+    def test_new_selection_draws_a_different_set(self):
+        root = Path(self.module.__file__).resolve().parents[1]
+        drawn = root / "motifs" / "nature-drawn"
+        if not drawn.is_dir():
+            self.skipTest("the shipped drawn motif folder is not present")
+        window = self.module.KaleidoscopeWindow(settings_file=_temp_settings(self))
+        window.load_motif_folder(str(drawn), announce=False)
+        first = set(window.motif_paths)
+        window.roll_motif_selection()
+        self.assertEqual(len(window.motif_paths), 10)
+        self.assertNotEqual(
+            first, set(window.motif_paths), "a re-roll should pick different images"
+        )
 
     def test_a_whole_drawing_is_trimmed_to_its_boldest_strokes(self):
         from PIL import Image, ImageDraw
@@ -385,20 +379,19 @@ class SidebarScrollTests(unittest.TestCase):
         self.app.processEvents()
         return window
 
-    def test_short_window_sidebar_contract(self):
+    def test_the_control_groups_live_in_a_resizable_scroll_area(self):
         window = self._short_window()
-        with self.subTest("resizable control groups"):
-            self.assertIsInstance(window.sidebar, QScrollArea)
-            self.assertTrue(window.sidebar.widgetResizable())
-            titles = {
-                box.title()
-                for box in window.sidebar.widget().findChildren(QGroupBox)
-            }
-            self.assertEqual(
-                titles,
-                {"Source", "Kaleidoscope", "Printable bounds", "Output"},
-            )
+        self.assertIsInstance(window.sidebar, QScrollArea)
+        self.assertTrue(window.sidebar.widgetResizable())
+        titles = {
+            box.title() for box in window.sidebar.widget().findChildren(QGroupBox)
+        }
+        self.assertEqual(
+            titles, {"Source", "Kaleidoscope", "Printable bounds", "Output"}
+        )
 
+    def test_a_short_window_scrolls_to_the_build_and_save_buttons(self):
+        window = self._short_window()
         bar = window.sidebar.verticalScrollBar()
         self.assertGreater(
             bar.maximum(), 0, "a short window must scroll the column, not clip it"
@@ -412,6 +405,8 @@ class SidebarScrollTests(unittest.TestCase):
             self.assertGreaterEqual(top, 0, button.text())
             self.assertLessEqual(bottom, viewport.height(), button.text())
 
+    def test_the_ornament_spacing_control_reaches_the_generator(self):
+        window = self._short_window()
         window.random_mode.setChecked(True)
         window.ornament_pitch.setValue(1.0)
         packed = len(window.build_design()[1])

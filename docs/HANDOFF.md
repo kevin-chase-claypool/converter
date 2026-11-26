@@ -262,8 +262,7 @@ converter README for the exact preamble and settings.
     fields, shade levels/angle step, and image-tone sampling. Pattern-specific rows appear only
     when relevant; `Raster px/unit` is hidden only when the source is pinned to `shapes`.
   - **Motion** — draw/feed rate and travel rate.
-  - **Machine** — physical bed diameter, paper-stock diameter, stock margin,
-    gantry reach cap, and the end-of-program G53 park. These
+  - **Machine** — bed diameter/margin, gantry reach cap, and the end-of-program G53 park. These
     clip and end the emitted program, so they are not preview settings.
   - **Theta kinematics** — theta axis/ratio/resolver/cost settings, plus monotonic theta. `Theta
     mode` and `Theta resolver` are combos of the implemented strategies.

@@ -1,6 +1,5 @@
 """Conservative endpoint joining for ordinary SVG contours."""
 
-import math
 import sys
 import unittest
 from pathlib import Path
@@ -85,67 +84,6 @@ class PathJoinTests(unittest.TestCase):
         self.assertEqual(joined, rows)
         self.assertFalse(stats["enabled"])
         self.assertEqual(stats["reason"], "tagged contours")
-
-    def test_nearby_short_open_contours_chain_end_to_end(self):
-        chained, stats = converter.chain_nearby_contours(
-            [
-                [(0.0, 0.0), (10.0, 0.0)],
-                [(12.0, 0.0), (20.0, 0.0)],
-                [(22.0, 1.0), (30.0, 1.0)],
-            ],
-            max_gap_mm=3.0,
-        )
-
-        self.assertEqual(len(chained), 1)
-        self.assertEqual(
-            chained[0],
-            [
-                (0.0, 0.0),
-                (10.0, 0.0),
-                (12.0, 0.0),
-                (20.0, 0.0),
-                (22.0, 1.0),
-                (30.0, 1.0),
-            ],
-        )
-        self.assertEqual(stats["connections"], 2)
-        self.assertAlmostEqual(
-            stats["bridged_mm"],
-            2.0 + math.hypot(2.0, 1.0),
-        )
-
-    def test_chain_gap_limit_is_explicit(self):
-        chained, stats = converter.chain_nearby_contours(
-            [
-                [(0.0, 0.0), (10.0, 0.0)],
-                [(13.0, 0.0), (20.0, 0.0)],
-            ],
-            max_gap_mm=2.0,
-        )
-
-        self.assertEqual(len(chained), 2)
-        self.assertEqual(stats["connections"], 0)
-
-    def test_contour_chain_preserves_closed_and_tagged_rows(self):
-        closed = [(0.0, 0.0), (10.0, 0.0), (0.0, 10.0), (0.0, 0.0)]
-        tagged = converter.WaveTrail(
-            [(0.0, 20.0), (10.0, 20.0)],
-            wave_row_index=0,
-        )
-        chained, stats = converter.chain_nearby_contours(
-            [
-                [(0.0, 0.0), (10.0, 0.0)],
-                closed,
-                tagged,
-                [(12.0, 0.0), (20.0, 0.0)],
-            ],
-            max_gap_mm=3.0,
-        )
-
-        self.assertEqual(len(chained), 3)
-        self.assertIn(closed, chained)
-        self.assertIn(tagged, chained)
-        self.assertEqual(stats["closed_or_tagged"], 2)
 
     def test_gcode_has_one_pen_cycle_for_a_joined_chain(self):
         contours = [

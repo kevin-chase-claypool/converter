@@ -1,5 +1,38 @@
 # Engineering Log
 
+<a id="elog-20261126-revert-pre-reddit-converter"></a>
+### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Revert the converter to its pre-Reddit baseline
+
+- The owner reported that the converter had been unstable since the attempt to
+  reproduce the Reddit user's CMYK image and directed a return to the state
+  before that work was mentioned.
+- The first Reddit-inspired commit is `4c44fc5` (`Add edge-flow CMYK
+  streamlines`), dated 2026-11-22. Its parent, `2a52202`, is the rollback
+  boundary.
+- `software/` and `tools/cmyk_calibrate.py` were restored to `2a52202`;
+  `tools/export_cmyk_headless.py` was removed. Converter-facing sections of
+  the handoff, interface, and CMYK calibration documents were restored to the
+  same baseline.
+- Unrelated P100 registration changes, firmware, hardware evidence, bed meshes,
+  and pre-existing user files were not reverted.
+- Focused CMYK, calibration-sheet, generator-tab, Plotterfun, and preview tests
+  pass `186` with one expected OpenGL-context skip. The host's `python`
+  command is a Microsoft Store stub, so verification used `py -3.13`.
+- The complete restored converter discovery passes `623` tests with one
+  expected OpenGL-context skip.
+- Documentation indexing rebuilt five indexes from `556` notes. The first
+  check found one historical link to the removed headless exporter; that link
+  was converted to plain code and the final check passed.
+- The rollback deliberately removes later converter work committed during the
+  Reddit-era sequence, including post-compensation reach guarding,
+  post-planner screen chaining, the adaptive CMYK workspace, and embedded
+  Plotterfun Extended. Those remain recoverable from Git history and require
+  separate reintroduction and validation if wanted.
+- Evidence: `WSW-20261126-005`;
+  `docs/changes/windows-software/2026/2026-11-26-revert-pre-reddit-converter.md`.
+- Category: windows-software, rollback, cmyk, reddit-reference, edge-flow,
+  app-stability, regression.
+
 <a id="elog-20261126-cmyk-photo-fill-bed-default"></a>
 ### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Fill the bed by default for CMYK Photo
 

@@ -92,23 +92,6 @@ class ArtworkPlacementTests(unittest.TestCase):
         )
         self.assertEqual(actual, expected)
 
-    def test_gcode_header_records_nonzero_artwork_placement(self):
-        settings = converter.Settings(
-            artwork_offset_x_mm=-3.17,
-            artwork_offset_y_mm=-28.74,
-            theta_mode="fixed",
-            flip_y=False,
-            compensate_pen_width=False,
-        )
-        gcode = converter.contours_to_gcode(
-            [[(0.0, 0.0), (10.0, 10.0)]],
-            settings,
-        )
-        self.assertIn(
-            "(artwork placement -3.170,-28.740 mm)",
-            gcode,
-        )
-
     def test_negative_offsets_are_valid(self):
         settings = converter.Settings(artwork_offset_x_mm=-25.0, artwork_offset_y_mm=-10.0)
         self.assertEqual(converter.validate_settings(settings).artwork_offset_x_mm, -25.0)

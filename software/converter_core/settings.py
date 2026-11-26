@@ -8,16 +8,15 @@ DEFAULT_BED_COMPENSATION_PATH = str(
     Path(__file__).resolve().parents[2]
     / "samples"
     / "gcode"
-    / "bed-error-compensation-2026-11-26-dense-v3-368mm-stock-extrapolated.json"
+    / "bed-error-compensation-2026-11-01-dense-v3-360mm-reach-extrapolated.json"
 )
-DEFAULT_BED_DIAMETER_MM = 18.0 * 25.4
-DEFAULT_STOCK_DIAMETER_MM = 15.0 * 25.4
+DEFAULT_BED_DIAMETER_MM = 15.0 * 25.4
 DEFAULT_BED_MARGIN_MM = 0.25 * 25.4
-DEFAULT_MACHINE_REACH_RADIUS_MM = 14.5 * 25.4 / 2.0
-# The 15-inch taped stock permits the requested 14.5-inch drawing circle after
-# a 0.25-inch margin from every stock edge. The physical rotating bed is 18 in.
+DEFAULT_MACHINE_REACH_RADIUS_MM = 180.0
+# The 15-inch stock permits a 14.5-inch rim-clear diameter, but the verified
+# gantry envelope is tighter and therefore determines the usable field.
 DEFAULT_BED_COMPENSATION_DIAMETER_MM = min(
-    DEFAULT_STOCK_DIAMETER_MM - 2.0 * DEFAULT_BED_MARGIN_MM,
+    DEFAULT_BED_DIAMETER_MM - 2.0 * DEFAULT_BED_MARGIN_MM,
     2.0 * DEFAULT_MACHINE_REACH_RADIUS_MM,
 )
 DEFAULT_BED_COMPENSATION_RADIUS_MM = DEFAULT_BED_COMPENSATION_DIAMETER_MM / 2.0
@@ -131,7 +130,6 @@ class Settings:
     theta_smooth_window: int = 2
     monotonic_theta: bool = True
     bed_diameter_mm: float = DEFAULT_BED_DIAMETER_MM
-    stock_diameter_mm: float = DEFAULT_STOCK_DIAMETER_MM
     bed_margin_mm: float = DEFAULT_BED_MARGIN_MM
     # Radius the gantry can actually reach from the registered bed center, in
     # the tightest direction. The bed rotates freely, so any artwork point at
@@ -153,13 +151,17 @@ class Settings:
     # 195.27 mm from the same bed center. Re-derive after every registration,
     # because the bed center, not the travel, is what moves.
     #
-    # 2026-11-26: the owner specified 14.5-inch drawing geometry on 15-inch
-    # stock taped to the 18-inch bed. That requires a 184.15 mm radius. This
-    # replaces the prior conservative 180 mm default; the operator must verify
-    # the current G54 registration and the physical tape/stock envelope before
-    # running a full 14.5-inch-disc plot.
+    # 2026-10-13: re-derived against the live registration (G54 machine
+    # -231.214, -193.629): the work envelope is X -233.786..221.214,
+    # Y -267.371..183.629, so +Y reach is now 183.629, not 185.27 - the
+    # September registration had the bed 1.6 mm further south. A CMYK set
+    # auto-fitted to 185 clipped nothing but tripped Alarm 2 mid-plot and
+    # forced a manual resume. 180.0 keeps >=3.6 mm margin on the tight +Y
+    # side at this registration. Re-derive per the note above after any
+    # re-registration; if a future registration gains headroom, 185 may be
+    # entered again from the UI.
     #
-    # Clip radius becomes min(stock_diameter/2 - bed_margin, this).
+    # Clip radius becomes min(bed_diameter/2 - bed_margin, this).
     machine_reach_radius_mm: float = DEFAULT_MACHINE_REACH_RADIUS_MM
     # Measured residual map from tools/analyze_bed_error_calibration.py. The
     # application selects the centered dense-v3 profile over the gantry-limited
@@ -312,9 +314,6 @@ class Settings:
     # explicit choice. Bridging is restricted to FillTrail contours, never the
     # artwork's own open strokes.
     keep_down_bridges: bool = False
-    # Explicitly tagged CMYK/screen marks may also be joined after the X/Y/A
-    # contour planner orders them. Zero disables post-planner screen chaining.
-    screen_chain_gap_mm: float = 0.0
     # Merge only contours whose endpoints already touch within this small
     # tolerance. This removes otherwise-unnecessary M3/M5 cycles without
     # joining visibly separate areas of the drawing.
@@ -394,8 +393,7 @@ TEXT_FIELD_GROUPS = (
     # not belong in a preview-only group.
     ("Machine", (
         ("Bed dia mm", "bed_diameter_mm", "%g" % DEFAULT_BED_DIAMETER_MM),
-        ("Stock dia mm", "stock_diameter_mm", "%g" % DEFAULT_STOCK_DIAMETER_MM),
-        ("Stock margin mm", "bed_margin_mm", "%g" % DEFAULT_BED_MARGIN_MM),
+        ("Bed margin mm", "bed_margin_mm", "%g" % DEFAULT_BED_MARGIN_MM),
         (
             "Gantry reach radius mm",
             "machine_reach_radius_mm",
@@ -574,11 +572,10 @@ FIELD_TOOLTIPS = {
     "pen_down_first_ms": "Dwell after the program's first M3 only, because that seek starts at the GP2 lift switch.",
     "pen_up_command": "Pen-up command. M5 for this machine.",
     "pen_down_command": "Pen-down command. M3 for this machine.",
-    "bed_diameter_mm": "Physical rotating-bed diameter. Default 457.2 mm (18 in); this is the outer preview circle and does not set the paper size.",
-    "stock_diameter_mm": "Round paper-stock diameter. Default 381.0 mm (15 in); this is the paper boundary inside the physical bed.",
-    "bed_margin_mm": "Blank tape border inside the stock edge. Default 6.35 mm (0.25 in) on each side removes 0.5 in from the diameter, leaving a 14.5 in drawing circle on 15 in stock.",
+    "bed_diameter_mm": "Physical stock diameter in mm. The default 381.0 mm (15 in) round stock minus the default 6.35 mm rim margin leaves a 368.3 mm (14.5 in) rim-clear diameter. The 180 mm gantry reach remains the tighter usable limit.",
+    "bed_margin_mm": "Keeps the pen clear of the stock rim by this many mm. With 15-inch stock, the default 6.35 mm margin leaves 14.5 inches of rim-clear diameter.",
     "machine_reach_radius_mm": "Radius the gantry can reach from the registered bed center. Artwork beyond it is clipped so soft limits are not tripped.",
-    "bed_compensation_path": "Default 368.3 mm centered dense-v3 theta-bed-compensation-v2 JSON. It keeps the measured field and extends its local-affine fit to the owner-specified 184.15 mm drawing radius. Browse to choose another profile, click Default to restore this one, or clear the path to disable correction.",
+    "bed_compensation_path": "Default 360 mm centered dense-v3 theta-bed-compensation-v2 JSON. It keeps the measured 165.1 mm field and extends its local-affine fit to the 180 mm gantry reach. Browse to choose another profile, click Default to restore this one, or clear the path to disable correction.",
     "exact_compensated_preview": "Use the full bed-compensation lookup while previewing. Exact previews can be dramatically slower on dense CMYK artwork. Saved G-code is always fully compensated.",
     "park_x_machine": "End-of-program park X in machine (G53) coordinates.",
     "park_y_machine": "End-of-program park Y in machine (G53) coordinates.",
@@ -672,7 +669,6 @@ def validate_settings(settings):
         "travel_rate",
         "theta_drive_ratio",
         "bed_diameter_mm",
-        "stock_diameter_mm",
         "raster_px_per_unit",
     )
     nonnegative = (
@@ -699,7 +695,6 @@ def validate_settings(settings):
         "pen_down_ms",
         "pen_down_first_ms",
         "path_join_tolerance_mm",
-        "screen_chain_gap_mm",
         "bed_margin_mm",
         "machine_reach_radius_mm",
         "theta_center_hold_diameter_mm",
@@ -753,10 +748,8 @@ def validate_settings(settings):
         )
     if int(settings.theta_smooth_window) < 0:
         raise ValueError("theta smooth window cannot be negative.")
-    if float(settings.stock_diameter_mm) > float(settings.bed_diameter_mm) + 1e-9:
-        raise ValueError("stock diameter cannot exceed the physical bed diameter.")
-    if float(settings.bed_margin_mm) * 2.0 >= float(settings.stock_diameter_mm):
-        raise ValueError("stock margin must leave a positive drawable radius.")
+    if float(settings.bed_margin_mm) * 2.0 >= float(settings.bed_diameter_mm):
+        raise ValueError("bed margin must leave a positive drawable bed radius.")
     if str(settings.theta_axis).strip().upper() != "A":
         raise ValueError("theta axis must be A for this X/Y/A plotter.")
     if str(settings.fill_source).strip().lower() not in ("auto", "shapes", "tone"):

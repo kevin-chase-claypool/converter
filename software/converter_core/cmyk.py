@@ -13,11 +13,10 @@ G-code.
 
 from __future__ import annotations
 
-import io
 import math
 
 from .cancellation import check_cancelled
-from .geometry import ScreenTrail, WaveTrail, retag_contour
+from .geometry import WaveTrail
 from .shading import (
     dot_mark_contours,
     greedy_single_line,
@@ -25,194 +24,21 @@ from .shading import (
     stipple_points,
     tone_terrain_contours,
 )
-from .structure_tensor import (
-    EDGE_FLOW_DARK_LAYER_END,
-    EDGE_FLOW_DARK_LAYER_START,
-    edge_preserving_simplify,
-    edge_flow_coverage_factor,
-    structure_tensor_fields,
-    trace_shared_structure_streamlines,
-    trace_structure_streamlines,
-)
 
 CHANNELS = ("c", "m", "y", "k")
 CHANNEL_LABELS = {"c": "Cyan", "m": "Magenta", "y": "Yellow", "k": "Black"}
-# Nominal full-coverage transmittances for the Tombow process-marker set.
-# Measured ink profiles override these values in separation and the preview.
-TOMBOW_PROCESS_COLORS = {
-    "c": "#00aeef",
-    "m": "#ec008c",
-    "y": "#ffff00",
-    "k": "#231f20",
+CHANNEL_COLORS = {
+    "c": "#00a6d6",
+    "m": "#d6009a",
+    "y": "#f0c400",
+    "k": "#222222",
 }
-CHANNEL_COLORS = dict(TOMBOW_PROCESS_COLORS)
-
-
-def ink_transmittance_matrix(ink_colors=None):
-    """Return full-coverage RGB transmittances in C, M, Y, K order."""
-    import numpy as np
-
-    colors = dict(CHANNEL_COLORS)
-    if ink_colors:
-        colors.update(
-            {
-                str(channel): value
-                for channel, value in ink_colors.items()
-                if channel in CHANNELS
-            }
-        )
-    matrix = []
-    for channel in CHANNELS:
-        value = colors[channel]
-        if isinstance(value, str):
-            text = value.strip().lstrip("#")
-            if len(text) != 6:
-                raise ValueError(
-                    f"{channel} ink colour must be a six-digit hex value"
-                )
-            triple = [
-                int(text[index : index + 2], 16) / 255.0
-                for index in (0, 2, 4)
-            ]
-        else:
-            triple = [float(component) for component in tuple(value)[:3]]
-            if len(triple) != 3:
-                raise ValueError(
-                    f"{channel} ink transmittance needs three RGB values"
-                )
-        matrix.append(np.clip(triple, 1e-4, 1.0))
-    return np.asarray(matrix, dtype=np.float64)
-
-
-def predict_cmyk_rgb(tones, ink_colors=None):
-    """Predict paper-relative RGB from C/M/Y/K screen coverage.
-
-    Each channel is the fraction of the paper covered by that full ink. The
-    process inks then multiply as independent transmittance filters:
-
-    ``result = product(1 - coverage * (1 - full_ink_transmittance))``.
-
-    This is the same model used by the OpenGL multiply preview and by the
-    calibration-sheet validator.
-    """
-    import numpy as np
-
-    coverage = np.stack(
-        [np.asarray(tones[channel], dtype=np.float64) for channel in CHANNELS],
-        axis=-1,
-    )
-    factors = ink_transmittance_matrix(ink_colors)
-    rendered = np.ones(coverage.shape[:-1] + (3,), dtype=np.float64)
-    for index in range(len(CHANNELS)):
-        rendered *= 1.0 - coverage[..., index : index + 1] * (
-            1.0 - factors[index]
-        )
-    return np.clip(rendered, 0.0, 1.0)
-
-
-def _refine_process_tones(rgb, tones, ink_colors=None, gcr=1.0):
-    """Refine C/M/Y coverage against the known full-ink response.
-
-    K keeps the requested GCR policy. A damped Gauss-Newton solve then adjusts
-    C/M/Y for chromatic colour, and the refined result is accepted per pixel
-    only when it predicts less RGB error than the plain channel-complement
-    separation. Nearly neutral pixels remain K-led at high GCR rather than
-    turning pure black into a four-pen maximum-density stack.
-    """
-    import numpy as np
-
-    target = np.clip(np.asarray(rgb, dtype=np.float64), 0.0, 1.0)
-    cmy = np.stack(
-        [np.asarray(tones[channel], dtype=np.float64) for channel in "cmy"],
-        axis=-1,
-    )
-    black = np.asarray(tones["k"], dtype=np.float64)
-    shape = cmy.shape[:-1]
-    flat_target = target.reshape(-1, 3)
-    flat_cmy = cmy.reshape(-1, 3)
-    flat_black = black.reshape(-1)
-    refined = np.empty_like(flat_cmy)
-    chroma = flat_target.max(axis=1) - flat_target.min(axis=1)
-    refinable = (chroma > 0.02) | (float(gcr) < 0.99)
-
-    factors = ink_transmittance_matrix(ink_colors)
-    cmy_effects = 1.0 - factors[:3]
-    black_factor = 1.0 - factors[3]
-    chunk_size = 65536
-    identity = np.eye(3, dtype=np.float64)[None, :, :] * 1e-6
-
-    def predicted(values, base_factor):
-        response = 1.0 - values[:, :, None] * cmy_effects[None, :, :]
-        return np.prod(response, axis=1) * base_factor
-
-    for start in range(0, len(flat_cmy), chunk_size):
-        stop = min(start + chunk_size, len(flat_cmy))
-        baseline = flat_cmy[start:stop].copy()
-        values = baseline.copy()
-        target_chunk = flat_target[start:stop]
-        base_factor = (
-            1.0
-            - flat_black[start:stop, None]
-            * black_factor[None, :]
-        )
-        for _iteration in range(4):
-            response = (
-                1.0 - values[:, :, None] * cmy_effects[None, :, :]
-            )
-            predicted_rgb = np.prod(response, axis=1) * base_factor
-            residual = target_chunk - predicted_rgb
-            products = (
-                response[:, 1, :] * response[:, 2, :],
-                response[:, 0, :] * response[:, 2, :],
-                response[:, 0, :] * response[:, 1, :],
-            )
-            jacobian = np.empty((stop - start, 3, 3), dtype=np.float64)
-            for index in range(3):
-                jacobian[:, index, :] = (
-                    -cmy_effects[index][None, :]
-                    * products[index]
-                    * base_factor
-                )
-            step = np.linalg.solve(
-                jacobian + identity,
-                residual[:, :, None],
-            )[:, :, 0]
-            values = np.clip(
-                values + np.clip(step, -0.35, 0.35),
-                0.0,
-                1.0,
-            )
-
-        baseline_error = np.mean(
-            (predicted(baseline, base_factor) - target_chunk) ** 2,
-            axis=1,
-        )
-        refined_error = np.mean(
-            (predicted(values, base_factor) - target_chunk) ** 2,
-            axis=1,
-        )
-        refined[start:stop] = np.where(
-            (refinable[start:stop] & (refined_error < baseline_error))[:, None],
-            values,
-            baseline,
-        )
-
-    result = dict(tones)
-    for index, channel in enumerate("cmy"):
-        result[channel] = refined[:, index].reshape(shape).astype(np.float32)
-    return result
 
 # Classic rotated screens: C 15, M 75, Y 0, K 45 degrees.
 SCREEN_ANGLES_DEG = {"c": 15.0, "m": 75.0, "y": 0.0, "k": 45.0}
 
 # Below this ink coverage a mark is dropped so paper stays clean.
 INK_FLOOR = 0.06
-_PROCESS_AREA_DITHER_JITTER = 0.15
-PROCESS_AREA_HIGHLIGHT_RADIUS_MM = 1.5
-PROCESS_AREA_HIGHLIGHT_DETAIL = 0.16
-PROCESS_AREA_HIGHLIGHT_FRACTION = 0.40
-PROCESS_AREA_HIGHLIGHT_LUMA_FLOOR = 0.45
-PROCESS_AREA_DETAIL_ALIGNMENT = 1.0
 # Preserve broad vertical image tone in wave height, but average over enough
 # rows that row-frequency detail cannot make neighbouring curves jitter.
 WAVE_DEPTH_ROW_WINDOW = 7
@@ -248,16 +74,8 @@ class InkTrail(list):
 
 
 def tag_ink(contours, ink):
-    """Return copies carrying *ink* without discarding geometry tags."""
-    tagged = []
-    for contour in contours:
-        if type(contour) is list:
-            tagged.append(InkTrail(contour, ink=ink))
-            continue
-        copy = retag_contour(contour, contour)
-        copy.ink = ink
-        tagged.append(copy)
-    return tagged
+    """Return the contours as :class:`InkTrail` copies carrying *ink*."""
+    return [InkTrail(contour, ink=ink) for contour in contours]
 
 
 def _weight_map(weights):
@@ -271,24 +89,13 @@ def _weight_map(weights):
     return dict(zip(CHANNELS, values))
 
 
-def rgb_to_cmyk_tone(
-    rgb,
-    gcr=1.0,
-    weights=None,
-    gamma=1.0,
-    ink_colors=None,
-    color_match=True,
-):
+def rgb_to_cmyk_tone(rgb, gcr=1.0, weights=None, gamma=1.0):
     """Return ink-coverage arrays in 0..1 (0 = paper, 1 = full ink).
 
     ``rgb`` is an ``(h, w, 3)`` array in 0..1. ``gcr`` scales how much of the
     gray component is moved into K (0 = no black extraction, 1 = standard
-    GCR). When ``color_match`` is true, C/M/Y are refined from the known
-    process-ink transmittances so their predicted overprint follows the input
-    colour; the refinement is accepted only where it improves that prediction.
-    ``ink_colors`` accepts measured paper-relative transmittances. Each
-    channel's final coverage is multiplied by its weight before the optional
-    ``gamma`` curve is applied.
+    GCR), and each channel's coverage is multiplied by its weight before the
+    optional ``gamma`` curve is applied.
     """
     import numpy as np
 
@@ -312,59 +119,16 @@ def rgb_to_cmyk_tone(
     m = np.where(k > 0.0, (m - k) / denominator, m)
     y = np.where(k > 0.0, (y - k) / denominator, y)
 
-    raw_tones = {"c": c, "m": m, "y": y, "k": k}
-    if color_match:
-        raw_tones = _refine_process_tones(
-            values,
-            raw_tones,
-            ink_colors=ink_colors,
-            gcr=min(1.0, max(0.0, float(gcr))),
-        )
-
     weight_map = _weight_map(weights)
     gamma = max(1e-3, float(gamma))
     tones = {}
-    for channel, array in raw_tones.items():
+    for channel, array in (("c", c), ("m", m), ("y", y), ("k", k)):
         tone = np.clip(array, 0.0, 1.0) * weight_map[channel]
         tone = np.clip(tone, 0.0, 1.0)
         if abs(gamma - 1.0) > 1e-9:
             tone = np.power(tone, gamma)
         tones[channel] = tone.astype(np.float32)
     return tones
-
-
-def _load_color_managed_image(image_path):
-    """Open an image as sRGB and apply EXIF orientation."""
-    from PIL import Image, ImageCms, ImageOps
-
-    with Image.open(image_path) as source:
-        image = ImageOps.exif_transpose(source)
-        profile = image.info.get("icc_profile")
-        if image.mode in ("RGBA", "LA") or "transparency" in image.info:
-            rgba = image.convert("RGBA")
-            background = Image.new(
-                "RGBA",
-                rgba.size,
-                (255, 255, 255, 255),
-            )
-            background.alpha_composite(rgba)
-            image = background.convert("RGB")
-        if profile and image.mode == "RGB":
-            try:
-                source_profile = ImageCms.ImageCmsProfile(io.BytesIO(profile))
-                target_profile = ImageCms.createProfile("sRGB")
-                image = ImageCms.profileToProfile(
-                    image,
-                    source_profile,
-                    target_profile,
-                    outputMode="RGB",
-                    renderingIntent=ImageCms.Intent.PERCEPTUAL,
-                )
-            except (ImageCms.PyCMSError, OSError, ValueError):
-                image = image.convert("RGB")
-        else:
-            image = image.convert("RGB")
-    return image
 
 
 def _soft_contrast(rgb, contrast):
@@ -435,14 +199,13 @@ def _detail_score(tone):
     return detail - 0.4 * clipped
 
 
-def _auto_photo_baseline_settings(
+def auto_photo_settings(
     image_path,
     resolution_px=256,
     pen_width_mm=None,
     effective_pitch_mm=None,
     style=None,
     dot_pitch_mm=None,
-    ink_colors=None,
 ):
     """Suggest Image-options values that keep a photo's detail legible.
 
@@ -460,19 +223,17 @@ def _auto_photo_baseline_settings(
     asks for is turned into the ink the rows actually lay down
     (``pen / row pitch``, opened up by the screen's light-tone stretch and
     cut off below the ink floor), so a sparse screen gets a darker chain
-    instead of a washed-out plot. Wave and Edge-flow styles use separate
-    exposure-preserving paths because their fixed geometry masks ink rather
-    than behaving like the sparse rectilinear row model. Returns
-    ``auto_levels``, ``brightness``, ``contrast``, ``saturation``, ``gcr`` and
-    ``gamma``, plus style-specific sharpening and row-pitch controls when the
-    source pitch and scale are available. ``ink_colors`` supplies measured
-    full-ink transmittances when available. Edge-flow treats its pitch as
-    operator-owned layout and never returns a replacement for it.
+    instead of a washed-out plot. A Wave-screen style uses a separate
+    exposure-preserving path because its fixed row pitch masks ink rather than
+    varying coverage with tone. Returns ``auto_levels``, ``brightness``,
+    ``contrast``, ``saturation``, ``gcr`` and ``gamma``, plus wave-specific
+    sharpening and row-pitch controls when the source pitch and scale are
+    available.
     """
     from PIL import Image
     import numpy as np
 
-    image = _load_color_managed_image(image_path)
+    image = Image.open(image_path).convert("RGB")
     longest = max(image.width, image.height)
     factor = min(1.0, max(32, int(resolution_px)) / float(longest))
     if factor < 1.0:
@@ -548,47 +309,6 @@ def _auto_photo_baseline_settings(
             )
         return result
 
-    if style_key in (
-        "edge_flow",
-        "edge_flow_shared",
-        "edge_flow_coherent",
-        "process_area",
-    ):
-        # Edge-flow is a sparse, path-local screen. Its recommended recipe
-        # keeps normal exposure and moderate contrast so broad skin and
-        # highlight planes retain paper; density comes from the pen-aware
-        # pitch and dark-tone layers rather than crushing the photograph.
-        p05, p50, p95 = (
-            float(value)
-            for value in np.percentile(luminance, [5.0, 50.0, 95.0])
-        )
-        tonal_range = p95 - p05
-        chroma_p90 = float(np.percentile(chroma, 90.0))
-        brightness = clamp(112.0 + (0.42 - p50) * 70.0, 100.0, 135.0)
-        contrast = clamp(175.0 + (0.65 - tonal_range) * 50.0, 140.0, 180.0)
-        gamma = clamp(1.00 + (p50 - 0.42) * 0.35, 1.00, 1.20)
-        saturation = clamp(
-            108.0 + (0.30 - chroma_p90) * 30.0,
-            105.0,
-            120.0,
-        )
-        gcr = clamp(
-            80.0 - max(0.0, chroma_p90 - 0.18) * 40.0,
-            60.0,
-            80.0,
-        )
-        return {
-            "auto_levels": True,
-            "brightness": round_up_to(brightness, 5),
-            "contrast": round_up_to(contrast, 5),
-            "saturation": round_up_to(saturation, 5),
-            "gcr": round_up_to(gcr, 5),
-            "gamma": round(gamma / 0.05) * 0.05,
-            "sharpen": True,
-            "sharpen_pct": 60.0,
-            "sharpen_radius_mm": 1.5,
-        }
-
     # Vivid photos keep more chroma in C/M/Y and less in K; muted ones lean
     # on a little extra saturation and heavier black instead.
     saturation = (
@@ -635,12 +355,13 @@ def _auto_photo_baseline_settings(
                         best = (score, contrast, brightness, gamma)
     else:
         pen_mm, pitch_mm = screen
-        filters = dict(
-            zip(
-                CHANNELS,
-                ink_transmittance_matrix(ink_colors).astype(np.float32),
+        filters = {}
+        for channel, color in CHANNEL_COLORS.items():
+            text = color.lstrip("#")
+            filters[channel] = np.array(
+                [int(text[index : index + 2], 16) / 255.0 for index in (0, 2, 4)],
+                dtype=np.float32,
             )
-        )
         levelled = np.clip(
             (rgb - low) / max(high - low, 1e-3), 0.0, 1.0
         )
@@ -662,11 +383,7 @@ def _auto_photo_baseline_settings(
                 lifted = np.power(contrasted, 100.0 / max(1.0, brightness))
                 for gamma in (0.6, 0.8, 1.0, 1.2, 1.4, 1.6):
                     tones = rgb_to_cmyk_tone(
-                        lifted,
-                        gcr=gcr,
-                        weights=(1, 1, 1, 1),
-                        gamma=gamma,
-                        ink_colors=ink_colors,
+                        lifted, gcr=gcr, weights=(1, 1, 1, 1), gamma=gamma
                     )
                     rendered = np.ones_like(lifted)
                     for channel in CHANNELS:
@@ -698,306 +415,6 @@ def _auto_photo_baseline_settings(
     }
 
 
-def _auto_curve_rgb(
-    rgb,
-    low,
-    high,
-    auto_levels,
-    saturation_pct,
-    contrast_pct,
-    brightness_pct,
-):
-    """Apply Auto's image curve to a sampled RGB array."""
-    import numpy as np
-
-    values = np.asarray(rgb, dtype=np.float32)
-    if auto_levels:
-        values = np.clip(
-            (values - float(low)) / max(float(high - low), 1e-3),
-            0.0,
-            1.0,
-        )
-    saturation = float(saturation_pct) / 100.0
-    gray = values @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
-    values = np.clip(
-        gray[..., None] + (values - gray[..., None]) * saturation,
-        0.0,
-        1.0,
-    )
-    values = _soft_contrast(values, float(contrast_pct) / 100.0)
-    return np.power(
-        np.clip(values, 0.0, 1.0),
-        100.0 / max(1.0, float(brightness_pct)),
-    )
-
-
-def _auto_screen_coverage(
-    tones,
-    style_key,
-    pen_width_mm,
-    effective_pitch_mm,
-    flow_layers=3,
-    flow_pitch_compression=0.0,
-):
-    """Approximate the area each ink covers after Auto's screen pass."""
-    import numpy as np
-
-    if pen_width_mm is None or effective_pitch_mm is None:
-        return {channel: tones[channel] for channel in CHANNELS}
-    pen_mm = max(0.01, float(pen_width_mm))
-    pitch_mm = max(0.01, float(effective_pitch_mm))
-    coverage = {}
-    if style_key in ("rectilinear", "continuous"):
-        for channel in CHANNELS:
-            tone = tones[channel]
-            spacing = pitch_mm * (1.0 + 6.0 * (1.0 - tone))
-            coverage[channel] = np.where(
-                tone >= INK_FLOOR,
-                np.clip(pen_mm / spacing, 0.0, 1.0),
-                0.0,
-            )
-        return coverage
-    if style_key in (
-        "edge_flow",
-        "edge_flow_shared",
-        "edge_flow_coherent",
-    ):
-        base_factor = edge_flow_coverage_factor(
-            pen_mm,
-            pitch_mm,
-            flow_layers,
-        )
-        compression = min(
-            0.9,
-            max(0.0, float(flow_pitch_compression)),
-        )
-        return {
-            channel: np.clip(
-                tones[channel]
-                * base_factor
-                * (1.0 + compression * tones[channel]),
-                0.0,
-                1.0,
-            )
-            for channel in CHANNELS
-        }
-    if style_key == "process_area":
-        return {
-            channel: np.clip(tones[channel], 0.0, 1.0)
-            for channel in CHANNELS
-        }
-    area_factor = min(1.0, pen_mm / pitch_mm)
-    return {
-        channel: np.clip(tones[channel] * area_factor, 0.0, 1.0)
-        for channel in CHANNELS
-    }
-
-
-def _auto_prediction_metrics(source_rgb, predicted_rgb, target_tone):
-    """Score colour, tone, detail, and clipping for an Auto candidate."""
-    import numpy as np
-
-    luminances = np.array([0.299, 0.587, 0.114], dtype=np.float64)
-    source = np.asarray(source_rgb, dtype=np.float64)
-    predicted = np.asarray(predicted_rgb, dtype=np.float64)
-    source_luminance = source @ luminances
-    predicted_luminance = predicted @ luminances
-    delta = predicted - source
-    rgb_rmse = float(np.sqrt(np.mean(delta ** 2)))
-    chroma_error = float(
-        np.mean(
-            np.abs(
-                (predicted - predicted_luminance[..., None])
-                - (source - source_luminance[..., None])
-            )
-        )
-    )
-    tone_error = abs(float(predicted_luminance.mean()) - float(target_tone))
-    source_detail = float(_detail_score(source_luminance))
-    predicted_detail = float(_detail_score(predicted_luminance))
-    detail_shortfall = max(
-        0.0,
-        1.0 - predicted_detail / max(source_detail, 1e-6),
-    )
-    clipping = float(
-        ((predicted_luminance < 0.02) | (predicted_luminance > 0.98)).mean()
-    )
-    score = (
-        0.75 * rgb_rmse
-        + 0.25 * chroma_error
-        + 0.75 * tone_error
-        + 0.02 * detail_shortfall
-        + 0.01 * clipping
-    )
-    return score, rgb_rmse
-
-
-def auto_photo_settings(
-    image_path,
-    resolution_px=256,
-    pen_width_mm=None,
-    effective_pitch_mm=None,
-    style=None,
-    dot_pitch_mm=None,
-    ink_colors=None,
-    flow_layers=3,
-    flow_pitch_compression=0.0,
-):
-    """Choose image controls from detail, tone, and process-ink accuracy.
-
-    The style-specific detail/exposure baseline remains the starting point.
-    Auto then evaluates that baseline and nearby control combinations through
-    the process-ink model, choosing the lowest combined colour, tone, detail,
-    and clipping error. Screen geometry and Dot pitch remain operator-owned.
-    """
-    from PIL import Image
-    import numpy as np
-
-    baseline = _auto_photo_baseline_settings(
-        image_path,
-        resolution_px=resolution_px,
-        pen_width_mm=pen_width_mm,
-        effective_pitch_mm=effective_pitch_mm,
-        style=style,
-        dot_pitch_mm=dot_pitch_mm,
-        ink_colors=ink_colors,
-    )
-
-    image = _load_color_managed_image(image_path)
-    analysis_factor = min(1.0, 128.0 / max(image.width, image.height))
-    if analysis_factor < 1.0:
-        image = image.resize(
-            (
-                max(8, int(round(image.width * analysis_factor))),
-                max(8, int(round(image.height * analysis_factor))),
-            ),
-            Image.LANCZOS,
-        )
-    source_rgb = np.asarray(image, dtype=np.float32) / 255.0
-    luminances = np.array([0.299, 0.587, 0.114], dtype=np.float32)
-    luminance = source_rgb @ luminances
-    low, high = (
-        float(value) for value in np.percentile(luminance, [1.0, 99.0])
-    )
-    source_tone = float(luminance.mean())
-    target_tone = min(max(source_tone, 0.30), 0.75)
-    auto_level_choices = (
-        (True,)
-        if source_tone < 0.30 or source_tone > 0.90
-        else (True, False)
-    )
-    style_key = str(style or "").strip().lower()
-    if style_key in ("waves", "waves_even", "waves_zero"):
-        result = dict(baseline)
-        result["weights"] = {
-            "c": 100.0,
-            "m": 100.0,
-            "y": 100.0,
-            "k": 100.0,
-        }
-        return result
-
-    def evaluate(candidate):
-        processed = _auto_curve_rgb(
-            source_rgb,
-            low,
-            high,
-            candidate["auto_levels"],
-            candidate["saturation"],
-            candidate["contrast"],
-            candidate["brightness"],
-        )
-        tones = rgb_to_cmyk_tone(
-            processed,
-            gcr=candidate["gcr"] / 100.0,
-            weights=(1, 1, 1, 1),
-            gamma=candidate["gamma"],
-            ink_colors=ink_colors,
-        )
-        coverage = _auto_screen_coverage(
-            tones,
-            style_key,
-            pen_width_mm,
-            effective_pitch_mm,
-            flow_layers,
-            flow_pitch_compression,
-        )
-        predicted = predict_cmyk_rgb(coverage, ink_colors=ink_colors)
-        return _auto_prediction_metrics(
-            source_rgb,
-            predicted,
-            target_tone,
-        )
-
-    def round_to_five(value):
-        return int(round(float(value) / 5.0) * 5.0)
-
-    candidate = {
-        "auto_levels": bool(baseline["auto_levels"]),
-        "saturation": float(baseline["saturation"]),
-        "contrast": float(baseline["contrast"]),
-        "brightness": float(baseline["brightness"]),
-        "gamma": float(baseline["gamma"]),
-        "gcr": float(baseline["gcr"]),
-    }
-    if style_key in (
-        "edge_flow",
-        "edge_flow_shared",
-        "edge_flow_coherent",
-        "process_area",
-    ):
-        ranges = {
-            "auto_levels": auto_level_choices,
-            "saturation": (105, 110, 115, 120),
-            "contrast": (120, 140, 160, 180),
-            "brightness": (100, 110, 120, 130, 140),
-            "gamma": (1.00, 1.10, 1.20, 1.30),
-            "gcr": (60, 70, 80),
-        }
-    else:
-        ranges = {
-            "auto_levels": auto_level_choices,
-            "saturation": (100, 110, 120, 130, 140),
-            "contrast": (120, 160, 200, 240, 280, 300),
-            "brightness": (80, 100, 120, 140, 160, 180, 200),
-            "gamma": (0.60, 0.80, 1.00, 1.20, 1.40, 1.60),
-            "gcr": (60, 75, 90, 100),
-        }
-
-    best_score, best_error = evaluate(candidate)
-    for _round in range(3):
-        changed = False
-        for key, choices in ranges.items():
-            values = sorted(set(choices) | {candidate[key]})
-            for value in values:
-                trial = dict(candidate)
-                trial[key] = value
-                score, error = evaluate(trial)
-                if score < best_score - 1e-9:
-                    candidate = trial
-                    best_score = score
-                    best_error = error
-                    changed = True
-        if not changed:
-            break
-
-    result = dict(baseline)
-    result.update(candidate)
-    result["saturation"] = round_to_five(candidate["saturation"])
-    result["contrast"] = round_to_five(candidate["contrast"])
-    result["brightness"] = round_to_five(candidate["brightness"])
-    result["gcr"] = round_to_five(candidate["gcr"])
-    result["gamma"] = round(candidate["gamma"] / 0.05) * 0.05
-    result["weights"] = {
-        "c": 100.0,
-        "m": 100.0,
-        "y": 100.0,
-        "k": 100.0,
-    }
-    result["predicted_rgb_error"] = round(best_error * 255.0, 1)
-    return result
-
-
 def prepare_image_tones(
     image_path,
     width_mm,
@@ -1014,10 +431,6 @@ def prepare_image_tones(
     level_clip_pct=1.0,
     sharpen_pct=0.0,
     sharpen_radius_mm=1.5,
-    edge_simplify_mm=0.0,
-    edge_simplify_epsilon=0.01,
-    ink_colors=None,
-    color_match=True,
     cancel_check=None,
 ):
     """Load a raster, fit it to the page, and return ``(tones, geometry)``.
@@ -1034,15 +447,6 @@ def prepare_image_tones(
     ``sharpen_pct`` is an unsharp mask on the luminance (0 disables it): the
     detail layer is added back to all three channels, so facial features
     survive the dot screen instead of dissolving into mid-tone dots.
-    ``edge_simplify_mm`` applies a self-guided edge-preserving smoothing before
-    sharpening. The coherent color-flow style uses it to merge pores, fabric
-    noise, and compression texture into broader color planes without moving
-    glasses, eyes, silhouettes, or other strong boundaries.
-    ``ink_colors`` supplies measured paper-relative C/M/Y/K transmittances to
-    the separation model; nominal process colours are used when absent.
-
-    The returned mapping also contains the internal ``depth`` luminance field
-    used by Wave screening.
     """
     from PIL import Image
     import numpy as np
@@ -1050,7 +454,7 @@ def prepare_image_tones(
     check_cancelled(cancel_check)
     draw_w = max(5.0, float(width_mm) - 2.0 * float(margin_mm))
     draw_h = max(5.0, float(height_mm) - 2.0 * float(margin_mm))
-    image = _load_color_managed_image(image_path)
+    image = Image.open(image_path).convert("RGB")
     scale = min(draw_w / image.width, draw_h / image.height)
     scale_w = max(1.0, image.width * scale)
     scale_h = max(1.0, image.height * scale)
@@ -1074,13 +478,6 @@ def prepare_image_tones(
             rgb = np.clip((rgb - float(low)) / spread, 0.0, 1.0)
 
     mm_per_px = (scale_w / pixel_w + scale_h / pixel_h) / 2.0
-    if float(edge_simplify_mm) > 0.0:
-        rgb = edge_preserving_simplify(
-            rgb,
-            edge_simplify_mm,
-            mm_per_px,
-            epsilon=edge_simplify_epsilon,
-        )
     rgb = _sharpen_luminance(
         rgb,
         sharpen_pct,
@@ -1113,23 +510,10 @@ def prepare_image_tones(
         exponent = 100.0 / max(1.0, brightness)
         rgb = np.power(np.clip(rgb, 0.0, 1.0), exponent)
 
-    tones = rgb_to_cmyk_tone(
-        rgb,
-        gcr=gcr,
-        weights=weights,
-        gamma=gamma,
-        ink_colors=ink_colors,
-        color_match=color_match,
-    )
+    tones = rgb_to_cmyk_tone(rgb, gcr=gcr, weights=weights, gamma=gamma)
     # Ink coverage decides where each plate is present; luminance supplies the
     # common scene depth used by wave screens even in a saturated ink channel.
     tones["depth"] = (1.0 - depth_luminance).astype(np.float32)
-    # A multichannel guide keeps chromatic boundaries whose luminance is nearly
-    # equal. The tuple reuses the separated arrays instead of allocating a
-    # second full-resolution RGB image.
-    tones["flow_guide"] = tuple(
-        tones[channel] for channel in CHANNELS
-    ) + (tones["depth"],)
     geometry = {
         "off_x": off_x,
         "off_y": off_y,
@@ -1189,7 +573,6 @@ def _line_runs(
     connect=False,
     light_stretch=2.0,
     min_length_mm=0.8,
-    connect_gap_mm=0.0,
     cancel_check=None,
 ):
     """Parallel line family, broken into runs where tone is above threshold.
@@ -1197,10 +580,8 @@ def _line_runs(
     With ``adaptive`` the next line's pitch grows in light areas and stays at
     the requested spacing in dark ones, so one tone-driven line screen covers
     a continuous tonal range instead of discrete levels. With ``connect``
-    consecutive overlapping runs are stitched into serpentine chains.
-    ``connect_gap_mm`` additionally joins the nearest row-run endpoints within
-    that bridge, so adjacent lines can share one pen-down stroke at the cost
-    of a visible connector.
+    consecutive overlapping runs are stitched into serpentine chains (never
+    across blank paper), so one connected region costs one M3/M5 pen cycle.
     ``light_stretch`` scales how far the pitch opens in the lightest tones;
     the coverage range of one ink is roughly ``light_stretch + 1`` to 1.
     """
@@ -1252,14 +633,7 @@ def _line_runs(
         else:
             y += spacing
     groups = (
-        _stitch_runs(
-            rows,
-            darkness,
-            ca,
-            sa,
-            threshold,
-            connect_gap_mm,
-        )
+        _stitch_runs(rows, darkness, ca, sa, threshold)
         if connect
         else [run for row_runs in rows for run in row_runs]
     )
@@ -1269,22 +643,15 @@ def _line_runs(
     ]
 
 
-def _stitch_runs(
-    rows,
-    darkness,
-    ca,
-    sa,
-    threshold,
-    connect_gap_mm=0.0,
-):
-    """Join adjacent row runs into serpentine pen-down chains.
+def _stitch_runs(rows, darkness, ca, sa, threshold):
+    """Join overlapping runs of consecutive rows into serpentine chains.
 
-    Overlapping runs are joined when their connector stays over ink. When no
-    overlapping run is available, ``connect_gap_mm`` permits a direct bridge
-    to the nearest adjacent run endpoint. Each run continues at most one chain
-    and each chain grows by at most one run per row.
+    A connector is only drawn when it stays over ink (its midpoint samples
+    at or above ``threshold``), so a chain never crosses blank paper. Each
+    run continues at most one chain and each chain grows by at most one run
+    per row, so rows that break into several dashes still chain column-wise
+    instead of only matching the row's last dash.
     """
-    connect_gap_mm = max(0.0, float(connect_gap_mm))
     finished = []
     open_chains = []
     for row_runs in rows:
@@ -1295,8 +662,7 @@ def _stitch_runs(
                 min(run[0][0], run[-1][0]),
                 max(run[0][0], run[-1][0]),
             )
-            overlapping = []
-            nearby = []
+            candidates = []
             for index, chain in enumerate(open_chains):
                 if continued[index]:
                     continue
@@ -1304,6 +670,12 @@ def _stitch_runs(
                 overlap = min(last_span[1], span[1]) - max(
                     last_span[0], span[0]
                 )
+                if overlap > 0.0:
+                    candidates.append((overlap, index))
+            candidates.sort(reverse=True)
+            joined = False
+            for _overlap, index in candidates:
+                chain = open_chains[index]
                 point = chain["points"][-1]
                 oriented = (
                     run
@@ -1312,36 +684,18 @@ def _stitch_runs(
                     else list(reversed(run))
                 )
                 next_point = oriented[0]
-                gap = math.hypot(
-                    next_point[0] - point[0],
-                    next_point[1] - point[1],
-                )
                 mx = (point[0] + next_point[0]) / 2.0
                 my = (point[1] + next_point[1]) / 2.0
                 wx = mx * ca - my * sa
                 wy = mx * sa + my * ca
-                if overlap > 0.0 and darkness(wx, wy) >= threshold:
-                    overlapping.append((-overlap, gap, index, oriented))
-                if gap <= connect_gap_mm + 1e-9:
-                    nearby.append((gap, index, oriented))
-            overlapping.sort(key=lambda item: item[:3])
-            nearby.sort(key=lambda item: (item[0], item[1]))
-            joined = False
-            candidate = (
-                (overlapping[0][2], overlapping[0][3])
-                if overlapping
-                else (nearby[0][1], nearby[0][2])
-                if nearby
-                else None
-            )
-            if candidate is not None:
-                index, oriented = candidate
-                chain = open_chains[index]
+                if darkness(wx, wy) < threshold:
+                    continue
                 chain["points"].extend(oriented)
                 chain["span"] = span
                 continued[index] = True
                 new_open.append(chain)
                 joined = True
+                break
             if not joined:
                 new_open.append({"points": list(run), "span": span})
         for index, chain in enumerate(open_chains):
@@ -1870,714 +1224,6 @@ def solid_dots(contours, turns=2.0, steps=14):
     return marks
 
 
-def screen_cmyk_edge_flow(
-    tones,
-    geometry,
-    spacing_mm,
-    pen_diameter_mm,
-    path_tolerance_mm,
-    flow_smoothing_mm=None,
-    flow_layers=3,
-    max_marks=5000,
-    seed=0,
-    overdraw=1,
-    keylines=False,
-    color_quiet=0.0,
-    tone_segment_mm=None,
-    max_path_mm=None,
-    bridge_mm=0.0,
-    flow_pitch_compression=0.0,
-    dark_layer_start=EDGE_FLOW_DARK_LAYER_START,
-    dark_layer_end=EDGE_FLOW_DARK_LAYER_END,
-    fallback_angle_deg=0.0,
-    flow_guide=None,
-    cancel_check=None,
-):
-    """Screen all CMYK inks through one experimental shared path network."""
-    spacing = max(0.2, float(spacing_mm))
-    marks = trace_shared_structure_streamlines(
-        (
-            flow_guide
-            if flow_guide is not None
-            else tones.get("flow_guide", tones.get("depth"))
-        ),
-        tones,
-        geometry,
-        spacing,
-        float(fallback_angle_deg),
-        flow_layers,
-        max(16, int(max_marks)),
-        pen_diameter_mm,
-        path_tolerance_mm,
-        (
-            max(0.25, float(flow_smoothing_mm))
-            if flow_smoothing_mm is not None
-            else max(0.25, float(path_tolerance_mm) * 4.0)
-        ),
-        seed,
-        INK_FLOOR,
-        CHANNELS,
-        keylines=bool(keylines),
-        color_quiet=max(0.0, min(1.0, float(color_quiet))),
-        tone_segment_mm=tone_segment_mm,
-        max_path_mm=max_path_mm,
-        bridge_mm=bridge_mm,
-        pitch_compression=flow_pitch_compression,
-        dark_layer_start=dark_layer_start,
-        dark_layer_end=dark_layer_end,
-        cancel_check=cancel_check,
-    )
-    return {
-        channel: _apply_overdraw(
-            marks.get(channel, []),
-            overdraw,
-            spacing,
-        )
-        for channel in CHANNELS
-    }
-
-
-def screen_coherent_color_flow(
-    tones,
-    geometry,
-    spacing_mm,
-    pen_diameter_mm,
-    path_tolerance_mm,
-    flow_smoothing_mm=None,
-    flow_layers=3,
-    max_marks=5000,
-    seed=0,
-    overdraw=1,
-    keylines=False,
-    color_quiet=0.0,
-    color_hold_mm=4.0,
-    color_mix_ratio=0.72,
-    bridge_mm=0.0,
-    max_path_mm=None,
-    flow_pitch_compression=0.0,
-    dark_layer_start=EDGE_FLOW_DARK_LAYER_START,
-    dark_layer_end=EDGE_FLOW_DARK_LAYER_END,
-    fallback_angles_deg=None,
-    flow_guide=None,
-    cancel_check=None,
-):
-    """Screen one coherent shared geometry into contiguous CMYK ink planes.
-
-    The streamline network is traced once per density layer through the image
-    form. Each path then keeps a stable local ink assignment instead of
-    switching independently for every plate at every path-local tone interval.
-    Dark-tone layers add offset parallel geometry, and Black keyline boosting
-    remains confined to high-confidence image structure.
-    """
-    spacing = max(0.2, float(spacing_mm))
-    if fallback_angles_deg is None:
-        fallback_angles_deg = tuple(
-            SCREEN_ANGLES_DEG[channel]
-            for channel in CHANNELS
-        )
-    marks = trace_shared_structure_streamlines(
-        (
-            flow_guide
-            if flow_guide is not None
-            else tones.get("flow_guide", tones.get("depth"))
-        ),
-        tones,
-        geometry,
-        spacing,
-        0.0,
-        flow_layers,
-        max(16, int(max_marks)),
-        pen_diameter_mm,
-        path_tolerance_mm,
-        (
-            max(0.25, float(flow_smoothing_mm))
-            if flow_smoothing_mm is not None
-            else max(0.25, float(path_tolerance_mm) * 4.0)
-        ),
-        seed,
-        INK_FLOOR,
-        CHANNELS,
-        keylines=bool(keylines),
-        color_quiet=max(0.0, min(1.0, float(color_quiet))),
-        bridge_mm=bridge_mm,
-        pitch_compression=flow_pitch_compression,
-        color_mode="coherent",
-        fallback_angles_deg=fallback_angles_deg,
-        color_hold_mm=color_hold_mm,
-        color_mix_ratio=color_mix_ratio,
-        max_path_mm=max_path_mm,
-        dark_layer_start=dark_layer_start,
-        dark_layer_end=dark_layer_end,
-        cancel_check=cancel_check,
-    )
-    return {
-        channel: _apply_overdraw(
-            marks.get(channel, []),
-            overdraw,
-            spacing,
-        )
-        for channel in CHANNELS
-    }
-
-
-def _grid_samples(field, geometry, columns, rows):
-    """Nearest-neighbour samples of one tone field at grid-cell centres."""
-    import numpy as np
-
-    source_rows, source_cols = np.asarray(field).shape
-    col_index = np.rint(
-        (columns - float(geometry["off_x"]))
-        / max(1e-9, float(geometry["width_mm"]))
-        * max(0, source_cols - 1)
-    ).astype(np.int32)
-    row_index = np.rint(
-        (rows - float(geometry["off_y"]))
-        / max(1e-9, float(geometry["height_mm"]))
-        * max(0, source_rows - 1)
-    ).astype(np.int32)
-    np.clip(col_index, 0, source_cols - 1, out=col_index)
-    np.clip(row_index, 0, source_rows - 1, out=row_index)
-    return np.asarray(field)[row_index[:, None], col_index[None, :]]
-
-
-def process_color_area_grid(
-    geometry,
-    spacing_mm,
-    pen_diameter_mm,
-):
-    """Return the shared process-cell grid and its source-space pitch."""
-    left = float(geometry["off_x"])
-    top = float(geometry["off_y"])
-    right = left + float(geometry["width_mm"])
-    bottom = top + float(geometry["height_mm"])
-    if right <= left or bottom <= top:
-        raise ValueError("Process-cell geometry has no usable area.")
-    pen_mm = max(0.05, float(pen_diameter_mm))
-    spacing = max(
-        pen_mm * 1.10,
-        max(0.20, float(spacing_mm)),
-    )
-    width = max(2, int(math.ceil((right - left) / spacing)))
-    height = max(2, int(math.ceil((bottom - top) / spacing)))
-    cell_x = (right - left) / width
-    cell_y = (bottom - top) / height
-    return width, height, cell_x, cell_y, spacing
-
-
-def _process_highlight_cells(
-    depth,
-    geometry,
-    width,
-    height,
-    cell_x,
-    cell_y,
-    *,
-    detail_threshold=PROCESS_AREA_HIGHLIGHT_DETAIL,
-    area_fraction=PROCESS_AREA_HIGHLIGHT_FRACTION,
-    radius_mm=PROCESS_AREA_HIGHLIGHT_RADIUS_MM,
-    luma_floor=PROCESS_AREA_HIGHLIGHT_LUMA_FLOOR,
-):
-    """Mark cells whose footprint contains a broad positive highlight."""
-    import numpy as np
-    from PIL import Image, ImageFilter
-
-    depth_values = np.asarray(depth, dtype=np.float32)
-    if depth_values.ndim != 2:
-        return np.zeros((height, width), dtype=bool)
-    luma = np.clip(1.0 - depth_values, 0.0, 1.0)
-    rows, cols = luma.shape
-    if rows < 1 or cols < 1:
-        return np.zeros((height, width), dtype=bool)
-    mm_per_px = 0.5 * (
-        float(geometry["width_mm"]) / max(1, cols)
-        + float(geometry["height_mm"]) / max(1, rows)
-    )
-    blur_px = max(1.0, float(radius_mm) / max(mm_per_px, 1e-6))
-    image = Image.fromarray(
-        np.rint(luma * 255.0).astype(np.uint8),
-        mode="L",
-    )
-    background = (
-        np.asarray(image.filter(ImageFilter.GaussianBlur(blur_px)), dtype=np.float32)
-        / 255.0
-    )
-    detail = np.maximum(luma - background, 0.0)
-    bright = detail >= max(0.0, float(detail_threshold))
-    bright &= luma >= min(1.0, max(0.0, float(luma_floor)))
-    fraction = min(1.0, max(0.0, float(area_fraction)))
-    protected = np.zeros((height, width), dtype=bool)
-    for row in range(height):
-        top = float(geometry["off_y"]) + row * cell_y
-        bottom = top + cell_y
-        top_px = max(
-            0,
-            int(
-                (top - float(geometry["off_y"]))
-                / max(1e-9, float(geometry["height_mm"]))
-                * rows
-            ),
-        )
-        bottom_px = min(
-            rows,
-            int(
-                math.ceil(
-                    (bottom - float(geometry["off_y"]))
-                    / max(1e-9, float(geometry["height_mm"]))
-                    * rows
-                )
-            ),
-        )
-        for column in range(width):
-            left = float(geometry["off_x"]) + column * cell_x
-            right = left + cell_x
-            left_px = max(
-                0,
-                int(
-                    (left - float(geometry["off_x"]))
-                    / max(1e-9, float(geometry["width_mm"]))
-                    * cols
-                ),
-            )
-            right_px = min(
-                cols,
-                int(
-                    math.ceil(
-                        (right - float(geometry["off_x"]))
-                        / max(1e-9, float(geometry["width_mm"]))
-                        * cols
-                    )
-                ),
-            )
-            local = bright[top_px:bottom_px, left_px:right_px]
-            protected[row, column] = bool(
-                local.size and float(local.mean()) >= fraction
-            )
-    return protected
-
-
-def _tone_centroid_offset(
-    tone,
-    geometry,
-    center_x,
-    center_y,
-    cell_x,
-    cell_y,
-):
-    """Offset a cell mark toward the source ink inside that cell."""
-    import numpy as np
-
-    rows, cols = np.asarray(tone).shape
-    left = float(geometry["off_x"])
-    top = float(geometry["off_y"])
-    width = max(1e-9, float(geometry["width_mm"]))
-    height = max(1e-9, float(geometry["height_mm"]))
-    left_px = max(0, int((center_x - cell_x * 0.5 - left) / width * cols))
-    right_px = min(
-        cols,
-        int(
-            math.ceil(
-                (center_x + cell_x * 0.5 - left) / width * cols
-            )
-        ),
-    )
-    top_px = max(0, int((center_y - cell_y * 0.5 - top) / height * rows))
-    bottom_px = min(
-        rows,
-        int(
-            math.ceil(
-                (center_y + cell_y * 0.5 - top) / height * rows
-            )
-        ),
-    )
-    patch = np.asarray(
-        tone[top_px:bottom_px, left_px:right_px],
-        dtype=np.float64,
-    )
-    if patch.size == 0:
-        return 0.0, 0.0
-    total = float(patch.sum())
-    if total <= 1e-9:
-        return 0.0, 0.0
-    row_index, column_index = np.indices(patch.shape)
-    target_x = left + (
-        float((column_index * patch).sum()) / total + left_px + 0.5
-    ) * width / cols
-    target_y = top + (
-        float((row_index * patch).sum()) / total + top_px + 0.5
-    ) * height / rows
-    return target_x - center_x, target_y - center_y
-
-
-def _coverage_masks(coverage, seed=0):
-    """Error-diffuse independent plate coverages into one ink subset per cell."""
-    import numpy as np
-
-    fields = np.asarray(coverage, dtype=np.float64)
-    if fields.ndim != 3 or fields.shape[2] != len(CHANNELS):
-        raise ValueError("Coverage must provide C, M, Y, and K fields.")
-    fields = np.clip(fields, 0.0, 1.0)
-    height, width = fields.shape[:2]
-    masks = np.zeros((height, width, len(CHANNELS)), dtype=bool)
-    row_index = np.arange(height, dtype=np.int64)[:, None]
-    column_index = np.arange(width, dtype=np.int64)[None, :]
-    for channel_index in range(len(CHANNELS)):
-        # Different deterministic scans keep the four binary plates from
-        # sharing an accidental one-pixel overprint lattice.
-        phase = (
-            int(seed)
-            + (channel_index + 1) * 0xA511E9B3
-        ) & 0xFFFFFFFF
-        noise = (
-            (
-                row_index * 73856093
-                ^ column_index * 19349663
-                ^ phase
-            )
-            * 2654435761
-            & 0xFFFFFFFF
-        ).astype(np.float64)
-        threshold = 0.5 + (
-            noise / 4294967295.0 - 0.5
-        ) * _PROCESS_AREA_DITHER_JITTER
-        error = np.zeros((height + 2, width + 4), dtype=np.float64)
-        field = fields[..., channel_index]
-        for row in range(height):
-            reverse = bool((row + phase) & 1)
-            columns = (
-                range(width - 1, -1, -1)
-                if reverse
-                else range(width)
-            )
-            direction = -1 if reverse else 1
-            for column in columns:
-                value = min(
-                    1.0,
-                    max(
-                        0.0,
-                        float(field[row, column])
-                        + error[row + 1, column + 2],
-                    ),
-                )
-                selected = value >= threshold[row, column]
-                masks[row, column, channel_index] = selected
-                delta = value - float(selected)
-                error[row + 1, column + 2 + direction] += (
-                    delta * 7.0 / 16.0
-                )
-                error[row + 2, column + 2 - direction] += (
-                    delta * 3.0 / 16.0
-                )
-                error[row + 2, column + 2] += delta * 5.0 / 16.0
-                error[row + 2, column + 2 + direction] += delta / 16.0
-    return masks
-
-
-def screen_process_color_area_cmyk(
-    tones,
-    geometry,
-    spacing_mm,
-    pen_diameter_mm,
-    flow_guide=None,
-    keyline_smoothing_mm=0.8,
-    edge_keylines=True,
-    edge_threshold=0.84,
-    max_marks=800000,
-    seed=0,
-    overdraw=1,
-    protect_highlights=True,
-    highlight_detail=PROCESS_AREA_HIGHLIGHT_DETAIL,
-    highlight_fraction=PROCESS_AREA_HIGHLIGHT_FRACTION,
-    detail_alignment=PROCESS_AREA_DETAIL_ALIGNMENT,
-):
-    """Render one calibrated CMYK area screen with structure-guided strokes.
-
-    The page is divided into paper-space cells matching the physical pen
-    footprint. Each calibrated C/M/Y/K coverage plate is independently error
-    diffused into a binary ink subset for every cell, and the corresponding
-    short strokes are oriented by a shared structure tensor. The preview's
-    multiply model then reconstructs the process separation instead of showing
-    isolated bright marker colours.
-    """
-    import numpy as np
-
-    left = float(geometry["off_x"])
-    top = float(geometry["off_y"])
-    right = left + float(geometry["width_mm"])
-    bottom = top + float(geometry["height_mm"])
-    pen_mm = max(0.05, float(pen_diameter_mm))
-    (
-        width,
-        height,
-        cell_x,
-        cell_y,
-        spacing,
-    ) = process_color_area_grid(
-        geometry,
-        spacing_mm,
-        pen_mm,
-    )
-    cap = max(16, int(max_marks))
-    columns = left + (np.arange(width, dtype=np.float64) + 0.5) * cell_x
-    rows = top + (np.arange(height, dtype=np.float64) + 0.5) * cell_y
-    tone_grid = {
-        channel: _grid_samples(
-            tones[channel],
-            geometry,
-            columns,
-            rows,
-        ).astype(np.float64)
-        for channel in CHANNELS
-    }
-
-    guide = (
-        flow_guide
-        if flow_guide is not None
-        else tones.get("flow_guide", tones.get("depth"))
-    )
-    (
-        _tangent_x,
-        _tangent_y,
-        _guided,
-        keyline,
-        field_geometry,
-    ) = structure_tensor_fields(
-        guide,
-        geometry,
-        max(0.1, float(keyline_smoothing_mm)),
-    )
-    tangent_grid = _grid_samples(
-        _tangent_x,
-        field_geometry,
-        columns,
-        rows,
-    ).astype(np.float64)
-    tangent_y_grid = _grid_samples(
-        _tangent_y,
-        field_geometry,
-        columns,
-        rows,
-    ).astype(np.float64)
-    guided_grid = _grid_samples(
-        _guided,
-        field_geometry,
-        columns,
-        rows,
-    ).astype(np.float64)
-
-    if edge_keylines:
-        edge_grid = _grid_samples(
-            keyline,
-            field_geometry,
-            columns,
-            rows,
-        ).astype(np.float64)
-        threshold = min(0.99, max(0.0, float(edge_threshold)))
-        edge_strength = np.clip(
-            (edge_grid - threshold) / max(1e-6, 1.0 - threshold),
-            0.0,
-            1.0,
-        )
-        tone_grid["k"] = np.maximum(
-            tone_grid["k"],
-            edge_strength * 0.88,
-        )
-
-    coverage = np.stack(
-        [
-            np.clip(tone_grid[channel], 0.0, 1.0)
-            for channel in CHANNELS
-        ],
-        axis=-1,
-    )
-    if protect_highlights:
-        protected = _process_highlight_cells(
-            tones.get("depth", 1.0),
-            geometry,
-            width,
-            height,
-            cell_x,
-            cell_y,
-            detail_threshold=highlight_detail,
-            area_fraction=highlight_fraction,
-        )
-    masks = _coverage_masks(coverage, seed)
-
-    # Ink-free paper is forced to the empty subset after diffusion so an error
-    # at a silhouette cannot scatter marks into the page margin.
-    active = np.any(coverage > INK_FLOOR, axis=-1)
-    masks[~active, :] = False
-    if protect_highlights:
-        masks[protected, :] = False
-
-    counts = np.count_nonzero(masks, axis=(0, 1))
-    largest = int(counts.max(initial=0))
-    if largest > cap and spacing < max(right - left, bottom - top):
-        grown = spacing * math.sqrt(largest / float(cap)) * 1.02
-        return screen_process_color_area_cmyk(
-            tones,
-            geometry,
-            grown,
-            pen_mm,
-            flow_guide=flow_guide,
-            keyline_smoothing_mm=keyline_smoothing_mm,
-            edge_keylines=edge_keylines,
-            edge_threshold=edge_threshold,
-            max_marks=cap,
-            seed=seed,
-            overdraw=overdraw,
-            protect_highlights=protect_highlights,
-            highlight_detail=highlight_detail,
-            highlight_fraction=highlight_fraction,
-            detail_alignment=detail_alignment,
-        )
-
-    marks = {channel: [] for channel in CHANNELS}
-    segment_length = cell_x * cell_y / pen_mm
-    half_length = max(spacing * 0.30, segment_length * 0.5)
-    fallback = {
-        channel: math.radians(SCREEN_ANGLES_DEG[channel])
-        for channel in CHANNELS
-    }
-    fallback_x = {
-        channel: math.cos(fallback[channel])
-        for channel in CHANNELS
-    }
-    fallback_y = {
-        channel: math.sin(fallback[channel])
-        for channel in CHANNELS
-    }
-    alignment = min(1.0, max(0.0, float(detail_alignment)))
-    aligned_weights = {
-        channel: tones[channel]
-        for channel in CHANNELS
-    }
-    if edge_keylines and float(detail_alignment) > 0.0:
-        from PIL import Image
-
-        edge_floor = min(
-            0.99,
-            max(0.0, float(edge_threshold)),
-        )
-        edge_weight_values = np.clip(
-            (np.asarray(keyline, dtype=np.float32) - edge_floor)
-            / max(1e-6, 1.0 - edge_floor),
-            0.0,
-            1.0,
-        ) * 0.88
-        edge_weight = np.asarray(
-            Image.fromarray(
-                edge_weight_values,
-                mode="F",
-            ).resize(
-                (
-                    aligned_weights["k"].shape[1],
-                    aligned_weights["k"].shape[0],
-                ),
-                Image.Resampling.BILINEAR,
-            ),
-            dtype=np.float32,
-        )
-        aligned_weights["k"] = np.maximum(
-            tones["k"],
-            edge_weight,
-        )
-    for row in range(height):
-        y = float(rows[row])
-        for column in range(width):
-            selected = np.flatnonzero(masks[row, column])
-            if selected.size == 0:
-                continue
-            x = float(columns[column])
-            guided = min(1.0, max(0.0, float(guided_grid[row, column])))
-            tangent_x = float(tangent_grid[row, column])
-            tangent_y = float(tangent_y_grid[row, column])
-            norm = math.hypot(tangent_x, tangent_y)
-            for channel_index in selected:
-                channel_index = int(channel_index)
-                channel = CHANNELS[channel_index]
-                offset_x = offset_y = 0.0
-                if alignment > 0.0:
-                    offset_x, offset_y = _tone_centroid_offset(
-                        aligned_weights[channel],
-                        geometry,
-                        x,
-                        y,
-                        cell_x,
-                        cell_y,
-                    )
-                    offset_x *= alignment
-                    offset_y *= alignment
-                mark_x = min(right, max(left, x + offset_x))
-                mark_y = min(bottom, max(top, y + offset_y))
-                if norm > 1e-8:
-                    dx = (
-                        guided * tangent_x / norm
-                        + (1.0 - guided) * fallback_x[channel]
-                    )
-                    dy = (
-                        guided * tangent_y / norm
-                        + (1.0 - guided) * fallback_y[channel]
-                    )
-                else:
-                    dx = fallback_x[channel]
-                    dy = fallback_y[channel]
-                direction_length = math.hypot(dx, dy)
-                if direction_length <= 1e-9:
-                    dx, dy = fallback_x[channel], fallback_y[channel]
-                else:
-                    dx /= direction_length
-                    dy /= direction_length
-                marks[channel].append(
-                    ScreenTrail(
-                        [
-                            (
-                                min(
-                                    right,
-                                    max(left, mark_x - dx * half_length),
-                                ),
-                                min(
-                                    bottom,
-                                    max(top, mark_y - dy * half_length),
-                                ),
-                            ),
-                            (mark_x, mark_y),
-                            (
-                                min(
-                                    right,
-                                    max(left, mark_x + dx * half_length),
-                                ),
-                                min(
-                                    bottom,
-                                    max(top, mark_y + dy * half_length),
-                                ),
-                            ),
-                        ]
-                    )
-                )
-    def clipped_page_marks(channel):
-        return [
-            ScreenTrail(
-                [
-                    (
-                        min(right, max(left, x)),
-                        min(bottom, max(top, y)),
-                    )
-                    for x, y in line
-                ]
-            )
-            for line in _apply_overdraw(
-                marks[channel][:cap],
-                overdraw,
-                spacing,
-            )
-        ]
-
-    return {
-        channel: clipped_page_marks(channel)
-        for channel in CHANNELS
-    }
-
-
 def screen_channel(
     tone,
     geometry,
@@ -2597,62 +1243,28 @@ def screen_channel(
     row_clearance_mm=None,
     allow_variable_wave_spacing=False,
     wave_frequency_variation=0.0,
-    flow_smoothing_mm=None,
-    flow_layers=3,
-    flow_guide=None,
-    flow_support_tone=None,
-    flow_keylines=False,
-    flow_color_quiet=0.0,
-    flow_tone_segment_mm=None,
-    flow_max_path_mm=None,
-    flow_bridge_mm=0.0,
-    flow_pitch_compression=0.0,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
     Styles: ``halftone`` (variable-radius dots), ``stipple`` (blue-noise
     dots), ``lines`` (parallel lines whose pitch follows tone),
     ``rectilinear`` (serpentine rows joined over ink, so a connected region
-    costs one M3/M5 cycle), ``continuous`` (tone-pitch rows whose nearest
-    adjacent runs are also bridged into long pen-down chains), ``crosshatch``
-    (line families stacked by tone
+    costs one M3/M5 cycle), ``crosshatch`` (line families stacked by tone
     level), ``waves`` (sine rows whose amplitude follows tone), ``waves_even``
     (identical translated wave rows with exact pitch spacing), ``waves_zero``
     (shared phase with tone-driven row amplitude, variable spacing, and exact
     clearance; legacy diagnostic use only), ``gyroid``
     (interference-field contours that flatten into blank paper), ``tsp``
-    (one greedy single line through tone stipple points), ``contours``
-    (topographic contour lines of the tone), and ``edge_flow`` (tone-masked
-    streamlines through a blurred structure tensor, with a fixed-angle
-    fallback where the guide has no clear direction).
+    (one greedy single line through tone stipple points) and ``contours``
+    (topographic contour lines of the tone).
     ``overdraw`` redraws every mark up to three times with a sub-pen offset so
     a ballpoint reads darker without changing the geometry.
     ``path_tolerance_mm`` bounds the chord error of resampled wave rows; the
     CMYK tab supplies that budget in its final paper-space units.
-    Edge-flow uses ``flow_guide`` when supplied, otherwise ``depth_tone`` or
-    this channel's ``tone``. The CMYK tab supplies a multi-channel image guide,
-    so all four plates follow one image form while their masks, seeds, and
-    fallback screen angles remain independent. ``flow_support_tone`` controls
-    where a streamline may continue; when supplied, a temporary low value in
-    one ink no longer truncates the shared image form.
     ``row_clearance_mm`` is the minimum shortest-segment separation between
     adjacent visible rows, expressed in the same pre-scale units as
     ``spacing_mm``. It defaults to the pen diameter plus
     ``WAVE_MIN_EDGE_GAP_MM`` for callers that do not apply a later artwork scale.
-    ``flow_keylines`` keeps the strongest coherent structure boundaries
-    continuous in the current plate. The CMYK tab enables it only for Black.
-    ``flow_color_quiet`` reduces coverage beside those coherent boundaries;
-    the CMYK tab applies it only to the color plates when Black keylines are
-    active.
-    ``flow_tone_segment_mm`` optionally overrides the normal `4-8 mm`
-    path-local tone interval so compact facial features can change ink state
-    inside a smaller area.
-    ``flow_max_path_mm`` limits each traced color streamline to a short local
-    mark instead of allowing it to run across the whole face.
-    ``flow_bridge_mm`` draws short tone-off gaps along the same streamline so
-    dense passages do not spend a full M3/M5 cycle on every local phase break.
-    ``flow_pitch_compression`` moves neighbouring streamlines closer as local
-    ink tone darkens. Zero keeps the classic fixed spacing.
     The legacy ``waves`` and ``waves_zero`` styles are promoted to the
     equidistant ``waves_even`` geometry unless ``allow_variable_wave_spacing``
     is explicitly true. Diagnostic comparison tools use that opt-in; normal
@@ -2669,16 +1281,6 @@ def screen_channel(
     depth_darkness = (
         tone_sampler(depth_tone, geometry)
         if depth_tone is not None
-        else None
-    )
-    flow_guide = (
-        flow_guide
-        if flow_guide is not None
-        else depth_tone if depth_tone is not None else tone
-    )
-    flow_support_darkness = (
-        tone_sampler(flow_support_tone, geometry)
-        if flow_support_tone is not None
         else None
     )
 
@@ -2722,19 +1324,6 @@ def screen_channel(
             adaptive=True,
             connect=True,
             light_stretch=6.0,
-            cancel_check=cancel_check,
-        )
-    elif style == "continuous":
-        marks = _line_runs(
-            darkness,
-            bounds,
-            angle_deg,
-            spacing,
-            INK_FLOOR,
-            adaptive=True,
-            connect=True,
-            light_stretch=6.0,
-            connect_gap_mm=float("inf"),
             cancel_check=cancel_check,
         )
     elif style == "crosshatch":
@@ -2798,33 +1387,6 @@ def screen_channel(
         marks = _field_contours(
             tone, geometry, spacing, kind="contours", cancel_check=cancel_check
         )
-    elif style == "edge_flow":
-        marks = trace_structure_streamlines(
-            flow_guide,
-            geometry,
-            spacing,
-            angle_deg,
-            flow_layers,
-            cap,
-            pen_diameter_mm,
-            path_tolerance_mm,
-            (
-                max(0.25, float(flow_smoothing_mm))
-                if flow_smoothing_mm is not None
-                else max(0.25, float(path_tolerance_mm) * 4.0)
-            ),
-            seed,
-            INK_FLOOR,
-            darkness,
-            support_at=flow_support_darkness,
-            keylines=bool(flow_keylines),
-            color_quiet=max(0.0, min(1.0, float(flow_color_quiet))),
-            tone_segment_mm=flow_tone_segment_mm,
-            max_path_mm=flow_max_path_mm,
-            bridge_mm=flow_bridge_mm,
-            pitch_compression=flow_pitch_compression,
-            cancel_check=cancel_check,
-        )
     else:
         area = max(0.0, (right - left) * (bottom - top))
         estimate = area / (spacing * spacing) if spacing > 0.0 else 0.0
@@ -2880,14 +1442,7 @@ def svg_document(layers, width_mm, height_mm, stroke_mm=0.3, order=None):
                 if row_index is not None
                 else ""
             )
-            screen_attribute = (
-                ' data-screen-chain="1"'
-                if isinstance(points, ScreenTrail)
-                else ""
-            )
-            body.append(
-                f"<polyline{row_attribute}{screen_attribute} points=\"{pairs}\"/>"
-            )
+            body.append(f"<polyline{row_attribute} points=\"{pairs}\"/>")
         body.append("</g>")
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'

@@ -49,36 +49,6 @@ The converter emits:
 Unknown or unsupported commands must cause an explicit error during test, not
 silent motion.
 
-### Host program-set publication
-
-A multi-ink output is one logical publication unit even though it reaches the
-machine as four independent G-code files. The host stages every program and
-its set manifest, flushes them, then atomically replaces the targets. It
-returns success only after all replacements commit. A failure removes newly
-installed files and restores any prior set, or reports that recovery itself
-failed.
-
-The programs must carry the same artwork scale, placement, page frame, theta
-ratio and mode, feed/travel contract, and bed-compensation profile identity.
-Guided CMYK requires Yellow, Magenta, Cyan, and Black in that physical print
-order. The version-8 set manifest records the source and program hashes,
-calibration identity, pen offsets, workflow stage dependency hashes and locks,
-the exposed coherent-plane and shadow-layer controls, the precision
-process-cell requested/resolved pitch and edge threshold when selected, the
-broad-highlight preservation thresholds and sub-cell detail alignment,
-independent tone-gap and adjacent-chain settings, per-program motion preflight,
-and one canonical common-identity hash. The headless verification report also
-records the resolved pitch separately from the requested layout value. This is
-a host filesystem contract only; it does not change the controller command or
-coordinate contracts above.
-
-The headless operator entry point is
-`python tools\export_cmyk_headless.py ...`. It must drive the actual CMYK Photo
-tab workflow and the same transactional host publication method used by the
-visible application. Its verification report is evidence about those emitted
-bytes and manifest; it is not a second G-code generator and does not replace a
-four-pass paper registration result.
-
 ## HMI to Pi-local settings
 
 The Raspberry Pi settings API is a separate allowlisted interface from the
@@ -109,11 +79,11 @@ proxy this root settings API as a convenience alongside the HMI; remote settings
 require a separately authenticated same-origin adapter.
 
 The desktop converter preselects the owner-promoted expanded centered dense-v3
-host-side bed-compensation profile `745e3d264cc5` and may transform the planned
+host-side bed-compensation profile `f85ec410dbac` and may transform the planned
 work coordinates before emission. It retains the measured `165.100 mm` field
 from profile `18bfb4ed1c33` and extends its local-affine correction by
-`19.050 mm` to the owner-specified `184.150 mm` drawing radius. The Machine-tab
-path remains editable, and an empty path selects the uncompensated path. The CMYK
+`14.900 mm` to the `180.000 mm` gantry-reach radius. The Machine-tab path
+remains editable, and an empty path selects the uncompensated path. The CMYK
 **Wave screen - equidistant rows** style keeps this profile by default through
 its spacing guard, but evaluates it as a **row-locked projection**. For each
 screen-frame along-row coordinate, the complete measured field is averaged
@@ -133,15 +103,11 @@ selection and after P100 registration. P100 remains the sole owner of the
 physical centre and A index. The profile declares XY coverage and a 5 mm
 correction bound, and planning stops beyond either guard. Of that declared
 coverage, `0-165.100 mm` comes from the dense-v3 measurements; the outer
-`19.050 mm` annulus is local-affine extrapolation pending an edge-band print.
+`14.900 mm` annulus is local-affine extrapolation pending an edge-band print.
 Compensated G-code uses the transformed and subdivided points;
 row-locked Wave G-code additionally identifies the full profile fingerprint,
 projection maximum, and per-ink row angle in its header. Its set manifest
 records `row_locked_projection` rather than claiming the raw field was applied.
-Every program header records the physical bed diameter, stock diameter, stock
-margin, and resulting drawing radius. CMYK set identity includes the same
-geometry so four programs cannot be published together under different stock
-assumptions; the set manifest also exposes it through `machine_geometry`.
 Interactive preview uses nominal X/Y by default and may select the same exact
 path when **Exact compensated preview (slow)** is enabled. The analyzer
 converts a measured bed-frame error into a machine-frame correction with

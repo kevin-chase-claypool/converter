@@ -1,6 +1,7 @@
 # ADR-012: Model the bed, stock, and tape margin separately
 
-- Status: accepted and implemented; full-disc physical verification pending
+- Status: accepted for physical geometry; converter implementation deferred
+  after the 2026-11-26 rollback
 - Date: 2026-11-26
 - Supersedes: numeric bed/stock defaults in ADR-009
 
@@ -44,6 +45,10 @@ That replaces the prior conservative `180.0 mm` default. Compensation profile
 
 ## Consequences
 
+- The 2026-11-26 rollback (`WSW-20261126-005`) restored the converter to its
+  earlier single-diameter stock model. The physical 18-inch bed, 15-inch stock,
+  6.35 mm tape margin, and need for a fresh HOME + REGISTER remain project
+  facts; only the converter-side three-circle implementation is deferred.
 - Preview can show distinct 18-inch bed, 15-inch stock, and 14.5-inch drawing
   circles, including the tape band.
 - Saved programs clip against the paper-stock margin unless the gantry cap is

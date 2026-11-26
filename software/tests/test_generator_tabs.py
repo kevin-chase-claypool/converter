@@ -34,7 +34,6 @@ EXPECTED_TOOLS = [
     "Flow Field",
     "Line Draw",
     "CMYK",
-    "CMYK Photo",
     "3D Wireframe",
     "Harmonograph",
     "Snowflake",
@@ -46,7 +45,6 @@ EXPECTED_TOOLS = [
     "Pixel Art",
     "Wobble",
     "Plotterfun",
-    "Plotterfun Extended",
     "Voronoi",
     "Path Prep",
     "Layers",
@@ -71,12 +69,6 @@ class ToolShellTests(unittest.TestCase):
         self.assertTrue(window.tool_actions["Convert"].isChecked())
         self.assertIs(window.stack.widget(0), window.dashboard)
 
-    def test_qt_quick_uses_the_converter_opengl_backend(self):
-        self.assertEqual(os.environ.get("QSG_RHI_BACKEND"), "opengl")
-        self.assertTrue(
-            callable(self.module.configure_qt_quick_for_opengl)
-        )
-
     def test_artwork_reimport_restores_saved_placement(self):
         with tempfile.TemporaryDirectory(prefix="theta-layout-") as folder:
             artwork = Path(folder) / "art.png"
@@ -88,7 +80,7 @@ class ToolShellTests(unittest.TestCase):
             cmyk = next(
                 widget
                 for title, widget, _group, _description in window.generator_tools
-                if title == "CMYK Photo"
+                if title == "CMYK"
             )
             cmyk.style.setCurrentIndex(cmyk.style.findData("waves_zero"))
             cmyk.pitch.setValue(0.50)
@@ -115,7 +107,7 @@ class ToolShellTests(unittest.TestCase):
             self.assertEqual(layout["version"], 2)
             self.assertAlmostEqual(layout["artwork_offset_x_mm"], 19.81)
             self.assertAlmostEqual(layout["artwork_offset_y_mm"], -29.65)
-            recipe = layout["generator_tabs"]["cmyk_photo"]
+            recipe = layout["generator_tabs"]["cmyk"]
             self.assertEqual(recipe["kind"], "cmyk-recipe")
             self.assertEqual(recipe["screen"]["style"], "waves_zero")
             self.assertEqual(recipe["screen"]["contour_order"], "rows_ascending")
@@ -133,7 +125,7 @@ class ToolShellTests(unittest.TestCase):
             reopened_cmyk = next(
                 widget
                 for title, widget, _group, _description in reopened.generator_tools
-                if title == "CMYK Photo"
+                if title == "CMYK"
             )
             self.assertEqual(reopened_cmyk.style.currentData(), "waves_zero")
             self.assertAlmostEqual(reopened_cmyk.pitch.value(), 0.50)
@@ -211,11 +203,9 @@ class ToolShellTests(unittest.TestCase):
             [
                 "Line Draw",
                 "CMYK",
-                "CMYK Photo",
                 "SquiggleCam",
                 "Pixel Art",
                 "Plotterfun",
-                "Plotterfun Extended",
                 "Layers",
                 "Stipple / TSP",
                 "Vector Trace",
@@ -244,46 +234,6 @@ class ToolShellTests(unittest.TestCase):
             if action.menu() is not None
         ]
         self.assertEqual(submenus, ["Photo-based", "Algorithm only"])
-
-    def test_original_cmyk_tuner_and_photo_workflow_are_both_listed(self):
-        window = self.module.MainWindow()
-        self.addCleanup(window.close)
-        tools = {
-            title: widget
-            for title, widget, _group, _description in window.generator_tools
-        }
-        self.assertIn("CMYK", tools)
-        self.assertIn("CMYK Photo", tools)
-        self.assertEqual(tools["CMYK"].NAME, "cmyk")
-        self.assertEqual(tools["CMYK Photo"].NAME, "cmyk_photo")
-        self.assertFalse(hasattr(tools["CMYK"], "guided_panel"))
-        self.assertTrue(hasattr(tools["CMYK Photo"], "guided_panel"))
-        self.assertEqual(
-            window.tool_actions["CMYK"].shortcut().toString(),
-            "Ctrl+3",
-        )
-        window.show_tool("CMYK")
-        self.assertIs(window.stack.currentWidget(), tools["CMYK"])
-        self.assertEqual(window.current_tool, "CMYK")
-
-    def test_cmyk_photo_guided_mode_hides_advanced_preview_chrome(self):
-        window = self.module.MainWindow()
-        self.addCleanup(window.close)
-        window.show()
-        window.show_tool("CMYK Photo")
-        self.app.processEvents()
-        tab = window.stack.currentWidget()
-        self.assertTrue(tab.guided_panel.isVisible())
-        self.assertFalse(window.preview_button.isVisible())
-        self.assertFalse(window.cancel_preview_button.isVisible())
-        self.assertFalse(window.ink_profile_button.isVisible())
-        self.assertFalse(window.preview_transport.isVisible())
-        tab.advanced_button.click()
-        self.app.processEvents()
-        self.assertTrue(window.preview_button.isVisible())
-        self.assertTrue(window.cancel_preview_button.isVisible())
-        self.assertTrue(window.ink_profile_button.isVisible())
-        self.assertTrue(window.preview_transport.isVisible())
 
     def test_tools_menu_switches_pages(self):
         window = self.module.MainWindow()
@@ -375,40 +325,12 @@ class ToolShellTests(unittest.TestCase):
             tab.status.y(), tab.controls_scroll.y() + tab.controls_scroll.height()
         )
 
-    def test_wide_generator_controls_grow_the_settings_pane(self):
-        window = self.module.MainWindow()
-        self.addCleanup(window.close)
-        window.resize(1500, 950)
-        window.show()
-        self.app.processEvents()
-        start_width = window.stack.width()
-
-        window.show_tool("CMYK Photo")
-        self.app.processEvents()
-
-        tab = window.stack.currentWidget()
-        self.assertTrue(tab.guided_panel.isVisible())
-        self.assertFalse(tab.controls_scroll.isVisible())
-        tab.advanced_button.click()
-        self.app.processEvents()
-        self.assertGreater(window.stack.width(), start_width)
-        self.assertGreaterEqual(
-            window.stack.width(), window.tools_pane_control_width()
-        )
-        self.assertEqual(
-            tab.controls_scroll.horizontalScrollBar().maximum(), 0
-        )
-        self.assertGreater(
-            window.preview_panel.width(),
-            window.preview_panel.minimumSizeHint().width(),
-        )
-
     def test_every_generator_tool_has_an_artwork_scale(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
         for title, page, _group, _desc in window.generator_tools:
-            if title in ("Plotterfun", "Plotterfun Extended", "Layers"):
-                # Plotterfun controls live inside the embedded pages; Layers
+            if title in ("Plotterfun", "Layers"):
+                # Plotterfun's controls live inside the embedded page; Layers
                 # preserves the source SVG's own dimensions.
                 continue
             self.assertTrue(hasattr(page, "scale_pct"), title)
@@ -443,8 +365,8 @@ class ToolShellTests(unittest.TestCase):
             [(10.0, 10.0), (70.0, 10.0), (70.0, 70.0), (10.0, 70.0), (10.0, 10.0)]
         ]
         for title, page, _group, _desc in window.generator_tools:
-            if title in ("Plotterfun", "Plotterfun Extended"):
-                # Embedded web apps; verified by their vendor/fallback tests.
+            if title == "Plotterfun":
+                # Embedded web app; verified by its own vendor/fallback tests.
                 continue
             if title == "Reaction-Diffusion":
                 page.grid.setValue(48)
@@ -474,66 +396,10 @@ class ToolShellTests(unittest.TestCase):
         convert_settings = window.settings_for_source(window.convert_root)
         self.assertEqual(convert_settings.fit_mode, window.settings().fit_mode)
 
-    def test_cmyk_photo_uses_the_global_bed_fill_by_default(self):
-        window = self.module.MainWindow()
-        self.addCleanup(window.close)
-        window.show_tool("CMYK Photo")
-        tab = window.stack.currentWidget()
-        settings = window.settings_for_source(tab)
-        self.assertEqual(settings.fit_mode, "fill")
-        self.assertEqual(settings.scale, 1.0)
-
-        contour = [
-            (-50.0, -50.0),
-            (50.0, -50.0),
-            (50.0, 50.0),
-            (-50.0, 50.0),
-            (-50.0, -50.0),
-        ]
-        fitted = window.fitted_settings(settings, [contour])
-        self.assertAlmostEqual(
-            fitted.scale,
-            settings.scale
-            * self.module.converter.fit_scale_to_span(
-                [contour],
-                2.0 * settings.machine_reach_radius_mm,
-            ),
-        )
-
-        fit = window.fields["fit_mode"]
-        fit.setCurrentIndex(fit.findData("manual"))
-        manual = window.settings_for_source(tab)
-        self.assertEqual(manual.fit_mode, "manual")
-        self.assertEqual(manual.scale, 1.0)
-
-    def test_explicit_fit_inside_applies_to_generator_sources(self):
-        window = self.module.MainWindow()
-        self.addCleanup(window.close)
-        window.show_tool("Flow Field")
-        flow = window.stack.currentWidget()
-        window.raw_contours = [
-            [
-                (-200.0, -200.0),
-                (200.0, -200.0),
-                (200.0, 200.0),
-                (-200.0, 200.0),
-                (-200.0, -200.0),
-            ]
-        ]
-        window.fields["scale"].setText("1")
-        window.fields["machine_reach_radius_mm"].setText("180")
-        window.fit_inside()
-
-        settings = window.settings_for_source(flow)
-        self.assertEqual(settings.fit_mode, "inside")
-        self.assertLess(settings.scale, 1.0)
-        radius, reach = window.clip_info()
-        self.assertLessEqual(radius, reach + 1e-6)
-
     def test_self_screened_tools_stop_the_fill_pass(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        window.show_tool("CMYK Photo")
+        window.show_tool("CMYK")
         tab = window.stack.currentWidget()
         self.assertTrue(getattr(tab, "SELF_SCREENED", False))
         settings = window.settings_for_source(tab)
@@ -542,74 +408,20 @@ class ToolShellTests(unittest.TestCase):
         window.fields["hatch_spacing_mm"].setText("3")
         self.assertGreater(window.settings_for_source(window.convert_root).hatch_spacing_mm, 0.0)
 
-    def test_plotterfun_cmyk_layers_use_one_fitted_page_and_make_gcode(self):
-        from generator_tabs._plotterfun_cmyk import write_cmyk_svg_set
-
-        window = self.module.MainWindow()
-        self.addCleanup(window.close)
-        tab = next(
-            widget
-            for title, widget, _group, _description in window.generator_tools
-            if title == "Plotterfun Extended"
-        )
-        settings = window.settings_for_source(tab)
-        self.assertEqual(settings.fit_mode, "inside")
-        self.assertEqual(settings.hatch_spacing_mm, 0.0)
-        page_svg = (
-            '<svg xmlns="http://www.w3.org/2000/svg" width="8in" '
-            'height="6in" viewBox="0 0 800 600">'
-            '<g id="cyan"><path d="M100,100 L180,120" stroke="#00ffff" '
-            'stroke-width="2" fill="none"/></g>'
-            '<g id="magenta"><path d="M200,140 L280,180" '
-            'stroke="#ff00ff" stroke-width="2" fill="none"/></g>'
-            '<g id="yellow"><path d="M300,220 L380,240" '
-            'stroke="#ffff00" stroke-width="2" fill="none"/></g>'
-            '<g id="black"><path d="M410,280 L390,300" '
-            'stroke="#000000" stroke-width="2" fill="none"/></g>'
-            "</svg>"
-        )
-        with tempfile.TemporaryDirectory(prefix="plotterfun-gcode-") as folder:
-            exported = write_cmyk_svg_set(
-                page_svg,
-                Path(folder),
-                base_name="portrait",
-            )
-            analyses = [
-                window.analyze_program(str(layer.path), settings)
-                for layer in exported.layers
-            ]
-        self.assertTrue(
-            all("M3" in analysis["gcode"] for analysis in analyses)
-        )
-        scales = {
-            round(float(analysis["settings"].scale), 9)
-            for analysis in analyses
-        }
-        self.assertEqual(len(scales), 1)
-
     def test_export_program_set_writes_one_file_per_entry(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
         folder = tempfile.mkdtemp(prefix="export-set-")
         self.addCleanup(shutil.rmtree, folder, ignore_errors=True)
         base = str(Path(folder) / "art-cmyk.gcode")
-        manifest = Path(folder) / "art-cmyk-set.json"
         written = window.export_program_set(
-            [("cyan", "G1 X0\n"), ("black", "G1 X1\n")],
-            base_path=base,
-            companion_files=[
-                (manifest, '{"kind":"cmyk-print-set"}\n'),
-            ],
+            [("cyan", "G1 X0\n"), ("black", "G1 X1\n")], base_path=base
         )
         self.assertEqual(
             [Path(path).name for path in written],
             ["art-cmyk-cyan.gcode", "art-cmyk-black.gcode"],
         )
         self.assertEqual(Path(written[0]).read_text(encoding="utf-8"), "G1 X0\n")
-        self.assertEqual(
-            manifest.read_text(encoding="utf-8"),
-            '{"kind":"cmyk-print-set"}\n',
-        )
 
     def test_ink_vertex_colors_follow_contour_tags(self):
         import converter_core as converter
@@ -645,43 +457,6 @@ class ToolShellTests(unittest.TestCase):
             self.module.ink_vertex_colors([[(0.0, 0.0), (1.0, 0.0)]], moves),
             (None, None),
         )
-
-    def test_ink_vertex_colors_include_keep_down_bridges(self):
-        import converter_core as converter
-
-        undrawn = self.module.ink_color_floats(
-            converter.CHANNEL_COLORS["c"],
-            undrawn_mix=0.55,
-        )
-        full = self.module.ink_color_floats(converter.CHANNEL_COLORS["c"])
-        contours = converter.tag_ink([[(0.0, 0.0), (1.0, 0.0)]], "c")
-        moves = [
-            {
-                "type": "draw",
-                "strategy": "x_theta",
-                "contour": 0,
-                "bed_start": (0.0, 0.0),
-                "bed_end": (1.0, 0.0),
-            },
-            {
-                "type": "draw",
-                "strategy": "keep_down_bridge",
-                "contour": 0,
-                "bed_start": (1.0, 0.0),
-                "bed_end": (1.2, 0.0),
-            },
-        ]
-
-        artwork_colors, drawn_colors = self.module.ink_vertex_colors(
-            contours,
-            moves,
-        )
-
-        self.assertIsNotNone(artwork_colors)
-        self.assertEqual(len(artwork_colors), 16)
-        self.assertEqual(len(drawn_colors), 16)
-        self.assertEqual(artwork_colors[8:12], list(undrawn))
-        self.assertEqual(drawn_colors[8:12], list(full))
 
     def test_gl_preview_filters_layers_live(self):
         import converter_core as converter
@@ -773,19 +548,10 @@ class ToolShellTests(unittest.TestCase):
                 },
                 handle,
             )
-        cmyk = next(
-            widget
-            for title, widget, _group, _description in window.generator_tools
-            if title == "CMYK Photo"
-        )
-        key_before = cmyk._control_key()
         window.load_ink_profile(path)
         self.assertEqual(
             window.gl_preview.sim_ink_colors["c"], (0.6, 0.9, 0.95)
         )
-        self.assertEqual(window.active_ink_colors()["c"], (0.6, 0.9, 0.95))
-        self.assertEqual(cmyk._active_ink_colors()["c"], (0.6, 0.9, 0.95))
-        self.assertNotEqual(cmyk._control_key(), key_before)
         window.gl_preview.set_preview(
             converter.tag_ink([[(0.0, 0.0), (1.0, 0.0)]], "c"),
             [],
@@ -913,7 +679,7 @@ class ToolShellTests(unittest.TestCase):
                 image.putpixel((x, y), (0, 0, 0))          # black
         image.save(image_path)
         window.svg_path.setText(image_path)
-        window.show_tool("CMYK Photo")
+        window.show_tool("CMYK")
         tab = window.stack.currentWidget()
         tab.page_w.setValue(40)
         tab.page_h.setValue(40)
@@ -992,7 +758,7 @@ class ToolShellTests(unittest.TestCase):
     def test_preview_finished_hook_runs_for_the_previewed_tab(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
-        window.show_tool("CMYK Photo")
+        window.show_tool("CMYK")
         tab = window.stack.currentWidget()
         calls = []
         tab.on_preview_finished = lambda: calls.append("planned")
@@ -1059,16 +825,14 @@ class ToolShellTests(unittest.TestCase):
         self.assertTrue(
             window.preview_panel.isAncestorOf(window.preview_motion_check)
         )
+        self.assertTrue(window.preview_motion_check.isChecked())
+        window.preview_motion_check.setChecked(False)
         self.assertFalse(window.gl_preview.show_pen_down_path)
         self.assertFalse(window.show_pen_down_path.isChecked())
-        self.assertFalse(window.preview_motion_check.isChecked())
-        window.preview_motion_check.setChecked(True)
-        self.assertTrue(window.gl_preview.show_pen_down_path)
-        self.assertTrue(window.preview_motion_check.isChecked())
         # The sidebar checkbox and the menu action stay in sync both ways.
-        window.show_pen_down_path.setChecked(False)
-        self.assertFalse(window.preview_motion_check.isChecked())
-        self.assertFalse(window.gl_preview.show_pen_down_path)
+        window.show_pen_down_path.setChecked(True)
+        self.assertTrue(window.preview_motion_check.isChecked())
+        self.assertTrue(window.gl_preview.show_pen_down_path)
 
     def test_preview_panel_has_an_ink_simulation_toggle(self):
         window = self.module.MainWindow()
@@ -1076,10 +840,10 @@ class ToolShellTests(unittest.TestCase):
         self.assertTrue(
             window.preview_panel.isAncestorOf(window.ink_sim_check)
         )
-        self.assertTrue(window.gl_preview.ink_simulation)
-        self.assertTrue(window.ink_sim_check.isChecked())
-        window.ink_sim_check.setChecked(False)
+        self.assertFalse(window.ink_sim_check.isChecked())
         self.assertFalse(window.gl_preview.ink_simulation)
+        window.ink_sim_check.setChecked(True)
+        self.assertTrue(window.gl_preview.ink_simulation)
 
     def test_gl_preview_builds_multiply_neutral_hidden_inks(self):
         import converter_core as converter
@@ -1113,38 +877,8 @@ class ToolShellTests(unittest.TestCase):
         window.show()
         self.app.processEvents()
         tools_width, preview_width = window.main_split.sizes()
-        self.assertGreaterEqual(
-            tools_width, window.tools_pane_control_width()
-        )
-        self.assertEqual(
-            window.sidebar_scroll.horizontalScrollBar().maximum(), 0
-        )
-        self.assertGreater(preview_width, 500)
-
-    def test_opening_a_wide_control_group_grows_the_settings_pane(self):
-        window = self.module.MainWindow()
-        self.addCleanup(window.close)
-        window.resize(1500, 950)
-        window.show()
-        self.app.processEvents()
-        start_width = window.stack.width()
-        section = next(
-            section
-            for section in window.sidebar_sections
-            if section.toggle.text().endswith("Theta kinematics")
-        )
-        self.assertFalse(section.content.isVisible())
-
-        section.toggle.setChecked(True)
-        self.app.processEvents()
-
-        self.assertGreater(window.stack.width(), start_width)
-        self.assertGreaterEqual(
-            window.stack.width(), window.tools_pane_control_width()
-        )
-        self.assertEqual(
-            window.sidebar_scroll.horizontalScrollBar().maximum(), 0
-        )
+        self.assertLessEqual(tools_width, 420)
+        self.assertGreater(preview_width, tools_width * 2)
 
     def test_resolve_active_source_returns_the_convert_artwork(self):
         window = self.module.MainWindow()

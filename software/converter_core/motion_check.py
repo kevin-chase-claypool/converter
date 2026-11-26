@@ -39,7 +39,6 @@ def analyse_gcode(text, settings, tolerance=None):
     worst_step = (0.0, 0)
     worst_rate = (0.0, 0)
     worst_deviation = (0.0, 0.0, 0, "")
-    max_xy_radius = (0.0, 0)
     over_tolerance = 0
     rapids_with_rotation = fed_rotations = unwinds = 0
 
@@ -50,9 +49,6 @@ def analyse_gcode(text, settings, tolerance=None):
             continue
         kind, x, y, a, feed = match.groups()
         point = (float(x), float(y), float(a) if a is not None else None)
-        radius = math.hypot(point[0], point[1])
-        if radius > max_xy_radius[0]:
-            max_xy_radius = (radius, number)
         label_match = LABEL.search(line.rstrip())
         label = label_match.group(1) if label_match else ""
         if label:
@@ -125,12 +121,6 @@ def analyse_gcode(text, settings, tolerance=None):
         "unwinds": unwinds,
         "cap": cap,
         "rate_cap": rate_cap,
-        "max_xy_radius_mm": max_xy_radius[0],
-        "max_xy_radius_line": max_xy_radius[1],
-        "machine_reach_radius_mm": max(
-            float(getattr(settings, "machine_reach_radius_mm", 0.0)),
-            0.0,
-        ),
     }
 
 
@@ -162,13 +152,5 @@ def preflight_problems(result):
         problems.append(
             "%d pen-up moves carry rotation as bare G0 rapids"
             % result["rapids_with_rotation"]
-        )
-    reach = float(result.get("machine_reach_radius_mm", 0.0))
-    max_radius = float(result.get("max_xy_radius_mm", 0.0))
-    if reach > 0.0 and max_radius > reach + 0.001:
-        problems.append(
-            "a move reaches %.3f mm from the bed center, over the %.3f mm "
-            "machine reach"
-            % (max_radius, reach)
         )
     return problems

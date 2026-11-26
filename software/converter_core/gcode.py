@@ -2,17 +2,7 @@ import math
 import re
 
 from .cancellation import check_cancelled
-from .geometry import (
-    FillTrail,
-    ScreenTrail,
-    clip_contours_to_bed,
-    contour_center,
-    distance,
-    format_float,
-    normalized_hatch_pattern,
-    read_svg,
-    retag_contour,
-)
+from .geometry import FillTrail, clip_contours_to_bed, contour_center, distance, format_float, normalized_hatch_pattern, read_svg, retag_contour
 from .path_join import join_touching_contours
 from .kinematics import (
     _polar_move_deviation,
@@ -169,45 +159,6 @@ def _is_open_contour(path, tol=0.5):
     return len(path) >= 2 and distance(path[0], path[-1]) > tol
 
 
-def _coordinated_bridge_plan(
-    previous_machine,
-    previous_motor_theta,
-    next_machine,
-    next_motor_theta,
-    center,
-    settings,
-):
-    """Return a keep-down connector plan when it beats lift/travel/lower."""
-    xy_len = distance(previous_machine, next_machine)
-    motor_delta = abs(next_motor_theta - previous_motor_theta)
-    if xy_len <= 1e-9:
-        return None
-    feed_plan = plan_radius_aware_draw_feed(
-        previous_machine,
-        next_machine,
-        center,
-        xy_len,
-        motor_delta,
-        settings,
-    )
-    travel_plan = plan_travel_move(settings, xy_len, motor_delta)
-    lift_lower_ms = (
-        pen_up_duration_ms(settings) + pen_down_duration_ms(settings)
-    )
-    if feed_plan["duration_ms"] >= (
-        travel_plan["duration_ms"] + lift_lower_ms
-    ):
-        return None
-    return {
-        "xy_len": xy_len,
-        "motor_delta": motor_delta,
-        "motion_len": feed_plan["motion_length"],
-        "duration_ms": feed_plan["duration_ms"],
-        "feed_plan": feed_plan,
-        "travel_plan": travel_plan,
-    }
-
-
 def bridge_motion(prev_machine, prev_motor_theta, next_machine, next_motor_theta, center, settings):
     if not bool(getattr(settings, "keep_down_bridges", False)):
         return None
@@ -241,183 +192,28 @@ def bridge_motion(prev_machine, prev_motor_theta, next_machine, next_motor_theta
     max_gap = max(pattern_gap, float(getattr(settings, "pen_diameter_mm", 0.0)) * 6.0)
     if xy_len <= 1e-9 or xy_len > max_gap:
         return None
-    return _coordinated_bridge_plan(
+    motor_delta = abs(next_motor_theta - prev_motor_theta)
+    feed_plan = plan_radius_aware_draw_feed(
         prev_machine,
-        prev_motor_theta,
         next_machine,
-        next_motor_theta,
         center,
+        xy_len,
+        motor_delta,
         settings,
     )
-
-
-def screen_chain_motion(
-    previous_bed_end,
-    next_bed_start,
-    previous_machine,
-    previous_motor_theta,
-    next_machine,
-    next_motor_theta,
-    center,
-    settings,
-):
-    """Keep the pen down between adjacent, same-ink generated screen marks.
-
-    The gap is measured on the paper, after the planner has selected contour
-    order and direction from its X/Y/A cost model. The connector is emitted
-    only when drawing it is faster than lifting, travelling, and lowering the
-    pen again. A real paper-space gap remains a pen lift.
-    """
-    max_gap = max(
-        float(getattr(settings, "screen_chain_gap_mm", 0.0)),
-        0.0,
-    )
-    if max_gap <= 0.0:
+    motion_len = feed_plan["motion_length"]
+    draw_ms = feed_plan["duration_ms"]
+    travel_ms = motion_len / max(float(getattr(settings, "travel_rate", 1.0)), 1e-9) * 60000.0
+    lift_lower_ms = pen_up_duration_ms(settings) + pen_down_duration_ms(settings)
+    if draw_ms >= travel_ms + lift_lower_ms:
         return None
-    bed_gap = distance(previous_bed_end, next_bed_start)
-    if bed_gap > max_gap + 1e-9:
-        return None
-    if bed_gap <= 1e-9:
-        machine_gap = distance(previous_machine, next_machine)
-        motor_delta = abs(next_motor_theta - previous_motor_theta)
-        if machine_gap <= 1e-9 and motor_delta <= 1e-9:
-            return {
-                "xy_len": 0.0,
-                "motor_delta": 0.0,
-                "motion_len": 0.0,
-                "duration_ms": 0.0,
-                "zero_length": True,
-                "feed_plan": {
-                    "feed_rate": float(settings.feed_rate),
-                    "duration_ms": 0.0,
-                    "motion_length": 0.0,
-                    "radius_mm": None,
-                    "tangential_speed_mm_min": 0.0,
-                    "limited_by": (),
-                },
-            }
-        return None
-    return _coordinated_bridge_plan(
-        previous_machine,
-        previous_motor_theta,
-        next_machine,
-        next_motor_theta,
-        center,
-        settings,
-    )
-
-
-def contour_transition_bridge(
-    previous_path,
-    path,
-    previous_machine,
-    previous_motor_theta,
-    next_machine,
-    next_motor_theta,
-    center,
-    settings,
-):
-    """Choose the same keep-down decision for emission and preview."""
-    if (
-        previous_path is None
-        or not _is_open_contour(previous_path)
-        or not _is_open_contour(path)
-    ):
-        return None
-    if isinstance(previous_path, FillTrail) and isinstance(path, FillTrail):
-        return bridge_motion(
-            previous_machine,
-            previous_motor_theta,
-            next_machine,
-            next_motor_theta,
-            center,
-            settings,
-        )
-    if isinstance(previous_path, ScreenTrail) and isinstance(path, ScreenTrail):
-        return screen_chain_motion(
-            previous_path[-1],
-            path[0],
-            previous_machine,
-            previous_motor_theta,
-            next_machine,
-            next_motor_theta,
-            center,
-            settings,
-        )
-    return None
-
-
-def _screen_bridge_segments(
-    previous_bed_end,
-    next_bed_start,
-    previous_theta,
-    next_theta,
-    center,
-    bed_compensation,
-    settings,
-):
-    """Subdivide an adjacent-screen connector so it stays on the paper path."""
-    steps = polar_segment_steps(
-        previous_bed_end,
-        next_bed_start,
-        center,
-        previous_theta,
-        next_theta,
-        settings.tolerance,
-    )
-    if bed_compensation is not None:
-        steps = max(
-            steps,
-            compensation_step_count(
-                previous_bed_end,
-                next_bed_start,
-                previous_theta,
-                next_theta,
-                center,
-                bed_compensation,
-                settings.tolerance,
-            ),
-        )
-    segments = []
-    for step in range(1, steps + 1):
-        t = step / steps
-        bed_start = (
-            previous_bed_end[0]
-            + (step - 1) / steps * (next_bed_start[0] - previous_bed_end[0]),
-            previous_bed_end[1]
-            + (step - 1) / steps * (next_bed_start[1] - previous_bed_end[1]),
-        )
-        bed_end = (
-            previous_bed_end[0]
-            + t * (next_bed_start[0] - previous_bed_end[0]),
-            previous_bed_end[1]
-            + t * (next_bed_start[1] - previous_bed_end[1]),
-        )
-        start_theta = previous_theta + (step - 1) / steps * (
-            next_theta - previous_theta
-        )
-        end_theta = previous_theta + t * (next_theta - previous_theta)
-        segments.append(
-            (
-                bed_start,
-                bed_end,
-                start_theta,
-                end_theta,
-                compensated_machine_point(
-                    bed_start,
-                    start_theta,
-                    center,
-                    bed_compensation,
-                ),
-                compensated_machine_point(
-                    bed_end,
-                    end_theta,
-                    center,
-                    bed_compensation,
-                ),
-            )
-        )
-    return segments
+    return {
+        "xy_len": xy_len,
+        "motor_delta": motor_delta,
+        "motion_len": motion_len,
+        "duration_ms": draw_ms,
+        "feed_plan": feed_plan,
+    }
 
 
 def _reregister_thetas(thetas, settings):
@@ -468,36 +264,13 @@ def plan_program(contours, settings, cancel_check=None):
     frame_center = getattr(settings, "frame_center_mm", None)
     if frame_center is not None:
         source_center = (float(frame_center[0]), float(frame_center[1]))
-    bed_compensation = load_bed_compensation(
-        getattr(settings, "bed_compensation_path", "")
-    )
-    compensation_margin = 0.0
-    if bed_compensation is not None and not bed_compensation.identity:
-        compensation_margin = max(
-            float(getattr(bed_compensation, "max_correction_mm", 0.0)),
-            float(
-                getattr(
-                    bed_compensation,
-                    "full_max_correction_mm",
-                    0.0,
-                )
-            ),
-        )
-    stock_radius = max(
-        float(getattr(settings, "stock_diameter_mm", 381.0)) / 2.0
+    bed_radius = max(
+        float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0
         - float(getattr(settings, "bed_margin_mm", 0.0)),
         0.0,
     )
     reach = float(getattr(settings, "machine_reach_radius_mm", 0.0))
-    radius = min(stock_radius, reach) if reach > 0.0 else stock_radius
-    # Coverage clipping happens in the uncompensated bed frame. Reserve the
-    # profile's maximum correction so an outward correction cannot put the
-    # final machine point beyond the configured reach.
-    radius = max(0.0, radius - compensation_margin)
-    if radius <= 0.0:
-        raise ValueError(
-            "bed compensation consumes the entire machine reach"
-        )
+    radius = min(bed_radius, reach) if reach > 0.0 else bed_radius
     # The artwork's own center is placed at this offset from the bed center, so
     # the reachable disc - which is fixed on the bed center - corresponds to the
     # artwork point `offset` away from its own center. Clipping is expressed in
@@ -533,6 +306,9 @@ def plan_program(contours, settings, cancel_check=None):
             getattr(settings, "path_join_tolerance_mm", 0.02),
             cancel_check,
         )
+    bed_compensation = load_bed_compensation(
+        getattr(settings, "bed_compensation_path", "")
+    )
     if bed_compensation is not None and bool(
         getattr(settings, "row_locked_compensation", False)
     ):
@@ -640,9 +416,6 @@ def plan_program(contours, settings, cancel_check=None):
         "contours": clipped_contours,
         "planned_jobs": planned_jobs,
         "bed_compensation": bed_compensation,
-        "planning_radius_mm": radius,
-        "compensation_safety_margin_mm": compensation_margin,
-        "machine_reach_radius_mm": reach,
         "wave_row_schedule": wave_row_schedule,
         "contour_join": contour_join,
     }
@@ -702,18 +475,6 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
             ),
             motion_label,
         ),
-        "(stock geometry bed %.3f mm, stock %.3f mm, "
-        "margin %.3f mm, drawing radius %.3f mm)"
-        % (
-            float(getattr(settings, "bed_diameter_mm", 457.2)),
-            float(getattr(settings, "stock_diameter_mm", 381.0)),
-            float(getattr(settings, "bed_margin_mm", 0.0)),
-            max(
-                float(getattr(settings, "stock_diameter_mm", 381.0)) / 2.0
-                - float(getattr(settings, "bed_margin_mm", 0.0)),
-                0.0,
-            ),
-        ),
         "G21",
         "G90",
         "G94",
@@ -721,17 +482,6 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
         "G54",
         f"G0 F{format_float(settings.travel_rate)}",
     ]
-    placement_x = float(getattr(settings, "artwork_offset_x_mm", 0.0))
-    placement_y = float(getattr(settings, "artwork_offset_y_mm", 0.0))
-    if abs(placement_x) > 1e-9 or abs(placement_y) > 1e-9:
-        lines.insert(
-            5,
-            "(artwork placement %s,%s mm)"
-            % (
-                f"{placement_x:.3f}",
-                f"{placement_y:.3f}",
-            ),
-        )
     if bed_compensation is not None:
         lines.insert(
             5,
@@ -773,30 +523,6 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
                 contour_join["tolerance_mm"],
             ),
         )
-    screen_chain_gap = float(
-        getattr(settings, "screen_chain_gap_mm", 0.0)
-    )
-    if screen_chain_gap > 0.0:
-        lines.insert(
-            5,
-            f"(screen chain up to {format_float(screen_chain_gap)} mm "
-            "after X/Y/A planner order)",
-        )
-    compensation_margin = float(
-        program_plan.get("compensation_safety_margin_mm", 0.0)
-    )
-    machine_reach = float(
-        program_plan.get("machine_reach_radius_mm", 0.0)
-    )
-    if compensation_margin > 0.0 and machine_reach > 0.0:
-        lines.insert(
-            5,
-            "(reach guard %.3f mm, planning radius %.3f mm)"
-            % (
-                machine_reach,
-                float(program_plan.get("planning_radius_mm", machine_reach)),
-            ),
-        )
     if settings.include_z:
         lines.append(f"G0 Z{format_float(settings.safe_z)}")
     else:
@@ -810,7 +536,6 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
     # cold-seek dwell; every later one starts from the M5 clearance height.
     first_pen_down_pending = True
     previous_pts = None
-    screen_chain_bridges = 0
     for planned, pts, thetas, strategies in program_plan["planned_jobs"]:
         first_theta = thetas[0]
 
@@ -818,10 +543,15 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
         first_motor_theta = first_theta * settings.theta_drive_ratio
         lines.append(f"(contour {planned['index'] + 1}{' reversed' if planned.get('reversed') else ''})")
         bridge = None
-        if previous_machine is not None and previous_pts is not None:
-            bridge = contour_transition_bridge(
-                previous_pts,
-                pts,
+        if (
+            previous_machine is not None
+            and previous_pts is not None
+            and isinstance(previous_pts, FillTrail)
+            and isinstance(pts, FillTrail)
+            and _is_open_contour(previous_pts)
+            and _is_open_contour(pts)
+        ):
+            bridge = bridge_motion(
                 previous_machine,
                 previous_motor_theta,
                 (x0, y0),
@@ -831,37 +561,7 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
             )
         if bridge and pen_is_down:
             bridge_feed = bridge["feed_plan"]["feed_rate"]
-            if not bridge.get("zero_length"):
-                if isinstance(pts, ScreenTrail):
-                    for (
-                        _bed_start,
-                        _bed_end,
-                        _start_theta,
-                        end_theta,
-                        _start_machine,
-                        end_machine,
-                    ) in _screen_bridge_segments(
-                        previous_pts[-1],
-                        pts[0],
-                        previous_theta,
-                        first_theta,
-                        center,
-                        bed_compensation,
-                        settings,
-                    ):
-                        lines.append(
-                            f"G1 {format_xy_command(end_machine)} "
-                            f"{axis}{format_float(end_theta * settings.theta_drive_ratio)} "
-                            f"F{format_float(bridge_feed)} (keep-down bridge)"
-                        )
-                else:
-                    lines.append(
-                        f"G1 {format_xy_command((x0, y0))} "
-                        f"{axis}{format_float(first_motor_theta)} "
-                        f"F{format_float(bridge_feed)} (keep-down bridge)"
-                    )
-            if isinstance(pts, ScreenTrail):
-                screen_chain_bridges += 1
+            lines.append(f"G1 {format_xy_command((x0, y0))} {axis}{format_float(first_motor_theta)} F{format_float(bridge_feed)} (keep-down bridge)")
         else:
             if pen_is_down:
                 if settings.include_z:
@@ -968,8 +668,6 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
         previous_machine = machine_point(pts[-1], thetas[-1])
         previous_motor_theta = previous_theta * settings.theta_drive_ratio
 
-    if stats is not None:
-        stats["screen_chain_bridges"] = screen_chain_bridges
     if pen_is_down:
         if settings.include_z:
             lines.append(f"G0 Z{format_float(settings.safe_z)}")
@@ -1030,10 +728,15 @@ def build_preview_moves(
         machine_start = machine_point(path[0], first_theta)
         first_motor_theta = first_theta * settings.theta_drive_ratio
         bridge = None
-        if last_machine_end is not None and previous_path is not None:
-            bridge = contour_transition_bridge(
-                previous_path,
-                path,
+        if (
+            last_machine_end is not None
+            and previous_path is not None
+            and isinstance(previous_path, FillTrail)
+            and isinstance(path, FillTrail)
+            and _is_open_contour(previous_path)
+            and _is_open_contour(path)
+        ):
+            bridge = bridge_motion(
                 last_machine_end,
                 previous_motor_theta,
                 machine_start,
@@ -1056,70 +759,32 @@ def build_preview_moves(
             moves.append({"type": "travel", "start": machine_start, "end": machine_start, "bed_start": path[0], "bed_end": path[0], "bed_theta": first_theta, "motor_theta": first_motor_theta, "contour": contour_index, "duration_ms": initial_travel_ms, "motion_length": initial_motor_delta, "xy_length": 0.0, "gcode": g0})
             previous_motor_theta = first_motor_theta
         elif bridge and pen_is_down:
-            if not bridge.get("zero_length"):
-                bridge_feed = bridge["feed_plan"]["feed_rate"]
-                if isinstance(path, ScreenTrail):
-                    segments = _screen_bridge_segments(
-                        previous_path[-1],
-                        path[0],
-                        previous_theta,
-                        first_theta,
-                        center,
-                        bed_compensation,
-                        settings,
-                    )
-                else:
-                    segments = [
-                        (
-                            previous_path[-1],
-                            path[0],
-                            previous_theta,
-                            first_theta,
-                            last_machine_end,
-                            machine_start,
-                        )
-                    ]
-                steps = len(segments)
-                move_ms = bridge["duration_ms"] / steps
-                move_len = bridge["motion_len"] / steps
-                for (
-                    bed_start,
-                    bed_end,
-                    start_theta,
-                    end_theta,
-                    start_machine,
-                    end_machine,
-                ) in segments:
-                    motor_theta = end_theta * settings.theta_drive_ratio
-                    gcode = f"G1 {format_xy_command(end_machine)}"
-                    gcode += f" {axis}{format_float(motor_theta)}"
-                    gcode += (
-                        f" F{format_float(bridge_feed)} "
-                        "(keep-down bridge)"
-                    )
-                    # The connector is drawn ink, so it needs real bed-frame
-                    # endpoints or the preview cannot show the joined strokes.
-                    moves.append({
-                        "type": "draw",
-                        "start": start_machine,
-                        "end": end_machine,
-                        "bed_start": bed_start,
-                        "bed_end": bed_end,
-                        "bed_theta": end_theta,
-                        "motor_theta": motor_theta,
-                        "strategy": "keep_down_bridge",
-                        "contour": contour_index,
-                        "duration_ms": move_ms,
-                        "motion_length": move_len,
-                        "xy_length": distance(start_machine, end_machine),
-                        "feed_rate": bridge_feed,
-                        "radius_mm": bridge["feed_plan"]["radius_mm"],
-                        "tangential_speed_mm_min": bridge["feed_plan"][
-                            "tangential_speed_mm_min"
-                        ],
-                        "limited_by": bridge["feed_plan"]["limited_by"],
-                        "gcode": gcode,
-                    })
+            bridge_feed = bridge["feed_plan"]["feed_rate"]
+            gcode = f"G1 {format_xy_command(machine_start)}"
+            gcode += f" {axis}{format_float(first_motor_theta)}"
+            gcode += f" F{format_float(bridge_feed)} (keep-down bridge)"
+            # The connector is drawn ink, so it needs real bed-frame endpoints or
+            # the preview cannot show the passes joined up. The previous path
+            # ends where this connector starts; this path starts where it ends.
+            moves.append({
+                "type": "draw",
+                "start": last_machine_end,
+                "end": machine_start,
+                "bed_start": previous_path[-1],
+                "bed_end": path[0],
+                "bed_theta": first_theta,
+                "motor_theta": first_motor_theta,
+                "strategy": "keep_down_bridge",
+                "contour": contour_index,
+                "duration_ms": bridge["duration_ms"],
+                "motion_length": bridge["motion_len"],
+                "xy_length": bridge["xy_len"],
+                "feed_rate": bridge_feed,
+                "radius_mm": bridge["feed_plan"]["radius_mm"],
+                "tangential_speed_mm_min": bridge["feed_plan"]["tangential_speed_mm_min"],
+                "limited_by": bridge["feed_plan"]["limited_by"],
+                "gcode": gcode,
+            })
             previous_motor_theta = first_motor_theta
         else:
             if pen_is_down:

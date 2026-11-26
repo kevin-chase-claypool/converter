@@ -1,7 +1,8 @@
 # ADR-011: Expose adaptive CMYK as a staged workspace
 
-- Status: accepted and implemented; materialized stage caches pending
+- Status: superseded by the 2026-11-26 converter rollback
 - Date: 2026-11-25
+- Superseded by: `WSW-20261126-005`
 
 ## Context
 

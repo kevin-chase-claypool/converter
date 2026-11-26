@@ -22,163 +22,32 @@ import os
 import threading
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, QObject, QThread, Qt, Signal
-from PySide6.QtGui import QCursor, QGuiApplication, QPixmap
+from PySide6.QtCore import QObject, QThread, Qt, Signal
+from PySide6.QtGui import QCursor, QGuiApplication
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
-    QDialog,
-    QFileDialog,
-    QFrame,
     QHBoxLayout,
     QLabel,
-    QMessageBox,
     QPushButton,
-    QVBoxLayout,
     QWidget,
 )
 
 import converter_core as converter
-from program_set_export import program_set_paths
 
 from ._tab_common import (
     ChoiceBullets,
     GeneratorTab,
-    OUTPUT_DIR,
     double_spin,
     int_spin,
     scale_polylines,
     write_svg_document,
 )
 from .cmyk_sheet import build_sheet
-from .cmyk_workflow import (
-    CMYK_RECIPE_PRESETS,
-    CMYK_WORKFLOW_STAGES,
-    CmykStageNavigator,
-    control_state,
-    restore_control_state,
-)
 
 
 TITLE = "CMYK"
 ORDER = 25
-EDGE_FLOW_STYLES = (
-    "edge_flow",
-    "edge_flow_shared",
-    "edge_flow_coherent",
-)
-FLOW_GUIDED_STYLES = EDGE_FLOW_STYLES + ("process_area",)
-REFERENCE_PHOTO_EFFECTIVE_PITCH_MM = 1.2
-REFERENCE_PHOTO_PEN_PITCH_MULTIPLIER = 2.0
-REFERENCE_PHOTO_FLOW_SMOOTHING_MM = 2.5
-REFERENCE_PHOTO_FLOW_LAYERS = 3
-REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT = 60.0
-REFERENCE_PHOTO_CHAIN_GAP_MM = 1.0
-PROCESS_AREA_CHAIN_CELL_RATIO = 3.0
-
-
-def _common_program_identity(settings, compensation):
-    """Return the machine/frame fields that every ink program must share."""
-    frame = getattr(settings, "frame_center_mm", None)
-    identity = {
-        "scale": round(float(settings.scale), 8),
-        "artwork_placement_mm": [
-            round(float(settings.artwork_offset_x_mm), 8),
-            round(float(settings.artwork_offset_y_mm), 8),
-        ],
-        "frame_center_mm": (
-            [round(float(frame[0]), 8), round(float(frame[1]), 8)]
-            if frame is not None
-            else None
-        ),
-        "bed_diameter_mm": round(float(settings.bed_diameter_mm), 8),
-        "stock_diameter_mm": round(float(settings.stock_diameter_mm), 8),
-        "stock_margin_mm": round(float(settings.bed_margin_mm), 8),
-        "machine_reach_radius_mm": round(
-            float(settings.machine_reach_radius_mm),
-            8,
-        ),
-        "theta_drive_ratio": round(float(settings.theta_drive_ratio), 8),
-        "theta_mode": str(settings.theta_mode),
-        "feed_rate": round(float(settings.feed_rate), 8),
-        "travel_rate": round(float(settings.travel_rate), 8),
-        "theta_max_rate_deg_min": round(
-            float(settings.theta_controller_limits.max_rate_deg_min),
-            8,
-        ),
-        "theta_max_acceleration_deg_s2": round(
-            float(settings.theta_controller_limits.max_acceleration_deg_s2),
-            8,
-        ),
-        "bed_compensation_path": str(settings.bed_compensation_path or ""),
-        "calibration_identity": str(
-            getattr(settings, "pen_profile_sha256", "") or ""
-        ),
-    }
-    if compensation is not None:
-        translation = getattr(compensation, "common_translation_mm", None)
-        identity["bed_compensation"] = {
-            "mode": (
-                "row_locked_projection"
-                if getattr(compensation, "row_locked", False)
-                else "raw"
-            ),
-            "full_profile_fingerprint": str(
-                getattr(
-                    compensation,
-                    "full_profile_fingerprint",
-                    getattr(compensation, "fingerprint", ""),
-                )
-            ),
-            "coverage_radius_mm": round(
-                float(compensation.coverage_radius_mm),
-                8,
-            ),
-            "full_max_correction_mm": round(
-                float(
-                    getattr(
-                        compensation,
-                        "full_max_correction_mm",
-                        compensation.max_correction_mm,
-                    )
-                ),
-                8,
-            ),
-            "common_translation_mm": (
-                [
-                    round(float(translation[0]), 8),
-                    round(float(translation[1]), 8),
-                ]
-                if translation is not None
-                else None
-            ),
-        }
-    else:
-        identity["bed_compensation"] = None
-    return identity
-
-
-def _record_count(value):
-    """Normalize analyzed integer counts and test-double move collections."""
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        try:
-            return len(value)
-        except TypeError:
-            return 0
-
-
-def reference_photo_pitch_mm(pen_width_mm, scale_pct):
-    """Return source pitch for the recommended on-paper photo spacing."""
-    scale = max(0.01, float(scale_pct) / 100.0)
-    pen_width = max(0.1, float(pen_width_mm))
-    target_mm = max(
-        REFERENCE_PHOTO_EFFECTIVE_PITCH_MM,
-        pen_width * REFERENCE_PHOTO_PEN_PITCH_MULTIPLIER,
-    )
-    source_mm = min(8.0, max(0.1, target_mm / scale))
-    return round(source_mm / 0.05) * 0.05
 
 
 def format_seconds(seconds):
@@ -293,10 +162,6 @@ class ProgramAnalysisWorker(QObject):
                     "draw_mm": estimate["draw_mm"],
                     "seconds": estimate["total_seconds"],
                     "checks": checks,
-                    "set_identity": _common_program_identity(
-                        data.get("settings", self.settings),
-                        data.get("bed_compensation"),
-                    ),
                 }
                 compensation = data.get("bed_compensation")
                 if getattr(compensation, "row_locked", False):
@@ -338,36 +203,9 @@ class CmykTab(GeneratorTab):
     # The tab draws its own halftone marks; the Convert-tab fill must not
     # hatch every dot outline a second time.
     SELF_SCREENED = True
-    # CMYK Photo is a production page, not a fixed 1:1 generator layout.
-    # Honor the global Fill bed / Fit inside choice for Preview and Save.
-    USES_BED_FIT_DEFAULT = True
-    WRITE_ORDER = converter.CHANNELS
-    REQUIRE_COMPLETE_SET = False
 
     def __init__(self, host):
         super().__init__(host)
-        recommended = self.add_group("Recommended")
-        start_here = QLabel(
-            "Start here for a normal photo. This one button sets color "
-            "matching, Edge-flow screening, density, and pen-down continuity. "
-            "The controls below are advanced options and do not need tuning."
-        )
-        start_here.setWordWrap(True)
-        start_here.setStyleSheet("color: #334155;")
-        recommended.addRow(start_here)
-        self.reference_button = QPushButton(
-            "Use recommended photo defaults"
-        )
-        self.reference_button.setToolTip(
-            "Apply the complete portrait workflow: automatic image color "
-            "matching, per-ink Edge-flow, three dark-tone layers, 2.5 mm "
-            "structure smoothing, a pen-aware pitch targeting 1.2 mm on "
-            "paper, and 5 mm pen-down chaining. Page size, artwork scale, "
-            "pen offsets, and bed motion are preserved."
-        )
-        self.reference_button.clicked.connect(self.apply_reference_defaults)
-        recommended.addRow("", self.reference_button)
-
         image = self.add_group("Image")
         self.image_label = QLabel()
         self.image_label.setWordWrap(True)
@@ -376,16 +214,15 @@ class CmykTab(GeneratorTab):
         options = self.add_group("Image options")
         self.auto_button = QPushButton("Auto (photo)")
         self.auto_button.setToolTip(
-            "Analyze the artwork and fit auto levels, brightness, contrast, "
-            "saturation, GCR, gamma, and ink weights against the active "
-            "process-ink response. Screen geometry and Dot pitch stay as "
-            "configured. The status line reports an occupancy-based RGB "
-            "estimate, not a paper-validated print-accuracy claim."
+            "Analyze the artwork and set auto levels, brightness, contrast, "
+            "saturation, GCR, and a starting gamma for a faithful photo "
+            "representation. Wave screens use an exposure-preserving setup; "
+            "tweak gamma for print lightness afterwards."
         )
         self.auto_button.clicked.connect(self.apply_auto_settings)
         options.addRow("Auto", self.auto_button)
         self.auto_levels = QCheckBox("Stretch tonality")
-        self.auto_levels.setChecked(False)
+        self.auto_levels.setChecked(True)
         self.auto_levels.setToolTip(
             "Stretch the image luminance between its 1st and 99th percentiles "
             "before separation, so a low-key or hazy photo uses the full tonal "
@@ -394,14 +231,14 @@ class CmykTab(GeneratorTab):
         options.addRow("Auto levels", self.auto_levels)
         self.saturation = double_spin(115, 0, 200, 5, 0, " %")
         options.addRow("Saturation", self.saturation)
-        self.contrast = double_spin(150, 25, 300, 5, 0, " %")
+        self.contrast = double_spin(285, 25, 300, 5, 0, " %")
         self.contrast.setToolTip(
             "Soft S-curve contrast up to 300 %: above 200 % the curve keeps "
             "steepening instead of clipping, so colour punch keeps "
             "increasing without blown highlights."
         )
         options.addRow("Contrast", self.contrast)
-        self.brightness = double_spin(115, 20, 200, 5, 0, " %")
+        self.brightness = double_spin(170, 20, 200, 5, 0, " %")
         self.brightness.setToolTip(
             "Shadow-weighted brightness lift (a gamma curve that keeps the "
             "black and white points). Raise it when the plot reads too dark, "
@@ -417,11 +254,11 @@ class CmykTab(GeneratorTab):
             "or an already-sharp source."
         )
         options.addRow("Sharpen", self.sharpen)
-        self.sharpen_amount = double_spin(60, 10, 200, 5, 0, " %")
+        self.sharpen_amount = double_spin(70, 10, 200, 5, 0, " %")
         self.sharpen_amount.setToolTip(
-            "Unsharp-mask strength. 60 % is the recommended Edge-flow photo "
-            "default; lower it if edges show halos, and raise it for fine "
-            "features that still disappear into the screen."
+            "Unsharp-mask strength. 70 % is the photo default; lower it if "
+            "edges show halos, and raise it for fine features that still "
+            "disappear into the screen."
         )
         options.addRow("Sharpen amount", self.sharpen_amount)
         self.sharpen_radius = double_spin(1.5, 0.2, 5.0, 0.1, 1, " mm")
@@ -433,20 +270,10 @@ class CmykTab(GeneratorTab):
         options.addRow("Sharpen radius", self.sharpen_radius)
         self.sharpen.toggled.connect(self._update_sharpen_controls)
         self._update_sharpen_controls()
-        separation = self.add_group("Ink separation")
-        self.gamma = double_spin(1.10, 0.2, 3.0, 0.05, 2)
-        self.gamma.setToolTip(
-            "Ink-density curve applied after the process-ink colour match. "
-            "1.0 preserves the predicted colour most closely; lower values "
-            "add coverage and higher values lighten every plate."
-        )
-        separation.addRow("Ink gamma", self.gamma)
-        self.gcr = double_spin(75, 0, 100, 5, 0, " %")
-        self.gcr.setToolTip(
-            "How much neutral density moves to the Black pen during process-"
-            "ink matching. Higher values protect chromatic C/M/Y for colour."
-        )
-        separation.addRow("Black (GCR)", self.gcr)
+        self.gamma = double_spin(1.40, 0.2, 3.0, 0.05, 2)
+        options.addRow("Ink gamma", self.gamma)
+        self.gcr = double_spin(95, 0, 100, 5, 0, " %")
+        options.addRow("Black (GCR)", self.gcr)
         self.resolution = int_spin(10000, 200, 100000, 50)
         self.resolution.setToolTip(
             "Longest side of the sampling image in pixels. The source is "
@@ -454,56 +281,22 @@ class CmykTab(GeneratorTab):
             "the source size keep full detail; memory grows with the source "
             "size you keep."
         )
-        separation.addRow("Resolution px", self.resolution)
+        options.addRow("Resolution px", self.resolution)
         self.weight_c = double_spin(100, 0, 150, 5, 0, " %")
         self.weight_m = double_spin(100, 0, 150, 5, 0, " %")
         self.weight_y = double_spin(100, 0, 150, 5, 0, " %")
         self.weight_k = double_spin(100, 0, 150, 5, 0, " %")
-        for spin, channel in zip(
-            (
-                self.weight_c,
-                self.weight_m,
-                self.weight_y,
-                self.weight_k,
-            ),
-            converter.CHANNELS,
-        ):
-            spin.setToolTip(
-                f"Final {converter.CHANNEL_LABELS[channel]} coverage scale "
-                "after process-ink matching. 100 % keeps the predicted "
-                "coverage; change this only to deliberately bias the print."
-            )
-        separation.addRow("Cyan weight", self.weight_c)
-        separation.addRow("Magenta weight", self.weight_m)
-        separation.addRow("Yellow weight", self.weight_y)
-        separation.addRow("Black weight", self.weight_k)
+        options.addRow("Cyan weight", self.weight_c)
+        options.addRow("Magenta weight", self.weight_m)
+        options.addRow("Yellow weight", self.weight_y)
+        options.addRow("Black weight", self.weight_k)
 
-        screen = self.add_group("Screening")
+        screen = self.add_group("Screen")
         self.style = QComboBox()
         self.style.addItem("Halftone dots", "halftone")
         self.style.addItem("Stipple dots", "stipple")
         self.style.addItem("Line screen (tone pitch)", "lines")
-        self.style.addItem(
-            "Edge-flow streamlines (per-ink networks)",
-            "edge_flow",
-        )
-        self.style.addItem(
-            "Coherent color flow (shared geometry, ink planes)",
-            "edge_flow_coherent",
-        )
-        self.style.addItem(
-            "Precision process screen (fine CMYK cells)",
-            "process_area",
-        )
-        self.style.addItem(
-            "Shared Edge-flow (experimental co-located CMYK)",
-            "edge_flow_shared",
-        )
         self.style.addItem("Rectilinear fill (joined rows)", "rectilinear")
-        self.style.addItem(
-            "Continuous row screen (adjacent joins)",
-            "continuous",
-        )
         self.style.addItem("Crosshatch levels", "crosshatch")
         self.style.addItem("Wave screen - equidistant rows", "waves_even")
         self.style.addItem(
@@ -523,39 +316,15 @@ class CmykTab(GeneratorTab):
             "labeled legacy diagnostic restores tone-varying row depth while "
             "keeping the selected bed-compensation profile. Stored legacy "
             "values from older settings are promoted to this layout when "
-            "regenerated. Continuous row screen also bridges nearest adjacent "
-            "row runs, trading short visible connectors for far fewer pen "
-            "lifts. Edge-flow traces a separate equally spaced streamline "
-            "network for each ink through one blurred multichannel image-form "
-            "tensor, using that ink's local tone, seed, fallback angle, and "
-            "extra dark-tone layers. The experimental shared Edge-flow variant "
-            "instead traces one common CMYK network and gates each ink with "
-            "independent stochastic phases. Coherent color flow also shares "
-            "one streamline form, but assigns contiguous local ink planes "
-            "along each long path and reserves Black keylines for coherent "
-            "structure. It is the recommended portrait renderer. Precision "
-            "process screen divides the page into pen-footprint cells, "
-            "error-diffuses each cell to a calibrated CMYK ink subset, and "
-            "orients its short strokes with the same structure tensor. With "
-            "Keep pen down enabled, adjacent process cell marks are joined "
-            "head-to-tail before planning within roughly 3 resolved cell "
-            "pitches, so they plot as longer strokes instead of isolated "
-            "dashes."
+            "regenerated."
         )
-        self.style.setCurrentIndex(self.style.findData("edge_flow"))
+        self.style.setCurrentIndex(self.style.findData("rectilinear"))
         screen.addRow("Style", self.style)
         pitch_row = QWidget()
         pitch_layout = QHBoxLayout(pitch_row)
         pitch_layout.setContentsMargins(0, 0, 0, 0)
         pitch_layout.setSpacing(4)
-        self.pitch = double_spin(
-            reference_photo_pitch_mm(0.3, 280),
-            0.1,
-            8.0,
-            0.05,
-            2,
-            " mm",
-        )
+        self.pitch = double_spin(0.1, 0.1, 8.0, 0.1, 2, " mm")
         pitch_layout.addWidget(self.pitch, 1)
         self.match_pen_button = QPushButton("Match pen")
         self.match_pen_button.setToolTip(
@@ -598,161 +367,15 @@ class CmykTab(GeneratorTab):
             "legacy tone-varying diagnostic."
         )
         screen.addRow("Wave carrier", self.vary_wave_frequency)
-        flow = self.add_group("Flow geometry")
-        self.flow_smoothing = double_spin(
-            2.5, 0.2, 10.0, 0.1, 1, " mm"
-        )
-        self.flow_smoothing.setToolTip(
-            "Edge-flow only: blur radius for the structure tensor. Coherent "
-            "color flow also uses 65 % of this radius for edge-preserving "
-            "source simplification. Larger values make broader color planes "
-            "and longer, calmer contours; smaller values follow fine texture "
-            "and can become noisy."
-        )
-        flow.addRow("Flow smoothing", self.flow_smoothing)
-        self.flow_layers = int_spin(3, 1, 6)
-        self.flow_layers.setToolTip(
-            "Edge-flow only: extra complete streamline networks that activate "
-            "in progressively darker tone bands. Use this for stepped density; "
-            "Shade compression below provides the continuous tightening "
-            "between individual lines. Coherent color flow uses those layers "
-            "as offset parallel geometry rather than independent color "
-            "fragments. More layers increase build time."
-        )
-        flow.addRow("Flow layers", self.flow_layers)
-        self.flow_pitch_compression = double_spin(
-            REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT,
-            0.0,
-            90.0,
-            5.0,
-            0,
-            " %",
-        )
-        self.flow_pitch_compression.setToolTip(
-            "Edge-flow only: continuously move neighbouring streamlines "
-            "closer as the ink darkens. 0 % keeps one fixed pitch everywhere; "
-            "90 % contracts the darkest areas to 10 % of Dot pitch, bounded "
-            "by a pen-safe minimum. This produces the reference's varying line "
-            "spacing in gradients instead of adding only whole extra layers."
-        )
-        flow.addRow(
-            "Shade compression",
-            self.flow_pitch_compression,
-        )
-        self.shadow_layer_start = double_spin(
-            40,
-            20,
-            98,
-            5,
-            0,
-            " %",
-        )
-        self.shadow_layer_start.setToolTip(
-            "Scene-depth threshold for the first additional coherent density "
-            "layer. Bright and middle tones remain on the base network."
-        )
-        flow.addRow("First shadow layer", self.shadow_layer_start)
-        self.shadow_layer_end = double_spin(
-            90,
-            40,
-            99,
-            1,
-            0,
-            " %",
-        )
-        self.shadow_layer_end.setToolTip(
-            "Scene-depth threshold approached by the final additional coherent "
-            "density layer. Keep this above the first-shadow threshold."
-        )
-        flow.addRow("Final shadow layer", self.shadow_layer_end)
-        self.shadow_layer_start.valueChanged.connect(
-            self._normalize_shadow_thresholds
-        )
-        self.shadow_layer_end.valueChanged.connect(
-            self._normalize_shadow_thresholds
-        )
-        self.detail_button = QPushButton("Fine detail")
-        self.detail_button.setCheckable(True)
-        self.detail_button.setToolTip(
-            "Edge-flow only: set a pen-aware portrait screen at one pen width, "
-            "smoothing near two pen widths, five low-offset layers, short "
-            "color marks, Black keylines with edge separation, a mild unsharp "
-            "mask, and Path tolerance no larger than 0.10 mm."
-        )
-        self.detail_button.clicked.connect(self.toggle_detail_preset)
-        flow.addRow("Precision", self.detail_button)
-        paths = self.add_group("Path and continuity")
-        continuity_row = QWidget()
-        continuity_layout = QHBoxLayout(continuity_row)
-        continuity_layout.setContentsMargins(0, 0, 0, 0)
-        continuity_layout.setSpacing(4)
-        self.chain_marks = QCheckBox("Keep pen down")
-        self.chain_marks.setChecked(True)
-        self.chain_gap = double_spin(5.0, 0.5, 50.0, 0.5, 1, " mm")
-        continuity_layout.addWidget(self.chain_marks)
-        continuity_layout.addWidget(self.chain_gap, 1)
-        self.chain_marks.setToolTip(
-            "Chain the nearest open mark endpoints into the same M3/M5 "
-            "drawing stroke. A connector up to the shown gap remains visible "
-            "ink. Edge-flow also bridges up to 4 mm of tone-off gaps along "
-            "each individual streamline. Precision process marks are joined "
-            "before planning as well; its recipe uses about 3 resolved "
-            "process cells as the local connector radius. After Xθ/Yθ "
-            "planning, the final ordered contours are chained again within "
-            "this same gap while real gaps remain pen lifts."
-        )
-        self.chain_gap.setToolTip(
-            "Maximum direct connector length between open screen marks when "
-            "Keep pen down is enabled. Closed shapes and tagged Wave rows "
-            "remain separate."
-        )
-        paths.addRow("Pen-down chain", continuity_row)
-        self.tone_bridge = double_spin(4.0, 0.0, 20.0, 0.5, 1, " mm")
-        self.tone_bridge.setToolTip(
-            "Edge-flow only: retain local coverage gaps up to this distance "
-            "along the same streamline. This is separate from the adjacent "
-            "pen-down chain and never bridges different traced paths."
-        )
-        paths.addRow("Tone-gap bridge", self.tone_bridge)
-        ink = self.add_group("Ink assignment")
-        self.flow_keylines = QCheckBox(
-            "Continuous Black keylines (edge separation)"
-        )
-        self.flow_keylines.setChecked(False)
-        self.flow_keylines.setToolTip(
-            "Edge-flow only: keep the strongest coherent luminance boundaries "
-            "continuous in the Black plate. C/M/Y are lightly quieted beside "
-            "those same boundaries so eyes, nostrils, lip edges, teeth, and "
-            "collar seams read without a blanket outline."
-        )
-        ink.addRow("Keylines", self.flow_keylines)
-        self.keyline_quiet = double_spin(25, 0, 80, 5, 0, " %")
-        self.keyline_quiet.setToolTip(
-            "When Black keylines are active, reduce C/M/Y coverage by this "
-            "percentage beside the strongest coherent boundaries."
-        )
-        ink.addRow("Colour edge separation", self.keyline_quiet)
-        self.color_hold = double_spin(6.0, 1.0, 20.0, 0.5, 1, " mm")
-        self.color_hold.setToolTip(
-            "Coherent color flow: paper-space window used to smooth local ink "
-            "planes along each shared streamline."
-        )
-        ink.addRow("Ink-plane hold", self.color_hold)
-        self.color_mix = double_spin(72, 30, 100, 1, 0, " %")
-        self.color_mix.setToolTip(
-            "Coherent color flow: retain a secondary ink when its smoothed "
-            "coverage reaches this percentage of the dominant ink."
-        )
-        ink.addRow("Secondary ink mix", self.color_mix)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
-        ink.addRow("Dot size", self.dot_size)
+        screen.addRow("Dot size", self.dot_size)
         self.solid_dots = QCheckBox("Solid dots")
         self.solid_dots.setChecked(False)
         self.solid_dots.setToolTip(
             "Draw each halftone dot as a two-turn spiral so it reads as a "
             "filled dot at pen width instead of an open ring."
         )
-        ink.addRow("", self.solid_dots)
+        screen.addRow("", self.solid_dots)
         self.levels = int_spin(8, 2, 9)
         self.levels.setToolTip(
             "Crosshatch levels: 2 draws one line family, each extra level adds "
@@ -760,36 +383,36 @@ class CmykTab(GeneratorTab):
             "step +45 degrees; further families spread evenly across the "
             "half turn so every direction stays distinct."
         )
-        ink.addRow("Hatch levels", self.levels)
+        screen.addRow("Hatch levels", self.levels)
         self.overdraw = int_spin(1, 1, 3)
         self.overdraw.setToolTip(
             "Draw every mark 1-3 times with a sub-pen offset so ballpoint ink "
             "reads darker without changing the geometry."
         )
-        ink.addRow("Overdraw", self.overdraw)
+        screen.addRow("Overdraw", self.overdraw)
         # Cap 1.2 -> 6.0 mm (2026-10-13): the brush end of a Tombow Dual Brush
         # water-based pen lays 1-6 mm wide strokes depending on pressure, and the
         # model already accepts up to 8 mm downstream. The fine nib (~0.8 mm)
         # still sits inside the range.
         self.pen_width = double_spin(0.3, 0.1, 6.0, 0.05, 2, " mm")
-        ink.addRow("Pen width", self.pen_width)
+        screen.addRow("Pen width", self.pen_width)
         # Path-fidelity budget for this tab's output: each emitted move is
         # subdivided so the bed-frame path stays within this of a straight
         # line (the rotating bed bows single moves). The main tab's Geometry
         # Tolerance does the same job but resets to 0.25 every launch, which
         # was too coarse for the halftone rows near the centre.
-        self.path_tolerance = double_spin(0.10, 0.05, 1.0, 0.05, 2, " mm")
+        self.path_tolerance = double_spin(0.15, 0.05, 1.0, 0.05, 2, " mm")
         self.path_tolerance.setToolTip(
             "Path-fidelity budget: limits both rotating-bed bow and visible "
             "facets in sine-wave rows. Lower values produce smoother waves and "
             "straighter paths at the cost of more moves. Overrides the main "
             "tab's Tolerance for CMYK output only."
         )
-        paths.addRow("Path tolerance", self.path_tolerance)
-        self.max_marks = int_spin(200000, 200, 800000, 500)
-        paths.addRow("Max marks/ink", self.max_marks)
+        screen.addRow("Path tolerance", self.path_tolerance)
+        self.max_marks = int_spin(40000, 200, 200000, 500)
+        screen.addRow("Max marks/ink", self.max_marks)
         self.seed = int_spin(7, 0, 999_999)
-        paths.addRow("Seed (stipple)", self.seed)
+        screen.addRow("Seed (stipple)", self.seed)
 
         # This tab's own kinematic either/or. The main tab's bullets set the
         # Convert page; a CMYK print keeps its own choice so a precision
@@ -810,7 +433,7 @@ class CmykTab(GeneratorTab):
             "the ascending and descending modes keep every row band together "
             "so the pen completes one band before moving to the next."
         )
-        paths.addRow("Row order", self.contour_order)
+        kinematics.addRow("Row order", self.contour_order)
         self.center_hold = double_spin(60.0, 0.0, 200.0, 1.0, 0, " mm")
         self.center_hold.setToolTip(
             converter.FIELD_TOOLTIPS.get("theta_center_hold_diameter_mm", "")
@@ -947,12 +570,11 @@ class CmykTab(GeneratorTab):
         )
         self.calibration_screen.addItem("Crosshatch levels", "crosshatch")
         self.calibration_screen.addItem("Halftone dots", "halftone")
-        self.calibration_screen.addItem("Edge-flow streamlines", "edge_flow")
         self.calibration_screen.setToolTip(
             "Marks used by the calibration sheet. Matching your art's Screen "
             "style makes the ladders calibrate exactly what you print: dot "
             "size for halftone, line pitch for the line screen, hatch levels "
-            "for crosshatch, and pitch plus layer count for edge flow."
+            "for crosshatch."
         )
         calibration.addRow("Sheet screen", self.calibration_screen)
         self.calibration_hint = QLabel(
@@ -1023,18 +645,12 @@ class CmykTab(GeneratorTab):
         self._layer_files = {}
         self._preview_visible = []
         self._layers_key = None
-        self._process_color_effective_pitch_mm = None
         self._layers_manifest = None
         self._analysis = None
         self._analysis_key = None
-        self._detail_preset_snapshot = None
-        self._pen_chain_stats = {}
         self._thread = None
         self._worker = None
         self._pending_save = False
-        self._stage_navigator = None
-        self._current_stage_key = CMYK_WORKFLOW_STAGES[0].key
-        self._stage_baselines = {}
         for channel in converter.CHANNELS:
             for spin in self.offset_spins[channel]:
                 spin.valueChanged.connect(lambda *_: self._refresh_pass_summary())
@@ -1052,10 +668,6 @@ class CmykTab(GeneratorTab):
         self.vary_wave_frequency.toggled.connect(
             self._update_wave_spacing_guard
         )
-        self.chain_marks.toggled.connect(self._update_wave_spacing_guard)
-        self.chain_gap.valueChanged.connect(self._update_wave_spacing_guard)
-        self.flow_layers.valueChanged.connect(self._update_wave_spacing_guard)
-        self.flow_keylines.toggled.connect(self._update_wave_spacing_guard)
         self.contour_order.currentIndexChanged.connect(
             lambda *_: self._refresh_pass_summary()
         )
@@ -1063,27 +675,9 @@ class CmykTab(GeneratorTab):
             self._update_wave_spacing_guard
         )
         self.theta_mode.changed.connect(lambda *_: self._refresh_pass_summary())
-        for signal in (
-            self.style.currentIndexChanged,
-            self.pitch.valueChanged,
-            self.scale_pct.valueChanged,
-            self.pen_width.valueChanged,
-            self.flow_smoothing.valueChanged,
-            self.flow_layers.valueChanged,
-            self.flow_pitch_compression.valueChanged,
-            self.path_tolerance.valueChanged,
-            self.flow_keylines.toggled,
-            self.sharpen.toggled,
-            self.sharpen_amount.valueChanged,
-            self.sharpen_radius.valueChanged,
-            self.calibration_mode.toggled,
-        ):
-            signal.connect(self._update_detail_preset_indicator)
         self._update_wave_spacing_guard()
-        self._update_detail_preset_indicator()
         self._refresh_pass_summary()
         self.finish_controls()
-        self._stage_baselines = control_state(self.controls)
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -1107,11 +701,6 @@ class CmykTab(GeneratorTab):
             "y": self.weight_y.value() / 100.0,
             "k": self.weight_k.value() / 100.0,
         }
-
-    def _active_ink_colors(self):
-        """Measured process-ink transmittances loaded by the host, if any."""
-        getter = getattr(self.host, "active_ink_colors", None)
-        return getter() if callable(getter) else None
 
     def _pen_offsets(self):
         """Per-ink X/Y corrections in paper millimetres."""
@@ -1147,118 +736,12 @@ class CmykTab(GeneratorTab):
         if not dx and not dy:
             return marks
         return [
-            converter.retag_contour(
-                line,
-                [(x + dx, y + dy) for x, y in line],
-            )
+            [(x + dx, y + dy) for x, y in line]
             for line in marks
         ]
 
-    def apply_reference_defaults(self, _checked=False):
-        """Apply the complete photo recipe without touching physical setup."""
-        locked_state = self._locked_stage_state()
-        try:
-            return self._apply_reference_defaults_body(_checked)
-        finally:
-            restore_control_state(locked_state)
-
-    def _apply_reference_defaults_body(self, _checked=False):
-        del _checked
-        self.calibration_mode.setChecked(False)
-        style_index = self.style.findData("edge_flow_coherent")
-        if style_index >= 0:
-            self.style.setCurrentIndex(style_index)
-        self.auto_levels.setChecked(False)
-        self.saturation.setValue(115)
-        self.contrast.setValue(150)
-        self.brightness.setValue(115)
-        self.sharpen.setChecked(True)
-        self.sharpen_amount.setValue(60)
-        self.sharpen_radius.setValue(1.5)
-        self.gamma.setValue(1.10)
-        self.gcr.setValue(75)
-        for spin in (
-            self.weight_c,
-            self.weight_m,
-            self.weight_y,
-            self.weight_k,
-        ):
-            spin.setValue(100)
-        self.flow_smoothing.setValue(REFERENCE_PHOTO_FLOW_SMOOTHING_MM)
-        self.flow_layers.setValue(REFERENCE_PHOTO_FLOW_LAYERS)
-        self.flow_pitch_compression.setValue(
-            REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT
-        )
-        self.shadow_layer_start.setValue(40)
-        self.shadow_layer_end.setValue(90)
-        self.flow_keylines.setChecked(True)
-        self.keyline_quiet.setValue(25)
-        self.color_hold.setValue(6.0)
-        self.color_mix.setValue(72)
-        self.chain_marks.setChecked(True)
-        self.chain_gap.setValue(REFERENCE_PHOTO_CHAIN_GAP_MM)
-        self.tone_bridge.setValue(4.0)
-        self.dot_size.setValue(100)
-        self.solid_dots.setChecked(False)
-        self.overdraw.setValue(1)
-        self.path_tolerance.setValue(0.10)
-        self.max_marks.setValue(200000)
-        self.seed.setValue(7)
-        self.pitch.setValue(
-            reference_photo_pitch_mm(
-                self.pen_width.value(),
-                self.scale_pct.value(),
-            )
-        )
-        self._refresh_artwork()
-        if not self._artwork:
-            message = (
-                "Recommended photo controls are ready. Open artwork, then "
-                "apply this button again for automatic color matching."
-            )
-            self.status.setText(message)
-            if self.host is not None and hasattr(self.host, "generator_status"):
-                self.host.generator_status(message)
-            return False
-
-        QGuiApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
-        try:
-            self.status.setText("Analyzing photo for recommended defaults...")
-            QGuiApplication.processEvents()
-            values = self.apply_auto_settings()
-        finally:
-            QGuiApplication.restoreOverrideCursor()
-        if values is None:
-            return False
-
-        effective_pitch = (
-            self.pitch.value() * self.scale_pct.value() / 100.0
-        )
-        message = (
-            "Recommended photo defaults ready: coherent color flow, "
-            f"{self.flow_layers.value()} layers, "
-            f"{self.flow_smoothing.value():.1f} mm smoothing, "
-            f"{self.flow_pitch_compression.value():.0f} % pitch compression, "
-            f"{effective_pitch:.2f} mm on-paper pitch. "
-            "Press Preview, then Save 4 G-code files."
-        )
-        self.cost_label.setText(message)
-        self.status.setText(message)
-        if self.host is not None and hasattr(self.host, "generator_status"):
-            self.host.generator_status(message)
-        self._refresh_pass_summary()
-        return True
-
     def apply_auto_settings(self, _checked=False):
         """Fit the Image-options controls to the loaded photo."""
-        locked_state = self._locked_stage_state()
-        try:
-            return self._apply_auto_settings_body(_checked)
-        finally:
-            restore_control_state(locked_state)
-
-    def _apply_auto_settings_body(self, _checked=False):
-        del _checked
         self._refresh_artwork()
         if not self._artwork:
             self.report_error("Import an image with the Artwork row above first.")
@@ -1266,40 +749,22 @@ class CmykTab(GeneratorTab):
         try:
             values = converter.auto_photo_settings(
                 self._artwork,
-                resolution_px=self.resolution.value(),
                 pen_width_mm=self.pen_width.value(),
                 effective_pitch_mm=(
                     self.pitch.value() * self.scale_pct.value() / 100.0
                 ),
                 style=self.style.currentData(),
                 dot_pitch_mm=self.pitch.value(),
-                ink_colors=self._active_ink_colors(),
-                flow_layers=self.flow_layers.value(),
-                flow_pitch_compression=(
-                    self.flow_pitch_compression.value() / 100.0
-                ),
             )
         except Exception as exc:  # noqa: BLE001 - user-facing setup error
             self.report_error(f"Auto settings failed: {exc}")
-            return None
+            return
         self.auto_levels.setChecked(bool(values["auto_levels"]))
         self.saturation.setValue(values["saturation"])
         self.contrast.setValue(values["contrast"])
         self.brightness.setValue(values["brightness"])
         self.gamma.setValue(values["gamma"])
         self.gcr.setValue(values["gcr"])
-        if "weights" in values:
-            weights = values["weights"]
-            for spin, channel in zip(
-                (
-                    self.weight_c,
-                    self.weight_m,
-                    self.weight_y,
-                    self.weight_k,
-                ),
-                converter.CHANNELS,
-            ):
-                spin.setValue(float(weights[channel]))
         if "dot_pitch_mm" in values:
             self.pitch.setValue(values["dot_pitch_mm"])
         if "sharpen" in values:
@@ -1310,20 +775,6 @@ class CmykTab(GeneratorTab):
             f"Auto: brightness {values['brightness']} %, contrast "
             f"{values['contrast']} %, saturation {values['saturation']} %, "
             f"GCR {values['gcr']} %, gamma {values['gamma']:.2f}"
-            + (
-                f", weights {values['weights']['c']:.0f}/"
-                f"{values['weights']['m']:.0f}/"
-                f"{values['weights']['y']:.0f}/"
-                f"{values['weights']['k']:.0f} %"
-                if "weights" in values
-                else ""
-            )
-            + (
-                f", coverage RGB error estimate "
-                f"{values['predicted_rgb_error']:.1f}/255"
-                if "predicted_rgb_error" in values
-                else ""
-            )
             + (
                 f", sharpen {values['sharpen_pct']:.0f} % at "
                 f"{values['sharpen_radius_mm']:.1f} mm"
@@ -1343,7 +794,6 @@ class CmykTab(GeneratorTab):
         self.status.setText(message)
         if self.host is not None:
             self.host.generator_status(message)
-        return values
 
     def pen_pitch_mm(self):
         """Dot pitch that puts full-tone rows one pen width apart on paper."""
@@ -1367,21 +817,6 @@ class CmykTab(GeneratorTab):
             text = "= %.2f mm on paper" % effective
         self.effective_pitch_label.setText(text)
 
-    def _normalize_shadow_thresholds(self, *_args):
-        """Keep the first shadow-layer threshold below the final one."""
-        start = self.shadow_layer_start.value()
-        end = self.shadow_layer_end.value()
-        if start < end:
-            return
-        if self.sender() is self.shadow_layer_end:
-            self.shadow_layer_start.blockSignals(True)
-            self.shadow_layer_start.setValue(max(20.0, end - 1.0))
-            self.shadow_layer_start.blockSignals(False)
-        else:
-            self.shadow_layer_end.blockSignals(True)
-            self.shadow_layer_end.setValue(min(99.0, start + 1.0))
-            self.shadow_layer_end.blockSignals(False)
-
     def _update_sharpen_controls(self, *_args):
         """Enable the mask settings only while sharpening is selected."""
         enabled = self.sharpen.isChecked()
@@ -1396,222 +831,6 @@ class CmykTab(GeneratorTab):
             f"{self.pen_width.value():.2f} mm pen at "
             f"{self.scale_pct.value():.0f} % artwork scale."
         )
-
-    def _detail_preset_values(self):
-        """Return the current pen-aware Fine detail target values."""
-        scale = max(0.01, self.scale_pct.value() / 100.0)
-        pen = max(0.1, self.pen_width.value())
-        return {
-            "scale": scale,
-            "pen": pen,
-            "pitch": max(
-                0.1,
-                min(8.0, round(pen / scale / 0.05) * 0.05),
-            ),
-            "smoothing": round(
-                max(1.0, min(1.5, pen * 2.0)) / 0.1
-            ) * 0.1,
-            "tolerance": round(
-                max(0.05, min(0.10, pen * 0.15)) / 0.05
-            ) * 0.05,
-            "layers": 5,
-            "pitch_compression": 65.0,
-        }
-
-    def _detail_preset_active(self):
-        """Whether the controls still match the current Fine detail preset."""
-        if (
-            self.calibration_mode.isChecked()
-            or self.style.currentData() != "edge_flow"
-            or not self.flow_keylines.isChecked()
-        ):
-            return False
-        target = self._detail_preset_values()
-        return (
-            abs(self.pitch.value() - target["pitch"]) <= 0.011
-            and abs(
-                self.flow_smoothing.value() - target["smoothing"]
-            )
-            <= 0.051
-            and self.flow_layers.value() == target["layers"]
-            and abs(
-                self.flow_pitch_compression.value()
-                - target["pitch_compression"]
-            )
-            <= 0.1
-            and self.path_tolerance.value()
-            <= target["tolerance"] + 1e-6
-            and self.sharpen.isChecked()
-            and abs(self.sharpen_amount.value() - 60.0) <= 0.1
-            and abs(self.sharpen_radius.value() - 1.5) <= 0.01
-        )
-
-    def _detail_control_state(self):
-        """Capture the controls changed by the Fine detail toggle."""
-        return {
-            "style": self.style.currentData(),
-            "calibration": self.calibration_mode.isChecked(),
-            "pitch": self.pitch.value(),
-            "smoothing": self.flow_smoothing.value(),
-            "layers": self.flow_layers.value(),
-            "pitch_compression": self.flow_pitch_compression.value(),
-            "tolerance": self.path_tolerance.value(),
-            "keylines": self.flow_keylines.isChecked(),
-            "sharpen": self.sharpen.isChecked(),
-            "sharpen_pct": self.sharpen_amount.value(),
-            "sharpen_radius_mm": self.sharpen_radius.value(),
-        }
-
-    def _restore_detail_control_state(self, state):
-        """Restore one validated pre-Fine-detail control snapshot."""
-        if not isinstance(state, dict):
-            return False
-        try:
-            style = str(state["style"])
-            style_index = self.style.findData(style)
-            if style_index < 0:
-                return False
-            self.calibration_mode.setChecked(bool(state["calibration"]))
-            self.style.setCurrentIndex(style_index)
-            self.pitch.setValue(float(state["pitch"]))
-            self.flow_smoothing.setValue(float(state["smoothing"]))
-            self.flow_layers.setValue(int(state["layers"]))
-            self.flow_pitch_compression.setValue(
-                float(
-                    state.get(
-                        "pitch_compression",
-                        REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT,
-                    )
-                )
-            )
-            self.path_tolerance.setValue(float(state["tolerance"]))
-            self.flow_keylines.setChecked(bool(state["keylines"]))
-            self.sharpen.setChecked(bool(state.get("sharpen", False)))
-            self.sharpen_amount.setValue(
-                float(state.get("sharpen_pct", 100.0))
-            )
-            self.sharpen_radius.setValue(
-                float(state.get("sharpen_radius_mm", 2.5))
-            )
-        except (KeyError, TypeError, ValueError):
-            return False
-        self._update_detail_preset_indicator()
-        return True
-
-    def toggle_detail_preset(self, _checked=False):
-        """Apply Fine detail, or restore the controls saved before it."""
-        if self.detail_button.isChecked():
-            self._detail_preset_snapshot = self._detail_control_state()
-            self.apply_detail_preset()
-            return
-        snapshot = self._detail_preset_snapshot
-        used_fallback = snapshot is None
-        if used_fallback:
-            snapshot = {
-                "style": "edge_flow",
-                "calibration": False,
-                "pitch": self.pitch.value(),
-                "smoothing": 2.5,
-                "layers": 3,
-                "pitch_compression": (
-                    REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT
-                ),
-                "tolerance": 0.15,
-                "keylines": False,
-                "sharpen": False,
-                "sharpen_pct": self.sharpen_amount.value(),
-                "sharpen_radius_mm": self.sharpen_radius.value(),
-            }
-        if self._restore_detail_control_state(snapshot):
-            message = (
-                "Fine detail off. No previous-layout snapshot was available; "
-                "restored standard Edge-flow defaults. Press Preview to "
-                "rebuild."
-                if used_fallback
-                else (
-                    "Fine detail off. Restored the controls from before the "
-                    "preset; press Preview to rebuild."
-                )
-            )
-        else:
-            message = (
-                "Fine detail off, but the previous controls were "
-                "unavailable. Press Preview to inspect the current layout."
-            )
-        self.status.setText(message)
-        if self.host is not None:
-            self.host.generator_status(message)
-
-    def _update_detail_preset_indicator(self, *_args):
-        """Show whether the current Edge-flow controls match Fine detail."""
-        active = self._detail_preset_active()
-        self.detail_button.setChecked(active)
-        self.detail_button.setText(
-            "Fine detail ✓" if active else "Fine detail"
-        )
-        base = (
-            "Edge-flow only: set a pen-aware portrait screen at one pen width, "
-            "smoothing near two pen widths, five low-offset layers, short "
-            "color marks, 65 % shade-pitch compression, Black keylines with "
-            "edge separation, a 60 % / "
-            "1.5 mm unsharp mask, and Path tolerance no larger than 0.10 mm."
-        )
-        self.detail_button.setToolTip(
-            base
-            + (
-                " Status: active. These controls still match the preset; "
-                "click again to restore the controls saved before Fine "
-                "detail."
-                if active
-                else (
-                    " Status: not active. Click to apply the preset and save "
-                    "the current controls for later restoration."
-                )
-            )
-        )
-
-    def apply_detail_preset(self, _checked=False):
-        """Fit Edge-flow geometry to the physical pen for portrait detail."""
-        edge_flow = self.style.findData("edge_flow")
-        if edge_flow < 0:
-            self.report_error("Edge-flow streamlines are not available.")
-            return
-        self.calibration_mode.setChecked(False)
-        self.style.setCurrentIndex(edge_flow)
-        target = self._detail_preset_values()
-        scale = target["scale"]
-        pen = target["pen"]
-        self.pitch.setValue(target["pitch"])
-        self.flow_smoothing.setValue(target["smoothing"])
-        self.flow_layers.setValue(target["layers"])
-        self.flow_pitch_compression.setValue(
-            target["pitch_compression"]
-        )
-        self.flow_keylines.setChecked(True)
-        self.sharpen.setChecked(True)
-        self.sharpen_amount.setValue(60.0)
-        self.sharpen_radius.setValue(1.5)
-        self.path_tolerance.setValue(
-            min(self.path_tolerance.value(), target["tolerance"])
-        )
-        effective_pitch = self.pitch.value() * scale
-        message = (
-            f"Fine detail for a {pen:.2f} mm pen: Dot pitch "
-            f"{self.pitch.value():.2f} mm = "
-            f"{effective_pitch:.2f} mm on paper "
-            f"({effective_pitch / pen:.2f} pen widths); Flow smoothing "
-            f"{self.flow_smoothing.value():.1f} mm; "
-            f"Flow layers {self.flow_layers.value()}; pitch compression "
-            f"{self.flow_pitch_compression.value():.0f} %; "
-            "Black keylines on; "
-            f"Sharpen 60 % / 1.5 mm; "
-            f"Path tolerance "
-            f"{self.path_tolerance.value():.2f} mm. Preview to compare."
-        )
-        self.status.setText(message)
-        if self.host is not None:
-            self.host.generator_status(message)
-        self._update_detail_preset_indicator()
 
     def _registration_crosses(self):
         """Four small crosses every ink draws, for four-pass alignment."""
@@ -1661,11 +880,6 @@ class CmykTab(GeneratorTab):
                 if self._wave_row_order_active()
                 else "optimized"
             ),
-            screen_chain_gap_mm=(
-                self.chain_gap.value()
-                if self._pen_chain_active()
-                else 0.0
-            ),
         )
         return settings
 
@@ -1698,25 +912,6 @@ class CmykTab(GeneratorTab):
                 "preserve_wave_pitch": self.preserve_wave_pitch.isChecked(),
                 "vary_wave_frequency": self.vary_wave_frequency.isChecked(),
                 "contour_order": self.contour_order.currentData(),
-                "flow_smoothing_mm": self.flow_smoothing.value(),
-                "flow_layers": self.flow_layers.value(),
-                "flow_pitch_compression_pct": (
-                    self.flow_pitch_compression.value()
-                ),
-                "shadow_layer_start_pct": self.shadow_layer_start.value(),
-                "shadow_layer_end_pct": self.shadow_layer_end.value(),
-                "preserve_black_keylines": self.flow_keylines.isChecked(),
-                "keyline_color_quiet_pct": self.keyline_quiet.value(),
-                "coherent_color_hold_mm": self.color_hold.value(),
-                "coherent_color_mix_pct": self.color_mix.value(),
-                "chain_marks": self.chain_marks.isChecked(),
-                "chain_gap_mm": self.chain_gap.value(),
-                "process_chain_cell_ratio": (
-                    PROCESS_AREA_CHAIN_CELL_RATIO
-                    if self.style.currentData() == "process_area"
-                    else None
-                ),
-                "tone_gap_bridge_mm": self.tone_bridge.value(),
                 "dot_size_pct": self.dot_size.value(),
                 "solid_dots": self.solid_dots.isChecked(),
                 "levels": self.levels.value(),
@@ -1726,12 +921,6 @@ class CmykTab(GeneratorTab):
                 "max_marks": self.max_marks.value(),
                 "seed": self.seed.value(),
             },
-            "fine_detail_previous": (
-                dict(self._detail_preset_snapshot)
-                if self._detail_preset_active()
-                and self._detail_preset_snapshot is not None
-                else None
-            ),
             "kinematics": {
                 "theta_mode": self.theta_mode.value(),
                 "center_hold_diameter_mm": self.center_hold.value(),
@@ -1753,18 +942,6 @@ class CmykTab(GeneratorTab):
                     channel: self.write_boxes[channel].isChecked()
                     for channel in converter.CHANNELS
                 },
-            },
-            "workflow": {
-                "current_stage": (
-                    self._stage_navigator.current_stage
-                    if self._stage_navigator is not None
-                    else None
-                ),
-                "locked_stages": list(
-                    self._stage_navigator.locked_stages
-                    if self._stage_navigator is not None
-                    else ()
-                ),
             },
             "calibration": {
                 "enabled": self.calibration_mode.isChecked(),
@@ -1823,41 +1000,6 @@ class CmykTab(GeneratorTab):
             if order_index < 0:
                 raise ValueError("saved CMYK row order is unavailable")
             self.contour_order.setCurrentIndex(order_index)
-            self.flow_smoothing.setValue(
-                float(screen.get("flow_smoothing_mm", 2.5))
-            )
-            self.flow_layers.setValue(int(screen.get("flow_layers", 3)))
-            self.flow_pitch_compression.setValue(
-                float(
-                    screen.get(
-                        "flow_pitch_compression_pct",
-                        REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT,
-                    )
-                )
-            )
-            self.shadow_layer_start.setValue(
-                float(screen.get("shadow_layer_start_pct", 40.0))
-            )
-            self.shadow_layer_end.setValue(
-                float(screen.get("shadow_layer_end_pct", 90.0))
-            )
-            self.flow_keylines.setChecked(
-                bool(screen.get("preserve_black_keylines", False))
-            )
-            self.keyline_quiet.setValue(
-                float(screen.get("keyline_color_quiet_pct", 25.0))
-            )
-            self.color_hold.setValue(
-                float(screen.get("coherent_color_hold_mm", 6.0))
-            )
-            self.color_mix.setValue(
-                float(screen.get("coherent_color_mix_pct", 72.0))
-            )
-            self.chain_marks.setChecked(bool(screen.get("chain_marks", True)))
-            self.chain_gap.setValue(float(screen.get("chain_gap_mm", 5.0)))
-            self.tone_bridge.setValue(
-                float(screen.get("tone_gap_bridge_mm", 4.0))
-            )
             self.dot_size.setValue(float(screen["dot_size_pct"]))
             self.solid_dots.setChecked(bool(screen["solid_dots"]))
             self.levels.setValue(int(screen["levels"]))
@@ -1868,11 +1010,6 @@ class CmykTab(GeneratorTab):
             )
             self.max_marks.setValue(int(screen["max_marks"]))
             self.seed.setValue(int(screen["seed"]))
-            previous = state.get("fine_detail_previous")
-            self._detail_preset_snapshot = (
-                dict(previous) if isinstance(previous, dict) else None
-            )
-            self._update_detail_preset_indicator()
 
             kinematics = state["kinematics"]
             self.theta_mode.set_value(str(kinematics["theta_mode"]))
@@ -1894,20 +1031,6 @@ class CmykTab(GeneratorTab):
                     bool(state["layers"]["write"][channel])
                 )
 
-            workflow = state.get("workflow") or {}
-            if self._stage_navigator is not None:
-                locked_stages = set(workflow.get("locked_stages") or ())
-                for stage in CMYK_WORKFLOW_STAGES:
-                    self._stage_navigator.set_locked(
-                        stage.key,
-                        stage.key in locked_stages,
-                    )
-                current_stage = workflow.get("current_stage")
-                if current_stage in {
-                    stage.key for stage in CMYK_WORKFLOW_STAGES
-                }:
-                    self._stage_navigator.set_stage(current_stage)
-
             calibration = state["calibration"]
             self.calibration_mode.setChecked(bool(calibration["enabled"]))
             screen_index = self.calibration_screen.findData(
@@ -1923,20 +1046,6 @@ class CmykTab(GeneratorTab):
             self.registration_marks.setChecked(
                 bool(page["registration_marks"])
             )
-            if (
-                screen.get("process_chain_cell_ratio") is None
-                and self.style.currentData() == "process_area"
-                and abs(
-                    self.chain_gap.value() - REFERENCE_PHOTO_CHAIN_GAP_MM
-                )
-                <= 1e-6
-            ):
-                # Older precision recipes stored a fixed 1 mm gap before
-                # process marks were chainable. Migrate them once; new
-                # sidecars retain the operator's current gap.
-                self.chain_gap.setValue(
-                    self._process_area_chain_gap_mm()
-                )
         except (
             KeyError,
             TypeError,
@@ -1949,9 +1058,7 @@ class CmykTab(GeneratorTab):
         self._layers_key = None
         self._analysis = None
         self._analysis_key = None
-        self._pen_chain_stats = {}
         self._update_wave_spacing_guard()
-        self._update_detail_preset_indicator()
         self._refresh_pass_summary()
         return True
 
@@ -1968,7 +1075,6 @@ class CmykTab(GeneratorTab):
         settings_key = ""
         if self.host is not None and hasattr(self.host, "settings_for_source"):
             settings_key = repr(self._effective_settings())
-        ink_profile = self._active_ink_colors() or {}
         return (
             getattr(self, "_artwork", ""),
             self.page_w.value(),
@@ -1987,34 +1093,12 @@ class CmykTab(GeneratorTab):
             self.gcr.value(),
             self.resolution.value(),
             tuple(self._weights().items()),
-            tuple(
-                (
-                    channel,
-                    tuple(
-                        round(float(component), 5)
-                        for component in ink_profile.get(channel, ())
-                    ),
-                )
-                for channel in converter.CHANNELS
-            ),
             self.style.currentData(),
             self.pitch.value(),
             self._wave_spacing_guard_active(),
             self._variable_wave_frequency_active(),
             self._wave_row_order_active(),
             self.contour_order.currentData(),
-            self.flow_smoothing.value(),
-            self.flow_layers.value(),
-            self.flow_pitch_compression.value(),
-            self.shadow_layer_start.value(),
-            self.shadow_layer_end.value(),
-            self.flow_keylines.isChecked(),
-            self.keyline_quiet.value(),
-            self.color_hold.value(),
-            self.color_mix.value(),
-            self.chain_marks.isChecked(),
-            self.chain_gap.value(),
-            self.tone_bridge.value(),
             self.dot_size.value(),
             self.solid_dots.isChecked(),
             self.theta_mode.value(),
@@ -2075,556 +1159,6 @@ class CmykTab(GeneratorTab):
                 )
         return warnings
 
-    def _set_consistency_errors(self, results, channels):
-        """Verify every recorded program uses one artwork/machine contract."""
-        errors = []
-        channel_set = set(channels)
-        if self.REQUIRE_COMPLETE_SET and channel_set != set(converter.CHANNELS):
-            missing = [
-                converter.CHANNEL_LABELS[channel]
-                for channel in converter.CHANNELS
-                if channel not in channel_set
-            ]
-            errors.append(
-                "complete CMYK export requires all four inks"
-                + (f" (missing: {', '.join(missing)})" if missing else "")
-            )
-
-        identities = {
-            channel: results[channel].get("set_identity")
-            for channel in channels
-            if results[channel].get("set_identity") is not None
-        }
-        if not identities:
-            return errors
-        if len(identities) != len(channels):
-            missing = [
-                converter.CHANNEL_LABELS[channel]
-                for channel in channels
-                if channel not in identities
-            ]
-            errors.append(
-                "set identity is missing for " + ", ".join(missing)
-            )
-            return errors
-        signatures = {
-            channel: json.dumps(identity, sort_keys=True)
-            for channel, identity in identities.items()
-        }
-        if len(set(signatures.values())) > 1:
-            errors.append(
-                "ink programs do not share one scale, placement, frame, "
-                "theta contract, feed contract, and compensation identity"
-            )
-        return errors
-
-    def attach_stage_navigator(self, navigator):
-        """Connect the persistent stage rail to this inspector."""
-        self._stage_navigator = navigator
-        navigator.stage_changed.connect(self.select_stage)
-        navigator.reset_requested.connect(self.reset_stage)
-        navigator.diagnostic_requested.connect(self.show_stage_diagnostic)
-        navigator.recipe_applied.connect(self.apply_workflow_preset)
-        self._stage_baselines = control_state(self.controls)
-        self._full_controls_min_width = (
-            self.controls.minimumSizeHint().width()
-        )
-        self.select_stage(navigator.current_stage)
-
-    def _stage_definition(self, key):
-        for stage in CMYK_WORKFLOW_STAGES:
-            if stage.key == key:
-                return stage
-        return None
-
-    def _stage_boxes(self, key):
-        stage = self._stage_definition(key)
-        if stage is None:
-            return []
-        return [
-            self.group_boxes[title]
-            for title in stage.group_titles
-            if title in self.group_boxes
-        ]
-
-    def select_stage(self, key):
-        """Filter the advanced inspector to one workflow stage."""
-        stage = self._stage_definition(key)
-        if stage is None:
-            return False
-        self._current_stage_key = key
-        visible_titles = set(stage.group_titles)
-        for title, box in self.group_boxes.items():
-            box.setVisible(title in visible_titles)
-        self.status.setText(stage.description)
-        if self.host is not None and hasattr(self.host, "generator_status"):
-            self.host.generator_status(stage.title)
-        return True
-
-    def _stage_widget_state(self, key):
-        states = {}
-        for box in self._stage_boxes(key):
-            states.update(control_state(box))
-        return states
-
-    def reset_stage(self, key=None):
-        """Restore one stage to the tab's initial control state."""
-        key = key or self._current_stage_key
-        states = self._stage_widget_state(key)
-        baseline = {
-            widget: state
-            for widget, state in self._stage_baselines.items()
-            if widget in states
-        }
-        if not baseline:
-            return False
-        restore_control_state(baseline)
-        self._layers = {}
-        self._layer_files = {}
-        self._layers_key = None
-        self._analysis = None
-        self._analysis_key = None
-        self._refresh_pass_summary()
-        stage = self._stage_definition(key)
-        self.status.setText(
-            f"{stage.short_title} settings reset; preview cache was invalidated."
-            if stage is not None
-            else "Stage settings reset."
-        )
-        return True
-
-    def _locked_stage_state(self):
-        if self._stage_navigator is None:
-            return {}
-        states = {}
-        for stage in CMYK_WORKFLOW_STAGES:
-            if self._stage_navigator.is_locked(stage.key):
-                states.update(self._stage_widget_state(stage.key))
-        return states
-
-    def stage_cache_key(self, key=None):
-        """Return the current widget state that invalidates one stage."""
-        key = key or self._current_stage_key
-        return tuple(
-            (
-                type(widget).__name__,
-                repr(state),
-            )
-            for widget, state in self._stage_widget_state(key).items()
-        )
-
-    def flow_field_diagnostic_image(self):
-        """Build the current multichannel direction/confidence diagnostic."""
-        self._refresh_artwork()
-        if not self._artwork:
-            raise ValueError(
-                "Import an image before opening the flow-field diagnostic."
-            )
-        factor = self.scale_pct.value() / 100.0
-        tones, geometry = converter.prepare_image_tones(
-            self._artwork,
-            self.page_w.value(),
-            self.page_h.value(),
-            margin_mm=self.margin.value(),
-            brightness=self.brightness.value(),
-            resolution_px=min(1200, self.resolution.value()),
-            saturation=self.saturation.value() / 100.0,
-            contrast=self.contrast.value() / 100.0,
-            gcr=self.gcr.value() / 100.0,
-            weights=self._weights(),
-            gamma=self.gamma.value(),
-            auto_levels=self.auto_levels.isChecked(),
-            sharpen_pct=(
-                self.sharpen_amount.value()
-                if self.sharpen.isChecked()
-                else 0.0
-            ),
-            sharpen_radius_mm=self.sharpen_radius.value() / factor,
-            edge_simplify_mm=(
-                self.flow_smoothing.value() * 0.65 / factor
-                if self.style.currentData() == "edge_flow_coherent"
-                else 0.0
-            ),
-            ink_colors=self._active_ink_colors(),
-        )
-        rgb = converter.structure_field_diagnostic(
-            tones["flow_guide"],
-            geometry,
-            self.flow_smoothing.value() / factor,
-        )
-        from PIL import Image
-
-        return Image.fromarray(rgb)
-
-    def validate_stage(self, key=None):
-        """Return current, human-readable validation issues for one stage."""
-        key = key or self._current_stage_key
-        issues = []
-        if key in {
-            "composition",
-            "prepare",
-            "separation",
-            "direction",
-            "streamlines",
-            "ink",
-            "paths",
-        } and not self.calibration_mode.isChecked() and not self._artwork:
-            issues.append("Import an artwork image before screening.")
-        if key == "composition":
-            if self.page_w.value() <= 2.0 * self.margin.value():
-                issues.append("Page width leaves no usable area inside the margin.")
-            if self.page_h.value() <= 2.0 * self.margin.value():
-                issues.append("Page height leaves no usable area inside the margin.")
-        elif key == "prepare":
-            if self.sharpen.isChecked() and self.sharpen_amount.value() > 120.0:
-                issues.append(
-                    "Strong sharpening can create visible halo edges."
-                )
-        elif key == "separation":
-            if not any(self._weights().values()):
-                issues.append("Every process-ink weight is zero.")
-        elif key == "direction":
-            if (
-                self.style.currentData() in EDGE_FLOW_STYLES
-                and self.flow_smoothing.value() < 0.8
-            ):
-                issues.append(
-                    "Very small flow smoothing can follow source noise."
-                )
-            if (
-                self.shadow_layer_start.value()
-                >= self.shadow_layer_end.value()
-            ):
-                issues.append(
-                    "The first shadow layer must be lighter than the final "
-                    "shadow layer."
-                )
-        elif key == "streamlines":
-            effective = self.pitch.value() * self.scale_pct.value() / 100.0
-            floor_ratio = (
-                converter.EDGE_FLOW_MIN_PITCH_PEN_RATIO
-                if self._edge_flow_style_active()
-                else 0.9
-            )
-            if self.style.currentData() == "process_area":
-                effective = max(
-                    effective,
-                    self.pen_width.value() * floor_ratio,
-                )
-            if effective < self.pen_width.value() * floor_ratio:
-                issues.append(
-                    "Effective pitch is below the pen-safe centerline floor."
-                )
-        elif key == "ink":
-            if self.overdraw.value() > 1:
-                issues.append(
-                    "Overdraw repeats every mark and can add paper wear."
-                )
-            if (
-                self.style.currentData() == "edge_flow_coherent"
-                and self.color_mix.value() > 95.0
-            ):
-                issues.append(
-                    "A near-100 % secondary-ink mix can collapse distinct "
-                    "planar colours into overprint."
-                )
-        elif key == "paths":
-            if self._pen_chain_active() and self.chain_gap.value() > 10.0:
-                issues.append(
-                    "A large pen-down chain gap can draw long visible bridges."
-                )
-        elif key in {"motion", "review"} and self._analysis is not None:
-            issues.extend(self._preflight_errors(self._analysis))
-            issues.extend(
-                self._set_consistency_errors(
-                    self._analysis,
-                    list(self._analysis),
-                )
-            )
-        if key == "review":
-            channels = self._write_channels()
-            if self.REQUIRE_COMPLETE_SET and set(channels) != set(
-                converter.CHANNELS
-            ):
-                issues.append(
-                    "The complete export requires all four inks."
-                )
-        return issues
-
-    def show_flow_field_diagnostic(self):
-        """Open the orientation field as an undirected hue/confidence image."""
-        QGuiApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
-        try:
-            image = self.flow_field_diagnostic_image()
-            OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-            digest = hashlib.sha256(
-                repr(
-                    (
-                        self._artwork,
-                        self.stage_cache_key("direction"),
-                    )
-                ).encode("utf-8")
-            ).hexdigest()[:12]
-            path = OUTPUT_DIR / f"cmyk-flow-field-{digest}.png"
-            image.save(path)
-        except Exception as exc:  # noqa: BLE001 - user-facing diagnostic
-            self.report_error(f"Flow-field diagnostic failed: {exc}")
-            return
-        finally:
-            QGuiApplication.restoreOverrideCursor()
-
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Structure-tensor direction field")
-        dialog.resize(760, 790)
-        layout = QVBoxLayout(dialog)
-        explanation = QLabel(
-            "Hue shows the undirected edge tangent (a direction and its "
-            "opposite share one colour). Brightness is guidance confidence; "
-            "dark regions fall back toward fixed screen angles. The white "
-            "overlay marks high-confidence keyline structure."
-        )
-        explanation.setWordWrap(True)
-        layout.addWidget(explanation)
-        preview = QLabel()
-        preview.setAlignment(Qt.AlignCenter)
-        preview.setPixmap(
-            QPixmap(str(path)).scaled(
-                720,
-                680,
-                Qt.KeepAspectRatio,
-                Qt.SmoothTransformation,
-            )
-        )
-        layout.addWidget(preview, 1)
-        close_button = QPushButton("Close")
-        close_button.clicked.connect(dialog.accept)
-        layout.addWidget(close_button)
-        dialog.exec()
-
-    def show_stage_diagnostic(self, key=None):
-        """Show a compact current-state diagnostic for one workflow stage."""
-        key = key or self._current_stage_key
-        stage = self._stage_definition(key)
-        if stage is None:
-            return
-        if key == "direction":
-            self.show_flow_field_diagnostic()
-            return
-        cache_key = hashlib.sha256(
-            repr(self.stage_cache_key(key)).encode("utf-8")
-        ).hexdigest()[:12]
-        issues = self.validate_stage(key)
-        details = [
-            stage.description,
-            "",
-            f"Settings cache: {cache_key}",
-            f"Input: {stage.input_contract}",
-            f"Output: {stage.output_contract}",
-            f"Validation: {stage.validation}",
-            f"Cache depends on: {', '.join(stage.cache_dependencies)}",
-            (
-                "Current validation: OK"
-                if not issues
-                else "Current validation: " + "; ".join(issues)
-            ),
-            (
-                "Status: locked against automatic changes"
-                if self._stage_navigator is not None
-                and self._stage_navigator.is_locked(key)
-                else "Status: automatic changes enabled"
-            ),
-        ]
-        if key == "streamlines":
-            details.extend(
-                [
-                    f"Style: {self.style.currentText()}",
-                    f"Dot pitch: {self.pitch.value():.2f} mm",
-                    f"Effective pitch: "
-                    f"{self.pitch.value() * self.scale_pct.value() / 100.0:.2f} mm",
-                ]
-            )
-        elif key == "ink":
-            details.extend(
-                [
-                    f"Pen width: {self.pen_width.value():.2f} mm",
-                    f"Black keylines: "
-                    f"{'on' if self.flow_keylines.isChecked() else 'off'}",
-                    f"Overdraw: {self.overdraw.value()}",
-                ]
-            )
-        elif key == "paths":
-            details.extend(
-                [
-                    f"Path tolerance: {self.path_tolerance.value():.2f} mm",
-                    f"Pen-down chain: "
-                    f"{'up to %.1f mm' % self.chain_gap.value() if self._pen_chain_active() else 'off'}",
-                    f"Maximum marks per ink: {self.max_marks.value()}",
-                ]
-            )
-        elif key == "motion":
-            details.extend(
-                [
-                    f"Bed motion: {self._bed_motion_label()}",
-                    f"Centre hold: {self.center_hold.value():.0f} mm diameter",
-                    "Per-ink motion preflight: required before save",
-                ]
-            )
-        elif key == "review":
-            details.extend(
-                [
-                    f"Write order: "
-                    + " -> ".join(
-                        converter.CHANNEL_LABELS[channel]
-                        for channel in self.WRITE_ORDER
-                    ),
-                    "Program + manifest publication: transactional",
-                    f"Calibration sheet: "
-                    f"{'on' if self.calibration_mode.isChecked() else 'off'}",
-                ]
-            )
-        QMessageBox.information(
-            self,
-            stage.diagnostic_label,
-            "\n".join(details),
-        )
-
-    def apply_workflow_preset(self, key):
-        """Apply a complete comparison recipe while honoring stage locks."""
-        overrides = {
-            "recommended": {
-                "style": "edge_flow_coherent",
-                "keylines": True,
-                "chain_gap": REFERENCE_PHOTO_CHAIN_GAP_MM,
-                "tone_bridge": 4.0,
-            },
-            "process_area": {
-                "style": "process_area",
-                "keylines": True,
-                "tone_bridge": 0.0,
-                "pitch": 0.35,
-                "path_tolerance": 0.05,
-                "max_marks": 800000,
-                "image": {
-                    "auto_levels": False,
-                    "brightness": 100.0,
-                    "saturation": 106.0,
-                    "contrast": 122.0,
-                    "gcr": 65.0,
-                    "gamma": 1.0,
-                    "sharpen": True,
-                    "sharpen_amount": 60.0,
-                    "sharpen_radius": 1.5,
-                    "weights": (100.0, 100.0, 100.0, 100.0),
-                },
-            },
-            "edge_flow_per_ink": {
-                "style": "edge_flow",
-                "keylines": True,
-                "chain_gap": REFERENCE_PHOTO_CHAIN_GAP_MM,
-                "tone_bridge": 1.0,
-            },
-            "edge_flow_shared": {
-                "style": "edge_flow_shared",
-                "keylines": True,
-                "chain_gap": REFERENCE_PHOTO_CHAIN_GAP_MM,
-                "tone_bridge": 1.0,
-            },
-            "line_screen": {
-                "style": "lines",
-                "keylines": False,
-                "chain_gap": 5.0,
-                "tone_bridge": 0.0,
-            },
-        }
-        recipe = overrides.get(str(key))
-        if recipe is None:
-            self.report_error(f"Unknown CMYK recipe preset: {key}")
-            return False
-        locked_state = self._locked_stage_state()
-        try:
-            applied = self.apply_reference_defaults()
-            style_index = self.style.findData(recipe["style"])
-            if style_index >= 0:
-                self.style.setCurrentIndex(style_index)
-            self.flow_keylines.setChecked(bool(recipe["keylines"]))
-            self.chain_gap.setValue(
-                float(recipe.get("chain_gap", self.chain_gap.value()))
-            )
-            self.tone_bridge.setValue(float(recipe["tone_bridge"]))
-            if "pitch" in recipe:
-                self.pitch.setValue(float(recipe["pitch"]))
-            if recipe["style"] == "process_area":
-                self.chain_gap.setValue(
-                    self._process_area_chain_gap_mm()
-                )
-            if "path_tolerance" in recipe:
-                self.path_tolerance.setValue(
-                    float(recipe["path_tolerance"])
-                )
-            if "color_mix" in recipe:
-                self.color_mix.setValue(float(recipe["color_mix"]))
-            if "max_marks" in recipe:
-                self.max_marks.setValue(int(recipe["max_marks"]))
-            image = recipe.get("image")
-            if image:
-                if "auto_levels" in image:
-                    self.auto_levels.setChecked(
-                        bool(image["auto_levels"])
-                    )
-                self.brightness.setValue(float(image["brightness"]))
-                self.saturation.setValue(float(image["saturation"]))
-                self.contrast.setValue(float(image["contrast"]))
-                self.gcr.setValue(float(image["gcr"]))
-                self.gamma.setValue(float(image["gamma"]))
-                self.sharpen.setChecked(bool(image["sharpen"]))
-                self.sharpen_amount.setValue(
-                    float(image["sharpen_amount"])
-                )
-                self.sharpen_radius.setValue(
-                    float(image["sharpen_radius"])
-                )
-                for spin, value in zip(
-                    (
-                        self.weight_c,
-                        self.weight_m,
-                        self.weight_y,
-                        self.weight_k,
-                    ),
-                    image["weights"],
-                ):
-                    spin.setValue(float(value))
-        finally:
-            restore_control_state(locked_state)
-        if self.style.currentData() == "process_area":
-            detail = (
-                f"{self.pen_width.value():.2f} mm process cells, "
-                f"{self.pitch.value() * self.scale_pct.value() / 100.0:.2f} "
-                "mm on-paper pitch"
-            )
-        else:
-            detail = (
-                f"{self.flow_layers.value()} layers, "
-                f"{self.pitch.value() * self.scale_pct.value() / 100.0:.2f} "
-                "mm effective pitch"
-            )
-        recipe_label = next(
-            (
-                label
-                for label, value in CMYK_RECIPE_PRESETS
-                if value == key
-            ),
-            str(key),
-        )
-        message = (
-            f"Applied recipe: {recipe_label}. "
-            f"Style {self.style.currentText()}, {detail}."
-        )
-        self.status.setText(message)
-        if self.host is not None and hasattr(self.host, "generator_status"):
-            self.host.generator_status(message)
-        self._refresh_pass_summary()
-        return applied
-
     def _wave_spacing_guard_active(self):
         """Whether to project compensation onto the Wave row lattice."""
         return (
@@ -2633,49 +1167,8 @@ class CmykTab(GeneratorTab):
             and self.preserve_wave_pitch.isChecked()
         )
 
-    def _pen_chain_active(self):
-        """Whether open per-ink marks may be joined into longer strokes."""
-        return (
-            not self.calibration_mode.isChecked()
-            and self.chain_marks.isChecked()
-            and self.style.currentData()
-            not in ("waves_even", "waves_zero", "tsp")
-        )
-
-    def _process_area_chain_gap_mm(self):
-        """Recommended local bridge between precision process-cell marks."""
-        # One short mark occupies roughly one process cell. A three-cell radius
-        # joins sparse clusters into long strokes without crossing the image.
-        effective_pitch = max(
-            self.pitch.value() * self.scale_pct.value() / 100.0,
-            self.pen_width.value() * 1.10,
-        )
-        return round(
-            effective_pitch * PROCESS_AREA_CHAIN_CELL_RATIO * 2.0
-        ) / 2.0
-
-    def _tone_bridge_active(self):
-        """Whether Edge-flow may bridge a local same-path coverage gap."""
-        return (
-            not self.calibration_mode.isChecked()
-            and self.style.currentData() in EDGE_FLOW_STYLES
-            and self.tone_bridge.value() > 0.0
-        )
-
-    def _edge_flow_style_active(self):
-        """Whether the selected screen uses Edge-flow geometry."""
-        return (
-            not self.calibration_mode.isChecked()
-            and self.style.currentData() in FLOW_GUIDED_STYLES
-        )
-
     def _update_wave_spacing_guard(self, _value=None):
         """Keep the guard meaningful for the selected screen style."""
-        flow_selected = self._edge_flow_style_active()
-        streamline_selected = (
-            not self.calibration_mode.isChecked()
-            and self.style.currentData() in EDGE_FLOW_STYLES
-        )
         equal_wave_selected = (
             not self.calibration_mode.isChecked()
             and self.style.currentData() == "waves_even"
@@ -2687,37 +1180,6 @@ class CmykTab(GeneratorTab):
         self.preserve_wave_pitch.setEnabled(equal_wave_selected)
         self.vary_wave_frequency.setEnabled(equal_wave_selected)
         self.contour_order.setEnabled(wave_selected)
-        self.flow_smoothing.setEnabled(flow_selected)
-        self.flow_layers.setEnabled(streamline_selected)
-        self.flow_pitch_compression.setEnabled(streamline_selected)
-        self.flow_keylines.setEnabled(flow_selected)
-        shadow_available = (
-            not self.calibration_mode.isChecked()
-            and self.style.currentData()
-            in ("edge_flow_shared", "edge_flow_coherent")
-            and self.flow_layers.value() > 1
-        )
-        self.shadow_layer_start.setEnabled(shadow_available)
-        self.shadow_layer_end.setEnabled(shadow_available)
-        self.keyline_quiet.setEnabled(
-            streamline_selected and self.flow_keylines.isChecked()
-        )
-        coherent_available = (
-            not self.calibration_mode.isChecked()
-            and self.style.currentData() == "edge_flow_coherent"
-        )
-        self.color_hold.setEnabled(coherent_available)
-        self.color_mix.setEnabled(coherent_available)
-        self.tone_bridge.setEnabled(streamline_selected)
-        chain_available = (
-            not self.calibration_mode.isChecked()
-            and self.style.currentData()
-            not in ("waves_even", "waves_zero", "tsp")
-        )
-        self.chain_marks.setEnabled(chain_available)
-        self.chain_gap.setEnabled(
-            chain_available and self.chain_marks.isChecked()
-        )
         if hasattr(self, "pass_summary"):
             self._refresh_pass_summary()
 
@@ -2790,48 +1252,8 @@ class CmykTab(GeneratorTab):
             "crosses %s" % ("on" if self.registration_marks.isChecked() else "off"),
             "pen offsets %s" % (", ".join(offset_parts) if offset_parts else "none"),
         ]
-        if self._edge_flow_style_active():
-            if self.style.currentData() == "process_area":
-                flow_summary = (
-                    "precision process screen, %.2f mm on-paper cells, "
-                    "%.2f mm pen footprint"
-                    % (
-                        self.pitch.value() * self.scale_pct.value() / 100.0,
-                        self.pen_width.value(),
-                    )
-                )
-            else:
-                flow_summary = (
-                    "edge flow %s, %.1f mm smoothing, %d layers, %.0f%% "
-                    "pitch compression"
-                    % (
-                        (
-                            "coherent shared geometry"
-                            if self.style.currentData() == "edge_flow_coherent"
-                            else (
-                                "shared stochastic"
-                                if self.style.currentData() == "edge_flow_shared"
-                                else "per-ink networks"
-                            )
-                        ),
-                        self.flow_smoothing.value(),
-                        self.flow_layers.value(),
-                        self.flow_pitch_compression.value(),
-                    )
-                )
-            parts.append(
-                flow_summary
-            )
-        if self._pen_chain_active():
-            parts.append(
-                "pen-down chain up to %.1f mm after Xθ/Yθ order"
-                % self.chain_gap.value()
-            )
         if results is not None:
             errors = self._preflight_errors(results)
-            errors.extend(
-                self._set_consistency_errors(results, list(results))
-            )
             warnings = self._preflight_warnings(results)
             if errors:
                 parts.append("preflight BLOCKED: " + "; ".join(errors))
@@ -2877,10 +1299,6 @@ class CmykTab(GeneratorTab):
         if not path:
             raise ValueError("Import an image with the Artwork row above first.")
         factor = self.scale_pct.value() / 100.0
-        style = self.style.currentData()
-        self._process_color_effective_pitch_mm = None
-        edge_flow_active = style in FLOW_GUIDED_STYLES
-        coherent_style = style == "edge_flow_coherent"
         tones, geometry = converter.prepare_image_tones(
             path,
             self.page_w.value(),
@@ -2900,236 +1318,43 @@ class CmykTab(GeneratorTab):
                 else 0.0
             ),
             sharpen_radius_mm=self.sharpen_radius.value() / factor,
-            edge_simplify_mm=(
-                self.flow_smoothing.value() * 0.65 / factor
-                if coherent_style
-                else 0.0
-            ),
-            ink_colors=self._active_ink_colors(),
         )
         width = self.page_w.value()
         height = self.page_h.value()
         stroke = self.pen_width.value()
+        style = self.style.currentData()
         layers = {}
         files = {}
-        pen_chain_stats = {}
-        shared_edge_marks = None
-        if style == "process_area":
-            (
-                _grid_width,
-                _grid_height,
-                process_cell_x,
-                process_cell_y,
-                _process_spacing,
-            ) = converter.process_color_area_grid(
-                geometry,
-                self.pitch.value(),
-                self.pen_width.value() / factor,
-            )
-            self._process_color_effective_pitch_mm = (
-                0.5 * (process_cell_x + process_cell_y) * factor
-            )
-            shared_edge_marks = converter.screen_process_color_area_cmyk(
-                tones,
-                geometry,
-                spacing_mm=self.pitch.value(),
-                pen_diameter_mm=self.pen_width.value() / factor,
-                flow_guide=tones["flow_guide"],
-                keyline_smoothing_mm=self.flow_smoothing.value() / factor,
-                edge_keylines=self.flow_keylines.isChecked(),
-                edge_threshold=0.84,
-                max_marks=self.max_marks.value(),
-                seed=self.seed.value(),
-                overdraw=self.overdraw.value(),
-                protect_highlights=True,
-                highlight_detail=(
-                    converter.PROCESS_AREA_HIGHLIGHT_DETAIL
-                ),
-                highlight_fraction=(
-                    converter.PROCESS_AREA_HIGHLIGHT_FRACTION
-                ),
-                detail_alignment=(
-                    converter.PROCESS_AREA_DETAIL_ALIGNMENT
-                ),
-            )
-        elif coherent_style:
-            shared_edge_marks = converter.screen_coherent_color_flow(
-                tones,
-                geometry,
-                spacing_mm=self.pitch.value(),
-                pen_diameter_mm=self.pen_width.value() / factor,
-                path_tolerance_mm=self.path_tolerance.value() / factor,
-                flow_smoothing_mm=self.flow_smoothing.value() / factor,
-                flow_layers=self.flow_layers.value(),
-                flow_pitch_compression=(
-                    self.flow_pitch_compression.value() / 100.0
-                ),
-                max_marks=self.max_marks.value(),
-                seed=self.seed.value(),
-                overdraw=self.overdraw.value(),
-                keylines=self.flow_keylines.isChecked(),
-                color_quiet=(
-                    self.keyline_quiet.value() / 100.0
-                    if self.flow_keylines.isChecked()
-                    else 0.0
-                ),
-                color_hold_mm=self.color_hold.value() / factor,
-                color_mix_ratio=self.color_mix.value() / 100.0,
-                bridge_mm=(
-                    self.tone_bridge.value() / factor
-                    if self._tone_bridge_active()
-                    else 0.0
-                ),
-                dark_layer_start=self.shadow_layer_start.value() / 100.0,
-                dark_layer_end=self.shadow_layer_end.value() / 100.0,
-                fallback_angles_deg=[
-                    converter.SCREEN_ANGLES_DEG[channel]
-                    for channel in converter.CHANNELS[
-                        : self.flow_layers.value()
-                    ]
-                ],
-                flow_guide=tones["flow_guide"],
-            )
-        elif style == "edge_flow_shared":
-            shared_edge_marks = converter.screen_cmyk_edge_flow(
-                tones,
-                geometry,
-                spacing_mm=self.pitch.value(),
-                pen_diameter_mm=self.pen_width.value() / factor,
-                path_tolerance_mm=self.path_tolerance.value() / factor,
-                flow_smoothing_mm=self.flow_smoothing.value() / factor,
-                flow_layers=self.flow_layers.value(),
-                flow_pitch_compression=(
-                    self.flow_pitch_compression.value() / 100.0
-                ),
-                max_marks=self.max_marks.value(),
-                seed=self.seed.value(),
-                overdraw=self.overdraw.value(),
-                keylines=self.flow_keylines.isChecked(),
-                color_quiet=(
-                    self.keyline_quiet.value() / 100.0
-                    if self.flow_keylines.isChecked()
-                    else 0.0
-                ),
-                tone_segment_mm=(
-                    2.0 / factor
-                    if self._detail_preset_active()
-                    else None
-                ),
-                max_path_mm=(
-                    12.0 / factor
-                    if self._detail_preset_active()
-                    else None
-                ),
-                bridge_mm=(
-                    self.tone_bridge.value() / factor
-                    if self._tone_bridge_active()
-                    else 0.0
-                ),
-                dark_layer_start=self.shadow_layer_start.value() / 100.0,
-                dark_layer_end=self.shadow_layer_end.value() / 100.0,
-                flow_guide=tones["flow_guide"],
-            )
         for index, channel in enumerate(converter.CHANNELS):
-            if shared_edge_marks is not None:
-                marks = shared_edge_marks[channel]
-            else:
-                marks = converter.screen_channel(
-                    tones[channel],
-                    geometry,
-                    style=style,
-                    spacing_mm=self.pitch.value(),
-                    dot_scale=self.dot_size.value() / 100.0,
-                    angle_deg=converter.SCREEN_ANGLES_DEG[channel],
-                    seed=self.seed.value() + index,
-                    max_marks=self.max_marks.value(),
-                    pen_diameter_mm=(
-                        self.pen_width.value() / factor
-                        if edge_flow_active
-                        else self.pen_width.value()
-                    ),
-                    levels=self.levels.value(),
-                    overdraw=self.overdraw.value(),
-                    solid=self.solid_dots.isChecked(),
-                    path_tolerance_mm=self.path_tolerance.value() / factor,
-                    depth_tone=tones.get("depth"),
-                    flow_smoothing_mm=(
-                        self.flow_smoothing.value() / factor
-                        if edge_flow_active
-                        else None
-                    ),
-                    flow_layers=self.flow_layers.value(),
-                    flow_pitch_compression=(
-                        self.flow_pitch_compression.value() / 100.0
-                        if edge_flow_active
-                        else 0.0
-                    ),
-                    flow_guide=(
-                        tones["flow_guide"] if edge_flow_active else None
-                    ),
-                    flow_support_tone=(
-                        tones["depth"] if edge_flow_active else None
-                    ),
-                    flow_keylines=(
-                        self.flow_keylines.isChecked()
-                        and channel == "k"
-                        if edge_flow_active
-                        else False
-                    ),
-                    flow_color_quiet=(
-                        self.keyline_quiet.value() / 100.0
-                        if edge_flow_active and channel != "k"
-                        and self.flow_keylines.isChecked()
-                        else 0.0
-                    ),
-                    flow_tone_segment_mm=(
-                        2.0 / factor
-                        if edge_flow_active and self._detail_preset_active()
-                        else None
-                    ),
-                    flow_max_path_mm=(
-                        12.0 / factor
-                        if edge_flow_active and self._detail_preset_active()
-                        else None
-                    ),
-                    flow_bridge_mm=(
-                        self.tone_bridge.value() / factor
-                        if self._tone_bridge_active()
-                        else 0.0
-                    ),
-                    row_clearance_mm=(
-                        (
-                            self.pen_width.value()
-                            + converter.WAVE_MIN_EDGE_GAP_MM
-                        )
-                        / factor
-                    ),
-                    wave_frequency_variation=(
-                        converter.WAVE_FREQUENCY_VARIATION
-                        if self._variable_wave_frequency_active()
-                        else 0.0
-                    ),
-                    allow_variable_wave_spacing=(style == "waves_zero"),
-                )
+            marks = converter.screen_channel(
+                tones[channel],
+                geometry,
+                style=style,
+                spacing_mm=self.pitch.value(),
+                dot_scale=self.dot_size.value() / 100.0,
+                angle_deg=converter.SCREEN_ANGLES_DEG[channel],
+                seed=self.seed.value() + index,
+                max_marks=self.max_marks.value(),
+                pen_diameter_mm=self.pen_width.value(),
+                levels=self.levels.value(),
+                overdraw=self.overdraw.value(),
+                solid=self.solid_dots.isChecked(),
+                path_tolerance_mm=self.path_tolerance.value() / factor,
+                depth_tone=tones.get("depth"),
+                row_clearance_mm=(
+                    (self.pen_width.value() + converter.WAVE_MIN_EDGE_GAP_MM)
+                    / factor
+                ),
+                wave_frequency_variation=(
+                    converter.WAVE_FREQUENCY_VARIATION
+                    if self._variable_wave_frequency_active()
+                    else 0.0
+                ),
+                allow_variable_wave_spacing=(style == "waves_zero"),
+            )
             # Generator pages are plotted 1:1, so the tab's Artwork scale is
             # applied to the screened marks about the page centre here.
             marks = scale_polylines(marks, factor, width, height)
-            if self._pen_chain_active():
-                chain_input = (
-                    [list(mark) for mark in marks]
-                    if style == "process_area"
-                    else marks
-                )
-                marks, pen_chain_stats[channel] = (
-                    converter.chain_nearby_contours(
-                        chain_input,
-                        max_gap_mm=self.chain_gap.value(),
-                    )
-                )
-                marks = [
-                    converter.ScreenTrail(mark)
-                    for mark in marks
-                ]
             if self.registration_marks.isChecked():
                 marks = list(marks) + self._registration_crosses()
             # Absolute paper-space corrections for this pen. Applied after
@@ -3145,7 +1370,6 @@ class CmykTab(GeneratorTab):
             files[channel] = str(
                 write_svg_document(f"cmyk-{channel}", document)
             )
-        self._pen_chain_stats = pen_chain_stats
         return layers, files, None
 
     def _build_calibration_layers(self):
@@ -3154,19 +1378,11 @@ class CmykTab(GeneratorTab):
         screen = self.calibration_screen.currentData()
         if screen == "match":
             style = self.style.currentData()
-            if style in ("edge_flow_shared", "edge_flow_coherent"):
-                screen = "edge_flow"
-            else:
-                screen = (
-                    style
-                    if style in (
-                        "lines",
-                        "rectilinear",
-                        "crosshatch",
-                        "edge_flow",
-                    )
-                    else "halftone"
-                )
+            screen = (
+                style
+                if style in ("lines", "rectilinear", "crosshatch")
+                else "halftone"
+            )
         layers, manifest = build_sheet(
             width,
             height,
@@ -3181,11 +1397,6 @@ class CmykTab(GeneratorTab):
             overdraw=self.overdraw.value(),
             screen=screen,
             levels=self.levels.value(),
-            flow_smoothing_mm=self.flow_smoothing.value(),
-            flow_layers=self.flow_layers.value(),
-            flow_pitch_compression=(
-                self.flow_pitch_compression.value() / 100.0
-            ),
         )
         stroke = self.pen_width.value()
         files = {}
@@ -3377,12 +1588,6 @@ class CmykTab(GeneratorTab):
                         )
                     )
                 errors = self._preflight_errors(results)
-                errors.extend(
-                    self._set_consistency_errors(
-                        results,
-                        list(results),
-                    )
-                )
                 warnings = self._preflight_warnings(results)
                 if errors:
                     self.host.log.append(
@@ -3434,27 +1639,16 @@ class CmykTab(GeneratorTab):
             return
         self._write_files(self._analysis)
 
-    def _output_label(self, channel):
-        return converter.CHANNEL_LABELS[channel].lower()
-
     def _write_files(self, results):
-        channels = [
-            channel for channel in self.WRITE_ORDER if channel in results
-        ]
         entries = [
-            (
-                self._output_label(channel),
-                results[channel]["gcode"],
-            )
-            for channel in channels
+            (converter.CHANNEL_LABELS[channel].lower(), results[channel]["gcode"])
+            for channel in converter.CHANNELS
+            if channel in results
         ]
         if not entries:
             self.report_error("Nothing to save; preview first.")
             return
         errors = self._preflight_errors(results)
-        errors.extend(
-            self._set_consistency_errors(results, channels)
-        )
         if errors:
             message = "CMYK preflight blocked save: " + "; ".join(errors)
             self.report_error(message)
@@ -3474,76 +1668,19 @@ class CmykTab(GeneratorTab):
         if not callable(export):
             self.report_error("The host window does not provide batch saving.")
             return
-        base_path = getattr(self, "_next_export_base_path", None)
-        self._next_export_base_path = None
-        resolver = getattr(self.host, "resolve_program_set_base", None)
-        if callable(resolver) and base_path is None:
-            base_path = resolver(base)
-            if not base_path:
-                self.report_error("CMYK G-code creation cancelled.")
-                return
-        companion_files = []
+        written = export(entries, None, base)
         manifest_path = None
-        if base_path:
-            try:
-                targets = program_set_paths(
-                    base_path,
-                    [label for label, _gcode in entries],
-                )
-            except ValueError as exc:
-                self.report_error(str(exc))
-                return
-            file_names = {
-                channel: target.name
-                for channel, target in zip(channels, targets)
-            }
-            if sheet and self._layers_manifest is not None:
-                manifest_path = self._manifest_path_for_target(
-                    targets[0],
-                    entries[0][0],
-                    "calibration",
-                )
-                companion_files.append(
-                    (
-                        manifest_path,
-                        json.dumps(self._layers_manifest, indent=2) + "\n",
-                    )
-                )
-            elif not sheet:
-                manifest_path = self._manifest_path_for_target(
-                    targets[0],
-                    entries[0][0],
-                    "set",
-                )
-                companion_files.append(
-                    (
-                        manifest_path,
-                        self._set_manifest_text(
-                            results,
-                            file_names,
-                            published_with_programs=True,
-                        ),
-                    )
-                )
-        written = export(
-            entries,
-            base_path,
-            base,
-            companion_files=companion_files,
-        )
         set_manifest_path = None
-        if written and not companion_files and sheet and self._layers_manifest is not None:
+        if written and sheet and self._layers_manifest is not None:
             manifest_path = self._write_manifest(written[0], entries[0][0])
-        elif written and not companion_files:
-            set_manifest_path = self._write_set_manifest(written, results)
         elif written:
-            set_manifest_path = manifest_path
+            set_manifest_path = self._write_set_manifest(written, results)
         if written:
             names = ", ".join(os.path.basename(path) for path in written)
             extra = (
-                f" Calibration manifest: {Path(manifest_path).name}."
-                if sheet and manifest_path
-                else f" Set manifest: {Path(set_manifest_path).name}."
+                f" Calibration manifest: {manifest_path.name}."
+                if manifest_path
+                else f" Set manifest: {set_manifest_path.name}."
                 if set_manifest_path
                 else ""
             )
@@ -3551,20 +1688,12 @@ class CmykTab(GeneratorTab):
                 f"Saved {len(written)} G-code files ({names}).{extra}"
             )
 
-    def _manifest_path_for_target(self, first_path, first_label, kind):
-        """Return the companion manifest beside one set's first program."""
+    def _write_manifest(self, first_path, first_label):
+        """Write the calibration manifest next to the saved G-code files."""
         first = Path(first_path)
         tail = f"-{first_label}.gcode"
         stem = first.name[: -len(tail)] if first.name.endswith(tail) else first.stem
-        return first.parent / f"{stem}-{kind}.json"
-
-    def _write_manifest(self, first_path, first_label):
-        """Write the calibration manifest next to the saved G-code files."""
-        path = self._manifest_path_for_target(
-            first_path,
-            first_label,
-            "calibration",
-        )
+        path = first.parent / f"{stem}-calibration.json"
         path.write_text(
             json.dumps(self._layers_manifest, indent=2) + "\n",
             encoding="utf-8",
@@ -3573,50 +1702,15 @@ class CmykTab(GeneratorTab):
 
     def _write_set_manifest(self, written, results):
         """Record the complete print recipe and output hashes for a set."""
-        channels = [
-            channel for channel in self.WRITE_ORDER if channel in results
-        ]
-        file_names = {
-            channel: Path(path).name
-            for channel, path in zip(channels, written)
-        }
-        path = self._manifest_path_for_target(
-            written[0],
-            self._output_label(channels[0]),
-            "set",
-        )
-        path.write_text(
-            self._set_manifest_text(results, file_names),
-            encoding="utf-8",
-        )
-        return path
-
-    def _set_manifest_text(
-        self,
-        results,
-        file_names,
-        published_with_programs=False,
-    ):
-        """Serialize one output manifest from known program contents."""
-        return json.dumps(
-            self._set_manifest_data(
-                results,
-                file_names,
-                published_with_programs=published_with_programs,
-            ),
-            indent=2,
-        ) + "\n"
-
-    def _set_manifest_data(
-        self,
-        results,
-        file_names,
-        published_with_programs=False,
-    ):
-        """Build the complete print recipe and output hashes for a set."""
-        channels = [
-            channel for channel in self.WRITE_ORDER if channel in results
-        ]
+        first = Path(written[0])
+        stem = first.stem
+        for channel in converter.CHANNELS:
+            suffix = "-" + converter.CHANNEL_LABELS[channel].lower()
+            if stem.endswith(suffix):
+                stem = stem[: -len(suffix)]
+                break
+        path = first.parent / f"{stem}-set.json"
+        channels = [channel for channel in converter.CHANNELS if channel in results]
         settings = self._effective_settings()
         factor = self.scale_pct.value() / 100.0
         weights = self._weights()
@@ -3658,58 +1752,10 @@ class CmykTab(GeneratorTab):
         translation_sample = next(
             iter(row_lock_records.values()), None
         )
-        ink_transmittances = {
-            channel: [
-                round(float(component), 4)
-                for component in values
-            ]
-            for channel, values in zip(
-                converter.CHANNELS,
-                converter.ink_transmittance_matrix(
-                    self._active_ink_colors()
-                ),
-            )
-        }
-        calibration_identity = hashlib.sha256(
-            json.dumps(
-                ink_transmittances,
-                sort_keys=True,
-                separators=(",", ":"),
-            ).encode("utf-8")
-        ).hexdigest()
-        set_identities = {
-            channel: results[channel].get("set_identity")
-            for channel in channels
-            if results[channel].get("set_identity") is not None
-        }
-        set_identity_sha256 = (
-            hashlib.sha256(
-                json.dumps(
-                    set_identities,
-                    sort_keys=True,
-                    separators=(",", ":"),
-                ).encode("utf-8")
-            ).hexdigest()
-            if set_identities
-            else ""
-        )
-        stage_settings_sha256 = (
-            {
-                stage.key: hashlib.sha256(
-                    repr(self.stage_cache_key(stage.key)).encode("utf-8")
-                ).hexdigest()
-                for stage in CMYK_WORKFLOW_STAGES
-            }
-            if self._stage_navigator is not None
-            else {}
-        )
         data = {
             "kind": "cmyk-print-set",
-            "version": 8,
+            "version": 4,
             "created": datetime.datetime.now().isoformat(timespec="seconds"),
-            "print_order": [
-                self._output_label(channel) for channel in channels
-            ],
             "source": {
                 "file": source_path.name if source_path else "",
                 "sha256": (
@@ -3718,56 +1764,14 @@ class CmykTab(GeneratorTab):
                     else ""
                 ),
             },
-            "workflow": {
-                "stages": [stage.key for stage in CMYK_WORKFLOW_STAGES],
-                "current_stage": (
-                    self._stage_navigator.current_stage
-                    if self._stage_navigator is not None
-                    else None
-                ),
-                "stage_settings_sha256": stage_settings_sha256,
-                "locked_stages": list(
-                    self._stage_navigator.locked_stages
-                    if self._stage_navigator is not None
-                    else ()
-                ),
-                "diagnostic_visualizations": {
-                    "direction": "undirected_tangent_hue_confidence_value",
-                    "review": "shared_cmyk_pen_trajectory_preview",
-                },
-            },
             "page": {
                 "width_mm": self.page_w.value(),
                 "height_mm": self.page_h.value(),
                 "margin_mm": self.margin.value(),
             },
-            "machine_geometry": {
-                "bed_diameter_mm": round(
-                    float(settings.bed_diameter_mm), 6
-                ),
-                "stock_diameter_mm": round(
-                    float(settings.stock_diameter_mm), 6
-                ),
-                "stock_margin_mm": round(
-                    float(settings.bed_margin_mm), 6
-                ),
-                "drawing_diameter_mm": round(
-                    float(settings.stock_diameter_mm)
-                    - 2.0 * float(settings.bed_margin_mm),
-                    6,
-                ),
-                "machine_reach_radius_mm": round(
-                    float(settings.machine_reach_radius_mm),
-                    6,
-                ),
-            },
             "frame_center_mm": [
                 self.page_w.value() / 2.0,
                 self.page_h.value() / 2.0,
-            ],
-            "artwork_placement_mm": [
-                float(settings.artwork_offset_x_mm),
-                float(settings.artwork_offset_y_mm),
             ],
             "bed_motion": self._bed_motion_label(),
             "center_hold_diameter_mm": self.center_hold.value(),
@@ -3835,12 +1839,7 @@ class CmykTab(GeneratorTab):
                 "style_label": self.style.currentText(),
                 "dot_pitch_mm": self.pitch.value(),
                 "artwork_scale_pct": self.scale_pct.value(),
-                "effective_pitch_mm": (
-                    self._process_color_effective_pitch_mm
-                    if style == "process_area"
-                    and self._process_color_effective_pitch_mm is not None
-                    else self.pitch.value() * factor
-                ),
+                "effective_pitch_mm": self.pitch.value() * factor,
                 "preserve_exact_row_pitch": (
                     self._wave_spacing_guard_active()
                 ),
@@ -3859,150 +1858,6 @@ class CmykTab(GeneratorTab):
                     if self._wave_row_order_active()
                     else "optimized"
                 ),
-                "flow_smoothing_mm": (
-                    self.flow_smoothing.value()
-                    if style in FLOW_GUIDED_STYLES
-                    else None
-                ),
-                "flow_layers": (
-                    self.flow_layers.value()
-                    if style in EDGE_FLOW_STYLES
-                    else None
-                ),
-                "flow_pitch_compression_pct": (
-                    self.flow_pitch_compression.value()
-                    if style in EDGE_FLOW_STYLES
-                    else None
-                ),
-                "shadow_layer_start_pct": (
-                    self.shadow_layer_start.value()
-                    if style in ("edge_flow_shared", "edge_flow_coherent")
-                    else None
-                ),
-                "shadow_layer_end_pct": (
-                    self.shadow_layer_end.value()
-                    if style in ("edge_flow_shared", "edge_flow_coherent")
-                    else None
-                ),
-                "preserve_black_keylines": (
-                    self.flow_keylines.isChecked()
-                    if style in FLOW_GUIDED_STYLES
-                    else False
-                ),
-                "keyline_color_quiet_pct": (
-                    self.keyline_quiet.value()
-                    if style in EDGE_FLOW_STYLES
-                    else None
-                ),
-                "flow_guide": (
-                    (
-                        "calibrated_process_cells_with_tensor_orientation"
-                        if style == "process_area"
-                        else (
-                            "strength_gated_multichannel_structure_tensor_"
-                            "coherent_ink_planes"
-                            if style == "edge_flow_coherent"
-                            else (
-                                "strength_gated_shared_luminance_structure_tensor_"
-                                "continuous_tone"
-                                if style == "edge_flow_shared"
-                                else "strength_gated_luminance_structure_tensor_"
-                                "per_ink_networks_continuous_tone"
-                            )
-                        )
-                    )
-                    if style in FLOW_GUIDED_STYLES
-                    else None
-                ),
-                "edge_flow_path_network": (
-                    (
-                        "pen_footprint_process_color_area_screen"
-                        if style == "process_area"
-                        else (
-                            "shared_coherent_ink_planes"
-                            if style == "edge_flow_coherent"
-                            else (
-                                "shared_all_inks"
-                                if style == "edge_flow_shared"
-                                else "per_ink"
-                            )
-                        )
-                    )
-                    if style in FLOW_GUIDED_STYLES
-                    else None
-                ),
-                "source_edge_preserving_simplify_mm": (
-                    self.flow_smoothing.value() * 0.65
-                    if style == "edge_flow_coherent"
-                    else 0.0
-                ),
-                "coherent_color_hold_mm": (
-                    self.color_hold.value()
-                    if style == "edge_flow_coherent"
-                    else None
-                ),
-                "coherent_color_mix_ratio": (
-                    self.color_mix.value() / 100.0
-                    if style == "edge_flow_coherent"
-                    else None
-                ),
-                "process_color_cell_pitch_mm": (
-                    self.pitch.value()
-                    if style == "process_area"
-                    else None
-                ),
-                "process_color_edge_threshold": (
-                    0.84 if style == "process_area" else None
-                ),
-                "process_color_highlight_protection": (
-                    {
-                        "enabled": True,
-                        "detail_threshold": (
-                            converter.PROCESS_AREA_HIGHLIGHT_DETAIL
-                        ),
-                        "area_fraction": (
-                            converter.PROCESS_AREA_HIGHLIGHT_FRACTION
-                        ),
-                        "smoothing_radius_mm": (
-                            converter.PROCESS_AREA_HIGHLIGHT_RADIUS_MM
-                        ),
-                        "luma_floor": (
-                            converter.PROCESS_AREA_HIGHLIGHT_LUMA_FLOOR
-                        ),
-                    }
-                    if style == "process_area"
-                    else None
-                ),
-                "process_color_detail_alignment": (
-                    converter.PROCESS_AREA_DETAIL_ALIGNMENT
-                    if style == "process_area"
-                    else None
-                ),
-                "tone_gap_bridge": {
-                    "enabled": self._tone_bridge_active(),
-                    "max_gap_mm": self.tone_bridge.value(),
-                    "scope": "same_traced_streamline_only",
-                },
-                "pen_down_chain": {
-                    "enabled": self._pen_chain_active(),
-                    "max_gap_mm": self.chain_gap.value(),
-                    "process_chain_cell_ratio": (
-                        PROCESS_AREA_CHAIN_CELL_RATIO
-                        if self.style.currentData() == "process_area"
-                        else None
-                    ),
-                    "planner_order": True,
-                    "bridge_decision": (
-                        "draw_connector_vs_lift_travel_lower"
-                    ),
-                    "local_flow_bridge_mm": (
-                        self.tone_bridge.value()
-                        if style in EDGE_FLOW_STYLES
-                        and self._tone_bridge_active()
-                        else 0.0
-                    ),
-                    "channels": self._pen_chain_stats,
-                },
                 "pen_width_mm": self.pen_width.value(),
                 "dot_size_pct": self.dot_size.value(),
                 "path_tolerance_mm": self.path_tolerance.value(),
@@ -4031,9 +1886,6 @@ class CmykTab(GeneratorTab):
                 "gcr_pct": self.gcr.value(),
                 "resolution_px": self.resolution.value(),
                 "weights": weights,
-                "color_model": "process-ink-multiply-v1",
-                "calibration_identity": calibration_identity,
-                "ink_transmittances": ink_transmittances,
                 "sharpening": {
                     "enabled": self.sharpen.isChecked(),
                     "amount_pct": self.sharpen_amount.value(),
@@ -4045,562 +1897,21 @@ class CmykTab(GeneratorTab):
                 "the calibration sheet keeps its geometric layout."
             ),
             "files": {
-                channel: Path(file_names[channel]).name
-                for channel in channels
+                channel: Path(path_value).name
+                for channel, path_value in zip(channels, written)
             },
             "file_sha256": {
-                channel: hashlib.sha256(
-                    results[channel]["gcode"].encode("utf-8")
-                ).hexdigest()
-                for channel in channels
-            },
-            "program_geometry": {
-                channel: {
-                    "marks": _record_count(
-                        results[channel].get("marks", 0)
-                    ),
-                    "moves": _record_count(
-                        results[channel].get("moves", 0)
-                    ),
-                    "draw_mm": float(results[channel].get("draw_mm", 0.0)),
-                    "x_theta_moves": int(
-                        results[channel].get("x_count", 0)
-                    ),
-                    "y_theta_moves": int(
-                        results[channel].get("y_count", 0)
-                    ),
-                }
-                for channel in channels
+                channel: _sha256_file(Path(path_value))
+                for channel, path_value in zip(channels, written)
+                if Path(path_value).is_file()
             },
             "preflight": {
                 channel: results[channel].get("checks")
                 for channel in channels
             },
-            "set_verification": {
-                "complete": set(channels) == set(converter.CHANNELS),
-                "channels": list(channels),
-                "expected_channels": list(converter.CHANNELS),
-                "identity_sha256": set_identity_sha256,
-                "consistency_checked": bool(set_identities),
-                "motion_preflight_passed": all(
-                    bool(results[channel].get("checks"))
-                    and not converter.preflight_problems(
-                        results[channel]["checks"]
-                    )
-                    for channel in channels
-                ),
-                "whole_set_transaction": bool(published_with_programs),
-            },
         }
-        return data
-
-
-class CmykPhotoTab(CmykTab):
-    """One-action color workflow with the complete CMYK tuner behind it."""
-
-    NAME = "cmyk_photo"
-    WRITE_ORDER = ("y", "m", "c", "k")
-    REQUIRE_COMPLETE_SET = True
-    GUIDED_HOST_CONTROLS = (
-        "ink_profile_button",
-        "fill_bed_button",
-        "fit_inside_button",
-        "preview_motion_check",
-        "ink_sim_check",
-        "preview_transport",
-    )
-
-    def __init__(self, host):
-        super().__init__(host)
-        self._guided_mode = True
-        self._quick_pending_save = False
-        self._next_export_base_path = None
-        self._last_quick_folder = ""
-        self._source_pixmap = QPixmap()
-        preview_widget = getattr(host, "gl_preview", None)
-        self._preview_placeholder = QLabel(
-            preview_widget if preview_widget is not None else self
-        )
-        self._preview_placeholder.setAlignment(Qt.AlignCenter)
-        self._preview_placeholder.setAttribute(
-            Qt.WA_TransparentForMouseEvents,
-            True,
-        )
-        self._preview_placeholder.hide()
-        if preview_widget is not None:
-            preview_widget.installEventFilter(self)
-        self.page_w.setValue(250)
-        self.page_h.setValue(250)
-        self.margin.setValue(5)
-        self.scale_pct.setValue(100)
-        self._build_guided_layout()
-        self._show_guided_mode(True)
-
-    def _build_guided_layout(self):
-        self.workflow_navigator = CmykStageNavigator(
-            CMYK_WORKFLOW_STAGES,
-            recipes=CMYK_RECIPE_PRESETS,
-        )
-        self.guided_bar = QWidget()
-        bar = QHBoxLayout(self.guided_bar)
-        bar.setContentsMargins(2, 2, 2, 2)
-        title = QLabel("Guided color setup")
-        title.setStyleSheet("font-weight: 600;")
-        bar.addWidget(title, 1)
-        self.advanced_button = QPushButton("Advanced settings")
-        self.advanced_button.setCheckable(True)
-        self.advanced_button.toggled.connect(self._toggle_advanced)
-        bar.addWidget(self.advanced_button)
-
-        self.guided_panel = QWidget()
-        guided_layout = QVBoxLayout(self.guided_panel)
-        guided_layout.setContentsMargins(0, 0, 0, 0)
-        guided_layout.setSpacing(8)
-        card = QFrame()
-        card.setObjectName("cmykGuidedCard")
-        card.setStyleSheet(
-            "QFrame#cmykGuidedCard {"
-            "  background: palette(base);"
-            "  border: 1px solid palette(mid);"
-            "  border-radius: 10px;"
-            "}"
-            "QLabel#cmykGuidedTitle {"
-            "  color: palette(text);"
-            "  font-size: 16px;"
-            "  font-weight: 700;"
-            "}"
-            "QLabel#cmykGuidedBody {"
-            "  color: palette(text);"
-            "  font-size: 11px;"
-            "}"
-            "QLabel#cmykGuidedImage {"
-            "  color: palette(text);"
-            "  background: palette(button);"
-            "  border-radius: 6px;"
-            "  padding: 8px;"
-            "  font-size: 11px;"
-            "}"
-            "QPushButton#cmykCreateButton {"
-            "  background: #2563eb;"
-            "  color: white;"
-            "  border: none;"
-            "  border-radius: 7px;"
-            "  padding: 13px 14px;"
-            "  font-size: 13px;"
-            "  font-weight: 700;"
-            "}"
-            "QPushButton#cmykCreateButton:hover {"
-            "  background: #1d4ed8;"
-            "}"
-            "QPushButton#cmykCreateButton:disabled {"
-            "  background: palette(mid);"
-            "  color: palette(disabled-text);"
-            "}"
-        )
-        body = QVBoxLayout(card)
-        body.setContentsMargins(18, 16, 18, 16)
-        body.setSpacing(10)
-        heading = QLabel("Color-matched CMYK photo")
-        heading.setObjectName("cmykGuidedTitle")
-        body.addWidget(heading)
-        description = QLabel(
-            "Uses the current image, matches tone through shared coherent "
-            "flow, and creates one program for each physical pen."
-        )
-        description.setObjectName("cmykGuidedBody")
-        description.setWordWrap(True)
-        body.addWidget(description)
-        self.guided_preview = QLabel()
-        self.guided_preview.setObjectName("cmykGuidedImage")
-        self.guided_preview.setMinimumHeight(170)
-        self.guided_preview.setMaximumHeight(210)
-        self.guided_preview.setAlignment(Qt.AlignCenter)
-        body.addWidget(self.guided_preview)
-        self.guided_image = QLabel()
-        self.guided_image.setObjectName("cmykGuidedImage")
-        self.guided_image.setWordWrap(True)
-        body.addWidget(self.guided_image)
-        self.quick_create_button = QPushButton("Create 4 G-code files…")
-        self.quick_create_button.setObjectName("cmykCreateButton")
-        self.quick_create_button.setToolTip(
-            "Use the current image, apply color-matched photo defaults, show "
-            "the preview, and save four programs in Yellow, Magenta, Cyan, "
-            "Black print order."
-        )
-        self.quick_create_button.clicked.connect(self.create_guided_set)
-        body.addWidget(self.quick_create_button)
-        order = QLabel(
-            "14-inch-safe page  •  Y → M → C → K  •  Xθ/Yθ optimized"
-        )
-        order.setObjectName("cmykGuidedBody")
-        order.setWordWrap(True)
-        body.addWidget(order)
-        self.profile_note = QLabel()
-        self.profile_note.setObjectName("cmykGuidedBody")
-        self.profile_note.setWordWrap(True)
-        body.addWidget(self.profile_note)
-        guided_layout.addWidget(card)
-        guided_layout.addStretch(1)
-
-        layout = self.layout()
-        layout.insertWidget(0, self.workflow_navigator)
-        layout.insertWidget(1, self.guided_bar)
-        layout.insertWidget(2, self.guided_panel, 1)
-        self.attach_stage_navigator(self.workflow_navigator)
-        self.workflow_navigator.stage_clicked.connect(
-            self._open_stage_in_advanced
-        )
-        self._refresh_guided_image()
-
-    def _open_stage_in_advanced(self, key):
-        self.select_stage(key)
-        if self._guided_mode:
-            self.advanced_button.setChecked(True)
-            self._toggle_advanced(True)
-
-    def _toggle_advanced(self, enabled):
-        self._show_guided_mode(not bool(enabled))
-        self._apply_host_guided_visibility()
-        fit = getattr(self.host, "fit_tools_pane_to_controls", None)
-        if callable(fit):
-            fit()
-
-    def _show_guided_mode(self, guided):
-        self._guided_mode = bool(guided)
-        self.guided_panel.setVisible(self._guided_mode)
-        self.controls_scroll.setVisible(not self._guided_mode)
-        self.guidance.setVisible(not self._guided_mode)
-        self.advanced_button.blockSignals(True)
-        self.advanced_button.setChecked(not self._guided_mode)
-        self.advanced_button.setText(
-            "Back to guided setup"
-            if not self._guided_mode
-            else "Advanced settings"
-        )
-        self.advanced_button.blockSignals(False)
-        if not self._guided_mode and self._stage_navigator is not None:
-            self.select_stage(self._stage_navigator.current_stage)
-        if self._guided_mode and hasattr(self, "guided_image"):
-            self._refresh_artwork()
-
-    def preferred_tool_pane_width(self):
-        if self._guided_mode:
-            return 410
-        return (
-            getattr(
-                self,
-                "_full_controls_min_width",
-                self.controls.minimumSizeHint().width(),
-            )
-            + 34
-        )
-
-    def _refresh_artwork(self):
-        super()._refresh_artwork()
-        self._refresh_guided_image()
-
-    def _refresh_guided_image(self):
-        if not hasattr(self, "guided_image"):
-            return
-        path = getattr(self, "_artwork", "")
-        pixmap = QPixmap(path) if path else QPixmap()
-        self._source_pixmap = pixmap
-        if not pixmap.isNull():
-            self.guided_preview.setPixmap(
-                pixmap.scaled(
-                    360,
-                    200,
-                    Qt.KeepAspectRatio,
-                    Qt.SmoothTransformation,
-                )
-            )
-            self.guided_preview.setText("")
-        else:
-            self.guided_preview.clear()
-            self.guided_preview.setText(
-                "Image preview appears here"
-                if path
-                else "Choose a photo to begin"
-            )
-        self.guided_image.setText(
-            "Current image: " + (Path(path).name or "(none)")
-            if path
-            else "No image selected. Create will ask you to choose one."
-        )
-        if hasattr(self, "profile_note"):
-            self.profile_note.setText(
-                "Using the loaded measured pen profile."
-                if self._active_ink_colors()
-                else (
-                    "Using default process-ink colors. For the closest paper "
-                    "match, load a measured pen profile in Advanced settings."
-                )
-            )
-        self._update_preview_placeholder()
-
-    def _update_preview_placeholder(self):
-        if not hasattr(self, "_preview_placeholder"):
-            return
-        preview = getattr(self.host, "gl_preview", None)
-        if preview is None:
-            return
-        self._preview_placeholder.setGeometry(preview.rect())
-        self._preview_placeholder.setStyleSheet(
-            "QLabel {"
-            "  background: palette(base);"
-            "  color: palette(text);"
-            "  font-size: 12px;"
-            "  padding: 24px;"
-            "}"
-        )
-        if self._source_pixmap.isNull():
-            self._preview_placeholder.clear()
-            self._preview_placeholder.setText(
-                "Choose a photo, then create the four CMYK programs."
-            )
-        else:
-            width = max(120, preview.width() - 48)
-            height = max(120, preview.height() - 48)
-            self._preview_placeholder.setPixmap(
-                self._source_pixmap.scaled(
-                    width,
-                    height,
-                    Qt.KeepAspectRatio,
-                    Qt.SmoothTransformation,
-                )
-            )
-        visible = (
-            self._guided_mode
-            and self.isVisible()
-            and not getattr(self.host, "moves", None)
-        )
-        self._preview_placeholder.setVisible(visible)
-        if visible:
-            self._preview_placeholder.raise_()
-
-    def _output_label(self, channel):
-        label = converter.CHANNEL_LABELS[channel].lower()
-        return f"{self.WRITE_ORDER.index(channel) + 1:02d}-{label}"
-
-    def _apply_quick_defaults(self):
-        locked_state = self._locked_stage_state()
-        try:
-            return self._apply_quick_defaults_body()
-        finally:
-            restore_control_state(locked_state)
-
-    def _apply_quick_defaults_body(self):
-        # A 250 mm square has a 176.78 mm corner radius, keeping the complete
-        # page inside the 355.6 mm (14 in) print circle.
-        self.page_w.setValue(250)
-        self.page_h.setValue(250)
-        self.margin.setValue(5)
-        self.scale_pct.setValue(100)
-        self.registration_marks.setChecked(True)
-        self.theta_mode.set_value("optimized")
-        for box in self.write_boxes.values():
-            box.setChecked(True)
-        return self.apply_reference_defaults()
-
-    def _expected_quick_paths(self, folder, base_name):
-        base = Path(folder) / base_name
-        paths = [
-            Path(f"{base}-{self._output_label(channel)}.gcode")
-            for channel in self.WRITE_ORDER
-        ]
-        return paths + [Path(f"{base}-set.json")]
-
-    def create_guided_set(self):
-        if self.analysis_running():
-            self.report_error("The four CMYK programs are already being built.")
-            return
-        if getattr(self.host, "preview_thread", None) is not None:
-            self.report_error("Wait for the current preview to finish.")
-            return
-        if getattr(self.host, "save_thread", None) is not None:
-            self.report_error("Wait for the current save to finish.")
-            return
-        self._refresh_artwork()
-        if not self._artwork:
-            pick = getattr(self.host, "pick_svg", None)
-            if callable(pick):
-                pick()
-                QGuiApplication.processEvents()
-                self._refresh_artwork()
-        if not self._artwork:
-            QMessageBox.warning(
-                self,
-                "Choose a photo",
-                "Choose the image you want to print, then try again.",
-            )
-            return
-        source = Path(self._artwork)
-        initial = self._last_quick_folder or str(source.parent)
-        folder = QFileDialog.getExistingDirectory(
-            self,
-            "Choose one folder for the four CMYK G-code files",
-            initial,
-        )
-        if not folder:
-            self.report_error("CMYK G-code creation cancelled.")
-            return
-        self._last_quick_folder = folder
-        base_name = f"{source.stem}-cmyk"
-        existing = [
-            path
-            for path in self._expected_quick_paths(folder, base_name)
-            if path.exists()
-        ]
-        if existing:
-            answer = QMessageBox.question(
-                self,
-                "Replace the existing CMYK set?",
-                (
-                    f"{len(existing)} matching file(s) already exist in "
-                    f"{folder}. Replace them?"
-                ),
-                QMessageBox.StandardButton.Yes
-                | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No,
-            )
-            if answer != QMessageBox.StandardButton.Yes:
-                self.report_error("CMYK G-code creation cancelled.")
-                return
-        self._next_export_base_path = str(
-            Path(folder) / f"{base_name}.gcode"
-        )
-        if not self._apply_quick_defaults():
-            self._next_export_base_path = None
-            return
-        self._quick_pending_save = True
-        self._set_quick_busy(True, "Building the color preview…")
-        preview = getattr(self.host, "preview", None)
-        if not callable(preview):
-            self._quick_pending_save = False
-            self._next_export_base_path = None
-            self._set_quick_busy(False)
-            self.report_error("The converter cannot start a preview.")
-            return
-        preview()
-        thread = getattr(self.host, "preview_thread", None)
-        if thread is None:
-            self._quick_pending_save = False
-            self._next_export_base_path = None
-            self._set_quick_busy(False)
-            return
-        thread.finished.connect(self._guided_preview_finished)
-
-    def _guided_preview_finished(self):
-        if not self._quick_pending_save:
-            return
-        self._quick_pending_save = False
-        self._next_export_base_path = None
-        self._set_quick_busy(False)
-        self.report_error("Preview did not complete; no files were saved.")
-
-    def on_preview_finished(self):
-        super().on_preview_finished()
-        if not self._quick_pending_save:
-            return
-        self._quick_pending_save = False
-        self._set_quick_busy(True, "Planning the four optimized programs…")
-        self.save_all()
-
-    def _set_planning_state(self, running):
-        super()._set_planning_state(running)
-        if hasattr(self, "quick_create_button"):
-            self._set_quick_busy(
-                running,
-                "Creating the four CMYK files…"
-                if running
-                else None,
-            )
-
-    def _on_failed(self, message):
-        self._next_export_base_path = None
-        super()._on_failed(message)
-
-    def _on_cancelled(self):
-        self._next_export_base_path = None
-        super()._on_cancelled()
-        if hasattr(self, "quick_create_button"):
-            self._set_quick_busy(False)
-
-    def _set_quick_busy(self, busy, message=None):
-        self.quick_create_button.setEnabled(not busy)
-        self.advanced_button.setEnabled(not busy)
-        self.quick_create_button.setText(
-            message if message else "Create 4 G-code files…"
-        )
-        if self._guided_mode:
-            cancel = getattr(self.host, "cancel_preview_button", None)
-            if cancel is not None:
-                cancel.setVisible(bool(busy))
-        if busy:
-            self._preview_placeholder.hide()
-        else:
-            self._update_preview_placeholder()
-
-    def showEvent(self, event):
-        super().showEvent(event)
-        self._refresh_guided_image()
-        self._apply_host_guided_visibility()
-
-    def hideEvent(self, event):
-        self._preview_placeholder.hide()
-        self._restore_host_controls()
-        super().hideEvent(event)
-
-    def _apply_host_guided_visibility(self):
-        guided = bool(self._guided_mode)
-        preview = getattr(self.host, "preview_button", None)
-        cancel = getattr(self.host, "cancel_preview_button", None)
-        if preview is not None:
-            preview.setVisible(not guided)
-        if cancel is not None:
-            cancel.setVisible(not guided)
-        for name in self.GUIDED_HOST_CONTROLS:
-            control = getattr(self.host, name, None)
-            if control is not None:
-                control.setVisible(not guided)
-        if guided:
-            self._update_preview_placeholder()
-            status = getattr(self.host, "status", None)
-            if callable(getattr(status, "setText", None)):
-                status.setText(
-                    "Ready to create your four CMYK G-code files."
-                )
-            estimate = getattr(self.host, "estimate", None)
-            if callable(getattr(estimate, "setText", None)):
-                estimate.setText(
-                    "One color-matched page, fitted inside the 14-inch "
-                    "print circle."
-                )
-        else:
-            self._preview_placeholder.hide()
-            status = getattr(self.host, "status", None)
-            if callable(getattr(status, "setText", None)):
-                status.setText("Advanced CMYK controls are ready.")
-            estimate = getattr(self.host, "estimate", None)
-            if callable(getattr(estimate, "setText", None)):
-                estimate.setText(
-                    "Preview builds the four layers; saving plans exact "
-                    "Xθ/Yθ G-code."
-                )
-
-    def _restore_host_controls(self):
-        for name in ("preview_button", "cancel_preview_button") + (
-            self.GUIDED_HOST_CONTROLS
-        ):
-            control = getattr(self.host, name, None)
-            if control is not None:
-                control.setVisible(True)
-
-    def eventFilter(self, watched, event):
-        preview = getattr(self.host, "gl_preview", None)
-        if watched is preview and event.type() == QEvent.Type.Resize:
-            self._update_preview_placeholder()
-        return super().eventFilter(watched, event)
+        path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+        return path
 
 
 def _sha256_file(path):

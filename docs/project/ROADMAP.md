@@ -8,6 +8,14 @@
 - Link completed hardware/test tasks to a test ID, lab note, measurement, photo, or commit.
 - Partial work stays unchecked; explain partial status in the engineering log.
 
+**2026-11-26 converter rollback:** the owner directed a return to the last
+stable converter state before the Reddit-inspired CMYK work. Windows software
+is back at commit `2a52202`; later 2026-11-22 through 2026-11-26 converter
+status entries below are historical and superseded by `WSW-20261126-005`.
+Independent P100, firmware, and physical-calibration records remain current.
+Any removed converter feature must be reintroduced as a separately validated
+task rather than treated as the active production path.
+
 ## Phase gates
 
 - [x] **Phase 0 - Repository organization**
@@ -559,20 +567,12 @@
 
 ## Known technical debt
 
-- [ ] Split structure-tensor geometry generation from CMYK ink assignment.
-  Problem: `software/converter_core/structure_tensor.py` now combines
-  edge-preserving source preprocessing, tensor construction, legacy per-ink
-  tracing, shared tracing, local pitch, and coherent ink-plane assignment in
-  one approximately `1,500`-line module. The coherent renderer is verified,
-  but another screen style would increase coupling and make focused testing
-  harder.
-  Benefit: a small geometry module can trace reusable streamline paths while
-  the CMYK layer owns tone/color assignment and keyline policy.
-  Risk: moving the implementation can accidentally change candidate order,
-  seed phases, occupancy, or output geometry, invalidating saved comparisons.
-  Acceptance: helper extraction preserves byte-equivalent geometry for fixed
-  seeds across legacy per-ink, stochastic shared, and coherent modes; the
-  focused Edge-flow suite and complete converter discovery still pass.
+- [x] Remove the unfinished structure-tensor/CMYK workflow from production.
+  The rollback in `WSW-20261126-005` removed
+  `software/converter_core/structure_tensor.py` and the dependent
+  Edge-flow/coherent renderers, UI, tests, and export paths. Reintroducing any
+  part of that work requires a new scoped task, current regression coverage,
+  and physical CMYK validation.
 
 - [ ] Plan the four CMYK layer programs in one shared page frame.
   Problem: each per-ink SVG is recentered on its own contour bounding box, so

@@ -9,13 +9,13 @@ deterministic layout can be rebuilt. All cell values and rectangles live in
 the returned manifest (used by ``tools/cmyk_calibrate.py`` and
 ``docs/testing/CMYK_CALIBRATION.md``), not on the paper.
 
-The sheet screen follows the tab's Screen style for the dot and continuous
-screens (halftone dots, line screen, crosshatch levels, or edge-flow
-streamlines): what you calibrate is what you print. The second ladder row
-adapts to the screen - dot size, line pitch, or hatch levels - and the dense
-spots use a tight mark spacing for each screen. Ladder cells print raw tone
-(the per-ink weights are not applied); the GCR ramp runs the real separation
-with the page's weights and gamma.
+The sheet screen follows the tab's Screen style for the dot and line screens
+(halftone dots, line screen, or crosshatch levels): what you calibrate is
+what you print. The second ladder row adapts to the screen - dot size, line
+pitch, or hatch levels - and the dense spots use a tight mark spacing for
+each screen. Ladder cells print raw tone (the per-ink weights are not
+applied); the GCR ramp runs the real separation with the page's weights and
+gamma.
 """
 
 from __future__ import annotations
@@ -63,7 +63,7 @@ MIX_SETS = (
     ("c", "m", "y", "k"),
 )
 SPOT_SCALE = 1.40
-SHEET_SCREENS = ("lines", "rectilinear", "crosshatch", "halftone", "edge_flow")
+SHEET_SCREENS = ("lines", "rectilinear", "crosshatch", "halftone")
 
 
 def _fmt(value):
@@ -112,9 +112,6 @@ class _SheetBuilder:
         overdraw,
         screen="halftone",
         levels=4,
-        flow_smoothing_mm=2.5,
-        flow_layers=3,
-        flow_pitch_compression=0.6,
         build_marks=True,
     ):
         self.page_width_mm = float(page_width_mm)
@@ -130,12 +127,6 @@ class _SheetBuilder:
         self.overdraw = max(1, min(3, int(overdraw)))
         self.screen_style = str(screen)
         self.levels = max(2, min(5, int(levels)))
-        self.flow_smoothing_mm = max(0.2, float(flow_smoothing_mm))
-        self.flow_layers = max(1, min(6, int(flow_layers)))
-        self.flow_pitch_compression = max(
-            0.0,
-            min(0.9, float(flow_pitch_compression)),
-        )
         self.build_marks = bool(build_marks)
         self.layers = {channel: [] for channel in converter.CHANNELS}
         self.patches = []
@@ -186,9 +177,6 @@ class _SheetBuilder:
             levels=self.levels if levels is None else int(levels),
             overdraw=self.overdraw if overdraw is None else int(overdraw),
             solid=self.solid,
-            flow_smoothing_mm=self.flow_smoothing_mm,
-            flow_layers=self.flow_layers,
-            flow_pitch_compression=self.flow_pitch_compression,
         )
 
     def cell(
@@ -286,9 +274,6 @@ def build_sheet(
     overdraw=1,
     screen="halftone",
     levels=4,
-    flow_smoothing_mm=2.5,
-    flow_layers=3,
-    flow_pitch_compression=0.6,
     marks=True,
 ):
     """Return ``(layers, manifest)`` for the labeled calibration sheet.
@@ -321,9 +306,6 @@ def build_sheet(
         overdraw,
         screen=screen,
         levels=levels,
-        flow_smoothing_mm=flow_smoothing_mm,
-        flow_layers=flow_layers,
-        flow_pitch_compression=flow_pitch_compression,
         build_marks=marks,
     )
     weight_map = _weight_map(weights)
@@ -339,12 +321,6 @@ def build_sheet(
         screen_line = (
             f"screen crosshatch | pitch {_fmt(builder.pitch_mm)} mm | "
             f"levels {builder.levels}"
-        )
-    elif screen == "edge_flow":
-        screen_line = (
-            f"screen edge flow | pitch {_fmt(builder.pitch_mm)} mm | "
-            f"layers {builder.flow_layers} | compression "
-            f"{_fmt(builder.flow_pitch_compression * 100.0)}%"
         )
     else:
         screen_line = (
@@ -444,7 +420,7 @@ def build_sheet(
         row(cells, ladder_w)
 
     for channel in converter.CHANNELS:
-        if screen in ("lines", "rectilinear", "edge_flow"):
+        if screen in ("lines", "rectilinear"):
             cells = [
                 {
                     "label": _fmt(value),
@@ -504,11 +480,7 @@ def build_sheet(
     cells = []
     for value in GCR_STEPS:
         tones = converter.rgb_to_cmyk_tone(
-            gray,
-            gcr=value,
-            weights=weights,
-            gamma=gamma,
-            color_match=False,
+            gray, gcr=value, weights=weights, gamma=gamma
         )
         tone_map = {
             channel: float(tones[channel][0, 0])
@@ -542,7 +514,7 @@ def build_sheet(
             "tones": {channel: 1.0 for channel in channels},
             "dot_scale": SPOT_SCALE if screen == "halftone" else 1.0,
         }
-        if screen in ("lines", "rectilinear", "crosshatch", "edge_flow"):
+        if screen in ("lines", "rectilinear", "crosshatch"):
             cell["pitch_mm"] = dense_pitch
         if screen == "crosshatch":
             cell["levels"] = 4
@@ -598,12 +570,6 @@ def build_sheet(
             "pen_width_mm": round(builder.pen_width_mm, 4),
             "overdraw": builder.overdraw,
             "levels": builder.levels,
-            "flow_smoothing_mm": round(builder.flow_smoothing_mm, 4),
-            "flow_layers": builder.flow_layers,
-            "flow_pitch_compression": round(
-                builder.flow_pitch_compression,
-                4,
-            ),
             "gcr_pct": round(builder.gcr_pct, 3),
             "gamma": round(builder.gamma, 4),
             "weights": {

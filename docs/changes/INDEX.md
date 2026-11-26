@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-26 | `WSW-20261126-005` | windows-software | implemented | [Revert the converter to its pre-Reddit baseline](windows-software/2026/2026-11-26-revert-pre-reddit-converter.md) |
 | 2026-11-26 | `WSW-20261126-004` | windows-software | implemented | [Fill the bed by default for CMYK Photo](windows-software/2026/2026-11-26-cmyk-photo-fill-bed-default.md) |
 | 2026-11-26 | `WSW-20261126-003` | windows-software | implemented | [Chain precision CMYK cells into continuous strokes](windows-software/2026/2026-11-26-continuous-precision-cmyk-strokes.md) |
 | 2026-11-26 | `WSW-20261126-002` | windows-software | implemented | [Correct precision CMYK skin color and facial detail](windows-software/2026/2026-11-26-precision-cmyk-skin-and-teeth.md) |

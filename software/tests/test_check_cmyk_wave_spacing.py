@@ -150,7 +150,7 @@ class CheckCmykWaveSpacingTests(unittest.TestCase):
             "bed_compensation_path": "bed.json",
             "bed_compensation": {
                 "mode": "row_locked_projection",
-                "profile_fingerprint": "745e3d264cc5",
+                "profile_fingerprint": "f85ec410dbac",
                 "translation_normalization": {
                     "mode": "shared_zero_mean",
                     "common_mean_mm": [0.0, 0.0],

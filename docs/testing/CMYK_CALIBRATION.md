@@ -23,9 +23,8 @@ The printed header is the minimum needed to match a scan to this layout:
 
 1. `CMYK CALIBRATION - page <W>x<H> mm | margin <M> mm`
 2. `screen lines | pitch <P> mm`, `screen rectilinear | pitch <P> mm`,
-   `screen dots | pitch <P> mm | dot <D>%`,
-   `screen crosshatch | pitch <P> mm | levels <L>`, or
-   `screen edge flow | pitch <P> mm | layers <L>`
+   `screen dots | pitch <P> mm | dot <D>%`, or
+   `screen crosshatch | pitch <P> mm | levels <L>`
 
 ## Analyze
 
@@ -44,10 +43,6 @@ The printed header is the minimum needed to match a scan to this layout:
    python tools\cmyk_calibrate.py scan.png --layout 216x279 --margin 6 --screen crosshatch --pitch 0.6 --levels 4
    ```
 
-   The CLI also accepts `--screen edge_flow` when rebuilding an edge-flow
-   sheet without its manifest. `--pitch` remains descriptive; the saved
-   manifest is the authoritative record of the flow settings.
-
 3. If fiducial detection fails (cropped or cluttered image), add
    `--corners x1,y1,...,x4,y4` with the fiducial centres in pixels, order
    top-left, top-right, bottom-left, bottom-right. The scan must show the
@@ -58,7 +53,7 @@ The tool writes `<scan stem>-profile.json`.
 ## Read the output
 
 - `inks.c/m/y/k` - paper-relative ink transmittance at full coverage. These
-  are the multipliers for separation and the print-simulation preview:
+  are the multipliers for the print-simulation preview:
   `result = paper x C x M x Y x K` in C, M, Y, K plot order.
 - `validation` - measured vs predicted values for the mix patches. A small
   mean error (about 8/255 or less) means pure multiply matches this pen set;
@@ -70,8 +65,7 @@ The tool writes `<scan stem>-profile.json`.
 
 ## Then
 
-Report the ink numbers and the multiply verdict. Load the profile with
-**Ink profile...**; CMYK separation then solves its C/M/Y coverage against
-those measured transmittances, and the preview uses the same response. Keep
-profiles named by pen set and paper, because a pen, paper, or pressure change
-invalidates them.
+Report the ink numbers and the multiply verdict. These profile numbers are
+the input for the CMYK multiply print-simulation preview (follow-up to
+`WSW-20261007-007`); keep profiles named by pen set and paper, because a
+pen, paper, or pressure change invalidates them.

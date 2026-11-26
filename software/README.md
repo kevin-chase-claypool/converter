@@ -24,10 +24,10 @@ python qt_svg_to_gcode.pyw
 or double-click `..\converter.bat` from the repo root. Runtime errors are written
 to `qt_debug.log` in this folder.
 
-Requires `PySide6` (`pip install PySide6`). The **Plotterfun**, **Plotterfun
-Extended**, and kaleidoscope **Maps** tabs need Qt WebEngine, which ships in
-the full `PySide6` wheel (`PySide6-Addons`); without it those tabs report the
-missing module instead of failing the app.
+Requires `PySide6` (`pip install PySide6`). The kaleidoscope's **Maps** tab
+also needs Qt WebEngine, which ships in the full `PySide6` wheel
+(`PySide6-Addons`); without it the tab reports the missing module instead of
+failing the app.
 
 The first two lines of `qt_debug.log` (and of the window's log pane) name the
 converter core and the active A-axis guard, e.g.
@@ -45,94 +45,6 @@ It reports the largest bed rotation inside one drawing move, the largest A rate
 demanded, whether any pen-up move carries rotation as a bare `G0` rapid, and the
 worst commanded bed-path bow with its radius - measured from the file, so it
 answers "did this program get the guard?" without guessing.
-
-## Tests
-
-The converter suite is organized for targeted runs. Use quiet mode (`-q`) to
-keep the output to the final summary. Do not use `unittest -b` for the full
-suite on this project: capturing every passing test's large planner output is
-measurably slower.
-
-```powershell
-# CMYK separation, image processing, screens, Wave geometry, and UI
-python -m unittest -q `
-  software.tests.test_cmyk_separation `
-  software.tests.test_cmyk_edge_flow `
-  software.tests.test_cmyk_photo `
-  software.tests.test_cmyk_screen_styles `
-  software.tests.test_cmyk_wave `
-  software.tests.test_cmyk_contract `
-  software.tests.test_cmyk_tab
-
-# One focused module
-python -m unittest -q software.tests.test_path_join
-
-# Complete converter suite
-python -m unittest discover -q -s software\tests -p "test_*.py"
-```
-
-The complete discovery run currently contains 755 test cases. Repeated generator
-tab contracts retain their per-tab class names and failure locations, while
-related slow setup scenarios use subtests to avoid rebuilding the same Qt
-window or generated coupon.
-
-### Reproducible headless CMYK export
-
-Use the headless driver when a CMYK set must be produced and checked without
-opening or automating a visible window:
-
-```powershell
-python tools\export_cmyk_headless.py `
-  "C:\Users\jacks\Downloads\Golden Sunset Winter Family Selfie.png" `
-  --output-dir samples\gcode\fam-precision-2026-11-25 `
-  --recipe process_area --page-mm 250 --pen-width-mm 0.9 `
-  --pitch-mm 0.35 --path-tolerance-mm 0.05 `
-  --max-marks 800000 --seed 7 `
-  --reference-image tmp\reddit_cmyk_reference.jpg
-```
-
-The command runs the real ``CMYK Photo`` tab in an offscreen Qt application,
-applies the selected workflow preset, calls the tab's normal save path, and
-publishes all four programs plus the version-8 manifest through
-`MainWindow.export_program_set`. It does not synthesize replacement artwork or
-G-code. By default it runs the complete export twice and requires byte-identical
-programs plus identical manifest content except for the creation timestamp.
-
-Each successful run writes `<base>-verification.json` with the exact program
-hashes, mark counts, page and machine bounds, unit commands, common identities,
-motion preflight, and determinism result. It also writes one compressed
-`<base>-comparison.jpg` derived from the tab's actual C/M/Y/K layers in print
-order using the multiply ink model. The coherent comparison re-applies the
-precision recipe and changes only the screen style, so page, placement,
-registration, pen order, seed, scale, pen width, and all image controls stay
-identical. The source panel uses the same page margin and artwork fit as the
-generated marks, rather than stretching the source across the whole panel. The
-preview is capped below `750000` bytes.
-
-For a `0.90 mm` pen, the `0.35 mm` process recipe is automatically raised by
-the renderer to its `1.10` pen-width floor (`0.99 mm` spacing, `0.98765 mm`
-actual axis pitch across the 240 mm artwork area). Both the set manifest and
-verification report now record that resolved pitch; the requested pitch remains
-the persisted layout value. The generated Golden Sunset milestone and its
-evidence are retained in
-`..\samples\gcode\fam-precision-2026-11-25\`.
-
-The precision recipe now starts with auto levels off, brightness `100 %`,
-saturation `106 %`, contrast `122 %`, gamma `1.00`, GCR `65 %`, a `60 %` /
-`1.50 mm` unsharp mask, and all four ink weights at `100 %`. Every selected
-process mark moves within its cell toward that ink's local integrated tone.
-Cells containing a broad positive highlight can remain blank after diffusion,
-preserving white features without punching a generic threshold mask through
-skin. A three-face digital crop keeps the eye/glasses structure, smiles, and
-white tooth bands that the failed candidate lost. The image-patch mean RGB
-error falls from about `9.9` levels in the corrected prior controls to `8.4`,
-while mean eye/mouth gradient correlation rises from about `0.097` to `0.140`.
-This is digital preview evidence, not a paper-resolution claim. Sub-pen tooth
-gaps and felt-tip spread still require the four-pass paper check.
-
-This is digital verification only. Running the four numbered files in order on
-one registered sheet is still required to establish paper hue, density,
-overprint texture, registration, drag, and elapsed time.
 
 ## ioSender configuration recovery
 
@@ -303,17 +215,15 @@ Cycle Start with the pen loaded:
   independent `bed-error-verify-dense-91-v3-centered-auto.gcode` print improved
   every angle-stage RMS and reduced aggregate RMS from `0.550` to `0.486 mm`,
   but its `1.171 mm` maximum and `11.6 %` improvement miss the gates.
-  The project owner explicitly promoted `18bfb4ed1c33` anyway. On 2026-11-26
-  the owner specified the installed geometry as an 18-inch rotating bed with
-  15-inch round stock taped inside it. A 6.35 mm margin on every stock edge
-  leaves the requested `368.300 mm` (14.5-inch) drawing circle. Derived profile
-  `745e3d264cc5` keeps the profile's measured samples and corrections, then
-  extends its local-affine coverage from `165.100` to `184.150 mm`. The
-  measured inner field has the verification result above; the new outer
-  `19.050 mm` annulus is extrapolated and remains unverified on paper. The
-  owner-supplied 14.5-inch reach also replaces the prior conservative 180 mm
-  default, so the full disc requires current G54 registration and physical
-  clearance verification before a production run.
+  The project owner explicitly promoted `18bfb4ed1c33` anyway. On 2026-11-01
+  the owner corrected the stock assumption from 14 to 15 inches. Derived
+  profile `f85ec410dbac` keeps that profile's measured samples and corrections,
+  then extends its local-affine coverage from `165.100` to `180.000 mm`. The
+  default 15-inch stock and 6.35 mm rim margin leave a `368.300 mm` (14.5-inch)
+  rim-clear diameter, but the 180 mm gantry reach makes the usable circle
+  `360.000 mm` (14.173 inches). The measured inner field has the verification
+  result above; the new outer `14.900 mm` annulus is extrapolated and remains
+  unverified on paper. This is an owner override, not a gate-qualified pass.
 
   For a v3 overhead photo, start with the dense image scale and a light blur:
 
@@ -387,12 +297,12 @@ Cycle Start with the pen loaded:
   seven intermediate-angle fields, performs leave-one-station-out validation, correlates
   the result with the optional bed mesh, and writes
   `bed-error-analysis.json`. The
-  `..\samples\gcode\bed-error-compensation-2026-11-26-dense-v3-368mm-stock-extrapolated.json`
+  `..\samples\gcode\bed-error-compensation-2026-11-01-dense-v3-360mm-reach-extrapolated.json`
   profile is preselected in **Machine > Bed compensation JSON** and declares a
-  `184.150 mm` radius (`368.300 mm` / `14.5 in` diameter). Its measured
+  `180.000 mm` radius (`360.000 mm` / `14.173 in` diameter). Its measured
   samples still come from the centered dense-v3 field through `165.100 mm`;
-  the outer `19.050 mm` annulus is local-affine extrapolation and its extreme
-  boundary correction is `1.105 mm`. **Browse...** selects a replacement;
+  the outer `14.900 mm` annulus is local-affine extrapolation and its extreme
+  boundary correction is `1.057 mm`. **Browse...** selects a replacement;
   **Default** restores that profile; clearing the path disables compensation.
   The profile is a machine-XY correction added after the existing planner
   chooses the bed angle and after P100 registration; it does not change
@@ -456,9 +366,9 @@ Cycle Start with the pen loaded:
   maximum from `1.309` to `0.752 mm`, and error by `41.9 %`; all M-12 gates
   passed. The earlier `13p5in-extrapolated` variant reused those correction
   samples and extended the local-affine field to `171.450 mm`. The current
-  stock-corrected profile reuses the same data to `184.150 mm`; its outer
-  `19.050 mm` annulus is extrapolated, not measured, and its maximum boundary
-  correction is `1.105 mm`, below the 5 mm safety bound. Recalibrate after any
+  stock-corrected profile reuses the same data to `180.000 mm`; its outer
+  `14.900 mm` annulus is extrapolated, not measured, and its maximum boundary
+  correction is `1.054 mm`, below the 5 mm safety bound. Recalibrate after any
   bed, paper-support, toolhead, carriage, pen-clamp, or registration change.
   The first eight-angle sheet was measured on 2026-10-24. A=0 spatial error was
   `0.306 mm` RMS / `0.540 mm` maximum and leave-one-station-out prediction was
@@ -479,9 +389,9 @@ Cycle Start with the pen loaded:
   prior default was profile `4bad792e35ad`; its measured inner field was
   independently verified, while its outer `6.350 mm` annulus was extrapolated.
   The current owner-selected default is derived centered dense-v3 profile
-  `745e3d264cc5`. It keeps profile `18bfb4ed1c33`'s measured data while
-  declaring the 184.15 mm stock-limited field; its outer `19.050 mm` annulus
-  is extrapolated and remains unverified.
+  `f85ec410dbac`. It keeps profile `18bfb4ed1c33`'s measured data while
+  declaring the 180 mm gantry-limited field; its outer `14.900 mm` annulus is
+  extrapolated and remains unverified.
 - `..\samples\gcode\a-tilt-pairs-test.gcode` - four separated line pairs for
   a caliper-read bed-tilt check: each pair is the same paper segment drawn
   twice, once at A=0 (the longer 80 mm constant line) and once at that
@@ -556,27 +466,21 @@ G-code (Ctrl+S), and exits. **Tools** is the tool selector: **All Tools**
 layout), **Convert** is Ctrl+1, and the other tools follow in menu order with
 Ctrl+2...Ctrl+0. **View** toggles the machine reach guide, pen-down path, and
 log, and controls preview zoom. The preview panel also has a **Red motion
-lines** checkbox that toggles the same pen-down overlay without leaving the
-preview. It starts **off** and stays in sync with the sidebar checkbox and the
-View menu. The **Ink simulation (multiply)** checkbox starts **on** for CMYK
-previews: the ink layers multiply over the paper white in plot order, like
-translucent pens, so the preview shows the finished overprint instead of
-painting each layer opaquely. Simulation strokes draw at the real pen width,
-and a stroke thinner than a screen pixel fades toward white by the fraction of
-a pixel it covers, so the fit-to-window view keeps the density the paper will
-get (zoom in for full-strength strokes). Mixing only happens where strokes
-overlap: keep the effective pitch (Dot pitch x Artwork scale, then the
-tone-adaptive factor of 1-3x) at or below the pen width for full coverage. An
-**Ink profile...** button loads
-the `*-profile.json` written by `tools\cmyk_calibrate.py`, so both separation
-and the simulation use your pens' measured transmittances instead of the
-nominal process values. The uncalibrated display approximation now matches the
-Tombow process marker set: Process Blue `#00aeef`, Magenta `#ec008c`, Process
-Yellow `#ffff00`, and Black `#231f20`. These values drive both the layer
-colours and the OpenGL multiply mixing, so yellow mainly removes blue and
-magenta remains vivid. A measured profile remains authoritative for the
-actual inks on paper.
-**Help** has the shortcut list
+lines** checkbox next to Fill bed / Fit inside that toggles the same pen-down
+overlay without leaving the preview (it stays in sync with the sidebar
+checkbox and the View menu), plus an **Ink simulation (multiply)** checkbox
+for CMYK previews: the ink layers multiply over the paper white in plot
+order, like translucent pens, so the preview shows the finished overprint
+instead of painting each layer opaquely. Simulation strokes draw at the real
+pen width, and a stroke thinner than a screen pixel fades toward white by the
+fraction of a pixel it covers, so the fit-to-window view keeps the density
+the paper will get (zoom in for full-strength strokes). Mixing only happens
+where strokes overlap: keep the effective pitch (Dot pitch x Artwork scale,
+then the tone-adaptive factor of 1-3x) at or below the pen width for full
+coverage. An **Ink profile...** button loads
+the `*-profile.json` written by `tools\cmyk_calibrate.py`, so the simulation
+multiplies your pens' measured transmittances instead of the display ink
+colours. **Help** has the shortcut list
 (F1) and About.
 The status bar shows the current artwork and G-code paths. Tools are
 contributed by `software/generator_tabs/*_tab.py` modules and discovered at
@@ -584,15 +488,16 @@ startup, one page per tool; a broken tool is reported in the log instead of
 stopping the app.
 
 Import, **Preview / Cancel / Save G-code**, and the OpenGL preview panel are
-static window furniture. Pressing **Preview** builds the active tab - Convert
-previews the Artwork row's file, while Flow Field, Line Draw, and 3D Wireframe
-build their own SVG from their controls - and that result runs through the
-same converter pipeline into the shared preview panel. **Save G-code** exports
-the active tab's result. Switching tabs never rebuilds anything; it marks the
-visible preview as belonging to another tab until Preview is pressed again.
-**CMYK Photo** is the guided exception: it starts with one image-led action,
-hides the static Preview/playback/fit chrome, and restores the complete CMYK
-tuner under **Advanced settings**.
+static window furniture: they stay visible on every tab. Pressing **Preview**
+builds the active tab - Convert previews the Artwork row's file, while Flow
+Field, Line Draw, and 3D Wireframe build their own SVG from their controls -
+and that result runs through the same converter pipeline into the shared
+preview panel. **Save G-code** exports the active tab's result. Switching tabs
+never rebuilds anything; it marks the visible preview as belonging to another
+tab until Preview is pressed again. Multi-layer tools (CMYK) keep that static
+Preview for the overlaid view; exact per-ink programs are planned when
+**Save 4 G-code files** is pressed and are written through one save dialog
+owned by the window.
 
 Tool authors: the contract and the host entry points are documented in
 [`generator_tabs/README.md`](generator_tabs/README.md). Ported or vendored
@@ -609,60 +514,11 @@ Current tools:
   threshold, hatch spacing, hatch light/mid/dark thresholds (upstream
   linedraw levels 144/64/16), sketch jitter, minimum length, simplify,
   resolution, line width, seed, page size, margin, artwork scale.
-- **CMYK** - the original full RGB-to-CMYK tuner. It opens with every image,
-  separation, screening, registration, pen, and bed-motion control visible.
-  Load an image in the Artwork row, press **Preview**, tune the four ink
-  layers, then press **Save 4 G-code files**. This is the direct entry point
-  for the existing CMYK workflow and retains the familiar Ctrl+3 shortcut.
-- **CMYK Photo** - the guided RGB-to-CMYK color workflow. Open an image, then
-  press **Create 4 G-code files**. If needed, the action asks for the image and
-  one output folder. It applies the recommended coherent color-flow recipe,
-  runs automatic color analysis with GCR enabled, shows the shared preview,
-  and writes four numbered programs in physical Yellow, Magenta, Cyan, Black
-  order.
-  - The guided page is `250 x 250 mm`. Its corner radius is `176.78 mm`, inside
-    the `184.15 mm` radius of the 14.5-inch drawing circle. CMYK Photo is
-    treated as a production page rather than a fixed 1:1 generator, so the
-    global **Fill bed** default enlarges its generated bounds to the drawable
-    circle unless the operator explicitly selects **Fit inside** or **Manual**.
-  - A persistent nine-stage rail spans composition, image preparation,
-    separation, direction field, streamline placement, ink assignment, path
-    order, motion, and review/export. Clicking a stage opens only that stage's
-    settings in Advanced mode. Each stage has a description, explicit input,
-    output, validation and cache-dependency contract, **Reset stage**, and
-    **Lock auto**; locked stages keep manual values when Auto, recommended
-    defaults, or a recipe preset runs. The selected stage and locks persist in
-    the artwork recipe.
-  - **Apply recipe** offers the recommended coherent portrait, a precision
-    process-color screen for fine detail, the per-ink Edge-flow comparison, the
-    stochastic shared-flow experiment, and a line-screen speed comparison. The
-    one-click guided action remains the fast path and does not require visiting
-    these stages. Precision recipes saved before process-cell chaining was
-    introduced migrate once to the new continuity gap; later sidecars preserve
-    the operator's current chain setting.
-  - The Direction stage's **Show flow field** action renders the current shared
-    structure tensor as an undirected hue field: opposite tangent directions
-    have the same colour, brightness is guidance confidence, and white marks
-    high-confidence keyline structure. The Review stage reports whole-set
-    consistency, hashes, preflight status, and transaction behavior.
-  - The screen shows the source image immediately in the large preview, then
-    replaces it with the four-layer print preview. The static Preview,
-    playback, fill, and ink-profile controls are hidden until **Advanced
-    settings** is opened.
-  - Open **Advanced settings** for the complete existing CMYK tuner. The
-    recommended controls set coherent shared geometry, three tone layers,
-    `2.5 mm` structure smoothing, `60 %` pitch compression, black keylines,
-    pen-aware pitch, chaining, saturation, contrast, brightness, gamma, GCR,
-    ink weights, and sharpening. The active measured ink profile is used when
-    loaded.
-  - **Plotterfun Extended** remains available as an experimental comparison.
-    It runs its selected algorithm independently per CMYK channel and is not
-    the color-matched production path.
-  - Embedded image colour profiles are converted to sRGB before auto levels,
-    sharpening, and CMYK separation. This is required for wide-gamut sources
-    such as Display P3 photographs; treating their raw RGB numbers as sRGB
-    shifts skin, foliage, and saturated colours. EXIF orientation is applied
-    first, so portrait images are screened in their displayed orientation.
+- **CMYK** - RGB to CMYK separation with gray-component replacement, screened
+  as one layer per ink pen. Controls: artwork (from the static Artwork row),
+  an **Auto (photo)** button that analyzes the image and sets auto levels,
+  brightness, contrast, saturation, GCR, a starting gamma, and a modest
+  luminance-sharpening preset.
   - For Wave screen, Auto uses an exposure-preserving color path. It reads the
     source's midtone, tonal span, and high-chroma percentile, then keeps normal
     photos near neutral saturation/contrast instead of pushing them to the
@@ -670,261 +526,41 @@ Current tools:
     highlights, and colour separation in the preview. If the current pitch
     would make each solid row cover too much of the page, Auto opens it to at
     least `3.4` pen widths; every resulting row remains exactly equidistant.
-  - Edge-flow, coherent color flow, the precision process screen, and the
-    general screen styles start from a detail/exposure search over the real
-    curve chain. Auto then evaluates those candidates through the active
-    process-ink multiply model and searches Auto levels, saturation, contrast,
-    brightness, gamma, and GCR for lower coverage-model RGB error, while
-    retaining penalties for lost detail, mean-tone drift, and clipping. Edge-flow
-    and the precision process screen keep this search inside an
-    exposure-preserving window: brightness `100-140 %`, contrast `120-180 %`,
-    saturation `105-120 %`, gamma `1.00-1.30`, and GCR `60-80 %`. Its estimate
-    uses the same
-    pen-width, pitch, and layer occupancy factor as the screen instead of
-    treating source tone as printed area. It resets all four ink weights to
-    `100 %`; the status line calls the result a **coverage RGB error
-    estimate**, not a paper-validated error.
-  - The **Wave** screen retains its separate exposure-preserving path. Its row
-    coverage is geometry-dependent rather than a direct ink-area fraction, so
-    it keeps the established photo-fidelity setup instead of claiming a
-    falsely precise colour match.
-  - Auto only changes Dot pitch for the Wave screen. Edge-flow and process-cell
-    spacing are treated as persisted layout and left at the operator's value
-    until the renderer applies its pen-safe floor; the status line still reports
-    the current effective pitch. **Match pen** remains the explicit action for
-    setting one pen width at the current artwork scale. The recommended action
-    sets the Edge-flow pitch before invoking Auto.
-  auto levels (default off: stretch the image's 1st-99th luminance percentiles
+  - For other screen styles, tone controls come from a detail search over the
+    real curve chain: maximum mid tone-weighted gradient with a clipping
+    penalty, plus a target print mean clamped to the printable `0.30-0.75`
+    window. That search also models the rectilinear row coverage.
+  - Auto only changes Dot pitch for Wave screen and never sets rows closer than
+    the operator's current choice. **Match pen** remains the explicit action
+    for setting one pen width at the current artwork scale.
+  auto levels (default on: stretch the image's 1st-99th luminance percentiles
   so low-key photos use the full tonal range), saturation, contrast,
   brightness, luminance sharpening (default on: unsharp-mask amount and
   on-paper radius), ink gamma, black (GCR), resolution, per-ink weights, screen style
   (halftone dots / stipple dots / line screen / crosshatch levels / wave screen
-  with equidistant rows / edge-flow streamlines / coherent color flow /
-  precision process-color cells / interference (gyroid) /
-  single line (TSP) / topographic contours / rectilinear fill / continuous
-  row screen),
+  with equidistant rows / interference (gyroid) / single line (TSP) /
+  topographic contours / rectilinear fill),
   dot pitch (with a **Match pen** button that sets it to one pen width at
   the current artwork scale), dot size, solid dots (spiral-filled so each
   mark reads as a dot, not a ring), hatch levels, overdraw, pen width, max
   marks per ink, seed, preview and write checkboxes per layer, page size,
   margin, artwork scale, and registration corner crosses (all four inks
   draw the same four margin crosses so pass alignment can be checked).
-  Separation now starts with the normal channel-complement estimate, then
-  refines cyan, magenta, and yellow through the known process-ink multiply
-  response. The refined coverage is accepted only where its predicted RGB is
-  closer to the processed source than the plain estimate, so nominal process
-  inks improve the starting colour without affecting the screening machinery.
-  Black remains governed by **Black (GCR)**. Ink weights and **Ink gamma** are
-  deliberate adjustments applied after that match; keeping weights at 100 %
-  and gamma at 1.0 preserves the closest prediction. A loaded measured ink
-  profile replaces the nominal process response for both separation and
-  preview.
-  **Coherent color flow (shared geometry, ink planes)** is the recommended
-  portrait renderer. One shared multichannel guide supplies the image form:
-  gradients from scene luminance and the separated C/M/Y/K tone maps form a
-  structure tensor, and Gaussian-like blur smooths it. The tracer builds one
-  shared streamline geometry per density layer instead of four independently
-  seeded screens. Moderate coherent gradients keep every path on the image
-  form; weak or flat areas use cyan 15°, magenta 75°, yellow 0°, and black
-  45° fallbacks as successive layers, preserving a visible screen rather than
-  one uniform direction.
-  Along each path, channel coverage is smoothed over the **Ink-plane hold**
-  paper-space window (default `6 mm`). A long run keeps its dominant ink, or a
-  second ink when it reaches the **Secondary ink mix** ratio (default `72 %`)
-  of the dominant coverage, so one local colour plane does not break into
-  independently phased dashes. Additional layers and shade compression
-  are owned by scene-depth luminance, not by the strongest saturated ink: a
-  bright yellow or magenta face remains one base network, while the first
-  extra layer starts at **First shadow layer** (default `40 %` scene depth) and
-  the final allowed layer approaches **Final shadow layer** (default `90 %`).
-  Both thresholds are operator controls and must remain in ascending order.
-  **Continuous Black
-  keylines** reserve strong Black strokes for tensor-coherent boundaries;
-  ordinary Black tone receives a lower coherent-flow weight while keylines
-  are active, so dark background texture does not become a black wash.
-  **Colour edge separation** sets how much C/M/Y coverage is removed beside
-  those same boundaries (default `25 %`).
-  Coherent color flow applies edge-preserving source simplification at `65 %`
-  of **Flow smoothing** before sharpening and separation. That merges pores,
-  compression noise, and fine fabric texture into broader color planes while
-  retaining glasses, eyes, silhouettes, and other strong boundaries.
-  **Precision process screen (fine CMYK cells)** divides the placed page into
-  cells whose pre-scale pitch is clamped to at least `1.10` pen widths. Each
-  C/M/Y/K coverage plate is independently Floyd-Steinberg error-diffused into a
-  binary ink subset per cell, so sparse highlights remain present at their
-  requested average coverage instead of quantizing to paper. Each selected ink
-  draws one short three-point mark, positioned toward that ink's tone centroid
-  inside the cell rather than always at the cell centre. A confidently coherent
-  structure-tensor direction orients the mark; weak fields fall back to the
-  Cyan `15°`, Magenta `75°`, Yellow `0°`, and Black `45°` screen angles. Black
-  keylines raise Black coverage above the selected edge threshold. Broad
-  positive highlights covering at least `40 %` of a cell footprint with local
-  detail `>= 0.16` and scene luma `>= 0.45` remain paper, so eyes and tooth
-  bands do not fill with unrelated process ink. The marks are clipped to the
-  artwork page, and if one plate exceeds **Max marks per ink**, the cell pitch
-  grows before any plate is silently truncated. When **Keep pen down** is
-  enabled, those short marks are chained head-to-tail before planning within a
-  `3`-cell local radius. This joins diagonal neighbours and short sparse-cell
-  gaps, so contiguous image areas become long cell-following strokes instead
-  of thousands of isolated M3/M5 dashes. Every bridge is visible ink; lowering
-  the gap restores a lighter, more fragmented screen without changing the
-  selected CMYK cell subsets. The precision recipe starts at `0.35`
-  pre-scale pitch, `0.05 mm` path tolerance, `800000` marks per ink, auto levels
-  off, brightness `100 %`, saturation `106 %`, contrast `122 %`, gamma `1.00`,
-  GCR `65 %`, a `60 % / 1.50 mm` unsharp mask, all four weights at `100 %`, and
-  the normal four-file Y/M/C/K workflow. Its fine-cell color and tooth
-  separations have not yet been paper-qualified.
-  **Edge-flow streamlines (per-ink networks)** remains available as the prior
-  comparison mode. It traces four independently seeded networks through the
-  same guide, with per-ink fallback angles and path-local stochastic tone
-  intervals. It can retain color-only detail that a single shared path cannot,
-  but its local `4-8 mm` gating produces substantially more short fragments.
-  **Shared Edge-flow (experimental co-located CMYK)** is a separate selectable
-  style. It traces one common coordinate network and gates each ink locally,
-  using independent phases and a normalized occupancy budget so similar tones
-  do not recreate a four-pen black centerline. It remains useful for comparing
-  co-located mixtures, but it is not the default photographic workflow.
-  **Continuous row screen (adjacent joins)** uses the tone-driven Rectilinear
-  row pitch and then joins the nearest non-overlapping adjacent row runs,
-  even when their ends do not overlap. Most of each ink therefore becomes a
-  few long pen-down chains instead of hundreds of row fragments. The joins
-  draw visible connector ink, the result follows straight screen angles rather
-  than Edge-flow contours, and a fully blank row band can still end a chain.
-  **Tone-gap bridge** is independent from adjacent chaining. It keeps a
-  current Edge-flow stroke down through a local coverage gap of up to the
-  selected distance (default `4 mm`) only when that gap lies along the same
-  traced streamline. Setting it to zero makes every tone break a pen lift;
-  changing it does not alter the adjacent contour chain.
-  **Pen-down chain** is enabled by default for open-line screens. It orders
-  endpoint-nearby marks head-to-tail and draws a connector only up to the
-  adjacent **Keep pen down** gap (default `5.0 mm`). Precision process marks
-  use the same pass before planning, with the precision recipe setting the gap
-  to `3` resolved process cells rather than one fixed millimetre. Edge-flow
-  also bridges up to `4 mm` of tone-off gaps along each individual streamline,
-  then applies that adjacent chain within each ink. Coherent color flow uses
-  the same
-  paper-space bridge before the normal post-planner chain, so local coverage
-  gaps do not recreate the fragmented screen. Screen contours are tagged
-  through the generated SVG. After the Xθ/Yθ planner chooses their final order and
-  direction, adjacent tagged contours in the same ink are chained again across
-  the same gap when drawing the connector is faster than lifting, travelling,
-  and lowering again. This second pass is what turns short planner-adjacent
-  fragments into one continuous M3 stroke. A real gap, a closed contour, or a
-  connector that would be slower than a lift remains a pen-up. Its connectors
-  draw visible ink, but they are local and substantially reduce the M3/M5
-  count. Ordinary SVG strokes and tagged Wave/TSP output stay separate.
-  The four plates use the same page frame, artwork scale, registration crosses,
-  pen offsets, and G-code contract, but remain independent pen programs.
-  Preview multiplies them to show the combined print; Save writes cyan,
-  magenta, yellow, and black to four separate G-code files. This is the same
-  four-file overprint workflow as the other CMYK screens, not one flattened
-  composite program.
-  **Shade compression** (default 60 %) is the continuous tone-to-spacing
-  control. Per-ink Edge-flow uses local ink tone `t`; coherent color flow uses
-  common scene depth so a saturated highlight is not mistaken for a shadow.
-  The target pitch is
-  `Dot pitch x (1 - compression x t)`, clamped to `1.10` pen widths. A value of
-  `0 %` keeps a fixed grid; `60 %` lets full-tone shadows reach `40 %` of the
-  base pitch; `90 %` is the densest setting and can approach solid coverage.
-  Neighbouring streamlines are seeded along the tensor field at this local
-  distance, so gradients compress gradually rather than switching at a few
-  broad tone thresholds.
-  **Flow layers** (default 3) adds complete offset streamline families in
-  progressively darker tone bands; more layers increase shadow detail, point
-  count, and plotting time beyond the continuous pitch compression.
-  Coherent color flow treats each layer as another parallel geometric family
-  and assigns ink planes along the shared path; its extra families use
-  scene-depth thresholds from `40 %` to `90 %`. Legacy per-ink Edge-flow grows
-  four separate path families by channel tone. The shared experimental style instead
-  normalizes each channel's layer occupancy so the layers are not multiplied
-  into a black stack. **Flow smoothing** (default 2.5 mm on paper) controls how far
-  the tensor is blurred, trading fine surface texture for longer, calmer
-  contours. Dot pitch sets seed separation, Path tolerance controls trace
-  resampling, and Max marks/ink caps each plate. If the cap requires a coarser
-  seed pitch, the screen grows the pitch rather than randomly dropping lines.
-  Keep the effective pitch at least `1.5` pen widths when highlights must show
-  tone; a pitch finer than the physical pen leaves no white paper to vary.
-  The recommended photo action uses `2.0` pen widths for normal portraits and
-  enables coherent color flow with Black keylines.
-  The explicit **Fine detail** action fits a portrait screen to the current
-  Pen width and Artwork scale: it sets Dot pitch to one effective pen width,
-  Flow smoothing to about two pen widths (clamped to `1.0-1.5 mm`), uses five
-  low-offset layers, sets Shade compression to `65 %`, shortens marks to
-  about `12 mm`, shortens path-local tone intervals to `2 mm`, and lowers Path
-  tolerance to at most `0.10 mm`.
-  It also enables **Continuous Black keylines (edge separation)**: the Black
-  plate keeps the strongest coherent boundaries continuous, while C/M/Y
-  reduce coverage by `25 %` beside those same high-confidence edges. A mild
-  `60 %` unsharp mask at `1.5 mm` restores small facial contrast without
-  changing the preset's physical spacing. It selects legacy per-ink Edge-flow
-  if another
-  screen style was active and intentionally changes the saved layout; Auto
-  remains image-only. For a `0.6 mm` pen at `260 %` scale this gives a
-  `0.25 mm` source pitch (`0.65 mm` effective), `1.2 mm` smoothing, five
-  layers, Black keylines with color-edge separation, `2 mm` tone breaks,
-  approximately `12 mm` marks, and `0.10 mm` tolerance. The button is checked
-  and reads **Fine detail ✓** while those controls still match the preset.
-  Changing the pen, scale, pitch, smoothing, layers, tolerance, keyline
-  choice, sharpening controls, screen style, or calibration mode clears the
-  indicator. Clicking
-  again while active restores the controls saved immediately before Fine
-  detail was applied and clears the checkmark. The snapshot is stored in the
-  artwork recipe so reopening the same image preserves the toggle's prior
-  layout. Older recipes that were already in the preset state without a saved
-  snapshot fall back to smoothing `2.5 mm`, three layers, keylines off, and
-  `0.15 mm` tolerance when switched off.
-  The implementation lives in
-  [`converter_core/structure_tensor.py`](converter_core/structure_tensor.py);
-  output uses the existing four-file CMYK save, preview, offset, and G-code
-  contract, and the Test sheet's **Sheet screen** can match this style. The
-  source method was prompted by the public
-  [First CMYK conversion](https://www.reddit.com/r/PlotterArt/comments/1xva9n7/first_cmyk_conversion/)
-  discussion; this implementation is repository-native and independently
-  tested. Software rendering is verified, but no edge-flow four-pass sheet has
-  yet established the best pitch, smoothing, or layer count on paper.
-  The recommended pitch adapts the Reddit-reference spacing to the installed
-  pen and current artwork scale. At the shipped `0.30 mm` pen and `280 %`
-  scale the `1.2 mm` minimum selects a `0.45 mm` source pitch, which is
-  `1.26 mm` on paper. At a `0.90 mm` pen and `200 %` scale it selects `0.90 mm`
-  for `1.80 mm`, or two pen widths on paper. Larger pens therefore retain the
-  open paper gaps visible in the reference instead of treating `1.2 mm` as a
-  dense ceiling. Auto still evaluates the actual image and may refine the
-  colour curve, while the physical pitch, smoothing, layers, and continuity
-  controls remain the recommended baseline. This is a software-selected
-  starting point, not a paper-validated optimum; inspect the four saved
-  programs and a physical sheet against the installed pen set.
-  For `IMG_0514.JPG` on the `200 x 200 mm` CMYK page, the `260 %` live layout
-  intentionally crops the portrait to fill the full drawable circle. Its
-  bounding radius is about `305.46 mm` against the `184.15 mm` reach, so the
-  orange reach warning is expected and the outer page corners are clipped;
-  the printed ink is the intended circular composition. Use **Fit inside**
-  only when the entire uncropped image is wanted; it recenters the artwork and
-  gives a final equivalent scale of about `153.21 %`. CMYK Photo now honors the
-  global **Fill bed** default, so its generated page is enlarged until the
-  artwork bounds touch the current 14.5-inch drawable circle. Other generator
-  pages still default to 1:1 so their own Artwork scale owns ordinary
-  placement; an explicit **Fit inside** or **Fill bed** still applies to every
-  generator.
   Resolution keeps the source image's longest side up to that many pixels
   and never upsamples, so it accepts high-resolution sources (the control is
   effectively uncapped; memory grows with the source size you keep).
-  The startup controls retain the prior Edge-flow baseline: auto
-  levels off, saturation 115 %, contrast 150 %, brightness 115 %, ink gamma
-  1.10, black (GCR) 75 %, C/M/Y/K weights 100/100/100/100 %, an unsharp mask
-  of 60 % at 1.5 mm, three Flow layers, 60 % Shade compression, 2.5 mm
-  Flow smoothing, Continuous
-  Black keylines off, Pen-down chain on, Path tolerance 0.10 mm, Max marks/ink
-  200000, seed 7, artwork scale 280 %, resolution 10000 px, and hatch levels
-  8. The recommended action switches to coherent color flow, enables Black
-  keylines, and uses a 1.0 mm adjacent chain so short connectors cannot cross
-  several screen rows and darken broad facial planes. The separate precision
-  process recipe uses about `3` resolved cell pitches, enough to join sparse
-  cell neighbours without drawing long face-crossing diagonals.
-  Increase that gap to prioritize elapsed time further, or lower it when the
-  connector ink changes colour density. Pressing the recommended action after
-  Auto replaces the screen recipe but preserves page size, artwork scale, pen
-  width, pen offsets, and bed motion. Existing artwork recipes keep their saved
-  advanced layout until the operator deliberately presses the button.
+  Shipped defaults are the owner's tuned rectilinear set: auto levels on,
+  rectilinear fill at 0.10 mm pitch (its light-tone stretch opens the pitch
+  up to 7x, so highlights and mid tones keep paper while dark tones fuse
+  solid, and the pitch follows the tone the row actually inks and eases
+  between rows so it does not step where the subject meets the background),
+  saturation 115 %, contrast 285 % (the soft S-curve keeps
+  steepening up to 300 % instead of clipping), brightness 170 %
+  (shadow-weighted lift), ink gamma 1.40 (about a third less ink in the mid
+  tones), unsharp mask on at 70 % with a 1.5 mm radius, black (GCR)
+  95 %, hatch levels 8, artwork scale 280 %, dot size 100 % with solid dots
+  off (both only affect the dot screens), 40000 marks per ink, 10000 px
+  resolution, C/M/Y/K weights 100/100/100/100 %.
   **Sharpen** applies its unsharp mask after auto levels and before the
   saturation, contrast, brightness, and separation curves. The mask derives
   detail from luminance and applies that same detail to all three RGB
@@ -935,11 +571,7 @@ Current tools:
   draws, and they apply instantly: every layer stays loaded, so toggling a
   checkbox never re-screens or re-plans. For CMYK previews the preview data
   area also reports the per-ink M3 (pen-down) counts as
-  `C: n M: n Y: n K: n`, counted from the preview moves after any
-  post-planner screen chaining. These counts and the preview time estimate
-  therefore match the saved program's pen-cycle decisions. Keep-down bridge
-  segments retain the originating contour's ink, so enabling chaining does not
-  disable the four-colour ink simulation.
+  `C: n M: n Y: n K: n`, counted from the planned program.
   Preview deliberately defers exact per-ink G-code generation until save so a
   completed preview does not sit behind four large planners. Pressing **Save
   4 G-code files** starts each checked ink's exact program through the same
@@ -1017,31 +649,17 @@ Current tools:
   shared frame, Bed motion, centre hold, row-spacing guard, crosses and pen
   offsets, then runs the motion preflight on each ink. It checks the bed-step
   cap, the A-rate limit, bare `G0` rotations and moves that exceed the Path
-  tolerance; hard violations block Save and warnings go to the log. The
-  analyzed programs must also agree on artwork scale, placement, page frame,
-  theta mode/ratio, feed and travel contract, and full bed-compensation
-  profile. Guided **Create 4 G-code files** requires all four output inks.
-  A successful artwork save publishes the four programs and a version-8
-  `<name>-set.json` as one logical transaction. Every file is staged before
-  any destination is replaced; a failed commit restores the previous set.
-  The manifest records the source hash, page and motion mode,
-  bed-compensation profile, artwork placement, complete image/screen recipe,
-  sharpening amount and radius, effective pitch, pen offsets, calibration
-  identity, workflow stage dependency hashes and locks, explicit coherent
-  hold/mix and shadow thresholds, keyline separation, independent tone-gap
-  bridge and adjacent-chain settings, per-ink preflight results, one canonical
-  set-identity hash, the precision process-cell pitch and edge threshold when
-  selected, the resolved cell pitch, highlight-preservation thresholds, detail
-  alignment fraction, and SHA-256 hashes for all four G-code files.
-  A non-zero artwork placement is also written into every G-code header, for
-  example `(artwork placement -3.170,-28.740 mm)`. Before a multi-pass print,
-  confirm that all four headers and `artwork_placement_mm` in the set manifest
-  match the placement used for the earlier passes.
-  Line, rectilinear, wave, edge-flow, gyroid, TSP and contour styles are the
-  continuous-mark alternatives to dot styles: they draw far fewer pen-lift
-  cycles, while the overdraw control darkens any style by redrawing each mark
-  up to three times with a sub-pen offset. **Wave screen - equidistant rows**
-  is the production
+  tolerance;
+  hard violations block Save and warnings go to the log. A successful
+  artwork save also writes a version-4 `<name>-set.json` beside the four files
+  with the source hash, page and motion mode, bed-compensation profile,
+  complete image/screen recipe, sharpening amount and radius, effective pitch,
+  pen offsets, per-ink
+  preflight results, and SHA-256 hashes for all four G-code files.
+  Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
+  alternatives to dot styles: they draw far fewer pen-lift cycles, while the
+  overdraw control darkens any style by redrawing each mark up to three times
+  with a sub-pen offset. **Wave screen - equidistant rows** is the production
   Wave screen. It translates one common
   luminance-shaped waveform to every row with no row-specific vertical
   movement, so adjacent centre spacing remains exactly the configured pitch.
@@ -1054,7 +672,7 @@ Current tools:
   which each row's amplitude follows its own locally smoothed tone. It uses
   the Machine tab's currently selected bed-compensation profile unchanged;
   the shipped default is the newer centered dense-v3 mesh
-  `745e3d264cc5`. The legacy mode deliberately does not row-lock compensation,
+  `f85ec410dbac`. The legacy mode deliberately does not row-lock compensation,
   so its adjacent paper-space row gaps may vary. Use it only to compare the
   old Wave geometry against the production screen on the current mesh.
   **Vary Wave frequency across image (break banding)** is enabled by default
@@ -1151,51 +769,6 @@ Current tools:
   algorithms) vendored under `software/plotterfun_vendor/` and embedded with
   QtWebEngine. Load the image and choose the algorithm inside the page, then
   press **Export SVG to plot**; requires PySide6-Addons.
-- **Plotterfun Extended** - the pinned
-  `msurguy/plotterfun-extended` production build (40 algorithms), embedded as a
-  local tab. The default view is a three-step CMYK workflow:
-  1. **Use current artwork** loads the converter's selected image and presses
-     the page's internal **Use image** action automatically.
-  2. **Style** chooses Flow Field, Contours, Linedraw, Stipple, Crosshatch,
-     Halftone, or Squiggle. The page is forced to CMYK with K included.
-  3. **Create Y/M/C/K G-code files...** asks for one folder, then writes
-     `<artwork>-01-yellow.gcode`, `<artwork>-02-magenta.gcode`,
-     `<artwork>-03-cyan.gcode`, `<artwork>-04-black.gcode`, and
-     `<artwork>-cmyk-set.json` there.
-
-  The split SVG layers are internal intermediates in the system temporary
-  folder; the selected folder receives only the four ready-to-run programs and
-  manifest. Every layer keeps the page frame and the same four registration
-  crosses, then uses one shared **Fit inside** scale, so the converter cannot
-  independently resize or centre an ink. Each layer runs through the normal
-  Convert analysis path, preserving bed compensation, pen settings, and motion
-  guards. The manifest records the hashes, source image, algorithm, line and
-  contour counts, and physical print order: Yellow, Magenta, Cyan, Black. Run
-  the numbered files on the same sheet without moving or re-registering the
-  paper. A missing channel is written as a registered boundary-only program and
-  is identified in the manifest rather than silently omitted.
-
-  Flow Field is the recommended default for color work. Its streamline
-  separation tightens in darker image regions, so shading changes the printed
-  pitch instead of mapping only to stroke color. CMYK separation also sends the
-  gray component to the black channel; the K program therefore contributes to
-  tonal density as well as edges. The generated files preserve those differences
-  in their drawing counts.
-
-  This remains an experimental comparison for the separate upstream channel
-  geometry. Use **CMYK Photo** for the production coherent color workflow and
-  measured-profile-aware tone matching.
-
-  **Advanced controls** reveals the full upstream sidebar, including all 40
-  algorithms, RGB/custom channels, luminance-depth controls, face-boundary
-  masking, field copies, route optimization, and page settings. In advanced
-  mode, **Open combined SVG in Convert** adopts the unsplit page as Convert
-  artwork. The upstream blue **Download SVG** button downloads only that
-  combined page; it does not create the four G-code programs. The static build is
-  served from a loopback-only HTTP server because Chromium blocks its module
-  workers under `file://`. It adds about 4.9 MB to the repository. Depth uses
-  a local luminance proxy; optional face landmarks may download their model on
-  first use. Requires PySide6-Addons.
 - **Layers** - splits the imported SVG by stroke/fill colour into per-layer
   SVGs; pick a layer to preview and plot one pen at a time. The source SVG's
   own dimensions are preserved.
@@ -1273,13 +846,8 @@ Generator pages are previewed **1:1** with the auto fit skipped, so that
 Artwork scale sets the physical drawing size; imported artwork on the Convert
 tab still uses the selected Fit mode.
 Generator tab controls fill the settings column, with the tab's hint and
-status text stacked below them. The settings column sizes itself to the active
-tool's visible controls, expands when a wider settings group is opened, and
-keeps a 280 px floor so it cannot be crushed by the preview. **CMYK Photo**
-starts in a compact guided column; opening **Advanced settings** widens it for
-the long Screen rows instead of requiring a manual splitter drag. The preview's
-checkbox and fit actions occupy two rows so they do not force the settings
-column into a horizontal scrollbar.
+status text stacked below them; the settings column has a 280 px floor so it
+cannot be crushed by the preview.
 
 ### Turtletoy artwork
 
@@ -1311,10 +879,7 @@ work with no input (optional mesh/image sources are noted below).
 | Convert | Fit bed (auto), Fill spacing 3 mm, linear or crosshatch, feed 700 / travel 3000 mm/min | Imported artwork; Save G-code once the preview looks right. |
 | Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
-| CMYK | Load an image, press **Preview**, inspect the four-ink overprint, then press **Save 4 G-code files**. | The original full tuner with all CMYK controls visible. Ctrl+3 opens this page. |
-| CMYK Photo (recommended) | Open an image, inspect the source preview, then press **Create 4 G-code files** and choose one folder. | Applies coherent color flow, three Flow layers, 60 % continuous Shade compression, 2.5 mm smoothing, edge-preserving simplification, Black keylines, pen-aware pitch, chaining, automatic color analysis with GCR, and a 250 mm page inside the 14-inch circle. Writes numbered Y/M/C/K programs and a manifest. Advanced settings expose the complete tuner. |
-| CMYK coherent-flow tuning | Open **Advanced settings** and press **Use recommended photo defaults** first. Adjust **Shade compression** for continuous gradient shading, **Flow layers** for additional offset dark-region geometry, and **Flow smoothing** for both source simplification and orientation calmness. **Fine detail** remains available as the prior per-ink precision mode. | This is the Reddit-reference workflow: one blurred multichannel image-form tensor defines direction, and long shared streamlines receive contiguous local CMYK ink planes. Darker areas gain offset layers, weak areas use layer-specific fixed angles, and Black keylines preserve subject structure. Plotterfun's independent-channel networks remain an explicit experimental comparison. |
-| CMYK continuous | Use the same image curve as the CMYK recipe, then choose **Continuous row screen (adjacent joins)** and keep **Pen-down chain** on with a `5 mm` gap. | Fastest starting point for an image where fewer M3/M5 cycles matter more than Edge-flow contour texture. Straight screen directions remain visible, and all joins print connector ink. A fully blank row band can still lift. |
+| CMYK | Auto levels on, rectilinear fill at 0.10 mm pitch, saturation 115 %, contrast 285 %, brightness 170 %, ink gamma 1.40, black (GCR) 95 %, 40000 marks/ink, resolution 10000 px, weights 100/100/100/100 %, artwork scale 280 % | Needs an image; Preview plans each ink in the background and Save writes four files. Dense photo screens take hours to plot; raise pitch or lower Max marks/ink for a faster pass. |
 | 3D Wireframe | Cube, size 2, detail 24, hidden-line wireframe, yaw 35 / pitch -25, perspective 4x radius, target width 140 mm, sample 0.7 mm | Works with no file; switch Source to File for OBJ/STL. |
 | Harmonograph | Physical model: d 900 / c 800 / p 900 / q 700 mm, A 10 / B 10 deg, R 0.001 / S 0.001, f 0.300 / g 0.302 Hz, disk 0.0008 Hz, 300 s, 12k samples | Upstream defaults; the simple model is a lighter alternative. |
 | Snowflake | 6 arms, depth 3, length 45 %, branch angle 35 deg, branch scale 55 %, jitter 8 deg / 15 % | Raise depth for finer detail; cap is 5. |
@@ -1326,7 +891,6 @@ work with no input (optional mesh/image sources are noted below).
 | Pixel Art | Mode big, pitch 0.6 mm, max grid 96, alpha 128, ignore white | Paths auto-fit the page; big mode needs 5x the pitch per pixel, line mode is denser. |
 | Wobble | Frequency 3 mm, amplitude 0.5 mm, jitter 20 %, seed 7, endpoint wobble on | Preview a tool first; Wobble processes those contours. |
 | Plotterfun | Load an image inside the page, pick an algorithm, keep its defaults, then Export SVG to plot | Requires QtWebEngine (PySide6-Addons). |
-| Plotterfun Extended | Press **Use current artwork**, choose a Style, then **Create Y/M/C/K G-code files** and select one folder. | Writes four page-registered G-code programs plus a manifest; split SVGs stay internal. Run `01-yellow`, `02-magenta`, `03-cyan`, then `04-black` on one sheet. Flow Field ties darker tone to tighter spacing, and K carries the gray component. Advanced controls expose the full 40-algorithm page. |
 | Voronoi | 120 points, seed 7, relax 1, cell boundaries, margin 6 mm | Raise relax for even cells; site dots show the seeds. |
 | Path Prep | Merge 5 deg / 0.05 mm, duplicate 0.05 mm, close gaps 0.2 mm, sort on | Preview a tool first; cleans those contours. |
 | Layers | Pick a colour layer (or All colours) from an imported SVG | One layer per pen; the source dimensions are kept. |
@@ -1862,12 +1426,10 @@ display-only; every other group changes the emitted program.
   closing the app update it. The current version stores the complete CMYK
   recipe, including image controls, screen geometry, Row order, kinematics,
   page layout, pen offsets, and layer selections. Version-1 sidecars still
-  restore their original placement fields. Reimporting an image logs
-  `Restored artwork placement: X ... mm, Y ... mm.`; check that line before
-  regenerating a later CMYK pass. A Fit still deliberately resets the placement
-  to zero. While dragging, the displayed part is the existing plan translated,
-  so the reach circle - not the drawn artwork - is the authority on what will
-  survive the next build.
+  restore their original placement fields. A Fit still deliberately resets the
+  placement to zero. While dragging, the displayed part is the existing plan
+  translated, so the reach circle - not the drawn artwork - is the authority on
+  what will survive the next build.
 - Pressing **Preview** shows the current build stage, percentage, and elapsed
   time. SVG parsing, motion planning, and clipping run in the background so the
   window remains responsive. Preview and Save G-code are mutually exclusive and
@@ -1917,7 +1479,7 @@ display-only; every other group changes the emitted program.
   the bed so the gantry draws the artwork unchanged (precise; the bed cannot
   add tilt, runout, or reversal error). XY-only programs still carry their
   A words - at one constant value - so ioSender and the controller see the
-  same program shape either way. CMYK Photo carries its own copy of the
+  same program shape either way. The CMYK tab carries its own copy of the
   two bullets for its four ink programs and its calibration sheet.
 - The converter does not apply a pen/TMAG XY tool offset. Generated XY positions
   remain in the machine work-coordinate frame; the controller's commissioning
@@ -1940,29 +1502,18 @@ display-only; every other group changes the emitted program.
 - SVG document coordinates are not machine coordinates. The converter centers
   the clipped artwork at G54 zero; a document centered at `(100,100)`, for
   example, emits drawing coordinates around `(0,0)`, not `(100,100)`.
-- `Bed dia mm` defaults to `457.2 mm` (18-inch rotating bed). `Stock dia mm`
-  defaults to `381.0 mm` (15-inch round paper stock), shown as the middle
-  preview circle. `Stock margin mm` defaults to `6.35 mm` (`0.25 in`) on every
-  edge, so the requested drawing diameter is `368.3 mm` (14.5 inches) and the
-  remaining outer stock band is available for tape.
-- `Gantry reach radius mm` (default `184.15`) caps the drawable circle at the
+- `Bed dia mm` defaults to `381.0 mm` (15-inch round stock). With the default
+  `Bed margin mm` of `6.35 mm` (0.25"), the stock permits a `368.3 mm`
+  (14.5-inch) rim-clear diameter. The default `180.0 mm` gantry-reach radius is
+  tighter, so the actual drawable and compensation diameter is `360.0 mm`.
+  The underlying dense-v3 measurements end at a `165.1 mm` radius, so the
+  outer `14.9 mm` annulus is extrapolated until an edge-calibration print
+  verifies it.
+- `Gantry reach radius mm` (default 180.0) caps the drawable circle at the
   gantry's reachable radius from the registered bed center. Because the bed
   rotates freely, the safe drawable area is this circle rather than the full
   bed; it keeps emitted coordinates inside the controller's X/Y envelope so
-  artwork at the rim cannot trip `Alarm:2 - Soft limit`. Before clipping, the
-  converter subtracts the active profile's maximum correction from this radius
-  so compensation cannot push a final machine point back outside the limit.
-  The saved header records the physical bed, stock, stock margin, reach, and
-  effective planning radius, and preflight blocks any emitted G54 point outside
-  the declared reach.
-  The owner-specified `14.5-inch` reach exceeds the prior conservative
-  `180 mm` default, so verify the current HOME + REGISTER envelope and physical
-  tape/stock clearance before relying on the full disc. The underlying
-  dense-v3 measurements end at a `165.1 mm` radius; the outer `19.05 mm`
-  annulus is extrapolated until an edge-calibration print verifies it. The
-  active profile reserves its `1.142 mm` maximum correction inside that reach,
-  so the current nominal planning radius is `183.008 mm` while the final
-  corrected XY envelope remains capped at `184.15 mm`.
+  artwork at the rim cannot trip `Alarm:2 - Soft limit`.
   The binding direction is **+Y**, and the edge is the controller's soft-limit
   envelope, not the switch: grblHAL sets a homed axis's envelope to
   `[max_travel + pulloff, -pulloff]` when hard limits are enabled, so `$27`

@@ -17,7 +17,6 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import converter_core as converter
-from generator_tabs.cmyk_workflow import CMYK_WORKFLOW_STAGES
 
 
 try:
@@ -37,6 +36,1876 @@ def svg_groups(root):
     ]
 
 
+class SeparationTests(unittest.TestCase):
+    def test_white_needs_no_ink(self):
+        import numpy as np
+
+        tones = converter.rgb_to_cmyk_tone(np.ones((2, 2, 3), dtype="float32"))
+        for channel in converter.CHANNELS:
+            self.assertLess(float(tones[channel].max()), 1e-6)
+
+    def test_black_moves_into_k_with_gcr(self):
+        import numpy as np
+
+        tones = converter.rgb_to_cmyk_tone(
+            np.zeros((1, 1, 3), dtype="float32"), weights=(1, 1, 1, 1)
+        )
+        self.assertAlmostEqual(float(tones["k"][0, 0]), 1.0, places=5)
+        for channel in ("c", "m", "y"):
+            self.assertAlmostEqual(float(tones[channel][0, 0]), 0.0, places=5)
+
+    def test_pure_cyan_stays_in_c(self):
+        import numpy as np
+
+        pixel = np.array([[[0.0, 1.0, 1.0]]], dtype="float32")
+        tones = converter.rgb_to_cmyk_tone(pixel)
+        self.assertAlmostEqual(float(tones["c"][0, 0]), 1.0, places=5)
+        self.assertAlmostEqual(float(tones["k"][0, 0]), 0.0, places=5)
+
+    def test_gcr_zero_keeps_the_gray_in_cmy(self):
+        import numpy as np
+
+        gray = np.full((1, 1, 3), 0.5, dtype="float32")
+        tones = converter.rgb_to_cmyk_tone(gray, gcr=0.0, weights=(1, 1, 1, 1))
+        self.assertAlmostEqual(float(tones["k"][0, 0]), 0.0, places=5)
+        for channel in ("c", "m", "y"):
+            self.assertAlmostEqual(float(tones[channel][0, 0]), 0.5, places=5)
+
+    def test_weights_and_gamma_shape_the_ink(self):
+        import numpy as np
+
+        gray = np.full((1, 1, 3), 0.5, dtype="float32")
+        tones = converter.rgb_to_cmyk_tone(
+            gray, gcr=0.0, weights=(0.0, 1.0, 1.0, 1.0), gamma=2.0
+        )
+        self.assertAlmostEqual(float(tones["c"][0, 0]), 0.0, places=6)
+        self.assertAlmostEqual(float(tones["m"][0, 0]), 0.25, places=5)
+
+
+class ScreeningTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        import numpy as np
+
+        cls.np = np
+
+    def geometry(self, width=100.0, height=100.0):
+        return {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": width,
+            "height_mm": height,
+            "pixels_w": 32,
+            "pixels_h": 32,
+        }
+
+    def test_halftone_marks_follow_tone(self):
+        white = self.np.zeros((32, 32), dtype="float32")
+        self.assertEqual(
+            converter.screen_channel(white, self.geometry(), spacing_mm=4.0), []
+        )
+        gray = self.np.full((32, 32), 0.6, dtype="float32")
+        marks = converter.screen_channel(
+            gray, self.geometry(), spacing_mm=4.0, solid=False
+        )
+        self.assertGreater(len(marks), 100)
+        self.assertEqual(len(marks[0]), 9)  # closed 8-step circle
+        solid = converter.screen_channel(gray, self.geometry(), spacing_mm=4.0)
+        self.assertEqual(len(solid), len(marks))
+        self.assertEqual(len(solid[0]), 15)  # 14-step spiral reads as a dot
+
+    def test_auto_levels_stretch_a_low_key_image(self):
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-levels-")
+        self.addCleanup(lambda: __import__("shutil").rmtree(folder, ignore_errors=True))
+        path = str(Path(folder) / "lowkey.png")
+        image = Image.new("L", (32, 32))
+        for x in range(32):
+            for y in range(32):
+                image.putpixel((x, y), 90 + (x * 40) // 31)
+        image.save(path)
+        plain, _ = converter.prepare_image_tones(
+            path, 80, 80, margin_mm=4, resolution_px=64, auto_levels=False
+        )
+        stretched, _ = converter.prepare_image_tones(
+            path, 80, 80, margin_mm=4, resolution_px=64, auto_levels=True
+        )
+        plain_range = float(plain["k"].max() - plain["k"].min())
+        stretched_range = float(stretched["k"].max() - stretched["k"].min())
+        self.assertGreater(stretched_range, plain_range + 0.3)
+
+    def test_depth_field_uses_scene_luminance_not_ink_coverage(self):
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-depth-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = str(Path(folder) / "colour.png")
+        image = Image.new("RGB", (16, 16))
+        for x in range(16):
+            red = round(255 * x / 15)
+            for y in range(16):
+                image.putpixel((x, y), (red, 128, 0))
+        image.save(path)
+        tones, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=32,
+            auto_levels=False,
+            gcr=0.0,
+            weights=(1, 1, 1, 1),
+        )
+        self.assertAlmostEqual(
+            float(tones["m"].max() - tones["m"].min()), 0.0, places=5
+        )
+        self.assertGreater(
+            float(tones["depth"].max() - tones["depth"].min()),
+            0.25,
+        )
+
+    def test_contrast_200_does_not_clip_tone_endpoints(self):
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-contrast-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = str(Path(folder) / "ramp.png")
+        image = Image.new("L", (16, 16))
+        for x in range(16):
+            value = int(64 + x * 127 / 15)
+            for y in range(16):
+                image.putpixel((x, y), value)
+        image.save(path)
+        tones, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=64,
+            auto_levels=False,
+            contrast=2.0,
+            gcr=1.0,
+            weights=(1, 1, 1, 1),
+        )
+        k = tones["k"]
+        # The old hard-clip contrast mapped 0.25/0.75 to pure white/black.
+        self.assertGreater(float(k.min()), 0.05)
+        self.assertLess(float(k.max()), 0.95)
+
+    def test_brightness_lifts_mid_tone_ink(self):
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-brightness-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = str(Path(folder) / "gray.png")
+        image = Image.new("RGB", (16, 16), (77, 77, 77))
+        image.save(path)
+        base, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=32,
+            auto_levels=False,
+            gcr=1.0,
+            weights=(1, 1, 1, 1),
+        )
+        lifted, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=32,
+            auto_levels=False,
+            gcr=1.0,
+            weights=(1, 1, 1, 1),
+            brightness=130.0,
+        )
+        # 130 % brightness keeps the black point but lays less ink.
+        self.assertLess(float(lifted["k"].mean()), float(base["k"].mean()) - 0.05)
+
+    def test_sharpening_restores_a_soft_edge_without_shifting_the_mean(self):
+        import numpy as np
+        from PIL import Image, ImageFilter
+
+        folder = tempfile.mkdtemp(prefix="cmyk-sharpen-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = str(Path(folder) / "soft-edge.png")
+        values = np.zeros((64, 64), dtype=np.uint8)
+        values[:, 32:] = 180
+        soft = np.asarray(
+            Image.fromarray(values).filter(ImageFilter.GaussianBlur(2.0))
+        )
+        Image.fromarray(np.stack([soft] * 3, axis=2)).save(path)
+        plain, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=64,
+            auto_levels=False,
+            gcr=0.0,
+            weights=(1, 1, 1, 1),
+        )
+        sharpened, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=64,
+            auto_levels=False,
+            gcr=0.0,
+            weights=(1, 1, 1, 1),
+            sharpen_pct=100.0,
+            sharpen_radius_mm=2.0,
+        )
+        plain_gradient = float(np.abs(np.diff(plain["c"], axis=1)).max())
+        sharp_gradient = float(np.abs(np.diff(sharpened["c"], axis=1)).max())
+        self.assertGreater(sharp_gradient, plain_gradient * 1.2)
+        self.assertLess(
+            abs(float(sharpened["c"].mean()) - float(plain["c"].mean())),
+            0.01,
+        )
+
+    def test_ink_processing_does_not_flatten_wave_depth(self):
+        import numpy as np
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-depth-processing-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = str(Path(folder) / "gradient.png")
+        ramp = np.tile(np.linspace(20, 235, 64, dtype="uint8"), (64, 1))
+        Image.fromarray(np.stack([ramp] * 3, axis=2)).save(path)
+        neutral, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=64,
+            auto_levels=False,
+            gcr=1.0,
+            weights=(1, 1, 1, 1),
+        )
+        processed, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=64,
+            auto_levels=False,
+            saturation=1.25,
+            contrast=2.5,
+            brightness=40.0,
+            gcr=0.99,
+            weights=(1, 1, 1, 1),
+            gamma=3.0,
+        )
+        np.testing.assert_allclose(
+            processed["depth"],
+            neutral["depth"],
+            atol=1e-6,
+            err_msg="ink density controls must not saturate scene depth",
+        )
+
+    def test_auto_photo_settings_fit_dark_and_bright_images(self):
+        import numpy as np
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-auto-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        rng = np.random.default_rng(7)
+
+        def save(name, values):
+            path = str(Path(folder) / name)
+            Image.fromarray(np.stack([values] * 3, axis=2)).save(path)
+            return path
+
+        dark_values = (12 + rng.random((64, 64)) * 22).astype("uint8")
+        dark_values[10:22, 10:22] = 190
+        dark_values[40:55, 35:50] = 150
+        bright_values = (150 + rng.random((64, 64)) * 70).astype("uint8")
+        dark = converter.auto_photo_settings(save("dark.png", dark_values))
+        bright = converter.auto_photo_settings(
+            save("bright.png", bright_values)
+        )
+        self.assertTrue(dark["auto_levels"])
+        # A dark scene still needs the full lift so its structure sits in the
+        # visible mid tones; the tone term trades a little gamma away to keep
+        # the print's mean inside the printable window. A bright image needs
+        # no lift and prints at its own tone.
+        self.assertGreaterEqual(dark["brightness"], 160)
+        self.assertGreaterEqual(dark["gamma"], 1.4)
+        self.assertLessEqual(bright["brightness"], 140)
+        self.assertLessEqual(bright["gamma"], 1.05)
+        self.assertEqual(
+            dark, converter.auto_photo_settings(save("dark2.png", dark_values))
+        )
+
+    def test_auto_photo_settings_match_the_printed_tone_to_the_photo(self):
+        import numpy as np
+        from PIL import Image
+        from converter_core import cmyk as cmyk_module
+
+        folder = tempfile.mkdtemp(prefix="cmyk-auto-tone-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        rng = np.random.default_rng(11)
+        # A bright, low-contrast field with soft structure - a stand-in for a
+        # portrait, where the detail-only search used to lift the print a stop
+        # lighter than the photo and wash the skin out.
+        values = (150 + rng.random((64, 64)) * 70).astype("uint8")
+        path = str(Path(folder) / "portrait.png")
+        Image.fromarray(np.stack([values] * 3, axis=2)).save(path)
+        chosen = converter.auto_photo_settings(path)
+
+        rgb = np.asarray(Image.open(path).convert("RGB"), dtype="float32") / 255.0
+        luminance = rgb @ np.array([0.299, 0.587, 0.114], dtype="float32")
+        low, high = np.percentile(luminance, [1.0, 99.0])
+        stretched = np.clip(
+            (luminance - low) / max(high - low, 1e-3), 0.0, 1.0
+        )
+        contrasted = cmyk_module._soft_contrast(
+            stretched, chosen["contrast"] / 100.0
+        )
+        lifted = np.power(
+            contrasted, 100.0 / max(1.0, chosen["brightness"])
+        )
+        printed = 1.0 - np.power(1.0 - lifted, chosen["gamma"])
+        # The search now aims the print's mean tone at the photo's instead of
+        # chasing detail energy wherever it leads.
+        self.assertLess(
+            abs(float(printed.mean()) - float(stretched.mean())), 0.03
+        )
+
+    def test_auto_photo_settings_compensate_a_sparse_screen(self):
+        import numpy as np
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-auto-screen-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        rng = np.random.default_rng(11)
+        values = (150 + rng.random((64, 64)) * 70).astype("uint8")
+        path = str(Path(folder) / "portrait.png")
+        Image.fromarray(np.stack([values] * 3, axis=2)).save(path)
+        plain = converter.auto_photo_settings(path)
+        sparse = converter.auto_photo_settings(
+            path, pen_width_mm=0.30, effective_pitch_mm=0.31
+        )
+        fine = converter.auto_photo_settings(
+            path, pen_width_mm=0.30, effective_pitch_mm=0.10
+        )
+        # Rows one pen width apart only ink about a fifth of a light tone, so
+        # the search has to ask for a darker chain than the tone model alone.
+        self.assertLess(sparse["gamma"], plain["gamma"])
+        self.assertLessEqual(sparse["brightness"], plain["brightness"])
+        # A screen finer than the pen over-inks the same tone and needs less.
+        self.assertGreater(fine["gamma"], sparse["gamma"])
+        self.assertGreaterEqual(fine["brightness"], sparse["brightness"])
+
+    def test_auto_photo_settings_add_contrast_when_it_helps_detail(self):
+        import numpy as np
+        from PIL import Image, ImageFilter
+
+        folder = tempfile.mkdtemp(prefix="cmyk-auto-mid-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        rng = np.random.default_rng(3)
+        values = (96 + rng.random((64, 64)) * 64).astype("uint8")
+        values = np.asarray(
+            Image.fromarray(values).filter(ImageFilter.GaussianBlur(1.5))
+        )
+        path = str(Path(folder) / "mid.png")
+        Image.fromarray(np.stack([values] * 3, axis=2)).save(path)
+        mid = converter.auto_photo_settings(path)
+        # A mid-key texture has its detail energy where the soft S-curve
+        # steepens, so the search chooses real contrast there.
+        self.assertGreaterEqual(mid["contrast"], 180)
+
+    def test_wave_auto_preserves_a_normal_photo_exposure(self):
+        import numpy as np
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-wave-auto-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        yy, xx = np.mgrid[0:96, 0:128]
+        image = np.empty((96, 128, 3), dtype="float32")
+        image[:55] = (0.62, 0.73, 0.82)
+        image[:55, 55:100] = (0.92, 0.75, 0.52)
+        image[55:] = (0.20, 0.28, 0.16)
+        image[55:, 18:45] = (0.62, 0.18, 0.12)
+        image[55:, 82:115] = (0.48, 0.12, 0.09)
+        image += (xx[..., None] / 127.0 - 0.5) * 0.06
+        image = np.clip(image * 255.0, 0.0, 255.0).astype("uint8")
+        path = str(Path(folder) / "landscape.png")
+        Image.fromarray(image).save(path)
+
+        values = converter.auto_photo_settings(
+            path,
+            pen_width_mm=0.8,
+            effective_pitch_mm=1.92,
+            style="waves_even",
+            dot_pitch_mm=0.8,
+        )
+
+        self.assertTrue(values["auto_levels"])
+        self.assertGreaterEqual(values["brightness"], 100)
+        self.assertLessEqual(values["brightness"], 160)
+        self.assertGreaterEqual(values["contrast"], 100)
+        self.assertLessEqual(values["contrast"], 160)
+        self.assertGreaterEqual(values["saturation"], 90)
+        self.assertLessEqual(values["saturation"], 110)
+        self.assertGreaterEqual(values["gcr"], 0)
+        self.assertLessEqual(values["gcr"], 70)
+        self.assertGreaterEqual(values["gamma"], 0.85)
+        self.assertLessEqual(values["gamma"], 1.40)
+        self.assertEqual(values["sharpen_pct"], 100.0)
+        self.assertEqual(values["sharpen_radius_mm"], 1.5)
+        self.assertGreater(values["dot_pitch_mm"], 0.8)
+
+    def test_auto_photo_settings_keep_colour_on_vivid_images(self):
+        import numpy as np
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-auto-colour-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        # Vivid purple/green vertical stripes against a vivid background.
+        vivid = np.zeros((64, 64, 3), dtype="uint8")
+        vivid[:, :, :] = (130, 110, 200)
+        vivid[:, ::8, :] = (60, 170, 70)
+        vivid_path = str(Path(folder) / "vivid.png")
+        Image.fromarray(vivid).save(vivid_path)
+        gray_path = str(Path(folder) / "gray.png")
+        Image.new("RGB", (64, 64), (128, 128, 128)).save(gray_path)
+        vivid_values = converter.auto_photo_settings(vivid_path)
+        gray_values = converter.auto_photo_settings(gray_path)
+        # Colourful subjects get more CMY retention (lower GCR) and a lower
+        # saturation boost than neutral ones.
+        self.assertLess(vivid_values["gcr"], gray_values["gcr"])
+        self.assertLessEqual(
+            vivid_values["saturation"], gray_values["saturation"]
+        )
+        self.assertGreaterEqual(vivid_values["saturation"], 110)
+
+    def test_contrast_300_keeps_smooth_shoulders(self):
+        from PIL import Image
+
+        folder = tempfile.mkdtemp(prefix="cmyk-contrast300-")
+        self.addCleanup(
+            lambda: __import__("shutil").rmtree(folder, ignore_errors=True)
+        )
+        path = str(Path(folder) / "ramp.png")
+        image = Image.new("L", (16, 16))
+        for x in range(16):
+            value = int(64 + x * 127 / 15)
+            for y in range(16):
+                image.putpixel((x, y), value)
+        image.save(path)
+        tones, _ = converter.prepare_image_tones(
+            path,
+            80,
+            80,
+            margin_mm=4,
+            resolution_px=64,
+            auto_levels=False,
+            contrast=3.0,
+            gcr=1.0,
+            weights=(1, 1, 1, 1),
+        )
+        k = tones["k"]
+        # Contrast 300 steepens the soft curve past the old 200 % ceiling
+        # (a wider spread than contrast 2.0) yet keeps the shoulders finite.
+        self.assertGreater(float(k.max()) - float(k.min()), 0.85)
+        self.assertLess(float(k.max()), 0.99)
+        self.assertGreater(float(k.min()), 0.01)
+
+    def test_mark_cap_grows_the_pitch(self):
+        dark = self.np.full((32, 32), 0.9, dtype="float32")
+        marks = converter.screen_channel(
+            dark, self.geometry(), spacing_mm=1.0, max_marks=300
+        )
+        self.assertLessEqual(len(marks), 360)
+        self.assertGreater(len(marks), 100)
+
+    def test_stipple_style_drops_marks_on_paper(self):
+        half = self.np.full((32, 32), 0.5, dtype="float32")
+        stipple = converter.screen_channel(
+            half, self.geometry(), style="stipple", spacing_mm=5.0, seed=3
+        )
+        blank = converter.screen_channel(
+            self.np.zeros((32, 32), dtype="float32"),
+            self.geometry(),
+            style="stipple",
+            spacing_mm=5.0,
+            seed=3,
+        )
+        self.assertEqual(blank, [])
+        self.assertGreater(len(stipple), 20)
+
+    def test_line_screen_breaks_in_white(self):
+        dark = self.np.full((32, 32), 0.7, dtype="float32")
+        lines = converter.screen_channel(
+            dark, self.geometry(), style="lines", spacing_mm=4.0
+        )
+        self.assertGreater(len(lines), 5)
+        self.assertTrue(all(len(line) > 2 for line in lines))
+        self.assertEqual(
+            converter.screen_channel(
+                self.np.zeros((32, 32), dtype="float32"),
+                self.geometry(),
+                style="lines",
+                spacing_mm=4.0,
+            ),
+            [],
+        )
+
+    def test_rectilinear_joins_rows_and_breaks_over_blank(self):
+        dark = self.np.full((32, 32), 0.8, dtype="float32")
+        lines = converter.screen_channel(
+            dark, self.geometry(), style="lines", spacing_mm=4.0
+        )
+        joined = converter.screen_channel(
+            dark, self.geometry(), style="rectilinear", spacing_mm=4.0
+        )
+        self.assertEqual(len(joined), 1)
+        self.assertGreater(len(joined[0]), len(lines[0]))
+        self.assertLess(len(joined), len(lines))
+        band = self.np.full((32, 32), 0.8, dtype="float32")
+        band[12:20, :] = 0.0
+        split = converter.screen_channel(
+            band, self.geometry(), style="rectilinear", spacing_mm=4.0
+        )
+        self.assertGreaterEqual(len(split), 2)
+
+    def test_rectilinear_chains_photo_like_tone(self):
+        yy, xx = self.np.mgrid[0:64, 0:64]
+        tone = (
+            0.15
+            + 0.6
+            * (self.np.sin(xx / 7.0) * self.np.cos(yy / 9.0) * 0.5 + 0.5)
+        ).astype("float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": 64,
+            "pixels_h": 64,
+        }
+        lines = converter.screen_channel(
+            tone, geometry, style="lines", spacing_mm=2.0
+        )
+        chains = converter.screen_channel(
+            tone, geometry, style="rectilinear", spacing_mm=2.0
+        )
+        self.assertLess(len(chains), len(lines) * 0.5)
+        self.assertGreater(
+            max(len(chain) for chain in chains),
+            max(len(line) for line in lines) * 5,
+        )
+
+    def test_rectilinear_stretches_light_tone_spacing(self):
+        light = self.np.full((32, 32), 0.2, dtype="float32")
+        lines = converter.screen_channel(
+            light, self.geometry(), style="lines", spacing_mm=4.0
+        )
+        rect = converter.screen_channel(
+            light, self.geometry(), style="rectilinear", spacing_mm=4.0
+        )
+        # The rectilinear screen opens the pitch much further in light tones
+        # (6x vs 2x), so a 20% field keeps open paper instead of hatching it.
+        self.assertLess(len(rect), len(lines) * 0.7)
+
+    def test_rectilinear_eases_the_row_pitch_across_a_tone_edge(self):
+        from converter_core import cmyk as cmyk_module
+
+        # Paper above 60 mm, a 0.35 tone below it. The first inked row used to
+        # drop the pitch in one step, which reads as banding where the subject
+        # meets the background.
+        def darkness(_x, y):
+            return 0.0 if y < 60.0 else 0.35
+
+        runs = cmyk_module._line_runs(
+            darkness,
+            (0.0, 0.0, 120.0, 120.0),
+            0.0,
+            1.0,
+            cmyk_module.INK_FLOOR,
+            adaptive=True,
+            connect=True,
+            light_stretch=6.0,
+        )
+        rows = sorted({round(point[1], 3) for run in runs for point in run})
+        gaps = [
+            second - first
+            for first, second in zip(rows, rows[1:])
+            if second - first > 0.01
+        ]
+        jumps = [
+            max(first, second) / max(min(first, second), 1e-6)
+            for first, second in zip(gaps, gaps[1:])
+        ]
+        self.assertGreaterEqual(len(gaps), 5)
+        self.assertLess(max(jumps), 1.25)
+
+    def test_crosshatch_levels_and_overdraw(self):
+        dark = self.np.full((32, 32), 0.8, dtype="float32")
+        two = converter.screen_channel(
+            dark, self.geometry(), style="crosshatch", spacing_mm=4.0, levels=2
+        )
+        four = converter.screen_channel(
+            dark, self.geometry(), style="crosshatch", spacing_mm=4.0, levels=4
+        )
+        self.assertGreater(len(four), len(two))
+        doubled = converter.screen_channel(
+            dark,
+            self.geometry(),
+            style="crosshatch",
+            spacing_mm=4.0,
+            levels=4,
+            overdraw=2,
+        )
+        self.assertEqual(len(doubled), 2 * len(four))
+
+    def test_crosshatch_supports_more_than_four_families(self):
+        dark = self.np.full((32, 32), 0.9, dtype="float32")
+        six = converter.screen_channel(
+            dark, self.geometry(), style="crosshatch", spacing_mm=4.0, levels=6
+        )
+        nine = converter.screen_channel(
+            dark, self.geometry(), style="crosshatch", spacing_mm=4.0, levels=9
+        )
+        self.assertGreater(len(nine), len(six))
+
+    def test_wave_gyroid_and_tsp_styles(self):
+        dark = self.np.full((32, 32), 0.6, dtype="float32")
+        waves = converter.screen_channel(
+            dark,
+            self.geometry(),
+            style="waves",
+            spacing_mm=4.0,
+            allow_variable_wave_spacing=True,
+        )
+        self.assertGreater(len(waves), 3)
+        gyroid = converter.screen_channel(
+            dark, self.geometry(), style="gyroid", spacing_mm=4.0
+        )
+        self.assertGreater(len(gyroid), 3)
+        tsp = converter.screen_channel(
+            dark, self.geometry(), style="tsp", spacing_mm=4.0, seed=1
+        )
+        self.assertEqual(len(tsp), 1)
+        self.assertGreater(len(tsp[0]), 10)
+
+    def test_wave_rows_keep_bounded_spacing_across_row_tone_changes(self):
+        spacing = 4.0
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        page_mm = 64
+        pixels_per_mm = 4
+        pixel_count = page_mm * pixels_per_mm
+        yy, xx = self.np.mgrid[0:pixel_count, 0:pixel_count]
+        yy_mm = yy / pixels_per_mm
+        xx_mm = xx / pixels_per_mm
+        for angle_deg in converter.SCREEN_ANGLES_DEG.values():
+            with self.subTest(angle_deg=angle_deg):
+                radians = math.radians(angle_deg)
+                local_normal = (
+                    xx_mm * math.sin(radians) + yy_mm * math.cos(radians)
+                )
+                tone = (
+                    0.7
+                    + 0.3
+                    * self.np.sin(
+                        2.0 * self.np.pi * local_normal / (2.0 * spacing)
+                    )
+                ).astype("float32")
+                waves = converter.screen_channel(
+                    tone,
+                    {
+                        "off_x": 0.0,
+                        "off_y": 0.0,
+                        "width_mm": float(page_mm),
+                        "height_mm": float(page_mm),
+                        "pixels_w": pixel_count,
+                        "pixels_h": pixel_count,
+                    },
+                    style="waves",
+                    allow_variable_wave_spacing=True,
+                    spacing_mm=spacing,
+                    angle_deg=angle_deg,
+                )
+                local_rows = []
+                for points in waves:
+                    local_rows.append(
+                        [
+                            (
+                                x * math.cos(radians) + y * math.sin(radians),
+                                -x * math.sin(radians) + y * math.cos(radians),
+                            )
+                            for x, y in points
+                        ]
+                    )
+
+                x_min = min(
+                    point[0] for points in local_rows for point in points
+                )
+                sample_xs = [
+                    x_min + spacing / 2.0 + index * 2.0 * spacing
+                    for index in range(8)
+                ]
+                sample_x = max(
+                    sample_xs,
+                    key=lambda candidate: sum(
+                        min(point[0] for point in row)
+                        <= candidate
+                        <= max(point[0] for point in row)
+                        for row in local_rows
+                    ),
+                )
+                # One quarter wavelength is where tone-driven amplitude has
+                # its strongest effect on the visible gap between rows.
+                ys = sorted(
+                    value
+                    for points in local_rows
+                    if (value := value_at_x(points, sample_x)) is not None
+                )
+                # End rows have a one-sided tone window; guard the field.
+                ys = ys[2:-2]
+                gaps = [
+                    second - first
+                    for first, second in zip(ys, ys[1:])
+                    if 0.1 <= second - first <= 2.0 * spacing
+                ]
+                self.assertGreaterEqual(len(gaps), 10)
+                self.assertGreater(min(gaps), 0.85 * spacing)
+                self.assertLess(max(gaps), 1.15 * spacing)
+                self.assertLess(max(gaps) - min(gaps), 0.3 * spacing)
+
+    def test_wave_rows_vary_depth_but_stay_bounded_on_a_vertical_gradient(self):
+        spacing = 4.0
+        yy, _xx = self.np.mgrid[0:64, 0:64]
+        tone = (0.2 + 0.6 * yy / 63.0).astype("float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves",
+            allow_variable_wave_spacing=True,
+            spacing_mm=spacing,
+        )
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        amplitudes = []
+        for points in waves:
+            baseline = value_at_x(points, 0.0)
+            crest = value_at_x(points, spacing / 2.0)
+            if baseline is not None and crest is not None:
+                amplitudes.append((baseline, crest - baseline))
+        amplitudes.sort()
+        self.assertGreaterEqual(len(amplitudes), 10)
+        wave_amplitudes = [amplitude for _baseline, amplitude in amplitudes]
+        self.assertGreater(
+            max(wave_amplitudes) - min(wave_amplitudes),
+            spacing * 0.12,
+            "vertical tone must create visible depth",
+        )
+        self.assertLess(
+            max(wave_amplitudes) - min(wave_amplitudes),
+            spacing * 0.35,
+            "depth variation must stay within the bounded row envelope",
+        )
+
+    def test_wave_rows_restore_vertical_tone_depth_without_crossing(self):
+        spacing = 4.0
+        yy, _xx = self.np.mgrid[0:64, 0:64]
+        tone = (0.1 + 0.8 * yy / 63.0).astype("float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves",
+            allow_variable_wave_spacing=True,
+            spacing_mm=spacing,
+        )
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        amplitudes = []
+        crest_y = []
+        for points in waves:
+            baseline = value_at_x(points, 0.0)
+            crest = value_at_x(points, spacing / 2.0)
+            if baseline is not None and crest is not None:
+                amplitudes.append(abs(crest - baseline))
+                crest_y.append(crest)
+
+        self.assertGreaterEqual(len(amplitudes), 12)
+        self.assertGreater(
+            max(amplitudes) - min(amplitudes),
+            spacing * 0.2,
+            "vertical image tone must still create visible wave depth",
+        )
+        gaps = sorted(
+            second - first for first, second in zip(crest_y, crest_y[1:])
+        )
+        self.assertGreater(min(gaps), 0.75 * spacing)
+        self.assertLess(max(gaps), 1.25 * spacing)
+
+    def test_wave_depth_can_follow_a_separate_luminance_field(self):
+        spacing = 4.0
+        yy, _xx = self.np.mgrid[0:64, 0:64]
+        ink_mask = self.np.ones((64, 64), dtype="float32")
+        depth_tone = (0.1 + 0.8 * yy / 63.0).astype("float32")
+        waves = converter.screen_channel(
+            ink_mask,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves",
+            allow_variable_wave_spacing=True,
+            spacing_mm=spacing,
+            depth_tone=depth_tone,
+        )
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        amplitudes = []
+        for points in waves:
+            baseline = value_at_x(points, 0.0)
+            crest = value_at_x(points, spacing / 2.0)
+            if baseline is not None and crest is not None:
+                amplitudes.append(abs(crest - baseline))
+        self.assertGreaterEqual(len(amplitudes), 12)
+        self.assertGreater(
+            max(amplitudes) - min(amplitudes),
+            spacing * 0.2,
+            "wave depth should follow scene luminance even where one ink "
+            "channel is uniformly saturated",
+        )
+
+    def test_depth_wave_keeps_near_full_pitch_amplitude_at_full_tone(self):
+        spacing = 4.0
+        tone = self.np.ones((128, 128), dtype="float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 128,
+                "pixels_h": 128,
+            },
+            style="waves_zero",
+            allow_variable_wave_spacing=True,
+            spacing_mm=spacing,
+            pen_diameter_mm=0.8,
+            depth_tone=tone,
+        )
+        ranges = [
+            max(y for _x, y in points) - min(y for _x, y in points)
+            for points in waves
+            if len(points) > 100
+        ]
+        self.assertGreater(min(ranges), spacing * 0.95)
+
+    def test_depth_wave_shares_phase_while_amplitude_follows_tone(self):
+        spacing = 4.0
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 64.0,
+            "height_mm": 64.0,
+            "pixels_w": 64,
+            "pixels_h": 64,
+        }
+        tone = self.np.ones((64, 64), dtype="float32")
+        yy, _xx = self.np.mgrid[0:64, 0:64]
+        depth = (0.25 + 0.7 * yy / 63.0).astype("float32")
+        rows = converter.screen_channel(
+            tone,
+            geometry,
+            style="waves_zero",
+            allow_variable_wave_spacing=True,
+            spacing_mm=spacing,
+            pen_diameter_mm=0.8,
+            depth_tone=depth,
+        )
+        rows = [points for points in rows if len(points) > 100]
+        peaks = []
+        ranges = []
+        for points in rows:
+            ys = [y for _x, y in points]
+            ranges.append(max(ys) - min(ys))
+            first_half = [point for point in points if point[0] <= spacing]
+            peaks.append(max(first_half, key=lambda point: point[1])[0])
+        self.assertLess(max(peaks) - min(peaks), 0.2)
+        self.assertGreater(max(ranges), min(ranges) * 1.8)
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        ys = sorted(
+            value
+            for points in rows
+            if (value := value_at_x(points, spacing * 0.5)) is not None
+        )
+        gaps = [second - first for first, second in zip(ys, ys[1:])]
+        self.assertGreater(
+            max(gaps) - min(gaps),
+            spacing * 0.02,
+            "phase-locked depth keeps crest phase, not exact row pitch",
+        )
+
+    def test_depth_wave_scales_amplitude_not_frequency_across_pitches(self):
+        size = 128
+        yy, _xx = self.np.mgrid[0:size, 0:size]
+        tone = self.np.ones((size, size), dtype="float32")
+        depth = self.np.where(
+            yy < size * 0.42,
+            0.12,
+            0.92,
+        ).astype("float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": float(size),
+            "height_mm": float(size),
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        def crossings(points):
+            baseline = points[0][1]
+            signs = [1 if y > baseline else -1 for _x, y in points]
+            return sum(
+                first != second for first, second in zip(signs, signs[1:])
+            )
+
+        for spacing in (2.80, 3.36, 4.20):
+            with self.subTest(spacing=spacing):
+                waves = converter.screen_channel(
+                    tone,
+                    geometry,
+                    style="waves_zero",
+                    allow_variable_wave_spacing=True,
+                    spacing_mm=spacing,
+                    pen_diameter_mm=0.8,
+                    depth_tone=depth,
+                )
+                rows = sorted(
+                    (points for points in waves if len(points) > 100),
+                    key=lambda points: sum(y for _x, y in points)
+                    / len(points),
+                )
+                self.assertGreaterEqual(len(rows), 20)
+                light_count = crossings(rows[1])
+                dark_count = crossings(rows[-2])
+                self.assertLessEqual(
+                    abs(dark_count - light_count),
+                    1,
+                    "depth must change amplitude without changing row frequency",
+                )
+                light_range = max(y for _x, y in rows[1]) - min(
+                    y for _x, y in rows[1]
+                )
+                dark_range = max(y for _x, y in rows[-2]) - min(
+                    y for _x, y in rows[-2]
+                )
+                self.assertGreater(
+                    dark_range,
+                    light_range * 2.0,
+                    "darker scene areas must retain visibly deeper waves",
+                )
+
+    def test_phase_locked_depth_clearance_scales_at_all_angles_and_pitches(
+        self,
+    ):
+        import converter_core.cmyk as cmyk_core
+
+        page_mm = 64.0
+        pixels_per_mm = 4
+        pixel_count = int(page_mm * pixels_per_mm)
+        yy, xx = self.np.mgrid[0:pixel_count, 0:pixel_count]
+        yy_mm = yy / pixels_per_mm
+        xx_mm = xx / pixels_per_mm
+        tone = self.np.ones((pixel_count, pixel_count), dtype="float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": page_mm,
+            "height_mm": page_mm,
+            "pixels_w": pixel_count,
+            "pixels_h": pixel_count,
+        }
+
+        def value_at_x(points, x_value):
+            lo, hi = 0, len(points) - 1
+            while lo < hi:
+                middle = (lo + hi) // 2
+                if points[middle][0] < x_value:
+                    lo = middle + 1
+                else:
+                    hi = middle
+            if lo == 0:
+                return points[0][1] if points[0][0] == x_value else None
+            first, second = points[lo - 1], points[lo]
+            if first[0] <= x_value <= second[0]:
+                fraction = (x_value - first[0]) / max(
+                    second[0] - first[0], 1e-9
+                )
+                return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        minimum_clearance = 0.8 + converter.WAVE_MIN_EDGE_GAP_MM
+        for spacing in (2.80, 3.36, 4.20):
+            for angle_deg in converter.SCREEN_ANGLES_DEG.values():
+                with self.subTest(spacing=spacing, angle_deg=angle_deg):
+                    radians = math.radians(angle_deg)
+                    local_normal = (
+                        xx_mm * math.sin(radians)
+                        + yy_mm * math.cos(radians)
+                    )
+                    depth = (
+                        0.08
+                        + 0.84
+                        * (
+                            0.5
+                            + 0.5
+                            * self.np.sin(
+                                2.0
+                                * self.np.pi
+                                * local_normal
+                                / (3.0 * spacing)
+                            )
+                        )
+                    ).astype("float32")
+                    waves = converter.screen_channel(
+                        tone,
+                        geometry,
+                        style="waves_zero",
+                        allow_variable_wave_spacing=True,
+                        spacing_mm=spacing,
+                        angle_deg=angle_deg,
+                        pen_diameter_mm=0.8,
+                        depth_tone=depth,
+                    )
+                    local_rows = [
+                        [
+                            (
+                                x * math.cos(radians)
+                                + y * math.sin(radians),
+                                -x * math.sin(radians)
+                                + y * math.cos(radians),
+                            )
+                            for x, y in points
+                        ]
+                        for points in waves
+                    ]
+                    local_rows.sort(
+                        key=lambda points: sum(y for _x, y in points)
+                        / len(points)
+                    )
+                    self.assertGreaterEqual(len(local_rows), 12)
+                    for first, second in zip(
+                        local_rows,
+                        local_rows[1:],
+                    ):
+                        self.assertTrue(
+                            cmyk_core._polyline_pair_is_clear(
+                                cmyk_core._polyline_segments(first),
+                                cmyk_core._polyline_segments(second),
+                                minimum_clearance,
+                            )
+                        )
+
+    def test_phase_locked_pitch_below_pen_envelope_fails_explicitly(self):
+        tone = self.np.ones((64, 64), dtype="float32")
+        with self.assertRaisesRegex(
+            ValueError,
+            "effective pitch is smaller than the pen width plus edge gap",
+        ):
+            converter.screen_channel(
+                tone,
+                {
+                    "off_x": 0.0,
+                    "off_y": 0.0,
+                    "width_mm": 64.0,
+                    "height_mm": 64.0,
+                    "pixels_w": 64,
+                    "pixels_h": 64,
+                },
+                style="waves_zero",
+                allow_variable_wave_spacing=True,
+                spacing_mm=0.8,
+                pen_diameter_mm=0.8,
+            )
+
+    def test_depth_wave_keeps_row_variation_within_exact_clearance(self):
+        spacing = 4.0
+        yy, xx = self.np.mgrid[0:64, 0:64]
+        tone = self.np.full((64, 64), 0.82, dtype="float32")
+        depth = (
+            0.1
+            + 0.8 * yy / 63.0
+            + 0.1 * self.np.sin(2.0 * self.np.pi * xx / 19.0)
+        ).astype("float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves_zero",
+            allow_variable_wave_spacing=True,
+            spacing_mm=spacing,
+            depth_tone=depth,
+        )
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        for sample_x in (2.0, 10.0, 18.0, 26.0, 34.0, 42.0):
+            with self.subTest(sample_x=sample_x):
+                ys = sorted(
+                    value
+                    for points in waves
+                    if (value := value_at_x(points, sample_x)) is not None
+                )
+                gaps = [
+                    second - first
+                    for first, second in zip(ys, ys[1:])
+                    if 2.0 < second - first < 6.0
+                ]
+                self.assertGreaterEqual(len(gaps), 10)
+                self.assertGreaterEqual(
+                    min(gaps),
+                    converter.WAVE_MIN_EDGE_GAP_MM
+                    + 0.8
+                    - 1e-6,
+                )
+                self.assertGreater(
+                    max(gaps) - min(gaps),
+                    0.05,
+                    "row-specific waveform depth must survive the clearance "
+                    "envelope",
+                )
+
+    def test_phase_locked_depth_preserves_untouched_rows(self):
+        size = 128
+        spacing = 2.8
+        tone = self.np.ones((size, size), dtype="float32")
+        depth = self.np.full((size, size), 0.80, dtype="float32")
+        disturbed = depth.copy()
+        # One short, steep tonal patch must not flatten unrelated rows across
+        # the page. The old global safety scale reacted to this patch as if
+        # every row contained the same maximum slope.
+        disturbed[40:52, 60:64] = 0.10
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 64.0,
+            "height_mm": 64.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        def vertical_ranges(depth_tone):
+            waves = converter.screen_channel(
+                tone,
+                geometry,
+                style="waves_zero",
+                allow_variable_wave_spacing=True,
+                spacing_mm=spacing,
+                pen_diameter_mm=0.8,
+                depth_tone=depth_tone,
+            )
+            rows = sorted(
+                waves,
+                key=lambda points: sum(y for _x, y in points)
+                / len(points),
+            )
+            return [
+                max(y for _x, y in points)
+                - min(y for _x, y in points)
+                for points in rows
+            ]
+
+        uniform_ranges = vertical_ranges(depth)
+        disturbed_ranges = vertical_ranges(disturbed)
+        self.assertGreaterEqual(len(uniform_ranges), 20)
+        self.assertGreaterEqual(len(disturbed_ranges), 20)
+        typical = sorted(uniform_ranges)[len(uniform_ranges) // 2]
+        untouched = sorted(disturbed_ranges[:5])[2]
+        self.assertGreater(
+            untouched,
+            typical * 0.9,
+            "a local high-slope patch must not reduce amplitude of distant rows",
+        )
+
+    def test_phase_locked_blank_depth_changes_do_not_limit_inked_rows(self):
+        size = 128
+        spacing = 2.8
+        ink_mask = self.np.zeros((size, size), dtype="float32")
+        ink_mask[:, :64] = 1.0
+        depth = self.np.full((size, size), 0.80, dtype="float32")
+        changed_blank = depth.copy()
+        changed_blank[:, 70:] = 0.10
+        changed_blank[40:80, 90:94] = 1.0
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 64.0,
+            "height_mm": 64.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        def visible_ranges(depth_tone):
+            waves = converter.screen_channel(
+                ink_mask,
+                geometry,
+                style="waves_zero",
+                allow_variable_wave_spacing=True,
+                spacing_mm=spacing,
+                pen_diameter_mm=0.8,
+                depth_tone=depth_tone,
+            )
+            ranges = []
+            for points in waves:
+                if len(points) <= 20:
+                    continue
+                ys = [y for _x, y in points]
+                ranges.append(max(ys) - min(ys))
+            return ranges
+
+        uniform = sorted(visible_ranges(depth))
+        changed = sorted(visible_ranges(changed_blank))
+        self.assertGreaterEqual(len(uniform), 10)
+        self.assertGreaterEqual(len(changed), 10)
+        self.assertGreater(
+            changed[len(changed) // 2],
+            uniform[len(uniform) // 2] * 0.9,
+            "depth changes over blank paper must not reduce ink-wave amplitude",
+        )
+
+    def test_phase_locked_clearance_checks_segment_distance(self):
+        import converter_core.cmyk as cmyk_core
+
+        positions = [
+            [(0.0, 0.0), (1.0, 2.75), (2.0, 0.0)],
+            [(0.0, 3.0), (1.0, 5.75), (2.0, 3.0)],
+        ]
+        self.assertFalse(
+            cmyk_core._wave_clearance_ok(
+                positions,
+                4.0,
+                minimum_clearance_mm=1.05,
+            ),
+            "the rows are three millimetres apart at every sampled column, "
+            "but the steep segments come closer than a 1.05 mm pen envelope",
+        )
+
+    def test_clearance_does_not_impose_a_fixed_band_floor(self):
+        import converter_core.cmyk as cmyk_core
+
+        positions = [
+            [(0.0, 1.0), (1.0, 1.0)],
+            [(0.0, 3.4), (1.0, 3.4)],
+        ]
+        self.assertTrue(
+            cmyk_core._wave_clearance_ok(
+                positions,
+                4.0,
+                minimum_clearance_mm=1.05,
+            ),
+            "2.4 mm between rows is legal when the pen envelope is clear",
+        )
+
+    def test_phase_locked_wave_chords_stay_within_path_tolerance(self):
+        spacing = 4.0
+        tone = self.np.ones((64, 64), dtype="float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves_zero",
+            allow_variable_wave_spacing=True,
+            spacing_mm=spacing,
+        )
+        row = next(points for points in waves if len(points) > 100)
+        baseline = row[0][1]
+        amplitude = spacing * 0.5
+        phase_rate = math.pi / spacing
+        errors = []
+        for first, second in zip(row, row[1:]):
+            midpoint_x = (first[0] + second[0]) / 2.0
+            chord_y = (first[1] + second[1]) / 2.0
+            sine_y = baseline + amplitude * math.sin(
+                phase_rate * midpoint_x
+            )
+            errors.append(abs(chord_y - sine_y))
+        self.assertLess(max(errors), 0.05)
+
+    def test_equidistant_wave_rows_keep_constant_spacing(self):
+        spacing = 4.0
+        yy, xx = self.np.mgrid[0:64, 0:64]
+        tone = (
+            0.2
+            + 0.55 * xx / 63.0
+            + 0.1 * self.np.sin(2.0 * self.np.pi * yy / (2.0 * spacing))
+        ).astype("float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves_even",
+            spacing_mm=spacing,
+        )
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        crest_values = []
+        for sample_x in (2.0, 18.0, 34.0, 50.0):
+            ys = sorted(
+                value
+                for points in waves
+                if (value := value_at_x(points, sample_x)) is not None
+            )
+            gaps = [
+                second - first
+                for first, second in zip(ys, ys[1:])
+                if abs((second - first) - spacing) < 0.1
+            ]
+            self.assertGreaterEqual(len(gaps), 10)
+            self.assertLess(max(gaps) - min(gaps), 1e-5)
+            crest_values.append((sample_x, ys))
+
+        # The common waveform still changes size across the page even though
+        # every row moves by exactly the same vertical offset.
+        first_offsets = [
+            value_at_x(points, 2.0) - points[0][1]
+            for points in waves
+            if value_at_x(points, 2.0) is not None
+            and abs(points[0][0]) < 0.1
+        ]
+        later_offsets = [
+            value_at_x(points, 18.0) - points[0][1]
+            for points in waves
+            if value_at_x(points, 18.0) is not None
+            and abs(points[0][0]) < 0.1
+        ]
+        self.assertGreater(
+            abs(sum(later_offsets) / len(later_offsets)
+                - sum(first_offsets) / len(first_offsets)),
+            0.2,
+        )
+
+    def test_dark_tone_changes_depth_without_dragging_row_baselines(self):
+        spacing = 4.0
+        _yy, xx = self.np.mgrid[0:64, 0:64]
+        tone = self.np.where(xx < 32, 1.0, 0.15).astype("float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves_even",
+            spacing_mm=spacing,
+            depth_tone=tone,
+        )
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        # Ten and forty-two millimetres are one or more full wavelengths
+        # apart. They sample dark and light tone at the same sine phase.
+        dark_x = 10.0
+        light_x = 42.0
+        rows = sorted(waves, key=lambda points: points[0][1])
+        dark_values = sorted(
+            value
+            for row in rows
+            if (value := value_at_x(row, dark_x)) is not None
+        )
+        light_values = sorted(
+            value
+            for row in rows
+            if (value := value_at_x(row, light_x)) is not None
+        )
+        dark_offsets = [
+            value_at_x(row, dark_x) - row[0][1]
+            for row in rows
+        ]
+        light_offsets = [
+            value_at_x(row, light_x) - row[0][1]
+            for row in rows
+        ]
+
+        for values in (dark_values, light_values):
+            gaps = [
+                second - first
+                for first, second in zip(values, values[1:])
+            ]
+            self.assertEqual(len(gaps), 15)
+            self.assertLess(max(gaps) - min(gaps), 1e-9)
+            self.assertAlmostEqual(sum(gaps) / len(gaps), spacing, places=9)
+
+        self.assertLess(max(dark_offsets) - min(dark_offsets), 1e-9)
+        self.assertLess(max(light_offsets) - min(light_offsets), 1e-9)
+        self.assertGreater(
+            abs(sum(dark_offsets)) / len(dark_offsets),
+            abs(sum(light_offsets)) / len(light_offsets) + 1.0,
+            "full tone must deepen the wave without changing row baselines",
+        )
+
+    def test_phase_locked_variable_frequency_preserves_row_pitch(self):
+        spacing = 4.0
+        tone = self.np.ones((64, 64), dtype="float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves_even",
+            spacing_mm=spacing,
+            seed=7,
+            wave_frequency_variation=converter.WAVE_FREQUENCY_VARIATION,
+        )
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        for x_value in (8.0, 20.0, 32.0, 44.0, 56.0):
+            values = sorted(
+                value
+                for row in waves
+                if (value := value_at_x(row, x_value)) is not None
+            )
+            gaps = [
+                second - first
+                for first, second in zip(values, values[1:])
+            ]
+            self.assertGreaterEqual(len(gaps), 10)
+            self.assertLess(max(gaps) - min(gaps), 1e-9)
+            self.assertAlmostEqual(sum(gaps) / len(gaps), spacing, places=9)
+
+        row = max(waves, key=len)
+        peak_x = [
+            x_value
+            for index, (x_value, y_value) in enumerate(row[1:-1], start=1)
+            if y_value >= row[index - 1][1]
+            and y_value >= row[index + 1][1]
+        ]
+        peak_spacing = [
+            second - first
+            for first, second in zip(peak_x, peak_x[1:])
+        ]
+        self.assertGreaterEqual(len(peak_spacing), 4)
+        self.assertGreater(
+            max(peak_spacing) - min(peak_spacing),
+            0.1,
+            "the shared carrier must no longer repeat at one fixed frequency",
+        )
+
+    def test_equidistant_wave_rows_work_at_all_screen_angles(self):
+        spacing = 4.0
+        page_mm = 64.0
+        pixels_per_mm = 4
+        pixel_count = int(page_mm * pixels_per_mm)
+        yy, xx = self.np.mgrid[0:pixel_count, 0:pixel_count]
+        xx_mm = xx / pixels_per_mm
+        yy_mm = yy / pixels_per_mm
+
+        def value_at_x(points, x_value):
+            ordered = sorted(points)
+            for first, second in zip(ordered, ordered[1:]):
+                if first[0] <= x_value <= second[0]:
+                    fraction = (x_value - first[0]) / max(
+                        second[0] - first[0], 1e-9
+                    )
+                    return first[1] + fraction * (second[1] - first[1])
+            return None
+
+        for angle_deg in converter.SCREEN_ANGLES_DEG.values():
+            with self.subTest(angle_deg=angle_deg):
+                radians = math.radians(angle_deg)
+                local_u = xx_mm * math.cos(radians) + yy_mm * math.sin(radians)
+                local_v = -xx_mm * math.sin(radians) + yy_mm * math.cos(radians)
+                tone = (
+                    0.35
+                    + 0.25 * (local_u - local_u.min()) / self.np.ptp(local_u)
+                    + 0.1
+                    * self.np.sin(
+                        2.0 * self.np.pi * local_v / (2.0 * spacing)
+                    )
+                ).astype("float32")
+                waves = converter.screen_channel(
+                    tone,
+                    {
+                        "off_x": 0.0,
+                        "off_y": 0.0,
+                        "width_mm": page_mm,
+                        "height_mm": page_mm,
+                        "pixels_w": pixel_count,
+                        "pixels_h": pixel_count,
+                    },
+                    style="waves_even",
+                    spacing_mm=spacing,
+                    angle_deg=angle_deg,
+                )
+                local_rows = [
+                    [
+                        (
+                            x * math.cos(radians) + y * math.sin(radians),
+                            -x * math.sin(radians) + y * math.cos(radians),
+                        )
+                        for x, y in points
+                    ]
+                    for points in waves
+                ]
+                min_u = min(point[0] for row in local_rows for point in row)
+                max_u = max(point[0] for row in local_rows for point in row)
+                for fraction in (0.2, 0.4, 0.6, 0.8):
+                    sample_u = min_u + fraction * (max_u - min_u)
+                    ys = sorted(
+                        value
+                        for row in local_rows
+                        if (value := value_at_x(row, sample_u)) is not None
+                    )
+                    gaps = [
+                        second - first
+                        for first, second in zip(ys, ys[1:])
+                        if abs((second - first) - spacing) < 0.1
+                    ]
+                    self.assertGreaterEqual(len(gaps), 6)
+                    self.assertLess(max(gaps) - min(gaps), 1e-5)
+
+    def test_legacy_wave_styles_default_to_equidistant_rows(self):
+        spacing = 4.0
+        tone = self.np.ones((64, 64), dtype="float32")
+        yy, _xx = self.np.mgrid[0:64, 0:64]
+        depth = (0.2 + 0.7 * yy / 63.0).astype("float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 64.0,
+            "height_mm": 64.0,
+            "pixels_w": 64,
+            "pixels_h": 64,
+        }
+        for angle_deg in converter.SCREEN_ANGLES_DEG.values():
+            expected = converter.screen_channel(
+                tone,
+                geometry,
+                style="waves_even",
+                spacing_mm=spacing,
+                angle_deg=angle_deg,
+                depth_tone=depth,
+            )
+            for legacy_style in ("waves", "waves_zero"):
+                with self.subTest(
+                    style=legacy_style,
+                    angle_deg=angle_deg,
+                ):
+                    actual = converter.screen_channel(
+                        tone,
+                        geometry,
+                        style=legacy_style,
+                        spacing_mm=spacing,
+                        angle_deg=angle_deg,
+                        depth_tone=depth,
+                    )
+                    self.assertEqual(actual, expected)
+
+    def test_wave_rows_approximate_the_sinusoid_within_path_tolerance(self):
+        spacing = 4.0
+        tone = self.np.ones((64, 64), dtype="float32")
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves",
+            allow_variable_wave_spacing=True,
+            spacing_mm=spacing,
+        )
+
+        row = next(points for points in waves if len(points) > 20)
+        baseline = row[0][1]
+        amplitude = spacing * 0.5
+        errors = []
+        for first, second in zip(row, row[1:]):
+            midpoint_x = (first[0] + second[0]) / 2.0
+            chord_y = (first[1] + second[1]) / 2.0
+            sine_y = baseline + amplitude * math.sin(
+                2.0 * math.pi * midpoint_x / (2.0 * spacing)
+            )
+            errors.append(abs(chord_y - sine_y))
+
+        self.assertLess(
+            max(errors),
+            0.05,
+            "wave chords must not turn the intended sine into visible facets",
+        )
+
+    def test_wave_rows_still_break_over_blank_image_regions(self):
+        tone = self.np.ones((64, 64), dtype="float32")
+        tone[:, 28:36] = 0.0
+        waves = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 64.0,
+                "height_mm": 64.0,
+                "pixels_w": 64,
+                "pixels_h": 64,
+            },
+            style="waves",
+            allow_variable_wave_spacing=True,
+            spacing_mm=4.0,
+        )
+        self.assertGreater(len(waves), 4)
+        centers = [
+            (min(point[0] for point in row) + max(point[0] for point in row))
+            / 2.0
+            for row in waves
+            if max(point[0] for point in row) - min(point[0] for point in row) > 5
+        ]
+        self.assertTrue(
+            all(
+                center < 28.0 or center > 36.0
+                for center in centers
+            ),
+            "a blank image band must split the wave instead of drawing through it",
+        )
+
+    def test_contours_need_a_gradient(self):
+        ramp = self.np.tile(
+            self.np.linspace(0.0, 1.0, 32, dtype="float32"), (32, 1)
+        )
+        contours = converter.screen_channel(
+            ramp, self.geometry(), style="contours", spacing_mm=4.0
+        )
+        self.assertGreater(len(contours), 3)
+        flat = self.np.full((32, 32), 0.8, dtype="float32")
+        self.assertEqual(
+            converter.screen_channel(
+                flat, self.geometry(), style="contours", spacing_mm=4.0
+            ),
+            [],
+        )
+
+    def test_svg_document_groups_and_order(self):
+        polyline = [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0)]
+        document = converter.svg_document(
+            {"c": [polyline], "k": [polyline]}, 50.0, 50.0, order=["c", "k"]
+        )
+        root = ET.fromstring(document)
+        groups = [
+            element
+            for element in root.iter()
+            if element.tag.split("}")[-1] == "g"
+        ]
+        self.assertEqual([group.get("data-ink") for group in groups], ["c", "k"])
+        self.assertEqual(
+            [group.get("stroke") for group in groups],
+            [converter.CHANNEL_COLORS["c"], converter.CHANNEL_COLORS["k"]],
+        )
+        # Layer groups blend multiplicatively so external SVG viewers show
+        # overprint the way the ink simulation does.
+        self.assertTrue(
+            all(
+                "mix-blend-mode" in (group.get("style") or "")
+                for group in groups
+            )
+        )
+
+    def test_ink_tags_survive_the_geometry_pipeline(self):
+        tagged = converter.tag_ink(
+            [[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]], "c"
+        )
+        moved = converter.apply_geometry_settings(tagged, converter.Settings())
+        self.assertEqual(getattr(moved[0], "ink", None), "c")
+        clipped = converter.clip_contours_to_bed(moved, (10.0, 0.0), 3.0)
+        self.assertTrue(clipped)
+        self.assertTrue(all(getattr(c, "ink", None) == "c" for c in clipped))
+
+    def test_cost_summary_names_both_strategies(self):
+        from generator_tabs.cmyk_tab import format_cost_summary, format_seconds
+
+        rows = {
+            "c": {
+                "marks": 10,
+                "moves": 42,
+                "x_count": 30,
+                "y_count": 12,
+                "draw_mm": 100.0,
+                "seconds": 61.0,
+            }
+        }
+        summary = format_cost_summary(rows)
+        self.assertIn("x30/y12", summary)
+        self.assertIn("C ", summary)
+        self.assertIn("1m01s", summary)
+        self.assertEqual(format_seconds(61.0), "1m01s")
+        self.assertEqual(format_seconds(3600.0), "1h00m")
+
+    def test_cost_summary_names_xy_only(self):
+        from generator_tabs.cmyk_tab import format_cost_summary
+
+        rows = {
+            "k": {
+                "marks": 4,
+                "moves": 9,
+                "x_count": 0,
+                "y_count": 0,
+                "draw_mm": 12.0,
+                "seconds": 5.0,
+            }
+        }
+        summary = format_cost_summary(rows)
+        self.assertIn("XY only", summary)
+        self.assertIn("5s", summary)
 
 
 @unittest.skipUnless(HAVE_QT, "PySide6 is not installed")
@@ -133,493 +2002,16 @@ class CmykTabTests(unittest.TestCase):
             "stipple",
             "lines",
             "rectilinear",
-            "continuous",
             "crosshatch",
             "waves_even",
             "waves_zero",
             "gyroid",
             "tsp",
             "contours",
-            "edge_flow",
-            "edge_flow_shared",
-            "edge_flow_coherent",
-            "process_area",
         ):
             tab.style.setCurrentIndex(tab.style.findData(style))
             root = ET.parse(tab.build_svg()).getroot()
             self.assertEqual(svg_groups(root), list(converter.CHANNELS), style)
-
-    def test_edge_flow_controls_build_and_round_trip(self):
-        tab = self.make_tab()
-        style_index = tab.style.findData("edge_flow")
-        self.assertGreaterEqual(style_index, 0)
-        tab.style.setCurrentIndex(style_index)
-        tab.flow_smoothing.setValue(2.5)
-        tab.flow_layers.setValue(2)
-        tab.flow_pitch_compression.setValue(55)
-        tab.flow_keylines.setChecked(True)
-
-        state = tab.artwork_layout_state()
-        self.assertEqual(state["screen"]["style"], "edge_flow")
-        self.assertAlmostEqual(state["screen"]["flow_smoothing_mm"], 2.5)
-        self.assertEqual(state["screen"]["flow_layers"], 2)
-        self.assertEqual(
-            state["screen"]["flow_pitch_compression_pct"],
-            55,
-        )
-        self.assertTrue(state["screen"]["preserve_black_keylines"])
-
-        root = ET.parse(tab.build_svg()).getroot()
-        self.assertEqual(svg_groups(root), list(converter.CHANNELS))
-
-        restored = self.make_tab()
-        self.assertTrue(restored.restore_artwork_layout_state(state))
-        self.assertEqual(restored.style.currentData(), "edge_flow")
-        self.assertAlmostEqual(restored.flow_smoothing.value(), 2.5)
-        self.assertEqual(restored.flow_layers.value(), 2)
-        self.assertEqual(restored.flow_pitch_compression.value(), 55)
-        self.assertTrue(restored.flow_keylines.isChecked())
-
-    def test_pen_down_chain_round_trips_with_the_artwork_recipe(self):
-        tab = self.make_tab()
-        tab.chain_marks.setChecked(False)
-        tab.chain_gap.setValue(8.5)
-
-        state = tab.artwork_layout_state()
-        self.assertFalse(state["screen"]["chain_marks"])
-        self.assertAlmostEqual(state["screen"]["chain_gap_mm"], 8.5)
-
-        restored = self.make_tab()
-        self.assertTrue(restored.restore_artwork_layout_state(state))
-        self.assertFalse(restored.chain_marks.isChecked())
-        self.assertAlmostEqual(restored.chain_gap.value(), 8.5)
-
-    def test_pen_down_chain_gap_reaches_post_planner_settings(self):
-        tab = self.make_tab()
-        tab.chain_marks.setChecked(True)
-        tab.chain_gap.setValue(6.5)
-
-        settings = tab.apply_tab_settings(converter.Settings())
-
-        self.assertAlmostEqual(settings.screen_chain_gap_mm, 6.5)
-        tab.chain_marks.setChecked(False)
-        settings = tab.apply_tab_settings(converter.Settings())
-        self.assertEqual(settings.screen_chain_gap_mm, 0.0)
-
-    def test_pen_offset_translation_preserves_screen_chain_tag(self):
-        tab = self.make_tab()
-        marks = [
-            converter.ScreenTrail([(0.0, 0.0), (10.0, 0.0)]),
-        ]
-
-        translated = tab._translate_marks(marks, 1.0, 2.0)
-
-        self.assertIsInstance(translated[0], converter.ScreenTrail)
-        self.assertEqual(translated[0], [(1.0, 2.0), (11.0, 2.0)])
-
-    def test_pen_down_chain_joins_short_marks_for_non_edge_flow(self):
-        tab = self.make_tab()
-        tab.chain_marks.setChecked(True)
-        tab.chain_gap.setValue(5.0)
-        short_marks = [
-            [(10.0, 20.0), (20.0, 20.0)],
-            [(21.5, 20.0), (30.0, 20.0)],
-        ]
-        with mock.patch.object(
-            converter,
-            "screen_channel",
-            return_value=short_marks,
-        ):
-            tab._ensure_layers()
-
-        for channel in converter.CHANNELS:
-            self.assertEqual(len(tab._layers[channel]), 1)
-            self.assertIsInstance(
-                tab._layers[channel][0],
-                converter.ScreenTrail,
-            )
-            self.assertEqual(
-                tab._pen_chain_stats[channel]["connections"],
-                1,
-            )
-
-    def test_shared_edge_flow_chains_short_marks_to_reduce_penups(self):
-        tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow_shared"))
-        tab.chain_marks.setChecked(True)
-        tab.chain_gap.setValue(5.0)
-        short_marks = [
-            [(10.0, 20.0), (20.0, 20.0)],
-            [(21.5, 20.0), (30.0, 20.0)],
-        ]
-        with mock.patch.object(
-            converter,
-            "screen_cmyk_edge_flow",
-            return_value={
-                channel: list(short_marks)
-                for channel in converter.CHANNELS
-            },
-        ):
-            tab._ensure_layers()
-
-        for channel in converter.CHANNELS:
-            self.assertEqual(len(tab._layers[channel]), 1)
-            self.assertEqual(
-                tab._pen_chain_stats[channel]["connections"],
-                1,
-            )
-
-    def test_shared_edge_flow_builds_one_network_for_all_inks(self):
-        tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow_shared"))
-        tab.scale_pct.setValue(260)
-        captured = {}
-        calls = []
-
-        def capture_shared(*args, **kwargs):
-            captured["args"] = args
-            captured["kwargs"] = kwargs
-            calls.append((args, kwargs))
-            return {channel: [] for channel in converter.CHANNELS}
-
-        tab.flow_keylines.setChecked(True)
-        with mock.patch.object(
-            converter,
-            "screen_cmyk_edge_flow",
-            side_effect=capture_shared,
-        ):
-            tab._ensure_layers()
-
-        self.assertEqual(len(calls), 1)
-        tones, geometry = captured["args"]
-        self.assertIs(
-            captured["kwargs"]["flow_guide"],
-            tones["flow_guide"],
-        )
-        self.assertAlmostEqual(
-            captured["kwargs"]["flow_pitch_compression"],
-            tab.flow_pitch_compression.value() / 100.0,
-        )
-        self.assertEqual(
-            len(captured["kwargs"]["flow_guide"]),
-            len(converter.CHANNELS) + 1,
-        )
-        self.assertEqual(captured["kwargs"]["seed"], 7)
-        self.assertAlmostEqual(
-            captured["kwargs"]["pen_diameter_mm"],
-            tab.pen_width.value() / 2.6,
-            places=6,
-        )
-        self.assertTrue(captured["kwargs"]["keylines"])
-        self.assertEqual(captured["kwargs"]["color_quiet"], 0.25)
-        self.assertIsNone(captured["kwargs"]["tone_segment_mm"])
-        self.assertIsNone(captured["kwargs"]["max_path_mm"])
-
-    def test_coherent_color_flow_builds_one_network_with_layer_angles(self):
-        tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow_coherent"))
-        tab.flow_layers.setValue(3)
-        tab.flow_keylines.setChecked(True)
-        tab.scale_pct.setValue(200)
-        captured = {}
-        calls = []
-
-        def capture_coherent(*args, **kwargs):
-            captured["args"] = args
-            captured["kwargs"] = kwargs
-            calls.append((args, kwargs))
-            return {channel: [] for channel in converter.CHANNELS}
-
-        prepare = converter.prepare_image_tones
-
-        def capture_prepare(*args, **kwargs):
-            captured["prepare"] = dict(kwargs)
-            return prepare(*args, **kwargs)
-
-        with mock.patch.object(
-            converter,
-            "prepare_image_tones",
-            side_effect=capture_prepare,
-        ), mock.patch.object(
-            converter,
-            "screen_coherent_color_flow",
-            side_effect=capture_coherent,
-        ), mock.patch.object(
-            converter,
-            "screen_channel",
-            side_effect=AssertionError(
-                "coherent color flow must build shared geometry"
-            ),
-        ):
-            tab._ensure_layers()
-
-        self.assertEqual(len(calls), 1)
-        tones, geometry = captured["args"]
-        self.assertIs(captured["kwargs"]["flow_guide"], tones["flow_guide"])
-        self.assertEqual(
-            captured["kwargs"]["fallback_angles_deg"],
-            [
-                converter.SCREEN_ANGLES_DEG[channel]
-                for channel in converter.CHANNELS[:3]
-            ],
-        )
-        self.assertTrue(captured["kwargs"]["keylines"])
-        self.assertAlmostEqual(
-            captured["kwargs"]["pen_diameter_mm"],
-            tab.pen_width.value() / 2.0,
-            places=6,
-        )
-        self.assertAlmostEqual(
-            captured["prepare"]["edge_simplify_mm"],
-            tab.flow_smoothing.value() * 0.65 / 2.0,
-            places=6,
-        )
-
-    def test_edge_flow_builds_four_independent_ink_networks(self):
-        tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
-        tab.chain_marks.setChecked(False)
-        tab.flow_keylines.setChecked(True)
-        tab.scale_pct.setValue(260)
-        calls = []
-
-        def capture_channel(tone, geometry, **kwargs):
-            calls.append((tone, geometry, kwargs))
-            seed = int(kwargs["seed"])
-            return [
-                [
-                    (float(seed), 10.0),
-                    (float(seed + 1), 20.0),
-                ]
-            ]
-
-        with mock.patch.object(
-            converter,
-            "screen_channel",
-            side_effect=capture_channel,
-        ), mock.patch.object(
-            converter,
-            "screen_cmyk_edge_flow",
-            side_effect=AssertionError("default Edge-flow must be per-ink"),
-        ):
-            tab._ensure_layers()
-
-        self.assertEqual(len(calls), len(converter.CHANNELS))
-        self.assertEqual(
-            [call[2]["seed"] for call in calls],
-            [tab.seed.value() + index for index in range(4)],
-        )
-        self.assertEqual(
-            [call[2]["angle_deg"] for call in calls],
-            [
-                converter.SCREEN_ANGLES_DEG[channel]
-                for channel in converter.CHANNELS
-            ],
-        )
-        self.assertTrue(
-            all(
-                call[2]["flow_guide"] is calls[0][2]["flow_guide"]
-                for call in calls
-            )
-        )
-        self.assertTrue(
-            all(
-                call[2]["flow_support_tone"]
-                is calls[0][2]["flow_support_tone"]
-                for call in calls
-            )
-        )
-        self.assertTrue(
-            all(
-                call[2]["flow_pitch_compression"]
-                == calls[0][2]["flow_pitch_compression"]
-                for call in calls
-            )
-        )
-        self.assertEqual(
-            [call[2]["flow_keylines"] for call in calls],
-            [False, False, False, True],
-        )
-        self.assertEqual(
-            [call[2]["flow_color_quiet"] for call in calls],
-            [0.25, 0.25, 0.25, 0.0],
-        )
-        self.assertEqual(len(set(tab._layer_files.values())), 4)
-
-    def test_process_color_area_screen_uses_physical_pen_pitch(self):
-        tab = self.make_tab()
-        tab.style.setCurrentIndex(
-            tab.style.findData("process_area")
-        )
-        tab.pen_width.setValue(0.9)
-        tab.pitch.setValue(0.35)
-        tab.flow_keylines.setChecked(True)
-        tab.scale_pct.setValue(260)
-        captured = {}
-
-        def capture(*args, **kwargs):
-            captured["args"] = args
-            captured["kwargs"] = kwargs
-            return {channel: [] for channel in converter.CHANNELS}
-
-        with mock.patch.object(
-            converter,
-            "screen_process_color_area_cmyk",
-            side_effect=capture,
-        ), mock.patch.object(
-            converter,
-            "screen_channel",
-            side_effect=AssertionError("precision contours share one network"),
-        ):
-            tab._ensure_layers()
-
-        self.assertAlmostEqual(
-            captured["kwargs"]["pen_diameter_mm"],
-            0.9 / 2.6,
-        )
-        self.assertAlmostEqual(captured["kwargs"]["spacing_mm"], 0.35)
-        self.assertAlmostEqual(
-            captured["kwargs"]["spacing_mm"] * 2.6,
-            0.91,
-        )
-        self.assertTrue(captured["kwargs"]["edge_keylines"])
-        self.assertEqual(captured["kwargs"]["edge_threshold"], 0.84)
-        self.assertEqual(captured["kwargs"]["seed"], tab.seed.value())
-        self.assertTrue(captured["kwargs"]["protect_highlights"])
-        self.assertAlmostEqual(
-            captured["kwargs"]["highlight_detail"],
-            converter.PROCESS_AREA_HIGHLIGHT_DETAIL,
-        )
-        self.assertAlmostEqual(
-            captured["kwargs"]["highlight_fraction"],
-            converter.PROCESS_AREA_HIGHLIGHT_FRACTION,
-        )
-        self.assertAlmostEqual(
-            captured["kwargs"]["detail_alignment"],
-            converter.PROCESS_AREA_DETAIL_ALIGNMENT,
-        )
-        self.assertEqual(len(set(tab._layer_files.values())), 4)
-
-    def test_process_color_area_prechains_cell_marks_before_the_planner(self):
-        tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("process_area"))
-        tab.registration_marks.setChecked(False)
-        tab.scale_pct.setValue(100)
-        tab.chain_marks.setChecked(True)
-        tab.chain_gap.setValue(1.5)
-        marks = [
-            converter.ScreenTrail([(10.0, 20.0), (20.0, 20.0)]),
-            converter.ScreenTrail([(21.4, 20.0), (30.0, 20.0)]),
-        ]
-
-        with mock.patch.object(
-            converter,
-            "screen_process_color_area_cmyk",
-            return_value={
-                channel: list(marks)
-                for channel in converter.CHANNELS
-            },
-        ):
-            tab._ensure_layers()
-
-        for channel in converter.CHANNELS:
-            self.assertEqual(len(tab._layers[channel]), 1)
-            self.assertIsInstance(
-                tab._layers[channel][0],
-                converter.ScreenTrail,
-            )
-            self.assertTrue(tab._pen_chain_stats[channel]["enabled"])
-            self.assertEqual(
-                tab._pen_chain_stats[channel]["connections"],
-                1,
-            )
-
-    def test_process_color_area_recipe_applies_full_density_controls(self):
-        tab = self.make_tab()
-        with mock.patch.object(
-            tab,
-            "apply_auto_settings",
-            return_value={},
-        ):
-            self.assertTrue(tab.apply_workflow_preset("process_area"))
-        self.assertEqual(tab.style.currentData(), "process_area")
-        self.assertTrue(tab.flow_keylines.isChecked())
-        self.assertAlmostEqual(tab.pitch.value(), 0.35)
-        self.assertAlmostEqual(tab.path_tolerance.value(), 0.05)
-        self.assertEqual(tab.max_marks.value(), 800000)
-        self.assertAlmostEqual(tab.chain_gap.value(), 3.0)
-        self.assertEqual(tab.tone_bridge.value(), 0.0)
-        self.assertAlmostEqual(tab.contrast.value(), 122.0)
-        self.assertAlmostEqual(tab.gcr.value(), 65.0)
-        self.assertFalse(tab.auto_levels.isChecked())
-        self.assertAlmostEqual(tab.brightness.value(), 100.0)
-        self.assertAlmostEqual(tab.saturation.value(), 106.0)
-        self.assertAlmostEqual(tab.gamma.value(), 1.0)
-        self.assertAlmostEqual(tab.sharpen_amount.value(), 60.0)
-        self.assertAlmostEqual(tab.sharpen_radius.value(), 1.5)
-        self.assertEqual(
-            [
-                spin.value()
-                for spin in (
-                    tab.weight_c,
-                    tab.weight_m,
-                    tab.weight_y,
-                    tab.weight_k,
-                )
-            ],
-            [100.0, 100.0, 100.0, 100.0],
-        )
-
-    def test_process_area_recipe_migrates_legacy_chain_gap_once(self):
-        tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("process_area"))
-        tab.pen_width.setValue(0.9)
-        tab.pitch.setValue(0.35)
-        tab.scale_pct.setValue(100)
-        tab.chain_gap.setValue(2.0)
-        state = tab.artwork_layout_state()
-        self.assertEqual(
-            state["screen"]["process_chain_cell_ratio"],
-            3.0,
-        )
-
-        restored = self.make_tab()
-        self.assertTrue(restored.restore_artwork_layout_state(state))
-        self.assertAlmostEqual(restored.chain_gap.value(), 2.0)
-
-        legacy = json.loads(json.dumps(state))
-        legacy["screen"].pop("process_chain_cell_ratio")
-        legacy["screen"]["chain_gap_mm"] = 1.0
-        migrated = self.make_tab()
-        self.assertTrue(migrated.restore_artwork_layout_state(legacy))
-        self.assertAlmostEqual(migrated.chain_gap.value(), 3.0)
-
-    def test_fine_detail_uses_two_mm_tone_segments_on_paper(self):
-        tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
-        tab.pen_width.setValue(0.6)
-        tab.scale_pct.setValue(260)
-        tab.detail_button.click()
-        tone_segments = []
-        max_paths = []
-
-        def capture_segment(*args, **kwargs):
-            tone_segments.append(kwargs.get("flow_tone_segment_mm"))
-            max_paths.append(kwargs.get("flow_max_path_mm"))
-            return []
-
-        with mock.patch.object(
-            converter,
-            "screen_channel",
-            side_effect=capture_segment,
-        ):
-            tab._ensure_layers()
-
-        self.assertEqual(len(tone_segments), len(converter.CHANNELS))
-        for value in tone_segments:
-            self.assertAlmostEqual(value, 2.0 / 2.6, places=6)
-        for value in max_paths:
-            self.assertAlmostEqual(value, 12.0 / 2.6, places=6)
 
     def test_analysis_worker_reports_strategy_split(self):
         from generator_tabs.cmyk_tab import ProgramAnalysisWorker
@@ -807,7 +2199,7 @@ class CmykTabTests(unittest.TestCase):
         settings = tab._effective_settings()
         self.assertEqual(
             Path(settings.bed_compensation_path).name,
-            "bed-error-compensation-2026-11-26-dense-v3-368mm-stock-extrapolated.json",
+            "bed-error-compensation-2026-11-01-dense-v3-360mm-reach-extrapolated.json",
         )
         self.assertFalse(settings.row_locked_compensation)
         self.assertFalse(tab._wave_spacing_guard_active())
@@ -838,7 +2230,7 @@ class CmykTabTests(unittest.TestCase):
         )
         plan = converter.plan_program(contours, settings)
         compensation = plan["bed_compensation"]
-        self.assertEqual(compensation.fingerprint, "745e3d264cc5")
+        self.assertEqual(compensation.fingerprint, "f85ec410dbac")
         self.assertFalse(getattr(compensation, "row_locked", False))
 
     def test_wave_spacing_guard_row_locks_bed_compensation(self):
@@ -962,7 +2354,7 @@ class CmykTabTests(unittest.TestCase):
 
         self.assertEqual(
             Path(settings.bed_compensation_path).name,
-            "bed-error-compensation-2026-11-26-dense-v3-368mm-stock-extrapolated.json",
+            "bed-error-compensation-2026-11-01-dense-v3-360mm-reach-extrapolated.json",
         )
         for channel in converter.CHANNELS:
             contours = converter.read_svg(
@@ -971,7 +2363,7 @@ class CmykTabTests(unittest.TestCase):
             plan = converter.plan_program(contours, settings)
             self.assertEqual(
                 plan["bed_compensation"].fingerprint,
-                "745e3d264cc5",
+                "f85ec410dbac",
                 channel,
             )
 
@@ -1085,7 +2477,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertTrue(manifest.exists())
         data = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(data["kind"], "cmyk-print-set")
-        self.assertEqual(data["version"], 8)
+        self.assertEqual(data["version"], 4)
         self.assertAlmostEqual(data["pen_offsets_mm"]["m"][0], 0.75)
         self.assertEqual(set(data["preflight"]), set(converter.CHANNELS))
         self.assertEqual(
@@ -1133,7 +2525,7 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertEqual(
             data["bed_compensation"]["profile_fingerprint"],
-            "745e3d264cc5",
+            "f85ec410dbac",
         )
         normalization = data["bed_compensation"][
             "translation_normalization"
@@ -1157,7 +2549,7 @@ class CmykTabTests(unittest.TestCase):
             data["ink_processing"]["sharpening"],
             {
                 "enabled": True,
-                "amount_pct": 60.0,
+                "amount_pct": 70.0,
                 "radius_mm": 1.5,
             },
         )
@@ -1170,49 +2562,7 @@ class CmykTabTests(unittest.TestCase):
                 data["file_sha256"][channel],
                 hashlib.sha256(saved.read_bytes()).hexdigest(),
             )
-        self.assertTrue(data["set_verification"]["complete"])
-        self.assertTrue(
-            data["set_verification"]["whole_set_transaction"]
-        )
-        self.assertEqual(
-            data["workflow"]["stages"],
-            [stage.key for stage in CMYK_WORKFLOW_STAGES],
-        )
-        self.assertTrue(
-            set(data["workflow"]["stage_settings_sha256"]).issubset(
-                {stage.key for stage in CMYK_WORKFLOW_STAGES}
-            )
-        )
         self.assertIn("Set manifest", tab.status.text())
-
-    def test_set_manifest_records_the_global_artwork_placement(self):
-        host = FakeHost(self.image_path)
-        host.settings_for_source = mock.Mock(
-            return_value=converter.Settings(
-                artwork_offset_x_mm=-3.17,
-                artwork_offset_y_mm=-28.74,
-            )
-        )
-        tab = self.make_tab(host)
-        results = {
-            channel: {
-                "gcode": f"; {channel}\nG1 X0 Y0\n",
-                "lines": 2,
-                "checks": self.clean_checks(),
-            }
-            for channel in converter.CHANNELS
-        }
-
-        tab._write_files(results)
-
-        manifest = Path(host.saved_paths["cyan"]).with_name(
-            "art-cmyk-set.json"
-        )
-        data = json.loads(manifest.read_text(encoding="utf-8"))
-        self.assertEqual(
-            data["artwork_placement_mm"],
-            [-3.17, -28.74],
-        )
 
     def test_legacy_wave_manifest_records_current_mesh_raw_mode(self):
         host = FakeHost(self.image_path)
@@ -1253,22 +2603,15 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertEqual(
             data["bed_compensation"]["profile_fingerprint"],
-            "745e3d264cc5",
+            "f85ec410dbac",
         )
         self.assertEqual(
             Path(data["bed_compensation_path"]).name,
-            "bed-error-compensation-2026-11-26-dense-v3-368mm-stock-extrapolated.json",
+            "bed-error-compensation-2026-11-01-dense-v3-360mm-reach-extrapolated.json",
         )
-        geometry = data["machine_geometry"]
-        self.assertAlmostEqual(geometry["bed_diameter_mm"], 457.2)
-        self.assertAlmostEqual(geometry["stock_diameter_mm"], 381.0)
-        self.assertAlmostEqual(geometry["stock_margin_mm"], 6.35)
-        self.assertAlmostEqual(geometry["drawing_diameter_mm"], 368.3)
-        self.assertAlmostEqual(geometry["machine_reach_radius_mm"], 184.15)
 
     def test_scaled_ink_layers_share_the_page_frame(self):
         tab = self.make_tab(FakeHost(self.colour_path))
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
         tab.scale_pct.setValue(280)
         tab.registration_marks.setChecked(False)
         tab._ensure_layers()
@@ -1283,12 +2626,11 @@ class CmykTabTests(unittest.TestCase):
             anchor = plan["source_center"]
             self.assertAlmostEqual(anchor[0], expected[0], places=6, msg=channel)
             self.assertAlmostEqual(anchor[1], expected[1], places=6, msg=channel)
-            if plan["contours"]:
-                scaled_radii[channel] = max(
-                    math.hypot(x, y)
-                    for contour in plan["contours"]
-                    for x, y in contour
-                )
+            scaled_radii[channel] = max(
+                math.hypot(x, y)
+                for contour in plan["contours"]
+                for x, y in contour
+            )
 
         # The Artwork scale control still sizes the print: 280 % must draw
         # appreciably larger than 100 % while both stay in one frame.
@@ -1301,23 +2643,18 @@ class CmykTabTests(unittest.TestCase):
                 str(tab._layer_files[channel]), settings
             )
             plan = converter.plan_program(contours, settings)
-            if plan["contours"]:
-                plain_radii.append(
-                    max(
-                        math.hypot(x, y)
-                        for contour in plan["contours"]
-                        for x, y in contour
-                    )
+            plain_radii.append(
+                max(
+                    math.hypot(x, y)
+                    for contour in plan["contours"]
+                    for x, y in contour
                 )
-        self.assertTrue(scaled_radii)
-        self.assertTrue(plain_radii)
+            )
         self.assertGreater(max(scaled_radii.values()), 2.0 * max(plain_radii))
 
     def test_save_writes_one_file_per_ink(self):
         host = FakeHost(self.image_path)
         tab = self.make_tab(host)
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
-        tab.scale_pct.setValue(260)
         tab._ensure_layers()
         results = {
             channel: {
@@ -1338,79 +2675,10 @@ class CmykTabTests(unittest.TestCase):
         tab._analysis_key = tab._control_key()
         tab._write_files(results)
         self.assertEqual(host.saved_labels, ["cyan", "magenta", "yellow", "black"])
-        self.assertEqual(len(set(host.saved_paths.values())), 4)
-        manifest = Path(host.saved_paths["cyan"]).with_name(
-            "art-cmyk-set.json"
-        )
-        data = json.loads(manifest.read_text(encoding="utf-8"))
-        self.assertEqual(
-            data["screen"]["flow_guide"],
-            "strength_gated_luminance_structure_tensor_"
-            "per_ink_networks_continuous_tone",
-        )
-        self.assertEqual(
-            data["screen"]["edge_flow_path_network"],
-            "per_ink",
-        )
         for channel in converter.CHANNELS:
             self.assertTrue(
                 Path(host.saved_paths[converter.CHANNEL_LABELS[channel].lower()]).exists()
             )
-
-    def test_coherent_flow_manifest_records_shared_ink_planes(self):
-        host = FakeHost(self.image_path)
-        tab = self.make_tab(host)
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow_coherent"))
-        tab.flow_smoothing.setValue(3.0)
-        tab.flow_keylines.setChecked(True)
-        tab._ensure_layers()
-        results = {
-            channel: {
-                "marks": 1,
-                "moves": 3,
-                "gcode": f"; {channel}\nG1 X0 Y0\n",
-                "lines": 2,
-                "x_count": 1,
-                "y_count": 0,
-                "x_mm": 1.0,
-                "y_mm": 0.0,
-                "draw_mm": 1.0,
-                "seconds": 1.0,
-            }
-            for channel in converter.CHANNELS
-        }
-        tab._analysis = results
-        tab._analysis_key = tab._control_key()
-        tab._write_files(results)
-        manifest = Path(host.saved_paths["cyan"]).with_name(
-            "art-cmyk-set.json"
-        )
-        data = json.loads(manifest.read_text(encoding="utf-8"))
-
-        self.assertEqual(
-            data["screen"]["flow_guide"],
-            "strength_gated_multichannel_structure_tensor_"
-            "coherent_ink_planes",
-        )
-        self.assertEqual(
-            data["screen"]["edge_flow_path_network"],
-            "shared_coherent_ink_planes",
-        )
-        self.assertAlmostEqual(
-            data["screen"]["source_edge_preserving_simplify_mm"],
-            1.95,
-            places=6,
-        )
-        self.assertAlmostEqual(
-            data["screen"]["coherent_color_hold_mm"],
-            6.0,
-            places=6,
-        )
-        self.assertAlmostEqual(
-            data["screen"]["coherent_color_mix_ratio"],
-            0.72,
-            places=6,
-        )
 
     def test_preview_loads_every_layer_and_filters_live(self):
         tab = self.make_tab()
@@ -1437,129 +2705,27 @@ class CmykTabTests(unittest.TestCase):
     def test_shipped_defaults_suit_a_photo(self):
         tab = self.CmykTab(FakeHost(self.image_path))
         self.addCleanup(tab.deleteLater)
-        self.assertFalse(tab.auto_levels.isChecked())
+        self.assertTrue(tab.auto_levels.isChecked())
         self.assertFalse(tab.solid_dots.isChecked())
-        self.assertEqual(tab.style.currentData(), "edge_flow")
+        self.assertEqual(tab.style.currentData(), "rectilinear")
         self.assertEqual(tab.levels.value(), 8)
-        self.assertAlmostEqual(tab.pitch.value(), 0.45, places=3)
-        self.assertAlmostEqual(tab.flow_smoothing.value(), 2.5, places=3)
-        self.assertEqual(tab.flow_layers.value(), 3)
-        self.assertEqual(tab.flow_pitch_compression.value(), 60)
-        self.assertFalse(tab.flow_keylines.isChecked())
-        self.assertAlmostEqual(tab.path_tolerance.value(), 0.10, places=3)
-        self.assertAlmostEqual(tab.gcr.value(), 75.0, places=3)
+        self.assertAlmostEqual(tab.pitch.value(), 0.1, places=3)
+        self.assertAlmostEqual(tab.gcr.value(), 95.0, places=3)
         self.assertAlmostEqual(tab.saturation.value(), 115.0, places=3)
-        self.assertAlmostEqual(tab.contrast.value(), 150.0, places=3)
-        self.assertAlmostEqual(tab.brightness.value(), 115.0, places=3)
+        self.assertAlmostEqual(tab.contrast.value(), 285.0, places=3)
+        self.assertAlmostEqual(tab.brightness.value(), 170.0, places=3)
         self.assertTrue(tab.sharpen.isChecked())
-        self.assertAlmostEqual(tab.sharpen_amount.value(), 60.0, places=3)
+        self.assertAlmostEqual(tab.sharpen_amount.value(), 70.0, places=3)
         self.assertAlmostEqual(tab.sharpen_radius.value(), 1.5, places=3)
-        self.assertAlmostEqual(tab.gamma.value(), 1.10, places=2)
+        self.assertAlmostEqual(tab.gamma.value(), 1.40, places=2)
         self.assertAlmostEqual(tab.dot_size.value(), 100.0, places=3)
-        self.assertEqual(tab.max_marks.value(), 200000)
+        self.assertEqual(tab.max_marks.value(), 40000)
         self.assertEqual(tab.resolution.value(), 10000)
         self.assertAlmostEqual(tab.scale_pct.value(), 280.0, places=3)
         self.assertAlmostEqual(tab.weight_c.value(), 100.0, places=3)
         self.assertAlmostEqual(tab.weight_m.value(), 100.0, places=3)
         self.assertAlmostEqual(tab.weight_y.value(), 100.0, places=3)
         self.assertAlmostEqual(tab.weight_k.value(), 100.0, places=3)
-
-    def test_reference_pitch_targets_on_paper_spacing(self):
-        from generator_tabs.cmyk_tab import reference_photo_pitch_mm
-
-        self.assertAlmostEqual(
-            reference_photo_pitch_mm(0.9, 200.0),
-            0.90,
-            places=3,
-        )
-        self.assertAlmostEqual(
-            reference_photo_pitch_mm(2.0, 200.0),
-            2.00,
-            places=3,
-        )
-
-    def test_reference_pitch_keeps_open_hatching_for_large_pens(self):
-        from generator_tabs.cmyk_tab import reference_photo_pitch_mm
-
-        effective_pitch = reference_photo_pitch_mm(0.9, 200.0) * 2.0
-        self.assertGreaterEqual(effective_pitch, 1.80)
-
-    def test_reference_defaults_apply_the_complete_photo_recipe(self):
-        host = FakeHost(self.image_path)
-        tab = self.CmykTab(host)
-        self.addCleanup(tab.deleteLater)
-        tab.scale_pct.setValue(200)
-        tab.pen_width.setValue(0.9)
-        tab.page_w.setValue(180)
-        tab.page_h.setValue(220)
-        tab.offset_spins["c"][0].setValue(1.25)
-        tab.offset_spins["c"][1].setValue(-2.5)
-        tab.offset_spins["k"][0].setValue(3.0)
-        tab.offset_spins["k"][1].setValue(4.0)
-        tab.chain_gap.setValue(8.0)
-        tab.theta_mode.set_value("fixed")
-        values = {
-            "auto_levels": False,
-            "saturation": 115,
-            "contrast": 150,
-            "brightness": 115,
-            "gamma": 1.1,
-            "gcr": 75,
-            "weights": {"c": 100, "m": 100, "y": 100, "k": 100},
-            "sharpen": True,
-            "sharpen_pct": 60,
-            "sharpen_radius_mm": 1.5,
-            "predicted_rgb_error": 52.8,
-        }
-
-        with mock.patch.object(
-            converter,
-            "auto_photo_settings",
-            return_value=values,
-        ):
-            tab.apply_reference_defaults()
-
-        self.assertEqual(
-            tab.style.currentData(),
-            "edge_flow_coherent",
-        )
-        self.assertAlmostEqual(tab.flow_smoothing.value(), 2.5, places=1)
-        self.assertEqual(tab.flow_layers.value(), 3)
-        self.assertEqual(tab.flow_pitch_compression.value(), 60)
-        self.assertTrue(tab.flow_keylines.isChecked())
-        self.assertTrue(tab.chain_marks.isChecked())
-        self.assertAlmostEqual(tab.chain_gap.value(), 1.0, places=3)
-        self.assertAlmostEqual(tab.pitch.value(), 0.90, places=2)
-        self.assertAlmostEqual(
-            tab.pitch.value() * tab.scale_pct.value() / 100.0,
-            1.8,
-            places=2,
-        )
-        self.assertAlmostEqual(tab.path_tolerance.value(), 0.10, places=2)
-        self.assertEqual(tab.max_marks.value(), 200000)
-        self.assertEqual(tab.saturation.value(), 115)
-        self.assertEqual(tab.contrast.value(), 150)
-        self.assertEqual(tab.brightness.value(), 115)
-        self.assertAlmostEqual(tab.gamma.value(), 1.10, places=2)
-        self.assertEqual(tab.gcr.value(), 75)
-        self.assertTrue(tab.sharpen.isChecked())
-        self.assertEqual(tab.sharpen_amount.value(), 60)
-        self.assertAlmostEqual(tab.sharpen_radius.value(), 1.5, places=2)
-        self.assertEqual(tab.theta_mode.value(), "fixed")
-        self.assertEqual(tab.page_w.value(), 180)
-        self.assertEqual(tab.page_h.value(), 220)
-        self.assertEqual(tab.scale_pct.value(), 200)
-        self.assertAlmostEqual(tab.pen_width.value(), 0.9, places=2)
-        self.assertEqual(
-            [spin.value() for spin in tab.offset_spins["c"]],
-            [1.25, -2.5],
-        )
-        self.assertEqual(
-            [spin.value() for spin in tab.offset_spins["k"]],
-            [3.0, 4.0],
-        )
-        self.assertIn("Recommended photo defaults ready", tab.status.text())
-        self.assertIn("Press Preview", tab.status.text())
 
     def test_sharpening_settings_reach_preparation_and_invalidate_layers(self):
         tab = self.make_tab()
@@ -1634,12 +2800,12 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(
             half_box[2] - half_box[0],
             0.5 * (full_box[2] - full_box[0]),
-            delta=0.10,
+            delta=0.05,
         )
         self.assertAlmostEqual(
             half_box[3] - half_box[1],
             0.5 * (full_box[3] - full_box[1]),
-            delta=0.10,
+            delta=0.05,
         )
         self.assertAlmostEqual(
             (half_box[0] + half_box[2]) / 2.0,
@@ -1720,21 +2886,17 @@ class CmykTabTests(unittest.TestCase):
             effective_pitch_mm=(
                 tab.pitch.value() * tab.scale_pct.value() / 100.0
             ),
-            style=tab.style.currentData(),
-            dot_pitch_mm=tab.pitch.value(),
         )
         self.assertEqual(tab.saturation.value(), values["saturation"])
         self.assertEqual(tab.contrast.value(), values["contrast"])
         self.assertEqual(tab.brightness.value(), values["brightness"])
         self.assertEqual(tab.gcr.value(), values["gcr"])
         self.assertAlmostEqual(tab.gamma.value(), values["gamma"], places=2)
-        self.assertEqual(tab.weight_y.value(), values["weights"]["y"])
         self.assertTrue(tab.auto_levels.isChecked())
         # Auto no longer touches Dot pitch: the operator's spacing choice
         # stands; the status line suggests what Match pen would set instead.
         self.assertAlmostEqual(tab.pitch.value(), pitch_before, places=3)
         self.assertIn("Auto:", tab.status.text())
-        self.assertIn("coverage RGB error estimate", tab.status.text())
         self.assertIn("Dot pitch", tab.status.text())
         self.assertIn("Match pen would suggest", tab.status.text())
 
@@ -1762,7 +2924,6 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(tab.brightness.value(), values["brightness"])
         self.assertEqual(tab.gcr.value(), values["gcr"])
         self.assertAlmostEqual(tab.gamma.value(), values["gamma"], places=2)
-        self.assertEqual(tab.weight_y.value(), values["weights"]["y"])
         self.assertTrue(tab.sharpen.isChecked())
         self.assertEqual(tab.sharpen_amount.value(), values["sharpen_pct"])
         self.assertEqual(
@@ -1771,48 +2932,6 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertAlmostEqual(tab.pitch.value(), values["dot_pitch_mm"])
 
-    def test_edge_flow_auto_preserves_the_physical_pitch(self):
-        host = FakeHost(self.image_path)
-        tab = self.make_tab(host)
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
-        tab.pitch.setValue(0.31)
-        tab.scale_pct.setValue(260)
-        tab.resolution.setValue(1600)
-        captured = {}
-        auto_settings = converter.auto_photo_settings
-
-        def capture_settings(*args, **kwargs):
-            captured["values"] = auto_settings(*args, **kwargs)
-            captured["kwargs"] = kwargs
-            return captured["values"]
-
-        with mock.patch.object(
-            converter,
-            "auto_photo_settings",
-            side_effect=capture_settings,
-        ):
-            tab.auto_button.click()
-        values = captured["values"]
-
-        self.assertEqual(tab.contrast.value(), values["contrast"])
-        self.assertEqual(tab.brightness.value(), values["brightness"])
-        self.assertAlmostEqual(tab.gamma.value(), values["gamma"], places=2)
-        self.assertEqual(tab.weight_y.value(), values["weights"]["y"])
-        self.assertAlmostEqual(tab.pitch.value(), 0.31, places=3)
-        self.assertEqual(
-            captured["kwargs"]["resolution_px"],
-            1600,
-        )
-        self.assertEqual(
-            captured["kwargs"]["flow_layers"],
-            tab.flow_layers.value(),
-        )
-        self.assertAlmostEqual(
-            captured["kwargs"]["flow_pitch_compression"],
-            tab.flow_pitch_compression.value() / 100.0,
-        )
-        self.assertIn("Dot pitch left at 0.31 mm", tab.status.text())
-
     def test_match_pen_pitch_uses_the_effective_scale(self):
         tab = self.make_tab()
         tab.scale_pct.setValue(200)
@@ -1820,171 +2939,6 @@ class CmykTabTests(unittest.TestCase):
         tab.match_pen_pitch()
         self.assertAlmostEqual(tab.pitch.value(), 0.15, places=2)
         self.assertIn("matches", tab.status.text())
-
-    def test_fine_detail_preset_scales_edge_flow_to_the_pen(self):
-        tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
-        tab.pen_width.setValue(0.6)
-        tab.scale_pct.setValue(260)
-        tab.flow_smoothing.setValue(4.0)
-        tab.flow_layers.setValue(5)
-        tab.path_tolerance.setValue(0.15)
-        self.assertFalse(tab.detail_button.isChecked())
-        self.assertEqual(tab.detail_button.text(), "Fine detail")
-
-        tab.detail_button.click()
-
-        self.assertTrue(tab.detail_button.isChecked())
-        self.assertIn("✓", tab.detail_button.text())
-        self.assertAlmostEqual(tab.pitch.value(), 0.25, places=2)
-        self.assertAlmostEqual(
-            tab.pitch.value() * tab.scale_pct.value() / 100.0,
-            0.65,
-            places=2,
-        )
-        self.assertAlmostEqual(tab.flow_smoothing.value(), 1.2, places=1)
-        self.assertEqual(tab.flow_layers.value(), 5)
-        self.assertEqual(tab.flow_pitch_compression.value(), 65)
-        self.assertTrue(tab.flow_keylines.isChecked())
-        self.assertTrue(tab.sharpen.isChecked())
-        self.assertAlmostEqual(tab.sharpen_amount.value(), 60.0, places=1)
-        self.assertAlmostEqual(tab.sharpen_radius.value(), 1.5, places=1)
-        self.assertAlmostEqual(tab.path_tolerance.value(), 0.10, places=2)
-        self.assertIn("Fine detail", tab.status.text())
-
-        tab.pen_width.setValue(0.8)
-        tab.scale_pct.setValue(150)
-        self.assertFalse(tab.detail_button.isChecked())
-        tab.detail_button.click()
-        self.assertTrue(tab.detail_button.isChecked())
-        self.assertAlmostEqual(tab.pitch.value(), 0.55, places=2)
-        self.assertAlmostEqual(tab.flow_smoothing.value(), 1.5, places=1)
-        self.assertEqual(tab.flow_layers.value(), 5)
-        self.assertEqual(tab.flow_pitch_compression.value(), 65)
-
-    def test_fine_detail_indicator_clears_when_layout_is_edited(self):
-        tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
-        tab.pen_width.setValue(0.6)
-        tab.scale_pct.setValue(260)
-
-        tab.detail_button.click()
-        self.assertTrue(tab.detail_button.isChecked())
-        self.assertIn("active", tab.detail_button.toolTip())
-
-        tab.flow_smoothing.setValue(2.4)
-        self.assertFalse(tab.detail_button.isChecked())
-        self.assertEqual(tab.detail_button.text(), "Fine detail")
-        self.assertIn("not active", tab.detail_button.toolTip())
-
-        tab.detail_button.click()
-        self.assertTrue(tab.detail_button.isChecked())
-        tab.flow_keylines.setChecked(False)
-        self.assertFalse(tab.detail_button.isChecked())
-
-        tab.detail_button.click()
-        self.assertTrue(tab.detail_button.isChecked())
-        tab.sharpen_amount.setValue(40.0)
-        self.assertFalse(tab.detail_button.isChecked())
-
-    def test_fine_detail_toggle_restores_previous_controls(self):
-        tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
-        tab.pen_width.setValue(0.6)
-        tab.scale_pct.setValue(260)
-        tab.pitch.setValue(0.65)
-        tab.flow_smoothing.setValue(4.0)
-        tab.flow_layers.setValue(5)
-        tab.flow_pitch_compression.setValue(35)
-        tab.path_tolerance.setValue(0.15)
-        tab.flow_keylines.setChecked(False)
-        tab.sharpen.setChecked(False)
-
-        tab.detail_button.click()
-        self.assertTrue(tab.detail_button.isChecked())
-
-        tab.detail_button.click()
-        self.assertFalse(tab.detail_button.isChecked())
-        self.assertEqual(tab.style.currentData(), "edge_flow")
-        self.assertAlmostEqual(tab.pitch.value(), 0.65, places=2)
-        self.assertAlmostEqual(tab.flow_smoothing.value(), 4.0, places=1)
-        self.assertEqual(tab.flow_layers.value(), 5)
-        self.assertEqual(tab.flow_pitch_compression.value(), 35)
-        self.assertAlmostEqual(tab.path_tolerance.value(), 0.15, places=2)
-        self.assertFalse(tab.flow_keylines.isChecked())
-        self.assertFalse(tab.sharpen.isChecked())
-        self.assertIn("Fine detail off", tab.status.text())
-
-    def test_fine_detail_toggle_snapshot_round_trips(self):
-        tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
-        tab.pen_width.setValue(0.6)
-        tab.scale_pct.setValue(260)
-        tab.flow_smoothing.setValue(4.0)
-        tab.flow_layers.setValue(5)
-        tab.flow_pitch_compression.setValue(35)
-        tab.path_tolerance.setValue(0.15)
-        tab.flow_keylines.setChecked(False)
-        tab.sharpen.setChecked(False)
-        tab.detail_button.click()
-
-        state = tab.artwork_layout_state()
-        self.assertIsNotNone(state["fine_detail_previous"])
-        restored = self.make_tab()
-        self.assertTrue(restored.restore_artwork_layout_state(state))
-        self.assertTrue(restored.detail_button.isChecked())
-
-        restored.detail_button.click()
-        self.assertFalse(restored.detail_button.isChecked())
-        self.assertAlmostEqual(restored.flow_smoothing.value(), 4.0, places=1)
-        self.assertEqual(restored.flow_layers.value(), 5)
-        self.assertEqual(restored.flow_pitch_compression.value(), 35)
-        self.assertFalse(restored.flow_keylines.isChecked())
-        self.assertFalse(restored.sharpen.isChecked())
-
-    def test_fine_detail_old_active_recipe_uses_off_fallback(self):
-        tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
-        tab.pen_width.setValue(0.6)
-        tab.scale_pct.setValue(260)
-        tab.detail_button.click()
-        state = tab.artwork_layout_state()
-        state["fine_detail_previous"] = None
-
-        restored = self.make_tab()
-        self.assertTrue(restored.restore_artwork_layout_state(state))
-        self.assertTrue(restored.detail_button.isChecked())
-        restored.detail_button.click()
-
-        self.assertFalse(restored.detail_button.isChecked())
-        self.assertAlmostEqual(restored.flow_smoothing.value(), 2.5, places=1)
-        self.assertEqual(restored.flow_layers.value(), 3)
-        self.assertEqual(restored.flow_pitch_compression.value(), 60)
-        self.assertAlmostEqual(restored.path_tolerance.value(), 0.15, places=2)
-        self.assertFalse(restored.flow_keylines.isChecked())
-        self.assertFalse(restored.sharpen.isChecked())
-        self.assertIn("standard Edge-flow defaults", restored.status.text())
-
-    def test_old_fine_detail_snapshot_without_sharpen_fields_restores(self):
-        tab = self.make_tab()
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
-        tab.pen_width.setValue(0.6)
-        tab.scale_pct.setValue(260)
-        tab.sharpen.setChecked(False)
-        tab.detail_button.click()
-        state = tab.artwork_layout_state()
-        previous = state["fine_detail_previous"]
-        previous.pop("sharpen")
-        previous.pop("sharpen_pct")
-        previous.pop("sharpen_radius_mm")
-
-        restored = self.make_tab()
-        self.assertTrue(restored.restore_artwork_layout_state(state))
-        restored.detail_button.click()
-
-        self.assertFalse(restored.detail_button.isChecked())
-        self.assertFalse(restored.sharpen.isChecked())
-        self.assertNotIn("unavailable", restored.status.text())
 
     def test_registration_crosses_are_identical_on_every_ink(self):
         tab = self.make_tab()
@@ -2129,25 +3083,6 @@ class CmykTabTests(unittest.TestCase):
             tab._layers_manifest["sheet_settings"]["style"], "rectilinear"
         )
 
-    def test_calibration_sheet_follows_edge_flow(self):
-        tab = self.make_tab()
-        tab.page_w.setValue(200)
-        tab.page_h.setValue(200)
-        tab.pitch.setValue(2.0)
-        tab.style.setCurrentIndex(tab.style.findData("edge_flow"))
-        tab.flow_pitch_compression.setValue(45)
-        tab.calibration_mode.setChecked(True)
-        tab.build_svg()
-        self.assertEqual(
-            tab._layers_manifest["sheet_settings"]["style"], "edge_flow"
-        )
-        self.assertAlmostEqual(
-            tab._layers_manifest["sheet_settings"][
-                "flow_pitch_compression"
-            ],
-            0.45,
-        )
-
 
 class FakeHost:
     """Minimal host: analysis is synthetic, saving writes real temp files."""
@@ -2209,27 +3144,15 @@ class FakeHost:
             "stats": {},
         }
 
-    def resolve_program_set_base(self, default_base=""):
-        del default_base
-        return str(Path(self._folder) / "art-cmyk.gcode")
-
-    def export_program_set(
-        self,
-        entries,
-        base_path=None,
-        default_base="",
-        companion_files=None,
-    ):
+    def export_program_set(self, entries, base_path=None, default_base=""):
         del base_path, default_base
         written = []
         for label, gcode in entries:
             path = str(Path(self._folder) / f"art-cmyk-{label}.gcode")
-            Path(path).write_bytes(gcode.encode("utf-8"))
+            Path(path).write_text(gcode, encoding="utf-8")
             self.saved_labels.append(label)
             self.saved_paths[label] = path
             written.append(path)
-        for path, content in companion_files or ():
-            Path(path).write_bytes(content.encode("utf-8"))
         return written
 
 

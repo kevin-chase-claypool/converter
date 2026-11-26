@@ -57,10 +57,10 @@ process screen needed a bounded digital comparison before any paper run.
 
 ## Implementation
 
-- [`tools/export_cmyk_headless.py`](../../../../tools/export_cmyk_headless.py)
-  loads the real application module in an offscreen Qt session, selects
-  **CMYK Photo**, applies the named workflow preset, calls `build_svg()` and
-  `save_all()`, and uses `MainWindow.export_program_set` for publication.
+- The now-removed `tools/export_cmyk_headless.py` loaded the real application
+  module in an offscreen Qt session, selected **CMYK Photo**, applied the named
+  workflow preset, called `build_svg()` and `save_all()`, and used
+  `MainWindow.export_program_set` for publication.
 - The verifier checks all four expected files and the manifest, source and
   program hashes, Y/M/C/K print order, `G21/G90/G94/G17/G54`, `M2` and final
   pen-up state, common frame/theta/feed/reach/compensation headers, per-ink

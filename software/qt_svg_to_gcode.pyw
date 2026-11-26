@@ -8,18 +8,7 @@ import threading
 import time
 from array import array
 
-os.environ.setdefault("QSG_RHI_BACKEND", "opengl")
-
-from PySide6.QtCore import (
-    QCoreApplication,
-    QObject,
-    QPointF,
-    QThread,
-    QTimer,
-    Qt,
-    QRectF,
-    Signal,
-)
+from PySide6.QtCore import QObject, QPointF, QThread, QTimer, Qt, QRectF, Signal
 from PySide6.QtGui import (
     QAction,
     QActionGroup,
@@ -31,7 +20,6 @@ from PySide6.QtGui import (
 )
 from PySide6.QtOpenGL import QOpenGLBuffer, QOpenGLShader, QOpenGLShaderProgram
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
-from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
     QApplication,
@@ -60,11 +48,6 @@ from PySide6.QtWidgets import (
 
 import converter_core as converter
 from generator_tabs._tab_common import ChoiceBullets
-from program_set_export import (
-    ProgramSetExportError,
-    program_set_paths,
-    write_file_set_transaction,
-)
 # Flushed so `qt_debug.log` names the build as soon as the app starts; it is the
 # quickest way to tell a stale window from a stale install.
 print(f"[geometry version: {getattr(converter, 'GEOMETRY_VERSION', 'OLD-no-new-patterns')}]", flush=True)
@@ -82,16 +65,6 @@ print(
 # Playback wall-clock multiplier: 1.0 = real time, so the toolhead animates at
 # the configured print speed (mm/s). Bump up to fast-forward long jobs.
 PLAYBACK_RATE = 1.0
-
-
-def configure_qt_quick_for_opengl():
-    """Make embedded Qt Quick/WebEngine share the app's OpenGL context."""
-    QCoreApplication.setAttribute(
-        Qt.ApplicationAttribute.AA_ShareOpenGLContexts
-    )
-    QQuickWindow.setGraphicsApi(
-        QSGRendererInterface.GraphicsApi.OpenGL
-    )
 
 
 def fmt(value):
@@ -208,23 +181,10 @@ def ink_vertex_colors(
         for _first, _second in zip(contour, contour[1:]):
             artwork_colors.extend(color)
             artwork_colors.extend(color)
-    # The preview geometry appends keep-down bridges after the contour
-    # geometry. Their colour entries must follow in the same order or the
-    # simulation guard sees a short solid-color buffer and silently falls back
-    # to the ordinary per-ink line rendering.
-    for move in moves:
-        if move.get("strategy") != "keep_down_bridge":
-            continue
-        if move.get("bed_start") is None or move.get("bed_end") is None:
-            continue
-        index = move.get("contour")
-        if not isinstance(index, int) or not 0 <= index < len(inks):
-            return None, None
-        color = color_for(inks[index], undrawn_mix)
-        artwork_colors.extend(color)
-        artwork_colors.extend(color)
     drawn_colors = []
     for move in moves:
+        if move.get("strategy") == "keep_down_bridge":
+            return None, None
         if move.get("type") != "draw":
             continue
         if move.get("bed_start") is None or move.get("bed_end") is None:
@@ -283,7 +243,7 @@ class GLPreview(QOpenGLWidget):
         self.moves = []
         # None shows every tagged ink; a set filters the drawn layers live.
         self.visible_inks = None
-        self.ink_simulation = True
+        self.ink_simulation = False
         self.sim_ink_colors = None
         # Ink laid down by one simulated stroke; rebuilt when the view scale
         # changes enough that a stroke covers a different fraction of a pixel.
@@ -299,7 +259,7 @@ class GLPreview(QOpenGLWidget):
         # is silently trimmed; drawing it makes that visible while the scale is
         # being chosen.
         self.reach_color = QColor("#15803d")
-        self.show_pen_down_path = False
+        self.show_pen_down_path = True
         self.show_machine_reach = True
         # Live placement. `placement` is where the artwork should sit relative to
         # the bed center; `planned_offset` is what the current plan already bakes
@@ -539,26 +499,6 @@ class GLPreview(QOpenGLWidget):
             curr = (self.preview_center[0] + math.cos(a) * bed_radius, self.preview_center[1] + math.sin(a) * bed_radius)
             bed_circle.extend([prev[0], prev[1], curr[0], curr[1]])
             prev = curr
-        stock_radius = max(
-            float(
-                getattr(
-                    self.settings,
-                    "stock_diameter_mm",
-                    self.settings.bed_diameter_mm,
-                )
-            ),
-            1.0,
-        ) / 2.0
-        stock_circle = []
-        prev = (self.preview_center[0] + stock_radius, self.preview_center[1])
-        for i in range(1, 241):
-            a = i / 240.0 * math.pi * 2.0
-            curr = (
-                self.preview_center[0] + math.cos(a) * stock_radius,
-                self.preview_center[1] + math.sin(a) * stock_radius,
-            )
-            stock_circle.extend([prev[0], prev[1], curr[0], curr[1]])
-            prev = curr
         bed_radius_line = [self.preview_center[0], self.preview_center[1], self.preview_center[0] + bed_radius, self.preview_center[1]]
         min_dbg = self.preview_center[0] - bed_radius
         max_dbg = self.preview_center[0] + bed_radius
@@ -668,7 +608,6 @@ class GLPreview(QOpenGLWidget):
 
         self.vertex_arrays = {
             "bed_circle": array("f", bed_circle),
-            "stock_circle": array("f", stock_circle),
             "bed_radius": array("f", bed_radius_line),
             "debug_box": array("f", debug_box),
             "debug_cross": array("f", debug_cross),
@@ -837,9 +776,9 @@ class GLPreview(QOpenGLWidget):
     def set_reach_warning(self, warning):
         """Draw the reach guide in red when artwork is being clipped by it.
 
-        The guide is the only place the physical bed, paper stock, and reachable
-        area are drawn at the same scale, so it is where the tape border and an
-        over-scale artwork are visible without reading the status line.
+        The guide is the only place the bed circle and the reachable area are
+        drawn at the same scale, so it is where an over-scale artwork is
+        visible without reading the status line.
         """
         self.reach_warning = bool(warning)
         self.reach_color = QColor("#dc2626" if self.reach_warning else "#15803d")
@@ -1114,11 +1053,10 @@ class GLPreview(QOpenGLWidget):
         # useful as a G-code sanity check instead of becoming a cluttered view.
         self.program.setUniformValue1f(self.uniform_loc["theta"], 0.0)
         shift_x, shift_y = self.placement_delta()
-        # The bed, stock, and reach circles are pinned to the bed center; the
-        # artwork and its tool path move with a placement drag.
+        # The bed and reach circles are pinned to the bed center; the artwork and
+        # its tool path move with a placement drag.
         self.set_shift(0.0, 0.0)
         self.draw_static("bed_circle", QColor("#94a3b8"), 1.5)
-        self.draw_static("stock_circle", QColor("#475569"), 1.5)
         self.set_shift(shift_x, shift_y)
         # Full artwork in the undrawn color, then overdraw the portion drawn so
         # far in the drawn color — the boundary tracks where the pen is. Ink
@@ -1351,10 +1289,6 @@ class MainWindow(QMainWindow):
         self.raw_cache_key = None
         self.preview_index = 0
         self.preview_progress = 0.0
-        # Generator pages default to 1:1 so their own Artwork scale governs
-        # size. An explicit fit action must override that default for this
-        # artwork instead of being discarded in settings_for_source().
-        self.generator_fit_override = False
         self.drawing_color = QColor("#2563eb")
         self.undrawn_color = QColor("#bcd0f5")
         self.motion_color = QColor("#be123c")
@@ -1534,7 +1468,7 @@ class MainWindow(QMainWindow):
         self.motion_color_button = QPushButton("Motion")
         self.motion_color_button.clicked.connect(lambda: self.choose_preview_color("motion"))
         self.show_pen_down_path = QCheckBox("Show X/Y pen-down path")
-        self.show_pen_down_path.setChecked(False)
+        self.show_pen_down_path.setChecked(True)
         self.show_machine_reach = QCheckBox("Show machine reach guide")
         self.show_machine_reach.setChecked(True)
         color_widget = QWidget()
@@ -1563,16 +1497,15 @@ class MainWindow(QMainWindow):
         sidebar_layout = QVBoxLayout(sidebar)
         sidebar_layout.setContentsMargins(0, 0, 0, 0)
         sidebar_layout.setSpacing(4)
-        self.sidebar_sections = []
         expanded_groups = {"Geometry", "Fill", "Motion"}
         for group_title, _items in converter.TEXT_FIELD_GROUPS:
-            section = CollapsibleSection(
-                group_title,
-                group_boxes[group_title],
-                group_title in expanded_groups,
+            sidebar_layout.addWidget(
+                CollapsibleSection(
+                    group_title,
+                    group_boxes[group_title],
+                    group_title in expanded_groups,
+                )
             )
-            self.sidebar_sections.append(section)
-            sidebar_layout.addWidget(section)
         sidebar_layout.addStretch(1)
         sidebar_scroll = QScrollArea()
         self.sidebar_scroll = sidebar_scroll
@@ -1587,15 +1520,10 @@ class MainWindow(QMainWindow):
         self.gl_preview = GLPreview()
         self.show_pen_down_path.toggled.connect(self.gl_preview.set_show_pen_down_path)
         self.show_machine_reach.toggled.connect(self.gl_preview.set_show_machine_reach)
-        self.gl_preview.set_show_pen_down_path(
-            self.show_pen_down_path.isChecked()
-        )
         self.gl_preview.placementChanged.connect(self.on_placement_changed)
         preview_layout.addWidget(self.gl_preview, 1)
 
-        self.preview_transport = QWidget()
-        controls = QHBoxLayout(self.preview_transport)
-        controls.setContentsMargins(0, 0, 0, 0)
+        controls = QHBoxLayout()
         controls.addWidget(QPushButton("|<", clicked=lambda: self.set_index(0)))
         controls.addWidget(QPushButton("<", clicked=lambda: self.set_index(self.preview_index - 1)))
         controls.addWidget(QPushButton("Play", clicked=self.play))
@@ -1605,7 +1533,7 @@ class MainWindow(QMainWindow):
         self.slider.valueChanged.connect(self.set_index)
         controls.addWidget(self.slider, 1)
         controls.addWidget(QPushButton(">|", clicked=lambda: self.set_index(len(self.moves))))
-        preview_layout.addWidget(self.preview_transport)
+        preview_layout.addLayout(controls)
 
         # Preview and Cancel belong with the preview they build and stop.
         preview_actions = QHBoxLayout()
@@ -1657,7 +1585,6 @@ class MainWindow(QMainWindow):
         self.preview_motion_check.toggled.connect(self.show_pen_down_path.setChecked)
         self.show_pen_down_path.toggled.connect(self.preview_motion_check.setChecked)
         self.ink_sim_check = QCheckBox("Ink simulation (multiply)")
-        self.ink_sim_check.setChecked(True)
         self.ink_sim_check.setToolTip(
             "CMYK preview only: multiply the ink layers over the paper white "
             "in plot order, the way translucent pens combine, instead of "
@@ -1667,29 +1594,22 @@ class MainWindow(QMainWindow):
             "coverage."
         )
         self.ink_sim_check.toggled.connect(self.gl_preview.set_ink_simulation)
-        self.gl_preview.set_ink_simulation(self.ink_sim_check.isChecked())
         self.ink_profile_button = QPushButton(
             "Ink profile...", clicked=self.choose_ink_profile
         )
         self.ink_profile_button.setToolTip(
             "Load a *-profile.json produced by tools\\cmyk_calibrate.py; the "
-            "Ink simulation and CMYK separation then use your pens' measured "
-            "response instead of the nominal process colours."
+            "Ink simulation then multiplies your pens' measured colours "
+            "instead of the display colours."
         )
-        # Keep the preview's minimum width below the settings content's width.
-        # A single row of every checkbox and action used to force a 974 px
-        # preview floor, which blocked the sidebar from fitting its controls.
-        render_row = QHBoxLayout()
-        render_row.addWidget(self.preview_motion_check)
-        render_row.addWidget(self.ink_sim_check)
-        render_row.addStretch(1)
-        preview_layout.addLayout(render_row)
-        fit_row = QHBoxLayout()
-        fit_row.addWidget(self.ink_profile_button)
-        fit_row.addWidget(self.fill_bed_button)
-        fit_row.addWidget(self.fit_inside_button)
-        fit_row.addWidget(self.clip_warning, 1)
-        preview_layout.addLayout(fit_row)
+        clip_row = QHBoxLayout()
+        clip_row.addWidget(self.preview_motion_check)
+        clip_row.addWidget(self.ink_sim_check)
+        clip_row.addWidget(self.ink_profile_button)
+        clip_row.addWidget(self.fill_bed_button)
+        clip_row.addWidget(self.fit_inside_button)
+        clip_row.addWidget(self.clip_warning, 1)
+        preview_layout.addLayout(clip_row)
 
         self.stale_warning = QLabel(
             "Settings changed since this preview - press Preview to rebuild it."
@@ -1724,12 +1644,6 @@ class MainWindow(QMainWindow):
         main_split.setStretchFactor(0, 0)
         main_split.setStretchFactor(1, 1)
         main_split.setSizes([380, 1120])
-        for section in self.sidebar_sections:
-            section.toggle.toggled.connect(
-                lambda _checked: QTimer.singleShot(
-                    0, self.fit_tools_pane_to_controls
-                )
-            )
         window_layout.addWidget(main_split, 1)
 
         self.log = QTextEdit()
@@ -1792,62 +1706,6 @@ class MainWindow(QMainWindow):
         self.update_file_status()
         self.svg_path.textChanged.connect(lambda _text: self.update_file_status())
         self.gcode_path.textChanged.connect(lambda _text: self.update_file_status())
-        QTimer.singleShot(0, self.fit_tools_pane_to_controls)
-
-    def tools_pane_control_width(self):
-        """Width needed to show the active tool's controls without clipping."""
-        current = self.stack.currentWidget()
-        preferred = getattr(current, "preferred_tool_pane_width", None)
-        if callable(preferred):
-            return max(
-                self.stack.minimumWidth(),
-                int(preferred()),
-            )
-        controls_scroll = getattr(current, "controls_scroll", None)
-        if current is not self.convert_root and controls_scroll is not None:
-            content = controls_scroll.widget()
-            margins = (
-                current.layout().contentsMargins()
-                if current.layout() is not None
-                else None
-            )
-            horizontal_margins = (
-                margins.left() + margins.right() if margins is not None else 0
-            )
-            return max(
-                self.stack.minimumWidth(),
-                content.minimumSizeHint().width()
-                + controls_scroll.verticalScrollBar().sizeHint().width()
-                + 2 * controls_scroll.frameWidth()
-                + horizontal_margins,
-            )
-        sidebar = self.sidebar_scroll.widget()
-        return (
-            max(self.stack.minimumWidth(), sidebar.minimumSizeHint().width())
-            + self.sidebar_scroll.verticalScrollBar().sizeHint().width()
-            + 2 * self.sidebar_scroll.frameWidth()
-        )
-
-    def fit_tools_pane_to_controls(self):
-        """Grow the settings pane to its controls without squeezing the preview."""
-        sizes = self.main_split.sizes()
-        total = sum(sizes)
-        if total <= 0:
-            return
-        preview_floor = self.preview_panel.minimumSizeHint().width()
-        available = max(self.stack.minimumWidth(), total - preview_floor)
-        preferred = getattr(
-            self.stack.currentWidget(),
-            "preferred_tool_pane_width",
-            None,
-        )
-        if callable(preferred):
-            target = min(int(preferred()), available)
-            self.main_split.setSizes([target, total - target])
-            return
-        target = min(self.tools_pane_control_width(), available)
-        if target > sizes[0]:
-            self.main_split.setSizes([target, total - target])
 
     def active_source_tab(self):
         """The tab that supplies artwork; None when Convert is active."""
@@ -1885,12 +1743,10 @@ class MainWindow(QMainWindow):
     def settings_for_source(self, source_tab):
         """Build settings for the active tab.
 
-        A generator page is already laid out in millimetres, so it defaults to
+        A generator page is already laid out in millimetres, so it is plotted
         1:1 with the fit mode manual. The Convert tab's auto fit would
         otherwise renormalize every generator result to the reach circle and
-        hide the tab's Artwork scale control. An explicit **Fit inside** or
-        **Fill bed** action opts this artwork into that fit for every generator
-        source instead of being discarded here.
+        hide the tab's Artwork scale control.
 
         A tab may also declare ``SELF_SCREENED = True`` when it draws its own
         tone marks (CMYK dots): the Fill patterns would then hatch every dot
@@ -1898,13 +1754,9 @@ class MainWindow(QMainWindow):
         """
         settings = self.settings()
         if source_tab is not self.convert_root:
-            preserve_bed_fit = bool(
-                getattr(source_tab, "USES_BED_FIT_DEFAULT", False)
+            settings = dataclasses.replace(
+                settings, fit_mode="manual", scale=1.0
             )
-            if not self.generator_fit_is_active() and not preserve_bed_fit:
-                settings = dataclasses.replace(
-                    settings, fit_mode="manual", scale=1.0
-                )
             if bool(getattr(source_tab, "SELF_SCREENED", False)):
                 settings = dataclasses.replace(settings, hatch_spacing_mm=0.0)
             # A tab may override fields for its own output (the CMYK tab's Pen
@@ -1914,18 +1766,6 @@ class MainWindow(QMainWindow):
             if callable(hook):
                 settings = hook(settings)
         return settings
-
-    def generator_fit_is_active(self):
-        """Whether an explicit auto-fit owns generator-tab scale."""
-        if self.generator_fit_override:
-            return True
-        if self.fit_mode() == "manual":
-            return False
-        try:
-            scale = float(self.fields["scale"].text() or 1.0)
-        except ValueError:
-            return False
-        return math.isfinite(scale) and scale > 0.0 and abs(scale - 1.0) > 1e-6
 
     def on_tool_changed(self):
         """A preview belongs to one tool; switching tools only marks it stale."""
@@ -1950,7 +1790,6 @@ class MainWindow(QMainWindow):
             action.setChecked(True)
         self.setWindowTitle(f"{title} - SVG to XY Theta G-code Converter")
         self.on_tool_changed()
-        QTimer.singleShot(0, self.fit_tools_pane_to_controls)
 
     def build_dashboard(self):
         """Fill the All tools page with one card per tool, grouped."""
@@ -2231,16 +2070,6 @@ class MainWindow(QMainWindow):
     def artwork_path(self):
         """Path currently in the static Artwork row, for generator tabs."""
         return self.svg_path.text().strip()
-
-    def active_ink_colors(self):
-        """Measured process-ink transmittances currently loaded, if any."""
-        colors = self.gl_preview.sim_ink_colors
-        if not colors:
-            return None
-        return {
-            channel: tuple(float(component) for component in values)
-            for channel, values in colors.items()
-        }
 
     def current_contours(self):
         """Preview contours in millimetres, for post-process tools."""
@@ -2731,72 +2560,45 @@ class MainWindow(QMainWindow):
             "bed_compensation": program_plan.get("bed_compensation"),
         }
 
-    def resolve_program_set_base(self, default_base=""):
-        """Resolve one save base before a multi-program set is staged."""
-        # A destination folder chosen from File > Set G-code Destination takes
-        # the place of the per-save dialog.
-        if getattr(self, "gcode_dir", ""):
-            return os.path.join(
-                self.gcode_dir,
-                default_base or "plot.gcode",
-            )
-        base_path, _ = QFileDialog.getSaveFileName(
-            self,
-            "Save G-code files",
-            default_base,
-            "G-code files (*.gcode *.nc *.tap);;All files (*.*)",
-        )
-        return base_path
+    def export_program_set(self, entries, base_path=None, default_base=""):
+        """Write one G-code file per ``(label, gcode)`` entry from one name.
 
-    def export_program_set(
-        self,
-        entries,
-        base_path=None,
-        default_base="",
-        companion_files=None,
-    ):
-        """Publish one complete G-code set and any required companions.
-
-        Every file is staged before the first target is replaced. If a commit
-        step fails, previously replaced files are restored, so a returned list
-        always represents a complete published set.
+        Multi-layer tools pass the analyzed programs and a base name (or let
+        the single save dialog pick one); every program is written as
+        ``<base>-<label>.gcode``. Returns the written paths; an empty list
+        means the dialog was cancelled.
         """
         entries = list(entries)
         if not entries:
             return []
+        # A destination folder chosen from File > Set G-code Destination takes
+        # the place of the per-save dialog: derive each file's name from the
+        # tool's default base inside that folder.
+        if base_path is None and getattr(self, "gcode_dir", ""):
+            base_path = os.path.join(self.gcode_dir, default_base or "plot.gcode")
         if base_path is None:
-            base_path = self.resolve_program_set_base(default_base)
+            base_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Save G-code files",
+                default_base,
+                "G-code files (*.gcode *.nc *.tap);;All files (*.*)",
+            )
             if not base_path:
                 return []
-        try:
-            targets = program_set_paths(
-                base_path,
-                [label for label, _gcode in entries],
-            )
-            files = list(zip(targets, (gcode for _label, gcode in entries)))
-            files.extend(list(companion_files or ()))
-            published = write_file_set_transaction(files)
-        except (ProgramSetExportError, OSError, TypeError, ValueError) as exc:
-            self.log.append(f"G-code set was not published: {exc}")
-            self.status.setText("G-code set was not published.")
-            QMessageBox.critical(
-                self,
-                "G-code set was not saved",
-                str(exc),
-            )
-            return []
-        written = [str(path) for path in published[: len(entries)]]
+        stem = str(base_path)
+        for suffix in (".gcode", ".nc", ".tap"):
+            if stem.lower().endswith(suffix):
+                stem = stem[: -len(suffix)]
+                break
+        written = []
+        for label, gcode in entries:
+            path = f"{stem}-{label}.gcode"
+            with open(path, "w", encoding="utf-8", newline="\n") as handle:
+                handle.write(gcode)
+            written.append(path)
         self.log.append(
-            "Saved %d G-code files%s: %s"
-            % (
-                len(written),
-                (
-                    f" with {len(published) - len(written)} companion file(s)"
-                    if len(published) > len(written)
-                    else ""
-                ),
-                ", ".join(os.path.basename(path) for path in written),
-            )
+            "Saved %d G-code files: %s"
+            % (len(written), ", ".join(os.path.basename(path) for path in written))
         )
         self.status.setText(f"Saved {len(written)} G-code files.")
         return written
@@ -4348,28 +4150,10 @@ class MainWindow(QMainWindow):
     def clip_info(self):
         """Pre-clip artwork radius and the reach cap, or None when unknown."""
         reach = float(getattr(self.gl_preview.settings, "machine_reach_radius_mm", 0.0))
-        source = self.clip_source_contours()
+        source = self.raw_contours if self.raw_contours else self.contours
         if reach <= 0.0 or not source:
             return None
         return converter.artwork_radius(source), reach
-
-    def clip_source_contours(self):
-        """Return source contours with an explicit generator fit applied."""
-        source = self.raw_contours if self.raw_contours else self.contours
-        tab = self.active_source_tab()
-        if (
-            source
-            and tab is not None
-            and tab is not self.convert_root
-            and self.generator_fit_is_active()
-        ):
-            fitted = converter.apply_geometry_settings(
-                source,
-                self.settings_for_source(tab),
-            )
-            if fitted:
-                source = fitted
-        return source
 
     def update_clip_warning(self):
         """Show, next to the preview, that the artwork is being cut by the reach.
@@ -4377,7 +4161,7 @@ class MainWindow(QMainWindow):
         A cropped plot still looks like a finished drawing, so an over-scale
         artwork is the one planning mistake the preview cannot show by itself.
         """
-        source = self.clip_source_contours()
+        source = self.raw_contours if self.raw_contours else self.contours
         reach = float(getattr(self.gl_preview.settings, "machine_reach_radius_mm", 0.0))
         offset_x = float(self.fields["artwork_offset_x_mm"].text() or 0.0)
         offset_y = float(self.fields["artwork_offset_y_mm"].text() or 0.0)
@@ -4431,7 +4215,6 @@ class MainWindow(QMainWindow):
 
     def select_fit_mode(self, mode):
         """Make a fit button's behaviour the standing auto-fit for this artwork."""
-        self.generator_fit_override = True
         combo = self.fields["fit_mode"]
         index = combo.findData(mode)
         if index >= 0 and combo.currentIndex() != index:
@@ -4648,7 +4431,6 @@ class MainWindow(QMainWindow):
             )
             return
         self.gl_preview.set_sim_ink_colors(colors)
-        self.mark_preview_dirty()
         summary = ", ".join(
             f"{channel.upper()} ({colors[channel][0]:.2f}, "
             f"{colors[channel][1]:.2f}, {colors[channel][2]:.2f})"
@@ -4660,14 +4442,13 @@ class MainWindow(QMainWindow):
             f"Ink simulation now uses measured profile {name}: {summary}"
         )
         self.ink_sim_check.setToolTip(
-            "CMYK preview: multiply the ink layers over the paper white in "
-            "plot order, the way translucent pens combine. Separation and "
-            f"simulation use measured profile {name}."
+            "CMYK preview only: multiply the ink layers over the paper white "
+            "in plot order, the way translucent pens combine. Using measured "
+            f"profile {name}."
         )
         self.status.setText(
             f"Ink profile loaded ({name}); the Ink simulation now uses the "
-            "measured pen colours and CMYK separation will use the same "
-            "measured response on the next Preview."
+            "measured pen colours."
         )
 
     def ink_engage_summary(self, contours, moves):
@@ -5163,7 +4944,6 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
-    configure_qt_quick_for_opengl()
     gl_format = QSurfaceFormat()
     gl_format.setRenderableType(QSurfaceFormat.OpenGL)
     gl_format.setVersion(2, 1)

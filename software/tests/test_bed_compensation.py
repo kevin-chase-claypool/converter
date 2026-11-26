@@ -805,10 +805,9 @@ class BedCalibrationAnalysisTests(unittest.TestCase):
             profile.coverage_radius_mm,
             converter.DEFAULT_BED_COMPENSATION_RADIUS_MM,
         )
-        self.assertAlmostEqual(
+        self.assertEqual(
             report["layout"]["coverage_radius_mm"],
             converter.DEFAULT_BED_COMPENSATION_RADIUS_MM,
-            places=6,
         )
         boundary = profile.correction(
             0.0, converter.DEFAULT_BED_COMPENSATION_RADIUS_MM, 0.0
@@ -892,7 +891,7 @@ class BedCalibrationAnalysisTests(unittest.TestCase):
 
 
 class BedCompensationPlannerIntegrationTests(unittest.TestCase):
-    def test_application_defaults_select_stock_limited_expanded_profile(self):
+    def test_application_defaults_select_gantry_limited_expanded_profile(self):
         text_defaults = {
             key: default
             for _group, items in converter.TEXT_FIELD_GROUPS
@@ -903,7 +902,7 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
         self.assertTrue(profile_path.is_file())
         self.assertEqual(
             converter.load_bed_compensation(str(profile_path)).fingerprint,
-            "745e3d264cc5",
+            "f85ec410dbac",
         )
         self.assertEqual(
             converter.default_settings().bed_compensation_path,
@@ -922,29 +921,15 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
         )
         self.assertAlmostEqual(
             settings.bed_diameter_mm,
-            18.0 * 25.4,
-            places=6,
-        )
-        self.assertAlmostEqual(
-            settings.stock_diameter_mm,
             15.0 * 25.4,
             places=6,
         )
         self.assertAlmostEqual(
-            settings.stock_diameter_mm / 2.0 - settings.bed_margin_mm,
+            settings.bed_diameter_mm / 2.0 - settings.bed_margin_mm,
             14.5 * 25.4 / 2.0,
             places=6,
         )
-        self.assertAlmostEqual(
-            settings.machine_reach_radius_mm,
-            14.5 * 25.4 / 2.0,
-            places=6,
-        )
-        self.assertAlmostEqual(
-            profile.coverage_radius_mm,
-            14.5 * 25.4 / 2.0,
-            places=6,
-        )
+        self.assertAlmostEqual(profile.coverage_radius_mm, 180.0, places=6)
         boundary_max = max(
             math.hypot(
                 *profile.correction(
@@ -957,29 +942,25 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
             )
             for angle in range(360)
         )
+        self.assertAlmostEqual(boundary_max, 1.056512, places=6)
         self.assertLessEqual(boundary_max, 5.0)
         gcode = converter.contours_to_gcode(
             [[(-5.0, 0.0), (5.0, 0.0)]], settings
         )
-        self.assertIn(
-            "(stock geometry bed 457.200 mm, stock 381.000 mm, "
-            "margin 6.350 mm, drawing radius 184.150 mm)",
-            gcode,
-        )
-        self.assertIn("(bed compensation 745e3d264cc5,", gcode)
+        self.assertIn("(bed compensation f85ec410dbac,", gcode)
         self.assertIn("angular interpolation bed-frame", gcode)
 
-    def test_default_368_mm_field_uses_extrapolated_stock_coverage(self):
+    def test_default_360_mm_field_uses_extrapolated_reach_coverage(self):
         settings = converter.Settings(
             theta_mode="fixed",
             theta_center_hold_diameter_mm=0,
             bed_margin_mm=6.35,
             bed_compensation_path=converter.DEFAULT_BED_COMPENSATION_PATH,
-            machine_reach_radius_mm=184.15,
+            machine_reach_radius_mm=180.0,
             frame_center_mm=(0.0, 0.0),
         )
         plan = converter.plan_program(
-            [[(160.0, 0.0), (184.0, 0.0)]], settings
+            [[(160.0, 0.0), (180.0, 0.0)]], settings
         )
         radii = [
             (x * x + y * y) ** 0.5
@@ -990,30 +971,9 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
         self.assertGreater(max(radii), 170.0)
         self.assertLessEqual(
             max(radii),
-            184.15 + 1e-6,
+            180.0 + 1e-6,
         )
-        self.assertEqual(plan["bed_compensation"].fingerprint, "745e3d264cc5")
-
-    def test_stock_margin_clips_before_a_larger_machine_reach(self):
-        settings = converter.Settings(
-            theta_mode="fixed",
-            theta_center_hold_diameter_mm=0,
-            bed_margin_mm=6.35,
-            machine_reach_radius_mm=250.0,
-            bed_compensation_path="",
-            frame_center_mm=(0.0, 0.0),
-        )
-        plan = converter.plan_program(
-            [[(0.0, 0.0), (200.0, 0.0)]],
-            settings,
-        )
-        radii = [
-            math.hypot(x, y)
-            for contour in plan["contours"]
-            for x, y in contour
-        ]
-        self.assertTrue(radii)
-        self.assertAlmostEqual(max(radii), 14.5 * 25.4 / 2.0, places=6)
+        self.assertEqual(plan["bed_compensation"].fingerprint, "f85ec410dbac")
 
     def test_fast_preview_uses_nominal_moves_without_compensation_probes(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -1128,7 +1088,6 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
                 theta_mode="fixed",
                 theta_center_hold_diameter_mm=0,
                 bed_diameter_mm=100.0,
-                stock_diameter_mm=100.0,
                 bed_margin_mm=0.0,
                 machine_reach_radius_mm=100.0,
                 frame_center_mm=(0.0, 0.0),
@@ -1208,7 +1167,6 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
             theta_offset=0.0,
             tolerance=1.0,
             bed_diameter_mm=400.0,
-            stock_diameter_mm=400.0,
             bed_margin_mm=0.0,
             machine_reach_radius_mm=200.0,
             frame_center_mm=(0.0, 0.0),
@@ -1275,7 +1233,6 @@ class BedCompensationPlannerIntegrationTests(unittest.TestCase):
             theta_center_hold_diameter_mm=0.0,
             theta_offset=0.0,
             bed_diameter_mm=100.0,
-            stock_diameter_mm=100.0,
             bed_margin_mm=0.0,
             machine_reach_radius_mm=50.0,
             frame_center_mm=(0.0, 0.0),
