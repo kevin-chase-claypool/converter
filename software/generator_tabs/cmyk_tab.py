@@ -60,7 +60,7 @@ from .cmyk_workflow import (
 )
 
 
-TITLE = "CMYK Photo"
+TITLE = "CMYK"
 ORDER = 25
 EDGE_FLOW_STYLES = (
     "edge_flow",
@@ -3950,7 +3950,7 @@ class CmykTab(GeneratorTab):
 class CmykPhotoTab(CmykTab):
     """One-action color workflow with the complete CMYK tuner behind it."""
 
-    NAME = "cmyk"
+    NAME = "cmyk_photo"
     WRITE_ORDER = ("y", "m", "c", "k")
     REQUIRE_COMPLETE_SET = True
     GUIDED_HOST_CONTROLS = (
@@ -4464,4 +4464,4 @@ def _sha256_file(path):
 
 
 def create_tab(host):
-    return CmykPhotoTab(host)
+    return CmykTab(host)

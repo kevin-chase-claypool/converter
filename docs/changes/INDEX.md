@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-26 | `WSW-20261126-001` | windows-software | implemented | [Restore the original CMYK tool entry](windows-software/2026/2026-11-26-restore-original-cmyk-tool.md) |
 | 2026-11-25 | `WSW-20261125-013` | windows-software | implemented | [Export and verify a precision CMYK set headlessly](windows-software/2026/2026-11-25-headless-precision-cmyk-export.md) |
 | 2026-11-25 | `WSW-20261125-012` | windows-software | implemented | [Stabilize the precision process-color screen](windows-software/2026/2026-11-25-stabilize-process-color-area-screen.md) |
 | 2026-11-25 | `WSW-20261125-011` | windows-software | implemented | [Expose coherent CMYK flow and coverage controls](windows-software/2026/2026-11-25-expose-cmyk-flow-coverage-controls.md) |

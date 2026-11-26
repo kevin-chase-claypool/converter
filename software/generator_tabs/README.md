@@ -77,17 +77,18 @@ it splits the page into four internal SVGs, calls
 writes the resulting Y/M/C/K G-code as a set. The internal SVGs stay outside the
 selected G-code folder.
 
-The production **CMYK Photo** page subclasses the full CMYK tuner but hides its
-control column by default. Its guided card owns the folder choice and invokes
-the same `build_svg()`, preview, `analyze_program()`, and four-file export path
-as the advanced page. Its 250 mm page keeps the complete printed square inside
-the 14-inch circle, and its output order is Y/M/C/K. The guided presentation
-may hide the main window's Preview/playback/fit chrome while it is active; it
-must restore those widgets when switching to advanced or leaving the tool.
-Its persistent nine-stage rail filters the advanced inspector, persists
-per-stage locks in the artwork recipe, and may open auxiliary diagnostic
-inspectors such as the structure-field image. Those inspectors never replace
-the one shared physical print preview.
+Two CMYK pages share the same tuner implementation. **CMYK** is the original
+full control surface with every tuner option visible. **CMYK Photo** is the
+guided production page: it subclasses the tuner, hides its control column by
+default, and owns the image and folder choices. Both use the same
+`build_svg()`, preview, `analyze_program()`, and four-file export path. The
+guided page's 250 mm square stays inside the 14-inch circle, and its output
+order is Y/M/C/K. Its guided presentation may hide the main window's
+Preview/playback/fit chrome while active; it must restore those widgets when
+switching to advanced or leaving the tool. Its persistent nine-stage rail
+filters the advanced inspector, persists per-stage locks in the artwork recipe,
+and may open auxiliary diagnostic inspectors such as the structure-field
+image. Those inspectors never replace the one shared physical print preview.
 
 Rules:
 

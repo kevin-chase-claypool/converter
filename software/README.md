@@ -596,6 +596,11 @@ Current tools:
   threshold, hatch spacing, hatch light/mid/dark thresholds (upstream
   linedraw levels 144/64/16), sketch jitter, minimum length, simplify,
   resolution, line width, seed, page size, margin, artwork scale.
+- **CMYK** - the original full RGB-to-CMYK tuner. It opens with every image,
+  separation, screening, registration, pen, and bed-motion control visible.
+  Load an image in the Artwork row, press **Preview**, tune the four ink
+  layers, then press **Save 4 G-code files**. This is the direct entry point
+  for the existing CMYK workflow and retains the familiar Ctrl+3 shortcut.
 - **CMYK Photo** - the guided RGB-to-CMYK color workflow. Open an image, then
   press **Create 4 G-code files**. If needed, the action asks for the image and
   one output folder. It applies the recommended coherent color-flow recipe,
@@ -1266,6 +1271,7 @@ work with no input (optional mesh/image sources are noted below).
 | Convert | Fit bed (auto), Fill spacing 3 mm, linear or crosshatch, feed 700 / travel 3000 mm/min | Imported artwork; Save G-code once the preview looks right. |
 | Flow Field | Noise source, scale 60 mm, octaves 3, spacing 3 mm, step 1 mm, 400 steps | Spacing 3 mm is dense; use 4 mm for a first plot. |
 | Line Draw | Both modes, edge 35 %, hatch 2 mm, levels 144/64/16, jitter 0.25 mm, simplify 0.75 px, resolution 900 px | Needs an image in the Artwork row. |
+| CMYK | Load an image, press **Preview**, inspect the four-ink overprint, then press **Save 4 G-code files**. | The original full tuner with all CMYK controls visible. Ctrl+3 opens this page. |
 | CMYK Photo (recommended) | Open an image, inspect the source preview, then press **Create 4 G-code files** and choose one folder. | Applies coherent color flow, three Flow layers, 60 % continuous Shade compression, 2.5 mm smoothing, edge-preserving simplification, Black keylines, pen-aware pitch, chaining, automatic color analysis with GCR, and a 250 mm page inside the 14-inch circle. Writes numbered Y/M/C/K programs and a manifest. Advanced settings expose the complete tuner. |
 | CMYK coherent-flow tuning | Open **Advanced settings** and press **Use recommended photo defaults** first. Adjust **Shade compression** for continuous gradient shading, **Flow layers** for additional offset dark-region geometry, and **Flow smoothing** for both source simplification and orientation calmness. **Fine detail** remains available as the prior per-ink precision mode. | This is the Reddit-reference workflow: one blurred multichannel image-form tensor defines direction, and long shared streamlines receive contiguous local CMYK ink planes. Darker areas gain offset layers, weak areas use layer-specific fixed angles, and Black keylines preserve subject structure. Plotterfun's independent-channel networks remain an explicit experimental comparison. |
 | CMYK continuous | Use the same image curve as the CMYK recipe, then choose **Continuous row screen (adjacent joins)** and keep **Pen-down chain** on with a `5 mm` gap. | Fastest starting point for an image where fewer M3/M5 cycles matter more than Edge-flow contour texture. Straight screen directions remain visible, and all joins print connector ink. A fully blank row band can still lift. |

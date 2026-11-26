@@ -33,6 +33,7 @@ def _load_app_module():
 EXPECTED_TOOLS = [
     "Flow Field",
     "Line Draw",
+    "CMYK",
     "CMYK Photo",
     "3D Wireframe",
     "Harmonograph",
@@ -114,7 +115,7 @@ class ToolShellTests(unittest.TestCase):
             self.assertEqual(layout["version"], 2)
             self.assertAlmostEqual(layout["artwork_offset_x_mm"], 19.81)
             self.assertAlmostEqual(layout["artwork_offset_y_mm"], -29.65)
-            recipe = layout["generator_tabs"]["cmyk"]
+            recipe = layout["generator_tabs"]["cmyk_photo"]
             self.assertEqual(recipe["kind"], "cmyk-recipe")
             self.assertEqual(recipe["screen"]["style"], "waves_zero")
             self.assertEqual(recipe["screen"]["contour_order"], "rows_ascending")
@@ -209,6 +210,7 @@ class ToolShellTests(unittest.TestCase):
             groups["Photo-based"],
             [
                 "Line Draw",
+                "CMYK",
                 "CMYK Photo",
                 "SquiggleCam",
                 "Pixel Art",
@@ -242,6 +244,27 @@ class ToolShellTests(unittest.TestCase):
             if action.menu() is not None
         ]
         self.assertEqual(submenus, ["Photo-based", "Algorithm only"])
+
+    def test_original_cmyk_tuner_and_photo_workflow_are_both_listed(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        tools = {
+            title: widget
+            for title, widget, _group, _description in window.generator_tools
+        }
+        self.assertIn("CMYK", tools)
+        self.assertIn("CMYK Photo", tools)
+        self.assertEqual(tools["CMYK"].NAME, "cmyk")
+        self.assertEqual(tools["CMYK Photo"].NAME, "cmyk_photo")
+        self.assertFalse(hasattr(tools["CMYK"], "guided_panel"))
+        self.assertTrue(hasattr(tools["CMYK Photo"], "guided_panel"))
+        self.assertEqual(
+            window.tool_actions["CMYK"].shortcut().toString(),
+            "Ctrl+3",
+        )
+        window.show_tool("CMYK")
+        self.assertIs(window.stack.currentWidget(), tools["CMYK"])
+        self.assertEqual(window.current_tool, "CMYK")
 
     def test_cmyk_photo_guided_mode_hides_advanced_preview_chrome(self):
         window = self.module.MainWindow()
@@ -391,7 +414,7 @@ class ToolShellTests(unittest.TestCase):
             self.assertTrue(hasattr(page, "scale_pct"), title)
             # CMYK ships the owner's tuned rectilinear default (WSW-...-025);
             # every other tool starts at 1:1.
-            expected = 100
+            expected = 280 if title == "CMYK" else 100
             self.assertEqual(page.scale_pct.value(), expected, title)
             self.assertEqual(page.scale_pct.maximum(), 1000, title)
 
