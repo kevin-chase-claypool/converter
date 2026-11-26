@@ -241,6 +241,19 @@ class CmykTab(GeneratorTab):
         self.image_label = QLabel()
         self.image_label.setWordWrap(True)
         image.addRow("Artwork", self.image_label)
+        self.save_image_defaults_button = QPushButton(
+            "Save defaults for this image"
+        )
+        self.save_image_defaults_button.setToolTip(
+            "Write this image's current CMYK controls, page, scale, "
+            "kinematics, pen offsets, layer selections, and artwork placement "
+            "to its .theta-layout.json sidecar. The recipe is restored whenever "
+            "this exact image is opened again."
+        )
+        self.save_image_defaults_button.clicked.connect(
+            self.save_image_defaults
+        )
+        image.addRow("Defaults", self.save_image_defaults_button)
 
         options = self.add_group("Image options")
         self.auto_button = QPushButton("Auto (photo)")
@@ -727,6 +740,35 @@ class CmykTab(GeneratorTab):
             if path
             else "(use Browse in the Artwork row above)"
         )
+        self.save_image_defaults_button.setEnabled(bool(path))
+
+    def save_image_defaults(self, _checked=False):
+        """Persist this image's current converter recipe immediately."""
+        del _checked
+        self._refresh_artwork()
+        if not self._artwork:
+            self.report_error(
+                "Open an image before saving image-specific defaults."
+            )
+            return
+        save = getattr(self.host, "save_artwork_layout", None)
+        if not callable(save):
+            self.report_error(
+                "The host window cannot save image-specific defaults."
+            )
+            return
+        if not save():
+            self.report_error(
+                "Could not save defaults for this image; see the log."
+            )
+            return
+        message = (
+            f"Saved CMYK defaults and placement for "
+            f"{os.path.basename(self._artwork)}."
+        )
+        self.status.setText(message)
+        if self.host is not None and hasattr(self.host, "generator_status"):
+            self.host.generator_status(message)
 
     def _weights(self):
         return {

@@ -668,6 +668,12 @@ Current tools:
   pen offsets, per-ink
   preflight results, SHA-256 hashes for all four G-code files, parsed program
   identities, and the overlay-audit report.
+  The Image group's **Save defaults for this image** button immediately writes
+  the current complete CMYK recipe and artwork placement to the image's
+  `.theta-layout.json` sidecar. This includes image controls, screen and row
+  order, pen and measured offsets, kinematics, page/scale, layer selections,
+  calibration options, and registration state. Opening the same image restores
+  that recipe automatically.
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times

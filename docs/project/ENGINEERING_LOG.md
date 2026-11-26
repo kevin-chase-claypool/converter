@@ -1,5 +1,30 @@
 # Engineering Log
 
+<a id="elog-20261126-save-cmyk-image-defaults"></a>
+### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Save CMYK defaults for the current image
+
+- The tuned CMYK screenshots already mapped to the per-image version-2 layout
+  sidecar, but that sidecar was written only on close or artwork switch.
+- The CMYK Image group now has **Save defaults for this image**, which
+  immediately writes the complete image-specific recipe and placement through
+  the existing atomic layout writer.
+- The recipe includes image controls and weights, screen/pitch/wave options,
+  levels, overdraw, pen and tolerance controls, mark cap, seed, Row order,
+  kinematics/center hold, pen and measured offsets, layer selections,
+  calibration state, page/margin/Artwork scale, registration, and placement.
+- Successful writes log the exact `.theta-layout.json` path. Reopening that
+  image restores the stored settings automatically.
+- A regression applies the screenshot values, saves with the new button,
+  verifies the sidecar, mutates controls, restores, and checks the original
+  values return.
+- The complete generator and CMYK modules pass `153` tests with one expected
+  OpenGL-context skip. Complete converter discovery passes `643` with one
+  expected OpenGL-context skip, and Python compilation passes.
+- Evidence: `WSW-20261126-011`;
+  `docs/changes/windows-software/2026/2026-11-26-save-cmyk-image-defaults.md`.
+- Category: windows-software, cmyk, image-defaults, artwork-layout, sidecar,
+  recipe, restore, user-interface.
+
 <a id="elog-20261126-post-save-cmyk-overlay-audit"></a>
 ### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Add a post-save CMYK G-code overlay audit
 

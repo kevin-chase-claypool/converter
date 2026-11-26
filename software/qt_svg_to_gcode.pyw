@@ -2210,6 +2210,7 @@ class MainWindow(QMainWindow):
                 )
                 handle.write("\n")
             os.replace(temporary, target)
+            self.log.append(f"Saved artwork defaults: {target}")
             return True
         except (OSError, TypeError, ValueError) as exc:
             self.log.append(f"Could not save artwork placement: {exc}")

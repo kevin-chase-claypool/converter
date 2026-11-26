@@ -195,6 +195,82 @@ class ToolShellTests(unittest.TestCase):
             )
             self.assertEqual(window.gl_preview.placement, (0.0, 0.0))
 
+    def test_cmyk_save_image_defaults_button_persists_the_exact_recipe(self):
+        with tempfile.TemporaryDirectory(prefix="theta-layout-cmyk-") as folder:
+            artwork = Path(folder) / "portrait.png"
+            artwork.write_bytes(b"")
+            window = self.module.MainWindow()
+            self.addCleanup(window.close)
+            window.svg_path.setText(str(artwork))
+            window.show_tool("CMYK")
+            tab = window.stack.currentWidget()
+            tab._refresh_artwork()
+
+            tab.auto_levels.setChecked(True)
+            tab.saturation.setValue(100)
+            tab.contrast.setValue(120)
+            tab.brightness.setValue(130)
+            tab.sharpen.setChecked(True)
+            tab.sharpen_amount.setValue(100)
+            tab.sharpen_radius.setValue(1.5)
+            tab.gamma.setValue(1.65)
+            tab.gcr.setValue(65)
+            tab.resolution.setValue(10050)
+            tab.weight_c.setValue(100)
+            tab.weight_m.setValue(70)
+            tab.weight_y.setValue(70)
+            tab.weight_k.setValue(135)
+            tab.style.setCurrentIndex(tab.style.findData("waves_zero"))
+            tab.pitch.setValue(1.1)
+            tab.preserve_wave_pitch.setChecked(True)
+            tab.vary_wave_frequency.setChecked(True)
+            tab.dot_size.setValue(100)
+            tab.solid_dots.setChecked(False)
+            tab.levels.setValue(8)
+            tab.overdraw.setValue(1)
+            tab.pen_width.setValue(0.90)
+            tab.path_tolerance.setValue(0.15)
+            tab.max_marks.setValue(40000)
+            tab.seed.setValue(7)
+            tab.theta_mode.set_value("optimized")
+            tab.contour_order.setCurrentIndex(
+                tab.contour_order.findData("rows_ascending")
+            )
+            tab.center_hold.setValue(60)
+            tab.offset_spins["y"][1].setValue(-0.04)
+            tab.offset_spins["k"][1].setValue(-0.01)
+            tab.page_w.setValue(200)
+            tab.page_h.setValue(200)
+            tab.margin.setValue(6)
+            tab.scale_pct.setValue(110)
+            tab.registration_marks.setChecked(False)
+
+            tab.save_image_defaults_button.click()
+
+            layout_path = Path(
+                self.module.artwork_layout_path(str(artwork))
+            )
+            self.assertTrue(layout_path.is_file())
+            layout = json.loads(layout_path.read_text(encoding="utf-8"))
+            recipe = layout["generator_tabs"]["cmyk"]
+            self.assertEqual(recipe["screen"]["style"], "waves_zero")
+            self.assertAlmostEqual(recipe["screen"]["dot_pitch_mm"], 1.1)
+            self.assertEqual(recipe["image_options"]["resolution_px"], 10050)
+            self.assertAlmostEqual(
+                recipe["image_options"]["weights_pct"]["k"],
+                135.0,
+            )
+            self.assertAlmostEqual(recipe["page"]["artwork_scale_pct"], 110.0)
+            self.assertAlmostEqual(recipe["pen_offsets_mm"]["y"][1], -0.04)
+            self.assertIn("Saved CMYK defaults", tab.status.text())
+
+            tab.contrast.setValue(200)
+            tab.page_w.setValue(80)
+            self.assertTrue(window.restore_artwork_layout(str(artwork)))
+            self.assertAlmostEqual(tab.contrast.value(), 120.0)
+            self.assertAlmostEqual(tab.page_w.value(), 200.0)
+            self.assertAlmostEqual(tab.offset_spins["y"][1].value(), -0.04)
+
     def test_menu_bar_has_the_standard_menus(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
