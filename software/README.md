@@ -102,13 +102,22 @@ Each successful run writes `<base>-verification.json` with the exact program
 hashes, mark counts, page and machine bounds, unit commands, common identities,
 motion preflight, and determinism result. It also writes one compressed
 `<base>-comparison.jpg` derived from the tab's actual C/M/Y/K layers in print
-order using the multiply ink model. The preview is capped below `750000` bytes.
+order using the multiply ink model. The coherent comparison re-applies the
+precision recipe and changes only the screen style, so page, placement,
+registration, pen order, seed, scale, pen width, and all image controls stay
+identical. The preview is capped below `750000` bytes.
 
 For a `0.90 mm` pen, the `0.35 mm` process recipe is automatically raised by
 the renderer to its `1.10` pen-width floor (`0.99 mm` spacing, `0.98765 mm`
 actual axis pitch across the 240 mm artwork area). The generated Golden Sunset
 milestone and its evidence are retained in
 `..\samples\gcode\fam-precision-2026-11-25\`.
+
+The controlled preview keeps all three faces, eyes, glasses, and hair structure
+that coherent flow loses, but individual teeth are not yet distinguishable at
+contact-sheet scale. Preserve the candidate set as digital evidence; choose a
+teeth/detail tuning direction and validate it on paper before promoting it as
+the production recipe.
 
 This is digital verification only. Running the four numbered files in order on
 one registered sheet is still required to establish paper hue, density,

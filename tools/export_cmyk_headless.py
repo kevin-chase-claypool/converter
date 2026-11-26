@@ -147,6 +147,46 @@ def _configure_tab(tab, options: ExportOptions) -> None:
     tab._refresh_pass_summary()
 
 
+def _comparison_control_contract(window, tab) -> dict[str, Any]:
+    """Capture layout and image controls that must match across screen styles."""
+    return {
+        "page_mm": [tab.page_w.value(), tab.page_h.value()],
+        "margin_mm": tab.margin.value(),
+        "artwork_placement_mm": [
+            float(window.fields["artwork_offset_x_mm"].text() or 0.0),
+            float(window.fields["artwork_offset_y_mm"].text() or 0.0),
+        ],
+        "scale_pct": tab.scale_pct.value(),
+        "pen_width_mm": tab.pen_width.value(),
+        "seed": tab.seed.value(),
+        "registration_marks": tab.registration_marks.isChecked(),
+        "theta_mode": tab.theta_mode.value(),
+        "center_hold_diameter_mm": tab.center_hold.value(),
+        "bed_compensation_path": window.fields[
+            "bed_compensation_path"
+        ].text().strip(),
+        "write_order": list(PRINT_LABELS),
+        "image_controls": {
+            "auto_levels": tab.auto_levels.isChecked(),
+            "saturation_pct": tab.saturation.value(),
+            "contrast_pct": tab.contrast.value(),
+            "brightness_pct": tab.brightness.value(),
+            "gamma": tab.gamma.value(),
+            "gcr_pct": tab.gcr.value(),
+            "resolution_px": tab.resolution.value(),
+            "sharpen": tab.sharpen.isChecked(),
+            "sharpen_pct": tab.sharpen_amount.value(),
+            "sharpen_radius_mm": tab.sharpen_radius.value(),
+            "weights_pct": {
+                "c": tab.weight_c.value(),
+                "m": tab.weight_m.value(),
+                "y": tab.weight_y.value(),
+                "k": tab.weight_k.value(),
+            },
+        },
+    }
+
+
 def _dialog_capture(messages: list[tuple[str, str]]):
     def capture(kind):
         def record(*args, **_kwargs):
@@ -499,6 +539,8 @@ def _run_once(
             stage.key: tab.validate_stage(stage.key)
             for stage in tab._stage_navigator.stages
         }
+        process_controls = _comparison_control_contract(window, tab)
+        process_style = tab.style.currentData()
 
         tab._next_export_base_path = str(
             output_dir / f"{options.base_name}.gcode"
@@ -529,21 +571,30 @@ def _run_once(
         verification["dialog_messages"] = messages
 
         coherent_layers = None
+        coherent_controls = None
         if make_preview:
-            if not tab.apply_workflow_preset("recommended"):
+            # Reapply the full precision recipe so image preparation,
+            # separation, layout, pen size, and seed are identical. The
+            # coherent comparison is a screen-style comparison, not a second
+            # automatic exposure recipe.
+            if not tab.apply_workflow_preset("process_area"):
                 raise HeadlessExportError(
-                    "Could not build the coherent-flow comparison preview."
+                    "Could not reset the shared comparison recipe."
                 )
-            tab.pen_width.setValue(float(options.pen_width_mm))
-            tab.page_w.setValue(float(options.page_mm))
-            tab.page_h.setValue(float(options.page_mm))
-            tab.margin.setValue(float(options.margin_mm))
-            tab.scale_pct.setValue(float(options.scale_pct))
-            tab.seed.setValue(int(options.seed))
-            tab.registration_marks.setChecked(True)
-            tab.theta_mode.set_value(str(options.theta_mode))
-            for box in tab.write_boxes.values():
-                box.setChecked(True)
+            coherent_index = tab.style.findData("edge_flow_coherent")
+            if coherent_index < 0:
+                raise HeadlessExportError(
+                    "The coherent-flow comparison style is unavailable."
+                )
+            tab.style.setCurrentIndex(coherent_index)
+            tab._update_wave_spacing_guard()
+            tab._refresh_pass_summary()
+            coherent_controls = _comparison_control_contract(window, tab)
+            if coherent_controls != process_controls:
+                raise HeadlessExportError(
+                    "The coherent and precision comparison previews do not "
+                    "share one layout/image-control contract."
+                )
             tab.build_svg()
             coherent_layers = {
                 channel: list(tab._layers.get(channel, ()))
@@ -554,6 +605,18 @@ def _run_once(
             "verification": verification,
             "process_layers": process_layers,
             "coherent_layers": coherent_layers,
+            "comparison": {
+                "process_style": process_style,
+                "coherent_style": (
+                    tab.style.currentData() if make_preview else None
+                ),
+                "matching_controls": (
+                    coherent_controls == process_controls
+                    if make_preview
+                    else None
+                ),
+                "contract": process_controls,
+            },
             "tab": tab,
             "window": window,
             "messages": messages,
@@ -912,6 +975,7 @@ def run_headless_export(options: ExportOptions) -> dict[str, Any]:
             "set_verification": verification["manifest"]["set_verification"],
             "workflow_validation": verification["workflow_validation"],
             "determinism": determinism,
+            "comparison": first["comparison"],
             "comparison_preview": (
                 {
                     "file": preview_path.name,

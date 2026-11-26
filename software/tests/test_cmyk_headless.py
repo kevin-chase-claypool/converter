@@ -110,6 +110,29 @@ class CmykHeadlessExportTests(unittest.TestCase):
                 report["status"],
                 "passed",
             )
+            self.assertEqual(
+                report["comparison"]["process_style"],
+                "process_area",
+            )
+            self.assertEqual(
+                report["comparison"]["coherent_style"],
+                "edge_flow_coherent",
+            )
+            self.assertTrue(report["comparison"]["matching_controls"])
+            controls = report["comparison"]["contract"]
+            self.assertEqual(controls["page_mm"], [50.0, 50.0])
+            self.assertEqual(controls["margin_mm"], 2.0)
+            self.assertEqual(controls["artwork_placement_mm"], [0.0, 0.0])
+            self.assertTrue(controls["registration_marks"])
+            self.assertTrue(controls["bed_compensation_path"].endswith(".json"))
+            self.assertEqual(
+                controls["write_order"],
+                ["01-yellow", "02-magenta", "03-cyan", "04-black"],
+            )
+            self.assertEqual(
+                controls["image_controls"]["weights_pct"],
+                {"c": 100.0, "m": 95.0, "y": 90.0, "k": 30.0},
+            )
             for channel in ("y", "m", "c", "k"):
                 self.assertGreater(report["programs"][channel]["mark_count"], 0)
                 self.assertLessEqual(

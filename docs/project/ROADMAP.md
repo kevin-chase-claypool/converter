@@ -755,8 +755,13 @@
   pitch. The set has `64901` marks total, zero over-tolerance moves at
   `0.05 mm`, a `174.383 mm` maximum G54 radius inside the `180 mm` reach, and
   a strict motion-checker pass on every file. The compressed multiply preview
-  retains all three faces and separated teeth, unlike the coherent-flow
-  comparison. Evidence and reusable command:
+  re-applies the same recipe and changes only the screen style, so its
+  coherent control has identical placement, registration, pen order, image
+  controls, and export path. It retains all three faces, eyes, glasses, and
+  hair that coherent flow loses, but individual teeth are not yet
+  distinguishable at contact-sheet scale. That is the current product
+  decision boundary; do not tune density or color weights speculatively.
+  Evidence and reusable command:
   `samples/gcode/fam-precision-2026-11-25/`,
   `tools/export_cmyk_headless.py`, and `WSW-20261125-013`. Paper hue,
   density, overprint texture, registration, drag, and elapsed time remain

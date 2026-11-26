@@ -38,7 +38,7 @@ driver verifies the resulting set, repeats the export for byte determinism,
 and creates one compressed comparison preview from the tab's actual C/M/Y/K
 layers.
 
-The final Golden Sunset set uses the stabilized precision process screen at
+The candidate Golden Sunset set uses the stabilized precision process screen at
 the accepted `250 mm` page, `0.90 mm` pen, `0.35 mm` requested pitch,
 `0.05 mm` tolerance, seed `7`, and `800000` marks-per-ink cap. It contains
 four registered Y/M/C/K programs and a version-8 manifest.
@@ -71,7 +71,10 @@ process screen needed a bounded digital comparison before any paper run.
   timestamp.
 - The evidence preview multiplies the actual generated ink layers in Y/M/C/K
   order using the converter's `process-ink-multiply-v1` transmittance model.
-  It is saved as a compressed JPEG and rejected above `750000` bytes.
+  The comparison re-applies the complete precision recipe and changes only
+  the screen style, so the coherent and process panels share one page,
+  placement, registration, pen order, seed, scale, pen width, and image-control
+  contract. It is saved as a compressed JPEG and rejected above `750000` bytes.
 - The generated set and evidence are in
   [`samples/gcode/fam-precision-2026-11-25/`](../../../../samples/gcode/fam-precision-2026-11-25/).
 
@@ -93,22 +96,29 @@ process screen needed a bounded digital comparison before any paper run.
   `269 motor deg/s` against the `500` preflight limit; there are no bare `G0`
   rotations.
 - `tools/check_gcode_motion.py --strict` passed on all four programs.
+- The controlled comparison report records matching process/coherent controls:
+  `250 x 250 mm`, `5 mm` margin, `100 %` scale, `0.90 mm` pen, seed `7`,
+  registration on, optimized bed motion, Y/M/C/K order, brightness `112 %`,
+  saturation `92 %`, contrast `118 %`, GCR `28 %`, gamma `1.05`, sharpen
+  `45 % / 0.80 mm`, and C/M/Y/K weights `100 / 95 / 90 / 30 %`.
 - Compared with the earlier coherent-flow Golden Sunset manifest
   (`fam1`), total marks rise from `9147` to `64901`, while over-tolerance
   moves fall from `30` at `0.10 mm` to `0` at `0.05 mm`. The maximum
   per-move bed step falls from `9.434 deg` to `2.060 deg`.
-- The single inspected `546932`-byte comparison image shows all three faces,
-  eye and glasses structure, hair, and separated teeth in the precision
-  process render. The coherent-flow panel remains dominated by dense blue
-  contour flow and loses facial readability. The reference is a different
-  subject and is used for screen/color behavior, not pixel matching.
+- The single inspected `544895`-byte comparison image shows all three faces,
+  eye and glasses structure, and hair in the precision process render. The
+  coherent-flow panel remains dominated by dense blue contour flow and loses
+  facial readability. Individual teeth are not yet distinguishable at this
+  contact-sheet scale, so teeth visibility remains an explicit product
+  decision rather than a claimed pass. The reference is a different subject
+  and is used for screen/color behavior, not pixel matching.
 - The requested `0.35 mm` process pitch is below the pen-safe centerline
   floor. With the `0.90 mm` pen and `5 mm` margin, the renderer resolves a
   `0.99 mm` spacing into `243` cells across `240 mm`, i.e. `0.98765 mm`
   actual axis pitch.
-- Focused CMYK/workflow/export/headless/generator/background-save tests passed
-  `229` tests with one expected OpenGL-context skip. Complete converter
-  discovery passed `750` tests in `289.643 s` with the same expected skip.
+- Focused CMYK separation, image, screen, wave, contract, tab, and headless
+  tests passed `173` tests. Complete converter discovery passed `750` tests in
+  `220.256 s` with one expected OpenGL-context skip.
 - No physical four-pass paper set was produced. Paper hue, ink density,
   overprint texture, pen registration, drag, and elapsed time remain
   unverified.
@@ -139,10 +149,12 @@ and cell dimensions to a future manifest revision if operators need them
 without inspecting the verification evidence.
 
 The digital comparison establishes structure and reproducibility, not paper
-calibration. The next milestone remains one HOME + REGISTER followed by the
-four numbered files in order on one sheet, using the same physical pens and
-measuring hue, density, light tints, keylines, teeth/eye readability,
-registration, drag, and elapsed time.
+calibration. Teeth detail is the visible product boundary: the candidate keeps
+faces and features but does not yet demonstrate separated teeth at contact
+sheet scale. Do not tune pitch, channel weights, or keyline density
+speculatively. The next decision is whether to prioritize teeth/detail over
+current color texture and density, then validate that choice with one HOME +
+REGISTER followed by the four numbered files in order on one sheet.
 
 ## Files
 
@@ -150,7 +162,7 @@ registration, drag, and elapsed time.
   determinism repeat, and comparison preview.
 - `software/tests/test_cmyk_headless.py`: application-path export and bounds
   regressions.
-- `samples/gcode/fam-precision-2026-11-25/`: final four programs, version-8
+- `samples/gcode/fam-precision-2026-11-25/`: candidate four programs, version-8
   manifest, verification report, and compressed comparison.
 - `software/README.md`: operator/tool documentation and current test count.
 - `docs/integration/INTERFACES.md`: headless publication contract.

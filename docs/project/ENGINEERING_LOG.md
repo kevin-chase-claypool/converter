@@ -15,7 +15,7 @@
 - The final set is
   `samples/gcode/fam-precision-2026-11-25/`. It contains numbered
   `01-yellow`, `02-magenta`, `03-cyan`, and `04-black` programs plus a
-  version-8 manifest, verification report, and `546932`-byte comparison JPEG.
+  version-8 manifest, verification report, and `544895`-byte comparison JPEG.
   Mark counts are `23923 / 23024 / 16271 / 1683`, `64901` total.
 - All programs contain `G21/G90/G94/G17/G54`, end with `M2` after pen clear,
   share one frame/theta/feed/reach/compensation header, and report a complete
@@ -26,19 +26,26 @@
   identical manifests after excluding `created`. `check_gcode_motion.py
   --strict` passes all four files; the largest bed step is `2.06 deg` and the
   largest A rate is `269 motor deg/s`.
-- Compared with the coherent-flow Golden Sunset set, total marks increase
+- The comparison preview now re-applies the complete precision recipe and
+  changes only the screen style. Its verification records matching page,
+  margin, placement, registration, pen order, scale, pen width, seed, image
+  controls, and channel weights, so the visual difference is not confounded by
+  a second auto-exposure recipe.
+- Compared with the earlier coherent-flow Golden Sunset set, total marks increase
   from `9147` to `64901`, over-tolerance moves fall from `30` at `0.10 mm` to
   `0` at `0.05 mm`, and maximum per-move bed rotation falls from `9.434` to
-  `2.060 deg`. The one inspected contact sheet keeps all three faces,
-  glasses, hair, and separated teeth readable; the coherent panel remains
-  dense blue contour texture.
+  `2.060 deg`. The one inspected controlled contact sheet keeps all three
+  faces, eyes, glasses, and hair readable; the coherent panel remains dense
+  blue contour texture. Individual teeth are not yet distinguishable at this
+  scale, so teeth visibility remains an explicit product decision rather than
+  a claimed pass.
 - The first headless wait assumed the tab's cached analysis key survived
   worker teardown. The save was complete while that check was already false.
   The driver now waits for the explicit saved result plus all five transaction
   targets. A `50 mm` smoke export caught the mistake before the full run.
-- Focused CMYK/workflow/export/headless/generator/background-save tests passed
-  `229` tests with one expected OpenGL-context skip. Complete converter
-  discovery passed `750` tests in `289.643 s` with the same expected skip.
+- Focused CMYK separation, image, screen, wave, contract, tab, and headless
+  tests passed `173` tests. Complete converter discovery passed `750` tests in
+  `220.256 s` with one expected OpenGL-context skip.
 - No paper set was run. Paper hue, density, overprint texture, registration,
   drag, and elapsed time remain physical validation work.
 - Evidence: `WSW-20261125-013`;

@@ -204,13 +204,61 @@
     "program_bytes_equal": true,
     "manifest_except_created_equal": true
   },
+  "comparison": {
+    "process_style": "process_area",
+    "coherent_style": "edge_flow_coherent",
+    "matching_controls": true,
+    "contract": {
+      "page_mm": [
+        250.0,
+        250.0
+      ],
+      "margin_mm": 5.0,
+      "artwork_placement_mm": [
+        0.0,
+        0.0
+      ],
+      "scale_pct": 100.0,
+      "pen_width_mm": 0.9,
+      "seed": 7,
+      "registration_marks": true,
+      "theta_mode": "optimized",
+      "center_hold_diameter_mm": 60.0,
+      "bed_compensation_path": "C:\\Users\\jacks\\Documents\\Claude\\converter\\samples\\gcode\\bed-error-compensation-2026-11-01-dense-v3-360mm-reach-extrapolated.json",
+      "write_order": [
+        "01-yellow",
+        "02-magenta",
+        "03-cyan",
+        "04-black"
+      ],
+      "image_controls": {
+        "auto_levels": true,
+        "saturation_pct": 92.0,
+        "contrast_pct": 118.0,
+        "brightness_pct": 112.0,
+        "gamma": 1.05,
+        "gcr_pct": 28.0,
+        "resolution_px": 10000,
+        "sharpen": true,
+        "sharpen_pct": 45.0,
+        "sharpen_radius_mm": 0.8,
+        "weights_pct": {
+          "c": 100.0,
+          "m": 95.0,
+          "y": 90.0,
+          "k": 30.0
+        }
+      }
+    }
+  },
   "comparison_preview": {
     "file": "Golden Sunset Winter Family Selfie-cmyk-comparison.jpg",
-    "bytes": 546932,
-    "sha256": "f6bbd6388191dce48c99b222d822582b86e605882e8e45ff7d516797704dbea4"
+    "bytes": 544895,
+    "sha256": "bd98d6acd395689cdec9300332027c0cf1537338f21213cacb7b136fd3d65740"
   },
   "limitations": [
     "Digital/headless export verification only.",
-    "No physical four-pass paper registration or ink-density validation was performed."
+    "No physical four-pass paper registration or ink-density validation was performed.",
+    "The controlled comparison preserves faces and facial structure, but individual teeth are not yet distinguishable at contact-sheet scale."
   ]
 }
