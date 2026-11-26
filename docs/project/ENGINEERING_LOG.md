@@ -1,5 +1,42 @@
 # Engineering Log
 
+<a id="elog-20261125-expose-cmyk-flow-coverage-controls"></a>
+### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Expose coherent flow and coverage controls
+
+- The adaptive CMYK requirement calls for independent geometric density,
+  per-ink coverage, color continuity, Black keyline behavior, shadow-layer
+  thresholds, tone-gap bridging, and adjacent chaining. The coherent renderer
+  still held a `6 mm` ink-plane window, `72 %` secondary-ink threshold,
+  `40/90 %` shadow boundaries, `25 %` color separation, and a bridge coupled
+  to the adjacent chain gap.
+- The flow stage now owns the first/final shadow thresholds. The ink stage owns
+  **Ink-plane hold**, **Secondary ink mix**, and **Colour edge separation**.
+  The path stage owns the independent **Tone-gap bridge** and the existing
+  adjacent **Pen-down chain**.
+- Shadow thresholds normalize into ascending order. Layer zero remains the
+  coherent base network; the first/final values locate additional scene-depth
+  families and remain disabled for styles that do not use that model.
+- The tone bridge now follows only the same traced streamline and no longer
+  inherits the adjacent path-chain distance. Recommended coherent defaults
+  remain a `4 mm` local bridge, while comparison recipes explicitly select
+  their historical topology.
+- The layer cache key now includes keylines and all new controls. This also
+  fixed the prior omission of the keyline toggle itself from the cache key.
+- Artwork recipes persist every new field with backward-compatible defaults.
+  Set manifests move to version 7 and record shadow thresholds, keyline
+  separation, coherent hold/mix, and the independent tone bridge.
+- Focused CMYK/workflow tests pass `112`; the broader CMYK/workflow/generator
+  subset passes `225` in `37.861 s`; complete converter discovery passes `738`
+  tests in `137.598 s`. Each broader run has the expected OpenGL-context skip.
+- Legacy per-ink shadow thresholds were intentionally not rewritten: that mode
+  uses a different historical ladder. Keyline confidence thresholds also
+  remain internal. Physical four-pass evidence is still required to choose
+  final continuity, density, and connector values.
+- Evidence: `WSW-20261125-011`;
+  `docs/changes/windows-software/2026/2026-11-25-expose-cmyk-flow-coverage-controls.md`.
+- Category: windows-software, cmyk, coherent-color-flow, shadow-layers,
+  color-continuity, keylines, tone-bridge, chaining, manifest.
+
 <a id="elog-20261125-cmyk-stage-workspace"></a>
 ### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Add the adaptive CMYK stage workspace
 

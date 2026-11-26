@@ -1085,6 +1085,8 @@ def trace_shared_structure_streamlines(
     fallback_angles_deg=None,
     color_hold_mm=4.0,
     color_mix_ratio=0.72,
+    dark_layer_start=EDGE_FLOW_DARK_LAYER_START,
+    dark_layer_end=EDGE_FLOW_DARK_LAYER_END,
     cancel_check=None,
 ):
     """Trace one common streamline network and gate every ink along it.
@@ -1103,6 +1105,8 @@ def trace_shared_structure_streamlines(
     with contiguous local ink planes. Ordinary shared mode keeps its established
     phase-gated behavior. ``fallback_angles_deg`` optionally gives each density
     layer its own fixed screen direction where the image field is weak.
+    ``dark_layer_start`` and ``dark_layer_end`` place the first extra and final
+    coherent scene-depth layers; layer zero always carries the base network.
     """
     import numpy as np
 
@@ -1161,6 +1165,14 @@ def trace_shared_structure_streamlines(
     }
 
     coherent_color = str(color_mode).strip().lower() == "coherent"
+    shadow_start = min(
+        0.98,
+        max(0.0, float(dark_layer_start)),
+    )
+    shadow_end = min(
+        1.0,
+        max(shadow_start + 1.0e-6, float(dark_layer_end)),
+    )
     fallback_angles = (
         tuple(float(value) for value in fallback_angles_deg)
         if fallback_angles_deg is not None
@@ -1301,10 +1313,10 @@ def trace_shared_structure_streamlines(
             0.0
             if layer == 0
             else (
-                EDGE_FLOW_DARK_LAYER_START
+                shadow_start
                 + (
-                    EDGE_FLOW_DARK_LAYER_END
-                    - EDGE_FLOW_DARK_LAYER_START
+                    shadow_end
+                    - shadow_start
                 )
                 * (layer - 1)
                 / max(1, layer_count - 1)

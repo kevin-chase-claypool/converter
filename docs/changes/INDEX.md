@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-25 | `WSW-20261125-011` | windows-software | implemented | [Expose coherent CMYK flow and coverage controls](windows-software/2026/2026-11-25-expose-cmyk-flow-coverage-controls.md) |
 | 2026-11-25 | `WSW-20261125-010` | windows-software | implemented | [Add the persistent adaptive CMYK stage workspace](windows-software/2026/2026-11-25-cmyk-stage-workspace.md) |
 | 2026-11-25 | `WSW-20261125-009` | windows-software | implemented | [Publish CMYK sets as one transactional export](windows-software/2026/2026-11-25-transactional-cmyk-set-export.md) |
 | 2026-11-25 | `WSW-20261125-008` | windows-software | implemented | [Make native coherent CMYK the guided color workflow](windows-software/2026/2026-11-25-guided-color-cmyk-photo.md) |

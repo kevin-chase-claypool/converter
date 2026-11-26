@@ -66,6 +66,49 @@ class CmykEdgeFlowTests(unittest.TestCase):
         )
         self.assertLess(float(flat.mean()), float(forward.mean()))
 
+    def test_coherent_screen_forwards_exposed_flow_controls(self):
+        from converter_core import cmyk as cmyk_core
+
+        field = self.np.full((16, 16), 0.5, dtype="float32")
+        tones = {
+            channel: field
+            for channel in (*converter.CHANNELS, "depth", "flow_guide")
+        }
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": 16,
+            "pixels_h": 16,
+        }
+        with mock.patch.object(
+            cmyk_core,
+            "trace_shared_structure_streamlines",
+            return_value={},
+        ) as trace:
+            cmyk_core.screen_coherent_color_flow(
+                tones,
+                geometry,
+                spacing_mm=4.0,
+                pen_diameter_mm=0.8,
+                path_tolerance_mm=0.1,
+                flow_layers=3,
+                keylines=True,
+                color_quiet=0.35,
+                color_hold_mm=9.5,
+                color_mix_ratio=0.81,
+                bridge_mm=7.5,
+                dark_layer_start=0.55,
+                dark_layer_end=0.97,
+            )
+        kwargs = trace.call_args.kwargs
+        self.assertAlmostEqual(kwargs["color_hold_mm"], 9.5)
+        self.assertAlmostEqual(kwargs["color_mix_ratio"], 0.81)
+        self.assertAlmostEqual(kwargs["bridge_mm"], 7.5)
+        self.assertAlmostEqual(kwargs["dark_layer_start"], 0.55)
+        self.assertAlmostEqual(kwargs["dark_layer_end"], 0.97)
+
     def test_edge_flow_streamlines_follow_structure_orientation(self):
         size = 80
         coords = self.np.arange(size, dtype="float32")

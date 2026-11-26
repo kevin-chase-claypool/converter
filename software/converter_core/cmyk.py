@@ -26,6 +26,8 @@ from .shading import (
     tone_terrain_contours,
 )
 from .structure_tensor import (
+    EDGE_FLOW_DARK_LAYER_END,
+    EDGE_FLOW_DARK_LAYER_START,
     edge_preserving_simplify,
     edge_flow_coverage_factor,
     trace_shared_structure_streamlines,
@@ -1871,6 +1873,8 @@ def screen_cmyk_edge_flow(
     max_path_mm=None,
     bridge_mm=0.0,
     flow_pitch_compression=0.0,
+    dark_layer_start=EDGE_FLOW_DARK_LAYER_START,
+    dark_layer_end=EDGE_FLOW_DARK_LAYER_END,
     fallback_angle_deg=0.0,
     flow_guide=None,
     cancel_check=None,
@@ -1905,6 +1909,8 @@ def screen_cmyk_edge_flow(
         max_path_mm=max_path_mm,
         bridge_mm=bridge_mm,
         pitch_compression=flow_pitch_compression,
+        dark_layer_start=dark_layer_start,
+        dark_layer_end=dark_layer_end,
         cancel_check=cancel_check,
     )
     return {
@@ -1934,6 +1940,8 @@ def screen_coherent_color_flow(
     color_mix_ratio=0.72,
     bridge_mm=0.0,
     flow_pitch_compression=0.0,
+    dark_layer_start=EDGE_FLOW_DARK_LAYER_START,
+    dark_layer_end=EDGE_FLOW_DARK_LAYER_END,
     fallback_angles_deg=None,
     flow_guide=None,
     cancel_check=None,
@@ -1982,6 +1990,8 @@ def screen_coherent_color_flow(
         fallback_angles_deg=fallback_angles_deg,
         color_hold_mm=color_hold_mm,
         color_mix_ratio=color_mix_ratio,
+        dark_layer_start=dark_layer_start,
+        dark_layer_end=dark_layer_end,
         cancel_check=cancel_check,
     )
     return {

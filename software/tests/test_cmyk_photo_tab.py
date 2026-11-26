@@ -236,6 +236,74 @@ class CmykPhotoTabTests(unittest.TestCase):
             tab.chain_gap.value(),
             REFERENCE_PHOTO_CHAIN_GAP_MM,
         )
+        self.assertEqual(tab.tone_bridge.value(), 1.0)
+
+    def test_separate_flow_controls_reach_coherent_renderer(self):
+        tab, _host = self.make_tab()
+        np = __import__("numpy")
+        tones = {
+            channel: np.full((16, 16), 0.6, dtype="float32")
+            for channel in (*converter.CHANNELS, "depth", "flow_guide")
+        }
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 250.0,
+            "height_mm": 250.0,
+            "pixels_w": 16,
+            "pixels_h": 16,
+        }
+        tab.style.setCurrentIndex(
+            tab.style.findData("edge_flow_coherent")
+        )
+        tab.flow_keylines.setChecked(True)
+        tab.keyline_quiet.setValue(35)
+        tab.color_hold.setValue(9.5)
+        tab.color_mix.setValue(81)
+        tab.shadow_layer_start.setValue(55)
+        tab.shadow_layer_end.setValue(97)
+        tab.tone_bridge.setValue(7.5)
+        tab.chain_marks.setChecked(False)
+        with (
+            mock.patch.object(
+                converter,
+                "prepare_image_tones",
+                return_value=(tones, geometry),
+            ),
+            mock.patch.object(
+                converter,
+                "screen_coherent_color_flow",
+                return_value={
+                    channel: []
+                    for channel in converter.CHANNELS
+                },
+            ) as screen,
+        ):
+            tab._build_artwork_layers()
+
+        kwargs = screen.call_args.kwargs
+        self.assertAlmostEqual(kwargs["color_quiet"], 0.35)
+        self.assertAlmostEqual(kwargs["color_hold_mm"], 9.5)
+        self.assertAlmostEqual(kwargs["color_mix_ratio"], 0.81)
+        self.assertAlmostEqual(kwargs["dark_layer_start"], 0.55)
+        self.assertAlmostEqual(kwargs["dark_layer_end"], 0.97)
+        self.assertAlmostEqual(kwargs["bridge_mm"], 7.5)
+
+    def test_exposed_flow_controls_invalidate_the_layer_cache(self):
+        tab, _host = self.make_tab()
+        before = tab._control_key()
+        tab.keyline_quiet.setValue(tab.keyline_quiet.value() + 5)
+        self.assertNotEqual(tab._control_key(), before)
+
+    def test_shadow_layer_thresholds_stay_in_ascending_order(self):
+        tab, _host = self.make_tab()
+        tab.shadow_layer_start.setValue(88)
+        self.assertGreater(tab.shadow_layer_end.value(), 88)
+        tab.shadow_layer_end.setValue(40)
+        self.assertLess(tab.shadow_layer_start.value(), 40)
+        tab.shadow_layer_start.setValue(99)
+        self.assertEqual(tab.shadow_layer_start.value(), 98)
+        self.assertEqual(tab.shadow_layer_end.value(), 99)
 
     def test_direction_diagnostic_renders_orientation_image(self):
         tab, _host = self.make_tab()
@@ -273,13 +341,28 @@ class CmykPhotoTabTests(unittest.TestCase):
         tab, _host = self.make_tab()
         tab.workflow_navigator.set_stage("motion")
         tab.workflow_navigator.set_locked("direction", True)
+        tab.shadow_layer_start.setValue(62)
+        tab.shadow_layer_end.setValue(96)
+        tab.keyline_quiet.setValue(45)
+        tab.color_hold.setValue(11.5)
+        tab.color_mix.setValue(84)
+        tab.tone_bridge.setValue(8.5)
         state = tab.artwork_layout_state()
         tab.workflow_navigator.set_stage("composition")
         tab.workflow_navigator.set_locked("direction", False)
+        tab.shadow_layer_start.setValue(40)
+        tab.color_hold.setValue(6.0)
+        tab.tone_bridge.setValue(4.0)
 
         self.assertTrue(tab.restore_artwork_layout_state(state))
         self.assertEqual(tab.workflow_navigator.current_stage, "motion")
         self.assertTrue(tab.workflow_navigator.is_locked("direction"))
+        self.assertEqual(tab.shadow_layer_start.value(), 62)
+        self.assertEqual(tab.shadow_layer_end.value(), 96)
+        self.assertEqual(tab.keyline_quiet.value(), 45)
+        self.assertEqual(tab.color_hold.value(), 11.5)
+        self.assertEqual(tab.color_mix.value(), 84)
+        self.assertEqual(tab.tone_bridge.value(), 8.5)
 
     def test_save_handoff_uses_physical_ymck_order_and_one_folder(self):
         tab, host = self.make_tab()
@@ -301,6 +384,9 @@ class CmykPhotoTabTests(unittest.TestCase):
         }
         output = Path(self.folder) / "out"
         output.mkdir(exist_ok=True)
+        tab.style.setCurrentIndex(
+            tab.style.findData("edge_flow_coherent")
+        )
         tab._next_export_base_path = str(output / "portrait-cmyk.gcode")
         with mock.patch.object(tab, "_preflight_errors", return_value=[]):
             tab._write_files(results)
@@ -318,6 +404,30 @@ class CmykPhotoTabTests(unittest.TestCase):
         self.assertEqual(
             set(manifest["workflow"]["stage_settings_sha256"]),
             {stage.key for stage in CMYK_WORKFLOW_STAGES},
+        )
+        self.assertAlmostEqual(
+            manifest["screen"]["shadow_layer_start_pct"],
+            40.0,
+        )
+        self.assertAlmostEqual(
+            manifest["screen"]["shadow_layer_end_pct"],
+            90.0,
+        )
+        self.assertAlmostEqual(
+            manifest["screen"]["keyline_color_quiet_pct"],
+            25.0,
+        )
+        self.assertAlmostEqual(
+            manifest["screen"]["coherent_color_hold_mm"],
+            6.0,
+        )
+        self.assertAlmostEqual(
+            manifest["screen"]["coherent_color_mix_ratio"],
+            0.72,
+        )
+        self.assertAlmostEqual(
+            manifest["screen"]["pen_down_chain"]["local_flow_bridge_mm"],
+            4.0,
         )
 
     def test_complete_set_rejects_different_ink_contracts(self):

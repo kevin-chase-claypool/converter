@@ -614,6 +614,19 @@
   CMYK/exporter/generator subset passes `215`. Physical print validation
   remains separate. Evidence: `WSW-20261125-009` and `ADR-010`.
 
+- [x] Expose coherent CMYK density and continuity controls.
+  Problem: scene-depth layer thresholds, ink-plane hold and secondary mix,
+  keyline color separation, and same-streamline tone-gap bridging were fixed
+  constants or coupled to the adjacent contour-chain gap.
+  Benefit: operators can compare color continuity, shadow density, Black edge
+  separation, and local connector behavior independently without changing the
+  base geometry or per-ink separation.
+  Status 2026-11-25: the controls are exposed, cached, persisted, forwarded to
+  the coherent/shared renderers, and recorded in version-7 manifests. Defaults
+  preserve the recommended coherent recipe. Focused tests pass `112`; complete
+  discovery passes `738`. Keyline confidence thresholds remain internal and
+  paper validation is pending. Evidence: `WSW-20261125-011`.
+
 - [ ] Deliver the stage-owned adaptive CMYK workspace.
   Problem: the guided card and complete Advanced tuner expose the implemented
   renderer, but composition, color preparation, separation, tensor guidance,
@@ -629,7 +642,9 @@
   stage-filtered inspectors, descriptions, reset, per-stage automatic-change
   locks, complete recipe presets, sidecar persistence, explicit
   input/output/validation/cache contracts, and an undirected flow-field
-  diagnostic. Set manifests record each stage's settings hash and locks. The
+  diagnostic. Set manifests record each stage's settings hash and locks;
+  `WSW-20261125-011` advances them to version 7 for the newly exposed flow
+  controls. The
   renderer still builds from one combined cache key, and only Direction/Review
   have dedicated visual diagnostics; per-stage materialized caches and
   intermediate previews for the other stages remain open.

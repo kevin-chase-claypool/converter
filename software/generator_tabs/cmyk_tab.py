@@ -616,6 +616,38 @@ class CmykTab(GeneratorTab):
             "Shade compression",
             self.flow_pitch_compression,
         )
+        self.shadow_layer_start = double_spin(
+            40,
+            20,
+            98,
+            5,
+            0,
+            " %",
+        )
+        self.shadow_layer_start.setToolTip(
+            "Scene-depth threshold for the first additional coherent density "
+            "layer. Bright and middle tones remain on the base network."
+        )
+        flow.addRow("First shadow layer", self.shadow_layer_start)
+        self.shadow_layer_end = double_spin(
+            90,
+            40,
+            99,
+            1,
+            0,
+            " %",
+        )
+        self.shadow_layer_end.setToolTip(
+            "Scene-depth threshold approached by the final additional coherent "
+            "density layer. Keep this above the first-shadow threshold."
+        )
+        flow.addRow("Final shadow layer", self.shadow_layer_end)
+        self.shadow_layer_start.valueChanged.connect(
+            self._normalize_shadow_thresholds
+        )
+        self.shadow_layer_end.valueChanged.connect(
+            self._normalize_shadow_thresholds
+        )
         self.detail_button = QPushButton("Fine detail")
         self.detail_button.setCheckable(True)
         self.detail_button.setToolTip(
@@ -650,6 +682,13 @@ class CmykTab(GeneratorTab):
             "remain separate."
         )
         paths.addRow("Pen-down chain", continuity_row)
+        self.tone_bridge = double_spin(4.0, 0.0, 20.0, 0.5, 1, " mm")
+        self.tone_bridge.setToolTip(
+            "Edge-flow only: retain local coverage gaps up to this distance "
+            "along the same streamline. This is separate from the adjacent "
+            "pen-down chain and never bridges different traced paths."
+        )
+        paths.addRow("Tone-gap bridge", self.tone_bridge)
         ink = self.add_group("Ink assignment")
         self.flow_keylines = QCheckBox(
             "Continuous Black keylines (edge separation)"
@@ -662,6 +701,24 @@ class CmykTab(GeneratorTab):
             "collar seams read without a blanket outline."
         )
         ink.addRow("Keylines", self.flow_keylines)
+        self.keyline_quiet = double_spin(25, 0, 80, 5, 0, " %")
+        self.keyline_quiet.setToolTip(
+            "When Black keylines are active, reduce C/M/Y coverage by this "
+            "percentage beside the strongest coherent boundaries."
+        )
+        ink.addRow("Colour edge separation", self.keyline_quiet)
+        self.color_hold = double_spin(6.0, 1.0, 20.0, 0.5, 1, " mm")
+        self.color_hold.setToolTip(
+            "Coherent color flow: paper-space window used to smooth local ink "
+            "planes along each shared streamline."
+        )
+        ink.addRow("Ink-plane hold", self.color_hold)
+        self.color_mix = double_spin(72, 30, 100, 1, 0, " %")
+        self.color_mix.setToolTip(
+            "Coherent color flow: retain a secondary ink when its smoothed "
+            "coverage reaches this percentage of the dominant ink."
+        )
+        ink.addRow("Secondary ink mix", self.color_mix)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
         ink.addRow("Dot size", self.dot_size)
         self.solid_dots = QCheckBox("Solid dots")
@@ -971,6 +1028,8 @@ class CmykTab(GeneratorTab):
         )
         self.chain_marks.toggled.connect(self._update_wave_spacing_guard)
         self.chain_gap.valueChanged.connect(self._update_wave_spacing_guard)
+        self.flow_layers.valueChanged.connect(self._update_wave_spacing_guard)
+        self.flow_keylines.toggled.connect(self._update_wave_spacing_guard)
         self.contour_order.currentIndexChanged.connect(
             lambda *_: self._refresh_pass_summary()
         )
@@ -1104,9 +1163,15 @@ class CmykTab(GeneratorTab):
         self.flow_pitch_compression.setValue(
             REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT
         )
+        self.shadow_layer_start.setValue(40)
+        self.shadow_layer_end.setValue(90)
         self.flow_keylines.setChecked(True)
+        self.keyline_quiet.setValue(25)
+        self.color_hold.setValue(6.0)
+        self.color_mix.setValue(72)
         self.chain_marks.setChecked(True)
         self.chain_gap.setValue(REFERENCE_PHOTO_CHAIN_GAP_MM)
+        self.tone_bridge.setValue(4.0)
         self.dot_size.setValue(100)
         self.solid_dots.setChecked(False)
         self.overdraw.setValue(1)
@@ -1275,6 +1340,21 @@ class CmykTab(GeneratorTab):
         else:
             text = "= %.2f mm on paper" % effective
         self.effective_pitch_label.setText(text)
+
+    def _normalize_shadow_thresholds(self, *_args):
+        """Keep the first shadow-layer threshold below the final one."""
+        start = self.shadow_layer_start.value()
+        end = self.shadow_layer_end.value()
+        if start < end:
+            return
+        if self.sender() is self.shadow_layer_end:
+            self.shadow_layer_start.blockSignals(True)
+            self.shadow_layer_start.setValue(max(20.0, end - 1.0))
+            self.shadow_layer_start.blockSignals(False)
+        else:
+            self.shadow_layer_end.blockSignals(True)
+            self.shadow_layer_end.setValue(min(99.0, start + 1.0))
+            self.shadow_layer_end.blockSignals(False)
 
     def _update_sharpen_controls(self, *_args):
         """Enable the mask settings only while sharpening is selected."""
@@ -1597,9 +1677,15 @@ class CmykTab(GeneratorTab):
                 "flow_pitch_compression_pct": (
                     self.flow_pitch_compression.value()
                 ),
+                "shadow_layer_start_pct": self.shadow_layer_start.value(),
+                "shadow_layer_end_pct": self.shadow_layer_end.value(),
                 "preserve_black_keylines": self.flow_keylines.isChecked(),
+                "keyline_color_quiet_pct": self.keyline_quiet.value(),
+                "coherent_color_hold_mm": self.color_hold.value(),
+                "coherent_color_mix_pct": self.color_mix.value(),
                 "chain_marks": self.chain_marks.isChecked(),
                 "chain_gap_mm": self.chain_gap.value(),
+                "tone_gap_bridge_mm": self.tone_bridge.value(),
                 "dot_size_pct": self.dot_size.value(),
                 "solid_dots": self.solid_dots.isChecked(),
                 "levels": self.levels.value(),
@@ -1718,11 +1804,29 @@ class CmykTab(GeneratorTab):
                     )
                 )
             )
+            self.shadow_layer_start.setValue(
+                float(screen.get("shadow_layer_start_pct", 40.0))
+            )
+            self.shadow_layer_end.setValue(
+                float(screen.get("shadow_layer_end_pct", 90.0))
+            )
             self.flow_keylines.setChecked(
                 bool(screen.get("preserve_black_keylines", False))
             )
+            self.keyline_quiet.setValue(
+                float(screen.get("keyline_color_quiet_pct", 25.0))
+            )
+            self.color_hold.setValue(
+                float(screen.get("coherent_color_hold_mm", 6.0))
+            )
+            self.color_mix.setValue(
+                float(screen.get("coherent_color_mix_pct", 72.0))
+            )
             self.chain_marks.setChecked(bool(screen.get("chain_marks", True)))
             self.chain_gap.setValue(float(screen.get("chain_gap_mm", 5.0)))
+            self.tone_bridge.setValue(
+                float(screen.get("tone_gap_bridge_mm", 4.0))
+            )
             self.dot_size.setValue(float(screen["dot_size_pct"]))
             self.solid_dots.setChecked(bool(screen["solid_dots"]))
             self.levels.setValue(int(screen["levels"]))
@@ -1857,8 +1961,15 @@ class CmykTab(GeneratorTab):
             self.flow_smoothing.value(),
             self.flow_layers.value(),
             self.flow_pitch_compression.value(),
+            self.shadow_layer_start.value(),
+            self.shadow_layer_end.value(),
+            self.flow_keylines.isChecked(),
+            self.keyline_quiet.value(),
+            self.color_hold.value(),
+            self.color_mix.value(),
             self.chain_marks.isChecked(),
             self.chain_gap.value(),
+            self.tone_bridge.value(),
             self.dot_size.value(),
             self.solid_dots.isChecked(),
             self.theta_mode.value(),
@@ -2135,6 +2246,14 @@ class CmykTab(GeneratorTab):
                 issues.append(
                     "Very small flow smoothing can follow source noise."
                 )
+            if (
+                self.shadow_layer_start.value()
+                >= self.shadow_layer_end.value()
+            ):
+                issues.append(
+                    "The first shadow layer must be lighter than the final "
+                    "shadow layer."
+                )
         elif key == "streamlines":
             effective = self.pitch.value() * self.scale_pct.value() / 100.0
             if effective < self.pen_width.value() * 0.9:
@@ -2145,6 +2264,14 @@ class CmykTab(GeneratorTab):
             if self.overdraw.value() > 1:
                 issues.append(
                     "Overdraw repeats every mark and can add paper wear."
+                )
+            if (
+                self.style.currentData() == "edge_flow_coherent"
+                and self.color_mix.value() > 95.0
+            ):
+                issues.append(
+                    "A near-100 % secondary-ink mix can collapse distinct "
+                    "planar colours into overprint."
                 )
         elif key == "paths":
             if self._pen_chain_active() and self.chain_gap.value() > 10.0:
@@ -2313,21 +2440,25 @@ class CmykTab(GeneratorTab):
                 "style": "edge_flow_coherent",
                 "keylines": True,
                 "chain_gap": REFERENCE_PHOTO_CHAIN_GAP_MM,
+                "tone_bridge": 4.0,
             },
             "edge_flow_per_ink": {
                 "style": "edge_flow",
                 "keylines": True,
                 "chain_gap": REFERENCE_PHOTO_CHAIN_GAP_MM,
+                "tone_bridge": 1.0,
             },
             "edge_flow_shared": {
                 "style": "edge_flow_shared",
                 "keylines": True,
                 "chain_gap": REFERENCE_PHOTO_CHAIN_GAP_MM,
+                "tone_bridge": 1.0,
             },
             "line_screen": {
                 "style": "lines",
                 "keylines": False,
                 "chain_gap": 5.0,
+                "tone_bridge": 0.0,
             },
         }
         recipe = overrides.get(str(key))
@@ -2342,6 +2473,7 @@ class CmykTab(GeneratorTab):
                 self.style.setCurrentIndex(style_index)
             self.flow_keylines.setChecked(bool(recipe["keylines"]))
             self.chain_gap.setValue(float(recipe["chain_gap"]))
+            self.tone_bridge.setValue(float(recipe["tone_bridge"]))
         finally:
             restore_control_state(locked_state)
         message = (
@@ -2374,6 +2506,13 @@ class CmykTab(GeneratorTab):
             not in ("waves_even", "waves_zero", "tsp")
         )
 
+    def _tone_bridge_active(self):
+        """Whether Edge-flow may bridge a local same-path coverage gap."""
+        return (
+            self._edge_flow_style_active()
+            and self.tone_bridge.value() > 0.0
+        )
+
     def _edge_flow_style_active(self):
         """Whether the selected screen uses Edge-flow geometry."""
         return (
@@ -2399,6 +2538,24 @@ class CmykTab(GeneratorTab):
         self.flow_layers.setEnabled(flow_selected)
         self.flow_pitch_compression.setEnabled(flow_selected)
         self.flow_keylines.setEnabled(flow_selected)
+        shadow_available = (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData()
+            in ("edge_flow_shared", "edge_flow_coherent")
+            and self.flow_layers.value() > 1
+        )
+        self.shadow_layer_start.setEnabled(shadow_available)
+        self.shadow_layer_end.setEnabled(shadow_available)
+        self.keyline_quiet.setEnabled(
+            flow_selected and self.flow_keylines.isChecked()
+        )
+        coherent_available = (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData() == "edge_flow_coherent"
+        )
+        self.color_hold.setEnabled(coherent_available)
+        self.color_mix.setEnabled(coherent_available)
+        self.tone_bridge.setEnabled(flow_selected)
         chain_available = (
             not self.calibration_mode.isChecked()
             and self.style.currentData()
@@ -2607,15 +2764,19 @@ class CmykTab(GeneratorTab):
                 overdraw=self.overdraw.value(),
                 keylines=self.flow_keylines.isChecked(),
                 color_quiet=(
-                    0.25 if self.flow_keylines.isChecked() else 0.0
-                ),
-                color_hold_mm=6.0 / factor,
-                color_mix_ratio=0.72,
-                bridge_mm=(
-                    max(4.0, self.chain_gap.value()) / factor
-                    if self._pen_chain_active()
+                    self.keyline_quiet.value() / 100.0
+                    if self.flow_keylines.isChecked()
                     else 0.0
                 ),
+                color_hold_mm=self.color_hold.value() / factor,
+                color_mix_ratio=self.color_mix.value() / 100.0,
+                bridge_mm=(
+                    self.tone_bridge.value() / factor
+                    if self._tone_bridge_active()
+                    else 0.0
+                ),
+                dark_layer_start=self.shadow_layer_start.value() / 100.0,
+                dark_layer_end=self.shadow_layer_end.value() / 100.0,
                 fallback_angles_deg=[
                     converter.SCREEN_ANGLES_DEG[channel]
                     for channel in converter.CHANNELS[
@@ -2640,7 +2801,11 @@ class CmykTab(GeneratorTab):
                 seed=self.seed.value(),
                 overdraw=self.overdraw.value(),
                 keylines=self.flow_keylines.isChecked(),
-                color_quiet=0.25 if self.flow_keylines.isChecked() else 0.0,
+                color_quiet=(
+                    self.keyline_quiet.value() / 100.0
+                    if self.flow_keylines.isChecked()
+                    else 0.0
+                ),
                 tone_segment_mm=(
                     2.0 / factor
                     if self._detail_preset_active()
@@ -2652,10 +2817,12 @@ class CmykTab(GeneratorTab):
                     else None
                 ),
                 bridge_mm=(
-                    min(4.0, self.chain_gap.value()) / factor
-                    if self._pen_chain_active()
+                    self.tone_bridge.value() / factor
+                    if self._tone_bridge_active()
                     else 0.0
                 ),
+                dark_layer_start=self.shadow_layer_start.value() / 100.0,
+                dark_layer_end=self.shadow_layer_end.value() / 100.0,
                 flow_guide=tones["flow_guide"],
             )
         for index, channel in enumerate(converter.CHANNELS):
@@ -2705,7 +2872,7 @@ class CmykTab(GeneratorTab):
                         else False
                     ),
                     flow_color_quiet=(
-                        0.25
+                        self.keyline_quiet.value() / 100.0
                         if edge_flow_active and channel != "k"
                         and self.flow_keylines.isChecked()
                         else 0.0
@@ -2721,8 +2888,8 @@ class CmykTab(GeneratorTab):
                         else None
                     ),
                     flow_bridge_mm=(
-                        min(4.0, self.chain_gap.value()) / factor
-                        if edge_flow_active and self._pen_chain_active()
+                        self.tone_bridge.value() / factor
+                        if self._tone_bridge_active()
                         else 0.0
                     ),
                     row_clearance_mm=(
@@ -3328,7 +3495,7 @@ class CmykTab(GeneratorTab):
         )
         data = {
             "kind": "cmyk-print-set",
-            "version": 6,
+            "version": 7,
             "created": datetime.datetime.now().isoformat(timespec="seconds"),
             "print_order": [
                 self._output_label(channel) for channel in channels
@@ -3472,10 +3639,25 @@ class CmykTab(GeneratorTab):
                     if style in EDGE_FLOW_STYLES
                     else None
                 ),
+                "shadow_layer_start_pct": (
+                    self.shadow_layer_start.value()
+                    if style in ("edge_flow_shared", "edge_flow_coherent")
+                    else None
+                ),
+                "shadow_layer_end_pct": (
+                    self.shadow_layer_end.value()
+                    if style in ("edge_flow_shared", "edge_flow_coherent")
+                    else None
+                ),
                 "preserve_black_keylines": (
                     self.flow_keylines.isChecked()
                     if style in EDGE_FLOW_STYLES
                     else False
+                ),
+                "keyline_color_quiet_pct": (
+                    self.keyline_quiet.value()
+                    if style in EDGE_FLOW_STYLES
+                    else None
                 ),
                 "flow_guide": (
                     (
@@ -3512,11 +3694,20 @@ class CmykTab(GeneratorTab):
                     else 0.0
                 ),
                 "coherent_color_hold_mm": (
-                    6.0 if style == "edge_flow_coherent" else None
+                    self.color_hold.value()
+                    if style == "edge_flow_coherent"
+                    else None
                 ),
                 "coherent_color_mix_ratio": (
-                    0.72 if style == "edge_flow_coherent" else None
+                    self.color_mix.value() / 100.0
+                    if style == "edge_flow_coherent"
+                    else None
                 ),
+                "tone_gap_bridge": {
+                    "enabled": self._tone_bridge_active(),
+                    "max_gap_mm": self.tone_bridge.value(),
+                    "scope": "same_traced_streamline_only",
+                },
                 "pen_down_chain": {
                     "enabled": self._pen_chain_active(),
                     "max_gap_mm": self.chain_gap.value(),
@@ -3525,9 +3716,9 @@ class CmykTab(GeneratorTab):
                         "draw_connector_vs_lift_travel_lower"
                     ),
                     "local_flow_bridge_mm": (
-                        min(4.0, self.chain_gap.value())
+                        self.tone_bridge.value()
                         if style in EDGE_FLOW_STYLES
-                        and self._pen_chain_active()
+                        and self._tone_bridge_active()
                         else 0.0
                     ),
                     "channels": self._pen_chain_stats,

@@ -936,7 +936,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertTrue(manifest.exists())
         data = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(data["kind"], "cmyk-print-set")
-        self.assertEqual(data["version"], 6)
+        self.assertEqual(data["version"], 7)
         self.assertAlmostEqual(data["pen_offsets_mm"]["m"][0], 0.75)
         self.assertEqual(set(data["preflight"]), set(converter.CHANNELS))
         self.assertEqual(

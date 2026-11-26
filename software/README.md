@@ -71,7 +71,7 @@ python -m unittest -q software.tests.test_path_join
 python -m unittest discover -q -s software\tests -p "test_*.py"
 ```
 
-The complete discovery run currently contains 734 test cases. Repeated generator
+The complete discovery run currently contains 738 test cases. Repeated generator
 tab contracts retain their per-tab class names and failure locations, while
 related slow setup scenarios use subtests to avoid rebuilding the same Qt
 window or generated coupon.
@@ -655,17 +655,22 @@ Current tools:
   form; weak or flat areas use cyan 15°, magenta 75°, yellow 0°, and black
   45° fallbacks as successive layers, preserving a visible screen rather than
   one uniform direction.
-  Along each path, channel coverage is smoothed over a 6 mm paper-space
-  window. A long run keeps its dominant ink, or a second ink when it is within
-  `72 %` of the dominant coverage, so one local colour plane does not break
-  into independently phased dashes. Additional layers and shade compression
+  Along each path, channel coverage is smoothed over the **Ink-plane hold**
+  paper-space window (default `6 mm`). A long run keeps its dominant ink, or a
+  second ink when it reaches the **Secondary ink mix** ratio (default `72 %`)
+  of the dominant coverage, so one local colour plane does not break into
+  independently phased dashes. Additional layers and shade compression
   are owned by scene-depth luminance, not by the strongest saturated ink: a
   bright yellow or magenta face remains one base network, while the first
-  extra layer starts at `40 %` scene depth and the final allowed layer
-  approaches `90 %`. **Continuous Black
+  extra layer starts at **First shadow layer** (default `40 %` scene depth) and
+  the final allowed layer approaches **Final shadow layer** (default `90 %`).
+  Both thresholds are operator controls and must remain in ascending order.
+  **Continuous Black
   keylines** reserve strong Black strokes for tensor-coherent boundaries;
   ordinary Black tone receives a lower coherent-flow weight while keylines
   are active, so dark background texture does not become a black wash.
+  **Colour edge separation** sets how much C/M/Y coverage is removed beside
+  those same boundaries (default `25 %`).
   Coherent color flow applies edge-preserving source simplification at `65 %`
   of **Flow smoothing** before sharpening and separation. That merges pores,
   compression noise, and fine fabric texture into broader color planes while
@@ -686,6 +691,11 @@ Current tools:
   few long pen-down chains instead of hundreds of row fragments. The joins
   draw visible connector ink, the result follows straight screen angles rather
   than Edge-flow contours, and a fully blank row band can still end a chain.
+  **Tone-gap bridge** is independent from adjacent chaining. It keeps a
+  current Edge-flow stroke down through a local coverage gap of up to the
+  selected distance (default `4 mm`) only when that gap lies along the same
+  traced streamline. Setting it to zero makes every tone break a pen lift;
+  changing it does not alter the adjacent contour chain.
   **Pen-down chain** is enabled by default for open-line screens. It orders
   endpoint-nearby marks head-to-tail and draws a connector only up to the
   adjacent **Keep pen down** gap (default `5.0 mm`). Edge-flow also bridges up
@@ -903,15 +913,16 @@ Current tools:
   analyzed programs must also agree on artwork scale, placement, page frame,
   theta mode/ratio, feed and travel contract, and full bed-compensation
   profile. Guided **Create 4 G-code files** requires all four output inks.
-  A successful artwork save publishes the four programs and a version-6
+  A successful artwork save publishes the four programs and a version-7
   `<name>-set.json` as one logical transaction. Every file is staged before
   any destination is replaced; a failed commit restores the previous set.
   The manifest records the source hash, page and motion mode,
   bed-compensation profile, artwork placement, complete image/screen recipe,
   sharpening amount and radius, effective pitch, pen offsets, calibration
-  identity, workflow stage dependency hashes and locks, per-ink preflight
-  results, one canonical set-identity hash, and SHA-256 hashes for all four
-  G-code files.
+  identity, workflow stage dependency hashes and locks, explicit coherent
+  hold/mix and shadow thresholds, keyline separation, independent tone-gap
+  bridge and adjacent-chain settings, per-ink preflight results, one canonical
+  set-identity hash, and SHA-256 hashes for all four G-code files.
   A non-zero artwork placement is also written into every G-code header, for
   example `(artwork placement -3.170,-28.740 mm)`. Before a multi-pass print,
   confirm that all four headers and `artwork_placement_mm` in the set manifest

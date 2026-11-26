@@ -38,6 +38,9 @@ related:
 
 # Add the persistent adaptive CMYK stage workspace
 
+`WSW-20261125-011` later advances the same manifest from version 6 to version 7
+to expose coherent flow and coverage controls.
+
 ## Summary
 
 CMYK Photo now has a persistent nine-stage workflow rail above the guided card

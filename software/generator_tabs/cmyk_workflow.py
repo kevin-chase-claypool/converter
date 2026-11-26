@@ -85,14 +85,16 @@ CMYK_WORKFLOW_STAGES = (
         "Direction",
         "Smooth the multichannel image field before tracing. This controls "
         "contour scale, edge confidence, and how quickly weak texture falls "
-        "back to fixed screen angles.",
+        "back to fixed screen angles, plus where additional shadow layers "
+        "activate.",
         ("Flow geometry",),
         "Show flow field",
         "Multichannel image guide, page geometry, and smoothing radius.",
         "Undirected tangent field, guidance confidence, and keyline confidence.",
         "Finite normalized vectors, repeatable tensor components, and stable "
         "opposite-direction colours.",
-        ("flow guide", "page geometry", "smoothing", "tensor constants"),
+        ("flow guide", "page geometry", "smoothing", "shadow thresholds",
+         "tensor constants"),
     ),
     CmykWorkflowStage(
         "streamlines",
@@ -112,29 +114,31 @@ CMYK_WORKFLOW_STAGES = (
         "Ink assignment and local coverage",
         "Ink planes",
         "Review how coverage becomes ink planes and marks: keyline policy, "
-        "dot size, overdraw, pen width, and density levels.",
+        "edge separation, ink-plane hold and secondary mix, dot size, overdraw, "
+        "pen width, and density levels.",
         ("Ink assignment",),
         "Show ink simulation",
         "Streamline geometry, local channel coverage, keyline and pen policy.",
         "Independent tagged polylines for Yellow, Magenta, Cyan, and Black.",
         "Ink planes are continuous where supported and deterministic phase "
         "gates remain bounded.",
-        ("streamline paths", "coverage fields", "keylines", "pen width",
-         "overdraw"),
+        ("streamline paths", "coverage fields", "keylines", "edge separation",
+         "ink-plane hold", "secondary mix", "pen width", "overdraw"),
     ),
     CmykWorkflowStage(
         "paths",
         "Path simplification, chaining, and order",
         "Paths",
-        "Control path fidelity, deterministic limits, pen-down joining, and "
-        "the row/chaining policy that changes M3/M5 count and visible bridges.",
+        "Control path fidelity, local tone-gap bridging, adjacent pen-down "
+        "joining, deterministic limits, and the row/chaining policy that "
+        "changes M3/M5 count and visible bridges.",
         ("Path and continuity",),
         "Show path plan",
         "Per-ink marks, path tolerance, deterministic limit, and chain policy.",
         "Simplified, ordered contours and visible connector decisions.",
         "Tolerance, mark cap, and chain gap are respected before planning.",
-        ("marks", "path tolerance", "chain gap", "row order", "seed",
-         "maximum marks"),
+        ("marks", "path tolerance", "tone bridge", "chain gap", "row order",
+         "seed", "maximum marks"),
     ),
     CmykWorkflowStage(
         "motion",
