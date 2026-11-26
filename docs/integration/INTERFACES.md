@@ -64,10 +64,13 @@ Guided CMYK requires Yellow, Magenta, Cyan, and Black in that physical print
 order. The version-8 set manifest records the source and program hashes,
 calibration identity, pen offsets, workflow stage dependency hashes and locks,
 the exposed coherent-plane and shadow-layer controls, the precision
-process-cell pitch and edge threshold when selected, independent tone-gap and
-adjacent-chain settings, per-program motion preflight, and one canonical
-common-identity hash. This is a host filesystem contract only; it does not
-change the controller command or coordinate contracts above.
+process-cell requested/resolved pitch and edge threshold when selected, the
+broad-highlight preservation thresholds and sub-cell detail alignment,
+independent tone-gap and adjacent-chain settings, per-program motion preflight,
+and one canonical common-identity hash. The headless verification report also
+records the resolved pitch separately from the requested layout value. This is
+a host filesystem contract only; it does not change the controller command or
+coordinate contracts above.
 
 The headless operator entry point is
 `python tools\export_cmyk_headless.py ...`. It must drive the actual CMYK Photo

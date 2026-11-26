@@ -131,7 +131,12 @@ class CmykHeadlessExportTests(unittest.TestCase):
             )
             self.assertEqual(
                 controls["image_controls"]["weights_pct"],
-                {"c": 100.0, "m": 95.0, "y": 90.0, "k": 30.0},
+                {"c": 100.0, "m": 100.0, "y": 100.0, "k": 100.0},
+            )
+            self.assertFalse(controls["image_controls"]["auto_levels"])
+            self.assertGreater(
+                report["recipe"]["effective_pitch_mm"],
+                report["recipe"]["requested_pitch_mm"],
             )
             for channel in ("y", "m", "c", "k"):
                 self.assertGreater(report["programs"][channel]["mark_count"], 0)
@@ -171,6 +176,49 @@ class CmykHeadlessExportTests(unittest.TestCase):
         bounds = self.module._machine_bounds(gcode)
         self.assertAlmostEqual(bounds["max_radius_mm"], 10.4403065089)
         self.assertEqual(bounds["xy_moves"], 2)
+
+    def test_render_layers_uses_cmyk_ink_identities_not_print_order(self):
+        factors = self.module.converter.ink_transmittance_matrix()
+        for index, channel in enumerate(self.module.converter.CHANNELS):
+            layers = {
+                name: (
+                    [[(0.0, 50.0), (100.0, 50.0)]]
+                    if name == channel
+                    else []
+                )
+                for name in self.module.converter.CHANNELS
+            }
+            rendered = self.module._render_layers(
+                layers,
+                100.0,
+                100.0,
+                10.0,
+                None,
+                pixels=100,
+            )
+            expected = tuple(
+                round(float(component) * 255.0)
+                for component in factors[index]
+            )
+            actual = rendered.getpixel((50, 50))
+            for observed, wanted in zip(actual, expected):
+                self.assertLessEqual(abs(observed - wanted), 1)
+
+    def test_source_comparison_panel_uses_the_gcode_page_margin(self):
+        from PIL import Image
+
+        source = Image.new("RGB", (100, 100), (220, 120, 60))
+        panel = self.module._page_source_panel(
+            source,
+            page_width_mm=100.0,
+            page_height_mm=100.0,
+            margin_mm=10.0,
+            size=100,
+        )
+        self.assertEqual(panel.getpixel((2, 50)), (255, 255, 255))
+        center = panel.getpixel((50, 50))
+        for observed, expected in zip(center, (220, 120, 60)):
+            self.assertLessEqual(abs(observed - expected), 1)
 
 
 if __name__ == "__main__":

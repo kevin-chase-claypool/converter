@@ -23,19 +23,20 @@
     "scale_pct": 100.0,
     "pen_width_mm": 0.9,
     "requested_pitch_mm": 0.35,
+    "effective_pitch_mm": 0.9876543209876543,
     "path_tolerance_mm": 0.05,
     "max_marks": 800000,
     "seed": 7,
     "theta_mode": "optimized"
   },
-  "manifest_sha256": "067d6167dca3e0205dd77ac2aea60ab108311fd89bab6383a6e8996f5442a49b",
+  "manifest_sha256": "210563a7b80e9064e2bd1e8c8de9fc147777114af9af9549a6c362c15b70f4d5",
   "programs": {
     "y": {
       "label": "01-yellow",
       "file": "Golden Sunset Winter Family Selfie-cmyk-01-yellow.gcode",
-      "bytes": 4549557,
-      "sha256": "419807d6bce806406c319e125f09e6d10cbed012f64d69631074895b8fb44a3b",
-      "lines": 123475,
+      "bytes": 4954131,
+      "sha256": "e00cc435f4aeaf6b1ccb4cb6ddc36c455ae514494842b94855d610a3244a9e77",
+      "lines": 131168,
       "units_and_frame": [
         "G21",
         "G90",
@@ -44,16 +45,16 @@
         "G54"
       ],
       "complete": true,
-      "mark_count": 23923,
-      "max_xy_radius_mm": 174.38303800370036,
+      "mark_count": 26250,
+      "max_xy_radius_mm": 174.27234766723606,
       "machine_reach_radius_mm": 180.0
     },
     "m": {
       "label": "02-magenta",
       "file": "Golden Sunset Winter Family Selfie-cmyk-02-magenta.gcode",
-      "bytes": 4443655,
-      "sha256": "850f412ebe21b94ab94121a37322accfd28b03ab517d413781f1c050dac4f32e",
-      "lines": 120064,
+      "bytes": 4437083,
+      "sha256": "a33d934643469ceaf93a1f7259df69470f0b45b6eb42d0c87b14b3ed1823e158",
+      "lines": 119920,
       "units_and_frame": [
         "G21",
         "G90",
@@ -62,16 +63,16 @@
         "G54"
       ],
       "complete": true,
-      "mark_count": 23024,
-      "max_xy_radius_mm": 174.20056412644018,
+      "mark_count": 23293,
+      "max_xy_radius_mm": 174.2038162356382,
       "machine_reach_radius_mm": 180.0
     },
     "c": {
       "label": "03-cyan",
       "file": "Golden Sunset Winter Family Selfie-cmyk-03-cyan.gcode",
-      "bytes": 3143092,
-      "sha256": "df09f94fb4bd59fcbd0fd9dfd81e3c7bff7ff8bf07d24e2a6bccd8c85263aca4",
-      "lines": 89317,
+      "bytes": 2537251,
+      "sha256": "569c9e874c51d3296d295a9390804f09a5ca4486aa12846a77304548a34b482e",
+      "lines": 73704,
       "units_and_frame": [
         "G21",
         "G90",
@@ -80,16 +81,16 @@
         "G54"
       ],
       "complete": true,
-      "mark_count": 16271,
-      "max_xy_radius_mm": 174.24046725557182,
+      "mark_count": 13079,
+      "max_xy_radius_mm": 174.36387018568382,
       "machine_reach_radius_mm": 180.0
     },
     "k": {
       "label": "04-black",
       "file": "Golden Sunset Winter Family Selfie-cmyk-04-black.gcode",
-      "bytes": 365912,
-      "sha256": "dc8194fc56b149c7837fea00492116ba39c840b86dad74ed825204c527a44e8e",
-      "lines": 14430,
+      "bytes": 2481823,
+      "sha256": "c65c35bb21ca934a5c928d325a0993241ebdefdff3cad2c7a2857b906f26436b",
+      "lines": 73919,
       "units_and_frame": [
         "G21",
         "G90",
@@ -98,8 +99,8 @@
         "G54"
       ],
       "complete": true,
-      "mark_count": 1683,
-      "max_xy_radius_mm": 174.1135829830631,
+      "mark_count": 12414,
+      "max_xy_radius_mm": 174.2357848600568,
       "machine_reach_radius_mm": 180.0
     }
   },
@@ -109,62 +110,62 @@
       "max_x_mm": 249.6,
       "min_y_mm": 0.3999999999999999,
       "max_y_mm": 249.6,
-      "marks": 23923
+      "marks": 26250
     },
     "m": {
       "min_x_mm": 0.3999999999999999,
       "max_x_mm": 249.6,
       "min_y_mm": 0.3999999999999999,
       "max_y_mm": 249.6,
-      "marks": 23024
+      "marks": 23293
     },
     "c": {
       "min_x_mm": 0.3999999999999999,
       "max_x_mm": 249.6,
       "min_y_mm": 0.3999999999999999,
       "max_y_mm": 249.6,
-      "marks": 16271
+      "marks": 13079
     },
     "k": {
       "min_x_mm": 0.3999999999999999,
       "max_x_mm": 249.6,
       "min_y_mm": 0.3999999999999999,
       "max_y_mm": 249.6,
-      "marks": 1683
+      "marks": 12414
     }
   },
   "gcode_bounds": {
     "y": {
-      "min_x_mm": -173.0323,
-      "max_x_mm": 173.6422,
-      "min_y_mm": -174.1581,
-      "max_y_mm": 173.4008,
-      "max_radius_mm": 174.38303800370036,
-      "xy_moves": 71761
+      "min_x_mm": -155.3665,
+      "max_x_mm": 154.9719,
+      "min_y_mm": -152.4428,
+      "max_y_mm": 156.7588,
+      "max_radius_mm": 174.27234766723606,
+      "xy_moves": 78742
     },
     "m": {
-      "min_x_mm": -172.9854,
-      "max_x_mm": 172.9143,
-      "min_y_mm": -173.8618,
-      "max_y_mm": 173.5751,
-      "max_radius_mm": 174.20056412644018,
-      "xy_moves": 69064
+      "min_x_mm": -154.5176,
+      "max_x_mm": 152.5504,
+      "min_y_mm": -149.832,
+      "max_y_mm": 156.4264,
+      "max_radius_mm": 174.2038162356382,
+      "xy_moves": 69871
     },
     "c": {
-      "min_x_mm": -171.0288,
-      "max_x_mm": 169.2117,
-      "min_y_mm": -148.5816,
-      "max_y_mm": 172.556,
-      "max_radius_mm": 174.24046725557182,
-      "xy_moves": 48805
+      "min_x_mm": -173.5851,
+      "max_x_mm": 174.2487,
+      "min_y_mm": -174.1346,
+      "max_y_mm": 165.3178,
+      "max_radius_mm": 174.36387018568382,
+      "xy_moves": 39229
     },
     "k": {
-      "min_x_mm": -144.9576,
-      "max_x_mm": 145.9968,
-      "min_y_mm": -144.2514,
-      "max_y_mm": 145.5244,
-      "max_radius_mm": 174.1135829830631,
-      "xy_moves": 5041
+      "min_x_mm": -171.3569,
+      "max_x_mm": 171.0486,
+      "min_y_mm": -171.9798,
+      "max_y_mm": 170.6443,
+      "max_radius_mm": 174.2357848600568,
+      "xy_moves": 37234
     }
   },
   "set_verification": {
@@ -191,9 +192,7 @@
     "prepare": [],
     "separation": [],
     "direction": [],
-    "streamlines": [
-      "Effective pitch is below the pen-safe centerline floor."
-    ],
+    "streamlines": [],
     "ink": [],
     "paths": [],
     "motion": [],
@@ -232,33 +231,32 @@
         "04-black"
       ],
       "image_controls": {
-        "auto_levels": true,
-        "saturation_pct": 92.0,
-        "contrast_pct": 118.0,
-        "brightness_pct": 112.0,
-        "gamma": 1.05,
-        "gcr_pct": 28.0,
+        "auto_levels": false,
+        "saturation_pct": 106.0,
+        "contrast_pct": 122.0,
+        "brightness_pct": 100.0,
+        "gamma": 1.0,
+        "gcr_pct": 65.0,
         "resolution_px": 10000,
         "sharpen": true,
-        "sharpen_pct": 45.0,
-        "sharpen_radius_mm": 0.8,
+        "sharpen_pct": 60.0,
+        "sharpen_radius_mm": 1.5,
         "weights_pct": {
           "c": 100.0,
-          "m": 95.0,
-          "y": 90.0,
-          "k": 30.0
+          "m": 100.0,
+          "y": 100.0,
+          "k": 100.0
         }
       }
     }
   },
   "comparison_preview": {
     "file": "Golden Sunset Winter Family Selfie-cmyk-comparison.jpg",
-    "bytes": 544895,
-    "sha256": "bd98d6acd395689cdec9300332027c0cf1537338f21213cacb7b136fd3d65740"
+    "bytes": 536109,
+    "sha256": "3fe691f26589b279aa9697140a6d9d8646f6fc8f20ba2dd4de087de3b30cca6f"
   },
   "limitations": [
     "Digital/headless export verification only.",
-    "No physical four-pass paper registration or ink-density validation was performed.",
-    "The controlled comparison preserves faces and facial structure, but individual teeth are not yet distinguishable at contact-sheet scale."
+    "No physical four-pass paper registration or ink-density validation was performed."
   ]
 }

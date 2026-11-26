@@ -1,5 +1,59 @@
 # Engineering Log
 
+<a id="elog-20261126-precision-cmyk-skin-and-teeth"></a>
+### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Correct precision CMYK skin and facial detail
+
+- The 2026-11-25 Golden Sunset precision set was rejected as a color candidate.
+  The headless comparison mapped the C/M/Y/K transmittance matrix onto the
+  Y/M/C/K print layers, so Yellow received Cyan's blue absorption and Cyan
+  received Yellow's response. A representative face patch moved from
+  `[207, 131, 104]` to `[147, 127, 173]`, approximately `-60 Red / +69 Blue`.
+- The source comparison panel had also stretched across the page while the
+  process render retained the `5 mm` margin. Both now share the same
+  aspect-fit page geometry. This changed only evidence rendering; G-code
+  registration, page placement, Y/M/C/K order, transactional publication, and
+  bed compensation were preserved.
+- Correcting color exposed a second failure: the precision recipe inherited
+  auto levels and used brightness/saturation/contrast `112/92/118 %`, gamma
+  `1.05`, GCR `28 %`, and M/Y/K weights `95/90/30 %`. The selected controls are
+  now auto levels off, `100/106/122 %`, gamma `1.00`, GCR `65 %`, a `60 % /
+  1.50 mm` unsharp mask, and all four weights at `100 %`.
+- Precision marks now move toward each ink's local tone centroid within the
+  cell. A cell can remain paper when a broad positive highlight covers at least
+  `40 %` of its footprint with local detail `>= 0.16` and scene luma `>= 0.45`.
+  This preserves eyes, glasses, smile boundaries, and tooth bands better than
+  the prior center-only cell marks.
+- Five representative skin patches improve from about `9.9` to `8.4` mean RGB
+  levels of error after correct rendering. Mean eye/mouth gradient correlation
+  rises from about `0.097` to `0.140`. A `387175`-byte three-face crop keeps
+  the three smiles and white tooth bands visible without the violet cast.
+- A blanket maximum-pixel highlight knockout removed `35-46 %` of marks and
+  destroyed facial structure. Joint 16-state color quantization reduced Cyan
+  coverage from about `19 %` to `7 %`; coherent and edge-streamline Black
+  overlays darkened skin without recovering the child's tooth gaps. All were
+  rejected in favor of the area-gated highlight and centroid shift.
+- The regenerated set is deterministic. Y/M/C/K mark counts are
+  `26250/23293/13079/12414` (`75036` total); the submitted `0.35 mm` pitch
+  resolves to `0.987654 mm`; maximum XY radii remain below `174.41 mm`; and
+  workflow validation reports no issues. Manifest and verification now retain
+  the resolved pitch and detail settings.
+- `tools/check_gcode_motion.py --strict` passes all four programs. Largest
+  per-move bed rotation is `2.05 deg`; largest A demand is `269 motor deg/s`;
+  every program has zero over-tolerance moves at `0.05 mm` and no bare `G0`
+  rotation.
+- Focused CMYK edge-flow, tab, and headless paths pass `111` tests. Physical
+  paper validation remains unavailable, so hue, density, registration, drag,
+  elapsed time, overprint texture, and sub-pen tooth separation remain open.
+  The complete focused CMYK suite passes `177`; converter discovery passes
+  `755` tests with one expected OpenGL-context skip; Python compilation passes.
+- Evidence: `WSW-20261126-002`;
+  `docs/changes/windows-software/2026/2026-11-26-precision-cmyk-skin-and-teeth.md`;
+  `samples/gcode/fam-precision-2026-11-25/Golden Sunset Winter Family
+  Selfie-cmyk-verification.json`.
+- Category: windows-software, cmyk, precision-screen, color-rendering, skin,
+  facial-detail, teeth, highlight-preservation, headless-export, deterministic,
+  physical-validation-pending.
+
 <a id="elog-20261125-headless-precision-cmyk-export"></a>
 ### 🟨 2026-11-25 - WINDOWS SOFTWARE/VERIFIED DIGITALLY - Export the precision CMYK milestone headlessly
 

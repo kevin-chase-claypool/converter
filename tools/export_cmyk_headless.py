@@ -666,7 +666,7 @@ def _render_layers(
     scale_y = (height * supersample) / float(height_mm)
     stroke = max(1, round(float(pen_width_mm) * (scale_x + scale_y) / 2.0))
     transmittances = converter.ink_transmittance_matrix(ink_colors)
-    transmittance_by_ink = dict(zip(PRINT_CHANNELS, transmittances))
+    transmittance_by_ink = dict(zip(converter.CHANNELS, transmittances))
     for channel in PRINT_CHANNELS:
         mask = Image.new("L", work.size, 0)
         draw = ImageDraw.Draw(mask)
@@ -713,6 +713,42 @@ def _fit_panel(image, size: int):
     return panel
 
 
+def _page_source_panel(
+    image,
+    page_width_mm: float,
+    page_height_mm: float,
+    margin_mm: float,
+    size: int,
+):
+    """Place the source image in the same paper frame as its G-code layers."""
+    from PIL import Image, ImageOps
+
+    image = ImageOps.exif_transpose(image).convert("RGBA")
+    paper = Image.new("RGBA", image.size, (255, 255, 255, 255))
+    image = Image.alpha_composite(paper, image).convert("RGB")
+    draw_width_mm = max(1.0, float(page_width_mm) - 2.0 * float(margin_mm))
+    draw_height_mm = max(1.0, float(page_height_mm) - 2.0 * float(margin_mm))
+    scale = min(
+        draw_width_mm / max(1, image.width),
+        draw_height_mm / max(1, image.height),
+    )
+    width = max(1, round(image.width * scale / page_width_mm * size))
+    height = max(1, round(image.height * scale / page_height_mm * size))
+    offset_x = round(
+        (size - image.width * scale / page_width_mm * size) / 2.0
+    )
+    offset_y = round(
+        (size - image.height * scale / page_height_mm * size) / 2.0
+    )
+    fitted = image.resize(
+        (width, height),
+        Image.Resampling.LANCZOS,
+    )
+    panel = Image.new("RGB", (size, size), "white")
+    panel.paste(fitted, (offset_x, offset_y))
+    return panel
+
+
 def write_comparison_preview(
     source: Path,
     reference: Path | None,
@@ -722,6 +758,7 @@ def write_comparison_preview(
     *,
     width_mm: float,
     height_mm: float,
+    margin_mm: float,
     pen_width_mm: float,
     ink_colors,
 ) -> Path:
@@ -756,7 +793,16 @@ def write_comparison_preview(
         pixels=panel_size,
     )
     panels = [
-        ("Source", _fit_panel(source_image, panel_size)),
+        (
+            "Source",
+            _page_source_panel(
+                source_image,
+                width_mm,
+                height_mm,
+                margin_mm,
+                panel_size,
+            ),
+        ),
         ("Coherent color flow", _fit_panel(coherent_image, panel_size)),
         ("Precision process (final)", _fit_panel(process_image, panel_size)),
     ]
@@ -888,6 +934,7 @@ def run_headless_export(options: ExportOptions) -> dict[str, Any]:
                 preview_path,
                 width_mm=float(normalized_options.page_mm),
                 height_mm=float(normalized_options.page_mm),
+                margin_mm=float(normalized_options.margin_mm),
                 pen_width_mm=float(normalized_options.pen_width_mm),
                 ink_colors=tab._active_ink_colors(),
             )
@@ -963,6 +1010,12 @@ def run_headless_export(options: ExportOptions) -> dict[str, Any]:
                 "scale_pct": normalized_options.scale_pct,
                 "pen_width_mm": normalized_options.pen_width_mm,
                 "requested_pitch_mm": normalized_options.pitch_mm,
+                "effective_pitch_mm": verification["manifest"][
+                    "screen"
+                ].get(
+                    "effective_pitch_mm",
+                    normalized_options.pitch_mm,
+                ),
                 "path_tolerance_mm": normalized_options.path_tolerance_mm,
                 "max_marks": normalized_options.max_marks,
                 "seed": normalized_options.seed,

@@ -1,7 +1,7 @@
 {
   "kind": "cmyk-print-set",
   "version": 8,
-  "created": "2026-11-25T23:37:48",
+  "created": "2026-11-26T09:08:15",
   "print_order": [
     "01-yellow",
     "02-magenta",
@@ -27,8 +27,8 @@
     "current_stage": "review",
     "stage_settings_sha256": {
       "composition": "b3da1a1ca4eda8d2c426bb022e3f2d4e545ccf31db08e891097539e6e04511bf",
-      "prepare": "1cbc36a9c93d8c03592299a444220f0fef394345aad6acab54a8efdf2bf2a602",
-      "separation": "20ede2421188d980b7deb2a57d6891c873a2a6264b6a6fa02d5c46837dcd3d10",
+      "prepare": "21c7be2306f9dec3aa5d54f19a6b5bc62c988f66ad84cd900b0cc293fe214bd4",
+      "separation": "02cb99c0c12011b87c572eafd2a864e57d109367c1f5359d5696d19b9f3deba3",
       "direction": "3a6779f64dd9fdf3627a1f5d3222f2ee52494364e3621b243d09687c0944b8cf",
       "streamlines": "986476b4bb0f73d7e65b8ec852281e04a56e949b812923fbc3ec7a1a94d79ef7",
       "ink": "89699c0363e3c77752e9ae6eb932b4c97741e6e579245450edd343015b8d5724",
@@ -94,7 +94,7 @@
     "style_label": "Precision process screen (fine CMYK cells)",
     "dot_pitch_mm": 0.35,
     "artwork_scale_pct": 100.0,
-    "effective_pitch_mm": 0.35,
+    "effective_pitch_mm": 0.9876543209876543,
     "preserve_exact_row_pitch": false,
     "wave_frequency_mode": "constant",
     "wave_frequency_variation_pct": 0.0,
@@ -113,6 +113,14 @@
     "coherent_color_mix_ratio": null,
     "process_color_cell_pitch_mm": 0.35,
     "process_color_edge_threshold": 0.84,
+    "process_color_highlight_protection": {
+      "enabled": true,
+      "detail_threshold": 0.16,
+      "area_fraction": 0.4,
+      "smoothing_radius_mm": 1.5,
+      "luma_floor": 0.45
+    },
+    "process_color_detail_alignment": 1.0,
     "tone_gap_bridge": {
       "enabled": false,
       "max_gap_mm": 0.0,
@@ -126,8 +134,8 @@
       "local_flow_bridge_mm": 0.0,
       "channels": {
         "c": {
-          "before": 16263,
-          "after": 16263,
+          "before": 13071,
+          "after": 13071,
           "joined": 0,
           "connections": 0,
           "bridged_mm": 0.0,
@@ -135,8 +143,8 @@
           "enabled": false
         },
         "m": {
-          "before": 23016,
-          "after": 23016,
+          "before": 23285,
+          "after": 23285,
           "joined": 0,
           "connections": 0,
           "bridged_mm": 0.0,
@@ -144,8 +152,8 @@
           "enabled": false
         },
         "y": {
-          "before": 23915,
-          "after": 23915,
+          "before": 26242,
+          "after": 26242,
           "joined": 0,
           "connections": 0,
           "bridged_mm": 0.0,
@@ -153,8 +161,8 @@
           "enabled": false
         },
         "k": {
-          "before": 1675,
-          "after": 1675,
+          "before": 12406,
+          "after": 12406,
           "joined": 0,
           "connections": 0,
           "bridged_mm": 0.0,
@@ -181,18 +189,18 @@
     "wave_phase_mode": null
   },
   "ink_processing": {
-    "auto_levels": true,
-    "saturation_pct": 92.0,
-    "contrast_pct": 118.0,
-    "brightness_pct": 112.0,
-    "gamma": 1.05,
-    "gcr_pct": 28.0,
+    "auto_levels": false,
+    "saturation_pct": 106.0,
+    "contrast_pct": 122.0,
+    "brightness_pct": 100.0,
+    "gamma": 1.0,
+    "gcr_pct": 65.0,
     "resolution_px": 10000,
     "weights": {
       "c": 1.0,
-      "m": 0.95,
-      "y": 0.9,
-      "k": 0.3
+      "m": 1.0,
+      "y": 1.0,
+      "k": 1.0
     },
     "color_model": "process-ink-multiply-v1",
     "calibration_identity": "cb81f97cd2989152a445e07bbb7ef2ac9d139ae2827fffd2a381c255916652ad",
@@ -220,8 +228,8 @@
     },
     "sharpening": {
       "enabled": true,
-      "amount_pct": 45.0,
-      "radius_mm": 0.8
+      "amount_pct": 60.0,
+      "radius_mm": 1.5
     }
   },
   "notes": "Pen offsets apply to artwork programs and the preview only; the calibration sheet keeps its geometric layout.",
@@ -232,60 +240,122 @@
     "k": "Golden Sunset Winter Family Selfie-cmyk-04-black.gcode"
   },
   "file_sha256": {
-    "y": "419807d6bce806406c319e125f09e6d10cbed012f64d69631074895b8fb44a3b",
-    "m": "850f412ebe21b94ab94121a37322accfd28b03ab517d413781f1c050dac4f32e",
-    "c": "df09f94fb4bd59fcbd0fd9dfd81e3c7bff7ff8bf07d24e2a6bccd8c85263aca4",
-    "k": "dc8194fc56b149c7837fea00492116ba39c840b86dad74ed825204c527a44e8e"
+    "y": "e00cc435f4aeaf6b1ccb4cb6ddc36c455ae514494842b94855d610a3244a9e77",
+    "m": "a33d934643469ceaf93a1f7259df69470f0b45b6eb42d0c87b14b3ed1823e158",
+    "c": "569c9e874c51d3296d295a9390804f09a5ca4486aa12846a77304548a34b482e",
+    "k": "c65c35bb21ca934a5c928d325a0993241ebdefdff3cad2c7a2857b906f26436b"
   },
   "program_geometry": {
     "y": {
-      "marks": 23923,
-      "moves": 88425,
-      "draw_mm": 150452.41423816397,
-      "x_theta_moves": 24228,
-      "y_theta_moves": 21059
+      "marks": 26250,
+      "moves": 94437,
+      "draw_mm": 162859.03260914123,
+      "x_theta_moves": 26048,
+      "y_theta_moves": 23336
     },
     "m": {
-      "marks": 23024,
-      "moves": 85839,
-      "draw_mm": 138465.4409541064,
-      "x_theta_moves": 18511,
-      "y_theta_moves": 25224
+      "marks": 23293,
+      "moves": 85914,
+      "draw_mm": 143942.85347829812,
+      "x_theta_moves": 17336,
+      "y_theta_moves": 26641
     },
     "c": {
-      "marks": 16271,
-      "moves": 63339,
-      "draw_mm": 100311.30574986883,
-      "x_theta_moves": 13325,
-      "y_theta_moves": 18439
+      "marks": 13079,
+      "moves": 52056,
+      "draw_mm": 78398.870984993,
+      "x_theta_moves": 13327,
+      "y_theta_moves": 12319
     },
     "k": {
-      "marks": 1683,
-      "moves": 9654,
-      "draw_mm": 10266.946148045887,
-      "x_theta_moves": 1369,
-      "y_theta_moves": 1893
+      "marks": 12414,
+      "moves": 51786,
+      "draw_mm": 75883.28213149695,
+      "x_theta_moves": 13464,
+      "y_theta_moves": 10690
     }
   },
   "preflight": {
     "y": {
-      "drawing": 66207,
-      "travel": 5553,
-      "hold": 2551,
+      "drawing": 73511,
+      "travel": 5230,
+      "hold": 3108,
       "strategies": {
-        "travel": 5554,
-        "hold": 2551,
-        "x_theta": 24228,
-        "y_theta": 21059
+        "travel": 5231,
+        "hold": 3108,
+        "x_theta": 26048,
+        "y_theta": 23336
       },
-      "step": 2.0604176431285337,
-      "step_line": 84791,
-      "rate": 268.7048215420594,
-      "rate_line": 84553,
+      "step": 2.050702886338177,
+      "step_line": 242,
+      "rate": 269.4278760807303,
+      "rate_line": 242,
       "deviation": [
-        0.015510104400229936,
-        172.88912078526235,
-        123066,
+        0.03989221106762922,
+        172.25786950465803,
+        131037,
+        "x_theta"
+      ],
+      "tolerance": 0.05,
+      "over_tolerance": 0,
+      "rapids_with_rotation": 0,
+      "fed_rotations": 0,
+      "unwinds": 0,
+      "cap": 15.0,
+      "rate_cap": 500.0,
+      "max_xy_radius_mm": 174.27234766723606,
+      "max_xy_radius_line": 130955,
+      "machine_reach_radius_mm": 180.0
+    },
+    "m": {
+      "drawing": 64524,
+      "travel": 5346,
+      "hold": 2601,
+      "strategies": {
+        "travel": 5347,
+        "hold": 2601,
+        "y_theta": 26641,
+        "x_theta": 17336
+      },
+      "step": 2.023494919074174,
+      "step_line": 82528,
+      "rate": 268.26949806361307,
+      "rate_line": 56683,
+      "deviation": [
+        0.035650950535775404,
+        172.63489733314586,
+        119889,
+        "x_theta"
+      ],
+      "tolerance": 0.05,
+      "over_tolerance": 0,
+      "rapids_with_rotation": 0,
+      "fed_rotations": 11,
+      "unwinds": 11,
+      "cap": 15.0,
+      "rate_cap": 500.0,
+      "max_xy_radius_mm": 174.2038162356382,
+      "max_xy_radius_line": 119731,
+      "machine_reach_radius_mm": 180.0
+    },
+    "c": {
+      "drawing": 34954,
+      "travel": 4274,
+      "hold": 504,
+      "strategies": {
+        "travel": 4275,
+        "hold": 504,
+        "x_theta": 13327,
+        "y_theta": 12319
+      },
+      "step": 1.9880264999285313,
+      "step_line": 1554,
+      "rate": 268.6817137035713,
+      "rate_line": 57577,
+      "deviation": [
+        0.02245708255396681,
+        172.86657292778995,
+        61025,
         "y_theta"
       ],
       "tolerance": 0.05,
@@ -295,91 +365,29 @@
       "unwinds": 0,
       "cap": 15.0,
       "rate_cap": 500.0,
-      "max_xy_radius_mm": 174.38303800370036,
-      "max_xy_radius_line": 123070,
-      "machine_reach_radius_mm": 180.0
-    },
-    "m": {
-      "drawing": 63473,
-      "travel": 5590,
-      "hold": 2305,
-      "strategies": {
-        "travel": 5591,
-        "hold": 2305,
-        "y_theta": 25224,
-        "x_theta": 18511
-      },
-      "step": 1.8323743231249339,
-      "step_line": 92031,
-      "rate": 268.89272672403763,
-      "rate_line": 62047,
-      "deviation": [
-        0.015354141220138619,
-        172.6323141126317,
-        120057,
-        "x_theta"
-      ],
-      "tolerance": 0.05,
-      "over_tolerance": 0,
-      "rapids_with_rotation": 0,
-      "fed_rotations": 38,
-      "unwinds": 38,
-      "cap": 15.0,
-      "rate_cap": 500.0,
-      "max_xy_radius_mm": 174.20056412644018,
-      "max_xy_radius_line": 120033,
-      "machine_reach_radius_mm": 180.0
-    },
-    "c": {
-      "drawing": 43961,
-      "travel": 4843,
-      "hold": 770,
-      "strategies": {
-        "travel": 4844,
-        "hold": 770,
-        "y_theta": 18439,
-        "x_theta": 13325
-      },
-      "step": 2.0112621372132526,
-      "step_line": 82533,
-      "rate": 268.3549829764479,
-      "rate_line": 74322,
-      "deviation": [
-        0.018618762777542066,
-        172.53822470995857,
-        89310,
-        "x_theta"
-      ],
-      "tolerance": 0.05,
-      "over_tolerance": 0,
-      "rapids_with_rotation": 0,
-      "fed_rotations": 0,
-      "unwinds": 0,
-      "cap": 15.0,
-      "rate_cap": 500.0,
-      "max_xy_radius_mm": 174.24046725557182,
-      "max_xy_radius_line": 89214,
+      "max_xy_radius_mm": 174.36387018568382,
+      "max_xy_radius_line": 61029,
       "machine_reach_radius_mm": 180.0
     },
     "k": {
-      "drawing": 3504,
-      "travel": 1536,
-      "hold": 96,
+      "drawing": 32384,
+      "travel": 4849,
+      "hold": 666,
       "strategies": {
-        "travel": 1537,
-        "hold": 96,
-        "x_theta": 1369,
-        "y_theta": 1893
+        "travel": 4850,
+        "hold": 666,
+        "y_theta": 10690,
+        "x_theta": 13464
       },
-      "step": 1.9839959977528907,
-      "step_line": 11081,
-      "rate": 268.09683207133247,
-      "rate_line": 11081,
+      "step": 1.7406533901093961,
+      "step_line": 48216,
+      "rate": 269.3073673723752,
+      "rate_line": 18270,
       "deviation": [
-        0.013006219237616917,
-        172.45776479491911,
-        14375,
-        "x_theta"
+        0.018034112364448737,
+        172.73470483638351,
+        73686,
+        "y_theta"
       ],
       "tolerance": 0.05,
       "over_tolerance": 0,
@@ -388,8 +396,8 @@
       "unwinds": 0,
       "cap": 15.0,
       "rate_cap": 500.0,
-      "max_xy_radius_mm": 174.1135829830631,
-      "max_xy_radius_line": 14415,
+      "max_xy_radius_mm": 174.2357848600568,
+      "max_xy_radius_line": 73686,
       "machine_reach_radius_mm": 180.0
     }
   },

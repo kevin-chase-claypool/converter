@@ -485,6 +485,19 @@ class CmykTabTests(unittest.TestCase):
         self.assertTrue(captured["kwargs"]["edge_keylines"])
         self.assertEqual(captured["kwargs"]["edge_threshold"], 0.84)
         self.assertEqual(captured["kwargs"]["seed"], tab.seed.value())
+        self.assertTrue(captured["kwargs"]["protect_highlights"])
+        self.assertAlmostEqual(
+            captured["kwargs"]["highlight_detail"],
+            converter.PROCESS_AREA_HIGHLIGHT_DETAIL,
+        )
+        self.assertAlmostEqual(
+            captured["kwargs"]["highlight_fraction"],
+            converter.PROCESS_AREA_HIGHLIGHT_FRACTION,
+        )
+        self.assertAlmostEqual(
+            captured["kwargs"]["detail_alignment"],
+            converter.PROCESS_AREA_DETAIL_ALIGNMENT,
+        )
         self.assertEqual(len(set(tab._layer_files.values())), 4)
 
     def test_process_color_area_recipe_applies_full_density_controls(self):
@@ -502,8 +515,26 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(tab.max_marks.value(), 800000)
         self.assertAlmostEqual(tab.chain_gap.value(), 1.0)
         self.assertEqual(tab.tone_bridge.value(), 0.0)
-        self.assertAlmostEqual(tab.contrast.value(), 118.0)
-        self.assertAlmostEqual(tab.gcr.value(), 28.0)
+        self.assertAlmostEqual(tab.contrast.value(), 122.0)
+        self.assertAlmostEqual(tab.gcr.value(), 65.0)
+        self.assertFalse(tab.auto_levels.isChecked())
+        self.assertAlmostEqual(tab.brightness.value(), 100.0)
+        self.assertAlmostEqual(tab.saturation.value(), 106.0)
+        self.assertAlmostEqual(tab.gamma.value(), 1.0)
+        self.assertAlmostEqual(tab.sharpen_amount.value(), 60.0)
+        self.assertAlmostEqual(tab.sharpen_radius.value(), 1.5)
+        self.assertEqual(
+            [
+                spin.value()
+                for spin in (
+                    tab.weight_c,
+                    tab.weight_m,
+                    tab.weight_y,
+                    tab.weight_k,
+                )
+            ],
+            [100.0, 100.0, 100.0, 100.0],
+        )
 
     def test_fine_detail_uses_two_mm_tone_segments_on_paper(self):
         tab = self.make_tab()

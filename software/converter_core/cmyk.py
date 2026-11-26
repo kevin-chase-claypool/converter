@@ -208,6 +208,11 @@ SCREEN_ANGLES_DEG = {"c": 15.0, "m": 75.0, "y": 0.0, "k": 45.0}
 # Below this ink coverage a mark is dropped so paper stays clean.
 INK_FLOOR = 0.06
 _PROCESS_AREA_DITHER_JITTER = 0.15
+PROCESS_AREA_HIGHLIGHT_RADIUS_MM = 1.5
+PROCESS_AREA_HIGHLIGHT_DETAIL = 0.16
+PROCESS_AREA_HIGHLIGHT_FRACTION = 0.40
+PROCESS_AREA_HIGHLIGHT_LUMA_FLOOR = 0.45
+PROCESS_AREA_DETAIL_ALIGNMENT = 1.0
 # Preserve broad vertical image tone in wave height, but average over enough
 # rows that row-frequency detail cannot make neighbouring curves jitter.
 WAVE_DEPTH_ROW_WINDOW = 7
@@ -2035,6 +2040,174 @@ def _grid_samples(field, geometry, columns, rows):
     return np.asarray(field)[row_index[:, None], col_index[None, :]]
 
 
+def process_color_area_grid(
+    geometry,
+    spacing_mm,
+    pen_diameter_mm,
+):
+    """Return the shared process-cell grid and its source-space pitch."""
+    left = float(geometry["off_x"])
+    top = float(geometry["off_y"])
+    right = left + float(geometry["width_mm"])
+    bottom = top + float(geometry["height_mm"])
+    if right <= left or bottom <= top:
+        raise ValueError("Process-cell geometry has no usable area.")
+    pen_mm = max(0.05, float(pen_diameter_mm))
+    spacing = max(
+        pen_mm * 1.10,
+        max(0.20, float(spacing_mm)),
+    )
+    width = max(2, int(math.ceil((right - left) / spacing)))
+    height = max(2, int(math.ceil((bottom - top) / spacing)))
+    cell_x = (right - left) / width
+    cell_y = (bottom - top) / height
+    return width, height, cell_x, cell_y, spacing
+
+
+def _process_highlight_cells(
+    depth,
+    geometry,
+    width,
+    height,
+    cell_x,
+    cell_y,
+    *,
+    detail_threshold=PROCESS_AREA_HIGHLIGHT_DETAIL,
+    area_fraction=PROCESS_AREA_HIGHLIGHT_FRACTION,
+    radius_mm=PROCESS_AREA_HIGHLIGHT_RADIUS_MM,
+    luma_floor=PROCESS_AREA_HIGHLIGHT_LUMA_FLOOR,
+):
+    """Mark cells whose footprint contains a broad positive highlight."""
+    import numpy as np
+    from PIL import Image, ImageFilter
+
+    depth_values = np.asarray(depth, dtype=np.float32)
+    if depth_values.ndim != 2:
+        return np.zeros((height, width), dtype=bool)
+    luma = np.clip(1.0 - depth_values, 0.0, 1.0)
+    rows, cols = luma.shape
+    if rows < 1 or cols < 1:
+        return np.zeros((height, width), dtype=bool)
+    mm_per_px = 0.5 * (
+        float(geometry["width_mm"]) / max(1, cols)
+        + float(geometry["height_mm"]) / max(1, rows)
+    )
+    blur_px = max(1.0, float(radius_mm) / max(mm_per_px, 1e-6))
+    image = Image.fromarray(
+        np.rint(luma * 255.0).astype(np.uint8),
+        mode="L",
+    )
+    background = (
+        np.asarray(image.filter(ImageFilter.GaussianBlur(blur_px)), dtype=np.float32)
+        / 255.0
+    )
+    detail = np.maximum(luma - background, 0.0)
+    bright = detail >= max(0.0, float(detail_threshold))
+    bright &= luma >= min(1.0, max(0.0, float(luma_floor)))
+    fraction = min(1.0, max(0.0, float(area_fraction)))
+    protected = np.zeros((height, width), dtype=bool)
+    for row in range(height):
+        top = float(geometry["off_y"]) + row * cell_y
+        bottom = top + cell_y
+        top_px = max(
+            0,
+            int(
+                (top - float(geometry["off_y"]))
+                / max(1e-9, float(geometry["height_mm"]))
+                * rows
+            ),
+        )
+        bottom_px = min(
+            rows,
+            int(
+                math.ceil(
+                    (bottom - float(geometry["off_y"]))
+                    / max(1e-9, float(geometry["height_mm"]))
+                    * rows
+                )
+            ),
+        )
+        for column in range(width):
+            left = float(geometry["off_x"]) + column * cell_x
+            right = left + cell_x
+            left_px = max(
+                0,
+                int(
+                    (left - float(geometry["off_x"]))
+                    / max(1e-9, float(geometry["width_mm"]))
+                    * cols
+                ),
+            )
+            right_px = min(
+                cols,
+                int(
+                    math.ceil(
+                        (right - float(geometry["off_x"]))
+                        / max(1e-9, float(geometry["width_mm"]))
+                        * cols
+                    )
+                ),
+            )
+            local = bright[top_px:bottom_px, left_px:right_px]
+            protected[row, column] = bool(
+                local.size and float(local.mean()) >= fraction
+            )
+    return protected
+
+
+def _tone_centroid_offset(
+    tone,
+    geometry,
+    center_x,
+    center_y,
+    cell_x,
+    cell_y,
+):
+    """Offset a cell mark toward the source ink inside that cell."""
+    import numpy as np
+
+    rows, cols = np.asarray(tone).shape
+    left = float(geometry["off_x"])
+    top = float(geometry["off_y"])
+    width = max(1e-9, float(geometry["width_mm"]))
+    height = max(1e-9, float(geometry["height_mm"]))
+    left_px = max(0, int((center_x - cell_x * 0.5 - left) / width * cols))
+    right_px = min(
+        cols,
+        int(
+            math.ceil(
+                (center_x + cell_x * 0.5 - left) / width * cols
+            )
+        ),
+    )
+    top_px = max(0, int((center_y - cell_y * 0.5 - top) / height * rows))
+    bottom_px = min(
+        rows,
+        int(
+            math.ceil(
+                (center_y + cell_y * 0.5 - top) / height * rows
+            )
+        ),
+    )
+    patch = np.asarray(
+        tone[top_px:bottom_px, left_px:right_px],
+        dtype=np.float64,
+    )
+    if patch.size == 0:
+        return 0.0, 0.0
+    total = float(patch.sum())
+    if total <= 1e-9:
+        return 0.0, 0.0
+    row_index, column_index = np.indices(patch.shape)
+    target_x = left + (
+        float((column_index * patch).sum()) / total + left_px + 0.5
+    ) * width / cols
+    target_y = top + (
+        float((row_index * patch).sum()) / total + top_px + 0.5
+    ) * height / rows
+    return target_x - center_x, target_y - center_y
+
+
 def _coverage_masks(coverage, seed=0):
     """Error-diffuse independent plate coverages into one ink subset per cell."""
     import numpy as np
@@ -2111,6 +2284,10 @@ def screen_process_color_area_cmyk(
     max_marks=800000,
     seed=0,
     overdraw=1,
+    protect_highlights=True,
+    highlight_detail=PROCESS_AREA_HIGHLIGHT_DETAIL,
+    highlight_fraction=PROCESS_AREA_HIGHLIGHT_FRACTION,
+    detail_alignment=PROCESS_AREA_DETAIL_ALIGNMENT,
 ):
     """Render one calibrated CMYK area screen with structure-guided strokes.
 
@@ -2128,16 +2305,18 @@ def screen_process_color_area_cmyk(
     right = left + float(geometry["width_mm"])
     bottom = top + float(geometry["height_mm"])
     pen_mm = max(0.05, float(pen_diameter_mm))
-    spacing = max(
-        pen_mm * 1.10,
-        max(0.20, float(spacing_mm)),
+    (
+        width,
+        height,
+        cell_x,
+        cell_y,
+        spacing,
+    ) = process_color_area_grid(
+        geometry,
+        spacing_mm,
+        pen_mm,
     )
     cap = max(16, int(max_marks))
-
-    width = max(2, int(math.ceil((right - left) / spacing)))
-    height = max(2, int(math.ceil((bottom - top) / spacing)))
-    cell_x = (right - left) / width
-    cell_y = (bottom - top) / height
     columns = left + (np.arange(width, dtype=np.float64) + 0.5) * cell_x
     rows = top + (np.arange(height, dtype=np.float64) + 0.5) * cell_y
     tone_grid = {
@@ -2210,12 +2389,25 @@ def screen_process_color_area_cmyk(
         ],
         axis=-1,
     )
+    if protect_highlights:
+        protected = _process_highlight_cells(
+            tones.get("depth", 1.0),
+            geometry,
+            width,
+            height,
+            cell_x,
+            cell_y,
+            detail_threshold=highlight_detail,
+            area_fraction=highlight_fraction,
+        )
     masks = _coverage_masks(coverage, seed)
 
     # Ink-free paper is forced to the empty subset after diffusion so an error
     # at a silhouette cannot scatter marks into the page margin.
     active = np.any(coverage > INK_FLOOR, axis=-1)
     masks[~active, :] = False
+    if protect_highlights:
+        masks[protected, :] = False
 
     counts = np.count_nonzero(masks, axis=(0, 1))
     largest = int(counts.max(initial=0))
@@ -2233,6 +2425,10 @@ def screen_process_color_area_cmyk(
             max_marks=cap,
             seed=seed,
             overdraw=overdraw,
+            protect_highlights=protect_highlights,
+            highlight_detail=highlight_detail,
+            highlight_fraction=highlight_fraction,
+            detail_alignment=detail_alignment,
         )
 
     marks = {channel: [] for channel in CHANNELS}
@@ -2250,6 +2446,41 @@ def screen_process_color_area_cmyk(
         channel: math.sin(fallback[channel])
         for channel in CHANNELS
     }
+    alignment = min(1.0, max(0.0, float(detail_alignment)))
+    aligned_weights = {
+        channel: tones[channel]
+        for channel in CHANNELS
+    }
+    if edge_keylines and float(detail_alignment) > 0.0:
+        from PIL import Image
+
+        edge_floor = min(
+            0.99,
+            max(0.0, float(edge_threshold)),
+        )
+        edge_weight_values = np.clip(
+            (np.asarray(keyline, dtype=np.float32) - edge_floor)
+            / max(1e-6, 1.0 - edge_floor),
+            0.0,
+            1.0,
+        ) * 0.88
+        edge_weight = np.asarray(
+            Image.fromarray(
+                edge_weight_values,
+                mode="F",
+            ).resize(
+                (
+                    aligned_weights["k"].shape[1],
+                    aligned_weights["k"].shape[0],
+                ),
+                Image.Resampling.BILINEAR,
+            ),
+            dtype=np.float32,
+        )
+        aligned_weights["k"] = np.maximum(
+            tones["k"],
+            edge_weight,
+        )
     for row in range(height):
         y = float(rows[row])
         for column in range(width):
@@ -2264,6 +2495,20 @@ def screen_process_color_area_cmyk(
             for channel_index in selected:
                 channel_index = int(channel_index)
                 channel = CHANNELS[channel_index]
+                offset_x = offset_y = 0.0
+                if alignment > 0.0:
+                    offset_x, offset_y = _tone_centroid_offset(
+                        aligned_weights[channel],
+                        geometry,
+                        x,
+                        y,
+                        cell_x,
+                        cell_y,
+                    )
+                    offset_x *= alignment
+                    offset_y *= alignment
+                mark_x = min(right, max(left, x + offset_x))
+                mark_y = min(bottom, max(top, y + offset_y))
                 if norm > 1e-8:
                     dx = (
                         guided * tangent_x / norm
@@ -2288,22 +2533,22 @@ def screen_process_color_area_cmyk(
                             (
                                 min(
                                     right,
-                                    max(left, x - dx * half_length),
+                                    max(left, mark_x - dx * half_length),
                                 ),
                                 min(
                                     bottom,
-                                    max(top, y - dy * half_length),
+                                    max(top, mark_y - dy * half_length),
                                 ),
                             ),
-                            (x, y),
+                            (mark_x, mark_y),
                             (
                                 min(
                                     right,
-                                    max(left, x + dx * half_length),
+                                    max(left, mark_x + dx * half_length),
                                 ),
                                 min(
                                     bottom,
-                                    max(top, y + dy * half_length),
+                                    max(top, mark_y + dy * half_length),
                                 ),
                             ),
                         ]

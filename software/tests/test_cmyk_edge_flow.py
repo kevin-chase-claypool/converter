@@ -345,6 +345,90 @@ class CmykEdgeFlowTests(unittest.TestCase):
         for lines in marks.values():
             self.assertLessEqual(len(lines), 100)
 
+    def test_process_color_area_preserves_broad_bright_highlights(self):
+        size = 96
+        field = self.np.full((size, size), 0.55, dtype="float32")
+        field[42:55, 42:55] = 0.12
+        tones = {
+            channel: field.copy()
+            for channel in converter.CHANNELS
+        }
+        depth = self.np.full((size, size), 0.60, dtype="float32")
+        depth[42:55, 42:55] = 0.05
+        tones["depth"] = depth
+        tones["flow_guide"] = tuple(
+            tones[channel] for channel in converter.CHANNELS
+        ) + (tones["depth"],)
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 40.0,
+            "height_mm": 40.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+        common = {
+            "spacing_mm": 1.0,
+            "pen_diameter_mm": 0.9,
+            "edge_keylines": False,
+            "max_marks": 5000,
+            "seed": 7,
+            "detail_alignment": 0.0,
+        }
+        unprotected = converter.screen_process_color_area_cmyk(
+            tones,
+            geometry,
+            protect_highlights=False,
+            **common,
+        )
+        protected = converter.screen_process_color_area_cmyk(
+            tones,
+            geometry,
+            protect_highlights=True,
+            highlight_detail=0.16,
+            highlight_fraction=0.40,
+            **common,
+        )
+
+        def center_marks(marks):
+            return sum(
+                1
+                for lines in marks.values()
+                for line in lines
+                if 18.0 <= line[len(line) // 2][0] <= 22.0
+                and 18.0 <= line[len(line) // 2][1] <= 22.0
+            )
+
+        self.assertGreater(center_marks(unprotected), 0)
+        self.assertLess(
+            center_marks(protected),
+            center_marks(unprotected),
+        )
+
+    def test_process_color_detail_alignment_moves_toward_local_ink(self):
+        from converter_core import cmyk as cmyk_core
+
+        tone = self.np.zeros((8, 8), dtype="float32")
+        tone[:, 6:] = 1.0
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 8.0,
+            "height_mm": 8.0,
+            "pixels_w": 8,
+            "pixels_h": 8,
+        }
+        offset_x, offset_y = cmyk_core._tone_centroid_offset(
+            tone,
+            geometry,
+            4.0,
+            4.0,
+            8.0,
+            8.0,
+        )
+        self.assertGreater(offset_x, 1.0)
+        self.assertAlmostEqual(offset_y, 0.0, places=6)
+
     def test_coherent_screen_forwards_exposed_flow_controls(self):
         from converter_core import cmyk as cmyk_core
 

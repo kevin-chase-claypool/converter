@@ -766,6 +766,32 @@
   `tools/export_cmyk_headless.py`, and `WSW-20261125-013`. Paper hue,
   density, overprint texture, registration, drag, and elapsed time remain
   open, so this milestone stays unchecked.
+  Status 2026-11-26 precision diagnosis: the violet skin was a comparison
+  renderer defect, not a plate-registration defect. Transmittances were stored
+  in C/M/Y/K order but multiplied onto layers in the Y/M/C/K print order; a
+  representative face patch shifted by approximately `-60` Red and `+69` Blue.
+  The source panel was also stretched across the full comparison panel instead
+  of sharing the generated image's `5 mm` page margin. Correcting both mappings
+  restored warm skin and like-for-like source/process geometry.
+  The failed candidate additionally inherited auto levels with weak
+  `92 % / 118 % / 112 %` saturation/contrast/brightness, GCR `28 %`, and
+  `95/90/30 %` M/Y/K weights. The precision recipe now uses explicit auto
+  levels off, `100/106/122 %`, GCR `65 %`, gamma `1.00`, a `60 % / 1.50 mm`
+  unsharp mask, and all four weights at `100 %`. Marks move within their cells
+  toward each ink's local tone centroid; cells with a broad positive highlight
+  (`40 %` minimum area, `0.16` local detail, `0.45` luma floor) remain paper.
+  Across five representative skin patches, mean modeled RGB error improves
+  from about `9.9` levels in the corrected prior controls to `8.4`; mean
+  eye/mouth gradient correlation rises from about `0.097` to `0.140`. The
+  three-face digital crop keeps eye/glasses structure, smiles, and tooth bands
+  visible, but individual sub-pen tooth gaps remain a paper question.
+  The regenerated deterministic set contains `26250 / 23293 / 13079 / 12414`
+  Y/M/C/K marks (`75036` total), resolves `0.35 mm` to `0.987654 mm` actual
+  pitch, and passes strict motion checking on all four files. Manifest and
+  verification now record the resolved pitch plus highlight/detail settings.
+  Evidence: `WSW-20261126-002`. Physical hue, density, registration, drag,
+  elapsed time, and felt-tip tooth separation still require one HOME + REGISTER
+  followed by the four numbered passes.
   Acceptance: print a pre-cropped portrait with the README starting recipe
   after one HOME + REGISTER; preserve the intentional `260 %` circular crop
   unless the test explicitly compares the whole-image Fit-inside layout;

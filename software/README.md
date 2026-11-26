@@ -71,7 +71,7 @@ python -m unittest -q software.tests.test_path_join
 python -m unittest discover -q -s software\tests -p "test_*.py"
 ```
 
-The complete discovery run currently contains 750 test cases. Repeated generator
+The complete discovery run currently contains 755 test cases. Repeated generator
 tab contracts retain their per-tab class names and failure locations, while
 related slow setup scenarios use subtests to avoid rebuilding the same Qt
 window or generated coupon.
@@ -105,19 +105,30 @@ motion preflight, and determinism result. It also writes one compressed
 order using the multiply ink model. The coherent comparison re-applies the
 precision recipe and changes only the screen style, so page, placement,
 registration, pen order, seed, scale, pen width, and all image controls stay
-identical. The preview is capped below `750000` bytes.
+identical. The source panel uses the same page margin and artwork fit as the
+generated marks, rather than stretching the source across the whole panel. The
+preview is capped below `750000` bytes.
 
 For a `0.90 mm` pen, the `0.35 mm` process recipe is automatically raised by
 the renderer to its `1.10` pen-width floor (`0.99 mm` spacing, `0.98765 mm`
-actual axis pitch across the 240 mm artwork area). The generated Golden Sunset
-milestone and its evidence are retained in
+actual axis pitch across the 240 mm artwork area). Both the set manifest and
+verification report now record that resolved pitch; the requested pitch remains
+the persisted layout value. The generated Golden Sunset milestone and its
+evidence are retained in
 `..\samples\gcode\fam-precision-2026-11-25\`.
 
-The controlled preview keeps all three faces, eyes, glasses, and hair structure
-that coherent flow loses, but individual teeth are not yet distinguishable at
-contact-sheet scale. Preserve the candidate set as digital evidence; choose a
-teeth/detail tuning direction and validate it on paper before promoting it as
-the production recipe.
+The precision recipe now starts with auto levels off, brightness `100 %`,
+saturation `106 %`, contrast `122 %`, gamma `1.00`, GCR `65 %`, a `60 %` /
+`1.50 mm` unsharp mask, and all four ink weights at `100 %`. Every selected
+process mark moves within its cell toward that ink's local integrated tone.
+Cells containing a broad positive highlight can remain blank after diffusion,
+preserving white features without punching a generic threshold mask through
+skin. A three-face digital crop keeps the eye/glasses structure, smiles, and
+white tooth bands that the failed candidate lost. The image-patch mean RGB
+error falls from about `9.9` levels in the corrected prior controls to `8.4`,
+while mean eye/mouth gradient correlation rises from about `0.097` to `0.140`.
+This is digital preview evidence, not a paper-resolution claim. Sub-pen tooth
+gaps and felt-tip spread still require the four-pass paper check.
 
 This is digital verification only. Running the four numbered files in order on
 one registered sheet is still required to establish paper hue, density,
@@ -735,15 +746,21 @@ Current tools:
   C/M/Y/K coverage plate is independently Floyd-Steinberg error-diffused into a
   binary ink subset per cell, so sparse highlights remain present at their
   requested average coverage instead of quantizing to paper. Each selected ink
-  draws one short three-point mark through that cell. A confidently coherent
+  draws one short three-point mark, positioned toward that ink's tone centroid
+  inside the cell rather than always at the cell centre. A confidently coherent
   structure-tensor direction orients the mark; weak fields fall back to the
   Cyan `15°`, Magenta `75°`, Yellow `0°`, and Black `45°` screen angles. Black
-  keylines raise Black coverage above the selected edge threshold. The marks
-  are clipped to the artwork page, and if one plate exceeds **Max marks per
-  ink**, the cell pitch grows before any plate is silently truncated. The
-  precision recipe starts at `0.35` pre-scale pitch, `0.05 mm` path tolerance,
-  `800000` marks per ink, scene-aware image controls, and the normal four-file
-  Y/M/C/K workflow. Its fine-cell density has not yet been paper-qualified.
+  keylines raise Black coverage above the selected edge threshold. Broad
+  positive highlights covering at least `40 %` of a cell footprint with local
+  detail `>= 0.16` and scene luma `>= 0.45` remain paper, so eyes and tooth
+  bands do not fill with unrelated process ink. The marks are clipped to the
+  artwork page, and if one plate exceeds **Max marks per ink**, the cell pitch
+  grows before any plate is silently truncated. The precision recipe starts at
+  `0.35` pre-scale pitch, `0.05 mm` path tolerance, `800000` marks per ink,
+  auto levels off, brightness `100 %`, saturation `106 %`, contrast `122 %`,
+  gamma `1.00`, GCR `65 %`, a `60 % / 1.50 mm` unsharp mask, all four weights at
+  `100 %`, and the normal four-file Y/M/C/K workflow. Its fine-cell color and
+  tooth separations have not yet been paper-qualified.
   **Edge-flow streamlines (per-ink networks)** remains available as the prior
   comparison mode. It traces four independently seeded networks through the
   same guide, with per-ink fallback angles and path-local stochastic tone
@@ -992,7 +1009,8 @@ Current tools:
   hold/mix and shadow thresholds, keyline separation, independent tone-gap
   bridge and adjacent-chain settings, per-ink preflight results, one canonical
   set-identity hash, the precision process-cell pitch and edge threshold when
-  selected, and SHA-256 hashes for all four G-code files.
+  selected, the resolved cell pitch, highlight-preservation thresholds, detail
+  alignment fraction, and SHA-256 hashes for all four G-code files.
   A non-zero artwork placement is also written into every G-code header, for
   example `(artwork placement -3.170,-28.740 mm)`. Before a multi-pass print,
   confirm that all four headers and `artwork_placement_mm` in the set manifest

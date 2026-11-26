@@ -1006,6 +1006,7 @@ class CmykTab(GeneratorTab):
         self._layer_files = {}
         self._preview_visible = []
         self._layers_key = None
+        self._process_color_effective_pitch_mm = None
         self._layers_manifest = None
         self._analysis = None
         self._analysis_key = None
@@ -2269,6 +2270,11 @@ class CmykTab(GeneratorTab):
                 if self._edge_flow_style_active()
                 else 0.9
             )
+            if self.style.currentData() == "process_area":
+                effective = max(
+                    effective,
+                    self.pen_width.value() * floor_ratio,
+                )
             if effective < self.pen_width.value() * floor_ratio:
                 issues.append(
                     "Effective pitch is below the pen-safe centerline floor."
@@ -2464,15 +2470,16 @@ class CmykTab(GeneratorTab):
                 "path_tolerance": 0.05,
                 "max_marks": 800000,
                 "image": {
-                    "brightness": 112.0,
-                    "saturation": 92.0,
-                    "contrast": 118.0,
-                    "gcr": 28.0,
-                    "gamma": 1.05,
+                    "auto_levels": False,
+                    "brightness": 100.0,
+                    "saturation": 106.0,
+                    "contrast": 122.0,
+                    "gcr": 65.0,
+                    "gamma": 1.0,
                     "sharpen": True,
-                    "sharpen_amount": 45.0,
-                    "sharpen_radius": 0.8,
-                    "weights": (100.0, 95.0, 90.0, 30.0),
+                    "sharpen_amount": 60.0,
+                    "sharpen_radius": 1.5,
+                    "weights": (100.0, 100.0, 100.0, 100.0),
                 },
             },
             "edge_flow_per_ink": {
@@ -2519,6 +2526,10 @@ class CmykTab(GeneratorTab):
                 self.max_marks.setValue(int(recipe["max_marks"]))
             image = recipe.get("image")
             if image:
+                if "auto_levels" in image:
+                    self.auto_levels.setChecked(
+                        bool(image["auto_levels"])
+                    )
                 self.brightness.setValue(float(image["brightness"]))
                 self.saturation.setValue(float(image["saturation"]))
                 self.contrast.setValue(float(image["contrast"]))
@@ -2814,6 +2825,7 @@ class CmykTab(GeneratorTab):
             raise ValueError("Import an image with the Artwork row above first.")
         factor = self.scale_pct.value() / 100.0
         style = self.style.currentData()
+        self._process_color_effective_pitch_mm = None
         edge_flow_active = style in FLOW_GUIDED_STYLES
         coherent_style = style == "edge_flow_coherent"
         tones, geometry = converter.prepare_image_tones(
@@ -2850,6 +2862,20 @@ class CmykTab(GeneratorTab):
         pen_chain_stats = {}
         shared_edge_marks = None
         if style == "process_area":
+            (
+                _grid_width,
+                _grid_height,
+                process_cell_x,
+                process_cell_y,
+                _process_spacing,
+            ) = converter.process_color_area_grid(
+                geometry,
+                self.pitch.value(),
+                self.pen_width.value() / factor,
+            )
+            self._process_color_effective_pitch_mm = (
+                0.5 * (process_cell_x + process_cell_y) * factor
+            )
             shared_edge_marks = converter.screen_process_color_area_cmyk(
                 tones,
                 geometry,
@@ -2862,6 +2888,16 @@ class CmykTab(GeneratorTab):
                 max_marks=self.max_marks.value(),
                 seed=self.seed.value(),
                 overdraw=self.overdraw.value(),
+                protect_highlights=True,
+                highlight_detail=(
+                    converter.PROCESS_AREA_HIGHLIGHT_DETAIL
+                ),
+                highlight_fraction=(
+                    converter.PROCESS_AREA_HIGHLIGHT_FRACTION
+                ),
+                detail_alignment=(
+                    converter.PROCESS_AREA_DETAIL_ALIGNMENT
+                ),
             )
         elif coherent_style:
             shared_edge_marks = converter.screen_coherent_color_flow(
@@ -3721,7 +3757,12 @@ class CmykTab(GeneratorTab):
                 "style_label": self.style.currentText(),
                 "dot_pitch_mm": self.pitch.value(),
                 "artwork_scale_pct": self.scale_pct.value(),
-                "effective_pitch_mm": self.pitch.value() * factor,
+                "effective_pitch_mm": (
+                    self._process_color_effective_pitch_mm
+                    if style == "process_area"
+                    and self._process_color_effective_pitch_mm is not None
+                    else self.pitch.value() * factor
+                ),
                 "preserve_exact_row_pitch": (
                     self._wave_spacing_guard_active()
                 ),
@@ -3834,6 +3875,30 @@ class CmykTab(GeneratorTab):
                 ),
                 "process_color_edge_threshold": (
                     0.84 if style == "process_area" else None
+                ),
+                "process_color_highlight_protection": (
+                    {
+                        "enabled": True,
+                        "detail_threshold": (
+                            converter.PROCESS_AREA_HIGHLIGHT_DETAIL
+                        ),
+                        "area_fraction": (
+                            converter.PROCESS_AREA_HIGHLIGHT_FRACTION
+                        ),
+                        "smoothing_radius_mm": (
+                            converter.PROCESS_AREA_HIGHLIGHT_RADIUS_MM
+                        ),
+                        "luma_floor": (
+                            converter.PROCESS_AREA_HIGHLIGHT_LUMA_FLOOR
+                        ),
+                    }
+                    if style == "process_area"
+                    else None
+                ),
+                "process_color_detail_alignment": (
+                    converter.PROCESS_AREA_DETAIL_ALIGNMENT
+                    if style == "process_area"
+                    else None
                 ),
                 "tone_gap_bridge": {
                     "enabled": self._tone_bridge_active(),
