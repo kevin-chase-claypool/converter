@@ -297,8 +297,9 @@ required the parked pen to move 1.20 mm north and 1.000 mm west from the
 `2.30 / 0.31` source frame. Because increasing the correction moves the
 registered pen east/north, the new constants are X `+1.30`, Y `+1.51`. The
 registration write becomes `G10 L20 P1 X-1.30 Y-30.9992`. Macro validation
-passed; controller upload and the repeat center-magnet check remain pending
-because ports 21 and 23 on `10.10.10.2` were unreachable.
+passed. Ports 21 and 23 on `10.10.10.2` were unreachable during that edit, but
+the direct Ethernet link was restored on 2026-11-26. Controller upload and the
+repeat center-magnet check still remain pending.
 
 `P103.macro` declares the same variable names with inert zero values for its
 non-motion initialization diagnostic; it is not a deployed calibration copy.

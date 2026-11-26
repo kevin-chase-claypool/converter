@@ -262,13 +262,14 @@ must pass bench tests before being treated as final machine wiring.
 | ID | From device | From terminal | To device | To terminal | Signal | Cable | Status | Evidence/notes |
 |---|---|---|---|---|---|---|---|---|
 | COM-001 | Host PC | USB TBD | RP23CNC | USB-C | G-code/control | USB data cable TBD | TBD | Baseline transport candidate |
-| COM-002 | Host/network | Ethernet | RP23CNC WizNet module | Ethernet | G-code/WebUI/network | Crossover Cat5e | bench-verified | Direct host link: Plugable USB2-E1000 (AX88178) at `*SpeedDuplex=2` (10 Mbps full duplex), host `10.10.10.1/24`, controller `10.10.10.2` (`$301=0`). The W5500 has no auto-MDX, so a switch port or a crossover cable is required; this adapter and the W5500 only link at 10 Mbps. See the 2026-09-28 lab note. |
+| COM-002 | Host/network | Ethernet | RP23CNC WizNet module | Ethernet | G-code/WebUI/network | Crossover Cat5e | bench-verified | Direct host link: Plugable USB2-E1000 (AX88178) at `*SpeedDuplex=2` (10 Mbps full duplex), current host `10.10.10.100/24`, controller `10.10.10.2` (`$301=0`). The 2026-09-28 host address `10.10.10.1/24` did not remain usable on Windows on 2026-11-26, so `.100` was selected in the same subnet. Ping and TCP port 23 passed, and ioSender reached `IDLE`. See the [current Ethernet configuration](../../firmware/grblhal/config/ethernet.md) and the 2026-11-26 lab note. |
 | COM-003 | microSD card | Card contacts | RP23CNC | microSD socket | Offline G-code | microSD | TBD | Optional transport candidate |
 
 ## Revision log
 
 | Date | Revision | Change | Updated by | Related evidence |
 |---|---:|---|---|---|
+| 2026-11-26 | 5.5 | Updated COM-002 from host `10.10.10.1/24` to the verified working `10.10.10.100/24`; controller `.2` and its persistent settings are unchanged. Ping, Telnet port 23, and ioSender `IDLE` passed. | Codex | `RPSW-20261126-001`; `2026-11-26-direct-ethernet-host-address-recovery.md` |
 | 2026-09-10 | 4.7 | Moved the existing blue GP27/U3 `A_HOME` conductor from `LIMA SIG` to `PROBE SIG` after direct and real-magnet motor-inert PRB/G38 entry/release checks passed; recorded installed active-low Aux0 command mapping and `$6=1`. | Codex | `RPSW-20260910-002`; `2026-09-10-e-18-motor-inert-p100-handshake.md` |
 | 2026-09-04 | 4.4 | Corrected the visual wiring diagrams to show the axis-specific motor cable colors: X shielded-cable `B-` is white and continues to the motor's blue lead; Y and A retain stock blue `B-` leads. | Codex | Project-owner clarification; `HW-20260904-001` |
 | 2026-09-04 | 4.5 | Re-routed the explanatory top-down wiring schematic into separate axis, signal, motor, and power lanes; no connection assignments changed. | Codex | `HW-20260904-002` |

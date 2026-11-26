@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20261126-direct-ethernet-host-address-recovery"></a>
+### 🟩 2026-11-26 - RP23CNC-SOFTWARE/WINDOWS-SOFTWARE/HARDWARE/VERIFIED - Restore direct Ethernet after host-address loss
+
+- ioSender had again opened with the zero-byte `App.config` warning. The
+  validated 5,001-byte backup restored the target `10.10.10.2:23` and both
+  macros with matching SHA-256.
+- The sender then raised `CurrentDomainException` because the controller could
+  not be reached. This was a transport failure, not a second configuration
+  corruption.
+- `Ethernet 3` remained physically connected at 10 Mbps full duplex, but the
+  host lost its `10.10.10.0/24` address. A fresh `10.10.10.1/24` assignment
+  reported `AddressState Invalid` and did not persist.
+- Assigning `10.10.10.100/24` produced a `Preferred` address. The controller
+  responded to ping at `10.10.10.2` in 1 ms over two of two packets, TCP port
+  23 connected, and ioSender returned to `IDLE` with both macros visible.
+- The controller address and persistent network settings were not changed.
+  Host `.1` failed independently; `.1` did not answer ping afterward and had
+  an incomplete neighbor entry.
+- After the next reboot, verify that `.100` remains preferred. P100 macro
+  upload and the repeat center-magnet check remain pending.
+- Evidence: `RPSW-20261126-001`;
+  `docs/changes/rp23cnc-software/2026/2026-11-26-direct-ethernet-host-address-recovery.md`;
+  `docs/report/lab-notes/2026-11-26-direct-ethernet-host-address-recovery.md`;
+  `firmware/grblhal/config/ethernet.md`.
+- Category: rp23cnc-software, windows-software, hardware, ioSender,
+  Ethernet, W5500, static-IP, network-recovery, App.config.
+
 <a id="elog-20261126-save-cmyk-image-defaults"></a>
 ### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Save CMYK defaults for the current image
 

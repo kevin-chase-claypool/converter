@@ -38,7 +38,9 @@ updated on 2026-11-24 after another `HOME + REGISTER` result required the
 registered pen to move 1.0 mm west and 1.2 mm north from the prior
 `2.30 / 0.31` source frame. Macro validation passed, but controller deployment
 could not be performed because ports 21 and 23 on `10.10.10.2` were
-unreachable. A repeat `G65 P113` center-magnet check therefore remains pending.
+unreachable on 2026-11-24. The direct Ethernet link was restored on
+2026-11-26; the updated macro still requires upload, and a repeat `G65 P113`
+center-magnet check remains pending.
 
 | Mode | Purpose | Current availability |
 |---:|---|---|

@@ -2,13 +2,16 @@
 
 Store controller-specific, reproducible configuration here.
 
-Planned files:
+Current configuration files:
 
 - `build-record.md` - grblHAL and driver commits, board target, plugins, build date, UF2 checksum.
 - `machine-settings.md` - annotated `$` settings and full settings dump.
+- `ethernet.md` - host/controller addressing, connection procedure, and recovery.
+
+Planned file:
+
 - `pin-map.md` - firmware-facing mirror of the verified RP23CNC assignments in
   `docs/hardware/WIRING_TABLE.md`.
-- `ethernet.md` - network settings and host connection procedure.
 
 Do not commit credentials or private network secrets.
 

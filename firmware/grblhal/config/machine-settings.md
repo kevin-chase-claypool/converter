@@ -52,12 +52,16 @@ current leaves `GP29` high (pen up).
 
 ## Network
 
+The controller addressing below is unchanged. The current host-side address is
+`10.10.10.100/24`; see [`ethernet.md`](ethernet.md) for the complete direct-link
+record and recovery procedure.
+
 | Setting | Value | Meaning | Evidence |
 |---|---|---|---|
 | `$300` | `grblHAL` | Hostname | 2026-09-28 direct-link bring-up; build default |
 | `$301` | `0` | IP mode: static, using `$302` (`1` is DHCP) | 2026-09-28: set together with `$302`-`$304` for the router-free host link |
 | `$302` | `10.10.10.2` | Static IP address | 2026-09-28: `10.10.10.1/24` host, crossover cable, no router |
-| `$303` | `10.10.10.1` | Gateway (the host; unused on a direct link) | 2026-09-28 |
+| `$303` | `10.10.10.1` | Configured gateway; retained from the original host address | 2026-09-28; unused for same-subnet direct-link traffic |
 | `$304` | `255.255.255.0` | Netmask | 2026-09-28 |
 | `$305` | `23` | Telnet port | 2026-09-28: answered with the grblHAL banner and status reports |
 | `$307` | `80` | HTTP port | 2026-09-28: accepted a connection |
@@ -65,7 +69,9 @@ current leaves `GP29` high (pen up).
 
 These values are **persistent**. The controller is on a fixed `10.10.10.x`
 address and will not appear on the house network until `$301` is returned to `1`
-(DHCP) and the board is power-cycled.
+(DHCP) and the board is power-cycled. On 2026-11-26 the host was moved to
+`10.10.10.100/24` after Windows rejected a fresh `10.10.10.1/24` assignment;
+the controller still answered at `10.10.10.2` and ioSender reached `IDLE`.
 
 ## Limits and homing (from the unloaded commission snapshot)
 
