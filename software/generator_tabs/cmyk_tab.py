@@ -400,6 +400,10 @@ class CmykTab(GeneratorTab):
             "two-dimensional field and accept non-uniform rows."
         )
         screen.addRow("Spacing guard", self.preserve_wave_pitch)
+        self.row_pitch_status = QLabel()
+        self.row_pitch_status.setWordWrap(True)
+        self.row_pitch_status.setAccessibleName("Wave row-pitch status")
+        screen.addRow("Row-pitch status", self.row_pitch_status)
         self.vary_wave_frequency = QCheckBox(
             "Vary Wave frequency across image (break banding)"
         )
@@ -666,6 +670,16 @@ class CmykTab(GeneratorTab):
         self.save_button = QPushButton("Save 4 G-code files...")
         self.save_button.clicked.connect(self.save_all)
         actions.addRow("", self.save_button)
+        self.allow_nonuniform_wave_output = QCheckBox(
+            "Allow nonuniform Wave diagnostic output"
+        )
+        self.allow_nonuniform_wave_output.setToolTip(
+            "Required only when deliberately saving a legacy Wave screen or "
+            "raw compensation without the row-pitch guard. This bypasses the "
+            "Wave row-spacing safety preflight; it is never saved in the "
+            "per-image recipe."
+        )
+        actions.addRow("", self.allow_nonuniform_wave_output)
         self.cancel_button = QPushButton("Cancel planning")
         self.cancel_button.setEnabled(False)
         self.cancel_button.clicked.connect(self.cancel_analysis)
@@ -716,12 +730,17 @@ class CmykTab(GeneratorTab):
             self._update_wave_spacing_guard
         )
         self.contour_order.currentIndexChanged.connect(
-            lambda *_: self._refresh_pass_summary()
+            self._update_wave_spacing_guard
+        )
+        self.allow_nonuniform_wave_output.toggled.connect(
+            self._update_wave_spacing_guard
         )
         self.calibration_mode.toggled.connect(
             self._update_wave_spacing_guard
         )
-        self.theta_mode.changed.connect(lambda *_: self._refresh_pass_summary())
+        self.theta_mode.changed.connect(
+            lambda *_: self._update_wave_spacing_guard()
+        )
         self._update_wave_spacing_guard()
         self._refresh_pass_summary()
         self.finish_controls()
@@ -812,7 +831,10 @@ class CmykTab(GeneratorTab):
         if not dx and not dy:
             return marks
         return [
-            [(x + dx, y + dy) for x, y in line]
+            converter.retag_contour(
+                line,
+                [(x + dx, y + dy) for x, y in line],
+            )
             for line in marks
         ]
 
@@ -1225,7 +1247,7 @@ class CmykTab(GeneratorTab):
         return str(value)
 
     def _preflight_errors(self, results):
-        problems = []
+        problems = self._wave_output_preflight_errors(results)
         for channel, record in results.items():
             checks = record.get("checks")
             if not checks:
@@ -1238,6 +1260,13 @@ class CmykTab(GeneratorTab):
 
     def _preflight_warnings(self, results):
         warnings = []
+        if (
+            self._wave_output_block_reason()
+            and self.allow_nonuniform_wave_output.isChecked()
+        ):
+            warnings.append(
+                "Wave rows are nonuniform by explicit diagnostic override"
+            )
         for channel, record in results.items():
             checks = record.get("checks")
             if not checks:
@@ -1252,6 +1281,127 @@ class CmykTab(GeneratorTab):
                     )
                 )
         return warnings
+
+    def _wave_screen_active(self):
+        """Whether the selected screen promises a parallel Wave row lattice."""
+        return (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData() in ("waves_even", "waves_zero")
+        )
+
+    def _wave_output_block_reason(self):
+        """Return why final Wave row pitch is not guaranteed, if it is not."""
+        if not self._wave_screen_active():
+            return ""
+        style = self.style.currentData()
+        if style == "waves_zero":
+            return (
+                "legacy diagnostic - raw selected profile can vary row pitch"
+            )
+        if not self._wave_spacing_guard_active():
+            return "OFF - raw compensation may alter pitch"
+        if (
+            self.theta_mode.value() != "fixed"
+            and self.contour_order.currentData()
+            not in ("rows_ascending", "rows_descending")
+        ):
+            return (
+                "raw compensation is row-locked, but Row order must be "
+                "Rows ascending or Rows descending to share one A schedule"
+            )
+        return ""
+
+    def _wave_output_status(self):
+        """Return ``(state, explanation)`` for the visible row-pitch contract."""
+        if not self._wave_screen_active():
+            return (
+                "neutral",
+                "Not applicable: select a Wave screen to enforce row pitch.",
+            )
+        reason = self._wave_output_block_reason()
+        if not reason:
+            shared = (
+                " Every row also shares one A schedule."
+                if self.theta_mode.value() != "fixed"
+                else ""
+            )
+            return (
+                "pass",
+                "PASS: equidistant rows and row-lock bed compensation are "
+                f"enforced.{shared}",
+            )
+        if self.allow_nonuniform_wave_output.isChecked():
+            return (
+                "warning",
+                "DIAGNOSTIC OVERRIDE: nonuniform Wave rows may be saved. "
+                f"{reason}.",
+            )
+        return (
+            "blocked",
+            "NOT EQUIDISTANT: Save is blocked because "
+            f"{reason}. Choose Wave screen - equidistant rows, enable the "
+            "spacing guard, and use Rows ascending or Rows descending.",
+        )
+
+    def _refresh_row_pitch_status(self):
+        """Make the Wave spacing contract conspicuous and status-colored."""
+        if not hasattr(self, "row_pitch_status"):
+            return
+        state, text = self._wave_output_status()
+        styles = {
+            "pass": (
+                "color: #166534; background: #dcfce7; "
+                "border: 1px solid #86efac; border-radius: 4px; padding: 6px;"
+            ),
+            "warning": (
+                "color: #92400e; background: #fef3c7; "
+                "border: 1px solid #fcd34d; border-radius: 4px; padding: 6px;"
+            ),
+            "blocked": (
+                "color: #991b1b; background: #fee2e2; "
+                "border: 1px solid #fca5a5; border-radius: 4px; padding: 6px;"
+            ),
+            "neutral": (
+                "color: #475569; background: #f8fafc; "
+                "border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px;"
+            ),
+        }
+        self.row_pitch_status.setProperty("feedback_state", state)
+        self.row_pitch_status.setStyleSheet(styles[state])
+        self.row_pitch_status.setText(text)
+
+    def _wave_output_preflight_errors(self, results):
+        """Validate the configured contract and the emitted G-code headers."""
+        if not self._wave_screen_active():
+            return []
+        errors = []
+        reason = self._wave_output_block_reason()
+        if reason and not self.allow_nonuniform_wave_output.isChecked():
+            errors.append("Wave row pitch is not guaranteed: " + reason)
+            return errors
+        if reason:
+            return errors
+
+        settings = self._effective_settings()
+        active_profile = bool(settings.bed_compensation_path)
+        rotating_bed = settings.theta_mode != "fixed"
+        for channel, record in results.items():
+            text = str(record.get("gcode", ""))
+            if not any(
+                line.strip().startswith("M3")
+                for line in text.splitlines()
+            ):
+                continue
+            label = converter.CHANNEL_LABELS[channel][0]
+            if active_profile and "row-locked projection" not in text:
+                errors.append(
+                    f"{label}: final G-code has no row-locked projection header"
+                )
+            if rotating_bed and "shared Wave row angles" not in text:
+                errors.append(
+                    f"{label}: final G-code has no shared Wave row-angle header"
+                )
+        return errors
 
     def _wave_spacing_guard_active(self):
         """Whether to project compensation onto the Wave row lattice."""
@@ -1274,6 +1424,11 @@ class CmykTab(GeneratorTab):
         self.preserve_wave_pitch.setEnabled(equal_wave_selected)
         self.vary_wave_frequency.setEnabled(equal_wave_selected)
         self.contour_order.setEnabled(wave_selected)
+        nonuniform_wave = bool(self._wave_output_block_reason())
+        self.allow_nonuniform_wave_output.setVisible(nonuniform_wave)
+        if not nonuniform_wave and self.allow_nonuniform_wave_output.isChecked():
+            self.allow_nonuniform_wave_output.setChecked(False)
+        self._refresh_row_pitch_status()
         if hasattr(self, "pass_summary"):
             self._refresh_pass_summary()
 
@@ -1308,15 +1463,14 @@ class CmykTab(GeneratorTab):
             for channel in converter.CHANNELS
             if offsets[channel][0] or offsets[channel][1]
         ]
-        if self._wave_spacing_guard_active():
-            row_lock_status = "active"
-        elif self._legacy_wave_screen_active():
-            row_lock_status = "legacy diagnostic - raw selected profile"
-        elif (
-            not self.calibration_mode.isChecked()
-            and self.style.currentData() == "waves_even"
-        ):
-            row_lock_status = "OFF - raw compensation may alter pitch"
+        wave_state, _wave_text = self._wave_output_status()
+        wave_reason = self._wave_output_block_reason()
+        if wave_state == "pass":
+            row_lock_status = "enforced"
+        elif wave_state == "warning":
+            row_lock_status = "DIAGNOSTIC OVERRIDE - " + wave_reason
+        elif wave_state == "blocked":
+            row_lock_status = "BLOCKED - " + wave_reason
         else:
             row_lock_status = "not applicable"
         parts = [
@@ -1330,7 +1484,7 @@ class CmykTab(GeneratorTab):
                 row_lock_status
                 + (
                     ", shared A"
-                    if row_lock_status == "active"
+                    if wave_state == "pass"
                     and self.theta_mode.value() != "fixed"
                     and self._wave_row_order_active()
                     else ""
@@ -1359,6 +1513,16 @@ class CmykTab(GeneratorTab):
 
     def _refresh_pass_summary(self):
         self.pass_summary.setText(self._summary_text())
+        state, _text = self._wave_output_status()
+        colors = {
+            "pass": "#166534",
+            "warning": "#92400e",
+            "blocked": "#991b1b",
+            "neutral": "#334155",
+        }
+        self.pass_summary.setStyleSheet(
+            "color: %s;" % colors[state]
+        )
 
     def _preview_channels(self):
         return [
@@ -1722,6 +1886,13 @@ class CmykTab(GeneratorTab):
 
     def save_all(self, _checked=False):
         del _checked
+        wave_errors = self._wave_output_preflight_errors({})
+        if wave_errors:
+            message = "CMYK preflight blocked save: " + "; ".join(wave_errors)
+            self.report_error(message)
+            self.cost_label.setText(message)
+            self.pass_summary.setText(self._summary_text())
+            return
         channels = self._write_channels()
         if not channels:
             self.report_error("Tick at least one ink to write.")
@@ -1815,12 +1986,18 @@ class CmykTab(GeneratorTab):
             if overlay_report is not None:
                 if overlay_report.get("passed"):
                     overlay_text = (
-                        " Overlay PASS: %s."
+                        " Identity/reach PASS (row spacing is checked "
+                        "separately): %s."
                         % Path(overlay_report["overlay_png"]).name
                     )
                 else:
-                    overlay_text = " Overlay BLOCKED: %s." % "; ".join(
-                        overlay_report.get("errors", ["unknown audit error"])
+                    overlay_text = (
+                        " Identity/reach BLOCKED: %s."
+                        % "; ".join(
+                            overlay_report.get(
+                                "errors", ["unknown audit error"]
+                            )
+                        )
                     )
                     if self.host is not None and hasattr(self.host, "log"):
                         self.host.log.append(overlay_text.strip())
@@ -1904,6 +2081,13 @@ class CmykTab(GeneratorTab):
         translation_sample = next(
             iter(row_lock_records.values()), None
         )
+        row_pitch_state, row_pitch_message = self._wave_output_status()
+        row_pitch_status = {
+            "pass": "enforced",
+            "warning": "diagnostic_override",
+            "blocked": "blocked",
+            "neutral": "not_applicable",
+        }[row_pitch_state]
         data = {
             "kind": "cmyk-print-set",
             "version": 4,
@@ -1929,6 +2113,13 @@ class CmykTab(GeneratorTab):
             "center_hold_diameter_mm": self.center_hold.value(),
             "theta_mode": settings.theta_mode,
             "row_theta_lock": converter.wave_row_theta_lock_enabled(settings),
+            "row_pitch_preflight": {
+                "status": row_pitch_status,
+                "message": row_pitch_message,
+                "diagnostic_override": (
+                    self.allow_nonuniform_wave_output.isChecked()
+                ),
+            },
             "bed_compensation_path": settings.bed_compensation_path,
             "bed_compensation": {
                 "mode": compensation_mode,

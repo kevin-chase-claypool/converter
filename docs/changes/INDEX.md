@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-26 | `WSW-20261126-012` | windows-software | implemented | [Block saves that do not guarantee Wave row pitch](windows-software/2026/2026-11-26-wave-row-pitch-ui-preflight.md) |
 | 2026-11-26 | `WSW-20261126-011` | windows-software | implemented | [Save CMYK defaults for the current image](windows-software/2026/2026-11-26-save-cmyk-image-defaults.md) |
 | 2026-11-26 | `WSW-20261126-010` | windows-software | implemented | [Add a post-save CMYK G-code overlay audit](windows-software/2026/2026-11-26-post-save-cmyk-overlay-audit.md) |
 | 2026-11-26 | `WSW-20261126-009` | windows-software, hardware | implemented | [Harden CMYK reach and set identity](windows-software/2026/2026-11-26-harden-cmyk-reach-and-set-identity.md) |

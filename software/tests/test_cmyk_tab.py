@@ -2280,6 +2280,118 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(compensation.fingerprint, "f85ec410dbac")
         self.assertFalse(getattr(compensation, "row_locked", False))
 
+    def test_legacy_wave_blocks_save_and_exposes_a_row_pitch_warning(self):
+        host = FakeHost(self.image_path)
+        host.settings_for_source = mock.Mock(
+            return_value=converter.default_settings()
+        )
+        tab = self.make_tab(host)
+        tab.style.setCurrentIndex(tab.style.findData("waves_zero"))
+
+        status = tab.row_pitch_status
+        self.assertEqual(status.property("feedback_state"), "blocked")
+        self.assertIn("NOT EQUIDISTANT", status.text())
+        self.assertIn("spacing guard", status.text().lower())
+        self.assertFalse(tab.allow_nonuniform_wave_output.isHidden())
+        self.assertFalse(tab.allow_nonuniform_wave_output.isChecked())
+
+        checks = self.clean_checks()
+        results = {
+            channel: {
+                "gcode": (
+                    f"; {channel}\nM5\nM3\nG1 X0 Y0\n"
+                    "G1 X1 Y1\nM5\n"
+                ),
+                "lines": 6,
+                "checks": dict(checks),
+            }
+            for channel in converter.CHANNELS
+        }
+        tab._write_files(results)
+
+        self.assertEqual(host.saved_labels, [])
+        self.assertIn("row pitch", tab.status.text().lower())
+        self.assertIn("blocked", tab.status.text().lower())
+        with mock.patch.object(tab, "start_analysis") as start_analysis:
+            tab.save_all()
+        start_analysis.assert_not_called()
+        self.assertIn("row pitch", tab.status.text().lower())
+
+    def test_explicit_diagnostic_override_allows_nonuniform_wave_save(self):
+        host = FakeHost(self.image_path)
+        host.settings_for_source = mock.Mock(
+            return_value=converter.default_settings()
+        )
+        tab = self.make_tab(host)
+        tab.style.setCurrentIndex(tab.style.findData("waves_zero"))
+        tab.allow_nonuniform_wave_output.setChecked(True)
+
+        status = tab.row_pitch_status
+        self.assertEqual(status.property("feedback_state"), "warning")
+        self.assertIn("DIAGNOSTIC OVERRIDE", status.text())
+        self.assertIn(
+            "diagnostic override",
+            tab._summary_text({"c": {"checks": self.clean_checks()}}).lower(),
+        )
+
+    def test_equidistant_wave_status_requires_guard_and_shared_row_order(self):
+        host = FakeHost(self.image_path)
+        host.settings_for_source = mock.Mock(
+            return_value=converter.default_settings()
+        )
+        tab = self.make_tab(host)
+        tab.style.setCurrentIndex(tab.style.findData("waves_even"))
+
+        self.assertEqual(
+            tab.row_pitch_status.property("feedback_state"),
+            "blocked",
+        )
+        self.assertIn("ROW ORDER", tab.row_pitch_status.text().upper())
+
+        tab.contour_order.setCurrentIndex(
+            tab.contour_order.findData("rows_ascending")
+        )
+        self.assertEqual(
+            tab.row_pitch_status.property("feedback_state"),
+            "pass",
+        )
+        self.assertIn("PASS", tab.row_pitch_status.text())
+
+        tab.preserve_wave_pitch.setChecked(False)
+        self.assertEqual(
+            tab.row_pitch_status.property("feedback_state"),
+            "blocked",
+        )
+        self.assertIn("SPACING GUARD", tab.row_pitch_status.text().upper())
+
+    def test_wave_preflight_rejects_missing_row_locked_gcode(self):
+        host = FakeHost(self.image_path)
+        host.settings_for_source = mock.Mock(
+            return_value=converter.default_settings()
+        )
+        tab = self.make_tab(host)
+        tab.style.setCurrentIndex(tab.style.findData("waves_even"))
+        tab.contour_order.setCurrentIndex(
+            tab.contour_order.findData("rows_ascending")
+        )
+        checks = self.clean_checks()
+        results = {
+            channel: {
+                "gcode": (
+                    f"; {channel}\nM5\nM3\nG1 X0 Y0\n"
+                    "G1 X1 Y1\nM5\n"
+                ),
+                "lines": 6,
+                "checks": dict(checks),
+            }
+            for channel in converter.CHANNELS
+        }
+
+        tab._write_files(results)
+
+        self.assertEqual(host.saved_labels, [])
+        self.assertIn("row-locked projection", tab.status.text().lower())
+
     def test_wave_spacing_guard_row_locks_bed_compensation(self):
         tab = self.make_tab()
         tab.host.settings_for_source = mock.Mock(
@@ -2377,6 +2489,25 @@ class CmykTabTests(unittest.TestCase):
                 for (x0, y0), (x1, y1) in zip(line_before, line_after):
                     self.assertAlmostEqual(x1, x0 + dx, places=6)
                     self.assertAlmostEqual(y1, y0 + dy, places=6)
+
+    def test_pen_offset_preserves_wave_row_tags(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("waves_even"))
+        tab._ensure_layers()
+        before = [
+            getattr(line, "wave_row_index", None)
+            for line in tab._layers["m"]
+        ]
+        self.assertTrue(any(value is not None for value in before))
+
+        tab.offset_spins["m"][0].setValue(0.75)
+        tab._ensure_layers()
+
+        after = [
+            getattr(line, "wave_row_index", None)
+            for line in tab._layers["m"]
+        ]
+        self.assertEqual(after, before)
 
     def test_measured_alignment_sets_opposite_corrections(self):
         tab = self.make_tab()
@@ -2495,18 +2626,28 @@ class CmykTabTests(unittest.TestCase):
         tab.offset_spins["m"][0].setValue(0.75)
         checks = self.clean_checks()
         manifest_settings = tab._effective_settings()
-        identity_gcode = {
-            channel: converter.contours_to_gcode(
-                [[(0.0, 0.0), (20.0, 0.0)]],
-                dataclasses.replace(
-                    manifest_settings,
-                    row_lock_screen_angle_deg=(
-                        converter.SCREEN_ANGLES_DEG[channel]
-                    ),
-                ),
+        tab._ensure_layers()
+        row_lock_set = converter.row_locked_bed_compensation_set(
+            converter.load_bed_compensation(
+                manifest_settings.bed_compensation_path
+            ),
+            tuple(converter.SCREEN_ANGLES_DEG.values()),
+        )
+        identity_gcode = {}
+        for channel in converter.CHANNELS:
+            angle = converter.SCREEN_ANGLES_DEG[channel]
+            channel_settings = dataclasses.replace(
+                manifest_settings,
+                row_lock_screen_angle_deg=angle,
+                row_lock_projection=row_lock_set.for_screen_angle(angle),
             )
-            for channel in converter.CHANNELS
-        }
+            contours = converter.read_svg(
+                str(tab._layer_files[channel]), channel_settings
+            )
+            plan = converter.plan_program(contours, channel_settings)
+            identity_gcode[channel] = converter.contours_to_gcode(
+                contours, channel_settings, plan
+            )
         results = {
             channel: {
                 "gcode": identity_gcode[channel],
@@ -2633,6 +2774,14 @@ class CmykTabTests(unittest.TestCase):
             data["overlay_audit"],
         )
         self.assertEqual(
+            data["overlay_audit"]["scope"],
+            ["program_identity", "machine_frame", "machine_reach"],
+        )
+        self.assertEqual(
+            data["row_pitch_preflight"]["status"],
+            "enforced",
+        )
+        self.assertEqual(
             set(data["overlay_audit"]["inks"]),
             set(converter.CHANNELS),
         )
@@ -2660,7 +2809,8 @@ class CmykTabTests(unittest.TestCase):
                 hashlib.sha256(saved.read_bytes()).hexdigest(),
             )
         self.assertIn("Set manifest", tab.status.text())
-        self.assertIn("Overlay PASS", tab.status.text())
+        self.assertIn("Identity/reach PASS", tab.status.text())
+        self.assertIn("row spacing", tab.status.text())
 
     def test_legacy_wave_manifest_records_current_mesh_raw_mode(self):
         host = FakeHost(self.image_path)
@@ -2669,6 +2819,7 @@ class CmykTabTests(unittest.TestCase):
         )
         tab = self.make_tab(host)
         tab.style.setCurrentIndex(tab.style.findData("waves_zero"))
+        tab.allow_nonuniform_wave_output.setChecked(True)
         checks = self.clean_checks()
         results = {
             channel: {
@@ -2706,6 +2857,10 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(
             Path(data["bed_compensation_path"]).name,
             "bed-error-compensation-2026-11-01-dense-v3-360mm-reach-extrapolated.json",
+        )
+        self.assertEqual(
+            data["row_pitch_preflight"]["status"],
+            "diagnostic_override",
         )
 
     def test_scaled_ink_layers_share_the_page_frame(self):

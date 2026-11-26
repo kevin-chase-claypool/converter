@@ -236,7 +236,9 @@ def _render_overlay(
     draw = ImageDraw.Draw(base)
     font = _overlay_font(15)
     title_font = _overlay_font(20)
-    title = "CMYK G-code overlay - " + ("PASS" if passed else "BLOCKED")
+    title = "CMYK identity/reach audit - " + (
+        "PASS" if passed else "BLOCKED"
+    )
     draw.text(
         (20, 18),
         title,
@@ -405,6 +407,11 @@ def write_cmyk_gcode_overlay(program_paths, output_stem, settings):
         "kind": "cmyk-gcode-overlay-audit",
         "version": 1,
         "created": datetime.datetime.now().isoformat(timespec="seconds"),
+        "scope": [
+            "program_identity",
+            "machine_frame",
+            "machine_reach",
+        ],
         "passed": passed,
         "errors": errors,
         "identity": identity,

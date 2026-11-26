@@ -1,5 +1,37 @@
 # Engineering Log
 
+<a id="elog-20261126-wave-row-pitch-ui-preflight"></a>
+### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Block saves that do not guarantee Wave row pitch
+
+- A printed legacy Wave layer visibly crowded although the selected bed mesh was
+  active. The job used `waves_zero`, raw compensation, and planner-optimized
+  rows, so no part of that configuration guaranteed equidistant paper rows.
+- The old UI exposed only a muted pass-summary sentence, allowed Save, and then
+  reported a green identity/reach overlay as `PASS`. That overlay never checked
+  row spacing.
+- The CMYK Screen group now has a full-width red/amber/green **Row-pitch
+  status**. Unsafe Wave configurations are rejected before background planning;
+  final-analysis and write-time preflight repeat the gate and require the
+  row-lock and shared-A G-code headers when applicable.
+- A controlled comparison can still be produced only after checking **Allow
+  nonuniform Wave diagnostic output**. That permission turns the status amber
+  and is not persisted in the image recipe.
+- Preflight exposed a pen-offset defect: translating a Wave layer discarded its
+  `data-wave-row` tags. Translation now preserves the contour type, so the
+  offset ink retains the shared row schedule.
+- The set manifest records `row_pitch_preflight`. The post-save overlay is now
+  labelled identity/reach and records that narrower scope.
+- New UI and output regressions cover red legacy blocking, explicit amber
+  override, green equidistant output, missing final G-code headers, manifest
+  status, and pen-offset tag preservation.
+- The affected CMYK, overlay, rotating-row, and spacing modules pass `123`
+  tests. Complete converter discovery passes `648` with one expected
+  OpenGL-context skip.
+- Evidence: `WSW-20261126-012`;
+  `docs/changes/windows-software/2026/2026-11-26-wave-row-pitch-ui-preflight.md`.
+- Category: windows-software, cmyk, wave-screen, row-spacing, row-lock,
+  preflight, save-guard, user-interface, pen-offset.
+
 <a id="elog-20261126-direct-ethernet-host-address-recovery"></a>
 ### 🟩 2026-11-26 - RP23CNC-SOFTWARE/WINDOWS-SOFTWARE/HARDWARE/VERIFIED - Restore direct Ethernet after host-address loss
 

@@ -657,17 +657,27 @@ Current tools:
   problem, not a pen offset.
   **Pass summary and preflight:** before saving, the tab shows the page,
   shared frame, Bed motion, centre hold, row-spacing guard, crosses and pen
-  offsets, then runs the motion preflight on each ink. It checks the bed-step
-  cap, the A-rate limit, bare `G0` rotations, moves that exceed the Path
-  tolerance, and the final path plus pen-radius envelope against the configured
-  reach;
-  hard violations block Save and warnings go to the log. A successful
-  artwork save also writes a version-4 `<name>-set.json` beside the four files
-  with the source hash, page and motion mode, bed-compensation profile,
-  complete image/screen recipe, sharpening amount and radius, effective pitch,
-  pen offsets, per-ink
-  preflight results, SHA-256 hashes for all four G-code files, parsed program
-  identities, and the overlay-audit report.
+  offsets, then runs both the Wave row-pitch contract and the motion preflight
+  on each ink. A prominent **Row-pitch status** beside the Wave controls is
+  green only when the production equidistant screen, spacing guard, and a
+  shared rotating-bed row order are active. It is red when the legacy
+  diagnostic, raw compensation, or planner-optimized row order can change
+  spacing, and Save is blocked before planning. A deliberately nonuniform
+  comparison run requires the explicit **Allow nonuniform Wave diagnostic
+  output** checkbox; that permission is not persisted in the image recipe and
+  turns the status amber.
+  Motion preflight checks the bed-step cap, the A-rate limit, bare `G0`
+  rotations, moves that exceed the Path tolerance, and the final path plus
+  pen-radius envelope against the configured reach. Hard violations block Save
+  and warnings go to the log. Wave output also proves its final G-code contains
+  the row-locked projection and shared row-angle headers when required.
+  A successful artwork save writes a version-4 `<name>-set.json` beside the
+  four files with the source hash, page and motion mode, bed-compensation
+  profile, complete image/screen recipe, sharpening amount and radius,
+  effective pitch, pen offsets, `row_pitch_preflight`, per-ink preflight
+  results, SHA-256 hashes for all four G-code files, parsed program identities,
+  and the identity/reach overlay-audit report. That report deliberately does
+  not claim row spacing passed.
   The Image group's **Save defaults for this image** button immediately writes
   the current complete CMYK recipe and artwork placement to the image's
   `.theta-layout.json` sidecar. This includes image controls, screen and row
@@ -721,6 +731,11 @@ Current tools:
   source-profile fingerprint, per-ink screen angles, projection sampling,
   `shared_zero_mean` translation normalization, raw means by angle,
   `preserve_exact_row_pitch: true`, and the exact common domain.
+  The tab also records whether its UI preflight enforced row pitch or permitted
+  a diagnostic override. A pen offset is a translation, so the tab retags each
+  shifted Wave row rather than discarding `data-wave-row`; offsets therefore
+  cannot silently turn a row-locked layer into a planner-optimized or raw-pitch
+  layer.
   Verify a saved set with
   `python ..\tools\check_cmyk_wave_spacing.py <name>-set.json`; it checks all
   four manifest hashes, the row-locked header and profile identity, the
