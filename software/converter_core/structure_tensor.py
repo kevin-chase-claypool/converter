@@ -336,6 +336,54 @@ def _structure_tensor_components(guide, geometry, smoothing_mm):
     )
 
 
+def structure_field_diagnostic(guide, geometry, smoothing_mm):
+    """Render undirected tangent orientation with confidence as brightness.
+
+    The hue repeats every 180 degrees, so reversing an eigenvector cannot change
+    the diagnostic colour. Weak or incoherent regions approach black; bright
+    colours mean the shared image direction is confidently steering the trace.
+    """
+    import numpy as np
+
+    tangent_x, tangent_y, guided, keyline, _field_geometry = (
+        _structure_tensor_components(
+            guide,
+            geometry,
+            max(0.1, float(smoothing_mm)),
+        )
+    )
+    angle = np.arctan2(tangent_y, tangent_x) % np.pi
+    hue = angle / np.pi
+    sector = np.floor(hue * 6.0).astype(np.int16) % 6
+    fraction = hue * 6.0 - np.floor(hue * 6.0)
+    saturation = 0.82
+    value = np.clip(0.18 + 0.82 * guided, 0.0, 1.0)
+    p = value * (1.0 - saturation)
+    q = value * (1.0 - saturation * fraction)
+    t = value * (1.0 - saturation * (1.0 - fraction))
+    channels = [
+        np.select(
+            [sector == 0, sector == 1, sector == 2, sector == 3, sector == 4],
+            [value, q, p, p, t],
+            default=value,
+        ),
+        np.select(
+            [sector == 0, sector == 1, sector == 2, sector == 3, sector == 4],
+            [t, value, value, q, p],
+            default=p,
+        ),
+        np.select(
+            [sector == 0, sector == 1, sector == 2, sector == 3, sector == 4],
+            [p, p, t, value, value],
+            default=q,
+        ),
+    ]
+    rgb = np.stack(channels, axis=-1)
+    edge_glow = np.clip(keyline, 0.0, 1.0)[..., None] * 0.35
+    rgb = rgb + edge_glow
+    return np.clip(rgb * 255.0, 0, 255).astype(np.uint8)
+
+
 def _blend_structure_velocity(
     tangent_x,
     tangent_y,

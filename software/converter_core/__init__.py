@@ -6,6 +6,7 @@ from .geometry import *
 from .path_join import *
 from .shading import *
 from .cmyk import *
+from .structure_tensor import *
 from .wave_rows import *
 from .kinematics import *
 from .motion_check import *

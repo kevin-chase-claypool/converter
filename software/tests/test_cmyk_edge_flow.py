@@ -31,6 +31,41 @@ class CmykEdgeFlowTests(unittest.TestCase):
             "pixels_h": 32,
         }
 
+    def test_structure_diagnostic_is_undirected_and_confidence_weighted(self):
+        size = 64
+        coords = self.np.arange(size, dtype="float32")
+        xx, _yy = self.np.meshgrid(coords, coords)
+        guide = xx / float(size - 1)
+        reversed_guide = guide[:, ::-1]
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 100.0,
+            "height_mm": 100.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        forward = converter.structure_field_diagnostic(
+            guide,
+            geometry,
+            2.0,
+        )
+        reversed_direction = converter.structure_field_diagnostic(
+            reversed_guide,
+            geometry,
+            2.0,
+        )
+        self.assertEqual(forward.shape, (size, size, 3))
+        self.assertTrue(self.np.array_equal(forward, reversed_direction))
+
+        flat = converter.structure_field_diagnostic(
+            self.np.full((size, size), 0.5, dtype="float32"),
+            geometry,
+            2.0,
+        )
+        self.assertLess(float(flat.mean()), float(forward.mean()))
+
     def test_edge_flow_streamlines_follow_structure_orientation(self):
         size = 80
         coords = self.np.arange(size, dtype="float32")

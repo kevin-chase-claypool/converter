@@ -609,7 +609,8 @@
   requires all four channels, and analyzed programs must share one frame,
   placement, scale, theta/feed contract, and compensation identity. Set
   manifests move to version 5 with calibration and canonical set-identity
-  hashes. The focused CMYK suite passes `168` tests and the expanded
+  hashes; the following stage-workspace milestone advances them to version 6.
+  The focused CMYK suite passes `168` tests and the expanded
   CMYK/exporter/generator subset passes `215`. Physical print validation
   remains separate. Evidence: `WSW-20261125-009` and `ADR-010`.
 
@@ -624,6 +625,14 @@
   geometry or motion evidence before committing a four-pen print.
   Risk: moving controls or splitting the monolithic key can change recipe
   persistence and regenerate previously byte-stable screens.
+  Status 2026-11-25: the persistent nine-stage rail is implemented with
+  stage-filtered inspectors, descriptions, reset, per-stage automatic-change
+  locks, complete recipe presets, sidecar persistence, explicit
+  input/output/validation/cache contracts, and an undirected flow-field
+  diagnostic. Set manifests record each stage's settings hash and locks. The
+  renderer still builds from one combined cache key, and only Direction/Review
+  have dedicated visual diagnostics; per-stage materialized caches and
+  intermediate previews for the other stages remain open.
   Acceptance: each stage owns a documented settings/data contract, reset and
   lock behavior, validation, preview/diagnostic entry point, and cache
   dependency; existing recipe sidecars load; one-click guided export still

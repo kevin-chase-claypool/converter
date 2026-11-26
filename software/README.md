@@ -71,7 +71,7 @@ python -m unittest -q software.tests.test_path_join
 python -m unittest discover -q -s software\tests -p "test_*.py"
 ```
 
-The complete discovery run currently contains 724 test cases. Repeated generator
+The complete discovery run currently contains 734 test cases. Repeated generator
 tab contracts retain their per-tab class names and failure locations, while
 related slow setup scenarios use subtests to avoid rebuilding the same Qt
 window or generated coupon.
@@ -557,6 +557,23 @@ Current tools:
   order.
   - The guided page is `250 x 250 mm`. Its corner radius is `176.78 mm`, inside
     the `177.8 mm` radius of the 14-inch print circle.
+  - A persistent nine-stage rail spans composition, image preparation,
+    separation, direction field, streamline placement, ink assignment, path
+    order, motion, and review/export. Clicking a stage opens only that stage's
+    settings in Advanced mode. Each stage has a description, explicit input,
+    output, validation and cache-dependency contract, **Reset stage**, and
+    **Lock auto**; locked stages keep manual values when Auto, recommended
+    defaults, or a recipe preset runs. The selected stage and locks persist in
+    the artwork recipe.
+  - **Apply recipe** offers the recommended coherent portrait, the per-ink
+    Edge-flow comparison, the stochastic shared-flow experiment, and a
+    line-screen speed comparison. The one-click guided action remains the fast
+    path and does not require visiting these stages.
+  - The Direction stage's **Show flow field** action renders the current shared
+    structure tensor as an undirected hue field: opposite tangent directions
+    have the same colour, brightness is guidance confidence, and white marks
+    high-confidence keyline structure. The Review stage reports whole-set
+    consistency, hashes, preflight status, and transaction behavior.
   - The screen shows the source image immediately in the large preview, then
     replaces it with the four-layer print preview. The static Preview,
     playback, fill, and ink-profile controls are hidden until **Advanced
@@ -886,14 +903,15 @@ Current tools:
   analyzed programs must also agree on artwork scale, placement, page frame,
   theta mode/ratio, feed and travel contract, and full bed-compensation
   profile. Guided **Create 4 G-code files** requires all four output inks.
-  A successful artwork save publishes the four programs and a version-5
+  A successful artwork save publishes the four programs and a version-6
   `<name>-set.json` as one logical transaction. Every file is staged before
   any destination is replaced; a failed commit restores the previous set.
   The manifest records the source hash, page and motion mode,
   bed-compensation profile, artwork placement, complete image/screen recipe,
   sharpening amount and radius, effective pitch, pen offsets, calibration
-  identity, per-ink preflight results, one canonical set-identity hash, and
-  SHA-256 hashes for all four G-code files.
+  identity, workflow stage dependency hashes and locks, per-ink preflight
+  results, one canonical set-identity hash, and SHA-256 hashes for all four
+  G-code files.
   A non-zero artwork placement is also written into every G-code header, for
   example `(artwork placement -3.170,-28.740 mm)`. Before a multi-pass print,
   confirm that all four headers and `artwork_placement_mm` in the set manifest

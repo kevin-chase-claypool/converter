@@ -33,6 +33,9 @@ related:
 
 # Publish CMYK sets as one transactional export
 
+`WSW-20261125-010` later advances the same manifest from version 5 to version 6
+to record stage dependency hashes and locks.
+
 ## Summary
 
 A CMYK save now stages all four numbered G-code programs and their version-5

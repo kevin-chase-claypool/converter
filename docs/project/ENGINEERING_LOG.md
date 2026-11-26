@@ -1,5 +1,48 @@
 # Engineering Log
 
+<a id="elog-20261125-cmyk-stage-workspace"></a>
+### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Add the adaptive CMYK stage workspace
+
+- The owner's adaptive-flow contract requires composition, image preparation,
+  separation, direction-field, streamline, ink-assignment, path, motion, and
+  export stages to expose their own settings, preview/diagnostic, validation,
+  and cache identity. The prior guided page and Advanced tuner were complete
+  but presented one long form and one undifferentiated cache key.
+- CMYK Photo now has a persistent nine-stage rail. A stage filters the existing
+  advanced groups instead of duplicating controls, shows its input/output/
+  validation/cache contract, and provides **Reset stage** and **Lock auto**.
+  Locked stages keep manually chosen values through Auto, recommended defaults,
+  quick guided defaults, and complete recipe presets.
+- Four complete recipes remain available from the rail: recommended coherent
+  portrait, per-ink Edge-flow comparison, stochastic shared-flow experiment,
+  and line-screen speed comparison. The one-click **Create 4 G-code files**
+  path remains independent and immediate.
+- The selected stage and locks persist in the artwork recipe. Set manifests
+  move to version 6 and record current stage, lock list, per-stage settings
+  SHA-256 hashes, and available diagnostics.
+- The Direction stage now opens a rendered structure-field diagnostic. Hue is
+  the undirected image tangent with a 180-degree repeat, brightness is
+  guidance confidence, and white marks high-confidence keyline structure.
+  Forced opposite-gradient input renders the same colours, providing direct
+  coverage for eigenvector sign ambiguity.
+- The stage split exposed that hiding groups reduced the advanced pane's
+  minimum width and broke the established wide-control layout. The tab now
+  keeps the full pre-filter width while showing one stage at a time.
+- Focused stage/CMYK tests pass `108`; the broader CMYK/workflow/generator
+  subset passes `221` in `35.323 s`; complete converter discovery passes `734`
+  tests in `140.782 s`. Each broader run has the expected OpenGL-context skip.
+- The renderer still uses one combined layer/analysis cache key. Stage hashes
+  make dependencies explicit, but materialized per-stage caches and graphical
+  diagnostics for every stage remain open roadmap work.
+- No physical paper set was printed. Density, color, connector visibility, and
+  registration remain physical-validation work.
+- Evidence: `WSW-20261125-010`;
+  `docs/changes/windows-software/2026/2026-11-25-cmyk-stage-workspace.md`;
+  `docs/decisions/ADR-011-cmyk-stage-workspace.md`.
+- Category: windows-software, cmyk, workflow, user-interface,
+  stage-navigation, structure-tensor, diagnostics, parameter-locks, recipes,
+  manifest.
+
 <a id="elog-20261125-transactional-cmyk-set-export"></a>
 ### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Publish CMYK sets transactionally
 

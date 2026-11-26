@@ -47,9 +47,12 @@ class FlowFieldTab(GeneratorTab):
 - `host.analyze_program(svg_path, settings, cancel_check=None)` — build the
   exact program a Preview would (moves, G-code, stats) without touching the
   UI; safe to call from a tab's worker thread.
-- `host.export_program_set(entries, base_path=None, default_base="")` — one
-  save dialog, then one `<base>-<label>.gcode` file per `(label, gcode)`
-  entry.
+- `host.resolve_program_set_base(default_base="")` — optional pre-resolution of
+  the one save base, so a tab can include its manifest in the transaction.
+- `host.export_program_set(entries, base_path=None, default_base="",
+  companion_files=None)` — one save dialog, then one
+  `<base>-<label>.gcode` file per `(label, gcode)` entry. Companion files join
+  the same staged transaction.
 
 Optional multi-layer hook (CMYK):
 
@@ -81,6 +84,10 @@ as the advanced page. Its 250 mm page keeps the complete printed square inside
 the 14-inch circle, and its output order is Y/M/C/K. The guided presentation
 may hide the main window's Preview/playback/fit chrome while it is active; it
 must restore those widgets when switching to advanced or leaving the tool.
+Its persistent nine-stage rail filters the advanced inspector, persists
+per-stage locks in the artwork recipe, and may open auxiliary diagnostic
+inspectors such as the structure-field image. Those inspectors never replace
+the one shared physical print preview.
 
 Rules:
 
@@ -88,7 +95,9 @@ Rules:
    another tab to make yours work.
 2. Implement `build_svg()`. It returns the path of a written SVG, or raises
    `ValueError` with a user-facing message when required input is missing.
-3. Do not add a per-tab preview, a per-tab file picker, or a hand-off button.
+3. Do not add a competing primary print preview, a per-tab file picker, or a
+   hand-off button. Auxiliary stage diagnostics may use their own inspector
+   window, but the simulated paper result remains in the shared preview.
    The static Preview/Save buttons and the shared preview panel own all of
    that. A multi-layer tool (CMYK) may add a Save-set button and an
    `on_preview_finished()` hook for background work; the host owns the dialogs

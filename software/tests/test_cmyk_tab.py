@@ -17,6 +17,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import converter_core as converter
+from generator_tabs.cmyk_workflow import CMYK_WORKFLOW_STAGES
 
 
 try:
@@ -935,7 +936,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertTrue(manifest.exists())
         data = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(data["kind"], "cmyk-print-set")
-        self.assertEqual(data["version"], 5)
+        self.assertEqual(data["version"], 6)
         self.assertAlmostEqual(data["pen_offsets_mm"]["m"][0], 0.75)
         self.assertEqual(set(data["preflight"]), set(converter.CHANNELS))
         self.assertEqual(
@@ -1023,6 +1024,15 @@ class CmykTabTests(unittest.TestCase):
         self.assertTrue(data["set_verification"]["complete"])
         self.assertTrue(
             data["set_verification"]["whole_set_transaction"]
+        )
+        self.assertEqual(
+            data["workflow"]["stages"],
+            [stage.key for stage in CMYK_WORKFLOW_STAGES],
+        )
+        self.assertTrue(
+            set(data["workflow"]["stage_settings_sha256"]).issubset(
+                {stage.key for stage in CMYK_WORKFLOW_STAGES}
+            )
         )
         self.assertIn("Set manifest", tab.status.text())
 
