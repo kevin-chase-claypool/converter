@@ -316,6 +316,10 @@ task rather than treated as the active production path.
   compensation reserve, reach, planning radius, or Wave row angle differs
   between inks. The extrapolated outer field still requires physical
   verification; these software guards do not validate its correction quality.
+  Status 2026-11-26 overlay audit: `WSW-20261126-010` reads the saved files
+  after writing and produces a common-frame PNG plus JSON report with identity,
+  bounds, centers, path radii, and ink envelopes. It remains a software
+  diagnostic; physical four-pen registration is still a paper check.
   Acceptance: print a stationary edge-band verification covering 165.1 to
   184.15 mm at all eight calibrated angles, measure it with the existing photo
   pipeline, and show at most `0.35 mm` RMS / `0.90 mm` maximum with no angle

@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20261126-post-save-cmyk-overlay-audit"></a>
+### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Add a post-save CMYK G-code overlay audit
+
+- CMYK Save now reads the four selected G-code files back from disk after
+  writing them and produces `<name>-overlay.png` plus
+  `<name>-overlay.json`.
+- The image places every pen-down path in one G54 machine frame, with raw reach,
+  effective planning circle, center axes, and per-ink bounding boxes. The JSON
+  records pass/fail, cross-file identity, errors, bounds, centers, maximum
+  path/ink radii, row angles, and source paths.
+- The post-save audit independently revalidates G54 center, compensation
+  fingerprint, reach/reserves/planning radius, and expected Wave row angles.
+  A mismatch renders a BLOCKED diagnostic overlay and reports the failure
+  without deleting files already written.
+- The CMYK set manifest includes the overlay audit. Dense paths are decimated
+  only in the rendered bitmap; all parsed segments contribute to metrics.
+- Tests cover a matching four-ink set, a mismatched frame diagnostic overlay,
+  Save integration, and manifest linkage.
+- The complete affected CMYK, generator, reach, identity, and overlay modules
+  pass `162` tests with one expected OpenGL-context skip. Complete converter
+  discovery passes `642` with one expected OpenGL-context skip, and Python
+  compilation passes.
+- Evidence: `WSW-20261126-010`;
+  `docs/changes/windows-software/2026/2026-11-26-post-save-cmyk-overlay-audit.md`.
+- Category: windows-software, cmyk, gcode, overlay, post-save,
+  bounding-envelope, identity, audit, visualization.
+
 <a id="elog-20261126-harden-cmyk-reach-and-set-identity"></a>
 ### 🟨 2026-11-26 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Harden CMYK reach and set identity
 

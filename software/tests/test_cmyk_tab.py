@@ -2495,14 +2495,22 @@ class CmykTabTests(unittest.TestCase):
         tab.offset_spins["m"][0].setValue(0.75)
         checks = self.clean_checks()
         manifest_settings = tab._effective_settings()
-        identity_gcode = converter.contours_to_gcode(
-            [[(0.0, 0.0), (20.0, 0.0)]],
-            manifest_settings,
-        )
+        identity_gcode = {
+            channel: converter.contours_to_gcode(
+                [[(0.0, 0.0), (20.0, 0.0)]],
+                dataclasses.replace(
+                    manifest_settings,
+                    row_lock_screen_angle_deg=(
+                        converter.SCREEN_ANGLES_DEG[channel]
+                    ),
+                ),
+            )
+            for channel in converter.CHANNELS
+        }
         results = {
             channel: {
-                "gcode": identity_gcode,
-                "lines": len(identity_gcode.splitlines()),
+                "gcode": identity_gcode[channel],
+                "lines": len(identity_gcode[channel].splitlines()),
                 "checks": dict(checks),
                 "compensation": {
                     "mode": "row_locked_projection",
@@ -2620,6 +2628,20 @@ class CmykTabTests(unittest.TestCase):
             },
             {"f85ec410dbac"},
         )
+        self.assertTrue(
+            data["overlay_audit"]["passed"],
+            data["overlay_audit"],
+        )
+        self.assertEqual(
+            set(data["overlay_audit"]["inks"]),
+            set(converter.CHANNELS),
+        )
+        self.assertTrue(
+            Path(data["overlay_audit"]["overlay_png"]).is_file()
+        )
+        self.assertTrue(
+            Path(data["overlay_audit"]["overlay_json"]).is_file()
+        )
         self.assertEqual(
             data["ink_processing"]["sharpening"],
             {
@@ -2638,6 +2660,7 @@ class CmykTabTests(unittest.TestCase):
                 hashlib.sha256(saved.read_bytes()).hexdigest(),
             )
         self.assertIn("Set manifest", tab.status.text())
+        self.assertIn("Overlay PASS", tab.status.text())
 
     def test_legacy_wave_manifest_records_current_mesh_raw_mode(self):
         host = FakeHost(self.image_path)

@@ -1723,12 +1723,65 @@ class CmykTab(GeneratorTab):
         written = export(entries, None, base)
         manifest_path = None
         set_manifest_path = None
+        overlay_report = None
+        overlay_error = ""
+        if written and not sheet:
+            by_label = dict(
+                zip(
+                    [label for label, _gcode in entries],
+                    written,
+                )
+            )
+            by_channel = {
+                channel: by_label[
+                    converter.CHANNEL_LABELS[channel].lower()
+                ]
+                for channel in converter.CHANNELS
+                if channel in results
+                and converter.CHANNEL_LABELS[channel].lower()
+                in by_label
+            }
+            first = Path(written[0])
+            overlay_stem = first.parent / (
+                self._set_stem_from_path(first) + "-overlay"
+            )
+            try:
+                overlay_report = converter.write_cmyk_gcode_overlay(
+                    by_channel,
+                    overlay_stem,
+                    self._effective_settings(),
+                )
+            except Exception as exc:  # noqa: BLE001 - files already exist
+                overlay_error = str(exc)
+                overlay_report = {
+                    "passed": False,
+                    "errors": [overlay_error],
+                    "overlay_png": "",
+                    "overlay_json": "",
+                }
         if written and sheet and self._layers_manifest is not None:
             manifest_path = self._write_manifest(written[0], entries[0][0])
         elif written:
-            set_manifest_path = self._write_set_manifest(written, results)
+            set_manifest_path = self._write_set_manifest(
+                written,
+                results,
+                overlay_report,
+            )
         if written:
             names = ", ".join(os.path.basename(path) for path in written)
+            overlay_text = ""
+            if overlay_report is not None:
+                if overlay_report.get("passed"):
+                    overlay_text = (
+                        " Overlay PASS: %s."
+                        % Path(overlay_report["overlay_png"]).name
+                    )
+                else:
+                    overlay_text = " Overlay BLOCKED: %s." % "; ".join(
+                        overlay_report.get("errors", ["unknown audit error"])
+                    )
+                    if self.host is not None and hasattr(self.host, "log"):
+                        self.host.log.append(overlay_text.strip())
             extra = (
                 f" Calibration manifest: {manifest_path.name}."
                 if manifest_path
@@ -1738,6 +1791,7 @@ class CmykTab(GeneratorTab):
             )
             self.status.setText(
                 f"Saved {len(written)} G-code files ({names}).{extra}"
+                f"{overlay_text}"
             )
 
     def _write_manifest(self, first_path, first_label):
@@ -1752,15 +1806,19 @@ class CmykTab(GeneratorTab):
         )
         return path
 
-    def _write_set_manifest(self, written, results):
-        """Record the complete print recipe and output hashes for a set."""
-        first = Path(written[0])
-        stem = first.stem
+    @staticmethod
+    def _set_stem_from_path(path):
+        stem = Path(path).stem
         for channel in converter.CHANNELS:
             suffix = "-" + converter.CHANNEL_LABELS[channel].lower()
             if stem.endswith(suffix):
-                stem = stem[: -len(suffix)]
-                break
+                return stem[: -len(suffix)]
+        return stem
+
+    def _write_set_manifest(self, written, results, overlay_report=None):
+        """Record the complete print recipe and output hashes for a set."""
+        first = Path(written[0])
+        stem = self._set_stem_from_path(first)
         path = first.parent / f"{stem}-set.json"
         channels = [channel for channel in converter.CHANNELS if channel in results]
         settings = self._effective_settings()
@@ -1890,6 +1948,7 @@ class CmykTab(GeneratorTab):
                 )
                 for channel, record in results.items()
             },
+            "overlay_audit": overlay_report,
             "registration_crosses": self.registration_marks.isChecked(),
             "pen_offsets_mm": {
                 channel: list(self._pen_offsets()[channel])

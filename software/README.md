@@ -585,6 +585,13 @@ Current tools:
   active CMYK worker.
   **Save 4 G-code files** writes
   `<name>-cyan.gcode`, `-magenta`, `-yellow` and `-black` from one base name.
+  After those files are written, the app reads them back from disk and creates
+  `<name>-overlay.png` plus `<name>-overlay.json`. The image renders all
+  pen-down paths in one G54 machine frame with the reach and planning circles,
+  center axes, and per-ink bounding boxes. The JSON records pass/fail,
+  cross-file identity, per-ink bounds/centers/max radii, ink envelopes, row
+  angles, and source program paths. A failed overlay audit is reported in the
+  save status and log while leaving the generated files available for review.
   The r-theta axis-cost solver and the M3/M5 pen contract are inherited
   unchanged, so each ink is as cost-efficient as a normal Convert program;
   the tab's **Bed motion** bullets (Xθ/Yθ or XY only) apply to all four ink
@@ -651,14 +658,16 @@ Current tools:
   **Pass summary and preflight:** before saving, the tab shows the page,
   shared frame, Bed motion, centre hold, row-spacing guard, crosses and pen
   offsets, then runs the motion preflight on each ink. It checks the bed-step
-  cap, the A-rate limit, bare `G0` rotations and moves that exceed the Path
-  tolerance;
+  cap, the A-rate limit, bare `G0` rotations, moves that exceed the Path
+  tolerance, and the final path plus pen-radius envelope against the configured
+  reach;
   hard violations block Save and warnings go to the log. A successful
   artwork save also writes a version-4 `<name>-set.json` beside the four files
   with the source hash, page and motion mode, bed-compensation profile,
   complete image/screen recipe, sharpening amount and radius, effective pitch,
   pen offsets, per-ink
-  preflight results, and SHA-256 hashes for all four G-code files.
+  preflight results, SHA-256 hashes for all four G-code files, parsed program
+  identities, and the overlay-audit report.
   Line, wave, gyroid, TSP and contour styles are the fast continuous-mark
   alternatives to dot styles: they draw far fewer pen-lift cycles, while the
   overdraw control darkens any style by redrawing each mark up to three times

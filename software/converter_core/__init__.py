@@ -10,6 +10,7 @@ from .wave_rows import *
 from .kinematics import *
 from .motion_check import *
 from .gcode import *
+from .gcode_overlay import *
 from .kaleidoscope import *
 from .generative import *
 

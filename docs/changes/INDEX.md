@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-26 | `WSW-20261126-010` | windows-software | implemented | [Add a post-save CMYK G-code overlay audit](windows-software/2026/2026-11-26-post-save-cmyk-overlay-audit.md) |
 | 2026-11-26 | `WSW-20261126-009` | windows-software, hardware | implemented | [Harden CMYK reach and set identity](windows-software/2026/2026-11-26-harden-cmyk-reach-and-set-identity.md) |
 | 2026-11-26 | `WSW-20261126-008` | windows-software | implemented | [Make Match pen satisfy Wave clearance](windows-software/2026/2026-11-26-cmyk-match-pen-wave-clearance.md) |
 | 2026-11-26 | `WSW-20261126-007` | windows-software | implemented | [Keep CMYK artwork scale effective and centered](windows-software/2026/2026-11-26-cmyk-scale-centering.md) |
