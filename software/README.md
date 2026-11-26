@@ -762,8 +762,8 @@ Current tools:
   `3`-cell local radius. This joins diagonal neighbours and short sparse-cell
   gaps, so contiguous image areas become long cell-following strokes instead
   of thousands of isolated M3/M5 dashes. Every bridge is visible ink; lowering
-  the gap restores a denser-looking, more fragmented screen without changing
-  the selected CMYK cell subsets. The precision recipe starts at `0.35`
+  the gap restores a lighter, more fragmented screen without changing the
+  selected CMYK cell subsets. The precision recipe starts at `0.35`
   pre-scale pitch, `0.05 mm` path tolerance, `800000` marks per ink, auto levels
   off, brightness `100 %`, saturation `106 %`, contrast `122 %`, gamma `1.00`,
   GCR `65 %`, a `60 % / 1.50 mm` unsharp mask, all four weights at `100 %`, and
