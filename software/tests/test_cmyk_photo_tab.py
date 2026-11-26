@@ -53,16 +53,27 @@ class FakeHost:
     def motion_estimate_scale(self):
         return converter.DEFAULT_MOTION_ESTIMATE_SCALE
 
-    def export_program_set(self, entries, base_path=None, default_base=""):
+    def resolve_program_set_base(self, default_base=""):
+        return default_base
+
+    def export_program_set(
+        self,
+        entries,
+        base_path=None,
+        default_base="",
+        companion_files=None,
+    ):
         del default_base
         self.export_base_path = base_path
         written = []
         base = Path(base_path)
         for label, gcode in entries:
             path = base.parent / f"{base.stem}-{label}.gcode"
-            path.write_text(gcode, encoding="utf-8")
+            path.write_bytes(gcode.encode("utf-8"))
             self.saved_labels.append(label)
             written.append(str(path))
+        for path, content in companion_files or ():
+            Path(path).write_bytes(content.encode("utf-8"))
         return written
 
     def preview(self):
@@ -106,6 +117,8 @@ class CmykPhotoTabTests(unittest.TestCase):
 
     def test_guided_page_is_simple_and_inside_a_fourteen_inch_circle(self):
         tab, _host = self.make_tab()
+        for box in tab.write_boxes.values():
+            box.setChecked(False)
         # Parent windows are not shown offscreen; visibility state is what
         # matters, not isVisible().
         tab.show()
@@ -118,6 +131,7 @@ class CmykPhotoTabTests(unittest.TestCase):
         self.assertGreaterEqual(tab.gcr.value(), 40.0)
         self.assertEqual(tab.page_w.value(), 250.0)
         self.assertEqual(tab.page_h.value(), 250.0)
+        self.assertTrue(all(box.isChecked() for box in tab.write_boxes.values()))
         corner_radius = math.hypot(125.0, 125.0)
         self.assertLessEqual(corner_radius, 355.6 / 2.0)
 
@@ -156,10 +170,7 @@ class CmykPhotoTabTests(unittest.TestCase):
         output = Path(self.folder) / "out"
         output.mkdir(exist_ok=True)
         tab._next_export_base_path = str(output / "portrait-cmyk.gcode")
-        with (
-            mock.patch.object(tab, "_preflight_errors", return_value=[]),
-            mock.patch.object(tab, "_write_set_manifest", return_value=None),
-        ):
+        with mock.patch.object(tab, "_preflight_errors", return_value=[]):
             tab._write_files(results)
         self.assertEqual(
             host.saved_labels,
@@ -168,6 +179,34 @@ class CmykPhotoTabTests(unittest.TestCase):
         self.assertEqual(
             Path(host.export_base_path).name,
             "portrait-cmyk.gcode",
+        )
+        self.assertTrue((output / "portrait-cmyk-set.json").is_file())
+
+    def test_complete_set_rejects_different_ink_contracts(self):
+        tab, _host = self.make_tab()
+        identity = {
+            "scale": 1.0,
+            "frame_center_mm": [125.0, 125.0],
+            "bed_compensation": {"full_profile_fingerprint": "abc"},
+        }
+        results = {
+            channel: {
+                "set_identity": dict(identity),
+            }
+            for channel in converter.CHANNELS
+        }
+        results["m"]["set_identity"]["frame_center_mm"] = [124.0, 125.0]
+        errors = tab._set_consistency_errors(
+            results,
+            list(converter.CHANNELS),
+        )
+        self.assertTrue(
+            any("do not share one scale" in error for error in errors)
+        )
+        del results["k"]
+        errors = tab._set_consistency_errors(results, list(results))
+        self.assertTrue(
+            any("requires all four inks" in error for error in errors)
         )
 
     def test_create_action_starts_preview_and_defers_save_until_ready(self):

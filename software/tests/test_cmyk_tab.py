@@ -935,7 +935,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertTrue(manifest.exists())
         data = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(data["kind"], "cmyk-print-set")
-        self.assertEqual(data["version"], 4)
+        self.assertEqual(data["version"], 5)
         self.assertAlmostEqual(data["pen_offsets_mm"]["m"][0], 0.75)
         self.assertEqual(set(data["preflight"]), set(converter.CHANNELS))
         self.assertEqual(
@@ -1020,6 +1020,10 @@ class CmykTabTests(unittest.TestCase):
                 data["file_sha256"][channel],
                 hashlib.sha256(saved.read_bytes()).hexdigest(),
             )
+        self.assertTrue(data["set_verification"]["complete"])
+        self.assertTrue(
+            data["set_verification"]["whole_set_transaction"]
+        )
         self.assertIn("Set manifest", tab.status.text())
 
     def test_set_manifest_records_the_global_artwork_placement(self):
@@ -2040,15 +2044,27 @@ class FakeHost:
             "stats": {},
         }
 
-    def export_program_set(self, entries, base_path=None, default_base=""):
+    def resolve_program_set_base(self, default_base=""):
+        del default_base
+        return str(Path(self._folder) / "art-cmyk.gcode")
+
+    def export_program_set(
+        self,
+        entries,
+        base_path=None,
+        default_base="",
+        companion_files=None,
+    ):
         del base_path, default_base
         written = []
         for label, gcode in entries:
             path = str(Path(self._folder) / f"art-cmyk-{label}.gcode")
-            Path(path).write_text(gcode, encoding="utf-8")
+            Path(path).write_bytes(gcode.encode("utf-8"))
             self.saved_labels.append(label)
             self.saved_paths[label] = path
             written.append(path)
+        for path, content in companion_files or ():
+            Path(path).write_bytes(content.encode("utf-8"))
         return written
 
 

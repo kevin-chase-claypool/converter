@@ -538,14 +538,23 @@ class ToolShellTests(unittest.TestCase):
         folder = tempfile.mkdtemp(prefix="export-set-")
         self.addCleanup(shutil.rmtree, folder, ignore_errors=True)
         base = str(Path(folder) / "art-cmyk.gcode")
+        manifest = Path(folder) / "art-cmyk-set.json"
         written = window.export_program_set(
-            [("cyan", "G1 X0\n"), ("black", "G1 X1\n")], base_path=base
+            [("cyan", "G1 X0\n"), ("black", "G1 X1\n")],
+            base_path=base,
+            companion_files=[
+                (manifest, '{"kind":"cmyk-print-set"}\n'),
+            ],
         )
         self.assertEqual(
             [Path(path).name for path in written],
             ["art-cmyk-cyan.gcode", "art-cmyk-black.gcode"],
         )
         self.assertEqual(Path(written[0]).read_text(encoding="utf-8"), "G1 X0\n")
+        self.assertEqual(
+            manifest.read_text(encoding="utf-8"),
+            '{"kind":"cmyk-print-set"}\n',
+        )
 
     def test_ink_vertex_colors_follow_contour_tags(self):
         import converter_core as converter

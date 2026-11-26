@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-25 | `WSW-20261125-009` | windows-software | implemented | [Publish CMYK sets as one transactional export](windows-software/2026/2026-11-25-transactional-cmyk-set-export.md) |
 | 2026-11-25 | `WSW-20261125-008` | windows-software | implemented | [Make native coherent CMYK the guided color workflow](windows-software/2026/2026-11-25-guided-color-cmyk-photo.md) |
 | 2026-11-25 | `WSW-20261125-007` | windows-software | superseded | [Simplify Plotterfun Extended and generate registered Y/M/C/K G-code](windows-software/2026/2026-11-25-plotterfun-cmyk-simple-workflow.md) |
 | 2026-11-25 | `WSW-20261125-006` | windows-software | implemented | [Embed Plotterfun Extended as a local converter tool](windows-software/2026/2026-11-25-plotterfun-extended-tab.md) |

@@ -1,5 +1,41 @@
 # Engineering Log
 
+<a id="elog-20261125-transactional-cmyk-set-export"></a>
+### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Publish CMYK sets transactionally
+
+- The owner's adaptive-flow export requirement makes four programs plus one
+  versioned manifest a single logical result. Sequential direct writes could
+  leave a mixed old/new set or four programs without their calibration and
+  hash record if a later write failed.
+- All CMYK and generator multi-program targets now use a staged
+  same-directory transaction. The exporter flushes every temporary file before
+  replacing any target, backs up existing files, and restores them if a commit
+  step fails. It returns success only after the complete set commits.
+- Guided CMYK restores all four write checkboxes and requires Yellow, Magenta,
+  Cyan, and Black. Program records now carry one canonical identity for
+  artwork scale, placement, page frame, theta mode/ratio, feed contract, and
+  full compensation profile; disagreements block the set.
+- The companion manifest is part of the same transaction. Version 5 records
+  hashes from the exact staged UTF-8 bytes, a process-ink calibration identity,
+  the canonical set-identity hash, and explicit whole-set verification fields.
+- Transaction regressions force both staging and commit failures and prove the
+  prior set is restored byte-for-byte. Unsafe/duplicate labels, guided
+  four-ink restoration, and mismatched ink contracts are rejected.
+- The focused CMYK suite including the new exporter passes `168` tests in
+  `29.397 s`; the expanded CMYK, exporter, and generator-shell subset passes
+  `215` tests in `34.918 s`. Complete converter discovery passes `724` tests
+  in `137.386 s`; each broader run has one expected OpenGL-context skip. No
+  physical plot was run.
+- An operating-system crash inside the per-file replacement window can still
+  leave retained `.backup` files; cross-file atomicity is logical rollback,
+  not a single filesystem primitive. The stage-owned workflow remains a
+  separate roadmap milestone.
+- Evidence: `WSW-20261125-009`;
+  `docs/changes/windows-software/2026/2026-11-25-transactional-cmyk-set-export.md`;
+  `docs/decisions/ADR-010-transactional-multiprogram-export.md`.
+- Category: windows-software, cmyk, export, transaction, manifest, preflight,
+  registration, reproducibility.
+
 <a id="elog-20261125-guided-color-cmyk-photo"></a>
 ### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Make native coherent CMYK the guided color path
 

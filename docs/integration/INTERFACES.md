@@ -49,6 +49,23 @@ The converter emits:
 Unknown or unsupported commands must cause an explicit error during test, not
 silent motion.
 
+### Host program-set publication
+
+A multi-ink output is one logical publication unit even though it reaches the
+machine as four independent G-code files. The host stages every program and
+its set manifest, flushes them, then atomically replaces the targets. It
+returns success only after all replacements commit. A failure removes newly
+installed files and restores any prior set, or reports that recovery itself
+failed.
+
+The programs must carry the same artwork scale, placement, page frame, theta
+ratio and mode, feed/travel contract, and bed-compensation profile identity.
+Guided CMYK requires Yellow, Magenta, Cyan, and Black in that physical print
+order. The version-5 set manifest records the source and program hashes,
+calibration identity, pen offsets, per-program motion preflight, and one
+canonical common-identity hash. This is a host filesystem contract only; it
+does not change the controller command or coordinate contracts above.
+
 ## HMI to Pi-local settings
 
 The Raspberry Pi settings API is a separate allowlisted interface from the

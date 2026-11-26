@@ -71,7 +71,7 @@ python -m unittest -q software.tests.test_path_join
 python -m unittest discover -q -s software\tests -p "test_*.py"
 ```
 
-The complete discovery run currently contains 719 test cases. Repeated generator
+The complete discovery run currently contains 724 test cases. Repeated generator
 tab contracts retain their per-tab class names and failure locations, while
 related slow setup scenarios use subtests to avoid rebuilding the same Qt
 window or generated coupon.
@@ -882,13 +882,18 @@ Current tools:
   shared frame, Bed motion, centre hold, row-spacing guard, crosses and pen
   offsets, then runs the motion preflight on each ink. It checks the bed-step
   cap, the A-rate limit, bare `G0` rotations and moves that exceed the Path
-  tolerance;
-  hard violations block Save and warnings go to the log. A successful
-  artwork save also writes a version-4 `<name>-set.json` beside the four files
-  with the source hash, page and motion mode, bed-compensation profile,
-  artwork placement, complete image/screen recipe, sharpening amount and
-  radius, effective pitch, pen offsets, per-ink
-  preflight results, and SHA-256 hashes for all four G-code files.
+  tolerance; hard violations block Save and warnings go to the log. The
+  analyzed programs must also agree on artwork scale, placement, page frame,
+  theta mode/ratio, feed and travel contract, and full bed-compensation
+  profile. Guided **Create 4 G-code files** requires all four output inks.
+  A successful artwork save publishes the four programs and a version-5
+  `<name>-set.json` as one logical transaction. Every file is staged before
+  any destination is replaced; a failed commit restores the previous set.
+  The manifest records the source hash, page and motion mode,
+  bed-compensation profile, artwork placement, complete image/screen recipe,
+  sharpening amount and radius, effective pitch, pen offsets, calibration
+  identity, per-ink preflight results, one canonical set-identity hash, and
+  SHA-256 hashes for all four G-code files.
   A non-zero artwork placement is also written into every G-code header, for
   example `(artwork placement -3.170,-28.740 mm)`. Before a multi-pass print,
   confirm that all four headers and `artwork_placement_mm` in the set manifest

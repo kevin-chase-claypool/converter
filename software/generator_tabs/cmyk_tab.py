@@ -38,6 +38,7 @@ from PySide6.QtWidgets import (
 )
 
 import converter_core as converter
+from program_set_export import program_set_paths
 
 from ._tab_common import (
     ChoiceBullets,
@@ -63,6 +64,91 @@ REFERENCE_PHOTO_FLOW_SMOOTHING_MM = 2.5
 REFERENCE_PHOTO_FLOW_LAYERS = 3
 REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT = 60.0
 REFERENCE_PHOTO_CHAIN_GAP_MM = 1.0
+
+
+def _common_program_identity(settings, compensation):
+    """Return the machine/frame fields that every ink program must share."""
+    frame = getattr(settings, "frame_center_mm", None)
+    identity = {
+        "scale": round(float(settings.scale), 8),
+        "artwork_placement_mm": [
+            round(float(settings.artwork_offset_x_mm), 8),
+            round(float(settings.artwork_offset_y_mm), 8),
+        ],
+        "frame_center_mm": (
+            [round(float(frame[0]), 8), round(float(frame[1]), 8)]
+            if frame is not None
+            else None
+        ),
+        "theta_drive_ratio": round(float(settings.theta_drive_ratio), 8),
+        "theta_mode": str(settings.theta_mode),
+        "feed_rate": round(float(settings.feed_rate), 8),
+        "travel_rate": round(float(settings.travel_rate), 8),
+        "theta_max_rate_deg_min": round(
+            float(settings.theta_controller_limits.max_rate_deg_min),
+            8,
+        ),
+        "theta_max_acceleration_deg_s2": round(
+            float(settings.theta_controller_limits.max_acceleration_deg_s2),
+            8,
+        ),
+        "bed_compensation_path": str(settings.bed_compensation_path or ""),
+        "calibration_identity": str(
+            getattr(settings, "pen_profile_sha256", "") or ""
+        ),
+    }
+    if compensation is not None:
+        translation = getattr(compensation, "common_translation_mm", None)
+        identity["bed_compensation"] = {
+            "mode": (
+                "row_locked_projection"
+                if getattr(compensation, "row_locked", False)
+                else "raw"
+            ),
+            "full_profile_fingerprint": str(
+                getattr(
+                    compensation,
+                    "full_profile_fingerprint",
+                    getattr(compensation, "fingerprint", ""),
+                )
+            ),
+            "coverage_radius_mm": round(
+                float(compensation.coverage_radius_mm),
+                8,
+            ),
+            "full_max_correction_mm": round(
+                float(
+                    getattr(
+                        compensation,
+                        "full_max_correction_mm",
+                        compensation.max_correction_mm,
+                    )
+                ),
+                8,
+            ),
+            "common_translation_mm": (
+                [
+                    round(float(translation[0]), 8),
+                    round(float(translation[1]), 8),
+                ]
+                if translation is not None
+                else None
+            ),
+        }
+    else:
+        identity["bed_compensation"] = None
+    return identity
+
+
+def _record_count(value):
+    """Normalize analyzed integer counts and test-double move collections."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        try:
+            return len(value)
+        except TypeError:
+            return 0
 
 
 def reference_photo_pitch_mm(pen_width_mm, scale_pct):
@@ -189,6 +275,10 @@ class ProgramAnalysisWorker(QObject):
                     "draw_mm": estimate["draw_mm"],
                     "seconds": estimate["total_seconds"],
                     "checks": checks,
+                    "set_identity": _common_program_identity(
+                        data.get("settings", self.settings),
+                        data.get("bed_compensation"),
+                    ),
                 }
                 compensation = data.get("bed_compensation")
                 if getattr(compensation, "row_locked", False):
@@ -231,6 +321,7 @@ class CmykTab(GeneratorTab):
     # hatch every dot outline a second time.
     SELF_SCREENED = True
     WRITE_ORDER = converter.CHANNELS
+    REQUIRE_COMPLETE_SET = False
 
     def __init__(self, host):
         super().__init__(host)
@@ -1770,6 +1861,49 @@ class CmykTab(GeneratorTab):
                 )
         return warnings
 
+    def _set_consistency_errors(self, results, channels):
+        """Verify every recorded program uses one artwork/machine contract."""
+        errors = []
+        channel_set = set(channels)
+        if self.REQUIRE_COMPLETE_SET and channel_set != set(converter.CHANNELS):
+            missing = [
+                converter.CHANNEL_LABELS[channel]
+                for channel in converter.CHANNELS
+                if channel not in channel_set
+            ]
+            errors.append(
+                "complete CMYK export requires all four inks"
+                + (f" (missing: {', '.join(missing)})" if missing else "")
+            )
+
+        identities = {
+            channel: results[channel].get("set_identity")
+            for channel in channels
+            if results[channel].get("set_identity") is not None
+        }
+        if not identities:
+            return errors
+        if len(identities) != len(channels):
+            missing = [
+                converter.CHANNEL_LABELS[channel]
+                for channel in channels
+                if channel not in identities
+            ]
+            errors.append(
+                "set identity is missing for " + ", ".join(missing)
+            )
+            return errors
+        signatures = {
+            channel: json.dumps(identity, sort_keys=True)
+            for channel, identity in identities.items()
+        }
+        if len(set(signatures.values())) > 1:
+            errors.append(
+                "ink programs do not share one scale, placement, frame, "
+                "theta contract, feed contract, and compensation identity"
+            )
+        return errors
+
     def _wave_spacing_guard_active(self):
         """Whether to project compensation onto the Wave row lattice."""
         return (
@@ -1919,6 +2053,9 @@ class CmykTab(GeneratorTab):
             )
         if results is not None:
             errors = self._preflight_errors(results)
+            errors.extend(
+                self._set_consistency_errors(results, list(results))
+            )
             warnings = self._preflight_warnings(results)
             if errors:
                 parts.append("preflight BLOCKED: " + "; ".join(errors))
@@ -2410,6 +2547,12 @@ class CmykTab(GeneratorTab):
                         )
                     )
                 errors = self._preflight_errors(results)
+                errors.extend(
+                    self._set_consistency_errors(
+                        results,
+                        list(results),
+                    )
+                )
                 warnings = self._preflight_warnings(results)
                 if errors:
                     self.host.log.append(
@@ -2469,13 +2612,19 @@ class CmykTab(GeneratorTab):
             channel for channel in self.WRITE_ORDER if channel in results
         ]
         entries = [
-            (self._output_label(channel), results[channel]["gcode"])
+            (
+                self._output_label(channel),
+                results[channel]["gcode"],
+            )
             for channel in channels
         ]
         if not entries:
             self.report_error("Nothing to save; preview first.")
             return
         errors = self._preflight_errors(results)
+        errors.extend(
+            self._set_consistency_errors(results, channels)
+        )
         if errors:
             message = "CMYK preflight blocked save: " + "; ".join(errors)
             self.report_error(message)
@@ -2497,19 +2646,74 @@ class CmykTab(GeneratorTab):
             return
         base_path = getattr(self, "_next_export_base_path", None)
         self._next_export_base_path = None
-        written = export(entries, base_path, base)
+        resolver = getattr(self.host, "resolve_program_set_base", None)
+        if callable(resolver) and base_path is None:
+            base_path = resolver(base)
+            if not base_path:
+                self.report_error("CMYK G-code creation cancelled.")
+                return
+        companion_files = []
         manifest_path = None
+        if base_path:
+            try:
+                targets = program_set_paths(
+                    base_path,
+                    [label for label, _gcode in entries],
+                )
+            except ValueError as exc:
+                self.report_error(str(exc))
+                return
+            file_names = {
+                channel: target.name
+                for channel, target in zip(channels, targets)
+            }
+            if sheet and self._layers_manifest is not None:
+                manifest_path = self._manifest_path_for_target(
+                    targets[0],
+                    entries[0][0],
+                    "calibration",
+                )
+                companion_files.append(
+                    (
+                        manifest_path,
+                        json.dumps(self._layers_manifest, indent=2) + "\n",
+                    )
+                )
+            elif not sheet:
+                manifest_path = self._manifest_path_for_target(
+                    targets[0],
+                    entries[0][0],
+                    "set",
+                )
+                companion_files.append(
+                    (
+                        manifest_path,
+                        self._set_manifest_text(
+                            results,
+                            file_names,
+                            published_with_programs=True,
+                        ),
+                    )
+                )
+        written = export(
+            entries,
+            base_path,
+            base,
+            companion_files=companion_files,
+        )
         set_manifest_path = None
-        if written and sheet and self._layers_manifest is not None:
+        if written and not companion_files and sheet and self._layers_manifest is not None:
             manifest_path = self._write_manifest(written[0], entries[0][0])
-        elif written:
+        elif written and not companion_files:
             set_manifest_path = self._write_set_manifest(written, results)
+        elif written:
+            set_manifest_path = manifest_path
         if written:
             names = ", ".join(os.path.basename(path) for path in written)
             extra = (
-                f" Calibration manifest: {manifest_path.name}."
-                if manifest_path
-                else f" Set manifest: {set_manifest_path.name}."
+                f" Calibration manifest: {Path(manifest_path).name}."
+                if sheet and manifest_path
+                else f" Set manifest: {Path(set_manifest_path).name}."
                 if set_manifest_path
                 else ""
             )
@@ -2517,12 +2721,20 @@ class CmykTab(GeneratorTab):
                 f"Saved {len(written)} G-code files ({names}).{extra}"
             )
 
-    def _write_manifest(self, first_path, first_label):
-        """Write the calibration manifest next to the saved G-code files."""
+    def _manifest_path_for_target(self, first_path, first_label, kind):
+        """Return the companion manifest beside one set's first program."""
         first = Path(first_path)
         tail = f"-{first_label}.gcode"
         stem = first.name[: -len(tail)] if first.name.endswith(tail) else first.stem
-        path = first.parent / f"{stem}-calibration.json"
+        return first.parent / f"{stem}-{kind}.json"
+
+    def _write_manifest(self, first_path, first_label):
+        """Write the calibration manifest next to the saved G-code files."""
+        path = self._manifest_path_for_target(
+            first_path,
+            first_label,
+            "calibration",
+        )
         path.write_text(
             json.dumps(self._layers_manifest, indent=2) + "\n",
             encoding="utf-8",
@@ -2531,17 +2743,50 @@ class CmykTab(GeneratorTab):
 
     def _write_set_manifest(self, written, results):
         """Record the complete print recipe and output hashes for a set."""
-        first = Path(written[0])
-        stem = first.stem
         channels = [
             channel for channel in self.WRITE_ORDER if channel in results
         ]
-        for channel in channels:
-            suffix = "-" + self._output_label(channel)
-            if stem.endswith(suffix):
-                stem = stem[: -len(suffix)]
-                break
-        path = first.parent / f"{stem}-set.json"
+        file_names = {
+            channel: Path(path).name
+            for channel, path in zip(channels, written)
+        }
+        path = self._manifest_path_for_target(
+            written[0],
+            self._output_label(channels[0]),
+            "set",
+        )
+        path.write_text(
+            self._set_manifest_text(results, file_names),
+            encoding="utf-8",
+        )
+        return path
+
+    def _set_manifest_text(
+        self,
+        results,
+        file_names,
+        published_with_programs=False,
+    ):
+        """Serialize one output manifest from known program contents."""
+        return json.dumps(
+            self._set_manifest_data(
+                results,
+                file_names,
+                published_with_programs=published_with_programs,
+            ),
+            indent=2,
+        ) + "\n"
+
+    def _set_manifest_data(
+        self,
+        results,
+        file_names,
+        published_with_programs=False,
+    ):
+        """Build the complete print recipe and output hashes for a set."""
+        channels = [
+            channel for channel in self.WRITE_ORDER if channel in results
+        ]
         settings = self._effective_settings()
         factor = self.scale_pct.value() / 100.0
         weights = self._weights()
@@ -2583,9 +2828,44 @@ class CmykTab(GeneratorTab):
         translation_sample = next(
             iter(row_lock_records.values()), None
         )
+        ink_transmittances = {
+            channel: [
+                round(float(component), 4)
+                for component in values
+            ]
+            for channel, values in zip(
+                converter.CHANNELS,
+                converter.ink_transmittance_matrix(
+                    self._active_ink_colors()
+                ),
+            )
+        }
+        calibration_identity = hashlib.sha256(
+            json.dumps(
+                ink_transmittances,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
+        set_identities = {
+            channel: results[channel].get("set_identity")
+            for channel in channels
+            if results[channel].get("set_identity") is not None
+        }
+        set_identity_sha256 = (
+            hashlib.sha256(
+                json.dumps(
+                    set_identities,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+            ).hexdigest()
+            if set_identities
+            else ""
+        )
         data = {
             "kind": "cmyk-print-set",
-            "version": 4,
+            "version": 5,
             "created": datetime.datetime.now().isoformat(timespec="seconds"),
             "print_order": [
                 self._output_label(channel) for channel in channels
@@ -2800,18 +3080,8 @@ class CmykTab(GeneratorTab):
                 "resolution_px": self.resolution.value(),
                 "weights": weights,
                 "color_model": "process-ink-multiply-v1",
-                "ink_transmittances": {
-                    channel: [
-                        round(float(component), 4)
-                        for component in values
-                    ]
-                    for channel, values in zip(
-                        converter.CHANNELS,
-                        converter.ink_transmittance_matrix(
-                            self._active_ink_colors()
-                        ),
-                    )
-                },
+                "calibration_identity": calibration_identity,
+                "ink_transmittances": ink_transmittances,
                 "sharpening": {
                     "enabled": self.sharpen.isChecked(),
                     "amount_pct": self.sharpen_amount.value(),
@@ -2823,21 +3093,54 @@ class CmykTab(GeneratorTab):
                 "the calibration sheet keeps its geometric layout."
             ),
             "files": {
-                channel: Path(path_value).name
-                for channel, path_value in zip(channels, written)
+                channel: Path(file_names[channel]).name
+                for channel in channels
             },
             "file_sha256": {
-                channel: _sha256_file(Path(path_value))
-                for channel, path_value in zip(channels, written)
-                if Path(path_value).is_file()
+                channel: hashlib.sha256(
+                    results[channel]["gcode"].encode("utf-8")
+                ).hexdigest()
+                for channel in channels
+            },
+            "program_geometry": {
+                channel: {
+                    "marks": _record_count(
+                        results[channel].get("marks", 0)
+                    ),
+                    "moves": _record_count(
+                        results[channel].get("moves", 0)
+                    ),
+                    "draw_mm": float(results[channel].get("draw_mm", 0.0)),
+                    "x_theta_moves": int(
+                        results[channel].get("x_count", 0)
+                    ),
+                    "y_theta_moves": int(
+                        results[channel].get("y_count", 0)
+                    ),
+                }
+                for channel in channels
             },
             "preflight": {
                 channel: results[channel].get("checks")
                 for channel in channels
             },
+            "set_verification": {
+                "complete": set(channels) == set(converter.CHANNELS),
+                "channels": list(channels),
+                "expected_channels": list(converter.CHANNELS),
+                "identity_sha256": set_identity_sha256,
+                "consistency_checked": bool(set_identities),
+                "motion_preflight_passed": all(
+                    bool(results[channel].get("checks"))
+                    and not converter.preflight_problems(
+                        results[channel]["checks"]
+                    )
+                    for channel in channels
+                ),
+                "whole_set_transaction": bool(published_with_programs),
+            },
         }
-        path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-        return path
+        return data
 
 
 class CmykPhotoTab(CmykTab):
@@ -2845,6 +3148,7 @@ class CmykPhotoTab(CmykTab):
 
     NAME = "cmyk"
     WRITE_ORDER = ("y", "m", "c", "k")
+    REQUIRE_COMPLETE_SET = True
     GUIDED_HOST_CONTROLS = (
         "ink_profile_button",
         "fill_bed_button",
@@ -3111,6 +3415,8 @@ class CmykPhotoTab(CmykTab):
         self.scale_pct.setValue(100)
         self.registration_marks.setChecked(True)
         self.theta_mode.set_value("optimized")
+        for box in self.write_boxes.values():
+            box.setChecked(True)
         return self.apply_reference_defaults()
 
     def _expected_quick_paths(self, folder, base_name):

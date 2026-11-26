@@ -60,6 +60,11 @@ from PySide6.QtWidgets import (
 
 import converter_core as converter
 from generator_tabs._tab_common import ChoiceBullets
+from program_set_export import (
+    ProgramSetExportError,
+    program_set_paths,
+    write_file_set_transaction,
+)
 # Flushed so `qt_debug.log` names the build as soon as the app starts; it is the
 # quickest way to tell a stale window from a stale install.
 print(f"[geometry version: {getattr(converter, 'GEOMETRY_VERSION', 'OLD-no-new-patterns')}]", flush=True)
@@ -2701,45 +2706,72 @@ class MainWindow(QMainWindow):
             "bed_compensation": program_plan.get("bed_compensation"),
         }
 
-    def export_program_set(self, entries, base_path=None, default_base=""):
-        """Write one G-code file per ``(label, gcode)`` entry from one name.
+    def resolve_program_set_base(self, default_base=""):
+        """Resolve one save base before a multi-program set is staged."""
+        # A destination folder chosen from File > Set G-code Destination takes
+        # the place of the per-save dialog.
+        if getattr(self, "gcode_dir", ""):
+            return os.path.join(
+                self.gcode_dir,
+                default_base or "plot.gcode",
+            )
+        base_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save G-code files",
+            default_base,
+            "G-code files (*.gcode *.nc *.tap);;All files (*.*)",
+        )
+        return base_path
 
-        Multi-layer tools pass the analyzed programs and a base name (or let
-        the single save dialog pick one); every program is written as
-        ``<base>-<label>.gcode``. Returns the written paths; an empty list
-        means the dialog was cancelled.
+    def export_program_set(
+        self,
+        entries,
+        base_path=None,
+        default_base="",
+        companion_files=None,
+    ):
+        """Publish one complete G-code set and any required companions.
+
+        Every file is staged before the first target is replaced. If a commit
+        step fails, previously replaced files are restored, so a returned list
+        always represents a complete published set.
         """
         entries = list(entries)
         if not entries:
             return []
-        # A destination folder chosen from File > Set G-code Destination takes
-        # the place of the per-save dialog: derive each file's name from the
-        # tool's default base inside that folder.
-        if base_path is None and getattr(self, "gcode_dir", ""):
-            base_path = os.path.join(self.gcode_dir, default_base or "plot.gcode")
         if base_path is None:
-            base_path, _ = QFileDialog.getSaveFileName(
-                self,
-                "Save G-code files",
-                default_base,
-                "G-code files (*.gcode *.nc *.tap);;All files (*.*)",
-            )
+            base_path = self.resolve_program_set_base(default_base)
             if not base_path:
                 return []
-        stem = str(base_path)
-        for suffix in (".gcode", ".nc", ".tap"):
-            if stem.lower().endswith(suffix):
-                stem = stem[: -len(suffix)]
-                break
-        written = []
-        for label, gcode in entries:
-            path = f"{stem}-{label}.gcode"
-            with open(path, "w", encoding="utf-8", newline="\n") as handle:
-                handle.write(gcode)
-            written.append(path)
+        try:
+            targets = program_set_paths(
+                base_path,
+                [label for label, _gcode in entries],
+            )
+            files = list(zip(targets, (gcode for _label, gcode in entries)))
+            files.extend(list(companion_files or ()))
+            published = write_file_set_transaction(files)
+        except (ProgramSetExportError, OSError, TypeError, ValueError) as exc:
+            self.log.append(f"G-code set was not published: {exc}")
+            self.status.setText("G-code set was not published.")
+            QMessageBox.critical(
+                self,
+                "G-code set was not saved",
+                str(exc),
+            )
+            return []
+        written = [str(path) for path in published[: len(entries)]]
         self.log.append(
-            "Saved %d G-code files: %s"
-            % (len(written), ", ".join(os.path.basename(path) for path in written))
+            "Saved %d G-code files%s: %s"
+            % (
+                len(written),
+                (
+                    f" with {len(published) - len(written)} companion file(s)"
+                    if len(published) > len(written)
+                    else ""
+                ),
+                ", ".join(os.path.basename(path) for path in written),
+            )
         )
         self.status.setText(f"Saved {len(written)} G-code files.")
         return written
