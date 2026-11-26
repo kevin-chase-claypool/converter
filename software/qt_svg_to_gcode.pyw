@@ -1898,7 +1898,10 @@ class MainWindow(QMainWindow):
         """
         settings = self.settings()
         if source_tab is not self.convert_root:
-            if not self.generator_fit_is_active():
+            preserve_bed_fit = bool(
+                getattr(source_tab, "USES_BED_FIT_DEFAULT", False)
+            )
+            if not self.generator_fit_is_active() and not preserve_bed_fit:
                 settings = dataclasses.replace(
                     settings, fit_mode="manual", scale=1.0
                 )

@@ -474,6 +474,38 @@ class ToolShellTests(unittest.TestCase):
         convert_settings = window.settings_for_source(window.convert_root)
         self.assertEqual(convert_settings.fit_mode, window.settings().fit_mode)
 
+    def test_cmyk_photo_uses_the_global_bed_fill_by_default(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.show_tool("CMYK Photo")
+        tab = window.stack.currentWidget()
+        settings = window.settings_for_source(tab)
+        self.assertEqual(settings.fit_mode, "fill")
+        self.assertEqual(settings.scale, 1.0)
+
+        contour = [
+            (-50.0, -50.0),
+            (50.0, -50.0),
+            (50.0, 50.0),
+            (-50.0, 50.0),
+            (-50.0, -50.0),
+        ]
+        fitted = window.fitted_settings(settings, [contour])
+        self.assertAlmostEqual(
+            fitted.scale,
+            settings.scale
+            * self.module.converter.fit_scale_to_span(
+                [contour],
+                2.0 * settings.machine_reach_radius_mm,
+            ),
+        )
+
+        fit = window.fields["fit_mode"]
+        fit.setCurrentIndex(fit.findData("manual"))
+        manual = window.settings_for_source(tab)
+        self.assertEqual(manual.fit_mode, "manual")
+        self.assertEqual(manual.scale, 1.0)
+
     def test_explicit_fit_inside_applies_to_generator_sources(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

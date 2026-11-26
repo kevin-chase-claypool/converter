@@ -1,5 +1,25 @@
 # Engineering Log
 
+<a id="elog-20261126-cmyk-photo-fill-bed-default"></a>
+### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Fill the bed by default for CMYK Photo
+
+- The machine circles were correct, but `settings_for_source()` forced every
+  generator tab back to manual scale `1.0`. A 200 mm CMYK page therefore
+  occupied only about half of the 368.3 mm stock-limited drawing circle.
+- CMYK Photo now opts into the global generator bed-fit policy. Its default
+  **Fill bed** scales generated bounds to the drawable diameter; **Fit inside**
+  keeps the complete artwork inside; **Manual** remains 1:1. Other generator
+  tabs retain their intentional page-specific behavior.
+- A 250 mm Golden Sunset export now reaches `183.10-183.41 mm` maximum XY
+  radius instead of `174.21-174.36 mm`. The four programs remain transactional
+  and pass the strict motion checker.
+- Complete converter discovery passes `759` tests with one expected
+  OpenGL-context skip.
+- Evidence: `WSW-20261126-004`;
+  `docs/changes/windows-software/2026/2026-11-26-cmyk-photo-fill-bed-default.md`.
+- Category: windows-software, cmyk, fill-bed, generator-tabs, printable-area,
+  artwork-scale.
+
 <a id="elog-20261126-bed-stock-tape-geometry"></a>
 ### 🟨 2026-11-26 - HARDWARE/WINDOWS SOFTWARE/IMPLEMENTED - Separate bed, stock, and tape geometry
 

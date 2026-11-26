@@ -621,7 +621,10 @@ Current tools:
   and writes four numbered programs in physical Yellow, Magenta, Cyan, Black
   order.
   - The guided page is `250 x 250 mm`. Its corner radius is `176.78 mm`, inside
-    the `184.15 mm` radius of the 14.5-inch drawing circle.
+    the `184.15 mm` radius of the 14.5-inch drawing circle. CMYK Photo is
+    treated as a production page rather than a fixed 1:1 generator, so the
+    global **Fill bed** default enlarges its generated bounds to the drawable
+    circle unless the operator explicitly selects **Fit inside** or **Manual**.
   - A persistent nine-stage rail spans composition, image preparation,
     separation, direction field, streamline placement, ink assignment, path
     order, motion, and review/export. Clicking a stage opens only that stage's
@@ -896,9 +899,12 @@ Current tools:
   orange reach warning is expected and the outer page corners are clipped;
   the printed ink is the intended circular composition. Use **Fit inside**
   only when the entire uncropped image is wanted; it recenters the artwork and
-  gives a final equivalent scale of about `153.21 %`. Generator pages still
-  default to 1:1 so their own Artwork scale owns ordinary placement, while an
-  explicit **Fit inside** or **Fill bed** now also owns Preview and Save.
+  gives a final equivalent scale of about `153.21 %`. CMYK Photo now honors the
+  global **Fill bed** default, so its generated page is enlarged until the
+  artwork bounds touch the current 14.5-inch drawable circle. Other generator
+  pages still default to 1:1 so their own Artwork scale owns ordinary
+  placement; an explicit **Fit inside** or **Fill bed** still applies to every
+  generator.
   Resolution keeps the source image's longest side up to that many pixels
   and never upsamples, so it accepts high-resolution sources (the control is
   effectively uncapped; memory grows with the source size you keep).

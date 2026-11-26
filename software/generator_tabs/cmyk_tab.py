@@ -338,6 +338,9 @@ class CmykTab(GeneratorTab):
     # The tab draws its own halftone marks; the Convert-tab fill must not
     # hatch every dot outline a second time.
     SELF_SCREENED = True
+    # CMYK Photo is a production page, not a fixed 1:1 generator layout.
+    # Honor the global Fill bed / Fit inside choice for Preview and Save.
+    USES_BED_FIT_DEFAULT = True
     WRITE_ORDER = converter.CHANNELS
     REQUIRE_COMPLETE_SET = False
 
