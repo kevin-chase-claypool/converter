@@ -2938,7 +2938,32 @@ class CmykTabTests(unittest.TestCase):
         tab.pen_width.setValue(0.3)
         tab.match_pen_pitch()
         self.assertAlmostEqual(tab.pitch.value(), 0.15, places=2)
-        self.assertIn("matches", tab.status.text())
+        self.assertIn("clearance", tab.status.text())
+
+    def test_match_pen_pitch_reserves_wave_edge_clearance(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("waves_zero"))
+        tab.scale_pct.setValue(80)
+        tab.pen_width.setValue(0.9)
+        tab.match_pen_pitch()
+        effective = tab.pitch.value() * tab.scale_pct.value() / 100.0
+        self.assertAlmostEqual(
+            effective,
+            tab.pen_width.value() + converter.WAVE_MIN_EDGE_GAP_MM,
+            places=2,
+        )
+        self.assertIn("on-paper clearance", tab.status.text())
+
+    def test_matched_wave_pitch_builds_the_preview(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("waves_zero"))
+        tab.scale_pct.setValue(80)
+        tab.pen_width.setValue(0.9)
+        tab.match_pen_pitch()
+
+        path = tab.build_svg()
+
+        self.assertTrue(Path(path).is_file())
 
     def test_registration_crosses_are_identical_on_every_ink(self):
         tab = self.make_tab()

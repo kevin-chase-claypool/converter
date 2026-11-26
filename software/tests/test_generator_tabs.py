@@ -535,6 +535,52 @@ class ToolShellTests(unittest.TestCase):
         self.assertAlmostEqual(scaled.scale, plain.scale, places=9)
         self.assertGreater(scaled_span, 2.5 * plain_span)
 
+    def test_cmyk_fit_inside_contains_the_matched_wave_page(self):
+        from PIL import Image
+
+        with tempfile.TemporaryDirectory(prefix="cmyk-fit-inside-") as folder:
+            image_path = Path(folder) / "image.png"
+            image = Image.new("RGB", (64, 64), "white")
+            for x in range(16, 48):
+                for y in range(16, 48):
+                    image.putpixel((x, y), (0, 0, 0))
+            image.save(image_path)
+
+            window = self.module.MainWindow()
+            self.addCleanup(window.close)
+            window.svg_path.setText(str(image_path))
+            window.show_tool("CMYK")
+            tab = window.stack.currentWidget()
+            tab.page_w.setValue(200)
+            tab.page_h.setValue(200)
+            tab.margin.setValue(6)
+            tab.scale_pct.setValue(80)
+            tab.pen_width.setValue(0.9)
+            tab.style.setCurrentIndex(tab.style.findData("waves_zero"))
+            tab.resolution.setValue(128)
+            tab.max_marks.setValue(400)
+            tab.match_pen_pitch()
+            fit = window.fields["fit_mode"]
+            fit.setCurrentIndex(fit.findData("inside"))
+            tab._ensure_layers()
+
+            settings = window.settings_for_source(tab)
+            fitted = window.fitted_settings(settings, [])
+            radii = [
+                self.module.converter.artwork_radius(
+                    self.module.converter.read_svg(
+                        tab._layer_files[channel],
+                        fitted,
+                    )
+                )
+                for channel in self.module.converter.CHANNELS
+            ]
+
+        self.assertLessEqual(
+            max(radii),
+            fitted.machine_reach_radius_mm + 1e-6,
+        )
+
     def test_explicit_generator_fit_survives_the_source_handoff(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

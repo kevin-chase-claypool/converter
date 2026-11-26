@@ -4593,7 +4593,7 @@ class MainWindow(QMainWindow):
         try:
             svg_path, source_tab = self.resolve_active_source()
         except Exception as exc:
-            QMessageBox.warning(self, "Preview needs artwork", str(exc))
+            QMessageBox.warning(self, "Preview failed", str(exc))
             return
         busy = getattr(source_tab, "analysis_running", None)
         if callable(busy) and busy():

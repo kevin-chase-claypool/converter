@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-26 | `WSW-20261126-008` | implemented | [Make Match pen satisfy Wave clearance](2026/2026-11-26-cmyk-match-pen-wave-clearance.md) | `cmyk`, `wave-screen`, `pen-clearance`, `dot-pitch`, `preview`, `error-message`, `regression` |
 | 2026-11-26 | `WSW-20261126-007` | implemented | [Keep CMYK artwork scale effective and centered](2026/2026-11-26-cmyk-scale-centering.md) | `cmyk`, `artwork-scale`, `bed-fit`, `auto-center`, `placement`, `generator-tabs`, `regression` |
 | 2026-11-26 | `WSW-20261126-006` | implemented | [Honor bed fits for generator artwork](2026/2026-11-26-generator-fit-handoff.md) | `generator-tabs`, `cmyk`, `fit-inside`, `fill-bed`, `preview`, `printable-area`, `regression` |
 | 2026-11-26 | `WSW-20261126-005` | implemented | [Revert the converter to its pre-Reddit baseline](2026/2026-11-26-revert-pre-reddit-converter.md) | `rollback`, `cmyk`, `reddit-reference`, `edge-flow`, `app-stability`, `regression` |

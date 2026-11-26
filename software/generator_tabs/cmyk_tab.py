@@ -331,15 +331,16 @@ class CmykTab(GeneratorTab):
         pitch_layout.addWidget(self.pitch, 1)
         self.match_pen_button = QPushButton("Match pen")
         self.match_pen_button.setToolTip(
-            "Set Dot pitch so full-tone rows sit about one pen width apart "
-            "at the current artwork scale (effective pitch = pitch x scale)."
+            "Set Dot pitch at the current artwork scale. Wave screens include "
+            "the required edge gap beyond the pen width; other screens target "
+            "one pen width."
         )
         self.match_pen_button.clicked.connect(self.match_pen_pitch)
         pitch_layout.addWidget(self.match_pen_button)
         self.effective_pitch_label = QLabel("")
         self.effective_pitch_label.setToolTip(
             "On-paper row spacing: Dot pitch x Artwork scale. This is the "
-            "number to compare with the pen width."
+            "number to compare with the screen's minimum pen clearance."
         )
         pitch_layout.addWidget(self.effective_pitch_label)
         screen.addRow("Dot pitch", pitch_row)
@@ -800,19 +801,27 @@ class CmykTab(GeneratorTab):
         if self.host is not None:
             self.host.generator_status(message)
 
+    def pen_clearance_mm(self):
+        """Minimum on-paper centre-line clearance for the active screen."""
+        clearance = max(0.0, self.pen_width.value())
+        if self.style.currentData() in ("waves", "waves_even", "waves_zero"):
+            clearance += converter.WAVE_MIN_EDGE_GAP_MM
+        return clearance
+
     def pen_pitch_mm(self):
-        """Dot pitch that puts full-tone rows one pen width apart on paper."""
+        """Dot pitch that satisfies the active screen's pen clearance."""
         scale = max(0.01, self.scale_pct.value() / 100.0)
-        return max(0.1, min(8.0, self.pen_width.value() / scale))
+        return max(0.1, min(8.0, self.pen_clearance_mm() / scale))
 
     def _update_effective_pitch(self, *_args):
         """Show the on-paper row spacing next to the Dot pitch field."""
         effective = self.pitch.value() * self.scale_pct.value() / 100.0
-        pen = self.pen_width.value()
-        if pen > 0.0:
-            ratio = effective / pen
+        clearance = self.pen_clearance_mm()
+        if clearance > 0.0:
+            ratio = effective / clearance
             relation = (
-                "touching" if ratio < 1.05 else
+                "below pen clearance" if ratio < 1.0 else
+                "at pen clearance" if ratio < 1.05 else
                 "slight gap" if ratio < 1.6 else
                 "separated rows" if ratio < 2.6 else
                 "wide gaps"
@@ -829,10 +838,14 @@ class CmykTab(GeneratorTab):
         self.sharpen_radius.setEnabled(enabled)
 
     def match_pen_pitch(self, _checked=False):
-        """Set Dot pitch to one pen width at the current artwork scale."""
+        """Set Dot pitch to the active screen's safe pen clearance."""
         self.pitch.setValue(self.pen_pitch_mm())
+        effective = (
+            self.pitch.value() * self.scale_pct.value() / 100.0
+        )
         self.status.setText(
-            f"Dot pitch {self.pitch.value():.2f} mm matches the "
+            f"Dot pitch {self.pitch.value():.2f} mm gives "
+            f"{effective:.2f} mm on-paper clearance for the "
             f"{self.pen_width.value():.2f} mm pen at "
             f"{self.scale_pct.value():.0f} % artwork scale."
         )

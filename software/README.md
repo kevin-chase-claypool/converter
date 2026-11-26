@@ -532,7 +532,9 @@ Current tools:
     window. That search also models the rectilinear row coverage.
   - Auto only changes Dot pitch for Wave screen and never sets rows closer than
     the operator's current choice. **Match pen** remains the explicit action
-    for setting one pen width at the current artwork scale.
+    for setting the screen's minimum safe clearance at the current artwork
+    scale: one pen width for ordinary screens, or pen width plus the `0.25 mm`
+    Wave edge gap for Wave screens.
   auto levels (default on: stretch the image's 1st-99th luminance percentiles
   so low-key photos use the full tonal range), saturation, contrast,
   brightness, luminance sharpening (default on: unsharp-mask amount and
@@ -540,8 +542,9 @@ Current tools:
   (halftone dots / stipple dots / line screen / crosshatch levels / wave screen
   with equidistant rows / interference (gyroid) / single line (TSP) /
   topographic contours / rectilinear fill),
-  dot pitch (with a **Match pen** button that sets it to one pen width at
-  the current artwork scale), dot size, solid dots (spiral-filled so each
+  dot pitch (with a **Match pen** button that sets one pen width for ordinary
+  screens or pen plus edge gap for Wave screens at the current artwork scale),
+  dot size, solid dots (spiral-filled so each
   mark reads as a dot, not a ring), hatch levels, overdraw, pen width, max
   marks per ink, seed, preview and write checkboxes per layer, page size,
   margin, artwork scale, and registration corner crosses (all four inks

@@ -1,5 +1,33 @@
 # Engineering Log
 
+<a id="elog-20261126-cmyk-match-pen-wave-clearance"></a>
+### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Make Match pen satisfy Wave clearance
+
+- The screenshot showed the operator already at `0.90 mm` pen and `80 %`
+  Artwork scale, with **Match pen** reporting `1.13 mm` Dot pitch. That is
+  only `0.90 mm` on paper, while Wave rows require `1.15 mm` centre-line
+  clearance including the `0.25 mm` edge gap, so Preview correctly rejected
+  the geometry.
+- **Match pen** now targets pen width for ordinary screens and pen width plus
+  the Wave edge gap for Wave styles, divided by the active Artwork scale. The
+  same screenshot configuration now resolves to `1.44 mm` pitch and `1.15 mm`
+  on-paper clearance.
+- The status and effective-pitch readout report the screen's actual clearance
+  rather than describing every style as touching at one pen width.
+- Preview build exceptions now open as **Preview failed** instead of the
+  misleading **Preview needs artwork**.
+- Focused regressions cover ordinary-target compatibility, Wave clearance, and
+  a complete CMYK preview build from the matched setting.
+- A screenshot-state regression confirms **Fit inside** contains the matched
+  page inside the configured reach.
+- The complete CMYK and generator modules pass `151` tests with one expected
+  OpenGL-context skip. Complete converter discovery passes `631` with one
+  expected OpenGL-context skip, and Python compilation passes.
+- Evidence: `WSW-20261126-008`;
+  `docs/changes/windows-software/2026/2026-11-26-cmyk-match-pen-wave-clearance.md`.
+- Category: windows-software, cmyk, wave-screen, pen-clearance, dot-pitch,
+  preview, error-message, regression.
+
 <a id="elog-20261126-cmyk-scale-centering"></a>
 ### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Keep CMYK artwork scale effective and centered
 
