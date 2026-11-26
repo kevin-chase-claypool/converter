@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-26 | `HW-20261126-001` | implemented | [Separate bed, stock, and tape-margin geometry](2026/2026-11-26-separate-bed-stock-tape-geometry.md) | `rotating-bed`, `paper-stock`, `tape-margin`, `printable-area`, `bed-compensation`, `gantry-reach`, `physical-validation-pending` |
 | 2026-11-24 | `WSW-20261124-004` | implemented | [Record artwork placement in CMYK outputs](../windows-software/2026/2026-11-24-record-artwork-placement-in-cmyk-outputs.md) | `cmyk`, `artwork-placement`, `registration`, `manifest`, `gcode-header`, `physical-validation-pending` |
 | 2026-11-24 | `WSW-20261124-003` | implemented | [Guard machine reach after bed compensation](../windows-software/2026/2026-11-24-post-compensation-reach-guard.md) | `reach`, `soft-limits`, `bed-compensation`, `preflight`, `cmyk`, `magenta` |
 | 2026-11-24 | `RPSW-20261124-001` | implemented | [Move the P100 registered pen 1.2 mm north and 1.0 mm west](../rp23cnc-software/2026/2026-11-24-p100-north-1-2-west-1-0.md) | `grblhal`, `p100`, `registration`, `pen-center`, `offset`, `deployment-pending` |

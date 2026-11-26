@@ -8,6 +8,7 @@ Newest changes appear first.
 | 2026-11-26 | `WSW-20261126-003` | windows-software | implemented | [Chain precision CMYK cells into continuous strokes](windows-software/2026/2026-11-26-continuous-precision-cmyk-strokes.md) |
 | 2026-11-26 | `WSW-20261126-002` | windows-software | implemented | [Correct precision CMYK skin color and facial detail](windows-software/2026/2026-11-26-precision-cmyk-skin-and-teeth.md) |
 | 2026-11-26 | `WSW-20261126-001` | windows-software | implemented | [Restore the original CMYK tool entry](windows-software/2026/2026-11-26-restore-original-cmyk-tool.md) |
+| 2026-11-26 | `HW-20261126-001` | hardware, windows-software | implemented | [Separate bed, stock, and tape-margin geometry](hardware/2026/2026-11-26-separate-bed-stock-tape-geometry.md) |
 | 2026-11-25 | `WSW-20261125-013` | windows-software | implemented | [Export and verify a precision CMYK set headlessly](windows-software/2026/2026-11-25-headless-precision-cmyk-export.md) |
 | 2026-11-25 | `WSW-20261125-012` | windows-software | implemented | [Stabilize the precision process-color screen](windows-software/2026/2026-11-25-stabilize-process-color-area-screen.md) |
 | 2026-11-25 | `WSW-20261125-011` | windows-software | implemented | [Expose coherent CMYK flow and coverage controls](windows-software/2026/2026-11-25-expose-cmyk-flow-coverage-controls.md) |

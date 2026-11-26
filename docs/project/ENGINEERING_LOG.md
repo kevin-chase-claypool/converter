@@ -1,5 +1,42 @@
 # Engineering Log
 
+<a id="elog-20261126-bed-stock-tape-geometry"></a>
+### 🟨 2026-11-26 - HARDWARE/WINDOWS SOFTWARE/IMPLEMENTED - Separate bed, stock, and tape geometry
+
+- The project owner corrected the physical dimensions: the rotating bed is
+  `18 in`, the round paper stock is `15 in`, and the intended drawing circle is
+  `14.5 in`. The 0.5-inch diameter difference is a 0.25-inch tape border on
+  every stock edge.
+- The converter previously used the paper-stock diameter as `Bed dia`, so its
+  outer Preview circle was 15 inches rather than the physical 18-inch bed. It
+  also described 14.5 inches as rim-clear while the 180 mm cap reduced the
+  actual drawing circle to 14.173 inches.
+- `bed_diameter_mm` now means the physical bed (`457.2 mm`). New
+  `stock_diameter_mm` means the paper (`381.0 mm`), and the shared margin field
+  is labeled **Stock margin mm** (`6.35 mm`). Clipping uses the stock radius;
+  the physical bed continues to own machine geometry and safe parking.
+- Preview now draws three circles: the 18-inch bed, 15-inch stock, and
+  reachable drawing area. With the new defaults the drawing circle is
+  `368.3 mm` / `14.5 in`.
+- The owner-specified reach is `184.15 mm`. Regenerated compensation profile
+  `745e3d264cc5` retains all 728 measured samples and corrections from
+  `18bfb4ed1c33` and changes only declared coverage from 180 to 184.15 mm.
+  Maximum correction remains `1.141625 mm`; boundary correction at the new
+  radius is `1.105188 mm`, below the 5 mm limit.
+- The outer `19.05 mm` compensation annulus remains extrapolated. The wider
+  default reach also exceeds the prior conservative 180 mm setting, so a
+  production full-disc run requires a fresh HOME + REGISTER check of the live
+  +Y envelope and physical tape/drag-chain clearance.
+- Complete converter discovery passes `758` tests with one expected
+  OpenGL-context skip. A real Golden Sunset CMYK export publishes all four
+  files transactionally and passes strict motion checks; maximum drawing-step
+  rotation is `6.80 deg` against the `15 deg` cap. Physical full-disc
+  validation remains open.
+- Evidence: `HW-20261126-001`; `ADR-012`;
+  `docs/changes/hardware/2026/2026-11-26-separate-bed-stock-tape-geometry.md`.
+- Category: hardware, windows-software, rotating-bed, paper-stock, tape-margin,
+  printable-area, bed-compensation, gantry-reach, physical-validation-pending.
+
 <a id="elog-20261126-continuous-precision-cmyk-strokes"></a>
 ### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Chain precision CMYK cells into continuous strokes
 

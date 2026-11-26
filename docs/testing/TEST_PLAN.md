@@ -251,11 +251,11 @@ Wave spacing guard now retains profile `18bfb4ed1c33` through a row-locked
 projection, preserving the part common to every parallel row. Canonical
 cyan/magenta/yellow/black final-machine spread is now
 `0.002432/0.002255/0.000115/0.001541 mm`, below `0.005 mm`, with all four files
-passing the row-lock checker, macro parsing, and strict motion checks with zero
-A motion. The active default is now derived profile `f85ec410dbac`, which keeps
-these measured corrections and extends their declared field to the 180 mm
-gantry-reach limit. The 15-inch stock permits a 14.5-inch rim-clear diameter,
-but the gantry limits the usable circle to 360 mm. The physical print now
+A motion. The active default is now derived profile `745e3d264cc5`, which keeps
+these measured corrections and extends their declared field to the
+owner-specified 184.15 mm radius. The 18-inch physical bed carries 15-inch
+stock with a 0.25-inch margin on every edge, producing a 14.5-inch drawing
+circle. The physical print now
 verifies both exact row spacing and
 whether the retained projected correction improves bed-position error. This
 supersedes the earlier no-compensation workaround. A dedicated dark-tone
@@ -267,12 +267,12 @@ changing any adjacent-row gap.
 **M-13 legacy-Wave/new-mesh discriminator 2026-11-01:** use the same artwork,
 page frame, pitch, pen, feed, and `XY only` motion for both passes. Keep the
 Machine-tab compensation path at the expanded centered dense-v3 profile
-`f85ec410dbac`; do not switch to an older profile. This profile retains the
+`745e3d264cc5`; do not switch to an older profile. This profile retains the
 measured `18bfb4ed1c33` field and adds the requested outer annulus. Run the
 production `waves_even` file and then the explicitly labeled legacy
 phase-locked depth diagnostic. The legacy pass must record
 `bed_compensation.mode = raw_unconstrained` and profile fingerprint
-`f85ec410dbac`; the production pass must record `row_locked_projection`.
+`745e3d264cc5`; the production pass must record `row_locked_projection`.
 Compare the same crop for cross-row banding. A clean legacy pass and a banded
 production pass establishes the Wave-geometry regression on the current mesh.
 The legacy mode's non-uniform row spacing remains an expected diagnostic
@@ -374,10 +374,10 @@ safety bound. Its independent automatic verification was repeatable and reduced
 aggregate RMS from `0.550` to `0.486 mm`, but maximum error was `1.171 mm` and
 improvement was only `11.6 %`. The formal gate decision is failure, but the
 project owner explicitly promoted `18bfb4ed1c33`. Derived profile
-`f85ec410dbac` became the default after the owner corrected the stock
-assumption from 14 to 15 inches on 2026-11-01. Its field reaches the 180 mm
-gantry limit; the outer 14.9 mm annulus is extrapolated and still requires the
-edge-band test.
+`745e3d264cc5` became the default after the owner clarified the 18-inch bed,
+15-inch stock, and 14.5-inch drawing geometry on 2026-11-26. Its field reaches
+the owner-specified 184.15 mm radius; the outer 19.05 mm annulus is
+extrapolated and still requires the edge-band test.
 
 M-01 current evidence: on 2026-09-05 the A-axis motor completed an initial
 bidirectional jog at `F120`; `A10` was counterclockwise, `A-10` was clockwise,

@@ -807,7 +807,7 @@ class CmykTabTests(unittest.TestCase):
         settings = tab._effective_settings()
         self.assertEqual(
             Path(settings.bed_compensation_path).name,
-            "bed-error-compensation-2026-11-01-dense-v3-360mm-reach-extrapolated.json",
+            "bed-error-compensation-2026-11-26-dense-v3-368mm-stock-extrapolated.json",
         )
         self.assertFalse(settings.row_locked_compensation)
         self.assertFalse(tab._wave_spacing_guard_active())
@@ -838,7 +838,7 @@ class CmykTabTests(unittest.TestCase):
         )
         plan = converter.plan_program(contours, settings)
         compensation = plan["bed_compensation"]
-        self.assertEqual(compensation.fingerprint, "f85ec410dbac")
+        self.assertEqual(compensation.fingerprint, "745e3d264cc5")
         self.assertFalse(getattr(compensation, "row_locked", False))
 
     def test_wave_spacing_guard_row_locks_bed_compensation(self):
@@ -962,7 +962,7 @@ class CmykTabTests(unittest.TestCase):
 
         self.assertEqual(
             Path(settings.bed_compensation_path).name,
-            "bed-error-compensation-2026-11-01-dense-v3-360mm-reach-extrapolated.json",
+            "bed-error-compensation-2026-11-26-dense-v3-368mm-stock-extrapolated.json",
         )
         for channel in converter.CHANNELS:
             contours = converter.read_svg(
@@ -971,7 +971,7 @@ class CmykTabTests(unittest.TestCase):
             plan = converter.plan_program(contours, settings)
             self.assertEqual(
                 plan["bed_compensation"].fingerprint,
-                "f85ec410dbac",
+                "745e3d264cc5",
                 channel,
             )
 
@@ -1133,7 +1133,7 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertEqual(
             data["bed_compensation"]["profile_fingerprint"],
-            "f85ec410dbac",
+            "745e3d264cc5",
         )
         normalization = data["bed_compensation"][
             "translation_normalization"
@@ -1253,12 +1253,18 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertEqual(
             data["bed_compensation"]["profile_fingerprint"],
-            "f85ec410dbac",
+            "745e3d264cc5",
         )
         self.assertEqual(
             Path(data["bed_compensation_path"]).name,
-            "bed-error-compensation-2026-11-01-dense-v3-360mm-reach-extrapolated.json",
+            "bed-error-compensation-2026-11-26-dense-v3-368mm-stock-extrapolated.json",
         )
+        geometry = data["machine_geometry"]
+        self.assertAlmostEqual(geometry["bed_diameter_mm"], 457.2)
+        self.assertAlmostEqual(geometry["stock_diameter_mm"], 381.0)
+        self.assertAlmostEqual(geometry["stock_margin_mm"], 6.35)
+        self.assertAlmostEqual(geometry["drawing_diameter_mm"], 368.3)
+        self.assertAlmostEqual(geometry["machine_reach_radius_mm"], 184.15)
 
     def test_scaled_ink_layers_share_the_page_frame(self):
         tab = self.make_tab(FakeHost(self.colour_path))

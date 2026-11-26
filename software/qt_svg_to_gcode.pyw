@@ -539,6 +539,26 @@ class GLPreview(QOpenGLWidget):
             curr = (self.preview_center[0] + math.cos(a) * bed_radius, self.preview_center[1] + math.sin(a) * bed_radius)
             bed_circle.extend([prev[0], prev[1], curr[0], curr[1]])
             prev = curr
+        stock_radius = max(
+            float(
+                getattr(
+                    self.settings,
+                    "stock_diameter_mm",
+                    self.settings.bed_diameter_mm,
+                )
+            ),
+            1.0,
+        ) / 2.0
+        stock_circle = []
+        prev = (self.preview_center[0] + stock_radius, self.preview_center[1])
+        for i in range(1, 241):
+            a = i / 240.0 * math.pi * 2.0
+            curr = (
+                self.preview_center[0] + math.cos(a) * stock_radius,
+                self.preview_center[1] + math.sin(a) * stock_radius,
+            )
+            stock_circle.extend([prev[0], prev[1], curr[0], curr[1]])
+            prev = curr
         bed_radius_line = [self.preview_center[0], self.preview_center[1], self.preview_center[0] + bed_radius, self.preview_center[1]]
         min_dbg = self.preview_center[0] - bed_radius
         max_dbg = self.preview_center[0] + bed_radius
@@ -648,6 +668,7 @@ class GLPreview(QOpenGLWidget):
 
         self.vertex_arrays = {
             "bed_circle": array("f", bed_circle),
+            "stock_circle": array("f", stock_circle),
             "bed_radius": array("f", bed_radius_line),
             "debug_box": array("f", debug_box),
             "debug_cross": array("f", debug_cross),
@@ -816,9 +837,9 @@ class GLPreview(QOpenGLWidget):
     def set_reach_warning(self, warning):
         """Draw the reach guide in red when artwork is being clipped by it.
 
-        The guide is the only place the bed circle and the reachable area are
-        drawn at the same scale, so it is where an over-scale artwork is
-        visible without reading the status line.
+        The guide is the only place the physical bed, paper stock, and reachable
+        area are drawn at the same scale, so it is where the tape border and an
+        over-scale artwork are visible without reading the status line.
         """
         self.reach_warning = bool(warning)
         self.reach_color = QColor("#dc2626" if self.reach_warning else "#15803d")
@@ -1093,10 +1114,11 @@ class GLPreview(QOpenGLWidget):
         # useful as a G-code sanity check instead of becoming a cluttered view.
         self.program.setUniformValue1f(self.uniform_loc["theta"], 0.0)
         shift_x, shift_y = self.placement_delta()
-        # The bed and reach circles are pinned to the bed center; the artwork and
-        # its tool path move with a placement drag.
+        # The bed, stock, and reach circles are pinned to the bed center; the
+        # artwork and its tool path move with a placement drag.
         self.set_shift(0.0, 0.0)
         self.draw_static("bed_circle", QColor("#94a3b8"), 1.5)
+        self.draw_static("stock_circle", QColor("#475569"), 1.5)
         self.set_shift(shift_x, shift_y)
         # Full artwork in the undrawn color, then overdraw the portion drawn so
         # far in the drawn color — the boundary tracks where the pen is. Ink

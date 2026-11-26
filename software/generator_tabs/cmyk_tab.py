@@ -91,6 +91,13 @@ def _common_program_identity(settings, compensation):
             if frame is not None
             else None
         ),
+        "bed_diameter_mm": round(float(settings.bed_diameter_mm), 8),
+        "stock_diameter_mm": round(float(settings.stock_diameter_mm), 8),
+        "stock_margin_mm": round(float(settings.bed_margin_mm), 8),
+        "machine_reach_radius_mm": round(
+            float(settings.machine_reach_radius_mm),
+            8,
+        ),
         "theta_drive_ratio": round(float(settings.theta_drive_ratio), 8),
         "theta_mode": str(settings.theta_mode),
         "feed_rate": round(float(settings.feed_rate), 8),
@@ -3730,6 +3737,26 @@ class CmykTab(GeneratorTab):
                 "width_mm": self.page_w.value(),
                 "height_mm": self.page_h.value(),
                 "margin_mm": self.margin.value(),
+            },
+            "machine_geometry": {
+                "bed_diameter_mm": round(
+                    float(settings.bed_diameter_mm), 6
+                ),
+                "stock_diameter_mm": round(
+                    float(settings.stock_diameter_mm), 6
+                ),
+                "stock_margin_mm": round(
+                    float(settings.bed_margin_mm), 6
+                ),
+                "drawing_diameter_mm": round(
+                    float(settings.stock_diameter_mm)
+                    - 2.0 * float(settings.bed_margin_mm),
+                    6,
+                ),
+                "machine_reach_radius_mm": round(
+                    float(settings.machine_reach_radius_mm),
+                    6,
+                ),
             },
             "frame_center_mm": [
                 self.page_w.value() / 2.0,

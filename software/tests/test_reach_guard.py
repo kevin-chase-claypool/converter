@@ -36,7 +36,7 @@ class ReachGuardTests(unittest.TestCase):
         gcode = converter.contours_to_gcode(contours, settings)
         analysis = converter.analyse_gcode(gcode, settings)
 
-        self.assertIn("(reach guard 180.000 mm, planning radius", gcode)
+        self.assertIn("(reach guard 184.150 mm, planning radius", gcode)
         self.assertLessEqual(
             analysis["max_xy_radius_mm"],
             settings.machine_reach_radius_mm + 1e-6,
@@ -61,7 +61,7 @@ class ReachGuardTests(unittest.TestCase):
                 "M5",
                 "G1 X0 Y0 A0 F3000 (travel)",
                 "M3",
-                "G1 X180.5 Y2.0 A0 F700 (fixed)",
+                "G1 X184.5 Y2.0 A0 F700 (fixed)",
                 "M5",
             ]
         )
@@ -69,7 +69,7 @@ class ReachGuardTests(unittest.TestCase):
         analysis = converter.analyse_gcode(gcode, settings)
         problems = converter.preflight_problems(analysis)
 
-        self.assertAlmostEqual(analysis["max_xy_radius_mm"], math.hypot(180.5, 2.0))
+        self.assertAlmostEqual(analysis["max_xy_radius_mm"], math.hypot(184.5, 2.0))
         self.assertEqual(analysis["max_xy_radius_line"], 7)
         self.assertTrue(
             any("machine reach" in problem for problem in problems),

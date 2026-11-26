@@ -483,13 +483,13 @@ def plan_program(contours, settings, cancel_check=None):
                 )
             ),
         )
-    bed_radius = max(
-        float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0
+    stock_radius = max(
+        float(getattr(settings, "stock_diameter_mm", 381.0)) / 2.0
         - float(getattr(settings, "bed_margin_mm", 0.0)),
         0.0,
     )
     reach = float(getattr(settings, "machine_reach_radius_mm", 0.0))
-    radius = min(bed_radius, reach) if reach > 0.0 else bed_radius
+    radius = min(stock_radius, reach) if reach > 0.0 else stock_radius
     # Coverage clipping happens in the uncompensated bed frame. Reserve the
     # profile's maximum correction so an outward correction cannot put the
     # final machine point beyond the configured reach.
@@ -701,6 +701,18 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
                 else "artwork bbox"
             ),
             motion_label,
+        ),
+        "(stock geometry bed %.3f mm, stock %.3f mm, "
+        "margin %.3f mm, drawing radius %.3f mm)"
+        % (
+            float(getattr(settings, "bed_diameter_mm", 457.2)),
+            float(getattr(settings, "stock_diameter_mm", 381.0)),
+            float(getattr(settings, "bed_margin_mm", 0.0)),
+            max(
+                float(getattr(settings, "stock_diameter_mm", 381.0)) / 2.0
+                - float(getattr(settings, "bed_margin_mm", 0.0)),
+                0.0,
+            ),
         ),
         "G21",
         "G90",

@@ -271,6 +271,7 @@ def _common_header(gcode: str) -> tuple[str, ...]:
         "(frame center",
         "(theta ratio",
         "(feed ",
+        "(stock geometry",
         "(reach guard",
         "(bed compensation",
         "(screen chain",

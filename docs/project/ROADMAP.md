@@ -271,23 +271,24 @@
   was `1.171 mm` and improvement was only `11.6 %`, which fails the formal
   gates. The project owner explicitly overrode that decision and promoted
   `18bfb4ed1c33`. On 2026-11-01 the owner requested a 0.5-inch larger canvas,
-  then corrected the physical stock assumption from 14 to 15 inches. Derived
-  profile `f85ec410dbac` keeps the same measured samples and corrections while
-  expanding declared coverage to the 180 mm gantry-reach limit. The 15-inch
-  stock and rim margin permit a 14.5-inch rim-clear diameter, but the gantry
-  caps the usable circle at 360 mm.
+  then corrected the physical stock assumption from 14 to 15 inches. On
+  2026-11-26 the owner clarified the full installed geometry: 18-inch rotating
+  bed, 15-inch paper stock, 6.35 mm margin on every stock edge, and a requested
+  14.5-inch drawing circle. Derived profile `745e3d264cc5` keeps the same
+  measured samples and corrections while expanding declared coverage to the
+  owner-specified 184.15 mm drawing radius.
   Acceptance: print the dense sheet after `G65 P113`, extract every station,
   repeat it to quantify station noise, require the normal M-12 fit gates, then
   print and compare an independently compensated verification sheet. Promote
   only if the dense field improves the worst residual without adding new
   spatial or per-angle error. Closed by documented owner override despite the
   maximum and improvement-gate miss.
-- [ ] **Verify the default extrapolated 180 mm compensation field.**
-  Problem: derived profile `f85ec410dbac` extends current dense-v3 profile
-  `18bfb4ed1c33` from its measured 165.1 mm field to 180.0 mm by local-affine
-  extrapolation. Its `1.057 mm` extreme boundary correction is below the
-  safety bound, but the outer 14.9 mm annulus has no compensated verification
-  print. Benefit: precision work can use the full default 360 mm gantry-limited
+- [ ] **Verify the default extrapolated 184.15 mm compensation field.**
+  Problem: derived profile `745e3d264cc5` extends current dense-v3 profile
+  `18bfb4ed1c33` from its measured 165.1 mm field to 184.15 mm by local-affine
+  extrapolation. Its `1.105 mm` extreme boundary correction is below the
+  safety bound, but the outer 19.05 mm annulus has no compensated verification
+  print. Benefit: precision work can use the full default 368.3 mm stock-limited
   diameter with a measured error bound rather than an extrapolation
   assumption. Risk: continuing to treat extrapolated values as verified can
   hide a local edge or rotation/height response.
@@ -296,9 +297,12 @@
   profile's maximum correction, clipping at `178.858 mm`, and preflight rejects
   any emitted G54 point beyond the declared reach. The four Ben3 programs were
   regenerated under this guard; the extrapolated outer band remains physically
-  unverified.
+  unverified. The 2026-11-26 owner geometry update raises the default planning
+  radius to 184.15 mm; repeat HOME + REGISTER verification against the live
+  +Y soft-limit envelope before treating the full 14.5-inch circle as
+  production-safe.
   Acceptance: print a stationary edge-band verification covering 165.1 to
-  180.0 mm at all eight calibrated angles, measure it with the existing photo
+  184.15 mm at all eight calibrated angles, measure it with the existing photo
   pipeline, and show at most `0.35 mm` RMS / `0.90 mm` maximum with no angle
   stage more than `0.05 mm` worse than the inner field.
 - [ ] **Optimize exact compensation subdivision for dense artwork.**
@@ -473,11 +477,12 @@
   production row-lock projection. This enables an old-Wave/new-mesh comparison;
   a physical print remains required and the legacy mode is not production
   output.
-  Status 2026-11-01 printable-canvas correction: the owner confirmed 15-inch
-  stock. The default now uses derived profile `f85ec410dbac`, retaining profile
+  Status 2026-11-26 printable-canvas correction: the owner confirmed 18-inch
+  bed, 15-inch stock, and 14.5-inch drawing geometry. The default now uses
+  derived profile `745e3d264cc5`, retaining profile
   `18bfb4ed1c33`'s measured data and extending its declared coverage to the
-  180 mm gantry-reach limit. The legacy diagnostic follows the selected profile
-  and therefore uses `f85ec410dbac` by default after restart.
+  184.15 mm drawing radius. The legacy diagnostic follows the selected profile
+  and therefore uses `745e3d264cc5` by default after restart.
   Status 2026-11-01 row-return discriminator: the operator observed that
   striations cluster when the planner returns to an earlier Wave-row band.
   CMYK Wave output now offers planner-optimized, ascending-row, and

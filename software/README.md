@@ -303,15 +303,17 @@ Cycle Start with the pen loaded:
   independent `bed-error-verify-dense-91-v3-centered-auto.gcode` print improved
   every angle-stage RMS and reduced aggregate RMS from `0.550` to `0.486 mm`,
   but its `1.171 mm` maximum and `11.6 %` improvement miss the gates.
-  The project owner explicitly promoted `18bfb4ed1c33` anyway. On 2026-11-01
-  the owner corrected the stock assumption from 14 to 15 inches. Derived
-  profile `f85ec410dbac` keeps that profile's measured samples and corrections,
-  then extends its local-affine coverage from `165.100` to `180.000 mm`. The
-  default 15-inch stock and 6.35 mm rim margin leave a `368.300 mm` (14.5-inch)
-  rim-clear diameter, but the 180 mm gantry reach makes the usable circle
-  `360.000 mm` (14.173 inches). The measured inner field has the verification
-  result above; the new outer `14.900 mm` annulus is extrapolated and remains
-  unverified on paper. This is an owner override, not a gate-qualified pass.
+  The project owner explicitly promoted `18bfb4ed1c33` anyway. On 2026-11-26
+  the owner specified the installed geometry as an 18-inch rotating bed with
+  15-inch round stock taped inside it. A 6.35 mm margin on every stock edge
+  leaves the requested `368.300 mm` (14.5-inch) drawing circle. Derived profile
+  `745e3d264cc5` keeps the profile's measured samples and corrections, then
+  extends its local-affine coverage from `165.100` to `184.150 mm`. The
+  measured inner field has the verification result above; the new outer
+  `19.050 mm` annulus is extrapolated and remains unverified on paper. The
+  owner-supplied 14.5-inch reach also replaces the prior conservative 180 mm
+  default, so the full disc requires current G54 registration and physical
+  clearance verification before a production run.
 
   For a v3 overhead photo, start with the dense image scale and a light blur:
 
@@ -385,12 +387,12 @@ Cycle Start with the pen loaded:
   seven intermediate-angle fields, performs leave-one-station-out validation, correlates
   the result with the optional bed mesh, and writes
   `bed-error-analysis.json`. The
-  `..\samples\gcode\bed-error-compensation-2026-11-01-dense-v3-360mm-reach-extrapolated.json`
+  `..\samples\gcode\bed-error-compensation-2026-11-26-dense-v3-368mm-stock-extrapolated.json`
   profile is preselected in **Machine > Bed compensation JSON** and declares a
-  `180.000 mm` radius (`360.000 mm` / `14.173 in` diameter). Its measured
+  `184.150 mm` radius (`368.300 mm` / `14.5 in` diameter). Its measured
   samples still come from the centered dense-v3 field through `165.100 mm`;
-  the outer `14.900 mm` annulus is local-affine extrapolation and its extreme
-  boundary correction is `1.057 mm`. **Browse...** selects a replacement;
+  the outer `19.050 mm` annulus is local-affine extrapolation and its extreme
+  boundary correction is `1.105 mm`. **Browse...** selects a replacement;
   **Default** restores that profile; clearing the path disables compensation.
   The profile is a machine-XY correction added after the existing planner
   chooses the bed angle and after P100 registration; it does not change
@@ -454,9 +456,9 @@ Cycle Start with the pen loaded:
   maximum from `1.309` to `0.752 mm`, and error by `41.9 %`; all M-12 gates
   passed. The earlier `13p5in-extrapolated` variant reused those correction
   samples and extended the local-affine field to `171.450 mm`. The current
-  stock-corrected profile reuses the same data to `180.000 mm`; its outer
-  `14.900 mm` annulus is extrapolated, not measured, and its maximum boundary
-  correction is `1.054 mm`, below the 5 mm safety bound. Recalibrate after any
+  stock-corrected profile reuses the same data to `184.150 mm`; its outer
+  `19.050 mm` annulus is extrapolated, not measured, and its maximum boundary
+  correction is `1.105 mm`, below the 5 mm safety bound. Recalibrate after any
   bed, paper-support, toolhead, carriage, pen-clamp, or registration change.
   The first eight-angle sheet was measured on 2026-10-24. A=0 spatial error was
   `0.306 mm` RMS / `0.540 mm` maximum and leave-one-station-out prediction was
@@ -477,9 +479,9 @@ Cycle Start with the pen loaded:
   prior default was profile `4bad792e35ad`; its measured inner field was
   independently verified, while its outer `6.350 mm` annulus was extrapolated.
   The current owner-selected default is derived centered dense-v3 profile
-  `f85ec410dbac`. It keeps profile `18bfb4ed1c33`'s measured data while
-  declaring the 180 mm gantry-limited field; its outer `14.900 mm` annulus is
-  extrapolated and remains unverified.
+  `745e3d264cc5`. It keeps profile `18bfb4ed1c33`'s measured data while
+  declaring the 184.15 mm stock-limited field; its outer `19.050 mm` annulus
+  is extrapolated and remains unverified.
 - `..\samples\gcode\a-tilt-pairs-test.gcode` - four separated line pairs for
   a caliper-read bed-tilt check: each pair is the same paper segment drawn
   twice, once at A=0 (the longer 80 mm constant line) and once at that
@@ -619,7 +621,7 @@ Current tools:
   and writes four numbered programs in physical Yellow, Magenta, Cyan, Black
   order.
   - The guided page is `250 x 250 mm`. Its corner radius is `176.78 mm`, inside
-    the `177.8 mm` radius of the 14-inch print circle.
+    the `184.15 mm` radius of the 14.5-inch drawing circle.
   - A persistent nine-stage rail spans composition, image preparation,
     separation, direction field, streamline placement, ink assignment, path
     order, motion, and review/export. Clicking a stage opens only that stage's
@@ -890,7 +892,7 @@ Current tools:
   programs and a physical sheet against the installed pen set.
   For `IMG_0514.JPG` on the `200 x 200 mm` CMYK page, the `260 %` live layout
   intentionally crops the portrait to fill the full drawable circle. Its
-  bounding radius is about `305.46 mm` against the `180 mm` reach, so the
+  bounding radius is about `305.46 mm` against the `184.15 mm` reach, so the
   orange reach warning is expected and the outer page corners are clipped;
   the printed ink is the intended circular composition. Use **Fit inside**
   only when the entire uncropped image is wanted; it recenters the artwork and
@@ -1046,7 +1048,7 @@ Current tools:
   which each row's amplitude follows its own locally smoothed tone. It uses
   the Machine tab's currently selected bed-compensation profile unchanged;
   the shipped default is the newer centered dense-v3 mesh
-  `f85ec410dbac`. The legacy mode deliberately does not row-lock compensation,
+  `745e3d264cc5`. The legacy mode deliberately does not row-lock compensation,
   so its adjacent paper-space row gaps may vary. Use it only to compare the
   old Wave geometry against the production screen on the current mesh.
   **Vary Wave frequency across image (break banding)** is enabled by default
@@ -1932,22 +1934,29 @@ display-only; every other group changes the emitted program.
 - SVG document coordinates are not machine coordinates. The converter centers
   the clipped artwork at G54 zero; a document centered at `(100,100)`, for
   example, emits drawing coordinates around `(0,0)`, not `(100,100)`.
-- `Bed dia mm` defaults to `381.0 mm` (15-inch round stock). With the default
-  `Bed margin mm` of `6.35 mm` (0.25"), the stock permits a `368.3 mm`
-  (14.5-inch) rim-clear diameter. The default `180.0 mm` gantry-reach radius is
-  tighter, so the actual drawable and compensation diameter is `360.0 mm`.
-  The underlying dense-v3 measurements end at a `165.1 mm` radius, so the
-  outer `14.9 mm` annulus is extrapolated until an edge-calibration print
-  verifies it.
-- `Gantry reach radius mm` (default 180.0) caps the drawable circle at the
+- `Bed dia mm` defaults to `457.2 mm` (18-inch rotating bed). `Stock dia mm`
+  defaults to `381.0 mm` (15-inch round paper stock), shown as the middle
+  preview circle. `Stock margin mm` defaults to `6.35 mm` (`0.25 in`) on every
+  edge, so the requested drawing diameter is `368.3 mm` (14.5 inches) and the
+  remaining outer stock band is available for tape.
+- `Gantry reach radius mm` (default `184.15`) caps the drawable circle at the
   gantry's reachable radius from the registered bed center. Because the bed
   rotates freely, the safe drawable area is this circle rather than the full
   bed; it keeps emitted coordinates inside the controller's X/Y envelope so
   artwork at the rim cannot trip `Alarm:2 - Soft limit`. Before clipping, the
   converter subtracts the active profile's maximum correction from this radius
   so compensation cannot push a final machine point back outside the limit.
-  The saved header records the reach and effective planning radius, and
-  preflight blocks any emitted G54 point outside the declared reach.
+  The saved header records the physical bed, stock, stock margin, reach, and
+  effective planning radius, and preflight blocks any emitted G54 point outside
+  the declared reach.
+  The owner-specified `14.5-inch` reach exceeds the prior conservative
+  `180 mm` default, so verify the current HOME + REGISTER envelope and physical
+  tape/stock clearance before relying on the full disc. The underlying
+  dense-v3 measurements end at a `165.1 mm` radius; the outer `19.05 mm`
+  annulus is extrapolated until an edge-calibration print verifies it. The
+  active profile reserves its `1.142 mm` maximum correction inside that reach,
+  so the current nominal planning radius is `183.008 mm` while the final
+  corrected XY envelope remains capped at `184.15 mm`.
   The binding direction is **+Y**, and the edge is the controller's soft-limit
   envelope, not the switch: grblHAL sets a homed axis's envelope to
   `[max_travel + pulloff, -pulloff]` when hard limits are enabled, so `$27`

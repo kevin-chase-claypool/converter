@@ -37,6 +37,8 @@ field by `14.900 mm` to the `180.000 mm` gantry-reach radius. The default
 the gantry reach makes the actual usable and correction diameter 360 mm. The
 existing Machine-tab path remains editable: **Browse...** selects a replacement,
 **Default** restores this profile, and an empty path disables compensation.
+The numeric bed/stock/radius defaults above are superseded by ADR-012; the
+compensation transform and projection rules in this ADR remain current.
 
 CMYK **Wave screen - equidistant rows** treats exact adjacent-row pitch as a
 hard geometry constraint. Its default spacing guard keeps the selected profile
