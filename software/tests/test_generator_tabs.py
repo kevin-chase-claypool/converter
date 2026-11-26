@@ -174,6 +174,27 @@ class ToolShellTests(unittest.TestCase):
             )
             window.close()
 
+    def test_new_artwork_without_a_layout_is_centered(self):
+        with tempfile.TemporaryDirectory(prefix="theta-layout-new-") as folder:
+            artwork = Path(folder) / "new.png"
+            artwork.write_bytes(b"")
+            window = self.module.MainWindow()
+            self.addCleanup(window.close)
+            window.fields["artwork_offset_x_mm"].setText("19.81")
+            window.fields["artwork_offset_y_mm"].setText("-29.65")
+            window.gl_preview.set_placement((19.81, -29.65))
+
+            self.assertFalse(window.restore_artwork_layout(str(artwork)))
+            self.assertEqual(
+                window.fields["artwork_offset_x_mm"].text(),
+                "0",
+            )
+            self.assertEqual(
+                window.fields["artwork_offset_y_mm"].text(),
+                "0",
+            )
+            self.assertEqual(window.gl_preview.placement, (0.0, 0.0))
+
     def test_menu_bar_has_the_standard_menus(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)
@@ -411,15 +432,7 @@ class ToolShellTests(unittest.TestCase):
         settings = window.settings_for_source(tab)
         self.assertEqual(settings.fit_mode, "inside")
         self.assertEqual(settings.scale, 1.0)
-        outlines = [
-            [
-                (-280.0, -280.0),
-                (280.0, -280.0),
-                (280.0, 280.0),
-                (-280.0, 280.0),
-                (-280.0, -280.0),
-            ]
-        ]
+        outlines = window.fit_frame_contours(settings)
         fitted = window.fitted_settings(settings, outlines)
         scaled = self.module.converter.apply_geometry_settings(
             outlines, fitted
@@ -433,6 +446,94 @@ class ToolShellTests(unittest.TestCase):
         settings = window.settings_for_source(tab)
         self.assertEqual(settings.fit_mode, "manual")
         self.assertEqual(settings.scale, 1.0)
+
+    def test_cmyk_bed_fit_uses_a_stable_page_frame(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.show_tool("CMYK")
+        tab = window.stack.currentWidget()
+
+        tab.scale_pct.setValue(100)
+        plain = window.settings_for_source(tab)
+        plain_fit = window.fitted_settings(plain, [])
+        plain_frame = window.fit_frame_contours(plain_fit)
+        plain_center = plain_fit.frame_center_mm
+
+        tab.scale_pct.setValue(280)
+        scaled = window.settings_for_source(tab)
+        scaled_fit = window.fitted_settings(scaled, [])
+        scaled_frame = window.fit_frame_contours(scaled_fit)
+        scaled_center = scaled_fit.frame_center_mm
+
+        # Bed fit sizes the page, not the already-scaled content. The local
+        # scale therefore remains a real composition control instead of being
+        # cancelled by a second normalization pass.
+        self.assertAlmostEqual(scaled_fit.scale, plain_fit.scale, places=9)
+        self.assertEqual(scaled_fit.fit_frame_mm, plain_fit.fit_frame_mm)
+        self.assertEqual(scaled_center, plain_center)
+        self.assertEqual(scaled_frame, plain_frame)
+        self.assertEqual(
+            self.module.converter.artwork_span(scaled_frame),
+            self.module.converter.artwork_span(plain_frame),
+        )
+        x0, y0, x1, y1 = plain_fit.fit_frame_mm
+        self.assertAlmostEqual(
+            plain_center[0],
+            (x0 + x1) / 2.0 * plain_fit.scale,
+            places=9,
+        )
+        self.assertAlmostEqual(
+            plain_center[1],
+            (y0 + y1) / 2.0 * plain_fit.scale,
+            places=9,
+        )
+
+    def test_cmyk_artwork_scale_changes_fitted_layer_span(self):
+        from PIL import Image
+
+        with tempfile.TemporaryDirectory(prefix="cmyk-fit-scale-") as folder:
+            image_path = Path(folder) / "image.png"
+            image = Image.new("RGB", (64, 64), "white")
+            for x in range(16, 48):
+                for y in range(16, 48):
+                    image.putpixel((x, y), (0, 0, 0))
+            image.save(image_path)
+
+            window = self.module.MainWindow()
+            self.addCleanup(window.close)
+            window.svg_path.setText(str(image_path))
+            window.show_tool("CMYK")
+            tab = window.stack.currentWidget()
+            tab.page_w.setValue(60)
+            tab.page_h.setValue(60)
+            tab.margin.setValue(4)
+            tab.pitch.setValue(4)
+            tab.resolution.setValue(128)
+            tab.max_marks.setValue(400)
+            tab.style.setCurrentIndex(tab.style.findData("lines"))
+            window.pending_source_tab = tab
+
+            def fitted_span(local_scale):
+                tab.scale_pct.setValue(local_scale)
+                tab._ensure_layers()
+                settings = window.settings_for_source(tab)
+                fitted = window.fitted_settings(settings, [])
+                spans = []
+                for channel in self.module.converter.CHANNELS:
+                    contours = self.module.converter.read_svg(
+                        tab._layer_files[channel],
+                        fitted,
+                    )
+                    spans.append(
+                        max(self.module.converter.artwork_span(contours))
+                    )
+                return max(spans), fitted
+
+            plain_span, plain = fitted_span(100)
+            scaled_span, scaled = fitted_span(280)
+
+        self.assertAlmostEqual(scaled.scale, plain.scale, places=9)
+        self.assertGreater(scaled_span, 2.5 * plain_span)
 
     def test_explicit_generator_fit_survives_the_source_handoff(self):
         window = self.module.MainWindow()

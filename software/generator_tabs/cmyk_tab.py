@@ -601,7 +601,9 @@ class CmykTab(GeneratorTab):
         self.scale_pct.setToolTip(
             "Scales the screened result about the page centre. The effective "
             "line pitch scales with it, so 200 % doubles the spacing between "
-            "rows - halve Dot pitch to keep the same density."
+            "rows - halve Dot pitch to keep the same density. Bed fit sizes "
+            "the page frame, so this control zooms/crops the artwork inside a "
+            "stable, centered print area."
         )
         page.addRow("Artwork scale", self.scale_pct)
         # Live effective-pitch readout: Dot pitch x Artwork scale is what lands
@@ -870,6 +872,12 @@ class CmykTab(GeneratorTab):
             pen_diameter_mm=self.pen_width.value(),
             theta_mode=self.theta_mode.value(),
             theta_center_hold_diameter_mm=self.center_hold.value(),
+            fit_frame_mm=(
+                0.0,
+                0.0,
+                self.page_w.value(),
+                self.page_h.value(),
+            ),
             frame_center_mm=(
                 self.page_w.value() / 2.0 * scale,
                 self.page_h.value() / 2.0 * scale,

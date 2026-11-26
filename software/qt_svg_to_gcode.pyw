@@ -1129,7 +1129,14 @@ class PreviewWorker(QObject):
         try:
             settings = self.settings
             auto_fit = str(getattr(settings, "fit_mode", "manual")).strip().lower() in ("fill", "inside")
-            if converter.is_raster_image(self.svg_path):
+            fit_frame = self.window.fit_frame_contours(settings)
+            if auto_fit and fit_frame:
+                fitted = self.window.fitted_settings(settings, fit_frame)
+                if fitted is not settings:
+                    self.progress.emit(20, "Fitting the generator page to the bed")
+                    self.notice.emit(self.window.describe_fit(settings, fitted))
+                    settings = fitted
+            elif converter.is_raster_image(self.svg_path):
                 # A photo has no outlines to measure, so size it from its pixels
                 # before the fill is built: the fill spacing is millimetres and
                 # cannot be resolved until the paper scale is known.
@@ -2207,11 +2214,20 @@ class MainWindow(QMainWindow):
             self.log.append(f"Could not save artwork placement: {exc}")
             return False
 
+    def center_artwork_on_bed(self):
+        """Reset the current artwork to the registered bed center."""
+        self.fields["artwork_offset_x_mm"].setText("0")
+        self.fields["artwork_offset_y_mm"].setText("0")
+        self.gl_preview.set_placement((0.0, 0.0))
+
     def restore_artwork_layout(self, path):
         """Restore placement and per-artwork recipes for this exact file."""
         path = str(path)
         layout_path = artwork_layout_path(path)
         if not os.path.isfile(layout_path):
+            # A new artwork inherits neither the previous file's drag offset nor
+            # its generator state. Placement edits are stored per artwork.
+            self.center_artwork_on_bed()
             return False
         try:
             with open(layout_path, "r", encoding="utf-8") as handle:
@@ -2227,6 +2243,7 @@ class MainWindow(QMainWindow):
                 raise ValueError("placement must be finite")
         except (OSError, TypeError, ValueError, KeyError, json.JSONDecodeError) as exc:
             self.log.append(f"Could not restore artwork placement: {exc}")
+            self.center_artwork_on_bed()
             return False
         self.fields["artwork_offset_x_mm"].setText(fmt(offset_x))
         self.fields["artwork_offset_y_mm"].setText(fmt(offset_y))
@@ -2555,7 +2572,12 @@ class MainWindow(QMainWindow):
             "fill",
             "inside",
         )
-        if converter.is_raster_image(svg_path):
+        fit_frame = self.fit_frame_contours(settings)
+        if auto_fit and fit_frame:
+            fitted = self.fitted_settings(settings, fit_frame)
+            if fitted is not settings:
+                settings = fitted
+        elif converter.is_raster_image(svg_path):
             settings = self.fitted_settings_for_artwork_bounds(settings, svg_path)
         elif auto_fit:
             outlines = self.load_contours(
@@ -4260,7 +4282,15 @@ class MainWindow(QMainWindow):
         because the point of the action is to place the drawing on the bed.
         """
         reach = float(self.fields["machine_reach_radius_mm"].text() or 0.0)
-        source = self.raw_contours if self.raw_contours else self.contours
+        source_tab = self.active_source_tab()
+        settings = (
+            self.settings_for_source(source_tab)
+            if source_tab not in (None, self.dashboard, self.convert_root)
+            else self.settings()
+        )
+        source = self.fit_frame_contours(settings)
+        if not source:
+            source = self.raw_contours if self.raw_contours else self.contours
         if reach <= 0.0 or not source:
             self.log.append("Fit: build a preview first so the artwork size is known.")
             return
@@ -4298,6 +4328,33 @@ class MainWindow(QMainWindow):
         self.preview_dirty = True
         self.update_stale_warning()
 
+    def fit_frame_contours(self, settings):
+        """Scaled corners of a generator's stable fit frame, if it has one."""
+        frame = getattr(settings, "fit_frame_mm", None)
+        if frame is None:
+            return []
+        try:
+            x0, y0, x1, y1 = (float(value) for value in frame)
+            scale = float(getattr(settings, "scale", 1.0))
+        except (TypeError, ValueError):
+            return []
+        if (
+            not math.isfinite(scale)
+            or scale <= 0.0
+            or x1 <= x0
+            or y1 <= y0
+        ):
+            return []
+        return [
+            [
+                (x0 * scale, y0 * scale),
+                (x1 * scale, y0 * scale),
+                (x1 * scale, y1 * scale),
+                (x0 * scale, y1 * scale),
+                (x0 * scale, y0 * scale),
+            ]
+        ]
+
     def fitted_settings(self, settings, contours):
         """Apply the configured auto-fit to *settings* for this artwork.
 
@@ -4307,7 +4364,12 @@ class MainWindow(QMainWindow):
         on-paper resolution of the final scale.
         """
         mode = str(getattr(settings, "fit_mode", "manual")).strip().lower()
-        if mode not in ("fill", "inside") or not contours:
+        if mode not in ("fill", "inside"):
+            return settings
+        fit_frame = self.fit_frame_contours(settings)
+        if fit_frame:
+            contours = fit_frame
+        if not contours:
             return settings
         reach = float(getattr(settings, "machine_reach_radius_mm", 0.0))
         scale = float(getattr(settings, "scale", 0.0))
@@ -4320,7 +4382,19 @@ class MainWindow(QMainWindow):
         fitted = scale * factor
         if fitted <= 0.0 or abs(fitted - scale) <= 1e-6:
             return settings
-        return dataclasses.replace(settings, scale=fitted)
+        updates = {"scale": fitted}
+        frame_center = getattr(settings, "frame_center_mm", None)
+        if frame_center is not None:
+            ratio = fitted / scale
+            try:
+                frame_x, frame_y = (
+                    float(value) * ratio for value in frame_center
+                )
+            except (TypeError, ValueError):
+                frame_x = frame_y = 0.0
+            if math.isfinite(frame_x) and math.isfinite(frame_y):
+                updates["frame_center_mm"] = (frame_x, frame_y)
+        return dataclasses.replace(settings, **updates)
 
     def describe_fit(self, settings, fitted):
         """One log line naming the auto fit and the scale it chose."""
@@ -4536,7 +4610,8 @@ class MainWindow(QMainWindow):
         settings = self.settings_for_source(source_tab)
         if source_tab is not self.convert_root:
             self.log.append(
-                "Generator page plotted 1:1; Artwork scale sets its size."
+                "Generator page built; Artwork scale sets content size and the "
+                "selected bed fit sizes the page."
             )
         try:
             self.raw_geometry_key(svg_path, settings)

@@ -1,5 +1,31 @@
 # Engineering Log
 
+<a id="elog-20261126-cmyk-scale-centering"></a>
+### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Keep CMYK artwork scale effective and centered
+
+- The operator reported that changing CMYK **Artwork scale** had no visible
+  effect after bed fit was enabled, and requested centered-by-default artwork
+  with later placement edits still available.
+- Bed fit had measured the already-scaled content bounds, so changing the local
+  scale and fitting those new bounds cancelled the visual change. The fit also
+  changed the global scale after the CMYK page-center anchor had been
+  calculated, mixing scaled contours with an unscaled frame anchor.
+- A generator can now expose a stable unscaled `fit_frame_mm`. CMYK uses its
+  page rectangle and updates the matching page-center anchor whenever bed fit
+  changes the global scale.
+- New artwork without a saved layout now resets placement to `(0, 0)` instead
+  of inheriting the previous file's offset. Valid layout sidecars still restore
+  deliberate drag/offset adjustments.
+- Focused regressions cover scale-independent page fitting, true page-center
+  coordinates, and centered import after a prior nonzero placement.
+- The complete generator, CMYK, and placement modules pass `154` tests with
+  one expected OpenGL-context skip. Complete converter discovery passes `628`
+  with one expected OpenGL-context skip, and Python compilation passes.
+- Evidence: `WSW-20261126-007`;
+  `docs/changes/windows-software/2026/2026-11-26-cmyk-scale-centering.md`.
+- Category: windows-software, cmyk, artwork-scale, bed-fit, auto-center,
+  placement, generator-tabs, regression.
+
 <a id="elog-20261126-generator-fit-handoff"></a>
 ### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Honor bed fits for generator artwork
 

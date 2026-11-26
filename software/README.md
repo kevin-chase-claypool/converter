@@ -850,6 +850,13 @@ global **Fill bed** / **Fit inside** choice by default, and switching to
 **Fit inside** opts that tab into the selected auto fit so the action reaches
 Preview and Save instead of being reset to 1:1.
 
+For CMYK, bed fit sizes the stable page frame, not the already-scaled ink
+bounds. **Artwork scale** therefore remains a real zoom/crop control inside the
+centered print area: reducing it leaves more paper around the image, while
+increasing it enlarges the image and may crop content beyond the drawable
+circle. The page frame and page centre are updated together when the global
+fit changes.
+
 Both fit actions size to the configured **Gantry reach radius mm**, which is
 the physically enforceable circle, not the larger rim-clear stock circle. With
 the restored defaults, an exact **Fit inside** result is bounded by the
@@ -1438,7 +1445,9 @@ display-only; every other group changes the emitted program.
   reach circle. Placement and any artwork-specific generator recipes are saved
   beside the artwork as `<artwork-file>.theta-layout.json` and restored when
   that same file is imported again; placement edits, artwork switches, and
-  closing the app update it. The current version stores the complete CMYK
+  closing the app update it. A newly imported artwork with no saved layout
+  starts at `(0, 0)` rather than inheriting the previous file's offset. The
+  current version stores the complete CMYK
   recipe, including image controls, screen geometry, Row order, kinematics,
   page layout, pen offsets, and layer selections. Version-1 sidecars still
   restore their original placement fields. A Fit still deliberately resets the

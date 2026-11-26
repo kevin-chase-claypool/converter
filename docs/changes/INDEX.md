@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-26 | `WSW-20261126-007` | windows-software | implemented | [Keep CMYK artwork scale effective and centered](windows-software/2026/2026-11-26-cmyk-scale-centering.md) |
 | 2026-11-26 | `WSW-20261126-006` | windows-software | implemented | [Honor bed fits for generator artwork](windows-software/2026/2026-11-26-generator-fit-handoff.md) |
 | 2026-11-26 | `WSW-20261126-005` | windows-software | implemented | [Revert the converter to its pre-Reddit baseline](windows-software/2026/2026-11-26-revert-pre-reddit-converter.md) |
 | 2026-11-26 | `WSW-20261126-004` | windows-software | implemented | [Fill the bed by default for CMYK Photo](windows-software/2026/2026-11-26-cmyk-photo-fill-bed-default.md) |

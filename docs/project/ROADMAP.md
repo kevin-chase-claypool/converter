@@ -719,6 +719,10 @@ task rather than treated as the active production path.
   global Fill bed / Fit inside choice and other generators keep an explicit fit
   only after the operator requests it. The fit remains bounded by the current
   `180 mm` safe reach until the separate 14.5-inch geometry is verified.
+  Status 2026-11-26 scale/center follow-up: CMYK bed fit now sizes the stable
+  page frame, so Artwork scale remains an effective zoom/crop control instead
+  of being cancelled by content-bound fitting. The page-center anchor scales
+  with the fit, and new artwork without a saved layout starts centered.
   Status 2026-11-24 ink density: the Golden Sunset comparison exposed
   near-solid overprint from a `1.20 mm` pitch under a `0.90 mm` pen, plus Auto
   selecting brightness 80 %, contrast 220 %, gamma 0.60, GCR 90 %. The

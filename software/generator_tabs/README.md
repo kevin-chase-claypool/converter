@@ -45,7 +45,10 @@ class FlowFieldTab(GeneratorTab):
   honor the global Fill bed / Fit inside policy, as CMYK does. An explicit
   fit action also opts the active tab in for the session. A tab with
   `SELF_SCREENED = True` gets the Fill patterns switched off so its own tone
-  marks are not hatched again.
+  marks are not hatched again. A production tab whose local Artwork scale is a
+  composition control should also set `fit_frame_mm` and `frame_center_mm` in
+  `apply_tab_settings`; bed fit then sizes that stable page frame, so global
+  fit does not cancel the local scale.
 - `host.motion_estimate_scale()` — the display-only controller-time scale.
 - `host.analyze_program(svg_path, settings, cancel_check=None)` — build the
   exact program a Preview would (moves, G-code, stats) without touching the

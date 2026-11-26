@@ -201,6 +201,11 @@ class Settings:
     # centre, otherwise unequal ink coverage shifts the four passes apart.
     # None keeps the single-artwork default: center the artwork's own bbox.
     frame_center_mm: tuple | None = None
+    # Optional unscaled source-page frame `(x0, y0, x1, y1)` for generators
+    # whose own Artwork scale is a composition control. Bed fit sizes this
+    # stable frame instead of remeasuring the already-scaled content, which
+    # would cancel the local scale and make that control appear ineffective.
+    fit_frame_mm: tuple | None = None
     # Outlines only by default. Line art is the common case here, and a fill
     # that is coarse relative to a small closed shape leaves one or two short
     # fragments inside it - the "random dashes" seen on 2026-09-30. A positive
@@ -722,6 +727,25 @@ def validate_settings(settings):
             ) from None
         if not (math.isfinite(frame_x) and math.isfinite(frame_y)):
             raise ValueError("frame center must be a pair of finite numbers.")
+    fit_frame = getattr(settings, "fit_frame_mm", None)
+    if fit_frame is not None:
+        try:
+            frame_x0, frame_y0, frame_x1, frame_y1 = (
+                float(value) for value in fit_frame
+            )
+        except (TypeError, ValueError):
+            raise ValueError(
+                "fit frame must be four finite numbers or empty."
+            ) from None
+        if not all(
+            math.isfinite(value)
+            for value in (frame_x0, frame_y0, frame_x1, frame_y1)
+        ):
+            raise ValueError("fit frame must contain finite numbers.")
+        if frame_x1 <= frame_x0 or frame_y1 <= frame_y0:
+            raise ValueError(
+                "fit frame must have positive width and height."
+            )
     if int(settings.shade_levels) < 1:
         raise ValueError("shade levels must be at least one.")
     if not 0.0 <= float(settings.theta_max_step_deg) <= 180.0:
