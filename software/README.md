@@ -71,10 +71,48 @@ python -m unittest -q software.tests.test_path_join
 python -m unittest discover -q -s software\tests -p "test_*.py"
 ```
 
-The complete discovery run currently contains 738 test cases. Repeated generator
+The complete discovery run currently contains 750 test cases. Repeated generator
 tab contracts retain their per-tab class names and failure locations, while
 related slow setup scenarios use subtests to avoid rebuilding the same Qt
 window or generated coupon.
+
+### Reproducible headless CMYK export
+
+Use the headless driver when a CMYK set must be produced and checked without
+opening or automating a visible window:
+
+```powershell
+python tools\export_cmyk_headless.py `
+  "C:\Users\jacks\Downloads\Golden Sunset Winter Family Selfie.png" `
+  --output-dir samples\gcode\fam-precision-2026-11-25 `
+  --recipe process_area --page-mm 250 --pen-width-mm 0.9 `
+  --pitch-mm 0.35 --path-tolerance-mm 0.05 `
+  --max-marks 800000 --seed 7 `
+  --reference-image tmp\reddit_cmyk_reference.jpg
+```
+
+The command runs the real ``CMYK Photo`` tab in an offscreen Qt application,
+applies the selected workflow preset, calls the tab's normal save path, and
+publishes all four programs plus the version-8 manifest through
+`MainWindow.export_program_set`. It does not synthesize replacement artwork or
+G-code. By default it runs the complete export twice and requires byte-identical
+programs plus identical manifest content except for the creation timestamp.
+
+Each successful run writes `<base>-verification.json` with the exact program
+hashes, mark counts, page and machine bounds, unit commands, common identities,
+motion preflight, and determinism result. It also writes one compressed
+`<base>-comparison.jpg` derived from the tab's actual C/M/Y/K layers in print
+order using the multiply ink model. The preview is capped below `750000` bytes.
+
+For a `0.90 mm` pen, the `0.35 mm` process recipe is automatically raised by
+the renderer to its `1.10` pen-width floor (`0.99 mm` spacing, `0.98765 mm`
+actual axis pitch across the 240 mm artwork area). The generated Golden Sunset
+milestone and its evidence are retained in
+`..\samples\gcode\fam-precision-2026-11-25\`.
+
+This is digital verification only. Running the four numbered files in order on
+one registered sheet is still required to establish paper hue, density,
+overprint texture, registration, drag, and elapsed time.
 
 ## ioSender configuration recovery
 

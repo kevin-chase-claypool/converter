@@ -69,6 +69,13 @@ adjacent-chain settings, per-program motion preflight, and one canonical
 common-identity hash. This is a host filesystem contract only; it does not
 change the controller command or coordinate contracts above.
 
+The headless operator entry point is
+`python tools\export_cmyk_headless.py ...`. It must drive the actual CMYK Photo
+tab workflow and the same transactional host publication method used by the
+visible application. Its verification report is evidence about those emitted
+bytes and manifest; it is not a second G-code generator and does not replace a
+four-pass paper registration result.
+
 ## HMI to Pi-local settings
 
 The Raspberry Pi settings API is a separate allowlisted interface from the

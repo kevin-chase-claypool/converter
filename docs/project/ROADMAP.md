@@ -748,6 +748,19 @@
   thresholds spanning `40-90 %`. Bright and middle tones stay on the base
   network; a dark-field test requires more than `1.40x` extra coverage.
   Physical validation remains open.
+  Status 2026-11-25 headless precision export: the real CMYK Photo tab and
+  transactional set writer produced the four Golden Sunset programs and a
+  version-8 manifest twice with identical program bytes. The `0.90 mm` pen
+  raised the requested `0.35 mm` process pitch to `0.98765 mm` actual axis
+  pitch. The set has `64901` marks total, zero over-tolerance moves at
+  `0.05 mm`, a `174.383 mm` maximum G54 radius inside the `180 mm` reach, and
+  a strict motion-checker pass on every file. The compressed multiply preview
+  retains all three faces and separated teeth, unlike the coherent-flow
+  comparison. Evidence and reusable command:
+  `samples/gcode/fam-precision-2026-11-25/`,
+  `tools/export_cmyk_headless.py`, and `WSW-20261125-013`. Paper hue,
+  density, overprint texture, registration, drag, and elapsed time remain
+  open, so this milestone stays unchecked.
   Acceptance: print a pre-cropped portrait with the README starting recipe
   after one HOME + REGISTER; preserve the intentional `260 %` circular crop
   unless the test explicitly compares the whole-image Fit-inside layout;

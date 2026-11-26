@@ -1,5 +1,54 @@
 # Engineering Log
 
+<a id="elog-20261125-headless-precision-cmyk-export"></a>
+### 🟨 2026-11-25 - WINDOWS SOFTWARE/VERIFIED DIGITALLY - Export the precision CMYK milestone headlessly
+
+- The visible Qt workflow was blocked at an approval gate. The new
+  `tools/export_cmyk_headless.py` instead loads the real application module
+  offscreen, selects **CMYK Photo**, applies the process workflow preset,
+  calls `build_svg()` and `save_all()`, and publishes through
+  `MainWindow.export_program_set`. No replacement SVG or G-code is synthesized.
+- The Golden Sunset set uses a `250 mm` page, `5 mm` margin, `0.90 mm` pen,
+  requested `0.35 mm` pitch, `0.05 mm` tolerance, seed `7`, and `800000`
+  marks-per-ink cap. The pen floor resolves the process grid to `0.99 mm`
+  spacing and `0.98765 mm` actual axis pitch over `240 mm`.
+- The final set is
+  `samples/gcode/fam-precision-2026-11-25/`. It contains numbered
+  `01-yellow`, `02-magenta`, `03-cyan`, and `04-black` programs plus a
+  version-8 manifest, verification report, and `546932`-byte comparison JPEG.
+  Mark counts are `23923 / 23024 / 16271 / 1683`, `64901` total.
+- All programs contain `G21/G90/G94/G17/G54`, end with `M2` after pen clear,
+  share one frame/theta/feed/reach/compensation header, and report a complete
+  transactional set with matching identity and successful motion preflight.
+  Layer extents are `0.400 .. 249.600 mm`; maximum final G54 radius is
+  `174.383 mm` against `180 mm`; over-tolerance moves are `0` at `0.05 mm`.
+- Two complete application exports produced identical program bytes and
+  identical manifests after excluding `created`. `check_gcode_motion.py
+  --strict` passes all four files; the largest bed step is `2.06 deg` and the
+  largest A rate is `269 motor deg/s`.
+- Compared with the coherent-flow Golden Sunset set, total marks increase
+  from `9147` to `64901`, over-tolerance moves fall from `30` at `0.10 mm` to
+  `0` at `0.05 mm`, and maximum per-move bed rotation falls from `9.434` to
+  `2.060 deg`. The one inspected contact sheet keeps all three faces,
+  glasses, hair, and separated teeth readable; the coherent panel remains
+  dense blue contour texture.
+- The first headless wait assumed the tab's cached analysis key survived
+  worker teardown. The save was complete while that check was already false.
+  The driver now waits for the explicit saved result plus all five transaction
+  targets. A `50 mm` smoke export caught the mistake before the full run.
+- Focused CMYK/workflow/export/headless/generator/background-save tests passed
+  `229` tests with one expected OpenGL-context skip. Complete converter
+  discovery passed `750` tests in `289.643 s` with the same expected skip.
+- No paper set was run. Paper hue, density, overprint texture, registration,
+  drag, and elapsed time remain physical validation work.
+- Evidence: `WSW-20261125-013`;
+  `docs/changes/windows-software/2026/2026-11-25-headless-precision-cmyk-export.md`;
+  `samples/gcode/fam-precision-2026-11-25/Golden Sunset Winter Family
+  Selfie-cmyk-verification.json`.
+- Category: windows-software, cmyk, process-color, headless, deterministic,
+  transactional-export, verification, facial-detail,
+  physical-validation-pending.
+
 <a id="elog-20261125-stabilize-process-color-area-screen"></a>
 ### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Stabilize the precision process-color screen
 

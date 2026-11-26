@@ -1,0 +1,415 @@
+{
+  "kind": "cmyk-print-set",
+  "version": 8,
+  "created": "2026-11-25T23:37:48",
+  "print_order": [
+    "01-yellow",
+    "02-magenta",
+    "03-cyan",
+    "04-black"
+  ],
+  "source": {
+    "file": "Golden Sunset Winter Family Selfie.png",
+    "sha256": "be98812272b81358e2683a06be48acdfd7958559c7f146f5bdecc928dc8f13c5"
+  },
+  "workflow": {
+    "stages": [
+      "composition",
+      "prepare",
+      "separation",
+      "direction",
+      "streamlines",
+      "ink",
+      "paths",
+      "motion",
+      "review"
+    ],
+    "current_stage": "review",
+    "stage_settings_sha256": {
+      "composition": "b3da1a1ca4eda8d2c426bb022e3f2d4e545ccf31db08e891097539e6e04511bf",
+      "prepare": "1cbc36a9c93d8c03592299a444220f0fef394345aad6acab54a8efdf2bf2a602",
+      "separation": "20ede2421188d980b7deb2a57d6891c873a2a6264b6a6fa02d5c46837dcd3d10",
+      "direction": "3a6779f64dd9fdf3627a1f5d3222f2ee52494364e3621b243d09687c0944b8cf",
+      "streamlines": "986476b4bb0f73d7e65b8ec852281e04a56e949b812923fbc3ec7a1a94d79ef7",
+      "ink": "89699c0363e3c77752e9ae6eb932b4c97741e6e579245450edd343015b8d5724",
+      "paths": "bd6d0a8ef87a555f359279b6a36efa3cfd16ef9c0b658016eb9233341c2b385c",
+      "motion": "8a9c71d23621a98d608dc35c53068ade44d3d678e4b3e06b929261e89ea4c611",
+      "review": "a2dad3560b6ac510341ae8aac59e98ddecea50a38aa77414293de0567d2de95c"
+    },
+    "locked_stages": [],
+    "diagnostic_visualizations": {
+      "direction": "undirected_tangent_hue_confidence_value",
+      "review": "shared_cmyk_pen_trajectory_preview"
+    }
+  },
+  "page": {
+    "width_mm": 250.0,
+    "height_mm": 250.0,
+    "margin_mm": 5.0
+  },
+  "frame_center_mm": [
+    125.0,
+    125.0
+  ],
+  "artwork_placement_mm": [
+    0.0,
+    0.0
+  ],
+  "bed_motion": "X\u03b8/Y\u03b8 (rotating bed, fast)",
+  "center_hold_diameter_mm": 60.0,
+  "theta_mode": "optimized",
+  "row_theta_lock": false,
+  "bed_compensation_path": "C:\\Users\\jacks\\Documents\\Claude\\converter\\samples\\gcode\\bed-error-compensation-2026-11-01-dense-v3-360mm-reach-extrapolated.json",
+  "bed_compensation": {
+    "mode": "raw_unconstrained",
+    "profile_fingerprint": "f85ec410dbac",
+    "full_max_correction_mm": 1.1416248849726154,
+    "screen_angles_deg": {},
+    "projection": null,
+    "translation_normalization": null,
+    "per_channel_raw_translation_means_mm": {},
+    "per_channel_max_correction_mm": {}
+  },
+  "registration_crosses": true,
+  "pen_offsets_mm": {
+    "c": [
+      0.0,
+      0.0
+    ],
+    "m": [
+      0.0,
+      0.0
+    ],
+    "y": [
+      0.0,
+      0.0
+    ],
+    "k": [
+      0.0,
+      0.0
+    ]
+  },
+  "screen": {
+    "style": "process_area",
+    "style_label": "Precision process screen (fine CMYK cells)",
+    "dot_pitch_mm": 0.35,
+    "artwork_scale_pct": 100.0,
+    "effective_pitch_mm": 0.35,
+    "preserve_exact_row_pitch": false,
+    "wave_frequency_mode": "constant",
+    "wave_frequency_variation_pct": 0.0,
+    "contour_order": "optimized",
+    "flow_smoothing_mm": 2.5,
+    "flow_layers": null,
+    "flow_pitch_compression_pct": null,
+    "shadow_layer_start_pct": null,
+    "shadow_layer_end_pct": null,
+    "preserve_black_keylines": true,
+    "keyline_color_quiet_pct": null,
+    "flow_guide": "calibrated_process_cells_with_tensor_orientation",
+    "edge_flow_path_network": "pen_footprint_process_color_area_screen",
+    "source_edge_preserving_simplify_mm": 0.0,
+    "coherent_color_hold_mm": null,
+    "coherent_color_mix_ratio": null,
+    "process_color_cell_pitch_mm": 0.35,
+    "process_color_edge_threshold": 0.84,
+    "tone_gap_bridge": {
+      "enabled": false,
+      "max_gap_mm": 0.0,
+      "scope": "same_traced_streamline_only"
+    },
+    "pen_down_chain": {
+      "enabled": true,
+      "max_gap_mm": 1.0,
+      "planner_order": true,
+      "bridge_decision": "draw_connector_vs_lift_travel_lower",
+      "local_flow_bridge_mm": 0.0,
+      "channels": {
+        "c": {
+          "before": 16263,
+          "after": 16263,
+          "joined": 0,
+          "connections": 0,
+          "bridged_mm": 0.0,
+          "max_gap_mm": 1.0,
+          "enabled": false
+        },
+        "m": {
+          "before": 23016,
+          "after": 23016,
+          "joined": 0,
+          "connections": 0,
+          "bridged_mm": 0.0,
+          "max_gap_mm": 1.0,
+          "enabled": false
+        },
+        "y": {
+          "before": 23915,
+          "after": 23915,
+          "joined": 0,
+          "connections": 0,
+          "bridged_mm": 0.0,
+          "max_gap_mm": 1.0,
+          "enabled": false
+        },
+        "k": {
+          "before": 1675,
+          "after": 1675,
+          "joined": 0,
+          "connections": 0,
+          "bridged_mm": 0.0,
+          "max_gap_mm": 1.0,
+          "enabled": false
+        }
+      }
+    },
+    "pen_width_mm": 0.9,
+    "dot_size_pct": 100.0,
+    "path_tolerance_mm": 0.05,
+    "minimum_centerline_clearance_mm": 1.15,
+    "levels": 8,
+    "overdraw": 1,
+    "solid_dots": false,
+    "seed": 7,
+    "max_marks": 800000,
+    "screen_angles_deg": {
+      "c": 15.0,
+      "m": 75.0,
+      "y": 0.0,
+      "k": 45.0
+    },
+    "wave_phase_mode": null
+  },
+  "ink_processing": {
+    "auto_levels": true,
+    "saturation_pct": 92.0,
+    "contrast_pct": 118.0,
+    "brightness_pct": 112.0,
+    "gamma": 1.05,
+    "gcr_pct": 28.0,
+    "resolution_px": 10000,
+    "weights": {
+      "c": 1.0,
+      "m": 0.95,
+      "y": 0.9,
+      "k": 0.3
+    },
+    "color_model": "process-ink-multiply-v1",
+    "calibration_identity": "cb81f97cd2989152a445e07bbb7ef2ac9d139ae2827fffd2a381c255916652ad",
+    "ink_transmittances": {
+      "c": [
+        0.0001,
+        0.6824,
+        0.9373
+      ],
+      "m": [
+        0.9255,
+        0.0001,
+        0.549
+      ],
+      "y": [
+        1.0,
+        1.0,
+        0.0001
+      ],
+      "k": [
+        0.1373,
+        0.1216,
+        0.1255
+      ]
+    },
+    "sharpening": {
+      "enabled": true,
+      "amount_pct": 45.0,
+      "radius_mm": 0.8
+    }
+  },
+  "notes": "Pen offsets apply to artwork programs and the preview only; the calibration sheet keeps its geometric layout.",
+  "files": {
+    "y": "Golden Sunset Winter Family Selfie-cmyk-01-yellow.gcode",
+    "m": "Golden Sunset Winter Family Selfie-cmyk-02-magenta.gcode",
+    "c": "Golden Sunset Winter Family Selfie-cmyk-03-cyan.gcode",
+    "k": "Golden Sunset Winter Family Selfie-cmyk-04-black.gcode"
+  },
+  "file_sha256": {
+    "y": "419807d6bce806406c319e125f09e6d10cbed012f64d69631074895b8fb44a3b",
+    "m": "850f412ebe21b94ab94121a37322accfd28b03ab517d413781f1c050dac4f32e",
+    "c": "df09f94fb4bd59fcbd0fd9dfd81e3c7bff7ff8bf07d24e2a6bccd8c85263aca4",
+    "k": "dc8194fc56b149c7837fea00492116ba39c840b86dad74ed825204c527a44e8e"
+  },
+  "program_geometry": {
+    "y": {
+      "marks": 23923,
+      "moves": 88425,
+      "draw_mm": 150452.41423816397,
+      "x_theta_moves": 24228,
+      "y_theta_moves": 21059
+    },
+    "m": {
+      "marks": 23024,
+      "moves": 85839,
+      "draw_mm": 138465.4409541064,
+      "x_theta_moves": 18511,
+      "y_theta_moves": 25224
+    },
+    "c": {
+      "marks": 16271,
+      "moves": 63339,
+      "draw_mm": 100311.30574986883,
+      "x_theta_moves": 13325,
+      "y_theta_moves": 18439
+    },
+    "k": {
+      "marks": 1683,
+      "moves": 9654,
+      "draw_mm": 10266.946148045887,
+      "x_theta_moves": 1369,
+      "y_theta_moves": 1893
+    }
+  },
+  "preflight": {
+    "y": {
+      "drawing": 66207,
+      "travel": 5553,
+      "hold": 2551,
+      "strategies": {
+        "travel": 5554,
+        "hold": 2551,
+        "x_theta": 24228,
+        "y_theta": 21059
+      },
+      "step": 2.0604176431285337,
+      "step_line": 84791,
+      "rate": 268.7048215420594,
+      "rate_line": 84553,
+      "deviation": [
+        0.015510104400229936,
+        172.88912078526235,
+        123066,
+        "y_theta"
+      ],
+      "tolerance": 0.05,
+      "over_tolerance": 0,
+      "rapids_with_rotation": 0,
+      "fed_rotations": 0,
+      "unwinds": 0,
+      "cap": 15.0,
+      "rate_cap": 500.0,
+      "max_xy_radius_mm": 174.38303800370036,
+      "max_xy_radius_line": 123070,
+      "machine_reach_radius_mm": 180.0
+    },
+    "m": {
+      "drawing": 63473,
+      "travel": 5590,
+      "hold": 2305,
+      "strategies": {
+        "travel": 5591,
+        "hold": 2305,
+        "y_theta": 25224,
+        "x_theta": 18511
+      },
+      "step": 1.8323743231249339,
+      "step_line": 92031,
+      "rate": 268.89272672403763,
+      "rate_line": 62047,
+      "deviation": [
+        0.015354141220138619,
+        172.6323141126317,
+        120057,
+        "x_theta"
+      ],
+      "tolerance": 0.05,
+      "over_tolerance": 0,
+      "rapids_with_rotation": 0,
+      "fed_rotations": 38,
+      "unwinds": 38,
+      "cap": 15.0,
+      "rate_cap": 500.0,
+      "max_xy_radius_mm": 174.20056412644018,
+      "max_xy_radius_line": 120033,
+      "machine_reach_radius_mm": 180.0
+    },
+    "c": {
+      "drawing": 43961,
+      "travel": 4843,
+      "hold": 770,
+      "strategies": {
+        "travel": 4844,
+        "hold": 770,
+        "y_theta": 18439,
+        "x_theta": 13325
+      },
+      "step": 2.0112621372132526,
+      "step_line": 82533,
+      "rate": 268.3549829764479,
+      "rate_line": 74322,
+      "deviation": [
+        0.018618762777542066,
+        172.53822470995857,
+        89310,
+        "x_theta"
+      ],
+      "tolerance": 0.05,
+      "over_tolerance": 0,
+      "rapids_with_rotation": 0,
+      "fed_rotations": 0,
+      "unwinds": 0,
+      "cap": 15.0,
+      "rate_cap": 500.0,
+      "max_xy_radius_mm": 174.24046725557182,
+      "max_xy_radius_line": 89214,
+      "machine_reach_radius_mm": 180.0
+    },
+    "k": {
+      "drawing": 3504,
+      "travel": 1536,
+      "hold": 96,
+      "strategies": {
+        "travel": 1537,
+        "hold": 96,
+        "x_theta": 1369,
+        "y_theta": 1893
+      },
+      "step": 1.9839959977528907,
+      "step_line": 11081,
+      "rate": 268.09683207133247,
+      "rate_line": 11081,
+      "deviation": [
+        0.013006219237616917,
+        172.45776479491911,
+        14375,
+        "x_theta"
+      ],
+      "tolerance": 0.05,
+      "over_tolerance": 0,
+      "rapids_with_rotation": 0,
+      "fed_rotations": 0,
+      "unwinds": 0,
+      "cap": 15.0,
+      "rate_cap": 500.0,
+      "max_xy_radius_mm": 174.1135829830631,
+      "max_xy_radius_line": 14415,
+      "machine_reach_radius_mm": 180.0
+    }
+  },
+  "set_verification": {
+    "complete": true,
+    "channels": [
+      "y",
+      "m",
+      "c",
+      "k"
+    ],
+    "expected_channels": [
+      "c",
+      "m",
+      "y",
+      "k"
+    ],
+    "identity_sha256": "8297ce5c72f872e243d3a6380b52bfe06f8df9f42e221b86b08e237548ac0770",
+    "consistency_checked": true,
+    "motion_preflight_passed": true,
+    "whole_set_transaction": true
+  }
+}
