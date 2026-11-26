@@ -842,9 +842,24 @@ result about the page centre.
 The Text tab (and the Postcard tab's caption/address) uses the vendored
 public-domain Hershey simplex font in `generator_tabs/fonts/`; its use terms
 are in `generator_tabs/fonts/NOTICE.md`.
-Generator pages are previewed **1:1** with the auto fit skipped, so that
-Artwork scale sets the physical drawing size; imported artwork on the Convert
-tab still uses the selected Fit mode.
+Generator pages default to **1:1** with the auto fit skipped, so that Artwork
+scale sets the physical drawing size; imported artwork on the Convert tab still
+uses the selected Fit mode. CMYK is the production exception: it follows the
+global **Fill bed** / **Fit inside** choice by default, and switching to
+**Manual** restores 1:1. On any other generator tab, pressing **Fill bed** or
+**Fit inside** opts that tab into the selected auto fit so the action reaches
+Preview and Save instead of being reset to 1:1.
+
+Both fit actions size to the configured **Gantry reach radius mm**, which is
+the physically enforceable circle, not the larger rim-clear stock circle. With
+the restored defaults, an exact **Fit inside** result is bounded by the
+`180.0 mm` reach (`360.0 mm` / `14.173 in` diameter), even though the 15-inch
+stock and 6.35 mm tape margin leave a `368.3 mm` (`14.5 in`) rim-clear
+diameter. A literal 14.5-inch fit requires raising the reach to `184.15 mm`
+after a fresh HOME + REGISTER confirms the live +Y limit and the compensation
+profile covers the wider field; the current full 14.5-inch disc is not a
+verified production-safe reach.
+
 Generator tab controls fill the settings column, with the tab's hint and
 status text stacked below them; the settings column has a 280 px floor so it
 cannot be crushed by the preview.

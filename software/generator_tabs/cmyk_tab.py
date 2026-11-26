@@ -203,6 +203,9 @@ class CmykTab(GeneratorTab):
     # The tab draws its own halftone marks; the Convert-tab fill must not
     # hatch every dot outline a second time.
     SELF_SCREENED = True
+    # CMYK is a production page, so its generated bounds use the converter's
+    # global Fill bed / Fit inside policy instead of a hidden 1:1 override.
+    USES_BED_FIT_DEFAULT = True
 
     def __init__(self, host):
         super().__init__(host)

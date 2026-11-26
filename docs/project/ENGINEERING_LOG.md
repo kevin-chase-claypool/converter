@@ -1,5 +1,32 @@
 # Engineering Log
 
+<a id="elog-20261126-generator-fit-handoff"></a>
+### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Honor bed fits for generator artwork
+
+- The operator reported that the processed image could not be fitted into the
+  drawable area. `settings_for_source()` forced every generator page back to
+  manual scale `1.0`, so the global **Fit inside** and **Fill bed** actions
+  were discarded before Preview and Save.
+- CMYK now opts into the global bed-fit policy by default. Other generator
+  pages retain manual 1:1 unless the operator explicitly selects an auto fit
+  while that generator is active; the opt-in is tracked per tab and clears
+  when Manual is selected.
+- A focused regression confirms the CMYK bounds scale inside the configured
+  reach, Manual restores 1:1, and an explicit fit does not affect a different
+  generator tab.
+- The complete generator suite passes `42` tests with one expected
+  OpenGL-context skip. Related CMYK, calibration-sheet, and preview modules
+  pass `144`, and complete converter discovery passes `625` with one expected
+  OpenGL-context skip. Python compilation passes.
+- The restored safe default remains `180 mm` reach (`14.173 in` diameter).
+  The `368.3 mm` / `14.5 in` stock-limited circle still requires the separate
+  `184.15 mm` reach decision and live HOME + REGISTER verification documented
+  in `ADR-012`.
+- Evidence: `WSW-20261126-006`;
+  `docs/changes/windows-software/2026/2026-11-26-generator-fit-handoff.md`.
+- Category: windows-software, generator-tabs, cmyk, fit-inside, fill-bed,
+  preview, printable-area, regression.
+
 <a id="elog-20261126-revert-pre-reddit-converter"></a>
 ### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Revert the converter to its pre-Reddit baseline
 

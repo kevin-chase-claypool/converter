@@ -714,6 +714,11 @@ task rather than treated as the active production path.
   that the portrait's `305.46 mm` layout is an intentional circular crop, so
   production keeps manual `1.0 / 260 %`; Fit inside's approximately
   `153.21 %` equivalent scale is only for an uncropped image.
+  Status 2026-11-26 restored baseline: the full rollback removed this fit
+  handoff. `WSW-20261126-006` reintroduces it narrowly: CMYK follows the
+  global Fill bed / Fit inside choice and other generators keep an explicit fit
+  only after the operator requests it. The fit remains bounded by the current
+  `180 mm` safe reach until the separate 14.5-inch geometry is verified.
   Status 2026-11-24 ink density: the Golden Sunset comparison exposed
   near-solid overprint from a `1.20 mm` pitch under a `0.90 mm` pen, plus Auto
   selecting brightness 80 %, contrast 220 %, gamma 0.60, GCR 90 %. The

@@ -1309,6 +1309,10 @@ class MainWindow(QMainWindow):
         self.preview_worker = None
         self.save_thread = None
         self.save_worker = None
+        # Generator pages normally keep their designed 1:1 size. Remember a
+        # tab only after the user explicitly asks for a global bed fit, so a
+        # Fill bed / Fit inside action survives the generator handoff.
+        self.generator_fit_sources = set()
         self.save_started_at = None
         self._background_planning_tab = None
         self.preview_started_at = None
@@ -1695,7 +1699,9 @@ class MainWindow(QMainWindow):
         self.fields["motion_estimate_scale"].textChanged.connect(lambda _text: self.on_motion_estimate_scale_changed())
         self.fields["hatch_pattern"].currentTextChanged.connect(lambda _text: self.update_pattern_settings())
         self.fields["fill_source"].currentIndexChanged.connect(lambda _index: self.update_pattern_settings())
-        self.fields["fit_mode"].currentIndexChanged.connect(lambda _index: self.update_fit_fields())
+        self.fields["fit_mode"].currentIndexChanged.connect(
+            self.on_fit_mode_changed
+        )
         self.fill_wide_strokes.toggled.connect(lambda _checked: self.update_pattern_settings())
         self.update_pattern_settings()
         self.update_fit_fields()
@@ -1743,10 +1749,12 @@ class MainWindow(QMainWindow):
     def settings_for_source(self, source_tab):
         """Build settings for the active tab.
 
-        A generator page is already laid out in millimetres, so it is plotted
-        1:1 with the fit mode manual. The Convert tab's auto fit would
-        otherwise renormalize every generator result to the reach circle and
-        hide the tab's Artwork scale control.
+        A generator page is already laid out in millimetres, so it defaults to
+        1:1 with the fit mode manual. The Convert tab's auto fit would otherwise
+        renormalize every generator result to the reach circle and hide the
+        tab's Artwork scale control. CMYK production pages, and tabs on which
+        the user explicitly pressed Fill bed / Fit inside, keep the selected
+        global fit through Preview and Save.
 
         A tab may also declare ``SELF_SCREENED = True`` when it draws its own
         tone marks (CMYK dots): the Fill patterns would then hatch every dot
@@ -1754,9 +1762,15 @@ class MainWindow(QMainWindow):
         """
         settings = self.settings()
         if source_tab is not self.convert_root:
-            settings = dataclasses.replace(
-                settings, fit_mode="manual", scale=1.0
+            fit_mode = str(settings.fit_mode).strip().lower()
+            preserve_bed_fit = fit_mode in ("fill", "inside") and (
+                source_tab in self.generator_fit_sources
+                or bool(getattr(source_tab, "USES_BED_FIT_DEFAULT", False))
             )
+            if not preserve_bed_fit:
+                settings = dataclasses.replace(
+                    settings, fit_mode="manual", scale=1.0
+                )
             if bool(getattr(source_tab, "SELF_SCREENED", False)):
                 settings = dataclasses.replace(settings, hatch_spacing_mm=0.0)
             # A tab may override fields for its own output (the CMYK tab's Pen
@@ -2475,6 +2489,21 @@ class MainWindow(QMainWindow):
 
     def fit_mode(self):
         return self.fields["fit_mode"].currentData() or "fill"
+
+    def on_fit_mode_changed(self, _index):
+        """Apply the fit-field state and remember an explicit generator fit."""
+        self.update_fit_fields()
+        self.remember_active_generator_fit()
+
+    def remember_active_generator_fit(self):
+        """Opt the active generator into a currently selected auto fit."""
+        tab = self.active_source_tab()
+        if tab in (None, self.dashboard, self.convert_root):
+            return
+        if self.fit_mode() in ("fill", "inside"):
+            self.generator_fit_sources.add(tab)
+        else:
+            self.generator_fit_sources.discard(tab)
 
     def update_fit_fields(self):
         """An auto fit owns Scale, so the field shows the value but is not typed."""
@@ -4220,6 +4249,7 @@ class MainWindow(QMainWindow):
         if index >= 0 and combo.currentIndex() != index:
             combo.setCurrentIndex(index)
             self.log.append(f"Fit mode set to {combo.itemText(index)}.")
+        self.remember_active_generator_fit()
 
     def fit_to_bed(self, fill=False):
         """Scale, and recenter, the artwork against the drawable reach circle.

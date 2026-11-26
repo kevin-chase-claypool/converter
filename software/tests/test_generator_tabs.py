@@ -396,6 +396,81 @@ class ToolShellTests(unittest.TestCase):
         convert_settings = window.settings_for_source(window.convert_root)
         self.assertEqual(convert_settings.fit_mode, window.settings().fit_mode)
 
+    def test_cmyk_honors_the_global_bed_fit(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.show_tool("CMYK")
+        tab = window.stack.currentWidget()
+
+        settings = window.settings_for_source(tab)
+        self.assertEqual(settings.fit_mode, "fill")
+        self.assertEqual(settings.scale, 1.0)
+
+        fit = window.fields["fit_mode"]
+        fit.setCurrentIndex(fit.findData("inside"))
+        settings = window.settings_for_source(tab)
+        self.assertEqual(settings.fit_mode, "inside")
+        self.assertEqual(settings.scale, 1.0)
+        outlines = [
+            [
+                (-280.0, -280.0),
+                (280.0, -280.0),
+                (280.0, 280.0),
+                (-280.0, 280.0),
+                (-280.0, -280.0),
+            ]
+        ]
+        fitted = window.fitted_settings(settings, outlines)
+        scaled = self.module.converter.apply_geometry_settings(
+            outlines, fitted
+        )
+        self.assertLessEqual(
+            self.module.converter.artwork_radius(scaled),
+            settings.machine_reach_radius_mm + 1e-6,
+        )
+
+        fit.setCurrentIndex(fit.findData("manual"))
+        settings = window.settings_for_source(tab)
+        self.assertEqual(settings.fit_mode, "manual")
+        self.assertEqual(settings.scale, 1.0)
+
+    def test_explicit_generator_fit_survives_the_source_handoff(self):
+        window = self.module.MainWindow()
+        self.addCleanup(window.close)
+        window.show_tool("Flow Field")
+        flow = window.stack.currentWidget()
+        window.contours = [
+            [
+                (-200.0, -200.0),
+                (200.0, -200.0),
+                (200.0, 200.0),
+                (-200.0, 200.0),
+                (-200.0, -200.0),
+            ]
+        ]
+        window.raw_contours = None
+        window.fields["scale"].setText("1")
+        window.fields["machine_reach_radius_mm"].setText("180")
+
+        window.fit_inside()
+        settings = window.settings_for_source(flow)
+        self.assertEqual(settings.fit_mode, "inside")
+        self.assertLess(settings.scale, 1.0)
+
+        window.show_tool("Voronoi")
+        other = window.stack.currentWidget()
+        other_settings = window.settings_for_source(other)
+        self.assertEqual(other_settings.fit_mode, "manual")
+        self.assertEqual(other_settings.scale, 1.0)
+
+        window.show_tool("Flow Field")
+        window.fields["fit_mode"].setCurrentIndex(
+            window.fields["fit_mode"].findData("manual")
+        )
+        manual = window.settings_for_source(flow)
+        self.assertEqual(manual.fit_mode, "manual")
+        self.assertEqual(manual.scale, 1.0)
+
     def test_self_screened_tools_stop_the_fill_pass(self):
         window = self.module.MainWindow()
         self.addCleanup(window.close)

@@ -40,9 +40,12 @@ class FlowFieldTab(GeneratorTab):
   import path.
 - `host.generator_status(text)` — write the shared status line.
 - `host.log` — the bottom log widget.
-- `host.settings_for_source(tab)` — the converter settings for this page
-  (generator tabs are plotted 1:1, and a tab with `SELF_SCREENED = True` gets
-  the Fill patterns switched off so its own tone marks are not hatched again).
+- `host.settings_for_source(tab)` — the converter settings for this page.
+  Generator tabs default to manual 1:1; set `USES_BED_FIT_DEFAULT = True` to
+  honor the global Fill bed / Fit inside policy, as CMYK does. An explicit
+  fit action also opts the active tab in for the session. A tab with
+  `SELF_SCREENED = True` gets the Fill patterns switched off so its own tone
+  marks are not hatched again.
 - `host.motion_estimate_scale()` — the display-only controller-time scale.
 - `host.analyze_program(svg_path, settings, cancel_check=None)` — build the
   exact program a Preview would (moves, G-code, stats) without touching the
