@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-26 | `WSW-20261126-009` | implemented | [Harden CMYK reach and set identity](../windows-software/2026/2026-11-26-harden-cmyk-reach-and-set-identity.md) | `cmyk`, `bed-compensation`, `machine-reach`, `pen-envelope`, `preflight`, `set-identity`, `g54`, `row-lock`, `safety` |
 | 2026-11-26 | `HW-20261126-001` | implemented | [Separate bed, stock, and tape-margin geometry](2026/2026-11-26-separate-bed-stock-tape-geometry.md) | `rotating-bed`, `paper-stock`, `tape-margin`, `printable-area`, `bed-compensation`, `gantry-reach`, `physical-validation-pending` |
 | 2026-11-24 | `WSW-20261124-004` | implemented | [Record artwork placement in CMYK outputs](../windows-software/2026/2026-11-24-record-artwork-placement-in-cmyk-outputs.md) | `cmyk`, `artwork-placement`, `registration`, `manifest`, `gcode-header`, `physical-validation-pending` |
 | 2026-11-24 | `WSW-20261124-003` | implemented | [Guard machine reach after bed compensation](../windows-software/2026/2026-11-24-post-compensation-reach-guard.md) | `reach`, `soft-limits`, `bed-compensation`, `preflight`, `cmyk`, `magenta` |

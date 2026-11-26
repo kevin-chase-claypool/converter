@@ -1,5 +1,41 @@
 # Engineering Log
 
+<a id="elog-20261126-harden-cmyk-reach-and-set-identity"></a>
+### 🟨 2026-11-26 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Harden CMYK reach and set identity
+
+- The audit found that clipping happened before bed compensation and on the
+  tool centreline only. A valid `180 mm` boundary point could therefore reach
+  about `180.64 mm` after compensation, with a further unguarded pen-radius
+  extension.
+- Planning now reserves the profile's maximum correction and half the physical
+  pen width before clipping. The completed program text is re-read before
+  release and rejected if the final path plus ink envelope exceeds the
+  configured reach.
+- G-code headers record the reach, compensation reserve, pen-radius reserve,
+  effective planning radius, frame center, profile fingerprint, and Wave row
+  angle where applicable.
+- Preview Fit inside/Fill bed and the over-scale warning use that same reduced
+  planning envelope, so the safety reserve is visible instead of appearing as
+  unexplained clipping.
+- CMYK planning validates the whole set before results are released. G54 frame
+  center, profile fingerprint, reach guard, reserves, and planning radius must
+  match across inks; Wave row-locked sets must also match the configured screen
+  angle for every channel.
+- The set manifest records each program identity with the output hashes. G53
+  end-of-print park commands remain outside the G54 bed-envelope check.
+- Focused reach and set-identity tests pass, including compensated edge
+  artwork, uncompensated pen-envelope reservation, synthetic over-reach
+  rejection, frame/profile/row-angle mismatch rejection, and worker-level
+  failure before a mismatched set reaches Save.
+- The complete affected CMYK, generator, compensation, placement, reach, and
+  identity modules pass `211` tests with one expected OpenGL-context skip.
+  Complete converter discovery passes `639` with one expected OpenGL-context
+  skip, and Python compilation passes for the changed modules.
+- Evidence: `WSW-20261126-009`;
+  `docs/changes/windows-software/2026/2026-11-26-harden-cmyk-reach-and-set-identity.md`.
+- Category: windows-software, hardware, cmyk, bed-compensation, machine-reach,
+  pen-envelope, preflight, set-identity, g54, row-lock, safety.
+
 <a id="elog-20261126-cmyk-match-pen-wave-clearance"></a>
 ### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Make Match pen satisfy Wave clearance
 

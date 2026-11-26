@@ -1,6 +1,7 @@
 """CMYK separation, screening, layer SVGs, and per-ink cost analysis."""
 
 import hashlib
+import dataclasses
 import json
 import math
 import os
@@ -2122,6 +2123,52 @@ class CmykTabTests(unittest.TestCase):
             len(converter.CHANNELS),
         )
 
+    def test_analysis_worker_rejects_a_mismatched_set_frame(self):
+        from generator_tabs.cmyk_tab import ProgramAnalysisWorker
+
+        host = FakeHost(self.image_path)
+        tab = self.make_tab(host)
+        tab._ensure_layers()
+        original = host.analyze_program
+        calls = 0
+
+        def mismatched(path, settings, cancel_check=None):
+            nonlocal calls
+            data = original(path, settings, cancel_check)
+            calls += 1
+            if calls == 2:
+                data["gcode"] = data["gcode"].replace(
+                    "(frame center 0.000,0.000 mm",
+                    "(frame center 0.500,0.000 mm",
+                    1,
+                )
+            return data
+
+        host.analyze_program = mismatched
+        settings = dataclasses.replace(
+            converter.default_settings(),
+            frame_center_mm=(0.0, 0.0),
+        )
+        worker = ProgramAnalysisWorker(
+            host,
+            settings,
+            converter.DEFAULT_MOTION_ESTIMATE_SCALE,
+            [
+                (channel, tab._layer_files[channel])
+                for channel in converter.CHANNELS
+            ],
+        )
+        results = {}
+        failures = []
+        worker.finished.connect(results.update)
+        worker.failed.connect(failures.append)
+
+        worker.run()
+
+        self.assertFalse(results)
+        self.assertEqual(len(failures), 1)
+        self.assertIn("frame center", failures[0])
+
     def test_kinematics_bullets_override_the_settings(self):
         tab = self.make_tab()
         self.assertEqual(
@@ -2447,10 +2494,15 @@ class CmykTabTests(unittest.TestCase):
         )
         tab.offset_spins["m"][0].setValue(0.75)
         checks = self.clean_checks()
+        manifest_settings = tab._effective_settings()
+        identity_gcode = converter.contours_to_gcode(
+            [[(0.0, 0.0), (20.0, 0.0)]],
+            manifest_settings,
+        )
         results = {
             channel: {
-                "gcode": f"; {channel}\nG1 X0 Y0\n",
-                "lines": 2,
+                "gcode": identity_gcode,
+                "lines": len(identity_gcode.splitlines()),
                 "checks": dict(checks),
                 "compensation": {
                     "mode": "row_locked_projection",
@@ -2544,6 +2596,29 @@ class CmykTabTests(unittest.TestCase):
         self.assertEqual(
             set(data["bed_compensation"]["screen_angles_deg"]),
             set(converter.CHANNELS),
+        )
+        self.assertEqual(
+            set(data["program_identity"]),
+            set(converter.CHANNELS),
+        )
+        self.assertEqual(
+            {
+                tuple(identity["frame_center_mm"])
+                for identity in data["program_identity"].values()
+            },
+            {
+                (
+                    tab.page_w.value() / 2.0,
+                    tab.page_h.value() / 2.0,
+                )
+            },
+        )
+        self.assertEqual(
+            {
+                identity["profile_fingerprint"]
+                for identity in data["program_identity"].values()
+            },
+            {"f85ec410dbac"},
         )
         self.assertEqual(
             data["ink_processing"]["sharpening"],
@@ -3162,10 +3237,22 @@ class FakeHost:
             },
             {"type": "pen_down", "duration_ms": 600.0},
         ]
+        gcode_settings = dataclasses.replace(
+            _settings,
+            frame_center_mm=(
+                tuple(_settings.frame_center_mm)
+                if _settings.frame_center_mm is not None
+                else (0.0, 0.0)
+            ),
+        )
+        gcode = converter.contours_to_gcode(
+            [[(0.0, 0.0), (20.0, 0.0)]],
+            gcode_settings,
+        )
         return {
             "contours": [[(0.0, 0.0), (1.0, 1.0)], [(1.0, 1.0), (2.0, 2.0)]],
             "moves": moves,
-            "gcode": "; synthetic\nG1 X0 Y0\n",
+            "gcode": gcode,
             "stats": {},
         }
 

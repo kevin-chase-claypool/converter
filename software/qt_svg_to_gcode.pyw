@@ -1574,14 +1574,15 @@ class MainWindow(QMainWindow):
         self.fit_inside_button = QPushButton("Fit inside", clicked=self.fit_inside)
         self.fit_inside_button.setEnabled(False)
         self.fit_inside_button.setToolTip(
-            "Scale so the whole drawing stays inside the drawable reach circle, and "
-            "recenter it on the bed."
+            "Scale so the whole drawing stays inside the compensation- and "
+            "pen-aware planning circle, and recenter it on the bed."
         )
         self.fill_bed_button = QPushButton("Fill bed", clicked=self.fill_bed)
         self.fill_bed_button.setEnabled(False)
         self.fill_bed_button.setToolTip(
-            "Scale so the artwork's bounds touch the drawable reach circle, and recenter "
-            "it on the bed. The four corners fall outside the circle and are clipped."
+            "Scale so the artwork's bounds touch the compensation- and "
+            "pen-aware planning circle, and recenter it on the bed. The four "
+            "corners fall outside the circle and are clipped."
         )
         self.clip_warning = QLabel()
         self.clip_warning.setWordWrap(True)
@@ -4182,7 +4183,7 @@ class MainWindow(QMainWindow):
         return f"path {fmt(path_w)} x {fmt(path_h)} mm, estimated ink {fmt(ink_w)} x {fmt(ink_h)} mm"
 
     def reach_summary(self):
-        """Artwork radius against the configured gantry reach.
+        """Artwork radius against the effective safety planning envelope.
 
         Measured before clipping, so artwork the reach cap would trim is
         reported rather than quietly disappearing.
@@ -4192,15 +4193,26 @@ class MainWindow(QMainWindow):
             return ""
         radius, reach = info
         if radius <= reach:
-            return f"Machine reach: artwork radius {fmt(radius)} mm is inside {fmt(reach)} mm."
+            return (
+                f"Planning envelope: artwork radius {fmt(radius)} mm is inside "
+                f"{fmt(reach)} mm."
+            )
         return (
-            f"Machine reach: artwork radius {fmt(radius)} mm exceeds {fmt(reach)} mm by "
-            f"{fmt(radius - reach)} mm; the excess is clipped."
+            f"Planning envelope: artwork radius {fmt(radius)} mm exceeds "
+            f"{fmt(reach)} mm by {fmt(radius - reach)} mm; the excess is clipped."
         )
 
     def clip_info(self):
         """Pre-clip artwork radius and the reach cap, or None when unknown."""
-        reach = float(getattr(self.gl_preview.settings, "machine_reach_radius_mm", 0.0))
+        settings = self.gl_preview.settings
+        try:
+            reach = float(
+                converter.planning_envelope(settings)["planning_radius_mm"]
+            )
+        except (OSError, TypeError, ValueError):
+            reach = float(
+                getattr(settings, "machine_reach_radius_mm", 0.0)
+            )
         source = self.raw_contours if self.raw_contours else self.contours
         if reach <= 0.0 or not source:
             return None
@@ -4213,7 +4225,16 @@ class MainWindow(QMainWindow):
         artwork is the one planning mistake the preview cannot show by itself.
         """
         source = self.raw_contours if self.raw_contours else self.contours
-        reach = float(getattr(self.gl_preview.settings, "machine_reach_radius_mm", 0.0))
+        settings = self.gl_preview.settings
+        try:
+            envelope = converter.planning_envelope(settings)
+            reach = float(envelope["planning_radius_mm"])
+            configured_reach = float(envelope["machine_reach_radius_mm"])
+        except (OSError, TypeError, ValueError):
+            reach = float(
+                getattr(settings, "machine_reach_radius_mm", 0.0)
+            )
+            configured_reach = reach
         offset_x = float(self.fields["artwork_offset_x_mm"].text() or 0.0)
         offset_y = float(self.fields["artwork_offset_y_mm"].text() or 0.0)
         off_center = abs(offset_x) > 1e-9 or abs(offset_y) > 1e-9
@@ -4248,9 +4269,10 @@ class MainWindow(QMainWindow):
             else "the corners fall outside"
         )
         self.clip_warning.setText(
-            f"Artwork radius {fmt(radius)} mm vs the {fmt(reach)} mm reach: {outside} the "
-            "drawable circle. Fill bed sizes the bounds to the bed (corners clipped); "
-            "Fit inside keeps the whole drawing."
+            f"Artwork radius {fmt(radius)} mm vs the {fmt(reach)} mm safety "
+            f"planning envelope (machine reach {fmt(configured_reach)} mm): "
+            f"{outside} the drawable circle. Fill bed sizes the bounds to the "
+            "envelope (corners clipped); Fit inside keeps the whole drawing."
         )
         self.clip_warning.show()
 
@@ -4281,13 +4303,20 @@ class MainWindow(QMainWindow):
         four corners are clipped. Both fits recenter the artwork on the bed,
         because the point of the action is to place the drawing on the bed.
         """
-        reach = float(self.fields["machine_reach_radius_mm"].text() or 0.0)
         source_tab = self.active_source_tab()
         settings = (
             self.settings_for_source(source_tab)
             if source_tab not in (None, self.dashboard, self.convert_root)
             else self.settings()
         )
+        try:
+            reach = float(
+                converter.planning_envelope(settings)["planning_radius_mm"]
+            )
+        except (OSError, TypeError, ValueError):
+            reach = float(
+                self.fields["machine_reach_radius_mm"].text() or 0.0
+            )
         source = self.fit_frame_contours(settings)
         if not source:
             source = self.raw_contours if self.raw_contours else self.contours
@@ -4298,11 +4327,11 @@ class MainWindow(QMainWindow):
         if fill:
             factor = converter.fit_scale_to_span(source, 2.0 * reach)
             action = "Fill bed"
-            goal = f"make the bounds touch the {fmt(reach)} mm reach circle"
+            goal = f"make the bounds touch the {fmt(reach)} mm planning circle"
         else:
             factor = converter.fit_scale_to_radius(source, reach)
             action = "Fit inside"
-            goal = f"keep the whole drawing inside the {fmt(reach)} mm reach circle"
+            goal = f"keep the whole drawing inside the {fmt(reach)} mm planning circle"
         fitted = current * factor
         if abs(fitted - current) > 1e-6:
             self.fields["scale"].setText(f"{fitted:.4f}")
@@ -4402,7 +4431,8 @@ class MainWindow(QMainWindow):
         named = "Fill bed" if mode == "fill" else "Fit inside"
         return (
             f"Auto-fit ({named}): Scale {fmt(settings.scale)} -> {fmt(fitted.scale)} "
-            f"for the {fmt(fitted.machine_reach_radius_mm)} mm reach circle."
+            f"for the {fmt(converter.planning_envelope(fitted)['planning_radius_mm'])} "
+            "mm planning circle."
         )
 
     def on_placement_changed(self, x, y):

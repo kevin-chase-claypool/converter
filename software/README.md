@@ -860,15 +860,15 @@ increasing it enlarges the image and may crop content beyond the drawable
 circle. The page frame and page centre are updated together when the global
 fit changes.
 
-Both fit actions size to the configured **Gantry reach radius mm**, which is
-the physically enforceable circle, not the larger rim-clear stock circle. With
-the restored defaults, an exact **Fit inside** result is bounded by the
-`180.0 mm` reach (`360.0 mm` / `14.173 in` diameter), even though the 15-inch
+Both fit actions size to the effective planning envelope: configured
+**Gantry reach radius mm** minus the active compensation profile's maximum
+correction and half the physical pen width. This is smaller than the raw reach
+and protects both the final machine point and the ink edge. With restored
+defaults the raw reach is `180.0 mm` (`360.0 mm` / `14.173 in` diameter), while
+the actual planning radius is shown in the saved G-code header. The 15-inch
 stock and 6.35 mm tape margin leave a `368.3 mm` (`14.5 in`) rim-clear
-diameter. A literal 14.5-inch fit requires raising the reach to `184.15 mm`
-after a fresh HOME + REGISTER confirms the live +Y limit and the compensation
-profile covers the wider field; the current full 14.5-inch disc is not a
-verified production-safe reach.
+diameter, but a literal 14.5-inch fit still requires a verified larger reach,
+a covering profile, and fresh HOME + REGISTER evidence.
 
 Generator tab controls fill the settings column, with the tab's hint and
 status text stacked below them; the settings column has a 280 px floor so it
@@ -1264,7 +1264,11 @@ display-only; every other group changes the emitted program.
   rejected before preview or save. Between measured bed angles, the converter
   rotates both neighboring corrections back into the bed frame, interpolates
   there, and rotates the result into machine XY. New compensated G-code carries
-  an `angular interpolation bed-frame` header marker.
+  an `angular interpolation bed-frame` header marker. Before clipping, planning
+  reserves the profile's maximum possible correction **and** half the physical
+  pen width, so the final ink envelope cannot cross the configured reach.
+  Generated `G0/G1` coordinates are re-read and rejected if the final envelope
+  still exceeds that reach.
 - **Theta kinematics** — theta axis/ratio/resolver/cost settings (`Theta ratio`
   defaults to 12.03324, the measured effective ratio of the 60T→720T pulley
   pair).
@@ -1523,7 +1527,12 @@ display-only; every other group changes the emitted program.
   equidistant rows. Its fiducial fit
   removes common translation, rotation, and scale before fitting. Do not place
   the same residual offset in both P100 and the profile. A saved compensated
-  program records the profile fingerprint and correction bound in its header.
+  program records the profile fingerprint, compensation reserve, pen-radius
+  reserve, planning radius, G54 frame center, and applicable row angle in its
+  header. A CMYK set is rejected before results are released if any ink differs
+  in G54 frame center, compensation fingerprint, reach/planning radius, or
+  expected Wave row angle. The set manifest records each program identity
+  alongside its file hash.
   Fast preview intentionally displays nominal machine points; enable **Exact
   compensated preview (slow)** when preview/saved-coordinate parity is needed.
 - SVG document coordinates are not machine coordinates. The converter centers
@@ -1540,7 +1549,10 @@ display-only; every other group changes the emitted program.
   gantry's reachable radius from the registered bed center. Because the bed
   rotates freely, the safe drawable area is this circle rather than the full
   bed; it keeps emitted coordinates inside the controller's X/Y envelope so
-  artwork at the rim cannot trip `Alarm:2 - Soft limit`.
+  artwork at the rim cannot trip `Alarm:2 - Soft limit`. The actual planning
+  radius is smaller than `Gantry reach radius mm`: it subtracts the active
+  profile's maximum correction and the physical pen radius. Preflight rejects
+  a program whose emitted path plus pen envelope exceeds the configured reach.
   The binding direction is **+Y**, and the edge is the controller's soft-limit
   envelope, not the switch: grblHAL sets a homed axis's envelope to
   `[max_travel + pulloff, -pulloff]` when hard limits are enabled, so `$27`

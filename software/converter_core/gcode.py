@@ -245,6 +245,49 @@ def _wave_row_step_count(start_theta, end_theta, program_plan):
     return max(1, int(math.ceil(abs(end_theta - start_theta) / max_step)))
 
 
+def planning_envelope(settings):
+    """Return the compensation- and pen-aware G54 planning envelope."""
+    bed_compensation = load_bed_compensation(
+        getattr(settings, "bed_compensation_path", "")
+    )
+    compensation_margin = 0.0
+    if bed_compensation is not None and not bed_compensation.identity:
+        compensation_margin = max(
+            float(getattr(bed_compensation, "max_correction_mm", 0.0)),
+            float(
+                getattr(
+                    bed_compensation,
+                    "full_max_correction_mm",
+                    0.0,
+                )
+            ),
+        )
+    pen_radius_margin = max(
+        float(getattr(settings, "pen_diameter_mm", 0.0)) / 2.0,
+        0.0,
+    )
+    bed_radius = max(
+        float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0
+        - float(getattr(settings, "bed_margin_mm", 0.0)),
+        0.0,
+    )
+    reach = float(getattr(settings, "machine_reach_radius_mm", 0.0))
+    envelope_radius = min(bed_radius, reach) if reach > 0.0 else bed_radius
+    planning_radius = max(
+        0.0,
+        envelope_radius - compensation_margin - pen_radius_margin,
+    )
+    return {
+        "bed_compensation": bed_compensation,
+        "bed_radius_mm": bed_radius,
+        "machine_reach_radius_mm": reach,
+        "envelope_radius_mm": envelope_radius,
+        "compensation_safety_margin_mm": compensation_margin,
+        "pen_radius_safety_margin_mm": pen_radius_margin,
+        "planning_radius_mm": planning_radius,
+    }
+
+
 def plan_program(contours, settings, cancel_check=None):
     """Plan clipped contours in the G54 bed-center work frame.
 
@@ -264,13 +307,16 @@ def plan_program(contours, settings, cancel_check=None):
     frame_center = getattr(settings, "frame_center_mm", None)
     if frame_center is not None:
         source_center = (float(frame_center[0]), float(frame_center[1]))
-    bed_radius = max(
-        float(getattr(settings, "bed_diameter_mm", 457.2)) / 2.0
-        - float(getattr(settings, "bed_margin_mm", 0.0)),
-        0.0,
-    )
-    reach = float(getattr(settings, "machine_reach_radius_mm", 0.0))
-    radius = min(bed_radius, reach) if reach > 0.0 else bed_radius
+    envelope = planning_envelope(settings)
+    bed_compensation = envelope["bed_compensation"]
+    reach = envelope["machine_reach_radius_mm"]
+    radius = envelope["planning_radius_mm"]
+    compensation_margin = envelope["compensation_safety_margin_mm"]
+    pen_radius_margin = envelope["pen_radius_safety_margin_mm"]
+    if radius <= 0.0:
+        raise ValueError(
+            "bed compensation plus pen radius consumes the entire machine reach"
+        )
     # The artwork's own center is placed at this offset from the bed center, so
     # the reachable disc - which is fixed on the bed center - corresponds to the
     # artwork point `offset` away from its own center. Clipping is expressed in
@@ -306,9 +352,6 @@ def plan_program(contours, settings, cancel_check=None):
             getattr(settings, "path_join_tolerance_mm", 0.02),
             cancel_check,
         )
-    bed_compensation = load_bed_compensation(
-        getattr(settings, "bed_compensation_path", "")
-    )
     if bed_compensation is not None and bool(
         getattr(settings, "row_locked_compensation", False)
     ):
@@ -416,6 +459,10 @@ def plan_program(contours, settings, cancel_check=None):
         "contours": clipped_contours,
         "planned_jobs": planned_jobs,
         "bed_compensation": bed_compensation,
+        "planning_radius_mm": radius,
+        "compensation_safety_margin_mm": compensation_margin,
+        "pen_radius_safety_margin_mm": pen_radius_margin,
+        "machine_reach_radius_mm": reach,
         "wave_row_schedule": wave_row_schedule,
         "contour_join": contour_join,
     }
@@ -510,6 +557,30 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
                         bed_compensation.max_correction_mm,
                     )
                 )
+            ),
+        )
+    machine_reach = float(
+        program_plan.get("machine_reach_radius_mm", 0.0)
+    )
+    planning_radius = float(
+        program_plan.get("planning_radius_mm", machine_reach)
+    )
+    compensation_reserve = float(
+        program_plan.get("compensation_safety_margin_mm", 0.0)
+    )
+    pen_radius_reserve = float(
+        program_plan.get("pen_radius_safety_margin_mm", 0.0)
+    )
+    if machine_reach > 0.0:
+        lines.insert(
+            5,
+            "(reach guard %.3f mm, compensation reserve %.3f mm, "
+            "pen radius %.3f mm, planning radius %.3f mm)"
+            % (
+                machine_reach,
+                compensation_reserve,
+                pen_radius_reserve,
+                planning_radius,
             ),
         )
     contour_join = program_plan.get("contour_join")
@@ -678,7 +749,22 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
     if previous_machine is not None:
         lines.append(park_home_command(settings))
     lines.append("M2")
-    return "\n".join(lines) + "\n"
+    program = "\n".join(lines) + "\n"
+    # Re-read the emitted G0/G1 points rather than trusting planning intent.
+    # G53 park moves are deliberately excluded by the motion checker because
+    # they operate in the machine frame outside the G54 bed envelope.
+    from .motion_check import analyse_gcode
+
+    emitted = analyse_gcode(program, settings)
+    reach = float(emitted.get("machine_reach_radius_mm", 0.0))
+    max_ink_radius = float(emitted.get("max_ink_radius_mm", 0.0))
+    if reach > 0.0 and max_ink_radius > reach + 0.001:
+        raise ValueError(
+            "generated ink envelope reaches %.3f mm from the bed center, "
+            "over the %.3f mm machine reach"
+            % (max_ink_radius, reach)
+        )
+    return program
 
 def convert_file(svg_path, gcode_path, settings):
     contours = read_svg(svg_path, settings)

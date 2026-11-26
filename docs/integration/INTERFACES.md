@@ -104,10 +104,24 @@ physical centre and A index. The profile declares XY coverage and a 5 mm
 correction bound, and planning stops beyond either guard. Of that declared
 coverage, `0-165.100 mm` comes from the dense-v3 measurements; the outer
 `14.900 mm` annulus is local-affine extrapolation pending an edge-band print.
+
+Planning converts the configured machine reach into a smaller tool-centreline
+radius by reserving the active profile's maximum correction and half the
+physical pen width. Every emitted `G0/G1` point is then re-read from the final
+program text and rejected if the path or physical ink envelope exceeds the
+configured reach. This is a host-side guard; grblHAL soft limits remain the
+final controller enforcement.
+
 Compensated G-code uses the transformed and subdivided points;
 row-locked Wave G-code additionally identifies the full profile fingerprint,
 projection maximum, and per-ink row angle in its header. Its set manifest
 records `row_locked_projection` rather than claiming the raw field was applied.
+Every current G-code file also records its G54 frame center, compensation
+fingerprint, compensation reserve, pen-radius reserve, and planning radius.
+CMYK planning rejects the complete set if any of those identities differ
+between inks, or if a Wave row-locked channel does not match its configured
+screen angle. The set manifest stores the parsed identity per ink with the
+file hashes.
 Interactive preview uses nominal X/Y by default and may select the same exact
 path when **Exact compensated preview (slow)** is enabled. The analyzer
 converts a measured bed-frame error into a machine-frame correction with

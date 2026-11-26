@@ -123,6 +123,14 @@ program unchanged.
 - Saved G-code may use the profile, and exact preview mode must share its
   corrected endpoints and subdivision. Any coverage or correction-bound
   violation stops planning.
+- The configured machine reach is reduced before clipping by the profile's
+  maximum possible correction and half the physical pen width. Final emitted
+  `G0/G1` points are re-read before release, and a print set is rejected if its
+  physical ink envelope exceeds the reach. Controller soft limits remain the
+  final machine enforcement.
+- Multi-ink sets must share G54 frame center, compensation fingerprint,
+  compensation reserve, pen-radius reserve, planning radius, and expected
+  row-lock angle. A set with any identity mismatch does not reach Save.
 - Fast preview intentionally displays nominal machine X/Y and must identify
   itself as approximate. It is suitable for composition and motion review,
   not for measuring compensated placement on paper.

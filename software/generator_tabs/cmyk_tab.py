@@ -105,16 +105,18 @@ class ProgramAnalysisWorker(QObject):
     def run(self):
         try:
             results = {}
+            base_profile = None
             row_lock_set = None
-            if (
-                self.settings.row_locked_compensation
-                and self.settings.bed_compensation_path
-            ):
-                profile = converter.load_bed_compensation(
+            if self.settings.bed_compensation_path:
+                base_profile = converter.load_bed_compensation(
                     self.settings.bed_compensation_path
                 )
+            if (
+                self.settings.row_locked_compensation
+                and base_profile is not None
+            ):
                 row_lock_set = converter.row_locked_bed_compensation_set(
-                    profile,
+                    base_profile,
                     tuple(converter.SCREEN_ANGLES_DEG.values()),
                     bed_angle_deg=(
                         float(self.settings.theta_offset)
@@ -154,6 +156,9 @@ class ProgramAnalysisWorker(QObject):
                     "marks": len(data["contours"]),
                     "moves": len(moves),
                     "gcode": data["gcode"],
+                    "identity": converter.gcode_program_identity(
+                        data["gcode"]
+                    ),
                     "lines": len(data["gcode"].splitlines()),
                     "x_count": counts.get("x_theta", 0),
                     "y_count": counts.get("y_theta", 0),
@@ -189,6 +194,29 @@ class ProgramAnalysisWorker(QObject):
                         ),
                     }
                 results[channel] = record
+            converter.validate_program_set_identity(
+                {
+                    channel: record["gcode"]
+                    for channel, record in results.items()
+                },
+                expected_row_angles=(
+                    {
+                        channel: converter.SCREEN_ANGLES_DEG[channel]
+                        for channel in results
+                    }
+                    if row_lock_set is not None
+                    else None
+                ),
+                expected_frame_center_mm=self.settings.frame_center_mm,
+                expected_profile_fingerprint=(
+                    base_profile.fingerprint
+                    if base_profile is not None
+                    else None
+                ),
+                expected_reach_radius_mm=(
+                    self.settings.machine_reach_radius_mm
+                ),
+            )
             self.finished.emit(results)
         except converter.OperationCancelled:
             self.cancelled.emit()
@@ -1852,6 +1880,15 @@ class CmykTab(GeneratorTab):
                     and results[channel].get("compensation", {}).get("mode")
                     == "row_locked_projection"
                 },
+            },
+            "program_identity": {
+                channel: record.get(
+                    "identity",
+                    converter.gcode_program_identity(
+                        str(record.get("gcode", ""))
+                    ),
+                )
+                for channel, record in results.items()
             },
             "registration_crosses": self.registration_marks.isChecked(),
             "pen_offsets_mm": {
