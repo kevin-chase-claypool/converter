@@ -5,6 +5,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Category | Status | Summary |
 |---|---|---|---|---|
+| 2026-11-26 | `WSW-20261126-003` | windows-software | implemented | [Chain precision CMYK cells into continuous strokes](windows-software/2026/2026-11-26-continuous-precision-cmyk-strokes.md) |
 | 2026-11-26 | `WSW-20261126-002` | windows-software | implemented | [Correct precision CMYK skin color and facial detail](windows-software/2026/2026-11-26-precision-cmyk-skin-and-teeth.md) |
 | 2026-11-26 | `WSW-20261126-001` | windows-software | implemented | [Restore the original CMYK tool entry](windows-software/2026/2026-11-26-restore-original-cmyk-tool.md) |
 | 2026-11-25 | `WSW-20261125-013` | windows-software | implemented | [Export and verify a precision CMYK set headlessly](windows-software/2026/2026-11-25-headless-precision-cmyk-export.md) |

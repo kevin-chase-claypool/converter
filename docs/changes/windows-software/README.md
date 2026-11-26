@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-26 | `WSW-20261126-003` | implemented | [Chain precision CMYK cells into continuous strokes](2026/2026-11-26-continuous-precision-cmyk-strokes.md) | `cmyk`, `precision-screen`, `pen-down`, `path-chaining`, `continuous`, `toolpath-efficiency`, `physical-validation-pending` |
 | 2026-11-26 | `WSW-20261126-002` | implemented | [Correct precision CMYK skin color and facial detail](2026/2026-11-26-precision-cmyk-skin-and-teeth.md) | `cmyk`, `process-color`, `precision-screen`, `color-rendering`, `skin`, `facial-detail`, `teeth`, `highlight-preservation`, `headless-export`, `deterministic`, `physical-validation-pending` |
 | 2026-11-26 | `WSW-20261126-001` | implemented | [Restore the original CMYK tool entry](2026/2026-11-26-restore-original-cmyk-tool.md) | `cmyk`, `navigation`, `tools-menu`, `guided-ui`, `regression` |
 | 2026-11-25 | `WSW-20261125-013` | implemented | [Export and verify a precision CMYK set headlessly](2026/2026-11-25-headless-precision-cmyk-export.md) | `cmyk`, `process-color`, `headless`, `deterministic`, `transactional-export`, `verification`, `facial-detail`, `physical-validation-pending` |

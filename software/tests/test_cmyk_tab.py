@@ -500,6 +500,40 @@ class CmykTabTests(unittest.TestCase):
         )
         self.assertEqual(len(set(tab._layer_files.values())), 4)
 
+    def test_process_color_area_prechains_cell_marks_before_the_planner(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("process_area"))
+        tab.registration_marks.setChecked(False)
+        tab.scale_pct.setValue(100)
+        tab.chain_marks.setChecked(True)
+        tab.chain_gap.setValue(1.5)
+        marks = [
+            converter.ScreenTrail([(10.0, 20.0), (20.0, 20.0)]),
+            converter.ScreenTrail([(21.4, 20.0), (30.0, 20.0)]),
+        ]
+
+        with mock.patch.object(
+            converter,
+            "screen_process_color_area_cmyk",
+            return_value={
+                channel: list(marks)
+                for channel in converter.CHANNELS
+            },
+        ):
+            tab._ensure_layers()
+
+        for channel in converter.CHANNELS:
+            self.assertEqual(len(tab._layers[channel]), 1)
+            self.assertIsInstance(
+                tab._layers[channel][0],
+                converter.ScreenTrail,
+            )
+            self.assertTrue(tab._pen_chain_stats[channel]["enabled"])
+            self.assertEqual(
+                tab._pen_chain_stats[channel]["connections"],
+                1,
+            )
+
     def test_process_color_area_recipe_applies_full_density_controls(self):
         tab = self.make_tab()
         with mock.patch.object(
@@ -513,7 +547,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertAlmostEqual(tab.pitch.value(), 0.35)
         self.assertAlmostEqual(tab.path_tolerance.value(), 0.05)
         self.assertEqual(tab.max_marks.value(), 800000)
-        self.assertAlmostEqual(tab.chain_gap.value(), 1.0)
+        self.assertAlmostEqual(tab.chain_gap.value(), 3.0)
         self.assertEqual(tab.tone_bridge.value(), 0.0)
         self.assertAlmostEqual(tab.contrast.value(), 122.0)
         self.assertAlmostEqual(tab.gcr.value(), 65.0)
@@ -535,6 +569,30 @@ class CmykTabTests(unittest.TestCase):
             ],
             [100.0, 100.0, 100.0, 100.0],
         )
+
+    def test_process_area_recipe_migrates_legacy_chain_gap_once(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(tab.style.findData("process_area"))
+        tab.pen_width.setValue(0.9)
+        tab.pitch.setValue(0.35)
+        tab.scale_pct.setValue(100)
+        tab.chain_gap.setValue(2.0)
+        state = tab.artwork_layout_state()
+        self.assertEqual(
+            state["screen"]["process_chain_cell_ratio"],
+            3.0,
+        )
+
+        restored = self.make_tab()
+        self.assertTrue(restored.restore_artwork_layout_state(state))
+        self.assertAlmostEqual(restored.chain_gap.value(), 2.0)
+
+        legacy = json.loads(json.dumps(state))
+        legacy["screen"].pop("process_chain_cell_ratio")
+        legacy["screen"]["chain_gap_mm"] = 1.0
+        migrated = self.make_tab()
+        self.assertTrue(migrated.restore_artwork_layout_state(legacy))
+        self.assertAlmostEqual(migrated.chain_gap.value(), 3.0)
 
     def test_fine_detail_uses_two_mm_tone_segments_on_paper(self):
         tab = self.make_tab()

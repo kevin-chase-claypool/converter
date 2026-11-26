@@ -1,5 +1,41 @@
 # Engineering Log
 
+<a id="elog-20261126-continuous-precision-cmyk-strokes"></a>
+### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Chain precision CMYK cells into continuous strokes
+
+- The precision process screen returned tagged `ScreenTrail` marks, so the
+  conservative pre-planner joiner treated every cell mark as preserved tagged
+  geometry and joined none of them. Only the later post-planner pass could
+  reduce the path, leaving many marker dashes and M3/M5 cycles.
+- Process-area marks are now converted to ordinary chain input for the local
+  **Keep pen down** pass, then wrapped back as `ScreenTrail` for ink preview and
+  post-planner chaining. Wave, TSP, and other tagged output remain unchanged.
+- The precision recipe derives its connector radius as three resolved process
+  cells and rounds to the control's `0.5 mm` step. At the controlled `0.98 mm`
+  cell pitch this is `3.0 mm`; a different pen or scale changes it
+  proportionally.
+- On the Golden Sunset set, pre-planner chains reduce the raw C/M/Y/K plate
+  marks from `13071/23285/26242/12406` to `738/707/656/840`. Exact programs
+  emit `637/600/548/737` M3 sequences, `2522` total, versus the prior checked-in
+  `19703`. The pen-cycle count falls `87.2 %`.
+- The regenerated comparison retains the three faces, eyes, glasses, smiles,
+  clothing, and tree/lantern structure as continuous linework rather than
+  isolated cell dashes. Visible bridge ink increases local density, which is
+  the intended speed tradeoff and remains controlled by **Keep pen down**.
+- Four-program transactional export, manifest consistency, page bounds, and
+  workflow validation pass. `check_gcode_motion.py --strict` passes all files;
+  largest drawing-step rotation is `6.80 deg` against `15 deg`, largest A
+  demand is `280 motor deg/s` against `500`, and there is no bare rotating
+  `G0`.
+- Focused general-CMYK verification passes `179` tests and complete converter
+  discovery passes `757` with one expected OpenGL-context skip. Python
+  compilation passes. Physical four-pass hue, density, registration, drag, and
+  elapsed time remain unverified.
+- Evidence: `WSW-20261126-003`;
+  `docs/changes/windows-software/2026/2026-11-26-continuous-precision-cmyk-strokes.md`.
+- Category: windows-software, cmyk, precision-screen, pen-down, path-chaining,
+  continuous, toolpath-efficiency, physical-validation-pending.
+
 <a id="elog-20261126-precision-cmyk-skin-and-teeth"></a>
 ### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Correct precision CMYK skin and facial detail
 

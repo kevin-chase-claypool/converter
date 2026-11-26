@@ -74,6 +74,7 @@ REFERENCE_PHOTO_FLOW_SMOOTHING_MM = 2.5
 REFERENCE_PHOTO_FLOW_LAYERS = 3
 REFERENCE_PHOTO_FLOW_PITCH_COMPRESSION_PCT = 60.0
 REFERENCE_PHOTO_CHAIN_GAP_MM = 1.0
+PROCESS_AREA_CHAIN_CELL_RATIO = 3.0
 
 
 def _common_program_identity(settings, compensation):
@@ -525,7 +526,11 @@ class CmykTab(GeneratorTab):
             "structure. It is the recommended portrait renderer. Precision "
             "process screen divides the page into pen-footprint cells, "
             "error-diffuses each cell to a calibrated CMYK ink subset, and "
-            "orients its short strokes with the same structure tensor."
+            "orients its short strokes with the same structure tensor. With "
+            "Keep pen down enabled, adjacent process cell marks are joined "
+            "head-to-tail before planning within roughly 3 resolved cell "
+            "pitches, so they plot as longer strokes instead of isolated "
+            "dashes."
         )
         self.style.setCurrentIndex(self.style.findData("edge_flow"))
         screen.addRow("Style", self.style)
@@ -680,9 +685,11 @@ class CmykTab(GeneratorTab):
             "Chain the nearest open mark endpoints into the same M3/M5 "
             "drawing stroke. A connector up to the shown gap remains visible "
             "ink. Edge-flow also bridges up to 4 mm of tone-off gaps along "
-            "each individual streamline. After Xθ/Yθ planning, the final "
-            "ordered contours are chained again within this same gap while "
-            "real gaps remain pen lifts."
+            "each individual streamline. Precision process marks are joined "
+            "before planning as well; its recipe uses about 3 resolved "
+            "process cells as the local connector radius. After Xθ/Yθ "
+            "planning, the final ordered contours are chained again within "
+            "this same gap while real gaps remain pen lifts."
         )
         self.chain_gap.setToolTip(
             "Maximum direct connector length between open screen marks when "
@@ -1694,6 +1701,11 @@ class CmykTab(GeneratorTab):
                 "coherent_color_mix_pct": self.color_mix.value(),
                 "chain_marks": self.chain_marks.isChecked(),
                 "chain_gap_mm": self.chain_gap.value(),
+                "process_chain_cell_ratio": (
+                    PROCESS_AREA_CHAIN_CELL_RATIO
+                    if self.style.currentData() == "process_area"
+                    else None
+                ),
                 "tone_gap_bridge_mm": self.tone_bridge.value(),
                 "dot_size_pct": self.dot_size.value(),
                 "solid_dots": self.solid_dots.isChecked(),
@@ -1901,6 +1913,20 @@ class CmykTab(GeneratorTab):
             self.registration_marks.setChecked(
                 bool(page["registration_marks"])
             )
+            if (
+                screen.get("process_chain_cell_ratio") is None
+                and self.style.currentData() == "process_area"
+                and abs(
+                    self.chain_gap.value() - REFERENCE_PHOTO_CHAIN_GAP_MM
+                )
+                <= 1e-6
+            ):
+                # Older precision recipes stored a fixed 1 mm gap before
+                # process marks were chainable. Migrate them once; new
+                # sidecars retain the operator's current gap.
+                self.chain_gap.setValue(
+                    self._process_area_chain_gap_mm()
+                )
         except (
             KeyError,
             TypeError,
@@ -2464,7 +2490,6 @@ class CmykTab(GeneratorTab):
             "process_area": {
                 "style": "process_area",
                 "keylines": True,
-                "chain_gap": 1.0,
                 "tone_bridge": 0.0,
                 "pitch": 0.35,
                 "path_tolerance": 0.05,
@@ -2512,10 +2537,16 @@ class CmykTab(GeneratorTab):
             if style_index >= 0:
                 self.style.setCurrentIndex(style_index)
             self.flow_keylines.setChecked(bool(recipe["keylines"]))
-            self.chain_gap.setValue(float(recipe["chain_gap"]))
+            self.chain_gap.setValue(
+                float(recipe.get("chain_gap", self.chain_gap.value()))
+            )
             self.tone_bridge.setValue(float(recipe["tone_bridge"]))
             if "pitch" in recipe:
                 self.pitch.setValue(float(recipe["pitch"]))
+            if recipe["style"] == "process_area":
+                self.chain_gap.setValue(
+                    self._process_area_chain_gap_mm()
+                )
             if "path_tolerance" in recipe:
                 self.path_tolerance.setValue(
                     float(recipe["path_tolerance"])
@@ -2600,6 +2631,18 @@ class CmykTab(GeneratorTab):
             and self.style.currentData()
             not in ("waves_even", "waves_zero", "tsp")
         )
+
+    def _process_area_chain_gap_mm(self):
+        """Recommended local bridge between precision process-cell marks."""
+        # One short mark occupies roughly one process cell. A three-cell radius
+        # joins sparse clusters into long strokes without crossing the image.
+        effective_pitch = max(
+            self.pitch.value() * self.scale_pct.value() / 100.0,
+            self.pen_width.value() * 1.10,
+        )
+        return round(
+            effective_pitch * PROCESS_AREA_CHAIN_CELL_RATIO * 2.0
+        ) / 2.0
 
     def _tone_bridge_active(self):
         """Whether Edge-flow may bridge a local same-path coverage gap."""
@@ -3062,9 +3105,14 @@ class CmykTab(GeneratorTab):
             # applied to the screened marks about the page centre here.
             marks = scale_polylines(marks, factor, width, height)
             if self._pen_chain_active():
+                chain_input = (
+                    [list(mark) for mark in marks]
+                    if style == "process_area"
+                    else marks
+                )
                 marks, pen_chain_stats[channel] = (
                     converter.chain_nearby_contours(
-                        marks,
+                        chain_input,
                         max_gap_mm=self.chain_gap.value(),
                     )
                 )
@@ -3908,6 +3956,11 @@ class CmykTab(GeneratorTab):
                 "pen_down_chain": {
                     "enabled": self._pen_chain_active(),
                     "max_gap_mm": self.chain_gap.value(),
+                    "process_chain_cell_ratio": (
+                        PROCESS_AREA_CHAIN_CELL_RATIO
+                        if self.style.currentData() == "process_area"
+                        else None
+                    ),
                     "planner_order": True,
                     "bridge_decision": (
                         "draw_connector_vs_lift_travel_lower"

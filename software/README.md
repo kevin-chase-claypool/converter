@@ -632,7 +632,9 @@ Current tools:
     process-color screen for fine detail, the per-ink Edge-flow comparison, the
     stochastic shared-flow experiment, and a line-screen speed comparison. The
     one-click guided action remains the fast path and does not require visiting
-    these stages.
+    these stages. Precision recipes saved before process-cell chaining was
+    introduced migrate once to the new continuity gap; later sidecars preserve
+    the operator's current chain setting.
   - The Direction stage's **Show flow field** action renders the current shared
     structure tensor as an undirected hue field: opposite tangent directions
     have the same colour, brightness is guidance confidence, and white marks
@@ -755,12 +757,18 @@ Current tools:
   detail `>= 0.16` and scene luma `>= 0.45` remain paper, so eyes and tooth
   bands do not fill with unrelated process ink. The marks are clipped to the
   artwork page, and if one plate exceeds **Max marks per ink**, the cell pitch
-  grows before any plate is silently truncated. The precision recipe starts at
-  `0.35` pre-scale pitch, `0.05 mm` path tolerance, `800000` marks per ink,
-  auto levels off, brightness `100 %`, saturation `106 %`, contrast `122 %`,
-  gamma `1.00`, GCR `65 %`, a `60 % / 1.50 mm` unsharp mask, all four weights at
-  `100 %`, and the normal four-file Y/M/C/K workflow. Its fine-cell color and
-  tooth separations have not yet been paper-qualified.
+  grows before any plate is silently truncated. When **Keep pen down** is
+  enabled, those short marks are chained head-to-tail before planning within a
+  `3`-cell local radius. This joins diagonal neighbours and short sparse-cell
+  gaps, so contiguous image areas become long cell-following strokes instead
+  of thousands of isolated M3/M5 dashes. Every bridge is visible ink; lowering
+  the gap restores a denser-looking, more fragmented screen without changing
+  the selected CMYK cell subsets. The precision recipe starts at `0.35`
+  pre-scale pitch, `0.05 mm` path tolerance, `800000` marks per ink, auto levels
+  off, brightness `100 %`, saturation `106 %`, contrast `122 %`, gamma `1.00`,
+  GCR `65 %`, a `60 % / 1.50 mm` unsharp mask, all four weights at `100 %`, and
+  the normal four-file Y/M/C/K workflow. Its fine-cell color and tooth
+  separations have not yet been paper-qualified.
   **Edge-flow streamlines (per-ink networks)** remains available as the prior
   comparison mode. It traces four independently seeded networks through the
   same guide, with per-ink fallback angles and path-local stochastic tone
@@ -784,9 +792,12 @@ Current tools:
   changing it does not alter the adjacent contour chain.
   **Pen-down chain** is enabled by default for open-line screens. It orders
   endpoint-nearby marks head-to-tail and draws a connector only up to the
-  adjacent **Keep pen down** gap (default `5.0 mm`). Edge-flow also bridges up
-  to `4 mm` of tone-off gaps along each individual streamline, then applies
-  that adjacent chain within each ink. Coherent color flow uses the same
+  adjacent **Keep pen down** gap (default `5.0 mm`). Precision process marks
+  use the same pass before planning, with the precision recipe setting the gap
+  to `3` resolved process cells rather than one fixed millimetre. Edge-flow
+  also bridges up to `4 mm` of tone-off gaps along each individual streamline,
+  then applies that adjacent chain within each ink. Coherent color flow uses
+  the same
   paper-space bridge before the normal post-planner chain, so local coverage
   gaps do not recreate the fragmented screen. Screen contours are tagged
   through the generated SVG. After the Xθ/Yθ planner chooses their final order and
@@ -898,11 +909,14 @@ Current tools:
   200000, seed 7, artwork scale 280 %, resolution 10000 px, and hatch levels
   8. The recommended action switches to coherent color flow, enables Black
   keylines, and uses a 1.0 mm adjacent chain so short connectors cannot cross
-  several screen rows and darken broad facial planes. Pressing
-  the recommended action after Auto replaces the screen recipe but preserves
-  page size, artwork scale, pen width, pen offsets, and bed motion. Existing
-  artwork recipes keep their saved advanced layout until the operator
-  deliberately presses the button.
+  several screen rows and darken broad facial planes. The separate precision
+  process recipe uses about `3` resolved cell pitches, enough to join sparse
+  cell neighbours without drawing long face-crossing diagonals.
+  Increase that gap to prioritize elapsed time further, or lower it when the
+  connector ink changes colour density. Pressing the recommended action after
+  Auto replaces the screen recipe but preserves page size, artwork scale, pen
+  width, pen offsets, and bed motion. Existing artwork recipes keep their saved
+  advanced layout until the operator deliberately presses the button.
   **Sharpen** applies its unsharp mask after auto levels and before the
   saturation, contrast, brightness, and separation curves. The mask derives
   detail from luminance and applies that same detail to all three RGB
