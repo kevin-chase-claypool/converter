@@ -61,9 +61,10 @@ failed.
 The programs must carry the same artwork scale, placement, page frame, theta
 ratio and mode, feed/travel contract, and bed-compensation profile identity.
 Guided CMYK requires Yellow, Magenta, Cyan, and Black in that physical print
-order. The version-7 set manifest records the source and program hashes,
+order. The version-8 set manifest records the source and program hashes,
 calibration identity, pen offsets, workflow stage dependency hashes and locks,
-the exposed coherent-plane and shadow-layer controls, independent tone-gap and
+the exposed coherent-plane and shadow-layer controls, the precision
+process-cell pitch and edge threshold when selected, independent tone-gap and
 adjacent-chain settings, per-program motion preflight, and one canonical
 common-identity hash. This is a host filesystem contract only; it does not
 change the controller command or coordinate contracts above.

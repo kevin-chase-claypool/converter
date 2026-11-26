@@ -25,7 +25,7 @@ EDGE_FLOW_STRENGTH_PERCENTILE = 60.0
 EDGE_FLOW_COHERENCE_LOW = 0.02
 EDGE_FLOW_COHERENCE_HIGH = 0.18
 EDGE_FLOW_MAX_PITCH_COMPRESSION = 0.90
-EDGE_FLOW_MIN_PITCH_PEN_RATIO = 0.90
+EDGE_FLOW_MIN_PITCH_PEN_RATIO = 1.10
 EDGE_FLOW_KEYLINE_BASE_WEIGHT = 0.55
 EDGE_FLOW_KEYLINE_PERCENTILE = 85.0
 EDGE_FLOW_KEYLINE_LOW = 0.30
@@ -333,6 +333,15 @@ def _structure_tensor_components(guide, geometry, smoothing_mm):
         guided.astype(np.float32),
         keyline.astype(np.float32),
         field_geometry,
+    )
+
+
+def structure_tensor_fields(guide, geometry, smoothing_mm):
+    """Return shared tangent, confidence, keyline, and field geometry."""
+    return _structure_tensor_components(
+        guide,
+        geometry,
+        max(0.1, float(smoothing_mm)),
     )
 
 
@@ -819,7 +828,10 @@ def trace_structure_streamlines(
         pixel_mm * 0.72,
         min(base_pitch * 0.28, max(0.10, float(path_tolerance_mm) * 1.8)),
     )
-    minimum_pen_gap = max(0.0, float(pen_diameter_mm)) * 0.72
+    minimum_pen_gap = (
+        max(0.0, float(pen_diameter_mm))
+        * EDGE_FLOW_MIN_PITCH_PEN_RATIO
+    )
     minimum_length = max(1.0, base_pitch * 0.45)
     tone_segment = (
         max(0.8, min(8.0, float(tone_segment_mm)))
@@ -1202,7 +1214,10 @@ def trace_shared_structure_streamlines(
         pixel_mm * 0.72,
         min(base_pitch * 0.28, max(0.10, float(path_tolerance_mm) * 1.8)),
     )
-    minimum_pen_gap = max(0.0, float(pen_diameter_mm)) * 0.72
+    minimum_pen_gap = (
+        max(0.0, float(pen_diameter_mm))
+        * EDGE_FLOW_MIN_PITCH_PEN_RATIO
+    )
     minimum_length = max(1.0, base_pitch * 0.45)
     tone_segment = (
         max(0.8, min(8.0, float(tone_segment_mm)))

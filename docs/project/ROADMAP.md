@@ -622,7 +622,7 @@
   separation, and local connector behavior independently without changing the
   base geometry or per-ink separation.
   Status 2026-11-25: the controls are exposed, cached, persisted, forwarded to
-  the coherent/shared renderers, and recorded in version-7 manifests. Defaults
+  the coherent/shared renderers, and recorded in version-8 manifests. Defaults
   preserve the recommended coherent recipe. Focused tests pass `112`; complete
   discovery passes `738`. Keyline confidence thresholds remain internal and
   paper validation is pending. Evidence: `WSW-20261125-011`.
@@ -643,8 +643,8 @@
   locks, complete recipe presets, sidecar persistence, explicit
   input/output/validation/cache contracts, and an undirected flow-field
   diagnostic. Set manifests record each stage's settings hash and locks;
-  `WSW-20261125-011` advances them to version 7 for the newly exposed flow
-  controls. The
+  `WSW-20261125-012` advances them to version 8 for the precision process
+  screen. The
   renderer still builds from one combined cache key, and only Direction/Review
   have dedicated visual diagnostics; per-stage materialized caches and
   intermediate previews for the other stages remain open.
@@ -728,6 +728,17 @@
   pixels being converted into ink; transparent areas now read as paper.
   These measurements are software-only and do not establish final paper
   density or connector behavior.
+  Status 2026-11-25 precision process screen: the selectable recipe now uses
+  pen-footprint cells, independent deterministic C/M/Y/K coverage diffusion,
+  shared tensor orientation with fixed-angle fallback, Black edge keylines,
+  page-clipped short marks, and pitch growth to honor each plate's mark cap.
+  Synthetic regressions preserve `15/35/55/25 %` requested plate coverage
+  within `2` percentage points, keep all four tilted-vane boundary cases inside
+  a `40 mm` page, match a three-ink half-coverage multiply mixture within
+  `<1.6` RGB levels, and grow a `0.25 mm` pitch to a `94`-mark maximum for a
+  `100`-mark cap. This establishes renderer coherence only; fine-cell color,
+  density, connector visibility, and registration still require a four-pass
+  paper comparison.
   Status 2026-11-25 scene-depth gate: the first coherent renderer used the
   strongest ink channel for dark layers and pitch compression, so bright
   yellow/magenta skin activated all layers and compressed like a shadow. A red

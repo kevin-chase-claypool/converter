@@ -143,6 +143,7 @@ class CmykTabTests(unittest.TestCase):
             "edge_flow",
             "edge_flow_shared",
             "edge_flow_coherent",
+            "process_area",
         ):
             tab.style.setCurrentIndex(tab.style.findData(style))
             root = ET.parse(tab.build_svg()).getroot()
@@ -444,6 +445,65 @@ class CmykTabTests(unittest.TestCase):
             [0.25, 0.25, 0.25, 0.0],
         )
         self.assertEqual(len(set(tab._layer_files.values())), 4)
+
+    def test_process_color_area_screen_uses_physical_pen_pitch(self):
+        tab = self.make_tab()
+        tab.style.setCurrentIndex(
+            tab.style.findData("process_area")
+        )
+        tab.pen_width.setValue(0.9)
+        tab.pitch.setValue(0.35)
+        tab.flow_keylines.setChecked(True)
+        tab.scale_pct.setValue(260)
+        captured = {}
+
+        def capture(*args, **kwargs):
+            captured["args"] = args
+            captured["kwargs"] = kwargs
+            return {channel: [] for channel in converter.CHANNELS}
+
+        with mock.patch.object(
+            converter,
+            "screen_process_color_area_cmyk",
+            side_effect=capture,
+        ), mock.patch.object(
+            converter,
+            "screen_channel",
+            side_effect=AssertionError("precision contours share one network"),
+        ):
+            tab._ensure_layers()
+
+        self.assertAlmostEqual(
+            captured["kwargs"]["pen_diameter_mm"],
+            0.9 / 2.6,
+        )
+        self.assertAlmostEqual(captured["kwargs"]["spacing_mm"], 0.35)
+        self.assertAlmostEqual(
+            captured["kwargs"]["spacing_mm"] * 2.6,
+            0.91,
+        )
+        self.assertTrue(captured["kwargs"]["edge_keylines"])
+        self.assertEqual(captured["kwargs"]["edge_threshold"], 0.84)
+        self.assertEqual(captured["kwargs"]["seed"], tab.seed.value())
+        self.assertEqual(len(set(tab._layer_files.values())), 4)
+
+    def test_process_color_area_recipe_applies_full_density_controls(self):
+        tab = self.make_tab()
+        with mock.patch.object(
+            tab,
+            "apply_auto_settings",
+            return_value={},
+        ):
+            self.assertTrue(tab.apply_workflow_preset("process_area"))
+        self.assertEqual(tab.style.currentData(), "process_area")
+        self.assertTrue(tab.flow_keylines.isChecked())
+        self.assertAlmostEqual(tab.pitch.value(), 0.35)
+        self.assertAlmostEqual(tab.path_tolerance.value(), 0.05)
+        self.assertEqual(tab.max_marks.value(), 800000)
+        self.assertAlmostEqual(tab.chain_gap.value(), 1.0)
+        self.assertEqual(tab.tone_bridge.value(), 0.0)
+        self.assertAlmostEqual(tab.contrast.value(), 118.0)
+        self.assertAlmostEqual(tab.gcr.value(), 28.0)
 
     def test_fine_detail_uses_two_mm_tone_segments_on_paper(self):
         tab = self.make_tab()
@@ -936,7 +996,7 @@ class CmykTabTests(unittest.TestCase):
         self.assertTrue(manifest.exists())
         data = json.loads(manifest.read_text(encoding="utf-8"))
         self.assertEqual(data["kind"], "cmyk-print-set")
-        self.assertEqual(data["version"], 7)
+        self.assertEqual(data["version"], 8)
         self.assertAlmostEqual(data["pen_offsets_mm"]["m"][0], 0.75)
         self.assertEqual(set(data["preflight"]), set(converter.CHANNELS))
         self.assertEqual(

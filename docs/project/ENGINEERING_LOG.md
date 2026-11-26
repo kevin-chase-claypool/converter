@@ -1,5 +1,46 @@
 # Engineering Log
 
+<a id="elog-20261125-stabilize-process-color-area-screen"></a>
+### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Stabilize the precision process-color screen
+
+- The uncommitted precision process renderer reduced a uniform `15 %`
+  single-ink target to no marks because its 16-colour whole-cell RGB palette
+  chose paper as the nearest state. Short angled marks also crossed the page
+  edge by up to `0.0556 mm` in the isolated-channel probe.
+- The original diffusion also processed a complete row before adding its
+  horizontal errors, so errors created earlier in the row never affected later
+  pixels. Independent per-plate coverage made that mistake visible immediately.
+- C/M/Y/K coverage now uses deterministic channel-specific serpentine
+  Floyd-Steinberg diffusion one pixel at a time. The resulting subset selects
+  shared-tensor-oriented marks, Black edge structure can raise K, every
+  endpoint is clipped to the page, and pitch growth enforces each plate's mark
+  cap. Auto uses the flow-guided exposure window and treats process-cell
+  coverage as the calibrated plate fields directly.
+- Requested `15/35/55/25 %` plate levels now render at
+  `14.44/34.56/55.00/24.75 %`. Pure-channel boundary cases remain within
+  `[0, 40] mm` after `3x` overdraw, and a `100`-mark cap resolves to a
+  `94`-mark maximum instead of truncation.
+- A deterministic per-pixel threshold jitter decorrelates the four plate
+  lattices. A three-ink `50 %` mixture now reproduces the continuous multiply
+  model within `1.56/255` in its worst mean RGB channel; identical or
+  complementary binary lattices were off by more than `25/255` before that
+  change.
+- Set manifests move to version 8 with process-cell pitch and edge-threshold
+  fields. The stage is labelled **Screen geometry and spacing**, and flow styles
+  now document the `1.10` pen-width minimum pitch. The marks control accepts
+  the recipe's `800000` value, which previously clamped to `200000`, and the
+  recipe uses the control's `0.05 mm` tolerance floor.
+- Focused CMYK tests pass `170`; complete converter discovery passes `747`
+  tests with one expected OpenGL-context skip. Python compilation passes.
+  No paper contact sheet was created or inspected.
+- Four-pass paper comparison remains required for process-screen hue, density,
+  light tints, overprint texture, keylines, connectors, registration, and
+  elapsed time.
+- Evidence: `WSW-20261125-012`;
+  `docs/changes/windows-software/2026/2026-11-25-stabilize-process-color-area-screen.md`.
+- Category: windows-software, cmyk, process-color, error-diffusion,
+  structure-tensor, fine-detail, mark-limit, geometry, manifest.
+
 <a id="elog-20261125-expose-cmyk-flow-coverage-controls"></a>
 ### 🟨 2026-11-25 - WINDOWS SOFTWARE/IMPLEMENTED - Expose coherent flow and coverage controls
 

@@ -8,6 +8,7 @@ Newest changes appear first.
 <!-- BEGIN GENERATED CHANGES -->
 | Date | ID | Status | Summary | Tags |
 |---|---|---|---|---|
+| 2026-11-25 | `WSW-20261125-012` | implemented | [Stabilize the precision process-color screen](2026/2026-11-25-stabilize-process-color-area-screen.md) | `cmyk`, `process-color`, `error-diffusion`, `structure-tensor`, `fine-detail`, `mark-limit`, `geometry`, `manifest` |
 | 2026-11-25 | `WSW-20261125-011` | implemented | [Expose coherent CMYK flow and coverage controls](2026/2026-11-25-expose-cmyk-flow-coverage-controls.md) | `cmyk`, `coherent-color-flow`, `shadow-layers`, `color-continuity`, `keylines`, `tone-bridge`, `chaining`, `manifest` |
 | 2026-11-25 | `WSW-20261125-010` | implemented | [Add the persistent adaptive CMYK stage workspace](2026/2026-11-25-cmyk-stage-workspace.md) | `cmyk`, `user-interface`, `workflow`, `stage-navigation`, `structure-tensor`, `diagnostics`, `parameter-locks`, `recipes`, `manifest` |
 | 2026-11-25 | `WSW-20261125-009` | implemented | [Publish CMYK sets as one transactional export](2026/2026-11-25-transactional-cmyk-set-export.md) | `cmyk`, `export`, `transaction`, `manifest`, `preflight`, `registration`, `reproducibility` |

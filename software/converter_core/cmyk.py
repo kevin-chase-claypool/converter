@@ -30,6 +30,7 @@ from .structure_tensor import (
     EDGE_FLOW_DARK_LAYER_START,
     edge_preserving_simplify,
     edge_flow_coverage_factor,
+    structure_tensor_fields,
     trace_shared_structure_streamlines,
     trace_structure_streamlines,
 )
@@ -206,6 +207,7 @@ SCREEN_ANGLES_DEG = {"c": 15.0, "m": 75.0, "y": 0.0, "k": 45.0}
 
 # Below this ink coverage a mark is dropped so paper stays clean.
 INK_FLOOR = 0.06
+_PROCESS_AREA_DITHER_JITTER = 0.15
 # Preserve broad vertical image tone in wave height, but average over enough
 # rows that row-frequency detail cannot make neighbouring curves jitter.
 WAVE_DEPTH_ROW_WINDOW = 7
@@ -545,6 +547,7 @@ def _auto_photo_baseline_settings(
         "edge_flow",
         "edge_flow_shared",
         "edge_flow_coherent",
+        "process_area",
     ):
         # Edge-flow is a sparse, path-local screen. Its recommended recipe
         # keeps normal exposure and moderate contrast so broad skin and
@@ -773,6 +776,11 @@ def _auto_screen_coverage(
             )
             for channel in CHANNELS
         }
+    if style_key == "process_area":
+        return {
+            channel: np.clip(tones[channel], 0.0, 1.0)
+            for channel in CHANNELS
+        }
     area_factor = min(1.0, pen_mm / pitch_mm)
     return {
         channel: np.clip(tones[channel] * area_factor, 0.0, 1.0)
@@ -931,6 +939,7 @@ def auto_photo_settings(
         "edge_flow",
         "edge_flow_shared",
         "edge_flow_coherent",
+        "process_area",
     ):
         ranges = {
             "auto_levels": auto_level_choices,
@@ -1939,6 +1948,7 @@ def screen_coherent_color_flow(
     color_hold_mm=4.0,
     color_mix_ratio=0.72,
     bridge_mm=0.0,
+    max_path_mm=None,
     flow_pitch_compression=0.0,
     dark_layer_start=EDGE_FLOW_DARK_LAYER_START,
     dark_layer_end=EDGE_FLOW_DARK_LAYER_END,
@@ -1990,6 +2000,7 @@ def screen_coherent_color_flow(
         fallback_angles_deg=fallback_angles_deg,
         color_hold_mm=color_hold_mm,
         color_mix_ratio=color_mix_ratio,
+        max_path_mm=max_path_mm,
         dark_layer_start=dark_layer_start,
         dark_layer_end=dark_layer_end,
         cancel_check=cancel_check,
@@ -2000,6 +2011,324 @@ def screen_coherent_color_flow(
             overdraw,
             spacing,
         )
+        for channel in CHANNELS
+    }
+
+
+def _grid_samples(field, geometry, columns, rows):
+    """Nearest-neighbour samples of one tone field at grid-cell centres."""
+    import numpy as np
+
+    source_rows, source_cols = np.asarray(field).shape
+    col_index = np.rint(
+        (columns - float(geometry["off_x"]))
+        / max(1e-9, float(geometry["width_mm"]))
+        * max(0, source_cols - 1)
+    ).astype(np.int32)
+    row_index = np.rint(
+        (rows - float(geometry["off_y"]))
+        / max(1e-9, float(geometry["height_mm"]))
+        * max(0, source_rows - 1)
+    ).astype(np.int32)
+    np.clip(col_index, 0, source_cols - 1, out=col_index)
+    np.clip(row_index, 0, source_rows - 1, out=row_index)
+    return np.asarray(field)[row_index[:, None], col_index[None, :]]
+
+
+def _coverage_masks(coverage, seed=0):
+    """Error-diffuse independent plate coverages into one ink subset per cell."""
+    import numpy as np
+
+    fields = np.asarray(coverage, dtype=np.float64)
+    if fields.ndim != 3 or fields.shape[2] != len(CHANNELS):
+        raise ValueError("Coverage must provide C, M, Y, and K fields.")
+    fields = np.clip(fields, 0.0, 1.0)
+    height, width = fields.shape[:2]
+    masks = np.zeros((height, width, len(CHANNELS)), dtype=bool)
+    row_index = np.arange(height, dtype=np.int64)[:, None]
+    column_index = np.arange(width, dtype=np.int64)[None, :]
+    for channel_index in range(len(CHANNELS)):
+        # Different deterministic scans keep the four binary plates from
+        # sharing an accidental one-pixel overprint lattice.
+        phase = (
+            int(seed)
+            + (channel_index + 1) * 0xA511E9B3
+        ) & 0xFFFFFFFF
+        noise = (
+            (
+                row_index * 73856093
+                ^ column_index * 19349663
+                ^ phase
+            )
+            * 2654435761
+            & 0xFFFFFFFF
+        ).astype(np.float64)
+        threshold = 0.5 + (
+            noise / 4294967295.0 - 0.5
+        ) * _PROCESS_AREA_DITHER_JITTER
+        error = np.zeros((height + 2, width + 4), dtype=np.float64)
+        field = fields[..., channel_index]
+        for row in range(height):
+            reverse = bool((row + phase) & 1)
+            columns = (
+                range(width - 1, -1, -1)
+                if reverse
+                else range(width)
+            )
+            direction = -1 if reverse else 1
+            for column in columns:
+                value = min(
+                    1.0,
+                    max(
+                        0.0,
+                        float(field[row, column])
+                        + error[row + 1, column + 2],
+                    ),
+                )
+                selected = value >= threshold[row, column]
+                masks[row, column, channel_index] = selected
+                delta = value - float(selected)
+                error[row + 1, column + 2 + direction] += (
+                    delta * 7.0 / 16.0
+                )
+                error[row + 2, column + 2 - direction] += (
+                    delta * 3.0 / 16.0
+                )
+                error[row + 2, column + 2] += delta * 5.0 / 16.0
+                error[row + 2, column + 2 + direction] += delta / 16.0
+    return masks
+
+
+def screen_process_color_area_cmyk(
+    tones,
+    geometry,
+    spacing_mm,
+    pen_diameter_mm,
+    flow_guide=None,
+    keyline_smoothing_mm=0.8,
+    edge_keylines=True,
+    edge_threshold=0.84,
+    max_marks=800000,
+    seed=0,
+    overdraw=1,
+):
+    """Render one calibrated CMYK area screen with structure-guided strokes.
+
+    The page is divided into paper-space cells matching the physical pen
+    footprint. Each calibrated C/M/Y/K coverage plate is independently error
+    diffused into a binary ink subset for every cell, and the corresponding
+    short strokes are oriented by a shared structure tensor. The preview's
+    multiply model then reconstructs the process separation instead of showing
+    isolated bright marker colours.
+    """
+    import numpy as np
+
+    left = float(geometry["off_x"])
+    top = float(geometry["off_y"])
+    right = left + float(geometry["width_mm"])
+    bottom = top + float(geometry["height_mm"])
+    pen_mm = max(0.05, float(pen_diameter_mm))
+    spacing = max(
+        pen_mm * 1.10,
+        max(0.20, float(spacing_mm)),
+    )
+    cap = max(16, int(max_marks))
+
+    width = max(2, int(math.ceil((right - left) / spacing)))
+    height = max(2, int(math.ceil((bottom - top) / spacing)))
+    cell_x = (right - left) / width
+    cell_y = (bottom - top) / height
+    columns = left + (np.arange(width, dtype=np.float64) + 0.5) * cell_x
+    rows = top + (np.arange(height, dtype=np.float64) + 0.5) * cell_y
+    tone_grid = {
+        channel: _grid_samples(
+            tones[channel],
+            geometry,
+            columns,
+            rows,
+        ).astype(np.float64)
+        for channel in CHANNELS
+    }
+
+    guide = (
+        flow_guide
+        if flow_guide is not None
+        else tones.get("flow_guide", tones.get("depth"))
+    )
+    (
+        _tangent_x,
+        _tangent_y,
+        _guided,
+        keyline,
+        field_geometry,
+    ) = structure_tensor_fields(
+        guide,
+        geometry,
+        max(0.1, float(keyline_smoothing_mm)),
+    )
+    tangent_grid = _grid_samples(
+        _tangent_x,
+        field_geometry,
+        columns,
+        rows,
+    ).astype(np.float64)
+    tangent_y_grid = _grid_samples(
+        _tangent_y,
+        field_geometry,
+        columns,
+        rows,
+    ).astype(np.float64)
+    guided_grid = _grid_samples(
+        _guided,
+        field_geometry,
+        columns,
+        rows,
+    ).astype(np.float64)
+
+    if edge_keylines:
+        edge_grid = _grid_samples(
+            keyline,
+            field_geometry,
+            columns,
+            rows,
+        ).astype(np.float64)
+        threshold = min(0.99, max(0.0, float(edge_threshold)))
+        edge_strength = np.clip(
+            (edge_grid - threshold) / max(1e-6, 1.0 - threshold),
+            0.0,
+            1.0,
+        )
+        tone_grid["k"] = np.maximum(
+            tone_grid["k"],
+            edge_strength * 0.88,
+        )
+
+    coverage = np.stack(
+        [
+            np.clip(tone_grid[channel], 0.0, 1.0)
+            for channel in CHANNELS
+        ],
+        axis=-1,
+    )
+    masks = _coverage_masks(coverage, seed)
+
+    # Ink-free paper is forced to the empty subset after diffusion so an error
+    # at a silhouette cannot scatter marks into the page margin.
+    active = np.any(coverage > INK_FLOOR, axis=-1)
+    masks[~active, :] = False
+
+    counts = np.count_nonzero(masks, axis=(0, 1))
+    largest = int(counts.max(initial=0))
+    if largest > cap and spacing < max(right - left, bottom - top):
+        grown = spacing * math.sqrt(largest / float(cap)) * 1.02
+        return screen_process_color_area_cmyk(
+            tones,
+            geometry,
+            grown,
+            pen_mm,
+            flow_guide=flow_guide,
+            keyline_smoothing_mm=keyline_smoothing_mm,
+            edge_keylines=edge_keylines,
+            edge_threshold=edge_threshold,
+            max_marks=cap,
+            seed=seed,
+            overdraw=overdraw,
+        )
+
+    marks = {channel: [] for channel in CHANNELS}
+    segment_length = cell_x * cell_y / pen_mm
+    half_length = max(spacing * 0.30, segment_length * 0.5)
+    fallback = {
+        channel: math.radians(SCREEN_ANGLES_DEG[channel])
+        for channel in CHANNELS
+    }
+    fallback_x = {
+        channel: math.cos(fallback[channel])
+        for channel in CHANNELS
+    }
+    fallback_y = {
+        channel: math.sin(fallback[channel])
+        for channel in CHANNELS
+    }
+    for row in range(height):
+        y = float(rows[row])
+        for column in range(width):
+            selected = np.flatnonzero(masks[row, column])
+            if selected.size == 0:
+                continue
+            x = float(columns[column])
+            guided = min(1.0, max(0.0, float(guided_grid[row, column])))
+            tangent_x = float(tangent_grid[row, column])
+            tangent_y = float(tangent_y_grid[row, column])
+            norm = math.hypot(tangent_x, tangent_y)
+            for channel_index in selected:
+                channel_index = int(channel_index)
+                channel = CHANNELS[channel_index]
+                if norm > 1e-8:
+                    dx = (
+                        guided * tangent_x / norm
+                        + (1.0 - guided) * fallback_x[channel]
+                    )
+                    dy = (
+                        guided * tangent_y / norm
+                        + (1.0 - guided) * fallback_y[channel]
+                    )
+                else:
+                    dx = fallback_x[channel]
+                    dy = fallback_y[channel]
+                direction_length = math.hypot(dx, dy)
+                if direction_length <= 1e-9:
+                    dx, dy = fallback_x[channel], fallback_y[channel]
+                else:
+                    dx /= direction_length
+                    dy /= direction_length
+                marks[channel].append(
+                    ScreenTrail(
+                        [
+                            (
+                                min(
+                                    right,
+                                    max(left, x - dx * half_length),
+                                ),
+                                min(
+                                    bottom,
+                                    max(top, y - dy * half_length),
+                                ),
+                            ),
+                            (x, y),
+                            (
+                                min(
+                                    right,
+                                    max(left, x + dx * half_length),
+                                ),
+                                min(
+                                    bottom,
+                                    max(top, y + dy * half_length),
+                                ),
+                            ),
+                        ]
+                    )
+                )
+    def clipped_page_marks(channel):
+        return [
+            ScreenTrail(
+                [
+                    (
+                        min(right, max(left, x)),
+                        min(bottom, max(top, y)),
+                    )
+                    for x, y in line
+                ]
+            )
+            for line in _apply_overdraw(
+                marks[channel][:cap],
+                overdraw,
+                spacing,
+            )
+        ]
+
+    return {
+        channel: clipped_page_marks(channel)
         for channel in CHANNELS
     }
 

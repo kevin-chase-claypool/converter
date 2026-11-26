@@ -86,7 +86,7 @@ CMYK_WORKFLOW_STAGES = (
         "Smooth the multichannel image field before tracing. This controls "
         "contour scale, edge confidence, and how quickly weak texture falls "
         "back to fixed screen angles, plus where additional shadow layers "
-        "activate.",
+        "activate for streamline styles.",
         ("Flow geometry",),
         "Show flow field",
         "Multichannel image guide, page geometry, and smoothing radius.",
@@ -98,14 +98,16 @@ CMYK_WORKFLOW_STAGES = (
     ),
     CmykWorkflowStage(
         "streamlines",
-        "Adaptive streamline placement",
-        "Streamlines",
-        "Choose the complete geometry style, base pitch, and shadow-density "
-        "behavior that seeds and spaces the shared streamlines.",
+        "Screen geometry and spacing",
+        "Geometry",
+        "Choose the complete geometry style, base pitch, and density behavior. "
+        "Adaptive styles trace streamlines; the precision process screen uses "
+        "pen-footprint area cells.",
         ("Screening",),
         "Show paths",
         "Direction field, coverage support, pitch, layers, and compression.",
-        "Deterministic shared streamline candidates and occupancy spacing.",
+        "Deterministic screen marks or shared streamline candidates and their "
+        "occupancy spacing.",
         "Bounds, pen-safe pitch, deterministic seeds, and mark cap.",
         ("direction field", "style", "pitch", "layers", "compression", "seed"),
     ),
@@ -113,9 +115,9 @@ CMYK_WORKFLOW_STAGES = (
         "ink",
         "Ink assignment and local coverage",
         "Ink planes",
-        "Review how coverage becomes ink planes and marks: keyline policy, "
-        "edge separation, ink-plane hold and secondary mix, dot size, overdraw, "
-        "pen width, and density levels.",
+        "Review how coverage becomes process-ink cells or local ink planes: "
+        "keyline policy, edge separation, ink-plane hold and secondary mix, "
+        "dot size, overdraw, pen width, and density levels.",
         ("Ink assignment",),
         "Show ink simulation",
         "Streamline geometry, local channel coverage, keyline and pen policy.",
@@ -176,6 +178,7 @@ CMYK_WORKFLOW_STAGES = (
 
 CMYK_RECIPE_PRESETS = (
     ("Recommended coherent portrait", "recommended"),
+    ("Precision process-color screen", "process_area"),
     ("Per-ink Edge-flow comparison", "edge_flow_per_ink"),
     ("Stochastic shared flow experiment", "edge_flow_shared"),
     ("Line-screen speed comparison", "line_screen"),

@@ -565,10 +565,11 @@ Current tools:
     **Lock auto**; locked stages keep manual values when Auto, recommended
     defaults, or a recipe preset runs. The selected stage and locks persist in
     the artwork recipe.
-  - **Apply recipe** offers the recommended coherent portrait, the per-ink
-    Edge-flow comparison, the stochastic shared-flow experiment, and a
-    line-screen speed comparison. The one-click guided action remains the fast
-    path and does not require visiting these stages.
+  - **Apply recipe** offers the recommended coherent portrait, a precision
+    process-color screen for fine detail, the per-ink Edge-flow comparison, the
+    stochastic shared-flow experiment, and a line-screen speed comparison. The
+    one-click guided action remains the fast path and does not require visiting
+    these stages.
   - The Direction stage's **Show flow field** action renders the current shared
     structure tensor as an undirected hue field: opposite tangent directions
     have the same colour, brightness is guidance confidence, and white marks
@@ -599,14 +600,16 @@ Current tools:
     highlights, and colour separation in the preview. If the current pitch
     would make each solid row cover too much of the page, Auto opens it to at
     least `3.4` pen widths; every resulting row remains exactly equidistant.
-  - Edge-flow, coherent color flow, and the general screen styles start from a detail/exposure
-    search over the real curve chain. Auto then evaluates those candidates
-    through the active process-ink multiply model and searches Auto levels,
-    saturation, contrast, brightness, gamma, and GCR for lower coverage-model
-    RGB error, while retaining penalties for lost detail, mean-tone drift, and
-    clipping. Edge-flow keeps this search inside an exposure-preserving window:
-    brightness `100-140 %`, contrast `120-180 %`, saturation `105-120 %`,
-    gamma `1.00-1.30`, and GCR `60-80 %`. Its estimate uses the same
+  - Edge-flow, coherent color flow, the precision process screen, and the
+    general screen styles start from a detail/exposure search over the real
+    curve chain. Auto then evaluates those candidates through the active
+    process-ink multiply model and searches Auto levels, saturation, contrast,
+    brightness, gamma, and GCR for lower coverage-model RGB error, while
+    retaining penalties for lost detail, mean-tone drift, and clipping. Edge-flow
+    and the precision process screen keep this search inside an
+    exposure-preserving window: brightness `100-140 %`, contrast `120-180 %`,
+    saturation `105-120 %`, gamma `1.00-1.30`, and GCR `60-80 %`. Its estimate
+    uses the same
     pen-width, pitch, and layer occupancy factor as the screen instead of
     treating source tone as printed area. It resets all four ink weights to
     `100 %`; the status line calls the result a **coverage RGB error
@@ -615,19 +618,19 @@ Current tools:
     coverage is geometry-dependent rather than a direct ink-area fraction, so
     it keeps the established photo-fidelity setup instead of claiming a
     falsely precise colour match.
-  - Auto only changes Dot pitch for the Wave screen. Edge-flow spacing is
-    treated as persisted layout and is left exactly as the operator set it;
-    the status line still reports the current effective pitch. **Match pen**
-    remains the explicit action for setting one pen width at the current
-    artwork scale. The recommended action sets the Edge-flow pitch before
-    invoking Auto.
+  - Auto only changes Dot pitch for the Wave screen. Edge-flow and process-cell
+    spacing are treated as persisted layout and left at the operator's value
+    until the renderer applies its pen-safe floor; the status line still reports
+    the current effective pitch. **Match pen** remains the explicit action for
+    setting one pen width at the current artwork scale. The recommended action
+    sets the Edge-flow pitch before invoking Auto.
   auto levels (default off: stretch the image's 1st-99th luminance percentiles
   so low-key photos use the full tonal range), saturation, contrast,
   brightness, luminance sharpening (default on: unsharp-mask amount and
   on-paper radius), ink gamma, black (GCR), resolution, per-ink weights, screen style
   (halftone dots / stipple dots / line screen / crosshatch levels / wave screen
   with equidistant rows / edge-flow streamlines / coherent color flow /
-  interference (gyroid) /
+  precision process-color cells / interference (gyroid) /
   single line (TSP) / topographic contours / rectilinear fill / continuous
   row screen),
   dot pitch (with a **Match pen** button that sets it to one pen width at
@@ -675,6 +678,20 @@ Current tools:
   of **Flow smoothing** before sharpening and separation. That merges pores,
   compression noise, and fine fabric texture into broader color planes while
   retaining glasses, eyes, silhouettes, and other strong boundaries.
+  **Precision process screen (fine CMYK cells)** divides the placed page into
+  cells whose pre-scale pitch is clamped to at least `1.10` pen widths. Each
+  C/M/Y/K coverage plate is independently Floyd-Steinberg error-diffused into a
+  binary ink subset per cell, so sparse highlights remain present at their
+  requested average coverage instead of quantizing to paper. Each selected ink
+  draws one short three-point mark through that cell. A confidently coherent
+  structure-tensor direction orients the mark; weak fields fall back to the
+  Cyan `15°`, Magenta `75°`, Yellow `0°`, and Black `45°` screen angles. Black
+  keylines raise Black coverage above the selected edge threshold. The marks
+  are clipped to the artwork page, and if one plate exceeds **Max marks per
+  ink**, the cell pitch grows before any plate is silently truncated. The
+  precision recipe starts at `0.35` pre-scale pitch, `0.05 mm` path tolerance,
+  `800000` marks per ink, scene-aware image controls, and the normal four-file
+  Y/M/C/K workflow. Its fine-cell density has not yet been paper-qualified.
   **Edge-flow streamlines (per-ink networks)** remains available as the prior
   comparison mode. It traces four independently seeded networks through the
   same guide, with per-ink fallback angles and path-local stochastic tone
@@ -721,7 +738,7 @@ Current tools:
   control. Per-ink Edge-flow uses local ink tone `t`; coherent color flow uses
   common scene depth so a saturated highlight is not mistaken for a shadow.
   The target pitch is
-  `Dot pitch x (1 - compression x t)`, clamped to `0.9` pen widths. A value of
+  `Dot pitch x (1 - compression x t)`, clamped to `1.10` pen widths. A value of
   `0 %` keeps a fixed grid; `60 %` lets full-tone shadows reach `40 %` of the
   base pitch; `90 %` is the densest setting and can approach solid coverage.
   Neighbouring streamlines are seeded along the tensor field at this local
@@ -913,7 +930,7 @@ Current tools:
   analyzed programs must also agree on artwork scale, placement, page frame,
   theta mode/ratio, feed and travel contract, and full bed-compensation
   profile. Guided **Create 4 G-code files** requires all four output inks.
-  A successful artwork save publishes the four programs and a version-7
+  A successful artwork save publishes the four programs and a version-8
   `<name>-set.json` as one logical transaction. Every file is staged before
   any destination is replaced; a failed commit restores the previous set.
   The manifest records the source hash, page and motion mode,
@@ -922,7 +939,8 @@ Current tools:
   identity, workflow stage dependency hashes and locks, explicit coherent
   hold/mix and shadow thresholds, keyline separation, independent tone-gap
   bridge and adjacent-chain settings, per-ink preflight results, one canonical
-  set-identity hash, and SHA-256 hashes for all four G-code files.
+  set-identity hash, the precision process-cell pitch and edge threshold when
+  selected, and SHA-256 hashes for all four G-code files.
   A non-zero artwork placement is also written into every G-code header, for
   example `(artwork placement -3.170,-28.740 mm)`. Before a multi-pass print,
   confirm that all four headers and `artwork_placement_mm` in the set manifest

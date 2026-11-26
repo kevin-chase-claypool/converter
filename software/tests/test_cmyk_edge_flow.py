@@ -66,6 +66,285 @@ class CmykEdgeFlowTests(unittest.TestCase):
         )
         self.assertLess(float(flat.mean()), float(forward.mean()))
 
+    def test_process_color_area_screen_is_deterministic_and_pen_bounded(self):
+        size = 96
+        coords = self.np.arange(size, dtype="float32")
+        xx, yy = self.np.meshgrid(coords, coords)
+        depth = 0.15 + 0.75 * (xx + yy) / float(2 * (size - 1))
+        tones = {
+            "c": depth * 0.25,
+            "m": depth * 0.75,
+            "y": depth * 0.60,
+            "k": 1.0 - depth,
+            "depth": depth,
+            "flow_guide": depth,
+        }
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 40.0,
+            "height_mm": 40.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+        first = converter.screen_process_color_area_cmyk(
+            tones,
+            geometry,
+            spacing_mm=1.0,
+            pen_diameter_mm=0.9,
+            max_marks=5000,
+            seed=7,
+        )
+        second = converter.screen_process_color_area_cmyk(
+            tones,
+            geometry,
+            spacing_mm=1.0,
+            pen_diameter_mm=0.9,
+            max_marks=5000,
+            seed=7,
+        )
+        self.assertEqual(
+            {
+                channel: [
+                    [tuple(point) for point in line]
+                    for line in lines
+                ]
+                for channel, lines in first.items()
+            },
+            {
+                channel: [
+                    [tuple(point) for point in line]
+                    for line in lines
+                ]
+                for channel, lines in second.items()
+            },
+        )
+        self.assertGreater(sum(len(lines) for lines in first.values()), 0)
+        self.assertGreater(len(first["k"]), 0)
+        for lines in first.values():
+            for line in lines:
+                self.assertEqual(len(line), 3)
+                for x, y in line:
+                    self.assertGreaterEqual(x, 0.0)
+                    self.assertLessEqual(x, 40.0)
+                    self.assertGreaterEqual(y, 0.0)
+                    self.assertLessEqual(y, 40.0)
+                length = sum(
+                    math.hypot(
+                        end[0] - start[0],
+                        end[1] - start[1],
+                    )
+                    for start, end in zip(line, line[1:])
+                )
+                self.assertLessEqual(length, 1.30)
+
+    def test_process_color_area_screen_keeps_tilted_edge_marks_on_page(self):
+        size = 64
+        field = self.np.full((size, size), 0.5, dtype="float32")
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 40.0,
+            "height_mm": 40.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+        for channel in converter.CHANNELS:
+            tones = {
+                name: (
+                    field
+                    if name == channel
+                    else self.np.zeros_like(field)
+                )
+                for name in converter.CHANNELS
+            }
+            tones["depth"] = self.np.ones_like(field)
+            tones["flow_guide"] = self.np.ones_like(field)
+            marks = converter.screen_process_color_area_cmyk(
+                tones,
+                geometry,
+                spacing_mm=1.0,
+                pen_diameter_mm=0.9,
+                edge_keylines=False,
+                max_marks=5000,
+                seed=7,
+                overdraw=3,
+            )
+            self.assertGreater(len(marks[channel]), 0)
+            for line in marks[channel]:
+                self.assertEqual(len(line), 3)
+                for x, y in line:
+                    self.assertGreaterEqual(x, 0.0)
+                    self.assertLessEqual(x, 40.0)
+                    self.assertGreaterEqual(y, 0.0)
+                    self.assertLessEqual(y, 40.0)
+
+    def test_process_color_area_screen_preserves_light_coverage(self):
+        size = 64
+        levels = (0.15, 0.35, 0.55, 0.25)
+        tones = {
+            channel: self.np.full(
+                (size, size),
+                level,
+                dtype="float32",
+            )
+            for channel, level in zip(converter.CHANNELS, levels)
+        }
+        tones["depth"] = self.np.ones((size, size), dtype="float32")
+        tones["flow_guide"] = tones["depth"]
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 40.0,
+            "height_mm": 40.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+        marks = converter.screen_process_color_area_cmyk(
+            tones,
+            geometry,
+            spacing_mm=1.0,
+            pen_diameter_mm=0.9,
+            edge_keylines=False,
+            max_marks=5000,
+            seed=7,
+        )
+        cell_count = 40 * 40
+        for channel, level in zip(converter.CHANNELS, levels):
+            self.assertAlmostEqual(
+                len(marks[channel]) / cell_count,
+                level,
+                delta=0.02,
+            )
+
+    def test_process_color_area_diffusion_matches_calibrated_mix(self):
+        from converter_core import cmyk as cmyk_core
+
+        size = 80
+        levels = (0.5, 0.5, 0.5, 0.0)
+        coverage = self.np.broadcast_to(
+            self.np.asarray(levels, dtype="float64"),
+            (size, size, len(converter.CHANNELS)),
+        )
+        masks = cmyk_core._coverage_masks(coverage, seed=7)
+        factors = converter.ink_transmittance_matrix()
+        actual = self.np.ones((size, size, 3), dtype="float64")
+        for index, factor in enumerate(factors):
+            actual *= self.np.where(
+                masks[..., index, None],
+                factor,
+                1.0,
+            )
+        target = converter.predict_cmyk_rgb(
+            {
+                channel: self.np.full((size, size), level)
+                for channel, level in zip(converter.CHANNELS, levels)
+            }
+        )
+        mean_error = self.np.abs(
+            actual.mean(axis=(0, 1))
+            - target.mean(axis=(0, 1))
+        )
+        self.assertLess(float(mean_error.max()), 0.02)
+
+    def test_process_color_area_auto_uses_plate_coverage_directly(self):
+        from converter_core import cmyk as cmyk_core
+
+        shape = (24, 24)
+        tones = {
+            channel: self.np.full(
+                shape,
+                0.1 + index * 0.2,
+                dtype="float32",
+            )
+            for index, channel in enumerate(converter.CHANNELS)
+        }
+        coverage = cmyk_core._auto_screen_coverage(
+            tones,
+            "process_area",
+            pen_width_mm=0.9,
+            effective_pitch_mm=0.91,
+        )
+        for channel in converter.CHANNELS:
+            self.np.testing.assert_array_equal(
+                coverage[channel],
+                tones[channel],
+            )
+
+    def test_process_color_area_keylines_add_black_on_strong_edge(self):
+        size = 96
+        guide = self.np.zeros((size, size), dtype="float32")
+        guide[:, size // 2 :] = 1.0
+        empty = self.np.zeros_like(guide)
+        tones = {
+            channel: empty.copy()
+            for channel in converter.CHANNELS
+        }
+        tones["depth"] = empty.copy()
+        tones["flow_guide"] = guide
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 40.0,
+            "height_mm": 40.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+        without = converter.screen_process_color_area_cmyk(
+            tones,
+            geometry,
+            spacing_mm=1.0,
+            pen_diameter_mm=0.9,
+            edge_keylines=False,
+            keyline_smoothing_mm=0.6,
+            max_marks=5000,
+            seed=7,
+        )
+        with_keyline = converter.screen_process_color_area_cmyk(
+            tones,
+            geometry,
+            spacing_mm=1.0,
+            pen_diameter_mm=0.9,
+            edge_keylines=True,
+            edge_threshold=0.5,
+            keyline_smoothing_mm=0.6,
+            max_marks=5000,
+            seed=7,
+        )
+        self.assertFalse(any(without.values()))
+        self.assertGreater(len(with_keyline["k"]), 0)
+        self.assertFalse(any(with_keyline[channel] for channel in "cmy"))
+
+    def test_process_color_area_screen_grows_pitch_to_respect_mark_cap(self):
+        size = 64
+        field = self.np.full((size, size), 0.75, dtype="float32")
+        tones = {
+            channel: field
+            for channel in converter.CHANNELS
+        }
+        tones["depth"] = self.np.ones((size, size), dtype="float32")
+        tones["flow_guide"] = tones["depth"]
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 40.0,
+            "height_mm": 40.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+        marks = converter.screen_process_color_area_cmyk(
+            tones,
+            geometry,
+            spacing_mm=0.25,
+            pen_diameter_mm=0.1,
+            edge_keylines=False,
+            max_marks=100,
+            seed=7,
+        )
+        self.assertGreater(sum(len(lines) for lines in marks.values()), 0)
+        for lines in marks.values():
+            self.assertLessEqual(len(lines), 100)
+
     def test_coherent_screen_forwards_exposed_flow_controls(self):
         from converter_core import cmyk as cmyk_core
 
