@@ -44,6 +44,15 @@ INK_FLOOR = 0.06
 # Preserve broad vertical image tone in wave height, but average over enough
 # rows that row-frequency detail cannot make neighbouring curves jitter.
 WAVE_DEPTH_ROW_WINDOW = 7
+# Keep paper texture and sharp image detail from modulating phase/amplitude as
+# a second waveform riding on the designed Wave carrier.
+WAVE_DEPTH_ALONG_SMOOTHING_PITCHES = 1.5
+# Use a smoothed coverage field to decide where a Wave row exists. Raw
+# per-pixel channel coverage can cross INK_FLOOR repeatedly inside one dark
+# area, chopping the carrier into many short wavelets that read as nested
+# waveforms in a zoomed preview.
+WAVE_COVERAGE_ALONG_SMOOTHING_PITCHES = 2.5
+WAVE_COVERAGE_ROW_WINDOW = 3
 # A row may not depart from its neighbour by more than this fraction of the
 # nominal pitch. The resulting gap remains between 88% and 112% of pitch,
 # keeping the intended depth variation without crossings or runaway gaps.
@@ -957,6 +966,55 @@ def _wave_clearance_ok(
     return True
 
 
+def _smooth_tone_row(values, radius):
+    """Return a horizontal box-smoothed tone row without per-pixel ripples."""
+    if radius <= 0 or len(values) < 3:
+        return list(values)
+    prefix = [0.0]
+    for value in values:
+        prefix.append(prefix[-1] + float(value))
+    smoothed = []
+    last = len(values) - 1
+    for index in range(len(values)):
+        low = max(0, index - radius)
+        high = min(last, index + radius)
+        smoothed.append(
+            (prefix[high + 1] - prefix[low]) / max(high - low + 1, 1)
+        )
+    return smoothed
+
+
+def _smooth_tone_rows(rows, along_radius, row_window):
+    """Smooth tone spatially in the Wave screen's row frame."""
+    if not rows:
+        return []
+    horizontally_smoothed = [
+        _smooth_tone_row(row, along_radius)
+        for row in rows
+    ]
+    window = min(max(1, int(row_window)), len(horizontally_smoothed))
+    if window <= 1:
+        return horizontally_smoothed
+    smoothed = []
+    for row_index in range(len(horizontally_smoothed)):
+        low = min(
+            max(0, row_index - window // 2),
+            len(horizontally_smoothed) - window,
+        )
+        high = low + window
+        smoothed.append(
+            [
+                sum(
+                    horizontally_smoothed[index][x_index]
+                    for index in range(low, high)
+                )
+                / window
+                for x_index in range(len(horizontally_smoothed[row_index]))
+            ]
+        )
+    return smoothed
+
+
 def _wave_rows(
     darkness,
     bounds,
@@ -979,8 +1037,9 @@ def _wave_rows(
 ):
     """Sine rows with tone-driven depth and a safety envelope.
 
-    Local tone still masks each mark to the image. A vertically smoothed tone
-    field also varies wave height across rows. The phase-locked depth mode
+    Local tone still masks each mark to the image. A locally smoothed two-axis
+    tone field also varies wave shape without turning image texture into a
+    second high-frequency wave. The phase-locked depth mode
     keeps one phase carrier across all rows and varies only their amplitude
     from scene depth. The equidistant mode translates one common waveform with
     no row-specific movement. The fixed-baseline mode keeps the equal row
@@ -1124,40 +1183,82 @@ def _wave_rows(
             )
     if depth_darkness is None:
         depth_rows = tone_rows
-
-    window = min(WAVE_DEPTH_ROW_WINDOW, len(tone_rows))
-    smoothed_tone = []
-    for row_index in range(len(tone_rows)):
-        low = min(
-            max(0, row_index - window // 2),
-            len(tone_rows) - window,
-        )
-        high = low + window
-        smoothed_tone.append(
-            [
-                sum(
-                    depth_rows[index][x_index]
-                    for index in range(low, high)
+    coverage_rows = tone_rows
+    if fixed_baseline_depth and len(x_values) > 2:
+        depth_span_samples = max(
+            1,
+            int(
+                round(
+                    WAVE_DEPTH_ALONG_SMOOTHING_PITCHES
+                    * spacing
+                    / max(sample_step, 1e-9)
                 )
-                / max(window, 1)
-                for x_index in range(len(x_values))
-            ]
+            ),
+        )
+        coverage_span_samples = max(
+            1,
+            int(
+                round(
+                    WAVE_COVERAGE_ALONG_SMOOTHING_PITCHES
+                    * spacing
+                    / max(sample_step, 1e-9)
+                )
+            ),
+        )
+        coverage_rows = _smooth_tone_rows(
+            tone_rows,
+            max(0, coverage_span_samples // 2),
+            WAVE_COVERAGE_ROW_WINDOW,
+        )
+        smoothed_tone = _smooth_tone_rows(
+            depth_rows,
+            max(0, depth_span_samples // 2),
+            WAVE_DEPTH_ROW_WINDOW,
+        )
+    else:
+        smoothed_tone = _smooth_tone_rows(
+            depth_rows,
+            0,
+            WAVE_DEPTH_ROW_WINDOW,
         )
     depth_intensity = max(0.0, float(wave_depth_intensity))
-    if abs(depth_intensity - 1.0) > 1e-9:
+    if depth_intensity <= 1e-9:
         smoothed_tone = [
-            [
-                max(
+            [0.5] * len(row)
+            for row in smoothed_tone
+        ]
+    elif abs(depth_intensity - 1.0) > 1e-9:
+        shaped = []
+        for row in smoothed_tone:
+            shaped_row = []
+            for value in row:
+                value = max(0.0, min(1.0, float(value)))
+                if depth_intensity < 1.0:
+                    shaped_row.append(
+                        0.5 + (value - 0.5) * depth_intensity
+                    )
+                    continue
+                band = 0.5 / depth_intensity
+                normalized = max(
                     0.0,
                     min(
                         1.0,
-                        0.5 + (value - 0.5) * depth_intensity,
+                        0.5 + (value - 0.5) / (2.0 * band),
                     ),
                 )
-                for value in row
-            ]
-            for row in smoothed_tone
-        ]
+                smooth = normalized * normalized * (
+                    3.0 - 2.0 * normalized
+                )
+                linear = max(
+                    0.0,
+                    min(1.0, 0.5 + (value - 0.5) * depth_intensity),
+                )
+                weight = min(1.0, depth_intensity - 1.0)
+                shaped_row.append(
+                    linear * (1.0 - weight) + smooth * weight
+                )
+            shaped.append(shaped_row)
+        smoothed_tone = shaped
     shared_tone = [
         sum(row[x_index] for row in smoothed_tone)
         / max(len(smoothed_tone), 1)
@@ -1174,7 +1275,7 @@ def _wave_rows(
         ]
         for row_index, y in enumerate(row_ys):
             for x_index, x in enumerate(x_values):
-                if tone_rows[row_index][x_index] >= INK_FLOOR:
+                if coverage_rows[row_index][x_index] >= INK_FLOOR:
                     offset = (
                         amplitude_max
                         * shared_tone[x_index]
@@ -1267,7 +1368,7 @@ def _wave_rows(
                     amplitude_max
                     * smoothed_tone[row_index][x_index]
                     * math.sin(nested_phases[x_index])
-                    if tone_rows[row_index][x_index] >= INK_FLOOR
+                    if coverage_rows[row_index][x_index] >= INK_FLOOR
                     else None
                 )
                 for x_index in range(len(x_values))
@@ -1325,8 +1426,8 @@ def _wave_rows(
             for row_index in range(len(row_ys) - 1):
                 for x_index in range(len(x_values)):
                     if (
-                        tone_rows[row_index][x_index] < INK_FLOOR
-                        or tone_rows[row_index + 1][x_index] < INK_FLOOR
+                        coverage_rows[row_index][x_index] < INK_FLOOR
+                        or coverage_rows[row_index + 1][x_index] < INK_FLOOR
                     ):
                         continue
                     first_desired = desired_offsets[row_index][x_index]
@@ -1442,7 +1543,7 @@ def _wave_rows(
             for x_index, x in enumerate(x_values):
                 check_cancelled(cancel_check)
                 for row_index, y in enumerate(row_ys):
-                    if tone_rows[row_index][x_index] < INK_FLOOR:
+                    if coverage_rows[row_index][x_index] < INK_FLOOR:
                         continue
                     offset = (
                         amplitude_max
@@ -1513,7 +1614,7 @@ def _wave_rows(
         ]
         for row_index, y in enumerate(row_ys):
             for x_index, x in enumerate(x_values):
-                if tone_rows[row_index][x_index] >= INK_FLOOR:
+                if coverage_rows[row_index][x_index] >= INK_FLOOR:
                     offset = (
                         amplitude_max
                         * depth_tone[x_index][row_index]
@@ -1741,8 +1842,10 @@ def screen_channel(
     Fixed-baseline depth uses ``wave_period_pitches`` as its base wavelength in
     row pitches. ``wave_period_variation`` shortens dark-row periods and
     lengthens light-row periods by up to that fractional amount.
-    ``wave_depth_intensity`` applies a centered contrast curve to each ink's
-    local depth before it drives period and amplitude.
+    ``wave_depth_intensity`` applies a bounded contrast curve to each ink's
+    locally smoothed depth before it drives period and amplitude. `100 %` is
+    neutral; higher values turn narrow tonal differences into decisive
+    waveform changes without amplifying per-pixel texture.
     The legacy ``waves`` and ``waves_zero`` styles are promoted to the
     equidistant ``waves_even`` geometry unless ``allow_variable_wave_spacing``
     is explicitly true. Diagnostic comparison tools use that opt-in; normal

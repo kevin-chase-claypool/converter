@@ -50,9 +50,15 @@ vary with row-local depth. Its base period is operator-controlled in row
 pitches, and each separated ink channel's local coverage after GCR varies both
 its period and amplitude. The four independent waveforms combine in the final
 print. A user-selectable depth-intensity curve controls how strongly light and
-dark channel tone affect that amplitude/period drive. Near the pen-clearance
-limit, only the local offsets that would collide are reduced; the equal row
-baselines and unaffected waveform remain intact.
+dark channel tone affect that amplitude/period drive. Depth tone is box-smoothed
+across rows and along each row by `1.5` row pitches before the intensity curve,
+so source ink texture cannot turn into a second high-frequency waveform. Above
+`100 %`, depth intensity uses a bounded smooth-step that makes narrow tonal
+differences decisive without amplifying pixel noise. Ink presence is a separate
+field, smoothed by `2.5` row pitches along each row and across three rows, so
+dark texture breaks a carrier only when the local coverage is genuinely light.
+Near the pen-clearance limit, only the local offsets that would collide are
+reduced; the equal row baselines and unaffected waveform remain intact.
 Both default spacing guards keep the selected profile but apply a row-locked
 projection. The full measured field is evaluated in the effective screen
 frame, then averaged across the perpendicular row coordinate at each along-row

@@ -759,10 +759,17 @@ Current tools:
   moves that waveform depth from CMY coverage into black. The final scaled
   path is checked again before planning. This mode is stored as `waves_fixed`;
   existing `waves_even` recipes keep their separate exact-spacing geometry.
-  **Depth intensity** applies a centered contrast curve to each channel's tone
-  before it drives both period and amplitude. `100 %` preserves the normal
-  tonal drive, lower values soften the difference between light and dark, and
-  higher values separate extreme highlights and shadows more aggressively.
+  **Depth intensity** applies a bounded contrast curve to each channel's tone
+  before it drives both period and amplitude. `100 %` is neutral, lower values
+  soften the difference between light and dark, and higher values turn even a
+  narrow tonal difference into a decisive waveform change. The depth field is
+  box-smoothed along each row by `1.5` row pitches as well as across rows, so
+  per-pixel black texture cannot create a second high-frequency wave inside
+  the designed carrier. A separate ink-presence field is smoothed along rows
+  by `2.5` pitches and across three rows before deciding where a Wave row is
+  visible. This prevents dark-but-textured image coverage from chopping one
+  carrier into repeated miniature wavelets, while genuinely light regions
+  still break the row normally.
   Imported-outline pen-width shrink is disabled for this self-screened mode so
   it cannot narrow the configured physical row clearance. Save preflight warns
   when clearance forces enough local damping to limit the requested period

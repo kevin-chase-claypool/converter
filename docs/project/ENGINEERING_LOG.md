@@ -1,5 +1,43 @@
 # Engineering Log
 
+<a id="elog-20261127-wave-depth-contrast-and-texture"></a>
+### 🟨 2026-11-27 - WINDOWS SOFTWARE/IMPLEMENTED - Make Wave depth intensity decisive without nested tone ripples
+
+- The black Wave layer showed a slow sine carrier with a second
+  high-frequency wiggle riding on it. The depth field was smoothed across rows
+  but still followed raw per-pixel ink texture along each row.
+- Added along-row box smoothing over `1.5` row pitches while preserving the
+  existing cross-row smoothing, row baselines, pen clearance, and A schedule.
+- The first correction still used raw channel coverage to decide where a Wave
+  row existed. A zoomed preview therefore broke each carrier at textured dark
+  pixels and read as smaller waveforms inside the intended one. Ink presence is
+  now a separate field, smoothed by `2.5` row pitches along each row and across
+  three rows.
+- Replaced the linear centered intensity mapping with a bounded smooth-step.
+  `100 %` remains neutral; higher values narrow the light/dark decision band
+  and make waveform changes abrupt without amplifying midtone pixel noise.
+- The textured-depth regression measured a `0.294 mm` nested ripple before the
+  fix and now requires less than `0.10 mm`.
+- A second regression uses a narrow `16 %` depth difference at `2.2 mm` pitch;
+  maximum intensity must produce more than `3.5x` the neutral light/dark
+  amplitude contrast.
+- A third regression feeds per-pixel coverage texture through the visibility
+  mask and requires the generated carrier to span the solid region instead of
+  fragmenting into repeated short waveforms.
+- A fresh app preview at `2.00 mm` pitch, period `4`, period variation `40 %`,
+  and Depth intensity `300 %` produced `142,387` moves in `3.7 s`. The
+  black-only close-up showed single smooth carriers with clear tonal amplitude
+  changes and no second waveform riding on them.
+- Focused generator, CMYK, registration, and rotating-row suites pass `193`
+  tests with one expected OpenGL-context skip.
+- Complete converter discovery passes `685` tests with one expected
+  OpenGL-context skip.
+- Evidence: `WSW-20261127-003`;
+  `docs/changes/windows-software/2026/2026-11-27-wave-depth-contrast-and-texture.md`;
+  `ADR-009`.
+- Category: windows-software, cmyk, wave-screen, fixed-baselines,
+  depth-intensity, tone-smoothing, preview, regression.
+
 <a id="elog-20261127-cmyk-registration-cross-photo-review"></a>
 ### 🟨 2026-11-27 - HARDWARE/MEASURED - CMYK paper crosses show sub-millimeter registration
 

@@ -499,8 +499,12 @@ class CmykTab(GeneratorTab):
         )
         self.wave_depth_intensity.setToolTip(
             "Contrast of the image depth driving each ink's waveform. 100 % "
-            "uses the normal tonal range; higher values separate light and "
-            "dark amplitude/period more strongly; lower values soften both."
+            "is neutral. Above 100 %, narrow light/dark differences are "
+            "expanded into decisive amplitude and period changes without "
+            "turning pixel texture into a second wave. The separate ink-"
+            "presence field is smoothed at pen scale so dark texture cannot "
+            "chop one carrier into repeated miniature waves; lower values "
+            "soften depth contrast."
         )
         screen.addRow("Depth intensity", self.wave_depth_intensity)
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")

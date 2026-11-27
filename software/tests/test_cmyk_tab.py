@@ -1994,6 +1994,184 @@ class ScreeningTests(unittest.TestCase):
             "Depth intensity must expand light-to-dark amplitude contrast",
         )
 
+    def test_fixed_wave_depth_does_not_create_texture_inside_each_wave(self):
+        size = 384
+        tone = self.np.ones((size, size), dtype="float32")
+        _yy, xx = self.np.mgrid[0:size, 0:size]
+        broad_depth = 0.55 + 0.22 * self.np.sin(
+            2.0 * self.np.pi * xx / (size * 0.28)
+        )
+        image_texture = 0.30 * ((xx // 1) % 2)
+        depth = self.np.clip(
+            broad_depth + image_texture,
+            0.0,
+            1.0,
+        ).astype("float32")
+        rows = converter.screen_channel(
+            tone,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 96.0,
+                "height_mm": 48.0,
+                "pixels_w": size,
+                "pixels_h": size,
+            },
+            style="waves_fixed",
+            spacing_mm=2.2,
+            pen_diameter_mm=0.9,
+            row_clearance_mm=1.15,
+            depth_tone=depth,
+            seed=7,
+            wave_period_pitches=4.0,
+            wave_period_variation=0.40,
+            wave_depth_intensity=3.0,
+            path_tolerance_mm=0.05,
+        )
+        row = max(rows, key=len)
+        low = min(x for x, _y in row)
+        high = max(x for x, _y in row)
+
+        def sample(x_value):
+            for (x0, y0), (x1, y1) in zip(row, row[1:]):
+                if (
+                    min(x0, x1) - 1e-9
+                    <= x_value
+                    <= max(x0, x1) + 1e-9
+                ):
+                    if abs(x1 - x0) <= 1e-12:
+                        return y0
+                    return y0 + (y1 - y0) * (
+                        x_value - x0
+                    ) / (x1 - x0)
+            return None
+
+        x_values = self.np.arange(low, high, 0.10)
+        y_values = self.np.asarray(
+            [sample(value) for value in x_values],
+            dtype="float32",
+        )
+        high_frequency = [
+            abs(
+                y_values[index]
+                - self.np.mean(y_values[index - 2:index + 3])
+            )
+            for index in range(2, len(y_values) - 2)
+        ]
+        self.assertLess(
+            float(self.np.max(high_frequency)),
+            0.10,
+            "per-pixel ink texture must not add a second high-frequency "
+            "wave inside the designed Wave carrier",
+        )
+
+    def test_fixed_wave_coverage_texture_does_not_chop_the_carrier(self):
+        size = 384
+        _yy, xx = self.np.mgrid[0:size, 0:size]
+        coverage_texture = self.np.where(
+            (xx + _yy) % 2,
+            0.78,
+            0.02,
+        ).astype("float32")
+        broad_depth = 0.62 + 0.12 * self.np.sin(
+            2.0 * self.np.pi * xx / (size * 0.34)
+        )
+        rows = converter.screen_channel(
+            coverage_texture,
+            {
+                "off_x": 0.0,
+                "off_y": 0.0,
+                "width_mm": 96.0,
+                "height_mm": 48.0,
+                "pixels_w": size,
+                "pixels_h": size,
+            },
+            style="waves_fixed",
+            spacing_mm=2.2,
+            pen_diameter_mm=0.9,
+            row_clearance_mm=1.15,
+            depth_tone=broad_depth.astype("float32"),
+            seed=7,
+            wave_period_pitches=4.0,
+            wave_period_variation=0.40,
+            wave_depth_intensity=3.0,
+            path_tolerance_mm=0.05,
+        )
+        self.assertTrue(
+            rows,
+            "smoothed coverage must keep a continuous dark region inked",
+        )
+        longest_span = max(
+            max(x for x, _y in row) - min(x for x, _y in row)
+            for row in rows
+        )
+        self.assertGreater(
+            longest_span,
+            80.0,
+            "pixel-scale coverage texture must not chop the designed Wave "
+            "carrier into repeated miniature waveforms",
+        )
+        self.assertLess(
+            len(rows),
+            40,
+            "a solid image region should produce one carrier per screen row, "
+            "not repeated fragments at every coverage-texture edge",
+        )
+
+    def test_depth_intensity_makes_narrow_tone_differences_decisive(self):
+        size = 128
+        tone = self.np.ones((size, size), dtype="float32")
+        depth = self.np.empty((size, size), dtype="float32")
+        depth[:, : size // 2] = 0.42
+        depth[:, size // 2 :] = 0.58
+        geometry = {
+            "off_x": 0.0,
+            "off_y": 0.0,
+            "width_mm": 128.0,
+            "height_mm": 64.0,
+            "pixels_w": size,
+            "pixels_h": size,
+        }
+
+        def amplitude_contrast(intensity):
+            rows = converter.screen_channel(
+                tone,
+                geometry,
+                style="waves_fixed",
+                spacing_mm=2.2,
+                pen_diameter_mm=0.9,
+                row_clearance_mm=1.15,
+                depth_tone=depth,
+                seed=7,
+                wave_period_pitches=4.0,
+                wave_period_variation=0.40,
+                wave_depth_intensity=intensity,
+                path_tolerance_mm=0.05,
+            )
+            light = []
+            dark = []
+            for row in rows:
+                if len(row) < 50:
+                    continue
+                light_values = [y for x, y in row if x < 50.0]
+                dark_values = [y for x, y in row if x > 78.0]
+                if len(light_values) > 10:
+                    light.append(max(light_values) - min(light_values))
+                if len(dark_values) > 10:
+                    dark.append(max(dark_values) - min(dark_values))
+            light_amplitude = float(self.np.median(light))
+            dark_amplitude = float(self.np.median(dark))
+            return dark_amplitude - light_amplitude
+
+        normal = amplitude_contrast(1.0)
+        strong = amplitude_contrast(3.0)
+        self.assertGreater(
+            strong,
+            normal * 3.5,
+            "maximum Depth intensity must turn a narrow 16 % tonal "
+            "difference into an obvious waveform contrast",
+        )
+
     def test_fixed_baseline_period_follows_local_channel_depth(self):
         size = 512
         tone = self.np.ones((size, size), dtype="float32")

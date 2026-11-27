@@ -580,6 +580,17 @@ task rather than treated as the active production path.
   straight rows. A **Depth intensity** control applies a centered tonal
   contrast curve to both amplitude and period. The effective-pitch/status
   diagnostics now wrap without increasing the sidebar's horizontal size.
+  Status 2026-11-27 depth contrast: `WSW-20261127-003` smooths depth tone along
+  each row by `1.5` row pitches as well as across rows, preventing black image
+  texture from creating a nested high-frequency waveform. Depth intensity now
+  uses a bounded smooth-step: `100 %` remains neutral, while values through
+  `300 %` turn narrow tonal differences into decisive amplitude/period
+  changes. A separate ink-presence field is smoothed by `2.5` row pitches along
+  each row and across three rows, so dark texture cannot chop a carrier into
+  repeated miniature waves. Regressions require the nested ripple below
+  `0.10 mm`, continuous carrier coverage through textured dark tone, and a
+  narrow `16 %` tonal difference to produce more than `3.5x` neutral amplitude
+  contrast at maximum intensity.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only
