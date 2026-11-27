@@ -447,6 +447,37 @@ class CmykTab(GeneratorTab):
             "scene depth. It does not apply to the legacy diagnostic."
         )
         screen.addRow("Wave carrier", self.vary_wave_frequency)
+        self.wave_period = double_spin(
+            converter.DEFAULT_WAVE_PERIOD_PITCHES,
+            0.5,
+            12.0,
+            0.1,
+            1,
+            " x pitch",
+        )
+        self.wave_period.setToolTip(
+            "Base width of one complete Variable-depth Wave period, measured "
+            "in row pitches. Dark image rows shorten the period; light rows "
+            "lengthen it. This control applies only to fixed-baseline depth."
+        )
+        screen.addRow("Wave period", self.wave_period)
+        self.wave_period_variation = double_spin(
+            converter.DEFAULT_WAVE_PERIOD_VARIATION * 100.0,
+            0.0,
+            150.0,
+            5.0,
+            0,
+            " %",
+        )
+        self.wave_period_variation.setToolTip(
+            "How strongly local image depth changes each row's period. "
+            "Dark rows become shorter; light rows become longer. Higher "
+            "values add more depth but require more pen clearance."
+        )
+        screen.addRow(
+            "Period variation",
+            self.wave_period_variation,
+        )
         self.dot_size = double_spin(100, 20, 140, 5, 0, " %")
         screen.addRow("Dot size", self.dot_size)
         self.solid_dots = QCheckBox("Solid dots")
@@ -688,6 +719,12 @@ class CmykTab(GeneratorTab):
         self.pitch.valueChanged.connect(self._update_effective_pitch)
         self.scale_pct.valueChanged.connect(self._update_effective_pitch)
         self.pen_width.valueChanged.connect(self._update_effective_pitch)
+        self.wave_period.valueChanged.connect(
+            self._update_effective_pitch
+        )
+        self.wave_period_variation.valueChanged.connect(
+            self._update_effective_pitch
+        )
         self._update_effective_pitch()
         self.registration_marks = QCheckBox("Corner crosses (all inks)")
         self.registration_marks.setToolTip(
@@ -961,6 +998,22 @@ class CmykTab(GeneratorTab):
             text = "= %.2f mm on paper (%s)" % (effective, relation)
         else:
             text = "= %.2f mm on paper" % effective
+        if (
+            not self.calibration_mode.isChecked()
+            and self.style.currentData() == "waves_fixed"
+        ):
+            base_period = effective * self.wave_period.value()
+            variation = self.wave_period_variation.value() / 100.0
+            dark_period = base_period / (1.0 + variation * 0.5)
+            light_period = base_period / max(
+                0.1,
+                1.0 - variation * 0.5,
+            )
+            text += "; period %.2f mm (dark %.2f / light %.2f)" % (
+                base_period,
+                dark_period,
+                light_period,
+            )
         self.effective_pitch_label.setText(text)
 
     def _update_sharpen_controls(self, *_args):
@@ -1072,6 +1125,10 @@ class CmykTab(GeneratorTab):
                 "dot_pitch_mm": self.pitch.value(),
                 "preserve_wave_pitch": self.preserve_wave_pitch.isChecked(),
                 "vary_wave_frequency": self.vary_wave_frequency.isChecked(),
+                "wave_period_pitches": self.wave_period.value(),
+                "wave_period_variation_pct": (
+                    self.wave_period_variation.value()
+                ),
                 "contour_order": self.contour_order.currentData(),
                 "dot_size_pct": self.dot_size.value(),
                 "solid_dots": self.solid_dots.isChecked(),
@@ -1154,6 +1211,22 @@ class CmykTab(GeneratorTab):
             )
             self.vary_wave_frequency.setChecked(
                 bool(screen["vary_wave_frequency"])
+            )
+            self.wave_period.setValue(
+                float(
+                    screen.get(
+                        "wave_period_pitches",
+                        converter.DEFAULT_WAVE_PERIOD_PITCHES,
+                    )
+                )
+            )
+            self.wave_period_variation.setValue(
+                float(
+                    screen.get(
+                        "wave_period_variation_pct",
+                        converter.DEFAULT_WAVE_PERIOD_VARIATION * 100.0,
+                    )
+                )
             )
             order_index = self.contour_order.findData(
                 str(screen["contour_order"])
@@ -1256,6 +1329,8 @@ class CmykTab(GeneratorTab):
             tuple(self._weights().items()),
             self.style.currentData(),
             self.pitch.value(),
+            self.wave_period.value(),
+            self.wave_period_variation.value(),
             self._wave_spacing_guard_active(),
             self._variable_wave_frequency_active(),
             self._wave_row_order_active(),
@@ -1311,6 +1386,23 @@ class CmykTab(GeneratorTab):
         ):
             warnings.append(
                 "Wave rows are nonuniform by explicit diagnostic override"
+            )
+        limited_channels = []
+        for channel, record in results.items():
+            grid = record.get("wave_baseline_grid") or {}
+            scale = grid.get("minimum_clearance_scale")
+            if scale is None:
+                continue
+            if float(scale) < 0.35:
+                limited_channels.append(
+                    converter.CHANNEL_LABELS[channel][0]
+                )
+        if limited_channels:
+            warnings.append(
+                "Wave period/amplitude was locally limited by pen clearance "
+                "on %s; increase Dot pitch or reduce Period variation for "
+                "stronger row depth"
+                % "/".join(limited_channels)
             )
         for channel, record in results.items():
             checks = record.get("checks")
@@ -1379,7 +1471,12 @@ class CmykTab(GeneratorTab):
                 (
                     "PASS: row-local depth with fixed, equally spaced "
                     "baselines is valid. Visible wavy gaps vary by design; "
-                    "row-lock bed compensation is enforced."
+                    "row-lock bed compensation is enforced. "
+                    "Base period %.1f x pitch; tone variation %.0f %%."
+                    % (
+                        self.wave_period.value(),
+                        self.wave_period_variation.value(),
+                    )
                     if self.style.currentData() == "waves_fixed"
                     else
                     "PASS: equidistant rows and row-lock bed compensation "
@@ -1504,6 +1601,8 @@ class CmykTab(GeneratorTab):
         self.vary_wave_frequency.setEnabled(
             equal_wave_selected or fixed_baseline_selected
         )
+        self.wave_period.setEnabled(fixed_baseline_selected)
+        self.wave_period_variation.setEnabled(fixed_baseline_selected)
         self.contour_order.setEnabled(wave_selected)
         nonuniform_wave = bool(self._wave_output_block_reason())
         self.allow_nonuniform_wave_output.setVisible(nonuniform_wave)
@@ -1512,6 +1611,7 @@ class CmykTab(GeneratorTab):
         self._refresh_row_pitch_status()
         if hasattr(self, "pass_summary"):
             self._refresh_pass_summary()
+        self._update_effective_pitch()
 
     def _variable_wave_frequency_active(self):
         """Whether the production Wave carrier varies frequency."""
@@ -1692,6 +1792,10 @@ class CmykTab(GeneratorTab):
                     converter.WAVE_FREQUENCY_VARIATION
                     if self._variable_wave_frequency_active()
                     else 0.0
+                ),
+                wave_period_pitches=self.wave_period.value(),
+                wave_period_variation=(
+                    self.wave_period_variation.value() / 100.0
                 ),
                 allow_variable_wave_spacing=(style == "waves_zero"),
             )
@@ -2355,6 +2459,13 @@ class CmykTab(GeneratorTab):
                     converter.WAVE_FREQUENCY_VARIATION * 100.0
                     if self._variable_wave_frequency_active()
                     else 0.0
+                ),
+                "wave_period_pitches": self.wave_period.value(),
+                "wave_period_variation_pct": (
+                    self.wave_period_variation.value()
+                ),
+                "base_wave_period_mm": (
+                    final_baseline_pitch * self.wave_period.value()
                 ),
                 "contour_order": (
                     self.contour_order.currentData()

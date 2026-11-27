@@ -719,16 +719,17 @@ Current tools:
   row-local waveforms, which is how depth is shown. When depth is zero every
   row collapses onto its straight baseline. The screen enforces the pen plus
   `0.25 mm` edge gap with a shortest-segment check; if a steep pair violates
-  the envelope, only the offending row pair is damped. When only a small
-  clearance margin exists, the waveform stretches to a longer wavelength and
-  row-to-row phase divergence contracts before the pair limiter acts. This
-  preserves a visibly tall broad waveform instead of flattening the screen to
-  a straight hatch. Wider clearance restores more row-local phase and
-  frequency variation. The final scaled path is checked again before planning.
-  This mode is stored as `waves_fixed`; existing `waves_even` recipes keep
-  their separate exact-spacing geometry.
+  the envelope, only the affected local offsets are damped. **Wave period**
+  sets the base cycle width in row pitches; **Period variation** controls how
+  strongly local depth shortens the cycle and deepens the wave in dark areas
+  versus lengthening and flattening it in light areas. A `0 %` variation keeps
+  one common period while amplitude still follows depth. The final scaled path
+  is checked again before planning. This mode is stored as `waves_fixed`;
+  existing `waves_even` recipes keep their separate exact-spacing geometry.
   Imported-outline pen-width shrink is disabled for this self-screened mode so
-  it cannot narrow the configured physical row clearance.
+  it cannot narrow the configured physical row clearance. Save preflight warns
+  when clearance forces enough local damping to limit the requested period
+  variation, with the remedy to increase Dot pitch or reduce Period variation.
   **Wave screen - legacy phase-locked depth (diagnostic)** is a temporary
   comparison mode. It restores the pre-2026-10-29 `waves_zero` geometry, in
   which each row's amplitude follows its own locally smoothed tone. It uses

@@ -594,6 +594,9 @@ Acceptance:
 - Every patch has one straight, equally spaced row baseline per row index.
 - Visible gaps vary by design and correlate with image depth; they are not
   evaluated as a demand for constant instantaneous pitch.
+- The **Wave period** control visibly changes the base cycle width, while
+  **Period variation** makes dark rows shorter/deeper and light rows
+  longer/flatter within the same patch.
 - Row-local amplitude and winding rate visibly differ across the patch.
 - No adjacent rows touch or cross, including under Xθ/Yθ interpolation.
 - The rotating-bed half produces the same row-baseline pitch and no additional

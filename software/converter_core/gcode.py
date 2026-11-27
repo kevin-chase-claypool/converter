@@ -255,6 +255,8 @@ def _wave_baseline_grid(planned_jobs, settings):
     row_samples = {}
     policies = set()
     clearance_scales = []
+    wave_periods = []
+    wave_period_variations = []
     for _planned, points, _thetas, _strategies in planned_jobs:
         row_index = getattr(points, "wave_row_index", None)
         baseline = getattr(points, "wave_baseline_mm", None)
@@ -269,6 +271,12 @@ def _wave_baseline_grid(planned_jobs, settings):
         scale = getattr(points, "wave_clearance_scale", None)
         if scale is not None:
             clearance_scales.append(float(scale))
+        period = getattr(points, "wave_period_pitches", None)
+        if period is not None:
+            wave_periods.append(float(period))
+        variation = getattr(points, "wave_period_variation", None)
+        if variation is not None:
+            wave_period_variations.append(float(variation))
     if len(row_samples) < 2:
         return None
     if any(
@@ -321,6 +329,18 @@ def _wave_baseline_grid(planned_jobs, settings):
         ),
         "minimum_clearance_scale": (
             min(clearance_scales) if clearance_scales else None
+        ),
+        "wave_period_pitches": (
+            sorted(wave_periods)[len(wave_periods) // 2]
+            if wave_periods
+            else None
+        ),
+        "wave_period_variation": (
+            sorted(wave_period_variations)[
+                len(wave_period_variations) // 2
+            ]
+            if wave_period_variations
+            else None
         ),
     }
 
@@ -754,7 +774,8 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
             5,
             (
                 "(Wave fixed baselines: pitch %.4f mm, origin %.4f mm, "
-                "rows %d, screen angle %.3f deg, row-local depth, "
+                "rows %d, screen angle %.3f deg, base period %.2f x pitch, "
+                "period variation %.0f %%, row-local amplitude and period, "
                 "visible gaps vary by design)"
             )
             % (
@@ -762,6 +783,14 @@ def contours_to_gcode(contours, settings, program_plan=None, stats=None):
                 wave_baseline_grid["origin_mm"],
                 wave_baseline_grid["rows"],
                 wave_baseline_grid["screen_angle_deg"],
+                wave_baseline_grid.get("wave_period_pitches") or 0.0,
+                float(
+                    wave_baseline_grid.get(
+                        "wave_period_variation",
+                    )
+                    or 0.0
+                )
+                * 100.0,
             ),
         )
     contour_join = program_plan.get("contour_join")

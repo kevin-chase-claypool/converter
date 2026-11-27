@@ -556,12 +556,13 @@ task rather than treated as the active production path.
   Status 2026-11-26 near-clearance correction: the first fixed-baseline build
   flattened a `1.21 mm` pitch / `0.90 mm` pen preview because amplitude was
   capped to half the `0.06 mm` clearance margin, and short wavelengths made
-  the exact pair limiter damp whole rows. The mode now keeps full scene-driven
-  amplitude, stretches wavelength using available clearance, reduces
-  row-to-row phase divergence only near the limit, and retains pairwise
-  damping plus a `0.02 mm` internal safety margin. The representative row
-  range increased from `0.0345` to `0.6965 mm` median while the focused
-  all-angle/Xθ-Yθ clearance suites remain green.
+  the exact pair limiter damp whole rows. The mode now exposes **Wave period**
+  in row pitches and **Period variation** in percent; local tone changes both
+  period and amplitude. Collision handling reduces only the affected column
+  offsets, preserving the equal baselines and unaffected waveform. A
+  `0.02 mm` internal safety margin covers quantization and rotation. At the
+  screenshot pitch, dark rows now use roughly `60-65` crossings versus
+  `42-48` for light rows while retaining the required clearance.
   Status 2026-10-25: the operator found that the Y drag chain had to climb a
   stepped transition onto the northeast rail pillar. Replacing that pillar
   with a straight version that follows the 3030 extrusion made the XY-only

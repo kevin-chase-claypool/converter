@@ -7,101 +7,127 @@ affected_categories:
 status: implemented
 components:
   - software/converter_core/cmyk.py
+  - software/converter_core/geometry.py
+  - software/converter_core/gcode.py
+  - software/generator_tabs/cmyk_tab.py
   - software/tests/test_cmyk_tab.py
+  - software/tests/test_contour_order.py
 tags:
   - cmyk
   - wave-screen
   - fixed-baselines
+  - period
+  - amplitude
+  - depth
   - clearance
-  - wavelength
-  - preview
+  - user-interface
   - regression
 related:
   - WSW-20261126-013
   - ADR-009
 ---
 
-# Keep visible fixed-baseline waves near pen clearance
+# Control tonal Wave period while preserving fixed baselines
 
 ## Summary
 
-Fixed-baseline variable-depth rows no longer collapse into a near-straight
-hatch when the selected pitch is only slightly above the pen plus edge-gap
-clearance. The waveform now uses the available margin to stretch its
-wavelength and control row-to-row phase divergence before the exact pen
-clearance limiter is applied.
+Variable-depth Wave now exposes **Wave period** in row pitches and
+**Period variation** in percent. The base period controls the overall cycle
+width; local image depth shortens the period and increases amplitude in dark
+areas, while light areas lengthen the period and flatten it. Equal row
+baselines remain fixed.
+
+The previous near-clearance fallback automatically stretched the period and
+shared the carrier across rows, which made the waveform excessively broad and
+removed the tonal period hierarchy. Clearance violations are now handled by
+column-local damping so unaffected parts of each row keep their depth.
 
 ## Reason
 
 At a `1.21 mm` effective pitch with a `0.90 mm` pen, the required centreline
-clearance is `1.15 mm`. The generated yellow preview contained 2,167 wave rows
-with only `0.002-0.060 mm` vertical range and a `0.041 mm` median: visually
+clearance is `1.15 mm`. The generated yellow preview contained 2,167 rows with
+only `0.002-0.060 mm` vertical range and a `0.041 mm` median: visually
 straight lines even though the fixed-baseline mode and spacing guard were
 active.
 
-Two safety mechanisms were responsible. The amplitude was capped at half the
-remaining clearance, allowing only `0.03 mm` of displacement. Removing that
-cap alone was insufficient because the short two-pitch wavelength made steep
-row segments approach each other in Euclidean distance, causing the pair
-limiter to damp entire rows.
+The first safety fallback capped amplitude to half the `0.06 mm` clearance
+margin. After that was removed, whole-row pairwise damping still flattened
+entire rows when local phases approached. The model needed a user-controlled
+period and local-only safety correction.
 
 ## Implementation
 
-- Removed the blanket half-clearance amplitude cap.
-- Accepted the full amplitude produced by scene depth and the configured wave
-  scale, while retaining the exact shortest-segment pen-envelope check.
-- Stretched the fixed-baseline wavelength when clearance is tight, based on
-  the maximum local amplitude and the geometric slope that still preserves
-  the required Euclidean separation.
-- Reduced independent row phase and tone-driven frequency divergence near the
-  clearance limit. Rows then express depth primarily through amplitude; broad
-  independent phase/frequency returns as clearance headroom increases.
-- Added a `0.02 mm` internal search target over the published pen clearance to
-  absorb SVG/G-code quantization and rotating interpolation.
-- Retained pairwise row damping as the final local safety fallback.
+- Added **Wave period** with a default of `2.0 x pitch` and range `0.5-12.0`
+  row pitches.
+- Added **Period variation** with a default of `60 %`. Dark rows shorten their
+  period and deepen the wave; light rows lengthen it and flatten toward the
+  baseline.
+- The same depth controls amplitude and period. A `0 %` variation keeps a
+  common period while amplitude still follows depth.
+- Clearance is enforced in two stages: a shortest-segment check for each
+  adjacent pair, then column-local offset reduction only where rows actually
+  approach. Whole-row damping remains a final fallback, not the primary path.
+- Added a `0.02 mm` internal clearance target to absorb SVG/G-code
+  quantization and rotating interpolation.
+- The controls are persisted in the per-image CMYK recipe and version-5 set
+  manifest, including final on-paper base period evidence.
+- SVG row metadata and the fixed-baseline G-code header now record the selected
+  period pitches and tonal period variation.
+- Preflight warns when local clearance damping is strong enough to limit the
+  configured depth, directing the operator to increase pitch or reduce period
+  variation.
 
 ## Verification
 
-- The new regression at `1.21 mm` pitch, `0.90 mm` pen, and `1.15 mm`
-  clearance failed before the fix with a median row range of `0.0345 mm`.
-- After the fix, the same deterministic case measures a `0.6965 mm` median
-  row range with no row-scale reduction.
-- The focused CMYK, Xθ/Yθ, final-coordinate checker, coupon, and contour-order
-  suites pass `150` tests.
-- Complete converter discovery passes `663` tests with one expected OpenGL
+- The period-control regression fails with the old API and now confirms that
+  `1.5 x pitch` produces materially more cycles than `3.0 x pitch`.
+- A dark-to-light depth regression confirms dark rows use a shorter period
+  than light rows.
+- At the screenshot geometry, the old build produced identical crossing
+  counts for light and dark rows. The corrected build produces about `42-48`
+  light-row crossings versus `60-65` dark-row crossings, while retaining
+  fixed `1.21 mm` baselines and the required pen clearance.
+- The fixed-baseline SVG test verifies that period and variation metadata
+  survive serialization and artwork scaling.
+- The real-pipeline Save regression verifies that period controls round-trip,
+  reach the recipe and manifest, and appear in emitted G-code.
+- The focused CMYK, Xθ/Yθ, checker, and contour suites pass `147` tests.
+- Complete converter discovery passes `666` tests with one expected OpenGL
   context skip.
 
 ## Struggles and rejected approaches
 
-- The first attempted fix merely removed the amplitude cap. Independent row
-  phases then forced the pair limiter to reduce safe rows to roughly
-  `0.02-0.04 mm`, leaving the same straight-line symptom.
-- Replacing independent phases with a permanently shared carrier restored
-  visible rows but discarded the requested row-local frequency behavior even
-  when physical clearance allowed it.
-- Keeping the original two-pitch wavelength ignored that steep, adjacent wave
-  chords can have a shorter Euclidean distance than their vertical baseline
-  separation.
-- Holding a fixed global amplitude budget was rejected because it repeats the
-  earlier failure mode where one strict area flattens unrelated regions.
+- Automatically stretching the period avoided collisions but caused the
+  reported “WAAAAY too wide” waveform and erased the tonal period hierarchy.
+- Capping amplitude from the clearance margin alone made every row nearly
+  straight.
+- Scaling both rows whenever any part approached flattened the complete row,
+  including regions that had ample local clearance.
+- Permanently sharing the carrier across rows preserved spacing but removed
+  the requested dark-versus-light frequency depth.
 
 ## Risks and follow-up
 
-- Near the pen-clearance limit, the visible waveforms are intentionally
-  broader and more phase-aligned than at wider pitch. This is a geometric
-  safety consequence, not a return to equidistant rows.
-- Physical ink spread and machine-following error still require the pending
-  `cmyk-variable-depth-wave-coupon.gcode` print.
-- The wavelength is selected in source space before the final global bed fit;
-  the final-coordinate checker remains authoritative for emitted geometry.
+- At very tight pitch, local clearance can still reduce amplitude or shorten
+  the safe period range. The UI warning identifies that condition; increasing
+  Dot pitch or reducing Period variation gives the waveform more room.
+- The final physical coupon must still confirm ink spread and machine-following
+  behavior. Software geometry alone does not prove paper-level clearance.
+- The source-space period is scaled by the final bed fit; the generated
+  manifest records the final fitted base period.
 
 ## Files
 
-- `software/converter_core/cmyk.py`: clearance-aware wavelength, phase blend,
-  internal safety margin, and full visible amplitude.
-- `software/tests/test_cmyk_tab.py`: screenshot-geometry regression.
-- `software/README.md`: current fixed-baseline Wave behavior.
-- `docs/decisions/ADR-009-post-registration-bed-compensation.md`: updated
-  near-clearance decision consequence.
-- `docs/project/ROADMAP.md`, `docs/project/ENGINEERING_LOG.md`, and generated
-  change indexes: implementation and verification status.
+- `software/converter_core/cmyk.py`: period controls, tonal frequency/amplitude,
+  column-local clearance damping, and internal safety margin.
+- `software/converter_core/geometry.py`: period metadata through WaveTrail and
+  SVG serialization.
+- `software/converter_core/gcode.py`: period evidence in the final G-code
+  header and baseline grid.
+- `software/generator_tabs/cmyk_tab.py`: controls, live period readout,
+  recipe/manifest persistence, and clearance-limit warning.
+- `software/tests/test_cmyk_tab.py`,
+  `software/tests/test_contour_order.py`: period and serialization regressions.
+- `software/README.md`, `docs/decisions/ADR-009-post-registration-bed-compensation.md`,
+  `docs/project/ROADMAP.md`, `docs/project/ENGINEERING_LOG.md`, and generated
+  change indexes: current behavior and verification.

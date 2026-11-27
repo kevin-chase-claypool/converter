@@ -59,6 +59,9 @@ WAVE_FREQUENCY_VARIATION = 0.18
 # depth vary its winding rate by up to this fraction. Baseline spacing remains
 # independent of that waveform choice.
 WAVE_FIXED_FREQUENCY_TONE_GAIN = 0.32
+DEFAULT_WAVE_PERIOD_PITCHES = 2.0
+DEFAULT_WAVE_PERIOD_VARIATION = 0.60
+WAVE_CLEARANCE_SAFETY_MARGIN_MM = 0.02
 # Black usually overpowers the other three pens (the r/PlotterArt threads
 # consistently report dialing it down), so its default weight is lower.
 DEFAULT_WEIGHTS = {"c": 1.0, "m": 1.0, "y": 1.0, "k": 0.8}
@@ -842,6 +845,8 @@ def _wave_rows(
     fixed_baseline_depth=False,
     minimum_clearance_mm=0.0,
     wave_frequency_variation=0.0,
+    wave_period_pitches=DEFAULT_WAVE_PERIOD_PITCHES,
+    wave_period_variation=DEFAULT_WAVE_PERIOD_VARIATION,
     seed=0,
 ):
     """Sine rows with tone-driven depth and a safety envelope.
@@ -871,7 +876,11 @@ def _wave_rows(
                 "the effective pitch is smaller than the pen width plus "
                 "edge gap."
             )
-    wavelength = spacing * 2.0
+    wavelength = (
+        spacing * max(0.5, float(wave_period_pitches))
+        if fixed_baseline_depth
+        else spacing * 2.0
+    )
     # A piecewise-linear sine turns into visible facets when its samples are
     # too far apart. Bound the sagitta against the configured path budget:
     # max|y''| for amplitude_max * sin(2*pi*x/wavelength) is amplitude_max *
@@ -885,6 +894,8 @@ def _wave_rows(
         + (frequency_variation if equal_spacing else 0.0)
         + (
             WAVE_FIXED_FREQUENCY_TONE_GAIN * 0.5
+            if fixed_baseline_depth and wave_period_variation <= 0.0
+            else max(0.0, float(wave_period_variation)) * 0.5
             if fixed_baseline_depth
             else 0.0
         )
@@ -1029,54 +1040,17 @@ def _wave_rows(
                     positions[row_index][x_index] = (x, y + offset)
     elif fixed_baseline_depth:
         clearance = max(0.0, float(minimum_clearance_mm))
-        clearance_target = clearance + 0.02
+        clearance_target = clearance + WAVE_CLEARANCE_SAFETY_MARGIN_MM
         if clearance_target > spacing + 1e-9:
             raise ValueError(
                 "Wave screen cannot keep adjacent pen strokes apart: "
                 "the effective pitch is smaller than the pen width plus "
                 "edge gap."
             )
-        clearance_ratio = min(
-            1.0,
-            clearance / max(spacing, 1e-9),
-        )
-        maximum_depth = max(
-            (
-                max(row)
-                for row in smoothed_tone
-                if row
-            ),
-            default=0.0,
-        )
-        maximum_slope = (
-            math.sqrt(max(0.0, 1.0 - clearance_ratio * clearance_ratio))
-            * 0.75
-        )
-        if maximum_slope > 1e-6 and maximum_depth > 1e-6:
-            wavelength = max(
-                wavelength,
-                2.0
-                * math.pi
-                * amplitude_max
-                * maximum_depth
-                / maximum_slope,
-            )
         radians_per_mm = 2.0 * math.pi / wavelength
-        clearance_headroom = max(
+        period_variation = max(
             0.0,
-            spacing - clearance,
-        )
-        phase_variation_strength = max(
-            0.0,
-            min(
-                1.0,
-                (
-                    clearance_headroom
-                    / max(spacing * 0.5, 1e-9)
-                    - 0.15
-                )
-                / 0.85,
-            ),
+            float(wave_period_variation),
         )
         common_phase_offset = (
             2.0
@@ -1107,23 +1081,12 @@ def _wave_rows(
                 )
             )
 
-        common_phases = [common_phase_offset]
-        for x_index in range(1, len(x_values)):
-            delta_x = x_values[x_index] - x_values[x_index - 1]
-            frequency_scale = 1.0 + common_frequency_variation(
-                x_index,
-                common_phase_offset,
-            )
-            common_phases.append(
-                common_phases[-1]
-                + radians_per_mm * frequency_scale * delta_x
-            )
         row_phases = []
         for row_index, row_tone in enumerate(smoothed_tone):
             mean_tone = sum(row_tone) / max(len(row_tone), 1)
             phase_offset = (
                 common_phase_offset
-                + phase_variation_strength
+                + min(1.0, period_variation)
                 * 2.0
                 * math.pi
                 * (
@@ -1146,14 +1109,18 @@ def _wave_rows(
                     0.5,
                     1.0
                     + common_variation
-                    + WAVE_FIXED_FREQUENCY_TONE_GAIN
-                    * phase_variation_strength
+                    + period_variation
                     * (tone - 0.5),
                 )
                 phases.append(
                     phases[-1] + radians_per_mm * frequency_scale * delta_x
                 )
             row_phases.append(phases)
+
+        local_scales = [
+            [1.0] * len(x_values)
+            for _row_index in range(len(row_ys))
+        ]
 
         def candidate(scales):
             result = [
@@ -1165,25 +1132,64 @@ def _wave_rows(
                 for x_index, x in enumerate(x_values):
                     if tone_rows[row_index][x_index] < INK_FLOOR:
                         continue
-                    independent_offset = (
+                    offset = (
                         amplitude_max
+                        * scale
+                        * local_scales[row_index][x_index]
                         * smoothed_tone[row_index][x_index]
                         * math.sin(row_phases[row_index][x_index])
-                    )
-                    shared_offset = (
-                        amplitude_max
-                        * shared_tone[x_index]
-                        * math.sin(common_phases[x_index])
-                    )
-                    offset = scale * (
-                        phase_variation_strength * independent_offset
-                        + (1.0 - phase_variation_strength) * shared_offset
                     )
                     result[row_index][x_index] = (x, y + offset)
             return result
 
         scales = [1.0] * len(row_ys)
         positions = candidate(scales)
+        for _iteration in range(max(4, len(row_ys) * 2)):
+            changed = False
+            for row_index in range(len(row_ys) - 1):
+                for x_index in range(len(x_values)):
+                    if (
+                        tone_rows[row_index][x_index] < INK_FLOOR
+                        or tone_rows[row_index + 1][x_index] < INK_FLOOR
+                    ):
+                        continue
+                    first_offset = (
+                        amplitude_max
+                        * scales[row_index]
+                        * local_scales[row_index][x_index]
+                        * smoothed_tone[row_index][x_index]
+                        * math.sin(
+                            row_phases[row_index][x_index]
+                        )
+                    )
+                    second_offset = (
+                        amplitude_max
+                        * scales[row_index + 1]
+                        * local_scales[row_index + 1][x_index]
+                        * smoothed_tone[row_index + 1][x_index]
+                        * math.sin(
+                            row_phases[row_index + 1][x_index]
+                        )
+                    )
+                    gap = spacing + second_offset - first_offset
+                    if gap >= clearance_target - 1e-9:
+                        continue
+                    relative = second_offset - first_offset
+                    if relative >= -1e-12:
+                        continue
+                    factor = max(
+                        0.0,
+                        min(
+                            1.0,
+                            (clearance_target - spacing) / relative,
+                        ),
+                    )
+                    local_scales[row_index][x_index] *= factor
+                    local_scales[row_index + 1][x_index] *= factor
+                    changed = True
+            positions = candidate(scales)
+            if not changed:
+                break
         for _iteration in range(max(4, len(row_ys) * 2)):
             failed = False
             for row_index in range(len(row_ys) - 1):
@@ -1235,7 +1241,11 @@ def _wave_rows(
                 "Wave screen could not keep the fixed baseline rows clear "
                 "of the configured pen envelope."
             )
-        row_clearance_scales = scales
+        row_clearance_scales = [
+            scales[row_index]
+            * min(local_scales[row_index])
+            for row_index in range(len(row_ys))
+        ]
     elif zero_anchored_depth:
         clearance = max(0.0, float(minimum_clearance_mm))
         if clearance > spacing + 1e-9:
@@ -1369,6 +1379,12 @@ def _wave_rows(
                     trail.wave_clearance_scale = row_clearance_scales[
                         row_index
                     ]
+                    trail.wave_period_pitches = float(
+                        wave_period_pitches
+                    )
+                    trail.wave_period_variation = float(
+                        wave_period_variation
+                    )
                     rows.append(trail)
                 current = []
         if current and (len(current) - 1) * sample_step >= min_length_mm:
@@ -1382,6 +1398,10 @@ def _wave_rows(
                 wave_row_policy=row_policy,
             )
             trail.wave_clearance_scale = row_clearance_scales[row_index]
+            trail.wave_period_pitches = float(wave_period_pitches)
+            trail.wave_period_variation = float(
+                wave_period_variation
+            )
             rows.append(trail)
     return rows
 
@@ -1510,6 +1530,8 @@ def screen_channel(
     row_clearance_mm=None,
     allow_variable_wave_spacing=False,
     wave_frequency_variation=0.0,
+    wave_period_pitches=DEFAULT_WAVE_PERIOD_PITCHES,
+    wave_period_variation=DEFAULT_WAVE_PERIOD_VARIATION,
 ):
     """Screen one ink channel into mark polylines in page millimetres.
 
@@ -1534,6 +1556,9 @@ def screen_channel(
     adjacent visible rows, expressed in the same pre-scale units as
     ``spacing_mm``. It defaults to the pen diameter plus
     ``WAVE_MIN_EDGE_GAP_MM`` for callers that do not apply a later artwork scale.
+    Fixed-baseline depth uses ``wave_period_pitches`` as its base wavelength in
+    row pitches. ``wave_period_variation`` shortens dark-row periods and
+    lengthens light-row periods by up to that fractional amount.
     The legacy ``waves`` and ``waves_zero`` styles are promoted to the
     equidistant ``waves_even`` geometry unless ``allow_variable_wave_spacing``
     is explicitly true. Diagnostic comparison tools use that opt-in; normal
@@ -1635,6 +1660,8 @@ def screen_channel(
             fixed_baseline_depth=(style == "waves_fixed"),
             minimum_clearance_mm=minimum_clearance_mm,
             wave_frequency_variation=wave_frequency_variation,
+            wave_period_pitches=wave_period_pitches,
+            wave_period_variation=wave_period_variation,
             seed=seed,
         )
     elif style == "tsp":
@@ -1709,6 +1736,16 @@ def svg_document(layers, width_mm, height_mm, stroke_mm=0.3, order=None):
             row_index = getattr(points, "wave_row_index", None)
             row_baseline = getattr(points, "wave_baseline_mm", None)
             row_policy = getattr(points, "wave_row_policy", None)
+            row_period = getattr(
+                points,
+                "wave_period_pitches",
+                None,
+            )
+            row_period_variation = getattr(
+                points,
+                "wave_period_variation",
+                None,
+            )
             row_attribute = (
                 f' data-wave-row="{int(row_index)}"'
                 if row_index is not None
@@ -1725,9 +1762,21 @@ def svg_document(layers, width_mm, height_mm, stroke_mm=0.3, order=None):
                 if row_policy is not None
                 else ""
             )
+            period_attribute = (
+                f' data-wave-period-pitches="{float(row_period):.6f}"'
+                if row_period is not None
+                else ""
+            )
+            period_variation_attribute = (
+                " data-wave-period-variation="
+                f'"{float(row_period_variation):.6f}"'
+                if row_period_variation is not None
+                else ""
+            )
             body.append(
                 f"<polyline{row_attribute}{baseline_attribute}"
-                f"{policy_attribute} points=\"{pairs}\"/>"
+                f"{policy_attribute}{period_attribute}"
+                f"{period_variation_attribute} points=\"{pairs}\"/>"
             )
         body.append("</g>")
     return (

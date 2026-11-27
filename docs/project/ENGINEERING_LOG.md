@@ -1,7 +1,7 @@
 # Engineering Log
 
 <a id="elog-20261126-fixed-baseline-clearance-wavelength"></a>
-### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Keep visible fixed-baseline waves near pen clearance
+### 🟨 2026-11-26 - WINDOWS SOFTWARE/IMPLEMENTED - Control tonal Wave period with fixed baselines
 
 - A `1.21 mm` effective-pitch / `0.90 mm` pen preview rendered as straight
   rows even though fixed-baseline spacing and row-lock were green. The saved
@@ -13,21 +13,27 @@
   steep row segments approach each other in Euclidean distance. The exact
   pair limiter then reduced entire rows to `0.02-0.04 mm`, recreating the
   straight-line symptom.
-- The fixed-baseline mode now keeps the full scene-driven amplitude, stretches
-  wavelength according to the available clearance, and reduces independent
-  row phase/frequency divergence only near the pen limit. Wider pitches retain
-  the original row-local variation.
-- The exact pairwise clearance check remains, with a `0.02 mm` internal target
-  margin to absorb SVG/G-code quantization and rotating interpolation.
-- The screenshot-geometry regression was red at `0.0345 mm` median and now
-  measures `0.6965 mm` without row-scale reduction.
-- The focused CMYK, Xθ/Yθ, final-coordinate, coupon, and contour suites pass
-  `150` tests. Complete converter discovery passes `663` tests with one
-  expected OpenGL-context skip.
+- The mode now exposes **Wave period** in row pitches and **Period variation**
+  in percent. Local depth changes both period and amplitude: dark rows become
+  shorter and deeper, light rows longer and flatter.
+- Whole-row damping was replaced with column-local damping. Only offsets that
+  would actually collide are reduced; the equal college-ruled baselines and
+  unaffected portions of every waveform remain intact.
+- All previously common rows shared one frequency near the clearance limit.
+  At the screenshot geometry the corrected output measures roughly `42-48`
+  crossings on light rows versus `60-65` on dark rows while keeping
+  `1.21 mm` baselines and the required pen clearance.
+- Period and variation now persist through the image recipe, SVG row metadata,
+  version-5 set manifest, and fixed-baseline G-code header. Save preflight
+  warns when local clearance damping materially limits the requested depth.
+- The focused CMYK, Xθ/Yθ, final-coordinate, and contour suites pass `147`
+  tests.
+- Complete converter discovery passes `666` tests with one expected
+  OpenGL-context skip.
 - Evidence: `WSW-20261126-014`;
   `docs/changes/windows-software/2026/2026-11-26-fixed-baseline-clearance-wavelength.md`.
-- Category: windows-software, cmyk, wave-screen, fixed-baselines, clearance,
-  wavelength, preview, regression.
+- Category: windows-software, cmyk, wave-screen, fixed-baselines, period,
+  amplitude, depth, clearance, user-interface, regression.
 
 <a id="elog-20261126-fixed-baseline-variable-depth-wave"></a>
 ### 🟨 2026-11-26 - WINDOWS SOFTWARE/HARDWARE/IMPLEMENTED - Add variable-depth Wave with fixed row baselines
@@ -58,9 +64,9 @@
 - Added the four-patch `cmyk-variable-depth-wave-coupon.gcode` comparison:
   XY-only and Xθ/Yθ at `3.36/4.20 mm` on a 0-degree screen. Physical
   inspection after one HOME + REGISTER remains the acceptance gate.
-- The coupon strict motion check passes with `2,989` drawing moves, a
-  `1.74 deg` maximum drawing-bed step, `500 motor deg/s` peak A rate, no
-  rotated pen-up `G0`, and `0.017 mm` worst bounded bed path bow.
+- The regenerated coupon strict motion check passes with `3,996` drawing
+  moves, a `1.77 deg` maximum drawing-bed step, `500 motor deg/s` peak A
+  rate, no rotated pen-up `G0`, and `0.015 mm` worst bounded bed path bow.
 - Complete converter discovery passes `662` tests with one expected
   OpenGL-context skip.
 - Evidence: `WSW-20261126-013`;

@@ -51,6 +51,8 @@ class WaveTrail(list):
         wave_row_index=None,
         wave_baseline_mm=None,
         wave_row_policy=None,
+        wave_period_pitches=None,
+        wave_period_variation=None,
     ):
         super().__init__(points)
         self.wave_row_index = wave_row_index
@@ -60,6 +62,8 @@ class WaveTrail(list):
             else None
         )
         self.wave_row_policy = wave_row_policy
+        self.wave_period_pitches = wave_period_pitches
+        self.wave_period_variation = wave_period_variation
 
 
 def retag_contour(source, points, point_transform=None):
@@ -2137,6 +2141,10 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
             contours = [[(cx + rx * math.cos(2 * math.pi * n / steps), cy + ry * math.sin(2 * math.pi * n / steps)) for n in range(steps + 1)]]
     row_index = element.get("data-wave-row")
     row_baseline = parse_points(element.get("data-wave-baseline"))
+    row_period = element.get("data-wave-period-pitches")
+    row_period_variation = element.get(
+        "data-wave-period-variation"
+    )
     if row_index is not None:
         try:
             parsed_row_index = int(row_index)
@@ -2153,6 +2161,16 @@ def element_contours(element, tolerance, hatch_spacing=0.0, hatch_angle=0.0, hat
                         else None
                     ),
                     wave_row_policy=element.get("data-wave-policy"),
+                    wave_period_pitches=(
+                        float(row_period)
+                        if row_period is not None
+                        else None
+                    ),
+                    wave_period_variation=(
+                        float(row_period_variation)
+                        if row_period_variation is not None
+                        else None
+                    ),
                 )
                 for contour in contours
             ]
